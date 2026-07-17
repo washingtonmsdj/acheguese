@@ -52,6 +52,7 @@ import { withQueryParams } from "@/app/pages/CidadeLanding.utils";
 interface EmpresasLandingPageProps {
   resolved?: ResolvedTerritory;
   activeMemberIds?: string[];
+  presentation?: "standalone" | "embedded";
 }
 
 function parseInitialSlugs(resolved: ResolvedTerritory | null | undefined) {
@@ -218,6 +219,7 @@ function LandingTopBar({
 export default function EmpresasLandingPage({
   resolved: resolvedProp,
   activeMemberIds: activeMemberIdsProp,
+  presentation = "standalone",
 }: EmpresasLandingPageProps = {}) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -245,8 +247,6 @@ export default function EmpresasLandingPage({
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  const { favorites, toggleFavorite } = useCanonicalBusinessFavorites();
-  const savedBusinesses = useMemo(() => new Set(favorites), [favorites]);
   const { coords: userLocation } = useRobustGeolocation({ useCache: true });
   const { polygons: territoryPolygons, isLoading: isLoadingBounds } = useTerritoryPolygon(resolved ?? null);
 
@@ -273,6 +273,18 @@ export default function EmpresasLandingPage({
 
     return realBusinesses.map((business) => normalizeRealBusinessEntry(business));
   }, [nearbyBusinesses, realBusinesses, sortBy]);
+
+  const favoriteCandidateIds = useMemo(
+    () =>
+      businessesToShow
+        .map((business) => business.business_data_id)
+        .filter((id): id is string => Boolean(id))
+        .slice(0, 100),
+    [businessesToShow],
+  );
+  const { favorites, toggleFavorite } =
+    useCanonicalBusinessFavorites(favoriteCandidateIds);
+  const savedBusinesses = useMemo(() => new Set(favorites), [favorites]);
 
   const categoryCards = useMemo(() => {
     const counts = new Map<string, number>();
@@ -371,7 +383,7 @@ export default function EmpresasLandingPage({
   }, [resolved, territoryName]);
 
   return (
-    <EmpresasLandingLayout>
+    <EmpresasLandingLayout embedded={presentation === "embedded"}>
       {!resolved ? (
         <Helmet>
           <title>Empresas locais | Achegue-se</title>
@@ -382,6 +394,7 @@ export default function EmpresasLandingPage({
         </Helmet>
       ) : null}
 
+      {presentation !== "embedded" ? (
       <LandingTopBar
         locationLabel={topLocationLabel}
         searchQuery={searchQuery}
@@ -393,7 +406,9 @@ export default function EmpresasLandingPage({
         secondaryHref={topSecondaryHref}
         secondaryLabel={topSecondaryLabel}
       />
+      ) : null}
 
+      {presentation !== "embedded" ? (
       <EmpresasHeroSection
         territoryName={territoryName}
         businesses={filteredBusinesses.length > 0 ? filteredBusinesses : businessesToShow}
@@ -409,6 +424,7 @@ export default function EmpresasLandingPage({
         onOpenLocationDialog={() => setLocationDialogOpen(true)}
         onOpenBusiness={openBusiness}
       />
+      ) : null}
 
       <EmpresasCategoriasSection
         categories={categoryCards}

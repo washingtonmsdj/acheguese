@@ -7,7 +7,8 @@ Escopo: Gastronomia + Delivery Motoboy + Trust/Admin
 
 - Fonte de pedido: `OrderDeliveryNotificationService`.
 - Fonte de corrida/entrega motoboy: `RideOperationalService.handlePostTransition`.
-- Fonte de confianca/admin: `TrustEventService`.
+- Fonte de confianca/admin: triggers transacionais de `trust_events` e
+  `trust_admin_actions` para o outbox canonico.
 - Sem notificacao com `profile_id` em `user_id`: sempre resolver `user_id` pelo profile.
 - Sem auto-notificacao duplicada.
 - Falha de notificacao nao interrompe fluxo operacional.

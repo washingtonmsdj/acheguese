@@ -15,17 +15,6 @@ export interface EditHistory {
   editor_name: string;
 }
 
-export interface MentionedProfile {
-  id: string;
-  name: string;
-  username?: string | null;
-  avatar_url?: string;
-  avatar?: string | null;
-  location?: string | null;
-  type?: string;
-  rank?: number;
-}
-
 export interface PollOptionBasic {
   id: string;
   text: string;
@@ -69,7 +58,6 @@ export interface CommunityPost {
   is_liked?: boolean;
   is_saved?: boolean;
   has_user_confirmed?: boolean;
-  mentioned_profiles?: MentionedProfile[];
   is_edited?: boolean;
   edit_history?: EditHistory[];
   event_date?: string;
@@ -79,16 +67,4 @@ export interface CommunityPost {
   hidden?: boolean;
 }
 
-export type PostType =
-  | "discussao"
-  | "recomendacao"
-  | "enquete"
-  | "pergunta"
-  | "achados"
-  | "favor"
-  | "evento"
-  | "desapego"
-  | "post"
-  | "alerta"
-  | "classificado"
-  | "civic_report";
+export type { PostType } from "../postTypes";

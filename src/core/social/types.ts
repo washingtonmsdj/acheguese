@@ -1,46 +1,8 @@
 /**
- * Types para SocialInteractionsService - GATE 3 FASE 3C
+ * Contracts for community group interactions.
  *
  * Tipos para interações sociais usando profile_id consistentemente
  */
-
-// ============================================================================
-// POST LIKES
-// ============================================================================
-
-export interface PostLike {
-  id: string;
-  post_id: string;
-  liker_profile_id: string;
-  created_at: string;
-}
-
-export interface PostLikeWithProfile extends PostLike {
-  profile: {
-    id: string;
-    name: string;
-    avatar_url?: string;
-  };
-}
-
-// ============================================================================
-// SAVED POSTS
-// ============================================================================
-
-export interface SavedPost {
-  id: string;
-  post_id: string;
-  saver_profile_id: string;
-  created_at: string;
-}
-
-export interface SavedPostWithProfile extends SavedPost {
-  profile: {
-    id: string;
-    name: string;
-    avatar_url?: string;
-  };
-}
 
 // ============================================================================
 // GROUP MEMBERS
@@ -76,6 +38,8 @@ export interface GroupMessage {
   media_mime_type?: string | null;
   audio_duration_seconds?: number | null;
   metadata?: Record<string, unknown>;
+  likes_count?: number;
+  is_liked?: boolean;
   created_at: string;
 }
 
@@ -105,29 +69,4 @@ export interface SocialInteractionStats {
   likesGiven: number;
   postsSaved: number;
   groupsJoined: number;
-}
-
-// ============================================================================
-// BULK OPERATIONS
-// ============================================================================
-
-export interface BulkInteractionResult {
-  likes: Set<string>;
-  saved: Set<string>;
-  memberships: Set<string>;
-}
-
-// ============================================================================
-// SERVICE RESPONSES
-// ============================================================================
-
-export interface SocialInteractionResponse {
-  success: boolean;
-  error?: string;
-}
-
-export interface SocialInteractionDataResponse<
-  T,
-> extends SocialInteractionResponse {
-  data?: T;
 }

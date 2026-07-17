@@ -1,4 +1,5 @@
 // Barrel export for authorization services
-export * from "./AuthorizationEngine";
+export * from "./CapabilityPreviewService";
+export * from "./capabilityPreviewPolicy";
 export * from "./RoleService";
 

@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSessionContext } from "@/core/session";
 import { postService } from "@/core/posts/services";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
-import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService"; //  GATE 3 FASE 3C
+import { PostEngagementService } from "@/core/engagement/services/PostEngagementService";
+import { communityFeedQueryKeys } from "@/core/feed";
 
 /**
  * Hook profissional para gerenciar interações com posts
@@ -34,10 +35,18 @@ export function usePostInteractions(
   const [state, setState] = useState(initialState);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  useEffect(() => {
+    if (isProcessing) return;
+    setState({
+      isLiked: initialState.isLiked,
+      isSaved: initialState.isSaved,
+      likesCount: initialState.likesCount,
+    });
+  }, [initialState.isLiked, initialState.isSaved, initialState.likesCount, isProcessing]);
+
   /**
    * Curtir/Descurtir post
    * Implementa otimistic update com rollback em caso de erro
-   * Valida existência do post antes de process
    */
   const handleLike = async () => {
     if (isProcessing || !user || !activeProfile) {
@@ -51,30 +60,14 @@ export function usePostInteractions(
     }
 
     setIsProcessing(true);
+    const previousState = { ...state };
 
     try {
-      //  MIGRADO - Verificar se o post existe usando PostService
-      const postExists = await postService.postExists(postId);
-
-      if (!postExists) {
-        if (import.meta.env.DEV) {
-          logger.error(" Post não encontrado no banco:", { postId });
-        }
-
-        // Post não existe - limpar do cache
-        queryClient.invalidateQueries({ queryKey: ["community-feed"] });
-        queryClient.invalidateQueries({ queryKey: ["community-feed-aaa"] });
-
-        toast.error("Este post não está mais disponível");
-        return;
-      }
-
       // Otimistic update
-      const previousState = { ...state };
       const newIsLiked = !state.isLiked;
       const newLikesCount = newIsLiked
         ? state.likesCount + 1
-        : state.likesCount - 1;
+        : Math.max(0, state.likesCount - 1);
 
       if (import.meta.env.DEV) {
         logger.info(" Otimistic update:", {
@@ -96,10 +89,9 @@ export function usePostInteractions(
           logger.info(" Adicionando curtida...");
         }
 
-        //  GATE 3 FASE 3C - Usar SocialInteractionsService
-        const result = await SocialInteractionsService.likePost(
+        // Canonical Post engagement owner.
+        const result = await PostEngagementService.likePost(
           postId,
-          activeProfile.id,
         );
         if (!result.success) {
           throw new Error(result.error || "Erro ao curtir post");
@@ -114,10 +106,9 @@ export function usePostInteractions(
           logger.info(" Removendo curtida...");
         }
 
-        //  GATE 3 FASE 3C - Usar SocialInteractionsService
-        const result = await SocialInteractionsService.unlikePost(
+        // Canonical Post engagement owner.
+        const result = await PostEngagementService.unlikePost(
           postId,
-          activeProfile.id,
         );
         if (!result.success) {
           throw new Error(result.error || "Erro ao remover curtida");
@@ -129,8 +120,7 @@ export function usePostInteractions(
       }
 
       // Invalidate cache do feed
-      queryClient.invalidateQueries({ queryKey: ["community-feed"] });
-      queryClient.invalidateQueries({ queryKey: ["community-feed-aaa"] });
+      queryClient.invalidateQueries({ queryKey: communityFeedQueryKeys.root });
 
       if (import.meta.env.DEV) {
         logger.info(" Cache invalidado");
@@ -141,14 +131,13 @@ export function usePostInteractions(
         logger.error(" Erro no handleLike:", error);
       }
 
-      setState(state); // Restaurar state original
+      setState(previousState);
 
       // Mensagem de erro específica
       if ((error as { code?: string })?.code === "23503") {
         toast.error("Este post não está mais disponível");
         // Limpar cache para remove post órfão
-        queryClient.invalidateQueries({ queryKey: ["community-feed"] });
-        queryClient.invalidateQueries({ queryKey: ["community-feed-aaa"] });
+        queryClient.invalidateQueries({ queryKey: communityFeedQueryKeys.root });
       } else {
         toast.error("Não foi possível curtir o post. Tente novamente.");
       }
@@ -186,10 +175,9 @@ export function usePostInteractions(
     try {
       if (newIsSaved) {
         // Salvar post
-        //  GATE 3 FASE 3C - Usar SocialInteractionsService
-        const result = await SocialInteractionsService.savePost(
+        // Canonical Post engagement owner.
+        const result = await PostEngagementService.savePost(
           postId,
-          activeProfile.id,
         );
         if (!result.success) {
           throw new Error(result.error || "Erro ao salvar post");
@@ -198,10 +186,9 @@ export function usePostInteractions(
         toast.success("Post salvo com sucesso");
       } else {
         // Remover dos salvos
-        //  GATE 3 FASE 3C - Usar SocialInteractionsService
-        const result = await SocialInteractionsService.unsavePost(
+        // Canonical Post engagement owner.
+        const result = await PostEngagementService.unsavePost(
           postId,
-          activeProfile.id,
         );
         if (!result.success) {
           throw new Error(result.error || "Erro ao remover post dos salvos");
@@ -211,7 +198,7 @@ export function usePostInteractions(
       }
 
       // Invalidate cache
-      queryClient.invalidateQueries({ queryKey: ["community-feed"] });
+      queryClient.invalidateQueries({ queryKey: communityFeedQueryKeys.root });
       queryClient.invalidateQueries({ queryKey: ["saved-posts"] });
     } catch (error) {
       // Rollback em caso de erro
@@ -243,12 +230,16 @@ export function usePostInteractions(
       if (navigator.share && navigator.canShare?.(shareData)) {
         await navigator.share(shareData);
 
-        //  MIGRADO - Incrementar contador usando PostService
-        await postService.incrementSharesCount(postId);
       } else {
         // Fallback: copiar link
         await navigator.clipboard.writeText(shareUrl);
         toast.success("Link copiado para a área de transferência");
+      }
+
+      if (activeProfile) {
+        await postService.recordPostShare(postId).catch((error) => {
+          logger.warn("Failed to record post share:", error);
+        });
       }
     } catch (error) {
       // Usuário cancelou ou erro

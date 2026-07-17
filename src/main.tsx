@@ -37,8 +37,8 @@ deferIdle(() => {
     initializeSentry();
   });
 
-  import("@/core/authorization/services/AuthorizationEngine").then(({ AuthorizationEngine }) => {
-    AuthorizationEngine.initialize();
+  import("@/core/authorization/services/CapabilityPreviewService").then(({ CapabilityPreviewService }) => {
+    CapabilityPreviewService.initialize();
   });
 
   import("@/integrations/maps").then(({ setupDefaultProviders }) => {

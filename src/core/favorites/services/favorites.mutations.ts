@@ -8,12 +8,9 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { ProfileFavorite, CreateFavoriteData } from "../types";
-import { isBusinessFavorited, isFavorited as checkIsFavorited } from "./favorites.queries";
-import { BusinessFavoriteService } from "@/core/business/services/BusinessFavoriteService";
-import {
-  resolveAuthUserIdFromProfile,
-  resolveBusinessDataIdFromProfile,
-} from "./businessFavoriteAdapters";
+import { isFavorited as checkIsFavorited } from "./favorites.queries";
+import { BusinessFavoriteStore } from "./BusinessFavoriteStore";
+import { resolveBusinessDataIdFromProfile } from "./businessFavoriteAdapters";
 
 const TABLE = "profile_favorites_new";
 
@@ -141,26 +138,23 @@ export async function toggleFavorite(
  * Toggle favorito de negócio (adicionar se não existe, remover se existe)
  * @returns true se foi adicionado, false se foi removido
  */
-export async function toggleBusinessFavorite(
+export async function setBusinessFavorite(
   businessId: string,
-  userId: string,
+  favorited: boolean,
 ): Promise<boolean> {
   try {
-    const isFavorited = await isBusinessFavorited(businessId, userId);
-
-    if (isFavorited) {
-      await removeBusinessFavorite(businessId, userId);
-      return false;
-    } else {
-      await addBusinessFavorite(businessId, userId);
-      return true;
+    const businessDataId = await resolveBusinessDataIdFromProfile(businessId);
+    if (!businessDataId) {
+      throw new Error("Empresa indisponivel para favorito");
     }
+
+    return BusinessFavoriteStore.setFavorited(businessDataId, favorited);
   } catch (error) {
-    logger.error("[favorites.mutations] Error toggling business favorite:", error);
+    logger.error("[favorites.mutations] Error setting business favorite:", error);
     trackError(error as Error, {
       component: "favorites.mutations",
-      action: "toggleBusinessFavorite",
-      metadata: { businessId, userId },
+      action: "setBusinessFavorite",
+      metadata: { businessId, favorited },
     });
     throw error;
   }
@@ -171,41 +165,16 @@ export async function toggleBusinessFavorite(
  */
 export async function addBusinessFavorite(
   businessId: string,
-  userId: string,
 ): Promise<void> {
   try {
-    const [authUserId, businessDataId] = await Promise.all([
-      resolveAuthUserIdFromProfile(userId),
-      resolveBusinessDataIdFromProfile(businessId),
-    ]);
-
-    if (!authUserId || !businessDataId) {
-      throw new Error("Perfil ou empresa indisponivel para favorito");
-    }
-
-    const alreadyFavorited = await BusinessFavoriteService.isFavoritedByUser(
-      businessDataId,
-      authUserId,
-    );
-
-    if (!alreadyFavorited) {
-      const nextIsFavorited = await BusinessFavoriteService.toggleFavorite(
-        businessDataId,
-        authUserId,
-      );
-
-      if (!nextIsFavorited) {
-        throw new Error("Favorito nao foi persistido");
-      }
-    }
-
-    logger.info("[favorites.mutations] Business favorite added:", { businessId, userId });
+    await setBusinessFavorite(businessId, true);
+    logger.info("[favorites.mutations] Business favorite added:", { businessId });
   } catch (error) {
     logger.error("[favorites.mutations] Error adding business favorite:", error);
     trackError(error as Error, {
       component: "favorites.mutations",
       action: "addBusinessFavorite",
-      metadata: { businessId, userId },
+      metadata: { businessId },
     });
     throw error;
   }
@@ -216,39 +185,16 @@ export async function addBusinessFavorite(
  */
 export async function removeBusinessFavorite(
   businessId: string,
-  userId: string,
 ): Promise<void> {
   try {
-    const [authUserId, businessDataId] = await Promise.all([
-      resolveAuthUserIdFromProfile(userId),
-      resolveBusinessDataIdFromProfile(businessId),
-    ]);
-
-    if (!authUserId || !businessDataId) return;
-
-    const alreadyFavorited = await BusinessFavoriteService.isFavoritedByUser(
-      businessDataId,
-      authUserId,
-    );
-
-    if (alreadyFavorited) {
-      const nextIsFavorited = await BusinessFavoriteService.toggleFavorite(
-        businessDataId,
-        authUserId,
-      );
-
-      if (nextIsFavorited) {
-        throw new Error("Favorito nao foi removido");
-      }
-    }
-
-    logger.info("[favorites.mutations] Business favorite removed:", { businessId, userId });
+    await setBusinessFavorite(businessId, false);
+    logger.info("[favorites.mutations] Business favorite removed:", { businessId });
   } catch (error) {
     logger.error("[favorites.mutations] Error removing business favorite:", error);
     trackError(error as Error, {
       component: "favorites.mutations",
       action: "removeBusinessFavorite",
-      metadata: { businessId, userId },
+      metadata: { businessId },
     });
     throw error;
   }

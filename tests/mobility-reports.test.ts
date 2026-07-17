@@ -9,10 +9,12 @@ import { RideReportsService } from '../src/core/mobility/services/RideReportsSer
 import type { ReportType, ReportSeverity, ReportStatus } from '../src/core/mobility/services/RideReportsService';
 
 const TEST_RIDE_ID = '7b9817cb-d0c3-46f3-b57f-b2c4d5a20ed3';
-const TEST_REPORTER_PROFILE_ID = 'c64a8e34-16be-474c-b4f8-0585afce7d14';
-
 vi.mock('@/integrations/supabase', () => ({
   supabase: {
+    rpc: vi.fn(() => Promise.resolve({
+      data: { id: '1085f785-d23d-4af7-b2ad-0fda9c0f8de2' },
+      error: null,
+    })),
     from: vi.fn(() => ({
       insert: vi.fn(() => ({
         select: vi.fn(() => ({
@@ -51,8 +53,6 @@ describe('RideReportsService', () => {
     it('deve criar report com sucesso', async () => {
       const input = {
         rideId: TEST_RIDE_ID,
-        reporterProfileId: TEST_REPORTER_PROFILE_ID,
-        reporterType: 'passenger' as const,
         reportType: 'driver_behavior' as ReportType,
         severity: 'medium' as ReportSeverity,
         title: 'Motorista dirigindo perigosamente',
@@ -69,8 +69,6 @@ describe('RideReportsService', () => {
     it('deve validar campos obrigatórios', () => {
       const requiredFields = [
         'rideId',
-        'reporterProfileId',
-        'reporterType',
         'reportType',
         'severity',
         'title',
@@ -85,8 +83,6 @@ describe('RideReportsService', () => {
     it('deve aceitar campos opcionais', async () => {
       const input = {
         rideId: TEST_RIDE_ID,
-        reporterProfileId: TEST_REPORTER_PROFILE_ID,
-        reporterType: 'passenger' as const,
         reportType: 'safety_concern' as ReportType,
         severity: 'high' as ReportSeverity,
         title: 'Problema de segurança',
@@ -239,8 +235,6 @@ describe('Integração - Reports Admin', () => {
     // 1. Criar report
     const createResult = await RideReportsService.createReport({
       rideId: TEST_RIDE_ID,
-      reporterProfileId: TEST_REPORTER_PROFILE_ID,
-      reporterType: 'passenger',
       reportType: 'driver_behavior',
       severity: 'medium',
       title: 'Test Report',
@@ -258,15 +252,11 @@ describe('Integração - Reports Admin', () => {
 
     // 3. Atualizar status (mock)
     if (createResult.reportId) {
-      const updateResult = await RideReportsService.updateReport(
-        createResult.reportId,
-        {
+      await expect(
+        RideReportsService.updateReport(createResult.reportId, {
           status: 'under_review',
-          reviewedBy: 'admin-123',
-        }
-      );
-
-      expect(updateResult.success).toBe(true);
+        }),
+      ).resolves.toBeUndefined();
     }
   });
 });

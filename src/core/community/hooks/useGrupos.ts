@@ -1,10 +1,10 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CommunityService } from "@/core/community/services/CommunityService";
 import type { TerritoryFilter } from "@/core/location";
 import { useSessionContext } from "@/core/session";
-import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService";
+import { SocialGroupInteractionsService } from "@/core/social/services/SocialGroupInteractionsService";
 import { DEFAULT_GROUP_RULES } from "@/shared/constants/groupTaxonomy";
 
 export type GroupTab = "todos" | "meus";
@@ -76,13 +76,6 @@ export function useGrupos(options: UseGruposOptions = {}) {
     setNewGroup((prev) => ({ ...prev, location_id: prev.location_id ?? defaultLocationId }));
   }, [defaultLocationId]);
 
-  const { data: memberGroupIds = [] } = useQuery({
-    queryKey: ["user-group-ids", activeProfile?.userId],
-    queryFn: () => SocialInteractionsService.getUserGroupIds(activeProfile?.userId),
-    enabled: !!activeProfile?.userId && tab === "meus",
-    staleTime: 60_000,
-  });
-
   const {
     data,
     isLoading,
@@ -90,9 +83,9 @@ export function useGrupos(options: UseGruposOptions = {}) {
     hasNextPage,
     fetchNextPage,
   } = useInfiniteQuery({
-    queryKey: ["grupos", debouncedSearch, tab, sortBy, territoryFilter, memberGroupIds],
+    queryKey: ["grupos", debouncedSearch, tab, sortBy, territoryFilter, activeProfile?.id],
     queryFn: async ({ pageParam }) => {
-      if (tab === "meus" && memberGroupIds.length === 0) {
+      if (tab === "meus" && !activeProfile) {
         return { items: [], totalCount: 0, hasMore: false, nextOffset: null };
       }
 
@@ -101,7 +94,7 @@ export function useGrupos(options: UseGruposOptions = {}) {
         territoryFilter,
         offset: pageParam as number,
         limit: GROUPS_PAGE_SIZE,
-        groupIds: tab === "meus" ? memberGroupIds : undefined,
+        onlyMemberGroups: tab === "meus",
         sortBy,
       });
     },
@@ -114,23 +107,7 @@ export function useGrupos(options: UseGruposOptions = {}) {
     () => ((data?.pages || []).flatMap((page) => page.items) || []) as unknown as Group[],
     [data?.pages],
   );
-  const groups = useMemo(() => {
-    const items = [...rawGroups];
-    if (sortBy === "relevancia" && debouncedSearch) {
-      const q = debouncedSearch.toLowerCase();
-      const score = (g: Group) => {
-        const n = (g.name || "").toLowerCase();
-        let s = 0;
-        if (n.startsWith(q)) s += 3;
-        else if (n.includes(q)) s += 1;
-        s += Math.min((g.members_count || 0) / 50, 2);
-        return s;
-      };
-      return items.sort((a, b) => score(b) - score(a));
-    }
-    // Para recentes/populares, o backend ja retornou ordenado por pagina.
-    return items;
-  }, [debouncedSearch, rawGroups, sortBy]);
+  const groups = rawGroups;
   const totalCount = data?.pages?.[0]?.totalCount ?? rawGroups.length;
   const hasMore = !!hasNextPage;
 
@@ -149,7 +126,8 @@ export function useGrupos(options: UseGruposOptions = {}) {
       return;
     }
 
-    if (!newGroup.location_id && !defaultLocationId) {
+    const locationId = newGroup.location_id ?? defaultLocationId;
+    if (!locationId) {
       toast.error("Bairro obrigatorio para criar grupo");
       return;
     }
@@ -158,7 +136,7 @@ export function useGrupos(options: UseGruposOptions = {}) {
     try {
       const result = await CommunityService.createGroup({
         ...newGroup,
-        location_id: newGroup.location_id ?? defaultLocationId,
+        location_id: locationId,
         rules: newGroup.rules
           ? newGroup.rules.split("\n").map((rule) => rule.trim()).filter(Boolean)
           : DEFAULT_GROUP_RULES,
@@ -193,7 +171,7 @@ export function useGrupos(options: UseGruposOptions = {}) {
       return;
     }
 
-    const result = await SocialInteractionsService.joinGroup(groupId, activeProfile.userId, "member");
+    const result = await SocialGroupInteractionsService.joinGroup(groupId);
     if (!result.success) {
       toast.error(result.error || "Erro ao entrar no grupo");
       return;

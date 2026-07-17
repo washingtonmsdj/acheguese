@@ -33,6 +33,6 @@ describe("notification create RPC security", () => {
     expect(service).toContain("SessionService.getCurrentUser()");
     expect(service).toContain("input.user_id !== user.id");
     expect(service).toContain("blocked untrusted cross-user notification creation");
-    expect(service).toMatch(/\.delete\(\)[\s\S]*\.eq\("id", notificationId\)[\s\S]*\.eq\("user_id", user\.id\)/);
+    expect(service).toMatch(/\.update\(\{ deleted_at:[\s\S]*\.eq\("id", notificationId\)[\s\S]*\.eq\("user_id", user\.id\)/);
   });
 });

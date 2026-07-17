@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase";
-import { getUserBusinessFavorites } from "@/core/favorites/services/favorites.queries";
+import { getCurrentUserBusinessFavorites } from "@/core/favorites/services/favorites.queries";
 import type { ProfileRow as Profile } from "./types";
 import type { BusinessRow } from "./profile.service.types";
 import { resolveOwnedProfileIds } from "./profile.queries";
@@ -144,15 +144,8 @@ export async function getUserFavoritesCountQuery(userId: string): Promise<number
   }
 }
 
-export async function getUserFavoriteBusinessesQuery(userId: string): Promise<BusinessRow[]> {
-  const ownerProfileIds = await resolveOwnedProfileIds(userId);
-  if (ownerProfileIds.length === 0) return [];
-
-  const businessIdGroups = await Promise.all(
-    ownerProfileIds.map((profileId) => getUserBusinessFavorites(profileId)),
-  );
-
-  const businessIds = [...new Set(businessIdGroups.flat().filter(Boolean))];
+export async function getCurrentUserFavoriteBusinessesQuery(): Promise<BusinessRow[]> {
+  const businessIds = await getCurrentUserBusinessFavorites();
   if (!businessIds.length) return [];
 
   const { data: businesses, error } = await profileExternalDataDb

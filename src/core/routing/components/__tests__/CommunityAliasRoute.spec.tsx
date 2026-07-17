@@ -30,6 +30,10 @@ vi.mock("@/core/routing/seo/TerritorialSEO", () => ({
   TerritorialSEO: () => null,
 }));
 
+vi.mock("@/core/navigation/BottomNav", () => ({
+  BottomNav: () => null,
+}));
+
 const district = {
   id: "district-1",
   name: "Santa Cruz",

@@ -1,19 +1,20 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSessionContext } from "@/core/session";
 import { toast } from "sonner";
-type ReportReason = string;
-import { ModerationService } from "@/core/moderation";
+import type { CommunityReportReason } from "@/core/moderation";
+import { communityReportService } from "@/core/community/moderation";
+import { communityFeedQueryKeys } from "@/core/feed";
 
 interface ReportPostInput {
   postId: string;
-  reason: ReportReason;
+  reason: CommunityReportReason;
   description?: string;
 }
 
 interface ReportCommentInput {
   commentId: string;
   postId: string;
-  reason: ReportReason;
+  reason: CommunityReportReason;
   description?: string;
 }
 
@@ -24,16 +25,15 @@ export function useModeration() {
   const reportPostMutation = useMutation({
     mutationFn: async ({ postId, reason, description }: ReportPostInput) => {
       if (!user || !activeProfile) throw new Error("Usuário não autenticado");
-      return await ModerationService.reportContent({
+      return await communityReportService.report({
         targetType: "post",
         targetId: postId,
-        reporterId: activeProfile.id,
         reason,
         details: description,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["community-feed"] });
+      queryClient.invalidateQueries({ queryKey: communityFeedQueryKeys.root });
       toast.success("Denúncia enviada. Nossa equipe irá revisar o conteúdo.");
     },
     onError: (error: Error) => {
@@ -49,10 +49,9 @@ export function useModeration() {
       description,
     }: ReportCommentInput & { _postId?: string }) => {
       if (!user || !activeProfile) throw new Error("Usuário não autenticado");
-      return await ModerationService.reportContent({
+      return await communityReportService.report({
         targetType: "comment",
         targetId: commentId,
-        reporterId: activeProfile.id,
         reason,
         details: description,
       });
@@ -68,7 +67,9 @@ export function useModeration() {
 
   return {
     reportPost: reportPostMutation.mutate,
+    reportPostAsync: reportPostMutation.mutateAsync,
     reportComment: reportCommentMutation.mutate,
+    reportCommentAsync: reportCommentMutation.mutateAsync,
     isReportingPost: reportPostMutation.isPending,
     isReportingComment: reportCommentMutation.isPending,
   };

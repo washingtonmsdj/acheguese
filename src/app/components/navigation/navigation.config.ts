@@ -2,7 +2,8 @@
  * Navigation Configuration - SSOT
  *
  * Single Source of Truth para todos os itens de navegacao da aplicacao.
- * Usado por AppSidebar (desktop) e AppBottomNav (mobile).
+ * Usado pelo AppSidebar. A navegacao mobile publica canonica vive em
+ * src/core/navigation/BottomNav.tsx porque depende do contexto territorial.
  */
 
 import {
@@ -24,7 +25,7 @@ import {
 } from 'lucide-react';
 import { APP_MODULE_SLUGS, buildAppModulePath } from '@/config/moduleSlugs';
 import { LAUNCH_URLS } from '@/config/territory';
-import { filterLaunchItems, filterLaunchSections } from '@/config/launchScope';
+import { filterLaunchSections } from '@/config/launchScope';
 import { gastronomyPublicRoutes } from '@/core/verticals/gastronomy/routes/gastronomyPublicRoutes';
 
 export interface NavItem {
@@ -188,73 +189,4 @@ const RAW_NAV_SECTIONS: NavSection[] = [
   },
 ];
 
-/**
- * Itens de navegacao para mobile (bottom nav).
- * Versao simplificada com os itens mais importantes.
- */
-const RAW_MOBILE_NAV_ITEMS: NavItem[] = [
-  {
-    id: 'home',
-    icon: Home,
-    label: 'Início',
-    href: '/',
-    description: 'Página inicial',
-  },
-  {
-    id: 'business',
-    icon: Building2,
-    label: 'Empresas',
-    href: NAV_MODULE_ROOTS.business,
-    description: 'Empresas locais',
-  },
-  {
-    id: 'community',
-    icon: Users,
-    label: 'Meu Bairro',
-    href: LAUNCH_URLS.community,
-    description: 'Comunidade',
-  },
-  {
-    id: 'gastronomy',
-    icon: UtensilsCrossed,
-    label: 'Gastronomia',
-    href: NAV_MODULE_ROOTS.gastronomy,
-    description: 'Restaurantes e cardápios',
-  },
-  {
-    id: 'classifieds',
-    icon: Tag,
-    label: 'Anúncios',
-    href: NAV_MODULE_ROOTS.classifieds,
-    description: 'Classificados',
-  },
-  {
-    id: 'services',
-    icon: Wrench,
-    label: 'Serviços',
-    href: NAV_MODULE_ROOTS.services,
-    description: 'Profissionais locais',
-  },
-  {
-    id: 'map',
-    icon: Map,
-    label: 'Mapa',
-    href: NAV_MODULE_ROOTS.map,
-    description: 'Mapa',
-  },
-];
-
 export const NAV_SECTIONS: NavSection[] = filterLaunchSections(RAW_NAV_SECTIONS);
-export const MOBILE_NAV_ITEMS: NavItem[] = filterLaunchItems(RAW_MOBILE_NAV_ITEMS);
-
-export function findNavItem(id: string): NavItem | undefined {
-  for (const section of NAV_SECTIONS) {
-    const item = section.items.find((i) => i.id === id);
-    if (item) return item;
-  }
-  return MOBILE_NAV_ITEMS.find((i) => i.id === id);
-}
-
-export function getAllNavItems(): NavItem[] {
-  return NAV_SECTIONS.flatMap((section) => section.items);
-}

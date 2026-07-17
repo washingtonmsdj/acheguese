@@ -371,15 +371,21 @@ export async function deleteProfile(profileId: string): Promise<void> {
 /**
  * Faz upload de avatar
  */
-export async function uploadAvatar(userId: string, file: File): Promise<string | null> {
+export async function uploadAvatar(profileId: string, file: File): Promise<string> {
   try {
-    const upload = await mediaService.uploadAvatar(userId, file);
-    return upload.url;
+    const upload = await mediaService.uploadMediaAsset(
+      profileId,
+      file,
+      "user_avatar",
+      { fit: "cover" },
+    );
+    await updateProfile(profileId, { avatar_url: upload.reference });
+    return upload.reference;
   } catch (error) {
     trackError(error, {
       component: "profile.mutations",
       action: "uploadAvatar",
-      metadata: { userId },
+      metadata: { profileId },
     });
     throw error;
   }

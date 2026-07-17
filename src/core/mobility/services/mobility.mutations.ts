@@ -186,20 +186,6 @@ export async function cancelRide(rideId: string, reason?: string): Promise<void>
 }
 
 /**
- * Criar alerta de emergência
- */
-export async function createEmergencyAlert(
-  rideId: string,
-  userId: string,
-  location: { lat: number; lng: number },
-): Promise<void> {
-  await mobilityDb
-    .from("emergency_alerts")
-    .insert({ ride_id: rideId, user_id: userId, location })
-    .throwOnError();
-}
-
-/**
  * Incrementar contador de visualizações
  */
 export async function incrementRideViewCount(rideId: string): Promise<void> {

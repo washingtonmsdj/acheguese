@@ -8,6 +8,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import { resolveMediaAssetSource } from "@/core/media/references/mediaAssetReference";
 import { trackError } from "@/shared/utils/errorTracking";
 import { applyTerritoryFilter } from "@/core/location";
 import { LocationService } from "@/core/location/services/LocationService";
@@ -68,7 +69,11 @@ type ClassifiedQuery = PromiseLike<ClassifiedQueryPayload> & {
 };
 
 function ensureStringArray(value: unknown): string[] {
-  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string");
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => typeof item === "string" ? resolveMediaAssetSource(item) : null)
+      .filter((item): item is string => item !== null);
+  }
   return [];
 }
 

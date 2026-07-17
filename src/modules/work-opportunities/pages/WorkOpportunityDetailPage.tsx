@@ -153,21 +153,15 @@ export default function WorkOpportunityDetailPage() {
         answer,
       );
 
-      const trustResult = await workOpportunityTrustService.submitFeedback({
+      await workOpportunityTrustService.submitFeedback({
         answer,
         opportunityId: data.id,
-        professionalId: data.professional_id,
-        subjectProfileId: data.author_profile_id,
-        actorProfileId: activeProfile?.id ?? null,
       });
-
-      if (!trustResult.ok) {
-        toast.error(trustResult.error ?? "Não foi possível salvar feedback.");
-        return;
-      }
 
       setFeedbackDone(answer);
       toast.success("Feedback enviado. Obrigado por fortalecer a confiança local.");
+    } catch {
+      toast.error("Não foi possível salvar feedback.");
     } finally {
       setFeedbackSaving(null);
     }

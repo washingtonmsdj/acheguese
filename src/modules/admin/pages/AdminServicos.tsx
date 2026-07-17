@@ -69,36 +69,20 @@ interface Professional {
 
 interface Review {
   id: string;
-  professional_id: string;
   rating: number;
-  comment: string;
+  comment: string | null;
   created_at: string;
   reviewer: { name: string; avatar_url: string } | null;
   professional: { name: string } | null;
 }
 
-interface Report {
-  id: string;
-  professional_id: string;
-  motivo: string;
-  detalhes: string;
-  status: string;
-  created_at: string;
-  professional: { name: string } | null;
-}
-
-type ProfessionalSimple = { id: string; name?: string | null };
-type ReviewRecord = {
-  reviewer_profile_id: string;
-  reviewed_profile_id: string;
-} & Record<string, unknown>;
+type ProfessionalSimple = { id: string; name: string };
 
 export default function AdminServicos() {
   const { canModerate, isChecking } = useAdminGuard();
   const { toast } = useToast();
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("todos");
@@ -144,52 +128,23 @@ export default function AdminServicos() {
 
         setReviews(
           revs.map((r) => ({
-            ...r,
-            reviewer: profileMap.get((r as ReviewRecord).reviewer_profile_id) || {
+            id: r.id,
+            rating: r.rating,
+            comment: r.comment,
+            created_at: r.created_at,
+            reviewer: profileMap.get(r.reviewer_profile_id) || {
               name: "Usuário",
               avatar_url: "",
             },
-            professional: proMap.get((r as ReviewRecord).reviewed_profile_id) || {
+            professional: proMap.get(r.reviewed_profile_id) || {
               name: "Desconhecido",
             },
-          })) as unknown as Review[],
+          })),
         );
       } else {
         setReviews([]);
       }
 
-      // Load reports via AdminCommunityService
-      const reps = await adminCommunityService.getProfessionalReports();
-
-      if (reps && reps.length > 0) {
-        const proIds = [...new Set(reps.map((r) => r.professional_id))];
-        const prosData =
-          proIds.length > 0
-            ? await ProfessionalService.getProfessionalsByIdsSimple(
-                proIds as string[],
-              )
-            : [];
-        const proMap = new Map(
-          (prosData || []).map((p: ProfessionalSimple) => [p.id, p] as const),
-        );
-
-        setReports(
-          reps.map((r) => ({
-            ...r,
-            motivo:
-              (r as { motivo?: string; reason?: string }).motivo ??
-              (r as { reason?: string }).reason ??
-              "",
-            detalhes:
-              (r as { detalhes?: string; description?: string }).detalhes ??
-              (r as { description?: string }).description ??
-              "",
-            professional: proMap.get(r.professional_id) || null,
-          })) as unknown as Report[],
-        );
-      } else {
-        setReports([]);
-      }
     } catch (error) {
       toast({
         title: "Erro ao carregar serviços",
@@ -278,23 +233,6 @@ export default function AdminServicos() {
     }
   };
 
-  const resolveReport = async (id: string, status: string) => {
-    setActionLoading(true);
-    try {
-      await ProfessionalService.updateProfessionalReport(id, status);
-      toast({ title: "Denúncia resolvida" });
-      await loadData();
-    } catch {
-      toast({
-        title: "Erro ao atualizar denúncia",
-        description: "Não foi possível concluir esta ação.",
-        variant: "destructive",
-      });
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     if (deleteTarget.type === "professional") {
@@ -320,7 +258,6 @@ export default function AdminServicos() {
   const pendingCount = professionals.filter(
     (p) => p.status === "pendente",
   ).length;
-  const pendingReports = reports.filter((r) => r.status === "pendente").length;
 
   return (
     <div className="space-y-4">
@@ -342,14 +279,6 @@ export default function AdminServicos() {
             )}
           </TabsTrigger>
           <TabsTrigger value="reviews">Avaliações</TabsTrigger>
-          <TabsTrigger value="reports" className="gap-1">
-            Denúncias
-            {pendingReports > 0 && (
-              <Badge variant="destructive" className="h-5 px-1.5">
-                {pendingReports}
-              </Badge>
-            )}
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="professionals" className="space-y-4">
@@ -566,74 +495,6 @@ export default function AdminServicos() {
           </div>
         </TabsContent>
 
-        <TabsContent value="reports" className="space-y-4">
-          <div className="border rounded-lg overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="text-left p-3">Profissional</th>
-                  <th className="text-left p-3">Motivo</th>
-                  <th className="text-left p-3">Detalhes</th>
-                  <th className="text-center p-3">Status</th>
-                  <th className="text-right p-3">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reports.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="p-4 text-center text-muted-foreground"
-                    >
-                      Nenhuma denúncia
-                    </td>
-                  </tr>
-                ) : (
-                  reports.map((rep) => (
-                    <tr key={rep.id} className="border-t">
-                      <td className="p-3">{rep.professional?.name || "-"}</td>
-                      <td className="p-3">{rep.motivo}</td>
-                      <td className="p-3 max-w-xs truncate">
-                        {rep.detalhes || "-"}
-                      </td>
-                      <td className="p-3 text-center">
-                        <Badge
-                          variant={
-                            rep.status === "pendente" ? "secondary" : "default"
-                          }
-                        >
-                          {rep.status}
-                        </Badge>
-                      </td>
-                      <td className="p-3 text-right">
-                        {rep.status === "pendente" && (
-                          <div className="flex justify-end gap-1">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={actionLoading}
-                              onClick={() => resolveReport(rep.id, "resolvido")}
-                            >
-                              Resolver
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              disabled={actionLoading}
-                              onClick={() => resolveReport(rep.id, "ignorado")}
-                            >
-                              Ignorar
-                            </Button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </TabsContent>
       </Tabs>
 
       {/* View professional dialog */}

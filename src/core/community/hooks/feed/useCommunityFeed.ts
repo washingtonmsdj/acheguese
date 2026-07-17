@@ -16,10 +16,10 @@ import type { Post, FeedParams } from "@/core/posts/types";
 import type { LocationScope } from "@/core/community/hooks/feed/useFeedFilters";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { TerritoryFilter } from "@/core/location/types";
+import { communityFeedQueryKeys } from "@/core/feed";
 
 interface UseCommunityFeedOptions {
   locationScope?: LocationScope;
-  context?: "all" | "my_posts" | "saved";
   limit?: number;
   enabled?: boolean;
   /** Território resolvido pela rota — passar quando dentro de TerritorialLayout */
@@ -29,7 +29,7 @@ interface UseCommunityFeedOptions {
 }
 
 export function useCommunityFeedSimple(options: UseCommunityFeedOptions = {}) {
-  const { locationScope = "city", context = "all", limit = 20, routeResolved, territoryFilter } = options;
+  const { locationScope = "city", limit = 20, routeResolved, territoryFilter } = options;
 
   const moduleTerritory = useModuleTerritoryFilter({ routeResolved });
   const filter = territoryFilter ?? moduleTerritory.territoryFilter;
@@ -38,15 +38,9 @@ export function useCommunityFeedSimple(options: UseCommunityFeedOptions = {}) {
   const queryEnabled = filterReady && options.enabled !== false;
 
   const query = useInfiniteQuery({
-    queryKey: [
-      "community-feed",
-      locationScope,
-      context,
-      filterKey,
-    ],
+    queryKey: communityFeedQueryKeys.list(locationScope, filterKey),
     queryFn: async ({ pageParam }: { pageParam?: string }) => {
       const params: FeedParams = {
-        context,
         cursor: pageParam,
         limit,
       };
@@ -72,17 +66,9 @@ export function useCommunityFeedSimple(options: UseCommunityFeedOptions = {}) {
   // Flatten all pages into a single list of posts
   const posts: Post[] = query.data?.pages.flatMap((page) => page.posts) ?? [];
 
-  // Convert to feed items format for backward compatibility
-  const feedItems = posts.map((post) => ({
-    type: "post" as const,
-    data: post,
-    date: post,
-  }));
-
   return {
     data: posts,
     posts,
-    feedItems,
     isLoading: query.isLoading,
     loading: query.isLoading,
     isError: query.isError,

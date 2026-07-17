@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ShieldAlert, Shield, Search, Trash2, Eye, MessageSquare, User } from "lucide-react";
+import { ShieldAlert, Shield, Search, CircleStop, Eye, MessageSquare, User } from "lucide-react";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { adminMessagingService } from "@/core/admin";
 import type { AdminConversationData } from "@/core/admin";
@@ -67,7 +67,7 @@ export default function AdminMensagens() {
   // Block conversation
   const blockMutation = useMutation({
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-      adminMessagingService.blockConversation(id, "admin", reason),
+      adminMessagingService.blockConversation(id, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-conversations"] });
       toast({ title: "Conversa bloqueada com sucesso" });
@@ -99,18 +99,18 @@ export default function AdminMensagens() {
     },
   });
 
-  // Delete conversation
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => adminMessagingService.deleteConversation(id),
+  // Close without destroying the moderation and audit trail.
+  const closeMutation = useMutation({
+    mutationFn: (id: string) => adminMessagingService.closeConversation(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-conversations"] });
-      toast({ title: "Conversa excluída com sucesso" });
+      toast({ title: "Conversa encerrada com sucesso" });
       setSelectedConversation(null);
     },
     onError: (error: unknown) => {
       toast({
-        title: "Erro ao excluir conversa",
-        description: error instanceof Error ? error.message : "Falha ao excluir conversa",
+        title: "Erro ao encerrar conversa",
+        description: error instanceof Error ? error.message : "Falha ao encerrar conversa",
         variant: "destructive",
       });
     },
@@ -131,15 +131,15 @@ export default function AdminMensagens() {
     );
   }
 
-  const handleDelete = async (conversation: AdminConversationData) => {
+  const handleClose = async (conversation: AdminConversationData) => {
     const confirmed = await confirm({
-      title: "Excluir conversa",
-      description: `A conversa ${conversation.id} sera removida da moderacao.`,
-      confirmLabel: "Excluir",
+      title: "Encerrar conversa",
+      description: `A conversa ${conversation.id} sera encerrada e preservada para auditoria.`,
+      confirmLabel: "Encerrar",
       variant: "destructive",
     });
     if (!confirmed) return;
-    deleteMutation.mutate(conversation.id);
+    closeMutation.mutate(conversation.id);
   };
 
   const handleConfirmBlock = () => {
@@ -316,10 +316,10 @@ export default function AdminMensagens() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => handleDelete(conversation)}
-                              disabled={deleteMutation.isPending}
+                              onClick={() => handleClose(conversation)}
+                              disabled={closeMutation.isPending}
                             >
-                              <Trash2 className="h-4 w-4 text-red-400" />
+                              <CircleStop className="h-4 w-4 text-red-400" />
                             </Button>
                           </div>
                         </TableCell>

@@ -1,86 +1,42 @@
-import { supabase } from '@/integrations/supabase';
-import { logger } from '@/shared/utils/logger';
-
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import {
+  BusinessFavoriteStore,
+  type BusinessFavoriteRecord,
+  type ListBusinessFavoritesInput,
+  type PatchBusinessFavoriteInput,
+} from '@/core/favorites/services/BusinessFavoriteStore';
 
 export class BusinessFavoriteService {
-  static async getUserFavoriteBusinessIds(userId: string): Promise<string[]> {
-    try {
-      if (!UUID_REGEX.test(userId)) {
-        return [];
-      }
-
-      const { data, error } = await supabase
-        .from('user_favorite_businesses')
-        .select('business_id')
-        .eq('user_id', userId);
-
-      if (error) {
-        logger.error('[BusinessFavoriteService] Failed to list favorites', error, {
-          userId,
-        });
-        return [];
-      }
-
-      return (data ?? [])
-        .map((item) => item.business_id)
-        .filter((businessId): businessId is string => UUID_REGEX.test(businessId));
-    } catch (error) {
-      logger.error('[BusinessFavoriteService] Error in getUserFavoriteBusinessIds', error);
-      return [];
-    }
+  static listCurrentUserFavorites(
+    input: ListBusinessFavoritesInput = {},
+  ): Promise<BusinessFavoriteRecord[]> {
+    return BusinessFavoriteStore.list(input);
   }
 
-  static async isFavoritedByUser(
-    businessDataId: string,
-    userId: string,
-  ): Promise<boolean> {
-    try {
-      if (!UUID_REGEX.test(businessDataId) || !UUID_REGEX.test(userId)) {
-        return false;
-      }
-
-      const { data, error } = await supabase.rpc('is_business_favorited', {
-        p_business_id: businessDataId,
-        p_user_id: userId,
-      });
-
-      if (error) {
-        logger.error('[BusinessFavoriteService] Failed to check favorite', error, {
-          businessDataId,
-          userId,
-        });
-        return false;
-      }
-
-      return data === true;
-    } catch (error) {
-      logger.error('[BusinessFavoriteService] Error in isFavoritedByUser', error);
-      return false;
-    }
+  static getFavoriteIdsForBusinesses(
+    businessDataIds: string[],
+  ): Promise<string[]> {
+    return BusinessFavoriteStore.getFavoritedBusinessIds(businessDataIds);
   }
 
-  static async toggleFavorite(
+  static isFavorited(businessDataId: string): Promise<boolean> {
+    return BusinessFavoriteStore.isFavorited(businessDataId);
+  }
+
+  static setFavorite(
     businessDataId: string,
-    userId: string,
+    favorited: boolean,
   ): Promise<boolean> {
-    if (!UUID_REGEX.test(businessDataId) || !UUID_REGEX.test(userId)) {
-      throw new Error('IDs invalidos para favorito');
-    }
+    return BusinessFavoriteStore.setFavorited(businessDataId, favorited);
+  }
 
-    const { data, error } = await supabase.rpc('toggle_business_favorite', {
-      p_business_id: businessDataId,
-      p_user_id: userId,
-    });
+  static updatePreferences(
+    favoriteId: string,
+    input: PatchBusinessFavoriteInput,
+  ): Promise<BusinessFavoriteRecord> {
+    return BusinessFavoriteStore.patchPreferences(favoriteId, input);
+  }
 
-    if (error) {
-      logger.error('[BusinessFavoriteService] Failed to toggle favorite', error, {
-        businessDataId,
-        userId,
-      });
-      throw error;
-    }
-
-    return data === true;
+  static getFavoritesCount(businessDataId: string): Promise<number> {
+    return BusinessFavoriteStore.getBusinessFavoritesCount(businessDataId);
   }
 }

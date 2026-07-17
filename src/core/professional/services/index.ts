@@ -19,17 +19,19 @@ export {
 } from "./professional.queries";
 
 export {
-  createProfessional,
-  updateProfessional,
-  deleteProfessional,
   createJob,
   updateProfessionalStatus,
   deleteProfessionalReview,
-  updateProfessionalReport,
   type Professional,
   type CreateProfessionalInput,
   type UpdateProfessionalInput,
 } from "./professional.mutations";
+
+export {
+  createProfessionalWithProfile as createProfessional,
+  updateProfessionalWithProfile as updateProfessional,
+  deleteProfessionalWithProfile as deleteProfessional,
+} from "./professional.profile-lifecycle";
 
 export { ProfessionalService, ProfessionalFacade } from "./ProfessionalService";
 export { ProfessionalLeadService, type ServiceResult } from "./ProfessionalLeadService";

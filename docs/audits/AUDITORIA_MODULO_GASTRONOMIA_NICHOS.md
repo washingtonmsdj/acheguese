@@ -95,8 +95,8 @@ Estado observado em `src/modules/business/gastronomy/niches/registry.ts`:
 - `src/modules/business/gastronomy/components/hours/OperationConfigForm.tsx`: usa `updateConfig`/`isUpdating` do hook canonico para salvar pausa e tempo operacional.
 - `src/modules/business/gastronomy/__tests__/GastronomyOperationalSSOT.test.ts`: teste de contrato para impedir regressao do fluxo operacional SSOT de gastronomia.
 - `tests/e2e/gastronomy-operational.spec.ts`: Playwright autenticado para validar cardapio da loja quando houver `E2E_GASTRONOMY_BUSINESS_ID` real.
-- `src/core/trust/services/TrustEventService.ts`: servico canonico para eventos de confianca operacional.
-- `src/core/trust/services/TrustPolicyService.ts`: politica canonica de score, reincidencia, risco e bloqueio de chamados criticos.
+- `src/core/trust/services/OperationalTrustCommandService.ts`: adapters tipados para comandos server-owned de confianca operacional.
+- `src/core/trust/services/TrustPolicyReadService.ts`: leitura da politica autoritativa calculada no banco; a UI nao autoriza operacoes.
 - `src/core/trust/components/TrustFeedbackForm.tsx`: formulario reutilizavel para feedback privado por contexto/participante.
 - `src/core/admin/components/TrustEventsQueue.tsx`: fila admin exibe eventos, score por perfil, reincidencia e acao recomendada.
 - `trust_admin_actions`: tabela de auditoria para avisos, restricoes temporarias e desbloqueios aplicados pelo admin.
@@ -106,7 +106,7 @@ Estado observado em `src/modules/business/gastronomy/niches/registry.ts`:
 - `src/modules/mobility/hooks/useDriverDashboardBase.ts`: ofertas abertas de motoboy sao ordenadas por prioridade ajustada de confianca.
 - `src/modules/mobility/components/driver/DriverRidesLayout.tsx` e `DriverDeliveriesLayout.tsx`: UI mostra quando a solicitacao tem prioridade reduzida por confianca.
 - `src/modules/business/gastronomy/services/DeliveryService.ts`: aceite de entrega canonica bloqueia motoboy em risco critico.
-- `supabase/migrations/20260506090000_create_trust_events.sql`: tabela `trust_events` com RLS e fila admin.
+- `supabase/migrations/20260715109000_consolidate_trust_commands.sql`: comandos, guards, politica, fila admin e gates transacionais de Trust.
 - `src/modules/business/gastronomy/billing/legacy/StripeService.ts`: arquivado fora do export publico; SSOT atual em `@/core/billing`.
 - `src/modules/business/gastronomy/billing/legacy/permissions.ts`: arquivado fora do export publico; SSOT atual em `@/core/billing`.
 - `src/modules/business/gastronomy/billing/legacy/featureFlags.ts`: arquivado fora do export publico; SSOT atual em `@/core/billing`.

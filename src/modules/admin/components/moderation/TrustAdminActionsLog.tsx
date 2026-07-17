@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { RefreshCw, Search } from "lucide-react";
-import { TrustEventService, type TrustAdminAction } from "@/core/trust";
+import { TrustAdminService, type TrustAdminAction } from "@/core/trust";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
@@ -34,11 +34,7 @@ export function TrustAdminActionsLog() {
   const [search, setSearch] = useState("");
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["admin", "trust-admin-actions-log"],
-    queryFn: async () => {
-      const result = await TrustEventService.listAdminActions(200);
-      if (result.error) throw new Error(result.error);
-      return result.data;
-    },
+    queryFn: () => TrustAdminService.listActions({ limit: 200 }),
     staleTime: 30_000,
   });
 

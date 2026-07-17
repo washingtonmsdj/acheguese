@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-09T13:30:43.013Z",
+  "generatedAt": "2026-07-15T21:17:41.484Z",
   "inventories": [
     {
       "domain": "core/routing/location/public-identity",
@@ -8,10 +8,12 @@
         "src/core/city/services/CityService.ts",
         "src/core/governance/services/TerritoryGovernanceService.ts",
         "src/core/landing/hooks/createLandingFeaturedService.ts",
+        "src/core/landing/services/HomeCommunityRankingService.ts",
         "src/core/landing/services/HomeDiscoveryService.ts",
         "src/core/landing/services/LandingFeaturedService.ts",
         "src/core/landing/services/LandingService.ts",
         "src/core/landing/services/NeighborhoodStreamModelService.ts",
+        "src/core/landing/services/__tests__/HomeCommunityRankingService.spec.ts",
         "src/core/landing/services/__tests__/HomeDiscoveryService.spec.ts",
         "src/core/landing/services/index.ts",
         "src/core/landing/services/landing.queries.ts",
@@ -217,7 +219,6 @@
       "officialHooks": [
         "src/core/family/hooks/useFamily.ts",
         "src/core/profiles/hooks/useActiveProfile.ts",
-        "src/core/profiles/hooks/useCommunityProfile.ts",
         "src/core/profiles/hooks/useContaWorkspace.ts",
         "src/core/profiles/hooks/useModuleProfile.ts",
         "src/core/profiles/hooks/usePrivateProfileWorkspace.ts",
@@ -237,7 +238,6 @@
         "src/modules/profile/hooks/useProfileHub.ts",
         "src/modules/profile/hooks/useSavedPosts.ts",
         "src/modules/profile/hooks/useUserActivity.ts",
-        "src/modules/profile/hooks/useUserMentions.ts",
         "src/modules/profile/hooks/useUserPosts.ts"
       ],
       "legacyHooks": [],
@@ -258,7 +258,6 @@
     {
       "domain": "admin",
       "services": [
-        "src/core/admin/services/AdminAlertsService.ts",
         "src/core/admin/services/AdminBusinessService.ts",
         "src/core/admin/services/AdminClassifiedsService.ts",
         "src/core/admin/services/AdminCommunityAlertsService.ts",
@@ -275,7 +274,6 @@
         "src/core/admin/services/AdminMessagingService.ts",
         "src/core/admin/services/AdminMobilityRuntimeService.ts",
         "src/core/admin/services/AdminMobilityService.ts",
-        "src/core/admin/services/AdminModerationService.ts",
         "src/core/admin/services/AdminMotoboyOperationsService.ts",
         "src/core/admin/services/AdminNotificationsService.ts",
         "src/core/admin/services/AdminPickupPointsService.ts",
@@ -296,10 +294,12 @@
         "src/core/admin/services/AdminUserService.ts",
         "src/core/admin/services/AdminVagasRuntimeService.ts",
         "src/core/admin/services/AdminVagasService.ts",
+        "src/core/admin/services/CommunityRpcOperationsService.ts",
         "src/core/admin/services/MobilityAdminQueryService.ts",
         "src/core/admin/services/SiteSettingsService.ts",
         "src/core/admin/services/__tests__/AdminMapGovernanceService.spec.ts",
         "src/core/admin/services/__tests__/AdminNotificationsService.spec.ts",
+        "src/core/admin/services/__tests__/CommunityRpcOperationsService.spec.ts",
         "src/core/admin/services/admin.queries.ts",
         "src/core/admin/services/index.ts",
         "src/core/admin/services/types.ts",
@@ -318,6 +318,7 @@
         "src/core/verification/pages/AdminVerificationsPage.tsx",
         "src/modules/admin/pages/AdminAnalytics.tsx",
         "src/modules/admin/pages/AdminAnalyticsMobilidade.tsx",
+        "src/modules/admin/pages/AdminAnuncios.tsx",
         "src/modules/admin/pages/AdminAssinaturas.tsx",
         "src/modules/admin/pages/AdminBillingPlansEditor.tsx",
         "src/modules/admin/pages/AdminBranding.tsx",
@@ -335,15 +336,12 @@
         "src/modules/admin/pages/AdminDashboardCharts.tsx",
         "src/modules/admin/pages/AdminEmpresas.tsx",
         "src/modules/admin/pages/AdminEventos.tsx",
-        "src/modules/admin/pages/AdminGamificacao.tsx",
         "src/modules/admin/pages/AdminGastronomia.tsx",
         "src/modules/admin/pages/AdminHighlights.tsx",
         "src/modules/admin/pages/AdminLayout.tsx",
         "src/modules/admin/pages/AdminMapa.tsx",
         "src/modules/admin/pages/AdminMensagens.tsx",
         "src/modules/admin/pages/AdminModeracao.tsx",
-        "src/modules/admin/pages/AdminModeracaoCompleta.tsx",
-        "src/modules/admin/pages/AdminModeracaoComunidade.tsx",
         "src/modules/admin/pages/AdminMotoboyOperations.tsx",
         "src/modules/admin/pages/AdminNotifications.tsx",
         "src/modules/admin/pages/AdminOperacoes.tsx",
@@ -369,7 +367,6 @@
         "src/modules/admin/pages/AdminVagasStatsCards.tsx",
         "src/modules/admin/pages/AdminVagasStatusBadge.tsx",
         "src/modules/admin/pages/AdminVerificacoes.tsx",
-        "src/modules/admin/pages/AdminZeladoria.tsx",
         "src/modules/admin/pages/BannersPage.tsx",
         "src/modules/admin/pages/HighlightForm.tsx",
         "src/modules/admin/pages/LocationsAdminPage.tsx",
@@ -405,14 +402,11 @@
       ],
       "routes": [],
       "tables": [
-        "admin_pending_comment_reports",
-        "admin_pending_post_reports",
         "business_data",
         "classified_categories",
         "classified_reports",
         "classified_subcategories",
         "classifieds",
-        "community_reports",
         "conversations",
         "driver_complete_profile",
         "events",
@@ -431,11 +425,18 @@
         "user_subscriptions"
       ],
       "rpcs": [
-        "increment_promotion_usage"
+        "get_community_alert_admin_stats",
+        "get_community_issue_admin_stats",
+        "get_community_rpc_operational_metrics",
+        "get_community_rpc_slo_status",
+        "increment_promotion_usage",
+        "list_community_alert_audit",
+        "list_community_issue_audit"
       ],
       "officialHooks": [
         "src/core/admin/drivers/hooks/useDriverManagement.ts",
         "src/core/admin/hooks/useAdminGuard.ts",
+        "src/core/admin/hooks/useCommunityRpcOperations.ts",
         "src/core/admin/hooks/useRealtimeMetrics.ts",
         "src/core/admin/hooks/useReputationStats.ts",
         "src/core/admin/hooks/useSiteSettings.ts",
@@ -445,8 +446,6 @@
         "src/modules/admin/hooks/useAdminTerritoryManagement.ts",
         "src/modules/admin/hooks/useAdminUserDetail.ts",
         "src/modules/admin/hooks/useLocationOptions.ts",
-        "src/modules/admin/hooks/useModeration.ts",
-        "src/modules/admin/hooks/useModerationFilters.ts",
         "src/modules/admin/hooks/usePricingAuditLog.ts",
         "src/modules/admin/hooks/usePricingRules.ts",
         "src/modules/admin/hooks/useTerritorialGroups.ts"
@@ -473,15 +472,21 @@
       "domain": "business",
       "services": [
         "src/core/business/BusinessHoursService.ts",
+        "src/core/business/promotions/services/AdCampaignAdminService.ts",
+        "src/core/business/promotions/services/AdCampaignRequestService.ts",
         "src/core/business/promotions/services/AdContextService.ts",
         "src/core/business/promotions/services/AdDeliveryService.ts",
         "src/core/business/promotions/services/AdEligibilityService.ts",
+        "src/core/business/promotions/services/__tests__/AdCampaignAdminService.spec.ts",
+        "src/core/business/promotions/services/__tests__/AdCampaignRequestService.spec.ts",
+        "src/core/business/promotions/services/__tests__/AdEligibilityService.spec.ts",
         "src/core/business/promotions/services/index.ts",
         "src/core/business/services/BusinessCanonicalAdapter.ts",
         "src/core/business/services/BusinessFavoriteService.ts",
         "src/core/business/services/BusinessManagementService.ts",
         "src/core/business/services/BusinessOwnershipService.ts",
         "src/core/business/services/BusinessRecommendationService.ts",
+        "src/core/business/services/BusinessReviewService.ts",
         "src/core/business/services/BusinessService.ts",
         "src/core/business/services/BusinessSettingsService.ts",
         "src/core/business/services/BusinessUrlService.ts",
@@ -524,7 +529,6 @@
         "src/modules/business/gastronomy/niches/services/NicheConfigService.ts",
         "src/modules/business/gastronomy/niches/versioning/AdminSectionVisibilityService.ts",
         "src/modules/business/gastronomy/niches/versioning/NicheVersioningService.ts",
-        "src/modules/business/gastronomy/services/BusinessReviewsRpcService.ts",
         "src/modules/business/gastronomy/services/DeliveryAreaService.ts",
         "src/modules/business/gastronomy/services/GastronomyCheckoutService.spec.ts",
         "src/modules/business/gastronomy/services/GastronomyCheckoutService.ts",
@@ -536,6 +540,7 @@
         "src/modules/business/gastronomy/services/OrderService.confirmOrderPayment.spec.ts",
         "src/modules/business/gastronomy/services/OrderService.ts",
         "src/modules/business/gastronomy/services/OrderService.updateInternalNotes.spec.ts",
+        "src/modules/business/gastronomy/services/OrderTrustService.ts",
         "src/modules/business/gastronomy/services/activity.queries.ts",
         "src/modules/business/gastronomy/services/favorites.queries.ts",
         "src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts",
@@ -558,6 +563,7 @@
       "pages": [
         "src/core/business/pages/CategoryBusinessPage.tsx",
         "src/modules/business/company/pages/EmpresaDetailLayout.tsx",
+        "src/modules/business/dashboard/pages/BusinessAdsPage.tsx",
         "src/modules/business/dashboard/pages/BusinessAnalyticsPage.tsx",
         "src/modules/business/dashboard/pages/BusinessDashboardShellPage.tsx",
         "src/modules/business/dashboard/pages/BusinessDetailsPage.tsx",
@@ -666,7 +672,6 @@
         "menu_items",
         "menu_promotions",
         "menus",
-        "orders",
         "pizza_doughs",
         "pizza_edges",
         "pizza_flavors",
@@ -675,12 +680,9 @@
         "pizza_sizes",
         "profile_members",
         "public_business_search",
-        "review_helpfulness",
-        "review_reports",
         "reviews",
         "territorial_group_members",
-        "trust_events",
-        "user_favorite_businesses"
+        "trust_events"
       ],
       "rpcs": [
         "check_delivery_eligibility",
@@ -689,10 +691,9 @@
         "get_business_views_summary",
         "get_delivery_areas_summary",
         "get_recent_gastronomy_activities",
-        "is_business_favorited",
         "is_business_recommended",
+        "request_ad_campaign",
         "rpc_get_location_descendants_ids",
-        "toggle_business_favorite",
         "toggle_business_recommendation"
       ],
       "officialHooks": [
@@ -824,7 +825,6 @@
         "src/modules/business/gastronomy/niches/services/NicheConfigService.ts",
         "src/modules/business/gastronomy/niches/versioning/AdminSectionVisibilityService.ts",
         "src/modules/business/gastronomy/niches/versioning/NicheVersioningService.ts",
-        "src/modules/business/gastronomy/services/BusinessReviewsRpcService.ts",
         "src/modules/business/gastronomy/services/DeliveryAreaService.ts",
         "src/modules/business/gastronomy/services/GastronomyCheckoutService.spec.ts",
         "src/modules/business/gastronomy/services/GastronomyCheckoutService.ts",
@@ -836,6 +836,7 @@
         "src/modules/business/gastronomy/services/OrderService.confirmOrderPayment.spec.ts",
         "src/modules/business/gastronomy/services/OrderService.ts",
         "src/modules/business/gastronomy/services/OrderService.updateInternalNotes.spec.ts",
+        "src/modules/business/gastronomy/services/OrderTrustService.ts",
         "src/modules/business/gastronomy/services/activity.queries.ts",
         "src/modules/business/gastronomy/services/favorites.queries.ts",
         "src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts",
@@ -896,18 +897,14 @@
         "menu_items",
         "menu_promotions",
         "menus",
-        "orders",
         "pizza_doughs",
         "pizza_edges",
         "pizza_flavors",
         "pizza_menu_items",
         "pizza_niche_configs",
         "pizza_sizes",
-        "review_helpfulness",
-        "review_reports",
         "reviews",
-        "trust_events",
-        "user_favorite_businesses"
+        "trust_events"
       ],
       "rpcs": [
         "check_delivery_eligibility",
@@ -915,9 +912,7 @@
         "get_business_views_last_7_days",
         "get_business_views_summary",
         "get_delivery_areas_summary",
-        "get_recent_gastronomy_activities",
-        "is_business_favorited",
-        "toggle_business_favorite"
+        "get_recent_gastronomy_activities"
       ],
       "officialHooks": [
         "src/core/verticals/gastronomy/hooks/useGastronomyStatus.ts",
@@ -1077,7 +1072,6 @@
         "location_aliases",
         "locations",
         "professional_data",
-        "professional_lead_events",
         "professional_lead_messages",
         "professional_lead_quotes",
         "professional_leads",
@@ -1085,7 +1079,10 @@
         "profile_members",
         "vagas"
       ],
-      "rpcs": [],
+      "rpcs": [
+        "create_vaga_report",
+        "moderate_vaga_report"
+      ],
       "officialHooks": [
         "src/core/professional/hooks/useServiceUrls.ts",
         "src/core/service-areas/hooks/useServiceAreas.ts",
@@ -1187,7 +1184,15 @@
       "tables": [
         "profiles"
       ],
-      "rpcs": [],
+      "rpcs": [
+        "create_community_issue",
+        "list_community_groups_page",
+        "mark_best_answer",
+        "mutate_community_alert",
+        "mutate_community_issue",
+        "toggle_community_issue_support",
+        "toggle_question_answer_like"
+      ],
       "officialHooks": [
         "src/core/community-experience/hooks/useCommunityProfile.ts"
       ],
@@ -1197,7 +1202,9 @@
         "docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
         "plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md"
       ],
-      "directDbOutsideServices": [],
+      "directDbOutsideServices": [
+        "src/core/community/access/__tests__/CommunitySocialProductionHardening.spec.ts"
+      ],
       "crossModuleImports": [],
       "duplicatedServices": [],
       "duplicatedTypes": []
@@ -1209,30 +1216,29 @@
         "src/core/comments/services/comments.mutations.ts",
         "src/core/comments/services/comments.queries.ts",
         "src/core/comments/services/index.ts",
+        "src/core/favorites/services/BusinessFavoriteStore.ts",
         "src/core/favorites/services/businessFavoriteAdapters.ts",
         "src/core/favorites/services/favorites.mutations.ts",
         "src/core/favorites/services/favorites.queries.ts",
         "src/core/favorites/services/favoritesBusinessContract.spec.ts",
         "src/core/favorites/services/index.ts",
-        "src/core/feed/services/FeedService.ts",
-        "src/core/feed/services/index.ts",
         "src/core/posts/services/PostLinkEligibilityService.ts",
         "src/core/posts/services/PostService.ts",
+        "src/core/posts/services/__tests__/postFeedCursor.spec.ts",
         "src/core/posts/services/index.ts",
         "src/core/posts/services/polls.mutations.ts",
         "src/core/posts/services/polls.queries.ts",
         "src/core/posts/services/post.service.rules.ts",
         "src/core/posts/services/post.service.runtime.ts",
+        "src/core/posts/services/postFeedCursor.ts",
         "src/core/posts/services/posts.alerts.queries.ts",
         "src/core/posts/services/posts.feed.queries.ts",
         "src/core/posts/services/posts.media.queries.ts",
         "src/core/posts/services/posts.mutations.ts",
         "src/core/posts/services/posts.queries.ts",
         "src/core/posts/services/posts.user.queries.ts",
-        "src/core/social/services/BlockService.ts",
         "src/core/social/services/GroupService.ts",
         "src/core/social/services/SocialGroupInteractionsService.ts",
-        "src/core/social/services/SocialInteractionsService.ts",
         "src/core/social/services/index.ts",
         "src/core/social/services/socialInteractionStats.queries.ts"
       ],
@@ -1246,29 +1252,26 @@
         "community_poll_options",
         "community_poll_votes",
         "community_polls",
-        "community_post_mentions",
-        "followed_posts",
         "group_members_new",
         "locations",
         "post_likes_new",
         "posts",
-        "saved_posts_new",
-        "user_favorite_businesses"
+        "saved_posts_new"
       ],
       "rpcs": [
-        "add_pontos",
-        "create_community_group",
         "get_community_group_by_id",
-        "get_community_groups",
-        "increment_group_members",
-        "increment_user_reputation"
+        "get_current_user_business_favorite_ids",
+        "get_current_user_business_favorites",
+        "is_current_user_business_favorite",
+        "list_group_message_reaction_state",
+        "patch_current_user_business_favorite",
+        "set_current_user_business_favorite",
+        "toggle_group_message_like"
       ],
       "officialHooks": [
-        "src/core/comments/hooks/useComments.ts",
         "src/core/community-feed/hooks/useCommunityFeed.ts",
         "src/core/favorites/hooks/useFavorites.ts",
-        "src/core/posts/hooks/usePostActions.ts",
-        "src/core/social/hooks/useCommunityInteractions.ts"
+        "src/core/posts/hooks/usePostActions.ts"
       ],
       "legacyHooks": [],
       "legacyFiles": [],
@@ -1288,17 +1291,17 @@
         "src/core/alerts/services/AlertService.ts",
         "src/core/alerts/services/index.ts",
         "src/core/community/alerts/services/AlertModerationService.ts",
-        "src/core/community/alerts/services/AlertNotificationService.ts",
         "src/core/community/alerts/services/CommunityAlertService.ts",
         "src/core/community/alerts/services/index.ts"
       ],
       "pages": [],
       "routes": [],
       "tables": [
-        "community_alert_reports",
-        "community_alerts"
+        "community_alert_reports"
       ],
-      "rpcs": [],
+      "rpcs": [
+        "mutate_community_alert"
+      ],
       "officialHooks": [
         "src/core/alerts/hooks/useAlerts.ts",
         "src/core/alerts/hooks/useConfirmAlert.ts",
@@ -1326,11 +1329,14 @@
       ],
       "routes": [],
       "tables": [
-        "community_issue_audit",
         "community_issue_reports",
         "community_issue_supports"
       ],
-      "rpcs": [],
+      "rpcs": [
+        "create_community_issue",
+        "mutate_community_issue",
+        "toggle_community_issue_support"
+      ],
       "officialHooks": [
         "src/core/community/issues/hooks/useCreateIssue.ts",
         "src/core/community/issues/hooks/useIssueSupport.ts",
@@ -1349,10 +1355,8 @@
     {
       "domain": "community-groups",
       "services": [
-        "src/core/social/services/BlockService.ts",
         "src/core/social/services/GroupService.ts",
         "src/core/social/services/SocialGroupInteractionsService.ts",
-        "src/core/social/services/SocialInteractionsService.ts",
         "src/core/social/services/index.ts",
         "src/core/social/services/socialInteractionStats.queries.ts"
       ],
@@ -1367,14 +1371,11 @@
         "saved_posts_new"
       ],
       "rpcs": [
-        "create_community_group",
         "get_community_group_by_id",
-        "get_community_groups",
-        "increment_group_members"
+        "list_group_message_reaction_state",
+        "toggle_group_message_like"
       ],
-      "officialHooks": [
-        "src/core/social/hooks/useCommunityInteractions.ts"
-      ],
+      "officialHooks": [],
       "legacyHooks": [],
       "legacyFiles": [],
       "docs": [
@@ -1388,45 +1389,48 @@
     {
       "domain": "community-events",
       "services": [
-        "src/core/community/services/CivicReportService.ts",
-        "src/core/community/services/CommunityEventsRuntimeService.ts",
-        "src/core/community/services/CommunityGamificationService.ts",
-        "src/core/community/services/CommunityGroupsService.ts",
-        "src/core/community/services/CommunityLocationService.ts",
-        "src/core/community/services/CommunityQAService.ts",
-        "src/core/community/services/CommunityRolloutService.ts",
-        "src/core/community/services/CommunityRpcService.ts",
-        "src/core/community/services/CommunityService.ts",
-        "src/core/community/services/LostFoundRuntimeService.ts",
-        "src/core/community/services/SponsoredAdsRuntimeService.ts",
-        "src/core/community/services/community.types.ts",
-        "src/core/community/services/index.ts"
+        "src/core/verticals/events/services/EventLinkEligibilityService.ts",
+        "src/core/verticals/events/services/EventMutationService.ts",
+        "src/core/verticals/events/services/EventReadService.ts",
+        "src/core/verticals/events/services/EventRuntimeService.ts",
+        "src/features/events/services/EventEngagementService.ts"
       ],
-      "pages": [],
+      "pages": [
+        "src/features/events/pages/EventDetailPage.tsx",
+        "src/features/events/pages/EventsCalendarPage.tsx",
+        "src/features/events/pages/EventsFavoritesPage.tsx",
+        "src/features/events/pages/EventsListPage.model.ts",
+        "src/features/events/pages/EventsListPage.tsx",
+        "src/features/events/pages/EventsListResults.tsx",
+        "src/features/events/pages/EventsMapPage.tsx",
+        "src/features/events/pages/EventsOrganizerAnalyticsPage.tsx",
+        "src/features/events/pages/EventsOrganizerDashboard.model.ts",
+        "src/features/events/pages/EventsOrganizerDashboard.tsx",
+        "src/features/events/pages/EventsOrganizerDashboardSections.tsx",
+        "src/features/events/pages/EventsOrganizerForm.model.ts",
+        "src/features/events/pages/EventsOrganizerForm.tsx",
+        "src/features/events/pages/EventsOrganizerFormStepContent.tsx",
+        "src/features/events/pages/EventsOrganizerStepSeoExtras.tsx"
+      ],
       "routes": [],
       "tables": [
-        "ad_campaigns",
-        "civic_engagement_scores",
-        "civic_report_comments",
-        "civic_reports",
-        "community_badges",
-        "community_interactions",
-        "community_profiles",
-        "community_questions",
-        "groups",
-        "question_answer_likes",
-        "question_answers"
+        "event_participants",
+        "events"
       ],
-      "rpcs": [
-        "increment_civic_upvote"
+      "rpcs": [],
+      "officialHooks": [
+        "src/features/events/hooks/useEventTerritoryFilter.ts",
+        "src/features/events/hooks/useFavorites.ts"
       ],
-      "officialHooks": [],
       "legacyHooks": [],
       "legacyFiles": [],
       "docs": [
         "src/modules/community-events/README.md"
       ],
-      "directDbOutsideServices": [],
+      "directDbOutsideServices": [
+        "src/core/verticals/events/mappers.ts",
+        "src/core/verticals/events/types.ts"
+      ],
       "crossModuleImports": [],
       "duplicatedServices": [],
       "duplicatedTypes": []
@@ -1444,22 +1448,20 @@
         "src/core/community-lost-found/services/LostFoundService.ts",
         "src/core/community-lost-found/services/index.ts",
         "src/core/community/alerts/services/AlertModerationService.ts",
-        "src/core/community/alerts/services/AlertNotificationService.ts",
         "src/core/community/alerts/services/CommunityAlertService.ts",
         "src/core/community/alerts/services/index.ts",
         "src/core/community/issues/services/CommunityIssueService.ts",
+        "src/core/community/moderation/CommunityContentModerationService.ts",
+        "src/core/community/moderation/CommunityReportService.ts",
         "src/core/community/services/CivicReportService.ts",
         "src/core/community/services/CommunityEventsRuntimeService.ts",
-        "src/core/community/services/CommunityGamificationService.ts",
         "src/core/community/services/CommunityGroupsService.ts",
         "src/core/community/services/CommunityLocationService.ts",
         "src/core/community/services/CommunityQAService.ts",
         "src/core/community/services/CommunityRolloutService.ts",
         "src/core/community/services/CommunityRpcService.ts",
         "src/core/community/services/CommunityService.ts",
-        "src/core/community/services/LostFoundRuntimeService.ts",
         "src/core/community/services/SponsoredAdsRuntimeService.ts",
-        "src/core/community/services/community.types.ts",
         "src/core/community/services/index.ts"
       ],
       "pages": [
@@ -1467,9 +1469,6 @@
         "src/core/community-feed/pages/NovoPostPage.tsx",
         "src/core/community-groups/pages/GrupoDetailPage.tsx",
         "src/core/community-groups/pages/GruposPage.tsx",
-        "src/core/community-lost-found/pages/AchadoPerdidoDetailPage.tsx",
-        "src/core/community-lost-found/pages/AchadosPerdidosPage.tsx",
-        "src/core/community-lost-found/pages/NovoAchadoPerdidoPage.tsx",
         "src/core/community-recommendations/pages/NovaRecomendacaoPage.tsx",
         "src/core/community-recommendations/pages/RecomendacaoDetailPage.tsx",
         "src/core/community-recommendations/pages/RecomendacoesPage.tsx",
@@ -1492,26 +1491,32 @@
       ],
       "routes": [],
       "tables": [
-        "ad_campaigns",
-        "civic_engagement_scores",
+        "admin_pending_comment_reports",
+        "admin_pending_post_reports",
         "civic_report_comments",
         "civic_reports",
         "community_alert_reports",
-        "community_alerts",
-        "community_badges",
-        "community_interactions",
-        "community_issue_audit",
         "community_issue_reports",
         "community_issue_supports",
-        "community_profiles",
         "community_questions",
+        "community_reports",
         "groups",
         "profiles",
         "question_answer_likes",
         "question_answers"
       ],
       "rpcs": [
-        "increment_civic_upvote"
+        "create_community_issue",
+        "get_community_moderation_stats",
+        "increment_civic_upvote",
+        "list_community_groups_page",
+        "list_community_social_audit_events",
+        "mark_best_answer",
+        "mutate_community_alert",
+        "mutate_community_issue",
+        "review_community_content_reports",
+        "toggle_community_issue_support",
+        "toggle_question_answer_like"
       ],
       "officialHooks": [
         "src/core/community-experience/hooks/useCommunityProfile.ts",
@@ -1521,56 +1526,45 @@
         "src/core/community/alerts/hooks/useAlerts.ts",
         "src/core/community/alerts/hooks/useAlertsBySpatialRadius.ts",
         "src/core/community/alerts/hooks/useCreateAlert.ts",
-        "src/core/community/hooks/useAddComment.ts",
         "src/core/community/hooks/useCivicReports.ts",
         "src/core/community/hooks/useCommentActions.ts",
         "src/core/community/hooks/useCommentInteractions.ts",
         "src/core/community/hooks/useComments.ts",
-        "src/core/community/hooks/useCommunity.ts",
         "src/core/community/hooks/useCommunityFiltersAAA.ts",
         "src/core/community/hooks/useCommunityImageUpload.ts",
-        "src/core/community/hooks/useCommunityInteractions.ts",
         "src/core/community/hooks/useCommunityKeyboard.ts",
         "src/core/community/hooks/useCommunityLocation.ts",
-        "src/core/community/hooks/useCommunityProfile.ts",
         "src/core/community/hooks/useCommunityRollout.ts",
         "src/core/community/hooks/useCommunityScopeResolver.ts",
         "src/core/community/hooks/useCommunityTerritory.ts",
         "src/core/community/hooks/useCommunityUrls.ts",
-        "src/core/community/hooks/useDeleteComment.ts",
         "src/core/community/hooks/useDirectMessages.ts",
         "src/core/community/hooks/useEventos.ts",
         "src/core/community/hooks/useFavoriteGroups.ts",
-        "src/core/community/hooks/useFollowUser.ts",
-        "src/core/community/hooks/useGroupChat.ts",
         "src/core/community/hooks/useGroupQueries.ts",
         "src/core/community/hooks/useGroups.ts",
         "src/core/community/hooks/useGrupos.ts",
         "src/core/community/hooks/useMessageModal.ts",
         "src/core/community/hooks/useModeration.ts",
-        "src/core/community/hooks/useNotifications.ts",
         "src/core/community/hooks/useNovaRecomendacao.ts",
         "src/core/community/hooks/useNovoPost.ts",
         "src/core/community/hooks/usePollForm.ts",
         "src/core/community/hooks/usePollVote.ts",
         "src/core/community/hooks/usePopularTags.ts",
         "src/core/community/hooks/usePost.ts",
-        "src/core/community/hooks/usePostActions.ts",
         "src/core/community/hooks/usePostById.ts",
         "src/core/community/hooks/usePostCreation.ts",
-        "src/core/community/hooks/useRankingUsers.ts",
         "src/core/community/hooks/useRecomendacaoDetail.ts",
         "src/core/community/hooks/useRecomendacoes.ts",
-        "src/core/community/hooks/useSearch.ts",
         "src/core/community/hooks/useSponsoredAds.ts",
         "src/core/community/hooks/useTrendingTopics.ts",
-        "src/core/community/hooks/useUnlikePost.ts",
-        "src/core/community/hooks/useUnsavePost.ts",
-        "src/core/community/hooks/useUserReputation.ts",
         "src/core/community/hooks/useUserType.ts",
         "src/core/community/issues/hooks/useCreateIssue.ts",
         "src/core/community/issues/hooks/useIssueSupport.ts",
-        "src/core/community/issues/hooks/useIssues.ts"
+        "src/core/community/issues/hooks/useIssues.ts",
+        "src/core/community/moderation/hooks/useCommunityModerationStats.ts",
+        "src/core/community/moderation/hooks/usePendingComments.ts",
+        "src/core/community/moderation/hooks/usePendingPosts.ts"
       ],
       "legacyHooks": [],
       "legacyFiles": [
@@ -1580,7 +1574,12 @@
         "docs/qa",
         "src/modules/community-recommendations/README.md"
       ],
-      "directDbOutsideServices": [],
+      "directDbOutsideServices": [
+        "src/core/community/access/__tests__/CommunitySocialProductionHardening.spec.ts",
+        "src/core/community/audit/CommunitySocialAuditReader.ts",
+        "src/core/community/moderation/CommunityContentModerationService.ts",
+        "src/core/community/moderation/CommunityReportService.ts"
+      ],
       "crossModuleImports": [],
       "duplicatedServices": [],
       "duplicatedTypes": []
@@ -1592,39 +1591,30 @@
         "src/core/community-lost-found/services/index.ts",
         "src/core/community/services/CivicReportService.ts",
         "src/core/community/services/CommunityEventsRuntimeService.ts",
-        "src/core/community/services/CommunityGamificationService.ts",
         "src/core/community/services/CommunityGroupsService.ts",
         "src/core/community/services/CommunityLocationService.ts",
         "src/core/community/services/CommunityQAService.ts",
         "src/core/community/services/CommunityRolloutService.ts",
         "src/core/community/services/CommunityRpcService.ts",
         "src/core/community/services/CommunityService.ts",
-        "src/core/community/services/LostFoundRuntimeService.ts",
         "src/core/community/services/SponsoredAdsRuntimeService.ts",
-        "src/core/community/services/community.types.ts",
         "src/core/community/services/index.ts"
       ],
-      "pages": [
-        "src/core/community-lost-found/pages/AchadoPerdidoDetailPage.tsx",
-        "src/core/community-lost-found/pages/AchadosPerdidosPage.tsx",
-        "src/core/community-lost-found/pages/NovoAchadoPerdidoPage.tsx"
-      ],
+      "pages": [],
       "routes": [],
       "tables": [
-        "ad_campaigns",
-        "civic_engagement_scores",
         "civic_report_comments",
         "civic_reports",
-        "community_badges",
-        "community_interactions",
-        "community_profiles",
         "community_questions",
         "groups",
         "question_answer_likes",
         "question_answers"
       ],
       "rpcs": [
-        "increment_civic_upvote"
+        "increment_civic_upvote",
+        "list_community_groups_page",
+        "mark_best_answer",
+        "toggle_question_answer_like"
       ],
       "officialHooks": [],
       "legacyHooks": [],
@@ -1774,10 +1764,13 @@
         "classifieds",
         "locations",
         "profile_members",
-        "trust_events",
         "vagas"
       ],
       "rpcs": [
+        "create_classified_report",
+        "create_vaga_report",
+        "moderate_classified_report",
+        "moderate_vaga_report",
         "rpc_get_location_descendants_ids"
       ],
       "officialHooks": [
@@ -1826,7 +1819,6 @@
         "src/modules/mobility/delivery/order/OrderDraftService.ts",
         "src/modules/mobility/delivery/payment-context/PaymentContextService.ts",
         "src/modules/mobility/delivery/services/OrderDeliveryLinkService.ts",
-        "src/modules/mobility/delivery/services/OrderDeliveryNotificationService.ts",
         "src/modules/mobility/delivery/services/OrderDeliverySSOTService.ts",
         "src/modules/mobility/delivery/services/OrderDeliverySSOTService.updateOrderNotes.spec.ts",
         "src/modules/mobility/delivery/settlement-context/SettlementContextService.ts"
@@ -1847,9 +1839,7 @@
       "tables": [
         "driver_availability",
         "driver_locations",
-        "emergency_delivery_log",
         "ride_dispatch_audit",
-        "safety_audit_log",
         "safety_incidents"
       ],
       "rpcs": [],
@@ -1908,7 +1898,6 @@
       "crossModuleImports": [],
       "duplicatedServices": [
         "OrderDeliveryLinkService.ts -> src/core/mobility/delivery/services/OrderDeliveryLinkService.ts, src/modules/mobility/delivery/services/OrderDeliveryLinkService.ts",
-        "OrderDeliveryNotificationService.ts -> src/core/mobility/delivery/services/OrderDeliveryNotificationService.ts, src/modules/mobility/delivery/services/OrderDeliveryNotificationService.ts",
         "OrderDeliverySSOTService.ts -> src/core/mobility/delivery/services/OrderDeliverySSOTService.ts, src/modules/mobility/delivery/services/OrderDeliverySSOTService.ts",
         "OrderDraftService.ts -> src/core/mobility/delivery/order/OrderDraftService.ts, src/modules/mobility/delivery/order/OrderDraftService.ts",
         "PaymentContextService.ts -> src/core/mobility/delivery/payment-context/PaymentContextService.ts, src/modules/mobility/delivery/payment-context/PaymentContextService.ts",
@@ -1921,13 +1910,11 @@
     {
       "domain": "notifications",
       "services": [
-        "src/core/notifications/services/CommunityNotificationBrokerService.ts",
         "src/core/notifications/services/EmailService.ts",
+        "src/core/notifications/services/NotificationPreferencesService.ts",
         "src/core/notifications/services/NotificationService.ts",
         "src/core/notifications/services/ProfessionalNotificationBrokerService.ts",
-        "src/core/notifications/services/PushNotificationPreferencesService.ts",
         "src/core/notifications/services/PushService.ts",
-        "src/core/notifications/services/UserNotificationPreferencesService.ts",
         "src/core/notifications/services/index.ts",
         "src/modules/admin/services/LocationAdminService.ts",
         "src/modules/admin/services/OperationalDiagnosticsService.ts",
@@ -1937,6 +1924,7 @@
       "pages": [
         "src/modules/admin/pages/AdminAnalytics.tsx",
         "src/modules/admin/pages/AdminAnalyticsMobilidade.tsx",
+        "src/modules/admin/pages/AdminAnuncios.tsx",
         "src/modules/admin/pages/AdminAssinaturas.tsx",
         "src/modules/admin/pages/AdminBillingPlansEditor.tsx",
         "src/modules/admin/pages/AdminBranding.tsx",
@@ -1954,15 +1942,12 @@
         "src/modules/admin/pages/AdminDashboardCharts.tsx",
         "src/modules/admin/pages/AdminEmpresas.tsx",
         "src/modules/admin/pages/AdminEventos.tsx",
-        "src/modules/admin/pages/AdminGamificacao.tsx",
         "src/modules/admin/pages/AdminGastronomia.tsx",
         "src/modules/admin/pages/AdminHighlights.tsx",
         "src/modules/admin/pages/AdminLayout.tsx",
         "src/modules/admin/pages/AdminMapa.tsx",
         "src/modules/admin/pages/AdminMensagens.tsx",
         "src/modules/admin/pages/AdminModeracao.tsx",
-        "src/modules/admin/pages/AdminModeracaoCompleta.tsx",
-        "src/modules/admin/pages/AdminModeracaoComunidade.tsx",
         "src/modules/admin/pages/AdminMotoboyOperations.tsx",
         "src/modules/admin/pages/AdminNotifications.tsx",
         "src/modules/admin/pages/AdminOperacoes.tsx",
@@ -1988,7 +1973,6 @@
         "src/modules/admin/pages/AdminVagasStatsCards.tsx",
         "src/modules/admin/pages/AdminVagasStatusBadge.tsx",
         "src/modules/admin/pages/AdminVerificacoes.tsx",
-        "src/modules/admin/pages/AdminZeladoria.tsx",
         "src/modules/admin/pages/BannersPage.tsx",
         "src/modules/admin/pages/HighlightForm.tsx",
         "src/modules/admin/pages/LocationsAdminPage.tsx",
@@ -2032,25 +2016,24 @@
       "routes": [],
       "tables": [
         "email_logs",
-        "notification_preferences",
         "notifications",
         "push_subscriptions",
-        "user_notification_settings",
         "user_subscriptions"
       ],
-      "rpcs": [],
+      "rpcs": [
+        "create_notification",
+        "get_current_notification_preferences",
+        "mark_current_user_notifications_as_read",
+        "patch_current_notification_preferences"
+      ],
       "officialHooks": [
         "src/core/notifications/hooks/useEmail.ts",
-        "src/core/notifications/hooks/useNotifications.ts",
-        "src/core/notifications/hooks/useNotificationsOptimized.ts",
         "src/core/notifications/hooks/usePush.ts",
         "src/modules/admin/hooks/useAdmin.ts",
         "src/modules/admin/hooks/useAdminGuard.ts",
         "src/modules/admin/hooks/useAdminTerritoryManagement.ts",
         "src/modules/admin/hooks/useAdminUserDetail.ts",
         "src/modules/admin/hooks/useLocationOptions.ts",
-        "src/modules/admin/hooks/useModeration.ts",
-        "src/modules/admin/hooks/useModerationFilters.ts",
         "src/modules/admin/hooks/usePricingAuditLog.ts",
         "src/modules/admin/hooks/usePricingRules.ts",
         "src/modules/admin/hooks/useTerritorialGroups.ts",
@@ -2061,7 +2044,6 @@
         "src/modules/profile/hooks/useProfileHub.ts",
         "src/modules/profile/hooks/useSavedPosts.ts",
         "src/modules/profile/hooks/useUserActivity.ts",
-        "src/modules/profile/hooks/useUserMentions.ts",
         "src/modules/profile/hooks/useUserPosts.ts"
       ],
       "legacyHooks": [],

@@ -83,7 +83,7 @@ export default tseslint.config(
       "session-context/no-direct-supabase-auth": "error",
       "session-context/no-permission-inference": "error",
       "session-context/no-ambiguous-identifiers": "error",
-      "session-context/require-authorization-engine": "error",
+      "session-context/require-capability-preview": "error",
       // 🏗️ ARCHITECTURE RULES
       "no-restricted-imports": ["error", {
         "patterns": [
@@ -325,7 +325,7 @@ export default tseslint.config(
   {
     files: ["src/core/profiles/services/ProfileService.ts"],
     rules: {
-      "session-context/require-authorization-engine": "off",
+      "session-context/require-capability-preview": "off",
     },
   },
   // PostService é o SSOT canônico de posts — acesso direto necessário por design.
@@ -371,15 +371,14 @@ export default tseslint.config(
       "maps/no-cross-layer-import": "off",
     },
   },
-  // ReviewsService é o SSOT canônico de reviews — acesso direto necessário por design.
+  // Reviews Core owns direct persistence; consumers must use ReviewsService.
   {
     files: [
-      "src/modules/gastronomy/services/review.queries.ts",
-      "src/modules/gastronomy/components/GastronomyOwnerDashboard.tsx", // Dashboard com acesso direto necessário
+      "src/core/reviews/services/reviews.queries.ts",
+      "src/core/reviews/services/reviews.mutations.ts",
     ],
     rules: {
       "ssot/no-direct-reviews-access": "off",
-      "ssot/no-direct-business-access": "off",
     },
   },
   // BusinessService é o SSOT canônico de businesses — acesso direto necessário por design.
@@ -451,17 +450,6 @@ export default tseslint.config(
   {
     files: ["src/core/admin/services/AdminMobilityService.ts"],
     rules: { "ssot/no-direct-profile-access": "off" },
-  },
-  {
-    files: ["src/core/authorization/services/AuthorizationEngine.ts"],
-    rules: {
-      "ssot/no-direct-profile-access": "off",
-      "ssot/no-direct-admin-access": "off",
-      "ssot/no-direct-posts-polls-access": "off",
-      "ssot/no-direct-comments-access": "off",
-      "ssot/no-direct-business-access": "off",
-      "ssot/no-direct-messaging-access": "off",
-    },
   },
   // ProfessionalService é o SSOT de professional_data — acesso direto necessário por design.
   {
@@ -587,7 +575,7 @@ export default tseslint.config(
           },
           {
             "group": ["**/hooks/useUserPermissions*"],
-            "message": "❌ REGRESSION: Use usePermission ou useAuthorization de '@/core/authorization'."
+            "message": "❌ REGRESSION: Use CapabilityPreviewService somente para visibilidade; comandos protegidos dependem do backend."
           }
         ]
       }]

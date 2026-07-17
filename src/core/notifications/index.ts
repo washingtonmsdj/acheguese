@@ -3,20 +3,17 @@
  */
 
 // Services
-export { CommunityNotificationBrokerService } from './services/CommunityNotificationBrokerService';
-export { NotificationService } from './services/NotificationService';
-export { ProfessionalNotificationBrokerService } from './services/ProfessionalNotificationBrokerService';
-export { notificationService } from './services';
+export { NotificationService } from "./services/NotificationService";
+export { ProfessionalNotificationBrokerService } from "./services/ProfessionalNotificationBrokerService";
+export { notificationService } from "./services";
 
 // Types
-export {
-  NotificationPriority,
-  NotificationType,
-} from './types';
+export { NotificationPriority, NotificationType } from "./types";
 export type {
   Notification,
   NotificationTypeValue,
   NotificationFilters,
+  NotificationCursor,
   CreateNotificationParams,
   NotificationStats,
   NotificationMetadata,
@@ -26,7 +23,4 @@ export type {
   GamificationNotificationMetadata,
   AlertNotificationMetadata,
   SystemNotificationMetadata,
-} from './types';
-
-// Components
-export { UnifiedNotificationBell } from './components/UnifiedNotificationBell';
+} from "./types";

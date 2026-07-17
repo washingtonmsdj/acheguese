@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSessionContext } from "@/core/session";
-import { AuthorizationEngine } from "@/core/authorization/services/AuthorizationEngine";
+import { CapabilityPreviewService } from "@/core/authorization/services/CapabilityPreviewService";
 import { logger } from "@/shared/utils/logger";
 
 export function useUserType() {
@@ -19,12 +19,12 @@ export function useUserType() {
       }
 
       try {
-        const [postAllowed, commentAllowed] = await Promise.all([
-          AuthorizationEngine.canProfilePerformAction(activeProfile.id, "createPost", {}),
-          AuthorizationEngine.canProfilePerformAction(activeProfile.id, "createComment", {}),
-        ]);
-        setCanPost(postAllowed);
-        setCanComment(commentAllowed);
+        const previews = await CapabilityPreviewService.previewActions(
+          activeProfile.id,
+          ["createPost", "createComment"],
+        );
+        setCanPost(previews[0]?.status === "allowed");
+        setCanComment(previews[1]?.status === "allowed");
       } catch (err) {
         logger.error("Error in useUserType:", err);
         setCanPost(false);

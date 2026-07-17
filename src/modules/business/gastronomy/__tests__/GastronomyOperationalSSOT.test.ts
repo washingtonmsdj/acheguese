@@ -38,34 +38,32 @@ describe("gastronomy operational SSOT flow", () => {
       "src/app/routes/sections/AppLayoutRoutes.tsx",
     );
     const notificationSource = readProjectFile(
-      "src/core/mobility/delivery/services/OrderDeliveryNotificationService.ts",
+      "supabase/migrations/20260714115000_migrate_mobility_admin_notifications.sql",
     );
 
-    expect(routesSource).toContain(
-      "gastronomyPublicRoutes.orderDetails(GASTRONOMY_PUBLIC_ROUTE_PARAMS.orderId)",
+    expect(routesSource).toMatch(
+      /gastronomyPublicRoutes\.orderDetails\(\s*GASTRONOMY_PUBLIC_ROUTE_PARAMS\.orderId,?\s*\)/,
     );
     expect(routesSource).toContain("<P.OrderDetailsPage />");
     expect(
-      routesSource.indexOf(
-        "gastronomyPublicRoutes.orderDetails(GASTRONOMY_PUBLIC_ROUTE_PARAMS.orderId)",
-      ),
+      routesSource.indexOf("gastronomyPublicRoutes.orderDetails("),
     ).toBeLessThan(
       routesSource.indexOf(
         "buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.gastronomy)",
       ),
     );
-    expect(notificationSource).toContain("customerOrderUrl");
+    expect(notificationSource).toContain("v_customer_url");
     expect(notificationSource).toContain(
-      "businessManagementRoutes.gastronomyPedidoPublico(order.id)",
+      "'/gastronomia/pedidos/' || NEW.id::TEXT",
     );
     expect(notificationSource).toContain(
-      'actionLabel: customerActionUrl ? "Abrir pedido" : null',
+      "CASE WHEN v_customer_url IS NOT NULL THEN 'Abrir pedido' ELSE NULL END",
     );
     expect(notificationSource).toContain(
-      "actionUrl: mobilityRoutes.motoboy.entregas",
+      "'/central/motoboy/entregas'",
     );
-    expect(notificationSource).toContain("dedupeNotifications");
-    expect(notificationSource).toContain("event_label");
+    expect(notificationSource).toContain("v_idempotency_key");
+    expect(notificationSource).toContain("'event_label', v_event_label");
   });
 
   it("keeps order screens subscribed to canonical order and timeline updates", () => {
@@ -78,25 +76,26 @@ describe("gastronomy operational SSOT flow", () => {
     const realtimeServiceSource = readProjectFile(
       "src/modules/business/gastronomy/services/GastronomyOrderRealtimeService.ts",
     );
+    const realtimeRegistrySource = readProjectFile(
+      "src/core/realtime/config/realtimeRegistry.ts",
+    );
 
     expect(ordersHookSource).toContain(
       "GastronomyOrderRealtimeService.subscribeBusinessOrders",
     );
-    expect(realtimeServiceSource).toContain("gastronomy-orders:${businessId}");
-    expect(realtimeServiceSource).toContain('table: "orders"');
-    expect(realtimeServiceSource).toContain(
-      "filter: `source_id=eq.${businessId}`",
-    );
-    expect(realtimeServiceSource).toContain('table: "order_timeline_events"');
-    expect(realtimeServiceSource).toContain('.eq("source_id", businessId)');
+    expect(realtimeServiceSource).toContain('"gastronomy.business-orders"');
+    expect(realtimeRegistrySource).toContain('"gastronomy.business-orders"');
+    expect(realtimeRegistrySource).toContain('table: "orders"');
+    expect(realtimeRegistrySource).toContain('column: "source_id"');
     expect(ordersHookSource).toContain("setTimeout(() => {");
-    expect(ordersHookSource).toContain("verifiedBusinessOrderIdsRef");
+    expect(ordersHookSource).not.toContain("verifiedBusinessOrderIdsRef");
     expect(orderDetailsHookSource).toContain(
       "GastronomyOrderRealtimeService.subscribeOrderDetails",
     );
-    expect(realtimeServiceSource).toContain("gastronomy-order:${orderId}");
-    expect(realtimeServiceSource).toContain("filter: `id=eq.${orderId}`");
-    expect(realtimeServiceSource).toContain("filter: `order_id=eq.${orderId}`");
+    expect(realtimeServiceSource).toContain('"gastronomy.order-details"');
+    expect(realtimeRegistrySource).toContain('"gastronomy.order-details"');
+    expect(realtimeRegistrySource).toContain('table: "order_timeline_events"');
+    expect(realtimeRegistrySource).toContain('column: "order_id"');
     expect(orderDetailsHookSource).toContain("setTimeout(() => {");
     expect(ordersHookSource).not.toContain("refetchInterval:");
     expect(orderDetailsHookSource).not.toContain("refetchInterval:");
@@ -109,14 +108,17 @@ describe("gastronomy operational SSOT flow", () => {
     const realtimeServiceSource = readProjectFile(
       "src/modules/business/gastronomy/services/GastronomyOrderRealtimeService.ts",
     );
+    const realtimeRegistrySource = readProjectFile(
+      "src/core/realtime/config/realtimeRegistry.ts",
+    );
 
     expect(trackingHookSource).toContain(
       "GastronomyOrderRealtimeService.subscribeOrderTracking",
     );
-    expect(realtimeServiceSource).toContain('table: "ride_requests"');
-    expect(realtimeServiceSource).toContain(
-      "filter: `source_id=eq.${orderId}`",
-    );
+    expect(realtimeServiceSource).toContain('"gastronomy.order-tracking"');
+    expect(realtimeRegistrySource).toContain('"gastronomy.order-tracking"');
+    expect(realtimeRegistrySource).toContain('table: "ride_requests"');
+    expect(realtimeRegistrySource).toContain('column: "source_id"');
     expect(trackingHookSource).toContain("source_type");
     expect(trackingHookSource).toContain(
       "newSourceType === 'gastronomy' || oldSourceType === 'gastronomy'",
@@ -129,6 +131,9 @@ describe("gastronomy operational SSOT flow", () => {
   it("uses the canonical review service and private trust SSOT after delivery", () => {
     const panelSource = readProjectFile(
       "src/modules/business/gastronomy/components/orders/OrderPublicReviewPanel.tsx",
+    );
+    const trustMigrationSource = readProjectFile(
+      "supabase/migrations/20260715109000_consolidate_trust_commands.sql",
     );
 
     expect(panelSource).toContain("ReviewQueryService.createReview");
@@ -147,24 +152,24 @@ describe("gastronomy operational SSOT flow", () => {
       "reviewed_profile_id: order.merchant_profile_id",
     );
     expect(panelSource).toContain("reviewer_profile_id: reviewerProfileId");
-    expect(panelSource).toContain("actor_profile_id: reviewerProfileId");
-    expect(panelSource).toContain(
-      "subject_profile_id: order.merchant_profile_id",
-    );
     expect(panelSource).not.toContain("businessProfileId: order.business_id");
     expect(panelSource).not.toContain("reviewed_profile_id: order.business_id");
     expect(panelSource).not.toContain("reviewer_profile_id: activeProfile.id");
-    expect(panelSource).not.toContain("actor_profile_id: activeProfile.id");
-    expect(panelSource).not.toContain("subject_profile_id: order.business_id");
-    expect(panelSource).toContain(
-      "TrustEventService.upsertOperationalFeedback",
-    );
-    expect(panelSource).toContain("TRUST_CONTEXT_TYPES.ORDER");
-    expect(panelSource).toContain("TRUST_ACTOR_ROLES.MERCHANT");
+    expect(panelSource).not.toContain("TrustEventService");
+    expect(panelSource).not.toContain("OperationalTrustCommandService");
     expect(panelSource).not.toContain(".from('reviews')");
     expect(panelSource).not.toContain('.from("reviews")');
     expect(panelSource).not.toContain(".from('trust_events')");
     expect(panelSource).not.toContain('.from("trust_events")');
+    expect(trustMigrationSource).toContain(
+      "CREATE OR REPLACE FUNCTION private.sync_order_review_trust_event()",
+    );
+    expect(trustMigrationSource).toContain(
+      "CREATE TRIGGER trg_sync_order_review_trust_event",
+    );
+    expect(trustMigrationSource).toContain(
+      "PERFORM set_config('achegue.trusted_trust_command', '1', TRUE)",
+    );
   });
 
   it("does not call authenticated favorite counters from anonymous public detail pages", () => {
@@ -177,79 +182,69 @@ describe("gastronomy operational SSOT flow", () => {
       "enabled: options?.enabled !== false && isValidUUID(businessId)",
     );
     expect(favoritesHookSource).toContain(
-      "const favoritesCount = useBusinessFavoritesCount(businessId || '', {",
+      "const favoritesCount = useBusinessFavoritesCount(businessId ?? '', {",
     );
-    expect(favoritesHookSource).toContain("enabled: !!userId");
+    expect(favoritesHookSource).toContain("enabled: !!businessId");
   });
 
   it("keeps trust notifications with canonical audience URLs", () => {
     const trustSource = readProjectFile(
-      "src/core/trust/services/TrustEventService.ts",
+      "supabase/migrations/20260714114000_migrate_social_work_trust_notifications.sql",
     );
 
     expect(trustSource).toContain(
-      'const subjectActionUrl = linkedEvent ? await trustContextActionUrl(linkedEvent) : "/conta"',
+      "private.trust_notification_action_url",
     );
-    expect(trustSource).toContain('const adminActionUrl = "/admin/moderacao"');
-    expect(trustSource).toContain("action_url: subjectActionUrl");
-    expect(trustSource).toContain("action_url: adminActionUrl");
-    expect(trustSource).toContain('action_label: "Ver contexto"');
-    expect(trustSource).toContain('action_label: "Ver fila"');
+    expect(trustSource).toContain("v_subject_action_url TEXT := '/conta'");
+    expect(trustSource).toContain("'/admin/moderacao'");
+    expect(trustSource).toContain("'Ver contexto'");
+    expect(trustSource).toContain("'Ver fila'");
     expect(trustSource).toContain(
-      'metadata: { ...baseMetadata, audience: "subject" }',
-    );
-    expect(trustSource).toContain(
-      'metadata: { ...baseMetadata, audience: "actor" }',
+      "'audience', 'subject'",
     );
     expect(trustSource).toContain(
-      'metadata: { ...metadata, audience: "subject" }',
+      "'audience', 'actor'",
     );
     expect(trustSource).toContain(
-      'metadata: { ...metadata, audience: "admin" }',
+      "'audience', 'admin'",
     );
   });
 
   it("enforces transactional notification category across delivery and trust flows", () => {
     const deliveryNotificationSource = readProjectFile(
-      "src/core/mobility/delivery/services/OrderDeliveryNotificationService.ts",
+      "supabase/migrations/20260714115000_migrate_mobility_admin_notifications.sql",
     );
     const notificationServiceSource = readProjectFile(
       "src/core/notifications/services/NotificationService.ts",
     );
     const trustSource = readProjectFile(
-      "src/core/trust/services/TrustEventService.ts",
+      "supabase/migrations/20260714114000_migrate_social_work_trust_notifications.sql",
     );
     const sqlSource = readProjectFile(
-      "supabase/migrations/20260511183000_create_notification_transactional_preference.sql",
+      "supabase/migrations/20260714113000_create_notification_outbox_core.sql",
     );
 
-    expect(deliveryNotificationSource).toContain('category: "transactional"');
+    expect(deliveryNotificationSource).toContain("'transactional'");
     expect(deliveryNotificationSource).toContain(
-      'metadata: { ...metadata, audience: "customer" }',
+      "v_metadata || jsonb_build_object('audience', 'customer')",
     );
     expect(deliveryNotificationSource).toContain(
-      'metadata: { ...metadata, audience: "merchant" }',
+      "v_metadata || jsonb_build_object('audience', 'merchant')",
     );
     expect(deliveryNotificationSource).toContain(
-      'metadata: { ...metadata, audience: "courier" }',
+      "v_metadata || jsonb_build_object('audience', 'courier')",
     );
-    expect(deliveryNotificationSource).toContain(
-      "NotificationService.createNotification",
-    );
-    expect(deliveryNotificationSource).toContain("type: payload.type");
-    expect(deliveryNotificationSource).toContain("category: payload.category");
+    expect(deliveryNotificationSource).toContain("private.enqueue_notification(");
     expect(notificationServiceSource).toContain("p_type: input.type");
     expect(notificationServiceSource).toContain(
       'p_category: input.category ?? "social"',
     );
-    expect(deliveryNotificationSource).not.toContain('p_category: "system"');
-    expect(deliveryNotificationSource).not.toContain('p_type: "order_update"');
+    expect(deliveryNotificationSource).not.toContain("'system',");
 
-    expect(trustSource).toContain('category: "transactional"');
-    expect(trustSource).not.toContain('category: "system"');
+    expect(trustSource).toContain("'transactional'");
 
     expect(sqlSource).toContain(
-      "IF p_category = 'transactional' AND NOT v_preferences.transactional_enabled THEN",
+      "p_category = 'transactional'",
     );
     expect(sqlSource).toContain("RETURN NULL;");
   });
@@ -474,8 +469,10 @@ describe("gastronomy operational SSOT flow", () => {
       ["BusinessHoursPage", "Gastronomia operacional"],
       ["DeliveryAreaPage", "Gastronomia operacional"],
     ].forEach(([exportName, pausedLabel]) => {
-      expect(appLazyImportsSource).toContain(
-        `export const ${exportName} = createLaunchPausedRoute("${pausedLabel}")`,
+      expect(appLazyImportsSource).toMatch(
+        new RegExp(
+          `export const ${exportName}\\s*=\\s*createLaunchPausedRoute\\(\\s*"${pausedLabel}"\\s*,?\\s*\\)`,
+        ),
       );
       expect(centralLazyImportsSource).toContain(
         `export const ${exportName} = lazy(() =>`,

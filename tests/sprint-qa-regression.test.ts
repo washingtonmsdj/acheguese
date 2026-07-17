@@ -183,13 +183,13 @@ describe('Fase 2 - Q&A territorial', () => {
   it('useRecomendacoes usa useTerritoryFilter', () => {
     const content = read('src/core/community/hooks/useRecomendacoes.ts');
     expect(content).toMatch(/useTerritoryFilter/);
-    expect(content).toMatch(/territoryFilter\.scope/);
+    expect(content).toMatch(/activeTerritoryFilter\.scope/);
   });
 
   it('useRecomendacoes passa location_id ou location_ids para getQuestions', () => {
     const content = read('src/core/community/hooks/useRecomendacoes.ts');
-    expect(content).toMatch(/location_id.*territoryFilter|territoryFilter.*location_id/);
-    expect(content).toMatch(/location_ids.*territoryFilter|territoryFilter.*location_ids/);
+    expect(content).toMatch(/location_id.*activeTerritoryFilter|activeTerritoryFilter.*location_id/);
+    expect(content).toMatch(/location_ids.*activeTerritoryFilter|activeTerritoryFilter.*location_ids/);
   });
 
   it('migration aplica NOT NULL em community_questions.location_id', () => {

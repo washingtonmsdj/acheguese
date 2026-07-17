@@ -53,13 +53,7 @@ export function getPostContentPrefix(value: string): string | null {
 }
 
 // Limites de Conteúdo
-export const POST_LIMITS = {
-  MIN_CONTENT_LENGTH: 10,
-  MAX_CONTENT_LENGTH: 5000,
-  MAX_IMAGES: 4,
-  MAX_TAGS: 5,
-  MAX_TAG_LENGTH: 30,
-} as const;
+export { POST_LIMITS } from "./socialContent";
 
 // Tipos de Ordenação
 export const POST_SORT_TYPES = {

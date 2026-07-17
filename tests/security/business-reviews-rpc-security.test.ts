@@ -15,7 +15,7 @@ describe("business reviews rpc broker security", () => {
     );
     const config = readProjectFile("supabase/config.toml");
     const broker = readProjectFile(
-      "src/modules/business/gastronomy/services/BusinessReviewsRpcService.ts",
+      "src/core/business/services/BusinessReviewService.ts",
     );
     const reviewQueries = readProjectFile(
       "src/modules/business/gastronomy/services/review.queries.ts",

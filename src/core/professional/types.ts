@@ -333,7 +333,6 @@ export interface ProfessionalReview {
   user_id: string;
   rating: number;
   comment: string;
-  job_type?: string;
   created_at: string;
   user_name: string;
   user_avatar?: string;
@@ -345,7 +344,6 @@ export interface ProfessionalReviewRecord {
   user_id: string;
   rating: number;
   comment: string | null;
-  job_type: string | null;
   created_at: string;
   profiles: {
     name: string;

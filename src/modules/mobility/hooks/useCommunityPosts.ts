@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { postService } from "@/core/posts/services"; // ✅ LOTE 8
-import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService"; // ✅ LOTE 8
+import { PostEngagementService } from "@/core/engagement";
 import { CommentService } from "@/core/comments/services/CommentService"; // ✅ LOTE 7
 
 export interface CommunityPost {
@@ -63,27 +63,19 @@ export function useCommunityPosts(filters?: {
   };
 
   const likePost = async (postId: string) => {
-    // ✅ LOTE 8 - SocialInteractionsService.likePost (canonical boundary)
-    await SocialInteractionsService.likePost(postId);
+    // Canonical post engagement boundary.
+    await PostEngagementService.likePost(postId);
     refetch();
   };
 
   const commentOnPost = async (
     postId: string,
     content: string,
-    authorProfileId: string,
   ) => {
-    if (!authorProfileId) {
-      throw new Error(
-        "authorProfileId is required to comment on a ride-share post",
-      );
-    }
-
     // ✅ LOTE 7 - CommentService.createComment
     await CommentService.createComment({
       post_id: postId,
       content,
-      author_profile_id: authorProfileId,
     });
     refetch();
   };

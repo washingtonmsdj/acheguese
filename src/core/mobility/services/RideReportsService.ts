@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase";
+import { supabase, type Database } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 
 export type ReportType =
@@ -40,8 +40,6 @@ export interface RideReport {
 
 export interface CreateReportInput {
   rideId: string;
-  reporterProfileId: string;
-  reporterType: ReporterType;
   reportType: ReportType;
   severity: ReportSeverity;
   title: string;
@@ -52,101 +50,12 @@ export interface CreateReportInput {
 }
 
 export interface UpdateReportInput {
-  status?: ReportStatus;
-  reviewedBy?: string;
+  status: Exclude<ReportStatus, "pending">;
   resolutionNotes?: string;
   adminNotes?: string;
 }
 
-type ErrorLike = { message?: string | null } | null;
-
-type RideReportRow = {
-  id: string;
-  ride_id: string;
-  reporter_profile_id: string;
-  reporter_type: ReporterType;
-  report_type: ReportType;
-  severity: ReportSeverity;
-  status: ReportStatus;
-  title: string;
-  description: string;
-  evidence_urls: string[] | null;
-  location_lat: number | null;
-  location_lng: number | null;
-  reported_at: string;
-  reviewed_by: string | null;
-  reviewed_at: string | null;
-  resolution_notes: string | null;
-  admin_notes: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
-type RideReportInsertRow = {
-  ride_id: string;
-  reporter_profile_id: string;
-  reporter_type: ReporterType;
-  report_type: ReportType;
-  severity: ReportSeverity;
-  title: string;
-  description: string;
-  evidence_urls?: string[];
-  location_lat?: number;
-  location_lng?: number;
-};
-
-type RideReportUpdateRow = {
-  status?: ReportStatus;
-  reviewed_at?: string;
-  reviewed_by?: string;
-  resolution_notes?: string;
-  admin_notes?: string;
-};
-
-type RideReportStatsRow = {
-  status: ReportStatus;
-  severity: ReportSeverity;
-  report_type: ReportType;
-};
-
-type QueryResult<T> = Promise<{
-  data: T[] | null;
-  error: ErrorLike;
-}>;
-
-type SingleQueryResult<T> = Promise<{
-  data: T | null;
-  error: ErrorLike;
-}>;
-
-type RideReportsSelectBuilder<T> = PromiseLike<{
-  data: T[] | null;
-  error: ErrorLike;
-}> & {
-  select(columns: string): RideReportsSelectBuilder<T>;
-  eq(column: string, value: string): RideReportsSelectBuilder<T>;
-  order(column: string, options: { ascending: boolean }): RideReportsSelectBuilder<T>;
-  limit(count: number): RideReportsSelectBuilder<T>;
-  range(from: number, to: number): RideReportsSelectBuilder<T>;
-  single(): SingleQueryResult<T>;
-};
-
-type RideReportsDbClient = {
-  from(table: "ride_reports"): {
-    insert(values: RideReportInsertRow): {
-      select(columns: string): {
-        single(): SingleQueryResult<{ id: string }>;
-      };
-    };
-    select(columns: string): RideReportsSelectBuilder<RideReportRow>;
-    select(columns: "status, severity, report_type"): RideReportsSelectBuilder<RideReportStatsRow>;
-    update(values: RideReportUpdateRow): {
-      eq(column: "id", value: string): Promise<{ error: ErrorLike }>;
-    };
-  };
-};
-
-const rideReportsDb = supabase as unknown as RideReportsDbClient;
+type RideReportRow = Database["public"]["Tables"]["ride_reports"]["Row"];
 
 function getEmptyReportStats() {
   return {
@@ -175,10 +84,10 @@ function normalizeRideReport(row: RideReportRow): RideReport {
     id: row.id,
     ride_id: row.ride_id,
     reporter_profile_id: row.reporter_profile_id,
-    reporter_type: row.reporter_type,
-    report_type: row.report_type,
-    severity: row.severity,
-    status: row.status,
+    reporter_type: row.reporter_type as ReporterType,
+    report_type: row.report_type as ReportType,
+    severity: row.severity as ReportSeverity,
+    status: row.status as ReportStatus,
     title: row.title,
     description: row.description,
     evidence_urls: row.evidence_urls ?? undefined,
@@ -204,24 +113,16 @@ export class RideReportsService {
         reportType: input.reportType,
       });
 
-      const payload: RideReportInsertRow = {
-        ride_id: input.rideId,
-        reporter_profile_id: input.reporterProfileId,
-        reporter_type: input.reporterType,
-        report_type: input.reportType,
-        severity: input.severity,
-        title: input.title,
-        description: input.description,
-        evidence_urls: input.evidenceUrls,
-        location_lat: input.locationLat,
-        location_lng: input.locationLng,
-      };
-
-      const { data, error } = await rideReportsDb
-        .from("ride_reports")
-        .insert(payload)
-        .select("id")
-        .single();
+      const { data, error } = await supabase.rpc("create_ride_report", {
+        p_ride_id: input.rideId,
+        p_report_type: input.reportType,
+        p_severity: input.severity,
+        p_title: input.title.trim(),
+        p_description: input.description.trim(),
+        p_evidence_urls: input.evidenceUrls,
+        p_location_lat: input.locationLat,
+        p_location_lng: input.locationLng,
+      });
 
       if (error || !data?.id) {
         logger.error("RideReportsService.createReport - error", error);
@@ -246,7 +147,7 @@ export class RideReportsService {
     offset?: number;
   }): Promise<RideReport[]> {
     try {
-      let query = rideReportsDb
+      let query = supabase
         .from("ride_reports")
         .select("*")
         .order("reported_at", { ascending: false });
@@ -254,10 +155,12 @@ export class RideReportsService {
       if (filters?.status) query = query.eq("status", filters.status);
       if (filters?.severity) query = query.eq("severity", filters.severity);
       if (filters?.reportType) query = query.eq("report_type", filters.reportType);
-      if (filters?.reporterProfileId) query = query.eq("reporter_profile_id", filters.reporterProfileId);
+      if (filters?.reporterProfileId) {
+        query = query.eq("reporter_profile_id", filters.reporterProfileId);
+      }
       if (filters?.rideId) query = query.eq("ride_id", filters.rideId);
       if (filters?.limit) query = query.limit(filters.limit);
-      if (filters?.offset) {
+      if (filters?.offset !== undefined) {
         const limit = filters.limit ?? 10;
         query = query.range(filters.offset, filters.offset + limit - 1);
       }
@@ -278,7 +181,7 @@ export class RideReportsService {
 
   static async getReportById(reportId: string): Promise<RideReport | null> {
     try {
-      const { data, error } = await rideReportsDb
+      const { data, error } = await supabase
         .from("ride_reports")
         .select("*")
         .eq("id", reportId)
@@ -296,45 +199,29 @@ export class RideReportsService {
     }
   }
 
-  static async updateReport(
-    reportId: string,
-    updates: UpdateReportInput,
-  ): Promise<{ success: boolean; error?: string }> {
+  static async updateReport(reportId: string, updates: UpdateReportInput): Promise<void> {
     try {
-      logger.info("RideReportsService.updateReport", { reportId, updates });
+      logger.info("RideReportsService.updateReport", {
+        reportId,
+        status: updates.status,
+      });
 
-      const updateData: RideReportUpdateRow = {};
-
-      if (updates.status) {
-        updateData.status = updates.status;
-        if (
-          updates.status === "under_review" ||
-          updates.status === "resolved" ||
-          updates.status === "dismissed"
-        ) {
-          updateData.reviewed_at = new Date().toISOString();
-        }
-      }
-
-      if (updates.reviewedBy) updateData.reviewed_by = updates.reviewedBy;
-      if (updates.resolutionNotes) updateData.resolution_notes = updates.resolutionNotes;
-      if (updates.adminNotes) updateData.admin_notes = updates.adminNotes;
-
-      const { error } = await rideReportsDb
-        .from("ride_reports")
-        .update(updateData)
-        .eq("id", reportId);
+      const { error } = await supabase.rpc("moderate_ride_report", {
+        p_report_id: reportId,
+        p_status: updates.status,
+        p_resolution_notes: updates.resolutionNotes?.trim() || undefined,
+        p_admin_notes: updates.adminNotes?.trim() || undefined,
+      });
 
       if (error) {
         logger.error("RideReportsService.updateReport - error", error);
-        return { success: false, error: error.message ?? "Erro ao atualizar report" };
+        throw error;
       }
 
       logger.info("RideReportsService.updateReport - success", { reportId });
-      return { success: true };
     } catch (error) {
       logger.error("RideReportsService.updateReport - exception", error as Error);
-      return { success: false, error: (error as Error).message };
+      throw error;
     }
   }
 
@@ -348,7 +235,7 @@ export class RideReportsService {
     byType: Record<ReportType, number>;
   }> {
     try {
-      const { data, error } = await rideReportsDb
+      const { data, error } = await supabase
         .from("ride_reports")
         .select("status, severity, report_type");
 

@@ -71,7 +71,12 @@ const professionalDb = supabase as unknown as ProfessionalDbClient;
  */
 export const ProfessionalFacade = {
   queries: professionalQueries,
-  mutations: professionalMutations,
+  mutations: {
+    ...professionalMutations,
+    createProfessional: createProfessionalWithProfile,
+    updateProfessional: updateProfessionalWithProfile,
+    deleteProfessional: deleteProfessionalWithProfile,
+  },
 } as const;
 
 // ============================================================
@@ -265,7 +270,6 @@ export class ProfessionalService {
     userId: string,
     rating: number,
     comment?: string,
-    jobType?: string,
   ): Promise<void> {
     try {
       // Buscar profile ativo do usuario.
@@ -282,7 +286,6 @@ export class ProfessionalService {
           reviewer_profile_id: activeProfile.id,
           rating,
           comment,
-          job_type: jobType,
         },
         "professional",
       );
@@ -372,13 +375,6 @@ export class ProfessionalService {
    * Atualizar status de denuncia de profissional (admin).
    * SSOT - Centraliza atualizacao de denuncias.
    */
-  static async updateProfessionalReport(
-    reportId: string,
-    status: string,
-  ): Promise<void> {
-    return professionalMutations.updateProfessionalReport(reportId, status);
-  }
-
   /**
    * Buscar profissionais por IDs (para admin)
    * SSOT - Centraliza busca por IDs.

@@ -2,15 +2,20 @@
  * Post write operations.
  */
 
-import { CommunityNotificationBrokerService } from "@/core/notifications/services";
 import { supabase } from "@/integrations/supabase";
 import type { Database, Json } from "@/integrations/supabase";
 import { EntityStatus, LocationType } from "@/shared/types/enums";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
+import { profileService } from "@/core/profiles/services/ProfileService";
+import { ZodError } from "zod";
 import type { CreatePostData, Post, UpdatePostData } from "../types";
 import { PostError } from "../types";
 import * as queries from "./posts.queries";
+import {
+  createPostMutationSchema,
+  updatePostSchema,
+} from "../schemas/postSchemas";
 
 type DbPostRow = Database["public"]["Tables"]["posts"]["Row"];
 type DbPostInsert = Database["public"]["Tables"]["posts"]["Insert"];
@@ -33,28 +38,11 @@ interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
 
 interface PostsMutationDbClient {
   from: <TRow = never>(table: string) => QueryBuilder<TRow>;
-  rpc: <TResult = unknown>(
-    fn: string,
-    params?: Record<string, unknown>,
-  ) => Promise<QueryResult<TResult>>;
 }
 
 type CreatePostPayload = { author_profile_id: string } & CreatePostData;
 
-type PostUpdatePayload = Partial<
-  Pick<DbPostUpdate, "content" | "image_url" | "video_url" | "is_verified" | "updated_at">
-> & {
-  hidden?: boolean;
-};
-
-type PostModerationState = {
-  is_hidden?: boolean;
-  is_removed?: boolean;
-  is_published?: boolean;
-  removed_reason?: string | null;
-  removed_by?: string | null;
-  removed_at?: string | null;
-};
+type PostUpdatePayload = Pick<DbPostUpdate, "content" | "updated_at">;
 
 interface LocationValidationRow {
   id: string;
@@ -75,25 +63,14 @@ interface PostMutationSelectRow extends DbPostRow {
     type: string;
     parent_id: string | null;
   } | null;
-  hidden?: boolean | null;
-  shares_count?: number | null;
 }
 
 interface PostAuthorRow {
   author_profile_id: string;
 }
 
-interface PostSharesRow {
-  shares_count: number | null;
-}
-
-interface FollowedPostRow {
+interface PostShareEventRow {
   id: string;
-}
-
-interface AlertConfirmationRow {
-  confirmations_count: number | null;
-  is_verified: boolean | null;
 }
 
 const postsMutationDb = supabase as unknown as PostsMutationDbClient;
@@ -105,10 +82,15 @@ export type CreatePostTerritoryPolicy = {
 
 export const CREATE_POST_LOCATION_REQUIRED_CODE = "LOCATION_REQUIRED";
 
-const DEFAULT_CREATE_POST_TERRITORY_POLICY: Required<CreatePostTerritoryPolicy> = {
-  allowedLocationTypes: [LocationType.CITY, LocationType.DISTRICT, LocationType.NEIGHBORHOOD],
-  invalidLocationTypeCode: "INVALID_LOCATION_TYPE",
-};
+const DEFAULT_CREATE_POST_TERRITORY_POLICY: Required<CreatePostTerritoryPolicy> =
+  {
+    allowedLocationTypes: [
+      LocationType.CITY,
+      LocationType.DISTRICT,
+      LocationType.NEIGHBORHOOD,
+    ],
+    invalidLocationTypeCode: "INVALID_LOCATION_TYPE",
+  };
 
 function buildCreatePostInsert(data: CreatePostPayload): DbPostInsert {
   return {
@@ -117,33 +99,21 @@ function buildCreatePostInsert(data: CreatePostPayload): DbPostInsert {
     type: data.type,
     location_id: data.location_id,
     reach: data.reach ?? "neighborhood",
-    image_url: data.image_url ?? null,
-    video_url: data.video_url ?? null,
-    images: ((data.images ?? []) as unknown) as Json,
-    tags: ((data.tags ?? []) as unknown) as Json,
+    images: (data.images ?? []) as unknown as Json,
+    tags: (data.tags ?? []) as unknown as Json,
     content_intent: data.content_intent ?? null,
     display_format: data.display_format ?? null,
     distribution_channels: data.distribution_channels ?? [],
-    content_payload: ((data.content_payload ?? null) as unknown) as Json,
+    content_payload: (data.content_payload ?? null) as unknown as Json,
     is_published: true,
   };
 }
 
-function buildUpdatePostPayload(
-  validatedContent: string | undefined,
-  data: UpdatePostData,
-): PostUpdatePayload {
-  const updateData: PostUpdatePayload = {
+function buildUpdatePostPayload(validatedContent: string): PostUpdatePayload {
+  return {
+    content: validatedContent,
     updated_at: new Date().toISOString(),
   };
-
-  if (validatedContent !== undefined) updateData.content = validatedContent;
-  if (data.image_url !== undefined) updateData.image_url = data.image_url;
-  if (data.video_url !== undefined) updateData.video_url = data.video_url;
-  if (data.is_verified !== undefined) updateData.is_verified = data.is_verified;
-  if (data.hidden !== undefined) updateData.hidden = data.hidden;
-
-  return updateData;
 }
 
 function isAllowedLocationType(
@@ -159,8 +129,16 @@ export async function createPost(
 ): Promise<Post> {
   try {
     if (!data.location_id) {
-      throw new PostError("location_id e obrigatorio", CREATE_POST_LOCATION_REQUIRED_CODE);
+      throw new PostError(
+        "location_id e obrigatorio",
+        CREATE_POST_LOCATION_REQUIRED_CODE,
+      );
     }
+
+    const validatedInput = createPostMutationSchema.parse(
+      data,
+    ) as CreatePostPayload;
+    data = validatedInput;
 
     const { data: location, error: locationError } = await postsMutationDb
       .from<LocationValidationRow>("locations")
@@ -178,7 +156,8 @@ export async function createPost(
 
     const resolvedPolicy = {
       allowedLocationTypes:
-        policy.allowedLocationTypes ?? DEFAULT_CREATE_POST_TERRITORY_POLICY.allowedLocationTypes,
+        policy.allowedLocationTypes ??
+        DEFAULT_CREATE_POST_TERRITORY_POLICY.allowedLocationTypes,
       invalidLocationTypeCode:
         policy.invalidLocationTypeCode ??
         DEFAULT_CREATE_POST_TERRITORY_POLICY.invalidLocationTypeCode,
@@ -255,6 +234,13 @@ export async function createPost(
   } catch (error) {
     if (error instanceof PostError) throw error;
 
+    if (error instanceof ZodError) {
+      if (error.issues.some((issue) => issue.path[0] === "location_id")) {
+        throw new PostError("Localizacao invalida", "INVALID_LOCATION");
+      }
+      throw new PostError("Dados do post invalidos", "INVALID_POST_INPUT");
+    }
+
     logger.error("[posts.mutations] Error creating post:", error);
     trackError(error as Error, {
       component: "posts.mutations",
@@ -269,17 +255,19 @@ export async function createPost(
   }
 }
 
-export async function updatePost(postId: string, data: UpdatePostData): Promise<Post> {
+export async function updatePost(
+  postId: string,
+  data: UpdatePostData,
+): Promise<Post> {
   try {
-    const { updatePostSchema: updatePostSchema } =
-      await import("@/core/posts/schemas/postSchemas");
     const validatedData = updatePostSchema.parse({
+      id: postId,
       content: data.content,
     });
 
     const { data: post, error } = await postsMutationDb
       .from<PostMutationSelectRow>("posts")
-      .update(buildUpdatePostPayload(validatedData.content, data))
+      .update(buildUpdatePostPayload(validatedData.content))
       .eq("id", postId)
       .select(
         `
@@ -337,7 +325,10 @@ export async function deletePost(postId: string): Promise<void> {
   }
 }
 
-export async function deletePostByAuthor(postId: string, authorProfileId: string): Promise<void> {
+export async function deletePostByAuthor(
+  postId: string,
+  authorProfileId: string,
+): Promise<void> {
   try {
     const { data: post, error: fetchError } = await postsMutationDb
       .from<PostAuthorRow>("posts")
@@ -350,7 +341,10 @@ export async function deletePostByAuthor(postId: string, authorProfileId: string
     }
 
     if (post.author_profile_id !== authorProfileId) {
-      throw new PostError("Voce nao tem permissao para deletar este post", "FORBIDDEN");
+      throw new PostError(
+        "Voce nao tem permissao para deletar este post",
+        "FORBIDDEN",
+      );
     }
 
     const { error } = await postsMutationDb
@@ -375,245 +369,29 @@ export async function deletePostByAuthor(postId: string, authorProfileId: string
   }
 }
 
-export async function incrementSharesCount(postId: string): Promise<void> {
-  try {
-    const { data: post, error: fetchError } = await postsMutationDb
-      .from<PostSharesRow>("posts")
-      .select("shares_count")
-      .eq("id", postId)
-      .single();
-
-    if (fetchError || !post) {
-      throw new PostError("Post nao encontrado", "NOT_FOUND");
-    }
-
-    const { error } = await postsMutationDb
-      .from<PostMutationSelectRow>("posts")
-      .update({ shares_count: (post.shares_count ?? 0) + 1 })
-      .eq("id", postId);
-
-    if (error) {
-      throw new PostError(error.message, error.code || "UPDATE_FAILED");
-    }
-  } catch (error) {
-    if (error instanceof PostError) throw error;
-
-    logger.error("[posts.mutations] Error incrementing shares:", error);
-    trackError(error as Error, {
-      component: "posts.mutations",
-      action: "incrementSharesCount",
-      metadata: { postId },
-    });
-    throw new PostError("Erro ao incrementar compartilhamentos", "UPDATE_ERROR");
-  }
-}
-
-export async function incrementUserReputation(userId: string, points: number): Promise<void> {
-  try {
-    const { error } = await postsMutationDb.rpc("increment_user_reputation", {
-      user_id: userId,
-      points,
-    });
-
-    if (error) {
-      logger.error("[posts.mutations] Error incrementing reputation:", error);
-    }
-  } catch (error) {
-    logger.error("[posts.mutations] Error in incrementUserReputation:", error);
-  }
-}
-
-export async function toggleFollowPost(
+export async function recordPostShare(
   postId: string,
-  userId: string,
-): Promise<{ action: "follow" | "unfollow" }> {
-  try {
-    const { data: existing } = await postsMutationDb
-      .from<FollowedPostRow>("followed_posts")
-      .select("id")
-      .eq("post_id", postId)
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (existing) {
-      const { error } = await postsMutationDb
-        .from<FollowedPostRow>("followed_posts")
-        .delete()
-        .eq("id", existing.id);
-
-      if (error) {
-        throw new PostError(error.message, error.code || "UNFOLLOW_FAILED");
-      }
-
-      return { action: "unfollow" };
-    }
-
-    const { error } = await postsMutationDb
-      .from<FollowedPostRow>("followed_posts")
-      .insert({ post_id: postId, user_id: userId });
-
-    if (error) {
-      throw new PostError(error.message, error.code || "FOLLOW_FAILED");
-    }
-
-    return { action: "follow" };
-  } catch (error) {
-    if (error instanceof PostError) throw error;
-
-    trackError(error as Error, {
-      component: "posts.mutations",
-      action: "toggleFollowPost",
-      metadata: { postId, userId },
-    });
-    throw new PostError("Unexpected error toggling follow", "UNKNOWN_ERROR");
-  }
-}
-
-export async function createLikeNotification(postId: string, likerId: string): Promise<void> {
-  try {
-    await CommunityNotificationBrokerService.notifyPostLike(postId, likerId);
-  } catch (error) {
-    trackError(error as Error, {
-      component: "posts.mutations",
-      action: "createLikeNotification",
-      metadata: { postId, likerId },
-    });
-  }
-}
-
-export async function removePost(
-  postId: string,
-  reason: string,
-  moderatorProfileId: string,
 ): Promise<void> {
   try {
+    const activeProfile = await profileService.getRequiredActiveProfile();
     const { error } = await postsMutationDb
-      .from<PostMutationSelectRow>("posts")
-      .update({
-        is_published: false,
-        is_removed: true,
-        removed_reason: reason,
-        removed_at: new Date().toISOString(),
-        removed_by: moderatorProfileId,
-      })
-      .eq("id", postId);
+      .from<PostShareEventRow>("post_share_events")
+      .insert({ post_id: postId, sharer_profile_id: activeProfile.id });
 
-    if (error) {
-      throw new PostError(error.message, error.code || "REMOVE_FAILED");
+    if (error && error.code !== "23505") {
+      throw new PostError(error.message, error.code || "SHARE_RECORD_FAILED");
     }
   } catch (error) {
     if (error instanceof PostError) throw error;
 
     trackError(error as Error, {
       component: "posts.mutations",
-      action: "removePost",
-      metadata: { postId, reason, moderatorProfileId },
-    });
-    throw new PostError("Unexpected error removing post", "UNKNOWN_ERROR");
-  }
-}
-
-export async function hidePost(postId: string): Promise<void> {
-  try {
-    const { error } = await postsMutationDb
-      .from<PostMutationSelectRow>("posts")
-      .update({
-        is_hidden: true,
-        is_published: false,
-      })
-      .eq("id", postId);
-
-    if (error) {
-      throw new PostError(error.message, error.code || "HIDE_FAILED");
-    }
-  } catch (error) {
-    if (error instanceof PostError) throw error;
-
-    trackError(error as Error, {
-      component: "posts.mutations",
-      action: "hidePost",
+      action: "recordPostShare",
       metadata: { postId },
     });
-    throw new PostError("Unexpected error hiding post", "UNKNOWN_ERROR");
-  }
-}
-
-export async function updatePostModerationState(
-  postId: string,
-  state: PostModerationState,
-): Promise<void> {
-  try {
-    const { error } = await postsMutationDb
-      .from<PostMutationSelectRow>("posts")
-      .update(state)
-      .eq("id", postId);
-
-    if (error) {
-      throw new PostError(error.message, error.code || "MODERATION_UPDATE_FAILED");
-    }
-  } catch (error) {
-    if (error instanceof PostError) throw error;
-
-    trackError(error as Error, {
-      component: "posts.mutations",
-      action: "updatePostModerationState",
-      metadata: { postId, state },
-    });
-    throw new PostError("Unexpected error updating post moderation state", "UNKNOWN_ERROR");
-  }
-}
-
-export async function confirmAlert(
-  postId: string,
-  userId: string,
-  authorProfileId: string,
-): Promise<{
-  confirmationsCount: number;
-  isVerified: boolean;
-}> {
-  try {
-    const { data: post, error: fetchError } = await postsMutationDb
-      .from<AlertConfirmationRow>("posts")
-      .select("confirmations_count, is_verified")
-      .eq("id", postId)
-      .single();
-
-    if (fetchError || !post) {
-      throw new PostError(fetchError?.message ?? "Post not found", fetchError?.code || "FETCH_FAILED");
-    }
-
-    const newCount = (post.confirmations_count ?? 0) + 1;
-    const shouldVerify = newCount >= 5;
-    const resolvedIsVerified = shouldVerify || Boolean(post.is_verified);
-
-    const { error: confirmError } = await postsMutationDb
-      .from<PostMutationSelectRow>("posts")
-      .update({
-        confirmations_count: newCount,
-        is_verified: resolvedIsVerified,
-      })
-      .eq("id", postId);
-
-    if (confirmError) {
-      throw new PostError(confirmError.message, confirmError.code || "CONFIRM_FAILED");
-    }
-
-    if (shouldVerify && !post.is_verified) {
-      await incrementUserReputation(authorProfileId, 5);
-    }
-
-    return {
-      confirmationsCount: newCount,
-      isVerified: resolvedIsVerified,
-    };
-  } catch (error) {
-    if (error instanceof PostError) throw error;
-
-    trackError(error as Error, {
-      component: "posts.mutations",
-      action: "confirmAlert",
-      metadata: { postId, userId },
-    });
-    throw new PostError("Unexpected error confirming alert", "UNKNOWN_ERROR");
+    throw new PostError(
+      "Erro ao registrar compartilhamento",
+      "SHARE_RECORD_ERROR",
+    );
   }
 }

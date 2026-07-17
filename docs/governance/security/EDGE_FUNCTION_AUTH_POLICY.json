@@ -56,6 +56,16 @@
         "Cache-Control"
       ]
     },
+    "media-assets-cleanup": {
+      "kind": "cron-secret",
+      "label": "canonical media orphan cleanup worker",
+      "requiredPatterns": [
+        "requireCronSecret\\s*\\(",
+        "rateLimitMiddleware\\s*\\(",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "list_media_asset_orphans"
+      ]
+    },
     "nominatim-proxy": {
       "kind": "public-proxy",
       "label": "public geocoding proxy",
@@ -202,12 +212,6 @@
       "label": "authenticated communication RPC broker",
       "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
-    "community-notifications-rpc": {
-      "kind": "notification-broker",
-      "risk": "Critical",
-      "label": "authenticated community notifications RPC broker",
-      "requiredPatterns": ["auth\\.getUser\\s*\\("]
-    },
     "community-rpc": {
       "kind": "authenticated-broker",
       "risk": "Critical",
@@ -237,6 +241,18 @@
       "risk": "Critical",
       "label": "authenticated location RPC broker",
       "requiredPatterns": ["auth\\.getUser\\s*\\("]
+    },
+    "media-assets": {
+      "kind": "authenticated-broker",
+      "risk": "Critical",
+      "label": "authenticated canonical media upload broker",
+      "requiredPatterns": ["auth\\.getUser\\s*\\(", "reserve_media_asset_upload"]
+    },
+    "media-assets-cleanup": {
+      "kind": "cron-secret",
+      "risk": "Critical",
+      "label": "canonical media orphan cleanup service_role worker",
+      "requiredPatterns": ["requireCronSecret\\s*\\(", "list_media_asset_orphans"]
     },
     "mobility-rpc": {
       "kind": "authenticated-broker",

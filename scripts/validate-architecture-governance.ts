@@ -31,7 +31,7 @@ const SUPABASE_BOUNDARY_RE =
 const NOTIFICATIONS_DOMAIN_BOUNDARY_RE =
   /\.(from\(["'](?:notifications|user_notification_settings)["']\)|rpc\(["'](?:create_notification|get_unread_count|mark_notification_as_read|mark_all_notifications_as_read|cleanup_old_notifications)["'])/;
 const FAMILY_DOMAIN_BOUNDARY_RE =
-  /(\.from\(\s*(?:FAMILY_TABLES\.(?:connections|locations|locationSharingSettings|geofences|alerts)|["'](?:family_connections|family_locations|family_location_sharing_settings|family_geofences|family_location_alerts)["'])\s*\)|table:\s*(?:FAMILY_TABLES\.(?:locations|alerts)|["'](?:family_locations|family_location_alerts)["']))/;
+  /\.from\(\s*(?:FAMILY_TABLES\.(?:connections|locations|locationSharingSettings|geofences|alerts)|["'](?:family_connections|family_locations|family_location_sharing_settings|family_geofences|family_location_alerts)["'])\s*\)/;
 const BUSINESS_RULE_RE =
   /(if\s*\(|\?\s*)(?=.*\b(profile|activeProfile|user|account|business|driver|subscription|verification)\b)(?=.*\b(verified|is_verified|is_suspended|plan|role|profile_type|status|type)\b)/;
 const SERVICE_FILE_RE = /(?:^|\/)([^/]+Service(?:\.impl)?\.ts)$/i;
@@ -58,7 +58,11 @@ function walk(dir: string): string[] {
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      if (["node_modules", ".git", "dist", "build", "coverage"].includes(entry.name)) {
+      if (
+        ["node_modules", ".git", "dist", "build", "coverage"].includes(
+          entry.name,
+        )
+      ) {
         continue;
       }
       files.push(...walk(fullPath));
@@ -95,7 +99,9 @@ function isBoundaryFile(filePath: string): boolean {
 
 function hasAllowedDbMarker(filePath: string): boolean {
   const normalized = normalize(filePath);
-  return GOVERNANCE_ALLOWED_DB_PATH_MARKERS.some((marker) => normalized.includes(marker));
+  return GOVERNANCE_ALLOWED_DB_PATH_MARKERS.some((marker) =>
+    normalized.includes(marker),
+  );
 }
 
 function resolveImport(currentFile: string, specifier: string): string | null {
@@ -131,7 +137,9 @@ function isFacadeFile(content: string): boolean {
     .toLowerCase();
 
   if (!normalized) return true;
-  if (GOVERNANCE_SERVICE_FACADE_HINTS.some((hint) => normalized.includes(hint))) {
+  if (
+    GOVERNANCE_SERVICE_FACADE_HINTS.some((hint) => normalized.includes(hint))
+  ) {
     return true;
   }
 
@@ -170,13 +178,19 @@ export function collectViolations(): Violation[] {
       const match = relativeFile.match(SERVICE_FILE_RE);
       const serviceBase = match?.[1]?.replace(".impl.ts", ".ts");
       if (serviceBase) {
-        serviceGroups.set(serviceBase, [...(serviceGroups.get(serviceBase) ?? []), relativeFile]);
+        serviceGroups.set(serviceBase, [
+          ...(serviceGroups.get(serviceBase) ?? []),
+          relativeFile,
+        ]);
       }
     }
 
     const baseName = path.basename(relativeFile);
     if (trackedTypeBasenames.has(baseName)) {
-      typeGroups.set(baseName, [...(typeGroups.get(baseName) ?? []), relativeFile]);
+      typeGroups.set(baseName, [
+        ...(typeGroups.get(baseName) ?? []),
+        relativeFile,
+      ]);
     }
 
     if (
@@ -187,7 +201,8 @@ export function collectViolations(): Violation[] {
       violations.push({
         kind: "db-boundary",
         file: relativeFile,
-        message: "Acesso direto ao Supabase fora de services/repositories oficiais.",
+        message:
+          "Acesso direto ao Supabase fora de services/repositories oficiais.",
       });
     }
 
@@ -210,12 +225,13 @@ export function collectViolations(): Violation[] {
       violations.push({
         kind: "db-boundary",
         file: relativeFile,
-        message:
-          "Acesso direto ao dominio family fora de FamilyService.",
+        message: "Acesso direto ao dominio family fora de FamilyService.",
       });
     }
 
-    const moduleMatch = normalize(relativeFile).match(/^src\/modules\/([^/]+)\//);
+    const moduleMatch = normalize(relativeFile).match(
+      /^src\/modules\/([^/]+)\//,
+    );
     if (moduleMatch) {
       const currentModule = moduleMatch[1];
       for (const specifier of extractImports(content)) {
@@ -242,7 +258,10 @@ export function collectViolations(): Violation[] {
       }
     }
 
-    if (normalize(relativeFile).includes("/hooks/") || normalize(relativeFile).includes("/pages/")) {
+    if (
+      normalize(relativeFile).includes("/hooks/") ||
+      normalize(relativeFile).includes("/pages/")
+    ) {
       const lines = scanContent.split("\n");
       lines.forEach((rawLine) => {
         const line = stripInlineComment(rawLine).trim();
@@ -262,7 +281,9 @@ export function collectViolations(): Violation[] {
     DOMAIN_REGISTRY.flatMap((entry) => entry.canonicalServiceBasenames),
   );
   const explicitSsotPaths = new Set(
-    DOMAIN_REGISTRY.flatMap((entry) => entry.ssotPaths).map((filePath) => normalize(filePath)),
+    DOMAIN_REGISTRY.flatMap((entry) => entry.ssotPaths).map((filePath) =>
+      normalize(filePath),
+    ),
   );
 
   for (const [serviceBase, groupedFiles] of serviceGroups) {
@@ -310,7 +331,9 @@ export function collectViolations(): Violation[] {
 
     const officialContainers = DOMAIN_REGISTRY.filter((entry) =>
       entry.canonicalTypeBasenames.includes(typeBase),
-    ).flatMap((entry) => entry.sourceRoots.map((sourceRoot) => normalize(sourceRoot)));
+    ).flatMap((entry) =>
+      entry.sourceRoots.map((sourceRoot) => normalize(sourceRoot)),
+    );
 
     for (const candidate of groupedFiles) {
       const isInsideOfficialContainer = officialContainers.some((rootDir) =>
@@ -349,7 +372,10 @@ function printReport(violations: Violation[]): void {
 
   const grouped = new Map<ViolationKind, Violation[]>();
   for (const violation of violations) {
-    grouped.set(violation.kind, [...(grouped.get(violation.kind) ?? []), violation]);
+    grouped.set(violation.kind, [
+      ...(grouped.get(violation.kind) ?? []),
+      violation,
+    ]);
   }
 
   for (const [kind, items] of grouped.entries()) {

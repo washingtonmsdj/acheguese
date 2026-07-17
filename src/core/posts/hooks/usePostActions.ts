@@ -10,9 +10,9 @@ import { useSessionContext } from "@/core/session";
 import { PostsFacade, postService } from "@/core/posts/services"; // ✅ SSOT v2.0
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
-import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService"; // ✅ GATE 3 FASE 3C
-import { ModerationService } from "@/core/moderation";
+import { PostEngagementService } from "@/core/engagement/services/PostEngagementService";
 import { LAUNCH_URLS } from "@/config/territory";
+import { communityFeedQueryKeys } from "@/core/feed";
 interface FeedLikeablePost {
   id?: string;
   is_liked?: boolean;
@@ -36,14 +36,44 @@ interface CommunityFeedCache {
   pages?: CommunityFeedPage[];
 }
 
-// Helper para criar notificação de like (✅ SSOT MIGRATION)
-async function createLikeNotification(postId: string, userId: string) {
-  try {
-    // ✅ SSOT — Usar PostService para criar notificação
-    await postService.createLikeNotification(postId, userId);
-  } catch (error) {
-    logger.error("Error creating like notification:", error);
-  }
+type FeedInteractionPatch = Partial<
+  Pick<FeedLikeablePost, "is_liked" | "likes_count"> & { is_saved: boolean }
+>;
+
+function updateFeedItem(
+  item: FeedItem,
+  postId: string,
+  updater: (
+    post: FeedLikeablePost & { is_saved?: boolean },
+  ) => FeedInteractionPatch,
+): FeedItem {
+  const embedded = "type" in item && item.type === "post";
+  const post = (embedded ? item.data : item) as FeedLikeablePost & {
+    is_saved?: boolean;
+  };
+  if ((post?.id ?? item.id) !== postId) return item;
+
+  const updated = { ...post, ...updater(post) };
+  return embedded ? { ...item, data: updated } : updated;
+}
+
+function updateFeedCache(
+  cache: CommunityFeedCache | undefined,
+  postId: string,
+  updater: (
+    post: FeedLikeablePost & { is_saved?: boolean },
+  ) => FeedInteractionPatch,
+): CommunityFeedCache | undefined {
+  if (!cache?.pages) return cache;
+
+  return {
+    ...cache,
+    pages: cache.pages.map((page) => ({
+      ...page,
+      feed: page.feed?.map((item) => updateFeedItem(item, postId, updater)),
+      posts: page.posts?.map((item) => updateFeedItem(item, postId, updater)),
+    })),
+  };
 }
 
 /**
@@ -68,108 +98,61 @@ export function usePostActions() {
         throw new Error("Você não tem permissão para curtir posts");
       }
 
-      // ✅ MIGRADO - Buscar informações do post usando PostsFacade.queries (SSOT v2.0)
-      const authorProfileId = await PostsFacade.queries.getPostAuthorId(postId);
-
-      // ✅ GATE 3 FASE 3C - Verificar se já curtiu usando SocialInteractionsService
-      const hasLiked = await SocialInteractionsService.hasLikedPost(
-        postId,
-        profileContext.id,
-      );
+      // Resolve current engagement before applying an explicit idempotent command.
+      const hasLiked = await PostEngagementService.hasLikedPost(postId);
 
       if (hasLiked) {
         // Descurtir
-        const result = await SocialInteractionsService.unlikePost(
-          postId,
-          profileContext.id,
-        );
+        const result = await PostEngagementService.unlikePost(postId);
         if (!result.success) {
           throw new Error(result.error || "Erro ao descurtir post");
         }
 
-        // ✅ MIGRADO - Atualizar reputação usando PostsFacade.mutations (SSOT v2.0)
-        if (authorProfileId) {
-          try {
-            await PostsFacade.mutations.incrementUserReputation(authorProfileId, -2);
-          } catch (error) {
-            logger.warn("Failed to update reputation:", error);
-          }
-        }
-
-        return { action: "unlike", authorProfileId: authorProfileId };
+        return { action: "unlike" };
       } else {
         // Curtir
-        const result = await SocialInteractionsService.likePost(
-          postId,
-          profileContext.id,
-        );
+        const result = await PostEngagementService.likePost(postId);
         if (!result.success) {
           throw new Error(result.error || "Erro ao curtir post");
         }
 
         // ✅ MIGRADO - Criar notificação de like usando PostService
-        await createLikeNotification(postId, profileContext.id);
-
-        // ✅ MIGRADO - Incrementar reputação usando PostsFacade.mutations (SSOT v2.0)
-        if (authorProfileId) {
-          try {
-            await PostsFacade.mutations.incrementUserReputation(authorProfileId, 2);
-          } catch (error) {
-            logger.warn("Failed to update reputation:", error);
-          }
-        }
-
-        return { action: "like", authorProfileId: authorProfileId };
+        return { action: "like" };
       }
     },
     // Optimistic update mantido igual
     onMutate: async (postId: string) => {
-      await queryClient.cancelQueries({ queryKey: ["community-feed"] });
-      const previousFeed = queryClient.getQueryData(["community-feed"]);
+      await queryClient.cancelQueries({
+        queryKey: communityFeedQueryKeys.root,
+      });
+      const previousFeeds = queryClient.getQueriesData<CommunityFeedCache>({
+        queryKey: communityFeedQueryKeys.root,
+      });
 
       queryClient.setQueriesData(
-        { queryKey: ["community-feed"] },
-        (old: CommunityFeedCache | undefined) => {
-          if (!old?.pages) return old;
-
-          return {
-            ...old,
-            pages: old.pages.map((page) => ({
-              ...page,
-              feed: (page.feed || page.posts || []).map((item) => {
-                const postData =
-                  "type" in item && item.type === "post" ? item.data : item;
-                const postId2 = postData?.id || item?.id;
-                if (postId2 === postId) {
-                  const isCurrentlyLiked = (postData as FeedLikeablePost).is_liked;
-                  const updated = {
-                    ...postData,
-                    is_liked: !isCurrentlyLiked,
-                    likes_count: isCurrentlyLiked
-                      ? (((postData as FeedLikeablePost).likes_count) || 1) - 1
-                      : (((postData as FeedLikeablePost).likes_count) || 0) + 1,
-                  };
-                  return "type" in item && item.type === "post"
-                    ? { ...item, data: updated }
-                    : updated;
-                }
-                return item;
-              }),
-            })),
-          };
-        },
+        { queryKey: communityFeedQueryKeys.root },
+        (old: CommunityFeedCache | undefined) =>
+          updateFeedCache(old, postId, (post) => {
+            const isLiked = Boolean(post.is_liked);
+            return {
+              is_liked: !isLiked,
+              likes_count: isLiked
+                ? Math.max(0, (post.likes_count ?? 0) - 1)
+                : (post.likes_count ?? 0) + 1,
+            };
+          }),
       );
 
-      return { previousFeed };
+      return { previousFeeds };
     },
-    onError: (error: Error, postId, context) => {
-      if (context?.previousFeed) {
-        queryClient.setQueryData(["community-feed"], context.previousFeed);
-      }
+    onError: (error: Error, _postId, context) => {
+      context?.previousFeeds.forEach(([queryKey, data]) =>
+        queryClient.setQueryData(queryKey, data),
+      );
       toast.error(error.message);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["community-feed"] });
+      queryClient.invalidateQueries({ queryKey: communityFeedQueryKeys.root });
       queryClient.invalidateQueries({ queryKey: ["user-reputation"] });
     },
   });
@@ -183,18 +166,12 @@ export function usePostActions() {
         throw new Error("Você não tem permissão para salvar posts");
       }
 
-      // ✅ GATE 3 FASE 3C - Verificar se já salvou usando SocialInteractionsService
-      const hasSaved = await SocialInteractionsService.hasSavedPost(
-        postId,
-        profileContext.id,
-      );
+      // Resolve current engagement before applying an explicit idempotent command.
+      const hasSaved = await PostEngagementService.hasSavedPost(postId);
 
       if (hasSaved) {
         // Remover dos salvos
-        const result = await SocialInteractionsService.unsavePost(
-          postId,
-          profileContext.id,
-        );
+        const result = await PostEngagementService.unsavePost(postId);
         if (!result.success) {
           throw new Error(result.error || "Erro ao remover post dos salvos");
         }
@@ -203,10 +180,7 @@ export function usePostActions() {
         return { action: "unsave" };
       } else {
         // Salvar
-        const result = await SocialInteractionsService.savePost(
-          postId,
-          profileContext.id,
-        );
+        const result = await PostEngagementService.savePost(postId);
         if (!result.success) {
           throw new Error(result.error || "Erro ao salvar post");
         }
@@ -215,98 +189,58 @@ export function usePostActions() {
         return { action: "save" };
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["community-feed"] });
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
-
-  // ✅ SSOT — Follow/Unfollow via PostService
-  const followMutation = useMutation({
-    mutationFn: async (postId: string) => {
-      if (!user || !profileContext) throw new Error("Usuário não autenticado");
-
-      if (!profileContext.isActive) {
-        throw new Error("Você não tem permissão para seguir posts");
-      }
-
-      const result = await postService.toggleFollowPost(
-        postId,
-        profileContext.id,
+    onMutate: async (postId: string) => {
+      await queryClient.cancelQueries({
+        queryKey: communityFeedQueryKeys.root,
+      });
+      const previousFeeds = queryClient.getQueriesData<CommunityFeedCache>({
+        queryKey: communityFeedQueryKeys.root,
+      });
+      queryClient.setQueriesData(
+        { queryKey: communityFeedQueryKeys.root },
+        (old: CommunityFeedCache | undefined) =>
+          updateFeedCache(old, postId, (post) => ({
+            is_saved: !post.is_saved,
+          })),
       );
-      const message =
-        result.action === "follow"
-          ? "Você está seguindo este post"
-          : "Você não está mais seguindo este post";
-      toast.success(message);
-      return result;
+      return { previousFeeds };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["community-feed"] });
+      queryClient.invalidateQueries({ queryKey: communityFeedQueryKeys.root });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _postId, context) => {
+      context?.previousFeeds.forEach(([queryKey, data]) =>
+        queryClient.setQueryData(queryKey, data),
+      );
       toast.error(error.message);
     },
   });
 
-  // Share post (mantido igual - não precisa de migração)
-  const sharePost = (postId: string) => {
+  const sharePost = async (postId: string) => {
     const url = `${window.location.origin}${LAUNCH_URLS.community}?post=${postId}`;
 
-    if (navigator.share) {
-      navigator
-        .share({
+    try {
+      if (navigator.share) {
+        await navigator.share({
           title: "Post da Comunidade",
           url: url,
-        })
-        .catch(() => {
-          navigator.clipboard.writeText(url);
-          toast.success("Link copiado!");
         });
-    } else {
-      navigator.clipboard.writeText(url);
-      toast.success("Link copiado!");
-    }
-  };
-
-  // ✅ MIGRADO - Report com verificação de permissão
-  const reportMutation = useMutation({
-    mutationFn: async ({
-      postId,
-      reason,
-      description,
-    }: {
-      postId: string;
-      reason: string;
-      description?: string;
-    }) => {
-      if (!user || !profileContext) throw new Error("Usuário não autenticado");
-
-      // ✅ MIGRADO - Verifica permissão usando isActive
-      if (!profileContext.isActive) {
-        throw new Error("Você não tem permissão para reportar posts");
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copiado!");
       }
 
-      // ✅ GATE 4A FASE 3 - Usar ModerationService
-      await ModerationService.reportContent({
-        targetType: "post",
-        targetId: postId,
-        reporterId: profileContext.id,
-        reason,
-        details: description,
-      });
-    },
-    onSuccess: () => {
-      toast.success(
-        "Denúncia enviada. Obrigado por ajudar a manter a comunidade segura.",
-      );
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
+      if (profileContext) {
+        await postService.recordPostShare(postId).catch((error) => {
+          logger.warn("Failed to record post share:", error);
+        });
+      }
+    } catch (error) {
+      if ((error as Error).name !== "AbortError") {
+        toast.error("Não foi possível compartilhar o post");
+      }
+    }
+  };
 
   // ✅ MIGRADO - Delete com verificação de permissão usando PostService
   const deleteMutation = useMutation({
@@ -322,7 +256,7 @@ export function usePostActions() {
       await PostsFacade.mutations.deletePostByAuthor(postId, profileContext.id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["community-feed"] });
+      queryClient.invalidateQueries({ queryKey: communityFeedQueryKeys.root });
       toast.success("Post excluído");
     },
     onError: (error: Error) => {
@@ -333,14 +267,10 @@ export function usePostActions() {
   return {
     likePost: likeMutation.mutate,
     savePost: saveMutation.mutate,
-    followPost: followMutation.mutate,
     sharePost,
-    reportPost: reportMutation.mutate,
     deletePost: deleteMutation.mutate,
     isLiking: likeMutation.isPending,
     isSaving: saveMutation.isPending,
-    isFollowing: followMutation.isPending,
-    isReporting: reportMutation.isPending,
     isDeleting: deleteMutation.isPending,
   };
 }

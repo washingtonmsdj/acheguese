@@ -34,8 +34,7 @@ export function useRideShare() {
   });
 
   const revokeShare = useMutation({
-    mutationFn: ({ rideId, performedBy }: { rideId: string; performedBy: string }) =>
-      safetyService.revokeRideShare(rideId, performedBy),
+    mutationFn: (shareId: string) => safetyService.revokeRideShare(shareId),
     onSuccess: (result) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: ['ride-shares'] });

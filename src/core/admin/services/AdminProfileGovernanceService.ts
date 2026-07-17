@@ -32,7 +32,7 @@ import {
   loadEntityMaps,
   loadFamilySummary,
   loadNotificationSettingsUserIds,
-  loadPermissionGovernance,
+  loadCapabilityPreview,
   loadPrimaryResidenceMap,
   loadProfileMembersCountMap,
   loadReviewAggregateMaps,
@@ -462,7 +462,7 @@ class AdminProfileGovernanceService {
         professionalReviews:
           reviewAggregateMaps.professionalReviewMap.get(profileId) ?? null,
       });
-      const permissionGovernance = await loadPermissionGovernance({
+      const capabilityPreview = await loadCapabilityPreview({
         profileId,
         roles,
         members,
@@ -484,7 +484,7 @@ class AdminProfileGovernanceService {
         reputationSources,
         residence: buildResidenceSummary(primaryResidenceMap.get(userId) ?? null),
         family,
-        permissionGovernance,
+        capabilityPreview,
       };
     } catch (error) {
       logger.error("AdminProfileGovernanceService.getProfileDetail", error);

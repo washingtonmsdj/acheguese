@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
 import { RIDE_STATUS } from "../constants";
+import { RideRatingService } from "./RideRatingService";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
@@ -84,10 +85,6 @@ type CompletedRidePaymentRow = {
   created_at: string;
   actual_fare?: number | null;
   final_price?: number | null;
-};
-
-type PassengerRatingRow = {
-  rating?: unknown;
 };
 
 export async function getDriverOfferCapabilities(
@@ -262,26 +259,10 @@ export async function getDriverCompleteProfile(profileId: string): Promise<{
 
 export async function getPassengerRating(profileId: string): Promise<number> {
   try {
-    const { data, error } = await mobilityDriverQueriesDb
-      .from<PassengerRatingRow>("ride_ratings")
-      .select("rating")
-      .eq("rated_id", profileId);
-
-    if (error) {
-      logger.warn("MobilityQueries.getPassengerRating - query error", { profileId, error });
-      return 5.0;
-    }
-
-    if (!data?.length) return 5.0;
-
-    const ratings = data
-      .map((row) => Number(row.rating))
-      .filter((value) => Number.isFinite(value));
-
-    if (!ratings.length) return 5.0;
-
-    const avg = ratings.reduce((sum, value) => sum + value, 0) / ratings.length;
-    return Number(avg.toFixed(1));
+    const summary = await RideRatingService.getSummary(profileId);
+    return summary.totalRatings > 0
+      ? Number(summary.averageRating.toFixed(1))
+      : 5.0;
   } catch (error) {
     logger.error("MobilityQueries.getPassengerRating", error as Error, { profileId });
     return 5.0;

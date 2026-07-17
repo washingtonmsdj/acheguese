@@ -7,10 +7,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { OrderService, type Order, type OrderStatus, type OrderType } from '@/modules/business/gastronomy/services/OrderService';
-import {
-  GastronomyOrderRealtimeService,
-  type GastronomyOrderRealtimePayload,
-} from '@/modules/business/gastronomy/services/GastronomyOrderRealtimeService';
+import { GastronomyOrderRealtimeService } from '@/modules/business/gastronomy/services/GastronomyOrderRealtimeService';
 import { toast } from 'sonner';
 import { useSessionContext } from '@/core/session';
 
@@ -29,14 +26,6 @@ export function useOrders(businessId: string, filters?: UseOrdersFilters) {
   const [isRealtimeConnected, setIsRealtimeConnected] = useState(false);
   const [lastRealtimeEventAt, setLastRealtimeEventAt] = useState<string | null>(null);
   const invalidateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const verifiedBusinessOrderIdsRef = useRef<Set<string>>(new Set());
-  const rememberVerifiedBusinessOrderId = (orderId: string) => {
-    const cache = verifiedBusinessOrderIdsRef.current;
-    if (cache.size >= 1000 && !cache.has(orderId)) {
-      cache.clear();
-    }
-    cache.add(orderId);
-  };
 
   // Query: Listar pedidos
   const { data: orders, isLoading, error, refetch } = useQuery({
@@ -50,14 +39,7 @@ export function useOrders(businessId: string, filters?: UseOrdersFilters) {
   });
 
   useEffect(() => {
-    if (!orders?.length) return;
-    for (const order of orders) {
-      rememberVerifiedBusinessOrderId(order.id);
-    }
-  }, [orders]);
-  useEffect(() => {
     if (!businessId) return;
-    verifiedBusinessOrderIdsRef.current.clear();
 
     const invalidateOrders = () => {
       setLastRealtimeEventAt(new Date().toISOString());
@@ -71,35 +53,9 @@ export function useOrders(businessId: string, filters?: UseOrdersFilters) {
       }, 250);
     };
 
-    const invalidateOrdersFromTimeline = async (
-      payload: GastronomyOrderRealtimePayload<Record<string, unknown>>,
-    ) => {
-      const newRow = payload.new as { order_id?: unknown } | null;
-      const oldRow = payload.old as { order_id?: unknown } | null;
-      const orderId =
-        typeof newRow?.order_id === 'string'
-          ? newRow.order_id
-          : typeof oldRow?.order_id === 'string'
-            ? oldRow.order_id
-            : null;
-
-      // Filtra por vinculo canonical (orders.source_id = businessId),
-      // evitando ruído sem perder pedidos que acabaram de entrar no filtro atual.
-      if (!orderId) return;
-      if (verifiedBusinessOrderIdsRef.current.has(orderId)) {
-        invalidateOrders();
-        return;
-      }
-      const isBusinessOrder = await GastronomyOrderRealtimeService.orderBelongsToBusiness(orderId, businessId);
-      if (!isBusinessOrder) return;
-      rememberVerifiedBusinessOrderId(orderId);
-      invalidateOrders();
-    };
-
     const channel = GastronomyOrderRealtimeService.subscribeBusinessOrders(
       businessId,
       invalidateOrders,
-      invalidateOrdersFromTimeline,
       (status) => {
         setIsRealtimeConnected(status === 'SUBSCRIBED');
       },

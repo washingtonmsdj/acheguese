@@ -1,40 +1,13 @@
-/**
- * 💬 USE DIRECT MESSAGES HOOK - SSOT Migration
- */
+import { useCallback, useEffect, useState } from "react";
 
-import { useState, useEffect, useCallback } from "react";
-import { realtimeService } from "@/core/realtime";
-import { messagingService } from "@/core/messaging";
+import {
+  communityDirectMessagingService,
+  type CommunityDirectMessage,
+  type CommunityDirectMessageCursor,
+  type CommunityDirectReportReason,
+  type CommunityDirectThreadPreview,
+} from "@/core/messaging";
 import { useSessionContext } from "@/core/session";
-import { resolveTrustActorRoleFromProfileType, TrustEventService } from "@/core/trust";
-import type {
-  ConversationPreview,
-  Message,
-  SendMessageInput,
-} from "@/core/messaging/types";
-
-function normalizeRealtimeMessage(input: Record<string, unknown>): Message | null {
-  const id = typeof input.id === "string" ? input.id : null;
-  const conversationId =
-    typeof input.conversation_id === "string" ? input.conversation_id : null;
-  const senderProfileId =
-    typeof input.sender_profile_id === "string" ? input.sender_profile_id : null;
-  const text = typeof input.text === "string" ? input.text : null;
-  const createdAt = typeof input.created_at === "string" ? input.created_at : null;
-
-  if (!id || !conversationId || !senderProfileId || !text || !createdAt) {
-    return null;
-  }
-
-  return {
-    id,
-    conversation_id: conversationId,
-    sender_profile_id: senderProfileId,
-    text,
-    created_at: createdAt,
-    read_at: typeof input.read_at === "string" ? input.read_at : null,
-  };
-}
 
 interface PostContext {
   id: string;
@@ -43,14 +16,18 @@ interface PostContext {
   type: "civic_report" | "achado" | "recomendacao" | "alerta";
 }
 
-export function useDirectMessages(_currentUserId?: string) {
+export function useDirectMessages(communityId?: string) {
   const { activeProfile } = useSessionContext();
   const profileId = activeProfile?.id;
-  const actorRole = resolveTrustActorRoleFromProfileType(activeProfile?.profileType);
-
-  const [conversations, setConversations] = useState<ConversationPreview[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [conversations, setConversations] = useState<
+    CommunityDirectThreadPreview[]
+  >([]);
+  const [messages, setMessages] = useState<CommunityDirectMessage[]>([]);
+  const [messageCursor, setMessageCursor] =
+    useState<CommunityDirectMessageCursor | null>(null);
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchConversations = useCallback(async () => {
@@ -58,170 +35,213 @@ export function useDirectMessages(_currentUserId?: string) {
     setIsLoading(true);
     setError(null);
     try {
-      const conversationPreviews =
-        await messagingService.getConversationPreviews(profileId);
-      setConversations(conversationPreviews);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao buscar conversas");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [profileId]);
-
-  const fetchMessages = useCallback(async (conversationId: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const messagesData = await messagingService.getMessages(conversationId);
-      setMessages(messagesData);
-      if (profileId) {
-        await messagingService.markMessagesAsRead(conversationId, profileId);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao buscar mensagens");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [profileId]);
-
-  const createOrGetConversation = useCallback(async (
-    postContext: PostContext,
-    participantId: string,
-  ): Promise<string | null> => {
-    if (!profileId) return null;
-    try {
-      const conversation = await messagingService.findOrCreateConversation(
-        postContext.id,
-        profileId,
-        participantId,
+      const page =
+        await communityDirectMessagingService.listConversationPreviews({
+          profileId,
+          limit: 50,
+        });
+      setConversations(page.items);
+    } catch (caught) {
+      setError(
+        caught instanceof Error ? caught.message : "Erro ao buscar conversas",
       );
-      return conversation?.id || null;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao criar conversa");
-      return null;
+    } finally {
+      setIsLoading(false);
     }
   }, [profileId]);
 
-  const sendMessage = useCallback(async (
-    conversationId: string,
-    messageText: string,
-    _messageType: "text" | "location" = "text",
-    _locationData?: { latitude: number; longitude: number; address?: string },
-  ) => {
-    if (!profileId) return false;
-    try {
-      const messageInput: SendMessageInput = {
-        conversation_id: conversationId,
-        sender_profile_id: profileId,
-        text: messageText,
-      };
-      const message = await messagingService.sendMessage(messageInput);
-      if (message) {
-        await fetchMessages(conversationId);
-        return true;
+  const fetchMessages = useCallback(
+    async (threadId: string) => {
+      if (!profileId) return;
+      setActiveThreadId(threadId);
+      setIsLoading(true);
+      setError(null);
+      try {
+        const page = await communityDirectMessagingService.listMessagePage({
+          profileId,
+          threadId,
+          limit: 50,
+        });
+        setMessages(page.items);
+        setMessageCursor(page.nextCursor);
+        await communityDirectMessagingService.markThreadRead(
+          profileId,
+          threadId,
+        );
+      } catch (caught) {
+        setError(
+          caught instanceof Error ? caught.message : "Erro ao buscar mensagens",
+        );
+      } finally {
+        setIsLoading(false);
       }
-      return false;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao enviar mensagem");
-      return false;
+    },
+    [profileId],
+  );
+
+  const loadOlderMessages = useCallback(async () => {
+    if (!profileId || !activeThreadId || !messageCursor || isLoadingOlder) {
+      return;
     }
-  }, [fetchMessages, profileId]);
-
-  const reportConversation = useCallback(async (
-    conversationId: string,
-    _reportedUserId: string,
-    reason: string,
-    description?: string,
-  ) => {
-    if (!profileId) return false;
+    setIsLoadingOlder(true);
     try {
-      const trustResult = await TrustEventService.createEvent({
-        actor_profile_id: profileId,
-        actor_role: actorRole,
-        subject_profile_id: profileId,
-        subject_role: actorRole,
-        context_type: "community",
-        context_id: conversationId,
-        event_type: "incident",
-        reason_code: "conversation_report",
-        severity: "medium",
-        visibility: "admin_only",
-        description: description?.trim() || reason.trim(),
-        evidence: {
-          conversation_id: conversationId,
-          reason,
-          description: description ?? null,
-        },
-        status: "under_review",
+      const page = await communityDirectMessagingService.listMessagePage({
+        profileId,
+        threadId: activeThreadId,
+        limit: 50,
+        cursor: messageCursor,
       });
+      setMessages((current) => {
+        const knownIds = new Set(current.map((message) => message.id));
+        return [
+          ...page.items.filter((message) => !knownIds.has(message.id)),
+          ...current,
+        ];
+      });
+      setMessageCursor(page.nextCursor);
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "Erro ao buscar mensagens anteriores",
+      );
+    } finally {
+      setIsLoadingOlder(false);
+    }
+  }, [activeThreadId, isLoadingOlder, messageCursor, profileId]);
 
-      if (trustResult.error) {
-        setError(trustResult.error);
+  const createOrGetConversation = useCallback(
+    async (
+      postContext: PostContext,
+      participantId: string,
+    ): Promise<string | null> => {
+      if (!profileId || !communityId) return null;
+      setError(null);
+      try {
+        return await communityDirectMessagingService.createOrGetThread({
+          profileId,
+          communityId,
+          postId: postContext.id,
+          recipientProfileId: participantId,
+        });
+      } catch (caught) {
+        setError(
+          caught instanceof Error ? caught.message : "Erro ao criar conversa",
+        );
+        return null;
+      }
+    },
+    [communityId, profileId],
+  );
+
+  const sendMessage = useCallback(
+    async (threadId: string, messageText: string) => {
+      if (!profileId) return false;
+      try {
+        const message = await communityDirectMessagingService.sendMessage({
+          profileId,
+          threadId,
+          body: messageText,
+        });
+        setMessages((current) =>
+          current.some((item) => item.id === message.id)
+            ? current
+            : [...current, message],
+        );
+        return true;
+      } catch (caught) {
+        setError(
+          caught instanceof Error ? caught.message : "Erro ao enviar mensagem",
+        );
         return false;
       }
+    },
+    [profileId],
+  );
 
-      await messagingService.blockConversation({
-        conversation_id: conversationId,
-        blocked_by: "buyer",
-        block_reason: `Report: ${reason} - ${description || ""}`,
-      });
-      return true;
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Erro ao denunciar conversa",
-      );
-      return false;
-    }
-  }, [actorRole, profileId]);
-
-  const deactivateConversation = useCallback(async (conversationId: string) => {
-    if (!profileId) return false;
-    try {
-      await messagingService.blockConversation({
-        conversation_id: conversationId,
-        blocked_by: "buyer",
-        block_reason: "User deactivated conversation",
-      });
-      await fetchConversations();
-      return true;
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Erro ao desativar conversa",
-      );
-      return false;
-    }
-  }, [fetchConversations, profileId]);
-
-  // ✅ SSOT - Usar RealtimeService para subscriptions
-  useEffect(() => {
-    if (!profileId) return;
-
-    // Subscribe to new messages
-    const messageSubscription = realtimeService.subscribeToDirectMessages(
-      profileId,
-      (newMessage) => {
-        const normalizedMessage = normalizeRealtimeMessage(newMessage);
-        if (!normalizedMessage) return;
-
-        setMessages((prev) => {
-          if (prev.find((m) => m.id === normalizedMessage.id)) return prev;
-          return [...prev, normalizedMessage];
+  const reportConversation = useCallback(
+    async (
+      threadId: string,
+      reason: CommunityDirectReportReason,
+      description?: string,
+    ) => {
+      if (!profileId) return false;
+      try {
+        await communityDirectMessagingService.reportThread({
+          profileId,
+          threadId,
+          reason,
+          description,
         });
+        return true;
+      } catch (caught) {
+        setError(
+          caught instanceof Error
+            ? caught.message
+            : "Erro ao denunciar conversa",
+        );
+        return false;
+      }
+    },
+    [profileId],
+  );
+
+  const deactivateConversation = useCallback(
+    async (threadId: string) => {
+      if (!profileId) return false;
+      try {
+        await communityDirectMessagingService.setThreadBlocked(
+          profileId,
+          threadId,
+          true,
+        );
+        await fetchConversations();
+        return true;
+      } catch (caught) {
+        setError(
+          caught instanceof Error
+            ? caught.message
+            : "Erro ao bloquear conversa",
+        );
+        return false;
+      }
+    },
+    [fetchConversations, profileId],
+  );
+
+  useEffect(() => {
+    if (!profileId || !activeThreadId) return;
+
+    const subscription = communityDirectMessagingService.subscribeToMessages(
+      activeThreadId,
+      (message) => {
+        setMessages((current) =>
+          current.some((item) => item.id === message.id)
+            ? current
+            : [...current, message],
+        );
+        if (message.sender_profile_id !== profileId) {
+          void communityDirectMessagingService.markThreadRead(
+            profileId,
+            activeThreadId,
+          );
+        }
       },
     );
 
-    return () => {
-      messageSubscription.unsubscribe();
-    };
-  }, [profileId]);
+    return () => subscription.unsubscribe();
+  }, [activeThreadId, profileId]);
 
   return {
     conversations,
     messages,
     isLoading,
+    isLoadingOlder,
+    hasOlderMessages: messageCursor !== null,
     error,
     fetchConversations,
     fetchMessages,
+    loadOlderMessages,
     createOrGetConversation,
     sendMessage,
     reportConversation,

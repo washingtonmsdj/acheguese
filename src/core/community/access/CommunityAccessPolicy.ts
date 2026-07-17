@@ -12,7 +12,10 @@ export interface CommunityAccessLocationTarget {
   };
 }
 
-export type CommunityAccessTarget = ResolvedTerritory | CommunityAccessLocationTarget | null;
+export type CommunityAccessTarget =
+  | ResolvedTerritory
+  | CommunityAccessLocationTarget
+  | null;
 
 export type CommunityAccessLevel =
   | "public_preview"
@@ -116,7 +119,9 @@ function emptyPermissions(): Record<CommunityAction, boolean> {
   >;
 }
 
-function permissionsFor(level: CommunityAccessLevel): Record<CommunityAction, boolean> {
+function permissionsFor(
+  level: CommunityAccessLevel,
+): Record<CommunityAction, boolean> {
   const can = emptyPermissions();
   can.view_public_preview = true;
 
@@ -150,12 +155,8 @@ function permissionsFor(level: CommunityAccessLevel): Record<CommunityAction, bo
 
   if (level === "community_member") {
     can.view_member_feed = true;
-    can.create_post = true;
-    can.comment = true;
     can.react = true;
     can.save = true;
-    can.send_message = true;
-    can.join_group = true;
     can.report = true;
     return can;
   }
@@ -213,8 +214,8 @@ function residenceMatchesTarget(
 ): boolean {
   return Boolean(
     residence?.locationId &&
-      targetLocationIds.length > 0 &&
-      targetLocationIds.includes(residence.locationId),
+    targetLocationIds.length > 0 &&
+    targetLocationIds.includes(residence.locationId),
   );
 }
 
@@ -234,7 +235,9 @@ function buildDecision(
   };
 }
 
-export function resolveCommunityAccess(input: CommunityAccessInput): CommunityAccessDecision {
+export function resolveCommunityAccess(
+  input: CommunityAccessInput,
+): CommunityAccessDecision {
   const targetLocationIds = resolveCommunityAccessTargetLocationIds(
     input.resolved,
     input.activeMemberIds,
@@ -249,15 +252,30 @@ export function resolveCommunityAccess(input: CommunityAccessInput): CommunityAc
   }
 
   if (!input.isAuthenticated) {
-    return buildDecision("public_preview", "visitor", "login", targetLocationIds);
+    return buildDecision(
+      "public_preview",
+      "visitor",
+      "login",
+      targetLocationIds,
+    );
   }
 
   if (!input.hasActiveProfile) {
-    return buildDecision("authenticated", "missing_profile", "create_profile", targetLocationIds);
+    return buildDecision(
+      "authenticated",
+      "missing_profile",
+      "create_profile",
+      targetLocationIds,
+    );
   }
 
   if (!input.rolloutEnabled) {
-    return buildDecision("authenticated", "rollout_blocked", "waitlist", targetLocationIds);
+    return buildDecision(
+      "authenticated",
+      "rollout_blocked",
+      "waitlist",
+      targetLocationIds,
+    );
   }
 
   if (input.membershipRequired) {
@@ -273,15 +291,38 @@ export function resolveCommunityAccess(input: CommunityAccessInput): CommunityAc
     }
 
     if (membership.status === "pending") {
-      return buildDecision("authenticated", "membership_pending", "none", targetLocationIds);
+      return buildDecision(
+        "authenticated",
+        "membership_pending",
+        "none",
+        targetLocationIds,
+      );
     }
 
     if (membership.status === "rejected") {
-      return buildDecision("authenticated", "membership_rejected", "none", targetLocationIds);
+      return buildDecision(
+        "authenticated",
+        "membership_rejected",
+        "none",
+        targetLocationIds,
+      );
     }
 
     if (membership.status === "blocked") {
-      return buildDecision("authenticated", "membership_blocked", "none", targetLocationIds);
+      return buildDecision(
+        "authenticated",
+        "membership_blocked",
+        "none",
+        targetLocationIds,
+      );
+    }
+
+    if (membership.role === "owner" || membership.role === "admin") {
+      return buildDecision("admin", "allowed", "none", targetLocationIds);
+    }
+
+    if (membership.role === "moderator") {
+      return buildDecision("moderator", "allowed", "none", targetLocationIds);
     }
 
     const isVerifiedLocalResident =
@@ -297,20 +338,45 @@ export function resolveCommunityAccess(input: CommunityAccessInput): CommunityAc
       );
     }
 
-    return buildDecision("verified_community_member", "allowed", "none", targetLocationIds);
+    return buildDecision(
+      "verified_community_member",
+      "allowed",
+      "none",
+      targetLocationIds,
+    );
   }
 
   if (!input.residence?.locationId) {
-    return buildDecision("authenticated", "missing_residence", "add_address", targetLocationIds);
+    return buildDecision(
+      "authenticated",
+      "missing_residence",
+      "add_address",
+      targetLocationIds,
+    );
   }
 
   if (!residenceMatchesTarget(input.residence, targetLocationIds)) {
-    return buildDecision("authenticated", "out_of_territory", "add_address", targetLocationIds);
+    return buildDecision(
+      "authenticated",
+      "out_of_territory",
+      "add_address",
+      targetLocationIds,
+    );
   }
 
   if (!input.residence.isVerified) {
-    return buildDecision("resident", "unverified_residence", "verify_address", targetLocationIds);
+    return buildDecision(
+      "resident",
+      "unverified_residence",
+      "verify_address",
+      targetLocationIds,
+    );
   }
 
-  return buildDecision("verified_resident", "allowed", "none", targetLocationIds);
+  return buildDecision(
+    "verified_resident",
+    "allowed",
+    "none",
+    targetLocationIds,
+  );
 }

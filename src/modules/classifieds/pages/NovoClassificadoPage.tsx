@@ -231,7 +231,7 @@ export default function NovoClassificadoPage() {
       if (photos.length > 0) {
         toast.info("Enviando fotos...");
         const uploadedImages = await uploadMultipleImages(photos);
-        photoUrls = uploadedImages.map((img) => img.url);
+        photoUrls = uploadedImages.map((image) => image.reference);
       }
 
       // 2. Criar anúncio

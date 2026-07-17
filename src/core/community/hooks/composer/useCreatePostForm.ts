@@ -2,8 +2,9 @@
  * useCreatePostForm - Hook para gerenciar formulário de criação de post
  */
 
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PostType } from "@/core/posts/types.ts";
+import { POST_LIMITS } from "@/shared/constants/socialContent";
 
 export function useCreatePostForm() {
   const [content, setContent] = useState("");
@@ -12,7 +13,20 @@ export function useCreatePostForm() {
     "neighborhood",
   );
   const [images, setImages] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const imagesRef = useRef<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    imagesRef.current = images;
+  }, [images]);
+
+  useEffect(
+    () => () => {
+      imagesRef.current.forEach((url) => URL.revokeObjectURL(url));
+    },
+    [],
+  );
 
   const characterCount = content.length;
   const isValid = characterCount >= 20 && characterCount <= 2000;
@@ -22,15 +36,27 @@ export function useCreatePostForm() {
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const newImages = files
-      .slice(0, 3 - images.length)
-      .map((file) => URL.createObjectURL(file));
-    setImages((prev) => [...prev, ...newImages].slice(0, 3));
+    const availableSlots = POST_LIMITS.MAX_IMAGES - imageFiles.length;
+    const files = Array.from(e.target.files || [])
+      .filter((file) => file.type.startsWith("image/"))
+      .slice(0, availableSlots);
+    if (files.length === 0) return;
+
+    const newImages = files.map((file) => URL.createObjectURL(file));
+    setImageFiles((current) => [...current, ...files]);
+    setImages((current) => [...current, ...newImages]);
+    e.target.value = "";
   };
 
   const handleRemoveImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
+    setImages((current) => {
+      const removed = current[index];
+      if (removed) URL.revokeObjectURL(removed);
+      return current.filter((_, currentIndex) => currentIndex !== index);
+    });
+    setImageFiles((current) =>
+      current.filter((_, currentIndex) => currentIndex !== index),
+    );
   };
 
   const validateForm = () => {
@@ -50,7 +76,10 @@ export function useCreatePostForm() {
     setContent("");
     setType("discussao");
     setReach("neighborhood");
+    imagesRef.current.forEach((url) => URL.revokeObjectURL(url));
+    imagesRef.current = [];
     setImages([]);
+    setImageFiles([]);
   };
 
   return {
@@ -61,6 +90,7 @@ export function useCreatePostForm() {
     reach,
     setReach,
     images,
+    imageFiles,
     characterCount,
     isValid,
     fileInputRef,

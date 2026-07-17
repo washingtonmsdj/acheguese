@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import type { Json, Tables, TablesInsert } from "@/integrations/supabase";
-import { SessionService } from "@/core/session/services/SessionService";
+import { communityAlertService } from "@/core/community/alerts";
 import { logger } from "@/shared/utils/logger";
 import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
 
@@ -54,7 +54,6 @@ type AlertReportReason =
   | "other";
 
 type CommunityAlertRow = Tables<"community_alerts">;
-type CommunityAlertUpdate = Partial<CommunityAlertRow>;
 type CommunityAlertReportRow = Tables<"community_alert_reports">;
 type BlockedTermRow = Tables<"alert_blocked_terms">;
 type BlockedTermInsert = TablesInsert<"alert_blocked_terms">;
@@ -66,13 +65,6 @@ type CommunityAlertAuditRow = {
   action_type: string;
   metadata: Json | null;
   created_at: string;
-};
-
-type CommunityAlertAuditInsert = {
-  alert_id: string;
-  actor_id: string;
-  action_type: string;
-  metadata?: Json | null;
 };
 
 type AlertAuthorProfile = {
@@ -92,7 +84,16 @@ type CommunityAlertReportWithRelationsRow = CommunityAlertReportRow & {
   reporter_profile?: AlertReporterProfile | null;
 };
 
-type CommunityAlertStatsRow = Pick<CommunityAlertRow, "status" | "report_count" | "under_review">;
+type CommunityAlertAdminStatsRpc = {
+  total?: number;
+  active?: number;
+  ended?: number;
+  expired?: number;
+  removed?: number;
+  under_review?: number;
+  total_reports?: number;
+  categories?: Partial<Record<AlertCategory, number>>;
+};
 
 interface CommunityAlert {
   id: string;
@@ -159,10 +160,6 @@ export interface BlockedTerm {
   updated_at: string;
 }
 
-function toJsonMetadata(value: Record<string, unknown>): Json {
-  return JSON.parse(JSON.stringify(value)) as Json;
-}
-
 function mapAlertRow(row: CommunityAlertRow): CommunityAlert {
   return {
     id: row.id,
@@ -219,53 +216,26 @@ class AdminCommunityAlertsServiceClass {
   private readonly tableName = "community_alerts";
   private readonly reportsTable = "community_alert_reports";
   private readonly blockedTermsTable = "alert_blocked_terms";
-  private readonly auditTable = "community_alert_audit";
 
   async getStats(): Promise<AlertStats> {
     try {
-      const { data, error } = await db
-        .from<CommunityAlertStatsRow>(this.tableName)
-        .select("status, report_count, under_review");
+      const { data, error } = await supabase.rpc("get_community_alert_admin_stats");
 
       if (error) throw error;
-
-      const rows = data || [];
+      const aggregate = (data ?? {}) as CommunityAlertAdminStatsRpc;
+      const total = aggregate.total ?? 0;
+      const totalReports = aggregate.total_reports ?? 0;
       const stats: AlertStats = {
-        total: rows.length,
-        active: 0,
-        ended: 0,
-        expired: 0,
-        removed: 0,
-        underReview: 0,
-        totalReports: 0,
-        avgReportsPerAlert: 0,
+        total,
+        active: aggregate.active ?? 0,
+        ended: aggregate.ended ?? 0,
+        expired: aggregate.expired ?? 0,
+        removed: aggregate.removed ?? 0,
+        underReview: aggregate.under_review ?? 0,
+        totalReports,
+        avgReportsPerAlert:
+          total > 0 ? Math.round((totalReports / total) * 10) / 10 : 0,
       };
-
-      rows.forEach((alert) => {
-        switch (alert.status) {
-          case "ativo":
-            stats.active += 1;
-            break;
-          case "encerrado":
-            stats.ended += 1;
-            break;
-          case "expirado":
-            stats.expired += 1;
-            break;
-          case "removido":
-            stats.removed += 1;
-            break;
-        }
-
-        if (alert.under_review) {
-          stats.underReview += 1;
-        }
-
-        stats.totalReports += alert.report_count || 0;
-      });
-
-      stats.avgReportsPerAlert =
-        stats.total > 0 ? Math.round((stats.totalReports / stats.total) * 10) / 10 : 0;
 
       logger.info("AdminCommunityAlertsService.getStats", stats);
       return stats;
@@ -301,6 +271,8 @@ class AdminCommunityAlertsServiceClass {
         page = 1,
         limit = 20,
       } = filters;
+      const safePage = Math.max(1, Math.floor(page));
+      const safeLimit = Math.min(100, Math.max(1, Math.floor(limit)));
 
       let query = db.from<CommunityAlertWithRelationsRow>(this.tableName).select(
         `
@@ -324,25 +296,24 @@ class AdminCommunityAlertsServiceClass {
         if (searchFilter) query = query.or(searchFilter);
       }
 
-      const from = (page - 1) * limit;
-      const to = from + limit - 1;
+      const from = (safePage - 1) * safeLimit;
+      const to = from + safeLimit - 1;
 
       const { data, error, count } = await query.order("created_at", { ascending: false }).range(from, to);
       if (error) throw error;
 
-      const alertsWithReports = await Promise.all(
-        (data || []).map(async (alert) => {
-          const reports = await this.getAlertReports(alert.id);
-          return mapAlertWithDetailsRow(alert, reports);
-        }),
+      const rows = data || [];
+      const reportsByAlert = await this.getReportsForAlerts(rows.map((alert) => alert.id));
+      const alertsWithReports = rows.map((alert) =>
+        mapAlertWithDetailsRow(alert, reportsByAlert.get(alert.id) ?? []),
       );
 
       const total = count || 0;
       return {
         data: alertsWithReports,
         total,
-        page,
-        totalPages: Math.ceil(total / limit),
+        page: safePage,
+        totalPages: Math.ceil(total / safeLimit),
       };
     } catch (error) {
       logger.error("AdminCommunityAlertsService.getAllAlerts", error);
@@ -365,12 +336,15 @@ class AdminCommunityAlertsServiceClass {
         )
         .eq("under_review", true)
         .in("status", ["ativo"])
-        .order("report_count", { ascending: false });
+        .order("report_count", { ascending: false })
+        .limit(100);
 
       if (error) throw error;
 
-      return Promise.all(
-        (data || []).map(async (alert) => mapAlertWithDetailsRow(alert, await this.getAlertReports(alert.id))),
+      const rows = data || [];
+      const reportsByAlert = await this.getReportsForAlerts(rows.map((alert) => alert.id));
+      return rows.map((alert) =>
+        mapAlertWithDetailsRow(alert, reportsByAlert.get(alert.id) ?? []),
       );
     } catch (error) {
       logger.error("AdminCommunityAlertsService.getAlertsUnderReview", error);
@@ -391,7 +365,8 @@ class AdminCommunityAlertsServiceClass {
           `,
         )
         .eq("alert_id", alertId)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(100);
 
       if (error) throw error;
       return (data || []).map(mapAlertReportRow);
@@ -402,71 +377,26 @@ class AdminCommunityAlertsServiceClass {
   }
 
   async removeAlert(alertId: string, reason: string): Promise<boolean> {
-    try {
-      const payload: CommunityAlertUpdate = {
-        status: "removido",
-        removed_at: new Date().toISOString(),
-        removal_reason: reason,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { error } = await db.from<CommunityAlertRow>(this.tableName).update(payload).eq("id", alertId);
-      if (error) throw error;
-
-      await this.writeAuditLog(alertId, "removed", { reason });
-      return true;
-    } catch (error) {
-      logger.error("AdminCommunityAlertsService.removeAlert", error);
-      return false;
-    }
+    return communityAlertService.removeAlert(alertId, reason);
   }
 
   async clearUnderReview(alertId: string): Promise<boolean> {
-    try {
-      const { error } = await db
-        .from<CommunityAlertRow>(this.tableName)
-        .update({ under_review: false, updated_at: new Date().toISOString() })
-        .eq("id", alertId);
-
-      if (error) throw error;
-
-      await this.writeAuditLog(alertId, "reviewed_cleared", {
-        cleared_at: new Date().toISOString(),
-      });
-      return true;
-    } catch (error) {
-      logger.error("AdminCommunityAlertsService.clearUnderReview", error);
-      return false;
-    }
+    return communityAlertService.clearUnderReview(alertId);
   }
 
   async endAlert(alertId: string): Promise<boolean> {
-    try {
-      const { error } = await db
-        .from<CommunityAlertRow>(this.tableName)
-        .update({ status: "encerrado", updated_at: new Date().toISOString() })
-        .eq("id", alertId);
-
-      if (error) throw error;
-
-      await this.writeAuditLog(alertId, "ended", {});
-      return true;
-    } catch (error) {
-      logger.error("AdminCommunityAlertsService.endAlert", error);
-      return false;
-    }
+    return communityAlertService.endAlert(alertId);
   }
 
   async getAuditLog(alertId: string): Promise<CommunityAlertAuditRow[]> {
     try {
-      const { data, error } = await db
-        .from<CommunityAlertAuditRow>(this.auditTable)
-        .select("*")
-        .eq("alert_id", alertId)
-        .order("created_at", { ascending: true });
+      const { data, error } = await supabase.rpc("list_community_alert_audit", {
+        p_alert_id: alertId,
+        p_limit: 200,
+      });
 
       if (error) throw error;
-      return data || [];
+      return (data ?? []) as CommunityAlertAuditRow[];
     } catch (error) {
       logger.error("AdminCommunityAlertsService.getAuditLog", error);
       return [];
@@ -478,7 +408,8 @@ class AdminCommunityAlertsServiceClass {
       const { data, error } = await db
         .from<BlockedTermRow>(this.blockedTermsTable)
         .select("*")
-        .order("term", { ascending: true });
+        .order("term", { ascending: true })
+        .limit(500);
 
       if (error) throw error;
       return (data || []) as BlockedTerm[];
@@ -532,6 +463,7 @@ class AdminCommunityAlertsServiceClass {
 
   async getTopReportedAlerts(limit = 10): Promise<AlertWithDetails[]> {
     try {
+      const safeLimit = Math.min(100, Math.max(1, Math.floor(limit)));
       const { data, error } = await db
         .from<CommunityAlertWithRelationsRow>(this.tableName)
         .select(
@@ -545,12 +477,14 @@ class AdminCommunityAlertsServiceClass {
         )
         .gt("report_count", 0)
         .order("report_count", { ascending: false })
-        .limit(limit);
+        .limit(safeLimit);
 
       if (error) throw error;
 
-      return Promise.all(
-        (data || []).map(async (alert) => mapAlertWithDetailsRow(alert, await this.getAlertReports(alert.id))),
+      const rows = data || [];
+      const reportsByAlert = await this.getReportsForAlerts(rows.map((alert) => alert.id));
+      return rows.map((alert) =>
+        mapAlertWithDetailsRow(alert, reportsByAlert.get(alert.id) ?? []),
       );
     } catch (error) {
       logger.error("AdminCommunityAlertsService.getTopReportedAlerts", error);
@@ -560,42 +494,48 @@ class AdminCommunityAlertsServiceClass {
 
   async getStatsByCategory(): Promise<Record<AlertCategory, number>> {
     try {
-      const { data, error } = await db
-        .from<Pick<CommunityAlertRow, "type">>(this.tableName)
-        .select("type");
+      const { data, error } = await supabase.rpc("get_community_alert_admin_stats");
 
       if (error) throw error;
-
-      const stats: Partial<Record<AlertCategory, number>> = {};
-      (data || []).forEach((alert) => {
-        const category = alert.type as AlertCategory;
-        stats[category] = (stats[category] || 0) + 1;
-      });
-
-      return stats as Record<AlertCategory, number>;
+      const aggregate = (data ?? {}) as CommunityAlertAdminStatsRpc;
+      return (aggregate.categories ?? {}) as Record<AlertCategory, number>;
     } catch (error) {
       logger.error("AdminCommunityAlertsService.getStatsByCategory", error);
       return {} as Record<AlertCategory, number>;
     }
   }
 
-  private async writeAuditLog(
-    alertId: string,
-    actionType: string,
-    metadata: Record<string, unknown>,
-  ): Promise<void> {
-    const user = await SessionService.getCurrentUser();
-    if (!user) return;
+  private async getReportsForAlerts(
+    alertIds: string[],
+  ): Promise<Map<string, NonNullable<AlertWithDetails["reports"]>>> {
+    const result = new Map<string, NonNullable<AlertWithDetails["reports"]>>();
+    const uniqueAlertIds = [...new Set(alertIds)].slice(0, 100);
+    if (uniqueAlertIds.length === 0) return result;
 
-    const payload: CommunityAlertAuditInsert = {
-      alert_id: alertId,
-      actor_id: user.id,
-      action_type: actionType,
-      metadata: toJsonMetadata(metadata),
-    };
+    const { data, error } = await db
+      .from<CommunityAlertReportWithRelationsRow>(this.reportsTable)
+      .select(
+        `
+        *,
+        reporter_profile:profiles!community_alert_reports_reporter_id_fkey(
+          display_name
+        )
+        `,
+      )
+      .in("alert_id", uniqueAlertIds)
+      .order("created_at", { ascending: false })
+      .limit(2000);
 
-    const { error } = await db.from<CommunityAlertAuditRow>(this.auditTable).insert(payload);
     if (error) throw error;
+
+    for (const row of data || []) {
+      const reports = result.get(row.alert_id) ?? [];
+      if (reports.length >= 100) continue;
+      reports.push(mapAlertReportRow(row));
+      result.set(row.alert_id, reports);
+    }
+
+    return result;
   }
 }
 

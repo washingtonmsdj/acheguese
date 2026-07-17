@@ -1,7 +1,2 @@
-/**
- * Feed Core Services
- * Migrated from /src/services/feed/
- */
-
-export { feedService } from "./services/FeedService";
-export type * from "./types";
+/** Cache namespace for cross-source community feed composition. */
+export { communityFeedQueryKeys } from "./queryKeys";

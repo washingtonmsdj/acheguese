@@ -1,0 +1,385 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-07-15",
+  "authorityRule": "A frontend capability preview only controls visibility. Every protected command is independently enforced by RLS, an RPC, or an Edge Function.",
+  "remoteAudit": "tests/security/authorization-enforcement-remote-audit.sql",
+  "actions": [
+    {
+      "action": "createPost",
+      "resource": "public.posts",
+      "commandOwner": "src/core/posts/services/posts.mutations.ts",
+      "coverage": "verified",
+      "enforcement": ["rls:community_posts_verified_insert"],
+      "evidence": [
+        "supabase/migrations/20260713090000_harden_community_social_runtime.sql"
+      ]
+    },
+    {
+      "action": "editPost",
+      "resource": "public.posts",
+      "commandOwner": "src/core/posts/services/posts.mutations.ts",
+      "coverage": "verified",
+      "enforcement": ["rls:community_posts_owner_or_admin_update"],
+      "evidence": [
+        "supabase/migrations/20260713090000_harden_community_social_runtime.sql"
+      ]
+    },
+    {
+      "action": "deletePost",
+      "resource": "public.posts",
+      "commandOwner": "src/core/posts/services/posts.mutations.ts",
+      "coverage": "verified",
+      "enforcement": ["rls:community_posts_owner_or_admin_delete"],
+      "evidence": [
+        "supabase/migrations/20260713090000_harden_community_social_runtime.sql"
+      ]
+    },
+    {
+      "action": "createComment",
+      "resource": "public.comments",
+      "commandOwner": "src/core/comments/services/comments.mutations.ts",
+      "coverage": "verified",
+      "enforcement": ["rls:community_comments_verified_insert"],
+      "evidence": [
+        "supabase/migrations/20260713090000_harden_community_social_runtime.sql"
+      ]
+    },
+    {
+      "action": "editComment",
+      "resource": "public.comments",
+      "commandOwner": "src/core/comments/services/comments.mutations.ts",
+      "coverage": "verified",
+      "enforcement": ["rls:community_comments_owner_or_admin_update"],
+      "evidence": [
+        "supabase/migrations/20260713090000_harden_community_social_runtime.sql"
+      ]
+    },
+    {
+      "action": "deleteComment",
+      "resource": "public.comments",
+      "commandOwner": "src/core/comments/services/comments.mutations.ts",
+      "coverage": "verified",
+      "enforcement": ["rls:community_comments_owner_or_admin_delete"],
+      "evidence": [
+        "supabase/migrations/20260713090000_harden_community_social_runtime.sql"
+      ]
+    },
+    {
+      "action": "createMessage",
+      "resource": "public.messages",
+      "commandOwner": "src/core/messaging/services/ClassifiedMessagingService.ts",
+      "coverage": "verified",
+      "enforcement": ["rls:Users access messages in own conversations"],
+      "evidence": ["tests/security/authorization-enforcement-remote-audit.sql"]
+    },
+    {
+      "action": "editMessage",
+      "resource": "public.messages",
+      "commandOwner": "src/core/messaging/services/ClassifiedMessagingService.ts",
+      "coverage": "verified",
+      "enforcement": ["rls:Users access messages in own conversations"],
+      "evidence": ["tests/security/authorization-enforcement-remote-audit.sql"]
+    },
+    {
+      "action": "deleteMessage",
+      "resource": "public.messages",
+      "commandOwner": "src/core/messaging/services/ClassifiedMessagingService.ts",
+      "coverage": "verified",
+      "enforcement": ["rls:Users access messages in own conversations"],
+      "evidence": ["tests/security/authorization-enforcement-remote-audit.sql"]
+    },
+    {
+      "action": "createCommunityDirectThread",
+      "resource": "public.community_direct_threads",
+      "commandOwner": "src/core/messaging/services/CommunityDirectMessagingService.ts",
+      "coverage": "verified",
+      "enforcement": [
+        "rpc:create_community_direct_thread",
+        "private.auth_owns_active_profile",
+        "active-community-membership",
+        "active-post-author-recipient"
+      ],
+      "evidence": [
+        "supabase/migrations/20260715093000_create_community_direct_messaging_commands.sql",
+        "tests/architecture/community-direct-messaging-ssot.test.ts",
+        "scripts/security/community-direct-messaging-authz-probe.mjs"
+      ]
+    },
+    {
+      "action": "sendCommunityDirectMessage",
+      "resource": "public.community_direct_messages",
+      "commandOwner": "src/core/messaging/services/CommunityDirectMessagingService.ts",
+      "coverage": "verified",
+      "enforcement": [
+        "rpc:send_community_direct_message",
+        "private.auth_owns_active_profile",
+        "participant-membership-and-block-check",
+        "rate-limit:30-per-minute"
+      ],
+      "evidence": [
+        "supabase/migrations/20260715093000_create_community_direct_messaging_commands.sql",
+        "tests/architecture/community-direct-messaging-ssot.test.ts",
+        "scripts/security/community-direct-messaging-authz-probe.mjs"
+      ]
+    },
+    {
+      "action": "blockCommunityDirectThread",
+      "resource": "public.community_direct_thread_participants",
+      "commandOwner": "src/core/messaging/services/CommunityDirectMessagingService.ts",
+      "coverage": "verified",
+      "enforcement": [
+        "rpc:set_community_direct_thread_blocked",
+        "private.auth_owns_active_profile",
+        "thread-participant-check"
+      ],
+      "evidence": [
+        "supabase/migrations/20260715093000_create_community_direct_messaging_commands.sql",
+        "tests/architecture/community-direct-messaging-ssot.test.ts",
+        "scripts/security/community-direct-messaging-authz-probe.mjs"
+      ]
+    },
+    {
+      "action": "reportCommunityDirectThread",
+      "resource": "public.community_direct_message_reports",
+      "commandOwner": "src/core/messaging/services/CommunityDirectMessagingService.ts",
+      "coverage": "verified",
+      "enforcement": [
+        "rpc:report_community_direct_thread",
+        "private.auth_owns_active_profile",
+        "thread-participant-check",
+        "rate-limit:10-per-day"
+      ],
+      "evidence": [
+        "supabase/migrations/20260715093000_create_community_direct_messaging_commands.sql",
+        "tests/architecture/community-direct-messaging-ssot.test.ts",
+        "scripts/security/community-direct-messaging-authz-probe.mjs"
+      ]
+    },
+    {
+      "action": "moderateCommunityDirectReport",
+      "resource": "public.community_direct_message_reports",
+      "commandOwner": "server-owned-community-direct-messaging-moderation-command",
+      "coverage": "verified",
+      "enforcement": [
+        "rpc:moderate_community_direct_report",
+        "private.is_admin_user",
+        "private-metadata-only-audit"
+      ],
+      "evidence": [
+        "supabase/migrations/20260715092000_create_community_direct_messaging_schema.sql",
+        "supabase/migrations/20260715093000_create_community_direct_messaging_commands.sql",
+        "tests/architecture/community-direct-messaging-ssot.test.ts",
+        "scripts/security/community-direct-messaging-authz-probe.mjs"
+      ]
+    },
+    {
+      "action": "createBusiness",
+      "resource": "public.business_data",
+      "commandOwner": "src/core/business/services/business.mutations.ts",
+      "coverage": "verified",
+      "enforcement": [
+        "rls:Owners manage own business",
+        "rls:Profile members manage business"
+      ],
+      "evidence": ["tests/security/authorization-enforcement-remote-audit.sql"]
+    },
+    {
+      "action": "editBusiness",
+      "resource": "public.business_data",
+      "commandOwner": "src/core/business/services/business.mutations.ts",
+      "coverage": "verified",
+      "enforcement": [
+        "rls:Owners manage own business",
+        "rls:Managers can modify business data"
+      ],
+      "evidence": ["tests/security/authorization-enforcement-remote-audit.sql"]
+    },
+    {
+      "action": "deleteBusiness",
+      "resource": "public.business_data",
+      "commandOwner": "src/core/business/services/business.mutations.ts",
+      "coverage": "verified",
+      "enforcement": [
+        "rls:Owners manage own business",
+        "rls:Managers can modify business data"
+      ],
+      "evidence": ["tests/security/authorization-enforcement-remote-audit.sql"]
+    },
+    {
+      "action": "moderateContent",
+      "resource": "public.community_reports",
+      "commandOwner": "src/core/community/moderation/CommunityContentModerationService.ts",
+      "coverage": "verified",
+      "enforcement": [
+        "rpc:review_community_content_reports",
+        "rpc:apply_community_user_moderation_action",
+        "rls:community_reports_admin_update"
+      ],
+      "evidence": [
+        "supabase/migrations/20260713135000_harden_community_content_review.sql",
+        "tests/security/authorization-enforcement-remote-audit.sql"
+      ]
+    },
+    {
+      "action": "reviewContent",
+      "resource": "public.community_reports",
+      "commandOwner": "src/core/community/moderation/CommunityContentModerationService.ts",
+      "coverage": "verified",
+      "enforcement": [
+        "rpc:review_community_content_reports",
+        "private.is_admin_user",
+        "rls:community_reports_admin_update"
+      ],
+      "evidence": [
+        "supabase/migrations/20260713135000_harden_community_content_review.sql",
+        "tests/security/authorization-enforcement-remote-audit.sql"
+      ]
+    },
+    {
+      "action": "verifyUser",
+      "resource": "public.profiles",
+      "commandOwner": "supabase/functions/admin-verify-profile/index.ts",
+      "coverage": "verified",
+      "enforcement": [
+        "edge-function:admin-verify-profile",
+        "service-role-only-rpc:verify_profile"
+      ],
+      "evidence": [
+        "supabase/functions/admin-verify-profile/index.ts",
+        "tests/security/authorization-enforcement-remote-audit.sql"
+      ]
+    },
+    {
+      "action": "suspendUser",
+      "resource": "public.profiles",
+      "commandOwner": "supabase/functions/admin-suspend-profile/index.ts",
+      "coverage": "verified",
+      "enforcement": [
+        "edge-function:admin-suspend-profile",
+        "service-role-only-rpc:suspend_profile"
+      ],
+      "evidence": [
+        "supabase/functions/admin-suspend-profile/index.ts",
+        "tests/security/authorization-enforcement-remote-audit.sql"
+      ]
+    },
+    {
+      "action": "upsertProfessionalReview",
+      "resource": "public.reviews",
+      "commandOwner": "src/core/reviews/services/reviews.mutations.ts",
+      "coverage": "verified",
+      "enforcement": [
+        "rpc:upsert_profile_review",
+        "profile-ownership:private.auth_owns_active_profile",
+        "eligibility:completed-professional-service",
+        "rate-limit:private.enforce_review_command_rate_limit"
+      ],
+      "evidence": [
+        "supabase/migrations/20260715094000_consolidate_review_core.sql",
+        "scripts/security/reviews-core-authz-probe.mjs"
+      ]
+    },
+    {
+      "action": "deleteProfessionalReview",
+      "resource": "public.reviews",
+      "commandOwner": "src/core/reviews/services/reviews.mutations.ts",
+      "coverage": "verified",
+      "enforcement": [
+        "rpc:delete_profile_review",
+        "profile-owner-or-admin",
+        "rate-limit:private.enforce_review_command_rate_limit"
+      ],
+      "evidence": [
+        "supabase/migrations/20260715096000_fix_profile_review_delete_contract.sql",
+        "scripts/security/reviews-core-authz-probe.mjs"
+      ]
+    },
+    {
+      "action": "mutateBusinessReview",
+      "resource": "public.reviews",
+      "commandOwner": "src/core/business/services/BusinessReviewService.ts",
+      "coverage": "verified",
+      "enforcement": [
+        "edge-function:business-reviews-rpc",
+        "profile-access:profile_members-or-owner",
+        "eligibility:delivered-order-when-linked",
+        "service-role-only-backing-functions"
+      ],
+      "evidence": [
+        "supabase/functions/business-reviews-rpc/index.ts",
+        "tests/security/business-reviews-rpc-security.test.ts"
+      ]
+    },
+    {
+      "action": "setReviewHelpfulness",
+      "resource": "public.review_helpfulness",
+      "commandOwner": "src/core/reviews/services/ReviewEngagementService.ts",
+      "coverage": "verified",
+      "enforcement": [
+        "rpc:set_review_helpfulness",
+        "profile-ownership:private.auth_owns_active_profile",
+        "deny-self-vote",
+        "rate-limit:private.enforce_review_command_rate_limit"
+      ],
+      "evidence": [
+        "supabase/migrations/20260715094000_consolidate_review_core.sql",
+        "scripts/security/reviews-core-authz-probe.mjs"
+      ]
+    },
+    {
+      "action": "reportReview",
+      "resource": "public.review_reports",
+      "commandOwner": "src/core/reviews/services/ReviewEngagementService.ts",
+      "coverage": "verified",
+      "enforcement": [
+        "rpc:create_review_report",
+        "active-profile-derived-reporter",
+        "rate-limit:review-report"
+      ],
+      "evidence": [
+        "supabase/migrations/20260714118000_harden_sensitive_report_commands.sql",
+        "scripts/security/reviews-core-authz-probe.mjs"
+      ]
+    },
+    {
+      "action": "voteOnContent",
+      "resource": "public.community_poll_votes",
+      "commandOwner": "src/core/posts/services/polls.mutations.ts",
+      "coverage": "partial",
+      "enforcement": ["domain-rls"],
+      "evidence": ["plans/CORE_PLATFORM_CONSOLIDATION_PLAN.md"],
+      "finding": "Poll vote enforcement requires a dedicated remote behavior probe."
+    },
+    {
+      "action": "uploadMedia",
+      "resource": "storage.objects",
+      "commandOwner": "src/core/media/services/MediaService.ts",
+      "coverage": "partial",
+      "enforcement": [
+        "storage-policy:post_images_owner_insert",
+        "private.can_upload_owned_post_image",
+        "edge:media-assets",
+        "rpc:reserve_media_asset_upload",
+        "trigger:guard_review_media_assets",
+        "trigger:guard_menu_item_media_asset"
+      ],
+      "evidence": [
+        "supabase/migrations/20260714100000_harden_community_post_content_media.sql",
+        "supabase/migrations/20260714125000_create_media_asset_core.sql",
+        "docs/architecture/MEDIA_ASSET_SSOT.md"
+      ],
+      "finding": "Post and Review/Menu media are verified; remaining legacy bucket contracts are tracked by CP-016."
+    },
+    {
+      "action": "reportContent",
+      "resource": "public.community_reports",
+      "commandOwner": "src/core/community/moderation/CommunityReportService.ts",
+      "coverage": "verified",
+      "enforcement": ["rls:community_reports_insert_own"],
+      "evidence": [
+        "supabase/migrations/20260715105000_extend_community_report_targets.sql",
+        "scripts/security/moderation-audit-authz-probe.mjs"
+      ]
+    }
+  ]
+}

@@ -207,7 +207,7 @@ Este documento consolida:
 - entrada unica de edicao privada via `/perfil/editar/:profileId`; o hub nao renderiza mais editor paralelo
 - plano atual, roles e entidades vinculadas principais
 - residencia canonica primaria via `user_residences`, `addresses` e `locations`
-- snapshot de permissoes efetivas via `AuthorizationEngine`
+- previa nao autoritativa de capacidades da interface via `CapabilityPreviewService`
 - estado persistido de notificacoes via `NotificationService`, sem defaults locais no hub privado
 - persistencia correta de `username`/`handle` do perfil pessoal no fluxo privado oficial
 - compatibilidade administrativa de `family`:

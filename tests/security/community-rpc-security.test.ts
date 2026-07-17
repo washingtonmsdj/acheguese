@@ -9,7 +9,7 @@ function readProjectFile(path: string): string {
 }
 
 describe("community content rpc broker security", () => {
-  it("routes privileged community content mutations through an authenticated broker", () => {
+  it("limits the service-role broker to alert creation and keeps other writes in their hardened database contracts", () => {
     const edgeFunction = readProjectFile("supabase/functions/community-rpc/index.ts");
     const eventEdgeFunction = readProjectFile("supabase/functions/event-rpc/index.ts");
     const config = readProjectFile("supabase/config.toml");
@@ -33,14 +33,12 @@ describe("community content rpc broker security", () => {
     expect(edgeFunction).toContain("function requireUser(");
     expect(edgeFunction).toContain('getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY")');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("create_community_alert"');
-    expect(edgeFunction).toContain('supabaseAdmin.rpc("create_community_issue"');
-    expect(edgeFunction).toContain('supabaseAdmin.rpc("increment_alert_edit_count"');
-    expect(edgeFunction).toContain('supabaseAdmin.rpc("mark_best_answer"');
+    expect(edgeFunction).not.toContain('supabaseAdmin.rpc("create_community_issue"');
+    expect(edgeFunction).not.toContain('supabaseAdmin.rpc("increment_alert_edit_count"');
+    expect(edgeFunction).not.toContain('supabaseAdmin.rpc("mark_best_answer"');
     expect(edgeFunction).not.toContain('supabaseAdmin.rpc("increment_event_participants"');
     expect(edgeFunction).not.toContain('supabaseAdmin.rpc("decrement_event_participants"');
     expect(edgeFunction).toContain("withTrustedActor");
-    expect(edgeFunction).toContain("profileBelongsToUser");
-    expect(edgeFunction).not.toContain("participantExists");
     expect(edgeFunction).not.toMatch(/_actor_user_id:\s*params\./);
     expect(edgeFunction).not.toMatch(/user_id:\s*params\./);
 
@@ -55,9 +53,11 @@ describe("community content rpc broker security", () => {
 
     expect(broker).toContain('const FUNCTION_NAME = "community-rpc"');
     expect(alertService).toContain("CommunityRpcService.createAlert");
-    expect(alertService).toContain("CommunityRpcService.incrementAlertEditCount");
-    expect(issueService).toContain("CommunityRpcService.createIssue");
-    expect(qaService).toContain("CommunityRpcService.markBestAnswer");
+    expect(broker).not.toContain("incrementAlertEditCount");
+    expect(broker).not.toContain("createIssue");
+    expect(broker).not.toContain("markBestAnswer");
+    expect(issueService).toContain('supabase.rpc("create_community_issue"');
+    expect(qaService).toContain('supabase.rpc("mark_best_answer"');
     expect(eventService).toContain('const EVENT_RPC_FUNCTION_NAME = "event-rpc"');
     expect(eventService).toContain('"joinEvent"');
     expect(eventService).toContain('"leaveEvent"');
@@ -65,14 +65,9 @@ describe("community content rpc broker security", () => {
     expect(eventService).toContain('"checkInEventByCode"');
     expect(eventService).not.toContain("CommunityRpcService");
 
-    for (const source of [alertService, issueService, qaService, eventService]) {
-      expect(source).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']create_community_alert/);
-      expect(source).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']create_community_issue/);
-      expect(source).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']increment_alert_edit_count/);
-      expect(source).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']mark_best_answer/);
-      expect(source).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']increment_event_participants/);
-      expect(source).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']decrement_event_participants/);
-    }
+    expect(alertService).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']create_community_alert/);
+    expect(eventService).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']increment_event_participants/);
+    expect(eventService).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']decrement_event_participants/);
   });
 
   it("revokes direct browser execution of backing community RPCs", () => {
@@ -97,6 +92,49 @@ describe("community content rpc broker security", () => {
     expect(migration).toContain("payload->>'_actor_user_id'");
     expect(migration).toContain("ur.user_id = v_user_id");
     expect(migration).toContain("verified_residence_required");
+  });
+
+  it("uses a fail-closed distributed limiter and admin-only latency metrics", () => {
+    const edgeFunction = readProjectFile("supabase/functions/community-rpc/index.ts");
+    const migration = readProjectFile(
+      "supabase/migrations/20260714090000_add_community_rpc_scale_controls.sql",
+    );
+    const retentionMigration = readProjectFile(
+      "supabase/migrations/20260714093000_add_community_rpc_audit_retention.sql",
+    );
+    const loadHarness = readProjectFile("scripts/community-staging-load-test.mjs");
+
+    expect(edgeFunction).toContain('supabaseAdmin.rpc(\n    "consume_community_edge_rate_limit"');
+    expect(edgeFunction).toContain('outcome: "blocked_fail_closed"');
+    expect(edgeFunction).toContain('statusCode: 503');
+    expect(edgeFunction).toContain('duration_ms: durationMs');
+    expect(edgeFunction).toContain('"X-Request-ID": requestId');
+    expect(edgeFunction).toContain("withRequestId(rawBody.response, requestId)");
+
+    expect(migration).toContain("CREATE TABLE IF NOT EXISTS private.community_edge_rate_limits");
+    expect(migration).toContain("ON CONFLICT (function_name, actor_user_id, action) DO UPDATE");
+    expect(migration).toContain("COALESCE(auth.role(), '') <> 'service_role'");
+    expect(migration).toContain("FROM PUBLIC, anon, authenticated");
+    expect(migration).toContain("TO service_role");
+    expect(migration).toContain("percentile_cont(0.95)");
+    expect(migration).toContain("private.is_admin_user(auth.uid())");
+    expect(migration).toContain("error_rate_threshold_exceeded");
+
+    expect(retentionMigration).toContain(
+      "private.prune_community_rpc_function_audit",
+    );
+    expect(retentionMigration).toContain("now() - INTERVAL '90 days'");
+    expect(retentionMigration).toContain("FOR UPDATE SKIP LOCKED");
+    expect(retentionMigration).toContain("TO service_role");
+    expect(retentionMigration).toContain("FROM PUBLIC, anon, authenticated");
+    expect(retentionMigration).toContain(
+      "acheguese-community-rpc-audit-retention",
+    );
+
+    expect(loadHarness).toContain('COMMUNITY_LOAD_CONFIRM');
+    expect(loadHarness).toContain('STAGING_ONLY_CONFIRMED');
+    expect(loadHarness).toContain('target.pathname.startsWith("/rest/v1/")');
+    expect(loadHarness).toContain('method: "GET"');
   });
 
   it("revokes direct browser execution of atomic event participation RPCs", () => {

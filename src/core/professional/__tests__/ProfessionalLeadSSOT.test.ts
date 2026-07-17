@@ -65,12 +65,20 @@ describe("professional lead SSOT", () => {
     const trackingPage = readProjectFile(
       "src/modules/professionals/pages/ProfessionalLeadTrackingPage.tsx",
     );
+    const notificationBroker = readProjectFile(
+      "src/core/notifications/services/ProfessionalNotificationBrokerService.ts",
+    );
+    const notificationBrokerHandler = readProjectFile(
+      "supabase/functions/professional-notifications-rpc/index.ts",
+    );
 
-    expect(service).toContain('.from("professional_leads")');
-    expect(service).toContain('.from("professional_lead_events")');
-    expect(service).toContain('.from("professional_lead_messages")');
-    expect(service).toContain('.from("professional_lead_quotes")');
-    expect(service).toContain('.from("professional_service_engagements")');
+    expect(service).toMatch(/\.from(?:<[^>]+>)?\("professional_leads"\)/);
+    expect(service).toMatch(/\.from(?:<[^>]+>)?\("professional_lead_events"\)/);
+    expect(service).toMatch(/\.from(?:<[^>]+>)?\("professional_lead_messages"\)/);
+    expect(service).toMatch(/\.from(?:<[^>]+>)?\("professional_lead_quotes"\)/);
+    expect(service).toMatch(
+      /\.from(?:<[^>]+>)?\("professional_service_engagements"\)/,
+    );
     expect(service).toContain("getLeadDetails");
     expect(service).toContain("sendMessage");
     expect(service).toContain("createQuote");
@@ -80,8 +88,11 @@ describe("professional lead SSOT", () => {
     expect(service).toContain("submitEngagementReview");
     expect(service).toContain("ReviewsService.upsertReview");
     expect(service).toContain("Avaliacao liberada apenas apos conclusao do atendimento");
-    expect(service).toContain("NotificationService.createNotification");
-    expect(service).toContain('action_url: "/central/profissional"');
+    expect(service).toContain("ProfessionalNotificationBrokerService.notifyLeadMessage");
+    expect(service).toContain("ProfessionalNotificationBrokerService.notifyLeadQuote");
+    expect(service).not.toContain("NotificationService.createNotification");
+    expect(notificationBroker).toContain('const FUNCTION_NAME = "professional-notifications-rpc"');
+    expect(notificationBrokerHandler).toContain('"/central/profissional"');
     expect(publicPage).toContain("ProfessionalLeadRequestDialog");
     expectReadableText(publicPage, "Solicitar orçamento");
     expect(actionButtons).toContain("ProfessionalLeadRequestDialog");

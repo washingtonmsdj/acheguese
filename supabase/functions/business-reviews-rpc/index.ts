@@ -26,6 +26,12 @@ const UUID_REGEX =
 const MAX_COMMENT_LENGTH = 1000;
 const MAX_PHOTOS = 6;
 const MAX_PHOTO_URL_LENGTH = 2048;
+const UUID_SOURCE =
+  "[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}";
+const REVIEW_PHOTO_REFERENCE_PATTERN = new RegExp(
+  `^storage://media-assets/(${UUID_SOURCE})/review_photo/v1/(${UUID_SOURCE})\\.jpg$`,
+  "i",
+);
 
 const ACTIONS = {
   canUserReviewBusiness: true,
@@ -146,12 +152,20 @@ function normalizePhotos(value: unknown): string[] {
     throw new RequestValidationError("A review accepts at most 6 photos");
   }
 
-  return value.map((photo) => {
+  const normalized = value.map((photo) => {
     if (typeof photo !== "string" || photo.length > MAX_PHOTO_URL_LENGTH) {
       throw new RequestValidationError("Invalid photo");
     }
-    return photo;
+    const reference = photo.trim();
+    if (!REVIEW_PHOTO_REFERENCE_PATTERN.test(reference)) {
+      throw new RequestValidationError("Invalid photo reference");
+    }
+    return reference;
   });
+  if (new Set(normalized.map((photo) => photo.toLowerCase())).size !== normalized.length) {
+    throw new RequestValidationError("Duplicate photo reference");
+  }
+  return normalized;
 }
 
 function hasOwnParam(

@@ -63,10 +63,9 @@ export function ItemForm({
   isPizzaria = false,
 }: ItemFormProps) {
   const itemNutritionalInfo = getItemNutritionalInfo(item);
-  const { user } = useSessionContext();
+  const { activeProfile } = useSessionContext();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [optimizeBeforeUpload, setOptimizeBeforeUpload] = useState(true);
   const [imageFitMode, setImageFitMode] = useState<'cover' | 'contain'>('cover');
   const [focalPointX, setFocalPointX] = useState(50);
   const [focalPointY, setFocalPointY] = useState(50);
@@ -90,7 +89,7 @@ export function ItemForm({
   };
 
   const handleUploadImage = async (file?: File) => {
-    if (!file || !user?.id) {
+    if (!file || !activeProfile?.id) {
       toast.error('Não foi possível enviar a imagem.');
       return;
     }
@@ -103,13 +102,17 @@ export function ItemForm({
 
     try {
       setUploadingImage(true);
-      const upload = await mediaService.uploadPostImage(user.id, file, {
-        preset: optimizeBeforeUpload ? 'gastronomy_menu_item' : 'post_image',
-        fit: imageFitMode,
-        focalPointX: focalPointX / 100,
-        focalPointY: focalPointY / 100,
-      });
-      form.setValue('image_url', upload.url, { shouldDirty: true, shouldValidate: true });
+      const upload = await mediaService.uploadMediaAsset(
+        activeProfile.id,
+        file,
+        'gastronomy_menu_item',
+        {
+          fit: imageFitMode,
+          focalPointX: focalPointX / 100,
+          focalPointY: focalPointY / 100,
+        },
+      );
+      form.setValue('image_url', upload.reference, { shouldDirty: true, shouldValidate: true });
       toast.success('Imagem enviada com sucesso.');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Erro ao enviar imagem.';
@@ -170,13 +173,11 @@ export function ItemForm({
               form={form}
               allowImage={allowImage}
               uploadingImage={uploadingImage}
-              optimizeBeforeUpload={optimizeBeforeUpload}
               imageFitMode={imageFitMode}
               focalPointX={focalPointX}
               focalPointY={focalPointY}
               fileInputRef={fileInputRef}
               onUploadImage={(file) => void handleUploadImage(file)}
-              onOptimizeBeforeUploadChange={setOptimizeBeforeUpload}
               onImageFitModeChange={setImageFitMode}
               onFocalPointXChange={setFocalPointX}
               onFocalPointYChange={setFocalPointY}

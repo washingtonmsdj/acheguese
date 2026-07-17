@@ -5,6 +5,7 @@ export type { FilterOption } from "./AdminFiltersBar";
 export { AdminPagination } from "./AdminPagination";
 export { AdminPageHeader } from "./AdminPageHeader";
 export { AdminSectionCard } from "./AdminSectionCard";
+export { CommunityRpcOperationsPanel } from "./CommunityRpcOperationsPanel";
 export { AdminDataState } from "./AdminDataState";
 export { AdminErrorState } from "./AdminErrorState";
 export { AdminTable } from "./AdminTable";

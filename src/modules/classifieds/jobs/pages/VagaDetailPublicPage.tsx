@@ -2,9 +2,9 @@
  * ═══════════════════════════════════════════════════════════════════════════════
  * VAGA DETAIL PUBLIC PAGE — Página pública de detalhe de vaga (Nível AAA)
  * ═══════════════════════════════════════════════════════════════════════════════
- * 
+ *
  * Rota canônica: /vagas/:uf/:cidade/:slug
- * 
+ *
  * Features:
  * - Cabeçalho forte com todas as informações principais
  * - Card lateral com CTA de candidatura
@@ -14,36 +14,54 @@
  * - Tratamento para status especiais
  * - SEO otimizado
  * - Ações: salvar, compartilhar, denunciar
- * 
+ *
  * @version 3.0.0 - Página Completa AAA
  */
 
-import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useCallback } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useParams, useNavigate } from "react-router-dom";
+import { useState, useCallback } from "react";
+import { motion } from "framer-motion";
 import {
-  ArrowLeft, Briefcase, MapPin, Clock, Star, Share2,
-  Zap, Building2, CalendarDays, DollarSign,
-  CheckCircle2, AlertCircle,
-  ExternalLink, MessageCircle, Mail, Phone, Send,
-  ChevronRight, Flag, Bookmark, X,
-} from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
-import { Badge } from '@/shared/components/ui/badge';
-import { Separator } from '@/shared/components/ui/separator';
-import { Skeleton } from '@/shared/components/ui/skeleton';
-import { Textarea } from '@/shared/components/ui/textarea';
-import { SEO } from '@/shared/components/seo/SEO';
-import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
-import { useAuth } from '@/core/auth/hooks/useAuth';
-import { jobPublicRoutes } from '@/core/verticals/jobs/routes/jobPublicRoutes';
-import { TERRITORY_CONFIG } from '@/config/territory';
-import { useToast } from '@/shared/hooks/use-toast';
+  ArrowLeft,
+  Briefcase,
+  MapPin,
+  Clock,
+  Star,
+  Share2,
+  Zap,
+  Building2,
+  CalendarDays,
+  DollarSign,
+  CheckCircle2,
+  AlertCircle,
+  ExternalLink,
+  MessageCircle,
+  Mail,
+  Phone,
+  Send,
+  ChevronRight,
+  Flag,
+  Bookmark,
+} from "lucide-react";
+import { Button } from "@/shared/components/ui/button";
+import { Badge } from "@/shared/components/ui/badge";
+import { Separator } from "@/shared/components/ui/separator";
+import { Skeleton } from "@/shared/components/ui/skeleton";
+import { SEO } from "@/shared/components/seo/SEO";
+import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
+import { useAuth } from "@/core/auth/hooks/useAuth";
+import { jobPublicRoutes } from "@/core/verticals/jobs/routes/jobPublicRoutes";
+import { TERRITORY_CONFIG } from "@/config/territory";
+import { useToast } from "@/shared/hooks/use-toast";
 
-import { useVagaDetail } from '../hooks/useVagaDetail';
-import { VagaCard } from '../components/VagaCard';
-import { VAGA_REPORT_REASON_OPTIONS, isVagaReportReason } from '../services/VagaReportService';
-import { JOB_FORM_LIMITS } from '../constants/form-limits';
+import { useVagaDetail } from "../hooks/useVagaDetail";
+import { VagaCard } from "../components/VagaCard";
+import {
+  VAGA_REPORT_REASON_OPTIONS,
+  type VagaReportReason,
+} from "../services/VagaReportService";
+import { JOB_FORM_LIMITS } from "../constants/form-limits";
+import { ReportReasonDialog } from "@/core/moderation";
 import {
   formatSalary,
   isVagaActive,
@@ -55,7 +73,7 @@ import {
   APPLICATION_CHANNEL_LABELS,
   HIGHLIGHT_TYPE_LABELS,
   type Vaga,
-} from '../types/vagas.types';
+} from "../types/vagas.types";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // HELPERS
@@ -64,29 +82,45 @@ import {
 function formatRelativeDate(date: Date): string {
   const now = new Date();
   const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
-  
-  if (diffInHours < 24) return 'Hoje';
-  if (diffInHours < 48) return 'Ontem';
+
+  if (diffInHours < 24) return "Hoje";
+  if (diffInHours < 48) return "Ontem";
   if (diffInHours < 168) return `${Math.floor(diffInHours / 24)} dias atrás`;
-  
-  return date.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' });
+
+  return date.toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
 }
 
 function getStatusBadge(vaga: Vaga) {
   switch (vaga.status) {
-    case 'closed':
-      return { label: 'Encerrada', variant: 'secondary' as const, icon: AlertCircle };
-    case 'expired':
-      return { label: 'Expirada', variant: 'secondary' as const, icon: Clock };
-    case 'paused':
-      return { label: 'Pausada', variant: 'secondary' as const, icon: AlertCircle };
-    case 'published':
+    case "closed":
+      return {
+        label: "Encerrada",
+        variant: "secondary" as const,
+        icon: AlertCircle,
+      };
+    case "expired":
+      return { label: "Expirada", variant: "secondary" as const, icon: Clock };
+    case "paused":
+      return {
+        label: "Pausada",
+        variant: "secondary" as const,
+        icon: AlertCircle,
+      };
+    case "published":
       if (!isVagaActive(vaga)) {
-        return { label: 'Expirada', variant: 'secondary' as const, icon: Clock };
+        return {
+          label: "Expirada",
+          variant: "secondary" as const,
+          icon: Clock,
+        };
       }
       return null;
     default:
-      return { label: 'Indisponível', variant: 'secondary' as const, icon: AlertCircle };
+      return {
+        label: "Indisponível",
+        variant: "secondary" as const,
+        icon: AlertCircle,
+      };
   }
 }
 
@@ -94,15 +128,28 @@ function getStatusBadge(vaga: Vaga) {
 // COMPONENT: Botão de Candidatura
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function ApplicationButton({ vaga, onApply, isLoading }: { vaga: Vaga; onApply: () => Promise<void>; isLoading: boolean }) {
+function ApplicationButton({
+  vaga,
+  onApply,
+  isLoading,
+}: {
+  vaga: Vaga;
+  onApply: () => Promise<void>;
+  isLoading: boolean;
+}) {
   const { toast } = useToast();
-  
+
   if (!canApplyToVaga(vaga)) {
     const statusBadge = getStatusBadge(vaga);
     if (statusBadge) {
       const Icon = statusBadge.icon;
       return (
-        <Button disabled className="w-full h-14 gap-2" size="lg" variant="secondary">
+        <Button
+          disabled
+          className="w-full h-14 gap-2"
+          size="lg"
+          variant="secondary"
+        >
           <Icon className="h-5 w-5" />
           Vaga {statusBadge.label}
         </Button>
@@ -111,22 +158,28 @@ function ApplicationButton({ vaga, onApply, isLoading }: { vaga: Vaga; onApply: 
   }
 
   const channel = APPLICATION_CHANNEL_LABELS[vaga.applicationChannel];
-  
+
   const handleClick = async () => {
     try {
       await onApply();
       toast({
-        title: vaga.applicationChannel === 'internal' ? 'Candidatura enviada' : 'Canal de candidatura aberto',
+        title:
+          vaga.applicationChannel === "internal"
+            ? "Candidatura enviada"
+            : "Canal de candidatura aberto",
         description:
-          vaga.applicationChannel === 'internal'
-            ? 'A empresa recebeu sua candidatura pela plataforma.'
-            : 'Conclua a candidatura no canal indicado pela empresa.',
+          vaga.applicationChannel === "internal"
+            ? "A empresa recebeu sua candidatura pela plataforma."
+            : "Conclua a candidatura no canal indicado pela empresa.",
       });
     } catch (error) {
       toast({
-        title: 'Erro',
-        description: error instanceof Error ? error.message : 'Não foi possível candidatar-se',
-        variant: 'destructive',
+        title: "Erro",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível candidatar-se",
+        variant: "destructive",
       });
     }
   };
@@ -165,7 +218,15 @@ function ApplicationButton({ vaga, onApply, isLoading }: { vaga: Vaga; onApply: 
 // COMPONENT: Card de Informação
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function InfoCard({ icon: Icon, label, value }: { icon: typeof Briefcase; label: string; value: string }) {
+function InfoCard({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Briefcase;
+  label: string;
+  value: string;
+}) {
   return (
     <div className="flex items-start gap-3">
       <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
@@ -183,9 +244,17 @@ function InfoCard({ icon: Icon, label, value }: { icon: typeof Briefcase; label:
 // COMPONENT: Seção de Lista
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function ListSection({ title, items, icon: Icon }: { title: string; items: string[]; icon: typeof CheckCircle2 }) {
+function ListSection({
+  title,
+  items,
+  icon: Icon,
+}: {
+  title: string;
+  items: string[];
+  icon: typeof CheckCircle2;
+}) {
   if (!items || items.length === 0) return null;
-  
+
   return (
     <section>
       <div className="flex items-center gap-2 mb-3">
@@ -194,7 +263,10 @@ function ListSection({ title, items, icon: Icon }: { title: string; items: strin
       </div>
       <ul className="space-y-2">
         {items.map((item, i) => (
-          <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+          <li
+            key={i}
+            className="flex items-start gap-2 text-sm text-muted-foreground"
+          >
             <CheckCircle2 className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
             <span>{item}</span>
           </li>
@@ -210,7 +282,11 @@ function ListSection({ title, items, icon: Icon }: { title: string; items: strin
 
 export default function VagaDetailPublicPage() {
   const navigate = useNavigate();
-  const { state, city, slug } = useParams<{ state: string; city: string; slug: string }>();
+  const { state, city, slug } = useParams<{
+    state: string;
+    city: string;
+    slug: string;
+  }>();
   const appUrls = useAppUrls();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -218,8 +294,6 @@ export default function VagaDetailPublicPage() {
   const routeCity = city || TERRITORY_CONFIG.launch.city;
   const listUrl = jobPublicRoutes.list({ state: routeState, city: routeCity });
   const [reportOpen, setReportOpen] = useState(false);
-  const [reportReason, setReportReason] = useState("");
-  const [reportDescription, setReportDescription] = useState("");
 
   const {
     vaga,
@@ -233,22 +307,23 @@ export default function VagaDetailPublicPage() {
     salvarVaga,
     denunciarVaga,
     isSaved,
-    isDenunciando,
-  } = useVagaDetail({ slug: slug || '' });
+  } = useVagaDetail({ slug: slug || "" });
 
   // SEO
-  const pageTitle = vaga ? `${vaga.titulo} na ${vaga.empresaNome} | Vagas ${city}` : 'Vaga de Emprego';
+  const pageTitle = vaga
+    ? `${vaga.titulo} na ${vaga.empresaNome} | Vagas ${city}`
+    : "Vaga de Emprego";
   const pageDescription = vaga
     ? `Vaga de ${vaga.titulo} na ${vaga.empresaNome}. ${vaga.resumo || vaga.descricao.slice(0, 150)}... Candidate-se agora!`
-    : 'Detalhes da vaga de emprego';
+    : "Detalhes da vaga de emprego";
 
   // Handlers
   const handleShare = useCallback(async () => {
     try {
       await compartilhar();
       toast({
-        title: 'Link copiado!',
-        description: 'O link da vaga foi copiado para a área de transferência.',
+        title: "Link copiado!",
+        description: "O link da vaga foi copiado para a área de transferência.",
       });
     } catch {
       // Silencioso
@@ -259,10 +334,10 @@ export default function VagaDetailPublicPage() {
     try {
       const nextIsSaved = await salvarVaga();
       toast({
-        title: nextIsSaved ? 'Vaga salva!' : 'Vaga removida',
+        title: nextIsSaved ? "Vaga salva!" : "Vaga removida",
         description: nextIsSaved
-          ? 'A vaga foi salva para você consultar depois.'
-          : 'A vaga foi removida dos seus favoritos.',
+          ? "A vaga foi salva para você consultar depois."
+          : "A vaga foi removida dos seus favoritos.",
       });
     } catch (error) {
       if (!user) {
@@ -271,9 +346,12 @@ export default function VagaDetailPublicPage() {
       }
 
       toast({
-        title: 'Nao foi possivel atualizar favoritos',
-        description: error instanceof Error ? error.message : 'Tente novamente em instantes.',
-        variant: 'destructive',
+        title: "Nao foi possivel atualizar favoritos",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Tente novamente em instantes.",
+        variant: "destructive",
       });
     }
   }, [appUrls.auth.login, navigate, salvarVaga, toast, user]);
@@ -287,41 +365,35 @@ export default function VagaDetailPublicPage() {
     setReportOpen(true);
   }, [appUrls.auth.login, navigate, user]);
 
-  const handleDenuncia = useCallback(async () => {
-    if (!user) {
-      navigate(appUrls.auth.login);
-      return;
-    }
-    if (!isVagaReportReason(reportReason)) return;
-
-    try {
-      await denunciarVaga({
-        reason: reportReason,
-        description: reportDescription,
-      });
-      toast({
-        title: 'Denuncia enviada',
-        description: 'Nossa equipe ira analisar esta vaga em breve.',
-      });
-      setReportOpen(false);
-      setReportReason("");
-      setReportDescription("");
-    } catch (error) {
-      toast({
-        title: 'Erro ao enviar denuncia',
-        description: error instanceof Error ? error.message : 'Tente novamente em instantes.',
-        variant: 'destructive',
-      });
-    }
-  }, [
-    appUrls.auth.login,
-    denunciarVaga,
-    navigate,
-    reportDescription,
-    reportReason,
-    toast,
-    user,
-  ]);
+  const handleDenuncia = useCallback(
+    async (reason: VagaReportReason, description?: string) => {
+      if (!user) {
+        navigate(appUrls.auth.login);
+        return;
+      }
+      try {
+        await denunciarVaga({
+          reason,
+          description,
+        });
+        toast({
+          title: "Denuncia enviada",
+          description: "Nossa equipe ira analisar esta vaga em breve.",
+        });
+      } catch (error) {
+        toast({
+          title: "Erro ao enviar denuncia",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Tente novamente em instantes.",
+          variant: "destructive",
+        });
+        throw error;
+      }
+    },
+    [appUrls.auth.login, denunciarVaga, navigate, toast, user],
+  );
 
   // Loading state
   if (isLoading) {
@@ -346,7 +418,9 @@ export default function VagaDetailPublicPage() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
         <Briefcase className="h-16 w-16 text-muted-foreground/30 mb-4" />
-        <h1 className="text-2xl font-bold text-foreground mb-2">Vaga não encontrada</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-2">
+          Vaga não encontrada
+        </h1>
         <p className="text-muted-foreground mb-6 text-center">
           A vaga que você procura não existe, foi encerrada ou expirou.
         </p>
@@ -373,7 +447,9 @@ export default function VagaDetailPublicPage() {
               className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-5 w-5" />
-              <span className="text-sm font-medium hidden sm:inline">Voltar</span>
+              <span className="text-sm font-medium hidden sm:inline">
+                Voltar
+              </span>
             </button>
             <div className="h-5 w-px bg-border hidden sm:block" />
             <button
@@ -383,13 +459,15 @@ export default function VagaDetailPublicPage() {
               Vagas
             </button>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <button
               onClick={handleSave}
               className="h-9 w-9 rounded-lg bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
             >
-              <Bookmark className={`h-4 w-4 ${isSaved ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
+              <Bookmark
+                className={`h-4 w-4 ${isSaved ? "fill-primary text-primary" : "text-muted-foreground"}`}
+              />
             </button>
             <button
               onClick={handleShare}
@@ -410,19 +488,28 @@ export default function VagaDetailPublicPage() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
         {/* ── BREADCRUMB ─────────────────────────────────────── */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-          <button onClick={() => navigate('/')} className="hover:text-primary transition-colors">Início</button>
+          <button
+            onClick={() => navigate("/")}
+            className="hover:text-primary transition-colors"
+          >
+            Início
+          </button>
           <ChevronRight className="h-4 w-4" />
-          <button onClick={() => navigate(listUrl)} className="hover:text-primary transition-colors">
+          <button
+            onClick={() => navigate(listUrl)}
+            className="hover:text-primary transition-colors"
+          >
             Vagas {city}
           </button>
           <ChevronRight className="h-4 w-4" />
-          <span className="text-foreground font-medium truncate max-w-[200px]">{vaga.titulo}</span>
+          <span className="text-foreground font-medium truncate max-w-[200px]">
+            {vaga.titulo}
+          </span>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* ── COLUNA PRINCIPAL ─────────────────────────────── */}
           <div className="lg:col-span-2 space-y-6">
-            
             {/* Header */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -431,20 +518,25 @@ export default function VagaDetailPublicPage() {
             >
               {/* Badges de destaque */}
               <div className="absolute top-0 right-0 flex flex-col items-end gap-1">
-                {vaga.urgencia !== 'normal' && (
+                {vaga.urgencia !== "normal" && (
                   <Badge className="bg-destructive text-white rounded-bl-xl rounded-tr-none">
                     <Zap className="h-3 w-3 mr-1" />
                     {URGENCIA_LABELS[vaga.urgencia]}
                   </Badge>
                 )}
-                {vaga.highlightType !== 'none' && (
-                  <Badge className={`${HIGHLIGHT_TYPE_LABELS[vaga.highlightType].bgColor} ${HIGHLIGHT_TYPE_LABELS[vaga.highlightType].color} rounded-bl-xl rounded-tr-none mt-1`}>
+                {vaga.highlightType !== "none" && (
+                  <Badge
+                    className={`${HIGHLIGHT_TYPE_LABELS[vaga.highlightType].bgColor} ${HIGHLIGHT_TYPE_LABELS[vaga.highlightType].color} rounded-bl-xl rounded-tr-none mt-1`}
+                  >
                     <Star className="h-3 w-3 mr-1" />
                     {HIGHLIGHT_TYPE_LABELS[vaga.highlightType].label}
                   </Badge>
                 )}
                 {statusBadge && (
-                  <Badge variant={statusBadge.variant} className="rounded-bl-xl rounded-tr-none mt-1">
+                  <Badge
+                    variant={statusBadge.variant}
+                    className="rounded-bl-xl rounded-tr-none mt-1"
+                  >
                     <statusBadge.icon className="h-3 w-3 mr-1" />
                     {statusBadge.label}
                   </Badge>
@@ -455,13 +547,19 @@ export default function VagaDetailPublicPage() {
               <div className="flex items-start gap-4 pr-24">
                 <div className="h-16 w-16 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                   {vaga.empresaLogoUrl ? (
-                    <img src={vaga.empresaLogoUrl} alt={vaga.empresaNome} className="h-12 w-12 object-contain" />
+                    <img
+                      src={vaga.empresaLogoUrl}
+                      alt={vaga.empresaNome}
+                      className="h-12 w-12 object-contain"
+                    />
                   ) : (
                     <Building2 className="h-8 w-8 text-primary" />
                   )}
                 </div>
                 <div>
-                  <h1 className="text-xl sm:text-2xl font-bold text-foreground leading-tight">{vaga.titulo}</h1>
+                  <h1 className="text-xl sm:text-2xl font-bold text-foreground leading-tight">
+                    {vaga.titulo}
+                  </h1>
                   <p className="text-muted-foreground flex items-center gap-1 mt-1">
                     <Building2 className="h-4 w-4" />
                     {vaga.empresaNome}
@@ -471,10 +569,16 @@ export default function VagaDetailPublicPage() {
 
               {/* Meta informações */}
               <div className="flex flex-wrap gap-2 mt-4">
-                <Badge variant="outline">{CONTRATO_LABELS[vaga.contrato]}</Badge>
-                <Badge variant="outline">{MODALIDADE_LABELS[vaga.modalidade]}</Badge>
+                <Badge variant="outline">
+                  {CONTRATO_LABELS[vaga.contrato]}
+                </Badge>
+                <Badge variant="outline">
+                  {MODALIDADE_LABELS[vaga.modalidade]}
+                </Badge>
                 <Badge variant="outline">{NIVEL_LABELS[vaga.nivel]}</Badge>
-                {vaga.categoria && <Badge variant="outline">{vaga.categoria}</Badge>}
+                {vaga.categoria && (
+                  <Badge variant="outline">{vaga.categoria}</Badge>
+                )}
               </div>
 
               {/* Info grid */}
@@ -482,7 +586,7 @@ export default function VagaDetailPublicPage() {
                 <InfoCard
                   icon={MapPin}
                   label="Localização"
-                  value={vaga.bairroNome || city || 'Cidade'}
+                  value={vaga.bairroNome || city || "Cidade"}
                 />
                 <InfoCard
                   icon={DollarSign}
@@ -492,12 +596,16 @@ export default function VagaDetailPublicPage() {
                 <InfoCard
                   icon={CalendarDays}
                   label="Publicada"
-                  value={vaga.publishedAt ? formatRelativeDate(vaga.publishedAt) : 'Recente'}
+                  value={
+                    vaga.publishedAt
+                      ? formatRelativeDate(vaga.publishedAt)
+                      : "Recente"
+                  }
                 />
                 <InfoCard
                   icon={Briefcase}
                   label="Vagas"
-                  value={`${vaga.vagasQuantidade} vaga${vaga.vagasQuantidade !== 1 ? 's' : ''}`}
+                  value={`${vaga.vagasQuantidade} vaga${vaga.vagasQuantidade !== 1 ? "s" : ""}`}
                 />
               </div>
             </motion.div>
@@ -509,20 +617,34 @@ export default function VagaDetailPublicPage() {
               transition={{ delay: 0.1 }}
               className="bg-card border border-border rounded-xl p-6"
             >
-              <h2 className="text-lg font-semibold text-foreground mb-4">Sobre a vaga</h2>
+              <h2 className="text-lg font-semibold text-foreground mb-4">
+                Sobre a vaga
+              </h2>
               <div className="prose prose-sm max-w-none text-muted-foreground whitespace-pre-line">
                 {vaga.descricao}
               </div>
             </motion.div>
 
             {/* Responsabilidades */}
-            <ListSection title="Responsabilidades" items={vaga.responsabilidades} icon={Briefcase} />
+            <ListSection
+              title="Responsabilidades"
+              items={vaga.responsabilidades}
+              icon={Briefcase}
+            />
 
             {/* Requisitos */}
-            <ListSection title="Requisitos Obrigatórios" items={vaga.requisitos} icon={CheckCircle2} />
+            <ListSection
+              title="Requisitos Obrigatórios"
+              items={vaga.requisitos}
+              icon={CheckCircle2}
+            />
 
             {/* Diferenciais */}
-            <ListSection title="Diferenciais Desejáveis" items={vaga.diferenciais} icon={Star} />
+            <ListSection
+              title="Diferenciais Desejáveis"
+              items={vaga.diferenciais}
+              icon={Star}
+            />
 
             {/* Benefícios */}
             {vaga.beneficios.length > 0 && (
@@ -533,7 +655,9 @@ export default function VagaDetailPublicPage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {vaga.beneficios.map((beneficio, i) => (
-                    <Badge key={i} variant="secondary">{beneficio}</Badge>
+                    <Badge key={i} variant="secondary">
+                      {beneficio}
+                    </Badge>
                   ))}
                 </div>
               </section>
@@ -544,19 +668,27 @@ export default function VagaDetailPublicPage() {
               <section className="bg-muted rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Clock className="h-5 w-5 text-primary" />
-                  <h3 className="font-semibold text-foreground">Jornada de Trabalho</h3>
+                  <h3 className="font-semibold text-foreground">
+                    Jornada de Trabalho
+                  </h3>
                 </div>
-                <p className="text-sm text-muted-foreground">{vaga.jornadaDescricao}</p>
+                <p className="text-sm text-muted-foreground">
+                  {vaga.jornadaDescricao}
+                </p>
               </section>
             )}
 
             {/* Tags */}
             {vaga.tags.length > 0 && (
               <section>
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">Tags</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                  Tags
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {vaga.tags.map((tag, i) => (
-                    <Badge key={i} variant="outline" className="text-xs">{tag}</Badge>
+                    <Badge key={i} variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
                   ))}
                 </div>
               </section>
@@ -570,14 +702,24 @@ export default function VagaDetailPublicPage() {
                 transition={{ delay: 0.2 }}
                 className="pt-6 border-t border-border"
               >
-                <h2 className="text-lg font-semibold text-foreground mb-4">Vagas semelhantes</h2>
+                <h2 className="text-lg font-semibold text-foreground mb-4">
+                  Vagas semelhantes
+                </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {vagasRelacionadas.map((vagaRel) => (
                     <VagaCard
                       key={vagaRel.id}
                       vaga={vagaRel}
                       variant="compact"
-                      onClick={() => navigate(jobPublicRoutes.detail({ state: routeState, city: routeCity, slug: vagaRel.slug }))}
+                      onClick={() =>
+                        navigate(
+                          jobPublicRoutes.detail({
+                            state: routeState,
+                            city: routeCity,
+                            slug: vagaRel.slug,
+                          }),
+                        )
+                      }
                     />
                   ))}
                 </div>
@@ -593,8 +735,12 @@ export default function VagaDetailPublicPage() {
               animate={{ opacity: 1, x: 0 }}
               className="bg-card border border-border rounded-xl p-6 sticky top-20"
             >
-              <ApplicationButton vaga={vaga} onApply={candidatarSe} isLoading={isCandidatando} />
-              
+              <ApplicationButton
+                vaga={vaga}
+                onApply={candidatarSe}
+                isLoading={isCandidatando}
+              />
+
               {vaga.applicationInstructions && (
                 <p className="text-xs text-muted-foreground mt-3 text-center">
                   {vaga.applicationInstructions}
@@ -605,11 +751,17 @@ export default function VagaDetailPublicPage() {
 
               {/* Info da empresa */}
               <div className="space-y-3">
-                <p className="text-sm font-medium text-foreground">Sobre a empresa</p>
+                <p className="text-sm font-medium text-foreground">
+                  Sobre a empresa
+                </p>
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-lg bg-secondary flex items-center justify-center">
                     {vaga.empresaLogoUrl ? (
-                      <img src={vaga.empresaLogoUrl} alt={vaga.empresaNome} className="h-8 w-8 object-contain" />
+                      <img
+                        src={vaga.empresaLogoUrl}
+                        alt={vaga.empresaNome}
+                        className="h-8 w-8 object-contain"
+                      />
                     ) : (
                       <Building2 className="h-5 w-5 text-muted-foreground" />
                     )}
@@ -633,15 +785,29 @@ export default function VagaDetailPublicPage() {
                 <>
                   <Separator className="my-4" />
                   <div className="space-y-3">
-                    <p className="text-sm font-medium text-foreground">Mais vagas desta empresa</p>
+                    <p className="text-sm font-medium text-foreground">
+                      Mais vagas desta empresa
+                    </p>
                     {vagasEmpresa.map((vagaEmp) => (
                       <button
                         key={vagaEmp.id}
-                        onClick={() => navigate(jobPublicRoutes.detail({ state: routeState, city: routeCity, slug: vagaEmp.slug }))}
+                        onClick={() =>
+                          navigate(
+                            jobPublicRoutes.detail({
+                              state: routeState,
+                              city: routeCity,
+                              slug: vagaEmp.slug,
+                            }),
+                          )
+                        }
                         className="w-full text-left p-3 rounded-lg hover:bg-secondary transition-colors"
                       >
-                        <p className="text-sm font-medium text-foreground line-clamp-1">{vagaEmp.titulo}</p>
-                        <p className="text-xs text-muted-foreground">{formatSalary(vagaEmp)}</p>
+                        <p className="text-sm font-medium text-foreground line-clamp-1">
+                          {vagaEmp.titulo}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatSalary(vagaEmp)}
+                        </p>
                       </button>
                     ))}
                   </div>
@@ -664,84 +830,14 @@ export default function VagaDetailPublicPage() {
         </div>
       </main>
 
-      <AnimatePresence>
-        {reportOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
-            onClick={() => setReportOpen(false)}
-          >
-            <motion.div
-              initial={{ y: 24, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 24, opacity: 0 }}
-              onClick={(event) => event.stopPropagation()}
-              className="bg-card border border-border rounded-xl p-5 max-w-md w-full"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Flag className="h-4 w-4 text-destructive" />
-                  <h2 className="text-base font-semibold text-foreground">Denunciar vaga</h2>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setReportOpen(false)}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label="Fechar denuncia"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <p className="text-xs text-muted-foreground mb-4">
-                Selecione o motivo para enviar esta vaga para moderacao.
-              </p>
-
-              <select
-                value={reportReason}
-                onChange={(event) => setReportReason(event.target.value)}
-                className="w-full h-10 px-3 rounded-lg bg-background border border-border text-foreground text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="">Selecione um motivo</option>
-                {VAGA_REPORT_REASON_OPTIONS.map((reason) => (
-                  <option key={reason.id} value={reason.id}>
-                    {reason.label}
-                  </option>
-                ))}
-              </select>
-
-              <Textarea
-                value={reportDescription}
-                onChange={(event) => setReportDescription(event.target.value)}
-                maxLength={JOB_FORM_LIMITS.MAX_REPORT_DESCRIPTION}
-                placeholder="Detalhes opcionais"
-                className="min-h-24 resize-none mb-4"
-              />
-
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setReportOpen(false)}
-                  className="flex-1"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleDenuncia}
-                  disabled={!isVagaReportReason(reportReason) || isDenunciando}
-                  className="flex-1 bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-                >
-                  {isDenunciando ? "Enviando..." : "Denunciar"}
-                </Button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ReportReasonDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        contentLabel="vaga"
+        reasonOptions={VAGA_REPORT_REASON_OPTIONS}
+        maxDetailsLength={JOB_FORM_LIMITS.MAX_REPORT_DESCRIPTION}
+        onSubmit={handleDenuncia}
+      />
     </div>
   );
 }

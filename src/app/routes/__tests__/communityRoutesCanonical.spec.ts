@@ -83,9 +83,14 @@ describe("community route patterns", () => {
     ].join("\n");
 
     expect(routesSource).toContain("COMMUNITY_ROUTE_DEFINITIONS");
-    expect(routesSource).toContain("COMMUNITY_ALIAS_ROUTE_PREFIXES");
-    expect(routesSource).toContain("buildCommunityTerritoryRoutePath()");
-    expect(routesSource).toContain("buildCommunityScopedRoutePath()");
+    expect(routesSource).toContain("CommunityPersistentPortalLayout");
+    expect(routesSource).toContain("toRelativeRoutePath");
+    expect(routesSource).toContain(
+      'renderCommunityRoutes("territory", buildCommunityTerritoryRoutePath)',
+    );
+    expect(routesSource).toContain(
+      'renderCommunityRoutes("scoped", buildCommunityScopedRoutePath)',
+    );
     expect(routesSource).toContain("buildCommunityAliasRoutePath");
     expect(routesSource).not.toContain("buildCommunityRootAliasRoutePath");
     expect(routesSource).not.toContain("CommunityShortAliasShellRoute");

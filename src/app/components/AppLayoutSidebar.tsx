@@ -33,13 +33,7 @@ export function AppLayoutSidebar() {
     /^[a-z]{2}$/i.test(pathSegments[0] ?? '') &&
     !isReservedSlug(pathSegments[0] ?? '');
   const isCommunityPublicLandingRoute =
-    pathSegments[0] === MODULE_SLUGS.community &&
-    /^[a-z]{2}$/i.test(pathSegments[1] ?? '') &&
-    Boolean(pathSegments[2]) &&
-    (
-      pathSegments.length === 3 ||
-      (pathSegments.length === 4 && !isCommunityRouteSuffixSegment(pathSegments[3]))
-    );
+    pathSegments[0] === MODULE_SLUGS.community;
   const isCommunityAliasPublicRoute =
     pathSegments[0] === MODULE_SLUGS.community &&
     Boolean(pathSegments[1]) &&

@@ -21,9 +21,9 @@ export interface GroupMessageItem {
   profile?: { name?: string | null; avatar_url?: string | null } | null;
   metadata?: {
     reply_to_message_id?: string;
-    reply_preview?: string;
-    reply_author_name?: string;
   } | null;
+  likes_count?: number;
+  is_liked?: boolean;
 }
 
 export interface GroupMemberItem {

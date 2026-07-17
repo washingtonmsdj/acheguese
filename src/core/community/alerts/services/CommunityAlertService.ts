@@ -8,10 +8,8 @@
  */
 
 import { supabase } from "@/integrations/supabase";
-import { insertLooseRow } from "@/integrations/supabase";
 import type { Database } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { SessionService } from "@/core/session/services/SessionService";
 import { CommunityRpcService } from "@/core/community/services/CommunityRpcService";
 import type {
   AlertCategory,
@@ -225,90 +223,22 @@ class CommunityAlertServiceClass {
   }
 
   async updateAlert(alertId: string, payload: UpdateAlertPayload): Promise<boolean> {
-    try {
-      await CommunityRpcService.incrementAlertEditCount(alertId);
-
-      const updateData: Record<string, unknown> = {
-        updated_at: new Date().toISOString(),
-      };
-
-      if (typeof payload.description === "string") {
-        updateData.description = payload.description;
-      }
-
-      // Domain still_risky does not exist in current DB schema.
-      // We map it to status to preserve intent until the schema converges.
-      if (typeof payload.still_risky === "boolean") {
-        updateData.status = payload.still_risky ? "ativo" : "encerrado";
-      }
-
-      const { error } = await supabase
-        .from(this.TABLE)
-        .update(updateData)
-        .eq("id", alertId);
-
-      if (error) throw error;
-
-      await this._auditLog(alertId, "updated", payload as Record<string, unknown>);
-      return true;
-    } catch (error) {
-      logger.error(
-        "CommunityAlertService.updateAlert",
-        error,
-        this._errorContext(error)
-      );
-      return false;
-    }
+    return this._mutateAlert("update", alertId, {
+      p_description: payload.description ?? null,
+      p_still_risky: payload.still_risky ?? null,
+    });
   }
 
   async endAlert(alertId: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from(this.TABLE)
-        .update({
-          status: "encerrado",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", alertId);
-
-      if (error) throw error;
-
-      await this._auditLog(alertId, "ended", {});
-      return true;
-    } catch (error) {
-      logger.error(
-        "CommunityAlertService.endAlert",
-        error,
-        this._errorContext(error)
-      );
-      return false;
-    }
+    return this._mutateAlert("end", alertId);
   }
 
   async removeAlert(alertId: string, reason: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from(this.TABLE)
-        .update({
-          status: "removido",
-          removed_at: new Date().toISOString(),
-          removal_reason: reason,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", alertId);
+    return this._mutateAlert("remove", alertId, { p_reason: reason });
+  }
 
-      if (error) throw error;
-
-      await this._auditLog(alertId, "removed", { reason });
-      return true;
-    } catch (error) {
-      logger.error(
-        "CommunityAlertService.removeAlert",
-        error,
-        this._errorContext(error)
-      );
-      return false;
-    }
+  async clearUnderReview(alertId: string): Promise<boolean> {
+    return this._mutateAlert("clear_review", alertId);
   }
 
   // --------------------------------------------------------------------------
@@ -378,24 +308,33 @@ class CommunityAlertServiceClass {
   // Internal helpers
   // --------------------------------------------------------------------------
 
-  private async _auditLog(
+  private async _mutateAlert(
+    action: "update" | "end" | "remove" | "clear_review",
     alertId: string,
-    action: string,
-    metadata: Record<string, unknown>
-  ): Promise<void> {
+    params: {
+      p_description?: string | null;
+      p_still_risky?: boolean | null;
+      p_reason?: string | null;
+    } = {},
+  ): Promise<boolean> {
     try {
-      const user = await SessionService.getCurrentUser();
-      if (!user) return;
-
-      const { error } = await insertLooseRow("community_alert_audit", {
-        alert_id: alertId,
-        actor_id: user.id,
-        action_type: action,
-        metadata,
+      const { error } = await supabase.rpc("mutate_community_alert", {
+        p_alert_id: alertId,
+        p_action: action,
+        p_description: params.p_description ?? null,
+        p_still_risky: params.p_still_risky ?? null,
+        p_reason: params.p_reason ?? null,
       });
+
       if (error) throw error;
+      return true;
     } catch (error) {
-      logger.error("CommunityAlertService._auditLog", error, this._errorContext(error));
+      logger.error("CommunityAlertService._mutateAlert", error, {
+        action,
+        alertId,
+        ...this._errorContext(error),
+      });
+      return false;
     }
   }
 

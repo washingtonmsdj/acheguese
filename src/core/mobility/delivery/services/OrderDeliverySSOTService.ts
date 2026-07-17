@@ -47,7 +47,6 @@ import type { DeliveryProof } from "../proof-of-delivery/types";
 import { LOGISTICS_STATUS, type LogisticsStatus } from "../logistics/types";
 import { SettlementContextService } from "../settlement-context/SettlementContextService";
 import { DeliveryRpcService, type DeliveryRpcAction } from "./DeliveryRpcService";
-import { OrderDeliveryNotificationService } from "./OrderDeliveryNotificationService";
 import type { OrderFinancialBreakdown } from "../settlement-context/types";
 
 const ORDER_TABLE = "orders";
@@ -272,26 +271,6 @@ function normalizeOrderItemsInput(
 }
 
 export class OrderDeliverySSOTService {
-  private static notifyBestEffort(
-    label: string,
-    orderId: string,
-    taskFactory: () => Promise<void>,
-  ): void {
-    try {
-      void taskFactory().catch((error) => {
-        logger.warn(`OrderDeliverySSOTService.${label}.notification_failed`, {
-          order_id: orderId,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      });
-    } catch (error) {
-      logger.warn(`OrderDeliverySSOTService.${label}.notification_failed`, {
-        order_id: orderId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
-
   private static assertCurrentDeliveryModeSupported(
     deliveryMode: OrderRecord["delivery_mode"],
   ): void {
@@ -460,11 +439,6 @@ export class OrderDeliverySSOTService {
         actorProfileId,
       });
 
-      this.notifyBestEffort(
-        "createOrder",
-        order.id,
-        () => OrderDeliveryNotificationService.notifyOrderCreated(order),
-      );
       return { success: true, data: order };
     } catch (error) {
       logger.error("OrderDeliverySSOTService.createOrder", error as Error, {
@@ -564,40 +538,6 @@ export class OrderDeliverySSOTService {
         },
       );
 
-      const eventByStatus: Record<
-        LogisticsStatus,
-        | "order_accepted"
-        | "order_preparing"
-        | "order_ready_for_pickup"
-        | "courier_picked_up"
-        | "order_delivered"
-        | "delivery_failed"
-        | "order_status_changed"
-      > = {
-        [LOGISTICS_STATUS.PENDING]: "order_status_changed",
-        [LOGISTICS_STATUS.ACCEPTED]: "order_accepted",
-        [LOGISTICS_STATUS.PREPARING]: "order_preparing",
-        [LOGISTICS_STATUS.READY_FOR_PICKUP]: "order_ready_for_pickup",
-        [LOGISTICS_STATUS.PICKED_UP]: "courier_picked_up",
-        [LOGISTICS_STATUS.DELIVERED]: "order_delivered",
-        [LOGISTICS_STATUS.CANCELED]: "order_status_changed",
-        [LOGISTICS_STATUS.FAILED]: "delivery_failed",
-      };
-      const canceledEvent =
-        order.customer_profile_id === actorProfileId
-          ? "order_canceled_by_customer"
-          : "order_canceled_by_merchant";
-      this.notifyBestEffort(
-        "transitionLogisticsStatus",
-        order.id,
-        () =>
-          OrderDeliveryNotificationService.notifyOrderStatusChanged(
-          order,
-          order.logistics_status === LOGISTICS_STATUS.CANCELED
-            ? canceledEvent
-            : (eventByStatus[order.logistics_status] ?? "order_status_changed"),
-          ),
-      );
       return { success: true, data: order };
     } catch (error) {
       logger.error(
@@ -662,15 +602,6 @@ export class OrderDeliverySSOTService {
         reason: params.reason ?? null,
       });
 
-      this.notifyBestEffort(
-        "markPickedUp",
-        order.id,
-        () =>
-          OrderDeliveryNotificationService.notifyOrderStatusChanged(
-            order,
-            "courier_picked_up",
-          ),
-      );
       return { success: true, data: order };
     } catch (error) {
       logger.error(
@@ -696,15 +627,6 @@ export class OrderDeliverySSOTService {
         },
       );
 
-      this.notifyBestEffort(
-        "attachDeliveryProof",
-        order.id,
-        () =>
-          OrderDeliveryNotificationService.notifyOrderStatusChanged(
-            order,
-            "delivery_proof_attached",
-          ),
-      );
       return { success: true, data: order };
     } catch (error) {
       logger.error(
@@ -733,15 +655,6 @@ export class OrderDeliverySSOTService {
         proof: normalizeProofInput(input.proof),
       });
 
-      this.notifyBestEffort(
-        "markDelivered",
-        order.id,
-        () =>
-          OrderDeliveryNotificationService.notifyOrderStatusChanged(
-            order,
-            "order_delivered",
-          ),
-      );
       return { success: true, data: order };
     } catch (error) {
       logger.error("OrderDeliverySSOTService.markDelivered", error as Error, {
@@ -755,12 +668,16 @@ export class OrderDeliverySSOTService {
     order_id: string;
     actor_profile_id?: string;
     reason?: string;
+    reason_code?: string;
   }): Promise<OrderOperationResult<OrderRecord>> {
     return this.transitionLogisticsStatus({
       order_id: input.order_id,
       to_status: LOGISTICS_STATUS.CANCELED,
       actor_profile_id: this.requireActorProfileId(input.actor_profile_id),
       reason: input.reason ?? "Pedido cancelado",
+      metadata: input.reason_code
+        ? { cancellation_reason_code: input.reason_code }
+        : {},
     });
   }
 

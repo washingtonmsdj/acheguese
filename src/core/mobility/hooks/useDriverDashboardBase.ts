@@ -20,13 +20,6 @@ import {
 import { logger } from "@/shared/utils/logger";
 import { RIDE_STATUS, TIMEOUTS } from "@/core/mobility/constants";
 import { RideRatingService } from "@/core/mobility/services/RideRatingService";
-import {
-  TRUST_ACTOR_ROLES,
-  TRUST_CONTEXT_TYPES,
-  TRUST_EVENT_TYPES,
-  TRUST_VISIBILITIES,
-  TrustEventService,
-} from "@/core/trust";
 
 interface MobilityRide {
   id: string;
@@ -534,20 +527,9 @@ export function useDriverDashboardBase({
     }
   }, [refetchDashboard, rideToCancel]);
 
-    const handleRatePassenger = useCallback(
+  const handleRatePassenger = useCallback(
     async (ratingPayload: unknown) => {
       if (!rideToRate?.id || !driverProfileId) {
-        setRatePassengerOpen(false);
-        return;
-      }
-
-      const passengerProfileId =
-        typeof (rideToRate as { passenger_profile_id?: unknown }).passenger_profile_id === "string"
-          ? ((rideToRate as unknown as { passenger_profile_id: string }).passenger_profile_id)
-          : null;
-
-      if (!passengerProfileId) {
-        toast.error("Nao foi possivel identificar o passageiro para avaliacao.");
         setRatePassengerOpen(false);
         return;
       }
@@ -565,55 +547,15 @@ export function useDriverDashboardBase({
       const punctuality = clampRating(typedPayload?.punctuality_rating ?? rating);
       const payment = clampRating(typedPayload?.payment_rating ?? rating);
       const comment = (typedPayload?.comment || "").trim();
-      const composedComment = [
-        comment || null,
-        `behaviour:${behavior}`,
-        `punctuality:${punctuality}`,
-        `payment:${payment}`,
-      ]
-        .filter(Boolean)
-        .join(" | ");
-
       try {
         await RideRatingService.upsert({
           rideId: rideToRate.id,
-          raterId: driverProfileId,
-          ratedId: passengerProfileId,
           rating,
-          comment: composedComment || null,
+          comment: comment || null,
+          behaviorRating: behavior,
+          punctualityRating: punctuality,
+          paymentRating: payment,
         });
-
-        const trustResult = await TrustEventService.upsertOperationalFeedback({
-          actor_profile_id: driverProfileId,
-          actor_role:
-            rideToRate.ride_mode === "motoboy"
-              ? TRUST_ACTOR_ROLES.COURIER
-              : TRUST_ACTOR_ROLES.DRIVER,
-          subject_profile_id: passengerProfileId,
-          subject_role: TRUST_ACTOR_ROLES.CUSTOMER,
-          context_type: TRUST_CONTEXT_TYPES.RIDE,
-          context_id: rideToRate.id,
-          event_type: TRUST_EVENT_TYPES.OPERATIONAL_FEEDBACK,
-          rating,
-          reason_code: rating >= 4 ? "smooth_operation" : "driver_reported_issue",
-          severity: rating <= 2 ? "high" : rating === 3 ? "medium" : "low",
-          visibility: TRUST_VISIBILITIES.PRIVATE,
-          description: comment || null,
-          evidence: {
-            behavior_rating: behavior,
-            punctuality_rating: punctuality,
-            payment_rating: payment,
-            ride_mode: rideToRate.ride_mode,
-          },
-        });
-
-        if (trustResult.error) {
-          logger.error("useDriverDashboardBase.handleRatePassenger.trust", new Error(trustResult.error), {
-            rideId: rideToRate.id,
-            driverProfileId,
-            passengerProfileId,
-          });
-        }
 
         toast.success("Avaliacao enviada!");
         setRatePassengerOpen(false);
@@ -621,7 +563,6 @@ export function useDriverDashboardBase({
         logger.error("useDriverDashboardBase.handleRatePassenger", error as Error, {
           rideId: rideToRate.id,
           driverProfileId,
-          passengerProfileId,
         });
         toast.error("Nao foi possivel enviar a avaliacao.");
       }

@@ -1,11 +1,11 @@
 import {
   TRUST_ACTOR_ROLES,
-  TRUST_CONTEXT_TYPES,
   TrustFeedbackForm,
   type TrustFeedbackReason,
   type TrustFeedbackTarget,
 } from "@/core/trust";
 import type { OrderStatus, OrderWithItems } from "@/modules/business/gastronomy/services/OrderService";
+import { OrderTrustService } from "@/modules/business/gastronomy/services/OrderTrustService";
 
 interface OrderTrustFeedbackPanelProps {
   order: OrderWithItems;
@@ -47,20 +47,11 @@ export function OrderTrustFeedbackPanel({ order }: OrderTrustFeedbackPanelProps)
 
   return (
     <TrustFeedbackForm
-      actorRole={TRUST_ACTOR_ROLES.MERCHANT}
-      contextType={TRUST_CONTEXT_TYPES.ORDER}
-      contextId={order.id}
       targets={targets}
       reasons={ORDER_FEEDBACK_REASONS}
       enabled={FINAL_STATUSES.includes(order.status)}
+      onSubmit={(input) => OrderTrustService.submitFeedback(order.id, input)}
       unavailableMessage="O feedback fica disponível quando o pedido for entregue, concluído ou cancelado."
-      evidence={{
-        order_status: order.status,
-        order_total: order.total,
-        business_profile_id: order.business_id,
-        customer_profile_id: order.customer_id,
-        courier_profile_id: order.courier_profile_id,
-      }}
     />
   );
 }

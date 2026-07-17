@@ -79,6 +79,7 @@ body:has(.home-concept) {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  font-family: "DM Sans", sans-serif;
 }
 
 .home-brand {
@@ -98,6 +99,7 @@ body:has(.home-concept) {
   font-weight: 800;
   line-height: 1;
   letter-spacing: 0;
+  white-space: nowrap;
   text-shadow: 0 8px 22px rgba(0, 0, 0, 0.42);
 }
 
@@ -213,14 +215,6 @@ body:has(.home-concept) {
   white-space: nowrap;
 }
 
-.home-weather-pill {
-  display: none;
-}
-
-.home-weather-pill svg {
-  color: var(--home-amber);
-}
-
 .home-notification-button {
   position: relative;
   display: inline-grid;
@@ -282,6 +276,20 @@ body:has(.home-concept) {
   display: none;
   width: 14px;
   height: 14px;
+}
+
+.home-mobile-menu {
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  border-color: rgba(119, 151, 168, 0.3);
+  background: rgba(4, 15, 24, 0.62);
+  color: var(--home-text);
+}
+
+.home-mobile-menu svg {
+  width: 17px;
+  height: 17px;
 }
 
 .home-hero-layout {
@@ -1239,8 +1247,18 @@ body:has(.home-concept) {
   }
 
   .home-location-pill span {
-    min-width: 0;
-    max-width: 58px;
+    display: none;
+  }
+
+  .home-location-pill {
+    width: 32px;
+    flex: 0 0 32px;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .home-location-pill svg:last-child {
+    display: none;
   }
 
   .home-notification-button {
@@ -1283,6 +1301,39 @@ body:has(.home-concept) {
   .home-search-submit {
     width: 42px;
     height: 42px;
+  }
+}
+
+@media (max-width: 340px) {
+  .home-header {
+    gap: 6px;
+  }
+
+  .home-brand {
+    gap: 5px;
+  }
+
+  .home-brand span:last-child {
+    font-size: 1.08rem;
+  }
+
+  .home-brand-mark {
+    width: 23px;
+    height: 29px;
+  }
+
+  .home-actions {
+    gap: 3px;
+  }
+
+  .home-location-pill,
+  .home-notification-button,
+  .home-user-avatar,
+  .home-mobile-menu {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    min-height: 32px;
   }
 }
 
@@ -1421,10 +1472,6 @@ body:has(.home-concept) {
     max-width: 86px;
   }
 
-  .home-weather-pill {
-    display: inline-flex;
-  }
-
   .home-notification-button {
     width: 36px;
   }
@@ -1449,6 +1496,10 @@ body:has(.home-concept) {
     display: block;
     width: 15px;
     height: 15px;
+  }
+
+  .home-mobile-menu {
+    display: none;
   }
 
   .home-hero-layout {

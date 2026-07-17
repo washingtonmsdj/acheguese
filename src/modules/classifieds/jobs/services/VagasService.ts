@@ -22,7 +22,6 @@ import { supabase } from '@/integrations/supabase';
 import { PublicViewTrackingService } from '@/core/analytics/services/PublicViewTrackingService';
 import {
   ProfileSavedEntityService,
-  type ProfileSavedEntityConfig,
 } from '@/core/engagement/services/ProfileSavedEntityService';
 import { JOB_QUERY_LIMITS } from '../constants/query-limits';
 import type {
@@ -81,12 +80,6 @@ interface VagasDbClient {
 }
 
 const vagasDb = supabase as unknown as VagasDbClient;
-
-const VAGA_SAVED_CONFIG = {
-  tableName: 'vaga_saved_items',
-  entityIdColumn: 'vaga_id',
-  logLabel: 'vaga_saved_items',
-} as const satisfies ProfileSavedEntityConfig;
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MAPEAMENTO DATABASE -> DOMAIN
@@ -637,20 +630,20 @@ export class VagasService {
     }
   }
 
-  static async getSavedVagaIds(profileId: string): Promise<string[]> {
-    return ProfileSavedEntityService.getSavedEntityIds(VAGA_SAVED_CONFIG, profileId);
+  static async getSavedVagaIds(): Promise<string[]> {
+    return ProfileSavedEntityService.getSavedEntityIds('vaga');
   }
 
-  static async isVagaSaved(vagaId: string, profileId: string): Promise<boolean> {
-    return ProfileSavedEntityService.isSaved(VAGA_SAVED_CONFIG, vagaId, profileId);
+  static async isVagaSaved(vagaId: string): Promise<boolean> {
+    return ProfileSavedEntityService.isSaved('vaga', vagaId);
   }
 
-  static async saveVaga(vagaId: string, profileId: string): Promise<void> {
-    return ProfileSavedEntityService.save(VAGA_SAVED_CONFIG, vagaId, profileId);
+  static async saveVaga(vagaId: string): Promise<void> {
+    return ProfileSavedEntityService.save('vaga', vagaId);
   }
 
-  static async removeSavedVaga(vagaId: string, profileId: string): Promise<void> {
-    return ProfileSavedEntityService.remove(VAGA_SAVED_CONFIG, vagaId, profileId);
+  static async removeSavedVaga(vagaId: string): Promise<void> {
+    return ProfileSavedEntityService.remove('vaga', vagaId);
   }
 
   /**

@@ -9,12 +9,13 @@
 
 import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
+import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { ProfessionalService } from "@/core/professional/services/ProfessionalService";
 import { BusinessService } from "@/core/business/services/BusinessService";
-import { CommunityRpcService } from "@/core/community/services/CommunityRpcService";
 import type {
   CommunityQuestion,
+  CommunityQuestionPage,
   CommunityAnswer,
   CreateAnswerInput,
   CreateQuestionInput,
@@ -129,12 +130,9 @@ export class CommunityQAService {
       const { data, error } = await supabase
         .from("community_questions")
         .insert({
-          author_profile_id: input.autor_id,
-          type: "question",
           title: input.titulo.trim(),
           description: input.description.trim(),
           category: input.category,
-          content: input.description.trim(),
           location_id: input.location_id,
         })
         .select()
@@ -165,15 +163,17 @@ export class CommunityQAService {
     }
   }
 
-  static async getQuestions(
+  static async getQuestionsPage(
     filters: QuestionFilters = {},
-  ): Promise<CommunityQuestion[]> {
+  ): Promise<CommunityQuestionPage> {
     try {
+      const boundedLimit = Math.min(Math.max(filters.limit ?? 20, 1), 50);
       let query = supabase
         .from("community_questions")
         .select("*, location:locations(id, name, type)")
         .eq("type", "question")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false });
 
       if (filters.category && filters.category !== "todos") {
         query = query.eq("category", filters.category);
@@ -185,15 +185,26 @@ export class CommunityQAService {
         query = query.eq("location_id", filters.location_id);
       }
 
-      if (filters.limit !== undefined && filters.offset !== undefined) {
-        query = query.range(filters.offset, filters.offset + filters.limit - 1);
+      const searchFilter = buildSafeOrILikeFilter(
+        ["title", "description"],
+        filters.search,
+      );
+      if (searchFilter) query = query.or(searchFilter);
+
+      if (filters.cursor) {
+        query = query.or(
+          `created_at.lt.${filters.cursor.createdAt},and(created_at.eq.${filters.cursor.createdAt},id.lt.${filters.cursor.id})`,
+        );
       }
+
+      query = query.limit(boundedLimit + 1);
 
       const { data, error } = await query;
       if (error) throw error;
-      if (!data || data.length === 0) return [];
+      if (!data || data.length === 0) return { items: [], nextCursor: null };
 
-      const questions = data as CommunityQuestionRow[];
+      const hasNextPage = data.length > boundedLimit;
+      const questions = (data as CommunityQuestionRow[]).slice(0, boundedLimit);
       const autorIds = [...new Set(questions.map((q) => q.author_profile_id))];
       const profiles = autorIds.length > 0
         ? await profileService.getProfilesSummary(autorIds as string[])
@@ -202,7 +213,7 @@ export class CommunityQAService {
         profiles.map((p) => [p.id, { id: p.id, name: p.displayName, avatar_url: p.avatarUrl }]),
       );
 
-      return questions.map((question) => ({
+      const items = questions.map((question) => ({
         id: question.id,
         titulo: question.title || "",
         description: question.description || "",
@@ -215,14 +226,22 @@ export class CommunityQAService {
         location: question.location || null,
         autor: profileMap.get(question.author_profile_id) || { id: "", name: "", avatar_url: "" },
       })) as CommunityQuestion[];
+
+      const lastQuestion = items.at(-1);
+      return {
+        items,
+        nextCursor: hasNextPage && lastQuestion
+          ? { createdAt: lastQuestion.created_at, id: lastQuestion.id }
+          : null,
+      };
     } catch (error) {
       trackError(new Error("Error fetching questions"), {
         component: "CommunityQAService",
-        action: "getQuestions",
+        action: "getQuestionsPage",
         severity: "medium",
         metadata: { filters, error },
       });
-      return [];
+      throw error;
     }
   }
 
@@ -238,6 +257,7 @@ export class CommunityQAService {
         .select("*")
         .eq("question_id", questionId)
         .order("created_at", { ascending: true })
+        .limit(100)
         .returns<QuestionAnswerRow[]>();
 
       if (error) throw error;
@@ -325,7 +345,6 @@ export class CommunityQAService {
         .from("question_answers")
         .insert({
           question_id: input.question_id,
-          author_profile_id: input.autor_id,
           content: input.texto.trim(),
           professional_id: input.professional_id || null,
           business_id: input.business_id || null,
@@ -366,7 +385,11 @@ export class CommunityQAService {
     answerId: string,
   ): Promise<boolean> {
     try {
-      await CommunityRpcService.markBestAnswer(questionId, answerId);
+      const { error } = await supabase.rpc("mark_best_answer", {
+        _question_id: questionId,
+        _answer_id: answerId,
+      });
+      if (error) throw error;
       return true;
     } catch (error) {
       trackError(new Error("Error marking best answer"), {
@@ -381,45 +404,30 @@ export class CommunityQAService {
 
   static async toggleAnswerLike(
     answerId: string,
-    userId: string,
   ): Promise<{ liked: boolean; newCount: number } | null> {
     try {
-      const { data: existing } = await supabase
-        .from("question_answer_likes")
-        .select("id")
-        .eq("answer_id", answerId)
-        .eq("user_id", userId)
-        .maybeSingle<{ id: string }>();
-
-      if (existing) {
-        const { error } = await supabase
-          .from("question_answer_likes")
-          .delete()
-          .eq("answer_id", answerId)
-          .eq("user_id", userId);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("question_answer_likes")
-          .insert({ answer_id: answerId, user_id: userId });
-        if (error) throw error;
+      const { data, error } = await supabase.rpc("toggle_question_answer_like", {
+        p_answer_id: answerId,
+      });
+      if (error) throw error;
+      const result = data as { liked?: unknown; new_count?: unknown } | null;
+      if (
+        !result
+        || typeof result.liked !== "boolean"
+        || typeof result.new_count !== "number"
+      ) {
+        throw new Error("Invalid answer-like response");
       }
 
-      const { data: updated } = await supabase
-        .from("question_answers")
-        .select("likes_count")
-        .eq("id", answerId)
-        .single<{ likes_count: number | null }>();
-
       return {
-        liked: !existing,
-        newCount: updated?.likes_count ?? 0,
+        liked: result.liked,
+        newCount: result.new_count,
       };
     } catch (error) {
       trackError(new Error("Error toggling answer like"), {
         component: "CommunityQAService",
         action: "toggleAnswerLike",
-        metadata: { answerId, userId, error },
+        metadata: { answerId, error },
         severity: "low",
       });
       return null;

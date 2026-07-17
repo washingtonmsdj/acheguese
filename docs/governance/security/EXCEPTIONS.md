@@ -55,6 +55,66 @@ Valida ate:
 
 ## Excecoes Ativas
 
+## EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS
+
+Status: aberta
+Risco: Medium
+Area: Supabase
+Responsavel: Tech/security owner
+Criada em: 2026-07-15
+Valida ate: 2026-10-15
+
+### Contexto
+
+O Advisor passou a reportar toda funcao `SECURITY DEFINER` executavel via
+PostgREST. Os RPCs registrados nesta excecao sao fronteiras publicas
+intencionais: comandos server-owned, read models privados/admin ou agregados
+publicos que precisam consultar tabelas sem conceder acesso direto ao browser.
+
+### Regra Afetada
+
+Funcoes `SECURITY DEFINER` expostas devem ser removidas ou ter contrato,
+autorizacao interna, grants minimos e evidencia negativa explicitos.
+
+### Risco
+
+Uma falha de validacao interna poderia transformar privilegio do owner em
+BOLA/IDOR, leitura privada ou escrita cross-user. O risco nao e o uso de
+`SECURITY DEFINER` isoladamente, mas uma assinatura executavel sem derivacao de
+identidade e verificacao do recurso.
+
+### Mitigacao Temporaria
+
+As assinaturas allowlisted possuem `search_path` fixo, grants por papel,
+limites de lote/texto/timeout e validacao interna de `auth.uid()`, Profile
+ativo, participante ou admin conforme o caso. Tabelas sensiveis continuam sem
+grant direto. Probes remotos cobrem anonymous, usuario comum, admin, identidade
+forjada e contexto inexistente nos dominios Trust, Reviews, Messaging,
+Community, Moderation, Favorites, Notifications e Safety.
+
+Somente tres RPCs sao anonimos: dois agregados publicos sem eventos/linhas
+privadas e a leitura Safety por token aleatorio. O registro usa cache keys
+exatas; nao existe wildcard para novas funcoes.
+
+### Plano De Remocao
+
+Revisar trimestralmente cada assinatura. Converter para `SECURITY INVOKER`
+quando RLS/grants forem suficientes; mover para Edge broker quando a
+autorizacao nao puder ser provada integralmente no banco; revogar funcoes sem
+consumidor. Uma nova cache key continua falhando ate possuir contrato, teste
+negativo remoto e ownership declarado.
+
+### Evidencias
+
+- `npm run security:trust:authz-probe`: 20 casos remotos aprovados em
+  2026-07-15;
+- `npm run security:reviews:authz-probe`: probes de Reviews existentes;
+- probes remotos de Classified Messaging, Community Direct Messaging,
+  Moderation/Audit, Notification Preferences e Business Favorites;
+- `npm run validate:security-authority` e manifest de ownership aprovados;
+- migrations `20260714113000` a `20260715110000`, com marcadores da Security
+  Authority, grants explicitos e `search_path` fixo.
+
 ## EXC-2026-07-08-POSTGIS-EXTENSION-OWNER
 
 Status: aberta
@@ -140,6 +200,13 @@ extensoes, grants, RLS ou migrations; se retornar `blocked`, o marcador
   `ready=false`.
 - Execucao em 2026-07-09 de `npm run security:advisor:residuals` validou 12
   achados remotos, todos dentro da allowlist canonica.
+- Execucao em 2026-07-13 de `npm run security:postgis:preflight` retornou
+  novamente `status=blocked`: extensoes `citext`, `pg_trgm`, `postgis`,
+  `unaccent`, `public.spatial_ref_sys` e tres overloads
+  `public.st_estimatedextent` permanecem owned por `supabase_admin` e sem
+  preflight aprovado.
+- Execucao em 2026-07-13 de `npm run security:advisor:residuals` validou os
+  mesmos 12 achados remotos, todos dentro da allowlist canonica.
 
 ## EXC-2026-07-08-AUTH-HIBP-DASHBOARD
 
@@ -219,6 +286,10 @@ env var usada, nunca o valor do token.
   retornou `status=blocked`, `blocker=missing_pat`, project ref
   `xhdowzacfujckjelqhtd` e nome das env vars esperadas, sem imprimir segredo e
   sem aplicar alteracao remota.
+- Execucao em 2026-07-13 de `npm run security:auth:hibp --check` confirmou
+  novamente ausencia de `SUPABASE_ACCESS_TOKEN` ou
+  `SUPABASE_MANAGEMENT_API_TOKEN` com os escopos necessarios. Nenhum token
+  implicito foi lido e nenhuma configuracao remota foi alterada.
 
 Achados residuais do Supabase Advisor tambem devem continuar registrados no
 relatorio canonico:

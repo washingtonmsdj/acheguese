@@ -189,7 +189,7 @@ export class PostAdapter {
 
     return {
       id: post.id,
-      type: (post.type || "text") as PostType,
+      type: (post.type || "post") as PostType,
       author_profile_id: post.profile_id || post.author_profile_id || "",
       author_name: profile?.name || profile?.username || "Usuário",
       author_avatar: profile?.avatar_url,

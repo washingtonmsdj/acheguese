@@ -94,7 +94,7 @@ O modulo esta fisicamente concentrado em `src/modules/business/gastronomy`, mas 
 - O E2E canonico de onboarding agora valida tambem o fluxo de favoritos: comprador logado favorita a pizzaria criada no teste, o registro e confirmado em `user_favorite_businesses`, `/gastronomia/favoritos` lista a pizzaria, e o fluxo segue para cardapio, checkout e pedido.
 - A pagina institucional de Empresas foi revalidada quanto a separacao: negocios cujo vertical primario e Gastronomia continuam delegando para `GastronomyDetailPage`, sem carrinho/checkout duplicado em `/empresas/...`.
 - O CTA institucional de Empresas para salvar/recomendar ganhou estado acessivel (`Salvo`/`Recomendado`, `aria-pressed`) e bloqueio visual durante mutacao de recomendacao; isso melhora o fluxo de Empresas sem reintroduzir recomendacao no detalhe transacional de Gastronomia.
-- O CTA institucional "Salvar" de Empresas foi migrado para `BusinessFavoriteService`/`useCanonicalBusinessFavorite`, usando `auth.users.id` + `snapshot.identity.businessId` (`business_data.id`) e persistindo em `user_favorite_businesses`; a pagina nao depende mais de `business_favorites` para esse fluxo publico.
+- O CTA institucional "Salvar" usa `BusinessFavoriteService`/`useCanonicalBusinessFavorite` com `business_data.id`; a identidade da conta e derivada no backend e nao e enviada pelo browser.
 - O CTA institucional de recomendacao foi corrigido para usar `snapshot.identity.businessId` (`business_data.id`) em vez de `institutional.business.id` (`profiles.id`), que quebrava a RPC `toggle_business_recommendation`.
 - A landing publica real de Empresas (`EmpresasLandingPage`) deixou de manter favoritos apenas em `useState`; os cards da lista territorial agora renderizam botao acessivel de favorito e persistem pelo contrato canonico `user_favorite_businesses`.
 - A pagina duplicada `src/modules/business/pages/EmpresasPage.tsx` e seus componentes exclusivos (`BusinessCard`, `BusinessGrid`, `BusinessFilters`) foram removidos do filesystem e dos barrels do modulo, evitando duas listas publicas concorrentes.
@@ -109,7 +109,7 @@ O modulo esta fisicamente concentrado em `src/modules/business/gastronomy`, mas 
 - O E2E operacional agora cobre o fluxo completo: fixture de pedido, loja entrega, cliente abre detalhe publico, publica avaliacao 5 estrelas e o teste confirma no banco que a review ficou em `reviews.order_id`, `reviewed_profile_id = orders.merchant_profile_id` e `reviewer_profile_id = orders.customer_profile_id`.
 - A rota publica `/gastronomia/pedidos/:orderId` deixou de contaminar a cidade ativa da navegacao lateral; `usePublicBrowsingCity` agora so aceita rotas territoriais quando o segmento de UF e valido, evitando mostrar UUID de pedido como cidade.
 - O seletor E2E do detalhe de pedido passou a validar o heading acessivel `Pedido #...`, reduzindo flake sem mascarar carregamento real da pagina.
-- Os servicos centrais de favoritos deixaram de consultar a tabela legada `business_favorites` em runtime; o contrato antigo de perfil foi preservado por mapeamento `profiles.id -> profiles.user_id -> user_favorite_businesses.business_id -> business_data.profile_id`, com teste de regressao bloqueando retorno da tabela legada aos servicos centrais.
+- `BusinessFavoriteStore` e o unico owner de `user_favorite_businesses`; Business e Gastronomia delegam ao mesmo contrato e compartilham a raiz de cache.
 - A camada visual duplicada do checkout foi consolidada em `checkout/CheckoutSections.tsx`; `GastronomyCheckoutPage` e `GastronomyCheckoutSheet` agora compartilham selecao de atendimento, itens, pagamento, campos estruturados de endereco, observacoes e resumo financeiro, preservando ids acessiveis especificos de cada superficie.
 - A implementacao duplicada de `src/modules/business/gastronomy/services/gastronomy.queries.ts` foi removida; o modulo agora reexporta `src/core/business/services/gastronomy.queries.ts`, que tambem recebeu a compatibilidade segura para chamadas antigas por `profiles.id`.
 - Tracking, fila, detalhe de pedido e widget de plano deixaram de prometer motoboy quando o fluxo v1 esta em frota propria/manual; a copy agora fala em entrega manual, responsavel pela entrega e rastreamento vinculado apenas quando existir SSOT de entrega.
@@ -139,7 +139,7 @@ O modulo esta fisicamente concentrado em `src/modules/business/gastronomy`, mas 
 - Expandir axe para checkout, detalhe, carrinho, pedidos e painel do lojista; a landing publica mobile e o dashboard mobile da loja ja tem cobertura automatizada inicial.
 - Validar o JSON-LD de restaurante/cardapio ja adicionado em `GastronomyDetailPage` e manter `noindex` em checkout, favoritos e areas privadas.
 - Confirmar em banco/territorio real se a listagem publica sem destino retorna volume esperado de restaurantes tambem no desktop; no host atual a UX carregou, mas o dataset visivel variou entre execucoes.
-- `business_favorites` ainda existe em migrations/types historicos. O runtime publico e o core de favoritos usam `user_favorite_businesses`; a remocao fisica da tabela antiga ainda exige auditoria de dados, backfill e migration propria para nao perder favoritos preexistentes.
+- A tabela `business_favorites`, vazia e sem dependencias na pre-auditoria remota, foi removida sem `CASCADE` pela migration `20260714123000`.
 
 ### Baixo
 

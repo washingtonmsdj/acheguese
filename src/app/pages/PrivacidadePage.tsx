@@ -1,7 +1,18 @@
 import { Helmet } from "react-helmet-async";
-import { ArrowLeft, Bell, Database, Eye, Globe, Lock, Mail, Shield, UserCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  Bell,
+  Database,
+  Eye,
+  Globe,
+  Lock,
+  Mail,
+  Shield,
+  UserCheck,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
+import { COMMUNITY_GUIDELINES_PATH } from "@/core/legal/termsOfService";
 import { Button } from "@/shared/components/ui/button";
 
 const POLICY_SECTIONS = [
@@ -142,8 +153,9 @@ export default function PrivacidadePage() {
                 Como o Achegue-se trata dados pessoais
               </h2>
               <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-                Este resumo público organiza as bases principais de coleta, uso, compartilhamento,
-                segurança e direitos do titular. Para solicitações operacionais, use o fluxo de privacidade da conta
+                Este resumo público organiza as bases principais de coleta, uso,
+                compartilhamento, segurança e direitos do titular. Para
+                solicitações operacionais, use o fluxo de privacidade da conta
                 ou o canal do encarregado de dados.
               </p>
             </div>
@@ -163,8 +175,9 @@ export default function PrivacidadePage() {
 
           <section className="mt-5 rounded-3xl border border-primary/20 bg-primary/5 p-4 shadow-sm sm:p-5">
             <p className="text-sm leading-6 text-foreground">
-              Esta política se alinha à Lei Geral de Proteção de Dados Pessoais e ao Marco Civil da Internet.
-              O tratamento de dados deve seguir necessidade, finalidade, segurança e transparência.
+              Esta política se alinha à Lei Geral de Proteção de Dados Pessoais
+              e ao Marco Civil da Internet. O tratamento de dados deve seguir
+              necessidade, finalidade, segurança e transparência.
             </p>
           </section>
 
@@ -190,7 +203,10 @@ export default function PrivacidadePage() {
 
                   <div className="mt-4 space-y-3">
                     {section.paragraphs.map((paragraph) => (
-                      <p key={paragraph} className="text-sm leading-6 text-muted-foreground">
+                      <p
+                        key={paragraph}
+                        className="text-sm leading-6 text-muted-foreground"
+                      >
                         {paragraph}
                       </p>
                     ))}
@@ -203,7 +219,8 @@ export default function PrivacidadePage() {
           <section className="mt-5 rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-5">
             <div className="flex flex-col gap-3">
               <p className="text-sm leading-6 text-muted-foreground">
-                Veja também os documentos complementares e o canal de contato para assuntos de dados pessoais.
+                Veja também os documentos complementares e o canal de contato
+                para assuntos de dados pessoais.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
@@ -213,10 +230,10 @@ export default function PrivacidadePage() {
                   Termos de uso
                 </Link>
                 <Link
-                  to="/regras"
+                  to={COMMUNITY_GUIDELINES_PATH}
                   className="text-sm font-medium text-primary underline-offset-4 hover:underline"
                 >
-                  Regras da comunidade
+                  Diretrizes da comunidade
                 </Link>
                 <Link
                   to="/dpo"

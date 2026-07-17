@@ -19,9 +19,8 @@ describe("BusinessSlugSection", () => {
       </QueryClientProvider>,
     );
 
-    expect(screen.getByText(/:comunidade\/seu-link/)).toBeInTheDocument();
-    expect(screen.getByText(/:comunidade\/padaria-x/)).toBeInTheDocument();
+    expect(screen.getByText(/\/empresas\/:uf\/:cidade\/:bairro\/seu-link/)).toBeInTheDocument();
+    expect(screen.getByText(/\/empresas\/:uf\/:cidade\/:bairro\/padaria-x/)).toBeInTheDocument();
     expect(screen.getByText(/\/p\/padaria-x/)).toBeInTheDocument();
-    expect(screen.queryByText(/\/empresas\/uf\/cidade\/bairro/)).not.toBeInTheDocument();
   });
 });

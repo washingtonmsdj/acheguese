@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PostsFacade } from "@/core/posts/services"; // ✅ SSOT v2.0
 import { Poll, PollOption } from "@/shared/types/poll";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { communityFeedQueryKeys } from "@/core/feed";
 /**
  * Hook para gerenciar votação em enquetes
  *
@@ -151,7 +152,7 @@ export function usePollVote({ pollId, initialPoll }: UsePollVoteProps) {
       }));
 
       // Invalidate cache do feed
-      queryClient.invalidateQueries({ queryKey: ["community-feed"] });
+      queryClient.invalidateQueries({ queryKey: communityFeedQueryKeys.root });
 
       toast({
         title: "Voto registrado",

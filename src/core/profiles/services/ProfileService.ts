@@ -54,7 +54,6 @@ import { buildBusinessModuleSnapshot } from "./profile.workspace.business-module
 import { getPrivateWorkspaceAggregate } from "./profile.workspace.aggregate";
 import {
   getUserLikeActivityQuery,
-  getUserMentionsQuery,
   getUserPollVoteActivityQuery,
   getUserSaveActivityQuery,
 } from "./profile.activity.queries";
@@ -81,7 +80,7 @@ import {
   verifyUser as verifyUserMutation,
 } from "./profile.mutations";
 import {
-  getUserFavoriteBusinessesQuery,
+  getCurrentUserFavoriteBusinessesQuery,
   getUserFavoritesCountQuery,
   getUserBusinessesByProfilesQuery,
   getUserBusinessesQuery,
@@ -109,7 +108,6 @@ import {
   getProfilesSummaryExtended as getProfilesSummaryExtendedQuery,
   getProfilesWithAlertBan as getProfilesWithAlertBanQuery,
   getRecentProfiles as getRecentProfilesQuery,
-  getRanking as getRankingQuery,
   getSimilarUsernames as getSimilarUsernamesQuery,
   getTotalProfilesCount as getTotalProfilesCountQuery,
   getUserIdsByCity as getUserIdsByCityQuery,
@@ -280,8 +278,8 @@ export class ProfileService {
   ): Promise<number> {
     return getProfilesCreatedInPeriodQuery(startDate, endDate);
   }
-  async uploadAvatar(userId: string, file: File): Promise<string | null> {
-    return uploadAvatarMutation(userId, file);
+  async uploadAvatar(profileId: string, file: File): Promise<string> {
+    return uploadAvatarMutation(profileId, file);
   }
   async isUsernameAvailable(
     username: string,
@@ -503,26 +501,12 @@ export class ProfileService {
       return [];
     }
   }
-  async getUserFavoriteBusinesses(userId: string): Promise<BusinessRow[]> {
-    return getUserFavoriteBusinessesQuery(userId);
-  }
-  async getRanking(
-    limit: number = 50,
-  ): Promise<
-    Array<{ id: string; name: string; avatar_url: string; pontos: number }>
-  > {
-    return getRankingQuery(limit);
+  async getCurrentUserFavoriteBusinesses(): Promise<BusinessRow[]> {
+    return getCurrentUserFavoriteBusinessesQuery();
   }
   async getDriverData(profileId: string): Promise<unknown | null> {
     void profileId;
     return null;
-  }
-  async getUserMentions(
-    userId: string,
-    from: number,
-    to: number,
-  ): Promise<ProfileLikeActivityRecord[]> {
-    return getUserMentionsQuery(userId, from, to);
   }
   async getUserLikeActivity(
     userId: string,

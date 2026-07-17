@@ -85,9 +85,10 @@ describe('createAnswer - grava em question_answers', () => {
     expect(content).toMatch(/question_id: input\.question_id/);
   });
 
-  it('insere author_profile_id', () => {
+  it('deriva author_profile_id no backend em vez de aceita-lo do browser', () => {
     const content = read(QA_SERVICE);
-    expect(content).toMatch(/author_profile_id: input\.autor_id/);
+    const insertBlock = content.match(/\.insert\(\{([\s\S]*?)\}\)\s*\.select\(\)/)?.[1] ?? '';
+    expect(insertBlock).not.toMatch(/author_profile_id/);
   });
 
   it('insere content', () => {
@@ -120,35 +121,31 @@ describe('getAnswersByQuestionId - le de question_answers', () => {
   });
 });
 
-describe('toggleAnswerLike - usa question_answer_likes', () => {
-  it('verifica existencia via question_answer_likes', () => {
+describe('toggleAnswerLike - usa comando RPC canonico', () => {
+  it('nao aceita identidade do usuario pelo browser', () => {
     const content = read(QA_SERVICE);
-    expect(content).toMatch(/\.from\("question_answer_likes"\)/);
-    expect(content).toMatch(/\.eq\("answer_id", answerId\)/);
-    expect(content).toMatch(/\.eq\("user_id", userId\)/);
+    expect(content).toMatch(/rpc\("toggle_question_answer_like"/);
+    expect(content).toMatch(/p_answer_id: answerId/);
+    expect(content).not.toMatch(/p_user_id|user_id: userId/);
   });
 
-  it('insere em question_answer_likes para like', () => {
+  it('nao grava likes diretamente pela UI', () => {
     const content = read(QA_SERVICE);
-    expect(content).toMatch(/answer_id: answerId, user_id: userId/);
+    expect(content).not.toMatch(/\.from\("question_answer_likes"\)[\s\S]{0,500}\.(?:insert|delete)\(/);
   });
 
-  it('deleta de question_answer_likes para unlike', () => {
+  it('recebe a contagem atualizada do comando server-owned', () => {
     const content = read(QA_SERVICE);
-    expect(content).toMatch(/\.delete\(\)/);
-  });
-
-  it('busca likes_count de question_answers apos toggle', () => {
-    const content = read(QA_SERVICE);
-    expect(content).toMatch(/\.from\("question_answers"\)[\s\S]*?\.select\("likes_count"\)/);
+    expect(content).toMatch(/newCount: result\.new_count/);
   });
 });
 
-describe('markBestAnswer - usa broker community-rpc', () => {
-  it('chama CommunityRpcService.markBestAnswer', () => {
+describe('markBestAnswer - usa RPC tipado', () => {
+  it('chama o comando SQL canonico sem campos de ator', () => {
     const content = read(QA_SERVICE);
-    expect(content).toMatch(/CommunityRpcService\.markBestAnswer/);
-    expect(content).not.toMatch(/rpc\("mark_best_answer"/);
+    expect(content).toMatch(/rpc\("mark_best_answer"/);
+    expect(content).toMatch(/_question_id: questionId/);
+    expect(content).toMatch(/_answer_id: answerId/);
   });
 
   it('migration canonica preserva helper interno apontando para question_answers', () => {

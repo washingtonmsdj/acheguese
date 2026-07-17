@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
 import { useToast } from "@/shared/hooks/use-toast";
-import { mediaService } from "@/core/media/services/MediaService";
 import { useSessionContext } from "@/core/session";
 import { servicesLocationService } from "@/modules/professionals/services/services/ServicesLocationService";
 import { useProfessionalProfileCreate } from "@/modules/professionals/services/hooks/useProfessionalProfileCreate";
@@ -209,18 +208,6 @@ export default function CadastrarServicoPage() {
     }
 
     try {
-      let logoUrl: string | undefined;
-
-      // Upload logo usando MediaService
-      if (photoFile) {
-        const result = await mediaService.uploadProfessionalImage(
-          user.id,
-          photoFile,
-          "logo",
-        );
-        logoUrl = result.url;
-      }
-
       const certsArray = parseCertifications(form.certifications);
 
       // Criar perfil professional via MultiProfileService
@@ -244,7 +231,7 @@ export default function CadastrarServicoPage() {
         certifications: certsArray.length > 0 ? certsArray : undefined,
         instagram: form.instagram.trim() || undefined,
         website: form.website.trim() || undefined,
-        logo_url: logoUrl,
+        logoFile: photoFile,
         location_id: servicesLocationService.getActiveLocationId() ?? undefined,
         city: servicesLocationService.getActiveLocationName() ?? "",
         neighborhood: form.serviceAreas[0] || "",

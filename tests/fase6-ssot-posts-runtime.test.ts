@@ -113,9 +113,9 @@ describe('FASE 6 - SSOT Posts Runtime', () => {
     it('rejects a post without location_id', async () => {
       await expect(
         postService.createPost({
-          author_profile_id: 'any-profile',
+          author_profile_id: '11111111-1111-4111-8111-111111111111',
           content: 'Test sem location_id',
-          type: 'text',
+          type: 'post',
           location_id: null as unknown as string,
         }),
       ).rejects.toThrow(/location_id.*obrigat.rio/i);
@@ -124,9 +124,9 @@ describe('FASE 6 - SSOT Posts Runtime', () => {
     it('rejects a post with a nonexistent location_id', async () => {
       await expect(
         postService.createPost({
-          author_profile_id: 'any-profile',
+          author_profile_id: '11111111-1111-4111-8111-111111111111',
           content: 'Test location invalida',
-          type: 'text',
+          type: 'post',
           location_id: '00000000-0000-0000-0000-999999999999',
         }),
       ).rejects.toThrow(/Localiza..o inv.lida/i);
@@ -135,8 +135,8 @@ describe('FASE 6 - SSOT Posts Runtime', () => {
     it('keeps country outside the allowed types for post creation', () => {
       const source = readPostMutationsSource();
 
-      expect(source).toContain(
-        'allowedLocationTypes: [LocationType.CITY, LocationType.DISTRICT, LocationType.NEIGHBORHOOD]',
+      expect(source).toMatch(
+        /allowedLocationTypes:\s*\[\s*LocationType\.CITY,\s*LocationType\.DISTRICT,\s*LocationType\.NEIGHBORHOOD,\s*\]/,
       );
       expect(source).toMatch(/Posts .* podem ser criados em cidades ou bairros/i);
       expect(source).not.toMatch(/allowedLocationTypes:[\s\S]*LocationType\.COUNTRY/);
@@ -145,8 +145,8 @@ describe('FASE 6 - SSOT Posts Runtime', () => {
     it('keeps state outside the allowed types for post creation', () => {
       const source = readPostMutationsSource();
 
-      expect(source).toContain(
-        'allowedLocationTypes: [LocationType.CITY, LocationType.DISTRICT, LocationType.NEIGHBORHOOD]',
+      expect(source).toMatch(
+        /allowedLocationTypes:\s*\[\s*LocationType\.CITY,\s*LocationType\.DISTRICT,\s*LocationType\.NEIGHBORHOOD,\s*\]/,
       );
       expect(source).toMatch(/Posts .* podem ser criados em cidades ou bairros/i);
       expect(source).not.toMatch(/allowedLocationTypes:[\s\S]*LocationType\.STATE/);

@@ -57,6 +57,8 @@ interface MapaPageV4Props {
   resolved?: ResolvedTerritory | null;
   /** IDs dos membros ativos do grupo (para rollout parcial) */
   activeMemberIds?: string[];
+  /** Standalone owns its page chrome; embedded reuses the persistent community shell. */
+  presentation?: 'standalone' | 'embedded';
 }
 
 // ─── Tile style — SSOT: DEFAULT_TILE_STYLE do MapProvider ────────────────────
@@ -508,7 +510,11 @@ function makeClassifiedsFetcher(territoryFilter: TerritoryFilter) {
 
 // ─── Componente ───────────────────────────────────────────────────────────────
 
-export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV4Props) {
+export default function MapaPageV4({
+  resolved,
+  activeMemberIds = [],
+  presentation = 'standalone',
+}: MapaPageV4Props) {
   const adapterRef = useRef<MapLibreAdapterHandle>(null);
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
   const [currentBounds, setCurrentBounds] = useState<BoundingBox>(INITIAL_BOUNDS);
@@ -879,16 +885,24 @@ export default function MapaPageV4({ resolved, activeMemberIds = [] }: MapaPageV
 
   if (isCommunityScopedSurface) {
     return (
-      <div className="mx-auto flex w-full max-w-7xl flex-col px-4 pb-20 pt-3 sm:px-6 md:pb-6 md:pt-5">
-        <NeighborhoodMapHero
-          territoryName={territoryName}
-          moduleUrls={moduleUrls}
-          mapLabel={territoryLabels.mapLabel}
-          polygons={territoryPolygons}
-          markers={markers}
-        />
+      <div
+        className="mx-auto flex w-full max-w-7xl flex-col px-4 pb-20 pt-3 sm:px-6 md:pb-6 md:pt-5"
+        data-module-presentation={presentation}
+      >
+        {presentation !== 'embedded' ? (
+          <NeighborhoodMapHero
+            territoryName={territoryName}
+            moduleUrls={moduleUrls}
+            mapLabel={territoryLabels.mapLabel}
+            polygons={territoryPolygons}
+            markers={markers}
+          />
+        ) : null}
 
-        <section className="mt-4 overflow-hidden rounded-[24px] border border-white/10 bg-[#0d161b] shadow-xl shadow-black/10">
+        <section className={presentation === 'embedded'
+          ? "overflow-hidden rounded-[24px] border border-white/10 bg-[#0d161b] shadow-xl shadow-black/10"
+          : "mt-4 overflow-hidden rounded-[24px] border border-white/10 bg-[#0d161b] shadow-xl shadow-black/10"}
+        >
           <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">

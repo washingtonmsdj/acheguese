@@ -144,29 +144,16 @@ export interface UpdateProfilePayload {
   state?: string;
   location_id?: string;
   main_territory_location_id?: string;
-  community_reputation_score?: number;
-  reputation?: number;
   suspended?: boolean;
+  suspended_at?: string | null;
   suspended_until?: string | null;
+  suspension_reason?: string | null;
   is_verified_resident?: boolean;
   is_suspended?: boolean;
-  pontos?: number;
   is_verified?: boolean;
   verified?: boolean;
   verified_at?: string | null;
   active_ride_id?: string | null;
-  [key: string]: unknown;
-}
-
-export interface BannedUser {
-  id: string;
-  user_id: string;
-  reason: string;
-  banned_at: string;
-  banned_until?: string;
-  banned_by?: string;
-  is_permanent: boolean;
-  created_at: string;
 }
 
 export interface AdminProfileListItem {

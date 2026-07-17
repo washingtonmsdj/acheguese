@@ -23,7 +23,11 @@ const SORT_OPTIONS: Array<{ id: GroupSort; label: string }> = [
   { id: "relevancia", label: "Relevância" },
 ];
 
-export default function GruposPage() {
+interface GruposPageProps {
+  embedded?: boolean;
+}
+
+export default function GruposPage({ embedded = false }: GruposPageProps) {
   const territorialContext = useTerritorialContext();
   const resolved = territorialContext.resolved;
   const communityHref = useHomeCommunityHref();
@@ -99,7 +103,13 @@ export default function GruposPage() {
 
   if (communityAccess.isLoading) {
     return (
-      <div className="min-h-screen bg-[#0b1417] flex items-center justify-center">
+      <div
+        className={
+          embedded
+            ? "flex min-h-48 items-center justify-center"
+            : "flex min-h-screen items-center justify-center bg-[#0b1417]"
+        }
+      >
         <Loader2 className="h-6 w-6 animate-spin text-teal-400" />
       </div>
     );
@@ -107,7 +117,7 @@ export default function GruposPage() {
 
   if (!communityAccess.can.join_group) {
     return (
-      <div className="min-h-screen bg-[#0b1417] text-white">
+      <div className={embedded ? "min-h-48 text-white" : "min-h-screen bg-[#0b1417] text-white"}>
         <CommunityPortalGate
           resolved={resolved}
           activeMemberIds={territorialContext.activeMemberIds}
@@ -118,10 +128,25 @@ export default function GruposPage() {
   }
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#0b1417] text-white">
-      <GruposHeader backHref={communityHref} onCreateClick={handleOpenCreateGroup} />
+    <div
+      className={
+        embedded
+          ? "w-full min-w-0 text-white"
+          : "min-h-screen w-full max-w-full overflow-x-hidden bg-[#0b1417] text-white"
+      }
+      data-community-groups-view={embedded ? "embedded" : "standalone"}
+    >
+      {!embedded ? (
+        <GruposHeader backHref={communityHref} onCreateClick={handleOpenCreateGroup} />
+      ) : null}
 
-      <div className="mx-auto w-full max-w-6xl min-w-0 space-y-4 px-3 py-4 sm:px-4 md:space-y-5 md:px-6 md:py-5">
+      <div
+        className={
+          embedded
+            ? "w-full min-w-0 space-y-3"
+            : "mx-auto w-full max-w-6xl min-w-0 space-y-4 px-3 py-4 sm:px-4 md:space-y-5 md:px-6 md:py-5"
+        }
+      >
         <section className="overflow-hidden rounded-2xl border border-teal-400/15 bg-[radial-gradient(1200px_220px_at_0%_0%,rgba(45,212,191,0.14),transparent),#0f191d] p-3.5 shadow-2xl shadow-black/20 md:p-5">
           <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0">
@@ -129,12 +154,19 @@ export default function GruposPage() {
                 <Sparkles className="h-3 w-3" />
                 Comunidade ativa
               </div>
-              <h1 className="mt-2 break-words text-2xl font-semibold leading-tight text-white sm:text-3xl md:text-4xl">
-                Grupos do bairro, com foco no que importa
+              <h1
+                className={
+                  embedded
+                    ? "mt-2 break-words text-xl font-semibold leading-tight text-white sm:text-2xl"
+                    : "mt-2 break-words text-2xl font-semibold leading-tight text-white sm:text-3xl md:text-4xl"
+                }
+              >
+                {embedded ? "Grupos da comunidade" : "Grupos do bairro, com foco no que importa"}
               </h1>
               <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-white/70 sm:text-sm">
-                Entre em conversas locais por tema e mantenha tudo organizado: moradores, serviços,
-                comércio e suporte da comunidade em um só lugar.
+                {embedded
+                  ? "Encontre conversas locais organizadas por tema, participe ou crie um novo grupo."
+                  : "Entre em conversas locais por tema e mantenha tudo organizado: moradores, serviços, comércio e suporte da comunidade em um só lugar."}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <button

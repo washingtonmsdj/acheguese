@@ -1,6 +1,12 @@
 import { supabase } from "@/integrations/supabase";
-import type { Json, Tables, TablesInsert } from "@/integrations/supabase";
-import { SessionService } from "@/core/session/services/SessionService";
+import type { Json, Tables } from "@/integrations/supabase";
+import { communityIssueService } from "@/core/community/issues/services/CommunityIssueService";
+import type {
+  IssueCategory,
+  IssuePriority,
+  IssueReportReason,
+  IssueStatus,
+} from "@/core/community/issues/domain/types";
 import { logger } from "@/shared/utils/logger";
 import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
 
@@ -12,23 +18,15 @@ type QueryPayload<TRow> = {
   count?: number | null;
 };
 
-type SingleQueryPayload<TRow> = {
-  data: TRow | null;
-  error: ErrorLike;
-  count?: number | null;
-};
-
 type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
   select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
-  insert(values: Record<string, unknown> | readonly Record<string, unknown>[]): TableClient<TRow>;
-  update(values: Record<string, unknown>): TableClient<TRow>;
   eq(column: string, value: unknown): TableClient<TRow>;
+  in(column: string, values: readonly unknown[]): TableClient<TRow>;
   or(filter: string): TableClient<TRow>;
   order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
   range(from: number, to: number): TableClient<TRow>;
   gt(column: string, value: unknown): TableClient<TRow>;
   limit(count: number): TableClient<TRow>;
-  single(): Promise<SingleQueryPayload<TRow>>;
 };
 
 type AdminCommunityIssuesDbClient = {
@@ -37,27 +35,8 @@ type AdminCommunityIssuesDbClient = {
 
 const db = supabase as unknown as AdminCommunityIssuesDbClient;
 
-type IssueCategory =
-  | "buraco_via"
-  | "calcada_danificada"
-  | "iluminacao_publica"
-  | "lixo_acumulado"
-  | "alagamento_cronico"
-  | "arvore_risco"
-  | "sinalizacao_danificada"
-  | "esgoto_aberto"
-  | "pichacao_vandalismo"
-  | "outro";
-
-type IssueStatus = "aberto" | "em_analise" | "em_andamento" | "resolvido" | "rejeitado";
-type IssuePriority = "baixa" | "media" | "alta" | "urgente";
-type IssueReportReason = "duplicate" | "false_report" | "inappropriate_content" | "spam" | "other";
-
 type CommunityIssueRow = Tables<"community_issues">;
-type CommunityIssueUpdate = Partial<CommunityIssueRow>;
 type CommunityIssueReportRow = Tables<"community_issue_reports">;
-type CommunityIssueAuditRow = Tables<"community_issue_audit">;
-type CommunityIssueAuditInsert = TablesInsert<"community_issue_audit">;
 
 type IssueAuthorProfile = {
   display_name?: string | null;
@@ -76,10 +55,27 @@ type CommunityIssueReportWithRelationsRow = CommunityIssueReportRow & {
   reporter_profile?: IssueReporterProfile | null;
 };
 
-type IssueStatsRow = Pick<
-  CommunityIssueRow,
-  "status" | "report_count" | "under_review" | "support_count"
->;
+type CommunityIssueAdminStatsRpc = {
+  total?: number;
+  aberto?: number;
+  em_analise?: number;
+  em_andamento?: number;
+  resolvido?: number;
+  rejeitado?: number;
+  under_review?: number;
+  total_reports?: number;
+  total_supports?: number;
+  categories?: Partial<Record<IssueCategory, number>>;
+};
+
+export interface CommunityIssueAuditRow {
+  id: string;
+  issue_id: string;
+  actor_id: string | null;
+  action: string;
+  metadata: Json | null;
+  created_at: string;
+}
 
 interface CommunityIssue {
   id: string;
@@ -117,6 +113,7 @@ export interface IssueStats {
   totalReports: number;
   totalSupports: number;
   avgSupportsPerIssue: number;
+  categories: Record<IssueCategory, number>;
 }
 
 export interface IssueWithDetails extends CommunityIssue {
@@ -146,9 +143,19 @@ export interface IssueFilters {
   limit?: number;
 }
 
-function toJsonMetadata(value: Record<string, unknown>): Json {
-  return JSON.parse(JSON.stringify(value)) as Json;
-}
+const EMPTY_STATS: IssueStats = {
+  total: 0,
+  aberto: 0,
+  em_analise: 0,
+  em_andamento: 0,
+  resolvido: 0,
+  rejeitado: 0,
+  underReview: 0,
+  totalReports: 0,
+  totalSupports: 0,
+  avgSupportsPerIssue: 0,
+  categories: {} as Record<IssueCategory, number>,
+};
 
 function mapIssueRow(row: CommunityIssueRow): CommunityIssue {
   return {
@@ -181,9 +188,8 @@ function mapIssueWithDetailsRow(
   row: CommunityIssueWithRelationsRow,
   reports: IssueWithDetails["reports"] = [],
 ): IssueWithDetails {
-  const base = mapIssueRow(row);
   return {
-    ...base,
+    ...mapIssueRow(row),
     author_profile: row.author_profile?.display_name
       ? {
           display_name: row.author_profile.display_name,
@@ -210,72 +216,30 @@ function mapIssueReportRow(
 class AdminCommunityIssuesServiceClass {
   private readonly tableName = "community_issues";
   private readonly reportsTable = "community_issue_reports";
-  private readonly auditTable = "community_issue_audit";
 
   async getStats(): Promise<IssueStats> {
     try {
-      const { data, error } = await db
-        .from<IssueStatsRow>(this.tableName)
-        .select("status, report_count, under_review, support_count");
+      const aggregate = await this.getAdminAggregate();
+      const total = aggregate.total ?? 0;
+      const totalSupports = aggregate.total_supports ?? 0;
 
-      if (error) throw error;
-
-      const rows = data || [];
-      const stats: IssueStats = {
-        total: rows.length,
-        aberto: 0,
-        em_analise: 0,
-        em_andamento: 0,
-        resolvido: 0,
-        rejeitado: 0,
-        underReview: 0,
-        totalReports: 0,
-        totalSupports: 0,
-        avgSupportsPerIssue: 0,
+      return {
+        total,
+        aberto: aggregate.aberto ?? 0,
+        em_analise: aggregate.em_analise ?? 0,
+        em_andamento: aggregate.em_andamento ?? 0,
+        resolvido: aggregate.resolvido ?? 0,
+        rejeitado: aggregate.rejeitado ?? 0,
+        underReview: aggregate.under_review ?? 0,
+        totalReports: aggregate.total_reports ?? 0,
+        totalSupports,
+        avgSupportsPerIssue:
+          total > 0 ? Math.round((totalSupports / total) * 10) / 10 : 0,
+        categories: (aggregate.categories ?? {}) as Record<IssueCategory, number>,
       };
-
-      rows.forEach((issue) => {
-        switch (issue.status) {
-          case "aberto":
-            stats.aberto += 1;
-            break;
-          case "em_analise":
-            stats.em_analise += 1;
-            break;
-          case "em_andamento":
-            stats.em_andamento += 1;
-            break;
-          case "resolvido":
-            stats.resolvido += 1;
-            break;
-          case "rejeitado":
-            stats.rejeitado += 1;
-            break;
-        }
-
-        if (issue.under_review) stats.underReview += 1;
-        stats.totalReports += issue.report_count || 0;
-        stats.totalSupports += issue.support_count || 0;
-      });
-
-      stats.avgSupportsPerIssue =
-        stats.total > 0 ? Math.round((stats.totalSupports / stats.total) * 10) / 10 : 0;
-
-      return stats;
     } catch (error) {
       logger.error("AdminCommunityIssuesService.getStats", error);
-      return {
-        total: 0,
-        aberto: 0,
-        em_analise: 0,
-        em_andamento: 0,
-        resolvido: 0,
-        rejeitado: 0,
-        underReview: 0,
-        totalReports: 0,
-        totalSupports: 0,
-        avgSupportsPerIssue: 0,
-      };
+      return { ...EMPTY_STATS };
     }
   }
 
@@ -297,6 +261,8 @@ class AdminCommunityIssuesServiceClass {
         page = 1,
         limit = 20,
       } = filters;
+      const safePage = Math.max(1, Math.floor(page));
+      const safeLimit = Math.min(100, Math.max(1, Math.floor(limit)));
 
       let query = db.from<CommunityIssueWithRelationsRow>(this.tableName).select(
         `
@@ -317,26 +283,32 @@ class AdminCommunityIssuesServiceClass {
       if (neighborhood) query = query.eq("neighborhood_display", neighborhood);
 
       if (search) {
-        const searchFilter = buildSafeOrILikeFilter(["title", "description", "neighborhood_display"], search);
+        const searchFilter = buildSafeOrILikeFilter(
+          ["title", "description", "neighborhood_display"],
+          search,
+        );
         if (searchFilter) query = query.or(searchFilter);
       }
 
-      const from = (page - 1) * limit;
-      const to = from + limit - 1;
+      const from = (safePage - 1) * safeLimit;
+      const to = from + safeLimit - 1;
+      const { data, error, count } = await query
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
-      const { data, error, count } = await query.order("created_at", { ascending: false }).range(from, to);
       if (error) throw error;
 
-      const issuesWithReports = await Promise.all(
-        (data || []).map(async (issue) => mapIssueWithDetailsRow(issue, await this.getIssueReports(issue.id))),
-      );
+      const rows = data ?? [];
+      const reportsByIssue = await this.getReportsForIssues(rows.map((issue) => issue.id));
+      const total = count ?? 0;
 
-      const total = count || 0;
       return {
-        data: issuesWithReports,
+        data: rows.map((issue) =>
+          mapIssueWithDetailsRow(issue, reportsByIssue.get(issue.id) ?? []),
+        ),
         total,
-        page,
-        totalPages: Math.ceil(total / limit),
+        page: safePage,
+        totalPages: Math.ceil(total / safeLimit),
       };
     } catch (error) {
       logger.error("AdminCommunityIssuesService.getAllIssues", error);
@@ -358,12 +330,15 @@ class AdminCommunityIssuesServiceClass {
           `,
         )
         .eq("under_review", true)
-        .order("report_count", { ascending: false });
+        .order("report_count", { ascending: false })
+        .limit(100);
 
       if (error) throw error;
 
-      return Promise.all(
-        (data || []).map(async (issue) => mapIssueWithDetailsRow(issue, await this.getIssueReports(issue.id))),
+      const rows = data ?? [];
+      const reportsByIssue = await this.getReportsForIssues(rows.map((issue) => issue.id));
+      return rows.map((issue) =>
+        mapIssueWithDetailsRow(issue, reportsByIssue.get(issue.id) ?? []),
       );
     } catch (error) {
       logger.error("AdminCommunityIssuesService.getIssuesUnderReview", error);
@@ -371,23 +346,12 @@ class AdminCommunityIssuesServiceClass {
     }
   }
 
-  async getIssueReports(issueId: string): Promise<NonNullable<IssueWithDetails["reports"]>> {
+  async getIssueReports(
+    issueId: string,
+  ): Promise<NonNullable<IssueWithDetails["reports"]>> {
     try {
-      const { data, error } = await db
-        .from<CommunityIssueReportWithRelationsRow>(this.reportsTable)
-        .select(
-          `
-          *,
-          reporter_profile:profiles!community_issue_reports_profile_id_fkey(
-            display_name
-          )
-          `,
-        )
-        .eq("issue_id", issueId)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return (data || []).map(mapIssueReportRow);
+      const reports = await this.getReportsForIssues([issueId]);
+      return reports.get(issueId) ?? [];
     } catch (error) {
       logger.error("AdminCommunityIssuesService.getIssueReports", error);
       return [];
@@ -395,149 +359,30 @@ class AdminCommunityIssuesServiceClass {
   }
 
   async updateStatus(issueId: string, status: IssueStatus): Promise<boolean> {
-    try {
-      const user = await SessionService.getCurrentUser();
-      if (!user) throw new Error("not_authenticated");
-
-      const { data: currentIssue } = await db
-        .from<Pick<CommunityIssueRow, "status">>(this.tableName)
-        .select("status")
-        .eq("id", issueId)
-        .single();
-
-      const updateData: CommunityIssueUpdate = {
-        status,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (status === "resolvido") {
-        updateData.resolved_at = new Date().toISOString();
-      }
-
-      const { error } = await db.from<CommunityIssueRow>(this.tableName).update(updateData).eq("id", issueId);
-      if (error) throw error;
-
-      const auditData: CommunityIssueAuditInsert = {
-        issue_id: issueId,
-        action: "status_change",
-        actor_id: user.id,
-        metadata: toJsonMetadata({
-          previous_status: currentIssue?.status,
-          new_status: status,
-          notes: `Status alterado de ${currentIssue?.status} para ${status}`,
-        }),
-      };
-
-      const { error: auditError } = await db
-        .from<CommunityIssueAuditRow>(this.auditTable)
-        .insert(auditData);
-
-      if (auditError) throw auditError;
-      return true;
-    } catch (error) {
-      logger.error("AdminCommunityIssuesService.updateStatus", error);
-      return false;
-    }
+    return communityIssueService.updateStatus(issueId, status);
   }
 
   async updatePriority(issueId: string, priority: IssuePriority): Promise<boolean> {
-    try {
-      const user = await SessionService.getCurrentUser();
-      if (!user) throw new Error("not_authenticated");
-
-      const { error } = await db
-        .from<CommunityIssueRow>(this.tableName)
-        .update({ priority, updated_at: new Date().toISOString() })
-        .eq("id", issueId);
-
-      if (error) throw error;
-
-      const auditData: CommunityIssueAuditInsert = {
-        issue_id: issueId,
-        action: "updated",
-        actor_id: user.id,
-        metadata: toJsonMetadata({ priority }),
-      };
-
-      await db.from<CommunityIssueAuditRow>(this.auditTable).insert(auditData);
-      return true;
-    } catch (error) {
-      logger.error("AdminCommunityIssuesService.updatePriority", error);
-      return false;
-    }
+    return communityIssueService.updatePriority(issueId, priority);
   }
 
   async removeIssue(issueId: string, reason: string): Promise<boolean> {
-    try {
-      const user = await SessionService.getCurrentUser();
-      if (!user) throw new Error("not_authenticated");
-
-      const { error } = await db
-        .from<CommunityIssueRow>(this.tableName)
-        .update({
-          removed_at: new Date().toISOString(),
-          removal_reason: reason,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", issueId);
-
-      if (error) throw error;
-
-      const auditData: CommunityIssueAuditInsert = {
-        issue_id: issueId,
-        action: "removed",
-        actor_id: user.id,
-        metadata: toJsonMetadata({ reason }),
-      };
-
-      await db.from<CommunityIssueAuditRow>(this.auditTable).insert(auditData);
-      return true;
-    } catch (error) {
-      logger.error("AdminCommunityIssuesService.removeIssue", error);
-      return false;
-    }
+    return communityIssueService.removeIssue(issueId, reason);
   }
 
   async clearUnderReview(issueId: string): Promise<boolean> {
-    try {
-      const user = await SessionService.getCurrentUser();
-      if (!user) throw new Error("not_authenticated");
-
-      const { error } = await db
-        .from<CommunityIssueRow>(this.tableName)
-        .update({
-          under_review: false,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", issueId);
-
-      if (error) throw error;
-
-      const auditData: CommunityIssueAuditInsert = {
-        issue_id: issueId,
-        actor_id: user.id,
-        action: "reviewed_cleared",
-        metadata: toJsonMetadata({ cleared_at: new Date().toISOString() }),
-      };
-
-      await db.from<CommunityIssueAuditRow>(this.auditTable).insert(auditData);
-      return true;
-    } catch (error) {
-      logger.error("AdminCommunityIssuesService.clearUnderReview", error);
-      return false;
-    }
+    return communityIssueService.clearUnderReview(issueId);
   }
 
   async getAuditLog(issueId: string): Promise<CommunityIssueAuditRow[]> {
     try {
-      const { data, error } = await db
-        .from<CommunityIssueAuditRow>(this.auditTable)
-        .select("*")
-        .eq("issue_id", issueId)
-        .order("created_at", { ascending: true });
+      const { data, error } = await supabase.rpc("list_community_issue_audit", {
+        p_issue_id: issueId,
+        p_limit: 200,
+      });
 
       if (error) throw error;
-      return data || [];
+      return (data ?? []) as CommunityIssueAuditRow[];
     } catch (error) {
       logger.error("AdminCommunityIssuesService.getAuditLog", error);
       return [];
@@ -546,6 +391,7 @@ class AdminCommunityIssuesServiceClass {
 
   async getTopSupportedIssues(limit = 10): Promise<IssueWithDetails[]> {
     try {
+      const safeLimit = Math.min(100, Math.max(1, Math.floor(limit)));
       const { data, error } = await db
         .from<CommunityIssueWithRelationsRow>(this.tableName)
         .select(
@@ -559,11 +405,10 @@ class AdminCommunityIssuesServiceClass {
         )
         .gt("support_count", 0)
         .order("support_count", { ascending: false })
-        .limit(limit);
+        .limit(safeLimit);
 
       if (error) throw error;
-
-      return (data || []).map((issue) => mapIssueWithDetailsRow(issue));
+      return (data ?? []).map((issue) => mapIssueWithDetailsRow(issue));
     } catch (error) {
       logger.error("AdminCommunityIssuesService.getTopSupportedIssues", error);
       return [];
@@ -572,6 +417,7 @@ class AdminCommunityIssuesServiceClass {
 
   async getTopReportedIssues(limit = 10): Promise<IssueWithDetails[]> {
     try {
+      const safeLimit = Math.min(100, Math.max(1, Math.floor(limit)));
       const { data, error } = await db
         .from<CommunityIssueWithRelationsRow>(this.tableName)
         .select(
@@ -585,12 +431,14 @@ class AdminCommunityIssuesServiceClass {
         )
         .gt("report_count", 0)
         .order("report_count", { ascending: false })
-        .limit(limit);
+        .limit(safeLimit);
 
       if (error) throw error;
 
-      return Promise.all(
-        (data || []).map(async (issue) => mapIssueWithDetailsRow(issue, await this.getIssueReports(issue.id))),
+      const rows = data ?? [];
+      const reportsByIssue = await this.getReportsForIssues(rows.map((issue) => issue.id));
+      return rows.map((issue) =>
+        mapIssueWithDetailsRow(issue, reportsByIssue.get(issue.id) ?? []),
       );
     } catch (error) {
       logger.error("AdminCommunityIssuesService.getTopReportedIssues", error);
@@ -600,19 +448,8 @@ class AdminCommunityIssuesServiceClass {
 
   async getStatsByCategory(): Promise<Record<IssueCategory, number>> {
     try {
-      const { data, error } = await db
-        .from<Pick<CommunityIssueRow, "category">>(this.tableName)
-        .select("category");
-
-      if (error) throw error;
-
-      const stats: Partial<Record<IssueCategory, number>> = {};
-      (data || []).forEach((issue) => {
-        const category = (issue.category ?? "outro") as IssueCategory;
-        stats[category] = (stats[category] || 0) + 1;
-      });
-
-      return stats as Record<IssueCategory, number>;
+      const aggregate = await this.getAdminAggregate();
+      return (aggregate.categories ?? {}) as Record<IssueCategory, number>;
     } catch (error) {
       logger.error("AdminCommunityIssuesService.getStatsByCategory", error);
       return {} as Record<IssueCategory, number>;
@@ -621,19 +458,14 @@ class AdminCommunityIssuesServiceClass {
 
   async getStatsByStatus(): Promise<Record<IssueStatus, number>> {
     try {
-      const { data, error } = await db
-        .from<Pick<CommunityIssueRow, "status">>(this.tableName)
-        .select("status");
-
-      if (error) throw error;
-
-      const stats: Partial<Record<IssueStatus, number>> = {};
-      (data || []).forEach((issue) => {
-        const status = issue.status as IssueStatus;
-        stats[status] = (stats[status] || 0) + 1;
-      });
-
-      return stats as Record<IssueStatus, number>;
+      const aggregate = await this.getAdminAggregate();
+      return {
+        aberto: aggregate.aberto ?? 0,
+        em_analise: aggregate.em_analise ?? 0,
+        em_andamento: aggregate.em_andamento ?? 0,
+        resolvido: aggregate.resolvido ?? 0,
+        rejeitado: aggregate.rejeitado ?? 0,
+      };
     } catch (error) {
       logger.error("AdminCommunityIssuesService.getStatsByStatus", error);
       return {} as Record<IssueStatus, number>;
@@ -642,22 +474,57 @@ class AdminCommunityIssuesServiceClass {
 
   async getResolutionRate(): Promise<{ total: number; resolved: number; rate: number }> {
     try {
-      const { data, error } = await db
-        .from<Pick<CommunityIssueRow, "status">>(this.tableName)
-        .select("status");
-
-      if (error) throw error;
-
-      const rows = data || [];
-      const total = rows.length;
-      const resolved = rows.filter((issue) => issue.status === "resolvido").length;
-      const rate = total > 0 ? Math.round((resolved / total) * 100) : 0;
-
-      return { total, resolved, rate };
+      const aggregate = await this.getAdminAggregate();
+      const total = aggregate.total ?? 0;
+      const resolved = aggregate.resolvido ?? 0;
+      return {
+        total,
+        resolved,
+        rate: total > 0 ? Math.round((resolved / total) * 100) : 0,
+      };
     } catch (error) {
       logger.error("AdminCommunityIssuesService.getResolutionRate", error);
       return { total: 0, resolved: 0, rate: 0 };
     }
+  }
+
+  private async getAdminAggregate(): Promise<CommunityIssueAdminStatsRpc> {
+    const { data, error } = await supabase.rpc("get_community_issue_admin_stats");
+    if (error) throw error;
+    return (data ?? {}) as CommunityIssueAdminStatsRpc;
+  }
+
+  private async getReportsForIssues(
+    issueIds: string[],
+  ): Promise<Map<string, NonNullable<IssueWithDetails["reports"]>>> {
+    const result = new Map<string, NonNullable<IssueWithDetails["reports"]>>();
+    const uniqueIssueIds = [...new Set(issueIds)].slice(0, 100);
+    if (uniqueIssueIds.length === 0) return result;
+
+    const { data, error } = await db
+      .from<CommunityIssueReportWithRelationsRow>(this.reportsTable)
+      .select(
+        `
+        *,
+        reporter_profile:profiles!community_issue_reports_profile_id_fkey(
+          display_name
+        )
+        `,
+      )
+      .in("issue_id", uniqueIssueIds)
+      .order("created_at", { ascending: false })
+      .limit(2000);
+
+    if (error) throw error;
+
+    for (const row of data ?? []) {
+      const reports = result.get(row.issue_id) ?? [];
+      if (reports.length >= 100) continue;
+      reports.push(mapIssueReportRow(row));
+      result.set(row.issue_id, reports);
+    }
+
+    return result;
   }
 }
 

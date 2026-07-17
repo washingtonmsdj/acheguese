@@ -19,7 +19,6 @@ import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import type { Database, Json } from '@/integrations/supabase';
 import { trackError } from '@/shared/utils/errorTracking';
-import { NotificationService } from '@/core/notifications';
 import { mediaService } from '@/core/media/services/MediaService';
 import { SafetyEmergencyContactsService } from './SafetyEmergencyContactsService';
 import { SafetyRideShareService } from './SafetyRideShareService';
@@ -42,7 +41,6 @@ import type {
   EmergencyContact,
   CreateEmergencyContactInput,
   UpdateEmergencyContactInput,
-  SafetyAuditEntry,
   SafetyServiceConfig,
   SafetyResult,
   SafetyFilter,
@@ -94,7 +92,6 @@ type SafetyEvidenceRow = {
 };
 
 type SafetyEvidenceInsert = Database['public']['Tables']['safety_evidence']['Insert'];
-type SafetyAuditInsert = Database['public']['Tables']['safety_audit_log']['Insert'];
 
 interface QueryResult<T> {
   data: T | null;
@@ -116,6 +113,10 @@ interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
 
 interface SafetyDbClient {
   from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+  rpc: <TRow = never>(
+    functionName: string,
+    args: Record<string, unknown>,
+  ) => Promise<QueryResult<TRow>>;
 }
 
 const safetyDb = supabase as unknown as SafetyDbClient;
@@ -134,15 +135,6 @@ export class SafetyService {
     };
     this.rideShareService = new SafetyRideShareService({
       getShareExpirationHours: () => this.config.shareExpirationHours,
-      createAuditEntry: async (entry) => this.createAuditEntry(entry),
-      sendSafetyNotification: async (
-        profileId: string,
-        type: 'alert' | 'incident' | 'share',
-        title: string,
-        message: string,
-        data?: Record<string, unknown>
-      ) =>
-        this.sendSafetyNotification(profileId, type, title, message, data),
     });
   }
 
@@ -192,27 +184,10 @@ export class SafetyService {
 
       if (error) throw error;
 
-      // Auditoria
-      await this.createAuditEntry({
-        action: 'alert_created',
-        entityType: 'alert',
-        entityId: data.id,
-        performedBy: input.profileId,
-        metadata: { alertType: input.alertType },
-      });
-
       const alert = this.mapToEmergencyAlert(data);
 
-      // ✅ Enviar notificação de safety
-      await this.sendSafetyNotification(
-        input.profileId,
-        'alert',
-        'Alerta de emergência acionado',
-        `Seu alerta de emergência foi registrado e está sendo processado.`,
-        { alertId: alert.id, alertType: input.alertType }
-      );
-
-      // ✅ Notificar contatos de emergência
+      // Contatos externos usam Edge Function autenticada; a notificacao in-app
+      // e a auditoria sao produzidas atomicamente pelo banco.
       await this.notifyEmergencyContacts(input.profileId, alert);
 
       return {
@@ -296,32 +271,14 @@ export class SafetyService {
     performedBy: string
   ): Promise<SafetyResult<EmergencyAlert>> {
     try {
-      const updateData: Record<string, unknown> = {
-        status,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (status === 'resolved') {
-        updateData.resolved_at = new Date().toISOString();
-      }
-
       const { data, error } = await safetyDb
-        .from<EmergencyAlertRow>('emergency_alerts')
-        .update(updateData)
-        .eq('id', alertId)
-        .select()
-        .single();
+        .rpc<EmergencyAlertRow>('update_safety_emergency_alert_status', {
+          p_alert_id: alertId,
+          p_status: status,
+          p_actor_profile_id: performedBy,
+        });
 
-      if (error) throw error;
-
-      // Auditoria
-      await this.createAuditEntry({
-        action: status === 'resolved' ? 'alert_resolved' : 'alert_acknowledged',
-        entityType: 'alert',
-        entityId: alertId,
-        performedBy,
-        metadata: { newStatus: status },
-      });
+      if (error || !data) throw error ?? new Error('Alerta nao encontrado');
 
       return {
         success: true,
@@ -359,11 +316,8 @@ export class SafetyService {
   /**
    * Revoga compartilhamento de viagem
    */
-  async revokeRideShare(
-    shareId: string,
-    performedBy: string
-  ): Promise<SafetyResult<void>> {
-    return this.rideShareService.revokeRideShare(shareId, performedBy);
+  async revokeRideShare(shareId: string): Promise<SafetyResult<void>> {
+    return this.rideShareService.revokeRideShare(shareId);
   }
 
   // ============================================
@@ -397,25 +351,7 @@ export class SafetyService {
 
       if (error) throw error;
 
-      // Auditoria
-      await this.createAuditEntry({
-        action: 'incident_reported',
-        entityType: 'incident',
-        entityId: data.id,
-        performedBy: input.reportedBy,
-        metadata: { incidentType: input.incidentType, severity: input.severity },
-      });
-
       const incident = this.mapToSafetyIncident(data);
-
-      // ✅ Enviar notificação de safety
-      await this.sendSafetyNotification(
-        input.reportedBy,
-        'incident',
-        'Incidente de segurança registrado',
-        `Seu relato de incidente foi registrado. Tipo: ${input.incidentType}`,
-        { incidentId: incident.id, incidentType: input.incidentType, severity: input.severity }
-      );
 
       return {
         success: true,
@@ -494,23 +430,14 @@ export class SafetyService {
     performedBy: string
   ): Promise<SafetyResult<SafetyIncident>> {
     try {
-      const updateData: Record<string, unknown> = {
-        status,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (status === 'resolved') {
-        updateData.resolved_at = new Date().toISOString();
-      }
-
       const { data, error } = await safetyDb
-        .from<SafetyIncidentRow>('safety_incidents')
-        .update(updateData)
-        .eq('id', incidentId)
-        .select()
-        .single();
+        .rpc<SafetyIncidentRow>('update_safety_incident_status', {
+          p_incident_id: incidentId,
+          p_status: status,
+          p_actor_profile_id: performedBy,
+        });
 
-      if (error) throw error;
+      if (error || !data) throw error ?? new Error('Incidente nao encontrado');
 
       return {
         success: true,
@@ -572,15 +499,6 @@ export class SafetyService {
 
       if (error) throw error;
 
-      // Auditoria
-      await this.createAuditEntry({
-        action: 'evidence_uploaded',
-        entityType: 'evidence',
-        entityId: data.id,
-        performedBy: uploadedBy,
-        metadata: { incidentId: input.incidentId, evidenceType: input.evidenceType },
-      });
-
       return {
         success: true,
         data: this.mapToSafetyEvidence(data),
@@ -615,38 +533,11 @@ export class SafetyService {
   }
 
   // ============================================
-  // AUDIT
-  // ============================================
-
-  /**
-   * Cria entrada de auditoria
-   */
-  private async createAuditEntry(
-    entry: Omit<SafetyAuditEntry, 'id' | 'createdAt' | 'ipAddress' | 'userAgent'>
-  ): Promise<void> {
-    try {
-      const payload: SafetyAuditInsert = {
-        action: entry.action,
-        entity_type: entry.entityType,
-        entity_id: entry.entityId,
-        performed_by: entry.performedBy,
-        metadata: entry.metadata ? ((entry.metadata as unknown) as Json) : null,
-        created_at: new Date().toISOString(),
-      };
-
-      await safetyDb.from('safety_audit_log').insert(payload);
-    } catch (error) {
-      logger.error('[SafetyService] Error creating audit entry:', error);
-      // Não falhar operação principal por erro de auditoria
-    }
-  }
-
-  // ============================================
   // HELPERS
   // ============================================
 
   private mapToEmergencyAlert(data: EmergencyAlertRow): EmergencyAlert {
-    const location = data.latitude && data.longitude ? {
+    const location = data.latitude != null && data.longitude != null ? {
       latitude: data.latitude,
       longitude: data.longitude,
       accuracy: data.accuracy,
@@ -668,7 +559,7 @@ export class SafetyService {
   }
 
   private mapToSafetyIncident(data: SafetyIncidentRow): SafetyIncident {
-    const location = data.latitude && data.longitude ? {
+    const location = data.latitude != null && data.longitude != null ? {
       latitude: data.latitude,
       longitude: data.longitude,
     } : undefined;
@@ -753,54 +644,14 @@ export class SafetyService {
         profileId,
         alert
       );
-
-      // Registrar na auditoria
-      await this.createAuditEntry({
-        action: 'alert_created',
-        entityType: 'alert',
-        entityId: alert.id,
-        performedBy: profileId,
-        metadata: {
-          contactsNotified: summary.contactsNotified,
-          contactIds: summary.contactIds,
-          deliverySuccessful: summary.successful,
-          deliveryFailed: summary.failed,
-        },
+      logger.info('[SafetyService] Emergency contact delivery completed', {
+        alertId: alert.id,
+        contactsNotified: summary.contactsNotified,
+        successful: summary.successful,
+        failed: summary.failed,
       });
     } catch (error) {
       logger.error('[SafetyService] Error notifying emergency contacts:', error);
-      // Não falhar operação principal
-    }
-  }
-
-  /**
-   * Envia notificação de safety para usuário
-   */
-  async sendSafetyNotification(
-    userId: string,
-    type: 'alert' | 'incident' | 'share',
-    title: string,
-    message: string,
-    metadata?: Record<string, unknown>
-  ): Promise<void> {
-    try {
-      await NotificationService.createNotification({
-        user_id: userId,
-        type: type === 'alert' ? 'error' : 'warning',
-        category: 'system',
-        title,
-        message,
-        priority: type === 'alert' ? 'high' : 'medium',
-        metadata: {
-          ...metadata,
-          safetyType: type,
-          timestamp: new Date().toISOString(),
-        },
-      });
-
-      logger.info(`[SafetyService] Safety notification sent to user ${userId}: ${title}`);
-    } catch (error) {
-      logger.error('[SafetyService] Error sending safety notification:', error);
       // Não falhar operação principal
     }
   }

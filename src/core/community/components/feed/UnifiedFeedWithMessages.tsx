@@ -13,6 +13,7 @@ interface UnifiedFeedWithMessagesProps {
   communityPosts?: UnifiedPost[];
   feedPosts?: UnifiedPost[];
   currentUserId?: string;
+  communityId?: string;
   sortCriteria?: "recent" | "popular" | "nearby" | "most_commented";
   filterType?:
     | "all"
@@ -50,7 +51,9 @@ type DirectMessagePostType =
   | "evento"
   | "desapego";
 
-function toDirectMessagePostType(type: UnifiedPost["type"]): DirectMessagePostType {
+function toDirectMessagePostType(
+  type: UnifiedPost["type"],
+): DirectMessagePostType {
   const allowed: DirectMessagePostType[] = [
     "civic_report",
     "discussao",
@@ -79,6 +82,7 @@ const UnifiedFeedWithMessages = React.forwardRef<
       communityPosts = [],
       feedPosts = [],
       currentUserId,
+      communityId,
       sortCriteria = "recent",
       filterType = "all",
       userLocation,
@@ -117,7 +121,10 @@ const UnifiedFeedWithMessages = React.forwardRef<
       handleSend,
       handleReport,
       messages,
-    } = useMessageModal(currentUserId);
+      loadOlderMessages,
+      hasOlderMessages,
+      isLoadingOlder,
+    } = useMessageModal(currentUserId, communityId);
 
     const handleLike = (postId: string) => {
       const post = sortedPosts.find((p) => p.id === postId);
@@ -129,7 +136,7 @@ const UnifiedFeedWithMessages = React.forwardRef<
     };
 
     const handleSendMessage = (postId: string, recipientProfileId: string) => {
-      if (!canSendMessage) {
+      if (!canSendMessage || !communityId) {
         onBlockedSendMessage?.();
         return;
       }
@@ -142,28 +149,37 @@ const UnifiedFeedWithMessages = React.forwardRef<
         <div className="space-y-5">
           {sortedPosts.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] px-4 py-10 text-center text-gray-400">
-              <p className="text-sm font-semibold text-white/75">{COMMUNITY_FEED_COPY.emptyStateTitle}</p>
-              <p className="mt-1 text-xs text-white/45">{COMMUNITY_FEED_COPY.emptyStateDescription}</p>
+              <p className="text-sm font-semibold text-white/75">
+                {COMMUNITY_FEED_COPY.emptyStateTitle}
+              </p>
+              <p className="mt-1 text-xs text-white/45">
+                {COMMUNITY_FEED_COPY.emptyStateDescription}
+              </p>
             </div>
           ) : (
             sortedPosts.map((post) => (
-              <UnifiedPostCard
+              <div
                 key={`${post.type}-${post.id}`}
-                post={post}
-                currentUserId={currentUserId}
-                onLike={handleLike}
-                onComment={onComment}
-                onShare={onShare}
-                onSave={onSave}
-                onReport={onReport}
-                onUpvote={onUpvote}
-                onConfirm={onConfirm}
-                onPostClick={onPostClick}
-                onSendMessage={handleSendMessage}
-                onDelete={onDelete}
-                onEdit={onEdit}
-                onTagClick={onTagClick}
-              />
+                className="[content-visibility:auto] [contain-intrinsic-size:0_520px]"
+                data-feed-post-id={post.id}
+              >
+                <UnifiedPostCard
+                  post={post}
+                  currentUserId={currentUserId}
+                  onLike={handleLike}
+                  onComment={onComment}
+                  onShare={onShare}
+                  onSave={onSave}
+                  onReport={onReport}
+                  onUpvote={onUpvote}
+                  onConfirm={onConfirm}
+                  onPostClick={onPostClick}
+                  onSendMessage={handleSendMessage}
+                  onDelete={onDelete}
+                  onEdit={onEdit}
+                  onTagClick={onTagClick}
+                />
+              </div>
             ))
           )}
         </div>
@@ -181,10 +197,13 @@ const UnifiedFeedWithMessages = React.forwardRef<
               type: toDirectMessagePostType(selectedPost.type),
             }}
             recipientProfile={recipientProfile}
-            currentUserId={currentUserId || ""}
+            currentProfileId={currentUserId || ""}
             initialMessages={messages}
             onSendMessage={handleSend}
             onReportConversation={handleReport}
+            onLoadOlderMessages={loadOlderMessages}
+            hasOlderMessages={hasOlderMessages}
+            isLoadingOlderMessages={isLoadingOlder}
           />
         )}
       </>

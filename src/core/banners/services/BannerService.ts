@@ -346,15 +346,17 @@ export class BannerService {
    * Upload de imagem de banner
    * ✅ SSOT para storage de banners
    */
-  static async uploadBannerImage(file: File): Promise<string> {
+  static async uploadBannerImage(
+    ownerProfileId: string,
+    file: File,
+  ): Promise<string> {
     try {
-      const upload = await mediaService.uploadToBucket(file, {
-        bucket: "banners",
-        pathPrefix: "banners",
-        preset: "banner_image",
-        upsert: true,
-      });
-      return upload.url;
+      const upload = await mediaService.uploadMediaAsset(
+        ownerProfileId,
+        file,
+        "site_banner",
+      );
+      return upload.reference;
     } catch (error: unknown) {
       logger.error('Error uploading banner image:', error);
       throw new Error(`Erro ao fazer upload: ${error instanceof Error ? error.message : 'erro desconhecido'}`);

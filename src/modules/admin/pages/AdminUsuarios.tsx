@@ -19,7 +19,6 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/shared/components/ui/dialog";
-import { Separator } from "@/shared/components/ui/separator";
 import { useToast } from "@/shared/hooks/use-toast";
 import { cn } from "@/shared/utils/cn";
 import { useSessionContext } from "@/core/session";
@@ -28,7 +27,6 @@ import {
   type AdminUser,
   type AdminUserProfile,
 } from "@/core/admin/services/AdminUserService";
-import { UserReputationManager } from "@/modules/admin/components/UserReputationManager";
 
 const PAGE_SIZE = 20;
 
@@ -283,10 +281,6 @@ export default function AdminUsuarios() {
               onSuspend={() => { setSuspendDialogUser(selectedUser); setSuspendReason(""); }}
               onUnsuspend={() => unsuspendMutation.mutate(selectedUser.user_id)}
               onVerify={(profileId) => verifyMutation.mutate(profileId)}
-              onUpdate={() => {
-                refetchList();
-                AdminUserService.getUserById(selectedUser.user_id).then((u) => u && setSelectedUser(u));
-              }}
             />
           </div>
         )}
@@ -413,10 +407,9 @@ interface UserDetailPanelProps {
   onSuspend: () => void;
   onUnsuspend: () => void;
   onVerify: (profileId: string) => void;
-  onUpdate: () => void;
 }
 
-function UserDetailPanel({ user, onClose, onSuspend, onUnsuspend, onVerify, onUpdate }: UserDetailPanelProps) {
+function UserDetailPanel({ user, onClose, onSuspend, onUnsuspend, onVerify }: UserDetailPanelProps) {
   const p = user.primary_profile;
   const isSuspended = p.is_suspended;
   const isAdmin = user.roles.some((r) => ["admin", "super_admin"].includes(r));
@@ -528,18 +521,6 @@ function UserDetailPanel({ user, onClose, onSuspend, onUnsuspend, onVerify, onUp
                 <Ban className="h-4 w-4" /> Suspender usuário (7 dias)
               </Button>
             )}
-          </div>
-
-          <Separator />
-
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Reputação</p>
-            <UserReputationManager
-              userId={p.id}
-              currentReputation={p.reputation}
-              userName={p.name}
-              onUpdate={onUpdate}
-            />
           </div>
         </TabsContent>
       </Tabs>

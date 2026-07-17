@@ -34,7 +34,8 @@ describe("business_data grants security", () => {
     expect(migration).not.toContain("GRANT DELETE ON TABLE public.business_data TO authenticated");
     expect(migration).not.toContain("GRANT TRUNCATE ON TABLE public.business_data");
 
-    expect(adminService).toContain('supabase.functions.invoke("admin-business-rpc"');
+    expect(adminService).toContain("invokeSupabaseBrokerCommand");
+    expect(adminService).toContain('functionName: "admin-business-rpc"');
     expect(adminService).not.toContain("BusinessService.updateBusiness(id, { is_verified");
     expect(adminService).not.toContain("BusinessService.updateBusiness(id, { is_premium");
 

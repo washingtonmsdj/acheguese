@@ -1,11 +1,8 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import {
-  TRUST_ACTOR_ROLES,
-  TRUST_CONTEXT_TYPES,
-  TRUST_EVENT_TYPES,
-  TRUST_VISIBILITIES,
-  TrustEventService,
+  TrustIncidentService,
+  type ClassifiedCommentIncidentReason,
 } from "@/core/trust";
 
 export interface ClassifiedComment {
@@ -24,30 +21,6 @@ export interface ClassifiedComment {
 }
 
 class ClassifiedCommentService {
-  private async hasOpenReportForActor(input: {
-    classifiedId: string;
-    commentId: string;
-    reporterProfileId: string;
-  }): Promise<boolean> {
-    const { data, error } = await supabase
-      .from("trust_events")
-      .select("id")
-      .eq("context_type", TRUST_CONTEXT_TYPES.CLASSIFIED)
-      .eq("context_id", input.classifiedId)
-      .eq("actor_profile_id", input.reporterProfileId)
-      .eq("event_type", TRUST_EVENT_TYPES.INCIDENT)
-      .in("status", ["active", "under_review"])
-      .contains("evidence", { comment_id: input.commentId })
-      .limit(1);
-
-    if (error) {
-      logger.error("[ClassifiedCommentService] hasOpenReportForActor failed", error);
-      return false;
-    }
-
-    return (data?.length ?? 0) > 0;
-  }
-
   async listByClassifiedId(classifiedId: string): Promise<ClassifiedComment[]> {
     const { data, error } = await supabase
       .from("classified_comments")
@@ -131,56 +104,11 @@ class ClassifiedCommentService {
   async reportComment(input: {
     classifiedId: string;
     commentId: string;
-    commentAuthorProfileId: string;
-    commentAuthorRole: "customer" | "merchant";
-    reporterProfileId: string;
-    reporterRole: "customer" | "merchant";
-    reasonCode?: string;
+    reason: ClassifiedCommentIncidentReason;
     description?: string;
-    evidence?: Record<string, unknown>;
   }): Promise<{ created: boolean }> {
-    const alreadyReported = await this.hasOpenReportForActor({
-      classifiedId: input.classifiedId,
-      commentId: input.commentId,
-      reporterProfileId: input.reporterProfileId,
-    });
-
-    if (alreadyReported) {
-      return { created: false };
-    }
-
-    const result = await TrustEventService.createEvent({
-      actor_profile_id: input.reporterProfileId,
-      actor_role:
-        input.reporterRole === "merchant"
-          ? TRUST_ACTOR_ROLES.MERCHANT
-          : TRUST_ACTOR_ROLES.CUSTOMER,
-      subject_profile_id: input.commentAuthorProfileId,
-      subject_role:
-        input.commentAuthorRole === "merchant"
-          ? TRUST_ACTOR_ROLES.MERCHANT
-          : TRUST_ACTOR_ROLES.CUSTOMER,
-      context_type: TRUST_CONTEXT_TYPES.CLASSIFIED,
-      context_id: input.classifiedId,
-      event_type: TRUST_EVENT_TYPES.INCIDENT,
-      reason_code: input.reasonCode ?? "classified_comment_report",
-      severity: "medium",
-      visibility: TRUST_VISIBILITIES.PRIVATE,
-      description:
-        input.description ??
-        "Comentário/pergunta de classificado denunciado para revisão administrativa.",
-      evidence: {
-        comment_id: input.commentId,
-        ...(input.evidence ?? {}),
-      },
-    });
-
-    if (result.error) {
-      logger.error("[ClassifiedCommentService] reportComment failed", result.error);
-      throw new Error(result.error);
-    }
-
-    return { created: true };
+    const result = await TrustIncidentService.reportClassifiedComment(input);
+    return { created: result.created };
   }
 }
 

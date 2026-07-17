@@ -17,8 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
-import { Switch } from '@/shared/components/ui/switch';
 import { Textarea } from '@/shared/components/ui/textarea';
+import { Switch } from '@/shared/components/ui/switch';
+import { resolveMediaAssetSource } from '@/core/media';
 import type { MenuCategory } from '@/modules/business/gastronomy/services/MenuService';
 import { NO_CATEGORY_VALUE, type ItemFormValues } from './ItemForm.model';
 
@@ -99,13 +100,11 @@ export function PriceCategoryFields({ form, categories, allowCategorySelection }
 interface ImagePreparationFieldsProps extends BaseSectionProps {
   allowImage: boolean;
   uploadingImage: boolean;
-  optimizeBeforeUpload: boolean;
   imageFitMode: 'cover' | 'contain';
   focalPointX: number;
   focalPointY: number;
   fileInputRef: RefObject<HTMLInputElement>;
   onUploadImage: (file?: File) => void;
-  onOptimizeBeforeUploadChange: (checked: boolean) => void;
   onImageFitModeChange: (value: 'cover' | 'contain') => void;
   onFocalPointXChange: (value: number) => void;
   onFocalPointYChange: (value: number) => void;
@@ -115,13 +114,11 @@ export function ImagePreparationFields({
   form,
   allowImage,
   uploadingImage,
-  optimizeBeforeUpload,
   imageFitMode,
   focalPointX,
   focalPointY,
   fileInputRef,
   onUploadImage,
-  onOptimizeBeforeUploadChange,
   onImageFitModeChange,
   onFocalPointXChange,
   onFocalPointYChange,
@@ -137,7 +134,6 @@ export function ImagePreparationFields({
               <FormLabel>Imagem do item</FormLabel>
               <FormControl>
                 <div className="space-y-2">
-                  <Input placeholder="https://..." {...field} />
                   <div className="flex flex-wrap items-center gap-2">
                     <input
                       ref={fileInputRef}
@@ -168,14 +164,7 @@ export function ImagePreparationFields({
                       </Button>
                     ) : null}
                   </div>
-                  <div className="grid gap-2 rounded-md border border-dashed p-2 sm:grid-cols-2">
-                    <label className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                      Otimizar antes do upload
-                      <Switch
-                        checked={optimizeBeforeUpload}
-                        onCheckedChange={(checked) => onOptimizeBeforeUploadChange(Boolean(checked))}
-                      />
-                    </label>
+                  <div className="grid gap-2 rounded-md border border-dashed p-2">
                     <div className="text-xs">
                       <Select
                         value={imageFitMode}
@@ -191,7 +180,7 @@ export function ImagePreparationFields({
                       </Select>
                     </div>
                   </div>
-                  {optimizeBeforeUpload && imageFitMode === 'cover' ? (
+                  {imageFitMode === 'cover' ? (
                     <div className="grid gap-2 rounded-md border border-dashed p-2">
                       <label className="text-xs text-muted-foreground">Foco horizontal ({focalPointX}%)</label>
                       <Input
@@ -215,7 +204,7 @@ export function ImagePreparationFields({
                   ) : null}
                   {field.value ? (
                     <img
-                      src={field.value}
+                      src={resolveMediaAssetSource(field.value) ?? undefined}
                       alt="Preview da imagem do item"
                       className={`h-24 w-24 rounded-md border ${
                         imageFitMode === 'cover' ? 'object-cover' : 'object-contain bg-muted/40 p-1'
@@ -225,7 +214,7 @@ export function ImagePreparationFields({
                   ) : null}
                 </div>
               </FormControl>
-              <FormDescription>Cole a URL ou envie uma imagem do computador.</FormDescription>
+              <FormDescription>Envie uma imagem do computador.</FormDescription>
               <FormMessage />
             </FormItem>
           )}

@@ -4,15 +4,14 @@
  * Responsável por:
  * - Buscar grupos e detalhes
  * - Criar grupos
- * - Gerenciar memberships (via SocialInteractionsService)
+ * - Gerenciar memberships (via SocialGroupInteractionsService)
  *
  * Arquitetura: Component → Hook → GroupService → Supabase
  */
 
 import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
-import { logger } from "@/shared/utils/logger";
-import { SocialInteractionsService } from "./SocialInteractionsService";
+import { SocialGroupInteractionsService } from "./SocialGroupInteractionsService";
 
 type QueryResult<T> = Promise<{ data: T; error: { code?: string; message?: string } | null }>;
 
@@ -55,49 +54,8 @@ export interface GroupMemberDetail {
   profile: { id: string; name: string; avatar_url: string | null } | null;
 }
 
-type GroupRow = Group & { members_count?: Array<{ count?: number } | null> | number };
-
 export class GroupService {
   private static readonly db = supabase as unknown as GroupDbClient;
-  /**
-   * Busca todos os grupos ordenados por membros
-   */
-  static async getGroups(): Promise<Group[]> {
-    try {
-      const { data, error } = await this.db.rpc("get_community_groups");
-
-      if (error) throw error;
-
-      return ((data || []) as GroupRow[]).map((group) => ({
-        ...group,
-        members_count: Array.isArray(group.members_count) ? (group.members_count[0]?.count ?? 0) : (group.members_count ?? 0),
-      }));
-    } catch (error) {
-      trackError(error as Error, {
-        component: "GroupService",
-        action: "getGroups",
-      });
-      return [];
-    }
-  }
-
-  /**
-   * Busca IDs dos grupos em que o usuário é membro
-   * Migrado para usar SocialInteractionsService
-   */
-  static async getUserGroupIds(userId: string): Promise<string[]> {
-    try {
-      // Usar SocialInteractionsService que agora tem este método
-      return await SocialInteractionsService.getUserGroupIds(userId);
-    } catch (error) {
-      trackError(error as Error, {
-        component: "GroupService",
-        action: "getUserGroupIds",
-      });
-      return [];
-    }
-  }
-
   /**
    * Busca detalhes de um grupo específico
    */
@@ -122,15 +80,15 @@ export class GroupService {
 
   /**
    * Busca membros de um grupo
-   * Delegado para SocialInteractionsService
+   * Delegado para SocialGroupInteractionsService
    */
   static async getGroupMembers(
     groupId: string,
     limit = 50,
   ): Promise<GroupMemberDetail[]> {
     try {
-      // Usar SocialInteractionsService que já tem este método
-      const members = await SocialInteractionsService.getGroupMembers(groupId);
+      // Canonical group interaction owner.
+      const members = await SocialGroupInteractionsService.getGroupMembers(groupId);
 
       // Converter para o formato esperado pelo GroupService
       return members.slice(0, limit).map((m) => ({
@@ -152,55 +110,13 @@ export class GroupService {
   }
 
   /**
-   * Cria um novo grupo
-   */
-  static async createGroup(data: {
-    name: string;
-    description?: string;
-    category?: string;
-    is_private?: boolean;
-    created_by: string;
-  }): Promise<Group> {
-    try {
-      const { data: group, error } = await this.db.rpc("create_community_group", {
-        p_name: data.name,
-        p_description: data.description ?? null,
-        p_category: data.category ?? null,
-        p_is_private: data.is_private ?? false,
-        p_created_by: data.created_by,
-      });
-
-      if (error) throw error;
-
-      return group as Group;
-    } catch (error) {
-      trackError(error as Error, {
-        component: "GroupService",
-        action: "createGroup",
-      });
-      throw error;
-    }
-  }
-
-  /**
-   * Incrementa contador de membros via RPC
-   */
-  static async incrementMembersCount(groupId: string): Promise<void> {
-    try {
-      await this.db.rpc("increment_group_members", { gid: groupId });
-    } catch (error) {
-      logger.warn("Failed to increment group members count:", error);
-    }
-  }
-
-  /**
    * Busca mensagem completa de grupo por ID (para realtime enrichment)
-   * Migrado para usar SocialInteractionsService
+   * Delegado para SocialGroupInteractionsService
    */
   static async getGroupMessageById(messageId: string): Promise<Record<string, unknown> | null> {
     try {
-      // Usar SocialInteractionsService que agora tem este método
-      return await SocialInteractionsService.getGroupMessageById(messageId);
+      // Canonical group interaction owner.
+      return await SocialGroupInteractionsService.getGroupMessageById(messageId);
     } catch (error) {
       trackError(error as Error, {
         component: "GroupService",

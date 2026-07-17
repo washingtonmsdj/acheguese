@@ -17,7 +17,7 @@ interface SavedPostsGridProps {
 function toCommunityPost(post: ProfileFeedPost): CommunityPost {
   return {
     ...post,
-    type: post.type === "achados_e_perdidos" ? "achado_perdido" : post.type,
+    type: post.type === "achados_e_perdidos" ? "achados" : post.type,
   };
 }
 

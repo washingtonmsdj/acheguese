@@ -36,12 +36,12 @@ describe("mobility canonical onboarding routes", () => {
     expect(centralMotoristaSource).toContain("appUrls.profile.mobilidade.motorista.cadastro");
   });
 
-  it("keeps passenger tracking notifications bound to mobilityRoutes helper", () => {
+  it("keeps passenger tracking notifications server-owned", () => {
     const rideOperationalSource = readProjectFile("src/core/mobility/core/RideOperationalService.ts");
     const postTransitionSource = readProjectFile("src/core/mobility/core/RideOperationalPostTransition.ts");
 
     expect(rideOperationalSource).toContain("handleRidePostTransition(rideId, toState, ride)");
-    expect(postTransitionSource).toContain("mobilityRoutes.passageiro.buscando(rideId)");
-    expect(postTransitionSource).not.toContain("`/mobilidade/buscando/${rideId}`");
+    expect(postTransitionSource).not.toContain("NotificationService.createNotification");
+    expect(postTransitionSource).not.toContain("mobilityRoutes.passageiro");
   });
 });

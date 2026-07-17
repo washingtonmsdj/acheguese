@@ -37,7 +37,6 @@ export const CreateProfileSchema = z.object({
     .min(2, validationMessages.string.min(2)),
 
   main_territory_location_id: z.string().uuid().optional(),
-  community_reputation_score: z.number().int().min(0).optional(),
 
   phone: phoneValidator.optional(),
 
@@ -69,7 +68,6 @@ export const UpdateProfileSchema = z.object({
 
   city: z.string().min(2, validationMessages.string.min(2)).optional(),
   main_territory_location_id: z.string().uuid().optional(),
-  community_reputation_score: z.number().int().min(0).optional(),
 
   phone: phoneValidator.optional(),
 });

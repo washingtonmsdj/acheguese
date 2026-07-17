@@ -49,12 +49,12 @@ export function useBusinessImageUpload() {
     if (!logoFile || !activeProfile) return null;
 
     try {
-      const result = await mediaService.uploadBusinessImage(
+      const result = await mediaService.uploadMediaAsset(
         activeProfile.id,
         logoFile,
-        "logo",
+        "business_logo",
       );
-      return result.url;
+      return result.reference;
     } catch (error) {
       logger.error("Erro ao fazer upload do logo:", error);
       throw error;
@@ -65,12 +65,12 @@ export function useBusinessImageUpload() {
     if (!capaFile || !activeProfile) return null;
 
     try {
-      const result = await mediaService.uploadBusinessImage(
+      const result = await mediaService.uploadMediaAsset(
         activeProfile.id,
         capaFile,
-        "capa",
+        "business_banner",
       );
-      return result.url;
+      return result.reference;
     } catch (error) {
       logger.error("Erro ao fazer upload da capa:", error);
       return null;

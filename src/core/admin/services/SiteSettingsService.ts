@@ -10,8 +10,6 @@ import {
   type SiteSettingKey,
   validateFileSize,
   validateFileType,
-  getFileExtension,
-  generateFileName,
 } from "../config/siteSettings.config";
 
 export interface SiteSetting {
@@ -144,26 +142,7 @@ class SiteSettingsServiceClass {
     }
   }
 
-  async uploadFile(
-    bucket: string,
-    path: string,
-    file: File,
-  ): Promise<{ url: string; path: string }> {
-    try {
-      const upload = await mediaService.uploadToBucket(file, {
-        bucket: bucket === "banners" ? "banners" : "business-images",
-        pathPrefix: path.split("/").slice(0, -1).join("/"),
-        preset: "site_asset",
-        upsert: true,
-      });
-      return upload;
-    } catch (error) {
-      logger.error("Erro ao fazer upload de arquivo", error as Error);
-      throw error;
-    }
-  }
-
-  async uploadLogo(file: File): Promise<string> {
+  async uploadLogo(ownerProfileId: string, file: File): Promise<string> {
     try {
       if (!validateFileSize(file, SITE_SETTINGS_STORAGE.MAX_FILE_SIZE.LOGO)) {
         throw new Error(
@@ -172,28 +151,30 @@ class SiteSettingsServiceClass {
       }
 
       if (!validateFileType(file, SITE_SETTINGS_STORAGE.ALLOWED_TYPES.LOGO)) {
-        throw new Error("Tipo de arquivo nao permitido. Use PNG, JPG ou SVG");
+        throw new Error("Tipo de arquivo nao permitido. Use PNG, JPG ou WebP");
       }
 
-      const extension = getFileExtension(file.name);
-      const fileName = generateFileName("logo", extension);
-      const path = `${SITE_SETTINGS_STORAGE.PATHS.LOGOS}/${fileName}`;
-      const { url } = await this.uploadFile(SITE_SETTINGS_STORAGE.BUCKET, path, file);
+      const asset = await mediaService.uploadMediaAsset(
+        ownerProfileId,
+        file,
+        "site_logo",
+        { fit: "contain" },
+      );
 
       await this.upsertSetting(
         SITE_SETTING_KEYS.LOGO_URL,
-        url,
-        "URL da logo principal do site",
+        asset.reference,
+        "Referencia canonica da logo principal do site",
       );
 
-      return url;
+      return asset.reference;
     } catch (error) {
       logger.error("Erro ao fazer upload da logo", error as Error);
       throw error;
     }
   }
 
-  async uploadFavicon(file: File): Promise<string> {
+  async uploadFavicon(ownerProfileId: string, file: File): Promise<string> {
     try {
       if (!validateFileSize(file, SITE_SETTINGS_STORAGE.MAX_FILE_SIZE.FAVICON)) {
         throw new Error(
@@ -202,21 +183,23 @@ class SiteSettingsServiceClass {
       }
 
       if (!validateFileType(file, SITE_SETTINGS_STORAGE.ALLOWED_TYPES.FAVICON)) {
-        throw new Error("Tipo de arquivo nao permitido. Use PNG ou ICO");
+        throw new Error("Tipo de arquivo nao permitido. Use PNG, JPG ou WebP");
       }
 
-      const extension = getFileExtension(file.name);
-      const fileName = generateFileName("favicon", extension);
-      const path = `${SITE_SETTINGS_STORAGE.PATHS.FAVICONS}/${fileName}`;
-      const { url } = await this.uploadFile(SITE_SETTINGS_STORAGE.BUCKET, path, file);
+      const asset = await mediaService.uploadMediaAsset(
+        ownerProfileId,
+        file,
+        "site_favicon",
+        { fit: "cover" },
+      );
 
       await this.upsertSetting(
         SITE_SETTING_KEYS.FAVICON_URL,
-        url,
-        "URL do favicon",
+        asset.reference,
+        "Referencia canonica do favicon",
       );
 
-      return url;
+      return asset.reference;
     } catch (error) {
       logger.error("Erro ao fazer upload do favicon", error as Error);
       throw error;

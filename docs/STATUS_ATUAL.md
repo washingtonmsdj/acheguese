@@ -1,10 +1,495 @@
 # Status Atual do Projeto
 
-Data: 2026-07-10
+Data: 2026-07-15
 Branch: main
 Ultimo commit base validado antes desta atualizacao: e16f3671 (`docs: record security authority revalidation`)
 
 Observacao: este documento e a fonte operacional atual. O historico abaixo fica preservado por contexto, mas qualquer registro antigo de bloqueio por falta de `git`/`node` nao representa o ambiente validado em 2026-06-06.
+
+## Atualizacao 2026-07-15 (Core Platform - Moderation e Audit)
+
+- A entrega 5D foi concluida sem criar tabela universal de report/audit. O
+  protocolo de razoes e o dialog sao compartilhados; cada dominio conserva o
+  status e a acao corretiva. A fila federada e read-only, admin-only, keyset e
+  limitada, agregando nove dominios sem copiar status ou texto sensivel.
+- `community_reports` e o SSOT comunitario para sete alvos. Reporter e autor do
+  alvo sao derivados pelo banco; `CommunityReportService` escreve e
+  `CommunityContentModerationService` revisa. Facades genericas e o
+  `AdminAuditService` foram removidos.
+- `core/audit` expoe somente contratos append-only. O log social comunitario
+  perdeu leitura direta pelo browser e possui reader administrativo paginado.
+  `ActiveBanReader`, em Trust, substituiu a consulta historica que podia gerar
+  falso ban ou falha aberta no agregado de Profile.
+- A exclusao de User deixou de ser bloqueada por `billing_audit_log`: snapshots
+  JSON nao duplicam mais `user_id` e o hard delete nao recria a referencia.
+- As migrations `20260715100000` ate `20260715107000` estao no remoto. O probe
+  passou em 28 cenarios, incluindo anonimo, usuario comum, admin, service role
+  sem identidade, leitura direta, taxonomia, sete alvos e ban atual
+  positivo/negativo. O probe final removeu todas as identidades e fixtures.
+- `banned_users` nao possui mais `SELECT` no navegador. Profile chama
+  `has_current_active_ban` sem parametro; o banco deriva `auth.uid()` e retorna
+  apenas booleano, sem motivo ou identidade de moderador.
+- `test:moderation:ssot` passou com 18 testes, o hardening comunitario com 27,
+  Security Authority com 68, Reviews com 7, Messaging com 30 e Realtime com 8.
+  Typecheck, lint focado, migrations local/remoto, SSOT, governance, taxonomy,
+  links documentais, Security e ownership tambem passaram.
+- O facade morto `UserWarningsService` foi removido. Warnings/suspensoes
+  comunitarias permanecem no comando server-owned; uma leitura futura deve
+  ganhar read model limitado em vez de acesso direto ao append-only.
+- O manifest controla 36 tabelas, 54 RPCs e 24 callsites incrementais. Isso nao
+  prova milhares de requisicoes por segundo: carga p50/p95/p99, backup/restore
+  e rollback ainda exigem staging autorizado. Retencao/anonymizacao de reports
+  e auditoria depende de Privacidade/DPO e segue como bloqueio de lancamento.
+- Contrato canonico: `docs/architecture/AUDIT_MODERATION_SSOT.md`.
+
+## Atualizacao 2026-07-15 (Core Platform - Review Core)
+
+- CP-013 e a entrega 5C foram concluidos. `public.reviews` e a unica fonte de
+  verdade para reviews com alvo Profile; `core/reviews` possui o agregado base
+  e `BusinessReviewService` preserva apenas a policy comercial.
+- Gastronomia deixou de possuir persistencia paralela. Duas linhas de
+  `professional_reviews_new` foram migradas para `reviews`; a tabela comercial
+  legada estava vazia. Ambas foram verificadas e removidas com `RESTRICT`.
+- Review profissional, helpfulness e report usam comandos server-owned. O
+  browser nao escreve diretamente, nao declara ator/admin e nao escolhe tabela.
+  Exclusao usa hard delete autorizado conforme o constraint canonico vigente.
+- As migrations `20260715094000`, `20260715095000` e `20260715096000` estao
+  aplicadas no remoto e os tipos foram regenerados.
+- `test:reviews:ssot` passou com 7 testes; o probe remoto passou em 31 casos de
+  elegibilidade, spoof, RLS, escrita direta, voto, denuncia e exclusao.
+- O manifest controla 34 tabelas, 51 RPCs e 24 callsites incrementais. Carga e
+  p50/p95/p99 ainda exigem staging; os probes nao provam capacidade em escala.
+- Contrato canonico: `docs/architecture/REVIEWS_SSOT.md`.
+
+## Atualizacao 2026-07-15 (Core Platform - Community Direct Messaging)
+
+- CP-015 e a entrega 5B foram concluidos. Direct message iniciado em Post da
+  Comunidade nao usa mais `classified_id`; possui threads, participantes,
+  mensagens, reports e auditoria privada no agregado `community_direct_*`.
+- `CommunityDirectMessagingService` e o unico adapter publico. Inbox e
+  historico usam RPCs keyset limitados; criacao, envio, receipt, bloqueio e
+  denuncia sao comandos server-owned. O browser nao possui escrita direta.
+- Thread exige JWT/Profile ativo, membership ativa dos dois participantes,
+  Post publicado e link ativo para a mesma Comunidade. Autor, interlocutor e
+  alvo de report sao derivados no banco. Bloqueio de qualquer lado interrompe
+  envio; report pendente e deduplicado.
+- Realtime usa o topico fechado `messaging.community-thread-messages`, filtrado
+  por `thread_id`. Corpo privado nao entra em telemetria, notificacao ou
+  metadata de auditoria; localizacao falsa foi removida do fluxo.
+- As migrations `20260715092000` e `20260715093000` estao aplicadas no remoto e
+  os tipos foram regenerados. O probe remoto passou em 16 casos positivos e
+  negativos, incluindo spoof de Profile, nao membro, RLS de terceiro, escrita
+  direta, bloqueio e moderacao nao administrativa.
+- `test:messaging:ssot` passou com 30 testes e `test:realtime:ssot` com 8. O
+  manifest controla 34 tabelas, 46 RPCs e 26 callsites incrementais.
+- Nao foi executado teste de milhares de requisicoes ou sockets. Carga,
+  concorrencia e p50/p95/p99 permanecem obrigatorios em staging; politica
+  temporal de retencao/anonymizacao entra na consolidacao de Audit/Privacy.
+
+## Atualizacao 2026-07-15 (Core Platform - Classified Messaging)
+
+- CP-012 e a entrega 5A foram concluidos. O owner foi renomeado para
+  `ClassifiedMessagingService`; aliases genericos foram removidos e os tipos
+  publicos agora expressam o agregado de Classificados.
+- A inbox deixou o fan-out por conversa. `list_classified_conversation_previews`
+  retorna pagina limitada com ultima mensagem, nao lidas, classificado e outro
+  Profile em uma consulta, usando cursor `(last_message_at,id)` e busca
+  server-side limitada.
+- Os indices de buyer/seller incluem timestamp e UUID de desempate. As
+  migrations `20260715090000` e `20260715091000` estao aplicadas no remoto.
+- O RPC exige JWT e Profile ativo pertencente ao User. O probe remoto confirmou
+  anonimo `401`, Profile proprio permitido e Profile alheio `403`.
+- `test:messaging:ssot` passou com 18 testes; migration/security/ownership e
+  `typecheck:app` passaram. O manifest controla 29 tabelas, 38 RPCs e 26
+  callsites incrementais.
+- Nesta entrega 5A, CP-015 permaneceu aberto; ele foi encerrado na atualizacao
+  5B acima com agregado, lifecycle e autorizacao proprios.
+
+## Atualizacao 2026-07-15 (Core Platform - Realtime)
+
+- CP-007 e a Fase 4B foram concluidos. `RealtimeService` e o registry fechado
+  sao o unico owner de Postgres Changes, Broadcast e Presence no cliente.
+- Notification, Messaging, Gastronomia, Tracking, Family, Metrics, Try-on e
+  Mobility foram migrados. A assinatura global de `messages` foi removida;
+  conversas, grupos, notificacoes, pedidos, corridas e tracking usam filtros
+  declarados e UUID validado antes do connect.
+- Broadcast ficou restrito a topicos registrados e canais mortos do antigo
+  AutoDispatch foram removidos. Estado persistente continua no banco; Realtime
+  nao e uma segunda fonte de verdade.
+- Cleanup usa `removeChannel`, e Presence executa `untrack`. Ha limite de 32
+  subscriptions, payload/estado limitado, telemetria sem ID de escopo e
+  deduplicacao bounded por linha/commit para eventos repetidos apos reconnect.
+- Reconnect/backoff pertencem ao SDK Supabase; o manager de Tracking nao
+  reconecta mais canais em paralelo. O hook da inbox assina apenas a conversa
+  aberta.
+- O teste arquitetural prova que `.channel(` existe somente no owner. Oito
+  testes do Core Realtime e 42 testes de regressao Community/Gastronomia
+  passaram, assim como `typecheck:app`. O manifest caiu de 34 para 26
+  callsites incrementais.
+- Perda de rede real, quotas, carga e p95/p99 nao foram simulados localmente e
+  continuam obrigatorios em staging na Fase 6. A proxima entrega e a Fase 5,
+  iniciando pelo owner e read model paginado de Messaging.
+
+## Atualizacao 2026-07-14 (Core Platform - MediaAsset)
+
+- CP-006 e a Fase 4A foram concluidos para Review/Menu. Gastronomia deixou de
+  reutilizar `uploadPostImage`; ambos persistem referencia canonica
+  `storage://media-assets/...` e usam presets proprios.
+- O broker `media-assets` valida JWT, Profile ativo/owner, limite antes do
+  multipart, JPEG por estrutura/bytes, dimensoes e quota distribuida. O path e
+  o ID sao gerados no servidor, APP/COM metadata e removida e `upsert` e falso.
+- `media_assets` e `media_asset_links` registram estado e vinculo ao agregado.
+  Triggers de Review/Menu rejeitam preset, owner, estado ou reutilizacao
+  invalidos; RPCs de lifecycle sao exclusivos de `service_role`.
+- O cleanup processa ate 500 orfaos por execucao com `SKIP LOCKED`. O cron
+  `*/5 * * * *` usa `pg_net`; URL e `CRON_SECRET` ficam no Supabase Vault.
+- As migrations `20260714125000` e `20260714126000` foram aplicadas e
+  `media-assets`, `media-assets-cleanup` e `business-reviews-rpc` estao ativos
+  no remoto. Os tipos Supabase foram regenerados.
+- Probe remoto: upload valido, isolamento RLS, cross-owner `403`, payload apos
+  EOI `415`, quota `P0001` com rollback, cleanup fisico e dispatch cron HTTP 200. O objeto publico sanitizado tambem respondeu 200 e foi decodificado nas
+  dimensoes esperadas. Os 13 testes de MediaAsset, typecheck de app, migration/security e
+  ownership passaram durante a entrega.
+- O manifest controla 29 tabelas, 37 RPCs e 34 callsites incrementais. Uploads
+  anteriores de outros dominios permanecem em CP-016; a proxima entrega e a
+  Fase 4B, Realtime registry. CP-014 e CP-015 continuam abertos.
+
+## Atualizacao 2026-07-14 (Core Platform - Search)
+
+- CP-009 e a Fase 3C foram concluidos. `SearchService` e o unico orquestrador
+  da busca publica global e comunitaria; integracoes de dominio ficam em uma
+  composition root de providers tipados.
+- O hook comunitario sem consumidores, que consultava cinco tipos de Post e
+  ordenava no browser, e seu modal morto foram removidos sem adapter legado.
+- Comunidade, Empresa, Profissional, Classificado, Evento e Post usam filtros
+  comunitarios exatos. Oportunidades exigem territorio canonico quando nao ha
+  tipo de link comunitario; escopos incompletos falham fechados.
+- Historicos global/comunitario/territorial sao isolados. Resultados usam
+  limites de 20, ate 100 candidatos e ate 100 links; falha de um provider nao
+  elimina buckets saudaveis e `AbortError` nao vira sucesso vazio.
+- A duracao federada e emitida sem o texto pesquisado. O contrato e top-N sem
+  pagina seguinte; cursor federado, indice dedicado e declaracao de p95 exigem
+  superficie real e medicao em staging, preservadas para a Fase 6.
+- Typecheck de app, lint focado e 18 testes de Search/paginas passaram antes da
+  auditoria final. Contrato: `docs/architecture/SEARCH_SSOT.md`. Proxima
+  entrega: Fase 4A, MediaAsset. CP-014 e CP-015 continuam abertos.
+
+## Atualizacao 2026-07-14 (Core Platform - Social Engagement)
+
+- CP-010, CP-011 e a Fase 3B foram concluidos. Likes/saves de Post,
+  comentarios, grupos e shares possuem owners separados e explicitos.
+- `core/interaction`, os facades `InteractionService` e
+  `SocialInteractionsService`, seis hooks sem consumidores e o falso
+  `BlockService` sem schema foram removidos.
+- A identidade de comentario, like, save e share e derivada do Profile ativo;
+  RLS continua validando ownership e visibilidade no backend.
+- Tabelas especificas de favoritos foram preservadas. A infraestrutura comum
+  aceita somente Classificado, Evento, Ponto Turistico e Vaga por registry
+  fechado; nenhum consumidor fornece tabela ou coluna.
+- Constraints unicas, triggers de contador, rate limit com advisory lock e
+  audit interno permanecem no banco. O cache otimista possui snapshot e
+  rollback em falha.
+- Typecheck de app, lint focado, ownership e 37 testes focados passaram. O
+  manifest controla 27 tabelas, 32 RPCs e 32 callsites incrementais.
+- Contrato: `docs/architecture/SOCIAL_ENGAGEMENT_SSOT.md`. Proxima entrega:
+  Fase 3C, consolidacao de Search. CP-014 e CP-015 continuam abertos.
+
+## Atualizacao 2026-07-14 (Core Platform - Posts e Feed)
+
+- CP-008 e a Fase 3A foram concluidos. `core/posts` e o unico owner de Post,
+  CRUD, consulta territorial e cursor.
+- `FeedService`, `core/feed/types.ts`, o alias `feedService`, a segunda consulta
+  territorial e o adapter `feedItems` sem consumidor foram removidos sem
+  camada deprecated.
+- `core/feed` conserva somente as chaves de cache da composicao. Contratos de
+  feed federado, ranking e adapters de outros dominios nao foram criados sem
+  uma superficie de produto real.
+- A consulta canonica limita paginas a 50 itens, usa `limit + 1`, ordena por
+  `created_at` e `id`, aceita cursor opaco com desempate e aplica filtros
+  explicitos de publicacao/moderacao alem da RLS.
+- Typecheck de app, lint focado, ownership e 10 testes focados passaram. O
+  manifest caiu para 39 callsites incrementais, mantendo 27 tabelas e 32 RPCs.
+- Contrato: `docs/architecture/POSTS_FEED_SSOT.md`. Proxima entrega: Fase 3B,
+  consolidacao de comments/reactions/saves/shares.
+
+## Atualizacao 2026-07-14 (Core Platform - Business Favorites)
+
+- CP-005 e a Fase 2B foram concluidos. `BusinessFavoriteStore` em
+  `core/favorites` e o unico owner de persistencia; Business e adapter de
+  dominio e Gastronomia apenas compoe o read model especifico.
+- As cinco RPCs canonicas derivam `auth.uid()` e nao recebem identidade do
+  browser. O set e idempotente e serializado; patch preserva campos omitidos;
+  a vitrine consulta em lote no maximo 100 empresas visiveis.
+- `authenticated` nao possui SELECT/INSERT/UPDATE/DELETE direto em
+  `user_favorite_businesses`. Auditoria privada grava somente nomes dos campos
+  alterados, sem valores de notas/tags.
+- O preflight remoto encontrou 8 favoritos canonicos unicos, sem orfaos. A
+  tabela `business_favorites` estava vazia e sem dependencias e foi removida
+  sem `CASCADE`; os RPCs antigos com `p_user_id` e o contador sem consumidor
+  tambem foram removidos.
+- As migrations `20260714122000` a `20260714124000` foram aplicadas no remoto
+  de desenvolvimento e os tipos foram regenerados. Auditoria confirmou cinco
+  RPCs canonicas, zero RPC/tabela legados e nenhum grant direto de browser.
+- O probe remoto cobriu create/remove repetidos, batch, patch parcial,
+  normalizacao, bloqueio de acesso direto e audit; terminou em `ROLLBACK`.
+- Typecheck de app, ownership e 9 testes focados passaram. O manifest controla
+  27 tabelas, 32 RPCs e 40 callsites incrementais.
+- Proxima entrega: Fase 3A, consolidacao de Posts/Feed.
+
+## Atualizacao 2026-07-14 (Core Platform - Notification Preferences)
+
+- CP-004 e a Fase 2A foram concluidos. `NotificationPreferencesService` e o
+  unico owner de escrita e deriva tipos do schema Supabase gerado.
+- O adapter Push sem consumidores, que declarava colunas inexistentes, e o
+  service de full-row update foram removidos. A pagina usa get/patch canonico.
+- O patch server-owned deriva `auth.uid()`, cria defaults quando necessario,
+  bloqueia a row e preserva todo parametro omitido. A UI salva o conjunto em
+  uma unica transacao; metodos focados atendem futuros consumidores.
+- Escrita direta foi revogada; RLS de SELECT proprio e leitura service-role de
+  delivery foram preservadas. Transacional e obrigatorio, horarios devem formar
+  par e dias/frequencia possuem constraints validadas.
+- Preflight encontrou 224 rows sem anomalias. Probe remoto provou cinco patches
+  independentes, nao-clobber, clear de horario, bloqueio de escrita direta e
+  audit mask, terminando em `ROLLBACK`.
+- Typecheck completo, lint, migrations, ownership e 22 testes focados passaram.
+  O manifest controla 27 tabelas, 29 RPCs e 40 callsites incrementais.
+- Proxima entrega: Fase 2B, consolidacao de Business favorites.
+
+## Atualizacao 2026-07-14 (Core Platform - Trust e Classified Messaging)
+
+- A Fase 1D foi concluida para incidentes de comentario, mensagem e conversa
+  de Classificado. `trust_events` continua sendo o SSOT, sem tabela universal.
+- O remoto possuia `conversations`/`messages` sem migration local e com FKs em
+  `auth.users`, enquanto o runtime usava Profile. A migration `20260714119000`
+  reproduziu o schema, converteu identidade com abort em caso irresoluvel e
+  passou as FKs para `profiles`.
+- Oito RPCs derivam comprador, vendedor, remetente, leitor, blocker, reporter,
+  alvo, papel e contexto no backend. INSERT/UPDATE/DELETE direto foi revogado
+  de `authenticated` para conversa/mensagem.
+- Denuncia de conversa deixou de apontar o proprio ator como alvo e agora
+  registra incidente e bloqueia a conversa na mesma transacao. Denuncia de
+  mensagem substituiu a escrita em `message_reports`, tabela inexistente.
+- Textos de mensagem/comentario, nomes e descricoes livres nao sao duplicados
+  em evidence nem no audit privado. Ha limite de texto, rate limit,
+  deduplicacao, self-report guard e identidade imutavel.
+- Hard delete administrativo foi substituido por encerramento auditavel.
+- O probe remoto transacional validou ciclo de conversa/mensagem, leitura,
+  dedup, bloqueio atomico e rejeicao de envio apos bloqueio, terminando em
+  `ROLLBACK`. Catalogo confirmou `anon` sem EXECUTE e audit privado sem SELECT.
+- Typecheck completo, lint focado e 15 testes de seguranca passaram. O manifest
+  controla 27 tabelas, 27 RPCs e 40 callsites incrementais.
+- Residuais explicitos: feedback/late cancellation/admin actions de Trust
+  continuam em CP-014; direct message de Post comunitario usa owner incorreto
+  e esta em CP-015. A proxima entrega selecionada e a Fase 2A.
+
+## Atualizacao 2026-07-14 (Core Platform - capability preview)
+
+- A Fase 1B removeu o `AuthorizationEngine`, os hooks de permissao sem
+  consumidores e o dominio paralelo `core/permissions`.
+- `CapabilityPreviewService` e explicitamente UI-only, usa `ProfileService` e
+  `RoleService`, e nao consulta Posts, Comments, Messages, Business,
+  `communities` ou `community_moderators` para provar ownership.
+- O admin deixou de exibir "permissoes efetivas" e passou a exibir uma previa
+  de capacidades, com aviso de que a autorizacao real ocorre no backend.
+- `authorization-enforcement-map.json` cobre todas as acoes declaradas e liga
+  cada uma ao owner, RLS/RPC/Edge e evidencia. Review, Poll e buckets de Media
+  estao explicitamente parciais e seguem nos findings das fases proprias.
+- O catalogo remoto confirmou RLS ativo em `posts`, `comments`, `messages`,
+  `business_data`, `community_reports` e `group_messages_new`. Tambem confirmou
+  que `verify_profile` e `suspend_profile` nao sao executaveis por `anon` nem
+  `authenticated`; os fluxos passam pelas Edge Functions administrativas.
+- Testes da fase cobrem anonimo, inativo, suspenso, bloqueado, owner,
+  non-owner, moderator, admin e hint de moderacao comunitaria. Regras de lint e
+  o validador de sessao nao recomendam mais autorizacao client-side.
+- Fase 1B concluida. A proxima entrega e a Fase 1C, reports sensiveis.
+
+## Atualizacao 2026-07-14 (Core Platform - outbox e Safety remoto)
+
+- A Fase 1A migrou para `private.notification_outbox` os produtores
+  inventariados de Community, Work Opportunities, Vagas, Trust, Mobility,
+  Orders, Business Claims e Safety. A API client-side de notificacao permanece
+  self-only.
+- As migrations `20260714113000` a `20260714117000` foram aplicadas no
+  Supabase remoto de desenvolvimento e os tipos foram regenerados a partir do
+  schema remoto.
+- Safety passou a ter schema reproduzivel, RLS por perfil/viagem, rate limit,
+  auditoria backend, comandos de status/revogacao e notificacao com audiencia
+  derivada no banco. Writers paralelos de `emergency_alerts` em Mobility foram
+  removidos.
+- `send-emergency-email` aceita apenas `contactId` e `alertId`; contato,
+  destinatario, alerta, descricao e localizacao sao carregados no backend. A
+  funcao foi redeployada com JWT obrigatorio e uma chamada sem token retornou
+  `401`.
+- Contatos de emergencia deixaram de sobrecarregar `phone` como email. O campo
+  `email` e canonico/obrigatorio para novos registros, `phone` e opcional e a
+  UI informa que SMS ainda nao esta ativo.
+- A leitura publica de share ocorre somente por RPC e token base62 de 32
+  caracteres. Prova remota com token inexistente retornou `200`/zero linhas;
+  leitura direta anonima de `ride_shares` retornou `401`.
+- O manifesto executavel controla agora 22 tabelas, 11 RPCs e 40 callsites
+  incrementais. `core/feed/types.ts` deixou de definir contratos paralelos de
+  Post/Create/Update e os grids de perfil usam o tipo canonico `achados`.
+- Evidencias: typecheck completo; 103 testes em 7 arquivos; validadores de
+  migrations, Security Authority e ownership; lint focado sem erros; migrations
+  local/remoto sincronizadas.
+- O probe transacional remoto comprovou entrega, deduplicacao, supressao por
+  preferencia, retry, DLQ, requeue e health. A transacao terminou em `ROLLBACK`
+  e a consulta posterior confirmou zero registros `core:probe:%` persistidos.
+- Fase 1A concluida. A proxima entrega do plano e a Fase 1B, que reclassifica
+  autorizacao do browser como hint e prova enforcement em RLS/RPC/Edge.
+- Limite ainda aberto neste recorte: evidencias de Safety dependem do preset
+  generico de midia (CP-006/Fase 4A).
+- O lint remoto nao aponta erro nas novas funcoes de Safety/outbox, mas continua
+  listando funcoes antigas quebradas em Delivery, cobertura, sessoes,
+  territorial e outros dominios. Esse residual global nao foi ocultado nem
+  classificado como concluido.
+
+## Atualizacao 2026-07-14 (auditoria e plano do Core Platform)
+
+- A arquitetura transversal deixou de assumir que Comunidades e o unico
+  modulo. O core domain continua sendo Comunidade Local, enquanto o Core
+  Platform passa a definir capacidades compartilhadas por Business,
+  Classifieds, Events, Gastronomy, Mobility, Profiles e dominios futuros.
+- O inventario foi validado por comportamento e ownership de tabelas, nao
+  apenas por nomes de arquivos. Foram registrados 13 findings em
+  `docs/architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md`.
+- Riscos criticos abertos: produtores cross-user usando uma API de notificacao
+  self-only; engine de autorizacao do navegador descrito como autoritativo; e
+  reports de Classificados aceitando identidade de reporter/admin da UI.
+- Violacoes de SSOT confirmadas incluem writers paralelos de
+  `notification_preferences` e `user_favorite_businesses`, CRUD/cursor de Feed
+  paralelo a Posts, busca comunitaria paralela e canais Supabase fora do
+  registry de Realtime.
+- Nenhuma funcionalidade nem schema foi alterado nesta auditoria. A execucao
+  incremental, os adapters temporarios e as definicoes de pronto estao em
+  `plans/CORE_PLATFORM_CONSOLIDATION_PLAN.md`.
+- Proxima entrega aprovada: outbox server-side para notificacoes cross-user.
+  O plano nao autoriza uma
+  refatoracao Big Bang nem uma tabela universal de interacoes.
+- A Fase 0 foi concluida: `core-platform-ownership.json` controla 22 tabelas,
+  11 RPCs e 40 callsites incrementais. O analisador AST distingue read/write,
+  tabela, RPC, Storage e Realtime sem confundir `Array.from` com Supabase.
+- `validate:architecture:core-platform` bloqueia novos acessos, aumento de uma
+  excecao existente, novos imports de `core/interaction` e alias de Feed. O
+  gate foi integrado ao audit arquitetural, deploy check e workflow de CI.
+
+## Atualizacao 2026-07-13 (contextos sociais e simplificacao institucional)
+
+- Conectores sociais da Comunidade agora sao transacionais: likes,
+  comentarios, respostas e mencoes derivam notificacoes in-app no PostgreSQL,
+  no mesmo commit da interacao. O navegador nao informa destinatario e nao faz
+  uma segunda requisicao de notificacao.
+- A derivacao usa as entidades canonicas posts, comments, post_likes_new,
+  profiles, notification_preferences e notifications, com deduplicacao por
+  evento persistido e destinatario, limite de 20 mencoes e sem copiar o
+  conteudo da publicacao para os metadados.
+- O broker legado community-notifications-rpc foi removido do frontend,
+  configuracao Supabase e projeto remoto. Push, e-mail e webhooks continuam
+  fora desse contrato: so receberao outbox quando houver consumidor,
+  agendamento, retentativas, DLQ e observabilidade definidos.
+- A criacao de alertas comunitarios tambem foi corrigida para escrever no
+  mesmo `community_social_audit_log`, sem reintroduzir a tabela de auditoria
+  legada. O limite por perfil e a deduplicacao agora sao serializados por
+  transacao e possuem indices adequados para o caminho de escrita.
+- O feed territorial passou a usar keyset deterministico por `(created_at,
+id)`, incluindo compatibilidade temporaria com cursores antigos de timestamp
+  unico. A migration remota `20260713152000` adiciona o indice parcial de
+  posts publicados e visiveis por territorio, eliminando perda ou repeticao
+  de itens em empates de timestamp.
+- Evidencias: migrations remotas 20260713150000 e 20260713151000, testes
+  focados de hardening e seguranca, security:validate, validadores de
+  arquitetura/documentacao e sincronizacao remota de migrations.
+
+## Atualizacao 2026-07-13 (pente-fino de interacoes da Comunidade)
+
+- Feed e detalhe de publicacao passaram a reutilizar a mesma arvore canonica
+  de comentarios, incluindo autor, respostas, likes do usuario atual, criacao,
+  exclusao e denuncia. Estados locais paralelos de comentarios foram removidos.
+- Denuncias de post, comentario e mensagem de grupo agora exigem motivo
+  explicito e detalhes opcionais limitados; o componente visual e unico e a
+  autorizacao/persistencia continua nos servicos e nas politicas do banco.
+- Likes e favoritos de posts corrigem otimisticamente o formato real do cache
+  e restauram todas as queries afetadas em falha. Props atualizadas tambem
+  reconciliam o estado visual do card.
+- Reacoes de like em mensagens de grupo foram ativadas pela migration remota
+  `20260713153000_add_group_message_reactions.sql`. A tabela nao concede acesso
+  direto ao navegador; RPCs validam identidade, grupo ativo, membership,
+  capability, limite de 120 acoes/minuto e gravam auditoria sem conteudo.
+- Componentes antigos e sem consumidores de comentarios, acoes, denuncias e
+  detalhe unificado foram removidos para manter um unico caminho auditavel.
+- Evidencia focada: 39 testes passaram em 5 arquivos, incluindo o fluxo
+  comportamental de denuncia. Typecheck, build de producao, lint focado,
+  `security:validate`, arquitetura comunitaria e sincronizacao local/remota de
+  migrations tambem passaram.
+- A suite E2E `community-persistent-shell.spec.ts` passou 8/8 contra o host
+  local: modulos embutidos, navegacao desktop sem remontar o shell, matriz
+  responsiva, contextos mobile e alias publico. A assercao antiga de 9 itens da
+  sidebar foi alinhada aos 7 itens do SSOT atual; Grupos e Discussoes ficam no
+  Feed e nao sao duplicados na navegacao lateral.
+- Nao existe declaracao de capacidade de milhares de requisicoes por segundo.
+  Rate limit distribuido de Edge, metricas operacionais e carga reproduzivel em
+  staging seguem abertos no plano ativo `COMMUNITY_SCALE_READINESS_PLAN.md`.
+- O lint completo do banco remoto ainda lista erros preexistentes em funcoes de
+  outros dominios. As novas funcoes de reacao de mensagens nao aparecem nesse
+  conjunto; esse residual global nao foi ocultado nem atribuido a Comunidade.
+
+- A navegacao primaria da Comunidade agora usa `Feed`, `Empresas`, `Servicos` e `Secoes` no mobile. Dentro do Feed, os contextos sao `Posts`, `Grupos` e `Discussoes`.
+- `Posts` exibe somente composer, ordenacao e publicacoes. Grupos e Discussoes renderizam apenas em suas abas contextuais, sem previews duplicados no mobile ou no desktop. `Ver todos` preserva a rota canonica de grupos.
+- As regras comunitarias deixaram a pagina de Comunidade e a rota `/regras`. Elas agora sao as `Diretrizes da Comunidade` dentro do documento canonico `/termos#diretrizes-da-comunidade`; o cadastro autogerenciado exige aceite versionado, o banco recusa email/telefone sem esse aceite e o OAuth conclui o fluxo em `/aceitar-termos`.
+- Revalidacao remota de seguranca: o Advisor permanece com 12 achados residuais allowlistados; o preflight PostGIS continua bloqueado por ownership `supabase_admin`; HIBP do provedor continua pendente de PAT explicito para Management API. Nenhuma credencial implicita ou alteracao cega foi usada.
+- Empresas, Servicos, Classificados e Gastronomia possuem previas route-backed por `?view=` com no maximo quatro registros. Cada CTA `Ver todos` abre a rota comunitaria completa do modulo, mantendo header, hero e sidebar.
+- As previas reutilizam `LandingFeaturedService`, filtros territoriais, launch gates e URLs canonicas existentes. Consultas de Servicos, Classificados e Gastronomia so sao ativadas quando a respectiva previa esta selecionada.
+- Cards de empresas e classificados usam seus SSOTs de URL quando possuem contexto publico suficiente; nenhum ID interno e exposto como fallback. Servicos sem contexto canonico completo permanecem informativos e usam o CTA do modulo.
+- Evidencias: 5 testes unitarios da superficie, 8 cenarios E2E do shell comunitario, 18 regressões mobile, typecheck, lint focado, arquitetura comunitaria, URL SSOT, seguranca e build de producao passaram.
+
+## Atualizacao 2026-07-12 (shell comunitario persistente)
+
+- A arvore de rotas comunitarias agora possui um unico shell pai por escopo
+  territorial ou alias publico. Empresas, Servicos, Classificados,
+  Gastronomia e Mapa sao rotas filhas e substituem somente o outlet de
+  conteudo; header, hero e sidebar mantem a mesma instancia DOM.
+- O limite de carregamento assincrono dos modulos fica dentro da area de
+  conteudo. O primeiro acesso a um chunk lazy nao troca mais o portal inteiro
+  por um loader de pagina.
+- Links de Eventos agora possuem navegacao por hash propria
+  para SPA: retornam ao overview, rolam e movem o foco para o painel canonico
+  sem desmontar o shell. O menu mobile `Secoes` fecha ao escolher um modulo,
+  evitando estado expandido sobre o novo conteudo.
+- O menu hamburguer deixou de usar arrays locais divergentes.
+  `src/core/navigation/publicHeaderNavigation.ts` agora e o SSOT de ordem,
+  rotulos, descricoes, icones e launch gates em Home e Cidade, alem de compor
+  a navegacao desktop contextual. No mobile da Comunidade, o hamburguer foi
+  removido por duplicar `Secoes` e a bottom nav: `Secoes` cuida do conteudo
+  comunitario e a bottom nav concentra a navegacao global.
+- Empresas, Servicos, Classificados e Gastronomia em rotas
+  `/comunidade/:state/:city/:community/:module` agora preservam o mesmo
+  header, identidade, hero, sidebar e navegacao mobile da comunidade.
+- A URL continua sendo a fonte de estado para modulos, deep links, refresh e
+  historico do navegador. Feed, Grupos e Discussoes continuam reutilizando
+  os servicos e permissoes comunitarios canonicos.
+- As paginas de dominio permanecem SSOT de dados, filtros, links e acoes. O
+  novo contrato `presentation="embedded"` remove apenas chrome duplicado;
+  rotas independentes mantem a apresentacao completa.
+- `AppLayoutSidebar` reconhece toda rota publica sob `/comunidade` como dona
+  do proprio shell, eliminando header global duplicado no mobile.
+- Consultas de mapa, turismo, destaques, feed e coluna lateral que nao sao
+  exibidas ficam desabilitadas durante a apresentacao embutida. O modulo
+  ativo continua consultando seu servico territorial e as politicas RLS
+  existentes.
+- O modulo ativo usa estado visual e `aria-current="page"`. O controle mobile
+  `Secoes` comunica quando um modulo secundario esta selecionado.
+- A sidebar vigente possui Feed, Empresas, Servicos, Classificados,
+  Gastronomia, Mapa e previa de Eventos. Grupos e Discussoes
+  sao acessados pelas abas contextuais do Feed. Modulos com
+  launch gate desabilitado nao sao anunciados como disponiveis; Eventos
+  continua somente como previa comunitaria enquanto o modulo completo esta
+  pausado.
+- Plano concluido em
+  `plans/COMMUNITY_PERSISTENT_SHELL_IMPLEMENTATION_PLAN.md`.
+- Validacao focada: typecheck, lint focado, 15 testes Vitest, 8 testes E2E do shell,
+  regressao mobile comunitaria, matriz responsiva em 320/390/768/1024/1366/
+  1536, validadores de arquitetura comunitaria, URL SSOT, seguranca e build
+  de producao passaram.
 
 ## Atualizacao 2026-07-09 (Community First / SSOT operacional)
 
@@ -167,6 +652,41 @@ Observacao: este documento e a fonte operacional atual. O historico abaixo fica 
   eventos e albuns existem com estados seguros em vez de dados simulados; e
   copies genericas de pre-lancamento sao ignoradas na descricao publica da
   comunidade.
+- Revisao mobile-first da Comunidade concluida em 2026-07-12: hero publica foi
+  reduzida para cerca de `200px` em `390x844`; entrada de publicacao publica e
+  autenticada usa `CommunityComposerEntry` como SSOT e exibe somente um campo
+  real `Compartilhe algo`. Midia, pergunta, enquete, evento e demais formatos
+  existem apenas no `CreatePostModal`, sem duplicar seletores na pagina. O
+  modal canonico de publicacao funciona como bottom sheet no mobile, preserva
+  dialog central no desktop e mantem permissoes/validacao/persistencia atuais.
+  A navegacao comunitaria mobile mantem Feed, Empresas e Servicos visiveis e
+  recolhe modulos secundarios em `Secoes`; Posts, Grupos e Discussoes ficam
+  dentro do Feed. O composer legado sem consumidores
+  `CreatePostInput.tsx` foi removido.
+- `Grupos` e `Discussoes` trocam o conteudo primario pelas abas contextuais
+  dentro do Feed na mesma `CommunityOverviewSurface`. A visao de grupos reutiliza `GruposPage` em
+  modo embutido, mantendo hooks, gates, criacao, entrada e paginacao canonicos;
+  a visao de discussoes reutiliza `CommunityFeed` com o recorte social. Rotas
+  canonicas continuam representando deep links iniciais, mas alternar as secoes
+  nao muda a URL, nao redireciona e nao monta uma pagina visual paralela.
+- A barra contextual do Feed usa `Posts`, `Grupos` e `Discussoes`. Em Posts,
+  a ordenacao e local com `Melhores`, `Recentes` e `Comentados`; a lista de
+  grupos abre cada grupo pela URL canonica `useCommunityUrls().groupDetail(id)`.
+- Header comunitario normalizado em 2026-07-12: a cascata responsiva agora
+  mantem marca, cidade, clima, sino e conta alinhados na primeira linha; somente
+  a navegacao principal passa para a segunda linha quando falta espaco.
+- Na landing principal, membro verificado abre o `CreatePostModal` canonico sem
+  sair da pagina; o chunk do modal e carregado apenas no clique. Visitante segue
+  pelo gate existente. Identificadores territoriais de fallback tambem deixaram
+  de chegar a consultas exclusivas de UUID, eliminando HTTP 400 no modo visual.
+- Fechamento da revisao comunitaria em 2026-07-12:
+  - QA `390x844`: hero em aproximadamente `200px`, sem overflow, sem sobreposicao
+    no header, um campo real de composer e zero botoes de formato expostos;
+  - QA `1440x980`: header `60px`, hero `191px`, sem overlap/overflow;
+  - Grupos e Discussoes partem do Feed e alternam no mesmo conteudo primario;
+  - console do navegador sem erros;
+  - typecheck, lint, security lint, `security:validate`, SSOT, fronteiras de
+    arquitetura, docs, testes comunitarios e build de producao passaram.
 - O gate `tests/public-territorial-copy-regression.test.ts` foi reativado em
   2026-07-10 para o estado atual da Home e da landing de bairro: removeu
   referencia a arquivo historico inexistente e voltou a validar copy publica
@@ -191,11 +711,11 @@ Observacao: este documento e a fonte operacional atual. O historico abaixo fica 
   `npm run verify:deploy` e `git diff --check` passaram. O E2E core fechou com
   `56/56` em Chromium e `verify:deploy` declarou `PROJETO PRONTO PARA DEPLOY`.
 - Revalidacao Security Authority em 2026-07-09: `npm run
-  validate:security-authority` passou com `68/68`; `npm run security:validate`
+validate:security-authority` passou com `68/68`; `npm run security:validate`
   passou; `npm run security:advisor:residuals` validou 12 achados, todos dentro
   da allowlist canonica. `npm run security:postgis:preflight` segue
   `status=blocked` por ownership `supabase_admin`, e `npm run
-  security:auth:hibp -- --json` segue `status=blocked`/`missing_pat`, sem
+security:auth:hibp -- --json` segue `status=blocked`/`missing_pat`, sem
   imprimir segredo.
 
 ## Validacoes Recentes
@@ -215,7 +735,7 @@ Observacao: este documento e a fonte operacional atual. O historico abaixo fica 
   comunidade/feed, SEO territorial, central, gastronomia, mobilidade e mobile
   passou com `49/49` testes em Chromium. Tambem passaram o pacote focado
   `gastronomy-operational + mobility-operational` com `7/7`, `npm run
-  typecheck:app`, `git diff --check` e os Vitest de SSOT/security para
+typecheck:app`, `git diff --check` e os Vitest de SSOT/security para
   `GastronomyOperationalSSOT` e `business-reviews-rpc-security` (`17/17`). O
   broker remoto `business-reviews-rpc` foi publicado no Supabase como
   `ACTIVE`, `verify_jwt=true`, versao `2`.
@@ -974,8 +1494,11 @@ Plano mestre de execucao por fases: `docs/PLANO_MESTRE_EXECUCAO_INTEGRAL_SSOT.md
 - Funil SSOT de profissionais foi destravado no banco com migrations pendentes (`20260506100000_create_professional_leads.sql`) e ajuste de RLS em `professional_service_engagements` (`20260508120000_fix_professional_engagement_insert_rls.sql`), eliminando falha de trigger no aceite da proposta.
 - Rota canonica `/central/profissional` foi corrigida em `AppRoutes` para renderizar `CentralProfissionalPage` via filho `index`, removendo estado em branco apenas com menu/lateral.
 - E2E autenticado de profissionais `tests/e2e/professional-leads-operational.spec.ts` ficou verde (`1 passed`) com bootstrap de perfil profissional, fixture de lead/proposta/aceite e validacao de tracking + Central.
-- `ReviewsService` (mutations SSOT) foi corrigido para `*_reviews_new`: removeu envio de colunas inexistentes (`job_type` e payload arbitrario), padronizando insert/update apenas com campos reais da tabela; isso destravou a avaliacao pos-servico no fluxo profissional.
-- E2E autenticado de profissionais foi expandido para validar tambem submissao de avaliacao no tracking e persistencia real em `professional_reviews_new`, com polling robusto para estados de carregamento da Central.
+- Registro historico supersedido em 2026-07-15: o fluxo profissional foi
+  migrado de `professional_reviews_new` para o SSOT `reviews`; a tabela legada
+  foi removida apos verificacao de equivalencia.
+- E2E autenticado de profissionais valida submissao no tracking e persistencia
+  no agregado canonico `reviews` com `review_type='professional'`.
 - `ProfessionalGuard` foi reforcado para revalidar perfis via `SessionService.getUserProfiles` (consulta backend) antes do empty-state, reduzindo falso negativo de contexto de sessao.
 - E2E `professional-leads-operational.spec.ts` foi estabilizado para cenarios reais da Central Profissional (painel completo, estado sem servico publicado e fallback de cadastro), mantendo validacao de tracking+avaliacao persistida.
 - Central Profissional deixou de ser placeholder: `/central/profissional` agora usa `ProfessionalFacade` para listar servicos do perfil, disponibilidade, metricas, avaliacao e acoes de edicao/visualizacao.
@@ -1018,7 +1541,9 @@ Plano mestre de execucao por fases: `docs/PLANO_MESTRE_EXECUCAO_INTEGRAL_SSOT.md
 - Roteamento territorial v2 aplicado: grupos territoriais usam `/area/:groupSlug` no site publico, modulos, comunidade, helpers, SEO e sitemap.
 - Ambiente Playwright ficou deterministico no SSOT: `PLAYWRIGHT_BASE_URL` padrao em `http://127.0.0.1:8099` e `webServer.reuseExistingServer=false` para evitar suite rodar contra servidor stale/manual em dev.
 - Central Profissional agora exibe bloco operacional com campos reais de `professional_data` (raio de atendimento, areas e disponibilidade), sem placeholder; E2E autenticado foi atualizado para validar esses dados no fluxo `lead -> proposta -> aceite -> atendimento -> avaliacao`.
-- Avaliacao pos-servico profissional esta protegida por regra de backend no SSOT (`ProfessionalLeadService.submitEngagementReview`): apenas cliente do atendimento concluido pode avaliar; o E2E autenticado valida envio e persistencia real em `professional_reviews_new`.
+- Avaliacao pos-servico profissional esta protegida por
+  `upsert_profile_review`: apenas cliente de atendimento concluido pode avaliar;
+  o E2E valida persistencia em `reviews`, conforme `REVIEWS_SSOT.md`.
 - Moderacao de comentarios/perguntas de classificados foi consolidada na mesma trilha administrativa de confianca: `/admin/classificados/denuncias` agora usa `TrustEventsQueue` com filtro travado em `trust_events` de contexto `classified` + `reason_code` de comentario, removendo fila operacional paralela para esse fluxo.
 - Admin/Moderacao foi consolidado em fila unica SSOT: `AdminModeracao` e `AdminModeracaoCompleta` agora usam `TrustEventsQueue` + audit log real de `trust_admin_actions` (via `TrustEventService.listAdminActions`), removendo dependencias legadas de trilhas sem fonte canonica de dados.
 - Comunidade/Grupos removeu fallback mock em runtime no SSOT: `CommunityService.getGroups/getGroupsPage`, `GroupService.getGroupById/getGroupMembers` e `SocialInteractionsService` (mensagens/denuncias de grupo) agora operam somente com persistencia real, retornando estado vazio controlado em erro/ausencia de dados.
@@ -1771,3 +2296,114 @@ Avancar para fechamento total da Fase 3 (sem abrir Fase 4):
 
 1. `npm test -- src/modules/mobility/delivery/__tests__/OrderDeliveryNotificationService.spec.ts`: passou (2/2).
 2. `npm run validate:phase:core`: passou com `56 passed`, `1 skipped` esperado.
+
+## Atualizacao 2026-07-12 (Headers Publicos + Navegacao Mobile SSOT)
+
+- Contrato responsivo unificado para Home, Cidade e Comunidade:
+  - marca, territorio, sino, perfil e menu permanecem na primeira linha mobile;
+  - navegacao completa vira menu recolhivel no mobile;
+  - bottom nav permanece como acesso primario persistente.
+- Temperatura removida dos headers. A Home tambem deixou de executar a chamada e o cache de clima que ficaram sem consumidor; na Cidade, clima permanece apenas como metadado do conteudo territorial.
+- Tipografia alinhada ao SSOT visual: `DM Sans` na interface/navegacao e `Space Grotesk` em marca/titulos.
+- Duplicacao removida:
+  - `AppBottomNav.tsx` e `MOBILE_NAV_ITEMS` sem consumidores foram eliminados;
+  - `src/core/navigation/BottomNav.tsx` e a unica bottom nav ativa e preserva URLs territoriais canonicas;
+  - a bottom nav possui contrato global/cidade (`Inicio`, `Explorar`, `Bairro`, `Busca`, `Mais`) e nao reutiliza URLs internas da comunidade, eliminando a duplicacao com `Secoes`;
+  - `PublicHeaderMobileMenu.tsx` concentra o menu recolhivel dos headers publicos.
+- Acessibilidade do `Sheet` corrigida (`data-state` e rotulo `Fechar`).
+- O scanner de seguranca ignora artefatos gerados antes de inspeciona-los e tolera somente `ENOENT` de caminhos removidos durante a varredura; outros erros de I/O continuam bloqueando o gate. A validacao foi comprovada em paralelo com o Playwright.
+- Navegacao primaria da Comunidade corrigida no mobile:
+  - `Feed`, `Empresas`, `Servicos` e `Secoes` compartilham fonte, peso, altura e alinhamento;
+  - abaixo de `480px`, icone e rotulo ficam empilhados para preservar o texto completo;
+  - corrigida a saida do icone de `Discussoes` em `320/360px` e a sobreposicao do header em `431-519px`.
+- Evidencias executadas:
+  - matriz Playwright em `320`, `360`, `390`, `768`, `1024` e `1366` px para Home, Comunidade e Cidade, sem overflow horizontal;
+  - `npm run test:e2e:mobile-core-layout`: `18 passed`;
+  - `npm run typecheck:app`, `npm run lint` e `npm run build`: passaram;
+  - `npm run validate:ssot`: `0` violacoes em `3008` arquivos e `0` violacoes de URL publica;
+  - `npm run security:validate`: passou;
+  - `npm run lint:security`: `0` erros; manteve `70` warnings preexistentes fora dos arquivos alterados nesta etapa;
+  - validadores de arquitetura comunitaria/incremental e de documentacao: passaram.
+
+## Atualizacao 2026-07-13 (Hardening de Producao Community First)
+
+- Fechado o plano `plans/COMMUNITY_PRODUCTION_HARDENING_PLAN.md` com foco em
+  runtime real e sem criar dominio paralelo de Comunidade.
+- Aplicadas remotamente as migrations de hardening social, moderacao,
+  notificacoes, midia, membership, achados/perdidos, alertas, QA, problemas,
+  discovery, content review e, por ultimo,
+  `20260713137000_harden_profile_server_owned_fields.sql`.
+  Esta ultima impede que o browser altere identidade estrutural, status de
+  moderacao ou qualquer campo de score/reputacao do perfil.
+- Removidos contratos falsos ou sem schema canonico do runtime ativo:
+  mutacao client-side de pontos, campos de score no perfil, mencoes de post
+  inexistentes, tela administrativa de gamificacao e controles manuais de
+  reputacao. O produto nao apresenta mais esses recursos como se existissem.
+- Consolidado o acesso de listas sociais em limites canonicos e cursor no feed;
+  corrigida a dependencia circular entre resolucao territorial e alias publico;
+  fixtures visuais ficaram explicitamente isoladas para desenvolvimento.
+- Consolidada a auditoria e moderacao server-side: a fila administrativa usa
+  contrato RPC canonico, as decisoes ficam auditaveis e RLS/trigger impedem
+  escalonamento de permissao, alteracao de contador ou moderacao forjada pelo
+  browser.
+- Validacoes concluidas:
+  - `npm run build`, `npm run lint` e `npm run verify:deploy`: passaram;
+  - validadores de arquitetura, taxonomy, SSOT, hardcodes, migrations remotas,
+    Security Authority e configuracao de seguranca: passaram;
+  - teste de hardening social: `23 passed`;
+  - suite comunitaria: `120 passed` em 20 arquivos; suite SSOT: `11 passed`;
+  - E2E `community-persistent-shell`: `8 passed`, territorial: `5 passed`,
+    mobile-core-layout: `18 passed`;
+  - probe de runtime em 1366 px e 390 px: zero erro de console/pagina,
+    zero overflow horizontal; hero com 191 px no desktop e 200 px no mobile.
+- Residual documentado, sem bloqueio da Comunidade: o discovery global de
+  `npm test` ultrapassou 10 minutos; os testes focados da alteracao passaram.
+  O validador de tamanho mantem um unico warning em arquivo nao relacionado de
+  cadastro de servicos (431/420 linhas). O Supabase advisor possui 12
+  residuais mapeados, sem novo achado Critical/High nesta entrega.
+
+## Atualizacao 2026-07-14 (Escala e Observabilidade Community RPC)
+
+- Aplicada remotamente a migration
+  `20260714090000_add_community_rpc_scale_controls.sql`.
+- `community-rpc` agora aplica limite distribuido atomico por usuario/acao no
+  PostgreSQL depois da autenticacao. Indisponibilidade ou contrato invalido do
+  limitador bloqueia a escrita com `503`; excesso retorna `429` e `Retry-After`.
+- A Edge Function registra em `function_audit` somente metadados operacionais:
+  acao, `request_id`, status, resultado e duracao. Conteudo e PII nao entram na
+  telemetria.
+- Criados RPCs administrativos para percentis p50/p95/p99 por minuto e sinal
+  agregado de SLO. A pagina de moderacao apresenta janelas de 5, 15 e 60
+  minutos via `CommunityRpcOperationsService`, sem acesso direto a tabela.
+- Criado `npm run bench:community:staging`, harness GET-only com limites de
+  duracao/concurrency e bloqueio explicito de qualquer host que nao corresponda
+  ao projeto Supabase de staging declarado.
+- A telemetria do broker tem retencao de 90 dias e limpeza horaria em lotes
+  limitados via Supabase Cron. A funcao de limpeza pertence ao schema `private`
+  e nao possui grant para `anon` ou `authenticated`.
+- Pendencias honestas antes de declarar capacidade de escala: executar o
+  benchmark em staging e registrar evidencias; configurar entrega externa dos
+  alertas de SLO com canal e responsavel. Nenhum teste de carga foi executado
+  contra o projeto remoto vinculado.
+
+## Atualizacao 2026-07-14 (Core Platform - Reports Sensiveis)
+
+- CP-003 foi encerrado para `classified_reports`, `vaga_reports`,
+  `review_reports` e `ride_reports` com oito comandos server-owned.
+- Reporter e moderador deixaram de ser parametros do browser. O banco deriva o
+  perfil ativo, valida alvo/participante, impede auto-denuncia onde aplicavel,
+  protege identidade e estados terminais e aplica limite de 10 criacoes por
+  hora por perfil.
+- Escrita direta foi revogada de `authenticated`; os adapters usam RPCs
+  tipados gerados do Supabase remoto. As quatro tabelas continuam separadas
+  por lifecycle e RLS.
+- Auditoria privada registra somente dominio, acao, IDs, status, motivo e
+  severidade. Descricao, notas e URLs nao sao copiadas para o envelope.
+- A migration `20260714118000_harden_sensitive_report_commands.sql` foi
+  aplicada no projeto remoto de desenvolvimento e o preflight confirmou zero
+  linhas legadas incompatveis.
+- O manifest executavel agora controla 24 tabelas, 19 RPCs e 40 callsites
+  incrementais.
+- Residual critico CP-014: produtores de `trust_events` ainda aceitam ator,
+  alvo, papel e contexto do cliente; a denuncia de conversa aponta o proprio
+  ator como alvo. A Fase 1D corrige Trust/Messaging sem criar tabela paralela.

@@ -3,6 +3,13 @@
 Data: 2026-07-09
 Escopo: `src/core`
 
+> Nota de vigencia (2026-07-14): este documento classifica a localizacao
+> fisica das pastas. Ele nao prova que cada implementacao atual e o owner
+> canonico da capacidade. `feed`, `interaction`, `permissions`, `messaging`,
+> `social`, `favorites`, `notifications`, `reviews` e `realtime` possuem
+> consolidacoes abertas em `CORE_PLATFORM_ARCHITECTURE_SSOT.md`. Em conflito
+> de ownership por operacao/tabela, prevalece esse SSOT mais especifico.
+
 ## Papel oficial da camada `core`
 `src/core` é fundação transversal reutilizável do sistema: autenticação/sessão/perfis, autorização/permissões, localização/território/mapas/geoespacial, comunicação/notificações/realtime, billing/subscription/pricing, observabilidade e governança.
 
@@ -33,7 +40,7 @@ Escopo: `src/core`
 | geocoding | core transversal legítimo | manter em `src/core/geocoding` |
 | geospatial | core transversal legítimo | manter em `src/core/geospatial` |
 | governance | core transversal legítimo | manter em `src/core/governance` |
-| interaction | core transversal legítimo | manter em `src/core/interaction` |
+| interaction | facade duplicada em retirada | migrar consumidores para owners tipados conforme Core Platform SSOT |
 | landing | composição app/rota/página | **migrado** para `src/app/features/landing` |
 | location | core transversal legítimo | manter em `src/core/location` |
 | lostfound | domínio de produto | owner explicito em `src/core/community-lost-found`; modulo transversal em `src/modules/community-lost-found` |
@@ -44,7 +51,7 @@ Escopo: `src/core`
 | mobility | domínio operacional compartilhado | manter contratos, serviços e UI cross-domain em `src/core/mobility`; telas de produto em `src/modules/mobility` |
 | moderation | core transversal legítimo | manter em `src/core/moderation` |
 | notifications | core transversal legítimo | manter em `src/core/notifications` |
-| permissions | core transversal legítimo | manter em `src/core/permissions` |
+| permissions | tipos paralelos sem runtime | consolidar contratos em `src/core/authorization` |
 | posts | core transversal legítimo | manter em `src/core/posts` |
 | pricing | core transversal legítimo | manter em `src/core/pricing` |
 | privacy | core transversal legítimo | manter em `src/core/privacy` |

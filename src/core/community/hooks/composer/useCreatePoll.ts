@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
 import { postService } from "@/core/posts/services";
 import type { CreatePollData } from "@/core/posts/types";
+import { communityFeedQueryKeys } from "@/core/feed";
 
 /**
  * Hook for create enquetes (polls)
@@ -42,7 +43,7 @@ export function useCreatePoll() {
       return await postService.createPoll(pollData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["community-feed"] });
+      queryClient.invalidateQueries({ queryKey: communityFeedQueryKeys.root });
       toast.success("Enquete criada com sucesso!");
     },
     onError: (error: Error) => {

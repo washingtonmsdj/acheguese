@@ -1,7 +1,7 @@
 # Planos do Projeto
 
 Status: oficial
-Data: 2026-07-07
+Data: 2026-07-14
 
 Esta pasta concentra planos de execucao ativos ou futuros para facilitar
 continuidade entre conversas, agentes e revisoes. Ela nao substitui os docs
@@ -10,11 +10,19 @@ existente e registrar o que ainda precisa ser implementado.
 
 ## Planos Ativos
 
+- [Core Platform Consolidation](./CORE_PLATFORM_CONSOLIDATION_PLAN.md)
 - [Security Authority - plano de implementacao](./SECURITY_AUTHORITY_IMPLEMENTATION_PLAN.md)
+- [Community Scale Readiness](./COMMUNITY_SCALE_READINESS_PLAN.md)
+- [Community Feed Security And Performance](./COMMUNITY_FEED_SECURITY_PERFORMANCE_PLAN.md)
 
 ## Planos Concluidos
 
 - [Community First Architecture - plano de arquitetura](./COMMUNITY_FIRST_ARCHITECTURE_PLAN.md)
+- [Community Page Concept - implementacao](./COMMUNITY_PAGE_CONCEPT_IMPLEMENTATION_PLAN.md)
+- [Community Persistent Shell - implementacao](./COMMUNITY_PERSISTENT_SHELL_IMPLEMENTATION_PLAN.md)
+- [Community Production Hardening](./COMMUNITY_PRODUCTION_HARDENING_PLAN.md)
+- [Community Connectors Reliability](./COMMUNITY_CONNECTORS_RELIABILITY_PLAN.md)
+- [Home real, anuncios, ranking e SSOT](./HOME_REAL_PRODUCT_COMPLETION_PLAN.md)
 
 ## Regras Para Novos Planos
 

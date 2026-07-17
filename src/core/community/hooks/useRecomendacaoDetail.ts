@@ -6,7 +6,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useToast } from "@/shared/hooks/use-toast";
-import { useAuth } from "@/core/auth/hooks/useAuth";
+import { useSessionContext } from "@/core/session";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { logger } from "@/shared/utils/logger";
 import { CommunityQAService } from "@/core/community/services/CommunityQAService";
@@ -23,7 +23,7 @@ export function useRecomendacaoDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, activeProfile } = useSessionContext();
   const appUrls = useAppUrls();
 
   const [question, setQuestion] = useState<CommunityQuestion | null>(null);
@@ -69,13 +69,16 @@ export function useRecomendacaoDetail() {
       navigate(appUrls.auth.login);
       return false;
     }
+    if (!activeProfile) {
+      toast({ title: "Selecione um perfil ativo para responder", variant: "destructive" });
+      return false;
+    }
     if (!answerText.trim()) return false;
 
     setSubmitting(true);
     try {
       const newAnswer = await CommunityQAService.createAnswer({
         question_id: id!,
-        autor_id: user.id,
         texto: answerText.trim(),
         professional_id: selectedPro || null,
         business_id: selectedBiz || null,
@@ -98,11 +101,14 @@ export function useRecomendacaoDetail() {
   };
 
   const toggleLike = async (answerId: string) => {
-    if (!user) {
-      toast({ title: "Faça login para curtir", variant: "destructive" });
+    if (!user || !activeProfile) {
+      toast({
+        title: user ? "Selecione um perfil ativo para curtir" : "Faça login para curtir",
+        variant: "destructive",
+      });
       return;
     }
-    const result = await CommunityQAService.toggleAnswerLike(answerId, user.id);
+    const result = await CommunityQAService.toggleAnswerLike(answerId);
     if (result) {
       setAnswers((prev) =>
         prev.map((a) =>
@@ -115,7 +121,7 @@ export function useRecomendacaoDetail() {
   };
 
   const markBestAnswer = async (answerId: string) => {
-    if (!user || question?.autor_id !== user.id) return;
+    if (!user || question?.autor_id !== activeProfile?.id) return;
     const success = await CommunityQAService.markBestAnswer(id!, answerId);
     if (success) {
       toast({ title: "Melhor resposta marcada!" });
@@ -145,7 +151,7 @@ export function useRecomendacaoDetail() {
 
   const clearMention = () => { setSelectedPro(null); setSelectedBiz(null); };
   const handleGoBack = () => navigate(-1);
-  const isAuthor = user?.id === question?.autor_id;
+  const isAuthor = activeProfile?.id === question?.autor_id;
 
   return {
     question, answers, loading, notFound, user,

@@ -13,5 +13,3 @@ export { communityAlertService } from "./CommunityAlertService";
 // 🔧 SERVICES ESPECIALIZADOS
 // ============================================================
 export { alertModerationService } from "./AlertModerationService";
-
-export { alertNotificationService } from "./AlertNotificationService";

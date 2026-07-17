@@ -65,7 +65,9 @@ export function ConsentBanner() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-consents-check", user?.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["user-consents-check", user?.id],
+      });
       setShowBanner(false);
       toast({
         title: "Preferências salvas",
@@ -78,6 +80,7 @@ export function ConsentBanner() {
     pathname === "/login" ||
     pathname === "/cadastro" ||
     pathname === "/cadastro/confirmacao" ||
+    pathname === "/aceitar-termos" ||
     pathname === "/reset-password";
 
   const rejectOptionalConsents = () =>
@@ -216,7 +219,8 @@ export function ConsentBanner() {
                   Privacidade e Cookies
                 </h3>
                 <p className="text-[0.72rem] leading-relaxed text-muted-foreground">
-                  Utilizamos cookies e dados pessoais para melhorar sua experiência.
+                  Utilizamos cookies e dados pessoais para melhorar sua
+                  experiência.
                 </p>
               </div>
 

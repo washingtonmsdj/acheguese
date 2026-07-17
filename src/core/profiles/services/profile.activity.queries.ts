@@ -4,7 +4,6 @@ import type {
   ProfilePollVoteActivityRecord,
   ProfileSaveActivityRecord,
 } from "@/core/profiles/views/ProfileActivityRecords";
-import type { MentionRow } from "./profile.service.types";
 
 interface QueryError {
   message?: string | null;
@@ -31,43 +30,6 @@ const profileActivityDb = supabase as unknown as ProfileActivityDbClient;
 type PollVoteActivityRow = ProfilePollVoteActivityRecord;
 type LikeActivityRow = ProfileLikeActivityRecord;
 type SaveActivityRow = ProfileSaveActivityRecord;
-
-export async function getUserMentionsQuery(
-  userId: string,
-  from: number,
-  to: number,
-): Promise<ProfileLikeActivityRecord[]> {
-  const { data, error } = await profileActivityDb
-    .from<MentionRow>("community_post_mentions")
-    .select(
-      `
-      id, rank, created_at,
-      post:posts!inner (
-        id, type, content, created_at, likes_count, comments_count,
-        author:profiles!posts_author_id_fkey (id, name, avatar_url)
-      )
-    `,
-    )
-    .eq("mentioned_profile_id", userId)
-    .order("created_at", { ascending: false })
-    .range(from, to);
-
-  if (error) return [];
-  return (data ?? []).map((mention) => ({
-    id: mention.id,
-    rank: mention.rank,
-    created_at: mention.created_at,
-    post: {
-      id: mention.post.id,
-      type: mention.post.type,
-      content: mention.post.content,
-      created_at: mention.post.created_at,
-      likes_count: mention.post.likes_count,
-      comments_count: mention.post.comments_count,
-      author: mention.post.author,
-    },
-  }));
-}
 
 export async function getUserLikeActivityQuery(
   likerProfileId: string,

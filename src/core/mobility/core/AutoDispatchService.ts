@@ -11,7 +11,6 @@
  */
 
 import { logger } from "@/shared/utils/logger";
-import { realtimeService } from "@/core/realtime/services/RealtimeService";
 import { RIDE_STATE, type RideState } from "./RideStateMachine";
 import { RideDispatchService } from "./RideDispatchService";
 import {
@@ -20,7 +19,7 @@ import {
 } from "../services/mobility.queries";
 import { updateRideIfStatusIn } from "../services/mobility.mutations";
 import { mobilityAuditService } from "../services/MobilityAuditService";
-import { TIMEOUTS, BUSINESS_RULES, REALTIME_CHANNELS } from "../constants";
+import { TIMEOUTS, BUSINESS_RULES } from "../constants";
 import {
   DISPATCH_ATTEMPT_STATUS,
   type DispatchAttemptStatus,
@@ -197,7 +196,6 @@ export class AutoDispatchService {
         }
 
         // Enviar notificação realtime para motorista
-        await this.notifyDriver(rideId, driver.profileId);
 
         // Aguardar aceite ou timeout
         const accepted = await this.waitForAcceptance(
@@ -331,7 +329,6 @@ export class AutoDispatchService {
       });
 
       // Notificar passageiro
-      await this.notifyPassenger(rideId, 'expired');
 
       logger.info('AutoDispatch: Ride expired', { rideId, reason });
     } catch (error) {
@@ -375,43 +372,6 @@ export class AutoDispatchService {
         rideId,
         driverProfileId,
       });
-    }
-  }
-
-  /**
-   * Notifica motorista sobre nova corrida
-   */
-  private static async notifyDriver(rideId: string, driverProfileId: string): Promise<void> {
-    try {
-      await realtimeService.sendBroadcast(
-        REALTIME_CHANNELS.driver(driverProfileId),
-        "ride_offered",
-        { rideId, offeredAt: new Date().toISOString() },
-      );
-    } catch (error) {
-      logger.error('AutoDispatch: Error notifying driver', error as Error, {
-        rideId,
-        driverProfileId,
-      });
-    }
-  }
-
-  /**
-   * Notifica passageiro sobre mudança de estado
-   */
-  private static async notifyPassenger(rideId: string, event: string): Promise<void> {
-    try {
-      const ride = await getRideDispatchData(rideId) as DispatchRideData | null;
-
-      if (ride?.passenger_profile_id) {
-        await realtimeService.sendBroadcast(
-          REALTIME_CHANNELS.passenger(ride.passenger_profile_id),
-          `ride_${event}`,
-          { rideId, timestamp: new Date().toISOString() },
-        );
-      }
-    } catch (error) {
-      logger.error('AutoDispatch: Error notifying passenger', error as Error, { rideId });
     }
   }
 

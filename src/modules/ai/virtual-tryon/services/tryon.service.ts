@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase';
 import { mediaService } from '@/core/media/services/MediaService';
+import { realtimeService } from '@/core/realtime';
 import type { Database } from '@/integrations/supabase';
 import type {
   CreateTryOnInput,
@@ -104,17 +105,11 @@ class TryOnService {
 
   /** Realtime: recebe atualizacoes de status. */
   subscribeToGeneration(id: string, cb: (g: TryOnGeneration) => void) {
-    const channel = supabase
-      .channel(`tryon:${id}`)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: this.TABLE, filter: `id=eq.${id}` },
-        (payload) => cb(rowToGeneration(payload.new as Row)),
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    const subscription = realtimeService.subscribe('tryon.generation', {
+      filterValues: { generationId: id },
+      onEvent: ({ row }) => cb(rowToGeneration(row as unknown as Row)),
+    });
+    return subscription.unsubscribe;
   }
 }
 

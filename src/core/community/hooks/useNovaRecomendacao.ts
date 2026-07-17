@@ -8,7 +8,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/shared/hooks/use-toast";
-import { useAuth } from "@/core/auth/hooks/useAuth";
+import { useSessionContext } from "@/core/session";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { logger } from "@/shared/utils/logger";
@@ -34,7 +34,7 @@ export function useNovaRecomendacao({
 }: UseNovaRecomendacaoOptions = {}) {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, activeProfile } = useSessionContext();
   const appUrls = useAppUrls();
   const { homeDistrict, homeCity, hasHome, loading: territoryLoading } = useUserTerritory();
   const [loading, setLoading] = useState(false);
@@ -64,6 +64,11 @@ export function useNovaRecomendacao({
       return false;
     }
 
+    if (!activeProfile) {
+      toast({ title: "Selecione um perfil ativo para perguntar", variant: "destructive" });
+      return false;
+    }
+
     if (!locationId) {
       toast({
         title: "Configure seu bairro no perfil antes de perguntar",
@@ -86,7 +91,6 @@ export function useNovaRecomendacao({
     setLoading(true);
     try {
       const questionInput: CreateQuestionInput = {
-        autor_id: user!.id,
         titulo: formData.titulo.trim(),
         description: formData.description.trim(),
         category: formData.category,

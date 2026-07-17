@@ -435,11 +435,16 @@ function NeighborhoodServicesHero({
 interface ServicosLandingPageProps {
   resolved?: ResolvedTerritory;
   activeMemberIds?: string[];
+  presentation?: "standalone" | "embedded";
 }
 
 // ── Página principal ──────────────────────────────────────────────────
 
-export default function ServicosLandingPage({ resolved, activeMemberIds }: ServicosLandingPageProps) {
+export default function ServicosLandingPage({
+  resolved,
+  activeMemberIds,
+  presentation = "standalone",
+}: ServicosLandingPageProps) {
   const territorialContext = useTerritorialContextOptional();
   const routeResolved = territorialContext?.resolved ?? resolved ?? null;
   const routeActiveMemberIds = territorialContext?.activeMemberIds ?? activeMemberIds;
@@ -455,6 +460,7 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("todos");
   const isCommunityScopedSurface = location.pathname.includes("/comunidade/");
+  const isEmbedded = presentation === "embedded";
 
   // ✅ SSOT: Nome do território com preposição
   const territoryName = useMemo(() => {
@@ -560,7 +566,10 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
     <main
       id="main-content"
       tabIndex={-1}
-      className="min-h-screen w-full bg-background text-foreground flex flex-col focus:outline-none"
+      className={isEmbedded
+        ? "flex w-full min-w-0 flex-col bg-background text-foreground focus:outline-none"
+        : "flex min-h-screen w-full flex-col bg-background text-foreground focus:outline-none"}
+      data-module-presentation={presentation}
     >
       {!resolved && (
         <Helmet>
@@ -629,7 +638,7 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
         }))}
       />
         </>
-      ) : (
+      ) : !isEmbedded ? (
         <NeighborhoodServicesHero
           territoryName={territoryName}
           professionalsCount={initialLoading ? "..." : formatServicesMetric(professionals.length)}
@@ -642,7 +651,7 @@ export default function ServicosLandingPage({ resolved, activeMemberIds }: Servi
           secondaryHref={moduleUrls.map}
           moduleUrls={moduleUrls}
         />
-      )}
+      ) : null}
 
       {isCommunityScopedSurface ? (
         <ServiceCategoryRail

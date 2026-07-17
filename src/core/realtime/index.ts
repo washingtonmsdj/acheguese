@@ -6,4 +6,17 @@
 
 export { RealtimeService, realtimeService } from "./services/RealtimeService";
 
-export type { RealtimeSubscription } from "./services/RealtimeService";
+export type {
+  RealtimeConnectionStatus,
+  RealtimeEvent,
+  RealtimePresenceOptions,
+  RealtimePresenceState,
+  RealtimePresenceSubscription,
+  RealtimeSubscription,
+} from "./services/RealtimeService";
+export type {
+  RealtimeBroadcastTopic,
+  RealtimePresenceTopic,
+  RealtimeStreamKey,
+  RealtimeTopic,
+} from "./config/realtimeRegistry";

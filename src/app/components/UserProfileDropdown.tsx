@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { LogOut, Settings, User, Award, TrendingUp } from "lucide-react";
+import { LogOut, Settings, User } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,8 +13,6 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/shared/components/ui/avatar";
-import { Badge } from "@/shared/components/ui/badge";
-import { useCommunityProfile } from "@/core/profiles/hooks/useCommunityProfile";
 import { useSessionContext } from "@/core/session";
 import { AuthService } from "@/core/auth";
 
@@ -25,12 +23,9 @@ interface UserProfileDropdownProps {
 export function UserProfileDropdown({ onLogout }: UserProfileDropdownProps) {
   const navigate = useNavigate();
   const { activeProfile } = useSessionContext();
-  const {
-    profile: communityProfile,
-    stats,
-    badges,
-    loading,
-  } = useCommunityProfile();
+  const profileLocation = [activeProfile?.neighborhood, activeProfile?.city]
+    .filter((value): value is string => Boolean(value?.trim()))
+    .join(", ");
 
   const getInitials = (name?: string | null) => {
     if (!name) return "U";
@@ -73,30 +68,10 @@ export function UserProfileDropdown({ onLogout }: UserProfileDropdownProps) {
 
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold truncate">{activeProfile?.displayName}</p>
-              <p className="text-xs text-muted-foreground truncate">
-                {communityProfile?.public_city}, {communityProfile?.public_neighborhood}
-              </p>
-
-              {!loading && (
-                <div className="flex items-center gap-3 mt-2">
-                  <div className="flex items-center gap-1">
-                    <TrendingUp className="h-3 w-3 text-primary" />
-                    <span className="text-xs font-semibold">
-                      {stats.total_points}
-                    </span>
-                    <span className="text-xs text-muted-foreground">pts</span>
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    <Award className="h-3 w-3 text-yellow-500" />
-                    <span className="text-xs font-semibold">
-                      {stats.badges_count}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      badges
-                    </span>
-                  </div>
-                </div>
+              {profileLocation && (
+                <p className="text-xs text-muted-foreground truncate">
+                  {profileLocation}
+                </p>
               )}
             </div>
           </div>

@@ -21,5 +21,6 @@ export type {
   ReportSeverity,
   ReportType,
   ReporterType,
+  UpdateReportInput,
 } from '@/core/mobility/services/RideReportsService';
 export type { RideRequest } from '@/core/mobility/types/types';

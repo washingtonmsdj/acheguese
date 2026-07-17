@@ -14,22 +14,56 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/shared/components/ui/tabs";
-import { useNotifications } from "@/core/notifications/hooks/useNotifications";
+import { useUnifiedNotifications } from "@/core/notifications/useUnifiedNotifications";
 import { NotificationItem } from "./NotificationItem";
 
 export function NotificationCenter() {
   const [filter, setFilter] = useState<"all" | "unread">("all");
-  const { notifications, unreadCount, isLoading, markAllAsRead, refetch } =
-    useNotifications({
-      read: filter === "unread" ? false : undefined,
+  const [pendingNotificationId, setPendingNotificationId] = useState<string | null>(null);
+  const [isMarkingAll, setIsMarkingAll] = useState(false);
+  const {
+    notifications,
+    unreadCount,
+    loading,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+  } = useUnifiedNotifications({
+      filters: {
+        read: filter === "unread" ? false : undefined,
+        limit: 50,
+      },
+      enableToast: false,
     });
 
   const handleMarkAllAsRead = async () => {
-    await markAllAsRead.mutateAsync();
-    refetch();
+    setIsMarkingAll(true);
+    try {
+      await markAllAsRead();
+    } finally {
+      setIsMarkingAll(false);
+    }
   };
 
-  if (isLoading) {
+  const handleMarkAsRead = async (notificationId: string) => {
+    setPendingNotificationId(notificationId);
+    try {
+      await markAsRead(notificationId);
+    } finally {
+      setPendingNotificationId(null);
+    }
+  };
+
+  const handleDelete = async (notificationId: string) => {
+    setPendingNotificationId(notificationId);
+    try {
+      await deleteNotification(notificationId);
+    } finally {
+      setPendingNotificationId(null);
+    }
+  };
+
+  if (loading) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-12">
@@ -62,9 +96,9 @@ export function NotificationCenter() {
               variant="outline"
               size="sm"
               onClick={handleMarkAllAsRead}
-              disabled={markAllAsRead.isPending}
+              disabled={isMarkingAll}
             >
-              {markAllAsRead.isPending ? (
+              {isMarkingAll ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
@@ -101,6 +135,9 @@ export function NotificationCenter() {
                   <NotificationItem
                     key={notification.id}
                     notification={notification}
+                    isPending={pendingNotificationId === notification.id}
+                    onDelete={handleDelete}
+                    onMarkAsRead={handleMarkAsRead}
                   />
                 ))}
               </div>

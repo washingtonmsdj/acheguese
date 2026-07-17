@@ -28,6 +28,7 @@ import { toBusinessData, mapBusinessDataToBusiness } from "./business.mappers";
 import { generateBusinessUsername } from "./business.helpers";
 import { BusinessUrlService } from "./BusinessUrlService";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { normalizeMediaAssetReference } from "@/core/media/references/mediaAssetReference";
 import type {
   Business,
   BusinessDataWithProfiles,
@@ -209,9 +210,8 @@ function sanitizeAndValidateInput(
     aceita_cartao: input.aceita_cartao,
     aceita_pix: input.aceita_pix,
     can_post_vagas: input.can_post_vagas,
-    logo_url: sanitizeOptionalUrlValue(input.logo_url),
-    banner_url: sanitizeOptionalUrlValue(input.banner_url),
-    fotos: sanitizeOptionalStringArray(input.fotos),
+    logo_url: normalizeMediaAssetReference(input.logo_url, "business_logo"),
+    banner_url: normalizeMediaAssetReference(input.banner_url, "business_banner"),
     status: input.status,
     is_verified: input.is_verified,
     is_premium: input.is_premium,
@@ -380,7 +380,6 @@ export async function createBusiness(
       username: generateBusinessUsername(validatedInput.name),
       city: validatedInput.city || validatedInput.neighborhood || "Nao informado",
       bio: validatedInput.description,
-      avatar_url: validatedInput.logo_url,
     });
 
     if (!profile) {
@@ -490,11 +489,10 @@ export async function updateBusiness(
       updatePayload.metadata = mergeMetadata(currentBusiness.metadata, businessData.metadata);
     }
 
-    if (validatedInput.name || validatedInput.description || validatedInput.logo_url || validatedInput.city) {
+    if (validatedInput.name || validatedInput.description || validatedInput.city) {
       await profileService.updateProfile(id, {
         ...(validatedInput.name !== undefined ? { name: validatedInput.name } : {}),
         ...(validatedInput.description !== undefined ? { bio: validatedInput.description } : {}),
-        ...(validatedInput.logo_url !== undefined ? { avatar_url: validatedInput.logo_url } : {}),
         ...(validatedInput.city !== undefined ? { city: validatedInput.city } : {}),
       });
     }

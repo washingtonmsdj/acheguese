@@ -12,10 +12,6 @@ export class CommunityMembershipService {
     return CommunityMembershipRepository.findByCommunityAndProfile(communityId, profileId);
   }
 
-  static async listForCurrentUser(): Promise<CommunityMembershipRecord[]> {
-    return CommunityMembershipRepository.listForCurrentUser();
-  }
-
   static async requestMembership(
     input: CommunityMembershipRequestInput,
   ): Promise<CommunityMembershipRecord | null> {

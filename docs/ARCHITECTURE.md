@@ -29,6 +29,19 @@ Database -> Service -> Hook -> Component
 - Adaptadores/facades sao permitidos apenas para compatibilidade de import.
 - Nao manter implementacoes paralelas para o mesmo contrato.
 
+## Core Platform
+- `Core Platform` e a camada de capacidades compartilhadas; nao e o core
+  domain do produto e nao absorve entidades de Business, Classifieds, Events,
+  Gastronomy ou Mobility.
+- Um contrato pode ser compartilhado sem que tabelas com lifecycle e RLS
+  diferentes sejam fundidas.
+- Cada tabela mutavel possui um unico owner de escrita. Read models paralelos
+  precisam ser declarados e read-only.
+- Autorizacao no frontend e apenas hint de interface. RLS, RPC e Edge Function
+  sao a autoridade de seguranca.
+- Ownership atual, duplicacoes e alvo de migracao estao em
+  [architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md](./architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md).
+
 ## Community First
 - A entidade central do produto hiperlocal e a Comunidade Local, apoiada pelo
   SSOT territorial.
@@ -54,6 +67,7 @@ Database -> Service -> Hook -> Component
 ## Documentacao Relacionada
 - [CURRENT_RULES.md](./CURRENT_RULES.md)
 - [DATA_MODELING.md](./DATA_MODELING.md)
+- [architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md](./architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md)
 - [architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md](./architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md)
 - [COMUNICACAO_TERRITORIAL_ARCHITECTURE.md](./COMUNICACAO_TERRITORIAL_ARCHITECTURE.md)
 - [MIGRATIONS.md](./MIGRATIONS.md)

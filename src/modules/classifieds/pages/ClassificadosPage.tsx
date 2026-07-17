@@ -232,6 +232,7 @@ function NeighborhoodClassifiedsHero({
 interface ClassificadosPageProps {
   readonly resolved?: ResolvedTerritory;
   readonly activeMemberIds?: string[];
+  readonly presentation?: "standalone" | "embedded";
 }
 
 // ============================================
@@ -241,11 +242,13 @@ interface ClassificadosPageProps {
 export default function ClassificadosPage({
   resolved,
   activeMemberIds,
+  presentation = "standalone",
 }: ClassificadosPageProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const moduleUrls = useFriendlyModuleUrls();
   const isCommunityScopedSurface = location.pathname.includes("/comunidade/");
+  const isEmbedded = presentation === "embedded";
   const {
     viewMode,
     setViewMode,
@@ -315,8 +318,8 @@ export default function ClassificadosPage({
   }, [classificados]);
 
   return (
-    <ClassificadosLayout>
-      {isCommunityScopedSurface ? (
+    <ClassificadosLayout embedded={isEmbedded}>
+      {isCommunityScopedSurface && !isEmbedded ? (
         <NeighborhoodClassifiedsHero
           territoryName={territoryName}
           activeCount={activeCount}
@@ -324,7 +327,7 @@ export default function ClassificadosPage({
           moduleUrls={moduleUrls}
           onNewClassificado={handleNewClassificado}
         />
-      ) : (
+      ) : !isCommunityScopedSurface ? (
         <>
           {/* Categorias de Destaque (Topo) */}
           <ClassifiedsCategoriesSection
@@ -345,7 +348,7 @@ export default function ClassificadosPage({
             onNewClassificado={handleNewClassificado}
           />
         </>
-      )}
+      ) : null}
 
       {isCommunityScopedSurface ? (
         <ClassifiedsCategoriesSection

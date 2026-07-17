@@ -19,12 +19,12 @@ import type { CommunityIssuePublic } from "../domain/types";
 
 interface IssueCardProps {
   issue: CommunityIssuePublic;
-  profileId?: string;
   onReport?: (issueId: string) => void;
 }
 
-export function IssueCard({ issue, profileId, onReport }: IssueCardProps) {
-  const { isSupporting, toggleSupport, isPending } = useIssueSupport(issue.id, profileId);
+export function IssueCard({ issue, onReport }: IssueCardProps) {
+  const { canSupport, isSupporting, supportCount, toggleSupport, isPending } =
+    useIssueSupport(issue.id, issue.support_count);
   const categoryLabel = getRecordValue(ISSUE_CATEGORY_LABELS, issue.category) ?? issue.category;
   const statusLabel = getRecordValue(ISSUE_STATUS_LABELS, issue.status) ?? issue.status;
 
@@ -83,12 +83,12 @@ export function IssueCard({ issue, profileId, onReport }: IssueCardProps) {
           size="sm"
           className="text-xs gap-1"
           onClick={() => toggleSupport()}
-          disabled={!profileId || isPending}
+          disabled={!canSupport || isPending}
           aria-label={isSupporting ? "Remover apoio" : "Apoiar este problema"}
           aria-pressed={isSupporting}
         >
           <ThumbsUp className="h-3 w-3" />
-          {issue.support_count + (isSupporting ? 0 : 0)} apoios
+          {supportCount} apoios
         </Button>
 
         {onReport && (

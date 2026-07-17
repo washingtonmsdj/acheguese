@@ -99,8 +99,12 @@ const ESLINT_PLUGINS = [
   { name: "admin-ssot", tables: ["user_roles"], service: "AdminService" },
   {
     name: "favorites-ssot",
-    tables: ["favorites", "business_favorites", "post_favorites"],
-    service: "favorites.queries/mutations",
+    tables: [
+      "profile_favorites_new",
+      "user_favorite_businesses",
+      "post_favorites",
+    ],
+    service: "core/favorites owners",
   },
   {
     name: "location-ssot",
@@ -119,28 +123,47 @@ const ESLINT_PLUGINS = [
   },
   {
     name: "messaging-ssot",
-    tables: ["messages", "conversations", "conversation_participants"],
-    service: "MessagingService",
+    tables: ["messages", "conversations"],
+    service: "ClassifiedMessagingService",
+  },
+  {
+    name: "community-direct-messaging-ssot",
+    tables: [
+      "community_direct_threads",
+      "community_direct_thread_participants",
+      "community_direct_messages",
+      "community_direct_message_reports",
+    ],
+    service: "CommunityDirectMessagingService",
   },
   {
     name: "reviews-ssot",
-    tables: [
-      "reviews",
-      "business_reviews",
-      "professional_reviews",
-      "driver_reviews",
-    ],
-    service: "ReviewsService",
+    tables: ["reviews", "review_helpfulness", "review_reports"],
+    service: "core/reviews / BusinessReviewService (policy adapter)",
   },
   {
-    name: "community-ssot",
-    tables: ["community_profiles", "groups", "group_members", "group_posts"],
-    service: "CommunityService",
+    name: "community-content-ssot",
+    tables: [
+      "groups",
+      "group_members_new",
+      "group_messages_new",
+      "posts",
+      "comments",
+      "community_reports",
+    ],
+    service:
+      "GroupService / PostService / CommentService / CommunityReportService",
   },
   {
     name: "moderation-ssot",
-    tables: ["reports", "moderation_actions", "content_flags", "banned_users"],
-    service: "ModerationService",
+    tables: [
+      "community_reports",
+      "community_user_moderation_actions",
+      "community_social_audit_log",
+      "banned_users",
+    ],
+    service:
+      "CommunityReportService / CommunityContentModerationService / ActiveBanReader",
   },
   {
     name: "mobility-ssot",

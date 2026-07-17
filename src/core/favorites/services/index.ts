@@ -3,7 +3,7 @@ export {
   getFavoritesByProfile,
   getFavoritesWithProfiles,
   getFavoritersOfProfile,
-  getUserBusinessFavorites,
+  getCurrentUserBusinessFavorites,
   isBusinessFavorited,
   isFavorited,
 } from "./favorites.queries";
@@ -13,7 +13,7 @@ export {
   addFavorite,
   removeBusinessFavorite,
   removeFavorite,
-  toggleBusinessFavorite,
+  setBusinessFavorite,
   toggleFavorite,
 } from "./favorites.mutations";
 
@@ -23,3 +23,10 @@ export type {
   FavoriteStats,
   ProfileFavorite,
 } from "../types";
+
+export {
+  BusinessFavoriteStore,
+  type BusinessFavoriteRecord,
+  type ListBusinessFavoritesInput,
+  type PatchBusinessFavoriteInput,
+} from "./BusinessFavoriteStore";

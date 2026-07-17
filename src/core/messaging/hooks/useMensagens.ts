@@ -1,38 +1,56 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { messagingService } from "@/core/messaging/services/MessagingService";
+import { useMemo, useState } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { classifiedMessagingService } from "@/core/messaging";
 import { useAuth } from "@/core/auth";
-import type { ConversationPreview } from "@/core/messaging/types";
+import { useSessionContext } from "@/core/session";
+import type { ClassifiedConversationCursor } from "@/core/messaging/types";
+
+const CONVERSATION_PAGE_SIZE = 30;
 
 export function useMensagens() {
   const { user, loading: authLoading } = useAuth();
+  const { activeProfile } = useSessionContext();
   const [search, setSearch] = useState("");
+  const normalizedSearch = search.trim();
 
-  const { data: conversations = [], isLoading: loading } = useQuery({
-    queryKey: ["mensagens", user?.id, search],
-    queryFn: async () => {
-      if (!user) return [];
-      // ✅ SSOT — usa MessagingService
-      return await messagingService.getConversationPreviews(user.id);
+  const query = useInfiniteQuery({
+    queryKey: ["classified-messages", activeProfile?.id, normalizedSearch],
+    initialPageParam: null as ClassifiedConversationCursor | null,
+    queryFn: async ({ pageParam }) => {
+      if (!activeProfile) {
+        return { items: [], nextCursor: null };
+      }
+      return classifiedMessagingService.listConversationPreviews({
+        profileId: activeProfile.id,
+        limit: CONVERSATION_PAGE_SIZE,
+        cursor: pageParam,
+        search: normalizedSearch,
+      });
     },
-    enabled: !!user,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: !!user && !!activeProfile,
   });
 
-  const totalUnreadCount = (conversations as ConversationPreview[]).reduce(
-    (acc, conversation) => acc + (conversation.unread_count || 0),
+  const conversations = useMemo(
+    () => query.data?.pages.flatMap((page) => page.items) ?? [],
+    [query.data],
+  );
+  const totalUnreadCount = conversations.reduce(
+    (total, conversation) => total + conversation.unread_count,
     0,
   );
-  const hasUnreadMessages = totalUnreadCount > 0;
-  const shouldShowSearch = conversations.length > 3;
 
   return {
     conversations,
-    loading,
+    loading: query.isLoading,
     authLoading,
     search,
     setSearch,
     totalUnreadCount,
-    hasUnreadMessages,
-    shouldShowSearch,
+    hasUnreadMessages: totalUnreadCount > 0,
+    shouldShowSearch: conversations.length > 3 || normalizedSearch.length > 0,
+    hasMore: query.hasNextPage,
+    loadingMore: query.isFetchingNextPage,
+    loadMore: () => query.fetchNextPage(),
   };
 }

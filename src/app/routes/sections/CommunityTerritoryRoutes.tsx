@@ -170,9 +170,6 @@ const COMMUNITY_ROUTE_DEFINITIONS: readonly CommunityRouteDefinition[] = [
   },
 ];
 
-const COMMUNITY_ALIAS_ROUTE_PREFIXES: readonly (readonly string[])[] =
-  COMMUNITY_ROUTE_DEFINITIONS.map((definition) => definition.segments);
-
 function renderLaunchScopedElement(
   definition: CommunityRouteDefinition,
   element: ReactNode,
@@ -184,39 +181,55 @@ function renderLaunchScopedElement(
   return <P.LaunchPausedPage moduleName={definition.pausedModuleName ?? "Módulo"} />;
 }
 
-function isCommunityRouteLaunchEnabled(definition: CommunityRouteDefinition): boolean {
-  return !definition.launchSurface || isLaunchSurfaceEnabled(definition.launchSurface);
+function toRelativeRoutePath(segments: readonly string[]): string {
+  return segments.join("/");
 }
 
 function renderCommunityRoutes(
   scope: "territory" | "scoped",
   buildPath: (suffixSegments?: readonly string[]) => string,
 ): ReactNode {
-  return COMMUNITY_ROUTE_DEFINITIONS.map((definition) => {
-    const path = buildPath(definition.segments);
-    if (definition.kind === "direct") {
-      return (
+  const directRoutes = COMMUNITY_ROUTE_DEFINITIONS.filter(
+    (definition) => definition.kind === "direct",
+  );
+  const persistentRoutes = COMMUNITY_ROUTE_DEFINITIONS.filter(
+    (definition) => definition.kind === "shell",
+  );
+
+  return (
+    <>
+      {directRoutes.map((definition) => (
         <Route
           key={`${scope}-${definition.key}`}
-          path={path}
+          path={buildPath(definition.segments)}
           element={renderLaunchScopedElement(definition, definition.element)}
         />
-      );
-    }
+      ))}
 
-    return (
-      <Route
-        key={`${scope}-${definition.key}`}
-        path={path}
-        element={renderLaunchScopedElement(definition, <P.CommunityTerritorialShell />)}
-      >
-        <Route index element={definition.indexElement} />
+      <Route path={buildPath()} element={<P.CommunityTerritorialShell />}>
+        <Route element={<P.CommunityPersistentPortalLayout />}>
+          <Route index element={<P.TerritorialCommunityEntryPage />} />
+          {persistentRoutes.map((definition) => (
+            <Route
+              key={`${scope}-${definition.key}`}
+              path={toRelativeRoutePath(definition.segments)}
+              element={renderLaunchScopedElement(definition, definition.indexElement)}
+            />
+          ))}
+        </Route>
       </Route>
-    );
-  });
+    </>
+  );
 }
 
 function renderCommunityTerritoryRoutes() {
+  const directRoutes = COMMUNITY_ROUTE_DEFINITIONS.filter(
+    (definition) => definition.kind === "direct",
+  );
+  const persistentRoutes = COMMUNITY_ROUTE_DEFINITIONS.filter(
+    (definition) => definition.kind === "shell",
+  );
+
   return (
     <>
       {renderCommunityRoutes("territory", buildCommunityTerritoryRoutePath)}
@@ -229,43 +242,26 @@ function renderCommunityTerritoryRoutes() {
         path={buildCommunityAliasRoutePath([APP_MODULE_SLUGS.gastronomy, TERRITORIAL_PARAMS.slug])}
         element={<P.CommunityEntityAliasRoute />}
       />
-      {COMMUNITY_ALIAS_ROUTE_PREFIXES.map((segments, index) => {
-        const definition = COMMUNITY_ROUTE_DEFINITIONS[index];
-        return (
-          <Route
-            key={`alias-prefix-${definition.key}`}
-            path={buildCommunityAliasRoutePath([...segments, "*"])}
-            element={
-              isCommunityRouteLaunchEnabled(definition)
-                ? <P.CommunityAliasRoute />
-                : <P.LaunchPausedPage moduleName={definition.pausedModuleName ?? "Módulo"} />
-            }
-          />
-        );
-      })}
-      {COMMUNITY_ROUTE_DEFINITIONS.map((definition) => (
-        <Route
-          key={`alias-${definition.key}`}
-          path={buildCommunityAliasRoutePath(definition.segments)}
-          element={
-            isCommunityRouteLaunchEnabled(definition)
-              ? <P.CommunityAliasRoute />
-              : <P.LaunchPausedPage moduleName={definition.pausedModuleName ?? "Módulo"} />
-          }
-        >
-          <Route index element={definition.kind === "direct" ? definition.element : definition.indexElement} />
-        </Route>
-      ))}
-      <Route path={buildCommunityScopedRoutePath()} element={<P.CommunityTerritorialShell />}>
-        <Route index element={<P.TerritorialCommunityEntryPage />} />
-      </Route>
-      <Route path={buildCommunityTerritoryRoutePath()} element={<P.CommunityTerritorialShell />}>
-        <Route index element={<P.TerritorialCommunityEntryPage />} />
-      </Route>
       <Route path={buildCommunityAliasRoutePath()} element={<P.CommunityAliasRoute />}>
-        <Route index element={<P.TerritorialCommunityEntryPage />} />
+        <Route element={<P.CommunityPersistentPortalLayout />}>
+          <Route index element={<P.TerritorialCommunityEntryPage />} />
+          {persistentRoutes.map((definition) => (
+            <Route
+              key={`alias-${definition.key}`}
+              path={toRelativeRoutePath(definition.segments)}
+              element={renderLaunchScopedElement(definition, definition.indexElement)}
+            />
+          ))}
+          <Route path="*" element={<P.NotFound />} />
+        </Route>
+        {directRoutes.map((definition) => (
+          <Route
+            key={`alias-${definition.key}`}
+            path={toRelativeRoutePath(definition.segments)}
+            element={renderLaunchScopedElement(definition, definition.element)}
+          />
+        ))}
       </Route>
-      <Route path={buildCommunityAliasRoutePath(["*"])} element={<P.CommunityAliasRoute />} />
     </>
   );
 }

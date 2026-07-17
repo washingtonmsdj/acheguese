@@ -1,4 +1,5 @@
 import { SessionService } from "@/core/session/services/SessionService";
+import { realtimeService } from "@/core/realtime";
 import { supabase } from "@/integrations/supabase";
 import type {
   FamilyConnection,
@@ -30,19 +31,8 @@ interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
   maybeSingle: () => Promise<QueryResult<TRow>>;
 }
 
-interface FamilyRealtimeChannel {
-  on: (
-    event: "postgres_changes",
-    filter: { event: string; schema: string; table: string },
-    callback: (payload: { new: unknown }) => void,
-  ) => FamilyRealtimeChannel;
-  subscribe: () => FamilyRealtimeChannel;
-}
-
 interface FamilyDbClient {
   from: <TRow = never>(table: string) => QueryBuilder<TRow>;
-  channel: (name: string) => FamilyRealtimeChannel;
-  removeChannel: (channel: FamilyRealtimeChannel) => void;
 }
 
 type FamilyCoverageClient = Pick<FamilyDbClient, "from">;
@@ -287,16 +277,13 @@ export class FamilyService {
   static subscribeToChildrenLocations(
     callback: (location: FamilyLocationData) => void,
   ) {
-    const channel = db
-      .channel("children-locations")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: FAMILY_TABLES.locations },
-        (payload: { new: FamilyLocationData }) => callback(payload.new),
-      )
-      .subscribe();
-
-    return { unsubscribe: () => db.removeChannel(channel) };
+    return realtimeService.subscribe("family.locations", {
+      onEvent: ({ eventType, row }) => {
+        if (eventType !== "DELETE") {
+          callback(row as unknown as FamilyLocationData);
+        }
+      },
+    });
   }
 
   static async getLocationSharingSettings(): Promise<FamilyLocationSharingSettings | null> {
@@ -401,16 +388,9 @@ export class FamilyService {
   }
 
   static subscribeToAlerts(callback: (alert: FamilyLocationAlert) => void) {
-    const channel = db
-      .channel("location-alerts")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: FAMILY_TABLES.alerts },
-        (payload: { new: FamilyLocationAlert }) => callback(payload.new),
-      )
-      .subscribe();
-
-    return { unsubscribe: () => db.removeChannel(channel) };
+    return realtimeService.subscribe("family.alerts", {
+      onEvent: ({ row }) => callback(row as unknown as FamilyLocationAlert),
+    });
   }
 
   static async markAlertAsRead(alertId: string): Promise<void> {

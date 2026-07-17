@@ -10,7 +10,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { profileService } from '@/core/profiles/services/ProfileService';
-import { TRUST_ACTOR_ROLES, TrustEventService } from '@/core/trust';
+import { TRUST_ACTOR_ROLES, TrustPolicyReadService } from '@/core/trust';
 import { MobilityDispatchConfigService } from './MobilityDispatchConfigService';
 import { DriverAvailabilityService } from './DriverAvailabilityService';
 import { MobilityRpcService } from './MobilityRpcService';
@@ -21,7 +21,7 @@ import {
   getReservationOfferRides,
 } from './mobility.queries';
 import type {
-  TrustActorRole,
+  RideCounterpartyTrustDecision,
   TrustDispatchPolicy,
   TrustPolicyDecision,
   TrustRiskLevel,
@@ -45,6 +45,11 @@ type AcceptRideAtomicResult = {
   error?: string;
 };
 
+type TrustDecisionView = Pick<
+  TrustPolicyDecision,
+  'risk_level' | 'dispatch_policy'
+>;
+
 function normalizeAcceptOfferReason(
   value: string | undefined,
 ): AcceptOfferResult["reason"] | undefined {
@@ -66,7 +71,7 @@ function normalizeAcceptOfferReason(
 // ============================================
 
 export class MobilityOfferService {
-  private static getTrustPriorityMultiplier(decision: TrustPolicyDecision | null): number {
+  private static getTrustPriorityMultiplier(decision: TrustDecisionView | null): number {
     if (!decision) return 1;
     if (decision.risk_level === 'critical') return 0.35;
     if (decision.risk_level === 'restricted') return 0.55;
@@ -74,7 +79,7 @@ export class MobilityOfferService {
     return 1;
   }
 
-  private static getTrustOfferMetadata(decision: TrustPolicyDecision | null): {
+  private static getTrustOfferMetadata(decision: TrustDecisionView | null): {
     driverTrustRiskLevel?: TrustRiskLevel;
     driverDispatchPolicy?: TrustDispatchPolicy;
   } {
@@ -84,26 +89,18 @@ export class MobilityOfferService {
     };
   }
 
-  private static async getSubjectTrustDecision(
-    profileId: string | null | undefined,
-    role: TrustActorRole,
-  ): Promise<TrustPolicyDecision | null> {
-    if (!profileId) return null;
-
-    const result = await TrustEventService.getPolicyDecision(profileId, role);
-    if (result.error) {
-      logger.warn('Subject trust policy unavailable for offer priority', {
-        profileId,
-        role,
-        error: result.error,
-      });
-      return null;
-    }
-
-    return result.data;
+  private static toTrustDecision(
+    decision: RideCounterpartyTrustDecision | undefined,
+  ): TrustDecisionView | null {
+    return decision
+      ? {
+          risk_level: decision.riskLevel,
+          dispatch_policy: decision.dispatchPolicy,
+        }
+      : null;
   }
 
-  private static getPassengerTrustOfferMetadata(decision: TrustPolicyDecision | null): {
+  private static getPassengerTrustOfferMetadata(decision: TrustDecisionView | null): {
     passengerTrustRiskLevel?: TrustRiskLevel;
     passengerDispatchPolicy?: TrustDispatchPolicy;
   } {
@@ -113,7 +110,7 @@ export class MobilityOfferService {
     };
   }
 
-  private static getCustomerTrustOfferMetadata(decision: TrustPolicyDecision | null): {
+  private static getCustomerTrustOfferMetadata(decision: TrustDecisionView | null): {
     customerTrustRiskLevel?: TrustRiskLevel;
     customerDispatchPolicy?: TrustDispatchPolicy;
   } {
@@ -134,8 +131,7 @@ export class MobilityOfferService {
       const ride = await getExclusiveOfferRideForDriver(driverProfileId);
       if (!ride) return null;
 
-      const trustGate = await TrustEventService.canReceiveOperationalCall(
-        driverProfileId,
+      const trustGate = await TrustPolicyReadService.canCurrentReceiveOperationalCall(
         TRUST_ACTOR_ROLES.DRIVER,
       );
       if (!trustGate.allowed) {
@@ -170,9 +166,10 @@ export class MobilityOfferService {
       const passengerTrustLevelValue = passengerMeta?.passenger_trust_level;
       const passengerTrustLevel =
         typeof passengerTrustLevelValue === 'string' ? passengerTrustLevelValue : undefined;
-      const passengerTrustDecision = await this.getSubjectTrustDecision(
-        ride.passenger_profile_id,
-        TRUST_ACTOR_ROLES.CUSTOMER,
+      const counterpartyDecisions =
+        await TrustPolicyReadService.getRideCounterpartyDecisions([ride.id]);
+      const passengerTrustDecision = this.toTrustDecision(
+        counterpartyDecisions.get(ride.id),
       );
       const passengerTrustMetadata =
         this.getPassengerTrustOfferMetadata(passengerTrustDecision);
@@ -240,8 +237,7 @@ export class MobilityOfferService {
     limit: number = 10
   ): Promise<OpenBoardOffer[]> {
     try {
-      const trustGate = await TrustEventService.canReceiveOperationalCall(
-        driverProfileId,
+      const trustGate = await TrustPolicyReadService.canCurrentReceiveOperationalCall(
         TRUST_ACTOR_ROLES.COURIER,
       );
       if (!trustGate.allowed) {
@@ -282,6 +278,19 @@ export class MobilityOfferService {
       });
       if (rides.length === 0) return [];
 
+      const customerTrustDecisions =
+        await TrustPolicyReadService.getRideCounterpartyDecisions(
+          rides.map((ride) => ride.id),
+        );
+      const customerProfiles = await profileService.getProfilesByIds(
+        rides
+          .map((ride) => ride.passenger_profile_id)
+          .filter((profileId): profileId is string => Boolean(profileId)),
+      );
+      const customerProfilesById = new Map(
+        customerProfiles.map((profile) => [profile.id, profile]),
+      );
+
       // Processar ofertas
       const offers: OpenBoardOffer[] = [];
 
@@ -314,19 +323,18 @@ export class MobilityOfferService {
         const estimatedDuration = this.estimateDuration(estimatedDistance);
 
         // Buscar dados do cliente
-        const customerProfile = ride.source_id
-          ? await profileService.getProfileById(ride.source_id).catch(() => null)
+        const customerProfile = ride.passenger_profile_id
+          ? customerProfilesById.get(ride.passenger_profile_id) ?? null
           : null;
-        const customerRecord = customerProfile as Record<string, unknown> | null;
+        const customerRecord = customerProfile as unknown as Record<string, unknown> | null;
         const customerDisplayNameValue = customerRecord?.display_name;
         const customerDisplayName =
           typeof customerDisplayNameValue === 'string' ? customerDisplayNameValue : 'Cliente';
         const customerRatingValue = customerRecord?.rating;
         const customerRating =
           typeof customerRatingValue === 'number' ? customerRatingValue : undefined;
-        const customerTrustDecision = await this.getSubjectTrustDecision(
-          ride.source_id,
-          TRUST_ACTOR_ROLES.CUSTOMER,
+        const customerTrustDecision = this.toTrustDecision(
+          customerTrustDecisions.get(ride.id),
         );
         const customerTrustMetadata =
           this.getCustomerTrustOfferMetadata(customerTrustDecision);
@@ -406,8 +414,7 @@ export class MobilityOfferService {
     limit: number = 10
   ): Promise<ReservationOffer[]> {
     try {
-      const trustGate = await TrustEventService.canReceiveOperationalCall(
-        driverProfileId,
+      const trustGate = await TrustPolicyReadService.canCurrentReceiveOperationalCall(
         TRUST_ACTOR_ROLES.DRIVER,
       );
       if (!trustGate.allowed) {
@@ -421,6 +428,19 @@ export class MobilityOfferService {
 
       const rides = await getReservationOfferRides(limit);
       if (rides.length === 0) return [];
+
+      const passengerTrustDecisions =
+        await TrustPolicyReadService.getRideCounterpartyDecisions(
+          rides.map((ride) => ride.id),
+        );
+      const passengerProfiles = await profileService.getProfilesByIds(
+        rides
+          .map((ride) => ride.passenger_profile_id)
+          .filter((profileId): profileId is string => Boolean(profileId)),
+      );
+      const passengerProfilesById = new Map(
+        passengerProfiles.map((profile) => [profile.id, profile]),
+      );
 
       // Processar reservas
       const offers: ReservationOffer[] = [];
@@ -442,18 +462,17 @@ export class MobilityOfferService {
 
         // Buscar dados do passageiro
         const passengerProfile = ride.passenger_profile_id
-          ? await profileService.getProfileById(ride.passenger_profile_id).catch(() => null)
+          ? passengerProfilesById.get(ride.passenger_profile_id) ?? null
           : null;
-        const passengerRecord = passengerProfile as Record<string, unknown> | null;
+        const passengerRecord = passengerProfile as unknown as Record<string, unknown> | null;
         const passengerNameValue = passengerRecord?.display_name;
         const passengerName =
           typeof passengerNameValue === 'string' ? passengerNameValue : 'Passageiro';
         const passengerRatingValue = passengerRecord?.passenger_rating;
         const passengerRating =
           typeof passengerRatingValue === 'number' ? passengerRatingValue : undefined;
-        const passengerTrustDecision = await this.getSubjectTrustDecision(
-          ride.passenger_profile_id,
-          TRUST_ACTOR_ROLES.CUSTOMER,
+        const passengerTrustDecision = this.toTrustDecision(
+          passengerTrustDecisions.get(ride.id),
         );
         const passengerTrustMetadata =
           this.getPassengerTrustOfferMetadata(passengerTrustDecision);
@@ -632,8 +651,7 @@ export class MobilityOfferService {
 
       const trustRole =
         strategy === 'open_board' ? TRUST_ACTOR_ROLES.COURIER : TRUST_ACTOR_ROLES.DRIVER;
-      const trustGate = await TrustEventService.canReceiveOperationalCall(
-        driverProfileId,
+      const trustGate = await TrustPolicyReadService.canCurrentReceiveOperationalCall(
         trustRole,
       );
       if (!trustGate.allowed) {

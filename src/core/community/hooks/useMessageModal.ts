@@ -18,23 +18,33 @@ function resolveConversationPostType(
   return "recomendacao";
 }
 
-export function useMessageModal(currentUserId?: string) {
+export function useMessageModal(
+  currentProfileId?: string,
+  communityId?: string,
+) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<UnifiedPost | null>(null);
-  const [recipientProfile, setRecipientProfile] = useState<DirectMessageRecipientView | null>(
-    null,
-  );
+  const [recipientProfile, setRecipientProfile] =
+    useState<DirectMessageRecipientView | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
 
-  const { createOrGetConversation, sendMessage, fetchMessages, messages } =
-    useDirectMessages(currentUserId);
+  const {
+    createOrGetConversation,
+    sendMessage,
+    fetchMessages,
+    loadOlderMessages,
+    hasOlderMessages,
+    isLoadingOlder,
+    reportConversation,
+    messages,
+  } = useDirectMessages(communityId);
 
   const handleOpen = async (
     postId: string,
     recipientProfileId: string,
     sortedPosts: UnifiedPost[],
   ) => {
-    if (!currentUserId) return;
+    if (!currentProfileId || !communityId) return;
 
     try {
       // SSOT: ProfileService para buscar dados do perfil
@@ -89,24 +99,24 @@ export function useMessageModal(currentUserId?: string) {
     setConversationId(null);
   };
 
-  const handleSend = async (
-    messageText: string,
-    messageType?: "text" | "location",
-  ) => {
-    if (!conversationId) return;
-    const success = await sendMessage(conversationId, messageText, messageType);
+  const handleSend = async (messageText: string) => {
+    if (!conversationId) return false;
+    const success = await sendMessage(conversationId, messageText);
     if (success) {
       if (import.meta.env.DEV) {
         logger.info("Mensagem enviada com sucesso");
       }
     }
+    return success;
   };
 
   const handleReport = async () => {
-    if (import.meta.env.DEV) {
-      logger.info("Conversa denunciada");
-    }
-    handleClose();
+    if (!conversationId) return;
+    const reported = await reportConversation(
+      conversationId,
+      "inappropriate_content",
+    );
+    if (reported) handleClose();
   };
 
   return {
@@ -115,10 +125,12 @@ export function useMessageModal(currentUserId?: string) {
     recipientProfile,
     conversationId,
     messages,
+    loadOlderMessages,
+    hasOlderMessages,
+    isLoadingOlder,
     handleOpen,
     handleClose,
     handleSend,
     handleReport,
   };
 }
-

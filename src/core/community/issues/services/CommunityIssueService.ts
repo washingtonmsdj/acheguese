@@ -3,7 +3,7 @@
  *
  * Rules:
  * - No direct database access outside this service.
- * - Creation always goes through community-rpc.
+ * - Writes always go through authenticated database brokers.
  * - Hooks only manage fetch/loading/error state.
  * - This service does not depend on alerts or posts.
  */
@@ -11,9 +11,6 @@
 import { supabase } from "@/integrations/supabase";
 import type { Database, Json } from "@/integrations/supabase";
 import type { TerritoryFilter } from "@/core/location/types";
-import { profileService } from "@/core/profiles/services/ProfileService";
-import { SessionService } from "@/core/session/services/SessionService";
-import { CommunityRpcService } from "@/core/community/services/CommunityRpcService";
 import { logger } from "@/shared/utils/logger";
 import type {
   CommunityIssuePublic,
@@ -21,6 +18,9 @@ import type {
   CreateIssueReportPayload,
   IssueFeedFilters,
   IssueRpcResult,
+  IssueSupportToggleResult,
+  IssuePriority,
+  IssueStatus,
   UpdateIssuePayload,
 } from "../domain/types";
 
@@ -46,15 +46,6 @@ type CommunityIssueRow = Pick<
   | "created_at"
   | "updated_at"
 >;
-
-type CommunityIssueUpdateRow = Pick<
-  Database["public"]["Tables"]["community_issues"]["Update"],
-  "title" | "description" | "images" | "address_reference" | "updated_at"
->;
-
-type CommunityIssueSupportInsert = Database["public"]["Tables"]["community_issue_supports"]["Insert"];
-type CommunityIssueReportInsert = Database["public"]["Tables"]["community_issue_reports"]["Insert"];
-type CommunityIssueAuditInsert = Database["public"]["Tables"]["community_issue_audit"]["Insert"];
 
 class CommunityIssueServiceClass {
   private readonly TABLE = "community_issues" as const;
@@ -98,6 +89,7 @@ class CommunityIssueServiceClass {
 
   async getIssues(filters: IssueFeedFilters): Promise<CommunityIssuePublic[]> {
     try {
+      const boundedLimit = Math.min(Math.max(filters.limit ?? 20, 1), 100);
       let query = supabase
         .from(this.TABLE)
         .select(this.DB_SELECT)
@@ -117,9 +109,7 @@ class CommunityIssueServiceClass {
         query = query.eq("status", filters.status);
       }
 
-      if (filters.limit) {
-        query = query.limit(filters.limit);
-      }
+      query = query.limit(boundedLimit);
 
       const { data, error } = await query;
       if (error) throw error;
@@ -171,12 +161,13 @@ class CommunityIssueServiceClass {
 
   async getIssuesByProfile(profileId: string, limit = 20): Promise<CommunityIssuePublic[]> {
     try {
+      const boundedLimit = Math.min(Math.max(limit, 1), 100);
       const { data, error } = await supabase
         .from(this.TABLE)
         .select(this.DB_SELECT)
         .eq("author_profile_id", profileId)
         .order("created_at", { ascending: false })
-        .limit(limit);
+        .limit(boundedLimit);
 
       if (error) throw error;
       return (data ?? []).map((row) => this.normalizeIssue(row));
@@ -188,9 +179,12 @@ class CommunityIssueServiceClass {
 
   async createIssue(payload: CreateIssuePayload): Promise<IssueRpcResult> {
     try {
-      return await CommunityRpcService.createIssue<IssueRpcResult>(
-        payload as unknown as Record<string, unknown>,
-      );
+      const { data, error } = await supabase.rpc("create_community_issue", {
+        payload: payload as unknown as Json,
+      });
+
+      if (error) throw error;
+      return (data ?? { error: "internal_error" }) as IssueRpcResult;
     } catch (error) {
       logger.error("CommunityIssueService.createIssue", error);
       return { error: "internal_error", detail: String(error) };
@@ -198,63 +192,46 @@ class CommunityIssueServiceClass {
   }
 
   async updateIssue(issueId: string, payload: UpdateIssuePayload): Promise<boolean> {
-    try {
-      const updateData: CommunityIssueUpdateRow = {
-        title: payload.title,
-        description: payload.description,
-        images: payload.images,
-        address_reference: payload.address_reference,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { error } = await supabase
-        .from(this.TABLE)
-        .update(updateData)
-        .eq("id", issueId)
-        .in("status", ["aberto", "em_analise"]);
-
-      if (error) throw error;
-
-      await this.auditLog(issueId, "updated", { ...payload });
-      return true;
-    } catch (error) {
-      logger.error("CommunityIssueService.updateIssue", error);
-      return false;
-    }
+    return this.mutateIssue("update", issueId, {
+      p_title: payload.title,
+      p_description: payload.description,
+      p_images: payload.images,
+      p_address_reference: payload.address_reference,
+    });
   }
 
-  async supportIssue(issueId: string, profileId: string): Promise<boolean> {
-    try {
-      const insertData: CommunityIssueSupportInsert = {
-        issue_id: issueId,
-        profile_id: profileId,
-      };
-
-      const { error } = await supabase.from("community_issue_supports").insert(insertData);
-      if (error) throw error;
-
-      await this.auditLog(issueId, "supported", { profile_id: profileId });
-      return true;
-    } catch (error) {
-      logger.error("CommunityIssueService.supportIssue", error);
-      return false;
-    }
+  async updateStatus(issueId: string, status: IssueStatus): Promise<boolean> {
+    return this.mutateIssue("status", issueId, { p_status: status });
   }
 
-  async unsupportIssue(issueId: string, profileId: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from("community_issue_supports")
-        .delete()
-        .eq("issue_id", issueId)
-        .eq("profile_id", profileId);
+  async updatePriority(issueId: string, priority: IssuePriority): Promise<boolean> {
+    return this.mutateIssue("priority", issueId, { p_priority: priority });
+  }
 
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      logger.error("CommunityIssueService.unsupportIssue", error);
-      return false;
+  async removeIssue(issueId: string, reason: string): Promise<boolean> {
+    return this.mutateIssue("remove", issueId, { p_reason: reason });
+  }
+
+  async clearUnderReview(issueId: string): Promise<boolean> {
+    return this.mutateIssue("clear_review", issueId);
+  }
+
+  async toggleIssueSupport(issueId: string): Promise<IssueSupportToggleResult> {
+    const { data, error } = await supabase.rpc("toggle_community_issue_support", {
+      p_issue_id: issueId,
+    });
+
+    if (error) {
+      logger.error("CommunityIssueService.toggleIssueSupport", error);
+      throw error;
     }
+
+    const result = data as unknown as Partial<IssueSupportToggleResult>;
+    if (typeof result.supported !== "boolean" || typeof result.new_count !== "number") {
+      throw new Error("invalid_issue_support_response");
+    }
+
+    return { supported: result.supported, new_count: result.new_count };
   }
 
   async isSupporting(issueId: string, profileId: string): Promise<boolean> {
@@ -276,22 +253,13 @@ class CommunityIssueServiceClass {
 
   async reportIssue(payload: CreateIssueReportPayload): Promise<boolean> {
     try {
-      const user = await SessionService.getCurrentUser();
-      if (!user) return false;
-
-      const profileId = await this.getActiveProfileIdByUserId(user.id);
-      if (!profileId) return false;
-
-      const insertData: CommunityIssueReportInsert = {
+      const insertData: Database["public"]["Tables"]["community_issue_reports"]["Insert"] = {
         issue_id: payload.issue_id,
-        profile_id: profileId,
         reason: payload.reason,
       };
 
       const { error } = await supabase.from("community_issue_reports").insert(insertData);
       if (error) throw error;
-
-      await this.auditLog(payload.issue_id, "reported", { reason: payload.reason });
       return true;
     } catch (error) {
       logger.error("CommunityIssueService.reportIssue", error);
@@ -323,35 +291,31 @@ class CommunityIssueServiceClass {
     };
   }
 
-  private async auditLog(
+  private async mutateIssue(
+    action: "update" | "status" | "priority" | "remove" | "clear_review",
     issueId: string,
-    action: string,
-    metadata: Record<string, unknown>,
-  ): Promise<void> {
+    params: {
+      p_title?: string;
+      p_description?: string;
+      p_images?: string[];
+      p_address_reference?: string;
+      p_status?: IssueStatus;
+      p_priority?: IssuePriority;
+      p_reason?: string;
+    } = {},
+  ): Promise<boolean> {
     try {
-      const user = await SessionService.getCurrentUser();
-      if (!user) return;
+      const { error } = await supabase.rpc("mutate_community_issue", {
+        p_action: action,
+        p_issue_id: issueId,
+        ...params,
+      });
 
-      const insertData: CommunityIssueAuditInsert = {
-        issue_id: issueId,
-        actor_id: user.id,
-        action,
-        metadata: metadata as Json,
-      };
-
-      await supabase.from("community_issue_audit").insert(insertData);
+      if (error) throw error;
+      return true;
     } catch (error) {
-      logger.error("CommunityIssueService.auditLog", error);
-    }
-  }
-
-  private async getActiveProfileIdByUserId(userId: string): Promise<string | null> {
-    try {
-      const profile = await profileService.getActiveProfile(userId);
-      return profile?.id ?? null;
-    } catch (error) {
-      logger.error("CommunityIssueService.getActiveProfileIdByUserId", error);
-      return null;
+      logger.error("CommunityIssueService.mutateIssue", error, { action, issueId });
+      return false;
     }
   }
 }

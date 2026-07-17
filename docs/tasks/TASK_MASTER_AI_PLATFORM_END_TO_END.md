@@ -3,7 +3,7 @@
 Status: draft executavel  
 Data: 2026-04-19  
 Autor: Codex (baseado na arquitetura atual do repositorio)  
-Destino: execucao por outra IA (Kiro IDE)  
+Destino: execucao por outra IA (Kiro IDE)
 
 ---
 
@@ -351,7 +351,8 @@ Priorizar fila admin com score de risco sem remover controle humano.
 
 ### 13.3 Arquivos alvo
 
-1. integrar com `src/core/moderation/services/ModerationService.ts`;
+1. consumir a projecao read-only de
+   `src/core/moderation/services/FederatedModerationQueueService.ts`;
 2. integrar com `src/core/admin/services/AdminFraudService.ts`;
 3. expor dados para pagina admin correspondente.
 
@@ -527,9 +528,9 @@ Done quando:
 3. [ ] Criar tabelas core IA listadas na secao 7.
 4. [ ] Criar tabelas semanticas listadas na secao 7.
 5. [ ] Criar tabelas de personalizacao (`ai_personalization_preferences`, `ai_user_behavior_events`, `ai_user_interest_profiles`).
-5. [ ] Criar indices (btree + ivfflat/hnsw conforme disponibilidade).
-6. [ ] Habilitar RLS e policies minimas.
-7. [ ] Criar seeds de policy/model aliases.
+6. [ ] Criar indices (btree + ivfflat/hnsw conforme disponibilidade).
+7. [ ] Habilitar RLS e policies minimas.
+8. [ ] Criar seeds de policy/model aliases.
 
 ### 19.2 Edge Functions
 
@@ -757,14 +758,15 @@ Fonte: `src/core/search/services/SearchService.ts`
 
 Prioridade: P0 (base obrigatoria para busca semantica unificada).
 
-### 27.3 Moderacao com inconsistencias de SSOT
+### 27.3 Moderacao consolidada; scoring IA ainda pendente
 
-Fonte: `src/core/moderation/services/ModerationService.ts`
+Fonte: `docs/architecture/AUDIT_MODERATION_SSOT.md`
 
-1. Existem fallbacks e mapeamentos que misturam responsabilidades de tabela.
-2. Necessario consolidar contrato canonico de reports/moderacao antes do scoring IA.
+1. Reports conservam owners por dominio e a fila federada e somente read-only.
+2. Scoring IA deve produzir sinal explicavel separado e nunca alterar status ou
+   executar acao corretiva sem o comando autorizado do dominio.
 
-Prioridade: P0 (evita decisao automatizada em base inconsistente).
+Prioridade: P0 (guardrail obrigatorio antes de moderacao assistida por IA).
 
 ### 27.4 Classificados com fallback de mock em runtime
 

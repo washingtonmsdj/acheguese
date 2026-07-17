@@ -1,5 +1,5 @@
 import React from "react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Dialog, DialogContent } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { logger } from "@/shared/utils/logger";
+import { resolvePostImageSources } from "@/core/media/references/postImageReference";
 /**
  * Galeria de imagens profissional com lightbox
  *
@@ -31,7 +32,11 @@ interface ImageGalleryProps {
   className?: string;
 }
 
-export function ImageGallery({ images, className }: ImageGalleryProps) {
+export function ImageGallery({ images: imageReferences, className }: ImageGalleryProps) {
+  const images = useMemo(
+    () => resolvePostImageSources(imageReferences),
+    [imageReferences],
+  );
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [zoom, setZoom] = useState(1);
@@ -121,6 +126,9 @@ export function ImageGallery({ images, className }: ImageGalleryProps) {
               alt={`Imagem ${index + 1}`}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
               loading="lazy"
+              decoding="async"
+              width={1280}
+              height={1280}
             />
 
             {/* Overlay no hover */}
@@ -213,6 +221,9 @@ export function ImageGallery({ images, className }: ImageGalleryProps) {
                 transform: `scale(${zoom})`,
                 cursor: zoom > 1 ? "move" : "default",
               }}
+              decoding="async"
+              width={1280}
+              height={1280}
             />
           </div>
 
@@ -261,6 +272,10 @@ export function ImageGallery({ images, className }: ImageGalleryProps) {
                       src={image}
                       alt={`Thumbnail ${index + 1}`}
                       className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                      width={64}
+                      height={64}
                     />
                   </button>
                 ))}

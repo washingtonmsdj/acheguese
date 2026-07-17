@@ -102,6 +102,10 @@ export const QUERY_KEYS = {
     group: (groupId: string) => ['groups', groupId] as const,
     groupMessages: (groupId: string) => ['groups', groupId, 'messages'] as const,
     groupMembers: (groupId: string) => ['groups', groupId, 'members'] as const,
+    lostFound: (filters: Record<string, unknown>) =>
+      ['community', 'lost-found', filters] as const,
+    questions: (filters: Record<string, unknown>) =>
+      ['community', 'questions', filters] as const,
   },
   
   // Mobility

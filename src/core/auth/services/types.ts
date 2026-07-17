@@ -4,6 +4,8 @@
  * Tipos TypeScript para o serviço de autenticação
  */
 
+import type { TermsAcceptance } from "@/core/legal/termsOfService";
+
 export interface AuthUser {
   id: string;
   email: string;
@@ -21,7 +23,7 @@ export interface SignUpData {
   password: string;
   name: string;
   username?: string;
-  handle?: string;       // handle desejado para o perfil personal
+  handle?: string; // handle desejado para o perfil personal
   display_name?: string; // nome de exibição (fallback: name)
   // Localização — strings legíveis para exibição
   city?: string;
@@ -30,6 +32,7 @@ export interface SignUpData {
   street?: string;
   // UUID canônico do bairro (tabela locations) — SSOT territorial
   neighborhood_id?: string;
+  termsAcceptance: TermsAcceptance;
 }
 
 export interface SignInData {

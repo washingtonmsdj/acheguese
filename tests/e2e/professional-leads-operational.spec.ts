@@ -302,10 +302,12 @@ async function assertProfessionalReviewPersistedWithSession(
   commentToken: string,
 ): Promise<boolean> {
   const review = await client
-    .from("professional_reviews_new")
+    .from("reviews")
     .select("id")
     .eq("reviewed_profile_id", professionalProfileId)
     .eq("reviewer_profile_id", reviewerProfileId)
+    .eq("review_type", "professional")
+    .eq("status", "active")
     .ilike("comment", `%${commentToken}%`)
     .limit(1)
     .maybeSingle();

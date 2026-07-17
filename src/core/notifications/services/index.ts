@@ -2,16 +2,18 @@
  * Notifications services - SSOT exports.
  */
 
-export { NotificationService, notificationService } from "./NotificationService";
-export { CommunityNotificationBrokerService } from "./CommunityNotificationBrokerService";
+export {
+  NotificationService,
+  notificationService,
+} from "./NotificationService";
 export { ProfessionalNotificationBrokerService } from "./ProfessionalNotificationBrokerService";
-export { PushNotificationPreferencesService } from "./PushNotificationPreferencesService";
-export { UserNotificationPreferencesService } from "./UserNotificationPreferencesService";
+export * from "./NotificationPreferencesService";
 
 export type {
   CreateNotificationParams,
   Notification,
   NotificationFilters,
+  NotificationCursor,
   NotificationPriority,
   NotificationStats,
   NotificationTypeValue as NotificationType,

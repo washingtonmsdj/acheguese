@@ -48,7 +48,14 @@ export default function RecomendacoesPage() {
     [activeMemberIds, resolved],
   );
 
-  const { questions, loading, initialLoading, sentinelRef } = useRecomendacoes({
+  const {
+    questions,
+    loading,
+    initialLoading,
+    sentinelRef,
+    isError,
+    refetch,
+  } = useRecomendacoes({
     filter,
     search,
     territoryFilter,
@@ -111,12 +118,23 @@ export default function RecomendacoesPage() {
 
       <CategoryFilters filter={filter} onFilterChange={setFilter} />
 
-      <QuestionsList
-        questions={questions}
-        loading={loading}
-        initialLoading={initialLoading}
-        sentinelRef={sentinelRef}
-      />
+      {isError ? (
+        <div className="mx-4 my-6 border border-border bg-card p-4 text-center" role="alert">
+          <p className="text-sm text-muted-foreground">
+            Nao foi possivel carregar as perguntas.
+          </p>
+          <Button className="mt-3" size="sm" variant="outline" onClick={() => void refetch()}>
+            Tentar novamente
+          </Button>
+        </div>
+      ) : (
+        <QuestionsList
+          questions={questions}
+          loading={loading}
+          initialLoading={initialLoading}
+          sentinelRef={sentinelRef}
+        />
+      )}
     </div>
   );
 }

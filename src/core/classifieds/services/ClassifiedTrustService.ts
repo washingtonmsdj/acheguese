@@ -1,4 +1,8 @@
-import { messagingService } from "@/core/messaging/services/MessagingService";
+import { classifiedMessagingService } from "@/core/messaging/services/ClassifiedMessagingService";
+import {
+  OperationalTrustCommandService,
+  type OperationalTrustFeedbackInput,
+} from "@/core/trust";
 
 export interface ClassifiedConversationParticipant {
   conversationId: string;
@@ -10,6 +14,16 @@ export interface ClassifiedConversationParticipant {
 
 export class ClassifiedTrustService {
   static async listConversationParticipants(classifiedId: string): Promise<ClassifiedConversationParticipant[]> {
-    return messagingService.listConversationParticipantsByClassified(classifiedId);
+    return classifiedMessagingService.listConversationParticipantsByClassified(classifiedId);
+  }
+
+  static submitFeedback(
+    classifiedId: string,
+    input: OperationalTrustFeedbackInput,
+  ) {
+    return OperationalTrustCommandService.submitClassifiedFeedback(
+      classifiedId,
+      input,
+    );
   }
 }

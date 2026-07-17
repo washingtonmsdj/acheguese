@@ -1,30 +1,22 @@
 import { logger } from "@/shared/utils/logger";
-import { supabase } from "@/integrations/supabase";
+import { supabase, type Json, type Tables } from "@/integrations/supabase";
 import { SessionService } from "@/core/session/services/SessionService";
+import { realtimeService } from "@/core/realtime";
+import type {
+  Notification,
+  NotificationCategory,
+  NotificationFilters,
+  NotificationPriority,
+} from "../types";
+import { normalizeNotification } from "../utils/normalizeNotification";
 
-export interface Notification {
-  id: string;
-  user_id: string;
-  type: string;
-  category: "transactional" | "social" | "system" | "marketing";
-  priority?: "low" | "medium" | "high" | "urgent";
-  title: string;
-  message: string;
-  action_url?: string;
-  action_label?: string;
-  metadata?: Record<string, unknown>;
-  read: boolean;
-  read_at?: string;
-  created_at: string;
-  updated_at?: string;
-  deleted_at?: string | null;
-}
+export type { Notification, NotificationFilters } from "../types";
 
 export interface CreateNotificationInput {
   user_id: string;
   type: "info" | "success" | "warning" | "error";
-  category?: "transactional" | "social" | "system" | "marketing";
-  priority?: "low" | "medium" | "high";
+  category?: NotificationCategory;
+  priority?: Exclude<NotificationPriority, "urgent">;
   title: string;
   message: string;
   action_url?: string;
@@ -32,131 +24,24 @@ export interface CreateNotificationInput {
   metadata?: Record<string, unknown>;
 }
 
-export interface NotificationFilters {
-  read?: boolean;
-  category?: string;
-  limit?: number;
-  offset?: number;
+export interface NotificationRealtimeChange {
+  eventType: "INSERT" | "UPDATE";
+  notification: Notification;
 }
 
-export interface UserNotificationSettings {
-  email_notifications: boolean;
-  push_notifications: boolean;
-  new_messages: boolean;
-  new_comments: boolean;
-  new_likes: boolean;
-  new_followers: boolean;
-  business_updates: boolean;
-  community_updates: boolean;
-  weekly_digest: boolean;
-}
+type NotificationRow = Tables<"notifications">;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-type NotificationPriorityLevel = NonNullable<Notification["priority"]>;
-type NotificationCategory = Notification["category"];
-
-type NotificationRow = {
-  id: string;
-  user_id: string;
-  type: string;
-  category: string | null;
-  priority: string | null;
-  title: string;
-  message: string;
-  action_url: string | null;
-  action_label: string | null;
-  metadata: Record<string, unknown> | null;
-  read: boolean | null;
-  read_at: string | null;
-  created_at: string;
-  updated_at: string | null;
-  deleted_at: string | null;
-};
-
-type UserNotificationSettingsRow = Partial<UserNotificationSettings> & {
-  user_id: string;
-  updated_at?: string | null;
-};
-
-type UserNotificationSettingsUpsertRow = Partial<UserNotificationSettings> & {
-  user_id: string;
-  updated_at: string;
-};
-
-type NotificationRpcClient = {
-  rpc<T>(fn: string, params?: Record<string, unknown>): Promise<{
-    data: T | null;
-    error: { message?: string | null } | null;
-  }>;
-};
-
-type QueryResult<T> = Promise<{
-  data: T | null;
-  error: { message?: string | null } | null;
-}>;
-
-type MutationResult = Promise<{
-  error: { message?: string | null } | null;
-}>;
-
-type UserNotificationSettingsDbClient = {
-  from(table: "user_notification_settings"): {
-    select(columns: string): {
-      eq(column: "user_id", value: string): {
-        maybeSingle(): QueryResult<UserNotificationSettingsRow>;
-      };
-    };
-    upsert(
-      values: UserNotificationSettingsUpsertRow,
-      options: { onConflict: string },
-    ): MutationResult;
-  };
-};
-
-const notificationRpc = supabase as unknown as NotificationRpcClient;
-const userNotificationSettingsDb = supabase as unknown as UserNotificationSettingsDbClient;
-const NOTIFICATION_CATEGORIES = new Set<NotificationCategory>([
-  "transactional",
-  "social",
-  "system",
-  "marketing",
-]);
-const NOTIFICATION_PRIORITIES = new Set<NotificationPriorityLevel>([
-  "low",
-  "medium",
-  "high",
-  "urgent",
-]);
-
-function normalizeNotificationCategory(value: string | null): NotificationCategory {
-  return value && NOTIFICATION_CATEGORIES.has(value as NotificationCategory)
-    ? (value as NotificationCategory)
-    : "social";
-}
-
-function normalizeNotificationPriority(value: string | null | undefined): NotificationPriorityLevel {
-  return value && NOTIFICATION_PRIORITIES.has(value as NotificationPriorityLevel)
-    ? (value as NotificationPriorityLevel)
-    : "medium";
+function serializeNotificationMetadata(value: Record<string, unknown>): Json {
+  const serialized = JSON.stringify(value);
+  if (serialized.length > 32_768) {
+    throw new Error("Notification metadata exceeds 32 KB");
+  }
+  return JSON.parse(serialized) as Json;
 }
 
 function normalizeNotificationRow(row: NotificationRow): Notification {
-  return {
-    id: row.id,
-    user_id: row.user_id,
-    type: row.type,
-    category: normalizeNotificationCategory(row.category),
-    priority: normalizeNotificationPriority(row.priority),
-    title: row.title,
-    message: row.message,
-    action_url: row.action_url ?? undefined,
-    action_label: row.action_label ?? undefined,
-    metadata: row.metadata ?? {},
-    read: row.read ?? false,
-    read_at: row.read_at ?? undefined,
-    created_at: row.created_at,
-    updated_at: row.updated_at ?? undefined,
-    deleted_at: row.deleted_at ?? null,
-  };
+  return normalizeNotification(row as unknown as Record<string, unknown>);
 }
 
 export class NotificationService {
@@ -175,15 +60,16 @@ export class NotificationService {
       return null;
     }
 
-    const { data, error } = await notificationRpc.rpc<string>("create_notification", {
+    const { data, error } = await supabase.rpc("create_notification", {
       p_user_id: input.user_id,
       p_type: input.type,
       p_category: input.category ?? "social",
+      p_priority: input.priority ?? "medium",
       p_title: input.title,
       p_message: input.message,
       p_action_url: input.action_url ?? null,
       p_action_label: input.action_label ?? null,
-      p_metadata: input.metadata ?? {},
+      p_metadata: serializeNotificationMetadata(input.metadata ?? {}),
     });
 
     if (error) {
@@ -194,33 +80,51 @@ export class NotificationService {
     return data;
   }
 
-  static async getUserNotifications(filters?: NotificationFilters): Promise<Notification[]> {
+  static async getUserNotifications(filters: NotificationFilters = {}): Promise<Notification[]> {
     const user = await SessionService.getCurrentUser();
     if (!user) {
       throw new Error("User not authenticated");
     }
 
+    const limit = Math.min(Math.max(filters.limit ?? 30, 1), 100);
     let query = supabase
       .from("notifications")
       .select("*")
       .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(limit);
 
-    if (filters?.read !== undefined) {
+    if (filters.read !== undefined) {
       query = query.eq("read", filters.read);
     }
 
-    if (filters?.category) {
+    if (filters.category) {
       query = query.eq("category", filters.category);
     }
 
-    if (filters?.limit) {
-      query = query.limit(filters.limit);
+    if (filters.type) {
+      query = Array.isArray(filters.type)
+        ? query.in("type", filters.type)
+        : query.eq("type", filters.type);
     }
 
-    if (filters?.offset) {
-      const limit = filters.limit ?? 10;
-      query = query.range(filters.offset, filters.offset + limit - 1);
+    if (filters.priority) {
+      query = Array.isArray(filters.priority)
+        ? query.in("priority", filters.priority)
+        : query.eq("priority", filters.priority);
+    }
+
+    if (filters.cursor) {
+      const before = new Date(filters.cursor.createdAt);
+      if (Number.isNaN(before.getTime()) || !UUID_PATTERN.test(filters.cursor.id)) {
+        throw new Error("Invalid notification cursor");
+      }
+      const createdAt = before.toISOString();
+      query = query.or(
+        `created_at.lt.${createdAt},and(created_at.eq.${createdAt},id.lt.${filters.cursor.id})`,
+      );
     }
 
     const { data, error } = await query;
@@ -230,7 +134,7 @@ export class NotificationService {
       throw error;
     }
 
-    return (data ?? []).map((row) => normalizeNotificationRow(row as NotificationRow));
+    return (data ?? []).map(normalizeNotificationRow);
   }
 
   static async markAsRead(notificationId: string): Promise<void> {
@@ -248,6 +152,7 @@ export class NotificationService {
       })
       .eq("id", notificationId)
       .eq("user_id", user.id)
+      .is("deleted_at", null)
       .eq("read", false);
 
     if (error) {
@@ -262,23 +167,16 @@ export class NotificationService {
       throw new Error("User not authenticated");
     }
 
-    const { data, error } = await supabase
-      .from("notifications")
-      .update({
-        read: true,
-        is_read: true,
-        read_at: new Date().toISOString(),
-      })
-      .eq("user_id", user.id)
-      .eq("read", false)
-      .select("id");
+    const { data, error } = await supabase.rpc(
+      "mark_current_user_notifications_as_read",
+    );
 
     if (error) {
       logger.error("Error marking all notifications as read:", error);
       throw error;
     }
 
-    return data?.length ?? 0;
+    return data ?? 0;
   }
 
   static async deleteNotification(notificationId: string): Promise<void> {
@@ -289,9 +187,10 @@ export class NotificationService {
 
     const { error } = await supabase
       .from("notifications")
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq("id", notificationId)
-      .eq("user_id", user.id);
+      .eq("user_id", user.id)
+      .is("deleted_at", null);
 
     if (error) {
       logger.error("Error deleting notification:", error);
@@ -307,6 +206,7 @@ export class NotificationService {
       .from("notifications")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
+      .is("deleted_at", null)
       .eq("read", false);
 
     if (error) {
@@ -328,13 +228,18 @@ export class NotificationService {
         supabase
           .from("notifications")
           .select("id", { count: "exact", head: true })
-          .eq("user_id", userId),
+          .eq("user_id", userId)
+          .is("deleted_at", null),
         supabase
           .from("notifications")
           .select("id", { count: "exact", head: true })
           .eq("user_id", userId)
+          .is("deleted_at", null)
           .eq("read", false),
       ]);
+
+      if (totalResult.error) throw totalResult.error;
+      if (unreadResult.error) throw unreadResult.error;
 
       return {
         total: totalResult.count ?? 0,
@@ -348,27 +253,20 @@ export class NotificationService {
 
   static subscribeToNotifications(
     userId: string,
-    callback: (notification: Notification) => void,
+    callback: (change: NotificationRealtimeChange) => void,
   ) {
-    const channel = supabase
-      .channel("notifications")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          callback(normalizeNotificationRow(payload.new as NotificationRow));
-        },
-      )
-      .subscribe();
+    const subscription = realtimeService.subscribe("notifications.user", {
+      filterValues: { userId },
+      onEvent: ({ eventType, row }) => {
+        if (eventType !== "INSERT" && eventType !== "UPDATE") return;
+        callback({
+          eventType,
+          notification: normalizeNotificationRow(row as NotificationRow),
+        });
+      },
+    });
 
-    return () => {
-      void supabase.removeChannel(channel);
-    };
+    return subscription.unsubscribe;
   }
 
   async fetchNotifications(filters?: NotificationFilters): Promise<Notification[]> {
@@ -379,7 +277,7 @@ export class NotificationService {
     return NotificationService.createNotification(input);
   }
 
-  createRealtimeChannel(userId: string, callback: (notification: Notification) => void) {
+  createRealtimeChannel(userId: string, callback: (change: NotificationRealtimeChange) => void) {
     return NotificationService.subscribeToNotifications(userId, callback);
   }
 
@@ -401,41 +299,6 @@ export class NotificationService {
 
   async deleteNotification(notificationId: string): Promise<void> {
     return NotificationService.deleteNotification(notificationId);
-  }
-
-  async getNotificationSettings(userId: string): Promise<Partial<UserNotificationSettings> | null> {
-    const { data, error } = await userNotificationSettingsDb
-      .from("user_notification_settings")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (error) {
-      logger.error("Error fetching user notification settings:", error);
-      return null;
-    }
-
-    return (data as UserNotificationSettingsRow | null) ?? null;
-  }
-
-  async updateNotificationSettings(
-    userId: string,
-    input: Partial<UserNotificationSettings>,
-  ): Promise<void> {
-    const payload: UserNotificationSettingsUpsertRow = {
-      user_id: userId,
-      ...input,
-      updated_at: new Date().toISOString(),
-    };
-
-    const { error } = await userNotificationSettingsDb
-      .from("user_notification_settings")
-      .upsert(payload, { onConflict: "user_id" });
-
-    if (error) {
-      logger.error("Error updating user notification settings:", error);
-      throw error;
-    }
   }
 }
 

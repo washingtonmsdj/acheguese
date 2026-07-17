@@ -14,16 +14,34 @@ export class BusinessSettingsService {
   }
 
   static async uploadBusinessImage(input: {
-    businessId: string;
+    ownerProfileId: string;
     file: File;
     type: "logo" | "banner" | "gallery";
   }): Promise<string> {
-    const upload = await mediaService.uploadBusinessImage(
-      input.businessId,
+    const preset = input.type === "logo"
+      ? "business_logo"
+      : input.type === "banner"
+        ? "business_banner"
+        : "business_gallery";
+    const upload = await mediaService.uploadMediaAsset(
+      input.ownerProfileId,
       input.file,
-      input.type === "logo" ? "logo" : "capa",
+      preset,
     );
-    return upload.url;
+    return upload.reference;
+  }
+
+  static async addGalleryItem(input: {
+    businessDataId: string;
+    reference: string;
+    caption?: string;
+  }): Promise<void> {
+    const { error } = await supabase.from("business_gallery").insert({
+      business_id: input.businessDataId,
+      image_url: input.reference,
+      caption: input.caption ?? null,
+    });
+    if (error) throw error;
   }
 
   static async updateBusinessById(

@@ -36,13 +36,6 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
 interface EmailRequest {
   contactId: string;
   alertId: string;
-  alertType?: string;
-  alertCreatedAt?: string;
-  alertDescription?: string;
-  alertLocation?: {
-    latitude: number;
-    longitude: number;
-  };
 }
 
 interface EmailResponse {
@@ -64,6 +57,10 @@ interface UserProfileRecord {
 interface AlertRecord {
   id: string;
   profile_id: string | null;
+  alert_type: string;
+  description: string | null;
+  latitude: number | null;
+  longitude: number | null;
   created_at: string | null;
 }
 
@@ -71,6 +68,7 @@ interface ContactRecord {
   id: string;
   profile_id: string | null;
   name: string | null;
+  email: string | null;
   phone: string | null;
   is_active?: boolean | null;
 }
@@ -157,7 +155,7 @@ serve(async (req: Request) => {
 
     const { data: alertData, error: alertError } = await supabase
       .from('emergency_alerts')
-      .select('id, profile_id, created_at')
+      .select('id, profile_id, alert_type, description, latitude, longitude, created_at')
       .eq('id', emailRequest.alertId)
       .maybeSingle();
 
@@ -184,7 +182,7 @@ serve(async (req: Request) => {
 
     const { data: contactData, error: contactError } = await supabase
       .from('emergency_contacts')
-      .select('id, profile_id, name, phone, is_active')
+      .select('id, profile_id, name, email, phone, is_active')
       .eq('id', emailRequest.contactId)
       .maybeSingle();
 
@@ -216,7 +214,7 @@ serve(async (req: Request) => {
       return respond({ error: 'Emergency contact is inactive' }, 403);
     }
 
-    const contactEmail = extractEmail(contact.phone || '');
+    const contactEmail = extractEmail(contact.email || '');
     if (!contactEmail) {
       return respond(
         { error: 'Emergency contact email is not configured' },
@@ -280,20 +278,23 @@ serve(async (req: Request) => {
     const sanitizedUserName = sanitizeString(ownerProfile?.name || 'Usuario', 100);
     const sanitizedUserPhone = sanitizeString(ownerProfile?.phone || 'Nao informado', 50);
     const sanitizedDescription =
-      typeof emailRequest.alertDescription === 'string' && emailRequest.alertDescription.trim().length > 0
-        ? sanitizeString(emailRequest.alertDescription, 500)
+      typeof alert.description === 'string' && alert.description.trim().length > 0
+        ? sanitizeString(alert.description, 500)
         : undefined;
 
     const alertType = translateAlertType(
-      sanitizeString(emailRequest.alertType || 'sos', 50).toLowerCase(),
+      sanitizeString(alert.alert_type || 'sos', 50).toLowerCase(),
     );
 
     const alertCreatedAt =
-      normalizeIsoDatetime(emailRequest.alertCreatedAt) ||
       normalizeIsoDatetime(alert.created_at) ||
       new Date().toISOString();
 
-    const location = normalizeLocation(emailRequest.alertLocation);
+    const location = normalizeLocation(
+      alert.latitude != null && alert.longitude != null
+        ? { latitude: alert.latitude, longitude: alert.longitude }
+        : undefined,
+    );
 
     const subject = 'ALERTA DE EMERGENCIA';
     const htmlBody = buildEmailHtml(
@@ -333,10 +334,44 @@ serve(async (req: Request) => {
 
     const resendRaw = await resendResponse.text();
     if (!resendResponse.ok) {
-      console.error('Resend API error', {
-        status: resendResponse.status,
-        body: resendRaw.slice(0, 1000),
+      const providerError = `Email provider returned HTTP ${resendResponse.status}`;
+      const { error: failureLogError } = await supabase
+        .from('emergency_delivery_log')
+        .insert({
+          alert_id: emailRequest.alertId,
+          contact_id: emailRequest.contactId,
+          channel: 'email',
+          status: 'failed',
+          target: contactEmail,
+          error_message: providerError,
+          metadata: {
+            provider: 'resend',
+            provider_status: resendResponse.status,
+          },
+          created_at: new Date().toISOString(),
+        });
+
+      if (failureLogError) {
+        console.error('Failed to persist emergency email delivery failure', {
+          status: resendResponse.status,
+          errorCode: failureLogError.code,
+        });
+      }
+
+      auditLog({
+        timestamp: new Date().toISOString(),
+        userId,
+        action: 'emergency_email_provider_failed',
+        resource: 'emergency_alerts',
+        status: 'failure',
+        details: {
+          alertId: emailRequest.alertId,
+          contactId: emailRequest.contactId,
+          providerStatus: resendResponse.status,
+        },
+        ...auditInfo,
       });
+
       return errorResponse('Failed to send emergency email', 502, {
         status: resendResponse.status,
       });

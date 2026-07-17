@@ -17,7 +17,6 @@ interface IssueFeedSectionProps {
   city: string;
   neighborhood?: string;
   locationId?: string;
-  profileId?: string;
   canCreateIssue?: boolean;
   onBlockedCreateIssue?: () => void;
 }
@@ -27,7 +26,6 @@ export function IssueFeedSection({
   city,
   neighborhood,
   locationId,
-  profileId,
   canCreateIssue = true,
   onBlockedCreateIssue,
 }: IssueFeedSectionProps) {
@@ -95,7 +93,7 @@ export function IssueFeedSection({
               Nenhum problema registrado nesta regiao.
             </p>
           ) : (
-            issues.map((issue) => <IssueCard key={issue.id} issue={issue} profileId={profileId} />)
+            issues.map((issue) => <IssueCard key={issue.id} issue={issue} />)
           )}
         </div>
       )}

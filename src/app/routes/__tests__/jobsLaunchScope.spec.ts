@@ -21,17 +21,17 @@ describe("jobs and work opportunities launch scope", () => {
       "src/app/routes/sections/CommunityTerritoryRoutes.tsx",
     );
 
-    expect(appRoutesSource).toContain(
-      'path={JOB_ROUTES.publish} element={launchElement("jobs", "Vagas"',
+    expect(appRoutesSource).toMatch(
+      /path=\{JOB_ROUTES\.publish\}\s+element=\{launchElement\("jobs", "Vagas"/,
     );
-    expect(appRoutesSource).toContain(
-      'path="/oportunidades" element={launchElement("jobs", "Oportunidades"',
+    expect(appRoutesSource).toMatch(
+      /path="\/oportunidades"\s+element=\{launchElement\(\s*"jobs",\s*"Oportunidades"/,
     );
-    expect(appRoutesSource).toContain(
-      'path="/oportunidades/:id" element={launchElement("jobs", "Oportunidades"',
+    expect(appRoutesSource).toMatch(
+      /path="\/oportunidades\/:id"\s+element=\{launchElement\(\s*"jobs",\s*"Oportunidades"/,
     );
-    expect(appRoutesSource).toContain(
-      'path={JOB_ROUTES.home} element={launchElement("jobs", "Vagas"',
+    expect(appRoutesSource).toMatch(
+      /path=\{JOB_ROUTES\.home\}\s+element=\{launchElement\("jobs", "Vagas"/,
     );
     expect(appRoutesSource).toContain('launchTerritorialLayout("jobs", "Vagas")');
 
@@ -47,20 +47,20 @@ describe("jobs and work opportunities launch scope", () => {
       "src/app/routes/territorial/TerritorialModulePages.tsx",
     );
 
-    expect(lazyImportsSource).toContain(
-      'export const PublicarVagaPage = lazy(() => import("@/modules/classifieds/jobs/pages/PublicarVagaPage"))',
+    expect(lazyImportsSource).toMatch(
+      /export const PublicarVagaPage = lazy\(\s*\(\) => import\("@\/modules\/classifieds\/jobs\/pages\/PublicarVagaPage"\),/,
     );
-    expect(lazyImportsSource).toContain(
-      'export const VagasPublicPage = lazy(() => import("@/modules/classifieds/jobs/pages/VagasPublicPage"))',
+    expect(lazyImportsSource).toMatch(
+      /export const VagasPublicPage = lazy\(\s*\(\) => import\("@\/modules\/classifieds\/jobs\/pages\/VagasPublicPage"\),/,
     );
-    expect(lazyImportsSource).toContain(
-      'export const VagaDetailPublicPage = lazy(() => import("@/modules/classifieds/jobs/pages/VagaDetailPublicPage"))',
+    expect(lazyImportsSource).toMatch(
+      /export const VagaDetailPublicPage = lazy\(\s*\(\) => import\("@\/modules\/classifieds\/jobs\/pages\/VagaDetailPublicPage"\),/,
     );
-    expect(lazyImportsSource).toContain(
-      'export const WorkOpportunitiesPage = lazy(() => import("@/modules/work-opportunities/pages/WorkOpportunitiesPage"))',
+    expect(lazyImportsSource).toMatch(
+      /export const WorkOpportunitiesPage = lazy\(\s*\(\) => import\("@\/modules\/work-opportunities\/pages\/WorkOpportunitiesPage"\),/,
     );
-    expect(lazyImportsSource).toContain(
-      'export const WorkOpportunityDetailPage = lazy(() => import("@/modules/work-opportunities/pages/WorkOpportunityDetailPage"))',
+    expect(lazyImportsSource).toMatch(
+      /export const WorkOpportunityDetailPage = lazy\(\s*\(\) => import\("@\/modules\/work-opportunities\/pages\/WorkOpportunityDetailPage"\),/,
     );
     expect(lazyImportsSource).not.toContain('PublicarVagaPage = createLaunchPausedRoute("Vagas")');
     expect(lazyImportsSource).not.toContain('WorkOpportunitiesPage = createLaunchPausedRoute("Oportunidades")');

@@ -9,64 +9,59 @@ import { PAGINATION } from "@/shared/constants";
 import type { FeedParams, FeedResult, Post } from "../types";
 import { PostError } from "../types";
 import { hasTechnicalSeedMarker } from "../utils/publicPostContent";
-
-function encodeCursor(data: { created_at: string }): string {
-  return Buffer.from(JSON.stringify(data)).toString("base64");
-}
-
-function decodeCursor(cursor: string): { created_at: string } {
-  try {
-    return JSON.parse(Buffer.from(cursor, "base64").toString("utf-8"));
-  } catch {
-    throw new PostError("Invalid cursor", "INVALID_CURSOR", 400);
-  }
-}
+import {
+  decodePostFeedCursor,
+  encodePostFeedCursor,
+  postFeedKeysetFilter,
+} from "./postFeedCursor";
 
 async function expandFeedLocationIds(locationIds: string[]): Promise<string[]> {
-  const expanded: string[] = [];
+  const requestedIds = [...new Set(locationIds)].slice(0, 100);
+  if (requestedIds.length === 0) return [];
 
-  for (const locationId of locationIds) {
-    const { data: location, error } = await supabase
-      .from("locations")
-      .select("id, type, parent_id")
-      .eq("id", locationId)
-      .eq("status", "active")
-      .maybeSingle();
+  const { data: locations, error } = await supabase
+    .from("locations")
+    .select("id, type, parent_id")
+    .in("id", requestedIds)
+    .eq("status", "active");
 
-    if (error) {
-      logger.warn("[posts.queries] Failed to resolve feed location:", {
-        location_id: locationId,
-        error: error.message,
-      });
-      continue;
-    }
+  if (error) {
+    logger.warn("[posts.queries] Failed to resolve feed locations:", {
+      location_count: requestedIds.length,
+      error: error.message,
+    });
+    return [];
+  }
 
-    if (!location) {
-      logger.warn("[posts.queries] Location not found or inactive:", {
-        location_id: locationId,
-      });
-      continue;
-    }
-
-    expanded.push(locationId);
-
-    if (location.type === "city") {
-      const { data: districts } = await supabase
-        .from("locations")
-        .select("id")
-        .eq("parent_id", locationId)
-        .eq("type", "district")
-        .eq("status", "active");
-
-      if (districts) {
-        expanded.push(...districts.map((district) => district.id));
-      }
-    } else if (location.type === "district" && location.parent_id) {
-      expanded.push(location.parent_id);
+  const expanded = new Set<string>();
+  const cityIds: string[] = [];
+  for (const location of locations ?? []) {
+    expanded.add(location.id);
+    if (location.type === "city") cityIds.push(location.id);
+    if (location.type === "district" && location.parent_id) {
+      expanded.add(location.parent_id);
     }
   }
 
-  return [...new Set(expanded)];
+  if (cityIds.length > 0) {
+    const { data: districts, error: districtError } = await supabase
+      .from("locations")
+      .select("id")
+      .in("parent_id", cityIds)
+      .eq("type", "district")
+      .eq("status", "active");
+
+    if (districtError) {
+      logger.warn("[posts.queries] Failed to expand city districts:", {
+        city_count: cityIds.length,
+        error: districtError.message,
+      });
+    } else {
+      for (const district of districts ?? []) expanded.add(district.id);
+    }
+  }
+
+  return [...expanded];
 }
 
 async function resolveFeedLocationIds(params: {
@@ -103,7 +98,7 @@ async function resolveFeedLocationIds(params: {
   return expandFeedLocationIds([location_id]);
 }
 
-export async function getTerritorialFeed(params: FeedParams = {}): Promise<FeedResult> {
+export async function getFeed(params: FeedParams = {}): Promise<FeedResult> {
   try {
     const {
       location_id,
@@ -114,6 +109,9 @@ export async function getTerritorialFeed(params: FeedParams = {}): Promise<FeedR
       limit = PAGINATION.DEFAULT_LIMIT,
       cursor,
     } = params;
+    const normalizedLimit = Number.isFinite(limit)
+      ? Math.min(50, Math.max(1, Math.trunc(limit)))
+      : PAGINATION.DEFAULT_LIMIT;
 
     if (!location_id && !location_ids?.length) {
       logger.warn("[posts.queries] Empty feed locations:", { params });
@@ -170,19 +168,26 @@ export async function getTerritorialFeed(params: FeedParams = {}): Promise<FeedR
       )
       .in("location_id", expandedIds)
       .eq("is_published", true)
+      .eq("is_hidden", false)
+      .eq("is_removed", false)
       .not("content", "ilike", "[MOCK%")
       .not("content", "ilike", "[SEED%")
       .not("content", "ilike", "[DEV%")
       .not("content", "ilike", "[TEST%")
       .order("created_at", { ascending: false })
-      .limit(limit + 1);
+      .order("id", { ascending: false })
+      .limit(normalizedLimit + 1);
 
     if (!includeStreetReach) {
       query = query.or("reach.is.null,reach.neq.street");
     }
 
     if (cursor) {
-      query = query.lt("created_at", decodeCursor(cursor).created_at);
+      const decodedCursor = decodePostFeedCursor(cursor);
+      const keysetFilter = postFeedKeysetFilter(decodedCursor);
+      query = keysetFilter
+        ? query.or(keysetFilter)
+        : query.lt("created_at", decodedCursor.createdAt);
     }
 
     const { data: posts, error } = await query;
@@ -196,11 +201,14 @@ export async function getTerritorialFeed(params: FeedParams = {}): Promise<FeedR
     }
 
     const rows = (posts ?? []).filter((post) => !hasTechnicalSeedMarker(post.content));
-    const hasMore = rows.length > limit;
-    const resultPosts = hasMore ? rows.slice(0, limit) : rows;
+    const hasMore = rows.length > normalizedLimit;
+    const resultPosts = hasMore ? rows.slice(0, normalizedLimit) : rows;
     const nextCursor =
       hasMore && resultPosts.length > 0
-        ? encodeCursor({ created_at: resultPosts[resultPosts.length - 1].created_at })
+        ? encodePostFeedCursor({
+            createdAt: resultPosts[resultPosts.length - 1].created_at,
+            id: resultPosts[resultPosts.length - 1].id,
+          })
         : undefined;
 
     return {
@@ -213,7 +221,7 @@ export async function getTerritorialFeed(params: FeedParams = {}): Promise<FeedR
     logger.error("[posts.queries] Unexpected feed error:", error);
     trackError(error as Error, {
       component: "posts.queries",
-      action: "getTerritorialFeed",
+      action: "getFeed",
       metadata: { limit: params.limit },
     });
     throw new PostError("Unexpected error fetching feed", "UNKNOWN_ERROR");

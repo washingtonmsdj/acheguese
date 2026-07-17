@@ -13,6 +13,7 @@ export {
 export {
   AdCampaignAdminService,
 } from '@/core/business/promotions/services/AdCampaignAdminService';
+export { AD_CAMPAIGN_STATUS } from '@/core/business/promotions/config/adCampaignStatus';
 export type {
   AdCampaignRequestInput,
   AdCampaignTerritoryType,

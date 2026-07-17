@@ -576,22 +576,6 @@ export default function ContaEditarPerfilPage() {
                 )}
 
                 {profileType === 'personal' && (
-                  <Field
-                    id="community_reputation_score"
-                    label="Reputação comunitária"
-                    hint="Pontuação social na comunidade local."
-                  >
-                    <Input
-                      id="community_reputation_score"
-                      type="number"
-                      min={0}
-                      value={baseForm.community_reputation_score ?? 0}
-                      onChange={(e) => setBaseField('community_reputation_score', Number(e.target.value))}
-                    />
-                  </Field>
-                )}
-
-                {profileType === 'personal' && (
                   <div className="rounded-2xl border border-border bg-muted/30 p-3">
                     <p className="text-sm font-medium">Participação e grupos</p>
                     <p className="mt-1 text-xs text-muted-foreground">

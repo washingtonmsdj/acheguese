@@ -15,7 +15,8 @@ import {
 } from "@/shared/components/ui/dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/core/auth";
-import { messagingService } from "@/core/messaging";
+import { useSessionContext } from "@/core/session";
+import { classifiedMessagingService } from "@/core/messaging/services/ClassifiedMessagingService";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
@@ -37,6 +38,7 @@ export function VendedorContactBar({
   initialClassifiedId,
 }: VendedorContactBarProps) {
   const { user } = useAuth();
+  const { activeProfile } = useSessionContext();
   const navigate = useNavigate();
   const appUrls = useAppUrls();
   const [chatOpen, setChatOpen] = useState(false);
@@ -62,12 +64,12 @@ export function VendedorContactBar({
   const handleSendMessage = async () => {
     if (!message.trim()) return;
 
-    if (!user?.id) {
+    if (!user?.id || !activeProfile?.id) {
       toast.error("Faça login para enviar mensagens.");
       return;
     }
 
-    if (user.id === vendedorId) {
+    if (activeProfile?.id === vendedorId) {
       toast.info("Você não pode enviar mensagem para o próprio perfil.");
       return;
     }
@@ -78,10 +80,8 @@ export function VendedorContactBar({
     }
 
     try {
-      const conversation = await messagingService.findOrCreateConversation(
+      const conversation = await classifiedMessagingService.findOrCreateConversation(
         initialClassifiedId,
-        user.id,
-        vendedorId,
       );
 
       if (!conversation?.id) {
@@ -89,9 +89,8 @@ export function VendedorContactBar({
         return;
       }
 
-      await messagingService.sendMessage({
+      await classifiedMessagingService.sendMessage({
         conversation_id: conversation.id,
-        sender_profile_id: user.id,
         text: message.trim(),
       });
 

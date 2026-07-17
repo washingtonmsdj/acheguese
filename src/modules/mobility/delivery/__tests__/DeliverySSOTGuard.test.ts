@@ -27,18 +27,20 @@ describe("delivery ssot guard", () => {
     const appLazyImportsSource = readProjectFile(
       "src/app/routes/lazyImports.ts",
     );
-
-    expect(ssotServiceSource).toContain("OrderDeliveryNotificationService");
-    expect(ssotServiceSource).toContain("private static notifyBestEffort");
-    expect(ssotServiceSource).toContain('"createOrder"');
-    expect(ssotServiceSource).toContain('"transitionLogisticsStatus"');
-    expect(ssotServiceSource).toContain("taskFactory: () => Promise<void>");
-    expect(ssotServiceSource).toContain("void taskFactory().catch");
-    expect(ssotServiceSource).not.toContain(
-      "await OrderDeliveryNotificationService.notifyOrderCreated(order)",
+    const notificationMigrationSource = readProjectFile(
+      "supabase/migrations/20260714115000_migrate_mobility_admin_notifications.sql",
     );
-    expect(ssotServiceSource).not.toContain(
-      "await OrderDeliveryNotificationService.notifyOrderStatusChanged",
+
+    expect(ssotServiceSource).not.toContain("OrderDeliveryNotificationService");
+    expect(ssotServiceSource).not.toContain("notifyBestEffort");
+    expect(notificationMigrationSource).toContain(
+      "private.enqueue_order_notifications",
+    );
+    expect(notificationMigrationSource).toContain(
+      "AFTER INSERT ON public.orders",
+    );
+    expect(notificationMigrationSource).toContain(
+      "AFTER UPDATE OF logistics_status, proof_of_delivery ON public.orders",
     );
     expect(ssotServiceSource).toContain("markPickedUp");
     expect(linkServiceSource).toContain("ride_requests");

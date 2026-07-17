@@ -1,8 +1,6 @@
 import { useState, useRef } from "react";
 import { toast } from "sonner";
-import {
-  validateImageFile,
-} from "@/shared/utils/imageOptimizer";
+import { validateImageFile } from "@/shared/utils/imageOptimizer";
 import type { PostType } from "@/core/posts/types";
 import { logger } from "@/shared/utils/logger";
 
@@ -17,7 +15,7 @@ export type UnifiedPostType =
 
 export function usePostForm() {
   const [texto, setTexto] = useState("");
-  const [tipo, setTipo] = useState<UnifiedPostType>("texto");
+  const [tipo, setTipo] = useState<UnifiedPostType>("post");
   const [imagens, setImagens] = useState<File[]>([]);
   const [imagensPreview, setImagensPreview] = useState<string[]>([]);
   const [tagsInput, setTagsInput] = useState("");
@@ -74,7 +72,7 @@ export function usePostForm() {
 
   const reset = () => {
     setTexto("");
-    setTipo("texto");
+    setTipo("post");
     setImagens([]);
     setImagensPreview([]);
     setTagsInput("");

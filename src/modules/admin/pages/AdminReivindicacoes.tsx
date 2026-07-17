@@ -17,11 +17,8 @@ import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Card } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
-import { NotificationService } from "@/core/notifications";
 import { profileService } from "@/core/profiles/services/ProfileService";
-import { logger } from "@/shared/utils/logger";
 
 interface Claim {
   id: string;
@@ -33,9 +30,6 @@ interface Claim {
   resolved_at: string | null;
   user_name?: string;
   business_name?: string;
-  business_slug?: string;
-  business_category?: string;
-  business_is_premium?: boolean;
 }
 
 type BusinessClaimRecord = {
@@ -124,49 +118,6 @@ export default function AdminReivindicacoes() {
       setProcessing(null);
       return;
     }
-
-    // Gerar URL canônica da business para notificação
-    let businessUrl: string | null = null;
-    if (claim.business_slug && claim.business_id) {
-      try {
-        // Buscar business completa para obter dados territoriais reais
-        const businessDetails = await adminBusinessService.getBusinessClaimDetails(claim.business_id);
-        const businessContext = businessDetails as
-          | { profile_id?: string; geographic_path?: string; is_premium?: boolean }
-          | null;
-        if (businessContext?.profile_id && businessContext?.geographic_path) {
-          businessUrl = BusinessUrlService.getCanonicalUrl({
-            id: businessContext.profile_id,
-            slug: claim.business_slug,
-            geographic_path: businessContext.geographic_path,
-            is_premium: businessContext.is_premium,
-          });
-        }
-      } catch (error) {
-        // Se falhar, não gerar URL (businessUrl permanece null)
-        logger.error("Erro ao buscar dados da business para URL:", error);
-      }
-    }
-
-    const msg =
-      action === "aprovada"
-        ? `Sua reivindicação da empresa "${claim.business_name}" foi aprovada!`
-        : `Sua reivindicação da empresa "${claim.business_name}" foi rejeitada.`;
-
-    await NotificationService.createNotification({
-      user_id: claim.user_id,
-      type: "info" as const,
-      title:
-        action === "aprovada"
-          ? "Reivindicação aprovada"
-          : "Reivindicação rejeitada",
-      message: msg,
-      priority: "high" as const,
-      metadata: businessUrl ? {
-        action_url: businessUrl,
-        action_label: "Ver empresa",
-      } : undefined,
-    });
 
     toast.success(
       action === "aprovada"

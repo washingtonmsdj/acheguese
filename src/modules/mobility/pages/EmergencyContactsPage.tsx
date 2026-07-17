@@ -17,6 +17,7 @@ export default function EmergencyContactsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
+    email: "",
     phone: "",
     relationship: "",
     isPrimary: false,
@@ -32,27 +33,31 @@ export default function EmergencyContactsPage() {
 
     try {
       if (editingId) {
-        await updateContact(editingId, {
+        const result = await updateContact(editingId, {
           name: formData.name,
+          email: formData.email,
           phone: formData.phone,
           relationship: formData.relationship,
           isPrimary: formData.isPrimary,
         });
+        if (!result.success) throw new Error(result.error || "Erro ao atualizar contato");
         toast.success("Contato atualizado!");
         setEditingId(null);
       } else {
-        await createContact({
+        const result = await createContact({
           profileId: activeProfile.id,
           name: formData.name,
+          email: formData.email,
           phone: formData.phone,
           relationship: formData.relationship,
           isPrimary: formData.isPrimary,
         });
+        if (!result.success) throw new Error(result.error || "Erro ao adicionar contato");
         toast.success("Contato adicionado!");
         setIsAdding(false);
       }
 
-      setFormData({ name: "", phone: "", relationship: "", isPrimary: false });
+      setFormData({ name: "", email: "", phone: "", relationship: "", isPrimary: false });
     } catch (error) {
       logger.error("Erro ao salvar contato:", error);
       toast.error("Erro ao salvar contato");
@@ -63,7 +68,8 @@ export default function EmergencyContactsPage() {
     setEditingId(contact.id);
     setFormData({
       name: contact.name,
-      phone: contact.phone,
+      email: contact.email,
+      phone: contact.phone ?? "",
       relationship: contact.relationship,
       isPrimary: contact.isPrimary,
     });
@@ -75,7 +81,8 @@ export default function EmergencyContactsPage() {
 
     setIsDeleting(true);
     try {
-      await deleteContact(contactToDelete);
+      const result = await deleteContact(contactToDelete);
+      if (!result.success) throw new Error(result.error || "Erro ao excluir contato");
       toast.success("Contato excluido!");
       setContactToDelete(null);
     } catch (error) {
@@ -89,7 +96,7 @@ export default function EmergencyContactsPage() {
   const handleCancel = () => {
     setIsAdding(false);
     setEditingId(null);
-    setFormData({ name: "", phone: "", relationship: "", isPrimary: false });
+    setFormData({ name: "", email: "", phone: "", relationship: "", isPrimary: false });
   };
 
   if (loading) {
@@ -136,15 +143,34 @@ export default function EmergencyContactsPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Email ou telefone</label>
+              <label className="text-sm font-medium">Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
-                  type="text"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="email@exemplo.com"
+                  autoComplete="email"
+                  required
+                  className="w-full pl-10 pr-4 py-2 rounded-lg bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Alertas sao enviados por email. SMS ainda nao esta ativo.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Telefone (opcional)</label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="email@exemplo.com ou (27) 99999-9999"
-                  required
+                  placeholder="(71) 99999-9999"
+                  autoComplete="tel"
                   className="w-full pl-10 pr-4 py-2 rounded-lg bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
@@ -171,7 +197,7 @@ export default function EmergencyContactsPage() {
                 className="w-4 h-4 rounded border-border"
               />
               <label htmlFor="isPrimary" className="text-sm">
-                Contato primario. Sera notificado primeiro.
+                Marcar como contato principal.
               </label>
             </div>
 
@@ -217,8 +243,14 @@ export default function EmergencyContactsPage() {
                     </div>
                     <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                       <Mail className="h-3.5 w-3.5" />
-                      {contact.phone}
+                      {contact.email}
                     </p>
+                    {contact.phone && (
+                      <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                        <Phone className="h-3.5 w-3.5" />
+                        {contact.phone}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground mt-1">
                       {contact.relationship}
                     </p>

@@ -19,17 +19,13 @@ export { default as AdminMotoristas } from "@/core/admin/drivers/pages/AdminMoto
 export { default as AdminEmpresas } from "./pages/AdminEmpresas";
 export { default as AdminServicos } from "./pages/AdminServicos";
 export { default as AdminClassificados } from "./pages/AdminClassificados";
-export { default as AdminZeladoria } from "./pages/AdminZeladoria";
 export { default as AdminEventos } from "./pages/AdminEventos";
 export { default as AdminMensagens } from "./pages/AdminMensagens";
 export { default as AdminCupons } from "./pages/AdminCupons";
-export { default as AdminGamificacao } from "./pages/AdminGamificacao";
 export { default as AdminConfiguracoes } from "./pages/AdminConfiguracoes";
 export { default as AdminOperacoes } from "./pages/AdminOperacoes";
 export { default as AdminSSOT } from "./pages/AdminSSOT";
 export { default as AdminVerificacoes } from "./pages/AdminVerificacoes";
-export { default as AdminModeracaoCompleta } from "./pages/AdminModeracaoCompleta";
-export { default as AdminModeracaoComunidade } from "./pages/AdminModeracaoComunidade";
 export { default as AdminPontosEmbarque } from "./pages/AdminPontosEmbarque";
 export { default as AdminReportsPassageiros } from "./pages/AdminReportsPassageiros";
 export { default as AdminReivindicacoes } from "./pages/AdminReivindicacoes";

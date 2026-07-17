@@ -1,6 +1,6 @@
 # CP-016 - Consolidacao de midia publica no Media Asset
 
-**Status:** em andamento, checkpoint local nao validado.
+**Status:** em andamento, codigo local validado; migration remota pendente.
 
 **Responsavel pela proxima etapa:** qualquer IA ou desenvolvedor que retomar o
 trabalho deve seguir este documento antes de alterar codigo ou aplicar SQL.
@@ -14,8 +14,9 @@ renderizacao devem ser resolvidas a partir dessas referencias.
 ## Estado confirmado
 
 - O projeto usa Supabase remoto. A migration CP-016 **nao foi aplicada**.
-- O worktree possui centenas de alteracoes locais de diversas frentes. Nao
-  presuma que elas pertencem ao CP-016 e nao as inclua em commits deste trabalho.
+- O checkpoint de consolidacao da plataforma inclui alteracoes de diversas
+  frentes, inclusive partes do CP-016. Isso nao significa que CP-016 esteja
+  concluido ou apto para aplicacao remota.
 - A branch atual e `main`, com remoto `origin`. Este handoff deve ser tratado
   como o ponto de retomada auditavel do CP-016.
 - Os assets de post, review, cardapio, anexos privados, evidencias de seguranca
@@ -36,9 +37,9 @@ renderizacao devem ser resolvidas a partir dessas referencias.
 
 ## Checkpoint local existente
 
-Ha implementacao parcial local. Ela foi deliberadamente deixada sem commit de
-codigo porque ainda nao passou por typecheck, testes, revisao de migration e
-auditoria remota. Antes de reaproveita-la, revise os diffs de cada arquivo.
+Ha implementacao parcial local. O checkpoint de codigo passou por typecheck,
+lint, testes, build e validadores de seguranca/arquitetura. A migration ainda
+nao teve auditoria remota e nao deve ser aplicada sem a revisao descrita abaixo.
 
 ### Migration pendente
 
@@ -88,8 +89,8 @@ mas ainda precisam de revisao integrada:
 - classificado: `ClassifiedImageService`, hook de imagem e pagina de criacao;
 - profissional: schemas, lifecycle, mappers, facade e paginas de cadastro/edicao;
 - branding administrativo: `SiteSettingsService` e `AdminBranding.tsx`;
-- banner: `BannerService.ts` foi atualizado, mas `BannersPage.tsx` ainda precisa
-  passar o perfil administrador para o novo contrato.
+- banner: `BannerService.ts` e `BannersPage.tsx` usam o perfil administrador
+  ativo no novo contrato; a cobertura remota continua pendente.
 
 Antes de prosseguir, rode `rg "uploadAvatar|uploadBusinessImage|uploadProfessionalImage|uploadToBucket" src supabase` e classifique cada uso. Nao remova wrappers genericos enquanto ainda houver consumidores legitimos (por exemplo, evidencias privadas e virtual try-on).
 
@@ -109,7 +110,8 @@ como `src` sem validacao de host e de tipo de referencia.
 ### Fase 0 - Isolamento e baseline
 
 1. Rode `git status --short` e registre os arquivos que ja estavam sujos.
-2. Nao use `git add -A`, `git commit -a`, `git reset --hard` ou force push.
+2. Nao use `git reset --hard` ou force push. Antes de qualquer commit, revise
+   o escopo staged e separe CP-016 de alteracoes sem relacao quando possivel.
 3. Inspecione os diffs locais do CP-016 individualmente antes de mantelos.
 4. Leia `docs/architecture/MEDIA_ASSET_SSOT.md` e
    `plans/CORE_PLATFORM_CONSOLIDATION_PLAN.md`.
@@ -184,9 +186,8 @@ Adicione testes especificos para:
 
 Somente apos todos os gates verdes e auditoria remota aprovada: aplicar migration,
 regenerar tipos Supabase se o projeto os versionar, atualizar
-`MEDIA_ASSET_SSOT.md`, o plano mestre e este handoff. O commit de codigo deve
-conter apenas arquivos CP-016 relacionados; revise `git diff --cached --check`
-antes de publicar.
+`MEDIA_ASSET_SSOT.md`, o plano mestre e este handoff. A entrega final de CP-016
+deve ter escopo revisado e `git diff --cached --check` verde antes de publicar.
 
 ## Criterios de pronto
 
@@ -201,6 +202,7 @@ nome de terceiro, URL arbitraria e preset indevido.
 
 ## Registro de entrega deste checkpoint
 
-Este checkpoint deliberadamente publica somente a documentacao de continuidade.
-Nenhum codigo CP-016 parcial deve ser considerado entregue, aplicado no remoto
-ou pronto para producao ate que as fases acima terminem.
+Este checkpoint publica a consolidacao local e seus testes, mas nao aplica a
+migration CP-016 no Supabase remoto. Nenhum codigo CP-016 parcial deve ser
+considerado entregue no banco remoto ou pronto para producao ate que as fases
+acima terminem, incluindo a auditoria remota e a migration segura em etapas.

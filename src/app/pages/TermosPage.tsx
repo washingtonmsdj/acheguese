@@ -10,17 +10,26 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
+import {
+  COMMUNITY_GUIDELINE_ENFORCEMENT_STEPS,
+  COMMUNITY_GUIDELINES,
+  COMMUNITY_GUIDELINES_ANCHOR,
+  COMMUNITY_GUIDELINES_PATH,
+  TERMS_OF_SERVICE_UPDATED_LABEL,
+  TERMS_OF_SERVICE_VERSION,
+} from "@/core/legal/termsOfService";
 import { Button } from "@/shared/components/ui/button";
 
 const legalForum =
-  import.meta.env.VITE_LEGAL_FORUM ?? "o foro competente definido pela legislação aplicável";
+  import.meta.env.VITE_LEGAL_FORUM ??
+  "o foro competente definido pela legislação aplicável";
 
 const TERMS_SECTIONS = [
   {
     icon: Users,
     title: "1. Aceitação dos termos",
     paragraphs: [
-      "Ao acessar ou utilizar a plataforma Achegue-se, o usuário declara que leu, compreendeu e aceitou estes Termos de Uso, assim como a Política de Privacidade e as Regras da Comunidade.",
+      "Ao acessar ou utilizar a plataforma Achegue-se, o usuário declara que leu, compreendeu e aceitou estes Termos de Uso, incluindo as Diretrizes da Comunidade, assim como a Política de Privacidade.",
       "Se o usuário não concordar com qualquer parte destes termos, não deve utilizar a plataforma. O uso continuado após atualizações relevantes representa aceitação das novas condições.",
       "A plataforma é destinada a maiores de 18 anos ou a menores representados e autorizados por seus responsáveis legais, conforme a legislação aplicável.",
     ],
@@ -106,7 +115,8 @@ export default function TermosPage() {
                   Termos de uso
                 </h1>
                 <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                  Última atualização: março de 2026. Versão pública de leitura.
+                  Última atualização: {TERMS_OF_SERVICE_UPDATED_LABEL}. Versão{" "}
+                  {TERMS_OF_SERVICE_VERSION}.
                 </p>
               </div>
             </div>
@@ -121,9 +131,10 @@ export default function TermosPage() {
                 Regras contratuais para uso do Achegue-se
               </h2>
               <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-                Este documento resume as condições principais de acesso, cadastro, publicação,
-                moderação e responsabilidade dentro da plataforma. O objetivo é deixar o uso claro,
-                previsível e alinhado ao SSOT jurídico do produto.
+                Este documento resume as condições principais de acesso,
+                cadastro, publicação, moderação e responsabilidade dentro da
+                plataforma. O objetivo é deixar o uso claro, previsível e
+                alinhado ao SSOT jurídico do produto.
               </p>
             </div>
 
@@ -142,9 +153,9 @@ export default function TermosPage() {
 
           <section className="mt-5 rounded-3xl border border-primary/20 bg-primary/5 p-4 shadow-sm sm:p-5">
             <p className="text-sm leading-6 text-foreground">
-              Ao criar conta, publicar conteúdo ou interagir com a comunidade, o usuário aceita estas
-              condições de uso e se compromete a respeitar as regras operacionais, legais e de
-              segurança da plataforma.
+              Ao criar conta, publicar conteúdo ou interagir com a comunidade, o
+              usuário aceita estas condições de uso e se compromete a respeitar
+              as regras operacionais, legais e de segurança da plataforma.
             </p>
           </section>
 
@@ -170,7 +181,10 @@ export default function TermosPage() {
 
                   <div className="mt-4 space-y-3">
                     {section.paragraphs.map((paragraph) => (
-                      <p key={paragraph} className="text-sm leading-6 text-muted-foreground">
+                      <p
+                        key={paragraph}
+                        className="text-sm leading-6 text-muted-foreground"
+                      >
                         {paragraph}
                       </p>
                     ))}
@@ -180,11 +194,73 @@ export default function TermosPage() {
             })}
           </div>
 
+          <section
+            id={COMMUNITY_GUIDELINES_ANCHOR}
+            className="mt-5 rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6"
+          >
+            <div className="max-w-3xl space-y-3">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
+                Parte integrante dos termos
+              </p>
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
+                Diretrizes da comunidade
+              </h2>
+              <p className="text-sm leading-6 text-muted-foreground">
+                Estas diretrizes fazem parte dos Termos de Uso e orientam
+                publicações, comentários, alertas, recomendações e interações em
+                todos os territórios. O aceite da versão vigente é exigido no
+                cadastro autogerenciado.
+              </p>
+            </div>
+
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
+              {COMMUNITY_GUIDELINES.map((guideline) => (
+                <article
+                  key={guideline.id}
+                  className="rounded-2xl border border-border/70 bg-background/50 p-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-xl bg-primary/10 p-2 text-primary">
+                      <Shield className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-semibold text-foreground">
+                        {guideline.title}
+                      </h3>
+                      <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+                        {guideline.description}
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            <div className="mt-5 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4">
+              <h3 className="text-sm font-semibold text-foreground">
+                Como a moderação escala
+              </h3>
+              <ol className="mt-3 space-y-2">
+                {COMMUNITY_GUIDELINE_ENFORCEMENT_STEPS.map((step, index) => (
+                  <li
+                    key={step}
+                    className="flex items-start gap-3 text-sm leading-6 text-muted-foreground"
+                  >
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-xs font-semibold text-amber-700 dark:text-amber-300">
+                      {index + 1}
+                    </span>
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </section>
+
           <section className="mt-5 rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-5">
             <div className="flex flex-col gap-3">
               <p className="text-sm leading-6 text-muted-foreground">
-                Leia também os documentos complementares e os canais oficiais para temas de comunidade
-                e privacidade.
+                Leia também os documentos complementares e os canais oficiais
+                para temas de comunidade e privacidade.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
@@ -194,10 +270,10 @@ export default function TermosPage() {
                   Política de privacidade
                 </Link>
                 <Link
-                  to="/regras"
+                  to={COMMUNITY_GUIDELINES_PATH}
                   className="text-sm font-medium text-primary underline-offset-4 hover:underline"
                 >
-                  Regras da comunidade
+                  Diretrizes da comunidade
                 </Link>
                 <Link
                   to="/dpo"

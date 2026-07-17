@@ -8,7 +8,7 @@ import type {
   ProfileReputation,
   ProfileStatus,
 } from "@/core/profiles/contracts/ProfileRuntimeContracts";
-import type { AdminProfilePermissionGovernanceStatus } from "@/core/admin/config/profile-governance";
+import type { AdminProfileCapabilityPreviewStatus } from "@/core/admin/config/profile-governance";
 export type RawRecord = Record<string, unknown>;
 
 export type AdminProfileIdentityIssue =
@@ -226,19 +226,19 @@ export interface AdminProfileReputationSourceSummary {
   notes: string[];
 }
 
-export interface AdminProfilePermissionActionSummary {
+export interface AdminProfileCapabilityActionSummary {
   action: string;
   status: "allowed" | "denied" | "requiresTarget";
 }
 
-export interface AdminProfilePermissionGovernanceSummary {
-  status: AdminProfilePermissionGovernanceStatus;
+export interface AdminProfileCapabilityPreviewSummary {
+  status: AdminProfileCapabilityPreviewStatus;
   sourceRoles: string[];
   sourceMembershipRoles: string[];
   allowedActions: number;
   deniedActions: number;
   targetDependentActions: number;
-  actionMatrix: AdminProfilePermissionActionSummary[];
+  actionMatrix: AdminProfileCapabilityActionSummary[];
   notes: string[];
 }
 
@@ -263,5 +263,5 @@ export interface AdminProfileIdentityDetail {
   reputationSources: AdminProfileReputationSourceSummary[];
   residence: AdminProfileResidenceSummary | null;
   family: AdminProfileFamilySummary;
-  permissionGovernance: AdminProfilePermissionGovernanceSummary | null;
+  capabilityPreview: AdminProfileCapabilityPreviewSummary | null;
 }

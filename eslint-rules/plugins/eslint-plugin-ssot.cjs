@@ -60,8 +60,14 @@ const DOMAIN_RULES = {
     service: 'GamificationService',
   },
   moderation: {
-    tables: ['reports', 'moderation_actions', 'content_flags', 'banned_users'],
-    service: 'ModerationService',
+    tables: ['community_reports', 'community_user_moderation_actions', 'community_social_audit_log', 'banned_users'],
+    service: 'owner de moderation declarado por tabela',
+    tableOwners: {
+      community_reports: ['CommunityReportService'],
+      community_user_moderation_actions: [],
+      community_social_audit_log: [],
+      banned_users: [],
+    },
   },
   lostfound: {
     tables: ['lost_found_posts', 'lost_found_comments'],
@@ -100,12 +106,7 @@ function createTableGuardRule(domain) {
     create(context) {
       return {
         CallExpression(node) {
-          // Skip if we're inside the canonical Service file or any additional permitted service
           const filename = context.getFilename();
-          const permittedServices = [service, ...(DOMAIN_RULES[domain].additionalServices || [])];
-          if (permittedServices.some(s => filename.includes(s))) {
-            return;
-          }
 
           if (
             node.callee &&
@@ -118,9 +119,19 @@ function createTableGuardRule(domain) {
           ) {
             const tableName = node.arguments[0].value;
             if (tables.includes(tableName)) {
+              const tableOwners = DOMAIN_RULES[domain].tableOwners;
+              const permittedServices = tableOwners
+                ? tableOwners[tableName] || []
+                : [service, ...(DOMAIN_RULES[domain].additionalServices || [])];
+              if (permittedServices.some((owner) => filename.includes(owner))) {
+                return;
+              }
+              const ownerInstruction = permittedServices.length
+                ? `Use ${permittedServices.join(' ou ')}.`
+                : 'Use o comando ou read model server-owned do dominio.';
               context.report({
                 node,
-                message: `❌ SSOT Violation: Acesso direto à tabela '${tableName}' não permitido. Use ${service}.`,
+                message: `❌ SSOT Violation: Acesso direto à tabela '${tableName}' não permitido. ${ownerInstruction}`,
               });
             }
           }
@@ -144,7 +155,7 @@ module.exports = { rules, DOMAIN_RULES };
  * REGRA: Validação de Nomenclatura (User vs Profile vs Author)
  * ============================================================================
  * Referência: docs/SSOT_ARCHITECTURE.md
- * 
+ *
  * Proíbe nomes ambíguos e força nomenclatura explícita:
  * - Contexto social → *_profile_id
  * - Contexto global → *_user_id
@@ -190,7 +201,7 @@ const NAMING_PATTERN_RULE = {
           }
         }
       },
-      
+
       // Detectar em objetos JavaScript
       Property(node) {
         if (node.key && node.key.type === 'Identifier') {
@@ -205,7 +216,7 @@ const NAMING_PATTERN_RULE = {
           }
         }
       },
-      
+
       // Detectar em strings (queries SQL)
       Literal(node) {
         if (typeof node.value === 'string') {

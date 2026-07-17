@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSessionContext } from "@/core/session";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
 import { CommentService } from "@/core/comments/services"; // ✅ GATE 4A FASE 2
-import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService"; // ✅ GATE 3 FASE 3C
 /**
  * Hook profissional para gerenciar interações com comentários
  *
@@ -97,7 +96,7 @@ export function useCommentInteractions(postId: string) {
   /**
    * Inicializar state de um comentário
    */
-  const initializeComment = (
+  const initializeComment = useCallback((
     commentId: string,
     isLiked: boolean,
     likesCount: number,
@@ -106,7 +105,7 @@ export function useCommentInteractions(postId: string) {
       ...prev,
       [commentId]: { isLiked, likesCount },
     }));
-  };
+  }, []);
 
   /**
    * Curtir/Descurtir comentário
@@ -136,20 +135,14 @@ export function useCommentInteractions(postId: string) {
     setIsProcessing((prev) => setProcessingById(prev, commentId, true));
 
     try {
-      // ✅ GATE 4A FASE 2 - Usar SocialInteractionsService para likes
+      // CommentService owns comment reactions.
       if (newIsLiked) {
-        const result = await SocialInteractionsService.likeComment(
-          commentId,
-          activeProfile.id,
-        );
+        const result = await CommentService.likeComment(commentId);
         if (!result.success) {
           throw new Error(result.error || "Erro ao curtir comentário");
         }
       } else {
-        const result = await SocialInteractionsService.unlikeComment(
-          commentId,
-          activeProfile.id,
-        );
+        const result = await CommentService.unlikeComment(commentId);
         if (!result.success) {
           throw new Error(result.error || "Erro ao descurtir comentário");
         }

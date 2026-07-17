@@ -5,7 +5,15 @@
  * filtros territoriais canônicos e o mapa real do produto.
  */
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useMemo,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -44,9 +52,13 @@ import bairroRioVermelho from "@/assets/bairro-riovermelho.jpg";
 import empresasHero from "@/assets/empresas-hero.jpg";
 import neighborhoodFeatured from "@/assets/neighborhood-featured.jpg";
 import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
-import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchScope";
+import {
+  isLaunchSurfaceEnabled,
+  type LaunchSurfaceKey,
+} from "@/config/launchScope";
 import { BusinessLogo } from "@/shared/components/ui/business-logo";
 import { useTheme } from "@/shared/hooks/useTheme";
+import { getRecordValue } from "@/shared/utils/recordLookup";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import type { Business } from "@/core/business/types/Business";
@@ -64,7 +76,12 @@ import { classifiedUrlService } from "@/core/classifieds/services/ClassifiedUrlS
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { LocationService } from "@/core/location/services/LocationService";
-import { LocationStatus, LocationType, type Location, type TerritoryFilter } from "@/core/location/types";
+import {
+  LocationStatus,
+  LocationType,
+  type Location,
+  type TerritoryFilter,
+} from "@/core/location/types";
 import {
   DARK_TILE_STYLE,
   DEFAULT_TILE_STYLE,
@@ -79,9 +96,22 @@ import { mapGastronomyLayerRuntimeService } from "@/core/maps/services/MapGastro
 import { mapServicesLayerRuntimeService } from "@/core/maps/services/MapServicesLayerRuntimeService";
 import type { BoundingBox } from "@/core/maps/types/core";
 import { useCommunityFeedSimple } from "@/core/community-feed/hooks/useCommunityFeed";
-import { CommunityOverviewSurface } from "@/core/community/components/page/CommunityOverviewSurface";
-import type { TerritorialFeedChannel } from "@/core/community/hooks/feed/territorialFeedEngine";
+import {
+  CommunityOverviewSurface,
+  type CommunityOverviewSection,
+  type CommunityOverviewView,
+} from "@/core/community-feed/components/page/CommunityOverviewSurface";
+import {
+  isCommunityOverviewView,
+  isCommunitySocialView,
+} from "@/core/community-feed/components/page/communityOverviewNavigation";
 import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
+import { PublicHeaderMobileMenu } from "@/core/navigation/PublicHeaderMobileMenu";
+import {
+  buildPublicHeaderNavigation,
+  type PublicHeaderNavItem,
+  type PublicHeaderNavItemId,
+} from "@/core/navigation/publicHeaderNavigation";
 import { useTouristPoints } from "@/core/guide/tourist-points/hooks/useTouristPoints";
 import type { TouristPoint } from "@/core/guide/tourist-points/types";
 import { residenceService } from "@/core/residence/services/ResidenceService";
@@ -90,7 +120,12 @@ import { useTerritorialContextOptional } from "@/core/routing/components/Territo
 import { useCommunityUrls } from "@/core/routing/hooks/useCommunityUrls";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { parsePublicTerritoryPath } from "@/core/routing/utils/publicTerritoryPath";
-import { formatCategory, formatMetric, formatPrice } from "./CidadeLanding.constants";
+import { isPublicTerritoryFallbackLocation } from "@/core/routing/utils/publicTerritoryFallbacks";
+import {
+  formatCategory,
+  formatMetric,
+  formatPrice,
+} from "./CidadeLanding.constants";
 import {
   buildCityModuleUrls,
   type CityModuleUrls,
@@ -109,11 +144,17 @@ import {
   type NeighborhoodAccessStatus,
   type PopulationMetric,
 } from "./CidadeLanding.neighborhood-panels";
-import {
-  NeighborhoodTerritoryHero,
-} from "./CidadeLanding.neighborhood-hero";
+import { NeighborhoodTerritoryHero } from "./CidadeLanding.neighborhood-hero";
 import { NeighborhoodTerritoryArt } from "@/core/community-feed/components/public/NeighborhoodTerritoryArt";
 import "./CidadeLandingPage.css";
+
+const CommunityCreatePostModal = lazy(() =>
+  import("@/core/community-feed/components/composer/CreatePostModal").then(
+    (module) => ({
+      default: module.CreatePostModal,
+    }),
+  ),
+);
 
 type Coordinates = {
   latitude: number;
@@ -131,6 +172,15 @@ type NavItem = {
   href: string;
   surface: LaunchSurfaceKey;
 };
+
+const COMMUNITY_DESKTOP_NAV_IDS = new Set<PublicHeaderNavItemId>([
+  "home",
+  "community",
+  "business",
+  "classifieds",
+  "services",
+  "map",
+]);
 
 type StatCard = {
   label: string;
@@ -186,9 +236,17 @@ const salvadorFallbackTerritoryPolygons: TerritoryPolygon[] = [
 
 const salvadorBounds: BoundingBox = [-38.72, -13.04, -38.27, -12.71];
 const weatherCacheTtlMs = 10 * 60 * 1000;
-const currentWeatherCache = new globalThis.Map<string, { temperatureCelsius: number; expiresAt: number }>();
+const currentWeatherCache = new globalThis.Map<
+  string,
+  { temperatureCelsius: number; expiresAt: number }
+>();
 const locationReadService = new LocationService(createLocationRepository());
-const districtImages = [bairroRioVermelho, bairroPituba, neighborhoodFeatured, empresasHero];
+const districtImages = [
+  bairroRioVermelho,
+  bairroPituba,
+  neighborhoodFeatured,
+  empresasHero,
+];
 
 function toDisplayName(value: string): string {
   return value
@@ -212,7 +270,17 @@ function slugify(value: string): string {
 }
 
 function slugToTerritoryLabel(slug: string): string {
-  const lowercaseWords = new Set(["de", "da", "do", "das", "dos", "e", "em", "a", "o"]);
+  const lowercaseWords = new Set([
+    "de",
+    "da",
+    "do",
+    "das",
+    "dos",
+    "e",
+    "em",
+    "a",
+    "o",
+  ]);
   return slug
     .split("-")
     .filter(Boolean)
@@ -233,7 +301,9 @@ function getFiniteNumber(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function getLocationCenter(location: Location | null | undefined): Coordinates | null {
+function getLocationCenter(
+  location: Location | null | undefined,
+): Coordinates | null {
   const metadata = location?.metadata;
   if (!metadata) return null;
 
@@ -253,12 +323,19 @@ function getLocationCenter(location: Location | null | undefined): Coordinates |
   return latitude != null && longitude != null ? { latitude, longitude } : null;
 }
 
-function getResolvedTerritoryLocations(resolved: ResolvedTerritory | null): Location[] {
+function getResolvedTerritoryLocations(
+  resolved: ResolvedTerritory | null,
+): Location[] {
   if (!resolved) return [];
-  return resolved.kind === "group" ? resolved.group.members : [resolved.location];
+  return resolved.kind === "group"
+    ? resolved.group.members
+    : [resolved.location];
 }
 
-function getCityPartsFromResolved(resolved: ResolvedTerritory | null): { state?: string; city?: string } {
+function getCityPartsFromResolved(resolved: ResolvedTerritory | null): {
+  state?: string;
+  city?: string;
+} {
   const location = getResolvedTerritoryLocations(resolved)[0];
   const parts = location?.geographic_path.split("/").filter(Boolean) ?? [];
   const publicParts = parts[0] === "br" ? parts.slice(1) : parts;
@@ -268,25 +345,42 @@ function getCityPartsFromResolved(resolved: ResolvedTerritory | null): { state?:
   };
 }
 
-function getResolvedTerritoryName(resolved: ResolvedTerritory | null, fallback: string): string {
+function getResolvedTerritoryName(
+  resolved: ResolvedTerritory | null,
+  fallback: string,
+): string {
   if (!resolved) return fallback;
-  return resolved.kind === "group" ? resolved.group.name : resolved.location.name;
+  return resolved.kind === "group"
+    ? resolved.group.name
+    : resolved.location.name;
 }
 
-function getPublicTerritoryDisplayName(pathname: string, resolved: ResolvedTerritory | null, fallback: string): string {
+function getPublicTerritoryDisplayName(
+  pathname: string,
+  resolved: ResolvedTerritory | null,
+  fallback: string,
+): string {
   const parsed = parsePublicTerritoryPath(pathname);
   if (parsed.territorySlug) return slugToTerritoryLabel(parsed.territorySlug);
   return getResolvedTerritoryName(resolved, fallback);
 }
 
-function getResolvedTerritoryCenter(resolved: ResolvedTerritory | null): Coordinates | null {
+function getResolvedTerritoryCenter(
+  resolved: ResolvedTerritory | null,
+): Coordinates | null {
   const locations = getResolvedTerritoryLocations(resolved);
-  const centers = locations.map(getLocationCenter).filter((center): center is Coordinates => Boolean(center));
+  const centers = locations
+    .map(getLocationCenter)
+    .filter((center): center is Coordinates => Boolean(center));
   if (centers.length === 0) return null;
 
-  const latitude = centers.reduce((sum, center) => sum + center.latitude, 0) / centers.length;
-  const longitude = centers.reduce((sum, center) => sum + center.longitude, 0) / centers.length;
-  return Number.isFinite(latitude) && Number.isFinite(longitude) ? { latitude, longitude } : null;
+  const latitude =
+    centers.reduce((sum, center) => sum + center.latitude, 0) / centers.length;
+  const longitude =
+    centers.reduce((sum, center) => sum + center.longitude, 0) / centers.length;
+  return Number.isFinite(latitude) && Number.isFinite(longitude)
+    ? { latitude, longitude }
+    : null;
 }
 
 const POPULATION_METADATA_FIELDS = [
@@ -313,24 +407,32 @@ const SERVICES_COUNT_METADATA_FIELDS = [
   "verified_services_count",
 ] as const;
 
-function getLocationPopulationMetric(location: Location): PopulationMetric | null {
+function getLocationPopulationMetric(
+  location: Location,
+): PopulationMetric | null {
   for (const { key, sourceLabel } of POPULATION_METADATA_FIELDS) {
-    const value = getFiniteNumber(location.metadata[key]);
+    const value = getFiniteNumber(getRecordValue(location.metadata, key));
     if (value != null) return { value, sourceLabel };
   }
   return null;
 }
 
-function getResolvedPopulationMetric(resolved: ResolvedTerritory | null): PopulationMetric {
+function getResolvedPopulationMetric(
+  resolved: ResolvedTerritory | null,
+): PopulationMetric {
   const values = getResolvedTerritoryLocations(resolved)
     .map(getLocationPopulationMetric)
-    .filter((metric): metric is PopulationMetric => Boolean(metric?.value && metric.value > 0));
+    .filter((metric): metric is PopulationMetric =>
+      Boolean(metric?.value && metric.value > 0),
+    );
 
   if (values.length === 0) {
     return { sourceLabel: "IBGE pendente" };
   }
 
-  const sourceLabel = values.every((metric) => metric.sourceLabel.includes("IBGE"))
+  const sourceLabel = values.every((metric) =>
+    metric.sourceLabel.includes("IBGE"),
+  )
     ? values[0].sourceLabel
     : "metadata territorial";
   return {
@@ -344,7 +446,7 @@ function getLocationNumericMetric(
   fields: readonly string[],
 ): number | null {
   for (const field of fields) {
-    const value = getFiniteNumber(location.metadata[field]);
+    const value = getFiniteNumber(getRecordValue(location.metadata, field));
     if (value != null) return value;
   }
 
@@ -357,7 +459,10 @@ function getResolvedNumericMetric(
 ): number | undefined {
   const values = getResolvedTerritoryLocations(resolved)
     .map((location) => getLocationNumericMetric(location, fields))
-    .filter((value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0);
+    .filter(
+      (value): value is number =>
+        typeof value === "number" && Number.isFinite(value) && value > 0,
+    );
 
   if (values.length === 0) return undefined;
   return values.reduce((sum, value) => sum + value, 0);
@@ -371,14 +476,20 @@ function getNeighborhoodAccessStatus(
   return isResidenceVerifiedInTerritory ? "verified" : "unverified";
 }
 
-function getCenterFromPolygons(polygons: TerritoryPolygon[]): Coordinates | null {
+function getCenterFromPolygons(
+  polygons: TerritoryPolygon[],
+): Coordinates | null {
   const center = polygons.find((polygon) => polygon.center)?.center;
   if (!center) return null;
   const [latitude, longitude] = center;
-  return Number.isFinite(latitude) && Number.isFinite(longitude) ? { latitude, longitude } : null;
+  return Number.isFinite(latitude) && Number.isFinite(longitude)
+    ? { latitude, longitude }
+    : null;
 }
 
-function getBoundsFromPolygons(polygons: TerritoryPolygon[]): BoundingBox | null {
+function getBoundsFromPolygons(
+  polygons: TerritoryPolygon[],
+): BoundingBox | null {
   const coordinates = polygons.flatMap((polygon) => polygon.coordinates);
   if (!coordinates.length) return null;
 
@@ -392,14 +503,31 @@ function getBoundsFromPolygons(polygons: TerritoryPolygon[]): BoundingBox | null
   return [west, south, east, north];
 }
 
-function isInsideBounds(latitude: number | null | undefined, longitude: number | null | undefined, bounds: BoundingBox): boolean {
+function isInsideBounds(
+  latitude: number | null | undefined,
+  longitude: number | null | undefined,
+  bounds: BoundingBox,
+): boolean {
   if (latitude == null || longitude == null) return false;
   const [west, south, east, north] = bounds;
-  return longitude >= west && longitude <= east && latitude >= south && latitude <= north;
+  return (
+    longitude >= west &&
+    longitude <= east &&
+    latitude >= south &&
+    latitude <= north
+  );
 }
 
-function hasValidCoordinates(latitude: number | null | undefined, longitude: number | null | undefined): boolean {
-  return typeof latitude === "number" && Number.isFinite(latitude) && typeof longitude === "number" && Number.isFinite(longitude);
+function hasValidCoordinates(
+  latitude: number | null | undefined,
+  longitude: number | null | undefined,
+): boolean {
+  return (
+    typeof latitude === "number" &&
+    Number.isFinite(latitude) &&
+    typeof longitude === "number" &&
+    Number.isFinite(longitude)
+  );
 }
 
 function formatLocationFromGeoPath(path: string | null | undefined): string {
@@ -409,10 +537,16 @@ function formatLocationFromGeoPath(path: string | null | undefined): string {
   return last ? toDisplayName(last) : "Salvador";
 }
 
-function firstMetric(...values: Array<number | null | undefined>): number | undefined {
-  const positive = values.find((value) => typeof value === "number" && Number.isFinite(value) && value > 0);
+function firstMetric(
+  ...values: Array<number | null | undefined>
+): number | undefined {
+  const positive = values.find(
+    (value) => typeof value === "number" && Number.isFinite(value) && value > 0,
+  );
   if (positive != null) return positive;
-  return values.find((value) => typeof value === "number" && Number.isFinite(value));
+  return values.find(
+    (value) => typeof value === "number" && Number.isFinite(value),
+  );
 }
 
 function isGastronomyBusiness(business: FeaturedBusiness): boolean {
@@ -464,10 +598,14 @@ async function fetchCurrentTemperature(point: Coordinates): Promise<number> {
     temperature_unit: "celsius",
     timezone: "auto",
   });
-  const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
+  const response = await fetch(
+    `https://api.open-meteo.com/v1/forecast?${params.toString()}`,
+  );
   if (!response.ok) throw new Error("Weather request failed");
 
-  const payload = (await response.json()) as { current?: { temperature_2m?: number } };
+  const payload = (await response.json()) as {
+    current?: { temperature_2m?: number };
+  };
   const temperature = payload.current?.temperature_2m;
   if (typeof temperature !== "number" || !Number.isFinite(temperature)) {
     throw new Error("Weather response missing temperature");
@@ -480,7 +618,11 @@ async function fetchCurrentTemperature(point: Coordinates): Promise<number> {
   return temperature;
 }
 
-function useCurrentTemperature(point: Coordinates | null, label: string): WeatherBadgeState {
+function useCurrentTemperature(
+  point: Coordinates | null,
+  label: string,
+  enabled = true,
+): WeatherBadgeState {
   const [state, setState] = useState<WeatherBadgeState>({
     label: "--°C",
     ariaLabel: `Temperatura atual em ${label} indisponível`,
@@ -488,6 +630,11 @@ function useCurrentTemperature(point: Coordinates | null, label: string): Weathe
   });
 
   useEffect(() => {
+    if (!enabled) {
+      setState((current) => ({ ...current, isLoading: false }));
+      return;
+    }
+
     if (!point) {
       setState({
         label: "--°C",
@@ -522,14 +669,24 @@ function useCurrentTemperature(point: Coordinates | null, label: string): Weathe
     return () => {
       cancelled = true;
     };
-  }, [point, label]);
+  }, [enabled, point, label]);
 
   return state;
 }
 
-function projectBusinessMarkers(businesses: Business[], bounds: BoundingBox, urls: CityModuleUrls): MapMarker[] {
+function projectBusinessMarkers(
+  businesses: Business[],
+  bounds: BoundingBox,
+  urls: CityModuleUrls,
+): MapMarker[] {
   const entities = businesses
-    .filter((business) => isInsideBounds(business.address?.latitude, business.address?.longitude, bounds))
+    .filter((business) =>
+      isInsideBounds(
+        business.address?.latitude,
+        business.address?.longitude,
+        bounds,
+      ),
+    )
     .slice(0, 90)
     .map((business) => ({
       id: `business-${business.profile_id || business.id}`,
@@ -537,7 +694,9 @@ function projectBusinessMarkers(businesses: Business[], bounds: BoundingBox, url
       latitude: business.address?.latitude ?? null,
       longitude: business.address?.longitude ?? null,
       status: business.status,
-      subtitle: formatLocationFromGeoPath(business.location?.geographic_path ?? business.geographic_path),
+      subtitle: formatLocationFromGeoPath(
+        business.location?.geographic_path ?? business.geographic_path,
+      ),
       category: business.category,
       slug: business.slug,
       url: getBusinessPublicUrl(
@@ -545,7 +704,8 @@ function projectBusinessMarkers(businesses: Business[], bounds: BoundingBox, url
           id: business.profile_id || business.id,
           slug: business.slug,
           is_premium: business.is_premium,
-          geographic_path: business.location?.geographic_path ?? business.geographic_path,
+          geographic_path:
+            business.location?.geographic_path ?? business.geographic_path,
         },
         urls.business,
       ),
@@ -570,9 +730,18 @@ async function fetchCityMapMarkers(
 
   const [businesses, gastronomy, services, classifieds] = await Promise.all([
     BusinessService.getBusinesses({ sortBy: "rating", territoryFilter }),
-    mapGastronomyLayerRuntimeService.getGastronomyByBounds(bounds, { territoryFilter, limit: 80 }),
-    mapServicesLayerRuntimeService.getServicesByBounds(bounds, { territoryFilter, limit: 80 }),
-    mapClassifiedsLayerRuntimeService.getClassifiedsByBounds(bounds, { territoryFilter, limit: 80 }),
+    mapGastronomyLayerRuntimeService.getGastronomyByBounds(bounds, {
+      territoryFilter,
+      limit: 80,
+    }),
+    mapServicesLayerRuntimeService.getServicesByBounds(bounds, {
+      territoryFilter,
+      limit: 80,
+    }),
+    mapClassifiedsLayerRuntimeService.getClassifiedsByBounds(bounds, {
+      territoryFilter,
+      limit: 80,
+    }),
   ]);
 
   const businessMarkers = projectBusinessMarkers(businesses, bounds, urls);
@@ -617,7 +786,9 @@ async function fetchCityMapMarkers(
       latitude: item.latitude,
       longitude: item.longitude,
       status: "active",
-      subtitle: item.price ? formatPrice(item.price) : item.category || "Classificado",
+      subtitle: item.price
+        ? formatPrice(item.price)
+        : item.category || "Classificado",
       url: item.url ?? urls.classifieds,
       map_layer_key: "classifieds",
     })),
@@ -625,10 +796,18 @@ async function fetchCityMapMarkers(
     { includeMetadata: true, calculateScore: true },
   );
 
-  return [...businessMarkers, ...gastronomyMarkers, ...serviceMarkers, ...classifiedMarkers];
+  return [
+    ...businessMarkers,
+    ...gastronomyMarkers,
+    ...serviceMarkers,
+    ...classifiedMarkers,
+  ];
 }
 
-function buildTouristPointMarkers(points: TouristPoint[], urls: CityModuleUrls): MapMarker[] {
+function buildTouristPointMarkers(
+  points: TouristPoint[],
+  urls: CityModuleUrls,
+): MapMarker[] {
   return mapEntityProjection.projectEntities(
     points
       .filter((point) => hasValidCoordinates(point.latitude, point.longitude))
@@ -640,7 +819,9 @@ function buildTouristPointMarkers(points: TouristPoint[], urls: CityModuleUrls):
         status: "active",
         subtitle: point.neighborhood || formatCategory(point.category),
         slug: point.slug,
-        url: point.slug ? `${urls.touristPoints}/${point.slug}` : urls.touristPoints,
+        url: point.slug
+          ? `${urls.touristPoints}/${point.slug}`
+          : urls.touristPoints,
         rating: point.rating,
         map_layer_key: "tourist_points",
       })),
@@ -649,18 +830,24 @@ function buildTouristPointMarkers(points: TouristPoint[], urls: CityModuleUrls):
   );
 }
 
-function buildLocationMarkers(locations: Location[], bounds: BoundingBox, cityPath: string): MapMarker[] {
+function buildLocationMarkers(
+  locations: Location[],
+  bounds: BoundingBox,
+  cityPath: string,
+): MapMarker[] {
   const entities = locations
     .map((location) => {
       const center = getLocationCenter(location);
-      if (!center || !isInsideBounds(center.latitude, center.longitude, bounds)) return null;
+      if (!center || !isInsideBounds(center.latitude, center.longitude, bounds))
+        return null;
 
       return {
         id: `location-${location.id}`,
         name: location.name,
         latitude: center.latitude,
         longitude: center.longitude,
-        subtitle: location.type === LocationType.NEIGHBORHOOD ? "Bairro" : "Distrito",
+        subtitle:
+          location.type === LocationType.NEIGHBORHOOD ? "Bairro" : "Distrito",
         status: "active",
         url: `${cityPath}/${location.slug}`,
         location_id: location.id,
@@ -678,7 +865,11 @@ function buildLocationMarkers(locations: Location[], bounds: BoundingBox, cityPa
   });
 }
 
-function buildTerritoryAnchorMarker(center: Coordinates, label: string, urls: CityModuleUrls): MapMarker {
+function buildTerritoryAnchorMarker(
+  center: Coordinates,
+  label: string,
+  urls: CityModuleUrls,
+): MapMarker {
   return mapEntityProjection.projectEntity(
     {
       id: "territory-anchor",
@@ -726,6 +917,7 @@ function EmptyAction({
 
 function CityHeader({
   navItems,
+  mobileNavItems,
   cityLabel,
   theme,
   onToggleTheme,
@@ -734,6 +926,7 @@ function CityHeader({
   authLabel,
 }: {
   navItems: NavItem[];
+  mobileNavItems: PublicHeaderNavItem[];
   cityLabel: string;
   theme: "dark" | "light";
   onToggleTheme: () => void;
@@ -765,20 +958,49 @@ function CityHeader({
       </nav>
 
       <div className="city-op-header-actions">
-        <button type="button" className="city-op-icon-button" onClick={onToggleTheme} aria-label="Alternar tema">
-          {theme === "dark" ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
+        <Link
+          to={navItems[0]?.href ?? "/"}
+          className="city-op-icon-button city-op-mobile-location"
+          aria-label={`Abrir ${cityLabel}`}
+        >
+          <MapPin aria-hidden="true" />
+        </Link>
+        <button
+          type="button"
+          className="city-op-icon-button city-op-theme-button"
+          onClick={onToggleTheme}
+          aria-label="Alternar tema"
+        >
+          {theme === "dark" ? (
+            <Sun aria-hidden="true" />
+          ) : (
+            <Moon aria-hidden="true" />
+          )}
         </button>
-        <Link to="/notificacoes" className="city-op-icon-button city-op-notification" aria-label="Notificações">
+        <Link
+          to="/notificacoes"
+          className="city-op-icon-button city-op-notification"
+          aria-label="Notificações"
+        >
           <Bell aria-hidden="true" />
           <span aria-hidden="true">3</span>
         </Link>
-        <Link to={authHref} className="city-op-login-link">
-          {authLabel}
+        <Link
+          to={authHref}
+          className="city-op-login-link"
+          aria-label={authLabel}
+        >
+          <Users aria-hidden="true" />
+          <span>{authLabel}</span>
         </Link>
         <Link to={publishHref} className="city-op-publish-link">
           <Plus aria-hidden="true" />
           <span>Publicar</span>
         </Link>
+        <PublicHeaderMobileMenu
+          items={mobileNavItems}
+          className="city-op-mobile-menu"
+        />
       </div>
     </header>
   );
@@ -790,7 +1012,11 @@ function StatGrid({ stats }: { stats: StatCard[] }) {
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (
-          <Link key={stat.label} to={stat.href} className={`city-op-stat-card is-${stat.tone}`}>
+          <Link
+            key={stat.label}
+            to={stat.href}
+            className={`city-op-stat-card is-${stat.tone}`}
+          >
             <span className="city-op-stat-icon" aria-hidden="true">
               <Icon />
             </span>
@@ -838,13 +1064,34 @@ function CityMapPanel({
 }) {
   const filters = [
     { label: "Todos", icon: MapIcon, href: urls.map, tone: "cyan" },
-    { label: "Empresas", icon: Store, href: withQueryParams(urls.map, { layer: "businesses" }), tone: "blue" },
-    { label: "Gastronomia", icon: UtensilsCrossed, href: withQueryParams(urls.map, { layer: "gastronomy" }), tone: "amber" },
-    { label: "Serviços", icon: Wrench, href: withQueryParams(urls.map, { layer: "services" }), tone: "blue" },
-    { label: "Classificados", icon: Tag, href: withQueryParams(urls.map, { layer: "classifieds" }), tone: "pink" },
+    {
+      label: "Empresas",
+      icon: Store,
+      href: withQueryParams(urls.map, { layer: "businesses" }),
+      tone: "blue",
+    },
+    {
+      label: "Gastronomia",
+      icon: UtensilsCrossed,
+      href: withQueryParams(urls.map, { layer: "gastronomy" }),
+      tone: "amber",
+    },
+    {
+      label: "Serviços",
+      icon: Wrench,
+      href: withQueryParams(urls.map, { layer: "services" }),
+      tone: "blue",
+    },
+    {
+      label: "Classificados",
+      icon: Tag,
+      href: withQueryParams(urls.map, { layer: "classifieds" }),
+      tone: "pink",
+    },
     { label: "Comunidade", icon: Users, href: urls.community, tone: "green" },
   ];
-  const showMapLoading = isLoading && markers.length === 0 && polygons.length === 0;
+  const showMapLoading =
+    isLoading && markers.length === 0 && polygons.length === 0;
 
   return (
     <section className="city-op-map-panel" aria-labelledby="city-op-map-title">
@@ -853,7 +1100,11 @@ function CityMapPanel({
           {filters.map((filter) => {
             const Icon = filter.icon;
             return (
-              <Link key={filter.label} to={filter.href} className={`city-op-map-filter is-${filter.tone}`}>
+              <Link
+                key={filter.label}
+                to={filter.href}
+                className={`city-op-map-filter is-${filter.tone}`}
+              >
                 <Icon aria-hidden="true" />
                 <span>{filter.label}</span>
               </Link>
@@ -862,7 +1113,10 @@ function CityMapPanel({
         </div>
       )}
 
-      <div className="city-op-map-canvas" aria-label={`Mapa territorial de ${cityLabel}`}>
+      <div
+        className="city-op-map-canvas"
+        aria-label={`Mapa territorial de ${cityLabel}`}
+      >
         <MapLibreAdapter
           styleUrl={mapStyleUrl}
           initialViewport={{ center, zoom }}
@@ -881,7 +1135,9 @@ function CityMapPanel({
         />
         <div className="city-op-map-label" aria-hidden="true">
           <strong id="city-op-map-title">{cityLabel}</strong>
-          <span>{markers.length === 1 ? "1 ponto" : `${markers.length} pontos`}</span>
+          <span>
+            {markers.length === 1 ? "1 ponto" : `${markers.length} pontos`}
+          </span>
         </div>
         {showMapLoading && (
           <div className="city-op-map-loading" role="status" aria-live="polite">
@@ -893,9 +1149,20 @@ function CityMapPanel({
   );
 }
 
-function DistrictsPanel({ cards, href, isLoading }: { cards: DistrictCard[]; href: string; isLoading: boolean }) {
+function DistrictsPanel({
+  cards,
+  href,
+  isLoading,
+}: {
+  cards: DistrictCard[];
+  href: string;
+  isLoading: boolean;
+}) {
   return (
-    <section className="city-op-panel city-op-districts-panel" aria-labelledby="city-op-districts-title">
+    <section
+      className="city-op-panel city-op-districts-panel"
+      aria-labelledby="city-op-districts-title"
+    >
       <div className="city-op-panel-heading">
         <h2 id="city-op-districts-title">Bairros em destaque</h2>
         <Link to={href}>Ver todos</Link>
@@ -903,7 +1170,11 @@ function DistrictsPanel({ cards, href, isLoading }: { cards: DistrictCard[]; hre
       {cards.length > 0 ? (
         <div className="city-op-district-strip">
           {cards.map((card) => (
-            <Link key={card.name} to={card.href} className="city-op-district-card">
+            <Link
+              key={card.name}
+              to={card.href}
+              className="city-op-district-card"
+            >
               <img src={card.image} alt="" loading="lazy" />
               <span className="city-op-district-shade" aria-hidden="true" />
               <span>
@@ -915,7 +1186,9 @@ function DistrictsPanel({ cards, href, isLoading }: { cards: DistrictCard[]; hre
         </div>
       ) : (
         <EmptyAction
-          title={isLoading ? "Carregando bairros" : "Bairros serão listados aqui"}
+          title={
+            isLoading ? "Carregando bairros" : "Bairros serão listados aqui"
+          }
           description="Abra a busca territorial para explorar áreas da cidade."
           href={href}
           action="Ver bairros"
@@ -925,7 +1198,13 @@ function DistrictsPanel({ cards, href, isLoading }: { cards: DistrictCard[]; hre
   );
 }
 
-function NearbyBusinessesPanel({ businesses, href }: { businesses: FeaturedBusiness[]; href: string }) {
+function NearbyBusinessesPanel({
+  businesses,
+  href,
+}: {
+  businesses: FeaturedBusiness[];
+  href: string;
+}) {
   return (
     <section className="city-op-panel" aria-labelledby="city-op-business-title">
       <div className="city-op-panel-heading">
@@ -941,13 +1220,21 @@ function NearbyBusinessesPanel({ businesses, href }: { businesses: FeaturedBusin
               className="city-op-row-card"
             >
               <span className="city-op-row-media">
-                <BusinessLogo name={business.name} logoUrl={business.logo_url} />
+                <BusinessLogo
+                  name={business.name}
+                  logoUrl={business.logo_url}
+                />
               </span>
               <span className="city-op-row-copy">
                 <strong>{business.name || "Empresa local"}</strong>
-                <small>{formatLocationFromGeoPath(business.geographic_path)} · {formatCategory(business.category || "empresa")}</small>
+                <small>
+                  {formatLocationFromGeoPath(business.geographic_path)} ·{" "}
+                  {formatCategory(business.category || "empresa")}
+                </small>
               </span>
-              <span className={`city-op-row-badge ${business.is_verified ? "is-green" : ""}`}>
+              <span
+                className={`city-op-row-badge ${business.is_verified ? "is-green" : ""}`}
+              >
                 {business.is_verified ? "Verificada" : "Local"}
               </span>
             </Link>
@@ -965,9 +1252,18 @@ function NearbyBusinessesPanel({ businesses, href }: { businesses: FeaturedBusin
   );
 }
 
-function GastronomyPanel({ items, href }: { items: FeaturedBusiness[]; href: string }) {
+function GastronomyPanel({
+  items,
+  href,
+}: {
+  items: FeaturedBusiness[];
+  href: string;
+}) {
   return (
-    <section className="city-op-panel city-op-gastronomy-panel" aria-labelledby="city-op-gastronomy-title">
+    <section
+      className="city-op-panel city-op-gastronomy-panel"
+      aria-labelledby="city-op-gastronomy-title"
+    >
       <div className="city-op-panel-heading">
         <h2 id="city-op-gastronomy-title">Gastronomia</h2>
         <Link to={href}>Ver todas</Link>
@@ -981,15 +1277,23 @@ function GastronomyPanel({ items, href }: { items: FeaturedBusiness[]; href: str
               className="city-op-row-card city-op-food-row"
             >
               <span className="city-op-row-media">
-                <BusinessLogo name={business.name} logoUrl={business.logo_url} />
+                <BusinessLogo
+                  name={business.name}
+                  logoUrl={business.logo_url}
+                />
               </span>
               <span className="city-op-row-copy">
                 <strong>{business.name || "Restaurante local"}</strong>
-                <small>{formatCategory(business.category || "gastronomia")} · {formatLocationFromGeoPath(business.geographic_path)}</small>
+                <small>
+                  {formatCategory(business.category || "gastronomia")} ·{" "}
+                  {formatLocationFromGeoPath(business.geographic_path)}
+                </small>
               </span>
               <span className="city-op-rating">
                 <Star aria-hidden="true" />
-                {business.rating ? business.rating.toFixed(1).replace(".", ",") : "-"}
+                {business.rating
+                  ? business.rating.toFixed(1).replace(".", ",")
+                  : "-"}
               </span>
             </Link>
           ))}
@@ -1006,11 +1310,20 @@ function GastronomyPanel({ items, href }: { items: FeaturedBusiness[]; href: str
   );
 }
 
-function ClassifiedsPreview({ classifieds, href }: { classifieds: FeaturedClassified[]; href: string }) {
+function ClassifiedsPreview({
+  classifieds,
+  href,
+}: {
+  classifieds: FeaturedClassified[];
+  href: string;
+}) {
   if (!classifieds.length) return null;
 
   return (
-    <div className="city-op-classified-strip" aria-label="Classificados recentes">
+    <div
+      className="city-op-classified-strip"
+      aria-label="Classificados recentes"
+    >
       {classifieds.slice(0, 2).map((classified) => {
         const publicHref =
           classifiedUrlService.buildPublicUrl({
@@ -1026,7 +1339,11 @@ function ClassifiedsPreview({ classifieds, href }: { classifieds: FeaturedClassi
             <Tag aria-hidden="true" />
             <span>
               <strong>{classified.titulo}</strong>
-              <small>{classified.price ? formatPrice(classified.price) : formatCategory(classified.category || "classificado")}</small>
+              <small>
+                {classified.price
+                  ? formatPrice(classified.price)
+                  : formatCategory(classified.category || "classificado")}
+              </small>
             </span>
           </Link>
         );
@@ -1055,7 +1372,9 @@ function CommunityPanel({
     },
     {
       label: "Publicar",
-      detail: isAuthenticated ? "Compartilhe uma atualização local." : "Entre para publicar no território.",
+      detail: isAuthenticated
+        ? "Compartilhe uma atualização local."
+        : "Entre para publicar no território.",
       href: urls.publish,
       icon: Plus,
     },
@@ -1068,7 +1387,10 @@ function CommunityPanel({
   ];
 
   return (
-    <section className="city-op-panel" aria-labelledby="city-op-community-title">
+    <section
+      className="city-op-panel"
+      aria-labelledby="city-op-community-title"
+    >
       <div className="city-op-panel-heading">
         <h2 id="city-op-community-title">Comunidade</h2>
         <Link to={urls.community}>Ver tudo</Link>
@@ -1077,7 +1399,11 @@ function CommunityPanel({
         {actions.map((action) => {
           const Icon = action.icon;
           return (
-            <Link key={action.label} to={action.href} className="city-op-community-action">
+            <Link
+              key={action.label}
+              to={action.href}
+              className="city-op-community-action"
+            >
               <span aria-hidden="true">
                 <Icon />
               </span>
@@ -1099,44 +1425,57 @@ function NeighborhoodCommunityHeader({
   urls,
   cityLabel,
   cityHref,
-  temperature,
-  theme,
-  onToggleTheme,
+  notificationHref,
   authHref,
   authLabel,
 }: {
   urls: CityModuleUrls;
   cityLabel: string;
   cityHref: string;
-  temperature: WeatherBadgeState;
-  theme: "dark" | "light";
-  onToggleTheme: () => void;
+  notificationHref: string;
   authHref: string;
   authLabel: string;
 }) {
   const communityNavItems = useMemo(
     () =>
-      [
-        { id: "home", label: "Início", href: "/" },
-        { id: "community", label: "Comunidades", href: urls.community },
-        { id: "business", label: "Empresas", href: urls.business },
-        { id: "classifieds", label: "Classificados", href: urls.classifieds },
-        { id: "services", label: "Serviços", href: urls.services },
-        { id: "map", label: "Mapa", href: urls.map },
-      ].filter((item) => isLaunchSurfaceEnabled(item.id as LaunchSurfaceKey)),
-    [urls.business, urls.classifieds, urls.community, urls.map, urls.services],
+      buildPublicHeaderNavigation({
+        home: "/",
+        community: urls.community,
+        business: urls.business,
+        gastronomy: urls.gastronomy,
+        services: urls.services,
+        classifieds: urls.classifieds,
+        map: urls.map,
+        search: urls.search,
+      }).filter((item) => COMMUNITY_DESKTOP_NAV_IDS.has(item.id)),
+    [
+      urls.business,
+      urls.classifieds,
+      urls.community,
+      urls.gastronomy,
+      urls.map,
+      urls.search,
+      urls.services,
+    ],
   );
 
   return (
     <header className="neighborhood-community-header">
-      <Link to="/" className="city-op-brand neighborhood-community-brand" aria-label="Achegue-se">
+      <Link
+        to="/"
+        className="city-op-brand neighborhood-community-brand"
+        aria-label="Achegue-se"
+      >
         <span className="city-op-brand-mark" aria-hidden="true">
           <MapPin />
         </span>
         <span>Achegue-se</span>
       </Link>
 
-      <nav className="neighborhood-community-nav" aria-label="Navegacao principal">
+      <nav
+        className="neighborhood-community-nav"
+        aria-label="Navegacao principal"
+      >
         {communityNavItems.map((item) =>
           item.href.startsWith("#") ? (
             <a key={item.id} href={item.href}>
@@ -1155,27 +1494,20 @@ function NeighborhoodCommunityHeader({
       </nav>
 
       <div className="neighborhood-community-actions">
-        <Link to={cityHref} className="city-op-location-switch neighborhood-community-location">
+        <Link
+          to={cityHref}
+          className="city-op-location-switch neighborhood-community-location"
+        >
           <MapPin aria-hidden="true" />
           <span>{cityLabel}</span>
           <ChevronDown aria-hidden="true" />
         </Link>
 
-        <span className="neighborhood-community-weather" aria-label={`Temperatura atual: ${temperature.label}`}>
-          <CloudSun aria-hidden="true" />
-          <span>{temperature.label}</span>
-        </span>
-
-        <button
-          type="button"
-          className="city-op-icon-button neighborhood-community-theme-button"
-          onClick={onToggleTheme}
-          aria-label="Alternar tema"
+        <Link
+          to={notificationHref}
+          className="city-op-icon-button neighborhood-community-bell"
+          aria-label="Notificacoes"
         >
-          {theme === "dark" ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
-        </button>
-
-        <Link to={authHref} className="city-op-icon-button neighborhood-community-bell" aria-label="Notificacoes">
           <Bell aria-hidden="true" />
         </Link>
 
@@ -1209,10 +1541,7 @@ function NeighborhoodLandingContent({
   feedPosts,
   stats,
   territoryFilter,
-  temperature,
   onMarkerClick,
-  theme,
-  onToggleTheme,
   authHref,
   authLabel,
   isAuthenticated,
@@ -1220,6 +1549,9 @@ function NeighborhoodLandingContent({
   accessStatus,
   residenceLoading,
   isLoading,
+  communityContent,
+  activeCommunitySection,
+  requestedCommunityView,
 }: {
   urls: CityModuleUrls;
   communityUrls: ReturnType<typeof useCommunityUrls>;
@@ -1236,12 +1568,11 @@ function NeighborhoodLandingContent({
   classifieds: FeaturedClassified[];
   gastronomyItems: FeaturedBusiness[];
   feedPosts: Post[];
-  stats: { businesses?: number; services?: number; classifieds?: number } | undefined;
+  stats:
+    | { businesses?: number; services?: number; classifieds?: number }
+    | undefined;
   territoryFilter: TerritoryFilter;
-  temperature: WeatherBadgeState;
   onMarkerClick: (id: string) => void;
-  theme: "dark" | "light";
-  onToggleTheme: () => void;
   authHref: string;
   authLabel: string;
   isAuthenticated: boolean;
@@ -1249,13 +1580,21 @@ function NeighborhoodLandingContent({
   accessStatus: NeighborhoodAccessStatus;
   residenceLoading: boolean;
   isLoading: boolean;
+  communityContent?: ReactNode;
+  activeCommunitySection?: CommunityOverviewSection;
+  requestedCommunityView?: CommunityOverviewView;
 }) {
   const navigate = useNavigate();
-  const [activeStreamTab, setActiveStreamTab] = useState<NeighborhoodCommunityTabId>("all");
-  const [activeFeedFilter, setActiveFeedFilter] = useState<TerritorialFeedChannel>("para_voce");
+  const [activeStreamTab, setActiveStreamTab] =
+    useState<NeighborhoodCommunityTabId>("all");
+  const [createPostOpen, setCreatePostOpen] = useState(false);
   const routeLocation = useLocation();
   const communityProfileQuery = useCommunityProfile(resolved);
-  const territoryName = getPublicTerritoryDisplayName(routeLocation.pathname, resolved, cityLabel);
+  const territoryName = getPublicTerritoryDisplayName(
+    routeLocation.pathname,
+    resolved,
+    cityLabel,
+  );
   const memberLocations = getResolvedTerritoryLocations(resolved);
   const memberCount = Math.max(memberLocations.length, 1);
   const isGroup = resolved.kind === "group";
@@ -1270,13 +1609,23 @@ function NeighborhoodLandingContent({
     getResolvedNumericMetric(resolved, SERVICES_COUNT_METADATA_FIELDS),
     services.length,
   );
-  const mapZoom = polygons.length > 1 ? 12.3 : polygons.length === 1 ? 13.3 : 12.2;
+  const mapZoom =
+    polygons.length > 1 ? 12.3 : polygons.length === 1 ? 13.3 : 12.2;
   const canInteract = accessStatus === "verified";
   const enterLoginHref = withQueryParams("/login", { redirect: urls.feed });
-  const publishLoginHref = withQueryParams("/login", { redirect: urls.publish });
+  const publishLoginHref = withQueryParams("/login", {
+    redirect: urls.publish,
+  });
   const residenceHref = "/conta/enderecos";
-  const verifyHref = accessStatus === "visitor" ? withQueryParams("/login", { redirect: residenceHref }) : residenceHref;
-  const interactionHref = canInteract ? urls.publish : accessStatus === "visitor" ? publishLoginHref : verifyHref;
+  const verifyHref =
+    accessStatus === "visitor"
+      ? withQueryParams("/login", { redirect: residenceHref })
+      : residenceHref;
+  const interactionHref = canInteract
+    ? urls.publish
+    : accessStatus === "visitor"
+      ? publishLoginHref
+      : verifyHref;
   const enterHref = isCommunityMode
     ? accessStatus === "verified"
       ? urls.feed
@@ -1284,8 +1633,14 @@ function NeighborhoodLandingContent({
         ? enterLoginHref
         : verifyHref
     : urls.community;
-  const gateActionHref = accessStatus === "verified" ? urls.publish : accessStatus === "visitor" ? enterLoginHref : verifyHref;
-  const lockedActionHref = accessStatus === "visitor" ? enterLoginHref : verifyHref;
+  const gateActionHref =
+    accessStatus === "verified"
+      ? urls.publish
+      : accessStatus === "visitor"
+        ? enterLoginHref
+        : verifyHref;
+  const lockedActionHref =
+    accessStatus === "visitor" ? enterLoginHref : verifyHref;
   const alertPosts = feedPosts.filter((post) => post.type === "alerta");
   const streamGroups = buildNeighborhoodStreamItems({
     posts: feedPosts,
@@ -1296,22 +1651,43 @@ function NeighborhoodLandingContent({
     urls,
     territoryName,
   });
-  const streamItems = streamGroups[activeStreamTab] ?? streamGroups.all;
-  const streamMoreConfig = getNeighborhoodStreamMoreConfig(activeStreamTab, urls);
+  const streamItems =
+    getRecordValue(streamGroups, activeStreamTab) ?? streamGroups.all;
+  const streamMoreConfig = getNeighborhoodStreamMoreConfig(
+    activeStreamTab,
+    urls,
+  );
   const tabs: NeighborhoodCommunityTab[] = [
     { id: "all", label: "Tudo", shortLabel: "Tudo", icon: LayoutGrid },
     { id: "feed", label: "Feed", shortLabel: "Feed", icon: List },
     { id: "business", label: "Empresas", shortLabel: "Emp.", icon: Store },
     { id: "services", label: "Serviços", shortLabel: "Serv.", icon: Wrench },
-    { id: "classifieds", label: "Classificados", shortLabel: "Class.", icon: Tag },
-    { id: "gastronomy", label: "Gastronomia", shortLabel: "Gast.", icon: UtensilsCrossed },
+    {
+      id: "classifieds",
+      label: "Classificados",
+      shortLabel: "Class.",
+      icon: Tag,
+    },
+    {
+      id: "gastronomy",
+      label: "Gastronomia",
+      shortLabel: "Gast.",
+      icon: UtensilsCrossed,
+    },
     { id: "map", label: "Mapa", shortLabel: "Mapa", icon: MapPin },
   ];
 
   if (isCommunityMode) {
     return (
-      <main className="city-op-page neighborhood-community-page" data-page="bairro-landing" data-community-home="community-first">
-        <div className="city-op-backdrop neighborhood-community-backdrop" aria-hidden="true">
+      <main
+        className="city-op-page neighborhood-community-page"
+        data-page="bairro-landing"
+        data-community-home="community-first"
+      >
+        <div
+          className="city-op-backdrop neighborhood-community-backdrop"
+          aria-hidden="true"
+        >
           <span />
         </div>
 
@@ -1319,9 +1695,7 @@ function NeighborhoodLandingContent({
           urls={urls}
           cityLabel={cityLabel}
           cityHref={cityHref}
-          temperature={temperature}
-          theme={theme}
-          onToggleTheme={onToggleTheme}
+          notificationHref={isAuthenticated ? "/notificacoes" : authHref}
           authHref={authHref}
           authLabel={authLabel}
         />
@@ -1330,20 +1704,50 @@ function NeighborhoodLandingContent({
           resolved={resolved}
           territoryName={territoryName}
           territoryFilter={territoryFilter}
-          activeHeaderFilter={activeFeedFilter}
-          onHeaderFilterChange={setActiveFeedFilter}
-          onRequireLogin={() => navigate(canInteract ? urls.feed : lockedActionHref)}
+          onRequireLogin={() =>
+            navigate(canInteract ? urls.feed : lockedActionHref)
+          }
           loginHref={enterHref}
           publishHref={interactionHref}
           communityProfile={communityProfileQuery.data ?? null}
           mode={canInteract ? "member" : "public"}
-          onOpenCreatePost={() => navigate(interactionHref)}
-        />
+          onOpenCreatePost={() => setCreatePostOpen(true)}
+          activeSection={activeCommunitySection}
+          activeView={
+            requestedCommunityView ??
+            (isCommunitySocialView(activeCommunitySection)
+              ? activeCommunitySection
+              : undefined)
+          }
+          onViewChange={(view) =>
+            navigate(
+              view === "feed"
+                ? communityUrls.feed
+                : withQueryParams(communityUrls.feed, { view }),
+            )
+          }
+        >
+          {communityContent}
+        </CommunityOverviewSurface>
+
+        {createPostOpen ? (
+          <Suspense fallback={null}>
+            <CommunityCreatePostModal
+              open
+              onClose={() => setCreatePostOpen(false)}
+              canCreatePost={canInteract}
+              canCreateAlert={canInteract}
+              canCreateIssue={canInteract}
+            />
+          </Suspense>
+        ) : null}
 
         <footer className="city-op-footer neighborhood-community-footer">
           <span>
             <strong>Achegue-se</strong>
-            <small>{territoryName} - {cityLabel}</small>
+            <small>
+              {territoryName} - {cityLabel}
+            </small>
           </span>
           <nav aria-label="Rodape do bairro">
             <Link to="/termos">Termos</Link>
@@ -1360,8 +1764,15 @@ function NeighborhoodLandingContent({
   }
 
   return (
-    <main className="city-op-page neighborhood-community-page" data-page="bairro-landing" data-community-home="meu-bairro">
-      <div className="city-op-backdrop neighborhood-community-backdrop" aria-hidden="true">
+    <main
+      className="city-op-page neighborhood-community-page"
+      data-page="bairro-landing"
+      data-community-home="meu-bairro"
+    >
+      <div
+        className="city-op-backdrop neighborhood-community-backdrop"
+        aria-hidden="true"
+      >
         <span />
       </div>
 
@@ -1369,9 +1780,7 @@ function NeighborhoodLandingContent({
         urls={urls}
         cityLabel={cityLabel}
         cityHref={cityHref}
-        temperature={temperature}
-        theme={theme}
-        onToggleTheme={onToggleTheme}
+        notificationHref={isAuthenticated ? "/notificacoes" : authHref}
         authHref={authHref}
         authLabel={authLabel}
       />
@@ -1390,7 +1799,10 @@ function NeighborhoodLandingContent({
         isCommunityMode={isCommunityMode}
       />
 
-      <section className="neighborhood-community-shell" aria-label={`Meu bairro em ${territoryName}`}>
+      <section
+        className="neighborhood-community-shell"
+        aria-label={`Meu bairro em ${territoryName}`}
+      >
         <div className="neighborhood-community-main">
           <NeighborhoodStream
             items={streamItems}
@@ -1404,7 +1816,10 @@ function NeighborhoodLandingContent({
         </div>
 
         <aside className="neighborhood-community-sidebar">
-          <section className="neighborhood-community-card neighborhood-community-map" aria-labelledby="neighborhood-community-map-title">
+          <section
+            className="neighborhood-community-card neighborhood-community-map"
+            aria-labelledby="neighborhood-community-map-title"
+          >
             <div className="city-op-panel-heading">
               <h2 id="neighborhood-community-map-title">Mapa do bairro</h2>
               <Link to={urls.map}>
@@ -1412,14 +1827,20 @@ function NeighborhoodLandingContent({
                 <ExternalLink aria-hidden="true" />
               </Link>
             </div>
-            <div className="neighborhood-community-map-preview" aria-hidden="true">
+            <div
+              className="neighborhood-community-map-preview"
+              aria-hidden="true"
+            >
               <NeighborhoodTerritoryArt
                 polygons={polygons}
                 markers={markers}
                 decorative
               />
             </div>
-            <div className="neighborhood-community-map-legend" aria-label="Categorias do mapa do bairro">
+            <div
+              className="neighborhood-community-map-legend"
+              aria-label="Categorias do mapa do bairro"
+            >
               <span className="is-blue">
                 <Store aria-hidden="true" />
                 Negócios
@@ -1439,7 +1860,11 @@ function NeighborhoodLandingContent({
             </div>
           </section>
 
-          <NeighborhoodGateCard status={accessStatus} loading={residenceLoading} actionHref={gateActionHref} />
+          <NeighborhoodGateCard
+            status={accessStatus}
+            loading={residenceLoading}
+            actionHref={gateActionHref}
+          />
           <NeighborhoodStatsPanel
             population={population}
             businessCount={businessCount ?? businesses.length}
@@ -1456,7 +1881,9 @@ function NeighborhoodLandingContent({
       <footer className="city-op-footer neighborhood-community-footer">
         <span>
           <strong>Achegue-se</strong>
-          <small>{territoryName} - {cityLabel}</small>
+          <small>
+            {territoryName} - {cityLabel}
+          </small>
         </span>
         <nav aria-label="Rodapé do bairro">
           <Link to="/termos">Termos</Link>
@@ -1472,16 +1899,44 @@ function NeighborhoodLandingContent({
   );
 }
 
-export default function CidadeLandingPage() {
+interface CidadeLandingPageProps {
+  readonly communityContent?: ReactNode;
+  readonly activeCommunitySection?: CommunityOverviewSection;
+}
+
+function getCommunityView(search: string): CommunityOverviewView | undefined {
+  const value = new URLSearchParams(search).get("view");
+  return isCommunityOverviewView(value) ? value : undefined;
+}
+
+export default function CidadeLandingPage({
+  communityContent,
+  activeCommunitySection,
+}: CidadeLandingPageProps = {}) {
   const navigate = useNavigate();
   const location = useLocation();
+  const requestedCommunityView = getCommunityView(location.search);
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { state: routeState = "", city: routeCity = "" } = useParams();
   const [searchQuery, setSearchQuery] = useState("");
   const territorialContext = useTerritorialContextOptional();
   const routeResolved = territorialContext?.resolved ?? null;
-  const cityPartsFromResolved = useMemo(() => getCityPartsFromResolved(routeResolved), [routeResolved]);
+  const isNeighborhoodLanding =
+    routeResolved?.kind === "group" ||
+    (routeResolved?.kind === "location" &&
+      routeResolved.location.type !== LocationType.CITY);
+  const communityRoot = `/${APP_MODULE_SLUGS.community}`;
+  const isCommunityRoute =
+    location.pathname === communityRoot ||
+    location.pathname.startsWith(`${communityRoot}/`);
+  const isEmbeddedCommunityModule = Boolean(
+    communityContent && isNeighborhoodLanding && isCommunityRoute,
+  );
+  const cityPartsFromResolved = useMemo(
+    () => getCityPartsFromResolved(routeResolved),
+    [routeResolved],
+  );
   const state = routeState || cityPartsFromResolved.state || "";
   const city = routeCity || cityPartsFromResolved.city || "";
   const communityUrls = useCommunityUrls(routeResolved);
@@ -1492,17 +1947,32 @@ export default function CidadeLandingPage() {
   });
   const territoryKey = moduleTerritory.resolvedLocationIds.join("|");
 
-  const { data: cityMetadata, isLoading: metadataLoading } = useCityMetadata(state, city);
+  const { data: cityMetadata, isLoading: metadataLoading } = useCityMetadata(
+    state,
+    city,
+  );
   const {
     businesses: featuredBusinesses,
     services: featuredServices,
     classifieds: featuredClassifieds,
     isLoading: featuredLoading,
-  } = useCityFeatured(state, city, moduleTerritory.territoryFilter);
-  const { data: touristPoints = [] } = useTouristPoints({ state, city, limit: 24 });
-  const { polygons, isLoading: polygonLoading } = useTerritoryPolygon(routeResolved);
+  } = useCityFeatured(state, city, moduleTerritory.territoryFilter, {
+    enabled: !isEmbeddedCommunityModule,
+  });
+  const { data: touristPoints = [] } = useTouristPoints(
+    { state, city, limit: 24 },
+    { enabled: !isEmbeddedCommunityModule },
+  );
+  const { polygons, isLoading: polygonLoading } = useTerritoryPolygon(
+    routeResolved,
+    {
+      enabled: !isEmbeddedCommunityModule,
+    },
+  );
 
-  const cityDisplayName = cityMetadata?.city ? toDisplayName(cityMetadata.city) : toDisplayName(city);
+  const cityDisplayName = cityMetadata?.city
+    ? toDisplayName(cityMetadata.city)
+    : toDisplayName(city);
   const stateDisplayName = (cityMetadata?.state || state).toUpperCase();
   const territoryLabel = `${cityDisplayName}, ${stateDisplayName}`;
   const cityPath = territorialContext?.baseUrl ?? `/${state}/${city}`;
@@ -1528,34 +1998,73 @@ export default function CidadeLandingPage() {
     [cityPath, communityUrls.feed],
   );
 
-  const isNeighborhoodLanding =
-    routeResolved?.kind === "group" ||
-    (routeResolved?.kind === "location" && routeResolved.location.type !== LocationType.CITY);
-  const isCommunityRoute = location.pathname.startsWith(`/${APP_MODULE_SLUGS.community}/`);
-  const activeModuleUrls = isNeighborhoodLanding && isCommunityRoute ? neighborhoodCommunityUrls : cityModuleUrls;
+  const activeModuleUrls =
+    isNeighborhoodLanding && isCommunityRoute
+      ? neighborhoodCommunityUrls
+      : cityModuleUrls;
 
   const navItems = useMemo<NavItem[]>(() => {
     const items: NavItem[] = [
       { label: "Início", href: cityModuleUrls.home, surface: "home" },
-      { label: "Bairros", href: withQueryParams(cityModuleUrls.search, { tipo: "bairros" }), surface: "search" },
+      {
+        label: "Bairros",
+        href: withQueryParams(cityModuleUrls.search, { tipo: "bairros" }),
+        surface: "search",
+      },
       { label: "Empresas", href: cityModuleUrls.business, surface: "business" },
-      { label: "Gastronomia", href: cityModuleUrls.gastronomy, surface: "gastronomy" },
+      {
+        label: "Gastronomia",
+        href: cityModuleUrls.gastronomy,
+        surface: "gastronomy",
+      },
       { label: "Serviços", href: cityModuleUrls.services, surface: "services" },
-      { label: "Classificados", href: cityModuleUrls.classifieds, surface: "classifieds" },
-      { label: "Comunidade", href: cityModuleUrls.community, surface: "community" },
+      {
+        label: "Classificados",
+        href: cityModuleUrls.classifieds,
+        surface: "classifieds",
+      },
+      {
+        label: "Comunidade",
+        href: cityModuleUrls.community,
+        surface: "community",
+      },
       { label: "Mapa", href: cityModuleUrls.map, surface: "map" },
     ];
     return items.filter((item) => isLaunchSurfaceEnabled(item.surface));
   }, [cityModuleUrls]);
+  const publicMobileNavItems = useMemo(
+    () =>
+      buildPublicHeaderNavigation(
+        {
+          home: cityModuleUrls.home,
+          community: cityModuleUrls.community,
+          business: cityModuleUrls.business,
+          gastronomy: cityModuleUrls.gastronomy,
+          services: cityModuleUrls.services,
+          classifieds: cityModuleUrls.classifieds,
+          map: cityModuleUrls.map,
+          search: cityModuleUrls.search,
+        },
+        { communityLabel: "Comunidade" },
+      ),
+    [cityModuleUrls],
+  );
 
   const territoryPolygons = useMemo(() => {
     if (polygons.length > 0) return polygons;
-    const isResolvedCity = routeResolved?.kind === "location" && routeResolved.location.type === LocationType.CITY;
-    return isResolvedCity && isSalvadorRoute(state, city) ? salvadorFallbackTerritoryPolygons : [];
+    const isResolvedCity =
+      routeResolved?.kind === "location" &&
+      routeResolved.location.type === LocationType.CITY;
+    return isResolvedCity && isSalvadorRoute(state, city)
+      ? salvadorFallbackTerritoryPolygons
+      : [];
   }, [city, polygons, routeResolved, state]);
 
   const mapBounds = useMemo<BoundingBox>(() => {
-    return getBoundsFromPolygons(territoryPolygons) ?? (isSalvadorRoute(state, city) ? salvadorBounds : salvadorBounds);
+    return (
+      getBoundsFromPolygons(territoryPolygons) ??
+      (isSalvadorRoute(state, city) ? salvadorBounds : salvadorBounds)
+    );
   }, [city, state, territoryPolygons]);
 
   const territoryCenter = useMemo<Coordinates>(() => {
@@ -1567,13 +2076,37 @@ export default function CidadeLandingPage() {
       (isSalvadorRoute(state, city) ? salvadorCenter : null) ??
       salvadorCenter
     );
-  }, [city, moduleTerritory.centerCoords, moduleTerritory.location, routeResolved, state, territoryPolygons]);
+  }, [
+    city,
+    moduleTerritory.centerCoords,
+    moduleTerritory.location,
+    routeResolved,
+    state,
+    territoryPolygons,
+  ]);
 
-  const weatherLabel = routeResolved ? getPublicTerritoryDisplayName(location.pathname, routeResolved, territoryLabel) : territoryLabel;
-  const temperature = useCurrentTemperature(territoryCenter, weatherLabel);
+  const weatherLabel = routeResolved
+    ? getPublicTerritoryDisplayName(
+        location.pathname,
+        routeResolved,
+        territoryLabel,
+      )
+    : territoryLabel;
+  const temperature = useCurrentTemperature(
+    territoryCenter,
+    weatherLabel,
+    !isNeighborhoodLanding,
+  );
 
-  const cityLocationId =
-    routeResolved?.kind === "location" ? routeResolved.location.id : moduleTerritory.location?.id ?? null;
+  const canonicalLocation =
+    moduleTerritory.location &&
+    !isPublicTerritoryFallbackLocation(moduleTerritory.location)
+      ? moduleTerritory.location
+      : routeResolved?.kind === "location" &&
+          !isPublicTerritoryFallbackLocation(routeResolved.location)
+        ? routeResolved.location
+        : null;
+  const cityLocationId = canonicalLocation?.id ?? null;
 
   const { data: cityDistricts = [], isLoading: districtsLoading } = useQuery({
     queryKey: ["city-landing", "districts", cityLocationId],
@@ -1587,17 +2120,21 @@ export default function CidadeLandingPage() {
       return output.descendants.filter(
         (location) =>
           location.status === LocationStatus.ACTIVE &&
-          (location.type === LocationType.DISTRICT || location.type === LocationType.NEIGHBORHOOD),
+          (location.type === LocationType.DISTRICT ||
+            location.type === LocationType.NEIGHBORHOOD),
       );
     },
-    enabled: Boolean(cityLocationId),
+    enabled: Boolean(cityLocationId) && !isEmbeddedCommunityModule,
     staleTime: 10 * 60 * 1000,
   });
 
   const { data: territoryStats } = useQuery({
     queryKey: ["city-landing", "territory-stats", territoryKey],
-    queryFn: () => LandingFeaturedService.getTerritoryStats(moduleTerritory.territoryFilter),
-    enabled: moduleTerritory.territoryFilter.scope !== "none",
+    queryFn: () =>
+      LandingFeaturedService.getTerritoryStats(moduleTerritory.territoryFilter),
+    enabled:
+      moduleTerritory.territoryFilter.scope !== "none" &&
+      !isEmbeddedCommunityModule,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -1609,8 +2146,15 @@ export default function CidadeLandingPage() {
       activeModuleUrls.community,
       mapBounds.map((value) => value.toFixed(4)).join(","),
     ],
-    queryFn: () => fetchCityMapMarkers(mapBounds, moduleTerritory.territoryFilter, activeModuleUrls),
-    enabled: moduleTerritory.territoryFilter.scope !== "none",
+    queryFn: () =>
+      fetchCityMapMarkers(
+        mapBounds,
+        moduleTerritory.territoryFilter,
+        activeModuleUrls,
+      ),
+    enabled:
+      moduleTerritory.territoryFilter.scope !== "none" &&
+      !isEmbeddedCommunityModule,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -1622,13 +2166,29 @@ export default function CidadeLandingPage() {
     () => buildLocationMarkers(cityDistricts, mapBounds, cityPath),
     [cityDistricts, cityPath, mapBounds],
   );
-  const mapMarkers = useMemo(
-    () => {
-      const resolvedMarkers = [...runtimeMapMarkers, ...touristMarkers, ...locationMarkers].slice(0, 240);
-      return resolvedMarkers.length > 0 ? resolvedMarkers : [buildTerritoryAnchorMarker(territoryCenter, territoryLabel, activeModuleUrls)];
-    },
-    [activeModuleUrls, locationMarkers, runtimeMapMarkers, territoryCenter, territoryLabel, touristMarkers],
-  );
+  const mapMarkers = useMemo(() => {
+    const resolvedMarkers = [
+      ...runtimeMapMarkers,
+      ...touristMarkers,
+      ...locationMarkers,
+    ].slice(0, 240);
+    return resolvedMarkers.length > 0
+      ? resolvedMarkers
+      : [
+          buildTerritoryAnchorMarker(
+            territoryCenter,
+            territoryLabel,
+            activeModuleUrls,
+          ),
+        ];
+  }, [
+    activeModuleUrls,
+    locationMarkers,
+    runtimeMapMarkers,
+    territoryCenter,
+    territoryLabel,
+    touristMarkers,
+  ]);
   const mapMarkersById = useMemo(
     () => new globalThis.Map(mapMarkers.map((marker) => [marker.id, marker])),
     [mapMarkers],
@@ -1637,26 +2197,35 @@ export default function CidadeLandingPage() {
     locationScope: "neighborhood",
     territoryFilter: moduleTerritory.territoryFilter,
     limit: 8,
+    enabled: !isEmbeddedCommunityModule,
   });
   const authUserId = typeof user?.id === "string" ? user.id : null;
   const { data: primaryResidence, isLoading: residenceLoading } = useQuery({
     queryKey: ["bairro-landing", "primary-residence", authUserId],
-    queryFn: () => residenceService.getPrimaryResidenceWithRelations(authUserId as string),
+    queryFn: () =>
+      residenceService.getPrimaryResidenceWithRelations(authUserId as string),
     enabled: Boolean(authUserId),
     staleTime: 2 * 60 * 1000,
   });
   const isResidenceVerifiedInTerritory = useMemo(() => {
-    if (!primaryResidence?.is_verified || !primaryResidence.location_id) return false;
-    return moduleTerritory.resolvedLocationIds.includes(primaryResidence.location_id);
+    if (!primaryResidence?.is_verified || !primaryResidence.location_id)
+      return false;
+    return moduleTerritory.resolvedLocationIds.includes(
+      primaryResidence.location_id,
+    );
   }, [moduleTerritory.resolvedLocationIds, primaryResidence]);
-  const neighborhoodAccessStatus = getNeighborhoodAccessStatus(Boolean(user), isResidenceVerifiedInTerritory);
+  const neighborhoodAccessStatus = getNeighborhoodAccessStatus(
+    Boolean(user),
+    isResidenceVerifiedInTerritory,
+  );
 
   const metadataDistrictCards = useMemo<DistrictCard[]>(
     () =>
       (cityMetadata?.featured_districts ?? []).map((district, index) => ({
         name: district.name,
         description: district.description || `Explore ${district.name}`,
-        image: district.image_url || districtImages[index % districtImages.length],
+        image:
+          district.image_url || districtImages[index % districtImages.length],
         href: `${cityPath}/${slugify(district.name)}`,
         meta: district.posts_count
           ? `${formatMetric(district.posts_count)} posts`
@@ -1674,40 +2243,61 @@ export default function CidadeLandingPage() {
         description: location.full_name || location.name,
         image: districtImages[index % districtImages.length],
         href: `${cityPath}/${location.slug}`,
-        meta: location.type === LocationType.NEIGHBORHOOD ? "Bairro" : "Distrito",
+        meta:
+          location.type === LocationType.NEIGHBORHOOD ? "Bairro" : "Distrito",
       })),
     [cityDistricts, cityPath],
   );
 
-  const districtCards = (metadataDistrictCards.length > 0 ? metadataDistrictCards : locationDistrictCards).slice(0, 4);
+  const districtCards = (
+    metadataDistrictCards.length > 0
+      ? metadataDistrictCards
+      : locationDistrictCards
+  ).slice(0, 4);
   const gastronomyItems = featuredBusinesses.filter(isGastronomyBusiness);
   const servicePreview = getServicePreview(featuredServices);
 
   const stats: StatCard[] = [
     {
       label: "Bairros",
-      value: formatMetric(firstMetric(cityMetadata?.districts_count, cityDistricts.length)),
+      value: formatMetric(
+        firstMetric(cityMetadata?.districts_count, cityDistricts.length),
+      ),
       href: withQueryParams(cityModuleUrls.search, { tipo: "bairros" }),
       icon: Building2,
       tone: "cyan",
     },
     {
       label: "Empresas",
-      value: formatMetric(firstMetric(cityMetadata?.active_businesses, territoryStats?.businesses, featuredBusinesses.length)),
+      value: formatMetric(
+        firstMetric(
+          cityMetadata?.active_businesses,
+          territoryStats?.businesses,
+          featuredBusinesses.length,
+        ),
+      ),
       href: cityModuleUrls.business,
       icon: Store,
       tone: "blue",
     },
     {
       label: "Profissionais",
-      value: formatMetric(firstMetric(cityMetadata?.professionals_count, territoryStats?.services, featuredServices.length)),
+      value: formatMetric(
+        firstMetric(
+          cityMetadata?.professionals_count,
+          territoryStats?.services,
+          featuredServices.length,
+        ),
+      ),
       href: cityModuleUrls.services,
       icon: Users,
       tone: "amber",
     },
     {
       label: "Classificados",
-      value: formatMetric(firstMetric(territoryStats?.classifieds, featuredClassifieds.length)),
+      value: formatMetric(
+        firstMetric(territoryStats?.classifieds, featuredClassifieds.length),
+      ),
       href: cityModuleUrls.classifieds,
       icon: Tag,
       tone: "pink",
@@ -1717,7 +2307,11 @@ export default function CidadeLandingPage() {
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const query = searchQuery.trim();
-    navigate(query ? withQueryParams(activeModuleUrls.search, { q: query }) : activeModuleUrls.search);
+    navigate(
+      query
+        ? withQueryParams(activeModuleUrls.search, { q: query })
+        : activeModuleUrls.search,
+    );
   };
 
   const handleMarkerClick = (id: string) => {
@@ -1754,17 +2348,21 @@ export default function CidadeLandingPage() {
         feedPosts={communityFeed.posts}
         stats={territoryStats}
         territoryFilter={moduleTerritory.territoryFilter}
-        temperature={temperature}
         onMarkerClick={handleMarkerClick}
-        theme={theme}
-        onToggleTheme={toggleTheme}
         authHref={user ? "/conta" : "/login"}
         authLabel={user ? "Conta" : "Entrar"}
         isAuthenticated={Boolean(user)}
         isCommunityMode={isCommunityRoute}
         accessStatus={neighborhoodAccessStatus}
         residenceLoading={residenceLoading}
-        isLoading={polygonLoading || featuredLoading || moduleTerritory.isLoading}
+        isLoading={
+          polygonLoading || featuredLoading || moduleTerritory.isLoading
+        }
+        communityContent={communityContent}
+        activeCommunitySection={
+          requestedCommunityView ?? activeCommunitySection
+        }
+        requestedCommunityView={requestedCommunityView}
       />
     );
   }
@@ -1778,6 +2376,7 @@ export default function CidadeLandingPage() {
 
       <CityHeader
         navItems={navItems}
+        mobileNavItems={publicMobileNavItems}
         cityLabel={territoryLabel}
         theme={theme}
         onToggleTheme={toggleTheme}
@@ -1807,7 +2406,8 @@ export default function CidadeLandingPage() {
             <span>{cityDisplayName}</span> em tempo real
           </h1>
           <p>
-            Explore bairros, empresas, serviços e tudo que acontece na cidade com busca territorial e mapa vivo.
+            Explore bairros, empresas, serviços e tudo que acontece na cidade
+            com busca territorial e mapa vivo.
           </p>
 
           <form className="city-op-search" onSubmit={handleSearchSubmit}>
@@ -1828,7 +2428,13 @@ export default function CidadeLandingPage() {
               <MapPin aria-hidden="true" />
               {territoryLabel}
             </span>
-            <span>{new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long" }).format(new Date())}</span>
+            <span>
+              {new Intl.DateTimeFormat("pt-BR", {
+                weekday: "long",
+                day: "2-digit",
+                month: "long",
+              }).format(new Date())}
+            </span>
             <span>{servicePreview}</span>
           </div>
 
@@ -1847,14 +2453,23 @@ export default function CidadeLandingPage() {
         />
       </section>
 
-      <section className="city-op-content-grid" aria-label={`Resumo operacional de ${cityDisplayName}`}>
+      <section
+        className="city-op-content-grid"
+        aria-label={`Resumo operacional de ${cityDisplayName}`}
+      >
         <DistrictsPanel
           cards={districtCards}
           href={withQueryParams(cityModuleUrls.search, { tipo: "bairros" })}
           isLoading={districtsLoading || metadataLoading}
         />
-        <NearbyBusinessesPanel businesses={featuredBusinesses} href={cityModuleUrls.business} />
-        <GastronomyPanel items={gastronomyItems} href={cityModuleUrls.gastronomy} />
+        <NearbyBusinessesPanel
+          businesses={featuredBusinesses}
+          href={cityModuleUrls.business}
+        />
+        <GastronomyPanel
+          items={gastronomyItems}
+          href={cityModuleUrls.gastronomy}
+        />
         <CommunityPanel
           urls={cityModuleUrls}
           cityLabel={cityDisplayName}
@@ -1863,7 +2478,10 @@ export default function CidadeLandingPage() {
         />
       </section>
 
-      <section className="city-op-trust-strip" aria-label="Confiança da plataforma">
+      <section
+        className="city-op-trust-strip"
+        aria-label="Confiança da plataforma"
+      >
         <Link to={cityModuleUrls.community}>
           <ShieldCheck aria-hidden="true" />
           <span>
@@ -1882,7 +2500,11 @@ export default function CidadeLandingPage() {
           <Heart aria-hidden="true" />
           <span>
             <strong>Comunidade ativa</strong>
-            <small>{featuredLoading ? "Atualizando dados" : "Empresas, anúncios e conversas locais"}</small>
+            <small>
+              {featuredLoading
+                ? "Atualizando dados"
+                : "Empresas, anúncios e conversas locais"}
+            </small>
           </span>
         </Link>
         <Link to={cityModuleUrls.search}>
@@ -1913,5 +2535,7 @@ export default function CidadeLandingPage() {
 
 function getServicePreview(services: FeaturedService[]): string {
   const category = services.find((service) => service.category)?.category;
-  return category ? `${formatCategory(category)} em destaque` : "Serviços locais";
+  return category
+    ? `${formatCategory(category)} em destaque`
+    : "Serviços locais";
 }

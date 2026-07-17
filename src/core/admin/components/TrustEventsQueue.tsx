@@ -3,11 +3,10 @@ import { ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { ConfirmActionDialog } from "@/shared/components/ConfirmActionDialog";
-import { useSessionContext } from "@/core/session";
 import {
   TRUST_ADMIN_ACTION_TYPES,
   TRUST_EVENT_STATUSES,
-  TrustEventService,
+  TrustAdminService,
   TrustPolicyService,
   type TrustEvent,
   type TrustEventStatus,
@@ -43,7 +42,6 @@ export function TrustEventsQueue({
   lockOnlyClassifiedCommentReports = false,
   hideScoreSummary = false,
 }: TrustEventsQueueProps = {}) {
-  const { activeProfile } = useSessionContext();
   const [events, setEvents] = useState<TrustEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
@@ -166,13 +164,7 @@ export function TrustEventsQueue({
   async function loadEvents() {
     setLoading(true);
     try {
-      const result = await TrustEventService.listEvents({ limit: 120 });
-      if (result.error) {
-        toast.error(result.error);
-        setEvents([]);
-      } else {
-        setEvents(result.data);
-      }
+      setEvents(await TrustAdminService.listEvents({ limit: 120 }));
     } catch (error) {
       logger.error("[TrustEventsQueue] loadEvents", error as Error);
       toast.error("Erro ao carregar eventos de confianca.");
@@ -204,26 +196,21 @@ export function TrustEventsQueue({
   }, [contextFilter, onlyOpenEvents, onlyClassifiedCommentReports]);
 
   async function review(eventId: string, status: TrustEventStatus) {
-    if (!activeProfile?.id) {
-      toast.error("Perfil admin ativo obrigatorio.");
-      return;
-    }
-
     setReviewingId(eventId);
-    const result = await TrustEventService.reviewEvent(eventId, {
-      status,
-      reviewed_by_profile_id: activeProfile.id,
-      resolution_notes: readResolutionNote(resolutionNotes, eventId),
-    });
-
-    if (result.error) {
-      toast.error(result.error);
-    } else {
+    try {
+      await TrustAdminService.reviewEvents({
+        eventIds: [eventId],
+        status,
+        resolutionNotes: readResolutionNote(resolutionNotes, eventId),
+      });
       toast.success("Evento atualizado.");
       await loadEvents();
+    } catch (error) {
+      logger.error("[TrustEventsQueue] review", error as Error, { eventId, status });
+      toast.error("Nao foi possivel atualizar o evento.");
+    } finally {
+      setReviewingId(null);
     }
-
-    setReviewingId(null);
   }
 
   async function applyAction(
@@ -231,40 +218,29 @@ export function TrustEventsQueue({
     actionType: (typeof TRUST_ADMIN_ACTION_TYPES)[keyof typeof TRUST_ADMIN_ACTION_TYPES],
     durationDays?: number,
   ) {
-    if (!activeProfile?.id) {
-      toast.error("Perfil admin ativo obrigatorio.");
-      return;
-    }
-
     const note = readResolutionNote(resolutionNotes, event.id);
     const reason = note || `Acao administrativa por evento ${event.event_type}`;
 
     setReviewingId(event.id);
-    const result = await TrustEventService.applyAdminAction({
-      trust_event_id: event.id,
-      subject_profile_id: event.subject_profile_id,
-      subject_role: event.subject_role,
-      applied_by_profile_id: activeProfile.id,
-      action_type: actionType,
-      reason,
-      notes: note || null,
-      duration_days: durationDays,
-      metadata: {
-        event_type: event.event_type,
-        severity: event.severity,
-        context_type: event.context_type,
-        context_id: event.context_id,
-      },
-    });
-
-    if (result.error) {
-      toast.error(result.error);
-    } else {
+    try {
+      await TrustAdminService.applyAction({
+        eventIds: [event.id],
+        actionType,
+        reason,
+        notes: note,
+        durationDays,
+      });
       toast.success("Acao administrativa aplicada.");
       await loadEvents();
+    } catch (error) {
+      logger.error("[TrustEventsQueue] applyAction", error as Error, {
+        eventId: event.id,
+        actionType,
+      });
+      toast.error("Nao foi possivel aplicar a acao administrativa.");
+    } finally {
+      setReviewingId(null);
     }
-
-    setReviewingId(null);
   }
 
   function toggleSelection(eventId: string) {
@@ -282,59 +258,50 @@ export function TrustEventsQueue({
   }
 
   async function applyBulkReview(status: TrustEventStatus) {
-    if (!activeProfile?.id || selectedEvents.length === 0) return;
+    if (selectedEvents.length === 0) return;
     setReviewingId("bulk");
-    const notes = "Atualizacao em lote de moderacao.";
-    await Promise.all(
-      selectedEvents.map((event) =>
-        TrustEventService.reviewEvent(event.id, {
-          status,
-          reviewed_by_profile_id: activeProfile.id!,
-          resolution_notes: readResolutionNote(resolutionNotes, event.id) || notes,
-        }),
-      ),
-    );
-    setSelectedEventIds([]);
-    await loadEvents();
-    setReviewingId(null);
-    toast.success("Atualizacao em lote concluida.");
+    try {
+      await TrustAdminService.reviewEvents({
+        eventIds: selectedEvents.map((event) => event.id),
+        status,
+        resolutionNotes: "Atualizacao em lote de moderacao.",
+      });
+      setSelectedEventIds([]);
+      await loadEvents();
+      toast.success("Atualizacao em lote concluida.");
+    } catch (error) {
+      logger.error("[TrustEventsQueue] applyBulkReview", error as Error, { status });
+      toast.error("Nao foi possivel concluir a atualizacao em lote.");
+    } finally {
+      setReviewingId(null);
+    }
   }
 
   async function applyBulkAdminAction(
     actionType: (typeof TRUST_ADMIN_ACTION_TYPES)[keyof typeof TRUST_ADMIN_ACTION_TYPES],
     durationDays?: number,
   ) {
-    if (!activeProfile?.id || selectedEvents.length === 0) return;
+    if (selectedEvents.length === 0) return;
     setReviewingId("bulk");
-
-    await Promise.all(
-      selectedEvents.map((event) =>
-        TrustEventService.applyAdminAction({
-          trust_event_id: event.id,
-          subject_profile_id: event.subject_profile_id,
-          subject_role: event.subject_role,
-          applied_by_profile_id: activeProfile.id!,
-          action_type: actionType,
-          reason:
-            readResolutionNote(resolutionNotes, event.id) ||
-            `Acao administrativa em lote (${actionType})`,
-          notes: readResolutionNote(resolutionNotes, event.id),
-          duration_days: durationDays,
-          metadata: {
-            batch: true,
-            event_type: event.event_type,
-            severity: event.severity,
-            context_type: event.context_type,
-            context_id: event.context_id,
-          },
-        }),
-      ),
-    );
-
-    setSelectedEventIds([]);
-    await loadEvents();
-    setReviewingId(null);
-    toast.success("Acao administrativa em lote concluida.");
+    try {
+      await TrustAdminService.applyAction({
+        eventIds: selectedEvents.map((event) => event.id),
+        actionType,
+        reason: `Acao administrativa em lote (${actionType})`,
+        notes: "Acao aplicada pela fila administrativa de Trust.",
+        durationDays,
+      });
+      setSelectedEventIds([]);
+      await loadEvents();
+      toast.success("Acao administrativa em lote concluida.");
+    } catch (error) {
+      logger.error("[TrustEventsQueue] applyBulkAdminAction", error as Error, {
+        actionType,
+      });
+      toast.error("Nao foi possivel concluir a acao administrativa em lote.");
+    } finally {
+      setReviewingId(null);
+    }
   }
 
   function confirmBulkAction(input: {

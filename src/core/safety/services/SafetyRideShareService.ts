@@ -6,15 +6,12 @@ import { secureRandomString } from "@/shared/utils/secureRandom";
 import type {
   CreateRideShareInput,
   RideShare,
-  SafetyAuditEntry,
   SafetyResult,
   SharedRideData,
 } from "../types";
 
 type RideShareRow = Database["public"]["Tables"]["ride_shares"]["Row"];
 type RideShareInsert = Database["public"]["Tables"]["ride_shares"]["Insert"];
-type RideShareUpdate = Database["public"]["Tables"]["ride_shares"]["Update"];
-type DriverLocationRow = Database["public"]["Tables"]["driver_locations"]["Row"];
 
 interface QueryResult<T> {
   data: T | null;
@@ -37,29 +34,27 @@ interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
 
 interface SafetyRideShareDbClient {
   from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+  rpc: <TRow = never>(
+    functionName: string,
+    args: Record<string, unknown>,
+  ) => Promise<QueryResult<TRow>>;
 }
 
 type RideShareDeps = {
   getShareExpirationHours: () => number;
-  createAuditEntry: (entry: Omit<SafetyAuditEntry, "id" | "createdAt">) => Promise<void>;
-  sendSafetyNotification: (
-    profileId: string,
-    type: "alert" | "share" | "incident",
-    title: string,
-    message: string,
-    data?: Record<string, unknown>,
-  ) => Promise<void>;
 };
 
-type SharedRideRow = Pick<RideShareRow, "ride_id" | "expires_at" | "status">;
-
-type RideData = {
-  id?: string | null;
-  status?: string | null;
-  origin?: string | null;
-  destination?: string | null;
-  driver_profile_id?: string | null;
-  passenger_profile_id?: string | null;
+type SharedRideRpcRow = {
+  ride_id: string;
+  ride_status: string;
+  origin: string;
+  destination: string;
+  driver_name: string | null;
+  vehicle_model: string | null;
+  vehicle_plate: string | null;
+  current_lat: number | null;
+  current_lng: number | null;
+  location_updated_at: string | null;
 };
 
 const safetyRideShareDb = supabase as unknown as SafetyRideShareDbClient;
@@ -106,22 +101,6 @@ export class SafetyRideShareService {
 
       const rideShare = toRideShare(data);
 
-      await this.deps.createAuditEntry({
-        action: "share_created",
-        entityType: "share",
-        entityId: data.id,
-        performedBy: input.createdBy,
-        metadata: { expiresAt },
-      });
-
-      await this.deps.sendSafetyNotification(
-        input.createdBy,
-        "share",
-        "Compartilhamento de Viagem Criado",
-        `Link de rastreamento criado com sucesso. Expira em ${expirationHours}h.`,
-        { shareId: data.id, shareUrl: rideShare.shareUrl },
-      );
-
       return { success: true, data: rideShare };
     } catch (error) {
       logger.error("[SafetyRideShareService] Error creating ride share:", error);
@@ -134,76 +113,34 @@ export class SafetyRideShareService {
 
   async getSharedRideData(shareToken: string): Promise<SharedRideData | null> {
     try {
-      const { data: shareData, error: shareError } = await safetyRideShareDb
-        .from<SharedRideRow>("ride_shares")
-        .select("ride_id, expires_at, status")
-        .eq("share_token", shareToken)
-        .eq("status", SAFETY_RIDE_SHARE_STATUS.ACTIVE)
-        .maybeSingle();
+      const { data: rows, error } = await safetyRideShareDb.rpc<SharedRideRpcRow[]>(
+        "get_shared_ride_safety_data",
+        { p_share_token: shareToken },
+      );
 
-      if (shareError) throw shareError;
-      if (!shareData) return null;
+      if (error) throw error;
+      const data = rows?.[0];
+      if (!data) return null;
 
-      if (new Date(shareData.expires_at) < new Date()) {
-        return null;
-      }
-
-      const { MobilityService: mobilityService } = await import("@/core/mobility/services/runtime");
-      const rideData = (await mobilityService.getRideById(shareData.ride_id)) as RideData | null;
-      if (!rideData) return null;
-
-      let driverName: string | undefined;
-      let vehicleModel: string | undefined;
-      let vehiclePlate: string | undefined;
-
-      if (rideData.driver_profile_id) {
-        const { MobilityService } = await import("@/core/mobility/services/runtime");
-        const { profileService } = await import("@/core/profiles");
-
-        const [driverCompleteProfile, driverProfile] = await Promise.all([
-          MobilityService.getDriverCompleteProfile(rideData.driver_profile_id),
-          profileService.getProfileById(rideData.driver_profile_id),
-        ]);
-
-        driverName = driverProfile?.name;
-        vehicleModel = driverCompleteProfile?.vehicle_model;
-        vehiclePlate = driverCompleteProfile?.vehicle_plate;
-      }
-
-      let currentLocation:
-        | {
-            latitude: number;
-            longitude: number;
-            timestamp: string;
-          }
-        | undefined;
-
-      if (rideData.driver_profile_id) {
-        const { data: locationData } = await safetyRideShareDb
-          .from<Pick<DriverLocationRow, "lat" | "lng" | "updated_at">>("driver_locations")
-          .select("lat, lng, updated_at")
-          .eq("driver_profile_id", rideData.driver_profile_id)
-          .order("updated_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (locationData) {
-          currentLocation = {
-            latitude: locationData.lat,
-            longitude: locationData.lng,
-            timestamp: locationData.updated_at,
-          };
-        }
-      }
+      const currentLocation =
+        data.current_lat != null &&
+        data.current_lng != null &&
+        data.location_updated_at
+          ? {
+              latitude: data.current_lat,
+              longitude: data.current_lng,
+              timestamp: data.location_updated_at,
+            }
+          : undefined;
 
       return {
-        rideId: rideData.id ?? shareData.ride_id,
-        status: rideData.status ?? "",
-        origin: rideData.origin ?? "",
-        destination: rideData.destination ?? "",
-        driverName,
-        vehicleModel,
-        vehiclePlate,
+        rideId: data.ride_id,
+        status: data.ride_status,
+        origin: data.origin,
+        destination: data.destination,
+        driverName: data.driver_name ?? undefined,
+        vehicleModel: data.vehicle_model ?? undefined,
+        vehiclePlate: data.vehicle_plate ?? undefined,
         currentLocation,
       };
     } catch (error) {
@@ -212,26 +149,14 @@ export class SafetyRideShareService {
     }
   }
 
-  async revokeRideShare(shareId: string, performedBy: string): Promise<SafetyResult<void>> {
+  async revokeRideShare(shareId: string): Promise<SafetyResult<void>> {
     try {
-      const updatePayload: Pick<RideShareUpdate, "status" | "revoked_at"> = {
-        status: SAFETY_RIDE_SHARE_STATUS.REVOKED,
-        revoked_at: new Date().toISOString(),
-      };
-
-      const { error } = await safetyRideShareDb
-        .from<RideShareRow>("ride_shares")
-        .update(updatePayload)
-        .eq("id", shareId);
+      const { error } = await safetyRideShareDb.rpc<boolean>(
+        "revoke_safety_ride_share",
+        { p_share_id: shareId },
+      );
 
       if (error) throw error;
-
-      await this.deps.createAuditEntry({
-        action: "share_revoked",
-        entityType: "share",
-        entityId: shareId,
-        performedBy,
-      });
 
       return { success: true };
     } catch (error) {

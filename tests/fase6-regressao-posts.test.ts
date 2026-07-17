@@ -205,9 +205,9 @@ describe('FASE 6 - Regressao Posts SSOT', () => {
     it('rejects null location_id', async () => {
       await expect(
         (await import('../src/core/posts/services')).postService.createPost({
-          author_profile_id: 'any',
+          author_profile_id: '11111111-1111-4111-8111-111111111111',
           content: 'Test',
-          type: 'text',
+          type: 'post',
           location_id: null as unknown as string,
         }),
       ).rejects.toThrow(/location_id.*obrigat.rio/i);

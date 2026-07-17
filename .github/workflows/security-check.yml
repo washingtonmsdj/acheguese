@@ -81,6 +81,9 @@ jobs:
       - name: Run architecture boundaries incremental validation
         run: npm run validate:architecture:incremental
 
+      - name: Validate Core Platform ownership
+        run: npm run validate:architecture:core-platform
+
   maps-architecture-enforcement:
     name: Maps Architecture Enforcement
     runs-on: ubuntu-latest

@@ -9,11 +9,10 @@ import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { FavoriteStats } from "../types";
 import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
-import { BusinessFavoriteService } from "@/core/business/services/BusinessFavoriteService";
+import { BusinessFavoriteStore } from "./BusinessFavoriteStore";
 import {
-  resolveAuthUserIdFromProfile,
   resolveBusinessDataIdFromProfile,
-  resolveFavoriteBusinessProfileIdsByUserId,
+  resolveBusinessProfileIdsByDataIds,
 } from "./businessFavoriteAdapters";
 
 const TABLE = "profile_favorites_new";
@@ -177,23 +176,19 @@ export async function getFavoritesWithProfiles(favoritingProfileId: string) {
  */
 export async function isBusinessFavorited(
   businessId: string,
-  userId: string,
 ): Promise<boolean> {
   try {
-    const [authUserId, businessDataId] = await Promise.all([
-      resolveAuthUserIdFromProfile(userId),
-      resolveBusinessDataIdFromProfile(businessId),
-    ]);
+    const businessDataId = await resolveBusinessDataIdFromProfile(businessId);
 
-    if (!authUserId || !businessDataId) return false;
+    if (!businessDataId) return false;
 
-    return BusinessFavoriteService.isFavoritedByUser(businessDataId, authUserId);
+    return BusinessFavoriteStore.isFavorited(businessDataId);
   } catch (error) {
     logger.error("[favorites.queries] Error checking if business is favorited:", error);
     trackError(error as Error, {
       component: "favorites.queries",
       action: "isBusinessFavorited",
-      metadata: { businessId, userId },
+      metadata: { businessId },
     });
     return false;
   }
@@ -202,18 +197,17 @@ export async function isBusinessFavorited(
 /**
  * Buscar IDs dos negócios favoritados por um usuário
  */
-export async function getUserBusinessFavorites(userId: string): Promise<string[]> {
+export async function getCurrentUserBusinessFavorites(): Promise<string[]> {
   try {
-    const authUserId = await resolveAuthUserIdFromProfile(userId);
-    if (!authUserId) return [];
-
-    return resolveFavoriteBusinessProfileIdsByUserId(authUserId);
+    const favorites = await BusinessFavoriteStore.list({ limit: 100 });
+    return resolveBusinessProfileIdsByDataIds(
+      favorites.map((favorite) => favorite.business_id),
+    );
   } catch (error) {
     logger.error("[favorites.queries] Error getting user business favorites:", error);
     trackError(error as Error, {
       component: "favorites.queries",
-      action: "getUserBusinessFavorites",
-      metadata: { userId },
+      action: "getCurrentUserBusinessFavorites",
     });
     return [];
   }

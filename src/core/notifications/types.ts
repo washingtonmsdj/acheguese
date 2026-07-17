@@ -69,6 +69,16 @@ export const NotificationPriority = {
 export type NotificationPriority =
   (typeof NotificationPriority)[keyof typeof NotificationPriority];
 
+export const NotificationCategory = {
+  TRANSACTIONAL: "transactional",
+  SOCIAL: "social",
+  SYSTEM: "system",
+  MARKETING: "marketing",
+} as const;
+
+export type NotificationCategory =
+  (typeof NotificationCategory)[keyof typeof NotificationCategory];
+
 export interface RideNotificationMetadata {
   ride_id: string;
   driver_profile_id?: string;
@@ -141,15 +151,18 @@ export interface Notification {
   id: string;
   user_id: string;
   type: NotificationTypeValue;
+  category: NotificationCategory;
   title: string;
   message: string;
   read: boolean;
   priority: NotificationPriority;
   metadata: NotificationMetadata;
+  action_url?: string;
+  action_label?: string;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
   deleted_at: string | null;
-  read_at?: string | null;
+  read_at?: string;
 }
 
 export interface NotificationStats {
@@ -159,12 +172,18 @@ export interface NotificationStats {
   by_priority: Record<NotificationPriority, number>;
 }
 
+export interface NotificationCursor {
+  createdAt: string;
+  id: string;
+}
+
 export interface NotificationFilters {
   type?: NotificationTypeValue | NotificationTypeValue[];
   priority?: NotificationPriority | NotificationPriority[];
   read?: boolean;
+  category?: NotificationCategory;
   limit?: number;
-  offset?: number;
+  cursor?: NotificationCursor;
 }
 
 export interface CreateNotificationParams {

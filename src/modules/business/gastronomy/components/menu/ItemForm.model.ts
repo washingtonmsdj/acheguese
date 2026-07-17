@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { MenuCategory, MenuItem } from '@/modules/business/gastronomy/services/MenuService';
+import { isMediaAssetReference } from '@/core/media';
 
 export const NO_CATEGORY_VALUE = '__none__';
 
@@ -8,7 +9,10 @@ export const itemSchema = z.object({
   description: z.string().max(500).optional(),
   price: z.number().min(0, 'Preço deve ser maior ou igual a 0'),
   category_id: z.string().optional(),
-  image_url: z.string().url('URL inválida').optional().or(z.literal('')),
+  image_url: z
+    .string()
+    .refine((value) => !value || isMediaAssetReference(value), 'Imagem inválida')
+    .optional(),
   preparation_time_min: z.number().min(0).optional(),
   stock_quantity: z.number().int().min(0).optional(),
   stock_alert_threshold: z.number().int().min(0).optional(),
@@ -70,7 +74,7 @@ export function buildItemFormDefaults(item?: MenuItem | null): ItemFormValues {
     description: item?.description || '',
     price: item?.price || 0,
     category_id: item?.category_id || '',
-    image_url: item?.image_url || '',
+    image_url: item?.image_reference || '',
     preparation_time_min: item?.preparation_time_min || undefined,
     stock_quantity: item?.stock_quantity ?? undefined,
     stock_alert_threshold: item?.stock_alert_threshold ?? undefined,

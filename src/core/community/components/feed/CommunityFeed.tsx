@@ -1,12 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
-  BarChart3,
   Clock3,
-  FileText,
   Flame,
-  ImageIcon,
-  Megaphone,
   MessageCircle,
   SlidersHorizontal,
 } from "lucide-react";
@@ -17,20 +13,19 @@ import type { LocationScope } from "@/core/community/hooks/feed/useFeedFilters";
 import type { TerritorialFeedChannel } from "@/core/community/hooks/feed/territorialFeedEngine";
 import type { TerritoryFilter } from "@/core/location";
 import {
-  COMMUNITY_FEED_COMPOSER_ACTIONS,
   COMMUNITY_FEED_HEADER_FILTERS,
   COMMUNITY_FEED_SORT_FILTERS,
-  type CommunityFeedComposerActionId,
   type CommunityFeedSortType,
 } from "@/core/community/utils/communityFeedTab";
 import { isLaunchCommunityPostEnabled } from "@/config/launchScope";
 import { COMMUNITY_FEED_COPY } from "@/core/community/utils/communityCopy";
 import type { CommunityAction } from "@/core/community/access";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { InfiniteScrollTrigger } from "@/shared/components/ui";
 import type { UnifiedPost } from "@/shared/types/posts";
+import type { PostType } from "@/core/posts/types";
 import { UnifiedFeedWithMessages } from "./UnifiedFeedWithMessages";
+import { CommunityComposerEntry } from "../composer/CommunityComposerEntry";
 import { PostCardSkeleton } from "../PostCardSkeleton";
 import { SPACING } from "../styles/communityDesignSystem";
 import { getRecordValue } from "@/shared/utils/recordLookup";
@@ -41,17 +36,16 @@ const SORT_ICONS: Record<CommunityFeedSortType, React.ElementType> = {
   most_commented: MessageCircle,
 };
 
-const COMPOSER_ICONS: Record<CommunityFeedComposerActionId, React.ElementType> = {
-  text: MessageCircle,
-  media: ImageIcon,
-  poll: BarChart3,
-  alert: Megaphone,
-  file: FileText,
-};
+const DISCUSSION_POST_TYPES = new Set<PostType>([
+  "post",
+  "discussao",
+  "pergunta",
+  "enquete",
+  "recomendacao",
+  "alerta",
+]);
 
-function getComposerIcon(id: CommunityFeedComposerActionId): React.ElementType {
-  return getRecordValue(COMPOSER_ICONS, id) ?? MessageCircle;
-}
+type CommunityFeedContentMode = "feed" | "discussions";
 
 function getSortIcon(id: CommunityFeedSortType): React.ElementType {
   return getRecordValue(SORT_ICONS, id) ?? Clock3;
@@ -59,12 +53,15 @@ function getSortIcon(id: CommunityFeedSortType): React.ElementType {
 
 interface CommunityFeedProps {
   currentUserId?: string;
+  communityId?: string;
   onPostClick?: (postId: string, post: UnifiedPost) => void;
   onCommentClick?: (postId: string) => void;
   onTagClick?: (tag: string) => void;
-  onOpenCreatePost?: () => void;
+  onOpenCreatePost: (defaultType?: PostType) => void;
+  communityName?: string;
   onDeletePost?: (postId: string) => void;
   onEditPost?: (postId: string) => void;
+  onReportPost: (postId: string) => void;
   canReact?: boolean;
   canComment?: boolean;
   canSave?: boolean;
@@ -75,16 +72,20 @@ interface CommunityFeedProps {
   territoryFilter?: TerritoryFilter;
   initialHeaderFilter?: TerritorialFeedChannel;
   onHeaderFilterChange?: (filter: TerritorialFeedChannel) => void;
+  contentMode?: CommunityFeedContentMode;
 }
 
 export function CommunityFeed({
   currentUserId,
+  communityId,
   onPostClick,
   onCommentClick,
   onTagClick,
   onOpenCreatePost,
+  communityName = "sua comunidade",
   onDeletePost,
   onEditPost,
+  onReportPost,
   canReact = true,
   canComment = true,
   canSave = true,
@@ -95,13 +96,22 @@ export function CommunityFeed({
   territoryFilter,
   initialHeaderFilter = "para_voce",
   onHeaderFilterChange,
+  contentMode = "feed",
 }: CommunityFeedProps) {
   const { activeProfile } = useSessionContext();
-  const { likePost, savePost, sharePost, reportPost } = usePostActions();
-  const { posts, isLoading, isError, error, hasNextPage, isFetchingNextPage, loadMore } =
-    useCommunityFeedSimple({ locationScope, territoryFilter });
+  const { likePost, savePost, sharePost } = usePostActions();
+  const {
+    posts,
+    isLoading,
+    isError,
+    error,
+    hasNextPage,
+    isFetchingNextPage,
+    loadMore,
+  } = useCommunityFeedSimple({ locationScope, territoryFilter });
 
   const [sortType, setSortType] = useState<CommunityFeedSortType>("recent");
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [activeHeaderFilter, setActiveHeaderFilter] =
     useState<TerritorialFeedChannel>(initialHeaderFilter);
 
@@ -109,60 +119,69 @@ export function CommunityFeed({
     setActiveHeaderFilter(initialHeaderFilter);
   }, [initialHeaderFilter]);
 
-  const handleLike = useCallback((postId: string) => {
-    if (!canReact) {
-      onBlockedAction?.("react");
-      return;
-    }
+  const handleLike = useCallback(
+    (postId: string) => {
+      if (!canReact) {
+        onBlockedAction?.("react");
+        return;
+      }
 
-    likePost(postId);
-  }, [canReact, likePost, onBlockedAction]);
+      likePost(postId);
+    },
+    [canReact, likePost, onBlockedAction],
+  );
 
-  const handleComment = useCallback((postId: string) => {
-    if (!canComment) {
-      onBlockedAction?.("comment");
-      return;
-    }
+  const handleComment = useCallback(
+    (postId: string) => {
+      if (!canComment) {
+        onBlockedAction?.("comment");
+        return;
+      }
 
-    onCommentClick?.(postId);
-  }, [canComment, onBlockedAction, onCommentClick]);
+      onCommentClick?.(postId);
+    },
+    [canComment, onBlockedAction, onCommentClick],
+  );
 
-  const handleSave = useCallback((postId: string) => {
-    if (!canSave) {
-      onBlockedAction?.("save");
-      return;
-    }
+  const handleSave = useCallback(
+    (postId: string) => {
+      if (!canSave) {
+        onBlockedAction?.("save");
+        return;
+      }
 
-    savePost(postId);
-  }, [canSave, onBlockedAction, savePost]);
+      savePost(postId);
+    },
+    [canSave, onBlockedAction, savePost],
+  );
 
-  const handleShare = useCallback((postId: string) => {
-    sharePost(postId);
-  }, [sharePost]);
+  const handleShare = useCallback(
+    (postId: string) => {
+      sharePost(postId);
+    },
+    [sharePost],
+  );
 
-  const handleReport = useCallback((postId: string) => {
-    if (!canReport) {
-      onBlockedAction?.("report");
-      return;
-    }
+  const handleReport = useCallback(
+    (postId: string) => {
+      if (!canReport) {
+        onBlockedAction?.("report");
+        return;
+      }
 
-    reportPost({
-      postId,
-      reason: "inappropriate_content",
-      description: "Denúncia enviada pelo fluxo principal do feed",
-    });
-  }, [canReport, onBlockedAction, reportPost]);
+      onReportPost(postId);
+    },
+    [canReport, onBlockedAction, onReportPost],
+  );
 
-  const handleTagClick = useCallback((tag: string) => {
-    onTagClick?.(tag);
-  }, [onTagClick]);
+  const handleTagClick = useCallback(
+    (tag: string) => {
+      onTagClick?.(tag);
+    },
+    [onTagClick],
+  );
 
   const handleUpvoteReport = useCallback((_reportId: string) => {}, []);
-  const profileName = activeProfile?.name?.trim() || "Usuário";
-  const profileAvatar =
-    activeProfile?.avatarUrl ??
-    undefined;
-  const profileInitial = profileName[0]?.toUpperCase() ?? "U";
 
   const sortCriteria = useMemo(() => {
     if (sortType === "popular") return "popular";
@@ -171,18 +190,20 @@ export function CommunityFeed({
   }, [sortType]);
 
   const filterType = useMemo(() => activeHeaderFilter, [activeHeaderFilter]);
-  const unifiedPosts = useMemo(
-    () =>
-      posts
-        .filter(isLaunchCommunityPostEnabled)
-        .map((post) => ({
-          ...post,
-          type: (post.type === "texto" ? "discussao" : post.type) as UnifiedPost["type"],
-          author_name: (post as { author_name?: string }).author_name ?? "Morador",
-          tags: (post as { tags?: string[] }).tags ?? [],
-        })),
-    [posts],
-  );
+  const unifiedPosts = useMemo(() => {
+    const launchPosts = posts.filter(isLaunchCommunityPostEnabled);
+    const visiblePosts =
+      contentMode === "discussions"
+        ? launchPosts.filter((post) => DISCUSSION_POST_TYPES.has(post.type))
+        : launchPosts;
+
+    return visiblePosts.map((post) => ({
+      ...post,
+      type: post.type as UnifiedPost["type"],
+      author_name: (post as { author_name?: string }).author_name ?? "Morador",
+      tags: (post as { tags?: string[] }).tags ?? [],
+    }));
+  }, [contentMode, posts]);
 
   if (isLoading) {
     return (
@@ -196,10 +217,14 @@ export function CommunityFeed({
 
   if (isError) {
     return (
-      <Alert variant="destructive" className="border-destructive/50 bg-destructive/10">
+      <Alert
+        variant="destructive"
+        className="border-destructive/50 bg-destructive/10"
+      >
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          {COMMUNITY_FEED_COPY.errorLoadingFeedPrefix} {error?.message || COMMUNITY_FEED_COPY.unknownError}
+          {COMMUNITY_FEED_COPY.errorLoadingFeedPrefix}{" "}
+          {error?.message || COMMUNITY_FEED_COPY.unknownError}
         </AlertDescription>
       </Alert>
     );
@@ -207,53 +232,22 @@ export function CommunityFeed({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-white/10 bg-[#0f171a] p-3 shadow-xl shadow-black/10 md:p-4">
-        <h2 className="mb-3 text-sm font-semibold text-white">{COMMUNITY_FEED_COPY.sectionTitle}</h2>
-        <div className="flex min-w-0 items-center gap-3">
-          <Avatar className="h-10 w-10 shrink-0 border border-white/15">
-            <AvatarImage src={profileAvatar} alt={profileName} />
-            <AvatarFallback className="bg-accent text-foreground font-semibold">
-              {profileInitial}
-            </AvatarFallback>
-          </Avatar>
-          <button
-            type="button"
-            onClick={onOpenCreatePost}
-            className="min-h-16 min-w-0 flex-1 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-left transition-colors hover:border-teal-400/40 hover:bg-teal-400/10"
-          >
-            <span className="flex flex-col">
-              <span className="block whitespace-nowrap overflow-hidden text-ellipsis text-sm font-medium text-white/85 leading-5">
-                {COMMUNITY_FEED_COPY.composerTitle}
-              </span>
-              <span className="block whitespace-nowrap overflow-hidden text-ellipsis text-xs text-white/50 leading-5">
-                {COMMUNITY_FEED_COPY.composerSubtitle}
-              </span>
-            </span>
-          </button>
-        </div>
-
-        <div
-          className="mt-3 flex min-w-0 flex-wrap gap-2 border-t border-white/10 pt-3"
-          aria-label={COMMUNITY_FEED_COPY.composerActionsAriaLabel}
-        >
-          {COMMUNITY_FEED_COMPOSER_ACTIONS.map(({ id, label }) => {
-            const Icon = getComposerIcon(id);
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={onOpenCreatePost}
-                className="flex min-h-9 items-center gap-2 rounded-lg px-2.5 text-xs font-semibold text-white/75 transition-colors hover:bg-white/5 hover:text-white"
-              >
-                <Icon className="h-3.5 w-3.5" />
-                {label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <CommunityComposerEntry
+        communityName={communityName}
+        onOpenCreatePost={onOpenCreatePost}
+      />
 
       <div className="rounded-2xl border border-white/10 bg-[#0f171a] p-3 shadow-xl shadow-black/10 md:p-4">
+        {contentMode === "discussions" ? (
+          <div className="mb-3 border-b border-white/10 pb-3">
+            <h2 className="text-sm font-semibold text-white">
+              Discussões da comunidade
+            </h2>
+            <p className="mt-1 text-xs leading-5 text-white/52">
+              Perguntas, recomendações, enquetes e conversas entre moradores.
+            </p>
+          </div>
+        ) : null}
         <div className="flex min-w-0 items-center justify-between gap-2">
           <div
             className="flex min-w-0 flex-wrap gap-2"
@@ -283,15 +277,19 @@ export function CommunityFeed({
 
           <button
             type="button"
+            onClick={() => setFiltersExpanded((current) => !current)}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/20 text-white/65 transition-colors hover:border-white/20 hover:text-white"
             aria-label={COMMUNITY_FEED_COPY.adjustFiltersAriaLabel}
+            aria-expanded={filtersExpanded}
+            aria-controls="community-feed-sort-options"
           >
             <SlidersHorizontal className="h-4 w-4" />
           </button>
         </div>
 
         <div
-          className="mt-3 flex min-w-0 flex-wrap gap-2 border-t border-white/10 pt-3"
+          id="community-feed-sort-options"
+          className={`${filtersExpanded ? "mt-3 flex" : "hidden"} min-w-0 flex-wrap gap-2 border-t border-white/10 pt-3 sm:mt-3 sm:flex`}
           aria-label={COMMUNITY_FEED_COPY.sortAriaLabel}
         >
           {COMMUNITY_FEED_SORT_FILTERS.map(({ id, label }) => {
@@ -320,6 +318,7 @@ export function CommunityFeed({
           civicReports={[]}
           communityPosts={unifiedPosts}
           currentUserId={currentUserId}
+          communityId={communityId}
           sortCriteria={sortCriteria}
           filterType={filterType}
           userLocation={{

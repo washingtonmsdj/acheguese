@@ -55,7 +55,7 @@ describe("BusinessUrlService", () => {
         ...businessContext,
         community_alias: "santa-cruz",
       }),
-    ).resolves.toBe("/santa-cruz");
+    ).resolves.toBe("/comunidade/santa-cruz");
 
     expect(createLocationRepository).not.toHaveBeenCalled();
   });

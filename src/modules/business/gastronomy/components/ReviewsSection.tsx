@@ -184,7 +184,6 @@ export function ReviewsSection({
                 activeProfile &&
                 reportReview({
                   review_id: review.id,
-                  reporter_profile_id: activeProfile.id,
                   reason: 'inappropriate',
                 })
               }

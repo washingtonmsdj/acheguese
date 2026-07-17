@@ -57,6 +57,7 @@ export class CommunityEntityLinkRepository {
     options: CommunityEntityLinkListOptions = {},
   ): Promise<CommunityEntityLinkRecord[]> {
     const now = new Date().toISOString();
+    const boundedLimit = Math.min(Math.max(options.limit ?? 100, 1), 100);
     let query = supabase
       .from("community_entity_links" as never)
       .select(COMMUNITY_ENTITY_LINK_SELECT)
@@ -71,9 +72,7 @@ export class CommunityEntityLinkRepository {
       query = query.in("entity_type", [...options.entityTypes]);
     }
 
-    if (options.limit && options.limit > 0) {
-      query = query.limit(options.limit);
-    }
+    query = query.limit(boundedLimit);
 
     const { data, error } = await query;
     if (error || !data) return [];
@@ -91,7 +90,8 @@ export class CommunityEntityLinkRepository {
       .eq("entity_id", entityId)
       .eq("status", "active")
       .order("priority", { ascending: false })
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(100);
 
     if (error || !data) return [];
     return data as CommunityEntityLinkRecord[];

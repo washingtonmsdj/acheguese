@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSessionContext } from "@/core/session";
-import { AuthorizationEngine } from "@/core/authorization/services/AuthorizationEngine";
+import { CapabilityPreviewService } from "@/core/authorization/services/CapabilityPreviewService";
 
 export function useAdminGuard() {
   const { activeProfile, isLoading: sessionLoading } = useSessionContext();
@@ -12,7 +12,7 @@ export function useAdminGuard() {
       setCanModerate(false);
       return;
     }
-    AuthorizationEngine.canProfilePerformAction(
+    CapabilityPreviewService.canDisplayAction(
       activeProfile.id,
       "moderateContent",
       {},

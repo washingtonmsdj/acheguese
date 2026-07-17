@@ -20,8 +20,11 @@ import { AdminPageHeader } from '@/core/admin/components';
 import { SiteSettingsService } from '@/core/admin/services/SiteSettingsService';
 import { SITE_SETTINGS_STORAGE } from '@/core/admin/config/siteSettings.config';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSessionContext } from '@/core/session';
+import { SafeImage } from '@/shared/components/security/SafeImage';
 
 export default function AdminBranding() {
+  const { activeProfile } = useSessionContext();
   const queryClient = useQueryClient();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -47,7 +50,10 @@ export default function AdminBranding() {
 
   // Mutation para upload de logo
   const uploadLogoMutation = useMutation({
-    mutationFn: (file: File) => SiteSettingsService.uploadLogo(file),
+    mutationFn: (file: File) => {
+      if (!activeProfile) throw new Error('Perfil administrativo ativo obrigatorio');
+      return SiteSettingsService.uploadLogo(activeProfile.id, file);
+    },
     onSuccess: (url) => {
       setLogoPreview(url);
       queryClient.invalidateQueries({ queryKey: ['site-settings'] });
@@ -62,7 +68,10 @@ export default function AdminBranding() {
 
   // Mutation para upload de favicon
   const uploadFaviconMutation = useMutation({
-    mutationFn: (file: File) => SiteSettingsService.uploadFavicon(file),
+    mutationFn: (file: File) => {
+      if (!activeProfile) throw new Error('Perfil administrativo ativo obrigatorio');
+      return SiteSettingsService.uploadFavicon(activeProfile.id, file);
+    },
     onSuccess: (url) => {
       setFaviconPreview(url);
       queryClient.invalidateQueries({ queryKey: ['site-settings'] });
@@ -201,7 +210,7 @@ export default function AdminBranding() {
               Logo Principal
             </CardTitle>
             <CardDescription>
-              Logo exibida na topbar. Recomendado: PNG transparente ou SVG
+              Logo exibida na topbar. Use PNG, JPG ou WebP.
               <br />
               <strong>Desktop:</strong> 180x48px (horizontal) | <strong>Mobile:</strong> 48x48px (quadrada)
               <br />
@@ -212,7 +221,7 @@ export default function AdminBranding() {
             <div className="flex flex-col items-center gap-4">
               {logoPreview ? (
                 <div className="relative w-full h-32 bg-muted rounded-lg flex items-center justify-center border-2 border-dashed border-border">
-                  <img
+                  <SafeImage
                     src={logoPreview}
                     alt="Preview da logo"
                     className="max-h-28 max-w-full object-contain"
@@ -236,13 +245,13 @@ export default function AdminBranding() {
                   <Input
                     id="logo-upload"
                     type="file"
-                    accept="image/png,image/jpeg,image/svg+xml"
+                    accept="image/png,image/jpeg,image/webp"
                     onChange={handleLogoChange}
                     className="hidden"
                   />
                 </Label>
                 <p className="text-xs text-muted-foreground mt-2 text-center">
-                  PNG, JPG ou SVG (máx. 2MB)
+                  PNG, JPG ou WebP (máx. 2MB)
                 </p>
               </div>
             </div>
@@ -257,7 +266,7 @@ export default function AdminBranding() {
               Favicon
             </CardTitle>
             <CardDescription>
-              Ícone exibido na aba do navegador. Recomendado: PNG ou ICO, 64x64px
+              Ícone exibido na aba do navegador. Use PNG, JPG ou WebP, 64x64px.
               <br />
               <span className="text-xs text-muted-foreground">Tamanho maior garante qualidade em telas Retina (será redimensionado automaticamente)</span>
             </CardDescription>
@@ -266,7 +275,7 @@ export default function AdminBranding() {
             <div className="flex flex-col items-center gap-4">
               {faviconPreview ? (
                 <div className="relative w-full h-32 bg-muted rounded-lg flex items-center justify-center border-2 border-dashed border-border">
-                  <img
+                  <SafeImage
                     src={faviconPreview}
                     alt="Preview do favicon"
                     className="h-16 w-16 object-contain"
@@ -290,13 +299,13 @@ export default function AdminBranding() {
                   <Input
                     id="favicon-upload"
                     type="file"
-                    accept="image/png,image/x-icon"
+                    accept="image/png,image/jpeg,image/webp"
                     onChange={handleFaviconChange}
                     className="hidden"
                   />
                 </Label>
                 <p className="text-xs text-muted-foreground mt-2 text-center">
-                  PNG ou ICO (máx. 500KB)
+                  PNG, JPG ou WebP (máx. 500KB)
                 </p>
               </div>
             </div>

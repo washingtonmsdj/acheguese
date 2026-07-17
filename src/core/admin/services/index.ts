@@ -11,11 +11,6 @@ export type {
 export { adminBusinessService } from "./AdminBusinessService";
 export type { AdminBusinessData } from "./AdminBusinessService";
 export { adminCommunityService } from "./AdminCommunityService";
-export type {
-  ModerationStats,
-  CommunityPost,
-  PostFlag,
-} from "./AdminCommunityService";
 export { adminStatsService } from "./AdminStatsService";
 export type { 
   PremiumStats, 
@@ -30,8 +25,6 @@ export type {
 } from "./AdminPickupPointsService";
 
 // Additional services exports
-export { adminAlertsService } from "./AdminAlertsService";
-export type { AdminAlertPost, AdminAlertProfile } from "./AdminAlertsService";
 export { adminClassifiedsService } from "./AdminClassifiedsService";
 export type {
   AdminClassifiedData,
@@ -50,7 +43,6 @@ export type { AdminEventData } from "./AdminEventsService";
 export { adminGastronomyService } from "./AdminGastronomyService";
 export { adminMessagingService } from "./AdminMessagingService";
 export type { AdminConversationData } from "./AdminMessagingService";
-export { adminModerationService } from "./AdminModerationService";
 export { adminNotificationsService } from "./AdminNotificationsService";
 export type { AdminNotificationRecord } from "./AdminNotificationsService";
 export { adminPromotionsService } from "./AdminPromotionsService";
@@ -69,7 +61,7 @@ export type {
   AdminProfilePreferenceFieldSummary,
   AdminProfileReputationSourceSummary,
   AdminProfileResidenceSummary,
-  AdminProfilePermissionGovernanceSummary,
+  AdminProfileCapabilityPreviewSummary,
   AdminProfileIdentityIssue,
 } from "./AdminProfileGovernanceService";
 export { adminMapGovernanceService } from "./AdminMapGovernanceService";

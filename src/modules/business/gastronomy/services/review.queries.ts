@@ -6,13 +6,10 @@
 
 import { logger } from "@/shared/utils/logger";
 import { supabase } from "@/integrations/supabase";
-import { REPORT_STATUS } from "@/shared/types/constants";
-import { EntityStatus } from "@/shared/types/enums";
-import { BusinessReviewsRpcService } from "./BusinessReviewsRpcService";
+import { BusinessReviewService } from "@/core/business/services/BusinessReviewService";
+import { ReviewEngagementService } from "@/core/reviews/services/ReviewEngagementService";
 
-// Types estendidos da tabela canonica `reviews`
-//  Estende o tipo base de @/shared/types/reviews com os campos adicionados
-//  pela migration 20260412000001 (especficos de gastronomia).
+// Read shape exposed by the business review projection.
 
 export interface Review {
   id: string;
@@ -53,7 +50,6 @@ export interface BusinessResponseInput {
 
 export interface ReportReviewInput {
   review_id: string;
-  reporter_profile_id: string;
   reason: "spam" | "offensive" | "fake" | "inappropriate" | "other";
   description?: string;
 }
@@ -104,7 +100,7 @@ export class ReviewQueryService {
   }): Promise<boolean> {
     try {
       void params.userId;
-      return await BusinessReviewsRpcService.canUserReviewBusiness(
+      return await BusinessReviewService.canUserReviewBusiness(
         params.businessProfileId,
         params.reviewerProfileId,
       );
@@ -119,7 +115,7 @@ export class ReviewQueryService {
    */
   static async createReview(input: CreateReviewInput): Promise<{ id: string }> {
     try {
-      const review = await BusinessReviewsRpcService.createReview(input);
+      const review = await BusinessReviewService.createReview(input);
       logger.info("Review created successfully", { reviewId: review.id });
       return review;
     } catch (error) {
@@ -136,7 +132,7 @@ export class ReviewQueryService {
     input: UpdateReviewInput,
   ): Promise<void> {
     try {
-      await BusinessReviewsRpcService.updateReview(reviewId, input);
+      await BusinessReviewService.updateReview(reviewId, input);
       logger.info("Review updated successfully", { reviewId });
     } catch (error) {
       logger.error("Error in updateReview", error);
@@ -149,7 +145,7 @@ export class ReviewQueryService {
    */
   static async deleteReview(reviewId: string): Promise<void> {
     try {
-      await BusinessReviewsRpcService.deleteReview(reviewId);
+      await BusinessReviewService.deleteReview(reviewId);
       logger.info("Review deleted successfully", { reviewId });
     } catch (error) {
       logger.error("Error in deleteReview", error);
@@ -165,7 +161,7 @@ export class ReviewQueryService {
     input: BusinessResponseInput,
   ): Promise<void> {
     try {
-      await BusinessReviewsRpcService.addBusinessResponse(reviewId, input);
+      await BusinessReviewService.addBusinessResponse(reviewId, input);
       logger.info("Business response added successfully", { reviewId });
     } catch (error) {
       logger.error("Error in addBusinessResponse", error);
@@ -178,29 +174,13 @@ export class ReviewQueryService {
    */
   static async reportReview(input: ReportReviewInput): Promise<{ id: string }> {
     try {
-      const { data, error } = await supabase
-        .from("review_reports")
-        .insert({
-          review_id: input.review_id,
-          reporter_profile_id: input.reporter_profile_id,
-          reason: input.reason,
-          description: input.description || null,
-          status: REPORT_STATUS.PENDING,
-        })
-        .select("id")
-        .single();
-
-      if (error) {
-        logger.error("Failed to report review", error, input);
-        throw error;
-      }
-
-      if (!data) {
-        throw new Error("No data returned from review report");
-      }
-
-      logger.info("Review reported successfully", { reportId: data.id });
-      return { id: data.id };
+      const report = await ReviewEngagementService.reportReview({
+        reviewId: input.review_id,
+        reason: input.reason,
+        description: input.description,
+      });
+      logger.info("Review reported successfully", { reportId: report.id });
+      return report;
     } catch (error) {
       logger.error("Error in reportReview", error);
       throw error;
@@ -212,22 +192,11 @@ export class ReviewQueryService {
    */
   static async voteReview(input: VoteReviewInput): Promise<void> {
     try {
-      const { error } = await supabase.from("review_helpfulness").upsert(
-        {
-          review_id: input.review_id,
-          voter_profile_id: input.voter_profile_id,
-          is_helpful: input.is_helpful,
-        },
-        {
-          onConflict: "review_id,voter_profile_id",
-        },
-      );
-
-      if (error) {
-        logger.error("Failed to vote on review", error, input);
-        throw error;
-      }
-
+      await ReviewEngagementService.setHelpfulness({
+        reviewId: input.review_id,
+        voterProfileId: input.voter_profile_id,
+        isHelpful: input.is_helpful,
+      });
       logger.info("Review vote recorded successfully", input);
     } catch (error) {
       logger.error("Error in voteReview", error);
@@ -243,19 +212,10 @@ export class ReviewQueryService {
     voterProfileId: string;
   }): Promise<boolean | null> {
     try {
-      const { data, error } = await supabase
-        .from("review_helpfulness")
-        .select("is_helpful")
-        .eq("review_id", params.reviewId)
-        .eq("voter_profile_id", params.voterProfileId)
-        .maybeSingle();
-
-      if (error) {
-        logger.error("Failed to get user review vote", error, params);
-        return null;
-      }
-
-      return data?.is_helpful ?? null;
+      return await ReviewEngagementService.getCurrentHelpfulness(
+        params.reviewId,
+        params.voterProfileId,
+      );
     } catch (error) {
       logger.error("Error in getUserReviewVote", error);
       return null;

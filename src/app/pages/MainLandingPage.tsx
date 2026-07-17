@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -16,7 +16,6 @@ import {
   ShieldCheck,
   Scissors,
   Star,
-  Sun,
   ShoppingCart,
   Tag,
   Users,
@@ -40,11 +39,15 @@ import {
   getHomeDiscoveryDocumentMeta,
   withQueryParams,
 } from "@/core/landing/utils/landingPresentation";
-import { LocationStatus, LocationType, type Location } from "@/core/location/types";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useHomeCommunityHref } from "@/core/routing/hooks/useHomeCommunityHref";
-import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { buildCommunityAliasUrl, buildCommunityScopedUrl } from "@/core/routing/utils/territoryUrls";
+import { PublicHeaderMobileMenu } from "@/core/navigation/PublicHeaderMobileMenu";
+import {
+  buildPublicHeaderNavigation,
+  type PublicHeaderNavItem,
+  type PublicHeaderNavItemId,
+} from "@/core/navigation/publicHeaderNavigation";
 import type { SearchDocument } from "@/core/search";
 import { useSessionContext } from "@/core/session";
 
@@ -68,35 +71,23 @@ import personaPrestador from "@/assets/persona-prestador.jpg";
 import servicosHero from "@/assets/servicos-hero.jpg";
 import "./MainLandingPage.css";
 
-type NavItem = {
-  label: string;
-  href: string;
+type NavItem = PublicHeaderNavItem & {
   mobileHeader?: "primary" | "secondary";
-  surface?: LaunchSurfaceKey;
 };
+
+const HOME_DESKTOP_NAV_IDS = new Set<PublicHeaderNavItemId>([
+  "home",
+  "community",
+  "business",
+  "classifieds",
+  "services",
+  "map",
+]);
 
 type Chip = {
   label: string;
   href: string;
   icon?: LucideIcon;
-};
-
-type WeatherPoint = {
-  latitude: number;
-  longitude: number;
-  label: string;
-};
-
-type TemperatureBadgeState = {
-  label: string;
-  ariaLabel: string;
-  isLoading: boolean;
-};
-
-type CurrentWeatherResponse = {
-  current?: {
-    temperature_2m?: number;
-  };
 };
 
 type HeaderSessionActions = {
@@ -134,8 +125,6 @@ type ModuleTile = {
 
 const cityPath = LAUNCH_CITY_PATH;
 const searchHref = LAUNCH_URLS.search;
-const weatherCacheTtlMs = 10 * 60 * 1000;
-const currentWeatherCache = new Map<string, { temperatureCelsius: number; expiresAt: number }>();
 const homeDiscoveryFallback = HomeDiscoveryService.getFallbackHomeDiscovery();
 const avatarImages = [personaMorador, personaComerciante, personaPrestador, personaEmprego];
 const homeAvatarsByKey: Record<HomeCommunityActivity["avatarKey"], string> = {
@@ -225,62 +214,6 @@ const fallbackHighlights: HighlightCard[] = [
   },
 ];
 
-const salvadorCenter = { latitude: -12.8744, longitude: -38.5015 };
-
-const homeSelectedTerritory: ResolvedTerritory = {
-  kind: "location",
-  location: {
-    id: "city-salvador",
-    parent_id: "state-ba",
-    type: LocationType.CITY,
-    slug: "salvador",
-    name: "Salvador",
-    full_name: "Salvador, BA",
-    geographic_path: "/br/ba/salvador",
-    status: LocationStatus.ACTIVE,
-    metadata: {
-      state_code: "BA",
-      center_latitude: salvadorCenter.latitude,
-      center_longitude: salvadorCenter.longitude,
-    },
-    created_at: "2026-01-01T00:00:00.000Z",
-    updated_at: "2026-01-01T00:00:00.000Z",
-  } satisfies Location,
-};
-
-function toFiniteCoordinate(value: unknown): number | null {
-  const numericValue = typeof value === "number" ? value : typeof value === "string" ? Number(value) : Number.NaN;
-  return Number.isFinite(numericValue) ? numericValue : null;
-}
-
-function getTerritoryWeatherPoint(resolved: ResolvedTerritory): WeatherPoint {
-  if (resolved?.kind === "location") {
-    const latitude = toFiniteCoordinate(resolved.location.metadata.center_latitude);
-    const longitude = toFiniteCoordinate(resolved.location.metadata.center_longitude);
-
-    if (latitude !== null && longitude !== null) {
-      return {
-        latitude,
-        longitude,
-        label: resolved.location.full_name || resolved.location.name,
-      };
-    }
-  }
-
-  return {
-    ...salvadorCenter,
-    label: "Salvador, BA",
-  };
-}
-
-function getWeatherCacheKey(point: WeatherPoint): string {
-  return `${point.latitude.toFixed(4)},${point.longitude.toFixed(4)}`;
-}
-
-function formatTemperatureLabel(temperatureCelsius: number): string {
-  return `${Math.round(temperatureCelsius)}°C`;
-}
-
 function formatNotificationBadgeCount(count: number): string {
   return count > 99 ? "99+" : String(count);
 }
@@ -295,90 +228,6 @@ function getInitials(value: string): string {
     .slice(0, 2);
 
   return initials || "A";
-}
-
-async function fetchCurrentTemperature(point: WeatherPoint, signal: AbortSignal): Promise<number> {
-  const params = new URLSearchParams({
-    latitude: String(point.latitude),
-    longitude: String(point.longitude),
-    current: "temperature_2m",
-    temperature_unit: "celsius",
-    timezone: "auto",
-  });
-  const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`, { signal });
-
-  if (!response.ok) {
-    throw new Error(`Weather request failed: ${response.status}`);
-  }
-
-  const data = (await response.json()) as CurrentWeatherResponse;
-  const temperature = data.current?.temperature_2m;
-
-  if (typeof temperature !== "number" || !Number.isFinite(temperature)) {
-    throw new Error("Weather response missing current temperature.");
-  }
-
-  return temperature;
-}
-
-function useCurrentTerritoryTemperature(resolved: ResolvedTerritory): TemperatureBadgeState {
-  const point = useMemo(() => getTerritoryWeatherPoint(resolved), [resolved]);
-  const [temperatureCelsius, setTemperatureCelsius] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const cacheKey = getWeatherCacheKey(point);
-    const cached = currentWeatherCache.get(cacheKey);
-
-    if (cached && cached.expiresAt > Date.now()) {
-      setTemperatureCelsius(cached.temperatureCelsius);
-      setIsLoading(false);
-      return;
-    }
-
-    let isActive = true;
-    const controller = new AbortController();
-
-    setIsLoading(true);
-
-    fetchCurrentTemperature(point, controller.signal)
-      .then((temperature) => {
-        if (!isActive) return;
-        currentWeatherCache.set(cacheKey, {
-          temperatureCelsius: temperature,
-          expiresAt: Date.now() + weatherCacheTtlMs,
-        });
-        setTemperatureCelsius(temperature);
-      })
-      .catch((error: unknown) => {
-        if (!isActive) return;
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        setTemperatureCelsius(null);
-      })
-      .finally(() => {
-        if (isActive) setIsLoading(false);
-      });
-
-    return () => {
-      isActive = false;
-      controller.abort();
-    };
-  }, [point]);
-
-  if (temperatureCelsius !== null) {
-    const label = formatTemperatureLabel(temperatureCelsius);
-    return {
-      label,
-      ariaLabel: `Temperatura atual em ${point.label}: ${label}`,
-      isLoading,
-    };
-  }
-
-  return {
-    label: "--°C",
-    ariaLabel: isLoading ? `Atualizando temperatura em ${point.label}` : `Temperatura indisponível em ${point.label}`,
-    isLoading,
-  };
 }
 
 function BrandMark() {
@@ -404,12 +253,12 @@ function BrandMark() {
 
 function HeaderNav({
   navItems,
+  mobileNavItems,
   sessionActions,
-  temperature,
 }: {
   navItems: NavItem[];
+  mobileNavItems: PublicHeaderNavItem[];
   sessionActions: HeaderSessionActions;
-  temperature: TemperatureBadgeState;
 }) {
   const notificationTarget = sessionActions.isAuthenticated
     ? sessionActions.notificationHref
@@ -456,10 +305,6 @@ function HeaderNav({
           <span>Salvador, BA</span>
           <ChevronDown aria-hidden="true" />
         </Link>
-        <span className="home-action-pill home-weather-pill" aria-label={temperature.ariaLabel} aria-live="polite">
-          <Sun aria-hidden="true" />
-          <span>{temperature.label}</span>
-        </span>
         <Link to={notificationTarget} className="home-notification-button" aria-label={notificationAriaLabel}>
           <Bell aria-hidden="true" />
           {sessionActions.isAuthenticated && sessionActions.unreadCount > 0 ? (
@@ -476,6 +321,7 @@ function HeaderNav({
           )}
           <ChevronDown aria-hidden="true" />
         </Link>
+        <PublicHeaderMobileMenu items={mobileNavItems} className="home-mobile-menu" />
       </div>
     </header>
   );
@@ -868,7 +714,6 @@ export default function MainLandingPage() {
     enableToast: false,
     filters: { limit: 1 },
   });
-  const temperature = useCurrentTerritoryTemperature(homeSelectedTerritory);
   const homeDiscovery = useQuery({
     queryKey: ["home", "launch-discovery", cityPath],
     queryFn: () => HomeDiscoveryService.getLaunchHomeDiscovery(),
@@ -884,18 +729,25 @@ export default function MainLandingPage() {
   const sponsoredItems = homeDiscoveryData.sponsoredItems;
   const happeningCards = toHighlightCards(activityDocuments, communityHref);
 
-  const navItems = [
-    { label: "Início", href: "/", mobileHeader: "primary" },
-    { label: "Comunidades", href: communityHref, mobileHeader: "primary" },
-    { label: "Empresas", href: LAUNCH_URLS.business, mobileHeader: "primary" },
-    { label: "Eventos", href: LAUNCH_URLS.events, mobileHeader: "primary", surface: "events" },
-    { label: "Classificados", href: LAUNCH_URLS.classifieds, mobileHeader: "secondary" },
-    { label: "Serviços", href: LAUNCH_URLS.services, mobileHeader: "secondary" },
-    { label: "Mapa", href: LAUNCH_URLS.map, mobileHeader: "secondary" },
-  ] satisfies NavItem[];
-  const enabledNavItems = navItems.filter(
-    (item) => !item.surface || isLaunchSurfaceEnabled(item.surface),
-  );
+  const mobileNavItems = buildPublicHeaderNavigation({
+    home: "/",
+    community: communityHref,
+    business: LAUNCH_URLS.business,
+    gastronomy: LAUNCH_URLS.gastronomy,
+    services: LAUNCH_URLS.services,
+    classifieds: LAUNCH_URLS.classifieds,
+    map: LAUNCH_URLS.map,
+    search: LAUNCH_URLS.search,
+  });
+  const enabledNavItems: NavItem[] = mobileNavItems
+    .filter((item) => HOME_DESKTOP_NAV_IDS.has(item.id))
+    .map((item) => ({
+      ...item,
+      mobileHeader:
+        item.id === "home" || item.id === "community" || item.id === "business"
+          ? "primary"
+          : "secondary",
+    }));
   const sessionActions: HeaderSessionActions = {
     isAuthenticated: Boolean(user),
     loginHref: appUrls.auth.login,
@@ -912,7 +764,11 @@ export default function MainLandingPage() {
         <img src={heroImg} alt="" />
       </div>
       <div className="home-shell">
-        <HeaderNav navItems={enabledNavItems} sessionActions={sessionActions} temperature={temperature} />
+        <HeaderNav
+          navItems={enabledNavItems}
+          mobileNavItems={mobileNavItems}
+          sessionActions={sessionActions}
+        />
         <section className="home-hero-layout" aria-labelledby="home-title">
           <div className="home-hero-copy">
             <HeroBadges communityHref={communityHref} />

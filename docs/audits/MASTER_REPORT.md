@@ -389,7 +389,7 @@ O gate esta verde no baseline atual. Ele deixou de ser cerca reativa e passou a 
 - Plano: `ProfileService` trata `user_subscriptions`, enquanto o admin tem `AdminSubscriptionsService`. Falta um contrato explicito entre plano do usuario, plano do perfil e cobertura administrativa.
 - Preferencias: o admin agora separa preferencias por escopo entre perfil publico, vinculos, visibilidade de reputacao e notificacoes; ainda falta historico administrativo e ownership de persistencia por escopo.
 - Entidades do usuario: business, professional, driver, family e members existem; residence canonica ja entrou na coverage administrativa, `family` agora possui `FamilyService`, hook tipado e migration local formalizada; o backlog remanescente esta na aplicacao/validacao dessa migration nos ambientes.
-- Permissoes: `ProfileService` concentra permissao base e o admin agora le snapshot efetivo via `AuthorizationEngine`, mas ainda falta historico administrativo formal dessas mudancas.
+- Capacidades de UI: `ProfileService` concentra o estado base e o admin exibe uma previa nao autoritativa via `CapabilityPreviewService`; comandos protegidos continuam sob RLS, RPC ou Edge Function.
 - Consistencia do `ProfileService`: o service e o nucleo correto, mas esta sobrecarregado com compatibilidade, leitura direta de tabelas e contratos antigos; precisa ser mantido como centro e cercado por view-models limpos.
 - Rotas publicas e privadas: privadas estao em `/perfil`, `/perfil/editar/:profileId`, `/perfil/identidades`, `/perfil/conta` e afins; publicas seguem os SSOTs de profile, business, professional e comunidade, removendo o principal conflito de identidade do ecossistema.
 

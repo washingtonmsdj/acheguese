@@ -688,6 +688,12 @@ o destinatario pelo dominio e chama `create_notification` sem aceitar
 `commentId`/`replyCommentId` reais para evitar notificacao baseada apenas em
 texto do cliente. Smoke remoto sem JWT retornou `401`.
 
+Atualizacao de estado em 2026-07-13: este broker foi substituido por
+derivacao transacional privada no PostgreSQL (`20260713150000`). A fonte de
+verdade atual esta em `docs/STATUS_ATUAL.md` e
+`plans/COMMUNITY_CONNECTORS_RELIABILITY_PLAN.md`; o registro acima permanece
+somente como evidencia historica da transicao.
+
 Resultado `professional-notifications-rpc` em 2026-07-07: criada e implantada
 a Edge Function `professional-notifications-rpc` com `verify_jwt=true`,
 autenticacao obrigatoria, rate limit e `service_role` apenas no broker.
@@ -756,8 +762,8 @@ obrigatoria, rate limit e `service_role` apenas no broker.
 `can_user_review_business`, `create_business_review`,
 `update_business_review`, `delete_business_review` e
 `add_business_review_response` deixaram de ser executaveis diretamente por
-`authenticated`; `ReviewQueryService` passou a usar
-`BusinessReviewsRpcService`. Como os RPCs legados dependem de `auth.uid()`, o
+`authenticated`; `ReviewQueryService` passou a usar o adapter canonico
+`BusinessReviewService`. Como os RPCs legados dependem de `auth.uid()`, o
 broker nao os chama com `service_role`; ele valida o JWT, replica a autorizacao
 por owner, `profile_members` ativo ou admin canonico, valida pedido entregue
 quando `order_id` existe e escreve em `public.reviews` com filtros explicitos.
@@ -874,6 +880,18 @@ edicao de alerta e melhor resposta de QA. Os helpers legados
 `EXECUTE` de `service_role` revogado pela migration `20260709005208` e foram
 removidos do contrato remoto pela migration
 `20260709011223_drop_legacy_event_counter_rpcs.sql`.
+
+Atualizacao `community-rpc` em 2026-07-14: o broker foi reduzido ao contrato
+ativo `createAlert`; ocorrencias, QA e eventos permanecem em seus dominios e
+brokers canonicos. A migration
+`20260714090000_add_community_rpc_scale_controls.sql` adicionou limite atomico
+por usuario/acao, inacessivel ao browser, com comportamento fail-closed. A
+telemetria usa `function_audit` sem payload de conteudo e e consultada apenas
+por RPCs administrativos de percentis e SLO. O middleware generico de Deno KV
+foi documentado corretamente como defesa complementar, nao como contador
+atomico autoritativo. A migration `20260714093000` limita a retencao da
+telemetria do broker a 90 dias, com limpeza horaria em lotes via Supabase Cron
+e funcao privada sem grants de navegador.
 
 Resultado `profile-rpc` em 2026-07-07: criada e implantada a Edge Function
 `profile-rpc` com `verify_jwt=true` para criacao de perfil, alteracao de
@@ -1099,6 +1117,14 @@ passou com `68/68`, `npm run security:validate` passou,
 mapeados, `npm run security:postgis:preflight` retornou `status=blocked` por
 ownership `supabase_admin` e `npm run security:auth:hibp -- --json` retornou
 `status=blocked`/`missing_pat` sem expor token.
+
+Resultado revalidacao em 2026-07-13: `npm run security:advisor:residuals`
+confirmou os mesmos 12 achados, todos dentro da allowlist canonica;
+`npm run security:postgis:preflight` continuou `blocked` pelos objetos da
+plataforma owned por `supabase_admin`; e `npm run security:auth:hibp --check`
+permaneceu bloqueado por ausencia de `SUPABASE_ACCESS_TOKEN` ou
+`SUPABASE_MANAGEMENT_API_TOKEN` com escopo de Management API. Nenhuma
+credencial implicita foi lida e nenhuma alteracao cega foi aplicada.
 
 Proxima etapa recomendada antes do lancamento:
 

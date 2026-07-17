@@ -43,11 +43,11 @@ import { RIDE_STATUS, RIDE_MODE, MOBILITY_QUERY_KEYS } from "@/core/mobility/con
 import type { RideRequest } from "@/core/mobility/types/types";
 import {
   TRUST_ACTOR_ROLES,
-  TRUST_CONTEXT_TYPES,
   TrustFeedbackForm,
   type TrustFeedbackReason,
   type TrustFeedbackTarget,
 } from "@/core/trust";
+import { MobilityTrustService } from "@/core/mobility/services/MobilityTrustService";
 
 const PASSENGER_FEEDBACK_REASONS: TrustFeedbackReason[] = [
   { value: "smooth_operation", label: "Atendimento correto / sem problema", severity: "low" },
@@ -510,20 +510,13 @@ export function RideHistoryUnified({
                       <TrustFeedbackForm
                         title={isMotoboy ? "Avaliar motoboy" : "Avaliar motorista"}
                         notice="Feedback privado operacional. Reviews publicos e nota operacional continuam separados."
-                        actorRole={TRUST_ACTOR_ROLES.CUSTOMER}
-                        contextType={TRUST_CONTEXT_TYPES.RIDE}
-                        contextId={ride.id}
                         targets={feedbackTargets}
                         reasons={PASSENGER_FEEDBACK_REASONS}
                         enabled={isCompleted}
                         compact
-                        evidence={{
-                          ride_mode: ride.ride_mode,
-                          ride_status: ride.status,
-                          final_price: ride.final_price || ride.suggested_price || 0,
-                          passenger_profile_id: ride.passenger_profile_id,
-                          driver_profile_id: driverProfileId,
-                        }}
+                        onSubmit={(input) =>
+                          MobilityTrustService.submitFeedback(ride.id, input)
+                        }
                       />
                     </div>
                   )}

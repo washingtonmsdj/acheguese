@@ -1,52 +1,14 @@
-import { TrustEventService } from "@/core/trust";
 import {
-  TRUST_ACTOR_ROLES,
-  TRUST_CONTEXT_TYPES,
-  TRUST_EVENT_TYPES,
-  TRUST_VISIBILITIES,
-  type TrustEvent,
-} from "@/core/trust/domain";
+  OperationalTrustCommandService,
+  type WorkOpportunityFeedbackAnswer,
+} from "@/core/trust";
 import { supabase } from "@/integrations/supabase";
-import type { Database } from "@/integrations/supabase";
 
-type TrustEventRow = Database["public"]["Tables"]["trust_events"]["Row"];
-
-function toTrustEvent(row: TrustEventRow): TrustEvent {
-  return {
-    id: row.id,
-    actor_profile_id: row.actor_profile_id,
-    actor_role: row.actor_role,
-    subject_profile_id: row.subject_profile_id,
-    subject_role: row.subject_role,
-    context_type: row.context_type,
-    context_id: row.context_id,
-    event_type: row.event_type,
-    rating: row.rating,
-    reason_code: row.reason_code,
-    severity: row.severity,
-    visibility: row.visibility,
-    description: row.description,
-    evidence:
-      row.evidence && typeof row.evidence === "object" && !Array.isArray(row.evidence)
-        ? (row.evidence as Record<string, unknown>)
-        : {},
-    status: row.status,
-    reviewed_by_profile_id: row.reviewed_by_profile_id,
-    reviewed_at: row.reviewed_at,
-    resolution_notes: row.resolution_notes,
-    created_at: row.created_at,
-    updated_at: row.updated_at,
-  };
-}
-
-export type OpportunityFeedbackAnswer = "helped" | "found_someone" | "service_done" | "no_help";
+export type OpportunityFeedbackAnswer = WorkOpportunityFeedbackAnswer;
 
 export interface SubmitOpportunityFeedbackInput {
   answer: OpportunityFeedbackAnswer;
   opportunityId: string;
-  professionalId: string;
-  subjectProfileId: string;
-  actorProfileId?: string | null;
   comment?: string;
 }
 
@@ -57,95 +19,37 @@ export interface ProfessionalReputationSnapshot {
   positive_feedback: number;
   neutral_feedback: number;
   negative_feedback: number;
-  recent_events: TrustEvent[];
 }
 
-function feedbackToRating(answer: OpportunityFeedbackAnswer): number {
-  if (answer === "service_done") return 5;
-  if (answer === "found_someone") return 4;
-  if (answer === "helped") return 4;
-  return 2;
-}
-
-function feedbackToSeverity(answer: OpportunityFeedbackAnswer): "low" | "medium" | "high" | "critical" {
-  if (answer === "no_help") return "medium";
-  return "low";
+function asReputation(value: unknown): ProfessionalReputationSnapshot {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("Reputacao profissional indisponivel.");
+  }
+  return value as ProfessionalReputationSnapshot;
 }
 
 class WorkOpportunityTrustServiceClass {
-  async submitFeedback(input: SubmitOpportunityFeedbackInput): Promise<{ ok: boolean; error?: string }> {
-    const rating = feedbackToRating(input.answer);
-    const severity = feedbackToSeverity(input.answer);
-
-    const result = await TrustEventService.upsertOperationalFeedback({
-      actor_profile_id: input.actorProfileId ?? null,
-      actor_role: TRUST_ACTOR_ROLES.CUSTOMER,
-      subject_profile_id: input.subjectProfileId,
-      subject_role: TRUST_ACTOR_ROLES.CUSTOMER,
-      context_type: TRUST_CONTEXT_TYPES.SERVICE,
-      context_id: input.professionalId,
-      event_type: TRUST_EVENT_TYPES.OPERATIONAL_FEEDBACK,
-      rating,
-      reason_code: `work_opportunity_${input.answer}`,
-      severity,
-      visibility: TRUST_VISIBILITIES.PRIVATE,
-      description: input.comment?.trim() || null,
-      evidence: {
-        opportunity_id: input.opportunityId,
-        professional_id: input.professionalId,
-        answer: input.answer,
-      },
+  async submitFeedback(input: SubmitOpportunityFeedbackInput): Promise<void> {
+    await OperationalTrustCommandService.submitWorkOpportunityFeedback({
+      opportunityId: input.opportunityId,
+      answer: input.answer,
+      description: input.comment,
     });
-
-    if (result.error) {
-      return { ok: false, error: result.error };
-    }
-
-    return { ok: true };
   }
 
-  async getProfessionalReputation(professionalId: string): Promise<ProfessionalReputationSnapshot> {
-    const { data, error } = await supabase
-      .from("trust_events")
-      .select("*")
-      .eq("context_type", TRUST_CONTEXT_TYPES.SERVICE)
-      .eq("context_id", professionalId)
-      .eq("event_type", TRUST_EVENT_TYPES.OPERATIONAL_FEEDBACK)
-      .order("created_at", { ascending: false })
-      .limit(60);
+  async getProfessionalReputation(
+    professionalId: string,
+  ): Promise<ProfessionalReputationSnapshot> {
+    const { data, error } = await supabase.rpc(
+      "get_professional_trust_reputation",
+      { p_professional_id: professionalId },
+    );
 
-    if (error || !data) {
-      return {
-        professional_id: professionalId,
-        total_feedback: 0,
-        avg_rating: 0,
-        positive_feedback: 0,
-        neutral_feedback: 0,
-        negative_feedback: 0,
-        recent_events: [],
-      };
-    }
-
-    const rows = data.map(toTrustEvent);
-    const ratings = rows.map((row) => row.rating ?? 0).filter((rating) => rating > 0);
-    const total = ratings.length;
-    const avg = total > 0 ? ratings.reduce((sum, value) => sum + value, 0) / total : 0;
-
-    const positive = rows.filter((row) => (row.rating ?? 0) >= 4).length;
-    const neutral = rows.filter((row) => (row.rating ?? 0) === 3).length;
-    const negative = rows.filter((row) => (row.rating ?? 0) <= 2 && (row.rating ?? 0) > 0).length;
-
-    return {
-      professional_id: professionalId,
-      total_feedback: total,
-      avg_rating: Number(avg.toFixed(2)),
-      positive_feedback: positive,
-      neutral_feedback: neutral,
-      negative_feedback: negative,
-      recent_events: rows.slice(0, 10),
-    };
+    if (error) throw error;
+    return asReputation(data);
   }
 }
 
-export const workOpportunityTrustService = new WorkOpportunityTrustServiceClass();
+export const workOpportunityTrustService =
+  new WorkOpportunityTrustServiceClass();
 export { workOpportunityTrustService as WorkOpportunityTrustService };

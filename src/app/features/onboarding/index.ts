@@ -9,5 +9,6 @@
 
 export { default as CadastroPage } from "./pages/CadastroPage";
 export { default as CadastroConfirmacaoPage } from "./pages/CadastroConfirmacaoPage";
+export { default as AceiteTermosPage } from "./pages/AceiteTermosPage";
 export { useCadastro } from "./hooks/useCadastro";
 export { useOnboarding } from "./hooks/useOnboarding";

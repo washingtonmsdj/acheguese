@@ -44,6 +44,13 @@ export type {
   CreateProductInput,
 } from "../types";
 
+export { BusinessReviewService } from "./BusinessReviewService";
+export type {
+  BusinessReviewCreateInput,
+  BusinessReviewResponseInput,
+  BusinessReviewUpdateInput,
+} from "./BusinessReviewService";
+
 export type {
   PriceRange,
   GastronomyStatus,

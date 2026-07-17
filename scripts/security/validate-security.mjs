@@ -172,27 +172,43 @@ function shouldScan(filePath) {
 
 function listTrackedFiles() {
   const files = [];
+  const ignoredDirectories = new Set([
+    '.git',
+    'node_modules',
+    'dist',
+    'coverage',
+    'playwright-report',
+    'test-results',
+  ]);
+
+  function isMissingPathError(error) {
+    return error instanceof Error && 'code' in error && error.code === 'ENOENT';
+  }
 
   function walk(relativeDir) {
     const absoluteDir = join(ROOT_DIR, relativeDir);
-    const entries = readdirSync(absoluteDir);
+    let entries;
+    try {
+      entries = readdirSync(absoluteDir);
+    } catch (error) {
+      if (isMissingPathError(error)) return;
+      throw error;
+    }
 
     for (const entry of entries) {
+      if (ignoredDirectories.has(entry)) continue;
+
       const nextRelative = relativeDir ? `${relativeDir}/${entry}` : entry;
       const nextAbsolute = join(ROOT_DIR, nextRelative);
-      const stats = statSync(nextAbsolute);
+      let stats;
+      try {
+        stats = statSync(nextAbsolute);
+      } catch (error) {
+        if (isMissingPathError(error)) continue;
+        throw error;
+      }
 
       if (stats.isDirectory()) {
-        if (
-          entry === '.git' ||
-          entry === 'node_modules' ||
-          entry === 'dist' ||
-          entry === 'coverage' ||
-          entry === 'playwright-report' ||
-          entry === 'test-results'
-        ) {
-          continue;
-        }
         walk(nextRelative);
         continue;
       }

@@ -3,6 +3,7 @@ import React from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/core/auth/hooks/useAuth";
+import { useSessionContext } from "@/core/session";
 import {
   ArrowLeft,
   Send,
@@ -34,22 +35,26 @@ import {
 } from "@/shared/components/ui/alert-dialog";
 import { useToast } from "@/shared/hooks/use-toast";
 import { ALERT_STATUS } from "@/shared/types/constants";
-import { messagingService } from "@/core/messaging";
-import type { Message, ConversationWithDetails } from "@/core/messaging/types";
+import { classifiedMessagingService } from "@/core/messaging";
+import type {
+  ClassifiedConversationWithDetails,
+  ClassifiedMessage,
+} from "@/core/messaging/types";
 
 /**
  * ✅ SSOT COMPLIANT - ChatPage migrado
- * Usa MessagingService como fonte única
+ * Usa ClassifiedMessagingService como fonte unica do agregado de Classificados.
  */
 
 export default function ChatPage() {
   const { conversationId } = useParams();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const { activeProfile } = useSessionContext();
   const { toast } = useToast();
   const [conversation, setConversation] =
-    useState<ConversationWithDetails | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+    useState<ClassifiedConversationWithDetails | null>(null);
+  const [messages, setMessages] = useState<ClassifiedMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -65,13 +70,13 @@ export default function ChatPage() {
 
   // Load conversation and messages
   useEffect(() => {
-    if (!user || !conversationId) return;
+    if (!user || !activeProfile?.id || !conversationId) return;
 
     async function load() {
-      // ✅ SSOT - Buscar conversa via MessagingService
-      const conv = await messagingService.getConversationWithDetails(
+      // SSOT: conversa de Classificados via ClassifiedMessagingService.
+      const conv = await classifiedMessagingService.getConversationWithDetails(
         conversationId!,
-        user.id,
+        activeProfile.id,
       );
 
       if (!conv) {
@@ -81,25 +86,27 @@ export default function ChatPage() {
 
       setConversation(conv);
 
-      // ✅ SSOT - Buscar mensagens via MessagingService
-      const msgs = await messagingService.getMessages(conversationId!);
+      // SSOT: mensagens de Classificados via ClassifiedMessagingService.
+      const msgs = await classifiedMessagingService.listMessages(
+        conversationId!,
+      );
       setMessages(msgs);
       setLoading(false);
 
-      // ✅ SSOT - Marcar mensagens como lidas via MessagingService
+      // SSOT: leitura de Classificados via ClassifiedMessagingService.
       if (msgs.length > 0) {
-        await messagingService.markMessagesAsRead(conversationId!, user.id);
+        await classifiedMessagingService.markMessagesAsRead(conversationId!);
       }
     }
 
     load();
-  }, [user, conversationId, navigate]);
+  }, [activeProfile?.id, user, conversationId, navigate]);
 
   // Realtime subscription
   useEffect(() => {
     if (!conversationId) return;
 
-    const channel = messagingService.subscribeToConversationMessages(
+    const channel = classifiedMessagingService.subscribeToConversationMessages(
       conversationId,
       (newMsg) => {
         setMessages((prev) => {
@@ -108,16 +115,16 @@ export default function ChatPage() {
         });
 
         // Auto-mark as read if from other user
-        if (user && newMsg.sender_profile_id !== user.id) {
-          messagingService.markMessagesAsRead(conversationId, user.id);
+        if (activeProfile && newMsg.sender_profile_id !== activeProfile.id) {
+          classifiedMessagingService.markMessagesAsRead(conversationId);
         }
       },
     );
 
     return () => {
-      messagingService.unsubscribeChannel(channel);
+      classifiedMessagingService.unsubscribeChannel(channel);
     };
-  }, [conversationId, user]);
+  }, [activeProfile, conversationId]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -125,7 +132,8 @@ export default function ChatPage() {
   }, [messages, scrollToBottom]);
 
   const handleSend = async () => {
-    if (!newMessage.trim() || !user || !conversation || sending) return;
+    if (!newMessage.trim() || !activeProfile || !conversation || sending)
+      return;
     if (conversation.status !== ALERT_STATUS.ACTIVE) {
       toast({
         title: "Conversa bloqueada",
@@ -140,10 +148,9 @@ export default function ChatPage() {
     setSending(true);
 
     try {
-      // ✅ SSOT - Enviar mensagem via MessagingService
-      await messagingService.sendMessage({
+      // SSOT: envio de Classificados via ClassifiedMessagingService.
+      await classifiedMessagingService.sendMessage({
         conversation_id: conversation.id,
-        sender_profile_id: user.id,
         text,
       });
     } catch (error) {
@@ -160,13 +167,13 @@ export default function ChatPage() {
   };
 
   const handleReport = async () => {
-    if (!reportMessageId || !user) return;
+    if (!reportMessageId || !activeProfile) return;
 
     try {
-      // ✅ SSOT - Reportar mensagem via MessagingService
-      await messagingService.reportMessage(
+      // SSOT: incidente delegado pelo adapter de Classificados.
+      await classifiedMessagingService.reportMessage(
         reportMessageId,
-        user.id,
+        "inappropriate_content",
         "Conteúdo inadequado",
       );
       toast({
@@ -186,17 +193,14 @@ export default function ChatPage() {
   };
 
   const handleBlock = async () => {
-    if (!conversation || !user) return;
-
-    const blockedBy = conversation.buyer_id === user.id ? "buyer" : "seller";
+    if (!conversation || !activeProfile) return;
 
     try {
-      // ✅ SSOT - Bloquear conversa via MessagingService
-      await messagingService.blockConversation({
-        conversation_id: conversation.id,
-        blocked_by: blockedBy,
-        block_reason: "Bloqueado pelo usuário",
-      });
+      // SSOT: bloqueio de conversa de Classificados no backend.
+      await classifiedMessagingService.blockConversation(
+        conversation.id,
+        "user_blocked",
+      );
 
       setConversation((prev) => (prev ? { ...prev, status: "blocked" } : null));
       toast({
@@ -238,7 +242,7 @@ export default function ChatPage() {
       </div>
     );
 
-  if (!user) {
+  if (!user || !activeProfile) {
     navigate("/login");
     return null;
   }
@@ -340,7 +344,7 @@ export default function ChatPage() {
 
         <AnimatePresence initial={false}>
           {messages.map((msg, i) => {
-            const isMine = msg.sender_profile_id === user.id;
+            const isMine = msg.sender_profile_id === activeProfile.id;
             const showTime =
               i === 0 ||
               new Date(msg.created_at).getTime() -
@@ -524,4 +528,3 @@ function formatMessageTime(dateStr: string): string {
     minute: "2-digit",
   });
 }
-

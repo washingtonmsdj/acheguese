@@ -25,7 +25,6 @@ import type {
   ProfileFilterRow,
   ActiveRideIdRow,
   ProfileWithAlertBanRow,
-  RankingRow,
   RideProfileRow,
   VerificationWorkflowStatus,
 } from "./profile.service.types";
@@ -661,32 +660,6 @@ export async function getProfilesCreatedInPeriod(
     });
     return 0;
   }
-}
-
-export async function getRanking(
-  limit: number = 50,
-): Promise<Array<{ id: string; name: string; avatar_url: string; pontos: number }>> {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select("id, name, avatar_url, pontos")
-    .order("pontos", { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    trackError(new Error("Error fetching ranking"), {
-      component: "profile.queries",
-      action: "getRanking",
-      metadata: { error },
-    });
-    return [];
-  }
-
-  return ((data as RankingRow[] | null) || []).map((p) => ({
-    id: p.id,
-    name: p.name || "Usuario",
-    avatar_url: p.avatar_url || "",
-    pontos: p.pontos || 0,
-  }));
 }
 
 export async function getProfilesByVerificationStatus(

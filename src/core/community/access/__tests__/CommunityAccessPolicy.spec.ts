@@ -177,7 +177,7 @@ describe("CommunityAccessPolicy", () => {
     expect(decision.can.comment).toBe(false);
   });
 
-  it("libera interacao social para membership ativa sem transformar isso em residencia verificada", () => {
+  it("mantem escrita local bloqueada para membership ativa sem residencia verificada", () => {
     const decision = resolveCommunityAccess({
       ...baseInput,
       residence: null,
@@ -188,8 +188,10 @@ describe("CommunityAccessPolicy", () => {
     expect(decision.level).toBe("community_member");
     expect(decision.reason).toBe("unverified_residence");
     expect(decision.can.view_member_feed).toBe(true);
-    expect(decision.can.create_post).toBe(true);
-    expect(decision.can.comment).toBe(true);
+    expect(decision.can.create_post).toBe(false);
+    expect(decision.can.comment).toBe(false);
+    expect(decision.can.send_message).toBe(false);
+    expect(decision.can.join_group).toBe(false);
     expect(decision.can.create_alert).toBe(false);
     expect(decision.can.create_issue).toBe(false);
   });
@@ -257,5 +259,24 @@ describe("CommunityAccessPolicy", () => {
     expect(moderator.can.manage_portal).toBe(false);
     expect(admin.level).toBe("admin");
     expect(admin.can.manage_portal).toBe(true);
+  });
+
+  it("aplica o papel da membership local sem depender de role global", () => {
+    const moderator = resolveCommunityAccess({
+      ...baseInput,
+      membershipRequired: true,
+      membership: { ...activeMembership, role: "moderator" },
+    });
+    const owner = resolveCommunityAccess({
+      ...baseInput,
+      membershipRequired: true,
+      membership: { ...activeMembership, role: "owner" },
+    });
+
+    expect(moderator.level).toBe("moderator");
+    expect(moderator.can.moderate).toBe(true);
+    expect(moderator.can.manage_portal).toBe(false);
+    expect(owner.level).toBe("admin");
+    expect(owner.can.manage_portal).toBe(true);
   });
 });

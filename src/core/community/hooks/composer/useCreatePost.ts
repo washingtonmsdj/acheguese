@@ -4,10 +4,10 @@ import type { PostType } from "@/core/posts/types";
 import { toast } from "sonner";
 import {
   sanitizeContent,
-  sanitizeUrl,
   validatePostContent,
 } from "@/shared/utils/textUtils";
-import { useCommunityInteractions } from "@/core/social/hooks/useCommunityInteractions";
+import { isPostImageReference } from "@/core/media/references/postImageReference";
+import { communityFeedQueryKeys } from "@/core/feed";
 import { PostsFacade } from "@/core/posts/services"; // ✅ GATE 4A FASE 13 - SSOT v2.0
 
 /**
@@ -37,7 +37,6 @@ interface CreatePostData {
 export function useCreatePost() {
   const { user, activeProfile } = useSessionContext();
   const queryClient = useQueryClient();
-  const { recordInteraction } = useCommunityInteractions();
 
   const mutation = useMutation({
     mutationFn: async (data: CreatePostData) => {
@@ -54,9 +53,10 @@ export function useCreatePost() {
       // Requirement 29.2: Sanitizar conteúdo para prevenir XSS
       const sanitizedContent = sanitizeContent(data.content);
 
-      // Requirement 29.2: Sanitizar URLs de imagens
-      const sanitizedImages =
-        data.images?.map(sanitizeUrl).filter((url) => url !== "") || [];
+      const canonicalImages = data.images?.filter(isPostImageReference) ?? [];
+      if (canonicalImages.length !== (data.images?.length ?? 0)) {
+        throw new Error("Referencia de imagem de post invalida");
+      }
 
       const resolvedLocationId =
         activeProfile.locationId ?? null;
@@ -70,27 +70,16 @@ export function useCreatePost() {
         content: sanitizedContent,
         type: data.type,
         location_id: resolvedLocationId,
-        images: sanitizedImages,
+        images: canonicalImages,
         tags: data.tags || [],
         reach: data.reach || "neighborhood",
       });
 
       return newPost;
     },
-    onSuccess: (newPost) => {
-      // Registrar interação e ganhar pontos
-      recordInteraction(
-        "post_created",
-        "post",
-        newPost.id,
-        {},
-        {
-          showToast: true,
-        },
-      );
-
+    onSuccess: () => {
       // Invalidate cache do feed
-      queryClient.invalidateQueries({ queryKey: ["community-feed"] });
+      queryClient.invalidateQueries({ queryKey: communityFeedQueryKeys.root });
       toast.success("Post criado com sucesso!");
     },
     onError: (error: Error) => {

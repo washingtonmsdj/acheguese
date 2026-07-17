@@ -1,29 +1,26 @@
 import { supabase } from "@/integrations/supabase";
+import type { Json } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { TerritoryFilter } from "@/core/location";
 import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
+import { profileService } from "@/core/profiles/services/ProfileService";
 
 interface GroupProfileInfo {
   name: string | null;
   avatar_url: string | null;
 }
 
-interface GroupMemberCountRow {
-  count: number;
-}
-
 export interface GroupRow {
   id: string;
   name: string;
-  description: string;
+  description: string | null;
   category: string;
-  members_count:
-    | number
-    | GroupMemberCountRow[]
-    | string
-    | null;
+  members_count: number | null;
   created_at: string;
-  created_by: string;
+  created_by: string | null;
+  avatar_url?: string | null;
+  is_private?: boolean;
+  location_id?: string | null;
   profile?: GroupProfileInfo[] | GroupProfileInfo | null;
 }
 
@@ -32,7 +29,7 @@ export type GroupCreateInput = {
   description: string;
   category?: string;
   is_private?: boolean;
-  location_id?: string;
+  location_id: string;
   rules?: string[];
   join_policy?: string;
   posting_policy?: string;
@@ -53,13 +50,6 @@ interface GroupsQueryBuilder {
     columns: string,
     options?: { count?: "exact"; head?: boolean },
   ) => GroupsQueryBuilder;
-  range: (from: number, to: number) => GroupsQueryBuilder;
-  order: (
-    column: string,
-    options?: { ascending?: boolean; nullsFirst?: boolean },
-  ) => GroupsQueryBuilder;
-  ilike: (column: string, pattern: string) => GroupsQueryBuilder;
-  in: (column: string, values: string[]) => GroupsQueryBuilder;
   eq: (column: string, value: string) => GroupsQueryBuilder;
   insert: (
     payload: Record<string, unknown>,
@@ -78,33 +68,26 @@ interface GroupsDbClient {
 
 const db = supabase as unknown as GroupsDbClient;
 
+function boundedInteger(value: number, minimum: number, maximum: number): number {
+  if (!Number.isFinite(value)) return minimum;
+  return Math.min(Math.max(Math.trunc(value), minimum), maximum);
+}
+
 function normalizeGroup(group: GroupRow): GroupRow {
   return {
     ...group,
     members_count:
-      Array.isArray(group.members_count) && group.members_count[0]
-        ? group.members_count[0].count
-        : typeof group.members_count === "number"
-          ? group.members_count
-          : 0,
+      typeof group.members_count === "number" && Number.isFinite(group.members_count)
+        ? group.members_count
+        : 0,
   };
 }
 
-function getNormalizedMembersCount(group: GroupRow): number {
-  if (typeof group.members_count === "number" && Number.isFinite(group.members_count)) {
-    return group.members_count;
-  }
-
-  if (typeof group.members_count === "string") {
-    const parsed = Number(group.members_count);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-
-  if (Array.isArray(group.members_count) && group.members_count[0]) {
-    return group.members_count[0].count;
-  }
-
-  return 0;
+interface GroupsPageRpcResponse {
+  items?: GroupRow[];
+  total_count?: number;
+  has_more?: boolean;
+  next_offset?: number | null;
 }
 
 export class CommunityGroupsService {
@@ -114,6 +97,7 @@ export class CommunityGroupsService {
     offset?: number;
     limit?: number;
     groupIds?: string[];
+    onlyMemberGroups?: boolean;
     sortBy?: "recentes" | "populares" | "relevancia";
   }): Promise<{
     items: GroupRow[];
@@ -127,61 +111,56 @@ export class CommunityGroupsService {
       offset = 0,
       limit = 20,
       groupIds,
+      onlyMemberGroups = false,
       sortBy = "recentes",
     } = params;
 
     try {
-      let query = db
-        .from("groups")
-        .select(
-          `
-          *,
-          profiles:created_by(name, avatar_url),
-          members_count:group_members_new(count)
-        `,
-          { count: "exact" },
-        )
-        .range(offset, offset + limit - 1);
+      const boundedOffset = boundedInteger(offset, 0, 10_000);
+      const boundedLimit = boundedInteger(limit, 1, 100);
+      const sanitizedSearch = sanitizeForILike(search ?? "") || null;
+      const uniqueGroupIds = groupIds
+        ? [...new Set(groupIds.filter((groupId) => groupId.trim().length > 0))].slice(0, 500)
+        : null;
+      const locationIds =
+        territoryFilter?.scope === "location"
+          ? [territoryFilter.location_id]
+          : territoryFilter?.scope === "group"
+            ? territoryFilter.location_ids.slice(0, 100)
+            : null;
 
-      query = query.order("created_at", { ascending: false });
-
-      if (search) {
-        const sanitizedSearch = sanitizeForILike(search);
-        if (sanitizedSearch) {
-          query = query.ilike("name", `%${sanitizedSearch}%`);
-        }
+      if (territoryFilter?.scope === "none") {
+        return { items: [], totalCount: 0, hasMore: false, nextOffset: null };
       }
 
-      if (groupIds && groupIds.length > 0) {
-        query = query.in("id", groupIds);
-      }
+      const { data, error } = await supabase.rpc("list_community_groups_page", {
+        p_group_ids: uniqueGroupIds,
+        p_limit: boundedLimit,
+        p_location_ids: locationIds,
+        p_offset: boundedOffset,
+        p_only_member_groups: onlyMemberGroups,
+        p_search: sanitizedSearch,
+        p_sort: sortBy,
+      });
 
-      if (territoryFilter?.scope === "location") {
-        query = query.eq("location_id", territoryFilter.location_id);
-      } else if (
-        territoryFilter?.scope === "group" &&
-        territoryFilter.location_ids.length > 0
-      ) {
-        query = query.in("location_id", territoryFilter.location_ids);
-      }
-
-      const { data, error, count } = await query;
       if (error) throw error;
 
-      const normalized = (data ?? []).map(normalizeGroup);
-      if (sortBy === "populares") {
-        normalized.sort(
-          (a, b) => getNormalizedMembersCount(b) - getNormalizedMembersCount(a),
-        );
-      }
-      const totalCount = count ?? normalized.length;
-      const hasMore = offset + normalized.length < totalCount;
+      const response = (data ?? {}) as unknown as GroupsPageRpcResponse;
+      const normalized = Array.isArray(response.items)
+        ? response.items.map(normalizeGroup)
+        : [];
+      const totalCount = Math.max(0, Number(response.total_count ?? 0));
+      const hasMore = Boolean(response.has_more);
+      const nextOffset =
+        hasMore && typeof response.next_offset === "number"
+          ? response.next_offset
+          : null;
 
       return {
         items: normalized,
         totalCount,
         hasMore,
-        nextOffset: hasMore ? offset + limit : null,
+        nextOffset,
       };
     } catch (error) {
       trackError(error as Error, {
@@ -201,43 +180,12 @@ export class CommunityGroupsService {
     search?: string,
     territoryFilter?: TerritoryFilter,
   ): Promise<GroupRow[]> {
-    try {
-      let query = db
-        .from("groups")
-        .select(`
-          *,
-          profiles:created_by(name, avatar_url),
-          members_count:group_members_new(count)
-        `)
-        .order("created_at", { ascending: false });
-
-      if (search) {
-        const sanitizedSearch = sanitizeForILike(search);
-        if (sanitizedSearch) {
-          query = query.ilike("name", `%${sanitizedSearch}%`);
-        }
-      }
-
-      if (territoryFilter?.scope === "location") {
-        query = query.eq("location_id", territoryFilter.location_id);
-      } else if (
-        territoryFilter?.scope === "group" &&
-        territoryFilter.location_ids.length > 0
-      ) {
-        query = query.in("location_id", territoryFilter.location_ids);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-
-      return (data ?? []).map(normalizeGroup);
-    } catch (error) {
-      trackError(error as Error, {
-        component: "CommunityGroupsService",
-        action: "getGroups",
-      });
-      return [];
-    }
+    const result = await this.getGroupsPage({
+      search,
+      territoryFilter,
+      limit: 50,
+    });
+    return result.items;
   }
 
   static async getGroupById(groupId: string): Promise<GroupRow | null> {
@@ -261,6 +209,7 @@ export class CommunityGroupsService {
 
   static async createGroup(groupData: GroupCreateInput): Promise<GroupRow | null> {
     try {
+      const activeProfile = await profileService.getRequiredActiveProfile();
       const groupType =
         groupData.category === "vizinhanca"
           ? "neighborhood"
@@ -280,7 +229,7 @@ export class CommunityGroupsService {
         member_visibility:
           groupData.member_visibility || "members_count_public",
         media_policy: groupData.media_policy || "manual_download",
-        rules: groupData.rules,
+        rules: groupData.rules?.join("\n") || null,
         capabilities: {
           text: true,
           images: true,
@@ -290,9 +239,10 @@ export class CommunityGroupsService {
           reactions: true,
           reports: true,
           share_link: true,
-        },
+        } satisfies Json,
         type: groupType,
         location_id: groupData.location_id,
+        created_by: activeProfile.id,
       };
 
       const { data, error } = await db

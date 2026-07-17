@@ -3,6 +3,7 @@ export const TRUST_ACTOR_ROLES = {
   MERCHANT: "merchant",
   COURIER: "courier",
   DRIVER: "driver",
+  PROFESSIONAL: "professional",
   ADMIN: "admin",
   SYSTEM: "system",
 } as const;
@@ -79,32 +80,6 @@ export interface TrustEvent {
   updated_at: string;
 }
 
-export interface CreateTrustEventInput {
-  actor_profile_id?: string | null;
-  actor_role: TrustActorRole;
-  subject_profile_id: string;
-  subject_role: TrustActorRole;
-  context_type: TrustContextType;
-  context_id: string;
-  event_type: TrustEventType;
-  rating?: number | null;
-  reason_code: string;
-  severity?: TrustSeverity;
-  visibility?: TrustVisibility;
-  description?: string | null;
-  evidence?: Record<string, unknown>;
-  status?: TrustEventStatus;
-}
-
-export interface TrustEventFilters {
-  subject_profile_id?: string;
-  actor_profile_id?: string;
-  context_type?: TrustContextType;
-  context_id?: string;
-  status?: TrustEventStatus;
-  limit?: number;
-}
-
 export interface TrustScoreSummary {
   profile_id: string;
   role: TrustActorRole;
@@ -164,18 +139,6 @@ export interface TrustAdminAction {
   ends_at: string | null;
   metadata: Record<string, unknown>;
   created_at: string;
-}
-
-export interface ApplyTrustAdminActionInput {
-  trust_event_id?: string | null;
-  subject_profile_id: string;
-  subject_role: TrustActorRole;
-  applied_by_profile_id: string;
-  action_type: TrustAdminActionType;
-  reason: string;
-  notes?: string | null;
-  duration_days?: number | null;
-  metadata?: Record<string, unknown>;
 }
 
 export function resolveTrustActorRoleFromProfileType(profileType?: string | null): TrustActorRole {

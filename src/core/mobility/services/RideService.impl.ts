@@ -12,9 +12,8 @@ import {
 import {
   createRide,
   updateRide,
-  createEmergencyAlert,
 } from './mobility.mutations';
-import { TRUST_ACTOR_ROLES, TrustEventService } from '@/core/trust';
+import { TRUST_ACTOR_ROLES, TrustPolicyReadService } from '@/core/trust';
 import { RIDE_STATUS } from '../constants';
 import type { RideRequest } from '../types/types';
 export type { RideRequest } from '../types/types';
@@ -40,8 +39,7 @@ interface CompleteRideData extends UpdateRideData {
 
 export class RideService {
   async createRide(data: CreateRideData & { passenger_profile_id: string }): Promise<RideRequest> {
-    const trustGate = await TrustEventService.canReceiveOperationalCall(
-      data.passenger_profile_id,
+    const trustGate = await TrustPolicyReadService.canCurrentReceiveOperationalCall(
       TRUST_ACTOR_ROLES.CUSTOMER,
     );
     if (!trustGate.allowed) {
@@ -73,8 +71,7 @@ export class RideService {
   }
 
   async acceptRide(rideId: string, driverProfileId: string): Promise<RideRequest> {
-    const trustGate = await TrustEventService.canReceiveOperationalCall(
-      driverProfileId,
+    const trustGate = await TrustPolicyReadService.canCurrentReceiveOperationalCall(
       TRUST_ACTOR_ROLES.DRIVER,
     );
     if (!trustGate.allowed) {
@@ -106,9 +103,6 @@ export class RideService {
     // Future implementation: sharing via notification/SMS.
   }
 
-  async createEmergencyAlert(rideId: string, userId: string, location: { lat: number; lng: number }): Promise<void> {
-    await createEmergencyAlert(rideId, userId, location);
-  }
 }
 
 export const rideService = new RideService();

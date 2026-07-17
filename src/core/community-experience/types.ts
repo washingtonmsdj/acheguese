@@ -1,4 +1,7 @@
-import type { Location, TerritorialGroupWithMembers } from "@/core/location/types";
+import type {
+  Location,
+  TerritorialGroupWithMembers,
+} from "@/core/location/types";
 
 export const COMMUNITY_STATUS_VALUES = [
   "active",
@@ -39,7 +42,8 @@ export const COMMUNITY_MEMBERSHIP_ROLES = [
   "member",
 ] as const;
 
-export type CommunityMembershipRole = (typeof COMMUNITY_MEMBERSHIP_ROLES)[number];
+export type CommunityMembershipRole =
+  (typeof COMMUNITY_MEMBERSHIP_ROLES)[number];
 
 export const COMMUNITY_MEMBERSHIP_STATUSES = [
   "pending",
@@ -48,7 +52,8 @@ export const COMMUNITY_MEMBERSHIP_STATUSES = [
   "blocked",
 ] as const;
 
-export type CommunityMembershipStatus = (typeof COMMUNITY_MEMBERSHIP_STATUSES)[number];
+export type CommunityMembershipStatus =
+  (typeof COMMUNITY_MEMBERSHIP_STATUSES)[number];
 
 export const COMMUNITY_MEMBERSHIP_JOIN_METHODS = [
   "open",
@@ -87,7 +92,8 @@ export const COMMUNITY_ENTITY_LINK_TYPES = [
   "official",
 ] as const;
 
-export type CommunityEntityLinkType = (typeof COMMUNITY_ENTITY_LINK_TYPES)[number];
+export type CommunityEntityLinkType =
+  (typeof COMMUNITY_ENTITY_LINK_TYPES)[number];
 
 export const COMMUNITY_ENTITY_LINK_STATUSES = [
   "pending",
@@ -188,8 +194,6 @@ export interface CommunityMembershipRecord {
 export interface CommunityMembershipRequestInput {
   communityId: string;
   profileId: string;
-  userId: string;
-  joinMethod?: Extract<CommunityMembershipJoinMethod, "open" | "approval">;
 }
 
 export interface CommunityEntityLinkRecord {
@@ -228,9 +232,9 @@ export function isPersistedCommunityId(
 ): value is string {
   return Boolean(
     value &&
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-        value,
-      ),
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      value,
+    ),
   );
 }
 

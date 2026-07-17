@@ -6,6 +6,7 @@
  */
 
 import { cn } from "@/shared/utils/cn";
+import { SafeImage } from "@/shared/components/security/SafeImage";
 
 interface BusinessLogoProps {
   name: string;
@@ -48,11 +49,10 @@ export function BusinessLogo({
 
   if (logoUrl) {
     return (
-      <img
+      <SafeImage
         src={logoUrl}
         alt={ariaLabel}
         className={cn("h-full w-full object-cover", className)}
-        loading="lazy"
       />
     );
   }

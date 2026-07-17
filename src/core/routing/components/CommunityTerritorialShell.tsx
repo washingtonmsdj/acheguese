@@ -261,7 +261,10 @@ export function CommunityTerritorialShell() {
         <meta name="robots" content={seoPolicy.robots} />
       </Helmet>
 
-      <div className="min-h-screen overflow-x-hidden bg-background pb-20 md:pb-0">
+      <div
+        className="min-h-screen overflow-x-hidden bg-background pb-20 md:pb-0"
+        data-community-territorial-shell="canonical"
+      >
         {effectiveResolved.kind === "group" && currentModuleKey ? (
           <>
             {effectiveAvailability === "partial" && availabilityResult ? (

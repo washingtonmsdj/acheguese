@@ -171,7 +171,7 @@ export default function ProblemasPage({
                 <p className="text-sm">Nenhum problema encontrado nesta regiao.</p>
               </div>
             ) : (
-              issues.map((issue) => <IssueCard key={issue.id} issue={issue} profileId={profile?.id} />)
+              issues.map((issue) => <IssueCard key={issue.id} issue={issue} />)
             )}
           </div>
         </div>

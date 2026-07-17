@@ -6,6 +6,7 @@
 
 import { z } from "zod";
 import { BUSINESS_CATEGORIES } from "@/shared/taxonomy/businessCategories";
+import { normalizeMediaAssetReference } from "@/shared/media/mediaAssetReference";
 
 export { BUSINESS_CATEGORIES } from "@/shared/taxonomy/businessCategories";
 
@@ -64,6 +65,20 @@ const optionalTrimmedString = (max: number, message?: string) =>
   z.preprocess(
     emptyStringToUndefined,
     z.string().max(max, message ?? `Maximo de ${max} caracteres`).trim().optional(),
+  );
+
+const optionalMediaAssetReference = (
+  preset: "business_logo" | "business_banner",
+) =>
+  z.preprocess(
+    emptyStringToUndefined,
+    z
+      .string()
+      .refine(
+        (value) => normalizeMediaAssetReference(value, preset) !== undefined,
+        "Referencia de midia invalida",
+      )
+      .optional(),
   );
 
 const optionalPhone = z.preprocess(
@@ -193,9 +208,8 @@ const baseBusinessObjectSchema = z.object({
     aceita_pix: z.boolean().optional(),
     can_post_vagas: z.boolean().optional(),
 
-    logo_url: optionalUrl,
-    banner_url: optionalUrl,
-    fotos: z.array(z.string().url("URL de foto invalida")).optional(),
+    logo_url: optionalMediaAssetReference("business_logo"),
+    banner_url: optionalMediaAssetReference("business_banner"),
 
     status: z.enum(["active", "inactive", "pending", "suspended"]).optional(),
 

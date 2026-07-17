@@ -1,12 +1,11 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { lostFoundRuntimeService as lostFoundService } from "@/core/community/services/LostFoundRuntimeService";
+import { lostFoundService } from "@/core/community-lost-found/services";
 import { useAppUrls } from "@/core/routing/hooks"; // SSOT URLs
 import {
   ArrowLeft,
   MapPin,
-  MessageCircle,
   Flag,
   CheckCircle2,
   Send,
@@ -24,17 +23,15 @@ import {
 import { Badge } from "@/shared/components/ui/badge";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useToast } from "@/shared/hooks/use-toast";
-import { useAuth } from "@/core/auth/hooks/useAuth";
-import { ReportContentDialog } from "@/core/moderation/components/ReportContentDialog";
+import { useSessionContext } from "@/core/session";
+import { CommunityReportContentDialog } from "@/core/community/moderation";
 import { LostFoundLocationCard } from "@/core/community-lost-found/components/LostFoundLocationCard";
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 import { cn } from "@/shared/utils/cn";
 import { motion } from "framer-motion";
 import { ProfileService } from "@/core/profiles/services/ProfileService";
-import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
 import { getLostFoundCategoryLabel } from "@/shared/validation/schemas/lostfound.schema";
-import type { ProfileRow } from "@/core/profiles/persistence/ProfileRow";
 import type { LostFoundComment } from "@/core/community-lost-found/services";
 type CommentProfileSummary = {
   id: string;
@@ -43,9 +40,11 @@ type CommentProfileSummary = {
 };
 
 const LazyLostFoundMiniMap = lazy(() =>
-  import("@/core/community-lost-found/components/LostFoundMiniMap").then((module) => ({
-    default: module.LostFoundMiniMap,
-  })),
+  import("@/core/community-lost-found/components/LostFoundMiniMap").then(
+    (module) => ({
+      default: module.LostFoundMiniMap,
+    }),
+  ),
 );
 
 const profileServiceInstance = new ProfileService();
@@ -65,7 +64,7 @@ interface Post {
   resolvido: boolean;
   created_at: string;
   autor_id: string;
-  autor: { name: string; avatar_url: string; whatsapp: string } | null;
+  autor: { name: string; avatar_url: string } | null;
 }
 
 interface Comment {
@@ -80,7 +79,7 @@ export default function AchadoPerdidoDetailPage() {
   const navigate = useNavigate();
   const appUrls = useAppUrls(); // SSOT URLs
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, activeProfile } = useSessionContext();
 
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -104,9 +103,9 @@ export default function AchadoPerdidoDetailPage() {
       return;
     }
 
-    const profile = (await profileServiceInstance.getProfileById(
+    const [profile] = await profileServiceInstance.getProfilesSummary([
       data.autor_id,
-    )) as ProfileRow | null;
+    ]);
 
     setPost({
       id: data.id,
@@ -125,9 +124,8 @@ export default function AchadoPerdidoDetailPage() {
       autor_id: data.autor_id,
       autor: profile
         ? {
-            name: profile.display_name ?? profile.name,
-            avatar_url: profile.avatar_url || "",
-            whatsapp: profile.whatsapp || "",
+            name: profile.displayName,
+            avatar_url: profile.avatarUrl || "",
           }
         : null,
     });
@@ -142,7 +140,9 @@ export default function AchadoPerdidoDetailPage() {
 
     if (!data) return;
 
-    const autorIds = [...new Set(data.map((c: LostFoundComment) => c.autor_id))];
+    const autorIds = [
+      ...new Set(data.map((c: LostFoundComment) => c.autor_id)),
+    ];
     const profiles =
       autorIds.length > 0
         ? ((await profileServiceInstance.getProfilesSummary(
@@ -174,13 +174,19 @@ export default function AchadoPerdidoDetailPage() {
       toast({ title: "Faça login para comentar", variant: "destructive" });
       return;
     }
+    if (!activeProfile) {
+      toast({
+        title: "Selecione um perfil ativo para comentar",
+        variant: "destructive",
+      });
+      return;
+    }
     if (!commentText.trim()) return;
 
     setSubmitting(true);
     try {
       await lostFoundService.createComment({
         post_id: id,
-        autor_id: user.id,
         conteudo: commentText.trim(),
       });
       setCommentText("");
@@ -194,7 +200,7 @@ export default function AchadoPerdidoDetailPage() {
   }
 
   async function handleMarkResolved() {
-    if (!post || post.autor_id !== user?.id) return;
+    if (!post || post.autor_id !== activeProfile?.id) return;
     await lostFoundService.toggleResolved(post.id);
     toast({
       title: post.resolvido
@@ -227,7 +233,7 @@ export default function AchadoPerdidoDetailPage() {
       </div>
     );
 
-  const isAuthor = user?.id === post.autor_id;
+  const isAuthor = activeProfile?.id === post.autor_id;
   const hasLocation = post.latitude !== null && post.longitude !== null;
 
   return (
@@ -331,21 +337,6 @@ export default function AchadoPerdidoDetailPage() {
                 })}
               </p>
             </div>
-            {post.autor?.whatsapp && (
-              <Button
-                asChild
-                size="sm"
-                className="bg-success hover:bg-success/90"
-              >
-                <a
-                  href={buildWhatsAppUrl(post.autor.whatsapp) ?? undefined}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <MessageCircle className="h-4 w-4 mr-1" /> WhatsApp
-                </a>
-              </Button>
-            )}
           </div>
 
           {isAuthor && (
@@ -428,10 +419,10 @@ export default function AchadoPerdidoDetailPage() {
           </div>
         </div>
 
-        <ReportContentDialog
+        <CommunityReportContentDialog
           open={reportOpen}
           onOpenChange={setReportOpen}
-          targetType="post"
+          targetType="lost_found_post"
           targetId={post.id}
         />
       </div>
@@ -504,12 +495,15 @@ export default function AchadoPerdidoDetailPage() {
 
           <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
             <p className="flex items-start gap-2 text-xs text-blue-500 leading-relaxed">
-              <Lightbulb className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
+              <Lightbulb
+                className="h-3.5 w-3.5 mt-0.5 shrink-0"
+                aria-hidden="true"
+              />
               <span>
                 <strong>Dica:</strong>{" "}
                 {post.tipo === "perdido"
-                  ? "Se você encontrou este item, entre em contato com o autor pelo WhatsApp."
-                  : "Se este item é seu, entre em contato com quem encontrou para combinar a devolução."}
+                  ? "Se você encontrou este item, responda à publicação para combinar a devolução com segurança."
+                  : "Se este item é seu, responda à publicação para falar com quem encontrou."}
               </span>
             </p>
           </div>

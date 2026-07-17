@@ -1,6 +1,6 @@
 # Plano - Home real, anuncios, ranking e SSOT
 
-Status: execucao complementar em andamento em 2026-07-09  
+Status: concluido em 2026-07-10
 Owner tecnico: Codex  
 Escopo: Home publica do Achegue-se, discovery local, ranking de comunidades, anuncios patrocinados, cards de atividade e indicadores.
 

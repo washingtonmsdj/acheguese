@@ -13,6 +13,7 @@ import type { Tables, TablesUpdate } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { RIDE_STATUS } from "../constants";
+import { RideRatingService } from "./RideRatingService";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
@@ -400,17 +401,6 @@ export class MobilityService {
     return data || null;
   }
 
-  static async createEmergencyAlert(
-    rideId: string,
-    userId: string,
-    location: { lat: number; lng: number },
-  ): Promise<void> {
-    await db
-      .from("emergency_alerts")
-      .insert({ ride_id: rideId, user_id: userId, location })
-      .throwOnError();
-  }
-
   static async getDriverProfiles(): Promise<{ data: unknown[]; error: unknown }> {
     try {
       const { data, error } = await db
@@ -557,26 +547,10 @@ export class MobilityService {
    */
   static async getPassengerRating(profileId: string): Promise<number> {
     try {
-      const { data, error } = await db
-        .from<{ rating?: unknown }>("ride_ratings")
-        .select("rating")
-        .eq("rated_id", profileId);
-
-      if (error) {
-        logger.warn("MobilityService.getPassengerRating - query error", { profileId, error });
-        return 5.0;
-      }
-
-      if (!data || data.length === 0) return 5.0;
-
-      const ratings = data
-        .map((row: { rating?: unknown }) => Number(row.rating))
-        .filter((value: number) => Number.isFinite(value));
-
-      if (ratings.length === 0) return 5.0;
-
-      const avg = ratings.reduce((sum: number, value: number) => sum + value, 0) / ratings.length;
-      return Number(avg.toFixed(1));
+      const summary = await RideRatingService.getSummary(profileId);
+      return summary.totalRatings > 0
+        ? Number(summary.averageRating.toFixed(1))
+        : 5.0;
     } catch (error) {
       logger.error("MobilityService.getPassengerRating", error as Error, { profileId });
       return 5.0;

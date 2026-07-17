@@ -76,10 +76,7 @@ function statusFromRow(row: ProfessionalRow): ProfessionalStatus {
   return row.is_accepting_clients === false ? "inactive" : "active";
 }
 
-function extractPortfolioImages(row: ProfessionalRow, metadata: JsonRecord): string[] {
-  const metadataImages = asStringArray(metadata.portfolio_images);
-  if (metadataImages.length > 0) return metadataImages;
-
+function extractPortfolioImages(row: ProfessionalRow): string[] {
   const portfolioItems = Array.isArray(row.portfolio_items) ? row.portfolio_items : [];
   return portfolioItems
     .map((item) => asRecord(item).url)
@@ -155,9 +152,9 @@ export function mapProfessionalRow(row: ProfessionalRow): Professional {
     service_areas: asStringArray(row.service_areas),
     service_radius_km: row.service_radius_km ?? undefined,
     available_hours: asRecord(row.available_hours),
-    logo_url: optionalString(metadata.logo_url) ?? optionalString(profile?.avatar_url),
+    logo_url: optionalString(metadata.logo_url),
     banner_url: optionalString(metadata.banner_url),
-    portfolio_images: extractPortfolioImages(row, metadata),
+    portfolio_images: extractPortfolioImages(row),
     instagram: optionalString(socialLinks.instagram),
     facebook: optionalString(socialLinks.facebook),
     linkedin: optionalString(socialLinks.linkedin),

@@ -8,8 +8,11 @@ import { BusinessService } from "@/core/business/services/BusinessService";
 import { postService } from "@/core/posts/services/PostService";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
+import {
+  realtimeService,
+  type RealtimeSubscription,
+} from "@/core/realtime";
 import { supabase } from "@/integrations/supabase";
-import type { RealtimeChannel } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 
 function toError(error: unknown): Error {
@@ -107,31 +110,18 @@ export class MetricsService {
 
   static subscribeToMetrics(
     callback: (metrics: Partial<RealtimeMetrics>) => void,
-  ): RealtimeChannel {
-    const channel = supabase
-      .channel("realtime-metrics")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "profiles" },
-        () => callback({ activeUsers: undefined }),
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "rides" },
-        () => callback({ activeRides: undefined }),
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "posts" },
-        () => callback({ totalPosts: undefined }),
-      )
-      .subscribe();
-
-    return channel;
+  ): RealtimeSubscription {
+    return realtimeService.subscribe("metrics.operational", {
+      onEvent: ({ bindingId }) => {
+        if (bindingId === "profiles") callback({ activeUsers: undefined });
+        if (bindingId === "rides") callback({ activeRides: undefined });
+        if (bindingId === "posts") callback({ totalPosts: undefined });
+      },
+    });
   }
 
-  static unsubscribeFromMetrics(channel: RealtimeChannel): void {
-    supabase.removeChannel(channel);
+  static unsubscribeFromMetrics(subscription: RealtimeSubscription): void {
+    subscription.unsubscribe();
   }
 
   static async getReputationStats(userId: string): Promise<ReputationStats | null> {

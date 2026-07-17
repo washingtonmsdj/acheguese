@@ -61,6 +61,7 @@ interface CivicReportCommentQueryBuilder {
     options: { ascending: boolean },
   ) => CivicReportCommentQueryBuilder;
   eq: (column: string, value: string) => CivicReportCommentQueryBuilder;
+  limit: (count: number) => CivicReportCommentQueryBuilder;
   insert: (
     payload: Record<string, unknown>,
   ) => {
@@ -161,12 +162,13 @@ export const CivicReportService = {
     type?: string;
     city?: string;
   }): Promise<CivicReport[]> {
+    const boundedLimit = Math.min(Math.max(options?.limit ?? 20, 1), 100);
     let query = db
       .from("civic_reports")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(boundedLimit);
 
-    if (options?.limit) query = query.limit(options.limit);
     if (options?.status) query = query.eq("status", options.status);
     if (options?.type) query = query.eq("problem_type", options.type);
 
@@ -200,7 +202,8 @@ export const CivicReportService = {
       .from("civic_report_comments")
       .select("*")
       .eq("report_id", reportId)
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: true })
+      .limit(100);
 
     if (error) throw error;
     return data ?? [];

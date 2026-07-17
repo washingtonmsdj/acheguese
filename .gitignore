@@ -168,6 +168,7 @@ test-output.txt
 !src/core/public-identity/utils/reserved-names.communication.test.ts
 
 # Runtime artifacts
+/.codex-logs/
 /.codex-artifacts/
 /artifacts/
 /tmp/

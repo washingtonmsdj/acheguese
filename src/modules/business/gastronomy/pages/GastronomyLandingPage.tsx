@@ -225,7 +225,13 @@ function NeighborhoodGastronomyHero({
   );
 }
 
-export default function GastronomyLandingPage() {
+interface GastronomyLandingPageProps {
+  readonly presentation?: "standalone" | "embedded";
+}
+
+export default function GastronomyLandingPage({
+  presentation = "standalone",
+}: GastronomyLandingPageProps = {}) {
   const navigate = useNavigate();
   const location = useLocation();
   const territorialContext = useTerritorialContextOptional();
@@ -234,6 +240,7 @@ export default function GastronomyLandingPage() {
   const appUrls = useAppUrls(resolved);
   const moduleUrls = useFriendlyModuleUrls();
   const isCommunityScopedSurface = location.pathname.includes('/comunidade/');
+  const isEmbedded = presentation === 'embedded';
   const { user } = useSessionContext();
   const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved, activeMemberIds });
   const territoryFilter = moduleTerritory.territoryFilter;
@@ -422,14 +429,17 @@ export default function GastronomyLandingPage() {
           content={`Descubra restaurantes e cardápios de gastronomia em ${territoryName}.`}
         />
       </Helmet>
-      <div className="min-h-screen bg-background">
+      <div
+        className={isEmbedded ? "w-full min-w-0 bg-background" : "min-h-screen bg-background"}
+        data-module-presentation={presentation}
+      >
         {!isCommunityScopedSurface ? (
           <GastronomyHeader
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
           />
         ) : null}
-        {isCommunityScopedSurface ? (
+        {isCommunityScopedSurface && !isEmbedded ? (
           <>
             <NeighborhoodGastronomyHero
               territoryName={territoryName}
@@ -443,7 +453,7 @@ export default function GastronomyLandingPage() {
               onCuisineChange={handleCuisineFilter}
             />
           </>
-        ) : (
+        ) : !isCommunityScopedSurface ? (
           <>
         <section className="w-full bg-card/50 border-b border-border py-4">
           <div className="w-full overflow-x-auto scrollbar-hide">
@@ -516,6 +526,11 @@ export default function GastronomyLandingPage() {
           </div>
         </section>
           </>
+        ) : (
+          <CuisineRail
+            activeCuisine={filters.cuisine_type}
+            onCuisineChange={handleCuisineFilter}
+          />
         )}
         {shouldShowDestinationGate && (
           <DeliveryDestinationGate

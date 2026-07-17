@@ -1,8 +1,8 @@
 import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BusinessService } from "@/core/business/services/BusinessService";
-import { getUserBusinessFavorites } from "@/core/favorites/services/favorites.queries";
-import { toggleBusinessFavorite } from "@/core/favorites/services/favorites.mutations";
+import { getCurrentUserBusinessFavorites } from "@/core/favorites/services/favorites.queries";
+import { setBusinessFavorite } from "@/core/favorites/services/favorites.mutations";
 import type { ProfileAssociatedBusiness } from "@/core/profiles/services/ProfileBusinessTypes";
 
 interface UseFavoritesResult {
@@ -24,7 +24,7 @@ export function useFavorites(profileId?: string | null): UseFavoritesResult {
         return [];
       }
 
-      const favoriteIds = await getUserBusinessFavorites(profileId);
+      const favoriteIds = await getCurrentUserBusinessFavorites();
       if (favoriteIds.length === 0) {
         return [];
       }
@@ -56,12 +56,12 @@ export function useFavorites(profileId?: string | null): UseFavoritesResult {
         return;
       }
 
-      await toggleBusinessFavorite(itemId, profileId);
+      await setBusinessFavorite(itemId, !favoriteIds.includes(itemId));
       await queryClient.invalidateQueries({
         queryKey: ["profile", "business-favorites"],
       });
     },
-    [profileId, queryClient],
+    [favoriteIds, profileId, queryClient],
   );
 
   const isFavorite = useCallback(

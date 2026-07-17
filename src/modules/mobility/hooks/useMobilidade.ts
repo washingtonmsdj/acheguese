@@ -530,32 +530,11 @@ export function useMobilidade() {
           return { success: false };
         }
 
-        const passengerProfile =
-          (await profileService.getProfileByType(user.id, "personal")) ||
-          (await profileService.getActiveProfile(user.id));
-
-        if (!passengerProfile?.id) {
-          toast.error("Perfil não encontrado");
-          return { success: false };
-        }
-
-        const ride = await getRideById(rideId);
-        const driverProfileId =
-          ride && typeof (ride as { driver_profile_id?: unknown }).driver_profile_id === "string"
-            ? (ride as { driver_profile_id: string }).driver_profile_id
-            : null;
-
-        if (!driverProfileId) {
-          toast.error("Não foi possível identificar o motorista desta corrida.");
-          return { success: false };
-        }
         const sanitizedComment = (comment || "").trim();
         const clampedRating = Math.min(5, Math.max(1, Math.round(rating)));
 
         await RideRatingService.upsert({
           rideId,
-          raterId: passengerProfile.id,
-          ratedId: driverProfileId,
           rating: clampedRating,
           comment: sanitizedComment || null,
         });
@@ -614,18 +593,8 @@ export function useMobilidade() {
           return { success: false };
         }
 
-        const passengerProfile =
-          (await profileService.getProfileByType(user.id, "personal")) ||
-          (await profileService.getActiveProfile(user.id));
-
-        if (!passengerProfile?.id) {
-          toast.error("Perfil nao encontrado");
-          return { success: false };
-        }
         const result = await RideReportsService.createReport({
           rideId,
-          reporterProfileId: passengerProfile.id,
-          reporterType: "passenger",
           reportType: parseReportType(reportType),
           severity: parseReportSeverity(severity),
           title: "Problema reportado",

@@ -6,7 +6,7 @@
  *  - no-direct-supabase-auth      : block supabase.auth.* outside SessionService
  *  - no-permission-inference      : block activeProfile.profileType / .isActive in conditionals
  *  - no-ambiguous-identifiers     : block prohibited ambiguous identifier names
- *  - require-authorization-engine : detect profileContext.permissions.* in conditionals
+ *  - require-capability-preview   : detect profileContext.permissions.* in conditionals
  */
 
 'use strict';
@@ -136,9 +136,9 @@ const noPermissionInference = {
     },
     messages: {
       noProfileTypeInference:
-        '❌ Permission Inference: "activeProfile.profileType" must not be used in authorization conditionals. Use AuthorizationEngine instead.',
+        '❌ Permission Inference: "activeProfile.profileType" is not authorization. Use CapabilityPreviewService only for UI visibility and enforce the command in the backend.',
       noIsActiveInference:
-        '❌ Permission Inference: "activeProfile.isActive" must not be used in authorization conditionals. Use AuthorizationEngine instead.',
+        '❌ Permission Inference: "activeProfile.isActive" is not authorization. Use CapabilityPreviewService only for UI visibility and enforce the command in the backend.',
     },
     schema: [],
   },
@@ -300,22 +300,22 @@ const noAmbiguousIdentifiers = {
   },
 };
 
-// ─── Rule: require-authorization-engine ─────────────────────────────────────
+// ─── Rule: require-capability-preview ───────────────────────────────────────
 
-const requireAuthorizationEngine = {
+const requireCapabilityPreview = {
   meta: {
     type: 'problem',
     docs: {
       description:
-        'Detect profileContext.permissions.* used directly in conditionals — use AuthorizationEngine instead',
+        'Detect profileContext.permissions.* used directly in conditionals',
       category: 'Session Context Centralization',
       recommended: true,
     },
     messages: {
       useAuthEngine:
-        '❌ Authorization Violation: "profileContext.permissions.{{permission}}" must not be used directly in conditionals. Use AuthorizationEngine.check() instead.',
+        '❌ UI Capability Violation: "profileContext.permissions.{{permission}}" must not be used directly. Use CapabilityPreviewService for visibility and enforce commands in the backend.',
       useAuthEngineGeneric:
-        '❌ Authorization Violation: "profileContext.permissions" must not be accessed directly in conditionals. Use AuthorizationEngine.check() instead.',
+        '❌ UI Capability Violation: "profileContext.permissions" must not be used directly. Use CapabilityPreviewService for visibility and enforce commands in the backend.',
     },
     schema: [],
   },
@@ -395,6 +395,6 @@ module.exports = {
     'no-direct-supabase-auth': noDirectSupabaseAuth,
     'no-permission-inference': noPermissionInference,
     'no-ambiguous-identifiers': noAmbiguousIdentifiers,
-    'require-authorization-engine': requireAuthorizationEngine,
+    'require-capability-preview': requireCapabilityPreview,
   },
 };

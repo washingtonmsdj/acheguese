@@ -18,6 +18,8 @@ export interface ImageOptimizeOptions {
 
 export type ImageOptimizePreset =
   | "gastronomy_menu_item"
+  | "review_photo"
+  | "attachment_image"
   | "user_avatar"
   | "post_image"
   | "professional_logo"
@@ -42,6 +44,28 @@ const DEFAULT_OPTIONS: Required<ImageOptimizeOptions> = {
   focalPointY: 0.5,
 };
 
+export const IMAGE_SOURCE_LIMITS = {
+  maxDimension: 12_000,
+  maxPixels: 40_000_000,
+} as const;
+
+export function assertSafeSourceImageDimensions(
+  width: number,
+  height: number,
+): void {
+  if (
+    !Number.isInteger(width) ||
+    !Number.isInteger(height) ||
+    width <= 0 ||
+    height <= 0 ||
+    width > IMAGE_SOURCE_LIMITS.maxDimension ||
+    height > IMAGE_SOURCE_LIMITS.maxDimension ||
+    width * height > IMAGE_SOURCE_LIMITS.maxPixels
+  ) {
+    throw new Error("Image dimensions exceed the safe processing limit");
+  }
+}
+
 export const IMAGE_OPTIMIZE_PRESETS: Record<ImageOptimizePreset, Required<ImageOptimizeOptions>> = {
   gastronomy_menu_item: {
     maxWidth: 1600,
@@ -50,6 +74,26 @@ export const IMAGE_OPTIMIZE_PRESETS: Record<ImageOptimizePreset, Required<ImageO
     targetWidth: 1200,
     targetHeight: 900,
     fit: "cover",
+    focalPointX: 0.5,
+    focalPointY: 0.5,
+  },
+  review_photo: {
+    maxWidth: 1800,
+    maxHeight: 1800,
+    quality: 0.86,
+    targetWidth: 1600,
+    targetHeight: 1600,
+    fit: "contain",
+    focalPointX: 0.5,
+    focalPointY: 0.5,
+  },
+  attachment_image: {
+    maxWidth: 1800,
+    maxHeight: 1800,
+    quality: 0.84,
+    targetWidth: 1600,
+    targetHeight: 1600,
+    fit: "contain",
     focalPointX: 0.5,
     focalPointY: 0.5,
   },
@@ -198,6 +242,13 @@ export async function optimizeImage(
       const img = new Image();
 
       img.onload = () => {
+        try {
+          assertSafeSourceImageDimensions(img.width, img.height);
+        } catch (error) {
+          reject(error);
+          return;
+        }
+
         let width = img.width;
         let height = img.height;
         const targetWidth = Math.min(opts.targetWidth, opts.maxWidth);

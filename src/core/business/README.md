@@ -1,5 +1,12 @@
 # Business Module
 
+## Favoritos de Empresa
+
+`BusinessFavoriteService` e o adapter publico do dominio. Persistencia e RPCs
+pertencem exclusivamente a `core/favorites/BusinessFavoriteStore`; paginas,
+hooks e verticais nao acessam `user_favorite_businesses` diretamente. O
+contrato vigente esta em `docs/architecture/BUSINESS_FAVORITES_SSOT.md`.
+
 Módulo de gerenciamento de empresas.
 
 ## Modelo Canônico (ETAPA 6)

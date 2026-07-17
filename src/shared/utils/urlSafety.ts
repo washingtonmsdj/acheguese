@@ -14,6 +14,7 @@ import {
   type BlockedURLProtocol,
 } from '@/config/security.config';
 import { logger } from '@/shared/utils/logger';
+import { resolveMediaAssetReference } from '@/shared/media/mediaAssetReference';
 
 interface UrlSafetyOptions {
   context?: string;
@@ -158,7 +159,8 @@ export function isSafeLinkUrl(rawUrl: string, options: LinkSafetyOptions = {}): 
 
 export function resolveSafeImageUrl(rawUrl: string, options: UrlSafetyOptions = {}): string | null {
   const context = options.context ?? 'image';
-  const input = normalizeUrlInput(rawUrl, context);
+  const canonicalMediaUrl = resolveMediaAssetReference(rawUrl);
+  const input = normalizeUrlInput(canonicalMediaUrl ?? rawUrl, context);
   if (!input) return null;
 
   if (isSafeRelativeUrl(input)) {

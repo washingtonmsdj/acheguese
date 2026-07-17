@@ -263,6 +263,7 @@ export type SafetyAuditAction =
   | 'alert_acknowledged' // Alerta reconhecido
   | 'alert_resolved'     // Alerta resolvido
   | 'incident_reported'  // Incidente reportado
+  | 'incident_status_updated' // Status do incidente alterado
   | 'evidence_uploaded'  // Evidência enviada
   | 'share_created'      // Compartilhamento criado
   | 'share_revoked';     // Compartilhamento revogado
@@ -329,7 +330,8 @@ export interface EmergencyContact {
   id: string;
   profileId: string;
   name: string;
-  phone: string;
+  email: string;
+  phone?: string;
   relationship?: string;
   isPrimary: boolean;
   isActive: boolean;
@@ -344,7 +346,8 @@ export interface EmergencyContact {
 export interface CreateEmergencyContactInput {
   profileId: string;
   name: string;
-  phone: string;
+  email: string;
+  phone?: string;
   relationship?: string;
   isPrimary?: boolean;
 }
@@ -354,6 +357,7 @@ export interface CreateEmergencyContactInput {
  */
 export interface UpdateEmergencyContactInput {
   name?: string;
+  email?: string;
   phone?: string;
   relationship?: string;
   isPrimary?: boolean;

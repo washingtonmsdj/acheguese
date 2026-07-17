@@ -12,7 +12,7 @@ export function useClassifiedFavorite(classifiedId: string | null | undefined) {
   const favoriteQuery = useQuery({
     queryKey,
     enabled: Boolean(profileId && classifiedId),
-    queryFn: () => ClassifiedFavoriteService.isFavorite(classifiedId!, profileId!),
+    queryFn: () => ClassifiedFavoriteService.isFavorite(classifiedId!),
   });
 
   const toggleMutation = useMutation({
@@ -23,11 +23,11 @@ export function useClassifiedFavorite(classifiedId: string | null | undefined) {
 
       const currentlyFavorite = Boolean(favoriteQuery.data);
       if (currentlyFavorite) {
-        await ClassifiedFavoriteService.removeFavorite(classifiedId, profileId);
+        await ClassifiedFavoriteService.removeFavorite(classifiedId);
         return false;
       }
 
-      await ClassifiedFavoriteService.addFavorite(classifiedId, profileId);
+      await ClassifiedFavoriteService.addFavorite(classifiedId);
       return true;
     },
     onSuccess: (nextValue) => {

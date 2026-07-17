@@ -2,13 +2,16 @@ import * as queries from "./posts.queries";
 import * as mutations from "./posts.mutations";
 import * as pollMutations from "./polls.mutations";
 import * as pollQueries from "./polls.queries";
-import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { PAGINATION } from "@/shared/constants";
+import { POST_LIMITS } from "@/shared/constants/socialContent";
 import { mediaService } from "@/core/media/services/MediaService";
+import { MEDIA_STORAGE_BUCKETS } from "@/core/media/config/storageBuckets";
+import { toPostImageReference } from "@/core/media/references/postImageReference";
 import { LocationType } from "@/shared/types/enums";
 import type {
   Post,
+  FeedParams,
   FeedResult,
   UpdatePostData,
   PostStats,
@@ -20,19 +23,19 @@ import type {
 } from "../types";
 import { PostError } from "../types";
 
-interface RpcResult<T> {
-  data: T | null;
-  error: { message: string; code?: string } | null;
+export interface CreatePostInput {
+  author_profile_id: string;
+  content: string;
+  type: PostType;
+  location_id: string;
+  reach?: "street" | "neighborhood" | "city";
+  images?: string[];
+  tags?: string[];
+  content_intent?: string;
+  display_format?: string;
+  distribution_channels?: string[];
+  content_payload?: Record<string, unknown>;
 }
-
-interface PostServiceRpcClient {
-  rpc: <TResult = unknown>(
-    fn: string,
-    params?: Record<string, unknown>,
-  ) => Promise<RpcResult<TResult>>;
-}
-
-const postServiceRpc = supabase as unknown as PostServiceRpcClient;
 
 export class PostService {
   // ============================================================================
@@ -46,25 +49,71 @@ export class PostService {
    * Cria um novo post com SSOT territorial
    * Sprint 2 - Fase 2: Refatorado para usar location_id obrigatorio
    */
-  async createPost(data: {
-    author_profile_id: string;
-    content: string;
-    type: PostType;
-    location_id: string;
-    reach?: 'street' | 'neighborhood' | 'city';
-    images?: string[];
-    tags?: string[];
-    content_intent?: string;
-    display_format?: string;
-    distribution_channels?: string[];
-    content_payload?: Record<string, unknown>;
-  }): Promise<Post> {
+  async createPost(data: CreatePostInput): Promise<Post> {
     const territoryPolicy = {
-      allowedLocationTypes: [LocationType.CITY, LocationType.DISTRICT, LocationType.NEIGHBORHOOD],
+      allowedLocationTypes: [
+        LocationType.CITY,
+        LocationType.DISTRICT,
+        LocationType.NEIGHBORHOOD,
+      ],
       invalidLocationTypeCode: "INVALID_LOCATION_TYPE",
     } as const;
 
     return mutations.createPost(data, territoryPolicy);
+  }
+
+  /**
+   * Uploads post media and persists the post as one application operation.
+   * Uploaded objects are removed if an upload or the database insert fails.
+   */
+  async createPostWithImages(
+    data: Omit<CreatePostInput, "images">,
+    imageFiles: File[],
+  ): Promise<Post> {
+    if (imageFiles.length > POST_LIMITS.MAX_IMAGES) {
+      throw new PostError(
+        `Maximo de ${POST_LIMITS.MAX_IMAGES} imagens permitidas`,
+        "TOO_MANY_IMAGES",
+      );
+    }
+
+    const uploads: Array<{ path: string; url: string }> = [];
+    try {
+      for (const imageFile of imageFiles) {
+        uploads.push(
+          await mediaService.uploadPostImage(
+            data.author_profile_id,
+            imageFile,
+            {
+              preset: "post_image",
+            },
+          ),
+        );
+      }
+
+      return await this.createPost({
+        ...data,
+        images: uploads.map((upload) =>
+          toPostImageReference(upload.path, data.author_profile_id),
+        ),
+      });
+    } catch (error) {
+      if (uploads.length > 0) {
+        await mediaService
+          .deleteFromBucket(
+            MEDIA_STORAGE_BUCKETS.POST_IMAGES,
+            uploads.map((upload) => upload.path),
+          )
+          .catch((cleanupError) => {
+            trackError(cleanupError as Error, {
+              component: "PostService",
+              action: "rollbackPostImageUploads",
+              metadata: { uploadedImageCount: uploads.length },
+            });
+          });
+      }
+      throw error;
+    }
   }
 
   /**
@@ -99,16 +148,10 @@ export class PostService {
    * Busca posts do feed com expansao territorial
    * Sprint 2 - Fase 2: Refatorado para usar location_ids com expansao territorial
    */
-  async getFeed(params: {
-    location_id?: string;
-    location_ids?: string[];
-    district_filter?: boolean;
-    city_filter?: boolean;
-    includeStreetReach?: boolean;
-    limit?: number;
-    cursor?: string;
-  } = {}): Promise<FeedResult> {
-    return queries.getTerritorialFeed(params);
+  async getFeed(
+    params: FeedParams = {},
+  ): Promise<FeedResult> {
+    return queries.getFeed(params);
   }
 
   /**
@@ -125,13 +168,10 @@ export class PostService {
    * Busca posts por localizacao
    */
   /**
-   * Busca posts salvos (delegado para SocialInteractionsService)
+   * Busca posts salvos pelo owner canonico de engagement
    */
-  async getSavedPosts(
-    userId: string,
-    params: PaginationParams = {},
-  ): Promise<Post[]> {
-    return queries.getSavedPosts(userId, params);
+  async getSavedPosts(params: PaginationParams = {}): Promise<Post[]> {
+    return queries.getSavedPosts(params);
   }
 
   // ============================================================================
@@ -266,67 +306,6 @@ export class PostService {
 
   // ============================================================================
   // ============================================================================
-  // STORAGE E UTILITARIOS
-  // ============================================================================
-
-  /**
-   * Upload de imagens para posts
-   */
-  async uploadPostImages(profileId: string, images: File[]): Promise<string[]> {
-    try {
-      const urls: string[] = [];
-
-      for (const image of images) {
-        const upload = await mediaService.uploadPostImage(profileId, image, { preset: "post_image" });
-        urls.push(upload.url);
-      }
-
-      return urls;
-    } catch (error) {
-      if (error instanceof PostError) throw error;
-      trackError(error as Error, {
-        component: "PostService",
-        action: "uploadPostImages",
-        metadata: { profileId, imageCount: images.length },
-      });
-      throw new PostError("Unexpected error uploading images", "UNKNOWN_ERROR");
-    }
-  }
-
-  /**
-   * Adiciona pontos ao usuario (delegado para gamificacao)
-   */
-  async addUserPoints(
-    userId: string,
-    action: string,
-    points: number,
-  ): Promise<void> {
-    try {
-      const { error } = await postServiceRpc.rpc("add_pontos", {
-        _user_id: userId,
-        _acao: action,
-        _pontos: points,
-      });
-
-      if (error) {
-        throw new PostError(error.message, error.code || "ADD_POINTS_FAILED");
-      }
-    } catch (error) {
-      if (error instanceof PostError) throw error;
-      trackError(error as Error, {
-        component: "PostService",
-        action: "addUserPoints",
-        metadata: { userId, action, points },
-      });
-      throw new PostError(
-        "Unexpected error adding user points",
-        "UNKNOWN_ERROR",
-      );
-    }
-  }
-
-  // ============================================================================
-  // ============================================================================
   // METODOS AUXILIARES
   // ============================================================================
 
@@ -357,13 +336,6 @@ export class PostService {
   }
 
   /**
-   * Incrementa reputacao do usuario via RPC
-   */
-  async incrementUserReputation(userId: string, points: number): Promise<void> {
-    await mutations.incrementUserReputation(userId, points);
-  }
-
-  /**
    * Verifica se um post existe
    */
   async postExists(postId: string): Promise<boolean> {
@@ -384,10 +356,10 @@ export class PostService {
   }
 
   /**
-   * Incrementa contador de compartilhamentos de um post
+   * Records one idempotent authenticated share event.
    */
-  async incrementSharesCount(postId: string): Promise<void> {
-    await mutations.incrementSharesCount(postId);
+  async recordPostShare(postId: string): Promise<void> {
+    await mutations.recordPostShare(postId);
   }
 
   /**
@@ -409,72 +381,6 @@ export class PostService {
     optionId: string,
   ): Promise<{ options: PollOption[]; total_votes: number }> {
     return pollMutations.updatePollVoteCounts(pollId, optionId);
-  }
-
-  // ============================================================================
-  // MODERACAO
-  // ============================================================================
-
-  /**
-   * Remove um post (moderacao)
-   */
-  async removePost(
-    postId: string,
-    reason: string,
-    moderatorProfileId: string,
-  ): Promise<void> {
-    try {
-      await mutations.removePost(postId, reason, moderatorProfileId);
-    } catch (error) {
-      if (error instanceof PostError) throw error;
-      trackError(error as Error, {
-        component: "PostService",
-        action: "removePost",
-        metadata: { postId, reason, moderatorProfileId: moderatorProfileId },
-      });
-      throw new PostError("Unexpected error removing post", "UNKNOWN_ERROR");
-    }
-  }
-
-  /**
-   * Oculta um post (moderacao)
-   */
-  async hidePost(postId: string): Promise<void> {
-    try {
-      await mutations.hidePost(postId);
-    } catch (error) {
-      if (error instanceof PostError) throw error;
-      trackError(error as Error, {
-        component: "PostService",
-        action: "hidePost",
-        metadata: { postId },
-      });
-      throw new PostError("Unexpected error hiding post", "UNKNOWN_ERROR");
-    }
-  }
-
-  async updatePostModerationState(
-    postId: string,
-    state: {
-      is_hidden?: boolean;
-      is_removed?: boolean;
-      is_published?: boolean;
-      removed_reason?: string | null;
-      removed_by?: string | null;
-      removed_at?: string | null;
-    },
-  ): Promise<void> {
-    try {
-      await mutations.updatePostModerationState(postId, state);
-    } catch (error) {
-      if (error instanceof PostError) throw error;
-      trackError(error as Error, {
-        component: "PostService",
-        action: "updatePostModerationState",
-        metadata: { postId, state },
-      });
-      throw new PostError("Unexpected error updating post moderation state", "UNKNOWN_ERROR");
-    }
   }
 
   // ============================================================================
@@ -531,21 +437,6 @@ export class PostService {
   }
 
   /**
-   * Confirma um alerta e aplica logica de verificacao automatica.
-   * SSOT - Usa counter no post, nao tabela separada.
-   */
-  async confirmAlert(
-    postId: string,
-    userId: string,
-    authorProfileId: string,
-  ): Promise<{
-    confirmationsCount: number;
-    isVerified: boolean;
-  }> {
-    return mutations.confirmAlert(postId, userId, authorProfileId);
-  }
-
-  /**
    * Busca interacoes do usuario com um post (likes, saves, confirmacoes, voto em enquete)
    */
   async getPostUserInteractions(
@@ -576,87 +467,6 @@ export class PostService {
     }
   }
 
-  /**
-   * Busca mencoes de um post
-   */
-  async getPostMentions(postId: string): Promise<
-    Array<{
-      id: string;
-      name: string;
-      username: string | null;
-      avatar: string | null;
-      location: string | null;
-      type: string;
-      rank: number;
-    }>
-  > {
-    try {
-      return queries.getPostMentions(postId);
-    } catch (error) {
-      trackError(error as Error, {
-        component: "PostService",
-        action: "getPostMentions",
-        metadata: { postId },
-      });
-      return [];
-    }
-  }
-
-  /**
-   * Cria notificacao de like para o autor do post
-   */
-  async createLikeNotification(postId: string, likerId: string): Promise<void> {
-    try {
-      await mutations.createLikeNotification(postId, likerId);
-    } catch (error) {
-      // Notificacao e best-effort, nao propagar erro
-      trackError(error as Error, {
-        component: "PostService",
-        action: "createLikeNotification",
-        metadata: { postId, likerId },
-      });
-    }
-  }
-
-  /**
-   * Busca os IDs de perfis que seguem um post.
-   */
-  async getFollowedPostUserIds(postId: string): Promise<string[]> {
-    try {
-      return queries.getFollowedPostUserIds(postId);
-    } catch (error) {
-      if (error instanceof PostError) throw error;
-      trackError(error as Error, {
-        component: "PostService",
-        action: "getFollowedPostUserIds",
-        metadata: { postId },
-      });
-      throw new PostError(
-        "Unexpected error fetching post followers",
-        "UNKNOWN_ERROR",
-      );
-    }
-  }
-
-  /**
-   * Verifica e alterna o follow de um post
-   */
-  async toggleFollowPost(
-    postId: string,
-    userId: string,
-  ): Promise<{ action: "follow" | "unfollow" }> {
-    try {
-      return mutations.toggleFollowPost(postId, userId);
-    } catch (error) {
-      if (error instanceof PostError) throw error;
-      trackError(error as Error, {
-        component: "PostService",
-        action: "toggleFollowPost",
-        metadata: { postId, userId },
-      });
-      throw new PostError("Unexpected error toggling follow", "UNKNOWN_ERROR");
-    }
-  }
   // ============================================================================
   // ============================================================================
   // METODOS CANONICOS
@@ -671,52 +481,6 @@ export class PostService {
     filters?: { search?: string },
   ): Promise<Post[]> {
     return queries.getPostsByType(type, filters);
-  }
-
-  /**
-   * Upload de imagem para o bucket 'posts' e retorno da URL publica.
-   *
-   * Canonical boundary: todo acesso ao storage bucket 'posts' deve passar por aqui.
-   * Nenhum modulo externo deve acessar storage de posts diretamente.
-   *
-   * Path: posts/{profileId}/{fileName}
-   * Motivo do profileId no path:
-   *   - Isola arquivos por profile (nao por user_id), alinhado com o modelo SSOT
-   *     onde a identidade de atuacao social e o profile ativo, nao o auth user.
-   *   - Permite RLS policies no storage baseadas em profile ownership.
-   *   - Evita colisao de nomes entre profiles diferentes do mesmo user.
-   *
-   * @param profileId - ID do profile ativo (author_profile_id), nao o auth user.id
-   * @param file - Arquivo de imagem ja validado e otimizado pelo chamador
-   * @param fileName - Nome do arquivo (ex: `${Date.now()}.jpg`) — sem path prefix
-   * @returns URL publica permanente da imagem no CDN
-   */
-  async uploadPostImage(
-    profileId: string,
-    file: File,
-    fileName: string,
-  ): Promise<string> {
-    try {
-      const upload = await mediaService.uploadToBucket(file, {
-        bucket: "posts",
-        pathPrefix: `posts/${profileId}`,
-        fileName,
-        preset: "post_image",
-        upsert: false,
-      });
-      return upload.url;
-    } catch (error) {
-      if (error instanceof PostError) throw error;
-      trackError(error as Error, {
-        component: "PostService",
-        action: "uploadPostImage",
-        metadata: { profileId, fileName },
-      });
-      throw new PostError(
-        "Unexpected error uploading post image",
-        "UNKNOWN_ERROR",
-      );
-    }
   }
 
   // ============================================================================
@@ -772,14 +536,16 @@ export class PostService {
     neighborhood?: string;
     state?: string;
     limit?: number;
-  }): Promise<Array<{
-    id: string;
-    image_url: string;
-    content: string;
-    author_name: string;
-    author_avatar: string | null;
-    created_at: string;
-  }>> {
+  }): Promise<
+    Array<{
+      id: string;
+      image_url: string;
+      content: string;
+      author_name: string;
+      author_avatar: string | null;
+      created_at: string;
+    }>
+  > {
     return queries.getPostsWithImages(options);
   }
 }

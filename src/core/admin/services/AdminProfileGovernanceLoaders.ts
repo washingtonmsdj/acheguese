@@ -1,7 +1,9 @@
 import { supabase } from "@/integrations/supabase";
-import { AuthorizationEngine } from "@/core/authorization/services/AuthorizationEngine";
+import { buildCapabilityPreviewMatrix } from "@/core/authorization/services/capabilityPreviewPolicy";
+import type { AppRole } from "@/core/authorization/types";
 import { FamilyService, FAMILY_TABLES } from "@/core/family";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { ReviewsService, type ReviewType } from "@/core/reviews";
 import { logger } from "@/shared/utils/logger";
 import { adminNotificationsService } from "./AdminNotificationsService";
 import {
@@ -14,7 +16,7 @@ import type {
   AdminProfileIdentityEffectiveContext,
   AdminProfileIdentityMemberSummary,
   AdminProfileIdentityRoleSummary,
-  AdminProfilePermissionGovernanceSummary,
+  AdminProfileCapabilityPreviewSummary,
   RawRecord,
 } from "./AdminProfileGovernanceTypes";
 import type { ReviewAggregateSummary } from "./AdminProfileGovernanceReviewTypes";
@@ -217,45 +219,29 @@ export async function loadDriverReputationMap(
 }
 
 export async function loadReviewAggregateMap(
-  table: "business_reviews_new" | "professional_reviews_new",
+  reviewType: Extract<ReviewType, "business" | "professional">,
   profileIds: string[],
 ): Promise<Map<string, ReviewAggregateSummary>> {
   if (profileIds.length === 0) return new Map();
 
-  const { data, error } = await supabase
-    .from(table)
-    .select("reviewed_profile_id, rating")
-    .in("reviewed_profile_id", profileIds);
-
-  if (error) {
+  try {
+    const aggregates = await ReviewsService.getReviewAggregatesAdmin(
+      profileIds,
+      reviewType,
+    );
+    return new Map(
+      aggregates.map((aggregate) => [
+        aggregate.profile_id,
+        { count: aggregate.count, average: aggregate.average },
+      ]),
+    );
+  } catch (error) {
     logger.error("AdminProfileGovernanceService.loadReviewAggregateMap", {
-      table,
+      reviewType,
       error,
     });
     return new Map();
   }
-
-  const aggregate = new Map<string, { count: number; sum: number }>();
-
-  for (const row of (data as RawRecord[]) ?? []) {
-    const profileId = row.reviewed_profile_id as string | undefined;
-    if (!profileId) continue;
-
-    const current = aggregate.get(profileId) ?? { count: 0, sum: 0 };
-    current.count += 1;
-    current.sum += Number(row.rating ?? 0);
-    aggregate.set(profileId, current);
-  }
-
-  return new Map(
-    [...aggregate.entries()].map(([profileId, value]) => [
-      profileId,
-      {
-        count: value.count,
-        average: value.count > 0 ? Math.round((value.sum / value.count) * 10) / 10 : null,
-      },
-    ]),
-  );
 }
 
 export async function loadReviewAggregateMaps(profileIds: string[]): Promise<{
@@ -263,8 +249,8 @@ export async function loadReviewAggregateMaps(profileIds: string[]): Promise<{
   professionalReviewMap: Map<string, ReviewAggregateSummary>;
 }> {
   const [businessReviewMap, professionalReviewMap] = await Promise.all([
-    loadReviewAggregateMap("business_reviews_new", profileIds),
-    loadReviewAggregateMap("professional_reviews_new", profileIds),
+    loadReviewAggregateMap("business", profileIds),
+    loadReviewAggregateMap("professional", profileIds),
   ]);
 
   return {
@@ -373,22 +359,43 @@ export async function loadFamilySummary(userId: string): Promise<AdminProfileFam
   }
 }
 
-export async function loadPermissionGovernance(payload: {
+const APP_ROLES = new Set<AppRole>([
+  "super_admin",
+  "admin",
+  "moderator",
+  "business_owner",
+  "driver",
+  "user",
+]);
+
+function isAppRole(value: string): value is AppRole {
+  return APP_ROLES.has(value as AppRole);
+}
+
+export async function loadCapabilityPreview(payload: {
   profileId: string;
   roles: AdminProfileIdentityRoleSummary[];
   members: AdminProfileIdentityMemberSummary[];
   effectiveContext: AdminProfileIdentityEffectiveContext | null;
-}): Promise<AdminProfilePermissionGovernanceSummary | null> {
+}): Promise<AdminProfileCapabilityPreviewSummary | null> {
   const { profileId, roles, members, effectiveContext } = payload;
 
   try {
-    const actionMatrix = await AuthorizationEngine.getProfilePermissions(profileId, {});
+    if (!effectiveContext) return null;
+
+    const sourceRoles = unique(roles.map((role) => role.role));
+    const actionMatrix = buildCapabilityPreviewMatrix({
+      profileId,
+      isActive: effectiveContext.status.isActive,
+      isSuspended: effectiveContext.status.isSuspended,
+      isBlocked: effectiveContext.status.isBlocked,
+      roles: sourceRoles.filter(isAppRole),
+    });
     const allowedActions = actionMatrix.filter((action) => action.status === "allowed").length;
     const deniedActions = actionMatrix.filter((action) => action.status === "denied").length;
     const targetDependentActions = actionMatrix.filter(
       (action) => action.status === "requiresTarget",
     ).length;
-    const sourceRoles = unique(roles.map((role) => role.role));
     const sourceMembershipRoles = unique(members.map((member) => member.role));
 
     return {
@@ -416,7 +423,7 @@ export async function loadPermissionGovernance(payload: {
       ],
     };
   } catch (error) {
-    logger.error("AdminProfileGovernanceService.loadPermissionGovernance", error, {
+    logger.error("AdminProfileGovernanceService.loadCapabilityPreview", error, {
       profileId,
     });
     return null;

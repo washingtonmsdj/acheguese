@@ -11,7 +11,6 @@ import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useToast } from "@/shared/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
-import { useCommunityInteractions } from "@/core/social/hooks/useCommunityInteractions";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 import type { ReviewWithProfiles } from "@/core/reviews/types";
@@ -28,7 +27,6 @@ export function useProfessionalReviews(professionalId?: string) {
   const { toast } = useToast();
   const navigate = useNavigate();
   const appUrls = useAppUrls();
-  const { recordInteraction } = useCommunityInteractions();
   const [reviews, setReviews] = useState<ProfessionalReview[]>([]);
   const [userReview, setUserReview] = useState<ProfessionalReview | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,10 +51,12 @@ export function useProfessionalReviews(professionalId?: string) {
             rating: r.rating,
             comment: r.comment || "",
             created_at: r.created_at,
-            reviewer: {
-              name: r.reviewer_profile.name,
-              avatar_url: r.reviewer_profile.avatar_url || "",
-            },
+            reviewer: r.reviewer_profile
+              ? {
+                  name: r.reviewer_profile.name ?? "Usuario",
+                  avatar_url: r.reviewer_profile.avatar_url || "",
+                }
+              : null,
           }),
         );
 
@@ -75,10 +75,12 @@ export function useProfessionalReviews(professionalId?: string) {
                 rating: myReview.rating,
                 comment: myReview.comment || "",
                 created_at: myReview.created_at,
-                reviewer: {
-                  name: myReview.reviewer_profile.name,
-                  avatar_url: myReview.reviewer_profile.avatar_url || "",
-                },
+                reviewer: myReview.reviewer_profile
+                  ? {
+                      name: myReview.reviewer_profile.name ?? "Usuario",
+                      avatar_url: myReview.reviewer_profile.avatar_url || "",
+                    }
+                  : null,
               });
             }
           }
@@ -94,7 +96,7 @@ export function useProfessionalReviews(professionalId?: string) {
   }, [professionalId, user]);
 
   const submitReview = useCallback(
-    async (rating: number, comment: string, jobType?: string) => {
+    async (rating: number, comment: string) => {
       if (!user) {
         toast({ title: "Faça login para avaliar", variant: "destructive" });
         navigate(appUrls.auth.login);
@@ -121,7 +123,6 @@ export function useProfessionalReviews(professionalId?: string) {
             reviewer_profile_id: activeProfile.id,
             rating,
             comment,
-            job_type: jobType,
           },
           "professional",
         );
@@ -140,17 +141,6 @@ export function useProfessionalReviews(professionalId?: string) {
 
         if (isNew) {
           setReviews((prev) => [newReview, ...prev]);
-
-          // Registrar interação e ganhar pontos (apenas para novas avaliações)
-          recordInteraction(
-            "review_written",
-            "review",
-            review.id,
-            {},
-            {
-              showToast: true,
-            },
-          );
 
           toast({ title: "Avaliação enviada!" });
         } else {
@@ -174,7 +164,7 @@ export function useProfessionalReviews(professionalId?: string) {
         return false;
       }
     },
-    [user, professionalId, toast, navigate, appUrls, recordInteraction],
+    [user, professionalId, toast, navigate, appUrls],
   );
 
   return {

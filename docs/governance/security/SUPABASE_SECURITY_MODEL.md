@@ -148,6 +148,9 @@ A allowlist atual de funcoes sem JWT e:
   `stripe-signature` e `STRIPE_WEBHOOK_SECRET`.
 - `auto-dispatch-ride` e `process-timeouts`: jobs de cron sem JWT, protegidos
   por `CRON_SECRET`/segredo operacional via `requireCronSecret`.
+- `media-assets-cleanup`: worker de orfaos sem JWT de usuario, protegido por
+  `CRON_SECRET`, rate limit e grants `service_role` restritos ao lifecycle de
+  MediaAsset.
 - `get-push-config`, `nominatim-proxy` e `sitemap`: endpoints publicos de
   leitura/proxy sem dado sensivel, com rate limit e validacao de entrada.
 

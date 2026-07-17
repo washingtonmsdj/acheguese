@@ -1,14 +1,21 @@
 import React, { Suspense, lazy } from "react";
 import { AnimatePresence } from "framer-motion";
 
-import type { CommunityPost, PostType as CommunityPostType } from "@/core/posts/types/Post";
+import type {
+  CommunityPost,
+  PostType as CommunityPostType,
+} from "@/core/posts/types/Post";
 import type { Poll } from "@/shared/types/poll";
-import { logger } from "@/shared/utils/logger";
 import type {
   ModalCommentData,
+  ModalReportData,
   ModalState,
-  UnifiedModalData,
 } from "@/core/community/hooks/page/useComunidadePage";
+import {
+  COMMUNITY_REPORT_REASON_OPTIONS,
+  ReportReasonDialog,
+  type CommunityReportReason,
+} from "@/core/moderation";
 
 const CommentsModal = lazy(() =>
   import("@/core/community/components/CommentsModal").then((module) => ({
@@ -16,14 +23,11 @@ const CommentsModal = lazy(() =>
   })),
 );
 const PostDetailModal = lazy(() =>
-  import("@/core/community/components/modals/PostDetailModal").then((module) => ({
-    default: module.PostDetailModal,
-  })),
-);
-const UnifiedDetailModal = lazy(() =>
-  import("@/core/community/components/UnifiedDetailModal").then((module) => ({
-    default: module.UnifiedDetailModal,
-  })),
+  import("@/core/community/components/modals/PostDetailModal").then(
+    (module) => ({
+      default: module.PostDetailModal,
+    }),
+  ),
 );
 
 type DetailPostType =
@@ -71,28 +75,34 @@ interface CommunityModalsProps {
   onSave: (postId: string) => void;
   onShare: (postId: string) => void;
   onReport: (postId: string) => void;
+  onSubmitReport: (
+    reason: CommunityReportReason,
+    details?: string,
+  ) => Promise<void>;
   onTagClick: (tag: string) => void;
   canComment?: boolean;
   commentBlockedMessage?: string;
 }
 
-function isCommentModalData(data: ModalState["data"]): data is ModalCommentData {
+function isCommentModalData(
+  data: ModalState["data"],
+): data is ModalCommentData {
   return Boolean(
     data &&
-      typeof data === "object" &&
-      "postId" in data &&
-      "authorProfileId" in data &&
-      "authorName" in data,
+    typeof data === "object" &&
+    "postId" in data &&
+    "authorProfileId" in data &&
+    "authorName" in data,
   );
 }
 
-function isUnifiedModalData(data: ModalState["data"]): data is UnifiedModalData {
+function isReportModalData(data: ModalState["data"]): data is ModalReportData {
   return Boolean(
     data &&
-      typeof data === "object" &&
-      "type" in data &&
-      data.type === "civic_report" &&
-      "reportId" in data,
+    typeof data === "object" &&
+    "targetType" in data &&
+    data.targetType === "post" &&
+    "targetId" in data,
   );
 }
 
@@ -121,7 +131,7 @@ function normalizePostDetailData(post: CommunityPost): PostDetailData {
   const neighborhood =
     typeof post.location === "string"
       ? post.location
-      : post.location?.name ?? "";
+      : (post.location?.name ?? "");
 
   return {
     id: post.id,
@@ -157,12 +167,17 @@ export function CommunityModals({
   onSave,
   onShare,
   onReport,
+  onSubmitReport,
   onTagClick,
   canComment = true,
   commentBlockedMessage,
 }: CommunityModalsProps) {
-  const commentData = isCommentModalData(modalState.data) ? modalState.data : null;
-  const unifiedData = isUnifiedModalData(modalState.data) ? modalState.data : null;
+  const commentData = isCommentModalData(modalState.data)
+    ? modalState.data
+    : null;
+  const reportData = isReportModalData(modalState.data)
+    ? modalState.data
+    : null;
   const detailPostData = postData ? normalizePostDetailData(postData) : null;
 
   return (
@@ -188,7 +203,6 @@ export function CommunityModals({
             isOpen={true}
             onClose={onClosePostDetail}
             post={detailPostData}
-            comments={[]}
             onLike={onLike}
             onSave={onSave}
             onShare={onShare}
@@ -200,24 +214,15 @@ export function CommunityModals({
         </Suspense>
       ) : null}
 
-      {modalState.type === "unified" && unifiedData ? (
-        <Suspense fallback={null}>
-          <UnifiedDetailModal
-            isOpen={true}
-            onClose={onCloseModal}
-            content={unifiedData}
-            comments={[]}
-            onLike={onLike}
-            onSave={onSave}
-            onShare={onShare}
-            onReport={onReport}
-            onUpvote={(id) => logger.info("Upvote:", { action: id })}
-            onTagClick={onTagClick}
-            canComment={canComment}
-            commentBlockedMessage={commentBlockedMessage}
-          />
-        </Suspense>
-      ) : null}
+      <ReportReasonDialog
+        open={modalState.type === "report" && Boolean(reportData)}
+        onOpenChange={(open) => {
+          if (!open) onCloseModal();
+        }}
+        contentLabel="publicacao"
+        reasonOptions={COMMUNITY_REPORT_REASON_OPTIONS}
+        onSubmit={onSubmitReport}
+      />
     </AnimatePresence>
   );
 }

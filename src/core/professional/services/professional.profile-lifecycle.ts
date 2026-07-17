@@ -16,6 +16,7 @@ import {
   sanitizeEmail,
   sanitizePhone,
 } from "@/shared/utils/sanitization";
+import { normalizeMediaAssetReference } from "@/core/media/references/mediaAssetReference";
 import type {
   Professional,
   CreateProfessionalInput,
@@ -110,11 +111,11 @@ function sanitizeAndValidateInput(
     price_range: sanitizeString(input.price_range),
     availability_notes: sanitizeString(input.availability_notes),
     instagram: sanitizeString(input.instagram),
-    logo_url: sanitizeUrl(input.logo_url),
-    banner_url: sanitizeUrl(input.banner_url),
+    logo_url: normalizeMediaAssetReference(input.logo_url, "professional_logo"),
+    banner_url: normalizeMediaAssetReference(input.banner_url, "professional_banner"),
     portfolio_images: input.portfolio_images
       ? (input.portfolio_images
-          .map((url) => sanitizeUrl(url))
+          .map((url) => normalizeMediaAssetReference(url, "professional_portfolio"))
           .filter(Boolean) as string[])
       : undefined,
     certifications: sanitizeArray(
@@ -225,13 +226,18 @@ function toProfessionalData(
 
   const metadata: ProfessionalMetadata = { ...(options.currentMetadata ?? {}) };
   delete metadata.location;
+  delete metadata.portfolio_images;
 
   if (input.logo_url !== undefined) metadata.logo_url = input.logo_url;
   if (input.banner_url !== undefined) metadata.banner_url = input.banner_url;
   if (input.portfolio_images !== undefined) {
-    metadata.portfolio_images = input.portfolio_images;
+    result.portfolio_items = input.portfolio_images.map((url, index) => ({
+      url,
+      media_type: "image" as const,
+      is_cover: index === 0,
+    }));
   } else if (options.mode === "create") {
-    metadata.portfolio_images = [];
+    result.portfolio_items = [];
   }
 
   const socialLinks = {
@@ -301,7 +307,6 @@ export async function createProfessionalWithProfile(
     username: generateProfessionalUsername(validatedInput.name),
     city: validatedInput.city || "Nao informado",
     bio: validatedInput.description,
-    avatar_url: validatedInput.logo_url,
   });
   if (!profile) throw new Error("Erro ao criar perfil do profissional");
 
@@ -372,7 +377,6 @@ export async function updateProfessionalWithProfile(
     await profileService.updateProfile(currentProfessional.profile_id, {
       name: validatedInput.name,
       bio: validatedInput.description,
-      avatar_url: validatedInput.logo_url,
     });
   }
 

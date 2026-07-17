@@ -61,11 +61,11 @@ const REGRESSION_GUARDS: RegressionGuard[] = [
   },
   {
     pattern: /\bcanUserPerformAction\b/,
-    message: '❌ REGRESSION: canUserPerformAction was removed. Use AuthorizationEngine.canProfilePerformAction() instead.',
+    message: '❌ REGRESSION: canUserPerformAction was removed. CapabilityPreviewService is UI-only; enforce protected commands in the backend.',
   },
   {
     pattern: /\buseUserPermissions\b/,
-    message: '❌ REGRESSION: useUserPermissions was removed. Use usePermission (reactive) or useAuthorization (imperative) from @/core/authorization instead.',
+    message: '❌ REGRESSION: useUserPermissions was removed. Use CapabilityPreviewService only for UI visibility and enforce protected commands in the backend.',
   },
   {
     pattern: /\buseActiveProfile\b/,

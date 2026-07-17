@@ -41,24 +41,6 @@ function toStringArray(value: unknown): string[] {
     .filter(Boolean);
 }
 
-function resolveMetadataPhotos(metadata: BusinessMetadata): string[] {
-  const candidates: unknown[] = [
-    metadata.fotos,
-    (metadata as Record<string, unknown>).photos,
-    (metadata as Record<string, unknown>).gallery,
-    (metadata as Record<string, unknown>).gallery_images,
-  ];
-
-  for (const candidate of candidates) {
-    const parsed = toStringArray(candidate);
-    if (parsed.length > 0) {
-      return parsed;
-    }
-  }
-
-  return [];
-}
-
 function buildBusinessAddressSummary(
   input: CreateBusinessInput | UpdateBusinessInput,
 ): string | undefined {
@@ -95,7 +77,6 @@ function buildMetadata(
 
   if (input.logo_url !== undefined) metadata.logo_url = input.logo_url;
   if (input.banner_url !== undefined) metadata.banner_url = input.banner_url;
-  if (input.fotos !== undefined) metadata.fotos = input.fotos;
   if (input.modos_atendimento !== undefined) metadata.modos_atendimento = serviceModes;
   if (input.tem_delivery !== undefined || input.modos_atendimento !== undefined) {
     metadata.tem_delivery = input.tem_delivery ?? serviceModes.includes("delivery");
@@ -221,7 +202,6 @@ export function mapBusinessDataToBusiness(
   const facilities = toStringArray(data.facilities);
   const serviceModes = toStringArray(metadata.modos_atendimento);
   const paymentFlags = normalizePaymentFlags(paymentMethods);
-  const metadataPhotos = resolveMetadataPhotos(metadata);
 
   const resolvedServiceModes =
     serviceModes.length > 0
@@ -269,9 +249,9 @@ export function mapBusinessDataToBusiness(
     tem_delivery: metadata.tem_delivery ?? resolvedServiceModes.includes("delivery"),
     aceita_cartao: metadata.aceita_cartao ?? paymentFlags.acceptsCard,
     aceita_pix: metadata.aceita_pix ?? paymentFlags.acceptsPix,
-    logo_url: metadata.logo_url || profileData?.avatar_url,
+    logo_url: metadata.logo_url,
     banner_url: metadata.banner_url,
-    fotos: metadataPhotos,
+    fotos: [],
     status: (data.status as Business["status"]) || "active",
     rating: data.rating || 0,
     total_reviews: data.total_reviews || 0,

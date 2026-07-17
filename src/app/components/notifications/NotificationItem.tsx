@@ -11,26 +11,31 @@ import {
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card } from "@/shared/components/ui/card";
-import { useNotifications } from "@/core/notifications/hooks/useNotifications";
-import { Notification } from "@/core/notifications/services/NotificationService";
+import type { Notification } from "@/core/notifications";
 import { cn } from "@/shared/utils/cn";
 import { SafeLink } from "@/shared/components/security";
 
 interface NotificationItemProps {
   notification: Notification;
+  isPending: boolean;
+  onDelete: (notificationId: string) => Promise<void>;
+  onMarkAsRead: (notificationId: string) => Promise<void>;
 }
 
-export function NotificationItem({ notification }: NotificationItemProps) {
-  const { markAsRead, deleteNotification } = useNotifications();
-
+export function NotificationItem({
+  notification,
+  isPending,
+  onDelete,
+  onMarkAsRead,
+}: NotificationItemProps) {
   const handleMarkAsRead = async () => {
     if (!notification.read) {
-      await markAsRead.mutateAsync(notification.id);
+      await onMarkAsRead(notification.id);
     }
   };
 
   const handleDelete = async () => {
-    await deleteNotification.mutateAsync(notification.id);
+    await onDelete(notification.id);
   };
 
   const getIcon = () => {
@@ -101,7 +106,9 @@ export function NotificationItem({ notification }: NotificationItemProps) {
                     size="icon"
                     className="h-8 w-8"
                     onClick={handleMarkAsRead}
-                    disabled={markAsRead.isPending}
+                    disabled={isPending}
+                    aria-label="Marcar notificacao como lida"
+                    title="Marcar como lida"
                   >
                     <Check className="h-4 w-4" />
                   </Button>
@@ -111,7 +118,9 @@ export function NotificationItem({ notification }: NotificationItemProps) {
                   size="icon"
                   className="h-8 w-8"
                   onClick={handleDelete}
-                  disabled={deleteNotification.isPending}
+                  disabled={isPending}
+                  aria-label="Remover notificacao"
+                  title="Remover notificacao"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

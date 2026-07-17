@@ -1,5 +1,4 @@
 import { SessionService } from "@/core/session/services/SessionService";
-import { NotificationService } from "@/core/notifications/services/NotificationService";
 import { postService } from "@/core/posts/services";
 import { ProfessionalUrlService } from "@/core/professional/services/ProfessionalUrlService";
 import { supabase } from "@/integrations/supabase";
@@ -102,11 +101,6 @@ type ProfessionalListItemRow = Pick<
   "id" | "professional_name" | "service_category"
 >;
 
-type ProfessionalNotificationCandidateRow = Pick<
-  ProfessionalDataRow,
-  "id" | "owner_user_id" | "professional_name" | "service_category"
->;
-
 type OpportunityResolutionUpdate = Pick<WorkOpportunityUpdate, "status" | "closed_at">;
 
 interface ExpireStaleOpportunitiesRow {
@@ -117,22 +111,6 @@ interface ExpireStaleOpportunitiesRow {
 type PublicOpportunityCardRow = PublicWorkOpportunitySearchRow;
 
 const workOpportunitiesDb = supabase as unknown as WorkOpportunitiesDbClient;
-
-interface ProfessionalMatchCandidate {
-  professional_id: string;
-  owner_user_id: string | null;
-  professional_name: string | null;
-  service_category: string | null;
-}
-
-interface StructuredVagaMatchingInput {
-  vagaId: string;
-  title: string;
-  professionalCategory: string;
-  territoryLocationId: string;
-  sourceUrl: string;
-  actorUserId?: string | null;
-}
 
 interface ProfessionalDataDetailRow {
   id: string;
@@ -603,10 +581,6 @@ class WorkOpportunitiesServiceClass {
 
       const completedOpportunity = toWorkOpportunity(updatedOpportunity);
 
-      this.notifyMatchingProfessionals(completedOpportunity).catch((notificationError) => {
-        logger.error("WorkOpportunitiesService.notifyMatchingProfessionals", notificationError);
-      });
-
       return completedOpportunity;
     } catch (error) {
       trackError(error as Error, {
@@ -1023,97 +997,6 @@ class WorkOpportunitiesServiceClass {
     }
   }
 
-  private async notifyMatchingProfessionals(opportunity: WorkOpportunity): Promise<void> {
-    const shouldNotify = ["offering_work", "freelance", "quick_job"].includes(opportunity.opportunity_type);
-    if (!shouldNotify) return;
-
-    const { data: candidates, error } = await workOpportunitiesDb
-      .from<ProfessionalNotificationCandidateRow>("professional_data")
-      .select("id, owner_user_id, professional_name, service_category")
-      .eq("service_category", opportunity.professional_category)
-      .eq("location_id", opportunity.territory_location_id)
-      .eq("is_accepting_clients", true)
-      .in("visibility", ["public_listed", "public_unlisted"])
-      .neq("owner_user_id", opportunity.author_user_id)
-      .limit(30);
-
-    if (error || !candidates) {
-      if (error) {
-        logger.error("WorkOpportunitiesService.notifyMatchingProfessionals.query", error);
-      }
-      return;
-    }
-
-    const list = candidates;
-    const notifications = list
-      .filter((candidate) => !!candidate.owner_user_id)
-      .map((candidate) =>
-        NotificationService.createNotification({
-            user_id: candidate.owner_user_id as string,
-          type: "info",
-          category: "transactional",
-          title: `Nova oportunidade para ${opportunity.professional_category}`,
-          message: `${opportunity.headline} na sua regiao.`,
-          action_url: `/oportunidades/${opportunity.id}`,
-          action_label: "Ver oportunidade",
-            metadata: {
-              domain: "work_opportunities",
-              opportunity_id: opportunity.id,
-              professional_id: candidate.id,
-              opportunity_type: opportunity.opportunity_type,
-            },
-          }),
-      );
-
-    if (notifications.length === 0) return;
-    await Promise.allSettled(notifications);
-  }
-
-  async notifyMatchingForStructuredVaga(input: StructuredVagaMatchingInput): Promise<void> {
-    const normalizedCategory = input.professionalCategory.trim().toLowerCase();
-    if (!normalizedCategory) return;
-
-    const { data: candidates, error } = await workOpportunitiesDb
-      .from<ProfessionalNotificationCandidateRow>("professional_data")
-      .select("id, owner_user_id, professional_name, service_category")
-      .eq("service_category", normalizedCategory)
-      .eq("location_id", input.territoryLocationId)
-      .eq("is_accepting_clients", true)
-      .in("visibility", ["public_listed", "public_unlisted"])
-      .neq("owner_user_id", input.actorUserId ?? "")
-      .limit(30);
-
-    if (error || !candidates) {
-      if (error) {
-        logger.error("WorkOpportunitiesService.notifyMatchingForStructuredVaga.query", error);
-      }
-      return;
-    }
-
-    const list = candidates;
-    const notifications = list
-      .filter((candidate) => !!candidate.owner_user_id)
-      .map((candidate) =>
-        NotificationService.createNotification({
-          user_id: candidate.owner_user_id as string,
-          type: "info",
-          category: "transactional",
-          title: `Nova vaga para ${normalizedCategory}`,
-          message: `${input.title} na sua regiao.`,
-          action_url: input.sourceUrl,
-          action_label: "Ver vaga",
-          metadata: {
-            domain: "vagas",
-            vaga_id: input.vagaId,
-            matched_category: normalizedCategory,
-            territory_location_id: input.territoryLocationId,
-          },
-        }),
-      );
-
-    if (notifications.length === 0) return;
-    await Promise.allSettled(notifications);
-  }
 }
 
 export const workOpportunitiesService = new WorkOpportunitiesServiceClass();

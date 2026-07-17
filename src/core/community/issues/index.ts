@@ -5,6 +5,7 @@ export { CreateIssueModal } from "./components/CreateIssueModal";
 export { useIssues } from "./hooks/useIssues";
 export { useCreateIssue } from "./hooks/useCreateIssue";
 export { useIssueSupport } from "./hooks/useIssueSupport";
+export { communityIssueService } from "./services/CommunityIssueService";
 
 export {
   COMMUNITY_ISSUES_ENABLED,
@@ -26,4 +27,5 @@ export type {
   IssueFeedFilters,
   IssueRpcResult,
   IssueRpcError,
+  IssueSupportToggleResult,
 } from "./domain/types";

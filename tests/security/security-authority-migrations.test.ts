@@ -1713,7 +1713,7 @@ describe("Security Authority Edge Function broker boundary", () => {
     ).toBe(true);
     expect(
       shouldScanEdgeFunctionBrokerBoundaryFile(
-        "src/modules/business/gastronomy/services/BusinessReviewsRpcService.ts",
+        "src/core/business/services/BusinessReviewService.ts",
       ),
     ).toBe(true);
     expect(

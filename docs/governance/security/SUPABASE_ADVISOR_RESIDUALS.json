@@ -1,6 +1,6 @@
 {
   "schemaVersion": "supabase-advisor-residuals/v1",
-  "updatedAt": "2026-07-08",
+  "updatedAt": "2026-07-15",
   "sourceCommand": "supabase db advisors --linked --type security --fail-on none --output json",
   "residuals": [
     {
@@ -59,9 +59,289 @@
       "summary": "PostGIS function grant requires owner/platform route."
     },
     {
+      "cacheKey": "anon_security_definer_function_executable_public_get_professional_trust_reputation_p_professional_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Public aggregate Trust read model with bounded output and no private event rows."
+    },
+    {
+      "cacheKey": "anon_security_definer_function_executable_public_get_ride_rating_summary_p_profile_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Public aggregate ride rating read model with no private rating rows."
+    },
+    {
+      "cacheKey": "anon_security_definer_function_executable_public_get_shared_ride_safety_data_p_share_token text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Public Safety read model authorized by high-entropy share token."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_apply_trust_admin_actions_p_event_ids uuid[], p_action_type text, p_reason text, p_notes text, p_duration_days integer",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Admin-only atomic Trust command with internal authorization."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_block_classified_conversation_p_conversation_id uuid, p_reason text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-scoped Classified Messaging command."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_create_classified_conversation_p_classified_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Classified conversation command deriving participants server-side."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_create_community_direct_thread_p_profile_id uuid, p_community_id uuid, p_post_id uuid, p_recipient_profile_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Community direct-thread command with owned-Profile and recipient checks."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_delete_profile_review_p_review_id uuid, p_reviewer_profile_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Review command validating author or admin server-side."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_get_community_rpc_operational_metrics_p_since_minutes integer",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Admin-only bounded Community operational read model."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_get_community_rpc_slo_status_p_window_minutes integer, p_minimum_requests integer, p_error_rate_threshold numeric, p_p95_duration_threshold_ms integer",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Admin-only bounded Community SLO read model."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_get_current_notification_preferences_",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Self-only notification preference read deriving auth identity."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_get_current_review_helpfulness_p_review_id uuid, p_voter_profile_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Self-only Review engagement read with owned-Profile validation."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_get_current_trust_policy_decision_p_role public.trust_actor_role",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Current-Profile Trust policy read without private event exposure."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_get_current_user_business_favorite_ids_p_business_ids uuid[]",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Self-only bounded Business Favorite batch read."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_get_current_user_business_favorites_p_limit integer, p_offset integer, p_tags text[]",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Self-only bounded Business Favorite read model."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_get_professional_trust_reputation_p_professional_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Public aggregate Trust read model with no private event rows."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_get_review_aggregates_admin_p_profile_ids uuid[], p_review_type text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Admin-only bounded Review aggregate read model."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_get_ride_offer_trust_decisions_p_ride_ids uuid[]",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Eligible-driver bounded Trust offer read model."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_get_ride_rating_summary_p_profile_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Public aggregate ride rating read model with no private rows."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_get_shared_ride_safety_data_p_share_token text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Safety read model authorized by high-entropy share token."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_has_current_active_ban_",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Self-only boolean active-ban read deriving auth identity."
+    },
+    {
       "cacheKey": "auth_leaked_password_protection",
       "exceptionId": "EXC-2026-07-08-AUTH-HIBP-DASHBOARD",
       "summary": "Leaked password protection depends on Auth Settings or Management API with valid PAT and compatible plan."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_is_current_user_business_favorite_p_business_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Self-only Business Favorite state read."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_list_classified_conversation_previews_p_profile_id uuid, p_limit integer, p_cursor_last_message_at timestamp with time zone, p_cursor_id uuid, p_search text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Owned-Profile Classified inbox read with keyset bounds."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_list_community_direct_messages_p_profile_id uuid, p_thread_id uuid, p_limit integer, p_cursor_created_at timestamp with time zone, p_cursor_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-only Community message read with keyset bounds."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_list_community_direct_thread_previews_p_profile_id uuid, p_limit integer, p_cursor_last_message_at timestamp with time zone, p_cursor_id uuid, p_search text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Owned-Profile Community inbox read with keyset bounds."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_list_community_social_audit_events_p_before_created_at timestamp with time zone, p_before_id uuid, p_limit integer",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Admin-only Community audit read with keyset bounds."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_list_federated_moderation_queue_p_queue_state text, p_domain text, p_before_created_at timestamp with time zone, p_before_domain text, p_before_report_id uuid, p_limit integer",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Admin-only federated moderation read with keyset bounds."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_list_group_message_reaction_state_p_message_ids uuid[]",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Group-participant bounded reaction read model."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_list_trust_admin_actions_admin_p_limit integer, p_before_created_at timestamp with time zone, p_before_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Admin-only Trust action read with keyset bounds."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_list_trust_events_admin_p_limit integer, p_before_created_at timestamp with time zone, p_before_id uuid, p_context_type public.trust_context_type, p_status public.trust_event_status",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Admin-only Trust event read with keyset bounds."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_mark_classified_messages_read_p_conversation_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-only Classified read-state command."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_mark_community_direct_thread_read_p_profile_id uuid, p_thread_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-only Community read-state command."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_moderate_classified_conversation_p_conversation_id uuid, p_action text, p_reason text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Admin-only Classified moderation command."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_moderate_community_direct_report_p_report_id uuid, p_action text, p_resolution_notes text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Admin-only Community direct-message moderation command."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_patch_current_notification_preferences_p_email_enabled boolean, p_push_enabled boolean, p_inapp_enabled boolean, p_social_enabled boolean, p_system_enabled boolean, p_marketing_enabled boolean, p_frequency text, p_quiet_hours_set boolean, p_quiet_hours_start time without time zone, p_quiet_hours_end time without time zone, p_quiet_hours_days integer[]",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Self-only Notification Preference patch command."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_patch_current_user_business_favorite_p_favorite_id uuid, p_notify_on_promotions boolean, p_notify_on_new_items boolean, p_notes_set boolean, p_notes text, p_tags_set boolean, p_tags text[]",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Self-only Business Favorite metadata command."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_report_classified_comment_p_classified_id uuid, p_comment_id uuid, p_reason text, p_description text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Classified incident command deriving actor and target."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_report_classified_conversation_p_conversation_id uuid, p_reason text, p_description text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-only Classified conversation incident command."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_report_classified_message_p_message_id uuid, p_reason text, p_description text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-only Classified message incident command."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_report_community_direct_thread_p_profile_id uuid, p_thread_id uuid, p_message_id uuid, p_reason text, p_description text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-only Community direct-message report command."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_review_trust_events_admin_p_event_ids uuid[], p_status public.trust_event_status, p_resolution_notes text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Admin-only bounded Trust review command."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_revoke_safety_ride_share_p_share_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Safety share revocation command validating ownership."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_send_classified_message_p_conversation_id uuid, p_text text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-only Classified message command."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_send_community_direct_message_p_profile_id uuid, p_thread_id uuid, p_body text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-only Community direct-message command."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_set_community_direct_thread_blocked_p_profile_id uuid, p_thread_id uuid, p_blocked boolean, p_reason text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-only Community block-state command."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_set_current_user_business_favorite_p_business_id uuid, p_favorited boolean",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Self-only Business Favorite command."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_set_review_helpfulness_p_review_id uuid, p_voter_profile_id uuid, p_is_helpful boolean",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Self-only Review engagement command."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_submit_classified_trust_feedback_p_classified_id uuid, p_subject_profile_id uuid, p_rating integer, p_reason_code text, p_description text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-only Classified Trust command deriving roles and context."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_submit_order_trust_feedback_p_order_id uuid, p_subject_profile_id uuid, p_rating integer, p_reason_code text, p_description text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-only Order Trust command deriving roles and context."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_submit_ride_rating_p_ride_id uuid, p_rating integer, p_comment text, p_behavior_rating integer, p_punctuality_rating integer, p_payment_rating integer",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-only atomic Ride rating and Trust command."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_submit_ride_trust_feedback_p_ride_id uuid, p_subject_profile_id uuid, p_rating integer, p_reason_code text, p_description text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-only Ride Trust command deriving roles and context."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_submit_work_opportunity_feedback_p_opportunity_id uuid, p_answer text, p_description text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Eligible-actor Work Opportunity Trust command."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_toggle_group_message_like_p_message_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Group-participant reaction command."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_update_safety_emergency_alert_status_p_alert_id uuid, p_status text, p_actor_profile_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Safety alert transition with actor authorization."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_update_safety_incident_status_p_incident_id uuid, p_status text, p_actor_profile_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Safety incident transition with actor authorization."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_upsert_profile_review_p_reviewed_profile_id uuid, p_reviewer_profile_id uuid, p_rating integer, p_comment text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Profile Review command validating owned actor and completed engagement."
     }
   ]
 }

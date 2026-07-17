@@ -9,7 +9,6 @@
 import { supabase } from "@/integrations/supabase";
 import { SessionService } from "@/core/session/services/SessionService";
 import { logger } from "@/shared/utils/logger";
-import { profileService } from "@/core/profiles/services/ProfileService";
 import { mediaService } from "@/core/media/services/MediaService";
 import {
   isPublicImageUploadBucket,
@@ -17,6 +16,8 @@ import {
 } from "@/core/media/config/storageBuckets";
 import { RoleService } from "@/core/authorization/services/RoleService";
 import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
+import { isCurrentTermsAcceptance } from "@/core/legal/termsOfService";
+import { AuthError } from "./types";
 import {
   buildSupabaseFunctionUrl,
   PUBLIC_SUPABASE_CONFIG,
@@ -51,6 +52,10 @@ export class AuthService {
     return `${AuthService.getOrigin()}/reset-password?mode=recovery`;
   }
 
+  static getTermsAcceptanceRedirectUrl(): string {
+    return `${AuthService.getOrigin()}/aceitar-termos`;
+  }
+
   static isGoogleAuthEnabled(): boolean {
     return import.meta.env.VITE_AUTH_GOOGLE_ENABLED === "true";
   }
@@ -61,7 +66,8 @@ export class AuthService {
     return (
       searchParams.get("mode") === "recovery" ||
       searchParams.get("type") === "recovery" ||
-      (searchParams.get("code") !== null && searchParams.get("mode") === "recovery")
+      (searchParams.get("code") !== null &&
+        searchParams.get("mode") === "recovery")
     );
   }
 
@@ -70,8 +76,8 @@ export class AuthService {
    * Deve ser chamado o mais cedo possível — o SDK pode limpar o hash após processar.
    */
   static captureAuthHash(): URLSearchParams {
-    if (typeof window === 'undefined') return new URLSearchParams();
-    return new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    if (typeof window === "undefined") return new URLSearchParams();
+    return new URLSearchParams(window.location.hash.replace(/^#/, ""));
   }
 
   /**
@@ -79,9 +85,10 @@ export class AuthService {
    */
   static getAuthHashError(): { error: string; errorCode: string } | null {
     const params = AuthService.captureAuthHash();
-    const error = params.get('error');
-    const errorCode = params.get('error_code');
-    if (error || errorCode) return { error: error ?? '', errorCode: errorCode ?? '' };
+    const error = params.get("error");
+    const errorCode = params.get("error_code");
+    if (error || errorCode)
+      return { error: error ?? "", errorCode: errorCode ?? "" };
     return null;
   }
 
@@ -97,7 +104,9 @@ export class AuthService {
     return username.replace(/^@/, "").toLowerCase().trim();
   }
 
-  private static async readAuthFunctionResponse(response: Response): Promise<UsernameLoginResponse> {
+  private static async readAuthFunctionResponse(
+    response: Response,
+  ): Promise<UsernameLoginResponse> {
     const text = await response.text();
     if (!text) return {};
 
@@ -158,72 +167,6 @@ export class AuthService {
     return user.id;
   }
 
-  // ── FASE 3: Helpers de Permissões Administrativas ──
-
-  /**
-   * Verifica se usuário pode verificar outros usuários
-   */
-  static async canVerifyUsers(profileId: string): Promise<boolean> {
-    const { AuthorizationEngine } =
-      await import("@/core/authorization/services/AuthorizationEngine");
-    return AuthorizationEngine.canProfilePerformAction(
-      profileId,
-      "verifyUser",
-      {},
-    );
-  }
-
-  /**
-   * Verifica se usuário pode banir outros usuários
-   */
-  static async canBanUsers(profileId: string): Promise<boolean> {
-    const { AuthorizationEngine } =
-      await import("@/core/authorization/services/AuthorizationEngine");
-    return AuthorizationEngine.canProfilePerformAction(
-      profileId,
-      "banUser",
-      {},
-    );
-  }
-
-  /**
-   * Verifica se usuário pode suspender outros usuários
-   */
-  static async canSuspendUsers(profileId: string): Promise<boolean> {
-    const { AuthorizationEngine } =
-      await import("@/core/authorization/services/AuthorizationEngine");
-    return AuthorizationEngine.canProfilePerformAction(
-      profileId,
-      "suspendUser",
-      {},
-    );
-  }
-
-  /**
-   *  VERIFICAR SE USUÁRIO É PROPRIETÁRIO
-   */
-  static isOwner(userId: string, resourceOwnerId: string): boolean {
-    return userId === resourceOwnerId;
-  }
-
-  /**
-   *  VERIFICAR PERMISSÕES COMBINADAS
-   */
-  static async canManageResource(
-    userId: string,
-    resourceOwnerId: string,
-  ): Promise<boolean> {
-    if (!userId) return false;
-
-    // Proprietário sempre pode gerenciar
-    if (this.isOwner(userId, resourceOwnerId)) {
-      return true;
-    }
-
-    // Admin pode gerenciar qualquer recurso
-    return await this.isAdmin(userId);
-  }
-
   // ── Canonical auth facade used by useAuth hook ──
 
   static async getCurrentUser(): Promise<import("./types").AuthUser | null> {
@@ -238,6 +181,13 @@ export class AuthService {
   }
 
   static async signUp(data: import("./types").SignUpData): Promise<void> {
+    if (!isCurrentTermsAcceptance(data.termsAcceptance)) {
+      throw new AuthError(
+        "O aceite da versão atual dos Termos de Uso é obrigatório.",
+        "TERMS_ACCEPTANCE_REQUIRED",
+      );
+    }
+
     const { error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
@@ -252,6 +202,8 @@ export class AuthService {
           street: data.street || undefined,
           // UUID canônico — vínculo territorial imutável
           neighborhood_id: data.neighborhood_id || undefined,
+          terms_accepted: data.termsAcceptance.accepted,
+          terms_version: data.termsAcceptance.version,
         },
         emailRedirectTo: AuthService.getEmailConfirmationRedirectUrl(),
       },
@@ -264,11 +216,11 @@ export class AuthService {
       email: data.email,
       password: data.password,
     });
-    
+
     if (error) {
       // Log apenas em desenvolvimento
       if (import.meta.env.DEV) {
-        logger.error(' Erro no login:', {
+        logger.error(" Erro no login:", {
           message: error.message,
           status: error.status,
           code: error.code,
@@ -283,20 +235,25 @@ export class AuthService {
    * Usa Edge Function publica com rate limit. O lookup privilegiado do e-mail
    * fica server-side e o browser recebe apenas tokens de sessao autenticada.
    */
-  static async signInWithUsername(data: import("./types").SignInWithUsernameData): Promise<void> {
+  static async signInWithUsername(
+    data: import("./types").SignInWithUsernameData,
+  ): Promise<void> {
     const username = AuthService.normalizeUsername(data.username);
     if (!username) {
       throw new Error("E-mail, usuario ou senha incorretos.");
     }
 
-    const response = await fetch(buildSupabaseFunctionUrl("auth-username-login"), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: PUBLIC_SUPABASE_CONFIG.publishableKey,
+    const response = await fetch(
+      buildSupabaseFunctionUrl("auth-username-login"),
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: PUBLIC_SUPABASE_CONFIG.publishableKey,
+        },
+        body: JSON.stringify({ username, password: data.password }),
       },
-      body: JSON.stringify({ username, password: data.password }),
-    });
+    );
 
     const payload = await AuthService.readAuthFunctionResponse(response);
 
@@ -325,7 +282,7 @@ export class AuthService {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: AuthService.getOrigin(),
+        redirectTo: AuthService.getTermsAcceptanceRedirectUrl(),
       },
     });
     if (error) throw error;
@@ -336,12 +293,9 @@ export class AuthService {
   }
 
   static async resetPassword(email: string): Promise<void> {
-    const { error } = await supabase.auth.resetPasswordForEmail(
-      email,
-      {
-        redirectTo: AuthService.getPasswordResetRedirectUrl(),
-      },
-    );
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: AuthService.getPasswordResetRedirectUrl(),
+    });
     if (error) throw error;
   }
   static async resetPasswordByIdentifier(identifier: string): Promise<void> {
@@ -373,20 +327,6 @@ export class AuthService {
       password: newPassword,
     });
     if (error) throw error;
-  }
-
-  /**
-   *  UPLOAD DE AVATAR
-   * Faz upload da imagem para o storage e atualiza o perfil
-   */
-  static async uploadAvatar(userId: string, file: File): Promise<string> {
-    const upload = await mediaService.uploadAvatar(userId, file);
-    const avatarUrl = upload.url;
-
-    // Atualizar profile usando ProfileService
-    await profileService.updateProfile(userId, { avatar_url: avatarUrl });
-
-    return avatarUrl;
   }
 
   /**

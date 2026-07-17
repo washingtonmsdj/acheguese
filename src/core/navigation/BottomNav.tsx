@@ -6,18 +6,13 @@
 
 import React, { useState } from 'react';
 import {
-  Users, Building2, Wrench, Tag, Home,
-  MoreHorizontal, Map, Search,
+  Users, Building2, Wrench, Tag, Home, Compass,
+  MoreHorizontal, Map, Search, UtensilsCrossed,
 } from 'lucide-react';
 import { useNavigate, useLocation as useRouterLocation } from 'react-router-dom';
 import { cn } from '@/shared/utils/cn';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import { useHomeCommunityHref } from '@/core/routing/hooks/useHomeCommunityHref';
-import { useCommunityNavigationContext } from '@/core/routing/hooks/useCommunityNavigationContext';
-import {
-  buildCommunityNavigationModuleUrls,
-  type CommunityNavigationModuleUrls,
-} from '@/core/routing/utils/communityNavigationContext';
 import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from '@/config/launchScope';
 import {
   Sheet,
@@ -42,51 +37,15 @@ interface BottomNavProps {
 
 const noopPrefetch = () => undefined;
 
-function resolveCommunityModuleUrl(
-  urls: CommunityNavigationModuleUrls | null,
-  key: keyof CommunityNavigationModuleUrls,
-): string | null {
-  if (!urls) return null;
-
-  switch (key) {
-    case 'business':
-      return urls.business;
-    case 'gastronomy':
-      return urls.gastronomy;
-    case 'education':
-      return urls.education;
-    case 'services':
-      return urls.services;
-    case 'classifieds':
-      return urls.classifieds;
-    case 'events':
-      return urls.events;
-    case 'jobs':
-      return urls.jobs;
-    case 'map':
-      return urls.map;
-    case 'mobility':
-      return urls.mobility;
-  }
-}
-
 export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
   const navigate = useNavigate();
   const { pathname } = useRouterLocation();
   const homeCommunityHref = useHomeCommunityHref();
-  const communityContext = useCommunityNavigationContext();
   const { active } = usePublicBrowsingCity();
   const [moreOpen, setMoreOpen] = useState(false);
 
   const cityBase = `/${active.state}/${active.city}`;
   const cityModule = (module: string) => `/${module}${cityBase}`;
-  const communityModuleUrls = communityContext
-    ? buildCommunityNavigationModuleUrls(communityContext)
-    : null;
-  const modulePath = (
-    key: keyof CommunityNavigationModuleUrls,
-    fallbackModule: string,
-  ) => resolveCommunityModuleUrl(communityModuleUrls, key) ?? cityModule(fallbackModule);
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/';
@@ -95,9 +54,9 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
 
   const mainTabs = [
     { path: '/', label: 'Início', icon: Home, badge: 0 },
-    { path: modulePath('business', 'empresas'), label: 'Empresas', icon: Building2, badge: 0 },
+    { path: cityBase, label: 'Explorar', icon: Compass, badge: 0 },
     { path: homeCommunityHref, label: 'Bairro', icon: Users, badge: 0 },
-    { path: modulePath('classifieds', 'classificados'), label: 'Anúncios', icon: Tag, badge: 0 },
+    { path: cityModule('busca'), label: 'Busca', icon: Search, badge: 0 },
   ];
 
   const moreItems: Array<{
@@ -107,10 +66,13 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
     badge: number;
     surface: LaunchSurfaceKey;
   }> = [
-    { path: modulePath('services', 'servicos'), label: 'Serviços', icon: Wrench, badge: 0, surface: 'services' as const },
-    { path: modulePath('map', 'mapa'), label: 'Mapa', icon: Map, badge: 0, surface: 'map' as const },
-    { path: cityModule('buscar'), label: 'Busca', icon: Search, badge: 0, surface: 'search' as const },
+    { path: cityModule('empresas'), label: 'Empresas', icon: Building2, badge: 0, surface: 'business' as const },
+    { path: cityModule('gastronomia'), label: 'Gastronomia', icon: UtensilsCrossed, badge: 0, surface: 'gastronomy' as const },
+    { path: cityModule('servicos'), label: 'Serviços', icon: Wrench, badge: 0, surface: 'services' as const },
+    { path: cityModule('classificados'), label: 'Classificados', icon: Tag, badge: 0, surface: 'classifieds' as const },
+    { path: cityModule('mapa'), label: 'Mapa', icon: Map, badge: 0, surface: 'map' as const },
   ].filter((item) => isLaunchSurfaceEnabled(item.surface));
+  const isMoreActive = moreItems.some((item) => isActive(item.path));
 
   const handleNavigate = (path: string) => {
     prefetchRoute(path);
@@ -119,13 +81,17 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-[100] bg-card/95 backdrop-blur-lg border-t border-border safe-area-bottom md:hidden">
-      <div className="flex items-center justify-around h-16 px-1">
+    <nav
+      className="fixed inset-x-0 bottom-0 z-[100] border-t border-border bg-card/95 font-sans backdrop-blur-lg safe-area-bottom md:hidden"
+      aria-label="Navegacao principal mobile"
+    >
+      <div className="flex h-16 items-stretch justify-around px-1">
         {mainTabs.map(({ path, label, icon: Icon, badge }) => {
           const activeTab = isActive(path);
           return (
             <button
               key={label}
+              type="button"
               onClick={() => {
                 prefetchRoute(path);
                 navigate(path);
@@ -134,16 +100,18 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
               onFocus={() => prefetchRoute(path)}
               onTouchStart={() => prefetchRoute(path)}
               className={cn(
-                'relative flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 transition-colors rounded-lg mx-0.5',
+                'relative mx-0.5 flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-md px-1 py-1.5 transition-colors',
                 activeTab ? 'text-primary' : 'text-muted-foreground active:text-foreground'
               )}
               aria-label={`${label}${badge > 0 ? ` (${badge} não lidas)` : ''}`}
+              aria-current={activeTab ? 'page' : undefined}
+              data-bottom-nav-item={label.toLowerCase()}
             >
               <span className="relative">
                 <Icon className={cn('h-5 w-5', activeTab && 'stroke-[2.5]')} />
                 <BadgeDot count={badge} />
               </span>
-              <span className={cn('text-[10px] leading-tight', activeTab ? 'font-semibold' : 'font-medium')}>
+              <span className={cn('max-w-full truncate text-[10px] leading-none min-[360px]:text-[11px]', activeTab ? 'font-semibold' : 'font-medium')}>
                 {label}
               </span>
             </button>
@@ -153,29 +121,39 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
         <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
           <SheetTrigger asChild>
             <button
-              className="relative flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 text-muted-foreground active:text-foreground transition-colors rounded-lg mx-0.5"
+              type="button"
+              className={cn(
+                'relative mx-0.5 flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-md px-1 py-1.5 transition-colors',
+                isMoreActive ? 'text-primary' : 'text-muted-foreground active:text-foreground',
+              )}
               aria-label="Mais opções"
+              aria-expanded={moreOpen}
+              data-bottom-nav-item="mais"
             >
               <MoreHorizontal className="h-5 w-5" />
-              <span className="text-[10px] leading-tight font-medium">Mais</span>
+              <span className={cn('text-[10px] leading-none min-[360px]:text-[11px]', isMoreActive ? 'font-semibold' : 'font-medium')}>
+                Mais
+              </span>
             </button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="rounded-t-2xl pb-safe">
+          <SheetContent side="bottom" className="rounded-t-lg pb-safe font-sans">
             <SheetHeader className="pb-2">
-              <SheetTitle className="text-base">Mais opções</SheetTitle>
+              <SheetTitle className="font-display text-base">Explorar cidade</SheetTitle>
             </SheetHeader>
-            <div className="grid grid-cols-4 gap-3 py-4">
+            <div className="grid grid-cols-3 gap-2 py-4">
               {moreItems.map(({ path, label, icon: Icon, badge }) => {
                 const activeItem = isActive(path);
                 return (
                   <button
                     key={label}
+                    type="button"
                     onClick={() => handleNavigate(path)}
                     onMouseEnter={() => prefetchRoute(path)}
                     onFocus={() => prefetchRoute(path)}
                     onTouchStart={() => prefetchRoute(path)}
+                    data-bottom-nav-more-item={label.toLowerCase()}
                     className={cn(
-                      'flex flex-col items-center gap-2 p-3 rounded-xl transition-colors',
+                      'flex min-h-20 flex-col items-center justify-center gap-2 rounded-md p-3 transition-colors',
                       activeItem ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-accent active:bg-accent'
                     )}
                   >

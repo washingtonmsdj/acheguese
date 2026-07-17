@@ -19,7 +19,7 @@ const postServiceWithLegacy = postService as typeof postService & DeprecatedPost
 
 const FIXTURES = {
   profiles: {
-    owner: 'profile_seed_owner',
+    owner: '11111111-1111-4111-8111-111111111111',
   },
   locations: {
     city: '00000000-0000-0000-0000-000000000001',
@@ -38,8 +38,8 @@ describe('Sprint 2 - Fase 2: PostService Refatorado', () => {
       await expect(
         postService.createPost({
           author_profile_id: FIXTURES.profiles.owner,
-          content: 'Test',
-          type: 'text',
+          content: 'Teste de validacao',
+          type: 'post',
           location_id: '',
         }),
       ).rejects.toThrow(/location_id.*obrigat.rio/i);
@@ -49,8 +49,8 @@ describe('Sprint 2 - Fase 2: PostService Refatorado', () => {
       await expect(
         postService.createPost({
           author_profile_id: FIXTURES.profiles.owner,
-          content: 'Test',
-          type: 'text',
+          content: 'Teste de validacao',
+          type: 'post',
           location_id: 'invalid-uuid',
         }),
       ).rejects.toThrow(/Localiza..o inv.lida/i);
@@ -59,8 +59,8 @@ describe('Sprint 2 - Fase 2: PostService Refatorado', () => {
     it('accepts only city, district and neighborhood in the creation contract', () => {
       const source = readPostMutationsSource();
 
-      expect(source).toContain(
-        'allowedLocationTypes: [LocationType.CITY, LocationType.DISTRICT, LocationType.NEIGHBORHOOD]',
+      expect(source).toMatch(
+        /allowedLocationTypes:\s*\[\s*LocationType\.CITY,\s*LocationType\.DISTRICT,\s*LocationType\.NEIGHBORHOOD,\s*\]/,
       );
       expect(source).not.toMatch(/allowedLocationTypes:[\s\S]*LocationType\.STATE/);
       expect(source).not.toMatch(/allowedLocationTypes:[\s\S]*LocationType\.COUNTRY/);
@@ -78,8 +78,8 @@ describe('Sprint 2 - Fase 2: PostService Refatorado', () => {
         await expect(
           postService.createPost({
             author_profile_id: FIXTURES.profiles.owner,
-            content: 'Test',
-            type: 'text',
+            content: 'Teste de validacao',
+            type: 'post',
             location_id: state.id,
           }),
         ).rejects.toThrow(/Posts .* podem ser criados em cidades ou bairros/i);
@@ -107,8 +107,8 @@ describe('Sprint 2 - Fase 2: PostService Refatorado', () => {
         await expect(
           postService.createPost({
             author_profile_id: FIXTURES.profiles.owner,
-            content: 'Test',
-            type: 'text',
+            content: 'Teste de validacao',
+            type: 'post',
             location_id: inactive.id,
           }),
         ).rejects.toThrow(/Localiza..o inativa/i);

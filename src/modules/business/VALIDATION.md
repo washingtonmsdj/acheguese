@@ -5,7 +5,7 @@
 ### Corrigido Nesta Rodada
 
 - Favoritos publicos de Empresas foram migrados para `user_favorite_businesses`.
-- Os servicos centrais de favoritos deixaram de consultar `business_favorites` em runtime e preservam o contrato antigo retornando `profiles.id` dos negocios a partir de `user_favorite_businesses.business_id`.
+- `BusinessFavoriteStore` tornou-se o unico owner de persistencia; Business e Gastronomia nao acessam a tabela/RPC diretamente.
 - `useBusinessFavorite` e `useBusinessFavorites` foram removidos da API publica do modulo.
 - A listagem publica real (`EmpresasLandingPage`) agora renderiza botao de favorito persistente no card.
 - O fluxo E2E cobre lista territorial -> salvar empresa -> detalhe institucional -> recomendar -> remover ambos.
@@ -45,7 +45,5 @@
 
 ### Riscos Remanescentes
 
-- `business_favorites` ainda existe em migrations/types historicos.
-- A remocao fisica desse contrato antigo exige auditoria de dados, backfill e migration separada, validando fluxos de perfil e favoritos antigos.
-- Ha drift historico de migrations fora das correcoes criticas de Gastronomia/Delivery: julho esta alinhado, mas existem versoes remotas antigas sem arquivo local e migrations locais de maio/junho sem historico remoto. Nao executar `db push`/`migration repair` global sem plano de reconciliacao separado.
+- O historico local/remoto estava sincronizado nesta rodada; toda migration futura deve repetir o gate de drift antes de `db push`.
 - E2Es de onboarding e operacional de Gastronomia usam estado remoto compartilhado; nao rodar esses dois arquivos em paralelo. Em paralelo houve falso negativo de permissao na Central, mas o cenario de pedido e o arquivo operacional completo passaram quando reexecutados isoladamente.

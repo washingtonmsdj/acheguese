@@ -11,11 +11,12 @@
 - Retorna `{ business, isLoading, isError, error, refetch }`.
 
 ### `useCanonicalBusinessFavorite`
-- Toggle de favorito para uma unica empresa usando `business_data.id`.
-- Usa `BusinessFavoriteService` e a tabela `user_favorite_businesses`.
+- Alterna a UI de uma unica empresa usando `business_data.id`, mas persiste por
+  comando `set` idempotente em `BusinessFavoriteService`.
 
 ### `useCanonicalBusinessFavorites`
-- Lista e alterna favoritos publicos do usuario autenticado.
+- Consulta em lote apenas as empresas candidatas visiveis e alterna favoritos
+  da conta autenticada.
 - Compartilha cache com `useCanonicalBusinessFavorite`.
 
 ### `useBusinessRecommendation`

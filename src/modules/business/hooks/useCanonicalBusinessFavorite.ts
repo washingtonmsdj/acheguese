@@ -2,14 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { BusinessFavoriteService } from '@/core/business/services/BusinessFavoriteService';
+import { businessFavoriteKeys } from '@/core/favorites/businessFavoriteKeys';
 import { logger } from '@/shared/utils/logger';
-
-const favoriteKeys = {
-  all: (userId: string) =>
-    ['business-favorite', 'canonical-all', userId] as const,
-  check: (businessDataId: string, userId: string) =>
-    ['business-favorite', 'canonical-check', businessDataId, userId] as const,
-};
 
 export function useCanonicalBusinessFavorite(
   businessDataId: string | undefined,
@@ -19,10 +13,10 @@ export function useCanonicalBusinessFavorite(
   const userId = user?.id;
 
   const { data: isFavorite = false } = useQuery({
-    queryKey: favoriteKeys.check(businessDataId || '', userId || ''),
+    queryKey: businessFavoriteKeys.status(userId || '', businessDataId || ''),
     queryFn: async () => {
       if (!businessDataId || !userId) return false;
-      return BusinessFavoriteService.isFavoritedByUser(businessDataId, userId);
+      return BusinessFavoriteService.isFavorited(businessDataId);
     },
     enabled: Boolean(businessDataId && userId),
     staleTime: 30 * 1000,
@@ -34,17 +28,17 @@ export function useCanonicalBusinessFavorite(
         throw new Error('Usuario ou empresa indisponivel para favorito');
       }
 
-      return BusinessFavoriteService.toggleFavorite(businessDataId, userId);
+      return BusinessFavoriteService.setFavorite(businessDataId, !isFavorite);
     },
     onSuccess: (nextIsFavorite) => {
       if (!businessDataId || !userId) return;
 
       queryClient.setQueryData(
-        favoriteKeys.check(businessDataId, userId),
+        businessFavoriteKeys.status(userId, businessDataId),
         nextIsFavorite,
       );
       queryClient.setQueryData<string[]>(
-        favoriteKeys.all(userId),
+        businessFavoriteKeys.ids(userId, [businessDataId]),
         (current = []) => {
           if (nextIsFavorite) {
             return current.includes(businessDataId)
@@ -55,12 +49,7 @@ export function useCanonicalBusinessFavorite(
           return current.filter((id) => id !== businessDataId);
         },
       );
-      queryClient.invalidateQueries({
-        queryKey: ['gastronomy', 'favorites', 'user', userId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['gastronomy', 'favorites', 'count', businessDataId],
-      });
+      queryClient.invalidateQueries({ queryKey: businessFavoriteKeys.all });
 
       toast.success(
         nextIsFavorite
@@ -90,7 +79,7 @@ export function useCanonicalBusinessFavorite(
   };
 }
 
-export function useCanonicalBusinessFavorites() {
+export function useCanonicalBusinessFavorites(businessDataIds: string[] = []) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const userId = user?.id;
@@ -101,12 +90,12 @@ export function useCanonicalBusinessFavorites() {
     isFetching,
     refetch,
   } = useQuery({
-    queryKey: favoriteKeys.all(userId || ''),
+    queryKey: businessFavoriteKeys.ids(userId || '', businessDataIds),
     queryFn: async () => {
       if (!userId) return [];
-      return BusinessFavoriteService.getUserFavoriteBusinessIds(userId);
+      return BusinessFavoriteService.getFavoriteIdsForBusinesses(businessDataIds);
     },
-    enabled: Boolean(userId),
+    enabled: Boolean(userId && businessDataIds.length > 0),
     staleTime: 60 * 1000,
   });
 
@@ -116,13 +105,16 @@ export function useCanonicalBusinessFavorites() {
         throw new Error('Faca login para favoritar');
       }
 
-      return BusinessFavoriteService.toggleFavorite(businessDataId, userId);
+      return BusinessFavoriteService.setFavorite(
+        businessDataId,
+        !favorites.includes(businessDataId),
+      );
     },
     onSuccess: (nextIsFavorite, businessDataId) => {
       if (!userId) return;
 
       queryClient.setQueryData<string[]>(
-        favoriteKeys.all(userId),
+        businessFavoriteKeys.ids(userId, businessDataIds),
         (current = []) => {
           if (nextIsFavorite) {
             return current.includes(businessDataId)
@@ -134,12 +126,10 @@ export function useCanonicalBusinessFavorites() {
         },
       );
       queryClient.setQueryData(
-        favoriteKeys.check(businessDataId, userId),
+        businessFavoriteKeys.status(userId, businessDataId),
         nextIsFavorite,
       );
-      queryClient.invalidateQueries({
-        queryKey: ['gastronomy', 'favorites', 'count', businessDataId],
-      });
+      queryClient.invalidateQueries({ queryKey: businessFavoriteKeys.all });
 
       toast.success(
         nextIsFavorite

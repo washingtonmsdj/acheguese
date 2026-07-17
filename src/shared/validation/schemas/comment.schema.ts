@@ -6,6 +6,7 @@
  */
 
 import { z } from "zod";
+import { COMMENT_LIMITS } from "@/shared/constants/socialContent";
 import { validationMessages } from "../messages/pt-BR";
 
 /**
@@ -18,8 +19,8 @@ export const CreateCommentSchema = z.object({
 
   content: z
     .string({ required_error: validationMessages.required })
-    .min(1, validationMessages.fields.content.empty)
-    .max(2000, validationMessages.fields.content.tooLong),
+    .min(COMMENT_LIMITS.MIN_CONTENT_LENGTH, validationMessages.fields.content.empty)
+    .max(COMMENT_LIMITS.MAX_CONTENT_LENGTH, validationMessages.fields.content.tooLong),
 
   parent_comment_id: z.string().uuid(validationMessages.string.uuid).optional(),
 });
@@ -30,8 +31,8 @@ export const CreateCommentSchema = z.object({
 export const UpdateCommentSchema = z.object({
   content: z
     .string()
-    .min(1, validationMessages.fields.content.empty)
-    .max(2000, validationMessages.fields.content.tooLong),
+    .min(COMMENT_LIMITS.MIN_CONTENT_LENGTH, validationMessages.fields.content.empty)
+    .max(COMMENT_LIMITS.MAX_CONTENT_LENGTH, validationMessages.fields.content.tooLong),
 });
 
 /**

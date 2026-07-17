@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { ReportContentDialog } from "@/core/moderation/components/ReportContentDialog";
+import { CommunityReportContentDialog } from "@/core/community/moderation";
 import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
-import { useBusinessNavigation } from '@/core/business';
+import { useBusinessNavigation } from "@/core/business";
 import { ProfessionalUrlService } from "@/core/professional/services/ProfessionalUrlService";
 import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
 import { useRecomendacaoDetail } from "@/core/community/hooks/useRecomendacaoDetail";
@@ -60,17 +60,22 @@ export default function RecomendacaoDetailPage() {
   const [reportOpen, setReportOpen] = useState(false);
   const [reportTarget, setReportTarget] = useState<{
     id: string;
-    type: "post" | "comment";
+    type: "question" | "answer";
   } | null>(null);
 
-  const handleReport = (id: string, type: "post" | "comment") => {
+  const handleReport = (id: string, type: "question" | "answer") => {
     setReportTarget({ id, type });
     setReportOpen(true);
   };
 
   const handleNavigateToProfessional = async (professionalId: string) => {
-    const ctx = await ProfessionalUrlService.resolveByProfessionalDataId(professionalId);
-    navigate(ctx ? ProfessionalUrlService.getCanonicalUrl(ctx) : professionalPublicRoutes.home());
+    const ctx =
+      await ProfessionalUrlService.resolveByProfessionalDataId(professionalId);
+    navigate(
+      ctx
+        ? ProfessionalUrlService.getCanonicalUrl(ctx)
+        : professionalPublicRoutes.home(),
+    );
   };
 
   const handleNavigateToBusiness = (business: NavigableBusiness) => {
@@ -124,7 +129,7 @@ export default function RecomendacaoDetailPage() {
       <div className="relative">
         <QuestionCard
           question={question}
-          onReport={() => handleReport(question.id, "post")}
+          onReport={() => handleReport(question.id, "question")}
         />
       </div>
 
@@ -134,7 +139,7 @@ export default function RecomendacaoDetailPage() {
         isAuthor={isAuthor}
         onToggleLike={toggleLike}
         onMarkBest={markBestAnswer}
-        onReport={(answerId) => handleReport(answerId, "comment")}
+        onReport={(answerId) => handleReport(answerId, "answer")}
         onNavigateToProfessional={handleNavigateToProfessional}
         onNavigateToBusiness={handleNavigateToBusiness}
       />
@@ -158,7 +163,7 @@ export default function RecomendacaoDetailPage() {
 
       {/* Report dialog */}
       {reportTarget && (
-        <ReportContentDialog
+        <CommunityReportContentDialog
           open={reportOpen}
           onOpenChange={setReportOpen}
           targetType={reportTarget.type}

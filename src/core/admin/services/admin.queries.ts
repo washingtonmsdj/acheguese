@@ -505,7 +505,7 @@ export async function getOperationalOverview(
       moduleCoverage(
         "community",
         "Comunidade e feed",
-        "/admin/moderacao-completa",
+        "/admin/moderacao",
         stats.posts + stats.comments,
         0,
         "posts + comments",

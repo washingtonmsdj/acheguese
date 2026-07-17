@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
-import type { ConversationPreview } from "@/core/messaging/types";
+import type { ClassifiedConversationPreview } from "@/core/messaging/types";
 
 interface ConversationCardProps {
-  conversation: ConversationPreview;
+  conversation: ClassifiedConversationPreview;
   index: number;
 }
 

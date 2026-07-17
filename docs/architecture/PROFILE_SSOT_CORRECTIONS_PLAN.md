@@ -109,7 +109,7 @@ export function createDefaultProfile(
  * 
  * ⚠️ IMPORTANTE: Este é um CACHE de permissões para UI.
  * O SSOT de autorização é core/authorization.
- * ProfilePermissions é DERIVADO de Authorization.canProfilePerformAction().
+ * ProfilePermissions e uma previa derivada para UI, nunca uma autorizacao.
  * 
  * NÃO use para decisões de autorização.
  * Use apenas para exibir/ocultar elementos de UI.

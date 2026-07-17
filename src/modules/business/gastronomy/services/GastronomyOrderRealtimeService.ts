@@ -1,10 +1,10 @@
-import { supabase } from "@/integrations/supabase";
-import type {
-  RealtimeChannel,
-  RealtimePostgresChangesPayload,
-} from "@/integrations/supabase";
+import type { RealtimePostgresChangesPayload } from "@/integrations/supabase";
+import {
+  realtimeService,
+  type RealtimeConnectionStatus,
+  type RealtimeSubscription,
+} from "@/core/realtime";
 
-type RealtimeChannelStatus = string;
 export type GastronomyOrderRealtimePayload<
   TRow extends Record<string, unknown> = Record<string, unknown>,
 > = RealtimePostgresChangesPayload<TRow>;
@@ -13,99 +13,39 @@ export class GastronomyOrderRealtimeService {
   static subscribeOrderDetails(
     orderId: string,
     onInvalidate: () => void,
-    onStatusChange?: (status: RealtimeChannelStatus) => void,
-  ): RealtimeChannel {
-    return supabase
-      .channel(`gastronomy-order:${orderId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "orders",
-          filter: `id=eq.${orderId}`,
-        },
-        onInvalidate,
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "order_timeline_events",
-          filter: `order_id=eq.${orderId}`,
-        },
-        onInvalidate,
-      )
-      .subscribe((status) => {
-        onStatusChange?.(status);
-      });
+    onStatusChange?: (status: RealtimeConnectionStatus) => void,
+  ): RealtimeSubscription {
+    return realtimeService.subscribe("gastronomy.order-details", {
+      filterValues: { orderId },
+      onEvent: onInvalidate,
+      onStatusChange,
+    });
   }
 
   static subscribeBusinessOrders(
     businessId: string,
     onInvalidateOrders: () => void,
-    onTimelineInsert: (payload: GastronomyOrderRealtimePayload<{ order_id?: string | null }>) => void,
-    onStatusChange?: (status: RealtimeChannelStatus) => void,
-  ): RealtimeChannel {
-    return supabase
-      .channel(`gastronomy-orders:${businessId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "orders",
-          filter: `source_id=eq.${businessId}`,
-        },
-        onInvalidateOrders,
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "order_timeline_events",
-        },
-        onTimelineInsert,
-      )
-      .subscribe((status) => {
-        onStatusChange?.(status);
-      });
+    onStatusChange?: (status: RealtimeConnectionStatus) => void,
+  ): RealtimeSubscription {
+    return realtimeService.subscribe("gastronomy.business-orders", {
+      filterValues: { businessId },
+      onEvent: onInvalidateOrders,
+      onStatusChange,
+    });
   }
 
   static subscribeOrderTracking(
     orderId: string,
     onRideRequestChange: (payload: GastronomyOrderRealtimePayload<Record<string, unknown>>) => void,
-  ): RealtimeChannel {
-    return supabase
-      .channel(`order-tracking:${orderId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "ride_requests",
-          filter: `source_id=eq.${orderId}`,
-        },
-        onRideRequestChange,
-      )
-      .subscribe();
+  ): RealtimeSubscription {
+    return realtimeService.subscribe("gastronomy.order-tracking", {
+      filterValues: { orderId },
+      onEvent: ({ payload }) => onRideRequestChange(payload),
+    });
   }
 
-  static async orderBelongsToBusiness(orderId: string, businessId: string): Promise<boolean> {
-    const { data, error } = await supabase
-      .from("orders")
-      .select("id")
-      .eq("id", orderId)
-      .eq("source_id", businessId)
-      .maybeSingle();
-
-    return !error && !!data?.id;
-  }
-
-  static async removeChannel(channel: RealtimeChannel): Promise<void> {
-    await supabase.removeChannel(channel);
+  static removeChannel(subscription: RealtimeSubscription): void {
+    subscription.unsubscribe();
   }
 }
 

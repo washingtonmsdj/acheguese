@@ -245,6 +245,8 @@ export default function GrupoDetailPage() {
               isMember={isMember}
               canPost={!!canPost}
               canModerate={canModerate}
+              canReact={capabilities.reactions}
+              canReport={capabilities.reports}
             />
           </div>
         )}

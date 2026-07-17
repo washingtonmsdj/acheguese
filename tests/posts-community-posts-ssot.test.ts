@@ -42,7 +42,7 @@ describe("posts vs community_posts SSOT", () => {
 
   it("keeps architecture docs from reintroducing the obsolete Q&A table contract", () => {
     const plan = readProjectFile("plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md");
-    expect(plan).not.toMatch(/posts\/community_posts/);
+    expect(plan).toMatch(/community_posts.*nao deve ser consultada por runtime/i);
 
     const territorialFiltersGuide = readProjectFile("docs/posts/GUIA_FILTROS_TERRITORIAIS.md");
     expect(territorialFiltersGuide).toMatch(/community_questions/);
@@ -52,7 +52,7 @@ describe("posts vs community_posts SSOT", () => {
     );
 
     const communityArchitecture = readProjectFile("docs/COMMUNITY_TRANSVERSAL_ARCHITECTURE.md");
-    expect(communityArchitecture).toMatch(/posts.*SSOT de feed social/);
+    expect(communityArchitecture).toMatch(/feed social usa `posts`/);
     expect(communityArchitecture).toMatch(/community_questions.*question_answers/);
   });
 });

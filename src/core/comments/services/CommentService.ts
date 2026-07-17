@@ -8,7 +8,6 @@
 export {
   getCommentsByPost,
   getCommentById,
-  getAllComments,
   getCommentsCount,
   getCommentCountByAuthor,
   getCommentsByAuthor,
@@ -21,7 +20,6 @@ export {
   createComment,
   updateComment,
   deleteComment,
-  removeCommentForModeration,
   likeComment,
   unlikeComment,
   CommentError,
@@ -39,7 +37,6 @@ import * as CommentsMutations from "./comments.mutations";
 export const CommentService = {
   getCommentsByPost: CommentsQueries.getCommentsByPost,
   getCommentById: CommentsQueries.getCommentById,
-  getAllComments: CommentsQueries.getAllComments,
   getCommentsCount: CommentsQueries.getCommentsCount,
   getCommentCountByAuthor: CommentsQueries.getCommentCountByAuthor,
   getCommentsByAuthor: CommentsQueries.getCommentsByAuthor,
@@ -50,7 +47,6 @@ export const CommentService = {
   createComment: CommentsMutations.createComment,
   updateComment: CommentsMutations.updateComment,
   deleteComment: CommentsMutations.deleteComment,
-  removeCommentForModeration: CommentsMutations.removeCommentForModeration,
   likeComment: CommentsMutations.likeComment,
   unlikeComment: CommentsMutations.unlikeComment,
 } as const;

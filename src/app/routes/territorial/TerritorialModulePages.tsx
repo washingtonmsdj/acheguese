@@ -11,7 +11,7 @@
  */
 
 import { lazy, Suspense, type ReactNode } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useOutlet } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useTerritorialContext } from '@/core/routing/components/TerritorialLayout';
 import { ModulePageLoader } from '@/shared/components/loading/PageLoader';
@@ -22,6 +22,7 @@ import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
 import { getRequiredRecordValue } from '@/shared/utils/recordLookup';
 import { MODULE_SLUGS, buildCommunityTerritoryUrl, buildModuleTerritoryUrl } from '@/core/routing/utils/territoryUrls';
 import { createLaunchPausedRoute } from '@/app/routes/launchPausedComponent';
+import type { CommunityOverviewSection } from '@/core/community-feed/components/page/CommunityOverviewSurface';
 
 // Lazy imports dos módulos existentes
 const ComunidadePage       = lazy(() => import('@/core/community-feed/pages/ComunidadePage'));
@@ -38,6 +39,82 @@ const MobilidadePage       = createLaunchPausedRoute('Mobilidade');
 const VagasPage            = lazy(() => import('@/modules/classifieds/jobs/pages/VagasPublicPage'));
 const CategoryBusinessPage = lazy(() => import('@/core/business/pages/CategoryBusinessPage'));
 const MapaPage             = lazy(() => import('@/core/maps/pages/MapaPageV4'));
+
+function isCommunityScopedPath(pathname: string): boolean {
+  const communityRoot = `/${MODULE_SLUGS.community}`;
+  return pathname === communityRoot || pathname.startsWith(`${communityRoot}/`);
+}
+
+function resolvePersistentCommunitySection(
+  pathname: string,
+  search: string,
+  communityBaseUrl: string,
+): { section: CommunityOverviewSection; embedOutlet: boolean } {
+  const relativePath = pathname.startsWith(communityBaseUrl)
+    ? pathname.slice(communityBaseUrl.length)
+    : '';
+  const segments = relativePath.split('/').filter(Boolean);
+  const firstSegment = segments[0];
+
+  if (!firstSegment) {
+    const requestedView = new URLSearchParams(search).get('view');
+    if (requestedView === 'groups' || requestedView === 'discussions') {
+      return { section: requestedView, embedOutlet: false };
+    }
+    return { section: 'feed', embedOutlet: false };
+  }
+
+  if (firstSegment === 'feed') return { section: 'feed', embedOutlet: false };
+  if (firstSegment === 'grupos') {
+    return { section: 'groups', embedOutlet: segments.length > 1 };
+  }
+
+  switch (firstSegment) {
+    case MODULE_SLUGS.business:
+      return { section: 'business', embedOutlet: true };
+    case MODULE_SLUGS.services:
+      return { section: 'services', embedOutlet: true };
+    case MODULE_SLUGS.classifieds:
+      return { section: 'classifieds', embedOutlet: true };
+    case MODULE_SLUGS.gastronomy:
+      return { section: 'gastronomy', embedOutlet: true };
+    case MODULE_SLUGS.map:
+      return { section: 'map', embedOutlet: true };
+    default:
+      return { section: 'feed', embedOutlet: true };
+  }
+}
+
+export function CommunityPersistentPortalLayout() {
+  const territorialContext = useTerritorialContext();
+  const location = useLocation();
+  const outlet = useOutlet(territorialContext);
+  const presentation = resolvePersistentCommunitySection(
+    location.pathname,
+    location.search,
+    territorialContext.communityBaseUrl,
+  );
+  const communityContent = presentation.embedOutlet ? (
+    <Suspense
+      fallback={
+        <div data-community-module-loading="true">
+          <ModulePageLoader />
+        </div>
+      }
+    >
+      {outlet}
+    </Suspense>
+  ) : undefined;
+
+  return (
+    <Suspense fallback={<ModulePageLoader />}>
+      <CidadeLandingPage
+        activeCommunitySection={presentation.section}
+        communityContent={communityContent}
+      />
+    </Suspense>
+  );
+}
 
 type PublicModuleKey =
   | 'empresas'
@@ -249,10 +326,16 @@ export function TerritorialCommunityCommunicationPage() {
 
 export function TerritorialBusinessPage() {
   const { resolved, activeMemberIds } = useTerritorialContext();
+  const { pathname } = useLocation();
+  const presentation = isCommunityScopedPath(pathname) ? 'embedded' : 'standalone';
   return (
     <CityStatusGate module="empresas">
       <Suspense fallback={<ModulePageLoader />}>
-        <EmpresasPage resolved={resolved} activeMemberIds={activeMemberIds} />
+        <EmpresasPage
+          resolved={resolved}
+          activeMemberIds={activeMemberIds}
+          presentation={presentation}
+        />
       </Suspense>
     </CityStatusGate>
   );
@@ -260,10 +343,16 @@ export function TerritorialBusinessPage() {
 
 export function TerritorialServicesPage() {
   const { resolved, activeMemberIds } = useTerritorialContext();
+  const { pathname } = useLocation();
+  const presentation = isCommunityScopedPath(pathname) ? 'embedded' : 'standalone';
   return (
     <CityStatusGate module="servicos">
       <Suspense fallback={<ModulePageLoader />}>
-        <ServicosPage resolved={resolved} activeMemberIds={activeMemberIds} />
+        <ServicosPage
+          resolved={resolved}
+          activeMemberIds={activeMemberIds}
+          presentation={presentation}
+        />
       </Suspense>
     </CityStatusGate>
   );
@@ -271,10 +360,16 @@ export function TerritorialServicesPage() {
 
 export function TerritorialClassificadosPage() {
   const { resolved, activeMemberIds } = useTerritorialContext();
+  const { pathname } = useLocation();
+  const presentation = isCommunityScopedPath(pathname) ? 'embedded' : 'standalone';
   return (
     <CityStatusGate module="classificados">
       <Suspense fallback={<ModulePageLoader />}>
-        <ClassificadosPage resolved={resolved} activeMemberIds={activeMemberIds} />
+        <ClassificadosPage
+          resolved={resolved}
+          activeMemberIds={activeMemberIds}
+          presentation={presentation}
+        />
       </Suspense>
     </CityStatusGate>
   );
@@ -292,10 +387,12 @@ export function TerritorialEventosPage() {
 }
 
 export function TerritorialGastronomyPage() {
+  const { pathname } = useLocation();
+  const presentation = isCommunityScopedPath(pathname) ? 'embedded' : 'standalone';
   return (
     <CityStatusGate module="gastronomia">
       <Suspense fallback={<ModulePageLoader />}>
-        <GastronomyPage />
+        <GastronomyPage presentation={presentation} />
       </Suspense>
     </CityStatusGate>
   );
@@ -342,9 +439,15 @@ export function TerritorialCategoryBusinessPage() {
 
 export function TerritorialMapPage() {
   const { resolved, activeMemberIds } = useTerritorialContext();
+  const { pathname } = useLocation();
+  const presentation = isCommunityScopedPath(pathname) ? 'embedded' : 'standalone';
   return (
     <Suspense fallback={<ModulePageLoader />}>
-      <MapaPage resolved={resolved} activeMemberIds={activeMemberIds} />
+      <MapaPage
+        resolved={resolved}
+        activeMemberIds={activeMemberIds}
+        presentation={presentation}
+      />
     </Suspense>
   );
 }

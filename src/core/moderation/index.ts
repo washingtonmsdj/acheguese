@@ -3,10 +3,22 @@
  * SSOT v2.0 - Domain services for moderation
  */
 
-export { ModerationService } from "./services/ModerationService";
-export { moderationQueueService } from "./services/ModerationQueueService";
-export { userWarningsService } from "./services/UserWarningsService";
-export { adminAuditService } from "./services/AdminAuditService";
-
-export type { UserWarning, CreateUserWarningData } from "./services/UserWarningsService";
-export type { AdminAuditLog, CreateAdminAuditLogData } from "./services/AdminAuditService";
+export { FederatedModerationQueue } from "./components/FederatedModerationQueue";
+export {
+  FEDERATED_MODERATION_DOMAINS,
+  FEDERATED_MODERATION_STATES,
+  federatedModerationQueueService,
+  type FederatedModerationCursor,
+  type FederatedModerationDomain,
+  type FederatedModerationItem,
+  type FederatedModerationPage,
+  type FederatedModerationState,
+} from "./services/FederatedModerationQueueService";
+export { ReportReasonDialog } from "./components/ReportReasonDialog";
+export {
+  COMMUNITY_REPORT_REASON_OPTIONS,
+  isReportReason,
+  reportReasonOptionsFromLabels,
+  type CommunityReportReason,
+  type ReportReasonOption,
+} from "./reportReasons";

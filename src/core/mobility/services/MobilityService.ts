@@ -63,7 +63,6 @@ export {
   completeRide,
   confirmRide,
   cancelRide,
-  createEmergencyAlert,
   incrementRideViewCount,
   decrementRideSeats,
   //  Driver areas
@@ -230,7 +229,6 @@ export class MobilityFacade {
   static completeRide = MobilityMutations.completeRide;
   static confirmRide = MobilityMutations.confirmRide;
   static cancelRide = MobilityMutations.cancelRide;
-  static createEmergencyAlert = MobilityMutations.createEmergencyAlert;
   static incrementRideViewCount = MobilityMutations.incrementRideViewCount;
   static decrementRideSeats = MobilityMutations.decrementRideSeats;
   static deleteDriverNeighborhood = MobilityMutations.deleteDriverNeighborhood;

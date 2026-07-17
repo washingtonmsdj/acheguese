@@ -1,6 +1,6 @@
 ﻿/**
  * ComunidadePage - PÃ¡gina principal da comunidade
- * 
+ *
  * SSOT - Usa Services via hooks
  * Arquitetura modular - Componentes isolados
  * Performance - Lazy loading e memoizaÃ§Ã£o
@@ -9,10 +9,7 @@
 
 import React, { lazy, Suspense, useCallback, useMemo } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import {
-  LayoutList,
-  Users,
-} from "lucide-react";
+import { Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { TooltipProvider } from "@/shared/components/ui/tooltip";
@@ -41,28 +38,23 @@ import { LocationScopeCards } from "../components/page/LocationScopeCards";
 import { CommunityFloatingButtons } from "../components/page/CommunityFloatingButtons";
 import { CommunityModals } from "../components/page/CommunityModals";
 import { CommunityOverviewSurface } from "../components/page/CommunityOverviewSurface";
+import {
+  isCommunityOverviewView,
+  isCommunitySocialView,
+  type CommunityOverviewView,
+} from "../components/page/communityOverviewNavigation";
 import { CreatePostModal } from "../components/composer/CreatePostModal";
 import { VerificationBanner } from "@/core/verification";
 import { COMMUNITY_PAGE_COPY } from "@/core/community/utils/communityCopy";
 import { resolveCommunityFeedTerritoryFilter } from "@/core/community/utils/resolveCommunityFeedTerritoryFilter";
-import { cn } from "@/shared/utils/cn";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { TerritoryFilter } from "@/core/location";
-import { buildCommunityTabUrlFromPath } from "@/core/routing/utils/territoryUrls";
 import type { TerritorialFeedChannel } from "@/core/community/hooks/feed/territorialFeedEngine";
 import { withQueryParams } from "@/core/landing/utils/landingPresentation";
 import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
 import { isPersistedCommunityId } from "@/core/community-experience/types";
 
 const GruposPage = lazy(() => import("./GruposPage"));
-
-type CommunityTab = "feed" | "grupos";
-
-const TABS: { id: CommunityTab; label: string; icon: React.ElementType }[] = [
-  { id: "feed",   label: "Feed",   icon: LayoutList },
-  { id: "grupos", label: "Grupos", icon: Users },
-];
-
 
 interface ComunidadePageProps {
   resolved?: ResolvedTerritory;
@@ -95,41 +87,74 @@ function getBlockedCommunityActionMessage(action: CommunityAction): string {
   }
 }
 
-export default function ComunidadePage({ resolved, activeMemberIds }: ComunidadePageProps) {
+export default function ComunidadePage({
+  resolved,
+  activeMemberIds,
+}: ComunidadePageProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const routeTab = location.pathname.endsWith("/grupos")
-    ? "grupos"
+  const routeView: CommunityOverviewView | null = location.pathname.endsWith(
+    "/grupos",
+  )
+    ? "groups"
     : location.pathname.endsWith("/feed")
       ? "feed"
       : null;
-  const requestedTab = (searchParams.get("tab") as CommunityDiscoveryTab | null) ?? null;
-  const activeTab: CommunityTab =
-    routeTab ?? (requestedTab === "grupos" ? "grupos" : "feed");
+  const requestedTab =
+    (searchParams.get("tab") as CommunityDiscoveryTab | null) ?? null;
+  const requestedSection = searchParams.get("section");
+  const requestedViewValue = searchParams.get("view");
+  const requestedView = isCommunityOverviewView(requestedViewValue)
+    ? requestedViewValue
+    : null;
+  const routeActiveView: CommunityOverviewView = requestedView
+    ? requestedView
+    : requestedSection === "discussions"
+      ? "discussions"
+      : (routeView ?? (requestedTab === "grupos" ? "groups" : "feed"));
+  const activeView = routeActiveView;
   const feedHeaderFilter: TerritorialFeedChannel =
     resolveCommunityFeedChannelFromTab(requestedTab);
   const [showBanner, setShowBanner] = React.useState(true);
   const appUrls = useAppUrls(resolved); // SSOT URLs com contexto territorial
-  const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved, activeMemberIds });
+  const moduleTerritory = useModuleTerritoryFilter({
+    routeResolved: resolved,
+    activeMemberIds,
+  });
   const territoryFilter = moduleTerritory.territoryFilter;
 
   // SSOT: guarda de acesso por UUID canÃ´nico, nÃ£o por string de perfil
-  const { homeDistrict, homeCity, loading: territoryLoading } = useUserTerritory();
-  const communityAccess = useCommunityAccess({ resolved: resolved ?? null, activeMemberIds });
+  const {
+    homeDistrict,
+    homeCity,
+    loading: territoryLoading,
+  } = useUserTerritory();
+  const communityAccess = useCommunityAccess({
+    resolved: resolved ?? null,
+    activeMemberIds,
+  });
   const communityProfileQuery = useCommunityProfile(resolved ?? null);
-  const linkedCommunityId = isPersistedCommunityId(communityProfileQuery.data?.id)
+  const linkedCommunityId = isPersistedCommunityId(
+    communityProfileQuery.data?.id,
+  )
     ? communityProfileQuery.data.id
     : communityAccess.communityId;
-  const setTab = (tab: CommunityTab) => {
-    const canonicalPath = buildCommunityTabUrlFromPath(location.pathname, tab);
-    if (canonicalPath) {
-      navigate(canonicalPath);
-      return;
-    }
-
-    setSearchParams(tab === "feed" ? {} : { tab });
-  };
+  const setView = useCallback(
+    (view: CommunityOverviewView) => {
+      setSearchParams((previous) => {
+        const next = new URLSearchParams(previous);
+        next.delete("section");
+        if (view === "feed") {
+          next.delete("view");
+        } else {
+          next.set("view", view);
+        }
+        return next;
+      });
+    },
+    [setSearchParams],
+  );
 
   const handleFeedHeaderFilterChange = useCallback(
     (filter: TerritorialFeedChannel) => {
@@ -164,6 +189,7 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
     handleCommentClick,
     handleTagClick,
     handleReportPost,
+    handleSubmitPostReport,
     handleDeletePost,
     handleCancelDeletePost,
     handleConfirmDeletePost,
@@ -188,20 +214,26 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
         homeCityId: homeCity?.id,
         homeDistrictId: homeDistrict?.id,
       }),
-    [territoryFilter, immediateFilters.locationScope, resolved, homeCity?.id, homeDistrict?.id],
+    [
+      territoryFilter,
+      immediateFilters.locationScope,
+      resolved,
+      homeCity?.id,
+      homeDistrict?.id,
+    ],
   );
-  const {
-    data: primaryResidence,
-    isLoading: primaryResidenceLoading,
-  } = useQuery({
-    queryKey: ["user-residence", "primary-with-relations", profile?.user_id],
-    queryFn: async () => {
-      if (!profile?.user_id) return null;
-      return residenceService.getPrimaryResidenceWithRelations(profile.user_id);
-    },
-    enabled: !!profile?.user_id,
-    staleTime: 2 * 60 * 1000,
-  });
+  const { data: primaryResidence, isLoading: primaryResidenceLoading } =
+    useQuery({
+      queryKey: ["user-residence", "primary-with-relations", profile?.user_id],
+      queryFn: async () => {
+        if (!profile?.user_id) return null;
+        return residenceService.getPrimaryResidenceWithRelations(
+          profile.user_id,
+        );
+      },
+      enabled: !!profile?.user_id,
+      staleTime: 2 * 60 * 1000,
+    });
   const primaryStreet = primaryResidence?.address?.street?.trim() ?? "";
   const hasPrimaryStreet = primaryStreet.length > 0;
 
@@ -213,7 +245,12 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
     ) {
       setLocationScope("neighborhood");
     }
-  }, [hasPrimaryStreet, immediateFilters.locationScope, primaryResidenceLoading, setLocationScope]);
+  }, [
+    hasPrimaryStreet,
+    immediateFilters.locationScope,
+    primaryResidenceLoading,
+    setLocationScope,
+  ]);
 
   const handleScopeChange = useCallback(
     (scope: "city" | "neighborhood" | "street") => {
@@ -233,17 +270,20 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
     [appUrls.profile.addresses, hasPrimaryStreet, navigate, setLocationScope],
   );
 
-  const territoryName = resolved?.kind === "group"
-    ? resolved.group.name
-    : resolved?.kind === "location"
-      ? resolved.location.name
-      : "comunidade";
+  const territoryName =
+    resolved?.kind === "group"
+      ? resolved.group.name
+      : resolved?.kind === "location"
+        ? resolved.location.name
+        : "comunidade";
   const loginHref = useMemo(() => {
     const redirect = `${location.pathname}${location.search}`;
     return withQueryParams(appUrls.auth.login, { redirect });
   }, [appUrls.auth.login, location.pathname, location.search]);
   const publishRedirectHref = useMemo(() => {
-    const targetPath = withQueryParams(location.pathname, { action: "publicar" });
+    const targetPath = withQueryParams(location.pathname, {
+      action: "publicar",
+    });
     return withQueryParams(appUrls.auth.login, { redirect: targetPath });
   }, [appUrls.auth.login, location.pathname]);
   const handleRequireLogin = useCallback(() => {
@@ -258,7 +298,8 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
     ) {
       return appUrls.profile.addresses;
     }
-    if (communityAccess.primaryAction === "create_profile") return appUrls.profile.manage;
+    if (communityAccess.primaryAction === "create_profile")
+      return appUrls.profile.manage;
     return appUrls.community.feed;
   }, [
     appUrls.community.feed,
@@ -301,7 +342,11 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
 
       handleCommentClick(postId, authorProfileId, authorName);
     },
-    [communityAccess.can.comment, handleBlockedCommunityAction, handleCommentClick],
+    [
+      communityAccess.can.comment,
+      handleBlockedCommunityAction,
+      handleCommentClick,
+    ],
   );
 
   const handleLikePostWithAccess = useCallback(
@@ -337,7 +382,11 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
 
       handleReportPost(postId);
     },
-    [communityAccess.can.report, handleBlockedCommunityAction, handleReportPost],
+    [
+      communityAccess.can.report,
+      handleBlockedCommunityAction,
+      handleReportPost,
+    ],
   );
 
   React.useEffect(() => {
@@ -345,11 +394,14 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
     if (!profile || !communityAccess.can.create_post) return;
 
     handleOpenCreatePostWithAccess();
-    setSearchParams((previous) => {
-      const next = new URLSearchParams(previous);
-      next.delete("action");
-      return next;
-    }, { replace: true });
+    setSearchParams(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+        next.delete("action");
+        return next;
+      },
+      { replace: true },
+    );
   }, [
     communityAccess.can.create_post,
     handleOpenCreatePostWithAccess,
@@ -358,22 +410,25 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
     setSearchParams,
   ]);
 
-  if (!profile && resolved && activeTab === "feed") {
+  if (!profile && resolved) {
     return (
       <TooltipProvider>
-        <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B]" role="main">
+        <div
+          className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B]"
+          role="main"
+        >
           <CommunityOverviewSurface
             resolved={resolved}
             territoryName={territoryName}
             territoryFilter={territoryFilter}
-            activeHeaderFilter={feedHeaderFilter}
-            onHeaderFilterChange={handleFeedHeaderFilterChange}
             onRequireLogin={handleRequireLogin}
             loginHref={loginHref}
             publishHref={publishRedirectHref}
             communityId={linkedCommunityId}
             communityProfile={communityProfileQuery.data ?? null}
             mode="public"
+            activeView={activeView}
+            onViewChange={setView}
           />
         </div>
       </TooltipProvider>
@@ -384,7 +439,10 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
   if (!profile) {
     return (
       <TooltipProvider>
-        <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B] flex items-center justify-center" role="main">
+        <div
+          className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B] flex items-center justify-center"
+          role="main"
+        >
           <div className="text-center p-8 max-w-md">
             <Users className="h-16 w-16 text-teal-400 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-white mb-4">
@@ -393,7 +451,10 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
             <p className="text-gray-400 mb-6">
               {COMMUNITY_PAGE_COPY.loginRequiredDescription}
             </p>
-            <Button onClick={handleRequireLogin} className="bg-teal-500 hover:bg-teal-400">
+            <Button
+              onClick={handleRequireLogin}
+              className="bg-teal-500 hover:bg-teal-400"
+            >
               {COMMUNITY_PAGE_COPY.loginRequiredAction}
             </Button>
           </div>
@@ -416,8 +477,14 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
   if (!communityAccess.can.view_member_feed) {
     return (
       <TooltipProvider>
-        <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B] text-white" role="main">
-          <CommunityPortalGate resolved={resolved ?? null} action="view_member_feed" />
+        <div
+          className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B] text-white"
+          role="main"
+        >
+          <CommunityPortalGate
+            resolved={resolved ?? null}
+            action="view_member_feed"
+          />
         </div>
       </TooltipProvider>
     );
@@ -428,104 +495,89 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B]" role="main">
-        <div className={cn(
-          activeTab === "feed"
-            ? "min-w-0"
-            : "mx-auto w-full max-w-[1600px] min-w-0 px-4 py-6 md:px-6 lg:px-8",
-        )}>
-          {activeTab !== "feed" && (
-            <nav
-              className="mb-6 flex min-w-0 flex-wrap gap-1 border-b border-white/10 pb-0"
-              aria-label={COMMUNITY_PAGE_COPY.subcategoryNavAriaLabel}
-            >
-              {TABS.map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  onClick={() => setTab(id)}
-                  className={cn(
-                      "flex min-w-0 items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px",
-                    activeTab === id
-                      ? "border-teal-400 text-teal-300"
-                      : "border-transparent text-gray-400 hover:text-gray-200 hover:border-white/20"
-                  )}
-                  aria-current={activeTab === id ? "page" : undefined}
+      <div
+        className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B]"
+        role="main"
+      >
+        <div className="min-w-0">
+          <CommunityOverviewSurface
+            resolved={resolved}
+            territoryName={territoryName}
+            territoryFilter={communityTerritoryFilter}
+            onRequireLogin={handleRequireLogin}
+            loginHref={loginHref}
+            publishHref={publishRedirectHref}
+            communityId={linkedCommunityId}
+            communityProfile={communityProfileQuery.data ?? null}
+            mode="member"
+            onOpenCreatePost={handleOpenCreatePostWithAccess}
+            activeView={activeView}
+            onViewChange={setView}
+          >
+            {isCommunitySocialView(activeView) ? (
+              activeView === "groups" ? (
+                <Suspense
+                  fallback={
+                    <div className="flex justify-center py-12">
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-teal-400 border-t-transparent" />
+                    </div>
+                  }
                 >
-                  <Icon className="h-4 w-4" aria-hidden="true" />
-                  {label}
-                </button>
-              ))}
-            </nav>
-          )}
+                  <GruposPage embedded />
+                </Suspense>
+              ) : (
+                <div className="space-y-4">
+                  {showVerificationBanner && showBanner && (
+                    <VerificationBanner
+                      onDismiss={() => setShowBanner(false)}
+                      onRequestVerification={() => navigate("/conta")}
+                    />
+                  )}
 
-          {activeTab !== "feed" && (
-            <Suspense fallback={
-              <div className="flex justify-center py-12">
-                <div className="w-6 h-6 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
-              </div>
-            }>
-              {activeTab === "grupos" && (
-                <CommunityPortalGate resolved={resolved ?? null} action="join_group">
-                  <GruposPage />
-                </CommunityPortalGate>
-              )}
-            </Suspense>
-          )}
-
-          {activeTab === "feed" && (
-            <CommunityOverviewSurface
-              resolved={resolved}
-              territoryName={territoryName}
-              territoryFilter={communityTerritoryFilter}
-              activeHeaderFilter={feedHeaderFilter}
-              onHeaderFilterChange={handleFeedHeaderFilterChange}
-              onRequireLogin={handleRequireLogin}
-              loginHref={loginHref}
-              publishHref={publishRedirectHref}
-              communityId={linkedCommunityId}
-              communityProfile={communityProfileQuery.data ?? null}
-              mode="member"
-              onOpenCreatePost={handleOpenCreatePostWithAccess}
-            >
-              <div className="space-y-4">
-                {showVerificationBanner && showBanner && (
-                  <VerificationBanner
-                    onDismiss={() => setShowBanner(false)}
-                    onRequestVerification={() => navigate("/conta")}
+                  {activeView === "feed" ? (
+                    <LocationScopeCards
+                      city={homeCity?.name}
+                      neighborhood={
+                        resolved?.kind === "group"
+                          ? resolved.group.name
+                          : homeDistrict?.name
+                      }
+                      isTerritorialGroup={resolved?.kind === "group"}
+                      street={primaryStreet}
+                      streetAvailable={hasPrimaryStreet}
+                      currentScope={immediateFilters.locationScope}
+                      onScopeChange={handleScopeChange}
+                    />
+                  ) : null}
+                  <CommunityFeed
+                    communityName={territoryName}
+                    currentUserId={profile?.id}
+                    communityId={linkedCommunityId ?? undefined}
+                    onPostClick={handlePostClick}
+                    onCommentClick={handleCommentClickWithAccess}
+                    onTagClick={handleTagClick}
+                    onOpenCreatePost={handleOpenCreatePostWithAccess}
+                    onDeletePost={handleDeletePost}
+                    onEditPost={handleEditPost}
+                    onReportPost={handleReportPostWithAccess}
+                    locationScope={immediateFilters.locationScope}
+                    territoryFilter={communityTerritoryFilter}
+                    initialHeaderFilter={feedHeaderFilter}
+                    onHeaderFilterChange={handleFeedHeaderFilterChange}
+                    canReact={communityAccess.can.react}
+                    canComment={communityAccess.can.comment}
+                    canSave={communityAccess.can.save}
+                    canReport={communityAccess.can.report}
+                    canSendMessage={communityAccess.can.send_message}
+                    onBlockedAction={handleBlockedCommunityAction}
+                    contentMode={
+                      activeView === "discussions" ? "discussions" : "feed"
+                    }
                   />
-                )}
-
-                <LocationScopeCards
-                  city={homeCity?.name}
-                  neighborhood={resolved?.kind === "group" ? resolved.group.name : homeDistrict?.name}
-                  isTerritorialGroup={resolved?.kind === "group"}
-                  street={primaryStreet}
-                  streetAvailable={hasPrimaryStreet}
-                  currentScope={immediateFilters.locationScope}
-                  onScopeChange={handleScopeChange}
-                />
-                <CommunityFeed
-                  currentUserId={profile?.id}
-                  onPostClick={handlePostClick}
-                  onCommentClick={handleCommentClickWithAccess}
-                  onTagClick={handleTagClick}
-                  onOpenCreatePost={handleOpenCreatePostWithAccess}
-                  onDeletePost={handleDeletePost}
-                  onEditPost={handleEditPost}
-                  locationScope={immediateFilters.locationScope}
-                  territoryFilter={communityTerritoryFilter}
-                  initialHeaderFilter={feedHeaderFilter}
-                  onHeaderFilterChange={handleFeedHeaderFilterChange}
-                  canReact={communityAccess.can.react}
-                  canComment={communityAccess.can.comment}
-                  canSave={communityAccess.can.save}
-                  canReport={communityAccess.can.report}
-                  canSendMessage={communityAccess.can.send_message}
-                  onBlockedAction={handleBlockedCommunityAction}
-                />
-              </div>
-            </CommunityOverviewSurface>
-          )}
+                </div>
+              )
+            ) : null}
+          </CommunityOverviewSurface>
         </div>
 
         <CommunityFloatingButtons />
@@ -534,11 +586,31 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
         <CreatePostModal
           open={modalState.type === "create"}
           onClose={handleCloseModal}
-          defaultType={createPostModalData && "defaultType" in createPostModalData ? createPostModalData.defaultType : undefined}
-          editPostId={createPostModalData && "editPostId" in createPostModalData ? createPostModalData.editPostId : undefined}
-          initialContent={createPostModalData && "initialContent" in createPostModalData ? createPostModalData.initialContent : undefined}
-          initialType={createPostModalData && "initialType" in createPostModalData ? createPostModalData.initialType : undefined}
-          initialReach={createPostModalData && "initialReach" in createPostModalData ? createPostModalData.initialReach : undefined}
+          defaultType={
+            createPostModalData && "defaultType" in createPostModalData
+              ? createPostModalData.defaultType
+              : undefined
+          }
+          editPostId={
+            createPostModalData && "editPostId" in createPostModalData
+              ? createPostModalData.editPostId
+              : undefined
+          }
+          initialContent={
+            createPostModalData && "initialContent" in createPostModalData
+              ? createPostModalData.initialContent
+              : undefined
+          }
+          initialType={
+            createPostModalData && "initialType" in createPostModalData
+              ? createPostModalData.initialType
+              : undefined
+          }
+          initialReach={
+            createPostModalData && "initialReach" in createPostModalData
+              ? createPostModalData.initialReach
+              : undefined
+          }
           canCreatePost={communityAccess.can.create_post}
           canCreateAlert={communityAccess.can.create_alert}
           canCreateIssue={communityAccess.can.create_issue}
@@ -560,6 +632,7 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
           onSave={handleSavePostWithAccess}
           onShare={sharePost}
           onReport={handleReportPostWithAccess}
+          onSubmitReport={handleSubmitPostReport}
           onTagClick={handleTagClick}
           canComment={communityAccess.can.comment}
           commentBlockedMessage={getBlockedCommunityActionMessage("comment")}
@@ -581,5 +654,3 @@ export default function ComunidadePage({ resolved, activeMemberIds }: Comunidade
     </TooltipProvider>
   );
 }
-
-

@@ -1,7 +1,9 @@
-import type { BannedUser } from "./types";
-
-export type VerificationWorkflowStatus = "pending" | "verified" | "rejected" | "none";
-export type BannedUserLike = BannedUser | null;
+export type VerificationWorkflowStatus =
+  | "pending"
+  | "verified"
+  | "rejected"
+  | "none";
+export type ActiveBanStatus = boolean;
 export type UserSubscriptionLike = {
   active?: boolean | null;
   plan_type?: string | null;
@@ -70,26 +72,6 @@ export type UserListRow = {
   reputation?: number | null;
 };
 export type ProfileIdRow = { id: string };
-export type RankingRow = {
-  id: string;
-  name: string | null;
-  avatar_url: string | null;
-  pontos: number | null;
-};
-export type MentionRow = {
-  id: string;
-  rank: number;
-  created_at: string;
-  post: {
-    id: string;
-    type: string;
-    content: string;
-    created_at: string;
-    likes_count: number;
-    comments_count: number;
-    author: { id: string; name: string; avatar_url: string | null };
-  };
-};
 export type PassengerRatingRow = {
   id: string;
   name: string | null;

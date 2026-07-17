@@ -14,11 +14,10 @@ export {
   getReviewStats,
   getReviewCount,
   getAllReviews,
+  getReviewAggregatesAdmin,
 } from "./reviews.queries";
 
 export {
-  addReview,
-  updateReview,
   removeReview,
   upsertReview,
 } from "./reviews.mutations";
@@ -42,9 +41,8 @@ export class ReviewsService {
   static getReviewStats = ReviewsQueries.getReviewStats;
   static getReviewCount = ReviewsQueries.getReviewCount;
   static getAllReviews = ReviewsQueries.getAllReviews;
+  static getReviewAggregatesAdmin = ReviewsQueries.getReviewAggregatesAdmin;
 
-  static addReview = ReviewsMutations.addReview;
-  static updateReview = ReviewsMutations.updateReview;
   static removeReview = ReviewsMutations.removeReview;
   static upsertReview = ReviewsMutations.upsertReview;
 }

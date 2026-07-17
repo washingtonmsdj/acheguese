@@ -18,8 +18,6 @@ import type {
   Post,
   PostStats,
   PaginationParams,
-  FeedParams,
-  FeedResult,
 } from "../types";
 import { PostError } from "../types";
 
@@ -53,10 +51,6 @@ interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
 
 interface PostsQueryDbClient {
   from: <TRow = never>(table: string) => QueryBuilder<TRow>;
-}
-
-interface LocationIdRow {
-  id: string;
 }
 
 interface PostStatRow {
@@ -120,112 +114,6 @@ export async function getPostById(postId: string): Promise<Post | null> {
       metadata: { postId },
     });
     throw new PostError("Erro ao buscar post", "FETCH_ERROR");
-  }
-}
-
-/**
- * Busca posts do feed com expansão territorial
- * Suporta múltiplos location_ids para grupos
- */
-export async function getFeed(params: FeedParams): Promise<FeedResult> {
-  const {
-    location_id,
-    location_ids,
-    district_filter,
-    city_filter,
-    includeStreetReach = false,
-    context = "all",
-    cursor,
-    limit = PAGINATION.DEFAULT_LIMIT,
-  } = params;
-
-  try {
-    let query = postsQueryDb
-      .from<Post>("posts")
-      .select(
-        `
-        *,
-        author_profile:profiles!author_profile_id(id, name, avatar_url, verified),
-        location:locations(id, name, type, parent_id)
-      `,
-      )
-      .eq("is_published", true)
-      .order("created_at", { ascending: false })
-      .limit(limit);
-
-    if (!includeStreetReach) {
-      query = query.or("reach.is.null,reach.neq.street");
-    }
-
-    // Aplicar filtros territoriais
-    if (location_ids && location_ids.length > 0) {
-      // Feed de grupo: busca posts de múltiplas localizações
-      query = query.in("location_id", location_ids);
-    } else if (location_id) {
-      if (district_filter) {
-        // Feed de distrito: inclui bairros (filho do parent)
-        const { data: neighborhoods } = await postsQueryDb
-          .from<LocationIdRow>("locations")
-          .select("id")
-          .eq("parent_id", location_id);
-
-        const neighborhoodIds = (
-          (neighborhoods as LocationIdRow[] | null) ?? []
-        ).map((n) => n.id);
-        if (neighborhoodIds.length > 0) {
-          query = query.in("location_id", [location_id, ...neighborhoodIds]);
-        } else {
-          query = query.eq("location_id", location_id);
-        }
-      } else if (city_filter) {
-        // Feed de cidade: busca posts da cidade + distritos + bairros
-        const { data: cityLocations } = await postsQueryDb
-          .from<LocationIdRow>("locations")
-          .select("id")
-          .or(`id.eq.${location_id},parent_id.eq.${location_id}`);
-
-        const locationIds = (
-          (cityLocations as LocationIdRow[] | null) ?? []
-        ).map((l) => l.id) || [location_id];
-        query = query.in("location_id", locationIds);
-      } else {
-        // Feed simples: apenas a localização específica
-        query = query.eq("location_id", location_id);
-      }
-    }
-
-    // Paginação por cursor
-    if (cursor) {
-      query = query.lt("created_at", cursor);
-    }
-
-    const { data: posts, error } = await query;
-
-    if (error) {
-      throw new PostError(error.message, error.code);
-    }
-
-    // Calcular próximo cursor
-    const nextCursor =
-      posts && posts.length === limit
-        ? posts[posts.length - 1].created_at
-        : undefined;
-
-    return {
-      posts: (posts as Post[] | null) ?? [],
-      nextCursor,
-      hasMore: !!nextCursor,
-    };
-  } catch (error) {
-    if (error instanceof PostError) throw error;
-
-    logger.error("[posts.queries] Error fetching feed:", error);
-    trackError(error as Error, {
-      component: "posts.queries",
-      action: "getFeed",
-      metadata: { location_id, location_ids, context },
-    });
-    throw new PostError("Erro ao carregar feed", "FEED_ERROR");
   }
 }
 

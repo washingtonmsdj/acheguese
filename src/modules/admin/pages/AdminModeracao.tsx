@@ -1,7 +1,12 @@
 import { Shield } from "lucide-react";
-import { TrustEventsQueue } from "@/core/admin/components/TrustEventsQueue";
+import {
+  CommunityRpcOperationsPanel,
+  TrustEventsQueue,
+} from "@/core/admin/components";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { TrustAdminActionsLog } from "@/modules/admin/components/moderation/TrustAdminActionsLog";
+import { CommunityContentModerationQueue } from "@/core/community/moderation";
+import { FederatedModerationQueue } from "@/core/moderation";
 
 export default function AdminModeracao() {
   const { canModerate, isChecking } = useAdminGuard();
@@ -12,7 +17,9 @@ export default function AdminModeracao() {
         <div className="text-center">
           <Shield className="h-16 w-16 text-red-400 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white mb-2">Acesso Negado</h1>
-          <p className="text-gray-400">Apenas administradores podem acessar esta pagina.</p>
+          <p className="text-gray-400">
+            Apenas administradores podem acessar esta pagina.
+          </p>
         </div>
       </div>
     );
@@ -23,13 +30,16 @@ export default function AdminModeracao() {
       <div>
         <h1 className="text-2xl font-bold font-display">Moderacao</h1>
         <p className="text-sm text-muted-foreground">
-          Fila unica de moderacao transversal com trilha de auditoria administrativa.
+          Fila canonica de conteudo, eventos de confianca e trilha de auditoria
+          administrativa.
         </p>
       </div>
 
+      <CommunityRpcOperationsPanel />
+      <FederatedModerationQueue />
+      <CommunityContentModerationQueue />
       <TrustEventsQueue />
       <TrustAdminActionsLog />
     </div>
   );
 }
-

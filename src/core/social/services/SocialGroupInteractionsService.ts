@@ -7,6 +7,7 @@
 import { supabase } from "@/integrations/supabase";
 import type { Database, Json } from "@/integrations/supabase";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { COMMUNITY_RUNTIME_LIMITS } from "@/shared/constants/communityRuntime";
 import { trackError } from "@/shared/utils/errorTracking";
 import type {
   CreateGroupMessageData,
@@ -37,7 +38,23 @@ interface QueryBuilder<TRow> {
 
 interface SocialGroupDbClient {
   from<TRow>(table: string): QueryBuilder<TRow>;
-  rpc<TResult>(fn: string, args?: Record<string, unknown>): QueryResult<TResult>;
+}
+
+interface GroupReactionStateRow {
+  message_id: string;
+  likes_count: number;
+  is_liked: boolean;
+}
+
+interface GroupReactionRpcClient {
+  rpc(
+    functionName: "list_group_message_reaction_state",
+    params: { p_message_ids: string[] },
+  ): Promise<{ data: GroupReactionStateRow[] | null; error: { message?: string } | null }>;
+  rpc(
+    functionName: "toggle_group_message_like",
+    params: { p_message_id: string },
+  ): Promise<{ data: GroupReactionStateRow | null; error: { message?: string } | null }>;
 }
 
 type GroupMemberRow = Database["public"]["Tables"]["group_members_new"]["Row"];
@@ -45,14 +62,9 @@ type GroupMessageRow = Database["public"]["Tables"]["group_messages_new"]["Row"]
 type GroupMessageReportRow =
   Database["public"]["Tables"]["group_message_reports"]["Row"];
 
-interface GroupContextRow {
-  id: string;
-  posting_policy?: string | null;
-  join_policy?: string | null;
-}
-
-interface MembershipRoleRow {
-  role: "admin" | "moderator" | "member";
+function boundedInteger(value: number, minimum: number, maximum: number): number {
+  if (!Number.isFinite(value)) return minimum;
+  return Math.min(Math.max(Math.trunc(value), minimum), maximum);
 }
 
 interface GroupMessageWithProfileRow extends GroupMessageRow {
@@ -121,54 +133,24 @@ function asModerationHistory(value: Json | undefined): ModerationHistoryItem[] {
 
 export class SocialGroupInteractionsService {
   private static readonly db = supabase as unknown as SocialGroupDbClient;
-  private static async resolveGroupContext(groupId: string, userId?: string) {
-    const { data: groupRow } = await this.db.rpc<GroupContextRow | null>("get_community_group_by_id", {
-      p_group_id: groupId,
-    });
-
-    if (!groupRow) {
-      return {
-        group: null,
-        role: null as "admin" | "moderator" | "member" | null,
-      };
-    }
-
-    const activeProfile = userId
-      ? await profileService.getRequiredActiveProfile(userId)
-      : await profileService.getRequiredActiveProfile();
-
-    const { data: membership } = await this.db
-      .from<MembershipRoleRow>("group_members_new")
-      .select("role")
-      .eq("group_id", groupId)
-      .eq("member_profile_id", activeProfile.id)
-      .maybeSingle();
-
-    return {
-      group: groupRow,
-      role: membership?.role || null,
-      activeProfileId: activeProfile.id,
-    };
-  }
+  private static readonly reactionRpc =
+    supabase as unknown as GroupReactionRpcClient;
 
   /**
    * Entrar em um grupo usando profile ativo
    */
   static async joinGroup(
     groupId: string,
-    userId?: string,
-    role: string = "member",
   ): Promise<{ success: boolean; error?: string }> {
     try {
       const activeProfile =
-        await profileService.getRequiredActiveProfile(userId);
+        await profileService.getRequiredActiveProfile();
 
       const { error } = await this.db
         .from<GroupMemberRow>("group_members_new")
         .insert({
           group_id: groupId,
           member_profile_id: activeProfile.id,
-          role,
         });
 
       if (error) {
@@ -183,9 +165,9 @@ export class SocialGroupInteractionsService {
     } catch (error) {
       const err = error as Error;
       trackError(err, {
-        component: "SocialInteractionsService",
+        component: "SocialGroupInteractionsService",
         action: "joinGroup",
-        metadata: { groupId, userId, role },
+        metadata: { groupId },
       });
       return { success: false, error: err.message };
     }
@@ -196,11 +178,10 @@ export class SocialGroupInteractionsService {
    */
   static async leaveGroup(
     groupId: string,
-    userId?: string,
   ): Promise<{ success: boolean; error?: string }> {
     try {
       const activeProfile =
-        await profileService.getRequiredActiveProfile(userId);
+        await profileService.getRequiredActiveProfile();
 
       const { error } = await this.db
         .from<GroupMemberRow>("group_members_new")
@@ -214,9 +195,9 @@ export class SocialGroupInteractionsService {
     } catch (error) {
       const err = error as Error;
       trackError(err, {
-        component: "SocialInteractionsService",
+        component: "SocialGroupInteractionsService",
         action: "leaveGroup",
-        metadata: { groupId, userId },
+        metadata: { groupId },
       });
       return { success: false, error: err.message };
     }
@@ -228,20 +209,6 @@ export class SocialGroupInteractionsService {
     role: "admin" | "moderator" | "member",
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const activeProfile = await profileService.getRequiredActiveProfile();
-
-      const { data: requesterMembership, error: requesterError } = await this.db
-        .from<MembershipRoleRow>("group_members_new")
-        .select("role")
-        .eq("group_id", groupId)
-        .eq("member_profile_id", activeProfile.id)
-        .single();
-
-      if (requesterError) throw requesterError;
-      if (!["admin", "moderator"].includes(requesterMembership?.role)) {
-        return { success: false, error: "Apenas admins ou moderadores podem alterar funcoes" };
-      }
-
       const { error } = await this.db
         .from<GroupMemberRow>("group_members_new")
         .update({ role })
@@ -253,7 +220,7 @@ export class SocialGroupInteractionsService {
     } catch (error) {
       const err = error as Error;
       trackError(err, {
-        component: "SocialInteractionsService",
+        component: "SocialGroupInteractionsService",
         action: "updateGroupMemberRole",
         metadata: { groupId, memberProfileId, role },
       });
@@ -266,11 +233,10 @@ export class SocialGroupInteractionsService {
    */
   static async isMemberOfGroup(
     groupId: string,
-    userId?: string,
   ): Promise<boolean> {
     try {
       const activeProfile =
-        await profileService.getRequiredActiveProfile(userId);
+        await profileService.getRequiredActiveProfile();
 
       const { data, error } = await this.db
         .from<Pick<GroupMemberRow, "id">>("group_members_new")
@@ -284,9 +250,9 @@ export class SocialGroupInteractionsService {
       return !!data;
     } catch (error) {
       trackError(error as Error, {
-        component: "SocialInteractionsService",
+        component: "SocialGroupInteractionsService",
         action: "isMemberOfGroup",
-        metadata: { groupId, userId },
+        metadata: { groupId },
       });
       return false;
     }
@@ -295,7 +261,10 @@ export class SocialGroupInteractionsService {
   /**
    * Buscar membros de um grupo
    */
-  static async getGroupMembers(groupId: string): Promise<GroupMember[]> {
+  static async getGroupMembers(
+    groupId: string,
+    limit = 50,
+  ): Promise<GroupMember[]> {
     try {
       const { data, error } = await this.db
         .from<GroupMember>("group_members_new")
@@ -306,16 +275,17 @@ export class SocialGroupInteractionsService {
         `,
         )
         .eq("group_id", groupId)
-        .order("joined_at", { ascending: true });
+        .order("joined_at", { ascending: true })
+        .limit(boundedInteger(limit, 1, 100));
 
       if (error) throw error;
 
       return data || [];
     } catch (error) {
       trackError(error as Error, {
-        component: "SocialInteractionsService",
+        component: "SocialGroupInteractionsService",
         action: "getGroupMembers",
-        metadata: { groupId },
+        metadata: { groupId, limit },
       });
       return [];
     }
@@ -326,42 +296,10 @@ export class SocialGroupInteractionsService {
    */
   static async sendGroupMessage(
     data: CreateGroupMessageData,
-    userId?: string,
   ): Promise<{ success: boolean; message?: GroupMessage; error?: string }> {
     try {
       const activeProfile =
-        await profileService.getRequiredActiveProfile(userId);
-
-      const { data: groupPolicy } = await this.db.rpc<GroupContextRow | null>(
-        "get_community_group_by_id",
-        {
-          p_group_id: data.groupId,
-        },
-      );
-      const { data: membership } = await this.db
-        .from<MembershipRoleRow>("group_members_new")
-        .select("role")
-        .eq("group_id", data.groupId)
-        .eq("member_profile_id", activeProfile.id)
-        .maybeSingle();
-
-      if (!membership) {
-        return { success: false, error: "Voce precisa entrar no grupo para postar" };
-      }
-
-      const role = membership.role;
-      const postingPolicy = groupPolicy?.posting_policy || "members";
-      const canPost =
-        postingPolicy === "members" ||
-        (postingPolicy === "moderators" && ["admin", "moderator"].includes(role)) ||
-        (postingPolicy === "admins" && role === "admin");
-
-      if (!canPost) {
-        return {
-          success: false,
-          error: "Este grupo limita postagens por funcao. Verifique as regras do grupo.",
-        };
-      }
+        await profileService.getRequiredActiveProfile();
 
       const payload: Partial<Database["public"]["Tables"]["group_messages_new"]["Insert"]> = {
         group_id: data.groupId,
@@ -394,9 +332,9 @@ export class SocialGroupInteractionsService {
     } catch (error) {
       const err = error as Error;
       trackError(err, {
-        component: "SocialInteractionsService",
+        component: "SocialGroupInteractionsService",
         action: "sendGroupMessage",
-        metadata: { groupId: data.groupId, userId },
+        metadata: { groupId: data.groupId },
       });
       return { success: false, error: err.message };
     }
@@ -411,6 +349,22 @@ export class SocialGroupInteractionsService {
     offset: number = 0,
   ): Promise<GroupMessage[]> {
     try {
+      const boundedLimit = boundedInteger(
+        limit,
+        1,
+        COMMUNITY_RUNTIME_LIMITS.SOCIAL_PAGE_SIZE,
+      );
+      if (
+        Number.isFinite(offset) &&
+        offset > COMMUNITY_RUNTIME_LIMITS.SOCIAL_PAGE_OFFSET_MAX
+      ) {
+        return [];
+      }
+      const boundedOffset = boundedInteger(
+        offset,
+        0,
+        COMMUNITY_RUNTIME_LIMITS.SOCIAL_PAGE_OFFSET_MAX,
+      );
       const { data, error } = await this.db
         .from<GroupMessage>("group_messages_new")
         .select(
@@ -421,17 +375,69 @@ export class SocialGroupInteractionsService {
         )
         .eq("group_id", groupId)
         .order("created_at", { ascending: false })
-        .range(offset, offset + limit - 1);
+        .range(boundedOffset, boundedOffset + boundedLimit - 1);
 
       if (error) throw error;
-      return data || [];
+      const messages = data || [];
+      const reactionStates = await this.getGroupMessageReactionStates(
+        messages.map((message) => message.id),
+      );
+      return messages.map((message) => ({
+        ...message,
+        likes_count: reactionStates.get(message.id)?.likes_count ?? 0,
+        is_liked: reactionStates.get(message.id)?.is_liked ?? false,
+      }));
     } catch (error) {
       trackError(error as Error, {
-        component: "SocialInteractionsService",
+        component: "SocialGroupInteractionsService",
         action: "getGroupMessages",
         metadata: { groupId, limit, offset },
       });
       return [];
+    }
+  }
+
+  static async getGroupMessageReactionStates(
+    messageIds: string[],
+  ): Promise<Map<string, GroupReactionStateRow>> {
+    const uniqueMessageIds = [...new Set(messageIds)].slice(0, 100);
+    if (uniqueMessageIds.length === 0) return new Map();
+
+    try {
+      const { data, error } = await this.reactionRpc.rpc(
+        "list_group_message_reaction_state",
+        { p_message_ids: uniqueMessageIds },
+      );
+      if (error) throw error;
+      return new Map((data ?? []).map((state) => [state.message_id, state]));
+    } catch (error) {
+      trackError(error as Error, {
+        component: "SocialGroupInteractionsService",
+        action: "getGroupMessageReactionStates",
+        metadata: { messageCount: uniqueMessageIds.length },
+      });
+      return new Map();
+    }
+  }
+
+  static async toggleGroupMessageLike(
+    messageId: string,
+  ): Promise<{ success: boolean; state?: GroupReactionStateRow; error?: string }> {
+    try {
+      const { data, error } = await this.reactionRpc.rpc(
+        "toggle_group_message_like",
+        { p_message_id: messageId },
+      );
+      if (error) throw error;
+      if (!data) throw new Error("Estado da reacao nao retornado");
+      return { success: true, state: data };
+    } catch (error) {
+      trackError(error as Error, {
+        component: "SocialGroupInteractionsService",
+        action: "toggleGroupMessageLike",
+        metadata: { messageId },
+      });
+      return { success: false, error: (error as Error).message };
     }
   }
 
@@ -440,40 +446,11 @@ export class SocialGroupInteractionsService {
    */
   static async deleteGroupMessage(
     messageId: string,
-    userId?: string,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const activeProfile =
-        await profileService.getRequiredActiveProfile(userId);
-
-      const { data: messageRow, error: messageFetchError } = await this.db
-        .from<Pick<GroupMessageRow, "id" | "group_id" | "sender_profile_id">>(
-          "group_messages_new",
-        )
-        .select("id, group_id, sender_profile_id")
-        .eq("id", messageId)
-        .maybeSingle();
-
-      if (messageFetchError) throw messageFetchError;
-      if (!messageRow) return { success: false, error: "Mensagem nao encontrada" };
-
-      const { data: membership } = await this.db
-        .from<MembershipRoleRow>("group_members_new")
-        .select("role")
-        .eq("group_id", messageRow.group_id)
-        .eq("member_profile_id", activeProfile.id)
-        .maybeSingle();
-
-      const isOwn = messageRow.sender_profile_id === activeProfile.id;
-      const canModerate = ["admin", "moderator"].includes(membership?.role || "");
-      if (!isOwn && !canModerate) {
-        return { success: false, error: "Sem permissao para remover esta mensagem" };
-      }
-
       const { error } = await this.db
         .from<GroupMessageRow>("group_messages_new")
         .delete()
-        .eq("id", messageId)
         .eq("id", messageId);
 
       if (error) throw error;
@@ -482,9 +459,9 @@ export class SocialGroupInteractionsService {
     } catch (error) {
       const err = error as Error;
       trackError(err, {
-        component: "SocialInteractionsService",
+        component: "SocialGroupInteractionsService",
         action: "deleteGroupMessage",
-        metadata: { messageId, userId },
+        metadata: { messageId },
       });
       return { success: false, error: err.message };
     }
@@ -493,41 +470,21 @@ export class SocialGroupInteractionsService {
   static async updateGroupMessage(
     messageId: string,
     content: string,
-    userId?: string,
   ): Promise<{ success: boolean; error?: string }> {
     try {
       if (!content.trim()) {
         return { success: false, error: "Mensagem vazia" };
       }
-      const activeProfile =
-        await profileService.getRequiredActiveProfile(userId);
-      const { data: messageRow, error: messageError } = await this.db
-        .from<Pick<GroupMessageRow, "id" | "sender_profile_id">>("group_messages_new")
-        .select("id, sender_profile_id")
-        .eq("id", messageId)
-        .maybeSingle();
-      if (messageError) throw messageError;
-      if (!messageRow) return { success: false, error: "Mensagem nao encontrada" };
-      if (messageRow.sender_profile_id !== activeProfile.id) {
-        return { success: false, error: "Somente o autor pode editar a mensagem" };
-      }
 
       const { error } = await this.db
         .from<GroupMessageRow>("group_messages_new")
-        .update({
-          content: content.trim(),
-          metadata: {
-            edited: true,
-            edited_at: new Date().toISOString(),
-          },
-        })
-        .eq("id", messageId)
-        .eq("sender_profile_id", activeProfile.id);
+        .update({ content: content.trim() })
+        .eq("id", messageId);
       if (error) throw error;
       return { success: true };
     } catch (error) {
       trackError(error as Error, {
-        component: "SocialInteractionsService",
+        component: "SocialGroupInteractionsService",
         action: "updateGroupMessage",
         metadata: { messageId },
       });
@@ -539,28 +496,23 @@ export class SocialGroupInteractionsService {
     messageId: string,
     reason: string,
     details?: string,
-    userId?: string,
   ): Promise<{ success: boolean; error?: string }> {
     try {
       if (!reason || reason.trim().length < 3) {
         return { success: false, error: "Motivo da denuncia muito curto" };
       }
       const activeProfile =
-        await profileService.getRequiredActiveProfile(userId);
+        await profileService.getRequiredActiveProfile();
       const { data: messageRow, error: messageError } = await this.db
-        .from<Pick<GroupMessageRow, "id" | "group_id" | "sender_profile_id">>(
+        .from<Pick<GroupMessageRow, "id" | "group_id">>(
           "group_messages_new",
         )
-        .select("id, group_id, sender_profile_id")
+        .select("id, group_id")
         .eq("id", messageId)
         .maybeSingle();
 
       if (messageError) throw messageError;
       if (!messageRow) return { success: false, error: "Mensagem nao encontrada" };
-
-      if (messageRow.sender_profile_id === activeProfile.id) {
-        return { success: false, error: "Nao e possivel denunciar a propria mensagem" };
-      }
 
       const payload = {
         group_id: messageRow.group_id,
@@ -583,7 +535,7 @@ export class SocialGroupInteractionsService {
     } catch (error) {
       const err = error as Error;
       trackError(err, {
-        component: "SocialInteractionsService",
+        component: "SocialGroupInteractionsService",
         action: "reportGroupMessage",
         metadata: { messageId },
       });
@@ -593,7 +545,6 @@ export class SocialGroupInteractionsService {
 
   static async getGroupMessageReports(
     groupId: string,
-    userId?: string,
   ): Promise<
     Array<{
       id: string;
@@ -618,19 +569,6 @@ export class SocialGroupInteractionsService {
     }>
   > {
     try {
-      const activeProfile =
-        await profileService.getRequiredActiveProfile(userId);
-      const { data: membership } = await this.db
-        .from<MembershipRoleRow>("group_members_new")
-        .select("role")
-        .eq("group_id", groupId)
-        .eq("member_profile_id", activeProfile.id)
-        .maybeSingle();
-
-      if (!["admin", "moderator"].includes(membership?.role || "")) {
-        return [];
-      }
-
       const { data, error } = await this.db
         .from<GroupMessageReportListRow>("group_message_reports")
         .select(`
@@ -668,7 +606,7 @@ export class SocialGroupInteractionsService {
       }));
     } catch (error) {
       trackError(error as Error, {
-        component: "SocialInteractionsService",
+        component: "SocialGroupInteractionsService",
         action: "getGroupMessageReports",
         metadata: { groupId },
       });
@@ -679,93 +617,21 @@ export class SocialGroupInteractionsService {
   static async updateGroupMessageReportStatus(
     reportId: string,
     status: "reviewing" | "resolved" | "dismissed",
-    userId?: string,
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const activeProfile =
-        await profileService.getRequiredActiveProfile(userId);
-
-      const { data: reportRow, error: reportError } = await this.db
-        .from<Pick<GroupMessageReportRow, "id" | "group_id">>("group_message_reports")
-        .select("id, group_id")
-        .eq("id", reportId)
-        .maybeSingle();
-      if (reportError) throw reportError;
-      if (!reportRow) return { success: false, error: "Denuncia nao encontrada" };
-
-      const { data: membership } = await this.db
-        .from<MembershipRoleRow>("group_members_new")
-        .select("role")
-        .eq("group_id", reportRow.group_id)
-        .eq("member_profile_id", activeProfile.id)
-        .maybeSingle();
-      if (!["admin", "moderator"].includes(membership?.role || "")) {
-        return { success: false, error: "Sem permissao para moderar denuncias" };
-      }
-
-      const { data: currentReport, error: currentReportError } = await this.db
-        .from<Pick<GroupMessageReportRow, "moderation_history">>("group_message_reports")
-        .select("moderation_history")
-        .eq("id", reportId)
-        .maybeSingle();
-      if (currentReportError) throw currentReportError;
-
-      const previousHistory = Array.isArray(currentReport?.moderation_history)
-        ? currentReport.moderation_history
-        : [];
-      const nextHistory = [
-        ...previousHistory,
-        {
-          at: new Date().toISOString(),
-          status,
-          moderator_profile_id: activeProfile.id,
-        },
-      ];
-
       const { error } = await this.db
         .from<GroupMessageReportRow>("group_message_reports")
-        .update({
-          status,
-          reviewed_by: activeProfile.id,
-          reviewed_at: new Date().toISOString(),
-          moderation_history: nextHistory,
-        })
+        .update({ status })
         .eq("id", reportId);
       if (error) throw error;
       return { success: true };
     } catch (error) {
       trackError(error as Error, {
-        component: "SocialInteractionsService",
+        component: "SocialGroupInteractionsService",
         action: "updateGroupMessageReportStatus",
         metadata: { reportId, status },
       });
       return { success: false, error: (error as Error).message };
-    }
-  }
-
-  /**
-   * Busca IDs dos grupos em que o usuario e membro
-   */
-  static async getUserGroupIds(userId?: string): Promise<string[]> {
-    try {
-      const activeProfile =
-        await profileService.getRequiredActiveProfile(userId);
-
-      const { data, error } = await this.db
-        .from<Pick<GroupMemberRow, "group_id">>("group_members_new")
-        .select("group_id")
-        .eq("member_profile_id", activeProfile.id);
-
-      if (error) throw error;
-
-      return (data || []).map((m) => m.group_id);
-    } catch (error) {
-      trackError(error as Error, {
-        component: "SocialInteractionsService",
-        action: "getUserGroupIds",
-        metadata: { userId },
-      });
-      return [];
     }
   }
 
@@ -792,7 +658,7 @@ export class SocialGroupInteractionsService {
       };
     } catch (error) {
       trackError(error as Error, {
-        component: "SocialInteractionsService",
+        component: "SocialGroupInteractionsService",
         action: "getGroupMessageById",
         metadata: { messageId },
       });

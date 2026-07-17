@@ -1,0 +1,1737 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-07-15",
+  "architecture": "docs/architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md",
+  "plan": "plans/CORE_PLATFORM_CONSOLIDATION_PLAN.md",
+  "sourceRoots": ["src", "api", "supabase/functions"],
+  "policy": {
+    "defaultMutationOwner": "one-writer-per-table-operation",
+    "frontendAuthorization": "ui-hint-only",
+    "backendEnforcement": ["rls", "rpc", "edge-function"],
+    "baselineUpdate": "requires-reviewed-architecture-change"
+  },
+  "controlledTables": [
+    {
+      "name": "posts",
+      "status": "canonical",
+      "currentOwner": "src/core/posts/services",
+      "targetOwner": "src/core/posts/services",
+      "allowedReaders": [
+        {
+          "path": "src/core/posts/services/posts.alerts.queries.ts",
+          "maxCalls": 1,
+          "role": "domain-read-model"
+        },
+        {
+          "path": "src/core/posts/services/posts.feed.queries.ts",
+          "maxCalls": 1,
+          "role": "canonical"
+        },
+        {
+          "path": "src/core/posts/services/posts.media.queries.ts",
+          "maxCalls": 2,
+          "role": "canonical"
+        },
+        {
+          "path": "src/core/posts/services/posts.mutations.ts",
+          "maxCalls": 1,
+          "role": "write-reconciliation"
+        },
+        {
+          "path": "src/core/posts/services/posts.queries.ts",
+          "maxCalls": 15,
+          "role": "canonical"
+        },
+        {
+          "path": "src/core/posts/services/posts.user.queries.ts",
+          "maxCalls": 4,
+          "role": "canonical"
+        },
+        {
+          "path": "supabase/functions/user-export-data/index.ts",
+          "maxCalls": 1,
+          "role": "account-export"
+        }
+      ],
+      "allowedWriters": [
+        {
+          "path": "src/core/posts/services/posts.mutations.ts",
+          "maxCalls": 4,
+          "role": "canonical"
+        },
+        {
+          "path": "supabase/functions/user-delete-account/index.ts",
+          "maxCalls": 1,
+          "role": "account-lifecycle"
+        }
+      ]
+    },
+    {
+      "name": "comments",
+      "status": "canonical",
+      "currentOwner": "src/core/comments/services",
+      "targetOwner": "src/core/comments/services",
+      "finding": "CP-002",
+      "allowedReaders": [
+        {
+          "path": "src/core/comments/services/comments.queries.ts",
+          "maxCalls": 8,
+          "role": "canonical"
+        }
+      ],
+      "allowedWriters": [
+        {
+          "path": "src/core/comments/services/comments.mutations.ts",
+          "maxCalls": 3,
+          "role": "canonical"
+        }
+      ]
+    },
+    {
+      "name": "comment_likes",
+      "status": "canonical",
+      "currentOwner": "src/core/comments/services",
+      "targetOwner": "src/core/comments/services",
+      "allowedReaders": [],
+      "allowedWriters": [
+        {
+          "path": "src/core/comments/services/comments.mutations.ts",
+          "maxCalls": 2,
+          "role": "canonical"
+        }
+      ]
+    },
+    {
+      "name": "post_likes_new",
+      "status": "canonical",
+      "currentOwner": "src/core/engagement/services/PostEngagementService.ts",
+      "targetOwner": "src/core/engagement/services/PostEngagementService.ts",
+      "allowedReaders": [
+        {
+          "path": "src/core/posts/services/posts.user.queries.ts",
+          "maxCalls": 1,
+          "role": "post-read-model"
+        },
+        {
+          "path": "src/core/profiles/services/profile.activity.queries.ts",
+          "maxCalls": 1,
+          "role": "profile-read-model"
+        },
+        {
+          "path": "src/core/profiles/services/profile.queries.ts",
+          "maxCalls": 1,
+          "role": "profile-read-model"
+        },
+        {
+          "path": "src/core/engagement/services/PostEngagementService.ts",
+          "maxCalls": 2,
+          "role": "canonical"
+        },
+        {
+          "path": "src/core/social/services/socialInteractionStats.queries.ts",
+          "maxCalls": 1,
+          "role": "stats-read-model"
+        }
+      ],
+      "allowedWriters": [
+        {
+          "path": "src/core/engagement/services/PostEngagementService.ts",
+          "maxCalls": 2,
+          "role": "canonical"
+        }
+      ]
+    },
+    {
+      "name": "saved_posts_new",
+      "status": "canonical",
+      "currentOwner": "src/core/engagement/services/PostEngagementService.ts",
+      "targetOwner": "src/core/engagement/services/PostEngagementService.ts",
+      "allowedReaders": [
+        {
+          "path": "src/core/posts/services/posts.user.queries.ts",
+          "maxCalls": 1,
+          "role": "post-read-model"
+        },
+        {
+          "path": "src/core/profiles/services/profile.activity.queries.ts",
+          "maxCalls": 1,
+          "role": "profile-read-model"
+        },
+        {
+          "path": "src/core/engagement/services/PostEngagementService.ts",
+          "maxCalls": 3,
+          "role": "canonical"
+        },
+        {
+          "path": "src/core/social/services/socialInteractionStats.queries.ts",
+          "maxCalls": 1,
+          "role": "stats-read-model"
+        }
+      ],
+      "allowedWriters": [
+        {
+          "path": "src/core/engagement/services/PostEngagementService.ts",
+          "maxCalls": 2,
+          "role": "canonical"
+        }
+      ]
+    },
+    {
+      "name": "post_share_events",
+      "status": "canonical",
+      "currentOwner": "src/core/posts/services/posts.mutations.ts",
+      "targetOwner": "src/core/posts/services/posts.mutations.ts",
+      "allowedReaders": [],
+      "allowedWriters": [
+        {
+          "path": "src/core/posts/services/posts.mutations.ts",
+          "maxCalls": 1,
+          "role": "canonical"
+        }
+      ]
+    },
+    {
+      "name": "notification_preferences",
+      "status": "canonical",
+      "currentOwner": "src/core/notifications/services/NotificationPreferencesService.ts",
+      "targetOwner": "src/core/notifications/services/NotificationPreferencesService.ts",
+      "allowedReaders": [
+        {
+          "path": "supabase/functions/send-email/index.ts",
+          "maxCalls": 1,
+          "role": "delivery-channel"
+        },
+        {
+          "path": "supabase/functions/send-push/index.ts",
+          "maxCalls": 1,
+          "role": "delivery-channel"
+        }
+      ],
+      "allowedWriters": []
+    },
+    {
+      "name": "notifications",
+      "status": "migration",
+      "finding": "CP-001",
+      "currentOwner": "src/core/notifications/services/NotificationService.ts",
+      "targetOwner": "src/core/notifications",
+      "allowedReaders": [
+        {
+          "path": "src/core/admin/services/AdminNotificationsService.ts",
+          "maxCalls": 2,
+          "role": "admin-read-model"
+        },
+        {
+          "path": "src/core/notifications/services/NotificationService.ts",
+          "maxCalls": 4,
+          "role": "canonical-inbox"
+        },
+        {
+          "path": "supabase/functions/user-export-data/index.ts",
+          "maxCalls": 1,
+          "role": "account-export"
+        }
+      ],
+      "allowedWriters": [
+        {
+          "path": "src/core/notifications/services/NotificationService.ts",
+          "maxCalls": 2,
+          "role": "self-inbox-state"
+        }
+      ]
+    },
+    {
+      "name": "notification_outbox",
+      "status": "canonical",
+      "finding": "CP-001",
+      "currentOwner": "private.notification_outbox-and-domain-database-producers",
+      "targetOwner": "private.notification_outbox-and-domain-database-producers",
+      "allowedReaders": [],
+      "allowedWriters": []
+    },
+    {
+      "name": "emergency_alerts",
+      "status": "canonical",
+      "currentOwner": "src/core/safety/services/SafetyService.ts",
+      "targetOwner": "src/core/safety/services/SafetyService.ts",
+      "allowedReaders": [
+        {
+          "path": "src/core/safety/services/SafetyService.ts",
+          "maxCalls": 2,
+          "role": "canonical"
+        },
+        {
+          "path": "supabase/functions/send-emergency-email/index.ts",
+          "maxCalls": 1,
+          "role": "trusted-delivery"
+        }
+      ],
+      "allowedWriters": [
+        {
+          "path": "src/core/safety/services/SafetyService.ts",
+          "maxCalls": 1,
+          "role": "canonical"
+        }
+      ]
+    },
+    {
+      "name": "emergency_contacts",
+      "status": "canonical",
+      "currentOwner": "src/core/safety/services/SafetyEmergencyContactsService.ts",
+      "targetOwner": "src/core/safety/services/SafetyEmergencyContactsService.ts",
+      "allowedReaders": [
+        {
+          "path": "src/core/safety/services/SafetyEmergencyContactsService.ts",
+          "maxCalls": 1,
+          "role": "canonical"
+        },
+        {
+          "path": "supabase/functions/send-emergency-email/index.ts",
+          "maxCalls": 1,
+          "role": "trusted-delivery"
+        }
+      ],
+      "allowedWriters": [
+        {
+          "path": "src/core/safety/services/SafetyEmergencyContactsService.ts",
+          "maxCalls": 3,
+          "role": "canonical"
+        }
+      ]
+    },
+    {
+      "name": "emergency_delivery_log",
+      "status": "canonical",
+      "currentOwner": "supabase/functions/send-emergency-email/index.ts",
+      "targetOwner": "supabase/functions/send-emergency-email/index.ts",
+      "allowedReaders": [
+        {
+          "path": "supabase/functions/send-emergency-email/index.ts",
+          "maxCalls": 1,
+          "role": "trusted-delivery"
+        }
+      ],
+      "allowedWriters": [
+        {
+          "path": "supabase/functions/send-emergency-email/index.ts",
+          "maxCalls": 3,
+          "role": "trusted-delivery"
+        }
+      ]
+    },
+    {
+      "name": "safety_incidents",
+      "status": "canonical",
+      "currentOwner": "src/core/safety/services/SafetyService.ts",
+      "targetOwner": "src/core/safety/services/SafetyService.ts",
+      "allowedReaders": [
+        {
+          "path": "src/core/safety/services/SafetyService.ts",
+          "maxCalls": 2,
+          "role": "canonical"
+        }
+      ],
+      "allowedWriters": [
+        {
+          "path": "src/core/safety/services/SafetyService.ts",
+          "maxCalls": 1,
+          "role": "canonical"
+        }
+      ]
+    },
+    {
+      "name": "safety_evidence",
+      "status": "canonical",
+      "currentOwner": "src/core/safety/services/SafetyService.ts",
+      "targetOwner": "src/core/safety/services/SafetyService.ts",
+      "allowedReaders": [
+        {
+          "path": "src/core/safety/services/SafetyService.ts",
+          "maxCalls": 1,
+          "role": "canonical"
+        }
+      ],
+      "allowedWriters": [
+        {
+          "path": "src/core/safety/services/SafetyService.ts",
+          "maxCalls": 1,
+          "role": "canonical"
+        }
+      ]
+    },
+    {
+      "name": "ride_shares",
+      "status": "canonical",
+      "currentOwner": "src/core/safety/services/SafetyRideShareService.ts",
+      "targetOwner": "src/core/safety/services/SafetyRideShareService.ts",
+      "allowedReaders": [],
+      "allowedWriters": [
+        {
+          "path": "src/core/safety/services/SafetyRideShareService.ts",
+          "maxCalls": 1,
+          "role": "canonical"
+        }
+      ]
+    },
+    {
+      "name": "safety_audit_log",
+      "status": "canonical",
+      "currentOwner": "private.audit_safety_insert-and-safety-rpcs",
+      "targetOwner": "private.audit_safety_insert-and-safety-rpcs",
+      "allowedReaders": [],
+      "allowedWriters": []
+    },
+    {
+      "name": "user_favorite_businesses",
+      "status": "canonical",
+      "currentOwner": "src/core/favorites/services/BusinessFavoriteStore.ts",
+      "targetOwner": "src/core/favorites/services/BusinessFavoriteStore.ts",
+      "allowedReaders": [],
+      "allowedWriters": []
+    },
+    {
+      "name": "community_reports",
+      "status": "canonical",
+      "currentOwner": "src/core/community/moderation/CommunityReportService.ts",
+      "targetOwner": "src/core/community/moderation/CommunityReportService.ts",
+      "allowedReaders": [],
+      "allowedWriters": [
+        {
+          "path": "src/core/community/moderation/CommunityReportService.ts",
+          "maxCalls": 1,
+          "role": "report-command"
+        }
+      ]
+    },
+    {
+      "name": "community_social_audit_log",
+      "status": "canonical",
+      "currentOwner": "private.audit_community_social_change-and-domain-rpcs",
+      "targetOwner": "private.audit_community_social_change-and-domain-rpcs",
+      "allowedReaders": [],
+      "allowedWriters": []
+    },
+    {
+      "name": "banned_users",
+      "status": "canonical",
+      "currentOwner": "server-owned-trust-ban-contract",
+      "targetOwner": "server-owned-trust-ban-contract",
+      "allowedReaders": [],
+      "allowedWriters": []
+    },
+    {
+      "name": "classified_reports",
+      "status": "canonical",
+      "currentOwner": "supabase/migrations/20260714118000_harden_sensitive_report_commands.sql",
+      "targetOwner": "server-owned-classified-report-command",
+      "allowedReaders": [
+        {
+          "path": "src/core/admin/services/AdminClassifiedsService.ts",
+          "maxCalls": 1,
+          "role": "admin-read-model"
+        },
+        {
+          "path": "src/core/classifieds/services/ClassifiedReportService.ts",
+          "maxCalls": 1,
+          "role": "pending-count-read-model"
+        }
+      ],
+      "allowedWriters": []
+    },
+    {
+      "name": "vaga_reports",
+      "status": "canonical",
+      "currentOwner": "supabase/migrations/20260714118000_harden_sensitive_report_commands.sql",
+      "targetOwner": "server-owned-vaga-report-command",
+      "allowedReaders": [],
+      "allowedWriters": []
+    },
+    {
+      "name": "ride_reports",
+      "status": "canonical",
+      "currentOwner": "supabase/migrations/20260714118000_harden_sensitive_report_commands.sql",
+      "targetOwner": "server-owned-ride-report-command",
+      "allowedReaders": [
+        {
+          "path": "src/core/mobility/services/RideReportsService.ts",
+          "maxCalls": 3,
+          "role": "rls-read-model"
+        },
+        {
+          "path": "src/core/admin/services/AdminUserDetailService.ts",
+          "maxCalls": 3,
+          "role": "admin-user-read-model"
+        }
+      ],
+      "allowedWriters": []
+    },
+    {
+      "name": "reviews",
+      "status": "canonical",
+      "currentOwner": "src/core/reviews",
+      "targetOwner": "src/core/reviews",
+      "allowedReaders": [
+        {
+          "path": "src/core/reviews/services/reviews.queries.ts",
+          "maxCalls": 5,
+          "role": "canonical-read-owner"
+        },
+        {
+          "path": "supabase/functions/business-reviews-rpc/index.ts",
+          "maxCalls": 2,
+          "role": "business-policy-adapter"
+        }
+      ],
+      "allowedWriters": [
+        {
+          "path": "supabase/functions/business-reviews-rpc/index.ts",
+          "maxCalls": 4,
+          "role": "business-policy-adapter"
+        }
+      ]
+    },
+    {
+      "name": "review_helpfulness",
+      "status": "canonical",
+      "currentOwner": "src/core/reviews/services/ReviewEngagementService.ts",
+      "targetOwner": "server-owned-review-engagement-command",
+      "allowedReaders": [],
+      "allowedWriters": []
+    },
+    {
+      "name": "review_reports",
+      "status": "canonical",
+      "currentOwner": "supabase/migrations/20260714118000_harden_sensitive_report_commands.sql",
+      "targetOwner": "server-owned-review-report-command",
+      "allowedReaders": [],
+      "allowedWriters": []
+    },
+    {
+      "name": "conversations",
+      "status": "canonical",
+      "currentOwner": "src/core/messaging/services/ClassifiedMessagingService.ts",
+      "targetOwner": "server-owned-classified-messaging-command",
+      "allowedReaders": [
+        {
+          "path": "src/core/messaging/services/ClassifiedMessagingService.ts",
+          "maxCalls": 3,
+          "role": "canonical-read-model"
+        },
+        {
+          "path": "src/core/admin/services/AdminMessagingService.ts",
+          "maxCalls": 2,
+          "role": "admin-read-model"
+        }
+      ],
+      "allowedWriters": []
+    },
+    {
+      "name": "messages",
+      "status": "canonical",
+      "currentOwner": "src/core/messaging/services/ClassifiedMessagingService.ts",
+      "targetOwner": "server-owned-classified-messaging-command",
+      "allowedReaders": [
+        {
+          "path": "src/core/messaging/services/ClassifiedMessagingService.ts",
+          "maxCalls": 1,
+          "role": "canonical-read-model"
+        },
+        {
+          "path": "src/core/admin/services/AdminMessagingService.ts",
+          "maxCalls": 3,
+          "role": "admin-read-model"
+        }
+      ],
+      "allowedWriters": [
+        {
+          "path": "supabase/functions/user-delete-account/index.ts",
+          "maxCalls": 1,
+          "role": "privacy-erasure"
+        }
+      ]
+    },
+    {
+      "name": "community_direct_threads",
+      "status": "canonical",
+      "currentOwner": "server-owned-community-direct-messaging-command",
+      "targetOwner": "server-owned-community-direct-messaging-command",
+      "allowedReaders": [],
+      "allowedWriters": []
+    },
+    {
+      "name": "community_direct_thread_participants",
+      "status": "canonical",
+      "currentOwner": "server-owned-community-direct-messaging-command",
+      "targetOwner": "server-owned-community-direct-messaging-command",
+      "allowedReaders": [],
+      "allowedWriters": []
+    },
+    {
+      "name": "community_direct_messages",
+      "status": "canonical",
+      "currentOwner": "server-owned-community-direct-messaging-command",
+      "targetOwner": "server-owned-community-direct-messaging-command",
+      "allowedReaders": [],
+      "allowedWriters": []
+    },
+    {
+      "name": "community_direct_message_reports",
+      "status": "canonical",
+      "currentOwner": "server-owned-community-direct-messaging-command",
+      "targetOwner": "server-owned-community-direct-messaging-command",
+      "allowedReaders": [],
+      "allowedWriters": []
+    },
+    {
+      "name": "community_direct_message_audit_log",
+      "status": "canonical",
+      "currentOwner": "private-community-direct-messaging-audit",
+      "targetOwner": "private-community-direct-messaging-audit",
+      "allowedReaders": [],
+      "allowedWriters": []
+    },
+    {
+      "name": "trust_events",
+      "status": "canonical",
+      "currentOwner": "server-owned-trust-event-commands",
+      "targetOwner": "server-owned-trust-event-commands",
+      "allowedReaders": [],
+      "allowedWriters": []
+    },
+    {
+      "name": "trust_admin_actions",
+      "status": "canonical",
+      "currentOwner": "server-owned-trust-admin-commands",
+      "targetOwner": "server-owned-trust-admin-commands",
+      "allowedReaders": [],
+      "allowedWriters": []
+    },
+    {
+      "name": "ride_ratings",
+      "status": "canonical",
+      "currentOwner": "server-owned-ride-rating-command",
+      "targetOwner": "server-owned-ride-rating-command",
+      "allowedReaders": [
+        {
+          "path": "src/core/admin/services/MobilityAdminQueryService.ts",
+          "maxCalls": 1,
+          "role": "admin-aggregate-read"
+        }
+      ],
+      "allowedWriters": []
+    },
+    {
+      "name": "media_assets",
+      "status": "canonical",
+      "currentOwner": "supabase/functions/media-assets",
+      "targetOwner": "supabase/functions/media-assets",
+      "allowedReaders": [],
+      "allowedWriters": []
+    },
+    {
+      "name": "media_asset_links",
+      "status": "canonical",
+      "currentOwner": "database-trigger-owned-media-lifecycle",
+      "targetOwner": "database-trigger-owned-media-lifecycle",
+      "allowedReaders": [],
+      "allowedWriters": []
+    }
+  ],
+  "controlledRpcs": [
+    {
+      "name": "create_notification",
+      "status": "migration",
+      "finding": "CP-001",
+      "currentOwner": "src/core/notifications/services/NotificationService.ts",
+      "targetOwner": "server-owned-notification-outbox-dispatcher",
+      "allowedCallers": [
+        {
+          "path": "src/core/notifications/services/NotificationService.ts",
+          "maxCalls": 1,
+          "role": "self-only"
+        },
+        {
+          "path": "supabase/functions/professional-notifications-rpc/index.ts",
+          "maxCalls": 1,
+          "role": "trusted-broker"
+        }
+      ]
+    },
+    {
+      "name": "mark_current_user_notifications_as_read",
+      "status": "canonical",
+      "currentOwner": "src/core/notifications/services/NotificationService.ts",
+      "targetOwner": "src/core/notifications/services/NotificationService.ts",
+      "allowedCallers": [
+        {
+          "path": "src/core/notifications/services/NotificationService.ts",
+          "maxCalls": 1,
+          "role": "canonical"
+        }
+      ]
+    },
+    {
+      "name": "update_safety_emergency_alert_status",
+      "status": "canonical",
+      "currentOwner": "src/core/safety/services/SafetyService.ts",
+      "targetOwner": "src/core/safety/services/SafetyService.ts",
+      "allowedCallers": [
+        {
+          "path": "src/core/safety/services/SafetyService.ts",
+          "maxCalls": 1,
+          "role": "canonical-command"
+        }
+      ]
+    },
+    {
+      "name": "update_safety_incident_status",
+      "status": "canonical",
+      "currentOwner": "src/core/safety/services/SafetyService.ts",
+      "targetOwner": "src/core/safety/services/SafetyService.ts",
+      "allowedCallers": [
+        {
+          "path": "src/core/safety/services/SafetyService.ts",
+          "maxCalls": 1,
+          "role": "canonical-command"
+        }
+      ]
+    },
+    {
+      "name": "revoke_safety_ride_share",
+      "status": "canonical",
+      "currentOwner": "src/core/safety/services/SafetyRideShareService.ts",
+      "targetOwner": "src/core/safety/services/SafetyRideShareService.ts",
+      "allowedCallers": [
+        {
+          "path": "src/core/safety/services/SafetyRideShareService.ts",
+          "maxCalls": 1,
+          "role": "canonical-command"
+        }
+      ]
+    },
+    {
+      "name": "get_shared_ride_safety_data",
+      "status": "canonical",
+      "currentOwner": "src/core/safety/services/SafetyRideShareService.ts",
+      "targetOwner": "src/core/safety/services/SafetyRideShareService.ts",
+      "allowedCallers": [
+        {
+          "path": "src/core/safety/services/SafetyRideShareService.ts",
+          "maxCalls": 1,
+          "role": "public-token-read-model"
+        }
+      ]
+    },
+    {
+      "name": "get_current_user_business_favorites",
+      "status": "canonical",
+      "currentOwner": "src/core/favorites/services/BusinessFavoriteStore.ts",
+      "targetOwner": "src/core/favorites/services/BusinessFavoriteStore.ts",
+      "allowedCallers": [
+        {
+          "path": "src/core/favorites/services/BusinessFavoriteStore.ts",
+          "maxCalls": 1,
+          "role": "canonical-read-owner"
+        }
+      ]
+    },
+    {
+      "name": "get_current_user_business_favorite_ids",
+      "status": "canonical",
+      "currentOwner": "src/core/favorites/services/BusinessFavoriteStore.ts",
+      "targetOwner": "src/core/favorites/services/BusinessFavoriteStore.ts",
+      "allowedCallers": [
+        {
+          "path": "src/core/favorites/services/BusinessFavoriteStore.ts",
+          "maxCalls": 1,
+          "role": "bounded-batch-read-owner"
+        }
+      ]
+    },
+    {
+      "name": "is_current_user_business_favorite",
+      "status": "canonical",
+      "currentOwner": "src/core/favorites/services/BusinessFavoriteStore.ts",
+      "targetOwner": "src/core/favorites/services/BusinessFavoriteStore.ts",
+      "allowedCallers": [
+        {
+          "path": "src/core/favorites/services/BusinessFavoriteStore.ts",
+          "maxCalls": 1,
+          "role": "canonical-read-owner"
+        }
+      ]
+    },
+    {
+      "name": "set_current_user_business_favorite",
+      "status": "canonical",
+      "currentOwner": "src/core/favorites/services/BusinessFavoriteStore.ts",
+      "targetOwner": "src/core/favorites/services/BusinessFavoriteStore.ts",
+      "allowedCallers": [
+        {
+          "path": "src/core/favorites/services/BusinessFavoriteStore.ts",
+          "maxCalls": 1,
+          "role": "canonical-command-owner"
+        }
+      ]
+    },
+    {
+      "name": "patch_current_user_business_favorite",
+      "status": "canonical",
+      "currentOwner": "src/core/favorites/services/BusinessFavoriteStore.ts",
+      "targetOwner": "src/core/favorites/services/BusinessFavoriteStore.ts",
+      "allowedCallers": [
+        {
+          "path": "src/core/favorites/services/BusinessFavoriteStore.ts",
+          "maxCalls": 1,
+          "role": "canonical-command-owner"
+        }
+      ]
+    },
+    {
+      "name": "get_business_reviews",
+      "status": "canonical",
+      "currentOwner": "src/core/reviews-with-business-policy-adapter",
+      "targetOwner": "src/core/reviews-with-business-policy-adapter",
+      "allowedCallers": [
+        {
+          "path": "src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts",
+          "maxCalls": 1,
+          "role": "runtime-read-model"
+        },
+        {
+          "path": "src/modules/business/gastronomy/services/review.queries.ts",
+          "maxCalls": 2,
+          "role": "business-read-projection"
+        }
+      ]
+    },
+    {
+      "name": "get_profile_review_stats",
+      "status": "canonical",
+      "currentOwner": "src/core/reviews/services/reviews.queries.ts",
+      "targetOwner": "src/core/reviews/services/reviews.queries.ts",
+      "allowedCallers": [
+        {
+          "path": "src/core/reviews/services/reviews.queries.ts",
+          "maxCalls": 1,
+          "role": "canonical-aggregate-read"
+        }
+      ]
+    },
+    {
+      "name": "get_review_aggregates_admin",
+      "status": "canonical",
+      "currentOwner": "src/core/reviews/services/reviews.queries.ts",
+      "targetOwner": "server-owned-admin-review-aggregate-read-model",
+      "allowedCallers": [
+        {
+          "path": "src/core/reviews/services/reviews.queries.ts",
+          "maxCalls": 1,
+          "role": "bounded-admin-aggregate-read"
+        }
+      ]
+    },
+    {
+      "name": "upsert_profile_review",
+      "status": "canonical",
+      "currentOwner": "src/core/reviews/services/reviews.mutations.ts",
+      "targetOwner": "server-owned-profile-review-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/reviews/services/reviews.mutations.ts",
+          "maxCalls": 1,
+          "role": "canonical-command-owner"
+        }
+      ]
+    },
+    {
+      "name": "delete_profile_review",
+      "status": "canonical",
+      "currentOwner": "src/core/reviews/services/reviews.mutations.ts",
+      "targetOwner": "server-owned-profile-review-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/reviews/services/reviews.mutations.ts",
+          "maxCalls": 1,
+          "role": "canonical-command-owner"
+        }
+      ]
+    },
+    {
+      "name": "set_review_helpfulness",
+      "status": "canonical",
+      "currentOwner": "src/core/reviews/services/ReviewEngagementService.ts",
+      "targetOwner": "server-owned-review-engagement-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/reviews/services/ReviewEngagementService.ts",
+          "maxCalls": 1,
+          "role": "canonical-command-owner"
+        }
+      ]
+    },
+    {
+      "name": "get_current_review_helpfulness",
+      "status": "canonical",
+      "currentOwner": "src/core/reviews/services/ReviewEngagementService.ts",
+      "targetOwner": "server-owned-review-engagement-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/reviews/services/ReviewEngagementService.ts",
+          "maxCalls": 1,
+          "role": "canonical-owned-state-read"
+        }
+      ]
+    },
+    {
+      "name": "review_community_content_reports",
+      "status": "canonical",
+      "currentOwner": "src/core/community/moderation/CommunityContentModerationService.ts",
+      "targetOwner": "src/core/community/moderation/CommunityContentModerationService.ts",
+      "allowedCallers": [
+        {
+          "path": "src/core/community/moderation/CommunityContentModerationService.ts",
+          "maxCalls": 1,
+          "role": "canonical"
+        }
+      ]
+    },
+    {
+      "name": "list_federated_moderation_queue",
+      "status": "canonical",
+      "currentOwner": "src/core/moderation/services/FederatedModerationQueueService.ts",
+      "targetOwner": "server-owned-read-only-moderation-projection",
+      "allowedCallers": [
+        {
+          "path": "src/core/moderation/services/FederatedModerationQueueService.ts",
+          "maxCalls": 1,
+          "role": "bounded-keyset-read-model"
+        }
+      ]
+    },
+    {
+      "name": "list_community_social_audit_events",
+      "status": "canonical",
+      "currentOwner": "src/core/community/audit/CommunitySocialAuditReader.ts",
+      "targetOwner": "server-owned-community-audit-read-model",
+      "allowedCallers": [
+        {
+          "path": "src/core/community/audit/CommunitySocialAuditReader.ts",
+          "maxCalls": 1,
+          "role": "bounded-keyset-admin-read-model"
+        }
+      ]
+    },
+    {
+      "name": "has_current_active_ban",
+      "status": "canonical",
+      "currentOwner": "src/core/trust/services/ActiveBanReader.ts",
+      "targetOwner": "server-owned-current-user-ban-read-model",
+      "allowedCallers": [
+        {
+          "path": "src/core/trust/services/ActiveBanReader.ts",
+          "maxCalls": 1,
+          "role": "minimal-current-user-state-read"
+        }
+      ]
+    },
+    {
+      "name": "list_group_message_reaction_state",
+      "status": "canonical",
+      "currentOwner": "src/core/social/services/SocialGroupInteractionsService.ts",
+      "targetOwner": "community-group-engagement-adapter",
+      "allowedCallers": [
+        {
+          "path": "src/core/social/services/SocialGroupInteractionsService.ts",
+          "maxCalls": 1,
+          "role": "current-owner"
+        }
+      ]
+    },
+    {
+      "name": "create_classified_report",
+      "status": "canonical",
+      "currentOwner": "supabase/migrations/20260714118000_harden_sensitive_report_commands.sql",
+      "targetOwner": "server-owned-classified-report-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/classifieds/services/ClassifiedReportService.ts",
+          "maxCalls": 1,
+          "role": "domain-adapter"
+        }
+      ]
+    },
+    {
+      "name": "moderate_classified_report",
+      "status": "canonical",
+      "currentOwner": "supabase/migrations/20260714118000_harden_sensitive_report_commands.sql",
+      "targetOwner": "server-owned-classified-report-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/classifieds/services/ClassifiedReportService.ts",
+          "maxCalls": 1,
+          "role": "admin-domain-adapter"
+        }
+      ]
+    },
+    {
+      "name": "create_vaga_report",
+      "status": "canonical",
+      "currentOwner": "supabase/migrations/20260714118000_harden_sensitive_report_commands.sql",
+      "targetOwner": "server-owned-vaga-report-command",
+      "allowedCallers": [
+        {
+          "path": "src/modules/classifieds/jobs/services/VagaReportService.ts",
+          "maxCalls": 1,
+          "role": "domain-adapter"
+        }
+      ]
+    },
+    {
+      "name": "moderate_vaga_report",
+      "status": "canonical",
+      "currentOwner": "supabase/migrations/20260714118000_harden_sensitive_report_commands.sql",
+      "targetOwner": "server-owned-vaga-report-command",
+      "allowedCallers": [
+        {
+          "path": "src/modules/classifieds/jobs/services/VagaReportService.ts",
+          "maxCalls": 1,
+          "role": "admin-domain-adapter"
+        }
+      ]
+    },
+    {
+      "name": "create_review_report",
+      "status": "canonical",
+      "currentOwner": "supabase/migrations/20260714118000_harden_sensitive_report_commands.sql",
+      "targetOwner": "server-owned-review-report-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/reviews/services/ReviewEngagementService.ts",
+          "maxCalls": 1,
+          "role": "canonical-report-adapter"
+        }
+      ]
+    },
+    {
+      "name": "moderate_review_report",
+      "status": "canonical",
+      "currentOwner": "supabase/migrations/20260714118000_harden_sensitive_report_commands.sql",
+      "targetOwner": "server-owned-review-report-command",
+      "allowedCallers": []
+    },
+    {
+      "name": "create_ride_report",
+      "status": "canonical",
+      "currentOwner": "supabase/migrations/20260714118000_harden_sensitive_report_commands.sql",
+      "targetOwner": "server-owned-ride-report-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/mobility/services/RideReportsService.ts",
+          "maxCalls": 1,
+          "role": "domain-adapter"
+        }
+      ]
+    },
+    {
+      "name": "moderate_ride_report",
+      "status": "canonical",
+      "currentOwner": "supabase/migrations/20260714118000_harden_sensitive_report_commands.sql",
+      "targetOwner": "server-owned-ride-report-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/mobility/services/RideReportsService.ts",
+          "maxCalls": 1,
+          "role": "admin-domain-adapter"
+        }
+      ]
+    },
+    {
+      "name": "create_classified_conversation",
+      "status": "canonical",
+      "currentOwner": "src/core/messaging/services/ClassifiedMessagingService.ts",
+      "targetOwner": "server-owned-classified-messaging-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/messaging/services/ClassifiedMessagingService.ts",
+          "maxCalls": 1,
+          "role": "canonical-command-adapter"
+        }
+      ]
+    },
+    {
+      "name": "list_classified_conversation_previews",
+      "status": "canonical",
+      "currentOwner": "src/core/messaging/services/ClassifiedMessagingService.ts",
+      "targetOwner": "server-owned-classified-messaging-read-model",
+      "allowedCallers": [
+        {
+          "path": "src/core/messaging/services/ClassifiedMessagingService.ts",
+          "maxCalls": 1,
+          "role": "bounded-inbox-read-model"
+        }
+      ]
+    },
+    {
+      "name": "send_classified_message",
+      "status": "canonical",
+      "currentOwner": "src/core/messaging/services/ClassifiedMessagingService.ts",
+      "targetOwner": "server-owned-classified-messaging-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/messaging/services/ClassifiedMessagingService.ts",
+          "maxCalls": 1,
+          "role": "canonical-command-adapter"
+        }
+      ]
+    },
+    {
+      "name": "mark_classified_messages_read",
+      "status": "canonical",
+      "currentOwner": "src/core/messaging/services/ClassifiedMessagingService.ts",
+      "targetOwner": "server-owned-classified-messaging-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/messaging/services/ClassifiedMessagingService.ts",
+          "maxCalls": 1,
+          "role": "canonical-command-adapter"
+        }
+      ]
+    },
+    {
+      "name": "block_classified_conversation",
+      "status": "canonical",
+      "currentOwner": "src/core/messaging/services/ClassifiedMessagingService.ts",
+      "targetOwner": "server-owned-classified-messaging-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/messaging/services/ClassifiedMessagingService.ts",
+          "maxCalls": 1,
+          "role": "participant-command-adapter"
+        }
+      ]
+    },
+    {
+      "name": "moderate_classified_conversation",
+      "status": "canonical",
+      "currentOwner": "src/core/messaging/services/ClassifiedMessagingService.ts",
+      "targetOwner": "server-owned-classified-messaging-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/messaging/services/ClassifiedMessagingService.ts",
+          "maxCalls": 1,
+          "role": "admin-command-adapter"
+        }
+      ]
+    },
+    {
+      "name": "create_community_direct_thread",
+      "status": "canonical",
+      "currentOwner": "src/core/messaging/services/CommunityDirectMessagingService.ts",
+      "targetOwner": "server-owned-community-direct-messaging-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/messaging/services/CommunityDirectMessagingService.ts",
+          "maxCalls": 1,
+          "role": "canonical-command-adapter"
+        }
+      ]
+    },
+    {
+      "name": "list_community_direct_thread_previews",
+      "status": "canonical",
+      "currentOwner": "src/core/messaging/services/CommunityDirectMessagingService.ts",
+      "targetOwner": "server-owned-community-direct-messaging-read-model",
+      "allowedCallers": [
+        {
+          "path": "src/core/messaging/services/CommunityDirectMessagingService.ts",
+          "maxCalls": 1,
+          "role": "bounded-inbox-read-model"
+        }
+      ]
+    },
+    {
+      "name": "list_community_direct_messages",
+      "status": "canonical",
+      "currentOwner": "src/core/messaging/services/CommunityDirectMessagingService.ts",
+      "targetOwner": "server-owned-community-direct-messaging-read-model",
+      "allowedCallers": [
+        {
+          "path": "src/core/messaging/services/CommunityDirectMessagingService.ts",
+          "maxCalls": 1,
+          "role": "bounded-message-read-model"
+        }
+      ]
+    },
+    {
+      "name": "send_community_direct_message",
+      "status": "canonical",
+      "currentOwner": "src/core/messaging/services/CommunityDirectMessagingService.ts",
+      "targetOwner": "server-owned-community-direct-messaging-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/messaging/services/CommunityDirectMessagingService.ts",
+          "maxCalls": 1,
+          "role": "canonical-command-adapter"
+        }
+      ]
+    },
+    {
+      "name": "mark_community_direct_thread_read",
+      "status": "canonical",
+      "currentOwner": "src/core/messaging/services/CommunityDirectMessagingService.ts",
+      "targetOwner": "server-owned-community-direct-messaging-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/messaging/services/CommunityDirectMessagingService.ts",
+          "maxCalls": 1,
+          "role": "participant-command-adapter"
+        }
+      ]
+    },
+    {
+      "name": "set_community_direct_thread_blocked",
+      "status": "canonical",
+      "currentOwner": "src/core/messaging/services/CommunityDirectMessagingService.ts",
+      "targetOwner": "server-owned-community-direct-messaging-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/messaging/services/CommunityDirectMessagingService.ts",
+          "maxCalls": 1,
+          "role": "participant-command-adapter"
+        }
+      ]
+    },
+    {
+      "name": "report_community_direct_thread",
+      "status": "canonical",
+      "currentOwner": "src/core/messaging/services/CommunityDirectMessagingService.ts",
+      "targetOwner": "server-owned-community-direct-messaging-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/messaging/services/CommunityDirectMessagingService.ts",
+          "maxCalls": 1,
+          "role": "participant-report-command-adapter"
+        }
+      ]
+    },
+    {
+      "name": "moderate_community_direct_report",
+      "status": "canonical",
+      "currentOwner": "supabase/migrations/20260715093000_create_community_direct_messaging_commands.sql",
+      "targetOwner": "server-owned-community-direct-messaging-moderation-command",
+      "allowedCallers": []
+    },
+    {
+      "name": "report_classified_comment",
+      "status": "canonical",
+      "currentOwner": "src/core/trust/services/TrustIncidentService.ts",
+      "targetOwner": "server-owned-trust-incident-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/trust/services/TrustIncidentService.ts",
+          "maxCalls": 1,
+          "role": "classified-comment-incident-adapter"
+        }
+      ]
+    },
+    {
+      "name": "report_classified_conversation",
+      "status": "canonical",
+      "currentOwner": "src/core/trust/services/TrustIncidentService.ts",
+      "targetOwner": "server-owned-trust-incident-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/trust/services/TrustIncidentService.ts",
+          "maxCalls": 1,
+          "role": "classified-conversation-incident-adapter"
+        }
+      ]
+    },
+    {
+      "name": "report_classified_message",
+      "status": "canonical",
+      "currentOwner": "src/core/trust/services/TrustIncidentService.ts",
+      "targetOwner": "server-owned-trust-incident-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/trust/services/TrustIncidentService.ts",
+          "maxCalls": 1,
+          "role": "classified-message-incident-adapter"
+        }
+      ]
+    },
+    {
+      "name": "get_current_notification_preferences",
+      "status": "canonical",
+      "currentOwner": "src/core/notifications/services/NotificationPreferencesService.ts",
+      "targetOwner": "src/core/notifications/services/NotificationPreferencesService.ts",
+      "allowedCallers": [
+        {
+          "path": "src/core/notifications/services/NotificationPreferencesService.ts",
+          "maxCalls": 1,
+          "role": "canonical-read-command"
+        }
+      ]
+    },
+    {
+      "name": "patch_current_notification_preferences",
+      "status": "canonical",
+      "currentOwner": "src/core/notifications/services/NotificationPreferencesService.ts",
+      "targetOwner": "src/core/notifications/services/NotificationPreferencesService.ts",
+      "allowedCallers": [
+        {
+          "path": "src/core/notifications/services/NotificationPreferencesService.ts",
+          "maxCalls": 1,
+          "role": "canonical-patch-command"
+        }
+      ]
+    },
+    {
+      "name": "reserve_media_asset_upload",
+      "status": "canonical",
+      "currentOwner": "supabase/functions/media-assets/index.ts",
+      "targetOwner": "supabase/functions/media-assets/index.ts",
+      "allowedCallers": [
+        {
+          "path": "supabase/functions/media-assets/index.ts",
+          "maxCalls": 1,
+          "role": "atomic-upload-reservation"
+        }
+      ]
+    },
+    {
+      "name": "activate_media_asset_upload",
+      "status": "canonical",
+      "currentOwner": "supabase/functions/media-assets/index.ts",
+      "targetOwner": "supabase/functions/media-assets/index.ts",
+      "allowedCallers": [
+        {
+          "path": "supabase/functions/media-assets/index.ts",
+          "maxCalls": 1,
+          "role": "upload-activation"
+        }
+      ]
+    },
+    {
+      "name": "fail_media_asset_upload",
+      "status": "canonical",
+      "currentOwner": "supabase/functions/media-assets/index.ts",
+      "targetOwner": "supabase/functions/media-assets/index.ts",
+      "allowedCallers": [
+        {
+          "path": "supabase/functions/media-assets/index.ts",
+          "maxCalls": 1,
+          "role": "upload-compensation"
+        }
+      ]
+    },
+    {
+      "name": "list_media_asset_orphans",
+      "status": "canonical",
+      "currentOwner": "supabase/functions/media-assets-cleanup/index.ts",
+      "targetOwner": "supabase/functions/media-assets-cleanup/index.ts",
+      "allowedCallers": [
+        {
+          "path": "supabase/functions/media-assets-cleanup/index.ts",
+          "maxCalls": 1,
+          "role": "bounded-orphan-claim"
+        }
+      ]
+    },
+    {
+      "name": "mark_media_assets_deleted",
+      "status": "canonical",
+      "currentOwner": "supabase/functions/media-assets-cleanup/index.ts",
+      "targetOwner": "supabase/functions/media-assets-cleanup/index.ts",
+      "allowedCallers": [
+        {
+          "path": "supabase/functions/media-assets-cleanup/index.ts",
+          "maxCalls": 1,
+          "role": "orphan-cleanup-commit"
+        }
+      ]
+    },
+    {
+      "name": "submit_classified_trust_feedback",
+      "status": "canonical",
+      "currentOwner": "src/core/trust/services/OperationalTrustCommandService.ts",
+      "targetOwner": "server-owned-classified-trust-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/trust/services/OperationalTrustCommandService.ts",
+          "maxCalls": 1,
+          "role": "classified-command-adapter"
+        }
+      ]
+    },
+    {
+      "name": "submit_order_trust_feedback",
+      "status": "canonical",
+      "currentOwner": "src/core/trust/services/OperationalTrustCommandService.ts",
+      "targetOwner": "server-owned-order-trust-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/trust/services/OperationalTrustCommandService.ts",
+          "maxCalls": 1,
+          "role": "order-command-adapter"
+        }
+      ]
+    },
+    {
+      "name": "submit_ride_trust_feedback",
+      "status": "canonical",
+      "currentOwner": "src/core/trust/services/OperationalTrustCommandService.ts",
+      "targetOwner": "server-owned-ride-trust-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/trust/services/OperationalTrustCommandService.ts",
+          "maxCalls": 1,
+          "role": "ride-command-adapter"
+        }
+      ]
+    },
+    {
+      "name": "submit_work_opportunity_feedback",
+      "status": "canonical",
+      "currentOwner": "src/core/trust/services/OperationalTrustCommandService.ts",
+      "targetOwner": "server-owned-work-opportunity-trust-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/trust/services/OperationalTrustCommandService.ts",
+          "maxCalls": 1,
+          "role": "work-opportunity-command-adapter"
+        }
+      ]
+    },
+    {
+      "name": "get_professional_trust_reputation",
+      "status": "canonical",
+      "currentOwner": "src/core/work-opportunities/services/WorkOpportunityTrustService.ts",
+      "targetOwner": "server-owned-professional-trust-read-model",
+      "allowedCallers": [
+        {
+          "path": "src/core/work-opportunities/services/WorkOpportunityTrustService.ts",
+          "maxCalls": 1,
+          "role": "public-aggregate-read"
+        }
+      ]
+    },
+    {
+      "name": "submit_ride_rating",
+      "status": "canonical",
+      "currentOwner": "src/core/mobility/services/RideRatingService.ts",
+      "targetOwner": "server-owned-ride-rating-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/mobility/services/RideRatingService.ts",
+          "maxCalls": 1,
+          "role": "canonical-command-owner"
+        }
+      ]
+    },
+    {
+      "name": "get_ride_rating_summary",
+      "status": "canonical",
+      "currentOwner": "src/core/mobility/services/RideRatingService.ts",
+      "targetOwner": "server-owned-ride-rating-read-model",
+      "allowedCallers": [
+        {
+          "path": "src/core/mobility/services/RideRatingService.ts",
+          "maxCalls": 1,
+          "role": "public-aggregate-read"
+        }
+      ]
+    },
+    {
+      "name": "get_current_trust_policy_decision",
+      "status": "canonical",
+      "currentOwner": "src/core/trust/services/TrustPolicyReadService.ts",
+      "targetOwner": "server-owned-trust-policy-read-model",
+      "allowedCallers": [
+        {
+          "path": "src/core/trust/services/TrustPolicyReadService.ts",
+          "maxCalls": 1,
+          "role": "current-profile-policy-read"
+        }
+      ]
+    },
+    {
+      "name": "get_ride_offer_trust_decisions",
+      "status": "canonical",
+      "currentOwner": "src/core/trust/services/TrustPolicyReadService.ts",
+      "targetOwner": "server-owned-trust-policy-read-model",
+      "allowedCallers": [
+        {
+          "path": "src/core/trust/services/TrustPolicyReadService.ts",
+          "maxCalls": 1,
+          "role": "bounded-offer-policy-batch-read"
+        }
+      ]
+    },
+    {
+      "name": "list_trust_events_admin",
+      "status": "canonical",
+      "currentOwner": "src/core/trust/services/TrustAdminService.ts",
+      "targetOwner": "server-owned-trust-admin-read-model",
+      "allowedCallers": [
+        {
+          "path": "src/core/trust/services/TrustAdminService.ts",
+          "maxCalls": 1,
+          "role": "bounded-admin-read"
+        }
+      ]
+    },
+    {
+      "name": "review_trust_events_admin",
+      "status": "canonical",
+      "currentOwner": "src/core/trust/services/TrustAdminService.ts",
+      "targetOwner": "server-owned-trust-admin-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/trust/services/TrustAdminService.ts",
+          "maxCalls": 1,
+          "role": "bounded-admin-command"
+        }
+      ]
+    },
+    {
+      "name": "apply_trust_admin_actions",
+      "status": "canonical",
+      "currentOwner": "src/core/trust/services/TrustAdminService.ts",
+      "targetOwner": "server-owned-trust-admin-command",
+      "allowedCallers": [
+        {
+          "path": "src/core/trust/services/TrustAdminService.ts",
+          "maxCalls": 1,
+          "role": "atomic-admin-command"
+        }
+      ]
+    },
+    {
+      "name": "list_trust_admin_actions_admin",
+      "status": "canonical",
+      "currentOwner": "src/core/trust/services/TrustAdminService.ts",
+      "targetOwner": "server-owned-trust-admin-read-model",
+      "allowedCallers": [
+        {
+          "path": "src/core/trust/services/TrustAdminService.ts",
+          "maxCalls": 1,
+          "role": "bounded-admin-audit-read"
+        }
+      ]
+    }
+  ],
+  "incrementalBaseline": [
+    {
+      "kind": "dynamic-channel",
+      "resource": "<dynamic>",
+      "access": "connect",
+      "path": "src/core/realtime/services/RealtimeService.ts",
+      "maxCalls": 3,
+      "details": ["subscriptionId", "`${definition.channelPrefix}:${scopeId}`"]
+    },
+    {
+      "kind": "dynamic-storage",
+      "resource": "<dynamic>",
+      "access": "read",
+      "path": "src/core/media/services/MediaService.ts",
+      "maxCalls": 6,
+      "details": [
+        "MEDIA_STORAGE_BUCKETS.AVATARS",
+        "MEDIA_STORAGE_BUCKETS.BUSINESS_LOGOS",
+        "MEDIA_STORAGE_BUCKETS.POST_IMAGES",
+        "bucket",
+        "options.bucket"
+      ]
+    },
+    {
+      "kind": "dynamic-storage",
+      "resource": "<dynamic>",
+      "access": "write",
+      "path": "src/core/media/services/MediaService.ts",
+      "maxCalls": 8,
+      "details": [
+        "MEDIA_STORAGE_BUCKETS.AVATARS",
+        "MEDIA_STORAGE_BUCKETS.BUSINESS_LOGOS",
+        "MEDIA_STORAGE_BUCKETS.POST_IMAGES",
+        "MEDIA_STORAGE_BUCKETS.VERIFICATION_DOCUMENTS",
+        "bucket",
+        "options.bucket"
+      ]
+    },
+    {
+      "kind": "dynamic-table",
+      "resource": "<dynamic>",
+      "access": "read",
+      "path": "src/core/engagement/services/ProfileSavedEntityService.ts",
+      "maxCalls": 2,
+      "details": ["config.tableName as never"]
+    },
+    {
+      "kind": "dynamic-table",
+      "resource": "<dynamic>",
+      "access": "read",
+      "path": "src/core/family/services/FamilyService.ts",
+      "maxCalls": 11,
+      "details": [
+        "FAMILY_TABLES.alerts",
+        "FAMILY_TABLES.connections",
+        "FAMILY_TABLES.geofences",
+        "FAMILY_TABLES.locationSharingSettings",
+        "FAMILY_TABLES.locations"
+      ]
+    },
+    {
+      "kind": "dynamic-table",
+      "resource": "<dynamic>",
+      "access": "read",
+      "path": "src/core/infrastructure/database/query-builders/QueryBuilder.ts",
+      "maxCalls": 6,
+      "details": ["table"]
+    },
+    {
+      "kind": "dynamic-table",
+      "resource": "<dynamic>",
+      "access": "read",
+      "path": "src/core/tracking/services/TrackingService.ts",
+      "maxCalls": 2,
+      "details": ["tableName"]
+    },
+    {
+      "kind": "dynamic-table",
+      "resource": "<dynamic>",
+      "access": "read",
+      "path": "src/integrations/supabase/services/supabaseHelpers.ts",
+      "maxCalls": 2,
+      "details": ["tableName as never"]
+    },
+    {
+      "kind": "dynamic-table",
+      "resource": "<dynamic>",
+      "access": "read",
+      "path": "src/modules/admin/services/OperationalDiagnosticsService.ts",
+      "maxCalls": 1,
+      "details": ["definition.table"]
+    },
+    {
+      "kind": "dynamic-table",
+      "resource": "<dynamic>",
+      "access": "write",
+      "path": "src/core/engagement/services/ProfileSavedEntityService.ts",
+      "maxCalls": 3,
+      "details": ["config.tableName as never"]
+    },
+    {
+      "kind": "dynamic-table",
+      "resource": "<dynamic>",
+      "access": "write",
+      "path": "src/core/family/services/FamilyService.ts",
+      "maxCalls": 11,
+      "details": [
+        "FAMILY_TABLES.alerts",
+        "FAMILY_TABLES.connections",
+        "FAMILY_TABLES.geofences",
+        "FAMILY_TABLES.locationSharingSettings",
+        "FAMILY_TABLES.locations"
+      ]
+    },
+    {
+      "kind": "dynamic-table",
+      "resource": "<dynamic>",
+      "access": "write",
+      "path": "src/core/infrastructure/database/query-builders/QueryBuilder.ts",
+      "maxCalls": 4,
+      "details": ["table"]
+    },
+    {
+      "kind": "dynamic-table",
+      "resource": "<dynamic>",
+      "access": "write",
+      "path": "src/core/mobility/services/mobility.mutations.ts",
+      "maxCalls": 1,
+      "details": ["table"]
+    },
+    {
+      "kind": "dynamic-table",
+      "resource": "<dynamic>",
+      "access": "write",
+      "path": "src/core/mobility/services/MobilityService.impl.ts",
+      "maxCalls": 1,
+      "details": ["table"]
+    },
+    {
+      "kind": "dynamic-table",
+      "resource": "<dynamic>",
+      "access": "write",
+      "path": "src/core/tracking/services/TrackingService.ts",
+      "maxCalls": 1,
+      "details": ["tableName"]
+    },
+    {
+      "kind": "dynamic-table",
+      "resource": "<dynamic>",
+      "access": "write",
+      "path": "src/integrations/supabase/services/supabaseHelpers.ts",
+      "maxCalls": 6,
+      "details": ["tableName as never"]
+    },
+    {
+      "kind": "dynamic-table",
+      "resource": "<dynamic>",
+      "access": "write",
+      "path": "src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts",
+      "maxCalls": 3,
+      "details": ["table"]
+    },
+    {
+      "kind": "storage",
+      "resource": "ai-images",
+      "access": "read",
+      "path": "supabase/functions/ai-image/index.ts",
+      "maxCalls": 1
+    },
+    {
+      "kind": "storage",
+      "resource": "ai-images",
+      "access": "write",
+      "path": "supabase/functions/ai-image/index.ts",
+      "maxCalls": 1
+    },
+    {
+      "kind": "storage",
+      "resource": "avatars",
+      "access": "read",
+      "path": "supabase/functions/health-check/index.ts",
+      "maxCalls": 1
+    },
+    {
+      "kind": "storage",
+      "resource": "media-assets",
+      "access": "write",
+      "path": "supabase/functions/media-assets-cleanup/index.ts",
+      "maxCalls": 1
+    },
+    {
+      "kind": "storage",
+      "resource": "media-assets",
+      "access": "write",
+      "path": "supabase/functions/media-assets/index.ts",
+      "maxCalls": 2
+    },
+    {
+      "kind": "storage",
+      "resource": "tryon",
+      "access": "read",
+      "path": "supabase/functions/tryon-generate/index.ts",
+      "maxCalls": 1
+    },
+    {
+      "kind": "storage",
+      "resource": "tryon",
+      "access": "write",
+      "path": "supabase/functions/tryon-generate/index.ts",
+      "maxCalls": 1
+    }
+  ]
+}

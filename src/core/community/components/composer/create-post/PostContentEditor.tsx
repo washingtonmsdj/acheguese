@@ -7,6 +7,7 @@ import {
   AvatarImage,
 } from "@/shared/components/ui/avatar";
 import { cn } from "@/shared/utils/cn";
+import { COMMUNITY_GUIDELINES_PATH } from "@/core/legal/termsOfService";
 import { POST_TYPES } from "./postTypes";
 import { PollEditor } from "./PollEditor";
 import type { UnifiedPostType } from "@/core/community/hooks/usePostCreation";
@@ -146,8 +147,8 @@ export function PostContentEditor({
           <Shield className="h-2 w-2 text-warning shrink-0" />
           <p className="text-[9px] leading-tight text-warning-foreground">
             Feed para assuntos do bairro.{" "}
-            <Link to="/regras" className="underline">
-              Regras
+            <Link to={COMMUNITY_GUIDELINES_PATH} className="underline">
+              Diretrizes
             </Link>
           </p>
         </div>

@@ -20,11 +20,9 @@ export function AdminRoutes() {
       <Route path="reports-passageiros" element={<P.AdminReportsPassageiros />} />
       <Route path="pontos-embarque" element={<P.AdminPontosEmbarque />} />
       <Route path="verificacoes" element={<P.AdminVerificacoes />} />
-      <Route path="zeladoria" element={<P.AdminZeladoria />} />
       <Route path="analytics-mobilidade" element={<P.AdminAnalyticsMobilidade />} />
       <Route path="motoboy-operacoes" element={<P.AdminMotoboyOperations />} />
       <Route path="realtime-dashboard" element={<P.AdminRealtimeDashboard />} />
-      <Route path="moderacao-completa" element={<P.AdminModeracaoCompleta />} />
       <Route path="moderacao" element={<P.AdminModeracao />} />
       <Route path="alertas" element={<P.AdminCommunityAlerts />} />
       <Route path="community-alerts" element={<P.AdminCommunityAlerts />} />
@@ -32,7 +30,6 @@ export function AdminRoutes() {
       <Route path="comunicacao" element={<P.AdminComunicacao />} />
       <Route path="notifications" element={<P.AdminNotifications />} />
       <Route path="mensagens" element={<P.AdminMensagens />} />
-      <Route path="gamificacao" element={<P.AdminGamificacao />} />
       <Route path="cupons" element={<P.AdminCupons />} />
       <Route path="promocoes" element={<P.AdminPromocoes />} />
       <Route path="assinaturas" element={<P.AdminAssinaturas />} />

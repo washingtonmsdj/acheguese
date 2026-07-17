@@ -24,7 +24,7 @@ import { TerritoryCommunityRouteService } from '@/core/routing/services/Territor
 import { resolveCommunityPublicAliasTerritory } from '@/core/routing/services/CommunityPublicAliasTerritoryResolver';
 import { APP_MODULE_SLUGS, isAppModulePath } from '@/config/moduleSlugs';
 import { TERRITORY_CONFIG } from '@/config/territory';
-import type { Location, TerritorialGroupWithMembers } from '@/core/location/types';
+import type { ResolvedTerritory } from '../types/territoryResolution';
 import { isTerritoryPubliclyNavigable } from '../utils/territoryVisibility';
 import { parsePublicTerritoryPath } from '../utils/publicTerritoryPath';
 import { resolvePublicTerritoryFallback } from '../utils/publicTerritoryFallbacks';
@@ -44,10 +44,7 @@ export const TERRITORY_RESOLVE_STATUS = {
 export type TerritoryResolveStatus =
   (typeof TERRITORY_RESOLVE_STATUS)[keyof typeof TERRITORY_RESOLVE_STATUS];
 
-export type ResolvedTerritory =
-  | { kind: 'location'; location: Location }
-  | { kind: 'group'; group: TerritorialGroupWithMembers }
-  | null;
+export type { ResolvedTerritory } from '../types/territoryResolution';
 
 export interface TerritoryResolveResult {
   status: TerritoryResolveStatus;
@@ -111,14 +108,18 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
   const state = params.state ?? parsedPath.state;
   const city = params.city ?? parsedPath.city;
   const groupSlug = params.groupSlug;
-  const districtSlug =
+  const isCommunityRoute = isAppModulePath(pathname, APP_MODULE_SLUGS.community);
+  const rawDistrictSlug =
     params.territorySlug ||
     params.district ||
     params.groupSlugOrDistrict ||
     parsedPath.territorySlug;
+  const districtSlug =
+    isCommunityRoute && isCommunityRouteSuffixSegment(rawDistrictSlug)
+      ? undefined
+      : rawDistrictSlug;
 
   const isGuideRoute = isAppModulePath(pathname, APP_MODULE_SLUGS.touristPoints);
-  const isCommunityRoute = isAppModulePath(pathname, APP_MODULE_SLUGS.community);
 
   const [result, setResult] = useState<TerritoryResolveResult>({
     status: TERRITORY_RESOLVE_STATUS.IDLE,

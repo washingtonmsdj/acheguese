@@ -11,5 +11,4 @@ export { useContaWorkspace } from './usePerfilPageV3';
 export { useProfileCompleteness } from './useProfileCompleteness';
 export { useSavedPosts } from './useSavedPosts';
 export { useUserActivity } from './useUserActivity';
-export { useUserMentions } from './useUserMentions';
 export { useUserPosts } from './useUserPosts';

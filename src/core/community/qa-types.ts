@@ -56,14 +56,12 @@ export interface CommunityAnswer {
 
 export interface CreateAnswerInput {
   question_id: string;
-  autor_id: string;
   texto: string;
   professional_id?: string | null;
   business_id?: string | null;
 }
 
 export interface CreateQuestionInput {
-  autor_id: string;
   titulo: string;
   description: string;
   category: string;
@@ -75,11 +73,21 @@ export interface QuestionFilters {
   category?: string;
   search?: string;
   limit?: number;
-  offset?: number;
+  cursor?: QuestionCursor | null;
   /** Filtro territorial — UUID de city ou district */
   location_id?: string;
   /** Filtro territorial por grupo — array de UUIDs */
   location_ids?: string[];
+}
+
+export interface QuestionCursor {
+  createdAt: string;
+  id: string;
+}
+
+export interface CommunityQuestionPage {
+  items: CommunityQuestion[];
+  nextCursor: QuestionCursor | null;
 }
 
 export interface AnswerLike {

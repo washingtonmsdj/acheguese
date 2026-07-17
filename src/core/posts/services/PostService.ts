@@ -33,8 +33,6 @@ export {
   canUserEditPost,
   canUserDeletePost,
   getPostUserInteractions,
-  getPostMentions,
-  getFollowedPostUserIds,
   getPostBasicInfo,
   getPostAuthorId,
   getTopPosts,
@@ -50,13 +48,7 @@ export {
   updatePost,
   deletePost,
   deletePostByAuthor,
-  incrementSharesCount,
-  incrementUserReputation,
-  toggleFollowPost,
-  createLikeNotification,
-  removePost,
-  hidePost,
-  confirmAlert,
+  recordPostShare,
 } from "./posts.mutations";
 
 // ============================================================

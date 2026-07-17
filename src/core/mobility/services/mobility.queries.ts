@@ -110,6 +110,7 @@ export interface OpenBoardRideRow {
   package_description: string | null;
   source_type: string | null;
   source_id: string | null;
+  passenger_profile_id: string | null;
 }
 
 export interface ReservationOfferRideRow {
@@ -371,6 +372,7 @@ export async function getOpenBoardOfferRides(params: {
         "package_description",
         "source_type",
         "source_id",
+        "passenger_profile_id",
       ].join(", "),
     )
     .in("status", [RIDE_STATUS.PENDING, RIDE_STATUS.REQUESTED, RIDE_STATUS.SEARCHING_DRIVER])

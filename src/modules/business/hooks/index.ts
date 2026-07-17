@@ -11,7 +11,6 @@ export { useBusinessAd } from './useBusinessAd';
 // Business hooks
 export { useBusiness } from "@/core/business/hooks/useBusiness";
 export * from "./useBusinessById";
-export * from "./useBusinessCreate";
 export { useBusinessEdit } from "./useBusinessEdit";
 export {
   useCanonicalBusinessFavorite,
@@ -21,7 +20,6 @@ export { useBusinessRecommendation } from "./useBusinessRecommendation";
 export * from "./useBusinessForm";
 export * from "./useBusinessFormSteps";
 export * from "./useBusinessGallery";
-// useBusinessImageUpload já exportado por useBusinessCreate
 export * from "./useBusinessList";
 export * from "./useBusinessManagement";
 export * from "./useBusinessMetrics";

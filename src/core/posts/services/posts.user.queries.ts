@@ -3,7 +3,7 @@
  */
 
 import { profileService } from "@/core/profiles/services/ProfileService";
-import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService";
+import { PostEngagementService } from "@/core/engagement";
 import { supabase } from "@/integrations/supabase";
 import { PAGINATION } from "@/shared/constants";
 import { trackError } from "@/shared/utils/errorTracking";
@@ -35,26 +35,13 @@ interface PostsUserQueryDbClient {
 
 const postsUserDb = supabase as unknown as PostsUserQueryDbClient;
 
+function boundedInteger(value: number, minimum: number, maximum: number): number {
+  if (!Number.isFinite(value)) return minimum;
+  return Math.min(Math.max(Math.trunc(value), minimum), maximum);
+}
+
 interface PollVoteRow {
   option_id: string | null;
-}
-
-interface MentionedProfileRow {
-  id: string;
-  name: string;
-  username: string | null;
-  avatar_url: string | null;
-  neighborhood: string | null;
-  type: string;
-}
-
-interface PostMentionRow {
-  mentioned_profile: MentionedProfileRow | null;
-  rank: number;
-}
-
-interface FollowedPostRow {
-  user_id: string | null;
 }
 
 interface AuthorActivityPostRow {
@@ -137,89 +124,15 @@ export async function getPostUserInteractions(
   }
 }
 
-export async function getPostMentions(postId: string): Promise<
-  Array<{
-    id: string;
-    name: string;
-    username: string | null;
-    avatar: string | null;
-    location: string | null;
-    type: string;
-    rank: number;
-  }>
-> {
-  try {
-    const { data } = await postsUserDb
-      .from("community_post_mentions")
-      .select(
-        `
-          mentioned_profile:profiles!mentioned_profile_id (
-            id,
-            name,
-            username,
-            avatar_url,
-            neighborhood,
-            type
-          ),
-          rank
-        `,
-      )
-      .eq("post_id", postId);
-
-    return ((data as unknown as PostMentionRow[] | null) ?? [])
-      .filter((mention) => Boolean(mention.mentioned_profile))
-      .map((mention) => ({
-        id: mention.mentioned_profile!.id,
-        name: mention.mentioned_profile!.name,
-        username: mention.mentioned_profile!.username,
-        avatar: mention.mentioned_profile!.avatar_url,
-        location: mention.mentioned_profile!.neighborhood,
-        type: mention.mentioned_profile!.type,
-        rank: mention.rank,
-      }));
-  } catch (error) {
-    trackError(error as Error, {
-      component: "posts.queries",
-      action: "getPostMentions",
-      metadata: { postId },
-    });
-    return [];
-  }
-}
-
-export async function getFollowedPostUserIds(postId: string): Promise<string[]> {
-  try {
-    const { data, error } = await postsUserDb
-      .from("followed_posts")
-      .select("user_id")
-      .eq("post_id", postId);
-
-    if (error) {
-      throw new PostError(error.message, error.code || "FETCH_FOLLOWED_POST_USERS_FAILED");
-    }
-
-    return ((data as unknown as FollowedPostRow[] | null) ?? [])
-      .map((row) => row.user_id)
-      .filter((row): row is string => typeof row === "string");
-  } catch (error) {
-    if (error instanceof PostError) throw error;
-
-    trackError(error as Error, {
-      component: "posts.queries",
-      action: "getFollowedPostUserIds",
-      metadata: { postId },
-    });
-    throw new PostError("Unexpected error fetching post followers", "UNKNOWN_ERROR");
-  }
-}
-
 export async function getSavedPosts(
-  userId: string,
   params: PaginationParams = {},
 ): Promise<Post[]> {
   try {
-    const { limit = PAGINATION.DEFAULT_LIMIT, offset = 0 } = params;
-    const savedPosts = await SocialInteractionsService.getSavedPosts(userId, limit, offset);
+    const limit = boundedInteger(params.limit ?? PAGINATION.DEFAULT_LIMIT, 1, 100);
+    const requestedOffset = params.offset ?? 0;
+    const offset = boundedInteger(requestedOffset, 0, 10_000);
+    if (Number.isFinite(requestedOffset) && requestedOffset > 10_000) return [];
+    const savedPosts = await PostEngagementService.getSavedPosts(limit, offset);
 
     if (!savedPosts || savedPosts.length === 0) {
       return [];
@@ -248,7 +161,7 @@ export async function getSavedPosts(
     trackError(error as Error, {
       component: "posts.queries",
       action: "getSavedPosts",
-      metadata: { userId, limit: params.limit },
+      metadata: { limit: params.limit },
     });
     throw new PostError("Unexpected error fetching saved posts", "UNKNOWN_ERROR");
   }
@@ -313,12 +226,19 @@ export async function getPostActivityByAuthor(
   }>
 > {
   try {
+    if (Number.isFinite(from) && from > 10_000) return [];
+    const boundedFrom = boundedInteger(from, 0, 10_000);
+
+    const requestedSize = Math.trunc(to) - boundedFrom + 1;
+    if (!Number.isFinite(requestedSize) || requestedSize < 1) return [];
+    const boundedTo = boundedFrom + Math.min(requestedSize, 100) - 1;
+
     const { data, error } = await supabase
       .from("posts")
       .select("id, type, content, likes_count, comments_count, created_at")
       .eq("author_profile_id", authorProfileId)
       .order("created_at", { ascending: false })
-      .range(from, to);
+      .range(boundedFrom, boundedTo);
 
     if (error) {
       throw new PostError(error.message, error.code || "FETCH_FAILED");

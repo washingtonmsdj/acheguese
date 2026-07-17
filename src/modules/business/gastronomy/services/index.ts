@@ -10,6 +10,7 @@ export { MenuService } from './MenuService';
 export { MenuService as menuService } from './MenuService';
 export { GastronomyProfileService } from './GastronomyProfileService';
 export { GastronomyUrlService } from './GastronomyUrlService';
+export { OrderTrustService } from './OrderTrustService';
 
 // Runtime queries
 export {

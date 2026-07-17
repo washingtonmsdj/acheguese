@@ -7,7 +7,8 @@
  * É um cache derivado de core/authorization para uso em UI:
  * exibir/ocultar botões, menus e ações.
  * 
- * O SSOT de autorização é core/authorization.canProfilePerformAction().
+ * Estes dados servem apenas para UI. A autorizacao real pertence ao backend,
+ * por RLS, RPC ou Edge Function; CapabilityPreviewService tambem e apenas UI.
  * 
  * @version 3.0.0
  */

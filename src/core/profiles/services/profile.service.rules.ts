@@ -6,21 +6,19 @@ import type {
   ProfileReputation,
   ProfileStatus,
 } from "@/core/profiles/contracts/ProfileRuntimeContracts";
-import type {
-  ProfileRow as Profile,
-} from "./types";
+import type { ProfileRow as Profile } from "./types";
 import type { ProfileAssociatedBusiness } from "./ProfileBusinessTypes";
 import type {
-  BannedUserLike,
+  ActiveBanStatus,
   BusinessRow,
   UserSubscriptionLike,
 } from "./profile.service.types";
 
 export function calculateProfileStatus(
   profile: Profile,
-  bannedUser: BannedUserLike,
+  hasActiveBan: ActiveBanStatus,
 ): ProfileStatus {
-  const isBanned = !!bannedUser;
+  const isBanned = hasActiveBan;
   const isSuspended = profile.is_suspended || false;
   const isActive = profile.is_active && !isBanned && !isSuspended;
 
@@ -64,7 +62,9 @@ export function calculateReputation(profile: Profile): ProfileReputation {
   };
 }
 
-export function mapBusinessRecords(records: BusinessRow[]): ProfileAssociatedBusiness[] {
+export function mapBusinessRecords(
+  records: BusinessRow[],
+): ProfileAssociatedBusiness[] {
   return records.map((business) => ({
     id: business.profile_id,
     name: business.business_name,

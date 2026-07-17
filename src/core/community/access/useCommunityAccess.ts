@@ -25,7 +25,10 @@ export interface UseCommunityAccessInput {
   readonly activeMemberIds?: readonly string[];
 }
 
-export interface UseCommunityAccessResult extends Omit<CommunityAccessDecision, "isLoading"> {
+export interface UseCommunityAccessResult extends Omit<
+  CommunityAccessDecision,
+  "isLoading"
+> {
   readonly isLoading: boolean;
   readonly isAuthenticated: boolean;
   readonly isAdmin: boolean;
@@ -40,7 +43,9 @@ export interface UseCommunityAccessResult extends Omit<CommunityAccessDecision, 
   readonly requestMembership: () => Promise<CommunityMembershipRecord | null>;
 }
 
-function loadingDecision(level: CommunityAccessLevel = "public_preview"): CommunityAccessDecision {
+function loadingDecision(
+  level: CommunityAccessLevel = "public_preview",
+): CommunityAccessDecision {
   return {
     level,
     isLoading: false,
@@ -83,7 +88,9 @@ export function useCommunityAccess({
     () => resolveCommunityAccessTargetLocationIds(resolved, activeMemberIds),
     [activeMemberIds, resolved],
   );
-  const routeResolved = isCommunityAccessRouteTarget(resolved) ? resolved : undefined;
+  const routeResolved = isCommunityAccessRouteTarget(resolved)
+    ? resolved
+    : undefined;
   const { isLoading: rolloutLoading, isBlocked } = useCommunityRollout(
     routeResolved,
     targetLocationIds[0] ?? null,
@@ -112,18 +119,26 @@ export function useCommunityAccess({
     queryKey: ["community-access", "local-community", routeTargetKey],
     queryFn: async () => {
       if (!routeResolved) return null;
-      const community = await CommunityExperienceService.getCommunityProfile(routeResolved);
+      const community =
+        await CommunityExperienceService.getCommunityProfile(routeResolved);
       return isPersistedCommunityId(community.id) ? community : null;
     },
-    enabled: isAuthenticated && Boolean(activeProfile?.id) && Boolean(routeResolved),
+    enabled:
+      isAuthenticated && Boolean(activeProfile?.id) && Boolean(routeResolved),
     staleTime: 5 * 60 * 1000,
   });
 
   const communityId = communityProfileQuery.data?.id ?? null;
-  const membershipRequired = Boolean(communityId) || communityProfileQuery.isError;
+  const membershipRequired =
+    Boolean(communityId) || communityProfileQuery.isError;
 
   const membershipQuery = useQuery({
-    queryKey: ["community-access", "membership", communityId, activeProfile?.id],
+    queryKey: [
+      "community-access",
+      "membership",
+      communityId,
+      activeProfile?.id,
+    ],
     queryFn: async () => {
       if (!communityId || !activeProfile?.id) return null;
       return CommunityMembershipService.findByCommunityAndProfile(
@@ -144,8 +159,6 @@ export function useCommunityAccess({
       const membership = await CommunityMembershipService.requestMembership({
         communityId,
         profileId: activeProfile.id,
-        userId: user.id,
-        joinMethod: "open",
       });
 
       if (!membership) {
@@ -156,13 +169,21 @@ export function useCommunityAccess({
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: ["community-access", "membership", communityId, activeProfile?.id],
+        queryKey: [
+          "community-access",
+          "membership",
+          communityId,
+          activeProfile?.id,
+        ],
       });
     },
   });
 
   const isAdmin = useMemo(
-    () => (rolesQuery.data ?? []).some((role) => role.role === "admin" && role.is_active),
+    () =>
+      (rolesQuery.data ?? []).some(
+        (role) => role.role === "admin" && role.is_active,
+      ),
     [rolesQuery.data],
   );
   const isModerator = useMemo(
@@ -177,19 +198,27 @@ export function useCommunityAccess({
     sessionLoading ||
     (isAuthenticated && (rolesQuery.isLoading || residenceQuery.isLoading));
   const needsRolloutDecision =
-    isAuthenticated && Boolean(activeProfile?.id) && Boolean(routeResolved) && !isAdmin && !isModerator;
+    isAuthenticated &&
+    Boolean(activeProfile?.id) &&
+    Boolean(routeResolved) &&
+    !isAdmin &&
+    !isModerator;
   const membershipAccessLoading =
     isAuthenticated &&
     Boolean(activeProfile?.id) &&
     Boolean(routeResolved) &&
-    (communityProfileQuery.isLoading || (Boolean(communityId) && membershipQuery.isLoading));
+    (communityProfileQuery.isLoading ||
+      (Boolean(communityId) && membershipQuery.isLoading));
   const isLoading =
     baseAccessLoading ||
     (needsRolloutDecision && rolloutLoading) ||
     membershipAccessLoading;
 
   const decision = useMemo(() => {
-    if (isLoading) return loadingDecision(isAuthenticated ? "authenticated" : "public_preview");
+    if (isLoading)
+      return loadingDecision(
+        isAuthenticated ? "authenticated" : "public_preview",
+      );
 
     return resolveCommunityAccess({
       isAuthenticated,
@@ -233,8 +262,8 @@ export function useCommunityAccess({
     ...decision,
     isLoading,
     isAuthenticated,
-    isAdmin,
-    isModerator,
+    isAdmin: decision.level === "admin",
+    isModerator: decision.level === "moderator" || decision.level === "admin",
     residenceLocationId: residenceQuery.data?.location_id ?? null,
     isResidenceVerified: Boolean(residenceQuery.data?.is_verified),
     communityId,
@@ -242,10 +271,10 @@ export function useCommunityAccess({
     membershipStatus: membershipQuery.data?.status ?? null,
     canRequestMembership: Boolean(
       communityId &&
-        activeProfile?.id &&
-        user?.id &&
-        !membershipQuery.data &&
-        !membershipQuery.isLoading,
+      activeProfile?.id &&
+      user?.id &&
+      !membershipQuery.data &&
+      !membershipQuery.isLoading,
     ),
     isRequestingMembership: requestMembershipMutation.isPending,
     requestMembership: async () => requestMembershipMutation.mutateAsync(),

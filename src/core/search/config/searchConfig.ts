@@ -1,7 +1,7 @@
 export const SEARCH_RESULT_LIMITS = {
   DEFAULT: 20,
   COMMUNITY_CANDIDATE_MULTIPLIER: 5,
-  COMMUNITY_LINK_MULTIPLIER: 10,
+  COMMUNITY_LINK_MULTIPLIER: 5,
 } as const;
 
 export function getCommunitySearchCandidateLimit(): number {

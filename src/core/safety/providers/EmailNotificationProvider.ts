@@ -28,38 +28,15 @@ export class EmailNotificationProvider {
   async sendEmergencyAlert(
     contact: EmergencyContact,
     alert: EmergencyAlert,
-    userProfile: { name?: string; phone?: string }
   ): Promise<EmailDeliveryResult> {
     const timestamp = new Date().toISOString();
     
     try {
-      // Validar email no campo phone (assumindo que pode conter email)
-      const email = this.extractEmail(contact.phone);
-      
-      if (!email) {
-        return {
-          success: false,
-          contactId: contact.id,
-          channel: 'email',
-          timestamp,
-          status: 'failed',
-          error: 'Email inválido ou não fornecido',
-        };
-      }
-
       // Chamar Edge Function (server-side seguro)
       const { data, error } = await supabase.functions.invoke('send-emergency-email', {
         body: {
           contactId: contact.id,
-          contactName: contact.name,
-          contactEmail: email,
           alertId: alert.id,
-          alertType: alert.alertType,
-          alertCreatedAt: alert.createdAt,
-          alertDescription: alert.description,
-          alertLocation: alert.location,
-          userName: userProfile.name,
-          userPhone: userProfile.phone,
         },
       });
 
@@ -97,19 +74,6 @@ export class EmailNotificationProvider {
     }
   }
 
-  /**
-   * Extrai email válido do campo phone
-   * (Suporta phone ou email no mesmo campo)
-   */
-  private extractEmail(phoneOrEmail: string): string | null {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
-    if (emailRegex.test(phoneOrEmail)) {
-      return phoneOrEmail;
-    }
-    
-    return null;
-  }
 }
 
 export const emailNotificationProvider = new EmailNotificationProvider();

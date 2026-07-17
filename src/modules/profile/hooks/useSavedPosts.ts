@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { postService } from "@/core/posts/services";
-import { SocialInteractionsService } from "@/core/social";
+import { PostEngagementService } from "@/core/engagement/services/PostEngagementService";
 import type { ServiceProfilePostRow } from "@/modules/profile/types/profileFeed";
 import {
   toProfileFeedPost,
@@ -32,14 +32,14 @@ export function useSavedPosts({ userId }: UseSavedPostsOptions) {
     enabled: Boolean(userId),
     queryFn: async ({ pageParam = 0 }): Promise<PaginatedSavedPostsResult> => {
       const currentPage = typeof pageParam === "number" ? pageParam : 0;
-      const postRows = (await postService.getSavedPosts(userId, {
+      const postRows = (await postService.getSavedPosts({
         limit: POSTS_PER_PAGE,
         offset: currentPage * POSTS_PER_PAGE,
       })) as ServiceProfilePostRow[];
       const postIds = postRows.map((post) => post.id);
       const userLikes =
         postIds.length > 0
-          ? await SocialInteractionsService.getLikesForPosts(postIds, userId)
+          ? await PostEngagementService.getLikesForPosts(postIds)
           : new Set<string>();
       const posts = postRows.map((post) =>
         toProfileFeedPost(post, {

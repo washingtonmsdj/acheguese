@@ -1,8 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import { postService } from "@/core/posts/services";
-import { profileService } from "@/core/profiles/services/ProfileService";
 import { jobPublicRoutes } from "@/core/verticals/jobs/routes/jobPublicRoutes";
-import { workOpportunitiesService } from "@/core/work-opportunities/services/WorkOpportunitiesService";
 import { logger } from "@/shared/utils/logger";
 
 type QueryResult<T> = Promise<{ data: T; error: { code?: string; message?: string } | null }>;
@@ -36,7 +34,6 @@ interface VagaDistributionRow {
   owner_profile_id: string;
   status: string;
   feed_post_id: string | null;
-  matching_notified_at: string | null;
   location: {
     geographic_path: string | null;
   } | null;
@@ -75,7 +72,6 @@ export class VagaPublicationDistributionService {
         owner_profile_id,
         status,
         feed_post_id,
-        matching_notified_at,
         location:locations(
           geographic_path
         )
@@ -90,17 +86,6 @@ export class VagaPublicationDistributionService {
     }
 
     return (data as VagaDistributionRow | null) ?? null;
-  }
-
-  private static async getOwnerUserId(ownerProfileId: string): Promise<string | null> {
-    try {
-      const profile = await profileService.getProfileById(ownerProfileId);
-      const ownerUserId = (profile as { user_id?: unknown } | null)?.user_id;
-      return typeof ownerUserId === "string" ? ownerUserId : null;
-    } catch (error) {
-      logger.warn("[VagaPublicationDistributionService] Erro ao resolver usuario dono da vaga", error);
-      return null;
-    }
   }
 
   static async distributePublishedVaga(vagaId: string): Promise<void> {
@@ -156,26 +141,6 @@ export class VagaPublicationDistributionService {
       }
     }
 
-    if (!vaga.matching_notified_at) {
-      const ownerUserId = await this.getOwnerUserId(vaga.owner_profile_id);
-      await workOpportunitiesService.notifyMatchingForStructuredVaga({
-        vagaId: vaga.id,
-        title: vaga.titulo,
-        professionalCategory: category,
-        territoryLocationId: vaga.location_id,
-        sourceUrl: publicUrl,
-        actorUserId: ownerUserId,
-      });
-
-      const { error: matchingUpdateError } = await this.db
-        .from("vagas")
-        .update({ matching_notified_at: new Date().toISOString() })
-        .eq("id", vaga.id);
-
-      if (matchingUpdateError) {
-        throw matchingUpdateError;
-      }
-    }
   }
 }
 

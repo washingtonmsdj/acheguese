@@ -67,8 +67,6 @@ export function usePostById(postId: string | null) {
           }
         : undefined;
 
-      const mentionedProfiles = await postService.getPostMentions(post.id);
-
       const communityPost: CommunityPost = {
         id: post.id,
         author_profile_id: post.author_profile_id,
@@ -92,7 +90,6 @@ export function usePostById(postId: string | null) {
         has_user_confirmed: interactions.hasConfirmed,
         is_edited: post.is_edited || false,
         poll: enrichedPoll,
-        mentioned_profiles: mentionedProfiles,
       };
 
       return communityPost;

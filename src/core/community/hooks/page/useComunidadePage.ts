@@ -12,6 +12,7 @@ import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useCommunityFiltersAAA } from "@/core/community/hooks/useCommunityFiltersAAA";
 import { usePostActions } from "@/core/posts/hooks";
+import { useModeration } from "@/core/community/hooks/useModeration";
 import { useSessionContext } from "@/core/session";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { usePostById } from "@/core/community/hooks/usePostById";
@@ -21,6 +22,7 @@ import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 import { logger } from "@/shared/utils/logger";
 import type { PostType } from "@/core/posts/types/Post";
 import type { UnifiedPost } from "@/shared/types/posts";
+import type { CommunityReportReason } from "@/core/moderation";
 
 export interface ModalCommentData {
   postId: string;
@@ -37,19 +39,19 @@ export type CreatePostModalData =
       initialReach: "street" | "neighborhood" | "city";
     };
 
-export interface UnifiedModalData {
-  type: "civic_report";
-  reportId: string;
+export interface ModalReportData {
+  targetType: "post";
+  targetId: string;
 }
 
 export interface ModalState {
-  type: "comment" | "post" | "unified" | "report" | "create" | null;
+  type: "comment" | "post" | "report" | "create" | null;
   data:
     | null
     | CreatePostModalData
     | { post: string }
     | ModalCommentData
-    | UnifiedModalData;
+    | ModalReportData;
 }
 
 interface CommunityActorProfile {
@@ -139,7 +141,14 @@ export function useComunidadePage() {
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
 
   const { setTagFilter, immediateFilters, setLocationScope } = useCommunityFiltersAAA();
-  const { likePost, savePost, sharePost, reportPost, deletePost, isDeleting } = usePostActions();
+  const {
+    likePost,
+    savePost,
+    sharePost,
+    deletePost,
+    isDeleting,
+  } = usePostActions();
+  const { reportPostAsync } = useModeration();
   const { activeProfile: sessionProfile } = useSessionContext();
   const { effectiveProfile } = useMultiProfileContext();
   const profile = toCommunityActorProfile(effectiveProfile ?? sessionProfile);
@@ -224,12 +233,31 @@ export function useComunidadePage() {
   );
 
   const handleReportPost = useCallback((postId: string) => {
-    reportPost({
-      postId,
-      reason: "inappropriate_content",
-      description: "Denúncia enviada pelo fluxo da comunidade",
+    setModalState({
+      type: "report",
+      data: { targetType: "post", targetId: postId },
     });
-  }, [reportPost]);
+  }, []);
+
+  const handleSubmitPostReport = useCallback(
+    async (reason: CommunityReportReason, description?: string) => {
+      if (
+        modalState.type !== "report" ||
+        !modalState.data ||
+        !("targetType" in modalState.data) ||
+        modalState.data.targetType !== "post"
+      ) {
+        return;
+      }
+
+      await reportPostAsync({
+        postId: modalState.data.targetId,
+        reason,
+        description,
+      });
+    },
+    [modalState, reportPostAsync],
+  );
 
   const handleDeletePost = useCallback((postId: string) => {
     setDeletePostId(postId);
@@ -289,6 +317,7 @@ export function useComunidadePage() {
     handleCommentClick,
     handleTagClick,
     handleReportPost,
+    handleSubmitPostReport,
     handleDeletePost,
     handleCancelDeletePost,
     handleConfirmDeletePost,

@@ -14,7 +14,7 @@ import type {
   AdminProfileIdentityIssue,
   AdminProfilePreferenceFieldSummary,
   AdminProfilePreferenceScopeSummary,
-  AdminProfilePermissionGovernanceSummary,
+  AdminProfileCapabilityPreviewSummary,
   AdminProfileReputationSourceSummary,
   AdminProfileResidenceSummary,
 } from "@/core/admin";
@@ -142,8 +142,8 @@ export interface PreferenceScopesCardProps {
   readonly scopes: readonly AdminProfilePreferenceScopeSummary[];
 }
 
-export interface EffectivePermissionsCardProps {
-  readonly permissionGovernance: AdminProfilePermissionGovernanceSummary | null;
+export interface CapabilityPreviewCardProps {
+  readonly capabilityPreview: AdminProfileCapabilityPreviewSummary | null;
 }
 
 // ============================================
@@ -191,12 +191,12 @@ export interface FamilyStatusBadgeProps {
   readonly family: AdminProfileFamilySummary;
 }
 
-export interface PermissionGovernanceBadgeProps {
-  readonly permissionGovernance: AdminProfilePermissionGovernanceSummary | null;
+export interface CapabilityPreviewBadgeProps {
+  readonly capabilityPreview: AdminProfileCapabilityPreviewSummary | null;
 }
 
-export interface PermissionActionBadgeProps {
-  readonly status: AdminProfilePermissionGovernanceSummary["actionMatrix"][number]["status"];
+export interface CapabilityActionBadgeProps {
+  readonly status: AdminProfileCapabilityPreviewSummary["actionMatrix"][number]["status"];
 }
 
 // ============================================
@@ -217,7 +217,7 @@ export type {
   AdminProfileIdentityIssue,
   AdminProfilePreferenceFieldSummary,
   AdminProfilePreferenceScopeSummary,
-  AdminProfilePermissionGovernanceSummary,
+  AdminProfileCapabilityPreviewSummary,
   AdminProfileReputationSourceSummary,
   AdminProfileResidenceSummary,
 };

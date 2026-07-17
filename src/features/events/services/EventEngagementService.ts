@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase";
-import { ProfileSavedEntityService, type ProfileSavedEntityConfig } from "@/core/engagement/services/ProfileSavedEntityService";
+import { ProfileSavedEntityService } from "@/core/engagement/services/ProfileSavedEntityService";
 import { logger } from "@/shared/utils/logger";
 
 export const EVENT_REVIEW_LIMITS = {
@@ -32,12 +32,6 @@ export interface SubmitEventReviewInput {
   rating: number;
   comment: string;
 }
-
-const EVENT_FAVORITE_CONFIG = {
-  tableName: "event_favorites",
-  entityIdColumn: "event_id",
-  logLabel: "event_favorites",
-} as const satisfies ProfileSavedEntityConfig;
 
 type EventReviewRow = {
   id: string;
@@ -234,19 +228,19 @@ export class EventEngagementService {
     return normalized;
   }
 
-  static async getFavoriteEventIds(profileId: string): Promise<string[]> {
-    return ProfileSavedEntityService.getSavedEntityIds(EVENT_FAVORITE_CONFIG, profileId);
+  static async getFavoriteEventIds(): Promise<string[]> {
+    return ProfileSavedEntityService.getSavedEntityIds("event");
   }
 
-  static async addFavorite(eventId: string, profileId: string): Promise<void> {
-    return ProfileSavedEntityService.save(EVENT_FAVORITE_CONFIG, eventId, profileId);
+  static async addFavorite(eventId: string): Promise<void> {
+    return ProfileSavedEntityService.save("event", eventId);
   }
 
-  static async removeFavorite(eventId: string, profileId: string): Promise<void> {
-    return ProfileSavedEntityService.remove(EVENT_FAVORITE_CONFIG, eventId, profileId);
+  static async removeFavorite(eventId: string): Promise<void> {
+    return ProfileSavedEntityService.remove("event", eventId);
   }
 
-  static async clearFavorites(profileId: string): Promise<void> {
-    return ProfileSavedEntityService.clearProfileSavedEntities(EVENT_FAVORITE_CONFIG, profileId);
+  static async clearFavorites(): Promise<void> {
+    return ProfileSavedEntityService.clearProfileSavedEntities("event");
   }
 }

@@ -1,6 +1,5 @@
-import { profileService } from "@/core/profiles/services/ProfileService";
 import { supabase } from "@/integrations/supabase";
-import type { Database, Json } from "@/integrations/supabase";
+import type { Database } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { emailNotificationProvider } from "../providers/EmailNotificationProvider";
 import type {
@@ -14,8 +13,6 @@ import type {
 type EmergencyContactRow = Database["public"]["Tables"]["emergency_contacts"]["Row"];
 type EmergencyContactInsert = Database["public"]["Tables"]["emergency_contacts"]["Insert"];
 type EmergencyContactUpdate = Database["public"]["Tables"]["emergency_contacts"]["Update"];
-type EmergencyDeliveryLogInsert =
-  Database["public"]["Tables"]["emergency_delivery_log"]["Insert"];
 
 interface QueryResult<T> {
   data: T | null;
@@ -38,16 +35,6 @@ interface SafetyDbClient {
   from: <TRow = never>(table: string) => QueryBuilder<TRow>;
 }
 
-type DeliveryResult = {
-  success: boolean;
-  contactId: string;
-  channel: string;
-  timestamp: string;
-  status: string;
-  error?: string;
-  metadata?: Record<string, unknown>;
-};
-
 const safetyDb = supabase as unknown as SafetyDbClient;
 
 function buildEmergencyContactInsert(
@@ -56,7 +43,8 @@ function buildEmergencyContactInsert(
   return {
     profile_id: input.profileId,
     name: input.name,
-    phone: input.phone,
+    email: input.email.trim().toLowerCase(),
+    phone: input.phone?.trim() || null,
     relationship: input.relationship,
     is_primary: input.isPrimary || false,
     is_active: true,
@@ -72,7 +60,8 @@ function buildEmergencyContactUpdate(
   };
 
   if (updates.name !== undefined) updateData.name = updates.name;
-  if (updates.phone !== undefined) updateData.phone = updates.phone;
+  if (updates.email !== undefined) updateData.email = updates.email.trim().toLowerCase();
+  if (updates.phone !== undefined) updateData.phone = updates.phone.trim() || null;
   if (updates.relationship !== undefined) updateData.relationship = updates.relationship;
   if (updates.isPrimary !== undefined) updateData.is_primary = updates.isPrimary;
   if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
@@ -85,7 +74,8 @@ function mapToEmergencyContact(data: EmergencyContactRow): EmergencyContact {
     id: data.id,
     profileId: data.profile_id,
     name: data.name,
-    phone: data.phone,
+    email: data.email,
+    phone: data.phone ?? undefined,
     relationship: data.relationship ?? "",
     isPrimary: data.is_primary,
     isActive: data.is_active,
@@ -195,25 +185,12 @@ export class SafetyEmergencyContactsService {
         return { contactsNotified: 0, contactIds: [], successful: 0, failed: 0 };
       }
 
-      const profileRecord = await profileService.getProfileById(profileId);
-      const userProfile = {
-        name: profileRecord?.name,
-        phone:
-          profileRecord &&
-          typeof profileRecord === "object" &&
-          "phone" in profileRecord
-            ? (profileRecord as { phone?: string | null }).phone
-            : undefined,
-      };
-
       const deliveryResults = await Promise.allSettled(
         contacts.map(async (contact) => {
           const result = await emailNotificationProvider.sendEmergencyAlert(
             contact,
             alert,
-            userProfile,
           );
-          await this.saveDeliveryLog(alert.id, result);
           return result;
         }),
       );
@@ -240,29 +217,4 @@ export class SafetyEmergencyContactsService {
     }
   }
 
-  private static async saveDeliveryLog(
-    alertId: string,
-    result: DeliveryResult,
-  ): Promise<void> {
-    try {
-      const target =
-        typeof result.metadata?.to === "string" ? result.metadata.to : "unknown";
-
-      const payload: EmergencyDeliveryLogInsert = {
-        alert_id: alertId,
-        contact_id: result.contactId,
-        channel: result.channel,
-        status: result.status,
-        target,
-        error_message: result.error ?? null,
-        metadata: ((result.metadata || {}) as unknown) as Json,
-        created_at: result.timestamp,
-        delivered_at: result.status === "sent" ? result.timestamp : null,
-      };
-
-      await safetyDb.from("emergency_delivery_log").insert(payload);
-    } catch (error) {
-      logger.error("[SafetyService] Error saving delivery log:", error);
-    }
-  }
 }

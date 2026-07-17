@@ -16,6 +16,7 @@ import {
   getGastronomyBusinesses,
 } from './gastronomy.queries';
 import { resolveGastronomyBusinessId } from './resolveGastronomyBusinessId';
+import { resolveMediaAssetSource } from '@/core/media';
 import type { GastronomyBusinessFilters } from '../types';
 import type {
   Menu,
@@ -68,6 +69,13 @@ const menuQueriesDb = supabase as unknown as MenuQueriesDbClient;
 
 type MenuItemRow = MenuItem & { menu_id?: string };
 
+function withResolvedMenuImage<T extends { image_url?: string | null }>(item: T): T {
+  return {
+    ...item,
+    image_url: resolveMediaAssetSource(item.image_url),
+  };
+}
+
 // Internal helpers
 
 /**
@@ -110,7 +118,7 @@ function mapToPublicFoodItem(params: {
     price: item.base_price,
     original_price:
       typeof metadata.original_price === 'number' ? metadata.original_price : undefined,
-    image_url: item.image_url || undefined,
+    image_url: resolveMediaAssetSource(item.image_url) || undefined,
     category: category.name,
     tags: Array.isArray(metadata.tags) ? metadata.tags : [],
     business_name: business.name,
@@ -369,7 +377,7 @@ export async function getMenuItemsByCategory(
         ]);
 
         return {
-          ...item,
+          ...withResolvedMenuImage(item),
           variants,
           addons,
         } as MenuItemWithRelations;
@@ -410,7 +418,7 @@ export async function getMenuItem(itemId: string): Promise<MenuItemWithRelations
     ]);
 
     return {
-      ...data,
+      ...withResolvedMenuImage(data),
       variants,
       addons,
     } as MenuItemWithRelations;
@@ -459,7 +467,7 @@ export async function getFeaturedMenuItems(businessId: string): Promise<MenuItem
         ]);
 
         return {
-          ...item,
+          ...withResolvedMenuImage(item),
           variants,
           addons,
         } as MenuItemWithRelations;
@@ -717,7 +725,7 @@ export async function getPublicFoodCatalog(params: {
         if (!business) return null;
 
         return mapToPublicFoodItem({
-          item,
+          item: withResolvedMenuImage(item),
           category,
           menu,
           business,
@@ -799,7 +807,11 @@ export async function getPublicFoodItems(params: {
               getMenuItemVariants(item.id),
               getMenuItemAddons(item.id),
             ]);
-            return { ...item, variants, addons } as MenuItemWithRelations;
+            return {
+              ...withResolvedMenuImage(item),
+              variants,
+              addons,
+            } as MenuItemWithRelations;
           }),
         );
       }
@@ -837,7 +849,12 @@ export async function getPublicFoodItems(params: {
         const menu = menuMap.get((item as unknown as { menu_id?: string }).menu_id || '');
         if (!menu) return null;
 
-        return mapToPublicFoodItem({ item, category, menu, business });
+        return mapToPublicFoodItem({
+          item: withResolvedMenuImage(item),
+          category,
+          menu,
+          business,
+        });
       })
       .filter((item): item is PublicGastronomyFoodItem => item !== null);
 

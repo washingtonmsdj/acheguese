@@ -2,17 +2,24 @@ import React from "react";
 import { MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { Button } from "@/shared/components/ui/button";
 import { ConversationCard } from "./ConversationCard";
-import type { ConversationPreview } from "@/core/messaging/types";
+import type { ClassifiedConversationPreview } from "@/core/messaging/types";
 
 interface ConversationsListProps {
-  conversations: ConversationPreview[];
+  conversations: ClassifiedConversationPreview[];
   loading: boolean;
+  hasMore: boolean;
+  loadingMore: boolean;
+  onLoadMore: () => void;
 }
 
 export function ConversationsList({
   conversations,
   loading,
+  hasMore,
+  loadingMore,
+  onLoadMore,
 }: ConversationsListProps) {
   if (loading) {
     return (
@@ -49,14 +56,28 @@ export function ConversationsList({
   }
 
   return (
-    <div className="divide-y">
-      {conversations.map((conversation, index) => (
-        <ConversationCard
-          key={conversation.id}
-          conversation={conversation}
-          index={index}
-        />
-      ))}
+    <div>
+      <div className="divide-y">
+        {conversations.map((conversation, index) => (
+          <ConversationCard
+            key={conversation.id}
+            conversation={conversation}
+            index={index}
+          />
+        ))}
+      </div>
+      {hasMore ? (
+        <div className="flex justify-center p-4">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={loadingMore}
+            onClick={onLoadMore}
+          >
+            {loadingMore ? "Carregando..." : "Carregar mais conversas"}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }

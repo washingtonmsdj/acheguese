@@ -10,6 +10,7 @@
  */
 
 import { z } from "zod";
+import { normalizeMediaAssetReference } from "@/shared/media/mediaAssetReference";
 
 // ============================================================================
 // BASE SCHEMAS
@@ -93,6 +94,20 @@ const slugSchema = z
   .regex(/^[a-z0-9][a-z0-9-]*[a-z0-9]$/, "Slug invalido")
   .optional();
 
+const mediaAssetReferenceSchema = (
+  preset:
+    | "professional_logo"
+    | "professional_banner"
+    | "professional_portfolio",
+) =>
+  z
+    .string()
+    .refine(
+      (value) => normalizeMediaAssetReference(value, preset) !== undefined,
+      "Referencia de midia invalida",
+    )
+    .optional();
+
 const cepSchema = z
   .string()
   .regex(/^\d{5}-?\d{3}$/, "CEP deve estar no formato XXXXX-XXX")
@@ -167,10 +182,16 @@ const baseProfessionalSchema = z.object({
   availability_notes: z.string().max(500).trim().optional(),
 
   // Media
-  logo_url: urlSchema,
-  banner_url: urlSchema,
+  logo_url: mediaAssetReferenceSchema("professional_logo"),
+  banner_url: mediaAssetReferenceSchema("professional_banner"),
   portfolio_images: z
-    .array(urlSchema)
+    .array(
+      z.string().refine(
+        (value) =>
+          normalizeMediaAssetReference(value, "professional_portfolio") !== undefined,
+        "Referencia de midia invalida",
+      ),
+    )
     .max(10, "Máximo 10 imagens no portfólio")
     .default([]),
 
@@ -263,7 +284,6 @@ export const createProfessionalReviewSchema = z.object({
     .max(1000, "Comentário deve ter no máximo 1000 caracteres")
     .trim()
     .optional(),
-  job_type: z.string().max(100).trim().optional(),
 });
 
 // ============================================================================

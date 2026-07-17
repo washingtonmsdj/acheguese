@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
 import { Separator } from '@/shared/components/ui/separator';
+import { resolveMediaAssetSource } from '@/core/media';
 import type { Review } from '../services/review.queries';
 
 interface ReviewCardProps {
@@ -149,8 +150,8 @@ export function ReviewCard({
         <div className="mt-3 flex gap-2 overflow-x-auto">
           {review.photos.map((photo, index) => (
             <img
-              key={index}
-              src={photo}
+              key={photo}
+              src={resolveMediaAssetSource(photo) ?? undefined}
               alt={`Foto ${index + 1} da avaliação`}
               className="h-20 w-20 rounded-lg object-cover"
             />

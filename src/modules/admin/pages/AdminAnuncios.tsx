@@ -25,6 +25,7 @@ import {
   TableRow,
 } from "@/shared/components/ui/table";
 import {
+  AD_CAMPAIGN_STATUS,
   AdCampaignAdminService,
   type AdminAdCampaignSummary,
   type AdCampaignBillingStatus,
@@ -451,7 +452,11 @@ export default function AdminAnuncios() {
                           <Button
                             size="sm"
                             disabled={!canActivate || updateMutation.isPending}
-                            onClick={() => updateCampaign(campaign.id, { status: "active" })}
+                            onClick={() =>
+                              updateCampaign(campaign.id, {
+                                status: AD_CAMPAIGN_STATUS.ACTIVE,
+                              })
+                            }
                           >
                             <PlayCircle className="mr-1 h-4 w-4" />
                             Ativar
@@ -460,7 +465,11 @@ export default function AdminAnuncios() {
                             size="sm"
                             variant="outline"
                             disabled={updateMutation.isPending}
-                            onClick={() => updateCampaign(campaign.id, { status: "paused" })}
+                            onClick={() =>
+                              updateCampaign(campaign.id, {
+                                status: AD_CAMPAIGN_STATUS.PAUSED,
+                              })
+                            }
                           >
                             <PauseCircle className="mr-1 h-4 w-4" />
                             Pausar

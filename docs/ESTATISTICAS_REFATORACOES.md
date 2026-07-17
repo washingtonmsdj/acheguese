@@ -144,7 +144,7 @@ TOTAL: [████████████████████] 100% 🎉
 7. ReputationVisibilityBadge
 8. ResidenceStatusBadge
 9. FamilyStatusBadge
-10. PermissionGovernanceBadge
+10. CapabilityPreviewBadge
 11. PermissionActionBadge
 12. IdentityCard
 13. GovernanceCard
@@ -153,7 +153,7 @@ TOTAL: [████████████████████] 100% 🎉
 16. SecondaryEntitiesCard
 17. ReputationSourcesCard
 18. PreferenceScopesCard
-19. EffectivePermissionsCard
+19. CapabilityPreviewCard
 
 **Total**: 71 componentes reutilizáveis 🎉
 

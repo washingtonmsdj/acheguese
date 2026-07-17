@@ -56,13 +56,15 @@ function parseGeoPath(geoPath: string): { neighborhood: string | null; city: str
 
 export function useTerritoryPolygon(
   resolved: ResolvedTerritory | null | undefined,
+  options: { enabled?: boolean } = {},
 ): UseTerritoryPolygonResult {
   const [polygons, setPolygons] = useState<TerritoryPolygon[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!resolved) {
+    if (!resolved || options.enabled === false) {
       setPolygons([]);
+      setIsLoading(false);
       return;
     }
 
@@ -121,7 +123,7 @@ export function useTerritoryPolygon(
 
     fetch();
     return () => { cancelled = true; };
-  }, [resolved]);
+  }, [options.enabled, resolved]);
 
   return { polygons, isLoading };
 }

@@ -71,7 +71,8 @@ export interface ProfileStatus {
  *
  * ⚠️ Cache de permissões para contexto de sessão e exibição em UI.
  * NÃO usar para decisões de autorização em tempo real.
- * O SSOT de autorização é core/authorization.canProfilePerformAction().
+ * Estes dados servem apenas para UI. A autorizacao real pertence ao backend,
+ * por RLS, RPC ou Edge Function; CapabilityPreviewService tambem e apenas UI.
  */
 export interface ProfilePermissions {
   canPost: boolean;

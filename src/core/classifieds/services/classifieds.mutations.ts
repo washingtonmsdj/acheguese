@@ -12,9 +12,14 @@ import { trackError } from "@/shared/utils/errorTracking";
 import type { ClassifiedData, CreateClassifiedInput, UpdateClassifiedInput } from "./types";
 import { CLASSIFIED_STATUS } from "../constants/statuses";
 import { slugify } from "./ClassifiedUrlService";
+import { resolveMediaAssetSource } from "@/core/media/references/mediaAssetReference";
 
 function ensureStringArray(value: unknown): string[] {
-  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string");
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => typeof item === "string" ? resolveMediaAssetSource(item) : null)
+      .filter((item): item is string => item !== null);
+  }
   return [];
 }
 

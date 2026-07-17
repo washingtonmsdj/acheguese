@@ -95,22 +95,21 @@ export default function AdminCommunityIssues() {
     enabled: activeTab === "analytics",
   });
 
-  const { data: categoryStats } = useQuery({
-    queryKey: ["admin-community-issues-category-stats"],
-    queryFn: () => adminCommunityIssuesService.getStatsByCategory(),
-    enabled: activeTab === "analytics",
-  });
-
-  const { data: resolutionRate } = useQuery({
-    queryKey: ["admin-community-issues-resolution-rate"],
-    queryFn: () => adminCommunityIssuesService.getResolutionRate(),
-    enabled: activeTab === "analytics",
-  });
+  const categoryStats = stats?.categories;
+  const resolutionRate = stats
+    ? {
+        total: stats.total,
+        resolved: stats.resolvido,
+        rate: stats.total > 0 ? Math.round((stats.resolvido / stats.total) * 100) : 0,
+      }
+    : undefined;
 
   // Mutations
   const removeMutation = useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-      adminCommunityIssuesService.removeIssue(id, reason),
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+      const removed = await adminCommunityIssuesService.removeIssue(id, reason);
+      if (!removed) throw new Error("community_issue_remove_failed");
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-community-issues"] });
       queryClient.invalidateQueries({ queryKey: ["admin-community-issues-stats"] });
@@ -125,8 +124,10 @@ export default function AdminCommunityIssues() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: IssueStatus }) =>
-      adminCommunityIssuesService.updateStatus(id, status),
+    mutationFn: async ({ id, status }: { id: string; status: IssueStatus }) => {
+      const updated = await adminCommunityIssuesService.updateStatus(id, status);
+      if (!updated) throw new Error("community_issue_status_update_failed");
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-community-issues"] });
       queryClient.invalidateQueries({ queryKey: ["admin-community-issues-stats"] });
@@ -141,7 +142,10 @@ export default function AdminCommunityIssues() {
   });
 
   const clearReviewMutation = useMutation({
-    mutationFn: (id: string) => adminCommunityIssuesService.clearUnderReview(id),
+    mutationFn: async (id: string) => {
+      const cleared = await adminCommunityIssuesService.clearUnderReview(id);
+      if (!cleared) throw new Error("community_issue_review_clear_failed");
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-community-issues"] });
       queryClient.invalidateQueries({ queryKey: ["admin-community-issues-review"] });
@@ -264,13 +268,13 @@ export default function AdminCommunityIssues() {
             <Button
               variant="destructive"
               onClick={() => {
-                if (selectedIssue && removalReason.trim()) {
+                if (selectedIssue && removalReason.trim().length >= 3) {
                   removeMutation.mutate({ id: selectedIssue.id, reason: removalReason });
                 } else {
-                  toast.error("Informe o motivo da remoção");
+                  toast.error("Informe um motivo com pelo menos 3 caracteres");
                 }
               }}
-              disabled={removeMutation.isPending || !removalReason.trim()}
+              disabled={removeMutation.isPending || removalReason.trim().length < 3}
             >
               Remover Issue
             </Button>

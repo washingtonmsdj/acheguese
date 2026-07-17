@@ -1,12 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { adminNotificationsService } from "../AdminNotificationsService";
 
-const rpcMock = vi.fn();
+const brokerMock = vi.fn();
 
 vi.mock("@/integrations/supabase", () => ({
   supabase: {
-    rpc: (...args: unknown[]) => rpcMock(...args),
+    rpc: vi.fn(),
   },
+}));
+
+vi.mock("@/core/infrastructure/edge-functions/edgeFunctionBroker", () => ({
+  invokeNullableSupabaseBroker: (...args: unknown[]) => brokerMock(...args),
 }));
 
 vi.mock("@/core/profiles/services/ProfileService", () => ({
@@ -25,12 +29,11 @@ vi.mock("@/shared/utils/logger", () => ({
 
 describe("AdminNotificationsService", () => {
   beforeEach(() => {
-    rpcMock.mockReset();
+    brokerMock.mockReset();
   });
 
   it("maps channel stats from admin RPC", async () => {
-    rpcMock.mockResolvedValueOnce({
-      data: [
+    brokerMock.mockResolvedValueOnce([
         {
           total_push_subscriptions: 12,
           active_push_subscriptions: 10,
@@ -40,9 +43,7 @@ describe("AdminNotificationsService", () => {
           email_delivered_24h: 27,
           email_failed_24h: 3,
         },
-      ],
-      error: null,
-    });
+      ]);
 
     const result = await adminNotificationsService.getChannelStats();
 
@@ -58,8 +59,7 @@ describe("AdminNotificationsService", () => {
   });
 
   it("maps template stats list from admin RPC", async () => {
-    rpcMock.mockResolvedValueOnce({
-      data: [
+    brokerMock.mockResolvedValueOnce([
         {
           template: "welcome_email",
           total: 11,
@@ -70,9 +70,7 @@ describe("AdminNotificationsService", () => {
           clicked: 1,
           last_sent_at: "2026-04-21T12:00:00.000Z",
         },
-      ],
-      error: null,
-    });
+      ]);
 
     const result = await adminNotificationsService.getTemplateStats(5);
 
@@ -90,8 +88,7 @@ describe("AdminNotificationsService", () => {
   });
 
   it("maps delivery audit rows and total count", async () => {
-    rpcMock.mockResolvedValueOnce({
-      data: [
+    brokerMock.mockResolvedValueOnce([
         {
           id: "a-1",
           user_id: "u-1",
@@ -105,9 +102,7 @@ describe("AdminNotificationsService", () => {
           created_at: "2026-04-21T10:00:00.000Z",
           total_count: 42,
         },
-      ],
-      error: null,
-    });
+      ]);
 
     const result = await adminNotificationsService.getEmailDeliveryAudit({
       page: 2,
@@ -128,14 +123,10 @@ describe("AdminNotificationsService", () => {
   });
 
   it("returns safe fallback when RPC fails", async () => {
-    rpcMock.mockResolvedValueOnce({
-      data: null,
-      error: { message: "forbidden" },
-    });
+    brokerMock.mockResolvedValueOnce(null);
 
     const result = await adminNotificationsService.getChannelStats();
     expect(result.totalPushSubscriptions).toBe(0);
     expect(result.emailFailed24h).toBe(0);
   });
 });
-

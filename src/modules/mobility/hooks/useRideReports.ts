@@ -47,20 +47,9 @@ export function useRideReports() {
 
   // Mutation para criar report
   const createReportMutation = useMutation({
-    mutationFn: async (input: Omit<CreateReportInput, "reporterProfileId" | "reporterType">) => {
+    mutationFn: async (input: CreateReportInput) => {
       if (!user) throw new Error("Usuário não autenticado");
-
-      const profile = await profileService.getActiveProfile(user.id);
-      if (!profile) throw new Error("Perfil não encontrado");
-
-      // Determinar tipo de reporter baseado no perfil
-      const reporterType = String(profile.type) === "driver" ? "driver" : "passenger";
-
-      return RideReportsService.createReport({
-        ...input,
-        reporterProfileId: profile.id,
-        reporterType,
-      });
+      return RideReportsService.createReport(input);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.reports(user?.id || "") });

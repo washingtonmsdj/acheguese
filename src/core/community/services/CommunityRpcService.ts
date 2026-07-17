@@ -1,10 +1,6 @@
 import { invokeSupabaseBroker } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 
-type CommunityRpcAction =
-  | "createAlert"
-  | "createIssue"
-  | "incrementAlertEditCount"
-  | "markBestAnswer";
+type CommunityRpcAction = "createAlert";
 
 const FUNCTION_NAME = "community-rpc";
 const SERVICE_NAME = "CommunityRpcService";
@@ -27,15 +23,4 @@ export class CommunityRpcService {
     return this.invoke<TResult>("createAlert", { payload });
   }
 
-  static async createIssue<TResult>(payload: Record<string, unknown>): Promise<TResult> {
-    return this.invoke<TResult>("createIssue", { payload });
-  }
-
-  static async incrementAlertEditCount(alertId: string): Promise<void> {
-    await this.invoke<{ incremented: boolean }>("incrementAlertEditCount", { alertId });
-  }
-
-  static async markBestAnswer(questionId: string, answerId: string): Promise<void> {
-    await this.invoke<{ marked: boolean }>("markBestAnswer", { questionId, answerId });
-  }
 }

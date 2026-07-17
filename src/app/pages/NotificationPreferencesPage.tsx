@@ -15,9 +15,10 @@ import {
 import { PushNotificationSettings } from "@/app/components/notifications/PushNotificationSettings";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import {
-  UserNotificationPreferencesService,
-  type NotificationPreferencesRecord,
-} from "@/core/notifications/services/UserNotificationPreferencesService";
+  DEFAULT_NOTIFICATION_PREFERENCES,
+  NotificationPreferencesService,
+  type NotificationPreferences,
+} from "@/core/notifications/services";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useToast } from "@/shared/hooks/use-toast";
 import { Button } from "@/shared/components/ui/button";
@@ -37,8 +38,6 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Switch } from "@/shared/components/ui/switch";
-
-type NotificationPreferences = NotificationPreferencesRecord;
 
 function PreferenceRow({
   id,
@@ -88,45 +87,25 @@ export default function NotificationPreferencesPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const [preferences, setPreferences] = useState<NotificationPreferences>({
-    email_enabled: true,
-    push_enabled: true,
-    inapp_enabled: true,
-    transactional_enabled: true,
-    social_enabled: true,
-    system_enabled: true,
-    marketing_enabled: false,
-    frequency: "immediate",
-    quiet_hours_start: null,
-    quiet_hours_end: null,
-  });
+  const [preferences, setPreferences] = useState<NotificationPreferences>(
+    DEFAULT_NOTIFICATION_PREFERENCES,
+  );
 
   const { data, isLoading } = useQuery({
     queryKey: ["notification-preferences", user?.id],
-    queryFn: async () => UserNotificationPreferencesService.getByUserId(user!.id),
+    queryFn: async () => NotificationPreferencesService.get(),
     enabled: !!user,
   });
 
   useEffect(() => {
     if (data) {
-      setPreferences({
-        email_enabled: data.email_enabled,
-        push_enabled: data.push_enabled,
-        inapp_enabled: data.inapp_enabled,
-        transactional_enabled: data.transactional_enabled,
-        social_enabled: data.social_enabled,
-        system_enabled: data.system_enabled,
-        marketing_enabled: data.marketing_enabled,
-        frequency: data.frequency,
-        quiet_hours_start: data.quiet_hours_start,
-        quiet_hours_end: data.quiet_hours_end,
-      });
+      setPreferences(data);
     }
   }, [data]);
 
   const saveMutation = useMutation({
     mutationFn: async (prefs: NotificationPreferences) =>
-      UserNotificationPreferencesService.updateByUserId(user!.id, prefs),
+      NotificationPreferencesService.patchAll(prefs),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notification-preferences"] });
       toast({

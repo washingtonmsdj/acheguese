@@ -131,20 +131,4 @@ describe("public territorial surface audit", () => {
     );
   });
 
-  it("keeps legacy community sidebar widgets injectable instead of owning route territory", () => {
-    const sidebarSource = readProjectFile("src/core/community/components/CommunitySidebar.tsx");
-    const topPostsSource = readProjectFile("src/core/community/components/TopPostsWidget.tsx");
-    const tagsSource = readProjectFile("src/core/community/components/PopularTagsWidget.tsx");
-
-    expect(sidebarSource).toContain("territoryFilter?: TerritoryFilter");
-    expect(sidebarSource).toContain("<TopPostsWidget territoryFilter={territoryFilter} />");
-    expect(sidebarSource).toContain(
-      "<PopularTagsWidget onTagClick={onTagClick} territoryFilter={territoryFilter} />",
-    );
-
-    expect(topPostsSource).toContain("territoryFilter?: TerritoryFilter");
-    expect(topPostsSource).toContain("const activeTerritoryFilter = territoryFilter ?? fallbackTerritoryFilter");
-    expect(tagsSource).toContain("territoryFilter?: TerritoryFilter");
-    expect(tagsSource).toContain("const activeTerritoryFilter = territoryFilter ?? fallbackTerritoryFilter");
-  });
 });

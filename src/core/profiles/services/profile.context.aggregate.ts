@@ -2,9 +2,13 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { adminRolesService } from "@/core/admin/services/AdminRolesService";
+import { activeBanReader } from "@/core/trust/services/ActiveBanReader";
 import type { ProfileContext, ProfileRow as Profile } from "./types";
-import type { ProfilePermissions, ProfileStatus } from "@/core/profiles/contracts/ProfileRuntimeContracts";
-import type { BannedUserLike } from "./profile.service.types";
+import type {
+  ProfilePermissions,
+  ProfileStatus,
+} from "@/core/profiles/contracts/ProfileRuntimeContracts";
+import type { ActiveBanStatus } from "./profile.service.types";
 import {
   calculatePlan,
   calculateProfileStatus,
@@ -44,7 +48,9 @@ async function calculatePermissions(
   let canModerate = false;
   try {
     const roles = await adminRolesService.getUserRoles(profile.user_id);
-    canModerate = roles.some((r) => ["admin", "moderator"].includes(r.role) && r.is_active);
+    canModerate = roles.some(
+      (r) => ["admin", "moderator"].includes(r.role) && r.is_active,
+    );
   } catch {
     canModerate = false;
   }
@@ -58,14 +64,8 @@ async function calculatePermissions(
   };
 }
 
-async function getBannedUserStatus(userId: string): Promise<BannedUserLike> {
-  try {
-    const { ModerationService } = await import("@/core/moderation/services/ModerationService");
-    return (await ModerationService.getBannedStatus(userId)) as unknown as BannedUserLike;
-  } catch (error) {
-    logger.error("Error in getBannedUserStatus:", error);
-    return null;
-  }
+async function getActiveBanStatus(): Promise<ActiveBanStatus> {
+  return activeBanReader.readCurrent();
 }
 
 async function getUserSubscription(userId: string) {
@@ -93,8 +93,10 @@ async function getUserSubscription(userId: string) {
 
 async function getVerificationStatus(profileId: string) {
   try {
-    const { VerificationService } = await import("@/core/verification/services/VerificationService");
-    const verifications = await VerificationService.getProfileVerifications(profileId);
+    const { VerificationService } =
+      await import("@/core/verification/services/VerificationService");
+    const verifications =
+      await VerificationService.getProfileVerifications(profileId);
     return verifications[0] ?? null;
   } catch (error) {
     logger.error("Error in getVerificationStatus:", error);
@@ -114,13 +116,13 @@ export async function getProfileContextAggregate(
       return null;
     }
 
-    const [bannedUser, subscription, verification] = await Promise.all([
-      getBannedUserStatus(userId),
+    const [hasActiveBan, subscription, verification] = await Promise.all([
+      getActiveBanStatus(),
       getUserSubscription(userId),
       profile.id ? getVerificationStatus(profile.id) : Promise.resolve(null),
     ]);
 
-    const status = calculateProfileStatus(profile, bannedUser);
+    const status = calculateProfileStatus(profile, hasActiveBan);
     const permissions = await calculatePermissions(status, profile);
 
     return mapProfileContext({

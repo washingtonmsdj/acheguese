@@ -16,7 +16,7 @@ import {
   SecondaryEntitiesCard,
   ReputationSourcesCard,
   PreferenceScopesCard,
-  EffectivePermissionsCard,
+  CapabilityPreviewCard,
 } from "../components/cards";
 
 export function AdminIdentidadeDetailDialog({
@@ -64,7 +64,7 @@ export function AdminIdentidadeDetailDialog({
             <SecondaryEntitiesCard residence={detail.residence} family={detail.family} />
             <ReputationSourcesCard sources={detail.reputationSources} />
             <PreferenceScopesCard scopes={detail.preferenceScopes} />
-            <EffectivePermissionsCard permissionGovernance={detail.permissionGovernance} />
+            <CapabilityPreviewCard capabilityPreview={detail.capabilityPreview} />
           </div>
         )}
       </DialogContent>

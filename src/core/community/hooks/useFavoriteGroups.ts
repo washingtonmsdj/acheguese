@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { FavoriteGroup } from "@/shared/types/community";
 import { useSessionContext } from "@/core/session";
-import { SocialInteractionsService } from "@/core/social/services/SocialInteractionsService";
 import { CommunityService } from "@/core/community/services/CommunityService";
 
 interface CommunityGroupListItem {
@@ -22,13 +21,12 @@ export function useFavoriteGroups() {
     queryFn: async (): Promise<FavoriteGroup[]> => {
       if (!activeProfile?.userId) return [];
 
-      const groupIds = await SocialInteractionsService.getUserGroupIds(activeProfile.userId);
-      if (groupIds.length === 0) return [];
-
-      const groups = await CommunityService.getGroups(undefined, undefined);
-      const byMembership = (groups as unknown as CommunityGroupListItem[])
-        .filter((group) => groupIds.includes(group.id))
-        .sort((a, b) => (b.members_count || 0) - (a.members_count || 0));
+      const page = await CommunityService.getGroupsPage({
+        limit: 50,
+        onlyMemberGroups: true,
+        sortBy: "populares",
+      });
+      const byMembership = page.items as unknown as CommunityGroupListItem[];
 
       return byMembership.map((group) => ({
         id: group.id,

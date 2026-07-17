@@ -2,6 +2,7 @@ import React from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
@@ -31,6 +32,7 @@ import {
   Bell,
   BriefcaseBusiness,
   Calendar,
+  ChevronDown,
   ClipboardList,
   HelpCircle,
   Image,
@@ -49,6 +51,7 @@ import { useCreatePostForm } from "../../hooks/composer/useCreatePostForm";
 import { postService } from "@/core/posts/services";
 import { toast } from "sonner";
 import { cn } from "@/shared/utils/cn";
+import { POST_LIMITS } from "@/shared/constants/socialContent";
 import type { PostType } from "@/core/posts/types.ts";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
@@ -402,6 +405,8 @@ export function CreatePostModal({
   const form = useCreatePostForm();
   const territoryFilter = useTerritoryFilter();
   const [publishing, setPublishing] = React.useState(false);
+  const [intentPickerExpanded, setIntentPickerExpanded] = React.useState(false);
+  const intentPickerId = React.useId();
   const [intent, setIntent] = React.useState<IntentId>(
     getLaunchIntent(intentFromPostType(initialType ?? defaultType)),
   );
@@ -457,6 +462,7 @@ export function CreatePostModal({
 
   const selectedIntent =
     flattenIntents().find((item) => item.id === intent) ?? flattenIntents()[0];
+  const SelectedIntentIcon = selectedIntent.icon;
   React.useEffect(() => {
     if (!open) return;
     form.setType(
@@ -471,6 +477,7 @@ export function CreatePostModal({
     form.setReach(initialReach ?? "neighborhood");
     form.setContent("");
     setIntent(getLaunchIntent(intentFromPostType(initialType ?? defaultType)));
+    setIntentPickerExpanded(false);
     setGenericDescription(initialContent ?? "");
     setDistributionLevel(initialDistributionLevel);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -617,7 +624,6 @@ export function CreatePostModal({
             category: problemCategory.trim(),
             severity: problemSeverity,
             recurrence: problemRecurrence,
-            photos: form.images,
             description: problemDescription.trim(),
           },
         },
@@ -727,7 +733,8 @@ export function CreatePostModal({
     if (locationError || !resolvedLocationId)
       return toast.error(locationError ?? "Localização inválida.");
     if (!baseValid) return toast.error("Preencha os campos obrigatórios.");
-    if (publicationPermissionError) return toast.info(publicationPermissionError);
+    if (publicationPermissionError)
+      return toast.info(publicationPermissionError);
     setPublishing(true);
     try {
       const payload = buildStructuredPayload();
@@ -737,23 +744,25 @@ export function CreatePostModal({
       } else if (isOpportunityIntent) {
         toast.error("Oportunidades estao pausadas neste MVP.");
       } else {
-        await postService.createPost({
-          author_profile_id: profile.id,
-          content: payload.content,
-          type: selectedIntent.structuralType,
-          location_id: resolvedLocationId,
-          reach: reachFromTerritorialLevel(distributionLevel),
-          images: form.images,
-          tags: payload.tags,
-          content_intent: intent,
-          display_format: payload.structural.display_format,
-          distribution_channels:
-            payload.structural.distribution_territorial.channels,
-          content_payload: payload.structural as unknown as Record<
-            string,
-            unknown
-          >,
-        });
+        await postService.createPostWithImages(
+          {
+            author_profile_id: profile.id,
+            content: payload.content,
+            type: selectedIntent.structuralType,
+            location_id: resolvedLocationId,
+            reach: reachFromTerritorialLevel(distributionLevel),
+            tags: payload.tags,
+            content_intent: intent,
+            display_format: payload.structural.display_format,
+            distribution_channels:
+              payload.structural.distribution_territorial.channels,
+            content_payload: payload.structural as unknown as Record<
+              string,
+              unknown
+            >,
+          },
+          form.imageFiles,
+        );
         toast.success("Conteúdo publicado.");
       }
       form.resetForm();
@@ -767,15 +776,19 @@ export function CreatePostModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[760px] max-h-[88vh] overflow-hidden p-0">
-        <DialogHeader className="border-b border-border px-5 py-4">
+      <DialogContent className="bottom-0 left-0 right-0 top-auto max-h-[92dvh] w-full max-w-none translate-x-0 translate-y-0 gap-0 overflow-hidden rounded-b-none rounded-t-2xl border-x-0 border-b-0 p-0 sm:bottom-auto sm:left-[50%] sm:right-auto sm:top-[50%] sm:max-h-[88vh] sm:max-w-[760px] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-lg sm:border">
+        <DialogHeader className="border-b border-border px-4 py-3 text-left sm:px-5 sm:py-4">
           <DialogTitle className="text-base font-semibold">
             {editPostId
               ? "Editar conteúdo territorial"
               : "Criar conteúdo territorial"}
           </DialogTitle>
+          <DialogDescription className="pr-8 text-xs">
+            Escolha o formato, escreva com clareza e confirme onde o conteúdo
+            será exibido.
+          </DialogDescription>
         </DialogHeader>
-        <div className="max-h-[70vh] overflow-y-auto px-5 py-4 space-y-5">
+        <div className="max-h-[calc(92dvh-7.5rem)] space-y-4 overflow-y-auto px-4 py-3 overscroll-contain sm:max-h-[70vh] sm:space-y-5 sm:px-5 sm:py-4">
           {locationError && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
@@ -803,50 +816,92 @@ export function CreatePostModal({
                 </div>
               )}
           </div>
-          <section className="space-y-3">
-            <h3 className="text-sm font-semibold">O que deseja publicar?</h3>
-            {INTENT_GROUPS.map((group) => (
-              <div key={group.title} className="space-y-2">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {group.title}
-                </p>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {group.items.map((item) => {
-                    const Icon = item.icon;
-                    const active = item.id === intent;
-                    return (
-                      <Tooltip key={item.id}>
-                        <TooltipTrigger asChild>
-                          <button
-                            type="button"
-                            onClick={() => setIntent(item.id)}
-                            className={cn(
-                              "rounded-lg border p-2.5 text-left transition-colors",
-                              active
-                                ? "border-primary bg-primary/10 text-primary"
-                                : "border-border hover:border-primary/40",
-                            )}
-                          >
-                            <div className="flex items-center gap-2">
-                              <Icon className="h-4 w-4" />
-                              <span className="text-xs font-semibold">
-                                {item.label}
-                              </span>
-                            </div>
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          side="bottom"
-                          className="max-w-[280px] text-xs"
-                        >
-                          {item.tooltip}
-                        </TooltipContent>
-                      </Tooltip>
-                    );
-                  })}
-                </div>
+          <section className="space-y-2">
+            <button
+              type="button"
+              onClick={() => setIntentPickerExpanded((current) => !current)}
+              className="flex min-h-12 w-full items-center gap-3 rounded-xl border border-border bg-card px-3 text-left transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              aria-expanded={intentPickerExpanded}
+              aria-controls={intentPickerId}
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <SelectedIntentIcon className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-xs text-muted-foreground">
+                  Tipo de publicação
+                </span>
+                <span className="block truncate text-sm font-semibold">
+                  {selectedIntent.label}
+                </span>
+              </span>
+              <span className="hidden text-xs text-muted-foreground sm:inline">
+                Alterar tipo
+              </span>
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+                  intentPickerExpanded && "rotate-180",
+                )}
+                aria-hidden="true"
+              />
+            </button>
+
+            {intentPickerExpanded ? (
+              <div
+                id={intentPickerId}
+                className="space-y-3 rounded-xl border border-border bg-card/60 p-3"
+              >
+                {INTENT_GROUPS.map((group) => (
+                  <div key={group.title} className="space-y-2">
+                    <p className="text-[0.68rem] font-medium uppercase text-muted-foreground">
+                      {group.title}
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {group.items.map((item) => {
+                        const Icon = item.icon;
+                        const active = item.id === intent;
+                        return (
+                          <Tooltip key={item.id}>
+                            <TooltipTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIntent(item.id);
+                                  setIntentPickerExpanded(false);
+                                }}
+                                className={cn(
+                                  "min-h-11 rounded-lg border p-2.5 text-left transition-colors",
+                                  active
+                                    ? "border-primary bg-primary/10 text-primary"
+                                    : "border-border hover:border-primary/40",
+                                )}
+                              >
+                                <span className="flex items-center gap-2">
+                                  <Icon
+                                    className="h-4 w-4 shrink-0"
+                                    aria-hidden="true"
+                                  />
+                                  <span className="truncate text-xs font-semibold">
+                                    {item.label}
+                                  </span>
+                                </span>
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="bottom"
+                              className="max-w-[280px] text-xs"
+                            >
+                              {item.tooltip}
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : null}
           </section>
           {isPollIntent ? (
             <section className="space-y-3 rounded-lg border border-border bg-card p-3">
@@ -1235,39 +1290,46 @@ export function CreatePostModal({
               </p>
             </section>
           )}
-          <section className="space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">Midia</p>
-              <Button
-                variant="ghost"
-                size="icon"
-                type="button"
-                onClick={form.handleAddImage}
-              >
-                <Image className="h-4 w-4" />
-              </Button>
-            </div>
-            {form.images.length > 0 && (
-              <div className="flex gap-2 flex-wrap">
-                {form.images.map((img, i) => (
-                  <div key={img} className="relative">
-                    <img
-                      src={img}
-                      alt=""
-                      className="h-16 w-16 rounded-lg border object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => form.handleRemoveImage(i)}
-                      className="absolute -top-1 -right-1 rounded-full bg-destructive p-0.5 text-white"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
+          {!editPostId ? (
+            <section className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">
+                  Midia ({form.images.length}/{POST_LIMITS.MAX_IMAGES})
+                </p>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  type="button"
+                  onClick={form.handleAddImage}
+                  disabled={form.images.length >= POST_LIMITS.MAX_IMAGES}
+                  aria-label="Adicionar imagens"
+                >
+                  <Image className="h-4 w-4" />
+                </Button>
               </div>
-            )}
-          </section>
+              {form.images.length > 0 && (
+                <div className="flex gap-2 flex-wrap">
+                  {form.images.map((img, i) => (
+                    <div key={img} className="relative">
+                      <img
+                        src={img}
+                        alt=""
+                        className="h-16 w-16 rounded-lg border object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => form.handleRemoveImage(i)}
+                        className="absolute -top-1 -right-1 rounded-full bg-destructive p-0.5 text-white"
+                        aria-label={`Remover imagem ${i + 1}`}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          ) : null}
           <section className="space-y-2">
             <p className="text-xs text-muted-foreground">
               Distribuicao territorial
@@ -1294,19 +1356,27 @@ export function CreatePostModal({
             </div>
           </section>
         </div>
-        <div className="border-t border-border px-5 py-3 flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">
+        <div className="flex items-center justify-between gap-2 border-t border-border bg-background px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 sm:px-5 sm:py-3">
+          <p className="sr-only text-xs text-muted-foreground sm:not-sr-only">
             {publicationPermissionError
               ? publicationPermissionError
               : canPublish
                 ? "Estrutura valida para publicação"
                 : "Complete os campos obrigatórios"}
           </p>
-          <div className="flex gap-2">
-            <Button variant="ghost" onClick={handleClose}>
+          <div className="flex w-full gap-2 sm:w-auto">
+            <Button
+              variant="ghost"
+              onClick={handleClose}
+              className="flex-1 sm:flex-none"
+            >
               Cancelar
             </Button>
-            <Button onClick={handlePublish} disabled={!canPublish}>
+            <Button
+              onClick={handlePublish}
+              disabled={!canPublish}
+              className="flex-1 sm:flex-none"
+            >
               {publishing
                 ? editPostId
                   ? "Salvando..."
@@ -1317,14 +1387,16 @@ export function CreatePostModal({
             </Button>
           </div>
         </div>
-        <input
-          ref={form.fileInputRef}
-          type="file"
-          accept="image/*,video/*"
-          multiple
-          className="hidden"
-          onChange={form.handleFileSelect}
-        />
+        {!editPostId ? (
+          <input
+            ref={form.fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            multiple
+            className="hidden"
+            onChange={form.handleFileSelect}
+          />
+        ) : null}
       </DialogContent>
     </Dialog>
   );

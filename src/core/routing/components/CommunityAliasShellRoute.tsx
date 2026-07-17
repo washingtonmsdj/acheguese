@@ -16,6 +16,7 @@ import type { TerritorialLayoutContext } from "./TerritorialLayout";
 import { TerritorialNotFound } from "./TerritorialNotFound";
 import { lastTerritoryStore } from "@/core/routing/stores/LastTerritoryStore";
 import { buildCommunityPortalUrl } from "@/core/routing/policies";
+import { BottomNav } from "@/core/navigation/BottomNav";
 
 type AliasShellState =
   | { status: "loading" }
@@ -232,7 +233,13 @@ export function CommunityAliasShellRoute() {
         </>
       ) : null}
 
-      <Outlet context={outletContext} />
+      <div
+        className="min-h-screen overflow-x-hidden bg-background pb-20 md:pb-0"
+        data-community-territorial-shell="alias"
+      >
+        <Outlet context={outletContext} />
+        <BottomNav />
+      </div>
     </>
   );
 }

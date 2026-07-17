@@ -12,6 +12,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { mediaService } from '@/core/media/services/MediaService';
+import { resolveMediaAssetSource } from '@/core/media';
 import { useSessionContext } from '@/core/session';
 import { REVIEW_MAX_PHOTOS } from '../constants/ui-limits';
 
@@ -40,7 +41,7 @@ export function ReviewForm({
   submitLabel = 'Publicar avaliação',
   isSubmitting = false,
 }: ReviewFormProps) {
-  const { user } = useSessionContext();
+  const { activeProfile } = useSessionContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [rating, setRating] = useState(initialRating);
@@ -74,7 +75,7 @@ export function ReviewForm({
       return;
     }
 
-    if (!user?.id) {
+    if (!activeProfile?.id) {
       toast.error('Faça login para adicionar fotos');
       return;
     }
@@ -83,11 +84,17 @@ export function ReviewForm({
 
     try {
       const uploadResults = await Promise.all(
-        files.map((file) => mediaService.uploadPostImage(user.id, file)),
+        files.map((file) =>
+          mediaService.uploadMediaAsset(
+            activeProfile.id,
+            file,
+            'review_photo',
+          ),
+        ),
       );
 
-      const urls = uploadResults.map((r) => r.url);
-      setPhotos((prev) => [...prev, ...urls]);
+      const references = uploadResults.map((result) => result.reference);
+      setPhotos((prev) => [...prev, ...references]);
     } catch (error) {
       toast.error('Erro ao enviar fotos. Tente novamente.');
     } finally {
@@ -168,7 +175,7 @@ export function ReviewForm({
             {photos.map((photo, index) => (
               <div key={photo} className="group relative">
                 <img
-                  src={photo}
+                  src={resolveMediaAssetSource(photo) ?? undefined}
                   alt={`Foto ${index + 1}`}
                   className="h-20 w-20 rounded-lg object-cover"
                 />

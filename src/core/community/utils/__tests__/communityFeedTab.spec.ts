@@ -15,7 +15,9 @@ describe("communityFeedTab SSOT", () => {
   });
 
   it("defaults unknown tab to para_voce", () => {
-    expect(resolveCommunityFeedChannelFromTab("desconhecido")).toBe("para_voce");
+    expect(resolveCommunityFeedChannelFromTab("desconhecido")).toBe(
+      "para_voce",
+    );
   });
 
   it("does not emit query tabs for paused channels", () => {
@@ -39,8 +41,8 @@ describe("communityFeedTab SSOT", () => {
 
   it("keeps sort filter order stable", () => {
     expect(COMMUNITY_FEED_SORT_FILTERS).toEqual([
+      { id: "popular", label: "Melhores" },
       { id: "recent", label: "Recentes" },
-      { id: "popular", label: "Em alta" },
       { id: "most_commented", label: "Comentados" },
     ]);
   });

@@ -99,9 +99,15 @@ export function useBusinessImageUpload() {
     const normalized = input instanceof File
       ? { file: input, folder: "logos" as const }
       : input;
-    const type = normalized.folder === "logos" ? "logo" : "capa";
-    const result = await mediaService.uploadBusinessImage(activeProfile.id, normalized.file, type);
-    return result.url;
+    const preset = normalized.folder === "logos"
+      ? "business_logo"
+      : "business_banner";
+    const result = await mediaService.uploadMediaAsset(
+      activeProfile.id,
+      normalized.file,
+      preset,
+    );
+    return result.reference;
   };
 
   return useMutation({

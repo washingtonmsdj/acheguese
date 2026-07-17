@@ -34,11 +34,8 @@ export {
   useUserFavorites,
   useIsFavorited,
   useBusinessFavoritesCount,
-  useToggleFavorite,
-  useAddFavorite,
-  useRemoveFavorite,
+  useSetFavorite,
   useUpdateFavoritePreferences,
-  useFavoritesByTags,
   useFavoritesManager,
 } from './useFavorites';
 export {

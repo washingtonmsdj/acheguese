@@ -1,13 +1,7 @@
-/**
- * Favorites Query Service - operacoes de favoritos de Gastronomia.
- *
- * Usa a tabela user_favorite_businesses criada pela migration 20260412000002.
- */
-
-import { logger } from '@/shared/utils/logger';
+import { BusinessFavoriteService } from '@/core/business/services/BusinessFavoriteService';
 import { supabase } from '@/integrations/supabase';
-
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { logger } from '@/shared/utils/logger';
+import { isValidUUID } from '@/shared/utils/validation';
 
 export interface FavoriteBusiness {
   favorite_id: string;
@@ -34,21 +28,11 @@ export interface FavoriteBusiness {
 export interface UpdateFavoritePreferencesInput {
   notify_on_promotions?: boolean;
   notify_on_new_items?: boolean;
-  notes?: string;
-  tags?: string[];
+  notes?: string | null;
+  tags?: string[] | null;
 }
 
-type FavoriteRecordRow = {
-  id: string;
-  business_id: string;
-  notify_on_promotions: boolean | null;
-  notify_on_new_items: boolean | null;
-  notes: string | null;
-  tags: string[] | null;
-  created_at: string;
-};
-
-type FavoriteBusinessDataRow = {
+interface FavoriteBusinessDataRow {
   id: string;
   business_name: string | null;
   slug: string | null;
@@ -63,413 +47,156 @@ type FavoriteBusinessDataRow = {
   location?: {
     geographic_path?: string | null;
   } | null;
-};
+}
 
-type FavoriteGastronomyProfileRow = {
+interface FavoriteGastronomyProfileRow {
   business_id: string;
   cuisine_type: string | null;
   delivery_enabled: boolean | null;
   price_range: string | null;
-};
+}
+
+interface ListFavoriteBusinessesInput {
+  limit?: number;
+  offset?: number;
+  tags?: string[];
+}
 
 export class FavoritesQueryService {
-  private static async getUserFavoritesFromRecords(params: {
-    userId: string;
-    limit?: number;
-    offset?: number;
-  }): Promise<FavoriteBusiness[]> {
-    const limit = Math.max(0, params.limit ?? 50);
-    const offset = Math.max(0, params.offset ?? 0);
-
-    const { data: favoriteRowsRaw, error: favoritesError } = await supabase
-      .from('user_favorite_businesses')
-      .select('id, business_id, notify_on_promotions, notify_on_new_items, notes, tags, created_at')
-      .eq('user_id', params.userId)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + Math.max(0, limit - 1));
-
-    if (favoritesError) {
-      throw favoritesError;
-    }
-
-    const favoriteRows = (favoriteRowsRaw as FavoriteRecordRow[] | null) ?? [];
+  private static async composeCurrentUserFavorites(
+    input: ListFavoriteBusinessesInput,
+  ): Promise<FavoriteBusiness[]> {
+    const favoriteRows = await BusinessFavoriteService.listCurrentUserFavorites(input);
     if (favoriteRows.length === 0) return [];
 
-    const businessIds = favoriteRows.map((item) => item.business_id);
+    const businessIds = favoriteRows.map((favorite) => favorite.business_id);
+    const [businessResult, gastronomyResult] = await Promise.all([
+      supabase
+        .from('business_data')
+        .select(`
+          id,
+          business_name,
+          slug,
+          description,
+          rating,
+          total_reviews,
+          is_verified,
+          metadata,
+          location:locations!location_id(geographic_path)
+        `)
+        .in('id', businessIds)
+        .eq('status', 'active'),
+      supabase
+        .from('gastronomy_profiles')
+        .select('business_id, cuisine_type, delivery_enabled, price_range')
+        .in('business_id', businessIds),
+    ]);
 
-    const { data: businessRowsRaw, error: businessError } = await supabase
-      .from('business_data')
-      .select(`
-        id,
-        business_name,
-        slug,
-        description,
-        rating,
-        total_reviews,
-        is_verified,
-        metadata,
-        location:locations!location_id(geographic_path)
-      `)
-      .in('id', businessIds)
-      .eq('status', 'active');
+    if (businessResult.error) throw businessResult.error;
+    if (gastronomyResult.error) throw gastronomyResult.error;
 
-    if (businessError) {
-      throw businessError;
-    }
-
-    const { data: gastronomyRowsRaw, error: gastronomyError } = await supabase
-      .from('gastronomy_profiles')
-      .select('business_id, cuisine_type, delivery_enabled, price_range')
-      .in('business_id', businessIds);
-
-    if (gastronomyError) {
-      throw gastronomyError;
-    }
-
-    const businessRows = (businessRowsRaw as FavoriteBusinessDataRow[] | null) ?? [];
-    const gastronomyRows = (gastronomyRowsRaw as FavoriteGastronomyProfileRow[] | null) ?? [];
-
-    const businessMap = new Map(businessRows.map((item) => [item.id, item]));
-    const gastronomyMap = new Map(gastronomyRows.map((item) => [item.business_id, item]));
+    const businessRows =
+      (businessResult.data as FavoriteBusinessDataRow[] | null) ?? [];
+    const gastronomyRows =
+      (gastronomyResult.data as FavoriteGastronomyProfileRow[] | null) ?? [];
+    const businessById = new Map(businessRows.map((business) => [business.id, business]));
+    const gastronomyByBusinessId = new Map(
+      gastronomyRows.map((profile) => [profile.business_id, profile]),
+    );
 
     return favoriteRows
-      .map((favoriteRow) => {
-        const businessRow = businessMap.get(favoriteRow.business_id);
-        if (!businessRow) return null;
+      .map((favorite) => {
+        const business = businessById.get(favorite.business_id);
+        if (!business) return null;
 
-        const gastronomy = gastronomyMap.get(favoriteRow.business_id);
+        const gastronomy = gastronomyByBusinessId.get(favorite.business_id);
         return {
-          favorite_id: favoriteRow.id,
-          business_id: businessRow.id,
-          business_name: businessRow.business_name || '',
-          business_slug: businessRow.slug || '',
-          business_description: businessRow.description,
-          business_logo_url: businessRow.metadata?.logo_url ?? null,
-          business_banner_url: businessRow.metadata?.banner_url ?? null,
-          business_rating: businessRow.rating ?? 0,
-          business_total_reviews: businessRow.total_reviews ?? 0,
-          business_is_verified: businessRow.is_verified ?? false,
-          business_geographic_path: businessRow.location?.geographic_path ?? null,
+          favorite_id: favorite.id,
+          business_id: business.id,
+          business_name: business.business_name ?? '',
+          business_slug: business.slug ?? '',
+          business_description: business.description,
+          business_logo_url: business.metadata?.logo_url ?? null,
+          business_banner_url: business.metadata?.banner_url ?? null,
+          business_rating: business.rating ?? 0,
+          business_total_reviews: business.total_reviews ?? 0,
+          business_is_verified: business.is_verified ?? false,
+          business_geographic_path: business.location?.geographic_path ?? null,
           cuisine_type: gastronomy?.cuisine_type ?? null,
           delivery_enabled: gastronomy?.delivery_enabled ?? null,
           price_range: gastronomy?.price_range ?? null,
-          notify_on_promotions: favoriteRow.notify_on_promotions ?? true,
-          notify_on_new_items: favoriteRow.notify_on_new_items ?? false,
-          notes: favoriteRow.notes,
-          tags: favoriteRow.tags ?? [],
-          favorited_at: favoriteRow.created_at,
+          notify_on_promotions: favorite.notify_on_promotions,
+          notify_on_new_items: favorite.notify_on_new_items,
+          notes: favorite.notes,
+          tags: favorite.tags ?? [],
+          favorited_at: favorite.created_at,
         } satisfies FavoriteBusiness;
       })
-      .filter((item): item is FavoriteBusiness => Boolean(item));
+      .filter((favorite): favorite is FavoriteBusiness => favorite !== null);
   }
 
-  /**
-   *  Obter favoritos do usuario.
-   */
-  static async getUserFavorites(params: {
-    userId: string;
-    limit?: number;
-    offset?: number;
-  }): Promise<FavoriteBusiness[]> {
+  static async getCurrentUserFavorites(
+    input: ListFavoriteBusinessesInput = {},
+  ): Promise<FavoriteBusiness[]> {
     try {
-      if (!UUID_REGEX.test(params.userId)) {
-        return [];
-      }
-
-      return await this.getUserFavoritesFromRecords(params);
+      return await this.composeCurrentUserFavorites(input);
     } catch (error) {
-      logger.error('Error in getUserFavorites', error);
+      logger.error('[FavoritesQueryService] Failed to list favorites', error);
       throw error;
     }
   }
 
-  /**
-   *  Verifica se negocio esta nos favoritos.
-   */
-  static async isBusinessFavorited(params: {
-    userId: string;
-    businessId: string;
-  }): Promise<boolean> {
+  static async isBusinessFavorited(businessId: string): Promise<boolean> {
+    if (!isValidUUID(businessId)) return false;
+
     try {
-      const { data, error } = await supabase.rpc('is_business_favorited', {
-        p_user_id: params.userId,
-        p_business_id: params.businessId,
+      return await BusinessFavoriteService.isFavorited(businessId);
+    } catch (error) {
+      logger.error('[FavoritesQueryService] Failed to read favorite state', error, {
+        businessId,
       });
-
-      if (error) {
-        logger.error('Failed to check if business is favorited', error, params);
-        return false;
-      }
-
-      return data === true;
-    } catch (error) {
-      logger.error('Error in isBusinessFavorited', error);
-      return false;
+      throw error;
     }
   }
 
-  /**
-   *  Toggle favorito (adiciona ou remove)
-   */
-  static async toggleFavorite(params: {
-    userId: string;
-    businessId: string;
-  }): Promise<boolean> {
+  static async setFavorite(
+    businessId: string,
+    favorited: boolean,
+  ): Promise<boolean> {
     try {
-      const { data, error } = await supabase.rpc('toggle_business_favorite', {
-        p_user_id: params.userId,
-        p_business_id: params.businessId,
+      return await BusinessFavoriteService.setFavorite(businessId, favorited);
+    } catch (error) {
+      logger.error('[FavoritesQueryService] Failed to set favorite state', error, {
+        businessId,
+        favorited,
       });
-
-      if (error) {
-        logger.error('Failed to toggle favorite', error, params);
-        throw error;
-      }
-
-      const isFavorited = data === true;
-      logger.info('Favorite toggled successfully', {
-        ...params,
-        isFavorited,
-      });
-
-      return isFavorited;
-    } catch (error) {
-      logger.error('Error in toggleFavorite', error);
       throw error;
     }
   }
 
-  /**
-   *  Adicionar aos favoritos
-   */
-  static async addFavorite(params: {
-    userId: string;
-    businessId: string;
-  }): Promise<{ id: string }> {
-    try {
-      const { data, error } = await supabase
-        .from('user_favorite_businesses')
-        .insert({
-          user_id: params.userId,
-          business_id: params.businessId,
-        })
-        .select('id')
-        .single();
-
-      if (error) {
-        logger.error('Failed to add favorite', error, params);
-        throw error;
-      }
-
-      if (!data) {
-        throw new Error('No data returned from favorite creation');
-      }
-
-      logger.info('Favorite added successfully', { favoriteId: data.id });
-      return { id: data.id };
-    } catch (error) {
-      logger.error('Error in addFavorite', error);
-      throw error;
-    }
-  }
-
-  /**
-   *  Remover dos favoritos
-   */
-  static async removeFavorite(params: {
-    userId: string;
-    businessId: string;
-  }): Promise<void> {
-    try {
-      const { error } = await supabase
-        .from('user_favorite_businesses')
-        .delete()
-        .eq('user_id', params.userId)
-        .eq('business_id', params.businessId);
-
-      if (error) {
-        logger.error('Failed to remove favorite', error, params);
-        throw error;
-      }
-
-      logger.info('Favorite removed successfully', params);
-    } catch (error) {
-      logger.error('Error in removeFavorite', error);
-      throw error;
-    }
-  }
-
-  /**
-   *  Atualizar preferncias de um favorito
-   */
   static async updateFavoritePreferences(
     favoriteId: string,
     input: UpdateFavoritePreferencesInput,
   ): Promise<void> {
-    try {
-      const { error } = await supabase
-        .from('user_favorite_businesses')
-        .update({
-          notify_on_promotions: input.notify_on_promotions,
-          notify_on_new_items: input.notify_on_new_items,
-          notes: input.notes,
-          tags: input.tags,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', favoriteId);
-
-      if (error) {
-        logger.error('Failed to update favorite preferences', error, {
-          favoriteId,
-          input,
-        });
-        throw error;
-      }
-
-      logger.info('Favorite preferences updated successfully', { favoriteId });
-    } catch (error) {
-      logger.error('Error in updateFavoritePreferences', error);
-      throw error;
-    }
+    await BusinessFavoriteService.updatePreferences(favoriteId, {
+      notifyOnPromotions: input.notify_on_promotions,
+      notifyOnNewItems: input.notify_on_new_items,
+      ...(Object.prototype.hasOwnProperty.call(input, 'notes')
+        ? { notes: input.notes }
+        : {}),
+      ...(Object.prototype.hasOwnProperty.call(input, 'tags')
+        ? { tags: input.tags }
+        : {}),
+    });
   }
 
-  /**
-   *  Obter contador de favoritos de um negocio.
-   */
   static async getBusinessFavoritesCount(businessId: string): Promise<number> {
-    if (!UUID_REGEX.test(businessId)) {
-      return 0;
-    }
-
     try {
-      const { data, error } = await supabase
-        .from('business_data')
-        .select('favorites_count')
-        .eq('id', businessId)
-        .maybeSingle();
-
-      if (error) {
-        logger.error('Failed to get business favorites count', error, {
-          businessId,
-        });
-        return 0;
-      }
-
-      return data?.favorites_count ?? 0;
+      return await BusinessFavoriteService.getFavoritesCount(businessId);
     } catch (error) {
-      logger.error('Error in getBusinessFavoritesCount', error);
-      return 0;
-    }
-  }
-
-  /**
-   *  Buscar favoritos por tags
-   */
-  static async searchFavoritesByTags(params: {
-    userId: string;
-    tags: string[];
-  }): Promise<FavoriteBusiness[]> {
-    try {
-      const { data, error } = await supabase
-        .from('user_favorite_businesses')
-        .select(
-          `
-          id,
-          business_id,
-          notify_on_promotions,
-          notify_on_new_items,
-          notes,
-          tags,
-          created_at,
-          business_data!inner (
-            id,
-            business_name,
-            slug,
-            description,
-            rating,
-            total_reviews,
-            is_verified,
-            metadata,
-            gastronomy_profiles (
-              cuisine_type,
-              delivery_enabled,
-              price_range
-            )
-          )
-        `,
-        )
-        .eq('user_id', params.userId)
-        .contains('tags', params.tags);
-
-      if (error) {
-        logger.error('Failed to search favorites by tags', error, params);
-        throw error;
-      }
-
-      //  Transformar dados para o formato esperado
-      type TagSearchRow = {
-        id: string;
-        notify_on_promotions: boolean;
-        notify_on_new_items: boolean;
-        notes: string | null;
-        tags: string[];
-        created_at: string;
-        business_data: {
-          id: string;
-          business_name: string;
-          slug: string;
-          description: string | null;
-          rating: number;
-          total_reviews: number;
-          is_verified: boolean;
-          metadata?: {
-            logo_url?: string | null;
-            banner_url?: string | null;
-          } | null;
-          gastronomy_profiles?:
-            | Array<{
-                cuisine_type: string;
-                delivery_enabled: boolean;
-                price_range: string;
-              }>
-            | {
-              cuisine_type: string;
-              delivery_enabled: boolean;
-              price_range: string;
-            };
-        };
-      };
-
-      const favorites: FavoriteBusiness[] = (((data as unknown) as TagSearchRow[]) || []).map((item) => {
-        const profile = Array.isArray(item.business_data.gastronomy_profiles)
-          ? item.business_data.gastronomy_profiles[0]
-          : item.business_data.gastronomy_profiles;
-        return ({
-        favorite_id: item.id,
-        business_id: item.business_data.id,
-        business_name: item.business_data.business_name,
-        business_slug: item.business_data.slug,
-        business_description: item.business_data.description,
-        business_logo_url: item.business_data.metadata?.logo_url ?? null,
-        business_banner_url: item.business_data.metadata?.banner_url ?? null,
-        business_rating: item.business_data.rating,
-        business_total_reviews: item.business_data.total_reviews,
-        business_is_verified: item.business_data.is_verified,
-        business_geographic_path: null, //  no disponvel nesta query
-        cuisine_type: profile?.cuisine_type ?? null,
-        delivery_enabled: profile?.delivery_enabled ?? null,
-        price_range: profile?.price_range ?? null,
-        notify_on_promotions: item.notify_on_promotions,
-        notify_on_new_items: item.notify_on_new_items,
-        notes: item.notes,
-        tags: item.tags,
-        favorited_at: item.created_at,
+      logger.error('[FavoritesQueryService] Failed to read favorite count', error, {
+        businessId,
       });
-      });
-
-      return favorites;
-    } catch (error) {
-      logger.error('Error in searchFavoritesByTags', error);
       throw error;
     }
   }

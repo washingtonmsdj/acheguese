@@ -9,4 +9,4 @@ export * from "./UsernameHistoryCard";
 export * from "./SecondaryEntitiesCard";
 export * from "./ReputationSourcesCard";
 export * from "./PreferenceScopesCard";
-export * from "./EffectivePermissionsCard";
+export * from "./CapabilityPreviewCard";

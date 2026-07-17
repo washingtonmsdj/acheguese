@@ -79,10 +79,6 @@ interface ProfessionalJobRow {
   created_at: string;
 }
 
-interface ProfessionalReportRow {
-  id: string;
-}
-
 type UpdateProfessionalInputWithStatus = UpdateProfessionalInput & {
   status?: ProfessionalStatus;
 };
@@ -532,39 +528,6 @@ export async function deleteProfessionalReview(reviewId: string): Promise<void> 
       component: "professional.mutations",
       action: "deleteProfessionalReview",
       metadata: { reviewId },
-    });
-    throw error;
-  }
-}
-
-/**
- * Atualizar status de denúncia de profissional (admin)
- */
-export async function updateProfessionalReport(
-  reportId: string,
-  status: string,
-): Promise<void> {
-  try {
-    const { error } = await professionalMutationsDb
-      .from<ProfessionalReportRow>("professional_reports")
-      .update({
-        status,
-        updated_at: new Date().toISOString(),
-        resolved_at: status === "resolved" ? new Date().toISOString() : null,
-      })
-      .eq("id", reportId);
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    logger.info("[professional.mutations] Report status updated:", { reportId, status });
-  } catch (error) {
-    logger.error("[professional.mutations] Error updating report:", error);
-    trackError(error as Error, {
-      component: "professional.mutations",
-      action: "updateProfessionalReport",
-      metadata: { reportId, status },
     });
     throw error;
   }

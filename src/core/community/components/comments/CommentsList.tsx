@@ -29,6 +29,7 @@ interface CommentsListProps {
   onLike: (commentId: string) => void;
   onReply: (id: string, name: string) => void;
   onDelete: (commentId: string) => void;
+  onReport: (commentId: string) => void;
 }
 
 export function CommentsList({
@@ -41,6 +42,7 @@ export function CommentsList({
   onLike,
   onReply,
   onDelete,
+  onReport,
 }: CommentsListProps) {
   const totalComments = comments.reduce(
     (acc, c) => acc + 1 + (c.replies?.length || 0),
@@ -115,6 +117,7 @@ export function CommentsList({
           onLike={onLike}
           onReply={!isReply ? onReply : undefined}
           onDelete={onDelete}
+          onReport={onReport}
         />
 
         {/* Replies */}

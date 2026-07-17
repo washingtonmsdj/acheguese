@@ -39,7 +39,10 @@ interface DeletionStatusRow {
 interface PrivacySettingsDbClient {
   from: (table: string) => {
     select: (_columns: string) => {
-      eq: (column: string, value: string) => {
+      eq: (
+        column: string,
+        value: string,
+      ) => {
         is: (
           column: string,
           value: null,
@@ -78,7 +81,9 @@ export class PrivacySettingsService {
     return data ?? [];
   }
 
-  static async getDeletionStatus(userId: string): Promise<DeletionStatusRecord | null> {
+  static async getDeletionStatus(
+    userId: string,
+  ): Promise<DeletionStatusRecord | null> {
     const { data, error } = await this.db
       .from("user_deletion_schedule")
       .select("status, scheduled_purge_at")
@@ -88,7 +93,10 @@ export class PrivacySettingsService {
     if (error) return null;
 
     const daysRemaining = data.scheduled_purge_at
-      ? Math.ceil((new Date(data.scheduled_purge_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+      ? Math.ceil(
+          (new Date(data.scheduled_purge_at).getTime() - Date.now()) /
+            (1000 * 60 * 60 * 24),
+        )
       : null;
 
     return {
@@ -103,14 +111,16 @@ export class PrivacySettingsService {
     consentType: string;
     granted: boolean;
     userAgent: string;
+    termsVersion?: string;
+    privacyVersion?: string;
   }): Promise<void> {
     if (!input.userId) throw new Error("Sessao nao encontrada");
     await PrivacyRpcService.recordConsent({
       consentType: input.consentType,
       granted: input.granted,
       userAgent: input.userAgent,
-      termsVersion: "1.0",
-      privacyVersion: "1.0",
+      termsVersion: input.termsVersion ?? "1.0",
+      privacyVersion: input.privacyVersion ?? "1.0",
     });
   }
 
@@ -149,17 +159,20 @@ export class PrivacySettingsService {
     accessToken: string;
     reason: string;
   }): Promise<{ days_until_purge: number }> {
-    const response = await fetch(buildSupabaseFunctionUrl("user-delete-account"), {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${input.accessToken}`,
-        "Content-Type": "application/json",
+    const response = await fetch(
+      buildSupabaseFunctionUrl("user-delete-account"),
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${input.accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          confirmation: true,
+          reason: input.reason,
+        }),
       },
-      body: JSON.stringify({
-        confirmation: true,
-        reason: input.reason,
-      }),
-    });
+    );
 
     const payload = await response.json();
     if (!response.ok) {
@@ -169,4 +182,3 @@ export class PrivacySettingsService {
     return payload.details as { days_until_purge: number };
   }
 }
-

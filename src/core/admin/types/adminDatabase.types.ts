@@ -41,33 +41,6 @@ export interface FraudAlertInsert extends Omit<FraudAlert, 'id' | 'created_at'> 
 export type FraudAlertUpdate = Partial<FraudAlert>;
 
 // ============================================
-// COMMUNITY ISSUES
-// ============================================
-
-export interface CommunityIssue {
-  id: string;
-  profile_id: string;
-  title: string;
-  description: string;
-  status: 'open' | 'in_progress' | 'resolved' | 'closed';
-  category: string;
-  location?: string;
-  latitude?: number;
-  longitude?: number;
-  created_at: string;
-  updated_at?: string;
-  resolved_at?: string;
-  profiles?: { name: string };
-}
-
-export interface CommunityIssueInsert extends Omit<CommunityIssue, 'id' | 'created_at'> {
-  id?: string;
-  created_at?: string;
-}
-
-export type CommunityIssueUpdate = Partial<CommunityIssue>;
-
-// ============================================
 // BUSINESS SUBSCRIPTIONS / CITY METADATA
 // ============================================
 
@@ -97,30 +70,6 @@ export type CityMetadataInsert = Partial<CityMetadata> & {
 };
 
 export type CityMetadataUpdate = Partial<CityMetadata>;
-
-// ============================================
-// PROFESSIONAL REPORTS
-// ============================================
-
-export interface ProfessionalReport {
-  id: string;
-  professional_id: string;
-  reporter_id: string;
-  reason: string;
-  description?: string;
-  status: 'pending' | 'investigating' | 'resolved' | 'dismissed';
-  created_at: string;
-  updated_at?: string;
-  resolved_at?: string;
-  resolution_notes?: string;
-}
-
-export interface ProfessionalReportInsert extends Omit<ProfessionalReport, 'id' | 'created_at'> {
-  id?: string;
-  created_at?: string;
-}
-
-export type ProfessionalReportUpdate = Partial<ProfessionalReport>;
 
 // ============================================
 // PROFESSIONAL DATA
@@ -309,28 +258,6 @@ export interface AdminRoleInsert extends Omit<AdminRole, 'id' | 'created_at'> {
 }
 
 export type AdminRoleUpdate = Partial<AdminRole>;
-
-// ============================================
-// COMMUNITY ISSUE AUDIT
-// ============================================
-
-export interface CommunityIssueAudit {
-  id: string;
-  issue_id: string;
-  action: string;
-  performed_by: string;
-  previous_status?: string;
-  new_status?: string;
-  notes?: string;
-  created_at: string;
-}
-
-export interface CommunityIssueAuditInsert extends Omit<CommunityIssueAudit, 'id' | 'created_at'> {
-  id?: string;
-  created_at?: string;
-}
-
-export type CommunityIssueAuditUpdate = Partial<CommunityIssueAudit>;
 
 // ============================================
 // BUSINESS CLAIMS
@@ -572,26 +499,6 @@ export interface AdminTables {
     Update: FraudAlertUpdate;
     Relationships: [];
   };
-  community_issues: {
-    Row: CommunityIssue;
-    Insert: CommunityIssueInsert;
-    Update: CommunityIssueUpdate;
-    Relationships: [
-      {
-        foreignKeyName: 'community_issues_profile_id_fkey';
-        columns: ['profile_id'];
-        isOneToOne: false;
-        referencedRelation: 'profiles';
-        referencedColumns: ['id'];
-      }
-    ];
-  };
-  professional_reports: {
-    Row: ProfessionalReport;
-    Insert: ProfessionalReportInsert;
-    Update: ProfessionalReportUpdate;
-    Relationships: [];
-  };
   professional_data: {
     Row: ProfessionalData;
     Insert: ProfessionalDataInsert;
@@ -626,12 +533,6 @@ export interface AdminTables {
     Row: AdminRole;
     Insert: AdminRoleInsert;
     Update: AdminRoleUpdate;
-    Relationships: [];
-  };
-  community_issue_audit: {
-    Row: CommunityIssueAudit;
-    Insert: CommunityIssueAuditInsert;
-    Update: CommunityIssueAuditUpdate;
     Relationships: [];
   };
   business_claims: {

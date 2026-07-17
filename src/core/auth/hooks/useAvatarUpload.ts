@@ -1,18 +1,18 @@
 import { useState, useCallback } from "react";
-import { AuthService } from "@/core/auth/services/AuthService";
-import { useAuth } from "@/core/auth/hooks/useAuth";
+import { profileService } from "@/core/profiles/services/ProfileService";
+import { useSessionContext } from "@/core/session";
 import { useToast } from "@/shared/hooks/use-toast";
 import { trackError } from "@/shared/utils/errorTracking";
 import { AUTH_AVATAR_UPLOAD_LIMITS } from "@/core/auth/constants/avatar";
 
-export function useAvatarUpload(onSuccess?: (avatarUrl: string) => void) {
-  const { user } = useAuth();
+export function useAvatarUpload(onSuccess?: (avatarReference: string) => void) {
+  const { activeProfile } = useSessionContext();
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
 
   const uploadAvatar = useCallback(
     async (file: File): Promise<boolean> => {
-      if (!user) {
+      if (!activeProfile) {
         toast({
           title: "Erro",
           description: "Usuário não autenticado",
@@ -33,18 +33,24 @@ export function useAvatarUpload(onSuccess?: (avatarUrl: string) => void) {
       setUploading(true);
 
       try {
-        // ✅ SSOT - Usar AuthService para upload de avatar
-        const avatarUrl = await AuthService.uploadAvatar(user.id, file);
+        // Profile owns both the MediaAsset and the persisted avatar reference.
+        const avatarReference = await profileService.uploadAvatar(
+          activeProfile.id,
+          file,
+        );
 
         toast({ title: "Foto atualizada com sucesso!" });
-        onSuccess?.(avatarUrl);
+        onSuccess?.(avatarReference);
         return true;
       } catch (err) {
         trackError(err as Error, {
           component: "useAvatarUpload",
           action: "uploadAvatar",
-          userId: user?.id,
-          metadata: { fileName: file.name, fileSize: file.size },
+          metadata: {
+            profileId: activeProfile.id,
+            fileName: file.name,
+            fileSize: file.size,
+          },
         });
         toast({
           title: "Error send photo",
@@ -56,7 +62,7 @@ export function useAvatarUpload(onSuccess?: (avatarUrl: string) => void) {
         setUploading(false);
       }
     },
-    [user, toast, onSuccess],
+    [activeProfile, toast, onSuccess],
   );
 
   return {

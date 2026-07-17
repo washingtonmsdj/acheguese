@@ -6,8 +6,8 @@ Modulo de empresas responsavel por detalhe publico, gestao basica, navegacao can
 
 - Dados de empresa vem de `@/core/business/services/BusinessService`.
 - URLs publicas vem de `@/core/business/services/BusinessUrlService`.
-- Favoritos publicos de Empresas e Gastronomia usam `user_favorite_businesses` via `BusinessFavoriteService`/`useCanonicalBusinessFavorite`.
-- O core de favoritos tambem resolve favoritos de empresas por `user_favorite_businesses`; `business_favorites` deve permanecer restrito a migrations/types historicos ate limpeza de banco com backfill validado.
+- Favoritos publicos de Empresas e Gastronomia usam `BusinessFavoriteService`; somente `BusinessFavoriteStore` conhece a persistencia e as RPCs.
+- `user_favorite_businesses` e o SSOT por conta. A tabela antiga `business_favorites` foi auditada vazia e removida sem `CASCADE`.
 - Hooks do modulo nao devem manter stores paralelas para a mesma responsabilidade.
 
 ## API Publica Principal

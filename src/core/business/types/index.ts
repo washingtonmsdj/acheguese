@@ -72,7 +72,6 @@ export interface BusinessInput {
   can_post_vagas?: boolean;
   logo_url?: string;
   banner_url?: string;
-  fotos?: string[];
   status?: "active" | "inactive" | "pending" | "suspended";
   /** Campos administrativos — apenas super_admin/admin */
   is_verified?: boolean;
@@ -188,7 +187,6 @@ export interface BusinessDataWithProfiles extends BusinessDataRecord {
 export interface BusinessMetadata extends Record<string, unknown> {
   logo_url?: string;
   banner_url?: string;
-  fotos?: string[];
   modos_atendimento?: string[];
   tem_delivery?: boolean;
   aceita_cartao?: boolean;

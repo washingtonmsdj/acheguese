@@ -13,6 +13,7 @@ export interface Comment {
   content: string;
   parent_id?: string | null;
   likes_count: number;
+  is_liked?: boolean;
   created_at: string;
   updated_at: string;
 
@@ -21,7 +22,7 @@ export interface Comment {
 }
 
 export interface CommentWithReplies extends Comment {
-  replies: Comment[];
+  replies: CommentWithReplies[];
 }
 
 export interface CreateCommentData {

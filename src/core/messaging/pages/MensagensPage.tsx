@@ -13,6 +13,9 @@ export default function MensagensPage() {
     totalUnreadCount,
     hasUnreadMessages,
     shouldShowSearch,
+    hasMore,
+    loadingMore,
+    loadMore,
   } = useMensagens();
 
   if (authLoading) return null;
@@ -28,7 +31,13 @@ export default function MensagensPage() {
       />
 
       <div className="flex-1">
-        <ConversationsList conversations={conversations} loading={loading} />
+        <ConversationsList
+          conversations={conversations}
+          loading={loading}
+          hasMore={hasMore}
+          loadingMore={loadingMore}
+          onLoadMore={() => void loadMore()}
+        />
       </div>
     </div>
   );

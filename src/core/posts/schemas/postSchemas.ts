@@ -1,15 +1,22 @@
 import { z } from "zod";
-import { POST_TYPE_CONFIG, type PostType } from "@/shared/constants/postTypeConfig";
+import { CANONICAL_POST_TYPES, type PostType } from "@/core/posts/postTypes";
+import { COMMENT_LIMITS, POST_LIMITS } from "@/shared/constants/socialContent";
+import { isPostImageReference } from "@/core/media/references/postImageReference";
 
-const POST_LIMITS = {
-  MIN_CONTENT_LENGTH: 10,
-  MAX_CONTENT_LENGTH: 5000,
-  MAX_IMAGES: 4,
-  MAX_TAGS: 5,
-  MAX_TAG_LENGTH: 30,
-} as const;
+const VALID_POST_TYPES = [...CANONICAL_POST_TYPES];
 
-const VALID_POST_TYPES = Object.keys(POST_TYPE_CONFIG) as PostType[];
+export const postImageReferenceSchema = z
+  .string()
+  .refine(isPostImageReference, "Referencia de imagem de post invalida");
+
+const structuredContentPayloadSchema = z
+  .record(z.unknown())
+  .refine(
+    (value) =>
+      new TextEncoder().encode(JSON.stringify(value)).byteLength <=
+      POST_LIMITS.MAX_CONTENT_PAYLOAD_BYTES,
+    `Payload estruturado deve ter no maximo ${POST_LIMITS.MAX_CONTENT_PAYLOAD_BYTES} bytes`,
+  );
 
 export const createPostSchema = z.object({
   type: z.enum(VALID_POST_TYPES as [PostType, ...PostType[]], {
@@ -27,7 +34,7 @@ export const createPostSchema = z.object({
     .trim(),
 
   images: z
-    .array(z.string().url("URL de imagem invalida"))
+    .array(postImageReferenceSchema)
     .max(POST_LIMITS.MAX_IMAGES, {
       message: `Maximo de ${POST_LIMITS.MAX_IMAGES} imagens permitidas`,
     })
@@ -71,43 +78,98 @@ export const createPostSchema = z.object({
   event_date: z.string().datetime().optional(),
   price: z.number().min(0).optional(),
   contact_info: z.string().optional(),
-  mentioned_profiles: z
-    .array(z.string().uuid("ID de perfil invalido"))
-    .optional()
-    .default([]),
 });
 
-export const updatePostSchema = createPostSchema.partial().extend({
-  id: z.string().uuid("ID de post invalido"),
+export const createPostMutationSchema = z.object({
+  author_profile_id: z.string().uuid("Perfil autor invalido"),
+  type: z.enum(CANONICAL_POST_TYPES),
+  content: z
+    .string()
+    .trim()
+    .min(POST_LIMITS.MIN_CONTENT_LENGTH)
+    .max(POST_LIMITS.MAX_CONTENT_LENGTH),
+  location_id: z.string().uuid("Territorio invalido"),
+  reach: z.enum(["street", "neighborhood", "city"]).optional(),
+  images: z
+    .array(postImageReferenceSchema)
+    .max(POST_LIMITS.MAX_IMAGES)
+    .optional()
+    .default([]),
+  tags: z
+    .array(z.string().trim().min(1).max(POST_LIMITS.MAX_TAG_LENGTH))
+    .max(POST_LIMITS.MAX_TAGS)
+    .optional()
+    .default([]),
+  content_intent: z
+    .string()
+    .trim()
+    .max(POST_LIMITS.MAX_CONTENT_INTENT_LENGTH)
+    .optional(),
+  display_format: z
+    .string()
+    .trim()
+    .max(POST_LIMITS.MAX_DISPLAY_FORMAT_LENGTH)
+    .optional(),
+  distribution_channels: z
+    .array(
+      z.string().trim().min(1).max(POST_LIMITS.MAX_DISTRIBUTION_CHANNEL_LENGTH),
+    )
+    .max(POST_LIMITS.MAX_DISTRIBUTION_CHANNELS)
+    .optional()
+    .default([]),
+  content_payload: structuredContentPayloadSchema.optional(),
+  image_url: z.never().optional(),
+  video_url: z.never().optional(),
 });
+
+export const updatePostSchema = z
+  .object({
+    id: z.string().uuid("ID de post invalido"),
+    content: z
+      .string()
+      .trim()
+      .min(POST_LIMITS.MIN_CONTENT_LENGTH)
+      .max(POST_LIMITS.MAX_CONTENT_LENGTH),
+  })
+  .strict();
 
 export const createCommentSchema = z.object({
   post_id: z.string().uuid("ID de post invalido"),
   content: z
     .string()
-    .min(1, "Comentario nao pode ser vazio")
-    .max(1000, "Comentario deve ter no maximo 1000 caracteres")
+    .min(COMMENT_LIMITS.MIN_CONTENT_LENGTH, "Comentario nao pode ser vazio")
+    .max(
+      COMMENT_LIMITS.MAX_CONTENT_LENGTH,
+      `Comentario deve ter no maximo ${COMMENT_LIMITS.MAX_CONTENT_LENGTH} caracteres`,
+    )
     .trim(),
-  parent_comment_id: z.string().uuid("ID de comentario pai invalido").optional(),
-  mentioned_profiles: z
-    .array(z.string().uuid("ID de perfil invalido"))
-    .optional()
-    .default([]),
+  parent_comment_id: z
+    .string()
+    .uuid("ID de comentario pai invalido")
+    .optional(),
 });
 
 export const feedFiltersSchema = z.object({
-  type: z.enum(["all", ...VALID_POST_TYPES] as ["all", ...PostType[]]).optional(),
+  type: z
+    .enum(["all", ...VALID_POST_TYPES] as ["all", ...PostType[]])
+    .optional(),
   city: z.string().optional(),
   neighborhood: z.string().optional(),
   tag: z.string().optional(),
-  sort: z.enum(["recent", "popular", "most_commented"] as const).optional().default("recent"),
+  sort: z
+    .enum(["recent", "popular", "most_commented"] as const)
+    .optional()
+    .default("recent"),
   limit: z.number().int().min(1).max(100).optional().default(20),
   cursor: z.string().optional(),
 });
 
 export const reactionSchema = z.object({
   post_id: z.string().uuid("ID de post invalido"),
-  type: z.enum(["like", "love", "support", "celebrate"] as const).optional().default("like"),
+  type: z
+    .enum(["like", "love", "support", "celebrate"] as const)
+    .optional()
+    .default("like"),
 });
 
 export const reportSchema = z.object({
@@ -135,7 +197,10 @@ export const reportSchema = z.object({
 
 export const alertConfirmationSchema = z.object({
   post_id: z.string().uuid("ID de post invalido"),
-  comment: z.string().max(200, "Comentario deve ter no maximo 200 caracteres").optional(),
+  comment: z
+    .string()
+    .max(200, "Comentario deve ter no maximo 200 caracteres")
+    .optional(),
 });
 
 export type CreatePostInput = z.infer<typeof createPostSchema>;
@@ -170,7 +235,9 @@ export function validateReport(data: unknown): ReportInput {
   return reportSchema.parse(data);
 }
 
-export function validateAlertConfirmation(data: unknown): AlertConfirmationInput {
+export function validateAlertConfirmation(
+  data: unknown,
+): AlertConfirmationInput {
   return alertConfirmationSchema.parse(data);
 }
 

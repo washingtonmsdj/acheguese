@@ -9,12 +9,16 @@ import { useQuery } from '@tanstack/react-query';
 import { TouristPointService } from '../services/TouristPointService';
 import type { TouristPointFilters } from '../types';
 
-export function useTouristPoints(filters: TouristPointFilters = {}) {
+export function useTouristPoints(
+  filters: TouristPointFilters = {},
+  options: { enabled?: boolean } = {},
+) {
   return useQuery({
     queryKey: ['tourist-points', filters],
     queryFn: () => TouristPointService.list(filters),
     staleTime: 5 * 60 * 1000,
     retry: false,
+    enabled: options.enabled !== false,
   });
 }
 

@@ -4,5 +4,5 @@ export const ADMIN_PROFILE_PERMISSION_GOVERNANCE_STATUS = {
   BLOCKED: 'blocked',
 } as const;
 
-export type AdminProfilePermissionGovernanceStatus =
+export type AdminProfileCapabilityPreviewStatus =
   (typeof ADMIN_PROFILE_PERMISSION_GOVERNANCE_STATUS)[keyof typeof ADMIN_PROFILE_PERMISSION_GOVERNANCE_STATUS];

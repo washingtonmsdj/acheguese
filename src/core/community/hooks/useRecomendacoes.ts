@@ -1,22 +1,20 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /**
- * useRecomendacoes — Hook para listar perguntas Q&A
- *
- * Q&A é territorial: filtra por location_id ou location_ids.
- * Usa useTerritoryFilter para resolver o território ativo.
+ * Cursor-paginated territorial Q&A query.
  */
 
-import { useEffect, useCallback, useRef } from "react";
-import {
-  useInfiniteScroll,
-  usePaginatedState,
-} from "@/shared/hooks/useInfiniteScroll";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { QUERY_KEYS } from "@/config/reactQuery.config";
+import { useInfiniteScroll } from "@/shared/hooks/useInfiniteScroll";
 import { CommunityQAService } from "@/core/community/services/CommunityQAService";
 import {
   territoryFilterKey,
   useTerritoryFilter,
 } from "@/core/location/hooks/useTerritoryFilter";
-import type { CommunityQuestion, QuestionFilters } from "@/core/community/qa-types";
+import type {
+  CommunityQuestion,
+  QuestionCursor,
+} from "@/core/community/qa-types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { TerritoryFilter } from "@/core/location";
 
@@ -30,6 +28,9 @@ interface UseRecomendacoesProps {
   territoryFilter?: TerritoryFilter;
 }
 
+const PAGE_SIZE = 20;
+const SEARCH_DEBOUNCE_MS = 250;
+
 export function useRecomendacoes({
   filter = "todos",
   search = "",
@@ -37,93 +38,72 @@ export function useRecomendacoes({
   activeMemberIds,
   territoryFilter,
 }: UseRecomendacoesProps = {}) {
-  const {
-    items: questions,
-    page,
-    hasMore,
-    loading,
-    initialLoading,
-    setLoading,
-    setInitialLoading,
-    appendItems,
-    nextPage,
-    reset,
-    PAGE_SIZE,
-  } = usePaginatedState<CommunityQuestion>();
-
-  // Filtro territorial canônico — suporta location e group
   const routeTerritoryFilter = useTerritoryFilter(routeResolved, activeMemberIds);
   const activeTerritoryFilter = territoryFilter ?? routeTerritoryFilter;
-  const activeTerritoryFilterKey = territoryFilterKey(activeTerritoryFilter);
-  const activeTerritoryFilterRef = useRef(activeTerritoryFilter);
+  const activeTerritoryKey = territoryFilterKey(activeTerritoryFilter);
+  const [debouncedSearch, setDebouncedSearch] = useState(search.trim());
 
   useEffect(() => {
-    activeTerritoryFilterRef.current = activeTerritoryFilter;
-  }, [activeTerritoryFilterKey, activeTerritoryFilter]);
+    const timeoutId = window.setTimeout(
+      () => setDebouncedSearch(search.trim()),
+      SEARCH_DEBOUNCE_MS,
+    );
+    return () => window.clearTimeout(timeoutId);
+  }, [search]);
 
-  const fetchPage = useCallback(
-    async (pageNum: number) => {
-      const territoryFilter = activeTerritoryFilterRef.current;
-
-      // Não buscar sem território resolvido
-      if (territoryFilter.scope === 'none') {
-        setInitialLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      const from = pageNum * PAGE_SIZE;
-
-      const filters: QuestionFilters = {
-        category: filter !== "todos" ? filter : undefined,
-        limit: PAGE_SIZE,
-        offset: from,
-        // Filtro territorial
-        ...(territoryFilter.scope === 'location'
-          ? { location_id: territoryFilter.location_id }
-          : { location_ids: territoryFilter.location_ids }),
-      };
-
-      const data = await CommunityQAService.getQuestions(filters);
-      appendItems(data, pageNum === 0);
-
-      setLoading(false);
-      setInitialLoading(false);
-    },
-    [filter, PAGE_SIZE, activeTerritoryFilterKey, setLoading, setInitialLoading, appendItems],
+  const queryFilters = useMemo(
+    () => ({
+      category: filter !== "todos" ? filter : "todos",
+      search: debouncedSearch,
+      territory: activeTerritoryKey,
+    }),
+    [activeTerritoryKey, debouncedSearch, filter],
   );
 
-  useEffect(() => {
-    reset();
-    fetchPage(0);
-  }, [reset, fetchPage]);
-
-  useEffect(() => {
-    if (page > 0) fetchPage(page);
-  }, [page, fetchPage]);
-
-  const { sentinelRef } = useInfiniteScroll({
-    hasMore,
-    loading,
-    onLoadMore: nextPage,
+  const query = useInfiniteQuery({
+    queryKey: QUERY_KEYS.community.questions(queryFilters),
+    enabled: activeTerritoryFilter.scope !== "none",
+    initialPageParam: null as QuestionCursor | null,
+    queryFn: ({ pageParam }) =>
+      CommunityQAService.getQuestionsPage({
+        category: filter !== "todos" ? filter : undefined,
+        search: debouncedSearch || undefined,
+        limit: PAGE_SIZE,
+        cursor: pageParam as QuestionCursor | null,
+        ...(activeTerritoryFilter.scope === "location"
+          ? { location_id: activeTerritoryFilter.location_id }
+          : activeTerritoryFilter.scope === "group"
+            ? { location_ids: activeTerritoryFilter.location_ids }
+            : {}),
+      }),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   });
 
-  const filteredQuestions = questions.filter((question) => {
-    if (!search) return true;
-    const searchLower = search.toLowerCase();
-    return (
-      question.titulo?.toLowerCase().includes(searchLower) ||
-      question.description?.toLowerCase().includes(searchLower)
-    );
+  const questions = useMemo(
+    () => query.data?.pages.flatMap((page) => page.items) ?? [],
+    [query.data],
+  );
+
+  const loadMore = useCallback(() => {
+    if (query.hasNextPage && !query.isFetchingNextPage) {
+      void query.fetchNextPage();
+    }
+  }, [query]);
+
+  const { sentinelRef } = useInfiniteScroll({
+    hasMore: Boolean(query.hasNextPage),
+    loading: query.isFetchingNextPage,
+    onLoadMore: loadMore,
   });
 
   return {
-    questions: filteredQuestions,
-    loading,
-    initialLoading,
-    hasMore,
+    questions,
+    loading: query.isFetchingNextPage,
+    initialLoading: query.isLoading,
+    hasMore: Boolean(query.hasNextPage),
     sentinelRef,
-    refetch: () => { reset(); fetchPage(0); },
+    isError: query.isError,
+    error: query.error,
+    refetch: query.refetch,
   };
 }
-

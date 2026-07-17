@@ -285,14 +285,12 @@ export async function readTextBody(
 // ══════════════════════════════════════════════════════════════════════════
 
 /**
- * Rate limiting distribuído via Deno KV.
+ * Best-effort perimeter rate limiting.
  *
- * Deno KV é o único storage persistente disponível nativamente em Supabase
- * Edge Functions, garantindo que o limite seja respeitado entre todas as
- * instâncias simultâneas da função (ao contrário de um Map em memória).
- *
- * Fallback: se o KV não estiver disponível (ambiente de teste), usa Map
- * em memória com aviso explícito no log.
+ * Deno KV shares state between instances when the runtime provides it, but
+ * this helper does not implement an atomic counter. Critical mutations must
+ * also enforce an atomic, fail-closed limit in their authoritative backend.
+ * If KV is unavailable, the local Map only limits the current instance.
  */
 
 interface RateLimitEntry {
@@ -300,8 +298,7 @@ interface RateLimitEntry {
   resetAt: number;
 }
 
-// Fallback em memória — usado APENAS quando Deno KV não está disponível
-// (ex: testes unitários locais). Em produção, Deno KV sempre está disponível.
+// Instance-local fallback used only when the runtime does not provide Deno KV.
 const _memoryFallback = new Map<string, RateLimitEntry>();
 
 async function _getKv(): Promise<Deno.Kv | null> {

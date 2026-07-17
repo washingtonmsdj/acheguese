@@ -8,13 +8,6 @@ import {
 import { toast } from "sonner";
 
 import { useSessionContext } from "@/core/session";
-import {
-  TRUST_ACTOR_ROLES,
-  TRUST_CONTEXT_TYPES,
-  TRUST_EVENT_TYPES,
-  TRUST_VISIBILITIES,
-  TrustEventService,
-} from "@/core/trust";
 import { Badge } from "@/shared/components/ui/badge";
 import {
   Card,
@@ -33,12 +26,6 @@ interface OrderPublicReviewPanelProps {
 }
 
 const REVIEWABLE_ORDER_STATUSES = new Set(["delivered", "completed"]);
-
-function trustSeverityForRating(rating: number) {
-  if (rating <= 1) return "high";
-  if (rating <= 2) return "medium";
-  return "low";
-}
 
 export function OrderPublicReviewPanel({ order }: OrderPublicReviewPanelProps) {
   const { user, activeProfile, profiles } = useSessionContext();
@@ -120,7 +107,7 @@ export function OrderPublicReviewPanel({ order }: OrderPublicReviewPanelProps) {
     setIsSubmitting(true);
 
     try {
-      const review = await ReviewQueryService.createReview({
+      await ReviewQueryService.createReview({
         reviewed_profile_id: order.merchant_profile_id,
         reviewer_profile_id: reviewerProfileId,
         rating: data.rating,
@@ -128,29 +115,6 @@ export function OrderPublicReviewPanel({ order }: OrderPublicReviewPanelProps) {
         photos: data.photos,
         order_id: order.id,
       });
-
-      if (data.rating <= 2) {
-        await TrustEventService.upsertOperationalFeedback({
-          actor_profile_id: reviewerProfileId,
-          actor_role: TRUST_ACTOR_ROLES.CUSTOMER,
-          subject_profile_id: order.merchant_profile_id,
-          subject_role: TRUST_ACTOR_ROLES.MERCHANT,
-          context_type: TRUST_CONTEXT_TYPES.ORDER,
-          context_id: order.id,
-          event_type: TRUST_EVENT_TYPES.REVIEW,
-          rating: data.rating,
-          reason_code: "customer_low_public_review",
-          severity: trustSeverityForRating(data.rating),
-          visibility: TRUST_VISIBILITIES.PRIVATE,
-          description: data.comment,
-          evidence: {
-            review_id: review.id,
-            order_total: order.total,
-            order_status: order.status,
-            source: "gastronomy_customer_public_review",
-          },
-        });
-      }
 
       setSubmitted(true);
       setCanReview(false);

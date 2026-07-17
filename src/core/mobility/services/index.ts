@@ -77,6 +77,7 @@ export {
   RideOperationalService,
 } from "@/core/mobility/core/RideOperationalService";
 export { RideRatingService } from "@/core/mobility/services/RideRatingService";
+export { MobilityTrustService } from "@/core/mobility/services/MobilityTrustService";
 export { RidePassengerService } from "@/core/mobility/services/RidePassengerService";
 export {
   DriverAvailabilityService,

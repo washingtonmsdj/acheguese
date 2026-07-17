@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   eventDetailUrl: vi.fn(),
   searchPublicPosts: vi.fn(),
   trackError: vi.fn(),
+  trackPerformance: vi.fn(),
   logger: {
     warn: vi.fn(),
     error: vi.fn(),
@@ -91,6 +92,7 @@ vi.mock("@/core/work-opportunities", () => ({
 
 vi.mock("@/shared/utils/errorTracking", () => ({
   trackError: mocks.trackError,
+  trackPerformance: mocks.trackPerformance,
 }));
 
 vi.mock("@/shared/utils/logger", () => ({
@@ -447,6 +449,17 @@ describe("SearchService", () => {
     expect(result.documents).toEqual([]);
   });
 
+  it("fails closed for community opportunities without canonical territory", async () => {
+    const result = await SearchService.search("pizza", {
+      category: "opportunities",
+      communityId: "community-1",
+    });
+
+    expect(result.total).toBe(0);
+    expect(result.opportunities).toEqual([]);
+    expect(mocks.listPublicOpportunityCards).not.toHaveBeenCalled();
+  });
+
   it("filters supported domain buckets by active community entity links", async () => {
     const otherCommunity = {
       ...community,
@@ -508,5 +521,49 @@ describe("SearchService", () => {
         expect.objectContaining({ id: "community-unlinked" }),
       ]),
     );
+  });
+
+  it("isolates a failed provider without discarding healthy domain results", async () => {
+    mocks.getBusinessesList.mockRejectedValueOnce(new Error("business unavailable"));
+
+    const result = await SearchService.search("pizza", {
+      category: "all",
+      territoryFilter,
+    });
+
+    expect(result.businesses).toEqual([]);
+    expect(result.total).toBe(6);
+    expect(result.documents.map((document) => document.type)).not.toContain(
+      "business",
+    );
+    expect(result.documents.map((document) => document.type)).toContain("post");
+  });
+
+  it("propagates cancellation without converting it into an empty success", async () => {
+    const controller = new AbortController();
+    controller.abort(new DOMException("cancelled", "AbortError"));
+
+    await expect(
+      SearchService.search("pizza", {}, { signal: controller.signal }),
+    ).rejects.toMatchObject({ name: "AbortError" });
+    expect(mocks.getBusinessesList).not.toHaveBeenCalled();
+  });
+
+  it("keeps search history isolated by explicit scope", () => {
+    localStorage.clear();
+
+    SearchService.saveSearchHistory("pizza", "global");
+    SearchService.saveSearchHistory("assembleia", "community:community-1");
+
+    expect(SearchService.getSearchHistory("global")).toEqual(["pizza"]);
+    expect(
+      SearchService.getSearchHistory("community:community-1"),
+    ).toEqual(["assembleia"]);
+
+    SearchService.clearSearchHistory("community:community-1");
+    expect(
+      SearchService.getSearchHistory("community:community-1"),
+    ).toEqual([]);
+    expect(SearchService.getSearchHistory("global")).toEqual(["pizza"]);
   });
 });

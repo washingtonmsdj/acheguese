@@ -2,7 +2,6 @@ import type { ChangeEvent } from "react";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { mediaService } from "@/core/media/services/MediaService";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   ArrowLeft,
@@ -32,15 +31,18 @@ import {
   PopoverTrigger,
 } from "@/shared/components/ui/popover";
 import { useToast } from "@/shared/hooks/use-toast";
-import { lostFoundRuntimeService as lostFoundService } from "@/core/community/services/LostFoundRuntimeService";
-import { useAuth } from "@/core/auth/hooks/useAuth";
+import { lostFoundService } from "@/core/community-lost-found/services";
+import { useSessionContext } from "@/core/session";
 import {
   useCityLocalities,
   type LocationOption,
 } from "@/core/location/hooks/useLocationCascade";
 import { LocationType } from "@/core/location/types";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
-import { CommunityPortalGate, useCommunityAccess } from "@/core/community/access";
+import {
+  CommunityPortalGate,
+  useCommunityAccess,
+} from "@/core/community/access";
 import type { TerritorialLayoutContext } from "@/core/routing/components/TerritorialLayout";
 import { resolveCommunityRouteDefaultLocationId } from "@/core/community/utils/communityRouteTerritory";
 import { cn } from "@/shared/utils/cn";
@@ -65,9 +67,15 @@ export default function NovoAchadoPerdidoPage() {
   const navigate = useNavigate();
   const appUrls = useAppUrls(); // ✅ SSOT URLs
   const { toast } = useToast();
-  const { user } = useAuth();
-  const territorialContext = useOutletContext<TerritorialLayoutContext | null>() ?? null;
-  const { homeDistrict, homeCity, hasHome, loading: territoryLoading } = useUserTerritory();
+  const { user, activeProfile } = useSessionContext();
+  const territorialContext =
+    useOutletContext<TerritorialLayoutContext | null>() ?? null;
+  const {
+    homeDistrict,
+    homeCity,
+    hasHome,
+    loading: territoryLoading,
+  } = useUserTerritory();
   const resolved = useMemo(
     () =>
       territorialContext?.resolved ??
@@ -87,14 +95,12 @@ export default function NovoAchadoPerdidoPage() {
     activeMemberIds,
   });
   const routeLocationId = useMemo(
-    () =>
-      resolveCommunityRouteDefaultLocationId(
-        resolved,
-        activeMemberIds,
-      ),
+    () => resolveCommunityRouteDefaultLocationId(resolved, activeMemberIds),
     [activeMemberIds, resolved],
   );
-  const { localities, loadingLocalities } = useCityLocalities(homeCity?.id ?? null);
+  const { localities, loadingLocalities } = useCityLocalities(
+    homeCity?.id ?? null,
+  );
   const [loading, setLoading] = useState(false);
   const [photoPreview, setFotoPreview] = useState<string | null>(null);
   const [photoFile, setFotoFile] = useState<File | null>(null);
@@ -140,7 +146,11 @@ export default function NovoAchadoPerdidoPage() {
 
       return {
         id: routeLocationId,
-        name: resolved.location.name ?? homeDistrict?.name ?? homeCity?.name ?? "Area da comunidade",
+        name:
+          resolved.location.name ??
+          homeDistrict?.name ??
+          homeCity?.name ??
+          "Area da comunidade",
         type: routeLocationType,
       };
     }
@@ -150,16 +160,32 @@ export default function NovoAchadoPerdidoPage() {
       name: "Area da comunidade",
       type: LocationType.NEIGHBORHOOD,
     };
-  }, [homeCity?.id, homeCity?.name, homeDistrict?.name, resolved, routeLocationId]);
+  }, [
+    homeCity?.id,
+    homeCity?.name,
+    homeDistrict?.name,
+    resolved,
+    routeLocationId,
+  ]);
 
   const territoryOptions = useMemo<TerritorySelectOption[]>(() => {
-    const options = localities.map(({ id, name, type }) => ({ id, name, type }));
+    const options = localities.map(({ id, name, type }) => ({
+      id,
+      name,
+      type,
+    }));
 
-    if (routeLocationOption && !options.some((option) => option.id === routeLocationOption.id)) {
+    if (
+      routeLocationOption &&
+      !options.some((option) => option.id === routeLocationOption.id)
+    ) {
       options.unshift(routeLocationOption);
     }
 
-    if (homeDistrict && !options.some((option) => option.id === homeDistrict.id)) {
+    if (
+      homeDistrict &&
+      !options.some((option) => option.id === homeDistrict.id)
+    ) {
       options.unshift({
         id: homeDistrict.id,
         name: homeDistrict.name,
@@ -172,19 +198,28 @@ export default function NovoAchadoPerdidoPage() {
 
   const selectedTerritoryName = useMemo(() => {
     return (
-      territoryOptions.find((option) => option.id === selectedLocationId)?.name ??
+      territoryOptions.find((option) => option.id === selectedLocationId)
+        ?.name ??
       routeLocationOption?.name ??
       homeDistrict?.name ??
       homeCity?.name ??
       "sua região"
     );
-  }, [homeCity?.name, homeDistrict?.name, routeLocationOption?.name, selectedLocationId, territoryOptions]);
+  }, [
+    homeCity?.name,
+    homeDistrict?.name,
+    routeLocationOption?.name,
+    selectedLocationId,
+    territoryOptions,
+  ]);
 
   useEffect(() => {
     if (selectedLocationId) return;
     if (routeLocationOption) {
       setValue("location_id", routeLocationOption.id, { shouldValidate: true });
-      setValue("neighborhood", routeLocationOption.name, { shouldValidate: false });
+      setValue("neighborhood", routeLocationOption.name, {
+        shouldValidate: false,
+      });
       return;
     }
 
@@ -199,7 +234,14 @@ export default function NovoAchadoPerdidoPage() {
       setValue("location_id", onlyOption.id, { shouldValidate: true });
       setValue("neighborhood", onlyOption.name, { shouldValidate: false });
     }
-  }, [homeDistrict?.id, homeDistrict?.name, routeLocationOption, selectedLocationId, setValue, territoryOptions]);
+  }, [
+    homeDistrict?.id,
+    homeDistrict?.name,
+    routeLocationOption,
+    selectedLocationId,
+    setValue,
+    territoryOptions,
+  ]);
 
   const handleFotoChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -213,7 +255,10 @@ export default function NovoAchadoPerdidoPage() {
 
   const onValid = async (data: NovoAchadoPerdidoInput) => {
     if (!communityAccess.can.create_post) {
-      toast({ title: "Publicar exige participacao ativa nesta comunidade.", variant: "destructive" });
+      toast({
+        title: "Publicar exige participacao ativa nesta comunidade.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -223,46 +268,65 @@ export default function NovoAchadoPerdidoPage() {
       return;
     }
 
-    if (!routeLocationId && (!hasHome || (!homeDistrict?.id && !homeCity?.id))) {
-      toast({ title: "Escolha seu território antes de publicar", variant: "destructive" });
+    if (!activeProfile) {
+      toast({
+        title: "Selecione um perfil ativo para publicar",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (
+      !routeLocationId &&
+      (!hasHome || (!homeDistrict?.id && !homeCity?.id))
+    ) {
+      toast({
+        title: "Escolha seu território antes de publicar",
+        variant: "destructive",
+      });
       navigate(appUrls.community.feed);
       return;
     }
 
-    const publicationLocationId = data.location_id ?? routeLocationId ?? homeDistrict?.id ?? homeCity?.id ?? null;
+    const publicationLocationId =
+      data.location_id ??
+      routeLocationId ??
+      homeDistrict?.id ??
+      homeCity?.id ??
+      null;
 
     if (!publicationLocationId) {
-      toast({ title: "Selecione o bairro ou região do item", variant: "destructive" });
+      toast({
+        title: "Selecione o bairro ou região do item",
+        variant: "destructive",
+      });
       return;
     }
 
     if (territoryOptions.length > 0 && !data.location_id) {
-      toast({ title: "Selecione o bairro ou região do item", variant: "destructive" });
+      toast({
+        title: "Selecione o bairro ou região do item",
+        variant: "destructive",
+      });
       return;
     }
 
     setLoading(true);
     try {
-      let photoUrl = "";
-      // Upload usando MediaService
-      if (photoFile) {
-        const result = await mediaService.uploadPostImage(user.id, photoFile);
-        photoUrl = result.url;
-      }
-
       // ✅ SSOT: Usar LostFoundService para criar post
-      const result = await lostFoundService.createPost({
-        autor_id: user.id,
-        tipo: data.tipo === "encontrado" ? "achado" : data.tipo,
-        categoria: data.category,
-        titulo: data.titulo.trim(),
-        descricao: data.description?.trim() ?? "",
-        imagens: photoUrl ? [photoUrl] : [],
-        local_perdido: data.localizacaoAprox?.trim() ?? "",
-        data_perdido: format(data.dateOcorrido, "yyyy-MM-dd"),
-        location_id: publicationLocationId,
-        resolvido: false,
-      });
+      const result = await lostFoundService.createPostWithImage(
+        {
+          tipo: data.tipo === "encontrado" ? "achado" : data.tipo,
+          categoria: data.category,
+          titulo: data.titulo.trim(),
+          descricao: data.description?.trim() ?? "",
+          local_perdido: data.localizacaoAprox?.trim() ?? "",
+          data_perdido: format(data.dateOcorrido, "yyyy-MM-dd"),
+          location_id: publicationLocationId,
+        },
+        activeProfile.id,
+        photoFile,
+      );
 
       if (!result) throw new Error("Erro ao criar post");
       toast({ title: "Publicação criada!" });
@@ -373,7 +437,9 @@ export default function NovoAchadoPerdidoPage() {
                         : "bg-card border-border hover:bg-secondary/50",
                     )}
                   >
-                    <span className="font-medium text-xs">{cat.createLabel}</span>
+                    <span className="font-medium text-xs">
+                      {cat.createLabel}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -388,7 +454,7 @@ export default function NovoAchadoPerdidoPage() {
           <label className="cursor-pointer w-full">
             <input
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp,image/gif"
               className="hidden"
               onChange={handleFotoChange}
             />
@@ -443,10 +509,18 @@ export default function NovoAchadoPerdidoPage() {
                 value={field.value ?? ""}
                 onValueChange={(value) => {
                   field.onChange(value);
-                  const selected = territoryOptions.find((option) => option.id === value);
-                  setValue("neighborhood", selected?.name ?? "", { shouldValidate: false });
+                  const selected = territoryOptions.find(
+                    (option) => option.id === value,
+                  );
+                  setValue("neighborhood", selected?.name ?? "", {
+                    shouldValidate: false,
+                  });
                 }}
-                disabled={territoryLoading || loadingLocalities || territoryOptions.length === 0}
+                disabled={
+                  territoryLoading ||
+                  loadingLocalities ||
+                  territoryOptions.length === 0
+                }
               >
                 <SelectTrigger>
                   <SelectValue
@@ -469,8 +543,9 @@ export default function NovoAchadoPerdidoPage() {
           />
           {territoryOptions.length === 0 && !loadingLocalities && (
             <p className="text-xs text-muted-foreground">
-              Não há bairros/regiões carregados para {homeCity?.name ?? "sua cidade"}. A publicação
-              será vinculada ao território residencial disponível.
+              Não há bairros/regiões carregados para{" "}
+              {homeCity?.name ?? "sua cidade"}. A publicação será vinculada ao
+              território residencial disponível.
             </p>
           )}
           <InlineFieldError message={errors.location_id?.message} />

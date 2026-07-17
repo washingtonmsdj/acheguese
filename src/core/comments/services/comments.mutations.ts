@@ -5,6 +5,7 @@
  */
 
 import { supabase } from "@/integrations/supabase";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { Comment, CreateCommentData, UpdateCommentData } from "../types";
 
@@ -57,10 +58,10 @@ export class CommentError extends Error {
 export async function createComment(
   commentData: CreateCommentData & {
     post_id: string;
-    author_profile_id: string;
   },
 ): Promise<Comment | null> {
   try {
+    const activeProfile = await profileService.getRequiredActiveProfile();
     // ✅ FUNDAÇÃO 3: Validar dados de entrada
     const { CreateCommentSchema } =
       await import("@/shared/validation/schemas/comment.schema");
@@ -77,7 +78,7 @@ export async function createComment(
           post_id: validatedData.post_id,
           content: validatedData.content,
           parent_id: validatedData.parent_comment_id,
-          author_profile_id: commentData.author_profile_id,
+          author_profile_id: activeProfile.id,
         },
       ])
       .select()
@@ -169,46 +170,14 @@ export async function deleteComment(commentId: string): Promise<boolean> {
  * Curte um comentário
  * ✅ LOTE 7 - Boundary canônico para comment_likes
  */
-/**
- * Remove um comentario por moderacao sem apagar o registro.
- */
-export async function removeCommentForModeration(
-  commentId: string,
-  reason = "Moderacao",
-  moderatorProfileId?: string | null,
-): Promise<void> {
-  try {
-    const { error } = await commentsDb
-      .from(TABLE)
-      .update({
-        is_removed: true,
-        is_hidden: true,
-        content: "[comentario removido pela moderacao]",
-        removed_reason: reason,
-        removed_by: moderatorProfileId ?? null,
-        removed_at: new Date().toISOString(),
-      })
-      .eq("id", commentId);
-
-    if (error) throw error;
-  } catch (error) {
-    trackError(error as Error, {
-      component: "comments.mutations",
-      action: "removeCommentForModeration",
-      metadata: { commentId, moderatorProfileId },
-    });
-    throw new CommentError("Erro ao remover comentario", "MODERATION_REMOVE_ERROR");
-  }
-}
-
 export async function likeComment(
   commentId: string,
-  userId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const activeProfile = await profileService.getRequiredActiveProfile();
     const { error } = await commentsDb
       .from(LIKES_TABLE)
-      .insert({ comment_id: commentId, user_id: userId });
+      .insert({ comment_id: commentId, liker_profile_id: activeProfile.id });
 
     if (error) {
       // Ignorar duplicata (já curtiu)
@@ -220,7 +189,7 @@ export async function likeComment(
     trackError(error as Error, {
       component: "comments.mutations",
       action: "likeComment",
-      metadata: { commentId, userId },
+      metadata: { commentId },
     });
     return { success: false, error: getErrorMessage(error) };
   }
@@ -232,14 +201,14 @@ export async function likeComment(
  */
 export async function unlikeComment(
   commentId: string,
-  userId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const activeProfile = await profileService.getRequiredActiveProfile();
     const { error } = await commentsDb
       .from(LIKES_TABLE)
       .delete()
       .eq("comment_id", commentId)
-      .eq("user_id", userId);
+      .eq("liker_profile_id", activeProfile.id);
 
     if (error) throw error;
     return { success: true };
@@ -247,7 +216,7 @@ export async function unlikeComment(
     trackError(error as Error, {
       component: "comments.mutations",
       action: "unlikeComment",
-      metadata: { commentId, userId },
+      metadata: { commentId },
     });
     return { success: false, error: getErrorMessage(error) };
   }

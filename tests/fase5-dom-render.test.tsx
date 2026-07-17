@@ -61,10 +61,6 @@ vi.mock('@/core/posts/services', () => ({
   postService: { getPostById: vi.fn() },
 }));
 
-vi.mock('@/core/social/services/SocialInteractionsService', () => ({
-  SocialInteractionsService: { likePost: vi.fn(), unlikePost: vi.fn() },
-}));
-
 import { PostHeader } from '../src/core/community/components/UnifiedPostCard/PostHeader';
 
 const BASE_HEADER_PROPS = {

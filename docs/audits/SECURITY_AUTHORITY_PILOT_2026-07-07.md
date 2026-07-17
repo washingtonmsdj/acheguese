@@ -267,9 +267,9 @@ executavel no fluxo de release.
   autenticado de checks e mutacoes de reviews de negocios, validando JWT,
   profile ownership por owner/`profile_members`/admin canonico e pedido
   entregue quando `order_id` existe.
-- `src/modules/business/gastronomy/services/BusinessReviewsRpcService.ts`
-  concentra a chamada client-side ao broker sem aceitar `user_id` confiavel no
-  payload.
+- `src/core/business/services/BusinessReviewService.ts` concentra a policy e a
+  chamada client-side ao broker sem aceitar `user_id` confiavel no payload. O
+  service anterior de Gastronomia foi removido na consolidacao CP-013.
 - `src/modules/business/gastronomy/services/review.queries.ts` deixou de
   chamar diretamente `can_user_review_business`, `create_business_review`,
   `update_business_review`, `delete_business_review` e

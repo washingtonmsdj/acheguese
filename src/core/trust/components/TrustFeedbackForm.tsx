@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { AlertTriangle, ShieldCheck, Star } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
@@ -13,15 +13,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { useSessionContext } from "@/core/session";
-import {
-  TRUST_EVENT_TYPES,
-  TRUST_VISIBILITIES,
-  type TrustActorRole,
-  type TrustContextType,
-  type TrustSeverity,
-} from "../domain";
-import { TrustEventService } from "../services";
+import { type TrustActorRole, type TrustSeverity } from "../domain";
 
 export interface TrustFeedbackTarget {
   id: string;
@@ -36,17 +28,21 @@ export interface TrustFeedbackReason {
   severity: TrustSeverity;
 }
 
+export interface TrustFeedbackSubmission {
+  subjectProfileId: string;
+  rating: number;
+  reasonCode: string;
+  description: string | null;
+}
+
 interface TrustFeedbackFormProps {
   title?: string;
   notice?: string;
   unavailableMessage?: string;
-  actorRole: TrustActorRole;
-  contextType: TrustContextType;
-  contextId: string;
   targets: TrustFeedbackTarget[];
   reasons: TrustFeedbackReason[];
   enabled: boolean;
-  evidence?: Record<string, unknown>;
+  onSubmit: (input: TrustFeedbackSubmission) => Promise<unknown>;
   defaultTargetId?: string | null;
   compact?: boolean;
 }
@@ -55,18 +51,13 @@ export function TrustFeedbackForm({
   title = "Confianca operacional",
   notice = "Avaliacao privada. Nao aparece publicamente como review; alimenta o painel admin para detectar reincidencia, abusos, avisos e penalidades.",
   unavailableMessage = "Feedback operacional ainda nao disponivel para este contexto.",
-  actorRole,
-  contextType,
-  contextId,
   targets,
   reasons,
   enabled,
-  evidence,
+  onSubmit,
   defaultTargetId,
   compact = false,
 }: TrustFeedbackFormProps) {
-  const queryClient = useQueryClient();
-  const { activeProfile } = useSessionContext();
   const firstTargetId = defaultTargetId ?? targets[0]?.id ?? "";
   const [targetProfileId, setTargetProfileId] = useState(firstTargetId);
   const [rating, setRating] = useState("5");
@@ -81,7 +72,6 @@ export function TrustFeedbackForm({
 
   const canSend =
     enabled &&
-    Boolean(activeProfile?.id) &&
     Boolean(selectedTarget?.id) &&
     Boolean(selectedReason) &&
     Number(rating) >= 1 &&
@@ -89,33 +79,18 @@ export function TrustFeedbackForm({
 
   const mutation = useMutation({
     mutationFn: async () => {
-      if (!activeProfile?.id || !selectedTarget || !selectedReason) {
-        throw new Error("Perfil ativo, alvo e motivo sao obrigatorios.");
+      if (!selectedTarget || !selectedReason) {
+        throw new Error("Alvo e motivo sao obrigatorios.");
       }
 
-      const result = await TrustEventService.upsertOperationalFeedback({
-        actor_profile_id: activeProfile.id,
-        actor_role: actorRole,
-        subject_profile_id: selectedTarget.id,
-        subject_role: selectedTarget.subjectRole,
-        context_type: contextType,
-        context_id: contextId,
-        event_type: TRUST_EVENT_TYPES.OPERATIONAL_FEEDBACK,
+      return onSubmit({
+        subjectProfileId: selectedTarget.id,
         rating: Number(rating),
-        reason_code: reasonCode,
-        severity: selectedReason.severity,
-        visibility: TRUST_VISIBILITIES.PRIVATE,
+        reasonCode,
         description: description.trim() || null,
-        evidence: evidence ?? {},
       });
-
-      if (result.error) throw new Error(result.error);
-      return result.data;
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["trust-events", contextType, contextId],
-      });
+    onSuccess: () => {
       toast.success("Feedback operacional registrado para analise de confianca.");
       setDescription("");
     },

@@ -258,22 +258,22 @@ export default function EditarServicoPage() {
       let logoUrl: string | undefined;
 
       if (photoFile) {
-        const result = await mediaService.uploadProfessionalImage(
-          user.id,
+        const result = await mediaService.uploadMediaAsset(
+          professional.profile_id,
           photoFile,
-          "logo",
+          "professional_logo",
         );
-        logoUrl = result.url;
+        logoUrl = result.reference;
       }
 
       const newPortfolioUrls: string[] = [];
       for (const file of portfolioFiles) {
-        const result = await mediaService.uploadProfessionalImage(
-          user.id,
+        const result = await mediaService.uploadMediaAsset(
+          professional.profile_id,
           file,
-          "portfolio",
+          "professional_portfolio",
         );
-        newPortfolioUrls.push(result.url);
+        newPortfolioUrls.push(result.reference);
       }
 
       const updateData = buildProfessionalUpdateInput({

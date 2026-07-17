@@ -4,7 +4,7 @@
  * Exporta API pública do módulo de busca
  */
 
-export { SearchService, searchService } from "./services/SearchService";
+export { SearchService } from "./services/SearchService";
 export {
   classifiedToSearchDocument,
   eventToSearchDocument,
@@ -16,5 +16,7 @@ export type {
   SearchDocument,
   SearchDocumentType,
   SearchFilters,
+  SearchHistoryScope,
+  SearchRequestOptions,
   SearchResults,
 } from "./services/SearchService";

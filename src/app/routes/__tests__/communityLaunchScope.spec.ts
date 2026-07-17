@@ -20,11 +20,11 @@ describe("community launch scope routing", () => {
   it("keeps global alert and issue routes behind launchElement", () => {
     const routesSource = readProjectFile("src/app/routes/sections/AppLayoutRoutes.tsx");
 
-    expect(routesSource).toContain(
-      '<Route path="/alertas" element={launchElement("communityAlerts"',
+    expect(routesSource).toMatch(
+      /<Route\s+path="\/alertas"\s+element=\{launchElement\(\s*"communityAlerts"/,
     );
-    expect(routesSource).toContain(
-      '<Route path="/problemas" element={launchElement("communityIssues"',
+    expect(routesSource).toMatch(
+      /<Route\s+path="\/problemas"\s+element=\{launchElement\(\s*"communityIssues"/,
     );
   });
 

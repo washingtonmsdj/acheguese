@@ -168,20 +168,14 @@ export function useClassifiedImageUpload() {
   /**
    * Deleta uma imagem.
    */
-  const deleteImage = useCallback(async (imageUrl: string) => {
-    try {
-      await ClassifiedImageService.deleteImage(imageUrl);
-      
-      setState((prev) => ({
-        ...prev,
-        uploadedImages: prev.uploadedImages.filter((img) => img.url !== imageUrl),
-      }));
-
-      toast.success("Imagem removida");
-    } catch (error) {
-      toast.error("Erro ao remover imagem");
-      logger.error(error);
-    }
+  const deleteImage = useCallback(async (imageReference: string) => {
+    setState((prev) => ({
+      ...prev,
+      uploadedImages: prev.uploadedImages.filter(
+        (image) => image.reference !== imageReference,
+      ),
+    }));
+    toast.success("Imagem removida");
   }, []);
 
   /**

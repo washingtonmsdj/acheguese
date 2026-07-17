@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase";
+import { logger } from "@/shared/utils/logger";
 import {
   COMMUNITY_MEMBERSHIP_REQUEST_DEFAULTS,
   type CommunityMembershipRecord,
@@ -25,7 +26,10 @@ const COMMUNITY_MEMBERSHIP_SELECT = [
   "updated_at",
 ].join(",");
 
-function isDuplicateMembershipError(error: { code?: string; message?: string }): boolean {
+function isDuplicateMembershipError(error: {
+  code?: string;
+  message?: string;
+}): boolean {
   const message = error.message?.toLowerCase() ?? "";
   return error.code === "23505" || message.includes("duplicate key");
 }
@@ -42,18 +46,15 @@ export class CommunityMembershipRepository {
       .eq("profile_id", profileId)
       .maybeSingle();
 
-    if (error || !data) return null;
+    if (error) {
+      logger.error(
+        "CommunityMembershipRepository.findByCommunityAndProfile",
+        error,
+      );
+      return null;
+    }
+    if (!data) return null;
     return data as CommunityMembershipRecord;
-  }
-
-  static async listForCurrentUser(): Promise<CommunityMembershipRecord[]> {
-    const { data, error } = await supabase
-      .from("community_memberships" as never)
-      .select(COMMUNITY_MEMBERSHIP_SELECT)
-      .order("requested_at", { ascending: false });
-
-    if (error || !data) return [];
-    return data as CommunityMembershipRecord[];
   }
 
   static async requestMembership(
@@ -64,10 +65,9 @@ export class CommunityMembershipRepository {
       .insert({
         community_id: input.communityId,
         profile_id: input.profileId,
-        user_id: input.userId,
         role: COMMUNITY_MEMBERSHIP_REQUEST_DEFAULTS.ROLE,
         status: COMMUNITY_MEMBERSHIP_REQUEST_DEFAULTS.STATE,
-        join_method: input.joinMethod ?? COMMUNITY_MEMBERSHIP_REQUEST_DEFAULTS.JOIN_METHOD,
+        join_method: COMMUNITY_MEMBERSHIP_REQUEST_DEFAULTS.JOIN_METHOD,
         verified_by_residence: false,
       } as never)
       .select(COMMUNITY_MEMBERSHIP_SELECT)
@@ -75,9 +75,13 @@ export class CommunityMembershipRepository {
 
     if (error) {
       if (isDuplicateMembershipError(error)) {
-        return this.findByCommunityAndProfile(input.communityId, input.profileId);
+        return this.findByCommunityAndProfile(
+          input.communityId,
+          input.profileId,
+        );
       }
 
+      logger.error("CommunityMembershipRepository.requestMembership", error);
       return null;
     }
 
@@ -91,6 +95,10 @@ export class CommunityMembershipRepository {
       .delete()
       .eq("id", membershipId);
 
-    return !error;
+    if (error) {
+      logger.error("CommunityMembershipRepository.deleteOwnMembership", error);
+      return false;
+    }
+    return true;
   }
 }

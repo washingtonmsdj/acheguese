@@ -16,6 +16,11 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase as defaultSupabase } from '@/integrations/supabase';
+import {
+  RealtimeService,
+  realtimeService,
+  type RealtimeTopic,
+} from '@/core/realtime';
 import { trackError } from '@/shared/utils/errorTracking';
 import { TIMEOUTS } from '@/shared/constants';
 import type { SupabaseClient } from '@/integrations/supabase';
@@ -56,10 +61,14 @@ export class TrackingService {
   private config: TrackingServiceConfig;
   private heartbeatTimers = new Map<string, NodeJS.Timeout>();
   private supabaseClient: SupabaseClient;
+  private realtimeClient: RealtimeService;
   private reconnectionManager: ReconnectionManager;
 
   constructor(supabaseClient?: SupabaseClient) {
     this.supabaseClient = supabaseClient || defaultSupabase;
+    this.realtimeClient = supabaseClient
+      ? new RealtimeService(supabaseClient)
+      : realtimeService;
     this.config = {
       defaultUpdateInterval: TIMEOUTS.GPS_LOCATION,
       enableHistory: true,
@@ -210,35 +219,21 @@ export class TrackingService {
     config?: Partial<TrackingSubscriptionConfig>
   ): TrackingSubscription {
     const subscriptionId = `${entityType}-position-${entityId}`;
-    const tableName = this.getTableName(entityType);
-    const idField = this.getIdField(entityType);
-
     // Remove subscription existente se houver
     this.unsubscribe(subscriptionId);
 
     try {
-      const channel = this.supabaseClient
-        .channel(`tracking-${subscriptionId}`)
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: tableName,
-            filter: `${idField}=eq.${entityId}`,
+      const realtimeSubscription = this.realtimeClient.subscribe(
+        this.getRealtimeTopic(entityType),
+        {
+          filterValues: { entityId },
+          onEvent: ({ eventType, row }) => {
+            if (eventType === 'DELETE') return;
+            const position = this.mapToPosition(row as unknown as TrackingRow);
+            callback(position);
           },
-          (payload) => {
-            if (payload.new) {
-              // GATE 2: Conversão explícita BANCO → APP
-              const position = this.mapToPosition(payload.new as TrackingRow);
-              callback(position);
-            }
-          }
-        )
-        .subscribe();
-
-      // GATE 4: Registrar canal para reconexão automática
-      this.reconnectionManager.registerChannel(subscriptionId, channel);
+        },
+      );
 
       const subscription: TrackingSubscription = {
         id: subscriptionId,
@@ -248,8 +243,7 @@ export class TrackingService {
           ...config,
         },
         unsubscribe: () => {
-          channel.unsubscribe();
-          this.reconnectionManager.unregisterChannel(subscriptionId);
+          realtimeSubscription.unsubscribe();
           this.subscriptions.delete(subscriptionId);
         },
         isActive: true,
@@ -635,6 +629,18 @@ export class TrackingService {
       default:
         return 'driver_locations';
     }
+  }
+
+  private getRealtimeTopic(
+    entityType: 'driver' | 'user' | 'vehicle' | 'device',
+  ): RealtimeTopic {
+    const topics: Record<typeof entityType, RealtimeTopic> = {
+      driver: 'tracking.driver-position',
+      user: 'tracking.user-position',
+      vehicle: 'tracking.vehicle-position',
+      device: 'tracking.device-position',
+    };
+    return topics[entityType];
   }
 
   private getIdField(entityType: string): string {

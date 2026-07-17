@@ -1,8 +1,9 @@
 # INDEX CANONICO DE DOCUMENTACAO
 
-Data de referencia: 2026-07-09
+Data de referencia: 2026-07-15
 
 ## Leitura inicial obrigatoria
+
 1. [README da documentacao](./README.md)
 2. [Regras vigentes](./CURRENT_RULES.md)
 3. [Arquitetura](./ARCHITECTURE.md)
@@ -10,12 +11,46 @@ Data de referencia: 2026-07-09
 5. [Plano executavel da auditoria hiperlocal](./ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md)
 6. [Auditoria estrutural global](./AUDITORIA_ESTRUTURAL_GLOBAL.md)
 7. Arquitetura-base Community First: `docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`
+8. Core Platform e ownership transversal: `docs/architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md`
 
 ## Fontes ativas por tema
+
 - Regras SSOT e governanca: [CURRENT_RULES.md](./CURRENT_RULES.md)
 - Arquitetura global: [ARCHITECTURE.md](./ARCHITECTURE.md)
 - Taxonomia global oficial: [architecture/TAXONOMY_SSOT.md](./architecture/TAXONOMY_SSOT.md)
 - SSOT da camada core: [architecture/CORE_LAYER_SSOT.md](./architecture/CORE_LAYER_SSOT.md)
+- SSOT de ownership do Core Platform:
+  [architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md](./architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md)
+- Manifest executavel de ownership:
+  `architecture/core-platform-ownership.json`
+- Comandos server-owned de denuncias sensiveis:
+  [architecture/SENSITIVE_REPORT_COMMANDS.md](./architecture/SENSITIVE_REPORT_COMMANDS.md)
+- Trust incidents e Classified Messaging:
+  [architecture/TRUST_MESSAGING_COMMANDS.md](./architecture/TRUST_MESSAGING_COMMANDS.md)
+- Inbox e thread de Classificados:
+  [architecture/CLASSIFIED_MESSAGING_SSOT.md](./architecture/CLASSIFIED_MESSAGING_SSOT.md)
+- Direct message comunitario:
+  [architecture/COMMUNITY_DIRECT_MESSAGING_SSOT.md](./architecture/COMMUNITY_DIRECT_MESSAGING_SSOT.md)
+- Preferencias de notificacao:
+  [architecture/NOTIFICATION_PREFERENCES_SSOT.md](./architecture/NOTIFICATION_PREFERENCES_SSOT.md)
+- Favoritos de Empresa:
+  [architecture/BUSINESS_FAVORITES_SSOT.md](./architecture/BUSINESS_FAVORITES_SSOT.md)
+- Posts e Feed:
+  [architecture/POSTS_FEED_SSOT.md](./architecture/POSTS_FEED_SSOT.md)
+- Social Engagement:
+  [architecture/SOCIAL_ENGAGEMENT_SSOT.md](./architecture/SOCIAL_ENGAGEMENT_SSOT.md)
+- Busca federada:
+  [architecture/SEARCH_SSOT.md](./architecture/SEARCH_SSOT.md)
+- MediaAsset publico:
+  [architecture/MEDIA_ASSET_SSOT.md](./architecture/MEDIA_ASSET_SSOT.md)
+- Realtime:
+  [architecture/REALTIME_SSOT.md](./architecture/REALTIME_SSOT.md)
+- Reviews:
+  [architecture/REVIEWS_SSOT.md](./architecture/REVIEWS_SSOT.md)
+- Moderacao federada e auditoria append-only:
+  [architecture/AUDIT_MODERATION_SSOT.md](./architecture/AUDIT_MODERATION_SSOT.md)
+- Plano de consolidacao do Core Platform:
+  `plans/CORE_PLATFORM_CONSOLIDATION_PLAN.md`
 - Arquitetura-base Community First:
   [architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md](./architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md)
 - Plano executavel Community First:
@@ -39,6 +74,7 @@ Data de referencia: 2026-07-09
 - Security Authority: [governance/security/SECURITY_AUTHORITY.md](./governance/security/SECURITY_AUTHORITY.md)
 
 ## Auditorias ativas
+
 - [audits/MASTER_REPORT.md](./audits/MASTER_REPORT.md)
 - [audits/PROJECT_INVENTORY.md](./audits/PROJECT_INVENTORY.md)
 - [audits/SUPABASE_REMOTE_SECURITY_ADVISOR_2026-07-06.md](./audits/SUPABASE_REMOTE_SECURITY_ADVISOR_2026-07-06.md)
@@ -47,6 +83,7 @@ Data de referencia: 2026-07-09
 - [audits/POST_READINESS_BACKLOG.md](./audits/POST_READINESS_BACKLOG.md)
 
 Observacao:
+
 - Para novas funcionalidades hiperlocais, prevalece a arquitetura-base
   Community First. O SSOT de Comunidade vs Entidades Publicas continua vigente
   como contrato especifico de roteamento, canonical e acesso entre site publico
@@ -57,6 +94,7 @@ Observacao:
 - `STATUS.md` e documentos com `FINAL`, `100%`, `completo` ou `pronto para producao` no texto/nome sao historicos ate revalidacao explicita em `STATUS_ATUAL.md`.
 
 ## Regras de atualizacao
+
 1. Documento vivo global permanece em `docs/`.
 2. Contrato tecnico de dominio deve ficar junto ao codigo dono em `src/<dominio>/README.md` ou `src/<dominio>/docs/`.
 3. Documento datado de sessao, entrega ou comparativo nao deve permanecer no repositorio principal.

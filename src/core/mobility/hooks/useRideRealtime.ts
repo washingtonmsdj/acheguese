@@ -8,9 +8,9 @@ import { logger } from '@/shared/utils/logger';
 import { useEffect, useRef, useState } from 'react';
 import {
   realtimeService,
+  type RealtimeTopic,
   type RealtimeSubscription,
-} from '@/core/realtime/services/RealtimeService';
-import { DB_TABLES, REALTIME_CHANNELS } from '@/core/mobility/constants';
+} from '@/core/realtime';
 
 export interface RideRealtimeEvent {
   type:
@@ -64,17 +64,16 @@ export function useRideRealtime(options: UseRideRealtimeOptions) {
       return;
     }
 
-    const subscriptionId = rideId
-      ? `ride-realtime-${userId}-${rideId}`
-      : `ride-realtime-${userId}`;
+    const topic: RealtimeTopic = rideId
+      ? 'mobility.ride-by-id'
+      : userType === 'driver'
+        ? 'mobility.driver-rides'
+        : 'mobility.passenger-rides';
+    const filterValues = rideId ? { rideId } : { profileId: userId };
 
-    const subscription = realtimeService.subscribeToPostgresChanges({
-      subscriptionId,
-      channelName: REALTIME_CHANNELS.rideRealtime(userId),
-      table: DB_TABLES.RIDE_REQUESTS,
-      event: 'UPDATE',
-      filter: rideId ? `id=eq.${rideId}` : undefined,
-      onChange: (payload) => {
+    const subscription = realtimeService.subscribe(topic, {
+      filterValues,
+      onEvent: ({ payload }) => {
         logger.info('Ride realtime event:', payload);
 
         const typedPayload = payload as PostgresUpdatePayload<RideRealtimeRow>;

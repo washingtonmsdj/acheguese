@@ -134,24 +134,11 @@ export function ClassifiedCommentsSection({
 
     setSubmittingReport(true);
     try {
-      const reporterRole = activeProfile.id === sellerProfileId ? "merchant" : "customer";
-      const commentAuthorRole =
-        comment.author_profile_id === sellerProfileId ? "merchant" : "customer";
-
       const response = await classifiedCommentService.reportComment({
         classifiedId,
         commentId: comment.id,
-        commentAuthorProfileId: comment.author_profile_id,
-        commentAuthorRole,
-        reporterProfileId: activeProfile.id,
-        reporterRole,
-        reasonCode: `classified_comment_${reportReason}`,
+        reason: reportReason as "spam" | "offensive" | "fraud" | "harassment" | "other",
         description: reportDescription.trim() || undefined,
-        evidence: {
-          comment_content: comment.content,
-          comment_created_at: comment.created_at,
-          comment_author_name: comment.author?.name ?? null,
-        },
       });
 
       if (!response.created) {

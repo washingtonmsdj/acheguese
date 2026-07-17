@@ -21,34 +21,39 @@ const QrResolverPage = lazy(() =>
 const StatusPage = lazy(() => import("@/app/pages/StatusPage"));
 const SplashPage = lazy(() => import("@/app/pages/SplashPage"));
 const LoginPage = lazy(() => import("@/app/pages/LoginPage"));
-const CadastroPage = lazy(() => import("@/app/features/onboarding/pages/CadastroPage"));
-const CadastroConfirmacaoPage = lazy(() =>
-  import("@/app/features/onboarding/pages/CadastroConfirmacaoPage"),
+const CadastroPage = lazy(
+  () => import("@/app/features/onboarding/pages/CadastroPage"),
+);
+const CadastroConfirmacaoPage = lazy(
+  () => import("@/app/features/onboarding/pages/CadastroConfirmacaoPage"),
+);
+const AceiteTermosPage = lazy(
+  () => import("@/app/features/onboarding/pages/AceiteTermosPage"),
 );
 const AboutPage = lazy(() => import("@/app/pages/AboutPage"));
 const ContactPage = lazy(() => import("@/app/pages/ContactPage"));
 const OnboardingPage = lazy(() => import("@/app/pages/OnboardingPage"));
 const ResetPasswordPage = lazy(() => import("@/app/pages/ResetPasswordPage"));
-const EmpresaCatalogoPublicoPage = lazy(() =>
-  import("@/modules/business/pages/EmpresaCatalogoPublicoPage"),
+const EmpresaCatalogoPublicoPage = lazy(
+  () => import("@/modules/business/pages/EmpresaCatalogoPublicoPage"),
 );
-const PremiumBusinessSiteRoute = lazy(() =>
-  import("@/modules/business/premium/pages/PremiumBusinessSiteRoute"),
+const PremiumBusinessSiteRoute = lazy(
+  () => import("@/modules/business/premium/pages/PremiumBusinessSiteRoute"),
 );
-const PremiumBusinessHomePage = lazy(() =>
-  import("@/modules/business/premium/pages/PremiumBusinessHomePage"),
+const PremiumBusinessHomePage = lazy(
+  () => import("@/modules/business/premium/pages/PremiumBusinessHomePage"),
 );
-const PremiumBusinessMenuPage = lazy(() =>
-  import("@/modules/business/premium/pages/PremiumBusinessMenuPage"),
+const PremiumBusinessMenuPage = lazy(
+  () => import("@/modules/business/premium/pages/PremiumBusinessMenuPage"),
 );
-const PremiumBusinessProductPage = lazy(() =>
-  import("@/modules/business/premium/pages/PremiumBusinessProductPage"),
+const PremiumBusinessProductPage = lazy(
+  () => import("@/modules/business/premium/pages/PremiumBusinessProductPage"),
 );
-const PremiumBusinessCartPage = lazy(() =>
-  import("@/modules/business/premium/pages/PremiumBusinessCartPage"),
+const PremiumBusinessCartPage = lazy(
+  () => import("@/modules/business/premium/pages/PremiumBusinessCartPage"),
 );
-const PremiumBusinessCheckoutPage = lazy(() =>
-  import("@/modules/business/premium/pages/PremiumBusinessCheckoutPage"),
+const PremiumBusinessCheckoutPage = lazy(
+  () => import("@/modules/business/premium/pages/PremiumBusinessCheckoutPage"),
 );
 const CentralRoutes = lazy(() =>
   import("./sections/CentralRoutes").then((module) => ({
@@ -76,12 +81,18 @@ const EVENT_ROUTES = {
     APP_MODULE_SLUGS.events,
     TERRITORIAL_ROUTE_STATIC_SEGMENTS.calendar,
   ),
-  map: buildAppModulePath(APP_MODULE_SLUGS.events, TERRITORIAL_ROUTE_STATIC_SEGMENTS.map),
+  map: buildAppModulePath(
+    APP_MODULE_SLUGS.events,
+    TERRITORIAL_ROUTE_STATIC_SEGMENTS.map,
+  ),
   detail: buildAppModulePath(
     APP_MODULE_SLUGS.events,
     `${TERRITORIAL_ROUTE_STATIC_SEGMENTS.eventDetail}/${TERRITORIAL_ROUTE_PARAMS.eventId}`,
   ),
-  legacyDetail: buildAppModulePath(APP_MODULE_SLUGS.events, TERRITORIAL_ROUTE_PARAMS.eventId),
+  legacyDetail: buildAppModulePath(
+    APP_MODULE_SLUGS.events,
+    TERRITORIAL_ROUTE_PARAMS.eventId,
+  ),
 } as const;
 
 export function AppRoutes() {
@@ -102,16 +113,26 @@ export function AppRoutes() {
       <Route path="/splash" element={<SplashPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/cadastro" element={<CadastroPage />} />
-      <Route path="/cadastro/confirmacao" element={<CadastroConfirmacaoPage />} />
+      <Route
+        path="/cadastro/confirmacao"
+        element={<CadastroConfirmacaoPage />}
+      />
+      <Route path="/aceitar-termos" element={<AceiteTermosPage />} />
       <Route path="/sobre" element={<AboutPage />} />
       <Route path="/contato" element={<ContactPage />} />
       <Route path="/onboarding" element={<OnboardingPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/empresas/:id/catalogo" element={<EmpresaCatalogoPublicoPage />} />
+      <Route
+        path="/empresas/:id/catalogo"
+        element={<EmpresaCatalogoPublicoPage />}
+      />
       <Route path="/p/:slug/*" element={<PremiumBusinessSiteRoute />}>
         <Route index element={<PremiumBusinessHomePage />} />
         <Route path="cardapio" element={<PremiumBusinessMenuPage />} />
-        <Route path="produto/:productSlug" element={<PremiumBusinessProductPage />} />
+        <Route
+          path="produto/:productSlug"
+          element={<PremiumBusinessProductPage />}
+        />
         <Route path="carrinho" element={<PremiumBusinessCartPage />} />
         <Route path="checkout" element={<PremiumBusinessCheckoutPage />} />
       </Route>

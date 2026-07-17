@@ -679,7 +679,6 @@ export class ProfessionalLeadService {
           reviewer_profile_id: data.requester_profile_id,
           rating,
           comment: sanitizeString(input.comment).slice(0, 1000),
-          job_type: "Atendimento contratado",
         },
         "professional",
       );

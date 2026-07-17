@@ -2,30 +2,10 @@ import { supabase } from "@/integrations/supabase";
 import { REPORT_STATUS, type ReportStatus } from "@/shared/types/constants";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
-import { JOB_FORM_LIMITS } from "../constants/form-limits";
-
-type QueryResult<T> = Promise<{ data: T; error: { code?: string; message?: string } | null }>;
-
-interface QueryBuilder<TRow> {
-  select(columns?: string): QueryBuilder<TRow>;
-  insert(values: unknown): QueryBuilder<TRow>;
-  update(values: unknown): QueryBuilder<TRow>;
-  eq(column: string, value: unknown): QueryBuilder<TRow>;
-  order(column: string, options?: { ascending?: boolean }): QueryBuilder<TRow>;
-  single(): QueryResult<TRow>;
-  then<TResult1 = { data: TRow[]; error: { code?: string; message?: string } | null }, TResult2 = never>(
-    onfulfilled?:
-      | ((value: { data: TRow[]; error: { code?: string; message?: string } | null }) => TResult1 | PromiseLike<TResult1>)
-      | null,
-    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
-  ): Promise<TResult1 | TResult2>;
-}
-
-interface VagaReportDbClient {
-  from<TRow>(table: string): QueryBuilder<TRow>;
-}
-
-const vagaReportDb = supabase as unknown as VagaReportDbClient;
+import {
+  isReportReason,
+  type ReportReasonOption,
+} from "@/core/moderation/reportReasons";
 
 export type VagaReportReason =
   | "fraud"
@@ -37,10 +17,7 @@ export type VagaReportReason =
   | "discrimination"
   | "other";
 
-export const VAGA_REPORT_REASON_OPTIONS: readonly {
-  id: VagaReportReason;
-  label: string;
-}[] = [
+export const VAGA_REPORT_REASON_OPTIONS = [
   { id: "fraud", label: "Fraude ou golpe" },
   { id: "fake-company", label: "Empresa falsa" },
   { id: "inappropriate", label: "Conteudo inapropriado" },
@@ -49,10 +26,10 @@ export const VAGA_REPORT_REASON_OPTIONS: readonly {
   { id: "misleading", label: "Informacao enganosa" },
   { id: "discrimination", label: "Conteudo discriminatorio" },
   { id: "other", label: "Outro" },
-] as const;
+] as const satisfies readonly ReportReasonOption<VagaReportReason>[];
 
 export function isVagaReportReason(value: string): value is VagaReportReason {
-  return VAGA_REPORT_REASON_OPTIONS.some((reason) => reason.id === value);
+  return isReportReason(VAGA_REPORT_REASON_OPTIONS, value);
 }
 
 export interface VagaReport {
@@ -81,54 +58,52 @@ export interface CreateVagaReportInput {
   description?: string;
 }
 
-type VagaReportRow = VagaReport & {
-  reporter?:
-    | { id: string; name: string; avatar_url?: string | null }
-    | Array<{ id: string; name: string; avatar_url?: string | null }>
-    | null;
+export type VagaReportModerationStatus = Extract<
+  VagaReport["status"],
+  | typeof REPORT_STATUS.REVIEWED
+  | typeof REPORT_STATUS.RESOLVED
+  | typeof REPORT_STATUS.DISMISSED
+>;
+
+type VagaReportRpcRow = Omit<VagaReport, "reason" | "status"> & {
+  reason: string;
+  status: string;
 };
 
-function normalizeDescription(description?: string): string | null {
-  const value = description?.trim();
-  if (!value) return null;
-  return value.slice(0, JOB_FORM_LIMITS.MAX_REPORT_DESCRIPTION);
-}
+function mapReport(row: VagaReportRpcRow): VagaReport {
+  if (!isVagaReportReason(row.reason)) {
+    throw new Error("Motivo de denuncia persistido e invalido.");
+  }
 
-function mapReport(row: VagaReportRow): VagaReport {
   return {
     ...row,
-    reason: row.reason ?? "other",
+    reason: row.reason,
+    status: row.status as VagaReport["status"],
   };
 }
 
 export class VagaReportService {
-  static async createReport(
-    reporterProfileId: string,
-    input: CreateVagaReportInput,
-  ): Promise<VagaReport> {
+  static async createReport(input: CreateVagaReportInput): Promise<VagaReport> {
     try {
       if (!isVagaReportReason(input.reason)) {
         throw new Error("Motivo de denuncia invalido.");
       }
 
-      const { data, error } = await vagaReportDb
-        .from<VagaReportRow>("vaga_reports")
-        .insert({
-          vaga_id: input.vagaId,
-          reporter_profile_id: reporterProfileId,
-          reason: input.reason,
-          description: normalizeDescription(input.description),
-          status: REPORT_STATUS.PENDING,
-        })
-        .select("*")
-        .single();
+      const { data, error } = await supabase.rpc("create_vaga_report", {
+        p_vaga_id: input.vagaId,
+        p_reason: input.reason,
+        p_description: input.description?.trim() || undefined,
+      });
 
-      if (error) {
-        if (error.code === "23505") {
-          throw new Error("Voce ja enviou uma denuncia pendente para esta vaga.");
+      if (error || !data) {
+        if (error?.code === "23505") {
+          throw new Error("Voce ja enviou uma denuncia para esta vaga.");
         }
-        logger.error("[VagaReportService] Erro ao criar denuncia de vaga:", error);
-        throw error;
+        logger.error(
+          "[VagaReportService] Erro ao criar denuncia de vaga:",
+          error,
+        );
+        throw error ?? new Error("Denuncia nao retornada pelo servidor.");
       }
 
       logger.info("[VagaReportService] Denuncia de vaga criada", {
@@ -139,7 +114,10 @@ export class VagaReportService {
 
       return mapReport(data);
     } catch (error) {
-      logger.error("[VagaReportService] Erro inesperado ao criar denuncia:", error);
+      logger.error(
+        "[VagaReportService] Erro inesperado ao criar denuncia:",
+        error,
+      );
       trackError(error as Error, {
         component: "VagaReportService",
         action: "createReport",
@@ -148,60 +126,32 @@ export class VagaReportService {
     }
   }
 
-  static async getReportsByVaga(vagaId: string): Promise<VagaReport[]> {
-    try {
-      const { data, error } = await vagaReportDb
-        .from<VagaReportRow>("vaga_reports")
-        .select(`
-          *,
-          reporter:profiles!reporter_profile_id(id, name, avatar_url)
-        `)
-        .eq("vaga_id", vagaId)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        logger.error("[VagaReportService] Erro ao buscar denuncias da vaga:", error);
-        throw error;
-      }
-
-      return (data ?? []).map(mapReport);
-    } catch (error) {
-      logger.error("[VagaReportService] Erro inesperado ao buscar denuncias:", error);
-      trackError(error as Error, {
-        component: "VagaReportService",
-        action: "getReportsByVaga",
-      });
-      throw error;
-    }
-  }
-
   static async updateReportStatus(
     reportId: string,
-    adminProfileId: string,
-    status: "reviewed" | "resolved" | "dismissed",
+    status: VagaReportModerationStatus,
     adminNotes?: string,
   ): Promise<VagaReport> {
     try {
-      const { data, error } = await vagaReportDb
-        .from<VagaReportRow>("vaga_reports")
-        .update({
-          status,
-          reviewed_by_profile_id: adminProfileId,
-          reviewed_at: new Date().toISOString(),
-          admin_notes: normalizeDescription(adminNotes),
-        })
-        .eq("id", reportId)
-        .select("*")
-        .single();
+      const { data, error } = await supabase.rpc("moderate_vaga_report", {
+        p_report_id: reportId,
+        p_status: status,
+        p_admin_notes: adminNotes?.trim() || undefined,
+      });
 
-      if (error) {
-        logger.error("[VagaReportService] Erro ao atualizar denuncia de vaga:", error);
-        throw error;
+      if (error || !data) {
+        logger.error(
+          "[VagaReportService] Erro ao atualizar denuncia de vaga:",
+          error,
+        );
+        throw error ?? new Error("Denuncia nao retornada pelo servidor.");
       }
 
       return mapReport(data);
     } catch (error) {
-      logger.error("[VagaReportService] Erro inesperado ao atualizar denuncia:", error);
+      logger.error(
+        "[VagaReportService] Erro inesperado ao atualizar denuncia:",
+        error,
+      );
       trackError(error as Error, {
         component: "VagaReportService",
         action: "updateReportStatus",

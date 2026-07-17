@@ -271,25 +271,27 @@ class BusinessManagementServiceClass {
     imageType: "logo" | "banner" | "gallery",
   ): Promise<string> {
     const business = await this.getBusinessRecord(businessId);
-    const url = await BusinessSettingsService.uploadBusinessImage({
-      businessId: business.profile_id,
+    const reference = await BusinessSettingsService.uploadBusinessImage({
+      ownerProfileId: business.profile_id,
       file,
       type: imageType,
     });
 
     if (imageType === "gallery") {
-      const currentPhotos = Array.isArray(business.metadata?.fotos)
-        ? business.metadata.fotos.filter((item): item is string => typeof item === "string")
-        : [];
-      await updateBusiness(business.profile_id, { fotos: [...currentPhotos, url] });
+      await BusinessSettingsService.addGalleryItem({
+        businessDataId: business.id,
+        reference,
+      });
     } else {
       await updateBusiness(
         business.profile_id,
-        imageType === "logo" ? { logo_url: url } : { banner_url: url },
+        imageType === "logo"
+          ? { logo_url: reference }
+          : { banner_url: reference },
       );
     }
 
-    return url;
+    return reference;
   }
 }
 

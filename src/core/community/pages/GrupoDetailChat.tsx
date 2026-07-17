@@ -3,31 +3,69 @@ import type { KeyboardEvent } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useSessionContext } from "@/core/session";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/shared/components/ui/dropdown-menu";
-import { Check, Copy, Flag, Loader2, MessageCircle, MoreVertical, Pencil, Reply, Send, Trash2 } from "lucide-react";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/shared/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/shared/components/ui/dropdown-menu";
+import {
+  Check,
+  Copy,
+  Flag,
+  Heart,
+  Loader2,
+  MessageCircle,
+  MoreVertical,
+  Pencil,
+  Reply,
+  Send,
+  Trash2,
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
-import { useDeleteGroupMessage, useGroupMessages, useReportGroupMessage, useSendGroupMessage, useUpdateGroupMessage } from "@/core/community/hooks/useGroupQueries";
+import {
+  useDeleteGroupMessage,
+  useGroupMessages,
+  useReportGroupMessage,
+  useSendGroupMessage,
+  useToggleGroupMessageLike,
+  useUpdateGroupMessage,
+} from "@/core/community/hooks/useGroupQueries";
 import { getInitials } from "./GrupoDetailShared";
 import type { GroupMessageItem } from "./GrupoDetailShared";
+import {
+  COMMUNITY_REPORT_REASON_OPTIONS,
+  ReportReasonDialog,
+  type CommunityReportReason,
+} from "@/core/moderation";
 
 export function GrupoDetailChat({
   groupId,
   isMember,
   canPost,
   canModerate,
+  canReact,
+  canReport,
 }: {
   groupId: string;
   isMember: boolean;
   canPost: boolean;
   canModerate: boolean;
+  canReact: boolean;
+  canReport: boolean;
 }) {
   const { user } = useAuth();
   const { activeProfile } = useSessionContext();
   const { data: messages, isLoading } = useGroupMessages(groupId);
   const [text, setText] = useState("");
-  const [reportingMessageId, setReportingMessageId] = useState<string | null>(null);
+  const [reportMessageId, setReportMessageId] = useState<string | null>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<GroupMessageItem | null>(null);
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
@@ -35,6 +73,7 @@ export function GrupoDetailChat({
   const deleteMessageMutation = useDeleteGroupMessage();
   const updateMessageMutation = useUpdateGroupMessage();
   const reportMessageMutation = useReportGroupMessage();
+  const likeMessageMutation = useToggleGroupMessageLike(groupId);
   const sending = sendMessageMutation.isPending;
   const scrollRef = useRef<HTMLDivElement>(null);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -51,7 +90,6 @@ export function GrupoDetailChat({
     el.style.height = "0px";
     el.style.height = `${Math.min(el.scrollHeight, 96)}px`;
   }, [text]);
-
 
   const handleSend = async () => {
     if (!canPost) {
@@ -73,8 +111,6 @@ export function GrupoDetailChat({
           metadata: replyTo
             ? {
                 reply_to_message_id: replyTo.id,
-                reply_preview: (replyTo.content || "").slice(0, 120),
-                reply_author_name: replyTo.profile?.name || "Usuario",
               }
             : undefined,
         });
@@ -98,19 +134,18 @@ export function GrupoDetailChat({
     await deleteMessageMutation.mutateAsync({ groupId, messageId });
   };
 
-  const handleReportMessage = async (messageId: string) => {
-    if (reportingMessageId === messageId) return;
-    setReportingMessageId(messageId);
-    try {
-      await reportMessageMutation.mutateAsync({
-        messageId,
-        reason: "Conteudo inadequado para o grupo",
-      });
-    } finally {
-      setReportingMessageId(null);
-    }
+  const handleSubmitReport = async (
+    reason: CommunityReportReason,
+    details?: string,
+  ) => {
+    if (!reportMessageId) return;
+    await reportMessageMutation.mutateAsync({
+      messageId: reportMessageId,
+      reason,
+      details,
+    });
+    setReportMessageId(null);
   };
-
 
   const handleCopyMessage = async (msg: GroupMessageItem) => {
     try {
@@ -141,13 +176,20 @@ export function GrupoDetailChat({
   };
 
   const renderMessageContent = (msg: GroupMessageItem, isOwn: boolean) => {
+    const repliedMessage = msg.metadata?.reply_to_message_id
+      ? (messages as GroupMessageItem[]).find(
+          (candidate) => candidate.id === msg.metadata?.reply_to_message_id,
+        )
+      : undefined;
     const bubbleClass = isOwn
       ? "bg-teal-500/20 text-teal-100 rounded-tr-sm"
       : "bg-white/5 text-gray-100 rounded-tl-sm";
 
     if (msg.message_type === "image" && msg.media_url) {
       return (
-        <div className={`max-w-full overflow-hidden rounded-2xl border border-white/10 ${bubbleClass}`}>
+        <div
+          className={`max-w-full overflow-hidden rounded-2xl border border-white/10 ${bubbleClass}`}
+        >
           <img
             src={msg.media_url}
             alt={msg.content || "Imagem do grupo"}
@@ -155,7 +197,9 @@ export function GrupoDetailChat({
             loading="lazy"
           />
           {msg.content ? (
-            <div className="px-2.5 py-1.5 text-[13px] leading-relaxed">{msg.content}</div>
+            <div className="px-2.5 py-1.5 text-[13px] leading-relaxed">
+              {msg.content}
+            </div>
           ) : null}
         </div>
       );
@@ -164,26 +208,35 @@ export function GrupoDetailChat({
     if (msg.message_type === "audio" && msg.media_url) {
       return (
         <div className={`max-w-full rounded-2xl px-2.5 py-1.5 ${bubbleClass}`}>
-          <p className="mb-1.5 text-[11px] text-white/75">{msg.content || "Mensagem de audio"}</p>
+          <p className="mb-1.5 text-[11px] text-white/75">
+            {msg.content || "Mensagem de audio"}
+          </p>
           <audio controls preload="none" className="w-full max-w-[250px]">
-            <source src={msg.media_url} type={msg.media_mime_type || "audio/mpeg"} />
+            <source
+              src={msg.media_url}
+              type={msg.media_mime_type || "audio/mpeg"}
+            />
           </audio>
           {msg.audio_duration_seconds ? (
-            <p className="mt-1 text-[10px] text-white/55">{msg.audio_duration_seconds}s</p>
+            <p className="mt-1 text-[10px] text-white/55">
+              {msg.audio_duration_seconds}s
+            </p>
           ) : null}
         </div>
       );
     }
 
     return (
-      <div className={`max-w-full px-2.5 py-1.5 rounded-2xl text-[13px] break-words ${bubbleClass}`}>
+      <div
+        className={`max-w-full px-2.5 py-1.5 rounded-2xl text-[13px] break-words ${bubbleClass}`}
+      >
         {msg?.metadata?.reply_to_message_id ? (
           <div className="mb-1 rounded-lg border border-white/10 bg-black/20 px-2 py-1">
             <p className="text-[10px] text-teal-200">
-              Resposta para {msg?.metadata?.reply_author_name || "mensagem"}
+              Resposta para {repliedMessage?.profile?.name || "mensagem"}
             </p>
             <p className="line-clamp-2 text-[10px] text-gray-300">
-              {msg?.metadata?.reply_preview || "Mensagem anterior"}
+              {repliedMessage?.content || "Mensagem anterior"}
             </p>
           </div>
         ) : null}
@@ -223,9 +276,9 @@ export function GrupoDetailChat({
             msg.sender_profile_id === activeProfile?.id;
           const showAvatar =
             i === 0 ||
-            (((messages as GroupMessageItem[])[i - 1]?.user_id ||
+            ((messages as GroupMessageItem[])[i - 1]?.user_id ||
               (messages as GroupMessageItem[])[i - 1]?.sender_profile_id) !==
-              (msg.user_id || msg.sender_profile_id));
+              (msg.user_id || msg.sender_profile_id);
 
           return (
             <div
@@ -252,7 +305,9 @@ export function GrupoDetailChat({
                     {msg.profile?.name || "Usuario"}
                   </p>
                 )}
-                <div className={`mt-0.5 flex w-full min-w-0 items-end gap-1.5 ${isOwn ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`mt-0.5 flex w-full min-w-0 items-end gap-1.5 ${isOwn ? "justify-end" : "justify-start"}`}
+                >
                   {isOwn ? null : (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -264,27 +319,41 @@ export function GrupoDetailChat({
                           <MoreVertical className="h-3 w-3" />
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="w-44 border-white/10 bg-[#152026] text-gray-100">
-                        <DropdownMenuItem onClick={() => handleReplyMessage(msg)} className="gap-2 text-xs">
+                      <DropdownMenuContent
+                        align="start"
+                        className="w-44 border-white/10 bg-[#152026] text-gray-100"
+                      >
+                        <DropdownMenuItem
+                          onClick={() => handleReplyMessage(msg)}
+                          className="gap-2 text-xs"
+                        >
                           <Reply className="h-3.5 w-3.5" />
                           Responder
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleCopyMessage(msg)} className="gap-2 text-xs">
+                        <DropdownMenuItem
+                          onClick={() => handleCopyMessage(msg)}
+                          className="gap-2 text-xs"
+                        >
                           <Copy className="h-3.5 w-3.5" />
                           {copiedMessageId === msg.id ? "Copiado" : "Copiar"}
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleReportMessage(msg.id)}
-                          disabled={reportingMessageId === msg.id}
-                          className="gap-2 text-xs"
-                        >
-                          <Flag className="h-3.5 w-3.5" />
-                          Denunciar
-                        </DropdownMenuItem>
+                        {canReport ? (
+                          <DropdownMenuItem
+                            onClick={() => setReportMessageId(msg.id)}
+                            disabled={reportMessageMutation.isPending}
+                            className="gap-2 text-xs"
+                          >
+                            <Flag className="h-3.5 w-3.5" />
+                            Denunciar
+                          </DropdownMenuItem>
+                        ) : null}
                         {canModerate ? (
                           <>
                             <DropdownMenuSeparator className="bg-white/10" />
-                            <DropdownMenuItem onClick={() => handleDeleteMessage(msg.id)} className="gap-2 text-xs text-red-300 focus:text-red-200">
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteMessage(msg.id)}
+                              className="gap-2 text-xs text-red-300 focus:text-red-200"
+                            >
                               <Trash2 className="h-3.5 w-3.5" />
                               Remover
                             </DropdownMenuItem>
@@ -305,22 +374,37 @@ export function GrupoDetailChat({
                           <MoreVertical className="h-3 w-3" />
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-44 border-white/10 bg-[#152026] text-gray-100">
-                        <DropdownMenuItem onClick={() => handleReplyMessage(msg)} className="gap-2 text-xs">
+                      <DropdownMenuContent
+                        align="end"
+                        className="w-44 border-white/10 bg-[#152026] text-gray-100"
+                      >
+                        <DropdownMenuItem
+                          onClick={() => handleReplyMessage(msg)}
+                          className="gap-2 text-xs"
+                        >
                           <Reply className="h-3.5 w-3.5" />
                           Responder
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleCopyMessage(msg)} className="gap-2 text-xs">
+                        <DropdownMenuItem
+                          onClick={() => handleCopyMessage(msg)}
+                          className="gap-2 text-xs"
+                        >
                           <Copy className="h-3.5 w-3.5" />
                           {copiedMessageId === msg.id ? "Copiado" : "Copiar"}
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEditMessage(msg)} className="gap-2 text-xs">
+                        <DropdownMenuItem
+                          onClick={() => handleEditMessage(msg)}
+                          className="gap-2 text-xs"
+                        >
                           <Pencil className="h-3.5 w-3.5" />
                           Editar
                         </DropdownMenuItem>
                         <>
                           <DropdownMenuSeparator className="bg-white/10" />
-                          <DropdownMenuItem onClick={() => handleDeleteMessage(msg.id)} className="gap-2 text-xs text-red-300 focus:text-red-200">
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteMessage(msg.id)}
+                            className="gap-2 text-xs text-red-300 focus:text-red-200"
+                          >
                             <Trash2 className="h-3.5 w-3.5" />
                             Remover
                           </DropdownMenuItem>
@@ -329,7 +413,30 @@ export function GrupoDetailChat({
                     </DropdownMenu>
                   ) : null}
                 </div>
-                <div className={`mt-0.5 flex w-full min-w-0 ${isOwn ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`mt-0.5 flex w-full min-w-0 items-center gap-2 ${isOwn ? "flex-row-reverse justify-start" : "justify-start"}`}
+                >
+                  {canReact ? (
+                    <button
+                      type="button"
+                      onClick={() => likeMessageMutation.mutate(msg.id)}
+                      disabled={likeMessageMutation.isPending}
+                      aria-label={
+                        msg.is_liked ? "Remover curtida" : "Curtir mensagem"
+                      }
+                      aria-pressed={Boolean(msg.is_liked)}
+                      className={`inline-flex min-h-7 min-w-7 items-center gap-1 rounded-full px-1.5 text-[10px] transition-colors disabled:opacity-50 ${
+                        msg.is_liked
+                          ? "bg-rose-400/12 text-rose-300"
+                          : "text-gray-500 hover:bg-white/5 hover:text-gray-300"
+                      }`}
+                    >
+                      <Heart
+                        className={`h-3 w-3 ${msg.is_liked ? "fill-current" : ""}`}
+                      />
+                      {(msg.likes_count ?? 0) > 0 ? msg.likes_count : null}
+                    </button>
+                  ) : null}
                   <p
                     className={`min-w-0 truncate text-[9px] text-gray-600 ${isOwn ? "text-right" : ""}`}
                   >
@@ -353,8 +460,12 @@ export function GrupoDetailChat({
               <div className="min-w-0">
                 {editingMessageId ? (
                   <>
-                    <p className="text-[10px] text-amber-300">Editando mensagem</p>
-                    <p className="truncate text-xs text-gray-300">Altere o texto e envie para salvar</p>
+                    <p className="text-[10px] text-amber-300">
+                      Editando mensagem
+                    </p>
+                    <p className="truncate text-xs text-gray-300">
+                      Altere o texto e envie para salvar
+                    </p>
                   </>
                 ) : (
                   <>
@@ -405,14 +516,17 @@ export function GrupoDetailChat({
             >
               {sending ? (
                 <Loader2 className="w-4 h-4 animate-spin text-white" />
+              ) : editingMessageId ? (
+                <Check className="w-4 h-4 text-white" />
               ) : (
-                editingMessageId ? <Check className="w-4 h-4 text-white" /> : <Send className="w-4 h-4 text-white" />
+                <Send className="w-4 h-4 text-white" />
               )}
             </button>
           </div>
           {!canPost ? (
             <p className="mt-2 text-xs text-amber-300/90">
-              Este grupo permite postagem apenas para o papel configurado na governanca.
+              Este grupo permite postagem apenas para o papel configurado na
+              governanca.
             </p>
           ) : null}
         </div>
@@ -423,6 +537,15 @@ export function GrupoDetailChat({
           </p>
         </div>
       )}
+      <ReportReasonDialog
+        open={Boolean(reportMessageId)}
+        onOpenChange={(open) => {
+          if (!open) setReportMessageId(null);
+        }}
+        contentLabel="mensagem do grupo"
+        reasonOptions={COMMUNITY_REPORT_REASON_OPTIONS}
+        onSubmit={handleSubmitReport}
+      />
     </div>
   );
 }

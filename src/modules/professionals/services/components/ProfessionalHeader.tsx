@@ -1,5 +1,6 @@
 import { BadgeCheck, Clock, MapPin, Star } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
+import { SafeImage } from "@/shared/components/security/SafeImage";
 import { getServiceCategoryIcon } from "@/modules/professionals/services/domain/professionalCategories";
 import type { ProfessionalData } from "@/modules/professionals/services/hooks/useProfessionalDetail";
 
@@ -14,7 +15,7 @@ export function ProfessionalHeader({ professional }: ProfessionalHeaderProps) {
     <div className="relative">
       {professional.banner_url ? (
         <div className="h-32 w-full overflow-hidden">
-          <img
+          <SafeImage
             src={professional.banner_url}
             alt=""
             className="w-full h-full object-cover"
@@ -29,7 +30,7 @@ export function ProfessionalHeader({ professional }: ProfessionalHeaderProps) {
         className={`px-4 ${professional.banner_url ? "-mt-12" : "-mt-4"} pb-4 flex flex-col items-center text-center relative z-10`}
       >
         {professional.photo ? (
-          <img
+          <SafeImage
             src={professional.photo}
             alt={professional.name}
             className="h-24 w-24 rounded-2xl object-cover border-4 border-background shadow-lg mb-3"

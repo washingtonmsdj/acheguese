@@ -3,6 +3,7 @@
 Gerado em: 2026-07-08T22:29:45.978Z
 
 ## Problemas encontrados
+
 - Dependencias ciclicas detectadas: 7
 - Imports relativos profundos (>= 3 niveis): 3
 - Arquivos com acesso DB fora de service/repository: 2
@@ -15,6 +16,7 @@ Gerado em: 2026-07-08T22:29:45.978Z
 - Violacoes de layer (shared/core boundaries): 0
 
 ## Modulos mais criticos
+
 - community
 - mobility
 - profile/professional
@@ -22,6 +24,7 @@ Gerado em: 2026-07-08T22:29:45.978Z
 - landing/routing
 
 ## Arquivos mais problematicos
+
 - `src/app/pages/CidadeLandingPage.tsx` (1891 linhas)
 - `src/core/community/components/composer/CreatePostModal.tsx` (1332 linhas)
 - `src/modules/business/education/services/education.queries.ts` (1133 linhas)
@@ -36,36 +39,46 @@ Gerado em: 2026-07-08T22:29:45.978Z
 - `src/core/maps/pages/MapaPageV4.tsx` (912 linhas)
 
 ## Riscos arquiteturais
+
 - Ciclo: src/core/routing/hooks/useResolveTerritoryFromUrl.ts -> src/core/routing/utils/publicTerritoryFallbacks.ts -> src/core/routing/hooks/useResolveTerritoryFromUrl.ts
-- Ciclo: src/core/profiles/services/ProfileService.ts -> src/core/profiles/services/profile.context.aggregate.ts -> src/core/moderation/services/ModerationService.ts -> src/core/profiles/services/ProfileService.ts
+- Resolvido em 2026-07-15: Profile consulta somente
+  `core/trust/services/ActiveBanReader.ts`; a antiga dependencia circular pela
+  facade generica de Moderation foi removida.
 - Ciclo: src/core/session/services/SessionService.ts -> src/core/profiles/services/ProfileService.ts -> src/core/profiles/services/profile.mutations.ts -> src/core/session/services/SessionService.ts
 - Ciclo: src/core/session/services/SessionService.ts -> src/core/profiles/services/ProfileService.ts -> src/core/profiles/services/profile.mutations.ts -> src/core/profiles/services/profile.queries.ts -> src/core/session/services/SessionService.ts
-- Ciclo: src/modules/business/gastronomy/services/review.queries.ts -> src/modules/business/gastronomy/services/BusinessReviewsRpcService.ts -> src/modules/business/gastronomy/services/review.queries.ts
+- Resolvido em 2026-07-15: o ciclo de Reviews de Gastronomia foi removido;
+  `BusinessReviewService` e o adapter de policy e `core/reviews` e o owner.
 - Ciclo: src/modules/business/gastronomy/checkout/checkoutRules.ts -> src/modules/business/gastronomy/types/menu.ts -> src/modules/business/gastronomy/checkout/checkoutRules.ts
 - Ciclo: src/core/mobility/services/MobilityRpcService.ts -> src/core/mobility/services/MobilityAuditService.ts -> src/core/mobility/services/MobilityRpcService.ts
 
 ## Melhorias aplicadas
+
 - Gates de arquitetura e SSOT alinhados com estabilizacao gate-first.
 - APIs de service reforcadas para eliminar acesso DB direto em UI.
 - Ciclos criticos removidos em profile/professional e mobility driver UI.
 - Taxonomia ajustada para modulos oficiais ativos.
 
 ## Pendencias restantes
+
 - Duplicacoes amplas em community (componentes/hooks em paralelo) exigem fase dedicada.
 - Arquivos grandes ainda exigem fatiamento gradual por responsabilidade.
 - Consolidacao estrutural de roots compativeis em core/landing, core/classifieds e core/mobility.
 
 ## Score de estabilidade arquitetural
+
 - Score Gate-First (ciclos/boundaries/DB/layers): **49/100**
 - Score Debt Estrutural (inclui duplicacoes e arquivos gigantes): **58/100**
 - Baseline de referencia: 70/100
 - Meta desta fase: 85+/100
 
 ## Anexos tecnicos
+
 ### Duplicacao de services (top)
+
 - `AnalyticsService.ts`: src/core/analytics/AnalyticsService.ts, src/core/analytics/services/AnalyticsService.ts
 
 ### Services com aliases/reexports (top)
+
 - `AdminVagasService.ts`: canonic `src/core/admin/services/AdminVagasService.ts`, aliases `src/modules/classifieds/jobs/services/AdminVagasService.ts`
 - `MobilityAdminQueryService.ts`: canonic `src/core/admin/services/MobilityAdminQueryService.ts`, aliases `src/core/mobility/services/MobilityAdminQueryService.ts`
 - `TouristPointQueryService.ts`: canonic `src/core/guide/tourist-points/services/TouristPointQueryService.ts`, aliases `src/modules/guide/services/TouristPointQueryService.ts`
@@ -80,10 +93,12 @@ Gerado em: 2026-07-08T22:29:45.978Z
 - `DriverService.ts`: canonic `src/core/mobility/services/DriverService.impl.ts`, aliases `src/core/mobility/services/DriverService.ts`
 
 ### Services homonimos por contexto (top)
+
 - `SubscriptionService.ts`: `src/core/billing/services/SubscriptionService.ts`, `src/core/billing/SubscriptionService.ts`, `src/core/subscription/services/SubscriptionService.ts`
 - `SessionService.ts`: `src/core/auth/services/SessionService.ts`, `src/core/session/services/SessionService.ts`
 
 ### Duplicacao de components (top)
+
 - `ErrorBoundary.tsx`: src/app/components/ErrorBoundary.tsx, src/modules/mobility/components/ErrorBoundary.tsx, src/shared/components/errors/ErrorBoundary.tsx
 - `CommentItem.tsx`: src/core/community/components/CommentItem.tsx, src/core/community/components/comments/CommentItem.tsx, src/shared/components/drawer/CommentItem.tsx
 - `ContactStep.tsx`: src/modules/business/components/edit/ContactStep.tsx, src/modules/classifieds/components/create/ContactStep.tsx, src/modules/classifieds/jobs/pages/steps/ContactStep.tsx
@@ -98,6 +113,7 @@ Gerado em: 2026-07-08T22:29:45.978Z
 - `SubscriptionPlans.tsx`: src/core/business/components/SubscriptionPlans.tsx, src/modules/business/components/SubscriptionPlans.tsx
 
 ### Components com aliases/reexports (top)
+
 - `PostCard.tsx`: canonic `src/core/community/components/cards/PostCard.tsx`, aliases `src/core/community/components/PostCard.tsx`, `src/core/posts/components/PostCard.tsx`
 - `CreatePostModal.tsx`: canonic `src/core/community/components/composer/CreatePostModal.tsx`, alias ativo `src/core/community-feed/components/composer/CreatePostModal.tsx`; alias vazio em `src/modules/community-feed/components/composer/CreatePostModal.tsx` removido em 2026-07-09.
 - `UnifiedComposer.tsx`: canonic `src/core/community/components/composer/UnifiedComposer.tsx`, alias ativo `src/core/community-feed/components/composer/UnifiedComposer.tsx`; alias vazio em `src/modules/community-feed/components/composer/UnifiedComposer.tsx` removido em 2026-07-09.
@@ -112,10 +128,12 @@ Gerado em: 2026-07-08T22:29:45.978Z
 - `RecomendacaoDetailPage.tsx`: canonic `src/core/community/pages/RecomendacaoDetailPage.tsx`, alias ativo `src/core/community-recommendations/pages/RecomendacaoDetailPage.tsx`; alias vazio em `src/modules/community-recommendations/pages/RecomendacaoDetailPage.tsx` removido em 2026-07-09.
 
 ### Imports profundos (top)
+
 - `src/modules/business/gastronomy/niches/pizzaria/components/PizzaAdminPanel.tsx` -> `../../../utils/currency` (subidas: 3)
 - `src/modules/business/gastronomy/niches/pizzaria/components/PizzaBuilder.tsx` -> `../../../utils/currency` (subidas: 3)
 - `src/modules/business/gastronomy/niches/pizzaria/components/PizzaPredefinedBuilder.tsx` -> `../../../utils/currency` (subidas: 3)
 
 ### DB fora de service/repository (top)
+
 - `src/core/infrastructure/edge-functions/edgeFunctionBroker.ts`
 - `src/modules/ai/core/client/aiClient.ts`

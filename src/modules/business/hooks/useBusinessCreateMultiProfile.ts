@@ -160,29 +160,37 @@ export function useBusinessCreateMultiProfile(
       const createdProfile = await createProfileWithHandleFallback({
         handleBase: finalSlug,
         displayName: normalizedInput.name,
-        avatarUrl: normalizedInput.logo_url,
+        avatarUrl: undefined,
         bio: normalizedInput.description,
         extension_data,
       });
 
-      let logoUrl = normalizedInput.logo_url;
-      let bannerUrl = normalizedInput.banner_url;
+      let logoReference: string | undefined;
+      let bannerReference: string | undefined;
 
       if (logoFile) {
-        const upload = await mediaService.uploadBusinessImage(createdProfile.profile_id, logoFile, "logo");
-        logoUrl = upload.url;
+        const upload = await mediaService.uploadMediaAsset(
+          createdProfile.profile_id,
+          logoFile,
+          "business_logo",
+        );
+        logoReference = upload.reference;
       }
 
       if (bannerFile) {
-        const upload = await mediaService.uploadBusinessImage(createdProfile.profile_id, bannerFile, "capa");
-        bannerUrl = upload.url;
+        const upload = await mediaService.uploadMediaAsset(
+          createdProfile.profile_id,
+          bannerFile,
+          "business_banner",
+        );
+        bannerReference = upload.reference;
       }
 
       await BusinessService.updateBusiness(createdProfile.profile_id, {
         ...normalizedInput,
         slug: finalSlug,
-        logo_url: logoUrl,
-        banner_url: bannerUrl,
+        ...(logoReference ? { logo_url: logoReference } : {}),
+        ...(bannerReference ? { banner_url: bannerReference } : {}),
       });
 
       const businessDataId = await BusinessService.getBusinessDataIdByProfileId(

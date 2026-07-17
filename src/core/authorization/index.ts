@@ -1,3 +1,8 @@
-export { AuthorizationEngine } from "./services/AuthorizationEngine";
+export { CapabilityPreviewService } from "./services/CapabilityPreviewService";
+export {
+  CAPABILITY_ACTIONS,
+  buildCapabilityPreviewMatrix,
+  evaluateCapabilityPreview,
+} from "./services/capabilityPreviewPolicy";
 export * from "./types";
 export * from "./errors";

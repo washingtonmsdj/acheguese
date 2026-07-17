@@ -1,6 +1,6 @@
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { createTerritorialGroupRepository } from "@/core/location/repositories/createTerritorialGroupRepository";
-import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import type { ResolvedTerritory } from "@/core/routing/types/territoryResolution";
 import { isTerritoryPubliclyNavigable } from "@/core/routing/utils/territoryVisibility";
 import {
   CommunityPublicAliasService,

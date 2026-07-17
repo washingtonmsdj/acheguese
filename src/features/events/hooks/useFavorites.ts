@@ -19,7 +19,7 @@ export function useFavorites() {
       }
 
       setIsLoading(true);
-      const favoriteEventIds = await EventEngagementService.getFavoriteEventIds(activeProfile.id);
+      const favoriteEventIds = await EventEngagementService.getFavoriteEventIds();
       if (mounted) {
         setFavorites(favoriteEventIds);
         setIsLoading(false);
@@ -40,7 +40,7 @@ export function useFavorites() {
 
     setFavorites((prev) => [...prev, eventId]);
     try {
-      await EventEngagementService.addFavorite(eventId, activeProfile.id);
+      await EventEngagementService.addFavorite(eventId);
     } catch (error) {
       setFavorites((prev) => prev.filter((id) => id !== eventId));
       logger.error('useFavorites.addFavorite', error);
@@ -53,7 +53,7 @@ export function useFavorites() {
     const previousFavorites = favorites;
     setFavorites((prev) => prev.filter((id) => id !== eventId));
     try {
-      await EventEngagementService.removeFavorite(eventId, activeProfile.id);
+      await EventEngagementService.removeFavorite(eventId);
     } catch (error) {
       setFavorites(previousFavorites);
       logger.error('useFavorites.removeFavorite', error);
@@ -75,7 +75,7 @@ export function useFavorites() {
     const previousFavorites = favorites;
     setFavorites([]);
     try {
-      await EventEngagementService.clearFavorites(activeProfile.id);
+      await EventEngagementService.clearFavorites();
     } catch (error) {
       setFavorites(previousFavorites);
       logger.error('useFavorites.clearFavorites', error);

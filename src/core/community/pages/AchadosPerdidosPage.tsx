@@ -1,6 +1,7 @@
 import React from "react";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -34,17 +35,19 @@ import { cn } from "@/shared/utils/cn";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
+import { useInfiniteScroll } from "@/shared/hooks/useInfiniteScroll";
 import {
-  useInfiniteScroll,
-  usePaginatedState,
-} from "@/shared/hooks/useInfiniteScroll";
-import { lostFoundRuntimeService as lostFoundService } from "@/core/community/services/LostFoundRuntimeService";
+  lostFoundService,
+  type LostFoundPageCursor,
+} from "@/core/community-lost-found/services";
+import { QUERY_KEYS } from "@/shared/utils/queryClient";
 import {
   getLostFoundCategoryLabel,
   LOST_FOUND_FILTER_OPTIONS,
 } from "@/shared/validation/schemas/lostfound.schema";
 import { getRecordValue } from "@/shared/utils/recordLookup";
 type LostFoundTipoFilter = "todos" | "perdido" | "achado";
+const LOST_FOUND_PAGE_SIZE = 20;
 
 interface LostFoundItem {
   id: string;
@@ -98,75 +101,60 @@ export default function AchadosPerdidosPage() {
     [activeMemberIds, resolved],
   );
 
-  const {
-    items,
-    page,
-    hasMore,
-    loading,
-    initialLoading,
-    setLoading,
-    setInitialLoading,
-    appendItems,
-    nextPage,
-    reset,
-    PAGE_SIZE,
-  } = usePaginatedState<LostFoundItem>();
+  const lostFoundQuery = useInfiniteQuery({
+    queryKey: QUERY_KEYS.community.lostFound({
+      tipo: filterTipo,
+      categoria: filterCategoria,
+      territoryFilter,
+    }),
+    queryFn: ({ pageParam }) =>
+      lostFoundService.getPostsPage(
+        {
+          tipo: filterTipo,
+          categoria: filterCategoria,
+          territoryFilter,
+        },
+        pageParam as LostFoundPageCursor | null,
+        LOST_FOUND_PAGE_SIZE,
+      ),
+    initialPageParam: null as LostFoundPageCursor | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: territoryFilter.scope !== "none",
+    staleTime: 30_000,
+  });
 
-  const fetchPage = useCallback(
-    async (
-      pageNum: number,
-      tipo: "perdido" | "achado" | "todos",
-      categoria: string,
-      effectiveTerritoryFilter: TerritoryFilter,
-    ) => {
-      setLoading(true);
-      const from = pageNum * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
-      // ✅ LOTE 9A - Usar lostFoundService.getPostsPage (SSOT para lost_found_posts)
-      const data = await lostFoundService.getPostsPage(
-        { tipo, categoria, territoryFilter: effectiveTerritoryFilter },
-        from,
-        to,
-      );
-
-      if (data) {
-        appendItems(
-          data.map((p) => ({
-            id: p.id,
-            tipo: p.tipo,
-            categoria: p.categoria,
-            titulo: p.titulo,
-            descricao: p.descricao || "",
-            foto_url: p.imagens?.[0] || "",
-            bairro_publico: "",
-            location_id: p.location_id ?? null,
-            data_ocorrido: p.data_perdido || "",
-            resolvido: p.resolvido || false,
-            created_at: p.created_at || "",
-          })),
-          pageNum === 0,
-        );
-      }
-      setLoading(false);
-      setInitialLoading(false);
-    },
-    [
-      PAGE_SIZE,
-      setLoading,
-      setInitialLoading,
-      appendItems,
-    ],
+  const items = useMemo<LostFoundItem[]>(
+    () =>
+      (lostFoundQuery.data?.pages ?? []).flatMap((pageData) =>
+        pageData.items.map((post) => ({
+          id: post.id,
+          tipo: post.tipo,
+          categoria: post.categoria,
+          titulo: post.titulo,
+          descricao: post.descricao || "",
+          foto_url: post.imagens?.[0] || "",
+          bairro_publico: "",
+          location_id: post.location_id ?? null,
+          data_ocorrido: post.data_perdido || "",
+          resolvido: post.resolvido || false,
+          created_at: post.created_at || "",
+        })),
+      ),
+    [lostFoundQuery.data?.pages],
   );
+  const initialLoading = lostFoundQuery.isLoading;
+  const loading = lostFoundQuery.isFetchingNextPage;
+  const hasMore = Boolean(lostFoundQuery.hasNextPage);
+  const loadMore = useCallback(() => {
+    if (!lostFoundQuery.hasNextPage || lostFoundQuery.isFetchingNextPage) return;
+    void lostFoundQuery.fetchNextPage();
+  }, [lostFoundQuery]);
 
   useEffect(() => {
-    reset();
-    void fetchPage(0, filterTipo, filterCategoria, territoryFilter);
-  }, [filterTipo, filterCategoria, territoryFilter, reset, fetchPage]);
-  useEffect(() => {
-    if (page > 0) {
-      void fetchPage(page, filterTipo, filterCategoria, territoryFilter);
+    if (lostFoundQuery.isError) {
+      toast.error("Nao foi possivel carregar os itens desta comunidade.");
     }
-  }, [page, filterTipo, filterCategoria, territoryFilter, fetchPage]);
+  }, [lostFoundQuery.isError]);
 
   useEffect(() => {
     const missingLocationIds = Array.from(
@@ -203,7 +191,7 @@ export default function AchadosPerdidosPage() {
   const { sentinelRef } = useInfiniteScroll({
     hasMore,
     loading,
-    onLoadMore: nextPage,
+    onLoadMore: loadMore,
   });
 
   const resolveItemTerritoryLabel = (item: LostFoundItem) => {

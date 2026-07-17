@@ -2,13 +2,12 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   TRUST_ACTOR_ROLES,
-  TRUST_CONTEXT_TYPES,
   TrustFeedbackForm,
-  type TrustActorRole,
   type TrustFeedbackReason,
   type TrustFeedbackTarget,
 } from "@/core/trust";
 import { OrderDeliverySSOTService } from "@/core/mobility/delivery/services/OrderDeliverySSOTService";
+import { MobilityTrustService } from "@/core/mobility/services/MobilityTrustService";
 import type { MobilityRide } from "@/core/mobility/types/ride";
 
 interface DriverTrustFeedbackPanelProps {
@@ -47,10 +46,6 @@ export function DriverTrustFeedbackPanel({ ride }: DriverTrustFeedbackPanelProps
     staleTime: 5 * 60 * 1000,
   });
 
-  const actorRole: TrustActorRole = isDelivery
-    ? TRUST_ACTOR_ROLES.COURIER
-    : TRUST_ACTOR_ROLES.DRIVER;
-
   const targets = useMemo<TrustFeedbackTarget[]>(() => {
     const feedbackTargets: TrustFeedbackTarget[] = [];
 
@@ -79,22 +74,11 @@ export function DriverTrustFeedbackPanel({ ride }: DriverTrustFeedbackPanelProps
     <TrustFeedbackForm
       title={isDelivery ? "Feedback da entrega" : "Feedback da corrida"}
       notice="Feedback privado operacional. Serve para padroes de confianca e revisao admin, sem exposicao publica."
-      actorRole={actorRole}
-      contextType={TRUST_CONTEXT_TYPES.RIDE}
-      contextId={ride.id}
       targets={targets}
       reasons={DRIVER_FEEDBACK_REASONS}
       enabled
       compact
-      evidence={{
-        ride_mode: ride.ride_mode,
-        ride_status: ride.status,
-        source_type: sourceType,
-        source_id: sourceId,
-        passenger_profile_id: passengerProfileId,
-        driver_profile_id: getString(ride.driver_profile_id),
-        merchant_profile_id: orderQuery.data?.merchant_profile_id ?? null,
-      }}
+      onSubmit={(input) => MobilityTrustService.submitFeedback(ride.id, input)}
     />
   );
 }

@@ -28,29 +28,14 @@ export { useCreatePostForm } from "./composer/useCreatePostForm";
 // Post interaction hooks
 export { usePostInteractions } from "./posts/usePostInteractions";
 export { usePostCard } from "./posts/usePostCard";
-export { useLikePost } from "./posts/useLikePost";
-export { useSavePost } from "./posts/useSavePost";
 export { useDeletePost } from "./posts/useDeletePost";
 export { useUpdatePost } from "./posts/useUpdatePost";
 
 // Comment hooks
-export { useAddComment } from "./useAddComment";
-export { useDeleteComment } from "./useDeleteComment";
 export { useComments } from "./useComments";
 
 // Modal hooks
 export { useCommunityModals } from "./modals/useCommunityModals";
-export { useUnifiedDetailModal } from "./modals/useUnifiedDetailModal";
 
 // Page hooks
 export { useComunidadePage } from "./page/useComunidadePage";
-
-export {
-  useCommunityProfile,
-  useCommunityStats,
-  useCommunityBadges,
-  useCommunityLeaderboard,
-  useRecordInteraction,
-  useUpdateCommunityProfile,
-  useAwardBadge,
-} from "./useCommunity";

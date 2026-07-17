@@ -41,6 +41,7 @@ interface CommentItemProps {
   onLike: (commentId: string) => void;
   onReply?: (id: string, name: string) => void;
   onDelete: (commentId: string) => void;
+  onReport: (commentId: string) => void;
 }
 
 export function CommentItem({
@@ -55,6 +56,7 @@ export function CommentItem({
   onLike,
   onReply,
   onDelete,
+  onReport,
 }: CommentItemProps) {
   return (
     <motion.div
@@ -124,6 +126,7 @@ export function CommentItem({
                         />
                       )}
                       <DropdownMenuItem
+                        onClick={() => onReport(comment.id)}
                         className="text-xs gap-2 focus:bg-white/10 cursor-pointer"
                         style={{ color: "#F59E0B" }}
                       >

@@ -8,6 +8,7 @@ import { SubscriptionService } from '@/core/billing/SubscriptionService';
 import { EntitlementsService } from '@/core/billing/entitlements';
 import { BillingPlanService, type PlanEntitlements } from '@/core/billing/services/BillingPlanService';
 import { PlanTier } from '@/core/billing/types';
+import { isMediaAssetReference, resolveMediaAssetSource } from '@/core/media';
 
 type QueryResult<T> = Promise<{ data: T; error: { code?: string; message?: string } | null; count?: number | null }>;
 
@@ -66,6 +67,7 @@ export interface MenuItem {
   description: string | null;
   price: number;
   image_url: string | null;
+  image_reference: string | null;
   display_order: number;
   is_available: boolean;
   is_featured: boolean;
@@ -232,6 +234,9 @@ function mapMenuItem(row: LooseRow, menuId?: string | null): MenuItem {
           pizza_visual: metadata.pizza_visual,
         };
 
+  const rawImage = typeof row.image_url === 'string' ? row.image_url : null;
+  const imageReference = isMediaAssetReference(rawImage) ? rawImage : null;
+
   return {
     id: String(row.id ?? ''),
     menu_id: String(row.menu_id ?? menuId ?? nestedCategory.menu_id ?? ''),
@@ -239,7 +244,8 @@ function mapMenuItem(row: LooseRow, menuId?: string | null): MenuItem {
     name: String(row.name ?? ''),
     description: typeof row.description === 'string' ? row.description : null,
     price: Number(row.price ?? row.base_price ?? 0),
-    image_url: typeof row.image_url === 'string' ? row.image_url : null,
+    image_url: resolveMediaAssetSource(rawImage),
+    image_reference: imageReference,
     display_order: typeof row.display_order === 'number' ? row.display_order : 0,
     is_available: typeof row.is_available === 'boolean' ? row.is_available : true,
     is_featured: typeof row.is_featured === 'boolean' ? row.is_featured : false,

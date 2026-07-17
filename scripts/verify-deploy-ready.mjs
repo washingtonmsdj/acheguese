@@ -92,6 +92,7 @@ const REQUIRED_SCRIPTS = [
   'validate:deps',
   'validate:taxonomy',
   'validate:architecture:incremental',
+  'validate:architecture:core-platform',
   'validate:architecture:governance',
   'validate:session-context',
   'validate:ssot',
@@ -304,6 +305,7 @@ console.log('Arquitetura e SSOT');
 runNpmScript('validate:deps');
 runNpmScript('validate:taxonomy');
 runNpmScript('validate:architecture:incremental');
+runNpmScript('validate:architecture:core-platform');
 runNpmScript('validate:architecture:governance');
 runNpmScript('validate:session-context');
 runNpmScript('validate:ssot');

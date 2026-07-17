@@ -11,15 +11,24 @@ function readProjectFile(path: string): string {
 }
 
 describe("mobility operational notifications ssot", () => {
-  it("keeps ride transition notifications transactional and audience-aware", () => {
-    const source = readProjectFile("src/core/mobility/core/RideOperationalPostTransition.ts");
+  it("keeps ride transition notifications server-owned and audience-aware", () => {
+    const source = readProjectFile(
+      "supabase/migrations/20260714115000_migrate_mobility_admin_notifications.sql",
+    );
+    const postTransitionSource = readProjectFile(
+      "src/core/mobility/core/RideOperationalPostTransition.ts",
+    );
 
-    expect(source).toContain("NotificationService.createNotification");
-    expect(source).toContain('category: "transactional"');
-    expect(source).toContain("audience");
-    expect(source).toContain("ride_mode");
+    expect(source).toContain("private.enqueue_ride_transition_notifications");
+    expect(source).toContain("'transactional'");
+    expect(source).toContain("'audience', 'passenger'");
+    expect(source).toContain("'audience', 'driver'");
+    expect(source).toContain("'ride_mode'");
     expect(source).toContain("ride_canceled_by_driver");
     expect(source).toContain("ride_canceled_by_passenger");
-    expect(source).toContain("mobilityRoutes.passageiro.buscando(rideId)");
+    expect(source).toContain("'/mobilidade/buscando/' || NEW.id::TEXT");
+    expect(postTransitionSource).not.toContain(
+      "NotificationService.createNotification",
+    );
   });
 });

@@ -30,15 +30,6 @@ export type IssueReportReason =
   | "spam"
   | "other";
 
-export type IssueAuditAction =
-  | "created"
-  | "updated"
-  | "status_changed"
-  | "supported"
-  | "reported"
-  | "reviewed_cleared"
-  | "removed";
-
 export interface CommunityIssue {
   id: string;
   author_profile_id: string;
@@ -90,6 +81,11 @@ export interface IssueSupport {
   created_at: string;
 }
 
+export interface IssueSupportToggleResult {
+  supported: boolean;
+  new_count: number;
+}
+
 export interface CommunityIssueReport {
   id: string;
   issue_id: string;
@@ -101,15 +97,6 @@ export interface CommunityIssueReport {
 export interface CreateIssueReportPayload {
   issue_id: string;
   reason: IssueReportReason;
-}
-
-export interface CommunityIssueAudit {
-  id: string;
-  issue_id: string;
-  actor_id: string;
-  action_type: IssueAuditAction;
-  metadata?: Record<string, unknown>;
-  created_at: string;
 }
 
 export interface IssueFeedFilters {
@@ -126,10 +113,14 @@ export type IssueRpcError =
   | "location_id_required"
   | "location_not_found"
   | "location_must_be_district"
+  | "verified_residence_required"
   | "rate_limit_exceeded"
   | "invalid_category"
   | "invalid_title_length"
   | "invalid_description_length"
+  | "invalid_address_reference"
+  | "invalid_priority"
+  | "invalid_images"
   | "duplicate_issue"
   | "internal_error";
 

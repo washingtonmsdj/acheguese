@@ -10,6 +10,7 @@
 import { logger } from "@/shared/utils/logger";
 import { adminRolesService } from "./AdminRolesService";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import type { UpdateProfilePayload } from "@/core/profiles/services/types";
 
 export class AdminDataService {
   /**
@@ -48,7 +49,7 @@ export class AdminDataService {
    * Atualizar dados de usuário (admin only)
    * ✅ SSOT: Delega para ProfileService
    */
-  static async updateUserData(userId: string, updates: Record<string, unknown>) {
+  static async updateUserData(userId: string, updates: UpdateProfilePayload) {
     try {
       // Buscar perfil ativo do usuário
       const profile = await profileService.getProfileContext(userId);

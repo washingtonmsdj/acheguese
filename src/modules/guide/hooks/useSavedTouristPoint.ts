@@ -14,7 +14,7 @@ export function useSavedTouristPoint(touristPointId: string | undefined) {
 
   const savedQuery = useQuery({
     queryKey,
-    queryFn: () => TouristPointSavedService.isSaved(touristPointId!, profileId!),
+    queryFn: () => TouristPointSavedService.isSaved(touristPointId!),
     enabled: !!touristPointId && !!profileId,
     staleTime: 5 * 60 * 1000,
     retry: false,
@@ -30,11 +30,11 @@ export function useSavedTouristPoint(touristPointId: string | undefined) {
       }
 
       if (savedQuery.data) {
-        await TouristPointSavedService.remove(touristPointId, profileId);
+        await TouristPointSavedService.remove(touristPointId);
         return false;
       }
 
-      await TouristPointSavedService.save(touristPointId, profileId);
+      await TouristPointSavedService.save(touristPointId);
       return true;
     },
     onSuccess: (isSaved) => {

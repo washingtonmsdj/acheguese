@@ -118,7 +118,7 @@ export function useVagaDetail(params: UseVagaDetailParams): UseVagaDetailReturn 
     data: isSaved = false,
   } = useQuery({
     queryKey: ['vaga-saved', activeProfile?.id, vaga?.id],
-    queryFn: () => VagasService.isVagaSaved(vaga!.id, activeProfile!.id),
+    queryFn: () => VagasService.isVagaSaved(vaga!.id),
     enabled: Boolean(vaga?.id && activeProfile?.id),
   });
 
@@ -184,11 +184,11 @@ export function useVagaDetail(params: UseVagaDetailParams): UseVagaDetailReturn 
       }
 
       if (isSaved) {
-        await VagasService.removeSavedVaga(vaga.id, activeProfile.id);
+        await VagasService.removeSavedVaga(vaga.id);
         return false;
       }
 
-      await VagasService.saveVaga(vaga.id, activeProfile.id);
+      await VagasService.saveVaga(vaga.id);
       return true;
     },
     onSuccess: (nextIsSaved) => {
@@ -208,7 +208,7 @@ export function useVagaDetail(params: UseVagaDetailParams): UseVagaDetailReturn 
         throw new Error('O perfil responsavel pela vaga nao pode denuncia-la.');
       }
 
-      await VagaReportService.createReport(activeProfile.id, {
+      await VagaReportService.createReport({
         vagaId: vaga.id,
         reason: input.reason,
         description: input.description,

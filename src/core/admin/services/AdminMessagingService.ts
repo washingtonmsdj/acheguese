@@ -1,11 +1,14 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
-import { messagingService } from "@/core/messaging/services/MessagingService";
-import type { Conversation, Message } from "@/core/messaging/types";
+import { classifiedMessagingService } from "@/core/messaging";
+import type {
+  ClassifiedConversation,
+  ClassifiedMessage,
+} from "@/core/messaging/types";
 import type { AdminSupabaseClient } from "../types/adminDatabase.types";
 
-export interface AdminConversationData extends Conversation {
+export interface AdminConversationData extends ClassifiedConversation {
   buyer_name?: string;
   buyer_avatar?: string;
   seller_name?: string;
@@ -162,7 +165,7 @@ class AdminMessagingServiceClass {
 
   async getConversationById(id: string, userId: string): Promise<AdminConversationData | null> {
     try {
-      const conversation = await messagingService.getConversationWithDetails(id, userId);
+      const conversation = await classifiedMessagingService.getConversationWithDetails(id, userId);
       if (!conversation) return null;
 
       const { count: messageCount } = await this.db
@@ -193,9 +196,9 @@ class AdminMessagingServiceClass {
     }
   }
 
-  async getMessages(conversationId: string): Promise<Message[]> {
+  async getMessages(conversationId: string): Promise<ClassifiedMessage[]> {
     try {
-      return await messagingService.getMessages(conversationId);
+      return await classifiedMessagingService.listMessages(conversationId);
     } catch (error) {
       logger.error("Error in getMessages:", error);
       throw error;
@@ -204,15 +207,10 @@ class AdminMessagingServiceClass {
 
   async blockConversation(
     conversationId: string,
-    blockedBy: string,
     reason?: string,
   ): Promise<boolean> {
     try {
-      await messagingService.blockConversation({
-        conversation_id: conversationId,
-        blocked_by: blockedBy as "buyer" | "seller",
-        block_reason: reason,
-      });
+      await classifiedMessagingService.moderateConversation(conversationId, "block", reason);
       return true;
     } catch (error) {
       logger.error("Error in blockConversation:", error);
@@ -222,7 +220,7 @@ class AdminMessagingServiceClass {
 
   async unblockConversation(conversationId: string): Promise<boolean> {
     try {
-      await messagingService.unblockConversation(conversationId);
+      await classifiedMessagingService.unblockConversation(conversationId);
       return true;
     } catch (error) {
       logger.error("Error in unblockConversation:", error);
@@ -232,7 +230,7 @@ class AdminMessagingServiceClass {
 
   async closeConversation(conversationId: string): Promise<boolean> {
     try {
-      await messagingService.closeConversation(conversationId);
+      await classifiedMessagingService.closeConversation(conversationId);
       return true;
     } catch (error) {
       logger.error("Error in closeConversation:", error);
@@ -242,7 +240,7 @@ class AdminMessagingServiceClass {
 
   async reopenConversation(conversationId: string): Promise<boolean> {
     try {
-      await messagingService.reopenConversation(conversationId);
+      await classifiedMessagingService.reopenConversation(conversationId);
       return true;
     } catch (error) {
       logger.error("Error in reopenConversation:", error);
@@ -250,15 +248,6 @@ class AdminMessagingServiceClass {
     }
   }
 
-  async deleteConversation(conversationId: string): Promise<boolean> {
-    try {
-      await messagingService.deleteConversation(conversationId);
-      return true;
-    } catch (error) {
-      logger.error("Error in deleteConversation:", error);
-      throw error;
-    }
-  }
 }
 
 export const adminMessagingService = new AdminMessagingServiceClass();

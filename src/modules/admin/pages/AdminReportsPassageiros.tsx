@@ -14,7 +14,12 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { RideReportsService } from "@/core/mobility/services/runtime";
-import type { RideReport, ReportStatus, ReportSeverity } from "@/core/mobility/services/runtime";
+import type {
+  RideReport,
+  ReportStatus,
+  ReportSeverity,
+  UpdateReportInput,
+} from "@/core/mobility/services/runtime";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -122,7 +127,7 @@ export default function AdminReportsPassageiros() {
 
   // Mutation para atualizar report
   const updateReportMutation = useMutation({
-    mutationFn: ({ reportId, updates }: { reportId: string; updates: Partial<RideReport> }) =>
+    mutationFn: ({ reportId, updates }: { reportId: string; updates: UpdateReportInput }) =>
       RideReportsService.updateReport(reportId, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-ride-reports"] });
@@ -149,7 +154,11 @@ export default function AdminReportsPassageiros() {
     if (!selectedReport) return;
     updateReportMutation.mutate({
       reportId: selectedReport.id,
-      updates: { status, resolution_notes: resolutionNotes, admin_notes: adminNotes },
+      updates: {
+        status: status as UpdateReportInput["status"],
+        resolutionNotes,
+        adminNotes,
+      },
     });
   };
 

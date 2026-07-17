@@ -27,7 +27,7 @@ import { useToast } from "@/shared/hooks/use-toast";
 import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 import { SafeImage, SafeLink } from "@/shared/components/security";
 import { logger } from "@/shared/utils/logger";
-import { SessionService } from "@/core/session/services/SessionService";
+import { useSessionContext } from "@/core/session";
 import {
   BannerService,
   type Banner,
@@ -44,6 +44,7 @@ export default function BannersPage() {
   const [imagePreview, setImagePreview] = useState<string>("");
   const { toast } = useToast();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
+  const { user, activeProfile } = useSessionContext();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -85,15 +86,16 @@ export default function BannersPage() {
     e.preventDefault();
 
     try {
-      const user = await SessionService.getCurrentUser();
-      if (!user) throw new Error("Não autenticado");
+      if (!user || !activeProfile) {
+        throw new Error("Perfil administrativo ativo obrigatorio");
+      }
 
       let imageUrl = formData.image_url;
 
       // Se tem arquivo novo, fazer upload
       if (imageFile) {
         setUploading(true);
-        imageUrl = await BannerService.uploadBannerImage(imageFile);
+        imageUrl = await BannerService.uploadBannerImage(activeProfile.id, imageFile);
         setUploading(false);
       }
 

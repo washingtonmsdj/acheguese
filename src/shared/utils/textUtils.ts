@@ -1,3 +1,5 @@
+import { COMMENT_LIMITS, POST_LIMITS } from "@/shared/constants/socialContent";
+
 /**
  * Utilitários genéricos para manipulação de texto
  *
@@ -118,17 +120,17 @@ export function validatePostContent(content: string): {
 
   const trimmed = content.trim();
 
-  if (trimmed.length < 20) {
+  if (trimmed.length < POST_LIMITS.MIN_CONTENT_LENGTH) {
     return {
       valid: false,
-      error: "O conteúdo deve ter no mínimo 20 caracteres",
+      error: `O conteudo deve ter no minimo ${POST_LIMITS.MIN_CONTENT_LENGTH} caracteres`,
     };
   }
 
-  if (trimmed.length > 2000) {
+  if (trimmed.length > POST_LIMITS.MAX_CONTENT_LENGTH) {
     return {
       valid: false,
-      error: "O conteúdo deve ter no máximo 2000 caracteres",
+      error: `O conteudo deve ter no maximo ${POST_LIMITS.MAX_CONTENT_LENGTH} caracteres`,
     };
   }
 
@@ -148,14 +150,14 @@ export function validateCommentContent(content: string): {
 
   const trimmed = content.trim();
 
-  if (trimmed.length < 1) {
+  if (trimmed.length < COMMENT_LIMITS.MIN_CONTENT_LENGTH) {
     return { valid: false, error: "O comentário não pode estar vazio" };
   }
 
-  if (trimmed.length > 1000) {
+  if (trimmed.length > COMMENT_LIMITS.MAX_CONTENT_LENGTH) {
     return {
       valid: false,
-      error: "O comentário deve ter no máximo 1000 caracteres",
+      error: `O comentario deve ter no maximo ${COMMENT_LIMITS.MAX_CONTENT_LENGTH} caracteres`,
     };
   }
 

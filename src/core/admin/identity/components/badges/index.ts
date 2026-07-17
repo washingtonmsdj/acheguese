@@ -11,5 +11,5 @@ export * from "./ReputationSourceBadge";
 export * from "./ReputationVisibilityBadge";
 export * from "./ResidenceStatusBadge";
 export * from "./FamilyStatusBadge";
-export * from "./PermissionGovernanceBadge";
-export * from "./PermissionActionBadge";
+export * from "./CapabilityPreviewBadge";
+export * from "./CapabilityActionBadge";

@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   TRUST_ACTOR_ROLES,
-  TRUST_CONTEXT_TYPES,
   TrustFeedbackForm,
   type TrustFeedbackReason,
   type TrustFeedbackTarget,
@@ -80,26 +79,16 @@ export function ClassifiedTrustFeedbackPanel({
   }, [activeProfile?.id, isSeller, participantsQuery.data, sellerId]);
 
   const enabled = classifiedStatus === "sold";
-  const actorRole = isSeller ? TRUST_ACTOR_ROLES.MERCHANT : TRUST_ACTOR_ROLES.CUSTOMER;
-
   return (
     <TrustFeedbackForm
       title="Confiança da negociação"
       notice="Registro privado bilateral comprador-vendedor para suporte a moderação e penalidades quando necessário."
-      actorRole={actorRole}
-      contextType={TRUST_CONTEXT_TYPES.CLASSIFIED}
-      contextId={classifiedId}
       targets={targets}
       reasons={CLASSIFIED_FEEDBACK_REASONS}
       enabled={enabled}
+      onSubmit={(input) => ClassifiedTrustService.submitFeedback(classifiedId, input)}
       compact
       unavailableMessage="O feedback bilateral fica disponível quando o anúncio for marcado como vendido."
-      evidence={{
-        classified_id: classifiedId,
-        classified_status: classifiedStatus ?? null,
-        seller_profile_id: sellerId,
-        actor_profile_id: activeProfile?.id ?? null,
-      }}
     />
   );
 }

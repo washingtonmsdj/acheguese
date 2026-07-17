@@ -5,7 +5,6 @@
 export {
   getCommentsByPost,
   getCommentById,
-  getAllComments,
   getCommentsCount,
   getCommentCountByAuthor,
   getCommentsByAuthor,

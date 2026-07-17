@@ -5,26 +5,9 @@
  */
 
 import type { ProfileSummary } from "@/core/profiles/views/ProfileSummary";
+import type { PostType } from "./postTypes";
 
-export type PostType =
-  | "texto"
-  | "alerta"
-  | "recomendacao"
-  | "achado_perdido"
-  | "evento"
-  | "enquete"
-  // imported post categories still normalized at service boundary
-  | "discussao"
-  | "pergunta"
-  | "classificado"
-  | "favor"
-  | "desapego"
-  | "achados"
-  | "civic_report"
-  | "post"
-  | "ride_share";
-
-export type FeedContext = "all" | "my_posts" | "saved";
+export type { PostType } from "./postTypes";
 
 export interface Post {
   id: string;
@@ -60,8 +43,6 @@ export interface FeedParams {
   includeStreetReach?: boolean;
 
   // Contexto do feed
-  context?: FeedContext;
-
   // Paginação
   cursor?: string;
   limit?: number;
@@ -78,8 +59,6 @@ export interface CreatePostData {
   content: string;
   location_id: string;
   reach?: "street" | "neighborhood" | "city";
-  image_url?: string;
-  video_url?: string;
   images?: string[];
   tags?: string[];
   content_intent?: string;
@@ -89,11 +68,7 @@ export interface CreatePostData {
 }
 
 export interface UpdatePostData {
-  content?: string;
-  image_url?: string;
-  video_url?: string;
-  is_verified?: boolean;
-  hidden?: boolean; // Campo para admin ocultar posts (alertas)
+  content: string;
 }
 
 export interface PostStats {
