@@ -77,6 +77,7 @@ describe("MediaAsset SSOT", () => {
 
   it("keeps the upload broker authenticated, bounded and server-named", () => {
     const broker = read("supabase/functions/media-assets/index.ts");
+    const jpegValidation = read("supabase/functions/_shared/jpegValidation.ts");
 
     expect(broker).toContain("auth.getUser(token)");
     expect(broker).toContain('.from("profiles")');
@@ -85,7 +86,7 @@ describe("MediaAsset SSOT", () => {
       broker.indexOf("req.formData()"),
     );
     expect(broker).toContain("validateAndStripJpegMetadata");
-    expect(broker).toContain('crypto.subtle.digest("SHA-256"');
+    expect(jpegValidation).toContain('crypto.subtle.digest("SHA-256"');
     expect(broker).toContain("crypto.randomUUID()");
     expect(broker).toContain('"reserve_media_asset_upload"');
     expect(broker).toContain("upsert: false");
@@ -149,15 +150,107 @@ describe("MediaAsset SSOT", () => {
     const preflight = read(
       "tests/security/media-assets-cp016-preflight-remote-audit.sql",
     );
+    const shapeAudit = read(
+      "tests/security/media-assets-cp016-legacy-shape-remote-audit.sql",
+    );
 
     expect(migration).not.toMatch(
       /(?:DELETE FROM public\.(?:business_gallery|banners)|UPDATE public\.(?:profiles|business_data|classifieds|professional_data|site_settings))/,
     );
     expect(preflight).toContain("CP-016 read-only preflight");
+    expect(preflight).toContain("counts only non-canonical media");
+    expect(preflight).toContain("/business_logo/v1/");
+    expect(preflight).toContain("/classified_image/v1/");
+    expect(preflight).toContain("/professional_portfolio/v1/");
+    expect(preflight).toContain("/site_favicon/v1/");
     expect(preflight).not.toMatch(
       /\b(?:INSERT|UPDATE|DELETE|ALTER|DROP|CREATE)\b/i,
     );
+    expect(shapeAudit).toContain("aggregate counts only");
+    expect(shapeAudit).toContain(
+      "never returns URLs, object paths, aggregate ids or owner ids",
+    );
+    expect(shapeAudit).not.toMatch(
+      /\b(?:INSERT|UPDATE|DELETE|ALTER|DROP|CREATE)\b/i,
+    );
   });
+  it("bounds the CP-016 backfill and keeps its mutation surface temporary", () => {
+    const migration = read(
+      "supabase/migrations/20260717120000_create_cp016_media_backfill_commands.sql",
+    );
+    const executor = read("scripts/media-assets-cp016-backfill.ts");
+    const jpegValidation = read("supabase/functions/_shared/jpegValidation.ts");
+
+    expect(migration).toContain("source_sha256");
+    expect(migration).toContain("disposition IN ('migrated', 'dropped')");
+    expect(migration).toContain("reject_cp016_media_asset_backfill");
+    expect(migration).toContain("missing_cp016_backfill_rejection");
+    expect(migration).toContain("cp016_backfill_source_mismatch");
+    expect(migration).toContain("FOR UPDATE");
+    expect(migration).toContain("changed_since_preflight");
+    const revokeIndex = migration.indexOf(
+      "REVOKE ALL ON FUNCTION public.reserve_cp016_media_asset_backfill",
+    );
+    const grantIndex = migration.indexOf(
+      "GRANT EXECUTE ON FUNCTION public.reserve_cp016_media_asset_backfill",
+    );
+    expect(revokeIndex).toBeGreaterThan(-1);
+    expect(
+      migration.indexOf("FROM PUBLIC, anon, authenticated;", revokeIndex),
+    ).toBeGreaterThan(revokeIndex);
+    expect(grantIndex).toBeGreaterThan(-1);
+    expect(migration.indexOf("TO service_role;", grantIndex)).toBeGreaterThan(
+      grantIndex,
+    );
+    expect(migration).not.toContain("source_url");
+
+    expect(executor).toContain('redirect: "error"');
+    expect(executor).toContain("MAX_SOURCE_BYTES");
+    expect(executor).toContain("FETCH_TIMEOUT_MS");
+    expect(executor).toContain("CP016_REMOTE_BACKFILL");
+    expect(executor).toContain("HTTP_404_ONLY");
+    expect(executor).toContain("recordUnavailable404");
+    expect(executor).toContain('rpc("get_active_profile"');
+    expect(executor).toContain("validated-no-writes");
+    expect(executor).toContain("hostname === supabaseHostname");
+    expect(executor).toContain("upsert: false");
+    expect(executor).not.toContain("console.log(task.sourceUrl");
+    expect(executor).not.toContain("console.error(task.sourceUrl");
+
+    expect(jpegValidation).toContain(
+      "export function validateAndStripJpegMetadata",
+    );
+    expect(jpegValidation).toContain("export async function sha256Hex");
+  });
+
+  it("closes the CP-016 mutation surface only after a replayable cutover", () => {
+    const cutover = read(
+      "supabase/migrations/20260717121000_finalize_cp016_media_cutover.sql",
+    );
+    const audit = read(
+      "tests/security/media-assets-cp016-cutover-remote-audit.sql",
+    );
+
+    expect(cutover).toContain("cp016_cutover_legacy_media_remaining");
+    expect(cutover).toContain("cp016_cutover_invalid_audit_state");
+    expect(cutover).toContain(
+      "DROP FUNCTION IF EXISTS public.reserve_cp016_media_asset_backfill",
+    );
+    expect(cutover).toContain(
+      "DROP FUNCTION IF EXISTS public.reject_cp016_media_asset_backfill",
+    );
+    expect(cutover).toContain(
+      "DROP FUNCTION IF EXISTS public.finalize_cp016_media_asset_backfill",
+    );
+    expect(cutover).not.toMatch(/audit_rows\s*(?:=|<>)\s*55/i);
+    expect(cutover).not.toMatch(/migrated_rows\s*(?:=|<>)\s*49/i);
+    expect(audit).toContain("aggregate counts only");
+    expect(audit).toContain("invalid_rows");
+    expect(audit).not.toMatch(
+      /\b(?:INSERT|UPDATE|DELETE|ALTER|DROP|CREATE)\b/i,
+    );
+  });
+
   it("does not reintroduce public-domain upload wrappers outside MediaAsset", () => {
     const mediaService = read("src/core/media/services/MediaService.ts");
     const authService = read("src/core/auth/services/AuthService.ts");

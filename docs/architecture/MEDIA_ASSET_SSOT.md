@@ -1,7 +1,7 @@
 # MediaAsset SSOT
 
-Status: ativo; Review e Menu canonicos; migracao dos demais buckets rastreada
-Data: 2026-07-14
+Status: ativo; dominios de imagem publica canonicos; CP-016 concluido
+Data: 2026-07-17
 Owner: `src/core/media`, `supabase/functions/media-assets` e lifecycle no banco
 
 ## 1. Decisao
@@ -24,36 +24,39 @@ privados e nao podem ser movidos para esse contrato.
 
 ## 2. Autoridades
 
-| Responsabilidade | Autoridade |
-| --- | --- |
-| Presets permitidos no servidor | `supabase/functions/_shared/mediaPresets.ts` |
-| Hints de otimizacao no cliente | `src/core/media/config/mediaPresets.ts` |
-| Transporte autenticado | `supabase/functions/media-assets/index.ts` |
-| Metadata e estado | `public.media_assets` |
-| Vinculo a agregado | `public.media_asset_links` |
-| Referencia e resolucao | `src/core/media/references/mediaAssetReference.ts` |
-| Cleanup fisico | `media-assets-cleanup` + `private.invoke_media_asset_cleanup()` |
-| Regras de Review/Menu | triggers privados e adapters dos dominios |
+| Responsabilidade               | Autoridade                                                      |
+| ------------------------------ | --------------------------------------------------------------- |
+| Presets permitidos no servidor | `supabase/functions/_shared/mediaPresets.ts`                    |
+| Hints de otimizacao no cliente | `src/core/media/config/mediaPresets.ts`                         |
+| Transporte autenticado         | `supabase/functions/media-assets/index.ts`                      |
+| Metadata e estado              | `public.media_assets`                                           |
+| Vinculo a agregado             | `public.media_asset_links`                                      |
+| Referencia e resolucao         | `src/core/media/references/mediaAssetReference.ts`              |
+| Cleanup fisico                 | `media-assets-cleanup` + `private.invoke_media_asset_cleanup()` |
+| Regras de anexacao por dominio | triggers privados e adapters dos dominios                       |
 
 O registro do cliente nao e autoridade de seguranca. Divergencia de limite e
 resolvida pelo Edge/banco, que falham fechado.
 
 ## 3. Presets v1
 
-| Preset | Maximo | Dimensoes maximas | Limite 24h | Nao anexados |
-| --- | ---: | ---: | ---: | ---: |
-| `user_avatar` | 2 MB | 1200 x 1200 | 10 | 3 |
-| `post_image` | 5 MB | 1800 x 1800 | 20 | 20 |
-| `business_logo` | 5 MB | 1600 x 1600 | 20 | 10 |
-| `business_banner` | 5 MB | 2400 x 1600 | 20 | 10 |
-| `business_gallery` | 5 MB | 2000 x 2000 | 40 | 20 |
-| `review_photo` | 5 MB | 1800 x 1800 | 30 | 12 |
-| `gastronomy_menu_item` | 5 MB | 1800 x 1800 | 50 | 20 |
-| `classified_image` | 5 MB | 2200 x 2200 | 40 | 20 |
-| `professional_logo` | 5 MB | 1600 x 1600 | 20 | 10 |
-| `professional_portfolio` | 5 MB | 2000 x 2000 | 40 | 20 |
-| `site_banner` | 5 MB | 2400 x 1600 | 20 | 10 |
-| `attachment_image` | 5 MB | 2000 x 2000 | 20 | 10 |
+| Preset                   | Maximo | Dimensoes maximas | Limite 24h | Nao anexados |
+| ------------------------ | -----: | ----------------: | ---------: | -----------: |
+| `user_avatar`            |   2 MB |       1200 x 1200 |         10 |            3 |
+| `post_image`             |   5 MB |       1800 x 1800 |         20 |           20 |
+| `business_logo`          |   5 MB |       1600 x 1600 |         20 |           10 |
+| `business_banner`        |   5 MB |       2400 x 1600 |         20 |           10 |
+| `business_gallery`       |   5 MB |       2000 x 2000 |         40 |           20 |
+| `review_photo`           |   5 MB |       1800 x 1800 |         30 |           12 |
+| `gastronomy_menu_item`   |   5 MB |       1800 x 1800 |         50 |           20 |
+| `classified_image`       |   5 MB |       2200 x 2200 |         40 |           20 |
+| `professional_logo`      |   5 MB |       1600 x 1600 |         20 |           10 |
+| `professional_banner`    |   5 MB |       2400 x 1600 |         20 |           10 |
+| `professional_portfolio` |   5 MB |       2000 x 2000 |         40 |           20 |
+| `site_banner`            |   5 MB |       2400 x 1600 |         20 |           10 |
+| `site_logo`              |   2 MB |       1600 x 1600 |         10 |            5 |
+| `site_favicon`           | 512 KB |         512 x 512 |         10 |            5 |
+| `attachment_image`       |   5 MB |       2000 x 2000 |         20 |           10 |
 
 Alterar dimensao, transformacao ou semantica exige nova versao do preset. Nao
 se altera silenciosamente o significado de `v1`.
@@ -68,8 +71,8 @@ se altera silenciosamente o significado de `v1`.
 5. `reserve_media_asset_upload` serializa a quota por Profile/preset com
    advisory lock e cria estado `reserved`.
 6. Storage recebe JPEG com `upsert: false`; sucesso muda o estado para `active`.
-7. Review/Menu persistem a referencia. Triggers comprovam owner, preset,
-   estado e exclusividade e criam `media_asset_links`.
+7. O dominio persiste a referencia. Triggers comprovam owner, preset, estado,
+   agregado e exclusividade e criam `media_asset_links`.
 
 Os comandos de lifecycle sao executaveis somente por `service_role`. Browser
 nao escreve `media_assets`, `media_asset_links` ou `storage.objects`.
@@ -117,18 +120,27 @@ Validado no projeto vinculado em 2026-07-14:
 Testes versionados: `npm run test:media:ssot`, migration validator, ownership
 validator e security validator.
 
-## 8. Residual CP-016
+## 8. Corte CP-016
 
-Avatar, imagens gerais de Business, Classified, Professional, Site e alguns
-wrappers antigos de `MediaService` ainda usam contratos de bucket anteriores.
-Eles nao podem reutilizar presets de Post, Review ou Menu e nao devem ganhar
-novos consumidores. A migration CP-016 aceita os presets e protege escritas
-futuras sem apagar valores legados. Antes do backfill/cutover, execute
-`tests/security/media-assets-cp016-preflight-remote-audit.sql` em modo somente
-leitura, registre as contagens e crie uma migration separada, idempotente e
-explicitamente aprovada para cada dominio. Documentos/evidencias privadas
-permanecem fora desse fluxo.
+CP-016 foi concluido no remoto em 2026-07-17 pelas migrations
+`20260715113000`, `20260717120000` e `20260717121000`:
 
-Esse residual nao reabre CP-006: o acoplamento incorreto de Gastronomia ao
-lifecycle de Post foi removido. Ele registra que a adocao de `MediaAsset` pelos
-demais uploads ainda nao esta concluida.
+- preflight: 1 empresa, 23 classificados e 1 configuracao com legado;
+- dry-run: 55 referencias em 25 agregados, sem escrita;
+- backfill: 49 imagens sanitizadas, migradas, ativas e vinculadas;
+- indisponibilidade: 6 URLs Unsplash com HTTP 404 foram removidas de dois
+  classificados; hash e motivo ficaram no ledger privado, sem persistir URL;
+- pos-corte: zero referencias nao canonicas nos sete dominios auditados;
+- ledger: 49 entradas `migrated`, 6 `dropped`, zero entradas invalidas;
+- os tres RPCs publicos e os tres helpers privados temporarios foram removidos.
+
+`private.media_asset_migration_audit` permanece como proveniencia imutavel e
+sem URL. Os SQLs de evidencia sao:
+
+- `tests/security/media-assets-cp016-preflight-remote-audit.sql`;
+- `tests/security/media-assets-cp016-legacy-shape-remote-audit.sql`;
+- `tests/security/media-assets-cp016-cutover-remote-audit.sql`.
+
+Documentos privados, evidencias de seguranca e virtual try-on continuam fora
+deste SSOT e preservam buckets e politicas proprios. `uploadToBucket` nao pode
+ser reutilizado para imagens publicas.

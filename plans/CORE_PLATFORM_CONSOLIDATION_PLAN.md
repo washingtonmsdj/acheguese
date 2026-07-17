@@ -447,7 +447,7 @@ que retorna somente o booleano do User autenticado.
 
 A entrega nao define retencao artificial: finalidade, TTL, anonimizacao e legal
 hold de reports/auditoria ainda exigem decisao de Privacidade/DPO antes do
-lancamento. CP-016 continua aberto.
+lancamento.
 
 CP-014 foi concluido em 2026-07-15. As migrations
 `20260715108000_add_professional_trust_role.sql` e
@@ -461,6 +461,15 @@ cancellation, politica e administracao usam comandos server-owned. O manifest
 agora controla 38 tabelas e 68 RPCs. Typecheck, testes SSOT e o probe remoto de
 20 cenarios de autorizacao passaram. Contrato:
 `docs/architecture/TRUST_OPERATIONAL_COMMANDS.md`.
+
+CP-016 foi concluido em 2026-07-17. As migrations `20260715113000`,
+`20260717120000` e `20260717121000` estao no remoto. O backfill processou 55
+referencias em 25 agregados: 49 imagens foram sanitizadas, ativadas e vinculadas;
+6 URLs Unsplash com HTTP 404 foram descartadas com hash e motivo no ledger
+privado. A auditoria final encontrou zero legado, zero entradas invalidas e zero
+funcoes temporarias restantes. Typecheck, lint, build, dependencias, SSOT,
+seguranca, testes MediaAsset/JPEG e migrations passaram. Contrato:
+`docs/architecture/MEDIA_ASSET_SSOT.md`.
 
 ### Fase 6 - Remocao de compatibilidade e escala
 
@@ -507,14 +516,12 @@ Nao usar:
 
 Continuar **Fase 6 - Remocao de compatibilidade e escala**.
 
-Proxima ordem: executar o preflight remoto somente leitura de CP-016 em
-`tests/security/media-assets-cp016-preflight-remote-audit.sql`, registrar as
-contagens e consolidar o lifecycle dos uploads anteriores sem duplicar
-`MediaService`; depois remover aliases/facades comprovadamente sem
-consumidores e executar os gates completos por dominio. Carga, p50/p95/p99,
-backup/restore e rollback exigem staging explicitamente autorizado. CP-016 e a
-aprovacao de retencao/anonymizacao permanecem abertos e nao podem ser
-mascarados como concluidos.
+Proxima ordem: regenerar o inventario depois do corte CP-016, localizar aliases,
+facades e adapters ainda sem consumidores fora do MediaAsset e remove-los em
+incrementos protegidos por teste. Depois executar suites por dominio e preparar
+um ambiente de staging explicitamente autorizado para carga, p50/p95/p99,
+backup/restore e rollback. A aprovacao de retencao/anonymizacao continua aberta
+e nao pode ser mascarada como concluida.
 
 ## 9. Comandos de validacao base
 
