@@ -7,6 +7,7 @@ import { MapPin, Package, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/shared/utils/cn";
 import { formatBrlNoCents } from "@/shared/utils/currency";
+import { SafeImage } from "@/shared/components/security/SafeImage";
 import type { VendedorWithAds } from "@/modules/classifieds/hooks/useVendedores";
 
 interface VendedorCardProps {
@@ -34,7 +35,7 @@ export const VendedorCard = memo(function VendedorCard({
         {/* Avatar */}
         <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-lg font-bold text-primary shrink-0 overflow-hidden">
           {vendedor.avatar_url ? (
-            <img
+            <SafeImage
               src={vendedor.avatar_url}
               alt={vendedor.name}
               className="w-full h-full object-cover"
@@ -60,7 +61,8 @@ export const VendedorCard = memo(function VendedorCard({
               </span>
             )}
             <span className="text-[11px] font-medium text-primary">
-              {vendedor.active_ads_count} {vendedor.active_ads_count === 1 ? 'anúncio' : 'anúncios'}
+              {vendedor.active_ads_count}{" "}
+              {vendedor.active_ads_count === 1 ? "anúncio" : "anúncios"}
             </span>
           </div>
         </div>
@@ -77,7 +79,7 @@ export const VendedorCard = memo(function VendedorCard({
               className="relative w-20 h-16 rounded-lg overflow-hidden bg-secondary shrink-0"
             >
               {ad.photos?.[0] ? (
-                <img
+                <SafeImage
                   src={ad.photos[0]}
                   alt={ad.title}
                   className="w-full h-full object-cover"
@@ -90,7 +92,9 @@ export const VendedorCard = memo(function VendedorCard({
               )}
               <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-1">
                 <span className="text-[8px] font-bold text-white">
-                  {ad.price != null ? formatBrlNoCents(ad.price) : "Sob consulta"}
+                  {ad.price != null
+                    ? formatBrlNoCents(ad.price)
+                    : "Sob consulta"}
                 </span>
               </div>
             </div>
@@ -107,5 +111,3 @@ export const VendedorCard = memo(function VendedorCard({
     </motion.div>
   );
 });
-
-

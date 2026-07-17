@@ -115,6 +115,8 @@ arquitetura impede a reintroducao desses caminhos de bucket antigo.
 ### Readers parcialmente adaptados
 
 - `SafeImage` foi adotado em `business-logo.tsx` e `ProfessionalHeader.tsx`.
+- `PhotoGallery`, `VendedorCard` e `VendedorPerfilPage` agora bloqueiam URLs
+  inseguras por `SafeImage`; teste arquitetural impede retorno a `<img>` direto.
 - Mappers de empresa, classificado e profissional foram alterados para trabalhar
   com referencias ou URLs resolvidas.
 

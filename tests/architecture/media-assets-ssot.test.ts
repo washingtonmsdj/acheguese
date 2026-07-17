@@ -167,4 +167,17 @@ describe("MediaAsset SSOT", () => {
     );
     expect(authService).not.toContain("static async uploadImage(");
   });
+  it("renders migrated business and classified media through SafeImage", () => {
+    const migratedReaders = [
+      "src/modules/business/components/PhotoGallery.tsx",
+      "src/modules/classifieds/components/VendedorCard.tsx",
+      "src/modules/classifieds/pages/VendedorPerfilPage.tsx",
+    ];
+
+    for (const path of migratedReaders) {
+      const source = read(path);
+      expect(source).toContain("SafeImage");
+      expect(source).not.toContain("<img");
+    }
+  });
 });

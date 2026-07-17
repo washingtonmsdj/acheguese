@@ -21,6 +21,7 @@ import { VendedorAdFilters, applyAdFilters, type AdFilters } from "../components
 import { VendedorContactBar } from "../components/profile/VendedorContactBar";
 import { classifiedUrlService } from "@/core/classifieds/services";
 import { formatBrlNoCents } from "@/shared/utils/currency";
+import { SafeImage } from "@/shared/components/security/SafeImage";
 
 export default function VendedorPerfilPage() {
   const { sellerId } = useParams<{ sellerId: string }>();
@@ -95,7 +96,7 @@ export default function VendedorPerfilPage() {
         <div className="flex items-start gap-4">
           <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary shrink-0 overflow-hidden ring-3 ring-primary/20">
             {vendedor.avatar_url ? (
-              <img src={vendedor.avatar_url} alt={vendedor.name} className="w-full h-full object-cover" />
+              <SafeImage src={vendedor.avatar_url} alt={vendedor.name} className="w-full h-full object-cover" />
             ) : (
               vendedor.name?.[0]?.toUpperCase() || "?"
             )}
@@ -193,7 +194,7 @@ export default function VendedorPerfilPage() {
                 >
                   <div className="relative aspect-[4/3] bg-secondary">
                     {ad.photos?.[0] ? (
-                      <img src={ad.photos[0]} alt={ad.title} className="w-full h-full object-cover" loading="lazy" />
+                      <SafeImage src={ad.photos[0]} alt={ad.title} className="w-full h-full object-cover" loading="lazy" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                         <Package className="h-8 w-8 opacity-40" aria-hidden="true" />
@@ -269,7 +270,7 @@ export default function VendedorPerfilPage() {
               <div className="flex items-start gap-3">
                 <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0 overflow-hidden">
                   {review.reviewer_avatar ? (
-                    <img src={review.reviewer_avatar} alt={review.reviewer_name} className="w-full h-full object-cover" />
+                    <SafeImage src={review.reviewer_avatar} alt={review.reviewer_name} className="w-full h-full object-cover" />
                   ) : (
                     review.reviewer_name[0]
                   )}

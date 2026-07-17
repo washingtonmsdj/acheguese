@@ -6,6 +6,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Dialog, DialogContent } from "@/shared/components/ui/dialog";
 import { ChevronLeft, ChevronRight, X, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
+import { SafeImage } from "@/shared/components/security/SafeImage";
 interface GalleryPhoto {
   id: string;
   image_url: string;
@@ -92,7 +93,7 @@ export default function PhotoGallery({
                     onClick={() => openLightbox(index)}
                     className="group relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-secondary hover:ring-2 hover:ring-primary transition-all"
                   >
-                    <img
+                    <SafeImage
                       src={photo.image_url}
                       alt={photo.caption}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -186,7 +187,7 @@ export default function PhotoGallery({
 
             {/* Image */}
             <div className="relative w-full h-full flex items-center justify-center p-12">
-              <img
+              <SafeImage
                 src={activePhoto?.image_url ?? ""}
                 alt={activePhoto?.caption ?? businessName}
                 className="max-w-full max-h-full object-contain"
