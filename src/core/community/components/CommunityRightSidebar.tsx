@@ -21,6 +21,7 @@ import { LandingFeaturedService } from "@/core/landing/services/LandingFeaturedS
 import type { FeaturedBusiness } from "@/core/landing/types";
 import type { TerritoryFilter } from "@/core/location";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import { SafeImage } from "@/shared/components/security/SafeImage";
 
 interface CommunityRightSidebarProps {
   resolved?: ResolvedTerritory;
@@ -216,7 +217,7 @@ export const CommunityRightSidebar = memo(
                   <>
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-foreground">
                       {business.logo_url ? (
-                        <img
+                        <SafeImage
                           src={business.logo_url}
                           alt=""
                           className="h-full w-full rounded-full object-cover"

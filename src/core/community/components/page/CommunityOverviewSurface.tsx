@@ -83,6 +83,7 @@ import {
 import { getPublicPostPreview } from "@/core/posts/utils/publicPostContent";
 import { eventRuntimeService, type PublicEvent } from "@/core/verticals/events";
 import { Button } from "@/shared/components/ui/button";
+import { SafeImage } from "@/shared/components/security/SafeImage";
 import { cn } from "@/shared/utils/cn";
 import { formatBrlNoCents } from "@/shared/utils/currency";
 import { getRecordValue } from "@/shared/utils/recordLookup";
@@ -873,7 +874,7 @@ function BusinessPreviewRow({
     <>
       <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-blue-500/12 text-blue-300">
         {business.logo_url ? (
-          <img
+          <SafeImage
             src={business.logo_url}
             alt=""
             className="h-full w-full object-cover"
@@ -925,7 +926,7 @@ function ServicePreviewRow({ service }: { service: FeaturedService }) {
     <article className="flex min-h-[4.75rem] min-w-0 items-center gap-3 rounded-xl border border-white/10 bg-[#081e28]/70 px-3 py-2">
       <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-violet-500/12 text-violet-300">
         {service.logo_url ? (
-          <img
+          <SafeImage
             src={service.logo_url}
             alt=""
             className="h-full w-full object-cover"
@@ -960,7 +961,7 @@ function ClassifiedPreviewRow({ item }: { item: FeaturedClassified }) {
     <>
       <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-amber-500/12 text-amber-300">
         {item.photos[0] ? (
-          <img
+          <SafeImage
             src={item.photos[0]}
             alt=""
             className="h-full w-full object-cover"
@@ -1765,7 +1766,7 @@ export function CommunityOverviewSurface({
               <div className="flex min-w-0 flex-col justify-between gap-2 sm:gap-3 xl:grid xl:h-full xl:grid-cols-[minmax(0,1fr)_21rem] xl:items-center xl:gap-5">
                 <div className="flex min-w-0 flex-row items-center gap-3 sm:gap-4 xl:gap-4">
                   <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/22 bg-white/10 shadow-xl shadow-black/25 sm:h-20 sm:w-20 md:h-24 md:w-24 md:rounded-2xl xl:h-24 xl:w-24">
-                    <img
+                    <SafeImage
                       src={heroImage}
                       alt=""
                       className="h-full w-full object-cover"
@@ -2106,7 +2107,7 @@ export function CommunityOverviewSurface({
                                       <div className="flex min-w-0 items-start gap-3">
                                         <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-teal-300/12 text-teal-200">
                                           {avatarUrl ? (
-                                            <img
+                                            <SafeImage
                                               src={avatarUrl}
                                               alt=""
                                               className="h-full w-full object-cover"
