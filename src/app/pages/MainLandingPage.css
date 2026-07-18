@@ -2002,6 +2002,152 @@ body:has(.home-concept) {
   }
 }
 
+/* ============================================================
+   DESKTOP FIT-TO-VIEWPORT (>=1180px)
+   Todo o conteudo deve caber em 100vh sem scroll da pagina.
+   ============================================================ */
+@media (min-width: 1180px) {
+  html:has(.home-concept),
+  body:has(.home-concept) {
+    height: 100svh;
+    overflow: hidden;
+  }
+
+  .home-concept {
+    height: 100svh;
+    min-height: 100svh;
+    max-height: 100svh;
+    overflow: hidden;
+  }
+
+  .home-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100svh;
+    min-height: 0;
+    max-height: 100svh;
+    padding: 10px 40px 12px;
+    gap: 10px;
+    overflow: hidden;
+  }
+
+  .home-header {
+    flex: 0 0 auto;
+    gap: 16px;
+  }
+
+  .home-hero-layout {
+    flex: 0 0 auto;
+    padding-top: 4px;
+    gap: 18px;
+  }
+
+  .home-hero-copy {
+    min-height: 0;
+    padding: 14px 16px;
+  }
+
+  .home-hero-copy h1 {
+    font-size: clamp(1.6rem, 2.2vw, 2rem);
+    line-height: 1.05;
+  }
+
+  .home-hero-copy > p {
+    margin: 6px 0 10px;
+    font-size: 0.82rem;
+    line-height: 1.35;
+  }
+
+  .home-search-panel { gap: 6px; }
+  .home-search-field { min-height: 40px; }
+  .home-search-submit { width: 40px; height: 40px; }
+  .home-chip { min-height: 28px; padding: 0 10px; font-size: 0.72rem; }
+
+  .home-featured-communities { padding-top: 4px; }
+  .home-community-card { min-height: 168px; }
+
+  .home-content-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-top: 4px;
+    gap: 10px;
+    overflow: hidden;
+    align-items: stretch;
+  }
+
+  .home-main-column,
+  .home-aside-column {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: hidden;
+  }
+
+  .home-dashboard-row {
+    min-height: 0;
+    gap: 10px;
+  }
+
+  .home-happening-panel,
+  .home-modules-panel,
+  .home-suggestions-panel,
+  .home-activity-panel,
+  .home-ranking-panel,
+  .home-sponsored-panel {
+    padding: 10px 12px;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .home-panel-heading,
+  .home-section-heading {
+    margin-bottom: 6px;
+  }
+  .home-panel-heading h2,
+  .home-section-heading h2 {
+    font-size: 0.86rem;
+  }
+
+  .home-happening-grid { gap: 8px; }
+  .home-happening-card { min-height: 130px; }
+  .home-happening-copy strong { font-size: 0.82rem; }
+  .home-happening-copy small,
+  .home-happening-copy em { font-size: 0.7rem; }
+
+  .home-community-activity-list { gap: 4px; }
+  .home-community-activity-item { padding: 8px 0; }
+  .home-community-activity-preview { max-height: 72px; }
+  .home-community-activity-copy p { -webkit-line-clamp: 2; }
+
+  .home-module-tile-grid { gap: 8px; }
+  .home-module-tile { min-height: 48px; padding: 6px 8px; }
+  .home-module-icon { width: 32px; height: 32px; }
+  .home-module-icon svg { width: 18px; height: 18px; }
+  .home-module-tile strong { font-size: 0.78rem; }
+  .home-module-tile small { font-size: 0.68rem; }
+
+  .home-suggestion-list { gap: 8px; }
+  .home-suggestion-card { min-height: 74px; }
+
+  .home-ranking-list { gap: 4px; }
+  .home-sponsored-list { gap: 6px; }
+  .home-sponsored-item { padding: 6px 8px; }
+  .home-sponsored-item img { width: 44px; height: 44px; }
+}
+
+/* Ultrawide: um pouco mais de folga */
+@media (min-width: 1540px) {
+  .home-shell {
+    padding: 14px 60px 16px;
+    gap: 12px;
+  }
+  .home-hero-copy h1 { font-size: clamp(1.9rem, 2.4vw, 2.4rem); }
+  .home-hero-copy > p { font-size: 0.9rem; }
+  .home-community-card { min-height: 200px; }
+  .home-happening-card { min-height: 160px; }
+}
+
 @media (min-width: 1540px) {
   .home-shell {
     padding-right: 60px;
