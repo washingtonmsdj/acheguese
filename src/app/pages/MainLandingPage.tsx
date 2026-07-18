@@ -917,7 +917,7 @@ export default function MainLandingPage() {
           <div className="home-main-column">
             <div className="home-dashboard-row">
               <HappeningPanel cards={happeningCards} isLoading={homeDiscovery.isLoading} />
-              <CommunityActivityPanel activities={communityActivities} />
+              <CommunityActivityPanel activities={communityActivities} isLoading={homeDiscovery.isLoading} />
             </div>
             <ModuleTiles communityHref={communityHref} />
             <CommunitySuggestionsPanel communities={suggestedCommunities} />
