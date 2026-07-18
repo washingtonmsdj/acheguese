@@ -846,7 +846,7 @@ export default function MainLandingPage() {
         <section className="home-content-grid" aria-label="Descoberta local">
           <div className="home-main-column">
             <div className="home-dashboard-row">
-              <HappeningPanel cards={happeningCards} />
+              <HappeningPanel cards={happeningCards} isLoading={homeDiscovery.isLoading} />
               <CommunityActivityPanel activities={communityActivities} />
             </div>
             <ModuleTiles communityHref={communityHref} />
@@ -854,7 +854,7 @@ export default function MainLandingPage() {
           </div>
           <aside className="home-aside-column" aria-label="Resumo das comunidades">
             <CommunityRankingPanel communities={communityRanking} />
-            <SponsoredPanel items={sponsoredItems} />
+            <SponsoredPanel items={sponsoredItems} isLoading={homeDiscovery.isLoading} />
           </aside>
         </section>
 
