@@ -699,7 +699,18 @@ body:has(.home-concept) {
 .home-activity-panel,
 .home-ranking-panel,
 .home-sponsored-panel {
-  padding: 14px;
+  padding: 18px;
+}
+
+@media (max-width: 640px) {
+  .home-happening-panel,
+  .home-modules-panel,
+  .home-suggestions-panel,
+  .home-activity-panel,
+  .home-ranking-panel,
+  .home-sponsored-panel {
+    padding: 14px;
+  }
 }
 
 .home-happening-grid {
