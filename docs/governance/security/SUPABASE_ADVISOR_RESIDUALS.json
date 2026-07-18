@@ -59,6 +59,36 @@
       "summary": "PostGIS function grant requires owner/platform route."
     },
     {
+      "cacheKey": "anon_security_definer_function_executable_public_profile_public_territory_projection_p_profile_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "PII-free public territory projection bounded by profile visibility consent."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_profile_public_territory_projection_p_profile_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "PII-free public territory projection bounded by profile visibility consent."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_remove_entity_coverage_p_entity_type text, p_entity_id uuid, p_coverage_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Atomic Coverage command deriving actor and entity ownership server-side."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_replace_entity_coverage_p_entity_type text, p_entity_id uuid, p_coverages jsonb",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Bounded atomic Coverage replacement with actor-bound entity authorization."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_request_profile_verification_p_profile_id uuid, p_verification_type text, p_document_url text, p_document_type text, p_notes text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Owned-Profile verification request with constrained private evidence reference."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_update_entity_coverage_status_p_coverage_id uuid, p_status text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Coverage status transition authorized against the owning entity."
+    },
+    {
       "cacheKey": "anon_security_definer_function_executable_public_get_professional_trust_reputation_p_professional_id uuid",
       "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
       "summary": "Public aggregate Trust read model with bounded output and no private event rows."

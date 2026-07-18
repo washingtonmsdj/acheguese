@@ -218,6 +218,16 @@
       "label": "authenticated community RPC broker",
       "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
+    "contact-rpc": {
+      "kind": "authenticated-broker",
+      "risk": "Critical",
+      "label": "authenticated entity contact RPC broker",
+      "requiredPatterns": [
+        "auth\\.getUser\\s*\\(",
+        "contact_rpc_get_visible_channels",
+        "contact_rpc_patch_owned_channels"
+      ]
+    },
     "delivery-rpc": {
       "kind": "authenticated-broker",
       "risk": "Critical",
@@ -277,6 +287,16 @@
       "risk": "Critical",
       "label": "authenticated professional notifications RPC broker",
       "requiredPatterns": ["auth\\.getUser\\s*\\("]
+    },
+    "professional-credentials-rpc": {
+      "kind": "authenticated-broker",
+      "risk": "Critical",
+      "label": "authenticated private professional credentials broker",
+      "requiredPatterns": [
+        "auth\\.getUser\\s*\\(",
+        "professional_credentials_rpc_get_owned",
+        "professional_credentials_rpc_patch_owned"
+      ]
     },
     "profile-rpc": {
       "kind": "authenticated-broker",

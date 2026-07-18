@@ -432,6 +432,25 @@ lifecycle diferentes. Midia usa o contrato comum MediaAsset.
 
 Contrato e evidencias: `REVIEWS_SSOT.md`.
 
+### 7.12 Dados privados de entidades
+
+**Consolidado:** telefone, WhatsApp e e-mail institucionais de Business e
+Professional pertencem ao Core `contact` e sao persistidos em
+`private.entity_contact_channels`. Credenciais de registro profissional ficam
+em `private.professional_credentials`. Profile conserva somente seu proprio
+contrato de contato pessoal e consentimento.
+
+**Permanece no dominio:** Business e Professional definem quando solicitar o
+contato, qual entidade e dona do dado e como apresenta-lo. Busca, ranking, feed
+e listagens nao carregam contato.
+
+**Core entregue:** tipos de canal, visibilidade, leitura limitada, patch de
+owner, brokers autenticados, constraints anti-duplicacao e auditoria sem
+valores. Ownership usa Profile/ProfileMember; User UUID nao e publicado como
+atalho de autorizacao.
+
+Contrato detalhado: `ENTITY_PRIVATE_DATA_SSOT.md`.
+
 ## 8. Backend versus interface
 
 ### Obrigatoriamente backend
@@ -490,6 +509,7 @@ src/core/
   moderation/      # protocolo e fila federada
   audit/            # envelope e ports append-only
   messaging/        # somente contratos compartilhados
+  contact/          # contatos privados de entidades e broker canonico
 
 src/modules/<domain>/
   services/        # regras e adapters especificos

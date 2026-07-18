@@ -154,7 +154,7 @@ export default function EmpresaEditSheet({
   onSaved,
   mode = "edit",
 }: Props) {
-  const { user, activeProfile } = useSessionContext();
+  const { user } = useSessionContext();
   const [saving, setSaving] = useState(false);
 
   // Campos fora do schema (arrays, files, etc)
@@ -273,22 +273,14 @@ export default function EmpresaEditSheet({
         return;
       }
 
-      if (!activeProfile?.id) {
-        toast.error("Perfil ativo não encontrado");
-        setSaving(false);
-        return;
-      }
-
       try {
         const profile = await adminBusinessService.createBusinessProfile(
           {
             name: data.name?.trim() ?? "",
             bio: data.description?.trim() ?? "",
             avatar_url: logo.trim() || null,
-            phone: data.phone?.trim() || null,
           },
           payload,
-          activeProfile.id,
         );
 
         toast.success("Empresa cadastrada. Aguarde aprovação pela equipe.");
@@ -331,8 +323,6 @@ export default function EmpresaEditSheet({
           name: data.name?.trim() ?? "",
           bio: data.description?.trim() ?? "",
           avatar_url: logo.trim() || null,
-          phone: data.phone?.trim() || null,
-          whatsapp: data.whatsapp?.trim() || null,
         });
 
         // 2. Atualizar business_profiles (usando profile_id)

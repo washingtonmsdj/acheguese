@@ -231,7 +231,6 @@ export class NetworkService {
         payment_methods: standalone.payment_methods || [],
         specialties: standalone.specialties || [],
         facilities: standalone.facilities || [],
-        email: standalone.email,
         website: standalone.website,
         instagram: standalone.instagram,
         facebook: standalone.facebook,
@@ -302,7 +301,7 @@ export class NetworkService {
     // Validar que brand_hub existe
     const { data: hub, error: hubErr } = await this.adminDb()
       .from<BusinessDataRecord>('business_data')
-      .select('id, category, subcategory, payment_methods, specialties, facilities, email, metadata')
+      .select('id, category, subcategory, payment_methods, specialties, facilities, metadata')
       .eq('id', params.brandHubId)
       .eq('business_role', 'brand_hub')
       .maybeSingle();
@@ -342,7 +341,6 @@ export class NetworkService {
         payment_methods: hub.payment_methods || [],
         specialties: hub.specialties || [],
         facilities: hub.facilities || [],
-        email: hub.email,
         metadata: hub.metadata || {},
       })
       .select('*')

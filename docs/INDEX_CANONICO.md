@@ -43,6 +43,8 @@ Data de referencia: 2026-07-15
   [architecture/SEARCH_SSOT.md](./architecture/SEARCH_SSOT.md)
 - MediaAsset publico:
   [architecture/MEDIA_ASSET_SSOT.md](./architecture/MEDIA_ASSET_SSOT.md)
+- Dados privados de Business e Professional:
+  [architecture/ENTITY_PRIVATE_DATA_SSOT.md](./architecture/ENTITY_PRIVATE_DATA_SSOT.md)
 - Realtime:
   [architecture/REALTIME_SSOT.md](./architecture/REALTIME_SSOT.md)
 - Reviews:

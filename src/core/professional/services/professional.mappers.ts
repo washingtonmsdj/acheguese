@@ -13,8 +13,6 @@ type ProfileRelation = {
   id?: string | null;
   name?: string | null;
   avatar_url?: string | null;
-  phone?: string | null;
-  whatsapp?: string | null;
   verified?: boolean | null;
 };
 
@@ -134,9 +132,6 @@ export function mapProfessionalRow(row: ProfessionalRow): Professional {
     description: row.description ?? "",
     category: serviceCategory as ProfessionalCategory,
     subcategory: optionalString(row.service_subcategory),
-    phone: optionalString(profile?.phone),
-    whatsapp: optionalString(row.whatsapp) ?? optionalString(profile?.whatsapp),
-    email: optionalString(row.email),
     location_id: row.location_id ?? undefined,
     geographic_path: territory.geographicPath,
     address: [address?.street, address?.number].filter(Boolean).join(", ") || undefined,

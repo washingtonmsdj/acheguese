@@ -12,6 +12,7 @@ import { PAGINATION } from "@/shared/constants";
 import { applyTerritoryFilter } from "@/core/location";
 import { ReviewsService } from "@/core/reviews";
 import { PublicIdentityService } from "@/core/public-identity";
+import { EntityContactService } from "@/core/contact";
 import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
 import { mapProfessionalRow, mapProfessionalRows } from "./professional.mappers";
 import type { TerritoryFilter } from "@/core/location/types";
@@ -166,6 +167,38 @@ interface ProfessionalSlugHistoryRow {
 
 const professionalQueriesDb = supabase as unknown as ProfessionalQueriesDbClient;
 
+const PROFESSIONAL_READ_SELECT = `
+  id,
+  profile_id,
+  slug,
+  professional_name,
+  service_category,
+  service_subcategory,
+  description,
+  certifications,
+  experience_years,
+  education,
+  price_range,
+  service_areas,
+  service_radius_km,
+  available_hours,
+  availability_notes,
+  portfolio_items,
+  is_accepting_clients,
+  is_verified,
+  verified_at,
+  rating,
+  address_id,
+  location_id,
+  metadata,
+  visibility,
+  created_at,
+  updated_at,
+  profiles!professional_data_profile_id_fkey(id, name, avatar_url, verified),
+  address:addresses!address_id(id, location_id, postal_code, street, number, complement, latitude, longitude),
+  location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
+`;
+
 function firstRelation<T>(value: T | T[] | null | undefined): T | null {
   if (Array.isArray(value)) return value[0] ?? null;
   return value ?? null;
@@ -218,14 +251,7 @@ export async function getProfessionals(
   try {
     let query = professionalQueriesDb
       .from<ProfessionalQueryRow>("public_professional_search")
-      .select(
-        `
-        *,
-        profiles!professional_data_profile_id_fkey(id, name, avatar_url, verified),
-        addresses:address_id(*),
-        location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
-      `,
-      );
+      .select(PROFESSIONAL_READ_SELECT);
 
     if (filters.territoryFilter) {
       query = applyTerritoryFilter(
@@ -285,18 +311,8 @@ export async function getProfessionalsList(params: {
 
   try {
     let query = professionalQueriesDb
-      .from<ProfessionalQueryRow>("professional_data")
-      .select(
-        `
-        *,
-        profiles!professional_data_profile_id_fkey(id, name, avatar_url, verified),
-        address:addresses!address_id(id, location_id, postal_code, street, number, complement, latitude, longitude),
-        location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
-      `,
-        { count: "exact" },
-      )
-      .eq("is_accepting_clients", true)
-      .eq("visibility", "public_listed");
+      .from<ProfessionalQueryRow>("public_professional_search")
+      .select(PROFESSIONAL_READ_SELECT, { count: "exact" });
 
     if (territory) {
       query = applyTerritoryFilter(
@@ -345,14 +361,7 @@ export async function getProfessionalById(id: string): Promise<Professional> {
   try {
     const { data, error } = await professionalQueriesDb
       .from<ProfessionalQueryRow>("professional_data")
-      .select(
-        `
-        *,
-        profiles!professional_data_profile_id_fkey(id, name, avatar_url, verified),
-        addresses:address_id(*),
-        location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
-      `,
-      )
+      .select(PROFESSIONAL_READ_SELECT)
       .eq("id", id)
       .single();
 
@@ -364,7 +373,12 @@ export async function getProfessionalById(id: string): Promise<Professional> {
       throw new Error("Profissional nao encontrado");
     }
 
-    return mapProfessionalRow(data);
+    const professional = mapProfessionalRow(data);
+    const contact = await EntityContactService.getVisibleForEntity(
+      "professional",
+      professional.professional_data_id,
+    );
+    return { ...professional, ...contact };
   } catch (error) {
     logger.error("[professional.queries] Error fetching professional by ID:", error);
     trackError(error as Error, {
@@ -380,14 +394,7 @@ export async function getServicesByProfile(profileId: string): Promise<Professio
   try {
     const { data, error } = await professionalQueriesDb
       .from<ProfessionalQueryRow>("professional_data")
-      .select(
-        `
-        *,
-        profiles!professional_data_profile_id_fkey(id, name, avatar_url, verified),
-        addresses:address_id(*),
-        location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
-      `,
-      )
+      .select(PROFESSIONAL_READ_SELECT)
       .eq("profile_id", profileId)
       .eq("is_accepting_clients", true);
 
@@ -446,7 +453,7 @@ export async function getTotalProfessionalsCount(): Promise<number> {
   try {
     const { count, error } = await professionalQueriesDb
       .from<ProfessionalIdRow>("professional_data")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("is_accepting_clients", true)
       .eq("visibility", "public_listed");
 
@@ -472,7 +479,7 @@ export async function getProfessionalsCreatedInPeriod(
   try {
     const { count, error } = await professionalQueriesDb
       .from<ProfessionalIdRow>("professional_data")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .gte("created_at", startDate.toISOString())
       .lte("created_at", endDate.toISOString())
       .eq("is_accepting_clients", true)
@@ -564,17 +571,10 @@ export async function getProfessionalsByIds(ids: string[]): Promise<Professional
     if (!ids || ids.length === 0) return [];
 
     const { data, error } = await professionalQueriesDb
-      .from<ProfessionalQueryRow>("professional_data")
-      .select(
-        `
-        *,
-        profiles!professional_data_profile_id_fkey(id, name, avatar_url, verified),
-        location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
-      `,
-      )
+      .from<ProfessionalQueryRow>("public_professional_search")
+      .select(PROFESSIONAL_READ_SELECT)
       .in("id", ids)
-      .eq("is_accepting_clients", true)
-      .eq("visibility", "public_listed");
+      .eq("is_accepting_clients", true);
 
     if (error) {
       throw new Error(error.message);
@@ -600,17 +600,8 @@ export async function searchProfessionals(
     const sanitizedQuery = sanitizeForILike(query);
 
     let dbQuery = professionalQueriesDb
-      .from<ProfessionalQueryRow>("professional_data")
-      .select(
-        `
-        *,
-        profiles!professional_data_profile_id_fkey(id, name, avatar_url, verified),
-        address:addresses!address_id(id, location_id, postal_code, street, number, complement, latitude, longitude),
-        location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
-      `,
-      )
-      .eq("is_accepting_clients", true)
-      .eq("visibility", "public_listed");
+      .from<ProfessionalQueryRow>("public_professional_search")
+      .select(PROFESSIONAL_READ_SELECT);
 
     if (sanitizedQuery) {
       dbQuery = dbQuery.or(
@@ -658,15 +649,8 @@ export async function getPublicProfileBySlug(
 ): Promise<Professional | null> {
   try {
     const { data, error } = await professionalQueriesDb
-      .from<ProfessionalQueryRow>("professional_data")
-      .select(
-        `
-        *,
-        profiles!professional_data_profile_id_fkey(id, name, avatar_url, verified),
-        addresses:address_id(*),
-        location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
-      `,
-      )
+      .from<ProfessionalQueryRow>("public_professional_search")
+      .select(PROFESSIONAL_READ_SELECT)
       .eq("slug", slug)
       .maybeSingle();
 

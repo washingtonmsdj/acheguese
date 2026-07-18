@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase";
 import { buildCapabilityPreviewMatrix } from "@/core/authorization/services/capabilityPreviewPolicy";
 import type { AppRole } from "@/core/authorization/types";
 import { FamilyService, FAMILY_TABLES } from "@/core/family";
+import { getProfessionalLinkedEntitiesByProfileIds } from "@/core/professional/services/professional.linked-entity";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { ReviewsService, type ReviewType } from "@/core/reviews";
 import { logger } from "@/shared/utils/logger";
@@ -154,7 +155,7 @@ export async function loadEntityMaps(profileIds: string[]): Promise<{
 
   const [businessResult, professionalResult] = await Promise.all([
     supabase.from("business_data").select("*").in("profile_id", profileIds),
-    supabase.from("professional_data").select("*").in("profile_id", profileIds),
+    getProfessionalLinkedEntitiesByProfileIds(profileIds),
   ]);
 
   const driverMap = new Map<string, RawRecord>();

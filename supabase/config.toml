@@ -180,6 +180,9 @@ verify_jwt = true
 [functions.community-rpc]
 verify_jwt = true
 
+[functions.contact-rpc]
+verify_jwt = true
+
 [functions.delivery-rpc]
 verify_jwt = true
 
@@ -208,6 +211,9 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.professional-notifications-rpc]
+verify_jwt = true
+
+[functions.professional-credentials-rpc]
 verify_jwt = true
 
 [functions.profile-rpc]

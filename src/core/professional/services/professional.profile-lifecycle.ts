@@ -17,6 +17,8 @@ import {
   sanitizePhone,
 } from "@/shared/utils/sanitization";
 import { normalizeMediaAssetReference } from "@/core/media/references/mediaAssetReference";
+import { EntityContactService } from "@/core/contact";
+import { SessionService } from "@/core/session/services/SessionService";
 import type {
   Professional,
   CreateProfessionalInput,
@@ -212,8 +214,6 @@ function toProfessionalData(
   if (input.service_radius_km !== undefined) result.service_radius_km = input.service_radius_km;
   if (input.available_hours !== undefined) result.available_hours = input.available_hours;
   if (input.availability_notes !== undefined) result.availability_notes = input.availability_notes;
-  if (input.whatsapp !== undefined) result.whatsapp = input.whatsapp;
-  if (input.email !== undefined) result.email = input.email;
   if (input.location_id !== undefined) result.location_id = input.location_id;
   if (input.address_id !== undefined) result.address_id = input.address_id;
   if (input.visibility !== undefined) result.visibility = input.visibility;
@@ -278,8 +278,10 @@ function generateProfessionalUsername(name: string): string {
 
 export async function createProfessionalWithProfile(
   input: CreateProfessionalInput,
-  userId: string,
 ): Promise<Professional> {
+  const user = await SessionService.getCurrentUser();
+  if (!user) throw new Error("Autenticacao obrigatoria para cadastrar profissional");
+
   const validatedInput = sanitizeAndValidateInput(input, false) as CreateProfessionalInput;
   const slug = validatedInput.slug
     ? await validateAvailableProfessionalSlug(validatedInput.slug)
@@ -314,7 +316,7 @@ export async function createProfessionalWithProfile(
     .from<ProfileMemberRow>("profile_members")
     .insert({
       profile_id: profile.id,
-      user_id: userId,
+      user_id: user.id,
       role: "owner",
     });
   if (memberError) throw memberError;
@@ -331,6 +333,12 @@ export async function createProfessionalWithProfile(
     .single();
 
   if (error) throw error;
+
+  await EntityContactService.patchOwnedChannels(
+    "professional",
+    professionalRow.id,
+    EntityContactService.buildPatch(validatedInput),
+  );
 
   await professionalProfileLifecycleDb
     .from<ProfessionalStatsInsertRow>("professional_stats")
@@ -428,6 +436,15 @@ export async function updateProfessionalWithProfile(
     .update(updatePayload)
     .eq("profile_id", currentProfessional.profile_id);
   if (error) throw error;
+
+  const contactPatch = EntityContactService.buildPatch(validatedInput);
+  if (contactPatch.length > 0) {
+    await EntityContactService.patchOwnedChannels(
+      "professional",
+      currentProfessional.id,
+      contactPatch,
+    );
+  }
 
   return getProfessionalById(currentProfessional.id);
 }

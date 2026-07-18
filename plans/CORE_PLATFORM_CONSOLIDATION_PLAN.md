@@ -613,11 +613,29 @@ Security Authority e auditoria de RPC privilegiada passaram.
 Evidencia: `docs/architecture/PROFILE_VERIFICATION_SSOT.md` e
 `tests/architecture/profile-verification-ssot.test.ts`.
 
+Sexto checkpoint em 2026-07-18: contatos de Business e Professional foram
+retirados de tabelas publicas, `metadata`, Profile e snapshots anonimos. O SSOT
+passou a ser `private.entity_contact_channels`, com FKs reais, visibilidade,
+broker autenticado, escopo limitado e auditoria sem valores. Credenciais de
+registro profissional tambem sairam do endpoint publico e passaram para
+`private.professional_credentials` por broker proprio. Queries de ownership de
+oportunidades agora usam Profile/ProfileMember, e os writers duplicados de
+Business/Admin e Professional foram removidos. Contrato:
+`docs/architecture/ENTITY_PRIVATE_DATA_SSOT.md`.
+
+A prova remota deste checkpoint foi concluida em 2026-07-18. A migration
+`20260718170000` foi aplicada, as Edge Functions `contact-rpc` e
+`professional-credentials-rpc` foram publicadas e os tipos foram regenerados
+do schema linkado. O probe anonimo/autenticado aprovou 11 verificacoes: colunas
+legadas e IDs de owner foram rejeitados, `metadata` e snapshots permaneceram
+sem contato, brokers anonimos foram bloqueados e os fluxos autenticados foram
+exercitados. Criacoes de Business e Professional deixaram de aceitar identidade
+do chamador e agora derivam o owner da sessao autenticada. O historico
+local/remoto ficou sem drift. Evidencia:
+`docs/audits/ENTITY_PRIVATE_DATA_BOUNDARY_2026-07-18.md`.
+
 Proxima ordem: continuar as suites unitarias, integracao, RLS e E2E dos demais dominios,
-registrando qualquer gap real antes de alterar implementacao. Auditar os
-contratos publicos de contato proprios de Professional e Business para
-garantir que usem seus owners, consentimento e payloads de detalhe, sem voltar a
-usar contato de `profiles` em listagens. Documentos de verificacao, evidencias
+registrando qualquer gap real antes de alterar implementacao. Documentos de verificacao, evidencias
 privadas e try-on permanecem em contratos separados e nao devem ser forcados
 para o MediaAsset publico. Por fim, preparar staging explicitamente autorizado
 para carga, p50/p95/p99, backup/restore e rollback. A aprovacao de

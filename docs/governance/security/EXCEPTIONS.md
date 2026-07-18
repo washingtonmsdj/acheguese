@@ -92,9 +92,10 @@ grant direto. Probes remotos cobrem anonymous, usuario comum, admin, identidade
 forjada e contexto inexistente nos dominios Trust, Reviews, Messaging,
 Community, Moderation, Favorites, Notifications e Safety.
 
-Somente tres RPCs sao anonimos: dois agregados publicos sem eventos/linhas
-privadas e a leitura Safety por token aleatorio. O registro usa cache keys
-exatas; nao existe wildcard para novas funcoes.
+Somente quatro RPCs sao anonimos: dois agregados publicos sem eventos/linhas
+privadas, a leitura Safety por token aleatorio e a projecao territorial
+consentida de Profile. O registro usa cache keys exatas; nao existe wildcard
+para novas funcoes.
 
 ### Plano De Remocao
 
@@ -114,6 +115,11 @@ negativo remoto e ownership declarado.
 - `npm run validate:security-authority` e manifest de ownership aprovados;
 - migrations `20260714113000` a `20260715110000`, com marcadores da Security
   Authority, grants explicitos e `search_path` fixo.
+- `npm run security:profiles:pii-probe` em 2026-07-18: 11 verificacoes remotas
+  aprovadas, incluindo perfil oculto e rejeicao de territorio bruto;
+- testes de Coverage, Profile Verification e fronteira de PII em 2026-07-18:
+  18 casos aprovados; comandos derivam ator/ownership no servidor e a projecao
+  publica nao retorna PII.
 
 ## EXC-2026-07-08-POSTGIS-EXTENSION-OWNER
 

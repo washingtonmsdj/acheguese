@@ -91,8 +91,6 @@ function buildMetadata(
   if (input.cep !== undefined || input.postal_code !== undefined) {
     metadata.cep = input.postal_code ?? input.cep;
   }
-  if (input.phone !== undefined) metadata.phone = input.phone;
-  if (input.whatsapp !== undefined) metadata.whatsapp = input.whatsapp;
   if (input.city !== undefined) metadata.city = input.city;
   if (input.state !== undefined) metadata.state = input.state;
 
@@ -122,7 +120,6 @@ export function toBusinessData(
   setIfDefined(result, "description", input.description);
   setIfDefined(result, "category", input.category);
   setIfDefined(result, "subcategory", input.subcategoria);
-  setIfDefined(result, "email", input.email);
   setIfDefined(result, "website", input.website);
   setIfDefined(result, "instagram", input.instagram);
   setIfDefined(result, "facebook", input.facebook);
@@ -224,9 +221,6 @@ export function mapBusinessDataToBusiness(
     description: data.description || profileData?.bio || "",
     category: (data.category as BusinessCategory) || "outros",
     subcategoria: data.subcategory ?? undefined,
-    phone: profileData?.phone || metadata.phone,
-    whatsapp: profileData?.whatsapp || metadata.whatsapp,
-    email: data.email || undefined,
     website: data.website || undefined,
 
     location_id: data.location_id || null,

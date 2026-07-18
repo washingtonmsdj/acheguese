@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { applyTerritoryFilter } from "@/core/location/utils";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { EntityContactService } from "@/core/contact";
 import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 
 const supabaseTyped = supabase as unknown as AdminSupabaseClient;
@@ -191,15 +192,12 @@ export async function getBusinesses(
       ((data as Array<{ profile_id: string }>) || [])
         .map((d) => d.profile_id)
         .filter(Boolean) || [];
-    const profilesMap = new Map<
-      string,
-      { id: string; name: string; phone?: string; whatsapp?: string }
-    >();
+    const profilesMap = new Map<string, { id: string; name: string }>();
 
     if (profileIds.length > 0) {
       // Importação dinâmica para evitar circular dependency
       const profilesData = await profileService.getProfilesByIds(profileIds);
-      profilesData.forEach((p: { id: string; name: string; phone?: string; whatsapp?: string }) =>
+      profilesData.forEach((p: { id: string; name: string }) =>
         profilesMap.set(p.id, p),
       );
     }
@@ -473,7 +471,7 @@ export async function getBusinessById(id: string): Promise<Business> {
     const { data, error } = await supabaseTyped.from("business_data")
       .select(`
         *,
-        profiles(id, name, avatar_url, phone, whatsapp, bio),
+        profiles(id, name, avatar_url, bio),
         address:addresses!address_id(*),
         location:locations!location_id(*)
       `)
@@ -483,7 +481,14 @@ export async function getBusinessById(id: string): Promise<Business> {
     if (error) throw error;
     if (!data) throw new Error("Empresa não encontrada");
 
-    return mapBusinessDataToBusiness(data as BusinessDataWithProfiles);
+    const business = mapBusinessDataToBusiness(data as BusinessDataWithProfiles);
+    const contact = business.business_data_id
+      ? await EntityContactService.getVisibleForEntity(
+          "business",
+          business.business_data_id,
+        )
+      : {};
+    return { ...business, ...contact };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Erro ao buscar empresa: ${message}`);

@@ -72,8 +72,6 @@ export interface ProfessionalDataRecord {
     media_type?: "image" | "video" | "document";
     is_cover?: boolean;
   }> | null;
-  whatsapp: string | null;
-  email: string | null;
   rating?: number | null;
   is_verified: boolean;
   verified_at: string | null;
@@ -96,8 +94,6 @@ export interface ProfessionalDataWithProfiles extends ProfessionalDataRecord {
     id: string;
     name: string;
     avatar_url: string | null;
-    phone: string | null;
-    whatsapp: string | null;
   };
   // FK joins canônicos (ETAPA 9)
   address?: {

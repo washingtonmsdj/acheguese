@@ -39,7 +39,6 @@ import { Badge } from "@/shared/components/ui/badge";
 import { useToast } from "@/shared/hooks/use-toast";
 import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
-import { useSessionContext } from "@/core/session";
 import { cn } from "@/shared/utils/cn";
 import { adminBusinessService } from "@/core/admin"; // ✅ MIGRADO - Usa AdminBusinessService do core
 import { BusinessService } from "@/core/business/services/BusinessService";
@@ -80,7 +79,6 @@ interface FilterConfig {
 
 export default function AdminBusinessPage() {
   const { canModerate, isChecking } = useAdminGuard();
-  const { activeProfile } = useSessionContext();
   const { toast } = useToast();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const queryClient = useQueryClient();
@@ -264,10 +262,9 @@ export default function AdminBusinessPage() {
 
         toast({ title: "Empresa atualizada com sucesso" });
       } else {
-        // Create - precisa de userId (usar admin atual)
+        // Create - o servico deriva o ator da sessao autenticada.
         const created = await BusinessService.createBusiness(
           form as unknown as CreateBusinessInput,
-          activeProfile?.id || "",
         );
 
         // 🔄 CACHE INVALIDATION

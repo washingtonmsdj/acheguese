@@ -9,6 +9,7 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService, ProfileService } from "@/core/profiles/services/ProfileService";
+import { getProfessionalLinkedEntityByProfileId } from "@/core/professional/services/professional.linked-entity";
 import { adminNotificationsService } from "./AdminNotificationsService";
 import type {
   AdminProfileIdentityDetail,
@@ -355,11 +356,7 @@ class AdminProfileGovernanceService {
         // ✅ SSOT: Usar profileService.getProfilesByUserId
         profileService.getProfilesByUserId(userId).then((data: unknown[]) => ({ data, error: null })),
         supabase.from("business_data").select("*").eq("profile_id", profileId).maybeSingle(),
-        supabase
-          .from("professional_data")
-          .select("*")
-          .eq("profile_id", profileId)
-          .maybeSingle(),
+        getProfessionalLinkedEntityByProfileId(profileId),
         // ✅ SSOT: Usar profileService.getDriverData
         profileService.getDriverData(profileId).then((data: unknown) => ({ data, error: null })),
         adminNotificationsService.getUserSettings(userId),

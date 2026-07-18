@@ -127,7 +127,6 @@ export interface BusinessDataRecord {
   is_headquarters?: boolean;
   unit_name?: string | null;
 
-  email?: string | null;
   website?: string | null;
   instagram?: string | null;
   facebook?: string | null;
@@ -156,8 +155,6 @@ export interface BusinessDataWithProfiles extends BusinessDataRecord {
     id: string;
     name: string;
     avatar_url?: string;
-    phone?: string;
-    whatsapp?: string;
     bio?: string;
   };
   // FK joins canonicos
@@ -193,8 +190,6 @@ export interface BusinessMetadata extends Record<string, unknown> {
   aceita_pix?: boolean;
   neighborhood?: string;
   cep?: string;
-  phone?: string;
-  whatsapp?: string;
   city?: string;
   state?: string;
 }

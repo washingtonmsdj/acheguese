@@ -10,8 +10,6 @@ import { logger } from "@/shared/utils/logger";
 import { invokeSupabaseBrokerCommand } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
-import { ADMIN_PLACEHOLDER_IDS } from "@/core/admin/config/identifiers";
-import { profileService } from "@/core/profiles/services/ProfileService";
 import { BUSINESS_STATUS } from "@/core/business/constants/statuses";
 import type { CreateBusinessInput } from "@/core/business/types";
 
@@ -305,36 +303,21 @@ class AdminBusinessServiceClass {
   async createBusinessProfile(
     profileData: {
       name: string;
-      phone?: string;
       bio?: string;
       avatar_url?: string;
     },
     businessData: Record<string, unknown>,
-    userId: string,
   ) {
     try {
-
-      // 1. Criar profile usando ProfileService
-      const profile = await profileService.createProfile({
-        profile_type: "business",
-        name: profileData.name,
-        username: this.buildUsernameFromName(profileData.name),
-        city: profileData.phone || "Não informado",
-        bio: profileData.bio,
-        avatar_url: profileData.avatar_url,
-      });
-
-      // 2. Adicionar user como owner via ProfileService.addMember
-      await profileService.addMember(profile.id, userId, "owner");
-
-      // 3. Criar business_data usando BusinessService
-      await BusinessService.createBusiness({
+      const business = await BusinessService.createBusiness({
         ...businessData,
+        name: profileData.name,
+        description: profileData.bio,
+        logo_url: profileData.avatar_url ?? undefined,
         status: BUSINESS_STATUS.PENDING,
-        neighborhood: ADMIN_PLACEHOLDER_IDS.EMPTY_LOCATION_ID,
-      } as CreateBusinessInput, userId);
+      } as CreateBusinessInput);
 
-      return profile;
+      return { id: business.profile_id };
     } catch (error) {
       logger.error("Error in createBusinessProfile:", error);
       throw error;

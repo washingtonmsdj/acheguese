@@ -29,6 +29,8 @@ import { generateBusinessUsername } from "./business.helpers";
 import { BusinessUrlService } from "./BusinessUrlService";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { normalizeMediaAssetReference } from "@/core/media/references/mediaAssetReference";
+import { EntityContactService } from "@/core/contact";
+import { SessionService } from "@/core/session/services/SessionService";
 import type {
   Business,
   BusinessDataWithProfiles,
@@ -95,7 +97,7 @@ const businessMutationsDb = supabase as unknown as BusinessMutationsDbClient;
 
 const BUSINESS_SELECT = `
   *,
-  profiles(id, name, avatar_url, phone, whatsapp),
+  profiles(id, name, avatar_url),
   address:addresses!address_id(*),
   location:locations!location_id(*)
 `;
@@ -339,9 +341,11 @@ function mergeMetadata(
  */
 export async function createBusiness(
   input: CreateBusinessInput,
-  userId: string,
 ): Promise<Business> {
   try {
+    const user = await SessionService.getCurrentUser();
+    if (!user) throw new Error("Autenticacao obrigatoria para criar empresa");
+
     const validatedInput = sanitizeAndValidateInput(input, false) as CreateBusinessInput;
     let slug = validatedInput.slug;
     if (slug) {
@@ -388,7 +392,7 @@ export async function createBusiness(
 
     const { error: memberError } = await businessMutationsDb.from<ProfileMemberInsertRow>("profile_members").insert({
       profile_id: profile.id,
-      user_id: userId,
+      user_id: user.id,
       role: "owner",
     });
 
@@ -436,7 +440,12 @@ export async function createBusiness(
       await syncBusinessHoursTable(business.id ?? profile.id, validatedInput.horario_funcionamento);
     }
 
-    return mapBusinessDataToBusiness(business);
+    const contact = await EntityContactService.patchOwnedChannels(
+      "business",
+      business.id ?? profile.id,
+      EntityContactService.buildPatch(validatedInput),
+    );
+    return { ...mapBusinessDataToBusiness(business), ...contact };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Erro ao criar empresa: ${message}`);
@@ -557,7 +566,15 @@ export async function updateBusiness(
       await syncBusinessHoursTable(business.id ?? id, validatedInput.horario_funcionamento);
     }
 
-    return mapBusinessDataToBusiness(business);
+    const contactPatch = EntityContactService.buildPatch(validatedInput);
+    const contact = contactPatch.length > 0
+      ? await EntityContactService.patchOwnedChannels(
+          "business",
+          currentBusiness.id,
+          contactPatch,
+        )
+      : await EntityContactService.getVisibleForEntity("business", currentBusiness.id);
+    return { ...mapBusinessDataToBusiness(business), ...contact };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Erro ao atualizar empresa: ${message}`);

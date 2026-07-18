@@ -1,5 +1,6 @@
 import { callRPC } from "@/integrations/supabase";
 import { SERVICE_MODES } from "@/core/business/constants";
+import { EntityContactService } from "@/core/contact";
 import { logger } from "@/shared/utils/logger";
 import type {
   PublicBusinessSnapshot,
@@ -100,25 +101,20 @@ function normalizeInstitutionalBusinessSnapshot<
     toBoolean(business.tem_delivery) ??
     (metadata ? toBoolean(metadata.tem_delivery) : undefined) ??
     normalizedModes.includes("delivery");
-  const normalizedPhone =
-    toNonEmptyString(institutional.phone) ??
-    toNonEmptyString(business.phone) ??
-    (metadata ? toNonEmptyString(metadata.phone) : undefined);
-  const normalizedWhatsapp =
-    toNonEmptyString(institutional.whatsapp) ??
-    toNonEmptyString(business.whatsapp) ??
-    (metadata ? toNonEmptyString(metadata.whatsapp) : undefined);
-
   const normalizedBusiness = {
     ...business,
+    phone: undefined,
+    whatsapp: undefined,
+    email: undefined,
     modos_atendimento: normalizedModes,
     tem_delivery: normalizedTemDelivery,
   };
 
   const nextInstitutional = {
     ...institutional,
-    phone: normalizedPhone,
-    whatsapp: normalizedWhatsapp,
+    phone: undefined,
+    whatsapp: undefined,
+    email: undefined,
     addressText: institutional.addressText ?? resolveAddressText(normalizedBusiness),
     locationText: institutional.locationText ?? resolveLocationText(normalizedBusiness),
     business: normalizedBusiness,
@@ -127,6 +123,30 @@ function normalizeInstitutionalBusinessSnapshot<
   return {
     ...snapshot,
     institutional: nextInstitutional,
+  } as TSnapshot;
+}
+
+async function attachAuthenticatedBusinessContact<
+  TSnapshot extends PublicBusinessSnapshot | PublicGastronomySnapshot,
+>(snapshot: TSnapshot): Promise<TSnapshot> {
+  const business = snapshot.institutional.business;
+  const businessDataId = toNonEmptyString(business.business_data_id)
+    ?? snapshot.identity.businessId
+    ?? undefined;
+  if (!businessDataId) return snapshot;
+
+  const contact = await EntityContactService.getVisibleForEntity(
+    "business",
+    businessDataId,
+  );
+
+  return {
+    ...snapshot,
+    institutional: {
+      ...snapshot.institutional,
+      ...contact,
+      business: { ...business, ...contact },
+    },
   } as TSnapshot;
 }
 
@@ -215,7 +235,9 @@ export class PublicSnapshotRpcService {
         return null;
       }
 
-      return normalizeInstitutionalBusinessSnapshot(data);
+      return attachAuthenticatedBusinessContact(
+        normalizeInstitutionalBusinessSnapshot(data),
+      );
     } catch (error) {
       logger.warn("[PublicSnapshotRpcService] business snapshot RPC failed", error);
       return null;
@@ -255,7 +277,9 @@ export class PublicSnapshotRpcService {
         return null;
       }
 
-      return normalizeGastronomyBusinessSnapshot(data);
+      return attachAuthenticatedBusinessContact(
+        normalizeGastronomyBusinessSnapshot(data),
+      );
     } catch (error) {
       logger.warn("[PublicSnapshotRpcService] gastronomy snapshot RPC failed", error);
       return null;

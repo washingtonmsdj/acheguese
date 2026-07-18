@@ -41,7 +41,7 @@ export function useProfessionalProfileCreate(
       const user = await SessionService.getCurrentUser();
       if (!user) throw new Error("Autenticacao obrigatoria para cadastrar servico");
 
-      const professional = await ProfessionalService.createProfessional(input, user.id);
+      const professional = await ProfessionalService.createProfessional(input);
       let mediaWarning: string | undefined;
 
       if (logoFile) {

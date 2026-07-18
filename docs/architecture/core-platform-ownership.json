@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-07-17",
+  "updatedAt": "2026-07-18",
   "architecture": "docs/architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md",
   "plan": "plans/CORE_PLATFORM_CONSOLIDATION_PLAN.md",
   "sourceRoots": [
@@ -646,6 +646,58 @@
     }
   ],
   "controlledRpcs": [
+    {
+      "name": "contact_rpc_get_visible_channels",
+      "status": "canonical",
+      "currentOwner": "src/core/contact/services/EntityContactService.ts",
+      "targetOwner": "src/core/contact/services/EntityContactService.ts",
+      "allowedCallers": [
+        {
+          "path": "supabase/functions/contact-rpc/index.ts",
+          "maxCalls": 1,
+          "role": "authenticated-private-data-broker"
+        }
+      ]
+    },
+    {
+      "name": "contact_rpc_patch_owned_channels",
+      "status": "canonical",
+      "currentOwner": "src/core/contact/services/EntityContactService.ts",
+      "targetOwner": "src/core/contact/services/EntityContactService.ts",
+      "allowedCallers": [
+        {
+          "path": "supabase/functions/contact-rpc/index.ts",
+          "maxCalls": 1,
+          "role": "authenticated-owner-command-broker"
+        }
+      ]
+    },
+    {
+      "name": "professional_credentials_rpc_get_owned",
+      "status": "canonical",
+      "currentOwner": "src/core/professional/services/ProfessionalCredentialsService.ts",
+      "targetOwner": "src/core/professional/services/ProfessionalCredentialsService.ts",
+      "allowedCallers": [
+        {
+          "path": "supabase/functions/professional-credentials-rpc/index.ts",
+          "maxCalls": 1,
+          "role": "authenticated-private-data-broker"
+        }
+      ]
+    },
+    {
+      "name": "professional_credentials_rpc_patch_owned",
+      "status": "canonical",
+      "currentOwner": "src/core/professional/services/ProfessionalCredentialsService.ts",
+      "targetOwner": "src/core/professional/services/ProfessionalCredentialsService.ts",
+      "allowedCallers": [
+        {
+          "path": "supabase/functions/professional-credentials-rpc/index.ts",
+          "maxCalls": 1,
+          "role": "authenticated-owner-command-broker"
+        }
+      ]
+    },
     {
       "name": "create_notification",
       "status": "migration",

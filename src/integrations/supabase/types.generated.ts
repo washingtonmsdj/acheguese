@@ -1212,7 +1212,6 @@ export type Database = {
           company_type: string | null
           created_at: string
           description: string | null
-          email: string | null
           employee_count: string | null
           facebook: string | null
           facilities: Json | null
@@ -1263,7 +1262,6 @@ export type Database = {
           company_type?: string | null
           created_at?: string
           description?: string | null
-          email?: string | null
           employee_count?: string | null
           facebook?: string | null
           facilities?: Json | null
@@ -1314,7 +1312,6 @@ export type Database = {
           company_type?: string | null
           created_at?: string
           description?: string | null
-          email?: string | null
           employee_count?: string | null
           facebook?: string | null
           facilities?: Json | null
@@ -11033,14 +11030,11 @@ export type Database = {
           created_at: string
           description: string | null
           education: string | null
-          email: string | null
           experience_years: number | null
           hourly_rate: number | null
           id: string
           is_accepting_clients: boolean
           is_verified: boolean
-          license_number: string | null
-          license_state: string | null
           location_id: string
           metadata: Json
           owner_user_id: string | null
@@ -11063,7 +11057,6 @@ export type Database = {
           updated_by_user_id: string | null
           verified_at: string | null
           visibility: Database["public"]["Enums"]["professional_profile_visibility"]
-          whatsapp: string | null
           years_experience: number | null
         }
         Insert: {
@@ -11075,14 +11068,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           education?: string | null
-          email?: string | null
           experience_years?: number | null
           hourly_rate?: number | null
           id?: string
           is_accepting_clients?: boolean
           is_verified?: boolean
-          license_number?: string | null
-          license_state?: string | null
           location_id: string
           metadata?: Json
           owner_user_id?: string | null
@@ -11105,7 +11095,6 @@ export type Database = {
           updated_by_user_id?: string | null
           verified_at?: string | null
           visibility?: Database["public"]["Enums"]["professional_profile_visibility"]
-          whatsapp?: string | null
           years_experience?: number | null
         }
         Update: {
@@ -11117,14 +11106,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           education?: string | null
-          email?: string | null
           experience_years?: number | null
           hourly_rate?: number | null
           id?: string
           is_accepting_clients?: boolean
           is_verified?: boolean
-          license_number?: string | null
-          license_state?: string | null
           location_id?: string
           metadata?: Json
           owner_user_id?: string | null
@@ -11147,7 +11133,6 @@ export type Database = {
           updated_by_user_id?: string | null
           verified_at?: string | null
           visibility?: Database["public"]["Enums"]["professional_profile_visibility"]
-          whatsapp?: string | null
           years_experience?: number | null
         }
         Relationships: [
@@ -17359,8 +17344,12 @@ export type Database = {
         Row: {
           address_id: string | null
           availability_notes: string | null
+          available_hours: Json | null
+          certifications: Json | null
           created_at: string | null
           description: string | null
+          education: string | null
+          experience_years: number | null
           geographic_path: string | null
           id: string | null
           is_accepting_clients: boolean | null
@@ -17369,15 +17358,18 @@ export type Database = {
           location_id: string | null
           longitude: number | null
           metadata: Json | null
-          owner_user_id: string | null
           portfolio_items: Json | null
           price_range: string | null
           professional_name: string | null
           profile_id: string | null
           rating: number | null
+          service_areas: Json | null
           service_category: string | null
+          service_radius_km: number | null
+          service_subcategory: string | null
           slug: string | null
           updated_at: string | null
+          verified_at: string | null
           visibility:
             | Database["public"]["Enums"]["professional_profile_visibility"]
             | null
@@ -17778,12 +17770,10 @@ export type Database = {
         Row: {
           availability_notes: string | null
           is_accepting_clients: boolean | null
-          opportunity_author_user_id: string | null
           opportunity_id: string | null
           professional_category: string | null
           professional_id: string | null
           professional_location_id: string | null
-          professional_owner_user_id: string | null
           professional_visibility:
             | Database["public"]["Enums"]["professional_profile_visibility"]
             | null
@@ -18261,6 +18251,35 @@ export type Database = {
           allowed: boolean
           remaining: number
           reset_at: string
+        }[]
+      }
+      contact_rpc_get_visible_channels: {
+        Args: {
+          p_actor_user_id: string
+          p_business_ids?: string[]
+          p_professional_ids?: string[]
+        }
+        Returns: {
+          channel_type: string
+          channel_value: string
+          entity_id: string
+          entity_type: string
+          visibility: string
+        }[]
+      }
+      contact_rpc_patch_owned_channels: {
+        Args: {
+          p_actor_user_id: string
+          p_channels: Json
+          p_entity_id: string
+          p_entity_type: string
+        }
+        Returns: {
+          channel_type: string
+          channel_value: string
+          entity_id: string
+          entity_type: string
+          visibility: string
         }[]
       }
       count_lost_found_posts_by_type: {
@@ -20457,6 +20476,28 @@ export type Database = {
           action: string
           details: string
           ride_id: string
+        }[]
+      }
+      professional_credentials_rpc_get_owned: {
+        Args: { p_actor_user_id: string; p_profile_id: string }
+        Returns: {
+          license_number: string
+          license_state: string
+          professional_id: string
+          profile_id: string
+        }[]
+      }
+      professional_credentials_rpc_patch_owned: {
+        Args: {
+          p_actor_user_id: string
+          p_credentials: Json
+          p_profile_id: string
+        }
+        Returns: {
+          license_number: string
+          license_state: string
+          professional_id: string
+          profile_id: string
         }[]
       }
       profile_public_territory_projection: {

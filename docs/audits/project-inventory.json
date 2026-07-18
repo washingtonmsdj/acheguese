@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-18T08:40:00.239Z",
+  "generatedAt": "2026-07-18T10:43:18.888Z",
   "inventories": [
     {
       "domain": "core/routing/location/public-identity",
@@ -415,7 +415,6 @@
         "menu_items",
         "menus",
         "messages",
-        "professional_data",
         "profile_members",
         "profile_username_history",
         "profiles",
@@ -974,12 +973,14 @@
       "domain": "professionals/services",
       "services": [
         "src/core/professional/services/ProfessionalCanonicalAdapter.ts",
+        "src/core/professional/services/ProfessionalCredentialsService.ts",
         "src/core/professional/services/ProfessionalLeadService.ts",
         "src/core/professional/services/ProfessionalLinkEligibilityService.ts",
         "src/core/professional/services/ProfessionalService.ts",
         "src/core/professional/services/ProfessionalUrlService.ts",
         "src/core/professional/services/__tests__/ProfessionalUrlService.spec.ts",
         "src/core/professional/services/index.ts",
+        "src/core/professional/services/professional.linked-entity.ts",
         "src/core/professional/services/professional.mappers.ts",
         "src/core/professional/services/professional.mutations.ts",
         "src/core/professional/services/professional.profile-lifecycle.ts",

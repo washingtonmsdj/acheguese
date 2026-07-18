@@ -67,7 +67,7 @@ const professionalDb = supabase as unknown as ProfessionalDbClient;
  * ProfessionalFacade - Interface SSOT unificada v2.0
  *
  * Uso: ProfessionalFacade.queries.getProfessionalById(id)
- *      ProfessionalFacade.mutations.createProfessional(data, userId)
+ *      ProfessionalFacade.mutations.createProfessional(data)
  */
 export const ProfessionalFacade = {
   queries: professionalQueries,
@@ -143,9 +143,8 @@ export class ProfessionalService {
    */
   static async createProfessional(
     input: CreateProfessionalInput,
-    userId: string,
   ): Promise<Professional> {
-    return createProfessionalWithProfile(input, userId);
+    return createProfessionalWithProfile(input);
   }
 
   /**

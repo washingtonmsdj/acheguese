@@ -1,5 +1,6 @@
 import { SessionService } from "@/core/session/services/SessionService";
 import { postService } from "@/core/posts/services";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import { ProfessionalUrlService } from "@/core/professional/services/ProfessionalUrlService";
 import { supabase } from "@/integrations/supabase";
 import type { Database, Json } from "@/integrations/supabase";
@@ -78,7 +79,7 @@ type OwnedProfessionalProfileRow = Pick<
   | "slug"
 >;
 
-type LinkedProfessionalOwnershipRow = Pick<ProfessionalDataRow, "id" | "owner_user_id">;
+type LinkedProfessionalOwnershipRow = Pick<ProfessionalDataRow, "id" | "profile_id">;
 
 type RecentOpportunityRow = Pick<
   WorkOpportunityRow,
@@ -256,6 +257,11 @@ class WorkOpportunitiesServiceClass {
     logger.warn(`[WorkOpportunitiesService] Slow ${scope}: ${Math.round(elapsed)}ms`, metadata);
   }
 
+  private async getAccessibleProfileIds(userId: string): Promise<string[]> {
+    const profiles = await profileService.getProfilesByUserId(userId);
+    return [...new Set(profiles.map((profile) => profile.id).filter(Boolean))];
+  }
+
   private readonly lifecycleHoursByType: Record<WorkOpportunityType, number> = {
     looking_for_work: 14 * 24,
     offering_work: 7 * 24,
@@ -411,10 +417,13 @@ class WorkOpportunitiesServiceClass {
       const user = await SessionService.getCurrentUser();
       if (!user) return [];
 
+      const accessibleProfileIds = await this.getAccessibleProfileIds(user.id);
+      if (accessibleProfileIds.length === 0) return [];
+
       const { data, error } = await workOpportunitiesDb
         .from<OwnedProfessionalProfileRow>("professional_data")
         .select("id, professional_name, service_category, location_id, is_accepting_clients, visibility, slug")
-        .eq("owner_user_id", user.id)
+        .in("profile_id", accessibleProfileIds)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -446,11 +455,16 @@ class WorkOpportunitiesServiceClass {
       if (!user) throw new Error("Usuário não autenticado.");
 
       if (input.professionalId) {
+        const accessibleProfileIds = await this.getAccessibleProfileIds(user.id);
+        if (accessibleProfileIds.length === 0) {
+          throw new Error("Perfil profissional vinculado nao pertence ao usuario atual.");
+        }
+
         const { data: linkedProfessional, error: linkedProfessionalError } = await workOpportunitiesDb
           .from<LinkedProfessionalOwnershipRow>("professional_data")
-          .select("id, owner_user_id")
+          .select("id, profile_id")
           .eq("id", input.professionalId)
-          .eq("owner_user_id", user.id)
+          .in("profile_id", accessibleProfileIds)
           .maybeSingle();
 
         if (linkedProfessionalError) {
