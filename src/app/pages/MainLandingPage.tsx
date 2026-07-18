@@ -491,18 +491,44 @@ function HappeningCard({ card }: { card: HighlightCard }) {
   );
 }
 
-function HappeningPanel({ cards }: { cards: HighlightCard[] }) {
+function HappeningSkeleton() {
+  return (
+    <div className="home-happening-grid" aria-hidden="true">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="home-happening-card is-skeleton">
+          <span className="home-skel home-skel-cover" />
+          <span className="home-happening-skel-copy">
+            <span className="home-skel home-skel-line" style={{ width: "68%" }} />
+            <span className="home-skel home-skel-line" style={{ width: "42%" }} />
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function HappeningPanel({
+  cards,
+  isLoading,
+}: {
+  cards: HighlightCard[];
+  isLoading?: boolean;
+}) {
   return (
     <section className="home-panel home-happening-panel" aria-labelledby="happening-title">
       <div className="home-panel-heading">
         <h2 id="happening-title">O que está acontecendo perto de você</h2>
         <Link to={LAUNCH_URLS.community}>Ver tudo</Link>
       </div>
-      <div className="home-happening-grid">
-        {cards.map((card) => (
-          <HappeningCard key={`${card.label}-${card.title}`} card={card} />
-        ))}
-      </div>
+      {isLoading && cards.length === 0 ? (
+        <HappeningSkeleton />
+      ) : (
+        <div className="home-happening-grid">
+          {cards.map((card) => (
+            <HappeningCard key={`${card.label}-${card.title}`} card={card} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }
