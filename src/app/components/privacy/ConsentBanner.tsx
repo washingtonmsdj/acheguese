@@ -162,106 +162,90 @@ export function ConsentBanner() {
       ) : (
         <div
           data-consent-banner
-          className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.2rem)] z-50 mx-auto w-[calc(100vw-1.5rem)] max-w-[17.5rem] rounded-[12px] border border-border/70 bg-background/90 p-0.5 shadow-2xl backdrop-blur-xl max-[480px]:w-fit max-[480px]:max-w-none max-[480px]:rounded-[14px] max-[480px]:border-border/45 max-[480px]:bg-background/78 max-[480px]:shadow-lg max-[360px]:bottom-[calc(env(safe-area-inset-bottom)+0.125rem)] md:left-auto md:right-4 md:mx-0 md:w-auto md:max-w-[31rem] md:rounded-[18px] md:p-3"
+          className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] z-50 mx-auto max-w-[calc(100vw-1.5rem)] rounded-2xl border border-border/70 bg-background/95 p-2 shadow-2xl backdrop-blur-xl md:left-auto md:right-4 md:mx-0 md:w-[40rem] md:max-w-[40rem] md:rounded-2xl md:p-3.5"
         >
-          <div className="flex items-center gap-1 md:hidden max-[360px]:gap-0.5">
-            <div className="shrink-0 rounded-full bg-primary/10 p-1 max-[480px]:hidden">
-              <Cookie className="h-3 w-3 text-primary" />
+          {/* Mobile compact */}
+          <div className="flex items-center gap-2 md:hidden">
+            <div className="shrink-0 rounded-full bg-primary/10 p-1.5">
+              <Cookie className="h-3.5 w-3.5 text-primary" />
             </div>
-            <span className="min-w-0 flex-1 text-[0.58rem] font-semibold leading-none max-[480px]:hidden">
-              Cookies
-            </span>
+            <p className="min-w-0 flex-1 truncate text-[0.7rem] font-medium leading-tight text-foreground">
+              Usamos cookies para melhorar sua experiência.
+            </p>
             <Button
               variant="outline"
               size="sm"
-              className="h-[22px] rounded-md border-slate-300 !bg-white px-1.25 text-[0.5rem] font-medium !text-slate-950 hover:!bg-slate-100 max-[360px]:h-5 max-[360px]:rounded-[10px] max-[360px]:px-1 max-[360px]:text-[0.46rem]"
+              className="h-7 shrink-0 rounded-lg border-slate-300 !bg-white px-2 text-[0.65rem] font-semibold !text-slate-950 hover:!bg-slate-100"
               onClick={rejectOptionalConsents}
               disabled={saveConsentsMutation.isPending}
             >
-              <span className="max-[480px]:hidden">Rejeitar</span>
-              <span className="hidden max-[480px]:inline">Não</span>
+              Rejeitar
             </Button>
             <Button
               size="sm"
-              className="h-[22px] rounded-md !bg-teal-700 px-1.25 text-[0.5rem] font-medium !text-white hover:!bg-teal-800 max-[360px]:h-5 max-[360px]:rounded-[10px] max-[360px]:px-1 max-[360px]:text-[0.46rem]"
+              className="h-7 shrink-0 rounded-lg !bg-teal-700 px-2.5 text-[0.65rem] font-semibold !text-white hover:!bg-teal-800"
               onClick={acceptAllConsents}
               disabled={saveConsentsMutation.isPending}
             >
-              <span className="max-[480px]:hidden">Aceitar</span>
-              <span className="hidden max-[480px]:inline">OK</span>
+              Aceitar
             </Button>
             <button
               type="button"
               onClick={() => setShowDetails(true)}
-              className="inline-flex h-5.5 w-5.5 items-center justify-center rounded-md text-slate-100 transition-colors hover:bg-white/15 hover:text-white max-[360px]:h-4.5 max-[360px]:w-4.5"
+              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
               aria-label="Personalizar cookies"
             >
-              <Shield className="h-3 w-3 max-[360px]:h-2.75 max-[360px]:w-2.75" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowBanner(false)}
-              className="inline-flex h-5.5 w-5.5 items-center justify-center rounded-md text-slate-100 transition-colors hover:bg-white/15 hover:text-white max-[360px]:h-4.5 max-[360px]:w-4.5"
-              aria-label="Fechar"
-            >
-              <X className="h-3 w-3 max-[360px]:h-2.75 max-[360px]:w-2.75" />
+              <Shield className="h-3.5 w-3.5" />
             </button>
           </div>
 
-          <div className="hidden md:flex md:flex-row md:items-center md:gap-2">
-            <div className="flex items-center gap-2">
-              <div className="shrink-0 rounded-full bg-primary/10 p-2">
-                <Cookie className="h-3.5 w-3.5 text-primary" />
-              </div>
-
-              <div className="min-w-0 flex-1">
-                <h3 className="text-[0.84rem] font-semibold leading-none">
-                  Privacidade e Cookies
-                </h3>
-                <p className="text-[0.72rem] leading-relaxed text-muted-foreground">
-                  Utilizamos cookies e dados pessoais para melhorar sua
-                  experiência.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowBanner(false)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-100 transition-colors hover:bg-white/15 hover:text-white"
-                aria-label="Fechar"
-              >
-                <X className="h-4 w-4" />
-              </button>
+          {/* Desktop */}
+          <div className="hidden md:flex md:items-center md:gap-3">
+            <div className="shrink-0 rounded-full bg-primary/10 p-2">
+              <Cookie className="h-4 w-4 text-primary" />
             </div>
-
-            <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm font-semibold leading-tight text-foreground">
+                Privacidade e Cookies
+              </h3>
+              <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
+                Utilizamos cookies e dados pessoais para melhorar sua experiência.
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 rounded-xl px-3 text-xs !text-muted-foreground hover:!bg-white/10 hover:!text-foreground"
+                onClick={() => setShowDetails(true)}
+              >
+                Personalizar
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 rounded-xl border-slate-300 !bg-white px-4 text-[0.72rem] font-medium !text-slate-950 hover:!bg-slate-100"
+                className="h-9 rounded-xl border-slate-300 !bg-white px-4 text-xs font-medium !text-slate-950 hover:!bg-slate-100"
                 onClick={rejectOptionalConsents}
                 disabled={saveConsentsMutation.isPending}
               >
                 Rejeitar
               </Button>
-
               <Button
                 size="sm"
-                className="h-9 rounded-xl !bg-teal-700 px-4 text-[0.72rem] font-medium !text-white hover:!bg-teal-800"
+                className="h-9 rounded-xl !bg-teal-700 px-4 text-xs font-semibold !text-white hover:!bg-teal-800"
                 onClick={acceptAllConsents}
                 disabled={saveConsentsMutation.isPending}
               >
                 Aceitar todos
               </Button>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-9 rounded-xl px-3 text-[0.72rem] !text-slate-100 hover:!bg-white/15 hover:!text-white"
-                onClick={() => setShowDetails(true)}
+              <button
+                type="button"
+                onClick={() => setShowBanner(false)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+                aria-label="Fechar"
               >
-                Personalizar
-              </Button>
+                <X className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>
