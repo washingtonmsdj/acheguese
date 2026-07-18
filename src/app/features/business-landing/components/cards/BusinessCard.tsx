@@ -33,7 +33,7 @@ export function BusinessCard({
 
   return (
     <article
-      className="group relative overflow-hidden rounded-[22px] border border-white/10 bg-white/[0.03] p-3 transition-colors hover:border-teal-400/18 hover:bg-white/[0.04] focus-within:border-teal-400/30 sm:p-3.5"
+      className="group relative flex h-full flex-col overflow-hidden rounded-[22px] border border-white/10 bg-white/[0.03] p-3 transition-colors hover:border-teal-400/18 hover:bg-white/[0.04] focus-within:border-teal-400/30 sm:p-3.5"
       aria-label={business.name}
     >
       <button

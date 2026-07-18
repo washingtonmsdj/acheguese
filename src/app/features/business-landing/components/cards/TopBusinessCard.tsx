@@ -34,7 +34,7 @@ export function TopBusinessCard({
 
   return (
     <article
-      className="relative w-full overflow-hidden rounded-[22px] border border-white/10 bg-white/[0.03] p-3 focus-within:border-teal-400/30"
+      className="relative flex h-full w-full flex-col overflow-hidden rounded-[22px] border border-white/10 bg-white/[0.03] p-3 focus-within:border-teal-400/30"
       aria-label={business.name}
     >
       <button
