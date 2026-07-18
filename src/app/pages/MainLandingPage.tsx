@@ -581,39 +581,104 @@ function ModuleTiles({ communityHref }: { communityHref: string }) {
   );
 }
 
-function CommunityActivityPanel({ activities }: { activities: HomeCommunityActivity[] }) {
+function ActivitySkeleton() {
+  return (
+    <div className="home-community-activity-list" aria-hidden="true">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="home-community-activity-item is-skeleton">
+          <span className="home-skel home-community-activity-avatar" />
+          <div className="home-community-activity-copy">
+            <span className="home-skel home-skel-line" style={{ width: "58%" }} />
+            <span className="home-skel home-skel-line" style={{ width: "92%" }} />
+            <span className="home-skel home-skel-line" style={{ width: "72%" }} />
+          </div>
+          <span className="home-skel home-community-activity-meta-skel" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ActivityEmptyState() {
+  return (
+    <div className="home-community-activity-empty" role="status">
+      <span className="home-community-activity-empty-icon" aria-hidden="true">
+        <Users />
+      </span>
+      <strong>Nenhuma atividade por aqui ainda</strong>
+      <p>Assim que os vizinhos publicarem, comentarem ou reagirem, tudo aparece aqui em tempo real.</p>
+      <Link to={LAUNCH_URLS.community} className="home-community-activity-empty-cta">
+        Explorar comunidades
+      </Link>
+    </div>
+  );
+}
+
+function CommunityActivityPanel({
+  activities,
+  isLoading,
+}: {
+  activities: HomeCommunityActivity[];
+  isLoading?: boolean;
+}) {
+  const showSkeleton = isLoading && activities.length === 0;
+  const showEmpty = !isLoading && activities.length === 0;
+
   return (
     <section className="home-panel home-activity-panel" aria-labelledby="activity-title">
       <div className="home-panel-heading">
         <h2 id="activity-title">Atividades nas comunidades</h2>
-        <Link to={LAUNCH_URLS.community}>Ver todas</Link>
-      </div>
-      <div className="home-community-activity-list">
-        {activities.map((activity) => (
-          <article key={activity.id} className="home-community-activity-item">
-            <img className="home-community-activity-avatar" src={homeAvatarsByKey[activity.avatarKey]} alt="" />
-            <div className="home-community-activity-copy">
-              <strong>
-                <span className="home-community-activity-author">{activity.author}</span>
-                <small>{activity.community}</small>
-                {activity.verified ? <ShieldCheck aria-label="Perfil verificado" /> : null}
-              </strong>
-              <p>{activity.text}</p>
-            </div>
-            {activity.imageKey ? (
-              <img className="home-community-activity-preview" src={homeImagesByKey[activity.imageKey]} alt="" />
-            ) : null}
-            <div className="home-community-activity-meta">
-              <small>{activity.time}</small>
-              <span aria-label={`${activity.comments} comentários`}>
-                <MessageCircle aria-hidden="true" />
-                {activity.comments}
-              </span>
-            </div>
-          </article>
-        ))}
+        <Link to={LAUNCH_URLS.community} aria-label="Ver todas as atividades nas comunidades">
+          Ver todas
+        </Link>
       </div>
 
+      {showSkeleton ? <ActivitySkeleton /> : null}
+      {showEmpty ? <ActivityEmptyState /> : null}
+
+      {!showSkeleton && !showEmpty ? (
+        <ul className="home-community-activity-list" role="list" aria-label="Atividades recentes">
+          {activities.map((activity) => (
+            <li key={activity.id} className="home-community-activity-item">
+              <img
+                className="home-community-activity-avatar"
+                src={homeAvatarsByKey[activity.avatarKey]}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                width={40}
+                height={40}
+              />
+              <div className="home-community-activity-copy">
+                <strong>
+                  <span className="home-community-activity-author">{activity.author}</span>
+                  <small aria-label={`Comunidade ${activity.community}`}>{activity.community}</small>
+                  {activity.verified ? (
+                    <ShieldCheck aria-label={`${activity.author} é um perfil verificado`} role="img" />
+                  ) : null}
+                </strong>
+                <p>{activity.text}</p>
+              </div>
+              {activity.imageKey ? (
+                <img
+                  className="home-community-activity-preview"
+                  src={homeImagesByKey[activity.imageKey]}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                />
+              ) : null}
+              <div className="home-community-activity-meta">
+                <time dateTime={activity.time}>{activity.time}</time>
+                <span aria-label={`${activity.comments} comentários`}>
+                  <MessageCircle aria-hidden="true" focusable="false" />
+                  <span aria-hidden="true">{activity.comments}</span>
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </section>
   );
 }
