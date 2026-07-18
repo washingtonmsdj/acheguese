@@ -76,7 +76,14 @@ export function AppLayoutSidebar() {
     pathSegments.length === 2 &&
     !isReservedSlug(pathSegments[1] ?? '') &&
     !isCommunityRouteSuffixSegment(pathSegments[1] ?? '');
-  const useDocumentScrollPublicShell = isPublicEntityDetailRoute;
+  const useDocumentScrollPublicShell =
+    isPublicEntityDetailRoute ||
+    pathname === '/' ||
+    isBarePublicTerritorialRoute ||
+    isCommunityPublicLandingRoute ||
+    isCommunityAliasPublicRoute ||
+    isShortCommunityRoute ||
+    isPublicBusinessLandingRoute;
   const hideMobileBottomNav =
     isInternalGroupRoute ||
     isConversationRoute ||
