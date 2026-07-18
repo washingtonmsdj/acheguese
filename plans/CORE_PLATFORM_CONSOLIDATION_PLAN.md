@@ -570,11 +570,39 @@ foram removidos e `test:classifieds:ssot` registra 28 testes. Migration aplicada
 ao remoto, tipos regenerados e amostra PostgREST com zero relacao invalida.
 Evidencia: `docs/audits/CLASSIFIEDS_TERRITORY_SSOT_2026-07-17.md`.
 
-Proxima ordem: continuar as suites unitarias, integracao, RLS e E2E dos demais
-dominios, registrando qualquer gap real antes de alterar implementacao. Revisar
-a exposicao de contatos de vendedores em payloads publicos de Classificados e
-separar listagem publica de leitura de contato quando a politica de visibilidade
-estiver definida. Documentos de verificacao, evidencias
+Quarto checkpoint em 2026-07-18: a fronteira de PII de Profile foi corrigida.
+A auditoria remota comprovou que policies de linha publicas permitiam selecionar
+telefone, WhatsApp e e-mail diretamente da tabela `profiles`. A migration
+`20260718100000` removeu grants integrais de browser, criou allowlist de colunas
+publicas e manteve `public_profiles` como projecao PII-free. O complemento
+`20260718110000` retirou suspensos da descoberta e limitou leituras privadas a
+escopos delimitados e gestores autorizados. Perfis privados e
+contato consentido agora passam pelo `profile-rpc`, com JWT, ator verificado,
+rate limit e RPCs exclusivos de `service_role`. Classificados deixou de carregar
+contato em listagens; o admin usa lote autorizado. O probe remoto passou para
+anonimo, autenticado, view publica, join de Classificados e broker autorizado.
+O complemento `20260718120000` removeu do browser os IDs territoriais brutos e
+fez `public_profiles` derivar apenas cidade ou bairro conforme
+`public_location_visibility`, sem localizacao quando a opcao for `hidden`.
+O ajuste `20260718130000` fechou a projecao deny-by-default: `hidden` tambem
+anula cidade, bairro e estado derivados. Fluxos privados e multi-profile foram
+migrados para o broker explicito, sem reutilizar a projecao publica em edicao,
+moderacao ou dashboard do proprio usuario.
+Como `user_residences` permanece privada por RLS, `20260718140000` criou a
+boundary publica minima `profile_public_territory_projection`: a view continua
+`security_invoker`, enquanto a funcao deriva somente o nivel consentido e
+reaplica os filtros de perfil publico.
+Evidencia: `docs/audits/PROFILE_PII_READ_BOUNDARY_2026-07-18.md`.
+
+Proxima ordem: corrigir ou remover o workflow legado de verificacao de Profile,
+que ainda referencia colunas inexistentes (`verification_status`,
+`verification_requested_at`, `verified_by` e
+`verification_rejection_reason`) e hoje degrada para listas vazias. Depois,
+continuar as suites unitarias, integracao, RLS e E2E dos demais dominios,
+registrando qualquer gap real antes de alterar implementacao. Auditar os
+contratos publicos de contato proprios de Professional e Business para
+garantir que usem seus owners, consentimento e payloads de detalhe, sem voltar a
+usar contato de `profiles` em listagens. Documentos de verificacao, evidencias
 privadas e try-on permanecem em contratos separados e nao devem ser forcados
 para o MediaAsset publico. Por fim, preparar staging explicitamente autorizado
 para carga, p50/p95/p99, backup/restore e rollback. A aprovacao de

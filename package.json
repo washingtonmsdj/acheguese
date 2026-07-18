@@ -31,6 +31,7 @@
     "security:community:authz-probe": "node scripts/security/community-feed-authz-probe.mjs",
     "security:community-dm:authz-probe": "node scripts/security/community-direct-messaging-authz-probe.mjs",
     "security:messaging:authz-probe": "node scripts/security/classified-messaging-inbox-authz-probe.mjs",
+    "security:profiles:pii-probe": "node scripts/security/profile-pii-exposure-probe.mjs",
     "security:reviews:authz-probe": "node scripts/security/reviews-core-authz-probe.mjs",
     "security:moderation:authz-probe": "node scripts/security/moderation-audit-authz-probe.mjs",
     "validate:deps": "tsx scripts/validate-dependencies.ts",

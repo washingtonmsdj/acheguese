@@ -138,7 +138,7 @@ export function useAdminUserDetail(
       setLoading(true);
       setError(null);
 
-      const profileData = await profileService.getProfileById(userId);
+      const profileData = await profileService.getAccessibleProfileById(userId);
       if (!profileData) throw new Error("Profile not found");
 
       const adminUser = profileData?.user_id

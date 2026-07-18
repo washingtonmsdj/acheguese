@@ -30,6 +30,38 @@ import {
 } from "./profile.service.presenters";
 
 const TABLE = "profiles";
+const PROFILE_MUTATION_RETURN_COLUMNS = [
+  "id",
+  "user_id",
+  "profile_type",
+  "name",
+  "display_name",
+  "username",
+  "handle",
+  "slug",
+  "bio",
+  "short_bio",
+  "avatar_url",
+  "website",
+  "is_active",
+  "is_public",
+  "is_suspended",
+  "public_location_visibility",
+  "reputation",
+  "reputation_score",
+  "community_reputation_score",
+  "pontos",
+  "trust_score",
+  "verified",
+  "verified_at",
+  "show_contact_email",
+  "show_phone",
+  "show_linked_profiles",
+  "show_business_links",
+  "show_professional_links",
+  "created_at",
+  "updated_at",
+].join(",");
 
 interface QueryError {
   message?: string | null;
@@ -105,7 +137,7 @@ export async function createProfile(profile: CreateProfilePayload): Promise<Prof
       whatsapp: getCreateProfileWhatsapp(profile),
       is_active: true,
     })
-    .select()
+    .select(PROFILE_MUTATION_RETURN_COLUMNS)
     .single();
 
   if (error) {
@@ -144,7 +176,7 @@ export async function createProfileWithIdentityValidation(
   const { data, error } = await profileMutationsDb
     .from<Profile>(TABLE)
     .insert(buildCreateProfileInsert(user.id, profile))
-    .select()
+    .select(PROFILE_MUTATION_RETURN_COLUMNS)
     .single();
 
   if (error) {
@@ -189,7 +221,7 @@ export async function updateProfile(
       updated_at: new Date().toISOString(),
     })
     .eq("id", profileId)
-    .select()
+    .select(PROFILE_MUTATION_RETURN_COLUMNS)
     .single();
 
   if (error) {
@@ -212,7 +244,7 @@ export async function updateProfileDirect(
     .from(TABLE)
     .update(updates)
     .eq("id", profileId)
-    .select()
+    .select(PROFILE_MUTATION_RETURN_COLUMNS)
     .single();
 
   if (error) {
@@ -235,7 +267,7 @@ export async function updatePrivacySettingsDirect(
     .from(TABLE)
     .update(settings)
     .eq("id", profileId)
-    .select()
+    .select(PROFILE_MUTATION_RETURN_COLUMNS)
     .single();
 
   if (error) {
@@ -258,7 +290,7 @@ export async function updateAlertBanStatus(
     .from<Profile>(TABLE)
     .update({ alert_banned: alertBanned })
     .eq("id", profileId)
-    .select()
+    .select(PROFILE_MUTATION_RETURN_COLUMNS)
     .single();
 
   if (error) {
@@ -287,7 +319,7 @@ export async function updatePrivacySettings(
       updated_at: new Date().toISOString(),
     })
     .eq("id", profileId)
-    .select()
+    .select(PROFILE_MUTATION_RETURN_COLUMNS)
     .single();
 
   if (error) {
@@ -424,7 +456,7 @@ export async function ensureDriverProfileForUser(userId: string): Promise<Profil
       is_active: false, // Não ativa automaticamente
       whatsapp: activeProfile.whatsapp,
     })
-    .select()
+    .select(PROFILE_MUTATION_RETURN_COLUMNS)
     .single();
 
   if (createError) {

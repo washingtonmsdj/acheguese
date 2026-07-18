@@ -24,6 +24,7 @@ describe("profile rpc broker security", () => {
     expect(config).toMatch(/\[functions\.profile-rpc\]\s+verify_jwt = true/);
 
     expect(edgeFunction).toContain("function requireUser(");
+    expect(edgeFunction).toContain("[89ab][0-9a-f]{3}-[0-9a-f]{12}");
     expect(edgeFunction).toContain('getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY")');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("profile_rpc_create_profile_with_extension"');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("profile_rpc_update_profile_handle"');

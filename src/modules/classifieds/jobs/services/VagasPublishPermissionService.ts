@@ -102,7 +102,7 @@ export class VagasPublishPermissionService {
     }
 
     try {
-      const profileData = await profileService.getProfileById(activeProfileId);
+      const profileData = await profileService.getAccessibleProfileById(activeProfileId);
 
       if (!profileData) {
         logger.error(`[VagasPublishPermissionService] Erro ao carregar profile`, { activeProfileId });

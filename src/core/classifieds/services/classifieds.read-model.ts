@@ -13,8 +13,6 @@ type LocationRow = Database["public"]["Tables"]["locations"]["Row"];
 type ClassifiedSellerRow = {
   name?: string | null;
   avatar_url?: string | null;
-  phone?: string | null;
-  whatsapp?: string | null;
 };
 
 type ClassifiedCategoryRow = { slug?: string | null };
@@ -33,9 +31,7 @@ export const CLASSIFIED_READ_SELECT = `
   *,
   seller:profiles!seller_id (
     name,
-    avatar_url,
-    phone,
-    whatsapp
+    avatar_url
   ),
   territory:locations!fk_classifieds_location_id (
     id,
@@ -95,8 +91,6 @@ export function mapClassifiedReadModel(row: ClassifiedReadRow): ClassifiedData {
     seller_id: row.seller_id,
     seller_name: row.seller?.name ?? undefined,
     seller_avatar: row.seller?.avatar_url ?? undefined,
-    seller_phone: row.seller?.phone ?? undefined,
-    seller_whatsapp: row.seller?.whatsapp ?? undefined,
     slug: row.slug ?? undefined,
     public_id: row.public_id ?? undefined,
     category_id: row.category_id ?? undefined,

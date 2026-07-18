@@ -148,7 +148,7 @@ async function loadProfilesByUserId(userIds: string[]): Promise<Map<string, Admi
   }
 
   try {
-    const profiles = await profileService.getProfilesByIds(userIds);
+    const profiles = await profileService.getAccessibleProfilesByUserIds(userIds);
     return new Map(
       profiles.map((profile) => [
         profile.user_id,

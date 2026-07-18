@@ -100,7 +100,7 @@ export class CapabilityPreviewService {
     profileId: string,
     includeRoles: boolean,
   ): Promise<CapabilityPreviewSubject | null> {
-    const profile = await profileService.getProfileById(profileId);
+    const profile = await profileService.getAccessibleProfileById(profileId);
     if (!profile) return null;
 
     const roles: AppRole[] = includeRoles

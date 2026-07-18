@@ -116,8 +116,6 @@ interface ClassifiedListRow extends AdminClassifiedData {
   seller?: {
     name?: string | null;
     avatar_url?: string | null;
-    phone?: string | null;
-    whatsapp?: string | null;
   } | null;
   classified_categories?: { slug?: string | null } | null;
   classified_subcategories?: { slug?: string | null } | null;
@@ -323,11 +321,14 @@ class AdminClassifiedsServiceClass {
         });
       }
 
-      const sellerIds = Array.from(sellerMap.keys());
+      const rankedSellers = Array.from(sellerMap.values())
+        .sort((a, b) => b.totalAds - a.totalAds || (b.lastAdAt || "").localeCompare(a.lastAdAt || ""))
+        .slice(0, limit);
+      const sellerIds = rankedSellers.map((seller) => seller.sellerId);
       let profileMap = new Map<string, { name: string | null; phone: string | null; whatsapp: string | null }>();
 
       if (sellerIds.length > 0) {
-        const profileRows = await profileService.getProfilesByIds(sellerIds);
+        const profileRows = await profileService.getAccessibleProfilesByIds(sellerIds);
         const rows: SellerProfileRow[] = profileRows || [];
         profileMap = new Map(
           rows.map((profile) => [
@@ -341,10 +342,7 @@ class AdminClassifiedsServiceClass {
         );
       }
 
-      const sellers = Array.from(sellerMap.values())
-        .sort((a, b) => b.totalAds - a.totalAds || (b.lastAdAt || "").localeCompare(a.lastAdAt || ""))
-        .slice(0, limit)
-        .map((seller) => {
+      const sellers = rankedSellers.map((seller) => {
           const profile = profileMap.get(seller.sellerId);
           return {
             ...seller,
@@ -414,9 +412,7 @@ class AdminClassifiedsServiceClass {
           seller:profiles!seller_id (
             id,
             name,
-            avatar_url,
-            phone,
-            whatsapp
+            avatar_url
           ),
           locations(name, slug),
           classified_categories(slug, name),
@@ -454,12 +450,19 @@ class AdminClassifiedsServiceClass {
       }
 
       const rows: ClassifiedListRow[] = data || [];
+      const sellerIds = [...new Set(rows.map((item) => item.seller_id).filter(Boolean))] as string[];
+      const accessibleProfiles = await profileService.getAccessibleProfilesByIds(sellerIds);
+      const accessibleProfileMap = new Map(accessibleProfiles.map((profile) => [profile.id, profile]));
       const classifieds: AdminClassifiedData[] = rows.map((item) => ({
         ...item,
         seller_name: item.seller?.name,
         seller_avatar: item.seller?.avatar_url,
-        seller_phone: item.seller?.phone,
-        seller_whatsapp: item.seller?.whatsapp,
+        seller_phone: item.seller_id
+          ? accessibleProfileMap.get(item.seller_id)?.phone
+          : undefined,
+        seller_whatsapp: item.seller_id
+          ? accessibleProfileMap.get(item.seller_id)?.whatsapp
+          : undefined,
         category_slug: item.classified_categories?.slug,
         subcategory_slug: item.classified_subcategories?.slug,
       }));

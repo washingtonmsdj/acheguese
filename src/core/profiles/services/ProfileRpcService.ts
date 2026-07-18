@@ -5,7 +5,28 @@ type ProfileRpcAction =
   | "updateHandle"
   | "deleteProfile"
   | "transferOwnership"
-  | "inviteMemberByEmail";
+  | "inviteMemberByEmail"
+  | "getAccessibleProfiles"
+  | "getVisibleContact";
+
+export interface VisibleProfileContact {
+  profile_id: string;
+  phone: string | null;
+  whatsapp: string | null;
+  contact_email: string | null;
+}
+
+export type AccessibleProfilesParams =
+  | {
+      profileIds: string[];
+      targetUserId?: string;
+      profileType?: string;
+    }
+  | {
+      targetUserId: string;
+      profileIds?: string[];
+      profileType?: string;
+    };
 
 const FUNCTION_NAME = "profile-rpc";
 const SERVICE_NAME = "ProfileRpcService";
@@ -56,5 +77,15 @@ export class ProfileRpcService {
     role: string,
   ): Promise<TResult> {
     return this.invoke<TResult>("inviteMemberByEmail", { profileId, email, role });
+  }
+
+  static async getAccessibleProfiles<TResult>(
+    params: AccessibleProfilesParams,
+  ): Promise<TResult> {
+    return this.invoke<TResult>("getAccessibleProfiles", params);
+  }
+
+  static async getVisibleContact(profileId: string): Promise<VisibleProfileContact | null> {
+    return this.invoke<VisibleProfileContact | null>("getVisibleContact", { profileId });
   }
 }

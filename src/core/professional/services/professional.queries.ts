@@ -221,7 +221,7 @@ export async function getProfessionals(
       .select(
         `
         *,
-        profiles!professional_data_profile_id_fkey(id, name, avatar_url, phone, whatsapp, verified),
+        profiles!professional_data_profile_id_fkey(id, name, avatar_url, verified),
         addresses:address_id(*),
         location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
       `,
@@ -289,7 +289,7 @@ export async function getProfessionalsList(params: {
       .select(
         `
         *,
-        profiles!professional_data_profile_id_fkey(id, name, avatar_url, phone, whatsapp, verified),
+        profiles!professional_data_profile_id_fkey(id, name, avatar_url, verified),
         address:addresses!address_id(id, location_id, postal_code, street, number, complement, latitude, longitude),
         location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
       `,
@@ -348,7 +348,7 @@ export async function getProfessionalById(id: string): Promise<Professional> {
       .select(
         `
         *,
-        profiles!professional_data_profile_id_fkey(id, name, avatar_url, phone, whatsapp, verified),
+        profiles!professional_data_profile_id_fkey(id, name, avatar_url, verified),
         addresses:address_id(*),
         location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
       `,
@@ -383,7 +383,7 @@ export async function getServicesByProfile(profileId: string): Promise<Professio
       .select(
         `
         *,
-        profiles!professional_data_profile_id_fkey(id, name, avatar_url, phone, whatsapp, verified),
+        profiles!professional_data_profile_id_fkey(id, name, avatar_url, verified),
         addresses:address_id(*),
         location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
       `,
@@ -568,7 +568,7 @@ export async function getProfessionalsByIds(ids: string[]): Promise<Professional
       .select(
         `
         *,
-        profiles!professional_data_profile_id_fkey(id, name, avatar_url, phone, whatsapp, verified),
+        profiles!professional_data_profile_id_fkey(id, name, avatar_url, verified),
         location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
       `,
       )
@@ -604,7 +604,7 @@ export async function searchProfessionals(
       .select(
         `
         *,
-        profiles!professional_data_profile_id_fkey(id, name, avatar_url, phone, whatsapp, verified),
+        profiles!professional_data_profile_id_fkey(id, name, avatar_url, verified),
         address:addresses!address_id(id, location_id, postal_code, street, number, complement, latitude, longitude),
         location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
       `,
@@ -662,7 +662,7 @@ export async function getPublicProfileBySlug(
       .select(
         `
         *,
-        profiles!professional_data_profile_id_fkey(id, name, avatar_url, phone, whatsapp, verified),
+        profiles!professional_data_profile_id_fkey(id, name, avatar_url, verified),
         addresses:address_id(*),
         location:locations!professional_data_location_id_fkey(id, name, full_name, type, slug, geographic_path)
       `,

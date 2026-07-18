@@ -43,8 +43,6 @@ export interface ClassificadoWithVendedor {
     nome: string;
     avatar_url: string | null;
     rating?: number;
-    phone?: string | null;
-    whatsapp?: string | null;
   } | null;
 }
 

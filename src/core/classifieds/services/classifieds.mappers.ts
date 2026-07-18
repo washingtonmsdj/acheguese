@@ -37,8 +37,6 @@ export function mapToClassificadoWithVendedor(
       id: data.seller_id,
       nome: data.seller_name || "",
       avatar_url: data.seller_avatar || null,
-      phone: data.seller_phone || null,
-      whatsapp: data.seller_whatsapp || null,
     },
   };
 }

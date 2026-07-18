@@ -22,6 +22,15 @@ vi.mock('../src/integrations/supabase', () => ({
   },
 }));
 
+vi.mock('../src/core/profiles/services/ProfileService', () => ({
+  profileService: {
+    getProfileById: vi.fn(() => Promise.resolve({ id: 'profile-123', is_suspended: false })),
+    getProfileByType: vi.fn(() => Promise.resolve({ id: 'profile-123', is_suspended: false })),
+    getActiveProfile: vi.fn(() => Promise.resolve({ id: 'profile-123', is_suspended: false })),
+    getProfilesByUserId: vi.fn(() => Promise.resolve([{ id: 'profile-123', is_suspended: false }])),
+  },
+}));
+
 // Mock do MobilityRolloutService
 vi.mock('../src/core/mobility/services/MobilityRolloutService', () => ({
   mobilityRolloutService: {

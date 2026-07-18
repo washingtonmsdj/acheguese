@@ -20,13 +20,16 @@ import {
 } from "../_shared/security.ts";
 
 const ALLOWED_METHODS = "POST, OPTIONS";
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const ACTIONS = {
   createProfile: true,
   updateHandle: true,
   deleteProfile: true,
   transferOwnership: true,
   inviteMemberByEmail: true,
+  getAccessibleProfiles: true,
+  getVisibleContact: true,
 } as const;
 
 type ProfileRpcAction = keyof typeof ACTIONS;
@@ -59,6 +62,19 @@ function requireUuid(value: unknown, field: string): string {
     throw new RequestValidationError(`Invalid ${field}`);
   }
   return value;
+}
+
+function optionalUuid(value: unknown, field: string): string | null {
+  if (value === undefined || value === null || value === "") return null;
+  return requireUuid(value, field);
+}
+
+function optionalUuidArray(value: unknown, field: string): string[] | null {
+  if (value === undefined || value === null) return null;
+  if (!Array.isArray(value) || value.length > 100) {
+    throw new RequestValidationError(`Invalid ${field}`);
+  }
+  return value.map((item) => requireUuid(item, field));
 }
 
 function requireString(value: unknown, field: string, maxLength: number): string {
@@ -100,6 +116,20 @@ function requireProfileType(value: unknown): ProfileType {
     value !== "business" &&
     value !== "professional" &&
     value !== "driver"
+  ) {
+    throw new RequestValidationError("Invalid profileType");
+  }
+  return value;
+}
+
+function optionalProfileType(value: unknown): ProfileType | "community" | null {
+  if (value === undefined || value === null || value === "") return null;
+  if (
+    value !== "personal" &&
+    value !== "business" &&
+    value !== "professional" &&
+    value !== "driver" &&
+    value !== "community"
   ) {
     throw new RequestValidationError("Invalid profileType");
   }
@@ -246,6 +276,45 @@ async function handleInviteMemberByEmail(
   return data ?? { success: false, error: "Profile RPC returned no data" };
 }
 
+async function handleGetAccessibleProfiles(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const profileIds = optionalUuidArray(params.profileIds, "profileIds");
+  const targetUserId = optionalUuid(params.targetUserId, "targetUserId");
+  const profileType = optionalProfileType(params.profileType);
+
+  if (profileIds === null && targetUserId === null) {
+    throw new RequestValidationError("profileIds or targetUserId is required");
+  }
+
+  const { data, error } = await supabaseAdmin.rpc("profile_rpc_get_accessible_profiles", {
+    p_actor_user_id: auth.userId,
+    p_profile_ids: profileIds,
+    p_target_user_id: targetUserId,
+    p_profile_type: profileType,
+  });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+async function handleGetVisibleContact(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const profileId = requireUuid(params.profileId, "profileId");
+  const { data, error } = await supabaseAdmin.rpc("profile_rpc_get_visible_contact", {
+    p_actor_user_id: auth.userId,
+    p_profile_id: profileId,
+  });
+
+  if (error) throw error;
+  return data ?? null;
+}
+
 async function dispatchAction(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
@@ -263,6 +332,10 @@ async function dispatchAction(
       return handleTransferOwnership(supabaseAdmin, auth, params);
     case "inviteMemberByEmail":
       return handleInviteMemberByEmail(supabaseAdmin, auth, params);
+    case "getAccessibleProfiles":
+      return handleGetAccessibleProfiles(supabaseAdmin, auth, params);
+    case "getVisibleContact":
+      return handleGetVisibleContact(supabaseAdmin, auth, params);
   }
 }
 

@@ -9,6 +9,10 @@ import {
   PublicIdentityService,
 } from "@/core/public-identity";
 import { SessionRpcService } from "@/core/session/services/SessionRpcService";
+import {
+  ProfileRpcService,
+  type VisibleProfileContact,
+} from "./ProfileRpcService";
 import { callRPC } from "@/integrations/supabase";
 import { PROFILE_VERIFICATION_STATUS } from "@/core/profiles/constants/verificationStatus";
 import { getSocialInteractionStatsByProfile } from "@/core/social/services/socialInteractionStats.queries";
@@ -42,7 +46,6 @@ import type {
   ProfileFilterRow,
   ProfileIdRow,
   RecentProfileRow,
-  RideProfileRow,
   UserSubscriptionLike,
   VerificationWorkflowStatus,
 } from "./profile.service.types";
@@ -89,8 +92,7 @@ import {
 } from "./profile.external-data.queries";
 import {
   getActiveProfileRpc,
-  getActiveRideId as getActiveRideIdQuery,
-  getAllUsers as getAllUsersQuery,
+  getSuspendedUsers as getSuspendedUsersQuery,
   getAllProfileIds as getAllProfileIdsQuery,
   getAdminProfilesList as getAdminProfilesListQuery,
   checkUsernameExists as checkUsernameExistsQuery,
@@ -104,14 +106,11 @@ import {
   getProfilesByVerificationStatus as getProfilesByVerificationStatusQuery,
   getProfilesCreatedInPeriod as getProfilesCreatedInPeriodQuery,
   getProfilesFiltered as getProfilesFilteredQuery,
-  getProfilesForRides as getProfilesForRidesQuery,
   getProfilesSummary as getProfilesSummaryQuery,
   getProfilesSummaryExtended as getProfilesSummaryExtendedQuery,
-  getProfilesWithAlertBan as getProfilesWithAlertBanQuery,
   getRecentProfiles as getRecentProfilesQuery,
   getSimilarUsernames as getSimilarUsernamesQuery,
   getTotalProfilesCount as getTotalProfilesCountQuery,
-  getUserIdsByCity as getUserIdsByCityQuery,
   getUsernameHistory as getUsernameHistoryQuery,
   getVerificationStats as getVerificationStatsQuery,
   resolveProfileIdByUserId,
@@ -159,11 +158,31 @@ export class ProfileService {
   async getProfileById(profileId: string): Promise<Profile | null> {
     return getProfileByIdQuery(profileId);
   }
+  async getAccessibleProfileById(profileId: string): Promise<Profile | null> {
+    const profiles = await this.getAccessibleProfilesByIds([profileId]);
+    return profiles[0] ?? null;
+  }
   async getActiveProfile(userId?: string): Promise<Profile | null> {
     return getActiveProfileRpc(userId);
   }
   async getProfilesByUserId(userId?: string): Promise<Profile[]> {
     return getProfilesByUserIdQuery(userId);
+  }
+  async getAccessibleProfilesByUserIds(userIds: string[]): Promise<Profile[]> {
+    const uniqueUserIds = [...new Set(userIds)];
+    const profiles: Profile[] = [];
+
+    for (let offset = 0; offset < uniqueUserIds.length; offset += 10) {
+      const batchUserIds = uniqueUserIds.slice(offset, offset + 10);
+      const batch = await Promise.all(
+        batchUserIds.map((targetUserId) =>
+          ProfileRpcService.getAccessibleProfiles<Profile[]>({ targetUserId }),
+        ),
+      );
+      profiles.push(...batch.flat());
+    }
+
+    return profiles;
   }
   async resolveProfileId(identifier: string): Promise<string | null> {
     const directProfile = await this.getProfileById(identifier);
@@ -216,7 +235,7 @@ export class ProfileService {
     return updateProfileCommand({
       profileId,
       updates,
-      getProfileById: (id) => this.getProfileById(id),
+      getProfileById: (id) => this.getAccessibleProfileById(id),
       updateProfileDirect: (id, payload) => updateProfileDirect(id, payload),
     });
   }
@@ -240,16 +259,6 @@ export class ProfileService {
   }
   async deleteProfile(profileId: string): Promise<void> {
     await deleteProfileMutation(profileId);
-  }
-  async getProfilesWithAlertBan(profileIds: string[]): Promise<
-    Array<{
-      id: string;
-      alert_banned: boolean;
-      neighborhood: string | null;
-      created_at: string;
-    }>
-  > {
-    return getProfilesWithAlertBanQuery(profileIds);
   }
   async getPrivateWorkspace(userId: string): Promise<ProfilePrivateWorkspace> {
     return getPrivateWorkspaceAggregate({
@@ -324,6 +333,18 @@ export class ProfileService {
   async getProfilesByIds(ids: string[]): Promise<Profile[]> {
     return getProfilesByIdsQuery(ids);
   }
+  async getAccessibleProfilesByIds(ids: string[]): Promise<Profile[]> {
+    const uniqueIds = [...new Set(ids)];
+    if (uniqueIds.length === 0) return [];
+
+    const profiles: Profile[] = [];
+    for (let offset = 0; offset < uniqueIds.length; offset += 100) {
+      const profileIds = uniqueIds.slice(offset, offset + 100);
+      const batch = await ProfileRpcService.getAccessibleProfiles<Profile[]>({ profileIds });
+      profiles.push(...batch);
+    }
+    return profiles;
+  }
   async getProfilesSummary(ids: string[]): Promise<ProfileSummary[]> {
     return getProfilesSummaryQuery(ids);
   }
@@ -357,9 +378,6 @@ export class ProfileService {
       canMessage: context?.permissions.canMessage ?? false,
     };
   }
-  async getActiveRideId(profileId: string): Promise<string | null> {
-    return getActiveRideIdQuery(profileId);
-  }
   async setActiveRideId(
     profileId: string,
     rideId: string | null,
@@ -369,11 +387,8 @@ export class ProfileService {
   async clearActiveRideId(profileId: string, rideId: string): Promise<void> {
     await clearActiveRideIdMutation(profileId, rideId);
   }
-  async getProfilesForRides(
-    ids: string[],
-    type: "passenger" | "driver",
-  ): Promise<RideProfileRow[]> {
-    return getProfilesForRidesQuery(ids, type);
+  async getVisibleContact(profileId: string): Promise<VisibleProfileContact | null> {
+    return ProfileRpcService.getVisibleContact(profileId);
   }
   async unsuspendUser(userId: string): Promise<void> {
     await this.updateProfile(userId, {
@@ -395,9 +410,6 @@ export class ProfileService {
     },
   ): Promise<Profile[]> {
     return getProfilesByVerificationStatusQuery(status, options);
-  }
-  async getUserIdsByCity(city: string, limit = 500): Promise<string[]> {
-    return getUserIdsByCityQuery(city, limit);
   }
   async getVerificationStats(): Promise<{
     pending: number;
@@ -429,7 +441,7 @@ export class ProfileService {
   ): Promise<void> {
     await suspendUserMutation(userId, duration, reason);
   }
-  async getAllUsers(): Promise<
+  async getSuspendedUsers(limit = 100): Promise<
     Array<{
       id: string;
       name: string;
@@ -440,7 +452,7 @@ export class ProfileService {
       reputation: number;
     }>
   > {
-    return getAllUsersQuery();
+    return getSuspendedUsersQuery(limit);
   }
   // SSOT: metodos auxiliares para dados complementares de perfil
   async getUserRoles(userId: string): Promise<string[]> {

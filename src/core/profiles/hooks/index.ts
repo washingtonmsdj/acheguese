@@ -8,3 +8,4 @@ export * from "./usePrivateProfileWorkspace";
 export * from "./useProfileEditor";
 export * from "./useContaWorkspace";
 export * from "./useProfileHub";
+export * from "./useVisibleProfileContact";

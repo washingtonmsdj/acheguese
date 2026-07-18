@@ -9,12 +9,6 @@ export type UserSubscriptionLike = {
   plan_type?: string | null;
   expires_at?: string | null;
 } | null;
-export type ProfileWithAlertBanRow = {
-  id: string;
-  alert_banned?: boolean | null;
-  neighborhood?: string | null;
-  created_at?: string | null;
-};
 export type BusinessRow = {
   profile_id: string;
   business_name: string;
@@ -47,17 +41,6 @@ export type ProfileFilterRow = {
   username?: string | null;
   name?: string | null;
   display_name?: string | null;
-};
-export type ActiveRideIdRow = { active_ride_id: string | null };
-export type RideProfileRow = {
-  id: string;
-  name: string | null;
-  avatar_url: string | null;
-  city?: string | null;
-  neighborhood?: string | null;
-  street?: string | null;
-  pontos?: number | null;
-  telefone?: string | null;
 };
 export type UserListRow = {
   id: string;

@@ -20,7 +20,7 @@ import { logger } from "@/shared/utils/logger";
 import { adminMobilityService } from "@/core/admin"; // ✅ MIGRADO - Usa AdminMobilityService do core
 import { profileService } from "@/core/profiles/services";
 
-type AdminUser = Awaited<ReturnType<typeof profileService.getAllUsers>>[number];
+type AdminUser = Awaited<ReturnType<typeof profileService.getSuspendedUsers>>[number];
 type LowRatedUser = Awaited<ReturnType<typeof profileService.getLowRatedUsers>>[number];
 type SuspendedDriver = AdminUser & { cancellation_rate: number };
 
@@ -47,13 +47,8 @@ export function ReputationBanishments() {
 
   async function loadData() {
     try {
-      // ✅ MIGRADO - Busca todos os usuários usando ProfileService
-      const allUsers = await profileService.getAllUsers();
+      const suspended = await profileService.getSuspendedUsers();
 
-      // ✅ MIGRADO - Filtra suspensos usando ProfileService
-      const suspended = allUsers.filter((user) => user.status.isSuspended);
-
-      // Buscar dados adicionais de cancelamento para motoristas suspensos
       const suspendedWithData = await Promise.all(
         suspended.map(async (user) => {
           // ✅ SSOT - Usar MobilityService para dados de motorista

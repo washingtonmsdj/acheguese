@@ -123,6 +123,7 @@ export { usePrivateProfileWorkspace } from "./hooks/usePrivateProfileWorkspace";
 export { useProfileEditor } from "./hooks/useProfileEditor";
 export { useContaWorkspace } from "./hooks/useContaWorkspace";
 export { useProfileHub } from "./hooks/useProfileHub";
+export { useVisibleProfileContact } from "./hooks/useVisibleProfileContact";
 
 export { MultiProfileProvider, ModuleContextSync, useMultiProfileContext } from './contexts/multi-profile-runtime-context.tsx';
 export type { MultiProfileContextValue } from './contexts/multi-profile-runtime-context.tsx';

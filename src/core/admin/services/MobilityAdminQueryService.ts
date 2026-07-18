@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import type { Tables } from "@/integrations/supabase";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
@@ -15,7 +16,6 @@ type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
   eq(column: string, value: unknown): TableClient<TRow>;
   in(column: string, values: readonly unknown[]): TableClient<TRow>;
   or(filters: string): TableClient<TRow>;
-  not(column: string, operator: string, value: unknown): TableClient<TRow>;
   order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
   limit(value: number): TableClient<TRow>;
 };
@@ -265,15 +265,11 @@ export class MobilityAdminQueryService {
 
   static async countDriverSuspensions(userId: string): Promise<number> {
     try {
-      const { count, error } = await mobilityDb
-        .from<ProfileRow>("profiles")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", userId)
-        .eq("profile_type", "driver")
-        .not("suspended_until", "is", null);
-
-      if (error) throw error;
-      return count ?? 0;
+      const profiles = await profileService.getProfilesByUserId(userId);
+      return profiles.filter(
+        (profile) =>
+          profile.profile_type === "driver" && Boolean(profile.suspended_until),
+      ).length;
     } catch (error) {
       logger.error("MobilityAdminQueryService.countDriverSuspensions", error as Error, {
         userId,

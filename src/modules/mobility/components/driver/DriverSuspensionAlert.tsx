@@ -57,7 +57,7 @@ export function DriverSuspensionAlert() {
 
       const driverProfile =
         (effectiveDriverProfileId
-          ? await profileService.getProfileById(effectiveDriverProfileId)
+          ? await profileService.getAccessibleProfileById(effectiveDriverProfileId)
           : await profileService.getProfileByType(userId, "driver")) as DriverProfileSnapshot | null;
 
       if (!driverProfile) {

@@ -58,7 +58,7 @@ class AdminProfileGovernanceService {
     try {
       // ✅ SSOT: Usar profileService para buscar profiles
       const allIds = await profileService.getAllProfileIds() as string[];
-      const profiles = await profileService.getProfilesByIds(allIds);
+      const profiles = await profileService.getAccessibleProfilesByIds(allIds);
       
       // Converter para RawRecord para manter compatibilidade com código existente
       const profilesRaw = profiles as unknown as RawRecord[];
@@ -258,7 +258,7 @@ class AdminProfileGovernanceService {
       const userIds = unique(profilesBasic.map((profile) => profile.user_id)) as string[];
       
       // ✅ SSOT: Buscar dados completos via profileService
-      const profiles = await profileService.getProfilesByIds(profileIds);
+      const profiles = await profileService.getAccessibleProfilesByIds(profileIds);
       const profilesMap = new Map(profiles.map(p => [p.id, p as unknown as RawRecord]));
 
       const [
@@ -315,7 +315,7 @@ class AdminProfileGovernanceService {
   async getProfileDetail(profileId: string): Promise<AdminProfileIdentityDetail | null> {
     try {
       // ✅ SSOT: Usar profileService para buscar profile
-      const profileData = await profileService.getProfileById(profileId);
+      const profileData = await profileService.getAccessibleProfileById(profileId);
       if (!profileData) return null;
 
       const profile = profileData as unknown as RawRecord;

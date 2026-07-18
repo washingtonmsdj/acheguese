@@ -3,6 +3,7 @@ import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
 import { mapAdminUserList } from "./profile.service.admin-rules";
+import { ProfileRpcService } from "./ProfileRpcService";
 import type { ProfilePermissions, ProfileStatus } from "@/core/profiles/contracts/ProfileRuntimeContracts";
 import type { PassengerRatingRow, UserListRow } from "./profile.service.types";
 
@@ -46,39 +47,6 @@ interface ProfileAdminQueriesDbClient {
 
 const profileAdminQueriesDb = supabase as unknown as ProfileAdminQueriesDbClient;
 
-export async function getUserIdsByCity(city: string, limit = 500): Promise<string[]> {
-  try {
-    const normalizedCity = city.trim();
-    if (!normalizedCity) return [];
-
-    const { data, error } = await supabase
-      .from(TABLE)
-      .select("user_id")
-      .eq("city", normalizedCity)
-      .limit(limit);
-
-    if (error) {
-      trackError(new Error("Error fetching user ids by city"), {
-        component: "profile.queries",
-        action: "getUserIdsByCity",
-        metadata: { city: normalizedCity, limit, error: error.message },
-      });
-      return [];
-    }
-
-    return (data ?? [])
-      .map((row) => row.user_id)
-      .filter((id): id is string => typeof id === "string" && id.length > 0);
-  } catch (error) {
-    trackError(new Error("Error fetching user ids by city"), {
-      component: "profile.queries",
-      action: "getUserIdsByCity",
-      metadata: { city, limit, error: error instanceof Error ? error.message : String(error) },
-    });
-    return [];
-  }
-}
-
 export async function getVerificationStats(): Promise<{
   pending: number;
   verified: number;
@@ -115,7 +83,7 @@ export async function getVerificationStats(): Promise<{
   }
 }
 
-export async function getAllUsers(): Promise<
+export async function getSuspendedUsers(limit = 100): Promise<
   Array<{
     id: string;
     name: string;
@@ -126,23 +94,30 @@ export async function getAllUsers(): Promise<
     reputation: number;
   }>
 > {
+  const boundedLimit = Math.max(1, Math.min(limit, 100));
   const { data, error } = await supabase
     .from(TABLE)
-    .select(
-      "id, name, avatar_url, is_active, is_suspended, suspended_at, suspension_reason, suspended_until, verified, reputation",
-    )
-    .order("created_at", { ascending: false });
+    .select("id")
+    .eq("is_suspended", true)
+    .order("created_at", { ascending: false })
+    .limit(boundedLimit);
 
   if (error) {
-    trackError(new Error("Error fetching all users"), {
+    trackError(new Error("Error fetching suspended profile ids"), {
       component: "profile.queries",
-      action: "getAllUsers",
+      action: "getSuspendedUsers",
       metadata: { error },
     });
     return [];
   }
 
-  return mapAdminUserList((data as UserListRow[] | null) || []);
+  const profileIds = (data ?? []).map((profile) => profile.id);
+  if (profileIds.length === 0) return [];
+
+  const profiles = await ProfileRpcService.getAccessibleProfiles<UserListRow[]>({
+    profileIds,
+  });
+  return mapAdminUserList(profiles);
 }
 
 export async function resolveOwnedProfileIds(userId: string): Promise<string[]> {

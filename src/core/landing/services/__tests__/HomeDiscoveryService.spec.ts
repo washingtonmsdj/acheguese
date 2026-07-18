@@ -144,6 +144,7 @@ const featuredClassified = {
   public_id: "bike1234",
   slug: "bicicleta-usada",
   geographic_path: "/br/ba/salvador/pituba",
+  territory_name: "Pituba",
   category_slug: "esportes",
   subcategory_slug: "bicicletas",
 };

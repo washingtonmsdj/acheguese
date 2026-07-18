@@ -22,8 +22,6 @@ export interface ClassifiedData {
   seller_id: string;
   seller_name?: string;
   seller_avatar?: string;
-  seller_phone?: string;
-  seller_whatsapp?: string;
   slug?: string;
   public_id?: string;
   category_id?: string;

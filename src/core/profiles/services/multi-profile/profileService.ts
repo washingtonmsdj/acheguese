@@ -225,14 +225,10 @@ export class MultiProfileService {
    */
   static async getProfileById(profileId: string): Promise<Profile | null> {
     try {
-      const { data, error } = await selectLooseRows<Profile>('profiles', {
-        filters: [{ op: 'eq', column: 'id', value: profileId }],
-        limit: 1,
+      const profiles = await ProfileRpcService.getAccessibleProfiles<Profile[]>({
+        profileIds: [profileId],
       });
-
-      if (error) throw error;
-
-      return data?.[0] ?? null;
+      return profiles[0] ?? null;
     } catch (error: unknown) {
       logger.error('Error fetching profile by id:', error);
       return null;

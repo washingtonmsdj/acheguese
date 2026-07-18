@@ -23,8 +23,6 @@ export interface VendedorPerfil extends VendedorWithAds {
   response_rate: number;
   avg_rating: number;
   total_reviews: number;
-  phone?: string | null;
-  whatsapp?: string | null;
   all_ads: Array<{
     id: string;
     public_id?: string | null;
@@ -82,8 +80,6 @@ export function useVendedorPerfil(sellerId: string | undefined) {
           response_rate: 0,
           avg_rating: 0,
           total_reviews: 0,
-          phone: profile.phone || null,
-          whatsapp: profile.whatsapp || null,
           featured_ads: activeAds.slice(0, 3).map((ad) => ({
             id: ad.id,
             title: ad.title,

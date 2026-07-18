@@ -74,6 +74,7 @@ export interface FeaturedClassified {
   public_id?: string;
   slug?: string;
   geographic_path?: string;
+  territory_name?: string;
   category_slug?: string;
   subcategory_slug?: string;
 }
@@ -119,7 +120,10 @@ interface FeaturedClassifiedRow {
   created_at: string | null;
   public_id: string | null;
   slug: string | null;
-  locations?: { geographic_path?: string | null } | null;
+  locations?: {
+    geographic_path?: string | null;
+    name?: string | null;
+  } | null;
   classified_categories?: { slug?: string | null } | null;
   classified_subcategories?: { slug?: string | null } | null;
 }
@@ -207,6 +211,7 @@ function mapFeaturedClassifiedRow(row: FeaturedClassifiedRow): FeaturedClassifie
     public_id: row.public_id ?? undefined,
     slug: row.slug ?? undefined,
     geographic_path: row.locations?.geographic_path ?? undefined,
+    territory_name: row.locations?.name ?? undefined,
     category_slug: row.classified_categories?.slug ?? undefined,
     subcategory_slug: row.classified_subcategories?.slug ?? undefined,
   };
@@ -456,7 +461,7 @@ export class LandingFeaturedService {
           created_at,
           public_id,
           slug,
-          locations(geographic_path),
+          locations(name, geographic_path),
           classified_categories(slug),
           classified_subcategories(slug)
         `)
@@ -504,7 +509,7 @@ export class LandingFeaturedService {
           created_at,
           public_id,
           slug,
-          locations(geographic_path),
+          locations(name, geographic_path),
           classified_categories(slug),
           classified_subcategories(slug)
         `)

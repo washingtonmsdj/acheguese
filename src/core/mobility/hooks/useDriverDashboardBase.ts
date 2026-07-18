@@ -140,7 +140,7 @@ export function useDriverDashboardBase({
         return null;
       }
 
-      return profileService.getProfileById(driverProfileId);
+      return profileService.getAccessibleProfileById(driverProfileId);
     },
     enabled: !!driverProfileId,
     staleTime: TIMEOUTS.CACHE_STALE_TIME_MEDIUM,

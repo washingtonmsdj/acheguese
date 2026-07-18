@@ -46,7 +46,7 @@ export class AdminDriverModerationService {
 
     let data: DriverModerationRow[] = [];
     try {
-      data = (await profileService.getProfilesByIds(profileIds)) as DriverModerationRow[];
+      data = (await profileService.getAccessibleProfilesByIds(profileIds)) as DriverModerationRow[];
     } catch (error) {
       logger.warn("AdminDriverModerationService.getModerationRows", error);
       return new Map<string, DriverModerationRow>();
@@ -68,7 +68,7 @@ export class AdminDriverModerationService {
     };
     let data: FallbackProfileRow | null = null;
     try {
-      data = (await profileService.getProfileById(driverProfileId)) as FallbackProfileRow | null;
+      data = (await profileService.getAccessibleProfileById(driverProfileId)) as FallbackProfileRow | null;
     } catch (error) {
       logger.warn("AdminDriverModerationService.getFallbackSuspensionHistory", error);
       return [];

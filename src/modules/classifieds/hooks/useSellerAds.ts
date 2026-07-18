@@ -33,8 +33,6 @@ export function useSellerAds(sellerId: string | undefined, excludeId?: string) {
             id: item.seller_id,
             nome: item.seller_name || "",
             avatar_url: item.seller_avatar || null,
-            phone: item.seller_phone || null,
-            whatsapp: item.seller_whatsapp || null,
           },
         })) as ClassificadoWithVendedor[];
     },

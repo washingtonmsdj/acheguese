@@ -21,20 +21,17 @@ import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { useVisibleProfileContact } from "@/core/profiles";
 
 interface VendedorContactBarProps {
   vendedorId: string;
   vendedorName: string;
-  vendedorPhone?: string | null;
-  vendedorWhatsapp?: string | null;
   initialClassifiedId?: string | null;
 }
 
 export function VendedorContactBar({
   vendedorId,
   vendedorName,
-  vendedorPhone,
-  vendedorWhatsapp,
   initialClassifiedId,
 }: VendedorContactBarProps) {
   const { user } = useAuth();
@@ -44,8 +41,9 @@ export function VendedorContactBar({
   const [chatOpen, setChatOpen] = useState(false);
   const [message, setMessage] = useState("");
   const showInternalChat = isLaunchSurfaceEnabled("communityCommunication");
+  const { contact } = useVisibleProfileContact(vendedorId);
 
-  const whatsappNumber = vendedorWhatsapp || vendedorPhone;
+  const whatsappNumber = contact?.whatsapp || contact?.phone;
 
   const handleWhatsApp = () => {
     if (!whatsappNumber) {
@@ -106,14 +104,16 @@ export function VendedorContactBar({
   return (
     <>
       <div className="mt-4 flex gap-2">
-        <Button
-          onClick={handleWhatsApp}
-          className="flex-1 gap-2 bg-green-600 text-white hover:bg-green-700"
-          size="sm"
-        >
-          <Phone className="h-4 w-4" />
-          WhatsApp
-        </Button>
+        {whatsappNumber ? (
+          <Button
+            onClick={handleWhatsApp}
+            className="flex-1 gap-2 bg-green-600 text-white hover:bg-green-700"
+            size="sm"
+          >
+            <Phone className="h-4 w-4" />
+            WhatsApp
+          </Button>
+        ) : null}
         {showInternalChat ? (
           <Button
             onClick={() => setChatOpen(true)}

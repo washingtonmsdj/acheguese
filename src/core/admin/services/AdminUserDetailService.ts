@@ -146,7 +146,7 @@ export class AdminUserDetailService {
 
     let data: Array<{ id: string; name?: string | null }> = [];
     try {
-      data = (await profileService.getProfilesByIds(profileIds)) as Array<{ id: string; name?: string | null }>;
+      data = (await profileService.getAccessibleProfilesByIds(profileIds)) as Array<{ id: string; name?: string | null }>;
     } catch (error) {
       logger.warn("AdminUserDetailService.loadReporterNames", error);
       return new Map<string, string>();

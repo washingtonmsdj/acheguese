@@ -144,7 +144,7 @@ export async function getSavedPosts(
       .select(
         `
           *,
-          author_profile:profiles!author_profile_id(*)
+          author_profile:profiles!author_profile_id(id, name, display_name, avatar_url, verified)
         `,
       )
       .in("id", postIds)

@@ -16,6 +16,8 @@ Este documento consolida:
 
 ## SSOT atual
 - Servico principal: `src/core/profiles/services/ProfileService.ts`
+- Projecao publica PII-free: `public.public_profiles`
+- Broker privado/contato consentido: `profile-rpc` e `ProfileRpcService`
 - Multi-profile: `src/core/profiles/services/multi-profile/profileService.ts`
 - Entidade derivada de familia: `src/core/family/services/FamilyService.ts`
 - Hook canonico de edicao privada: `src/core/profiles/hooks/useProfileEditor.ts`
@@ -45,6 +47,7 @@ Este documento consolida:
 ### Separacao de dados
 #### Publicos
 - `name`
+- `display_name`
 - `avatar_url`
 - `bio`
 - `username`
@@ -55,16 +58,41 @@ Este documento consolida:
   - vinculos publicos com entidades
 
 #### Privados
-- `user_id`
 - preferencias pessoais
-- dados de contato nao expostos
+- `phone`, `whatsapp`, `telefone` e `contact_email`
 - endereco completo e evidencias de residencia
+- IDs territoriais brutos (`location_id` e `main_territory_location_id`)
+- `active_ride_id` e outros estados operacionais
 - flags internas de moderacao/suspensao
 - metadados operacionais de assinatura/permissao
 
 ### Regra
 - dado privado so pode subir para superficie publica por contrato explicito do dominio.
 - UI nao decide sozinha o que e publico; `ProfileService` e as regras de identidade precisam ser a fonte.
+- `anon` e `authenticated` nao recebem `SELECT` de tabela em `profiles`; recebem
+  somente grants de coluna explicitamente publicos.
+- contato nao pertence a listagens, cards ou joins genericos. A leitura passa por
+  `profile-rpc`, exige JWT e respeita `show_phone`/`show_contact_email`.
+- localizacao publica e sempre derivada da residencia canonica e limitada por
+  `public_location_visibility`: oculta, cidade ou bairro. O browser nao le os
+  IDs territoriais brutos do registro de `profiles`.
+- proprietario, membro gestor e admin podem ler dados privados somente pelo broker
+  autenticado e pelos RPCs actor-bound de `profiles`.
+- `user_id` permanece um identificador tecnico selecionavel para integridade de
+  relacionamentos; nao e namespace, prova de autorizacao nem dado de exibicao.
+
+### Evidencia operacional
+- migrations `20260718100000_harden_profile_pii_read_boundaries.sql`,
+  `20260718110000_tighten_profile_private_broker_scope.sql` e
+  `20260718120000_enforce_profile_location_visibility.sql`, complementada por
+  `20260718130000_enforce_hidden_profile_location_projection.sql` e
+  `20260718140000_add_public_profile_territory_boundary.sql`, aplicadas no
+  remoto;
+- `npm run security:profiles:pii-probe` prova bloqueio de PII para anonimo e
+  autenticado, bloqueio de IDs territoriais brutos, ausencia de cidade/bairro/
+  estado em perfis ocultos, projecao publica consentida e contato autorizado
+  pelo broker;
+- auditoria: `docs/audits/PROFILE_PII_READ_BOUNDARY_2026-07-18.md`.
 
 ## Username e namespace
 ### Regra canonica

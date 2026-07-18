@@ -65,10 +65,11 @@ export default function AdminReivindicacoes() {
     // Enrich with user and business names using ProfileService
     const enriched = await Promise.all(
       ((data || []) as BusinessClaimRecord[]).map(async (claim) => {
-        const [profile, biz] = await Promise.all([
-          profileService.getProfileById(claim.user_id),
+        const [profiles, biz] = await Promise.all([
+          profileService.getAccessibleProfilesByUserIds([claim.user_id]),
           adminBusinessService.getBusinessClaimDetails(claim.business_id),
         ]);
+        const profile = profiles[0] ?? null;
         return {
           ...claim,
           user_name: profile?.name || "Desconhecido",

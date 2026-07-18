@@ -146,8 +146,6 @@ export default function VendedorPerfilPage() {
         <VendedorContactBar
           vendedorId={vendedor.id}
           vendedorName={vendedor.name}
-          vendedorPhone={vendedor.phone}
-          vendedorWhatsapp={vendedor.whatsapp}
           initialClassifiedId={vendedor.all_ads[0]?.id ?? null}
         />
       </motion.div>

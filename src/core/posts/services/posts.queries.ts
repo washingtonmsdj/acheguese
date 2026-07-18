@@ -92,7 +92,7 @@ export async function getPostById(postId: string): Promise<Post | null> {
       .select(
         `
           *,
-          author_profile:profiles!author_profile_id(*)
+          author_profile:profiles!author_profile_id(id, name, display_name, avatar_url, verified)
         `,
       )
       .eq("id", postId)

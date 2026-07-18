@@ -1,5 +1,5 @@
 import { logger } from "@/shared/utils/logger";
-import { selectLooseRows } from "@/integrations/supabase";
+import { ProfileRpcService } from "../ProfileRpcService";
 
 import type { Profile } from "./types";
 
@@ -8,14 +8,9 @@ export const MultiProfileRuntimeService = {
     if (!userId) return [];
 
     try {
-      const { data, error } = await selectLooseRows<Profile>("profiles", {
-        filters: [{ op: "eq", column: "user_id", value: userId }],
-        orderBy: { column: "created_at", ascending: true },
+      return await ProfileRpcService.getAccessibleProfiles<Profile[]>({
+        targetUserId: userId,
       });
-
-      if (error) throw error;
-
-      return (data ?? []) as Profile[];
     } catch (error) {
       logger.error("Error fetching runtime profiles:", error);
       return [];

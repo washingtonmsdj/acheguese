@@ -17501,9 +17501,11 @@ export type Database = {
           city: string | null
           created_at: string | null
           display_name: string | null
+          handle: string | null
           id: string | null
           is_active: boolean | null
           location_id: string | null
+          name: string | null
           neighborhood: string | null
           pontos: number | null
           profile_type: string | null
@@ -17516,6 +17518,9 @@ export type Database = {
           updated_at: string | null
           user_id: string | null
           username: string | null
+          verified: boolean | null
+          verified_at: string | null
+          website: string | null
         }
         Relationships: [
           {
@@ -20488,6 +20493,76 @@ export type Database = {
         Returns: Json
       }
       profile_rpc_delete_profile: {
+        Args: { p_actor_user_id: string; p_profile_id: string }
+        Returns: Json
+      }
+      profile_rpc_get_accessible_profiles: {
+        Args: {
+          p_actor_user_id: string
+          p_profile_ids?: string[]
+          p_profile_type?: string
+          p_target_user_id?: string
+        }
+        Returns: {
+          active_ride_id: string | null
+          avatar_url: string | null
+          bio: string | null
+          city: string | null
+          community_reputation_score: number
+          contact_email: string | null
+          country: string | null
+          created_at: string
+          display_name: string | null
+          handle: string | null
+          id: string
+          is_active: boolean
+          is_public: boolean | null
+          is_suspended: boolean
+          location: string | null
+          location_id: string | null
+          main_territory_location_id: string | null
+          name: string
+          neighborhood: string | null
+          phone: string | null
+          pontos: number
+          profile_type: string
+          public_location_visibility: string
+          reputation: number
+          reputation_score: number | null
+          requires_pin_for_deliveries: boolean | null
+          requires_pin_for_rides: boolean | null
+          share_activity_default: boolean | null
+          short_bio: string | null
+          show_business_links: boolean | null
+          show_contact_email: boolean | null
+          show_linked_profiles: boolean | null
+          show_phone: boolean | null
+          show_professional_links: boolean | null
+          slug: string | null
+          state: string | null
+          street: string | null
+          suspended: boolean
+          suspended_at: string | null
+          suspended_until: string | null
+          suspension_reason: string | null
+          telefone: string | null
+          trust_score: number | null
+          updated_at: string
+          user_id: string
+          username: string | null
+          verified: boolean
+          verified_at: string | null
+          website: string | null
+          whatsapp: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      profile_rpc_get_visible_contact: {
         Args: { p_actor_user_id: string; p_profile_id: string }
         Returns: Json
       }

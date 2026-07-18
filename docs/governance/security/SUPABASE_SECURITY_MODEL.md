@@ -29,6 +29,28 @@ seguranca.
    server-side.
 5. Advisor, migrations e validadores confirmam que a decisao ficou auditavel.
 
+RLS controla linhas, nao colunas. Uma policy publica em tabela com PII nunca e
+suficiente por si so. Nesses casos o projeto deve combinar:
+
+- `REVOKE SELECT` da tabela para roles de browser;
+- `GRANT SELECT (colunas...)` com allowlist explicita e sem PII;
+- view publica PII-free para leitura de descoberta;
+- broker/RPC actor-bound para leitura privada ou contato com consentimento.
+
+O contrato de referencia e `profiles`: `public_profiles` e a projecao publica,
+enquanto `profile-rpc` concentra perfis acessiveis e contato condicionado por
+`show_phone`/`show_contact_email`. Telefone, WhatsApp, e-mail, endereco exato e
+estado operacional nao podem entrar em joins ou payloads genericos. IDs de
+residencia e territorio exato tambem sao privados: a projecao publica deve
+reduzi-los a cidade ou bairro somente quando `public_location_visibility`
+autorizar, e retornar `NULL` quando a localizacao estiver oculta.
+Quando uma view `security_invoker` precisar derivar essa informacao de uma
+tabela privada, usar uma RPC `SECURITY DEFINER` minima e PII-free que reaplique
+os filtros publicos. `profile_public_territory_projection` e o contrato de
+referencia; conceder `SELECT` de `user_residences` a `anon` nao e aceitavel.
+Leituras privadas devem exigir escopo delimitado (IDs ou usuario-alvo), impor
+limite por lote e distinguir gestor (`owner`/`admin`) de membro comum.
+
 ## Data API E Grants Explicitos
 
 O Supabase anunciou em 2026-04-28 uma mudanca nos defaults de grants para novas
@@ -128,6 +150,10 @@ conflito com nomes que sempre exigem JWT por meio de
 `scripts/security/edge-function-auth-policy.mjs`; o contrato local
 `[functions.*]` em `supabase/config.toml` e validado por
 `scripts/security/edge-function-auth-config.mjs`.
+
+Validadores de UUID em brokers devem aceitar somente a forma canonica completa
+(`8-4-4-4-12`) e possuir teste de regressao. Validacao sintatica nunca substitui
+a autorizacao actor-bound no RPC.
 
 Toda Edge Function que usa `SUPABASE_SERVICE_ROLE_KEY` ou `SERVICE_ROLE` deve
 estar classificada em

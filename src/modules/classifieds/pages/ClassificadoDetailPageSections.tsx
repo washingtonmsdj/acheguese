@@ -86,12 +86,14 @@ export function ClassifiedStatusOwnerPanel({
 export function SellerCard({
   vendedor,
   onWhatsApp,
+  hasWhatsApp,
   onChat,
   isChatLoading = false,
   activeAdsCount,
 }: {
   vendedor: Seller;
   onWhatsApp: () => void;
+  hasWhatsApp: boolean;
   onChat?: () => void;
   isChatLoading?: boolean;
   activeAdsCount: number;
@@ -121,13 +123,15 @@ export function SellerCard({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Button
-          onClick={onWhatsApp}
-          className="w-full bg-[#25D366] hover:bg-[#20BA5A] text-white font-bold h-11 rounded-xl"
-        >
-          <Phone className="h-4 w-4 mr-2" />
-          WhatsApp
-        </Button>
+        {hasWhatsApp ? (
+          <Button
+            onClick={onWhatsApp}
+            className="w-full bg-[#25D366] hover:bg-[#20BA5A] text-white font-bold h-11 rounded-xl"
+          >
+            <Phone className="h-4 w-4 mr-2" />
+            WhatsApp
+          </Button>
+        ) : null}
         {onChat ? (
           <Button onClick={onChat} variant="outline" className="w-full h-11 rounded-xl font-bold" disabled={isChatLoading}>
             <MessageCircle className="h-4 w-4 mr-2" />

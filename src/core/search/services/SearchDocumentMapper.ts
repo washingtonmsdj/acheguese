@@ -12,7 +12,19 @@ export type ProfessionalSearchDocumentInput = Professional & {
   target_url?: string | null;
 };
 
-export type ClassifiedSearchDocumentInput = ClassifiedData & {
+export type ClassifiedSearchDocumentInput = Pick<
+  ClassifiedData,
+  | "id"
+  | "title"
+  | "description"
+  | "price"
+  | "category"
+  | "photos"
+  | "public_id"
+  | "created_at"
+> & {
+  territory: Pick<ClassifiedData["territory"], "name">;
+  condition?: ClassifiedData["condition"];
   target_url?: string | null;
 };
 

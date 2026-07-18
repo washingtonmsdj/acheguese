@@ -11,6 +11,7 @@ import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
 import { SessionService } from "@/core/session/services/SessionService";
 import { SessionRpcService } from "@/core/session/services/SessionRpcService";
 import { postService } from "@/core/posts/services/PostService";
+import { ProfileRpcService } from "./ProfileRpcService";
 import type {
   AdminFilters,
   AdminProfileListItem,
@@ -23,13 +24,36 @@ import type {
 import type { ProfileActivityStats } from "./ProfileOperationTypes";
 import type {
   ProfileFilterRow,
-  ActiveRideIdRow,
-  ProfileWithAlertBanRow,
-  RideProfileRow,
   VerificationWorkflowStatus,
 } from "./profile.service.types";
 
 const TABLE = "profiles";
+const PUBLIC_PROFILE_VIEW = "public_profiles";
+const PUBLIC_PROFILE_COLUMNS = [
+  "id",
+  "user_id",
+  "profile_type",
+  "name",
+  "display_name",
+  "username",
+  "handle",
+  "slug",
+  "bio",
+  "avatar_url",
+  "city",
+  "neighborhood",
+  "state",
+  "location_id",
+  "public_location_visibility",
+  "reputation",
+  "pontos",
+  "verified",
+  "verified_at",
+  "website",
+  "is_active",
+  "created_at",
+  "updated_at",
+].join(",");
 
 interface QueryError {
   message?: string | null;
@@ -83,8 +107,8 @@ type RecentProfileRow = {
  */
 export async function getProfileById(profileId: string): Promise<Profile | null> {
   const { data, error } = await profileQueriesDb
-    .from<Profile>(TABLE)
-    .select("*")
+    .from<Profile>(PUBLIC_PROFILE_VIEW)
+    .select(PUBLIC_PROFILE_COLUMNS)
     .eq("id", profileId)
     .single();
 
@@ -112,23 +136,8 @@ export async function getActiveProfile(userId?: string): Promise<Profile | null>
   }
 
   if (!targetUserId) return null;
-
-  const { data, error } = await profileQueriesDb
-    .from<Profile>(TABLE)
-    .select("*")
-    .eq("user_id", targetUserId)
-    .eq("is_active", true)
-    .single();
-
-  if (error && error.code !== "PGRST116") {
-    trackError(error as Error, {
-      component: "profile.queries",
-      action: "getActiveProfile",
-      metadata: { userId: targetUserId },
-    });
-  }
-
-  return (data as Profile) || null;
+  const profiles = await getProfilesByUserId(targetUserId);
+  return profiles.find((profile) => profile.is_active) ?? null;
 }
 
 export async function getActiveProfileRpc(userId?: string): Promise<Profile | null> {
@@ -160,14 +169,11 @@ export async function getProfilesByUserId(userId?: string): Promise<Profile[]> {
 
   if (!targetUserId) return [];
 
-  const { data, error } = await profileQueriesDb
-    .from<Profile>(TABLE)
-    .select("*")
-    .eq("user_id", targetUserId)
-    .order("is_active", { ascending: false })
-    .order("created_at", { ascending: false });
-
-  if (error) {
+  try {
+    return await ProfileRpcService.getAccessibleProfiles<Profile[]>({
+      targetUserId,
+    });
+  } catch (error) {
     trackError(error as Error, {
       component: "profile.queries",
       action: "getProfilesByUserId",
@@ -175,8 +181,6 @@ export async function getProfilesByUserId(userId?: string): Promise<Profile[]> {
     });
     return [];
   }
-
-  return ((data || []) as Profile[]);
 }
 
 /**
@@ -186,22 +190,20 @@ export async function getProfileByType(
   userId: string,
   profileType: "personal" | "driver" | "business" | "professional",
 ): Promise<Profile | null> {
-  const { data, error } = await profileQueriesDb
-    .from<Profile>(TABLE)
-    .select("*")
-    .eq("user_id", userId)
-    .eq("profile_type", profileType)
-    .single();
-
-  if (error && error.code !== "PGRST116") {
+  try {
+    const profiles = await ProfileRpcService.getAccessibleProfiles<Profile[]>({
+      targetUserId: userId,
+      profileType,
+    });
+    return profiles[0] ?? null;
+  } catch (error) {
     trackError(error as Error, {
       component: "profile.queries",
       action: "getProfileByType",
       metadata: { userId, profileType },
     });
+    return null;
   }
-
-  return (data as Profile) || null;
 }
 
 /**
@@ -257,8 +259,8 @@ export async function getProfilesByIds(ids: string[]): Promise<Profile[]> {
   const uniqueIds = [...new Set(ids)];
 
   const { data, error } = await profileQueriesDb
-    .from<Profile>(TABLE)
-    .select()
+    .from<Profile>(PUBLIC_PROFILE_VIEW)
+    .select(PUBLIC_PROFILE_COLUMNS)
     .in("id", uniqueIds);
 
   if (error) {
@@ -281,8 +283,8 @@ export async function getProfilesSummary(ids: string[]): Promise<ProfileSummary[
 
   const uniqueIds = [...new Set(ids)];
 
-  const { data, error } = await supabase
-    .from(TABLE)
+  const { data, error } = await profileQueriesDb
+    .from<Profile>(PUBLIC_PROFILE_VIEW)
     .select("id, display_name, name, avatar_url, verified")
     .in("id", uniqueIds);
 
@@ -487,84 +489,6 @@ export async function getAllProfileIds(): Promise<string[]> {
   return (data ?? []).map((p: { id: string }) => p.id);
 }
 
-export async function getActiveRideId(profileId: string): Promise<string | null> {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .select("active_ride_id")
-    .eq("id", profileId)
-    .single();
-
-  if (error) return null;
-  return (data as ActiveRideIdRow | null)?.active_ride_id || null;
-}
-
-export async function getProfilesForRides(
-  ids: string[],
-  type: "passenger" | "driver",
-): Promise<RideProfileRow[]> {
-  if (ids.length === 0) return [];
-
-  const { data, error } =
-    type === "passenger"
-      ? await supabase
-          .from(TABLE)
-          .select("id,name,avatar_url,city,neighborhood,street,pontos,telefone")
-          .in("id", ids)
-      : await supabase.from(TABLE).select("id,name,avatar_url").in("id", ids);
-
-  if (error) {
-    trackError(new Error("Error fetching profiles for rides"), {
-      component: "profile.queries",
-      action: "getProfilesForRides",
-      metadata: { ids, type, error },
-    });
-    return [];
-  }
-
-  return (data as RideProfileRow[] | null) ?? [];
-}
-
-export async function getProfilesWithAlertBan(profileIds: string[]): Promise<
-  Array<{
-    id: string;
-    alert_banned: boolean;
-    neighborhood: string | null;
-    created_at: string;
-  }>
-> {
-  if (profileIds.length === 0) return [];
-
-  try {
-    const { data, error } = await profileQueriesDb
-      .from<ProfileWithAlertBanRow>(TABLE)
-      .select("id, alert_banned, neighborhood, created_at")
-      .in("id", profileIds);
-
-    if (error) {
-      trackError(new Error("Error fetching profiles with alert_banned"), {
-        component: "profile.queries",
-        action: "getProfilesWithAlertBan",
-        metadata: { profileIds, error },
-      });
-      throw error;
-    }
-
-    return ((data as ProfileWithAlertBanRow[] | null) || []).map((p) => ({
-      id: p.id,
-      alert_banned: p.alert_banned || false,
-      neighborhood: p.neighborhood || null,
-      created_at: p.created_at || "",
-    }));
-  } catch (error) {
-    trackError(error as Error, {
-      component: "profile.queries",
-      action: "getProfilesWithAlertBan",
-      metadata: { profileIds },
-    });
-    throw error;
-  }
-}
-
 // ============================================================================
 // 📊 ESTATÍSTICAS ADMINISTRATIVAS
 // ============================================================================
@@ -576,7 +500,7 @@ export async function getTotalProfilesCount(): Promise<number> {
   try {
     const { count, error } = await supabase
       .from(TABLE)
-      .select("*", { count: "exact", head: true });
+      .select("id", { count: "exact", head: true });
 
     if (error) {
       trackError(error, {
@@ -636,7 +560,7 @@ export async function getProfilesCreatedInPeriod(
   try {
     const { count, error } = await supabase
       .from(TABLE)
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .gte("created_at", startDate.toISOString())
       .lte("created_at", endDate.toISOString());
 
@@ -673,7 +597,7 @@ export async function getProfilesByVerificationStatus(
   try {
     let query = profileQueriesDb
       .from<Profile>(TABLE)
-      .select("*")
+      .select(PUBLIC_PROFILE_COLUMNS)
       .eq("verification_status", status)
       .order(options?.orderBy ?? "updated_at", { ascending: false });
 
@@ -700,9 +624,8 @@ export async function getProfilesByVerificationStatus(
 }
 
 export {
-  getUserIdsByCity,
   getVerificationStats,
-  getAllUsers,
+  getSuspendedUsers,
   resolveOwnedProfileIds,
   resolveProfileIdByUserId,
   getPassengerRatings,

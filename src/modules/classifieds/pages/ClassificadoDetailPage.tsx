@@ -60,6 +60,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 import { classifiedMessagingService } from "@/core/messaging/services/ClassifiedMessagingService";
 import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { useVisibleProfileContact } from "@/core/profiles";
 
 interface ClassificadoDetailPageProps {
   classifiedId?: string;
@@ -91,6 +92,9 @@ export default function ClassificadoDetailPage({
   });
 
   const { sellerAds } = useSellerAds(classificado?.vendedor?.id, id);
+  const { contact: sellerContact } = useVisibleProfileContact(
+    classificado?.vendedor?.id,
+  );
   const {
     canFavorite,
     isFavorite,
@@ -149,7 +153,7 @@ export default function ClassificadoDetailPage({
 
   const handleWhatsApp = useCallback(() => {
     if (!classificado?.vendedor) return;
-    const phone = classificado.vendedor.whatsapp || classificado.vendedor.phone;
+    const phone = sellerContact?.whatsapp || sellerContact?.phone;
     if (!phone) return;
     const url = buildWhatsAppUrl(
       phone,
@@ -158,7 +162,7 @@ export default function ClassificadoDetailPage({
     if (url) {
       openSafeExternalUrl(url, { context: "classified-whatsapp" });
     }
-  }, [classificado]);
+  }, [classificado, sellerContact]);
 
   const handleChat = useCallback(async () => {
     if (!user || !activeProfile?.id) {
@@ -547,6 +551,7 @@ export default function ClassificadoDetailPage({
               <SellerCard
                 vendedor={classificado.vendedor}
                 onWhatsApp={handleWhatsApp}
+                hasWhatsApp={Boolean(sellerContact?.whatsapp || sellerContact?.phone)}
                 onChat={showInternalChat ? handleChat : undefined}
                 isChatLoading={startingChat}
                 activeAdsCount={sellerAds.length + 1}
@@ -609,6 +614,7 @@ export default function ClassificadoDetailPage({
               <SellerCard
                 vendedor={classificado.vendedor}
                 onWhatsApp={handleWhatsApp}
+                hasWhatsApp={Boolean(sellerContact?.whatsapp || sellerContact?.phone)}
                 onChat={showInternalChat ? handleChat : undefined}
                 isChatLoading={startingChat}
                 activeAdsCount={sellerAds.length + 1}
