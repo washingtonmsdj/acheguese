@@ -128,25 +128,21 @@ export async function authenticateAsBusinessOwner(page: Page, businessId: string
     return;
   }
 
-  // Usar senha E2E se for o usuário E2E, senão resetar para TestPass123!
+  // O fixture precisa pertencer à conta E2E declarada. Testes nunca alteram
+  // credenciais de owners encontrados no ambiente remoto.
   const e2eEmail = process.env.E2E_USER_EMAIL || process.env.TEST_DRIVER_EMAIL;
   const e2ePassword = process.env.E2E_USER_PASSWORD || process.env.TEST_DRIVER_PASSWORD;
-  
-  let loginPassword: string;
-  if (user.email === e2eEmail && e2ePassword) {
-    // Tentar com senha E2E primeiro, mas garantir que funciona resetando
-    await admin.auth.admin.updateUserById(member.user_id, { password: e2ePassword });
-    loginPassword = e2ePassword;
-  } else {
-    // Resetar senha para padrão de teste
-    await admin.auth.admin.updateUserById(member.user_id, { password: 'TestPass123!' });
-    loginPassword = 'TestPass123!';
+
+  if (!e2eEmail || !e2ePassword || user.email.toLowerCase() !== e2eEmail.toLowerCase()) {
+    throw new Error(
+      `O business ${businessId} deve pertencer à conta E2E dedicada; o owner existente não será modificado.`,
+    );
   }
 
   // Login via UI
   await page.goto('/login');
   await page.locator('#login-identifier').fill(user.email);
-  await page.locator('#login-password').fill(loginPassword);
+  await page.locator('#login-password').fill(e2ePassword);
   await page.getByRole('button', { name: 'Entrar' }).click();
 
   // Aguardar redirecionamento após login

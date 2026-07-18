@@ -5,7 +5,10 @@
  */
 
 import { supabase } from '@/integrations/supabase';
-import { createOperationalAdminClient } from './operational-env';
+import {
+  createOperationalAdminClient,
+  requireOperationalEnv,
+} from './operational-env';
 
 let supabaseAdmin: ReturnType<typeof createOperationalAdminClient> | undefined;
 
@@ -36,19 +39,24 @@ export async function authenticateAsProfile(profileId: string): Promise<void> {
     throw new Error(`User ${profile.user_id} não encontrado ou sem email`);
   }
 
-  // Resetar senha para garantir que é TestPass123!
-  await getSupabaseAdmin().auth.admin.updateUserById(profile.user_id, {
-    password: 'TestPass123!',
-  });
-
-  // Autenticar no client padrão
-  const { error: signInError } = await supabase.auth.signInWithPassword({
+  const { data: link, error: linkError } = await getSupabaseAdmin().auth.admin.generateLink({
+    type: 'magiclink',
     email: user.email,
-    password: 'TestPass123!',
+  });
+  const tokenHash = link.properties?.hashed_token;
+
+  if (linkError || !tokenHash) {
+    throw new Error(`Falha ao gerar sessão operacional para ${profileId}: ${linkError?.message ?? 'token ausente'}`);
+  }
+
+  await supabase.auth.signOut();
+  const { data: session, error: signInError } = await supabase.auth.verifyOtp({
+    token_hash: tokenHash,
+    type: 'magiclink',
   });
 
-  if (signInError) {
-    throw new Error(`Falha ao autenticar como ${user.email}: ${signInError.message}`);
+  if (signInError || session.user?.id !== profile.user_id) {
+    throw new Error(`Falha ao autenticar o profile ${profileId}: ${signInError?.message ?? 'ator divergente'}`);
   }
 }
 
@@ -56,12 +64,28 @@ export async function authenticateAsProfile(profileId: string): Promise<void> {
  * Desloga o usuário atual
  */
 /**
- * Autentica como o primeiro profile associado a um admin ativo.
+ * Autentica somente com a conta administrativa E2E declarada pelo operador.
  */
-export async function authenticateAsFirstAdminProfile(): Promise<string> {
+export async function authenticateAsConfiguredAdminProfile(): Promise<string> {
+  const env = requireOperationalEnv({
+    requireAdminCredentials: true,
+    requireServiceRole: true,
+  });
+
+  await supabase.auth.signOut();
+  const { data: signIn, error: signInError } = await supabase.auth.signInWithPassword({
+    email: env.adminEmail,
+    password: env.adminPassword,
+  });
+
+  if (signInError || !signIn.user) {
+    throw new Error(`Falha ao autenticar a conta E2E administrativa: ${signInError?.message ?? 'usuario ausente'}`);
+  }
+
   const { data: adminRole, error: roleError } = await getSupabaseAdmin()
     .from('user_roles')
     .select('user_id')
+    .eq('user_id', signIn.user.id)
     .in('role_enum', ['super_admin', 'admin'])
     .eq('is_active', true)
     .is('revoked_at', null)
@@ -70,7 +94,7 @@ export async function authenticateAsFirstAdminProfile(): Promise<string> {
     .single();
 
   if (roleError || !adminRole?.user_id) {
-    throw new Error(`Nenhum admin ativo encontrado para testes: ${roleError?.message ?? 'sem user_id'}`);
+    throw new Error(`A conta E2E declarada nao possui papel administrativo ativo: ${roleError?.message ?? 'papel ausente'}`);
   }
 
   const { data: adminProfile, error: profileError } = await getSupabaseAdmin()
@@ -84,7 +108,6 @@ export async function authenticateAsFirstAdminProfile(): Promise<string> {
     throw new Error(`Admin sem profile associado para testes: ${profileError?.message ?? 'sem profile'}`);
   }
 
-  await authenticateAsProfile(adminProfile.id);
   return adminProfile.id;
 }
 

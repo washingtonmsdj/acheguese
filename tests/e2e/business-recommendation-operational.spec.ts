@@ -7,8 +7,13 @@ import {
   hasOperationalAnonEnv,
   hasOperationalAdminEnv,
 } from "../helpers/operational-env";
+import {
+  createConfirmedOperationalUser,
+  deleteOperationalUserWithOwnedProfiles,
+} from "../helpers/operational-auth-fixture";
 
 const admin = createOptionalOperationalAdminClient();
+const createdUserIds = new Set<string>();
 
 const CONSENT_FIXTURE = [
   { consent_type: "cookies", granted: true },
@@ -19,11 +24,7 @@ const CONSENT_FIXTURE = [
 ];
 
 function hasSupabaseAdminEnv(): boolean {
-  return Boolean(
-    admin &&
-      hasOperationalAnonEnv() &&
-      hasOperationalAdminEnv(),
-  );
+  return Boolean(admin && hasOperationalAnonEnv() && hasOperationalAdminEnv());
 }
 
 function uniqueSuffix(): string {
@@ -82,22 +83,21 @@ async function createConfirmedUser(input: {
     );
   }
 
-  const { data, error } = await admin.auth.admin.createUser({
-    email: input.email,
-    password: input.password,
-    email_confirm: true,
-    user_metadata: {
-      name: input.name,
-      display_name: input.name,
-      handle: input.handle,
-    },
+  const user = await createConfirmedOperationalUser(admin, {
+    ...input,
+    userMetadata: { e2e_fixture: "business-recommendation" },
   });
+  createdUserIds.add(user.id);
+  return { user };
+}
 
-  if (error || !data.user) {
-    throw error ?? new Error("Falha ao criar usuario confirmado para o teste.");
+async function cleanupCreatedUsers(): Promise<void> {
+  if (!admin) return;
+
+  for (const userId of createdUserIds) {
+    await deleteOperationalUserWithOwnedProfiles(admin, userId);
   }
-
-  return { user: data.user };
+  createdUserIds.clear();
 }
 
 async function waitForPersonalProfile(userId: string): Promise<{ id: string }> {
@@ -262,7 +262,14 @@ async function bootstrapInstitutionalBusinessForUser(input: {
     });
 
     if (rpc.error || rpc.data?.error || rpc.data?.data?.success === false) {
-      throw rpc.error ?? new Error(rpc.data?.error ?? rpc.data?.data?.error ?? "Falha ao criar perfil business.");
+      throw (
+        rpc.error ??
+        new Error(
+          rpc.data?.error ??
+            rpc.data?.data?.error ??
+            "Falha ao criar perfil business.",
+        )
+      );
     }
 
     businessProfile = await waitForBusinessProfile(signIn.data.user.id);
@@ -306,8 +313,6 @@ async function bootstrapInstitutionalBusinessForUser(input: {
     business_city: "Salvador",
     business_state: "BA",
     metadata: {
-      phone: "71999990000",
-      whatsapp: "5571999990000",
       modos_atendimento: ["presencial"],
     },
   };
@@ -342,7 +347,10 @@ async function bootstrapInstitutionalBusinessForUser(input: {
     throw new Error("business_data nao foi criado para a empresa E2E.");
   }
 
-  await admin.from("gastronomy_profiles").delete().eq("business_id", businessDataId);
+  await admin
+    .from("gastronomy_profiles")
+    .delete()
+    .eq("business_id", businessDataId);
   await client.auth.signOut();
 
   return {
@@ -585,6 +593,10 @@ test.describe("business engagement e2e", () => {
     "Defina VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY e SUPABASE_SERVICE_ROLE_KEY.",
   );
 
+  test.afterEach(async () => {
+    await cleanupCreatedUsers();
+  });
+
   test("authenticated user saves, recommends and toggles an institutional company", async ({
     page,
   }) => {
@@ -631,7 +643,9 @@ test.describe("business engagement e2e", () => {
     await gotoApp(page, listUrl);
     await dismissConsentBanner(page);
 
-    await page.getByRole("searchbox", { name: /Buscar empresas/i }).fill(businessName);
+    await page
+      .getByRole("searchbox", { name: /Buscar empresas/i })
+      .fill(businessName);
     const businessCard = page
       .getByRole("article", {
         name: new RegExp(businessName, "i"),
@@ -654,9 +668,9 @@ test.describe("business engagement e2e", () => {
 
     await gotoApp(page, publicUrl);
 
-    await expect(
-      page.getByRole("heading", { name: businessName }),
-    ).toBeVisible({ timeout: 30000 });
+    await expect(page.getByRole("heading", { name: businessName })).toBeVisible(
+      { timeout: 30000 },
+    );
     await expect(
       page.getByRole("link", { name: /Ver card.pio e pedir/i }),
     ).toHaveCount(0);

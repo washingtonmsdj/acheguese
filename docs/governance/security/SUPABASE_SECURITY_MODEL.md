@@ -243,6 +243,16 @@ Essa regra e executavel: `security:validate` bloqueia `process.env.VITE_SUPABASE
 `readEnv('VITE_SUPABASE_*')` e `createClient(...)` em `tests/e2e/`,
 `tests/helpers/` e `tests/operational/`, exceto no helper canonico.
 
+O comando deterministico `npm test` exclui `tests/operational` e nao pode abrir
+conexoes remotas. O runner `npm run test:operational` usa apenas essa pasta,
+executa em serie e exige `OPERATIONAL_TEST_TARGET`, project ref correspondente e
+a confirmacao literal `NON_PRODUCTION_REMOTE_CONFIRMED`. Producao nao e um alvo
+valido. Mesmo em development ou staging, testes nao podem redefinir senha de
+usuarios descobertos no banco: atores de fixture usam magic link efemero e
+fluxos administrativos usam exclusivamente a conta `E2E_ADMIN_*` declarada.
+O contrato detalhado fica em `tests/README.md` e e protegido por
+`tests/architecture/test-execution-boundary.test.ts`.
+
 No runtime do app, o unico cliente Supabase de browser deve nascer em
 `src/integrations/supabase/supabase.ts`, usando `PUBLIC_SUPABASE_CONFIG` e
 storage de auth cookie-only. O barrel `src/integrations/supabase/index.ts`
@@ -282,6 +292,25 @@ negocio. Em 2026-07-08, nao deve existir `body: { action, params }` fora desse
 helper. Essa regra e executavel: `security:validate` bloqueia envelopes broker
 fora do helper por meio de
 `scripts/security/edge-function-broker-boundary.mjs`.
+
+O transporte dos brokers deve encerrar em tempo finito. O helper canonico
+aplica timeout padrao e permite que o service reduza esse prazo para dados
+opcionais, como contato autenticado. Timeout ou falha de rede nunca autorizam
+uma operacao, nao removem RLS e nao podem converter erro em resultado vazio nos
+fluxos que decidem sessao ou permissao.
+
+`ALLOWED_ORIGINS` e uma allowlist exata de origem, incluindo esquema, hostname
+e porta. Wildcard e proibido. Em desenvolvimento, `localhost` e `127.0.0.1`
+sao origens diferentes e cada porta usada pelo Vite ou Playwright deve ser
+declarada explicitamente. O baseline local atual e:
+
+```text
+http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:8080,http://127.0.0.1:8080,http://localhost:8099,http://127.0.0.1:8099
+```
+
+Esse baseline pertence apenas ao projeto remoto de development. Staging e
+producao devem conter somente seus dominios HTTPS reais; origens de loopback
+nao devem ser promovidas para producao.
 
 ## Advisor Remoto
 

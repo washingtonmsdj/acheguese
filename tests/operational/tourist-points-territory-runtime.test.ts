@@ -8,9 +8,12 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { resolveCityToLocationIds, resolveNeighborhoodInCity } from '../src/core/location/helpers/territorialResolver';
+import { resolveCityToLocationIds, resolveNeighborhoodInCity } from '../../src/core/location/helpers/territorialResolver';
+import { describeOperational } from '../helpers/operational-env';
 
-describe('SSOT Territorial - tourist_points (Helper)', () => {
+describeOperational('SSOT Territorial - tourist_points (Helper)', {
+  requireAnonKey: true,
+}, () => {
   describe('Helper Territorial', () => {
     it('deve resolver cidade para location_ids corretamente', async () => {
       const resolution = await resolveCityToLocationIds('BA', 'Salvador');

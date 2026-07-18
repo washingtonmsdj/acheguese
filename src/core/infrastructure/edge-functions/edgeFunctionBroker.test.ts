@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   invokeNullableSupabaseBroker,
   invokeSupabaseBroker,
@@ -28,6 +28,10 @@ describe("edgeFunctionBroker", () => {
   beforeEach(() => {
     invokeMock.mockReset();
     warnMock.mockReset();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("invokes a broker function with action and params", async () => {
@@ -63,10 +67,13 @@ describe("edgeFunctionBroker", () => {
       }),
     ).rejects.toThrow("network failed");
 
-    expect(warnMock).toHaveBeenCalledWith("[ProbeService] broker invocation failed", {
-      action: "probe",
-      message: "network failed",
-    });
+    expect(warnMock).toHaveBeenCalledWith(
+      "[ProbeService] broker invocation failed",
+      {
+        action: "probe",
+        message: "network failed",
+      },
+    );
   });
 
   it("throws and logs broker rejections", async () => {
@@ -83,10 +90,13 @@ describe("edgeFunctionBroker", () => {
       }),
     ).rejects.toThrow("not allowed");
 
-    expect(warnMock).toHaveBeenCalledWith("[ProbeService] broker rejected action", {
-      action: "probe",
-      message: "not allowed",
-    });
+    expect(warnMock).toHaveBeenCalledWith(
+      "[ProbeService] broker rejected action",
+      {
+        action: "probe",
+        message: "not allowed",
+      },
+    );
   });
 
   it("returns null for nullable broker failures", async () => {
@@ -118,5 +128,30 @@ describe("edgeFunctionBroker", () => {
         serviceName: "ProbeService",
       }),
     ).resolves.toBeUndefined();
+  });
+
+  it("rejects stalled broker requests after the configured timeout", async () => {
+    vi.useFakeTimers();
+    invokeMock.mockImplementation(() => new Promise(() => undefined));
+
+    const request = invokeSupabaseBroker<unknown, "probe">({
+      action: "probe",
+      functionName: "probe-rpc",
+      serviceName: "ProbeService",
+      timeoutMs: 100,
+    });
+    const assertion = expect(request).rejects.toThrow(
+      "ProbeService broker request timed out",
+    );
+
+    await vi.advanceTimersByTimeAsync(100);
+    await assertion;
+    expect(warnMock).toHaveBeenCalledWith(
+      "[ProbeService] broker invocation failed",
+      {
+        action: "probe",
+        message: "ProbeService broker request timed out",
+      },
+    );
   });
 });

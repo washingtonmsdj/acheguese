@@ -6,8 +6,13 @@ import {
   hasOperationalAnonEnv,
   hasOperationalAdminEnv,
 } from "../helpers/operational-env";
+import {
+  createConfirmedOperationalUser,
+  deleteOperationalUserWithOwnedProfiles,
+} from "../helpers/operational-auth-fixture";
 
 const admin = createOptionalOperationalAdminClient();
+const createdUserIds = new Set<string>();
 
 const CONSENT_FIXTURE = [
   { consent_type: "cookies", granted: true },
@@ -21,11 +26,7 @@ const COMMUNITY_ROUTE = "/comunidade/ba/salvador/nordeste-de-amaralina/feed";
 const COMMUNITY_LOCATION_PATH = "/br/ba/salvador/nordeste-de-amaralina";
 
 function hasSupabaseAdminEnv(): boolean {
-  return Boolean(
-    admin &&
-      hasOperationalAnonEnv() &&
-      hasOperationalAdminEnv(),
-  );
+  return Boolean(admin && hasOperationalAnonEnv() && hasOperationalAdminEnv());
 }
 
 function uniqueSuffix(): string {
@@ -62,22 +63,31 @@ async function createConfirmedUser(input: {
     throw new Error("SUPABASE_SERVICE_ROLE_KEY nao configurada.");
   }
 
-  const { data, error } = await admin.auth.admin.createUser({
-    email: input.email,
-    password: input.password,
-    email_confirm: true,
-    user_metadata: {
-      name: input.name,
-      display_name: input.name,
-      handle: input.handle,
-    },
-  });
+  const user = await createConfirmedOperationalUser(admin, input);
+  createdUserIds.add(user.id);
+  return { user };
+}
 
-  if (error || !data.user) {
-    throw error ?? new Error("Falha ao criar usuario confirmado.");
+async function cleanupCreatedCommunityUsers(): Promise<void> {
+  if (!admin) return;
+
+  for (const userId of createdUserIds) {
+    const residenceDelete = await admin
+      .from("user_residences")
+      .delete()
+      .eq("user_id", userId);
+    if (residenceDelete.error) throw residenceDelete.error;
+
+    const addressDelete = await admin
+      .from("addresses")
+      .delete()
+      .eq("owner_user_id", userId);
+    if (addressDelete.error) throw addressDelete.error;
+
+    await deleteOperationalUserWithOwnedProfiles(admin, userId);
   }
 
-  return { user: data.user };
+  createdUserIds.clear();
 }
 
 async function waitForPersonalProfile(userId: string): Promise<{ id: string }> {
@@ -201,6 +211,10 @@ test.describe("community access gate e2e", () => {
     "Defina VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY e SUPABASE_SERVICE_ROLE_KEY.",
   );
 
+  test.afterEach(async () => {
+    await cleanupCreatedCommunityUsers();
+  });
+
   test("authenticated user without local residence sees address setup gate", async ({
     page,
   }) => {
@@ -221,14 +235,14 @@ test.describe("community access gate e2e", () => {
     await login(page, user.user.email!, password);
     await gotoApp(page, COMMUNITY_ROUTE);
 
-    await expect(
-      page.getByRole("heading", {
-        name: "Confirme sua residencia neste territorio",
-      }),
-    ).toBeVisible({ timeout: 30_000 });
-    await expect(
-      page.getByRole("link", { name: "Cadastrar endereco" }),
-    ).toBeVisible();
+    const participateLink = page.getByRole("link", {
+      name: "Participar da comunidade",
+    });
+    await expect(participateLink).toBeVisible({ timeout: 30_000 });
+    await expect(participateLink).toHaveAttribute("href", "/conta/enderecos");
+
+    await page.getByRole("textbox", { name: /Criar publicação em/i }).click();
+    await expect(page).toHaveURL(/\/conta\/enderecos$/i, { timeout: 30_000 });
   });
 
   test("verified resident can access member feed actions", async ({ page }) => {
@@ -255,17 +269,12 @@ test.describe("community access gate e2e", () => {
     await gotoApp(page, COMMUNITY_ROUTE);
 
     await expect(
-      page.getByRole("heading", {
-        name: "Confirme sua residencia neste territorio",
-      }),
-    ).toHaveCount(0, { timeout: 30_000 });
-    await expect(page.getByRole("feed", { name: "Feed da comunidade" })).toBeVisible({
-      timeout: 30_000,
-    });
+      page.getByRole("button", { name: "Criar publicação" }),
+    ).toBeVisible({ timeout: 30_000 });
+
+    await page.getByRole("textbox", { name: /Criar publicação em/i }).click();
     await expect(
-      page.getByRole("button", {
-        name: /O que voce quer compartilhar|O que você quer compartilhar/i,
-      }),
+      page.getByRole("heading", { name: "Criar conteúdo territorial" }),
     ).toBeVisible({ timeout: 30_000 });
   });
 });

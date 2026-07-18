@@ -10,29 +10,13 @@
  * - getCommunityPhotos() com resolução territorial
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
-import { TouristPointService } from '../src/core/guide/tourist-points/services/TouristPointService';
-import { supabase } from '../src/integrations/supabase';
+import { describe, it, expect } from 'vitest';
+import { TouristPointService } from '../../src/core/guide/tourist-points/services/TouristPointService';
+import { describeOperational } from '../helpers/operational-env';
 
-describe('SSOT Territorial - tourist_points (Runtime Services)', () => {
-  let runtimeAvailable = false;
-
-  beforeAll(async () => {
-    try {
-      const { error } = await supabase.from('locations').select('id').limit(1);
-      runtimeAvailable = !error;
-    } catch {
-      runtimeAvailable = false;
-    }
-  });
-
-  function requireRuntime(): boolean {
-    if (!runtimeAvailable) {
-      expect(true).toBe(true);
-      return false;
-    }
-    return true;
-  }
+describeOperational('SSOT Territorial - tourist_points (Runtime Services)', {
+  requireAnonKey: true,
+}, () => {
   
   // IDs conhecidos dos tourist_points criados
   const BARRA_LOCATION_ID = '5c91b9e1-17bf-4707-9ba7-0dd82ada7eb3';
@@ -40,7 +24,6 @@ describe('SSOT Territorial - tourist_points (Runtime Services)', () => {
 
   describe('list() - Filtro por location_id', () => {
     it('deve retornar apenas pontos da Barra quando filtrado por location_id', async () => {
-      if (!requireRuntime()) return;
       const points = await TouristPointService.list({
         location_id: BARRA_LOCATION_ID,
         status: 'active'
@@ -61,7 +44,6 @@ describe('SSOT Territorial - tourist_points (Runtime Services)', () => {
     }, 10000); // 10s timeout
 
     it('deve restringir pontos do Pelourinho por location_id', async () => {
-      if (!requireRuntime()) return;
       const points = await TouristPointService.list({
         location_id: PELOURINHO_LOCATION_ID,
         status: 'active'
@@ -88,7 +70,6 @@ describe('SSOT Territorial - tourist_points (Runtime Services)', () => {
     });
 
     it('deve incluir join com location e address', async () => {
-      if (!requireRuntime()) return;
       const points = await TouristPointService.list({
         location_id: BARRA_LOCATION_ID,
         status: 'active'
@@ -109,7 +90,6 @@ describe('SSOT Territorial - tourist_points (Runtime Services)', () => {
 
   describe('getBySlug() - Contexto territorial', () => {
     it('deve retornar Farol da Barra quando buscado por slug em Salvador', async () => {
-      if (!requireRuntime()) return;
       const point = await TouristPointService.getBySlug('BA', 'Salvador', 'farol-da-barra');
 
       expect(point).toBeDefined();
@@ -119,7 +99,6 @@ describe('SSOT Territorial - tourist_points (Runtime Services)', () => {
     });
 
     it('deve respeitar contexto territorial ao buscar Pelourinho por slug', async () => {
-      if (!requireRuntime()) return;
       const point = await TouristPointService.getBySlug('BA', 'Salvador', 'pelourinho');
 
       if (point) {
@@ -143,7 +122,6 @@ describe('SSOT Territorial - tourist_points (Runtime Services)', () => {
     });
 
     it('deve incluir join com location e address', async () => {
-      if (!requireRuntime()) return;
       const point = await TouristPointService.getBySlug('BA', 'Salvador', 'farol-da-barra');
 
       if (point) {
@@ -165,7 +143,6 @@ describe('SSOT Territorial - tourist_points (Runtime Services)', () => {
 
   describe('countByCity() - Resolução territorial', () => {
     it('deve contar pontos turísticos de Salvador usando SSOT', async () => {
-      if (!requireRuntime()) return;
       const count = await TouristPointService.countByCity('BA', 'Salvador');
 
       // Deve contar pelo menos os 3 pontos criados
@@ -179,7 +156,6 @@ describe('SSOT Territorial - tourist_points (Runtime Services)', () => {
     });
 
     it('deve usar resolução territorial (não campos legados)', async () => {
-      if (!requireRuntime()) return;
       // Este teste valida que countByCity usa resolveCityToLocationIds
       // Se usar campos legados, não encontraria os pontos criados apenas com location_id
       const count = await TouristPointService.countByCity('BA', 'Salvador');
@@ -190,7 +166,6 @@ describe('SSOT Territorial - tourist_points (Runtime Services)', () => {
 
   describe('getCategoriesByCity() - Resolução territorial', () => {
     it('deve retornar categorias de Salvador usando SSOT', async () => {
-      if (!requireRuntime()) return;
       const categories = await TouristPointService.getCategoriesByCity('BA', 'Salvador');
 
       // Deve incluir pelo menos as categorias dos 3 pontos criados
@@ -209,7 +184,6 @@ describe('SSOT Territorial - tourist_points (Runtime Services)', () => {
     });
 
     it('deve usar resolução territorial (não campos legados)', async () => {
-      if (!requireRuntime()) return;
       const categories = await TouristPointService.getCategoriesByCity('BA', 'Salvador');
 
       // Se usar campos legados, não encontraria os pontos criados apenas com location_id
@@ -219,7 +193,6 @@ describe('SSOT Territorial - tourist_points (Runtime Services)', () => {
 
   describe('getCommunityPhotos() - Resolução territorial', () => {
     it('deve retornar fotos quando location_id fornecido', async () => {
-      if (!requireRuntime()) return;
       const photos = await TouristPointService.getCommunityPhotos(
         BARRA_LOCATION_ID,
         'salvador',
@@ -240,7 +213,6 @@ describe('SSOT Territorial - tourist_points (Runtime Services)', () => {
     });
 
     it('deve resolver bairro dentro da cidade quando location_id não fornecido', async () => {
-      if (!requireRuntime()) return;
       const photos = await TouristPointService.getCommunityPhotos(
         null,
         'salvador',
@@ -264,7 +236,6 @@ describe('SSOT Territorial - tourist_points (Runtime Services)', () => {
 
   describe('Integração - Fluxo completo', () => {
     it('deve executar fluxo completo: list → getBySlug → countByCity', async () => {
-      if (!requireRuntime()) return;
       // 1. Listar pontos de Salvador
       const allPoints = await TouristPointService.list({ status: 'active' });
       expect(allPoints.length).toBeGreaterThan(0);

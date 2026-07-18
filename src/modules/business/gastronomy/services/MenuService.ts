@@ -737,6 +737,9 @@ export const MenuService = {
 
       return { data: mapMenuItem(asRecord(data), input.menu_id), error: null };
     } catch (err) {
+      logger.error('[MenuService] createItem failed', err, {
+        menuId: input.menu_id,
+      });
       return { data: null, error: err instanceof Error ? err.message : String(err) };
     }
   },

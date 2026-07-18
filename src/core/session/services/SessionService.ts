@@ -1,4 +1,4 @@
-import { logger } from '@/shared/utils/logger';
+import { logger } from "@/shared/utils/logger";
 import { supabase } from "@/integrations/supabase";
 import type { AuthChangeEvent, Session } from "@/integrations/supabase";
 import { SessionState } from "../state/SessionState";
@@ -91,10 +91,14 @@ export class SessionService {
     if (storedProfile) return storedProfile;
 
     const rpcProfile = rpcActiveProfile
-      ? profiles.find((profile) => profile.id === rpcActiveProfile.id) ?? rpcActiveProfile
+      ? (profiles.find((profile) => profile.id === rpcActiveProfile.id) ??
+        rpcActiveProfile)
       : null;
     const fallbackProfile =
-      rpcProfile ?? profiles.find((profile) => profile.profileType === "personal") ?? profiles[0] ?? null;
+      rpcProfile ??
+      profiles.find((profile) => profile.profileType === "personal") ??
+      profiles[0] ??
+      null;
 
     if (fallbackProfile) {
       SessionService.setStoredActiveProfileId(fallbackProfile.id);
@@ -107,9 +111,9 @@ export class SessionService {
 
   // initPromise resolve após o INITIAL_SESSION ser processado
   private static initResolve: (() => void) | null = null;
-  private static initPromise: Promise<void> = new Promise(
-    (resolve) => { SessionService.initResolve = resolve; }
-  );
+  private static initPromise: Promise<void> = new Promise((resolve) => {
+    SessionService.initResolve = resolve;
+  });
   private static initFallbackStarted = false;
   private static authEventQueue: Promise<void> = Promise.resolve();
 
@@ -176,60 +180,68 @@ export class SessionService {
     SessionService.initialized = true;
 
     // Armazena a subscription para cleanup
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
-      SessionService.currentSession = session;
-      SessionService.debug(
-        `[SessionService] onAuthStateChange: ${event}`,
-        session ? `user=${session.user.id}` : "no session",
-      );
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      (event: AuthChangeEvent, session: Session | null) => {
+        SessionService.currentSession = session;
+        SessionService.debug(
+          `[SessionService] onAuthStateChange: ${event}`,
+          session ? `user=${session.user.id}` : "no session",
+        );
 
-      if (event === "SIGNED_OUT") {
-        SessionService.cancelPendingLoads();
-        SessionService.currentSessionPromise = null;
-        SessionService.clearStoredActiveProfileId();
-        SessionState.clear();
-        CacheManager.clearAll();
-        SessionService.resolveInit();
-        return;
-      }
+        if (event === "SIGNED_OUT") {
+          SessionService.cancelPendingLoads();
+          SessionService.currentSessionPromise = null;
+          SessionService.clearStoredActiveProfileId();
+          SessionState.clear();
+          CacheManager.clearAll();
+          SessionService.resolveInit();
+          return;
+        }
 
-      const isInitEvent = event === "INITIAL_SESSION";
+        const isInitEvent = event === "INITIAL_SESSION";
 
-      if (
-        event === "INITIAL_SESSION" ||
-        event === "SIGNED_IN" ||
-        event === "TOKEN_REFRESHED" ||
-        event === "USER_UPDATED"
-      ) {
-        if (session) {
-          // Nunca executar carga de sessão dentro do callback do Supabase.
-          // Encadeamos em fila assíncrona para sair do ciclo do lock interno do GoTrue.
-          SessionService.authEventQueue = SessionService.authEventQueue
-            .catch(() => undefined)
-            .then(
-              () =>
-                new Promise<void>((resolve) => {
-                  window.setTimeout(() => {
-                    SessionService.loadFromSession(session, true)
-                      .then(() => {
-                        if (isInitEvent) SessionService.resolveInit();
-                      })
-                      .catch(() => {
-                        if (isInitEvent) SessionService.resolveInit();
-                      })
-                      .finally(resolve);
-                  }, 0);
-                }),
-            );
-        } else {
-          SessionState.setState({ user: null, activeProfile: null, profiles: [] });
-          // INITIAL_SESSION sem sessão = não logado, libera o init
-          if (isInitEvent) {
-            SessionService.resolveInit();
+        if (
+          event === "INITIAL_SESSION" ||
+          event === "SIGNED_IN" ||
+          event === "TOKEN_REFRESHED" ||
+          event === "USER_UPDATED"
+        ) {
+          if (session) {
+            // Nunca executar carga de sessão dentro do callback do Supabase.
+            // Encadeamos em fila assíncrona para sair do ciclo do lock interno do GoTrue.
+            SessionService.authEventQueue = SessionService.authEventQueue
+              .catch(() => undefined)
+              .then(
+                () =>
+                  new Promise<void>((resolve) => {
+                    window.setTimeout(() => {
+                      SessionService.loadFromSession(session, true)
+                        .then(() => {
+                          if (isInitEvent) SessionService.resolveInit();
+                        })
+                        .catch(() => {
+                          if (isInitEvent) SessionService.resolveInit();
+                        })
+                        .finally(resolve);
+                    }, 0);
+                  }),
+              );
+          } else {
+            SessionState.setState({
+              user: null,
+              activeProfile: null,
+              profiles: [],
+            });
+            // INITIAL_SESSION sem sessão = não logado, libera o init
+            if (isInitEvent) {
+              SessionService.resolveInit();
+            }
           }
         }
-      }
-    });
+      },
+    );
 
     // Armazena subscription para cleanup futuro se necessário
     SessionService.authSubscription = subscription;
@@ -253,7 +265,9 @@ export class SessionService {
       // Evita lock contention no bootstrap: não chamar getSession aqui.
       // O caminho canônico é o evento INITIAL_SESSION do onAuthStateChange.
       // Este fallback existe apenas para não bloquear a UI em casos extremos.
-      SessionService.debug("[SessionService] init fallback: resolving without getSession");
+      SessionService.debug(
+        "[SessionService] init fallback: resolving without getSession",
+      );
     } catch (error) {
       SessionService.debug("[SessionService] getSession fallback threw", error);
     } finally {
@@ -284,13 +298,20 @@ export class SessionService {
       if (current.user?.id === session.user.id) return;
     }
 
-    SessionService.loadPromise = SessionService.doLoad(session, forceFresh)
-      .finally(() => { SessionService.loadPromise = null; });
+    SessionService.loadPromise = SessionService.doLoad(
+      session,
+      forceFresh,
+    ).finally(() => {
+      SessionService.loadPromise = null;
+    });
 
     return SessionService.loadPromise;
   }
 
-  private static async doLoad(session: Session, forceFresh: boolean): Promise<void> {
+  private static async doLoad(
+    session: Session,
+    forceFresh: boolean,
+  ): Promise<void> {
     const version = ++SessionService.loadVersion;
 
     if (!forceFresh) {
@@ -311,12 +332,23 @@ export class SessionService {
     };
 
     // Publica o user imediatamente — UI pode renderizar enquanto perfis carregam
-    SessionState.setState({ user, activeProfile: null, profiles: [] });
+    const previousSession = SessionState.getState();
+    const isSameUser = previousSession.user?.id === user.id;
 
-    SessionService.debug(`[SessionService] doLoad: fetching profiles user=${user.id}`);
+    SessionState.setState(
+      isSameUser
+        ? { ...previousSession, user }
+        : { user, activeProfile: null, profiles: [] },
+    );
 
-    const [activeProfile, profiles] = await Promise.all([
-      SessionService.getActiveProfile(user.id),
+    SessionService.debug(
+      `[SessionService] doLoad: fetching profiles user=${user.id}`,
+    );
+
+    const [activeProfileResult, profiles] = await Promise.all([
+      SessionService.getActiveProfile(user.id)
+        .then((value) => ({ error: null, value }))
+        .catch((error: unknown) => ({ error, value: null })),
       SessionService.getUserProfiles(user.id),
     ]);
 
@@ -328,8 +360,28 @@ export class SessionService {
       return;
     }
 
-    const resolvedActiveProfile = SessionService.resolveActiveProfile(activeProfile, profiles);
-    const sessionData: SessionData = { user, activeProfile: resolvedActiveProfile, profiles };
+    if (activeProfileResult.error && profiles.length === 0) {
+      if (isSameUser && previousSession.activeProfile) {
+        logger.warn(
+          "SessionService preserved the last verified profile after a transient refresh failure",
+          { userId: user.id },
+        );
+        SessionState.setState({ ...previousSession, user });
+        return;
+      }
+
+      throw activeProfileResult.error;
+    }
+
+    const resolvedActiveProfile = SessionService.resolveActiveProfile(
+      activeProfileResult.value,
+      profiles,
+    );
+    const sessionData: SessionData = {
+      user,
+      activeProfile: resolvedActiveProfile,
+      profiles,
+    };
     SessionState.setState(sessionData);
     CacheManager.setSession(sessionData);
     SessionService.debug(
@@ -339,7 +391,8 @@ export class SessionService {
 
   private static async getCurrentSession(): Promise<Session | null> {
     if (SessionService.currentSession) return SessionService.currentSession;
-    if (SessionService.currentSessionPromise) return SessionService.currentSessionPromise;
+    if (SessionService.currentSessionPromise)
+      return SessionService.currentSessionPromise;
 
     SessionService.currentSessionPromise = (async () => {
       try {
@@ -352,7 +405,9 @@ export class SessionService {
         // Tratamos como condição transitória para evitar unhandled rejection.
         const message = error instanceof Error ? error.message : String(error);
         if (message.includes("Lock broken by another request")) {
-          SessionService.debug("[SessionService] getCurrentSession lock contention recovered");
+          SessionService.debug(
+            "[SessionService] getCurrentSession lock contention recovered",
+          );
           return SessionService.currentSession ?? null;
         }
         throw error;
@@ -395,7 +450,7 @@ export class SessionService {
     const user = await SessionService.getCurrentUser();
     if (!user || user.id !== userId) return null;
 
-    const row = await SessionRpcService.getActiveProfile();
+    const row = await SessionRpcService.getActiveProfileStrict();
     if (!row) return null;
     return SessionService.mapProfileFromDb(row);
   }
@@ -406,14 +461,17 @@ export class SessionService {
    */
   static async getUserProfiles(userId: string): Promise<Profile[]> {
     try {
-      const { profileService } = await import("@/core/profiles/services/ProfileService");
+      const { profileService } =
+        await import("@/core/profiles/services/ProfileService");
       const profiles = await profileService.getProfilesByUserId(userId);
 
       return profiles
         .filter((row) => row.is_active)
-        .map((row) => SessionService.mapProfileFromDb(row as unknown as DbProfileRow));
+        .map((row) =>
+          SessionService.mapProfileFromDb(row as unknown as DbProfileRow),
+        );
     } catch (error) {
-      logger.error('SessionService.getUserProfiles failed:', error);
+      logger.error("SessionService.getUserProfiles failed:", error);
       return [];
     }
   }
@@ -461,7 +519,9 @@ export class SessionService {
    * @param dbProfile - Dados brutos do banco (RPC ou query)
    * @returns Profile tipado para uso no domínio
    */
-  private static mapProfileFromDb(dbProfile: DbProfileRow | SessionRpcProfileRow): Profile {
+  private static mapProfileFromDb(
+    dbProfile: DbProfileRow | SessionRpcProfileRow,
+  ): Profile {
     return {
       id: dbProfile.id,
       userId: dbProfile.user_id,

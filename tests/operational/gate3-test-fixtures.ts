@@ -1,17 +1,22 @@
-import { type SupabaseClient, type User } from '@supabase/supabase-js';
-import { supabase as runtimeSupabase } from '@/integrations/supabase';
+import { type User } from "@supabase/supabase-js";
+import { supabase as runtimeSupabase } from "@/integrations/supabase";
 import {
   createOperationalAdminClient,
   createOperationalAnonClient,
   requireOperationalEnv,
-} from '../helpers/operational-env';
+  type OperationalSupabaseClient,
+} from "../helpers/operational-env";
+import {
+  createConfirmedOperationalUser,
+  deleteOperationalUser,
+} from "../helpers/operational-auth-fixture";
 
 export interface Gate3UserFixture {
   email: string;
   password: string;
   userId: string;
   profileId: string;
-  client: SupabaseClient;
+  client: OperationalSupabaseClient;
   pickupAddressId?: string;
   dropoffAddressId?: string;
   pickupLocationId?: string;
@@ -19,8 +24,8 @@ export interface Gate3UserFixture {
 }
 
 export interface Gate3Clients {
-  anon: SupabaseClient;
-  admin: SupabaseClient;
+  anon: OperationalSupabaseClient;
+  admin: OperationalSupabaseClient;
 }
 
 export function createGate3Clients(): Gate3Clients {
@@ -30,26 +35,36 @@ export function createGate3Clients(): Gate3Clients {
   };
 }
 
-export async function authenticateGate3Driver(anon: SupabaseClient): Promise<Gate3UserFixture> {
-  const { driverEmail: email, driverPassword: password } = requireOperationalEnv({
-    requireDriverCredentials: true,
-  });
+export async function authenticateGate3Driver(
+  anon: OperationalSupabaseClient,
+): Promise<Gate3UserFixture> {
+  const { driverEmail: email, driverPassword: password } =
+    requireOperationalEnv({
+      requireDriverCredentials: true,
+    });
 
-  const { data: auth, error } = await anon.auth.signInWithPassword({ email, password });
+  const { data: auth, error } = await anon.auth.signInWithPassword({
+    email,
+    password,
+  });
   if (error || !auth.user) {
-    throw new Error(`Falha na autenticacao do motorista: ${error?.message ?? 'usuario ausente'}`);
+    throw new Error(
+      `Falha na autenticacao do motorista: ${error?.message ?? "usuario ausente"}`,
+    );
   }
 
   const { data: profile, error: profileError } = await anon
-    .from('profiles')
-    .select('id')
-    .eq('user_id', auth.user.id)
-    .order('created_at', { ascending: true })
+    .from("profiles")
+    .select("id")
+    .eq("user_id", auth.user.id)
+    .order("created_at", { ascending: true })
     .limit(1)
     .maybeSingle();
 
   if (profileError || !profile?.id) {
-    throw new Error(`Perfil do motorista nao encontrado: ${profileError?.message ?? 'sem profile'}`);
+    throw new Error(
+      `Perfil do motorista nao encontrado: ${profileError?.message ?? "sem profile"}`,
+    );
   }
 
   return {
@@ -62,37 +77,39 @@ export async function authenticateGate3Driver(anon: SupabaseClient): Promise<Gat
 }
 
 export async function createGate3PassengerFixture(
-  admin: SupabaseClient,
+  admin: OperationalSupabaseClient,
   prefix: string,
 ): Promise<Gate3UserFixture> {
   const suffix = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
   const email = `${prefix}-${suffix}@acheguese.local`;
-  const password = 'Gate3Passenger@2026!';
+  const password = "Gate3Passenger@2026!";
 
-  const { data, error } = await admin.auth.admin.createUser({
+  const user = await createConfirmedOperationalUser(admin, {
     email,
     password,
-    email_confirm: true,
-    user_metadata: { name: 'Gate 3 Passenger' },
+    handle: `${prefix}${suffix}`.replace(/[^a-z0-9]/gi, "").slice(0, 48),
+    name: "Gate 3 Passenger",
+    userMetadata: { e2e_fixture: "gate3-passenger" },
   });
 
-  if (error || !data.user) {
-    throw new Error(`Falha na criacao do passageiro: ${error?.message ?? 'usuario ausente'}`);
-  }
-
-  const profileId = await ensureGate3PersonalProfile(admin, data.user, prefix);
-  const routeFixture = await createGate3RouteFixture(admin, data.user.id);
+  const profileId = await ensureGate3PersonalProfile(admin, user, prefix);
+  const routeFixture = await createGate3RouteFixture(admin, user.id);
   const client = createOperationalAnonClient();
 
-  const { error: signInError } = await client.auth.signInWithPassword({ email, password });
+  const { error: signInError } = await client.auth.signInWithPassword({
+    email,
+    password,
+  });
   if (signInError) {
-    throw new Error(`Falha ao autenticar passageiro fixture: ${signInError.message}`);
+    throw new Error(
+      `Falha ao autenticar passageiro fixture: ${signInError.message}`,
+    );
   }
 
   return {
     email,
     password,
-    userId: data.user.id,
+    userId: user.id,
     profileId,
     client,
     pickupAddressId: routeFixture.pickupAddressId,
@@ -103,18 +120,20 @@ export async function createGate3PassengerFixture(
 }
 
 export async function cleanupGate3UserFixture(
-  admin: SupabaseClient | undefined,
+  admin: OperationalSupabaseClient | undefined,
   fixture: Gate3UserFixture | undefined,
 ): Promise<void> {
   if (!admin || !fixture) return;
   await fixture.client.auth.signOut();
   await deleteGate3Address(admin, fixture.pickupAddressId);
   await deleteGate3Address(admin, fixture.dropoffAddressId);
-  await admin.from('profiles').delete().eq('id', fixture.profileId);
-  await admin.auth.admin.deleteUser(fixture.userId);
+  await admin.from("profiles").delete().eq("id", fixture.profileId);
+  await deleteOperationalUser(admin, fixture.userId);
 }
 
-export async function authenticateGate3RuntimeAs(fixture: Gate3UserFixture): Promise<void> {
+export async function authenticateGate3RuntimeAs(
+  fixture: Gate3UserFixture,
+): Promise<void> {
   await runtimeSupabase.auth.signOut();
   const { error } = await runtimeSupabase.auth.signInWithPassword({
     email: fixture.email,
@@ -122,7 +141,9 @@ export async function authenticateGate3RuntimeAs(fixture: Gate3UserFixture): Pro
   });
 
   if (error) {
-    throw new Error(`Falha ao autenticar runtime Gate3 como ${fixture.email}: ${error.message}`);
+    throw new Error(
+      `Falha ao autenticar runtime Gate3 como ${fixture.email}: ${error.message}`,
+    );
   }
 }
 
@@ -143,7 +164,7 @@ export function createGate3RidePayload(
     !passengerFixture.pickupLocationId ||
     !passengerFixture.dropoffLocationId
   ) {
-    throw new Error('Fixture de rota Gate3 incompleta.');
+    throw new Error("Fixture de rota Gate3 incompleta.");
   }
 
   return {
@@ -153,30 +174,30 @@ export function createGate3RidePayload(
     dropoff_address_id: passengerFixture.dropoffAddressId,
     pickup_location_id: passengerFixture.pickupLocationId,
     dropoff_location_id: passengerFixture.dropoffLocationId,
-    origin: 'Origem Teste',
-    destination: 'Destino Teste',
+    origin: "Origem Teste",
+    destination: "Destino Teste",
     origin_lat: -12.975,
     origin_lng: -38.501,
     destination_lat: -12.985,
     destination_lng: -38.491,
     status,
     suggested_price: suggestedPrice,
-    ride_mode: 'ride',
+    ride_mode: "ride",
   };
 }
 
 async function ensureGate3PersonalProfile(
-  admin: SupabaseClient,
+  admin: OperationalSupabaseClient,
   user: User,
   prefix: string,
 ): Promise<string> {
   for (let attempt = 0; attempt < 10; attempt += 1) {
     const { data, error } = await admin
-      .from('profiles')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('profile_type', 'personal')
-      .order('created_at', { ascending: true })
+      .from("profiles")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("profile_type", "personal")
+      .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
 
@@ -186,25 +207,27 @@ async function ensureGate3PersonalProfile(
   }
 
   const { data, error } = await admin
-    .from('profiles')
+    .from("profiles")
     .insert({
       user_id: user.id,
       username: `${prefix}_${user.id.slice(0, 8)}`,
-      name: 'Gate 3 Passenger',
-      profile_type: 'personal',
+      name: "Gate 3 Passenger",
+      profile_type: "personal",
     })
-    .select('id')
+    .select("id")
     .single();
 
   if (error || !data?.id) {
-    throw new Error(`Falha ao criar perfil do passageiro: ${error?.message ?? 'sem profile'}`);
+    throw new Error(
+      `Falha ao criar perfil do passageiro: ${error?.message ?? "sem profile"}`,
+    );
   }
 
   return data.id as string;
 }
 
 async function createGate3RouteFixture(
-  admin: SupabaseClient,
+  admin: OperationalSupabaseClient,
   ownerUserId: string,
 ): Promise<{
   pickupAddressId: string;
@@ -213,28 +236,40 @@ async function createGate3RouteFixture(
   dropoffLocationId: string;
 }> {
   const { data: location, error: locationError } = await admin
-    .from('locations')
-    .select('id')
-    .eq('status', 'active')
-    .in('type', ['neighborhood', 'district', 'city'])
-    .order('type', { ascending: false })
+    .from("locations")
+    .select("id")
+    .eq("status", "active")
+    .in("type", ["neighborhood", "district", "city"])
+    .order("type", { ascending: false })
     .limit(1)
     .maybeSingle();
 
   if (locationError || !location?.id) {
-    throw new Error(`Localidade ativa nao encontrada para fixture Gate3: ${locationError?.message ?? 'sem localidade'}`);
+    throw new Error(
+      `Localidade ativa nao encontrada para fixture Gate3: ${locationError?.message ?? "sem localidade"}`,
+    );
   }
 
-  const pickupAddressId = await createGate3Address(admin, ownerUserId, location.id as string, {
-    street: 'Origem Teste Gate3',
-    latitude: -12.975,
-    longitude: -38.501,
-  });
-  const dropoffAddressId = await createGate3Address(admin, ownerUserId, location.id as string, {
-    street: 'Destino Teste Gate3',
-    latitude: -12.985,
-    longitude: -38.491,
-  });
+  const pickupAddressId = await createGate3Address(
+    admin,
+    ownerUserId,
+    location.id as string,
+    {
+      street: "Origem Teste Gate3",
+      latitude: -12.975,
+      longitude: -38.501,
+    },
+  );
+  const dropoffAddressId = await createGate3Address(
+    admin,
+    ownerUserId,
+    location.id as string,
+    {
+      street: "Destino Teste Gate3",
+      latitude: -12.985,
+      longitude: -38.491,
+    },
+  );
 
   return {
     pickupAddressId,
@@ -245,35 +280,40 @@ async function createGate3RouteFixture(
 }
 
 async function createGate3Address(
-  admin: SupabaseClient,
+  admin: OperationalSupabaseClient,
   ownerUserId: string,
   locationId: string,
   data: { street: string; latitude: number; longitude: number },
 ): Promise<string> {
   const { data: address, error } = await admin
-    .from('addresses')
+    .from("addresses")
     .insert({
       owner_user_id: ownerUserId,
       location_id: locationId,
-      address_type: 'exact',
+      address_type: "exact",
       street: data.street,
       latitude: data.latitude,
       longitude: data.longitude,
-      metadata: { source: 'gate3-operational-test' },
-      verification_status: 'verified',
+      metadata: { source: "gate3-operational-test" },
+      verification_status: "verified",
       is_verified: true,
     })
-    .select('id')
+    .select("id")
     .single();
 
   if (error || !address?.id) {
-    throw new Error(`Falha ao criar endereco Gate3: ${error?.message ?? 'sem id'}`);
+    throw new Error(
+      `Falha ao criar endereco Gate3: ${error?.message ?? "sem id"}`,
+    );
   }
 
   return address.id as string;
 }
 
-async function deleteGate3Address(admin: SupabaseClient, addressId: string | undefined): Promise<void> {
+async function deleteGate3Address(
+  admin: OperationalSupabaseClient,
+  addressId: string | undefined,
+): Promise<void> {
   if (!addressId) return;
-  await admin.from('addresses').delete().eq('id', addressId);
+  await admin.from("addresses").delete().eq("id", addressId);
 }

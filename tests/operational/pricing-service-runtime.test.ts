@@ -1,28 +1,19 @@
 /**
  * Testes de runtime para PricingService
  *
- * Se o runtime Supabase nao estiver configurado, os testes nao falham no ambiente local.
+ * Executa somente no runner operacional contra alvo nao produtivo autorizado.
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { pricingService } from '../services/PricingService';
-import { authenticateAsFirstAdminProfile, signOut } from '../../../../tests/helpers/auth-helper';
-import { getAdminClient } from '../../../../tests/helpers/supabase-test-client';
-import { getMissingOperationalEnv } from '../../../../tests/helpers/operational-env';
+import { it, expect, beforeAll, afterAll } from 'vitest';
+import { pricingService } from '../../src/core/pricing/services/PricingService';
+import { authenticateAsConfiguredAdminProfile, signOut } from '../helpers/auth-helper';
+import { getAdminClient } from '../helpers/supabase-test-client';
+import { describeOperational } from '../helpers/operational-env';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? '';
-const MISSING_RUNTIME_ENV = getMissingOperationalEnv({ requireServiceRole: true });
-const HAS_RUNTIME =
-  MISSING_RUNTIME_ENV.length === 0 &&
-  SUPABASE_URL.length > 0 &&
-  !SUPABASE_URL.includes('placeholder.supabase.co') &&
-  !SUPABASE_URL.includes('your-project.supabase.co');
-
-function skipIfNoRuntime(): boolean {
-  return !HAS_RUNTIME;
-}
-
-describe('PricingService - Runtime Validation', () => {
+describeOperational('PricingService - Runtime Validation', {
+  requireAdminCredentials: true,
+  requireServiceRole: true,
+}, () => {
   let testRuleId: string;
   let testProfileId: string;
   let activeCustomRuleIdsBefore: string[] = [];
@@ -32,11 +23,10 @@ describe('PricingService - Runtime Validation', () => {
     await supabaseAdmin
       .from('pricing_rules')
       .delete()
-      .ilike('name', 'Teste%');
+      .contains('metadata', { runtime_test: true });
   }
 
   beforeAll(async () => {
-    if (skipIfNoRuntime()) return;
     supabaseAdmin = getAdminClient();
 
     await cleanupRuntimeRules();
@@ -48,12 +38,10 @@ describe('PricingService - Runtime Validation', () => {
       .eq('is_active', true);
     activeCustomRuleIdsBefore = (activeCustomRules ?? []).map((rule) => rule.id);
 
-    testProfileId = await authenticateAsFirstAdminProfile();
+    testProfileId = await authenticateAsConfiguredAdminProfile();
   });
 
   afterAll(async () => {
-    if (skipIfNoRuntime()) return;
-
     await cleanupRuntimeRules();
     if (activeCustomRuleIdsBefore.length > 0) {
       await supabaseAdmin
@@ -66,8 +54,6 @@ describe('PricingService - Runtime Validation', () => {
 
   describe('1. Criacao de regra', () => {
     it('deve criar regra com multiplicadores e taxas', async () => {
-      if (skipIfNoRuntime()) return;
-
       const ruleId = await pricingService.createRule(
         {
           mode: 'custom',
@@ -132,8 +118,6 @@ describe('PricingService - Runtime Validation', () => {
 
   describe('2. Conflito de regras', () => {
     it('deve manter apenas uma regra ativa por modo ao criar nova ativa', async () => {
-      if (skipIfNoRuntime()) return;
-
       const firstRuleId = await pricingService.createRule(
         {
           mode: 'custom',
@@ -173,8 +157,6 @@ describe('PricingService - Runtime Validation', () => {
     });
 
     it('deve permitir regras inativas simultaneas', async () => {
-      if (skipIfNoRuntime()) return;
-
       const ruleId = await pricingService.createRule(
         {
           mode: 'ride',
@@ -195,8 +177,6 @@ describe('PricingService - Runtime Validation', () => {
 
   describe('3. Calculo com regra persistida', () => {
     it('deve calcular estimativa usando regra do banco', async () => {
-      if (skipIfNoRuntime()) return;
-
       const estimate = await pricingService.calculateEstimate({
         mode: 'ride',
         origin: { latitude: -12.9714, longitude: -38.5014 },
@@ -216,8 +196,6 @@ describe('PricingService - Runtime Validation', () => {
     });
 
     it('deve aplicar multiplicador de horario de pico', async () => {
-      if (skipIfNoRuntime()) return;
-
       const peakDate = new Date('2026-05-20T17:30:00-03:00');
 
       const estimate = await pricingService.calculateEstimate({
@@ -236,8 +214,6 @@ describe('PricingService - Runtime Validation', () => {
     });
 
     it('deve usar fallback se regra nao existir', async () => {
-      if (skipIfNoRuntime()) return;
-
       const { data: activeMotoboyRules } = await supabaseAdmin
         .from('pricing_rules')
         .select('id')
@@ -274,8 +250,6 @@ describe('PricingService - Runtime Validation', () => {
 
   describe('4. Auditoria', () => {
     it('deve registrar criacao de regra', async () => {
-      if (skipIfNoRuntime()) return;
-
       const ruleId = await pricingService.createRule(
         {
           mode: 'custom',
@@ -303,8 +277,6 @@ describe('PricingService - Runtime Validation', () => {
     });
 
     it('deve registrar ativacao/desativacao', async () => {
-      if (skipIfNoRuntime()) return;
-
       await supabaseAdmin
         .from('pricing_rules')
         .update({ is_active: false })
@@ -340,8 +312,6 @@ describe('PricingService - Runtime Validation', () => {
 
   describe('5. Cache e invalidacao', () => {
     it('deve cachear regras por 5 minutos', async () => {
-      if (skipIfNoRuntime()) return;
-
       const rule1 = await pricingService.getRule('ride');
       const rule2 = await pricingService.getRule('ride');
 
@@ -351,8 +321,6 @@ describe('PricingService - Runtime Validation', () => {
     });
 
     it('deve invalidar cache ao limpar', async () => {
-      if (skipIfNoRuntime()) return;
-
       const rule1 = await pricingService.getRule('delivery');
       expect(rule1).toBeDefined();
 
@@ -363,8 +331,6 @@ describe('PricingService - Runtime Validation', () => {
     });
 
     it('deve invalidar cache ao criar regra', async () => {
-      if (skipIfNoRuntime()) return;
-
       pricingService.clearCache();
 
       const rule1 = await pricingService.getRule('custom');
@@ -391,16 +357,12 @@ describe('PricingService - Runtime Validation', () => {
 
   describe('6. Listagem de regras', () => {
     it('deve listar apenas regras ativas por padrao', async () => {
-      if (skipIfNoRuntime()) return;
-
       const rules = await pricingService.listRules();
       expect(rules.length).toBeGreaterThan(0);
       expect(rules.every((r) => r.isActive)).toBe(true);
     });
 
     it('deve listar todas as regras quando solicitado', async () => {
-      if (skipIfNoRuntime()) return;
-
       const allRules = await pricingService.listRules(true);
       const activeRules = await pricingService.listRules(false);
 

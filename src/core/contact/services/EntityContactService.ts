@@ -49,10 +49,12 @@ export class EntityContactService {
     >({
       action: "getVisible",
       functionName: FUNCTION_NAME,
-      params: entityType === "business"
-        ? { businessIds: [entityId] }
-        : { professionalIds: [entityId] },
+      params:
+        entityType === "business"
+          ? { businessIds: [entityId] }
+          : { professionalIds: [entityId] },
       serviceName: SERVICE_NAME,
+      timeoutMs: 3_000,
     });
 
     return toContact(rows ?? []);
@@ -63,7 +65,8 @@ export class EntityContactService {
     entityId: string,
     channels: ContactChannelPatch[],
   ): Promise<EntityContact> {
-    if (channels.length === 0) return this.getVisibleForEntity(entityType, entityId);
+    if (channels.length === 0)
+      return this.getVisibleForEntity(entityType, entityId);
 
     const rows = await invokeSupabaseBroker<ContactChannelRow[], "patchOwned">({
       action: "patchOwned",
@@ -76,7 +79,9 @@ export class EntityContactService {
 
   static buildPatch(input: EntityContact): ContactChannelPatch[] {
     return (["phone", "whatsapp", "email"] as const)
-      .filter((channelType) => Object.prototype.hasOwnProperty.call(input, channelType))
+      .filter((channelType) =>
+        Object.prototype.hasOwnProperty.call(input, channelType),
+      )
       .map((channelType) => ({
         channelType,
         value: input[channelType]?.trim() || null,

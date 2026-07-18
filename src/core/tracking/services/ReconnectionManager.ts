@@ -50,6 +50,7 @@ export interface PendingOperation {
 // ============================================
 
 export class ReconnectionManager {
+  private isStarted = false;
   private config: ReconnectionConfig;
   private connectionState: ConnectionState;
   private pendingOperations: Map<string, PendingOperation>;
@@ -92,6 +93,8 @@ export class ReconnectionManager {
    * Inicia monitoramento de conexão
    */
   start(): void {
+    if (this.isStarted) return;
+    this.isStarted = true;
     logger.info('[ReconnectionManager] Starting connection monitoring');
     
     // Iniciar health check
@@ -105,6 +108,8 @@ export class ReconnectionManager {
    * Para monitoramento de conexão
    */
   stop(): void {
+    if (!this.isStarted) return;
+    this.isStarted = false;
     logger.info('[ReconnectionManager] Stopping connection monitoring');
     
     this.stopHealthCheck();

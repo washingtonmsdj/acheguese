@@ -5,6 +5,10 @@ import {
   createOptionalOperationalAdminClient,
   createOptionalOperationalAnonClient,
 } from "../helpers/operational-env";
+import {
+  createConfirmedOperationalUser,
+  deleteOperationalUser,
+} from "../helpers/operational-auth-fixture";
 
 const EXISTING_LOGIN_EMAIL =
   process.env.TEST_DRIVER_EMAIL || process.env.E2E_USER_EMAIL || null;
@@ -115,10 +119,7 @@ async function cleanupUserByEmail(email: string): Promise<void> {
     return;
   }
 
-  const { error } = await admin.auth.admin.deleteUser(user.id);
-  if (error) {
-    throw error;
-  }
+  await deleteOperationalUser(admin, user.id);
 }
 
 async function waitForPersonalProfile(
@@ -231,22 +232,8 @@ async function createConfirmedUser(input: {
     );
   }
 
-  const { data, error } = await admin.auth.admin.createUser({
-    email: input.email,
-    password: input.password,
-    email_confirm: true,
-    user_metadata: {
-      name: input.name,
-      display_name: input.name,
-      handle: input.handle,
-    },
-  });
-
-  if (error || !data.user) {
-    throw error ?? new Error("Falha ao criar usuario confirmado para o teste.");
-  }
-
-  return { user: data.user };
+  const user = await createConfirmedOperationalUser(admin, input);
+  return { user };
 }
 
 async function clickFirstEnabledOption(
@@ -639,7 +626,7 @@ test.describe.serial("Auth and business flow", () => {
         break;
       }
 
-      await admin.auth.admin.deleteUser(userId).catch((error) => {
+      await deleteOperationalUser(admin, userId).catch((error) => {
         if (isListUsersInfraError(error)) {
           return;
         }
@@ -683,28 +670,29 @@ test.describe.serial("Auth and business flow", () => {
       username,
     };
 
-    await gotoApp(page, "/cadastro");
-    const cadastroReady = await page
-      .locator("#name")
-      .waitFor({ state: "visible", timeout: 20000 })
-      .then(() => true)
-      .catch(() => false);
+    let cadastroReady = false;
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      await gotoApp(page, "/cadastro");
+      cadastroReady = await page
+        .locator("#name")
+        .waitFor({ state: "visible", timeout: 30_000 })
+        .then(() => true)
+        .catch(() => false);
+      if (cadastroReady) break;
 
-    if (!cadastroReady) {
       const appStillLoading = await page
-        .getByText(/Carregando aplica(?:ção|cao)/i)
+        .getByText(/^Carregando\.\.\.$/i)
         .isVisible()
         .catch(() => false);
-
-      if (appStillLoading) {
-        test.skip(
-          true,
-          "Aplicacao permaneceu em loading na rota /cadastro neste ambiente.",
-        );
+      if (attempt === 1 && appStillLoading) {
+        await page.reload({ waitUntil: "domcontentloaded", timeout: 60_000 });
+        continue;
       }
+    }
 
+    if (!cadastroReady) {
       throw new Error(
-        "Formulario de cadastro nao ficou visivel em tempo habil.",
+        "Formulario de cadastro nao ficou visivel apos nova tentativa.",
       );
     }
 
@@ -723,7 +711,19 @@ test.describe.serial("Auth and business flow", () => {
     await fillCadastroTerritory(page);
     await page.getByRole("button", { name: /Pr[oó]ximo/i }).click();
 
-    await page.getByRole("button", { name: "Criar minha conta" }).click();
+    const createAccountButton = page.getByRole("button", {
+      name: "Criar minha conta",
+    });
+    const termsCheckbox = page.getByRole("checkbox", {
+      name: /Li e aceito os Termos de Uso/i,
+    });
+
+    await expect(termsCheckbox).toBeVisible();
+    await expect(createAccountButton).toBeDisabled();
+    await termsCheckbox.click();
+    await expect(termsCheckbox).toHaveAttribute("aria-checked", "true");
+    await expect(createAccountButton).toBeEnabled();
+    await createAccountButton.click();
 
     if (signupEmailInfraAvailable === false) {
       await expect(page).toHaveURL(/\/cadastro$/);
@@ -733,7 +733,7 @@ test.describe.serial("Auth and business flow", () => {
       await expect(
         page
           .getByText(
-            /N[aã]o foi poss[ií]vel enviar o email de confirma[cç][aã]o agora/i,
+            /N[aã]o foi poss[ií]vel enviar o e-?mail de confirma[cç][aã]o agora/i,
           )
           .first(),
       ).toBeVisible({ timeout: 15_000 });

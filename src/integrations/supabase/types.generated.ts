@@ -21580,6 +21580,10 @@ export type Database = {
         }
         Returns: Json
       }
+      submit_professional_engagement_review: {
+        Args: { p_comment?: string; p_engagement_id: string; p_rating: number }
+        Returns: Json
+      }
       submit_ride_rating: {
         Args: {
           p_behavior_rating?: number

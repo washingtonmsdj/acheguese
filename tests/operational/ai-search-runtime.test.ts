@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { AIOrchestratorService } from "../orchestrator/AIOrchestratorService";
+import { expect, it } from "vitest";
+import { AIOrchestratorService } from "../../src/core/ai/orchestrator/AIOrchestratorService";
+import { describeOperational } from "../helpers/operational-env";
 
 const queries = [
   "pizzaria barata com delivery",
@@ -10,7 +11,9 @@ const queries = [
   "me conte uma piada",
 ];
 
-describe("Fluxo real do orquestrador /buscar (integration)", () => {
+describeOperational("Fluxo real do orquestrador /buscar (integration)", {
+  requireAnonKey: true,
+}, () => {
   it("executa consultas end-to-end com resultado ou empty state controlado", async () => {
     const orchestrator = new AIOrchestratorService();
     const outputs = [];
