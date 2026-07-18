@@ -1884,19 +1884,10 @@ body:has(.home-concept) {
     grid-template-columns: minmax(0, 1fr) minmax(390px, 430px);
   }
 
-  .home-community-activity-item:has(.home-community-activity-preview) {
-    min-height: 84px;
-    padding-right: 138px;
+  .home-community-activity-preview {
+    max-height: 140px;
   }
 
-  .home-community-activity-preview {
-    position: absolute;
-    right: 0;
-    bottom: 12px;
-    width: 128px;
-    height: 64px;
-    max-height: none;
-  }
 
   .home-suggestion-list {
     grid-template-columns: repeat(5, minmax(0, 1fr));
