@@ -93,10 +93,10 @@ Tests:
 - [x] Add unit tests for every route intent.
 - [x] Verify public entity intent never emits community URL.
 - [x] Verify community-scoped entity intent requires community alias/context.
-- [x] `decideLegacyEntityRoute(...)` documents and tests the remaining legacy
-      decisions: public entity canonicalization renders on the public site
-      without redirecting into community, while non-canonical community entity
-      aliases fail visibly instead of redirecting.
+- [x] `decideCommunityEntityRoute(...)` validates the only remaining decision:
+      a non-canonical community entity path fails visibly instead of
+      redirecting. Public entity canonicalization renders directly on the
+      public site and needs no redirect policy.
 
 ## 6. Phase 2 - Stop Public Entity Auto-Redirects
 
@@ -130,7 +130,7 @@ Inspect and refactor:
 
 - [x] `src/core/routing/components/CommunityShortEntityRoute.tsx`
 - [x] `src/core/routing/components/CommunityEntityAliasRoute.tsx`
-- [x] `src/core/routing/components/CommunityAliasRoute.tsx`
+- [x] `src/core/routing/components/CommunityAliasShellRoute.tsx`
 - [x] `src/core/routing/components/CommunityShortAliasShellRoute.tsx`
 - [x] `src/core/routing/services/CommunityBusinessEntityResolver.ts`
 - [x] `src/app/routes/sections/CommunityTerritoryRoutes.tsx`
@@ -347,7 +347,7 @@ Validation run:
       territorial and alias shells. `CommunityPortalModeBanner` identifies the
       active community context and exposes `Ver no site publico` back to the
       public territory URL. Validated with
-      `npx vitest --run src/core/routing/components/__tests__/CommunityPortalModeBanner.spec.tsx src/core/routing/components/__tests__/CommunityAliasRoute.spec.tsx --reporter=dot`,
+      `npx vitest --run src/core/routing/components/__tests__/CommunityPortalModeBanner.spec.tsx src/core/routing/components/__tests__/CommunityAliasShellRoute.spec.tsx --reporter=dot`,
       focused eslint, and `npm run typecheck:app`.
 - [x] Blocked community actions now have explicit, tested CTAs through the
       central `CommunityPortalGate`: visitors see `Entrar`, authenticated users
@@ -505,7 +505,7 @@ Validation run:
 Target structure:
 
 - [x] `src/core/routing/policies`
-- [x] `src/core/routing/redirects`
+- [x] `src/core/routing/redirects` removed after redirect compatibility ended
 - [x] `src/core/community/access`
 - [x] keep public company detail under `src/modules/business/company`
 - [x] keep gastronomy operations under `src/modules/business/gastronomy`
@@ -521,14 +521,13 @@ Cleanup:
 
 Validation run:
 
-- [x] Extracted legacy entity route decisions to
-      `src/core/routing/redirects/LegacyEntityRedirectPolicy.ts` on
-      2026-07-06 while preserving the existing `src/core/routing/policies`
-      facade exports for compatibility.
+- [x] The temporary redirect policy extracted on 2026-07-06 was removed on
+      2026-07-18. The canonical community path decision now lives directly in
+      `src/core/routing/policies/EntityUrlPolicy.ts`.
 - [x] `npx vitest --run src/core/routing/policies/__tests__/EntityUrlPolicy.spec.ts src/core/routing/components/__tests__/BusinessCanonicalRoute.spec.tsx src/core/routing/components/__tests__/CommunityEntityAliasRoute.spec.tsx --reporter=dot`
       passed on 2026-07-06 (`11/11`).
-- [x] `npx eslint src/core/routing/policies/EntityUrlPolicy.ts src/core/routing/redirects/LegacyEntityRedirectPolicy.ts src/core/routing/redirects/index.ts`
-      passed on 2026-07-06.
+- [x] `npx eslint src/core/routing/policies/EntityUrlPolicy.ts src/core/routing/components/CommunityEntityAliasRoute.tsx`
+      covers the current implementation.
 - [x] `npm run typecheck:app` passed on 2026-07-06 after the legacy route boundary
       extraction.
 - [x] Moved the business landing quick-filter decision out of
@@ -743,10 +742,9 @@ Delivered:
   territorial browsing.
 - Community access is centralized in `src/core/community/access`, including
   login, address, verified-residence, admin/moderator, and rollout decisions.
-- Legacy community entity decisions are isolated in
-  `src/core/routing/redirects` while `src/core/routing/policies` remains a
-  compatibility facade for existing imports; non-canonical aliases return
-  explicit NotFound instead of redirecting.
+- Community entity path decisions live in `src/core/routing/policies`;
+  non-canonical aliases return explicit NotFound instead of redirecting. There
+  is no compatibility facade or redirect directory.
 - Supabase/RLS hardening added verified-residence checks for community
   alerts/issues and explicit authenticated-profile author checks for community
   social writes.

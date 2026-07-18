@@ -704,6 +704,28 @@ em 516,1 segundos, typecheck app e Node aprovados, `security:validate` aprovado
 nas oito etapas, build de producao aprovado com 5.912 modulos e migrations
 locais/remotas sincronizadas ate `20260718181000`.
 
+Nono checkpoint em 2026-07-18: a superficie comunitaria deixou de publicar uma
+segunda arvore de imports. Os nove arquivos de `src/core/community-feed` eram
+somente reexports de implementacoes em `src/core/community`; todos os
+consumidores foram migrados para os entrypoints canonicos e a arvore paralela
+foi removida. O validador comunitario agora lista os entrypoints externos
+permitidos e exige diretamente os owners `core/posts`, `core/comments`,
+`core/feed` e `core/social`.
+
+No mesmo checkpoint, `CommunityAliasRoute` foi eliminado por apenas encapsular
+`CommunityAliasShellRoute`. A pasta `core/routing/redirects` tambem foi removida:
+a antiga `LegacyEntityRedirectPolicy` nao executava redirects e misturava uma
+decisao publica sem efeito com a validacao de caminho comunitario. A unica regra
+necessaria agora vive em `EntityUrlPolicy` e rejeita caminho comunitario nao
+canonico com 404. Aliases publicos persistidos continuam ativos porque fazem
+parte do contrato canonico da Comunidade, nao de compatibilidade legada.
+
+Evidencia do checkpoint: 19 testes focados de roteamento, 12 contratos SSOT da
+Comunidade e a suite deterministica completa passaram (`314` arquivos, `1.700`
+testes). Typecheck completo, lint, taxonomia, docs vivos, SSOT, URLs publicas,
+governanca, fronteiras incremental/comunitaria e as oito etapas da Security
+Authority passaram. O build de producao concluiu com `5.902` modulos.
+
 Proxima ordem: continuar as suites unitarias, integracao, RLS e E2E dos demais dominios,
 registrando qualquer gap real antes de alterar implementacao. Documentos de verificacao, evidencias
 privadas e try-on permanecem em contratos separados e nao devem ser forcados

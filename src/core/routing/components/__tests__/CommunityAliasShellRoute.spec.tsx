@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CommunityAliasRoute } from "../CommunityAliasRoute";
+import { CommunityAliasShellRoute } from "../CommunityAliasShellRoute";
 import { useTerritorialContext } from "../TerritorialLayout";
 import { resolveCommunityPublicAliasTerritory } from "@/core/routing/services/CommunityPublicAliasTerritoryResolver";
 
@@ -60,7 +60,7 @@ function ContextProbe() {
   );
 }
 
-describe("CommunityAliasRoute", () => {
+describe("CommunityAliasShellRoute", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -77,7 +77,7 @@ describe("CommunityAliasRoute", () => {
     render(
       <MemoryRouter initialEntries={["/comunidade/santa-cruz/empresas?origem=zap#topo"]}>
         <Routes>
-          <Route path="/comunidade/:communitySlug/empresas" element={<CommunityAliasRoute />}>
+          <Route path="/comunidade/:communitySlug/empresas" element={<CommunityAliasShellRoute />}>
             <Route index element={<ContextProbe />} />
           </Route>
         </Routes>
@@ -106,7 +106,7 @@ describe("CommunityAliasRoute", () => {
     render(
       <MemoryRouter initialEntries={["/comunidade/santa-cruz/grupos/grupo-123"]}>
         <Routes>
-          <Route path="/comunidade/:communitySlug/grupos/:id" element={<CommunityAliasRoute />}>
+          <Route path="/comunidade/:communitySlug/grupos/:id" element={<CommunityAliasShellRoute />}>
             <Route index element={<ContextProbe />} />
           </Route>
         </Routes>
@@ -132,7 +132,7 @@ describe("CommunityAliasRoute", () => {
     render(
       <MemoryRouter initialEntries={["/comunidade/duplicado"]}>
         <Routes>
-          <Route path="/comunidade/:communitySlug" element={<CommunityAliasRoute />}>
+          <Route path="/comunidade/:communitySlug" element={<CommunityAliasShellRoute />}>
             <Route index element={<ContextProbe />} />
           </Route>
         </Routes>

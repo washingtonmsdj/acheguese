@@ -95,7 +95,7 @@ The change is isolated to presentation composition and route wrappers. Domain se
 
 - `npm run typecheck:app`
 - Focused ESLint for every edited implementation file
-- `npx vitest --run src/core/community/components/page/CommunityOverviewSurface.spec.tsx src/app/routes/__tests__/communityRoutesCanonical.spec.ts src/app/routes/__tests__/communityLaunchScope.spec.ts src/core/routing/components/__tests__/CommunityAliasRoute.spec.tsx` (12 tests)
+- `npx vitest --run src/core/community/components/page/CommunityOverviewSurface.spec.tsx src/app/routes/__tests__/communityRoutesCanonical.spec.ts src/app/routes/__tests__/communityLaunchScope.spec.ts src/core/routing/components/__tests__/CommunityAliasShellRoute.spec.tsx` (12 tests)
 - `npx playwright test tests/e2e/community-persistent-shell.spec.ts --project=chromium`
 - The Playwright contract verifies eight scenarios, including preview-first navigation, DOM identity across module navigation, zero document navigation for the public alias, Map embedding, browser history and the responsive width matrix.
 - The same contract verifies accessible `#eventos` focus after cross-module navigation and automatic mobile Sections-menu dismissal.

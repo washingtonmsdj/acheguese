@@ -4,7 +4,7 @@ import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import {
   buildCommunityScopedEntityUrl,
-  decideLegacyEntityRoute,
+  decideCommunityEntityRoute,
 } from "@/core/routing/policies";
 import {
   resolveBusinessEntityFromCommunityAlias,
@@ -78,8 +78,7 @@ export function CommunityEntityAliasRoute() {
         slug: resolution.business.slug,
       });
       const publicPath = BusinessUrlService.getCanonicalUrl(resolution.business);
-      const routeDecision = decideLegacyEntityRoute({
-        kind: "community_scoped_entity_alias",
+      const routeDecision = decideCommunityEntityRoute({
         currentPath: location.pathname,
         targetPath,
       });

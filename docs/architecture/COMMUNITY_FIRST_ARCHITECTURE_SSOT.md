@@ -118,11 +118,14 @@ permissoes da experiencia comunitaria. Ele pode consumir
 membership da comunidade persistida da rota, mas nao pode acessar
 `community_memberships` diretamente.
 
-Consumidores fora do bounded context legado de `src/core/community` devem
-importar a fachada publica de acesso por `src/core/community-experience/access`.
-Superficies de feed/descoberta comunitaria fora desse bounded context devem
-usar fachadas explicitas em `src/core/community-feed`, nao caminhos diretos de
-`src/core/community/*`.
+Identidade, membership e autorizacao da Comunidade Local sao consumidas pela
+API publica de `src/core/community-experience/access`. Composicoes visuais
+especificas da Comunidade pertencem a `src/core/community`; consumidores
+externos podem importar apenas os entrypoints explicitamente aprovados por
+`scripts/validate-community-transversal-boundaries.ts`. Posts, comentarios,
+reacoes e ranking continuam pertencendo aos owners transversais `core/posts`,
+`core/comments`, `core/social` e `core/feed`. Nao existe facade paralela em
+`src/core/community-feed`.
 
 ### Entidades Independentes
 
@@ -154,9 +157,10 @@ mais comunidades sem copiar seus dados mestres:
   `jobs` e nao devem ser fundidas com `work_opportunities` sem uma migracao
   explicita para um futuro `core/jobs`.
 - Usuarios/perfis: `profiles`, `src/core/profiles`, `src/modules/profile`
-- Posts/feed: `posts`, `src/core/posts`, `src/core/feed` e
-  `src/modules/community-feed` para feed social, publicacoes comunitarias,
-  moderacao, busca e metricas de perfil. `community_questions` e
+- Posts/feed: `posts`, `src/core/posts`, `src/core/comments`, `src/core/social`,
+  `src/core/feed` e as composicoes de UI em `src/core/community/components/feed`.
+  `src/modules/community-feed` documenta o bounded context de produto, sem
+  duplicar implementacao. `community_questions` e
   `question_answers` pertencem ao bounded context de Q&A. `community_posts`
   nao e runtime SSOT e nao deve ser consultada fora de migrations historicas ou
   tipos gerados ate a remocao definitiva do schema legado.

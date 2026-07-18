@@ -17,7 +17,8 @@ propria em `modules`; seu owner e acessado diretamente em core.
 
 Os owners de core por dominio sao:
 
-- `core/community-feed`
+- `core/posts`, `core/comments`, `core/social` e `core/feed` para o feed
+- `core/community/components` e `core/community/pages` para composicao visual comunitaria
 - `core/community/alerts`
 - `core/community-issues`
 - `core/community-groups`
@@ -44,9 +45,11 @@ Regras:
 - Modulos transversais nao acessam Supabase diretamente.
 - Consumidores externos nao importam o agregador legado `@/modules/community`.
 - Consumidores externos nao importam o barrel `@/core/community`; devem usar subdominios explicitos.
-- Modulos transversais nao importam `@/core/community/*`; devem usar owners
-  `@/core/community-*` explicitos. `core/community/alerts` e consumido apenas
-  por compositores e servicos fora desses modulos, sem allowlist de facade.
+- Modulos transversais nao importam implementacao interna de
+  `@/core/community/*`; devem usar os owners transversais explicitos.
+  Superficies do app podem consumir somente os entrypoints de UI comunitaria
+  aprovados pelo validador arquitetural, sem uma facade de reexports paralela.
+  `core/community/alerts` e consumido diretamente pelo owner autorizado.
 - `location_id` e o SSOT territorial para leitura, escrita, filtros, rollout e permissao.
 - Cidade, bairro, UF, slug e nome publico sao campos derivados ou de apresentacao.
 - Posts usam `core/posts`; comentarios de Post usam `core/comments`.

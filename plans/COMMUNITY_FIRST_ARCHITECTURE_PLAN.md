@@ -1089,10 +1089,9 @@ Evidencia:
 - `useLandingFeatured`, `TerritorialLandingPage` e `CommunityRightSidebar`
   consomem `community_entity_links` indiretamente por service, sem Supabase
   direto fora do SSOT;
-- `CidadeLandingPage`, `NeighborhoodTerritoryHero` e `ProblemasPage` deixam de
-  importar `@/core/community/*` diretamente e passam por fachadas explicitas em
-  `community-feed` e `community-experience`, preservando o validador de
-  fronteira transversal;
+- `CidadeLandingPage` e `NeighborhoodTerritoryHero` consomem os entrypoints de
+  UI canonicos de `core/community`; identidade e acesso continuam em
+  `community-experience`, com a fronteira explicitamente validada;
 - `SearchService` consome `CommunityEntityLinkService` para restringir busca
   em contexto de comunidade por links ativos de businesses, professionals,
   classifieds, events e posts, mantendo fallback territorial quando o tipo nao
@@ -1363,9 +1362,10 @@ Evidencia:
   `src/core/community-recommendations/pages/*`, os aliases vazios foram
   removidos e `validate:taxonomy` bloqueia a volta desses caminhos.
 - Rotas, prefetch, pagina territorial e testes de feed comunitario deixaram de
-  depender de facades vazias em `src/modules/community-feed`; o consumo agora
-  aponta para `src/core/community-feed/*`, as cinco pontes vazias foram removidas
-  e `validate:taxonomy` bloqueia a volta desses paths.
+  depender de facades vazias em `src/modules/community-feed`. Em 2026-07-18,
+  as nove pontes restantes de `src/core/community-feed` tambem foram removidas;
+  o consumo aponta para os entrypoints canonicos de `src/core/community` e os
+  validadores bloqueiam a volta dos aliases.
 - Facades vazias de paginas em `src/modules/community-lost-found/pages` foram
   removidas; `src/core/community-lost-found` permanece como owner explicito para
   reabertura futura da superficie pausada de achados/perdidos, e

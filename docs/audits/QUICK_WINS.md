@@ -1,10 +1,10 @@
 ﻿# Quick Wins
 
-Atualizado em: 2026-07-06
+Atualizado em: 2026-07-18
 
 ## Executados em 2026-07-06
 1. Rotas publicas de empresas e gastronomia ficaram explicitamente separadas do portal comunitario: canonicalizacao publica renderiza no site publico, sem redirect automatico para comunidade.
-2. Compatibilidade de redirect para aliases comunitarios legados foi isolada em `src/core/routing/redirects`, preservando fachada publica em `src/core/routing/policies`.
+2. A compatibilidade de redirect temporaria foi removida. `src/core/routing/policies` valida o caminho comunitario canonico e aliases incorretos retornam NotFound sem redirect.
 3. Gate comunitario passou a resolver ausencia de residencia sem depender do carregamento de rollout, exibindo CTA de cadastro de endereco.
 4. Auditoria RLS comunitaria ganhou cobertura para residencia, aliases publicos, posts, comentarios, reacoes, grupos, reports, alerts e issues.
 5. Migrations de hardening adicionaram verificacao de residencia canonica para alerts/issues e `WITH CHECK` explicito para autoria social comunitaria.

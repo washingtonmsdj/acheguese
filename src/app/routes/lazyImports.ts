@@ -33,9 +33,9 @@ export const CommunityPersistentPortalLayout = lazy(() =>
     default: m.CommunityPersistentPortalLayout,
   })),
 );
-export const CommunityAliasRoute = lazy(() =>
-  import("@/core/routing/components/CommunityAliasRoute").then((m) => ({
-    default: m.CommunityAliasRoute,
+export const CommunityAliasShellRoute = lazy(() =>
+  import("@/core/routing/components/CommunityAliasShellRoute").then((m) => ({
+    default: m.CommunityAliasShellRoute,
   })),
 );
 export const CommunityEntityAliasRoute = lazy(() =>
@@ -424,7 +424,7 @@ export const GruposPage = lazy(
   () => import("@/core/community-groups/pages/GruposPage"),
 );
 export const ComunidadePage = lazy(
-  () => import("@/core/community-feed/pages/ComunidadePage"),
+  () => import("@/core/community/pages/ComunidadePage"),
 );
 export const GrupoDetailPage = lazy(
   () => import("@/core/community-groups/pages/GrupoDetailPage"),
@@ -457,7 +457,7 @@ export const AchadoPerdidoDetailPage =
   createLaunchPausedRoute("Achados e perdidos");
 export const ProblemasPage = createLaunchPausedRoute("Problemas");
 export const NovoPostPage = lazy(
-  () => import("@/core/community-feed/pages/NovoPostPage"),
+  () => import("@/core/community/pages/NovoPostPage"),
 );
 
 // Comunicacao Territorial

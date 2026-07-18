@@ -7,6 +7,14 @@ const read = (path: string) => readFileSync(resolve(repoRoot, path), 'utf8');
 const exists = (path: string) => existsSync(resolve(repoRoot, path));
 
 describe('compatibility surface cleanup', () => {
+  it('does not recreate removed community feed or routing redirect shims', () => {
+    expect(exists('src/core/community-feed')).toBe(false);
+    expect(exists('src/core/routing/redirects')).toBe(false);
+    expect(exists('src/core/routing/components/CommunityAliasRoute.tsx')).toBe(
+      false,
+    );
+  });
+
   it('keeps community alerts on the canonical core owner without validator allowlists', () => {
     const communityValidator = read(
       'scripts/validate-community-transversal-boundaries.ts',
