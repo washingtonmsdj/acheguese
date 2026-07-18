@@ -162,7 +162,7 @@ export function ConsentBanner() {
       ) : (
         <div
           data-consent-banner
-          className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] z-50 mx-auto max-w-[calc(100vw-1.5rem)] rounded-2xl border border-border/70 bg-background/95 p-2 shadow-2xl backdrop-blur-xl md:left-auto md:right-4 md:mx-0 md:w-[34rem] md:max-w-[34rem] md:rounded-2xl md:p-3.5"
+          className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] z-50 mx-auto max-w-[calc(100vw-1.5rem)] rounded-2xl border border-border/70 bg-background/95 p-2 shadow-2xl backdrop-blur-xl md:left-auto md:right-4 md:mx-0 md:w-[40rem] md:max-w-[40rem] md:rounded-2xl md:p-3.5"
         >
           {/* Mobile compact */}
           <div className="flex items-center gap-2 md:hidden">
