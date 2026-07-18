@@ -13,7 +13,7 @@ export interface VendedorWithAds {
   id: string;
   name: string;
   avatar_url: string | null;
-  neighborhood: string;
+  territory_name: string;
   active_ads_count: number;
   featured_ads: {
     id: string;
@@ -47,7 +47,7 @@ export function useVendedores(options: UseVendedoresOptions = {}) {
           id: s.id,
           name: s.name,
           avatar_url: s.avatar_url,
-          neighborhood: s.neighborhood,
+          territory_name: s.territory_name,
           active_ads_count: s.active_ads_count,
           featured_ads: s.featured_ads.map((ad) => ({
             id: ad.id,

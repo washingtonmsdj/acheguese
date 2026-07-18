@@ -560,15 +560,21 @@ Edge Function foram aplicadas ao remoto. A migration incremental
 concorrentes. Evidencia:
 `docs/audits/COMPATIBILITY_AND_PRIVILEGED_RPC_CALLERS_2026-07-17.md`.
 
-Os campos `ClassifiedData.location` e `ClassifiedData.neighborhood` permanecem
-temporariamente porque seis callsites ainda os usam como label. Eles so podem
-sair depois de um read model territorial canonico, sem fabricar label no
-cliente.
+Terceiro checkpoint em 2026-07-17: o read model territorial de Classificados
+foi consolidado. A migration `20260717150000` validou 23 registros, tornou
+`location_id` obrigatorio e removeu a coluna textual `neighborhood`. Consultas
+e mutations agora compartilham uma unica projecao/mapeador; builders explicitos
+de escrita evitam mass assignment. Criacao, edicao, busca, perfil, vendedores,
+URLs e mapa consomem `ClassifiedData.territory`. Quatro arquivos sem consumidores
+foram removidos e `test:classifieds:ssot` registra 28 testes. Migration aplicada
+ao remoto, tipos regenerados e amostra PostgREST com zero relacao invalida.
+Evidencia: `docs/audits/CLASSIFIEDS_TERRITORY_SSOT_2026-07-17.md`.
 
-Proxima ordem: executar as suites unitarias, integracao, RLS e E2E por dominio,
-registrando qualquer gap real antes de alterar implementacao. Depois preparar
-o read model territorial de Classificados como migracao incremental. Documentos
-de verificacao, evidencias
+Proxima ordem: continuar as suites unitarias, integracao, RLS e E2E dos demais
+dominios, registrando qualquer gap real antes de alterar implementacao. Revisar
+a exposicao de contatos de vendedores em payloads publicos de Classificados e
+separar listagem publica de leitura de contato quando a politica de visibilidade
+estiver definida. Documentos de verificacao, evidencias
 privadas e try-on permanecem em contratos separados e nao devem ser forcados
 para o MediaAsset publico. Por fim, preparar staging explicitamente autorizado
 para carga, p50/p95/p99, backup/restore e rollback. A aprovacao de

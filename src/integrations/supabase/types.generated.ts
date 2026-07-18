@@ -2837,9 +2837,8 @@ export type Database = {
           is_active: boolean | null
           is_featured: boolean | null
           latitude: number | null
-          location_id: string | null
+          location_id: string
           longitude: number | null
-          neighborhood: string | null
           photos: Json | null
           point: unknown
           price: number | null
@@ -2864,9 +2863,8 @@ export type Database = {
           is_active?: boolean | null
           is_featured?: boolean | null
           latitude?: number | null
-          location_id?: string | null
+          location_id: string
           longitude?: number | null
-          neighborhood?: string | null
           photos?: Json | null
           point?: unknown
           price?: number | null
@@ -2891,9 +2889,8 @@ export type Database = {
           is_active?: boolean | null
           is_featured?: boolean | null
           latitude?: number | null
-          location_id?: string | null
+          location_id?: string
           longitude?: number | null
-          neighborhood?: string | null
           photos?: Json | null
           point?: unknown
           price?: number | null
@@ -18181,6 +18178,10 @@ export type Database = {
       }
       can_write_ride_dispatch_audit: {
         Args: { p_driver_profile_id: string; p_ride_id: string }
+        Returns: boolean
+      }
+      cancel_account_deletion_for_user: {
+        Args: { p_reason?: string; p_user_id: string }
         Returns: boolean
       }
       cancel_pending_ride_offers: {

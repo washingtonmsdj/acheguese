@@ -24,9 +24,9 @@ export function useSellerAds(sellerId: string | undefined, excludeId?: string) {
           categoria: item.category,
           fotos: item.photos,
           status: item.is_active ? "active" : "inactive",
-          bairro: item.neighborhood || item.location || "",
+          bairro: item.territory.name,
           created_at: item.created_at,
-          geographic_path: item.geographic_path,
+          geographic_path: item.territory.geographic_path,
           category_slug: item.category_slug,
           subcategory_slug: item.subcategory_slug,
           vendedor: {

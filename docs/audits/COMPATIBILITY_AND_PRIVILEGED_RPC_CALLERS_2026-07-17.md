@@ -32,9 +32,10 @@ validates the final browser exposure state.
   `GastronomyFacade` still have runtime consumers and were not removed.
 - Public community alias services model canonical public URL ownership and are
   not deprecated compatibility redirects.
-- `ClassifiedData.location` and `ClassifiedData.neighborhood` still feed six UI,
-  search and mapper callsites. They remain a documented residual until a
-  canonical location label read model replaces them.
+- The former `ClassifiedData.location` and `ClassifiedData.neighborhood`
+  residual was resolved by migration `20260717150000` and the canonical
+  `ClassifiedData.territory` read model. Evidence is recorded in
+  `docs/audits/CLASSIFIEDS_TERRITORY_SSOT_2026-07-17.md`.
 
 ## Remote privileged RPC audit
 

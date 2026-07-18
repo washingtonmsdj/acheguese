@@ -217,7 +217,7 @@ export class ClassifiedUrlService {
         logger.warn(`[ClassifiedUrlService] Classificado não encontrado: ${publicId}`);
         return null;
       }
-      if (!data.geographic_path || !data.category_slug || !data.subcategory_slug) {
+      if (!data.category_slug || !data.subcategory_slug) {
         logger.error(`[ClassifiedUrlService] Dados incompletos para ${publicId}`);
         return null;
       }
@@ -226,7 +226,7 @@ export class ClassifiedUrlService {
         id: data.id,
         public_id: data.public_id,
         slug: data.slug,
-        geographic_path: data.geographic_path,
+        geographic_path: data.territory.geographic_path,
         category_slug: data.category_slug,
         subcategory_slug: data.subcategory_slug,
       });
@@ -283,7 +283,7 @@ export class ClassifiedUrlService {
       if (!data) {
         return null;
       }
-      if (!data.geographic_path || !data.category_slug || !data.subcategory_slug) {
+      if (!data.category_slug || !data.subcategory_slug) {
         return null;
       }
 
@@ -291,7 +291,7 @@ export class ClassifiedUrlService {
         id: data.id,
         public_id: data.public_id,
         slug: data.slug,
-        geographic_path: data.geographic_path,
+        geographic_path: data.territory.geographic_path,
         category_slug: data.category_slug,
         subcategory_slug: data.subcategory_slug,
       };

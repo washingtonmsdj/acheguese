@@ -12,31 +12,12 @@ import { trackError } from "@/shared/utils/errorTracking";
 import type { ClassifiedData, CreateClassifiedInput, UpdateClassifiedInput } from "./types";
 import { CLASSIFIED_STATUS } from "../constants/statuses";
 import { slugify } from "./ClassifiedUrlService";
-import { resolveMediaAssetSource } from "@/core/media/references/mediaAssetReference";
-
-function ensureStringArray(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => typeof item === "string" ? resolveMediaAssetSource(item) : null)
-      .filter((item): item is string => item !== null);
-  }
-  return [];
-}
-
-function mapMutationClassified(data: Record<string, unknown>): ClassifiedData {
-  const seller = data.seller as
-    | { name?: string | null; avatar_url?: string | null; phone?: string | null; whatsapp?: string | null }
-    | undefined;
-
-  return {
-    ...(data as unknown as ClassifiedData),
-    photos: ensureStringArray(data.photos),
-    seller_name: seller?.name,
-    seller_avatar: seller?.avatar_url,
-    seller_phone: seller?.phone,
-    seller_whatsapp: seller?.whatsapp,
-  };
-}
+import {
+  CLASSIFIED_READ_SELECT,
+  mapClassifiedReadModel,
+  type ClassifiedReadRow,
+} from "./classifieds.read-model";
+import { toClassifiedInsert, toClassifiedUpdate } from "./classifieds.write-model";
 
 //  ============================================================
 //  HELPERS INTERNOS
@@ -66,24 +47,8 @@ export async function createClassified(
 
     const { data, error } = await supabase
       .from("classifieds")
-      .insert({
-        ...input,
-        slug, //  Slug gerado automaticamente
-        seller_id: userId,
-        status: CLASSIFIED_STATUS.ACTIVE, //  Define status ao invs de is_active (que computed)
-      })
-      .select(
-        `
-        * ,
-        seller:profiles!seller_id (
-          id,
-          name,
-          avatar_url,
-          phone,
-          whatsapp
-        )
-      `,
-      )
+      .insert(toClassifiedInsert(userId, input, slug))
+      .select(CLASSIFIED_READ_SELECT)
       .single();
 
     if (error) {
@@ -91,7 +56,7 @@ export async function createClassified(
       throw error;
     }
 
-    return mapMutationClassified(data as Record<string, unknown>);
+    return mapClassifiedReadModel(data as ClassifiedReadRow);
   } catch (error) {
     logger.error("Error in createClassified:", error);
     trackError(error as Error, {
@@ -113,21 +78,10 @@ export async function updateClassified(
   try {
     const { data, error } = await supabase
       .from("classifieds")
-      .update(input)
+      .update(toClassifiedUpdate(input))
       .eq("id", id)
       .eq("seller_id", userId) //  S o vendedor pode atualizar
-      .select(
-        `
-        * ,
-        seller:profiles!seller_id (
-          id,
-          name,
-          avatar_url,
-          phone,
-          whatsapp
-        )
-      `,
-      )
+      .select(CLASSIFIED_READ_SELECT)
       .single();
 
     if (error) {
@@ -135,7 +89,7 @@ export async function updateClassified(
       throw error;
     }
 
-    return mapMutationClassified(data as Record<string, unknown>);
+    return mapClassifiedReadModel(data as ClassifiedReadRow);
   } catch (error) {
     logger.error("Error in updateClassified:", error);
     trackError(error as Error, {
@@ -190,18 +144,7 @@ export async function markAsSold(
       .update({ status: CLASSIFIED_STATUS.SOLD })
       .eq("id", id)
       .eq("seller_id", userId)
-      .select(
-        `
-        * ,
-        seller:profiles!seller_id (
-          id,
-          name,
-          avatar_url,
-          phone,
-          whatsapp
-        )
-      `,
-      )
+      .select(CLASSIFIED_READ_SELECT)
       .single();
 
     if (error) {
@@ -209,7 +152,7 @@ export async function markAsSold(
       throw error;
     }
 
-    return mapMutationClassified(data as Record<string, unknown>);
+    return mapClassifiedReadModel(data as ClassifiedReadRow);
   } catch (error) {
     logger.error("Error in markAsSold:", error);
     trackError(error as Error, {
@@ -233,18 +176,7 @@ export async function reactivateClassified(
       .update({ status: CLASSIFIED_STATUS.ACTIVE })
       .eq("id", id)
       .eq("seller_id", userId)
-      .select(
-        `
-        * ,
-        seller:profiles!seller_id (
-          id,
-          name,
-          avatar_url,
-          phone,
-          whatsapp
-        )
-      `,
-      )
+      .select(CLASSIFIED_READ_SELECT)
       .single();
 
     if (error) {
@@ -252,7 +184,7 @@ export async function reactivateClassified(
       throw error;
     }
 
-    return mapMutationClassified(data as Record<string, unknown>);
+    return mapClassifiedReadModel(data as ClassifiedReadRow);
   } catch (error) {
     logger.error("Error in reactivateClassified:", error);
     trackError(error as Error, {

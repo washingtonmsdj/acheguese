@@ -25,7 +25,6 @@ interface PreviewStepProps {
   subcategory?: string;
   condition: string;
   locationName: string;
-  neighborhood: string;
   photoPreviews: string[];
   details: Record<string, string>;
   phone: string;
@@ -41,7 +40,6 @@ export function PreviewStep({
   subcategory,
   condition,
   locationName,
-  neighborhood,
   photoPreviews,
   details,
   phone,
@@ -136,11 +134,11 @@ export function PreviewStep({
           )}
 
           {/* Localização */}
-          {(locationName || neighborhood) && (
+          {locationName && (
             <div className="flex items-center gap-1.5 text-muted-foreground pt-1">
               <MapPin className="h-3.5 w-3.5" />
               <span className="text-xs">
-                {[neighborhood, locationName].filter(Boolean).join(", ")}
+                {locationName}
               </span>
             </div>
           )}

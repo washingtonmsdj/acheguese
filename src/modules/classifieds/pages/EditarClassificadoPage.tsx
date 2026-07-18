@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, MapPin, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
@@ -23,7 +23,6 @@ export default function EditarClassificadoPage() {
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
   const [condition, setCondition] = useState("");
-  const [neighborhood, setNeighborhood] = useState("");
   const [status, setStatus] = useState<"active" | "inactive" | "sold">("active");
 
   const { data, isLoading, error } = useQuery({
@@ -44,7 +43,6 @@ export default function EditarClassificadoPage() {
     setPrice(String(data.price ?? ""));
     setCategory(data.category || "");
     setCondition(data.condition || "");
-    setNeighborhood(data.neighborhood || "");
     setStatus((data.status as "active" | "inactive" | "sold") || "active");
   }, [data]);
 
@@ -60,7 +58,6 @@ export default function EditarClassificadoPage() {
         price: Number(price),
         category: category.trim(),
         condition: condition.trim(),
-        neighborhood: neighborhood.trim(),
         status,
       });
     },
@@ -203,12 +200,11 @@ export default function EditarClassificadoPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="neighborhood">Bairro</Label>
-            <Input
-              id="neighborhood"
-              value={neighborhood}
-              onChange={(event) => setNeighborhood(event.target.value)}
-            />
+            <Label>Território do anúncio</Label>
+            <div className="flex min-h-10 items-center gap-2 rounded-md border bg-muted/40 px-3 text-sm">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <span>{data.territory.name}</span>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2 justify-end">

@@ -54,10 +54,10 @@ export const VendedorCard = memo(function VendedorCard({
           </div>
 
           <div className="flex items-center gap-3 mt-1 text-muted-foreground">
-            {vendedor.neighborhood && (
+            {vendedor.territory_name && (
               <span className="flex items-center gap-0.5 text-[11px]">
                 <MapPin className="h-3 w-3 shrink-0" />
-                <span className="truncate">{vendedor.neighborhood}</span>
+                <span className="truncate">{vendedor.territory_name}</span>
               </span>
             )}
             <span className="text-[11px] font-medium text-primary">

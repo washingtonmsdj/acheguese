@@ -28,9 +28,9 @@ export function mapToClassificadoWithVendedor(
     condition: data.condition || undefined,
     fotos: data.photos,
     status: data.status || (data.is_active ? "active" : "inactive"),
-    bairro: data.neighborhood || "",
+    bairro: data.territory.name,
     created_at: data.created_at,
-    geographic_path: data.geographic_path,
+    geographic_path: data.territory.geographic_path,
     category_slug: data.category_slug,
     subcategory_slug: data.subcategory_slug,
     vendedor: {

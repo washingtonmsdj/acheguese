@@ -60,7 +60,6 @@ export default function NovoClassificadoPage() {
   const [category, setCategory] = useState("");
   const [subcategory, setSubcategory] = useState("");
   const [condition, setCondition] = useState("usado");
-  const [neighborhood, setNeighborhood] = useState("");
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [details, setDetails] = useState<Record<string, string>>({});
@@ -215,13 +214,18 @@ export default function NovoClassificadoPage() {
       return;
     }
 
-    if (activeLocationId) {
-      const valid = await validateLocationId(activeLocationId);
-      if (!valid) {
-        toast.error("Localização inválida");
-        setCurrentStep("location");
-        return;
-      }
+    const locationId = activeLocationId;
+    if (!locationId) {
+      toast.error("Selecione uma localização ativa");
+      setCurrentStep("location");
+      return;
+    }
+
+    const valid = await validateLocationId(locationId);
+    if (!valid) {
+      toast.error("Localização inválida");
+      setCurrentStep("location");
+      return;
     }
 
     setPublishing(true);
@@ -245,8 +249,7 @@ export default function NovoClassificadoPage() {
         category,
         condition,
         photos: photoUrls,
-        neighborhood: neighborhood.trim(),
-        location_id: activeLocationId ?? undefined,
+        location_id: locationId,
       });
 
       toast.success("Anúncio publicado com sucesso!");
@@ -264,7 +267,6 @@ export default function NovoClassificadoPage() {
     priceType,
     category,
     condition,
-    neighborhood,
     photos,
     activeProfile,
     activeLocationId,
@@ -344,9 +346,7 @@ export default function NovoClassificadoPage() {
             <LocationStep
               hasActiveLocation={hasActiveLocation}
               activeLocationName={activeLocationName}
-              neighborhood={neighborhood}
               error={errors.location}
-              onNeighborhoodChange={setNeighborhood}
             />
           )}
 
@@ -401,7 +401,6 @@ export default function NovoClassificadoPage() {
               subcategory={subcategory}
               condition={condition}
               locationName={activeLocationName || ""}
-              neighborhood={neighborhood}
               photoPreviews={photoPreviews}
               details={details}
               phone={contactPhone}

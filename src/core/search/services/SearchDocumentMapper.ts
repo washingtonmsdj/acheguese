@@ -154,7 +154,7 @@ export function classifiedToSearchDocument(
     description: truncateSearchDescription(classified.description),
     imageUrl: classified.photos[0] ?? null,
     url: classified.target_url ?? null,
-    territoryLabel: classified.neighborhood ?? classified.location,
+    territoryLabel: classified.territory.name,
     createdAt: classified.created_at,
     metadata: {
       price: classified.price,

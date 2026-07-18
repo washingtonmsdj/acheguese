@@ -138,12 +138,10 @@ function ClassifiedBlock({
                       {classified.category || "Sem categoria"}
                     </Badge>
 
-                    {(classified.neighborhood || classified.location) && (
-                      <Badge variant="outline" className="gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {classified.neighborhood || classified.location}
-                      </Badge>
-                    )}
+                    <Badge variant="outline" className="gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {classified.territory.name}
+                    </Badge>
 
                     <Badge variant="outline" className="gap-1">
                       <DollarSign className="h-3 w-3" />

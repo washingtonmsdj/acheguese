@@ -2,7 +2,6 @@
 export * from "./useClassificadoDetail";
 export * from "@/core/classifieds/hooks/useClassificados";
 export * from "./useClassificadosPage";
-export * from "./useNovoClassificado";
 export * from "./useSellerAds";
 export * from "./useVendedores";
 export * from "./useVendedorPerfil";

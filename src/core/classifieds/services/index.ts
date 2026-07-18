@@ -34,6 +34,7 @@ export {
 
 export type {
   ClassifiedData,
+  ClassifiedTerritory,
   CreateClassifiedInput,
   UpdateClassifiedInput,
   NeighborhoodWithClassifiedCount,

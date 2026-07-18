@@ -8,35 +8,26 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { resolveMediaAssetSource } from "@/core/media/references/mediaAssetReference";
 import { trackError } from "@/shared/utils/errorTracking";
 import { applyTerritoryFilter } from "@/core/location";
 import { LocationService } from "@/core/location/services/LocationService";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
 import type { TerritoryFilter } from "@/core/location/types";
-import type { ClassifiedData, NeighborhoodWithClassifiedCount } from "./types";
+import type {
+  ClassifiedData,
+  NeighborhoodWithClassifiedCount,
+  SellerWithAds,
+} from "./types";
+import {
+  CLASSIFIED_READ_SELECT,
+  mapClassifiedReadModel,
+  type ClassifiedReadRow,
+} from "./classifieds.read-model";
+import { CLASSIFIED_STATUS } from "../constants/statuses";
 
 //  Instancia do LocationService com repositorio
 const locationService = new LocationService(createLocationRepository());
-
-type ClassifiedSellerRow = {
-  name?: string | null;
-  avatar_url?: string | null;
-  phone?: string | null;
-  whatsapp?: string | null;
-};
-
-type ClassifiedCategoryRow = { slug?: string | null };
-
-type ClassifiedLocationPathRow = { geographic_path?: string | null };
-
-type ClassifiedWithRelationsRow = ClassifiedData & {
-  seller?: ClassifiedSellerRow | null;
-  locations?: ClassifiedLocationPathRow | null;
-  classified_categories?: ClassifiedCategoryRow | null;
-  classified_subcategories?: ClassifiedCategoryRow | null;
-};
 
 type NeighborhoodLocationRow = {
   id: string;
@@ -56,7 +47,7 @@ type ErrorLike = {
 };
 
 type ClassifiedQueryPayload = {
-  data: ClassifiedWithRelationsRow[] | null;
+  data: ClassifiedReadRow[] | null;
   error: ErrorLike | null;
 };
 
@@ -67,47 +58,6 @@ type ClassifiedQuery = PromiseLike<ClassifiedQueryPayload> & {
   order(column: string, options?: { ascending?: boolean }): ClassifiedQuery;
   select(columns?: string): ClassifiedQuery;
 };
-
-function ensureStringArray(value: unknown): string[] {
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => typeof item === "string" ? resolveMediaAssetSource(item) : null)
-      .filter((item): item is string => item !== null);
-  }
-  return [];
-}
-
-//  ============================================================
-//  HELPERS INTERNOS
-//  ============================================================
-
-/**
- *  Mapeia resposta do Supabase para ClassifiedData com seller info
- */
-function mapClassifiedWithSeller(item: ClassifiedWithRelationsRow): ClassifiedData {
-  return {
-    ...item,
-    photos: ensureStringArray((item as { photos?: unknown }).photos),
-    seller_name: item.seller?.name,
-    seller_avatar: item.seller?.avatar_url,
-    seller_phone: item.seller?.phone,
-    seller_whatsapp: item.seller?.whatsapp,
-    geographic_path: item.locations?.geographic_path,
-    category_slug: item.classified_categories?.slug,
-    subcategory_slug: item.classified_subcategories?.slug,
-  };
-}
-
-function mapRawClassified(item: Record<string, unknown>): ClassifiedData {
-  return {
-    ...(item as unknown as ClassifiedData),
-    photos: ensureStringArray(item.photos),
-    seller_name: (item.seller as ClassifiedSellerRow | undefined)?.name,
-    seller_avatar: (item.seller as ClassifiedSellerRow | undefined)?.avatar_url,
-    seller_phone: (item.seller as ClassifiedSellerRow | undefined)?.phone,
-    seller_whatsapp: (item.seller as ClassifiedSellerRow | undefined)?.whatsapp,
-  };
-}
 
 //  ============================================================
 //  QUERIES - LISTAGEM E BUSCA
@@ -123,7 +73,7 @@ export async function getNeighborhoodsWithClassifieds(
     .from("classifieds")
     .select("location_id, locations!inner(id, name, slug, parent_id)")
     .eq("is_active", true)
-    .eq("status", "approved")
+    .eq("status", CLASSIFIED_STATUS.ACTIVE)
     .eq("locations.parent_id", cityId);
 
   if (error) {
@@ -179,21 +129,7 @@ export async function getAllClassifieds(
   try {
     let query = supabase
       .from("classifieds")
-      .select(
-        `
-        * ,
-        seller:profiles!seller_id (
-          id,
-          name,
-          avatar_url,
-          phone,
-          whatsapp
-        ),
-        locations(geographic_path, type, parent_id),
-        classified_categories(slug),
-        classified_subcategories(slug)
-      `,
-      )
+      .select(CLASSIFIED_READ_SELECT)
       .eq("is_active", true)
       .order("created_at", { ascending: false }) as unknown as ClassifiedQuery;
 
@@ -261,9 +197,7 @@ export async function getAllClassifieds(
       throw error;
     }
 
-    return ((data || []) as unknown[]).map((item) =>
-      mapClassifiedWithSeller(item as ClassifiedWithRelationsRow),
-    );
+    return (data || []).map(mapClassifiedReadModel);
   } catch (error) {
     logger.error("Error in getAllClassifieds:", error);
     trackError(error as Error, {
@@ -290,21 +224,7 @@ export async function searchClassifieds(
   try {
     let dbQuery = supabase
       .from("classifieds")
-      .select(
-        `
-        * ,
-        seller:profiles!seller_id (
-          id,
-          name,
-          avatar_url,
-          phone,
-          whatsapp
-        ),
-        locations(geographic_path, type, parent_id),
-        classified_categories(slug),
-        classified_subcategories(slug)
-      `,
-      )
+      .select(CLASSIFIED_READ_SELECT)
       .eq("is_active", true)
       .or(searchFilter)
       .order("created_at", { ascending: false })
@@ -317,9 +237,7 @@ export async function searchClassifieds(
     const { data, error } = await dbQuery;
     if (error) throw error;
 
-    return ((data || []) as unknown[]).map((item) =>
-      mapClassifiedWithSeller(item as ClassifiedWithRelationsRow),
-    );
+    return (data || []).map(mapClassifiedReadModel);
   } catch (error) {
     logger.error("Error in searchClassifieds:", error);
     trackError(error as Error, {
@@ -337,21 +255,7 @@ export async function getClassifiedById(id: string): Promise<ClassifiedData | nu
   try {
     const { data, error } = await supabase
       .from("classifieds")
-      .select(
-        `
-        * ,
-        seller:profiles!seller_id (
-          id,
-          name,
-          avatar_url,
-          phone,
-          whatsapp
-        ),
-        locations(geographic_path, type, parent_id),
-        classified_categories(slug),
-        classified_subcategories(slug)
-      `,
-      )
+      .select(CLASSIFIED_READ_SELECT)
       .eq("id", id)
       .single();
 
@@ -363,7 +267,7 @@ export async function getClassifiedById(id: string): Promise<ClassifiedData | nu
       throw error;
     }
 
-    return mapClassifiedWithSeller(data as ClassifiedWithRelationsRow);
+    return mapClassifiedReadModel(data as ClassifiedReadRow);
   } catch (error) {
     logger.error("Error in getClassifiedById:", error);
     trackError(error as Error, {
@@ -381,21 +285,7 @@ export async function getClassifiedsByCategory(category: string): Promise<Classi
   try {
     const { data, error } = await supabase
       .from("classifieds")
-      .select(
-        `
-        * ,
-        seller:profiles!seller_id (
-          id,
-          name,
-          avatar_url,
-          phone,
-          whatsapp
-        ),
-        locations(geographic_path, type, parent_id),
-        classified_categories(slug),
-        classified_subcategories(slug)
-      `,
-      )
+      .select(CLASSIFIED_READ_SELECT)
       .eq("category", category)
       .eq("is_active", true)
       .order("created_at", { ascending: false });
@@ -405,9 +295,7 @@ export async function getClassifiedsByCategory(category: string): Promise<Classi
       throw error;
     }
 
-    return ((data || []) as unknown[]).map((item) =>
-      mapClassifiedWithSeller(item as ClassifiedWithRelationsRow),
-    );
+    return ((data || []) as ClassifiedReadRow[]).map(mapClassifiedReadModel);
   } catch (error) {
     logger.error("Error in getClassifiedsByCategory:", error);
     trackError(error as Error, {
@@ -425,21 +313,7 @@ export async function getUserClassifieds(userId: string): Promise<ClassifiedData
   try {
     const { data, error } = await supabase
       .from("classifieds")
-      .select(
-        `
-        * ,
-        seller:profiles!seller_id (
-          id,
-          name,
-          avatar_url,
-          phone,
-          whatsapp
-        ),
-        locations(geographic_path, type, parent_id),
-        classified_categories(slug),
-        classified_subcategories(slug)
-      `,
-      )
+      .select(CLASSIFIED_READ_SELECT)
       .eq("seller_id", userId)
       .order("created_at", { ascending: false });
 
@@ -448,9 +322,7 @@ export async function getUserClassifieds(userId: string): Promise<ClassifiedData
       throw error;
     }
 
-    return ((data || []) as unknown[]).map((item) =>
-      mapClassifiedWithSeller(item as ClassifiedWithRelationsRow),
-    );
+    return ((data || []) as ClassifiedReadRow[]).map(mapClassifiedReadModel);
   } catch (error) {
     logger.error("Error in getUserClassifieds:", error);
     trackError(error as Error, {
@@ -468,17 +340,7 @@ export async function getClassifiedsBySeller(sellerId: string): Promise<Classifi
   try {
     const { data, error } = await supabase
       .from("classifieds")
-      .select(
-        `
-        * ,
-        seller:profiles!seller_id (
-          id, name, avatar_url, phone, whatsapp
-        ),
-        locations(geographic_path, type, parent_id),
-        classified_categories(slug),
-        classified_subcategories(slug)
-      `,
-      )
+      .select(CLASSIFIED_READ_SELECT)
       .eq("seller_id", sellerId)
       .eq("is_active", true)
       .order("created_at", { ascending: false });
@@ -488,9 +350,7 @@ export async function getClassifiedsBySeller(sellerId: string): Promise<Classifi
       throw error;
     }
 
-    return ((data || []) as unknown[]).map((item) =>
-      mapClassifiedWithSeller(item as ClassifiedWithRelationsRow),
-    );
+    return ((data || []) as ClassifiedReadRow[]).map(mapClassifiedReadModel);
   } catch (error) {
     logger.error("Error in getClassifiedsBySeller:", error);
     return [];
@@ -537,7 +397,7 @@ export async function getRecentClassifieds(limit = 10): Promise<ClassifiedData[]
   try {
     const { data, error } = await supabase
       .from("classifieds")
-      .select("*")
+      .select(CLASSIFIED_READ_SELECT)
       .order("created_at", { ascending: false })
       .limit(limit);
 
@@ -550,7 +410,7 @@ export async function getRecentClassifieds(limit = 10): Promise<ClassifiedData[]
       return [];
     }
 
-    return (data || []).map((item) => mapRawClassified(item as Record<string, unknown>));
+    return ((data || []) as ClassifiedReadRow[]).map(mapClassifiedReadModel);
   } catch (error) {
     logger.error("Error getting recent classifieds", error as Error, {
       service: "ClassifiedsQueries",
@@ -602,16 +462,7 @@ export async function getClassifiedsCreatedInPeriod(
  */
 export async function getSellersWithAds(
   filter?: TerritoryFilter,
-): Promise<
-  Array<{
-    id: string;
-    name: string;
-    avatar_url: string | null;
-    neighborhood: string;
-    active_ads_count: number;
-    featured_ads: ClassifiedData[];
-  }>
-> {
+): Promise<SellerWithAds[]> {
   try {
     //  Busca todos classificados ativos (reutiliza filtro territorial)
     const allAds = await getAllClassifieds(filter);
@@ -623,7 +474,7 @@ export async function getSellersWithAds(
         id: string;
         name: string;
         avatar_url: string | null;
-        neighborhood: string;
+        territory_name: string;
         ads: ClassifiedData[];
       }
     >();
@@ -635,7 +486,7 @@ export async function getSellersWithAds(
           id: ad.seller_id,
           name: ad.seller_name || "Vendedor",
           avatar_url: ad.seller_avatar || null,
-          neighborhood: ad.neighborhood || ad.location || "",
+          territory_name: ad.territory.name,
           ads: [],
         });
       }
@@ -647,7 +498,7 @@ export async function getSellersWithAds(
         id: seller.id,
         name: seller.name,
         avatar_url: seller.avatar_url,
-        neighborhood: seller.neighborhood,
+        territory_name: seller.territory_name,
         active_ads_count: seller.ads.length,
         featured_ads: seller.ads.slice(0, 3),
       }))

@@ -233,15 +233,11 @@ export function InfoStep({
 export function LocationStep({
   hasActiveLocation,
   activeLocationName,
-  neighborhood,
   error,
-  onNeighborhoodChange,
 }: {
   hasActiveLocation: boolean;
   activeLocationName?: string | null;
-  neighborhood: string;
   error?: string;
-  onNeighborhoodChange: (value: string) => void;
 }) {
   return (
     <div className="space-y-4">
@@ -287,19 +283,6 @@ export function LocationStep({
           <p className="text-xs text-destructive">{error}</p>
         </div>
       )}
-
-      <FormField label="Bairro" optional>
-        <div className="relative">
-          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Ex: Rio Vermelho"
-            value={neighborhood}
-            onChange={(event) => onNeighborhoodChange(event.target.value)}
-            className="pl-9 h-12 text-sm rounded-xl"
-            maxLength={100}
-          />
-        </div>
-      </FormField>
     </div>
   );
 }

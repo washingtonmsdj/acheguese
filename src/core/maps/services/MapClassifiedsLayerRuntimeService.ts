@@ -58,7 +58,7 @@ class MapClassifiedsLayerRuntimeService {
             id: row.id,
             public_id: row.public_id,
             slug: row.slug,
-            geographic_path: row.geographic_path,
+            geographic_path: row.territory.geographic_path,
             category_slug: row.category_slug,
             subcategory_slug: row.subcategory_slug,
           });

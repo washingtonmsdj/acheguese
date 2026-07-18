@@ -113,9 +113,9 @@ export default function VendedorPerfilPage() {
             </div>
 
             <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground flex-wrap">
-              {vendedor.neighborhood && (
+              {vendedor.territory_name && (
                 <span className="flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5" /> {vendedor.neighborhood}
+                  <MapPin className="h-3.5 w-3.5" /> {vendedor.territory_name}
                 </span>
               )}
               <span className="flex items-center gap-1">

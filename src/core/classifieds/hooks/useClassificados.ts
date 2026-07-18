@@ -101,7 +101,7 @@ export function useClassificados(options: UseClassificadosOptions = {}) {
           filtered = filtered.filter((item) =>
             item.title.toLowerCase().includes(s) ||
             item.category?.toLowerCase().includes(s) ||
-            item.neighborhood?.toLowerCase().includes(s) ||
+            item.territory.name.toLowerCase().includes(s) ||
             item.seller_name?.toLowerCase().includes(s)
           );
         }
