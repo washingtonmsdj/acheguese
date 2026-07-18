@@ -925,18 +925,27 @@ body:has(.home-concept) {
   display: grid;
   min-width: 0;
   grid-template-columns: 40px minmax(0, 1fr) auto;
-  gap: 10px;
+  grid-template-areas:
+    "avatar body meta"
+    "avatar preview preview";
+  column-gap: 12px;
+  row-gap: 8px;
   align-items: start;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 12px 0;
+  padding: 14px 0;
 }
 
 .home-community-activity-item:first-child {
   border-top: 0;
-  padding-top: 0;
+  padding-top: 4px;
 }
 
-.home-community-activity-item > img:first-child {
+.home-community-activity-item:last-child {
+  padding-bottom: 4px;
+}
+
+.home-community-activity-avatar {
+  grid-area: avatar;
   width: 40px;
   height: 40px;
   border-radius: 999px;
@@ -944,57 +953,87 @@ body:has(.home-concept) {
 }
 
 .home-community-activity-copy {
-  display: grid;
+  grid-area: body;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  gap: 5px;
+  gap: 4px;
 }
 
 .home-community-activity-copy strong {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8rem;
+  min-width: 0;
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.home-community-activity-author {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .home-community-activity-copy strong small {
+  flex-shrink: 0;
   color: var(--home-muted);
   font-size: 0.68rem;
   font-weight: 700;
 }
 
 .home-community-activity-copy strong svg {
+  flex-shrink: 0;
   width: 13px;
   height: 13px;
   color: var(--home-blue);
 }
 
-.home-community-activity-copy > span {
+.home-community-activity-copy p {
+  margin: 0;
   color: rgba(232, 240, 247, 0.86);
   font-size: 0.78rem;
-  font-weight: 600;
-  line-height: 1.35;
+  font-weight: 500;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .home-community-activity-meta {
-  display: grid;
-  justify-items: end;
-  gap: 12px;
+  grid-area: meta;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
   color: rgba(225, 235, 243, 0.78);
   font-size: 0.72rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .home-community-activity-meta span {
-  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.home-community-activity-meta svg {
+  width: 12px;
+  height: 12px;
+  opacity: 0.85;
 }
 
 .home-community-activity-preview {
-  grid-column: 2 / -1;
+  grid-area: preview;
   width: 100%;
-  max-height: 84px;
-  border-radius: 8px;
+  max-height: 120px;
+  border-radius: 10px;
   object-fit: cover;
 }
+
 
 .home-community-ranking-list {
   gap: 2px;
