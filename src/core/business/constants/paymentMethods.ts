@@ -74,55 +74,10 @@ export const PAYMENT_METHODS: readonly PaymentMethod[] = [
 ] as const;
 
 // Helper functions
-export const getPaymentMethodById = (id: string): PaymentMethod | undefined => {
+const getPaymentMethodById = (id: string): PaymentMethod | undefined => {
   return PAYMENT_METHODS.find(m => m.id === id);
 };
 
 export const getPaymentMethodLabel = (id: string): string => {
   return getPaymentMethodById(id)?.label || id;
 };
-
-export const getPaymentMethodIcon = (id: string): LucideIcon | undefined => {
-  return getPaymentMethodById(id)?.icon;
-};
-
-export const getPaymentMethodColor = (id: string): string => {
-  return getPaymentMethodById(id)?.color || "text-muted-foreground";
-};
-
-/**
- * Retorna array de labels para uso em formulários antigos
- * @deprecated Use PAYMENT_METHODS diretamente quando possível
- */
-export const getPaymentMethodLabels = (): string[] => {
-  return PAYMENT_METHODS.map(m => m.label);
-};
-
-/**
- * Converte label para ID
- * Útil para migração de código antigo que usa labels
- */
-export const labelToId = (label: string): string => {
-  const method = PAYMENT_METHODS.find(m => 
-    m.label.toLowerCase() === label.toLowerCase() ||
-    m.label.replace(/\s+/g, '').toLowerCase() === label.replace(/\s+/g, '').toLowerCase()
-  );
-  return method?.id || label.toLowerCase().replace(/\s+/g, '-');
-};
-
-/**
- * Converte array de labels para array de IDs
- */
-export const labelsToIds = (labels: string[]): string[] => {
-  return labels.map(labelToId);
-};
-
-/**
- * Converte array de IDs para array de labels
- */
-export const idsToLabels = (ids: string[]): string[] => {
-  return ids.map(id => getPaymentMethodLabel(id));
-};
-
-// Type helper para IDs válidos
-export type PaymentMethodId = typeof PAYMENT_METHODS[number]['id'];

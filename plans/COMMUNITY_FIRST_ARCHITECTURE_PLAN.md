@@ -1352,10 +1352,10 @@ Evidencia:
   `src/core/social/services/socialInteractionStats.queries.ts`, removendo a
   dependencia dinamica `ProfileService -> SocialInteractionsService` sem
   duplicar a regra de estatisticas sociais.
-- A facade top-level `src/core/community-alerts` foi removida; o barrel publico
-  `src/modules/community-alerts` aponta diretamente para o owner atual
-  `src/core/community/alerts`, e `validate:taxonomy` bloqueia a volta desse
-  root legado em `core`.
+- As facades `src/core/community-alerts` e `src/modules/community-alerts` foram
+  removidas; consumidores apontam diretamente para o owner atual
+  `src/core/community/alerts`, e os validadores bloqueiam a volta dos roots
+  legados.
 - Rotas lazy de grupos e recomendacoes comunitarias deixaram de carregar paginas
   por facades vazias em `src/modules/community-groups/pages` e
   `src/modules/community-recommendations/pages`; `src/app/routes/lazyImports.ts`
@@ -1389,9 +1389,10 @@ Evidencia:
   `docs/VALIDACAO_FINAL_E_PROXIMOS_PASSOS.md` foram atualizados para nao
   tratar esses snapshots como SSOT vigente nem apontar para checklist
   documental ausente.
-- `scripts/generate-ssot-fix-plan.ts` deixou de priorizar
-  `src/modules/community/` e passou a gerar `plans/SSOT_FIX_PLAN.md`, mantendo
-  a politica de nao criar markdown operacional na raiz.
+- O gerador simulado `scripts/generate-ssot-fix-plan.ts` e o comando
+  `plan:ssot-fix` foram removidos: eles mantinham uma lista hardcoded de
+  violacoes e poderiam produzir um plano operacional falso. Planos vigentes
+  sao atualizados a partir de auditorias reais.
 - Runtime de eventos foi promovido para
   `src/core/verticals/events/services/EventRuntimeService.ts`; telas de
   eventos em `src/features/events`, `useEventos` e `EventoDetailPage` passaram

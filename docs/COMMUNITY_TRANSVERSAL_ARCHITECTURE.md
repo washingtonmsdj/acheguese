@@ -5,7 +5,6 @@
 `community` nao deve ser tratado como modulo unico. O dominio foi decomposto em modulos transversais independentes:
 
 - `community-feed`
-- `community-alerts`
 - `community-issues`
 - `community-groups`
 - `community-events`
@@ -13,11 +12,13 @@
 - `community-lost-found`
 
 Cada modulo pode ter UI propria, mas comunicacao e compartilhamento de comportamento passam apenas por `core`.
+Alertas comunitarios sao uma capacidade transversal sem superficie de produto
+propria em `modules`; seu owner e acessado diretamente em core.
 
 Os owners de core por dominio sao:
 
 - `core/community-feed`
-- `core/community/alerts` consumido pelo barrel publico `modules/community-alerts`
+- `core/community/alerts`
 - `core/community-issues`
 - `core/community-groups`
 - `core/verticals/events`
@@ -33,7 +34,8 @@ Regras:
 
 - Rotas canonicas editoriais usam `/comunicacao/...`, nao `/comunidade/...`.
 - Conteudo institucional pode aparecer no feed comunitario como agregacao, mas a fonte primaria deve ser o dominio de comunicacao.
-- Alertas institucionais devem consumir a infraestrutura de `core/community/alerts` via `modules/community-alerts` quando precisarem do barrel publico, e `core/notifications`, sem duplicar stack de alerta/push.
+- Alertas institucionais devem consumir diretamente `core/community/alerts` e
+  `core/notifications`, sem duplicar stack de alerta/push.
 - A autorizacao territorial continua baseada em `location_id`.
 
 ## Boundaries
@@ -42,17 +44,21 @@ Regras:
 - Modulos transversais nao acessam Supabase diretamente.
 - Consumidores externos nao importam o agregador legado `@/modules/community`.
 - Consumidores externos nao importam o barrel `@/core/community`; devem usar subdominios explicitos.
-- Modulos transversais nao importam `@/core/community/*`, exceto barrels publicos explicitamente allowlisted como `modules/community-alerts`; os demais devem usar `@/core/community-*` ou outro core de dominio.
+- Modulos transversais nao importam `@/core/community/*`; devem usar owners
+  `@/core/community-*` explicitos. `core/community/alerts` e consumido apenas
+  por compositores e servicos fora desses modulos, sem allowlist de facade.
 - `location_id` e o SSOT territorial para leitura, escrita, filtros, rollout e permissao.
 - Cidade, bairro, UF, slug e nome publico sao campos derivados ou de apresentacao.
 - Posts usam `core/posts`; comentarios de Post usam `core/comments`.
 - `core/feed` deve apenas agregar/rankear fontes e nao repetir CRUD ou cursor
   de Post. Wrappers atuais estao em retirada pelo plano de Core Platform.
-- Reacoes, saves e grupos ainda possuem facades sobrepostas em `core/social`,
-  `core/interaction`, `core/favorites` e `core/engagement`; o owner alvo e a
-  migracao compativel estao em
-  `architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md`.
-- Alertas usam services especificos em `core/community/alerts` e barrel publico em `modules/community-alerts`; problemas usam owner explicito em `core/community-issues` e superficie de produto em `modules/community-issues`.
+- Reacoes de Post pertencem a `core/posts`; comentarios a `core/comments`;
+  grupos mantem suas interacoes no agregado de grupos; favorites especificos
+  permanecem em adapters de dominio sobre a infraestrutura aprovada. O contrato
+  completo esta em `architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md`.
+- Alertas usam services especificos em `core/community/alerts`, sem facade;
+  problemas usam owner explicito em `core/community-issues` e superficie de
+  produto em `modules/community-issues`.
 
 ## Interacoes Sociais Ativas
 

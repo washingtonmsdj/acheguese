@@ -492,9 +492,9 @@ O baseline de Storage dinamico do `MediaService` caiu de 6 para 1 leitura e de
 
 ### Fase 6 - Remocao de compatibilidade e escala
 
-- [ ] remover aliases, facades e tipos deprecated sem consumidores;
+- [x] remover aliases, facades e tipos deprecated sem consumidores;
 - [x] regenerar inventario e provar reducao de duplicacoes;
-- [ ] remover allowlists fechadas dos validadores;
+- [x] remover allowlists fechadas dos validadores;
 - [ ] executar suites unitarias, integracao, RLS e E2E por dominio;
 - [ ] executar carga somente em staging explicitamente autorizado;
 - [ ] registrar p50/p95/p99, erros, conexoes, cache hit e custo;
@@ -543,11 +543,32 @@ aplicacao; restam somente 12 nomes pertencentes ao PostGIS, registrados em
 `docs/audits/SUPABASE_REMOTE_FUNCTION_LINT_2026-07-17.md`. A auditoria remota
 de Coverage retornou quatro contagens zero, e o inventario foi regenerado.
 
-Proxima ordem: continuar a busca comprovada por aliases, facades, tipos e
-allowlists sem consumidores, removendo apenas depois de migrar ou provar a
-ausencia de callsites. Depois revisar o acionamento operacional de rotinas
-`service_role` para garantir que nenhuma UI tente executa-las diretamente.
-Documentos de verificacao, evidencias
+Segundo checkpoint de limpeza em 2026-07-17: o facade sem consumidores
+`src/modules/community-alerts`, o modelo de tipos duplicado em
+`src/modules/classifieds/types/classified.ts`, APIs deprecated sem callsites e
+o gerador simulado de plano SSOT foram removidos. Os validadores de taxonomia e
+Community nao possuem mais allowlists de compatibilidade; o validador de
+migrations passou a calcular o estado final ordenado de `GRANT`/`REVOKE`, sem
+excecao nominal para `increment_vaga_view_count`. O comando
+`security:privileged-rpc:browser-callers` derivou 163 nomes restritos do remoto e
+encontrou zero chamada direta no browser. A auditoria tambem encontrou a chamada
+quebrada para `cancel_account_deletion`: a migration `20260717143000` registrou
+os ACLs historicos, substituiu o comando antigo por uma RPC exclusiva de
+`service_role`, e o `privacy-rpc` v2 passou a derivar o ator do JWT. Migration e
+Edge Function foram aplicadas ao remoto. A migration incremental
+`20260717144000` tornou o cancelamento idempotente e serializou tentativas
+concorrentes. Evidencia:
+`docs/audits/COMPATIBILITY_AND_PRIVILEGED_RPC_CALLERS_2026-07-17.md`.
+
+Os campos `ClassifiedData.location` e `ClassifiedData.neighborhood` permanecem
+temporariamente porque seis callsites ainda os usam como label. Eles so podem
+sair depois de um read model territorial canonico, sem fabricar label no
+cliente.
+
+Proxima ordem: executar as suites unitarias, integracao, RLS e E2E por dominio,
+registrando qualquer gap real antes de alterar implementacao. Depois preparar
+o read model territorial de Classificados como migracao incremental. Documentos
+de verificacao, evidencias
 privadas e try-on permanecem em contratos separados e nao devem ser forcados
 para o MediaAsset publico. Por fim, preparar staging explicitamente autorizado
 para carga, p50/p95/p99, backup/restore e rollback. A aprovacao de

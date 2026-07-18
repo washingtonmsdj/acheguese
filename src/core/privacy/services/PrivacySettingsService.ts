@@ -60,10 +60,6 @@ interface PrivacySettingsDbClient {
       };
     };
   };
-  rpc: (
-    fn: string,
-    params: Record<string, unknown>,
-  ) => Promise<{ error: { message: string } | null }>;
 }
 
 export class PrivacySettingsService {
@@ -124,12 +120,11 @@ export class PrivacySettingsService {
     });
   }
 
-  static async cancelAccountDeletion(userId: string): Promise<void> {
-    const { error } = await this.db.rpc("cancel_account_deletion", {
-      p_user_id: userId,
-      p_reason: "Cancelado pelo usuario",
-    });
-    if (error) throw error;
+  static async cancelAccountDeletion(): Promise<void> {
+    const cancelled = await PrivacyRpcService.cancelAccountDeletion();
+    if (!cancelled) {
+      throw new Error("Nenhuma exclusao agendada pode ser cancelada");
+    }
   }
 
   static async getAccessToken(): Promise<string> {

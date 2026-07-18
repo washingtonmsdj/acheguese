@@ -526,10 +526,12 @@ id)`, incluindo compatibilidade temporaria com cursores antigos de timestamp
   `community_entity_links`; membership de comunidade usa
   `community_memberships`.
 - Modulos comunitarios vigentes sao explicitos: `src/modules/community-feed`,
-  `src/modules/community-alerts`, `src/modules/community-issues`,
-  `src/modules/community-groups`, `src/modules/community-events`,
+  `src/modules/community-issues`, `src/modules/community-groups`,
+  `src/modules/community-events`,
   `src/modules/community-lost-found` e
   `src/modules/community-recommendations`.
+- Alertas comunitarios pertencem diretamente a `src/core/community/alerts`;
+  nao existe facade de compatibilidade em `src/modules/community-alerts`.
 - `src/modules/community` nao e modulo canonico vigente. Caminhos historicos
   `src/modules/community` citados abaixo pertencem a snapshots antigos e nao
   representam arquitetura atual.

@@ -149,17 +149,6 @@ export class ResidentAddressService {
     };
   }
 
-  async lookupCep(cep: string): Promise<LocationPostalCodeLookupResult | null> {
-    logger.warn(
-      ' ResidentAddressService.lookupCep() is deprecated. ' +
-        'Use locationGeocodingService.lookupPostalCode() from @/core/location',
-    );
-
-    return locationGeocodingService.lookupPostalCode({
-      postalCode: cep,
-    });
-  }
-
   private validateInput(input: RegisterResidentAddressInput): void {
     if (!input.user_id) {
       throw new Error('user_id é obrigatório');

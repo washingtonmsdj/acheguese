@@ -10,11 +10,11 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Checkbox } from "@/shared/components/ui/checkbox";
-import { getPaymentMethodLabels } from "@/core/business/constants";
+import { PAYMENT_METHODS } from "@/core/business/constants";
 import { getBusinessCreateFieldCopy } from "@/modules/business/components/create/businessCreateCopy";
 
 // SSOT: usa constantes centralizadas de formas de pagamento.
-const FORMAS_PAGAMENTO = getPaymentMethodLabels();
+const FORMAS_PAGAMENTO = PAYMENT_METHODS.map(({ label }) => label);
 
 interface ExtrasStepProps {
   category?: string;

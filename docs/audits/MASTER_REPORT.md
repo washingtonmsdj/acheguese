@@ -36,7 +36,7 @@ Fase executada: consolidacao de identidade publica, extracao inicial de regras d
 - `PublicProfilePage.tsx`, `PerfilPublicoPage.tsx` e `PerfilHubPageLegacy.tsx` foram removidos do fluxo ativo.
 - Regras de tipo/verificacao de perfil foram extraidas de `PerfilEditarPage`, `PerfilHubPage`, `PerfilIdentidadesPage` e `usePerfilPageV3` para helpers de dominio.
 - `MobilitySettingsPanel`, `ReputationRankings`, `AdminCommunityAlerts`, `AdminCommunityIssues`, `AdminGastronomia`, `AdminMotoristas`, `AdminOperacoes`, `AdminReivindicacoes` e `AdminReportsPassageiros` passaram a consumir contratos em `core`.
-- Alertas comunitarios usam barrel publico em `modules/community-alerts` sobre o owner `core/community/alerts`; issues, gastronomia e mobility seguem seus owners canonicos vigentes.
+- Alertas comunitarios usam diretamente o owner `core/community/alerts`, sem facade em `modules`; issues, gastronomia e mobility seguem seus owners canonicos vigentes.
 - `business`, `classifieds`, `community` e `services` deixaram de consumir `promotions` diretamente e passaram a usar `core/promotions`.
 - `mobility` deixou de consumir `modules/notifications` diretamente e passou a usar `core/notifications`.
 - `community` e `dashboard` passaram a compor `community-alerts`, `community-issues`, `verification` e `business` apenas via `core`.
@@ -248,7 +248,7 @@ O inventario completo e regeneravel e esta em [PROJECT_INVENTORY.md](./PROJECT_I
 
 ### community-alerts
 - Fonte SSOT atual: `AlertService`, `CommunityAlertService` e `CommunityIssueService`.
-- Problemas de organizacao: o dominio ainda vive entre `core/alerts`, `core/civic`, `modules/community-alerts` e `modules/community-issues`.
+- Problemas de organizacao: alertas ja possuem owner direto em `core/community/alerts`; a consolidacao documental com civic reports e issues permanece pendente.
 - Arquivos legados: nao detectados, mas falta documento canonico unico.
 - Acesso direto ao banco fora do service: nao detectado fora do service.
 - Importacoes incorretas entre modulos: nao ha no inventario do proprio dominio, mas o admin depende dele de forma invertida.
@@ -263,7 +263,7 @@ O inventario completo e regeneravel e esta em [PROJECT_INVENTORY.md](./PROJECT_I
 - Problemas de organizacao: o dominio tecnico e forte, mas `NearbyPage` ainda vive fora do ownership direto de `core/maps`; a composicao de alertas do `MapaPageV4` ainda depende de service em modulo.
 - Arquivos legados: `GeospatialRepositoryMock.ts`, `MockRoutingProvider.ts`, `GeospatialServiceMock.ts` e a superficie `src/pages/NearbyPage.tsx` como ownership residual.
 - Acesso direto ao banco fora do service: `src/integrations/maps/providers/NominatimGeocodingProvider.ts`.
-- Importacoes incorretas entre modulos: nao ha entre modulos, mas `MapaPageV4` ainda compoe alertas via `modules/community-alerts/services/CommunityAlertService`.
+- Importacoes incorretas entre modulos: nao ha; mapa e admin consomem os owners canonicos em `core`.
 - Duplicacoes de tipos, regras ou services: o passivo maior deixou de ser duplicacao real e passou a ser drift entre runtime do mapa e a superficie `NearbyPage`.
 - Status do admin: parcial; agora ha coverage dedicada em `/admin/mapa`, incluindo write-side de boundaries e reconciliacao geografica, com backlog residual em governanca de geometrias e convergencia de Nearby.
 - Status da documentacao: boa e mais coesa; o dominio agora possui documento vivo em `docs/audits/MAP_GOVERNANCE.md`, mas ainda precisa alinhar docs historicas de providers com a implementacao real.

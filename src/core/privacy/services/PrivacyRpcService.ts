@@ -1,9 +1,13 @@
 import { invokeSupabaseBroker } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 
-type PrivacyRpcAction = "recordConsent";
+type PrivacyRpcAction = "recordConsent" | "cancelAccountDeletion";
 
 interface RecordConsentBrokerData {
   consentId: string;
+}
+
+interface CancelAccountDeletionBrokerData {
+  cancelled: boolean;
 }
 
 export interface RecordConsentInput {
@@ -40,5 +44,12 @@ export class PrivacyRpcService {
       privacyVersion: input.privacyVersion,
     });
     return result.consentId;
+  }
+
+  static async cancelAccountDeletion(): Promise<boolean> {
+    const result = await this.invoke<CancelAccountDeletionBrokerData>(
+      "cancelAccountDeletion",
+    );
+    return result.cancelled;
   }
 }

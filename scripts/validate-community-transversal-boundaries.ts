@@ -7,7 +7,6 @@ const ROOT = process.cwd();
 
 const TRANSVERSAL_MODULES = [
   "community-feed",
-  "community-alerts",
   "community-issues",
   "community-groups",
   "community-events",
@@ -36,9 +35,6 @@ const CORE_COMMUNITY_BARREL_IMPORT_RE =
   /(?:from\s+["']|import\(\s*["'])@\/core\/community["']/;
 const CORE_COMMUNITY_LEGACY_IMPORT_RE =
   /(?:from\s+["']|import\(\s*["'])@\/core\/community\//;
-const CORE_COMMUNITY_IMPORT_ALLOWLIST = new Set([
-  "src/modules/community-alerts/index.ts",
-]);
 
 function normalize(filePath: string): string {
   return filePath.replace(/\\/g, "/");
@@ -102,12 +98,9 @@ function main() {
         );
       }
 
-      if (
-        CORE_COMMUNITY_LEGACY_IMPORT_RE.test(content) &&
-        !CORE_COMMUNITY_IMPORT_ALLOWLIST.has(relative)
-      ) {
+      if (CORE_COMMUNITY_LEGACY_IMPORT_RE.test(content)) {
         violations.push(
-          `${relative}: modulo transversal nao deve importar @/core/community/*. Use core/community-* ou um owner explicitamente allowlisted.`,
+          `${relative}: modulo transversal nao deve importar @/core/community/*. Use core/community-* ou outro owner canonico.`,
         );
       }
     }

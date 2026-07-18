@@ -14,10 +14,6 @@ const SQL_IDENTIFIER =
   String.raw`(?:"[^"]+"|[A-Za-z_][\w$]*)(?:\s*\.\s*(?:"[^"]+"|[A-Za-z_][\w$]*))?`;
 const MUTATING_RPC_NAME_PATTERN =
   /^public\.(create|update|delete|remove|insert|upsert|set|switch|revoke|mark|add|increment|decrement|accept|activate|cancel|log|record|track|process|expire|release|toggle|invite|approve|reject|publish|request)_/i;
-const EXPOSED_MUTATING_RPC_ALLOWLIST = new Set([
-  // Public counter for published job views; does not expose or mutate tenant-owned private state.
-  "public.increment_vaga_view_count",
-]);
 const RPC_AUTH_GUARD_PATTERN =
   /auth\.uid\s*\(|auth\.role\s*\(|\bis_admin\b|\bis_admin_user\b|\bis_admin_from_roles\b|\bhas_role\b|current_setting\s*\(|jwt\s*\(/i;
 
@@ -441,7 +437,10 @@ function validateExtensionOwnerPreflight(files: MigrationFile[]): string[] {
 function validateExposedMutatingRpcGuards(files: MigrationFile[]): string[] {
   const violations: string[] = [];
   const functions = new Map<string, FunctionDefinition>();
-  const functionGrants: FunctionGrant[] = [];
+  const browserAccess = new Map<
+    string,
+    { principals: Set<string>; lastGrantFile: string }
+  >();
 
   const createFunctionRegex = new RegExp(
     String.raw`\bCREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+(${SQL_IDENTIFIER})\s*\([^)]*\)([\s\S]*?)(?=\n\s*(?:CREATE|ALTER|DROP|GRANT|REVOKE|COMMENT|NOTIFY|DO\b|$))`,
@@ -451,39 +450,126 @@ function validateExposedMutatingRpcGuards(files: MigrationFile[]): string[] {
     String.raw`\bGRANT\s+EXECUTE\s+ON\s+FUNCTION\s+(${SQL_IDENTIFIER})\s*\([^)]*\)\s+TO\s+([^;]+)`,
     "gi",
   );
+  const revokeExecuteRegex = new RegExp(
+    String.raw`\bREVOKE\s+(?:ALL|EXECUTE)\s+ON\s+FUNCTION\s+(${SQL_IDENTIFIER})\s*\([^)]*\)\s+FROM\s+([^;]+)`,
+    "gi",
+  );
+  const dropFunctionRegex = new RegExp(
+    String.raw`\bDROP\s+FUNCTION\s+(?:IF\s+EXISTS\s+)?(${SQL_IDENTIFIER})\s*\([^;]*?\)\s*(?:CASCADE|RESTRICT)?\s*;?`,
+    "gi",
+  );
+  const browserPrincipals = ["public", "anon", "authenticated"] as const;
 
-  for (const file of files) {
+  const orderedFiles = [...files].sort(
+    (left, right) =>
+      left.version.localeCompare(right.version) || left.name.localeCompare(right.name),
+  );
+
+  for (const file of orderedFiles) {
     const content = stripSqlComments(fs.readFileSync(file.fullPath, "utf8"));
     let match: RegExpExecArray | null;
+
+    const functionEvents: Array<{
+      index: number;
+      action: "create" | "drop" | "grant" | "revoke";
+      name: string;
+      principals?: string;
+      definition?: FunctionDefinition;
+    }> = [];
 
     while ((match = createFunctionRegex.exec(content))) {
       const name = normalizeSqlIdentifier(match[1]);
       if (!isPublicSchemaIdentifier(name)) continue;
 
       const body = match[2];
-      functions.set(name, {
+      functionEvents.push({
+        index: match.index,
+        action: "create",
         name,
-        file: file.name,
-        securityDefiner: /\bSECURITY\s+DEFINER\b/i.test(body),
-        hasAuthGuard: RPC_AUTH_GUARD_PATTERN.test(body),
+        definition: {
+          name,
+          file: file.name,
+          securityDefiner: /\bSECURITY\s+DEFINER\b/i.test(body),
+          hasAuthGuard: RPC_AUTH_GUARD_PATTERN.test(body),
+        },
+      });
+    }
+
+    while ((match = dropFunctionRegex.exec(content))) {
+      functionEvents.push({
+        index: match.index,
+        action: "drop",
+        name: normalizeSqlIdentifier(match[1]),
       });
     }
 
     while ((match = grantExecuteRegex.exec(content))) {
-      const grantees = match[2].toLowerCase();
-      if (!/\banon\b|\bauthenticated\b/.test(grantees)) continue;
+      functionEvents.push({
+        index: match.index,
+        action: "grant",
+        name: normalizeSqlIdentifier(match[1]),
+        principals: match[2].toLowerCase(),
+      });
+    }
 
-      const name = normalizeSqlIdentifier(match[1]);
-      if (isPublicSchemaIdentifier(name)) {
-        functionGrants.push({ name, file: file.name });
+    while ((match = revokeExecuteRegex.exec(content))) {
+      functionEvents.push({
+        index: match.index,
+        action: "revoke",
+        name: normalizeSqlIdentifier(match[1]),
+        principals: match[2].toLowerCase(),
+      });
+    }
+
+    for (const change of functionEvents.sort((left, right) => left.index - right.index)) {
+      if (!isPublicSchemaIdentifier(change.name)) continue;
+
+      if (change.action === "drop") {
+        functions.delete(change.name);
+        browserAccess.delete(change.name);
+        continue;
       }
+
+      if (change.action === "create") {
+        if (!change.definition) continue;
+        functions.set(change.name, change.definition);
+
+        // PostgreSQL grants EXECUTE to PUBLIC when a function is first created.
+        if (!browserAccess.has(change.name)) {
+          browserAccess.set(change.name, {
+            principals: new Set(["public"]),
+            lastGrantFile: file.name,
+          });
+        }
+        continue;
+      }
+
+      const state = browserAccess.get(change.name) ?? {
+        principals: new Set<string>(),
+        lastGrantFile: file.name,
+      };
+
+      for (const principal of browserPrincipals) {
+        if (!new RegExp(`\\b${principal}\\b`, "i").test(change.principals ?? "")) continue;
+        if (change.action === "grant") {
+          state.principals.add(principal);
+          state.lastGrantFile = file.name;
+        } else {
+          state.principals.delete(principal);
+        }
+      }
+
+      browserAccess.set(change.name, state);
     }
   }
+
+  const functionGrants: FunctionGrant[] = Array.from(browserAccess.entries())
+    .filter(([, state]) => state.principals.size > 0)
+    .map(([name, state]) => ({ name, file: state.lastGrantFile }));
 
   const reported = new Set<string>();
   for (const grant of functionGrants) {
     if (reported.has(grant.name)) continue;
-    if (EXPOSED_MUTATING_RPC_ALLOWLIST.has(grant.name)) continue;
     if (!MUTATING_RPC_NAME_PATTERN.test(grant.name)) continue;
 
     const definition = functions.get(grant.name);

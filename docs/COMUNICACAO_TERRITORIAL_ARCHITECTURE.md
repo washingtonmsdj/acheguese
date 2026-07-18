@@ -62,7 +62,7 @@ A ideia e forte, mas precisa ser encaixada no SSOT atual do projeto. O ajuste pr
 | `core/public-identity` | slug publico e historico de identificador |
 | `core/verification` | verificacao institucional do canal |
 | `core/moderation` | denuncia, revisao, auditoria e penalidade |
-| `core/community/alerts` | infraestrutura de alertas territoriais e mapa; barrel publico em `modules/community-alerts` |
+| `core/community/alerts` | owner direto da infraestrutura de alertas territoriais e mapa; sem facade em `modules` |
 | `core/notifications` | push/in-app/email com preferencia do usuario |
 | `core/feed` / `core/posts` | exibicao agregada no feed geral, sem virar fonte primaria editorial |
 

@@ -1,10 +1,10 @@
 # Inventario Estrutural do Projeto
 
-Gerado em 2026-07-17T23:58:23.019Z.
+Gerado em 2026-07-18T02:20:29.849Z.
 
 ## Modulos existentes
 - Core: `address`, `admin`, `ai`, `alerts`, `analytics`, `audit`, `auth`, `authorization`, `banners`, `billing`, `business`, `city`, `classifieds`, `comments`, `communication-territorial`, `community`, `community-experience`, `community-feed`, `community-groups`, `community-issues`, `community-lost-found`, `community-recommendations`, `coverage`, `education`, `engagement`, `family`, `favorites`, `feed`, `geocoding`, `geospatial`, `governance`, `guide`, `infrastructure`, `interaction`, `landing`, `legal`, `location`, `maps`, `media`, `messaging`, `metrics`, `mobility`, `moderation`, `navigation`, `nearby`, `notifications`, `permissions`, `posts`, `pricing`, `privacy`, `professional`, `profiles`, `public-identity`, `qr`, `realtime`, `residence`, `reviews`, `rollout`, `routing`, `safety`, `search`, `service-areas`, `session`, `social`, `subscription`, `telemetry`, `territorial`, `tracking`, `trust`, `users`, `verification`, `verticals`, `work-opportunities`
-- Modules: `admin`, `ai`, `business`, `central`, `classifieds`, `communication-territorial`, `community-alerts`, `community-events`, `community-feed`, `community-groups`, `community-issues`, `community-lost-found`, `community-recommendations`, `guide`, `mobility`, `professionals`, `profile`, `work-opportunities`
+- Modules: `admin`, `ai`, `business`, `central`, `classifieds`, `communication-territorial`, `community-events`, `community-feed`, `community-groups`, `community-issues`, `community-lost-found`, `community-recommendations`, `guide`, `mobility`, `professionals`, `profile`, `work-opportunities`
 
 ## Componentes compartilhados criticos
 - `src/app/components/AppLayoutSidebar.tsx`
@@ -215,9 +215,9 @@ Gerado em 2026-07-17T23:58:23.019Z.
 - Docs ligadas ao dominio: `docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`, `docs/posts`, `src/modules/community-feed/README.md`
 
 ## community-alerts
-- SSOT atual: Alertas comunitarios ficam isolados em community-alerts e consomem core/community/alerts. O contrato territorial deve ser location_id; nomes de cidade/bairro sao apresentacao.
+- SSOT atual: Alertas comunitarios pertencem a core/community/alerts, sem facade em modules. O contrato territorial deve ser location_id; nomes de cidade/bairro sao apresentacao.
 - Admin: Boa cobertura administrativa para alertas e issues. O admin ja consome contratos centrais; a lacuna atual e documental e de ownership unificado do dominio.
-- Documentacao: Fraca. Existe implementacao e SQL no modulo, mas nao ha documento canonico ativo consolidando alertas, issues e civic reports num dominio unico.
+- Documentacao: Parcial. O owner e unico em core/community/alerts; falta consolidar alertas, issues e civic reports em um contrato documental dedicado.
 - Services: `src/core/alerts/services/AlertService.ts`, `src/core/alerts/services/index.ts`, `src/core/community/alerts/services/AlertModerationService.ts`, `src/core/community/alerts/services/CommunityAlertService.ts`, `src/core/community/alerts/services/index.ts`
 - Pages: nenhuma pagina propria
 - Routes: nenhuma rota propria mapeada

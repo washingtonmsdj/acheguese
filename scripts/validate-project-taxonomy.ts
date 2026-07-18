@@ -33,7 +33,6 @@ const CANONICAL_MODULES = [
   "business",
   "central",
   "classifieds",
-  "community-alerts",
   "community-events",
   "community-feed",
   "community-groups",
@@ -48,14 +47,12 @@ const CANONICAL_MODULES = [
   "work-opportunities",
 ] as const;
 
-const DEPRECATED_COMPAT_MODULE_ROOTS = [
-  "community",
-] as const;
-
 const LEGACY_FORBIDDEN_MODULE_ROOTS = [
   "admin-identidade",
   "admin-motoristas",
   "analytics",
+  "community",
+  "community-alerts",
   "dashboard",
   "delivery",
   "empresa",
@@ -90,7 +87,6 @@ const REQUIRED_NESTED_PATHS = [
   "src/modules/business/company",
   "src/modules/business/gastronomy",
   "src/modules/business/promotions",
-  "src/modules/community-alerts",
   "src/modules/community-events",
   "src/modules/community-feed",
   "src/modules/community-groups",
@@ -126,8 +122,6 @@ const FORBIDDEN_LEGACY_PATH_LITERALS = [
 
 const LEGACY_SCAN_IGNORE_FILES = new Set([
   "scripts/validate-project-taxonomy.ts",
-  "scripts/fix-architecture-violations.ts",
-  "scripts/fix-remaining-violations.ts",
 ]);
 
 const COMMUNITY_FIRST_DOC_MARKERS = [
@@ -160,7 +154,6 @@ const COMMUNITY_EXPERIENCE_TABLE_SSOT_PATHS = new Set([
 ]);
 const CORE_TO_MODULE_IMPORT_RE =
   /(?:from\s+["']|export\s+(?:type\s+)?(?:\{[\s\S]*?\}|\*)\s+from\s+["'])@\/modules\//m;
-const CORE_TO_MODULE_IMPORT_ALLOWLIST = new Set<string>();
 const FAVORITES_SERVICES_BARREL_IMPORT_RE =
   /from\s+["']@\/core\/favorites\/services(?:\/index)?["']/;
 const APP_LAYOUT_ROUTE_REGISTRY_MARKERS = [
@@ -228,7 +221,6 @@ const GLOBAL_STRUCTURAL_AUDIT_REQUIRED_MARKERS = [
   "`central`",
   "`communication-territorial`",
   "`community-feed`",
-  "`community-alerts`",
   "`community-issues`",
   "`community-groups`",
   "`community-events`",
@@ -370,10 +362,9 @@ function main() {
   const moduleRoots = listDirectories("src/modules");
   const moduleRootSet = toSet(moduleRoots);
   const canonicalModuleSet = toSet(CANONICAL_MODULES);
-  const deprecatedCompatModuleSet = toSet(DEPRECATED_COMPAT_MODULE_ROOTS);
 
   for (const root of moduleRoots) {
-    if (!canonicalModuleSet.has(root) && !deprecatedCompatModuleSet.has(root)) {
+    if (!canonicalModuleSet.has(root)) {
       violations.push(
         `Modulo de topo fora do SSOT em src/modules: "${root}". Permitidos: ${CANONICAL_MODULES.join(", ")}`,
       );
@@ -678,7 +669,6 @@ function main() {
     if (
       relative.startsWith("src/core/") &&
       !isTestFile(relative) &&
-      !CORE_TO_MODULE_IMPORT_ALLOWLIST.has(relative) &&
       CORE_TO_MODULE_IMPORT_RE.test(content)
     ) {
       violations.push(

@@ -31,7 +31,6 @@ Definir uma taxonomia unica e oficial do projeto, separando com clareza:
   - `central`
   - `classifieds`
   - `communication-territorial`
-  - `community-alerts`
   - `community-events`
   - `community-feed`
   - `community-groups`

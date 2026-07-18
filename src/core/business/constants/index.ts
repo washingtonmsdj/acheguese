@@ -37,16 +37,8 @@ export {
 // Formas de Pagamento
 export {
   PAYMENT_METHODS,
-  getPaymentMethodById,
   getPaymentMethodLabel,
-  getPaymentMethodIcon,
-  getPaymentMethodColor,
-  getPaymentMethodLabels,
-  labelToId,
-  labelsToIds,
-  idsToLabels,
   type PaymentMethod,
-  type PaymentMethodId,
 } from './paymentMethods';
 
 // Redes Sociais

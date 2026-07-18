@@ -80,9 +80,9 @@ Escopo: `src/core`
 | verticals | configuração transversal de verticalização | manter em `src/core/verticals` |
 
 ## Execução aplicada nesta rodada
-- Removidos de `core` e consolidados em `modules`:
-  - facade top-level `src/core/community-alerts` removida; barrel publico em
-    `src/modules/community-alerts`, consumindo owner atual
+- Fronteiras consolidadas:
+  - facades `src/core/community-alerts` e `src/modules/community-alerts`
+    removidas; consumidores usam diretamente o owner
     `src/core/community/alerts`
   - `src/core/community-issues` mantido como owner explicito de problemas
     comunitarios; superficie de produto em `src/modules/community-issues`

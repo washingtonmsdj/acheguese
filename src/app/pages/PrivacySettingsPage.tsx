@@ -240,7 +240,7 @@ export default function PrivacySettingsPage() {
 
   const handleCancelDeletion = async () => {
     try {
-      await PrivacySettingsService.cancelAccountDeletion(user.id);
+      await PrivacySettingsService.cancelAccountDeletion();
       queryClient.invalidateQueries({ queryKey: ["deletion-status", user.id] });
       toast({
         title: "Exclusao cancelada",

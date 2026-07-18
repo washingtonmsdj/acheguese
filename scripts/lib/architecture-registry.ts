@@ -417,7 +417,6 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     sourceRoots: [
       "src/core/alerts",
       "src/core/community/alerts",
-      "src/modules/community-alerts",
     ],
     docsPaths: [],
     ssotPaths: [
@@ -439,9 +438,9 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     adminSummary:
       "Boa cobertura administrativa para alertas e issues. O admin ja consome contratos centrais; a lacuna atual e documental e de ownership unificado do dominio.",
     docsSummary:
-      "Fraca. Existe implementacao e SQL no modulo, mas nao ha documento canonico ativo consolidando alertas, issues e civic reports num dominio unico.",
+      "Parcial. O owner e unico em core/community/alerts; falta consolidar alertas, issues e civic reports em um contrato documental dedicado.",
     ssotSummary:
-      "Alertas comunitarios ficam isolados em community-alerts e consomem core/community/alerts. O contrato territorial deve ser location_id; nomes de cidade/bairro sao apresentacao.",
+      "Alertas comunitarios pertencem a core/community/alerts, sem facade em modules. O contrato territorial deve ser location_id; nomes de cidade/bairro sao apresentacao.",
   },
   {
     id: "community-issues",

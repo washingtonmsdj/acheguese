@@ -10,7 +10,6 @@
 - `central`
 - `classifieds`
 - `communication-territorial`
-- `community-alerts`
 - `community-events`
 - `community-feed`
 - `community-groups`
@@ -38,9 +37,11 @@
 - Business-derived domains stay inside `business`.
 : `business/company`, `business/gastronomy`, `business/promotions`
 - Community product experiences use explicit top-level bounded contexts.
-: `community-feed`, `community-alerts`, `community-issues`,
+: `community-feed`, `community-issues`,
   `community-groups`, `community-events`, `community-lost-found`,
   `community-recommendations`
+- Community alert infrastructure belongs directly to
+  `src/core/community/alerts`; it has no compatibility module facade.
 - Mobility derived domains stay inside `mobility`.
 : `mobility/delivery`
 - Quick work opportunities stay in the explicit top-level bounded context.
@@ -62,9 +63,8 @@ They live in `src/app/features` (for example: onboarding, dashboard, landings).
 - Shared contracts and canonical services must come from `core`.
 - `src/core` must not import or reexport `src/modules`. When a module UI/hook is
   needed by more than one bounded context, promote the reusable contract to
-  `core` and keep the old module path as a compatibility reexport only.
+  `core` and migrate every consumer before removing the old module path.
 - `index.ts` files in modules must expose a real public contract. Empty
   `export {};` indexes are prohibited because they create false SSOT surfaces.
 - There is no `src/core -> src/modules` allowlist. Shared Mobility UI and hooks
-  used by Central live in `src/core/mobility`; module paths are thin
-  compatibility reexports.
+  used by Central live in `src/core/mobility`.

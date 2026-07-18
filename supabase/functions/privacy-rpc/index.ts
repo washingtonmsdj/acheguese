@@ -35,6 +35,7 @@ const CONSENT_TYPES = new Set([
 const SAFE_VERSION_REGEX = /^[A-Za-z0-9_.:-]{1,32}$/;
 const ACTIONS = {
   recordConsent: true,
+  cancelAccountDeletion: true,
 } as const;
 
 type PrivacyRpcAction = keyof typeof ACTIONS;
@@ -180,6 +181,43 @@ async function handleRecordConsent(
   return { consentId: data as string };
 }
 
+async function handleCancelAccountDeletion(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+) {
+  const { data, error } = await supabaseAdmin.rpc(
+    "cancel_account_deletion_for_user",
+    {
+      p_user_id: userId,
+      p_reason: "user_self_service",
+    },
+  );
+
+  if (error) throw error;
+  if (data !== true) return { cancelled: false };
+
+  const { data: authData, error: authReadError } =
+    await supabaseAdmin.auth.admin.getUserById(userId);
+  if (authReadError || !authData.user) {
+    throw authReadError ?? new Error("User not found after cancellation");
+  }
+
+  const userMetadata = { ...authData.user.user_metadata };
+  delete userMetadata.account_status;
+  delete userMetadata.deletion_requested_at;
+  delete userMetadata.scheduled_purge_at;
+  delete userMetadata.deletion_reason;
+
+  const { error: authUpdateError } =
+    await supabaseAdmin.auth.admin.updateUserById(userId, {
+      email_confirm: true,
+      user_metadata: userMetadata,
+    });
+  if (authUpdateError) throw authUpdateError;
+
+  return { cancelled: true };
+}
+
 async function dispatchAction(
   req: Request,
   supabaseAdmin: SupabaseClient,
@@ -190,6 +228,8 @@ async function dispatchAction(
   switch (action) {
     case "recordConsent":
       return handleRecordConsent(req, supabaseAdmin, userId, params);
+    case "cancelAccountDeletion":
+      return handleCancelAccountDeletion(supabaseAdmin, userId);
   }
 }
 

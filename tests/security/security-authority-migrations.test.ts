@@ -667,6 +667,71 @@ describe("Security Authority migration validator", () => {
     expect(violations).toEqual([]);
   });
 
+  it("rejects an exposed mutating SECURITY DEFINER RPC without an auth guard", () => {
+    const violations = validateFixture(`
+      CREATE OR REPLACE FUNCTION public.update_security_authority_probe(p_value text)
+      RETURNS void
+      LANGUAGE plpgsql
+      SECURITY DEFINER
+      SET search_path = public, pg_temp
+      AS $$
+      BEGIN
+        PERFORM p_value;
+      END;
+      $$;
+
+      GRANT EXECUTE ON FUNCTION public.update_security_authority_probe(text)
+        TO authenticated;
+    `);
+
+    expect(violations).toContainEqual(
+      expect.stringContaining("RPC mutante SECURITY DEFINER exposto sem guarda de auth"),
+    );
+  });
+
+  it("models PostgreSQL's default PUBLIC execute privilege for new functions", () => {
+    const violations = validateFixture(`
+      CREATE OR REPLACE FUNCTION public.update_security_authority_probe(p_value text)
+      RETURNS void
+      LANGUAGE plpgsql
+      SECURITY DEFINER
+      SET search_path = public, pg_temp
+      AS $$
+      BEGIN
+        PERFORM p_value;
+      END;
+      $$;
+    `);
+
+    expect(violations).toContainEqual(
+      expect.stringContaining("RPC mutante SECURITY DEFINER exposto sem guarda de auth"),
+    );
+  });
+
+  it("uses the final ordered GRANT/REVOKE state instead of a closed RPC allowlist", () => {
+    const violations = validateFixture(`
+      CREATE OR REPLACE FUNCTION public.update_security_authority_probe(p_value text)
+      RETURNS void
+      LANGUAGE plpgsql
+      SECURITY DEFINER
+      SET search_path = public, pg_temp
+      AS $$
+      BEGIN
+        PERFORM p_value;
+      END;
+      $$;
+
+      GRANT EXECUTE ON FUNCTION public.update_security_authority_probe(text)
+        TO authenticated;
+      REVOKE ALL ON FUNCTION public.update_security_authority_probe(text)
+        FROM PUBLIC, anon, authenticated;
+      GRANT EXECUTE ON FUNCTION public.update_security_authority_probe(text)
+        TO service_role;
+    `);
+
+    expect(violations).toEqual([]);
+  });
+
   it("requires classification for broad anon storage listings", () => {
     const violations = validateFixture(`
       CREATE POLICY "public storage list"

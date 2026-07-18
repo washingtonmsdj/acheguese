@@ -9,7 +9,7 @@ function readProjectFile(path: string): string {
 }
 
 describe("privacy rpc broker security", () => {
-  it("routes consent writes through an authenticated broker", () => {
+  it("routes privacy writes through an authenticated broker", () => {
     const edgeFunction = readProjectFile("supabase/functions/privacy-rpc/index.ts");
     const config = readProjectFile("supabase/config.toml");
     const broker = readProjectFile("src/core/privacy/services/PrivacyRpcService.ts");
@@ -22,6 +22,7 @@ describe("privacy rpc broker security", () => {
     expect(edgeFunction).toContain("function requireUser(");
     expect(edgeFunction).toContain('getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY")');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("record_consent"');
+    expect(edgeFunction).toContain('"cancel_account_deletion_for_user"');
     expect(edgeFunction).toContain("p_user_id: userId");
     expect(edgeFunction).toContain("CONSENT_TYPES");
     expect(edgeFunction).not.toMatch(/p_user_id:\s*params\./);
@@ -32,6 +33,42 @@ describe("privacy rpc broker security", () => {
 
     expect(consentService).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']record_consent/);
     expect(settingsService).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']record_consent/);
+    expect(settingsService).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']cancel_account_deletion/);
+  });
+
+  it("keeps account-deletion cancellation service-only and actor-bound", () => {
+    const migration = readProjectFile(
+      "supabase/migrations/20260717143000_harden_privacy_rpc_boundaries.sql",
+    );
+    const edgeFunction = readProjectFile("supabase/functions/privacy-rpc/index.ts");
+
+    expect(migration).toContain(
+      "DROP FUNCTION IF EXISTS public.cancel_account_deletion(UUID, TEXT)",
+    );
+    expect(migration).toContain(
+      "REVOKE ALL ON FUNCTION public.cancel_account_deletion_for_user(UUID, TEXT)",
+    );
+    expect(migration).toContain("FROM PUBLIC, anon, authenticated");
+    expect(migration).toContain(
+      "GRANT EXECUTE ON FUNCTION public.cancel_account_deletion_for_user(UUID, TEXT)",
+    );
+    expect(migration).toContain("TO service_role");
+    expect(edgeFunction).toContain("p_user_id: userId");
+    expect(edgeFunction).not.toMatch(/p_user_id:\s*params\./);
+    expect(edgeFunction).not.toMatch(/p_user_id:\s*rawBody/);
+  });
+
+  it("keeps account-deletion cancellation retry-safe", () => {
+    const migration = readProjectFile(
+      "supabase/migrations/20260717144000_make_privacy_cancellation_idempotent.sql",
+    );
+
+    expect(migration).toContain("FOR UPDATE");
+    expect(migration).toContain("ELSIF v_status <> 'cancelled'");
+    expect(migration).toContain(
+      "REVOKE ALL ON FUNCTION public.cancel_account_deletion_for_user(UUID, TEXT)",
+    );
+    expect(migration).toContain("TO service_role");
   });
 
   it("revokes direct browser execution of the consent RPC and fixes active consent uniqueness", () => {

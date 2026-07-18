@@ -791,6 +791,16 @@ oficial caiu para 50 achados totais, 41
 `authenticated_security_definer_function_executable` e 3
 `anon_security_definer_function_executable`.
 
+Atualizacao em 2026-07-17: `privacy-rpc` v2 tambem passou a executar o
+cancelamento de exclusao de conta. O browser nao envia `user_id`; o broker
+deriva o ator do JWT e chama `cancel_account_deletion_for_user`, exclusiva de
+`service_role`. A migration `20260717143000` foi aplicada ao remoto, removeu o
+contrato antigo ausente, reconciliou oito ACLs historicos e a verificacao final
+confirmou `anon_execute=false`, `authenticated_execute=false` e
+`service_role_execute=true` para o novo comando. A migration
+`20260717144000` tornou o comando idempotente e protegido contra concorrencia
+com lock da agenda de exclusao.
+
 Resultado `location-rpc` em 2026-07-07: criada e implantada a Edge Function
 `location-rpc` com `verify_jwt=true` para
 `rpc_upsert_canonical_city_by_ibge`. `LocationGeocodingService` passou a usar

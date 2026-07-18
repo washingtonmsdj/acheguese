@@ -38,7 +38,6 @@ Escopo: `src/app`, `src/core`, `src/modules`, `src/shared`, `src/integrations`, 
   - `central`
   - `classifieds`
   - `communication-territorial`
-  - `community-alerts`
   - `community-events`
   - `community-feed`
   - `community-groups`
@@ -79,7 +78,6 @@ src/
     central/
     classifieds/{jobs,...}
     communication-territorial/
-    community-alerts/
     community-events/
     community-feed/
     community-groups/
@@ -119,8 +117,8 @@ src/
 - Auditoria minuciosa da camada `core` consolidada em:
   - `docs/architecture/CORE_LAYER_SSOT.md`
 - Consolidacao adicional de fronteiras de `core` executada:
-  - facade top-level `src/core/community-alerts` removida; barrel publico em
-    `src/modules/community-alerts`, consumindo owner atual
+  - facades `src/core/community-alerts` e `src/modules/community-alerts`
+    removidas; consumidores usam diretamente o owner
     `src/core/community/alerts`
   - `src/core/community-issues` mantido como owner explicito de problemas
     comunitarios; superficie de produto em `src/modules/community-issues`
