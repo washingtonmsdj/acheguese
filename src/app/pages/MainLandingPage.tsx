@@ -10,6 +10,7 @@ import {
   Dumbbell,
   Home as HomeIcon,
   MapPin,
+  Megaphone,
   MoreHorizontal,
   PawPrint,
   Search,
