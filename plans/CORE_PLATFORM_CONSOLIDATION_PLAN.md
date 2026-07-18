@@ -726,8 +726,28 @@ testes). Typecheck completo, lint, taxonomia, docs vivos, SSOT, URLs publicas,
 governanca, fronteiras incremental/comunitaria e as oito etapas da Security
 Authority passaram. O build de producao concluiu com `5.902` modulos.
 
-Proxima ordem: continuar as suites unitarias, integracao, RLS e E2E dos demais dominios,
-registrando qualquer gap real antes de alterar implementacao. Documentos de verificacao, evidencias
+Decimo checkpoint em 2026-07-18: a suite E2E publica de Comunidades foi
+executada em conjunto no Chromium. Uma corrida real foi encontrada na volta de
+um modulo embutido para `#eventos`: o hash podia mudar antes de o painel do feed
+estar montado, fazendo a navegacao perder foco acessivel. A superficie agora usa
+o mesmo estado canonico tanto para montar o painel lateral quanto para disparar
+o foco, e o identificador do anchor deixou de ser repetido. A regressao unitaria
+reproduz a transicao `Empresas -> Eventos` sem substituir o shell.
+
+Evidencia: `CommunityOverviewSurface.spec.tsx` passou com 7 testes; a execucao
+conjunta dos seis specs E2E de Comunidades terminou com 21 testes aprovados,
+zero falhas e 2 skips. Os skips sao exclusivamente os cenarios autenticados que
+criam e removem fixtures remotas; o guard os manteve desativados porque
+`OPERATIONAL_TEST_TARGET`, `OPERATIONAL_TEST_PROJECT_REF` e a confirmacao
+explicita nao estao configurados. Typecheck da aplicacao, ESLint focado e o
+validador de fronteiras comunitarias tambem passaram. O item global da Fase 6
+permanece aberto: ainda faltam esses dois cenarios sob alvo autorizado e as
+suites dos demais dominios.
+
+Proxima ordem: executar os dois E2E autenticados de Comunidades somente em alvo
+de development/staging explicitamente autorizado; depois continuar as suites
+unitarias, integracao, RLS e E2E dos demais dominios, registrando qualquer gap
+real antes de alterar implementacao. Documentos de verificacao, evidencias
 privadas e try-on permanecem em contratos separados e nao devem ser forcados
 para o MediaAsset publico. Por fim, preparar staging explicitamente autorizado
 para carga, p50/p95/p99, backup/restore e rollback. A aprovacao de
