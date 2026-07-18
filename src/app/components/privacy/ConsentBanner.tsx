@@ -199,24 +199,24 @@ export function ConsentBanner() {
             </button>
           </div>
 
-          {/* Desktop */}
-          <div className="hidden md:flex md:items-center md:gap-3">
+          {/* Desktop / Tablet */}
+          <div className="hidden md:flex md:flex-nowrap md:items-center md:gap-3">
             <div className="shrink-0 rounded-full bg-primary/10 p-2">
               <Cookie className="h-4 w-4 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="text-sm font-semibold leading-tight text-foreground">
+              <h3 className="truncate text-sm font-semibold leading-tight text-foreground">
                 Privacidade e Cookies
               </h3>
-              <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
+              <p className="mt-0.5 truncate text-xs leading-snug text-muted-foreground">
                 Utilizamos cookies e dados pessoais para melhorar sua experiência.
               </p>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex shrink-0 flex-nowrap items-center gap-2">
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-9 rounded-xl px-3 text-xs !text-muted-foreground hover:!bg-white/10 hover:!text-foreground"
+                className="h-9 whitespace-nowrap rounded-xl px-3 text-xs !text-muted-foreground hover:!bg-white/10 hover:!text-foreground"
                 onClick={() => setShowDetails(true)}
               >
                 Personalizar
@@ -224,7 +224,7 @@ export function ConsentBanner() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 rounded-xl border-slate-300 !bg-white px-4 text-xs font-medium !text-slate-950 hover:!bg-slate-100"
+                className="h-9 whitespace-nowrap rounded-xl border-slate-300 !bg-white px-4 text-xs font-medium !text-slate-950 hover:!bg-slate-100"
                 onClick={rejectOptionalConsents}
                 disabled={saveConsentsMutation.isPending}
               >
@@ -232,7 +232,7 @@ export function ConsentBanner() {
               </Button>
               <Button
                 size="sm"
-                className="h-9 rounded-xl !bg-teal-700 px-4 text-xs font-semibold !text-white hover:!bg-teal-800"
+                className="h-9 whitespace-nowrap rounded-xl !bg-teal-700 px-4 text-xs font-semibold !text-white hover:!bg-teal-800"
                 onClick={acceptAllConsents}
                 disabled={saveConsentsMutation.isPending}
               >
@@ -241,7 +241,7 @@ export function ConsentBanner() {
               <button
                 type="button"
                 onClick={() => setShowBanner(false)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
                 aria-label="Fechar"
               >
                 <X className="h-4 w-4" />
