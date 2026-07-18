@@ -918,7 +918,11 @@ body:has(.home-concept) {
 
 .home-community-activity-list {
   gap: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
+
 
 .home-community-activity-item {
   position: relative;
