@@ -18,6 +18,28 @@ function expectReadableText(source: string, text: string): void {
   expect(normalizeReadableText(source)).toContain(normalizeReadableText(text));
 }
 
+function expectSupabaseTableAccess(source: string, table: string): void {
+  let offset = 0;
+
+  while (offset < source.length) {
+    const fromStart = source.indexOf(".from", offset);
+    if (fromStart === -1) break;
+
+    const callStart = source.indexOf("(", fromStart + 5);
+    if (callStart === -1) break;
+
+    const typeArgument = source.slice(fromStart + 5, callStart).trim();
+    const isFromCall =
+      typeArgument === "" ||
+      (typeArgument.startsWith("<") && typeArgument.endsWith(">"));
+    if (isFromCall && source.startsWith(`("${table}")`, callStart)) return;
+
+    offset = fromStart + 5;
+  }
+
+  throw new Error(`Expected Supabase access to table: ${table}`);
+}
+
 describe("professional lead SSOT", () => {
   it("creates a canonical lead schema with RLS and event history", () => {
     const migration = readProjectFile(
@@ -72,13 +94,11 @@ describe("professional lead SSOT", () => {
       "supabase/functions/professional-notifications-rpc/index.ts",
     );
 
-    expect(service).toMatch(/\.from(?:<[^>]+>)?\("professional_leads"\)/);
-    expect(service).toMatch(/\.from(?:<[^>]+>)?\("professional_lead_events"\)/);
-    expect(service).toMatch(/\.from(?:<[^>]+>)?\("professional_lead_messages"\)/);
-    expect(service).toMatch(/\.from(?:<[^>]+>)?\("professional_lead_quotes"\)/);
-    expect(service).toMatch(
-      /\.from(?:<[^>]+>)?\("professional_service_engagements"\)/,
-    );
+    expectSupabaseTableAccess(service, "professional_leads");
+    expectSupabaseTableAccess(service, "professional_lead_events");
+    expectSupabaseTableAccess(service, "professional_lead_messages");
+    expectSupabaseTableAccess(service, "professional_lead_quotes");
+    expectSupabaseTableAccess(service, "professional_service_engagements");
     expect(service).toContain("getLeadDetails");
     expect(service).toContain("sendMessage");
     expect(service).toContain("createQuote");

@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { DriverModerationEventsService } from "@/core/mobility/services/runtime";
 
 export interface DriverModerationRow {
   id: string;
@@ -44,15 +45,38 @@ export class AdminDriverModerationService {
   static async getModerationRows(profileIds: string[]): Promise<Map<string, DriverModerationRow>> {
     if (profileIds.length === 0) return new Map<string, DriverModerationRow>();
 
-    let data: DriverModerationRow[] = [];
     try {
-      data = (await profileService.getAccessibleProfilesByIds(profileIds)) as DriverModerationRow[];
+      const [decisions, profileRows] = await Promise.all([
+        DriverModerationEventsService.listLatestDecisionsByDriverProfiles(profileIds),
+        profileService.getAccessibleProfilesByIds(profileIds) as Promise<DriverModerationRow[]>,
+      ]);
+      const profileById = new Map(profileRows.map((row) => [row.id, row]));
+      return new Map(
+        profileIds.map((profileId) => {
+          const decision = decisions.get(profileId);
+          const profile = profileById.get(profileId);
+          const row: DriverModerationRow = {
+            id: profileId,
+            verification_status: decision
+              ? decision.action === "approved"
+                ? "verified"
+                : "rejected"
+              : "pending",
+            verification_rejection_reason:
+              decision?.action === "rejected" ? decision.reason : null,
+            is_suspended: profile?.is_suspended ?? false,
+            suspended_at: profile?.suspended_at ?? null,
+            suspended_until: profile?.suspended_until ?? null,
+            suspension_reason: profile?.suspension_reason ?? null,
+            updated_at: decision?.created_at ?? profile?.updated_at,
+          };
+          return [profileId, row];
+        }),
+      );
     } catch (error) {
       logger.warn("AdminDriverModerationService.getModerationRows", error);
       return new Map<string, DriverModerationRow>();
     }
-
-    return new Map(((data || []) as DriverModerationRow[]).map((row) => [row.id, row]));
   }
 
   static async getFallbackSuspensionHistory(

@@ -91,19 +91,6 @@ async function getUserSubscription(userId: string) {
   }
 }
 
-async function getVerificationStatus(profileId: string) {
-  try {
-    const { VerificationService } =
-      await import("@/core/verification/services/VerificationService");
-    const verifications =
-      await VerificationService.getProfileVerifications(profileId);
-    return verifications[0] ?? null;
-  } catch (error) {
-    logger.error("Error in getVerificationStatus:", error);
-    return null;
-  }
-}
-
 export async function getProfileContextAggregate(
   deps: ProfileContextDependencies,
 ): Promise<ProfileContext | null> {
@@ -116,10 +103,9 @@ export async function getProfileContextAggregate(
       return null;
     }
 
-    const [hasActiveBan, subscription, verification] = await Promise.all([
+    const [hasActiveBan, subscription] = await Promise.all([
       getActiveBanStatus(),
       getUserSubscription(userId),
-      profile.id ? getVerificationStatus(profile.id) : Promise.resolve(null),
     ]);
 
     const status = calculateProfileStatus(profile, hasActiveBan);
@@ -131,7 +117,6 @@ export async function getProfileContextAggregate(
       permissions,
       plan: calculatePlan(subscription),
       reputation: calculateReputation(profile),
-      verification,
     });
   } catch (error) {
     logger.error("Error getting profile context:", error);

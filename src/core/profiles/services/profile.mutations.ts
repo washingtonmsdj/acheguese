@@ -16,13 +16,11 @@ import type {
   ProfileRow as Profile,
   UpdateProfilePayload,
 } from "./types";
-import type { VerificationWorkflowStatus } from "./profile.service.types";
 import {
   getActiveProfile,
   getProfileByType,
   isUsernameAvailable,
 } from "./profile.queries";
-import { buildVerificationStatusUpdates } from "./profile.service.admin-rules";
 import { calculateSuspensionEnd } from "./profile.service.rules";
 import {
   buildCreateProfileInsert,
@@ -556,48 +554,6 @@ export async function checkUsernameAvailability(
   excludeProfileId?: string,
 ): Promise<boolean> {
   return isUsernameAvailable(username, excludeProfileId);
-}
-
-export async function verifyUser(userId: string): Promise<void> {
-  const { error } = await supabase
-    .from(TABLE)
-    .update({
-      is_verified: true,
-      verified_at: new Date().toISOString(),
-    })
-    .eq("id", userId);
-
-  if (error) {
-    trackError(new Error("Error verifying user"), {
-      component: "profile.mutations",
-      action: "verifyUser",
-      metadata: { userId, error },
-    });
-    throw error;
-  }
-}
-
-export async function updateVerificationStatus(
-  profileId: string,
-  status: VerificationWorkflowStatus,
-  reason?: string,
-): Promise<void> {
-  try {
-    const updates = buildVerificationStatusUpdates(status, reason);
-    const { error } = await supabase.from(TABLE).update(updates).eq("id", profileId);
-
-    if (error) {
-      logger.error("Error updating verification status:", error);
-      throw error;
-    }
-  } catch (error) {
-    trackError(new Error("Error updating verification status"), {
-      component: "profile.mutations",
-      action: "updateVerificationStatus",
-      metadata: { profileId, status, reason, error },
-    });
-    throw error;
-  }
 }
 
 export async function suspendUser(

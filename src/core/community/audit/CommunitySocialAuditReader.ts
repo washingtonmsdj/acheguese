@@ -16,16 +16,34 @@ const metadataValueSchema = z.union([
   z.null(),
 ]);
 
+function isAuditAction(value: string): boolean {
+  const segments = value.split(".");
+  if (segments.length > 3) return false;
+
+  return segments.every((segment) => {
+    if (segment.length === 0) return false;
+    const firstCode = segment.charCodeAt(0);
+    if (firstCode < 97 || firstCode > 122) return false;
+
+    for (let index = 1; index < segment.length; index += 1) {
+      const code = segment.charCodeAt(index);
+      const isLowercaseLetter = code >= 97 && code <= 122;
+      const isDigit = code >= 48 && code <= 57;
+      if (!isLowercaseLetter && !isDigit && code !== 95) return false;
+    }
+
+    return true;
+  });
+}
+
 const auditRowSchema = z
   .object({
     id: z.string().uuid(),
     actor_user_id: z.string().uuid().nullable(),
     actor_profile_id: z.string().uuid().nullable(),
-    action: z
-      .string()
-      .min(1)
-      .max(80)
-      .regex(/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*){0,2}$/),
+    action: z.string().min(1).max(80).refine(isAuditAction, {
+      message: "Invalid community audit action",
+    }),
     target_type: z.string().min(1).max(80),
     target_id: z.string().uuid(),
     location_id: z.string().uuid().nullable(),

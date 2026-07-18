@@ -47,42 +47,6 @@ interface ProfileAdminQueriesDbClient {
 
 const profileAdminQueriesDb = supabase as unknown as ProfileAdminQueriesDbClient;
 
-export async function getVerificationStats(): Promise<{
-  pending: number;
-  verified: number;
-  rejected: number;
-}> {
-  try {
-    const [pending, verified, rejected] = await Promise.all([
-      profileAdminQueriesDb
-        .from<{ id: string }>(TABLE)
-        .select("*", { count: "exact", head: true })
-        .eq("verification_status", "pending"),
-      profileAdminQueriesDb
-        .from<{ id: string }>(TABLE)
-        .select("*", { count: "exact", head: true })
-        .eq("verification_status", "verified"),
-      profileAdminQueriesDb
-        .from<{ id: string }>(TABLE)
-        .select("*", { count: "exact", head: true })
-        .eq("verification_status", "rejected"),
-    ]);
-
-    return {
-      pending: pending.count ?? 0,
-      verified: verified.count ?? 0,
-      rejected: rejected.count ?? 0,
-    };
-  } catch (error) {
-    trackError(new Error("Error getting verification stats"), {
-      component: "profile.queries",
-      action: "getVerificationStats",
-      metadata: { error },
-    });
-    throw error;
-  }
-}
-
 export async function getSuspendedUsers(limit = 100): Promise<
   Array<{
     id: string;

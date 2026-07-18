@@ -15,7 +15,7 @@ import type {
 import type { ProfileActivityStats } from "@/core/profiles/services/ProfileOperationTypes";
 import type { ProfileAccountSnapshot } from "@/core/profiles/views/ProfileAccountSnapshot";
 import type { ProfileRow } from "@/core/profiles/services/types";
-import type { VerificationStatus } from "@/modules/profile/components/ResidentVerificationCard";
+import type { ProfileVerificationStatus as VerificationStatus } from "@/core/verification/verificationStatus";
 import type { DriverDataRecord } from "@/core/mobility/types/DriverDataRecord";
 export type ProfileSectionId =
   import("@/modules/profile/config/profile-sections.config").ProfileSectionId;

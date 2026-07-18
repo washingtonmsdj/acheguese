@@ -95,10 +95,6 @@ export {
 } from "./mappers";
 
 export { profileService, ProfileService } from "./services/ProfileService";
-export {
-  ProfileVerificationAdminService,
-  profileVerificationAdminService,
-} from "./services/ProfileVerificationAdminService";
 export type {
   CreateProfilePayload,
   UpdateProfilePayload,
@@ -114,10 +110,6 @@ export type {
   ProfileEffectivePermission,
   ProfileVerificationStatus,
 } from "./services/types";
-export type {
-  PendingVerification,
-  VerificationStats,
-} from "./services/ProfileVerificationAdminService";
 
 export { usePrivateProfileWorkspace } from "./hooks/usePrivateProfileWorkspace";
 export { useProfileEditor } from "./hooks/useProfileEditor";

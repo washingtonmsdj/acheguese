@@ -25,6 +25,7 @@ WITH table_policies AS (
       'comments',
       'messages',
       'business_data',
+      'verification',
       'community_reports',
       'group_messages_new'
     )
@@ -42,6 +43,9 @@ WITH table_policies AS (
   WHERE n.nspname = 'public'
     AND p.proname IN (
       'verify_profile',
+      'request_profile_verification',
+      'review_profile_verification',
+      'set_profile_verification_badge',
       'suspend_profile',
       'review_community_content_reports',
       'apply_community_user_moderation_action'

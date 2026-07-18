@@ -1,8 +1,3 @@
-export type VerificationWorkflowStatus =
-  | "pending"
-  | "verified"
-  | "rejected"
-  | "none";
 export type ActiveBanStatus = boolean;
 export type UserSubscriptionLike = {
   active?: boolean | null;

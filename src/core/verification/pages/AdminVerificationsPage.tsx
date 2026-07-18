@@ -1,10 +1,20 @@
 /**
  * AdminVerificationsPage - Painel administrativo de verificacoes.
  */
-import { CheckCircle, Clock, Users } from "lucide-react";
+import { CheckCircle, Clock, ShieldOff, Users } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/shared/components/ui/tabs";
 import { Button } from "@/shared/components/ui/button";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Label } from "@/shared/components/ui/label";
@@ -19,9 +29,9 @@ import {
 } from "@/shared/components/ui/dialog";
 import { VerificationCard } from "@/core/verification/components/VerificationCard";
 import { useVerifications } from "@/core/verification/hooks/useVerifications";
-import type { PendingVerification } from "@/core/profiles/services/ProfileVerificationAdminService";
+import type { VerificationReviewItem } from "@/core/verification/types";
 
-type ReviewMode = "approve" | "reject";
+type ReviewMode = "approve" | "reject" | "revoke";
 
 const INITIAL_CHECKLIST = {
   profileConsistent: false,
@@ -33,21 +43,25 @@ const INITIAL_CHECKLIST = {
 export default function AdminVerificationsPage() {
   const {
     pending,
-    verified,
+    approved,
     rejected,
+    revoked,
     stats,
     loadingPending,
-    loadingVerified,
+    loadingApproved,
     loadingRejected,
+    loadingRevoked,
     isApproving,
     isRejecting,
+    isRevoking,
     approve,
     reject,
+    revoke,
   } = useVerifications();
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewMode, setReviewMode] = useState<ReviewMode>("approve");
-  const [target, setTarget] = useState<PendingVerification | null>(null);
-  const [rejectReason, setRejectReason] = useState("");
+  const [target, setTarget] = useState<VerificationReviewItem | null>(null);
+  const [decisionReason, setDecisionReason] = useState("");
   const [checklist, setChecklist] = useState(INITIAL_CHECKLIST);
 
   const allChecklistDone = useMemo(
@@ -55,10 +69,10 @@ export default function AdminVerificationsPage() {
     [checklist],
   );
 
-  function openReview(verification: PendingVerification, mode: ReviewMode) {
+  function openReview(verification: VerificationReviewItem, mode: ReviewMode) {
     setTarget(verification);
     setReviewMode(mode);
-    setRejectReason("");
+    setDecisionReason("");
     setChecklist(INITIAL_CHECKLIST);
     setReviewOpen(true);
   }
@@ -66,7 +80,7 @@ export default function AdminVerificationsPage() {
   function closeReview() {
     setReviewOpen(false);
     setTarget(null);
-    setRejectReason("");
+    setDecisionReason("");
     setChecklist(INITIAL_CHECKLIST);
   }
 
@@ -76,15 +90,19 @@ export default function AdminVerificationsPage() {
     if (!allChecklistDone) return;
 
     if (reviewMode === "approve") {
-      approve(target.profile_id);
+      approve(target.id);
       closeReview();
       return;
     }
 
-    const normalizedReason = rejectReason.trim();
+    const normalizedReason = decisionReason.trim();
     if (normalizedReason.length < 10) return;
 
-    reject({ profileId: target.profile_id, reason: normalizedReason });
+    if (reviewMode === "reject") {
+      reject({ verificationId: target.id, reason: normalizedReason });
+    } else {
+      revoke({ verificationId: target.id, reason: normalizedReason });
+    }
     closeReview();
   }
 
@@ -97,7 +115,7 @@ export default function AdminVerificationsPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
@@ -110,11 +128,21 @@ export default function AdminVerificationsPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Revogados</CardTitle>
+            <ShieldOff className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.revoked || 0}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Verificados</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.verified || 0}</div>
+            <div className="text-2xl font-bold">{stats?.approved || 0}</div>
           </CardContent>
         </Card>
 
@@ -145,19 +173,25 @@ export default function AdminVerificationsPage() {
             <Clock className="h-4 w-4" />
             Pendentes ({pending.length})
           </TabsTrigger>
-          <TabsTrigger value="verified" className="gap-2">
+          <TabsTrigger value="approved" className="gap-2">
             <CheckCircle className="h-4 w-4" />
-            Verificados ({verified.length})
+            Aprovados ({approved.length})
           </TabsTrigger>
           <TabsTrigger value="rejected" className="gap-2">
             <Users className="h-4 w-4" />
             Rejeitados ({rejected.length})
           </TabsTrigger>
+          <TabsTrigger value="revoked" className="gap-2">
+            <ShieldOff className="h-4 w-4" />
+            Revogados ({revoked.length})
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="pending" className="space-y-4">
           {loadingPending ? (
-            <div className="text-center py-12 text-muted-foreground">Carregando...</div>
+            <div className="text-center py-12 text-muted-foreground">
+              Carregando...
+            </div>
           ) : pending.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center text-muted-foreground">
@@ -180,10 +214,12 @@ export default function AdminVerificationsPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="verified" className="space-y-4">
-          {loadingVerified ? (
-            <div className="text-center py-12 text-muted-foreground">Carregando...</div>
-          ) : verified.length === 0 ? (
+        <TabsContent value="approved" className="space-y-4">
+          {loadingApproved ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Carregando...
+            </div>
+          ) : approved.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center text-muted-foreground">
                 Nenhum perfil verificado ainda.
@@ -191,12 +227,12 @@ export default function AdminVerificationsPage() {
             </Card>
           ) : (
             <div className="grid gap-4">
-              {verified.map((verification) => (
+              {approved.map((verification) => (
                 <VerificationCard
                   key={verification.id}
                   verification={verification}
-                  onApprove={approve}
-                  onReject={(profileId) => reject({ profileId })}
+                  onRevoke={() => openReview(verification, "revoke")}
+                  isRevoking={isRevoking}
                   showActions={false}
                 />
               ))}
@@ -206,7 +242,9 @@ export default function AdminVerificationsPage() {
 
         <TabsContent value="rejected" className="space-y-4">
           {loadingRejected ? (
-            <div className="text-center py-12 text-muted-foreground">Carregando...</div>
+            <div className="text-center py-12 text-muted-foreground">
+              Carregando...
+            </div>
           ) : rejected.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center text-muted-foreground">
@@ -219,8 +257,30 @@ export default function AdminVerificationsPage() {
                 <VerificationCard
                   key={verification.id}
                   verification={verification}
-                  onApprove={approve}
-                  onReject={(_profileId) => {}}
+                  showActions={false}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="revoked" className="space-y-4">
+          {loadingRevoked ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Carregando...
+            </div>
+          ) : revoked.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                Nenhuma verificacao revogada.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4">
+              {revoked.map((verification) => (
+                <VerificationCard
+                  key={verification.id}
+                  verification={verification}
                   showActions={false}
                 />
               ))}
@@ -239,7 +299,11 @@ export default function AdminVerificationsPage() {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {reviewMode === "approve" ? "Aprovar verificacao" : "Rejeitar verificacao"}
+              {reviewMode === "approve"
+                ? "Aprovar verificacao"
+                : reviewMode === "reject"
+                  ? "Rejeitar verificacao"
+                  : "Revogar verificacao"}
             </DialogTitle>
             <DialogDescription>
               Revise o checklist operacional antes de concluir a decisao.
@@ -250,65 +314,94 @@ export default function AdminVerificationsPage() {
             <div className="space-y-4">
               <div className="rounded-lg border border-border p-3 text-sm">
                 <p className="font-semibold">{target.display_name}</p>
-                <p className="text-muted-foreground">Perfil: {target.profile_id}</p>
+                <p className="text-muted-foreground">
+                  Perfil: {target.profile_id}
+                </p>
               </div>
 
               <div className="space-y-3 rounded-lg border border-border p-3">
-                <p className="text-sm font-semibold">Checklist de revisao obrigatoria</p>
+                <p className="text-sm font-semibold">
+                  Checklist de revisao obrigatoria
+                </p>
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="profileConsistent"
                     checked={checklist.profileConsistent}
                     onCheckedChange={(checked) =>
-                      setChecklist((prev) => ({ ...prev, profileConsistent: Boolean(checked) }))
+                      setChecklist((prev) => ({
+                        ...prev,
+                        profileConsistent: Boolean(checked),
+                      }))
                     }
                   />
-                  <Label htmlFor="profileConsistent">Dados do perfil conferem com a solicitacao</Label>
+                  <Label htmlFor="profileConsistent">
+                    Dados do perfil conferem com a solicitacao
+                  </Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="evidenceReviewed"
                     checked={checklist.evidenceReviewed}
                     onCheckedChange={(checked) =>
-                      setChecklist((prev) => ({ ...prev, evidenceReviewed: Boolean(checked) }))
+                      setChecklist((prev) => ({
+                        ...prev,
+                        evidenceReviewed: Boolean(checked),
+                      }))
                     }
                   />
-                  <Label htmlFor="evidenceReviewed">Comprovantes/documentos foram revisados</Label>
+                  <Label htmlFor="evidenceReviewed">
+                    Comprovantes/documentos foram revisados
+                  </Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="territoryMatch"
                     checked={checklist.territoryMatch}
                     onCheckedChange={(checked) =>
-                      setChecklist((prev) => ({ ...prev, territoryMatch: Boolean(checked) }))
+                      setChecklist((prev) => ({
+                        ...prev,
+                        territoryMatch: Boolean(checked),
+                      }))
                     }
                   />
-                  <Label htmlFor="territoryMatch">Territorio do perfil esta coerente com a comunidade</Label>
+                  <Label htmlFor="territoryMatch">
+                    Territorio do perfil esta coerente com a comunidade
+                  </Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="antiFraudReviewed"
                     checked={checklist.antiFraudReviewed}
                     onCheckedChange={(checked) =>
-                      setChecklist((prev) => ({ ...prev, antiFraudReviewed: Boolean(checked) }))
+                      setChecklist((prev) => ({
+                        ...prev,
+                        antiFraudReviewed: Boolean(checked),
+                      }))
                     }
                   />
-                  <Label htmlFor="antiFraudReviewed">Validacao anti-fraude foi aplicada</Label>
+                  <Label htmlFor="antiFraudReviewed">
+                    Validacao anti-fraude foi aplicada
+                  </Label>
                 </div>
               </div>
 
-              {reviewMode === "reject" && (
+              {reviewMode !== "approve" && (
                 <div className="space-y-2">
-                  <Label htmlFor="rejectReason">Motivo da rejeicao (obrigatorio)</Label>
+                  <Label htmlFor="decisionReason">
+                    Motivo da{" "}
+                    {reviewMode === "reject" ? "rejeicao" : "revogacao"}{" "}
+                    (obrigatorio)
+                  </Label>
                   <Textarea
-                    id="rejectReason"
-                    value={rejectReason}
-                    onChange={(event) => setRejectReason(event.target.value)}
-                    placeholder="Descreva objetivamente o motivo da rejeicao."
+                    id="decisionReason"
+                    value={decisionReason}
+                    onChange={(event) => setDecisionReason(event.target.value)}
+                    placeholder={`Descreva objetivamente o motivo da ${reviewMode === "reject" ? "rejeicao" : "revogacao"}.`}
                     rows={4}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Minimo de 10 caracteres para auditoria e retorno ao solicitante.
+                    Minimo de 10 caracteres para auditoria e retorno ao
+                    solicitante.
                   </p>
                 </div>
               )}
@@ -326,11 +419,16 @@ export default function AdminVerificationsPage() {
                 !allChecklistDone ||
                 isApproving ||
                 isRejecting ||
-                (reviewMode === "reject" && rejectReason.trim().length < 10)
+                isRevoking ||
+                (reviewMode !== "approve" && decisionReason.trim().length < 10)
               }
               onClick={handleDecision}
             >
-              {reviewMode === "approve" ? "Confirmar aprovacao" : "Confirmar rejeicao"}
+              {reviewMode === "approve"
+                ? "Confirmar aprovacao"
+                : reviewMode === "reject"
+                  ? "Confirmar rejeicao"
+                  : "Confirmar revogacao"}
             </Button>
           </DialogFooter>
         </DialogContent>

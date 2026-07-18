@@ -47,7 +47,6 @@ import type {
   ProfileIdRow,
   RecentProfileRow,
   UserSubscriptionLike,
-  VerificationWorkflowStatus,
 } from "./profile.service.types";
 import {
   mapBusinessRecords,
@@ -80,8 +79,6 @@ import {
   updatePrivacySettingsDirect,
   updateProfileDirect,
   uploadAvatar as uploadAvatarMutation,
-  updateVerificationStatus as updateVerificationStatusMutation,
-  verifyUser as verifyUserMutation,
 } from "./profile.mutations";
 import {
   getCurrentUserFavoriteBusinessesQuery,
@@ -103,7 +100,6 @@ import {
   getPublicProfileById as getPublicProfileByIdQuery,
   getProfilesByUserId as getProfilesByUserIdQuery,
   getProfilesByIds as getProfilesByIdsQuery,
-  getProfilesByVerificationStatus as getProfilesByVerificationStatusQuery,
   getProfilesCreatedInPeriod as getProfilesCreatedInPeriodQuery,
   getProfilesFiltered as getProfilesFilteredQuery,
   getProfilesSummary as getProfilesSummaryQuery,
@@ -112,7 +108,6 @@ import {
   getSimilarUsernames as getSimilarUsernamesQuery,
   getTotalProfilesCount as getTotalProfilesCountQuery,
   getUsernameHistory as getUsernameHistoryQuery,
-  getVerificationStats as getVerificationStatsQuery,
   resolveProfileIdByUserId,
 } from "./profile.queries";
 export class ProfileService {
@@ -397,42 +392,6 @@ export class ProfileService {
       suspended_until: null,
       suspension_reason: undefined,
     });
-  }
-  async verifyUser(userId: string): Promise<void> {
-    await verifyUserMutation(userId);
-  }
-  async getProfilesByVerificationStatus(
-    status: VerificationWorkflowStatus,
-    options?: {
-      limit?: number;
-      offset?: number;
-      orderBy?: "created_at" | "updated_at";
-    },
-  ): Promise<Profile[]> {
-    return getProfilesByVerificationStatusQuery(status, options);
-  }
-  async getVerificationStats(): Promise<{
-    pending: number;
-    verified: number;
-    rejected: number;
-  }> {
-    return getVerificationStatsQuery();
-  }
-  async updateVerificationStatus(
-    profileId: string,
-    status: VerificationWorkflowStatus,
-    reason?: string,
-  ): Promise<void> {
-    await updateVerificationStatusMutation(profileId, status, reason);
-  }
-  async approveVerification(profileId: string): Promise<void> {
-    await this.updateVerificationStatus(profileId, "verified");
-  }
-  async rejectVerification(profileId: string, reason?: string): Promise<void> {
-    await this.updateVerificationStatus(profileId, "rejected", reason);
-  }
-  async revokeVerification(profileId: string): Promise<void> {
-    await this.updateVerificationStatus(profileId, "none");
   }
   async suspendUser(
     userId: string,

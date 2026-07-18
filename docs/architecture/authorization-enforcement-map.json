@@ -236,17 +236,34 @@
       ]
     },
     {
+      "action": "reviewProfileVerification",
+      "resource": "public.verification",
+      "commandOwner": "supabase/functions/admin-verify-profile/index.ts",
+      "coverage": "verified",
+      "enforcement": [
+        "edge-function:admin-verify-profile",
+        "service-role-only-rpc:review_profile_verification",
+        "actor-binding:private.is_admin_user"
+      ],
+      "evidence": [
+        "supabase/migrations/20260718150000_consolidate_profile_verification_core.sql",
+        "supabase/migrations/20260718163000_harden_profile_verification_transitions.sql",
+        "tests/architecture/profile-verification-ssot.test.ts"
+      ]
+    },
+    {
       "action": "verifyUser",
       "resource": "public.profiles",
       "commandOwner": "supabase/functions/admin-verify-profile/index.ts",
       "coverage": "verified",
       "enforcement": [
         "edge-function:admin-verify-profile",
-        "service-role-only-rpc:verify_profile"
+        "service-role-only-rpc:set_profile_verification_badge"
       ],
       "evidence": [
         "supabase/functions/admin-verify-profile/index.ts",
-        "tests/security/authorization-enforcement-remote-audit.sql"
+        "supabase/migrations/20260718150000_consolidate_profile_verification_core.sql",
+        "tests/architecture/profile-verification-ssot.test.ts"
       ]
     },
     {

@@ -136,7 +136,9 @@ Atualizado para exportar:
 - **Views**: ProfileSummary, Author, PublicProfile, ProfileContext
 - **Operations**: CreateProfileInput, UpdateProfileInput, ProfileFilters
 - **Legacy**: LegacyProfile, LegacyMapper (com @deprecated)
-- **Services**: ProfileService, ProfileMobilityAdapter, ProfileVerificationAdminService (mantidos)
+- **Services**: ProfileService e ProfileMobilityAdapter. O workflow de
+  verificacao foi removido de Profile e pertence a `core/verification`; Profile
+  mantem apenas a projecao publica `verified`.
 
 ---
 

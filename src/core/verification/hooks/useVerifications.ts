@@ -1,16 +1,10 @@
-/**
- * useVerifications - Hook canonic para moderacao de verificacoes.
- */
-import { logger } from "@/shared/utils/logger";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ProfileVerificationAdminService } from "@/core/profiles/services/ProfileVerificationAdminService";
+import { VerificationAdminService } from "@/core/verification/services/VerificationAdminService";
+import { logger } from "@/shared/utils/logger";
 
-const QUERY_KEYS = {
-  pending: ["verifications", "pending"] as const,
-  verified: ["verifications", "verified"] as const,
-  stats: ["verifications", "stats"] as const,
-};
+const QUERY_ROOT = ["profile-verifications"] as const;
+const queryKey = (status: string) => [...QUERY_ROOT, status] as const;
 
 const RELATED_QUERY_KEYS = [
   ["resident-verification"],
@@ -22,37 +16,39 @@ const RELATED_QUERY_KEYS = [
 
 export function useVerifications() {
   const queryClient = useQueryClient();
+  const invalidateVerificationReads = async () => {
+    await queryClient.invalidateQueries({ queryKey: QUERY_ROOT });
+    RELATED_QUERY_KEYS.forEach((key) => {
+      void queryClient.invalidateQueries({ queryKey: key });
+    });
+  };
 
   const { data: pending = [], isLoading: loadingPending } = useQuery({
-    queryKey: QUERY_KEYS.pending,
-    queryFn: () => ProfileVerificationAdminService.getPendingVerifications(),
+    queryKey: queryKey("pending"),
+    queryFn: () => VerificationAdminService.list("pending"),
   });
-
-  const { data: verified = [], isLoading: loadingVerified } = useQuery({
-    queryKey: QUERY_KEYS.verified,
-    queryFn: () => ProfileVerificationAdminService.getVerifiedProfiles(),
+  const { data: approved = [], isLoading: loadingApproved } = useQuery({
+    queryKey: queryKey("approved"),
+    queryFn: () => VerificationAdminService.list("approved"),
   });
-
   const { data: rejected = [], isLoading: loadingRejected } = useQuery({
-    queryKey: ["verifications", "rejected"],
-    queryFn: () => ProfileVerificationAdminService.getRejectedProfiles(),
+    queryKey: queryKey("rejected"),
+    queryFn: () => VerificationAdminService.list("rejected"),
   });
-
+  const { data: revoked = [], isLoading: loadingRevoked } = useQuery({
+    queryKey: queryKey("revoked"),
+    queryFn: () => VerificationAdminService.list("revoked"),
+  });
   const { data: stats } = useQuery({
-    queryKey: QUERY_KEYS.stats,
-    queryFn: () => ProfileVerificationAdminService.getVerificationStats(),
+    queryKey: queryKey("stats"),
+    queryFn: () => VerificationAdminService.getStats(),
   });
 
   const approveMutation = useMutation({
-    mutationFn: (profileId: string) => ProfileVerificationAdminService.approveVerification(profileId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pending });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.verified });
-      queryClient.invalidateQueries({ queryKey: ["verifications", "rejected"] });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.stats });
-      RELATED_QUERY_KEYS.forEach((queryKey) => {
-        queryClient.invalidateQueries({ queryKey });
-      });
+    mutationFn: (verificationId: string) =>
+      VerificationAdminService.review(verificationId, "approve"),
+    onSuccess: async () => {
+      await invalidateVerificationReads();
       toast.success("Verificacao aprovada com sucesso");
     },
     onError: (error) => {
@@ -62,16 +58,15 @@ export function useVerifications() {
   });
 
   const rejectMutation = useMutation({
-    mutationFn: ({ profileId, reason }: { profileId: string; reason?: string }) =>
-      ProfileVerificationAdminService.rejectVerification(profileId, reason),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pending });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.verified });
-      queryClient.invalidateQueries({ queryKey: ["verifications", "rejected"] });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.stats });
-      RELATED_QUERY_KEYS.forEach((queryKey) => {
-        queryClient.invalidateQueries({ queryKey });
-      });
+    mutationFn: ({
+      verificationId,
+      reason,
+    }: {
+      verificationId: string;
+      reason: string;
+    }) => VerificationAdminService.review(verificationId, "reject", reason),
+    onSuccess: async () => {
+      await invalidateVerificationReads();
       toast.success("Verificacao rejeitada");
     },
     onError: (error) => {
@@ -81,15 +76,15 @@ export function useVerifications() {
   });
 
   const revokeMutation = useMutation({
-    mutationFn: (profileId: string) => ProfileVerificationAdminService.revokeVerification(profileId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.verified });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pending });
-      queryClient.invalidateQueries({ queryKey: ["verifications", "rejected"] });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.stats });
-      RELATED_QUERY_KEYS.forEach((queryKey) => {
-        queryClient.invalidateQueries({ queryKey });
-      });
+    mutationFn: ({
+      verificationId,
+      reason,
+    }: {
+      verificationId: string;
+      reason: string;
+    }) => VerificationAdminService.review(verificationId, "revoke", reason),
+    onSuccess: async () => {
+      await invalidateVerificationReads();
       toast.success("Verificacao revogada");
     },
     onError: (error) => {
@@ -100,12 +95,14 @@ export function useVerifications() {
 
   return {
     pending,
-    verified,
+    approved,
     rejected,
+    revoked,
     stats,
     loadingPending,
-    loadingVerified,
+    loadingApproved,
     loadingRejected,
+    loadingRevoked,
     isApproving: approveMutation.isPending,
     isRejecting: rejectMutation.isPending,
     isRevoking: revokeMutation.isPending,
@@ -114,4 +111,3 @@ export function useVerifications() {
     revoke: revokeMutation.mutate,
   };
 }
-

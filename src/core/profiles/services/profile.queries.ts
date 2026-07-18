@@ -22,10 +22,7 @@ import type {
   ProfileSummaryExtended,
 } from "./types";
 import type { ProfileActivityStats } from "./ProfileOperationTypes";
-import type {
-  ProfileFilterRow,
-  VerificationWorkflowStatus,
-} from "./profile.service.types";
+import type { ProfileFilterRow } from "./profile.service.types";
 
 const TABLE = "profiles";
 const PUBLIC_PROFILE_VIEW = "public_profiles";
@@ -586,45 +583,7 @@ export async function getProfilesCreatedInPeriod(
   }
 }
 
-export async function getProfilesByVerificationStatus(
-  status: VerificationWorkflowStatus,
-  options?: {
-    limit?: number;
-    offset?: number;
-    orderBy?: "created_at" | "updated_at";
-  },
-): Promise<Profile[]> {
-  try {
-    let query = profileQueriesDb
-      .from<Profile>(TABLE)
-      .select(PUBLIC_PROFILE_COLUMNS)
-      .eq("verification_status", status)
-      .order(options?.orderBy ?? "updated_at", { ascending: false });
-
-    if (options?.limit) query = query.limit(options.limit);
-    if (options?.offset) {
-      query = query.range(options.offset, options.offset + (options.limit || 20) - 1);
-    }
-
-    const { data, error } = await query;
-    if (error) {
-      logger.error("Error fetching profiles by verification status:", error);
-      throw error;
-    }
-
-    return ((data ?? []) as unknown) as Profile[];
-  } catch (error) {
-    trackError(new Error("Error getting profiles by verification status"), {
-      component: "profile.queries",
-      action: "getProfilesByVerificationStatus",
-      metadata: { status, options, error },
-    });
-    throw error;
-  }
-}
-
 export {
-  getVerificationStats,
   getSuspendedUsers,
   resolveOwnedProfileIds,
   resolveProfileIdByUserId,

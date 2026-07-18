@@ -20,61 +20,6 @@ const errorMessage = (error: unknown, fallback: string): string =>
 
 export class AdminService {
   /**
-   * Verificar perfil (via edge function)
-   */
-  static async verifyProfile(profileId: string, reason?: string): Promise<ServiceResponse<{ profile_id: string }>> {
-    try {
-      const user = await SessionService.getCurrentUser();
-      
-      if (!user) {
-        return {
-          success: false,
-          error: 'Not authenticated',
-        };
-      }
-
-      const accessToken = SessionService.getAccessToken();
-      if (!accessToken) {
-        return {
-          success: false,
-          error: 'No session token available',
-        };
-      }
-
-      const response = await fetch(
-        buildSupabaseFunctionUrl('admin-verify-profile'),
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            profile_id: profileId,
-            reason,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return {
-          success: false,
-          error: data.error || 'Failed to verify profile',
-        };
-      }
-
-      return data;
-    } catch (error: unknown) {
-      return {
-        success: false,
-        error: errorMessage(error, 'Failed to verify profile'),
-      };
-    }
-  }
-
-  /**
    * Suspender perfil (via edge function)
    */
   static async suspendProfile(profileId: string, reason: string): Promise<ServiceResponse<{ profile_id: string }>> {

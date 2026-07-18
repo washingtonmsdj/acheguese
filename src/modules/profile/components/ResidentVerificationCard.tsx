@@ -22,8 +22,9 @@ import { Home, Upload, CheckCircle, Clock, XCircle, FileCheck, Search, MapPin } 
 import { VerificationService } from "@/core/verification/services/VerificationService";
 import { mediaService } from "@/core/media/services/MediaService";
 import { useResidentAddress } from "@/core/address/hooks/useResidentAddress";
+import type { ProfileVerificationStatus } from "@/core/verification/verificationStatus";
 
-export type VerificationStatus = "not_requested" | "pending" | "approved" | "rejected";
+export type VerificationStatus = ProfileVerificationStatus;
 
 interface ResidentVerificationCardProps {
   profileId: string;
@@ -113,7 +114,7 @@ export function ResidentVerificationCard({
       ]);
 
       // 3. Criar solicitação de verificação vinculada ao endereço
-      const verificationResult = await VerificationService.createVerificationRequest({
+      await VerificationService.createVerificationRequest({
         profile_id: profileId,
         verification_type: "resident",
         document_url: proofUrl,
@@ -128,8 +129,6 @@ export function ResidentVerificationCard({
           .filter(Boolean)
           .join("\n") || undefined,
       });
-
-      if (!verificationResult.success) throw new Error(verificationResult.error);
 
       setStatus("pending");
       onStatusChange?.("pending");

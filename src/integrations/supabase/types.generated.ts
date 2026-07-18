@@ -16503,15 +16503,13 @@ export type Database = {
           id: string
           notes: string | null
           profile_id: string
-          rejection_reason: string | null
+          review_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          status: string
           submitted_at: string
           updated_at: string
           verification_type: string
-          verified: boolean
-          verified_at: string | null
-          verified_by: string | null
         }
         Insert: {
           created_at?: string
@@ -16520,15 +16518,13 @@ export type Database = {
           id?: string
           notes?: string | null
           profile_id: string
-          rejection_reason?: string | null
+          review_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          status?: string
           submitted_at?: string
           updated_at?: string
           verification_type: string
-          verified?: boolean
-          verified_at?: string | null
-          verified_by?: string | null
         }
         Update: {
           created_at?: string
@@ -16537,15 +16533,13 @@ export type Database = {
           id?: string
           notes?: string | null
           profile_id?: string
-          rejection_reason?: string | null
+          review_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          status?: string
           submitted_at?: string
           updated_at?: string
           verification_type?: string
-          verified?: boolean
-          verified_at?: string | null
-          verified_by?: string | null
         }
         Relationships: [
           {
@@ -17522,22 +17516,7 @@ export type Database = {
           verified_at: string | null
           website: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "fk_profiles_location_id"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profiles_location_id_fkey"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       public_work_opportunity_search: {
         Row: {
@@ -20480,6 +20459,16 @@ export type Database = {
           ride_id: string
         }[]
       }
+      profile_public_territory_projection: {
+        Args: { p_profile_id: string }
+        Returns: {
+          city: string
+          location_id: string
+          neighborhood: string
+          public_location_visibility: string
+          state: string
+        }
+      }
       profile_rpc_create_profile_with_extension: {
         Args: {
           p_actor_user_id: string
@@ -20684,6 +20673,16 @@ export type Database = {
       }
       request_ad_campaign: { Args: { payload: Json }; Returns: string }
       request_communication_channel: { Args: { payload: Json }; Returns: Json }
+      request_profile_verification: {
+        Args: {
+          p_document_type?: string
+          p_document_url?: string
+          p_notes?: string
+          p_profile_id: string
+          p_verification_type: string
+        }
+        Returns: Json
+      }
       reserve_media_asset_upload: {
         Args: {
           p_asset_id: string
@@ -20745,6 +20744,15 @@ export type Database = {
           p_reason: string
           p_target_id: string
           p_target_type: string
+        }
+        Returns: Json
+      }
+      review_profile_verification: {
+        Args: {
+          p_actor_user_id: string
+          p_decision: string
+          p_reason?: string
+          p_verification_id: string
         }
         Returns: Json
       }
@@ -20911,6 +20919,14 @@ export type Database = {
       set_current_user_business_favorite: {
         Args: { p_business_id: string; p_favorited: boolean }
         Returns: boolean
+      }
+      set_profile_verification_badge: {
+        Args: {
+          p_actor_user_id: string
+          p_profile_id: string
+          p_reason?: string
+        }
+        Returns: Json
       }
       set_review_helpfulness: {
         Args: {

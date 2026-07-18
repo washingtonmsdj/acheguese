@@ -42,14 +42,6 @@ export {
 } from "./profile.mutations";
 
 // ============================================================
-// Specialized services
-// ============================================================
-export {
-  ProfileVerificationAdminService,
-  profileVerificationAdminService,
-} from "./ProfileVerificationAdminService";
-
-// ============================================================
 // Types
 // ============================================================
 export type {
@@ -78,8 +70,3 @@ export type {
   ProfilePrivacySettingsInput,
   ProfileVerificationStatus,
 } from "./types";
-
-export type {
-  PendingVerification,
-  VerificationStats,
-} from "./ProfileVerificationAdminService";

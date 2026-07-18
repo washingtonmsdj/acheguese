@@ -92,16 +92,30 @@ export class DriverModerationEventsService {
 
     const { error } = await supabase.from("driver_moderation_events").insert(payload);
 
-    if (error) {
-      if (isMissingTableError(error)) {
-        logger.warn(
-          "[DriverModerationEventsService] tabela driver_moderation_events ausente. Aplicar migration 20260419160000_create_driver_moderation_events.sql",
-        );
-        return;
-      }
+    if (error) throw error;
+  }
 
-      logger.warn("DriverModerationEventsService.createEvent", error);
+  static async listLatestDecisionsByDriverProfiles(
+    driverProfileIds: string[],
+  ): Promise<Map<string, DriverModerationEvent>> {
+    if (driverProfileIds.length === 0) return new Map();
+
+    const { data, error } = await supabase
+      .from("driver_moderation_events")
+      .select("id, driver_profile_id, admin_profile_id, action, reason, metadata, created_at")
+      .in("driver_profile_id", driverProfileIds)
+      .in("action", ["approved", "rejected"])
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    const latest = new Map<string, DriverModerationEvent>();
+    for (const event of (data ?? []) as DriverModerationEvent[]) {
+      if (!latest.has(event.driver_profile_id)) {
+        latest.set(event.driver_profile_id, event);
+      }
     }
+    return latest;
   }
 
   static async listByDriverProfile(driverProfileId: string): Promise<DriverModerationEvent[]> {

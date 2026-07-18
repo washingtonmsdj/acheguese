@@ -76,18 +76,14 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
     reason?: string;
     metadata?: Record<string, unknown>;
   }) => {
-    try {
-      const adminProfile = await profileService.getActiveProfile();
-      await adminMobilityRuntimeService.createDriverModerationEvent({
-        driverProfileId: params.driverProfileId,
-        adminProfileId: adminProfile?.id ?? null,
-        action: params.action,
-        reason: params.reason,
-        metadata: params.metadata,
-      });
-    } catch (error) {
-      logger.warn("useDriverManagement.appendModerationEvent", error);
-    }
+    const adminProfile = await profileService.getActiveProfile();
+    await adminMobilityRuntimeService.createDriverModerationEvent({
+      driverProfileId: params.driverProfileId,
+      adminProfileId: adminProfile?.id ?? null,
+      action: params.action,
+      reason: params.reason,
+      metadata: params.metadata,
+    });
   };
 
   useEffect(() => {
@@ -204,7 +200,6 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
   const handleApprove = async (driver: DriverRequest) => {
     setProcessing(true);
     try {
-      await profileService.approveVerification(driver.profile_id);
       await appendModerationEvent({
         driverProfileId: driver.profile_id,
         action: "approved",
@@ -238,16 +233,15 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
 
     setProcessing(true);
     try {
-      await profileService.rejectVerification(driver.profile_id, reason.trim());
-      await adminMobilityRuntimeService.updateDriverOnlineStatus(driver.profile_id, false).catch((err) =>
-        logger.warn("useDriverManagement.handleReject - online status fallback", err),
-      );
       await appendModerationEvent({
         driverProfileId: driver.profile_id,
         action: "rejected",
         reason: reason.trim(),
         metadata: { forced_offline: true },
       });
+      await adminMobilityRuntimeService.updateDriverOnlineStatus(driver.profile_id, false).catch((err) =>
+        logger.warn("useDriverManagement.handleReject - online status fallback", err),
+      );
 
       toast({
         title: "Cadastro rejeitado",

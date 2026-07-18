@@ -3,7 +3,6 @@ import type {
   ProfileContext,
   ProfileRow as Profile,
 } from "./types";
-import type { VerificationWorkflowStatus } from "./profile.service.types";
 import type {
   ProfilePermissions,
   ProfilePlan,
@@ -40,9 +39,8 @@ export function mapProfileContext(params: {
   permissions: ProfilePermissions;
   plan: ProfilePlan;
   reputation: ProfileReputation;
-  verification: VerificationWorkflowStatus | null;
 }): ProfileContext {
-  const { profile, status, permissions, plan, reputation, verification } = params;
+  const { profile, status, permissions, plan, reputation } = params;
   return {
     id: profile.id,
     name: profile.name,
@@ -53,6 +51,6 @@ export function mapProfileContext(params: {
     permissions,
     plan,
     reputation,
-    verified: profile.verified || verification === "verified" || false,
+    verified: Boolean(profile.verified),
   };
 }

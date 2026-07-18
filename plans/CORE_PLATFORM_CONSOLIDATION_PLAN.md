@@ -594,11 +594,26 @@ boundary publica minima `profile_public_territory_projection`: a view continua
 reaplica os filtros de perfil publico.
 Evidencia: `docs/audits/PROFILE_PII_READ_BOUNDARY_2026-07-18.md`.
 
-Proxima ordem: corrigir ou remover o workflow legado de verificacao de Profile,
-que ainda referencia colunas inexistentes (`verification_status`,
-`verification_requested_at`, `verified_by` e
-`verification_rejection_reason`) e hoje degrada para listas vazias. Depois,
-continuar as suites unitarias, integracao, RLS e E2E dos demais dominios,
+Quinto checkpoint em 2026-07-18: o workflow legado de verificacao foi removido
+de Profile. A migration `20260718150000` formalizou `public.verification` como
+SSOT, migrou o lifecycle para `pending/approved/rejected/revoked`, removeu os
+campos redundantes e criou auditoria privada. Solicitacoes sao actor-bound;
+revisoes passam pelo broker admin e por RPCs exclusivas de `service_role`.
+`profiles.verified` agora e somente a projecao do selo de identidade, e
+verificacao de moradia nao concede esse selo. Admin, Conta e tipos gerados foram
+migrados; a moderacao de motoristas passou a derivar seu estado da trilha
+canonica `driver_moderation_events`, sem reutilizar verificacao de Profile.
+O complemento `20260718163000` serializou as decisoes, restringiu aprovacao e
+rejeicao a solicitacoes pendentes e revogacao a aprovacoes existentes. Rejeicao
+e revogacao exigem motivo auditavel. O painel agora lista todos os estados e
+permite revogar sem escrita administrativa direta no browser. Migration e Edge
+Function foram publicadas; probes anonimos receberam `401` no broker, nas RPCs
+e na escrita direta de `verification`. Typecheck, lint, build, SSOT, arquitetura,
+Security Authority e auditoria de RPC privilegiada passaram.
+Evidencia: `docs/architecture/PROFILE_VERIFICATION_SSOT.md` e
+`tests/architecture/profile-verification-ssot.test.ts`.
+
+Proxima ordem: continuar as suites unitarias, integracao, RLS e E2E dos demais dominios,
 registrando qualquer gap real antes de alterar implementacao. Auditar os
 contratos publicos de contato proprios de Professional e Business para
 garantir que usem seus owners, consentimento e payloads de detalhe, sem voltar a

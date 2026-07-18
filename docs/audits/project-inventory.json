@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-18T02:20:29.852Z",
+  "generatedAt": "2026-07-18T08:40:00.239Z",
   "inventories": [
     {
       "domain": "core/routing/location/public-identity",
@@ -150,7 +150,6 @@
         "src/core/profiles/services/ProfileOperationTypes.ts",
         "src/core/profiles/services/ProfileRpcService.ts",
         "src/core/profiles/services/ProfileService.ts",
-        "src/core/profiles/services/ProfileVerificationAdminService.ts",
         "src/core/profiles/services/__tests__/profile.workspace.business-modules.spec.ts",
         "src/core/profiles/services/index.ts",
         "src/core/profiles/services/multi-profile/adminService.ts",
@@ -227,6 +226,7 @@
         "src/core/profiles/hooks/useProfileLocation.ts",
         "src/core/profiles/hooks/useProfileMembers.ts",
         "src/core/profiles/hooks/useProfiles.ts",
+        "src/core/profiles/hooks/useVisibleProfileContact.ts",
         "src/core/residence/hooks/useResidence.ts",
         "src/core/residence/hooks/useResidenceLocalityResolution.ts",
         "src/core/residence/hooks/useResidenceManager.ts",
@@ -302,6 +302,8 @@
         "src/core/admin/services/admin.queries.ts",
         "src/core/admin/services/index.ts",
         "src/core/admin/services/types.ts",
+        "src/core/verification/services/VerificationAdminService.ts",
+        "src/core/verification/services/VerificationService.test.ts",
         "src/core/verification/services/VerificationService.ts",
         "src/core/verification/services/index.ts",
         "src/modules/admin/services/LocationAdminService.ts",
@@ -421,7 +423,8 @@
         "ride_state_audit",
         "tourist_points",
         "user_residences",
-        "user_subscriptions"
+        "user_subscriptions",
+        "verification"
       ],
       "rpcs": [
         "get_community_alert_admin_stats",
@@ -430,7 +433,8 @@
         "get_community_rpc_slo_status",
         "increment_promotion_usage",
         "list_community_alert_audit",
-        "list_community_issue_audit"
+        "list_community_issue_audit",
+        "request_profile_verification"
       ],
       "officialHooks": [
         "src/core/admin/drivers/hooks/useDriverManagement.ts",
@@ -1701,9 +1705,12 @@
         "src/core/classifieds/services/ClassifiedsRolloutService.ts",
         "src/core/classifieds/services/__tests__/ClassifiedReportService.spec.ts",
         "src/core/classifieds/services/__tests__/ClassifiedUrlService.spec.ts",
+        "src/core/classifieds/services/__tests__/classifieds.persistence.spec.ts",
         "src/core/classifieds/services/classifieds.mappers.ts",
         "src/core/classifieds/services/classifieds.mutations.ts",
         "src/core/classifieds/services/classifieds.queries.ts",
+        "src/core/classifieds/services/classifieds.read-model.ts",
+        "src/core/classifieds/services/classifieds.write-model.ts",
         "src/core/classifieds/services/index.ts",
         "src/core/classifieds/services/types.ts",
         "src/modules/classifieds/jobs/services/AdminVagasService.ts",
@@ -1773,7 +1780,6 @@
         "src/modules/classifieds/hooks/useClassifiedsLocation.ts",
         "src/modules/classifieds/hooks/useClassifiedsRollout.ts",
         "src/modules/classifieds/hooks/useNeighborhoodsWithClassifieds.ts",
-        "src/modules/classifieds/hooks/useNovoClassificado.ts",
         "src/modules/classifieds/hooks/useSellerAds.ts",
         "src/modules/classifieds/hooks/useSellerReputation.ts",
         "src/modules/classifieds/hooks/useVendedorPerfil.ts",

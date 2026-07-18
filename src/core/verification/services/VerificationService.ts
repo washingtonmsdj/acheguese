@@ -1,62 +1,14 @@
 /**
- * VerificationService - SSOT para verificações de perfil
- *
- * Responsável por gerenciar:
- * - Verificações de email, telefone, documentos
- * - Verificação de morador
- * - Verificação de negócios
- *
- * Arquitetura: Component → Hook → VerificationService → Supabase
+ * Owner-facing API for the canonical profile-verification aggregate.
+ * Administrative reads and decisions belong to VerificationAdminService.
  */
-
 import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
-import { logger } from "@/shared/utils/logger";
-
-interface QueryResult<T> {
-  data: T | null;
-  error: { message: string; code?: string } | null;
-}
-
-interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
-  select: (columns?: string) => QueryBuilder<TRow>;
-  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
-  update: (values: unknown) => QueryBuilder<TRow>;
-  delete: () => QueryBuilder<TRow>;
-  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
-  is: (column: string, value: unknown) => QueryBuilder<TRow>;
-  order: (column: string, options?: { ascending?: boolean }) => QueryBuilder<TRow>;
-  single: () => Promise<QueryResult<TRow>>;
-  maybeSingle: () => Promise<QueryResult<TRow>>;
-}
-
-interface VerificationDbClient {
-  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
-}
-
-const verificationDb = supabase as unknown as VerificationDbClient;
-
-export type VerificationType =
-  | "email"
-  | "phone"
-  | "document"
-  | "resident"
-  | "business";
-
-export interface Verification {
-  id: string;
-  profile_id: string;
-  verified: boolean;
-  verification_type: VerificationType;
-  verified_at: string | null;
-  verified_by: string | null;
-  document_url: string | null;
-  document_type: string | null;
-  notes: string | null;
-  rejection_reason: string | null;
-  created_at: string;
-  updated_at: string;
-}
+import type {
+  Verification,
+  VerificationRequestResult,
+  VerificationType,
+} from "@/core/verification/types";
 
 export interface CreateVerificationParams {
   profile_id: string;
@@ -66,360 +18,86 @@ export interface CreateVerificationParams {
   notes?: string;
 }
 
-export interface ApproveVerificationParams {
-  profile_id: string;
-  verification_type: VerificationType;
-  verified_by: string;
-  notes?: string;
+function reportFailure(action: string, error: unknown, metadata?: Record<string, unknown>): void {
+  trackError(error instanceof Error ? error : new Error(String(error)), {
+    component: "VerificationService",
+    action,
+    metadata,
+  });
 }
 
-export interface RejectVerificationParams {
-  profile_id: string;
-  verification_type: VerificationType;
-  rejection_reason: string;
-  verified_by: string;
-}
-
-type VerificationRow = Verification;
-
-interface VerificationStatsRow {
-  verified: boolean | null;
-  verification_type: VerificationType;
-  rejection_reason: string | null;
-}
-
-/**
- * Serviço de Verificações - SSOT
- */
 export class VerificationService {
-  /**
-   * Busca todas as verificações de um perfil
-   */
-  static async getProfileVerifications(
-    profileId: string,
-  ): Promise<Verification[]> {
-    try {
-      const { data, error } = await verificationDb
-        .from<VerificationRow>("verification")
-        .select("*")
-        .eq("profile_id", profileId)
-        .order("created_at", { ascending: false });
+  static async getProfileVerifications(profileId: string): Promise<Verification[]> {
+    const { data, error } = await supabase
+      .from("verification")
+      .select(
+        "id, profile_id, verification_type, status, document_url, document_type, notes, review_reason, submitted_at, reviewed_at, reviewed_by, created_at, updated_at",
+      )
+      .eq("profile_id", profileId)
+      .order("submitted_at", { ascending: false });
 
-      if (error) throw error;
-
-      return ((data || []) as unknown as Verification[]);
-    } catch (error) {
-      trackError(error as Error, {
-        component: "VerificationService",
-        action: "getProfileVerifications",
-        metadata: { profileId },
-      });
-      return [];
+    if (error) {
+      reportFailure("getProfileVerifications", error, { profileId });
+      throw error;
     }
+
+    return (data ?? []) as Verification[];
   }
 
-  /**
-   * Busca uma verificação específica
-   */
   static async getVerification(
     profileId: string,
     verificationType: VerificationType,
   ): Promise<Verification | null> {
-    try {
-      const { data, error } = await verificationDb
-        .from<VerificationRow>("verification")
-        .select("*")
-        .eq("profile_id", profileId)
-        .eq("verification_type", verificationType)
-        .maybeSingle();
+    const { data, error } = await supabase
+      .from("verification")
+      .select(
+        "id, profile_id, verification_type, status, document_url, document_type, notes, review_reason, submitted_at, reviewed_at, reviewed_by, created_at, updated_at",
+      )
+      .eq("profile_id", profileId)
+      .eq("verification_type", verificationType)
+      .maybeSingle();
 
-      if (error && error.code !== "PGRST116") {
-        throw error;
-      }
-
-      return (data as unknown as Verification | null);
-    } catch (error) {
-      trackError(error as Error, {
-        component: "VerificationService",
-        action: "getVerification",
-        metadata: { profileId, verificationType },
-      });
-      return null;
+    if (error) {
+      reportFailure("getVerification", error, { profileId, verificationType });
+      throw error;
     }
+
+    return data as Verification | null;
   }
 
-  /**
-   * Verifica se um perfil tem uma verificação específica aprovada
-   */
   static async isVerified(
     profileId: string,
     verificationType: VerificationType,
   ): Promise<boolean> {
-    try {
-      const verification = await this.getVerification(
-        profileId,
-        verificationType,
-      );
-      return verification?.verified || false;
-    } catch (error) {
-      trackError(error as Error, {
-        component: "VerificationService",
-        action: "isVerified",
-        metadata: { profileId, verificationType },
-      });
-      return false;
-    }
+    const verification = await this.getVerification(profileId, verificationType);
+    return verification?.status === "approved";
   }
 
-  /**
-   * Cria uma solicitação de verificação
-   */
   static async createVerificationRequest(
     params: CreateVerificationParams,
-  ): Promise<{
-    success: boolean;
-    verification?: Verification;
-    error?: string;
-  }> {
-    try {
-      const { data, error } = await verificationDb
-        .from<VerificationRow>("verification")
-        .insert({
-          profile_id: params.profile_id,
-          verification_type: params.verification_type,
-          document_url: params.document_url || null,
-          document_type: params.document_type || null,
-          notes: params.notes || null,
-          verified: false,
-        })
-        .select()
-        .single();
+  ): Promise<VerificationRequestResult> {
+    const { data, error } = await supabase.rpc("request_profile_verification", {
+      p_profile_id: params.profile_id,
+      p_verification_type: params.verification_type,
+      p_document_url: params.document_url ?? null,
+      p_document_type: params.document_type ?? null,
+      p_notes: params.notes ?? null,
+    });
 
-      if (error) {
-        // Se já existe, retornar a existente
-        if (error.code === "23505") {
-          const existing = await this.getVerification(
-            params.profile_id,
-            params.verification_type,
-          );
-          return { success: true, verification: existing || undefined };
-        }
-        throw error;
-      }
-
-      logger.info("Verification request created", {
+    if (error) {
+      reportFailure("createVerificationRequest", error, {
         profileId: params.profile_id,
-        type: params.verification_type,
+        verificationType: params.verification_type,
       });
-
-      return { success: true, verification: data as unknown as Verification };
-    } catch (error) {
-      const err = error as Error;
-      trackError(err, {
-        component: "VerificationService",
-        action: "createVerificationRequest",
-        metadata: { ...params },
-      });
-      return { success: false, error: err.message };
+      throw error;
     }
-  }
 
-  /**
-   * Aprova uma verificação (admin)
-   */
-  static async approveVerification(
-    params: ApproveVerificationParams,
-  ): Promise<{ success: boolean; error?: string }> {
-    try {
-      const { error } = await verificationDb
-        .from<VerificationRow>("verification")
-        .update({
-          verified: true,
-          verified_at: new Date().toISOString(),
-          verified_by: params.verified_by,
-          notes: params.notes || null,
-          rejection_reason: null,
-        })
-        .eq("profile_id", params.profile_id)
-        .eq("verification_type", params.verification_type);
-
-      if (error) throw error;
-
-      logger.info("Verification approved", {
-        profileId: params.profile_id,
-        type: params.verification_type,
-        by: params.verified_by,
-      });
-
-      return { success: true };
-    } catch (error) {
-      const err = error as Error;
-      trackError(err, {
-        component: "VerificationService",
-        action: "approveVerification",
-        metadata: { ...params },
-      });
-      return { success: false, error: err.message };
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      throw new Error("Invalid profile verification response");
     }
-  }
 
-  /**
-   * Rejeita uma verificação (admin)
-   */
-  static async rejectVerification(
-    params: RejectVerificationParams,
-  ): Promise<{ success: boolean; error?: string }> {
-    try {
-      const { error } = await verificationDb
-        .from<VerificationRow>("verification")
-        .update({
-          verified: false,
-          verified_at: null,
-          verified_by: params.verified_by,
-          rejection_reason: params.rejection_reason,
-        })
-        .eq("profile_id", params.profile_id)
-        .eq("verification_type", params.verification_type);
-
-      if (error) throw error;
-
-      logger.info("Verification rejected", {
-        profileId: params.profile_id,
-        type: params.verification_type,
-        by: params.verified_by,
-        reason: params.rejection_reason,
-      });
-
-      return { success: true };
-    } catch (error) {
-      const err = error as Error;
-      trackError(err, {
-        component: "VerificationService",
-        action: "rejectVerification",
-        metadata: { ...params },
-      });
-      return { success: false, error: err.message };
-    }
-  }
-
-  /**
-   * Lista todas as verificações pendentes (admin)
-   */
-  static async getPendingVerifications(
-    verificationType?: VerificationType,
-  ): Promise<Verification[]> {
-    try {
-      let query = verificationDb
-        .from<VerificationRow>("verification")
-        .select("*")
-        .eq("verified", false)
-        .is("rejection_reason", null)
-        .order("created_at", { ascending: true });
-
-      if (verificationType) {
-        query = query.eq("verification_type", verificationType);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      return ((data || []) as unknown as Verification[]);
-    } catch (error) {
-      trackError(error as Error, {
-        component: "VerificationService",
-        action: "getPendingVerifications",
-        metadata: { verificationType },
-      });
-      return [];
-    }
-  }
-
-  /**
-   * Busca estatísticas de verificações (admin)
-   */
-  static async getVerificationStats(): Promise<{
-    total: number;
-    verified: number;
-    pending: number;
-    rejected: number;
-    by_type: Record<VerificationType, number>;
-  }> {
-    try {
-      const { data, error } = await verificationDb
-        .from<VerificationStatsRow>("verification")
-        .select("verified, verification_type, rejection_reason");
-
-      if (error) throw error;
-
-      const rows = (data || []) as VerificationStatsRow[];
-      const stats = {
-        total: rows.length,
-        verified: rows.filter((v) => v.verified).length,
-        pending:
-          rows.filter((v) => !v.verified && !v.rejection_reason).length,
-        rejected: rows.filter((v) => v.rejection_reason).length,
-        by_type: {} as Record<VerificationType, number>,
-      };
-
-      // Contar por tipo
-      const typeCounter = new Map<VerificationType, number>();
-      rows.forEach((v) => {
-        const type = v.verification_type;
-        const currentCount = typeCounter.get(type) ?? 0;
-        typeCounter.set(type, currentCount + 1);
-      });
-      stats.by_type = Object.fromEntries(typeCounter.entries()) as Record<
-        VerificationType,
-        number
-      >;
-
-      return stats;
-    } catch (error) {
-      trackError(error as Error, {
-        component: "VerificationService",
-        action: "getVerificationStats",
-      });
-      return {
-        total: 0,
-        verified: 0,
-        pending: 0,
-        rejected: 0,
-        by_type: {} as Record<VerificationType, number>,
-      };
-    }
-  }
-
-  /**
-   * Remove uma verificação
-   */
-  static async deleteVerification(
-    profileId: string,
-    verificationType: VerificationType,
-  ): Promise<{ success: boolean; error?: string }> {
-    try {
-      const { error } = await verificationDb
-        .from<VerificationRow>("verification")
-        .delete()
-        .eq("profile_id", profileId)
-        .eq("verification_type", verificationType);
-
-      if (error) throw error;
-
-      logger.info("Verification deleted", { profileId, verificationType });
-      return { success: true };
-    } catch (error) {
-      const err = error as Error;
-      trackError(err, {
-        component: "VerificationService",
-        action: "deleteVerification",
-        metadata: { profileId, verificationType },
-      });
-      return { success: false, error: err.message };
-    }
+    return data as unknown as VerificationRequestResult;
   }
 }
 
-// Export singleton
 export const verificationService = VerificationService;
-

@@ -11,6 +11,7 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { adminRolesService } from "./AdminRolesService";
+import { VerificationAdminService } from "@/core/verification";
 
 export interface AdminUser {
   /** ID do auth.users */
@@ -142,12 +143,10 @@ export class AdminUserService {
    * ✅ Usa supabase normal com RLS (admin tem permissão)
    */
   static async verifyUser(profileId: string): Promise<void> {
-    const { error } = await supabase
-      .from("profiles")
-      .update({ verified: true, verified_at: new Date().toISOString() })
-      .eq("id", profileId);
-
-    if (error) throw error;
+    await VerificationAdminService.verifyProfile(
+      profileId,
+      "Aprovacao administrativa pelo painel de usuarios",
+    );
   }
 
   /**
