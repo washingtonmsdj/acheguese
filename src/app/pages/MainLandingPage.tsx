@@ -11,6 +11,7 @@ import {
   Home as HomeIcon,
   MapPin,
   Megaphone,
+  MessageCircle,
   MoreHorizontal,
   PawPrint,
   Search,
@@ -590,25 +591,29 @@ function CommunityActivityPanel({ activities }: { activities: HomeCommunityActiv
       <div className="home-community-activity-list">
         {activities.map((activity) => (
           <article key={activity.id} className="home-community-activity-item">
-            <img src={homeAvatarsByKey[activity.avatarKey]} alt="" />
-            <span className="home-community-activity-copy">
+            <img className="home-community-activity-avatar" src={homeAvatarsByKey[activity.avatarKey]} alt="" />
+            <div className="home-community-activity-copy">
               <strong>
-                {activity.author}
+                <span className="home-community-activity-author">{activity.author}</span>
                 <small>{activity.community}</small>
                 {activity.verified ? <ShieldCheck aria-label="Perfil verificado" /> : null}
               </strong>
-              <span>{activity.text}</span>
-            </span>
-            <span className="home-community-activity-meta">
-              <small>{activity.time}</small>
-              <span>{activity.comments}</span>
-            </span>
+              <p>{activity.text}</p>
+            </div>
             {activity.imageKey ? (
               <img className="home-community-activity-preview" src={homeImagesByKey[activity.imageKey]} alt="" />
             ) : null}
+            <div className="home-community-activity-meta">
+              <small>{activity.time}</small>
+              <span aria-label={`${activity.comments} comentários`}>
+                <MessageCircle aria-hidden="true" />
+                {activity.comments}
+              </span>
+            </div>
           </article>
         ))}
       </div>
+
     </section>
   );
 }
