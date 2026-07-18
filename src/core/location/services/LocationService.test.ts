@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * @fileoverview Testes unitários para LocationService
  * @module core/location/services/LocationService.test
