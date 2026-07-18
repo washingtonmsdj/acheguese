@@ -11,6 +11,7 @@ import {
   Home as HomeIcon,
   MapPin,
   Megaphone,
+  MessageCircle,
   MoreHorizontal,
   PawPrint,
   Search,
