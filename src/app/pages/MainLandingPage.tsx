@@ -614,50 +614,83 @@ function isExternalHref(href: string): boolean {
   return /^https?:\/\//i.test(href);
 }
 
-function SponsoredPanel({ items }: { items: HomeSponsoredItem[] }) {
+function SponsoredSkeleton() {
+  return (
+    <div className="home-sponsored-list" aria-hidden="true">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="home-sponsored-item is-skeleton">
+          <span className="home-skel home-skel-thumb" />
+          <span className="home-sponsored-skel-copy">
+            <span className="home-skel home-skel-line" style={{ width: "72%" }} />
+            <span className="home-skel home-skel-line" style={{ width: "48%" }} />
+            <span className="home-skel home-skel-line" style={{ width: "88%" }} />
+          </span>
+          <span className="home-skel home-skel-badge" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SponsoredPanel({
+  items,
+  isLoading,
+}: {
+  items: HomeSponsoredItem[];
+  isLoading?: boolean;
+}) {
   return (
     <section className="home-panel home-sponsored-panel" aria-labelledby="sponsored-title">
       <div className="home-panel-heading">
         <h2 id="sponsored-title">Anúncios de empresas locais</h2>
         <Link to={LAUNCH_URLS.business}>Ver todos</Link>
       </div>
-      {items.length === 0 ? (
+      {isLoading ? (
+        <SponsoredSkeleton />
+      ) : items.length === 0 ? (
         <div className="home-sponsored-empty">
-          <strong>Sem anuncios ativos</strong>
-          <small>Campanhas aprovadas aparecem aqui quando estiverem ativas.</small>
+          <span className="home-sponsored-empty-icon" aria-hidden="true">
+            <Megaphone />
+          </span>
+          <strong>Sem anúncios ativos</strong>
+          <small>Campanhas aprovadas aparecem aqui assim que forem publicadas.</small>
+          <Link to={LAUNCH_URLS.business} className="home-sponsored-empty-cta">
+            Anunciar meu negócio
+          </Link>
         </div>
-      ) : null}
-      <div className="home-sponsored-list">
-        {items.map((item) => {
-          const content = (
-            <>
-              <img src={item.imageUrl || homeImagesByKey[item.imageKey]} alt="" />
-              <span>
-                <strong>{item.title}</strong>
-                <small>{item.community}</small>
-                <em>{item.description}</em>
-              </span>
-              <b>Patrocinado</b>
-            </>
-          );
+      ) : (
+        <div className="home-sponsored-list">
+          {items.map((item) => {
+            const content = (
+              <>
+                <img src={item.imageUrl || homeImagesByKey[item.imageKey]} alt="" />
+                <span>
+                  <strong>{item.title}</strong>
+                  <small>{item.community}</small>
+                  <em>{item.description}</em>
+                </span>
+                <b>Patrocinado</b>
+              </>
+            );
 
-          return isExternalHref(item.href) ? (
-            <a
-              key={item.id}
-              href={item.href}
-              className="home-sponsored-item"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {content}
-            </a>
-          ) : (
-            <Link key={item.id} to={item.href} className="home-sponsored-item">
-              {content}
-            </Link>
-          );
-        })}
-      </div>
+            return isExternalHref(item.href) ? (
+              <a
+                key={item.id}
+                href={item.href}
+                className="home-sponsored-item"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {content}
+              </a>
+            ) : (
+              <Link key={item.id} to={item.href} className="home-sponsored-item">
+                {content}
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }
