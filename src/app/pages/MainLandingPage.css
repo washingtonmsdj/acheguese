@@ -928,16 +928,15 @@ body:has(.home-concept) {
   position: relative;
   display: grid;
   min-width: 0;
-  grid-template-columns: 40px minmax(0, 1fr) auto;
-  grid-template-areas:
-    "avatar body meta"
-    "avatar preview preview";
+  grid-template-columns: 40px minmax(0, 1fr) 72px auto;
+  grid-template-areas: "avatar body preview meta";
   column-gap: 12px;
-  row-gap: 8px;
+  row-gap: 6px;
   align-items: start;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding: 14px 0;
 }
+
 
 .home-community-activity-item:first-child {
   border-top: 0;
