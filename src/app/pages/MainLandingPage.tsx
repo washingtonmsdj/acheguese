@@ -928,7 +928,7 @@ export default function MainLandingPage() {
           </aside>
         </section>
 
-        <StatsBar stats={homeStats} />
+        
       </div>
     </main>
   );
