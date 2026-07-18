@@ -1602,13 +1602,17 @@ body:has(.home-concept) {
     scroll-snap-align: none;
   }
 
-  .home-featured-community-grid,
-  .home-happening-grid {
+  .home-featured-community-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+  .home-happening-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    justify-content: start;
+  }
+
   .home-module-tile-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   }
 
   .home-suggestion-list {
@@ -1718,7 +1722,7 @@ body:has(.home-concept) {
   }
 
   .home-stats {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   }
 
   .home-stat-item {
@@ -1780,7 +1784,7 @@ body:has(.home-concept) {
   }
 
   .home-module-tile-grid {
-    grid-template-columns: repeat(8, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   }
 
   .home-happening-panel,
