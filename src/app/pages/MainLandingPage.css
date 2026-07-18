@@ -2178,7 +2178,8 @@ body:has(.home-concept) {
 /* Small-screen layout: keep avatar/body/meta stable, tuck the preview neatly */
 @media (max-width: 520px) {
   .home-community-activity-item {
-    grid-template-columns: 36px minmax(0, 1fr) auto;
+    grid-template-columns: 36px minmax(0, 1fr) 56px auto;
+    grid-template-areas: "avatar body preview meta";
     column-gap: 10px;
     padding: 12px 0;
   }
@@ -2195,13 +2196,14 @@ body:has(.home-concept) {
 
   .home-community-activity-copy p {
     font-size: 0.76rem;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
   }
 
   .home-community-activity-preview {
-    max-height: 96px;
-    margin-top: 2px;
+    max-height: 56px;
+    height: 56px;
   }
+
 
   .home-community-activity-meta {
     font-size: 0.7rem;
