@@ -91,7 +91,7 @@ describe("GastronomyCheckoutSheet", () => {
     handleUseSavedResidence: vi.fn(),
   };
 
-  const businessMock: GastronomyBusiness = {
+  const businessMock = {
     business_data_id: "business-1",
     name: "Loja Teste",
     slug: "loja-teste",
@@ -121,7 +121,7 @@ describe("GastronomyCheckoutSheet", () => {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
-  };
+  } as unknown as GastronomyBusiness;
 
   it("bloqueia checkout de delivery quando nao ha destino de entrega valido", () => {
     mockedUseGastronomyCart.mockReturnValue(baseCartMock);
