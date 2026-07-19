@@ -116,6 +116,15 @@ seguranca para acelerar o teste.
   ainda bloqueia o inicio da alpha com pessoas reais.
 - `backup:database:status` e `alpha:backup:gate` transformam esse estado em
   diagnostico e gate reproduziveis.
+- `alpha:readiness` consolida backup, e-mail, integridade Auth e status de
+  admissao em um unico preflight read-only, com codigos de bloqueio e sem
+  expor PII. `alpha:readiness:gate` aplica o mesmo relatorio como gate
+  fail-closed.
+- A prova remota de `alpha:readiness` em development retornou
+  `summary.ready=false`, `summary.containment.closed=true`,
+  `activeInvites=0`, `admissionsEnabled=false` e bloqueios canonicos para
+  `backup_not_restorable`, `missing_resend_management_api_key`,
+  `missing_management_pat` e `auth_admin_list_failed`.
 - O backup de Storage passou a ser atomico, inventariado e verificado por
   SHA-256. Restore no projeto de origem e alvo produtivo e recusado.
 - Smoke real exportou e verificou localmente `65` objetos em `12` buckets,
@@ -193,11 +202,32 @@ npm run alpha:revoke -- pessoa@example.com
 npm run alpha:status
 npm run alpha:pause
 npm run alpha:resume
+npm run alpha:readiness
+npm run alpha:readiness:gate
 ```
 
 O browser nunca recebe `service_role`. O e-mail e normalizado no banco, o
 convite expira, possui limite de uso e cada emissao, consumo ou revogacao gera
 auditoria sem copiar o e-mail para o log.
+
+Antes de emitir convites reais, executar `alpha:readiness`. O relatorio deve
+ter `summary.ready=true`; `summary.containment.closed=true` e esperado antes de
+abrir a rodada, porque `alpha:resume` e a acao que altera a admissao. O comando
+nao envia e-mail, nao cria convite e nao modifica o Supabase.
+
+## Pacote Para Supabase Support
+
+Enviar somente evidencias sem PII:
+
+- projeto de desenvolvimento e horario UTC da reproducao;
+- `auth.admin.listUsers({ page, perPage: 1 })` retorna erro interno somente nas
+  paginas 281 a 283; paginas vizinhas respondem;
+- existem tres contas permanentes com perfil publico, mas sem identidade Auth
+  associada; nao incluir e-mails ou UUIDs no chamado inicial;
+- o painel administrativo foi tornado resiliente por RPC `service_role`, mas o
+  gate `alpha:auth:gate` permanece fechado ate o reparo da integridade;
+- solicitar procedimento suportado para reconciliar ou remover as contas depois
+  de backup restauravel, sem alteracao manual cega no schema `auth`.
 
 `alpha:pause` revoga atomicamente todos os convites ainda ativos e impede tanto
 novos convites quanto novas identidades. Contas existentes nao sao apagadas.

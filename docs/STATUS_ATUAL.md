@@ -2469,3 +2469,7 @@ Avancar para fechamento total da Fase 3 (sem abrir Fase 4):
   a chave Resend existente tambem permite leitura administrativa e deve ser
   substituida por uma chave send-only no runtime. O gate usa uma credencial de
   gestao separada; a alpha permanece fechada e nenhum e-mail foi enviado.
+- `alpha:readiness` passou a consolidar os gates de recuperacao, e-mail,
+  integridade Auth e status de admissao em um relatorio read-only. Ele exige
+  confirmacao de alvo nao produtivo, nao altera o Supabase e serve como comando
+  canonico para decidir se a rodada privada pode ser aberta.

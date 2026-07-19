@@ -233,6 +233,7 @@ npm run backup:database:status
 npm run alpha:backup:gate
 npm run alpha:auth:gate
 npm run alpha:email:gate
+npm run alpha:readiness
 npm run backup:storage
 npm run restore:storage -- caminho-do-backup --verify-only
 ```
@@ -273,6 +274,12 @@ permissao de envio. A leitura de dominios usa `RESEND_MANAGEMENT_API_KEY`,
 carregada apenas no ambiente operacional local/CI e nunca implantada nas Edge
 Functions, Vercel ou browser. Reutilizar uma chave full-access para enviar
 e-mails viola menor privilegio e reprova a preparacao operacional.
+
+`alpha:readiness` e o preflight agregado. Ele consulta backup, e-mail, Auth e
+status de admissao em leitura, exige confirmacao de alvo nao produtivo e emite
+apenas contagens, booleanos e codigos de bloqueio. O comando nao substitui os
+gates individuais usados por `alpha:invite` e `alpha:resume`; ele existe para
+operacao, auditoria e handoff.
 
 O exportador de Storage cria um inventario versionado, usa nomes locais
 derivados por hash e registra tamanho e SHA-256 de cada objeto. O diretorio

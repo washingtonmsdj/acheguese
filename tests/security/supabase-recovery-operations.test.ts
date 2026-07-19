@@ -20,6 +20,7 @@ import {
   evaluateResendEmailReadiness,
   evaluateSupabaseAuthEmailReadiness,
 } from "../../scripts/private-alpha-email-readiness.mjs";
+import { summarizePrivateAlphaReadiness } from "../../scripts/private-alpha-readiness.mjs";
 import { auditSupabaseAuthReadiness } from "../../scripts/supabase-auth-readiness.mjs";
 import {
   evaluateBackupReadiness,
@@ -344,6 +345,68 @@ describe("Private alpha email readiness", () => {
       failureCode: "auth_email_autoconfirm_enabled",
       ready: false,
     });
+  });
+});
+
+describe("Private alpha aggregated readiness", () => {
+  it("summarizes every blocking gate without exposing identities", () => {
+    const summary = summarizePrivateAlphaReadiness({
+      admission: {
+        activeInvites: 0,
+        admissionsEnabled: false,
+        failureCode: null,
+        ready: true,
+      },
+      auth: {
+        checkedUsers: 200,
+        failedPage: 2,
+        failureCode: "auth_admin_list_failed",
+        ready: false,
+      },
+      backup: {
+        backupCount: 0,
+        failureCode: null,
+        pitrEnabled: false,
+        ready: false,
+      },
+      email: {
+        ready: false,
+        resend: { failureCode: "missing_resend_management_api_key" },
+        supabaseAuth: { failureCode: "missing_management_pat" },
+      },
+    });
+
+    expect(summary.ready).toBe(false);
+    expect(summary.containment).toEqual({
+      activeInvites: 0,
+      admissionsEnabled: false,
+      closed: true,
+    });
+    expect(summary.blockers.map((blocker) => blocker.code)).toEqual([
+      "backup_not_restorable",
+      "email_not_ready",
+      "missing_resend_management_api_key",
+      "missing_management_pat",
+      "auth_admin_list_failed",
+    ]);
+    expect(JSON.stringify(summary)).not.toContain("@");
+  });
+
+  it("accepts a clean technical preflight even while admissions remain closed", () => {
+    const summary = summarizePrivateAlphaReadiness({
+      admission: {
+        activeInvites: 0,
+        admissionsEnabled: false,
+        failureCode: null,
+        ready: true,
+      },
+      auth: { failureCode: null, ready: true },
+      backup: { failureCode: null, ready: true },
+      email: { failureCode: null, ready: true },
+    });
+
+    expect(summary.ready).toBe(true);
+    expect(summary.containment.closed).toBe(true);
   });
 });
 

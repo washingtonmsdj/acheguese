@@ -126,5 +126,15 @@ describe("private alpha access boundary", () => {
     );
     expect(emailGate).toContain("process.env.RESEND_MANAGEMENT_API_KEY");
     expect(emailGate).not.toContain("process.env.RESEND_API_KEY");
+
+    const readinessGate = readProjectFile(
+      "scripts/private-alpha-readiness.mjs",
+    );
+    expect(readinessGate).toContain("assertAuthorizedNonProductionTarget");
+    expect(readinessGate).toContain("getSupabaseBackupReadiness");
+    expect(readinessGate).toContain("auditPrivateAlphaEmailReadiness");
+    expect(readinessGate).toContain("auditSupabaseAuthReadiness");
+    expect(readinessGate).toContain("alpha_access_get_status");
+    expect(readinessGate).not.toContain("console.log(token");
   });
 });
