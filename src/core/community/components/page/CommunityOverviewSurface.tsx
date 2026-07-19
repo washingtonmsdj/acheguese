@@ -136,18 +136,6 @@ interface FocusShortcut {
   surface?: LaunchSurfaceKey;
 }
 
-const COMMUNITY_HERO_IMAGES: Record<string, string> = {
-  barra: bairroOndina,
-  chapada: bairroChapada,
-  "complexo-do-nordeste-de-amaralina": bairroNordeste,
-  nordeste: bairroNordeste,
-  ondina: bairroOndina,
-  pituba: bairroPituba,
-  "rio-vermelho": bairroRioVermelho,
-  "santa-cruz": bairroSantaCruz,
-  stiep: bairroStiep,
-  "vale-das-pedrinhas": bairroValePedrinhas,
-};
 
 const COMMUNITY_FEED_CONTEXT_SHORTCUTS = [
   { view: "feed", label: "Posts", icon: MessageCircle },
