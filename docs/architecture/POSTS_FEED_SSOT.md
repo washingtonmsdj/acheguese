@@ -1,7 +1,7 @@
 # Posts e Feed SSOT
 
 Status: vigente
-Data: 2026-07-17
+Data: 2026-07-18
 Finding encerrado: CP-008
 
 ## Decisao
@@ -26,6 +26,8 @@ tipos antecipadamente produziria uma abstracao sem consumidor.
   criados no mesmo instante;
 - o cursor antigo contendo somente timestamp e aceito apenas durante a
   transicao;
+- limites de tamanho e parsing do cursor pertencem a
+  `src/core/posts/config/postFeedPolicy.ts`;
 - posts tecnicos de seed nao entram na resposta publica;
 - `is_published`, `is_hidden` e `is_removed` sao aplicados na consulta como
   defesa em profundidade e tambem pela RLS.

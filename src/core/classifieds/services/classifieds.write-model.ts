@@ -1,4 +1,4 @@
-import type { Database } from "@/integrations/supabase/types.generated";
+import type { Database } from "@/integrations/supabase";
 import { CLASSIFIED_STATUS } from "../constants/statuses";
 import type { CreateClassifiedInput, UpdateClassifiedInput } from "./types";
 

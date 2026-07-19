@@ -83,6 +83,12 @@ serve(async (req: Request) => {
     }
 
     // 5. Criar usuário no auth
+    const { error: inviteError } = await supabaseAdmin.rpc('alpha_access_issue_invite', {
+      p_email: email,
+      p_note: 'admin_created',
+    });
+    if (inviteError) throw inviteError;
+
     const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,

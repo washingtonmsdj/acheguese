@@ -9,7 +9,11 @@
  */
 
 import type { User } from "@supabase/supabase-js";
-import { createServiceRoleClient, loadSupabaseScriptEnv } from "./lib/supabase-client";
+import {
+  createServiceRoleClient,
+  issuePrivateAlphaInvite,
+  loadSupabaseScriptEnv,
+} from "./lib/supabase-client";
 
 // Carregar variáveis de ambiente
 const E2E_ENV_FILES = [".env.test", ".env.local"];
@@ -163,6 +167,7 @@ async function seedE2EUsers(options: SeedOptions = {}) {
 
     // Criar novo usuário
     console.log(`   📝 Criando usuário...`);
+    await issuePrivateAlphaInvite(supabase, testUser.email, "e2e_seed");
     const { data: newUser, error: createError } =
       await supabase.auth.admin.createUser({
         email: testUser.email,

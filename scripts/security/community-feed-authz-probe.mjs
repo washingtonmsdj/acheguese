@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import {
   createAnonClient,
   createServiceRoleClient,
+  issuePrivateAlphaInvite,
   loadSupabaseScriptEnv,
 } from "../lib/supabase-client.mjs";
 
@@ -66,9 +67,11 @@ try {
   }
   if (!ownProfile) {
     const temporaryPassword = `Aa1!${randomUUID()}`;
+    const temporaryEmail = `community-security-probe-${randomUUID()}@example.invalid`;
+    await issuePrivateAlphaInvite(admin, temporaryEmail, "security_probe");
     const { data: temporaryAuth, error: temporaryAuthError } =
       await admin.auth.admin.createUser({
-        email: `community-security-probe-${randomUUID()}@example.invalid`,
+        email: temporaryEmail,
         password: temporaryPassword,
         email_confirm: true,
         user_metadata: { full_name: "Community Security Probe" },

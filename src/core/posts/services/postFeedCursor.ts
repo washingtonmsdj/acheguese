@@ -1,4 +1,5 @@
 import { PostError } from "../types";
+import { POST_FEED_CURSOR_POLICY } from "../config/postFeedPolicy";
 
 export interface PostFeedCursor {
   createdAt: string;
@@ -7,19 +8,21 @@ export interface PostFeedCursor {
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const MAX_CURSOR_LENGTH = 512;
 
 function isValidTimestamp(value: unknown): value is string {
   return (
     typeof value === "string" &&
     value.length > 0 &&
-    value.length <= 64 &&
+    value.length <= POST_FEED_CURSOR_POLICY.timestampCharacterCapacity &&
     Number.isFinite(Date.parse(value))
   );
 }
 
 function decodeBase64Cursor(value: string): unknown {
-  if (value.length === 0 || value.length > MAX_CURSOR_LENGTH) {
+  if (
+    value.length === 0 ||
+    value.length > POST_FEED_CURSOR_POLICY.encodedCursorCharacterCapacity
+  ) {
     throw new Error("invalid_cursor_length");
   }
   if (!/^[A-Za-z0-9+/_-]+={0,2}$/.test(value)) {

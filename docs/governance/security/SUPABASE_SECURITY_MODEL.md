@@ -51,6 +51,25 @@ referencia; conceder `SELECT` de `user_residences` a `anon` nao e aceitavel.
 Leituras privadas devem exigir escopo delimitado (IDs ou usuario-alvo), impor
 limite por lote e distinguir gestor (`owner`/`admin`) de membro comum.
 
+## Admissao No Alpha Privado
+
+Enquanto o produto estiver em alpha privado, esconder a rota de cadastro ou
+nao divulgar a URL nao e controle de seguranca. A criacao de identidade em
+`auth.users` falha antes dos triggers de perfil quando nao houver um convite
+ativo para o e-mail normalizado, ainda valido e com uso disponivel. A regra
+tambem vale para criacao administrativa; automacoes com `service_role` emitem
+o convite restrito antes de criar a identidade.
+
+`user_metadata` e `app_metadata` nao sao usados como bypass no `BEFORE INSERT`.
+Os
+convites vivem em `private.alpha_access_invites`, sem grants para browser, e o
+consumo e atomico. Emissao, consumo e revogacao sao registrados em auditoria.
+As funcoes de gestao aceitam somente `service_role`; os comandos locais tambem
+exigem alvo `development` ou `staging`, project ref correspondente e
+confirmacao explicita. O contrato executavel esta na migration
+`20260718210000_enforce_private_alpha_access.sql` e no endurecimento
+`20260718211000_require_alpha_invite_for_all_auth_identities.sql`.
+
 ## Data API E Grants Explicitos
 
 O Supabase anunciou em 2026-04-28 uma mudanca nos defaults de grants para novas

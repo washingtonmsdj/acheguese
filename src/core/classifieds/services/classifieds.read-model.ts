@@ -1,5 +1,5 @@
 import { resolveMediaAssetSource } from "@/core/media/references/mediaAssetReference";
-import type { Database } from "@/integrations/supabase/types.generated";
+import type { Database } from "@/integrations/supabase";
 import {
   CLASSIFIED_STATUS,
   CLASSIFIED_STATUS_VALUES,

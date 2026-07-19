@@ -13,6 +13,7 @@ existente e registrar o que ainda precisa ser implementado.
 - [Core Platform Consolidation](./CORE_PLATFORM_CONSOLIDATION_PLAN.md)
 - [Security Authority - plano de implementacao](./SECURITY_AUTHORITY_IMPLEMENTATION_PLAN.md)
 - [Community Scale Readiness](./COMMUNITY_SCALE_READINESS_PLAN.md)
+- [Private Alpha Readiness](./PRIVATE_ALPHA_READINESS_PLAN.md)
 
 ## Planos Concluidos
 

@@ -21,6 +21,12 @@ describe("test execution boundary", () => {
 
     expect(config).toMatch(/mode === ["']operational["']/);
     expect(config).toMatch(/loadEnv\(["']example["']/);
+    expect(config).toContain("const OPERATIONAL_ENV_KEYS = [");
+    expect(config).toContain(
+      "isOperational ? loadOperationalTestEnv(mode) : {}",
+    );
+    expect(config).toContain('"SUPABASE_SERVICE_ROLE_KEY"');
+    expect(config).toContain('"OPERATIONAL_TEST_CONFIRM"');
     expect(config).toMatch(
       /include: \[["']tests\/operational\/\*\*\/\*\.test\.ts["']\]/,
     );
@@ -38,8 +44,23 @@ describe("test execution boundary", () => {
       "maxWorkers: isOperational ? 1 : deterministicMaxWorkers",
     );
     expect(scripts.test).toBe("vitest --run");
-    expect(scripts["test:operational"]).toBe("vitest --run --mode operational");
+    expect(scripts["test:operational"]).toBe(
+      "node scripts/run-operational-suite.mjs alpha",
+    );
+    expect(scripts["test:operational:all"]).toBe(
+      "vitest --run --mode operational",
+    );
     expect(scripts["test:all"]).toBeUndefined();
+  });
+
+  it("keeps the release operational suite scoped to active alpha surfaces", () => {
+    const runner = read("scripts/run-operational-suite.mjs");
+
+    expect(runner).toContain("private-alpha-access-runtime.test.ts");
+    expect(runner).toContain("professional-review-authz-runtime.test.ts");
+    expect(runner).toContain("rls-posts-auth-flow.test.ts");
+    expect(runner).toContain("posts-territorial-feed-runtime.test.ts");
+    expect(runner).not.toMatch(/gate[2-7]-/i);
   });
 
   it("accepts only an explicitly declared local or non-production remote target", () => {

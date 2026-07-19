@@ -2,11 +2,42 @@ import { defineConfig } from "vitest/config";
 import { resolve } from "path";
 import { loadEnv } from "vite";
 
+const OPERATIONAL_ENV_KEYS = [
+  "E2E_ADMIN_EMAIL",
+  "E2E_ADMIN_PASSWORD",
+  "E2E_EDUCATION_OWNER_EMAIL",
+  "E2E_EDUCATION_OWNER_PASSWORD",
+  "E2E_USER_EMAIL",
+  "E2E_USER_PASSWORD",
+  "OPERATIONAL_TEST_CONFIRM",
+  "OPERATIONAL_TEST_PROJECT_REF",
+  "OPERATIONAL_TEST_TARGET",
+  "RUN_ALPHA_ACCESS_REAL_TESTS",
+  "RUN_GATE2_REAL_TESTS",
+  "RUN_PROFESSIONAL_REVIEW_REAL_TESTS",
+  "RUN_RLS_REAL_TESTS",
+  "SUPABASE_SECRET_KEY",
+  "SUPABASE_SERVICE_ROLE_KEY",
+  "TEST_DRIVER_EMAIL",
+  "TEST_DRIVER_PASSWORD",
+] as const;
+
 function loadClientEnv(mode: string) {
   return {
     ...loadEnv("example", process.cwd(), "VITE_"),
     ...loadEnv(mode, process.cwd(), "VITE_"),
   };
+}
+
+function loadOperationalTestEnv(mode: string) {
+  const fileEnv = loadEnv(mode, process.cwd(), "");
+
+  return Object.fromEntries(
+    OPERATIONAL_ENV_KEYS.flatMap((key) => {
+      const value = process.env[key] ?? fileEnv[key];
+      return value ? [[key, value]] : [];
+    }),
+  );
 }
 
 export default defineConfig(({ mode }) => {
@@ -39,7 +70,10 @@ export default defineConfig(({ mode }) => {
       maxWorkers: isOperational ? 1 : deterministicMaxWorkers,
       testTimeout: isOperational ? 120000 : 30000,
       hookTimeout: isOperational ? 30000 : 10000,
-      env: loadClientEnv(mode),
+      env: {
+        ...loadClientEnv(mode),
+        ...(isOperational ? loadOperationalTestEnv(mode) : {}),
+      },
       exclude: [
         "**/node_modules/**",
         "**/dist/**",

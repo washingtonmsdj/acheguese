@@ -2,7 +2,7 @@
 
 Status: canonical
 Owner: `src/core/realtime`
-Ultima revisao: 2026-07-15
+Ultima revisao: 2026-07-18
 
 ## 1. Decisao
 
@@ -72,6 +72,11 @@ permissao publica. Novos topicos sem filtro exigem revisao de RLS e deste SSOT.
 Reconexao e backoff do socket pertencem ao SDK Supabase. O projeto nao cria um
 segundo loop de reconexao para canais. Tracking ainda usa seu manager para fila
 de operacoes pendentes, mas nao registra nem reconecta canais do Core.
+
+Os limites de capacidade, deduplicacao e timeout pertencem a
+`src/core/realtime/config/realtimeRuntimePolicy.ts`. O service apenas aplica
+essa politica; alteracoes operacionais devem atualizar esse ponto canonico e as
+evidencias do dominio.
 
 ## 5. Ownership
 

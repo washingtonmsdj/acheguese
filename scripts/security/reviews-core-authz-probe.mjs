@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import {
   createAnonClient,
   createServiceRoleClient,
+  issuePrivateAlphaInvite,
   loadSupabaseScriptEnv,
 } from "../lib/supabase-client.mjs";
 
@@ -25,6 +26,7 @@ let reviewedProfileId;
 async function createIdentity(label) {
   const email = `reviews-core-${label}-${randomUUID()}@example.com`;
   const password = `Aa1!${randomUUID()}`;
+  await issuePrivateAlphaInvite(admin, email, "security_probe");
   const { data: authData, error: authError } =
     await admin.auth.admin.createUser({
       email,
@@ -183,7 +185,9 @@ try {
     (candidate) => candidate.profile_id === eligibleProfile?.id,
   );
   if (!targetProfessional || !eligibleProfile) {
-    throw new Error("No eligible professional Profile is available for the probe");
+    throw new Error(
+      "No eligible professional Profile is available for the probe",
+    );
   }
   reviewedProfileId = eligibleProfile.id;
 
@@ -334,11 +338,13 @@ try {
     true,
   );
 
-  const { data: currentVote, error: currentVoteError } =
-    await voter.client.rpc("get_current_review_helpfulness", {
+  const { data: currentVote, error: currentVoteError } = await voter.client.rpc(
+    "get_current_review_helpfulness",
+    {
       p_review_id: reviewId,
       p_voter_profile_id: voter.profileId,
-    });
+    },
+  );
   requireAllowed("owned_helpfulness_read", currentVoteError);
   record("owned_helpfulness_value", currentVote === true, true);
 

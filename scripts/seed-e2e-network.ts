@@ -13,7 +13,11 @@
  */
 
 import fs from 'fs';
-import { createServiceRoleClient, loadSupabaseScriptEnv } from './lib/supabase-client';
+import {
+  createServiceRoleClient,
+  issuePrivateAlphaInvite,
+  loadSupabaseScriptEnv,
+} from './lib/supabase-client';
 
 const E2E_ENV_FILES = ['.env.test', '.env.local'];
 
@@ -71,6 +75,7 @@ async function run() {
   let userId = existingUsers?.users.find(u => u.email === SEED.USER_EMAIL)?.id;
 
   if (!userId) {
+    await issuePrivateAlphaInvite(supabase, SEED.USER_EMAIL, 'e2e_seed');
     const { data: newUser, error: userErr } = await supabase.auth.admin.createUser({
       email: SEED.USER_EMAIL,
       password: SEED.USER_PASSWORD,

@@ -12,7 +12,6 @@ import {
 } from "../helpers/operational-auth-fixture";
 
 const admin = createOptionalOperationalAdminClient();
-const createdUserIds = new Set<string>();
 
 const CONSENT_FIXTURE = [
   { consent_type: "cookies", granted: true },
@@ -64,30 +63,25 @@ async function createConfirmedUser(input: {
   }
 
   const user = await createConfirmedOperationalUser(admin, input);
-  createdUserIds.add(user.id);
   return { user };
 }
 
-async function cleanupCreatedCommunityUsers(): Promise<void> {
+async function cleanupCommunityUser(userId: string): Promise<void> {
   if (!admin) return;
 
-  for (const userId of createdUserIds) {
-    const residenceDelete = await admin
-      .from("user_residences")
-      .delete()
-      .eq("user_id", userId);
-    if (residenceDelete.error) throw residenceDelete.error;
+  const residenceDelete = await admin
+    .from("user_residences")
+    .delete()
+    .eq("user_id", userId);
+  if (residenceDelete.error) throw residenceDelete.error;
 
-    const addressDelete = await admin
-      .from("addresses")
-      .delete()
-      .eq("owner_user_id", userId);
-    if (addressDelete.error) throw addressDelete.error;
+  const addressDelete = await admin
+    .from("addresses")
+    .delete()
+    .eq("owner_user_id", userId);
+  if (addressDelete.error) throw addressDelete.error;
 
-    await deleteOperationalUserWithOwnedProfiles(admin, userId);
-  }
-
-  createdUserIds.clear();
+  await deleteOperationalUserWithOwnedProfiles(admin, userId);
 }
 
 async function waitForPersonalProfile(userId: string): Promise<{ id: string }> {
@@ -211,10 +205,6 @@ test.describe("community access gate e2e", () => {
     "Defina VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY e SUPABASE_SERVICE_ROLE_KEY.",
   );
 
-  test.afterEach(async () => {
-    await cleanupCreatedCommunityUsers();
-  });
-
   test("authenticated user without local residence sees address setup gate", async ({
     page,
   }) => {
@@ -228,21 +218,28 @@ test.describe("community access gate e2e", () => {
       name: "Morador Sem Endereco E2E",
       handle: `semendereco${suffix}`,
     });
-    const profile = await waitForPersonalProfile(user.user.id);
-    await setActiveProfile({ userId: user.user.id, profileId: profile.id });
 
-    await seedConsent(page);
-    await login(page, user.user.email!, password);
-    await gotoApp(page, COMMUNITY_ROUTE);
+    try {
+      const profile = await waitForPersonalProfile(user.user.id);
+      await setActiveProfile({ userId: user.user.id, profileId: profile.id });
 
-    const participateLink = page.getByRole("link", {
-      name: "Participar da comunidade",
-    });
-    await expect(participateLink).toBeVisible({ timeout: 30_000 });
-    await expect(participateLink).toHaveAttribute("href", "/conta/enderecos");
+      await seedConsent(page);
+      await login(page, user.user.email!, password);
+      await gotoApp(page, COMMUNITY_ROUTE);
 
-    await page.getByRole("textbox", { name: /Criar publicação em/i }).click();
-    await expect(page).toHaveURL(/\/conta\/enderecos$/i, { timeout: 30_000 });
+      const participateLink = page.getByRole("link", {
+        name: "Participar da comunidade",
+      });
+      await expect(participateLink).toBeVisible({ timeout: 30_000 });
+      await expect(participateLink).toHaveAttribute("href", "/conta/enderecos");
+
+      await page.getByRole("textbox", { name: /Criar publicação em/i }).click();
+      await expect(page).toHaveURL(/\/conta\/enderecos$/i, {
+        timeout: 30_000,
+      });
+    } finally {
+      await cleanupCommunityUser(user.user.id);
+    }
   });
 
   test("verified resident can access member feed actions", async ({ page }) => {
@@ -256,25 +253,30 @@ test.describe("community access gate e2e", () => {
       name: "Morador Verificado E2E",
       handle: `verificado${suffix}`,
     });
-    const profile = await waitForPersonalProfile(user.user.id);
-    await setActiveProfile({ userId: user.user.id, profileId: profile.id });
-    const location = await findCommunityLocation();
-    await seedVerifiedResidence({
-      userId: user.user.id,
-      locationId: location.id,
-    });
 
-    await seedConsent(page);
-    await login(page, user.user.email!, password);
-    await gotoApp(page, COMMUNITY_ROUTE);
+    try {
+      const profile = await waitForPersonalProfile(user.user.id);
+      await setActiveProfile({ userId: user.user.id, profileId: profile.id });
+      const location = await findCommunityLocation();
+      await seedVerifiedResidence({
+        userId: user.user.id,
+        locationId: location.id,
+      });
 
-    await expect(
-      page.getByRole("button", { name: "Criar publicação" }),
-    ).toBeVisible({ timeout: 30_000 });
+      await seedConsent(page);
+      await login(page, user.user.email!, password);
+      await gotoApp(page, COMMUNITY_ROUTE);
 
-    await page.getByRole("textbox", { name: /Criar publicação em/i }).click();
-    await expect(
-      page.getByRole("heading", { name: "Criar conteúdo territorial" }),
-    ).toBeVisible({ timeout: 30_000 });
+      await expect(
+        page.getByRole("button", { name: "Criar publicação" }),
+      ).toBeVisible({ timeout: 30_000 });
+
+      await page.getByRole("textbox", { name: /Criar publicação em/i }).click();
+      await expect(
+        page.getByRole("heading", { name: "Criar conteúdo territorial" }),
+      ).toBeVisible({ timeout: 30_000 });
+    } finally {
+      await cleanupCommunityUser(user.user.id);
+    }
   });
 });

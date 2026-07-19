@@ -18,7 +18,11 @@ export const DEFAULT_SUPABASE_SCRIPT_ENV_FILES = ['.env.local', '.env.remote', '
 
 export function loadSupabaseScriptEnv(envFiles = DEFAULT_SUPABASE_SCRIPT_ENV_FILES) {
   for (const envFile of envFiles) {
-    dotenv.config({ path: resolve(ROOT_DIR, envFile), override: false });
+    dotenv.config({
+      path: resolve(ROOT_DIR, envFile),
+      override: false,
+      quiet: true,
+    });
   }
 }
 
@@ -122,6 +126,17 @@ export function createAnonClient(config = {}) {
       autoRefreshToken: false,
     },
   });
+}
+
+export async function issuePrivateAlphaInvite(admin, email, note) {
+  const { data, error } = await admin.rpc('alpha_access_issue_invite', {
+    p_email: email,
+    p_note: note || null,
+  });
+  if (error || !data) {
+    throw error || new Error('Falha ao emitir convite de alpha privado.');
+  }
+  return data;
 }
 
 export function createSupabaseScriptClient(config = {}) {

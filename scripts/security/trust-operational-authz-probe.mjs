@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import {
   createAnonClient,
   createServiceRoleClient,
+  issuePrivateAlphaInvite,
   loadSupabaseScriptEnv,
 } from "../lib/supabase-client.mjs";
 
@@ -23,6 +24,7 @@ const outcomes = [];
 async function createIdentity(label, role = "user") {
   const email = `trust-authz-${label}-${randomUUID()}@example.invalid`;
   const password = `Aa1!${randomUUID()}`;
+  await issuePrivateAlphaInvite(serviceRole, email, "security_probe");
   const { data: authData, error: authError } =
     await serviceRole.auth.admin.createUser({
       email,
