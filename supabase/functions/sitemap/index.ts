@@ -59,7 +59,8 @@ type BusinessLocationRelation = {
   id?: string | null;
   geographic_path?: string | null;
 } | null;
-type SupabaseClient = ReturnType<typeof createClient>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SupabaseClient = ReturnType<typeof createClient<any, any, any>>;
 
 interface BusinessSitemapRow {
   profile_id: string;

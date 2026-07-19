@@ -90,7 +90,8 @@ const OCCURRENCE_SEVERITIES = new Set([
 ]);
 
 type DeliveryRpcAction = keyof typeof ACTIONS;
-type SupabaseClient = ReturnType<typeof createClient>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SupabaseClient = ReturnType<typeof createClient<any, any, any>>;
 type ActorRole = "customer" | "merchant" | "courier" | "platform";
 
 interface RequestBody {

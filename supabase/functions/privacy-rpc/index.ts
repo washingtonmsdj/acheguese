@@ -39,7 +39,8 @@ const ACTIONS = {
 } as const;
 
 type PrivacyRpcAction = keyof typeof ACTIONS;
-type SupabaseClient = ReturnType<typeof createClient>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SupabaseClient = ReturnType<typeof createClient<any, any, any>>;
 
 interface RequestBody {
   action?: string;
