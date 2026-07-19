@@ -2431,3 +2431,14 @@ Avancar para fechamento total da Fase 3 (sem abrir Fase 4):
 - Residual critico CP-014: produtores de `trust_events` ainda aceitam ator,
   alvo, papel e contexto do cliente; a denuncia de conversa aponta o proprio
   ator como alvo. A Fase 1D corrige Trust/Messaging sem criar tabela paralela.
+
+## Atualizacao 2026-07-19 (Recuperacao Da Alpha Privada)
+
+- O status remoto foi confirmado sem escrita: zero backups acessiveis e PITR
+  inativo. A alpha com pessoas reais continua bloqueada por recuperacao.
+- O gate canonico e o runbook estao em
+  `plans/PRIVATE_ALPHA_READINESS_PLAN.md` e no modelo de seguranca do Supabase.
+- Backup de Storage agora falha atomicamente, gera inventario com SHA-256 e
+  restore exige alvo nao produtivo diferente da origem.
+- `backup-config.ts` foi removido porque Git e o SSOT de configuracao,
+  migrations e funcoes.

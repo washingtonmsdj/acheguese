@@ -1,7 +1,7 @@
 # Private Alpha Readiness
 
-Status: codigo e perimetro prontos; ativacao dos testadores pendente
-Data: 2026-07-18
+Status: codigo e perimetro prontos; recuperacao e ativacao dos testadores pendentes
+Data: 2026-07-19
 Escopo: acesso controlado e gates das superficies ativas
 
 ## Objetivo
@@ -55,7 +55,10 @@ seguranca para acelerar o teste.
 - [x] Manter a aplicacao fora dos dominios publicos durante a alpha privada.
 - [x] Proteger o Preview com Vercel Authentication e `noindex`.
 - [x] Criar kill switch auditavel para pausar admissoes e revogar convites ativos.
-- [ ] Confirmar politica e restauracao de backup do Supabase remoto.
+- [x] Definir politica executavel de backup e recuperacao do Supabase/Storage.
+- [x] Auditar a disponibilidade de restore do banco remoto sem escrita.
+- [ ] Habilitar backup diario acessivel no Supabase remoto.
+- [ ] Ensaiar restauracao de banco e Storage em projeto descartavel separado.
 - [ ] Definir contato nominal de incidente e canal de feedback dos testadores.
 - [ ] Validar SMTP/Auth com um e-mail real convidado.
 - [ ] Resolver no Supabase os tres registros historicos que quebram as paginas
@@ -97,6 +100,26 @@ seguranca para acelerar o teste.
   e usuario limitado ao identificador pseudonimo.
 - O kill switch remoto bloqueou a emissao de convite enquanto pausado, retornou
   codigo de falha controlado e terminou retomado com zero convites ativos.
+
+## Evidencias De 2026-07-19
+
+- `supabase backups list --project-ref <development> --output json` retornou
+  `backups: []` e `pitr_enabled: false`; `walg_enabled: true` nao oferece ponto
+  de restauracao acessivel ao operador.
+- O projeto remoto permanece `ACTIVE_HEALTHY` em `us-west-2`, mas recuperacao
+  ainda bloqueia o inicio da alpha com pessoas reais.
+- `backup:database:status` e `alpha:backup:gate` transformam esse estado em
+  diagnostico e gate reproduziveis.
+- O backup de Storage passou a ser atomico, inventariado e verificado por
+  SHA-256. Restore no projeto de origem e alvo produtivo e recusado.
+- Smoke real exportou e verificou localmente `65` objetos em `12` buckets,
+  totalizando `23.926.702` bytes; o artefato sensivel foi removido depois da
+  verificacao.
+- `npm test -- --maxWorkers=2`: `317` arquivos e `1.726` testes aprovados.
+- `npm run verify:deploy`: arquitetura, SSOT, migrations remotas, Security
+  Authority e configuracao de seguranca aprovadas.
+- O script redundante `backup-config.ts` foi removido: configuracao, migrations
+  e funcoes ja possuem SSOT versionado no Git.
 
 Os residuais PostGIS dependem do owner `supabase_admin`; a protecao HIBP do
 Auth depende de plano/configuracao do Dashboard ou Management API. Eles
@@ -144,8 +167,9 @@ versionada.
 
 O alpha pode iniciar quando um cadastro sem convite falhar, um convite valido
 funcionar uma unica vez, os gates ativos passarem, nao houver residuos de E2E e
-os responsaveis operacionais souberem pausar acesso e receber incidentes. Isso
-nao equivale a prontidao para publico geral.
+os responsaveis operacionais souberem pausar acesso e receber incidentes. Deve
+existir tambem backup diario acessivel e um restore ensaiado em projeto
+descartavel. Isso nao equivale a prontidao para publico geral.
 
 O gate de cadastro nao substitui o perimetro. No plano Hobby, a aplicacao fica
 em Preview protegido e o dominio de producao serve somente a pagina fechada.

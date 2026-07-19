@@ -3,9 +3,9 @@ import {
   getSupabaseConfig,
   loadSupabaseScriptEnv,
 } from "./lib/supabase-client.mjs";
+import { assertAuthorizedNonProductionTarget as assertAuthorizedNonProductionTargetImpl } from "./lib/non-production-target.mjs";
 
 const ENV_FILES = [".env.local", ".env.remote", ".env.test", ".env"];
-const CONFIRMATION = "NON_PRODUCTION_REMOTE_CONFIRMED";
 
 loadSupabaseScriptEnv(ENV_FILES);
 
@@ -28,28 +28,8 @@ function normalizeEmail(value) {
 }
 
 function assertAuthorizedNonProductionTarget() {
-  const target = process.env.OPERATIONAL_TEST_TARGET?.trim().toLowerCase();
-  const confirmation = process.env.OPERATIONAL_TEST_CONFIRM?.trim();
-  const declaredProjectRef = process.env.OPERATIONAL_TEST_PROJECT_REF?.trim();
   const config = getSupabaseConfig({ envFiles: ENV_FILES });
-
-  if (!new Set(["development", "staging"]).has(target)) {
-    fail("OPERATIONAL_TEST_TARGET deve ser development ou staging.");
-  }
-  if (confirmation !== CONFIRMATION) {
-    fail(`OPERATIONAL_TEST_CONFIRM deve ser ${CONFIRMATION}.`);
-  }
-  if (!config.url || !declaredProjectRef) {
-    fail("URL do Supabase e OPERATIONAL_TEST_PROJECT_REF sao obrigatorios.");
-  }
-
-  const url = new URL(config.url);
-  if (
-    url.protocol !== "https:" ||
-    url.hostname !== `${declaredProjectRef}.supabase.co`
-  ) {
-    fail("O projeto declarado nao corresponde ao Supabase configurado.");
-  }
+  return assertAuthorizedNonProductionTargetImpl({ supabaseUrl: config.url });
 }
 
 async function main() {

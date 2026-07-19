@@ -1,166 +1,277 @@
 /**
- * Restore Supabase Storage.
- *
- * Uploads all files from a recursive backup directory to Supabase Storage.
- *
- * Usage:
- *   npx tsx scripts/restore-storage.ts <backup-dir>
- *
- * Example:
- *   npx tsx scripts/restore-storage.ts backups/storage-2026-04-19
- *
- * Environment:
- *   SUPABASE_URL - Supabase project URL
- *   SUPABASE_SERVICE_ROLE_KEY - Service role key with storage admin access
+ * Verifies or restores a Storage backup into an explicitly confirmed,
+ * non-production Supabase project. Restoring into the source project is denied.
  */
 
-import { existsSync, readdirSync, readFileSync, statSync } from "fs";
-import { join, relative } from "path";
-import { createServiceRoleClient } from "./lib/supabase-client";
+/* eslint-disable ssot/no-direct-storage-access -- Operator restore covers the full Storage inventory outside the browser MediaService boundary. */
+
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
+import { assertAuthorizedNonProductionTarget } from "./lib/non-production-target";
+import {
+  createServiceRoleClient,
+  getSupabaseConfig,
+} from "./lib/supabase-client";
+import {
+  readAndVerifyStorageBackup,
+  resolveManifestFile,
+  sha256Bytes,
+  type StorageBackupBucket,
+  type StorageBackupObject,
+} from "./lib/storage-recovery";
+
+const DEFAULT_CONCURRENCY = 3;
 
 type SupabaseClient = ReturnType<typeof createServiceRoleClient>;
 
-function getContentType(filename: string): string {
-  const ext = filename.toLowerCase().split(".").pop();
+interface RestoreArguments {
+  backupDir: string;
+  concurrency: number;
+  verifyOnly: boolean;
+}
 
-  const contentTypes: Record<string, string> = {
-    avif: "image/avif",
-    doc: "application/msword",
-    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    gif: "image/gif",
-    jpeg: "image/jpeg",
-    jpg: "image/jpeg",
-    mp3: "audio/mpeg",
-    mp4: "video/mp4",
-    pdf: "application/pdf",
-    png: "image/png",
-    svg: "image/svg+xml",
-    wav: "audio/wav",
-    webm: "video/webm",
-    webp: "image/webp",
-    default: "application/octet-stream",
+interface StorageBucketRow {
+  allowed_mime_types?: string[] | null;
+  file_size_limit?: number | string | null;
+  id: string;
+  name?: string;
+  public?: boolean;
+}
+
+function parseArguments(args: string[]): RestoreArguments {
+  let backupDir: string | undefined;
+  let concurrency = DEFAULT_CONCURRENCY;
+  let verifyOnly = false;
+
+  for (let index = 0; index < args.length; index += 1) {
+    const argument = args[index];
+    if (argument === "--verify-only") {
+      verifyOnly = true;
+    } else if (argument === "--concurrency") {
+      const value = args[index + 1];
+      if (!value || value.startsWith("--")) {
+        throw new Error("--concurrency exige um valor.");
+      }
+      concurrency = Number(value);
+      index += 1;
+    } else if (!argument.startsWith("--") && !backupDir) {
+      backupDir = argument;
+    } else {
+      throw new Error(`Argumento desconhecido: ${argument}.`);
+    }
+  }
+
+  if (!backupDir) {
+    throw new Error(
+      "Uso: npm run restore:storage -- <backup-dir> [--verify-only] [--concurrency 1-6]",
+    );
+  }
+  if (
+    !Number.isSafeInteger(concurrency) ||
+    concurrency < 1 ||
+    concurrency > 6
+  ) {
+    throw new Error("--concurrency deve ser um inteiro entre 1 e 6.");
+  }
+
+  return { backupDir: resolve(backupDir), concurrency, verifyOnly };
+}
+
+function normalizeStringArray(
+  value: string[] | null | undefined,
+): string[] | null {
+  return value ? [...value].sort() : null;
+}
+
+function normalizeFileSizeLimit(
+  value: number | string | null | undefined,
+): number | null {
+  return value === null || value === undefined ? null : Number(value);
+}
+
+function assertBucketContract(
+  expected: StorageBackupBucket,
+  actual: StorageBucketRow,
+) {
+  const actualAllowedMimeTypes = normalizeStringArray(
+    actual.allowed_mime_types,
+  );
+  if (
+    Boolean(actual.public) !== expected.public ||
+    normalizeFileSizeLimit(actual.file_size_limit) !== expected.fileSizeLimit ||
+    JSON.stringify(actualAllowedMimeTypes) !==
+      JSON.stringify(normalizeStringArray(expected.allowedMimeTypes))
+  ) {
+    throw new Error(
+      `Bucket ${expected.id} diverge do manifesto. Aplique migrations/configuracao antes do restore.`,
+    );
+  }
+}
+
+function isObjectNotFound(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as {
+    message?: string;
+    status?: number;
+    statusCode?: string;
   };
-
-  return contentTypes[ext || ""] || contentTypes.default;
+  return (
+    candidate.status === 404 ||
+    candidate.statusCode === "404" ||
+    /not found|does not exist/i.test(candidate.message ?? "")
+  );
 }
 
-function listLocalFiles(rootDir: string, currentDir = rootDir): string[] {
-  const files: string[] = [];
-
-  for (const entry of readdirSync(currentDir)) {
-    const entryPath = join(currentDir, entry);
-    const stat = statSync(entryPath);
-
-    if (stat.isDirectory()) {
-      files.push(...listLocalFiles(rootDir, entryPath));
-      continue;
+async function mapWithConcurrency<T>(
+  values: T[],
+  concurrency: number,
+  worker: (value: T) => Promise<void>,
+): Promise<void> {
+  let nextIndex = 0;
+  async function runWorker() {
+    while (nextIndex < values.length) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      await worker(values[currentIndex]);
     }
-
-    files.push(entryPath);
   }
-
-  return files;
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, values.length) }, () =>
+      runWorker(),
+    ),
+  );
 }
 
-function toStoragePath(rootDir: string, filePath: string): string {
-  return relative(rootDir, filePath).replace(/\\/g, "/");
-}
-
-async function restoreBucket(
+async function downloadChecksum(
   supabase: SupabaseClient,
-  bucketName: string,
+  bucketId: string,
+  objectPath: string,
+): Promise<string | null> {
+  const { data, error } = await supabase.storage
+    .from(bucketId)
+    .download(objectPath);
+  if (error) {
+    if (isObjectNotFound(error)) return null;
+    throw new Error(
+      `Falha ao verificar ${bucketId}/${objectPath}: ${error.message}`,
+    );
+  }
+  if (!data) return null;
+  return sha256Bytes(new Uint8Array(await data.arrayBuffer()));
+}
+
+async function restoreObject(
+  supabase: SupabaseClient,
   backupDir: string,
-): Promise<number> {
-  console.log(`Restoring bucket: ${bucketName}`);
-
-  const bucketDir = join(backupDir, bucketName);
-  const files = listLocalFiles(bucketDir);
-
-  if (files.length === 0) {
-    console.log("   No files to restore");
-    return 0;
-  }
-
-  let count = 0;
-  let errors = 0;
-
-  for (const filePath of files) {
-    const objectPath = toStoragePath(bucketDir, filePath);
-
-    try {
-      const fileBuffer = readFileSync(filePath);
-
-      const { error } = await supabase.storage.from(bucketName).upload(objectPath, fileBuffer, {
-        upsert: true,
-        contentType: getContentType(objectPath),
-      });
-
-      if (error) {
-        console.error(`   Error uploading ${objectPath}:`, error.message);
-        errors++;
-        continue;
-      }
-
-      count++;
-
-      if (count % 10 === 0) {
-        console.log(`   Uploaded ${count} files...`);
-      }
-    } catch (error) {
-      console.error(`   Exception uploading ${objectPath}:`, error);
-      errors++;
+  bucketId: string,
+  object: StorageBackupObject,
+): Promise<"restored" | "verified"> {
+  const existingChecksum = await downloadChecksum(
+    supabase,
+    bucketId,
+    object.path,
+  );
+  if (existingChecksum) {
+    if (existingChecksum !== object.sha256) {
+      throw new Error(
+        `Objeto existente diverge do backup: ${bucketId}/${object.path}.`,
+      );
     }
+    return "verified";
   }
 
-  console.log(`Restored ${count} files to ${bucketName}${errors > 0 ? ` (${errors} errors)` : ""}`);
-  return count;
+  const bytes = await readFile(resolveManifestFile(backupDir, object.file));
+  const { error } = await supabase.storage
+    .from(bucketId)
+    .upload(object.path, bytes, {
+      contentType: object.contentType ?? "application/octet-stream",
+      upsert: true,
+    });
+  if (error) {
+    throw new Error(
+      `Falha ao restaurar ${bucketId}/${object.path}: ${error.message}`,
+    );
+  }
+
+  const restoredChecksum = await downloadChecksum(
+    supabase,
+    bucketId,
+    object.path,
+  );
+  if (restoredChecksum !== object.sha256) {
+    throw new Error(`Verificacao remota falhou em ${bucketId}/${object.path}.`);
+  }
+  return "restored";
 }
 
 async function main() {
-  console.log("Starting Supabase Storage Restore\n");
+  const args = parseArguments(process.argv.slice(2));
+  const manifest = await readAndVerifyStorageBackup(args.backupDir);
+  console.log(
+    `Backup local verificado: ${manifest.totals.objects} objeto(s), ${manifest.totals.bytes} byte(s).`,
+  );
+  if (args.verifyOnly) return;
 
-  const backupDir = process.argv[2];
-
-  if (!backupDir) {
-    console.error("Usage: npx tsx scripts/restore-storage.ts <backup-dir>");
-    console.error("\nExample:");
-    console.error("  npx tsx scripts/restore-storage.ts backups/storage-2026-04-19");
-    process.exit(1);
-  }
-
-  if (!existsSync(backupDir)) {
-    console.error(`Backup directory not found: ${backupDir}`);
-    process.exit(1);
+  const config = getSupabaseConfig();
+  const target = assertAuthorizedNonProductionTarget({
+    supabaseUrl: config.url,
+  });
+  if (target.projectRef === manifest.source.projectRef) {
+    throw new Error(
+      "Restore no projeto de origem e proibido. Use um projeto descartavel separado.",
+    );
   }
 
   const supabase = createServiceRoleClient();
-  const buckets = readdirSync(backupDir).filter((entry) => statSync(join(backupDir, entry)).isDirectory());
+  const { data: targetBuckets, error } = await supabase.storage.listBuckets();
+  if (error)
+    throw new Error(`Falha ao listar buckets de destino: ${error.message}`);
+  const bucketById = new Map(
+    ((targetBuckets ?? []) as StorageBucketRow[]).map((bucket) => [
+      bucket.id || bucket.name || "",
+      bucket,
+    ]),
+  );
 
-  console.log(`Backup directory: ${backupDir}\n`);
-
-  if (buckets.length === 0) {
-    console.error("No buckets found in backup directory");
-    process.exit(1);
+  for (const expectedBucket of manifest.buckets) {
+    const actualBucket = bucketById.get(expectedBucket.id);
+    if (!actualBucket) {
+      throw new Error(
+        `Bucket ${expectedBucket.id} nao existe no destino. Aplique migrations antes do restore.`,
+      );
+    }
+    assertBucketContract(expectedBucket, actualBucket);
   }
 
-  console.log(`Found ${buckets.length} buckets to restore\n`);
+  const work = manifest.buckets.flatMap((bucket) =>
+    bucket.objects.map((object) => ({ bucketId: bucket.id, object })),
+  );
+  let restored = 0;
+  let verified = 0;
+  await mapWithConcurrency(
+    work,
+    args.concurrency,
+    async ({ bucketId, object }) => {
+      const result = await restoreObject(
+        supabase,
+        args.backupDir,
+        bucketId,
+        object,
+      );
+      if (result === "restored") restored += 1;
+      else verified += 1;
+    },
+  );
 
-  let totalFiles = 0;
-  const startTime = Date.now();
-
-  for (const bucket of buckets) {
-    const count = await restoreBucket(supabase, bucket, backupDir);
-    totalFiles += count;
-  }
-
-  const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-
-  console.log("\nStorage restore complete.");
-  console.log(`Total files: ${totalFiles}`);
-  console.log(`Duration: ${duration}s`);
+  console.log(`Destino confirmado: ${target.projectRef} (${target.target}).`);
+  console.log(
+    `Restore verificado: ${restored} restaurado(s), ${verified} ja identico(s).`,
+  );
 }
 
 main().catch((error) => {
-  console.error("\nRestore failed:", error);
-  process.exit(1);
+  console.error(
+    error instanceof Error ? error.message : "Falha no restore de Storage.",
+  );
+  process.exitCode = 1;
 });

@@ -219,6 +219,61 @@ tratada como excecao. Se for realmente necessaria, deve ser classificada:
 -- security-authority: public-storage-listing storage.objects
 ```
 
+## Backup E Recuperacao
+
+O backup gerenciado do banco e a fonte canonica para recuperar schema, dados,
+Auth e metadados do Storage. Objetos binarios do Storage nao fazem parte desse
+backup e exigem exportacao separada. Arquivos de configuracao e migrations sao
+versionados no Git; nao devem ser copiados para uma segunda arvore de backup.
+
+Gates operacionais:
+
+```powershell
+npm run backup:database:status
+npm run alpha:backup:gate
+npm run backup:storage
+npm run restore:storage -- caminho-do-backup --verify-only
+```
+
+`alpha:backup:gate` falha quando o Supabase nao apresenta backup `COMPLETED`
+com no maximo 36 horas nem PITR. Backup falho, antigo ou `walg_enabled` isolado
+nao e evidencia de que o operador consegue restaurar. O status observado deve
+ser registrado no plano da release, sem copiar tokens ou URLs com credenciais.
+
+O exportador de Storage cria um inventario versionado, usa nomes locais
+derivados por hash e registra tamanho e SHA-256 de cada objeto. O diretorio
+mantem o marcador `INCOMPLETE` ate todos os downloads terminarem; o manifesto e
+gravado por ultimo e o verificador recusa qualquer marcador remanescente. A
+saida em `backups/` e ignorada pelo Git, contem dados sensiveis e deve
+permanecer apenas em volume local criptografado ou cofre de backup aprovado.
+Falha parcial nao e backup.
+
+O restore de Storage:
+
+- valida integralmente manifesto, tamanho e checksum antes da rede;
+- aceita apenas `development` ou `staging` com a confirmacao operacional
+  canonica;
+- recusa restaurar no mesmo project ref da origem;
+- exige que migrations/configuracao ja tenham criado buckets equivalentes;
+- nao substitui objeto remoto divergente;
+- verifica novamente o SHA-256 depois do upload.
+
+Rehearsal de recuperacao deve usar um projeto Supabase descartavel. Nunca
+executar teste destrutivo no projeto ativo. Sequencia canonica:
+
+1. Pausar novas admissoes e preservar logs do incidente.
+2. Selecionar um backup anterior ao incidente.
+3. Restaurar ou clonar o banco para um novo projeto.
+4. Aplicar e validar migrations, Edge Functions, Auth, Realtime e secrets.
+5. Restaurar os objetos do Storage e validar checksums.
+6. Executar migrations drift, Security Authority, RLS e smoke autenticado.
+7. Trocar endpoints somente depois de aprovacao operacional; preservar a
+   origem para investigacao.
+
+Para alpha privado, backup diario acessivel e um rehearsal aprovado sao
+obrigatorios antes de convidar pessoas reais. PITR reduz RPO, mas nao substitui
+o rehearsal nem o backup separado de Storage.
+
 ## Secrets
 
 Seguir [Workflow de secrets Supabase](../../SUPABASE_SECRETS.md).

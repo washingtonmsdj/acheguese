@@ -5,6 +5,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { PostAdapter } from '../src/core/posts/adapters/PostAdapter';
+import { postService } from '../src/core/posts/services';
 import type { UnifiedPost } from '../src/shared/types/posts';
 
 type PostLocationLike = Extract<NonNullable<UnifiedPost['location']>, { name: string }>;
@@ -204,14 +205,14 @@ describe('FASE 6 - Regressao Posts SSOT', () => {
   describe('Fase 4 - createPost requires location_id', () => {
     it('rejects null location_id', async () => {
       await expect(
-        (await import('../src/core/posts/services')).postService.createPost({
+        postService.createPost({
           author_profile_id: '11111111-1111-4111-8111-111111111111',
           content: 'Test',
           type: 'post',
           location_id: null as unknown as string,
         }),
       ).rejects.toThrow(/location_id.*obrigat.rio/i);
-    }, 5000);
+    });
   });
 
   describe('Zero regression - sortPosts', () => {
