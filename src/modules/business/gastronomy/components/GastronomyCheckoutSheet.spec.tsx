@@ -73,7 +73,7 @@ describe("GastronomyCheckoutSheet", () => {
     checkout: vi.fn(),
     isSubmitting: false,
     hasActiveProfile: true,
-  } as CheckoutHookResult;
+  } as unknown as CheckoutHookResult;
   const baseDeliveryDestinationMock = {
     deliveryDestination: null,
     showDestinationEditor: true,
@@ -110,7 +110,7 @@ describe("GastronomyCheckoutSheet", () => {
       has_menu: true,
       is_open: true,
       opening_hours: null,
-      status: "approved",
+      status: "active",
       active_subscription: null,
       trial_ends_at: null,
       plan_limits: null,
