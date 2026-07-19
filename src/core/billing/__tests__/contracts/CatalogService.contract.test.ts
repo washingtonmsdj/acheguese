@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * CatalogService - Contract Tests
  * 
