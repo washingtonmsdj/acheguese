@@ -239,6 +239,11 @@ npm run restore:storage -- caminho-do-backup --verify-only
 com no maximo 36 horas nem PITR. Backup falho, antigo ou `walg_enabled` isolado
 nao e evidencia de que o operador consegue restaurar. O status observado deve
 ser registrado no plano da release, sem copiar tokens ou URLs com credenciais.
+O mesmo gate e aplicado diretamente por `alpha:invite` e `alpha:resume` antes
+da criacao do cliente `service_role`. Falha da CLI, da Management API ou da
+evidencia de recuperacao mantem a admissao fechada. Comandos de contencao e
+consulta (`alpha:pause`, `alpha:revoke` e `alpha:status`) nao dependem desse
+gate e permanecem utilizaveis durante incidentes.
 
 O exportador de Storage cria um inventario versionado, usa nomes locais
 derivados por hash e registra tamanho e SHA-256 de cada objeto. O diretorio

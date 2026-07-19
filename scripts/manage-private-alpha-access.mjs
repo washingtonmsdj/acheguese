@@ -1,13 +1,16 @@
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import {
   createServiceRoleClient,
   getSupabaseConfig,
   loadSupabaseScriptEnv,
 } from "./lib/supabase-client.mjs";
 import { assertAuthorizedNonProductionTarget as assertAuthorizedNonProductionTargetImpl } from "./lib/non-production-target.mjs";
+import { getSupabaseBackupReadiness } from "./supabase-backup-readiness.mjs";
 
 const ENV_FILES = [".env.local", ".env.remote", ".env.test", ".env"];
-
-loadSupabaseScriptEnv(ENV_FILES);
+const EMAIL_ACTIONS = new Set(["invite", "revoke"]);
+const STATE_ACTIONS = new Set(["pause", "resume", "status"]);
 
 function fail(message) {
   throw new Error(message);
@@ -32,20 +35,34 @@ function assertAuthorizedNonProductionTarget() {
   return assertAuthorizedNonProductionTargetImpl({ supabaseUrl: config.url });
 }
 
-async function main() {
-  const action = process.argv[2];
-  const emailActions = new Set(["invite", "revoke"]);
-  const stateActions = new Set(["pause", "resume", "status"]);
+export function requiresRestorableBackup(action) {
+  return action === "invite" || action === "resume";
+}
 
-  if (!emailActions.has(action) && !stateActions.has(action)) {
+async function main() {
+  loadSupabaseScriptEnv(ENV_FILES);
+
+  const action = process.argv[2];
+
+  if (!EMAIL_ACTIONS.has(action) && !STATE_ACTIONS.has(action)) {
     fail("Use invite, revoke, pause, resume ou status como acao.");
   }
 
-  assertAuthorizedNonProductionTarget();
-  const admin = createServiceRoleClient({ envFiles: ENV_FILES });
-  const email = emailActions.has(action)
+  const email = EMAIL_ACTIONS.has(action)
     ? normalizeEmail(process.argv[3])
     : null;
+  const target = assertAuthorizedNonProductionTarget();
+
+  if (requiresRestorableBackup(action)) {
+    const recovery = getSupabaseBackupReadiness(target.projectRef);
+    if (!recovery.ready) {
+      fail(
+        "Alpha permanece fechada: nao existe backup COMPLETED recente nem PITR acessivel. Execute npm run alpha:backup:gate depois de habilitar a recuperacao.",
+      );
+    }
+  }
+
+  const admin = createServiceRoleClient({ envFiles: ENV_FILES });
 
   if (action === "invite") {
     const { data, error } = await admin.rpc("alpha_access_issue_invite", {
@@ -76,11 +93,17 @@ async function main() {
   }
 }
 
-try {
-  await main();
-} catch (error) {
-  console.error(
-    error instanceof Error ? error.message : "Falha na operacao da alpha.",
-  );
-  process.exitCode = 1;
+const isMain =
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+
+if (isMain) {
+  try {
+    await main();
+  } catch (error) {
+    console.error(
+      error instanceof Error ? error.message : "Falha na operacao da alpha.",
+    );
+    process.exitCode = 1;
+  }
 }

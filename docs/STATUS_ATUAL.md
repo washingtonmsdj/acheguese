@@ -2442,3 +2442,8 @@ Avancar para fechamento total da Fase 3 (sem abrir Fase 4):
   restore exige alvo nao produtivo diferente da origem.
 - `backup-config.ts` foi removido porque Git e o SSOT de configuracao,
   migrations e funcoes.
+- A admissao remota foi pausada com zero convites ativos. `alpha:invite` e
+  `alpha:resume` agora falham antes de criar o cliente `service_role` quando o
+  gate nao encontra backup recente ou PITR; a prova remota retornou codigo `1`
+  para ambos e preservou `admissions_enabled=false`. Contencao, revogacao e
+  consulta continuam independentes do gate de recuperacao.

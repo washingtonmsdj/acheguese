@@ -177,10 +177,15 @@ function runBackupList(projectRef) {
   return parseSupabaseBackupListJson(result.stdout);
 }
 
+export function getSupabaseBackupReadiness(projectRef) {
+  validateProjectRef(projectRef);
+  return evaluateBackupReadiness(runBackupList(projectRef), projectRef);
+}
+
 async function main() {
   const args = parseArguments(process.argv.slice(2));
   const projectRef = resolveProjectRef(args.projectRef);
-  const status = evaluateBackupReadiness(runBackupList(projectRef), projectRef);
+  const status = getSupabaseBackupReadiness(projectRef);
 
   if (args.json) {
     console.log(JSON.stringify(status, null, 2));

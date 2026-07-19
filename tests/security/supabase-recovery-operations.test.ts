@@ -15,6 +15,7 @@ import {
   readAndVerifyStorageBackup,
   STORAGE_BACKUP_SCHEMA_VERSION,
 } from "../../scripts/lib/storage-recovery";
+import { requiresRestorableBackup } from "../../scripts/manage-private-alpha-access.mjs";
 import {
   evaluateBackupReadiness,
   parseArguments as parseBackupReadinessArguments,
@@ -76,6 +77,14 @@ function createBackupFixture(
 }
 
 describe("Supabase backup readiness", () => {
+  it("blocks only operations that can admit new alpha identities", () => {
+    expect(requiresRestorableBackup("invite")).toBe(true);
+    expect(requiresRestorableBackup("resume")).toBe(true);
+    expect(requiresRestorableBackup("pause")).toBe(false);
+    expect(requiresRestorableBackup("revoke")).toBe(false);
+    expect(requiresRestorableBackup("status")).toBe(false);
+  });
+
   it("parses JSON even when the CLI emits an update warning", () => {
     const payload = parseSupabaseBackupListJson(
       `CLI update available\n{"backups":[],"pitr_enabled":false,"walg_enabled":true}\n`,

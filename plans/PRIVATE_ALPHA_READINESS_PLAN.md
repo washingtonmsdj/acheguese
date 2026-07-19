@@ -120,6 +120,14 @@ seguranca para acelerar o teste.
   Authority e configuracao de seguranca aprovadas.
 - O script redundante `backup-config.ts` foi removido: configuracao, migrations
   e funcoes ja possuem SSOT versionado no Git.
+- A admissao remota foi pausada e permanece com zero convites ativos. Os
+  comandos `alpha:invite` e `alpha:resume` agora consultam o gate de recuperacao
+  e falham antes de criar o cliente `service_role` enquanto nao houver backup
+  recente ou PITR. `alpha:pause`, `alpha:revoke` e `alpha:status` continuam
+  disponiveis mesmo se a consulta de backup estiver indisponivel.
+- A prova operacional executou `alpha:resume` e `alpha:invite` contra
+  development: ambos retornaram codigo `1`; o status anterior e posterior
+  permaneceu `active_invites=0` e `admissions_enabled=false`.
 
 Os residuais PostGIS dependem do owner `supabase_admin`; a protecao HIBP do
 Auth depende de plano/configuracao do Dashboard ou Management API. Eles
@@ -148,7 +156,9 @@ auditoria sem copiar o e-mail para o log.
 `alpha:pause` revoga atomicamente todos os convites ainda ativos e impede tanto
 novos convites quanto novas identidades. Contas existentes nao sao apagadas.
 `alpha:resume` reabre somente a emissao e o consumo de novos convites; convites
-revogados pela pausa nao sao reativados.
+revogados pela pausa nao sao reativados. Tanto `alpha:resume` quanto
+`alpha:invite` falham de forma fechada antes de acessar o banco se o projeto nao
+possuir recuperacao restauravel aprovada pelo gate canonico.
 
 ## Perimetro De Deployment
 

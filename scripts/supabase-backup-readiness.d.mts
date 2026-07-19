@@ -37,3 +37,7 @@ export function evaluateBackupReadiness(
   projectRef: string,
   checkedAt?: Date,
 ): SupabaseBackupReadiness;
+
+export function getSupabaseBackupReadiness(
+  projectRef: string,
+): SupabaseBackupReadiness;

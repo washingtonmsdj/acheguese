@@ -109,4 +109,12 @@ describe("private alpha access boundary", () => {
     expect(command).toContain("process.exitCode = 1");
     expect(command).not.toContain("process.exit(1)");
   });
+
+  it("keeps admission closed until recovery is restorable", () => {
+    const command = readProjectFile("scripts/manage-private-alpha-access.mjs");
+
+    expect(command).toContain("requiresRestorableBackup(action)");
+    expect(command).toContain("getSupabaseBackupReadiness(target.projectRef)");
+    expect(command).toContain("if (!recovery.ready)");
+  });
 });
