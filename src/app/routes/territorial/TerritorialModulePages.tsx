@@ -22,10 +22,10 @@ import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
 import { getRequiredRecordValue } from '@/shared/utils/recordLookup';
 import { MODULE_SLUGS, buildCommunityTerritoryUrl, buildModuleTerritoryUrl } from '@/core/routing/utils/territoryUrls';
 import { createLaunchPausedRoute } from '@/app/routes/launchPausedComponent';
-import type { CommunityOverviewSection } from '@/core/community-feed/components/page/CommunityOverviewSurface';
+import type { CommunityOverviewSection } from '@/core/community/components/page/CommunityOverviewSurface';
 
 // Lazy imports dos módulos existentes
-const ComunidadePage       = lazy(() => import('@/core/community-feed/pages/ComunidadePage'));
+const ComunidadePage       = lazy(() => import('@/core/community/pages/ComunidadePage'));
 const CidadeLandingPage    = lazy(() => import('@/app/pages/CidadeLandingPage'));
 const CommunityCommunicationTabPage = createLaunchPausedRoute('Comunicacao');
 const ProblemasPage        = lazy(() => import('@/modules/community-issues/pages/ProblemasPage'));
