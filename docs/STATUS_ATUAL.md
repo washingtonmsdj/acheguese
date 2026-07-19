@@ -2473,3 +2473,7 @@ Avancar para fechamento total da Fase 3 (sem abrir Fase 4):
   integridade Auth e status de admissao em um relatorio read-only. Ele exige
   confirmacao de alvo nao produtivo, nao altera o Supabase e serve como comando
   canonico para decidir se a rodada privada pode ser aberta.
+- O SMTP Auth agora possui operador proprio:
+  `alpha:auth:smtp:check` audita em leitura e `alpha:auth:smtp:apply` aplica via
+  Management API somente com confirmacao explicita de alvo nao produtivo. A
+  saida nao copia host, remetente, usuario, senha, PAT ou resposta upstream.

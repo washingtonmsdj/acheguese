@@ -78,6 +78,8 @@
     "alpha:backup:gate": "node scripts/supabase-backup-readiness.mjs --require-restorable",
     "alpha:auth:gate": "node scripts/supabase-auth-readiness.mjs --require-ready",
     "alpha:email:gate": "node scripts/private-alpha-email-readiness.mjs --require-ready",
+    "alpha:auth:smtp:check": "node scripts/private-alpha-auth-smtp-config.mjs --check --require-ready",
+    "alpha:auth:smtp:apply": "node scripts/private-alpha-auth-smtp-config.mjs --apply --require-ready",
     "alpha:readiness": "node scripts/private-alpha-readiness.mjs",
     "alpha:readiness:gate": "node scripts/private-alpha-readiness.mjs --require-ready",
     "backup:storage": "tsx scripts/backup-storage.ts",

@@ -136,5 +136,15 @@ describe("private alpha access boundary", () => {
     expect(readinessGate).toContain("auditSupabaseAuthReadiness");
     expect(readinessGate).toContain("alpha_access_get_status");
     expect(readinessGate).not.toContain("console.log(token");
+
+    const smtpOperator = readProjectFile(
+      "scripts/private-alpha-auth-smtp-config.mjs",
+    );
+    expect(smtpOperator).toContain("assertAuthorizedNonProductionTarget");
+    expect(smtpOperator).toContain("CONFIGURE_SUPABASE_AUTH_SMTP_CONFIRMED");
+    expect(smtpOperator).toContain("requestAuthConfig(projectRef, token");
+    expect(smtpOperator).toContain("SUPABASE_AUTH_SMTP_PASS");
+    expect(smtpOperator).not.toContain("console.log(token");
+    expect(smtpOperator).not.toContain("console.log(process.env");
   });
 });

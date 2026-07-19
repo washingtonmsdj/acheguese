@@ -20,6 +20,10 @@ import {
   evaluateResendEmailReadiness,
   evaluateSupabaseAuthEmailReadiness,
 } from "../../scripts/private-alpha-email-readiness.mjs";
+import {
+  createAuthSmtpPatchPayload,
+  evaluateSmtpOperatorEnv,
+} from "../../scripts/private-alpha-auth-smtp-config.mjs";
 import { summarizePrivateAlphaReadiness } from "../../scripts/private-alpha-readiness.mjs";
 import { auditSupabaseAuthReadiness } from "../../scripts/supabase-auth-readiness.mjs";
 import {
@@ -345,6 +349,61 @@ describe("Private alpha email readiness", () => {
       failureCode: "auth_email_autoconfirm_enabled",
       ready: false,
     });
+  });
+});
+
+describe("Private alpha Auth SMTP operator", () => {
+  const completeEnv = {
+    SUPABASE_AUTH_SMTP_ADMIN_EMAIL: "no-reply@auth.example.com",
+    SUPABASE_AUTH_SMTP_HOST: "smtp.resend.com",
+    SUPABASE_AUTH_SMTP_PASS: "secret-password",
+    SUPABASE_AUTH_SMTP_PORT: "587",
+    SUPABASE_AUTH_SMTP_SENDER_NAME: "Achegue-se",
+    SUPABASE_AUTH_SMTP_USER: "resend",
+  };
+
+  it("validates operator SMTP env without copying secret values", () => {
+    const status = evaluateSmtpOperatorEnv({
+      ...completeEnv,
+      SUPABASE_AUTH_SMTP_PASS: "",
+    });
+
+    expect(status).toMatchObject({
+      configured: false,
+      failureCode: "missing_smtp_env",
+      validAdminEmail: true,
+      validPort: true,
+    });
+    expect(status.missingKeys).toContain("SUPABASE_AUTH_SMTP_PASS");
+    expect(JSON.stringify(status)).not.toContain("secret-password");
+    expect(JSON.stringify(status)).not.toContain("smtp.resend.com");
+    expect(JSON.stringify(status)).not.toContain("no-reply@auth.example.com");
+  });
+
+  it("builds the official Auth SMTP patch only after validation", () => {
+    expect(evaluateSmtpOperatorEnv(completeEnv)).toMatchObject({
+      configured: true,
+      failureCode: null,
+    });
+
+    expect(createAuthSmtpPatchPayload(completeEnv)).toMatchObject({
+      external_email_enabled: true,
+      mailer_autoconfirm: false,
+      mailer_secure_email_change_enabled: true,
+      smtp_admin_email: "no-reply@auth.example.com",
+      smtp_host: "smtp.resend.com",
+      smtp_pass: "secret-password",
+      smtp_port: 587,
+      smtp_sender_name: "Achegue-se",
+      smtp_user: "resend",
+    });
+
+    expect(() =>
+      createAuthSmtpPatchPayload({
+        ...completeEnv,
+        SUPABASE_AUTH_SMTP_PORT: "not-a-port",
+      }),
+    ).toThrow(/invalid_smtp_port/);
   });
 });
 

@@ -65,7 +65,9 @@ seguranca para acelerar o teste.
 - [ ] Rotacionar `RESEND_API_KEY` das Edge Functions para uma chave send-only e
       manter `RESEND_MANAGEMENT_API_KEY` apenas no ambiente operacional.
 - [ ] Corrigir e verificar DKIM e SPF do dominio remetente no Resend.
-- [ ] Configurar e auditar SMTP customizado no Supabase Auth com PAT valido.
+- [x] Criar operador auditavel para configurar SMTP customizado do Supabase
+      Auth com PAT valido e confirmacao explicita.
+- [ ] Aplicar e auditar SMTP customizado no Supabase Auth com PAT valido.
 - [ ] Validar SMTP/Auth com um e-mail real convidado.
 - [ ] Resolver no Supabase os tres registros historicos que quebram as paginas
       281 a 283 do Auth Admin com `perPage=1`, sem apagar identidades desconhecidas.
@@ -177,6 +179,14 @@ seguranca para acelerar o teste.
   operacional separada. O PAT de Management API esta ausente, portanto o SMTP
   customizado do Supabase Auth nao pode ser auditado. Nenhum e-mail foi enviado
   e nenhuma configuracao remota foi alterada.
+- `alpha:auth:smtp:check` e `alpha:auth:smtp:apply` foram preparados para
+  auditar/aplicar SMTP Auth via Management API, usando somente alvo nao
+  produtivo confirmado. O apply exige
+  `SUPABASE_AUTH_SMTP_APPLY_CONFIRM=CONFIGURE_SUPABASE_AUTH_SMTP_CONFIRMED` e
+  nunca imprime host, remetente, usuario ou senha.
+- A prova remota de `alpha:auth:smtp:check` em development retornou codigo `1`
+  com `missing_management_pat`, sem imprimir configuracao SMTP e sem aplicar
+  alteracao remota.
 
 Os residuais PostGIS dependem do owner `supabase_admin`; a protecao HIBP do
 Auth depende de plano/configuracao do Dashboard ou Management API. Eles
@@ -204,6 +214,8 @@ npm run alpha:pause
 npm run alpha:resume
 npm run alpha:readiness
 npm run alpha:readiness:gate
+npm run alpha:auth:smtp:check
+npm run alpha:auth:smtp:apply
 ```
 
 O browser nunca recebe `service_role`. O e-mail e normalizado no banco, o

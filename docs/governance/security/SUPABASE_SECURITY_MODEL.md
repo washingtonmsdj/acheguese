@@ -233,6 +233,7 @@ npm run backup:database:status
 npm run alpha:backup:gate
 npm run alpha:auth:gate
 npm run alpha:email:gate
+npm run alpha:auth:smtp:check
 npm run alpha:readiness
 npm run backup:storage
 npm run restore:storage -- caminho-do-backup --verify-only
@@ -280,6 +281,14 @@ status de admissao em leitura, exige confirmacao de alvo nao produtivo e emite
 apenas contagens, booleanos e codigos de bloqueio. O comando nao substitui os
 gates individuais usados por `alpha:invite` e `alpha:resume`; ele existe para
 operacao, auditoria e handoff.
+
+`alpha:auth:smtp:apply` configura SMTP Auth pela Management API somente quando
+o alvo nao produtivo esta confirmado e
+`SUPABASE_AUTH_SMTP_APPLY_CONFIRM=CONFIGURE_SUPABASE_AUTH_SMTP_CONFIRMED`.
+Variaveis `SUPABASE_AUTH_SMTP_*` ficam apenas no ambiente operacional e nao
+entram no browser, Vercel ou Edge Functions. A saida deve registrar somente
+booleanos, codigos de falha e nomes de env vars ausentes; senha, host, usuario
+e remetente nao sao logs.
 
 O exportador de Storage cria um inventario versionado, usa nomes locais
 derivados por hash e registra tamanho e SHA-256 de cada objeto. O diretorio
