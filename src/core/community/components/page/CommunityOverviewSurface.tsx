@@ -25,16 +25,25 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import bairroChapada from "@/assets/bairro-chapada.jpg";
-import bairroNordeste from "@/assets/bairro-nordeste.jpg";
-import bairroOndina from "@/assets/bairro-ondina.jpg";
-import bairroPituba from "@/assets/bairro-pituba.jpg";
-import bairroRioVermelho from "@/assets/bairro-riovermelho.jpg";
-import bairroSantaCruz from "@/assets/bairro-santa-cruz.jpg";
-import bairroStiep from "@/assets/bairro-stiep.jpg";
-import bairroValePedrinhas from "@/assets/bairro-vale-pedrinhas.jpg";
-import heroSalvador from "@/assets/hero-cidade-salvador-real.jpg";
-import neighborhoodFeatured from "@/assets/neighborhood-featured.jpg";
+import personaMoradorImport from "@/assets/persona-morador.jpg";
+import {
+  buildBusinessHref,
+  buildCommunityViewHref,
+  formatCount,
+  formatPublicPostDate,
+  formatSlugLabel,
+  getCommunityDescription,
+  getCommunityLocationLine,
+  getCommunityTitle,
+  getEventDateParts,
+  getHeroImage,
+  getPublicPostAuthor,
+  getPublicPostTypeIcon,
+  getPublicPostTypeLabel,
+  getResolvedSlug,
+  getTerritoryLocationLabel,
+  normalizeCategoryLabel,
+} from "./communityOverviewHelpers";
 import personaMorador from "@/assets/persona-morador.jpg";
 import {
   isLaunchCommunityPostEnabled,
