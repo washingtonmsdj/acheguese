@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 import type { MapMarker, TerritoryPolygon } from "@/core/maps";
-import { NeighborhoodTerritoryArt } from "@/core/community-feed/components/public/NeighborhoodTerritoryArt";
+import { NeighborhoodTerritoryArt } from "@/core/community/components/public/NeighborhoodTerritoryArt";
 
 type NeighborhoodTerritoryHeroProps = {
   territoryName: string;
