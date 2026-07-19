@@ -117,7 +117,7 @@ serve(async (req: Request) => {
       input: {},
       success: true,
       duration_ms: 0,
-    }).catch((err: unknown) => console.error('Audit log error:', err));
+    }).then(() => {}, (err: unknown) => console.error('Audit log error:', err));
 
     return new Response(
       JSON.stringify({ tree }),
