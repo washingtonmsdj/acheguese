@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:vercel": "node deployment/build.mjs",
     "build:dev": "vite build --mode development",
     "build:fast": "node scripts/build-fast.mjs",
     "build:analyze": "vite build && open dist/stats.html",

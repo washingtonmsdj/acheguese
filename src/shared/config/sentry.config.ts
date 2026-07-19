@@ -3,6 +3,7 @@ import type { SeverityLevel } from "@sentry/react";
 export interface SentryConfig {
   dsn: string;
   environment: string;
+  release?: string;
   enabled: boolean;
   tracesSampleRate: number;
   replaysSessionSampleRate: number;
@@ -55,6 +56,8 @@ function ensureSentryInitialized(): Promise<SentryModule | null> {
       Sentry.init({
         dsn: config.dsn,
         environment: config.environment,
+        release: config.release,
+        sendDefaultPii: false,
         integrations: [
           Sentry.browserTracingIntegration(),
           Sentry.replayIntegration({
@@ -86,6 +89,26 @@ function ensureSentryInitialized(): Promise<SentryModule | null> {
               error.stack?.includes("moz-extension://")
             ) {
               return null;
+            }
+          }
+
+          if (event.user) {
+            event.user = event.user.id ? { id: event.user.id } : undefined;
+          }
+
+          if (event.request) {
+            delete event.request.cookies;
+            delete event.request.data;
+            delete event.request.headers;
+            delete event.request.query_string;
+
+            if (event.request.url) {
+              try {
+                const url = new URL(event.request.url);
+                event.request.url = `${url.origin}${url.pathname}`;
+              } catch {
+                event.request.url = undefined;
+              }
             }
           }
 
@@ -127,8 +150,15 @@ export function getSentryConfig(): SentryConfig {
 
   return {
     dsn: import.meta.env.VITE_SENTRY_DSN || "",
-    environment: import.meta.env.MODE || "development",
-    enabled: import.meta.env.PROD && !!import.meta.env.VITE_SENTRY_DSN && !automatedRuntime,
+    environment:
+      import.meta.env.VITE_SENTRY_ENVIRONMENT ||
+      import.meta.env.MODE ||
+      "development",
+    release: import.meta.env.VITE_SENTRY_RELEASE || undefined,
+    enabled:
+      import.meta.env.PROD &&
+      !!import.meta.env.VITE_SENTRY_DSN &&
+      !automatedRuntime,
     tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
@@ -139,19 +169,11 @@ export function initializeSentry(): void {
   void ensureSentryInitialized();
 }
 
-export function setSentryUser(user: {
-  id: string;
-  email?: string;
-  username?: string;
-}): void {
+export function setSentryUser(user: { id: string }): void {
   const config = getSentryConfig();
   if (!config.enabled) return;
 
-  withSentry((Sentry) => Sentry.setUser({
-    id: user.id,
-    email: user.email,
-    username: user.username,
-  }));
+  withSentry((Sentry) => Sentry.setUser({ id: user.id }));
 }
 
 export function clearSentryUser(): void {
@@ -178,13 +200,15 @@ export function addSentryBreadcrumb(
   const config = getSentryConfig();
   if (!config.enabled) return;
 
-  withSentry((Sentry) => Sentry.addBreadcrumb({
-    message,
-    category,
-    level,
-    data,
-    timestamp: Date.now() / 1000,
-  }));
+  withSentry((Sentry) =>
+    Sentry.addBreadcrumb({
+      message,
+      category,
+      level,
+      data,
+      timestamp: Date.now() / 1000,
+    }),
+  );
 }
 
 export function captureSentryException(
@@ -207,10 +231,12 @@ export function captureSentryMessage(
   const config = getSentryConfig();
   if (!config.enabled) return;
 
-  withSentry((Sentry) => Sentry.captureMessage(message, {
-    level: level as SeverityLevel,
-    extra: context,
-  }));
+  withSentry((Sentry) =>
+    Sentry.captureMessage(message, {
+      level: level as SeverityLevel,
+      extra: context,
+    }),
+  );
 }
 
 export function startSentryTransaction(name: string, op: string): unknown {
@@ -228,7 +254,9 @@ export function startSentryTransaction(name: string, op: string): unknown {
   return null;
 }
 
-export function showSentryReportDialog(options?: SentryReportDialogOptions): void {
+export function showSentryReportDialog(
+  options?: SentryReportDialogOptions,
+): void {
   const config = getSentryConfig();
   if (!config.enabled) return;
 

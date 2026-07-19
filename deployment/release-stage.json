@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "stage": "private-alpha",
+  "productionExposure": "closed",
+  "alphaExposure": "vercel-authenticated-preview",
+  "publicLaunchApproved": false
+}
