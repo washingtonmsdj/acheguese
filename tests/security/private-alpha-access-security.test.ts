@@ -17,6 +17,9 @@ describe("private alpha access boundary", () => {
   const enforcementMigration = readProjectFile(
     "supabase/migrations/20260718211000_require_alpha_invite_for_all_auth_identities.sql",
   );
+  const admissionControlMigration = readProjectFile(
+    "supabase/migrations/20260718230000_add_private_alpha_admission_control.sql",
+  );
 
   it("blocks Auth identity creation before public profile triggers run", () => {
     expect(accessMigration).toContain("BEFORE INSERT ON auth.users");
@@ -72,5 +75,38 @@ describe("private alpha access boundary", () => {
     expect(cleanupMigration).toMatch(
       /REVOKE ALL ON FUNCTION public\.alpha_access_delete_operational_invite[\s\S]+FROM PUBLIC, anon, authenticated/,
     );
+  });
+
+  it("provides a service-role kill switch that revokes pending invites", () => {
+    expect(admissionControlMigration).toContain("private.alpha_access_control");
+    expect(admissionControlMigration).toContain(
+      "private_alpha_admissions_paused",
+    );
+    expect(admissionControlMigration).toMatch(
+      /UPDATE private\.alpha_access_invites[\s\S]+WHERE status = 'active'/,
+    );
+    expect(admissionControlMigration).toMatch(
+      /REVOKE ALL ON FUNCTION public\.alpha_access_set_admissions[\s\S]+FROM PUBLIC, anon, authenticated/,
+    );
+    expect(admissionControlMigration).toMatch(
+      /GRANT EXECUTE ON FUNCTION public\.alpha_access_set_admissions[\s\S]+TO service_role/,
+    );
+  });
+
+  it("returns admission status without exposing invite identities", () => {
+    expect(admissionControlMigration).toContain("alpha_access_get_status");
+    expect(admissionControlMigration).toContain(
+      "'active_invites', v_active_invites",
+    );
+    expect(admissionControlMigration).not.toMatch(
+      /alpha_access_get_status[\s\S]+email_normalized[\s\S]+END;/,
+    );
+  });
+
+  it("lets the CLI close network handles before returning a failure code", () => {
+    const command = readProjectFile("scripts/manage-private-alpha-access.mjs");
+
+    expect(command).toContain("process.exitCode = 1");
+    expect(command).not.toContain("process.exit(1)");
   });
 });

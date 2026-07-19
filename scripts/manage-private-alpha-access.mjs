@@ -10,8 +10,7 @@ const CONFIRMATION = "NON_PRODUCTION_REMOTE_CONFIRMED";
 loadSupabaseScriptEnv(ENV_FILES);
 
 function fail(message) {
-  console.error(message);
-  process.exit(1);
+  throw new Error(message);
 }
 
 function normalizeEmail(value) {
@@ -53,30 +52,55 @@ function assertAuthorizedNonProductionTarget() {
   }
 }
 
-const action = process.argv[2];
-const email = normalizeEmail(process.argv[3]);
+async function main() {
+  const action = process.argv[2];
+  const emailActions = new Set(["invite", "revoke"]);
+  const stateActions = new Set(["pause", "resume", "status"]);
 
-if (!new Set(["invite", "revoke"]).has(action)) {
-  fail("Use invite ou revoke como acao.");
+  if (!emailActions.has(action) && !stateActions.has(action)) {
+    fail("Use invite, revoke, pause, resume ou status como acao.");
+  }
+
+  assertAuthorizedNonProductionTarget();
+  const admin = createServiceRoleClient({ envFiles: ENV_FILES });
+  const email = emailActions.has(action)
+    ? normalizeEmail(process.argv[3])
+    : null;
+
+  if (action === "invite") {
+    const { data, error } = await admin.rpc("alpha_access_issue_invite", {
+      p_email: email,
+    });
+    if (error || !data) fail(error?.message ?? "Falha ao emitir convite.");
+    console.log(`Convite de alpha emitido para ${email}.`);
+  } else if (action === "revoke") {
+    const { data, error } = await admin.rpc("alpha_access_revoke_invite", {
+      p_email: email,
+    });
+    if (error) fail(error.message);
+    console.log(
+      data
+        ? `Convite de alpha revogado para ${email}.`
+        : `Nenhum convite ativo encontrado para ${email}.`,
+    );
+  } else if (action === "status") {
+    const { data, error } = await admin.rpc("alpha_access_get_status");
+    if (error || !data) fail(error?.message ?? "Falha ao consultar a alpha.");
+    console.log(JSON.stringify(data));
+  } else {
+    const { data, error } = await admin.rpc("alpha_access_set_admissions", {
+      p_enabled: action === "resume",
+    });
+    if (error || !data) fail(error?.message ?? "Falha ao alterar a admissao.");
+    console.log(JSON.stringify(data));
+  }
 }
 
-assertAuthorizedNonProductionTarget();
-const admin = createServiceRoleClient({ envFiles: ENV_FILES });
-
-if (action === "invite") {
-  const { data, error } = await admin.rpc("alpha_access_issue_invite", {
-    p_email: email,
-  });
-  if (error || !data) fail(error?.message ?? "Falha ao emitir convite.");
-  console.log(`Convite de alpha emitido para ${email}.`);
-} else {
-  const { data, error } = await admin.rpc("alpha_access_revoke_invite", {
-    p_email: email,
-  });
-  if (error) fail(error.message);
-  console.log(
-    data
-      ? `Convite de alpha revogado para ${email}.`
-      : `Nenhum convite ativo encontrado para ${email}.`,
+try {
+  await main();
+} catch (error) {
+  console.error(
+    error instanceof Error ? error.message : "Falha na operacao da alpha.",
   );
+  process.exitCode = 1;
 }
