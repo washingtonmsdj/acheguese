@@ -3,6 +3,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TerritorialLayout } from "@/core/routing/components/TerritorialLayout";
+import { LocationType, LocationStatus } from "@/core/location/types";
 import type { TerritoryResolveResult } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
 const useResolveTerritoryFromUrlMock = vi.fn<
@@ -40,10 +41,10 @@ describe("TerritorialLayout", () => {
           id: "district-1",
           name: "Pituba",
           slug: "pituba",
-          type: "district",
+          type: "district" as LocationType,
           parent_id: "city-1",
           geographic_path: "/br/ba/salvador/pituba",
-          status: "active",
+          status: "active" as LocationStatus,
           metadata: {
             is_selector_active: false,
             is_navigable: true,
@@ -107,10 +108,10 @@ describe("TerritorialLayout", () => {
           id: "district-1",
           name: "Pituba",
           slug: "pituba",
-          type: "district",
+          type: "district" as LocationType,
           parent_id: "city-1",
           geographic_path: "/br/ba/salvador/pituba",
-          status: "active",
+          status: "active" as LocationStatus,
           metadata: {
             is_selector_active: false,
             is_navigable: true,
@@ -145,10 +146,10 @@ describe("TerritorialLayout", () => {
           id: "district-2",
           name: "Rio Vermelho",
           slug: "rio-vermelho",
-          type: "district",
+          type: "district" as LocationType,
           parent_id: "city-1",
           geographic_path: "/br/ba/salvador/rio-vermelho",
-          status: "active",
+          status: "active" as LocationStatus,
           metadata: {
             is_selector_active: false,
             is_landing_enabled: false,
