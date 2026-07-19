@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -50,7 +49,9 @@ describe("useCadastro", () => {
   });
 
   function fillRequiredFields(
-    result: ReturnType<typeof renderHook<typeof useCadastro>>["result"],
+    result: ReturnType<
+      typeof renderHook<ReturnType<typeof useCadastro>, unknown>
+    >["result"],
   ) {
     act(() => {
       result.current.updateField("name", "Ana Souza");

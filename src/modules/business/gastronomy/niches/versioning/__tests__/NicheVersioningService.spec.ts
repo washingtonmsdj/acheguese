@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * NicheVersioningService tests.
  */
@@ -92,7 +91,7 @@ describe('NicheVersioningService', () => {
     it('does not add capabilities from the browser client', async () => {
       const result = await NicheVersioningService.addCapability({
         business_id: 'business-123',
-        capability: 'slice_sales',
+        capability: 'pizza_multi_flavor',
         upgraded_by: 'user-456',
       });
 
@@ -105,7 +104,7 @@ describe('NicheVersioningService', () => {
     it('does not mark niche cohorts for upgrade from the browser client', async () => {
       const result = await NicheVersioningService.markNeedsUpgrade({
         niche_key: 'pizza',
-        missing_capabilities: ['slice_sales', 'seasonal_flavors'],
+        missing_capabilities: ['pizza_multi_flavor', 'pizza_crusts'],
       });
 
       expect(result.updated_count).toBe(0);
@@ -144,7 +143,7 @@ describe('NicheVersioningService', () => {
         support_level: 'full_enabled',
         operational_mode: 'pizzaria_full',
         enabled_capabilities: ['pizza_sizes', 'pizza_flavors'],
-        missing_capabilities: ['slice_sales'],
+        missing_capabilities: ['pizza_multi_flavor'],
         needs_niche_upgrade: true,
         last_niche_upgrade_at: '2026-04-26T10:00:00Z',
       });
@@ -157,7 +156,7 @@ describe('NicheVersioningService', () => {
       expect(config?.primary_niche_key).toBe('pizza');
       expect(config?.niche_config_version).toBe('1.0.0');
       expect(config?.enabled_capabilities).toContain('pizza_sizes');
-      expect(config?.missing_capabilities).toContain('slice_sales');
+      expect(config?.missing_capabilities).toContain('pizza_multi_flavor');
       expect(config?.needs_niche_upgrade).toBe(true);
     });
 

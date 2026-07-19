@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -31,16 +30,16 @@ function createQueryClient() {
 }
 
 vi.mock("react-helmet-async", () => ({
-  Helmet: ({ children }: { children?: unknown }) => <>{children}</>,
+  Helmet: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 
 vi.mock("framer-motion", () => ({
-  AnimatePresence: ({ children }: { children?: unknown }) => <>{children}</>,
+  AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
   motion: new Proxy(
     {},
     {
       get: () =>
-        ({ children }: { children?: unknown }) => <div>{children}</div>,
+        ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
     },
   ),
 }));

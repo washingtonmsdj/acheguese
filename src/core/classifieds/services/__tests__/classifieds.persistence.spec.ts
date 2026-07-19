@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, expect, it } from "vitest";
 import {
   CLASSIFIED_READ_SELECT,
@@ -36,8 +35,6 @@ const row: ClassifiedReadRow = {
   seller: {
     name: "Ana",
     avatar_url: "https://cdn.example.com/ana.jpg",
-    phone: null,
-    whatsapp: "5571999999999",
   },
   territory: {
     id: "location-1",

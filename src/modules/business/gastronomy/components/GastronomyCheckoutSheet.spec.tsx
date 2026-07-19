@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -74,7 +73,7 @@ describe("GastronomyCheckoutSheet", () => {
     checkout: vi.fn(),
     isSubmitting: false,
     hasActiveProfile: true,
-  } as CheckoutHookResult;
+  } as unknown as CheckoutHookResult;
   const baseDeliveryDestinationMock = {
     deliveryDestination: null,
     showDestinationEditor: true,
@@ -92,7 +91,7 @@ describe("GastronomyCheckoutSheet", () => {
     handleUseSavedResidence: vi.fn(),
   };
 
-  const businessMock: GastronomyBusiness = {
+  const businessMock = {
     business_data_id: "business-1",
     name: "Loja Teste",
     slug: "loja-teste",
@@ -111,7 +110,7 @@ describe("GastronomyCheckoutSheet", () => {
       has_menu: true,
       is_open: true,
       opening_hours: null,
-      status: "approved",
+      status: "active",
       active_subscription: null,
       trial_ends_at: null,
       plan_limits: null,
@@ -122,7 +121,7 @@ describe("GastronomyCheckoutSheet", () => {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
-  };
+  } as unknown as GastronomyBusiness;
 
   it("bloqueia checkout de delivery quando nao ha destino de entrega valido", () => {
     mockedUseGastronomyCart.mockReturnValue(baseCartMock);

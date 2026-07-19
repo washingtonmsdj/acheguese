@@ -1,25 +1,26 @@
-// @ts-nocheck
 /**
  * @fileoverview Testes unitários para LocationService
  * @module core/location/services/LocationService.test
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { LocationService } from './LocationService';
-import { LocationError, LocationErrorCode } from '../errors/LocationError';
+import { LocationError } from '../errors/LocationError';
 import type { ILocationRepository } from '../repositories/ILocationRepository';
-import type { Location, LocationType, LocationStatus } from '../types';
+import { LocationType, LocationStatus, type Location } from '../types';
+
+type MockedRepository = { [K in keyof ILocationRepository]: Mock };
 
 // Mock data
 const mockLocation: Location = {
   id: 'loc-123',
   parent_id: null,
-  type: 'state' as LocationType,
+  type: LocationType.STATE,
   slug: 'bahia',
   name: 'Bahia',
   full_name: 'Bahia',
   geographic_path: '/br/bahia',
-  status: 'active' as LocationStatus,
+  status: LocationStatus.ACTIVE,
   metadata: {},
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
@@ -28,19 +29,19 @@ const mockLocation: Location = {
 const mockCity: Location = {
   id: 'loc-456',
   parent_id: 'loc-123',
-  type: 'city' as LocationType,
+  type: LocationType.CITY,
   slug: 'salvador',
   name: 'Salvador',
   full_name: 'Salvador, Bahia',
   geographic_path: '/br/bahia/salvador',
-  status: 'active' as LocationStatus,
+  status: LocationStatus.ACTIVE,
   metadata: {},
   created_at: '2026-01-01T00:00:00Z',
   updated_at: '2026-01-01T00:00:00Z',
 };
 
 // Mock Repository
-const createMockRepository = (): ILocationRepository => ({
+const createMockRepository = (): MockedRepository => ({
   findById: vi.fn(),
   findByPath: vi.fn(),
   findBySlugWithinParent: vi.fn(),
@@ -52,11 +53,11 @@ const createMockRepository = (): ILocationRepository => ({
 
 describe('LocationService', () => {
   let service: LocationService;
-  let mockRepo: ReturnType<typeof createMockRepository>;
+  let mockRepo: MockedRepository;
 
   beforeEach(() => {
     mockRepo = createMockRepository();
-    service = new LocationService(mockRepo);
+    service = new LocationService(mockRepo as unknown as ILocationRepository);
   });
 
   describe('getLocationById', () => {
@@ -240,7 +241,7 @@ describe('LocationService', () => {
         total_count: 0,
       });
 
-      await service.getChildren({ location_id: 'loc-123', type: 'city' as LocationType });
+      await service.getChildren({ location_id: 'loc-123', type: LocationType.CITY });
 
       expect(mockRepo.findChildren).toHaveBeenCalledWith(
         'loc-123',
@@ -263,8 +264,8 @@ describe('LocationService', () => {
 
       const result = await service.validateLocation({
         location_id: 'loc-123',
-        required_status: 'active',
-        required_type: 'state',
+        required_status: LocationStatus.ACTIVE,
+        required_type: LocationType.STATE,
       });
 
       expect(result.is_valid).toBe(true);
@@ -277,7 +278,7 @@ describe('LocationService', () => {
 
       const result = await service.validateLocation({
         location_id: 'loc-123',
-        required_status: 'inactive',
+        required_status: LocationStatus.INACTIVE,
       });
 
       expect(result.is_valid).toBe(false);
@@ -291,7 +292,7 @@ describe('LocationService', () => {
 
       const result = await service.validateLocation({
         location_id: 'loc-123',
-        required_type: 'city',
+        required_type: LocationType.CITY,
       });
 
       expect(result.is_valid).toBe(false);

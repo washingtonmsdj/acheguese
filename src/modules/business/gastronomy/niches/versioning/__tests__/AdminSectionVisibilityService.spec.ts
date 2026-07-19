@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * 🧪 ADMIN SECTION VISIBILITY SERVICE TESTS
  */
@@ -160,7 +159,7 @@ describe('AdminSectionVisibilityService', () => {
           'pizza_sizes',
           'pizza_flavors',
         ],
-        missing_capabilities: ['slice_sales'],
+        missing_capabilities: ['pizza_multi_flavor'],
         needs_niche_upgrade: true,
         last_niche_upgrade_at: null,
       };
@@ -181,7 +180,7 @@ describe('AdminSectionVisibilityService', () => {
       const missingCaps: NicheCapability[] = [
         'pizza_sizes',
         'pizza_flavors',
-        'slice_sales',
+        'pizza_multi_flavor',
       ];
 
       const configurableSections =
@@ -239,7 +238,7 @@ describe('AdminSectionVisibilityService', () => {
         support_level: 'full_enabled',
         operational_mode: 'pizzaria_full',
         enabled_capabilities: ['basic_menu'],
-        missing_capabilities: ['slice_sales'],
+        missing_capabilities: ['pizza_multi_flavor'],
         needs_niche_upgrade: true,
         last_niche_upgrade_at: null,
       };
@@ -256,7 +255,7 @@ describe('AdminSectionVisibilityService', () => {
         support_level: 'full_enabled',
         operational_mode: 'pizzaria_full',
         enabled_capabilities: ['basic_menu'],
-        missing_capabilities: ['slice_sales', 'seasonal_flavors'],
+        missing_capabilities: ['pizza_multi_flavor', 'pizza_crusts'],
         needs_niche_upgrade: false,
         last_niche_upgrade_at: null,
       };
