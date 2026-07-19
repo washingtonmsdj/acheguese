@@ -2,7 +2,6 @@ import { randomUUID } from "node:crypto";
 import {
   createAnonClient,
   createServiceRoleClient,
-  issuePrivateAlphaInvite,
   loadSupabaseScriptEnv,
 } from "../lib/supabase-client.mjs";
 
@@ -26,7 +25,6 @@ let threadId;
 async function createIdentity(label) {
   const email = `community-dm-${label}-${randomUUID()}@example.com`;
   const password = `Aa1!${randomUUID()}`;
-  await issuePrivateAlphaInvite(admin, email, "security_probe");
   const { data: authData, error: authError } =
     await admin.auth.admin.createUser({
       email,

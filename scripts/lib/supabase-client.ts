@@ -4,9 +4,8 @@ import {
   createSupabaseScriptClient as createSupabaseScriptClientImpl,
   getSupabaseClientCandidates as getSupabaseClientCandidatesImpl,
   getSupabaseConfig as getSupabaseConfigImpl,
-  issuePrivateAlphaInvite as issuePrivateAlphaInviteImpl,
   loadSupabaseScriptEnv as loadSupabaseScriptEnvImpl,
-} from "./supabase-client.mjs";
+} from './supabase-client.mjs';
 
 export interface SupabaseConfig {
   url?: string;
@@ -19,7 +18,7 @@ export interface SupabaseClientCandidate {
   url: string;
   key: string;
   source: string;
-  kind: "admin" | "publishable";
+  kind: 'admin' | 'publishable';
 }
 
 export interface SupabaseScriptClientConfig {
@@ -32,9 +31,7 @@ export function loadSupabaseScriptEnv(envFiles?: string[]): void {
   loadSupabaseScriptEnvImpl(envFiles);
 }
 
-export function getSupabaseClientCandidates(
-  envFiles?: string[],
-): SupabaseClientCandidate[] {
+export function getSupabaseClientCandidates(envFiles?: string[]): SupabaseClientCandidate[] {
   return getSupabaseClientCandidatesImpl(envFiles);
 }
 
@@ -46,20 +43,10 @@ export function createAnonClient(config: SupabaseConfig = {}) {
   return createAnonClientImpl(config);
 }
 
-export function issuePrivateAlphaInvite(
-  admin: ReturnType<typeof createServiceRoleClientImpl>,
-  email: string,
-  note?: string,
-) {
-  return issuePrivateAlphaInviteImpl(admin, email, note);
-}
-
 export function createSupabaseScriptClient(config: SupabaseScriptClientConfig) {
   return createSupabaseScriptClientImpl(config);
 }
 
-export function getSupabaseConfig(
-  config: Pick<SupabaseConfig, "envFiles"> = {},
-) {
+export function getSupabaseConfig(config: Pick<SupabaseConfig, 'envFiles'> = {}) {
   return getSupabaseConfigImpl(config);
 }

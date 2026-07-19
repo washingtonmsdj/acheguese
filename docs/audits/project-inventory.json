@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-18T20:38:34.987Z",
+  "generatedAt": "2026-07-18T10:43:18.888Z",
   "inventories": [
     {
       "domain": "core/routing/location/public-identity",
@@ -117,7 +117,8 @@
       ],
       "legacyFiles": [
         "src/core/public-identity/components/IdentityCooldownNotice.tsx",
-        "src/core/public-identity/hooks/useIdentityCooldown.ts"
+        "src/core/public-identity/hooks/useIdentityCooldown.ts",
+        "src/core/routing/redirects/LegacyEntityRedirectPolicy.ts"
       ],
       "docs": [
         "docs/ARCHITECTURE.md",
@@ -1083,8 +1084,7 @@
       ],
       "rpcs": [
         "create_vaga_report",
-        "moderate_vaga_report",
-        "submit_professional_engagement_review"
+        "moderate_vaga_report"
       ],
       "officialHooks": [
         "src/core/professional/hooks/useServiceUrls.ts",
@@ -1246,8 +1246,8 @@
         "src/core/social/services/socialInteractionStats.queries.ts"
       ],
       "pages": [
-        "src/core/community/pages/ComunidadePage.tsx",
-        "src/core/community/pages/NovoPostPage.tsx"
+        "src/core/community-feed/pages/ComunidadePage.tsx",
+        "src/core/community-feed/pages/NovoPostPage.tsx"
       ],
       "routes": [],
       "tables": [
@@ -1272,6 +1272,7 @@
         "toggle_group_message_like"
       ],
       "officialHooks": [
+        "src/core/community-feed/hooks/useCommunityFeed.ts",
         "src/core/favorites/hooks/useFavorites.ts",
         "src/core/posts/hooks/usePostActions.ts"
       ],
@@ -1467,6 +1468,8 @@
         "src/core/community/services/index.ts"
       ],
       "pages": [
+        "src/core/community-feed/pages/ComunidadePage.tsx",
+        "src/core/community-feed/pages/NovoPostPage.tsx",
         "src/core/community-groups/pages/GrupoDetailPage.tsx",
         "src/core/community-groups/pages/GruposPage.tsx",
         "src/core/community-recommendations/pages/NovaRecomendacaoPage.tsx",
@@ -1520,6 +1523,7 @@
       ],
       "officialHooks": [
         "src/core/community-experience/hooks/useCommunityProfile.ts",
+        "src/core/community-feed/hooks/useCommunityFeed.ts",
         "src/core/community-issues/hooks/useIssues.ts",
         "src/core/community/alerts/hooks/useAlertReport.ts",
         "src/core/community/alerts/hooks/useAlerts.ts",

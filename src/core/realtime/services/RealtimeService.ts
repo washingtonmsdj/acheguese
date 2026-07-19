@@ -20,7 +20,6 @@ import {
   type RealtimeStreamKey,
   type RealtimeTopic,
 } from "../config/realtimeRegistry";
-import { REALTIME_RUNTIME_POLICY } from "../config/realtimeRuntimePolicy";
 import { logger } from "@/shared/utils/logger";
 import { trackError, trackPerformance } from "@/shared/utils/errorTracking";
 
@@ -80,6 +79,9 @@ export interface RealtimeSubscribeOptions {
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const MAX_ACTIVE_SUBSCRIPTIONS = 32;
+const MAX_RECENT_EVENT_FINGERPRINTS = 256;
+const BROADCAST_SUBSCRIBE_TIMEOUT_MS = 5_000;
 
 function validateFilterValue(validator: "uuid", value: string): void {
   if (validator === "uuid" && !UUID_PATTERN.test(value)) {
@@ -133,10 +135,7 @@ export class RealtimeService {
     topic: RealtimeTopic,
     options: RealtimeSubscribeOptions,
   ): RealtimeSubscription {
-    if (
-      this.subscriptions.size >=
-      REALTIME_RUNTIME_POLICY.activeSubscriptionCapacity
-    ) {
+    if (this.subscriptions.size >= MAX_ACTIVE_SUBSCRIPTIONS) {
       throw new Error("Realtime subscription limit reached");
     }
 
@@ -185,10 +184,7 @@ export class RealtimeService {
               if (fingerprint && recentEvents.has(fingerprint)) return;
               if (fingerprint) {
                 recentEvents.add(fingerprint);
-                if (
-                  recentEvents.size >
-                  REALTIME_RUNTIME_POLICY.recentEventFingerprintCapacity
-                ) {
+                if (recentEvents.size > MAX_RECENT_EVENT_FINGERPRINTS) {
                   const oldest = recentEvents.values().next().value;
                   if (oldest) recentEvents.delete(oldest);
                 }
@@ -273,10 +269,7 @@ export class RealtimeService {
     scopeId: string,
     options: RealtimePresenceOptions,
   ): RealtimePresenceSubscription {
-    if (
-      this.subscriptions.size >=
-      REALTIME_RUNTIME_POLICY.activeSubscriptionCapacity
-    ) {
+    if (this.subscriptions.size >= MAX_ACTIVE_SUBSCRIPTIONS) {
       throw new Error("Realtime subscription limit reached");
     }
     if (
@@ -386,7 +379,7 @@ export class RealtimeService {
       await new Promise<void>((resolve, reject) => {
         const timeout = globalThis.setTimeout(() => {
           reject(new Error("Realtime broadcast channel timed out"));
-        }, REALTIME_RUNTIME_POLICY.broadcastSubscribeTimeoutMs);
+        }, BROADCAST_SUBSCRIBE_TIMEOUT_MS);
 
         channel.subscribe((rawStatus) => {
           const status = normalizeStatus(String(rawStatus));

@@ -1,526 +1,380 @@
 /// <reference types="vite/client" />
 
 /**
- * End-to-end RLS validation for the canonical Posts table.
+ * VALIDAÇÃO RLS/AUTH FLOW — Posts
+ * Prova ponta a ponta com usuário autenticado comum (sem service_role)
  *
- * Every identity and territorial grant is created for this run and removed at
- * teardown. Runtime mutations always use authenticated anon clients; the admin
- * client is restricted to fixture setup, verification and cleanup.
+ * Fixtures (criadas em 20260405000028_seed_rls_test_users.sql):
+ *
+ *   USER_A  = 'fa000000-0000-0000-0000-000000000001'  rls-user-a@test.local
+ *   PROF_A  = '68d9110d-5c11-4394-a205-bea06c2a9105'  personal, Barra Teste Fase2
+ *
+ *   USER_B  = 'fb000000-0000-0000-0000-000000000001'  rls-user-b@test.local
+ *   PROF_B  = '24e5306d-4bcc-4081-8464-85ac70ebec6b'  personal, Salvador Teste Fase2
+ *   PROF_B2 = 'fb000000-0000-0000-0000-000000000002'  business, Salvador Teste Fase2
+ *
+ * Regras:
+ *   - supabaseAdmin usado APENAS em setup/teardown
+ *   - Ações validadas usam cliente autenticado como usuário comum
+ *   - Timeout 20s por teste (I/O de rede + auth)
  */
 
-import type { SupabaseClient, User } from "@supabase/supabase-js";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import {
-  createConfirmedOperationalUser,
-  deleteOperationalUserWithOwnedProfiles,
-} from "../helpers/operational-auth-fixture";
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   createOperationalAdminClient,
   createOperationalAnonClient,
   describeOperational,
   type OperationalSupabaseClient,
-} from "../helpers/operational-env";
+} from '../helpers/operational-env';
 
-const RUN_RLS_REAL_TESTS = process.env.RUN_RLS_REAL_TESTS === "1";
+// ─── Constantes ──────────────────────────────────────────────────────────────
+
+const RUN_RLS_REAL_TESTS = process.env.RUN_RLS_REAL_TESTS === '1';
 const describeRls = RUN_RLS_REAL_TESTS
   ? (name: string, suite: () => void) =>
-      describeOperational(
-        name,
-        { requireAnonKey: true, requireServiceRole: true },
-        suite,
-      )
+      describeOperational(name, { requireAnonKey: true, requireServiceRole: true }, suite)
   : describe.skip;
 
-const INVALID_LOCATION_ID = "00000000-0000-0000-0000-999999999999";
+const USER_A_EMAIL = process.env.RLS_USER_A_EMAIL ?? 'rls-user-a@test.local';
+const USER_A_PASS  = process.env.RLS_USER_A_PASS ?? 'RlsTestA123!';
+const USER_B_EMAIL = process.env.RLS_USER_B_EMAIL ?? 'rls-user-b@test.local';
+const USER_B_PASS  = process.env.RLS_USER_B_PASS ?? 'RlsTestB123!';
 
-interface TestIdentity {
-  client: OperationalSupabaseClient;
-  personalProfileId: string;
-  user: User;
-}
+const PROF_A  = 'e114b313-3d76-452b-8dca-3bb8079ca59e'; // personal User A
+const PROF_B  = '6fb6aa61-7b40-4deb-867a-72688d1bccc1'; // personal User B
+const PROF_B2 = '5acc8b86-8dc7-44c6-8ab6-707f86e101f2'; // business User B
 
-let admin: OperationalSupabaseClient;
+const LOC_BARRA    = process.env.RLS_LOC_BARRA_ID ?? '5c91b9e1-17bf-4707-9ba7-0dd82ada7eb3';
+const LOC_SALVADOR = process.env.RLS_LOC_SALVADOR_ID ?? '63c41c29-adce-40f5-a552-e52d176123c3';
+const LOC_INVALID  = '00000000-0000-0000-0000-999999999999';
+
+// ─── Clientes autenticados ────────────────────────────────────────────────────
+
+// Clientes separados por usuário — cada um mantém sua própria sessão
+let clientA: OperationalSupabaseClient;
+let clientB: OperationalSupabaseClient;
 let clientAnon: OperationalSupabaseClient;
-let identityA: TestIdentity;
-let identityB: TestIdentity;
-let businessProfileBId: string;
-let locationId: string;
+let supabaseAdmin: OperationalSupabaseClient;
+// Cliente anon puro (sem autenticação)
 
-const createdPostIds = new Set<string>();
-const createdUserIds: string[] = [];
+// ─── IDs de posts criados nos testes (para cleanup) ──────────────────────────
 
-function uniqueSuffix(): string {
-  return `${Date.now()}${Math.floor(Math.random() * 1000)}`;
-}
+const createdPostIds: string[] = [];
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+// ─── Setup / Teardown ─────────────────────────────────────────────────────────
 
-async function waitForPersonalProfile(userId: string): Promise<string> {
-  for (let attempt = 0; attempt < 20; attempt += 1) {
-    const { data, error } = await admin
-      .from("profiles")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("profile_type", "personal")
-      .maybeSingle();
+// ─── Helper ───────────────────────────────────────────────────────────────────
 
-    if (error) throw error;
-    if (data?.id) return data.id as string;
-    await delay(500);
-  }
-
-  throw new Error(
-    `Personal profile not created for operational user ${userId}.`,
-  );
-}
-
-async function setActiveProfile(
-  userId: string,
-  profileId: string,
-): Promise<void> {
-  const { error } = await admin
-    .from("user_active_profiles")
-    .upsert(
-      { user_id: userId, profile_id: profileId },
-      { onConflict: "user_id" },
-    );
-  if (error) throw error;
-}
-
-async function createIdentity(label: "a" | "b"): Promise<TestIdentity> {
-  const suffix = uniqueSuffix();
-  const password = `RlsPosts@${suffix}!`;
-  const user = await createConfirmedOperationalUser(admin, {
-    email: `rls-posts-${label}-${suffix}@example.com`,
-    handle: `rlsposts${label}${suffix}`,
-    name: `RLS Posts ${label.toUpperCase()}`,
-    password,
-  });
-  createdUserIds.push(user.id);
-
-  const personalProfileId = await waitForPersonalProfile(user.id);
-  await setActiveProfile(user.id, personalProfileId);
-
-  const client = createOperationalAnonClient();
-  const signIn = await client.auth.signInWithPassword({
-    email: user.email!,
-    password,
-  });
-  if (signIn.error) throw signIn.error;
-
-  return { client, personalProfileId, user };
-}
-
-async function findActiveCommunityLocation(): Promise<string> {
-  const preferred = await admin
-    .from("locations")
-    .select("id")
-    .eq("geographic_path", "/br/ba/salvador/nordeste-de-amaralina")
-    .eq("status", "active")
-    .maybeSingle();
-
-  if (preferred.error) throw preferred.error;
-  if (preferred.data?.id) return preferred.data.id as string;
-
-  const fallback = await admin
-    .from("locations")
-    .select("id")
-    .eq("status", "active")
-    .eq("type", "neighborhood")
-    .order("geographic_path", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  if (fallback.error || !fallback.data?.id) {
-    throw (
-      fallback.error ?? new Error("No active community location available.")
-    );
-  }
-  return fallback.data.id as string;
-}
-
-async function seedVerifiedResidence(userId: string): Promise<void> {
-  const now = new Date().toISOString();
-  const address = await admin
-    .from("addresses")
-    .insert({
-      owner_user_id: userId,
-      location_id: locationId,
-      address_type: "exact",
-      street: "Rua RLS Posts",
-      number: "100",
-      postal_code: "40000000",
-      precision: "street",
-      is_verified: true,
-      verification_status: "verified",
-      verified_at: now,
-      verified_reason: "operational_rls_posts",
-      metadata: { source: "rls-posts-auth-flow" },
-    })
-    .select("id")
-    .single();
-
-  if (address.error || !address.data?.id) {
-    throw (
-      address.error ?? new Error("Could not create verified address fixture.")
-    );
-  }
-
-  const residence = await admin.from("user_residences").insert({
-    user_id: userId,
-    address_id: address.data.id,
-    location_id: locationId,
-    country: "BR",
-    is_primary: true,
-    is_verified: true,
-    verification_requested_at: now,
-  });
-  if (residence.error) throw residence.error;
-}
-
-async function createBusinessProfile(userId: string): Promise<string> {
-  const suffix = uniqueSuffix();
-  const profile = await admin
-    .from("profiles")
-    .insert({
-      user_id: userId,
-      profile_type: "business",
-      name: `RLS Business ${suffix}`,
-      display_name: `RLS Business ${suffix}`,
-      username: `rlsbusiness${suffix}`,
-      handle: `rlsbusiness${suffix}`,
-      slug: `rls-business-${suffix}`,
-      is_active: true,
-      is_public: true,
-    })
-    .select("id")
-    .single();
-
-  if (profile.error || !profile.data?.id) {
-    throw (
-      profile.error ?? new Error("Could not create business profile fixture.")
-    );
-  }
-
-  const member = await admin
-    .from("profile_members")
-    .upsert(
-      { profile_id: profile.data.id, user_id: userId, role: "owner" },
-      { onConflict: "profile_id,user_id" },
-    );
-  if (member.error) throw member.error;
-
-  return profile.data.id as string;
-}
-
-async function insertPost(
-  client: SupabaseClient,
-  params: {
-    profileId: string;
-    targetLocationId?: string;
-    content?: string;
-    reach?: string;
-  },
-) {
-  return client
-    .from("posts")
-    .insert({
-      author_profile_id: params.profileId,
-      content: params.content ?? "Operational post used to validate RLS.",
-      type: "post",
-      location_id: params.targetLocationId ?? locationId,
-      reach: params.reach ?? "neighborhood",
-      images: [],
-      tags: [],
-      is_published: true,
-    })
-    .select("id, author_profile_id, location_id, reach")
-    .single();
-}
-
-async function seedPost(params: {
-  profileId: string;
-  content: string;
-  isPublished?: boolean;
+async function insertPost(client: SupabaseClient, params: {
+  profile_id: string;
+  location_id: string;
+  content?: string;
   reach?: string;
-}): Promise<string> {
-  const { data, error } = await admin
-    .from("posts")
-    .insert({
-      author_profile_id: params.profileId,
-      content: params.content,
-      type: "post",
-      location_id: locationId,
-      reach: params.reach ?? "neighborhood",
-      images: [],
-      tags: [],
-      is_published: params.isPublished ?? true,
-    })
-    .select("id")
-    .single();
-
-  if (error || !data?.id) {
-    throw error ?? new Error("Could not create operational post fixture.");
-  }
-  createdPostIds.add(data.id as string);
-  return data.id as string;
+}) {
+  return client.from('posts').insert({
+    author_profile_id: params.profile_id,
+    content: params.content ?? 'Post de teste RLS',
+    type: 'text',
+    location_id: params.location_id,
+    reach: params.reach ?? 'neighborhood',
+    images: [],
+    tags: [],
+    is_published: true,
+  }).select('id, author_profile_id, location_id, reach').single();
 }
 
-async function cleanupIdentity(userId: string): Promise<void> {
-  const residenceDelete = await admin
-    .from("user_residences")
-    .delete()
-    .eq("user_id", userId);
-  if (residenceDelete.error) throw residenceDelete.error;
+// ─── Testes ───────────────────────────────────────────────────────────────────
 
-  const addressDelete = await admin
-    .from("addresses")
-    .delete()
-    .eq("owner_user_id", userId);
-  if (addressDelete.error) throw addressDelete.error;
-
-  await deleteOperationalUserWithOwnedProfiles(admin, userId);
-}
-
-describeRls("RLS Posts - authenticated runtime", () => {
+describeRls('RLS Posts — Auth Flow Real', () => {
   beforeAll(async () => {
-    admin = createOperationalAdminClient();
+    // Clientes separados por usuario: cada um mantem sua propria sessao.
+    clientA = createOperationalAnonClient();
+    clientB = createOperationalAnonClient();
     clientAnon = createOperationalAnonClient();
-    locationId = await findActiveCommunityLocation();
+    supabaseAdmin = createOperationalAdminClient();
 
-    identityA = await createIdentity("a");
-    identityB = await createIdentity("b");
-    await Promise.all([
-      seedVerifiedResidence(identityA.user.id),
-      seedVerifiedResidence(identityB.user.id),
+    const [resA, resB] = await Promise.all([
+      clientA.auth.signInWithPassword({ email: USER_A_EMAIL, password: USER_A_PASS }),
+      clientB.auth.signInWithPassword({ email: USER_B_EMAIL, password: USER_B_PASS }),
     ]);
-    businessProfileBId = await createBusinessProfile(identityB.user.id);
-  }, 60_000);
+
+    if (resA.error) throw new Error(`Auth User A falhou: ${resA.error.message}`);
+    if (resB.error) throw new Error(`Auth User B falhou: ${resB.error.message}`);
+  }, 30000);
 
   afterAll(async () => {
-    if (!admin) return;
-
-    if (createdPostIds.size > 0) {
-      const postDelete = await admin
-        .from("posts")
-        .delete()
-        .in("id", [...createdPostIds]);
-      if (postDelete.error) throw postDelete.error;
+    // Cleanup via admin, nao via RLS.
+    if (createdPostIds.length > 0) {
+      await supabaseAdmin.from('posts').delete().in('id', createdPostIds);
     }
-
-    await Promise.allSettled([
-      identityA?.client.auth.signOut(),
-      identityB?.client.auth.signOut(),
-    ]);
-
-    for (const userId of [...createdUserIds].reverse()) {
-      await cleanupIdentity(userId);
-    }
-  }, 60_000);
-
-  describe("create", () => {
-    it("allows an active personal profile with verified residence", async () => {
-      const { data, error } = await insertPost(identityA.client, {
-        profileId: identityA.personalProfileId,
-      });
-
-      expect(error).toBeNull();
-      expect(data?.author_profile_id).toBe(identityA.personalProfileId);
-      createdPostIds.add(data!.id);
-    });
-
-    it("rejects another user's profile", async () => {
-      const { data, error } = await insertPost(identityA.client, {
-        profileId: identityB.personalProfileId,
-      });
-
-      expect(error).not.toBeNull();
-      expect(data).toBeNull();
-    });
-
-    it("rejects an invalid territorial location", async () => {
-      const { data, error } = await insertPost(identityA.client, {
-        profileId: identityA.personalProfileId,
-        targetLocationId: INVALID_LOCATION_ID,
-      });
-
-      expect(error).not.toBeNull();
-      expect(data).toBeNull();
-    });
-
-    it("allows an owned business profile only when it is active", async () => {
-      await setActiveProfile(identityB.user.id, businessProfileBId);
-      const { data, error } = await insertPost(identityB.client, {
-        profileId: businessProfileBId,
-        content: "Operational business profile post for RLS validation.",
-      });
-
-      expect(error).toBeNull();
-      expect(data?.author_profile_id).toBe(businessProfileBId);
-      createdPostIds.add(data!.id);
-    });
+    await Promise.all([clientA.auth.signOut(), clientB.auth.signOut()]);
   });
 
-  describe("read", () => {
+  // ── 1. posts_create ────────────────────────────────────────────────────────
+  describe('posts_create', () => {
+    it('User A cria post com profile próprio → sucesso', async () => {
+      const { data, error } = await insertPost(clientA, {
+        profile_id: PROF_A,
+        location_id: LOC_BARRA,
+      });
+
+      expect(error).toBeNull();
+      expect(data).toBeDefined();
+      expect(data!.author_profile_id).toBe(PROF_A);
+      createdPostIds.push(data!.id);
+    }, 20000);
+
+    it('User A tenta criar post com profile de User B → falha RLS', async () => {
+      const { data, error } = await insertPost(clientA, {
+        profile_id: PROF_B,  // profile de outro usuário
+        location_id: LOC_BARRA,
+      });
+
+      expect(error).not.toBeNull();
+      // RLS rejeita: profiles.user_id ≠ auth.uid()
+      expect(data).toBeNull();
+    }, 20000);
+
+    it('User A tenta criar post com location_id inválido → falha (trigger/FK)', async () => {
+      const { data, error } = await insertPost(clientA, {
+        profile_id: PROF_A,
+        location_id: LOC_INVALID,
+      });
+
+      expect(error).not.toBeNull();
+      expect(data).toBeNull();
+    }, 20000);
+
+    it('User B cria post com profile business próprio (multi-profile) → sucesso', async () => {
+      const { data, error } = await insertPost(clientB, {
+        profile_id: PROF_B2,  // profile business de B
+        location_id: LOC_SALVADOR,
+        content: 'Post multi-profile business User B',
+      });
+
+      expect(error).toBeNull();
+      expect(data).toBeDefined();
+      expect(data!.author_profile_id).toBe(PROF_B2);
+      createdPostIds.push(data!.id);
+    }, 20000);
+  });
+
+  // ── 2. posts_read_published ────────────────────────────────────────────────
+  describe('posts_read_published', () => {
     let publicPostId: string;
-    let privatePostId: string;
 
     beforeAll(async () => {
-      publicPostId = await seedPost({
-        profileId: identityA.personalProfileId,
-        content: "Published operational post available for public RLS read.",
-        reach: "city",
-      });
-      privatePostId = await seedPost({
-        profileId: identityA.personalProfileId,
-        content: "Unpublished operational post visible only to its owner.",
-        isPublished: false,
-      });
-    });
+      // Criar post público de User A via admin (setup)
+      const { data } = await supabaseAdmin.from('posts').insert({
+        author_profile_id: PROF_A,
+        content: 'Post público para leitura RLS',
+        type: 'text',
+        location_id: LOC_BARRA,
+        reach: 'city',
+        images: [], tags: [],
+        is_published: true,
+      }).select('id').single();
+      publicPostId = data!.id;
+      createdPostIds.push(publicPostId);
+    }, 20000);
 
-    it("allows authenticated and anonymous reads of a published post", async () => {
-      const [authenticated, anonymous] = await Promise.all([
-        identityB.client
-          .from("posts")
-          .select("id")
-          .eq("id", publicPostId)
-          .single(),
-        clientAnon.from("posts").select("id").eq("id", publicPostId).single(),
-      ]);
-
-      expect(authenticated.error).toBeNull();
-      expect(authenticated.data?.id).toBe(publicPostId);
-      expect(anonymous.error).toBeNull();
-      expect(anonymous.data?.id).toBe(publicPostId);
-    });
-
-    it("keeps an unpublished post private to its owner", async () => {
-      const owner = await identityA.client
-        .from("posts")
-        .select("id")
-        .eq("id", privatePostId)
+    it('User B lê post publicado de User A → sucesso (leitura pública)', async () => {
+      const { data, error } = await clientB
+        .from('posts')
+        .select('id, author_profile_id, is_published')
+        .eq('id', publicPostId)
         .single();
-      const other = await identityB.client
-        .from("posts")
-        .select("id")
-        .eq("id", privatePostId)
-        .maybeSingle();
 
-      expect(owner.error).toBeNull();
-      expect(owner.data?.id).toBe(privatePostId);
-      expect(other.error).toBeNull();
-      expect(other.data).toBeNull();
-    });
-  });
+      expect(error).toBeNull();
+      expect(data!.id).toBe(publicPostId);
+      expect(data!.is_published).toBe(true);
+    }, 20000);
 
-  describe("update", () => {
-    let postId: string;
-
-    beforeAll(async () => {
-      postId = await seedPost({
-        profileId: identityA.personalProfileId,
-        content: "Operational post awaiting an owner update.",
-      });
-    });
-
-    it("allows the active owner and rejects another user", async () => {
-      await setActiveProfile(identityA.user.id, identityA.personalProfileId);
-      const ownerUpdate = await identityA.client
-        .from("posts")
-        .update({ content: "Operational content updated by its owner." })
-        .eq("id", postId);
-      expect(ownerUpdate.error).toBeNull();
-
-      await identityB.client
-        .from("posts")
-        .update({ content: "Unauthorized operational content update." })
-        .eq("id", postId);
-
-      const persisted = await admin
-        .from("posts")
-        .select("content")
-        .eq("id", postId)
+    it('Cliente anon lê post publicado → sucesso (sem autenticação)', async () => {
+      const { data, error } = await clientAnon
+        .from('posts')
+        .select('id, is_published')
+        .eq('id', publicPostId)
         .single();
-      expect(persisted.error).toBeNull();
-      expect(persisted.data?.content).toBe(
-        "Operational content updated by its owner.",
-      );
-    });
+
+      expect(error).toBeNull();
+      expect(data!.is_published).toBe(true);
+    }, 20000);
   });
 
-  describe("delete", () => {
-    let postAId: string;
-    let postBId: string;
+  // ── 3. posts_read_own ──────────────────────────────────────────────────────
+  describe('posts_read_own', () => {
+    let ownPostId: string;
 
     beforeAll(async () => {
-      [postAId, postBId] = await Promise.all([
-        seedPost({
-          profileId: identityA.personalProfileId,
-          content: "Operational owner post scheduled for deletion.",
-        }),
-        seedPost({
-          profileId: identityB.personalProfileId,
-          content: "Operational foreign post protected from deletion.",
-        }),
-      ]);
-    });
+      // Criar post não publicado de User A via admin
+      const { data } = await supabaseAdmin.from('posts').insert({
+        author_profile_id: PROF_A,
+        content: 'Post não publicado — só User A vê',
+        type: 'text',
+        location_id: LOC_BARRA,
+        reach: 'neighborhood',
+        images: [], tags: [],
+        is_published: false,
+      }).select('id').single();
+      ownPostId = data!.id;
+      createdPostIds.push(ownPostId);
+    }, 20000);
 
-    it("keeps another user's post and lets the owner delete their own", async () => {
-      await setActiveProfile(identityA.user.id, identityA.personalProfileId);
-      await identityA.client.from("posts").delete().eq("id", postBId);
+    it('User A lê próprio post não publicado → sucesso (posts_read_own)', async () => {
+      const { data, error } = await clientA
+        .from('posts')
+        .select('id, is_published')
+        .eq('id', ownPostId)
+        .single();
 
-      const foreignPost = await admin
-        .from("posts")
-        .select("id")
-        .eq("id", postBId)
+      expect(error).toBeNull();
+      expect(data!.id).toBe(ownPostId);
+    }, 20000);
+
+    it('User B não vê post não publicado de User A → retorna vazio', async () => {
+      const { data, error } = await clientB
+        .from('posts')
+        .select('id')
+        .eq('id', ownPostId)
         .maybeSingle();
-      expect(foreignPost.data?.id).toBe(postBId);
 
-      const ownerDelete = await identityA.client
-        .from("posts")
-        .delete()
-        .eq("id", postAId);
-      expect(ownerDelete.error).toBeNull();
-
-      const deleted = await admin
-        .from("posts")
-        .select("id")
-        .eq("id", postAId)
-        .maybeSingle();
-      expect(deleted.data).toBeNull();
-      createdPostIds.delete(postAId);
-    });
+      // RLS: is_published=false e não é dono → não retorna
+      expect(error).toBeNull();
+      expect(data).toBeNull();
+    }, 20000);
   });
 
-  describe("multi-profile isolation", () => {
-    it("requires the selected profile and never accepts another user's profile", async () => {
-      await setActiveProfile(identityB.user.id, identityB.personalProfileId);
-      const personal = await insertPost(identityB.client, {
-        profileId: identityB.personalProfileId,
-        content: "Operational personal profile post after an explicit switch.",
-      });
-      expect(personal.error).toBeNull();
-      expect(personal.data?.author_profile_id).toBe(
-        identityB.personalProfileId,
-      );
-      createdPostIds.add(personal.data!.id);
+  // ── 4. posts_update_own ────────────────────────────────────────────────────
+  describe('posts_update_own', () => {
+    let postToUpdate: string;
 
-      await setActiveProfile(identityB.user.id, businessProfileBId);
-      const business = await insertPost(identityB.client, {
-        profileId: businessProfileBId,
-        content: "Operational business profile post after an explicit switch.",
-      });
-      expect(business.error).toBeNull();
-      expect(business.data?.author_profile_id).toBe(businessProfileBId);
-      createdPostIds.add(business.data!.id);
+    beforeAll(async () => {
+      const { data } = await supabaseAdmin.from('posts').insert({
+        author_profile_id: PROF_A,
+        content: 'Post para atualizar',
+        type: 'text',
+        location_id: LOC_BARRA,
+        reach: 'neighborhood',
+        images: [], tags: [],
+        is_published: true,
+      }).select('id').single();
+      postToUpdate = data!.id;
+      createdPostIds.push(postToUpdate);
+    }, 20000);
 
-      const foreign = await insertPost(identityB.client, {
-        profileId: identityA.personalProfileId,
+    it('User A edita próprio post → sucesso', async () => {
+      const { error } = await clientA
+        .from('posts')
+        .update({ content: 'Conteúdo atualizado por User A' })
+        .eq('id', postToUpdate);
+
+      expect(error).toBeNull();
+    }, 20000);
+
+    it('User B tenta editar post de User A → falha RLS', async () => {
+      const { error, count } = await clientB
+        .from('posts')
+        .update({ content: 'Tentativa de edição indevida' })
+        .eq('id', postToUpdate);
+
+      // RLS bloqueia: nenhuma linha afetada ou erro
+      // Supabase retorna error null mas 0 rows afetadas quando RLS bloqueia UPDATE
+      if (error) {
+        expect(error).not.toBeNull();
+      } else {
+        // Verificar que o conteúdo não foi alterado
+        const { data } = await supabaseAdmin
+          .from('posts').select('content').eq('id', postToUpdate).single();
+        expect(data!.content).toBe('Conteúdo atualizado por User A');
+      }
+    }, 20000);
+  });
+
+  // ── 5. posts_delete_own ────────────────────────────────────────────────────
+  describe('posts_delete_own', () => {
+    let postToDeleteA: string;
+    let postToDeleteB: string;
+
+    beforeAll(async () => {
+      const [resA, resB] = await Promise.all([
+        supabaseAdmin.from('posts').insert({
+          author_profile_id: PROF_A, content: 'Post A para deletar',
+          type: 'text', location_id: LOC_BARRA, reach: 'neighborhood',
+          images: [], tags: [], is_published: true,
+        }).select('id').single(),
+        supabaseAdmin.from('posts').insert({
+          author_profile_id: PROF_B, content: 'Post B para deletar',
+          type: 'text', location_id: LOC_SALVADOR, reach: 'neighborhood',
+          images: [], tags: [], is_published: true,
+        }).select('id').single(),
+      ]);
+      postToDeleteA = resA.data!.id;
+      postToDeleteB = resB.data!.id;
+      createdPostIds.push(postToDeleteA, postToDeleteB);
+    }, 20000);
+
+    it('User A tenta deletar post de User B → falha RLS (post permanece)', async () => {
+      await clientA.from('posts').delete().eq('id', postToDeleteB);
+
+      // Verificar via admin que o post ainda existe
+      const { data } = await supabaseAdmin
+        .from('posts').select('id').eq('id', postToDeleteB).maybeSingle();
+      expect(data).not.toBeNull();
+    }, 20000);
+
+    it('User A deleta próprio post → sucesso (post removido)', async () => {
+      const { error } = await clientA
+        .from('posts').delete().eq('id', postToDeleteA);
+
+      expect(error).toBeNull();
+
+      // Verificar via admin que o post foi removido
+      const { data } = await supabaseAdmin
+        .from('posts').select('id').eq('id', postToDeleteA).maybeSingle();
+      expect(data).toBeNull();
+
+      // Remover da lista de cleanup (já deletado)
+      const idx = createdPostIds.indexOf(postToDeleteA);
+      if (idx > -1) createdPostIds.splice(idx, 1);
+    }, 20000);
+  });
+
+  // ── 6. Multi-profile ───────────────────────────────────────────────────────
+  describe('multi-profile', () => {
+    it('User B cria post com profile pessoal → author_profile_id = PROF_B', async () => {
+      const { data, error } = await insertPost(clientB, {
+        profile_id: PROF_B,
+        location_id: LOC_SALVADOR,
+        content: 'Post multi-profile pessoal',
       });
-      expect(foreign.error).not.toBeNull();
-      expect(foreign.data).toBeNull();
-    });
+
+      expect(error).toBeNull();
+      expect(data!.author_profile_id).toBe(PROF_B);
+      createdPostIds.push(data!.id);
+    }, 20000);
+
+    it('User B cria post com profile business → author_profile_id = PROF_B2', async () => {
+      const { data, error } = await insertPost(clientB, {
+        profile_id: PROF_B2,
+        location_id: LOC_SALVADOR,
+        content: 'Post multi-profile business',
+      });
+
+      expect(error).toBeNull();
+      expect(data!.author_profile_id).toBe(PROF_B2);
+      createdPostIds.push(data!.id);
+    }, 20000);
+
+    it('User B não consegue criar post com profile de User A (mesmo autenticado)', async () => {
+      const { data, error } = await insertPost(clientB, {
+        profile_id: PROF_A,  // profile de outro user
+        location_id: LOC_SALVADOR,
+      });
+
+      expect(error).not.toBeNull();
+      expect(data).toBeNull();
+    }, 20000);
   });
 });

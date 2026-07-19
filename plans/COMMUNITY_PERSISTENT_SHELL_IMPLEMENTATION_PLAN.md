@@ -95,13 +95,12 @@ The change is isolated to presentation composition and route wrappers. Domain se
 
 - `npm run typecheck:app`
 - Focused ESLint for every edited implementation file
-- `npx vitest --run src/core/community/components/page/CommunityOverviewSurface.spec.tsx src/app/routes/__tests__/communityRoutesCanonical.spec.ts src/app/routes/__tests__/communityLaunchScope.spec.ts src/core/routing/components/__tests__/CommunityAliasShellRoute.spec.tsx` (12 tests)
+- `npx vitest --run src/core/community/components/page/CommunityOverviewSurface.spec.tsx src/app/routes/__tests__/communityRoutesCanonical.spec.ts src/app/routes/__tests__/communityLaunchScope.spec.ts src/core/routing/components/__tests__/CommunityAliasRoute.spec.tsx` (12 tests)
 - `npx playwright test tests/e2e/community-persistent-shell.spec.ts --project=chromium`
 - The Playwright contract verifies eight scenarios, including preview-first navigation, DOM identity across module navigation, zero document navigation for the public alias, Map embedding, browser history and the responsive width matrix.
 - The same contract verifies accessible `#eventos` focus after cross-module navigation and automatic mobile Sections-menu dismissal.
-- `npx vitest --run src/core/community/components/page/CommunityOverviewSurface.spec.tsx` (7 tests), including the no-route-change contract for contextual Groups and Discussions and the deterministic focus transition from an embedded module to `#eventos`.
+- `npx vitest --run src/core/community/components/page/CommunityOverviewSurface.spec.tsx` (6 tests), including the no-route-change contract for contextual Groups and Discussions.
 - `npx playwright test tests/e2e/community-persistent-shell.spec.ts --project=chromium --reporter=list` (8 tests), including unchanged URL for contextual tabs and the explicit `/grupos` destination for `Ver todos`.
-- The six Community E2E specs passed together on 2026-07-18 with 21 passed, zero failed and 2 authenticated operational scenarios skipped by the explicit remote-target guard.
 - Community regression from `tests/e2e/mobile-core-layout.spec.ts` at 360px
 - `npm run validate:architecture:community`
 - `npm run validate:url:ssot`

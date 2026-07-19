@@ -2,7 +2,6 @@ import { randomUUID } from "node:crypto";
 import {
   createAnonClient,
   createServiceRoleClient,
-  issuePrivateAlphaInvite,
   loadSupabaseScriptEnv,
 } from "../lib/supabase-client.mjs";
 
@@ -30,7 +29,6 @@ let fixtureBanId;
 async function createIdentity(label, role = "user") {
   const email = `federated-moderation-${label}-${randomUUID()}@example.invalid`;
   const password = `Aa1!${randomUUID()}`;
-  await issuePrivateAlphaInvite(serviceRole, email, "security_probe");
   const { data: authData, error: authError } =
     await serviceRole.auth.admin.createUser({
       email,

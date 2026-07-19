@@ -242,7 +242,7 @@ function renderCommunityTerritoryRoutes() {
         path={buildCommunityAliasRoutePath([APP_MODULE_SLUGS.gastronomy, TERRITORIAL_PARAMS.slug])}
         element={<P.CommunityEntityAliasRoute />}
       />
-      <Route path={buildCommunityAliasRoutePath()} element={<P.CommunityAliasShellRoute />}>
+      <Route path={buildCommunityAliasRoutePath()} element={<P.CommunityAliasRoute />}>
         <Route element={<P.CommunityPersistentPortalLayout />}>
           <Route index element={<P.TerritorialCommunityEntryPage />} />
           {persistentRoutes.map((definition) => (

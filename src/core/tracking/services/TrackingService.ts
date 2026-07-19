@@ -76,8 +76,9 @@ export class TrackingService {
       heartbeatInterval: TIMEOUTS.DEFAULT_REQUEST,
     };
     
-    // O monitoramento inicia sob demanda; importar o modulo nao abre timers.
+    // GATE 4: Inicializar gerenciador de reconexão
     this.reconnectionManager = new ReconnectionManager(this.supabaseClient);
+    this.reconnectionManager.start();
     
     // Monitorar mudanças de estado de conexão
     this.reconnectionManager.onConnectionStateChange((state) => {
@@ -153,7 +154,6 @@ export class TrackingService {
     entityType: 'driver' | 'user' | 'vehicle' | 'device' = 'driver',
     metadata?: Record<string, unknown>
   ): Promise<void> {
-    this.ensureReconnectionMonitoring();
     try {
       const tableName = this.getTableName(entityType);
       const idField = this.getIdField(entityType);
@@ -218,7 +218,6 @@ export class TrackingService {
     entityType: 'driver' | 'user' | 'vehicle' | 'device' = 'driver',
     config?: Partial<TrackingSubscriptionConfig>
   ): TrackingSubscription {
-    this.ensureReconnectionMonitoring();
     const subscriptionId = `${entityType}-position-${entityId}`;
     // Remove subscription existente se houver
     this.unsubscribe(subscriptionId);
@@ -297,7 +296,6 @@ export class TrackingService {
     status: PresenceStatus,
     entityType: 'driver' | 'user' | 'vehicle' | 'device' = 'driver'
   ): Promise<void> {
-    this.ensureReconnectionMonitoring();
     try {
       if (entityType === 'driver') {
         const { mobilityService } = await import('@/core/mobility/services/runtime');
@@ -467,7 +465,6 @@ export class TrackingService {
    * Obtém estado da conexão
    */
   getConnectionState(): ConnectionState {
-    this.ensureReconnectionMonitoring();
     return this.reconnectionManager.getConnectionState();
   }
 
@@ -632,10 +629,6 @@ export class TrackingService {
       default:
         return 'driver_locations';
     }
-  }
-
-  private ensureReconnectionMonitoring(): void {
-    this.reconnectionManager.start();
   }
 
   private getRealtimeTopic(

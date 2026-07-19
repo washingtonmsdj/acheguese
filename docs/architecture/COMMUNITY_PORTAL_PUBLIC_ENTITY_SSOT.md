@@ -255,7 +255,7 @@ The cleanup task must inspect and update these runtime areas:
 1. `src/core/routing/components/BusinessCanonicalRoute.tsx`
 2. `src/core/routing/components/CommunityShortEntityRoute.tsx`
 3. `src/core/routing/components/CommunityShortAliasShellRoute.tsx`
-4. `src/core/routing/components/CommunityAliasShellRoute.tsx`
+4. `src/core/routing/components/CommunityAliasRoute.tsx`
 5. `src/core/routing/services/CommunityBusinessEntityResolver.ts`
 6. `src/core/business/services/BusinessUrlService.ts`
 7. `src/core/business/hooks/useBusinessNavigation.ts`

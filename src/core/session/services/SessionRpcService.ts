@@ -1,7 +1,4 @@
-import {
-  invokeNullableSupabaseBroker,
-  invokeSupabaseBroker,
-} from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
+import { invokeNullableSupabaseBroker } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 
 export type SessionRpcAction =
   | "getActiveProfile"
@@ -73,31 +70,14 @@ export class SessionRpcService {
   }
 
   static async getActiveProfile(): Promise<SessionRpcProfileRow | null> {
-    const result =
-      await this.invoke<ActiveProfileBrokerData>("getActiveProfile");
+    const result = await this.invoke<ActiveProfileBrokerData>("getActiveProfile");
     return result?.profile ?? null;
   }
 
-  static async getActiveProfileStrict(): Promise<SessionRpcProfileRow | null> {
-    const result = await invokeSupabaseBroker<
-      ActiveProfileBrokerData,
-      "getActiveProfile"
-    >({
-      action: "getActiveProfile",
-      functionName: FUNCTION_NAME,
-      noDataMessage: "Session broker returned no active-profile resolution",
-      serviceName: SERVICE_NAME,
-    });
-    return result.profile;
-  }
-
   static async switchActiveProfile(profileId: string): Promise<boolean> {
-    const result = await this.invoke<SwitchProfileBrokerData>(
-      "switchActiveProfile",
-      {
-        profileId,
-      },
-    );
+    const result = await this.invoke<SwitchProfileBrokerData>("switchActiveProfile", {
+      profileId,
+    });
     return result?.ok === true;
   }
 
@@ -106,10 +86,7 @@ export class SessionRpcService {
     return result?.required ?? null;
   }
 
-  static async revokeSession(
-    sessionId: string,
-    reason?: string,
-  ): Promise<boolean> {
+  static async revokeSession(sessionId: string, reason?: string): Promise<boolean> {
     const result = await this.invoke<RevokeSessionBrokerData>("revokeSession", {
       sessionId,
       reason,
@@ -117,24 +94,16 @@ export class SessionRpcService {
     return result?.revoked === true;
   }
 
-  static async revokeAllSessions(
-    exceptCurrent = true,
-    reason?: string,
-  ): Promise<number> {
-    const result = await this.invoke<RevokeAllSessionsBrokerData>(
-      "revokeAllSessions",
-      {
-        exceptCurrent,
-        reason,
-      },
-    );
+  static async revokeAllSessions(exceptCurrent = true, reason?: string): Promise<number> {
+    const result = await this.invoke<RevokeAllSessionsBrokerData>("revokeAllSessions", {
+      exceptCurrent,
+      reason,
+    });
     return result?.revokedCount ?? 0;
   }
 
   static async updateSessionActivity(): Promise<boolean> {
-    const result = await this.invoke<UpdateSessionActivityBrokerData>(
-      "updateSessionActivity",
-    );
+    const result = await this.invoke<UpdateSessionActivityBrokerData>("updateSessionActivity");
     return result?.updated === true;
   }
 }

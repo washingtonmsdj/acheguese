@@ -54,20 +54,13 @@ interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
     options?: { onConflict?: string },
   ) => QueryBuilder<TRow>;
   eq: (column: string, value: unknown) => QueryBuilder<TRow>;
-  order: (
-    column: string,
-    options?: { ascending?: boolean },
-  ) => QueryBuilder<TRow>;
+  order: (column: string, options?: { ascending?: boolean }) => QueryBuilder<TRow>;
   maybeSingle: () => Promise<QuerySingleResult<TRow>>;
   single: () => Promise<QuerySingleResult<TRow>>;
 }
 
 interface ProfessionalLeadDbClient {
   from: <TRow = never>(table: string) => QueryBuilder<TRow>;
-  rpc: <TResult = unknown>(
-    functionName: string,
-    args: Record<string, unknown>,
-  ) => Promise<{ data: TResult | null; error: QueryError | null }>;
 }
 
 interface ProfessionalOwnerRecord {
@@ -79,21 +72,18 @@ interface ProfessionalOwnerRecord {
 }
 
 interface ProfessionalLeadWithOwner extends ProfessionalLeadRecord {
-  professional_data?:
-    | ProfessionalOwnerRecord
-    | ProfessionalOwnerRecord[]
-    | null;
+  professional_data?: ProfessionalOwnerRecord | ProfessionalOwnerRecord[] | null;
 }
 
-type ProfessionalLeadDetailsRelation = NonNullable<
-  ProfessionalLeadDetails["professional"]
->;
+interface ProfessionalServiceEngagementWithProfessional
+  extends ProfessionalServiceEngagementRecord {
+  professional_data?: { profile_id: string } | { profile_id: string }[] | null;
+}
+
+type ProfessionalLeadDetailsRelation = NonNullable<ProfessionalLeadDetails["professional"]>;
 
 interface ProfessionalLeadDetailsRow extends ProfessionalLeadRecord {
-  professional?:
-    | ProfessionalLeadDetailsRelation
-    | ProfessionalLeadDetailsRelation[]
-    | null;
+  professional?: ProfessionalLeadDetailsRelation | ProfessionalLeadDetailsRelation[] | null;
 }
 
 interface ProfessionalLeadEventInsert {
@@ -116,9 +106,7 @@ function firstRelation<T>(value: T | T[] | null | undefined): T | null {
   return value ?? null;
 }
 
-function firstProfileUserId(
-  profiles: ProfessionalOwnerRecord["profiles"],
-): string | null {
+function firstProfileUserId(profiles: ProfessionalOwnerRecord["profiles"]): string | null {
   if (!profiles) return null;
   if (Array.isArray(profiles)) {
     return profiles[0]?.user_id ?? null;
@@ -161,13 +149,10 @@ function normalizeLeadInput(input: CreateProfessionalLeadInput) {
     service_needed: serviceNeeded,
     description,
     preferred_date: input.preferredDate || null,
-    preferred_time_window:
-      sanitizeString(input.preferredTimeWindow).slice(0, 80) || null,
+    preferred_time_window: sanitizeString(input.preferredTimeWindow).slice(0, 80) || null,
     neighborhood: sanitizeString(input.neighborhood).slice(0, 120) || null,
     location_id: input.locationId || null,
-    source_channel: sanitizeString(
-      input.sourceChannel || "public_profile",
-    ).slice(0, 50),
+    source_channel: sanitizeString(input.sourceChannel || "public_profile").slice(0, 50),
     priority: input.priority || "normal",
     metadata: input.metadata || {},
   };
@@ -209,10 +194,7 @@ export class ProfessionalLeadService {
       logger.error("[ProfessionalLeadService] createLead failed:", error);
       return {
         success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Erro ao solicitar orcamento",
+        error: error instanceof Error ? error.message : "Erro ao solicitar orcamento",
       };
     }
   }
@@ -237,14 +219,10 @@ export class ProfessionalLeadService {
 
       return { success: true, data: data ?? [] };
     } catch (error) {
-      logger.error(
-        "[ProfessionalLeadService] listLeadsForProfessional failed:",
-        error,
-      );
+      logger.error("[ProfessionalLeadService] listLeadsForProfessional failed:", error);
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : "Erro ao buscar orcamentos",
+        error: error instanceof Error ? error.message : "Erro ao buscar orcamentos",
       };
     }
   }
@@ -283,8 +261,7 @@ export class ProfessionalLeadService {
       logger.error("[ProfessionalLeadService] getLeadDetails failed:", error);
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : "Erro ao buscar orcamento",
+        error: error instanceof Error ? error.message : "Erro ao buscar orcamento",
       };
     }
   }
@@ -306,8 +283,7 @@ export class ProfessionalLeadService {
       logger.error("[ProfessionalLeadService] listMessages failed:", error);
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : "Erro ao buscar mensagens",
+        error: error instanceof Error ? error.message : "Erro ao buscar mensagens",
       };
     }
   }
@@ -329,8 +305,7 @@ export class ProfessionalLeadService {
       logger.error("[ProfessionalLeadService] listQuotes failed:", error);
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : "Erro ao buscar propostas",
+        error: error instanceof Error ? error.message : "Erro ao buscar propostas",
       };
     }
   }
@@ -340,9 +315,7 @@ export class ProfessionalLeadService {
   ): Promise<ServiceResult<ProfessionalServiceEngagementRecord | null>> {
     try {
       const { data, error } = await professionalLeadDb
-        .from<ProfessionalServiceEngagementRecord>(
-          "professional_service_engagements",
-        )
+        .from<ProfessionalServiceEngagementRecord>("professional_service_engagements")
         .select("*")
         .eq("lead_id", leadId)
         .maybeSingle();
@@ -354,14 +327,10 @@ export class ProfessionalLeadService {
         data: data ?? null,
       };
     } catch (error) {
-      logger.error(
-        "[ProfessionalLeadService] getEngagementByLead failed:",
-        error,
-      );
+      logger.error("[ProfessionalLeadService] getEngagementByLead failed:", error);
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : "Erro ao buscar atendimento",
+        error: error instanceof Error ? error.message : "Erro ao buscar atendimento",
       };
     }
   }
@@ -371,9 +340,7 @@ export class ProfessionalLeadService {
   ): Promise<ServiceResult<ProfessionalServiceEngagementRecord[]>> {
     try {
       const { data, error } = await professionalLeadDb
-        .from<ProfessionalServiceEngagementRecord>(
-          "professional_service_engagements",
-        )
+        .from<ProfessionalServiceEngagementRecord>("professional_service_engagements")
         .select("*")
         .eq("professional_id", professionalId)
         .order("created_at", { ascending: false });
@@ -382,16 +349,10 @@ export class ProfessionalLeadService {
 
       return { success: true, data: data ?? [] };
     } catch (error) {
-      logger.error(
-        "[ProfessionalLeadService] listEngagementsForProfessional failed:",
-        error,
-      );
+      logger.error("[ProfessionalLeadService] listEngagementsForProfessional failed:", error);
       return {
         success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Erro ao buscar atendimentos",
+        error: error instanceof Error ? error.message : "Erro ao buscar atendimentos",
       };
     }
   }
@@ -451,8 +412,7 @@ export class ProfessionalLeadService {
       logger.error("[ProfessionalLeadService] sendMessage failed:", error);
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : "Erro ao enviar mensagem",
+        error: error instanceof Error ? error.message : "Erro ao enviar mensagem",
       };
     }
   }
@@ -483,8 +443,7 @@ export class ProfessionalLeadService {
           amount_cents: Math.round(input.amountCents),
           description,
           estimated_start_date: input.estimatedStartDate || null,
-          estimated_duration:
-            sanitizeString(input.estimatedDuration).slice(0, 120) || null,
+          estimated_duration: sanitizeString(input.estimatedDuration).slice(0, 120) || null,
         })
         .select("*")
         .single();
@@ -506,8 +465,7 @@ export class ProfessionalLeadService {
       logger.error("[ProfessionalLeadService] createQuote failed:", error);
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : "Erro ao enviar proposta",
+        error: error instanceof Error ? error.message : "Erro ao enviar proposta",
       };
     }
   }
@@ -543,10 +501,7 @@ export class ProfessionalLeadService {
         throw new Error("Apenas o profissional pode cancelar a proposta");
       }
 
-      if (
-        (input.status === "accepted" || input.status === "declined") &&
-        !isRequester
-      ) {
+      if ((input.status === "accepted" || input.status === "declined") && !isRequester) {
         throw new Error("Apenas o cliente pode aceitar ou recusar a proposta");
       }
 
@@ -567,22 +522,15 @@ export class ProfessionalLeadService {
       });
 
       if (data.status === "accepted") {
-        await this.updateLeadStatus({
-          leadId: data.lead_id,
-          status: "scheduled",
-        });
+        await this.updateLeadStatus({ leadId: data.lead_id, status: "scheduled" });
       }
 
       return { success: true, data };
     } catch (error) {
-      logger.error(
-        "[ProfessionalLeadService] updateQuoteStatus failed:",
-        error,
-      );
+      logger.error("[ProfessionalLeadService] updateQuoteStatus failed:", error);
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : "Erro ao atualizar proposta",
+        error: error instanceof Error ? error.message : "Erro ao atualizar proposta",
       };
     }
   }
@@ -616,8 +564,7 @@ export class ProfessionalLeadService {
       logger.error("[ProfessionalLeadService] updateLeadStatus failed:", error);
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : "Erro ao atualizar lead",
+        error: error instanceof Error ? error.message : "Erro ao atualizar lead",
       };
     }
   }
@@ -638,9 +585,7 @@ export class ProfessionalLeadService {
       }
 
       const { data, error } = await professionalLeadDb
-        .from<ProfessionalServiceEngagementRecord>(
-          "professional_service_engagements",
-        )
+        .from<ProfessionalServiceEngagementRecord>("professional_service_engagements")
         .update(patch)
         .eq("id", input.engagementId)
         .select("*")
@@ -673,16 +618,10 @@ export class ProfessionalLeadService {
 
       return { success: true, data };
     } catch (error) {
-      logger.error(
-        "[ProfessionalLeadService] updateEngagementStatus failed:",
-        error,
-      );
+      logger.error("[ProfessionalLeadService] updateEngagementStatus failed:", error);
       return {
         success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Erro ao atualizar atendimento",
+        error: error instanceof Error ? error.message : "Erro ao atualizar atendimento",
       };
     }
   }
@@ -691,7 +630,8 @@ export class ProfessionalLeadService {
     input: SubmitProfessionalEngagementReviewInput,
   ): Promise<ServiceResult<Review>> {
     try {
-      if (!(await SessionService.getCurrentUser())) {
+      const user = await SessionService.getCurrentUser();
+      if (!user) {
         throw new Error("Faca login para avaliar o atendimento");
       }
 
@@ -700,31 +640,66 @@ export class ProfessionalLeadService {
         throw new Error("Nota invalida");
       }
 
-      const { data, error } = await professionalLeadDb.rpc(
-        "submit_professional_engagement_review",
-        {
-          p_comment: sanitizeString(input.comment).slice(0, 1000),
-          p_engagement_id: input.engagementId,
-          p_rating: rating,
-        },
-      );
+      const { data, error } = await professionalLeadDb
+        .from<ProfessionalServiceEngagementWithProfessional>("professional_service_engagements")
+        .select(
+          `
+          *,
+          professional_data(
+            profile_id
+          )
+        `,
+        )
+        .eq("id", input.engagementId)
+        .single();
 
       if (error) throw error;
-      const { review } =
-        ReviewsService.normalizeUpsertReviewCommandResponse(data);
+
+      if (data.requester_user_id !== user.id) {
+        throw new Error("Apenas o cliente do atendimento pode avaliar");
+      }
+
+      if (data.status !== "completed") {
+        throw new Error("Avaliacao liberada apenas apos conclusao do atendimento");
+      }
+
+      if (!data.requester_profile_id) {
+        throw new Error("Perfil do cliente nao encontrado para este atendimento");
+      }
+
+      const professional = firstRelation(data.professional_data);
+
+      if (!professional?.profile_id) {
+        throw new Error("Perfil profissional nao encontrado");
+      }
+
+      const { review } = await ReviewsService.upsertReview(
+        {
+          reviewed_profile_id: professional.profile_id,
+          reviewer_profile_id: data.requester_profile_id,
+          rating,
+          comment: sanitizeString(input.comment).slice(0, 1000),
+        },
+        "professional",
+      );
+
+      await this.recordEvent({
+        leadId: data.lead_id,
+        eventType: "engagement_review_submitted",
+        actorUserId: user.id,
+        payload: {
+          engagement_id: data.id,
+          review_id: review.id,
+          rating,
+        },
+      });
 
       return { success: true, data: review };
     } catch (error) {
-      logger.error(
-        "[ProfessionalLeadService] submitEngagementReview failed:",
-        error,
-      );
+      logger.error("[ProfessionalLeadService] submitEngagementReview failed:", error);
       return {
         success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Erro ao avaliar atendimento",
+        error: error instanceof Error ? error.message : "Erro ao avaliar atendimento",
       };
     }
   }
@@ -754,9 +729,7 @@ export class ProfessionalLeadService {
   ): Promise<ProfessionalOwnerRecord | null> {
     const { data, error } = await professionalLeadDb
       .from<ProfessionalOwnerRecord>("professional_data")
-      .select(
-        "id, profile_id, professional_name, service_category, profiles!inner(user_id)",
-      )
+      .select("id, profile_id, professional_name, service_category, profiles!inner(user_id)")
       .eq("id", professionalId)
       .maybeSingle();
 
@@ -796,15 +769,12 @@ export class ProfessionalLeadService {
       logger.error("[ProfessionalLeadService] getLeadWithOwner failed:", error);
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : "Erro ao buscar orcamento",
+        error: error instanceof Error ? error.message : "Erro ao buscar orcamento",
       };
     }
   }
 
-  private static async incrementContactsCount(
-    professionalId: string,
-  ): Promise<void> {
+  private static async incrementContactsCount(professionalId: string): Promise<void> {
     const owner = await this.getProfessionalOwner(professionalId);
     if (!owner?.profile_id) return;
 
@@ -815,10 +785,7 @@ export class ProfessionalLeadService {
       .maybeSingle();
 
     if (currentError) {
-      logger.warn(
-        "[ProfessionalLeadService] contacts counter read failed:",
-        currentError,
-      );
+      logger.warn("[ProfessionalLeadService] contacts counter read failed:", currentError);
       return;
     }
 
@@ -835,10 +802,8 @@ export class ProfessionalLeadService {
       );
 
     if (error) {
-      logger.warn(
-        "[ProfessionalLeadService] contacts counter update failed:",
-        error,
-      );
+      logger.warn("[ProfessionalLeadService] contacts counter update failed:", error);
     }
   }
+
 }

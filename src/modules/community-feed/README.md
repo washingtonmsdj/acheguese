@@ -1,16 +1,11 @@
 # community-feed
 
-Bounded context de produto para o feed territorial. Ele nao mantem uma arvore
-paralela de implementacao.
+Modulo transversal para o feed territorial.
 
 Boundary:
-- Posts, comentarios, reacoes, compartilhamentos e ranking pertencem a
-  `core/posts`, `core/comments`, `core/social` e `core/feed`.
-- A composicao visual especifica da Comunidade pertence a
-  `core/community/components` e `core/community/pages`.
+- Consome somente `core/posts`, `core/comments`, `core/social`, as chaves de
+  cache de `core/feed`, `core/location` e owners canonicos em
+  `core/community-feed`.
 - Nao importa outros modulos `src/modules/*`.
 - O territorio e sempre resolvido por `location_id` via core.
-- Consumidores externos usam somente os entrypoints comunitarios aprovados em
-  `scripts/validate-community-transversal-boundaries.ts`.
-- `src/core/community-feed` foi removido: reexports de compatibilidade nao sao
-  uma segunda fonte de verdade e nao podem ser recriados.
+- Rotas, testes e componentes compartilhados de feed devem carregar `src/core/community-feed/*` diretamente; este modulo nao deve recriar facades vazias.

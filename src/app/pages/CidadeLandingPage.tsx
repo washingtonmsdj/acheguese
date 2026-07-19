@@ -95,14 +95,16 @@ import { mapClassifiedsLayerRuntimeService } from "@/core/maps/services/MapClass
 import { mapGastronomyLayerRuntimeService } from "@/core/maps/services/MapGastronomyLayerRuntimeService";
 import { mapServicesLayerRuntimeService } from "@/core/maps/services/MapServicesLayerRuntimeService";
 import type { BoundingBox } from "@/core/maps/types/core";
-import { useCommunityFeedSimple } from "@/core/community/hooks/feed/useCommunityFeed";
-import { CommunityOverviewSurface } from "@/core/community/components/page/CommunityOverviewSurface";
+import { useCommunityFeedSimple } from "@/core/community-feed/hooks/useCommunityFeed";
+import {
+  CommunityOverviewSurface,
+  type CommunityOverviewSection,
+  type CommunityOverviewView,
+} from "@/core/community-feed/components/page/CommunityOverviewSurface";
 import {
   isCommunityOverviewView,
   isCommunitySocialView,
-  type CommunityOverviewSection,
-  type CommunityOverviewView,
-} from "@/core/community/components/page/communityOverviewNavigation";
+} from "@/core/community-feed/components/page/communityOverviewNavigation";
 import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
 import { PublicHeaderMobileMenu } from "@/core/navigation/PublicHeaderMobileMenu";
 import {
@@ -143,11 +145,11 @@ import {
   type PopulationMetric,
 } from "./CidadeLanding.neighborhood-panels";
 import { NeighborhoodTerritoryHero } from "./CidadeLanding.neighborhood-hero";
-import { NeighborhoodTerritoryArt } from "@/core/community/components/public/NeighborhoodTerritoryArt";
+import { NeighborhoodTerritoryArt } from "@/core/community-feed/components/public/NeighborhoodTerritoryArt";
 import "./CidadeLandingPage.css";
 
 const CommunityCreatePostModal = lazy(() =>
-  import("@/core/community/components/composer/CreatePostModal").then(
+  import("@/core/community-feed/components/composer/CreatePostModal").then(
     (module) => ({
       default: module.CreatePostModal,
     }),

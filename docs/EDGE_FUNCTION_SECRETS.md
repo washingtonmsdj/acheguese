@@ -73,11 +73,6 @@ If gender-specific try-on reference images are required, configure all of:
   fallback sender emails, fallback model versions, or fake provider responses.
 - CORS and redirect allowlists must come from `ALLOWED_ORIGINS` and
   `ALLOWED_REDIRECT_DOMAINS`.
-- `ALLOWED_ORIGINS` matches the full origin exactly. Scheme, hostname, and port
-  are significant; wildcards are forbidden.
-- Development must list each Vite/Playwright loopback origin explicitly. The
-  repository baseline is the value documented in `.env.example`; production
-  must contain only real HTTPS origins.
 
 ## Supabase Setup
 
@@ -94,12 +89,6 @@ supabase secrets set CRON_SECRET="[random high-entropy value]"
 ```
 
 Use the same pattern for provider-specific secrets listed above.
-
-Development example:
-
-```powershell
-supabase secrets set ALLOWED_ORIGINS="http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:8080,http://127.0.0.1:8080,http://localhost:8099,http://127.0.0.1:8099"
-```
 
 ## Verification
 

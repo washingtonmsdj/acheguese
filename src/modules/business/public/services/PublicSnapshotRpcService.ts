@@ -2,22 +2,11 @@ import { callRPC } from "@/integrations/supabase";
 import { SERVICE_MODES } from "@/core/business/constants";
 import { EntityContactService } from "@/core/contact";
 import { logger } from "@/shared/utils/logger";
-import { withTimeout } from "@/shared/utils/withTimeout";
 import type {
   PublicBusinessSnapshot,
   PublicGastronomySnapshot,
   PublicSlugRouteParams,
 } from "../types/publicSnapshots";
-
-const PUBLIC_SNAPSHOT_TIMEOUT_MS = 8_000;
-
-function toError(error: unknown, fallbackMessage: string): Error {
-  if (error instanceof Error) return error;
-  if (isRecord(error) && typeof error.message === "string") {
-    return new Error(error.message);
-  }
-  return new Error(fallbackMessage);
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -39,11 +28,7 @@ function toStringArray(value: unknown): string[] {
 function toBoolean(value: unknown): boolean | undefined {
   if (typeof value === "boolean") return value;
   if (typeof value === "string") {
-    const normalized = value
-      .trim()
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
+    const normalized = value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     if (["true", "1", "sim", "yes"].includes(normalized)) return true;
     if (["false", "0", "nao", "no"].includes(normalized)) return false;
   }
@@ -81,15 +66,12 @@ const VALID_SERVICE_MODES = new Set(SERVICE_MODES.map((mode) => mode.id));
 
 function resolveServiceModes(business: Record<string, unknown>): string[] {
   const metadata = isRecord(business.metadata) ? business.metadata : null;
-  const fromBusiness = toStringArray(business.modos_atendimento).filter(
-    (mode) => VALID_SERVICE_MODES.has(mode),
-  );
+  const fromBusiness = toStringArray(business.modos_atendimento)
+    .filter((mode) => VALID_SERVICE_MODES.has(mode));
   if (fromBusiness.length > 0) return [...new Set(fromBusiness)];
 
   const fromMetadata = metadata
-    ? toStringArray(metadata.modos_atendimento).filter((mode) =>
-        VALID_SERVICE_MODES.has(mode),
-      )
+    ? toStringArray(metadata.modos_atendimento).filter((mode) => VALID_SERVICE_MODES.has(mode))
     : [];
   if (fromMetadata.length > 0) return [...new Set(fromMetadata)];
 
@@ -103,14 +85,13 @@ function resolveServiceModes(business: Record<string, unknown>): string[] {
 
 function normalizeInstitutionalBusinessSnapshot<
   TSnapshot extends PublicBusinessSnapshot | PublicGastronomySnapshot,
->(snapshot: TSnapshot): TSnapshot {
-  const institutional = isRecord(snapshot.institutional)
-    ? snapshot.institutional
+>(
+  snapshot: TSnapshot,
+): TSnapshot {
+  const institutional = isRecord(snapshot.institutional) ? snapshot.institutional : null;
+  const business = institutional && isRecord(institutional.business)
+    ? institutional.business
     : null;
-  const business =
-    institutional && isRecord(institutional.business)
-      ? institutional.business
-      : null;
 
   if (!institutional || !business) return snapshot;
 
@@ -134,10 +115,8 @@ function normalizeInstitutionalBusinessSnapshot<
     phone: undefined,
     whatsapp: undefined,
     email: undefined,
-    addressText:
-      institutional.addressText ?? resolveAddressText(normalizedBusiness),
-    locationText:
-      institutional.locationText ?? resolveLocationText(normalizedBusiness),
+    addressText: institutional.addressText ?? resolveAddressText(normalizedBusiness),
+    locationText: institutional.locationText ?? resolveLocationText(normalizedBusiness),
     business: normalizedBusiness,
   };
 
@@ -151,10 +130,9 @@ async function attachAuthenticatedBusinessContact<
   TSnapshot extends PublicBusinessSnapshot | PublicGastronomySnapshot,
 >(snapshot: TSnapshot): Promise<TSnapshot> {
   const business = snapshot.institutional.business;
-  const businessDataId =
-    toNonEmptyString(business.business_data_id) ??
-    snapshot.identity.businessId ??
-    undefined;
+  const businessDataId = toNonEmptyString(business.business_data_id)
+    ?? snapshot.identity.businessId
+    ?? undefined;
   if (!businessDataId) return snapshot;
 
   const contact = await EntityContactService.getVisibleForEntity(
@@ -198,9 +176,7 @@ function normalizeGastronomyBusinessSnapshot(
   return base;
 }
 
-function isBusinessSnapshotLike(
-  value: unknown,
-): value is PublicBusinessSnapshot {
+function isBusinessSnapshotLike(value: unknown): value is PublicBusinessSnapshot {
   if (!isRecord(value)) return false;
   const identity = value.identity;
   const institutional = value.institutional;
@@ -224,16 +200,10 @@ function isBusinessSnapshotLike(
   );
 }
 
-function isGastronomySnapshotLike(
-  value: unknown,
-): value is PublicGastronomySnapshot {
+function isGastronomySnapshotLike(value: unknown): value is PublicGastronomySnapshot {
   if (!isBusinessSnapshotLike(value)) return false;
   const gastronomy = (value as unknown as Record<string, unknown>).gastronomy;
-  return (
-    isRecord(gastronomy) &&
-    isRecord(gastronomy.profile) &&
-    isRecord(gastronomy.business)
-  );
+  return isRecord(gastronomy) && isRecord(gastronomy.profile) && isRecord(gastronomy.business);
 }
 
 export class PublicSnapshotRpcService {
@@ -261,9 +231,7 @@ export class PublicSnapshotRpcService {
       }
 
       if (!isBusinessSnapshotLike(data)) {
-        logger.warn(
-          "[PublicSnapshotRpcService] Invalid business snapshot payload",
-        );
+        logger.warn("[PublicSnapshotRpcService] Invalid business snapshot payload");
         return null;
       }
 
@@ -271,10 +239,7 @@ export class PublicSnapshotRpcService {
         normalizeInstitutionalBusinessSnapshot(data),
       );
     } catch (error) {
-      logger.warn(
-        "[PublicSnapshotRpcService] business snapshot RPC failed",
-        error,
-      );
+      logger.warn("[PublicSnapshotRpcService] business snapshot RPC failed", error);
       return null;
     }
   }
@@ -293,16 +258,14 @@ export class PublicSnapshotRpcService {
         p_slug: params.slug,
       };
 
-      const { data, error } = await withTimeout(
-        callRPC<unknown>("get_public_gastronomy_snapshot_by_slug", rpcParams),
-        {
-          message: "Public gastronomy snapshot request timed out",
-          timeoutMs: PUBLIC_SNAPSHOT_TIMEOUT_MS,
-        },
+      const { data, error } = await callRPC<unknown>(
+        "get_public_gastronomy_snapshot_by_slug",
+        rpcParams,
       );
 
       if (error) {
-        throw toError(error, "Public gastronomy snapshot RPC failed");
+        logger.warn("[PublicSnapshotRpcService] gastronomy snapshot RPC failed", error);
+        return null;
       }
 
       if (!data) {
@@ -310,18 +273,16 @@ export class PublicSnapshotRpcService {
       }
 
       if (!isGastronomySnapshotLike(data)) {
-        throw new Error("Invalid public gastronomy snapshot payload");
+        logger.warn("[PublicSnapshotRpcService] Invalid gastronomy snapshot payload");
+        return null;
       }
 
       return attachAuthenticatedBusinessContact(
         normalizeGastronomyBusinessSnapshot(data),
       );
     } catch (error) {
-      logger.warn(
-        "[PublicSnapshotRpcService] gastronomy snapshot RPC failed",
-        error,
-      );
-      throw toError(error, "Public gastronomy snapshot RPC failed");
+      logger.warn("[PublicSnapshotRpcService] gastronomy snapshot RPC failed", error);
+      return null;
     }
   }
 }

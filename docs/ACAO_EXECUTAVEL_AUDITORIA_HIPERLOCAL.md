@@ -528,7 +528,7 @@ Passos:
 Criterio de aceite:
 
 - [x] `rg -n "confirm\\(" src/modules/business/gastronomy -S` nao encontra esses casos.
-- [x] `rg -n "confirm\\(" src/app/pages/OfflineSettingsPage.tsx src/core/community src/core/community-issues src/core/community-lost-found -g "*.tsx" -g "*.ts"` nao encontra casos nos fluxos auditados.
+- [x] `rg -n "confirm\\(" src/app/pages/OfflineSettingsPage.tsx src/core/community src/core/community-feed src/core/community-issues src/core/community-lost-found -g "*.tsx" -g "*.ts"` nao encontra casos nos fluxos auditados.
 - [x] Acoes destrutivas usam `ConfirmActionDialog`, baseado em `AlertDialog` do design system.
 - [x] Dialogs preservam estado pendente e bloqueiam confirmacao quando ha operacao destrutiva em andamento.
 

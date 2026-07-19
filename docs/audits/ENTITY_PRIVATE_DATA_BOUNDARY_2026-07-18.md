@@ -46,11 +46,6 @@ A suite diretamente afetada aprovou 22 arquivos e 67 testes. A execucao global
 por isso ela nao foi registrada como aprovada e deve ser particionada no
 checkpoint de suites remanescente do plano.
 
-Atualizacao de 2026-07-18: a causa foi corrigida no checkpoint seguinte. O
-runner deterministico passou a excluir testes remotos e voltou a usar
-paralelismo por arquivo; a evidencia da nova execucao pertence ao plano
-principal, sem reescrever retroativamente o resultado deste checkpoint.
-
 As Edge Functions `contact-rpc` e `professional-credentials-rpc` foram
 publicadas com `verify_jwt = true`. Nenhuma evidencia registra valor de contato,
 credencial ou token.

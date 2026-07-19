@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 function filesUnder(dir: string): string[] {
@@ -24,10 +24,6 @@ function filesUnder(dir: string): string[] {
 }
 
 describe("community legacy isolation", () => {
-  it("keeps community implementation on one canonical code path", () => {
-    expect(existsSync("src/core/community-feed")).toBe(false);
-  });
-
   it("does not import module implementation internals from core community", () => {
     const offenders = filesUnder("src/core/community").filter((file) =>
       /@\/modules\/community(?!-)/.test(readFileSync(file, "utf8")),

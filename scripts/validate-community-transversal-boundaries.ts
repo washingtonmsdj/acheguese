@@ -15,12 +15,7 @@ const TRANSVERSAL_MODULES = [
 ] as const;
 
 const CORE_DOMAIN_PATHS = [
-  "src/core/posts",
-  "src/core/comments",
-  "src/core/feed",
-  "src/core/social",
-  "src/core/community/components/feed",
-  "src/core/community/pages/ComunidadePage.tsx",
+  "src/core/community-feed",
   "src/core/community/alerts",
   "src/core/community-issues",
   "src/core/community-groups",
@@ -38,19 +33,8 @@ const DEPRECATED_COMMUNITY_IMPORT_RE =
   /(?:from\s+["']|import\(\s*["'])@\/modules\/community(?:\/|["'])/;
 const CORE_COMMUNITY_BARREL_IMPORT_RE =
   /(?:from\s+["']|import\(\s*["'])@\/core\/community["']/;
-const CORE_COMMUNITY_IMPORT_RE =
-  /(?:from\s+["']|import\(\s*["'])(@\/core\/community(?:\/[^"']*)?)["']/g;
-const EXTERNAL_COMMUNITY_ENTRYPOINTS = new Set([
-  "@/core/community/components/composer/CreatePostModal",
-  "@/core/community/components/composer/UnifiedComposer",
-  "@/core/community/components/page/communityOverviewNavigation",
-  "@/core/community/components/page/CommunityOverviewSurface",
-  "@/core/community/components/public/NeighborhoodTerritoryArt",
-  "@/core/community/hooks/composer/useCreatePostForm",
-  "@/core/community/hooks/feed/useCommunityFeed",
-  "@/core/community/pages/ComunidadePage",
-  "@/core/community/pages/NovoPostPage",
-]);
+const CORE_COMMUNITY_LEGACY_IMPORT_RE =
+  /(?:from\s+["']|import\(\s*["'])@\/core\/community\//;
 
 function normalize(filePath: string): string {
   return filePath.replace(/\\/g, "/");
@@ -114,9 +98,9 @@ function main() {
         );
       }
 
-      for (const match of content.matchAll(CORE_COMMUNITY_IMPORT_RE)) {
+      if (CORE_COMMUNITY_LEGACY_IMPORT_RE.test(content)) {
         violations.push(
-          `${relative}: modulo transversal nao deve importar ${match[1]}. Use o owner canonico em core.`,
+          `${relative}: modulo transversal nao deve importar @/core/community/*. Use core/community-* ou outro owner canonico.`,
         );
       }
     }
@@ -158,13 +142,10 @@ function main() {
       const relative = normalize(path.relative(ROOT, filePath));
       const content = fs.readFileSync(filePath, "utf8");
 
-      for (const match of content.matchAll(CORE_COMMUNITY_IMPORT_RE)) {
-        const importPath = match[1];
-        if (!EXTERNAL_COMMUNITY_ENTRYPOINTS.has(importPath)) {
-          violations.push(
-            `${relative}: import interno ${importPath} proibido. Use um entrypoint comunitario aprovado ou o owner transversal em core.`,
-          );
-        }
+      if (CORE_COMMUNITY_LEGACY_IMPORT_RE.test(content)) {
+        violations.push(
+          `${relative}: import direto de @/core/community/* proibido fora dos dominios de compatibilidade. Use core/community-*, core/social, core/posts, core/profiles ou core/routing.`,
+        );
       }
     }
   }

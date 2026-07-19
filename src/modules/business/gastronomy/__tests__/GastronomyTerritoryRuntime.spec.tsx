@@ -38,26 +38,22 @@ vi.mock("framer-motion", () => ({
   motion: new Proxy(
     {},
     {
-      get:
-        () =>
+      get: () =>
         ({ children }: { children?: unknown }) => <div>{children}</div>,
     },
   ),
 }));
 
 vi.mock("@/shared/components/hero/CanonicalHero", () => ({
-  CanonicalHero: ({
-    title,
-    titleHighlight,
-  }: {
-    title: string;
-    titleHighlight: string;
-  }) => <div>{`${title} ${titleHighlight}`}</div>,
+  CanonicalHero: ({ title, titleHighlight }: { title: string; titleHighlight: string }) => (
+    <div>{`${title} ${titleHighlight}`}</div>
+  ),
 }));
 
 vi.mock("@/core/location", async () => {
-  const actual =
-    await vi.importActual<typeof import("@/core/location")>("@/core/location");
+  const actual = await vi.importActual<typeof import("@/core/location")>(
+    "@/core/location",
+  );
 
   return {
     ...actual,
@@ -104,23 +100,20 @@ vi.mock("@/shared/components/maps/MiniMap", () => ({
 }));
 
 vi.mock("@/modules/business/gastronomy/hooks", async () => {
-  const actual = await vi.importActual<
-    typeof import("@/modules/business/gastronomy/hooks")
-  >("@/modules/business/gastronomy/hooks");
+  const actual = await vi.importActual<typeof import("@/modules/business/gastronomy/hooks")>(
+    "@/modules/business/gastronomy/hooks",
+  );
 
   return {
     ...actual,
     useGastronomyList: (...args: unknown[]) => useGastronomyListMock(...args),
     useGastronomyFoodCatalog: (...args: unknown[]) =>
       useGastronomyFoodCatalogMock(...args),
-    useGastronomyDetail: (...args: unknown[]) =>
-      useGastronomyDetailMock(...args),
+    useGastronomyDetail: (...args: unknown[]) => useGastronomyDetailMock(...args),
     useMenusByBusiness: (...args: unknown[]) => useMenusByBusinessMock(...args),
     useMenu: (...args: unknown[]) => useMenuMock(...args),
-    useActivePromotions: (...args: unknown[]) =>
-      useActivePromotionsMock(...args),
-    useDeliveryDestination: (...args: unknown[]) =>
-      useDeliveryDestinationMock(...args),
+    useActivePromotions: (...args: unknown[]) => useActivePromotionsMock(...args),
+    useDeliveryDestination: (...args: unknown[]) => useDeliveryDestinationMock(...args),
     useFavoritesManager: () => ({
       isFavorited: false,
       toggleFavorite: vi.fn(),
@@ -131,28 +124,6 @@ vi.mock("@/modules/business/gastronomy/hooks", async () => {
 vi.mock("@/modules/business/public/hooks", () => ({
   usePublicGastronomySnapshot: (...args: unknown[]) =>
     usePublicGastronomySnapshotMock(...args),
-}));
-
-vi.mock("@/modules/business/gastronomy/hooks/useGastronomyActivity", () => ({
-  useGastronomyActivity: () => ({ data: [], isLoading: false }),
-}));
-
-vi.mock("@/modules/business/gastronomy/hooks/useGastronomyReviews", () => ({
-  useReviewsManager: () => ({
-    activeProfile: null,
-    canReview: false,
-    createReview: vi.fn(),
-    deleteReview: vi.fn(),
-    isCreating: false,
-    isLoadingReviews: false,
-    isLoadingStats: false,
-    reportReview: vi.fn(),
-    reviews: [],
-    stats: { average: 0, distribution: {}, total: 0 },
-    user: null,
-    voteReview: vi.fn(),
-  }),
-  useUserReviewVote: () => ({ data: null }),
 }));
 
 describe("Gastronomy territorial runtime", () => {
@@ -274,9 +245,7 @@ describe("Gastronomy territorial runtime", () => {
 
     expect(screen.getByText(/Descubra Sabores/i)).toBeInTheDocument();
     expect(
-      document
-        .querySelector('meta[name="description"]')
-        ?.getAttribute("content"),
+      document.querySelector('meta[name="description"]')?.getAttribute("content"),
     ).toContain("Pituba");
     expect(useGastronomyListMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -294,18 +263,14 @@ describe("Gastronomy territorial runtime", () => {
         enabled: true,
       }),
     );
-    expect(
-      screen.queryByText(/Nenhuma loja encontrada/i),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/Nenhuma loja encontrada/i)).not.toBeInTheDocument();
   });
 
   it("resolves gastronomy detail by territory plus slug", () => {
     const queryClient = createQueryClient();
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter
-          initialEntries={["/gastronomia/ba/salvador/pituba/pasta-lab"]}
-        >
+        <MemoryRouter initialEntries={["/gastronomia/ba/salvador/pituba/pasta-lab"]}>
           <Routes>
             <Route
               path="/gastronomia/:state/:city/:district/:slug"
@@ -323,9 +288,7 @@ describe("Gastronomy territorial runtime", () => {
       slug: "pasta-lab",
     });
     expect(
-      screen.getByText(
-        /não pertence a um estabelecimento ativo neste território/i,
-      ),
+      screen.getByText(/não pertence a um estabelecimento ativo neste território/i),
     ).toBeInTheDocument();
   });
   it("renders legacy gastronomy detail without redirecting to the public business URL", async () => {
@@ -425,11 +388,7 @@ describe("Gastronomy territorial runtime", () => {
     const queryClient = createQueryClient();
     render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter
-          initialEntries={[
-            "/gastronomia/ba/salvador/pituba/pasta-lab?origem=zap#menu",
-          ]}
-        >
+        <MemoryRouter initialEntries={["/gastronomia/ba/salvador/pituba/pasta-lab?origem=zap#menu"]}>
           <Routes>
             <Route
               path="/gastronomia/:state/:city/:district/:slug"
@@ -447,8 +406,6 @@ describe("Gastronomy territorial runtime", () => {
     await waitFor(() => {
       expect(screen.getByText("Pasta Lab")).toBeInTheDocument();
     });
-    expect(
-      screen.queryByText("Empresa publica canonica"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Empresa publica canonica")).not.toBeInTheDocument();
   });
 });

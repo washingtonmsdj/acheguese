@@ -51,25 +51,6 @@ referencia; conceder `SELECT` de `user_residences` a `anon` nao e aceitavel.
 Leituras privadas devem exigir escopo delimitado (IDs ou usuario-alvo), impor
 limite por lote e distinguir gestor (`owner`/`admin`) de membro comum.
 
-## Admissao No Alpha Privado
-
-Enquanto o produto estiver em alpha privado, esconder a rota de cadastro ou
-nao divulgar a URL nao e controle de seguranca. A criacao de identidade em
-`auth.users` falha antes dos triggers de perfil quando nao houver um convite
-ativo para o e-mail normalizado, ainda valido e com uso disponivel. A regra
-tambem vale para criacao administrativa; automacoes com `service_role` emitem
-o convite restrito antes de criar a identidade.
-
-`user_metadata` e `app_metadata` nao sao usados como bypass no `BEFORE INSERT`.
-Os
-convites vivem em `private.alpha_access_invites`, sem grants para browser, e o
-consumo e atomico. Emissao, consumo e revogacao sao registrados em auditoria.
-As funcoes de gestao aceitam somente `service_role`; os comandos locais tambem
-exigem alvo `development` ou `staging`, project ref correspondente e
-confirmacao explicita. O contrato executavel esta na migration
-`20260718210000_enforce_private_alpha_access.sql` e no endurecimento
-`20260718211000_require_alpha_invite_for_all_auth_identities.sql`.
-
 ## Data API E Grants Explicitos
 
 O Supabase anunciou em 2026-04-28 uma mudanca nos defaults de grants para novas
@@ -219,117 +200,6 @@ tratada como excecao. Se for realmente necessaria, deve ser classificada:
 -- security-authority: public-storage-listing storage.objects
 ```
 
-## Backup E Recuperacao
-
-O backup gerenciado do banco e a fonte canonica para recuperar schema, dados,
-Auth e metadados do Storage. Objetos binarios do Storage nao fazem parte desse
-backup e exigem exportacao separada. Arquivos de configuracao e migrations sao
-versionados no Git; nao devem ser copiados para uma segunda arvore de backup.
-
-Gates operacionais:
-
-```powershell
-npm run backup:database:status
-npm run alpha:backup:gate
-npm run alpha:auth:gate
-npm run alpha:email:gate
-npm run alpha:auth:smtp:check
-npm run alpha:readiness
-npm run alpha:support:packet
-npm run backup:storage
-npm run restore:storage -- caminho-do-backup --verify-only
-```
-
-`alpha:backup:gate` falha quando o Supabase nao apresenta backup `COMPLETED`
-com no maximo 36 horas nem PITR. Backup falho, antigo ou `walg_enabled` isolado
-nao e evidencia de que o operador consegue restaurar. O status observado deve
-ser registrado no plano da release, sem copiar tokens ou URLs com credenciais.
-O mesmo gate e aplicado diretamente por `alpha:invite` e `alpha:resume` antes
-da criacao do cliente `service_role`. Falha da CLI, da Management API ou da
-evidencia de recuperacao mantem a admissao fechada. Comandos de contencao e
-consulta (`alpha:pause`, `alpha:revoke` e `alpha:status`) nao dependem desse
-gate e permanecem utilizaveis durante incidentes.
-
-`alpha:auth:gate` pagina contas exclusivamente pela API Admin oficial, nunca por
-leitura ou escrita direta no schema gerenciado `auth`. O resultado contem apenas
-contagens e codigos de falha. Lista de identidades explicitamente vazia em conta
-permanente, falha da API, registro duplicado/invalido ou auditoria acima do
-limite mantem a alpha fechada. O endpoint de lista pode omitir `identities` ou
-retorna-lo como `null`; esses estados significam dado nao projetado e nao sao
-tratados como lista vazia. Usuarios anonimos podem legitimamente nao possuir
-identidade. `alpha:invite` e `alpha:resume` aplicam esse gate depois da
-recuperacao e antes do RPC de admissao.
-
-`alpha:email:gate` separa duas responsabilidades que nao devem ser confundidas:
-o dominio Resend usado pelas Edge Functions da aplicacao e o SMTP customizado
-usado pelo Supabase Auth para confirmacao, recuperacao e convites. O gate faz
-somente leitura, exige dominio remetente verificado, fluxo Auth com confirmacao
-de e-mail e SMTP customizado completo. Sua saida contem apenas contagens,
-booleanos, status e codigos de falha; e-mail, dominio, host, usuario, registros
-DNS, PAT e respostas upstream nunca sao copiados. Ausencia de PAT com permissao
-`auth_config_read`, dominio nao verificado ou configuracao nao auditavel mantem
-`alpha:invite` e `alpha:resume` fechados. O gate nao substitui o smoke final com
-uma caixa postal real convidada.
-
-`RESEND_API_KEY` pertence exclusivamente ao runtime de envio e deve ter somente
-permissao de envio. A leitura de dominios usa `RESEND_MANAGEMENT_API_KEY`,
-carregada apenas no ambiente operacional local/CI e nunca implantada nas Edge
-Functions, Vercel ou browser. Reutilizar uma chave full-access para enviar
-e-mails viola menor privilegio e reprova a preparacao operacional.
-
-`alpha:readiness` e o preflight agregado. Ele consulta backup, e-mail, Auth e
-status de admissao em leitura, exige confirmacao de alvo nao produtivo e emite
-apenas contagens, booleanos e codigos de bloqueio. O comando nao substitui os
-gates individuais usados por `alpha:invite` e `alpha:resume`; ele existe para
-operacao, auditoria e handoff.
-
-`alpha:auth:smtp:apply` configura SMTP Auth pela Management API somente quando
-o alvo nao produtivo esta confirmado e
-`SUPABASE_AUTH_SMTP_APPLY_CONFIRM=CONFIGURE_SUPABASE_AUTH_SMTP_CONFIRMED`.
-Variaveis `SUPABASE_AUTH_SMTP_*` ficam apenas no ambiente operacional e nao
-entram no browser, Vercel ou Edge Functions. A saida deve registrar somente
-booleanos, codigos de falha e nomes de env vars ausentes; senha, host, usuario
-e remetente nao sao logs.
-
-`alpha:support:packet` gera um texto para suporte externo usando apenas o
-preflight agregado. Ele pode conter project ref e contagens operacionais, mas
-nao deve conter e-mails, UUIDs de usuarios, tokens, credenciais SMTP, valores
-DNS ou stack traces upstream.
-
-O exportador de Storage cria um inventario versionado, usa nomes locais
-derivados por hash e registra tamanho e SHA-256 de cada objeto. O diretorio
-mantem o marcador `INCOMPLETE` ate todos os downloads terminarem; o manifesto e
-gravado por ultimo e o verificador recusa qualquer marcador remanescente. A
-saida em `backups/` e ignorada pelo Git, contem dados sensiveis e deve
-permanecer apenas em volume local criptografado ou cofre de backup aprovado.
-Falha parcial nao e backup.
-
-O restore de Storage:
-
-- valida integralmente manifesto, tamanho e checksum antes da rede;
-- aceita apenas `development` ou `staging` com a confirmacao operacional
-  canonica;
-- recusa restaurar no mesmo project ref da origem;
-- exige que migrations/configuracao ja tenham criado buckets equivalentes;
-- nao substitui objeto remoto divergente;
-- verifica novamente o SHA-256 depois do upload.
-
-Rehearsal de recuperacao deve usar um projeto Supabase descartavel. Nunca
-executar teste destrutivo no projeto ativo. Sequencia canonica:
-
-1. Pausar novas admissoes e preservar logs do incidente.
-2. Selecionar um backup anterior ao incidente.
-3. Restaurar ou clonar o banco para um novo projeto.
-4. Aplicar e validar migrations, Edge Functions, Auth, Realtime e secrets.
-5. Restaurar os objetos do Storage e validar checksums.
-6. Executar migrations drift, Security Authority, RLS e smoke autenticado.
-7. Trocar endpoints somente depois de aprovacao operacional; preservar a
-   origem para investigacao.
-
-Para alpha privado, backup diario acessivel e um rehearsal aprovado sao
-obrigatorios antes de convidar pessoas reais. PITR reduz RPO, mas nao substitui
-o rehearsal nem o backup separado de Storage.
-
 ## Secrets
 
 Seguir [Workflow de secrets Supabase](../../SUPABASE_SECRETS.md).
@@ -373,16 +243,6 @@ Essa regra e executavel: `security:validate` bloqueia `process.env.VITE_SUPABASE
 `readEnv('VITE_SUPABASE_*')` e `createClient(...)` em `tests/e2e/`,
 `tests/helpers/` e `tests/operational/`, exceto no helper canonico.
 
-O comando deterministico `npm test` exclui `tests/operational` e nao pode abrir
-conexoes remotas. O runner `npm run test:operational` usa apenas essa pasta,
-executa em serie e exige `OPERATIONAL_TEST_TARGET`, project ref correspondente e
-a confirmacao literal `NON_PRODUCTION_REMOTE_CONFIRMED`. Producao nao e um alvo
-valido. Mesmo em development ou staging, testes nao podem redefinir senha de
-usuarios descobertos no banco: atores de fixture usam magic link efemero e
-fluxos administrativos usam exclusivamente a conta `E2E_ADMIN_*` declarada.
-O contrato detalhado fica em `tests/README.md` e e protegido por
-`tests/architecture/test-execution-boundary.test.ts`.
-
 No runtime do app, o unico cliente Supabase de browser deve nascer em
 `src/integrations/supabase/supabase.ts`, usando `PUBLIC_SUPABASE_CONFIG` e
 storage de auth cookie-only. O barrel `src/integrations/supabase/index.ts`
@@ -422,25 +282,6 @@ negocio. Em 2026-07-08, nao deve existir `body: { action, params }` fora desse
 helper. Essa regra e executavel: `security:validate` bloqueia envelopes broker
 fora do helper por meio de
 `scripts/security/edge-function-broker-boundary.mjs`.
-
-O transporte dos brokers deve encerrar em tempo finito. O helper canonico
-aplica timeout padrao e permite que o service reduza esse prazo para dados
-opcionais, como contato autenticado. Timeout ou falha de rede nunca autorizam
-uma operacao, nao removem RLS e nao podem converter erro em resultado vazio nos
-fluxos que decidem sessao ou permissao.
-
-`ALLOWED_ORIGINS` e uma allowlist exata de origem, incluindo esquema, hostname
-e porta. Wildcard e proibido. Em desenvolvimento, `localhost` e `127.0.0.1`
-sao origens diferentes e cada porta usada pelo Vite ou Playwright deve ser
-declarada explicitamente. O baseline local atual e:
-
-```text
-http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:8080,http://127.0.0.1:8080,http://localhost:8099,http://127.0.0.1:8099
-```
-
-Esse baseline pertence apenas ao projeto remoto de development. Staging e
-producao devem conter somente seus dominios HTTPS reais; origens de loopback
-nao devem ser promovidas para producao.
 
 ## Advisor Remoto
 

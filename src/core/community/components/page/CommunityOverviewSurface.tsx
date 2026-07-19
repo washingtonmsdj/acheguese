@@ -90,8 +90,6 @@ import { getRecordValue } from "@/shared/utils/recordLookup";
 
 type CommunityOverviewMode = "public" | "member";
 
-const COMMUNITY_EVENTS_ANCHOR_ID = "eventos";
-
 interface CommunityOverviewSurfaceProps {
   resolved?: ResolvedTerritory;
   territoryName: string;
@@ -1163,7 +1161,6 @@ export function CommunityOverviewSurface({
   const isEmbeddedModule = Boolean(
     children && activeSection && !isCommunitySocialView(activeSection),
   );
-  const isFeedSidebarVisible = !isEmbeddedModule && selectedView === "feed";
   const handleViewChange = useCallback(
     (view: CommunityOverviewView) => {
       if (activeView === undefined) setInternalView(view);
@@ -1185,9 +1182,7 @@ export function CommunityOverviewSurface({
 
   useEffect(() => {
     const targetId = routeLocation.hash.replace(/^#/, "");
-    if (targetId !== COMMUNITY_EVENTS_ANCHOR_ID || !isFeedSidebarVisible) {
-      return;
-    }
+    if (!targetId) return;
 
     const frame = window.requestAnimationFrame(() => {
       const target = document.getElementById(targetId);
@@ -1204,7 +1199,7 @@ export function CommunityOverviewSurface({
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [isFeedSidebarVisible, routeLocation.hash]);
+  }, [routeLocation.hash]);
 
   const {
     posts,
@@ -1522,9 +1517,7 @@ export function CommunityOverviewSurface({
       {
         key: "events",
         label: "Eventos",
-        href: isEmbeddedModule
-          ? `${communityUrls.feed}#${COMMUNITY_EVENTS_ANCHOR_ID}`
-          : `#${COMMUNITY_EVENTS_ANCHOR_ID}`,
+        href: isEmbeddedModule ? `${communityUrls.feed}#eventos` : "#eventos",
         icon: CalendarDays,
         surface: "communityEventsPreview",
       },
@@ -2428,9 +2421,9 @@ export function CommunityOverviewSurface({
             </div>
           </div>
 
-          {isFeedSidebarVisible ? (
+          {!isEmbeddedModule && selectedView === "feed" ? (
             <div className="min-w-0 space-y-4 xl:col-start-2 xl:row-span-5 xl:row-start-1 xl:space-y-2">
-              <SurfacePanel id={COMMUNITY_EVENTS_ANCHOR_ID} className="p-3">
+              <SurfacePanel id="eventos" className="p-3">
                 <SectionHeader
                   title="Próximos eventos"
                   actionHref={fullEventsEnabled ? moduleUrls.events : undefined}

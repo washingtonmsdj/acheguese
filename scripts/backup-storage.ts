@@ -1,122 +1,39 @@
 /**
- * Creates a complete local export of Supabase Storage objects.
- * Database backups contain Storage metadata, but not the object bytes.
- * Output is ignored by Git and must be handled as sensitive user data.
+ * Backup Supabase Storage.
+ *
+ * Downloads every object from every bucket returned by Supabase Storage. The
+ * environment is the source of truth because migrations and optional features
+ * can create buckets outside the frontend upload surface.
+ *
+ * Usage:
+ *   npx tsx scripts/backup-storage.ts
+ *
+ * Environment:
+ *   SUPABASE_URL - Supabase project URL
+ *   SUPABASE_SERVICE_ROLE_KEY - Service role key with storage admin access
  */
 
-/* eslint-disable ssot/no-direct-storage-access -- Operator backup must inventory every remote bucket; MediaService is a browser/domain boundary. */
-
-import { constants } from "node:fs";
-import { access, chmod, mkdir, rm, writeFile } from "node:fs/promises";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import {
-  createServiceRoleClient,
-  getSupabaseConfig,
-} from "./lib/supabase-client";
-import {
-  createStorageObjectFile,
-  getProjectIdentity,
-  sha256Bytes,
-  STORAGE_BACKUP_SCHEMA_VERSION,
-  type StorageBackupBucket,
-  type StorageBackupManifest,
-  type StorageBackupObject,
-} from "./lib/storage-recovery";
+import { dirname, join, relative, resolve } from "path";
+import { existsSync, mkdirSync, writeFileSync } from "fs";
+import { createServiceRoleClient } from "./lib/supabase-client";
 
 const PAGE_SIZE = 1000;
-const DEFAULT_CONCURRENCY = 4;
 
 type SupabaseClient = ReturnType<typeof createServiceRoleClient>;
 
-interface StorageBucketRow {
-  allowed_mime_types?: string[] | null;
-  file_size_limit?: number | string | null;
+type StorageBucket = {
   id: string;
   name?: string;
-  public?: boolean;
-}
+};
 
-interface StorageEntry {
+type StorageEntry = {
   id?: string | null;
-  metadata?: unknown;
   name: string;
-}
+  metadata?: unknown;
+};
 
-interface BackupArguments {
-  concurrency: number;
-  output?: string;
-}
-
-function parseArguments(args: string[]): BackupArguments {
-  const parsed: BackupArguments = { concurrency: DEFAULT_CONCURRENCY };
-
-  for (let index = 0; index < args.length; index += 1) {
-    const argument = args[index];
-    if (argument === "--output") {
-      const value = args[index + 1];
-      if (!value || value.startsWith("--")) {
-        throw new Error("--output exige um diretorio.");
-      }
-      parsed.output = value;
-      index += 1;
-    } else if (argument === "--concurrency") {
-      const value = args[index + 1];
-      if (!value || value.startsWith("--")) {
-        throw new Error("--concurrency exige um valor.");
-      }
-      parsed.concurrency = Number(value);
-      index += 1;
-    } else {
-      throw new Error(`Argumento desconhecido: ${argument}.`);
-    }
-  }
-
-  if (parsed.output !== undefined && !parsed.output.trim()) {
-    throw new Error("--output exige um diretorio.");
-  }
-  if (
-    !Number.isSafeInteger(parsed.concurrency) ||
-    parsed.concurrency < 1 ||
-    parsed.concurrency > 8
-  ) {
-    throw new Error("--concurrency deve ser um inteiro entre 1 e 8.");
-  }
-
-  return parsed;
-}
-
-function timestampForPath(): string {
-  return new Date().toISOString().replaceAll(":", "-").replace(".", "-");
-}
-
-async function pathExists(path: string): Promise<boolean> {
-  try {
-    await access(path, constants.F_OK);
-    return true;
-  } catch (error) {
-    if (
-      error &&
-      typeof error === "object" &&
-      "code" in error &&
-      error.code === "ENOENT"
-    ) {
-      return false;
-    }
-    throw error;
-  }
-}
-
-function assertSensitiveOutputLocation(outputDir: string) {
-  const workspace = resolve(process.cwd());
-  const relativeOutput = relative(workspace, outputDir);
-  if (relativeOutput.startsWith("..") || isAbsolute(relativeOutput)) return;
-
-  const topLevel = relativeOutput.split(/[\\/]/, 1)[0];
-  if (!new Set([".codex-artifacts", "backups"]).has(topLevel)) {
-    throw new Error(
-      "Backup dentro do workspace deve ficar em backups/ ou .codex-artifacts/.",
-    );
-  }
+function getBucketId(bucket: StorageBucket): string {
+  return bucket.id || bucket.name || "";
 }
 
 function isFolderEntry(entry: StorageEntry): boolean {
@@ -127,218 +44,172 @@ function toStoragePath(...parts: string[]): string {
   return parts.filter(Boolean).join("/");
 }
 
-function normalizeFileSizeLimit(
-  value: number | string | null | undefined,
-): number | null {
-  if (value === null || value === undefined) return null;
-  const parsed = Number(value);
-  if (!Number.isSafeInteger(parsed) || parsed < 0) {
-    throw new Error(
-      `file_size_limit invalido retornado pelo Storage: ${value}.`,
-    );
+function safeLocalPath(rootDir: string, objectPath: string): string {
+  const target = resolve(rootDir, ...objectPath.split("/"));
+  const relativeTarget = relative(rootDir, target);
+
+  if (relativeTarget.startsWith("..") || resolve(relativeTarget) === relativeTarget) {
+    throw new Error(`Unsafe storage object path: ${objectPath}`);
   }
-  return parsed;
+
+  return target;
 }
 
-async function mapWithConcurrency<T, R>(
-  values: T[],
-  concurrency: number,
-  worker: (value: T) => Promise<R>,
-): Promise<R[]> {
-  const results = new Array<R>(values.length);
-  let nextIndex = 0;
+async function listStorageBucketIds(supabase: SupabaseClient): Promise<string[]> {
+  const { data, error } = await supabase.storage.listBuckets();
 
-  async function runWorker() {
-    while (nextIndex < values.length) {
-      const currentIndex = nextIndex;
-      nextIndex += 1;
-      results[currentIndex] = await worker(values[currentIndex]);
-    }
+  if (error) {
+    throw new Error(`Could not list storage buckets: ${error.message}`);
   }
 
-  await Promise.all(
-    Array.from({ length: Math.min(concurrency, values.length) }, () =>
-      runWorker(),
-    ),
-  );
-  return results;
+  const bucketIds = (data ?? [])
+    .map((bucket) => getBucketId(bucket as StorageBucket))
+    .filter((bucketId): bucketId is string => Boolean(bucketId));
+
+  return Array.from(new Set(bucketIds)).sort();
 }
 
 async function listBucketObjectPaths(
   supabase: SupabaseClient,
-  bucketId: string,
+  bucketName: string,
   prefix = "",
 ): Promise<string[]> {
   const objectPaths: string[] = [];
   let offset = 0;
 
   while (true) {
-    const { data, error } = await supabase.storage.from(bucketId).list(prefix, {
+    const { data, error } = await supabase.storage.from(bucketName).list(prefix, {
       limit: PAGE_SIZE,
       offset,
       sortBy: { column: "name", order: "asc" },
     });
+
     if (error) {
-      throw new Error(
-        `Falha ao listar ${bucketId}/${prefix}: ${error.message}`,
-      );
+      throw new Error(`Could not list ${bucketName}/${prefix}: ${error.message}`);
     }
 
     const entries = (data ?? []) as StorageEntry[];
+    if (entries.length === 0) break;
+
     for (const entry of entries) {
       const objectPath = toStoragePath(prefix, entry.name);
+
       if (isFolderEntry(entry)) {
-        objectPaths.push(
-          ...(await listBucketObjectPaths(supabase, bucketId, objectPath)),
-        );
-      } else {
-        objectPaths.push(objectPath);
+        objectPaths.push(...(await listBucketObjectPaths(supabase, bucketName, objectPath)));
+        continue;
       }
+
+      objectPaths.push(objectPath);
     }
 
     if (entries.length < PAGE_SIZE) break;
     offset += PAGE_SIZE;
   }
 
-  return [...new Set(objectPaths)].sort();
-}
-
-async function backupObject(
-  supabase: SupabaseClient,
-  bucketId: string,
-  objectPath: string,
-  workingDir: string,
-): Promise<StorageBackupObject> {
-  const { data, error } = await supabase.storage
-    .from(bucketId)
-    .download(objectPath);
-  if (error || !data) {
-    throw new Error(
-      `Falha ao baixar ${bucketId}/${objectPath}: ${error?.message ?? "sem dados"}.`,
-    );
-  }
-
-  const bytes = new Uint8Array(await data.arrayBuffer());
-  const relativeFile = createStorageObjectFile(bucketId, objectPath);
-  const destination = join(workingDir, ...relativeFile.split("/"));
-  await mkdir(dirname(destination), { recursive: true, mode: 0o700 });
-  await writeFile(destination, bytes, { mode: 0o600, flag: "wx" });
-
-  return {
-    contentType: data.type || null,
-    file: relativeFile,
-    path: objectPath,
-    sha256: sha256Bytes(bytes),
-    size: bytes.byteLength,
-  };
+  return objectPaths;
 }
 
 async function backupBucket(
   supabase: SupabaseClient,
-  bucket: StorageBucketRow,
-  workingDir: string,
-  concurrency: number,
-): Promise<StorageBackupBucket> {
-  const bucketId = bucket.id || bucket.name;
-  if (!bucketId) throw new Error("Storage retornou bucket sem identificador.");
+  bucketName: string,
+  backupDir: string,
+): Promise<number> {
+  console.log(`Backing up bucket: ${bucketName}`);
 
-  const objectPaths = await listBucketObjectPaths(supabase, bucketId);
-  console.log(`Bucket ${bucketId}: ${objectPaths.length} objeto(s).`);
-  const objects = await mapWithConcurrency(
-    objectPaths,
-    concurrency,
-    (objectPath) => backupObject(supabase, bucketId, objectPath, workingDir),
-  );
+  const bucketDir = join(backupDir, bucketName);
+  if (!existsSync(bucketDir)) {
+    mkdirSync(bucketDir, { recursive: true });
+  }
 
-  return {
-    allowedMimeTypes: bucket.allowed_mime_types
-      ? [...bucket.allowed_mime_types].sort()
-      : null,
-    fileSizeLimit: normalizeFileSizeLimit(bucket.file_size_limit),
-    id: bucketId,
-    objects,
-    public: Boolean(bucket.public),
-  };
+  let objectPaths: string[];
+  try {
+    objectPaths = await listBucketObjectPaths(supabase, bucketName);
+  } catch (error) {
+    console.error(error);
+    return 0;
+  }
+
+  if (objectPaths.length === 0) {
+    console.log(`   No files in ${bucketName}`);
+    return 0;
+  }
+
+  let count = 0;
+  let errors = 0;
+
+  for (const objectPath of objectPaths) {
+    try {
+      const { data, error } = await supabase.storage.from(bucketName).download(objectPath);
+
+      if (error) {
+        console.error(`   Error downloading ${objectPath}:`, error.message);
+        errors++;
+        continue;
+      }
+
+      if (!data) {
+        console.error(`   No data for ${objectPath}`);
+        errors++;
+        continue;
+      }
+
+      const filePath = safeLocalPath(bucketDir, objectPath);
+      mkdirSync(dirname(filePath), { recursive: true });
+      writeFileSync(filePath, Buffer.from(await data.arrayBuffer()));
+      count++;
+
+      if (count % 10 === 0) {
+        console.log(`   Downloaded ${count} files...`);
+      }
+    } catch (error) {
+      console.error(`   Exception downloading ${objectPath}:`, error);
+      errors++;
+    }
+  }
+
+  console.log(`Backed up ${count} files from ${bucketName}${errors > 0 ? ` (${errors} errors)` : ""}`);
+  return count;
 }
 
 async function main() {
-  const args = parseArguments(process.argv.slice(2));
-  const config = getSupabaseConfig();
-  if (!config.url) throw new Error("URL do Supabase nao configurada.");
+  console.log("Starting Supabase Storage Backup\n");
 
-  const source = getProjectIdentity(config.url);
-  const finalDir = resolve(
-    args.output ?? join("backups", `storage-${timestampForPath()}`),
-  );
-  assertSensitiveOutputLocation(finalDir);
-  const parentDir = dirname(finalDir);
-  await mkdir(parentDir, { recursive: true, mode: 0o700 });
-  if (await pathExists(finalDir)) {
-    throw new Error(`Diretorio de destino ja existe: ${finalDir}.`);
+  const supabase = createServiceRoleClient();
+
+  const timestamp = new Date().toISOString().split("T")[0];
+  const backupDir = join(process.cwd(), "backups", `storage-${timestamp}`);
+
+  console.log(`Backup directory: ${backupDir}\n`);
+
+  if (!existsSync(backupDir)) {
+    mkdirSync(backupDir, { recursive: true });
   }
 
-  const workingDir = finalDir;
-  await mkdir(workingDir, { mode: 0o700 });
-  await chmod(workingDir, 0o700).catch(() => undefined);
-  const incompleteMarker = join(workingDir, "INCOMPLETE");
-  await writeFile(incompleteMarker, "Backup em andamento. Nao restaurar.\n", {
-    encoding: "utf8",
-    flag: "wx",
-    mode: 0o600,
-  });
-
-  try {
-    console.log(`Origem: ${source.host}`);
-    console.log(`Destino sensivel: ${finalDir}`);
-
-    const supabase = createServiceRoleClient();
-    const { data, error } = await supabase.storage.listBuckets();
-    if (error) throw new Error(`Falha ao listar buckets: ${error.message}`);
-
-    const bucketRows = [...((data ?? []) as StorageBucketRow[])].sort((a, b) =>
-      (a.id || a.name || "").localeCompare(b.id || b.name || ""),
-    );
-    const buckets: StorageBackupBucket[] = [];
-    for (const bucket of bucketRows) {
-      buckets.push(
-        await backupBucket(supabase, bucket, workingDir, args.concurrency),
-      );
-    }
-
-    const objects = buckets.flatMap((bucket) => bucket.objects);
-    const manifest: StorageBackupManifest = {
-      buckets,
-      createdAt: new Date().toISOString(),
-      schemaVersion: STORAGE_BACKUP_SCHEMA_VERSION,
-      source,
-      totals: {
-        bytes: objects.reduce((total, object) => total + object.size, 0),
-        objects: objects.length,
-      },
-    };
-
-    await writeFile(
-      join(workingDir, "manifest.json"),
-      `${JSON.stringify(manifest, null, 2)}\n`,
-      { encoding: "utf8", flag: "wx", mode: 0o600 },
-    );
-    await rm(incompleteMarker);
-
-    console.log(
-      `Backup concluido: ${manifest.totals.objects} objeto(s), ${manifest.totals.bytes} byte(s).`,
-    );
-    console.log(`Manifesto: ${join(finalDir, "manifest.json")}`);
-  } catch (error) {
-    await rm(workingDir, { force: true, recursive: true }).catch(
-      () => undefined,
-    );
-    throw error;
+  const buckets = await listStorageBucketIds(supabase);
+  if (buckets.length === 0) {
+    console.log("No storage buckets found.");
+    return;
   }
+
+  console.log(`Found ${buckets.length} storage buckets: ${buckets.join(", ")}\n`);
+
+  let totalFiles = 0;
+  const startTime = Date.now();
+
+  for (const bucket of buckets) {
+    const count = await backupBucket(supabase, bucket, backupDir);
+    totalFiles += count;
+  }
+
+  const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+  console.log("\nStorage backup complete.");
+  console.log(`Total files: ${totalFiles}`);
+  console.log(`Duration: ${duration}s`);
+  console.log(`Location: ${backupDir}`);
 }
 
 main().catch((error) => {
-  console.error(
-    error instanceof Error ? error.message : "Falha no backup de Storage.",
-  );
-  process.exitCode = 1;
+  console.error("\nBackup failed:", error);
+  process.exit(1);
 });

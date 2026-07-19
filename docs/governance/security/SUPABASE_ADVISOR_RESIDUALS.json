@@ -1,6 +1,6 @@
 {
   "schemaVersion": "supabase-advisor-residuals/v1",
-  "updatedAt": "2026-07-18",
+  "updatedAt": "2026-07-15",
   "sourceCommand": "supabase db advisors --linked --type security --fail-on none --output json",
   "residuals": [
     {
@@ -337,11 +337,6 @@
       "cacheKey": "authenticated_security_definer_function_executable_public_submit_order_trust_feedback_p_order_id uuid, p_subject_profile_id uuid, p_rating integer, p_reason_code text, p_description text",
       "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
       "summary": "Participant-only Order Trust command deriving roles and context."
-    },
-    {
-      "cacheKey": "authenticated_security_definer_function_executable_public_submit_professional_engagement_review_p_engagement_id uuid, p_rating integer, p_comment text",
-      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
-      "summary": "Completed-engagement review command deriving requester and professional identities server-side."
     },
     {
       "cacheKey": "authenticated_security_definer_function_executable_public_submit_ride_rating_p_ride_id uuid, p_rating integer, p_comment text, p_behavior_rating integer, p_punctuality_rating integer, p_payment_rating integer",

@@ -120,10 +120,6 @@ negativo remoto e ownership declarado.
 - testes de Coverage, Profile Verification e fronteira de PII em 2026-07-18:
   18 casos aprovados; comandos derivam ator/ownership no servidor e a projecao
   publica nao retorna PII.
-- `tests/operational/professional-review-authz-runtime.test.ts` em 2026-07-18:
-  4 casos remotos aprovados; anonymous, usuario cross-owner e rating invalido
-  foram rejeitados, enquanto o solicitante do atendimento concluido criou
-  review e evento de auditoria vinculados a sua identidade original.
 
 ## EXC-2026-07-08-POSTGIS-EXTENSION-OWNER
 
@@ -215,9 +211,6 @@ extensoes, grants, RLS ou migrations; se retornar `blocked`, o marcador
   `unaccent`, `public.spatial_ref_sys` e tres overloads
   `public.st_estimatedextent` permanecem owned por `supabase_admin` e sem
   preflight aprovado.
-- Execucao em 2026-07-18 confirmou o mesmo `status=blocked` e `ready=false`
-  para os oito objetos owned por `supabase_admin`; nenhuma alteracao remota foi
-  tentada sem ownership.
 - Execucao em 2026-07-13 de `npm run security:advisor:residuals` validou os
   mesmos 12 achados remotos, todos dentro da allowlist canonica.
 
@@ -303,9 +296,6 @@ env var usada, nunca o valor do token.
   novamente ausencia de `SUPABASE_ACCESS_TOKEN` ou
   `SUPABASE_MANAGEMENT_API_TOKEN` com os escopos necessarios. Nenhum token
   implicito foi lido e nenhuma configuracao remota foi alterada.
-- Execucao em 2026-07-18 de `npm run security:auth:hibp` confirmou novamente
-  `missing_pat`; a protecao local de senha permanece ativa e a configuracao do
-  provedor continua pendente.
 
 Achados residuais do Supabase Advisor tambem devem continuar registrados no
 relatorio canonico:

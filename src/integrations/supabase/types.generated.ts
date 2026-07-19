@@ -17981,15 +17981,6 @@ export type Database = {
         Args: { payload?: Json; request_id: string }
         Returns: Json
       }
-      admin_list_user_account_contexts: {
-        Args: { p_page?: number; p_page_size?: number; p_search?: string }
-        Returns: {
-          profiles: Json
-          roles: string[]
-          total_count: number
-          user_id: string
-        }[]
-      }
       admin_notifications_assert_access: { Args: never; Returns: undefined }
       admin_notifications_get_channel_stats: {
         Args: never
@@ -18075,28 +18066,6 @@ export type Database = {
         Returns: Json
       }
       aggregate_daily_metrics: { Args: { p_date?: string }; Returns: undefined }
-      alpha_access_delete_operational_invite: {
-        Args: { p_email: string }
-        Returns: boolean
-      }
-      alpha_access_get_status: { Args: never; Returns: Json }
-      alpha_access_issue_invite: {
-        Args: {
-          p_email: string
-          p_expires_at?: string
-          p_max_uses?: number
-          p_note?: string
-        }
-        Returns: string
-      }
-      alpha_access_revoke_invite: {
-        Args: { p_email: string }
-        Returns: boolean
-      }
-      alpha_access_set_admissions: {
-        Args: { p_enabled: boolean }
-        Returns: Json
-      }
       apply_community_user_moderation_action: {
         Args: {
           p_action: string
@@ -21609,10 +21578,6 @@ export type Database = {
           p_reason_code: string
           p_subject_profile_id: string
         }
-        Returns: Json
-      }
-      submit_professional_engagement_review: {
-        Args: { p_comment?: string; p_engagement_id: string; p_rating: number }
         Returns: Json
       }
       submit_ride_rating: {

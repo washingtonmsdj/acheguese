@@ -122,7 +122,7 @@ src/core/
   reviews rollout safety search service-areas session social subscription
   territorial tracking users verification
   mobility
-  community-experience community-groups community-issues
+  community-experience community-feed community-groups community-issues
   community-lost-found community-recommendations
   analytics metrics telemetry
   verticals

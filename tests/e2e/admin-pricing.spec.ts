@@ -1,10 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import type { User } from "@supabase/supabase-js";
 import { createOptionalOperationalAdminClient } from "../helpers/operational-env";
-import {
-  createConfirmedOperationalUser,
-  deleteOperationalUser,
-} from "../helpers/operational-auth-fixture";
 
 const ADMIN_PRICING_URL = "/admin/pricing";
 const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? null;
@@ -47,7 +43,8 @@ async function cleanupUserByEmail(email: string): Promise<void> {
   if (!adminClient) return;
   const user = await findUserByEmail(email);
   if (!user) return;
-  await deleteOperationalUser(adminClient, user.id);
+  const { error } = await adminClient.auth.admin.deleteUser(user.id);
+  if (error) throw error;
 }
 
 async function ensureAdminRole(userId: string): Promise<void> {
@@ -126,15 +123,21 @@ test.beforeAll(async () => {
 
   await cleanupUserByEmail(email);
 
-  const user = await createConfirmedOperationalUser(adminClient, {
+  const { data, error } = await adminClient.auth.admin.createUser({
     email,
     password: TEMP_ADMIN_PASSWORD,
-    handle: `e2eadminpricing${uniqueSuffix()}`,
-    name: "E2E Admin Pricing",
-    userMetadata: { e2e_fixture: "admin-pricing" },
+    email_confirm: true,
+    user_metadata: {
+      name: "E2E Admin Pricing",
+      display_name: "E2E Admin Pricing",
+    },
   });
 
-  await ensureAdminRole(user.id);
+  if (error || !data.user?.id) {
+    throw error ?? new Error("Falha ao criar usuario admin para E2E.");
+  }
+
+  await ensureAdminRole(data.user.id);
 
   runtimeAdminEmail = email;
   runtimeAdminPassword = TEMP_ADMIN_PASSWORD;

@@ -4,87 +4,45 @@
  * SSOT: Usa hooks que consomem MenuService.
  */
 
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useBusinessSubscription } from "@/core/billing";
-import {
-  useMenuCategories,
-  useMenuItems,
-  useGastronomyMenuId,
-  useGastronomyProfile,
-} from "@/modules/business/gastronomy/hooks";
-import {
-  CategoryList,
-  CategoryForm,
-  ItemCard,
-  ItemForm,
-} from "../components/menu";
-import { PizzaAdminPanel } from "../niches";
-import { UpgradePromptInline } from "../components";
-import { useSessionContext } from "@/core/session";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/shared/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/ui/card";
-import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
-import { ConfirmActionDialog } from "@/shared/components/ConfirmActionDialog";
+import { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useBusinessSubscription } from '@/core/billing';
+import { useMenuCategories, useMenuItems, useGastronomyMenuId, useGastronomyProfile } from '@/modules/business/gastronomy/hooks';
+import { CategoryList, CategoryForm, ItemCard, ItemForm } from '../components/menu';
+import { PizzaAdminPanel } from '../niches';
+import { UpgradePromptInline } from '../components';
+import { useSessionContext } from '@/core/session';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
+import { ConfirmActionDialog } from '@/shared/components/ConfirmActionDialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/shared/components/ui/select";
-import {
-  AlertTriangle,
-  ArrowLeft,
-  Plus,
-  RefreshCw,
-  Search,
-} from "lucide-react";
-import type {
-  MenuCategory,
-  MenuItem,
-} from "@/modules/business/gastronomy/services/MenuService";
-import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
+} from '@/shared/components/ui/select';
+import { ArrowLeft, Plus, Search } from 'lucide-react';
+import type { MenuCategory, MenuItem } from '@/modules/business/gastronomy/services/MenuService';
+import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 export default function MenuManagementPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
-  const {
-    entitlements,
-    error: subscriptionError,
-    isLoading: loadingSubscription,
-    refetch: retrySubscription,
-  } = useBusinessSubscription(businessId!);
+  const { entitlements, isLoading: loadingSubscription } = useBusinessSubscription(businessId!);
   const { user } = useSessionContext();
 
-  const {
-    isError: menuIdError,
-    isLoading: loadingMenuId,
-    menuId,
-    retry: retryMenuId,
-  } = useGastronomyMenuId(businessId);
+  const { menuId, isLoading: loadingMenuId } = useGastronomyMenuId(businessId);
   const { data: gastronomyProfile } = useGastronomyProfile(businessId);
 
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [itemFormOpen, setItemFormOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<MenuCategory | null>(
-    null,
-  );
+  const [selectedCategory, setSelectedCategory] = useState<MenuCategory | null>(null);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState<string>('all');
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
@@ -97,7 +55,7 @@ export default function MenuManagementPage() {
     reorderCategories,
     isCreating: creatingCategory,
     isUpdating: updatingCategory,
-  } = useMenuCategories(menuId ?? "");
+  } = useMenuCategories(menuId ?? '');
 
   const {
     items,
@@ -110,12 +68,9 @@ export default function MenuManagementPage() {
     toggleAvailability,
     isCreating: creatingItem,
     isUpdating: updatingItem,
-  } = useMenuItems(
-    menuId ?? "",
-    filterCategory === "all" ? undefined : filterCategory,
-  );
+  } = useMenuItems(menuId ?? '', filterCategory === 'all' ? undefined : filterCategory);
 
-  const { items: allItems } = useMenuItems(menuId ?? "");
+  const { items: allItems } = useMenuItems(menuId ?? '');
 
   const canUseCategories = entitlements.canUseMenuCategories;
   const canUseImages = entitlements.canUseMenuImages;
@@ -123,16 +78,14 @@ export default function MenuManagementPage() {
   const totalItemsCount = allItems?.length || 0;
 
   const canAddMoreItems =
-    entitlements.maxMenuItems === null ||
-    totalItemsCount < entitlements.maxMenuItems;
+    entitlements.maxMenuItems === null || totalItemsCount < entitlements.maxMenuItems;
 
   const canAddMoreCategories =
-    entitlements.maxCategories === null ||
-    categoriesCount < entitlements.maxCategories;
+    entitlements.maxCategories === null || categoriesCount < entitlements.maxCategories;
   const isPizzaria =
-    gastronomyProfile?.niche_key === "pizza" ||
-    gastronomyProfile?.cuisine_type === "pizzaria" ||
-    gastronomyProfile?.cuisine_type === "pizza";
+    gastronomyProfile?.niche_key === 'pizza' ||
+    gastronomyProfile?.cuisine_type === 'pizzaria' ||
+    gastronomyProfile?.cuisine_type === 'pizza';
 
   const handleCreateCategory = () => {
     if (!canUseCategories || !canAddMoreCategories) return;
@@ -145,11 +98,7 @@ export default function MenuManagementPage() {
     setCategoryFormOpen(true);
   };
 
-  const handleCategorySubmit = (values: {
-    name: string;
-    description?: string;
-    display_order?: number;
-  }) => {
+  const handleCategorySubmit = (values: { name: string; description?: string; display_order?: number }) => {
     if (selectedCategory) {
       updateCategory({ categoryId: selectedCategory.id, ...values });
     } else {
@@ -219,10 +168,9 @@ export default function MenuManagementPage() {
   };
 
   const filteredItems =
-    items?.filter(
-      (item) =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.description?.toLowerCase().includes(searchQuery.toLowerCase()),
+    items?.filter((item) =>
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description?.toLowerCase().includes(searchQuery.toLowerCase()),
     ) || [];
 
   if (loadingSubscription || loadingMenuId) {
@@ -233,51 +181,20 @@ export default function MenuManagementPage() {
     );
   }
 
-  if (subscriptionError || menuIdError) {
-    return (
-      <div
-        className="container flex max-w-6xl flex-col items-center py-16 text-center"
-        role="alert"
-      >
-        <AlertTriangle className="h-10 w-10 text-destructive" />
-        <h1 className="mt-4 text-xl font-semibold">
-          Nao foi possivel carregar o cardapio
-        </h1>
-        <p className="mt-2 max-w-md text-sm text-muted-foreground">
-          Houve uma falha temporaria de conexao. Tente novamente.
-        </p>
-        <Button
-          className="mt-6"
-          onClick={() => {
-            void retrySubscription();
-            retryMenuId();
-          }}
-        >
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Tentar novamente
-        </Button>
-      </div>
-    );
-  }
-
   if (!menuId) {
     return (
       <div className="container max-w-6xl py-8 space-y-8">
         <Button
           variant="ghost"
           size="sm"
-          onClick={() =>
-            navigate(businessManagementRoutes.gastronomia(businessId!))
-          }
+          onClick={() => navigate(businessManagementRoutes.gastronomia(businessId!))}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar ao Dashboard
         </Button>
         <div className="text-center py-12 text-muted-foreground">
           <p className="text-lg font-medium mb-2">Nenhum cardápio encontrado</p>
-          <p className="text-sm">
-            Configure o perfil gastronômico para criar seu cardápio.
-          </p>
+          <p className="text-sm">Configure o perfil gastronômico para criar seu cardápio.</p>
         </div>
       </div>
     );
@@ -289,9 +206,7 @@ export default function MenuManagementPage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() =>
-            navigate(businessManagementRoutes.gastronomia(businessId!))
-          }
+          onClick={() => navigate(businessManagementRoutes.gastronomia(businessId!))}
           className="mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -314,9 +229,7 @@ export default function MenuManagementPage() {
       <Tabs defaultValue="items" className="space-y-6">
         <TabsList>
           <TabsTrigger value="items">Itens</TabsTrigger>
-          {canUseCategories && (
-            <TabsTrigger value="categories">Categorias</TabsTrigger>
-          )}
+          {canUseCategories && <TabsTrigger value="categories">Categorias</TabsTrigger>}
           {isPizzaria && <TabsTrigger value="pizzaria">Pizzaria</TabsTrigger>}
         </TabsList>
 
@@ -326,9 +239,7 @@ export default function MenuManagementPage() {
               <CardTitle>Itens do Cardápio</CardTitle>
               <CardDescription>
                 {totalItemsCount}
-                {entitlements.maxMenuItems !== null &&
-                  ` / ${entitlements.maxMenuItems}`}{" "}
-                itens
+                {entitlements.maxMenuItems !== null && ` / ${entitlements.maxMenuItems}`} itens
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -344,10 +255,7 @@ export default function MenuManagementPage() {
                 </div>
 
                 {canUseCategories && (
-                  <Select
-                    value={filterCategory}
-                    onValueChange={setFilterCategory}
-                  >
+                  <Select value={filterCategory} onValueChange={setFilterCategory}>
                     <SelectTrigger className="w-[200px]">
                       <SelectValue placeholder="Categoria" />
                     </SelectTrigger>
@@ -376,8 +284,7 @@ export default function MenuManagementPage() {
 
               {!canAddMoreItems && (
                 <div className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                  Você atingiu o limite de {entitlements.maxMenuItems} itens.
-                  Faça upgrade para adicionar mais.
+                  Você atingiu o limite de {entitlements.maxMenuItems} itens. Faça upgrade para adicionar mais.
                 </div>
               )}
             </CardContent>
@@ -393,15 +300,10 @@ export default function MenuManagementPage() {
             <Card>
               <CardContent className="py-12 text-center">
                 <p className="text-muted-foreground mb-4">
-                  {searchQuery
-                    ? "Nenhum item encontrado"
-                    : "Nenhum item cadastrado ainda"}
+                  {searchQuery ? 'Nenhum item encontrado' : 'Nenhum item cadastrado ainda'}
                 </p>
                 {!searchQuery && (
-                  <Button
-                    onClick={handleCreateItem}
-                    disabled={!canAddMoreItems}
-                  >
+                  <Button onClick={handleCreateItem} disabled={!canAddMoreItems}>
                     <Plus className="w-4 h-4 mr-2" />
                     Criar Primeiro Item
                   </Button>
@@ -431,9 +333,7 @@ export default function MenuManagementPage() {
             {loadingCategories ? (
               <Card>
                 <CardContent className="py-12 text-center">
-                  <p className="text-muted-foreground">
-                    Carregando categorias...
-                  </p>
+                  <p className="text-muted-foreground">Carregando categorias...</p>
                 </CardContent>
               </Card>
             ) : (
@@ -486,6 +386,7 @@ export default function MenuManagementPage() {
         allowImage={canUseImages}
         isPizzaria={isPizzaria}
       />
+
 
       <ConfirmActionDialog
         open={!!categoryToDelete}

@@ -4,12 +4,11 @@
  * SSOT: Hook central que todos os modulos devem usar.
  */
 
-import { useQuery } from "@tanstack/react-query";
-import { SubscriptionService } from "../SubscriptionService";
-import { EntitlementsService } from "../entitlements";
-import { BillingPlanService } from "../services/BillingPlanService";
-import { PlanTier } from "../types";
-import { withTimeout } from "@/shared/utils/withTimeout";
+import { useQuery } from '@tanstack/react-query';
+import { SubscriptionService } from '../SubscriptionService';
+import { EntitlementsService } from '../entitlements';
+import { BillingPlanService } from '../services/BillingPlanService';
+import { PlanTier } from '../types';
 
 export function useBusinessSubscription(businessId: string | undefined) {
   const {
@@ -18,17 +17,11 @@ export function useBusinessSubscription(businessId: string | undefined) {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["business-subscription", businessId],
+    queryKey: ['business-subscription', businessId],
     queryFn: async () => {
-      if (!businessId) throw new Error("businessId e obrigatorio");
+      if (!businessId) throw new Error('businessId e obrigatorio');
 
-      const subscriptionResult = await withTimeout(
-        SubscriptionService.getByBusinessId(businessId),
-        {
-          message: "A consulta da assinatura excedeu o tempo limite.",
-          timeoutMs: 10_000,
-        },
-      );
+      const subscriptionResult = await SubscriptionService.getByBusinessId(businessId);
       if (subscriptionResult.error) {
         throw new Error(subscriptionResult.error);
       }
@@ -39,14 +32,7 @@ export function useBusinessSubscription(businessId: string | undefined) {
       let entitlements = EntitlementsService.getAll(planTier);
 
       try {
-        const dynamicEntitlements = await withTimeout(
-          BillingPlanService.getEntitlements(planTier),
-          {
-            message:
-              "A consulta de permissoes do plano excedeu o tempo limite.",
-            timeoutMs: 5_000,
-          },
-        );
+        const dynamicEntitlements = await BillingPlanService.getEntitlements(planTier);
         if (dynamicEntitlements) {
           entitlements = dynamicEntitlements;
         }
@@ -61,20 +47,17 @@ export function useBusinessSubscription(businessId: string | undefined) {
       };
     },
     enabled: !!businessId,
-    retry: 1,
-    retryDelay: 750,
     staleTime: 1000 * 60 * 5,
   });
 
   const subscription = result?.subscription || null;
   const planTier = result?.planTier || PlanTier.FREE;
-  const entitlements =
-    result?.entitlements || EntitlementsService.getAll(PlanTier.FREE);
+  const entitlements = result?.entitlements || EntitlementsService.getAll(PlanTier.FREE);
 
-  const isActive = subscription?.status === "active";
-  const isCanceled = subscription?.status === "canceled";
-  const isPastDue = subscription?.status === "past_due";
-  const isTrialing = subscription?.status === "trialing";
+  const isActive = subscription?.status === 'active';
+  const isCanceled = subscription?.status === 'canceled';
+  const isPastDue = subscription?.status === 'past_due';
+  const isTrialing = subscription?.status === 'trialing';
   const willCancelAtPeriodEnd = subscription?.cancel_at_period_end || false;
 
   const isFree = planTier === PlanTier.FREE;

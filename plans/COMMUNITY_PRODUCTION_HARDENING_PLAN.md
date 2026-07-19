@@ -28,11 +28,9 @@ community shell.
 - explicit `src/core/community-*` boundaries
 - `supabase/migrations/`
 
-`src/core/community` owns community-specific UI composition. Shared behavior
-must use `core/posts`, `core/comments`, `core/social`, `core/feed`,
-`core/community-experience` or the owning domain. External consumers may use
-only the community UI entrypoints enforced by the architecture validator; no
-compatibility facade may mirror those implementations.
+`src/core/community` is a compatibility bounded context. New external
+consumers must use explicit facades such as `core/community-feed`,
+`core/community-groups`, `core/community-experience` or the owning domain.
 
 ## Scope Control
 

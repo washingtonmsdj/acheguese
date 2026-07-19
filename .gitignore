@@ -36,8 +36,8 @@ dist-ssr
 *.local
 
 # Environment
-# .env contem configuracao da maquina; o template publico e .env.example.
-.env
+# .env é o template público com placeholders — DEVE ser commitado
+!.env
 .env.local
 .env.*.local
 .env.staging

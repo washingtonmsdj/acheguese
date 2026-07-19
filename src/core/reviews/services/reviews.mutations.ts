@@ -37,17 +37,6 @@ function parseUpsertResponse(value: unknown): UpsertProfileReviewResponse {
   };
 }
 
-export function normalizeUpsertReviewCommandResponse(value: unknown): {
-  review: Review;
-  isNew: boolean;
-} {
-  const response = parseUpsertResponse(value);
-  return {
-    review: normalizeReviewRow(response.review),
-    isNew: response.isNew,
-  };
-}
-
 function failMutation(
   action: string,
   error: unknown,
@@ -86,7 +75,11 @@ export async function upsertReview(
     });
   }
 
-  return normalizeUpsertReviewCommandResponse(commandResult);
+  const response = parseUpsertResponse(commandResult);
+  return {
+    review: normalizeReviewRow(response.review),
+    isNew: response.isNew,
+  };
 }
 
 export async function removeReview(

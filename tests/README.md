@@ -1,84 +1,170 @@
-# Testes
+# Testes Unitários
 
-Este documento define a taxonomia canonica das suites do Achegue-se. Testes
-locais deterministas, testes remotos operacionais e E2E possuem runners
-separados; um comando local nunca deve acessar o Supabase remoto por acidente.
+> Testes automatizados para o Ordax
+> 
+> Cobertura atual: **110 testes** adicionados na expansão de Abril 2026
 
-## Suites
+---
 
-| Suite                              |                         Local |          Rede | Paralelismo | Comando                    |
-| ---------------------------------- | ----------------------------: | ------------: | ----------: | -------------------------- |
-| Unitarios, contratos e arquitetura |                           sim |      proibida | por arquivo | `npm test`                 |
-| Operacional Supabase               |                           nao |   obrigatoria |      serial | `npm run test:operational` |
-| E2E de browser                     | app local + backend declarado | conforme spec |      serial | `npx playwright test ...`  |
+## Estrutura de Testes
 
-O runner deterministico usa no maximo quatro workers por padrao para evitar
-pressao imprevisivel de memoria em maquinas locais e runners compartilhados.
-O CI pode ajustar esse limite com `VITEST_MAX_WORKERS=<inteiro-positivo>` sem
-alterar a separacao entre suites. Testes operacionais permanecem com um worker.
-Variaveis publicas usam `.env.example` como baseline deterministico do runner;
-arquivos locais podem sobrescreve-las, mas nunca sao requisito para a suite.
+```
+tests/                          # Testes de integração e E2E
+  ├── operational/              # Testes operacionais (Gate 2-7)
+  ├── e2e/                      # Testes end-to-end
+  └── legacy/                   # Testes antigos (arquivados)
 
-Testes deterministas ficam colocalizados em `src/**` ou nas pastas
-`tests/architecture`, `tests/security` e equivalentes. Qualquer teste que
-consulte ou altere um backend real pertence a `tests/operational`.
-
-## Alvo Operacional
-
-O runner operacional falha antes de coletar testes quando o alvo nao foi
-autorizado. Para Supabase remoto, o operador deve fornecer:
-
-```text
-OPERATIONAL_TEST_TARGET=development|staging
-OPERATIONAL_TEST_PROJECT_REF=<project-ref-nao-producao>
-OPERATIONAL_TEST_CONFIRM=NON_PRODUCTION_REMOTE_CONFIRMED
+src/                            # Testes unitários (co-localizados)
+  ├── shared/utils/
+  │   ├── dateUtils.test.ts     # 22 testes - datas
+  │   ├── validation.test.ts    # 35 testes - validação
+  │   ├── formatters.test.ts    # 14 testes - formatação
+  │   └── currency.test.ts      # 13 testes - moeda
+  ├── core/session/services/
+  │   └── SessionService.test.ts # Testes de sessão
+  └── core/location/services/
+      └── LocationService.test.ts # 26 testes - serviço de localização
 ```
 
-`VITE_SUPABASE_URL` precisa ser HTTPS e corresponder exatamente a
-`https://<project-ref>.supabase.co`. `OPERATIONAL_TEST_TARGET=production` e
-rejeitado. O alvo `local` aceita somente enderecos de loopback.
+---
 
-Para E2E contra Supabase remoto, a origem exata de `PLAYWRIGHT_BASE_URL` deve
-existir em `ALLOWED_ORIGINS` no projeto de development/staging. `localhost` e
-`127.0.0.1`, assim como portas diferentes, nao sao equivalentes para CORS.
+## Testes Criados na Expansão
 
-Credenciais e chaves permanecem em `.env.local` ou no secret manager do CI e
-nunca sao versionadas. Suites que precisam de `service_role`, motorista ou
-administrador E2E declaram esse requisito no `describeOperational` e sao
-ignoradas quando a credencial dedicada nao existe.
+### 1. dateUtils.test.ts (22 testes)
 
-## Identidade De Teste
+| Função | Testes |
+|--------|--------|
+| `formatRelativeTime` | 8 testes (agora, minutos, horas, dias, semanas, meses, anos) |
+| `formatTime` | 2 testes |
+| `formatShortDate` | 2 testes |
+| `formatDateTime` | 2 testes |
+| `isToday` | 3 testes |
+| `isTomorrow` | 3 testes |
+| `getDaysDifference` | 4 testes |
 
-- testes nunca redefinem senha de usuario encontrado no ambiente;
-- atores arbitrarios de fixtures usam magic link administrativo efemero;
-- fluxos administrativos usam apenas `E2E_ADMIN_EMAIL` e
-  `E2E_ADMIN_PASSWORD`;
-- fixtures de UI devem pertencer a uma conta E2E dedicada;
-- clientes Supabase de teste nascem somente em
-  `tests/helpers/operational-env.ts`.
+### 2. validation.test.ts (35 testes)
 
-## Convencoes
+| Função | Testes |
+|--------|--------|
+| `isValidEmail` | 6 testes |
+| `isValidCNPJ` | 4 testes |
+| `isValidCPF` | 4 testes |
+| `isValidPhone` | 4 testes |
+| `isValidCEP` | 3 testes |
+| `isValidUUID` | 4 testes |
+| `isValidURL` | 3 testes |
+| `isValidLength` | 4 testes |
+| `isInRange` | 4 testes |
+| `isInFuture` | 2 testes |
+| `isInPast` | 2 testes |
+| `isNotEmpty` | 2 testes |
+| `isObjectNotEmpty` | 2 testes |
 
-- arquivos: `*.test.ts`, `*.test.tsx` ou `*.spec.ts`;
-- cada teste deve limpar somente as fixtures que criou;
-- IDs, e-mails e nomes de fixture devem ser identificaveis e nao colidir com
-  dados de produto;
-- autorizacao negativa, ownership e isolamento entre atores sao obrigatorios
-  para mutations;
-- nenhum teste deve tratar falta de ambiente como sucesso silencioso no runner
-  operacional.
-- specs de browser devem aguardar estados observaveis e usar a acao real de
-  recuperacao da UI para falhas transitorias; sleeps nao substituem readiness.
+### 3. formatters.test.ts (14 testes)
 
-## Comandos
+| Função | Testes |
+|--------|--------|
+| `getInitials` | 4 testes |
+| `getRelativeTime` | 5 testes |
+| `formatNumber` | 4 testes |
+| `truncateText` | 4 testes |
 
-```powershell
-npm test
-npm run test:operational
-npm run test:ssot
-npm run test:regression
-npx playwright test tests/e2e/<arquivo>.spec.ts --project=chromium
+### 4. currency.test.ts (13 testes)
+
+| Função | Testes |
+|--------|--------|
+| `formatBrl` | 5 testes |
+| `formatBrlCompact` | 6 testes |
+
+### 5. LocationService.test.ts (26 testes)
+
+| Método | Testes |
+|--------|--------|
+| `getLocationById` | 3 testes |
+| `getLocationByPath` | 3 testes |
+| `getLocationBySlugWithinParent` | 4 testes |
+| `getAncestors` | 3 testes |
+| `getDescendants` | 3 testes |
+| `getChildren` | 3 testes |
+| `validateLocation` | 4 testes |
+| `getLocationTree` | 2 testes |
+| Error handling | 1 teste |
+
+---
+
+## Executando Testes
+
+### Todos os testes unitários
+```bash
+npm run test
 ```
 
-`test:release:smoke` preserva o smoke historico de SSOT, browser e regressao;
-nao substitui as suites completas acima.
+### Testes específicos
+```bash
+# Apenas utilitários
+npx vitest run src/shared/utils/
+
+# Apenas um arquivo
+npx vitest run src/shared/utils/dateUtils.test.ts
+
+# Watch mode
+npx vitest watch src/shared/utils/
+```
+
+### Com cobertura
+```bash
+npx vitest run --coverage
+```
+
+---
+
+## Convenções
+
+### Nomenclatura
+- Arquivos: `*.test.ts` ou `*.test.tsx`
+- Descrições: `deve [comportamento esperado]`
+- Agrupamento: por função ou módulo
+
+### Boas Práticas
+1. **Isolamento**: Cada teste deve ser independente
+2. **Determinismo**: Mesmo input = mesmo output
+3. **Cobertura**: Testar casos de sucesso e falha
+4. **Performance**: Evitar operações assíncronas desnecessárias
+
+### Exemplo
+```typescript
+describe('minhaFuncao', () => {
+  it('deve retornar resultado esperado para input válido', () => {
+    expect(minhaFuncao('valido')).toBe('resultado');
+  });
+
+  it('deve lançar erro para input inválido', () => {
+    expect(() => minhaFuncao(null)).toThrow();
+  });
+});
+```
+
+---
+
+## Próximos Passos
+
+- [x] Expandir testes para `core/session` (SessionService já possui testes)
+- [x] Expandir testes para `core/location` (LocationService - 26 testes criados)
+- [ ] Criar testes para hooks de UI
+- [ ] Criar testes para outros services de negócio (business, alerts, etc.)
+- [ ] Criar testes para repositories
+- [ ] Atingir meta de 85%+ de cobertura
+
+---
+
+## Métricas
+
+| Métrica | Antes | Depois | Meta |
+|---------|-------|--------|------|
+| Testes unitários | 45 | 110 | 150+ |
+| Cobertura (est.) | ~40% | ~55% | 85%+ |
+| Arquivos testados | 18 | 24 | 50+ |
+
+---
+
+*Documento atualizado em Abril 2026*

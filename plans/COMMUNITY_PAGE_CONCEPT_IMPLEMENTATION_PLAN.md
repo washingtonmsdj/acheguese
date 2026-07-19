@@ -49,7 +49,7 @@ Implement the Community First community page concept as a real product surface, 
 - [x] Normalized the community header cascade so logo typography, location, notification, account and mobile menu controls stay aligned on the first row; the primary site navigation alone moves to row two when space is available.
 - [x] Wired the main community landing composer to the canonical `CreatePostModal` for verified members, without route navigation; the modal is lazy-loaded and unauthenticated visitors remain protected by the existing access gate.
 - [x] Prevented public fallback territory identifiers from reaching UUID-only descendant queries; `CidadeLandingPage` now prefers a persisted canonical location and otherwise keeps the fallback presentation local.
-- [x] Routed landing imports to the canonical community UI entrypoints and removed the parallel `core/community-feed` reexport facade; the architecture validator now enforces the explicit public paths.
+- [x] Routed landing imports through the public `core/community-feed` facade so the community transversal boundary remains valid without duplicating implementation.
 - [x] Wired `Grupos da comunidade` to the canonical `CommunityGroupsService` and `useCommunityUrls`, with real group detail URLs instead of local placeholder anchors.
 - [x] Fixed `CommunityGroupsService.getGroupsPage(sortBy: "populares")` so it does not order by an aggregate alias that Supabase/PostgREST rejects at runtime.
 - [x] Added `Discussões em alta` from the canonical public feed data, ranked only by real public interaction counters already present on posts.
@@ -101,9 +101,9 @@ Implement the Community First community page concept as a real product surface, 
 - `npm run typecheck:app`
 - `npx eslint src/core/community/components/page/CommunityOverviewSurface.tsx src/core/community/components/page/communityOverviewVisualFixture.ts src/core/community/hooks/feed/useCommunityFeed.ts`
 - `npx eslint src/core/community/components/page/CommunityOverviewSurface.tsx`
-- `npx eslint src/app/components/AppLayoutSidebar.tsx src/app/pages/CidadeLandingPage.tsx src/core/community/components/page/CommunityOverviewSurface.tsx src/core/routing/components/CommunityAliasShellRoute.tsx src/core/routing/components/__tests__/CommunityAliasShellRoute.spec.tsx`
+- `npx eslint src/app/components/AppLayoutSidebar.tsx src/app/pages/CidadeLandingPage.tsx src/core/community/components/page/CommunityOverviewSurface.tsx src/core/routing/components/CommunityAliasShellRoute.tsx src/core/routing/components/__tests__/CommunityAliasRoute.spec.tsx`
 - `npx eslint src/app/pages/CidadeLandingPage.tsx src/core/community/components/page/CommunityOverviewSurface.tsx`
-- `npx vitest --run src/app/routes/__tests__/communityRoutesCanonical.spec.ts src/core/routing/components/__tests__/CommunityAliasShellRoute.spec.tsx --reporter=dot`
+- `npx vitest --run src/app/routes/__tests__/communityRoutesCanonical.spec.ts src/core/routing/components/__tests__/CommunityAliasRoute.spec.tsx --reporter=dot`
 - Browser QA at `http://127.0.0.1:5174/comunidade/pituba` in the in-app browser mobile viewport.
 - Browser QA confirmed `communityEventsPreview`: mobile showed `Agenda em leitura`, `#eventos` present and hero at about `281px` in a `555px` viewport.
 - Browser QA confirmed desktop shell: header `60px`, sidebar `254px`, hero about `253px`, `#eventos` present and no framework overlay.

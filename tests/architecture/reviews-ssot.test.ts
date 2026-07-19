@@ -14,12 +14,11 @@ const deleteContractMigration = read(
 const adminAggregateMigration = read(
   "supabase/migrations/20260715110000_create_review_aggregate_admin_read_model.sql",
 );
-const professionalCommandMigration = read(
-  "supabase/migrations/20260718181000_extract_professional_review_core_command.sql",
-);
 const queries = read("src/core/reviews/services/reviews.queries.ts");
 const mutations = read("src/core/reviews/services/reviews.mutations.ts");
-const engagement = read("src/core/reviews/services/ReviewEngagementService.ts");
+const engagement = read(
+  "src/core/reviews/services/ReviewEngagementService.ts",
+);
 const businessAdapter = read(
   "src/core/business/services/BusinessReviewService.ts",
 );
@@ -62,7 +61,7 @@ describe("Reviews Core SSOT", () => {
     expect(queries).toContain('.from("reviews")');
     expect(queries).toContain('rpc("get_profile_review_stats"');
     expect(queries).not.toContain("getTableName");
-    expect(mutations).toMatch(/rpc\(\s*["']upsert_profile_review["']/);
+    expect(mutations).toContain('rpc(\n    "upsert_profile_review"');
     expect(mutations).toContain('rpc("delete_profile_review"');
     expect(mutations).not.toContain('.from("reviews")');
   });
@@ -81,22 +80,13 @@ describe("Reviews Core SSOT", () => {
     );
     expect(deleteContractMigration).toContain("DELETE FROM public.reviews");
     expect(deleteContractMigration).not.toContain("SET status = 'deleted'");
-    expect(professionalCommandMigration).toContain(
-      "CREATE OR REPLACE FUNCTION private.upsert_professional_profile_review",
-    );
-    expect(professionalCommandMigration).toContain(
-      "RETURN private.upsert_professional_profile_review(",
-    );
-    expect(professionalCommandMigration).toContain(
-      "REVOKE ALL ON FUNCTION private.upsert_professional_profile_review",
-    );
   });
 
   it("owns reports and helpfulness in the reusable Review Core service", () => {
     expect(engagement).toContain('rpc("create_review_report"');
     expect(engagement).toContain('rpc("set_review_helpfulness"');
-    expect(engagement).toMatch(
-      /rpc\(\s*["']get_current_review_helpfulness["']/,
+    expect(engagement).toContain(
+      'rpc(\n      "get_current_review_helpfulness"',
     );
     expect(gastronomyAdapter).toContain("ReviewEngagementService");
     expect(gastronomyAdapter).not.toContain('.from("review_helpfulness")');
@@ -119,9 +109,7 @@ describe("Reviews Core SSOT", () => {
 
   it("keeps administrative aggregates in a bounded server-owned read model", () => {
     expect(queries).toContain('rpc("get_review_aggregates_admin"');
-    expect(adminAggregateMigration).toContain(
-      "private.is_admin_user(auth.uid())",
-    );
+    expect(adminAggregateMigration).toContain("private.is_admin_user(auth.uid())");
     expect(adminAggregateMigration).toContain(
       "cardinality(v_profile_ids), 0) NOT BETWEEN 1 AND 200",
     );

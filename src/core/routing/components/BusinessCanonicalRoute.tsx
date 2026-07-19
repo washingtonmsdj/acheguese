@@ -1,14 +1,16 @@
 ﻿/**
- * BusinessCanonicalRoute resolves the canonical territorial business URL.
+ * BusinessCanonicalRoute - fallback territorial legado de empresa.
  *
- * URL: /empresas/:state/:city/:district/:slug.
+ * URL legada: /empresas/:state/:city/:district/:slug
+ * Destino canonico: /empresas/:state/:city/:district/:slug.
  */
 import { logger } from '@/shared/utils/logger';
 import { useEffect, useState } from 'react';
 import type { ComponentType } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import { buildBusinessPublicUrlFromSegments } from '@/core/business/utils/businessPublicUrls';
+import { decideLegacyEntityRoute } from '@/core/routing/policies';
 import { Loader2 } from 'lucide-react';
 import { logPageNotFound } from '@/core/public-identity/utils/identity-logger';
 
@@ -24,6 +26,7 @@ type RouteState =
 export default function BusinessCanonicalRoute({
   BusinessDetailComponent,
 }: BusinessCanonicalRouteProps = {}) {
+  const location = useLocation();
   const { state, city, district, slug } = useParams<{
     state: string;
     city: string;
@@ -73,6 +76,13 @@ export default function BusinessCanonicalRoute({
           return;
         }
 
+        const canonicalPath = BusinessUrlService.getCanonicalUrl(ctx);
+        decideLegacyEntityRoute({
+          kind: 'public_entity_canonicalization',
+          currentPath: location.pathname,
+          targetPath: canonicalPath,
+        });
+
         if (!cancelled) {
           setRouteState({
             status: 'found',
@@ -92,7 +102,7 @@ export default function BusinessCanonicalRoute({
     return () => {
       cancelled = true;
     };
-  }, [state, city, district, slug]);
+  }, [location.pathname, state, city, district, slug]);
 
   if (routeState.status === 'loading') {
     return (

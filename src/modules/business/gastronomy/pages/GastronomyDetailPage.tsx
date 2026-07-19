@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { AlertTriangle, RefreshCw, UtensilsCrossed } from "lucide-react";
+import {
+  Link,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
+import { UtensilsCrossed } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -72,37 +76,6 @@ function GastronomyDetailSkeleton() {
   );
 }
 
-function GastronomyDetailLoadError({
-  isRetrying,
-  onRetry,
-}: {
-  isRetrying: boolean;
-  onRetry: () => void;
-}) {
-  return (
-    <div
-      className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center"
-      role="alert"
-    >
-      <div className="rounded-full bg-destructive/10 p-5">
-        <AlertTriangle className="h-10 w-10 text-destructive" />
-      </div>
-      <h1 className="mt-5 text-2xl font-bold text-foreground">
-        Nao foi possivel carregar o estabelecimento
-      </h1>
-      <p className="mt-2 max-w-md text-muted-foreground">
-        Houve uma falha temporaria de conexao. Tente novamente.
-      </p>
-      <Button className="mt-6" disabled={isRetrying} onClick={onRetry}>
-        <RefreshCw
-          className={`mr-2 h-4 w-4 ${isRetrying ? "animate-spin" : ""}`}
-        />
-        {isRetrying ? "Tentando novamente" : "Tentar novamente"}
-      </Button>
-    </div>
-  );
-}
-
 export default function GastronomyDetailPage({
   routeParams,
   communityScoped = false,
@@ -119,13 +92,8 @@ export default function GastronomyDetailPage({
     useState<MenuItemWithRelations | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
 
-  const {
-    data: snapshot,
-    isError: isSnapshotError,
-    isFetching: isFetchingSnapshot,
-    isLoading: isLoadingSnapshot,
-    refetch: refetchSnapshot,
-  } = usePublicGastronomySnapshot({ state, city, district, slug });
+  const { data: snapshot, isLoading: isLoadingSnapshot } =
+    usePublicGastronomySnapshot({ state, city, district, slug });
 
   const business = snapshot?.gastronomy.business ?? null;
   const profile =
@@ -196,16 +164,6 @@ export default function GastronomyDetailPage({
   };
 
   if (!business && !isLoadingSnapshot) {
-    if (isSnapshotError) {
-      return (
-        <GastronomyDetailLoadError
-          isRetrying={isFetchingSnapshot}
-          onRetry={() => {
-            void refetchSnapshot();
-          }}
-        />
-      );
-    }
     return <GastronomyDetailNotFound homeUrl={gastronomyHomeUrl} />;
   }
 

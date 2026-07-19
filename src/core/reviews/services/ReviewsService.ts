@@ -18,7 +18,6 @@ export {
 } from "./reviews.queries";
 
 export {
-  normalizeUpsertReviewCommandResponse,
   removeReview,
   upsertReview,
 } from "./reviews.mutations";
@@ -45,7 +44,5 @@ export class ReviewsService {
   static getReviewAggregatesAdmin = ReviewsQueries.getReviewAggregatesAdmin;
 
   static removeReview = ReviewsMutations.removeReview;
-  static normalizeUpsertReviewCommandResponse =
-    ReviewsMutations.normalizeUpsertReviewCommandResponse;
   static upsertReview = ReviewsMutations.upsertReview;
 }

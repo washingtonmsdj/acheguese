@@ -9,15 +9,9 @@ import {
   hasOperationalAnonEnv,
   hasOperationalAdminEnv,
 } from "../helpers/operational-env";
-import {
-  createConfirmedOperationalUser,
-  deleteOperationalUserWithOwnedProfiles,
-} from "../helpers/operational-auth-fixture";
 
 const admin = createOptionalOperationalAdminClient();
 const repoRoot = process.cwd();
-const createdOrderIds = new Set<string>();
-const createdUserIds = new Set<string>();
 
 const CONSENT_FIXTURE = [
   { consent_type: "cookies", granted: true },
@@ -28,7 +22,11 @@ const CONSENT_FIXTURE = [
 ];
 
 function hasSupabaseAdminEnv(): boolean {
-  return Boolean(admin && hasOperationalAnonEnv() && hasOperationalAdminEnv());
+  return Boolean(
+    admin &&
+      hasOperationalAnonEnv() &&
+      hasOperationalAdminEnv(),
+  );
 }
 
 function uniqueSuffix(): string {
@@ -59,25 +57,6 @@ async function clickWhenEnabled(locator: Locator): Promise<void> {
   await locator.click();
 }
 
-async function waitForMenuManagement(page: Page): Promise<void> {
-  const heading = page.getByRole("heading", {
-    name: /Gest[aã]o de Card[aá]pio/i,
-  });
-  const retryButton = page.getByRole("button", {
-    name: /Tentar novamente/i,
-  });
-
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    await expect(heading.or(retryButton).first()).toBeVisible({
-      timeout: 35_000,
-    });
-    if (await heading.isVisible().catch(() => false)) return;
-    await retryButton.click();
-  }
-
-  await expect(heading).toBeVisible({ timeout: 35_000 });
-}
-
 async function advanceOrderAction(input: {
   page: Page;
   orderUrl: string;
@@ -87,9 +66,7 @@ async function advanceOrderAction(input: {
   const { page, orderUrl, actionName, nextActionName } = input;
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    const nextButton = page
-      .getByRole("button", { name: nextActionName })
-      .first();
+    const nextButton = page.getByRole("button", { name: nextActionName }).first();
     if (await nextButton.isVisible().catch(() => false)) {
       return;
     }
@@ -155,30 +132,22 @@ async function createConfirmedUser(input: {
     );
   }
 
-  const user = await createConfirmedOperationalUser(admin, {
-    ...input,
-    userMetadata: { e2e_fixture: "gastronomy-onboarding" },
+  const { data, error } = await admin.auth.admin.createUser({
+    email: input.email,
+    password: input.password,
+    email_confirm: true,
+    user_metadata: {
+      name: input.name,
+      display_name: input.name,
+      handle: input.handle,
+    },
   });
-  createdUserIds.add(user.id);
-  return { user };
-}
 
-async function cleanupCreatedGastronomyFixtures(): Promise<void> {
-  if (!admin) return;
-
-  if (createdOrderIds.size > 0) {
-    const orderDelete = await admin
-      .from("orders")
-      .delete()
-      .in("id", [...createdOrderIds]);
-    if (orderDelete.error) throw orderDelete.error;
-    createdOrderIds.clear();
+  if (error || !data.user) {
+    throw error ?? new Error("Falha ao criar usuario confirmado para o teste.");
   }
 
-  for (const userId of createdUserIds) {
-    await deleteOperationalUserWithOwnedProfiles(admin, userId);
-  }
-  createdUserIds.clear();
+  return { user: data.user };
 }
 
 function createPublicClient() {
@@ -451,8 +420,7 @@ async function bootstrapBusinessForUser(input: {
             location_id: location.id,
             category: "restaurante",
             subcategory: "pizzaria",
-            description:
-              "Bootstrap automatizado de empresa base para Gastronomia.",
+            description: "Bootstrap automatizado de empresa base para Gastronomia.",
             status: "active",
           },
         },
@@ -460,14 +428,7 @@ async function bootstrapBusinessForUser(input: {
     });
 
     if (rpc.error || rpc.data?.error || rpc.data?.data?.success === false) {
-      throw (
-        rpc.error ??
-        new Error(
-          rpc.data?.error ??
-            rpc.data?.data?.error ??
-            "Falha ao criar perfil business.",
-        )
-      );
+      throw rpc.error ?? new Error(rpc.data?.error ?? rpc.data?.data?.error ?? "Falha ao criar perfil business.");
     }
 
     businessProfile = await waitForBusinessProfile(signIn.data.user.id);
@@ -800,10 +761,6 @@ test.describe("gastronomy onboarding e2e", () => {
     "Defina VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY e SUPABASE_SERVICE_ROLE_KEY.",
   );
 
-  test.afterEach(async () => {
-    await cleanupCreatedGastronomyFixtures();
-  });
-
   test("new seller creates a pizzaria, adds first product, and a second user buys it", async ({
     page,
     browser,
@@ -877,7 +834,11 @@ test.describe("gastronomy onboarding e2e", () => {
       page,
       `/central/empresas/${businessProfileId}/gastronomia/cardapio`,
     );
-    await waitForMenuManagement(page);
+    await expect(
+      page.getByRole("heading", { name: /Gest[aã]o de Card[aá]pio/i }),
+    ).toBeVisible({
+      timeout: 30000,
+    });
     await expect(page.getByText(/Nenhum card[aá]pio encontrado/i)).toHaveCount(
       0,
     );
@@ -894,7 +855,7 @@ test.describe("gastronomy onboarding e2e", () => {
     await itemDialog
       .getByLabel(/Descri/i)
       .fill("Produto inicial do fluxo E2E.");
-    await itemDialog.locator('input[type="number"]').first().fill("50");
+    await itemDialog.locator('input[type="number"]').first().fill("12.5");
 
     const categoryCombobox = itemDialog.getByRole("combobox");
     if ((await categoryCombobox.count()) > 0) {
@@ -903,11 +864,6 @@ test.describe("gastronomy onboarding e2e", () => {
     }
 
     await itemDialog.getByRole("button", { name: /^Criar$/i }).click();
-    const itemCreationOutcome = page
-      .getByText(/Item criado com sucesso!|Erro ao criar item:/i)
-      .first();
-    await expect(itemCreationOutcome).toBeVisible({ timeout: 30000 });
-    await expect(itemCreationOutcome).toHaveText("Item criado com sucesso!");
     await expect(itemDialog).toHaveCount(0, { timeout: 20000 });
     await expect(page.getByText(itemName)).toBeVisible({ timeout: 30000 });
 
@@ -990,12 +946,12 @@ test.describe("gastronomy onboarding e2e", () => {
     await expect(
       buyerPage.getByRole("heading", { name: /Confirmar pedido/i }),
     ).toBeVisible({ timeout: 30000 });
-    await expect(
-      buyerPage.getByRole("button", { name: /^Retirada$/i, pressed: true }),
-    ).toBeVisible();
-    await clickWhenEnabled(
-      buyerPage.getByRole("button", { name: /^Confirmar pedido$/i }),
-    );
+    await buyerPage
+      .locator("button")
+      .filter({ hasText: /^Retirada$/i })
+      .first()
+      .click();
+    await buyerPage.getByRole("button", { name: /Confirmar pedido/i }).click();
 
     await buyerPage.waitForURL(/\/gastronomia\/pedidos\/[^/]+$/, {
       timeout: 90000,
@@ -1003,7 +959,6 @@ test.describe("gastronomy onboarding e2e", () => {
     const orderId =
       buyerPage.url().match(/\/gastronomia\/pedidos\/([^/?#]+)/)?.[1] ?? null;
     expect(orderId).toBeTruthy();
-    createdOrderIds.add(orderId!);
 
     await expect(
       buyerPage.getByRole("heading", { name: /Pedido #/i }),

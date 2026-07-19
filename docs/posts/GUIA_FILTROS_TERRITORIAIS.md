@@ -54,7 +54,7 @@ A intenção futura é usar `reach` para filtros opcionais de UI — mas isso n�
 ### Via hook (componentes React)
 
 ```typescript
-import { useCommunityFeedSimple } from '@/core/community/hooks/feed/useCommunityFeed';
+import { useCommunityFeedSimple } from '@/core/community-feed/hooks/useCommunityFeed';
 
 const { posts, isLoading, hasNextPage, loadMore } = useCommunityFeedSimple({
   locationScope: 'city', // ou 'neighborhood'

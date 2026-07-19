@@ -4,10 +4,10 @@ import type { PublicSlugRouteParams } from "../types/publicSnapshots";
 
 const FIVE_MINUTES = 5 * 60 * 1000;
 
-export function usePublicGastronomySnapshot(
-  params: Partial<PublicSlugRouteParams>,
-) {
-  const hasRoute = Boolean(params.state && params.city && params.slug);
+export function usePublicGastronomySnapshot(params: Partial<PublicSlugRouteParams>) {
+  const hasRoute = Boolean(
+    params.state && params.city && params.slug,
+  );
 
   return useQuery({
     queryKey: [
@@ -18,12 +18,8 @@ export function usePublicGastronomySnapshot(
       params.slug,
     ],
     queryFn: () =>
-      PublicGastronomySnapshotService.getByTerritorySlug(
-        params as PublicSlugRouteParams,
-      ),
+      PublicGastronomySnapshotService.getByTerritorySlug(params as PublicSlugRouteParams),
     enabled: hasRoute,
-    retry: 1,
-    retryDelay: 750,
     staleTime: FIVE_MINUTES,
   });
 }

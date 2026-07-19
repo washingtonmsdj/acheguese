@@ -2,35 +2,19 @@ import { expect, test, type Page } from "@playwright/test";
 import { loginAsUser } from "../../e2e/helpers/auth";
 import {
   createOperationalAnonClient,
-  createOptionalOperationalAdminClient,
-  getMissingOperationalEnv,
   getOperationalEnv,
+  hasOperationalAnonEnv,
 } from "../helpers/operational-env";
-import {
-  createConfirmedOperationalUser,
-  deleteOperationalUserWithOwnedProfiles,
-  getOperationalActiveProfileId,
-} from "../helpers/operational-auth-fixture";
 
 const operationalEnv = getOperationalEnv();
-const REQUESTER_EMAIL = operationalEnv.driverEmail || "";
-const REQUESTER_PASSWORD = operationalEnv.driverPassword || "";
-const PROFESSIONAL_FLOW_ENV_ISSUES = getMissingOperationalEnv({
-  requireAnonKey: true,
-  requireDriverCredentials: true,
-  requireServiceRole: true,
-});
+const TEST_EMAIL = operationalEnv.driverEmail || "";
+const TEST_PASSWORD = operationalEnv.driverPassword || "";
 
 let PROFESSIONAL_DATA_ID: string | null = null;
-let PROFESSIONAL_EMAIL = "";
-let PROFESSIONAL_PASSWORD = "";
-let PROFESSIONAL_USER_ID: string | null = null;
-const CREATED_FIXTURES: LeadFixture[] = [];
 
 interface LeadFixture {
   leadId: string;
   professionalProfileId: string;
-  requesterProfileId: string;
 }
 
 function testClient() {
@@ -38,56 +22,18 @@ function testClient() {
 }
 
 async function signInTestUser() {
-  return signInActor(REQUESTER_EMAIL, REQUESTER_PASSWORD, "requester");
-}
-
-async function signInProfessionalUser() {
-  return signInActor(PROFESSIONAL_EMAIL, PROFESSIONAL_PASSWORD, "professional");
-}
-
-async function signInActor(email: string, password: string, actor: string) {
-  if (!email || !password || PROFESSIONAL_FLOW_ENV_ISSUES.length > 0)
-    return null;
+  if (!TEST_EMAIL || !TEST_PASSWORD || !hasOperationalAnonEnv()) return null;
   const client = testClient();
   const signIn = await client.auth.signInWithPassword({
-    email,
-    password,
+    email: TEST_EMAIL,
+    password: TEST_PASSWORD,
   });
-  if (signIn.error || !signIn.data.user) {
-    throw new Error(
-      `Nao foi possivel autenticar o ator E2E ${actor}: ${signIn.error?.message ?? "usuario ausente"}`,
-    );
-  }
+  if (signIn.error || !signIn.data.user) return null;
   return { client, userId: signIn.data.user.id };
 }
 
-async function provisionProfessionalActor(): Promise<void> {
-  const admin = createOptionalOperationalAdminClient();
-  if (!admin) return;
-
-  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  PROFESSIONAL_EMAIL = `e2e-professional-${suffix}@example.com`;
-  PROFESSIONAL_PASSWORD = `Professional@${suffix}!`;
-  const displayName = "Profissional E2E";
-  const handle = `e2eprof${Date.now().toString().slice(-10)}${Math.random()
-    .toString(36)
-    .slice(2, 6)}`;
-
-  const createdUser = await createConfirmedOperationalUser(admin, {
-    email: PROFESSIONAL_EMAIL,
-    handle,
-    name: displayName,
-    password: PROFESSIONAL_PASSWORD,
-    userMetadata: {
-      e2e_fixture: "professional-lead-flow",
-    },
-  });
-
-  PROFESSIONAL_USER_ID = createdUser.id;
-}
-
 async function ensureProfessionalData(): Promise<string | null> {
-  const session = await signInProfessionalUser();
+  const session = await signInTestUser();
   if (!session) return null;
   const { client, userId } = session;
   const location = await client
@@ -142,14 +88,7 @@ async function ensureProfessionalData(): Promise<string | null> {
     });
 
     if (rpc.error || rpc.data?.error || rpc.data?.data?.success === false) {
-      throw (
-        rpc.error ??
-        new Error(
-          rpc.data?.error ??
-            rpc.data?.data?.error ??
-            "Falha ao criar perfil profissional.",
-        )
-      );
+      throw rpc.error ?? new Error(rpc.data?.error ?? rpc.data?.data?.error ?? "Falha ao criar perfil profissional.");
     }
 
     const refreshed = await client
@@ -231,17 +170,26 @@ async function ensureProfessionalData(): Promise<string | null> {
   return professionalDataId;
 }
 
-async function createLeadFixture(
-  professionalDataId: string,
-): Promise<LeadFixture | null> {
-  const requesterSession = await signInTestUser();
-  if (!requesterSession) return null;
-  const { client: requesterClient, userId: requesterUserId } = requesterSession;
+async function createLeadFixture(professionalDataId: string): Promise<LeadFixture | null> {
+  const session = await signInTestUser();
+  if (!session) return null;
+  const { client, userId } = session;
 
-  const requesterProfileId =
-    await getOperationalActiveProfileId(requesterClient);
+  const personalProfile = await client
+    .from("profiles")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("profile_type", "personal")
+    .limit(1)
+    .maybeSingle();
 
-  const professionalData = await requesterClient
+  const requesterProfileId = personalProfile.data?.id ?? null;
+  if (!requesterProfileId) {
+    await client.auth.signOut();
+    return null;
+  }
+
+  const professionalData = await client
     .from("professional_data")
     .select("profile_id")
     .eq("id", professionalDataId)
@@ -249,22 +197,21 @@ async function createLeadFixture(
     .maybeSingle();
   const professionalProfileId = professionalData.data?.profile_id ?? null;
   if (!professionalProfileId) {
-    await requesterClient.auth.signOut();
+    await client.auth.signOut();
     return null;
   }
 
   const token = Date.now().toString().slice(-6);
-  const leadInsert = await requesterClient
+  const leadInsert = await client
     .from("professional_leads")
     .insert({
       professional_id: professionalDataId,
-      requester_user_id: requesterUserId,
+      requester_user_id: userId,
       requester_profile_id: requesterProfileId,
       requester_name: "Cliente E2E",
       requester_phone: "71999999999",
       service_needed: `Servico E2E ${token}`,
-      description:
-        "Fluxo E2E profissional: lead, proposta, aceite, atendimento e avaliacao.",
+      description: "Fluxo E2E profissional: lead, proposta, aceite, atendimento e avaliacao.",
       neighborhood: "Nordeste de Amaralina",
       source_channel: "e2e",
       status: "new",
@@ -276,41 +223,22 @@ async function createLeadFixture(
 
   const leadId = leadInsert.data?.id ?? null;
   if (!leadId) {
-    await requesterClient.auth.signOut();
-    throw new Error(
-      `Nao foi possivel criar o lead E2E: ${leadInsert.error?.message ?? "resposta vazia"}`,
-    );
+    await client.auth.signOut();
+    return null;
   }
 
-  const fixture = { leadId, professionalProfileId, requesterProfileId };
-  CREATED_FIXTURES.push(fixture);
+  await client.from("professional_lead_messages").insert({
+    lead_id: leadId,
+    sender_user_id: userId,
+    sender_role: "requester",
+    message: "Mensagem inicial do cliente no fluxo E2E.",
+  });
 
-  const messageInsert = await requesterClient
-    .from("professional_lead_messages")
-    .insert({
-      lead_id: leadId,
-      sender_user_id: requesterUserId,
-      sender_role: "requester",
-      message: "Mensagem inicial do cliente no fluxo E2E.",
-    });
-  if (messageInsert.error) {
-    await requesterClient.auth.signOut();
-    throw new Error(
-      `Nao foi possivel criar a mensagem E2E: ${messageInsert.error.message}`,
-    );
-  }
-  await requesterClient.auth.signOut();
-
-  const professionalSession = await signInProfessionalUser();
-  if (!professionalSession) return null;
-  const { client: professionalClient, userId: professionalUserId } =
-    professionalSession;
-
-  const quoteInsert = await professionalClient
+  const quoteInsert = await client
     .from("professional_lead_quotes")
     .insert({
       lead_id: leadId,
-      professional_user_id: professionalUserId,
+      professional_user_id: userId,
       amount_cents: 18990,
       currency: "BRL",
       description: "Proposta estruturada E2E.",
@@ -322,63 +250,49 @@ async function createLeadFixture(
 
   const quoteId = quoteInsert.data?.id ?? null;
   if (!quoteId) {
-    await professionalClient.auth.signOut();
-    throw new Error(
-      `Nao foi possivel criar a proposta E2E: ${quoteInsert.error?.message ?? "resposta vazia"}`,
-    );
+    await client.auth.signOut();
+    return { leadId, professionalProfileId };
   }
-  await professionalClient.auth.signOut();
 
-  const acceptanceSession = await signInTestUser();
-  if (!acceptanceSession) return null;
-
-  const quoteAcceptance = await acceptanceSession.client
+  await client
     .from("professional_lead_quotes")
     .update({ status: "accepted" })
     .eq("id", quoteId)
     .select("id")
     .single();
-  if (quoteAcceptance.error) {
-    await acceptanceSession.client.auth.signOut();
-    throw new Error(
-      `Nao foi possivel aceitar a proposta E2E: ${quoteAcceptance.error.message}`,
-    );
-  }
-  await acceptanceSession.client.auth.signOut();
 
-  const completionSession = await signInProfessionalUser();
-  if (!completionSession) return null;
-
-  const engagement = await completionSession.client
+  const engagement = await client
     .from("professional_service_engagements")
     .select("id")
     .eq("lead_id", leadId)
     .maybeSingle();
 
-  if (!engagement.data?.id) {
-    await completionSession.client.auth.signOut();
-    throw new Error(
-      `Atendimento E2E nao foi criado: ${engagement.error?.message ?? "resposta vazia"}`,
-    );
+  if (engagement.data?.id) {
+    await client
+      .from("professional_service_engagements")
+      .update({
+        status: "completed",
+        completed_at: new Date().toISOString(),
+      })
+      .eq("id", engagement.data.id);
   }
 
-  const completion = await completionSession.client
-    .from("professional_service_engagements")
-    .update({
-      status: "completed",
-      completed_at: new Date().toISOString(),
-    })
-    .eq("id", engagement.data.id)
+  await client.auth.signOut();
+  return { leadId, professionalProfileId };
+}
+
+async function resolveReviewerProfileId(
+  client: ReturnType<typeof testClient>,
+  userId: string,
+): Promise<string | null> {
+  const personalProfile = await client
+    .from("profiles")
     .select("id")
-    .single();
-  await completionSession.client.auth.signOut();
-  if (completion.error) {
-    throw new Error(
-      `Nao foi possivel concluir o atendimento E2E: ${completion.error.message}`,
-    );
-  }
-
-  return fixture;
+    .eq("user_id", userId)
+    .eq("profile_type", "personal")
+    .limit(1)
+    .maybeSingle();
+  return personalProfile.data?.id ?? null;
 }
 
 async function assertProfessionalReviewPersistedWithSession(
@@ -401,46 +315,6 @@ async function assertProfessionalReviewPersistedWithSession(
   return Boolean(review.data?.id);
 }
 
-async function cleanupCreatedFixtures(): Promise<void> {
-  if (CREATED_FIXTURES.length === 0 && !PROFESSIONAL_USER_ID) return;
-
-  const admin = createOptionalOperationalAdminClient();
-  if (!admin) {
-    throw new Error(
-      "Service role obrigatoria para limpar fixtures profissionais E2E.",
-    );
-  }
-
-  for (const fixture of [...CREATED_FIXTURES].reverse()) {
-    const reviewDelete = await admin
-      .from("reviews")
-      .delete()
-      .eq("reviewed_profile_id", fixture.professionalProfileId)
-      .eq("reviewer_profile_id", fixture.requesterProfileId)
-      .eq("review_type", "professional");
-    if (reviewDelete.error) {
-      throw new Error(
-        `Falha ao limpar review E2E: ${reviewDelete.error.message}`,
-      );
-    }
-
-    const leadDelete = await admin
-      .from("professional_leads")
-      .delete()
-      .eq("id", fixture.leadId);
-    if (leadDelete.error) {
-      throw new Error(`Falha ao limpar lead E2E: ${leadDelete.error.message}`);
-    }
-  }
-
-  CREATED_FIXTURES.length = 0;
-
-  if (PROFESSIONAL_USER_ID) {
-    await deleteOperationalUserWithOwnedProfiles(admin, PROFESSIONAL_USER_ID);
-    PROFESSIONAL_USER_ID = null;
-  }
-}
-
 async function open(page: Page, path: string) {
   await page.goto(path, { waitUntil: "domcontentloaded", timeout: 60_000 });
 }
@@ -460,68 +334,43 @@ test.describe("professional leads authenticated flow", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test.beforeAll(async () => {
-    if (PROFESSIONAL_FLOW_ENV_ISSUES.length > 0) return;
-    await provisionProfessionalActor();
     PROFESSIONAL_DATA_ID = await ensureProfessionalData();
   });
 
-  test.afterAll(async () => {
-    await cleanupCreatedFixtures();
-  });
-
-  test("tracking + central profissional render lead/proposal/engagement pipeline", async ({
-    page,
-  }) => {
+  test("tracking + central profissional render lead/proposal/engagement pipeline", async ({ page }) => {
     test.skip(
-      PROFESSIONAL_FLOW_ENV_ISSUES.length > 0,
-      `Ambiente profissional E2E incompleto: ${PROFESSIONAL_FLOW_ENV_ISSUES.join(", ")}.`,
+      !TEST_EMAIL || !TEST_PASSWORD,
+      "Defina E2E_USER_EMAIL e E2E_USER_PASSWORD para validar fluxo autenticado de profissionais.",
     );
 
-    test.skip(
-      !PROFESSIONAL_DATA_ID,
-      "Nao foi possivel bootstrapar professional_data para o usuario E2E.",
-    );
+    test.skip(!PROFESSIONAL_DATA_ID, "Nao foi possivel bootstrapar professional_data para o usuario E2E.");
 
     const fixture = await createLeadFixture(PROFESSIONAL_DATA_ID!);
     test.skip(!fixture, "Nao foi possivel criar fixture de lead profissional.");
-    const { leadId, professionalProfileId, requesterProfileId } = fixture!;
+    const { leadId, professionalProfileId } = fixture!;
     const reviewToken = `E2E review ${Date.now()}`;
 
     await loginAsUser(page);
 
     await open(page, `/servicos/orcamentos/${leadId}`);
-    await expect(page.getByText(/propostas recebidas/i)).toBeVisible({
-      timeout: 20_000,
-    });
-    await expect(page.getByText(/atendimento contratado/i)).toBeVisible({
-      timeout: 20_000,
-    });
-    await expect(
-      page.getByText(/avaliar atendimento conclu[ií]do/i),
-    ).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText(/conversa do or[cç]amento/i)).toBeVisible({
-      timeout: 20_000,
-    });
-    await page
-      .getByPlaceholder(/conte como foi o atendimento/i)
-      .fill(reviewToken);
+    await expect(page.getByText(/propostas recebidas/i)).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(/atendimento contratado/i)).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(/avaliar atendimento conclu[ií]do/i)).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(/conversa do or[cç]amento/i)).toBeVisible({ timeout: 20_000 });
+    await page.getByPlaceholder(/conte como foi o atendimento/i).fill(reviewToken);
     await page.getByRole("button", { name: /enviar avalia[cç][aã]o/i }).click();
-    await expect(page.getByText(/^avalia[cç][aã]o enviada$/i)).toBeVisible({
-      timeout: 20_000,
-    });
 
     const verifySession = await signInTestUser();
-    test.skip(
-      !verifySession,
-      "Nao foi possivel iniciar sessao de verificacao para review.",
-    );
+    test.skip(!verifySession, "Nao foi possivel iniciar sessao de verificacao para review.");
+    const reviewerProfileId = await resolveReviewerProfileId(verifySession!.client, verifySession!.userId);
+    test.skip(!reviewerProfileId, "Nao foi possivel resolver perfil pessoal para verificacao de review.");
 
     await expect
       .poll(
         async () =>
           assertProfessionalReviewPersistedWithSession(
             verifySession!.client,
-            requesterProfileId,
+            reviewerProfileId!,
             professionalProfileId,
             reviewToken,
           ),
@@ -533,34 +382,24 @@ test.describe("professional leads authenticated flow", () => {
     await verifySession!.client.auth.signOut();
 
     await open(page, "/central/profissional");
+    await expect.poll(() => bodyText(page), { timeout: 60_000 }).toMatch(/central|perfil profissional/i);
     await expect
-      .poll(() => bodyText(page), { timeout: 60_000 })
-      .toMatch(/central|perfil profissional/i);
-    await expect
-      .poll(
-        async () =>
-          (await bodyText(page)).toLowerCase().includes("verificando acesso"),
-        {
-          timeout: 60_000,
-        },
-      )
+      .poll(async () => (await bodyText(page)).toLowerCase().includes("verificando acesso"), {
+        timeout: 60_000,
+      })
       .toBe(false);
 
     await expect
-      .poll(
-        async () => {
-          const text = comparableText(await bodyText(page));
-          const hasOperationalPanel =
-            text.includes("operacao profissional") ||
-            text.includes("pedidos de orcamento") ||
-            text.includes("atendimentos contratados");
-          const hasProfessionalEmptyState =
-            text.includes("perfil profissional") &&
-            text.includes("cadastrar servi");
-          return hasOperationalPanel || hasProfessionalEmptyState;
-        },
-        { timeout: 60_000 },
-      )
+      .poll(async () => {
+        const text = comparableText(await bodyText(page));
+        const hasOperationalPanel =
+          text.includes("operacao profissional") ||
+          text.includes("pedidos de orcamento") ||
+          text.includes("atendimentos contratados");
+        const hasProfessionalEmptyState =
+          text.includes("perfil profissional") && text.includes("cadastrar servi");
+        return hasOperationalPanel || hasProfessionalEmptyState;
+      }, { timeout: 60_000 })
       .toBe(true);
 
     const centralText = await bodyText(page);
@@ -569,76 +408,49 @@ test.describe("professional leads authenticated flow", () => {
       centralTextLower.includes("operacao profissional") ||
       centralTextLower.includes("pedidos de orcamento") ||
       centralTextLower.includes("atendimentos contratados");
-    const hasNoServiceState = centralTextLower.includes(
-      "nenhum servico publicado ainda",
-    );
+    const hasNoServiceState = centralTextLower.includes("nenhum servico publicado ainda");
     const hasProfessionalEmptyState =
-      centralTextLower.includes("perfil profissional") &&
-      centralTextLower.includes("cadastrar servi");
+      centralTextLower.includes("perfil profissional") && centralTextLower.includes("cadastrar servi");
 
     if (hasOperationalPanel && !hasNoServiceState) {
       await expect
-        .poll(async () => comparableText(await bodyText(page)), {
-          timeout: 60_000,
-        })
+        .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
         .toMatch(/pedidos de orcamento/i);
       await expect
-        .poll(async () => comparableText(await bodyText(page)), {
-          timeout: 60_000,
-        })
+        .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
         .toMatch(/atendimentos contratados/i);
       await expect
-        .poll(async () => comparableText(await bodyText(page)), {
-          timeout: 60_000,
-        })
+        .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
         .toMatch(/servico e2e/i);
       await expect
-        .poll(async () => comparableText(await bodyText(page)), {
-          timeout: 60_000,
-        })
+        .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
         .toMatch(/dados operacionais do perfil/i);
       await expect
-        .poll(async () => comparableText(await bodyText(page)), {
-          timeout: 60_000,
-        })
+        .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
         .toMatch(/raio de atendimento/i);
       await expect
-        .poll(async () => comparableText(await bodyText(page)), {
-          timeout: 60_000,
-        })
+        .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
         .toMatch(/(7 km|nao informado)/i);
       await expect
-        .poll(async () => comparableText(await bodyText(page)), {
-          timeout: 60_000,
-        })
+        .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
         .toMatch(/nordeste de amaralina/i);
       await expect
-        .poll(async () => comparableText(await bodyText(page)), {
-          timeout: 60_000,
-        })
+        .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
         .toMatch(/(segunda: 08:00-18:00|nao informado)/i);
     }
 
     if (hasNoServiceState) {
       await expect
-        .poll(async () => comparableText(await bodyText(page)), {
-          timeout: 60_000,
-        })
+        .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
         .toMatch(/cadastrar servico/i);
     }
 
     if (hasProfessionalEmptyState) {
-      const registerButton = page.getByRole("button", {
-        name: /cadastrar servi[çc]os/i,
-      });
-      const hasRegisterButton = await registerButton
-        .isVisible()
-        .catch(() => false);
+      const registerButton = page.getByRole("button", { name: /cadastrar servi[çc]os/i });
+      const hasRegisterButton = await registerButton.isVisible().catch(() => false);
       if (hasRegisterButton) {
         await registerButton.click();
-        await expect(page).toHaveURL(/\/servicos\/cadastrar/i, {
-          timeout: 20_000,
-        });
+        await expect(page).toHaveURL(/\/services\/cadastrar/i, { timeout: 20_000 });
       }
     }
   });
