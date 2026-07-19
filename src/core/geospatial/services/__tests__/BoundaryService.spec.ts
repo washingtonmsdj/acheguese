@@ -63,7 +63,7 @@ function createService(
 ): BoundaryServiceClass {
   const deps: BoundaryServiceDeps = {
     locationRepository: createRepository(locations),
-    supabaseClient: createSupabaseStub(rowsByTable) as BoundaryServiceDeps['supabaseClient'],
+    supabaseClient: createSupabaseStub(rowsByTable) as unknown as BoundaryServiceDeps['supabaseClient'],
     locationCacheTtlMs: 60_000,
     customBoundariesEnabled,
   };
@@ -168,7 +168,7 @@ describe('BoundaryService', () => {
     });
     const service = new BoundaryServiceClass({
       locationRepository: createRepository([state, city, district]),
-      supabaseClient: supabaseStub as BoundaryServiceDeps['supabaseClient'],
+      supabaseClient: supabaseStub as unknown as BoundaryServiceDeps['supabaseClient'],
       customBoundariesEnabled: false,
     });
 
@@ -265,7 +265,8 @@ describe('BoundaryService', () => {
     expect(result.rings).toHaveLength(1);
     expect(result.rings[0][0]).toEqual([-13.01, -38.46]);
 
-    const requestUrl = new URL(fetchMock.mock.calls[0][0] as string);
+    const firstCall = fetchMock.mock.calls[0] as unknown as [string];
+    const requestUrl = new URL(firstCall[0]);
     expect(requestUrl.searchParams.get('where')).toBe('OBJECTID = 112');
     expect(requestUrl.searchParams.get('f')).toBe('geojson');
   });

@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SearchBusinessesActionHandler } from '../SearchBusinessesActionHandler';
 import type { AIActionContext, AIIntent } from '../../domain/types';
 import { BusinessService } from '@/core/business';
+import type { Business } from '@/core/business';
 import { spatialSearchService } from '@/core/geospatial';
+import type { SpatialSearchResult } from '@/core/geospatial';
 
 vi.mock('@/core/business', () => ({
   BusinessService: {
@@ -19,6 +21,48 @@ vi.mock('@/core/geospatial', () => ({
     searchHybrid: vi.fn(),
   },
 }));
+
+function buildBusiness(overrides: Partial<Business> = {}): Business {
+  return {
+    id: '1',
+    profile_id: 'profile-1',
+    name: 'Pizzaria Central',
+    description: 'Sabor autêntico',
+    category: 'restaurante' as Business['category'],
+    location_id: 'loc-1',
+    slug: 'pizzaria-central',
+    geographic_path: 'ba/salvador/pituba',
+    tem_delivery: true,
+    aceita_cartao: true,
+    aceita_pix: true,
+    status: 'active',
+    rating: 4.5,
+    total_reviews: 10,
+    total_products: 0,
+    is_premium: false,
+    is_verified: true,
+    can_post_vagas: false,
+    formas_pagamento: [],
+    especialidades: [],
+    facilidades: [],
+    modos_atendimento: [],
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+    ...overrides,
+  };
+}
+
+function buildSpatialResult(
+  overrides: Partial<SpatialSearchResult> = {},
+): SpatialSearchResult {
+  return {
+    id: '1',
+    name: 'Pizzaria Central',
+    latitude: -12.9977,
+    longitude: -38.4502,
+    ...overrides,
+  };
+}
 
 describe('SearchBusinessesActionHandler', () => {
   let handler: SearchBusinessesActionHandler;
@@ -48,17 +92,7 @@ describe('SearchBusinessesActionHandler', () => {
 
   it('deve buscar empresas sem coordenadas', async () => {
     vi.mocked(BusinessService.getBusinessesList).mockResolvedValue({
-      businesses: [
-        {
-          id: '1',
-          name: 'Pizzaria Central',
-          category: 'restaurante',
-          slug: 'pizzaria-central',
-          geographic_path: 'ba/salvador/pituba',
-          is_premium: false,
-          rating: 4.5,
-        },
-      ],
+      businesses: [buildBusiness()],
     });
 
     const results = await handler.execute(mockIntent, mockContext);
@@ -78,23 +112,11 @@ describe('SearchBusinessesActionHandler', () => {
     mockContext.coordinates = { latitude: -12.9977, longitude: -38.4502 };
 
     vi.mocked(spatialSearchService.searchHybrid).mockResolvedValue([
-      {
-        id: '1',
-        name: 'Pizzaria Central',
-        distance_meters: 500,
-      },
+      buildSpatialResult({ distance_meters: 500 }),
     ]);
 
     vi.mocked(BusinessService.getBusinessesByIds).mockResolvedValue([
-      {
-        id: '1',
-        name: 'Pizzaria Central',
-        category: 'restaurante',
-        slug: 'pizzaria-central',
-        geographic_path: 'ba/salvador/pituba',
-        is_premium: false,
-        rating: 4.5,
-      },
+      buildBusiness(),
     ]);
 
     const results = await handler.execute(mockIntent, mockContext);
@@ -112,17 +134,7 @@ describe('SearchBusinessesActionHandler', () => {
 
   it('deve usar URL publica canonica para negocio gastronomico', async () => {
     vi.mocked(BusinessService.getBusinessesList).mockResolvedValue({
-      businesses: [
-        {
-          id: '1',
-          name: 'Restaurante Gourmet',
-          category: 'restaurante',
-          slug: 'restaurante-gourmet',
-          geographic_path: 'ba/salvador/pituba',
-          is_premium: false,
-          rating: 4.8,
-        },
-      ],
+      businesses: [buildBusiness({ name: 'Restaurante Gourmet', slug: 'restaurante-gourmet', rating: 4.8 })],
     });
 
     const results = await handler.execute(mockIntent, mockContext);
@@ -133,15 +145,13 @@ describe('SearchBusinessesActionHandler', () => {
   it('deve manter URL publica canonica mesmo quando negocio e premium', async () => {
     vi.mocked(BusinessService.getBusinessesList).mockResolvedValue({
       businesses: [
-        {
-          id: '1',
+        buildBusiness({
           name: 'Empresa Premium',
-          category: 'servicos',
+          category: 'servicos' as Business['category'],
           slug: 'empresa-premium',
-          geographic_path: 'ba/salvador/pituba',
           is_premium: true,
           rating: 5,
-        },
+        }),
       ],
     });
 
@@ -158,17 +168,7 @@ describe('SearchBusinessesActionHandler', () => {
     );
 
     vi.mocked(BusinessService.getBusinessesList).mockResolvedValue({
-      businesses: [
-        {
-          id: '1',
-          name: 'Pizzaria Central',
-          category: 'restaurante',
-          slug: 'pizzaria-central',
-          geographic_path: 'ba/salvador/pituba',
-          is_premium: false,
-          rating: 4.5,
-        },
-      ],
+      businesses: [buildBusiness()],
     });
 
     const results = await handler.execute(mockIntent, mockContext);
