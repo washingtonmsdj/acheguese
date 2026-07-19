@@ -232,6 +232,7 @@ Gates operacionais:
 npm run backup:database:status
 npm run alpha:backup:gate
 npm run alpha:auth:gate
+npm run alpha:email:gate
 npm run backup:storage
 npm run restore:storage -- caminho-do-backup --verify-only
 ```
@@ -255,6 +256,23 @@ retorna-lo como `null`; esses estados significam dado nao projetado e nao sao
 tratados como lista vazia. Usuarios anonimos podem legitimamente nao possuir
 identidade. `alpha:invite` e `alpha:resume` aplicam esse gate depois da
 recuperacao e antes do RPC de admissao.
+
+`alpha:email:gate` separa duas responsabilidades que nao devem ser confundidas:
+o dominio Resend usado pelas Edge Functions da aplicacao e o SMTP customizado
+usado pelo Supabase Auth para confirmacao, recuperacao e convites. O gate faz
+somente leitura, exige dominio remetente verificado, fluxo Auth com confirmacao
+de e-mail e SMTP customizado completo. Sua saida contem apenas contagens,
+booleanos, status e codigos de falha; e-mail, dominio, host, usuario, registros
+DNS, PAT e respostas upstream nunca sao copiados. Ausencia de PAT com permissao
+`auth_config_read`, dominio nao verificado ou configuracao nao auditavel mantem
+`alpha:invite` e `alpha:resume` fechados. O gate nao substitui o smoke final com
+uma caixa postal real convidada.
+
+`RESEND_API_KEY` pertence exclusivamente ao runtime de envio e deve ter somente
+permissao de envio. A leitura de dominios usa `RESEND_MANAGEMENT_API_KEY`,
+carregada apenas no ambiente operacional local/CI e nunca implantada nas Edge
+Functions, Vercel ou browser. Reutilizar uma chave full-access para enviar
+e-mails viola menor privilegio e reprova a preparacao operacional.
 
 O exportador de Storage cria um inventario versionado, usa nomes locais
 derivados por hash e registra tamanho e SHA-256 de cada objeto. O diretorio

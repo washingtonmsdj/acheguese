@@ -128,7 +128,7 @@ function resolveAccessToken(tokenEnv) {
   return { envName: envNames.join(' or '), value: undefined };
 }
 
-async function requestAuthConfig(projectRef, token, init = {}) {
+export async function requestAuthConfig(projectRef, token, init = {}) {
   const response = await fetch(`${API_BASE_URL}/projects/${projectRef}/config/auth`, {
     ...init,
     headers: {

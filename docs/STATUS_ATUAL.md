@@ -2461,3 +2461,11 @@ Avancar para fechamento total da Fase 3 (sem abrir Fase 4):
   falha de integridade, sem registrar IDs, e-mails ou diagnosticos upstream.
   A prova remota auditou `200/287` contas e falhou de forma fechada na pagina
   `2`, que contem os registros historicos inconsistentes.
+- A entrega de e-mail ganhou um gate unico para o dominio Resend da aplicacao e
+  o SMTP customizado do Supabase Auth. Ele nao expoe e-mail, dominio, DNS, PAT
+  ou resposta upstream e agora precede o acesso `service_role` nas operacoes
+  que admitem identidades. A verificacao encontrou o dominio Resend em estado
+  `failed`, com DKIM/SPF nao verificados, e ausencia de PAT para auditar o Auth;
+  a chave Resend existente tambem permite leitura administrativa e deve ser
+  substituida por uma chave send-only no runtime. O gate usa uma credencial de
+  gestao separada; a alpha permanece fechada e nenhum e-mail foi enviado.

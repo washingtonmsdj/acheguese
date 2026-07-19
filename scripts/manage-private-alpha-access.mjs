@@ -6,6 +6,7 @@ import {
   loadSupabaseScriptEnv,
 } from "./lib/supabase-client.mjs";
 import { assertAuthorizedNonProductionTarget as assertAuthorizedNonProductionTargetImpl } from "./lib/non-production-target.mjs";
+import { auditPrivateAlphaEmailReadiness } from "./private-alpha-email-readiness.mjs";
 import { auditSupabaseAuthReadiness } from "./supabase-auth-readiness.mjs";
 import { getSupabaseBackupReadiness } from "./supabase-backup-readiness.mjs";
 
@@ -60,6 +61,14 @@ async function main() {
     if (!recovery.ready) {
       fail(
         "Alpha permanece fechada: nao existe backup COMPLETED recente nem PITR acessivel. Execute npm run alpha:backup:gate depois de habilitar a recuperacao.",
+      );
+    }
+    const emailReadiness = await auditPrivateAlphaEmailReadiness({
+      projectRef: target.projectRef,
+    });
+    if (!emailReadiness.ready) {
+      fail(
+        `Alpha permanece fechada: e-mail operacional reprovado (Resend: ${emailReadiness.resend.failureCode ?? "ok"}; Auth: ${emailReadiness.supabaseAuth.failureCode ?? "ok"}). Execute npm run alpha:email:gate.`,
       );
     }
     admin = createServiceRoleClient({ envFiles: ENV_FILES });

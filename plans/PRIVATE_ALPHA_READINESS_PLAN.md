@@ -1,6 +1,6 @@
 # Private Alpha Readiness
 
-Status: codigo e perimetro prontos; recuperacao e ativacao dos testadores pendentes
+Status: codigo e perimetro prontos; recuperacao, e-mail e ativacao dos testadores pendentes
 Data: 2026-07-19
 Escopo: acesso controlado e gates das superficies ativas
 
@@ -58,9 +58,14 @@ seguranca para acelerar o teste.
 - [x] Definir politica executavel de backup e recuperacao do Supabase/Storage.
 - [x] Auditar a disponibilidade de restore do banco remoto sem escrita.
 - [x] Bloquear a admissao quando a API Auth nao comprovar identidades integras.
+- [x] Criar gate sem PII para dominio Resend e SMTP do Supabase Auth.
 - [ ] Habilitar backup diario acessivel no Supabase remoto.
 - [ ] Ensaiar restauracao de banco e Storage em projeto descartavel separado.
 - [ ] Definir contato nominal de incidente e canal de feedback dos testadores.
+- [ ] Rotacionar `RESEND_API_KEY` das Edge Functions para uma chave send-only e
+      manter `RESEND_MANAGEMENT_API_KEY` apenas no ambiente operacional.
+- [ ] Corrigir e verificar DKIM e SPF do dominio remetente no Resend.
+- [ ] Configurar e auditar SMTP customizado no Supabase Auth com PAT valido.
 - [ ] Validar SMTP/Auth com um e-mail real convidado.
 - [ ] Resolver no Supabase os tres registros historicos que quebram as paginas
       281 a 283 do Auth Admin com `perPage=1`, sem apagar identidades desconhecidas.
@@ -151,6 +156,18 @@ seguranca para acelerar o teste.
 - A prova remota do gate auditou `200` de `287` contas e parou na pagina `2`
   com `auth_admin_list_failed`, codigo de saida `1` e nenhuma identidade copiada
   para a saida.
+- `alpha:email:gate` passou a verificar em leitura o dominio do provedor da
+  aplicacao e a configuracao SMTP do Auth sem imprimir remetente, dominio,
+  registros DNS, token ou resposta upstream. `alpha:invite` e `alpha:resume`
+  tambem exigem esse gate depois da recuperacao e antes de criar o cliente
+  `service_role`.
+- A auditoria read-only complementar encontrou um dominio Resend correspondente,
+  mas com status `failed`, zero dominios verificados e falhas nos registros DKIM
+  e SPF. A chave existente permitiu leitura administrativa e deve ser rotacionada
+  para uma chave send-only nas Edge Functions; o gate exige uma credencial
+  operacional separada. O PAT de Management API esta ausente, portanto o SMTP
+  customizado do Supabase Auth nao pode ser auditado. Nenhum e-mail foi enviado
+  e nenhuma configuracao remota foi alterada.
 
 Os residuais PostGIS dependem do owner `supabase_admin`; a protecao HIBP do
 Auth depende de plano/configuracao do Dashboard ou Management API. Eles
@@ -187,7 +204,8 @@ novos convites quanto novas identidades. Contas existentes nao sao apagadas.
 `alpha:resume` reabre somente a emissao e o consumo de novos convites; convites
 revogados pela pausa nao sao reativados. Tanto `alpha:resume` quanto
 `alpha:invite` falham de forma fechada antes de acessar o banco se o projeto nao
-possuir recuperacao restauravel aprovada pelo gate canonico.
+possuir recuperacao restauravel, entrega de e-mail aprovada e integridade Auth
+comprovada pelos gates canonicos.
 
 ## Perimetro De Deployment
 

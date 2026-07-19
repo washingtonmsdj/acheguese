@@ -16,6 +16,10 @@ import {
   STORAGE_BACKUP_SCHEMA_VERSION,
 } from "../../scripts/lib/storage-recovery";
 import { requiresRestorableBackup } from "../../scripts/manage-private-alpha-access.mjs";
+import {
+  evaluateResendEmailReadiness,
+  evaluateSupabaseAuthEmailReadiness,
+} from "../../scripts/private-alpha-email-readiness.mjs";
 import { auditSupabaseAuthReadiness } from "../../scripts/supabase-auth-readiness.mjs";
 import {
   evaluateBackupReadiness,
@@ -247,6 +251,97 @@ describe("Supabase Auth readiness", () => {
     await expect(auditSupabaseAuthReadiness(admin)).resolves.toMatchObject({
       failureCode: "permanent_user_without_identity",
       permanentUsersWithoutIdentity: 1,
+      ready: false,
+    });
+  });
+});
+
+describe("Private alpha email readiness", () => {
+  it("accepts a verified Resend sender without exposing provider data", () => {
+    const status = evaluateResendEmailReadiness(
+      {
+        data: [
+          {
+            id: "provider-domain-id",
+            name: "auth.example.com",
+            records: [
+              {
+                name: "sensitive-record-name",
+                record: "DKIM",
+                status: "verified",
+                type: "TXT",
+                value: "sensitive-dns-value",
+              },
+            ],
+            status: "verified",
+          },
+        ],
+      },
+      "Achegue-se <no-reply@auth.example.com>",
+    );
+
+    expect(status).toMatchObject({
+      failedRecordCount: 0,
+      matchingDomainFound: true,
+      matchingDomainStatus: "verified",
+      ready: true,
+      verifiedDomainCount: 1,
+    });
+    expect(JSON.stringify(status)).not.toContain("auth.example.com");
+    expect(JSON.stringify(status)).not.toContain("sensitive");
+  });
+
+  it("fails closed when the sender domain or its DNS is not verified", () => {
+    expect(
+      evaluateResendEmailReadiness(
+        {
+          data: [
+            {
+              name: "auth.example.com",
+              records: [{ record: "DKIM", status: "failed", type: "TXT" }],
+              status: "failed",
+            },
+          ],
+        },
+        "no-reply@auth.example.com",
+      ),
+    ).toMatchObject({
+      failedRecordCount: 1,
+      failureCode: "resend_domain_not_verified",
+      ready: false,
+    });
+    expect(evaluateResendEmailReadiness({}, "invalid")).toMatchObject({
+      failureCode: "resend_invalid_response",
+      ready: false,
+    });
+  });
+
+  it("requires confirmed-email flow and a complete custom Auth SMTP", () => {
+    expect(
+      evaluateSupabaseAuthEmailReadiness({
+        external_email_enabled: true,
+        mailer_autoconfirm: false,
+        smtp_admin_email: "no-reply@auth.example.com",
+        smtp_host: "smtp.example.com",
+        smtp_port: 587,
+        smtp_sender_name: "Achegue-se",
+        smtp_user: "resend",
+      }),
+    ).toEqual({
+      autoConfirmDisabled: true,
+      customSmtpConfigured: true,
+      externalEmailEnabled: true,
+      failureCode: null,
+      ready: true,
+      senderConfigured: true,
+    });
+    expect(
+      evaluateSupabaseAuthEmailReadiness({
+        external_email_enabled: true,
+        mailer_autoconfirm: true,
+      }),
+    ).toMatchObject({
+      failureCode: "auth_email_autoconfirm_enabled",
       ready: false,
     });
   });
