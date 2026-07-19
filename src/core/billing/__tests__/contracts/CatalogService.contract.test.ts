@@ -11,7 +11,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { CatalogService } from '@/core/billing/services/CatalogService';
-import type { EligibilityContext } from '@/core/billing/types';
+import type { EligibilityContextDTO as EligibilityContext } from '@/core/billing/types';
 
 describe('CatalogService - Contract Tests', () => {
   describe('API Contract', () => {

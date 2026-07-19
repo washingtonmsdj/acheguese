@@ -49,7 +49,9 @@ describe("useCadastro", () => {
   });
 
   function fillRequiredFields(
-    result: ReturnType<typeof renderHook<typeof useCadastro>>["result"],
+    result: ReturnType<
+      typeof renderHook<ReturnType<typeof useCadastro>, unknown>
+    >["result"],
   ) {
     act(() => {
       result.current.updateField("name", "Ana Souza");

@@ -28,7 +28,7 @@ describe("BusinessServiceOrderOriginAdapter", () => {
       delivery_fee: 5,
       discount_total: 0,
     },
-  } as const;
+  };
 
   it("builds business source order with canonical metadata", () => {
     const order = BusinessOrderOriginAdapter.toCreateOrderInput(baseInput);
