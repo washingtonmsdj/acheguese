@@ -96,14 +96,12 @@ import { mapGastronomyLayerRuntimeService } from "@/core/maps/services/MapGastro
 import { mapServicesLayerRuntimeService } from "@/core/maps/services/MapServicesLayerRuntimeService";
 import type { BoundingBox } from "@/core/maps/types/core";
 import { useCommunityFeedSimple } from "@/core/community/hooks/feed/useCommunityFeed";
-import {
-  CommunityOverviewSurface,
-  type CommunityOverviewSection,
-  type CommunityOverviewView,
-} from "@/core/community/components/page/CommunityOverviewSurface";
+import { CommunityOverviewSurface } from "@/core/community/components/page/CommunityOverviewSurface";
 import {
   isCommunityOverviewView,
   isCommunitySocialView,
+  type CommunityOverviewSection,
+  type CommunityOverviewView,
 } from "@/core/community/components/page/communityOverviewNavigation";
 import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
 import { PublicHeaderMobileMenu } from "@/core/navigation/PublicHeaderMobileMenu";
