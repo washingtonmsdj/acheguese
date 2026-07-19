@@ -2447,3 +2447,12 @@ Avancar para fechamento total da Fase 3 (sem abrir Fase 4):
   gate nao encontra backup recente ou PITR; a prova remota retornou codigo `1`
   para ambos e preservou `admissions_enabled=false`. Contencao, revogacao e
   consulta continuam independentes do gate de recuperacao.
+- As falhas historicas das paginas 281 a 283 do Auth Admin foram isoladas em
+  tres contas permanentes sem linha em `auth.identities`. Nenhuma PII foi
+  exportada e nenhuma conta foi alterada. A lista do painel agora pagina contas
+  distintas por um RPC somente de `service_role`, em vez de paginar perfis;
+  busca e total tambem usam essa fonte canonica.
+- A migration `20260719010000` e a Edge Function foram aplicadas remotamente.
+  Smoke com admin existente confirmou `267` contas, paginas `20/20/7`, total
+  estavel, nenhum ID repetido, busca por e-mail funcional e rejeicao de acesso
+  sem sessao. Os tipos Supabase foram regenerados a partir do schema vinculado.

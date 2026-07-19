@@ -128,12 +128,33 @@ seguranca para acelerar o teste.
 - A prova operacional executou `alpha:resume` e `alpha:invite` contra
   development: ambos retornaram codigo `1`; o status anterior e posterior
   permaneceu `active_invites=0` e `admissions_enabled=false`.
+- O diagnostico read-only reproduziu `500 unexpected_failure` somente nas
+  paginas 281 a 283 e identificou a causa estrutural: tres contas permanentes
+  de e-mail possuem perfis, mas nenhuma linha em `auth.identities`; as contas
+  vizinhas possuem uma identidade. Elas tambem usam UUIDs legados validos no
+  PostgreSQL, mas fora das versoes RFC que o antigo parser da Edge aceitava. O
+  schema gerenciado do Auth nao sera alterado manualmente sem backup e
+  orientacao oficial do Supabase.
+- A listagem interna do painel deixou de paginar perfis e passou a usar contas
+  distintas por RPC `service_role`, com contexto de perfis/roles, total e busca
+  canonicos. Isso evita usuarios repetidos e preserva o painel enquanto o reparo
+  do Auth aguarda recuperacao e suporte.
+- A migration `20260719010000` e a Edge Function `admin-list-users` foram
+  aplicadas em development. O smoke administrativo autenticado retornou paginas
+  `20/20/7`, total estavel de `267` contas com perfil, nenhum ID repetido e busca
+  por e-mail correta; requisicao sem sessao e RPC com `anon` foram rejeitados.
 
 Os residuais PostGIS dependem do owner `supabase_admin`; a protecao HIBP do
 Auth depende de plano/configuracao do Dashboard ou Management API. Eles
 permanecem documentados em `docs/governance/security/EXCEPTIONS.md` e impedem
 afirmar prontidao para publico geral, mas nao abrem cadastro fora da allowlist
 do alpha.
+
+O reparo das tres identidades historicas tambem permanece bloqueado. As fontes
+oficiais do Supabase orientam nao modificar manualmente o schema gerenciado do
+Auth; a correcao exige backup restauravel e procedimento confirmado pelo
+Supabase Support. O painel esta resiliente a essas linhas, mas isso nao equivale
+a corrigir a integridade do Auth.
 
 ## Operacao De Convites
 
