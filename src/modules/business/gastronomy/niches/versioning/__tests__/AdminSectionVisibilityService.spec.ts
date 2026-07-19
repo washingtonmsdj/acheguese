@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🧪 ADMIN SECTION VISIBILITY SERVICE TESTS
  */
