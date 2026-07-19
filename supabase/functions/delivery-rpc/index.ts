@@ -232,7 +232,7 @@ function normalizeOrderItems(value: unknown): Record<string, unknown>[] {
     const item = normalizeObject(rawItem, `orderItems[${index}]`);
     const name = requireText(item.name, `orderItems[${index}].name`, 200);
     const quantity = item.quantity;
-    if (!Number.isInteger(quantity) || quantity <= 0 || quantity > 1_000) {
+    if (typeof quantity !== "number" || !Number.isInteger(quantity) || quantity <= 0 || quantity > 1_000) {
       throw new RequestValidationError(`Invalid orderItems[${index}].quantity`);
     }
 

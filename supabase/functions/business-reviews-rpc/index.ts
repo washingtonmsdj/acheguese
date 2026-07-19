@@ -114,7 +114,7 @@ function optionalUuid(value: unknown, field: string): string | null {
 }
 
 function requireRating(value: unknown): number {
-  if (!Number.isInteger(value) || value < 1 || value > 5) {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 1 || value > 5) {
     throw new RequestValidationError("Rating must be between 1 and 5");
   }
   return value;

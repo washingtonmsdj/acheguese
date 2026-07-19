@@ -96,10 +96,10 @@ serve(async (req: Request) => {
           createdAt: u.created_at,
           lastSignInAt: u.last_sign_in_at,
           confirmedAt: u.confirmed_at,
-          identities: u.identities?.map((identity: { provider: string; created_at: string; last_sign_in_at: string }) => ({
+          identities: u.identities?.map((identity: { provider: string; created_at?: string; last_sign_in_at?: string }) => ({
             provider: identity.provider,
-            createdAt: identity.created_at,
-            lastSignInAt: identity.last_sign_in_at,
+            createdAt: identity.created_at ?? null,
+            lastSignInAt: identity.last_sign_in_at ?? null,
           })) ?? [],
           factors: u.factors?.map((factor: { id: string; factor_type: string; status: string; created_at: string; updated_at: string }) => ({
             id: factor.id,

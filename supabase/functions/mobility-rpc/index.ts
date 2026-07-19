@@ -91,7 +91,7 @@ function optionalUuid(value: unknown, field: string): string | null {
 }
 
 function requireAttemptNumber(value: unknown): number {
-  if (!Number.isInteger(value) || value < 1 || value > 1000) {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 1 || value > 1000) {
     throw new RequestValidationError("Invalid attemptNumber");
   }
   return value;
