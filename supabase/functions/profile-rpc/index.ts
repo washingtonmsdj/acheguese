@@ -33,7 +33,8 @@ const ACTIONS = {
 } as const;
 
 type ProfileRpcAction = keyof typeof ACTIONS;
-type SupabaseClient = ReturnType<typeof createClient>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SupabaseClient = ReturnType<typeof createClient<any, any, any>>;
 type ProfileType = "personal" | "business" | "professional" | "driver";
 type ProfileMemberRole = "member" | "admin";
 

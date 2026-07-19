@@ -133,7 +133,8 @@ Deno.serve(async (req) => {
         return mapGatewayErrorToResponse(result, req);
       }
 
-      const images = result.data?.choices?.[0]?.message?.images ?? [];
+      // deno-lint-ignore no-explicit-any
+      const images = (result.data as any)?.choices?.[0]?.message?.images ?? [];
       const dataUrl: string | undefined = images[0]?.image_url?.url;
       if (!dataUrl) {
         await admin

@@ -166,7 +166,8 @@ function normalizeRpcParams(
 }
 
 async function assertProfileBelongsToUser(
-  supabaseAdmin: ReturnType<typeof createClient>,
+  // deno-lint-ignore no-explicit-any
+  supabaseAdmin: ReturnType<typeof createClient<any, any, any>>,
   profileId: string,
   userId: string,
 ): Promise<boolean> {

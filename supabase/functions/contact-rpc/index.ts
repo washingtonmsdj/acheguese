@@ -27,7 +27,8 @@ const VISIBILITIES = new Set(["private", "authenticated"]);
 
 type ContactRpcAction = keyof typeof ACTIONS;
 type ContactEntityType = "business" | "professional";
-type SupabaseClient = ReturnType<typeof createClient>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SupabaseClient = ReturnType<typeof createClient<any, any, any>>;
 
 interface RequestBody {
   action?: string;

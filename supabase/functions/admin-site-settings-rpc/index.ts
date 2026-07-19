@@ -37,9 +37,9 @@ const SETTING_KEYS = {
   SITE_TAGLINE: "site_tagline",
 } as const;
 
-const ALLOWED_SETTING_KEYS = new Set(Object.values(SETTING_KEYS));
-const COLOR_KEYS = new Set([SETTING_KEYS.PRIMARY_COLOR, SETTING_KEYS.SECONDARY_COLOR]);
-const ASSET_URL_KEYS = new Set([
+const ALLOWED_SETTING_KEYS: Set<string> = new Set(Object.values(SETTING_KEYS));
+const COLOR_KEYS: Set<string> = new Set([SETTING_KEYS.PRIMARY_COLOR, SETTING_KEYS.SECONDARY_COLOR]);
+const ASSET_URL_KEYS: Set<string> = new Set([
   SETTING_KEYS.LOGO_URL,
   SETTING_KEYS.LOGO_MOBILE_URL,
   SETTING_KEYS.FAVICON_URL,
@@ -132,7 +132,8 @@ function normalizeRpcParams(
   }
 }
 
-async function getAllSettings(supabaseAdmin: ReturnType<typeof createClient>) {
+// deno-lint-ignore no-explicit-any
+async function getAllSettings(supabaseAdmin: ReturnType<typeof createClient<any, any, any>>) {
   const { data, error } = await supabaseAdmin
     .from("site_settings")
     .select("key,value,description,updated_at")
@@ -143,7 +144,8 @@ async function getAllSettings(supabaseAdmin: ReturnType<typeof createClient>) {
 }
 
 async function upsertSetting(
-  supabaseAdmin: ReturnType<typeof createClient>,
+  // deno-lint-ignore no-explicit-any
+  supabaseAdmin: ReturnType<typeof createClient<any, any, any>>,
   params: Record<string, unknown>,
   updatedByUserId: string,
 ) {

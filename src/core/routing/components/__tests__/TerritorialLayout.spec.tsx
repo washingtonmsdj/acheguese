@@ -45,6 +45,9 @@ describe("TerritorialLayout", () => {
           parent_id: "city-1",
           geographic_path: "/br/ba/salvador/pituba",
           status: "active" as LocationStatus,
+          full_name: "",
+          created_at: "2024-01-01T00:00:00Z",
+          updated_at: "2024-01-01T00:00:00Z",
           metadata: {
             is_selector_active: false,
             is_navigable: true,
@@ -112,6 +115,9 @@ describe("TerritorialLayout", () => {
           parent_id: "city-1",
           geographic_path: "/br/ba/salvador/pituba",
           status: "active" as LocationStatus,
+          full_name: "",
+          created_at: "2024-01-01T00:00:00Z",
+          updated_at: "2024-01-01T00:00:00Z",
           metadata: {
             is_selector_active: false,
             is_navigable: true,
@@ -150,6 +156,9 @@ describe("TerritorialLayout", () => {
           parent_id: "city-1",
           geographic_path: "/br/ba/salvador/rio-vermelho",
           status: "active" as LocationStatus,
+          full_name: "",
+          created_at: "2024-01-01T00:00:00Z",
+          updated_at: "2024-01-01T00:00:00Z",
           metadata: {
             is_selector_active: false,
             is_landing_enabled: false,

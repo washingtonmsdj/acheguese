@@ -156,7 +156,8 @@ function objectParam(value: unknown, field: string): Record<string, unknown> {
 
 async function requireUser(
   req: Request,
-  supabaseAdmin: ReturnType<typeof createClient>,
+  // deno-lint-ignore no-explicit-any
+  supabaseAdmin: ReturnType<typeof createClient<any, any, any>>,
 ): Promise<UserAuthResult | Response> {
   const token = extractBearerToken(req);
   if (!token) {

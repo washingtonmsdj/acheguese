@@ -99,7 +99,8 @@ function isUuid(value: string): boolean {
 }
 
 async function fetchAuthUsersById(
-  supabaseAdmin: ReturnType<typeof createClient>,
+  // deno-lint-ignore no-explicit-any
+  supabaseAdmin: ReturnType<typeof createClient<any, any, any>>,
   userIds: string[],
 ): Promise<Map<string, AuthUserRow>> {
   const authUserById = new Map<string, AuthUserRow>();

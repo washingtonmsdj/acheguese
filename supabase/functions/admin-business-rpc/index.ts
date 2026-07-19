@@ -61,7 +61,8 @@ function cleanBoolean(value: unknown, field: string): boolean {
 }
 
 async function updateBusinessByPublicId(
-  supabaseAdmin: ReturnType<typeof createClient>,
+  // deno-lint-ignore no-explicit-any
+  supabaseAdmin: ReturnType<typeof createClient<any, any, any>>,
   publicId: string,
   updates: Record<string, unknown>,
 ) {

@@ -148,7 +148,8 @@ Deno.serve(async (req) => {
 
   if (!result.ok) return mapGatewayErrorToResponse(result, req);
 
-  const choice = result.data?.choices?.[0];
+  // deno-lint-ignore no-explicit-any
+  const choice = (result.data as any)?.choices?.[0];
   const message = choice?.message ?? {};
   let structured: unknown = null;
   const toolCall = message.tool_calls?.[0];
@@ -164,7 +165,8 @@ Deno.serve(async (req) => {
     text: typeof message.content === "string" ? message.content : "",
     structured,
     model,
-    usage: result.data?.usage ?? null,
+    // deno-lint-ignore no-explicit-any
+    usage: (result.data as any)?.usage ?? null,
     requestId: result.requestId ?? null,
   }, 200, req);
 });

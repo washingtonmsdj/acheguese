@@ -23,7 +23,8 @@ const UUID_REGEX =
 const ACTIONS = { getOwned: true, patchOwned: true } as const;
 
 type CredentialsAction = keyof typeof ACTIONS;
-type SupabaseClient = ReturnType<typeof createClient>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SupabaseClient = ReturnType<typeof createClient<any, any, any>>;
 
 interface RequestBody {
   action?: string;

@@ -1,4 +1,6 @@
-import { type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { type SupabaseClient as SupabaseClientBase } from "https://esm.sh/@supabase/supabase-js@2";
+// deno-lint-ignore no-explicit-any
+type SupabaseClient = SupabaseClientBase<any, any, any>;
 import { getAllSecurityHeaders } from "./security.ts";
 
 export function jsonSecurityResponse(

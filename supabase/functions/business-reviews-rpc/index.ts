@@ -42,7 +42,8 @@ const ACTIONS = {
 } as const;
 
 type BusinessReviewsAction = keyof typeof ACTIONS;
-type SupabaseClient = ReturnType<typeof createClient>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SupabaseClient = ReturnType<typeof createClient<any, any, any>>;
 
 interface RequestBody {
   action?: string;
@@ -113,7 +114,7 @@ function optionalUuid(value: unknown, field: string): string | null {
 }
 
 function requireRating(value: unknown): number {
-  if (!Number.isInteger(value) || value < 1 || value > 5) {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 1 || value > 5) {
     throw new RequestValidationError("Rating must be between 1 and 5");
   }
   return value;

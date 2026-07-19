@@ -90,7 +90,8 @@ const OCCURRENCE_SEVERITIES = new Set([
 ]);
 
 type DeliveryRpcAction = keyof typeof ACTIONS;
-type SupabaseClient = ReturnType<typeof createClient>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SupabaseClient = ReturnType<typeof createClient<any, any, any>>;
 type ActorRole = "customer" | "merchant" | "courier" | "platform";
 
 interface RequestBody {
@@ -231,7 +232,7 @@ function normalizeOrderItems(value: unknown): Record<string, unknown>[] {
     const item = normalizeObject(rawItem, `orderItems[${index}]`);
     const name = requireText(item.name, `orderItems[${index}].name`, 200);
     const quantity = item.quantity;
-    if (!Number.isInteger(quantity) || quantity <= 0 || quantity > 1_000) {
+    if (typeof quantity !== "number" || !Number.isInteger(quantity) || quantity <= 0 || quantity > 1_000) {
       throw new RequestValidationError(`Invalid orderItems[${index}].quantity`);
     }
 
