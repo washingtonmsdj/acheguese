@@ -57,6 +57,7 @@ seguranca para acelerar o teste.
 - [x] Criar kill switch auditavel para pausar admissoes e revogar convites ativos.
 - [x] Definir politica executavel de backup e recuperacao do Supabase/Storage.
 - [x] Auditar a disponibilidade de restore do banco remoto sem escrita.
+- [x] Bloquear a admissao quando a API Auth nao comprovar identidades integras.
 - [ ] Habilitar backup diario acessivel no Supabase remoto.
 - [ ] Ensaiar restauracao de banco e Storage em projeto descartavel separado.
 - [ ] Definir contato nominal de incidente e canal de feedback dos testadores.
@@ -143,6 +144,13 @@ seguranca para acelerar o teste.
   aplicadas em development. O smoke administrativo autenticado retornou paginas
   `20/20/7`, total estavel de `267` contas com perfil, nenhum ID repetido e busca
   por e-mail correta; requisicao sem sessao e RPC com `anon` foram rejeitados.
+- `alpha:auth:gate` passou a auditar a API Admin oficial sem expor PII e foi
+  incorporado a `alpha:invite`/`alpha:resume` depois do gate de backup. No estado
+  remoto atual ele falha de forma fechada quando a pagina que contem os registros
+  historicos nao pode ser serializada pelo Auth.
+- A prova remota do gate auditou `200` de `287` contas e parou na pagina `2`
+  com `auth_admin_list_failed`, codigo de saida `1` e nenhuma identidade copiada
+  para a saida.
 
 Os residuais PostGIS dependem do owner `supabase_admin`; a protecao HIBP do
 Auth depende de plano/configuracao do Dashboard ou Management API. Eles

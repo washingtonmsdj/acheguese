@@ -16,6 +16,7 @@ import {
   STORAGE_BACKUP_SCHEMA_VERSION,
 } from "../../scripts/lib/storage-recovery";
 import { requiresRestorableBackup } from "../../scripts/manage-private-alpha-access.mjs";
+import { auditSupabaseAuthReadiness } from "../../scripts/supabase-auth-readiness.mjs";
 import {
   evaluateBackupReadiness,
   parseArguments as parseBackupReadinessArguments,
@@ -160,6 +161,94 @@ describe("Supabase backup readiness", () => {
         new Date("2026-07-19T00:00:00.000Z"),
       ),
     ).toMatchObject({ completedBackupCount: 1, ready: false });
+  });
+});
+
+describe("Supabase Auth readiness", () => {
+  it("accepts paginated permanent identities and anonymous users", async () => {
+    const pages = [
+      {
+        data: {
+          total: 5,
+          users: [
+            { id: "account-1", identities: [{}], is_anonymous: false },
+            { id: "account-2", identities: [], is_anonymous: true },
+            { id: "account-3", is_anonymous: false },
+            { id: "account-4", identities: null, is_anonymous: false },
+          ],
+        },
+        error: null,
+      },
+      {
+        data: {
+          total: 5,
+          users: [{ id: "account-5", identities: [{}], is_anonymous: false }],
+        },
+        error: null,
+      },
+    ];
+    const admin = {
+      auth: {
+        admin: {
+          listUsers: async () => pages.shift() ?? { data: { users: [] } },
+        },
+      },
+    };
+
+    await expect(
+      auditSupabaseAuthReadiness(admin, { pageSize: 4 }),
+    ).resolves.toMatchObject({
+      checkedUsers: 5,
+      permanentUsersWithoutIdentity: 0,
+      ready: true,
+      reportedTotal: 5,
+    });
+  });
+
+  it("fails closed without copying API errors or identity values", async () => {
+    const apiFailure = {
+      auth: {
+        admin: {
+          listUsers: async () => ({
+            data: null,
+            error: { message: "sensitive upstream diagnostic" },
+          }),
+        },
+      },
+    };
+    const status = await auditSupabaseAuthReadiness(apiFailure);
+
+    expect(status).toMatchObject({
+      checkedUsers: 0,
+      failedPage: 1,
+      failureCode: "auth_admin_list_failed",
+      ready: false,
+    });
+    expect(JSON.stringify(status)).not.toContain("sensitive upstream");
+  });
+
+  it("rejects a permanent user without an authentication identity", async () => {
+    const admin = {
+      auth: {
+        admin: {
+          listUsers: async () => ({
+            data: {
+              total: 1,
+              users: [
+                { id: "legacy-account", identities: [], is_anonymous: false },
+              ],
+            },
+            error: null,
+          }),
+        },
+      },
+    };
+
+    await expect(auditSupabaseAuthReadiness(admin)).resolves.toMatchObject({
+      failureCode: "permanent_user_without_identity",
+      permanentUsersWithoutIdentity: 1,
+      ready: false,
+    });
   });
 });
 

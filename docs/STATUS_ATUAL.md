@@ -2456,3 +2456,8 @@ Avancar para fechamento total da Fase 3 (sem abrir Fase 4):
   Smoke com admin existente confirmou `267` contas, paginas `20/20/7`, total
   estavel, nenhum ID repetido, busca por e-mail funcional e rejeicao de acesso
   sem sessao. Os tipos Supabase foram regenerados a partir do schema vinculado.
+- Um gate independente agora pagina a API Admin oficial e bloqueia
+  `alpha:invite`/`alpha:resume` quando houver conta permanente sem identidade ou
+  falha de integridade, sem registrar IDs, e-mails ou diagnosticos upstream.
+  A prova remota auditou `200/287` contas e falhou de forma fechada na pagina
+  `2`, que contem os registros historicos inconsistentes.

@@ -116,5 +116,7 @@ describe("private alpha access boundary", () => {
     expect(command).toContain("requiresRestorableBackup(action)");
     expect(command).toContain("getSupabaseBackupReadiness(target.projectRef)");
     expect(command).toContain("if (!recovery.ready)");
+    expect(command).toContain("auditSupabaseAuthReadiness(admin)");
+    expect(command).toContain("if (!authReadiness.ready)");
   });
 });

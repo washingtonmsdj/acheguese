@@ -231,6 +231,7 @@ Gates operacionais:
 ```powershell
 npm run backup:database:status
 npm run alpha:backup:gate
+npm run alpha:auth:gate
 npm run backup:storage
 npm run restore:storage -- caminho-do-backup --verify-only
 ```
@@ -244,6 +245,16 @@ da criacao do cliente `service_role`. Falha da CLI, da Management API ou da
 evidencia de recuperacao mantem a admissao fechada. Comandos de contencao e
 consulta (`alpha:pause`, `alpha:revoke` e `alpha:status`) nao dependem desse
 gate e permanecem utilizaveis durante incidentes.
+
+`alpha:auth:gate` pagina contas exclusivamente pela API Admin oficial, nunca por
+leitura ou escrita direta no schema gerenciado `auth`. O resultado contem apenas
+contagens e codigos de falha. Lista de identidades explicitamente vazia em conta
+permanente, falha da API, registro duplicado/invalido ou auditoria acima do
+limite mantem a alpha fechada. O endpoint de lista pode omitir `identities` ou
+retorna-lo como `null`; esses estados significam dado nao projetado e nao sao
+tratados como lista vazia. Usuarios anonimos podem legitimamente nao possuir
+identidade. `alpha:invite` e `alpha:resume` aplicam esse gate depois da
+recuperacao e antes do RPC de admissao.
 
 O exportador de Storage cria um inventario versionado, usa nomes locais
 derivados por hash e registra tamanho e SHA-256 de cada objeto. O diretorio

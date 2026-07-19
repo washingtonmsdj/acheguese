@@ -6,6 +6,7 @@ import {
   loadSupabaseScriptEnv,
 } from "./lib/supabase-client.mjs";
 import { assertAuthorizedNonProductionTarget as assertAuthorizedNonProductionTargetImpl } from "./lib/non-production-target.mjs";
+import { auditSupabaseAuthReadiness } from "./supabase-auth-readiness.mjs";
 import { getSupabaseBackupReadiness } from "./supabase-backup-readiness.mjs";
 
 const ENV_FILES = [".env.local", ".env.remote", ".env.test", ".env"];
@@ -53,6 +54,7 @@ async function main() {
     : null;
   const target = assertAuthorizedNonProductionTarget();
 
+  let admin = null;
   if (requiresRestorableBackup(action)) {
     const recovery = getSupabaseBackupReadiness(target.projectRef);
     if (!recovery.ready) {
@@ -60,9 +62,16 @@ async function main() {
         "Alpha permanece fechada: nao existe backup COMPLETED recente nem PITR acessivel. Execute npm run alpha:backup:gate depois de habilitar a recuperacao.",
       );
     }
+    admin = createServiceRoleClient({ envFiles: ENV_FILES });
+    const authReadiness = await auditSupabaseAuthReadiness(admin);
+    if (!authReadiness.ready) {
+      fail(
+        `Alpha permanece fechada: integridade do Auth reprovada (${authReadiness.failureCode ?? "unknown"}). Execute npm run alpha:auth:gate.`,
+      );
+    }
   }
 
-  const admin = createServiceRoleClient({ envFiles: ENV_FILES });
+  admin ??= createServiceRoleClient({ envFiles: ENV_FILES });
 
   if (action === "invite") {
     const { data, error } = await admin.rpc("alpha_access_issue_invite", {
