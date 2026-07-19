@@ -588,7 +588,7 @@ export const AdminPontosEmbarque = createLaunchPausedRoute("Admin");
 export const AdminVerificacoes = createLaunchPausedRoute("Admin");
 export const AdminAnalyticsMobilidade = createLaunchPausedRoute("Admin");
 export const AdminRealtimeDashboard = createLaunchPausedRoute("Admin");
-export const AdminModeracao = createLaunchPausedRoute("Admin");
+// AdminModeracao: consumido via src/app/routes/adminLazyImports.ts (rota ativa em AdminRoutes.tsx). Nao redeclarar aqui.
 export const AdminAnalytics = createLaunchPausedRoute("Admin");
 export const AdminCupons = createLaunchPausedRoute("Admin");
 export const AdminPromocoes = createLaunchPausedRoute("Admin");
