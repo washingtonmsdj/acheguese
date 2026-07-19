@@ -146,5 +146,12 @@ describe("private alpha access boundary", () => {
     expect(smtpOperator).toContain("SUPABASE_AUTH_SMTP_PASS");
     expect(smtpOperator).not.toContain("console.log(token");
     expect(smtpOperator).not.toContain("console.log(process.env");
+
+    const supportPacket = readProjectFile(
+      "scripts/private-alpha-support-packet.mjs",
+    );
+    expect(supportPacket).toContain("auditPrivateAlphaReadiness");
+    expect(supportPacket).toContain("Do Not Include In Initial Ticket");
+    expect(supportPacket).not.toContain("auth.identities SELECT");
   });
 });

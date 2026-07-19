@@ -25,6 +25,7 @@ import {
   evaluateSmtpOperatorEnv,
 } from "../../scripts/private-alpha-auth-smtp-config.mjs";
 import { summarizePrivateAlphaReadiness } from "../../scripts/private-alpha-readiness.mjs";
+import { createPrivateAlphaSupportPacket } from "../../scripts/private-alpha-support-packet.mjs";
 import { auditSupabaseAuthReadiness } from "../../scripts/supabase-auth-readiness.mjs";
 import {
   evaluateBackupReadiness,
@@ -466,6 +467,53 @@ describe("Private alpha aggregated readiness", () => {
 
     expect(summary.ready).toBe(true);
     expect(summary.containment.closed).toBe(true);
+  });
+});
+
+describe("Private alpha support packet", () => {
+  it("renders a support-ready packet without PII or secrets", () => {
+    const packet = createPrivateAlphaSupportPacket({
+      auth: {
+        checkedUsers: 200,
+        failedPage: 2,
+        failureCode: "auth_admin_list_failed",
+        reportedTotal: 287,
+      },
+      backup: {
+        backupCount: 0,
+        completedBackupCount: 0,
+        pitrEnabled: false,
+        ready: false,
+        walgEnabled: true,
+      },
+      projectRef: "abcdefghijklmnopqrst",
+      summary: {
+        blockers: [
+          {
+            area: "auth",
+            code: "auth_admin_list_failed",
+            command: "npm run alpha:auth:gate",
+          },
+        ],
+        checkedAt: "2026-07-19T15:00:00.000Z",
+        containment: {
+          activeInvites: 0,
+          admissionsEnabled: false,
+          closed: true,
+        },
+        ready: false,
+      },
+      target: "development",
+    });
+
+    expect(packet).toContain("Achegue-se Private Alpha Support Packet");
+    expect(packet).toContain("auth_admin_list_failed");
+    expect(packet).toContain("Failed page: 2");
+    expect(packet).toContain("Do Not Include In Initial Ticket");
+    expect(packet).not.toContain("person@example.com");
+    expect(packet).not.toContain("sbp_");
+    expect(packet).not.toContain("service_role");
+    expect(packet).not.toContain("SMTP credentials:");
   });
 });
 

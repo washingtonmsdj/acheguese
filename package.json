@@ -82,6 +82,7 @@
     "alpha:auth:smtp:apply": "node scripts/private-alpha-auth-smtp-config.mjs --apply --require-ready",
     "alpha:readiness": "node scripts/private-alpha-readiness.mjs",
     "alpha:readiness:gate": "node scripts/private-alpha-readiness.mjs --require-ready",
+    "alpha:support:packet": "node scripts/private-alpha-support-packet.mjs",
     "backup:storage": "tsx scripts/backup-storage.ts",
     "restore:storage": "tsx scripts/restore-storage.ts",
     "test:recovery": "vitest --run tests/security/supabase-recovery-operations.test.ts",

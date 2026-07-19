@@ -235,6 +235,7 @@ npm run alpha:auth:gate
 npm run alpha:email:gate
 npm run alpha:auth:smtp:check
 npm run alpha:readiness
+npm run alpha:support:packet
 npm run backup:storage
 npm run restore:storage -- caminho-do-backup --verify-only
 ```
@@ -289,6 +290,11 @@ Variaveis `SUPABASE_AUTH_SMTP_*` ficam apenas no ambiente operacional e nao
 entram no browser, Vercel ou Edge Functions. A saida deve registrar somente
 booleanos, codigos de falha e nomes de env vars ausentes; senha, host, usuario
 e remetente nao sao logs.
+
+`alpha:support:packet` gera um texto para suporte externo usando apenas o
+preflight agregado. Ele pode conter project ref e contagens operacionais, mas
+nao deve conter e-mails, UUIDs de usuarios, tokens, credenciais SMTP, valores
+DNS ou stack traces upstream.
 
 O exportador de Storage cria um inventario versionado, usa nomes locais
 derivados por hash e registra tamanho e SHA-256 de cada objeto. O diretorio

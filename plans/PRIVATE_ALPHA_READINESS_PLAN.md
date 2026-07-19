@@ -67,6 +67,7 @@ seguranca para acelerar o teste.
 - [ ] Corrigir e verificar DKIM e SPF do dominio remetente no Resend.
 - [x] Criar operador auditavel para configurar SMTP customizado do Supabase
       Auth com PAT valido e confirmacao explicita.
+- [x] Criar pacote executavel sem PII para chamado do Supabase Support.
 - [ ] Aplicar e auditar SMTP customizado no Supabase Auth com PAT valido.
 - [ ] Validar SMTP/Auth com um e-mail real convidado.
 - [ ] Resolver no Supabase os tres registros historicos que quebram as paginas
@@ -187,6 +188,8 @@ seguranca para acelerar o teste.
 - A prova remota de `alpha:auth:smtp:check` em development retornou codigo `1`
   com `missing_management_pat`, sem imprimir configuracao SMTP e sem aplicar
   alteracao remota.
+- `alpha:support:packet` passou a gerar um texto de chamado sem PII com resumo
+  dos blockers, estado de contencao, achado Auth Admin e achado de recuperacao.
 
 Os residuais PostGIS dependem do owner `supabase_admin`; a protecao HIBP do
 Auth depende de plano/configuracao do Dashboard ou Management API. Eles
@@ -216,6 +219,7 @@ npm run alpha:readiness
 npm run alpha:readiness:gate
 npm run alpha:auth:smtp:check
 npm run alpha:auth:smtp:apply
+npm run alpha:support:packet
 ```
 
 O browser nunca recebe `service_role`. O e-mail e normalizado no banco, o
@@ -240,6 +244,12 @@ Enviar somente evidencias sem PII:
   gate `alpha:auth:gate` permanece fechado ate o reparo da integridade;
 - solicitar procedimento suportado para reconciliar ou remover as contas depois
   de backup restauravel, sem alteracao manual cega no schema `auth`.
+
+Gerar o texto atualizado:
+
+```powershell
+npm run alpha:support:packet
+```
 
 `alpha:pause` revoga atomicamente todos os convites ainda ativos e impede tanto
 novos convites quanto novas identidades. Contas existentes nao sao apagadas.

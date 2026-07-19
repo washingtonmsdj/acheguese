@@ -2477,3 +2477,6 @@ Avancar para fechamento total da Fase 3 (sem abrir Fase 4):
   `alpha:auth:smtp:check` audita em leitura e `alpha:auth:smtp:apply` aplica via
   Management API somente com confirmacao explicita de alvo nao produtivo. A
   saida nao copia host, remetente, usuario, senha, PAT ou resposta upstream.
+- `alpha:support:packet` agora gera o texto seguro para abrir chamado no
+  Supabase Support, com blockers e contagens, mas sem e-mails, UUIDs, tokens,
+  credenciais SMTP, DNS ou logs brutos.
