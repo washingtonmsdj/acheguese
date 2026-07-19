@@ -14,7 +14,7 @@ lifecycle, RLS e persistencia:
 | --- | --- | --- |
 | Like e save de Post | `PostEngagementService` | `post_likes_new`, `saved_posts_new` |
 | Comentario e like de Comment | `core/comments` | `comments`, `comment_likes` |
-| Share autenticado de Post | `core/posts` | `post_share_events` |
+| Share autenticado de Post | `core/posts` | _planejado — tabela `post_share_events` ainda nao existe; hoje o share e apenas efeito de UI (Web Share/clipboard)_ |
 | Membership/interacao de Grupo | `SocialGroupInteractionsService` | tabelas `group_*` |
 | Favoritos de Empresa | `BusinessFavoriteStore` | `user_favorite_businesses` |
 | Saves de Classificado, Evento, Ponto e Vaga | adapter do dominio sobre infraestrutura interna allowlisted | tabela propria do dominio |
