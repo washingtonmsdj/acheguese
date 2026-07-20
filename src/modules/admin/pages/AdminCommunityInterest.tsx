@@ -10,13 +10,14 @@
  */
 
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BellRing,
   CalendarDays,
   Download,
   MailCheck,
   MapPin,
+  ShieldCheck,
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -24,6 +25,7 @@ import { toast } from "sonner";
 import {
   adminCommunityInterestService,
   type AdminCommunityInterestFilters,
+  type CommunityInterestAdminStatus,
   type CommunityInterestRegistration,
   type CommunityInterestRole,
 } from "@/core/admin";
@@ -38,10 +40,27 @@ import {
   AdminTable,
   type FilterOption,
 } from "@/core/admin/components";
+import { useSessionContext } from "@/core/session";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
+import { Textarea } from "@/shared/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 import {
   TableBody,
   TableCell,
