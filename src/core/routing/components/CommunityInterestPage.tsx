@@ -147,6 +147,21 @@ export function CommunityInterestPage() {
     event.preventDefault();
     if (submitting) return;
 
+    // Honeypot: bots normalmente preenchem todos os campos, inclusive o oculto.
+    if (honeypot.trim().length > 0) {
+      setSubmitted(true); // silencia o bot sem indicar o motivo
+      return;
+    }
+
+    // Timing check: rejeita submissões instantâneas (bots).
+    if (Date.now() - mountedAtRef.current < MIN_FILL_MS) {
+      toast({
+        title: "Aguarde um instante",
+        description: "Confira os dados antes de enviar.",
+      });
+      return;
+    }
+
     const parsed = interestSchema.safeParse(form);
     if (!parsed.success) {
       const nextErrors: Partial<Record<keyof InterestFormState, string>> = {};
@@ -158,8 +173,28 @@ export function CommunityInterestPage() {
       return;
     }
 
+    if (turnstileEnabled && !turnstileToken) {
+      setTurnstileError("Confirme que você não é um robô.");
+      return;
+    }
+
     setSubmitting(true);
     try {
+      // Verificação server-side do Turnstile (quando habilitado)
+      let turnstileVerified = false;
+      if (turnstileEnabled && turnstileToken) {
+        const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
+          "verify-turnstile-token",
+          { body: { token: turnstileToken, action: "community-interest" } },
+        );
+        if (verifyError || !(verifyData as { success?: boolean } | null)?.success) {
+          setTurnstileError("Falha na verificação anti-spam. Tente novamente.");
+          setTurnstileToken(null);
+          return;
+        }
+        turnstileVerified = true;
+      }
+
       const territoryPath = communityBase ?? null;
       const source = typeof window !== "undefined" ? window.location.pathname : "community-interest";
       const userAgent =
@@ -180,6 +215,7 @@ export function CommunityInterestPage() {
           wants_updates: parsed.data.wants_updates,
           source,
           user_agent: userAgent,
+          turnstile_verified: turnstileVerified,
         });
 
       if (error) {
