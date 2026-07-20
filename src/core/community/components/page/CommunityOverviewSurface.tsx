@@ -894,8 +894,9 @@ export function CommunityOverviewSurface({
   );
   const visualMockEnabled = useMemo(() => {
     const params = new URLSearchParams(routeLocation.search);
+    // Mock visual disponível em qualquer ambiente via ?visualMock=community-concept
+    // Popula feed, grupos, negócios, serviços, classificados, gastronomia, eventos e stats
     return (
-      import.meta.env.DEV &&
       params.get("visualMock") === COMMUNITY_OVERVIEW_VISUAL_MOCK_QUERY_VALUE
     );
   }, [routeLocation.search]);
