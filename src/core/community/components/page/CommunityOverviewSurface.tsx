@@ -91,6 +91,7 @@ import {
   type CommunityOverviewView,
 } from "./communityOverviewNavigation";
 import { getPublicPostPreview } from "@/core/posts/utils/publicPostContent";
+import { sharePost } from "@/core/posts/utils/postShare";
 import { eventRuntimeService, type PublicEvent } from "@/core/verticals/events";
 import { Button } from "@/shared/components/ui/button";
 import { SafeImage } from "@/shared/components/security/SafeImage";
