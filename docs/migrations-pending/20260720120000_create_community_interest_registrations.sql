@@ -98,5 +98,55 @@ CREATE POLICY community_interest_owner_select
   TO authenticated
   USING (user_id IS NOT NULL AND user_id = auth.uid());
 
+-- 6.1 Colunas opcionais para triagem administrativa (idempotentes)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+     WHERE table_schema = 'public'
+       AND table_name = 'community_interest_registrations'
+       AND column_name = 'admin_status'
+  ) THEN
+    ALTER TABLE public.community_interest_registrations
+      ADD COLUMN admin_status text NOT NULL DEFAULT 'new'
+        CHECK (admin_status IN ('new','reviewed','contacted','converted','discarded'));
+    ALTER TABLE public.community_interest_registrations
+      ADD COLUMN admin_notes text NULL CHECK (admin_notes IS NULL OR char_length(admin_notes) <= 2000);
+    ALTER TABLE public.community_interest_registrations
+      ADD COLUMN reviewed_at timestamptz NULL;
+    ALTER TABLE public.community_interest_registrations
+      ADD COLUMN reviewed_by uuid NULL REFERENCES auth.users(id) ON DELETE SET NULL;
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS community_interest_admin_status_idx
+  ON public.community_interest_registrations (admin_status);
+
+-- 6.2 Policies para admins (SELECT/UPDATE/DELETE) via helper private.is_admin
+DROP POLICY IF EXISTS community_interest_admin_select
+  ON public.community_interest_registrations;
+CREATE POLICY community_interest_admin_select
+  ON public.community_interest_registrations
+  FOR SELECT
+  TO authenticated
+  USING (private.is_admin(auth.uid()));
+
+DROP POLICY IF EXISTS community_interest_admin_update
+  ON public.community_interest_registrations;
+CREATE POLICY community_interest_admin_update
+  ON public.community_interest_registrations
+  FOR UPDATE
+  TO authenticated
+  USING (private.is_admin(auth.uid()))
+  WITH CHECK (private.is_admin(auth.uid()));
+
+DROP POLICY IF EXISTS community_interest_admin_delete
+  ON public.community_interest_registrations;
+CREATE POLICY community_interest_admin_delete
+  ON public.community_interest_registrations
+  FOR DELETE
+  TO authenticated
+  USING (private.is_admin(auth.uid()));
+
 COMMENT ON TABLE public.community_interest_registrations IS
-  'Waitlist pública de interesse em comunidades territoriais (coming_soon). Insert público, select restrito ao dono. Anti-spam: Turnstile + honeypot no frontend.';
+  'Waitlist pública de interesse em comunidades territoriais (coming_soon). Insert público; SELECT do dono ou admin (private.is_admin); UPDATE/DELETE apenas admin. Anti-spam: Turnstile + honeypot no frontend.';
