@@ -4,9 +4,20 @@
  * Persistência client-side (localStorage) por perfil ativo. Snapshot enxuto
  * dos campos textuais do composer — não persiste imagens/uploads.
  *
+ * ⚠️ O conteúdo é **criptografado** com AES-GCM antes de ir para o
+ * localStorage (ver `postDraftCrypto.ts`). Snapshots antigos em texto puro
+ * são migrados automaticamente na primeira leitura.
+ *
  * O timestamp `updatedAt` é usado para reconciliar com o rascunho remoto
  * (ver `postDraftSync.ts`). `savedAt` é mantido para compat retroativa.
  */
+
+import {
+  decryptString,
+  encryptString,
+  isEncryptedEnvelope,
+  purgeCryptoKey,
+} from "./postDraftCrypto";
 
 const STORAGE_PREFIX = "community:post-draft:v1:";
 
@@ -38,14 +49,27 @@ function keyFor(profileId: string): string {
   return `${STORAGE_PREFIX}${profileId}`;
 }
 
+function cryptoScopeFor(profileId: string): string {
+  return `post-draft:${profileId}`;
+}
+
 function isBrowser(): boolean {
   return typeof window !== "undefined" && !!window.localStorage;
 }
 
-export function savePostDraft(
+async function persistEncrypted(
+  profileId: string,
+  snapshot: PostDraftSnapshot,
+): Promise<void> {
+  const serialized = JSON.stringify(snapshot);
+  const ciphertext = await encryptString(cryptoScopeFor(profileId), serialized);
+  window.localStorage.setItem(keyFor(profileId), ciphertext);
+}
+
+export async function savePostDraft(
   profileId: string,
   snapshot: PostDraftPayload,
-): PostDraftSnapshot | null {
+): Promise<PostDraftSnapshot | null> {
   if (!isBrowser() || !profileId) return null;
   try {
     const now = Date.now();
@@ -54,34 +78,51 @@ export function savePostDraft(
       updatedAt: now,
       savedAt: now,
     };
-    window.localStorage.setItem(keyFor(profileId), JSON.stringify(payload));
+    await persistEncrypted(profileId, payload);
     return payload;
   } catch {
     return null;
   }
 }
 
-export function loadPostDraft(profileId: string): PostDraftSnapshot | null {
+export async function loadPostDraft(
+  profileId: string,
+): Promise<PostDraftSnapshot | null> {
   if (!isBrowser() || !profileId) return null;
   try {
     const raw = window.localStorage.getItem(keyFor(profileId));
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as PostDraftSnapshot;
+
+    const scope = cryptoScopeFor(profileId);
+    const plaintext = await decryptString(scope, raw);
+    if (!plaintext) return null;
+
+    const parsed = JSON.parse(plaintext) as PostDraftSnapshot;
     if (!parsed || typeof parsed !== "object") return null;
     if (!parsed.updatedAt && parsed.savedAt) parsed.updatedAt = parsed.savedAt;
+
+    // Migração transparente: se o envelope original estava em texto puro,
+    // reescreve criptografado.
+    if (!isEncryptedEnvelope(raw)) {
+      try {
+        await persistEncrypted(profileId, parsed);
+      } catch {
+        // best-effort
+      }
+    }
     return parsed;
   } catch {
     return null;
   }
 }
 
-export function writePostDraftSnapshot(
+export async function writePostDraftSnapshot(
   profileId: string,
   snapshot: PostDraftSnapshot,
-): void {
+): Promise<void> {
   if (!isBrowser() || !profileId) return;
   try {
-    window.localStorage.setItem(keyFor(profileId), JSON.stringify(snapshot));
+    await persistEncrypted(profileId, snapshot);
   } catch {
     // no-op
   }
@@ -94,6 +135,8 @@ export function clearPostDraft(profileId: string): void {
   } catch {
     // no-op
   }
+  // Chave AES pode ser descartada com o rascunho — próxima gravação gera nova.
+  void purgeCryptoKey(cryptoScopeFor(profileId));
 }
 
 export function hasMeaningfulDraft(
