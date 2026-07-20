@@ -718,5 +718,3 @@ export default function AdminCommunityInterest() {
     </div>
   );
 }
-  );
-}
