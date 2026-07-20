@@ -648,6 +648,8 @@ export function CreatePostModal({
     if (remoteSyncTimerRef.current)
       window.clearTimeout(remoteSyncTimerRef.current);
 
+    setSaveStatus("saving");
+
     autosaveTimerRef.current = window.setTimeout(() => {
       const snapshot = savePostDraft(profileId, currentDraftPayload);
       if (snapshot) {
@@ -656,12 +658,27 @@ export function CreatePostModal({
       }
     }, 400);
 
-    remoteSyncTimerRef.current = window.setTimeout(() => {
+    remoteSyncTimerRef.current = window.setTimeout(async () => {
       const snapshot: PostDraftSnapshot = {
         ...currentDraftPayload,
         updatedAt: Date.now(),
       };
-      void upsertRemoteDraft(profileId, snapshot);
+      const result = await upsertRemoteDraft(profileId, snapshot);
+      if (result.status === "ok") {
+        setSaveStatus("synced");
+      } else if (result.status === "offline") {
+        setSaveStatus("offline");
+      } else if (result.status === "conflict") {
+        // Rascunho remoto mais novo: reconciliar sem sobrescrever.
+        writePostDraftSnapshot(profileId, result.remote.snapshot);
+        setLastSavedAt(result.remote.updatedAt);
+        setSaveStatus("synced");
+        toast.info(
+          "Encontramos um rascunho mais recente em outro dispositivo. Recarregue para ver.",
+        );
+      } else {
+        setSaveStatus("error");
+      }
     }, 1500);
 
     return () => {
@@ -671,6 +688,29 @@ export function CreatePostModal({
         window.clearTimeout(remoteSyncTimerRef.current);
     };
   }, [open, editPostId, profile?.id, currentDraftPayload]);
+
+  // Reenvia rascunhos pendentes assim que o navegador voltar a ficar online.
+  React.useEffect(() => {
+    if (!open || editPostId || !profile?.id) return;
+    if (typeof window === "undefined") return;
+    const profileId = profile.id;
+    const handleOnline = () => {
+      setSaveStatus((prev) => (prev === "offline" ? "saving" : prev));
+      void flushPendingSync(profileId).then((res) => {
+        if (!res) return;
+        if (res.status === "ok") setSaveStatus("synced");
+        else if (res.status === "offline") setSaveStatus("offline");
+        else if (res.status === "error") setSaveStatus("error");
+      });
+    };
+    const handleOffline = () => setSaveStatus("offline");
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [open, editPostId, profile?.id]);
 
 
 
