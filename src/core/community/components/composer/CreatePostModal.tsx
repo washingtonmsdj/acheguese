@@ -561,26 +561,28 @@ export function CreatePostModal({
     // Detecta rascunho (local + remoto) e oferece "Continuar rascunho".
     if (!editPostId && profile?.id) {
       const profileId = profile.id;
-      const local = loadPostDraft(profileId);
-      let candidate: PostDraftSnapshot | null =
-        local && hasMeaningfulDraft(local) ? local : null;
-      if (candidate) {
-        setHasStoredDraft(true);
-        setLastSavedAt(candidate.updatedAt ?? candidate.savedAt ?? null);
-        setPendingDraftForRestore(candidate);
-      }
-      void fetchRemoteDraft(profileId).then((remote) => {
-        if (!remote || !hasMeaningfulDraft(remote.snapshot)) return;
-        const localTs = candidate?.updatedAt ?? candidate?.savedAt ?? 0;
-        // Conflict resolution: mais recente vence.
-        if (remote.updatedAt > localTs) {
-          writePostDraftSnapshot(profileId, remote.snapshot);
-          candidate = remote.snapshot;
+      void (async () => {
+        const local = await loadPostDraft(profileId);
+        let candidate: PostDraftSnapshot | null =
+          local && hasMeaningfulDraft(local) ? local : null;
+        if (candidate) {
           setHasStoredDraft(true);
-          setLastSavedAt(remote.updatedAt);
-          setPendingDraftForRestore(remote.snapshot);
+          setLastSavedAt(candidate.updatedAt ?? candidate.savedAt ?? null);
+          setPendingDraftForRestore(candidate);
         }
-      });
+        const remote = await fetchRemoteDraft(profileId);
+        if (remote && hasMeaningfulDraft(remote.snapshot)) {
+          const localTs = candidate?.updatedAt ?? candidate?.savedAt ?? 0;
+          // Conflict resolution: mais recente vence.
+          if (remote.updatedAt > localTs) {
+            await writePostDraftSnapshot(profileId, remote.snapshot);
+            candidate = remote.snapshot;
+            setHasStoredDraft(true);
+            setLastSavedAt(remote.updatedAt);
+            setPendingDraftForRestore(remote.snapshot);
+          }
+        }
+      })();
       // Flush de qualquer rascunho pendente que ficou offline.
       if (hasPendingSync(profileId) && typeof navigator !== "undefined" && navigator.onLine !== false) {
         void flushPendingSync(profileId);
@@ -651,11 +653,12 @@ export function CreatePostModal({
     setSaveStatus("saving");
 
     autosaveTimerRef.current = window.setTimeout(() => {
-      const snapshot = savePostDraft(profileId, currentDraftPayload);
-      if (snapshot) {
-        setLastSavedAt(snapshot.updatedAt);
-        setHasStoredDraft(true);
-      }
+      void savePostDraft(profileId, currentDraftPayload).then((snapshot) => {
+        if (snapshot) {
+          setLastSavedAt(snapshot.updatedAt);
+          setHasStoredDraft(true);
+        }
+      });
     }, 400);
 
     remoteSyncTimerRef.current = window.setTimeout(async () => {
@@ -1022,7 +1025,7 @@ export function CreatePostModal({
     }
   };
 
-  const handleSaveDraft = () => {
+  const handleSaveDraft = async () => {
     if (editPostId) return;
     if (!profile?.id) {
       toast.error("Faça login para salvar rascunhos.");
@@ -1034,7 +1037,7 @@ export function CreatePostModal({
     }
     setSavingDraft(true);
     try {
-      const snapshot = savePostDraft(profile.id, currentDraftPayload);
+      const snapshot = await savePostDraft(profile.id, currentDraftPayload);
       if (snapshot) {
         setLastSavedAt(snapshot.updatedAt);
         setHasStoredDraft(true);
