@@ -191,14 +191,14 @@ export async function upsertRemoteDraft(
       )) as { error?: unknown };
 
     if (res && res.error) {
-      enqueuePending(profileId, snapshot);
+      await enqueuePending(profileId, snapshot);
       return { status: "error", error: res.error };
     }
 
     clearPending(profileId);
     return { status: "ok", updatedAt: snapshot.updatedAt };
   } catch (error) {
-    enqueuePending(profileId, snapshot);
+    await enqueuePending(profileId, snapshot);
     return { status: "error", error };
   }
 }
@@ -210,7 +210,7 @@ export async function upsertRemoteDraft(
 export async function flushPendingSync(
   profileId: string,
 ): Promise<UpsertRemoteResult | null> {
-  const pending = readPending(profileId);
+  const pending = await readPending(profileId);
   if (!pending) return null;
   const result = await upsertRemoteDraft(profileId, pending, {
     skipConflictCheck: false,
