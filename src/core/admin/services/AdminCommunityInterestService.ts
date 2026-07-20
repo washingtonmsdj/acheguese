@@ -28,6 +28,7 @@ type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
   order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
   range(from: number, to: number): TableClient<TRow>;
   limit(count: number): TableClient<TRow>;
+  update(values: Record<string, unknown>): TableClient<TRow>;
 };
 
 type DbClient = {
