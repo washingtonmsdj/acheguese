@@ -13,6 +13,7 @@ import {
   Flag,
   Image,
   LayoutDashboard,
+  MailCheck,
   Map,
   MapPin,
   Megaphone,
