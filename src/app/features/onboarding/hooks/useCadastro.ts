@@ -160,7 +160,9 @@ export function useCadastroForm() {
           ? String((error as { message?: unknown }).message ?? "")
           : "";
 
-      // Mapeia erros de backend para o campo do shadcn correspondente
+      // Mapeia erros de backend para o campo do shadcn correspondente e
+      // sempre exibe um banner amigável (root.serverError) — o usuário pode
+      // estar em qualquer step quando o submit final falha.
       if (/already registered|already exists|já cadastrado/i.test(raw)) {
         form.setError("email", { type: "server", message });
       } else if (/username|handle|nome de usu[aá]rio/i.test(raw)) {
@@ -169,9 +171,8 @@ export function useCadastroForm() {
         form.setError("password", { type: "server", message });
       } else if (/email|e-?mail/i.test(raw)) {
         form.setError("email", { type: "server", message });
-      } else {
-        form.setError("root.serverError", { type: "server", message });
       }
+      form.setError("root.serverError", { type: "server", message });
 
       toast({
         title: "Erro ao criar conta",
