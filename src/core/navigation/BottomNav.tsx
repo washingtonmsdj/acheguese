@@ -13,7 +13,6 @@ import {
 import { useNavigate, useLocation as useRouterLocation } from 'react-router-dom';
 import { cn } from '@/shared/utils/cn';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
-import { useHomeCommunityHref } from '@/core/routing/hooks/useHomeCommunityHref';
 import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from '@/config/launchScope';
 import {
   Sheet,
