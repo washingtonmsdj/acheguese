@@ -64,7 +64,26 @@ import {
   hasMeaningfulDraft,
   loadPostDraft,
   savePostDraft,
+  writePostDraftSnapshot,
+  type PostDraftPayload,
+  type PostDraftSnapshot,
 } from "@/core/community/utils/postDraft";
+import {
+  deleteRemoteDraft,
+  fetchRemoteDraft,
+  upsertRemoteDraft,
+} from "@/core/community/services/postDraftSync";
+import { emitNewPost } from "@/core/community/state/newPostHighlight";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
 import {
   DEFAULT_BLOCKED_ALERT_MESSAGE,
   DEFAULT_BLOCKED_ISSUE_MESSAGE,
