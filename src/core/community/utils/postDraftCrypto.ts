@@ -159,7 +159,11 @@ export async function decryptString(scope: string, raw: string): Promise<string 
     const key = await getOrCreateKey(scope);
     const iv = base64ToBytes(envelope.iv);
     const ct = base64ToBytes(envelope.ct);
-    const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ct);
+    const plain = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: iv as BufferSource },
+      key,
+      ct as BufferSource,
+    );
     return new TextDecoder().decode(plain);
   } catch {
     return null;
