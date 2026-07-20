@@ -27,12 +27,12 @@ import type { CommunityOverviewSection } from '@/core/community/components/page/
 // Lazy imports dos módulos existentes
 const ComunidadePage       = lazy(() => import('@/core/community/pages/ComunidadePage'));
 const CidadeLandingPage    = lazy(() => import('@/app/pages/CidadeLandingPage'));
-const CommunityCommunicationTabPage = createLaunchPausedRoute('Comunicacao');
+const CommunityCommunicationTabPage = lazy(() => import('@/modules/communication-territorial/pages/CommunityCommunicationTabPage'));
 const ProblemasPage        = lazy(() => import('@/modules/community-issues/pages/ProblemasPage'));
 const EmpresasPage         = lazy(() => import('@/app/pages/EmpresasLandingPage'));
 const ServicosPage         = lazy(() => import('@/modules/professionals/services/pages/ServicosLandingPage'));
 const ClassificadosPage    = lazy(() => import('@/modules/classifieds/pages/ClassificadosPage'));
-const EventsListPage     = createLaunchPausedRoute('Eventos');
+const EventsListPage     = lazy(() => import('@/features/events/pages/EventsListPage'));
 const GastronomyPage        = lazy(() => import('@/modules/business/gastronomy/pages/GastronomyLandingPage'));
 const EducationPage         = createLaunchPausedRoute('Educacao');
 const MobilidadePage       = createLaunchPausedRoute('Mobilidade');
