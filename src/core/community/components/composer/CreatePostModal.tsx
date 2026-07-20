@@ -1079,6 +1079,22 @@ export function CreatePostModal({
     }, 300);
   };
 
+  const handleContinueDraft = () => {
+    if (!pendingDraftForRestore) return;
+    suppressAutosaveRef.current = true;
+    applyDraftSnapshot(pendingDraftForRestore);
+    setPendingDraftForRestore(null);
+    setSaveStatus("synced");
+    window.setTimeout(() => {
+      suppressAutosaveRef.current = false;
+    }, 300);
+  };
+
+  const handleDismissDraftBanner = () => {
+    // Mantém o rascunho armazenado; só esconde o banner nesta sessão.
+    setPendingDraftForRestore(null);
+  };
+
   const formattedSavedAt = React.useMemo(() => {
     if (!lastSavedAt) return null;
     try {
@@ -1090,6 +1106,40 @@ export function CreatePostModal({
       return null;
     }
   }, [lastSavedAt]);
+
+  const saveStatusView = React.useMemo(() => {
+    switch (saveStatus) {
+      case "saving":
+        return {
+          icon: <Loader2 className="h-3 w-3 animate-spin" />,
+          label: "Salvando…",
+          className: "text-muted-foreground",
+        };
+      case "synced":
+        return {
+          icon: <CloudCheck className="h-3 w-3" />,
+          label: formattedSavedAt
+            ? `Sincronizado às ${formattedSavedAt}`
+            : "Sincronizado",
+          className: "text-emerald-600 dark:text-emerald-400",
+        };
+      case "offline":
+        return {
+          icon: <CloudOff className="h-3 w-3" />,
+          label: "Offline — vamos sincronizar depois",
+          className: "text-amber-600 dark:text-amber-400",
+        };
+      case "error":
+        return {
+          icon: <TriangleAlert className="h-3 w-3" />,
+          label: "Erro ao sincronizar",
+          className: "text-destructive",
+        };
+      default:
+        return null;
+    }
+  }, [saveStatus, formattedSavedAt]);
+
 
 
 
