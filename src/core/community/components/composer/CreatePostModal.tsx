@@ -1649,6 +1649,17 @@ export function CreatePostModal({
             >
               Cancelar
             </Button>
+            {!editPostId && (hasStoredDraft || hasMeaningfulDraft(currentDraftPayload)) ? (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setConfirmDiscardOpen(true)}
+                disabled={publishing || savingDraft}
+                className="flex-1 text-destructive hover:bg-destructive/10 hover:text-destructive sm:flex-none"
+              >
+                Descartar
+              </Button>
+            ) : null}
             {!editPostId ? (
               <Button
                 variant="outline"
