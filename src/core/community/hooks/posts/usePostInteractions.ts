@@ -212,42 +212,21 @@ export function usePostInteractions(
   };
 
   /**
-   * Compartilhar post
-   * Usa Web Share API quando disponível, fallback para copiar link
+   * Compartilhar post — usa o utilitário SSOT `sharePost`.
+   * Web Share API quando disponível, fallback para clipboard.
    */
   const handleShare = async () => {
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set("post", postId);
-    const shareUrl = currentUrl.toString();
-    const shareData = {
+    await sharePost({
+      postId,
       title: "Post da Comunidade",
       text: "Confira este post no Achegue-se",
-      url: shareUrl,
-    };
-
-    try {
-      // Tentar usar Web Share API (mobile)
-      if (navigator.share && navigator.canShare?.(shareData)) {
-        await navigator.share(shareData);
-
-      } else {
-        // Fallback: copiar link
-        await navigator.clipboard.writeText(shareUrl);
-        toast.success("Link copiado para a área de transferência");
-      }
-
-      if (activeProfile) {
-        await postService.recordPostShare(postId).catch((error) => {
-          logger.warn("Failed to record post share:", error);
-        });
-      }
-    } catch (error) {
-      // Usuário cancelou ou erro
-      if ((error as Error).name !== "AbortError") {
-        logger.error("Error compartilhar:", error);
-        toast.error("Não foi possível compartilhar o post");
-      }
-    }
+      onShared: activeProfile
+        ? () =>
+            postService.recordPostShare(postId).catch((error) => {
+              logger.warn("Failed to record post share:", error);
+            })
+        : undefined,
+    });
   };
 
   return {
