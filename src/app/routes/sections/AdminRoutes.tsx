@@ -27,6 +27,7 @@ export function AdminRoutes() {
       <Route path="alertas" element={<P.AdminCommunityAlerts />} />
       <Route path="community-alerts" element={<P.AdminCommunityAlerts />} />
       <Route path="community-issues" element={<P.AdminCommunityIssues />} />
+      <Route path="community-interest" element={<P.AdminCommunityInterest />} />
       <Route path="comunicacao" element={<P.AdminComunicacao />} />
       <Route path="notifications" element={<P.AdminNotifications />} />
       <Route path="mensagens" element={<P.AdminMensagens />} />
