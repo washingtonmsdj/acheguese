@@ -31,6 +31,18 @@ if (urlTarget && typeof urlTarget.revokeObjectURL !== 'function') {
   });
 }
 
+// Polyfills for Radix UI (Select, etc.) under jsdom
+if (typeof window !== 'undefined') {
+  if (!(window.HTMLElement.prototype as unknown as { hasPointerCapture?: unknown }).hasPointerCapture) {
+    window.HTMLElement.prototype.hasPointerCapture = () => false;
+    window.HTMLElement.prototype.setPointerCapture = () => {};
+    window.HTMLElement.prototype.releasePointerCapture = () => {};
+  }
+  if (!(window.HTMLElement.prototype as unknown as { scrollIntoView?: unknown }).scrollIntoView) {
+    window.HTMLElement.prototype.scrollIntoView = () => {};
+  }
+}
+
 // Setup global antes de todos os testes
 beforeAll(() => {
   // Configurações globais se necessário
