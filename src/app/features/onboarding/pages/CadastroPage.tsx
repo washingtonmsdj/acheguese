@@ -5,8 +5,6 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
-  Eye,
-  EyeOff,
   Loader2,
   MapPin,
   Sparkles,
@@ -15,16 +13,14 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
+import { PasswordInput } from "@/app/components/auth/PasswordInput";
 import { useCadastro } from "@/app/features/onboarding/hooks/useCadastro";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import {
   COMMUNITY_GUIDELINES_PATH,
   TERMS_OF_SERVICE_PATH,
 } from "@/core/legal/termsOfService";
-import {
-  AUTH_PASSWORD_MIN_LENGTH,
-  getAuthPasswordRequirementStatus,
-} from "@/core/auth/utils/passwordPolicy";
+import { AUTH_PASSWORD_MIN_LENGTH } from "@/core/auth/utils/passwordPolicy";
 import { useLocationCascade } from "@/core/location/hooks/useLocationCascade";
 import { Button } from "@/shared/components/ui/button";
 import { Checkbox } from "@/shared/components/ui/checkbox";
