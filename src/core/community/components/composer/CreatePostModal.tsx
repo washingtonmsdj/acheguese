@@ -498,8 +498,37 @@ export function CreatePostModal({
   const selectedIntent =
     flattenIntents().find((item) => item.id === intent) ?? flattenIntents()[0];
   const SelectedIntentIcon = selectedIntent.icon;
+  const applyDraftSnapshot = React.useCallback(
+    (draft: PostDraftSnapshot) => {
+      setIntent(getLaunchIntent(draft.intent as IntentId));
+      setDistributionLevel(draft.distributionLevel);
+      form.setReach(reachFromTerritorialLevel(draft.distributionLevel));
+      setGenericDescription(draft.genericDescription);
+      setPollQuestion(draft.pollQuestion);
+      setPollOptions(
+        draft.pollOptions.length >= 2 ? draft.pollOptions : ["", ""],
+      );
+      setProblemLocation(draft.problemLocation);
+      setProblemCategory(draft.problemCategory);
+      setProblemSeverity(draft.problemSeverity);
+      setProblemRecurrence(draft.problemRecurrence);
+      setProblemDescription(draft.problemDescription);
+      setEventDate(draft.eventDate);
+      setEventTime(draft.eventTime);
+      setEventPlace(draft.eventPlace);
+      setEventLimit(draft.eventLimit);
+      setEventDescription(draft.eventDescription);
+      setLastSavedAt(draft.updatedAt ?? draft.savedAt ?? Date.now());
+      setHasStoredDraft(true);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
   React.useEffect(() => {
     if (!open) return;
+    // Suprime autosave durante a hidratação inicial do modal.
+    suppressAutosaveRef.current = true;
     form.setType(
       (initialType ?? defaultType ?? selectedIntent.structuralType) as PostType,
     );
@@ -515,32 +544,41 @@ export function CreatePostModal({
     setIntentPickerExpanded(false);
     setGenericDescription(initialContent ?? "");
     setDistributionLevel(initialDistributionLevel);
+    setLastSavedAt(null);
+    setHasStoredDraft(false);
 
-    // Restaura rascunho local (apenas em criação, não em edição)
+    // Restaura rascunho local + remoto (apenas em criação, não em edição)
     if (!editPostId && profile?.id) {
-      const draft = loadPostDraft(profile.id);
-      if (draft && hasMeaningfulDraft(draft)) {
-        setIntent(getLaunchIntent(draft.intent as IntentId));
-        setDistributionLevel(draft.distributionLevel);
-        form.setReach(reachFromTerritorialLevel(draft.distributionLevel));
-        setGenericDescription(draft.genericDescription);
-        setPollQuestion(draft.pollQuestion);
-        setPollOptions(
-          draft.pollOptions.length >= 2 ? draft.pollOptions : ["", ""],
-        );
-        setProblemLocation(draft.problemLocation);
-        setProblemCategory(draft.problemCategory);
-        setProblemSeverity(draft.problemSeverity);
-        setProblemRecurrence(draft.problemRecurrence);
-        setProblemDescription(draft.problemDescription);
-        setEventDate(draft.eventDate);
-        setEventTime(draft.eventTime);
-        setEventPlace(draft.eventPlace);
-        setEventLimit(draft.eventLimit);
-        setEventDescription(draft.eventDescription);
+      const profileId = profile.id;
+      const local = loadPostDraft(profileId);
+      if (local && hasMeaningfulDraft(local)) {
+        applyDraftSnapshot(local);
+      }
+      // Merge com remoto: se remoto for mais novo, sobrescreve.
+      void fetchRemoteDraft(profileId).then((remote) => {
+        if (!remote) {
+          // Se só temos local, garante persistência remota inicial.
+          if (local && hasMeaningfulDraft(local)) {
+            void upsertRemoteDraft(profileId, local);
+          }
+          return;
+        }
+        const localTs = local?.updatedAt ?? local?.savedAt ?? 0;
+        if (remote.updatedAt > localTs && hasMeaningfulDraft(remote.snapshot)) {
+          writePostDraftSnapshot(profileId, remote.snapshot);
+          applyDraftSnapshot(remote.snapshot);
+          toast.info("Rascunho de outro dispositivo restaurado.");
+        }
+      });
+      if (local && hasMeaningfulDraft(local)) {
         toast.info("Rascunho restaurado. Continue de onde parou.");
       }
     }
+    // Libera autosave após o próximo tick, quando os estados já settlaram.
+    const t = window.setTimeout(() => {
+      suppressAutosaveRef.current = false;
+    }, 300);
+    return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, defaultType, initialType, initialContent, initialReach, editPostId, profile?.id]);
   React.useEffect(() => {
