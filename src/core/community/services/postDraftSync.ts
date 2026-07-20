@@ -150,7 +150,7 @@ export async function upsertRemoteDraft(
 
   // Offline: enfileira para reenvio.
   if (!isOnline()) {
-    enqueuePending(profileId, snapshot);
+    await enqueuePending(profileId, snapshot);
     return { status: "offline" };
   }
 
