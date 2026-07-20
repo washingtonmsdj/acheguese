@@ -119,10 +119,11 @@ export function useCadastro() {
     (step: number): boolean => {
       const newErrors: Partial<Record<keyof CadastroFormData, string>> = {};
 
-      const applyZodResult = (
-        result: { success: true } | { success: false; error: { issues: Array<{ path: (string | number)[]; message: string }> } },
-      ) => {
-        if (result.success) return;
+      const applyZodResult = (result: {
+        success: boolean;
+        error?: { issues: Array<{ path: (string | number)[]; message: string }> };
+      }) => {
+        if (result.success || !result.error) return;
         for (const issue of result.error.issues) {
           const field = issue.path[0];
           if (typeof field === "string" && !(field in newErrors)) {
