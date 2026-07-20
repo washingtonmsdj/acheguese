@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, MapPin, Sparkles } from "lucide-react";
 import { Helmet } from "react-helmet-async";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/shared/components/ui/card";
+import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
 import { LAUNCH_CITY_PATH, TERRITORY_CONFIG } from "@/config/territory";
 
 type CityEntry = {
