@@ -276,47 +276,26 @@ export default function ResetPasswordPage() {
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">
                     Nova senha
                   </label>
-                  <div className="relative">
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      placeholder={`M\u00ednimo ${AUTH_PASSWORD_MIN_LENGTH} caracteres`}
-                      autoComplete="new-password"
-                      className="h-11 pr-10"
-                      aria-describedby={errors.newPassword ? "new-password-error" : undefined}
-                      {...register("newPassword")}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((current) => !current)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
+                  <PasswordInput
+                    placeholder={`M\u00ednimo ${AUTH_PASSWORD_MIN_LENGTH} caracteres`}
+                    autoComplete="new-password"
+                    invalid={Boolean(errors.newPassword)}
+                    showStrength
+                    strengthValue={newPasswordValue}
+                    aria-describedby={errors.newPassword ? "new-password-error" : undefined}
+                    {...register("newPassword")}
+                  />
                   <InlineFieldError id="new-password-error" message={errors.newPassword?.message} />
-                </div>
-
-                <div className="space-y-1 rounded-xl border border-border/60 bg-secondary/30 p-3">
-                  {passwordRequirements.map((requirement) => (
-                    <div
-                      key={requirement.id}
-                      className={`text-xs ${requirement.satisfied ? "text-success" : "text-muted-foreground"}`}
-                    >
-                      {requirement.satisfied ? "OK" : "•"} {requirement.label}
-                    </div>
-                  ))}
                 </div>
 
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">
                     Confirmar senha
                   </label>
-                  <Input
-                    type="password"
+                  <PasswordInput
                     placeholder="Repita a nova senha"
                     autoComplete="new-password"
-                    className="h-11"
+                    invalid={Boolean(errors.confirmNewPassword)}
                     aria-describedby={errors.confirmNewPassword ? "confirm-password-error" : undefined}
                     {...register("confirmNewPassword")}
                   />
