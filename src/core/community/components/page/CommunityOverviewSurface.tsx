@@ -13,6 +13,7 @@ import {
   LogIn,
   MapPin,
   Megaphone,
+  Newspaper,
   MessageCircle,
   Share2,
   Store,
