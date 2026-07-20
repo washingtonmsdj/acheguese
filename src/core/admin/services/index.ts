@@ -36,6 +36,15 @@ export type {
 } from "./AdminClassifiedsService";
 export { adminCommunityAlertsService } from "./AdminCommunityAlertsService";
 export { adminCommunityIssuesService } from "./AdminCommunityIssuesService";
+export { adminCommunityInterestService } from "./AdminCommunityInterestService";
+export type {
+  CommunityInterestRegistration,
+  CommunityInterestRole,
+  AdminCommunityInterestFilters,
+  AdminCommunityInterestListParams,
+  AdminCommunityInterestListResult,
+  AdminCommunityInterestStats,
+} from "./AdminCommunityInterestService";
 export { adminCouponsService } from "./AdminCouponsService";
 export type { CouponData } from "./AdminCouponsService";
 export { adminEventsService } from "./AdminEventsService";
