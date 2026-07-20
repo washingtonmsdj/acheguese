@@ -128,19 +128,23 @@ export function generateSitemap(
   ];
 
   const staticPages = [
-    { path: '/sobre', priority: 0.6 },
-    { path: '/contato', priority: 0.6 },
-    { path: '/termos', priority: 0.3 },
-    { path: '/privacidade', priority: 0.3 },
+    { path: '/inicio', priority: 0.9, changefreq: 'weekly' as const },
+    { path: '/ba/salvador', priority: 0.95, changefreq: 'daily' as const },
+    { path: '/sobre', priority: 0.6, changefreq: 'monthly' as const },
+    { path: '/contato', priority: 0.6, changefreq: 'monthly' as const },
+    { path: '/termos', priority: 0.3, changefreq: 'monthly' as const },
+    { path: '/privacidade', priority: 0.3, changefreq: 'monthly' as const },
   ];
+
 
   staticPages.forEach((page) => {
     urls.push({
       loc: `${normalizedBaseUrl}${page.path}`,
-      changefreq: 'monthly',
+      changefreq: page.changefreq,
       priority: page.priority,
     });
   });
+
 
   locations
     .filter((location) => location.status === 'active')
