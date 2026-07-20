@@ -290,11 +290,54 @@ export default function AdminCommunityInterest() {
       const stamp = new Date().toISOString().slice(0, 10);
       downloadCsv(`interesse-comunidade-${stamp}.csv`, toCsv(rows));
       toast.success(`Exportados ${rows.length} registros`);
-    } catch (err) {
+    } catch {
       toast.error("Falha ao gerar CSV de exportação");
     } finally {
       setIsExporting(false);
     }
+  };
+
+  const handleExportPage = async () => {
+    if (items.length === 0) {
+      toast.info("Sem registros na página atual.");
+      return;
+    }
+    try {
+      setIsExportingPage(true);
+      const stamp = new Date().toISOString().slice(0, 10);
+      downloadCsv(
+        `interesse-comunidade-pagina-${page}-${stamp}.csv`,
+        toCsv(items),
+      );
+      toast.success(`Exportados ${items.length} registros da página ${page}`);
+    } finally {
+      setIsExportingPage(false);
+    }
+  };
+
+  const openDetail = (row: CommunityInterestRegistration) => {
+    setSelected(row);
+    setEditStatus((row.admin_status ?? "new") as CommunityInterestAdminStatus);
+    setEditNotes(row.admin_notes ?? "");
+  };
+
+  const handleSave = async () => {
+    if (!selected) return;
+    setIsSaving(true);
+    const res = await adminCommunityInterestService.updateRegistration(
+      selected.id,
+      { admin_status: editStatus, admin_notes: editNotes || null },
+      user?.id ?? null,
+    );
+    setIsSaving(false);
+    if (!res.ok) {
+      toast.error(`Falha ao salvar: ${res.error ?? "erro"}`);
+      return;
+    }
+    toast.success("Registro atualizado");
+    setSelected(null);
+    queryClient.invalidateQueries({ queryKey: ["admin-community-interest"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-community-interest-stats"] });
   };
 
   return (
