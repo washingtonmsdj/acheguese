@@ -586,6 +586,82 @@ export function CreatePostModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedIntent.structuralType]);
 
+  // Snapshot atual dos campos textuais (mesma forma do PostDraftPayload).
+  const currentDraftPayload = React.useMemo<PostDraftPayload>(
+    () => ({
+      intent,
+      distributionLevel,
+      genericDescription,
+      pollQuestion,
+      pollOptions,
+      problemLocation,
+      problemCategory,
+      problemSeverity,
+      problemRecurrence,
+      problemDescription,
+      eventDate,
+      eventTime,
+      eventPlace,
+      eventLimit,
+      eventDescription,
+    }),
+    [
+      intent,
+      distributionLevel,
+      genericDescription,
+      pollQuestion,
+      pollOptions,
+      problemLocation,
+      problemCategory,
+      problemSeverity,
+      problemRecurrence,
+      problemDescription,
+      eventDate,
+      eventTime,
+      eventPlace,
+      eventLimit,
+      eventDescription,
+    ],
+  );
+
+  // Autosave: local (debounce 400ms) + remoto (debounce 1500ms).
+  React.useEffect(() => {
+    if (!open || editPostId) return;
+    if (!profile?.id) return;
+    if (suppressAutosaveRef.current) return;
+    if (!hasMeaningfulDraft(currentDraftPayload)) return;
+
+    const profileId = profile.id;
+    if (autosaveTimerRef.current) window.clearTimeout(autosaveTimerRef.current);
+    if (remoteSyncTimerRef.current)
+      window.clearTimeout(remoteSyncTimerRef.current);
+
+    autosaveTimerRef.current = window.setTimeout(() => {
+      const snapshot = savePostDraft(profileId, currentDraftPayload);
+      if (snapshot) {
+        setLastSavedAt(snapshot.updatedAt);
+        setHasStoredDraft(true);
+      }
+    }, 400);
+
+    remoteSyncTimerRef.current = window.setTimeout(() => {
+      const snapshot: PostDraftSnapshot = {
+        ...currentDraftPayload,
+        updatedAt: Date.now(),
+      };
+      void upsertRemoteDraft(profileId, snapshot);
+    }, 1500);
+
+    return () => {
+      if (autosaveTimerRef.current)
+        window.clearTimeout(autosaveTimerRef.current);
+      if (remoteSyncTimerRef.current)
+        window.clearTimeout(remoteSyncTimerRef.current);
+    };
+  }, [open, editPostId, profile?.id, currentDraftPayload]);
+
+
+
   const displayName = profile?.displayName ?? "Usuário";
   const avatarUrl = profile?.avatarUrl;
   const initials = displayName
