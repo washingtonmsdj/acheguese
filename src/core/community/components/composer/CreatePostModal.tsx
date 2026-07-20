@@ -1056,6 +1056,14 @@ export function CreatePostModal({
             Escolha o formato, escreva com clareza e confirme onde o conteúdo
             será exibido.
           </DialogDescription>
+          {!editPostId && formattedSavedAt ? (
+            <p
+              className="mt-1 text-[11px] text-muted-foreground"
+              aria-live="polite"
+            >
+              Rascunho salvo às {formattedSavedAt}
+            </p>
+          ) : null}
         </DialogHeader>
         <div className="max-h-[calc(92dvh-7.5rem)] space-y-4 overflow-y-auto px-4 py-3 overscroll-contain sm:max-h-[70vh] sm:space-y-5 sm:px-5 sm:py-4">
           {locationError && (
