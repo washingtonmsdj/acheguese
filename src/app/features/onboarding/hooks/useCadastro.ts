@@ -120,6 +120,10 @@ export function useCadastroForm() {
     try {
       const compromise = await checkPasswordCompromise(values.password);
       if (compromise.blocked) {
+        form.setError("password", {
+          type: "compromised",
+          message: compromise.message,
+        });
         toast({
           title: "Senha comprometida",
           description: compromise.message,
@@ -150,9 +154,29 @@ export function useCadastroForm() {
         state: { email: values.email },
       });
     } catch (error: unknown) {
+      const message = getAuthErrorMessage(error, "Tente novamente.");
+      const raw =
+        error && typeof error === "object" && "message" in error
+          ? String((error as { message?: unknown }).message ?? "")
+          : "";
+
+      // Mapeia erros de backend para o campo do shadcn correspondente e
+      // sempre exibe um banner amigável (root.serverError) — o usuário pode
+      // estar em qualquer step quando o submit final falha.
+      if (/already registered|already exists|já cadastrado/i.test(raw)) {
+        form.setError("email", { type: "server", message });
+      } else if (/username|handle|nome de usu[aá]rio/i.test(raw)) {
+        form.setError("username", { type: "server", message });
+      } else if (/password|senha/i.test(raw)) {
+        form.setError("password", { type: "server", message });
+      } else if (/email|e-?mail/i.test(raw)) {
+        form.setError("email", { type: "server", message });
+      }
+      form.setError("root.serverError", { type: "server", message });
+
       toast({
         title: "Erro ao criar conta",
-        description: getAuthErrorMessage(error, "Tente novamente."),
+        description: message,
         variant: "destructive",
       });
     } finally {

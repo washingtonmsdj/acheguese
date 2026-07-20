@@ -696,6 +696,16 @@ export default function CadastroPage() {
                       </div>
                     ) : null}
 
+                    {form.formState.errors.root?.serverError?.message ? (
+                      <div
+                        role="alert"
+                        data-testid="cadastro-server-error"
+                        className="mt-4 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+                      >
+                        {form.formState.errors.root.serverError.message}
+                      </div>
+                    ) : null}
+
                     <div className="mt-6 flex items-center justify-between border-t border-border/70 pt-5">
                       {currentStep > 0 ? (
                         <Button
