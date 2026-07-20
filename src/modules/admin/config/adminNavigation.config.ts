@@ -13,6 +13,7 @@ import {
   Flag,
   Image,
   LayoutDashboard,
+  MailCheck,
   Map,
   MapPin,
   Megaphone,
@@ -193,6 +194,13 @@ export const ADMIN_NAV_SECTIONS: readonly AdminNavSection[] = [
         to: "/admin/community-issues",
         icon: AlertCircle,
         label: "Problemas Urbanos",
+        section: "comunidade",
+      },
+      {
+        id: "community-interest",
+        to: "/admin/community-interest",
+        icon: MailCheck,
+        label: "Interesse (Waitlist)",
         section: "comunidade",
       },
       {
