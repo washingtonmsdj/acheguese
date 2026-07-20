@@ -440,6 +440,11 @@ export function CreatePostModal({
   const [lastSavedAt, setLastSavedAt] = React.useState<number | null>(null);
   const [hasStoredDraft, setHasStoredDraft] = React.useState(false);
   const [confirmDiscardOpen, setConfirmDiscardOpen] = React.useState(false);
+  const [saveStatus, setSaveStatus] = React.useState<
+    "idle" | "saving" | "synced" | "offline" | "error"
+  >("idle");
+  const [pendingDraftForRestore, setPendingDraftForRestore] =
+    React.useState<PostDraftSnapshot | null>(null);
   const autosaveTimerRef = React.useRef<number | null>(null);
   const remoteSyncTimerRef = React.useRef<number | null>(null);
   const suppressAutosaveRef = React.useRef(true);
