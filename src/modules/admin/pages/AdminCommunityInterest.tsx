@@ -526,53 +526,197 @@ export default function AdminCommunityInterest() {
                 <TableHead>Contato</TableHead>
                 <TableHead>Vínculo</TableHead>
                 <TableHead>Comunidade</TableHead>
-                <TableHead>Novidades</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Verif.</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                    {formatDate(row.created_at)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="font-medium">{row.full_name}</div>
-                    {row.message ? (
-                      <div className="mt-0.5 line-clamp-2 max-w-[320px] text-xs text-muted-foreground">
-                        {row.message}
+              {items.map((row) => {
+                const status = (row.admin_status ?? "new") as CommunityInterestAdminStatus;
+                return (
+                  <TableRow
+                    key={row.id}
+                    className="cursor-pointer"
+                    onClick={() => openDetail(row)}
+                  >
+                    <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                      {formatDate(row.created_at)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-medium">{row.full_name}</div>
+                      {row.message ? (
+                        <div className="mt-0.5 line-clamp-2 max-w-[320px] text-xs text-muted-foreground">
+                          {row.message}
+                        </div>
+                      ) : null}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      <div>{row.email}</div>
+                      {row.phone ? (
+                        <div className="text-xs text-muted-foreground">{row.phone}</div>
+                      ) : null}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{ROLE_LABELS[row.role] ?? row.role}</Badge>
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      <div className="font-medium">{row.community_slug ?? "—"}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {row.territory_path ?? "sem território"}
                       </div>
-                    ) : null}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    <div>{row.email}</div>
-                    {row.phone ? (
-                      <div className="text-xs text-muted-foreground">{row.phone}</div>
-                    ) : null}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{ROLE_LABELS[row.role] ?? row.role}</Badge>
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    <div className="font-medium">{row.community_slug ?? "—"}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {row.territory_path ?? "sem território"}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {row.wants_updates ? (
-                      <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">
-                        Aceita
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={`${STATUS_BADGE[status]} hover:opacity-90`}>
+                        {STATUS_LABELS[status]}
                       </Badge>
-                    ) : (
-                      <Badge variant="outline">Não</Badge>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>
+                      {row.turnstile_verified ? (
+                        <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">
+                          <ShieldCheck className="mr-1 h-3 w-3" />
+                          OK
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline">—</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openDetail(row);
+                        }}
+                      >
+                        Detalhes
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </AdminTable>
         </AdminDataState>
       </AdminSectionCard>
+
+      <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Detalhes do cadastro</DialogTitle>
+            <DialogDescription>
+              Consulte metadados completos e atualize o status de triagem.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selected ? (
+            <div className="space-y-4">
+              <div className="grid gap-3 text-sm md:grid-cols-2">
+                <div>
+                  <div className="text-xs text-muted-foreground">Nome</div>
+                  <div className="font-medium">{selected.full_name}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Vínculo</div>
+                  <div>{ROLE_LABELS[selected.role] ?? selected.role}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">E-mail</div>
+                  <div className="break-all">{selected.email}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Telefone</div>
+                  <div>{selected.phone ?? "—"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Comunidade</div>
+                  <div>{selected.community_slug ?? "—"}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {selected.territory_path ?? "sem território"}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Turnstile</div>
+                  <div>{selected.turnstile_verified ? "Verificado" : "Não verificado"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Criado</div>
+                  <div>{formatDate(selected.created_at)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Atualizado</div>
+                  <div>{formatDate(selected.updated_at)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Revisado em</div>
+                  <div>{selected.reviewed_at ? formatDate(selected.reviewed_at) : "—"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Aceita novidades</div>
+                  <div>{selected.wants_updates ? "Sim" : "Não"}</div>
+                </div>
+              </div>
+
+              {selected.message ? (
+                <div>
+                  <div className="text-xs text-muted-foreground">Mensagem</div>
+                  <div className="rounded border bg-muted/30 p-2 text-sm whitespace-pre-wrap">
+                    {selected.message}
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-1">
+                  <Label>Status de triagem</Label>
+                  <Select
+                    value={editStatus}
+                    onValueChange={(value) =>
+                      setEditStatus(value as CommunityInterestAdminStatus)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(STATUS_LABELS) as CommunityInterestAdminStatus[]).map(
+                        (key) => (
+                          <SelectItem key={key} value={key}>
+                            {STATUS_LABELS[key]}
+                          </SelectItem>
+                        ),
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1 md:col-span-2">
+                  <Label htmlFor="admin-notes">Notas internas</Label>
+                  <Textarea
+                    id="admin-notes"
+                    value={editNotes}
+                    onChange={(event) => setEditNotes(event.target.value)}
+                    rows={3}
+                    maxLength={2000}
+                    placeholder="Contexto de contato, próximos passos, etc."
+                  />
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setSelected(null)} disabled={isSaving}>
+              Fechar
+            </Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? "Salvando..." : "Salvar alterações"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
   );
 }
