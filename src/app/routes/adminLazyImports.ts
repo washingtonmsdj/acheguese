@@ -57,6 +57,9 @@ export const AdminCommunityAlerts = lazy(() =>
 export const AdminCommunityIssues = lazy(() =>
   import("@/modules/admin/pages/AdminCommunityIssues"),
 );
+export const AdminCommunityInterest = lazy(() =>
+  import("@/modules/admin/pages/AdminCommunityInterest"),
+);
 export const AdminComunicacao = createLaunchPausedRoute("Comunicacao");
 export const AdminIdentidade = lazy(() =>
   import("@/core/admin/identity/pages/AdminIdentidadePage"),
