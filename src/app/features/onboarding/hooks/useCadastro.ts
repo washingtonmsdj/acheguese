@@ -1,5 +1,19 @@
+/**
+ * useCadastroForm — SSOT do wizard de cadastro (react-hook-form + Zod).
+ *
+ * Substitui a antiga versão baseada em `useState` manual. Todo o estado do
+ * formulário passa a viver dentro do `useForm`, e a validação por step usa
+ * `form.trigger([...campos])` contra o `RegisterFullSchema`.
+ *
+ * O nome `useCadastro` é mantido como alias para compatibilidade com o
+ * barrel `@/app/features/onboarding` e testes existentes.
+ */
+
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useForm, type FieldPath } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
 import { AuthService } from "@/core/auth/services/AuthService";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
@@ -7,28 +21,13 @@ import { setPendingSignupEmail } from "@/core/auth/utils/pendingSignup";
 import { TERMS_OF_SERVICE_VERSION } from "@/core/legal/termsOfService";
 import { useToast } from "@/shared/hooks/use-toast";
 import {
-  RegisterAccountStepSchema,
-  RegisterConfirmationStepSchema,
-  RegisterLocationStepSchema,
+  RegisterFullSchema,
+  type RegisterFullInput,
 } from "@/shared/validation/schemas/user.schema";
 
-export interface CadastroFormData {
-  name: string;
-  username: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  stateId: string;
-  stateName: string;
-  cityId: string;
-  cityName: string;
-  neighborhoodId: string;
-  neighborhoodName: string;
-  street: string;
-  termsAccepted: boolean;
-}
+export type CadastroFormValues = RegisterFullInput;
 
-const initialFormData: CadastroFormData = {
+const defaultValues: CadastroFormValues = {
   name: "",
   username: "",
   email: "",
@@ -41,136 +40,39 @@ const initialFormData: CadastroFormData = {
   neighborhoodId: "",
   neighborhoodName: "",
   street: "",
-  termsAccepted: false,
+  // literal(true) — o RHF só permite avançar quando marcado
+  termsAccepted: false as unknown as true,
 };
 
-export function useCadastro() {
+const STEP_FIELDS: Record<number, FieldPath<CadastroFormValues>[]> = {
+  0: ["name", "username", "email", "password", "confirmPassword"],
+  1: ["stateId", "cityId", "neighborhoodId"],
+  2: ["termsAccepted"],
+};
+
+export function useCadastroForm() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const form = useForm<CadastroFormValues>({
+    resolver: zodResolver(RegisterFullSchema),
+    mode: "onBlur",
+    defaultValues,
+    shouldFocusError: true,
+  });
+
   const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState<CadastroFormData>(initialFormData);
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof CadastroFormData, string>>
-  >({});
   const [loading, setLoading] = useState(false);
 
-  const updateField = useCallback(
-    <K extends keyof CadastroFormData>(
-      field: K,
-      value: CadastroFormData[K],
-    ) => {
-      setFormData((prev) => ({ ...prev, [field]: value }));
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    },
-    [],
-  );
-
-  const setTermsAccepted = useCallback(
-    (accepted: boolean) => {
-      updateField("termsAccepted", accepted);
-    },
-    [updateField],
-  );
-
-  const selectState = useCallback((id: string, name: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      stateId: id,
-      stateName: name,
-      cityId: "",
-      cityName: "",
-      neighborhoodId: "",
-      neighborhoodName: "",
-    }));
-    setErrors((prev) => ({
-      ...prev,
-      stateId: undefined,
-      cityId: undefined,
-      neighborhoodId: undefined,
-    }));
-  }, []);
-
-  const selectCity = useCallback((id: string, name: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      cityId: id,
-      cityName: name,
-      neighborhoodId: "",
-      neighborhoodName: "",
-    }));
-    setErrors((prev) => ({
-      ...prev,
-      cityId: undefined,
-      neighborhoodId: undefined,
-    }));
-  }, []);
-
-  const selectNeighborhood = useCallback((id: string, name: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      neighborhoodId: id,
-      neighborhoodName: name,
-    }));
-    setErrors((prev) => ({ ...prev, neighborhoodId: undefined }));
-  }, []);
-
   const validateStep = useCallback(
-    (step: number): boolean => {
-      const newErrors: Partial<Record<keyof CadastroFormData, string>> = {};
-
-      const applyZodResult = (result: {
-        success: boolean;
-        error?: { issues: Array<{ path: (string | number)[]; message: string }> };
-      }) => {
-        if (result.success || !result.error) return;
-        for (const issue of result.error.issues) {
-          const field = issue.path[0];
-          if (typeof field === "string" && !(field in newErrors)) {
-            (newErrors as Record<string, string>)[field] = issue.message;
-          }
-        }
-      };
-
-      if (step === 0) {
-        applyZodResult(
-          RegisterAccountStepSchema.safeParse({
-            name: formData.name,
-            username: formData.username,
-            email: formData.email,
-            password: formData.password,
-            confirmPassword: formData.confirmPassword,
-          }),
-        );
-      }
-
-      if (step === 1) {
-        applyZodResult(
-          RegisterLocationStepSchema.safeParse({
-            stateId: formData.stateId,
-            cityId: formData.cityId,
-            neighborhoodId: formData.neighborhoodId,
-          }),
-        );
-      }
-
-      if (step === 2) {
-        applyZodResult(
-          RegisterConfirmationStepSchema.safeParse({
-            termsAccepted: formData.termsAccepted,
-          }),
-        );
-      }
-
-      setErrors(newErrors);
-      return Object.keys(newErrors).length === 0;
-    },
-    [formData],
+    async (step: number) => form.trigger(STEP_FIELDS[step] ?? []),
+    [form],
   );
 
   const handleNext = useCallback(
-    (totalSteps: number) => {
-      if (!validateStep(currentStep)) return;
+    async (totalSteps: number) => {
+      const ok = await validateStep(currentStep);
+      if (!ok) return;
       setCurrentStep((prev) => Math.min(prev + 1, totalSteps - 1));
     },
     [currentStep, validateStep],
@@ -180,18 +82,43 @@ export function useCadastro() {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   }, []);
 
-  const handleSubmit = useCallback(async () => {
-    if (!validateStep(0) || !validateStep(1) || !validateStep(2)) {
-      toast({
-        title: "Preencha todos os campos obrigatorios",
-        variant: "destructive",
-      });
-      return;
-    }
+  const selectState = useCallback(
+    (id: string, name: string) => {
+      form.setValue("stateId", id, { shouldValidate: true, shouldDirty: true });
+      form.setValue("stateName", name);
+      form.setValue("cityId", "", { shouldValidate: false });
+      form.setValue("cityName", "");
+      form.setValue("neighborhoodId", "", { shouldValidate: false });
+      form.setValue("neighborhoodName", "");
+    },
+    [form],
+  );
 
+  const selectCity = useCallback(
+    (id: string, name: string) => {
+      form.setValue("cityId", id, { shouldValidate: true, shouldDirty: true });
+      form.setValue("cityName", name);
+      form.setValue("neighborhoodId", "", { shouldValidate: false });
+      form.setValue("neighborhoodName", "");
+    },
+    [form],
+  );
+
+  const selectNeighborhood = useCallback(
+    (id: string, name: string) => {
+      form.setValue("neighborhoodId", id, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      form.setValue("neighborhoodName", name);
+    },
+    [form],
+  );
+
+  const submit = form.handleSubmit(async (values) => {
     setLoading(true);
     try {
-      const compromise = await checkPasswordCompromise(formData.password);
+      const compromise = await checkPasswordCompromise(values.password);
       if (compromise.blocked) {
         toast({
           title: "Senha comprometida",
@@ -202,23 +129,26 @@ export function useCadastro() {
       }
 
       await AuthService.signUp({
-        email: formData.email,
-        password: formData.password,
-        name: formData.name,
-        display_name: formData.name,
-        handle: formData.username,
-        city: formData.cityName,
-        neighborhood: formData.neighborhoodName,
-        state: formData.stateName,
-        street: formData.street.trim(),
-        neighborhood_id: formData.neighborhoodId || undefined,
+        email: values.email,
+        password: values.password,
+        name: values.name,
+        display_name: values.name,
+        handle: values.username,
+        city: values.cityName,
+        neighborhood: values.neighborhoodName,
+        state: values.stateName,
+        street: values.street.trim(),
+        neighborhood_id: values.neighborhoodId || undefined,
         termsAcceptance: {
           accepted: true,
           version: TERMS_OF_SERVICE_VERSION,
         },
       });
-      setPendingSignupEmail(formData.email);
-      navigate("/cadastro/confirmacao", { state: { email: formData.email } });
+
+      setPendingSignupEmail(values.email);
+      navigate("/cadastro/confirmacao", {
+        state: { email: values.email },
+      });
     } catch (error: unknown) {
       toast({
         title: "Erro ao criar conta",
@@ -228,21 +158,21 @@ export function useCadastro() {
     } finally {
       setLoading(false);
     }
-  }, [formData, validateStep, toast, navigate]);
+  });
 
   return {
+    form,
     currentStep,
-    formData,
-    errors,
     loading,
-    updateField,
-    setTermsAccepted,
-    selectState,
-    selectCity,
-    selectNeighborhood,
     validateStep,
     handleNext,
     handleBack,
-    handleSubmit,
+    selectState,
+    selectCity,
+    selectNeighborhood,
+    submit,
   };
 }
+
+/** Alias legado — mantido para compat com barrel/tests. */
+export const useCadastro = useCadastroForm;
