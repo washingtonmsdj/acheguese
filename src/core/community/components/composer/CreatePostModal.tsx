@@ -71,9 +71,12 @@ import {
 import {
   deleteRemoteDraft,
   fetchRemoteDraft,
+  flushPendingSync,
+  hasPendingSync,
   upsertRemoteDraft,
 } from "@/core/community/services/postDraftSync";
 import { emitNewPost } from "@/core/community/state/newPostHighlight";
+import { CloudCheck, CloudOff, Loader2, TriangleAlert } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
