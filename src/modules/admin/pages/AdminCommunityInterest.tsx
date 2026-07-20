@@ -141,16 +141,23 @@ function toCsv(rows: CommunityInterestRegistration[]): string {
   const headers = [
     "id",
     "created_at",
+    "updated_at",
     "full_name",
     "email",
     "phone",
     "role",
+    "community_id",
     "community_slug",
     "territory_path",
     "wants_updates",
     "turnstile_verified",
+    "admin_status",
+    "reviewed_at",
+    "reviewed_by",
+    "user_id",
     "source",
     "message",
+    "admin_notes",
   ];
   const lines = [headers.join(",")];
   for (const row of rows) {
@@ -158,16 +165,30 @@ function toCsv(rows: CommunityInterestRegistration[]): string {
       [
         row.id,
         row.created_at,
+        row.updated_at,
         row.full_name,
         row.email,
         row.phone ?? "",
         row.role,
+        row.community_id ?? "",
         row.community_slug ?? "",
         row.territory_path ?? "",
         row.wants_updates ? "sim" : "nao",
         row.turnstile_verified ? "sim" : "nao",
+        row.admin_status ?? "new",
+        row.reviewed_at ?? "",
+        row.reviewed_by ?? "",
+        row.user_id ?? "",
         row.source ?? "",
         (row.message ?? "").replace(/\s+/g, " ").slice(0, 500),
+        (row.admin_notes ?? "").replace(/\s+/g, " ").slice(0, 500),
+      ]
+        .map(csvEscape)
+        .join(","),
+    );
+  }
+  return lines.join("\n");
+}
       ]
         .map(csvEscape)
         .join(","),
