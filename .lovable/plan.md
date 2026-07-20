@@ -1,61 +1,82 @@
-# Plano: Melhorias no fluxo /novo-post + destaque no feed
 
-## 1. Destacar post recém-publicado no feed + scroll automático
+# Plano: Padronização SSOT de Login e Cadastro
 
-**Onde:** `CreatePostModal.tsx`, `communityFeedQueryKeys`, componente do feed da comunidade (`CommunityOverviewSurface` / lista de posts).
+## Objetivo
+Alinhar `/cadastro`, `/login`, `/esqueci-senha` e `/reset-password` ao mesmo padrão canônico já usado no Login: `react-hook-form` + Zod (`@/shared/validation`), `useAuth`/`AuthService` como boundary, componentes compartilhados e mensagens de erro unificadas.
 
-- Após `handlePublish` bem-sucedido, gravar o ID do novo post em um contexto leve (novo `useNewPostHighlight` com Zustand ou React Context em `src/core/community/state/newPostHighlight.ts`).
-- Feed passa a ler esse ID; quando o card correspondente monta:
-  - Aplica classe `data-new-post="true"` com ring/glow animado (Tailwind + `animate-pulse` inicial + fade após 6s).
-  - Faz `scrollIntoView({ behavior: 'smooth', block: 'center' })` em `useEffect`.
-- Highlight expira após 8s (ou ao trocar de rota).
-- Complementa o invalidate já existente de `communityFeedQueryKeys.root`.
+## Escopo
 
-## 2. Autosave enquanto escreve em /novo-post
+### 1. Schemas canônicos (`src/shared/validation/schemas/user.schema.ts`)
+- Estender com `RegisterAccountStepSchema`, `RegisterLocationStepSchema`, `RegisterConfirmationStepSchema` e `RegisterFullSchema` (união dos 3 steps + `termsAccepted`, `termsVersion`).
+- Reutilizar `strongPasswordValidator`, `usernameValidator`, `isValidEmail`.
+- Exportar tipos `RegisterAccountStepInput`, etc.
 
-**Onde:** `CreatePostModal.tsx` + `postDraft.ts`.
+### 2. Componente compartilhado `PasswordInput`
+- Criar `src/app/components/auth/PasswordInput.tsx`:
+  - Toggle mostrar/ocultar.
+  - Indicador de força (usa `getPasswordStrength`).
+  - Checklist de requisitos (`getPasswordRequirementStatus`).
+  - Aviso de senha comprometida (async, via `checkPasswordCompromise`).
+- Usado por Cadastro (senha + confirmar) e Reset Password.
 
-- Adicionar `useEffect` com debounce (400ms via helper local ou `use-debounce` existente) que chama `savePostDraft` sempre que qualquer campo textual muda e `hasMeaningfulDraft` retorna true.
-- Mostrar rótulo discreto "Rascunho salvo às HH:MM" no header do modal, alimentado por estado `lastSavedAt`.
-- Manter o botão "Salvar rascunho" para salvar/fechar manualmente.
+### 3. Refatorar `useCadastro` → `useCadastroForm`
+- Substituir estado manual por `useForm` com `zodResolver(RegisterFullSchema)` e `mode: "onBlur"`.
+- Steps controlados via `trigger([...campos])` em vez de `validateStep` manual.
+- Manter `selectState/selectCity/selectNeighborhood` como helpers que chamam `setValue` + `trigger`.
+- `handleSubmit` continua usando `AuthService.signUp` com `termsAcceptance` versionado.
 
-## 3. Botão "Descartar rascunho" com confirmação
+### 4. `CadastroPage.tsx`
+- Trocar inputs controlados por `<FormField>` do shadcn (Form, FormControl, FormMessage).
+- Usar `PasswordInput` nos campos de senha.
+- Remover validações inline duplicadas — depende de `FormMessage`.
+- Manter layout responsivo (mobile/desktop) e o wizard 3 steps existente.
 
-**Onde:** `CreatePostModal.tsx`.
+### 5. `LoginPage.tsx` — pequenos ajustes
+- Já usa `LoginIdentifierSchema` + `useAuth`. Adicionar:
+  - `PasswordInput` (sem checklist, só toggle) para unificar UX.
+  - Padronizar mapping de erro via `getAuthErrorMessage`.
 
-- Botão discreto (variant ghost, texto destrutivo) visível apenas quando existe rascunho salvo (`loadPostDraft` retornou algo OU `hasMeaningfulDraft` atual).
-- Ao clicar abre `AlertDialog` (shadcn) com "Descartar rascunho? Esta ação não pode ser desfeita.".
-- Confirmação: `clearPostDraft(profileId)`, reseta todos os estados do formulário para os defaults e cancela autosave até nova digitação.
+### 6. `EsqueciSenhaPage` / `ResetPasswordPage`
+- Garantir `react-hook-form` + `ForgotPasswordSchema` / `ResetPasswordFormSchema`.
+- Reset usa `PasswordInput` completo.
 
-## 4. Sincronização de rascunhos no banco (multi-device)
+### 7. Testes
+- Atualizar `useCadastro.spec.tsx` para o novo hook (`useCadastroForm`) preservando cenários:
+  - Termos obrigatórios no step 2.
+  - `AuthService.signUp` recebe `termsAcceptance` versionado.
+- Novo `PasswordInput.spec.tsx` cobrindo toggle, força e requisitos.
+- Smoke test em `LoginPage` garantindo submit chama `useAuth.signIn`.
 
-**Backend (via migrações Cloud):**
-- Nova tabela `public.community_post_drafts`:
-  - `id uuid pk default gen_random_uuid()`
-  - `user_id uuid not null references auth.users(id) on delete cascade`
-  - `profile_id uuid not null` (mesmo id usado no localStorage)
-  - `payload jsonb not null` (snapshot do `PostDraftSnapshot`)
-  - `updated_at timestamptz default now()`
-  - unique `(user_id, profile_id)`
-- RLS: `select/insert/update/delete` restritos a `auth.uid() = user_id`.
-- GRANTs para `authenticated` e `service_role` (SSOT do projeto).
+### 8. Cleanup
+- Remover funções `validateStep` manuais e mensagens duplicadas.
+- Documentar padrão em `docs/ARCHITECTURE.md` (seção Auth Forms).
 
-**Frontend:**
-- Novo serviço `src/core/community/services/postDraftSync.ts` com `fetchRemoteDraft`, `upsertRemoteDraft`, `deleteRemoteDraft` usando `supabase.from('community_post_drafts')`.
-- No mount do modal: em paralelo carrega local + remoto; se remoto for mais novo (`updated_at > localSavedAt`) usa remoto e sobrescreve local; caso contrário mantém local e faz upsert remoto.
-- Autosave (item 2) também chama `upsertRemoteDraft` (debounce maior, 1.5s) com try/catch silencioso — offline nunca bloqueia a UX.
-- Descartar (item 3) e publicar com sucesso chamam `deleteRemoteDraft`.
-- Erros de rede caem em log apenas; localStorage continua sendo a fonte imediata.
+## Fora de escopo
+- Mudanças em `AuthService`, `SessionService` ou schema de banco.
+- Novos providers OAuth.
+- Mudanças visuais além das necessárias para o `PasswordInput`.
+
+## Definição de pronto
+- `tsgo` verde nos arquivos alterados.
+- Testes atualizados passando (`useCadastro.spec`, `PasswordInput.spec`, `LoginPage.spec` se existir).
+- Cadastro completo end-to-end funcional em mobile e desktop.
+- Nenhuma validação manual de campo restante em `useCadastroForm` — tudo via Zod.
 
 ## Detalhes técnicos
 
-- Nova tabela: entregue como migração via ferramenta de Cloud (a mesma sessão executa).
-- `PostDraftSnapshot` ganha `updatedAt` (renomeando `savedAt` para manter compat e comparações com remoto).
-- Contexto de highlight vive em `src/core/community/state/newPostHighlight.tsx` (Provider já disponível em `AppLayoutRoutes`).
-- Sem novos pacotes: debounce inline, `AlertDialog` já existente em `@/components/ui/alert-dialog`.
-- Testes: adicionar caso rápido em `CreatePostModal.spec.ts` para autosave + descartar; smoke em `postDraftSync` mockando supabase.
+```text
+src/
+├─ shared/validation/schemas/user.schema.ts   (+ Register*StepSchema)
+├─ app/components/auth/
+│   └─ PasswordInput.tsx                      (novo)
+├─ app/features/onboarding/
+│   ├─ hooks/useCadastroForm.ts               (substitui useCadastro)
+│   ├─ hooks/useCadastroForm.spec.tsx
+│   └─ pages/CadastroPage.tsx                 (usa Form/FormField)
+└─ app/pages/
+    ├─ LoginPage.tsx                          (PasswordInput)
+    ├─ EsqueciSenhaPage.tsx                   (RHF + schema)
+    └─ ResetPasswordPage.tsx                  (PasswordInput)
+```
 
-## Fora do escopo
-
-- Versionamento/histórico de rascunhos (apenas o mais recente por perfil).
-- Upload de imagens no rascunho (segue apenas texto, como hoje).
+Ordem de execução: schemas → PasswordInput → useCadastroForm → CadastroPage → Login/Reset → testes.

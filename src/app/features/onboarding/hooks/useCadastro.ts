@@ -4,9 +4,13 @@ import { AuthService } from "@/core/auth/services/AuthService";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
 import { setPendingSignupEmail } from "@/core/auth/utils/pendingSignup";
-import { validateAuthPassword } from "@/core/auth/utils/passwordPolicy";
 import { TERMS_OF_SERVICE_VERSION } from "@/core/legal/termsOfService";
 import { useToast } from "@/shared/hooks/use-toast";
+import {
+  RegisterAccountStepSchema,
+  RegisterConfirmationStepSchema,
+  RegisterLocationStepSchema,
+} from "@/shared/validation/schemas/user.schema";
 
 export interface CadastroFormData {
   name: string;
@@ -115,41 +119,47 @@ export function useCadastro() {
     (step: number): boolean => {
       const newErrors: Partial<Record<keyof CadastroFormData, string>> = {};
 
+      const applyZodResult = (result: {
+        success: boolean;
+        error?: { issues: Array<{ path: (string | number)[]; message: string }> };
+      }) => {
+        if (result.success || !result.error) return;
+        for (const issue of result.error.issues) {
+          const field = issue.path[0];
+          if (typeof field === "string" && !(field in newErrors)) {
+            (newErrors as Record<string, string>)[field] = issue.message;
+          }
+        }
+      };
+
       if (step === 0) {
-        if (!formData.name.trim()) newErrors.name = "Nome e obrigatorio";
-        else if (formData.name.trim().length < 3)
-          newErrors.name = "Nome deve ter pelo menos 3 caracteres";
-
-        if (!formData.username.trim()) {
-          newErrors.username = "Nome de usuario e obrigatorio";
-        } else if (!/^[a-z][a-z0-9_]{2,29}$/.test(formData.username)) {
-          newErrors.username =
-            "Deve comecar com letra e ter 3-30 chars (letras minusculas, numeros e _)";
-        }
-
-        if (!formData.email.trim()) newErrors.email = "E-mail e obrigatorio";
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-          newErrors.email = "E-mail invalido";
-        }
-
-        const passwordError = validateAuthPassword(formData.password);
-        if (passwordError) newErrors.password = passwordError;
-
-        if (formData.password !== formData.confirmPassword) {
-          newErrors.confirmPassword = "Senhas nao conferem";
-        }
+        applyZodResult(
+          RegisterAccountStepSchema.safeParse({
+            name: formData.name,
+            username: formData.username,
+            email: formData.email,
+            password: formData.password,
+            confirmPassword: formData.confirmPassword,
+          }),
+        );
       }
 
       if (step === 1) {
-        if (!formData.stateId) newErrors.stateId = "Selecione o estado";
-        if (!formData.cityId) newErrors.cityId = "Selecione a cidade";
-        if (!formData.neighborhoodId)
-          newErrors.neighborhoodId = "Selecione seu bairro";
+        applyZodResult(
+          RegisterLocationStepSchema.safeParse({
+            stateId: formData.stateId,
+            cityId: formData.cityId,
+            neighborhoodId: formData.neighborhoodId,
+          }),
+        );
       }
 
-      if (step === 2 && !formData.termsAccepted) {
-        newErrors.termsAccepted =
-          "Você precisa aceitar os Termos de Uso para criar sua conta";
+      if (step === 2) {
+        applyZodResult(
+          RegisterConfirmationStepSchema.safeParse({
+            termsAccepted: formData.termsAccepted,
+          }),
+        );
       }
 
       setErrors(newErrors);

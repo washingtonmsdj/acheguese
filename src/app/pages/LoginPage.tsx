@@ -6,14 +6,13 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   AtSign,
   CheckCircle2,
-  Eye,
-  EyeOff,
   Loader2,
   Mail,
   ShieldCheck,
 } from "lucide-react";
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
+import { PasswordInput } from "@/app/components/auth/PasswordInput";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
@@ -44,7 +43,7 @@ export default function LoginPage() {
     googleAuthAvailable,
   } = useAuth();
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
-  const [showPassword, setShowPassword] = useState(false);
+  
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -325,26 +324,15 @@ export default function LoginPage() {
 
                 <div className="space-y-1.5">
                   <Label htmlFor="login-password">Senha</Label>
-                  <div className="relative">
-                    <Input
-                      id="login-password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Sua senha"
-                      className={cn("h-11 pr-10", errors.password && "border-destructive")}
-                      autoComplete="current-password"
-                      disabled={isBusy}
-                      aria-describedby={errors.password ? "login-password-error" : undefined}
-                      {...register("password")}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((current) => !current)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
+                  <PasswordInput
+                    id="login-password"
+                    placeholder="Sua senha"
+                    autoComplete="current-password"
+                    disabled={isBusy}
+                    invalid={Boolean(errors.password)}
+                    aria-describedby={errors.password ? "login-password-error" : undefined}
+                    {...register("password")}
+                  />
                   <InlineFieldError id="login-password-error" message={errors.password?.message} />
                   <button
                     type="button"

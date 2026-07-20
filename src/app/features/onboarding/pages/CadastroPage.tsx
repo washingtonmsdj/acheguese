@@ -5,8 +5,6 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
-  Eye,
-  EyeOff,
   Loader2,
   MapPin,
   Sparkles,
@@ -15,16 +13,14 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
+import { PasswordInput } from "@/app/components/auth/PasswordInput";
 import { useCadastro } from "@/app/features/onboarding/hooks/useCadastro";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import {
   COMMUNITY_GUIDELINES_PATH,
   TERMS_OF_SERVICE_PATH,
 } from "@/core/legal/termsOfService";
-import {
-  AUTH_PASSWORD_MIN_LENGTH,
-  getAuthPasswordRequirementStatus,
-} from "@/core/auth/utils/passwordPolicy";
+import { AUTH_PASSWORD_MIN_LENGTH } from "@/core/auth/utils/passwordPolicy";
 import { useLocationCascade } from "@/core/location/hooks/useLocationCascade";
 import { Button } from "@/shared/components/ui/button";
 import { Checkbox } from "@/shared/components/ui/checkbox";
@@ -132,12 +128,7 @@ export default function CadastroPage() {
     loadingNeighborhoods,
   } = useLocationCascade(formData.stateId || null, formData.cityId || null);
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [capsLock, setCapsLock] = useState(false);
-  const passwordRequirements = getAuthPasswordRequirementStatus(
-    formData.password,
-  );
 
   const activeStep = STEPS.at(currentStep) ?? STEPS[0];
   const stepId = activeStep.id;
@@ -298,97 +289,37 @@ export default function CadastroPage() {
 
                     <div className="space-y-1.5">
                       <Label htmlFor="password">Senha *</Label>
-                      <div className="relative">
-                        <Input
-                          id="password"
-                          type={showPassword ? "text" : "password"}
-                          placeholder={`M\u00ednimo ${AUTH_PASSWORD_MIN_LENGTH} caracteres`}
-                          value={formData.password}
-                          onChange={(event) =>
-                            updateField("password", event.target.value)
-                          }
-                          className={cn(
-                            "h-10 pr-10 sm:h-11",
-                            errors.password && "border-destructive",
-                          )}
-                          autoComplete="new-password"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword((current) => !current)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                          aria-label={
-                            showPassword ? "Ocultar senha" : "Mostrar senha"
-                          }
-                        >
-                          {showPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </button>
-                      </div>
+                      <PasswordInput
+                        id="password"
+                        placeholder={`M\u00ednimo ${AUTH_PASSWORD_MIN_LENGTH} caracteres`}
+                        value={formData.password}
+                        onChange={(event) =>
+                          updateField("password", event.target.value)
+                        }
+                        invalid={Boolean(errors.password)}
+                        showStrength
+                        strengthValue={formData.password}
+                        autoComplete="new-password"
+                      />
                       {errors.password ? (
                         <p className="text-xs text-destructive">
                           {errors.password}
                         </p>
                       ) : null}
-                      {formData.password ? (
-                        <div className="space-y-1 rounded-2xl border border-border/60 bg-secondary/35 p-3">
-                          {passwordRequirements.map((requirement) => (
-                            <div
-                              key={requirement.id}
-                              className={cn(
-                                "text-xs",
-                                requirement.satisfied
-                                  ? "text-emerald-400"
-                                  : "text-muted-foreground",
-                              )}
-                            >
-                              {requirement.satisfied ? "OK" : "-"}{" "}
-                              {requirement.label}
-                            </div>
-                          ))}
-                        </div>
-                      ) : null}
                     </div>
 
                     <div className="space-y-1.5">
                       <Label htmlFor="confirmPassword">Confirmar senha *</Label>
-                      <div className="relative">
-                        <Input
-                          id="confirmPassword"
-                          type={showConfirmPassword ? "text" : "password"}
-                          placeholder="Repita a senha"
-                          value={formData.confirmPassword}
-                          onChange={(event) =>
-                            updateField("confirmPassword", event.target.value)
-                          }
-                          className={cn(
-                            "h-10 pr-10 sm:h-11",
-                            errors.confirmPassword && "border-destructive",
-                          )}
-                          autoComplete="new-password"
-                        />
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowConfirmPassword((current) => !current)
-                          }
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                          aria-label={
-                            showConfirmPassword
-                              ? "Ocultar senha"
-                              : "Mostrar senha"
-                          }
-                        >
-                          {showConfirmPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </button>
-                      </div>
+                      <PasswordInput
+                        id="confirmPassword"
+                        placeholder="Repita a senha"
+                        value={formData.confirmPassword}
+                        onChange={(event) =>
+                          updateField("confirmPassword", event.target.value)
+                        }
+                        invalid={Boolean(errors.confirmPassword)}
+                        autoComplete="new-password"
+                      />
                       {errors.confirmPassword ? (
                         <p className="text-xs text-destructive">
                           {errors.confirmPassword}
