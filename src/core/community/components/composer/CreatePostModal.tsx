@@ -434,6 +434,12 @@ export function CreatePostModal({
   const queryClient = useQueryClient();
   const [publishing, setPublishing] = React.useState(false);
   const [savingDraft, setSavingDraft] = React.useState(false);
+  const [lastSavedAt, setLastSavedAt] = React.useState<number | null>(null);
+  const [hasStoredDraft, setHasStoredDraft] = React.useState(false);
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = React.useState(false);
+  const autosaveTimerRef = React.useRef<number | null>(null);
+  const remoteSyncTimerRef = React.useRef<number | null>(null);
+  const suppressAutosaveRef = React.useRef(true);
   const [intentPickerExpanded, setIntentPickerExpanded] = React.useState(false);
   const intentPickerId = React.useId();
   const [intent, setIntent] = React.useState<IntentId>(
