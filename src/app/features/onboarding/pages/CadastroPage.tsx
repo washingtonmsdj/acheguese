@@ -14,7 +14,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
 import { PasswordInput } from "@/app/components/auth/PasswordInput";
-import { useCadastro } from "@/app/features/onboarding/hooks/useCadastro";
+import { useCadastroForm } from "@/app/features/onboarding/hooks/useCadastro";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import {
   COMMUNITY_GUIDELINES_PATH,
@@ -24,6 +24,14 @@ import { AUTH_PASSWORD_MIN_LENGTH } from "@/core/auth/utils/passwordPolicy";
 import { useLocationCascade } from "@/core/location/hooks/useLocationCascade";
 import { Button } from "@/shared/components/ui/button";
 import { Checkbox } from "@/shared/components/ui/checkbox";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/shared/components/ui/form";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import {
@@ -65,7 +73,6 @@ function StepIndicator({
                 )}
               />
             ) : null}
-
             <button
               type="button"
               onClick={() => {
@@ -99,25 +106,32 @@ export default function CadastroPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const {
+    form,
     currentStep,
-    formData,
-    errors,
     loading,
-    updateField,
-    setTermsAccepted,
+    handleNext,
+    handleBack,
     selectState,
     selectCity,
     selectNeighborhood,
-    handleNext,
-    handleBack,
-    handleSubmit,
-  } = useCadastro();
+    submit,
+  } = useCadastroForm();
 
   useEffect(() => {
-    if (user) {
-      navigate("/", { replace: true });
-    }
+    if (user) navigate("/", { replace: true });
   }, [navigate, user]);
+
+  const stateId = form.watch("stateId");
+  const cityId = form.watch("cityId");
+  const password = form.watch("password");
+  const neighborhoodName = form.watch("neighborhoodName");
+  const cityName = form.watch("cityName");
+  const stateName = form.watch("stateName");
+  const street = form.watch("street");
+  const nameValue = form.watch("name");
+  const usernameValue = form.watch("username");
+  const emailValue = form.watch("email");
+  const termsAcceptedValue = form.watch("termsAccepted");
 
   const {
     states,
@@ -126,7 +140,7 @@ export default function CadastroPage() {
     loadingStates,
     loadingCities,
     loadingNeighborhoods,
-  } = useLocationCascade(formData.stateId || null, formData.cityId || null);
+  } = useLocationCascade(stateId || null, cityId || null);
 
   const [capsLock, setCapsLock] = useState(false);
 
@@ -134,6 +148,8 @@ export default function CadastroPage() {
   const stepId = activeStep.id;
   const nextStepLabel =
     currentStep < STEPS.length - 1 ? STEPS[currentStep + 1]?.label : null;
+
+  const isLastStep = currentStep === STEPS.length - 1;
 
   return (
     <>
@@ -176,526 +192,553 @@ export default function CadastroPage() {
             </div>
             <StepIndicator currentStep={currentStep} onBack={handleBack} />
 
-            <AnimatePresence mode="wait">
-              <motion.section
-                key={stepId}
-                initial={{ opacity: 0, x: 18 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -18 }}
-                transition={{ duration: 0.22 }}
-                className="rounded-[28px] border border-border/70 bg-card/78 p-5 shadow-[0_32px_120px_-64px_rgba(0,0,0,0.9)] backdrop-blur-sm sm:p-8"
+            <Form {...form}>
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (isLastStep) void submit();
+                }}
               >
-                {stepId === "personal" ? (
-                  <div className="space-y-4 sm:space-y-5">
-                    <div className="space-y-1.5 text-center">
-                      <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
-                        Criacao de conta
-                      </p>
-                      <h1 className="font-heading text-2xl font-bold text-foreground sm:text-[2rem]">
-                        Crie sua conta
-                      </h1>
-                      <p className="text-sm leading-6 text-muted-foreground">
-                        Conecte-se com o que acontece no seu bairro.
-                      </p>
-                    </div>
+                <AnimatePresence mode="wait">
+                  <motion.section
+                    key={stepId}
+                    initial={{ opacity: 0, x: 18 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -18 }}
+                    transition={{ duration: 0.22 }}
+                    className="rounded-[28px] border border-border/70 bg-card/78 p-5 shadow-[0_32px_120px_-64px_rgba(0,0,0,0.9)] backdrop-blur-sm sm:p-8"
+                  >
+                    {stepId === "personal" ? (
+                      <div className="space-y-4 sm:space-y-5">
+                        <div className="space-y-1.5 text-center">
+                          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
+                            Criacao de conta
+                          </p>
+                          <h1 className="font-heading text-2xl font-bold text-foreground sm:text-[2rem]">
+                            Crie sua conta
+                          </h1>
+                          <p className="text-sm leading-6 text-muted-foreground">
+                            Conecte-se com o que acontece no seu bairro.
+                          </p>
+                        </div>
 
-                    <div className="space-y-1.5">
-                      <Label htmlFor="name">Nome completo *</Label>
-                      <Input
-                        id="name"
-                        placeholder="Seu nome"
-                        value={formData.name}
-                        onChange={(event) =>
-                          updateField("name", event.target.value)
-                        }
-                        className={cn(
-                          "h-10 sm:h-11",
-                          errors.name && "border-destructive",
-                        )}
-                        autoComplete="name"
-                      />
-                      {errors.name ? (
-                        <p className="text-xs text-destructive">
-                          {errors.name}
-                        </p>
-                      ) : null}
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="username">Nome de usuario *</Label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                          @
-                        </span>
-                        <Input
-                          id="username"
-                          placeholder="seunome"
-                          value={formData.username}
-                          onChange={(event) =>
-                            updateField(
-                              "username",
-                              event.target.value
-                                .replace(/[^a-z0-9_]/g, "")
-                                .toLowerCase(),
-                            )
-                          }
-                          onKeyDown={(event) =>
-                            setCapsLock(event.getModifierState("CapsLock"))
-                          }
-                          onKeyUp={(event) =>
-                            setCapsLock(event.getModifierState("CapsLock"))
-                          }
-                          className={cn(
-                            "h-10 pl-8 sm:h-11",
-                            errors.username && "border-destructive",
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field, fieldState }) => (
+                            <FormItem>
+                              <FormLabel>Nome completo *</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  placeholder="Seu nome"
+                                  autoComplete="name"
+                                  className={cn(
+                                    "h-10 sm:h-11",
+                                    fieldState.error && "border-destructive",
+                                  )}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
                           )}
-                          autoComplete="username"
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="username"
+                          render={({ field, fieldState }) => (
+                            <FormItem>
+                              <FormLabel>Nome de usuario *</FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                                    @
+                                  </span>
+                                  <Input
+                                    {...field}
+                                    placeholder="seunome"
+                                    autoComplete="username"
+                                    onChange={(event) =>
+                                      field.onChange(
+                                        event.target.value
+                                          .replace(/[^a-z0-9_]/g, "")
+                                          .toLowerCase(),
+                                      )
+                                    }
+                                    onKeyDown={(event) =>
+                                      setCapsLock(
+                                        event.getModifierState("CapsLock"),
+                                      )
+                                    }
+                                    onKeyUp={(event) =>
+                                      setCapsLock(
+                                        event.getModifierState("CapsLock"),
+                                      )
+                                    }
+                                    className={cn(
+                                      "h-10 pl-8 sm:h-11",
+                                      fieldState.error && "border-destructive",
+                                    )}
+                                  />
+                                </div>
+                              </FormControl>
+                              {capsLock ? (
+                                <p className="text-xs text-amber-500">
+                                  Caps Lock ativo. Apenas letras minusculas sao
+                                  aceitas.
+                                </p>
+                              ) : null}
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field, fieldState }) => (
+                            <FormItem>
+                              <FormLabel>Email *</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  type="email"
+                                  placeholder="seu@email.com"
+                                  autoComplete="email"
+                                  className={cn(
+                                    "h-10 sm:h-11",
+                                    fieldState.error && "border-destructive",
+                                  )}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="password"
+                          render={({ field, fieldState }) => (
+                            <FormItem>
+                              <FormLabel>Senha *</FormLabel>
+                              <FormControl>
+                                <PasswordInput
+                                  {...field}
+                                  placeholder={`M\u00ednimo ${AUTH_PASSWORD_MIN_LENGTH} caracteres`}
+                                  invalid={Boolean(fieldState.error)}
+                                  showStrength
+                                  strengthValue={password || ""}
+                                  autoComplete="new-password"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="confirmPassword"
+                          render={({ field, fieldState }) => (
+                            <FormItem>
+                              <FormLabel>Confirmar senha *</FormLabel>
+                              <FormControl>
+                                <PasswordInput
+                                  {...field}
+                                  placeholder="Repita a senha"
+                                  invalid={Boolean(fieldState.error)}
+                                  autoComplete="new-password"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
                       </div>
-                      {capsLock ? (
-                        <p className="text-xs text-amber-500">
-                          Caps Lock ativo. Apenas letras minusculas sao aceitas.
-                        </p>
-                      ) : null}
-                      {errors.username ? (
-                        <p className="text-xs text-destructive">
-                          {errors.username}
-                        </p>
-                      ) : null}
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="email">Email *</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="seu@email.com"
-                        value={formData.email}
-                        onChange={(event) =>
-                          updateField("email", event.target.value)
-                        }
-                        className={cn(
-                          "h-10 sm:h-11",
-                          errors.email && "border-destructive",
-                        )}
-                        autoComplete="email"
-                      />
-                      {errors.email ? (
-                        <p className="text-xs text-destructive">
-                          {errors.email}
-                        </p>
-                      ) : null}
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="password">Senha *</Label>
-                      <PasswordInput
-                        id="password"
-                        placeholder={`M\u00ednimo ${AUTH_PASSWORD_MIN_LENGTH} caracteres`}
-                        value={formData.password}
-                        onChange={(event) =>
-                          updateField("password", event.target.value)
-                        }
-                        invalid={Boolean(errors.password)}
-                        showStrength
-                        strengthValue={formData.password}
-                        autoComplete="new-password"
-                      />
-                      {errors.password ? (
-                        <p className="text-xs text-destructive">
-                          {errors.password}
-                        </p>
-                      ) : null}
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="confirmPassword">Confirmar senha *</Label>
-                      <PasswordInput
-                        id="confirmPassword"
-                        placeholder="Repita a senha"
-                        value={formData.confirmPassword}
-                        onChange={(event) =>
-                          updateField("confirmPassword", event.target.value)
-                        }
-                        invalid={Boolean(errors.confirmPassword)}
-                        autoComplete="new-password"
-                      />
-                      {errors.confirmPassword ? (
-                        <p className="text-xs text-destructive">
-                          {errors.confirmPassword}
-                        </p>
-                      ) : null}
-                    </div>
-                  </div>
-                ) : null}
-
-                {stepId === "location" ? (
-                  <div className="space-y-4 sm:space-y-5">
-                    <div className="space-y-1.5 text-center">
-                      <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
-                        {"Territ\u00f3rio"}
-                      </p>
-                      <h2 className="font-heading text-2xl font-bold text-foreground">
-                        {"Onde voc\u00ea mora?"}
-                      </h2>
-                      <p className="text-sm leading-6 text-muted-foreground">
-                        {
-                          "Isso conecta voc\u00ea ao bairro certo e melhora a descoberta local."
-                        }
-                      </p>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label>Estado *</Label>
-                      <Select
-                        value={formData.stateId}
-                        onValueChange={(id) => {
-                          const found = states.find((state) => state.id === id);
-                          if (found) selectState(found.id, found.name);
-                        }}
-                        disabled={loadingStates}
-                      >
-                        <SelectTrigger
-                          className={cn(
-                            "h-10 sm:h-11",
-                            errors.stateId && "border-destructive",
-                          )}
-                        >
-                          <SelectValue
-                            placeholder={
-                              loadingStates
-                                ? "Carregando..."
-                                : "Selecione o estado"
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-64">
-                          {states.map((state) => (
-                            <SelectItem key={state.id} value={state.id}>
-                              {state.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {errors.stateId ? (
-                        <p className="text-xs text-destructive">
-                          {errors.stateId}
-                        </p>
-                      ) : null}
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label>Cidade *</Label>
-                      <Select
-                        value={formData.cityId}
-                        onValueChange={(id) => {
-                          const found = cities.find((city) => city.id === id);
-                          if (found) selectCity(found.id, found.name);
-                        }}
-                        disabled={!formData.stateId || loadingCities}
-                      >
-                        <SelectTrigger
-                          className={cn(
-                            "h-10 sm:h-11",
-                            errors.cityId && "border-destructive",
-                          )}
-                        >
-                          <SelectValue
-                            placeholder={
-                              !formData.stateId
-                                ? "Selecione o estado primeiro"
-                                : loadingCities
-                                  ? "Carregando..."
-                                  : "Selecione a cidade"
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-64">
-                          {cities.map((city) => (
-                            <SelectItem key={city.id} value={city.id}>
-                              {city.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {errors.cityId ? (
-                        <p className="text-xs text-destructive">
-                          {errors.cityId}
-                        </p>
-                      ) : null}
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label>Bairro *</Label>
-                      <Select
-                        value={formData.neighborhoodId}
-                        onValueChange={(id) => {
-                          const found = neighborhoods.find(
-                            (neighborhood) => neighborhood.id === id,
-                          );
-                          if (found) selectNeighborhood(found.id, found.name);
-                        }}
-                        disabled={!formData.cityId || loadingNeighborhoods}
-                      >
-                        <SelectTrigger
-                          className={cn(
-                            "h-10 sm:h-11",
-                            errors.neighborhoodId && "border-destructive",
-                          )}
-                        >
-                          <SelectValue
-                            placeholder={
-                              !formData.cityId
-                                ? "Selecione a cidade primeiro"
-                                : loadingNeighborhoods
-                                  ? "Carregando..."
-                                  : "Selecione seu bairro"
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-64">
-                          {neighborhoods.map((neighborhood) => (
-                            <SelectItem
-                              key={neighborhood.id}
-                              value={neighborhood.id}
-                            >
-                              {neighborhood.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {errors.neighborhoodId ? (
-                        <p className="text-xs text-destructive">
-                          {errors.neighborhoodId}
-                        </p>
-                      ) : null}
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label htmlFor="cadastro-street">Rua</Label>
-                      <Input
-                        id="cadastro-street"
-                        value={formData.street}
-                        onChange={(event) =>
-                          updateField("street", event.target.value)
-                        }
-                        placeholder="Ex: Rua Afonso Lopes"
-                        className={cn(
-                          "h-10 sm:h-11",
-                          errors.street && "border-destructive",
-                        )}
-                      />
-                      {errors.street ? (
-                        <p className="text-xs text-destructive">
-                          {errors.street}
-                        </p>
-                      ) : null}
-                    </div>
-
-                    {formData.neighborhoodName ? (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/6 p-4"
-                      >
-                        <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium text-foreground">
-                            {formData.neighborhoodName}, {formData.cityName}
-                          </p>
-                          <p className="text-xs leading-5 text-muted-foreground">
-                            {
-                              "Voc\u00ea ser\u00e1 conectado \u00e0 comunidade local e aos m\u00f3dulos do seu territ\u00f3rio."
-                            }
-                          </p>
-                        </div>
-                      </motion.div>
                     ) : null}
-                  </div>
-                ) : null}
 
-                {stepId === "confirm" ? (
-                  <div className="space-y-4 sm:space-y-5">
-                    <div className="space-y-1.5 text-center">
-                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/12 text-primary">
-                        <CheckCircle2 className="h-6 w-6" />
-                      </div>
-                      <h2 className="font-heading text-2xl font-bold text-foreground">
-                        Tudo pronto
-                      </h2>
-                      <p className="text-sm leading-6 text-muted-foreground">
-                        Confirme seus dados antes de criar a conta.
-                      </p>
-                    </div>
-
-                    <div className="overflow-hidden rounded-2xl border border-border/70 bg-secondary/30">
-                      <div className="flex items-start gap-3 border-b border-border/60 p-4">
-                        <User className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                        <div className="min-w-0">
-                          <p className="text-xs text-muted-foreground">Nome</p>
-                          <p className="truncate text-sm font-medium text-foreground">
-                            {formData.name}
+                    {stepId === "location" ? (
+                      <div className="space-y-4 sm:space-y-5">
+                        <div className="space-y-1.5 text-center">
+                          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
+                            {"Territ\u00f3rio"}
+                          </p>
+                          <h2 className="font-heading text-2xl font-bold text-foreground">
+                            {"Onde voc\u00ea mora?"}
+                          </h2>
+                          <p className="text-sm leading-6 text-muted-foreground">
+                            {
+                              "Isso conecta voc\u00ea ao bairro certo e melhora a descoberta local."
+                            }
                           </p>
                         </div>
-                      </div>
 
-                      {formData.username ? (
-                        <div className="flex items-start gap-3 border-b border-border/60 p-4">
-                          <span className="mt-0.5 shrink-0 text-sm text-muted-foreground">
-                            @
-                          </span>
-                          <div className="min-w-0">
-                            <p className="text-xs text-muted-foreground">
-                              Usuario
-                            </p>
-                            <p className="truncate text-sm font-medium text-foreground">
-                              @{formData.username}
-                            </p>
+                        <FormField
+                          control={form.control}
+                          name="stateId"
+                          render={({ field, fieldState }) => (
+                            <FormItem>
+                              <FormLabel>Estado *</FormLabel>
+                              <Select
+                                value={field.value}
+                                onValueChange={(id) => {
+                                  const found = states.find(
+                                    (state) => state.id === id,
+                                  );
+                                  if (found) selectState(found.id, found.name);
+                                }}
+                                disabled={loadingStates}
+                              >
+                                <FormControl>
+                                  <SelectTrigger
+                                    className={cn(
+                                      "h-10 sm:h-11",
+                                      fieldState.error &&
+                                        "border-destructive",
+                                    )}
+                                  >
+                                    <SelectValue
+                                      placeholder={
+                                        loadingStates
+                                          ? "Carregando..."
+                                          : "Selecione o estado"
+                                      }
+                                    />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="max-h-64">
+                                  {states.map((state) => (
+                                    <SelectItem key={state.id} value={state.id}>
+                                      {state.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="cityId"
+                          render={({ field, fieldState }) => (
+                            <FormItem>
+                              <FormLabel>Cidade *</FormLabel>
+                              <Select
+                                value={field.value}
+                                onValueChange={(id) => {
+                                  const found = cities.find(
+                                    (city) => city.id === id,
+                                  );
+                                  if (found) selectCity(found.id, found.name);
+                                }}
+                                disabled={!stateId || loadingCities}
+                              >
+                                <FormControl>
+                                  <SelectTrigger
+                                    className={cn(
+                                      "h-10 sm:h-11",
+                                      fieldState.error && "border-destructive",
+                                    )}
+                                  >
+                                    <SelectValue
+                                      placeholder={
+                                        !stateId
+                                          ? "Selecione o estado primeiro"
+                                          : loadingCities
+                                            ? "Carregando..."
+                                            : "Selecione a cidade"
+                                      }
+                                    />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="max-h-64">
+                                  {cities.map((city) => (
+                                    <SelectItem key={city.id} value={city.id}>
+                                      {city.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="neighborhoodId"
+                          render={({ field, fieldState }) => (
+                            <FormItem>
+                              <FormLabel>Bairro *</FormLabel>
+                              <Select
+                                value={field.value}
+                                onValueChange={(id) => {
+                                  const found = neighborhoods.find(
+                                    (n) => n.id === id,
+                                  );
+                                  if (found)
+                                    selectNeighborhood(found.id, found.name);
+                                }}
+                                disabled={!cityId || loadingNeighborhoods}
+                              >
+                                <FormControl>
+                                  <SelectTrigger
+                                    className={cn(
+                                      "h-10 sm:h-11",
+                                      fieldState.error && "border-destructive",
+                                    )}
+                                  >
+                                    <SelectValue
+                                      placeholder={
+                                        !cityId
+                                          ? "Selecione a cidade primeiro"
+                                          : loadingNeighborhoods
+                                            ? "Carregando..."
+                                            : "Selecione seu bairro"
+                                      }
+                                    />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="max-h-64">
+                                  {neighborhoods.map((n) => (
+                                    <SelectItem key={n.id} value={n.id}>
+                                      {n.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="street"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Rua</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  placeholder="Ex: Rua Afonso Lopes"
+                                  className="h-10 sm:h-11"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        {neighborhoodName ? (
+                          <motion.div
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/6 p-4"
+                          >
+                            <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                            <div className="space-y-1">
+                              <p className="text-sm font-medium text-foreground">
+                                {neighborhoodName}, {cityName}
+                              </p>
+                              <p className="text-xs leading-5 text-muted-foreground">
+                                {
+                                  "Voc\u00ea ser\u00e1 conectado \u00e0 comunidade local e aos m\u00f3dulos do seu territ\u00f3rio."
+                                }
+                              </p>
+                            </div>
+                          </motion.div>
+                        ) : null}
+                      </div>
+                    ) : null}
+
+                    {stepId === "confirm" ? (
+                      <div className="space-y-4 sm:space-y-5">
+                        <div className="space-y-1.5 text-center">
+                          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+                            <CheckCircle2 className="h-6 w-6" />
+                          </div>
+                          <h2 className="font-heading text-2xl font-bold text-foreground">
+                            Tudo pronto
+                          </h2>
+                          <p className="text-sm leading-6 text-muted-foreground">
+                            Confirme seus dados antes de criar a conta.
+                          </p>
+                        </div>
+
+                        <div className="overflow-hidden rounded-2xl border border-border/70 bg-secondary/30">
+                          <div className="flex items-start gap-3 border-b border-border/60 p-4">
+                            <User className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                            <div className="min-w-0">
+                              <p className="text-xs text-muted-foreground">
+                                Nome
+                              </p>
+                              <p className="truncate text-sm font-medium text-foreground">
+                                {nameValue}
+                              </p>
+                            </div>
+                          </div>
+
+                          {usernameValue ? (
+                            <div className="flex items-start gap-3 border-b border-border/60 p-4">
+                              <span className="mt-0.5 shrink-0 text-sm text-muted-foreground">
+                                @
+                              </span>
+                              <div className="min-w-0">
+                                <p className="text-xs text-muted-foreground">
+                                  Usuario
+                                </p>
+                                <p className="truncate text-sm font-medium text-foreground">
+                                  @{usernameValue}
+                                </p>
+                              </div>
+                            </div>
+                          ) : null}
+
+                          <div className="flex items-start gap-3 border-b border-border/60 p-4">
+                            <span className="mt-0.5 shrink-0 text-sm text-muted-foreground">
+                              Mail
+                            </span>
+                            <div className="min-w-0">
+                              <p className="text-xs text-muted-foreground">
+                                Email
+                              </p>
+                              <p className="truncate text-sm font-medium text-foreground">
+                                {emailValue}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-3 p-4">
+                            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                            <div className="min-w-0">
+                              <p className="text-xs text-muted-foreground">
+                                Localizacao
+                              </p>
+                              <p className="text-sm font-medium text-foreground">
+                                {neighborhoodName}, {cityName} - {stateName}
+                              </p>
+                              {street ? (
+                                <p className="text-xs text-muted-foreground">
+                                  {street}
+                                </p>
+                              ) : null}
+                            </div>
                           </div>
                         </div>
-                      ) : null}
 
-                      <div className="flex items-start gap-3 border-b border-border/60 p-4">
-                        <span className="mt-0.5 shrink-0 text-sm text-muted-foreground">
-                          Mail
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-xs text-muted-foreground">Email</p>
-                          <p className="truncate text-sm font-medium text-foreground">
-                            {formData.email}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-start gap-3 p-4">
-                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                        <div className="min-w-0">
-                          <p className="text-xs text-muted-foreground">
-                            Localizacao
-                          </p>
-                          <p className="text-sm font-medium text-foreground">
-                            {formData.neighborhoodName}, {formData.cityName} -{" "}
-                            {formData.stateName}
-                          </p>
-                          {formData.street ? (
-                            <p className="text-xs text-muted-foreground">
-                              {formData.street}
-                            </p>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="rounded-xl border border-border/70 bg-background/45 p-3">
-                      <div className="flex items-start gap-3">
-                        <Checkbox
-                          id="cadastro-terms-acceptance"
-                          checked={formData.termsAccepted}
-                          onCheckedChange={(checked) =>
-                            setTermsAccepted(checked === true)
-                          }
-                          aria-invalid={Boolean(errors.termsAccepted)}
-                          aria-describedby={
-                            errors.termsAccepted
-                              ? "cadastro-terms-acceptance-error"
-                              : undefined
-                          }
-                          className="mt-0.5"
+                        <FormField
+                          control={form.control}
+                          name="termsAccepted"
+                          render={({ field, fieldState }) => (
+                            <FormItem className="rounded-xl border border-border/70 bg-background/45 p-3">
+                              <div className="flex items-start gap-3">
+                                <FormControl>
+                                  <Checkbox
+                                    id="cadastro-terms-acceptance"
+                                    checked={field.value === true}
+                                    onCheckedChange={(checked) =>
+                                      field.onChange(checked === true)
+                                    }
+                                    aria-invalid={Boolean(fieldState.error)}
+                                    className="mt-0.5"
+                                  />
+                                </FormControl>
+                                <Label
+                                  htmlFor="cadastro-terms-acceptance"
+                                  className="cursor-pointer text-sm leading-5 text-foreground"
+                                >
+                                  Li e aceito os Termos de Uso, incluindo as
+                                  Diretrizes da Comunidade.
+                                </Label>
+                              </div>
+                              <p className="mt-2 pl-7 text-xs leading-5 text-muted-foreground">
+                                Leia os{" "}
+                                <Link
+                                  to={TERMS_OF_SERVICE_PATH}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="font-medium text-primary hover:underline"
+                                >
+                                  Termos de Uso
+                                </Link>{" "}
+                                e as{" "}
+                                <Link
+                                  to={COMMUNITY_GUIDELINES_PATH}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="font-medium text-primary hover:underline"
+                                >
+                                  Diretrizes da Comunidade
+                                </Link>{" "}
+                                antes de confirmar. A Política de Privacidade
+                                permanece disponível em{" "}
+                                <Link
+                                  to="/privacidade"
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="font-medium text-primary hover:underline"
+                                >
+                                  Privacidade
+                                </Link>
+                                .
+                              </p>
+                              <div className="pl-7">
+                                <FormMessage />
+                              </div>
+                            </FormItem>
+                          )}
                         />
-                        <Label
-                          htmlFor="cadastro-terms-acceptance"
-                          className="cursor-pointer text-sm leading-5 text-foreground"
-                        >
-                          Li e aceito os Termos de Uso, incluindo as Diretrizes
-                          da Comunidade.
-                        </Label>
                       </div>
-                      <p className="mt-2 pl-7 text-xs leading-5 text-muted-foreground">
-                        Leia os{" "}
-                        <Link
-                          to={TERMS_OF_SERVICE_PATH}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="font-medium text-primary hover:underline"
-                        >
-                          Termos de Uso
-                        </Link>{" "}
-                        e as{" "}
-                        <Link
-                          to={COMMUNITY_GUIDELINES_PATH}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="font-medium text-primary hover:underline"
-                        >
-                          Diretrizes da Comunidade
-                        </Link>{" "}
-                        antes de confirmar. A Política de Privacidade permanece
-                        disponível em{" "}
-                        <Link
-                          to="/privacidade"
-                          target="_blank"
-                          rel="noreferrer"
-                          className="font-medium text-primary hover:underline"
-                        >
-                          Privacidade
-                        </Link>
-                        .
-                      </p>
-                      {errors.termsAccepted ? (
-                        <p
-                          id="cadastro-terms-acceptance-error"
-                          role="alert"
-                          className="mt-2 pl-7 text-xs font-medium text-destructive"
-                        >
-                          {errors.termsAccepted}
-                        </p>
-                      ) : null}
-                    </div>
-                  </div>
-                ) : null}
+                    ) : null}
 
-                <div className="mt-6 flex items-center justify-between border-t border-border/70 pt-5">
-                  {currentStep > 0 ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={handleBack}
-                      className="gap-1.5 px-0 sm:px-3"
-                    >
-                      <ArrowLeft className="h-4 w-4" />
-                      Voltar
-                    </Button>
-                  ) : (
-                    <span />
-                  )}
-
-                  {currentStep < STEPS.length - 1 ? (
-                    <Button
-                      type="button"
-                      onClick={() => handleNext(STEPS.length)}
-                      className="h-10 gap-1.5 bg-primary font-semibold text-primary-foreground hover:bg-primary/90 sm:h-11"
-                    >
-                      Próximo
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      onClick={handleSubmit}
-                      disabled={loading || !formData.termsAccepted}
-                      className="h-10 gap-1.5 bg-primary font-semibold text-primary-foreground hover:bg-primary/90 sm:h-11"
-                    >
-                      {loading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                    <div className="mt-6 flex items-center justify-between border-t border-border/70 pt-5">
+                      {currentStep > 0 ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={handleBack}
+                          className="gap-1.5 px-0 sm:px-3"
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                          Voltar
+                        </Button>
                       ) : (
-                        <CheckCircle2 className="h-4 w-4" />
+                        <span />
                       )}
-                      Criar minha conta
-                    </Button>
-                  )}
-                </div>
-              </motion.section>
-            </AnimatePresence>
+
+                      {!isLastStep ? (
+                        <Button
+                          type="button"
+                          onClick={() => void handleNext(STEPS.length)}
+                          className="h-10 gap-1.5 bg-primary font-semibold text-primary-foreground hover:bg-primary/90 sm:h-11"
+                        >
+                          Próximo
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button
+                          type="submit"
+                          disabled={loading || termsAcceptedValue !== true}
+                          className="h-10 gap-1.5 bg-primary font-semibold text-primary-foreground hover:bg-primary/90 sm:h-11"
+                        >
+                          {loading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="h-4 w-4" />
+                          )}
+                          Criar minha conta
+                        </Button>
+                      )}
+                    </div>
+                  </motion.section>
+                </AnimatePresence>
+              </form>
+            </Form>
           </div>
         </main>
       </div>
