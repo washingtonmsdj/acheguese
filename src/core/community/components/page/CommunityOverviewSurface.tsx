@@ -1321,26 +1321,7 @@ export function CommunityOverviewSurface({
 
   const handleSharePost = useCallback(
     (postId: string) => {
-      const shareUrl =
-        typeof window !== "undefined"
-          ? `${window.location.origin}${window.location.pathname}?post=${encodeURIComponent(postId)}`
-          : "";
-
-      if (
-        typeof navigator !== "undefined" &&
-        typeof navigator.share === "function"
-      ) {
-        void navigator
-          .share({ title: communityTitle, url: shareUrl })
-          .catch(() => undefined);
-        return;
-      }
-
-      if (typeof navigator !== "undefined" && navigator.clipboard && shareUrl) {
-        void navigator.clipboard
-          .writeText(shareUrl)
-          .then(() => toast.success("Link copiado"));
-      }
+      void sharePost({ postId, title: communityTitle });
     },
     [communityTitle],
   );
