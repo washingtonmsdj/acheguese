@@ -72,12 +72,18 @@ function renderPage() {
 }
 
 async function fillStep0(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(screen.getByLabelText(/Nome completo/i), "Ana Souza");
-  await user.type(screen.getByLabelText(/Nome de usuario/i), "ana_souza");
-  await user.type(screen.getByLabelText(/^Email/i), "ana@example.com");
-  await user.type(screen.getByLabelText(/^Senha/i), "SenhaSegura@2026");
+  await user.type(screen.getByPlaceholderText(/Seu nome/i), "Ana Souza");
+  await user.type(screen.getByPlaceholderText(/^seunome/i), "ana_souza");
   await user.type(
-    screen.getByLabelText(/Confirmar senha/i),
+    screen.getByPlaceholderText(/seu@email\.com/i),
+    "ana@example.com",
+  );
+  await user.type(
+    screen.getByPlaceholderText(/M[íi]nimo .* caracteres/i),
+    "SenhaSegura@2026",
+  );
+  await user.type(
+    screen.getByPlaceholderText(/Repita a senha/i),
     "SenhaSegura@2026",
   );
 }
