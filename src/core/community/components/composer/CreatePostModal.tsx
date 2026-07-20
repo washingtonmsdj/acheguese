@@ -653,11 +653,12 @@ export function CreatePostModal({
     setSaveStatus("saving");
 
     autosaveTimerRef.current = window.setTimeout(() => {
-      const snapshot = savePostDraft(profileId, currentDraftPayload);
-      if (snapshot) {
-        setLastSavedAt(snapshot.updatedAt);
-        setHasStoredDraft(true);
-      }
+      void savePostDraft(profileId, currentDraftPayload).then((snapshot) => {
+        if (snapshot) {
+          setLastSavedAt(snapshot.updatedAt);
+          setHasStoredDraft(true);
+        }
+      });
     }, 400);
 
     remoteSyncTimerRef.current = window.setTimeout(async () => {
