@@ -189,13 +189,6 @@ function toCsv(rows: CommunityInterestRegistration[]): string {
   }
   return lines.join("\n");
 }
-      ]
-        .map(csvEscape)
-        .join(","),
-    );
-  }
-  return lines.join("\n");
-}
 
 function downloadCsv(filename: string, content: string) {
   const blob = new Blob([`\ufeff${content}`], { type: "text/csv;charset=utf-8" });
