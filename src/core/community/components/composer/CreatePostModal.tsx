@@ -50,6 +50,8 @@ import { useSessionContext } from "@/core/session";
 import { useCreatePostForm } from "../../hooks/composer/useCreatePostForm";
 import { postService } from "@/core/posts/services";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { communityFeedQueryKeys } from "@/core/feed";
 import { cn } from "@/shared/utils/cn";
 import { POST_LIMITS } from "@/shared/constants/socialContent";
 import type { PostType } from "@/core/posts/types.ts";
@@ -57,6 +59,12 @@ import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-r
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
 import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
 import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import {
+  clearPostDraft,
+  hasMeaningfulDraft,
+  loadPostDraft,
+  savePostDraft,
+} from "@/core/community/utils/postDraft";
 import {
   DEFAULT_BLOCKED_ALERT_MESSAGE,
   DEFAULT_BLOCKED_ISSUE_MESSAGE,
@@ -404,7 +412,9 @@ export function CreatePostModal({
   );
   const form = useCreatePostForm();
   const territoryFilter = useTerritoryFilter();
+  const queryClient = useQueryClient();
   const [publishing, setPublishing] = React.useState(false);
+  const [savingDraft, setSavingDraft] = React.useState(false);
   const [intentPickerExpanded, setIntentPickerExpanded] = React.useState(false);
   const intentPickerId = React.useId();
   const [intent, setIntent] = React.useState<IntentId>(
@@ -480,8 +490,34 @@ export function CreatePostModal({
     setIntentPickerExpanded(false);
     setGenericDescription(initialContent ?? "");
     setDistributionLevel(initialDistributionLevel);
+
+    // Restaura rascunho local (apenas em criação, não em edição)
+    if (!editPostId && profile?.id) {
+      const draft = loadPostDraft(profile.id);
+      if (draft && hasMeaningfulDraft(draft)) {
+        setIntent(getLaunchIntent(draft.intent as IntentId));
+        setDistributionLevel(draft.distributionLevel);
+        form.setReach(reachFromTerritorialLevel(draft.distributionLevel));
+        setGenericDescription(draft.genericDescription);
+        setPollQuestion(draft.pollQuestion);
+        setPollOptions(
+          draft.pollOptions.length >= 2 ? draft.pollOptions : ["", ""],
+        );
+        setProblemLocation(draft.problemLocation);
+        setProblemCategory(draft.problemCategory);
+        setProblemSeverity(draft.problemSeverity);
+        setProblemRecurrence(draft.problemRecurrence);
+        setProblemDescription(draft.problemDescription);
+        setEventDate(draft.eventDate);
+        setEventTime(draft.eventTime);
+        setEventPlace(draft.eventPlace);
+        setEventLimit(draft.eventLimit);
+        setEventDescription(draft.eventDescription);
+        toast.info("Rascunho restaurado. Continue de onde parou.");
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, defaultType, initialType, initialContent, initialReach]);
+  }, [open, defaultType, initialType, initialContent, initialReach, editPostId, profile?.id]);
   React.useEffect(() => {
     form.setType(selectedIntent.structuralType);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -738,13 +774,14 @@ export function CreatePostModal({
     setPublishing(true);
     try {
       const payload = buildStructuredPayload();
+      let createdPostId: string | null = null;
       if (editPostId) {
         await postService.updatePost(editPostId, { content: payload.content });
         toast.success("Conteúdo atualizado.");
       } else if (isOpportunityIntent) {
         toast.error("Oportunidades estao pausadas neste MVP.");
       } else {
-        await postService.createPostWithImages(
+        const created = await postService.createPostWithImages(
           {
             author_profile_id: profile.id,
             content: payload.content,
@@ -763,8 +800,31 @@ export function CreatePostModal({
           },
           form.imageFiles,
         );
+        createdPostId = (created as { id?: string })?.id ?? null;
         toast.success("Conteúdo publicado.");
       }
+
+      // Atualiza o feed imediatamente para trazer o novo post ao topo
+      // (ordem canônica é created_at DESC, então o recém-criado aparece primeiro).
+      queryClient.invalidateQueries({ queryKey: communityFeedQueryKeys.root });
+
+      // Marca o post recém-criado para destaque visual opcional na próxima renderização do feed.
+      if (createdPostId && typeof window !== "undefined") {
+        try {
+          window.sessionStorage.setItem(
+            "community:highlight-post-id",
+            createdPostId,
+          );
+        } catch {
+          // best-effort
+        }
+      }
+
+      // Limpa o rascunho após publicação bem-sucedida.
+      if (!editPostId && profile?.id) {
+        clearPostDraft(profile.id);
+      }
+
       form.resetForm();
       handleClose();
     } catch {
@@ -773,6 +833,45 @@ export function CreatePostModal({
       setPublishing(false);
     }
   };
+
+  const handleSaveDraft = () => {
+    if (editPostId) return;
+    if (!profile?.id) {
+      toast.error("Faça login para salvar rascunhos.");
+      return;
+    }
+    const snapshot = {
+      intent,
+      distributionLevel,
+      genericDescription,
+      pollQuestion,
+      pollOptions,
+      problemLocation,
+      problemCategory,
+      problemSeverity,
+      problemRecurrence,
+      problemDescription,
+      eventDate,
+      eventTime,
+      eventPlace,
+      eventLimit,
+      eventDescription,
+    };
+    if (!hasMeaningfulDraft(snapshot)) {
+      toast.info("Escreva algo antes de salvar como rascunho.");
+      return;
+    }
+    setSavingDraft(true);
+    try {
+      savePostDraft(profile.id, snapshot);
+      toast.success("Rascunho salvo. Você pode voltar depois para publicar.");
+      handleClose();
+    } finally {
+      setSavingDraft(false);
+    }
+  };
+
+
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -1372,6 +1471,16 @@ export function CreatePostModal({
             >
               Cancelar
             </Button>
+            {!editPostId ? (
+              <Button
+                variant="outline"
+                onClick={handleSaveDraft}
+                disabled={savingDraft || publishing}
+                className="flex-1 sm:flex-none"
+              >
+                {savingDraft ? "Salvando..." : "Salvar rascunho"}
+              </Button>
+            ) : null}
             <Button
               onClick={handlePublish}
               disabled={!canPublish}
