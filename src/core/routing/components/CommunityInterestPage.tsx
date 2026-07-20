@@ -96,6 +96,14 @@ export function CommunityInterestPage() {
   const [errors, setErrors] = useState<Partial<Record<keyof InterestFormState, string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [honeypot, setHoneypot] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileError, setTurnstileError] = useState<string | null>(null);
+  const mountedAtRef = useRef<number>(Date.now());
+  useEffect(() => {
+    mountedAtRef.current = Date.now();
+  }, []);
+  const turnstileEnabled = TURNSTILE_SITE_KEY.length > 0;
 
   const communityBase = useMemo(() => {
     if (!normalizedState || !normalizedCity) return null;
