@@ -1,0 +1,185 @@
+/**
+ * Testes de integração — CadastroPage
+ *
+ * Cobre:
+ *  1) Erros de Zod exibidos por campo ao tentar avançar com dados inválidos.
+ *  2) Botão "Criar minha conta" desabilitado sem aceite dos Termos e liberado
+ *     quando o checkbox é marcado.
+ *  3) Submit final chama AuthService.signUp com os dados do formulário e
+ *     exibe erro amigável no banner quando a API rejeita o cadastro.
+ */
+
+import { render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import CadastroPage from "./CadastroPage";
+import { AuthService } from "@/core/auth/services/AuthService";
+import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
+
+const navigateMock = vi.fn();
+
+vi.mock("react-router-dom", async () => {
+  const actual =
+    await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
+  return {
+    ...actual,
+    useNavigate: () => navigateMock,
+  };
+});
+
+vi.mock("@/core/auth/hooks/useAuth", () => ({
+  useAuth: () => ({ user: null }),
+}));
+
+vi.mock("@/core/auth/services/AuthService", () => ({
+  AuthService: { signUp: vi.fn() },
+}));
+
+vi.mock("@/core/auth/utils/compromisedPassword", () => ({
+  checkPasswordCompromise: vi.fn(),
+}));
+
+vi.mock("@/core/auth/utils/pendingSignup", () => ({
+  setPendingSignupEmail: vi.fn(),
+}));
+
+vi.mock("@/shared/hooks/use-toast", () => ({
+  useToast: () => ({ toast: vi.fn() }),
+}));
+
+vi.mock("@/core/location/hooks/useLocationCascade", () => ({
+  useLocationCascade: () => ({
+    states: [{ id: "state-ba", name: "Bahia" }],
+    cities: [{ id: "city-salvador", name: "Salvador" }],
+    neighborhoods: [{ id: "district-pituba", name: "Pituba" }],
+    loadingStates: false,
+    loadingCities: false,
+    loadingNeighborhoods: false,
+  }),
+}));
+
+function renderPage() {
+  return render(
+    <HelmetProvider>
+      <MemoryRouter initialEntries={["/cadastro"]}>
+        <CadastroPage />
+      </MemoryRouter>
+    </HelmetProvider>,
+  );
+}
+
+async function fillStep0(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(screen.getByLabelText(/Nome completo/i), "Ana Souza");
+  await user.type(screen.getByLabelText(/Nome de usuario/i), "ana_souza");
+  await user.type(screen.getByLabelText(/^Email/i), "ana@example.com");
+  await user.type(screen.getByLabelText(/^Senha/i), "SenhaSegura@2026");
+  await user.type(
+    screen.getByLabelText(/Confirmar senha/i),
+    "SenhaSegura@2026",
+  );
+}
+
+describe("CadastroPage (integração)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(checkPasswordCompromise).mockResolvedValue({
+      blocked: false,
+      count: 0,
+      unavailable: false,
+    });
+    vi.mocked(AuthService.signUp).mockResolvedValue(undefined);
+  });
+
+  it("mostra erros do Zod nos campos ao tentar avançar com dados inválidos", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(screen.getByRole("button", { name: /Próximo/i }));
+
+    expect(
+      await screen.findByText(/Nome deve ter pelo menos 3 caracteres/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Deve comecar com letra e ter 3-30/i),
+    ).toBeInTheDocument();
+    // signUp não deve ser chamado enquanto houver erros
+    expect(AuthService.signUp).not.toHaveBeenCalled();
+  });
+
+  it("bloqueia o submit sem aceite dos Termos e libera quando marcado", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    // Step 0
+    await fillStep0(user);
+    await user.click(screen.getByRole("button", { name: /Próximo/i }));
+
+    // Step 1 — seleciona território
+    await user.click(await screen.findByLabelText(/Estado/i));
+    await user.click(await screen.findByRole("option", { name: "Bahia" }));
+    await user.click(screen.getByLabelText(/Cidade/i));
+    await user.click(await screen.findByRole("option", { name: "Salvador" }));
+    await user.click(screen.getByLabelText(/Bairro/i));
+    await user.click(await screen.findByRole("option", { name: "Pituba" }));
+    await user.click(screen.getByRole("button", { name: /Próximo/i }));
+
+    // Step 2 — botão desabilitado sem aceite
+    const submit = await screen.findByRole("button", {
+      name: /Criar minha conta/i,
+    });
+    expect(submit).toBeDisabled();
+
+    // Aceita termos
+    await user.click(screen.getByLabelText(/Li e aceito os Termos/i));
+
+    await waitFor(() => expect(submit).toBeEnabled());
+
+    // Submit chama AuthService.signUp
+    await user.click(submit);
+
+    await waitFor(() =>
+      expect(AuthService.signUp).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: "ana@example.com",
+          handle: "ana_souza",
+          city: "Salvador",
+          neighborhood: "Pituba",
+          state: "Bahia",
+        }),
+      ),
+    );
+  });
+
+  it("exibe banner de erro quando a API rejeita o cadastro", async () => {
+    const user = userEvent.setup();
+    vi.mocked(AuthService.signUp).mockRejectedValueOnce(
+      new Error("User already registered"),
+    );
+    renderPage();
+
+    await fillStep0(user);
+    await user.click(screen.getByRole("button", { name: /Próximo/i }));
+    await user.click(await screen.findByLabelText(/Estado/i));
+    await user.click(await screen.findByRole("option", { name: "Bahia" }));
+    await user.click(screen.getByLabelText(/Cidade/i));
+    await user.click(await screen.findByRole("option", { name: "Salvador" }));
+    await user.click(screen.getByLabelText(/Bairro/i));
+    await user.click(await screen.findByRole("option", { name: "Pituba" }));
+    await user.click(screen.getByRole("button", { name: /Próximo/i }));
+
+    await user.click(await screen.findByLabelText(/Li e aceito os Termos/i));
+    await user.click(screen.getByRole("button", { name: /Criar minha conta/i }));
+
+    const emailField = await screen.findByLabelText(/^Email/i);
+    // erro mapeado para o campo email
+    const emailItem = emailField.closest("div")!;
+    await waitFor(() =>
+      expect(
+        within(emailItem.parentElement!).getByText(/já está cadastrado/i),
+      ).toBeInTheDocument(),
+    );
+  });
+});
