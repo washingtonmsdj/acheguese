@@ -54,7 +54,6 @@ export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { user, updatePassword, resetPasswordByIdentifier } = useAuth();
-  const [showPassword, setShowPassword] = useState(false);
   const [done, setDone] = useState(false);
   const [recoveryState, setRecoveryState] = useState<RecoveryState>(
     searchParams.get("expired") === "1" ? "invalid" : "checking",
@@ -73,10 +72,6 @@ export default function ResetPasswordPage() {
   });
 
   const newPasswordValue = watch("newPassword") ?? "";
-  const passwordRequirements = useMemo(
-    () => getAuthPasswordRequirementStatus(newPasswordValue),
-    [newPasswordValue],
-  );
 
   useEffect(() => {
     if (recoveryState === "invalid") return;
