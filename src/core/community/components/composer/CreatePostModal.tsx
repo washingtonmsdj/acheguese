@@ -834,6 +834,45 @@ export function CreatePostModal({
     }
   };
 
+  const handleSaveDraft = () => {
+    if (editPostId) return;
+    if (!profile?.id) {
+      toast.error("Faça login para salvar rascunhos.");
+      return;
+    }
+    const snapshot = {
+      intent,
+      distributionLevel,
+      genericDescription,
+      pollQuestion,
+      pollOptions,
+      problemLocation,
+      problemCategory,
+      problemSeverity,
+      problemRecurrence,
+      problemDescription,
+      eventDate,
+      eventTime,
+      eventPlace,
+      eventLimit,
+      eventDescription,
+    };
+    if (!hasMeaningfulDraft(snapshot)) {
+      toast.info("Escreva algo antes de salvar como rascunho.");
+      return;
+    }
+    setSavingDraft(true);
+    try {
+      savePostDraft(profile.id, snapshot);
+      toast.success("Rascunho salvo. Você pode voltar depois para publicar.");
+      handleClose();
+    } finally {
+      setSavingDraft(false);
+    }
+  };
+
+
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="bottom-0 left-0 right-0 top-auto max-h-[92dvh] w-full max-w-none translate-x-0 translate-y-0 gap-0 overflow-hidden rounded-b-none rounded-t-2xl border-x-0 border-b-0 p-0 sm:bottom-auto sm:left-[50%] sm:right-auto sm:top-[50%] sm:max-h-[88vh] sm:max-w-[760px] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-lg sm:border">
