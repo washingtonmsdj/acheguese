@@ -266,11 +266,44 @@ async function getCommunityBreakdown(
     .slice(0, limit);
 }
 
+export interface UpdateRegistrationInput {
+  admin_status?: CommunityInterestAdminStatus;
+  admin_notes?: string | null;
+  wants_updates?: boolean;
+}
+
+async function updateRegistration(
+  id: string,
+  patch: UpdateRegistrationInput,
+  reviewerId?: string | null,
+): Promise<{ ok: boolean; error?: string }> {
+  const payload: Record<string, unknown> = { ...patch };
+  if (patch.admin_status || patch.admin_notes !== undefined) {
+    payload.reviewed_at = new Date().toISOString();
+    if (reviewerId) payload.reviewed_by = reviewerId;
+  }
+  const query = db
+    .from<CommunityInterestRegistration>("community_interest_registrations")
+    .update(payload)
+    .eq("id", id);
+  const { error } = await query;
+  if (error) {
+    logger.error(
+      "AdminCommunityInterestService.update falhou",
+      new Error(error.message ?? "unknown"),
+      { component: "AdminCommunityInterestService", registrationId: id },
+    );
+    return { ok: false, error: error.message ?? "unknown" };
+  }
+  return { ok: true };
+}
+
 export const adminCommunityInterestService = {
   list: listRegistrations,
   exportAll,
   getStats,
   getCommunityBreakdown,
+  updateRegistration,
 };
 
 export type AdminCommunityInterestService = typeof adminCommunityInterestService;
