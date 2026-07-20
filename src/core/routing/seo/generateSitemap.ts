@@ -140,10 +140,11 @@ export function generateSitemap(
   staticPages.forEach((page) => {
     urls.push({
       loc: `${normalizedBaseUrl}${page.path}`,
-      changefreq: 'monthly',
+      changefreq: page.changefreq,
       priority: page.priority,
     });
   });
+
 
   locations
     .filter((location) => location.status === 'active')
