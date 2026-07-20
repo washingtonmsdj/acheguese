@@ -555,31 +555,35 @@ export function CreatePostModal({
     setLastSavedAt(null);
     setHasStoredDraft(false);
 
-    // Restaura rascunho local + remoto (apenas em criação, não em edição)
+    setPendingDraftForRestore(null);
+    setSaveStatus("idle");
+
+    // Detecta rascunho (local + remoto) e oferece "Continuar rascunho".
     if (!editPostId && profile?.id) {
       const profileId = profile.id;
       const local = loadPostDraft(profileId);
-      if (local && hasMeaningfulDraft(local)) {
-        applyDraftSnapshot(local);
+      let candidate: PostDraftSnapshot | null =
+        local && hasMeaningfulDraft(local) ? local : null;
+      if (candidate) {
+        setHasStoredDraft(true);
+        setLastSavedAt(candidate.updatedAt ?? candidate.savedAt ?? null);
+        setPendingDraftForRestore(candidate);
       }
-      // Merge com remoto: se remoto for mais novo, sobrescreve.
       void fetchRemoteDraft(profileId).then((remote) => {
-        if (!remote) {
-          // Se só temos local, garante persistência remota inicial.
-          if (local && hasMeaningfulDraft(local)) {
-            void upsertRemoteDraft(profileId, local);
-          }
-          return;
-        }
-        const localTs = local?.updatedAt ?? local?.savedAt ?? 0;
-        if (remote.updatedAt > localTs && hasMeaningfulDraft(remote.snapshot)) {
+        if (!remote || !hasMeaningfulDraft(remote.snapshot)) return;
+        const localTs = candidate?.updatedAt ?? candidate?.savedAt ?? 0;
+        // Conflict resolution: mais recente vence.
+        if (remote.updatedAt > localTs) {
           writePostDraftSnapshot(profileId, remote.snapshot);
-          applyDraftSnapshot(remote.snapshot);
-          toast.info("Rascunho de outro dispositivo restaurado.");
+          candidate = remote.snapshot;
+          setHasStoredDraft(true);
+          setLastSavedAt(remote.updatedAt);
+          setPendingDraftForRestore(remote.snapshot);
         }
       });
-      if (local && hasMeaningfulDraft(local)) {
-        toast.info("Rascunho restaurado. Continue de onde parou.");
+      // Flush de qualquer rascunho pendente que ficou offline.
+      if (hasPendingSync(profileId) && typeof navigator !== "undefined" && navigator.onLine !== false) {
+        void flushPendingSync(profileId);
       }
     }
     // Libera autosave após o próximo tick, quando os estados já settlaram.
