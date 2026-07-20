@@ -91,6 +91,7 @@ import {
   type CommunityOverviewView,
 } from "./communityOverviewNavigation";
 import { getPublicPostPreview } from "@/core/posts/utils/publicPostContent";
+import { sharePost } from "@/core/posts/utils/postShare";
 import { eventRuntimeService, type PublicEvent } from "@/core/verticals/events";
 import { Button } from "@/shared/components/ui/button";
 import { SafeImage } from "@/shared/components/security/SafeImage";
@@ -1321,26 +1322,7 @@ export function CommunityOverviewSurface({
 
   const handleSharePost = useCallback(
     (postId: string) => {
-      const shareUrl =
-        typeof window !== "undefined"
-          ? `${window.location.origin}${window.location.pathname}?post=${encodeURIComponent(postId)}`
-          : "";
-
-      if (
-        typeof navigator !== "undefined" &&
-        typeof navigator.share === "function"
-      ) {
-        void navigator
-          .share({ title: communityTitle, url: shareUrl })
-          .catch(() => undefined);
-        return;
-      }
-
-      if (typeof navigator !== "undefined" && navigator.clipboard && shareUrl) {
-        void navigator.clipboard
-          .writeText(shareUrl)
-          .then(() => toast.success("Link copiado"));
-      }
+      void sharePost({ postId, title: communityTitle });
     },
     [communityTitle],
   );

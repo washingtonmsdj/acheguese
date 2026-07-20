@@ -217,29 +217,19 @@ export function usePostActions() {
   });
 
   const sharePost = async (postId: string) => {
-    const url = `${window.location.origin}${LAUNCH_URLS.community}?post=${postId}`;
-
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: "Post da Comunidade",
-          url: url,
-        });
-      } else {
-        await navigator.clipboard.writeText(url);
-        toast.success("Link copiado!");
-      }
-
-      if (profileContext) {
-        await postService.recordPostShare(postId).catch((error) => {
-          logger.warn("Failed to record post share:", error);
-        });
-      }
-    } catch (error) {
-      if ((error as Error).name !== "AbortError") {
-        toast.error("Não foi possível compartilhar o post");
-      }
-    }
+    const { sharePost: sharePostLink } = await import(
+      "@/core/posts/utils/postShare"
+    );
+    await sharePostLink({
+      postId,
+      title: "Post da Comunidade",
+      onShared: profileContext
+        ? () =>
+            postService.recordPostShare(postId).catch((error) => {
+              logger.warn("Failed to record post share:", error);
+            })
+        : undefined,
+    });
   };
 
   // ✅ MIGRADO - Delete com verificação de permissão usando PostService
