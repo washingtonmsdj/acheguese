@@ -7,7 +7,7 @@
 import React, { useState } from 'react';
 import {
   Users, Building2, Wrench, Tag, Home, Compass,
-  MoreHorizontal, Map, Search, UtensilsCrossed,
+  MoreHorizontal, Map, Search, UtensilsCrossed, Calendar, Briefcase,
 } from 'lucide-react';
 import { useNavigate, useLocation as useRouterLocation } from 'react-router-dom';
 import { cn } from '@/shared/utils/cn';
