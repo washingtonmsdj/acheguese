@@ -4,9 +4,13 @@ import { AuthService } from "@/core/auth/services/AuthService";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
 import { setPendingSignupEmail } from "@/core/auth/utils/pendingSignup";
-import { validateAuthPassword } from "@/core/auth/utils/passwordPolicy";
 import { TERMS_OF_SERVICE_VERSION } from "@/core/legal/termsOfService";
 import { useToast } from "@/shared/hooks/use-toast";
+import {
+  RegisterAccountStepSchema,
+  RegisterConfirmationStepSchema,
+  RegisterLocationStepSchema,
+} from "@/shared/validation/schemas/user.schema";
 
 export interface CadastroFormData {
   name: string;
