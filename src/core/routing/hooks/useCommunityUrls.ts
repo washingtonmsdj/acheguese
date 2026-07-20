@@ -102,6 +102,7 @@ export function useCommunityUrls(routeResolved?: ResolvedTerritory | null): Comm
     feed: feedUrl,
     alerts: alertsUrl,
     issues: issuesUrl,
+    communication: communicationUrl,
     events: eventsUrl,
     eventDetail: (id: string) => eventPublicRoutes.detailFromBase(eventsUrl, id),
     eventFavorites: eventPublicRoutes.favoritesFromBase(eventsUrl),
