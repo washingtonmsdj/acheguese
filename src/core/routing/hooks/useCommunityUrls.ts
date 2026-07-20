@@ -14,6 +14,7 @@ export interface CommunityUrls {
   feed: string;
   alerts: string;
   issues: string;
+  communication: string;
   events: string;
   eventDetail: (id: string) => string;
   eventFavorites: string;
@@ -94,12 +95,14 @@ export function useCommunityUrls(routeResolved?: ResolvedTerritory | null): Comm
 
   const alertsUrl = `${feedUrl}/feed?tab=alertas`;
   const issuesUrl = `${feedUrl}/problemas`;
+  const communicationUrl = `${feedUrl}/comunicacao`;
   const groupsUrl = `${feedUrl}/grupos`;
 
   return {
     feed: feedUrl,
     alerts: alertsUrl,
     issues: issuesUrl,
+    communication: communicationUrl,
     events: eventsUrl,
     eventDetail: (id: string) => eventPublicRoutes.detailFromBase(eventsUrl, id),
     eventFavorites: eventPublicRoutes.favoritesFromBase(eventsUrl),

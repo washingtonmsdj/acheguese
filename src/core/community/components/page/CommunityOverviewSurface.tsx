@@ -13,6 +13,7 @@ import {
   LogIn,
   MapPin,
   Megaphone,
+  Newspaper,
   MessageCircle,
   Share2,
   Store,
@@ -1269,6 +1270,14 @@ export function CommunityOverviewSurface({
         icon: CalendarDays,
         surface: "communityEventsPreview",
       },
+      {
+        key: "communication",
+        label: "Comunicação",
+        href: communityUrls.communication,
+        icon: Newspaper,
+        surface: "communityCommunication",
+        isActive: activeSection === "communication",
+      },
     ];
     return links.filter(
       (item) => !item.surface || isLaunchSurfaceEnabled(item.surface),
@@ -1281,6 +1290,7 @@ export function CommunityOverviewSurface({
     moduleUrls.services,
     activeSection,
     communityUrls.feed,
+    communityUrls.communication,
     isEmbeddedModule,
     selectedView,
   ]);
