@@ -1,18 +1,13 @@
 import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { ArrowRight, Newspaper, Radio, ShieldCheck } from "lucide-react";
-import { Badge } from "@/shared/components/ui/badge";
+import { Newspaper } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import {
-  COMMUNICATION_CONTENT_FORMAT_LABELS,
-  PUBLICATION_TYPE_LABELS,
-} from "../types";
-import type { CommunicationPublicationDistribution } from "@/core/communication-territorial/types";
+import { Card, CardContent } from "@/shared/components/ui/card";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { useCommunityCommunicationFeed } from "../hooks";
-import { buildCommunicationCityPath, communicationTerritorialGateway } from "../services";
+import { buildCommunicationCityPath } from "../services";
+import { CommunityCommunicationCard } from "../components/CommunityCommunicationCard";
 
 interface CommunityCommunicationTabPageProps {
   resolved: ResolvedTerritory;
