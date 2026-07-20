@@ -125,6 +125,9 @@ export const TerritorialMapPage = lazy(() =>
 export const MainLandingPage = lazy(
   () => import("@/app/pages/MainLandingPage"),
 );
+export const NationalHubPage = lazy(
+  () => import("@/app/pages/NationalHubPage"),
+);
 export const EmpresasLandingPage = lazy(
   () => import("@/app/pages/EmpresasLandingPage"),
 );

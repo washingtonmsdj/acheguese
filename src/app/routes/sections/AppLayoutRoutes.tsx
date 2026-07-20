@@ -415,7 +415,7 @@ export function AppLayoutRoutes() {
          * evitando conteudo duplicado e retrabalho quando novas cidades entrarem.
          */}
         <Route path="/" element={<Navigate to={LAUNCH_CITY_PATH} replace />} />
-        <Route path="/inicio" element={<P.MainLandingPage />} />
+        <Route path="/inicio" element={<P.NationalHubPage />} />
 
         {/* Rotas de Billing e Assinaturas */}
         <Route path="/planos" element={<P.PricingPage />} />
