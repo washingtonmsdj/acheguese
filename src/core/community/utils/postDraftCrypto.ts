@@ -142,7 +142,11 @@ export async function encryptString(scope: string, plaintext: string): Promise<s
   const key = await getOrCreateKey(scope);
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const encoded = new TextEncoder().encode(plaintext);
-  const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoded);
+  const ct = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv: iv as BufferSource },
+    key,
+    encoded as BufferSource,
+  );
   const envelope: EncryptedEnvelope = {
     v: ENVELOPE_VERSION,
     iv: bytesToBase64(iv),
