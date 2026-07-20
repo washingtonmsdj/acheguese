@@ -71,9 +71,12 @@ import {
 import {
   deleteRemoteDraft,
   fetchRemoteDraft,
+  flushPendingSync,
+  hasPendingSync,
   upsertRemoteDraft,
 } from "@/core/community/services/postDraftSync";
 import { emitNewPost } from "@/core/community/state/newPostHighlight";
+import { Check as CloudCheck, CloudOff, Loader2, TriangleAlert } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -437,6 +440,11 @@ export function CreatePostModal({
   const [lastSavedAt, setLastSavedAt] = React.useState<number | null>(null);
   const [hasStoredDraft, setHasStoredDraft] = React.useState(false);
   const [confirmDiscardOpen, setConfirmDiscardOpen] = React.useState(false);
+  const [saveStatus, setSaveStatus] = React.useState<
+    "idle" | "saving" | "synced" | "offline" | "error"
+  >("idle");
+  const [pendingDraftForRestore, setPendingDraftForRestore] =
+    React.useState<PostDraftSnapshot | null>(null);
   const autosaveTimerRef = React.useRef<number | null>(null);
   const remoteSyncTimerRef = React.useRef<number | null>(null);
   const suppressAutosaveRef = React.useRef(true);
@@ -547,31 +555,35 @@ export function CreatePostModal({
     setLastSavedAt(null);
     setHasStoredDraft(false);
 
-    // Restaura rascunho local + remoto (apenas em criação, não em edição)
+    setPendingDraftForRestore(null);
+    setSaveStatus("idle");
+
+    // Detecta rascunho (local + remoto) e oferece "Continuar rascunho".
     if (!editPostId && profile?.id) {
       const profileId = profile.id;
       const local = loadPostDraft(profileId);
-      if (local && hasMeaningfulDraft(local)) {
-        applyDraftSnapshot(local);
+      let candidate: PostDraftSnapshot | null =
+        local && hasMeaningfulDraft(local) ? local : null;
+      if (candidate) {
+        setHasStoredDraft(true);
+        setLastSavedAt(candidate.updatedAt ?? candidate.savedAt ?? null);
+        setPendingDraftForRestore(candidate);
       }
-      // Merge com remoto: se remoto for mais novo, sobrescreve.
       void fetchRemoteDraft(profileId).then((remote) => {
-        if (!remote) {
-          // Se só temos local, garante persistência remota inicial.
-          if (local && hasMeaningfulDraft(local)) {
-            void upsertRemoteDraft(profileId, local);
-          }
-          return;
-        }
-        const localTs = local?.updatedAt ?? local?.savedAt ?? 0;
-        if (remote.updatedAt > localTs && hasMeaningfulDraft(remote.snapshot)) {
+        if (!remote || !hasMeaningfulDraft(remote.snapshot)) return;
+        const localTs = candidate?.updatedAt ?? candidate?.savedAt ?? 0;
+        // Conflict resolution: mais recente vence.
+        if (remote.updatedAt > localTs) {
           writePostDraftSnapshot(profileId, remote.snapshot);
-          applyDraftSnapshot(remote.snapshot);
-          toast.info("Rascunho de outro dispositivo restaurado.");
+          candidate = remote.snapshot;
+          setHasStoredDraft(true);
+          setLastSavedAt(remote.updatedAt);
+          setPendingDraftForRestore(remote.snapshot);
         }
       });
-      if (local && hasMeaningfulDraft(local)) {
-        toast.info("Rascunho restaurado. Continue de onde parou.");
+      // Flush de qualquer rascunho pendente que ficou offline.
+      if (hasPendingSync(profileId) && typeof navigator !== "undefined" && navigator.onLine !== false) {
+        void flushPendingSync(profileId);
       }
     }
     // Libera autosave após o próximo tick, quando os estados já settlaram.
@@ -636,6 +648,8 @@ export function CreatePostModal({
     if (remoteSyncTimerRef.current)
       window.clearTimeout(remoteSyncTimerRef.current);
 
+    setSaveStatus("saving");
+
     autosaveTimerRef.current = window.setTimeout(() => {
       const snapshot = savePostDraft(profileId, currentDraftPayload);
       if (snapshot) {
@@ -644,12 +658,27 @@ export function CreatePostModal({
       }
     }, 400);
 
-    remoteSyncTimerRef.current = window.setTimeout(() => {
+    remoteSyncTimerRef.current = window.setTimeout(async () => {
       const snapshot: PostDraftSnapshot = {
         ...currentDraftPayload,
         updatedAt: Date.now(),
       };
-      void upsertRemoteDraft(profileId, snapshot);
+      const result = await upsertRemoteDraft(profileId, snapshot);
+      if (result.status === "ok") {
+        setSaveStatus("synced");
+      } else if (result.status === "offline") {
+        setSaveStatus("offline");
+      } else if (result.status === "conflict") {
+        // Rascunho remoto mais novo: reconciliar sem sobrescrever.
+        writePostDraftSnapshot(profileId, result.remote.snapshot);
+        setLastSavedAt(result.remote.updatedAt);
+        setSaveStatus("synced");
+        toast.info(
+          "Encontramos um rascunho mais recente em outro dispositivo. Recarregue para ver.",
+        );
+      } else {
+        setSaveStatus("error");
+      }
     }, 1500);
 
     return () => {
@@ -659,6 +688,29 @@ export function CreatePostModal({
         window.clearTimeout(remoteSyncTimerRef.current);
     };
   }, [open, editPostId, profile?.id, currentDraftPayload]);
+
+  // Reenvia rascunhos pendentes assim que o navegador voltar a ficar online.
+  React.useEffect(() => {
+    if (!open || editPostId || !profile?.id) return;
+    if (typeof window === "undefined") return;
+    const profileId = profile.id;
+    const handleOnline = () => {
+      setSaveStatus((prev) => (prev === "offline" ? "saving" : prev));
+      void flushPendingSync(profileId).then((res) => {
+        if (!res) return;
+        if (res.status === "ok") setSaveStatus("synced");
+        else if (res.status === "offline") setSaveStatus("offline");
+        else if (res.status === "error") setSaveStatus("error");
+      });
+    };
+    const handleOffline = () => setSaveStatus("offline");
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [open, editPostId, profile?.id]);
 
 
 
@@ -1027,6 +1079,22 @@ export function CreatePostModal({
     }, 300);
   };
 
+  const handleContinueDraft = () => {
+    if (!pendingDraftForRestore) return;
+    suppressAutosaveRef.current = true;
+    applyDraftSnapshot(pendingDraftForRestore);
+    setPendingDraftForRestore(null);
+    setSaveStatus("synced");
+    window.setTimeout(() => {
+      suppressAutosaveRef.current = false;
+    }, 300);
+  };
+
+  const handleDismissDraftBanner = () => {
+    // Mantém o rascunho armazenado; só esconde o banner nesta sessão.
+    setPendingDraftForRestore(null);
+  };
+
   const formattedSavedAt = React.useMemo(() => {
     if (!lastSavedAt) return null;
     try {
@@ -1038,6 +1106,40 @@ export function CreatePostModal({
       return null;
     }
   }, [lastSavedAt]);
+
+  const saveStatusView = React.useMemo(() => {
+    switch (saveStatus) {
+      case "saving":
+        return {
+          icon: <Loader2 className="h-3 w-3 animate-spin" />,
+          label: "Salvando…",
+          className: "text-muted-foreground",
+        };
+      case "synced":
+        return {
+          icon: <CloudCheck className="h-3 w-3" />,
+          label: formattedSavedAt
+            ? `Sincronizado às ${formattedSavedAt}`
+            : "Sincronizado",
+          className: "text-emerald-600 dark:text-emerald-400",
+        };
+      case "offline":
+        return {
+          icon: <CloudOff className="h-3 w-3" />,
+          label: "Offline — vamos sincronizar depois",
+          className: "text-amber-600 dark:text-amber-400",
+        };
+      case "error":
+        return {
+          icon: <TriangleAlert className="h-3 w-3" />,
+          label: "Erro ao sincronizar",
+          className: "text-destructive",
+        };
+      default:
+        return null;
+    }
+  }, [saveStatus, formattedSavedAt]);
+
 
 
 
@@ -1056,16 +1158,48 @@ export function CreatePostModal({
             Escolha o formato, escreva com clareza e confirme onde o conteúdo
             será exibido.
           </DialogDescription>
-          {!editPostId && formattedSavedAt ? (
+          {!editPostId && saveStatusView ? (
             <p
-              className="mt-1 text-[11px] text-muted-foreground"
+              className={cn(
+                "mt-1 flex items-center gap-1.5 text-[11px]",
+                saveStatusView.className,
+              )}
               aria-live="polite"
             >
-              Rascunho salvo às {formattedSavedAt}
+              {saveStatusView.icon}
+              <span>{saveStatusView.label}</span>
             </p>
           ) : null}
         </DialogHeader>
         <div className="max-h-[calc(92dvh-7.5rem)] space-y-4 overflow-y-auto px-4 py-3 overscroll-contain sm:max-h-[70vh] sm:space-y-5 sm:px-5 sm:py-4">
+          {!editPostId && pendingDraftForRestore ? (
+            <div
+              role="status"
+              className="flex flex-col gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="min-w-0">
+                <p className="font-medium">Você tem um rascunho salvo</p>
+                <p className="text-xs text-muted-foreground">
+                  {formattedSavedAt
+                    ? `Última edição às ${formattedSavedAt}. Continue de onde parou.`
+                    : "Continue de onde parou."}
+                </p>
+              </div>
+              <div className="flex gap-2 sm:shrink-0">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleDismissDraftBanner}
+                >
+                  Ignorar
+                </Button>
+                <Button type="button" size="sm" onClick={handleContinueDraft}>
+                  Continuar rascunho
+                </Button>
+              </div>
+            </div>
+          ) : null}
           {locationError && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />

@@ -4,8 +4,12 @@
  * Depende da tabela `public.community_post_drafts` (ver
  * docs/migrations-pending/*_create_community_post_drafts.sql).
  *
- * Todas as operações silenciam erros — falha remota nunca bloqueia a UX,
- * pois o `localStorage` continua sendo a fonte imediata (`postDraft.ts`).
+ * Estratégia de conflito: last-write-wins com `updated_at` (server-side).
+ * Antes de sobrescrever, buscamos o remoto e comparamos timestamps — se o
+ * remoto for mais novo, abortamos e devolvemos { conflict: true, remote }.
+ *
+ * Suporte offline: quando o navegador está offline ou a requisição falha,
+ * o snapshot é enfileirado em localStorage para reenvio via `flushPendingSync`.
  */
 
 import { supabase } from "@/integrations/supabase/supabase";
@@ -15,6 +19,7 @@ import type {
 } from "@/core/community/utils/postDraft";
 
 const TABLE = "community_post_drafts";
+const PENDING_PREFIX = "community:post-draft-pending:v1:";
 
 interface RemoteDraftRow {
   payload: PostDraftPayload;
@@ -24,6 +29,58 @@ interface RemoteDraftRow {
 export interface RemoteDraft {
   snapshot: PostDraftSnapshot;
   updatedAt: number;
+}
+
+export type UpsertRemoteResult =
+  | { status: "ok"; updatedAt: number }
+  | { status: "offline" }
+  | { status: "conflict"; remote: RemoteDraft }
+  | { status: "error"; error: unknown };
+
+function isBrowser(): boolean {
+  return typeof window !== "undefined" && !!window.localStorage;
+}
+
+function isOnline(): boolean {
+  if (typeof navigator === "undefined") return true;
+  return navigator.onLine !== false;
+}
+
+function pendingKey(profileId: string): string {
+  return `${PENDING_PREFIX}${profileId}`;
+}
+
+function enqueuePending(profileId: string, snapshot: PostDraftSnapshot): void {
+  if (!isBrowser() || !profileId) return;
+  try {
+    window.localStorage.setItem(pendingKey(profileId), JSON.stringify(snapshot));
+  } catch {
+    // no-op
+  }
+}
+
+function readPending(profileId: string): PostDraftSnapshot | null {
+  if (!isBrowser() || !profileId) return null;
+  try {
+    const raw = window.localStorage.getItem(pendingKey(profileId));
+    if (!raw) return null;
+    return JSON.parse(raw) as PostDraftSnapshot;
+  } catch {
+    return null;
+  }
+}
+
+function clearPending(profileId: string): void {
+  if (!isBrowser() || !profileId) return;
+  try {
+    window.localStorage.removeItem(pendingKey(profileId));
+  } catch {
+    // no-op
+  }
+}
+
+export function hasPendingSync(profileId: string): boolean {
+  return readPending(profileId) !== null;
 }
 
 function toSnapshot(row: RemoteDraftRow): PostDraftSnapshot {
@@ -60,22 +117,39 @@ export async function fetchRemoteDraft(
 export async function upsertRemoteDraft(
   profileId: string,
   snapshot: PostDraftSnapshot,
-): Promise<void> {
-  if (!profileId) return;
+  options: { skipConflictCheck?: boolean } = {},
+): Promise<UpsertRemoteResult> {
+  if (!profileId) return { status: "error", error: "missing profileId" };
+
+  // Offline: enfileira para reenvio.
+  if (!isOnline()) {
+    enqueuePending(profileId, snapshot);
+    return { status: "offline" };
+  }
+
   try {
+    // Conflict guard: só sobrescreve se local for igual ou mais novo.
+    if (!options.skipConflictCheck) {
+      const remote = await fetchRemoteDraft(profileId);
+      if (remote && remote.updatedAt > snapshot.updatedAt) {
+        return { status: "conflict", remote };
+      }
+    }
+
     const { data: userRes } = await supabase.auth.getUser();
     const userId = userRes?.user?.id;
-    if (!userId) return;
-    // Remove chaves de metadata do payload persistido remotamente.
+    if (!userId) return { status: "error", error: "not authenticated" };
+
     const { updatedAt: _u, savedAt: _s, ...payload } = snapshot;
     void _u;
     void _s;
-    await (supabase as unknown as {
+
+    const res = (await (supabase as unknown as {
       from: (t: string) => {
         upsert: (
           row: Record<string, unknown>,
           opts: { onConflict: string },
-        ) => Promise<unknown>;
+        ) => Promise<{ error?: unknown }>;
       };
     })
       .from(TABLE)
@@ -87,14 +161,40 @@ export async function upsertRemoteDraft(
           updated_at: new Date(snapshot.updatedAt).toISOString(),
         },
         { onConflict: "user_id,profile_id" },
-      );
-  } catch {
-    // best-effort
+      )) as { error?: unknown };
+
+    if (res && res.error) {
+      enqueuePending(profileId, snapshot);
+      return { status: "error", error: res.error };
+    }
+
+    clearPending(profileId);
+    return { status: "ok", updatedAt: snapshot.updatedAt };
+  } catch (error) {
+    enqueuePending(profileId, snapshot);
+    return { status: "error", error };
   }
+}
+
+/**
+ * Reenvio de rascunhos pendentes salvos offline. Retorna o resultado do
+ * último upsert, se houver.
+ */
+export async function flushPendingSync(
+  profileId: string,
+): Promise<UpsertRemoteResult | null> {
+  const pending = readPending(profileId);
+  if (!pending) return null;
+  const result = await upsertRemoteDraft(profileId, pending, {
+    skipConflictCheck: false,
+  });
+  if (result.status === "ok") clearPending(profileId);
+  return result;
 }
 
 export async function deleteRemoteDraft(profileId: string): Promise<void> {
   if (!profileId) return;
+  clearPending(profileId);
   try {
     await (supabase as unknown as {
       from: (t: string) => {
