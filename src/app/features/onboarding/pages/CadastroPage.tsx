@@ -128,12 +128,7 @@ export default function CadastroPage() {
     loadingNeighborhoods,
   } = useLocationCascade(formData.stateId || null, formData.cityId || null);
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [capsLock, setCapsLock] = useState(false);
-  const passwordRequirements = getAuthPasswordRequirementStatus(
-    formData.password,
-  );
 
   const activeStep = STEPS.at(currentStep) ?? STEPS[0];
   const stepId = activeStep.id;
