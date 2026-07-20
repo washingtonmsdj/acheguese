@@ -200,6 +200,56 @@ export const RegisterConfirmationStepSchema = z.object({
   }),
 });
 
+/**
+ * Schema completo do wizard — usado pelo `useCadastroForm` com react-hook-form.
+ * Combina os 3 steps + campos auxiliares de nomes territoriais e endereço.
+ */
+export const RegisterFullSchema = z
+  .object({
+    name: z
+      .string({ required_error: validationMessages.required })
+      .trim()
+      .min(3, "Nome deve ter pelo menos 3 caracteres"),
+    username: z
+      .string({ required_error: validationMessages.required })
+      .trim()
+      .regex(
+        /^[a-z][a-z0-9_]{2,29}$/,
+        "Deve comecar com letra e ter 3-30 chars (letras minusculas, numeros e _)",
+      ),
+    email: z
+      .string({ required_error: validationMessages.required })
+      .trim()
+      .email(validationMessages.string.email),
+    password: strongPasswordValidator,
+    confirmPassword: z.string({ required_error: validationMessages.required }),
+    stateId: z
+      .string({ required_error: "Selecione o estado" })
+      .min(1, "Selecione o estado"),
+    stateName: z.string().default(""),
+    cityId: z
+      .string({ required_error: "Selecione a cidade" })
+      .min(1, "Selecione a cidade"),
+    cityName: z.string().default(""),
+    neighborhoodId: z
+      .string({ required_error: "Selecione seu bairro" })
+      .min(1, "Selecione seu bairro"),
+    neighborhoodName: z.string().default(""),
+    street: z.string().default(""),
+    termsAccepted: z.literal(true, {
+      errorMap: () => ({
+        message:
+          "Você precisa aceitar os Termos de Uso para criar sua conta",
+      }),
+    }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: validationMessages.fields.password.mismatch,
+    path: ["confirmPassword"],
+  });
+
+export type RegisterFullInput = z.infer<typeof RegisterFullSchema>;
+
 export type RegisterConfirmationStepInput = z.infer<
   typeof RegisterConfirmationStepSchema
 >;
