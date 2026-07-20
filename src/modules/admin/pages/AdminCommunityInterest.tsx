@@ -212,6 +212,14 @@ export default function AdminCommunityInterest() {
   const [toDate, setToDate] = useState("");
   const [page, setPage] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingPage, setIsExportingPage] = useState(false);
+  const [selected, setSelected] = useState<CommunityInterestRegistration | null>(null);
+  const [editStatus, setEditStatus] = useState<CommunityInterestAdminStatus>("new");
+  const [editNotes, setEditNotes] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const queryClient = useQueryClient();
+  const { user } = useSessionContext();
 
   const filters = useMemo<AdminCommunityInterestFilters>(
     () => ({
