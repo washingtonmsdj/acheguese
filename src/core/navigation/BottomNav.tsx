@@ -69,6 +69,8 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
     { path: cityModule('empresas'), label: 'Empresas', icon: Building2, badge: 0, surface: 'business' as const },
     { path: cityModule('gastronomia'), label: 'Gastronomia', icon: UtensilsCrossed, badge: 0, surface: 'gastronomy' as const },
     { path: cityModule('servicos'), label: 'Serviços', icon: Wrench, badge: 0, surface: 'services' as const },
+    { path: cityModule('eventos'), label: 'Eventos', icon: Calendar, badge: 0, surface: 'events' as const },
+    { path: cityModule('vagas'), label: 'Vagas', icon: Briefcase, badge: 0, surface: 'jobs' as const },
     { path: cityModule('classificados'), label: 'Classificados', icon: Tag, badge: 0, surface: 'classifieds' as const },
     { path: cityModule('mapa'), label: 'Mapa', icon: Map, badge: 0, surface: 'map' as const },
   ].filter((item) => isLaunchSurfaceEnabled(item.surface));
