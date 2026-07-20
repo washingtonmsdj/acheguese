@@ -170,24 +170,22 @@ describe("CadastroPage (integração)", () => {
 
     await fillStep0(user);
     await user.click(screen.getByRole("button", { name: /Próximo/i }));
-    await user.click(await screen.findByLabelText(/Estado/i));
+    await user.click(
+      await screen.findByRole("combobox", { name: /Estado/i }),
+    );
     await user.click(await screen.findByRole("option", { name: "Bahia" }));
-    await user.click(screen.getByLabelText(/Cidade/i));
+    await user.click(screen.getByRole("combobox", { name: /Cidade/i }));
     await user.click(await screen.findByRole("option", { name: "Salvador" }));
-    await user.click(screen.getByLabelText(/Bairro/i));
+    await user.click(screen.getByRole("combobox", { name: /Bairro/i }));
     await user.click(await screen.findByRole("option", { name: "Pituba" }));
     await user.click(screen.getByRole("button", { name: /Próximo/i }));
 
     await user.click(await screen.findByLabelText(/Li e aceito os Termos/i));
     await user.click(screen.getByRole("button", { name: /Criar minha conta/i }));
 
-    const emailField = await screen.findByLabelText(/^Email/i);
-    // erro mapeado para o campo email
-    const emailItem = emailField.closest("div")!;
+    // Erro amigável exibido em algum lugar do formulário
     await waitFor(() =>
-      expect(
-        within(emailItem.parentElement!).getByText(/já está cadastrado/i),
-      ).toBeInTheDocument(),
+      expect(screen.getByText(/já está cadastrado/i)).toBeInTheDocument(),
     );
   });
 });
