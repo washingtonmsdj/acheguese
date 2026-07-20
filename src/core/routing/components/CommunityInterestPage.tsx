@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
-import { CheckCircle2, Loader2, MapPin, Sparkles } from "lucide-react";
+import { CheckCircle2, Loader2, MapPin, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -12,7 +12,11 @@ import { useToast } from "@/shared/components/ui/use-toast";
 import { useResolveTerritoryFromUrl } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
 import { supabase } from "@/integrations/supabase/client";
+import { TurnstileWidget } from "@/shared/components/security/TurnstileWidget";
 import { TerritorialNotFound } from "./TerritorialNotFound";
+
+const TURNSTILE_SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "").trim();
+const MIN_FILL_MS = 3_000; // Bots preenchem instantaneamente; humanos demoram alguns segundos.
 
 function titleCaseFromSlug(value?: string): string {
   if (!value) return "Comunidade local";
@@ -92,6 +96,14 @@ export function CommunityInterestPage() {
   const [errors, setErrors] = useState<Partial<Record<keyof InterestFormState, string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [honeypot, setHoneypot] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileError, setTurnstileError] = useState<string | null>(null);
+  const mountedAtRef = useRef<number>(Date.now());
+  useEffect(() => {
+    mountedAtRef.current = Date.now();
+  }, []);
+  const turnstileEnabled = TURNSTILE_SITE_KEY.length > 0;
 
   const communityBase = useMemo(() => {
     if (!normalizedState || !normalizedCity) return null;
@@ -135,6 +147,21 @@ export function CommunityInterestPage() {
     event.preventDefault();
     if (submitting) return;
 
+    // Honeypot: bots normalmente preenchem todos os campos, inclusive o oculto.
+    if (honeypot.trim().length > 0) {
+      setSubmitted(true); // silencia o bot sem indicar o motivo
+      return;
+    }
+
+    // Timing check: rejeita submissões instantâneas (bots).
+    if (Date.now() - mountedAtRef.current < MIN_FILL_MS) {
+      toast({
+        title: "Aguarde um instante",
+        description: "Confira os dados antes de enviar.",
+      });
+      return;
+    }
+
     const parsed = interestSchema.safeParse(form);
     if (!parsed.success) {
       const nextErrors: Partial<Record<keyof InterestFormState, string>> = {};
@@ -146,8 +173,28 @@ export function CommunityInterestPage() {
       return;
     }
 
+    if (turnstileEnabled && !turnstileToken) {
+      setTurnstileError("Confirme que você não é um robô.");
+      return;
+    }
+
     setSubmitting(true);
     try {
+      // Verificação server-side do Turnstile (quando habilitado)
+      let turnstileVerified = false;
+      if (turnstileEnabled && turnstileToken) {
+        const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
+          "verify-turnstile-token",
+          { body: { token: turnstileToken, action: "community-interest" } },
+        );
+        if (verifyError || !(verifyData as { success?: boolean } | null)?.success) {
+          setTurnstileError("Falha na verificação anti-spam. Tente novamente.");
+          setTurnstileToken(null);
+          return;
+        }
+        turnstileVerified = true;
+      }
+
       const territoryPath = communityBase ?? null;
       const source = typeof window !== "undefined" ? window.location.pathname : "community-interest";
       const userAgent =
@@ -168,6 +215,7 @@ export function CommunityInterestPage() {
           wants_updates: parsed.data.wants_updates,
           source,
           user_agent: userAgent,
+          turnstile_verified: turnstileVerified,
         });
 
       if (error) {
@@ -369,6 +417,57 @@ export function CommunityInterestPage() {
                   e-mail.
                 </span>
               </label>
+
+              {/* Honeypot: campo invisível para humanos, tentador para bots. */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  left: "-10000px",
+                  width: 1,
+                  height: 1,
+                  overflow: "hidden",
+                }}
+              >
+                <label htmlFor="company_website">Não preencha este campo</label>
+                <input
+                  id="company_website"
+                  name="company_website"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={honeypot}
+                  onChange={(event) => setHoneypot(event.target.value)}
+                />
+              </div>
+
+              {turnstileEnabled ? (
+                <div className="space-y-1.5">
+                  <TurnstileWidget
+                    siteKey={TURNSTILE_SITE_KEY}
+                    action="community-interest"
+                    onVerify={(token) => {
+                      setTurnstileToken(token);
+                      setTurnstileError(null);
+                    }}
+                    onExpire={() => setTurnstileToken(null)}
+                    onError={() => {
+                      setTurnstileToken(null);
+                      setTurnstileError("Não foi possível carregar a verificação. Recarregue a página.");
+                    }}
+                  />
+                  {turnstileError ? (
+                    <p className="text-xs text-destructive">{turnstileError}</p>
+                  ) : (
+                    <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <ShieldCheck className="h-3 w-3" aria-hidden />
+                      Verificação anti-spam protegida por Cloudflare.
+                    </p>
+                  )}
+                </div>
+              ) : null}
+
+
 
               <div className="flex flex-col gap-2 pt-2 sm:flex-row">
                 <Button type="submit" disabled={submitting} className="sm:min-w-40">
