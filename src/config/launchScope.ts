@@ -47,7 +47,7 @@ export const PUBLIC_LAUNCH_SURFACES: Record<LaunchSurfaceKey, boolean> = {
   communityAlerts: false,
   communityIssues: false,
   communityLostFound: false,
-  communityCommunication: false,
+  communityCommunication: true,
   familySafety: false,
 };
 
