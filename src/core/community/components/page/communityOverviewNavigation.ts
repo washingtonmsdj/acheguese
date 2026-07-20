@@ -8,7 +8,7 @@ export type CommunityModulePreviewView =
 
 export type CommunityOverviewView = CommunitySocialView | CommunityModulePreviewView;
 
-export type CommunityOverviewSection = CommunityOverviewView | "map";
+export type CommunityOverviewSection = CommunityOverviewView | "map" | "communication";
 
 const COMMUNITY_OVERVIEW_VIEWS = new Set<string>([
   "feed",
