@@ -43,6 +43,23 @@ if (typeof window !== 'undefined') {
   }
 }
 
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  class ResizeObserverMock {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = ResizeObserverMock;
+}
+
+if (typeof globalThis.DOMRect === 'undefined') {
+  (globalThis as unknown as { DOMRect: unknown }).DOMRect = class {
+    static fromRect() { return new (globalThis as any).DOMRect(); }
+    x = 0; y = 0; width = 0; height = 0; top = 0; left = 0; right = 0; bottom = 0;
+    toJSON() { return this; }
+  };
+}
+
 // Setup global antes de todos os testes
 beforeAll(() => {
   // Configurações globais se necessário
