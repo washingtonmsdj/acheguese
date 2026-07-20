@@ -510,6 +510,14 @@ export function AppLayoutRoutes() {
         />
         <Route path="/conta" element={<P.ContaPage />} />
         <Route path="/perfil" element={<Navigate to="/conta" replace />} />
+        <Route path="/perfil/editar" element={<Navigate to="/conta/editar" replace />} />
+        <Route path="/perfil/editar/:profileId" element={<Navigate to="/conta/editar" replace />} />
+        <Route path="/perfil/enderecos" element={<Navigate to="/conta/enderecos" replace />} />
+        <Route path="/perfil/seguranca" element={<Navigate to="/conta/seguranca" replace />} />
+        <Route path="/perfil/preferencias" element={<Navigate to="/conta/preferencias" replace />} />
+        <Route path="/perfil/notificacoes" element={<Navigate to="/conta/notificacoes" replace />} />
+        <Route path="/perfil/privacidade" element={<Navigate to="/conta/privacidade" replace />} />
+        <Route path="/perfil/configuracoes" element={<Navigate to="/conta/perfil/configuracoes" replace />} />
         <Route path="/perfil/*" element={<Navigate to="/conta" replace />} />
         <Route
           path="/gamificacao"
