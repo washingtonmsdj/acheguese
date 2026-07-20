@@ -347,10 +347,20 @@ export default function AdminCommunityInterest() {
         description="Waitlist dos bairros em coming_soon. Filtre, analise a distribuição por território e exporte a base para prospecção."
         icon={MailCheck}
         actions={
-          <Button onClick={handleExport} disabled={isExporting || total === 0}>
-            <Download className="mr-2 h-4 w-4" />
-            {isExporting ? "Gerando..." : "Exportar CSV"}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={handleExportPage}
+              disabled={isExportingPage || items.length === 0}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              {isExportingPage ? "Gerando..." : "Exportar página"}
+            </Button>
+            <Button onClick={handleExport} disabled={isExporting || total === 0}>
+              <Download className="mr-2 h-4 w-4" />
+              {isExporting ? "Gerando..." : "Exportar tudo"}
+            </Button>
+          </div>
         }
       />
 
