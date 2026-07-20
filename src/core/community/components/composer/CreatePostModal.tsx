@@ -490,8 +490,34 @@ export function CreatePostModal({
     setIntentPickerExpanded(false);
     setGenericDescription(initialContent ?? "");
     setDistributionLevel(initialDistributionLevel);
+
+    // Restaura rascunho local (apenas em criação, não em edição)
+    if (!editPostId && profile?.id) {
+      const draft = loadPostDraft(profile.id);
+      if (draft && hasMeaningfulDraft(draft)) {
+        setIntent(getLaunchIntent(draft.intent as IntentId));
+        setDistributionLevel(draft.distributionLevel);
+        form.setReach(reachFromTerritorialLevel(draft.distributionLevel));
+        setGenericDescription(draft.genericDescription);
+        setPollQuestion(draft.pollQuestion);
+        setPollOptions(
+          draft.pollOptions.length >= 2 ? draft.pollOptions : ["", ""],
+        );
+        setProblemLocation(draft.problemLocation);
+        setProblemCategory(draft.problemCategory);
+        setProblemSeverity(draft.problemSeverity);
+        setProblemRecurrence(draft.problemRecurrence);
+        setProblemDescription(draft.problemDescription);
+        setEventDate(draft.eventDate);
+        setEventTime(draft.eventTime);
+        setEventPlace(draft.eventPlace);
+        setEventLimit(draft.eventLimit);
+        setEventDescription(draft.eventDescription);
+        toast.info("Rascunho restaurado. Continue de onde parou.");
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, defaultType, initialType, initialContent, initialReach]);
+  }, [open, defaultType, initialType, initialContent, initialReach, editPostId, profile?.id]);
   React.useEffect(() => {
     form.setType(selectedIntent.structuralType);
     // eslint-disable-next-line react-hooks/exhaustive-deps
