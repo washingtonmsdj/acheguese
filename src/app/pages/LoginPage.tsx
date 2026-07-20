@@ -6,14 +6,13 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   AtSign,
   CheckCircle2,
-  Eye,
-  EyeOff,
   Loader2,
   Mail,
   ShieldCheck,
 } from "lucide-react";
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
+import { PasswordInput } from "@/app/components/auth/PasswordInput";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
