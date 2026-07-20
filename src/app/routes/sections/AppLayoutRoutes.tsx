@@ -509,6 +509,8 @@ export function AppLayoutRoutes() {
           element={<P.ContaEditarPerfilPage />}
         />
         <Route path="/conta" element={<P.ContaPage />} />
+        <Route path="/perfil" element={<Navigate to="/conta" replace />} />
+        <Route path="/perfil/*" element={<Navigate to="/conta" replace />} />
         <Route
           path="/gamificacao"
           element={launchElement(
