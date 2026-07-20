@@ -41,7 +41,6 @@ const noopPrefetch = () => undefined;
 export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
   const navigate = useNavigate();
   const { pathname } = useRouterLocation();
-  const homeCommunityHref = useHomeCommunityHref();
   const { active } = usePublicBrowsingCity();
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -56,7 +55,7 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
   const mainTabs = [
     { path: '/', label: 'Início', icon: Home, badge: 0 },
     { path: cityBase, label: 'Explorar', icon: Compass, badge: 0 },
-    { path: homeCommunityHref, label: 'Bairro', icon: Users, badge: 0 },
+    { path: '/novo-post', label: 'Postar', icon: SquarePen, badge: 0 },
     { path: cityModule('busca'), label: 'Busca', icon: Search, badge: 0 },
   ];
 
