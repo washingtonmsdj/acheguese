@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
 import { PostEngagementService } from "@/core/engagement/services/PostEngagementService";
 import { communityFeedQueryKeys } from "@/core/feed";
+import { sharePost } from "@/core/posts/utils/postShare";
 
 /**
  * Hook profissional para gerenciar interações com posts
