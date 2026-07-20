@@ -226,6 +226,7 @@ function CityStatusGate({ module, enforceActive = false, children }: CityStatusG
       ? `/${safeState}/${safeCity}`
       : `/${safeState}/${safeCity}/${resolved.location.slug}`;
   const communityEntryHref = communityBaseUrl || buildCommunityTerritoryUrl(moduleTerritoryBase);
+  const interestHref = buildCommunityTerritoryUrl(moduleTerritoryBase, 'interesse');
   const primaryCtaHref = buildModuleTerritoryUrl(MODULE_SLUGS.business, moduleTerritoryBase);
 
   return (
@@ -246,14 +247,17 @@ function CityStatusGate({ module, enforceActive = false, children }: CityStatusG
         </p>
         <p className="mt-2 text-muted-foreground">{copy.description(cityName)}</p>
         <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            to={interestHref}
+            className="inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90"
+          >
+            Entrar na lista de interesse
+          </Link>
           <Link to={primaryCtaHref} className="inline-flex rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent">
             {copy.cta}
           </Link>
-          <Link to={`/contato?cidade=${encodeURIComponent(cityName)}`} className="inline-flex rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent">
-            Entrar na lista de interesse
-          </Link>
           <Link to={communityEntryHref} className="inline-flex rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent">
-            Abrir portal comunitario
+            Abrir portal comunitário
           </Link>
         </div>
       </div>
