@@ -6,13 +6,13 @@
 
 import React, { useState } from 'react';
 import {
-  Users, Building2, Wrench, Tag, Home, Compass,
+  Building2, Wrench, Tag, Home, Compass,
   MoreHorizontal, Map, Search, UtensilsCrossed, Calendar, Briefcase,
+  SquarePen,
 } from 'lucide-react';
 import { useNavigate, useLocation as useRouterLocation } from 'react-router-dom';
 import { cn } from '@/shared/utils/cn';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
-import { useHomeCommunityHref } from '@/core/routing/hooks/useHomeCommunityHref';
 import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from '@/config/launchScope';
 import {
   Sheet,
@@ -40,7 +40,6 @@ const noopPrefetch = () => undefined;
 export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
   const navigate = useNavigate();
   const { pathname } = useRouterLocation();
-  const homeCommunityHref = useHomeCommunityHref();
   const { active } = usePublicBrowsingCity();
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -55,7 +54,7 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
   const mainTabs = [
     { path: '/', label: 'Início', icon: Home, badge: 0 },
     { path: cityBase, label: 'Explorar', icon: Compass, badge: 0 },
-    { path: homeCommunityHref, label: 'Bairro', icon: Users, badge: 0 },
+    { path: '/novo-post', label: 'Postar', icon: SquarePen, badge: 0 },
     { path: cityModule('busca'), label: 'Busca', icon: Search, badge: 0 },
   ];
 
