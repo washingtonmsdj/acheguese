@@ -837,10 +837,11 @@ export function AppLayoutRoutes() {
             index
             element={
               <P.TerritorialIndexPage
-                CityLandingComponent={P.CidadeLandingPage}
+                CityLandingComponent={P.MainLandingPage}
               />
             }
           />
+
         </Route>
 
         {/* Landing de estado - lista cidades ativas */}
