@@ -1025,7 +1025,7 @@ export function CreatePostModal({
     }
   };
 
-  const handleSaveDraft = () => {
+  const handleSaveDraft = async () => {
     if (editPostId) return;
     if (!profile?.id) {
       toast.error("Faça login para salvar rascunhos.");
@@ -1037,7 +1037,7 @@ export function CreatePostModal({
     }
     setSavingDraft(true);
     try {
-      const snapshot = savePostDraft(profile.id, currentDraftPayload);
+      const snapshot = await savePostDraft(profile.id, currentDraftPayload);
       if (snapshot) {
         setLastSavedAt(snapshot.updatedAt);
         setHasStoredDraft(true);
