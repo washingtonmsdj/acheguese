@@ -29,7 +29,7 @@ const suspiciousMojibakeTokens = [
 
 const publicSurfaceFiles = [
   "src/app/components/Breadcrumbs.tsx",
-  "src/app/pages/MainLandingPage.tsx",
+  "src/app/pages/PublicCityLandingPage.tsx",
   "src/app/pages/CidadeLandingPage.tsx",
   "src/app/pages/EmpresasLandingPage.tsx",
   "src/modules/professionals/services/pages/ServicosLandingPage.tsx",
@@ -75,7 +75,7 @@ describe("public territorial copy regression", () => {
     expect(cityLanding).toContain("Território verificado");
     expect(cityLanding).toContain("Resultados conectados ao território atual");
 
-    const mainLanding = read("src/app/pages/MainLandingPage.tsx");
+    const mainLanding = read("src/app/pages/PublicCityLandingPage.tsx");
     expect(mainLanding).toContain("Tudo do seu bairro,");
     expect(mainLanding).toContain("Comunidades em destaque");
     expect(mainLanding).toContain("Ranking das comunidades");

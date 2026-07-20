@@ -71,7 +71,7 @@ import personaEmprego from "@/assets/persona-emprego.jpg";
 import personaMorador from "@/assets/persona-morador.jpg";
 import personaPrestador from "@/assets/persona-prestador.jpg";
 import servicosHero from "@/assets/servicos-hero.jpg";
-import "./MainLandingPage.css";
+import "./PublicCityLandingPage.css";
 
 type NavItem = PublicHeaderNavItem & {
   mobileHeader?: "primary" | "secondary";
@@ -835,7 +835,7 @@ function StatsBar({ stats }: { stats: HomeStatCard[] }) {
   );
 }
 
-export default function MainLandingPage() {
+export default function PublicCityLandingPage() {
   const appUrls = useAppUrls();
   const communityHref = useHomeCommunityHref();
   const { activeProfile, user } = useSessionContext();

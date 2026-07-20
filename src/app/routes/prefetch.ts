@@ -16,7 +16,7 @@ const PREFETCHERS: Array<{
 }> = [
   {
     test: (path) => path === "/",
-    load: () => import("@/app/pages/MainLandingPage"),
+    load: () => import("@/app/pages/PublicCityLandingPage"),
     surface: "home",
   },
   {

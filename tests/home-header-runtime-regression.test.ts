@@ -8,7 +8,7 @@ function readProjectFile(path: string): string {
 
 describe("Home header runtime state", () => {
   it("keeps notifications and profile display tied to canonical runtime data", () => {
-    const source = readProjectFile("src/app/pages/MainLandingPage.tsx");
+    const source = readProjectFile("src/app/pages/PublicCityLandingPage.tsx");
 
     expect(source).toContain("useSessionContext");
     expect(source).toContain("useUnifiedNotifications");

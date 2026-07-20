@@ -823,7 +823,7 @@ export function AppLayoutRoutes() {
             index
             element={
               <P.TerritorialIndexPage
-                CityLandingComponent={P.MainLandingPage}
+                CityLandingComponent={P.PublicCityLandingPage}
               />
             }
           />
@@ -837,7 +837,7 @@ export function AppLayoutRoutes() {
             index
             element={
               <P.TerritorialIndexPage
-                CityLandingComponent={P.MainLandingPage}
+                CityLandingComponent={P.PublicCityLandingPage}
               />
             }
           />
