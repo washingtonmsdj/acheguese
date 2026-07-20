@@ -44,6 +44,13 @@ export type CommunityInterestRole =
   | "visitante"
   | "outro";
 
+export type CommunityInterestAdminStatus =
+  | "new"
+  | "reviewed"
+  | "contacted"
+  | "converted"
+  | "discarded";
+
 export interface CommunityInterestRegistration {
   id: string;
   community_id: string | null;
@@ -56,8 +63,13 @@ export interface CommunityInterestRegistration {
   message: string | null;
   wants_updates: boolean;
   source: string | null;
+  user_agent: string | null;
   turnstile_verified: boolean;
   user_id: string | null;
+  admin_status: CommunityInterestAdminStatus | null;
+  admin_notes: string | null;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
   created_at: string;
   updated_at: string;
 }
