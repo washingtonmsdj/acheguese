@@ -1,21 +1,19 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { CheckCircle, Eye, EyeOff, Key, Loader2, ShieldCheck } from "lucide-react";
+import { CheckCircle, Key, Loader2, ShieldCheck } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
+import { PasswordInput } from "@/app/components/auth/PasswordInput";
 import { AUTH_BROWSER_STORAGE_CONFIG } from "@/config/security.config";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { AuthService } from "@/core/auth/services/AuthService";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
-import {
-  AUTH_PASSWORD_MIN_LENGTH,
-  getAuthPasswordRequirementStatus,
-} from "@/core/auth/utils/passwordPolicy";
+import { AUTH_PASSWORD_MIN_LENGTH } from "@/core/auth/utils/passwordPolicy";
 import { InlineFieldError } from "@/shared/components/ui/InlineFieldError";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
