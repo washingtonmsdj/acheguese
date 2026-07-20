@@ -1696,6 +1696,29 @@ export function CreatePostModal({
           />
         ) : null}
       </DialogContent>
+      <AlertDialog
+        open={confirmDiscardOpen}
+        onOpenChange={setConfirmDiscardOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Descartar rascunho?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O conteúdo salvo será apagado deste dispositivo e dos outros
+              dispositivos sincronizados. Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Manter rascunho</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDiscardDraft}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Descartar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
