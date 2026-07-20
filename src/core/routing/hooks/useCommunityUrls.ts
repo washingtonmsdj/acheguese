@@ -14,6 +14,7 @@ export interface CommunityUrls {
   feed: string;
   alerts: string;
   issues: string;
+  communication: string;
   events: string;
   eventDetail: (id: string) => string;
   eventFavorites: string;
