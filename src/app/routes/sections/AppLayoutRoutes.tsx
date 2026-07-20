@@ -10,6 +10,7 @@
 import type { ReactNode } from "react";
 import { Navigate, Routes, Route } from "react-router-dom";
 import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
+import { LAUNCH_CITY_PATH } from "@/config/territory";
 import {
   isLaunchSurfaceEnabled,
   type LaunchSurfaceKey,
@@ -408,7 +409,13 @@ export function AppLayoutRoutes() {
 
       <Route element={<P.AppLayoutSidebar />}>
         {/* Pagina inicial */}
-        <Route path="/" element={<P.MainLandingPage />} />
+        {/*
+         * Opcao B: Home canonica em /:uf/:cidade da cidade de lancamento.
+         * "/" redireciona para a landing da cidade ativa (hoje: /ba/salvador),
+         * evitando conteudo duplicado e retrabalho quando novas cidades entrarem.
+         */}
+        <Route path="/" element={<Navigate to={LAUNCH_CITY_PATH} replace />} />
+        <Route path="/inicio" element={<P.MainLandingPage />} />
 
         {/* Rotas de Billing e Assinaturas */}
         <Route path="/planos" element={<P.PricingPage />} />
