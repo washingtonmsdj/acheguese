@@ -124,11 +124,13 @@ describe("CadastroPage (integração)", () => {
     await user.click(screen.getByRole("button", { name: /Próximo/i }));
 
     // Step 1 — seleciona território
-    await user.click(await screen.findByLabelText(/Estado/i));
+    await user.click(
+      await screen.findByRole("combobox", { name: /Estado/i }),
+    );
     await user.click(await screen.findByRole("option", { name: "Bahia" }));
-    await user.click(screen.getByLabelText(/Cidade/i));
+    await user.click(screen.getByRole("combobox", { name: /Cidade/i }));
     await user.click(await screen.findByRole("option", { name: "Salvador" }));
-    await user.click(screen.getByLabelText(/Bairro/i));
+    await user.click(screen.getByRole("combobox", { name: /Bairro/i }));
     await user.click(await screen.findByRole("option", { name: "Pituba" }));
     await user.click(screen.getByRole("button", { name: /Próximo/i }));
 
