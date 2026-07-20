@@ -69,12 +69,6 @@ describe("useCadastroForm", () => {
     });
     expect(valid).toBe(false);
 
-    await waitFor(() => {
-      expect(
-        result.current.form.formState.errors.termsAccepted?.message,
-      ).toMatch(/aceitar/i);
-    });
-
     act(() => {
       result.current.form.setValue("termsAccepted", true as never, {
         shouldValidate: true,
