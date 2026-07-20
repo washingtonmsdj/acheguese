@@ -10,13 +10,14 @@
  */
 
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BellRing,
   CalendarDays,
   Download,
   MailCheck,
   MapPin,
+  ShieldCheck,
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -24,6 +25,7 @@ import { toast } from "sonner";
 import {
   adminCommunityInterestService,
   type AdminCommunityInterestFilters,
+  type CommunityInterestAdminStatus,
   type CommunityInterestRegistration,
   type CommunityInterestRole,
 } from "@/core/admin";
@@ -38,10 +40,27 @@ import {
   AdminTable,
   type FilterOption,
 } from "@/core/admin/components";
+import { useSessionContext } from "@/core/session";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
+import { Textarea } from "@/shared/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 import {
   TableBody,
   TableCell,
@@ -79,6 +98,22 @@ const UPDATES_FILTER_OPTIONS: FilterOption = {
   ],
 };
 
+const STATUS_LABELS: Record<CommunityInterestAdminStatus, string> = {
+  new: "Novo",
+  reviewed: "Revisado",
+  contacted: "Contatado",
+  converted: "Convertido",
+  discarded: "Descartado",
+};
+
+const STATUS_BADGE: Record<CommunityInterestAdminStatus, string> = {
+  new: "bg-slate-100 text-slate-800",
+  reviewed: "bg-blue-100 text-blue-800",
+  contacted: "bg-amber-100 text-amber-800",
+  converted: "bg-emerald-100 text-emerald-800",
+  discarded: "bg-rose-100 text-rose-800",
+};
+
 function formatDate(iso: string): string {
   try {
     return new Date(iso).toLocaleString("pt-BR", {
@@ -106,16 +141,23 @@ function toCsv(rows: CommunityInterestRegistration[]): string {
   const headers = [
     "id",
     "created_at",
+    "updated_at",
     "full_name",
     "email",
     "phone",
     "role",
+    "community_id",
     "community_slug",
     "territory_path",
     "wants_updates",
     "turnstile_verified",
+    "admin_status",
+    "reviewed_at",
+    "reviewed_by",
+    "user_id",
     "source",
     "message",
+    "admin_notes",
   ];
   const lines = [headers.join(",")];
   for (const row of rows) {
@@ -123,16 +165,23 @@ function toCsv(rows: CommunityInterestRegistration[]): string {
       [
         row.id,
         row.created_at,
+        row.updated_at,
         row.full_name,
         row.email,
         row.phone ?? "",
         row.role,
+        row.community_id ?? "",
         row.community_slug ?? "",
         row.territory_path ?? "",
         row.wants_updates ? "sim" : "nao",
         row.turnstile_verified ? "sim" : "nao",
+        row.admin_status ?? "new",
+        row.reviewed_at ?? "",
+        row.reviewed_by ?? "",
+        row.user_id ?? "",
         row.source ?? "",
         (row.message ?? "").replace(/\s+/g, " ").slice(0, 500),
+        (row.admin_notes ?? "").replace(/\s+/g, " ").slice(0, 500),
       ]
         .map(csvEscape)
         .join(","),
@@ -163,6 +212,14 @@ export default function AdminCommunityInterest() {
   const [toDate, setToDate] = useState("");
   const [page, setPage] = useState(1);
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingPage, setIsExportingPage] = useState(false);
+  const [selected, setSelected] = useState<CommunityInterestRegistration | null>(null);
+  const [editStatus, setEditStatus] = useState<CommunityInterestAdminStatus>("new");
+  const [editNotes, setEditNotes] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const queryClient = useQueryClient();
+  const { user } = useSessionContext();
 
   const filters = useMemo<AdminCommunityInterestFilters>(
     () => ({
@@ -233,11 +290,54 @@ export default function AdminCommunityInterest() {
       const stamp = new Date().toISOString().slice(0, 10);
       downloadCsv(`interesse-comunidade-${stamp}.csv`, toCsv(rows));
       toast.success(`Exportados ${rows.length} registros`);
-    } catch (err) {
+    } catch {
       toast.error("Falha ao gerar CSV de exportação");
     } finally {
       setIsExporting(false);
     }
+  };
+
+  const handleExportPage = async () => {
+    if (items.length === 0) {
+      toast.info("Sem registros na página atual.");
+      return;
+    }
+    try {
+      setIsExportingPage(true);
+      const stamp = new Date().toISOString().slice(0, 10);
+      downloadCsv(
+        `interesse-comunidade-pagina-${page}-${stamp}.csv`,
+        toCsv(items),
+      );
+      toast.success(`Exportados ${items.length} registros da página ${page}`);
+    } finally {
+      setIsExportingPage(false);
+    }
+  };
+
+  const openDetail = (row: CommunityInterestRegistration) => {
+    setSelected(row);
+    setEditStatus((row.admin_status ?? "new") as CommunityInterestAdminStatus);
+    setEditNotes(row.admin_notes ?? "");
+  };
+
+  const handleSave = async () => {
+    if (!selected) return;
+    setIsSaving(true);
+    const res = await adminCommunityInterestService.updateRegistration(
+      selected.id,
+      { admin_status: editStatus, admin_notes: editNotes || null },
+      user?.id ?? null,
+    );
+    setIsSaving(false);
+    if (!res.ok) {
+      toast.error(`Falha ao salvar: ${res.error ?? "erro"}`);
+      return;
+    }
+    toast.success("Registro atualizado");
+    setSelected(null);
+    queryClient.invalidateQueries({ queryKey: ["admin-community-interest"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-community-interest-stats"] });
   };
 
   return (
@@ -247,10 +347,20 @@ export default function AdminCommunityInterest() {
         description="Waitlist dos bairros em coming_soon. Filtre, analise a distribuição por território e exporte a base para prospecção."
         icon={MailCheck}
         actions={
-          <Button onClick={handleExport} disabled={isExporting || total === 0}>
-            <Download className="mr-2 h-4 w-4" />
-            {isExporting ? "Gerando..." : "Exportar CSV"}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={handleExportPage}
+              disabled={isExportingPage || items.length === 0}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              {isExportingPage ? "Gerando..." : "Exportar página"}
+            </Button>
+            <Button onClick={handleExport} disabled={isExporting || total === 0}>
+              <Download className="mr-2 h-4 w-4" />
+              {isExporting ? "Gerando..." : "Exportar tudo"}
+            </Button>
+          </div>
         }
       />
 
@@ -416,53 +526,195 @@ export default function AdminCommunityInterest() {
                 <TableHead>Contato</TableHead>
                 <TableHead>Vínculo</TableHead>
                 <TableHead>Comunidade</TableHead>
-                <TableHead>Novidades</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Verif.</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                    {formatDate(row.created_at)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="font-medium">{row.full_name}</div>
-                    {row.message ? (
-                      <div className="mt-0.5 line-clamp-2 max-w-[320px] text-xs text-muted-foreground">
-                        {row.message}
+              {items.map((row) => {
+                const status = (row.admin_status ?? "new") as CommunityInterestAdminStatus;
+                return (
+                  <TableRow
+                    key={row.id}
+                    className="cursor-pointer"
+                    onClick={() => openDetail(row)}
+                  >
+                    <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                      {formatDate(row.created_at)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-medium">{row.full_name}</div>
+                      {row.message ? (
+                        <div className="mt-0.5 line-clamp-2 max-w-[320px] text-xs text-muted-foreground">
+                          {row.message}
+                        </div>
+                      ) : null}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      <div>{row.email}</div>
+                      {row.phone ? (
+                        <div className="text-xs text-muted-foreground">{row.phone}</div>
+                      ) : null}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{ROLE_LABELS[row.role] ?? row.role}</Badge>
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      <div className="font-medium">{row.community_slug ?? "—"}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {row.territory_path ?? "sem território"}
                       </div>
-                    ) : null}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    <div>{row.email}</div>
-                    {row.phone ? (
-                      <div className="text-xs text-muted-foreground">{row.phone}</div>
-                    ) : null}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{ROLE_LABELS[row.role] ?? row.role}</Badge>
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    <div className="font-medium">{row.community_slug ?? "—"}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {row.territory_path ?? "sem território"}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {row.wants_updates ? (
-                      <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">
-                        Aceita
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={`${STATUS_BADGE[status]} hover:opacity-90`}>
+                        {STATUS_LABELS[status]}
                       </Badge>
-                    ) : (
-                      <Badge variant="outline">Não</Badge>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>
+                      {row.turnstile_verified ? (
+                        <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">
+                          <ShieldCheck className="mr-1 h-3 w-3" />
+                          OK
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline">—</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openDetail(row);
+                        }}
+                      >
+                        Detalhes
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </AdminTable>
         </AdminDataState>
       </AdminSectionCard>
+
+      <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Detalhes do cadastro</DialogTitle>
+            <DialogDescription>
+              Consulte metadados completos e atualize o status de triagem.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selected ? (
+            <div className="space-y-4">
+              <div className="grid gap-3 text-sm md:grid-cols-2">
+                <div>
+                  <div className="text-xs text-muted-foreground">Nome</div>
+                  <div className="font-medium">{selected.full_name}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Vínculo</div>
+                  <div>{ROLE_LABELS[selected.role] ?? selected.role}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">E-mail</div>
+                  <div className="break-all">{selected.email}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Telefone</div>
+                  <div>{selected.phone ?? "—"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Comunidade</div>
+                  <div>{selected.community_slug ?? "—"}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {selected.territory_path ?? "sem território"}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Turnstile</div>
+                  <div>{selected.turnstile_verified ? "Verificado" : "Não verificado"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Criado</div>
+                  <div>{formatDate(selected.created_at)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Atualizado</div>
+                  <div>{formatDate(selected.updated_at)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Revisado em</div>
+                  <div>{selected.reviewed_at ? formatDate(selected.reviewed_at) : "—"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Aceita novidades</div>
+                  <div>{selected.wants_updates ? "Sim" : "Não"}</div>
+                </div>
+              </div>
+
+              {selected.message ? (
+                <div>
+                  <div className="text-xs text-muted-foreground">Mensagem</div>
+                  <div className="rounded border bg-muted/30 p-2 text-sm whitespace-pre-wrap">
+                    {selected.message}
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-1">
+                  <Label>Status de triagem</Label>
+                  <Select
+                    value={editStatus}
+                    onValueChange={(value) =>
+                      setEditStatus(value as CommunityInterestAdminStatus)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(STATUS_LABELS) as CommunityInterestAdminStatus[]).map(
+                        (key) => (
+                          <SelectItem key={key} value={key}>
+                            {STATUS_LABELS[key]}
+                          </SelectItem>
+                        ),
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1 md:col-span-2">
+                  <Label htmlFor="admin-notes">Notas internas</Label>
+                  <Textarea
+                    id="admin-notes"
+                    value={editNotes}
+                    onChange={(event) => setEditNotes(event.target.value)}
+                    rows={3}
+                    maxLength={2000}
+                    placeholder="Contexto de contato, próximos passos, etc."
+                  />
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setSelected(null)} disabled={isSaving}>
+              Fechar
+            </Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? "Salvando..." : "Salvar alterações"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

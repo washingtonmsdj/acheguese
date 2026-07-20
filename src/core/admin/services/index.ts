@@ -40,10 +40,12 @@ export { adminCommunityInterestService } from "./AdminCommunityInterestService";
 export type {
   CommunityInterestRegistration,
   CommunityInterestRole,
+  CommunityInterestAdminStatus,
   AdminCommunityInterestFilters,
   AdminCommunityInterestListParams,
   AdminCommunityInterestListResult,
   AdminCommunityInterestStats,
+  UpdateRegistrationInput,
 } from "./AdminCommunityInterestService";
 export { adminCouponsService } from "./AdminCouponsService";
 export type { CouponData } from "./AdminCouponsService";

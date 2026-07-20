@@ -28,6 +28,7 @@ type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
   order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
   range(from: number, to: number): TableClient<TRow>;
   limit(count: number): TableClient<TRow>;
+  update(values: Record<string, unknown>): TableClient<TRow>;
 };
 
 type DbClient = {
@@ -43,6 +44,13 @@ export type CommunityInterestRole =
   | "visitante"
   | "outro";
 
+export type CommunityInterestAdminStatus =
+  | "new"
+  | "reviewed"
+  | "contacted"
+  | "converted"
+  | "discarded";
+
 export interface CommunityInterestRegistration {
   id: string;
   community_id: string | null;
@@ -55,8 +63,13 @@ export interface CommunityInterestRegistration {
   message: string | null;
   wants_updates: boolean;
   source: string | null;
+  user_agent: string | null;
   turnstile_verified: boolean;
   user_id: string | null;
+  admin_status: CommunityInterestAdminStatus | null;
+  admin_notes: string | null;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -253,11 +266,44 @@ async function getCommunityBreakdown(
     .slice(0, limit);
 }
 
+export interface UpdateRegistrationInput {
+  admin_status?: CommunityInterestAdminStatus;
+  admin_notes?: string | null;
+  wants_updates?: boolean;
+}
+
+async function updateRegistration(
+  id: string,
+  patch: UpdateRegistrationInput,
+  reviewerId?: string | null,
+): Promise<{ ok: boolean; error?: string }> {
+  const payload: Record<string, unknown> = { ...patch };
+  if (patch.admin_status || patch.admin_notes !== undefined) {
+    payload.reviewed_at = new Date().toISOString();
+    if (reviewerId) payload.reviewed_by = reviewerId;
+  }
+  const query = db
+    .from<CommunityInterestRegistration>("community_interest_registrations")
+    .update(payload)
+    .eq("id", id);
+  const { error } = await query;
+  if (error) {
+    logger.error(
+      "AdminCommunityInterestService.update falhou",
+      new Error(error.message ?? "unknown"),
+      { component: "AdminCommunityInterestService", registrationId: id },
+    );
+    return { ok: false, error: error.message ?? "unknown" };
+  }
+  return { ok: true };
+}
+
 export const adminCommunityInterestService = {
   list: listRegistrations,
   exportAll,
   getStats,
   getCommunityBreakdown,
+  updateRegistration,
 };
 
 export type AdminCommunityInterestService = typeof adminCommunityInterestService;
