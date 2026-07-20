@@ -774,13 +774,14 @@ export function CreatePostModal({
     setPublishing(true);
     try {
       const payload = buildStructuredPayload();
+      let createdPostId: string | null = null;
       if (editPostId) {
         await postService.updatePost(editPostId, { content: payload.content });
         toast.success("Conteúdo atualizado.");
       } else if (isOpportunityIntent) {
         toast.error("Oportunidades estao pausadas neste MVP.");
       } else {
-        await postService.createPostWithImages(
+        const created = await postService.createPostWithImages(
           {
             author_profile_id: profile.id,
             content: payload.content,
@@ -799,8 +800,31 @@ export function CreatePostModal({
           },
           form.imageFiles,
         );
+        createdPostId = (created as { id?: string })?.id ?? null;
         toast.success("Conteúdo publicado.");
       }
+
+      // Atualiza o feed imediatamente para trazer o novo post ao topo
+      // (ordem canônica é created_at DESC, então o recém-criado aparece primeiro).
+      queryClient.invalidateQueries({ queryKey: communityFeedQueryKeys.root });
+
+      // Marca o post recém-criado para destaque visual opcional na próxima renderização do feed.
+      if (createdPostId && typeof window !== "undefined") {
+        try {
+          window.sessionStorage.setItem(
+            "community:highlight-post-id",
+            createdPostId,
+          );
+        } catch {
+          // best-effort
+        }
+      }
+
+      // Limpa o rascunho após publicação bem-sucedida.
+      if (!editPostId && profile?.id) {
+        clearPostDraft(profile.id);
+      }
+
       form.resetForm();
       handleClose();
     } catch {
