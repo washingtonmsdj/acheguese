@@ -17,6 +17,10 @@ import type {
   PostDraftPayload,
   PostDraftSnapshot,
 } from "@/core/community/utils/postDraft";
+import {
+  decryptString,
+  encryptString,
+} from "@/core/community/utils/postDraftCrypto";
 
 const TABLE = "community_post_drafts";
 const PENDING_PREFIX = "community:post-draft-pending:v1:";
@@ -50,21 +54,36 @@ function pendingKey(profileId: string): string {
   return `${PENDING_PREFIX}${profileId}`;
 }
 
-function enqueuePending(profileId: string, snapshot: PostDraftSnapshot): void {
+function pendingCryptoScope(profileId: string): string {
+  return `post-draft-pending:${profileId}`;
+}
+
+async function enqueuePending(
+  profileId: string,
+  snapshot: PostDraftSnapshot,
+): Promise<void> {
   if (!isBrowser() || !profileId) return;
   try {
-    window.localStorage.setItem(pendingKey(profileId), JSON.stringify(snapshot));
+    const ciphertext = await encryptString(
+      pendingCryptoScope(profileId),
+      JSON.stringify(snapshot),
+    );
+    window.localStorage.setItem(pendingKey(profileId), ciphertext);
   } catch {
     // no-op
   }
 }
 
-function readPending(profileId: string): PostDraftSnapshot | null {
+async function readPending(
+  profileId: string,
+): Promise<PostDraftSnapshot | null> {
   if (!isBrowser() || !profileId) return null;
   try {
     const raw = window.localStorage.getItem(pendingKey(profileId));
     if (!raw) return null;
-    return JSON.parse(raw) as PostDraftSnapshot;
+    const plaintext = await decryptString(pendingCryptoScope(profileId), raw);
+    if (!plaintext) return null;
+    return JSON.parse(plaintext) as PostDraftSnapshot;
   } catch {
     return null;
   }
@@ -79,8 +98,16 @@ function clearPending(profileId: string): void {
   }
 }
 
+/**
+ * Verificação síncrona: apenas checa se há envelope pendente, sem decifrar.
+ */
 export function hasPendingSync(profileId: string): boolean {
-  return readPending(profileId) !== null;
+  if (!isBrowser() || !profileId) return false;
+  try {
+    return window.localStorage.getItem(pendingKey(profileId)) !== null;
+  } catch {
+    return false;
+  }
 }
 
 function toSnapshot(row: RemoteDraftRow): PostDraftSnapshot {
