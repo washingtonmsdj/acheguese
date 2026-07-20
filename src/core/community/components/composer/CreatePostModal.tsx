@@ -412,7 +412,9 @@ export function CreatePostModal({
   );
   const form = useCreatePostForm();
   const territoryFilter = useTerritoryFilter();
+  const queryClient = useQueryClient();
   const [publishing, setPublishing] = React.useState(false);
+  const [savingDraft, setSavingDraft] = React.useState(false);
   const [intentPickerExpanded, setIntentPickerExpanded] = React.useState(false);
   const intentPickerId = React.useId();
   const [intent, setIntent] = React.useState<IntentId>(
