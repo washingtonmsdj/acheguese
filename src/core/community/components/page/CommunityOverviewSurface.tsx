@@ -1577,7 +1577,7 @@ export function CommunityOverviewSurface({
                     })}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0 sm:flex-nowrap sm:gap-3 sm:overflow-x-auto sm:pb-1 sm:[-ms-overflow-style:none] sm:[scrollbar-width:none] md:flex-wrap md:justify-end md:overflow-visible md:pb-0 xl:flex-col xl:gap-2 xl:pb-0 sm:[&::-webkit-scrollbar]:hidden">
+                  <div className="grid grid-cols-1 gap-2 sm:flex sm:shrink-0 sm:flex-nowrap sm:gap-3 sm:overflow-x-auto sm:pb-1 sm:[-ms-overflow-style:none] sm:[scrollbar-width:none] md:flex-wrap md:justify-end md:overflow-visible md:pb-0 xl:flex-col xl:gap-2 xl:pb-0 sm:[&::-webkit-scrollbar]:hidden">
                     {mode === "member" ? (
                       <Button
                         type="button"
@@ -1599,15 +1599,6 @@ export function CommunityOverviewSurface({
                         </span>
                       </Link>
                     )}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleShareCommunity}
-                      className="min-h-8 w-full rounded-lg border-white/20 bg-black/20 px-2 text-xs text-white hover:bg-white/10 hover:text-white sm:min-h-9 sm:w-auto sm:shrink-0 sm:rounded-xl sm:px-3 sm:text-sm md:min-h-11 md:px-5 xl:w-48 xl:text-xs"
-                    >
-                      <Share2 className="mr-2 h-4 w-4" />
-                      Compartilhar
-                    </Button>
                   </div>
                 </div>
               </div>
