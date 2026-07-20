@@ -823,10 +823,11 @@ export function AppLayoutRoutes() {
             index
             element={
               <P.TerritorialIndexPage
-                CityLandingComponent={P.CidadeLandingPage}
+                CityLandingComponent={P.MainLandingPage}
               />
             }
           />
+
         </Route>
         <Route
           path={buildTerritorialBareRoutePath()}
