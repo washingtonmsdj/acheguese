@@ -64,7 +64,26 @@ import {
   hasMeaningfulDraft,
   loadPostDraft,
   savePostDraft,
+  writePostDraftSnapshot,
+  type PostDraftPayload,
+  type PostDraftSnapshot,
 } from "@/core/community/utils/postDraft";
+import {
+  deleteRemoteDraft,
+  fetchRemoteDraft,
+  upsertRemoteDraft,
+} from "@/core/community/services/postDraftSync";
+import { emitNewPost } from "@/core/community/state/newPostHighlight";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/shared/components/ui/alert-dialog";
 import {
   DEFAULT_BLOCKED_ALERT_MESSAGE,
   DEFAULT_BLOCKED_ISSUE_MESSAGE,
@@ -415,6 +434,12 @@ export function CreatePostModal({
   const queryClient = useQueryClient();
   const [publishing, setPublishing] = React.useState(false);
   const [savingDraft, setSavingDraft] = React.useState(false);
+  const [lastSavedAt, setLastSavedAt] = React.useState<number | null>(null);
+  const [hasStoredDraft, setHasStoredDraft] = React.useState(false);
+  const [confirmDiscardOpen, setConfirmDiscardOpen] = React.useState(false);
+  const autosaveTimerRef = React.useRef<number | null>(null);
+  const remoteSyncTimerRef = React.useRef<number | null>(null);
+  const suppressAutosaveRef = React.useRef(true);
   const [intentPickerExpanded, setIntentPickerExpanded] = React.useState(false);
   const intentPickerId = React.useId();
   const [intent, setIntent] = React.useState<IntentId>(
@@ -473,8 +498,37 @@ export function CreatePostModal({
   const selectedIntent =
     flattenIntents().find((item) => item.id === intent) ?? flattenIntents()[0];
   const SelectedIntentIcon = selectedIntent.icon;
+  const applyDraftSnapshot = React.useCallback(
+    (draft: PostDraftSnapshot) => {
+      setIntent(getLaunchIntent(draft.intent as IntentId));
+      setDistributionLevel(draft.distributionLevel);
+      form.setReach(reachFromTerritorialLevel(draft.distributionLevel));
+      setGenericDescription(draft.genericDescription);
+      setPollQuestion(draft.pollQuestion);
+      setPollOptions(
+        draft.pollOptions.length >= 2 ? draft.pollOptions : ["", ""],
+      );
+      setProblemLocation(draft.problemLocation);
+      setProblemCategory(draft.problemCategory);
+      setProblemSeverity(draft.problemSeverity);
+      setProblemRecurrence(draft.problemRecurrence);
+      setProblemDescription(draft.problemDescription);
+      setEventDate(draft.eventDate);
+      setEventTime(draft.eventTime);
+      setEventPlace(draft.eventPlace);
+      setEventLimit(draft.eventLimit);
+      setEventDescription(draft.eventDescription);
+      setLastSavedAt(draft.updatedAt ?? draft.savedAt ?? Date.now());
+      setHasStoredDraft(true);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
   React.useEffect(() => {
     if (!open) return;
+    // Suprime autosave durante a hidratação inicial do modal.
+    suppressAutosaveRef.current = true;
     form.setType(
       (initialType ?? defaultType ?? selectedIntent.structuralType) as PostType,
     );
@@ -490,38 +544,123 @@ export function CreatePostModal({
     setIntentPickerExpanded(false);
     setGenericDescription(initialContent ?? "");
     setDistributionLevel(initialDistributionLevel);
+    setLastSavedAt(null);
+    setHasStoredDraft(false);
 
-    // Restaura rascunho local (apenas em criação, não em edição)
+    // Restaura rascunho local + remoto (apenas em criação, não em edição)
     if (!editPostId && profile?.id) {
-      const draft = loadPostDraft(profile.id);
-      if (draft && hasMeaningfulDraft(draft)) {
-        setIntent(getLaunchIntent(draft.intent as IntentId));
-        setDistributionLevel(draft.distributionLevel);
-        form.setReach(reachFromTerritorialLevel(draft.distributionLevel));
-        setGenericDescription(draft.genericDescription);
-        setPollQuestion(draft.pollQuestion);
-        setPollOptions(
-          draft.pollOptions.length >= 2 ? draft.pollOptions : ["", ""],
-        );
-        setProblemLocation(draft.problemLocation);
-        setProblemCategory(draft.problemCategory);
-        setProblemSeverity(draft.problemSeverity);
-        setProblemRecurrence(draft.problemRecurrence);
-        setProblemDescription(draft.problemDescription);
-        setEventDate(draft.eventDate);
-        setEventTime(draft.eventTime);
-        setEventPlace(draft.eventPlace);
-        setEventLimit(draft.eventLimit);
-        setEventDescription(draft.eventDescription);
+      const profileId = profile.id;
+      const local = loadPostDraft(profileId);
+      if (local && hasMeaningfulDraft(local)) {
+        applyDraftSnapshot(local);
+      }
+      // Merge com remoto: se remoto for mais novo, sobrescreve.
+      void fetchRemoteDraft(profileId).then((remote) => {
+        if (!remote) {
+          // Se só temos local, garante persistência remota inicial.
+          if (local && hasMeaningfulDraft(local)) {
+            void upsertRemoteDraft(profileId, local);
+          }
+          return;
+        }
+        const localTs = local?.updatedAt ?? local?.savedAt ?? 0;
+        if (remote.updatedAt > localTs && hasMeaningfulDraft(remote.snapshot)) {
+          writePostDraftSnapshot(profileId, remote.snapshot);
+          applyDraftSnapshot(remote.snapshot);
+          toast.info("Rascunho de outro dispositivo restaurado.");
+        }
+      });
+      if (local && hasMeaningfulDraft(local)) {
         toast.info("Rascunho restaurado. Continue de onde parou.");
       }
     }
+    // Libera autosave após o próximo tick, quando os estados já settlaram.
+    const t = window.setTimeout(() => {
+      suppressAutosaveRef.current = false;
+    }, 300);
+    return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, defaultType, initialType, initialContent, initialReach, editPostId, profile?.id]);
   React.useEffect(() => {
     form.setType(selectedIntent.structuralType);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedIntent.structuralType]);
+
+  // Snapshot atual dos campos textuais (mesma forma do PostDraftPayload).
+  const currentDraftPayload = React.useMemo<PostDraftPayload>(
+    () => ({
+      intent,
+      distributionLevel,
+      genericDescription,
+      pollQuestion,
+      pollOptions,
+      problemLocation,
+      problemCategory,
+      problemSeverity,
+      problemRecurrence,
+      problemDescription,
+      eventDate,
+      eventTime,
+      eventPlace,
+      eventLimit,
+      eventDescription,
+    }),
+    [
+      intent,
+      distributionLevel,
+      genericDescription,
+      pollQuestion,
+      pollOptions,
+      problemLocation,
+      problemCategory,
+      problemSeverity,
+      problemRecurrence,
+      problemDescription,
+      eventDate,
+      eventTime,
+      eventPlace,
+      eventLimit,
+      eventDescription,
+    ],
+  );
+
+  // Autosave: local (debounce 400ms) + remoto (debounce 1500ms).
+  React.useEffect(() => {
+    if (!open || editPostId) return;
+    if (!profile?.id) return;
+    if (suppressAutosaveRef.current) return;
+    if (!hasMeaningfulDraft(currentDraftPayload)) return;
+
+    const profileId = profile.id;
+    if (autosaveTimerRef.current) window.clearTimeout(autosaveTimerRef.current);
+    if (remoteSyncTimerRef.current)
+      window.clearTimeout(remoteSyncTimerRef.current);
+
+    autosaveTimerRef.current = window.setTimeout(() => {
+      const snapshot = savePostDraft(profileId, currentDraftPayload);
+      if (snapshot) {
+        setLastSavedAt(snapshot.updatedAt);
+        setHasStoredDraft(true);
+      }
+    }, 400);
+
+    remoteSyncTimerRef.current = window.setTimeout(() => {
+      const snapshot: PostDraftSnapshot = {
+        ...currentDraftPayload,
+        updatedAt: Date.now(),
+      };
+      void upsertRemoteDraft(profileId, snapshot);
+    }, 1500);
+
+    return () => {
+      if (autosaveTimerRef.current)
+        window.clearTimeout(autosaveTimerRef.current);
+      if (remoteSyncTimerRef.current)
+        window.clearTimeout(remoteSyncTimerRef.current);
+    };
+  }, [open, editPostId, profile?.id, currentDraftPayload]);
+
+
 
   const displayName = profile?.displayName ?? "Usuário";
   const avatarUrl = profile?.avatarUrl;
@@ -808,21 +947,18 @@ export function CreatePostModal({
       // (ordem canônica é created_at DESC, então o recém-criado aparece primeiro).
       queryClient.invalidateQueries({ queryKey: communityFeedQueryKeys.root });
 
-      // Marca o post recém-criado para destaque visual opcional na próxima renderização do feed.
-      if (createdPostId && typeof window !== "undefined") {
-        try {
-          window.sessionStorage.setItem(
-            "community:highlight-post-id",
-            createdPostId,
-          );
-        } catch {
-          // best-effort
-        }
+      // Emite o post recém-criado para destaque + auto-scroll no feed.
+      if (createdPostId) {
+        emitNewPost(createdPostId);
       }
 
-      // Limpa o rascunho após publicação bem-sucedida.
+      // Limpa o rascunho após publicação bem-sucedida (local + remoto).
       if (!editPostId && profile?.id) {
         clearPostDraft(profile.id);
+        void deleteRemoteDraft(profile.id);
+        setLastSavedAt(null);
+        setHasStoredDraft(false);
+        suppressAutosaveRef.current = true;
       }
 
       form.resetForm();
@@ -840,36 +976,70 @@ export function CreatePostModal({
       toast.error("Faça login para salvar rascunhos.");
       return;
     }
-    const snapshot = {
-      intent,
-      distributionLevel,
-      genericDescription,
-      pollQuestion,
-      pollOptions,
-      problemLocation,
-      problemCategory,
-      problemSeverity,
-      problemRecurrence,
-      problemDescription,
-      eventDate,
-      eventTime,
-      eventPlace,
-      eventLimit,
-      eventDescription,
-    };
-    if (!hasMeaningfulDraft(snapshot)) {
+    if (!hasMeaningfulDraft(currentDraftPayload)) {
       toast.info("Escreva algo antes de salvar como rascunho.");
       return;
     }
     setSavingDraft(true);
     try {
-      savePostDraft(profile.id, snapshot);
+      const snapshot = savePostDraft(profile.id, currentDraftPayload);
+      if (snapshot) {
+        setLastSavedAt(snapshot.updatedAt);
+        setHasStoredDraft(true);
+        void upsertRemoteDraft(profile.id, snapshot);
+      }
       toast.success("Rascunho salvo. Você pode voltar depois para publicar.");
       handleClose();
     } finally {
       setSavingDraft(false);
     }
   };
+
+  const resetComposerFields = React.useCallback(() => {
+    setGenericDescription("");
+    setPollQuestion("");
+    setPollOptions(["", ""]);
+    setProblemLocation("");
+    setProblemCategory("");
+    setProblemSeverity("media");
+    setProblemRecurrence("pontual");
+    setProblemDescription("");
+    setEventDate("");
+    setEventTime("");
+    setEventPlace("");
+    setEventLimit("");
+    setEventDescription("");
+  }, []);
+
+  const handleDiscardDraft = () => {
+    if (!profile?.id) return;
+    suppressAutosaveRef.current = true;
+    clearPostDraft(profile.id);
+    void deleteRemoteDraft(profile.id);
+    resetComposerFields();
+    setLastSavedAt(null);
+    setHasStoredDraft(false);
+    setConfirmDiscardOpen(false);
+    toast.success("Rascunho descartado.");
+    // Reabilita autosave assim que o usuário voltar a digitar.
+    window.setTimeout(() => {
+      suppressAutosaveRef.current = false;
+    }, 300);
+  };
+
+  const formattedSavedAt = React.useMemo(() => {
+    if (!lastSavedAt) return null;
+    try {
+      return new Date(lastSavedAt).toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return null;
+    }
+  }, [lastSavedAt]);
+
+
 
 
 
@@ -886,6 +1056,14 @@ export function CreatePostModal({
             Escolha o formato, escreva com clareza e confirme onde o conteúdo
             será exibido.
           </DialogDescription>
+          {!editPostId && formattedSavedAt ? (
+            <p
+              className="mt-1 text-[11px] text-muted-foreground"
+              aria-live="polite"
+            >
+              Rascunho salvo às {formattedSavedAt}
+            </p>
+          ) : null}
         </DialogHeader>
         <div className="max-h-[calc(92dvh-7.5rem)] space-y-4 overflow-y-auto px-4 py-3 overscroll-contain sm:max-h-[70vh] sm:space-y-5 sm:px-5 sm:py-4">
           {locationError && (
@@ -1471,6 +1649,17 @@ export function CreatePostModal({
             >
               Cancelar
             </Button>
+            {!editPostId && (hasStoredDraft || hasMeaningfulDraft(currentDraftPayload)) ? (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setConfirmDiscardOpen(true)}
+                disabled={publishing || savingDraft}
+                className="flex-1 text-destructive hover:bg-destructive/10 hover:text-destructive sm:flex-none"
+              >
+                Descartar
+              </Button>
+            ) : null}
             {!editPostId ? (
               <Button
                 variant="outline"
@@ -1507,6 +1696,29 @@ export function CreatePostModal({
           />
         ) : null}
       </DialogContent>
+      <AlertDialog
+        open={confirmDiscardOpen}
+        onOpenChange={setConfirmDiscardOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Descartar rascunho?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O conteúdo salvo será apagado deste dispositivo e dos outros
+              dispositivos sincronizados. Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Manter rascunho</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDiscardDraft}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Descartar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

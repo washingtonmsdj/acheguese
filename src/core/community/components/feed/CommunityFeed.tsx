@@ -25,6 +25,10 @@ import { InfiniteScrollTrigger } from "@/shared/components/ui";
 import type { UnifiedPost } from "@/shared/types/posts";
 import type { PostType } from "@/core/posts/types";
 import { UnifiedFeedWithMessages } from "./UnifiedFeedWithMessages";
+import {
+  consumePendingNewPost,
+  subscribeNewPost,
+} from "@/core/community/state/newPostHighlight";
 import { CommunityComposerEntry } from "../composer/CommunityComposerEntry";
 import { PostCardSkeleton } from "../PostCardSkeleton";
 import { SPACING } from "../styles/communityDesignSystem";
@@ -114,10 +118,62 @@ export function CommunityFeed({
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [activeHeaderFilter, setActiveHeaderFilter] =
     useState<TerritorialFeedChannel>(initialHeaderFilter);
+  const [highlightPostId, setHighlightPostId] = useState<string | null>(() =>
+    consumePendingNewPost(),
+  );
 
   useEffect(() => {
     setActiveHeaderFilter(initialHeaderFilter);
   }, [initialHeaderFilter]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeNewPost((id) => setHighlightPostId(id));
+    return unsubscribe;
+  }, []);
+
+  // Scroll + highlight visual quando o post recém-publicado aparecer no DOM.
+  useEffect(() => {
+    if (!highlightPostId || typeof window === "undefined") return;
+    let cancelled = false;
+    const start = Date.now();
+    const tryHighlight = () => {
+      if (cancelled) return;
+      const el = document.querySelector<HTMLElement>(
+        `[data-feed-post-id="${CSS.escape(highlightPostId)}"]`,
+      );
+      if (el) {
+        el.setAttribute("data-new-post", "true");
+        el.classList.add(
+          "ring-2",
+          "ring-teal-300/70",
+          "rounded-2xl",
+          "shadow-[0_0_0_4px_rgba(45,212,191,0.15)]",
+          "transition-all",
+          "duration-500",
+        );
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        window.setTimeout(() => {
+          el.classList.remove(
+            "ring-2",
+            "ring-teal-300/70",
+            "shadow-[0_0_0_4px_rgba(45,212,191,0.15)]",
+          );
+          el.removeAttribute("data-new-post");
+        }, 6000);
+        setHighlightPostId(null);
+        return;
+      }
+      if (Date.now() - start < 5000) {
+        window.setTimeout(tryHighlight, 200);
+      } else {
+        setHighlightPostId(null);
+      }
+    };
+    tryHighlight();
+    return () => {
+      cancelled = true;
+    };
+  }, [highlightPostId]);
 
   const handleLike = useCallback(
     (postId: string) => {
