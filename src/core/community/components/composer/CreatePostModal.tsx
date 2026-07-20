@@ -50,6 +50,8 @@ import { useSessionContext } from "@/core/session";
 import { useCreatePostForm } from "../../hooks/composer/useCreatePostForm";
 import { postService } from "@/core/posts/services";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { communityFeedQueryKeys } from "@/core/feed";
 import { cn } from "@/shared/utils/cn";
 import { POST_LIMITS } from "@/shared/constants/socialContent";
 import type { PostType } from "@/core/posts/types.ts";
@@ -57,6 +59,12 @@ import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-r
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
 import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
 import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import {
+  clearPostDraft,
+  hasMeaningfulDraft,
+  loadPostDraft,
+  savePostDraft,
+} from "@/core/community/utils/postDraft";
 import {
   DEFAULT_BLOCKED_ALERT_MESSAGE,
   DEFAULT_BLOCKED_ISSUE_MESSAGE,
