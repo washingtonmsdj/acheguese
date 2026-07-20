@@ -43,7 +43,7 @@ export default function LoginPage() {
     googleAuthAvailable,
   } = useAuth();
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
-  const [showPassword, setShowPassword] = useState(false);
+  
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
