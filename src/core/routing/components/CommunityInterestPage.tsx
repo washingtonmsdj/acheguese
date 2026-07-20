@@ -418,6 +418,57 @@ export function CommunityInterestPage() {
                 </span>
               </label>
 
+              {/* Honeypot: campo invisível para humanos, tentador para bots. */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  left: "-10000px",
+                  width: 1,
+                  height: 1,
+                  overflow: "hidden",
+                }}
+              >
+                <label htmlFor="company_website">Não preencha este campo</label>
+                <input
+                  id="company_website"
+                  name="company_website"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={honeypot}
+                  onChange={(event) => setHoneypot(event.target.value)}
+                />
+              </div>
+
+              {turnstileEnabled ? (
+                <div className="space-y-1.5">
+                  <TurnstileWidget
+                    siteKey={TURNSTILE_SITE_KEY}
+                    action="community-interest"
+                    onVerify={(token) => {
+                      setTurnstileToken(token);
+                      setTurnstileError(null);
+                    }}
+                    onExpire={() => setTurnstileToken(null)}
+                    onError={() => {
+                      setTurnstileToken(null);
+                      setTurnstileError("Não foi possível carregar a verificação. Recarregue a página.");
+                    }}
+                  />
+                  {turnstileError ? (
+                    <p className="text-xs text-destructive">{turnstileError}</p>
+                  ) : (
+                    <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <ShieldCheck className="h-3 w-3" aria-hidden />
+                      Verificação anti-spam protegida por Cloudflare.
+                    </p>
+                  )}
+                </div>
+              ) : null}
+
+
+
               <div className="flex flex-col gap-2 pt-2 sm:flex-row">
                 <Button type="submit" disabled={submitting} className="sm:min-w-40">
                   {submitting ? (
