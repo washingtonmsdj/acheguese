@@ -95,6 +95,7 @@ export function useCommunityUrls(routeResolved?: ResolvedTerritory | null): Comm
 
   const alertsUrl = `${feedUrl}/feed?tab=alertas`;
   const issuesUrl = `${feedUrl}/problemas`;
+  const communicationUrl = `${feedUrl}/comunicacao`;
   const groupsUrl = `${feedUrl}/grupos`;
 
   return {
