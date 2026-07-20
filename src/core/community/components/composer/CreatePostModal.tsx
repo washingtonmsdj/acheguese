@@ -1471,6 +1471,16 @@ export function CreatePostModal({
             >
               Cancelar
             </Button>
+            {!editPostId ? (
+              <Button
+                variant="outline"
+                onClick={handleSaveDraft}
+                disabled={savingDraft || publishing}
+                className="flex-1 sm:flex-none"
+              >
+                {savingDraft ? "Salvando..." : "Salvar rascunho"}
+              </Button>
+            ) : null}
             <Button
               onClick={handlePublish}
               disabled={!canPublish}
