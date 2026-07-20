@@ -101,7 +101,7 @@ export default function CommunityCommunicationTabPage({ resolved }: CommunityCom
         <section className="grid gap-4">
           {(feed.data ?? []).map((distribution) =>
             state && city ? (
-              <CommunicationCard
+              <CommunityCommunicationCard
                 key={distribution.id}
                 distribution={distribution}
                 routeParams={{ state, city }}
