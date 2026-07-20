@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
-import { CheckCircle2, Loader2, MapPin, Sparkles } from "lucide-react";
+import { CheckCircle2, Loader2, MapPin, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -12,7 +12,11 @@ import { useToast } from "@/shared/components/ui/use-toast";
 import { useResolveTerritoryFromUrl } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
 import { supabase } from "@/integrations/supabase/client";
+import { TurnstileWidget } from "@/shared/components/security/TurnstileWidget";
 import { TerritorialNotFound } from "./TerritorialNotFound";
+
+const TURNSTILE_SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "").trim();
+const MIN_FILL_MS = 3_000; // Bots preenchem instantaneamente; humanos demoram alguns segundos.
 
 function titleCaseFromSlug(value?: string): string {
   if (!value) return "Comunidade local";
