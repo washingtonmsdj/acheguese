@@ -947,21 +947,18 @@ export function CreatePostModal({
       // (ordem canônica é created_at DESC, então o recém-criado aparece primeiro).
       queryClient.invalidateQueries({ queryKey: communityFeedQueryKeys.root });
 
-      // Marca o post recém-criado para destaque visual opcional na próxima renderização do feed.
-      if (createdPostId && typeof window !== "undefined") {
-        try {
-          window.sessionStorage.setItem(
-            "community:highlight-post-id",
-            createdPostId,
-          );
-        } catch {
-          // best-effort
-        }
+      // Emite o post recém-criado para destaque + auto-scroll no feed.
+      if (createdPostId) {
+        emitNewPost(createdPostId);
       }
 
-      // Limpa o rascunho após publicação bem-sucedida.
+      // Limpa o rascunho após publicação bem-sucedida (local + remoto).
       if (!editPostId && profile?.id) {
         clearPostDraft(profile.id);
+        void deleteRemoteDraft(profile.id);
+        setLastSavedAt(null);
+        setHasStoredDraft(false);
+        suppressAutosaveRef.current = true;
       }
 
       form.resetForm();
@@ -979,36 +976,70 @@ export function CreatePostModal({
       toast.error("Faça login para salvar rascunhos.");
       return;
     }
-    const snapshot = {
-      intent,
-      distributionLevel,
-      genericDescription,
-      pollQuestion,
-      pollOptions,
-      problemLocation,
-      problemCategory,
-      problemSeverity,
-      problemRecurrence,
-      problemDescription,
-      eventDate,
-      eventTime,
-      eventPlace,
-      eventLimit,
-      eventDescription,
-    };
-    if (!hasMeaningfulDraft(snapshot)) {
+    if (!hasMeaningfulDraft(currentDraftPayload)) {
       toast.info("Escreva algo antes de salvar como rascunho.");
       return;
     }
     setSavingDraft(true);
     try {
-      savePostDraft(profile.id, snapshot);
+      const snapshot = savePostDraft(profile.id, currentDraftPayload);
+      if (snapshot) {
+        setLastSavedAt(snapshot.updatedAt);
+        setHasStoredDraft(true);
+        void upsertRemoteDraft(profile.id, snapshot);
+      }
       toast.success("Rascunho salvo. Você pode voltar depois para publicar.");
       handleClose();
     } finally {
       setSavingDraft(false);
     }
   };
+
+  const resetComposerFields = React.useCallback(() => {
+    setGenericDescription("");
+    setPollQuestion("");
+    setPollOptions(["", ""]);
+    setProblemLocation("");
+    setProblemCategory("");
+    setProblemSeverity("media");
+    setProblemRecurrence("pontual");
+    setProblemDescription("");
+    setEventDate("");
+    setEventTime("");
+    setEventPlace("");
+    setEventLimit("");
+    setEventDescription("");
+  }, []);
+
+  const handleDiscardDraft = () => {
+    if (!profile?.id) return;
+    suppressAutosaveRef.current = true;
+    clearPostDraft(profile.id);
+    void deleteRemoteDraft(profile.id);
+    resetComposerFields();
+    setLastSavedAt(null);
+    setHasStoredDraft(false);
+    setConfirmDiscardOpen(false);
+    toast.success("Rascunho descartado.");
+    // Reabilita autosave assim que o usuário voltar a digitar.
+    window.setTimeout(() => {
+      suppressAutosaveRef.current = false;
+    }, 300);
+  };
+
+  const formattedSavedAt = React.useMemo(() => {
+    if (!lastSavedAt) return null;
+    try {
+      return new Date(lastSavedAt).toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return null;
+    }
+  }, [lastSavedAt]);
+
+
 
 
 
