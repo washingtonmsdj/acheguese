@@ -61,12 +61,19 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
       showStrength = false,
       showRequirements = true,
       strengthValue = "",
+      showCapsLockHint = true,
       className,
+      onKeyUp,
+      onKeyDown,
+      onBlur,
+      onFocus,
       ...props
     },
     ref,
   ) {
     const [visible, setVisible] = React.useState(false);
+    const [capsLock, setCapsLock] = React.useState(false);
+    const [focused, setFocused] = React.useState(false);
     const requirements = React.useMemo(
       () =>
         showStrength && showRequirements
@@ -79,6 +86,15 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
       [showStrength, strengthValue],
     );
 
+    const detectCapsLock = React.useCallback(
+      (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (typeof event.getModifierState === "function") {
+          setCapsLock(event.getModifierState("CapsLock"));
+        }
+      },
+      [],
+    );
+
     return (
       <div className="space-y-2">
         <div className="relative">
@@ -86,6 +102,23 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
             ref={ref}
             type={visible ? "text" : "password"}
             className={cn("h-11 pr-10", invalid && "border-destructive", className)}
+            onKeyUp={(event) => {
+              detectCapsLock(event);
+              onKeyUp?.(event);
+            }}
+            onKeyDown={(event) => {
+              detectCapsLock(event);
+              onKeyDown?.(event);
+            }}
+            onFocus={(event) => {
+              setFocused(true);
+              onFocus?.(event);
+            }}
+            onBlur={(event) => {
+              setFocused(false);
+              setCapsLock(false);
+              onBlur?.(event);
+            }}
             {...props}
           />
           <button
@@ -98,6 +131,17 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
             {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
+
+        {showCapsLockHint && focused && capsLock ? (
+          <p
+            role="status"
+            aria-live="polite"
+            className="text-xs font-medium text-amber-600"
+          >
+            Caps Lock ativado
+          </p>
+        ) : null}
+
 
         {showStrength && strengthValue ? (
           <div className="space-y-2 rounded-2xl border border-border/60 bg-secondary/35 p-3">
