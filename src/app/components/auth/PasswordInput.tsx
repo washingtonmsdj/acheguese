@@ -114,19 +114,21 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
                 </span>
               ) : null}
             </div>
-            <ul className="space-y-0.5">
-              {requirements.map((requirement) => (
-                <li
-                  key={requirement.id}
-                  className={cn(
-                    "text-xs",
-                    requirement.satisfied ? "text-emerald-500" : "text-muted-foreground",
-                  )}
-                >
-                  {requirement.satisfied ? "✓" : "•"} {requirement.label}
-                </li>
-              ))}
-            </ul>
+            {requirements.length > 0 ? (
+              <ul className="space-y-0.5">
+                {requirements.map((requirement) => (
+                  <li
+                    key={requirement.id}
+                    className={cn(
+                      "text-xs",
+                      requirement.satisfied ? "text-emerald-500" : "text-muted-foreground",
+                    )}
+                  >
+                    {requirement.satisfied ? "✓" : "•"} {requirement.label}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
         ) : null}
       </div>
