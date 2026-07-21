@@ -147,14 +147,15 @@ export default function CadastroConfirmacaoPage() {
                   variant="outline"
                   className="h-10.5 w-full gap-2 sm:h-11"
                   onClick={handleResend}
-                  disabled={isResending}
+                  disabled={resendDisabled}
+                  aria-live="polite"
                 >
                   {isResending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <RefreshCcw className="h-4 w-4" />
                   )}
-                  Reenviar email
+                  {resendLabel}
                 </Button>
 
                 <Button
