@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, Loader2, MailCheck, RefreshCcw } from "lucide-react";
@@ -10,17 +10,37 @@ import { getPendingSignupEmail } from "@/core/auth/utils/pendingSignup";
 import { Button } from "@/shared/components/ui/button";
 import { useToast } from "@/shared/hooks/use-toast";
 
+const RESEND_COOLDOWN_SECONDS = 60;
+
 export default function CadastroConfirmacaoPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { resendConfirmationEmail } = useAuth();
   const { toast } = useToast();
   const [isResending, setIsResending] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const intervalRef = useRef<number | null>(null);
 
   const email = useMemo(() => {
     const stateEmail = (location.state as { email?: string } | null)?.email;
     return stateEmail || getPendingSignupEmail();
   }, [location.state]);
+
+  useEffect(() => {
+    if (cooldown <= 0) {
+      if (intervalRef.current) {
+        window.clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      return;
+    }
+    intervalRef.current = window.setInterval(() => {
+      setCooldown((current) => (current > 0 ? current - 1 : 0));
+    }, 1000);
+    return () => {
+      if (intervalRef.current) window.clearInterval(intervalRef.current);
+    };
+  }, [cooldown]);
 
   const handleResend = async () => {
     if (!email) {
@@ -31,6 +51,7 @@ export default function CadastroConfirmacaoPage() {
       });
       return;
     }
+    if (cooldown > 0 || isResending) return;
 
     setIsResending(true);
 
@@ -40,6 +61,7 @@ export default function CadastroConfirmacaoPage() {
         title: "Email reenviado",
         description: "Verifique sua caixa de entrada e a pasta de spam.",
       });
+      setCooldown(RESEND_COOLDOWN_SECONDS);
     } catch (error) {
       toast({
         title: "Não foi possível reenviar",
@@ -50,6 +72,9 @@ export default function CadastroConfirmacaoPage() {
       setIsResending(false);
     }
   };
+
+  const resendDisabled = isResending || cooldown > 0;
+  const resendLabel = cooldown > 0 ? `Reenviar em ${cooldown}s` : "Reenviar email";
 
   return (
     <>
