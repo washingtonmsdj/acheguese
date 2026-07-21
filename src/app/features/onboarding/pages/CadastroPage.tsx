@@ -716,7 +716,7 @@ export default function CadastroPage() {
                       </div>
                     ) : null}
 
-                    <div className="mt-6 flex items-center justify-between border-t border-border/70 pt-5">
+                    <div className="mt-6 hidden items-center justify-between border-t border-border/70 pt-5 sm:flex">
                       {currentStep > 0 ? (
                         <Button
                           type="button"
@@ -763,6 +763,57 @@ export default function CadastroPage() {
                     </div>
                   </motion.section>
                 </AnimatePresence>
+
+                {/* Sticky footer mobile — mantém as ações principais sempre visíveis */}
+                <div
+                  className="fixed inset-x-0 bottom-0 z-30 border-t border-border/70 bg-background/95 px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 backdrop-blur sm:hidden"
+                >
+                  <div className="mx-auto flex w-full max-w-md items-center justify-between gap-3">
+                    {currentStep > 0 ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={handleBack}
+                        disabled={loading}
+                        className="h-11 min-w-[44px] gap-1.5"
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                        Voltar
+                      </Button>
+                    ) : (
+                      <span className="min-w-[44px]" />
+                    )}
+
+                    {!isLastStep ? (
+                      <Button
+                        type="button"
+                        onClick={() => void handleNext(STEPS.length)}
+                        disabled={loading}
+                        className="h-11 flex-1 gap-1.5 bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
+                      >
+                        {loading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <ArrowRight className="h-4 w-4" />
+                        )}
+                        Próximo
+                      </Button>
+                    ) : (
+                      <Button
+                        type="submit"
+                        disabled={loading || termsAcceptedValue !== true}
+                        className="h-11 flex-1 gap-1.5 bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
+                      >
+                        {loading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="h-4 w-4" />
+                        )}
+                        Criar conta
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </form>
             </Form>
           </div>
