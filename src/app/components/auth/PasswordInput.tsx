@@ -51,13 +51,23 @@ const strengthColor: Record<number, string> = {
  */
 export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
   function PasswordInput(
-    { invalid, showStrength = false, strengthValue = "", className, ...props },
+    {
+      invalid,
+      showStrength = false,
+      showRequirements = true,
+      strengthValue = "",
+      className,
+      ...props
+    },
     ref,
   ) {
     const [visible, setVisible] = React.useState(false);
     const requirements = React.useMemo(
-      () => (showStrength ? getAuthPasswordRequirementStatus(strengthValue) : []),
-      [showStrength, strengthValue],
+      () =>
+        showStrength && showRequirements
+          ? getAuthPasswordRequirementStatus(strengthValue)
+          : [],
+      [showStrength, showRequirements, strengthValue],
     );
     const strength = React.useMemo(
       () => (showStrength ? getAuthPasswordStrength(strengthValue) : { level: 0, label: "" }),
