@@ -8,6 +8,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
 import { AuthFooter } from "@/app/components/auth/AuthFooter";
+import { AuthTurnstileGate, useAuthTurnstile } from "@/app/components/auth/AuthTurnstileGate";
 import { PasswordInput } from "@/app/components/auth/PasswordInput";
 import { AUTH_BROWSER_STORAGE_CONFIG } from "@/config/security.config";
 import { useAuth } from "@/core/auth/hooks/useAuth";
@@ -62,6 +63,7 @@ export default function ResetPasswordPage() {
   const [resendEmail, setResendEmail] = useState("");
   const [isSendingLink, setIsSendingLink] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const resendTurnstile = useAuthTurnstile();
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -153,12 +155,21 @@ export default function ResetPasswordPage() {
       return;
     }
     if (resendCooldown > 0 || isSendingLink) return;
+    if (!resendTurnstile.isReady) {
+      toast({
+        title: "Confirme o desafio de segurança",
+        description: "Complete a verificação anti-bot antes de reenviar o link.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsSendingLink(true);
     try {
       await resetPasswordByIdentifier(resendEmail.trim());
       toast({ title: "Link enviado", description: "Verifique sua caixa de entrada." });
       setResendCooldown(60);
+      resendTurnstile.reset();
     } catch (error) {
       toast({
         title: "Erro ao enviar",
@@ -231,10 +242,18 @@ export default function ResetPasswordPage() {
                     onKeyDown={(event) => event.key === "Enter" && handleResendLink()}
                     className="h-11"
                   />
+                  {resendTurnstile.enabled ? (
+                    <AuthTurnstileGate
+                      onVerify={resendTurnstile.setToken}
+                      onExpire={resendTurnstile.reset}
+                      onError={resendTurnstile.reset}
+                      action="password_reset"
+                    />
+                  ) : null}
                   <Button
                     className="h-11 w-full"
                     onClick={handleResendLink}
-                    disabled={isSendingLink || resendCooldown > 0}
+                    disabled={isSendingLink || resendCooldown > 0 || !resendTurnstile.isReady}
                     aria-live="polite"
                   >
                     {isSendingLink ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
