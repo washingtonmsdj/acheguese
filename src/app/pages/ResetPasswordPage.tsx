@@ -242,10 +242,18 @@ export default function ResetPasswordPage() {
                     onKeyDown={(event) => event.key === "Enter" && handleResendLink()}
                     className="h-11"
                   />
+                  {resendTurnstile.enabled ? (
+                    <AuthTurnstileGate
+                      onVerify={resendTurnstile.setToken}
+                      onExpire={resendTurnstile.reset}
+                      onError={resendTurnstile.reset}
+                      action="password_reset"
+                    />
+                  ) : null}
                   <Button
                     className="h-11 w-full"
                     onClick={handleResendLink}
-                    disabled={isSendingLink || resendCooldown > 0}
+                    disabled={isSendingLink || resendCooldown > 0 || !resendTurnstile.isReady}
                     aria-live="polite"
                   >
                     {isSendingLink ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
