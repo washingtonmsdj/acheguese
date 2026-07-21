@@ -231,7 +231,7 @@ export class AuthService {
   ): Promise<void> {
     const username = AuthService.normalizeUsername(data.username);
     if (!username) {
-      throw new Error("E-mail, usuario ou senha incorretos.");
+      throw new Error("E-mail, usuário ou senha incorretos.");
     }
 
     const response = await fetch(
@@ -255,7 +255,7 @@ export class AuthService {
     const accessToken = payload.session?.access_token;
     const refreshToken = payload.session?.refresh_token;
     if (!accessToken || !refreshToken) {
-      throw new Error("Resposta de login invalida.");
+      throw new Error("Resposta de login inválida.");
     }
 
     const { error } = await supabase.auth.setSession({
@@ -268,7 +268,7 @@ export class AuthService {
   }
   static async signInWithGoogle(): Promise<void> {
     if (!AuthService.isGoogleAuthEnabled()) {
-      throw new Error("Login com Google nao esta disponivel neste ambiente.");
+      throw new Error("Login com Google não está disponível neste ambiente.");
     }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",

@@ -61,11 +61,16 @@ export default function LoginPage() {
     register,
     handleSubmit,
     watch,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useForm<LoginIdentifierInput>({
     resolver: zodResolver(LoginIdentifierSchema),
     mode: "onBlur",
   });
+
+  const serverError = (errors as { root?: { serverError?: { message?: string } } })
+    .root?.serverError?.message;
 
   const identifierValue = watch("identifier") ?? "";
   const parsedIdentifier = parseAuthIdentifier(identifierValue);
@@ -114,6 +119,7 @@ export default function LoginPage() {
     const parsed = parseAuthIdentifier(data.identifier);
     if (!parsed) return;
 
+    clearErrors("root.serverError");
     setPendingAction("login");
 
     try {
@@ -124,9 +130,25 @@ export default function LoginPage() {
 
       await signIn({ email: parsed.value, password: data.password });
     } catch (error) {
+      const message = getAuthErrorMessage(
+        error,
+        "Verifique suas credenciais e tente novamente.",
+      );
+      const raw =
+        error && typeof error === "object" && "message" in error
+          ? String((error as { message?: unknown }).message ?? "")
+          : "";
+
+      if (/invalid login credentials|incorretos|not found|invalid/i.test(raw)) {
+        setError("password", { type: "server", message });
+      } else if (/email|e-?mail|usu[aá]rio|username/i.test(raw)) {
+        setError("identifier", { type: "server", message });
+      }
+      setError("root.serverError", { type: "server", message });
+
       toast({
         title: "Erro ao entrar",
-        description: getAuthErrorMessage(error, "Verifique suas credenciais e tente novamente."),
+        description: message,
         variant: "destructive",
       });
       setPendingAction(null);
@@ -178,7 +200,7 @@ export default function LoginPage() {
       await signInWithGoogle();
     } catch (error) {
       toast({
-        title: "Google indisponivel",
+        title: "Google indisponível",
         description: getAuthErrorMessage(error),
         variant: "destructive",
       });
@@ -217,7 +239,7 @@ export default function LoginPage() {
                 </h1>
                 <p className="max-w-lg text-base leading-7 text-muted-foreground">
                   O login precisa ser direto no mobile e claro no desktop. Esta tela concentra
-                  conta, identidade e entrada na comunidade sem ruido visual.
+                  conta, identidade e entrada na comunidade sem ruído visual.
                 </p>
               </div>
 
@@ -297,7 +319,20 @@ export default function LoginPage() {
                 </div>
               ) : null}
 
-              <form onSubmit={handleSubmit(onValid)} className="space-y-4" noValidate>
+              <form
+                onSubmit={handleSubmit(onValid)}
+                className="space-y-4"
+                noValidate
+                aria-busy={isBusy}
+              >
+                {serverError ? (
+                  <div
+                    role="alert"
+                    className="rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+                  >
+                    {serverError}
+                  </div>
+                ) : null}
                 <div className="space-y-1.5">
                   <Label htmlFor="login-identifier">E-mail ou nome de usuário</Label>
                   <p className="-mt-0.5 text-xs text-muted-foreground">
