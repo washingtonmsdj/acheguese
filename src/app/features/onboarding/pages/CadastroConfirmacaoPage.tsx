@@ -174,6 +174,7 @@ export default function CadastroConfirmacaoPage() {
             </div>
           </section>
         </main>
+        <AuthFooter />
       </div>
     </>
   );
