@@ -819,6 +819,7 @@ export default function CadastroPage() {
             </Form>
           </div>
         </main>
+        <AuthFooter />
       </div>
     </>
   );
