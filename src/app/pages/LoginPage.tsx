@@ -13,6 +13,10 @@ import {
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
 import { AuthFooter } from "@/app/components/auth/AuthFooter";
+import {
+  AuthTurnstileGate,
+  useAuthTurnstile,
+} from "@/app/components/auth/AuthTurnstileGate";
 import { PasswordInput } from "@/app/components/auth/PasswordInput";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
