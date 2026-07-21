@@ -194,9 +194,10 @@ export default function CadastroPage() {
 
             <Form {...form}>
               <form
+                aria-busy={loading}
                 onSubmit={(event) => {
                   event.preventDefault();
-                  if (isLastStep) void submit();
+                  if (isLastStep && !loading) void submit();
                 }}
               >
                 <AnimatePresence mode="wait">
