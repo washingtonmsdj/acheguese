@@ -12,6 +12,12 @@ export function AuthBrandHeader({
 }: AuthBrandHeaderProps) {
   return (
     <header className="sticky top-0 z-20 border-b border-border/70 bg-background/92 backdrop-blur-md supports-[backdrop-filter]:bg-background/78">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-30 focus:rounded-md focus:bg-primary focus:px-3 focus:py-1.5 focus:text-sm focus:font-medium focus:text-primary-foreground focus:shadow"
+      >
+        Pular para o conteúdo
+      </a>
       <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6">
         <Link
           to="/"
