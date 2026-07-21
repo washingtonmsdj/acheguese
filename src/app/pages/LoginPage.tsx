@@ -414,6 +414,7 @@ export default function LoginPage() {
             </div>
           </div>
         </main>
+        <AuthFooter />
       </div>
     </>
   );
