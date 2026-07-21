@@ -750,7 +750,7 @@ export default function CadastroPage() {
                         <Button
                           type="submit"
                           disabled={loading || termsAcceptedValue !== true}
-                          className="h-10 gap-1.5 bg-primary font-semibold text-primary-foreground hover:bg-primary/90 sm:h:h-11"
+                          className="h-10 gap-1.5 bg-primary font-semibold text-primary-foreground hover:bg-primary/90 sm:h-11"
                         >
                           {loading ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
