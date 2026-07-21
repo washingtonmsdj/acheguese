@@ -188,4 +188,49 @@ describe("CadastroPage (integração)", () => {
       expect(screen.getByText(/já está cadastrado/i)).toBeInTheDocument(),
     );
   });
+
+  it("desabilita o formulário e exibe spinner no submit enquanto a requisição está em andamento", async () => {
+    const user = userEvent.setup();
+    let resolveSignUp: (value: void) => void = () => {};
+    vi.mocked(AuthService.signUp).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveSignUp = resolve;
+        }),
+    );
+
+    renderPage();
+
+    await fillStep0(user);
+    await user.click(screen.getByRole("button", { name: /Próximo/i }));
+
+    await user.click(await screen.findByRole("combobox", { name: /Estado/i }));
+    await user.click(await screen.findByRole("option", { name: "Bahia" }));
+    await user.click(screen.getByRole("combobox", { name: /Cidade/i }));
+    await user.click(await screen.findByRole("option", { name: "Salvador" }));
+    await user.click(screen.getByRole("combobox", { name: /Bairro/i }));
+    await user.click(await screen.findByRole("option", { name: "Pituba" }));
+    await user.click(screen.getByRole("button", { name: /Próximo/i }));
+
+    await user.click(await screen.findByLabelText(/Li e aceito os Termos/i));
+
+    const submit = screen.getByRole("button", { name: /Criar minha conta/i });
+    await waitFor(() => expect(submit).toBeEnabled());
+
+    await user.click(submit);
+
+    // Botão de submit desabilitado e com spinner
+    await waitFor(() => expect(submit).toBeDisabled());
+    expect(submit.querySelector("svg.animate-spin")).toBeInTheDocument();
+
+    // Campos do step de confirmação também devem estar desabilitados
+    expect(screen.getByLabelText(/Li e aceito os Termos/i)).toBeDisabled();
+
+    // Voltar e Próximo (neste step não existe Próximo) devem estar desabilitados
+    expect(screen.getByRole("button", { name: /Voltar/i })).toBeDisabled();
+
+    resolveSignUp();
+
+    await waitFor(() => expect(navigateMock).toHaveBeenCalled());
+  });
 });

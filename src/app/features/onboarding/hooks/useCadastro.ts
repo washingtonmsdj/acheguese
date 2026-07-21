@@ -71,16 +71,18 @@ export function useCadastroForm() {
 
   const handleNext = useCallback(
     async (totalSteps: number) => {
+      if (loading) return;
       const ok = await validateStep(currentStep);
       if (!ok) return;
       setCurrentStep((prev) => Math.min(prev + 1, totalSteps - 1));
     },
-    [currentStep, validateStep],
+    [currentStep, validateStep, loading],
   );
 
   const handleBack = useCallback(() => {
+    if (loading) return;
     setCurrentStep((prev) => Math.max(prev - 1, 0));
-  }, []);
+  }, [loading]);
 
   const selectState = useCallback(
     (id: string, name: string) => {

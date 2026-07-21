@@ -52,9 +52,11 @@ const STEPS = [
 function StepIndicator({
   currentStep,
   onBack,
+  loading,
 }: {
   currentStep: number;
   onBack: () => void;
+  loading: boolean;
 }) {
   return (
     <div className="flex items-center justify-center gap-2 sm:gap-3">
@@ -76,9 +78,9 @@ function StepIndicator({
             <button
               type="button"
               onClick={() => {
-                if (index < currentStep) onBack();
+                if (index < currentStep && !loading) onBack();
               }}
-              disabled={index > currentStep}
+              disabled={index > currentStep || loading}
               aria-label={step.label}
               className={cn(
                 "flex h-11 w-11 items-center justify-center rounded-2xl border transition-all sm:h-12 sm:w-auto sm:min-w-[8.5rem] sm:gap-2 sm:px-4",
@@ -190,13 +192,14 @@ export default function CadastroPage() {
                 ) : null}
               </div>
             </div>
-            <StepIndicator currentStep={currentStep} onBack={handleBack} />
+            <StepIndicator currentStep={currentStep} onBack={handleBack} loading={loading} />
 
             <Form {...form}>
               <form
+                aria-busy={loading}
                 onSubmit={(event) => {
                   event.preventDefault();
-                  if (isLastStep) void submit();
+                  if (isLastStep && !loading) void submit();
                 }}
               >
                 <AnimatePresence mode="wait">
@@ -233,6 +236,7 @@ export default function CadastroPage() {
                                   {...field}
                                   placeholder="Seu nome"
                                   autoComplete="name"
+                                  disabled={loading}
                                   className={cn(
                                     "h-10 sm:h-11",
                                     fieldState.error && "border-destructive",
@@ -259,6 +263,7 @@ export default function CadastroPage() {
                                     {...field}
                                     placeholder="seunome"
                                     autoComplete="username"
+                                    disabled={loading}
                                     onChange={(event) =>
                                       field.onChange(
                                         event.target.value
@@ -306,6 +311,7 @@ export default function CadastroPage() {
                                   type="email"
                                   placeholder="seu@email.com"
                                   autoComplete="email"
+                                  disabled={loading}
                                   className={cn(
                                     "h-10 sm:h-11",
                                     fieldState.error && "border-destructive",
@@ -331,6 +337,7 @@ export default function CadastroPage() {
                                   showStrength
                                   strengthValue={password || ""}
                                   autoComplete="new-password"
+                                  disabled={loading}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -350,6 +357,7 @@ export default function CadastroPage() {
                                   placeholder="Repita a senha"
                                   invalid={Boolean(fieldState.error)}
                                   autoComplete="new-password"
+                                  disabled={loading}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -389,7 +397,7 @@ export default function CadastroPage() {
                                   );
                                   if (found) selectState(found.id, found.name);
                                 }}
-                                disabled={loadingStates}
+                                disabled={loadingStates || loading}
                               >
                                 <FormControl>
                                   <SelectTrigger
@@ -435,7 +443,7 @@ export default function CadastroPage() {
                                   );
                                   if (found) selectCity(found.id, found.name);
                                 }}
-                                disabled={!stateId || loadingCities}
+                                disabled={!stateId || loadingCities || loading}
                               >
                                 <FormControl>
                                   <SelectTrigger
@@ -483,7 +491,7 @@ export default function CadastroPage() {
                                   if (found)
                                     selectNeighborhood(found.id, found.name);
                                 }}
-                                disabled={!cityId || loadingNeighborhoods}
+                                disabled={!cityId || loadingNeighborhoods || loading}
                               >
                                 <FormControl>
                                   <SelectTrigger
@@ -526,6 +534,7 @@ export default function CadastroPage() {
                                 <Input
                                   {...field}
                                   placeholder="Ex: Rua Afonso Lopes"
+                                  disabled={loading}
                                   className="h-10 sm:h-11"
                                 />
                               </FormControl>
@@ -644,6 +653,7 @@ export default function CadastroPage() {
                                     onCheckedChange={(checked) =>
                                       field.onChange(checked === true)
                                     }
+                                    disabled={loading}
                                     aria-invalid={Boolean(fieldState.error)}
                                     className="mt-0.5"
                                   />
@@ -712,6 +722,7 @@ export default function CadastroPage() {
                           type="button"
                           variant="ghost"
                           onClick={handleBack}
+                          disabled={loading}
                           className="gap-1.5 px-0 sm:px-3"
                         >
                           <ArrowLeft className="h-4 w-4" />
@@ -725,10 +736,15 @@ export default function CadastroPage() {
                         <Button
                           type="button"
                           onClick={() => void handleNext(STEPS.length)}
+                          disabled={loading}
                           className="h-10 gap-1.5 bg-primary font-semibold text-primary-foreground hover:bg-primary/90 sm:h-11"
                         >
+                          {loading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <ArrowRight className="h-4 w-4" />
+                          )}
                           Próximo
-                          <ArrowRight className="h-4 w-4" />
                         </Button>
                       ) : (
                         <Button
