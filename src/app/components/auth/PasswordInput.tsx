@@ -27,6 +27,11 @@ export interface PasswordInputProps extends PasswordInputBaseProps {
    * (por causa de `register` o componente não recebe `value` diretamente).
    */
   strengthValue?: string;
+  /**
+   * Exibe aviso de Caps Lock quando ativa enquanto o campo tem foco.
+   * Default: true.
+   */
+  showCapsLockHint?: boolean;
 }
 
 const strengthColor: Record<number, string> = {
