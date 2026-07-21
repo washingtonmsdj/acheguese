@@ -192,7 +192,7 @@ export default function CadastroPage() {
                 ) : null}
               </div>
             </div>
-            <StepIndicator currentStep={currentStep} onBack={handleBack} />
+            <StepIndicator currentStep={currentStep} onBack={handleBack} loading={loading} />
 
             <Form {...form}>
               <form
