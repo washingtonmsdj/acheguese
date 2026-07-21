@@ -268,7 +268,7 @@ export class AuthService {
   }
   static async signInWithGoogle(): Promise<void> {
     if (!AuthService.isGoogleAuthEnabled()) {
-      throw new Error("Login com Google nao esta disponivel neste ambiente.");
+      throw new Error("Login com Google não está disponível neste ambiente.");
     }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
