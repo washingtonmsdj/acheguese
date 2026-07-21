@@ -229,9 +229,14 @@ export default function ResetPasswordPage() {
                     onKeyDown={(event) => event.key === "Enter" && handleResendLink()}
                     className="h-11"
                   />
-                  <Button className="h-11 w-full" onClick={handleResendLink} disabled={isSendingLink}>
+                  <Button
+                    className="h-11 w-full"
+                    onClick={handleResendLink}
+                    disabled={isSendingLink || resendCooldown > 0}
+                    aria-live="polite"
+                  >
                     {isSendingLink ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
-                    Enviar novo link
+                    {resendCooldown > 0 ? `Reenviar em ${resendCooldown}s` : "Enviar novo link"}
                   </Button>
                 </div>
 
