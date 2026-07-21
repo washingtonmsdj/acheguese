@@ -61,11 +61,16 @@ export default function LoginPage() {
     register,
     handleSubmit,
     watch,
+    setError,
+    clearErrors,
     formState: { errors },
   } = useForm<LoginIdentifierInput>({
     resolver: zodResolver(LoginIdentifierSchema),
     mode: "onBlur",
   });
+
+  const serverError = (errors as { root?: { serverError?: { message?: string } } })
+    .root?.serverError?.message;
 
   const identifierValue = watch("identifier") ?? "";
   const parsedIdentifier = parseAuthIdentifier(identifierValue);
