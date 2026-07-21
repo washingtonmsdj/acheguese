@@ -400,7 +400,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={handleForgotPassword}
                     className="ml-auto block text-xs font-medium text-primary hover:underline"
-                    disabled={pendingAction === "recovery"}
+                    disabled={pendingAction === "recovery" || !turnstile.isReady}
                   >
                     {pendingAction === "recovery" ? "Enviando recuperação..." : "Esqueci minha senha"}
                   </button>
