@@ -60,6 +60,15 @@ export default function ResetPasswordPage() {
   );
   const [resendEmail, setResendEmail] = useState("");
   const [isSendingLink, setIsSendingLink] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const id = window.setInterval(() => {
+      setResendCooldown((current) => (current > 0 ? current - 1 : 0));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [resendCooldown]);
 
   const {
     register,
@@ -142,11 +151,13 @@ export default function ResetPasswordPage() {
       });
       return;
     }
+    if (resendCooldown > 0 || isSendingLink) return;
 
     setIsSendingLink(true);
     try {
       await resetPasswordByIdentifier(resendEmail.trim());
       toast({ title: "Link enviado", description: "Verifique sua caixa de entrada." });
+      setResendCooldown(60);
     } catch (error) {
       toast({
         title: "Erro ao enviar",
@@ -218,9 +229,14 @@ export default function ResetPasswordPage() {
                     onKeyDown={(event) => event.key === "Enter" && handleResendLink()}
                     className="h-11"
                   />
-                  <Button className="h-11 w-full" onClick={handleResendLink} disabled={isSendingLink}>
+                  <Button
+                    className="h-11 w-full"
+                    onClick={handleResendLink}
+                    disabled={isSendingLink || resendCooldown > 0}
+                    aria-live="polite"
+                  >
                     {isSendingLink ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
-                    Enviar novo link
+                    {resendCooldown > 0 ? `Reenviar em ${resendCooldown}s` : "Enviar novo link"}
                   </Button>
                 </div>
 
