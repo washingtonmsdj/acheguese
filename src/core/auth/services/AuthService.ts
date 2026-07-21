@@ -231,7 +231,7 @@ export class AuthService {
   ): Promise<void> {
     const username = AuthService.normalizeUsername(data.username);
     if (!username) {
-      throw new Error("E-mail, usuario ou senha incorretos.");
+      throw new Error("E-mail, usuário ou senha incorretos.");
     }
 
     const response = await fetch(
