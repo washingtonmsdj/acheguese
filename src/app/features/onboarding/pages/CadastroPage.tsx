@@ -395,7 +395,7 @@ export default function CadastroPage() {
                                   );
                                   if (found) selectState(found.id, found.name);
                                 }}
-                                disabled={loadingStates}
+                                disabled={loadingStates || loading}
                               >
                                 <FormControl>
                                   <SelectTrigger
@@ -441,7 +441,7 @@ export default function CadastroPage() {
                                   );
                                   if (found) selectCity(found.id, found.name);
                                 }}
-                                disabled={!stateId || loadingCities}
+                                disabled={!stateId || loadingCities || loading}
                               >
                                 <FormControl>
                                   <SelectTrigger
@@ -489,7 +489,7 @@ export default function CadastroPage() {
                                   if (found)
                                     selectNeighborhood(found.id, found.name);
                                 }}
-                                disabled={!cityId || loadingNeighborhoods}
+                                disabled={!cityId || loadingNeighborhoods || loading}
                               >
                                 <FormControl>
                                   <SelectTrigger
@@ -532,6 +532,7 @@ export default function CadastroPage() {
                                 <Input
                                   {...field}
                                   placeholder="Ex: Rua Afonso Lopes"
+                                  disabled={loading}
                                   className="h-10 sm:h-11"
                                 />
                               </FormControl>
@@ -650,6 +651,7 @@ export default function CadastroPage() {
                                     onCheckedChange={(checked) =>
                                       field.onChange(checked === true)
                                     }
+                                    disabled={loading}
                                     aria-invalid={Boolean(fieldState.error)}
                                     className="mt-0.5"
                                   />
