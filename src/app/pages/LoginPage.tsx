@@ -239,7 +239,7 @@ export default function LoginPage() {
                 </h1>
                 <p className="max-w-lg text-base leading-7 text-muted-foreground">
                   O login precisa ser direto no mobile e claro no desktop. Esta tela concentra
-                  conta, identidade e entrada na comunidade sem ruido visual.
+                  conta, identidade e entrada na comunidade sem ruído visual.
                 </p>
               </div>
 
