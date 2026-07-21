@@ -155,12 +155,21 @@ export default function ResetPasswordPage() {
       return;
     }
     if (resendCooldown > 0 || isSendingLink) return;
+    if (!resendTurnstile.isReady) {
+      toast({
+        title: "Confirme o desafio de segurança",
+        description: "Complete a verificação anti-bot antes de reenviar o link.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsSendingLink(true);
     try {
       await resetPasswordByIdentifier(resendEmail.trim());
       toast({ title: "Link enviado", description: "Verifique sua caixa de entrada." });
       setResendCooldown(60);
+      resendTurnstile.reset();
     } catch (error) {
       toast({
         title: "Erro ao enviar",
