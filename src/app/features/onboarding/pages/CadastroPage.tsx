@@ -52,9 +52,11 @@ const STEPS = [
 function StepIndicator({
   currentStep,
   onBack,
+  loading,
 }: {
   currentStep: number;
   onBack: () => void;
+  loading: boolean;
 }) {
   return (
     <div className="flex items-center justify-center gap-2 sm:gap-3">
@@ -76,9 +78,9 @@ function StepIndicator({
             <button
               type="button"
               onClick={() => {
-                if (index < currentStep) onBack();
+                if (index < currentStep && !loading) onBack();
               }}
-              disabled={index > currentStep}
+              disabled={index > currentStep || loading}
               aria-label={step.label}
               className={cn(
                 "flex h-11 w-11 items-center justify-center rounded-2xl border transition-all sm:h-12 sm:w-auto sm:min-w-[8.5rem] sm:gap-2 sm:px-4",
