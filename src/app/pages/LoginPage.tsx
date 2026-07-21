@@ -365,6 +365,9 @@ export default function LoginPage() {
                     autoComplete="current-password"
                     disabled={isBusy}
                     invalid={Boolean(errors.password)}
+                    showStrength
+                    showRequirements={false}
+                    strengthValue={watch("password") ?? ""}
                     aria-describedby={errors.password ? "login-password-error" : undefined}
                     {...register("password")}
                   />
