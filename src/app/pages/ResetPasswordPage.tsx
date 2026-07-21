@@ -178,7 +178,7 @@ export default function ResetPasswordPage() {
         </Helmet>
         <div className="min-h-screen bg-background">
           <AuthBrandHeader secondaryHref="/login" secondaryLabel="Entrar" />
-          <main className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-5xl items-start justify-center px-4 pb-28 pt-6 sm:min-h-[calc(100vh-4rem)] sm:px-6 sm:pb-10 sm:pt-10 lg:items-center">
+          <main id="main-content" tabIndex={-1} className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-5xl items-start justify-center px-4 pb-28 pt-6 focus:outline-none sm:min-h-[calc(100vh-4rem)] sm:px-6 sm:pb-10 sm:pt-10 lg:items-center">
             <AuthStatusCard
               icon={<CheckCircle className="h-6 w-6" />}
               title="Senha redefinida"
@@ -199,7 +199,7 @@ export default function ResetPasswordPage() {
         </Helmet>
         <div className="min-h-screen bg-background">
           <AuthBrandHeader secondaryHref="/login" secondaryLabel="Entrar" />
-          <main className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-5xl items-start justify-center px-4 pb-28 pt-6 sm:min-h-[calc(100vh-4rem)] sm:px-6 sm:pb-10 sm:pt-10 lg:items-center">
+          <main id="main-content" tabIndex={-1} className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-5xl items-start justify-center px-4 pb-28 pt-6 focus:outline-none sm:min-h-[calc(100vh-4rem)] sm:px-6 sm:pb-10 sm:pt-10 lg:items-center">
             <div className="w-full max-w-md rounded-[28px] border border-border/70 bg-card/78 p-6 shadow-[0_32px_120px_-64px_rgba(0,0,0,0.9)] backdrop-blur-sm sm:p-8">
               <div className="space-y-6">
                 <div className="space-y-3 text-center">
@@ -266,7 +266,7 @@ export default function ResetPasswordPage() {
 
       <div className="min-h-screen bg-background">
         <AuthBrandHeader secondaryHref="/login" secondaryLabel="Entrar" />
-        <main className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-5xl items-start justify-center px-4 pb-28 pt-6 sm:min-h-[calc(100vh-4rem)] sm:px-6 sm:pb-10 sm:pt-10 lg:items-center">
+        <main id="main-content" tabIndex={-1} className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-5xl items-start justify-center px-4 pb-28 pt-6 focus:outline-none sm:min-h-[calc(100vh-4rem)] sm:px-6 sm:pb-10 sm:pt-10 lg:items-center">
           <div className="w-full max-w-md rounded-[28px] border border-border/70 bg-card/78 p-6 shadow-[0_32px_120px_-64px_rgba(0,0,0,0.9)] backdrop-blur-sm sm:p-8">
             <div className="space-y-6">
               <div className="space-y-3 text-center sm:space-y-4">
