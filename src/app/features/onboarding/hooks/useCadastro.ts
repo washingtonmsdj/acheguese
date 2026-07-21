@@ -80,8 +80,9 @@ export function useCadastroForm() {
   );
 
   const handleBack = useCallback(() => {
+    if (loading) return;
     setCurrentStep((prev) => Math.max(prev - 1, 0));
-  }, []);
+  }, [loading]);
 
   const selectState = useCallback(
     (id: string, name: string) => {
