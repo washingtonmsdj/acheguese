@@ -200,7 +200,7 @@ export default function LoginPage() {
       await signInWithGoogle();
     } catch (error) {
       toast({
-        title: "Google indisponivel",
+        title: "Google indisponível",
         description: getAuthErrorMessage(error),
         variant: "destructive",
       });
