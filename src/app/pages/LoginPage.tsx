@@ -188,6 +188,15 @@ export default function LoginPage() {
       return;
     }
 
+    if (!turnstile.isReady) {
+      toast({
+        title: "Confirme o desafio de segurança",
+        description: "Complete a verificação anti-bot antes de solicitar a recuperação.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setPendingAction("recovery");
 
     try {
@@ -196,6 +205,7 @@ export default function LoginPage() {
         title: "E-mail enviado",
         description: "Verifique sua caixa de entrada para redefinir a senha.",
       });
+      turnstile.reset();
     } catch {
       toast({
         title: "Solicitação recebida",
@@ -390,7 +400,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={handleForgotPassword}
                     className="ml-auto block text-xs font-medium text-primary hover:underline"
-                    disabled={pendingAction === "recovery"}
+                    disabled={pendingAction === "recovery" || !turnstile.isReady}
                   >
                     {pendingAction === "recovery" ? "Enviando recuperação..." : "Esqueci minha senha"}
                   </button>
