@@ -151,11 +151,13 @@ export default function ResetPasswordPage() {
       });
       return;
     }
+    if (resendCooldown > 0 || isSendingLink) return;
 
     setIsSendingLink(true);
     try {
       await resetPasswordByIdentifier(resendEmail.trim());
       toast({ title: "Link enviado", description: "Verifique sua caixa de entrada." });
+      setResendCooldown(60);
     } catch (error) {
       toast({
         title: "Erro ao enviar",
