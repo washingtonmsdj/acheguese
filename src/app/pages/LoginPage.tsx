@@ -319,7 +319,20 @@ export default function LoginPage() {
                 </div>
               ) : null}
 
-              <form onSubmit={handleSubmit(onValid)} className="space-y-4" noValidate>
+              <form
+                onSubmit={handleSubmit(onValid)}
+                className="space-y-4"
+                noValidate
+                aria-busy={isBusy}
+              >
+                {serverError ? (
+                  <div
+                    role="alert"
+                    className="rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+                  >
+                    {serverError}
+                  </div>
+                ) : null}
                 <div className="space-y-1.5">
                   <Label htmlFor="login-identifier">E-mail ou nome de usuário</Label>
                   <p className="-mt-0.5 text-xs text-muted-foreground">
