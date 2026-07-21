@@ -255,7 +255,7 @@ export class AuthService {
     const accessToken = payload.session?.access_token;
     const refreshToken = payload.session?.refresh_token;
     if (!accessToken || !refreshToken) {
-      throw new Error("Resposta de login invalida.");
+      throw new Error("Resposta de login inválida.");
     }
 
     const { error } = await supabase.auth.setSession({
