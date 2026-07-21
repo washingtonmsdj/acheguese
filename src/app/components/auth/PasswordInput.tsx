@@ -15,8 +15,13 @@ type PasswordInputBaseProps = Omit<
 
 export interface PasswordInputProps extends PasswordInputBaseProps {
   invalid?: boolean;
-  /** Mostra checklist + medidor de força (usar apenas na criação/reset). */
+  /** Mostra o medidor de força (barra). */
   showStrength?: boolean;
+  /**
+   * Mostra a checklist de requisitos abaixo da barra.
+   * Default: true (compat). No login usamos `false` para manter só a barra.
+   */
+  showRequirements?: boolean;
   /**
    * Valor do input quando o campo é controlado externamente via RHF
    * (por causa de `register` o componente não recebe `value` diretamente).
@@ -46,13 +51,23 @@ const strengthColor: Record<number, string> = {
  */
 export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
   function PasswordInput(
-    { invalid, showStrength = false, strengthValue = "", className, ...props },
+    {
+      invalid,
+      showStrength = false,
+      showRequirements = true,
+      strengthValue = "",
+      className,
+      ...props
+    },
     ref,
   ) {
     const [visible, setVisible] = React.useState(false);
     const requirements = React.useMemo(
-      () => (showStrength ? getAuthPasswordRequirementStatus(strengthValue) : []),
-      [showStrength, strengthValue],
+      () =>
+        showStrength && showRequirements
+          ? getAuthPasswordRequirementStatus(strengthValue)
+          : [],
+      [showStrength, showRequirements, strengthValue],
     );
     const strength = React.useMemo(
       () => (showStrength ? getAuthPasswordStrength(strengthValue) : { level: 0, label: "" }),
@@ -99,19 +114,21 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
                 </span>
               ) : null}
             </div>
-            <ul className="space-y-0.5">
-              {requirements.map((requirement) => (
-                <li
-                  key={requirement.id}
-                  className={cn(
-                    "text-xs",
-                    requirement.satisfied ? "text-emerald-500" : "text-muted-foreground",
-                  )}
-                >
-                  {requirement.satisfied ? "✓" : "•"} {requirement.label}
-                </li>
-              ))}
-            </ul>
+            {requirements.length > 0 ? (
+              <ul className="space-y-0.5">
+                {requirements.map((requirement) => (
+                  <li
+                    key={requirement.id}
+                    className={cn(
+                      "text-xs",
+                      requirement.satisfied ? "text-emerald-500" : "text-muted-foreground",
+                    )}
+                  >
+                    {requirement.satisfied ? "✓" : "•"} {requirement.label}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
         ) : null}
       </div>
