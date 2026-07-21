@@ -60,6 +60,15 @@ export default function ResetPasswordPage() {
   );
   const [resendEmail, setResendEmail] = useState("");
   const [isSendingLink, setIsSendingLink] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const id = window.setInterval(() => {
+      setResendCooldown((current) => (current > 0 ? current - 1 : 0));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [resendCooldown]);
 
   const {
     register,
