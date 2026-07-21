@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, Loader2, MailCheck, RefreshCcw } from "lucide-react";
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
+import { AuthFooter } from "@/app/components/auth/AuthFooter";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { getPendingSignupEmail } from "@/core/auth/utils/pendingSignup";
@@ -173,6 +174,7 @@ export default function CadastroConfirmacaoPage() {
             </div>
           </section>
         </main>
+        <AuthFooter />
       </div>
     </>
   );

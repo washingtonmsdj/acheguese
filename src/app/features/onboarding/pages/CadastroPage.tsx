@@ -13,6 +13,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
+import { AuthFooter } from "@/app/components/auth/AuthFooter";
 import { PasswordInput } from "@/app/components/auth/PasswordInput";
 import { useCadastroForm } from "@/app/features/onboarding/hooks/useCadastro";
 import { useAuth } from "@/core/auth/hooks/useAuth";
@@ -818,6 +819,7 @@ export default function CadastroPage() {
             </Form>
           </div>
         </main>
+        <AuthFooter />
       </div>
     </>
   );

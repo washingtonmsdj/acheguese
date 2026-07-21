@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
+import { AuthFooter } from "@/app/components/auth/AuthFooter";
 import { PasswordInput } from "@/app/components/auth/PasswordInput";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
@@ -413,6 +414,7 @@ export default function LoginPage() {
             </div>
           </div>
         </main>
+        <AuthFooter />
       </div>
     </>
   );
