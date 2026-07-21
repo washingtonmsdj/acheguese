@@ -234,6 +234,7 @@ export default function CadastroPage() {
                                   {...field}
                                   placeholder="Seu nome"
                                   autoComplete="name"
+                                  disabled={loading}
                                   className={cn(
                                     "h-10 sm:h-11",
                                     fieldState.error && "border-destructive",
@@ -260,6 +261,7 @@ export default function CadastroPage() {
                                     {...field}
                                     placeholder="seunome"
                                     autoComplete="username"
+                                    disabled={loading}
                                     onChange={(event) =>
                                       field.onChange(
                                         event.target.value
@@ -307,6 +309,7 @@ export default function CadastroPage() {
                                   type="email"
                                   placeholder="seu@email.com"
                                   autoComplete="email"
+                                  disabled={loading}
                                   className={cn(
                                     "h-10 sm:h-11",
                                     fieldState.error && "border-destructive",
@@ -332,6 +335,7 @@ export default function CadastroPage() {
                                   showStrength
                                   strengthValue={password || ""}
                                   autoComplete="new-password"
+                                  disabled={loading}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -351,6 +355,7 @@ export default function CadastroPage() {
                                   placeholder="Repita a senha"
                                   invalid={Boolean(fieldState.error)}
                                   autoComplete="new-password"
+                                  disabled={loading}
                                 />
                               </FormControl>
                               <FormMessage />
