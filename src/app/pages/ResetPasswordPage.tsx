@@ -336,6 +336,7 @@ export default function ResetPasswordPage() {
             </div>
           </div>
         </main>
+        <AuthFooter />
       </div>
     </>
   );
