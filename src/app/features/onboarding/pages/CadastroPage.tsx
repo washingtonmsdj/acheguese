@@ -722,6 +722,7 @@ export default function CadastroPage() {
                           type="button"
                           variant="ghost"
                           onClick={handleBack}
+                          disabled={loading}
                           className="gap-1.5 px-0 sm:px-3"
                         >
                           <ArrowLeft className="h-4 w-4" />
@@ -735,16 +736,21 @@ export default function CadastroPage() {
                         <Button
                           type="button"
                           onClick={() => void handleNext(STEPS.length)}
+                          disabled={loading}
                           className="h-10 gap-1.5 bg-primary font-semibold text-primary-foreground hover:bg-primary/90 sm:h-11"
                         >
+                          {loading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <ArrowRight className="h-4 w-4" />
+                          )}
                           Próximo
-                          <ArrowRight className="h-4 w-4" />
                         </Button>
                       ) : (
                         <Button
                           type="submit"
                           disabled={loading || termsAcceptedValue !== true}
-                          className="h-10 gap-1.5 bg-primary font-semibold text-primary-foreground hover:bg-primary/90 sm:h-11"
+                          className="h-10 gap-1.5 bg-primary font-semibold text-primary-foreground hover:bg-primary/90 sm:h:h-11"
                         >
                           {loading ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
