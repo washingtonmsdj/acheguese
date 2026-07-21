@@ -119,6 +119,7 @@ export default function LoginPage() {
     const parsed = parseAuthIdentifier(data.identifier);
     if (!parsed) return;
 
+    clearErrors("root.serverError");
     setPendingAction("login");
 
     try {
@@ -129,9 +130,25 @@ export default function LoginPage() {
 
       await signIn({ email: parsed.value, password: data.password });
     } catch (error) {
+      const message = getAuthErrorMessage(
+        error,
+        "Verifique suas credenciais e tente novamente.",
+      );
+      const raw =
+        error && typeof error === "object" && "message" in error
+          ? String((error as { message?: unknown }).message ?? "")
+          : "";
+
+      if (/invalid login credentials|incorretos|not found|invalid/i.test(raw)) {
+        setError("password", { type: "server", message });
+      } else if (/email|e-?mail|usu[aá]rio|username/i.test(raw)) {
+        setError("identifier", { type: "server", message });
+      }
+      setError("root.serverError", { type: "server", message });
+
       toast({
         title: "Erro ao entrar",
-        description: getAuthErrorMessage(error, "Verifique suas credenciais e tente novamente."),
+        description: message,
         variant: "destructive",
       });
       setPendingAction(null);
