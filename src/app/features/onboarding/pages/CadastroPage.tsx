@@ -14,6 +14,10 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
 import { AuthFooter } from "@/app/components/auth/AuthFooter";
+import {
+  AuthTurnstileGate,
+  useAuthTurnstile,
+} from "@/app/components/auth/AuthTurnstileGate";
 import { PasswordInput } from "@/app/components/auth/PasswordInput";
 import { useCadastroForm } from "@/app/features/onboarding/hooks/useCadastro";
 import { useAuth } from "@/core/auth/hooks/useAuth";
@@ -153,6 +157,9 @@ export default function CadastroPage() {
     currentStep < STEPS.length - 1 ? STEPS[currentStep + 1]?.label : null;
 
   const isLastStep = currentStep === STEPS.length - 1;
+  const turnstile = useAuthTurnstile();
+  const canSubmit =
+    !loading && termsAcceptedValue === true && turnstile.isReady;
 
   return (
     <>
