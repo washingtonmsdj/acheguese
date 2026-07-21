@@ -63,6 +63,7 @@ export default function ResetPasswordPage() {
   const [resendEmail, setResendEmail] = useState("");
   const [isSendingLink, setIsSendingLink] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const resendTurnstile = useAuthTurnstile();
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
