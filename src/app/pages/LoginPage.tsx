@@ -13,6 +13,10 @@ import {
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
 import { AuthFooter } from "@/app/components/auth/AuthFooter";
+import {
+  AuthTurnstileGate,
+  useAuthTurnstile,
+} from "@/app/components/auth/AuthTurnstileGate";
 import { PasswordInput } from "@/app/components/auth/PasswordInput";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
@@ -49,6 +53,7 @@ export default function LoginPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const turnstile = useAuthTurnstile();
 
   const redirectTo = useMemo(() => {
     const stateRedirect = (location.state as LoginLocationState)?.redirectTo;
@@ -119,6 +124,14 @@ export default function LoginPage() {
   const onValid = async (data: LoginIdentifierInput) => {
     const parsed = parseAuthIdentifier(data.identifier);
     if (!parsed) return;
+    if (!turnstile.isReady) {
+      toast({
+        title: "Verificação necessária",
+        description: "Complete o desafio de segurança para continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     clearErrors("root.serverError");
     setPendingAction("login");
@@ -386,10 +399,19 @@ export default function LoginPage() {
                   </p>
                 </div>
 
+                {turnstile.enabled ? (
+                  <AuthTurnstileGate
+                    action="login"
+                    onVerify={(token) => turnstile.setToken(token)}
+                    onExpire={turnstile.reset}
+                    onError={turnstile.reset}
+                  />
+                ) : null}
+
                 <Button
                   type="submit"
                   className="h-11 w-full bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
-                  disabled={isBusy}
+                  disabled={isBusy || !turnstile.isReady}
                 >
                   {pendingAction === "login" ? (
                     <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
@@ -399,6 +421,7 @@ export default function LoginPage() {
                   Entrar
                 </Button>
               </form>
+
 
               <div className="space-y-2 text-center">
                 <p className="text-sm text-muted-foreground">Não tem conta?</p>

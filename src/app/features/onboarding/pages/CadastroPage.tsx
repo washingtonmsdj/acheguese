@@ -14,6 +14,10 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
 import { AuthFooter } from "@/app/components/auth/AuthFooter";
+import {
+  AuthTurnstileGate,
+  useAuthTurnstile,
+} from "@/app/components/auth/AuthTurnstileGate";
 import { PasswordInput } from "@/app/components/auth/PasswordInput";
 import { useCadastroForm } from "@/app/features/onboarding/hooks/useCadastro";
 import { useAuth } from "@/core/auth/hooks/useAuth";
@@ -153,6 +157,9 @@ export default function CadastroPage() {
     currentStep < STEPS.length - 1 ? STEPS[currentStep + 1]?.label : null;
 
   const isLastStep = currentStep === STEPS.length - 1;
+  const turnstile = useAuthTurnstile();
+  const canSubmit =
+    !loading && termsAcceptedValue === true && turnstile.isReady;
 
   return (
     <>
@@ -707,6 +714,17 @@ export default function CadastroPage() {
                       </div>
                     ) : null}
 
+                    {isLastStep && turnstile.enabled ? (
+                      <div className="mt-4">
+                        <AuthTurnstileGate
+                          action="signup"
+                          onVerify={(token) => turnstile.setToken(token)}
+                          onExpire={turnstile.reset}
+                          onError={turnstile.reset}
+                        />
+                      </div>
+                    ) : null}
+
                     {form.formState.errors.root?.serverError?.message ? (
                       <div
                         role="alert"
@@ -750,7 +768,7 @@ export default function CadastroPage() {
                       ) : (
                         <Button
                           type="submit"
-                          disabled={loading || termsAcceptedValue !== true}
+                          disabled={!canSubmit}
                           className="h-10 gap-1.5 bg-primary font-semibold text-primary-foreground hover:bg-primary/90 sm:h-11"
                         >
                           {loading ? (
@@ -802,7 +820,7 @@ export default function CadastroPage() {
                     ) : (
                       <Button
                         type="submit"
-                        disabled={loading || termsAcceptedValue !== true}
+                        disabled={!canSubmit}
                         className="h-11 flex-1 gap-1.5 bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
                       >
                         {loading ? (
