@@ -12,6 +12,7 @@
 import { useEffect, useState } from "react";
 import { createLocationRepository } from "../repositories/createLocationRepository";
 import { LOCATION_PAGINATION, LocationStatus, LocationType } from "../types";
+import { normalizePersistedTextEncoding } from "@/shared/utils/textEncodingRepair";
 
 export interface LocationOption {
   id: string;
@@ -39,12 +40,13 @@ function toOption(loc: {
 }): LocationOption {
   return {
     id: loc.id,
-    name: loc.name,
+    name: normalizePersistedTextEncoding(loc.name),
     slug: loc.slug,
     geographic_path: loc.geographic_path,
     type: loc.type,
   };
 }
+
 
 export async function fetchAllChildrenByType(
   parentId: string,

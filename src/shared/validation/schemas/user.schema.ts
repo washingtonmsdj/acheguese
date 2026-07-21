@@ -155,7 +155,7 @@ export const RegisterAccountStepSchema = z
       .trim()
       .regex(
         /^[a-z][a-z0-9_]{2,29}$/,
-        "Deve comecar com letra e ter 3-30 chars (letras minusculas, numeros e _)",
+        "Deve começar com letra e ter 3-30 caracteres (letras minúsculas, números e _)",
       ),
     email: z
       .string({ required_error: validationMessages.required })
@@ -215,7 +215,7 @@ export const RegisterFullSchema = z
       .trim()
       .regex(
         /^[a-z][a-z0-9_]{2,29}$/,
-        "Deve comecar com letra e ter 3-30 chars (letras minusculas, numeros e _)",
+        "Deve começar com letra e ter 3-30 caracteres (letras minúsculas, números e _)",
       ),
     email: z
       .string({ required_error: validationMessages.required })

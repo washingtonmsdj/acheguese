@@ -159,14 +159,14 @@ export default function CadastroPage() {
         <title>Criar conta | Achegue-se</title>
         <meta
           name="description"
-          content="Crie sua conta Achegue-se para participar da comunidade, conectar-se ao seu bairro e acessar servicos e negocios locais."
+          content="Crie sua conta Achegue-se para participar da comunidade, conectar-se ao seu bairro e acessar serviços e negócios locais."
         />
       </Helmet>
 
       <div className="min-h-screen bg-background">
         <AuthBrandHeader
           secondaryHref="/login"
-          secondaryLabel="Ja tenho conta"
+          secondaryLabel="Já tenho conta"
         />
 
         <main
@@ -182,12 +182,12 @@ export default function CadastroPage() {
                     Cadastro local
                   </p>
                   <p className="text-sm font-medium text-foreground">
-                    Conta, territorio e comunidade no mesmo fluxo.
+                    Conta, território e comunidade no mesmo fluxo.
                   </p>
                 </div>
                 {nextStepLabel ? (
                   <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[0.68rem] font-medium text-primary">
-                    Proximo: {nextStepLabel}
+                    Próximo: {nextStepLabel}
                   </span>
                 ) : null}
               </div>
@@ -215,7 +215,7 @@ export default function CadastroPage() {
                       <div className="space-y-4 sm:space-y-5">
                         <div className="space-y-1.5 text-center">
                           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
-                            Criacao de conta
+                            Criação de conta
                           </p>
                           <h1 className="font-heading text-2xl font-bold text-foreground sm:text-[2rem]">
                             Crie sua conta
@@ -253,7 +253,7 @@ export default function CadastroPage() {
                           name="username"
                           render={({ field, fieldState }) => (
                             <FormItem>
-                              <FormLabel>Nome de usuario *</FormLabel>
+                              <FormLabel>Nome de usuário *</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
@@ -290,7 +290,7 @@ export default function CadastroPage() {
                               </FormControl>
                               {capsLock ? (
                                 <p className="text-xs text-amber-500">
-                                  Caps Lock ativo. Apenas letras minusculas sao
+                                  Caps Lock ativo. Apenas letras minúsculas são
                                   aceitas.
                                 </p>
                               ) : null}
@@ -599,7 +599,7 @@ export default function CadastroPage() {
                               </span>
                               <div className="min-w-0">
                                 <p className="text-xs text-muted-foreground">
-                                  Usuario
+                                  Usuário
                                 </p>
                                 <p className="truncate text-sm font-medium text-foreground">
                                   @{usernameValue}
@@ -610,7 +610,7 @@ export default function CadastroPage() {
 
                           <div className="flex items-start gap-3 border-b border-border/60 p-4">
                             <span className="mt-0.5 shrink-0 text-sm text-muted-foreground">
-                              Mail
+                              @
                             </span>
                             <div className="min-w-0">
                               <p className="text-xs text-muted-foreground">
@@ -626,7 +626,7 @@ export default function CadastroPage() {
                             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                             <div className="min-w-0">
                               <p className="text-xs text-muted-foreground">
-                                Localizacao
+                                Localização
                               </p>
                               <p className="text-sm font-medium text-foreground">
                                 {neighborhoodName}, {cityName} - {stateName}
