@@ -714,6 +714,17 @@ export default function CadastroPage() {
                       </div>
                     ) : null}
 
+                    {isLastStep && turnstile.enabled ? (
+                      <div className="mt-4">
+                        <AuthTurnstileGate
+                          action="signup"
+                          onVerify={(token) => turnstile.setToken(token)}
+                          onExpire={turnstile.reset}
+                          onError={turnstile.reset}
+                        />
+                      </div>
+                    ) : null}
+
                     {form.formState.errors.root?.serverError?.message ? (
                       <div
                         role="alert"
@@ -757,7 +768,7 @@ export default function CadastroPage() {
                       ) : (
                         <Button
                           type="submit"
-                          disabled={loading || termsAcceptedValue !== true}
+                          disabled={!canSubmit}
                           className="h-10 gap-1.5 bg-primary font-semibold text-primary-foreground hover:bg-primary/90 sm:h-11"
                         >
                           {loading ? (
@@ -809,7 +820,7 @@ export default function CadastroPage() {
                     ) : (
                       <Button
                         type="submit"
-                        disabled={loading || termsAcceptedValue !== true}
+                        disabled={!canSubmit}
                         className="h-11 flex-1 gap-1.5 bg-primary font-semibold text-primary-foreground hover:bg-primary/90"
                       >
                         {loading ? (
