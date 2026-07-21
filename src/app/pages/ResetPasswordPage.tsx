@@ -185,6 +185,7 @@ export default function ResetPasswordPage() {
               description="Sua senha foi atualizada. Você será redirecionado em instantes."
             />
           </main>
+          <AuthFooter />
         </div>
       </>
     );
