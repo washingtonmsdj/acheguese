@@ -15,8 +15,13 @@ type PasswordInputBaseProps = Omit<
 
 export interface PasswordInputProps extends PasswordInputBaseProps {
   invalid?: boolean;
-  /** Mostra checklist + medidor de força (usar apenas na criação/reset). */
+  /** Mostra o medidor de força (barra). */
   showStrength?: boolean;
+  /**
+   * Mostra a checklist de requisitos abaixo da barra.
+   * Default: true (compat). No login usamos `false` para manter só a barra.
+   */
+  showRequirements?: boolean;
   /**
    * Valor do input quando o campo é controlado externamente via RHF
    * (por causa de `register` o componente não recebe `value` diretamente).
