@@ -7,6 +7,7 @@ import { CheckCircle, Key, Loader2, ShieldCheck } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
+import { AuthFooter } from "@/app/components/auth/AuthFooter";
 import { PasswordInput } from "@/app/components/auth/PasswordInput";
 import { AUTH_BROWSER_STORAGE_CONFIG } from "@/config/security.config";
 import { useAuth } from "@/core/auth/hooks/useAuth";
