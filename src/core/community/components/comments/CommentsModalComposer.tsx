@@ -36,7 +36,7 @@ export function CommentsModalComposer({
   userName,
   isLoggedIn,
   canComment = true,
-  blockedMessage = "Verifique sua residencia para comentar.",
+  blockedMessage = "Confirme seu bairro pra responder por aqui.",
 }: CommentsModalComposerProps) {
   const isValid =
     Boolean(value.trim()) && value.length <= COMMENT_LIMITS.MAX_CONTENT_LENGTH;
@@ -51,12 +51,12 @@ export function CommentsModalComposer({
   };
 
   const placeholder = !isLoggedIn
-    ? "Faca login para comentar"
+    ? "Entre pra responder aqui do bairro"
     : !canComment
       ? blockedMessage
       : replyTo
-        ? `Responder ${replyTo.name}...`
-        : "Escreva um comentario...";
+        ? `Responder pra ${replyTo.name}...`
+        : "Escreva pro seu bairro...";
 
   return (
     <div
@@ -69,7 +69,7 @@ export function CommentsModalComposer({
       {replyTo && (
         <div className="flex items-center justify-between mb-2 px-1">
           <span className="text-xs" style={INLINE_STYLES.textSecondary}>
-            Respondendo{" "}
+            Você está respondendo a{" "}
             <span className="font-bold text-teal-400">@{replyTo.name}</span>
           </span>
           <button
@@ -120,7 +120,7 @@ export function CommentsModalComposer({
                 color: "#FFFFFF",
               }}
             >
-              {submitting ? "Enviando..." : "Comentar"}
+              {submitting ? "Enviando..." : "Responder"}
               <Send className="w-3 h-3 ml-1.5" />
             </Button>
           </div>
