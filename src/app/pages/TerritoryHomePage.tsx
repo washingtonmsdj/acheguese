@@ -338,25 +338,25 @@ export default function TerritoryHomePage() {
             </h2>
           </div>
 
-          <ul className="grid grid-cols-4 gap-2.5">
+          <ul className="grid grid-cols-4 gap-2">
             {pulse.map((card) => {
               const tokens = getCategoryTokens(card.category);
               const Icon = card.icon;
               return (
-                <li key={card.id}>
-                  <div className="flex h-full flex-col items-start gap-1.5 rounded-2xl border border-border bg-card p-3">
-                    <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${tokens.chip}`}>
+                <li key={card.id} className="min-w-0">
+                  <div className="flex h-full min-w-0 flex-col items-start gap-1 overflow-hidden rounded-2xl border border-border bg-card p-2.5 sm:p-3">
+                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg sm:h-8 sm:w-8 ${tokens.chip}`}>
                       <Icon className="h-4 w-4" aria-hidden="true" strokeWidth={2.25} />
                     </span>
-                    <span className="text-[18px] font-semibold leading-none tracking-[-0.01em]">
+                    <span className="w-full truncate text-[15px] font-semibold leading-tight tracking-[-0.01em] sm:text-[18px]">
                       {card.value}
                     </span>
-                    <span className="text-[12px] font-medium leading-tight text-foreground/90">
+                    <span className="w-full truncate text-[11px] font-medium leading-tight text-foreground/90 sm:text-[12px]">
                       {card.label}
                     </span>
                     {card.hint ? (
                       <span
-                        className={`text-[11px] leading-tight ${
+                        className={`w-full truncate text-[10px] leading-tight sm:text-[11px] ${
                           card.category === "alert" ? tokens.text : "text-muted-foreground"
                         }`}
                       >
