@@ -343,7 +343,7 @@ export default function TerritoryHomePage() {
             </Link>
           </div>
 
-          <ul className="grid grid-cols-4 gap-2">
+          <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {pulse.map((card) => {
               const tokens = getCategoryTokens(card.category);
               const Icon = card.icon;
@@ -396,7 +396,7 @@ export default function TerritoryHomePage() {
             {today.map((item) => {
               const tokens = getCategoryTokens(item.category);
               return (
-                <li key={item.id} className="w-[62%] shrink-0 snap-start sm:w-[45%]">
+                <li key={item.id} className="w-[72%] shrink-0 snap-start xs:w-[62%] sm:w-[45%] md:w-[32%]">
                   <Link
                     to={item.href}
                     className="group block overflow-hidden rounded-2xl border border-border/60 bg-card transition-transform hover:-translate-y-0.5 hover:shadow-sm"
@@ -598,7 +598,7 @@ export default function TerritoryHomePage() {
             Explore o que você precisa
           </h2>
 
-          <ul className="grid grid-cols-6 gap-2">
+          <ul className="grid grid-cols-3 gap-2 sm:grid-cols-6">
             {explore.map((vertical) => {
               const tokens = getCategoryTokens(vertical.category);
               const Icon = vertical.icon;
