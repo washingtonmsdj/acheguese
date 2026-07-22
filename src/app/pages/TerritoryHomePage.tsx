@@ -494,15 +494,16 @@ export default function TerritoryHomePage() {
               id="explore-title"
               className="font-display text-[16px] font-semibold leading-none"
             >
-              Explore o bairro
+              Passear pelo bairro
             </h2>
             <Link
               to={LAUNCH_URLS.search}
               className="text-[13px] font-medium text-primary hover:underline"
             >
-              Buscar
+              Procurar
             </Link>
           </div>
+
 
           <ul className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {[
