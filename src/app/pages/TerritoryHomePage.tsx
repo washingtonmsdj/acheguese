@@ -396,7 +396,7 @@ export default function TerritoryHomePage() {
             {today.map((item) => {
               const tokens = getCategoryTokens(item.category);
               return (
-                <li key={item.id} className="w-[62%] shrink-0 snap-start sm:w-[45%]">
+                <li key={item.id} className="w-[72%] shrink-0 snap-start xs:w-[62%] sm:w-[45%] md:w-[32%]">
                   <Link
                     to={item.href}
                     className="group block overflow-hidden rounded-2xl border border-border/60 bg-card transition-transform hover:-translate-y-0.5 hover:shadow-sm"
