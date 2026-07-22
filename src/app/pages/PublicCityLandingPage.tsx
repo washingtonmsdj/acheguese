@@ -161,11 +161,9 @@ const statIcons: Record<HomeStatCard["id"], LucideIcon> = {
 
 const quickChips: Chip[] = [
   { label: "Restaurantes", href: LAUNCH_URLS.gastronomy, icon: UtensilsCrossed },
-  { label: "Mercados", href: withQueryParams(searchHref, { q: "mercados" }), icon: ShoppingCart },
-  { label: "Salões", href: withQueryParams(searchHref, { q: "salões" }), icon: Scissors },
-  { label: "Mecânicas", href: withQueryParams(searchHref, { q: "mecânicas" }), icon: Wrench },
-  { label: "Academias", href: withQueryParams(searchHref, { q: "academias" }), icon: Dumbbell },
-  { label: "Pet shops", href: withQueryParams(searchHref, { q: "pet shops" }), icon: PawPrint },
+  { label: "Empresas", href: LAUNCH_URLS.business, icon: Building2 },
+  { label: "Serviços", href: LAUNCH_URLS.services, icon: Wrench },
+  { label: "Eventos", href: LAUNCH_URLS.events, icon: Calendar },
   { label: "+ Mais", href: searchHref, icon: MoreHorizontal },
 ];
 
