@@ -599,7 +599,58 @@ export default function TerritoryHomePage() {
             })}
           </ul>
         </section>
+
+        {/* 7. HOJE — movido para o final: aprofundamento editorial do dia */}
+        <section aria-labelledby="today-title" className="mt-8">
+          <div className="mb-3 flex items-baseline justify-between">
+            <h2
+              id="today-title"
+              className="text-[22px] font-semibold leading-tight tracking-[-0.015em]"
+            >
+              Hoje em {territoryName}
+            </h2>
+            <Link
+              to={LAUNCH_URLS.community}
+              className="text-[13px] font-medium text-primary transition-opacity hover:opacity-80"
+            >
+              Ver tudo
+            </Link>
+          </div>
+
+          <ul className="grid grid-cols-2 gap-2.5">
+            {today.map((item) => {
+              const tokens = getCategoryTokens(item.category);
+              return (
+                <li key={item.id} className="min-w-0">
+                  <Link
+                    to={item.href}
+                    className="group flex h-full min-h-[168px] min-w-0 flex-col justify-between gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-all hover:border-border/40 hover:shadow-[0_1px_3px_rgba(17,24,39,0.06)] sm:min-h-[184px] sm:p-4"
+                  >
+                    <div className="flex min-w-0 flex-col gap-2">
+                      <span
+                        className={`inline-flex w-fit max-w-full items-center gap-1 truncate rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide sm:text-[11px] ${tokens.chip}`}
+                      >
+                        {item.kind}
+                      </span>
+                      <p className="line-clamp-3 break-words text-[13px] font-semibold leading-snug tracking-[-0.005em] text-foreground sm:text-[15px]">
+                        {item.title}
+                      </p>
+                      <p className="line-clamp-2 break-words text-[11px] font-normal text-muted-foreground sm:text-[13px]">
+                        {item.meta}
+                      </p>
+                    </div>
+                    <span className={`inline-flex items-center gap-1 truncate text-[12px] font-medium sm:text-[13px] ${tokens.text}`}>
+                      <span className="truncate">{item.cta}</span>
+                      <ArrowRight className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       </main>
+
     </div>
   );
 }
