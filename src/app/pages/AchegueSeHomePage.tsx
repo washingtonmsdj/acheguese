@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   Check,
-  Heart,
   Loader2,
   MapPin,
   Navigation,
   X,
 } from "lucide-react";
+
+const OFFICIAL_LOGO_SRC = "/images/logo-icon.png";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { TERRITORY_CONFIG, LAUNCH_CITY_PATH } from "@/config/territory";
@@ -334,21 +335,13 @@ export default function AchegueSeHomePage() {
         className="relative mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-between px-6 pb-10 pt-16"
       >
         <section className="flex flex-col items-center text-center">
-          <div className="mb-5 inline-flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <div className="relative flex h-12 w-12 items-center justify-center">
-              <MapPin
-                className="h-12 w-12 text-primary"
-                strokeWidth={2.5}
-                fill="hsl(var(--primary) / 0.15)"
-              />
-              <Heart
-                className="absolute top-2.5 h-4 w-4 text-primary-foreground"
-                fill="currentColor"
-              />
-            </div>
-          </div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">
-            achegue-se
+          <img
+            src={OFFICIAL_LOGO_SRC}
+            alt="Achegue-se"
+            className="h-28 w-auto object-contain"
+          />
+          <h1 className="mt-1 font-heading text-3xl font-semibold leading-none tracking-tight text-foreground">
+            Achegue-<span className="text-primary">se</span>
           </h1>
           <p className="mt-6 max-w-[16rem] text-base leading-relaxed text-muted-foreground">
             Descubra o que acontece perto de você.
