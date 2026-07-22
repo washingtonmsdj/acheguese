@@ -465,8 +465,9 @@ export default function TerritoryHomePage() {
             id="quick-title"
             className="mb-3 font-display text-[16px] font-semibold leading-none"
           >
-            Ações rápidas
+            O que você quer fazer?
           </h2>
+
           <ul className="flex flex-wrap gap-2">
             {quickActions.map((action) => {
               const tokens = getCategoryTokens(action.category);
