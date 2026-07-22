@@ -380,12 +380,9 @@ export default function TerritoryHomePage() {
         </form>
 
         {/* 3. AGORA — carrossel horizontal compacto */}
-        <section aria-labelledby="pulse-title" className="mt-5">
-          <div className="mb-2.5">
-            <h2
-              id="pulse-title"
-              className="text-[16px] font-semibold leading-none tracking-[-0.01em]"
-            >
+        <section aria-labelledby="pulse-title" className="th-section" data-testid="pulse-section">
+          <div className="th-section-header">
+            <h2 id="pulse-title" className="th-section-title">
               Agora em {territoryName}
             </h2>
           </div>
@@ -400,21 +397,16 @@ export default function TerritoryHomePage() {
                 const Icon = card.icon;
                 return (
                   <li key={card.id} className="snap-start shrink-0">
-                    <Link
-                      to={card.href}
-                      className="group flex h-full min-h-[72px] w-[220px] flex-col justify-between gap-1 overflow-hidden rounded-2xl border border-border bg-card p-2.5 transition-all hover:border-border/40 hover:shadow-[0_1px_3px_rgba(17,24,39,0.06)] sm:w-[240px]"
-                    >
+                    <Link to={card.href} className="th-pulse-card">
                       <div className="flex min-w-0 items-center gap-1.5">
                         <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${tokens.chip}`}>
                           <Icon className="h-3 w-3" aria-hidden="true" strokeWidth={2.25} />
                         </span>
-                        <span className={`truncate rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
+                        <span className={`th-badge truncate uppercase tracking-wide ${tokens.chip}`}>
                           {card.kind}
                         </span>
                       </div>
-                      <p className="line-clamp-2 break-words text-[12.5px] font-semibold leading-snug tracking-[-0.005em] text-foreground">
-                        {card.title}
-                      </p>
+                      <p className="th-pulse-title">{card.title}</p>
                     </Link>
                   </li>
                 );
@@ -424,38 +416,31 @@ export default function TerritoryHomePage() {
         </section>
 
 
-        {/* 4. AÇÕES RÁPIDAS — 4 cards em linha */}
-        <section aria-labelledby="quick-title" className="mt-5">
-          <h2
-            id="quick-title"
-            className="mb-2.5 text-[16px] font-semibold leading-none tracking-[-0.01em]"
-          >
-            Ações rápidas
-          </h2>
+        {/* 4. AÇÕES RÁPIDAS — 4 tiles */}
+        <section aria-labelledby="quick-title" className="th-section" data-testid="quick-section">
+          <div className="th-section-header">
+            <h2 id="quick-title" className="th-section-title">Ações rápidas</h2>
+          </div>
           <ul className="grid grid-cols-4 gap-2.5">
             {quickActions.map((action) => {
               const Icon = action.icon;
               return (
                 <li key={action.id} className="min-w-0">
-                  <Link
-                    to={action.href}
-                    className="group flex min-w-0 flex-col items-center gap-1.5 text-center focus-visible:outline-none"
-                  >
+                  <Link to={action.href} className="th-tile focus-visible:outline-none">
                     <span
-                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-[0_2px_6px_rgba(17,24,39,0.08)] transition-transform group-hover:scale-[1.03] group-focus-visible:ring-2 group-focus-visible:ring-primary/40"
+                      className="th-tile-icon shadow-[0_2px_6px_rgba(17,24,39,0.08)]"
                       style={{ backgroundColor: action.tint }}
                     >
                       <Icon className="h-6 w-6 text-white" aria-hidden="true" strokeWidth={2.25} />
                     </span>
-                    <span className="w-full text-[12px] font-medium leading-tight text-foreground">
-                      {action.label}
-                    </span>
+                    <span className="th-tile-label">{action.label}</span>
                   </Link>
                 </li>
               );
             })}
           </ul>
         </section>
+
 
 
 
