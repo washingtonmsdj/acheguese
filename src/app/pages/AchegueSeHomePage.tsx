@@ -335,9 +335,10 @@ export default function AchegueSeHomePage() {
         id="main-content"
         className={cn(
           "relative mx-auto flex w-full max-w-[420px] flex-1 flex-col justify-center",
-          "px-5 sm:px-6",
-          "pt-[max(2rem,env(safe-area-inset-top))]",
-          "pb-[max(1.5rem,env(safe-area-inset-bottom))]",
+          "px-5 xs:px-6 sm:px-6",
+          "pt-[max(1.5rem,env(safe-area-inset-top))]",
+          "pb-[max(1.25rem,env(safe-area-inset-bottom))]",
+          "gap-7 sm:gap-9",
         )}
       >
         {/* Brand block */}
@@ -346,18 +347,18 @@ export default function AchegueSeHomePage() {
             src={OFFICIAL_LOGO_SRC}
             alt=""
             aria-hidden
-            className="h-20 w-20 object-contain sm:h-24 sm:w-24"
+            className="h-[72px] w-[72px] object-contain sm:h-24 sm:w-24"
           />
-          <h1 className="mt-3 font-heading text-[28px] font-semibold leading-none tracking-tight text-foreground sm:text-3xl">
+          <h1 className="mt-3 font-heading text-[26px] font-semibold leading-none tracking-tight text-foreground sm:text-3xl">
             Achegue-<span className="text-primary">se</span>
           </h1>
-          <p className="mt-3 max-w-[18rem] text-sm leading-relaxed text-muted-foreground sm:text-[15px]">
+          <p className="mt-3 max-w-[18rem] text-[15px] leading-relaxed text-muted-foreground">
             Descubra o que acontece perto de você.
           </p>
         </section>
 
         {/* Action block */}
-        <section className="mt-8 flex w-full flex-col gap-3 sm:mt-10">
+        <section className="flex w-full flex-col gap-3">
           <label htmlFor="home-city" className="sr-only">
             Sua cidade
           </label>
@@ -384,7 +385,10 @@ export default function AchegueSeHomePage() {
                 if (event.key === "Escape") setShowSuggestions(false);
               }}
               placeholder="Sua cidade"
-              className="h-14 rounded-2xl border-border/60 bg-card pl-12 pr-14 text-base shadow-sm"
+              className={cn(
+                "h-14 rounded-2xl border-border/60 bg-card pl-12 pr-14 text-base shadow-sm",
+                "transition-colors focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-0",
+              )}
               autoComplete="off"
               inputMode="text"
               role="combobox"
@@ -397,10 +401,12 @@ export default function AchegueSeHomePage() {
               onClick={() => goToLaunchCity()}
               disabled={!canSubmitCity}
               className={cn(
-                "absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full transition",
+                "absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full",
+                "transition-all duration-150 ease-out",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 canSubmitCity
-                  ? "text-primary hover:bg-primary/10 active:scale-95"
-                  : "text-muted-foreground/40",
+                  ? "bg-primary/10 text-primary hover:bg-primary/15 active:scale-90 active:bg-primary/20"
+                  : "text-muted-foreground/50",
               )}
             >
               <ArrowRight className="h-5 w-5" />
@@ -420,9 +426,13 @@ export default function AchegueSeHomePage() {
                       aria-selected={cityQuery === s.label}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => handlePickSuggestion(s)}
-                      className="flex min-h-11 w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm text-foreground hover:bg-accent"
+                      className={cn(
+                        "flex min-h-11 w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm text-foreground",
+                        "transition-colors hover:bg-accent hover:text-accent-foreground active:bg-accent/80",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+                      )}
                     >
-                      <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <MapPin className="h-4 w-4 shrink-0 text-primary" />
                       <span className="truncate">{s.label}</span>
                     </button>
                   </li>
@@ -453,7 +463,11 @@ export default function AchegueSeHomePage() {
                   type="button"
                   aria-label="Descartar local encontrado"
                   onClick={() => setResolved(null)}
-                  className="-mr-1 -mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-background/60"
+                  className={cn(
+                    "-mr-1 -mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground",
+                    "transition-colors hover:bg-background/70 hover:text-foreground active:scale-90",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+                  )}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -462,7 +476,7 @@ export default function AchegueSeHomePage() {
                 type="button"
                 size="sm"
                 onClick={() => goToLaunchCity(resolved.label, resolved)}
-                className="mt-3 h-10 w-full gap-2 rounded-xl"
+                className="mt-3 h-11 w-full gap-2 rounded-xl transition-transform active:scale-[0.98]"
               >
                 <Check className="h-4 w-4" />
                 Confirmar
@@ -475,7 +489,12 @@ export default function AchegueSeHomePage() {
             size="lg"
             onClick={handleUseLocation}
             disabled={geo.loading || resolvingCity}
-            className="h-14 w-full gap-2 rounded-2xl text-base font-semibold shadow-lg shadow-primary/25 active:scale-[0.99]"
+            className={cn(
+              "h-14 w-full gap-2 rounded-2xl text-base font-semibold",
+              "shadow-lg shadow-primary/25 transition-all duration-150 ease-out",
+              "hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98] active:shadow-md",
+              "disabled:opacity-70 disabled:shadow-none",
+            )}
           >
             {geo.loading || resolvingCity ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -488,16 +507,20 @@ export default function AchegueSeHomePage() {
           {geoErrorLabel || reverseError ? (
             <div
               role="alert"
-              className="rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-xs leading-relaxed text-destructive"
+              className="rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-[13px] leading-relaxed text-destructive-foreground"
             >
-              {geoErrorLabel || reverseError}
+              <span className="text-destructive">{geoErrorLabel || reverseError}</span>
             </div>
           ) : null}
 
-          <div className="flex items-center gap-3 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground/70">
-            <span className="h-px flex-1 bg-border/70" />
+          <div
+            role="separator"
+            aria-orientation="horizontal"
+            className="flex items-center gap-3 py-1 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground"
+          >
+            <span aria-hidden className="h-px flex-1 bg-border/70" />
             ou
-            <span className="h-px flex-1 bg-border/70" />
+            <span aria-hidden className="h-px flex-1 bg-border/70" />
           </div>
 
           <Button
@@ -505,13 +528,17 @@ export default function AchegueSeHomePage() {
             variant="outline"
             size="lg"
             onClick={() => navigate("/inicio")}
-            className="h-14 w-full rounded-2xl border-border/60 bg-card text-base font-semibold active:scale-[0.99]"
+            className={cn(
+              "h-14 w-full rounded-2xl border-border/60 bg-card text-base font-semibold",
+              "transition-all duration-150 ease-out",
+              "hover:border-primary/40 hover:bg-card active:scale-[0.98]",
+            )}
           >
             Escolher cidade
           </Button>
         </section>
 
-        <footer className="mt-10 text-center text-[11px] leading-relaxed text-muted-foreground/70">
+        <footer className="text-center text-[12px] leading-relaxed text-muted-foreground">
           {TERRITORY_CONFIG.launch.name}, {TERRITORY_CONFIG.launch.state.toUpperCase()}
           {" · "}comunidade hiperlocal
         </footer>
