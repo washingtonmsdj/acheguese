@@ -13,6 +13,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
+import { InterestedCTAs } from "@/app/components/auth/InterestedCTAs";
 import { AuthFooter } from "@/app/components/auth/AuthFooter";
 import {
   AuthTurnstileGate,
