@@ -340,3 +340,91 @@
 .maplibregl-popup {
   z-index: var(--map-popup-z-index) !important;
 }
+
+/* =========================================================
+ * Territory Home — utility tokens (typography & spacing SSOT)
+ * Aplicados em cards do concept: Agora, Ações rápidas,
+ * Acontecendo, Explore e Hoje. Idênticos em mobile e tablet.
+ * ========================================================= */
+.th-section { margin-top: 1.25rem; }
+.th-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.625rem;
+}
+.th-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+.th-section-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  font-weight: 500;
+  color: hsl(var(--primary));
+  transition: opacity .2s;
+}
+.th-section-link:hover { opacity: .8; }
+
+.th-card {
+  display: flex;
+  min-height: 76px;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  padding: 0.75rem;
+  transition: background-color .2s;
+}
+.th-card:hover { background: hsl(var(--muted)); }
+.th-card--top { align-items: flex-start; }
+
+.th-card-icon {
+  display: flex;
+  height: 2.75rem;
+  width: 2.75rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+}
+.th-card-body { min-width: 0; flex: 1; }
+.th-card-meta {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 12px;
+}
+.th-badge {
+  flex-shrink: 0;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.th-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: hsl(var(--foreground));
+}
+.th-card-sub {
+  margin-top: 4px;
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+}
+.th-card-thumb {
+  height: 3rem;
+  width: 3.5rem;
+  flex-shrink: 0;
+  border-radius: 0.75rem;
+}
