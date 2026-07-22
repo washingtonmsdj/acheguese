@@ -149,9 +149,9 @@ export function CommunityFeed({
         el.setAttribute("data-new-post", "true");
         el.classList.add(
           "ring-2",
-          "ring-teal-300/70",
+          "ring-primary/60",
           "rounded-2xl",
-          "shadow-[0_0_0_4px_rgba(45,212,191,0.15)]",
+          "shadow-[0_0_0_4px_hsl(var(--primary)/0.15)]",
           "transition-all",
           "duration-500",
         );
@@ -159,8 +159,8 @@ export function CommunityFeed({
         window.setTimeout(() => {
           el.classList.remove(
             "ring-2",
-            "ring-teal-300/70",
-            "shadow-[0_0_0_4px_rgba(45,212,191,0.15)]",
+            "ring-primary/60",
+            "shadow-[0_0_0_4px_hsl(var(--primary)/0.15)]",
           );
           el.removeAttribute("data-new-post");
         }, 6000);
