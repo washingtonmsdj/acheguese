@@ -12,6 +12,14 @@ function normalize(value: string): string {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
+function titleCase(value: string): string {
+  return value
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word) => (word.length > 2 ? word.charAt(0).toUpperCase() + word.slice(1) : word))
+    .join(" ");
+}
+
 export default function OnboardingPage() {
   const navigate = useNavigate();
   const {
