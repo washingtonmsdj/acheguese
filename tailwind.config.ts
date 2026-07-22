@@ -134,7 +134,7 @@ export default {
             foreground: "hsl(var(--category-neutral-foreground))",
           },
         },
-
+      },
       borderRadius: {
         lg: "var(--radius-lg)",
         md: "var(--radius-md)",
