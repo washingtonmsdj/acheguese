@@ -172,10 +172,46 @@ export default function TerritoryHomePage() {
   }, [params]);
 
   const pulse: PulseCard[] = [
-    { id: "p1", icon: Sun, value: "28°", label: "Ensolarado", hint: "Sensação 30°", category: "neutral" },
-    { id: "p2", icon: UtensilsCrossed, value: "15", label: "Restaurantes", hint: "abertos agora", category: "gastronomy" },
-    { id: "p3", icon: AlertTriangle, value: "1", label: "Alerta ativo", hint: "Ver detalhes", category: "alert" },
-    { id: "p4", icon: Users, value: "Alto", label: "Movimento", hint: "no bairro", category: "discussion" },
+    {
+      id: "p1",
+      icon: AlertTriangle,
+      kind: "Alerta",
+      title: "Interdição na Rua das Orquídeas",
+      detail: "Trânsito bloqueado até as 17h de hoje.",
+      cta: "Ver no mapa",
+      href: LAUNCH_URLS.map ?? "#",
+      category: "alert",
+    },
+    {
+      id: "p2",
+      icon: Bell,
+      kind: "Aviso",
+      title: "Coleta seletiva muda de horário",
+      detail: "A partir de segunda, passa às terças e sextas, 6h.",
+      cta: "Saber mais",
+      href: LAUNCH_URLS.community,
+      category: "neutral",
+    },
+    {
+      id: "p3",
+      icon: BadgeCheck,
+      kind: "Oferta",
+      title: "Farmácia Saúde+",
+      detail: "Até 30% de desconto em vitaminas nesta semana.",
+      cta: "Ver oferta",
+      href: LAUNCH_URLS.business,
+      category: "business",
+    },
+    {
+      id: "p4",
+      icon: UtensilsCrossed,
+      kind: "Promoção",
+      title: "Mercado Bom Dia",
+      detail: "Combo café da manhã por R$ 12,90 até sábado.",
+      cta: "Aproveitar",
+      href: LAUNCH_URLS.business,
+      category: "gastronomy",
+    },
   ];
 
   const today: TodayCard[] = [
