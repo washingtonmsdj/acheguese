@@ -458,17 +458,17 @@ export default function TerritoryHomePage() {
 
 
 
-        <section aria-labelledby="feed-title" className="mt-6">
-          <div className="mb-3 flex items-baseline justify-between">
+        <section aria-labelledby="feed-title" className="mt-5">
+          <div className="mb-2.5 flex items-baseline justify-between">
             <h2
               id="feed-title"
-              className="text-[22px] font-semibold leading-tight tracking-[-0.015em]"
+              className="text-[16px] font-semibold leading-none tracking-[-0.01em]"
             >
               Acontecendo no bairro
             </h2>
             <Link
               to={LAUNCH_URLS.community}
-              className="text-[13px] font-medium text-primary transition-opacity hover:opacity-80"
+              className="text-[12px] font-medium text-primary transition-opacity hover:opacity-80"
             >
               Ver tudo
             </Link>
