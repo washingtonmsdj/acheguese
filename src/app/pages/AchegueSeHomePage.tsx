@@ -17,12 +17,67 @@ import { cn } from "@/shared/utils/cn";
  * Não redireciona automaticamente para a cidade de lançamento — a home passa
  * a ser esta tela de acolhimento.
  */
+interface ReverseGeocodeAddress {
+  city?: string;
+  town?: string;
+  village?: string;
+  municipality?: string;
+  suburb?: string;
+  state?: string;
+  state_code?: string;
+  country_code?: string;
+  "ISO3166-2-lvl4"?: string;
+}
+
+const BR_STATE_TO_UF: Record<string, string> = {
+  acre: "AC", alagoas: "AL", amapa: "AP", "amapá": "AP", amazonas: "AM",
+  bahia: "BA", ceara: "CE", "ceará": "CE", "distrito federal": "DF",
+  "espirito santo": "ES", "espírito santo": "ES", goias: "GO", "goiás": "GO",
+  maranhao: "MA", "maranhão": "MA", "mato grosso": "MT", "mato grosso do sul": "MS",
+  "minas gerais": "MG", para: "PA", "pará": "PA", paraiba: "PB", "paraíba": "PB",
+  parana: "PR", "paraná": "PR", pernambuco: "PE", piaui: "PI", "piauí": "PI",
+  "rio de janeiro": "RJ", "rio grande do norte": "RN", "rio grande do sul": "RS",
+  rondonia: "RO", "rondônia": "RO", roraima: "RR", "santa catarina": "SC",
+  "sao paulo": "SP", "são paulo": "SP", sergipe: "SE", tocantins: "TO",
+};
+
+function extractUf(addr: ReverseGeocodeAddress): string | null {
+  const iso = addr["ISO3166-2-lvl4"];
+  if (iso && iso.startsWith("BR-")) return iso.slice(3).toUpperCase();
+  if (addr.state_code) return addr.state_code.toUpperCase();
+  if (addr.state) {
+    const key = addr.state.toLowerCase();
+    if (BR_STATE_TO_UF[key]) return BR_STATE_TO_UF[key];
+  }
+  return null;
+}
+
+async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1&accept-language=pt-BR`;
+    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { address?: ReverseGeocodeAddress };
+    const addr = data.address ?? {};
+    const city =
+      addr.city || addr.town || addr.village || addr.municipality || addr.suburb;
+    const uf = extractUf(addr);
+    if (city && uf) return `${city}, ${uf}`;
+    if (city) return city;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export default function AchegueSeHomePage() {
   const navigate = useNavigate();
   const geo = useGeolocation();
   const [cityQuery, setCityQuery] = useState<string>(
     `${TERRITORY_CONFIG.launch.name}, ${TERRITORY_CONFIG.launch.state.toUpperCase()}`,
   );
+  const [resolvingCity, setResolvingCity] = useState(false);
+  const [reverseError, setReverseError] = useState<string | null>(null);
 
   const canSubmitCity = useMemo(
     () => cityQuery.trim().length > 1,
@@ -32,8 +87,28 @@ export default function AchegueSeHomePage() {
   const goToLaunchCity = () => navigate(LAUNCH_CITY_PATH);
 
   const handleUseLocation = async () => {
+    setReverseError(null);
     const ok = await geo.requestPermission();
-    if (ok) goToLaunchCity();
+    if (!ok) return;
+    // Read fresh coords via getCurrentPosition to avoid state race
+    if (!("geolocation" in navigator)) return;
+    setResolvingCity(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const label = await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+        if (label) {
+          setCityQuery(label);
+        } else {
+          setReverseError("Não foi possível identificar sua cidade automaticamente.");
+        }
+        setResolvingCity(false);
+      },
+      () => {
+        setReverseError("Não foi possível ler sua localização.");
+        setResolvingCity(false);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
+    );
   };
 
   return (
@@ -113,19 +188,21 @@ export default function AchegueSeHomePage() {
             type="button"
             size="lg"
             onClick={handleUseLocation}
-            disabled={geo.loading}
+            disabled={geo.loading || resolvingCity}
             className="h-14 w-full gap-2 rounded-2xl text-base font-semibold shadow-lg shadow-primary/25"
           >
-            {geo.loading ? (
+            {geo.loading || resolvingCity ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
               <Navigation className="h-5 w-5" />
             )}
-            Usar minha localização
+            {resolvingCity ? "Identificando cidade..." : "Usar minha localização"}
           </Button>
 
-          {geo.error ? (
-            <p className="text-center text-xs text-destructive">{geo.error}</p>
+          {geo.error || reverseError ? (
+            <p className="text-center text-xs text-destructive">
+              {geo.error || reverseError}
+            </p>
           ) : null}
 
           <div className="flex items-center gap-3 py-1 text-xs uppercase tracking-wide text-muted-foreground">
