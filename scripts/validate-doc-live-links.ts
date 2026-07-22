@@ -1,13 +1,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
-const LIVE_DOCS = [
-  "docs/README.md",
-  "docs/INDEX_CANONICO.md",
-  "docs/CURRENT_RULES.md",
-  "docs/CANONICAL_MAP.md",
-  "docs/STATUS_ATUAL.md",
-] as const;
+// Após Sprint DOCS.1, a porta de entrada única é docs/README.md.
+// Ele é o SSOT documental e o único doc validado por completude de links.
+const LIVE_DOCS = ["docs/README.md"] as const;
 
 function extractRelativeLinks(markdown: string): string[] {
   const matches = [...markdown.matchAll(/\[[^\]]+\]\((\.[^)]+)\)/g)];
