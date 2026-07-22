@@ -1,10 +1,9 @@
 import React, { useMemo, useState } from "react";
-import { ArrowLeft, Search, MapPin, Check } from "lucide-react";
+import { ArrowLeft, ChevronRight, RotateCcw, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { useOnboarding } from "@/app/features/onboarding/hooks/useOnboarding";
-import { Button } from "@/shared/components/ui/button";
-import { cn } from "@/shared/utils/cn";
+
+const INITIAL_VISIBLE = 5;
 
 function normalize(value: string): string {
   return value
@@ -19,14 +18,14 @@ export default function OnboardingPage() {
     neighborhoods,
     cityName,
     stateName,
-    selectedNeighborhood,
     onNeighborhoodSelect,
     onConfirm,
-    canConfirm,
     isLoading,
   } = useOnboarding();
 
   const [query, setQuery] = useState("");
+  const [showAll, setShowAll] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
 
   const filtered = useMemo(() => {
     const q = normalize(query.trim());
@@ -34,118 +33,126 @@ export default function OnboardingPage() {
     return neighborhoods.filter((n) => normalize(n).includes(q));
   }, [neighborhoods, query]);
 
+  const hasQuery = query.trim().length > 0;
+  const visible = showAll || hasQuery ? filtered : filtered.slice(0, INITIAL_VISIBLE);
+  const canShowMore = !showAll && !hasQuery && filtered.length > INITIAL_VISIBLE;
+
+  const handleSelect = (neighborhood: string) => {
+    onNeighborhoodSelect(neighborhood);
+    // confirm immediately, matching the concept (tap-to-enter)
+    setTimeout(() => onConfirm(), 0);
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
       <header
-        className="sticky top-0 z-10 border-b border-border/60 bg-background/90 backdrop-blur"
+        className="sticky top-0 z-10 bg-background"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
-        <div className="flex items-center gap-2 px-4 py-3">
+        <div className="flex items-center justify-between px-4 py-3">
           <button
             onClick={() => navigate(-1)}
+            className="-ml-2 flex items-center gap-1.5 rounded-full px-2 py-1 text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             aria-label="Voltar"
-            className="flex h-10 w-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
             <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div className="min-w-0 flex-1">
-            <h1 className="font-display text-lg font-semibold leading-tight">
-              Selecione o seu bairro
-            </h1>
-            <p className="truncate text-xs text-muted-foreground">
+            <span className="text-sm font-medium">
               {cityName}, {stateName}
-            </p>
-          </div>
+            </span>
+          </button>
+
+          <button
+            onClick={() => setShowSearch((v) => !v)}
+            aria-label={showSearch ? "Fechar busca" : "Buscar bairro"}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          >
+            {showSearch ? <RotateCcw className="h-4 w-4" /> : <Search className="h-4 w-4" />}
+          </button>
         </div>
 
-        {/* Search */}
-        <div className="px-4 pb-3">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Buscar bairro"
-              aria-label="Buscar bairro"
-              className="h-11 w-full rounded-full border border-border bg-muted/50 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-            />
+        {showSearch ? (
+          <div className="px-4 pb-3">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                autoFocus
+                type="search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Buscar bairro"
+                aria-label="Buscar bairro"
+                className="h-11 w-full rounded-full border border-border bg-muted/50 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+              />
+            </div>
           </div>
-        </div>
+        ) : null}
       </header>
 
-      {/* List */}
-      <main className="flex-1 px-4 pb-32 pt-3">
-        {isLoading && neighborhoods.length === 0 ? (
-          <div className="space-y-2">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-14 animate-pulse rounded-xl bg-muted/50" />
-            ))}
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="mt-10 text-center text-sm text-muted-foreground">
-            {query
-              ? `Nenhum bairro encontrado para "${query}".`
-              : "Nenhum bairro ativo. Você pode continuar pela visão municipal."}
-          </div>
-        ) : (
-          <motion.ul
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-            className="space-y-2"
-          >
-            {filtered.map((neighborhood) => {
-              const isSelected = selectedNeighborhood === neighborhood;
-              return (
+      {/* Content */}
+      <main className="flex-1 px-6 pt-4">
+        <h1 className="font-display text-2xl font-semibold leading-snug tracking-tight text-foreground">
+          Escolha um bairro para
+          <br />
+          ver o que acontece por lá.
+        </h1>
+
+        <div className="mt-8">
+          {isLoading && neighborhoods.length === 0 ? (
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="h-14 animate-pulse rounded-lg bg-muted/50" />
+              ))}
+            </div>
+          ) : visible.length === 0 ? (
+            <p className="mt-6 text-sm text-muted-foreground">
+              {hasQuery
+                ? `Nenhum bairro encontrado para "${query}".`
+                : "Nenhum bairro ativo. Você pode continuar pela visão municipal."}
+            </p>
+          ) : (
+            <ul className="divide-y divide-border/70">
+              {visible.map((neighborhood) => (
                 <li key={neighborhood}>
                   <button
-                    onClick={() => onNeighborhoodSelect(neighborhood)}
-                    className={cn(
-                      "flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
-                      isSelected
-                        ? "border-primary bg-primary/10"
-                        : "border-border bg-card hover:border-primary/40",
-                    )}
+                    onClick={() => handleSelect(neighborhood)}
+                    className="group flex w-full items-center justify-between py-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                   >
-                    <span
-                      className={cn(
-                        "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full transition-colors",
-                        isSelected
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground",
-                      )}
-                    >
-                      <MapPin className="h-4 w-4" />
-                    </span>
-                    <span className="flex-1 text-sm font-medium text-foreground">
+                    <span className="text-base font-medium text-foreground group-hover:text-primary">
                       {neighborhood}
                     </span>
-                    {isSelected ? (
-                      <Check className="h-5 w-5 flex-shrink-0 text-primary" />
-                    ) : null}
+                    <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
                   </button>
                 </li>
-              );
-            })}
-          </motion.ul>
-        )}
-      </main>
+              ))}
+            </ul>
+          )}
 
-      {/* Sticky footer */}
-      <div
-        className="fixed inset-x-0 bottom-0 border-t border-border/60 bg-background/95 px-4 py-3 backdrop-blur"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
-      >
-        <Button
-          onClick={onConfirm}
-          disabled={!canConfirm || isLoading}
-          className="h-12 w-full rounded-xl text-base font-semibold"
-        >
-          {selectedNeighborhood ? `Continuar em ${selectedNeighborhood}` : "Continuar"}
-        </Button>
-      </div>
+          {canShowMore ? (
+            <div className="mt-6 flex justify-center">
+              <button
+                onClick={() => setShowAll(true)}
+                className="rounded-full px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              >
+                Ver todos os bairros
+              </button>
+            </div>
+          ) : null}
+
+          {(showAll || hasQuery) && neighborhoods.length > 0 ? (
+            <div className="mt-6 flex justify-center">
+              <button
+                onClick={onConfirm}
+                className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+              >
+                Continuar sem escolher bairro
+              </button>
+            </div>
+          ) : null}
+        </div>
+
+        <div style={{ height: "calc(env(safe-area-inset-bottom) + 24px)" }} />
+      </main>
     </div>
   );
 }
