@@ -518,15 +518,15 @@ export default function TerritoryHomePage() {
                         <Calendar className="h-5 w-5" aria-hidden="true" />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 text-[12px]">
-                          <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
+                        <div className="flex min-w-0 items-center gap-2 text-[12px]">
+                          <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
                             Evento
                           </span>
                           <span className="truncate font-semibold text-foreground">
                             {item.title}
                           </span>
                         </div>
-                        <p className="mt-1 text-[13px] text-muted-foreground">
+                        <p className="mt-1 truncate text-[13px] text-muted-foreground">
                           {item.place} · {item.time}
                         </p>
                       </div>
