@@ -35,14 +35,14 @@ export default function LaunchPausedPage({ moduleName = "Módulo" }: LaunchPause
 
         <section className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-            MVP público
+            Em breve no bairro
           </p>
           <h1 className="mt-3 text-2xl font-black tracking-tight sm:text-4xl">
-            {moduleName} está separado para ajustes.
+            {moduleName} ainda está sendo preparado.
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Esta área não faz parte da primeira superfície pública do Achegue-se. O módulo continua
-            preservado para manutenção, testes e retorno controlado quando estiver pronto para lançar.
+            A gente quer entregar {moduleName.toLowerCase()} do jeito certo pro seu bairro.
+            Enquanto isso, dá pra continuar por aqui — o resto do Achegue-se já está no ar.
           </p>
         </section>
 
