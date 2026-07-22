@@ -44,14 +44,14 @@ export function FeedFilters({
   onClearTag,
 }: FeedFiltersProps) {
   const sortOptions = [
-    { value: "recent" as FeedSortType, label: "Recentes", icon: Clock },
+    { value: "recent" as FeedSortType, label: "Mais recentes", icon: Clock },
     { value: "popular" as FeedSortType, label: "Populares", icon: TrendingUp },
-    { value: "nearby" as FeedSortType, label: "Próximos", icon: MapPin },
+    { value: "nearby" as FeedSortType, label: "Perto de mim", icon: MapPin },
   ];
 
   const typeOptions = [
-    { value: "all" as FeedPostType, label: "Todos", icon: Filter },
-    { value: "discussao" as FeedPostType, label: "Discussão", icon: Filter },
+    { value: "all" as FeedPostType, label: "Tudo", icon: Filter },
+    { value: "discussao" as FeedPostType, label: "Conversas", icon: Filter },
     { value: "recomendacao" as FeedPostType, label: "Dicas", icon: Filter },
     { value: "enquete" as FeedPostType, label: "Enquetes", icon: Filter },
   ];
@@ -62,17 +62,6 @@ export function FeedFilters({
       style={getCardBackground("card")}
     >
       <CardContent className="p-2">
-        {/* Header */}
-        <div className="flex items-center gap-1.5 mb-2">
-          <Filter className="h-3 w-3" style={INLINE_STYLES.textCyan} />
-          <span
-            className="font-bold text-[10px]"
-            style={INLINE_STYLES.textPrimary}
-          >
-            ORDENAR POR
-          </span>
-        </div>
-
         {/* Tag ativa (se houver) */}
         {activeTag && (
           <div className="mb-2">
@@ -87,7 +76,8 @@ export function FeedFilters({
               <button
                 onClick={onClearTag}
                 className="hover:opacity-70 transition-opacity"
-                title="Remover filtro"
+                title="Limpar"
+                aria-label="Limpar filtro de tag"
               >
                 <X className="h-2.5 w-2.5" />
               </button>
@@ -129,17 +119,7 @@ export function FeedFilters({
           })}
         </div>
 
-        {/* Filtros por Tipo */}
-        <div className="flex items-center gap-1.5 mb-2">
-          <Filter className="h-3 w-3" style={INLINE_STYLES.textCyan} />
-          <span
-            className="font-bold text-[10px]"
-            style={INLINE_STYLES.textPrimary}
-          >
-            FILTRAR POR TIPO
-          </span>
-        </div>
-
+        {/* Categorias */}
         <div className="flex gap-1.5 flex-wrap">
           {typeOptions.map((option) => {
             const Icon = option.icon;

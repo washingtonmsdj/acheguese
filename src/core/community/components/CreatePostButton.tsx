@@ -33,10 +33,11 @@ export function CreatePostButton({ onOpenModal }: CreatePostButtonProps) {
       onClick={onOpenModal}
       className="gap-2 min-h-[44px] min-w-[44px]"
       size="default"
+      aria-label="Publicar no bairro"
     >
-      <Plus className="h-4 w-4" />
-      <span className="hidden sm:inline">Criar Post</span>
-      <span className="sm:hidden">Criar</span>
+      <Plus className="h-4 w-4" aria-hidden="true" />
+      <span className="hidden sm:inline">Publicar no bairro</span>
+      <span className="sm:hidden">Publicar</span>
     </Button>
   );
 }
