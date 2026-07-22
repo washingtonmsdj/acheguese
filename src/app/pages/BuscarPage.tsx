@@ -116,21 +116,17 @@ export default function BuscarPage() {
   ]);
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-background via-background to-muted/40 px-4 py-12">
-      <div className="mx-auto flex max-w-5xl flex-col gap-8">
-        <header className="space-y-3 text-center">
-          <p className="text-sm font-medium uppercase tracking-[0.25em] text-muted-foreground">
-            Busca inteligente
-          </p>
-          <h1 className="text-4xl font-semibold tracking-tight md:text-5xl">
-            Encontre no território usando linguagem natural
+    <main className="min-h-[calc(100vh-4rem)] bg-background px-4 py-10">
+      <div className="mx-auto flex max-w-3xl flex-col gap-6">
+        <header className="space-y-2">
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            Procurar no bairro
           </h1>
-          <p className="mx-auto max-w-2xl text-muted-foreground">
-            Digite o que precisa. A IA interpreta a intenção, aplica o território ativo
-            e busca empresas ou serviços reais.
+          <p className="text-sm text-muted-foreground">
+            Escreva do seu jeito: pizza, chaveiro, feira de sábado, alguém que conserte bicicleta.
           </p>
-          <p className="text-xs text-muted-foreground">
-            Território aplicado: {appliedTerritoryLabel}
+          <p className="text-xs text-muted-foreground/80">
+            Procurando em: {appliedTerritoryLabel}
           </p>
         </header>
 
