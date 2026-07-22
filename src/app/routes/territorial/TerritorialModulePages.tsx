@@ -97,6 +97,24 @@ export function CommunityPersistentPortalLayout() {
     location.search,
     territorialContext.communityBaseUrl,
   );
+
+  // Sprint TERRITORY.1: no índice do território (sem sub-rota e sem ?view=...),
+  // a Territory Home substitui a antiga home baseada em CidadeLandingPage.
+  // Feed/Grupos/Discussões continuam servidos pelo CidadeLandingPage seccionado.
+  const isTerritoryHomeIndex =
+    presentation.section === 'feed' &&
+    !presentation.embedOutlet &&
+    !location.pathname.replace(territorialContext.communityBaseUrl, '').replace(/^\/+|\/+$/g, '') &&
+    !new URLSearchParams(location.search).get('view');
+
+  if (isTerritoryHomeIndex) {
+    return (
+      <Suspense fallback={<ModulePageLoader />}>
+        {outlet}
+      </Suspense>
+    );
+  }
+
   const communityContent = presentation.embedOutlet ? (
     <Suspense
       fallback={
@@ -115,6 +133,7 @@ export function CommunityPersistentPortalLayout() {
         activeCommunitySection={presentation.section}
         communityContent={communityContent}
       />
+
     </Suspense>
   );
 }
