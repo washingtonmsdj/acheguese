@@ -379,8 +379,8 @@ export default function TerritoryHomePage() {
         </form>
 
         {/* 3. AGORA — carrossel horizontal compacto */}
-        <section aria-labelledby="pulse-title" className="mt-7">
-          <div className="mb-3">
+        <section aria-labelledby="pulse-title" className="mt-5">
+          <div className="mb-2.5">
             <h2
               id="pulse-title"
               className="text-[16px] font-semibold leading-none tracking-[-0.01em]"
@@ -391,7 +391,7 @@ export default function TerritoryHomePage() {
 
           <div className="-mx-5">
             <ul
-              className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="flex snap-x snap-mandatory gap-2.5 overflow-x-auto px-5 pb-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               role="list"
             >
               {pulse.map((card) => {
@@ -401,17 +401,17 @@ export default function TerritoryHomePage() {
                   <li key={card.id} className="snap-start shrink-0">
                     <Link
                       to={card.href}
-                      className="group flex h-full min-h-[88px] w-[240px] flex-col justify-between gap-1.5 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-all hover:border-border/40 hover:shadow-[0_1px_3px_rgba(17,24,39,0.06)] sm:w-[260px]"
+                      className="group flex h-full min-h-[72px] w-[220px] flex-col justify-between gap-1 overflow-hidden rounded-2xl border border-border bg-card p-2.5 transition-all hover:border-border/40 hover:shadow-[0_1px_3px_rgba(17,24,39,0.06)] sm:w-[240px]"
                     >
-                      <div className="flex min-w-0 items-center gap-2">
-                        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${tokens.chip}`}>
-                          <Icon className="h-3.5 w-3.5" aria-hidden="true" strokeWidth={2.25} />
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${tokens.chip}`}>
+                          <Icon className="h-3 w-3" aria-hidden="true" strokeWidth={2.25} />
                         </span>
                         <span className={`truncate rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
                           {card.kind}
                         </span>
                       </div>
-                      <p className="line-clamp-2 break-words text-[13px] font-semibold leading-snug tracking-[-0.005em] text-foreground">
+                      <p className="line-clamp-2 break-words text-[12.5px] font-semibold leading-snug tracking-[-0.005em] text-foreground">
                         {card.title}
                       </p>
                     </Link>
@@ -421,6 +421,7 @@ export default function TerritoryHomePage() {
             </ul>
           </div>
         </section>
+
 
         {/* 4. AÇÕES RÁPIDAS — 4 cards em linha */}
         <section aria-labelledby="quick-title" className="mt-5">
