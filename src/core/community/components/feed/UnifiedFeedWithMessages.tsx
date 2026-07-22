@@ -148,11 +148,11 @@ const UnifiedFeedWithMessages = React.forwardRef<
       <>
         <div className="space-y-5">
           {sortedPosts.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] px-4 py-10 text-center text-gray-400">
-              <p className="text-sm font-semibold text-white/75">
+            <div className="rounded-2xl border border-dashed border-border/60 bg-card px-4 py-10 text-center">
+              <p className="text-sm font-semibold text-foreground">
                 {COMMUNITY_FEED_COPY.emptyStateTitle}
               </p>
-              <p className="mt-1 text-xs text-white/45">
+              <p className="mt-1 text-xs text-muted-foreground">
                 {COMMUNITY_FEED_COPY.emptyStateDescription}
               </p>
             </div>

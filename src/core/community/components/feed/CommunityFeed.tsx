@@ -149,9 +149,9 @@ export function CommunityFeed({
         el.setAttribute("data-new-post", "true");
         el.classList.add(
           "ring-2",
-          "ring-teal-300/70",
+          "ring-primary/60",
           "rounded-2xl",
-          "shadow-[0_0_0_4px_rgba(45,212,191,0.15)]",
+          "shadow-[0_0_0_4px_hsl(var(--primary)/0.15)]",
           "transition-all",
           "duration-500",
         );
@@ -159,8 +159,8 @@ export function CommunityFeed({
         window.setTimeout(() => {
           el.classList.remove(
             "ring-2",
-            "ring-teal-300/70",
-            "shadow-[0_0_0_4px_rgba(45,212,191,0.15)]",
+            "ring-primary/60",
+            "shadow-[0_0_0_4px_hsl(var(--primary)/0.15)]",
           );
           el.removeAttribute("data-new-post");
         }, 6000);
@@ -291,7 +291,7 @@ export function CommunityFeed({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="mx-auto w-full max-w-2xl space-y-4 px-4">
       <TerritoryFeedHeader
         territoryName={communityName}
         territoryType={locationScope === "city" ? "cidade" : "bairro"}
@@ -301,16 +301,14 @@ export function CommunityFeed({
         onOpenCreatePost={onOpenCreatePost}
       />
 
-
-
-      <div className="rounded-2xl border border-white/10 bg-[#0f171a] p-3 shadow-xl shadow-black/10 md:p-4">
+      <div className="rounded-2xl border border-border/60 bg-card p-3 md:p-4">
         {contentMode === "discussions" ? (
-          <div className="mb-3 border-b border-white/10 pb-3">
-            <h2 className="text-sm font-semibold text-white">
-              Discussões da comunidade
+          <div className="mb-3 border-b border-border/60 pb-3">
+            <h2 className="text-sm font-semibold text-foreground">
+              Conversas do bairro
             </h2>
-            <p className="mt-1 text-xs leading-5 text-white/52">
-              Perguntas, recomendações, enquetes e conversas entre moradores.
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              Perguntas, recomendações, enquetes e conversas entre vizinhos.
             </p>
           </div>
         ) : null}
@@ -332,8 +330,8 @@ export function CommunityFeed({
                 }}
                 className={`flex min-h-9 min-w-0 items-center gap-2 rounded-full border px-3 text-xs font-semibold transition-colors ${
                   activeHeaderFilter === id
-                    ? "border-teal-300/50 bg-teal-300/15 text-teal-100"
-                    : "border-white/10 bg-black/20 text-white/55 hover:border-white/20 hover:text-white"
+                    ? "border-primary/40 bg-primary/10 text-primary"
+                    : "border-border/60 bg-muted/40 text-muted-foreground hover:border-border hover:text-foreground"
                 }`}
               >
                 {label}
@@ -344,7 +342,7 @@ export function CommunityFeed({
           <button
             type="button"
             onClick={() => setFiltersExpanded((current) => !current)}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/20 text-white/65 transition-colors hover:border-white/20 hover:text-white"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-muted/40 text-muted-foreground transition-colors hover:border-border hover:text-foreground"
             aria-label={COMMUNITY_FEED_COPY.adjustFiltersAriaLabel}
             aria-expanded={filtersExpanded}
             aria-controls="community-feed-sort-options"
@@ -355,7 +353,7 @@ export function CommunityFeed({
 
         <div
           id="community-feed-sort-options"
-          className={`${filtersExpanded ? "mt-3 flex" : "hidden"} min-w-0 flex-wrap gap-2 border-t border-white/10 pt-3 sm:mt-3 sm:flex`}
+          className={`${filtersExpanded ? "mt-3 flex" : "hidden"} min-w-0 flex-wrap gap-2 border-t border-border/60 pt-3 sm:mt-3 sm:flex`}
           aria-label={COMMUNITY_FEED_COPY.sortAriaLabel}
         >
           {COMMUNITY_FEED_SORT_FILTERS.map(({ id, label }) => {
@@ -367,8 +365,8 @@ export function CommunityFeed({
                 onClick={() => setSortType(id)}
                 className={`flex min-h-9 min-w-0 items-center gap-2 rounded-full border px-3 text-xs font-semibold transition-colors ${
                   sortType === id
-                    ? "border-white/30 bg-white/15 text-white"
-                    : "border-white/10 bg-black/20 text-white/50 hover:text-white"
+                    ? "border-foreground/20 bg-foreground/10 text-foreground"
+                    : "border-border/60 bg-muted/40 text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Icon className="h-3.5 w-3.5" />
@@ -379,7 +377,7 @@ export function CommunityFeed({
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="w-full">
         {unifiedPosts.length === 0 ? (
           <EmptyState
             icon={MessageCirclePlus}
