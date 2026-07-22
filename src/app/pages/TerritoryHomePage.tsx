@@ -378,57 +378,43 @@ export default function TerritoryHomePage() {
           </ul>
         </section>
 
-        {/* 4. HOJE — cards editoriais com capa */}
-        <section aria-labelledby="today-title" className="mt-6">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 id="today-title" className="font-display text-[16px] font-semibold leading-none">
-              Hoje em {territoryName}
-            </h2>
-            <Link
-              to={LAUNCH_URLS.community}
-              className="text-[13px] font-medium text-primary hover:underline"
-            >
-              Ver tudo ›
-            </Link>
-          </div>
+        {/* 4. AÇÕES RÁPIDAS */}
+        <section aria-labelledby="quick-actions-title" className="mt-6">
+          <h2
+            id="quick-actions-title"
+            className="mb-3 font-display text-[16px] font-semibold leading-none"
+          >
+            Ações rápidas
+          </h2>
 
-          <ul className="grid grid-cols-3 gap-2 sm:gap-3">
-            {today.map((item) => {
-              const tokens = getCategoryTokens(item.category);
+          <ul className="grid grid-cols-4 gap-3">
+            {[
+              { id: "qa1", label: "Buscar", icon: Search, category: "business" as ContentCategoryKey, href: LAUNCH_URLS.search },
+              { id: "qa2", label: "Perto de mim", icon: MapPin, category: "discussion" as ContentCategoryKey, href: LAUNCH_URLS.map ?? LAUNCH_URLS.search },
+              { id: "qa3", label: "Comer agora", icon: UtensilsCrossed, category: "gastronomy" as ContentCategoryKey, href: LAUNCH_URLS.gastronomy },
+              { id: "qa4", label: "Mobilidade", icon: Car, category: "mobility" as ContentCategoryKey, href: LAUNCH_URLS.map ?? LAUNCH_URLS.search },
+            ].map((action) => {
+              const tokens = getCategoryTokens(action.category);
+              const Icon = action.icon;
               return (
-                <li key={item.id} className="min-w-0">
+                <li key={action.id}>
                   <Link
-                    to={item.href}
-                    className="group block overflow-hidden rounded-2xl border border-border/60 bg-card transition-transform hover:-translate-y-0.5 hover:shadow-sm"
+                    to={action.href}
+                    className="flex flex-col items-center gap-2 text-center focus-visible:outline-none"
                   >
-                    <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-                      <img
-                        src={item.cover}
-                        alt={item.coverAlt}
-                        loading="lazy"
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                      <span
-                        className={`absolute left-2 top-2 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${tokens.chip}`}
-                      >
-                        {item.kind}
-                      </span>
-                    </div>
-                    <div className="p-2 sm:p-3">
-                      <p className="line-clamp-2 text-[12px] font-semibold leading-snug text-foreground sm:text-[14px]">
-                        {item.title}
-                      </p>
-                      <p className="mt-0.5 line-clamp-1 text-[10px] text-muted-foreground sm:text-[12px]">{item.meta}</p>
-                      <span className={`mt-1 inline-block text-[10px] font-semibold sm:text-[12px] ${tokens.text}`}>
-                        {item.cta}
-                      </span>
-                    </div>
+                    <span className={`flex h-16 w-16 items-center justify-center rounded-2xl shadow-sm ${tokens.chip}`}>
+                      <Icon className="h-7 w-7" aria-hidden="true" />
+                    </span>
+                    <span className="text-[12px] font-medium leading-tight text-foreground">
+                      {action.label}
+                    </span>
                   </Link>
                 </li>
               );
             })}
           </ul>
         </section>
+
 
         {/* 5. ACONTECENDO — feed misto */}
         <section aria-labelledby="feed-title" className="mt-6">
