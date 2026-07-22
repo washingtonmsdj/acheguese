@@ -511,10 +511,7 @@ export default function AchegueSeHomePage() {
           </Button>
         </section>
 
-        {/* Spacer pushes footer to bottom on tall screens without over-stretching */}
-        <div className="flex-1 min-h-6" />
-
-        <footer className="pt-6 text-center text-[11px] leading-relaxed text-muted-foreground/70">
+        <footer className="mt-10 text-center text-[11px] leading-relaxed text-muted-foreground/70">
           {TERRITORY_CONFIG.launch.name}, {TERRITORY_CONFIG.launch.state.toUpperCase()}
           {" · "}comunidade hiperlocal
         </footer>
