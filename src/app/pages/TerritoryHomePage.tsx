@@ -252,7 +252,7 @@ export default function TerritoryHomePage() {
         {/* 2. BUSCA */}
         <form onSubmit={handleSubmit} role="search" className="relative">
           <label className="sr-only" htmlFor="territory-search">
-            O que você procura no bairro?
+            Procurar algo na {territoryName}
           </label>
           <Search
             className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
@@ -262,9 +262,10 @@ export default function TerritoryHomePage() {
             id="territory-search"
             name="q"
             type="search"
-            placeholder="O que você procura no bairro?"
+            placeholder="Procurar no bairro: pizza, chaveiro, feira..."
             className="h-12 w-full rounded-full border border-border bg-muted/40 pl-12 pr-4 text-[14px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
           />
+
         </form>
 
         {/* 3. HOJE — 1 destaque + 2 chips compactos */}
