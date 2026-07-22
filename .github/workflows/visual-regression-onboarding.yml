@@ -19,13 +19,19 @@ concurrency:
 
 jobs:
   visual-regression:
-    name: Onboarding visual regression (${{ matrix.viewport }})
+    name: ${{ matrix.label }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        viewport: [mobile, tablet, desktop]
+        include:
+          - label: mobile
+            spec: tests/e2e/onboarding-visual-regression.spec.ts
+          - label: tablet
+            spec: tests/e2e/onboarding-visual-regression-tablet.spec.ts
+          - label: desktop
+            spec: tests/e2e/onboarding-visual-regression-desktop.spec.ts
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,18 +48,18 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Run visual regression (${{ matrix.viewport }})
+      - name: Run visual regression (${{ matrix.label }})
         env:
           CI: 'true'
-        run: npx playwright test onboarding-visual-regression-${{ matrix.viewport == 'mobile' && '' || matrix.viewport }} --project=chromium
-        # Note: mobile spec has no suffix in filename
-        continue-on-error: false
+        # Fails the job (and therefore the PR check) on any pixel diff
+        # above the tolerance defined in each spec (maxDiffPixelRatio: 0.01).
+        run: npx playwright test ${{ matrix.spec }} --project=chromium
 
       - name: Upload Playwright report on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-${{ matrix.viewport }}
+          name: playwright-report-${{ matrix.label }}
           path: |
             playwright-report/
             test-results/
