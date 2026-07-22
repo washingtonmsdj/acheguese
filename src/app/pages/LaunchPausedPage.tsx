@@ -29,7 +29,7 @@ export default function LaunchPausedPage({ moduleName = "Módulo" }: LaunchPause
         <Button asChild variant="ghost" className="w-fit gap-2 px-0 text-muted-foreground hover:bg-transparent">
           <Link to="/">
             <ArrowLeft className="h-4 w-4" />
-            Voltar para o início
+            Voltar pro bairro
           </Link>
         </Button>
 
