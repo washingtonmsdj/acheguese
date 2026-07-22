@@ -98,35 +98,35 @@ export default function OnboardingPage() {
       </header>
 
       {/* Content */}
-      <main className="flex flex-1 flex-col px-5 pt-4">
-        <h1 className="font-display text-[30px] font-semibold leading-[1.15] tracking-tight text-foreground">
+      <main className="flex flex-1 flex-col px-4 pt-2">
+        <h1 className="font-display text-[26px] font-semibold leading-[1.15] tracking-tight text-foreground">
           Escolha um bairro para
           <br />
           ver o que acontece por lá.
         </h1>
 
-        <div className="mt-6 flex-1">
+        <div className="mt-3 flex-1">
           {isLoading && neighborhoods.length === 0 ? (
             <div className="rounded-2xl border border-border/60 bg-muted/30 p-2">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-16 animate-pulse rounded-xl bg-muted/50" />
+                <div key={i} className="h-14 animate-pulse rounded-xl bg-muted/50" />
               ))}
             </div>
           ) : visible.length === 0 ? (
-            <p className="mt-6 text-[15px] text-muted-foreground">
+            <p className="mt-4 text-[15px] text-muted-foreground">
               {hasQuery
                 ? `Nenhum bairro encontrado para "${query}".`
                 : "Nenhum bairro ativo. Você pode continuar pela visão municipal."}
             </p>
           ) : (
-            <ul className="overflow-hidden rounded-2xl border border-border/60 bg-muted/25 px-5 divide-y divide-border/50">
+            <ul className="overflow-hidden rounded-2xl border border-border/60 bg-muted/25 px-4 divide-y divide-border/50">
               {visible.map((neighborhood) => (
                 <li key={neighborhood}>
                   <button
                     onClick={() => handleSelect(neighborhood)}
-                    className="group flex w-full items-center justify-between py-[22px] text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 rounded-md"
+                    className="group flex w-full items-center justify-between py-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 rounded-md"
                   >
-                    <span className="text-[17px] font-medium text-foreground group-hover:text-primary">
+                    <span className="text-[16px] font-medium text-foreground group-hover:text-primary">
                       {neighborhood}
                     </span>
                     <ChevronRight className="h-5 w-5 text-muted-foreground/70 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
@@ -138,13 +138,13 @@ export default function OnboardingPage() {
         </div>
 
         <div
-          className="mt-6 flex flex-col items-center gap-3 pt-4"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 20px)" }}
+          className="flex flex-col items-center gap-2 pt-3"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
         >
           {canShowMore ? (
             <button
               onClick={() => setShowAll(true)}
-              className="rounded-full px-5 py-2.5 text-[15px] font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              className="rounded-full px-5 py-2 text-[15px] font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
               Ver todos os bairros
             </button>
@@ -160,6 +160,7 @@ export default function OnboardingPage() {
           ) : null}
         </div>
       </main>
+
     </div>
   );
 }
