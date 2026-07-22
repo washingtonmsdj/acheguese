@@ -52,16 +52,16 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-background">
       {/* Header */}
       <header
-        className="sticky top-0 z-10 bg-background"
+        className="shrink-0 bg-background"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-3 py-2">
           <button
             onClick={() => navigate(-1)}
-            className="-ml-2 flex items-center gap-1.5 rounded-full px-2 py-1 text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            className="-ml-1 flex items-center gap-1 rounded-full px-1.5 py-1 text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             aria-label="Voltar"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -73,14 +73,14 @@ export default function OnboardingPage() {
           <button
             onClick={() => setShowSearch((v) => !v)}
             aria-label={showSearch ? "Fechar busca" : "Buscar bairro"}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
             {showSearch ? <RotateCcw className="h-[18px] w-[18px]" /> : <Search className="h-[18px] w-[18px]" />}
           </button>
         </div>
 
         {showSearch ? (
-          <div className="px-4 pb-3">
+          <div className="px-3 pb-2">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
@@ -90,7 +90,7 @@ export default function OnboardingPage() {
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Buscar bairro"
                 aria-label="Buscar bairro"
-                className="h-11 w-full rounded-full border border-border bg-muted/50 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                className="h-10 w-full rounded-full border border-border bg-muted/50 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               />
             </div>
           </div>
@@ -98,18 +98,18 @@ export default function OnboardingPage() {
       </header>
 
       {/* Content */}
-      <main className="flex flex-1 flex-col px-4 pt-2">
-        <h1 className="font-display text-[26px] font-semibold leading-[1.15] tracking-tight text-foreground">
+      <main className="flex min-h-0 flex-1 flex-col px-3">
+        <h1 className="shrink-0 pt-1 font-display text-[24px] font-semibold leading-[1.15] tracking-tight text-foreground">
           Escolha um bairro para
           <br />
           ver o que acontece por lá.
         </h1>
 
-        <div className="mt-3 flex-1">
+        <div className="mt-2 min-h-0 flex-1 overflow-hidden">
           {isLoading && neighborhoods.length === 0 ? (
-            <div className="rounded-2xl border border-border/60 bg-muted/30 p-2">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-14 animate-pulse rounded-xl bg-muted/50" />
+            <div className="h-full rounded-2xl border border-border/60 bg-muted/30 p-2">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="mb-1 h-12 animate-pulse rounded-xl bg-muted/50" />
               ))}
             </div>
           ) : visible.length === 0 ? (
@@ -119,12 +119,12 @@ export default function OnboardingPage() {
                 : "Nenhum bairro ativo. Você pode continuar pela visão municipal."}
             </p>
           ) : (
-            <ul className="overflow-hidden rounded-2xl border border-border/60 bg-muted/25 px-4 divide-y divide-border/50">
+            <ul className="h-full overflow-y-auto rounded-2xl border border-border/60 bg-muted/25 px-4 divide-y divide-border/50">
               {visible.map((neighborhood) => (
                 <li key={neighborhood}>
                   <button
                     onClick={() => handleSelect(neighborhood)}
-                    className="group flex w-full items-center justify-between py-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 rounded-md"
+                    className="group flex w-full items-center justify-between py-3.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 rounded-md"
                   >
                     <span className="text-[16px] font-medium text-foreground group-hover:text-primary">
                       {neighborhood}
@@ -138,13 +138,13 @@ export default function OnboardingPage() {
         </div>
 
         <div
-          className="flex flex-col items-center gap-2 pt-3"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
+          className="flex shrink-0 flex-col items-center gap-1 pt-2"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)" }}
         >
           {canShowMore ? (
             <button
               onClick={() => setShowAll(true)}
-              className="rounded-full px-5 py-2 text-[15px] font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              className="rounded-full px-5 py-1.5 text-[15px] font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
               Ver todos os bairros
             </button>
@@ -160,7 +160,6 @@ export default function OnboardingPage() {
           ) : null}
         </div>
       </main>
-
     </div>
   );
 }
