@@ -123,7 +123,7 @@ export const TerritorialMapPage = lazy(() =>
 // PAGINAS PUBLICAS (Landing Pages)
 // ============================================================
 export const PublicCityLandingPage = lazy(
-  () => import("@/app/pages/PublicCityLandingPage"),
+  () => import("@/app/pages/TerritoryHomePage"),
 );
 export const NationalHubPage = lazy(
   () => import("@/app/pages/NationalHubPage"),
