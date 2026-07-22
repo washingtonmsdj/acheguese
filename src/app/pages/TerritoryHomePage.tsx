@@ -347,14 +347,15 @@ export default function TerritoryHomePage() {
               id="highlights-title"
               className="font-display text-[16px] font-semibold leading-none"
             >
-              Destaques do seu bairro
+              Vale conferir
             </h2>
             <Link
               to={LAUNCH_URLS.community}
               className="text-[13px] font-medium text-primary hover:underline"
             >
-              Ver todos
+              Ver mais do bairro
             </Link>
+
           </div>
 
           <ul className="space-y-3">
