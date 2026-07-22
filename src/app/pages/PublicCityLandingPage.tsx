@@ -833,6 +833,349 @@ function StatsBar({ stats }: { stats: HomeStatCard[] }) {
   );
 }
 
+/* ============================================================
+ * HOME 1.0 — Bairro digital
+ * Território → Busca → Hoje no bairro → Ações rápidas
+ *   → Destaques (timeline) → Explorar → FAB
+ * Apenas layout/hierarquia; nenhuma nova regra de negócio.
+ * ============================================================ */
+
+function TerritoryBlock({ communityHref }: { communityHref: string }) {
+  return (
+    <section className="home1-territory" aria-label="Seu território">
+      <div className="home1-territory-marker" aria-hidden="true">
+        <MapPin />
+      </div>
+      <div className="home1-territory-copy">
+        <span className="home1-territory-eyebrow">Você está em</span>
+        <h1>Salvador, BA</h1>
+        <p>Seu bairro digital — pessoas, negócios e o que acontece agora.</p>
+      </div>
+      <Link to={communityHref} className="home1-territory-switch">
+        Trocar bairro
+        <ChevronDown aria-hidden="true" />
+      </Link>
+    </section>
+  );
+}
+
+function HomeSearchBar() {
+  const navigate = useNavigate();
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const query = String(formData.get("q") ?? "").trim();
+    navigate(query ? withQueryParams(searchHref, { q: query }) : searchHref);
+  };
+  return (
+    <form className="home1-search" onSubmit={handleSubmit} role="search">
+      <Search className="home1-search-icon" aria-hidden="true" />
+      <label className="sr-only" htmlFor="home1-search-input">
+        Buscar no bairro
+      </label>
+      <input
+        id="home1-search-input"
+        name="q"
+        type="search"
+        autoComplete="off"
+        placeholder="O que você procura no bairro?"
+      />
+      <button type="submit" className="home1-search-submit" aria-label="Buscar">
+        <Search aria-hidden="true" />
+      </button>
+    </form>
+  );
+}
+
+function TodayInNeighborhood({
+  cards,
+  isLoading,
+}: {
+  cards: HighlightCard[];
+  isLoading?: boolean;
+}) {
+  const items = cards.slice(0, 3);
+  return (
+    <section className="home1-today" aria-labelledby="home1-today-title">
+      <div className="home1-section-heading">
+        <div>
+          <h2 id="home1-today-title">Hoje no bairro</h2>
+          <p>O que está acontecendo agora perto de você.</p>
+        </div>
+      </div>
+      {isLoading && items.length === 0 ? (
+        <div className="home1-today-grid">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="home1-today-card is-skeleton">
+              <span className="home-skel home-skel-cover" />
+              <span className="home-skel home-skel-line" style={{ width: "70%" }} />
+              <span className="home-skel home-skel-line" style={{ width: "45%" }} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="home1-today-grid">
+          {items.map((card) => {
+            const Icon = card.icon;
+            return (
+              <Link key={`${card.label}-${card.title}`} to={card.href} className="home1-today-card">
+                <img src={card.image} alt="" loading="lazy" />
+                <span className="home1-today-shade" aria-hidden="true" />
+                <span className={`home1-today-badge is-${card.tone}`}>
+                  <Icon aria-hidden="true" />
+                  {card.label}
+                </span>
+                <span className="home1-today-copy">
+                  <strong>{card.title}</strong>
+                  <small>{card.meta}</small>
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+type QuickAction = { label: string; href: string; icon: LucideIcon };
+
+function QuickActions() {
+  const actions: QuickAction[] = [
+    { label: "Buscar", href: searchHref, icon: Search },
+    { label: "Perto de mim", href: LAUNCH_URLS.map, icon: Navigation },
+    { label: "Comer agora", href: LAUNCH_URLS.gastronomy, icon: UtensilsCrossed },
+    { label: "Mobilidade", href: withQueryParams(searchHref, { q: "mobilidade" }), icon: Compass },
+  ];
+  return (
+    <nav className="home1-quick" aria-label="Ações rápidas">
+      {actions.map((action) => {
+        const Icon = action.icon;
+        return (
+          <Link key={action.label} to={action.href} className="home1-quick-item">
+            <span className="home1-quick-icon" aria-hidden="true">
+              <Icon />
+            </span>
+            <span>{action.label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+type FeedItem = {
+  id: string;
+  kind: "post" | "business" | "event" | "alert" | "promo" | "classified";
+  title: string;
+  excerpt: string;
+  meta: string;
+  href: string;
+  image?: string;
+  author?: string;
+  avatar?: string;
+};
+
+function buildFeedItems(
+  activities: HomeCommunityActivity[],
+  highlights: HighlightCard[],
+  sponsored: HomeSponsoredItem[],
+): FeedItem[] {
+  const posts: FeedItem[] = activities.slice(0, 4).map((a) => ({
+    id: `post-${a.id}`,
+    kind: "post",
+    title: a.author,
+    excerpt: a.text,
+    meta: `${a.community} · ${a.time}`,
+    href: LAUNCH_URLS.community,
+    image: a.imageKey ? homeImagesByKey[a.imageKey] : undefined,
+    author: a.author,
+    avatar: homeAvatarsByKey[a.avatarKey],
+  }));
+  const cards: FeedItem[] = highlights.slice(0, 3).map((h, idx) => ({
+    id: `hl-${idx}-${h.title}`,
+    kind: h.label.toLowerCase().includes("aviso") || h.label.toLowerCase().includes("alerta")
+      ? "alert"
+      : h.label.toLowerCase().includes("evento")
+        ? "event"
+        : h.label.toLowerCase().includes("promo")
+          ? "promo"
+          : "business",
+    title: h.title,
+    excerpt: h.detail,
+    meta: h.meta,
+    href: h.href,
+    image: h.image,
+  }));
+  const ads: FeedItem[] = sponsored.slice(0, 2).map((s) => ({
+    id: `sp-${s.id}`,
+    kind: "business",
+    title: s.title,
+    excerpt: s.description,
+    meta: s.community,
+    href: s.href,
+    image: s.imageUrl || homeImagesByKey[s.imageKey],
+  }));
+  // Interleave to avoid perceived module grouping
+  const merged: FeedItem[] = [];
+  const queues = [posts, cards, ads];
+  let i = 0;
+  while (queues.some((q) => q.length)) {
+    const q = queues[i % queues.length];
+    if (q.length) merged.push(q.shift()!);
+    i++;
+  }
+  return merged.slice(0, 8);
+}
+
+function DestaquesTimeline({ items, isLoading }: { items: FeedItem[]; isLoading?: boolean }) {
+  return (
+    <section className="home1-feed" aria-labelledby="home1-feed-title">
+      <div className="home1-section-heading">
+        <div>
+          <h2 id="home1-feed-title">Destaques</h2>
+          <p>O que vale a pena ver por aqui.</p>
+        </div>
+        <Link to={LAUNCH_URLS.community} className="home1-section-link">
+          Ver tudo
+        </Link>
+      </div>
+      {isLoading && items.length === 0 ? (
+        <div className="home1-feed-list">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="home1-feed-item is-skeleton">
+              <span className="home-skel home-skel-thumb" />
+              <span className="home-skel home-skel-line" style={{ width: "60%" }} />
+              <span className="home-skel home-skel-line" style={{ width: "90%" }} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="home1-feed-list">
+          {items.map((item) => (
+            <Link key={item.id} to={item.href} className="home1-feed-item">
+              {item.avatar ? (
+                <img className="home1-feed-avatar" src={item.avatar} alt="" loading="lazy" />
+              ) : item.image ? (
+                <img className="home1-feed-thumb" src={item.image} alt="" loading="lazy" />
+              ) : (
+                <span className="home1-feed-thumb home1-feed-thumb-placeholder" aria-hidden="true">
+                  <MapPin />
+                </span>
+              )}
+              <span className="home1-feed-copy">
+                <strong>{item.title}</strong>
+                <p>{item.excerpt}</p>
+                <small>{item.meta}</small>
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+type ExploreEntry = {
+  label: string;
+  emoji: string;
+  href: string;
+  surface?: LaunchSurfaceKey;
+};
+
+function ExploreBlock() {
+  const entries: ExploreEntry[] = [
+    { label: "Gastronomia", emoji: "🍔", href: LAUNCH_URLS.gastronomy },
+    { label: "Mobilidade", emoji: "🚗", href: withQueryParams(searchHref, { q: "mobilidade" }) },
+    { label: "Empresas", emoji: "🏪", href: LAUNCH_URLS.business },
+    { label: "Serviços", emoji: "🧑‍🔧", href: LAUNCH_URLS.services },
+    { label: "Imóveis", emoji: "🏡", href: withQueryParams(LAUNCH_URLS.classifieds, { q: "imóveis" }) },
+    { label: "Vagas", emoji: "💼", href: LAUNCH_URLS.jobs, surface: "jobs" },
+    { label: "Classificados", emoji: "📦", href: LAUNCH_URLS.classifieds },
+    { label: "Eventos", emoji: "🎭", href: LAUNCH_URLS.events, surface: "events" },
+  ];
+  const enabled = entries.filter((e) => !e.surface || isLaunchSurfaceEnabled(e.surface));
+  return (
+    <section className="home1-explore" aria-labelledby="home1-explore-title">
+      <div className="home1-section-heading">
+        <div>
+          <h2 id="home1-explore-title">Explore mais do seu bairro</h2>
+          <p>Universos especializados para descobrir com calma.</p>
+        </div>
+      </div>
+      <div className="home1-explore-grid">
+        {enabled.map((entry) => (
+          <Link key={entry.label} to={entry.href} className="home1-explore-tile">
+            <span className="home1-explore-emoji" aria-hidden="true">
+              {entry.emoji}
+            </span>
+            <span>{entry.label}</span>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+type FabAction = { label: string; href: string; icon: LucideIcon };
+
+function ComposeFab({ communityHref }: { communityHref: string }) {
+  const [open, setOpen] = useState(false);
+  const actions: FabAction[] = [
+    { label: "Publicar", href: "/novo-post", icon: MessageCircle },
+    { label: "Perguntar", href: withQueryParams("/novo-post", { tipo: "pergunta" }), icon: MessageCircle },
+    { label: "Criar alerta", href: withQueryParams("/novo-post", { tipo: "alerta" }), icon: Bell },
+    { label: "Criar evento", href: LAUNCH_URLS.events, icon: Calendar },
+    { label: "Cadastrar empresa", href: LAUNCH_URLS.business, icon: Building2 },
+    { label: "Criar anúncio", href: LAUNCH_URLS.classifieds, icon: Megaphone },
+  ];
+  void communityHref;
+
+  return (
+    <div className={`home1-fab ${open ? "is-open" : ""}`}>
+      {open ? (
+        <button
+          type="button"
+          className="home1-fab-backdrop"
+          aria-label="Fechar menu de criação"
+          onClick={() => setOpen(false)}
+        />
+      ) : null}
+      {open ? (
+        <div className="home1-fab-menu" role="menu" aria-label="Criar conteúdo">
+          {actions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <Link
+                key={action.label}
+                to={action.href}
+                role="menuitem"
+                className="home1-fab-menu-item"
+                onClick={() => setOpen(false)}
+              >
+                <span aria-hidden="true">
+                  <Icon />
+                </span>
+                {action.label}
+              </Link>
+            );
+          })}
+        </div>
+      ) : null}
+      <button
+        type="button"
+        className="home1-fab-button"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label={open ? "Fechar menu de criação" : "Abrir menu de criação"}
+        onClick={() => setOpen((v) => !v)}
+      >
+        {open ? <X aria-hidden="true" /> : <Plus aria-hidden="true" />}
+      </button>
+    </div>
+  );
+}
+
 export default function PublicCityLandingPage() {
   const appUrls = useAppUrls();
   const communityHref = useHomeCommunityHref();
@@ -850,12 +1193,9 @@ export default function PublicCityLandingPage() {
   const homeDiscoveryData = homeDiscovery.data ?? homeDiscoveryFallback;
   const activityDocuments = homeDiscoveryData.activityDocuments;
   const communityActivities = homeDiscoveryData.communityActivities;
-  const communityRanking = homeDiscoveryData.communityRanking;
-  const featuredCommunities = homeDiscoveryData.featuredCommunities;
-  const homeStats = homeDiscoveryData.stats;
-  const suggestedCommunities = homeDiscoveryData.suggestedCommunities;
   const sponsoredItems = homeDiscoveryData.sponsoredItems;
   const happeningCards = toHighlightCards(activityDocuments, communityHref);
+  const feedItems = buildFeedItems(communityActivities, happeningCards, sponsoredItems);
 
   const mobileNavItems = buildPublicHeaderNavigation({
     home: "/",
@@ -887,47 +1227,28 @@ export default function PublicCityLandingPage() {
   };
 
   return (
-    <main className="home-concept">
-      <div className="home-bg" aria-hidden="true">
-        <img src={heroImg} alt="" />
-      </div>
-      <div className="home-shell">
+    <main className="home-concept home1">
+      <div className="home-shell home1-shell">
         <HeaderNav
           navItems={enabledNavItems}
           mobileNavItems={mobileNavItems}
           sessionActions={sessionActions}
         />
-        <section className="home-hero-layout" aria-labelledby="home-title">
-          <div className="home-hero-copy">
-            <HeroBadges communityHref={communityHref} />
-            <h1 id="home-title">
-              Tudo do seu bairro,
-              <br />
-              em <span>um só lugar</span>
-            </h1>
-            <p>Conecte-se com pessoas, descubra empresas locais, participe de eventos e fortaleça sua comunidade.</p>
-            <SearchPanel />
-          </div>
-          <FeaturedCommunitiesPanel communities={featuredCommunities} />
-        </section>
 
-        <section className="home-content-grid" aria-label="Descoberta local">
-          <div className="home-main-column">
-            <div className="home-dashboard-row">
-              <HappeningPanel cards={happeningCards} isLoading={homeDiscovery.isLoading} />
-              <CommunityActivityPanel activities={communityActivities} isLoading={homeDiscovery.isLoading} />
-            </div>
-            <ModuleTiles communityHref={communityHref} />
-            <CommunitySuggestionsPanel communities={suggestedCommunities} />
-          </div>
-          <aside className="home-aside-column" aria-label="Resumo das comunidades">
-            <CommunityRankingPanel communities={communityRanking} />
-            <SponsoredPanel items={sponsoredItems} isLoading={homeDiscovery.isLoading} />
-          </aside>
-        </section>
+        <TerritoryBlock communityHref={communityHref} />
 
-        
+        <HomeSearchBar />
+
+        <TodayInNeighborhood cards={happeningCards} isLoading={homeDiscovery.isLoading} />
+
+        <QuickActions />
+
+        <DestaquesTimeline items={feedItems} isLoading={homeDiscovery.isLoading} />
+
+        <ExploreBlock />
       </div>
+
+      <ComposeFab communityHref={communityHref} />
     </main>
   );
 }
