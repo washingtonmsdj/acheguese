@@ -423,27 +423,29 @@ export default function TerritoryHomePage() {
         </section>
 
         {/* 4. AÇÕES RÁPIDAS — 4 cards em linha */}
-        <section aria-labelledby="quick-title" className="mt-6">
+        <section aria-labelledby="quick-title" className="mt-5">
           <h2
             id="quick-title"
-            className="mb-3 text-[16px] font-semibold leading-none tracking-[-0.01em]"
+            className="mb-2.5 text-[16px] font-semibold leading-none tracking-[-0.01em]"
           >
             Ações rápidas
           </h2>
-          <ul className="grid grid-cols-4 gap-2">
+          <ul className="grid grid-cols-4 gap-2.5">
             {quickActions.map((action) => {
-              const tokens = getCategoryTokens(action.category);
               const Icon = action.icon;
               return (
                 <li key={action.id} className="min-w-0">
                   <Link
                     to={action.href}
-                    className="flex min-w-0 flex-col items-center gap-1.5 overflow-hidden rounded-2xl border border-border bg-card p-2.5 text-center transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    className="group flex min-w-0 flex-col items-center gap-1.5 text-center focus-visible:outline-none"
                   >
-                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tokens.chip}`}>
-                      <Icon className="h-[18px] w-[18px]" aria-hidden="true" strokeWidth={2.25} />
+                    <span
+                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-[0_2px_6px_rgba(17,24,39,0.08)] transition-transform group-hover:scale-[1.03] group-focus-visible:ring-2 group-focus-visible:ring-primary/40"
+                      style={{ backgroundColor: action.tint }}
+                    >
+                      <Icon className="h-6 w-6 text-white" aria-hidden="true" strokeWidth={2.25} />
                     </span>
-                    <span className="w-full truncate text-[11px] font-medium leading-tight text-foreground sm:text-[12px]">
+                    <span className="w-full text-[12px] font-medium leading-tight text-foreground">
                       {action.label}
                     </span>
                   </Link>
@@ -452,6 +454,7 @@ export default function TerritoryHomePage() {
             })}
           </ul>
         </section>
+
 
 
         <section aria-labelledby="feed-title" className="mt-8">
