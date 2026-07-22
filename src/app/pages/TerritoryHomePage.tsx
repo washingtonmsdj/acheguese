@@ -307,7 +307,7 @@ export default function TerritoryHomePage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-2xl px-5 pt-5">
+      <main className="mx-auto max-w-2xl px-5 pt-2 sm:pt-3">
         {/* 2. BUSCA — CTA principal da Home */}
         <form onSubmit={handleSubmit} role="search" className="relative">
           <label className="sr-only" htmlFor="territory-search">
@@ -344,7 +344,7 @@ export default function TerritoryHomePage() {
               const Icon = card.icon;
               return (
                 <li key={card.id} className="min-w-0">
-                  <div className="flex h-full min-w-0 flex-col items-start gap-1 overflow-hidden rounded-2xl border border-border bg-card p-2.5 sm:p-3">
+                  <div className="flex h-full min-h-[112px] min-w-0 flex-col items-start gap-1 overflow-hidden rounded-2xl border border-border bg-card p-2.5 sm:min-h-[124px] sm:p-3">
                     <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg sm:h-8 sm:w-8 ${tokens.chip}`}>
                       <Icon className="h-4 w-4" aria-hidden="true" strokeWidth={2.25} />
                     </span>
@@ -394,7 +394,7 @@ export default function TerritoryHomePage() {
                 <li key={item.id} className="min-w-0">
                   <Link
                     to={item.href}
-                    className="group flex h-full min-w-0 flex-col justify-between gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-all hover:border-border/40 hover:shadow-[0_1px_3px_rgba(17,24,39,0.06)] sm:p-4"
+                    className="group flex h-full min-h-[168px] min-w-0 flex-col justify-between gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-all hover:border-border/40 hover:shadow-[0_1px_3px_rgba(17,24,39,0.06)] sm:min-h-[184px] sm:p-4"
                   >
                     <div className="flex min-w-0 flex-col gap-2">
                       <span
@@ -445,7 +445,7 @@ export default function TerritoryHomePage() {
                   <li key={item.id}>
                     <Link
                       to={item.href}
-                      className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-muted"
+                      className="flex min-h-[88px] w-full min-w-0 items-start gap-3 overflow-hidden rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-muted"
                     >
                       <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[15px] font-semibold ${tokens.chip}`}>
                         {item.avatarInitial}
@@ -482,7 +482,7 @@ export default function TerritoryHomePage() {
                   <li key={item.id}>
                     <Link
                       to={item.href}
-                      className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-muted"
+                      className="flex min-h-[88px] w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-muted"
                     >
                       <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${tokens.chip}`}>
                         <Store className="h-5 w-5" aria-hidden="true" />
@@ -512,7 +512,7 @@ export default function TerritoryHomePage() {
                   <li key={item.id}>
                     <Link
                       to={item.href}
-                      className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-muted"
+                      className="flex min-h-[88px] w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-muted"
                     >
                       <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${tokens.chip}`}>
                         <Calendar className="h-5 w-5" aria-hidden="true" />
@@ -541,7 +541,7 @@ export default function TerritoryHomePage() {
                 <li key={item.id}>
                   <Link
                     to={item.href}
-                    className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-muted"
+                    className="flex min-h-[88px] w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-muted"
                   >
                     <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${tokens.chip}`}>
                       <BadgeCheck className="h-5 w-5" aria-hidden="true" />
