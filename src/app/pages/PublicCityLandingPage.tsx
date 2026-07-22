@@ -12,6 +12,7 @@ import {
   MapPin,
   Megaphone,
   MessageCircle,
+  Mic,
   MoreHorizontal,
   Navigation,
   Plus,
@@ -25,6 +26,8 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
+import { useRef } from "react";
+import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchScope";
 import { LAUNCH_CITY_PATH, LAUNCH_URLS } from "@/config/territory";
 import {
