@@ -598,7 +598,7 @@ export default function TerritoryHomePage() {
             Explore o que você precisa
           </h2>
 
-          <ul className="grid grid-cols-6 gap-2">
+          <ul className="grid grid-cols-3 gap-2 sm:grid-cols-6">
             {explore.map((vertical) => {
               const tokens = getCategoryTokens(vertical.category);
               const Icon = vertical.icon;
