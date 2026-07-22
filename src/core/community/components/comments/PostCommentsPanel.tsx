@@ -53,7 +53,7 @@ export function PostCommentsPanel({
   postAuthorId,
   currentUserId,
   canComment = true,
-  commentBlockedMessage = "Verifique sua residencia para comentar nesta comunidade.",
+  commentBlockedMessage = "Confirme seu bairro pra responder por aqui.",
   scrollable = false,
 }: PostCommentsPanelProps) {
   const { user, activeProfile } = useSessionContext();
@@ -149,8 +149,16 @@ export function PostCommentsPanel({
       <div className="flex min-h-0 flex-col" data-post-comments-panel="true">
         <div className="border-b border-white/10 px-4 py-3">
           <h3 className="text-sm font-semibold text-white">
-            Comentarios ({countComments(comments)})
+            Conversa no post
           </h3>
+          <p className="mt-0.5 text-xs text-white/60">
+            {(() => {
+              const n = countComments(comments);
+              if (n === 0) return "Ainda ninguém comentou · seja o primeiro";
+              if (n === 1) return "1 vizinho comentou";
+              return `${n} vizinhos comentaram`;
+            })()}
+          </p>
         </div>
 
         {scrollable ? (

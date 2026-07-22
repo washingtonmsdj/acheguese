@@ -77,7 +77,7 @@ export function PostDetailModal({
   onReport,
   onTagClick,
   canComment = true,
-  commentBlockedMessage = "Verifique sua residencia para comentar nesta comunidade.",
+  commentBlockedMessage = "Confirme seu bairro pra responder por aqui.",
 }: PostDetailModalProps) {
   const { state, isProcessing } = usePostInteractions(post.id, {
     isLiked: post.is_liked || false,
@@ -99,10 +99,10 @@ export function PostDetailModal({
       >
         <DialogHeader className="border-b border-white/10 p-4">
           <DialogTitle style={INLINE_STYLES.textPrimary}>
-            Detalhes da publicacao
+            Post do bairro
           </DialogTitle>
           <DialogDescription className="sr-only">
-            Publicacao completa e comentarios da comunidade
+            Publicação completa e conversa dos vizinhos.
           </DialogDescription>
         </DialogHeader>
 
