@@ -71,7 +71,45 @@
     --sidebar-accent-foreground: 0 0% 85%;
     --sidebar-border: 0 0% 20%;
     --sidebar-ring: 171 77% 56%;
+
+    /* ==========================================================
+     * Semantic content category tokens (SSOT visual do Achegue-se)
+     * Cada categoria de conteúdo tem uma cor própria e padronizada.
+     * Uso: text-[hsl(var(--category-alert))] | bg-[hsl(var(--category-alert)/0.12)]
+     * ou via helpers em src/shared/design-system/contentCategories.ts
+     * ========================================================== */
+    --category-alert: 0 78% 58%;              /* Alertas de segurança / urgência */
+    --category-alert-foreground: 0 0% 100%;
+    --category-event: 322 78% 58%;            /* Eventos, encontros */
+    --category-event-foreground: 0 0% 100%;
+    --category-gastronomy: 24 92% 55%;        /* Gastronomia, restaurantes */
+    --category-gastronomy-foreground: 0 0% 100%;
+    --category-mobility: 234 76% 62%;         /* Mobilidade, transporte */
+    --category-mobility-foreground: 0 0% 100%;
+    --category-discussion: 217 91% 60%;       /* Discussões, conversas */
+    --category-discussion-foreground: 0 0% 100%;
+    --category-business: 171 77% 45%;         /* Empresas, comércio local */
+    --category-business-foreground: 0 0% 100%;
+    --category-civic: 32 95% 52%;             /* Zeladoria urbana / relato cívico */
+    --category-civic-foreground: 0 0% 100%;
+    --category-help: 84 68% 45%;              /* Favor, empréstimo, ajuda */
+    --category-help-foreground: 0 0% 100%;
+    --category-classified: 43 92% 52%;        /* Classificados */
+    --category-classified-foreground: 0 0% 12%;
+    --category-recommendation: 160 84% 39%;   /* Recomendações positivas */
+    --category-recommendation-foreground: 0 0% 100%;
+    --category-question: 45 92% 55%;          /* Perguntas */
+    --category-question-foreground: 0 0% 12%;
+    --category-poll: 262 74% 62%;             /* Enquetes */
+    --category-poll-foreground: 0 0% 100%;
+    --category-found: 190 80% 48%;            /* Achados e perdidos */
+    --category-found-foreground: 0 0% 100%;
+    --category-giveaway: 14 84% 58%;          /* Desapego */
+    --category-giveaway-foreground: 0 0% 100%;
+    --category-neutral: 220 9% 55%;           /* Post genérico / neutro */
+    --category-neutral-foreground: 0 0% 100%;
   }
+
 
   .light {
     --background: 0 0% 100%;
@@ -108,7 +146,40 @@
     --sidebar-accent-foreground: 0 0% 9%;
     --sidebar-border: 0 0% 90%;
     --sidebar-ring: 171 77% 40%;
+
+    /* Semantic content category tokens - light mode */
+    --category-alert: 0 72% 48%;
+    --category-alert-foreground: 0 0% 100%;
+    --category-event: 322 68% 48%;
+    --category-event-foreground: 0 0% 100%;
+    --category-gastronomy: 24 88% 48%;
+    --category-gastronomy-foreground: 0 0% 100%;
+    --category-mobility: 234 68% 52%;
+    --category-mobility-foreground: 0 0% 100%;
+    --category-discussion: 217 85% 50%;
+    --category-discussion-foreground: 0 0% 100%;
+    --category-business: 171 77% 34%;
+    --category-business-foreground: 0 0% 100%;
+    --category-civic: 32 92% 44%;
+    --category-civic-foreground: 0 0% 100%;
+    --category-help: 84 62% 36%;
+    --category-help-foreground: 0 0% 100%;
+    --category-classified: 43 88% 46%;
+    --category-classified-foreground: 0 0% 12%;
+    --category-recommendation: 160 78% 32%;
+    --category-recommendation-foreground: 0 0% 100%;
+    --category-question: 45 88% 48%;
+    --category-question-foreground: 0 0% 12%;
+    --category-poll: 262 68% 54%;
+    --category-poll-foreground: 0 0% 100%;
+    --category-found: 190 76% 40%;
+    --category-found-foreground: 0 0% 100%;
+    --category-giveaway: 14 78% 50%;
+    --category-giveaway-foreground: 0 0% 100%;
+    --category-neutral: 220 9% 45%;
+    --category-neutral-foreground: 0 0% 100%;
   }
+
 }
 
 @layer base {

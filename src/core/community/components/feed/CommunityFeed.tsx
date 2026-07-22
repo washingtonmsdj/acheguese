@@ -31,6 +31,10 @@ import {
 } from "@/core/community/state/newPostHighlight";
 import { CommunityComposerEntry } from "../composer/CommunityComposerEntry";
 import { PostCardSkeleton } from "../PostCardSkeleton";
+import { TerritoryFeedHeader } from "./TerritoryFeedHeader";
+import { EmptyState } from "@/shared/components/EmptyState";
+import { MessageCirclePlus } from "lucide-react";
+
 import { SPACING } from "../styles/communityDesignSystem";
 import { getRecordValue } from "@/shared/utils/recordLookup";
 
@@ -288,10 +292,16 @@ export function CommunityFeed({
 
   return (
     <div className="space-y-4">
+      <TerritoryFeedHeader
+        territoryName={communityName}
+        territoryType={locationScope === "city" ? "cidade" : "bairro"}
+      />
       <CommunityComposerEntry
         communityName={communityName}
         onOpenCreatePost={onOpenCreatePost}
       />
+
+
 
       <div className="rounded-2xl border border-white/10 bg-[#0f171a] p-3 shadow-xl shadow-black/10 md:p-4">
         {contentMode === "discussions" ? (
@@ -370,30 +380,44 @@ export function CommunityFeed({
       </div>
 
       <div className="mx-auto w-full max-w-2xl">
-        <UnifiedFeedWithMessages
-          civicReports={[]}
-          communityPosts={unifiedPosts}
-          currentUserId={currentUserId}
-          communityId={communityId}
-          sortCriteria={sortCriteria}
-          filterType={filterType}
-          userLocation={{
-            location_id: activeProfile?.locationId ?? null,
-          }}
-          onLike={handleLike}
-          onComment={handleComment}
-          onShare={handleShare}
-          onSave={handleSave}
-          onReport={handleReport}
-          onUpvote={handleUpvoteReport}
-          onPostClick={onPostClick}
-          onDelete={onDeletePost}
-          onEdit={onEditPost}
-          onTagClick={handleTagClick}
-          canSendMessage={canSendMessage}
-          onBlockedSendMessage={() => onBlockedAction?.("send_message")}
-        />
+        {unifiedPosts.length === 0 ? (
+          <EmptyState
+            icon={MessageCirclePlus}
+            title={`Ainda sem publicações em ${communityName}.`}
+            description="Seja o primeiro morador a compartilhar algo por aqui — uma dica, um alerta ou uma pergunta."
+            action={
+              onOpenCreatePost
+                ? { label: "Publicar no bairro", onClick: onOpenCreatePost }
+                : undefined
+            }
+          />
+        ) : (
+          <UnifiedFeedWithMessages
+            civicReports={[]}
+            communityPosts={unifiedPosts}
+            currentUserId={currentUserId}
+            communityId={communityId}
+            sortCriteria={sortCriteria}
+            filterType={filterType}
+            userLocation={{
+              location_id: activeProfile?.locationId ?? null,
+            }}
+            onLike={handleLike}
+            onComment={handleComment}
+            onShare={handleShare}
+            onSave={handleSave}
+            onReport={handleReport}
+            onUpvote={handleUpvoteReport}
+            onPostClick={onPostClick}
+            onDelete={onDeletePost}
+            onEdit={onEditPost}
+            onTagClick={handleTagClick}
+            canSendMessage={canSendMessage}
+            onBlockedSendMessage={() => onBlockedAction?.("send_message")}
+          />
+        )}
       </div>
+
 
       <InfiniteScrollTrigger
         onLoadMore={loadMore}

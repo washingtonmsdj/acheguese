@@ -71,7 +71,69 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-      },
+        category: {
+          alert: {
+            DEFAULT: "hsl(var(--category-alert))",
+            foreground: "hsl(var(--category-alert-foreground))",
+          },
+          event: {
+            DEFAULT: "hsl(var(--category-event))",
+            foreground: "hsl(var(--category-event-foreground))",
+          },
+          gastronomy: {
+            DEFAULT: "hsl(var(--category-gastronomy))",
+            foreground: "hsl(var(--category-gastronomy-foreground))",
+          },
+          mobility: {
+            DEFAULT: "hsl(var(--category-mobility))",
+            foreground: "hsl(var(--category-mobility-foreground))",
+          },
+          discussion: {
+            DEFAULT: "hsl(var(--category-discussion))",
+            foreground: "hsl(var(--category-discussion-foreground))",
+          },
+          business: {
+            DEFAULT: "hsl(var(--category-business))",
+            foreground: "hsl(var(--category-business-foreground))",
+          },
+          civic: {
+            DEFAULT: "hsl(var(--category-civic))",
+            foreground: "hsl(var(--category-civic-foreground))",
+          },
+          help: {
+            DEFAULT: "hsl(var(--category-help))",
+            foreground: "hsl(var(--category-help-foreground))",
+          },
+          classified: {
+            DEFAULT: "hsl(var(--category-classified))",
+            foreground: "hsl(var(--category-classified-foreground))",
+          },
+          recommendation: {
+            DEFAULT: "hsl(var(--category-recommendation))",
+            foreground: "hsl(var(--category-recommendation-foreground))",
+          },
+          question: {
+            DEFAULT: "hsl(var(--category-question))",
+            foreground: "hsl(var(--category-question-foreground))",
+          },
+          poll: {
+            DEFAULT: "hsl(var(--category-poll))",
+            foreground: "hsl(var(--category-poll-foreground))",
+          },
+          found: {
+            DEFAULT: "hsl(var(--category-found))",
+            foreground: "hsl(var(--category-found-foreground))",
+          },
+          giveaway: {
+            DEFAULT: "hsl(var(--category-giveaway))",
+            foreground: "hsl(var(--category-giveaway-foreground))",
+          },
+          neutral: {
+            DEFAULT: "hsl(var(--category-neutral))",
+            foreground: "hsl(var(--category-neutral-foreground))",
+          },
+        },
+
       borderRadius: {
         lg: "var(--radius-lg)",
         md: "var(--radius-md)",
