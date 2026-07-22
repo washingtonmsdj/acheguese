@@ -99,19 +99,19 @@ export default function SplashPage() {
           className="space-y-3"
         >
           <Button
-            onClick={() => navigate(cityPath)}
+            onClick={() => navigate(communityHref)}
             className="h-12 w-full gap-2 rounded-2xl text-base font-semibold shadow-lg shadow-primary/20"
             size="lg"
           >
-            Ver cidade
+            Abrir o bairro
             <ArrowRight className="h-5 w-5" />
           </Button>
           <Button
-            onClick={() => navigate(communityHref)}
+            onClick={() => navigate(cityPath)}
             variant="outline"
             className="h-12 w-full rounded-2xl text-base font-semibold"
           >
-            Ver meu bairro
+            Explorar a cidade
           </Button>
           <p className="text-center text-[10px] text-muted-foreground">
             Dados exibidos a partir do cadastro municipal e módulos ativos.
