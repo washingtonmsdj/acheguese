@@ -212,7 +212,7 @@ export default function TerritoryHomePage() {
             type="button"
             onClick={() => navigate("/onboarding")}
             className="flex min-w-0 items-center gap-2 rounded-full py-1 pr-2 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-            aria-label={`Trocar território. Atual: ${territoryName}`}
+            aria-label={`Mudar de bairro. Você está na ${territoryName}.`}
           >
             <MapPin className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
             <span className="min-w-0">
@@ -232,8 +232,8 @@ export default function TerritoryHomePage() {
             to={user ? "/notificacoes" : "/login"}
             aria-label={
               user && unreadCount > 0
-                ? `Notificações, ${unreadCount} não lidas`
-                : "Notificações"
+                ? `${unreadCount} novidades para você`
+                : "Ver novidades"
             }
             className="relative flex h-10 w-10 items-center justify-center rounded-full text-foreground/80 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
@@ -244,6 +244,7 @@ export default function TerritoryHomePage() {
               </span>
             ) : null}
           </Link>
+
         </div>
       </header>
 
