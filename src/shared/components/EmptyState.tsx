@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { Inbox } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils/cn";
 
 export interface EmptyStateAction {
   label: string;
