@@ -212,6 +212,15 @@ export default function TerritoryHomePage() {
     },
   ];
 
+  const quickActions = [
+    { id: "q1", label: "Buscar", icon: Search, href: LAUNCH_URLS.search, category: "neutral" as ContentCategoryKey },
+    { id: "q2", label: "Perto de mim", icon: MapPin, href: LAUNCH_URLS.map ?? LAUNCH_URLS.search, category: "mobility" as ContentCategoryKey },
+    { id: "q3", label: "Comer agora", icon: UtensilsCrossed, href: LAUNCH_URLS.gastronomy, category: "gastronomy" as ContentCategoryKey },
+    { id: "q4", label: "Mobilidade", icon: Car, href: LAUNCH_URLS.map ?? LAUNCH_URLS.search, category: "mobility" as ContentCategoryKey },
+  ];
+
+
+
   const today: TodayCard[] = [
     {
       id: "t1",
