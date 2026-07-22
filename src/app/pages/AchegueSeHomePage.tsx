@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   Check,
-  Heart,
   Loader2,
   MapPin,
   Navigation,
   X,
 } from "lucide-react";
+
+const OFFICIAL_LOGO_SRC = "/images/logo-icon.png";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { TERRITORY_CONFIG, LAUNCH_CITY_PATH } from "@/config/territory";
