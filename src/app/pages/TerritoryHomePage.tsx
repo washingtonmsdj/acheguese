@@ -459,17 +459,19 @@ export default function TerritoryHomePage() {
 
 
 
-        <section aria-labelledby="feed-title" className="mt-5">
-          <div className="mb-2.5 flex items-baseline justify-between">
-            <h2
-              id="feed-title"
-              className="text-[16px] font-semibold leading-none tracking-[-0.01em]"
-            >
+        <section
+          aria-labelledby="feed-title"
+          className="th-section"
+          data-testid="feed-section"
+        >
+          <div className="th-section-header">
+            <h2 id="feed-title" className="th-section-title">
               Acontecendo no bairro
             </h2>
             <Link
               to={LAUNCH_URLS.community}
-              className="inline-flex items-center gap-0.5 text-[13px] font-medium text-primary transition-opacity hover:opacity-80"
+              className="th-section-link"
+              data-testid="feed-see-all"
             >
               Ver todos
               <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -483,18 +485,19 @@ export default function TerritoryHomePage() {
                   <li key={item.id}>
                     <Link
                       to={item.href}
-                      className="flex min-h-[76px] w-full min-w-0 items-start gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-colors hover:bg-muted"
+                      className="th-card th-card--top"
+                      data-testid="feed-card-post"
                     >
                       <span
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[15px] font-semibold"
+                        className="th-card-icon text-[15px] font-semibold"
                         style={{ backgroundColor: "#EDE9FE", color: "#6D28D9" }}
                       >
                         {item.avatarInitial}
                       </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex min-w-0 items-center gap-2 text-[12px]">
+                      <div className="th-card-body">
+                        <div className="th-card-meta">
                           <span
-                            className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-semibold"
+                            className="th-badge"
                             style={{ backgroundColor: "#EDE9FE", color: "#6D28D9" }}
                           >
                             Post
@@ -504,7 +507,7 @@ export default function TerritoryHomePage() {
                           </span>
                           <span className="shrink-0 text-muted-foreground">· {item.time}</span>
                         </div>
-                        <p className="mt-1 line-clamp-2 text-[15px] font-semibold leading-snug text-foreground">
+                        <p className="th-card-title mt-1 line-clamp-2">
                           {item.title}
                         </p>
                         <p className="mt-1 text-[12px] text-muted-foreground">
@@ -525,34 +528,33 @@ export default function TerritoryHomePage() {
                   <li key={item.id}>
                     <Link
                       to={item.href}
-                      className="flex min-h-[76px] w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-colors hover:bg-muted"
+                      className="th-card"
+                      data-testid="feed-card-empresa"
                     >
                       <span
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+                        className="th-card-icon"
                         style={{ backgroundColor: "#DCFCE7", color: "#15803D" }}
                       >
                         <Store className="h-5 w-5" aria-hidden="true" />
                       </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex min-w-0 items-center gap-2 text-[12px]">
+                      <div className="th-card-body">
+                        <div className="th-card-meta">
                           <span
-                            className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-semibold"
+                            className="th-badge"
                             style={{ backgroundColor: "#DCFCE7", color: "#15803D" }}
                           >
                             Empresa
                           </span>
-                          <span className="truncate text-[15px] font-semibold text-foreground">
-                            {item.title}
-                          </span>
+                          <span className="th-card-title truncate">{item.title}</span>
                           <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-[#2563EB]" aria-hidden="true" />
                         </div>
-                        <p className="mt-1 truncate text-[13px] text-muted-foreground">
+                        <p className="th-card-sub truncate">
                           <span style={{ color: "#15803D" }}>{item.status}</span> · {item.distance} · ★ {item.rating}
                         </p>
                       </div>
                       <span
                         aria-hidden="true"
-                        className="h-12 w-14 shrink-0 rounded-xl"
+                        className="th-card-thumb"
                         style={{ background: "linear-gradient(135deg,#FDE68A,#F59E0B)" }}
                       />
                     </Link>
@@ -565,33 +567,32 @@ export default function TerritoryHomePage() {
                   <li key={item.id}>
                     <Link
                       to={item.href}
-                      className="flex min-h-[76px] w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-colors hover:bg-muted"
+                      className="th-card"
+                      data-testid="feed-card-evento"
                     >
                       <span
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+                        className="th-card-icon"
                         style={{ backgroundColor: "#FFEDD5", color: "#C2410C" }}
                       >
                         <Calendar className="h-5 w-5" aria-hidden="true" />
                       </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex min-w-0 items-center gap-2 text-[12px]">
+                      <div className="th-card-body">
+                        <div className="th-card-meta">
                           <span
-                            className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-semibold"
+                            className="th-badge"
                             style={{ backgroundColor: "#FFEDD5", color: "#C2410C" }}
                           >
                             Evento
                           </span>
-                          <span className="truncate text-[15px] font-semibold text-foreground">
-                            {item.title}
-                          </span>
+                          <span className="th-card-title truncate">{item.title}</span>
                         </div>
-                        <p className="mt-1 truncate text-[13px] text-muted-foreground">
+                        <p className="th-card-sub truncate">
                           {item.place} · {item.time}
                         </p>
                       </div>
                       <span
                         aria-hidden="true"
-                        className="h-12 w-14 shrink-0 rounded-xl"
+                        className="th-card-thumb"
                         style={{ background: "linear-gradient(135deg,#FED7AA,#FB923C)" }}
                       />
                     </Link>
@@ -604,31 +605,30 @@ export default function TerritoryHomePage() {
                 <li key={item.id}>
                   <Link
                     to={item.href}
-                    className="flex min-h-[76px] w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-colors hover:bg-muted"
+                    className="th-card"
+                    data-testid="feed-card-oferta"
                   >
                     <span
-                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+                      className="th-card-icon"
                       style={{ backgroundColor: "#FCE7F3", color: "#BE185D" }}
                     >
                       <BadgeCheck className="h-5 w-5" aria-hidden="true" />
                     </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex min-w-0 items-center gap-2 text-[12px]">
+                    <div className="th-card-body">
+                      <div className="th-card-meta">
                         <span
-                          className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-semibold"
+                          className="th-badge"
                           style={{ backgroundColor: "#FCE7F3", color: "#BE185D" }}
                         >
                           Oferta
                         </span>
-                        <span className="truncate text-[15px] font-semibold text-foreground">
-                          {item.title}
-                        </span>
+                        <span className="th-card-title truncate">{item.title}</span>
                       </div>
-                      <p className="mt-1 line-clamp-2 break-words text-[13px] text-muted-foreground">{item.detail}</p>
+                      <p className="th-card-sub line-clamp-2 break-words">{item.detail}</p>
                     </div>
                     <span
                       aria-hidden="true"
-                      className="h-12 w-14 shrink-0 rounded-xl"
+                      className="th-card-thumb"
                       style={{ background: "linear-gradient(135deg,#FBCFE8,#EC4899)" }}
                     />
                   </Link>
