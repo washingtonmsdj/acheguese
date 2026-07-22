@@ -377,7 +377,7 @@ export function CommunityFeed({
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="w-full">
         {unifiedPosts.length === 0 ? (
           <EmptyState
             icon={MessageCirclePlus}
