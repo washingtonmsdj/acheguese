@@ -414,7 +414,7 @@ export function AppLayoutRoutes() {
          * "/" redireciona para a landing da cidade ativa (hoje: /ba/salvador),
          * evitando conteudo duplicado e retrabalho quando novas cidades entrarem.
          */}
-        <Route path="/" element={<P.AchegueSeHomePage />} />
+        <Route path="/" element={<RootRouteEntry />} />
         <Route path="/inicio" element={<P.NationalHubPage />} />
 
         {/* Rotas de Billing e Assinaturas */}
