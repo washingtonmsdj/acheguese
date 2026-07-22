@@ -212,11 +212,17 @@ export default function TerritoryHomePage() {
     },
   ];
 
-  const quickActions = [
-    { id: "q1", label: "Buscar", icon: Search, href: LAUNCH_URLS.search, category: "neutral" as ContentCategoryKey },
-    { id: "q2", label: "Perto de mim", icon: MapPin, href: LAUNCH_URLS.map ?? LAUNCH_URLS.search, category: "mobility" as ContentCategoryKey },
-    { id: "q3", label: "Comer agora", icon: UtensilsCrossed, href: LAUNCH_URLS.gastronomy, category: "gastronomy" as ContentCategoryKey },
-    { id: "q4", label: "Mobilidade", icon: Car, href: LAUNCH_URLS.map ?? LAUNCH_URLS.search, category: "mobility" as ContentCategoryKey },
+  const quickActions: {
+    id: string;
+    label: string;
+    icon: LucideIcon;
+    href: string;
+    tint: string;
+  }[] = [
+    { id: "q1", label: "Buscar", icon: Search, href: LAUNCH_URLS.search, tint: "#18B37E" },
+    { id: "q2", label: "Perto de mim", icon: MapPin, href: LAUNCH_URLS.map ?? LAUNCH_URLS.search, tint: "#7C3AED" },
+    { id: "q3", label: "Comer agora", icon: UtensilsCrossed, href: LAUNCH_URLS.gastronomy, tint: "#F97316" },
+    { id: "q4", label: "Mobilidade", icon: Car, href: LAUNCH_URLS.map ?? LAUNCH_URLS.search, tint: "#2563EB" },
   ];
 
 
@@ -373,8 +379,8 @@ export default function TerritoryHomePage() {
         </form>
 
         {/* 3. AGORA — carrossel horizontal compacto */}
-        <section aria-labelledby="pulse-title" className="mt-7">
-          <div className="mb-3">
+        <section aria-labelledby="pulse-title" className="mt-5">
+          <div className="mb-2.5">
             <h2
               id="pulse-title"
               className="text-[16px] font-semibold leading-none tracking-[-0.01em]"
@@ -385,7 +391,7 @@ export default function TerritoryHomePage() {
 
           <div className="-mx-5">
             <ul
-              className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="flex snap-x snap-mandatory gap-2.5 overflow-x-auto px-5 pb-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               role="list"
             >
               {pulse.map((card) => {
@@ -395,17 +401,17 @@ export default function TerritoryHomePage() {
                   <li key={card.id} className="snap-start shrink-0">
                     <Link
                       to={card.href}
-                      className="group flex h-full min-h-[88px] w-[240px] flex-col justify-between gap-1.5 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-all hover:border-border/40 hover:shadow-[0_1px_3px_rgba(17,24,39,0.06)] sm:w-[260px]"
+                      className="group flex h-full min-h-[72px] w-[220px] flex-col justify-between gap-1 overflow-hidden rounded-2xl border border-border bg-card p-2.5 transition-all hover:border-border/40 hover:shadow-[0_1px_3px_rgba(17,24,39,0.06)] sm:w-[240px]"
                     >
-                      <div className="flex min-w-0 items-center gap-2">
-                        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${tokens.chip}`}>
-                          <Icon className="h-3.5 w-3.5" aria-hidden="true" strokeWidth={2.25} />
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${tokens.chip}`}>
+                          <Icon className="h-3 w-3" aria-hidden="true" strokeWidth={2.25} />
                         </span>
                         <span className={`truncate rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
                           {card.kind}
                         </span>
                       </div>
-                      <p className="line-clamp-2 break-words text-[13px] font-semibold leading-snug tracking-[-0.005em] text-foreground">
+                      <p className="line-clamp-2 break-words text-[12.5px] font-semibold leading-snug tracking-[-0.005em] text-foreground">
                         {card.title}
                       </p>
                     </Link>
@@ -416,28 +422,31 @@ export default function TerritoryHomePage() {
           </div>
         </section>
 
+
         {/* 4. AÇÕES RÁPIDAS — 4 cards em linha */}
-        <section aria-labelledby="quick-title" className="mt-6">
+        <section aria-labelledby="quick-title" className="mt-5">
           <h2
             id="quick-title"
-            className="mb-3 text-[16px] font-semibold leading-none tracking-[-0.01em]"
+            className="mb-2.5 text-[16px] font-semibold leading-none tracking-[-0.01em]"
           >
             Ações rápidas
           </h2>
-          <ul className="grid grid-cols-4 gap-2">
+          <ul className="grid grid-cols-4 gap-2.5">
             {quickActions.map((action) => {
-              const tokens = getCategoryTokens(action.category);
               const Icon = action.icon;
               return (
                 <li key={action.id} className="min-w-0">
                   <Link
                     to={action.href}
-                    className="flex min-w-0 flex-col items-center gap-1.5 overflow-hidden rounded-2xl border border-border bg-card p-2.5 text-center transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    className="group flex min-w-0 flex-col items-center gap-1.5 text-center focus-visible:outline-none"
                   >
-                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tokens.chip}`}>
-                      <Icon className="h-[18px] w-[18px]" aria-hidden="true" strokeWidth={2.25} />
+                    <span
+                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-[0_2px_6px_rgba(17,24,39,0.08)] transition-transform group-hover:scale-[1.03] group-focus-visible:ring-2 group-focus-visible:ring-primary/40"
+                      style={{ backgroundColor: action.tint }}
+                    >
+                      <Icon className="h-6 w-6 text-white" aria-hidden="true" strokeWidth={2.25} />
                     </span>
-                    <span className="w-full truncate text-[11px] font-medium leading-tight text-foreground sm:text-[12px]">
+                    <span className="w-full text-[12px] font-medium leading-tight text-foreground">
                       {action.label}
                     </span>
                   </Link>
@@ -448,7 +457,8 @@ export default function TerritoryHomePage() {
         </section>
 
 
-        <section aria-labelledby="feed-title" className="mt-8">
+
+        <section aria-labelledby="feed-title" className="mt-6">
           <div className="mb-3 flex items-baseline justify-between">
             <h2
               id="feed-title"
@@ -592,7 +602,7 @@ export default function TerritoryHomePage() {
         </section>
 
         {/* 6. EXPLORE — categorias (sem aparência de banner) */}
-        <section aria-labelledby="explore-title" className="mt-8">
+        <section aria-labelledby="explore-title" className="mt-6">
           <h2
             id="explore-title"
             className="mb-3 text-[22px] font-semibold leading-tight tracking-[-0.015em]"
@@ -624,7 +634,7 @@ export default function TerritoryHomePage() {
         </section>
 
         {/* 7. HOJE — movido para o final: aprofundamento editorial do dia */}
-        <section aria-labelledby="today-title" className="mt-8">
+        <section aria-labelledby="today-title" className="mt-6">
           <div className="mb-3 flex items-baseline justify-between">
             <h2
               id="today-title"
