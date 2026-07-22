@@ -307,7 +307,7 @@ export default function TerritoryHomePage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-2xl px-5 pt-5">
+      <main className="mx-auto max-w-2xl px-5 pt-2 sm:pt-3">
         {/* 2. BUSCA — CTA principal da Home */}
         <form onSubmit={handleSubmit} role="search" className="relative">
           <label className="sr-only" htmlFor="territory-search">
