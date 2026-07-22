@@ -681,9 +681,10 @@ export default function TerritoryHomePage() {
             </h2>
             <Link
               to={LAUNCH_URLS.community}
-              className="text-[12px] font-medium text-primary transition-opacity hover:opacity-80"
+              className="th-section-link"
             >
-              Ver tudo
+              Ver todos
+              <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
           </div>
 
