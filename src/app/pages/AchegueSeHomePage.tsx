@@ -334,9 +334,9 @@ export default function AchegueSeHomePage() {
       <main
         id="main-content"
         className={cn(
-          "relative mx-auto flex w-full max-w-[420px] flex-1 flex-col",
+          "relative mx-auto flex w-full max-w-[420px] flex-1 flex-col justify-center",
           "px-5 sm:px-6",
-          "pt-[max(2.5rem,env(safe-area-inset-top))]",
+          "pt-[max(2rem,env(safe-area-inset-top))]",
           "pb-[max(1.5rem,env(safe-area-inset-bottom))]",
         )}
       >
@@ -511,10 +511,7 @@ export default function AchegueSeHomePage() {
           </Button>
         </section>
 
-        {/* Spacer pushes footer to bottom on tall screens without over-stretching */}
-        <div className="flex-1 min-h-6" />
-
-        <footer className="pt-6 text-center text-[11px] leading-relaxed text-muted-foreground/70">
+        <footer className="mt-10 text-center text-[11px] leading-relaxed text-muted-foreground/70">
           {TERRITORY_CONFIG.launch.name}, {TERRITORY_CONFIG.launch.state.toUpperCase()}
           {" · "}comunidade hiperlocal
         </footer>
