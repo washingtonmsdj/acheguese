@@ -451,14 +451,14 @@ export default function TerritoryHomePage() {
                         {item.avatarInitial}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 text-[12px]">
-                          <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
+                        <div className="flex min-w-0 items-center gap-2 text-[12px]">
+                          <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
                             Post
                           </span>
                           <span className="truncate font-medium text-foreground">
                             {item.author}
                           </span>
-                          <span className="text-muted-foreground">· {item.time}</span>
+                          <span className="shrink-0 text-muted-foreground">· {item.time}</span>
                         </div>
                         <p className="mt-1 line-clamp-2 text-[15px] font-medium leading-snug text-foreground">
                           {item.title}
