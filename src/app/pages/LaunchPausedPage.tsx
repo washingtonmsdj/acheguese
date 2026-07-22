@@ -48,7 +48,7 @@ export default function LaunchPausedPage({ moduleName = "Módulo" }: LaunchPause
 
         <section>
           <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-muted-foreground">
-            Áreas abertas agora
+            Continue explorando o bairro
           </h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {activeLinks.map((item) => (
