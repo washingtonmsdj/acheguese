@@ -30,13 +30,20 @@ export function CommunityHeader({ onOpenCreatePost }: CommunityHeaderProps) {
     useCommunityFilters();
 
   return (
-    <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-[10px] border-b">
+    <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-[10px] border-b border-border/60">
       <div className="w-full py-3 md:py-4 px-4">
         {/* Mobile Layout: Vertical stacking */}
         <div className="flex flex-col gap-3 md:hidden">
-          {/* Título e botão de create post */}
+          {/* Título territorial + CTA única */}
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold">Comunidade</h1>
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                Feed do bairro
+              </p>
+              <h1 className="truncate text-lg font-semibold text-foreground">
+                O que rola no bairro
+              </h1>
+            </div>
             <CreatePostButton onOpenModal={onOpenCreatePost} />
           </div>
 
@@ -55,9 +62,15 @@ export function CommunityHeader({ onOpenCreatePost }: CommunityHeaderProps) {
 
         {/* Desktop Layout: Horizontal */}
         <div className="hidden md:flex md:items-center md:justify-between">
-          {/* Título e botão de create post */}
           <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold">Comunidade</h1>
+            <div>
+              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                Feed do bairro
+              </p>
+              <h1 className="text-2xl font-semibold text-foreground">
+                O que rola no bairro
+              </h1>
+            </div>
             <CreatePostButton onOpenModal={onOpenCreatePost} />
           </div>
 
@@ -74,12 +87,10 @@ export function CommunityHeader({ onOpenCreatePost }: CommunityHeaderProps) {
           </div>
         </div>
 
-        {/* Tag filter (se active) */}
+        {/* Tag ativa */}
         {immediateFilters.tagFilter && (
           <div className="mt-3 flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              Filtrando por:
-            </span>
+            <span className="text-sm text-muted-foreground">Vendo só</span>
             <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary">
               #{immediateFilters.tagFilter}
             </span>
@@ -87,7 +98,7 @@ export function CommunityHeader({ onOpenCreatePost }: CommunityHeaderProps) {
         )}
       </div>
 
-      {/* Botões de Ação Rápida - Formato Pílula com Gradientes */}
+      {/* Ações rápidas do bairro */}
       <QuickActionButtons />
     </div>
   );
