@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -133,7 +134,7 @@ export default {
             foreground: "hsl(var(--category-neutral-foreground))",
           },
         },
-
+      },
       borderRadius: {
         lg: "var(--radius-lg)",
         md: "var(--radius-md)",
@@ -164,6 +165,5 @@ export default {
       },
     },
   },
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  plugins: [require("tailwindcss-animate")],
-} satisfies Config;
+  plugins: [tailwindcssAnimate],
+} as Config;
