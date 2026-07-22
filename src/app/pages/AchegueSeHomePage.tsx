@@ -188,19 +188,21 @@ export default function AchegueSeHomePage() {
             type="button"
             size="lg"
             onClick={handleUseLocation}
-            disabled={geo.loading}
+            disabled={geo.loading || resolvingCity}
             className="h-14 w-full gap-2 rounded-2xl text-base font-semibold shadow-lg shadow-primary/25"
           >
-            {geo.loading ? (
+            {geo.loading || resolvingCity ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
               <Navigation className="h-5 w-5" />
             )}
-            Usar minha localização
+            {resolvingCity ? "Identificando cidade..." : "Usar minha localização"}
           </Button>
 
-          {geo.error ? (
-            <p className="text-center text-xs text-destructive">{geo.error}</p>
+          {geo.error || reverseError ? (
+            <p className="text-center text-xs text-destructive">
+              {geo.error || reverseError}
+            </p>
           ) : null}
 
           <div className="flex items-center gap-3 py-1 text-xs uppercase tracking-wide text-muted-foreground">
