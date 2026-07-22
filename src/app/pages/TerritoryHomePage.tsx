@@ -154,11 +154,12 @@ export default function TerritoryHomePage() {
   const leadTokens = getCategoryTokens(todayLead.category);
 
   const quickActions: QuickAction[] = [
-    { id: "buscar", label: "Buscar", icon: Search, category: "neutral", href: LAUNCH_URLS.search },
+    { id: "buscar", label: "Procurar algo", icon: Search, category: "neutral", href: LAUNCH_URLS.search },
     { id: "perto", label: "Perto de mim", icon: Navigation, category: "mobility", href: LAUNCH_URLS.map ?? LAUNCH_URLS.search },
     { id: "comer", label: "Comer agora", icon: UtensilsCrossed, category: "gastronomy", href: LAUNCH_URLS.gastronomy },
-    { id: "mob", label: "Mobilidade", icon: Car, category: "mobility", href: LAUNCH_URLS.map },
+    { id: "mob", label: "Como chegar", icon: Car, category: "mobility", href: LAUNCH_URLS.map },
   ];
+
 
   const highlights: Highlight[] = [
     {
