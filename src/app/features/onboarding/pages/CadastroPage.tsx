@@ -844,9 +844,4 @@ export default function CadastroPage() {
     </>
   );
 }
-        </main>
-        <AuthFooter />
-      </div>
-    </>
-  );
-}
+
