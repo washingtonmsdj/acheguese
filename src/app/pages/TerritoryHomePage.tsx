@@ -344,7 +344,7 @@ export default function TerritoryHomePage() {
               const Icon = card.icon;
               return (
                 <li key={card.id} className="min-w-0">
-                  <div className="flex h-full min-w-0 flex-col items-start gap-1 overflow-hidden rounded-2xl border border-border bg-card p-2.5 sm:p-3">
+                  <div className="flex h-full min-h-[112px] min-w-0 flex-col items-start gap-1 overflow-hidden rounded-2xl border border-border bg-card p-2.5 sm:min-h-[124px] sm:p-3">
                     <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg sm:h-8 sm:w-8 ${tokens.chip}`}>
                       <Icon className="h-4 w-4" aria-hidden="true" strokeWidth={2.25} />
                     </span>
