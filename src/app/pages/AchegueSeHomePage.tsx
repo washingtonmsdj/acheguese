@@ -352,8 +352,11 @@ export default function AchegueSeHomePage() {
           <h1 className="mt-3 font-heading text-[26px] font-semibold leading-none tracking-tight text-foreground sm:text-3xl">
             Achegue-<span className="text-primary">se</span>
           </h1>
-          <p className="mt-3 max-w-[18rem] text-[15px] leading-relaxed text-muted-foreground">
-            Descubra o que acontece perto de você.
+          <p className="mt-3 max-w-[20rem] text-[15px] font-medium leading-relaxed text-foreground">
+            A rede do seu bairro.
+          </p>
+          <p className="mt-1.5 max-w-[20rem] text-[13.5px] leading-relaxed text-muted-foreground">
+            Vizinhos, empresas e o que acontece pertinho de você — tudo em um só lugar.
           </p>
         </section>
 
