@@ -578,15 +578,15 @@ export default function TerritoryHomePage() {
               const tokens = getCategoryTokens(vertical.category);
               const Icon = vertical.icon;
               return (
-                <li key={vertical.id}>
+                <li key={vertical.id} className="min-w-0">
                   <Link
                     to={vertical.href}
-                    className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-3 text-center transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    className="flex min-w-0 flex-col items-center gap-2 overflow-hidden rounded-2xl border border-border bg-card p-3 text-center transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                   >
-                    <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${tokens.chip}`}>
+                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tokens.chip}`}>
                       <Icon className="h-[18px] w-[18px]" aria-hidden="true" strokeWidth={2.25} />
                     </span>
-                    <span className="text-[12px] font-medium leading-tight text-foreground">
+                    <span className="w-full truncate text-[12px] font-medium leading-tight text-foreground">
                       {vertical.label}
                     </span>
                   </Link>
