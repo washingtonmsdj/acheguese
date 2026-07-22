@@ -1,8 +1,0 @@
-# INDEX (LEGACY REDIRECT)
-
-Este arquivo foi mantido por compatibilidade.
-
-Use como fonte oficial:
-- [INDEX_CANONICO.md](./INDEX_CANONICO.md)
-- [STATUS_ATUAL.md](./STATUS_ATUAL.md)
-- [ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md](./ACAO_EXECUTAVEL_AUDITORIA_HIPERLOCAL.md)
