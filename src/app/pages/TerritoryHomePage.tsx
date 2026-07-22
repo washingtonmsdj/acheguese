@@ -179,9 +179,9 @@ export default function TerritoryHomePage() {
       category: "business",
       id: "h2",
       title: "Mercado Bom Dia",
-      status: "Aberto",
-      distance: "450 m",
-      rating: "4,7 (128)",
+      status: "Aberto agora",
+      distance: "a 450 m de você",
+      rating: "4,7 — 128 vizinhos avaliaram",
       href: LAUNCH_URLS.business,
     },
     {
@@ -190,9 +190,10 @@ export default function TerritoryHomePage() {
       id: "h3",
       title: "Feira local no sábado",
       place: "Praça Ana Lúcia",
-      time: "10h",
+      time: "sábado às 10h",
       href: LAUNCH_URLS.events,
     },
+
   ];
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
