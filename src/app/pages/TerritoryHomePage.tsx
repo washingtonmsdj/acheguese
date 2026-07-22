@@ -458,17 +458,17 @@ export default function TerritoryHomePage() {
 
 
 
-        <section aria-labelledby="feed-title" className="mt-6">
-          <div className="mb-3 flex items-baseline justify-between">
+        <section aria-labelledby="feed-title" className="mt-5">
+          <div className="mb-2.5 flex items-baseline justify-between">
             <h2
               id="feed-title"
-              className="text-[22px] font-semibold leading-tight tracking-[-0.015em]"
+              className="text-[16px] font-semibold leading-none tracking-[-0.01em]"
             >
               Acontecendo no bairro
             </h2>
             <Link
               to={LAUNCH_URLS.community}
-              className="text-[13px] font-medium text-primary transition-opacity hover:opacity-80"
+              className="text-[12px] font-medium text-primary transition-opacity hover:opacity-80"
             >
               Ver tudo
             </Link>
@@ -482,7 +482,7 @@ export default function TerritoryHomePage() {
                   <li key={item.id}>
                     <Link
                       to={item.href}
-                      className="flex min-h-[88px] w-full min-w-0 items-start gap-3 overflow-hidden rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-muted"
+                      className="flex min-h-[72px] w-full min-w-0 items-start gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-colors hover:bg-muted"
                     >
                       <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[15px] font-semibold ${tokens.chip}`}>
                         {item.avatarInitial}
@@ -519,7 +519,7 @@ export default function TerritoryHomePage() {
                   <li key={item.id}>
                     <Link
                       to={item.href}
-                      className="flex min-h-[88px] w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-muted"
+                      className="flex min-h-[72px] w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-colors hover:bg-muted"
                     >
                       <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${tokens.chip}`}>
                         <Store className="h-5 w-5" aria-hidden="true" />
@@ -549,7 +549,7 @@ export default function TerritoryHomePage() {
                   <li key={item.id}>
                     <Link
                       to={item.href}
-                      className="flex min-h-[88px] w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-muted"
+                      className="flex min-h-[72px] w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-colors hover:bg-muted"
                     >
                       <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${tokens.chip}`}>
                         <Calendar className="h-5 w-5" aria-hidden="true" />
@@ -578,7 +578,7 @@ export default function TerritoryHomePage() {
                 <li key={item.id}>
                   <Link
                     to={item.href}
-                    className="flex min-h-[88px] w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-muted"
+                    className="flex min-h-[72px] w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-colors hover:bg-muted"
                   >
                     <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${tokens.chip}`}>
                       <BadgeCheck className="h-5 w-5" aria-hidden="true" />
@@ -602,10 +602,10 @@ export default function TerritoryHomePage() {
         </section>
 
         {/* 6. EXPLORE — categorias (sem aparência de banner) */}
-        <section aria-labelledby="explore-title" className="mt-6">
+        <section aria-labelledby="explore-title" className="mt-5">
           <h2
             id="explore-title"
-            className="mb-3 text-[22px] font-semibold leading-tight tracking-[-0.015em]"
+            className="mb-2.5 text-[16px] font-semibold leading-none tracking-[-0.01em]"
           >
             Explore o bairro
           </h2>
@@ -634,17 +634,17 @@ export default function TerritoryHomePage() {
         </section>
 
         {/* 7. HOJE — movido para o final: aprofundamento editorial do dia */}
-        <section aria-labelledby="today-title" className="mt-6">
-          <div className="mb-3 flex items-baseline justify-between">
+        <section aria-labelledby="today-title" className="mt-5">
+          <div className="mb-2.5 flex items-baseline justify-between">
             <h2
               id="today-title"
-              className="text-[22px] font-semibold leading-tight tracking-[-0.015em]"
+              className="text-[16px] font-semibold leading-none tracking-[-0.01em]"
             >
               Hoje em {territoryName}
             </h2>
             <Link
               to={LAUNCH_URLS.community}
-              className="text-[13px] font-medium text-primary transition-opacity hover:opacity-80"
+              className="text-[12px] font-medium text-primary transition-opacity hover:opacity-80"
             >
               Ver tudo
             </Link>
