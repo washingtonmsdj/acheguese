@@ -212,11 +212,17 @@ export default function TerritoryHomePage() {
     },
   ];
 
-  const quickActions = [
-    { id: "q1", label: "Buscar", icon: Search, href: LAUNCH_URLS.search, category: "neutral" as ContentCategoryKey },
-    { id: "q2", label: "Perto de mim", icon: MapPin, href: LAUNCH_URLS.map ?? LAUNCH_URLS.search, category: "mobility" as ContentCategoryKey },
-    { id: "q3", label: "Comer agora", icon: UtensilsCrossed, href: LAUNCH_URLS.gastronomy, category: "gastronomy" as ContentCategoryKey },
-    { id: "q4", label: "Mobilidade", icon: Car, href: LAUNCH_URLS.map ?? LAUNCH_URLS.search, category: "mobility" as ContentCategoryKey },
+  const quickActions: {
+    id: string;
+    label: string;
+    icon: LucideIcon;
+    href: string;
+    tint: string;
+  }[] = [
+    { id: "q1", label: "Buscar", icon: Search, href: LAUNCH_URLS.search, tint: "#18B37E" },
+    { id: "q2", label: "Perto de mim", icon: MapPin, href: LAUNCH_URLS.map ?? LAUNCH_URLS.search, tint: "#7C3AED" },
+    { id: "q3", label: "Comer agora", icon: UtensilsCrossed, href: LAUNCH_URLS.gastronomy, tint: "#F97316" },
+    { id: "q4", label: "Mobilidade", icon: Car, href: LAUNCH_URLS.map ?? LAUNCH_URLS.search, tint: "#2563EB" },
   ];
 
 
