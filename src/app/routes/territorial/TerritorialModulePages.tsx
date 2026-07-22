@@ -288,24 +288,18 @@ export function TerritorialCommunityPage() {
 }
 
 export function TerritorialCommunityHomePage() {
+  // Sprint TERRITORY.1: renderiza a Territory Home oficial em vez do antigo
+  // CidadeLandingPage. O feed completo permanece disponível em `.../feed`.
   return (
     <Suspense fallback={<ModulePageLoader />}>
-      <CidadeLandingPage />
+      <TerritoryHomePage />
     </Suspense>
   );
 }
 
 export function TerritorialCommunityEntryPage() {
-  const { resolved } = useTerritorialContext();
-
-  if (resolved.kind === "group") {
-    return <TerritorialCommunityHomePage />;
-  }
-
-  if (resolved.location.type === "city") {
-    return <TerritorialCommunityHomePage />;
-  }
-
+  // Antes: variava conforme cidade/bairro/grupo. Agora a Territory Home é única
+  // e o próprio TerritoryHomePage se especializa pelo território ativo.
   return <TerritorialCommunityHomePage />;
 }
 
