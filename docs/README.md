@@ -78,7 +78,7 @@ Contratos em [`07-modules/`](./07-modules/): Posts/Feed, Social Engagement, Comm
 ### Roadmap
 - [Próximos passos](./08-roadmap/NEXT-STEPS.md)
 - [Recovery roadmap](./08-roadmap/RECOVERY-ROADMAP.md)
-- [Pré-launch audit](./08-roadmap/PRE_LAUNCH_AUDIT.md)
+- [Migração mobile (Capacitor)](./08-roadmap/MONOREPO_MIGRATION_PLAN.md)
 
 ### Referência
 - [Segurança](./09-reference/SECURITY.md) · [Governance](./09-reference/governance/AUTHORITIES.md)
