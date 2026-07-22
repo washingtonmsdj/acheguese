@@ -380,12 +380,9 @@ export default function TerritoryHomePage() {
         </form>
 
         {/* 3. AGORA — carrossel horizontal compacto */}
-        <section aria-labelledby="pulse-title" className="mt-5">
-          <div className="mb-2.5">
-            <h2
-              id="pulse-title"
-              className="text-[16px] font-semibold leading-none tracking-[-0.01em]"
-            >
+        <section aria-labelledby="pulse-title" className="th-section" data-testid="pulse-section">
+          <div className="th-section-header">
+            <h2 id="pulse-title" className="th-section-title">
               Agora em {territoryName}
             </h2>
           </div>
@@ -400,21 +397,16 @@ export default function TerritoryHomePage() {
                 const Icon = card.icon;
                 return (
                   <li key={card.id} className="snap-start shrink-0">
-                    <Link
-                      to={card.href}
-                      className="group flex h-full min-h-[72px] w-[220px] flex-col justify-between gap-1 overflow-hidden rounded-2xl border border-border bg-card p-2.5 transition-all hover:border-border/40 hover:shadow-[0_1px_3px_rgba(17,24,39,0.06)] sm:w-[240px]"
-                    >
+                    <Link to={card.href} className="th-pulse-card">
                       <div className="flex min-w-0 items-center gap-1.5">
                         <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${tokens.chip}`}>
                           <Icon className="h-3 w-3" aria-hidden="true" strokeWidth={2.25} />
                         </span>
-                        <span className={`truncate rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
+                        <span className={`th-badge truncate uppercase tracking-wide ${tokens.chip}`}>
                           {card.kind}
                         </span>
                       </div>
-                      <p className="line-clamp-2 break-words text-[12.5px] font-semibold leading-snug tracking-[-0.005em] text-foreground">
-                        {card.title}
-                      </p>
+                      <p className="th-pulse-title">{card.title}</p>
                     </Link>
                   </li>
                 );
@@ -424,38 +416,31 @@ export default function TerritoryHomePage() {
         </section>
 
 
-        {/* 4. AÇÕES RÁPIDAS — 4 cards em linha */}
-        <section aria-labelledby="quick-title" className="mt-5">
-          <h2
-            id="quick-title"
-            className="mb-2.5 text-[16px] font-semibold leading-none tracking-[-0.01em]"
-          >
-            Ações rápidas
-          </h2>
+        {/* 4. AÇÕES RÁPIDAS — 4 tiles */}
+        <section aria-labelledby="quick-title" className="th-section" data-testid="quick-section">
+          <div className="th-section-header">
+            <h2 id="quick-title" className="th-section-title">Ações rápidas</h2>
+          </div>
           <ul className="grid grid-cols-4 gap-2.5">
             {quickActions.map((action) => {
               const Icon = action.icon;
               return (
                 <li key={action.id} className="min-w-0">
-                  <Link
-                    to={action.href}
-                    className="group flex min-w-0 flex-col items-center gap-1.5 text-center focus-visible:outline-none"
-                  >
+                  <Link to={action.href} className="th-tile focus-visible:outline-none">
                     <span
-                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-[0_2px_6px_rgba(17,24,39,0.08)] transition-transform group-hover:scale-[1.03] group-focus-visible:ring-2 group-focus-visible:ring-primary/40"
+                      className="th-tile-icon shadow-[0_2px_6px_rgba(17,24,39,0.08)]"
                       style={{ backgroundColor: action.tint }}
                     >
                       <Icon className="h-6 w-6 text-white" aria-hidden="true" strokeWidth={2.25} />
                     </span>
-                    <span className="w-full text-[12px] font-medium leading-tight text-foreground">
-                      {action.label}
-                    </span>
+                    <span className="th-tile-label">{action.label}</span>
                   </Link>
                 </li>
               );
             })}
           </ul>
         </section>
+
 
 
 
@@ -638,14 +623,11 @@ export default function TerritoryHomePage() {
           </ul>
         </section>
 
-        {/* 6. EXPLORE — categorias (sem aparência de banner) */}
-        <section aria-labelledby="explore-title" className="mt-5">
-          <h2
-            id="explore-title"
-            className="mb-2.5 text-[16px] font-semibold leading-none tracking-[-0.01em]"
-          >
-            Explore o bairro
-          </h2>
+        {/* 6. EXPLORE — categorias */}
+        <section aria-labelledby="explore-title" className="th-section" data-testid="explore-section">
+          <div className="th-section-header">
+            <h2 id="explore-title" className="th-section-title">Explore o bairro</h2>
+          </div>
 
           <ul className="grid grid-cols-3 gap-2 sm:grid-cols-6">
             {explore.map((vertical) => {
@@ -655,14 +637,12 @@ export default function TerritoryHomePage() {
                 <li key={vertical.id} className="min-w-0">
                   <Link
                     to={vertical.href}
-                    className="flex min-w-0 flex-col items-center gap-2 overflow-hidden rounded-2xl border border-border bg-card p-3 text-center transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    className="th-tile th-tile--framed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                   >
-                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tokens.chip}`}>
+                    <span className={`th-tile-icon ${tokens.chip}`}>
                       <Icon className="h-[18px] w-[18px]" aria-hidden="true" strokeWidth={2.25} />
                     </span>
-                    <span className="w-full truncate text-[12px] font-medium leading-tight text-foreground">
-                      {vertical.label}
-                    </span>
+                    <span className="th-tile-label">{vertical.label}</span>
                   </Link>
                 </li>
               );
@@ -670,19 +650,13 @@ export default function TerritoryHomePage() {
           </ul>
         </section>
 
-        {/* 7. HOJE — movido para o final: aprofundamento editorial do dia */}
-        <section aria-labelledby="today-title" className="mt-5">
-          <div className="mb-2.5 flex items-baseline justify-between">
-            <h2
-              id="today-title"
-              className="text-[16px] font-semibold leading-none tracking-[-0.01em]"
-            >
+        {/* 7. HOJE — aprofundamento editorial do dia */}
+        <section aria-labelledby="today-title" className="th-section" data-testid="today-section">
+          <div className="th-section-header">
+            <h2 id="today-title" className="th-section-title">
               Hoje em {territoryName}
             </h2>
-            <Link
-              to={LAUNCH_URLS.community}
-              className="th-section-link"
-            >
+            <Link to={LAUNCH_URLS.community} className="th-section-link">
               Ver todos
               <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
@@ -693,24 +667,15 @@ export default function TerritoryHomePage() {
               const tokens = getCategoryTokens(item.category);
               return (
                 <li key={item.id} className="min-w-0">
-                  <Link
-                    to={item.href}
-                    className="group flex h-full min-h-[168px] min-w-0 flex-col justify-between gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-all hover:border-border/40 hover:shadow-[0_1px_3px_rgba(17,24,39,0.06)] sm:min-h-[184px] sm:p-4"
-                  >
+                  <Link to={item.href} className="th-today-card group">
                     <div className="flex min-w-0 flex-col gap-2">
-                      <span
-                        className={`inline-flex w-fit max-w-full items-center gap-1 truncate rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide sm:text-[11px] ${tokens.chip}`}
-                      >
+                      <span className={`th-badge inline-flex w-fit max-w-full items-center gap-1 truncate uppercase tracking-wide ${tokens.chip}`}>
                         {item.kind}
                       </span>
-                      <p className="line-clamp-3 break-words text-[13px] font-semibold leading-snug tracking-[-0.005em] text-foreground sm:text-[15px]">
-                        {item.title}
-                      </p>
-                      <p className="line-clamp-2 break-words text-[11px] font-normal text-muted-foreground sm:text-[13px]">
-                        {item.meta}
-                      </p>
+                      <p className="th-today-title">{item.title}</p>
+                      <p className="th-today-meta">{item.meta}</p>
                     </div>
-                    <span className={`inline-flex items-center gap-1 truncate text-[12px] font-medium sm:text-[13px] ${tokens.text}`}>
+                    <span className={`inline-flex items-center gap-1 truncate text-[12px] font-medium ${tokens.text}`}>
                       <span className="truncate">{item.cta}</span>
                       <ArrowRight className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
                     </span>
@@ -720,6 +685,7 @@ export default function TerritoryHomePage() {
             })}
           </ul>
         </section>
+
       </main>
 
     </div>
