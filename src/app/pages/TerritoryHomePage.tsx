@@ -343,7 +343,7 @@ export default function TerritoryHomePage() {
             </Link>
           </div>
 
-          <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <ul className="grid grid-cols-4 gap-2">
             {pulse.map((card) => {
               const tokens = getCategoryTokens(card.category);
               const Icon = card.icon;
