@@ -29,13 +29,13 @@ export function CommunityComposerEntry({
       id={id}
       data-community-composer="entry"
       className={cn(
-        "rounded-2xl border border-white/10 bg-[#071922]/92 p-3 text-white shadow-xl shadow-black/10 backdrop-blur",
+        "rounded-2xl border border-border/60 bg-card p-3",
         className,
       )}
       aria-label="Criar publicação"
     >
       <div className="flex min-w-0 items-center gap-2.5">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-white/[0.06] text-white/65">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-muted/40 text-muted-foreground">
           {resolvedAvatarUrl ? (
             <img
               src={resolvedAvatarUrl}
@@ -55,9 +55,9 @@ export function CommunityComposerEntry({
           onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === " ") openComposer();
           }}
-          placeholder={`Compartilhe algo com ${communityName}...`}
+          placeholder={`Publicar no ${communityName}...`}
           aria-label={`Criar publicação em ${communityName}`}
-          className="min-h-11 min-w-0 flex-1 cursor-text rounded-xl border border-white/10 bg-white/[0.045] px-3 text-sm text-white outline-none placeholder:text-white/55 hover:border-teal-300/35 hover:bg-teal-300/10 focus:border-teal-300/50 focus:ring-2 focus:ring-teal-300/25"
+          className="min-h-11 min-w-0 flex-1 cursor-text rounded-xl border border-border bg-muted/40 px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground hover:border-primary/40 hover:bg-background focus:border-primary focus:bg-background focus-visible:ring-2 focus-visible:ring-primary/30"
         />
       </div>
     </section>
