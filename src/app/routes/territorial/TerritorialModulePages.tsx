@@ -27,6 +27,9 @@ import type { CommunityOverviewSection } from '@/core/community/components/page/
 // Lazy imports dos módulos existentes
 const ComunidadePage       = lazy(() => import('@/core/community/pages/ComunidadePage'));
 const CidadeLandingPage    = lazy(() => import('@/app/pages/CidadeLandingPage'));
+// Sprint TERRITORY.1: Territory Home passa a ser a home única de qualquer território
+// (cidade ou bairro). O feed completo continua em `/comunidade/.../feed` via ComunidadePage.
+const TerritoryHomePage    = lazy(() => import('@/app/pages/TerritoryHomePage'));
 const CommunityCommunicationTabPage = lazy(() => import('@/modules/communication-territorial/pages/CommunityCommunicationTabPage'));
 const ProblemasPage        = lazy(() => import('@/modules/community-issues/pages/ProblemasPage'));
 const EmpresasPage         = lazy(() => import('@/app/pages/EmpresasLandingPage'));
@@ -94,6 +97,24 @@ export function CommunityPersistentPortalLayout() {
     location.search,
     territorialContext.communityBaseUrl,
   );
+
+  // Sprint TERRITORY.1: no índice do território (sem sub-rota e sem ?view=...),
+  // a Territory Home substitui a antiga home baseada em CidadeLandingPage.
+  // Feed/Grupos/Discussões continuam servidos pelo CidadeLandingPage seccionado.
+  const isTerritoryHomeIndex =
+    presentation.section === 'feed' &&
+    !presentation.embedOutlet &&
+    !location.pathname.replace(territorialContext.communityBaseUrl, '').replace(/^\/+|\/+$/g, '') &&
+    !new URLSearchParams(location.search).get('view');
+
+  if (isTerritoryHomeIndex) {
+    return (
+      <Suspense fallback={<ModulePageLoader />}>
+        {outlet}
+      </Suspense>
+    );
+  }
+
   const communityContent = presentation.embedOutlet ? (
     <Suspense
       fallback={
@@ -112,6 +133,7 @@ export function CommunityPersistentPortalLayout() {
         activeCommunitySection={presentation.section}
         communityContent={communityContent}
       />
+
     </Suspense>
   );
 }
@@ -285,24 +307,18 @@ export function TerritorialCommunityPage() {
 }
 
 export function TerritorialCommunityHomePage() {
+  // Sprint TERRITORY.1: renderiza a Territory Home oficial em vez do antigo
+  // CidadeLandingPage. O feed completo permanece disponível em `.../feed`.
   return (
     <Suspense fallback={<ModulePageLoader />}>
-      <CidadeLandingPage />
+      <TerritoryHomePage />
     </Suspense>
   );
 }
 
 export function TerritorialCommunityEntryPage() {
-  const { resolved } = useTerritorialContext();
-
-  if (resolved.kind === "group") {
-    return <TerritorialCommunityHomePage />;
-  }
-
-  if (resolved.location.type === "city") {
-    return <TerritorialCommunityHomePage />;
-  }
-
+  // Antes: variava conforme cidade/bairro/grupo. Agora a Territory Home é única
+  // e o próprio TerritoryHomePage se especializa pelo território ativo.
   return <TerritorialCommunityHomePage />;
 }
 
