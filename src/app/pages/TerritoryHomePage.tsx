@@ -394,7 +394,7 @@ export default function TerritoryHomePage() {
                 <li key={item.id} className="min-w-0">
                   <Link
                     to={item.href}
-                    className="group flex h-full min-w-0 flex-col justify-between gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-all hover:border-border/40 hover:shadow-[0_1px_3px_rgba(17,24,39,0.06)] sm:p-4"
+                    className="group flex h-full min-h-[168px] min-w-0 flex-col justify-between gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-all hover:border-border/40 hover:shadow-[0_1px_3px_rgba(17,24,39,0.06)] sm:min-h-[184px] sm:p-4"
                   >
                     <div className="flex min-w-0 flex-col gap-2">
                       <span
