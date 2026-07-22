@@ -385,8 +385,9 @@ export default function TerritoryHomePage() {
                           {h.title}
                         </p>
                         <p className="mt-0.5 text-[12px] text-muted-foreground">
-                          {h.replies} respostas · {h.neighborhood}
+                          {h.replies} vizinhos comentaram
                         </p>
+
                       </div>
                       <span className="mt-1 flex items-center gap-1 text-[12px] text-muted-foreground">
                         <MessageCircle className="h-4 w-4" aria-hidden="true" />
