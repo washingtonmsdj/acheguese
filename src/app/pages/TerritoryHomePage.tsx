@@ -154,11 +154,12 @@ export default function TerritoryHomePage() {
   const leadTokens = getCategoryTokens(todayLead.category);
 
   const quickActions: QuickAction[] = [
-    { id: "buscar", label: "Buscar", icon: Search, category: "neutral", href: LAUNCH_URLS.search },
+    { id: "buscar", label: "Procurar algo", icon: Search, category: "neutral", href: LAUNCH_URLS.search },
     { id: "perto", label: "Perto de mim", icon: Navigation, category: "mobility", href: LAUNCH_URLS.map ?? LAUNCH_URLS.search },
     { id: "comer", label: "Comer agora", icon: UtensilsCrossed, category: "gastronomy", href: LAUNCH_URLS.gastronomy },
-    { id: "mob", label: "Mobilidade", icon: Car, category: "mobility", href: LAUNCH_URLS.map },
+    { id: "mob", label: "Como chegar", icon: Car, category: "mobility", href: LAUNCH_URLS.map },
   ];
+
 
   const highlights: Highlight[] = [
     {
@@ -178,9 +179,9 @@ export default function TerritoryHomePage() {
       category: "business",
       id: "h2",
       title: "Mercado Bom Dia",
-      status: "Aberto",
-      distance: "450 m",
-      rating: "4,7 (128)",
+      status: "Aberto agora",
+      distance: "a 450 m de você",
+      rating: "4,7 — 128 vizinhos avaliaram",
       href: LAUNCH_URLS.business,
     },
     {
@@ -189,9 +190,10 @@ export default function TerritoryHomePage() {
       id: "h3",
       title: "Feira local no sábado",
       place: "Praça Ana Lúcia",
-      time: "10h",
+      time: "sábado às 10h",
       href: LAUNCH_URLS.events,
     },
+
   ];
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -212,7 +214,7 @@ export default function TerritoryHomePage() {
             type="button"
             onClick={() => navigate("/onboarding")}
             className="flex min-w-0 items-center gap-2 rounded-full py-1 pr-2 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-            aria-label={`Trocar território. Atual: ${territoryName}`}
+            aria-label={`Mudar de bairro. Você está na ${territoryName}.`}
           >
             <MapPin className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
             <span className="min-w-0">
@@ -232,8 +234,8 @@ export default function TerritoryHomePage() {
             to={user ? "/notificacoes" : "/login"}
             aria-label={
               user && unreadCount > 0
-                ? `Notificações, ${unreadCount} não lidas`
-                : "Notificações"
+                ? `${unreadCount} novidades para você`
+                : "Ver novidades"
             }
             className="relative flex h-10 w-10 items-center justify-center rounded-full text-foreground/80 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
@@ -244,6 +246,7 @@ export default function TerritoryHomePage() {
               </span>
             ) : null}
           </Link>
+
         </div>
       </header>
 
@@ -251,7 +254,7 @@ export default function TerritoryHomePage() {
         {/* 2. BUSCA */}
         <form onSubmit={handleSubmit} role="search" className="relative">
           <label className="sr-only" htmlFor="territory-search">
-            O que você procura no bairro?
+            Procurar algo na {territoryName}
           </label>
           <Search
             className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
@@ -261,9 +264,10 @@ export default function TerritoryHomePage() {
             id="territory-search"
             name="q"
             type="search"
-            placeholder="O que você procura no bairro?"
+            placeholder="Procurar no bairro: pizza, chaveiro, feira..."
             className="h-12 w-full rounded-full border border-border bg-muted/40 pl-12 pr-4 text-[14px] text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
           />
+
         </form>
 
         {/* 3. HOJE — 1 destaque + 2 chips compactos */}
@@ -279,8 +283,9 @@ export default function TerritoryHomePage() {
               to={LAUNCH_URLS.community}
               className="text-[13px] font-medium text-primary hover:underline"
             >
-              Ver tudo
+              Abrir o bairro
             </Link>
+
           </div>
 
           <Link
@@ -342,14 +347,15 @@ export default function TerritoryHomePage() {
               id="highlights-title"
               className="font-display text-[16px] font-semibold leading-none"
             >
-              Destaques do seu bairro
+              Vale conferir
             </h2>
             <Link
               to={LAUNCH_URLS.community}
               className="text-[13px] font-medium text-primary hover:underline"
             >
-              Ver todos
+              Ver mais do bairro
             </Link>
+
           </div>
 
           <ul className="space-y-3">
@@ -379,8 +385,9 @@ export default function TerritoryHomePage() {
                           {h.title}
                         </p>
                         <p className="mt-0.5 text-[12px] text-muted-foreground">
-                          {h.replies} respostas · {h.neighborhood}
+                          {h.replies} vizinhos comentaram
                         </p>
+
                       </div>
                       <span className="mt-1 flex items-center gap-1 text-[12px] text-muted-foreground">
                         <MessageCircle className="h-4 w-4" aria-hidden="true" />
@@ -458,8 +465,9 @@ export default function TerritoryHomePage() {
             id="quick-title"
             className="mb-3 font-display text-[16px] font-semibold leading-none"
           >
-            Ações rápidas
+            O que você quer fazer?
           </h2>
+
           <ul className="flex flex-wrap gap-2">
             {quickActions.map((action) => {
               const tokens = getCategoryTokens(action.category);
@@ -486,15 +494,16 @@ export default function TerritoryHomePage() {
               id="explore-title"
               className="font-display text-[16px] font-semibold leading-none"
             >
-              Explore o bairro
+              Passear pelo bairro
             </h2>
             <Link
               to={LAUNCH_URLS.search}
               className="text-[13px] font-medium text-primary hover:underline"
             >
-              Buscar
+              Procurar
             </Link>
           </div>
+
 
           <ul className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {[
