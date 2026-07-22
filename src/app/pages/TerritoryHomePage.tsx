@@ -212,6 +212,15 @@ export default function TerritoryHomePage() {
     },
   ];
 
+  const quickActions = [
+    { id: "q1", label: "Buscar", icon: Search, href: LAUNCH_URLS.search, category: "neutral" as ContentCategoryKey },
+    { id: "q2", label: "Perto de mim", icon: MapPin, href: LAUNCH_URLS.map ?? LAUNCH_URLS.search, category: "mobility" as ContentCategoryKey },
+    { id: "q3", label: "Comer agora", icon: UtensilsCrossed, href: LAUNCH_URLS.gastronomy, category: "gastronomy" as ContentCategoryKey },
+    { id: "q4", label: "Mobilidade", icon: Car, href: LAUNCH_URLS.map ?? LAUNCH_URLS.search, category: "mobility" as ContentCategoryKey },
+  ];
+
+
+
   const today: TodayCard[] = [
     {
       id: "t1",
@@ -363,21 +372,15 @@ export default function TerritoryHomePage() {
           />
         </form>
 
-        {/* 3. AGORA — carrossel horizontal de alertas, avisos e ofertas */}
+        {/* 3. AGORA — carrossel horizontal compacto */}
         <section aria-labelledby="pulse-title" className="mt-7">
-          <div className="mb-3 flex items-baseline justify-between">
+          <div className="mb-3">
             <h2
               id="pulse-title"
               className="text-[16px] font-semibold leading-none tracking-[-0.01em]"
             >
               Agora em {territoryName}
             </h2>
-            <Link
-              to={LAUNCH_URLS.community}
-              className="text-[13px] font-medium text-primary transition-opacity hover:opacity-80"
-            >
-              Ver tudo
-            </Link>
           </div>
 
           <div className="-mx-5">
@@ -392,26 +395,19 @@ export default function TerritoryHomePage() {
                   <li key={card.id} className="snap-start shrink-0">
                     <Link
                       to={card.href}
-                      className="group flex h-full min-h-[132px] w-[260px] flex-col justify-between gap-2 overflow-hidden rounded-2xl border border-border bg-card p-3.5 transition-all hover:border-border/40 hover:shadow-[0_1px_3px_rgba(17,24,39,0.06)] sm:w-[280px]"
+                      className="group flex h-full min-h-[88px] w-[240px] flex-col justify-between gap-1.5 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-all hover:border-border/40 hover:shadow-[0_1px_3px_rgba(17,24,39,0.06)] sm:w-[260px]"
                     >
                       <div className="flex min-w-0 items-center gap-2">
-                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${tokens.chip}`}>
-                          <Icon className="h-4 w-4" aria-hidden="true" strokeWidth={2.25} />
+                        <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${tokens.chip}`}>
+                          <Icon className="h-3.5 w-3.5" aria-hidden="true" strokeWidth={2.25} />
                         </span>
                         <span className={`truncate rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
                           {card.kind}
                         </span>
                       </div>
-                      <p className="line-clamp-2 break-words text-[14px] font-semibold leading-snug tracking-[-0.005em] text-foreground">
+                      <p className="line-clamp-2 break-words text-[13px] font-semibold leading-snug tracking-[-0.005em] text-foreground">
                         {card.title}
                       </p>
-                      <p className="line-clamp-2 break-words text-[12px] font-normal text-muted-foreground">
-                        {card.detail}
-                      </p>
-                      <span className={`inline-flex items-center gap-1 text-[12px] font-medium ${tokens.text}`}>
-                        <span className="truncate">{card.cta}</span>
-                        <ArrowRight className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-                      </span>
                     </Link>
                   </li>
                 );
@@ -420,9 +416,38 @@ export default function TerritoryHomePage() {
           </div>
         </section>
 
+        {/* 4. AÇÕES RÁPIDAS — 4 cards em linha */}
+        <section aria-labelledby="quick-title" className="mt-6">
+          <h2
+            id="quick-title"
+            className="mb-3 text-[16px] font-semibold leading-none tracking-[-0.01em]"
+          >
+            Ações rápidas
+          </h2>
+          <ul className="grid grid-cols-4 gap-2">
+            {quickActions.map((action) => {
+              const tokens = getCategoryTokens(action.category);
+              const Icon = action.icon;
+              return (
+                <li key={action.id} className="min-w-0">
+                  <Link
+                    to={action.href}
+                    className="flex min-w-0 flex-col items-center gap-1.5 overflow-hidden rounded-2xl border border-border bg-card p-2.5 text-center transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                  >
+                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tokens.chip}`}>
+                      <Icon className="h-[18px] w-[18px]" aria-hidden="true" strokeWidth={2.25} />
+                    </span>
+                    <span className="w-full truncate text-[11px] font-medium leading-tight text-foreground sm:text-[12px]">
+                      {action.label}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
 
 
-        {/* 5. ACONTECENDO NO BAIRRO — feed misto abaixo da dobra */}
         <section aria-labelledby="feed-title" className="mt-8">
           <div className="mb-3 flex items-baseline justify-between">
             <h2
