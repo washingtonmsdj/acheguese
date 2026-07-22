@@ -602,10 +602,10 @@ export default function TerritoryHomePage() {
         </section>
 
         {/* 6. EXPLORE — categorias (sem aparência de banner) */}
-        <section aria-labelledby="explore-title" className="mt-6">
+        <section aria-labelledby="explore-title" className="mt-5">
           <h2
             id="explore-title"
-            className="mb-3 text-[22px] font-semibold leading-tight tracking-[-0.015em]"
+            className="mb-2.5 text-[16px] font-semibold leading-none tracking-[-0.01em]"
           >
             Explore o bairro
           </h2>
