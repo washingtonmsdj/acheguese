@@ -623,14 +623,11 @@ export default function TerritoryHomePage() {
           </ul>
         </section>
 
-        {/* 6. EXPLORE — categorias (sem aparência de banner) */}
-        <section aria-labelledby="explore-title" className="mt-5">
-          <h2
-            id="explore-title"
-            className="mb-2.5 text-[16px] font-semibold leading-none tracking-[-0.01em]"
-          >
-            Explore o bairro
-          </h2>
+        {/* 6. EXPLORE — categorias */}
+        <section aria-labelledby="explore-title" className="th-section" data-testid="explore-section">
+          <div className="th-section-header">
+            <h2 id="explore-title" className="th-section-title">Explore o bairro</h2>
+          </div>
 
           <ul className="grid grid-cols-3 gap-2 sm:grid-cols-6">
             {explore.map((vertical) => {
@@ -640,14 +637,12 @@ export default function TerritoryHomePage() {
                 <li key={vertical.id} className="min-w-0">
                   <Link
                     to={vertical.href}
-                    className="flex min-w-0 flex-col items-center gap-2 overflow-hidden rounded-2xl border border-border bg-card p-3 text-center transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    className="th-tile th-tile--framed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                   >
-                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tokens.chip}`}>
+                    <span className={`th-tile-icon ${tokens.chip}`}>
                       <Icon className="h-[18px] w-[18px]" aria-hidden="true" strokeWidth={2.25} />
                     </span>
-                    <span className="w-full truncate text-[12px] font-medium leading-tight text-foreground">
-                      {vertical.label}
-                    </span>
+                    <span className="th-tile-label">{vertical.label}</span>
                   </Link>
                 </li>
               );
@@ -655,19 +650,13 @@ export default function TerritoryHomePage() {
           </ul>
         </section>
 
-        {/* 7. HOJE — movido para o final: aprofundamento editorial do dia */}
-        <section aria-labelledby="today-title" className="mt-5">
-          <div className="mb-2.5 flex items-baseline justify-between">
-            <h2
-              id="today-title"
-              className="text-[16px] font-semibold leading-none tracking-[-0.01em]"
-            >
+        {/* 7. HOJE — aprofundamento editorial do dia */}
+        <section aria-labelledby="today-title" className="th-section" data-testid="today-section">
+          <div className="th-section-header">
+            <h2 id="today-title" className="th-section-title">
               Hoje em {territoryName}
             </h2>
-            <Link
-              to={LAUNCH_URLS.community}
-              className="th-section-link"
-            >
+            <Link to={LAUNCH_URLS.community} className="th-section-link">
               Ver todos
               <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
@@ -678,24 +667,15 @@ export default function TerritoryHomePage() {
               const tokens = getCategoryTokens(item.category);
               return (
                 <li key={item.id} className="min-w-0">
-                  <Link
-                    to={item.href}
-                    className="group flex h-full min-h-[168px] min-w-0 flex-col justify-between gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-all hover:border-border/40 hover:shadow-[0_1px_3px_rgba(17,24,39,0.06)] sm:min-h-[184px] sm:p-4"
-                  >
+                  <Link to={item.href} className="th-today-card group">
                     <div className="flex min-w-0 flex-col gap-2">
-                      <span
-                        className={`inline-flex w-fit max-w-full items-center gap-1 truncate rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide sm:text-[11px] ${tokens.chip}`}
-                      >
+                      <span className={`th-badge inline-flex w-fit max-w-full items-center gap-1 truncate uppercase tracking-wide ${tokens.chip}`}>
                         {item.kind}
                       </span>
-                      <p className="line-clamp-3 break-words text-[13px] font-semibold leading-snug tracking-[-0.005em] text-foreground sm:text-[15px]">
-                        {item.title}
-                      </p>
-                      <p className="line-clamp-2 break-words text-[11px] font-normal text-muted-foreground sm:text-[13px]">
-                        {item.meta}
-                      </p>
+                      <p className="th-today-title">{item.title}</p>
+                      <p className="th-today-meta">{item.meta}</p>
                     </div>
-                    <span className={`inline-flex items-center gap-1 truncate text-[12px] font-medium sm:text-[13px] ${tokens.text}`}>
+                    <span className={`inline-flex items-center gap-1 truncate text-[12px] font-medium ${tokens.text}`}>
                       <span className="truncate">{item.cta}</span>
                       <ArrowRight className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
                     </span>
@@ -705,6 +685,7 @@ export default function TerritoryHomePage() {
             })}
           </ul>
         </section>
+
       </main>
 
     </div>
