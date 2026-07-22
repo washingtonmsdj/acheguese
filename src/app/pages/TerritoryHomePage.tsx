@@ -9,9 +9,7 @@ import {
   MessageCircle,
   MoreHorizontal,
   Search,
-  Sun,
   UtensilsCrossed,
-  Users,
   Store,
   Wrench,
   Car,
@@ -49,9 +47,11 @@ import {
 type PulseCard = {
   id: string;
   icon: LucideIcon;
-  value: string;
-  label: string;
-  hint?: string;
+  kind: "Alerta" | "Aviso" | "Oferta" | "Promoção";
+  title: string;
+  detail: string;
+  cta: string;
+  href: string;
   category: ContentCategoryKey;
 };
 
@@ -170,10 +170,46 @@ export default function TerritoryHomePage() {
   }, [params]);
 
   const pulse: PulseCard[] = [
-    { id: "p1", icon: Sun, value: "28°", label: "Ensolarado", hint: "Sensação 30°", category: "neutral" },
-    { id: "p2", icon: UtensilsCrossed, value: "15", label: "Restaurantes", hint: "abertos agora", category: "gastronomy" },
-    { id: "p3", icon: AlertTriangle, value: "1", label: "Alerta ativo", hint: "Ver detalhes", category: "alert" },
-    { id: "p4", icon: Users, value: "Alto", label: "Movimento", hint: "no bairro", category: "discussion" },
+    {
+      id: "p1",
+      icon: AlertTriangle,
+      kind: "Alerta",
+      title: "Interdição na Rua das Orquídeas",
+      detail: "Trânsito bloqueado até as 17h de hoje.",
+      cta: "Ver no mapa",
+      href: LAUNCH_URLS.map ?? "#",
+      category: "alert",
+    },
+    {
+      id: "p2",
+      icon: Bell,
+      kind: "Aviso",
+      title: "Coleta seletiva muda de horário",
+      detail: "A partir de segunda, passa às terças e sextas, 6h.",
+      cta: "Saber mais",
+      href: LAUNCH_URLS.community,
+      category: "neutral",
+    },
+    {
+      id: "p3",
+      icon: BadgeCheck,
+      kind: "Oferta",
+      title: "Farmácia Saúde+",
+      detail: "Até 30% de desconto em vitaminas nesta semana.",
+      cta: "Ver oferta",
+      href: LAUNCH_URLS.business,
+      category: "business",
+    },
+    {
+      id: "p4",
+      icon: UtensilsCrossed,
+      kind: "Promoção",
+      title: "Mercado Bom Dia",
+      detail: "Combo café da manhã por R$ 12,90 até sábado.",
+      cta: "Aproveitar",
+      href: LAUNCH_URLS.business,
+      category: "gastronomy",
+    },
   ];
 
   const today: TodayCard[] = [
@@ -327,7 +363,7 @@ export default function TerritoryHomePage() {
           />
         </form>
 
-        {/* 3. AGORA — pulso do bairro */}
+        {/* 3. AGORA — carrossel horizontal de alertas, avisos e ofertas */}
         <section aria-labelledby="pulse-title" className="mt-7">
           <div className="mb-3 flex items-baseline justify-between">
             <h2
@@ -335,49 +371,6 @@ export default function TerritoryHomePage() {
               className="text-[16px] font-semibold leading-none tracking-[-0.01em]"
             >
               Agora em {territoryName}
-            </h2>
-          </div>
-
-          <ul className="grid grid-cols-4 gap-2">
-            {pulse.map((card) => {
-              const tokens = getCategoryTokens(card.category);
-              const Icon = card.icon;
-              return (
-                <li key={card.id} className="min-w-0">
-                  <div className="flex h-full min-h-[112px] min-w-0 flex-col items-start gap-1 overflow-hidden rounded-2xl border border-border bg-card p-2.5 sm:min-h-[124px] sm:p-3">
-                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg sm:h-8 sm:w-8 ${tokens.chip}`}>
-                      <Icon className="h-4 w-4" aria-hidden="true" strokeWidth={2.25} />
-                    </span>
-                    <span className="w-full truncate text-[15px] font-semibold leading-tight tracking-[-0.01em] sm:text-[18px]">
-                      {card.value}
-                    </span>
-                    <span className="w-full truncate text-[11px] font-medium leading-tight text-foreground/90 sm:text-[12px]">
-                      {card.label}
-                    </span>
-                    {card.hint ? (
-                      <span
-                        className={`w-full truncate text-[10px] leading-tight sm:text-[11px] ${
-                          card.category === "alert" ? tokens.text : "text-muted-foreground"
-                        }`}
-                      >
-                        {card.hint}
-                      </span>
-                    ) : null}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-
-        {/* 4. HOJE — no máximo 2 cards + CTA "Ver tudo" */}
-        <section aria-labelledby="today-title" className="mt-7">
-          <div className="mb-3 flex items-baseline justify-between">
-            <h2
-              id="today-title"
-              className="text-[22px] font-semibold leading-tight tracking-[-0.015em]"
-            >
-              Hoje em {territoryName}
             </h2>
             <Link
               to={LAUNCH_URLS.community}
@@ -387,38 +380,47 @@ export default function TerritoryHomePage() {
             </Link>
           </div>
 
-          <ul className="grid grid-cols-2 gap-2.5">
-            {today.map((item) => {
-              const tokens = getCategoryTokens(item.category);
-              return (
-                <li key={item.id} className="min-w-0">
-                  <Link
-                    to={item.href}
-                    className="group flex h-full min-h-[168px] min-w-0 flex-col justify-between gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-all hover:border-border/40 hover:shadow-[0_1px_3px_rgba(17,24,39,0.06)] sm:min-h-[184px] sm:p-4"
-                  >
-                    <div className="flex min-w-0 flex-col gap-2">
-                      <span
-                        className={`inline-flex w-fit max-w-full items-center gap-1 truncate rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide sm:text-[11px] ${tokens.chip}`}
-                      >
-                        {item.kind}
+          <div className="-mx-5">
+            <ul
+              className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              role="list"
+            >
+              {pulse.map((card) => {
+                const tokens = getCategoryTokens(card.category);
+                const Icon = card.icon;
+                return (
+                  <li key={card.id} className="snap-start shrink-0">
+                    <Link
+                      to={card.href}
+                      className="group flex h-full min-h-[132px] w-[260px] flex-col justify-between gap-2 overflow-hidden rounded-2xl border border-border bg-card p-3.5 transition-all hover:border-border/40 hover:shadow-[0_1px_3px_rgba(17,24,39,0.06)] sm:w-[280px]"
+                    >
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${tokens.chip}`}>
+                          <Icon className="h-4 w-4" aria-hidden="true" strokeWidth={2.25} />
+                        </span>
+                        <span className={`truncate rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
+                          {card.kind}
+                        </span>
+                      </div>
+                      <p className="line-clamp-2 break-words text-[14px] font-semibold leading-snug tracking-[-0.005em] text-foreground">
+                        {card.title}
+                      </p>
+                      <p className="line-clamp-2 break-words text-[12px] font-normal text-muted-foreground">
+                        {card.detail}
+                      </p>
+                      <span className={`inline-flex items-center gap-1 text-[12px] font-medium ${tokens.text}`}>
+                        <span className="truncate">{card.cta}</span>
+                        <ArrowRight className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
                       </span>
-                      <p className="line-clamp-3 break-words text-[13px] font-semibold leading-snug tracking-[-0.005em] text-foreground sm:text-[15px]">
-                        {item.title}
-                      </p>
-                      <p className="line-clamp-2 break-words text-[11px] font-normal text-muted-foreground sm:text-[13px]">
-                        {item.meta}
-                      </p>
-                    </div>
-                    <span className={`inline-flex items-center gap-1 truncate text-[12px] font-medium sm:text-[13px] ${tokens.text}`}>
-                      <span className="truncate">{item.cta}</span>
-                      <ArrowRight className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </section>
+
+
 
         {/* 5. ACONTECENDO NO BAIRRO — feed misto abaixo da dobra */}
         <section aria-labelledby="feed-title" className="mt-8">
@@ -595,7 +597,58 @@ export default function TerritoryHomePage() {
             })}
           </ul>
         </section>
+
+        {/* 7. HOJE — movido para o final: aprofundamento editorial do dia */}
+        <section aria-labelledby="today-title" className="mt-8">
+          <div className="mb-3 flex items-baseline justify-between">
+            <h2
+              id="today-title"
+              className="text-[22px] font-semibold leading-tight tracking-[-0.015em]"
+            >
+              Hoje em {territoryName}
+            </h2>
+            <Link
+              to={LAUNCH_URLS.community}
+              className="text-[13px] font-medium text-primary transition-opacity hover:opacity-80"
+            >
+              Ver tudo
+            </Link>
+          </div>
+
+          <ul className="grid grid-cols-2 gap-2.5">
+            {today.map((item) => {
+              const tokens = getCategoryTokens(item.category);
+              return (
+                <li key={item.id} className="min-w-0">
+                  <Link
+                    to={item.href}
+                    className="group flex h-full min-h-[168px] min-w-0 flex-col justify-between gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-all hover:border-border/40 hover:shadow-[0_1px_3px_rgba(17,24,39,0.06)] sm:min-h-[184px] sm:p-4"
+                  >
+                    <div className="flex min-w-0 flex-col gap-2">
+                      <span
+                        className={`inline-flex w-fit max-w-full items-center gap-1 truncate rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide sm:text-[11px] ${tokens.chip}`}
+                      >
+                        {item.kind}
+                      </span>
+                      <p className="line-clamp-3 break-words text-[13px] font-semibold leading-snug tracking-[-0.005em] text-foreground sm:text-[15px]">
+                        {item.title}
+                      </p>
+                      <p className="line-clamp-2 break-words text-[11px] font-normal text-muted-foreground sm:text-[13px]">
+                        {item.meta}
+                      </p>
+                    </div>
+                    <span className={`inline-flex items-center gap-1 truncate text-[12px] font-medium sm:text-[13px] ${tokens.text}`}>
+                      <span className="truncate">{item.cta}</span>
+                      <ArrowRight className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       </main>
+
     </div>
   );
 }
