@@ -142,8 +142,8 @@ export default function OnboardingPage() {
         </div>
 
         <footer
-          className="flex shrink-0 flex-col items-center gap-1 pt-3"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 18px)" }}
+          className="flex shrink-0 flex-col items-center gap-1 pt-2"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 96px)" }}
         >
           {canShowMore ? (
             <button
