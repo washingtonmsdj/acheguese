@@ -281,8 +281,9 @@ export default function TerritoryHomePage() {
               to={LAUNCH_URLS.community}
               className="text-[13px] font-medium text-primary hover:underline"
             >
-              Ver tudo
+              Abrir o bairro
             </Link>
+
           </div>
 
           <Link
