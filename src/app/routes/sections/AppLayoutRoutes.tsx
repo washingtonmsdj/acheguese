@@ -9,6 +9,7 @@
 
 import type { ReactNode } from "react";
 import { Navigate, Routes, Route } from "react-router-dom";
+import RootRouteEntry from "@/app/routes/RootRouteEntry";
 import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
 import { LAUNCH_CITY_PATH } from "@/config/territory";
 import {
