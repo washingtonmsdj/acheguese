@@ -414,7 +414,7 @@ export default function ComunidadePage({
     return (
       <TooltipProvider>
         <div
-          className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B]"
+          className="min-h-screen w-full max-w-full overflow-x-hidden bg-background"
           role="main"
         >
           <CommunityOverviewSurface
@@ -440,20 +440,20 @@ export default function ComunidadePage({
     return (
       <TooltipProvider>
         <div
-          className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B] flex items-center justify-center"
+          className="min-h-screen w-full max-w-full overflow-x-hidden bg-background flex items-center justify-center"
           role="main"
         >
           <div className="text-center p-8 max-w-md">
-            <Users className="h-16 w-16 text-teal-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-white mb-4">
+            <Users className="h-16 w-16 text-primary mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-foreground mb-4">
               {COMMUNITY_PAGE_COPY.loginRequiredTitle}
             </h2>
-            <p className="text-gray-400 mb-6">
+            <p className="text-muted-foreground mb-6">
               {COMMUNITY_PAGE_COPY.loginRequiredDescription}
             </p>
             <Button
               onClick={handleRequireLogin}
-              className="bg-teal-500 hover:bg-teal-400"
+              className="bg-primary hover:bg-primary/90"
             >
               {COMMUNITY_PAGE_COPY.loginRequiredAction}
             </Button>
@@ -466,8 +466,8 @@ export default function ComunidadePage({
   // Aguardar resoluÃ§Ã£o do territÃ³rio antes de bloquear
   if (territoryLoading || communityAccess.isLoading) {
     return (
-      <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-teal-400 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-background flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -478,7 +478,7 @@ export default function ComunidadePage({
     return (
       <TooltipProvider>
         <div
-          className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B] text-white"
+          className="min-h-screen w-full max-w-full overflow-x-hidden bg-background text-white"
           role="main"
         >
           <CommunityPortalGate
@@ -496,7 +496,7 @@ export default function ComunidadePage({
   return (
     <TooltipProvider>
       <div
-        className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#12181B]"
+        className="min-h-screen w-full max-w-full overflow-x-hidden bg-background"
         role="main"
       >
         <div className="min-w-0">
@@ -519,7 +519,7 @@ export default function ComunidadePage({
                 <Suspense
                   fallback={
                     <div className="flex justify-center py-12">
-                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-teal-400 border-t-transparent" />
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                     </div>
                   }
                 >
