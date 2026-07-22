@@ -414,12 +414,12 @@ export default function TerritoryHomePage() {
                         {item.kind}
                       </span>
                     </div>
-                    <div className="p-3">
-                      <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-foreground">
+                    <div className="p-2 sm:p-3">
+                      <p className="line-clamp-2 text-[12px] font-semibold leading-snug text-foreground sm:text-[14px]">
                         {item.title}
                       </p>
-                      <p className="mt-1 text-[12px] text-muted-foreground">{item.meta}</p>
-                      <span className={`mt-1.5 inline-block text-[12px] font-semibold ${tokens.text}`}>
+                      <p className="mt-0.5 line-clamp-1 text-[10px] text-muted-foreground sm:text-[12px]">{item.meta}</p>
+                      <span className={`mt-1 inline-block text-[10px] font-semibold sm:text-[12px] ${tokens.text}`}>
                         {item.cta}
                       </span>
                     </div>
