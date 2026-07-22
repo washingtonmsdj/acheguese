@@ -240,7 +240,7 @@ export default function AchegueSeHomePage() {
   const goToLaunchCity = (label?: string, coords?: ResolvedLocation | null) => {
     const finalLabel = (label ?? cityQuery).trim();
     if (finalLabel) persistCity(finalLabel, coords ?? resolved);
-    navigate(LAUNCH_CITY_PATH);
+    navigate("/onboarding");
   };
 
   const handleUseLocation = async () => {
