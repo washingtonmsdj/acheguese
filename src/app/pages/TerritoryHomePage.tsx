@@ -458,7 +458,7 @@ export default function TerritoryHomePage() {
 
 
 
-        <section aria-labelledby="feed-title" className="mt-8">
+        <section aria-labelledby="feed-title" className="mt-6">
           <div className="mb-3 flex items-baseline justify-between">
             <h2
               id="feed-title"
@@ -602,7 +602,7 @@ export default function TerritoryHomePage() {
         </section>
 
         {/* 6. EXPLORE — categorias (sem aparência de banner) */}
-        <section aria-labelledby="explore-title" className="mt-8">
+        <section aria-labelledby="explore-title" className="mt-6">
           <h2
             id="explore-title"
             className="mb-3 text-[22px] font-semibold leading-tight tracking-[-0.015em]"
@@ -634,7 +634,7 @@ export default function TerritoryHomePage() {
         </section>
 
         {/* 7. HOJE — movido para o final: aprofundamento editorial do dia */}
-        <section aria-labelledby="today-title" className="mt-8">
+        <section aria-labelledby="today-title" className="mt-6">
           <div className="mb-3 flex items-baseline justify-between">
             <h2
               id="today-title"
