@@ -137,6 +137,9 @@ export const CidadeLandingPage = lazy(
 export const AboutPage = lazy(() => import("@/app/pages/AboutPage"));
 export const ContactPage = lazy(() => import("@/app/pages/ContactPage"));
 export const SplashPage = lazy(() => import("@/app/pages/SplashPage"));
+export const AchegueSeHomePage = lazy(
+  () => import("@/app/pages/AchegueSeHomePage"),
+);
 export const OnboardingPage = lazy(() => import("@/app/pages/OnboardingPage"));
 export const BuscaPage = lazy(() => import("@/app/pages/BuscaPage"));
 export const BuscarPage = lazy(() => import("@/app/pages/BuscarPage"));
