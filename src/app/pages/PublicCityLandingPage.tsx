@@ -12,6 +12,7 @@ import {
   MapPin,
   Megaphone,
   MessageCircle,
+  Mic,
   MoreHorizontal,
   Navigation,
   Plus,
@@ -25,6 +26,8 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
+import { useRef } from "react";
+import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchScope";
 import { LAUNCH_CITY_PATH, LAUNCH_URLS } from "@/config/territory";
 import {
@@ -840,50 +843,98 @@ function StatsBar({ stats }: { stats: HomeStatCard[] }) {
  * Apenas layout/hierarquia; nenhuma nova regra de negócio.
  * ============================================================ */
 
-function TerritoryBlock({ communityHref }: { communityHref: string }) {
-  return (
-    <section className="home1-territory" aria-label="Seu território">
-      <div className="home1-territory-marker" aria-hidden="true">
-        <MapPin />
-      </div>
-      <div className="home1-territory-copy">
-        <span className="home1-territory-eyebrow">Você está em</span>
-        <h1>Salvador, BA</h1>
-        <p>Seu bairro digital — pessoas, negócios e o que acontece agora.</p>
-      </div>
-      <Link to={communityHref} className="home1-territory-switch">
-        Trocar bairro
-        <ChevronDown aria-hidden="true" />
-      </Link>
-    </section>
-  );
-}
-
-function HomeSearchBar() {
+function NeighborhoodHeader({
+  communityHref,
+  notificationHref,
+  unreadCount,
+}: {
+  communityHref: string;
+  notificationHref: string;
+  unreadCount: number;
+}) {
   const navigate = useNavigate();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const territory = useUserTerritory();
+  const neighborhoodName = territory.homeDistrict?.name ?? "Salvador";
+  const citySubtitle = "Salvador, BA";
+  const badge = unreadCount > 99 ? "99+" : String(unreadCount);
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const query = String(formData.get("q") ?? "").trim();
     navigate(query ? withQueryParams(searchHref, { q: query }) : searchHref);
   };
+
+  const focusSearch = () => inputRef.current?.focus();
+
   return (
-    <form className="home1-search" onSubmit={handleSubmit} role="search">
-      <Search className="home1-search-icon" aria-hidden="true" />
-      <label className="sr-only" htmlFor="home1-search-input">
-        Buscar no bairro
-      </label>
-      <input
-        id="home1-search-input"
-        name="q"
-        type="search"
-        autoComplete="off"
-        placeholder="O que você procura no bairro?"
-      />
-      <button type="submit" className="home1-search-submit" aria-label="Buscar">
-        <Search aria-hidden="true" />
-      </button>
-    </form>
+    <section className="home1-nhead" aria-label="Seu bairro">
+      <div className="home1-nhead-row">
+        <Link to={communityHref} className="home1-nhead-place" aria-label="Trocar bairro">
+          <span className="home1-nhead-pin" aria-hidden="true">
+            <MapPin />
+          </span>
+          <span className="home1-nhead-place-copy">
+            <span className="home1-nhead-name">
+              {neighborhoodName}
+              <ChevronDown aria-hidden="true" />
+            </span>
+            <span className="home1-nhead-city">{citySubtitle}</span>
+          </span>
+        </Link>
+
+        <div className="home1-nhead-actions">
+          <button
+            type="button"
+            className="home1-nhead-iconbtn"
+            aria-label="Buscar"
+            onClick={focusSearch}
+          >
+            <Search aria-hidden="true" />
+          </button>
+          <Link
+            to={notificationHref}
+            className="home1-nhead-iconbtn"
+            aria-label={
+              unreadCount > 0
+                ? `Notificações (${unreadCount} não lidas)`
+                : "Notificações"
+            }
+          >
+            <Bell aria-hidden="true" />
+            {unreadCount > 0 ? (
+              <span className="home1-nhead-badge" aria-hidden="true">
+                {badge}
+              </span>
+            ) : null}
+          </Link>
+        </div>
+      </div>
+
+      <form className="home1-nhead-search" onSubmit={handleSubmit} role="search">
+        <Search className="home1-nhead-search-icon" aria-hidden="true" />
+        <label className="sr-only" htmlFor="home1-search-input">
+          Buscar no bairro
+        </label>
+        <input
+          ref={inputRef}
+          id="home1-search-input"
+          name="q"
+          type="search"
+          autoComplete="off"
+          placeholder="O que você procura no bairro?"
+        />
+        <button
+          type="button"
+          className="home1-nhead-mic"
+          aria-label="Buscar por voz"
+          title="Buscar por voz"
+        >
+          <Mic aria-hidden="true" />
+        </button>
+      </form>
+    </section>
   );
 }
 
@@ -1235,9 +1286,12 @@ export default function PublicCityLandingPage() {
           sessionActions={sessionActions}
         />
 
-        <TerritoryBlock communityHref={communityHref} />
+        <NeighborhoodHeader
+          communityHref={communityHref}
+          notificationHref={appUrls.notifications}
+          unreadCount={unreadCount}
+        />
 
-        <HomeSearchBar />
 
         <TodayInNeighborhood cards={happeningCards} isLoading={homeDiscovery.isLoading} />
 
