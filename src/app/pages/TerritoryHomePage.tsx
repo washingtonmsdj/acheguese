@@ -338,25 +338,25 @@ export default function TerritoryHomePage() {
             </h2>
           </div>
 
-          <ul className="grid grid-cols-4 gap-2.5">
+          <ul className="grid grid-cols-4 gap-2">
             {pulse.map((card) => {
               const tokens = getCategoryTokens(card.category);
               const Icon = card.icon;
               return (
-                <li key={card.id}>
-                  <div className="flex h-full flex-col items-start gap-1.5 rounded-2xl border border-border bg-card p-3">
-                    <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${tokens.chip}`}>
+                <li key={card.id} className="min-w-0">
+                  <div className="flex h-full min-w-0 flex-col items-start gap-1 overflow-hidden rounded-2xl border border-border bg-card p-2.5 sm:p-3">
+                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg sm:h-8 sm:w-8 ${tokens.chip}`}>
                       <Icon className="h-4 w-4" aria-hidden="true" strokeWidth={2.25} />
                     </span>
-                    <span className="text-[18px] font-semibold leading-none tracking-[-0.01em]">
+                    <span className="w-full truncate text-[15px] font-semibold leading-tight tracking-[-0.01em] sm:text-[18px]">
                       {card.value}
                     </span>
-                    <span className="text-[12px] font-medium leading-tight text-foreground/90">
+                    <span className="w-full truncate text-[11px] font-medium leading-tight text-foreground/90 sm:text-[12px]">
                       {card.label}
                     </span>
                     {card.hint ? (
                       <span
-                        className={`text-[11px] leading-tight ${
+                        className={`w-full truncate text-[10px] leading-tight sm:text-[11px] ${
                           card.category === "alert" ? tokens.text : "text-muted-foreground"
                         }`}
                       >
@@ -387,31 +387,31 @@ export default function TerritoryHomePage() {
             </Link>
           </div>
 
-          <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          <ul className="grid grid-cols-2 gap-2.5">
             {today.map((item) => {
               const tokens = getCategoryTokens(item.category);
               return (
-                <li key={item.id}>
+                <li key={item.id} className="min-w-0">
                   <Link
                     to={item.href}
-                    className="group flex h-full flex-col justify-between gap-3 rounded-2xl border border-border bg-card p-4 transition-all hover:border-border/40 hover:shadow-[0_1px_3px_rgba(17,24,39,0.06)]"
+                    className="group flex h-full min-w-0 flex-col justify-between gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-all hover:border-border/40 hover:shadow-[0_1px_3px_rgba(17,24,39,0.06)] sm:p-4"
                   >
-                    <div className="flex flex-col gap-2.5">
+                    <div className="flex min-w-0 flex-col gap-2">
                       <span
-                        className={`inline-flex w-fit items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${tokens.chip}`}
+                        className={`inline-flex w-fit max-w-full items-center gap-1 truncate rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide sm:text-[11px] ${tokens.chip}`}
                       >
                         {item.kind}
                       </span>
-                      <p className="text-[16px] font-semibold leading-snug tracking-[-0.005em] text-foreground">
+                      <p className="line-clamp-3 break-words text-[13px] font-semibold leading-snug tracking-[-0.005em] text-foreground sm:text-[15px]">
                         {item.title}
                       </p>
-                      <p className="text-[13px] font-normal text-muted-foreground">
+                      <p className="line-clamp-2 break-words text-[11px] font-normal text-muted-foreground sm:text-[13px]">
                         {item.meta}
                       </p>
                     </div>
-                    <span className={`inline-flex items-center gap-1 text-[13px] font-medium ${tokens.text}`}>
-                      {item.cta}
-                      <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                    <span className={`inline-flex items-center gap-1 truncate text-[12px] font-medium sm:text-[13px] ${tokens.text}`}>
+                      <span className="truncate">{item.cta}</span>
+                      <ArrowRight className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
                     </span>
                   </Link>
                 </li>
@@ -451,14 +451,14 @@ export default function TerritoryHomePage() {
                         {item.avatarInitial}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 text-[12px]">
-                          <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
+                        <div className="flex min-w-0 items-center gap-2 text-[12px]">
+                          <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
                             Post
                           </span>
                           <span className="truncate font-medium text-foreground">
                             {item.author}
                           </span>
-                          <span className="text-muted-foreground">· {item.time}</span>
+                          <span className="shrink-0 text-muted-foreground">· {item.time}</span>
                         </div>
                         <p className="mt-1 line-clamp-2 text-[15px] font-medium leading-snug text-foreground">
                           {item.title}
@@ -488,16 +488,16 @@ export default function TerritoryHomePage() {
                         <Store className="h-5 w-5" aria-hidden="true" />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 text-[12px]">
-                          <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
+                        <div className="flex min-w-0 items-center gap-2 text-[12px]">
+                          <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
                             Empresa
                           </span>
                           <span className="truncate font-semibold text-foreground">
                             {item.title}
                           </span>
-                          <BadgeCheck className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                          <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
                         </div>
-                        <p className="mt-1 text-[13px] text-muted-foreground">
+                        <p className="mt-1 truncate text-[13px] text-muted-foreground">
                           <span className={tokens.text}>{item.status}</span> · {item.distance} · ★ {item.rating}
                         </p>
                       </div>
@@ -518,15 +518,15 @@ export default function TerritoryHomePage() {
                         <Calendar className="h-5 w-5" aria-hidden="true" />
                       </span>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 text-[12px]">
-                          <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
+                        <div className="flex min-w-0 items-center gap-2 text-[12px]">
+                          <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
                             Evento
                           </span>
                           <span className="truncate font-semibold text-foreground">
                             {item.title}
                           </span>
                         </div>
-                        <p className="mt-1 text-[13px] text-muted-foreground">
+                        <p className="mt-1 truncate text-[13px] text-muted-foreground">
                           {item.place} · {item.time}
                         </p>
                       </div>
@@ -547,15 +547,15 @@ export default function TerritoryHomePage() {
                       <BadgeCheck className="h-5 w-5" aria-hidden="true" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 text-[12px]">
-                        <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
+                      <div className="flex min-w-0 items-center gap-2 text-[12px]">
+                        <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
                           Oferta
                         </span>
                         <span className="truncate font-semibold text-foreground">
                           {item.title}
                         </span>
                       </div>
-                      <p className="mt-1 text-[13px] text-muted-foreground">{item.detail}</p>
+                      <p className="mt-1 line-clamp-2 break-words text-[13px] text-muted-foreground">{item.detail}</p>
                     </div>
                   </Link>
                 </li>
@@ -578,15 +578,15 @@ export default function TerritoryHomePage() {
               const tokens = getCategoryTokens(vertical.category);
               const Icon = vertical.icon;
               return (
-                <li key={vertical.id}>
+                <li key={vertical.id} className="min-w-0">
                   <Link
                     to={vertical.href}
-                    className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-3 text-center transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    className="flex min-w-0 flex-col items-center gap-2 overflow-hidden rounded-2xl border border-border bg-card p-3 text-center transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                   >
-                    <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${tokens.chip}`}>
+                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tokens.chip}`}>
                       <Icon className="h-[18px] w-[18px]" aria-hidden="true" strokeWidth={2.25} />
                     </span>
-                    <span className="text-[12px] font-medium leading-tight text-foreground">
+                    <span className="w-full truncate text-[12px] font-medium leading-tight text-foreground">
                       {vertical.label}
                     </span>
                   </Link>
