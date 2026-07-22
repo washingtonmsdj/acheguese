@@ -292,10 +292,16 @@ export function CommunityFeed({
 
   return (
     <div className="space-y-4">
+      <TerritoryFeedHeader
+        territoryName={communityName}
+        territoryType={locationScope === "city" ? "cidade" : "bairro"}
+      />
       <CommunityComposerEntry
         communityName={communityName}
         onOpenCreatePost={onOpenCreatePost}
       />
+
+
 
       <div className="rounded-2xl border border-white/10 bg-[#0f171a] p-3 shadow-xl shadow-black/10 md:p-4">
         {contentMode === "discussions" ? (
