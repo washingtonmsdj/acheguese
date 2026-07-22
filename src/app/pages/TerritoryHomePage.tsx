@@ -392,11 +392,11 @@ export default function TerritoryHomePage() {
             </Link>
           </div>
 
-          <ul className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <ul className="grid grid-cols-3 gap-2 sm:gap-3">
             {today.map((item) => {
               const tokens = getCategoryTokens(item.category);
               return (
-                <li key={item.id} className="w-[72%] shrink-0 snap-start xs:w-[62%] sm:w-[45%] md:w-[32%]">
+                <li key={item.id} className="min-w-0">
                   <Link
                     to={item.href}
                     className="group block overflow-hidden rounded-2xl border border-border/60 bg-card transition-transform hover:-translate-y-0.5 hover:shadow-sm"
