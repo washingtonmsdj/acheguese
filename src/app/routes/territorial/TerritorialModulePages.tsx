@@ -27,6 +27,9 @@ import type { CommunityOverviewSection } from '@/core/community/components/page/
 // Lazy imports dos módulos existentes
 const ComunidadePage       = lazy(() => import('@/core/community/pages/ComunidadePage'));
 const CidadeLandingPage    = lazy(() => import('@/app/pages/CidadeLandingPage'));
+// Sprint TERRITORY.1: Territory Home passa a ser a home única de qualquer território
+// (cidade ou bairro). O feed completo continua em `/comunidade/.../feed` via ComunidadePage.
+const TerritoryHomePage    = lazy(() => import('@/app/pages/TerritoryHomePage'));
 const CommunityCommunicationTabPage = lazy(() => import('@/modules/communication-territorial/pages/CommunityCommunicationTabPage'));
 const ProblemasPage        = lazy(() => import('@/modules/community-issues/pages/ProblemasPage'));
 const EmpresasPage         = lazy(() => import('@/app/pages/EmpresasLandingPage'));
