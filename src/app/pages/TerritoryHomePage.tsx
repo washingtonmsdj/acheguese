@@ -49,9 +49,11 @@ import {
 type PulseCard = {
   id: string;
   icon: LucideIcon;
-  value: string;
-  label: string;
-  hint?: string;
+  kind: "Alerta" | "Aviso" | "Oferta" | "Promoção";
+  title: string;
+  detail: string;
+  cta: string;
+  href: string;
   category: ContentCategoryKey;
 };
 
