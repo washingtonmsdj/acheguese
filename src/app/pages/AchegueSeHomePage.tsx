@@ -334,9 +334,9 @@ export default function AchegueSeHomePage() {
       <main
         id="main-content"
         className={cn(
-          "relative mx-auto flex w-full max-w-[420px] flex-1 flex-col",
+          "relative mx-auto flex w-full max-w-[420px] flex-1 flex-col justify-center",
           "px-5 sm:px-6",
-          "pt-[max(2.5rem,env(safe-area-inset-top))]",
+          "pt-[max(2rem,env(safe-area-inset-top))]",
           "pb-[max(1.5rem,env(safe-area-inset-bottom))]",
         )}
       >
