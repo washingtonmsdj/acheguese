@@ -1,4 +1,4 @@
-import { type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -7,22 +7,22 @@ import {
   Building2,
   Calendar,
   ChevronDown,
-  Dumbbell,
+  Compass,
   Home as HomeIcon,
   MapPin,
   Megaphone,
   MessageCircle,
   MoreHorizontal,
-  PawPrint,
+  Navigation,
+  Plus,
   Search,
   ShieldCheck,
-  Scissors,
   Star,
-  ShoppingCart,
   Tag,
   Users,
   UtensilsCrossed,
   Wrench,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchScope";
