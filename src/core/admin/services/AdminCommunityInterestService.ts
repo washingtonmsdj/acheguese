@@ -275,12 +275,12 @@ export interface UpdateRegistrationInput {
 async function updateRegistration(
   id: string,
   patch: UpdateRegistrationInput,
-  reviewerId?: string | null,
+  reviewerUserId?: string | null,
 ): Promise<{ ok: boolean; error?: string }> {
   const payload: Record<string, unknown> = { ...patch };
   if (patch.admin_status || patch.admin_notes !== undefined) {
     payload.reviewed_at = new Date().toISOString();
-    if (reviewerId) payload.reviewed_by = reviewerId;
+    if (reviewerUserId) payload.reviewed_by = reviewerUserId;
   }
   const query = db
     .from<CommunityInterestRegistration>("community_interest_registrations")

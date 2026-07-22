@@ -70,14 +70,14 @@ async function resolveDeliveryLocationInfo(
 
   if (!reverse) {
     throw new Error(
-      "NÃ£o foi possÃ­vel validar o endereÃ§o de entrega. Informe um endereÃ§o mais completo.",
+      "Não foi possível validar o endereço de entrega. Informe um endereço mais completo.",
     );
   }
 
   const info = locationGeocodingService.extractLocationInfo(reverse);
   if (!info.neighborhood || !info.city || !info.state) {
     throw new Error(
-      "EndereÃ§o sem bairro, cidade e estado vÃ¡lidos para calcular Ã¡rea de entrega.",
+      "Endereço sem bairro, cidade e estado válidos para calcular área de entrega.",
     );
   }
 
@@ -131,14 +131,14 @@ export function useGastronomyCheckout() {
           },
         );
         throw new Error(
-          "Entrega por rede de motoboy ainda nao esta disponivel neste lancamento. Ajuste a loja para frota propria ou use retirada/no local.",
+          "Entrega por rede de motoboy ainda não está disponível neste lançamento. Ajuste a loja para frota própria ou use retirada/no local.",
         );
       }
 
       if (isDeliveryOrder) {
         if (!input.deliveryAddress) {
           throw new Error(
-            "Defina um destino de entrega vÃ¡lido antes de concluir o pedido.",
+            "Defina um destino de entrega válido antes de concluir o pedido.",
           );
         }
 

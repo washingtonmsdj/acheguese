@@ -6,27 +6,10 @@
  * - Quando desativado, `enabled = false` e o gate não bloqueia o submit
  *   (compat com ambientes de dev / preview sem a chave).
  */
-import { useCallback, useState } from "react";
-
 import { TurnstileWidget } from "@/shared/components/security/TurnstileWidget";
 import { cn } from "@/shared/utils/cn";
 
 const SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "").trim();
-
-export function useAuthTurnstile() {
-  const [token, setToken] = useState<string | null>(null);
-  const enabled = SITE_KEY.length > 0;
-  const reset = useCallback(() => setToken(null), []);
-  return {
-    enabled,
-    token,
-    setToken,
-    reset,
-    /** true = pode submeter (sem gate) OU já tem token válido. */
-    isReady: !enabled || Boolean(token),
-    siteKey: SITE_KEY,
-  };
-}
 
 export interface AuthTurnstileGateProps {
   onVerify: (token: string) => void;

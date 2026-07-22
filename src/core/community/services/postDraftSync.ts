@@ -21,6 +21,7 @@ import {
   decryptString,
   encryptString,
 } from "@/core/community/utils/postDraftCrypto";
+import { SessionService } from "@/core/session/services/SessionService";
 
 const TABLE = "community_post_drafts";
 const PENDING_PREFIX = "community:post-draft-pending:v1:";
@@ -163,8 +164,8 @@ export async function upsertRemoteDraft(
       }
     }
 
-    const { data: userRes } = await supabase.auth.getUser();
-    const userId = userRes?.user?.id;
+    const user = await SessionService.getCurrentUser();
+    const userId = user?.id;
     if (!userId) return { status: "error", error: "not authenticated" };
 
     const { updatedAt: _u, savedAt: _s, ...payload } = snapshot;

@@ -11,7 +11,7 @@ import { Checkbox } from "@/shared/components/ui/checkbox";
 import { useToast } from "@/shared/components/ui/use-toast";
 import { useResolveTerritoryFromUrl } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
-import { supabase } from "@/integrations/supabase/client";
+import { registerCommunityInterest } from "@/core/routing/services";
 import { TurnstileWidget } from "@/shared/components/security/TurnstileWidget";
 import { TerritorialNotFound } from "./TerritorialNotFound";
 
@@ -180,55 +180,39 @@ export function CommunityInterestPage() {
 
     setSubmitting(true);
     try {
-      // Verificação server-side do Turnstile (quando habilitado)
-      let turnstileVerified = false;
-      if (turnstileEnabled && turnstileToken) {
-        const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
-          "verify-turnstile-token",
-          { body: { token: turnstileToken, action: "community-interest" } },
-        );
-        if (verifyError || !(verifyData as { success?: boolean } | null)?.success) {
-          setTurnstileError("Falha na verificação anti-spam. Tente novamente.");
-          setTurnstileToken(null);
-          return;
-        }
-        turnstileVerified = true;
-      }
-
       const territoryPath = communityBase ?? null;
       const source = typeof window !== "undefined" ? window.location.pathname : "community-interest";
       const userAgent =
         typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any)
-        .from("community_interest_registrations")
-        .insert({
-          community_id: communityId,
-          community_slug: communitySlug,
-          territory_path: territoryPath,
-          full_name: parsed.data.full_name,
-          email: parsed.data.email,
-          phone: parsed.data.phone || null,
-          role: parsed.data.role,
-          message: parsed.data.message || null,
-          wants_updates: parsed.data.wants_updates,
-          source,
-          user_agent: userAgent,
-          turnstile_verified: turnstileVerified,
-        });
+      const result = await registerCommunityInterest({
+        communityId,
+        communitySlug,
+        territoryPath,
+        fullName: parsed.data.full_name,
+        email: parsed.data.email,
+        phone: parsed.data.phone || null,
+        role: parsed.data.role,
+        message: parsed.data.message || null,
+        wantsUpdates: parsed.data.wants_updates,
+        source,
+        userAgent,
+        turnstileToken: turnstileEnabled ? turnstileToken : null,
+      });
 
-      if (error) {
-        const alreadyRegistered = error.code === "23505";
-        if (alreadyRegistered) {
-          setSubmitted(true);
-          toast({
-            title: "Você já está na lista",
-            description: `Já registramos seu interesse em ${territoryName}. Vamos te avisar!`,
-          });
-          return;
-        }
-        throw error;
+      if (result.status === "turnstile_failed") {
+        setTurnstileError("Falha na verificação anti-spam. Tente novamente.");
+        setTurnstileToken(null);
+        return;
+      }
+
+      if (result.status === "already_registered") {
+        setSubmitted(true);
+        toast({
+          title: "Você já está na lista",
+          description: `Já registramos seu interesse em ${territoryName}. Vamos te avisar!`,
+        });
+        return;
       }
 
       setSubmitted(true);

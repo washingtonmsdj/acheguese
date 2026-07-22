@@ -8,7 +8,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
 import { AuthFooter } from "@/app/components/auth/AuthFooter";
-import { AuthTurnstileGate, useAuthTurnstile } from "@/app/components/auth/AuthTurnstileGate";
+import { AuthTurnstileGate } from "@/app/components/auth/AuthTurnstileGate";
+import { useAuthTurnstile } from "@/app/components/auth/useAuthTurnstile";
 import { PasswordInput } from "@/app/components/auth/PasswordInput";
 import { AUTH_BROWSER_STORAGE_CONFIG } from "@/config/security.config";
 import { useAuth } from "@/core/auth/hooks/useAuth";

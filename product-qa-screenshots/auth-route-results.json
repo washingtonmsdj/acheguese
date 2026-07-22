@@ -1,0 +1,810 @@
+{
+  "results": [
+    {
+      "flow": "Login",
+      "url": "http://127.0.0.1:5175/ba/salvador",
+      "title": "Salvador | Achegue-se",
+      "body": "Pular para o conteúdo principal Privacidade e Cookies Utilizamos cookies e dados pessoais para melhorar sua experiência. Personalizar Rejeitar Aceitar todos Achegue-se Início Comunidades Empresas Serviços Classificados Mapa Salvador, BA E Salvador, BA Comunidade em alta Tudo do seu bairro, em um só lugar Conecte-se com pessoas, descubra empresas locais, participe de eventos e fortaleça sua comunidade. Buscar no Achegue-se Restaurantes Mercados Salões Mecânicas Academias Pet shops + Mais Comunidades em destaque Ver todas Em alta Pituba Comunidade ativa +23 Barra Comunidade ativa +18 Itapuã Comunidade ativa +15 Rio Vermelho Comunidade ativa +9 O que está acontecendo perto de você Ver tudo Evento hoje Samba na Praça 19h - Praça da Pituba Música Nova empresa Academia Strong Pituba Aberto agora Atividades nas comunidades Ver todas Juliana Santos Pituba Alguém sabe de um bom restaurante japonês por aqui? 2h 24 Prefeitura de Salvador Avisos oficiais Mutirão de limpeza neste sábado na orla da "
+    },
+    {
+      "flow": "editar perfil",
+      "route": "/conta/editar",
+      "url": "http://127.0.0.1:5175/conta",
+      "title": "Achegue-se - Comunidade hiperlocal",
+      "body": "Pular para o conteúdo principal Privacidade e Cookies Utilizamos cookies e dados pessoais para melhorar sua experiência. Personalizar Rejeitar Aceitar todos"
+    },
+    {
+      "flow": "trocar foto",
+      "route": "/conta/editar",
+      "url": "http://127.0.0.1:5175/conta",
+      "title": "Achegue-se - Comunidade hiperlocal",
+      "body": "Pular para o conteúdo principal Privacidade e Cookies Utilizamos cookies e dados pessoais para melhorar sua experiência. Personalizar Rejeitar Aceitar todos"
+    },
+    {
+      "flow": "criar postagem",
+      "route": "/novo-post",
+      "url": "http://127.0.0.1:5175/novo-post",
+      "title": "Achegue-se - Comunidade hiperlocal",
+      "body": "Pular para o conteúdo principal Privacidade e Cookies Utilizamos cookies e dados pessoais para melhorar sua experiência. Personalizar Rejeitar Aceitar todos Criar conteúdo territorial Escolha o formato, escreva com clareza e confirme onde o conteúdo será exibido. Configure sua localização no perfil antes de publicar. U Usuário Discussão Tipo de publicação Discussão Alterar tipo Descrição 23/2000 Midia (0/4) Distribuicao territorial Minha rua Meu bairro Região Cidade Complete os campos obrigatórios Cancelar Descartar Salvar rascunho Publicar Close"
+    },
+    {
+      "flow": "pesquisar",
+      "route": "/busca",
+      "url": "http://127.0.0.1:5175/busca",
+      "title": "Achegue-se - Comunidade hiperlocal",
+      "body": "Pular para o conteúdo principal Privacidade e Cookies Utilizamos cookies e dados pessoais para melhorar sua experiência. Personalizar Rejeitar Aceitar todos Achegue-se Cidade: salvador PRINCIPAL Início Meu Bairro Empresas Gastronomia Serviços Classificados Pontos turísticos GESTÃO Central OPORTUNIDADES Vagas Eventos FERRAMENTAS Perto de Mim Mapa Busca Modo Claro E e2e-network Ver perfil Preferencias da conta Toggle Sidebar Planos Sobre E Todos Comunidades Empresas Profissões e Serviços Eventos Classificados Oportunidades Posts Buscando..."
+    },
+    {
+      "flow": "cadastrar empresa",
+      "route": "/central/empresas/nova",
+      "url": "http://127.0.0.1:5175/central/empresas/nova",
+      "title": "Achegue-se - Comunidade hiperlocal",
+      "body": "Pular para o conteúdo principal Privacidade e Cookies Utilizamos cookies e dados pessoais para melhorar sua experiência. Personalizar Rejeitar Aceitar todos Central Menu Inicio Minhas Empresas Meus Eventos Perfil Profissional Modo Claro E e2e-network@test.local Ver perfil Toggle Sidebar Ver site Planos Sobre E Criar empresa 1 2 3 Identidade e classificação Nome, enquadramento e descrição que definem a empresa no domínio canônico. Logo da empresa Adicionar logo Recomendado: imagem quadrada, até 5 MB. Nome da empresa * Razão social CNPJ Categoria * Selecione uma categoria Restaurante Mercado Farmácia Saúde Educação Serviços Lazer Outros Subcategoria Tipo societário Não informado MEI LTDA S/A EIRELI Outro Porte da equipe Não informado 1 a 10 pessoas 11 a 50 pessoas 51 a 200 pessoas 201 a 500 pessoas Mais de 500 pessoas Ano de fundação Segmento Não informado Comércio local Prestação de serviços Atendimento especializado Atividade comunitária Outro (digitar manualmente) Descrição * Mínimo d"
+    },
+    {
+      "flow": "visualizar empresa",
+      "route": "/empresas/ba/salvador/complexo-do-nordeste-de-amaralina/tone-cos-loja",
+      "url": "http://127.0.0.1:5175/empresas/ba/salvador/complexo-do-nordeste-de-amaralina/tone-cos-loja",
+      "title": "Achegue-se - Comunidade hiperlocal",
+      "body": "Pular para o conteúdo principal Privacidade e Cookies Utilizamos cookies e dados pessoais para melhorar sua experiência. Personalizar Rejeitar Aceitar todos Preparando a casa para você se achegar..."
+    },
+    {
+      "flow": "mensagens",
+      "route": "/mensagens",
+      "url": "http://127.0.0.1:5175/mensagens",
+      "title": "Achegue-se - Comunidade hiperlocal",
+      "body": "Pular para o conteúdo principal Privacidade e Cookies Utilizamos cookies e dados pessoais para melhorar sua experiência. Personalizar Rejeitar Aceitar todos Achegue-se Cidade: salvador PRINCIPAL Início Meu Bairro Empresas Gastronomia Serviços Classificados Pontos turísticos GESTÃO Central OPORTUNIDADES Vagas Eventos FERRAMENTAS Perto de Mim Mapa Busca Modo Claro E e2e-network Ver perfil Preferencias da conta Toggle Sidebar Planos Sobre E Voltar para o início MVP PÚBLICO Mensagens está separado para ajustes. Esta área não faz parte da primeira superfície pública do Achegue-se. O módulo continua preservado para manutenção, testes e retorno controlado quando estiver pronto para lançar. ÁREAS ABERTAS AGORA Comunidade Início Empresas Serviços Classificados Mapa Perto de Mim Busca"
+    },
+    {
+      "flow": "notificacoes",
+      "route": "/notificacoes",
+      "url": "http://127.0.0.1:5175/notificacoes",
+      "title": "Achegue-se - Comunidade hiperlocal",
+      "body": "Pular para o conteúdo principal Privacidade e Cookies Utilizamos cookies e dados pessoais para melhorar sua experiência. Personalizar Rejeitar Aceitar todos Notificações Acompanhe suas atualizacoes e avisos Preferências Notificações Suas notificações e atualizações Todas Não lidas Nenhuma notificação"
+    },
+    {
+      "flow": "configuracoes",
+      "route": "/conta/preferencias",
+      "url": "http://127.0.0.1:5175/conta/preferencias",
+      "title": "Preferências da conta",
+      "body": "Pular para o conteúdo principal Privacidade e Cookies Utilizamos cookies e dados pessoais para melhorar sua experiência. Personalizar Rejeitar Aceitar todos CONTA E PREFERÊNCIAS Preferências da conta Notificações, privacidade e ajustes da identidade ativa. ATALHOS PRINCIPAIS Ajustes pessoais em um só lugar Use essas entradas para controlar comunicação, privacidade e relações da sua identidade atual sem misturar com operação. Notificações Defina canais, frequência e horário silencioso. Abrir notificações Privacidade Controle dados, consentimentos e fluxo LGPD. Abrir privacidade Vínculos e membros Gerencie ligações da identidade ativa e dos times. Abrir vínculos Identidade ativa Ajuste configurações do perfil em contexto. Ajustar identidade"
+    },
+    {
+      "flow": "feed social",
+      "route": "/ba/salvador",
+      "url": "http://127.0.0.1:5175/ba/salvador",
+      "title": "Salvador | Achegue-se",
+      "body": "Pular para o conteúdo principal Privacidade e Cookies Utilizamos cookies e dados pessoais para melhorar sua experiência. Personalizar Rejeitar Aceitar todos Achegue-se Início Comunidades Empresas Serviços Classificados Mapa Salvador, BA E Salvador, BA Comunidade em alta Tudo do seu bairro, em um só lugar Conecte-se com pessoas, descubra empresas locais, participe de eventos e fortaleça sua comunidade. Buscar no Achegue-se Restaurantes Mercados Salões Mecânicas Academias Pet shops + Mais Comunidades em destaque Ver todas Em alta Pituba Comunidade ativa +23 Barra Comunidade ativa +18 Itapuã Comunidade ativa +15 Rio Vermelho Comunidade ativa +9 O que está acontecendo perto de você Ver tudo Evento hoje Samba na Praça 19h - Praça da Pituba Música Nova empresa Academia Strong Pituba Aberto agora Atividades nas comunidades Ver todas Juliana Santos Pituba Alguém sabe de um bom restaurante japonês por aqui? 2h 24 Prefeitura de Salvador Avisos oficiais Mutirão de limpeza neste sábado na orla da "
+    }
+  ],
+  "logs": [
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error tracked | {\"component\":\"profile.queries\",\"action\":\"getProfilesByUserId\",\"userId\":\"0efbc7cb-af58-488f-8e56-d2cd5936d17b\",\"severity\":\"medium\"} Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infr"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [WorkOpportunitiesService] Slow listPublicOpportunityCards: 1134ms | {\"hasSearch\":false,\"hasTerritory\":true,\"hasCategory\":false,\"limit\":4}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] EventReadService.getEventsPage | {\"code\":\"\",\"details\":\"TypeError: Failed to fetch\\n    at http://127.0.0.1:5175/node_modules/.vite/deps/@supabase_supabase-js.js?v=41202aac:15583:22\\n    at http://127.0.0.1:5175/node_modules/.vite/deps/@supabase_supabase-js.js?v=41202aac:15597:10\\n    at async EventReadService.getEventsPage (http://127.0.0.1:5175/src/core/verticals/events/services/EventRead"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] LandingFeaturedService.getFeaturedClassifieds | \"TypeError: Failed to fetch\""
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Query error: | {\"code\":\"\",\"details\":\"TypeError: Failed to fetch\\n    at http://127.0.0.1:5175/node_modules/.vite/deps/@supabase_supabase-js.js?v=41202aac:15583:22\\n    at http://127.0.0.1:5175/node_modules/.vite/deps/@supabase_supabase-js.js?v=41202aac:15597:10\\n    at async TerritorialGroupRepositorySupabase.listMembers (http://127.0.0.1:5175/src/core/location/repositories/TerritorialGrou"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] HomeDiscoveryService.partialQuery | \"TypeError: Failed to fetch\""
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] HomeDiscoveryService.partialQuery | \"TypeError: Failed to fetch\""
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error tracked | {\"component\":\"profile.queries\",\"action\":\"getProfilesByUserId\",\"userId\":\"0efbc7cb-af58-488f-8e56-d2cd5936d17b\",\"severity\":\"medium\"} Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error fetching runtime profiles: Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:30:22)\n    at async Object.getMyProfiles (http://127.0.0.1:5175/sr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error tracked | {\"component\":\"profile.queries\",\"action\":\"getProfilesByUserId\",\"userId\":\"0efbc7cb-af58-488f-8e56-d2cd5936d17b\",\"severity\":\"medium\"} Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error tracked | {\"component\":\"profile.queries\",\"action\":\"getProfilesByUserId\",\"userId\":\"0efbc7cb-af58-488f-8e56-d2cd5936d17b\",\"severity\":\"medium\"} Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error fetching runtime profiles: Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:30:22)\n    at async Object.getMyProfiles (http://127.0.0.1:5175/sr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error tracked | {\"component\":\"profile.queries\",\"action\":\"getProfilesByUserId\",\"userId\":\"0efbc7cb-af58-488f-8e56-d2cd5936d17b\",\"severity\":\"medium\"} Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error fetching runtime profiles: Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:30:22)\n    at async Object.getMyProfiles (http://127.0.0.1:5175/sr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error tracked | {\"component\":\"profile.queries\",\"action\":\"getProfilesByUserId\",\"userId\":\"0efbc7cb-af58-488f-8e56-d2cd5936d17b\",\"severity\":\"medium\"} Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error fetching runtime profiles: Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:30:22)\n    at async Object.getMyProfiles (http://127.0.0.1:5175/sr"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [WorkOpportunitiesService] Slow listPublicOpportunityCards: 723ms | {\"hasSearch\":true,\"hasTerritory\":false,\"hasCategory\":false,\"limit\":20}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error tracked | {\"component\":\"profile.queries\",\"action\":\"getProfilesByIds\",\"severity\":\"medium\",\"ids\":[\"dd18e6ed-616b-4e4d-821b-87e1bc1ccec3\",\"8666e48d-559f-48e2-bf67-c815e52bc2f9\",\"fb65fc3d-8da1-4221-852f-33d1ea47389e\",\"a3786d9a-3a1a-4580-b8a4-18a0074de95a\",\"059d6244-39a7-4789-83ba-550b2cecb7dd\",\"8e6ae3ee-d020-4879-877e-851bf3d8e1d6\",\"bcfce6a8-56c4-4809-ac23-1ddd6cc277e4\",\"c882c916-3c95-41"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error tracked | {\"component\":\"profile.queries\",\"action\":\"getProfilesByIds\",\"severity\":\"medium\",\"ids\":[\"dd18e6ed-616b-4e4d-821b-87e1bc1ccec3\",\"8666e48d-559f-48e2-bf67-c815e52bc2f9\",\"6cb9718c-e31d-4bea-9f0a-ac9fbd977af6\",\"fb65fc3d-8da1-4221-852f-33d1ea47389e\",\"a3786d9a-3a1a-4580-b8a4-18a0074de95a\",\"059d6244-39a7-4789-83ba-550b2cecb7dd\",\"c882c916-3c95-416f-a61a-afcb61fa2a43\",\"5205ea32-5e8f-43"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SearchService] Slow federated-search: 1532ms | {\"queryLength\":11,\"category\":\"all\",\"hasCommunityScope\":false}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error tracked | {\"component\":\"profile.queries\",\"action\":\"getProfilesByUserId\",\"userId\":\"0efbc7cb-af58-488f-8e56-d2cd5936d17b\",\"severity\":\"medium\"} Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error tracked | {\"component\":\"profile.queries\",\"action\":\"getProfilesByUserId\",\"userId\":\"0efbc7cb-af58-488f-8e56-d2cd5936d17b\",\"severity\":\"medium\"} Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error fetching runtime profiles: Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:30:22)\n    at async Object.getMyProfiles (http://127.0.0.1:5175/sr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error tracked | {\"component\":\"profile.queries\",\"action\":\"getProfilesByUserId\",\"userId\":\"0efbc7cb-af58-488f-8e56-d2cd5936d17b\",\"severity\":\"medium\"} Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error fetching runtime profiles: Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:30:22)\n    at async Object.getMyProfiles (http://127.0.0.1:5175/sr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error tracked | {\"component\":\"profile.queries\",\"action\":\"getProfilesByUserId\",\"userId\":\"0efbc7cb-af58-488f-8e56-d2cd5936d17b\",\"severity\":\"medium\"} Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error fetching runtime profiles: Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:30:22)\n    at async Object.getMyProfiles (http://127.0.0.1:5175/sr"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Query error: | {\"code\":\"\",\"details\":\"TypeError: Failed to fetch\\n    at http://127.0.0.1:5175/node_modules/.vite/deps/@supabase_supabase-js.js?v=41202aac:15583:22\\n    at http://127.0.0.1:5175/node_modules/.vite/deps/@supabase_supabase-js.js?v=41202aac:15597:10\\n    at async TerritorialGroupRepositorySupabase.listMembers (http://127.0.0.1:5175/src/core/location/repositories/TerritorialGrou"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error tracked | {\"component\":\"profile.queries\",\"action\":\"getProfilesByUserId\",\"userId\":\"0efbc7cb-af58-488f-8e56-d2cd5936d17b\",\"severity\":\"medium\"} Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error fetching runtime profiles: Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:30:22)\n    at async Object.getMyProfiles (http://127.0.0.1:5175/sr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error tracked | {\"component\":\"profile.queries\",\"action\":\"getProfilesByUserId\",\"userId\":\"0efbc7cb-af58-488f-8e56-d2cd5936d17b\",\"severity\":\"medium\"} Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error tracked | {\"component\":\"profile.queries\",\"action\":\"getProfilesByUserId\",\"userId\":\"0efbc7cb-af58-488f-8e56-d2cd5936d17b\",\"severity\":\"medium\"} Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error fetching runtime profiles: Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:30:22)\n    at async Object.getMyProfiles (http://127.0.0.1:5175/sr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error tracked | {\"component\":\"profile.queries\",\"action\":\"getProfilesByUserId\",\"userId\":\"0efbc7cb-af58-488f-8e56-d2cd5936d17b\",\"severity\":\"medium\"} Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error fetching runtime profiles: Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:30:22)\n    at async Object.getMyProfiles (http://127.0.0.1:5175/sr"
+    }
+  ]
+}

@@ -1,0 +1,255 @@
+{
+  "results": [
+    {
+      "flow": "feed-social-controls-discovery",
+      "url": "http://127.0.0.1:5175/ba/salvador",
+      "buttons": [
+        {
+          "i": 0,
+          "tag": "BUTTON",
+          "text": "Pular para o conteúdo principal",
+          "href": null,
+          "aria": null,
+          "title": null
+        },
+        {
+          "i": 1,
+          "tag": "BUTTON",
+          "text": "Início",
+          "href": null,
+          "aria": "Início",
+          "title": null
+        },
+        {
+          "i": 2,
+          "tag": "BUTTON",
+          "text": "Explorar",
+          "href": null,
+          "aria": "Explorar",
+          "title": null
+        },
+        {
+          "i": 3,
+          "tag": "BUTTON",
+          "text": "Postar",
+          "href": null,
+          "aria": "Postar",
+          "title": null
+        },
+        {
+          "i": 4,
+          "tag": "BUTTON",
+          "text": "Busca",
+          "href": null,
+          "aria": "Busca",
+          "title": null
+        },
+        {
+          "i": 5,
+          "tag": "BUTTON",
+          "text": "Mais",
+          "href": null,
+          "aria": "Mais opções",
+          "title": null
+        }
+      ],
+      "body": "Pular para o conteúdo principal",
+      "screenshot": "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\product-qa-screenshots\\19-social-discovery.png"
+    },
+    {
+      "flow": "curtir",
+      "clicked": false,
+      "url": "http://127.0.0.1:5175/ba/salvador",
+      "obtained": "Botao nao visivel por nome acessivel.",
+      "body": "Pular para o conteúdo principal",
+      "screenshot": "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\product-qa-screenshots\\20-curtir.png"
+    },
+    {
+      "flow": "comentar",
+      "clicked": false,
+      "url": "http://127.0.0.1:5175/ba/salvador",
+      "obtained": "Botao nao visivel por nome acessivel.",
+      "body": "Pular para o conteúdo principal",
+      "screenshot": "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\product-qa-screenshots\\21-comentar.png"
+    },
+    {
+      "flow": "compartilhar",
+      "clicked": false,
+      "url": "http://127.0.0.1:5175/ba/salvador",
+      "obtained": "Botao nao visivel por nome acessivel.",
+      "body": "Pular para o conteúdo principal\n\nPreparando a casa para você se achegar...",
+      "screenshot": "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\product-qa-screenshots\\22-compartilhar.png"
+    },
+    {
+      "flow": "editar-postagem",
+      "clicked": false,
+      "url": "http://127.0.0.1:5175/ba/salvador",
+      "obtained": "Botao nao visivel por nome acessivel.",
+      "body": "Pular para o conteúdo principal\n\nPreparando a casa para você se achegar...",
+      "screenshot": "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\product-qa-screenshots\\23-editar-postagem.png"
+    },
+    {
+      "flow": "logout",
+      "clicked": false,
+      "method": null,
+      "error": "locator.click: Timeout 1500ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button').last()\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" data-state=\"closed\" aria-expanded=\"false\" aria-haspopup=\"dialog\" aria-label=\"Mais opções\" aria-controls=\"radix-:r3:\" data-bottom-nav-item=\"mais\" cla",
+      "url": "http://127.0.0.1:5175/ba/salvador",
+      "body": "Pular para o conteúdo principal\nAchegue-se\nInício\nComunidades\nEmpresas\nServiços\nClassificados\nMapa\nSalvador, BA\nE\nSalvador, BA\nComunidade em alta\nTudo do seu bairro,\nem um só lugar\n\nConecte-se com pessoas, descubra empresas locais, participe de eventos e fortaleça sua comunidade.\n\nBuscar no Achegue-se\nRestaurantes\nMercados\nSalões\nMecânicas\nAcademias\nPet shops\n+ Mais\nComunidades em destaque\nVer todas\nEm alta\nPituba\nComunidade ativa\n+23\nBarra\nComunidade ativa\n+18\nItapuã\nComunidade ativa\n+15\nRio Vermelho\nComunidade ativa\n+9\nO que está acontecendo perto de você\nVer tudo\nEvento hoje\nSamba na Praça\n19h - Praça da Pituba\nMúsica\nNova empresa\nAcademia Strong\nPituba\nAberto agora\nAtividades nas comunidades\nVer todas\nJuliana Santos\nPituba\n\nAlguém sabe de um bom restaurante japonês por aqui?\n\n2h\n24\nPrefeitura de Salvador\nAvisos oficiais\n\nMutirão de limpeza neste sábado na orla da Pituba. Participe!\n\n4h\n18\nMarcos Lima\nBarra\n\nVendo bicicleta semi nova, usada poucas vezes.\n\n6h\n9\nEncontre o que precisa na sua comunidade\nVer todas\nEmpresas\nComércios locais\nEventos\nNa sua região\nClassificados\nCompre e venda\nServiços\nProfissionais\nGrupos\nInteresses\nImóveis\nAluguel e venda\nVagas\nOportunidades\nMais\nVer tudo\nSugestões para você participar\nVer todas\nHorto Florestal\nComunidade ativa\nParticipar\nImbuí\nComunidade ativa\nParticipar\nGraça\nComunidade ativa\nParticipar\nCaminho das Árvores\nComunidade ativa\nParticipar\nStella Maris\nComunidade ativa\nParticipar\nRanking das comunidades\nVer ranking\n1\nPituba\nComunidade ativa\nAtiva\n2\nBarra\nComunidade ativa\nAtiva\n3\nItapuã\nComunidade ativa\nAtiva\n4\nRio Vermelho\nComunid",
+      "screenshot": "C:\\Users\\Casa\\Documents\\Novo github\\acheguese\\product-qa-screenshots\\24-logout.png"
+    }
+  ],
+  "logs": [
+    {
+      "type": "debug",
+      "text": "[vite] connecting..."
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connected."
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "debug",
+      "text": "[AuthStorage] Initialized cookie-only Supabase auth storage {cookiesAvailable: true, localStorageFallback: false}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error tracked | {\"component\":\"profile.queries\",\"action\":\"getProfilesByUserId\",\"userId\":\"0efbc7cb-af58-488f-8e56-d2cd5936d17b\",\"severity\":\"medium\"} Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infr"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [PrivacyRpcService] broker invocation failed | {\"action\":\"recordConsent\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Mutation error: Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:30:22)\n    at async PrivacyRpcService.recordConsent (http://127.0.0.1:5175/src/core"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connecting..."
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connected."
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "debug",
+      "text": "[AuthStorage] Initialized cookie-only Supabase auth storage {cookiesAvailable: true, localStorageFallback: false}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error tracked | {\"component\":\"profile.queries\",\"action\":\"getProfilesByUserId\",\"userId\":\"0efbc7cb-af58-488f-8e56-d2cd5936d17b\",\"severity\":\"medium\"} Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infr"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/session-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [SessionRpcService] broker invocation failed | {\"action\":\"getActiveProfile\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "Access to fetch at 'https://xhdowzacfujckjelqhtd.supabase.co/functions/v1/profile-rpc' from origin 'http://127.0.0.1:5175' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: The 'Access-Control-Allow-Origin' header has a value 'null' that is not equal to the supplied origin. Have the server send the header with a valid value."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "warning",
+      "text": "[WARN] [ProfileRpcService] broker invocation failed | {\"action\":\"getAccessibleProfiles\",\"message\":\"Failed to send a request to the Edge Function\"}"
+    },
+    {
+      "type": "error",
+      "text": "[ERROR] Error fetching runtime profiles: Error: Failed to send a request to the Edge Function\n    at invokeRawSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:18:15)\n    at async invokeSupabaseBroker (http://127.0.0.1:5175/src/core/infrastructure/edge-functions/edgeFunctionBroker.ts:30:22)\n    at async Object.getMyProfiles (http://127.0.0.1:5175/sr"
+    },
+    {
+      "type": "info",
+      "text": "[INFO] [ReconnectionManager] Starting connection monitoring"
+    },
+    {
+      "type": "info",
+      "text": "[INFO] [ReconnectionManager] Connection state changed | {\"status\":\"connected\",\"reconnectAttempts\":0}"
+    },
+    {
+      "type": "info",
+      "text": "[INFO] [RoutingService] OSRM provider validado com sucesso"
+    },
+    {
+      "type": "info",
+      "text": "[INFO] Performance: realtime_subscription_latency_ms | {\"action\":\"track_performance\",\"metric\":\"realtime_subscription_latency_ms\",\"value\":1634.699999988079,\"topic\":\"notifications.user\"}"
+    }
+  ]
+}
