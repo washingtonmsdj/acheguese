@@ -1286,9 +1286,12 @@ export default function PublicCityLandingPage() {
           sessionActions={sessionActions}
         />
 
-        <TerritoryBlock communityHref={communityHref} />
+        <NeighborhoodHeader
+          communityHref={communityHref}
+          notificationHref={appUrls.notifications}
+          unreadCount={unreadCount}
+        />
 
-        <HomeSearchBar />
 
         <TodayInNeighborhood cards={happeningCards} isLoading={homeDiscovery.isLoading} />
 
