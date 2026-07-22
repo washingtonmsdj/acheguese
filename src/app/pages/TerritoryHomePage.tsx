@@ -5,6 +5,7 @@ import {
   Bell,
   Calendar,
   ChevronDown,
+  ChevronRight,
   MapPin,
   MessageCircle,
   MoreHorizontal,
