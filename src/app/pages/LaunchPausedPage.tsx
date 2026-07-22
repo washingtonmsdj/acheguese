@@ -29,26 +29,26 @@ export default function LaunchPausedPage({ moduleName = "Módulo" }: LaunchPause
         <Button asChild variant="ghost" className="w-fit gap-2 px-0 text-muted-foreground hover:bg-transparent">
           <Link to="/">
             <ArrowLeft className="h-4 w-4" />
-            Voltar para o início
+            Voltar pro bairro
           </Link>
         </Button>
 
         <section className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-            MVP público
+            Em breve no bairro
           </p>
           <h1 className="mt-3 text-2xl font-black tracking-tight sm:text-4xl">
-            {moduleName} está separado para ajustes.
+            {moduleName} ainda está sendo preparado.
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Esta área não faz parte da primeira superfície pública do Achegue-se. O módulo continua
-            preservado para manutenção, testes e retorno controlado quando estiver pronto para lançar.
+            A gente quer entregar {moduleName.toLowerCase()} do jeito certo pro seu bairro.
+            Enquanto isso, dá pra continuar por aqui — o resto do Achegue-se já está no ar.
           </p>
         </section>
 
         <section>
           <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-muted-foreground">
-            Áreas abertas agora
+            Continue explorando o bairro
           </h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {activeLinks.map((item) => (

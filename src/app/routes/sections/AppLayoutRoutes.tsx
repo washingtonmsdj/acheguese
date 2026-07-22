@@ -9,6 +9,7 @@
 
 import type { ReactNode } from "react";
 import { Navigate, Routes, Route } from "react-router-dom";
+import RootRouteEntry from "@/app/routes/RootRouteEntry";
 import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
 import { LAUNCH_CITY_PATH } from "@/config/territory";
 import {
@@ -414,7 +415,7 @@ export function AppLayoutRoutes() {
          * "/" redireciona para a landing da cidade ativa (hoje: /ba/salvador),
          * evitando conteudo duplicado e retrabalho quando novas cidades entrarem.
          */}
-        <Route path="/" element={<P.AchegueSeHomePage />} />
+        <Route path="/" element={<RootRouteEntry />} />
         <Route path="/inicio" element={<P.NationalHubPage />} />
 
         {/* Rotas de Billing e Assinaturas */}
