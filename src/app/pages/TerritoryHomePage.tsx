@@ -177,7 +177,7 @@ export default function TerritoryHomePage() {
     { id: "buscar", label: "Buscar", icon: Search, tone: "green", href: LAUNCH_URLS.search },
     { id: "perto", label: "Perto de mim", icon: Navigation, tone: "violet", href: LAUNCH_URLS.map ?? LAUNCH_URLS.search },
     { id: "comer", label: "Comer agora", icon: UtensilsCrossed, tone: "orange", href: LAUNCH_URLS.gastronomy },
-    { id: "mob", label: "Mobilidade", icon: Car, tone: "blue", href: LAUNCH_URLS.mobility ?? "#" },
+    { id: "mob", label: "Mobilidade", icon: Car, tone: "blue", href: LAUNCH_URLS.map },
   ];
 
   const highlights: Highlight[] = [
@@ -214,7 +214,7 @@ export default function TerritoryHomePage() {
       id: "h4",
       title: "Farmácia Saúde+",
       detail: "Até 30% de desconto em vitaminas",
-      href: LAUNCH_URLS.coupons ?? LAUNCH_URLS.business,
+      href: LAUNCH_URLS.business,
     },
   ];
 
@@ -541,12 +541,12 @@ export default function TerritoryHomePage() {
           <ul className="mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {[
               { label: "Gastronomia", href: LAUNCH_URLS.gastronomy },
-              { label: "Mobilidade", href: LAUNCH_URLS.mobility ?? "#" },
+              { label: "Mobilidade", href: LAUNCH_URLS.map },
               { label: "Empresas", href: LAUNCH_URLS.business },
               { label: "Serviços", href: LAUNCH_URLS.services },
-              { label: "Imóveis", href: LAUNCH_URLS.realEstate ?? "#" },
+              { label: "Imóveis", href: LAUNCH_URLS.business },
               { label: "Eventos", href: LAUNCH_URLS.events },
-              { label: "Classificados", href: LAUNCH_URLS.classifieds ?? "#" },
+              { label: "Classificados", href: LAUNCH_URLS.classifieds },
             ]
               .filter((c) => c.href && c.href !== "#")
               .map((c) => (
