@@ -65,17 +65,17 @@ export default function OnboardingPage() {
             aria-label="Voltar"
           >
             <ArrowLeft className="h-5 w-5" />
-            <span className="text-sm font-medium">
-              {cityName}, {stateName}
+            <span className="text-[15px] font-semibold">
+              {titleCase(cityName)}, {stateName.toUpperCase()}
             </span>
           </button>
 
           <button
             onClick={() => setShowSearch((v) => !v)}
             aria-label={showSearch ? "Fechar busca" : "Buscar bairro"}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
-            {showSearch ? <RotateCcw className="h-4 w-4" /> : <Search className="h-4 w-4" />}
+            {showSearch ? <RotateCcw className="h-[18px] w-[18px]" /> : <Search className="h-[18px] w-[18px]" />}
           </button>
         </div>
 
