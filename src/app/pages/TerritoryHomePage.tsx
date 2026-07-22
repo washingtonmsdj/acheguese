@@ -5,6 +5,7 @@ import {
   Bell,
   Calendar,
   ChevronDown,
+  ChevronRight,
   MapPin,
   MessageCircle,
   MoreHorizontal,
@@ -468,28 +469,34 @@ export default function TerritoryHomePage() {
             </h2>
             <Link
               to={LAUNCH_URLS.community}
-              className="text-[12px] font-medium text-primary transition-opacity hover:opacity-80"
+              className="inline-flex items-center gap-0.5 text-[13px] font-medium text-primary transition-opacity hover:opacity-80"
             >
-              Ver tudo
+              Ver todos
+              <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
           </div>
 
           <ul className="space-y-2">
             {feed.map((item) => {
               if (item.kind === "post") {
-                const tokens = getCategoryTokens("discussion");
                 return (
                   <li key={item.id}>
                     <Link
                       to={item.href}
-                      className="flex min-h-[72px] w-full min-w-0 items-start gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-colors hover:bg-muted"
+                      className="flex min-h-[76px] w-full min-w-0 items-start gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-colors hover:bg-muted"
                     >
-                      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[15px] font-semibold ${tokens.chip}`}>
+                      <span
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[15px] font-semibold"
+                        style={{ backgroundColor: "#EDE9FE", color: "#6D28D9" }}
+                      >
                         {item.avatarInitial}
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex min-w-0 items-center gap-2 text-[12px]">
-                          <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
+                          <span
+                            className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-semibold"
+                            style={{ backgroundColor: "#EDE9FE", color: "#6D28D9" }}
+                          >
                             Post
                           </span>
                           <span className="truncate font-medium text-foreground">
@@ -497,7 +504,7 @@ export default function TerritoryHomePage() {
                           </span>
                           <span className="shrink-0 text-muted-foreground">· {item.time}</span>
                         </div>
-                        <p className="mt-1 line-clamp-2 text-[15px] font-medium leading-snug text-foreground">
+                        <p className="mt-1 line-clamp-2 text-[15px] font-semibold leading-snug text-foreground">
                           {item.title}
                         </p>
                         <p className="mt-1 text-[12px] text-muted-foreground">
@@ -514,52 +521,67 @@ export default function TerritoryHomePage() {
               }
 
               if (item.kind === "empresa") {
-                const tokens = getCategoryTokens("business");
                 return (
                   <li key={item.id}>
                     <Link
                       to={item.href}
-                      className="flex min-h-[72px] w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-colors hover:bg-muted"
+                      className="flex min-h-[76px] w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-colors hover:bg-muted"
                     >
-                      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${tokens.chip}`}>
+                      <span
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+                        style={{ backgroundColor: "#DCFCE7", color: "#15803D" }}
+                      >
                         <Store className="h-5 w-5" aria-hidden="true" />
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex min-w-0 items-center gap-2 text-[12px]">
-                          <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
+                          <span
+                            className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-semibold"
+                            style={{ backgroundColor: "#DCFCE7", color: "#15803D" }}
+                          >
                             Empresa
                           </span>
-                          <span className="truncate font-semibold text-foreground">
+                          <span className="truncate text-[15px] font-semibold text-foreground">
                             {item.title}
                           </span>
-                          <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+                          <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-[#2563EB]" aria-hidden="true" />
                         </div>
                         <p className="mt-1 truncate text-[13px] text-muted-foreground">
-                          <span className={tokens.text}>{item.status}</span> · {item.distance} · ★ {item.rating}
+                          <span style={{ color: "#15803D" }}>{item.status}</span> · {item.distance} · ★ {item.rating}
                         </p>
                       </div>
+                      <span
+                        aria-hidden="true"
+                        className="h-12 w-14 shrink-0 rounded-xl"
+                        style={{ background: "linear-gradient(135deg,#FDE68A,#F59E0B)" }}
+                      />
                     </Link>
                   </li>
                 );
               }
 
               if (item.kind === "evento") {
-                const tokens = getCategoryTokens("event");
                 return (
                   <li key={item.id}>
                     <Link
                       to={item.href}
-                      className="flex min-h-[72px] w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-colors hover:bg-muted"
+                      className="flex min-h-[76px] w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-colors hover:bg-muted"
                     >
-                      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${tokens.chip}`}>
+                      <span
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+                        style={{ backgroundColor: "#FFEDD5", color: "#C2410C" }}
+                      >
                         <Calendar className="h-5 w-5" aria-hidden="true" />
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex min-w-0 items-center gap-2 text-[12px]">
-                          <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
+                          <span
+                            className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-semibold"
+                            style={{ backgroundColor: "#FFEDD5", color: "#C2410C" }}
+                          >
                             Evento
                           </span>
-                          <span className="truncate font-semibold text-foreground">
+                          <span className="truncate text-[15px] font-semibold text-foreground">
                             {item.title}
                           </span>
                         </div>
@@ -567,33 +589,48 @@ export default function TerritoryHomePage() {
                           {item.place} · {item.time}
                         </p>
                       </div>
+                      <span
+                        aria-hidden="true"
+                        className="h-12 w-14 shrink-0 rounded-xl"
+                        style={{ background: "linear-gradient(135deg,#FED7AA,#FB923C)" }}
+                      />
                     </Link>
                   </li>
                 );
               }
 
               // oferta
-              const tokens = getCategoryTokens("business");
               return (
                 <li key={item.id}>
                   <Link
                     to={item.href}
-                    className="flex min-h-[72px] w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-colors hover:bg-muted"
+                    className="flex min-h-[76px] w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3 transition-colors hover:bg-muted"
                   >
-                    <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${tokens.chip}`}>
+                    <span
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+                      style={{ backgroundColor: "#FCE7F3", color: "#BE185D" }}
+                    >
                       <BadgeCheck className="h-5 w-5" aria-hidden="true" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex min-w-0 items-center gap-2 text-[12px]">
-                        <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${tokens.chip}`}>
+                        <span
+                          className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-semibold"
+                          style={{ backgroundColor: "#FCE7F3", color: "#BE185D" }}
+                        >
                           Oferta
                         </span>
-                        <span className="truncate font-semibold text-foreground">
+                        <span className="truncate text-[15px] font-semibold text-foreground">
                           {item.title}
                         </span>
                       </div>
                       <p className="mt-1 line-clamp-2 break-words text-[13px] text-muted-foreground">{item.detail}</p>
                     </div>
+                    <span
+                      aria-hidden="true"
+                      className="h-12 w-14 shrink-0 rounded-xl"
+                      style={{ background: "linear-gradient(135deg,#FBCFE8,#EC4899)" }}
+                    />
                   </Link>
                 </li>
               );
