@@ -478,7 +478,7 @@ export default function ComunidadePage({
     return (
       <TooltipProvider>
         <div
-          className="min-h-screen w-full max-w-full overflow-x-hidden bg-background text-white"
+          className="min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground"
           role="main"
         >
           <CommunityPortalGate
