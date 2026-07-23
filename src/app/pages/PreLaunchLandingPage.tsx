@@ -9,6 +9,7 @@ import {
   Loader2,
   MapPin,
   MessageSquareText,
+  Route,
   ShieldCheck,
   Store,
   UtensilsCrossed,
@@ -84,6 +85,12 @@ const PRODUCT_AREAS = [
     icon: ShieldCheck,
     tone: "slate",
   },
+] as const;
+
+const LAUNCH_SIGNALS = [
+  { label: "Piloto", value: "Salvador", icon: MapPin },
+  { label: "Bairros", value: "170", icon: Route },
+  { label: "Entrada", value: "Lista", icon: ShieldCheck },
 ] as const;
 
 type FormState = {
@@ -202,24 +209,50 @@ function TerritoryMapArt() {
 
 function ProductAreaGrid({ className }: { className?: string }) {
   return (
-    <div className={cn("grid grid-cols-2 gap-2 sm:grid-cols-3", className)}>
+    <div className={cn("grid grid-cols-1 gap-2 sm:grid-cols-3", className)}>
       {PRODUCT_AREAS.map((area) => {
         const Icon = area.icon;
         return (
           <article
             key={area.title}
-            className="min-h-[118px] rounded-[20px] border border-white/80 bg-white/92 p-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur"
+            className="grid min-h-[94px] grid-cols-[auto,1fr] items-start gap-3 rounded-[20px] border border-white/80 bg-white/92 p-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur sm:block sm:min-h-[118px]"
           >
             <AreaIcon tone={area.tone}>
               <Icon className="h-5 w-5" aria-hidden="true" />
             </AreaIcon>
-            <h2 className="mt-3 text-sm font-bold leading-tight text-slate-950">
-              {area.title}
-            </h2>
-            <p className="mt-1 text-xs leading-5 text-slate-600">
-              {area.description}
-            </p>
+            <div>
+              <h2 className="text-sm font-bold leading-tight text-slate-950 sm:mt-3">
+                {area.title}
+              </h2>
+              <p className="mt-1 text-xs leading-5 text-slate-600">
+                {area.description}
+              </p>
+            </div>
           </article>
+        );
+      })}
+    </div>
+  );
+}
+
+function LaunchSignalStrip() {
+  return (
+    <div className="mt-3.5 grid grid-cols-3 gap-2">
+      {LAUNCH_SIGNALS.map((signal) => {
+        const Icon = signal.icon;
+        return (
+          <div
+            key={signal.label}
+            className="rounded-2xl border border-slate-200 bg-slate-50 px-2.5 py-2.5"
+          >
+            <Icon className="h-4 w-4 text-[#18B37E]" aria-hidden="true" />
+            <p className="mt-2 text-[11px] font-semibold leading-tight text-slate-500">
+              {signal.label}
+            </p>
+            <p className="mt-1 text-xs font-bold leading-tight text-slate-950">
+              {signal.value}
+            </p>
+          </div>
         );
       })}
     </div>
@@ -441,6 +474,7 @@ export default function PreLaunchLandingPage() {
                   value={form.name}
                   onChange={(event) => update("name", event.target.value)}
                   autoComplete="name"
+                  placeholder="Seu nome"
                   className="h-11 rounded-2xl border-slate-200 bg-white text-base shadow-sm focus-visible:ring-[#18B37E]/35 sm:h-12"
                   required
                 />
@@ -455,7 +489,8 @@ export default function PreLaunchLandingPage() {
                   value={form.contact}
                   onChange={(event) => update("contact", event.target.value)}
                   autoComplete="email"
-                  inputMode="email"
+                  inputMode="text"
+                  placeholder="email@exemplo.com ou (71) 99999-9999"
                   className="h-11 rounded-2xl border-slate-200 bg-white text-base shadow-sm focus-visible:ring-[#18B37E]/35 sm:h-12"
                   aria-describedby="waitlist-contact-help"
                   required
@@ -557,7 +592,7 @@ export default function PreLaunchLandingPage() {
               <Button
                 type="submit"
                 disabled={!canSubmit}
-                className="h-12 min-h-12 w-full rounded-2xl bg-[#18B37E] text-base font-bold text-white shadow-[0_16px_36px_rgba(24,179,126,0.28)] transition hover:bg-[#149f70] focus-visible:ring-[#18B37E]/40 disabled:bg-slate-200 disabled:text-slate-600 disabled:shadow-none sm:h-[52px] sm:min-h-[52px]"
+                className="h-12 min-h-12 w-full rounded-2xl bg-[#18B37E] text-base font-bold text-white shadow-[0_16px_36px_rgba(24,179,126,0.28)] transition-[background-color,box-shadow] hover:bg-[#149f70] focus-visible:ring-[#18B37E]/40 disabled:bg-slate-200 disabled:text-slate-600 disabled:shadow-none sm:h-[52px] sm:min-h-[52px]"
               >
                 {submitting ? (
                   <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
@@ -566,16 +601,7 @@ export default function PreLaunchLandingPage() {
               </Button>
             </form>
 
-            <div className="mt-3.5 rounded-2xl border border-slate-200 bg-slate-50 p-3">
-              <div className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#18B37E] shadow-sm">
-                  <MapPin className="h-5 w-5" aria-hidden="true" />
-                </span>
-                <p className="text-sm leading-6 text-slate-700">
-                  A prioridade inicial é Salvador. Os cadastros ajudam a decidir quais bairros recebem mobilidade, feed, alertas e negócios locais primeiro.
-                </p>
-              </div>
-            </div>
+            <LaunchSignalStrip />
           </aside>
 
           <ProductAreaGrid className="lg:hidden" />
