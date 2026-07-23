@@ -29,11 +29,12 @@ const TURNSTILE_SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "").trim(
 const MINIMUM_FILL_MS = 1_200;
 
 const BAIRROS = [
+  "Complexo Nordeste de Amaralina",
+  "Nordeste de Amaralina",
   "Pituba",
   "Barra",
   "Rio Vermelho",
   "Ondina",
-  "Nordeste de Amaralina",
   "Pernambués",
   "Itapuã",
   "Brotas",
@@ -89,7 +90,7 @@ const PRODUCT_AREAS = [
 
 const LAUNCH_SIGNALS = [
   { label: "Piloto", value: "Salvador", icon: MapPin },
-  { label: "Bairros", value: "170", icon: Route },
+  { label: "Primeiro", value: "Complexo", icon: Route },
   { label: "Entrada", value: "Lista", icon: ShieldCheck },
 ] as const;
 
@@ -225,13 +226,13 @@ function TerritoryMapArt() {
           <circle cx="211" cy="452" r="6.2" fill="#0ea5e9" />
         </g>
         <g className="hidden sm:block" fontFamily="Inter, system-ui, sans-serif" fontSize="11" fontWeight="700">
-          <g transform="translate(207 198)">
-            <rect x="0" y="0" width="48" height="24" rx="12" fill="rgba(255,255,255,0.78)" />
-            <text x="12" y="16" fill="#0f8c61">Pituba</text>
+          <g transform="translate(174 198)">
+            <rect x="0" y="0" width="98" height="24" rx="12" fill="rgba(255,255,255,0.82)" />
+            <text x="12" y="16" fill="#0f8c61">Complexo NE</text>
           </g>
           <g transform="translate(62 324)">
-            <rect x="0" y="0" width="44" height="24" rx="12" fill="rgba(255,255,255,0.78)" />
-            <text x="12" y="16" fill="#c2410c">Barra</text>
+            <rect x="0" y="0" width="98" height="24" rx="12" fill="rgba(255,255,255,0.82)" />
+            <text x="12" y="16" fill="#0f8c61">Complexo NE</text>
           </g>
           <g transform="translate(220 434)">
             <rect x="0" y="0" width="80" height="24" rx="12" fill="rgba(255,255,255,0.78)" />
@@ -424,7 +425,7 @@ export default function PreLaunchLandingPage() {
         <title>Achegue-se | Lista de espera</title>
         <meta
           name="description"
-          content="Achegue-se está em desenvolvimento: mobilidade, gastronomia, alertas, feed e serviços do seu bairro em Salvador."
+          content="Achegue-se está em desenvolvimento em Salvador, com primeiro lançamento no Complexo do Nordeste de Amaralina: mobilidade, gastronomia, alertas, feed e serviços do bairro."
         />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
@@ -461,7 +462,7 @@ export default function PreLaunchLandingPage() {
                   Salvador em desenvolvimento
                 </span>
                 <span className="inline-flex min-h-8 items-center rounded-full bg-white/88 px-3 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
-                  170 bairros
+                  Complexo Nordeste primeiro
                 </span>
               </div>
 
@@ -472,7 +473,7 @@ export default function PreLaunchLandingPage() {
                 Mobilidade, gastronomia, alertas e feed do bairro em Salvador.
               </p>
               <p className="max-w-xl text-sm leading-6 text-slate-600 sm:text-base lg:max-w-lg">
-                Inclui carona local e motoristas do bairro para lugares onde app de corrida nem sempre chega.
+                O primeiro lançamento será no Complexo do Nordeste de Amaralina, com carona local e motoristas para lugares onde app de corrida nem sempre chega.
               </p>
             </div>
 
