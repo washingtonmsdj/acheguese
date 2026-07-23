@@ -170,37 +170,76 @@ function TerritoryMapArt() {
       <div className="absolute inset-0 bg-[linear-gradient(180deg,#f8fbfa_0%,#eaf3ef_42%,#ffffff_100%)]" />
       <svg
         viewBox="0 0 390 620"
-        className="absolute -right-28 top-16 h-[74svh] min-h-[520px] w-[92vw] max-w-[560px] opacity-[0.55] sm:-right-8 sm:w-[78vw] sm:opacity-75 lg:right-auto lg:left-[42%] lg:top-1/2 lg:h-[92vh] lg:max-h-[780px] lg:w-[44vw] lg:-translate-y-1/2 lg:opacity-90"
+        className="absolute -right-28 top-14 h-[76svh] min-h-[540px] w-[92vw] max-w-[580px] opacity-[0.58] sm:-right-8 sm:w-[78vw] sm:opacity-75 lg:right-auto lg:left-[42%] lg:top-1/2 lg:h-[94vh] lg:max-h-[800px] lg:w-[44vw] lg:-translate-y-1/2 lg:opacity-90"
         preserveAspectRatio="xMidYMid slice"
       >
+        <defs>
+          <linearGradient id="salvadorLandGradient" x1="64" x2="266" y1="42" y2="560">
+            <stop offset="0" stopColor="#f8fffb" />
+            <stop offset="0.5" stopColor="#dff3eb" />
+            <stop offset="1" stopColor="#eef8f3" />
+          </linearGradient>
+          <linearGradient id="salvadorWaterGradient" x1="278" x2="390" y1="0" y2="620">
+            <stop offset="0" stopColor="#dff0f7" />
+            <stop offset="1" stopColor="#cfe6f2" />
+          </linearGradient>
+          <filter id="salvadorMapShadow" x="-30%" y="-20%" width="160%" height="140%">
+            <feDropShadow dx="0" dy="24" stdDeviation="22" floodColor="#0f172a" floodOpacity="0.10" />
+          </filter>
+          <clipPath id="salvadorMapClip">
+            <path d="M169 26 C209 42 240 77 244 122 C250 178 220 210 235 258 C249 302 278 337 260 384 C242 431 260 480 225 529 C196 569 139 579 101 540 C63 501 79 448 58 405 C33 355 45 312 36 258 C26 198 57 158 72 110 C87 63 121 17 169 26 Z" />
+          </clipPath>
+        </defs>
         <path
-          d="M279 0 C251 74 252 118 280 172 C311 231 288 281 305 338 C322 395 381 445 370 524 C362 583 324 611 280 620 L390 620 L390 0 Z"
-          fill="#dcecf4"
+          d="M291 0 C257 73 256 126 286 179 C323 242 288 293 311 352 C336 417 383 451 371 530 C363 586 326 611 282 620 L390 620 L390 0 Z"
+          fill="url(#salvadorWaterGradient)"
         />
         <path
-          d="M168 30 C220 54 246 100 238 151 C230 198 259 225 247 267 C234 311 266 347 243 390 C216 441 229 488 188 535 C156 572 106 568 78 526 C45 477 62 431 42 388 C16 332 44 296 35 239 C25 174 69 139 78 88 C86 45 121 14 168 30 Z"
-          fill="rgba(24,179,126,0.08)"
-          stroke="rgba(15,23,42,0.15)"
-          strokeWidth="2"
+          d="M169 26 C209 42 240 77 244 122 C250 178 220 210 235 258 C249 302 278 337 260 384 C242 431 260 480 225 529 C196 569 139 579 101 540 C63 501 79 448 58 405 C33 355 45 312 36 258 C26 198 57 158 72 110 C87 63 121 17 169 26 Z"
+          fill="url(#salvadorLandGradient)"
+          filter="url(#salvadorMapShadow)"
+          stroke="rgba(15,23,42,0.18)"
+          strokeWidth="2.4"
         />
-        <g stroke="rgba(15,23,42,0.08)" strokeWidth="1.25" fill="none">
-          <path d="M86 94 C125 123 154 134 228 134" />
-          <path d="M50 229 C118 219 174 229 249 264" />
-          <path d="M61 353 C114 334 169 342 247 381" />
-          <path d="M92 520 C128 475 172 453 224 452" />
-          <path d="M156 35 C143 113 150 194 133 276 C117 357 139 452 126 552" />
-          <path d="M209 76 C186 148 197 225 184 292 C172 359 199 425 182 513" />
+        <g clipPath="url(#salvadorMapClip)">
+          <path d="M56 92 C107 122 153 132 241 125 L246 180 C180 167 127 159 67 138 Z" fill="rgba(24,179,126,0.10)" />
+          <path d="M68 138 C128 160 181 168 246 180 L237 256 C166 229 112 221 39 239 C39 197 50 164 68 138 Z" fill="rgba(14,165,233,0.08)" />
+          <path d="M39 239 C111 220 165 229 237 256 C250 301 274 332 260 384 C190 349 124 336 46 359 C34 318 36 280 39 239 Z" fill="rgba(249,115,22,0.10)" />
+          <path d="M46 359 C124 336 190 349 260 384 C244 427 255 470 230 512 C171 484 120 485 69 515 C53 462 66 411 46 359 Z" fill="rgba(24,179,126,0.08)" />
+          <path d="M69 515 C120 485 171 484 230 512 C200 568 132 578 94 540 C84 531 76 523 69 515 Z" fill="rgba(15,23,42,0.04)" />
+          <g stroke="rgba(15,23,42,0.13)" strokeWidth="1.3" fill="none">
+            <path d="M80 111 C127 142 172 151 243 148" />
+            <path d="M41 241 C116 225 168 234 238 261" />
+            <path d="M49 360 C126 339 190 352 260 386" />
+            <path d="M73 514 C123 484 173 482 229 511" />
+            <path d="M150 31 C139 111 145 191 130 274 C115 359 137 452 124 555" />
+            <path d="M204 68 C181 145 193 222 181 292 C168 365 197 426 180 531" />
+          </g>
         </g>
-        <g>
-          <circle cx="186" cy="205" r="20" fill="rgba(24,179,126,0.14)" />
-          <circle cx="186" cy="205" r="7" fill="#18B37E" />
-          <circle cx="118" cy="338" r="16" fill="rgba(249,115,22,0.13)" />
-          <circle cx="118" cy="338" r="6" fill="#f97316" />
-          <circle cx="213" cy="432" r="16" fill="rgba(14,165,233,0.12)" />
-          <circle cx="213" cy="432" r="6" fill="#0ea5e9" />
+        <g opacity="0.95">
+          <circle cx="198" cy="220" r="21" fill="rgba(24,179,126,0.16)" />
+          <circle cx="198" cy="220" r="7" fill="#18B37E" />
+          <circle cx="114" cy="343" r="17" fill="rgba(249,115,22,0.14)" />
+          <circle cx="114" cy="343" r="6.2" fill="#f97316" />
+          <circle cx="211" cy="452" r="17" fill="rgba(14,165,233,0.14)" />
+          <circle cx="211" cy="452" r="6.2" fill="#0ea5e9" />
+        </g>
+        <g className="hidden sm:block" fontFamily="Inter, system-ui, sans-serif" fontSize="11" fontWeight="700">
+          <g transform="translate(207 198)">
+            <rect x="0" y="0" width="48" height="24" rx="12" fill="rgba(255,255,255,0.78)" />
+            <text x="12" y="16" fill="#0f8c61">Pituba</text>
+          </g>
+          <g transform="translate(62 324)">
+            <rect x="0" y="0" width="44" height="24" rx="12" fill="rgba(255,255,255,0.78)" />
+            <text x="12" y="16" fill="#c2410c">Barra</text>
+          </g>
+          <g transform="translate(220 434)">
+            <rect x="0" y="0" width="80" height="24" rx="12" fill="rgba(255,255,255,0.78)" />
+            <text x="12" y="16" fill="#0369a1">Rio Vermelho</text>
+          </g>
         </g>
       </svg>
-      <div className="absolute inset-y-0 left-0 w-[76vw] bg-gradient-to-r from-white/92 via-white/70 to-white/0 lg:w-[46vw]" />
+      <div className="absolute inset-y-0 left-0 w-[76vw] bg-gradient-to-r from-white/94 via-white/74 to-white/0 lg:w-[46vw]" />
       <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-white/95 to-white/0" />
       <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-white via-white/82 to-white/0" />
     </div>
@@ -490,7 +529,7 @@ export default function PreLaunchLandingPage() {
                   onChange={(event) => update("contact", event.target.value)}
                   autoComplete="email"
                   inputMode="text"
-                  placeholder="email@exemplo.com ou (71) 99999-9999"
+                  placeholder="Email ou WhatsApp"
                   className="h-11 rounded-2xl border-slate-200 bg-white text-base shadow-sm focus-visible:ring-[#18B37E]/35 sm:h-12"
                   aria-describedby="waitlist-contact-help"
                   required
