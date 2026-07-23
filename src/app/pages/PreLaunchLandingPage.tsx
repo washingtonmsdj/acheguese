@@ -160,10 +160,10 @@ function AreaIcon({
 function TerritoryMapArt() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-      <div className="absolute inset-0 bg-[#eaf3ef]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,#f8fbfa_0%,#eaf3ef_42%,#ffffff_100%)]" />
       <svg
         viewBox="0 0 390 620"
-        className="absolute inset-0 h-full w-full"
+        className="absolute -right-28 top-16 h-[74svh] min-h-[520px] w-[92vw] max-w-[560px] opacity-[0.55] sm:-right-8 sm:w-[78vw] sm:opacity-75 lg:right-auto lg:left-[42%] lg:top-1/2 lg:h-[92vh] lg:max-h-[780px] lg:w-[44vw] lg:-translate-y-1/2 lg:opacity-90"
         preserveAspectRatio="xMidYMid slice"
       >
         <path
@@ -173,10 +173,10 @@ function TerritoryMapArt() {
         <path
           d="M168 30 C220 54 246 100 238 151 C230 198 259 225 247 267 C234 311 266 347 243 390 C216 441 229 488 188 535 C156 572 106 568 78 526 C45 477 62 431 42 388 C16 332 44 296 35 239 C25 174 69 139 78 88 C86 45 121 14 168 30 Z"
           fill="rgba(24,179,126,0.08)"
-          stroke="rgba(15,23,42,0.24)"
+          stroke="rgba(15,23,42,0.15)"
           strokeWidth="2"
         />
-        <g stroke="rgba(15,23,42,0.12)" strokeWidth="1.25" fill="none">
+        <g stroke="rgba(15,23,42,0.08)" strokeWidth="1.25" fill="none">
           <path d="M86 94 C125 123 154 134 228 134" />
           <path d="M50 229 C118 219 174 229 249 264" />
           <path d="M61 353 C114 334 169 342 247 381" />
@@ -193,8 +193,9 @@ function TerritoryMapArt() {
           <circle cx="213" cy="432" r="6" fill="#0ea5e9" />
         </g>
       </svg>
-      <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/90 to-white/0" />
-      <div className="absolute inset-x-0 bottom-0 h-80 bg-gradient-to-t from-white via-white/78 to-white/0" />
+      <div className="absolute inset-y-0 left-0 w-[76vw] bg-gradient-to-r from-white/92 via-white/70 to-white/0 lg:w-[46vw]" />
+      <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-white/95 to-white/0" />
+      <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-white via-white/82 to-white/0" />
     </div>
   );
 }
@@ -207,7 +208,7 @@ function ProductAreaGrid({ className }: { className?: string }) {
         return (
           <article
             key={area.title}
-            className="min-h-[132px] rounded-2xl border border-white/80 bg-white/90 p-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur"
+            className="min-h-[118px] rounded-[20px] border border-white/80 bg-white/92 p-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur"
           >
             <AreaIcon tone={area.tone}>
               <Icon className="h-5 w-5" aria-hidden="true" />
@@ -345,7 +346,7 @@ export default function PreLaunchLandingPage() {
   return (
     <main
       id="main-content"
-      className="min-h-[100svh] overflow-hidden bg-white text-slate-950"
+      className="min-h-[100svh] overflow-x-hidden bg-white text-slate-950"
     >
       <Helmet>
         <title>Achegue-se | Lista de espera</title>
@@ -356,10 +357,10 @@ export default function PreLaunchLandingPage() {
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
-      <section className="relative isolate min-h-[100svh] px-4 pb-7 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 lg:flex lg:items-center lg:px-10 lg:py-10">
+      <section className="relative isolate min-h-[100svh] px-4 pb-8 pt-[max(0.85rem,env(safe-area-inset-top))] sm:px-6 lg:flex lg:items-center lg:px-10 lg:py-10">
         <TerritoryMapArt />
 
-        <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,0.64fr)] lg:items-center lg:gap-10">
+        <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,0.64fr)] lg:items-center lg:gap-10">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">
               <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white/92 text-sm font-black text-[#18B37E] shadow-[0_10px_24px_rgba(15,23,42,0.10)] ring-1 ring-white">
@@ -388,38 +389,38 @@ export default function PreLaunchLandingPage() {
                   Salvador em desenvolvimento
                 </span>
                 <span className="inline-flex min-h-8 items-center rounded-full bg-white/88 px-3 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
-                  170 bairros mapeados
+                  170 bairros
                 </span>
               </div>
 
-              <h1 className="max-w-[11ch] text-[3.25rem] font-semibold leading-[0.9] tracking-normal text-slate-950 sm:text-6xl lg:max-w-[12ch] lg:text-[5.8rem]">
+              <h1 className="max-w-[10ch] text-[2.86rem] font-semibold leading-[0.92] tracking-normal text-slate-950 min-[390px]:text-[3.1rem] sm:max-w-[11ch] sm:text-6xl lg:max-w-[12ch] lg:text-[5.8rem]">
                 Seu bairro primeiro.
               </h1>
               <p className="max-w-xl text-base leading-7 text-slate-700 sm:text-lg lg:text-xl lg:leading-8">
-                Mobilidade, gastronomia, alertas e comunidade perto de você.
+                Mobilidade, gastronomia, alertas e feed do bairro em Salvador.
               </p>
-              <p className="max-w-xl text-sm leading-6 text-slate-600 sm:text-base">
-                Estamos preparando a forma mais simples de acompanhar o que acontece perto de você, incluindo carona local e motoristas do bairro para lugares onde app de corrida nem sempre chega.
+              <p className="max-w-xl text-sm leading-6 text-slate-600 sm:text-base lg:max-w-lg">
+                Inclui carona local e motoristas do bairro para lugares onde app de corrida nem sempre chega.
               </p>
             </div>
 
             <ProductAreaGrid className="hidden lg:grid lg:max-w-2xl" />
           </div>
 
-          <aside className="relative z-10 rounded-[28px] border border-white/86 bg-white/94 p-4 shadow-[0_24px_70px_rgba(15,23,42,0.18)] backdrop-blur-xl sm:p-5 lg:col-start-2 lg:row-span-2 lg:row-start-1">
-            <div className="mb-4 space-y-1">
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#0f8c61]">
+          <aside className="relative z-10 rounded-[26px] border border-slate-200/70 bg-white/94 p-3.5 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-xl sm:p-5 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+            <div className="mb-3.5 space-y-1">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#0f8c61] sm:text-[11px]">
                 Entre na lista de espera
               </p>
-              <h2 className="text-2xl font-semibold leading-tight text-slate-950">
-                Seja avisado quando seu bairro abrir.
+              <h2 className="text-[1.45rem] font-semibold leading-tight text-slate-950 sm:text-2xl">
+                Avise-me quando abrir.
               </h2>
-              <p className="text-sm leading-6 text-slate-600">
+              <p className="text-sm leading-5 text-slate-600">
                 Sem atalhos. Tudo começa pelo cadastro.
               </p>
             </div>
 
-            <form className="space-y-3" onSubmit={handleSubmit} noValidate>
+            <form className="space-y-2.5 sm:space-y-3" onSubmit={handleSubmit} noValidate>
               <div className="hidden" aria-hidden="true">
                 <Label htmlFor="company">Empresa</Label>
                 <Input
@@ -440,7 +441,7 @@ export default function PreLaunchLandingPage() {
                   value={form.name}
                   onChange={(event) => update("name", event.target.value)}
                   autoComplete="name"
-                  className="h-12 rounded-2xl border-slate-200 bg-white text-base shadow-sm focus-visible:ring-[#18B37E]/35"
+                  className="h-11 rounded-2xl border-slate-200 bg-white text-base shadow-sm focus-visible:ring-[#18B37E]/35 sm:h-12"
                   required
                 />
               </div>
@@ -455,16 +456,16 @@ export default function PreLaunchLandingPage() {
                   onChange={(event) => update("contact", event.target.value)}
                   autoComplete="email"
                   inputMode="email"
-                  className="h-12 rounded-2xl border-slate-200 bg-white text-base shadow-sm focus-visible:ring-[#18B37E]/35"
+                  className="h-11 rounded-2xl border-slate-200 bg-white text-base shadow-sm focus-visible:ring-[#18B37E]/35 sm:h-12"
                   aria-describedby="waitlist-contact-help"
                   required
                 />
-                <p id="waitlist-contact-help" className="text-xs leading-5 text-slate-500">
+                <p id="waitlist-contact-help" className="sr-only">
                   Use um e-mail ou um WhatsApp com DDD.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-2.5 min-[340px]:grid-cols-2 sm:gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="waitlist-bairro" className="text-sm font-semibold text-slate-800">
                     Bairro
@@ -473,7 +474,7 @@ export default function PreLaunchLandingPage() {
                     id="waitlist-bairro"
                     value={form.bairro}
                     onChange={(event) => update("bairro", event.target.value)}
-                    className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-3 text-base text-slate-950 shadow-sm outline-none transition focus:border-[#18B37E] focus:ring-2 focus:ring-[#18B37E]/35"
+                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-base text-slate-950 shadow-sm outline-none transition focus:border-[#18B37E] focus:ring-2 focus:ring-[#18B37E]/35 sm:h-12"
                     required
                   >
                     <option value="">Selecione</option>
@@ -495,7 +496,7 @@ export default function PreLaunchLandingPage() {
                     onChange={(event) =>
                       update("role", event.target.value as CommunityInterestRole)
                     }
-                    className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-3 text-base text-slate-950 shadow-sm outline-none transition focus:border-[#18B37E] focus:ring-2 focus:ring-[#18B37E]/35"
+                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-base text-slate-950 shadow-sm outline-none transition focus:border-[#18B37E] focus:ring-2 focus:ring-[#18B37E]/35 sm:h-12"
                   >
                     {ROLE_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -556,7 +557,7 @@ export default function PreLaunchLandingPage() {
               <Button
                 type="submit"
                 disabled={!canSubmit}
-                className="h-[52px] min-h-[52px] w-full rounded-2xl bg-[#18B37E] text-base font-bold text-white shadow-[0_16px_36px_rgba(24,179,126,0.28)] transition hover:bg-[#149f70] focus-visible:ring-[#18B37E]/40 disabled:bg-slate-300 disabled:shadow-none"
+                className="h-12 min-h-12 w-full rounded-2xl bg-[#18B37E] text-base font-bold text-white shadow-[0_16px_36px_rgba(24,179,126,0.28)] transition hover:bg-[#149f70] focus-visible:ring-[#18B37E]/40 disabled:bg-slate-200 disabled:text-slate-600 disabled:shadow-none sm:h-[52px] sm:min-h-[52px]"
               >
                 {submitting ? (
                   <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
@@ -565,7 +566,7 @@ export default function PreLaunchLandingPage() {
               </Button>
             </form>
 
-            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+            <div className="mt-3.5 rounded-2xl border border-slate-200 bg-slate-50 p-3">
               <div className="flex items-start gap-3">
                 <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#18B37E] shadow-sm">
                   <MapPin className="h-5 w-5" aria-hidden="true" />
