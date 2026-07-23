@@ -15,7 +15,7 @@ import { lastTerritoryStore, type LastTerritory } from "@/core/routing/stores/La
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 
 const PRELAUNCH_LOCKDOWN_ENABLED =
-  (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "true") !== "false";
+  (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "false") === "true";
 
 export default function RootRouteEntry() {
   if (PRELAUNCH_LOCKDOWN_ENABLED) {

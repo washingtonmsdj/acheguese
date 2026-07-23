@@ -26,7 +26,7 @@ interface ConsentPreferences {
 }
 
 const PRELAUNCH_LOCKDOWN_ENABLED =
-  (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "true") !== "false";
+  (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "false") === "true";
 
 export function ConsentBanner() {
   const { user } = useAuth();

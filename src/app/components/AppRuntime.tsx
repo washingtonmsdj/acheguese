@@ -52,7 +52,7 @@ const LoginPage = lazy(() => import("@/app/pages/LoginPage"));
 const ResetPasswordPage = lazy(() => import("@/app/pages/ResetPasswordPage"));
 
 const PRELAUNCH_LOCKDOWN_ENABLED =
-  (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "true") !== "false";
+  (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "false") === "true";
 
 function PreLaunchRoutes() {
   return (

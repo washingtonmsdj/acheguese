@@ -73,7 +73,7 @@ const AppLayoutRoutes = lazy(() =>
 );
 
 const PRELAUNCH_LOCKDOWN_ENABLED =
-  (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "true") !== "false";
+  (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "false") === "true";
 
 const EVENT_ROUTES = {
   home: buildAppModulePath(APP_MODULE_SLUGS.events),
