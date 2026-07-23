@@ -198,9 +198,9 @@ export const ADMIN_NAV_SECTIONS: readonly AdminNavSection[] = [
       },
       {
         id: "community-interest",
-        to: "/admin/community-interest",
+        to: "/admin/lista-espera",
         icon: MailCheck,
-        label: "Interesse (Waitlist)",
+        label: "Lista de espera",
         section: "comunidade",
       },
       {

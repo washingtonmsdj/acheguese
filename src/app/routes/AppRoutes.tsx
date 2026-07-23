@@ -5,7 +5,7 @@
  */
 
 import { lazy } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
 import {
   TERRITORIAL_ROUTE_PARAMS,
@@ -34,6 +34,7 @@ const AboutPage = lazy(() => import("@/app/pages/AboutPage"));
 const ContactPage = lazy(() => import("@/app/pages/ContactPage"));
 const OnboardingPage = lazy(() => import("@/app/pages/OnboardingPage"));
 const ResetPasswordPage = lazy(() => import("@/app/pages/ResetPasswordPage"));
+const RootRouteEntry = lazy(() => import("@/app/routes/RootRouteEntry"));
 const EmpresaCatalogoPublicoPage = lazy(
   () => import("@/modules/business/pages/EmpresaCatalogoPublicoPage"),
 );
@@ -71,6 +72,9 @@ const AppLayoutRoutes = lazy(() =>
   })),
 );
 
+const PRELAUNCH_LOCKDOWN_ENABLED =
+  (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "true") !== "false";
+
 const EVENT_ROUTES = {
   home: buildAppModulePath(APP_MODULE_SLUGS.events),
   favorites: buildAppModulePath(
@@ -97,6 +101,18 @@ const EVENT_ROUTES = {
 
 export function AppRoutes() {
   const eventsElement = <LaunchPausedPage moduleName="Eventos" />;
+
+  if (PRELAUNCH_LOCKDOWN_ENABLED) {
+    return (
+      <Routes>
+        <Route path="/" element={<RootRouteEntry />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/admin/*" element={<AdminRoutes />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    );
+  }
 
   return (
     <Routes>

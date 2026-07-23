@@ -9,11 +9,23 @@
  */
 import { useSyncExternalStore } from "react";
 import { Navigate } from "react-router-dom";
-import AchegueSeHomePage from "@/app/pages/AchegueSeHomePage";
+import AchegueSeHomePage from "@/app/pages/AchegueSeHomePageMap";
+import PreLaunchLandingPage from "@/app/pages/PreLaunchLandingPage";
 import { lastTerritoryStore, type LastTerritory } from "@/core/routing/stores/LastTerritoryStore";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 
+const PRELAUNCH_LOCKDOWN_ENABLED =
+  (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "true") !== "false";
+
 export default function RootRouteEntry() {
+  if (PRELAUNCH_LOCKDOWN_ENABLED) {
+    return <PreLaunchLandingPage />;
+  }
+
+  return <ResolvedTerritoryRoot />;
+}
+
+function ResolvedTerritoryRoot() {
   const lastTerritory = useSyncExternalStore<LastTerritory | null>(
     (listener) => lastTerritoryStore.subscribe(listener),
     () => lastTerritoryStore.get(),

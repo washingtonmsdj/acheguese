@@ -25,6 +25,9 @@ interface ConsentPreferences {
   geolocation: boolean;
 }
 
+const PRELAUNCH_LOCKDOWN_ENABLED =
+  (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "true") !== "false";
+
 export function ConsentBanner() {
   const { user } = useAuth();
   const { pathname } = useLocation();
@@ -81,7 +84,11 @@ export function ConsentBanner() {
     pathname === "/cadastro" ||
     pathname === "/cadastro/confirmacao" ||
     pathname === "/aceitar-termos" ||
+    pathname === "/onboarding" ||
     pathname === "/reset-password";
+  const mobileBannerBottomClass = isAuthSurface
+    ? "bottom-[calc(env(safe-area-inset-bottom)+0.75rem)]"
+    : "bottom-[calc(env(safe-area-inset-bottom)+5.5rem)]";
 
   const rejectOptionalConsents = () =>
     saveConsentsMutation.mutate({
@@ -99,6 +106,8 @@ export function ConsentBanner() {
       geolocation: true,
     });
 
+  if (pathname === "/onboarding") return null;
+  if (PRELAUNCH_LOCKDOWN_ENABLED && pathname === "/") return null;
   if (!showBanner) return null;
 
   return (
@@ -106,7 +115,7 @@ export function ConsentBanner() {
       {isAuthSurface ? (
         <div
           data-consent-banner
-          className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-50 mx-auto max-w-[20rem] rounded-[20px] border border-border/70 bg-background/94 px-2.5 py-2 shadow-[0_20px_48px_-28px_rgba(0,0,0,0.85)] backdrop-blur-xl"
+          className={`fixed inset-x-4 ${mobileBannerBottomClass} z-50 mx-auto max-w-[20rem] rounded-[20px] border border-border/70 bg-background/94 px-2.5 py-2 shadow-[0_20px_48px_-28px_rgba(0,0,0,0.85)] backdrop-blur-xl`}
         >
           <div className="grid grid-cols-[auto,1fr,auto] items-center gap-2">
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary">
@@ -162,7 +171,7 @@ export function ConsentBanner() {
       ) : (
         <div
           data-consent-banner
-          className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] z-50 mx-auto max-w-[calc(100vw-1.5rem)] rounded-2xl border border-border/70 bg-background/95 p-2 shadow-2xl backdrop-blur-xl md:left-auto md:right-4 md:mx-0 md:w-[40rem] md:max-w-[40rem] md:rounded-2xl md:p-3.5"
+          className={`fixed inset-x-3 ${mobileBannerBottomClass} z-50 mx-auto max-w-[calc(100vw-1.5rem)] rounded-2xl border border-border/70 bg-background/95 p-2 shadow-2xl backdrop-blur-xl md:left-auto md:right-4 md:mx-0 md:w-[40rem] md:max-w-[40rem] md:rounded-2xl md:p-3.5`}
         >
           {/* Mobile compact */}
           <div className="flex items-center gap-2 md:hidden">
