@@ -24,6 +24,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { cn } from "@/shared/utils/cn";
+import { slugifyTerritory } from "@/shared/utils/slugify";
 
 const TURNSTILE_SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "").trim();
 const MINIMUM_FILL_MS = 1_200;
@@ -363,8 +364,10 @@ export default function PreLaunchLandingPage() {
 
     setSubmitting(true);
     try {
+      const selectedBairro = form.bairro.trim();
+      const territorySlug = slugifyTerritory(selectedBairro);
       const message = [
-        `Bairro informado: ${form.bairro.trim()}`,
+        `Bairro informado: ${selectedBairro}`,
         `Tipo de contato: ${contact.contactMode === "email" ? "email" : "WhatsApp"}`,
         "Interesses: mobilidade local, gastronomia, feed do bairro, alertas, serviços e negócios locais.",
       ].join("\n");
@@ -372,7 +375,7 @@ export default function PreLaunchLandingPage() {
       const result = await registerCommunityInterest({
         communityId: null,
         communitySlug: "salvador",
-        territoryPath: `/ba/salvador/${form.bairro.trim().toLowerCase()}`,
+        territoryPath: `/ba/salvador/${territorySlug}`,
         fullName: form.name.trim(),
         email: contact.email,
         phone: contact.phone,
