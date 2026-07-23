@@ -28,7 +28,13 @@ test.describe("prelaunch landing", () => {
 
     await expect(page.locator(".maplibregl-canvas")).toBeVisible({ timeout: 30_000 });
     await expect(page.getByRole("heading", { name: "Seu bairro primeiro." })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Quero ser avisado" })).toBeVisible();
+    const waitlistButton = page.getByRole("button", { name: "Quero ser avisado" });
+    await expect(waitlistButton).toBeVisible();
+    const waitlistButtonBox = await waitlistButton.boundingBox();
+    expect(waitlistButtonBox, "waitlist CTA should fit in the first mobile viewport").not.toBeNull();
+    if (waitlistButtonBox) {
+      expect(waitlistButtonBox.y + waitlistButtonBox.height).toBeLessThanOrEqual(844);
+    }
 
     const metrics = await page.evaluate(() => ({
       clientWidth: document.documentElement.clientWidth,

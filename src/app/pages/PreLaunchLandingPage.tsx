@@ -132,12 +132,35 @@ type SubmitState =
   | { status: "success"; message: string }
   | { status: "error"; message: string };
 
+type TerritoryFitPadding = {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+};
+
 const INITIAL_FORM: FormState = {
   name: "",
   contact: "",
   bairro: "",
   role: "morador",
 };
+
+function getTerritoryFitPadding(): TerritoryFitPadding {
+  if (typeof window === "undefined") {
+    return { top: 96, right: 32, bottom: 110, left: 32 };
+  }
+
+  if (window.innerWidth < 640) {
+    return { top: 92, right: 18, bottom: 280, left: 126 };
+  }
+
+  if (window.innerWidth < 1024) {
+    return { top: 96, right: 28, bottom: 240, left: 28 };
+  }
+
+  return { top: 96, right: 32, bottom: 110, left: 32 };
+}
 
 function isEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -218,6 +241,15 @@ function PreLaunchTerritoryMap() {
   const [cityPolygons, setCityPolygons] = useState<TerritoryPolygon[]>([]);
   const [complexLocations, setComplexLocations] = useState<Location[]>([]);
   const [complexPolygons, setComplexPolygons] = useState<TerritoryPolygon[]>([]);
+  const [territoryFitPadding, setTerritoryFitPadding] =
+    useState<TerritoryFitPadding>(() => getTerritoryFitPadding());
+
+  useEffect(() => {
+    const handleResize = () => setTerritoryFitPadding(getTerritoryFitPadding());
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -455,15 +487,18 @@ function PreLaunchTerritoryMap() {
   ).size;
 
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-      <div className="absolute inset-0 opacity-[0.52] sm:opacity-[0.7] lg:opacity-100">
+    <div
+      className="pointer-events-none absolute inset-x-0 top-0 h-[100svh] min-h-[760px] overflow-hidden lg:inset-0 lg:h-auto"
+      aria-hidden="true"
+    >
+      <div className="absolute inset-0 opacity-[0.62] sm:opacity-[0.78] lg:opacity-100 [&_.maplibregl-marker]:drop-shadow-[0_10px_18px_rgba(15,23,42,0.24)]">
         <MapLibreAdapter
           styleUrl={DEFAULT_TILE_STYLE.styleUrl}
           initialViewport={{ center: SALVADOR_CENTER, zoom: 10.2 }}
           territoryPolygons={territoryPolygons}
           markers={markers}
           fitTerritoryBounds={territoryPolygons.length > 0}
-          territoryFitPadding={{ top: 96, right: 32, bottom: 110, left: 32 }}
+          territoryFitPadding={territoryFitPadding}
           territoryFitMaxZoom={10.7}
           userLocationMarker={{ enabled: false, autoAdd: false }}
           enableClustering={false}
@@ -484,9 +519,9 @@ function PreLaunchTerritoryMap() {
           {complexCount || 4} bairros mapeados no primeiro lançamento.
         </p>
       </div>
-      <div className="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-white via-white/95 to-white/62 sm:w-[84vw] sm:via-white/90 sm:to-white/8 lg:w-[58vw] lg:from-white/98 lg:via-white/88 lg:to-white/0" />
-      <div className="absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-white via-white/90 to-white/0 sm:h-36 sm:from-white/98" />
-      <div className="absolute inset-x-0 bottom-0 h-[68vh] bg-gradient-to-t from-white via-white/92 to-white/0 sm:h-80 sm:via-white/78 lg:h-72 lg:via-white/86" />
+      <div className="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-white via-white/95 to-white/54 sm:w-[84vw] sm:via-white/88 sm:to-white/8 lg:w-[58vw] lg:from-white/98 lg:via-white/88 lg:to-white/0" />
+      <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white via-white/90 to-white/0 sm:h-36 sm:from-white/98" />
+      <div className="absolute inset-x-0 bottom-0 h-[62vh] bg-gradient-to-t from-white via-white/88 to-white/0 sm:h-80 sm:via-white/76 lg:h-72 lg:via-white/86" />
     </div>
   );
 }
@@ -726,12 +761,12 @@ export default function PreLaunchLandingPage() {
             <ProductAreaGrid className="hidden lg:grid lg:max-w-2xl" />
           </div>
 
-          <aside className="relative z-10 rounded-[26px] border border-slate-200/70 bg-white/94 p-3.5 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-xl sm:p-5 lg:col-start-2 lg:row-span-2 lg:row-start-1">
-            <div className="mb-3.5 space-y-1">
+          <aside className="relative z-10 rounded-[26px] border border-slate-200/70 bg-white/94 p-3 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-xl sm:p-5 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+            <div className="mb-2.5 space-y-0.5 sm:mb-3.5 sm:space-y-1">
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#0f8c61] sm:text-[11px]">
                 Entre na lista de espera
               </p>
-              <h2 className="text-[1.45rem] font-semibold leading-tight text-slate-950 sm:text-2xl">
+              <h2 className="text-[1.34rem] font-semibold leading-tight text-slate-950 sm:text-2xl">
                 Avise-me quando abrir.
               </h2>
               <p className="text-sm leading-5 text-slate-600">
@@ -739,7 +774,7 @@ export default function PreLaunchLandingPage() {
               </p>
             </div>
 
-            <form className="space-y-2.5 sm:space-y-3" onSubmit={handleSubmit} noValidate>
+            <form className="space-y-2 sm:space-y-3" onSubmit={handleSubmit} noValidate>
               <div className="hidden" aria-hidden="true">
                 <Label htmlFor="company">Empresa</Label>
                 <Input
@@ -752,7 +787,7 @@ export default function PreLaunchLandingPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="waitlist-name" className="text-sm font-semibold text-slate-800">
+                <Label htmlFor="waitlist-name" className="text-[13px] font-semibold text-slate-800 sm:text-sm">
                   Nome
                 </Label>
                 <Input
@@ -761,13 +796,13 @@ export default function PreLaunchLandingPage() {
                   onChange={(event) => update("name", event.target.value)}
                   autoComplete="name"
                   placeholder="Seu nome"
-                  className="h-11 rounded-2xl border-slate-200 bg-white text-base shadow-sm focus-visible:ring-[#18B37E]/35 sm:h-12"
+                  className="h-10 rounded-2xl border-slate-200 bg-white text-base shadow-sm focus-visible:ring-[#18B37E]/35 sm:h-12"
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="waitlist-contact" className="text-sm font-semibold text-slate-800">
+                <Label htmlFor="waitlist-contact" className="text-[13px] font-semibold text-slate-800 sm:text-sm">
                   Email ou WhatsApp
                 </Label>
                 <Input
@@ -777,7 +812,7 @@ export default function PreLaunchLandingPage() {
                   autoComplete="email"
                   inputMode="text"
                   placeholder="Email ou WhatsApp"
-                  className="h-11 rounded-2xl border-slate-200 bg-white text-base shadow-sm focus-visible:ring-[#18B37E]/35 sm:h-12"
+                  className="h-10 rounded-2xl border-slate-200 bg-white text-base shadow-sm focus-visible:ring-[#18B37E]/35 sm:h-12"
                   aria-describedby="waitlist-contact-help"
                   required
                 />
@@ -788,14 +823,14 @@ export default function PreLaunchLandingPage() {
 
               <div className="grid grid-cols-1 gap-2.5 min-[340px]:grid-cols-2 sm:gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="waitlist-bairro" className="text-sm font-semibold text-slate-800">
+                  <Label htmlFor="waitlist-bairro" className="text-[13px] font-semibold text-slate-800 sm:text-sm">
                     Bairro
                   </Label>
                   <select
                     id="waitlist-bairro"
                     value={form.bairro}
                     onChange={(event) => update("bairro", event.target.value)}
-                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-base text-slate-950 shadow-sm outline-none transition focus:border-[#18B37E] focus:ring-2 focus:ring-[#18B37E]/35 sm:h-12"
+                    className="h-10 w-full rounded-2xl border border-slate-200 bg-white px-3 text-base text-slate-950 shadow-sm outline-none transition focus:border-[#18B37E] focus:ring-2 focus:ring-[#18B37E]/35 sm:h-12"
                     required
                   >
                     <option value="">Selecione</option>
@@ -808,7 +843,7 @@ export default function PreLaunchLandingPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="waitlist-role" className="text-sm font-semibold text-slate-800">
+                  <Label htmlFor="waitlist-role" className="text-[13px] font-semibold text-slate-800 sm:text-sm">
                     Perfil
                   </Label>
                   <select
@@ -817,7 +852,7 @@ export default function PreLaunchLandingPage() {
                     onChange={(event) =>
                       update("role", event.target.value as CommunityInterestRole)
                     }
-                    className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-base text-slate-950 shadow-sm outline-none transition focus:border-[#18B37E] focus:ring-2 focus:ring-[#18B37E]/35 sm:h-12"
+                    className="h-10 w-full rounded-2xl border border-slate-200 bg-white px-3 text-base text-slate-950 shadow-sm outline-none transition focus:border-[#18B37E] focus:ring-2 focus:ring-[#18B37E]/35 sm:h-12"
                   >
                     {ROLE_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -878,7 +913,7 @@ export default function PreLaunchLandingPage() {
               <Button
                 type="submit"
                 disabled={!canSubmit}
-                className="h-12 min-h-12 w-full rounded-2xl bg-[#18B37E] text-base font-bold text-white shadow-[0_16px_36px_rgba(24,179,126,0.28)] transition-[background-color,box-shadow] hover:bg-[#149f70] focus-visible:ring-[#18B37E]/40 disabled:bg-slate-200 disabled:text-slate-600 disabled:shadow-none sm:h-[52px] sm:min-h-[52px]"
+                className="h-11 min-h-11 w-full rounded-2xl bg-[#18B37E] text-base font-bold text-white shadow-[0_16px_36px_rgba(24,179,126,0.28)] transition-[background-color,box-shadow] hover:bg-[#149f70] focus-visible:ring-[#18B37E]/40 disabled:bg-slate-200 disabled:text-slate-600 disabled:shadow-none sm:h-[52px] sm:min-h-[52px]"
               >
                 {submitting ? (
                   <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
