@@ -18,9 +18,8 @@ import {
 import { TERRITORY_CONFIG } from "@/config/territory";
 import { boundaryService } from "@/core/geospatial";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
-import type { Location } from "@/core/location/types";
+import { LocationStatus, LocationType, type Location } from "@/core/location/types";
 import { DEFAULT_TILE_STYLE, MapLibreAdapter, type MapMarker } from "@/core/maps";
-import { useCityNeighborhoodsPolygons } from "@/core/maps/hooks/useCityNeighborhoodsPolygons";
 import type { TerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import {
   registerCommunityInterest,
@@ -59,6 +58,15 @@ const COMPLEX_NEIGHBORHOODS = [
 
 const COMPLEX_POLYGON_COLORS = ["#18B37E", "#f97316", "#0ea5e9", "#84cc16"] as const;
 const SALVADOR_CENTER = { latitude: -12.9777, longitude: -38.5016 };
+const COMPLEX_FALLBACK_CENTERS: Record<
+  (typeof COMPLEX_NEIGHBORHOODS)[number],
+  [number, number]
+> = {
+  "Nordeste de Amaralina": [-13.00850207522845, -38.473872259293444],
+  "Santa Cruz": [-13.00219789478145, -38.47471040182655],
+  "Chapada do Rio Vermelho": [-13.004056002367001, -38.4818418340164],
+  "Vale das Pedrinhas": [-13.00843350490315, -38.48009510441305],
+};
 
 const ROLE_OPTIONS: { value: CommunityInterestRole; label: string }[] = [
   { value: "morador", label: "Sou morador" },
@@ -183,10 +191,11 @@ function AreaIcon({
   );
 }
 
-function getLaunchCityPath(): string {
+function getLaunchCityPaths(): string[] {
+  const country = TERRITORY_CONFIG.launch.country || "br";
   const state = TERRITORY_CONFIG.launch.state || "ba";
   const city = TERRITORY_CONFIG.launch.city || "salvador";
-  return `/br/${state}/${city}`;
+  return Array.from(new Set([`/${country}/${state}/${city}`, `/${state}/${city}`]));
 }
 
 function isComplexNeighborhood(name: string): boolean {
@@ -196,22 +205,35 @@ function isComplexNeighborhood(name: string): boolean {
   );
 }
 
+function getLocationCenter(location: Location): [number, number] | null {
+  const latitude = Number(location.metadata.center_latitude);
+  const longitude = Number(location.metadata.center_longitude);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+  if (latitude === 0 && longitude === 0) return null;
+  return [latitude, longitude];
+}
+
 function PreLaunchTerritoryMap() {
   const [cityLocation, setCityLocation] = useState<Location | null>(null);
   const [cityPolygons, setCityPolygons] = useState<TerritoryPolygon[]>([]);
-  const { polygons: neighborhoodPolygons } = useCityNeighborhoodsPolygons({
-    cityId: cityLocation?.id,
-    cityGeoPath: cityLocation?.geographic_path,
-    enabled: Boolean(cityLocation?.id && cityLocation?.geographic_path),
-  });
+  const [complexLocations, setComplexLocations] = useState<Location[]>([]);
+  const [complexPolygons, setComplexPolygons] = useState<TerritoryPolygon[]>([]);
 
   useEffect(() => {
     let cancelled = false;
 
-    createLocationRepository()
-      .findByPath(getLaunchCityPath())
+    const loadCityLocation = async () => {
+      const repo = createLocationRepository();
+      for (const path of getLaunchCityPaths()) {
+        const location = await repo.findByPath(path);
+        if (location) return location;
+      }
+      return null;
+    };
+
+    loadCityLocation()
       .then((location) => {
-        if (!cancelled) setCityLocation(location ?? null);
+        if (!cancelled) setCityLocation(location);
       })
       .catch(() => {
         if (!cancelled) setCityLocation(null);
@@ -253,22 +275,101 @@ function PreLaunchTerritoryMap() {
     };
   }, [cityLocation]);
 
-  const complexPolygons = useMemo(
-    () =>
-      neighborhoodPolygons
-        .filter((polygon) => isComplexNeighborhood(polygon.name))
-        .map((polygon) => {
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadComplexBoundaries = async () => {
+      if (!cityLocation) {
+        setComplexLocations([]);
+        const fallbackResults = await Promise.allSettled(
+          COMPLEX_NEIGHBORHOODS.map(async (neighborhood) => {
+            const bounds = await boundaryService.getNeighborhoodBounds({
+              neighborhood,
+              city: TERRITORY_CONFIG.launch.name || "Salvador",
+              state: TERRITORY_CONFIG.launch.state || "ba",
+            });
+
+            return bounds.rings.map((ring) => ({
+              name: neighborhood,
+              coordinates: ring,
+              center: bounds.center,
+              color:
+                COMPLEX_POLYGON_COLORS[
+                  COMPLEX_NEIGHBORHOODS.indexOf(neighborhood)
+                ],
+            }));
+          }),
+        );
+
+        if (!cancelled) {
+          setComplexPolygons(
+            fallbackResults.flatMap((result) =>
+              result.status === "fulfilled" ? result.value : [],
+            ),
+          );
+        }
+        return;
+      }
+
+      const repo = createLocationRepository();
+      const { locations: neighborhoods } = await repo.findChildren(cityLocation.id, {
+        type: LocationType.NEIGHBORHOOD,
+        status: LocationStatus.ACTIVE,
+        page_size: 200,
+      });
+      const { locations: districts } = await repo.findChildren(cityLocation.id, {
+        type: LocationType.DISTRICT,
+        status: LocationStatus.ACTIVE,
+        page_size: 200,
+      });
+
+      const selected = new Map<string, Location>();
+      [...neighborhoods, ...districts].forEach((location) => {
+        if (!isComplexNeighborhood(location.name)) return;
+        const key = normalizeTerritoryText(location.name);
+        if (!selected.has(key)) selected.set(key, location);
+      });
+
+      const selectedLocations = Array.from(selected.values());
+      if (!cancelled) setComplexLocations(selectedLocations);
+
+      const results = await Promise.allSettled(
+        selectedLocations.map(async (location) => {
           const colorIndex = COMPLEX_NEIGHBORHOODS.findIndex(
             (neighborhood) =>
-              normalizeTerritoryText(neighborhood) === normalizeTerritoryText(polygon.name),
+              normalizeTerritoryText(neighborhood) === normalizeTerritoryText(location.name),
           );
-          return {
-            ...polygon,
+          const bounds = await boundaryService.getNeighborhoodBounds({
+            neighborhood: location.name,
+            city: cityLocation.name,
+            state: "",
+            locationId: location.id,
+          });
+
+          return bounds.rings.map((ring) => ({
+            name: location.name,
+            coordinates: ring,
+            center: bounds.center,
             color: COMPLEX_POLYGON_COLORS[colorIndex >= 0 ? colorIndex : 0],
-          };
+          }));
         }),
-    [neighborhoodPolygons],
-  );
+      );
+
+      if (cancelled) return;
+
+      setComplexPolygons(
+        results.flatMap((result) => (result.status === "fulfilled" ? result.value : [])),
+      );
+    };
+
+    loadComplexBoundaries().catch(() => {
+      if (!cancelled) setComplexPolygons([]);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cityLocation]);
 
   const territoryPolygons = useMemo(
     () => [...cityPolygons, ...complexPolygons],
@@ -292,16 +393,52 @@ function PreLaunchTerritoryMap() {
         isPremium: true,
       },
     ];
+    const complexMarkerSourcesByName = new Map<
+      string,
+      { center: [number, number]; name: string }
+    >();
 
-    complexPolygons.slice(0, 4).forEach((polygon, index) => {
+    complexPolygons.forEach((polygon) => {
+      const key = normalizeTerritoryText(polygon.name);
+      if (!key || complexMarkerSourcesByName.has(key)) return;
+      complexMarkerSourcesByName.set(key, {
+        center: polygon.center,
+        name: polygon.name,
+      });
+    });
+
+    complexLocations.forEach((location) => {
+      const key = normalizeTerritoryText(location.name);
+      if (!key || complexMarkerSourcesByName.has(key)) return;
+      const center = getLocationCenter(location);
+      if (center) {
+        complexMarkerSourcesByName.set(key, {
+          center,
+          name: location.name,
+        });
+      }
+    });
+
+    COMPLEX_NEIGHBORHOODS.forEach((name) => {
+      const key = normalizeTerritoryText(name);
+      if (!key || complexMarkerSourcesByName.has(key)) return;
+      complexMarkerSourcesByName.set(key, {
+        center: COMPLEX_FALLBACK_CENTERS[name],
+        name,
+      });
+    });
+
+    const complexMarkerSources = Array.from(complexMarkerSourcesByName.values());
+
+    complexMarkerSources.slice(0, 4).forEach((source, index) => {
       output.push({
-        id: `prelaunch-complex-${slugifyTerritory(polygon.name)}-${index}`,
+        id: `prelaunch-complex-${slugifyTerritory(source.name)}-${index}`,
         type: index === 0 ? "business" : "service",
         coordinates: {
-          latitude: polygon.center[0],
-          longitude: polygon.center[1],
+          latitude: source.center[0],
+          longitude: source.center[1],
         },
-        title: polygon.name,
+        title: source.name,
         subtitle: "Complexo do Nordeste",
         status: "active",
         score: 96 - index,
@@ -309,29 +446,33 @@ function PreLaunchTerritoryMap() {
     });
 
     return output;
-  }, [cityPolygons, complexPolygons]);
+  }, [cityPolygons, complexLocations, complexPolygons]);
 
   const complexCount = new Set(
-    complexPolygons.map((polygon) => normalizeTerritoryText(polygon.name)),
+    (complexPolygons.length > 0 ? complexPolygons : complexLocations).map((item) =>
+      normalizeTerritoryText(item.name),
+    ),
   ).size;
 
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-      <MapLibreAdapter
-        styleUrl={DEFAULT_TILE_STYLE.styleUrl}
-        initialViewport={{ center: SALVADOR_CENTER, zoom: 10.2 }}
-        territoryPolygons={territoryPolygons}
-        markers={markers}
-        fitTerritoryBounds={territoryPolygons.length > 0}
-        territoryFitPadding={{ top: 96, right: 32, bottom: 110, left: 32 }}
-        territoryFitMaxZoom={10.7}
-        userLocationMarker={{ enabled: false, autoAdd: false }}
-        enableClustering={false}
-        markerPresentation="compact"
-        attribution={false}
-        hideNavigationControl
-        className="h-full w-full"
-      />
+      <div className="absolute inset-0 opacity-[0.52] sm:opacity-[0.7] lg:opacity-100">
+        <MapLibreAdapter
+          styleUrl={DEFAULT_TILE_STYLE.styleUrl}
+          initialViewport={{ center: SALVADOR_CENTER, zoom: 10.2 }}
+          territoryPolygons={territoryPolygons}
+          markers={markers}
+          fitTerritoryBounds={territoryPolygons.length > 0}
+          territoryFitPadding={{ top: 96, right: 32, bottom: 110, left: 32 }}
+          territoryFitMaxZoom={10.7}
+          userLocationMarker={{ enabled: false, autoAdd: false }}
+          enableClustering={false}
+          markerPresentation="compact"
+          attribution={false}
+          hideNavigationControl
+          className="h-full w-full"
+        />
+      </div>
       <div className="absolute right-4 top-20 z-10 hidden max-w-[250px] rounded-2xl border border-white/80 bg-white/88 px-4 py-3 text-left shadow-[0_16px_42px_rgba(15,23,42,0.14)] backdrop-blur-md sm:block lg:right-[8%] lg:top-[22%]">
         <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#0f8c61]">
           Salvador
@@ -574,10 +715,10 @@ export default function PreLaunchLandingPage() {
               <h1 className="max-w-[10ch] text-[2.86rem] font-semibold leading-[0.92] tracking-normal text-slate-950 min-[390px]:text-[3.1rem] sm:max-w-[11ch] sm:text-6xl lg:max-w-[12ch] lg:text-[5.8rem]">
                 Seu bairro primeiro.
               </h1>
-              <p className="max-w-xl text-base leading-7 text-slate-700 sm:text-lg lg:text-xl lg:leading-8">
+              <p className="max-w-[20rem] text-base leading-7 text-slate-700 min-[390px]:max-w-[22rem] sm:max-w-xl sm:text-lg lg:text-xl lg:leading-8">
                 Mobilidade, gastronomia, alertas e feed do bairro em Salvador.
               </p>
-              <p className="max-w-xl text-sm leading-6 text-slate-600 sm:text-base lg:max-w-lg">
+              <p className="max-w-[19rem] text-sm leading-6 text-slate-600 min-[390px]:max-w-[21rem] sm:max-w-xl sm:text-base lg:max-w-lg">
                 O primeiro lançamento será no Complexo do Nordeste de Amaralina, com carona local e motoristas para lugares onde app de corrida nem sempre chega.
               </p>
             </div>
