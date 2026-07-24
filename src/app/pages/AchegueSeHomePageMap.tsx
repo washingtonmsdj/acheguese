@@ -679,7 +679,14 @@ export default function AchegueSeHomePage() {
               </span>
             </header>
 
-            <div className="th-live-copy !left-5 !top-[5.75rem] !w-[min(14rem,calc(100%-2.5rem))] lg:!left-7 lg:!top-[6.75rem] lg:!w-[min(14rem,38%)]">
+            <div
+              className="th-live-copy"
+              style={{
+                left: "1.25rem",
+                top: "5.75rem",
+                width: "min(14rem, calc(100% - 2.5rem))",
+              }}
+            >
               <ul className="th-live-status-list" aria-label="Status ao vivo do Achegue-se">
                 <li className="th-live-status">
                   <span className="th-live-status-icon bg-primary/10 text-primary">
