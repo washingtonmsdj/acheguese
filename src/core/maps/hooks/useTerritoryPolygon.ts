@@ -24,6 +24,12 @@ export interface TerritoryPolygon {
   center: [number, number];
   /** Cor de destaque */
   color: string;
+  /** Opacidade do preenchimento da camada */
+  fillOpacity?: number;
+  /** Largura da linha da camada */
+  lineWidth?: number;
+  /** Opacidade da linha da camada */
+  lineOpacity?: number;
 }
 
 interface UseTerritoryPolygonResult {

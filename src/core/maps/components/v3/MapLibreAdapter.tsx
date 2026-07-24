@@ -595,14 +595,18 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
             id: fillId,
             type: 'fill',
             source: sourceId,
-            paint: { 'fill-color': poly.color, 'fill-opacity': 0.18 },
+            paint: { 'fill-color': poly.color, 'fill-opacity': poly.fillOpacity ?? 0.18 },
           });
 
           map.addLayer({
             id: lineId,
             type: 'line',
             source: sourceId,
-            paint: { 'line-color': poly.color, 'line-width': 3, 'line-opacity': 1 },
+            paint: {
+              'line-color': poly.color,
+              'line-width': poly.lineWidth ?? 3,
+              'line-opacity': poly.lineOpacity ?? 1,
+            },
           });
           appliedPolygons += 1;
           appliedCoordinates += ring.length;

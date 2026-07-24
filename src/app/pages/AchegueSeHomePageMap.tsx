@@ -88,6 +88,12 @@ const statusChips = [
 ] as const;
 
 const recentSuggestions = ["Pituba", "Barra", "Rio Vermelho"];
+const LAUNCH_COMPLEX_NEIGHBORHOOD_SLUGS = [
+  "nordeste-de-amaralina",
+  "santa-cruz",
+  "chapada-do-rio-vermelho",
+  "vale-das-pedrinhas",
+] as const;
 
 const PREVIEW_MAP_CENTER = { latitude: -12.95, longitude: -38.55 };
 const PREVIEW_CITY_MARKERS: MapMarker[] = [
@@ -220,6 +226,10 @@ function getLaunchCityPaths(): string[] {
   return Array.from(new Set([`/${country}/${state}/${city}`, `/${state}/${city}`]));
 }
 
+function getLaunchNeighborhoodPaths(slug: string): string[] {
+  return getLaunchCityPaths().map((path) => `${path}/${slug}`);
+}
+
 async function findLaunchCityLocation(): Promise<Location | null> {
   const repo = createLocationRepository();
 
@@ -254,6 +264,21 @@ async function findLaunchCityLocation(): Promise<Location | null> {
   );
 }
 
+async function findLaunchNeighborhoodLocations(): Promise<Location[]> {
+  const repo = createLocationRepository();
+  const found = await Promise.all(
+    LAUNCH_COMPLEX_NEIGHBORHOOD_SLUGS.map(async (slug) => {
+      for (const path of getLaunchNeighborhoodPaths(slug)) {
+        const location = await repo.findByPath(path);
+        if (location) return location;
+      }
+      return null;
+    }),
+  );
+
+  return found.filter((location): location is Location => Boolean(location));
+}
+
 function buildOfficialSalvadorCityPolygon(cityName: string): TerritoryPolygon | null {
   if (normalizeTerritoryText(cityName) !== "salvador") return null;
 
@@ -268,6 +293,9 @@ function buildOfficialSalvadorCityPolygon(cityName: string): TerritoryPolygon | 
       (Math.min(...longitudes) + Math.max(...longitudes)) / 2,
     ],
     color: "#18B37E",
+    fillOpacity: 0.1,
+    lineWidth: 3,
+    lineOpacity: 0.95,
   };
 }
 
@@ -277,6 +305,7 @@ function HomeBoundaryPreview() {
     const fallback = buildOfficialSalvadorCityPolygon("Salvador");
     return fallback ? [fallback] : [];
   });
+  const [launchPolygons, setLaunchPolygons] = useState<TerritoryPolygon[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -313,6 +342,9 @@ function HomeBoundaryPreview() {
         coordinates: ring,
         center: bounds.center,
         color: index === 0 ? "#18B37E" : "#7dd3fc",
+        fillOpacity: index === 0 ? 0.1 : 0.06,
+        lineWidth: index === 0 ? 3 : 2,
+        lineOpacity: index === 0 ? 0.95 : 0.55,
       }));
       const fallback = storedPolygons.length === 0
         ? buildOfficialSalvadorCityPolygon(homeCity.name)
@@ -333,12 +365,60 @@ function HomeBoundaryPreview() {
     };
   }, [homeCity]);
 
-  const cityLabel = homeCity?.name ?? "Salvador";
-  const cityMetaLabel = "170 bairros";
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      const locations = await findLaunchNeighborhoodLocations();
+      if (cancelled || locations.length === 0) {
+        if (!cancelled) setLaunchPolygons([]);
+        return;
+      }
+
+      const results = await Promise.all(
+        locations.map((location) =>
+          boundaryService
+            .getLocationBounds(location)
+            .then((bounds) => ({ location, bounds }))
+            .catch(() => null),
+        ),
+      );
+
+      if (cancelled) return;
+
+      const colors = ["#0f9f72", "#18B37E", "#22c55e", "#f97316"];
+      const built: TerritoryPolygon[] = [];
+
+      results.forEach((result, locationIndex) => {
+        if (!result || result.bounds.rings.length === 0) return;
+        result.bounds.rings.forEach((ring) => {
+          built.push({
+            name: result.location.name,
+            coordinates: ring,
+            center: result.bounds.center,
+            color: colors[locationIndex % colors.length],
+            fillOpacity: locationIndex === 3 ? 0.14 : 0.12,
+            lineWidth: 1.65,
+            lineOpacity: 0.75,
+          });
+        });
+      });
+
+      setLaunchPolygons(built);
+    };
+
+    run().catch(() => {
+      if (!cancelled) setLaunchPolygons([]);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const territoryPolygons = useMemo(
-    () => cityPolygons,
-    [cityPolygons],
+    () => [...cityPolygons, ...launchPolygons],
+    [cityPolygons, launchPolygons],
   );
 
   const mapMarkers = useMemo<MapMarker[]>(
@@ -364,9 +444,14 @@ function HomeBoundaryPreview() {
       />
       <div
         aria-hidden
-        className="absolute left-4 top-16 z-20 rounded-full bg-white/88 px-3 py-1.5 text-[11px] font-medium text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.10)] backdrop-blur-sm"
+        className="absolute right-4 top-[4.35rem] z-20 flex max-w-[9.5rem] flex-col items-end gap-1.5 text-right lg:right-7 lg:top-24"
       >
-        {cityLabel} · {cityMetaLabel}
+        <span className="rounded-full bg-white/88 px-3 py-1.5 text-[10.5px] font-semibold text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.10)] backdrop-blur-sm">
+          contorno da cidade
+        </span>
+        <span className="rounded-full bg-[#18B37E]/90 px-3 py-1.5 text-[10.5px] font-semibold text-white shadow-[0_8px_20px_rgba(24,179,126,0.18)] backdrop-blur-sm">
+          {launchPolygons.length > 0 ? "Complexo em destaque" : "SSOT territorial"}
+        </span>
       </div>
       <div aria-hidden className="absolute inset-x-0 top-0 z-10 h-24 bg-gradient-to-b from-white/80 via-white/35 to-white/0" />
       <div aria-hidden className="absolute inset-x-0 bottom-0 z-10 h-24 bg-gradient-to-t from-white via-white/42 to-white/0 lg:h-32" />
@@ -684,20 +769,20 @@ export default function AchegueSeHomePage() {
               style={{
                 left: "1.25rem",
                 top: "5.75rem",
-                width: "min(14rem, calc(100% - 2.5rem))",
+                width: "min(13rem, calc(100% - 2.5rem))",
               }}
             >
               <ul className="th-live-status-list grid gap-[0.22rem]" aria-label="Status ao vivo do Achegue-se">
-                <li className="th-live-status flex min-w-0 items-center gap-[0.28rem] rounded-[0.58rem] border border-white/60 bg-gradient-to-br from-white/65 to-white/35 px-[0.22rem] py-[0.18rem] shadow-[0_4px_10px_rgba(15,23,42,0.03)] backdrop-blur-md">
+                <li className="th-live-status flex min-w-0 items-center gap-[0.32rem] rounded-[0.64rem] border border-white/90 bg-white/95 px-[0.28rem] py-[0.24rem] shadow-[0_8px_18px_rgba(15,23,42,0.07)] backdrop-blur-sm">
                   <span className="th-live-status-icon inline-flex h-[1.24rem] w-[1.24rem] shrink-0 items-center justify-center rounded-[0.48rem] bg-primary/10 text-primary">
                     <MapPin className="h-3 w-3" aria-hidden strokeWidth={2.25} />
                   </span>
                   <span className="min-w-0">
-                    <span className="block truncate text-[10.5px] font-bold leading-tight text-foreground">
-                      Descubra seu bairro
+                    <span className="block truncate text-[10.5px] font-bold leading-tight text-slate-950">
+                      Salvador
                     </span>
-                    <span className="block truncate text-[9.5px] leading-tight text-muted-foreground">
-                      perto de você
+                    <span className="block truncate text-[9.5px] leading-tight text-slate-600">
+                      cidade ativa
                     </span>
                   </span>
                 </li>
@@ -718,21 +803,23 @@ export default function AchegueSeHomePage() {
                   return (
                     <li
                       key={`${chip.value ?? "near"}-${chip.label}`}
-                      className="th-live-status flex min-w-0 items-center gap-[0.28rem] rounded-[0.58rem] border border-white/60 bg-gradient-to-br from-white/65 to-white/35 px-[0.22rem] py-[0.18rem] shadow-[0_4px_10px_rgba(15,23,42,0.03)] backdrop-blur-md"
+                      className="th-live-status flex min-w-0 items-center gap-[0.32rem] rounded-[0.64rem] border border-white/90 bg-white/95 px-[0.28rem] py-[0.24rem] shadow-[0_8px_18px_rgba(15,23,42,0.07)] backdrop-blur-sm"
                     >
                       <span
                         className={cn(
                           "th-live-status-icon inline-flex h-[1.24rem] w-[1.24rem] shrink-0 items-center justify-center rounded-[0.48rem]",
-                          isOrange ? "bg-orange-50 text-[#f97316]" : "bg-primary/10 text-primary",
+                          isOrange
+                            ? "bg-orange-50 text-[#f97316]"
+                            : "bg-primary/10 text-primary",
                         )}
                       >
                         <Icon className="h-3 w-3" aria-hidden strokeWidth={2.25} />
                       </span>
                       <span className="min-w-0 leading-none">
-                        <span className="block truncate text-[10.5px] font-bold leading-tight text-foreground">
+                        <span className="block truncate text-[10.5px] font-bold leading-tight text-slate-950">
                           {primaryLabel}
                         </span>
-                        <span className="block truncate text-[9.5px] leading-tight text-muted-foreground">
+                        <span className="block truncate text-[9.5px] leading-tight text-slate-600">
                           {detailLabel}
                         </span>
                       </span>
@@ -750,7 +837,7 @@ export default function AchegueSeHomePage() {
               Tudo começa pelo seu bairro
             </h1>
             <p className="mx-auto max-w-[20rem] text-[15px] leading-6 text-slate-600 lg:mx-0 lg:max-w-[24rem] lg:text-base lg:leading-7">
-              Escolha seu bairro para ver pessoas, empresas e alertas perto de você.
+              Escolha um bairro ou entre por Salvador inteira.
             </p>
           </div>
 
@@ -849,6 +936,15 @@ export default function AchegueSeHomePage() {
               ) : null}
             </div>
 
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => goToOnboarding("Salvador")}
+              className="h-12 w-full rounded-2xl border-[#18B37E]/25 bg-white/80 text-[14px] font-semibold text-[#13845f] shadow-[0_10px_22px_rgba(15,23,42,0.06)] transition-all hover:border-[#18B37E]/45 hover:bg-[#18B37E]/[0.06] active:scale-[0.98]"
+            >
+              Ver Salvador inteira
+            </Button>
+
             {resolved ? (
               <div className="rounded-2xl border border-[#18B37E]/20 bg-[#18B37E]/[0.07] p-3.5">
                 <div className="flex items-start gap-3">
@@ -930,7 +1026,7 @@ export default function AchegueSeHomePage() {
               {cityScaleLabel}
             </span>
             <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
-              comunidade oficial
+              contornos reais
             </span>
           </div>
         </footer>
