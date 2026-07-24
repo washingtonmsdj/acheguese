@@ -87,6 +87,12 @@ const statusChips = [
   { value: "2", label: "avisos hoje", icon: Bell, tone: "orange" },
 ] as const;
 
+const homeStatusCardStyle = {
+  minWidth: "6.25rem",
+  background: "rgba(255, 255, 255, 0.9)",
+  boxShadow: "0 6px 14px rgba(15, 23, 42, 0.08)",
+};
+
 const recentSuggestions = ["Pituba", "Barra", "Rio Vermelho"];
 
 const PREVIEW_MAP_CENTER = { latitude: -12.95, longitude: -38.55 };
@@ -677,13 +683,13 @@ export default function AchegueSeHomePage() {
             <div aria-hidden className="absolute inset-x-0 bottom-0 z-10 h-20 bg-gradient-to-t from-white via-white/42 to-white/0 lg:h-32" />
 
             <header
-              className="absolute left-4 top-[max(0.75rem,env(safe-area-inset-top))] z-30 flex w-fit max-w-[calc(100%-2rem)] items-center gap-2 rounded-full bg-white/95 py-1.5 pl-1.5 pr-4 shadow-[0_12px_30px_rgba(15,23,42,0.14)] ring-1 ring-white/90 backdrop-blur-md lg:left-6 lg:top-6 lg:gap-2.5 lg:pr-5"
+              className="absolute left-4 top-[max(0.75rem,env(safe-area-inset-top))] z-30 flex w-fit max-w-[calc(100%-2rem)] items-center gap-2 rounded-full bg-white py-1.5 pl-1.5 pr-4 shadow-[0_14px_34px_rgba(15,23,42,0.20)] ring-1 ring-slate-950/10 backdrop-blur-md lg:left-6 lg:top-6 lg:gap-2.5 lg:pr-5"
               aria-label="Achegue-se"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-[0_8px_18px_rgba(15,23,42,0.10)] ring-1 ring-slate-950/5 lg:h-10 lg:w-10">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f4fbf8] shadow-[inset_0_0_0_1px_rgba(24,179,126,0.18)] lg:h-10 lg:w-10">
                 <img src={OFFICIAL_LOGO_SRC} alt="" aria-hidden className="h-6 w-6 object-contain lg:h-7 lg:w-7" />
               </span>
-              <span className="font-heading text-[20px] font-semibold leading-none tracking-normal text-slate-950 lg:text-[23px]">
+              <span className="font-heading text-[20px] font-bold leading-none tracking-normal text-slate-950 lg:text-[23px]">
                 Achegue-<span className="text-[#18B37E]">se</span>
               </span>
             </header>
@@ -693,19 +699,22 @@ export default function AchegueSeHomePage() {
               style={{
                 left: "1rem",
                 top: "4.95rem",
-                width: "min(11.25rem, calc(100% - 2rem))",
+                width: "min(9rem, calc(100% - 2rem))",
               }}
             >
-              <ul className="th-live-status-list grid gap-[0.18rem]" aria-label="Status ao vivo do Achegue-se">
-                <li className="th-live-status flex min-w-0 items-center gap-[0.28rem] rounded-[0.58rem] border border-white/90 bg-white/95 px-[0.26rem] py-[0.2rem] shadow-[0_7px_16px_rgba(15,23,42,0.07)] backdrop-blur-sm">
-                  <span className="th-live-status-icon inline-flex h-[1.1rem] w-[1.1rem] shrink-0 items-center justify-center rounded-[0.42rem] bg-primary/10 text-primary">
-                    <MapPin className="h-[0.66rem] w-[0.66rem]" aria-hidden strokeWidth={2.25} />
+              <ul className="th-live-status-list grid justify-items-start gap-[0.12rem]" aria-label="Status ao vivo do Achegue-se">
+                <li
+                  className="th-live-status flex w-fit max-w-full items-center gap-[0.24rem] rounded-[0.54rem] border border-white/90 bg-white/95 px-[0.24rem] py-[0.16rem] shadow-[0_6px_14px_rgba(15,23,42,0.07)] backdrop-blur-sm"
+                  style={homeStatusCardStyle}
+                >
+                  <span className="th-live-status-icon inline-flex h-[1.06rem] w-[1.06rem] shrink-0 items-center justify-center rounded-[0.38rem] bg-primary/10 text-primary">
+                    <MapPin className="h-[0.64rem] w-[0.64rem]" aria-hidden strokeWidth={2.25} />
                   </span>
                   <span className="min-w-0">
-                    <span className="block truncate text-[9.5px] font-bold leading-tight text-slate-950">
+                    <span className="block truncate text-[9.4px] font-bold leading-tight text-slate-950">
                       Salvador
                     </span>
-                    <span className="block truncate text-[8.5px] leading-tight text-slate-600">
+                    <span className="block truncate text-[8.4px] leading-tight text-slate-600">
                       cidade ativa
                     </span>
                   </span>
@@ -727,23 +736,24 @@ export default function AchegueSeHomePage() {
                   return (
                     <li
                       key={`${chip.value ?? "near"}-${chip.label}`}
-                      className="th-live-status flex min-w-0 items-center gap-[0.28rem] rounded-[0.58rem] border border-white/90 bg-white/95 px-[0.26rem] py-[0.2rem] shadow-[0_7px_16px_rgba(15,23,42,0.07)] backdrop-blur-sm"
+                      className="th-live-status flex w-fit max-w-full items-center gap-[0.24rem] rounded-[0.54rem] border border-white/90 bg-white/95 px-[0.24rem] py-[0.16rem] shadow-[0_6px_14px_rgba(15,23,42,0.07)] backdrop-blur-sm"
+                      style={homeStatusCardStyle}
                     >
                       <span
                         className={cn(
-                          "th-live-status-icon inline-flex h-[1.1rem] w-[1.1rem] shrink-0 items-center justify-center rounded-[0.42rem]",
+                          "th-live-status-icon inline-flex h-[1.06rem] w-[1.06rem] shrink-0 items-center justify-center rounded-[0.38rem]",
                           isOrange
                             ? "bg-orange-50 text-[#f97316]"
                             : "bg-primary/10 text-primary",
                         )}
                       >
-                        <Icon className="h-[0.66rem] w-[0.66rem]" aria-hidden strokeWidth={2.25} />
+                        <Icon className="h-[0.64rem] w-[0.64rem]" aria-hidden strokeWidth={2.25} />
                       </span>
                       <span className="min-w-0 leading-none">
-                        <span className="block truncate text-[9.5px] font-bold leading-tight text-slate-950">
+                        <span className="block truncate text-[9.4px] font-bold leading-tight text-slate-950">
                           {primaryLabel}
                         </span>
-                        <span className="block truncate text-[8.5px] leading-tight text-slate-600">
+                        <span className="block truncate text-[8.4px] leading-tight text-slate-600">
                           {detailLabel}
                         </span>
                       </span>
