@@ -118,6 +118,8 @@ export interface MapLibreAdapterProps {
   attribution?: boolean;
   /** Ocultar controles de navegação. Padrão: false */
   hideNavigationControl?: boolean;
+  /** Permitir interação direta no mapa (arrasto, zoom, teclado). Padrão: true */
+  interactive?: boolean;
   className?: string;
 }
 
@@ -182,6 +184,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       radiusControl,
       attribution = true,
       hideNavigationControl = false,
+      interactive = true,
       className 
     },
     ref
@@ -271,6 +274,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
         bearing: initialViewport?.bearing ?? 0,
         pitch: initialViewport?.pitch ?? 0,
         attributionControl: false,
+        interactive,
       });
 
       if (attribution) {

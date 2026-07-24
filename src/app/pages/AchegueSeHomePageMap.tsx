@@ -88,12 +88,6 @@ const statusChips = [
 ] as const;
 
 const recentSuggestions = ["Pituba", "Barra", "Rio Vermelho"];
-const LAUNCH_COMPLEX_NEIGHBORHOOD_SLUGS = [
-  "nordeste-de-amaralina",
-  "santa-cruz",
-  "chapada-do-rio-vermelho",
-  "vale-das-pedrinhas",
-] as const;
 
 const PREVIEW_MAP_CENTER = { latitude: -12.95, longitude: -38.55 };
 const PREVIEW_CITY_MARKERS: MapMarker[] = [
@@ -226,10 +220,6 @@ function getLaunchCityPaths(): string[] {
   return Array.from(new Set([`/${country}/${state}/${city}`, `/${state}/${city}`]));
 }
 
-function getLaunchNeighborhoodPaths(slug: string): string[] {
-  return getLaunchCityPaths().map((path) => `${path}/${slug}`);
-}
-
 async function findLaunchCityLocation(): Promise<Location | null> {
   const repo = createLocationRepository();
 
@@ -264,21 +254,6 @@ async function findLaunchCityLocation(): Promise<Location | null> {
   );
 }
 
-async function findLaunchNeighborhoodLocations(): Promise<Location[]> {
-  const repo = createLocationRepository();
-  const found = await Promise.all(
-    LAUNCH_COMPLEX_NEIGHBORHOOD_SLUGS.map(async (slug) => {
-      for (const path of getLaunchNeighborhoodPaths(slug)) {
-        const location = await repo.findByPath(path);
-        if (location) return location;
-      }
-      return null;
-    }),
-  );
-
-  return found.filter((location): location is Location => Boolean(location));
-}
-
 function buildOfficialSalvadorCityPolygon(cityName: string): TerritoryPolygon | null {
   if (normalizeTerritoryText(cityName) !== "salvador") return null;
 
@@ -305,7 +280,6 @@ function HomeBoundaryPreview() {
     const fallback = buildOfficialSalvadorCityPolygon("Salvador");
     return fallback ? [fallback] : [];
   });
-  const [launchPolygons, setLaunchPolygons] = useState<TerritoryPolygon[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -365,60 +339,9 @@ function HomeBoundaryPreview() {
     };
   }, [homeCity]);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const run = async () => {
-      const locations = await findLaunchNeighborhoodLocations();
-      if (cancelled || locations.length === 0) {
-        if (!cancelled) setLaunchPolygons([]);
-        return;
-      }
-
-      const results = await Promise.all(
-        locations.map((location) =>
-          boundaryService
-            .getLocationBounds(location)
-            .then((bounds) => ({ location, bounds }))
-            .catch(() => null),
-        ),
-      );
-
-      if (cancelled) return;
-
-      const colors = ["#0f9f72", "#18B37E", "#22c55e", "#f97316"];
-      const built: TerritoryPolygon[] = [];
-
-      results.forEach((result, locationIndex) => {
-        if (!result || result.bounds.rings.length === 0) return;
-        result.bounds.rings.forEach((ring) => {
-          built.push({
-            name: result.location.name,
-            coordinates: ring,
-            center: result.bounds.center,
-            color: colors[locationIndex % colors.length],
-            fillOpacity: locationIndex === 3 ? 0.14 : 0.12,
-            lineWidth: 1.65,
-            lineOpacity: 0.75,
-          });
-        });
-      });
-
-      setLaunchPolygons(built);
-    };
-
-    run().catch(() => {
-      if (!cancelled) setLaunchPolygons([]);
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const territoryPolygons = useMemo(
-    () => [...cityPolygons, ...launchPolygons],
-    [cityPolygons, launchPolygons],
+    () => cityPolygons,
+    [cityPolygons],
   );
 
   const mapMarkers = useMemo<MapMarker[]>(
@@ -439,18 +362,19 @@ function HomeBoundaryPreview() {
         userLocationMarker={{ enabled: false, autoAdd: false }}
         enableClustering={false}
         attribution={false}
+        interactive={false}
         hideNavigationControl
-        className="h-full w-full"
+        className="pointer-events-none h-full w-full"
       />
       <div
         aria-hidden
-        className="absolute right-4 top-[4.35rem] z-20 flex max-w-[9.5rem] flex-col items-end gap-1.5 text-right lg:right-7 lg:top-24"
+        className="absolute right-3 top-[3.75rem] z-20 flex max-w-[8.4rem] flex-col items-end gap-1 text-right lg:right-6 lg:top-20 lg:max-w-[9rem]"
       >
-        <span className="rounded-full bg-white/88 px-3 py-1.5 text-[10.5px] font-semibold text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.10)] backdrop-blur-sm">
+        <span className="rounded-full bg-white/90 px-2.5 py-1 text-[9.5px] font-semibold text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.10)] backdrop-blur-sm lg:text-[10px]">
           contorno da cidade
         </span>
-        <span className="rounded-full bg-[#18B37E]/90 px-3 py-1.5 text-[10.5px] font-semibold text-white shadow-[0_8px_20px_rgba(24,179,126,0.18)] backdrop-blur-sm">
-          {launchPolygons.length > 0 ? "Complexo em destaque" : "SSOT territorial"}
+        <span className="rounded-full bg-[#18B37E]/90 px-2.5 py-1 text-[9.5px] font-semibold text-white shadow-[0_8px_20px_rgba(24,179,126,0.18)] backdrop-blur-sm lg:text-[10px]">
+          Salvador em destaque
         </span>
       </div>
       <div aria-hidden className="absolute inset-x-0 top-0 z-10 h-24 bg-gradient-to-b from-white/80 via-white/35 to-white/0" />
@@ -747,19 +671,19 @@ export default function AchegueSeHomePage() {
           aria-label="Status ao vivo do Achegue-se"
           className="th-live-section"
         >
-          <div className="th-live-card relative block h-[320px] min-h-56 overflow-hidden rounded-b-[28px] border-0 bg-[#e8f1ee] shadow-[0_22px_60px_rgba(15,23,42,0.14)] lg:h-[min(560px,calc(100dvh-6rem))] lg:min-h-[500px] lg:rounded-[32px]">
+          <div className="th-live-card relative block h-[238px] min-h-[238px] select-none overflow-hidden rounded-b-[26px] border-0 bg-[#e8f1ee] shadow-[0_18px_48px_rgba(15,23,42,0.13)] sm:h-[276px] lg:h-[min(500px,calc(100dvh-6rem))] lg:min-h-[440px] lg:rounded-[30px]">
             <HomeBoundaryPreview />
-            <div aria-hidden className="absolute inset-x-0 top-0 z-10 h-28 bg-gradient-to-b from-white/78 via-white/38 to-white/0" />
-            <div aria-hidden className="absolute inset-x-0 bottom-0 z-10 h-28 bg-gradient-to-t from-white via-white/42 to-white/0 lg:h-40" />
+            <div aria-hidden className="absolute inset-x-0 top-0 z-10 h-24 bg-gradient-to-b from-white/78 via-white/38 to-white/0" />
+            <div aria-hidden className="absolute inset-x-0 bottom-0 z-10 h-20 bg-gradient-to-t from-white via-white/42 to-white/0 lg:h-32" />
 
             <header
-              className="absolute left-5 right-5 top-[max(1rem,env(safe-area-inset-top))] z-30 flex items-center gap-2.5 lg:left-7 lg:right-7 lg:top-7"
+              className="absolute left-4 top-[max(0.75rem,env(safe-area-inset-top))] z-30 flex w-fit max-w-[calc(100%-2rem)] items-center gap-2 rounded-full bg-white/95 py-1.5 pl-1.5 pr-4 shadow-[0_12px_30px_rgba(15,23,42,0.14)] ring-1 ring-white/90 backdrop-blur-md lg:left-6 lg:top-6 lg:gap-2.5 lg:pr-5"
               aria-label="Achegue-se"
             >
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 shadow-[0_10px_24px_rgba(15,23,42,0.10)] ring-1 ring-white/80 backdrop-blur">
-                <img src={OFFICIAL_LOGO_SRC} alt="" aria-hidden className="h-7 w-7 object-contain" />
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-[0_8px_18px_rgba(15,23,42,0.10)] ring-1 ring-slate-950/5 lg:h-10 lg:w-10">
+                <img src={OFFICIAL_LOGO_SRC} alt="" aria-hidden className="h-6 w-6 object-contain lg:h-7 lg:w-7" />
               </span>
-              <span className="font-heading text-[22px] font-semibold leading-none tracking-tight text-slate-950 drop-shadow-[0_1px_0_rgba(255,255,255,0.65)] lg:text-[24px]">
+              <span className="font-heading text-[20px] font-semibold leading-none tracking-normal text-slate-950 lg:text-[23px]">
                 Achegue-<span className="text-[#18B37E]">se</span>
               </span>
             </header>
@@ -767,21 +691,21 @@ export default function AchegueSeHomePage() {
             <div
               className="th-live-copy absolute z-20 p-0"
               style={{
-                left: "1.25rem",
-                top: "5.75rem",
-                width: "min(13rem, calc(100% - 2.5rem))",
+                left: "1rem",
+                top: "4.95rem",
+                width: "min(11.25rem, calc(100% - 2rem))",
               }}
             >
-              <ul className="th-live-status-list grid gap-[0.22rem]" aria-label="Status ao vivo do Achegue-se">
-                <li className="th-live-status flex min-w-0 items-center gap-[0.32rem] rounded-[0.64rem] border border-white/90 bg-white/95 px-[0.28rem] py-[0.24rem] shadow-[0_8px_18px_rgba(15,23,42,0.07)] backdrop-blur-sm">
-                  <span className="th-live-status-icon inline-flex h-[1.24rem] w-[1.24rem] shrink-0 items-center justify-center rounded-[0.48rem] bg-primary/10 text-primary">
-                    <MapPin className="h-3 w-3" aria-hidden strokeWidth={2.25} />
+              <ul className="th-live-status-list grid gap-[0.18rem]" aria-label="Status ao vivo do Achegue-se">
+                <li className="th-live-status flex min-w-0 items-center gap-[0.28rem] rounded-[0.58rem] border border-white/90 bg-white/95 px-[0.26rem] py-[0.2rem] shadow-[0_7px_16px_rgba(15,23,42,0.07)] backdrop-blur-sm">
+                  <span className="th-live-status-icon inline-flex h-[1.1rem] w-[1.1rem] shrink-0 items-center justify-center rounded-[0.42rem] bg-primary/10 text-primary">
+                    <MapPin className="h-[0.66rem] w-[0.66rem]" aria-hidden strokeWidth={2.25} />
                   </span>
                   <span className="min-w-0">
-                    <span className="block truncate text-[10.5px] font-bold leading-tight text-slate-950">
+                    <span className="block truncate text-[9.5px] font-bold leading-tight text-slate-950">
                       Salvador
                     </span>
-                    <span className="block truncate text-[9.5px] leading-tight text-slate-600">
+                    <span className="block truncate text-[8.5px] leading-tight text-slate-600">
                       cidade ativa
                     </span>
                   </span>
@@ -803,23 +727,23 @@ export default function AchegueSeHomePage() {
                   return (
                     <li
                       key={`${chip.value ?? "near"}-${chip.label}`}
-                      className="th-live-status flex min-w-0 items-center gap-[0.32rem] rounded-[0.64rem] border border-white/90 bg-white/95 px-[0.28rem] py-[0.24rem] shadow-[0_8px_18px_rgba(15,23,42,0.07)] backdrop-blur-sm"
+                      className="th-live-status flex min-w-0 items-center gap-[0.28rem] rounded-[0.58rem] border border-white/90 bg-white/95 px-[0.26rem] py-[0.2rem] shadow-[0_7px_16px_rgba(15,23,42,0.07)] backdrop-blur-sm"
                     >
                       <span
                         className={cn(
-                          "th-live-status-icon inline-flex h-[1.24rem] w-[1.24rem] shrink-0 items-center justify-center rounded-[0.48rem]",
+                          "th-live-status-icon inline-flex h-[1.1rem] w-[1.1rem] shrink-0 items-center justify-center rounded-[0.42rem]",
                           isOrange
                             ? "bg-orange-50 text-[#f97316]"
                             : "bg-primary/10 text-primary",
                         )}
                       >
-                        <Icon className="h-3 w-3" aria-hidden strokeWidth={2.25} />
+                        <Icon className="h-[0.66rem] w-[0.66rem]" aria-hidden strokeWidth={2.25} />
                       </span>
                       <span className="min-w-0 leading-none">
-                        <span className="block truncate text-[10.5px] font-bold leading-tight text-slate-950">
+                        <span className="block truncate text-[9.5px] font-bold leading-tight text-slate-950">
                           {primaryLabel}
                         </span>
-                        <span className="block truncate text-[9.5px] leading-tight text-slate-600">
+                        <span className="block truncate text-[8.5px] leading-tight text-slate-600">
                           {detailLabel}
                         </span>
                       </span>
@@ -831,25 +755,25 @@ export default function AchegueSeHomePage() {
           </div>
         </section>
 
-        <section className="flex flex-1 flex-col items-center px-5 py-5 text-center lg:items-start lg:justify-center lg:px-0 lg:py-0 lg:text-left">
-          <div className="space-y-2">
-            <h1 className="mx-auto max-w-[17rem] text-[32px] font-semibold leading-[0.98] tracking-normal text-slate-950 lg:mx-0 lg:max-w-[21rem] lg:text-[48px]">
+        <section className="flex flex-1 flex-col items-center px-5 py-3 text-center lg:items-start lg:justify-center lg:px-0 lg:py-0 lg:text-left">
+          <div className="space-y-1.5">
+            <h1 className="mx-auto max-w-[16rem] text-[28px] font-semibold leading-[0.98] tracking-normal text-slate-950 min-[380px]:max-w-[17rem] min-[380px]:text-[31px] lg:mx-0 lg:max-w-[21rem] lg:text-[44px]">
               Tudo começa pelo seu bairro
             </h1>
-            <p className="mx-auto max-w-[20rem] text-[15px] leading-6 text-slate-600 lg:mx-0 lg:max-w-[24rem] lg:text-base lg:leading-7">
+            <p className="mx-auto max-w-[20rem] text-[14px] leading-5 text-slate-600 lg:mx-0 lg:max-w-[24rem] lg:text-base lg:leading-7">
               Escolha um bairro ou entre por Salvador inteira.
             </p>
           </div>
 
-          <div className="mt-5 w-full space-y-3 lg:mt-8 lg:max-w-[410px]">
+          <div className="mt-4 w-full space-y-2.5 lg:mt-7 lg:max-w-[410px] lg:space-y-3">
             <Button
               type="button"
               size="lg"
               onClick={handleUseLocation}
               disabled={geo.loading || resolvingCity}
               className={cn(
-                "h-14 w-full gap-2 rounded-2xl bg-[#18B37E] text-[15px] font-semibold text-white",
-                "shadow-[0_16px_35px_rgba(24,179,126,0.28)] transition-all duration-150",
+                "h-12 w-full gap-2 rounded-[1rem] bg-[#18B37E] text-[14px] font-semibold text-white",
+                "shadow-[0_12px_28px_rgba(24,179,126,0.26)] transition-all duration-150",
                 "hover:bg-[#149f70] active:scale-[0.98] disabled:opacity-70 disabled:shadow-none",
               )}
             >
@@ -885,8 +809,8 @@ export default function AchegueSeHomePage() {
                 }}
                 placeholder="Buscar bairro ou cidade"
                 className={cn(
-                  "h-14 rounded-2xl border-slate-200 bg-white pl-12 pr-14 text-[15px] text-slate-950",
-                  "shadow-[0_12px_28px_rgba(15,23,42,0.08)] placeholder:text-slate-400",
+                  "h-12 rounded-[1rem] border-slate-200 bg-white pl-12 pr-14 text-[14px] text-slate-950",
+                  "shadow-[0_10px_24px_rgba(15,23,42,0.08)] placeholder:text-slate-400",
                   "focus-visible:border-[#18B37E] focus-visible:ring-2 focus-visible:ring-[#18B37E]/25 focus-visible:ring-offset-0",
                 )}
                 autoComplete="off"
@@ -940,7 +864,7 @@ export default function AchegueSeHomePage() {
               type="button"
               variant="outline"
               onClick={() => goToOnboarding("Salvador")}
-              className="h-12 w-full rounded-2xl border-[#18B37E]/25 bg-white/80 text-[14px] font-semibold text-[#13845f] shadow-[0_10px_22px_rgba(15,23,42,0.06)] transition-all hover:border-[#18B37E]/45 hover:bg-[#18B37E]/[0.06] active:scale-[0.98]"
+              className="h-11 w-full rounded-[1rem] border-[#18B37E]/25 bg-white/80 text-[13.5px] font-semibold text-[#13845f] shadow-[0_8px_18px_rgba(15,23,42,0.06)] transition-all hover:border-[#18B37E]/45 hover:bg-[#18B37E]/[0.06] active:scale-[0.98]"
             >
               Ver Salvador inteira
             </Button>
@@ -992,18 +916,18 @@ export default function AchegueSeHomePage() {
               </div>
             ) : null}
 
-            <div className="space-y-2 pt-1">
+            <div className="space-y-1.5 pt-0.5">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-[12px] font-medium text-slate-500">Mais acessados</p>
                 <p className="text-[11px] font-medium text-slate-400">{cityScaleLabel}</p>
               </div>
-              <div className="flex flex-wrap gap-2" aria-label="Sugestoes de local">
+              <div className="flex flex-wrap gap-1.5" aria-label="Sugestoes de local">
                 {recentSuggestions.map((label) => (
                   <button
                     key={label}
                     type="button"
                     onClick={() => handleSeedSuggestion(label)}
-                    className="rounded-full border border-slate-200 bg-white px-3 py-2 text-[12px] font-medium text-slate-700 shadow-sm transition-colors hover:border-[#18B37E]/40 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18B37E]/30"
+                    className="rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-[11.5px] font-medium text-slate-700 shadow-sm transition-colors hover:border-[#18B37E]/40 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18B37E]/30"
                   >
                     <span className="mr-1 inline-block text-[#18B37E]" aria-hidden>
                       📍
@@ -1016,9 +940,9 @@ export default function AchegueSeHomePage() {
           </div>
         </section>
 
-        <footer className="px-5 pb-4 text-center text-[12px] leading-relaxed text-slate-500 lg:col-start-2 lg:px-0 lg:pb-0 lg:text-left">
+        <footer className="px-5 pb-3 text-center text-[11.5px] leading-snug text-slate-500 lg:col-start-2 lg:px-0 lg:pb-0 lg:text-left lg:text-[12px] lg:leading-relaxed">
           <p>Você verá primeiro o que realmente acontece perto de você.</p>
-          <div className="mt-2 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+          <div className="mt-1.5 flex flex-wrap items-center justify-center gap-1.5 lg:mt-2 lg:gap-2 lg:justify-start">
             <span className="rounded-full bg-[#18B37E]/10 px-2.5 py-1 text-[11px] font-medium text-[#13845f]">
               Salvador
             </span>
