@@ -662,7 +662,7 @@ export default function AchegueSeHomePage() {
           aria-label="Status ao vivo do Achegue-se"
           className="th-live-section"
         >
-          <div className="th-live-card h-[392px] rounded-b-[28px] border-0 bg-[#e8f1ee] shadow-[0_22px_60px_rgba(15,23,42,0.14)] lg:h-[calc(100dvh-4rem)] lg:min-h-[640px] lg:rounded-[32px]">
+          <div className="th-live-card relative block h-[392px] min-h-56 overflow-hidden rounded-b-[28px] border-0 bg-[#e8f1ee] shadow-[0_22px_60px_rgba(15,23,42,0.14)] lg:h-[calc(100dvh-4rem)] lg:min-h-[640px] lg:rounded-[32px]">
             <HomeBoundaryPreview />
             <div aria-hidden className="absolute inset-x-0 top-0 z-10 h-28 bg-gradient-to-b from-white/78 via-white/38 to-white/0" />
             <div aria-hidden className="absolute inset-x-0 bottom-0 z-10 h-28 bg-gradient-to-t from-white via-white/42 to-white/0 lg:h-40" />
@@ -680,16 +680,16 @@ export default function AchegueSeHomePage() {
             </header>
 
             <div
-              className="th-live-copy"
+              className="th-live-copy absolute z-20 p-0"
               style={{
                 left: "1.25rem",
                 top: "5.75rem",
                 width: "min(14rem, calc(100% - 2.5rem))",
               }}
             >
-              <ul className="th-live-status-list" aria-label="Status ao vivo do Achegue-se">
-                <li className="th-live-status">
-                  <span className="th-live-status-icon bg-primary/10 text-primary">
+              <ul className="th-live-status-list grid gap-[0.22rem]" aria-label="Status ao vivo do Achegue-se">
+                <li className="th-live-status flex min-w-0 items-center gap-[0.28rem] rounded-[0.58rem] border border-white/60 bg-gradient-to-br from-white/65 to-white/35 px-[0.22rem] py-[0.18rem] shadow-[0_4px_10px_rgba(15,23,42,0.03)] backdrop-blur-md">
+                  <span className="th-live-status-icon inline-flex h-[1.24rem] w-[1.24rem] shrink-0 items-center justify-center rounded-[0.48rem] bg-primary/10 text-primary">
                     <MapPin className="h-3 w-3" aria-hidden strokeWidth={2.25} />
                   </span>
                   <span className="min-w-0">
@@ -718,11 +718,11 @@ export default function AchegueSeHomePage() {
                   return (
                     <li
                       key={`${chip.value ?? "near"}-${chip.label}`}
-                      className="th-live-status"
+                      className="th-live-status flex min-w-0 items-center gap-[0.28rem] rounded-[0.58rem] border border-white/60 bg-gradient-to-br from-white/65 to-white/35 px-[0.22rem] py-[0.18rem] shadow-[0_4px_10px_rgba(15,23,42,0.03)] backdrop-blur-md"
                     >
                       <span
                         className={cn(
-                          "th-live-status-icon",
+                          "th-live-status-icon inline-flex h-[1.24rem] w-[1.24rem] shrink-0 items-center justify-center rounded-[0.48rem]",
                           isOrange ? "bg-orange-50 text-[#f97316]" : "bg-primary/10 text-primary",
                         )}
                       >
