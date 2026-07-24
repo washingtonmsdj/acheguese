@@ -43,6 +43,10 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
   const { active } = usePublicBrowsingCity();
   const [moreOpen, setMoreOpen] = useState(false);
 
+  if (pathname === '/') {
+    return null;
+  }
+
   const cityBase = `/${active.state}/${active.city}`;
   const cityModule = (module: string) => `/${module}${cityBase}`;
 

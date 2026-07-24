@@ -662,7 +662,7 @@ export default function AchegueSeHomePage() {
           aria-label="Status ao vivo do Achegue-se"
           className="th-live-section"
         >
-          <div className="th-live-card relative block h-[392px] min-h-56 overflow-hidden rounded-b-[28px] border-0 bg-[#e8f1ee] shadow-[0_22px_60px_rgba(15,23,42,0.14)] lg:h-[calc(100dvh-4rem)] lg:min-h-[640px] lg:rounded-[32px]">
+          <div className="th-live-card relative block h-[320px] min-h-56 overflow-hidden rounded-b-[28px] border-0 bg-[#e8f1ee] shadow-[0_22px_60px_rgba(15,23,42,0.14)] lg:h-[min(560px,calc(100dvh-6rem))] lg:min-h-[500px] lg:rounded-[32px]">
             <HomeBoundaryPreview />
             <div aria-hidden className="absolute inset-x-0 top-0 z-10 h-28 bg-gradient-to-b from-white/78 via-white/38 to-white/0" />
             <div aria-hidden className="absolute inset-x-0 bottom-0 z-10 h-28 bg-gradient-to-t from-white via-white/42 to-white/0 lg:h-40" />
@@ -744,7 +744,7 @@ export default function AchegueSeHomePage() {
           </div>
         </section>
 
-        <section className="flex flex-1 flex-col items-center px-5 py-7 text-center lg:items-start lg:justify-center lg:px-0 lg:py-0 lg:text-left">
+        <section className="flex flex-1 flex-col items-center px-5 py-5 text-center lg:items-start lg:justify-center lg:px-0 lg:py-0 lg:text-left">
           <div className="space-y-2">
             <h1 className="mx-auto max-w-[17rem] text-[32px] font-semibold leading-[0.98] tracking-normal text-slate-950 lg:mx-0 lg:max-w-[21rem] lg:text-[48px]">
               Tudo começa pelo seu bairro
@@ -754,7 +754,7 @@ export default function AchegueSeHomePage() {
             </p>
           </div>
 
-          <div className="mt-6 w-full space-y-3 lg:mt-8 lg:max-w-[410px]">
+          <div className="mt-5 w-full space-y-3 lg:mt-8 lg:max-w-[410px]">
             <Button
               type="button"
               size="lg"

@@ -85,6 +85,7 @@ export function AppLayoutSidebar() {
     isShortCommunityRoute ||
     isPublicBusinessLandingRoute;
   const hideMobileBottomNav =
+    pathname === '/' ||
     isInternalGroupRoute ||
     isConversationRoute ||
     isPublicEntityDetailRoute ||
@@ -106,8 +107,12 @@ export function AppLayoutSidebar() {
             id="main-content"
             className={
               useDocumentScrollPublicShell
-                ? "flex-1 flex flex-col min-w-0"
-                : "flex-1 overflow-y-auto flex flex-col min-h-0"
+                ? hideMobileBottomNav
+                  ? "flex-1 flex flex-col min-w-0"
+                  : "flex-1 flex flex-col min-w-0 pb-[calc(env(safe-area-inset-bottom)+6rem)]"
+                : hideMobileBottomNav
+                  ? "flex-1 overflow-y-auto flex flex-col min-h-0"
+                  : "flex-1 overflow-y-auto flex flex-col min-h-0 pb-[calc(env(safe-area-inset-bottom)+6rem)]"
             }
             tabIndex={-1}
           >
