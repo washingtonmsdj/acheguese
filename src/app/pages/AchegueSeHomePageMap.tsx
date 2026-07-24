@@ -16,7 +16,6 @@ import { boundaryService } from "@/core/geospatial";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { LocationStatus, LocationType, type Location } from "@/core/location/types";
 import { DEFAULT_TILE_STYLE, MapLibreAdapter, type MapMarker } from "@/core/maps";
-import { useCityNeighborhoodsPolygons } from "@/core/maps/hooks/useCityNeighborhoodsPolygons";
 import type { TerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -89,38 +88,8 @@ const statusChips = [
 ] as const;
 
 const recentSuggestions = ["Pituba", "Barra", "Rio Vermelho"];
-const FEATURED_NEIGHBORHOODS = [
-  "Pituba",
-  "Barra",
-  "Ondina",
-  "Rio Vermelho",
-  "Nordeste de Amaralina",
-] as const;
 
-type CityBoundarySeed = {
-  id: string;
-  geographicPath: string;
-};
-
-type PreviewBounds = {
-  minLat: number;
-  maxLat: number;
-  minLng: number;
-  maxLng: number;
-};
-
-type PreviewPoint = {
-  x: number;
-  y: number;
-};
-
-const PREVIEW_WIDTH = 360;
-const PREVIEW_HEIGHT = 286;
-const PREVIEW_PADDING_X = 18;
-const PREVIEW_PADDING_TOP = 36;
-const PREVIEW_PADDING_BOTTOM = 104;
 const PREVIEW_MAP_CENTER = { latitude: -12.95, longitude: -38.55 };
-const PREVIEW_MAP_ZOOM = 7.85;
 const PREVIEW_CITY_MARKERS: MapMarker[] = [
   {
     id: "salvador",
@@ -166,190 +135,155 @@ const PREVIEW_CITY_MARKERS: MapMarker[] = [
   },
 ];
 
-const HOME_PREVIEW_CITY_NAMES = [
-  "Salvador",
-  "Lauro de Freitas",
-  "Camaçari",
-  "Simões Filho",
-  "Candeias",
-  "Dias d'Ávila",
-  "Madre de Deus",
-  "Vera Cruz",
-  "Itaparica",
-  "Feira de Santana",
-] as const;
+// Source: IBGE Malhas Municipais, municipio 2927408 (Salvador), GeoJSON qualidade intermediaria.
+// Used only while the SSOT does not expose a stored municipal boundary for Salvador.
+const SALVADOR_CITY_BOUNDARY_RING: [number, number][] = [
+  [-13.0127, -38.5856],
+  [-13.0099, -38.5278],
+  [-13.0123, -38.5078],
+  [-13.0117, -38.4927],
+  [-13.0173, -38.487],
+  [-13.0148, -38.4819],
+  [-13.0149, -38.4687],
+  [-13.0069, -38.4583],
+  [-12.9962, -38.4404],
+  [-12.9864, -38.4322],
+  [-12.9633, -38.3982],
+  [-12.956, -38.385],
+  [-12.9507, -38.3644],
+  [-12.9571, -38.3535],
+  [-12.9449, -38.3348],
+  [-12.9284, -38.3175],
+  [-12.9109, -38.3043],
+  [-12.9038, -38.3062],
+  [-12.9053, -38.3162],
+  [-12.8981, -38.3267],
+  [-12.9034, -38.3321],
+  [-12.9034, -38.3388],
+  [-12.8947, -38.3549],
+  [-12.8612, -38.3544],
+  [-12.8529, -38.3522],
+  [-12.8391, -38.3534],
+  [-12.8315, -38.3588],
+  [-12.8243, -38.374],
+  [-12.8345, -38.3879],
+  [-12.844, -38.3928],
+  [-12.8536, -38.3899],
+  [-12.862, -38.4007],
+  [-12.8726, -38.4025],
+  [-12.8735, -38.4066],
+  [-12.867, -38.416],
+  [-12.8494, -38.4281],
+  [-12.8396, -38.4411],
+  [-12.8458, -38.4504],
+  [-12.8294, -38.464],
+  [-12.8147, -38.4662],
+  [-12.7977, -38.4605],
+  [-12.7915, -38.4623],
+  [-12.7845, -38.4742],
+  [-12.7848, -38.4802],
+  [-12.7908, -38.4913],
+  [-12.7793, -38.5038],
+  [-12.767, -38.508],
+  [-12.7483, -38.5085],
+  [-12.7436, -38.5157],
+  [-12.7437, -38.5254],
+  [-12.7387, -38.535],
+  [-12.7362, -38.5467],
+  [-12.7365, -38.5664],
+  [-12.7339, -38.5879],
+  [-12.754, -38.5879],
+  [-12.7541, -38.6952],
+  [-12.7866, -38.6993],
+  [-12.8006, -38.6986],
+  [-12.8164, -38.6956],
+  [-12.8305, -38.688],
+  [-12.8454, -38.6749],
+  [-12.855, -38.6615],
+  [-12.865, -38.6433],
+  [-12.8824, -38.6058],
+  [-12.8926, -38.5888],
+  [-12.8993, -38.5812],
+  [-12.9152, -38.5678],
+  [-12.9327, -38.5611],
+  [-12.9521, -38.5605],
+  [-12.9661, -38.5652],
+  [-12.9891, -38.5805],
+  [-12.9987, -38.5846],
+  [-13.0127, -38.5856],
+];
 
-type CityPreviewShape = {
-  center: [number, number];
-  isPrimary: boolean;
-  name: string;
-  rings: [number, number][][];
-};
-
-function getBoundaryBounds(polygons: TerritoryPolygon[]): PreviewBounds | null {
-  const coordinates = polygons.flatMap((polygon) => polygon.coordinates);
-  if (!coordinates.length) return null;
-
-  const latitudes = coordinates.map(([latitude]) => latitude).filter(Number.isFinite);
-  const longitudes = coordinates.map(([, longitude]) => longitude).filter(Number.isFinite);
-  if (!latitudes.length || !longitudes.length) return null;
-
-  return {
-    minLat: Math.min(...latitudes),
-    maxLat: Math.max(...latitudes),
-    minLng: Math.min(...longitudes),
-    maxLng: Math.max(...longitudes),
-  };
+function getLaunchCityPaths(): string[] {
+  const country = TERRITORY_CONFIG.launch.country || "br";
+  const state = TERRITORY_CONFIG.launch.state || "ba";
+  const city = TERRITORY_CONFIG.launch.city || "salvador";
+  return Array.from(new Set([`/${country}/${state}/${city}`, `/${state}/${city}`]));
 }
 
-function getBoundsFromPreviewShapes(shapes: CityPreviewShape[]): PreviewBounds | null {
-  const coordinates = shapes.flatMap((shape) => [...shape.rings.flat(), shape.center]);
-  const latitudes = coordinates.map(([latitude]) => latitude).filter(Number.isFinite);
-  const longitudes = coordinates.map(([, longitude]) => longitude).filter(Number.isFinite);
-  if (!latitudes.length || !longitudes.length) return null;
+async function findLaunchCityLocation(): Promise<Location | null> {
+  const repo = createLocationRepository();
 
-  return {
-    minLat: Math.min(...latitudes),
-    maxLat: Math.max(...latitudes),
-    minLng: Math.min(...longitudes),
-    maxLng: Math.max(...longitudes),
-  };
-}
-
-function expandBounds(bounds: PreviewBounds, factor: number): PreviewBounds {
-  const latCenter = (bounds.minLat + bounds.maxLat) / 2;
-  const lngCenter = (bounds.minLng + bounds.maxLng) / 2;
-  const latHalf = Math.max((bounds.maxLat - bounds.minLat) * factor * 0.5, 0.008);
-  const lngHalf = Math.max((bounds.maxLng - bounds.minLng) * factor * 0.5, 0.008);
-
-  return {
-    minLat: latCenter - latHalf,
-    maxLat: latCenter + latHalf,
-    minLng: lngCenter - lngHalf,
-    maxLng: lngCenter + lngHalf,
-  };
-}
-
-function projectBoundaryPoint(
-  latitude: number,
-  longitude: number,
-  bounds: PreviewBounds,
-): PreviewPoint {
-  const lngSpan = Math.max(bounds.maxLng - bounds.minLng, 0.000001);
-  const latSpan = Math.max(bounds.maxLat - bounds.minLat, 0.000001);
-  const drawableWidth = PREVIEW_WIDTH - PREVIEW_PADDING_X * 2;
-  const drawableHeight = PREVIEW_HEIGHT - PREVIEW_PADDING_TOP - PREVIEW_PADDING_BOTTOM;
-
-  return {
-    x: PREVIEW_PADDING_X + ((longitude - bounds.minLng) / lngSpan) * drawableWidth,
-    y: PREVIEW_PADDING_TOP + ((bounds.maxLat - latitude) / latSpan) * drawableHeight,
-  };
-}
-
-function buildBoundaryPath(polygon: TerritoryPolygon, bounds: PreviewBounds): string | null {
-  const points = polygon.coordinates
-    .filter(([latitude, longitude]) => Number.isFinite(latitude) && Number.isFinite(longitude))
-    .map(([latitude, longitude]) => projectBoundaryPoint(latitude, longitude, bounds));
-
-  if (points.length < 3) return null;
-
-  return points
-    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`)
-    .join(" ") + " Z";
-}
-
-function buildRingPath(ring: [number, number][], bounds: PreviewBounds): string | null {
-  const points = ring
-    .filter(([longitude, latitude]) => Number.isFinite(latitude) && Number.isFinite(longitude))
-    .map(([longitude, latitude]) => projectBoundaryPoint(latitude, longitude, bounds));
-
-  if (points.length < 3) return null;
-
-  return points
-    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`)
-    .join(" ") + " Z";
-}
-
-function pickPreviewCities(cities: Location[]): Location[] {
-  const normalizedNames = new Set(HOME_PREVIEW_CITY_NAMES.map((name) => normalizeTerritoryText(name)));
-  const selected = cities.filter((city) => normalizedNames.has(normalizeTerritoryText(city.name)));
-  const salvador = selected.find((city) => normalizeTerritoryText(city.name) === "salvador");
-
-  const fallback = cities
-    .filter((city) => normalizeTerritoryText(city.name) !== "salvador")
-    .slice(0, 5);
-
-  const merged = [...selected, ...fallback];
-  const unique = new Map<string, Location>();
-
-  if (salvador) unique.set(salvador.id, salvador);
-  for (const city of merged) {
-    if (!unique.has(city.id)) unique.set(city.id, city);
+  for (const path of getLaunchCityPaths()) {
+    const location = await repo.findByPath(path);
+    if (location) return location;
   }
 
-  return Array.from(unique.values()).slice(0, 6);
-}
+  const state = TERRITORY_CONFIG.launch.state || "ba";
+  const city = TERRITORY_CONFIG.launch.city || "salvador";
+  const normalizedCity = normalizeTerritoryText(city);
+  const normalizedState = normalizeTerritoryText(state);
+  const locations = await repo.findAll();
 
-function getActiveBoundaryName(query: string): string | null {
-  const normalized = normalizeTerritoryText(query);
-  if (!normalized) return null;
+  return (
+    locations.find((location) => {
+      if (location.type !== LocationType.CITY || location.status !== LocationStatus.ACTIVE) {
+        return false;
+      }
 
-  if (normalized.includes("pituba")) return "pituba";
-  if (normalized.includes("nordeste de amaralina")) return "nordeste de amaralina";
-  if (normalized.includes("barra")) return "barra";
-  if (normalized.includes("ondina")) return "ondina";
+      const pathParts = location.geographic_path.split("/").filter(Boolean);
+      const cityMatches =
+        normalizeTerritoryText(location.slug) === normalizedCity ||
+        normalizeTerritoryText(location.name) === normalizedCity;
+      const stateMatches =
+        !normalizedState ||
+        pathParts.includes(normalizedState) ||
+        normalizeTerritoryText(String(location.metadata?.state_code ?? "")) === normalizedState;
 
-  return normalized;
-}
-
-function selectFeaturedNeighborhoods(
-  neighborhoods: TerritoryPolygon[],
-  activeName: string | null,
-): TerritoryPolygon[] {
-  const priorityNames = new Set(
-    [...FEATURED_NEIGHBORHOODS, activeName].filter(Boolean).map((name) => normalizeTerritoryText(name)),
+      return cityMatches && stateMatches;
+    }) ?? null
   );
-
-  const selected = neighborhoods.filter((polygon) =>
-    priorityNames.has(normalizeTerritoryText(polygon.name)),
-  );
-
-  const unique = new Map<string, TerritoryPolygon>();
-  for (const polygon of selected) {
-    const key = normalizeTerritoryText(polygon.name) || polygon.name;
-    if (!unique.has(key)) unique.set(key, polygon);
-  }
-
-  if (unique.size >= 4) {
-    return Array.from(unique.values()).slice(0, 6);
-  }
-
-  for (const polygon of neighborhoods) {
-    const key = normalizeTerritoryText(polygon.name) || polygon.name;
-    if (!unique.has(key)) unique.set(key, polygon);
-    if (unique.size >= 6) break;
-  }
-
-  return Array.from(unique.values()).slice(0, 6);
 }
 
-function HomeBoundaryPreview({ activeQuery }: { activeQuery: string }) {
+function buildOfficialSalvadorCityPolygon(cityName: string): TerritoryPolygon | null {
+  if (normalizeTerritoryText(cityName) !== "salvador") return null;
+
+  const latitudes = SALVADOR_CITY_BOUNDARY_RING.map(([latitude]) => latitude);
+  const longitudes = SALVADOR_CITY_BOUNDARY_RING.map(([, longitude]) => longitude);
+
+  return {
+    name: cityName,
+    coordinates: SALVADOR_CITY_BOUNDARY_RING,
+    center: [
+      (Math.min(...latitudes) + Math.max(...latitudes)) / 2,
+      (Math.min(...longitudes) + Math.max(...longitudes)) / 2,
+    ],
+    color: "#18B37E",
+  };
+}
+
+function HomeBoundaryPreview() {
   const [homeCity, setHomeCity] = useState<Location | null>(null);
-  const [cityPolygons, setCityPolygons] = useState<TerritoryPolygon[]>([]);
-  const { polygons: neighborhoodPolygons } = useCityNeighborhoodsPolygons({
-    cityId: homeCity?.id,
-    cityGeoPath: homeCity?.geographic_path,
-    enabled: Boolean(homeCity?.id && homeCity?.geographic_path),
+  const [cityPolygons, setCityPolygons] = useState<TerritoryPolygon[]>(() => {
+    const fallback = buildOfficialSalvadorCityPolygon("Salvador");
+    return fallback ? [fallback] : [];
   });
 
   useEffect(() => {
     let cancelled = false;
-    const path = `/br/${TERRITORY_CONFIG.launch.state}/${TERRITORY_CONFIG.launch.city}`;
 
-    createLocationRepository()
-      .findByPath(path)
+    findLaunchCityLocation()
       .then((city) => {
-        if (cancelled || !city) return;
+        if (cancelled) return;
         setHomeCity(city);
       })
       .catch(() => {
@@ -366,25 +300,32 @@ function HomeBoundaryPreview({ activeQuery }: { activeQuery: string }) {
 
     const run = async () => {
       if (!homeCity) {
-        setCityPolygons([]);
+        const fallback = buildOfficialSalvadorCityPolygon("Salvador");
+        setCityPolygons(fallback ? [fallback] : []);
         return;
       }
 
       const bounds = await boundaryService.getLocationBounds(homeCity);
       if (cancelled) return;
 
-      const polygons = bounds.rings.map((ring, index) => ({
+      const storedPolygons = bounds.rings.map((ring, index) => ({
         name: homeCity.name,
         coordinates: ring,
         center: bounds.center,
         color: index === 0 ? "#18B37E" : "#7dd3fc",
       }));
+      const fallback = storedPolygons.length === 0
+        ? buildOfficialSalvadorCityPolygon(homeCity.name)
+        : null;
 
-      setCityPolygons(polygons);
+      setCityPolygons(storedPolygons.length > 0 ? storedPolygons : fallback ? [fallback] : []);
     };
 
     run().catch(() => {
-      if (!cancelled) setCityPolygons([]);
+      if (!cancelled) {
+        const fallback = buildOfficialSalvadorCityPolygon(homeCity?.name ?? "Salvador");
+        setCityPolygons(fallback ? [fallback] : []);
+      }
     });
 
     return () => {
@@ -392,97 +333,18 @@ function HomeBoundaryPreview({ activeQuery }: { activeQuery: string }) {
     };
   }, [homeCity]);
 
-  const bounds = useMemo(() => {
-    const territorySource = cityPolygons.length > 0 ? cityPolygons : neighborhoodPolygons;
-    const base = getBoundaryBounds(territorySource);
-    return base ? expandBounds(base, 1.08) : null;
-  }, [cityPolygons, neighborhoodPolygons]);
-
-  const activeBoundaryName = useMemo(() => getActiveBoundaryName(activeQuery), [activeQuery]);
-
-  const featuredNeighborhoods = useMemo(
-    () => selectFeaturedNeighborhoods(neighborhoodPolygons, activeBoundaryName),
-    [activeBoundaryName, neighborhoodPolygons],
-  );
-
-  const activeNeighborhood = useMemo(() => {
-    if (!activeBoundaryName) return null;
-    const normalizedTarget = normalizeTerritoryText(activeBoundaryName);
-    return (
-      neighborhoodPolygons.find(
-        (polygon) => normalizeTerritoryText(polygon.name) === normalizedTarget,
-      ) ?? null
-    );
-  }, [activeBoundaryName, neighborhoodPolygons]);
-
-  const stageNeighborhoods = useMemo(() => {
-    const merged = [...(activeNeighborhood ? [activeNeighborhood] : []), ...featuredNeighborhoods];
-    const unique = new Map<string, TerritoryPolygon>();
-
-    for (const polygon of merged) {
-      const key = normalizeTerritoryText(polygon.name) || polygon.name;
-      if (!unique.has(key)) unique.set(key, polygon);
-    }
-
-    return Array.from(unique.values()).slice(0, 6);
-  }, [activeNeighborhood, featuredNeighborhoods]);
-
   const cityLabel = homeCity?.name ?? "Salvador";
   const cityMetaLabel = "170 bairros";
-  const pinTone = {
-    fill: "#18B37E",
-    inner: "#ecfff8",
-    labelFill: "rgba(24,179,126,0.12)",
-  };
-
-  const cityBoundaryPaths = useMemo(() => {
-    if (!bounds) return [];
-    const territorySource = cityPolygons.length > 0 ? cityPolygons : neighborhoodPolygons;
-    return territorySource.map((polygon) => buildBoundaryPath(polygon, bounds)).filter((path): path is string => Boolean(path));
-  }, [bounds, cityPolygons, neighborhoodPolygons]);
-
-  const neighborhoodPaths = useMemo(() => {
-    if (!bounds) return [];
-    return stageNeighborhoods
-      .map((polygon) => ({
-        name: polygon.name,
-        path: buildBoundaryPath(polygon, bounds),
-        isActive: Boolean(activeBoundaryName && normalizeTerritoryText(polygon.name) === normalizeTerritoryText(activeBoundaryName)),
-      }))
-      .filter((item): item is { name: string; path: string; isActive: boolean } => Boolean(item.path));
-  }, [activeBoundaryName, bounds, stageNeighborhoods]);
-
-  const pinPoints = useMemo(() => {
-    if (!bounds) return [];
-    return stageNeighborhoods
-      .map((polygon) => ({
-        name: polygon.name,
-        point: projectBoundaryPoint(polygon.center[0], polygon.center[1], bounds),
-        isActive: Boolean(activeBoundaryName && normalizeTerritoryText(polygon.name) === normalizeTerritoryText(activeBoundaryName)),
-      }))
-      .slice(0, 4);
-  }, [activeBoundaryName, bounds, stageNeighborhoods]);
 
   const territoryPolygons = useMemo(
-    () => (cityPolygons.length > 0 ? cityPolygons : neighborhoodPolygons),
-    [cityPolygons, neighborhoodPolygons],
+    () => cityPolygons,
+    [cityPolygons],
   );
 
-  const mapMarkers = useMemo<MapMarker[]>(() => {
-    if (!bounds) return [];
-    return stageNeighborhoods.slice(0, 4).map((polygon, index) => ({
-      id: `${polygon.name}-${index}`,
-      type: "service",
-      coordinates: {
-        latitude: polygon.center[0],
-        longitude: polygon.center[1],
-      },
-      title: polygon.name,
-      subtitle: index === 0 ? "bairro em destaque" : "bairro ativo",
-      status: "active",
-      score: index === 0 ? 100 : 84,
-    }));
-  }, [bounds, stageNeighborhoods]);
+  const mapMarkers = useMemo<MapMarker[]>(
+    () => PREVIEW_CITY_MARKERS,
+    [],
+  );
 
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#eef4f0]">
@@ -491,7 +353,7 @@ function HomeBoundaryPreview({ activeQuery }: { activeQuery: string }) {
         initialViewport={{ center: PREVIEW_MAP_CENTER, zoom: 9.15 }}
         territoryPolygons={territoryPolygons}
         markers={mapMarkers}
-        fitTerritoryBounds
+        fitTerritoryBounds={territoryPolygons.length > 0}
         territoryFitPadding={28}
         territoryFitMaxZoom={9.4}
         userLocationMarker={{ enabled: false, autoAdd: false }}
@@ -797,7 +659,7 @@ export default function AchegueSeHomePage() {
         )}
       >
         <section className="relative h-[392px] overflow-hidden rounded-b-[28px] bg-[#e8f1ee] shadow-[0_22px_60px_rgba(15,23,42,0.14)] lg:h-[calc(100dvh-4rem)] lg:min-h-[640px] lg:rounded-[32px]">
-          <HomeBoundaryPreview activeQuery={cityQuery} />
+          <HomeBoundaryPreview />
           <div aria-hidden className="absolute inset-x-0 top-0 z-10 h-28 bg-gradient-to-b from-white/78 via-white/38 to-white/0" />
           <div aria-hidden className="absolute inset-x-0 bottom-0 z-10 h-28 bg-gradient-to-t from-white via-white/42 to-white/0 lg:h-40" />
 
@@ -814,12 +676,12 @@ export default function AchegueSeHomePage() {
           </header>
 
           <div className="absolute bottom-4 left-1/2 z-20 w-[calc(100%-2.5rem)] max-w-[620px] -translate-x-1/2 rounded-[22px] border border-white/85 bg-white/92 px-4 py-3.5 shadow-[0_18px_42px_rgba(15,23,42,0.16)] backdrop-blur-md lg:bottom-7 lg:left-7 lg:max-w-[450px] lg:translate-x-0 lg:px-5 lg:py-4">
-            <div className="flex items-center justify-between gap-3">
-              <p className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-[20px] font-semibold leading-none tracking-[-0.02em] text-slate-950 sm:text-[22px] lg:text-[24px]">
+            <div className="flex items-center justify-between gap-2.5">
+              <p className="min-w-0 whitespace-nowrap text-[16px] font-semibold leading-none tracking-[-0.02em] text-slate-950 min-[360px]:text-[17px] min-[380px]:text-[18px] sm:text-[22px] lg:text-[24px]">
                 Descubra seu bairro
               </p>
-              <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-white px-2.5 py-1.5 text-[11px] font-medium whitespace-nowrap text-slate-600 shadow-[0_8px_20px_rgba(15,23,42,0.10)] ring-1 ring-slate-100">
-                <span className="flex h-5.5 w-5.5 items-center justify-center rounded-full bg-[#18B37E]/10 text-[#18B37E]">
+              <span className="flex shrink-0 items-center gap-1 rounded-full bg-white px-2 py-1.5 text-[10px] font-medium whitespace-nowrap text-slate-600 shadow-[0_8px_20px_rgba(15,23,42,0.10)] ring-1 ring-slate-100 min-[380px]:gap-1.5 min-[380px]:px-2.5 min-[380px]:text-[11px]">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#18B37E]/10 text-[#18B37E] min-[380px]:h-5.5 min-[380px]:w-5.5">
                   <MapPin className="h-3.5 w-3.5 fill-[#18B37E]" aria-hidden />
                 </span>
                 <span>perto de você</span>

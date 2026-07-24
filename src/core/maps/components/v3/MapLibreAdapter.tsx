@@ -114,6 +114,10 @@ export interface MapLibreAdapterProps {
       touristPoints?: number;
     };
   };
+  /** Exibir attribution do mapa. Padrão: true */
+  attribution?: boolean;
+  /** Ocultar controles de navegação. Padrão: false */
+  hideNavigationControl?: boolean;
   className?: string;
 }
 
@@ -176,6 +180,8 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       clusterOptions,
       markerPresentation = 'default',
       radiusControl,
+      attribution = true,
+      hideNavigationControl = false,
       className 
     },
     ref
@@ -267,18 +273,22 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
         attributionControl: false,
       });
 
-      map.addControl(
-        new maplibregl.AttributionControl({
-          compact: true,
-          customAttribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
-        }),
-        'bottom-left'
-      );
+      if (attribution) {
+        map.addControl(
+          new maplibregl.AttributionControl({
+            compact: true,
+            customAttribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+          }),
+          'bottom-left'
+        );
+      }
 
-      map.addControl(
-        new maplibregl.NavigationControl({ showCompass: false }),
-        'bottom-right'
-      );
+      if (!hideNavigationControl) {
+        map.addControl(
+          new maplibregl.NavigationControl({ showCompass: false }),
+          'bottom-right'
+        );
+      }
 
       // Evento: mapa carregado
       map.on('load', () => {
@@ -522,6 +532,8 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       const TERRITORY_LINE_PREFIX   = 'territory-line-';
 
       const apply = () => {
+        if (!map.isStyleLoaded()) return false;
+
         // Remover layers/sources anteriores
         const style = map.getStyle();
         let appliedPolygons = 0;
@@ -612,13 +624,30 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
               : undefined;
           writeMapState(state);
         }
+
+        return true;
       };
 
-      if (map.isStyleLoaded()) {
+      let disposed = false;
+      const applyWhenReady = () => {
+        if (disposed) return;
         apply();
+      };
+      const retryTimer = window.setTimeout(applyWhenReady, 250);
+
+      if (map.isStyleLoaded()) {
+        applyWhenReady();
       } else {
-        map.once('load', apply);
+        map.once('load', applyWhenReady);
+        map.once('idle', applyWhenReady);
       }
+
+      return () => {
+        disposed = true;
+        window.clearTimeout(retryTimer);
+        map.off('load', applyWhenReady);
+        map.off('idle', applyWhenReady);
+      };
     }, [territoryPolygons]);
 
     // ── Círculo (área de CEP) ──────────────────────────────────────────────────
