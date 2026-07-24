@@ -675,7 +675,7 @@ export default function AchegueSeHomePage() {
             </span>
           </header>
 
-          <div className="absolute bottom-4 left-1/2 z-20 w-[calc(100%-2.5rem)] max-w-[620px] -translate-x-1/2 rounded-[22px] border border-white/85 bg-white/92 px-4 py-3.5 shadow-[0_18px_42px_rgba(15,23,42,0.16)] backdrop-blur-md lg:bottom-7 lg:left-7 lg:max-w-[450px] lg:translate-x-0 lg:px-5 lg:py-4">
+          <div className="absolute left-4 top-[5.5rem] z-20 w-[calc(100%-2rem)] max-w-[380px] rounded-[22px] border border-white/85 bg-white/92 px-3.5 py-3.5 shadow-[0_18px_42px_rgba(15,23,42,0.16)] backdrop-blur-md min-[380px]:left-5 min-[380px]:top-[5.75rem] min-[380px]:w-[calc(100%-2.5rem)] min-[380px]:px-4 lg:left-7 lg:top-[6.75rem] lg:max-w-[450px] lg:px-5 lg:py-4">
             <div className="flex items-center justify-between gap-2.5">
               <p className="min-w-0 whitespace-nowrap text-[16px] font-semibold leading-none tracking-[-0.02em] text-slate-950 min-[360px]:text-[17px] min-[380px]:text-[18px] sm:text-[22px] lg:text-[24px]">
                 Descubra seu bairro
