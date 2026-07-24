@@ -658,69 +658,81 @@ export default function AchegueSeHomePage() {
           "lg:grid lg:max-w-6xl lg:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.72fr)] lg:items-center lg:gap-10 lg:px-8 lg:py-8",
         )}
       >
-        <section className="relative h-[392px] overflow-hidden rounded-b-[28px] bg-[#e8f1ee] shadow-[0_22px_60px_rgba(15,23,42,0.14)] lg:h-[calc(100dvh-4rem)] lg:min-h-[640px] lg:rounded-[32px]">
-          <HomeBoundaryPreview />
-          <div aria-hidden className="absolute inset-x-0 top-0 z-10 h-28 bg-gradient-to-b from-white/78 via-white/38 to-white/0" />
-          <div aria-hidden className="absolute inset-x-0 bottom-0 z-10 h-28 bg-gradient-to-t from-white via-white/42 to-white/0 lg:h-40" />
+        <section
+          aria-label="Status ao vivo do Achegue-se"
+          className="th-live-section"
+        >
+          <div className="th-live-card h-[392px] rounded-b-[28px] border-0 bg-[#e8f1ee] shadow-[0_22px_60px_rgba(15,23,42,0.14)] lg:h-[calc(100dvh-4rem)] lg:min-h-[640px] lg:rounded-[32px]">
+            <HomeBoundaryPreview />
+            <div aria-hidden className="absolute inset-x-0 top-0 z-10 h-28 bg-gradient-to-b from-white/78 via-white/38 to-white/0" />
+            <div aria-hidden className="absolute inset-x-0 bottom-0 z-10 h-28 bg-gradient-to-t from-white via-white/42 to-white/0 lg:h-40" />
 
-          <header
-            className="absolute left-5 right-5 top-[max(1rem,env(safe-area-inset-top))] z-30 flex items-center gap-2.5 lg:left-7 lg:right-7 lg:top-7"
-            aria-label="Achegue-se"
-          >
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 shadow-[0_10px_24px_rgba(15,23,42,0.10)] ring-1 ring-white/80 backdrop-blur">
-              <img src={OFFICIAL_LOGO_SRC} alt="" aria-hidden className="h-7 w-7 object-contain" />
-            </span>
-            <span className="font-heading text-[22px] font-semibold leading-none tracking-tight text-slate-950 drop-shadow-[0_1px_0_rgba(255,255,255,0.65)] lg:text-[24px]">
-              Achegue-<span className="text-[#18B37E]">se</span>
-            </span>
-          </header>
-
-          <div className="absolute left-4 top-[5.5rem] z-20 w-[calc(100%-2rem)] max-w-[380px] rounded-[22px] border border-white/85 bg-white/92 px-3.5 py-3.5 shadow-[0_18px_42px_rgba(15,23,42,0.16)] backdrop-blur-md min-[380px]:left-5 min-[380px]:top-[5.75rem] min-[380px]:w-[calc(100%-2.5rem)] min-[380px]:px-4 lg:left-7 lg:top-[6.75rem] lg:max-w-[450px] lg:px-5 lg:py-4">
-            <div className="flex items-center justify-between gap-2.5">
-              <p className="min-w-0 whitespace-nowrap text-[16px] font-semibold leading-none tracking-[-0.02em] text-slate-950 min-[360px]:text-[17px] min-[380px]:text-[18px] sm:text-[22px] lg:text-[24px]">
-                Descubra seu bairro
-              </p>
-              <span className="flex shrink-0 items-center gap-1 rounded-full bg-white px-2 py-1.5 text-[10px] font-medium whitespace-nowrap text-slate-600 shadow-[0_8px_20px_rgba(15,23,42,0.10)] ring-1 ring-slate-100 min-[380px]:gap-1.5 min-[380px]:px-2.5 min-[380px]:text-[11px]">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#18B37E]/10 text-[#18B37E] min-[380px]:h-5.5 min-[380px]:w-5.5">
-                  <MapPin className="h-3.5 w-3.5 fill-[#18B37E]" aria-hidden />
-                </span>
-                <span>perto de você</span>
+            <header
+              className="absolute left-5 right-5 top-[max(1rem,env(safe-area-inset-top))] z-30 flex items-center gap-2.5 lg:left-7 lg:right-7 lg:top-7"
+              aria-label="Achegue-se"
+            >
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 shadow-[0_10px_24px_rgba(15,23,42,0.10)] ring-1 ring-white/80 backdrop-blur">
+                <img src={OFFICIAL_LOGO_SRC} alt="" aria-hidden className="h-7 w-7 object-contain" />
               </span>
-            </div>
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              {statusChips.map((chip) => {
-                const Icon = chip.icon;
-                const isOrange = chip.tone === "orange";
-                return (
-                  <span
-                    key={`${chip.value ?? "near"}-${chip.label}`}
-                    className="flex min-h-[76px] min-w-0 items-center gap-2 rounded-[18px] bg-white px-3 py-2.5 text-left leading-none text-slate-700 shadow-[0_8px_18px_rgba(15,23,42,0.07)] ring-1 ring-slate-100 sm:px-3.5"
-                  >
-                    <Icon
-                      className={cn(
-                        "h-7 w-7 shrink-0",
-                        isOrange ? "text-[#f97316]" : "text-[#18B37E]",
-                      )}
-                      aria-hidden
-                    />
-                    <span className="min-w-0 leading-none">
-                      {chip.value ? (
-                        <span className="block text-[25px] font-semibold leading-none text-slate-950 sm:text-[26px]">
-                          {chip.value}
-                        </span>
-                      ) : null}
-                      <span
-                        className={cn(
-                          "block text-[11px] font-medium leading-[1.1] text-slate-600 sm:text-[12px]",
-                          chip.value ? "mt-0.5" : "text-[12px] text-slate-700",
-                        )}
-                      >
-                        {chip.label}
-                      </span>
+              <span className="font-heading text-[22px] font-semibold leading-none tracking-tight text-slate-950 drop-shadow-[0_1px_0_rgba(255,255,255,0.65)] lg:text-[24px]">
+                Achegue-<span className="text-[#18B37E]">se</span>
+              </span>
+            </header>
+
+            <div className="th-live-copy !left-5 !top-[5.75rem] !w-[min(14rem,calc(100%-2.5rem))] lg:!left-7 lg:!top-[6.75rem] lg:!w-[min(14rem,38%)]">
+              <ul className="th-live-status-list" aria-label="Status ao vivo do Achegue-se">
+                <li className="th-live-status">
+                  <span className="th-live-status-icon bg-primary/10 text-primary">
+                    <MapPin className="h-3 w-3" aria-hidden strokeWidth={2.25} />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-[10.5px] font-bold leading-tight text-foreground">
+                      Descubra seu bairro
+                    </span>
+                    <span className="block truncate text-[9.5px] leading-tight text-muted-foreground">
+                      perto de você
                     </span>
                   </span>
-                );
-              })}
+                </li>
+                {statusChips.map((chip) => {
+                  const Icon = chip.icon;
+                  const isOrange = chip.tone === "orange";
+                  const isPlaces = chip.label.includes("lugares");
+                  const primaryLabel = isOrange
+                    ? `${chip.value} avisos`
+                    : isPlaces
+                      ? `${chip.value} lugares`
+                      : `${chip.value} ${chip.label}`;
+                  const detailLabel = isOrange
+                    ? "hoje"
+                    : isPlaces
+                      ? "abertos agora"
+                      : "em Salvador";
+                  return (
+                    <li
+                      key={`${chip.value ?? "near"}-${chip.label}`}
+                      className="th-live-status"
+                    >
+                      <span
+                        className={cn(
+                          "th-live-status-icon",
+                          isOrange ? "bg-orange-50 text-[#f97316]" : "bg-primary/10 text-primary",
+                        )}
+                      >
+                        <Icon className="h-3 w-3" aria-hidden strokeWidth={2.25} />
+                      </span>
+                      <span className="min-w-0 leading-none">
+                        <span className="block truncate text-[10.5px] font-bold leading-tight text-foreground">
+                          {primaryLabel}
+                        </span>
+                        <span className="block truncate text-[9.5px] leading-tight text-muted-foreground">
+                          {detailLabel}
+                        </span>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
           </div>
         </section>
