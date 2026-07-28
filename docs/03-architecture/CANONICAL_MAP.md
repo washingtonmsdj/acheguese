@@ -1,5 +1,11 @@
 # Mapa Canonico de Documentacao
 
+> AVISO DE SUBSTITUICAO DOCUMENTAL
+>
+> Status: SUBSTITUIDO.
+> Documento canonico atual: `docs/DOCUMENTATION-INDEX.md`.
+> Este arquivo fica preservado apenas como historico e nao deve ser usado como fonte normativa.
+
 ## Uso
 
 Se houver conflito entre documentos, vence a ordem abaixo:

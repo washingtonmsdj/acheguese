@@ -1,5 +1,11 @@
 # Posts e Feed SSOT
 
+> AVISO DE SUBSTITUICAO DOCUMENTAL
+>
+> Status: SUBSTITUIDO.
+> Documento canonico atual: `docs/feed/FEED-FREEZE.md`.
+> Este arquivo fica preservado apenas como historico e nao deve ser usado como fonte normativa para a superficie publica do Feed.
+
 Status: vigente
 Data: 2026-07-17
 Finding encerrado: CP-008

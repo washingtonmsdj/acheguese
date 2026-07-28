@@ -1,8 +1,14 @@
 # Arquitetura Posts — SSOT Territorial
-**Posts Sociais | Status**: ✅ Concluído estruturalmente  
-**Polls | Status**: ✅ Vinculadas a `posts.id`  
-**Q&A Perguntas | Status**: ✅ Concluído — `community_questions`  
-**Q&A Respostas | Status**: ✅ Concluído — `question_answers`  
+
+> AVISO DE SUBSTITUICAO DOCUMENTAL
+>
+> Status: SUBSTITUIDO.
+> Documento canonico atual: `docs/feed/FEED-FREEZE.md`.
+> Este arquivo fica preservado apenas como historico e nao deve ser usado como fonte normativa para a superficie publica do Feed.
+**Posts Sociais | Status**: ✅ Concluído estruturalmente
+**Polls | Status**: ✅ Vinculadas a `posts.id`
+**Q&A Perguntas | Status**: ✅ Concluído — `community_questions`
+**Q&A Respostas | Status**: ✅ Concluído — `question_answers`
 **Última atualização**: 2026-04-05
 
 ---

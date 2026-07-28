@@ -1,5 +1,7 @@
 # FEATURE-MAP
 
+Domain status: Feed = STATUS: FROZEN.
+
 > Mapa único de funcionalidades do Achegue-se. Toda funcionalidade precisa ter uma **entrada de navegação**. Toda rota precisa ter uma funcionalidade que a justifica.
 >
 > Status: ✅ ativo · 🟡 parcial/beta · 🚧 em construção · 🗄 arquivado
@@ -37,14 +39,16 @@
 
 ## 3. Comunidade (Feed & Posts)
 
+Status do dominio Feed: FROZEN. Documento oficial: `docs/feed/FEED-FREEZE.md`.
+
 | Funcionalidade | Status | Onde aparece | Como o usuário chega |
 |---|---|---|---|
 | Feed do bairro (timeline unificada) | ✅ | `CommunityFeed` | Home → chip "Ver mais do bairro" / botão central da BottomNav |
 | Publicar post (composer + rascunho AES-GCM) | ✅ | `NovoPostPage` / `CreatePostModal` | BottomNav **Postar** (`/novo-post`) |
 | Rascunho offline com resolução de conflito | ✅ | `postDraftCrypto` + service | reabertura do composer |
-| Detalhe do post (modal) | ✅ | `PostDetailModal` | tap no card do feed · `/p/:slug` |
+| Detalhe do post (modal) | ✅ | `PostDetailModal` via `FeedService.getDetail()` | tap no card do feed · URL territorial com `?post=<id>` |
 | Comentários (thread + composer humanizado) | ✅ | `PostCommentsPanel` | dentro do post |
-| Compartilhar post (SSOT `postShare`) | ✅ | menu do post | ícone dentro do card/detalhe |
+| Compartilhar post (SSOT Feed) | ✅ | `useShareFeedItem` / `FeedService.shareItem()` | ícone dentro do card/detalhe; gera URL territorial com `?post=<id>` |
 | Reações / social engagement | ✅ | inline no card | tap direto |
 | Aba Comunicação territorial | ✅ | `TerritorialCommunityCommunicationPage` | tabs do bairro |
 | Alertas comunitários | ✅ | `/alertas` | menu comunidade |

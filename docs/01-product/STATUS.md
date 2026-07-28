@@ -1,5 +1,11 @@
 # Status Atual do Projeto
 
+> AVISO DE SUBSTITUICAO DOCUMENTAL
+>
+> Status: SUBSTITUIDO.
+> Documento canonico atual: `docs/architecture/PROJECT-MILESTONE-1.md`, com estado publico em `docs/FEATURE-MAP.md` e `docs/SCREEN-MAP.md`.
+> Este arquivo fica preservado apenas como historico e nao deve ser usado como fonte normativa.
+
 Data: 2026-07-17
 Branch: main
 Ultimo commit base validado antes desta atualizacao: 3c307846 (`refactor(core): remove unused facades and media wrappers`)
@@ -517,7 +523,7 @@ id)`, incluindo compatibilidade temporaria com cursores antigos de timestamp
 
 - Arquitetura vigente: Community First com entidades independentes, conforme
   `plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md` e
-  `docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`.
+  `docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`.
 - Core domain: `Comunidade Local`, com identidade e acesso canonicos em
   `src/core/community-experience`.
 - SSOT territorial: `locations`, `territorial_groups`, `src/core/location` e

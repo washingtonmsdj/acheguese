@@ -1,5 +1,7 @@
 # SCREEN-MAP
 
+Domain status: Feed = STATUS: FROZEN.
+
 > Mapa único de telas/rotas. Nomenclatura canônica: `Territory*Page`. Nomes antigos permanecem como aliases (ver [`06-navigation/NAVIGATION-MAPPING.md`](./06-navigation/NAVIGATION-MAPPING.md)).
 >
 > Status: ✅ ativo · 🟡 parcial · 🗄 legado (a remover) · ↪ redireciona
@@ -14,7 +16,8 @@
 | `/comunidade/:uf/:city/:hood` | `TerritoryHomePage` | Home do bairro específico | routes/territorial | Deep-link, share | ✅ | ex-`TerritorialCommunityHomePage` ↪ TerritoryHome |
 | `/comunidade/:uf/:city` | `TerritoryExplorerPage` | Cidade (contexto amplo) | app/pages | Explorar cidade | ✅ | ex-`ComunidadeCidadePage` ↪ Explorer |
 | `/comunidade/:uf/:city/:hood/feed` | `TerritoryFeedPage` | Timeline completa do bairro | app/pages | Home → "Ver mais" | ✅ | ex-`ComunidadeFeedPage` |
-| `/p/:slug/*` | `PostPage` (via detail modal + rota) | Detalhe do post | community | Tap no card / share | ✅ | — |
+| `/comunidade/:uf/:city/:hood?post=:postId` | `PostDetailModal` via `FeedService.getDetail()` | Deep-link territorial de post | Feed | Tap no card / share / busca | ✅ | query param canonico |
+| `/p/:slug/*` | `PremiumBusinessSiteRoute` | Mini-site premium de empresa | business | Link premium | ✅ | nao pertence ao Feed |
 | `/interesse` | `CommunityInterestPage` | Waitlist para bairro coming_soon | community | Bairro indisponível | ✅ | — |
 | `/br`, `/brasil` | `NationalHubPage` | Hub país (SEO + escolha de UF) | app/pages | SEO / entrada externa | ✅ | — |
 | `/:state`, `/:state/:city` | `PublicCityLandingPage` | Landing pública (SEO) | app/pages | Google / links | ✅ | — |
