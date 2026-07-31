@@ -1,4 +1,0 @@
-[submodule "teste nao remova/maker-forge-net"]
-	path = teste nao remova/maker-forge-net
-	url = https://github.com/washingtonmsdj/maker-forge-net.git
-	ignore = all
