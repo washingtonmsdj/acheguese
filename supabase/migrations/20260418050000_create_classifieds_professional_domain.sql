@@ -17,53 +17,37 @@
 -- ============================================================================
 
 -- Status de classificados
-DO $migration$ BEGIN
-  CREATE TYPE classified_status AS ENUM (
-    'active',
-    'inactive',
-    'sold',
-    'expired',
-    'deleted'
-  );
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
-END $migration$;
+CREATE TYPE classified_status AS ENUM (
+  'active',
+  'inactive',
+  'sold',
+  'expired',
+  'deleted'
+);
 
 -- Condição do item
-DO $migration$ BEGIN
-  CREATE TYPE item_condition AS ENUM (
-    'new',
-    'like_new',
-    'good',
-    'fair',
-    'poor'
-  );
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
-END $migration$;
+CREATE TYPE item_condition AS ENUM (
+  'new',
+  'like_new',
+  'good',
+  'fair',
+  'poor'
+);
 
 -- Status de trabalhos profissionais
-DO $migration$ BEGIN
-  CREATE TYPE job_status AS ENUM (
-    'pending',
-    'in_progress',
-    'completed',
-    'cancelled'
-  );
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
-END $migration$;
+CREATE TYPE job_status AS ENUM (
+  'pending',
+  'in_progress',
+  'completed',
+  'cancelled'
+);
 
 -- Tipo de review
-DO $migration$ BEGIN
-  CREATE TYPE review_type AS ENUM (
-    'business',
-    'professional',
-    'service'
-  );
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
-END $migration$;
+CREATE TYPE review_type AS ENUM (
+  'business',
+  'professional',
+  'service'
+);
 
 -- ============================================================================
 -- 1. PROFESSIONAL_DATA - Dados de Profissionais
@@ -371,7 +355,7 @@ CREATE TABLE IF NOT EXISTS classifieds (
 );
 
 -- Adicionar colunas se não existirem
-DO $migration$
+DO $$ 
 BEGIN
   -- Anunciante
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'classifieds' AND column_name = 'profile_id') THEN
@@ -432,7 +416,7 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'classifieds' AND column_name = 'updated_at') THEN
     ALTER TABLE classifieds ADD COLUMN updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
   END IF;
-END $migration$;
+END $$;
 
 -- Índices
 CREATE INDEX IF NOT EXISTS idx_classifieds_profile_id ON classifieds(profile_id);

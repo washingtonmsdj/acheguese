@@ -1,0 +1,1593 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Durable, local provenance for the migration-history reconciliation completed on 2026-08-10.",
+  "remoteBaseline": {
+    "capturedAt": "2026-08-10",
+    "migrationCount": 339,
+    "source": "Read-only query of supabase_migrations.schema_migrations",
+    "remoteValidation": "REQUIRED_SEPARATELY"
+  },
+  "scope": {
+    "kind": "HIGH_RISK_RECONCILED_HISTORICAL_SUBSET",
+    "entryCount": 45,
+    "note": "Version parity for all migrations remains the responsibility of validate:migrations:remote."
+  },
+  "fingerprintAlgorithm": {
+    "raw": "MD5 and SHA-256 of UTF-8, LF-normalized top-level statements joined with U+001F; comments retained.",
+    "operational": "MD5 and SHA-256 of the same statement sequence after lexer-aware removal of SQL comments; comment-only entries omitted.",
+    "parser": "scripts/lib/migration-statement-fingerprint.mjs"
+  },
+  "entries": [
+    {
+      "version": "20260413100000",
+      "file": "20260413100000_create_business_subscriptions.sql",
+      "provenanceClass": "CANONICAL_REMOTE_RECONSTRUCTION",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "TEXT_ARTIFACT_UNRECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_REMOTE_CANONICALIZATION",
+      "source": {
+        "evidenceClass": "REMOTE_EXACT_STATEMENTS",
+        "remoteTable": "supabase_migrations.schema_migrations",
+        "statementArrayComplete": true,
+        "note": "Canonical file rendered from the complete remote statement array, in ordinal order, without inferred SQL."
+      },
+      "remoteFingerprint": {
+        "statementCount": 20,
+        "normalizedMd5": "98b9d0726b8c202c387028325d03aa2b"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 20,
+          "byteLength": 4966,
+          "md5": "98b9d0726b8c202c387028325d03aa2b",
+          "sha256": "b1be36bd5a41c4782d9e2d676a0aef2ccb155132286ea4dee27bad701018a7a3"
+        },
+        "operational": {
+          "statementCount": 20,
+          "byteLength": 2847,
+          "md5": "4ad043eb7705174025046ca15b4ace7f",
+          "sha256": "24d8a3c78f75b15f53022dd61a90a1372cbf9c94055dbc76f513d53ec691ba48"
+        }
+      }
+    },
+    {
+      "version": "20260413100002",
+      "file": "20260413100002_migrate_gastronomy_to_business_subscriptions.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "a346ba085c3893747e7371b27ad0a18fd54b9ed3",
+        "blob": "7166f9a838ce2a5abe36efdead930b81ab9cb573"
+      },
+      "remoteFingerprint": {
+        "statementCount": 3,
+        "normalizedMd5": "9ba0a7e74d7339962ab898a61591324c"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 3,
+          "byteLength": 3696,
+          "md5": "9ba0a7e74d7339962ab898a61591324c",
+          "sha256": "89574d348f38350384b64e70f9876b3a80fc1ef3bea5037576e2df046207eb47"
+        },
+        "operational": {
+          "statementCount": 2,
+          "byteLength": 1169,
+          "md5": "1887552d47159da34a8d1904e86d2e70",
+          "sha256": "4d772cfb4f02359f239286a9abfaf0f54e22acae3ac95775d45754827b5e83a0"
+        }
+      }
+    },
+    {
+      "version": "20260415000000",
+      "file": "20260415000000_create_activity_feed_system.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "a346ba085c3893747e7371b27ad0a18fd54b9ed3",
+        "blob": "8841a3fca7177e6d4b09e96c5a4d28bf652cafe1"
+      },
+      "remoteFingerprint": {
+        "statementCount": 11,
+        "normalizedMd5": "9f40e33dd3ca655e884ac5856e1c14f5"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 11,
+          "byteLength": 7293,
+          "md5": "9f40e33dd3ca655e884ac5856e1c14f5",
+          "sha256": "3c473fd582de8537b0f341c5f83742709b4e2035c5a26893903a08b46c3b38e5"
+        },
+        "operational": {
+          "statementCount": 10,
+          "byteLength": 4909,
+          "md5": "81095191d7339f3c0edeb62d30a26b7c",
+          "sha256": "5bbcb31f5c48362a7886b6ab0c91cee9d45a3d87dafac4dcac87ebd4c6e14de8"
+        }
+      }
+    },
+    {
+      "version": "20260416110000",
+      "file": "20260416110000_create_vagas.sql",
+      "provenanceClass": "CANONICAL_REMOTE_RECONSTRUCTION",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "TEXT_ARTIFACT_UNRECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_REMOTE_CANONICALIZATION",
+      "source": {
+        "evidenceClass": "REMOTE_EXACT_STATEMENTS",
+        "remoteTable": "supabase_migrations.schema_migrations",
+        "statementArrayComplete": true,
+        "note": "Canonical file rendered from the complete remote statement array, in ordinal order, without inferred SQL."
+      },
+      "remoteFingerprint": {
+        "statementCount": 26,
+        "normalizedMd5": "113f51355b09e320b68cf89cd9246569"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 26,
+          "byteLength": 7515,
+          "md5": "113f51355b09e320b68cf89cd9246569",
+          "sha256": "4601ef82e4c21e7cf54e416c783d372f1afe9c3a4d200199bc6a7eeb51192ca5"
+        },
+        "operational": {
+          "statementCount": 25,
+          "byteLength": 2870,
+          "md5": "d46fd62cae013d5e40718eb0c7112dcd",
+          "sha256": "643428ef4406792594b56ac14c81f7c7a376a5c00b3e68321bc16c738ca1ed29"
+        }
+      }
+    },
+    {
+      "version": "20260416120000",
+      "file": "20260416120000_seed_vagas.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "a5451d9d410be40578b5a84e9f8c71c7c4669d83",
+        "blob": "b62ca3b983689a15152b95f4b92dc04673b19ce2"
+      },
+      "remoteFingerprint": {
+        "statementCount": 1,
+        "normalizedMd5": "1b98ceda494a57933231c7e810787c3a"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 1,
+          "byteLength": 14492,
+          "md5": "1b98ceda494a57933231c7e810787c3a",
+          "sha256": "de65b16236418a5b2c48011eebf0dc9ee83e732bc6aa098310794bc0164a3e40"
+        },
+        "operational": {
+          "statementCount": 1,
+          "byteLength": 12918,
+          "md5": "3e9e2af34888cbf2e841aafed2a6451f",
+          "sha256": "3ce8972df11b29688b6542bc3644e99e0a24db6244671625c6a8af2a3ef18f2f"
+        }
+      }
+    },
+    {
+      "version": "20260416130000",
+      "file": "20260416130000_fix_vagas_location.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "a5451d9d410be40578b5a84e9f8c71c7c4669d83",
+        "blob": "dc02e9c0e6fe84271fb633980603b6bc2dd628d4"
+      },
+      "remoteFingerprint": {
+        "statementCount": 1,
+        "normalizedMd5": "9c6f4b62e3e70755d165c833ebb6f410"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 1,
+          "byteLength": 1521,
+          "md5": "9c6f4b62e3e70755d165c833ebb6f410",
+          "sha256": "d59ff5180051522f94fd30d4d640dc8e0188220418eed29f6ea6b4a3c2bf7f66"
+        },
+        "operational": {
+          "statementCount": 1,
+          "byteLength": 610,
+          "md5": "1f0db16263e9c330cadc115ee413ab4d",
+          "sha256": "1d63a63191aae4ffe7044fe6e588c00021834037a95317fec343cc18a6dd9442"
+        }
+      }
+    },
+    {
+      "version": "20260416140000",
+      "file": "20260416140000_fix_vagas_to_correct_salvador.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "a5451d9d410be40578b5a84e9f8c71c7c4669d83",
+        "blob": "79d976f30fb5fea3a367250e81027579a9834bff"
+      },
+      "remoteFingerprint": {
+        "statementCount": 1,
+        "normalizedMd5": "55fa32d914e5c806356c25d9c86874b0"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 1,
+          "byteLength": 676,
+          "md5": "55fa32d914e5c806356c25d9c86874b0",
+          "sha256": "7e86845df6239e93a8623746f6b9245e359a64f2bc910b2ffe35c06062b35cf3"
+        },
+        "operational": {
+          "statementCount": 1,
+          "byteLength": 129,
+          "md5": "ff1eace91d0c0f7b9b5e3e1bf7599579",
+          "sha256": "0ad5c9b4e6bb88fe3c8fcaa13cbed61bcc7e9ef81fe9d46c1f46b8457661e0c0"
+        }
+      }
+    },
+    {
+      "version": "20260416150000",
+      "file": "20260416150000_add_vagas_missing_fields.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "a5451d9d410be40578b5a84e9f8c71c7c4669d83",
+        "blob": "796fedd3251dcc94c3f85e38497527b73e2a57ac"
+      },
+      "remoteFingerprint": {
+        "statementCount": 5,
+        "normalizedMd5": "0b54c8759be8700119928a186554d470"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 5,
+          "byteLength": 1937,
+          "md5": "0b54c8759be8700119928a186554d470",
+          "sha256": "f1485474a3d1f729d430ce7c35519049e87f9063e86a62a6c0bb53b5bc95382a"
+        },
+        "operational": {
+          "statementCount": 4,
+          "byteLength": 415,
+          "md5": "6c5a5c14e701b68e6807f8c2b6e8efce",
+          "sha256": "abaaff80b1357fcd58b5d9604094d6c708c7b4f9d33fe4f4a1865150df2af906"
+        }
+      }
+    },
+    {
+      "version": "20260416190000",
+      "file": "20260416190000_migrate_vaga_status_enum.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "a5451d9d410be40578b5a84e9f8c71c7c4669d83",
+        "blob": "b5800c9f5cc20931420e69b713bf1bcb6bce05ef"
+      },
+      "remoteFingerprint": {
+        "statementCount": 43,
+        "normalizedMd5": "084b15cd76cf68e20e02e2a5354de123"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 43,
+          "byteLength": 9408,
+          "md5": "084b15cd76cf68e20e02e2a5354de123",
+          "sha256": "d5a33f4214f969946e6e5e5c086e68b08d1a317b5b270854f5f3ef7e9a453b63"
+        },
+        "operational": {
+          "statementCount": 42,
+          "byteLength": 4456,
+          "md5": "778c1744de7a808cec03b48795162039",
+          "sha256": "c9fd7c39c7ca91213c680bc8e1b9cee8825bf31a01e61c6dceddf293639eca97"
+        }
+      }
+    },
+    {
+      "version": "20260418020000",
+      "file": "20260418020000_create_locations_system.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "ef0144e1cf05afa476db118b8dbc25714891d5ac",
+        "blob": "dbe6e6d93eb6006327a66182e7d9005539f71054"
+      },
+      "remoteFingerprint": {
+        "statementCount": 65,
+        "normalizedMd5": "9b01b78c70a8496f86b791b7c46cfd3f"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 65,
+          "byteLength": 19251,
+          "md5": "9b01b78c70a8496f86b791b7c46cfd3f",
+          "sha256": "96dfe5160df35efcef05786787523c1feab5872653b69f62feca47985f53d088"
+        },
+        "operational": {
+          "statementCount": 64,
+          "byteLength": 11363,
+          "md5": "d1c6210f1855aeab6f5afbae05459f62",
+          "sha256": "b3e77a06c55a2005ebb8a3c5230bad11e0a77a77c40ded893ed78e724a94ca7f"
+        }
+      }
+    },
+    {
+      "version": "20260418040000",
+      "file": "20260418040000_create_gastronomy_domain.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "ef0144e1cf05afa476db118b8dbc25714891d5ac",
+        "blob": "9357f2574978af9be5cc96c883f252514d29f307"
+      },
+      "remoteFingerprint": {
+        "statementCount": 107,
+        "normalizedMd5": "fc84cd34e7890428a73ea5f86ff8f9b6"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 107,
+          "byteLength": 22516,
+          "md5": "fc84cd34e7890428a73ea5f86ff8f9b6",
+          "sha256": "f8f806454391c1b5e4bee4ec21cda06a38234b2382c239a098205b10a930da8b"
+        },
+        "operational": {
+          "statementCount": 106,
+          "byteLength": 17855,
+          "md5": "1c7d090c67e04b30a1ee164f4f704519",
+          "sha256": "30462a4cece8619bcc42bc94c0892e0b72e661df6ad6c0953c72603d76c20a86"
+        }
+      }
+    },
+    {
+      "version": "20260418050000",
+      "file": "20260418050000_create_classifieds_professional_domain.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "ef0144e1cf05afa476db118b8dbc25714891d5ac",
+        "blob": "9484251d31a1897948f9c4bc7e51071ff5cade2f"
+      },
+      "remoteFingerprint": {
+        "statementCount": 82,
+        "normalizedMd5": "728cb850102de4c72aadc5f0946e9538"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 82,
+          "byteLength": 17842,
+          "md5": "728cb850102de4c72aadc5f0946e9538",
+          "sha256": "5f11d6d7442030976fc0d4ee0e0d195ae2974c9377ac637c7cb58a5682d87406"
+        },
+        "operational": {
+          "statementCount": 81,
+          "byteLength": 14320,
+          "md5": "4c39ccc3091afb05b1834b5486d8e11c",
+          "sha256": "44f9f852290d63fe5a7bbdc5428f39964036ac9e9bf62356c4f398d7a687f584"
+        }
+      }
+    },
+    {
+      "version": "20260418070000",
+      "file": "20260418070000_create_mobility_domain.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "0d0fefa4cba0c1b72f7b59533b3421d614470d2b",
+        "blob": "09d93c8d0e3928dba50fbe15760932012444806d"
+      },
+      "remoteFingerprint": {
+        "statementCount": 83,
+        "normalizedMd5": "43513177e8d319ba91f6ee8281d5c2f6"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 83,
+          "byteLength": 11909,
+          "md5": "43513177e8d319ba91f6ee8281d5c2f6",
+          "sha256": "092c205900b19ed89ea2e89b6bb6cee72bc83b27774c177057e5249951284e45"
+        },
+        "operational": {
+          "statementCount": 82,
+          "byteLength": 11294,
+          "md5": "0a576825e7676d2b7e4a6a5f8e2e4c80",
+          "sha256": "1e59ea5b7a4037d7f8ad97b7bdabff84d213fea2f17c0a60ace2197167410a90"
+        }
+      }
+    },
+    {
+      "version": "20260419000001",
+      "file": "20260419000001_create_performance_indexes.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "0d0fefa4cba0c1b72f7b59533b3421d614470d2b",
+        "blob": "bbc9d641cfad12ae75066b94586f0be221382c9b"
+      },
+      "remoteFingerprint": {
+        "statementCount": 14,
+        "normalizedMd5": "9e83cb5e436851563485da50f30addac"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 14,
+          "byteLength": 2617,
+          "md5": "9e83cb5e436851563485da50f30addac",
+          "sha256": "aef4c8ef5127a80bd3c8784027388b66b0d82a448e51bcafc0b39b3c61a464db"
+        },
+        "operational": {
+          "statementCount": 14,
+          "byteLength": 1078,
+          "md5": "9959feebcdd4a9a3d1d79f149be37f8a",
+          "sha256": "080f5c281ec18c6995449bf9a27b46ca62ac8382a596514411a3d6ea3d303dd4"
+        }
+      }
+    },
+    {
+      "version": "20260419140000",
+      "file": "20260419140000_community_alerts_territorial_integration.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "697d8b15fae741efa86bc43174b8578514def065",
+        "blob": "6801a1757832d7acb01f83d9213480029b40a405"
+      },
+      "remoteFingerprint": {
+        "statementCount": 16,
+        "normalizedMd5": "051a9dd3e0af0814b6bd050b858afbc6"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 16,
+          "byteLength": 3677,
+          "md5": "051a9dd3e0af0814b6bd050b858afbc6",
+          "sha256": "b8c0d60be219bd2b806d6d4b87b376aa9ede9cc137a8e1080e2f1cdfe0d74d62"
+        },
+        "operational": {
+          "statementCount": 15,
+          "byteLength": 1830,
+          "md5": "9211f111da5ad9759bbf6432c9053556",
+          "sha256": "758da15a8471c05e1fc2a4b36c4c20b2d511679e6a69da1e2e464347c880ea87"
+        }
+      }
+    },
+    {
+      "version": "20260419141000",
+      "file": "20260419141000_update_rpc_and_view.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "697d8b15fae741efa86bc43174b8578514def065",
+        "blob": "337215cfa9ea6c549de4494d4098a3057644eb00"
+      },
+      "remoteFingerprint": {
+        "statementCount": 3,
+        "normalizedMd5": "a82097808aa26e64042842f62118db24"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 3,
+          "byteLength": 2694,
+          "md5": "a82097808aa26e64042842f62118db24",
+          "sha256": "5fce22faddf7bb1761f74e40927e8b834299052bb1bcb7bf6cecca3718ff7183"
+        },
+        "operational": {
+          "statementCount": 3,
+          "byteLength": 2466,
+          "md5": "f1c4e609fbae9764c3f7fc0e46a8d15b",
+          "sha256": "bbd5918fb7aad319e4742f5a6b9f9a8b062b685f84747d3a061d07c46d276f11"
+        }
+      }
+    },
+    {
+      "version": "20260520120000",
+      "file": "20260520120000_seed_public_education_complexo_schools.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "281c8b6d1aa2adaa0f548376b0ac9500ac1efae3",
+        "blob": "99879603534ce7d02b6f19dad3b3400b781ad44d"
+      },
+      "remoteFingerprint": {
+        "statementCount": 17,
+        "normalizedMd5": "23d80c5a11241d5715aee137211d167e"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 17,
+          "byteLength": 30489,
+          "md5": "23d80c5a11241d5715aee137211d167e",
+          "sha256": "0827a3f4c5370b5273ac3b7e497d686f535c5a3fd89becc80080c9431546e406"
+        },
+        "operational": {
+          "statementCount": 17,
+          "byteLength": 29716,
+          "md5": "5ea2325d987f695695f5e91462d8eb98",
+          "sha256": "bb833b12340398a0b048b57a35bf278f9b3179c3fca7e179a14e87b774b52655"
+        }
+      }
+    },
+    {
+      "version": "20260419150002",
+      "file": "20260419150002_create_user_deletion_schedule.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "67ea68c70633b0c8a3c758df2df2a6485287f888",
+        "blob": "d1e69cfccc26e06393ad4143339f2353035e85a1"
+      },
+      "remoteFingerprint": {
+        "statementCount": 17,
+        "normalizedMd5": "2ff375b45c4a173e1f389497f971663e"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 17,
+          "byteLength": 4783,
+          "md5": "2ff375b45c4a173e1f389497f971663e",
+          "sha256": "df8e8393aeaedb7032885a65b13dad89c4b70269f65ff63cc767b053a65b2682"
+        },
+        "operational": {
+          "statementCount": 17,
+          "byteLength": 4226,
+          "md5": "9f11f172eed460bcece6ffe1cafb4bb0",
+          "sha256": "f54700e2d3dd58ac20897ccec868bdd06f1adf890b1e67853db56ce6ce7cf20d"
+        }
+      }
+    },
+    {
+      "version": "20260421000004",
+      "file": "20260421000004_migrate_legacy_subscriptions.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "9f1234bcd8337d650868246adc9a04a504c64751",
+        "blob": "8abdd7bc86733a2a3fedd76161f11215b23acdc2"
+      },
+      "remoteFingerprint": {
+        "statementCount": 4,
+        "normalizedMd5": "2e40652a87c691d07cd38cf7859eadc4"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 4,
+          "byteLength": 5802,
+          "md5": "2e40652a87c691d07cd38cf7859eadc4",
+          "sha256": "345e08491e93b888b58cda6e432aac5ce6f07b4f820e61fe2ab2e43934d4fc55"
+        },
+        "operational": {
+          "statementCount": 3,
+          "byteLength": 2480,
+          "md5": "ce7f52438319567b4291d2d9d52db799",
+          "sha256": "c9c8953b7a986db5e57a3089a0b8a3da3741cbc1e8b9ef034e96227e4d711bec"
+        }
+      }
+    },
+    {
+      "version": "20260421000005",
+      "file": "20260421000005_mark_legacy_tables_readonly.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "9f1234bcd8337d650868246adc9a04a504c64751",
+        "blob": "b0ecb22f888f1babebd2ae0896421cd52ba7113e"
+      },
+      "remoteFingerprint": {
+        "statementCount": 9,
+        "normalizedMd5": "5869bcc82bc95ed229ee3528b6c778de"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 9,
+          "byteLength": 8285,
+          "md5": "5869bcc82bc95ed229ee3528b6c778de",
+          "sha256": "ef1a0bf7c686e182cc5c45a910c809c272f1d16d8c0cf6842c726b0465bde429"
+        },
+        "operational": {
+          "statementCount": 8,
+          "byteLength": 3356,
+          "md5": "4c81b8d5e18b113d646c34f6e864d701",
+          "sha256": "bbd2b7610eea042f77cd2f454efef961426f6cd997d9f0f32f30d77492b8eb8b"
+        }
+      }
+    },
+    {
+      "version": "20260421120000",
+      "file": "20260421120000_reconcile_community_qa_schema.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "c435dd7c9445d00eed140658bfb888f5f283268c",
+        "blob": "b5e021111d3e67c759f4710394e101ef3a08954c"
+      },
+      "remoteFingerprint": {
+        "statementCount": 37,
+        "normalizedMd5": "262ff5c29303ba9332e5ba96cad84d7d"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 37,
+          "byteLength": 7421,
+          "md5": "262ff5c29303ba9332e5ba96cad84d7d",
+          "sha256": "810e2452035360a26b9829e28557c1d94bd4c7ef3d95d4ce5b0ad9a24ea57f8a"
+        },
+        "operational": {
+          "statementCount": 37,
+          "byteLength": 6493,
+          "md5": "a1bc5d8c5be7422225ba100302c0b229",
+          "sha256": "7593e0b287c7b95cec2c0c1ef9a0003e0601153d901ebf79048fc3daf98024f9"
+        }
+      }
+    },
+    {
+      "version": "20260423000000",
+      "file": "20260423000000_create_user_favorites_system.sql",
+      "provenanceClass": "CANONICAL_REMOTE_RECONSTRUCTION",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "TEXT_ARTIFACT_UNRECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_REMOTE_CANONICALIZATION",
+      "source": {
+        "evidenceClass": "REMOTE_EXACT_STATEMENTS",
+        "remoteTable": "supabase_migrations.schema_migrations",
+        "statementArrayComplete": true,
+        "note": "Canonical file rendered from the complete remote statement array, in ordinal order, without inferred SQL."
+      },
+      "remoteFingerprint": {
+        "statementCount": 22,
+        "normalizedMd5": "dc32b59a7aed6951b9e0fe50ef85c913"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 22,
+          "byteLength": 7528,
+          "md5": "dc32b59a7aed6951b9e0fe50ef85c913",
+          "sha256": "89e1a5355a39201fecff622cac7716e77ef854b03e8e5e6ccbeabd2c734cd933"
+        },
+        "operational": {
+          "statementCount": 22,
+          "byteLength": 6067,
+          "md5": "860b8d300ca9470eaac5e7b3b5e5486e",
+          "sha256": "5262473b2236a481f9e202fd6a3b50e763a48e7d9dbd87b88b4ce9f305d4c89d"
+        }
+      }
+    },
+    {
+      "version": "20260425000000",
+      "file": "20260425000000_create_public_business_snapshots_rpc.sql",
+      "provenanceClass": "CANONICAL_REMOTE_RECONSTRUCTION",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "TEXT_ARTIFACT_UNRECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_REMOTE_CANONICALIZATION",
+      "source": {
+        "evidenceClass": "REMOTE_EXACT_STATEMENTS",
+        "remoteTable": "supabase_migrations.schema_migrations",
+        "statementArrayComplete": true,
+        "note": "Canonical file rendered from the complete remote statement array, in ordinal order, without inferred SQL."
+      },
+      "remoteFingerprint": {
+        "statementCount": 6,
+        "normalizedMd5": "eb74d172cd684cd0e118f3533e9e17c8"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 6,
+          "byteLength": 24767,
+          "md5": "eb74d172cd684cd0e118f3533e9e17c8",
+          "sha256": "80c84b4bb7269eaccc1c9a73d9a126a4a3f46b790be26e40c037a75ea08672e6"
+        },
+        "operational": {
+          "statementCount": 6,
+          "byteLength": 24281,
+          "md5": "3fd430319a26316ed14ab1acc2586958",
+          "sha256": "ac24ee15c347432824b7f9a026895435372c4327d5031f1bb23fc95c569d88a1"
+        }
+      }
+    },
+    {
+      "version": "20260425030000",
+      "file": "20260425030000_enable_premium_link_pizzaria_bella_napoli.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "01ddabb806f24a309feae3579c79f93f37958dd5",
+        "blob": "4d73a88f8f3f2ff7e70a33e871be9f2c0d686e95"
+      },
+      "remoteFingerprint": {
+        "statementCount": 1,
+        "normalizedMd5": "58e5aede63c5b922e8b4cc955a71dc89"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 1,
+          "byteLength": 1036,
+          "md5": "58e5aede63c5b922e8b4cc955a71dc89",
+          "sha256": "3c430b8be72d84875bacadbdf5eca96840806a37f0d1b1f63bb7ce93c9e82f93"
+        },
+        "operational": {
+          "statementCount": 1,
+          "byteLength": 940,
+          "md5": "b91ec7d786c60d1208ac28cf3a4a0658",
+          "sha256": "1d1d76c4f3ee2b8cf027ecc05ae62bea5945c1d8e4f4ad6347b3b114dc7a4cb3"
+        }
+      }
+    },
+    {
+      "version": "20260425040000",
+      "file": "20260425040000_fix_reviews_rpc_is_verified.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "6ef969a71731eb2293e48bc79b8a671cdd518504",
+        "blob": "16014cf037153945b7316b6dcf224c11b7a5748d"
+      },
+      "remoteFingerprint": {
+        "statementCount": 35,
+        "normalizedMd5": "1fe61186c86925a8edd06c8877daf9d6"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 35,
+          "byteLength": 10089,
+          "md5": "1fe61186c86925a8edd06c8877daf9d6",
+          "sha256": "e41ffd9bb912ff489a59016fdc2c184d83f02170b7e29976f09485833758a043"
+        },
+        "operational": {
+          "statementCount": 35,
+          "byteLength": 8077,
+          "md5": "80f84c630c489eb0e24e06bdd780edc5",
+          "sha256": "2e5c1ad1650d5304b1a2f613f9fd89e4587f7458a4e35d8d2db30c55fb404ed3"
+        }
+      }
+    },
+    {
+      "version": "20260426010000",
+      "file": "20260426010000_add_pizza_extras_bella_napoli.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "765bac060919a319287fe173ade5cc33dcc852a9",
+        "blob": "ca35706b5929ba46d1a1494f432af2e9294fe669"
+      },
+      "remoteFingerprint": {
+        "statementCount": 1,
+        "normalizedMd5": "425c7ccb7633d9bbbc70213b1ec433aa"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 1,
+          "byteLength": 3590,
+          "md5": "425c7ccb7633d9bbbc70213b1ec433aa",
+          "sha256": "82edf3bcdaff3e2730702862d037e377f48bfe979527ec0e7150827d9d22a038"
+        },
+        "operational": {
+          "statementCount": 1,
+          "byteLength": 3154,
+          "md5": "558c71c4b45af4d44521cfb427f229a0",
+          "sha256": "5a0b13070d1010b5ea8b97bfb4a9b6b672fe99a2e2781dd5ac93d95dbc77e8cf"
+        }
+      }
+    },
+    {
+      "version": "20260426130000",
+      "file": "20260426130000_create_education_profiles.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "6cf8562ee3762d76af561ad737869a099e918d08",
+        "blob": "97454464dc382a3adb8b5231437e0db2b2b9db6d"
+      },
+      "remoteFingerprint": {
+        "statementCount": 15,
+        "normalizedMd5": "9e713647a6a0e04a999b97deabbd21d5"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 15,
+          "byteLength": 3535,
+          "md5": "9e713647a6a0e04a999b97deabbd21d5",
+          "sha256": "3329ac756c6494b0fb50f472aa74c7c087d362b17c2e29b86ea2e20b2d2ced0a"
+        },
+        "operational": {
+          "statementCount": 15,
+          "byteLength": 2645,
+          "md5": "2431e3cf9833465be00076adbd255527",
+          "sha256": "a84f4d9c018ac50280b73eea198eef6be38fdf08dfe2d2cd6fe5f9ee7667bedb"
+        }
+      }
+    },
+    {
+      "version": "20260428000001",
+      "file": "20260428000001_fix_education_profiles_fk.sql",
+      "provenanceClass": "CANONICAL_REMOTE_RECONSTRUCTION",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "TEXT_ARTIFACT_UNRECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_REMOTE_CANONICALIZATION",
+      "source": {
+        "evidenceClass": "REMOTE_EXACT_STATEMENTS",
+        "remoteTable": "supabase_migrations.schema_migrations",
+        "statementArrayComplete": true,
+        "note": "Canonical file rendered from the complete remote statement array, in ordinal order, without inferred SQL."
+      },
+      "remoteFingerprint": {
+        "statementCount": 5,
+        "normalizedMd5": "54593c2f7800b7e6af0949b903651602"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 5,
+          "byteLength": 1491,
+          "md5": "54593c2f7800b7e6af0949b903651602",
+          "sha256": "606513d7f9a215c94fc4dacb8922aa38c97c97fb7c464dbc1c067abe37269418"
+        },
+        "operational": {
+          "statementCount": 5,
+          "byteLength": 847,
+          "md5": "514a234e5672abc83f94dbd4f4c91d48",
+          "sha256": "830a6934d5228f035076211b2f54d0d46a36e4cb3fd4047108e6d242a06f5054"
+        }
+      }
+    },
+    {
+      "version": "20260428000002",
+      "file": "20260428000002_fix_education_profiles_fk_to_profiles.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "54e45decc710f9601f11235bfbe8e2c8f4c8cde7",
+        "blob": "b81607d042c6f3842f1fd24be2021f82ec6fadc4"
+      },
+      "remoteFingerprint": {
+        "statementCount": 5,
+        "normalizedMd5": "362aa1ce768841603ba80e3528ca8347"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 5,
+          "byteLength": 1446,
+          "md5": "362aa1ce768841603ba80e3528ca8347",
+          "sha256": "5b2ee90869662004eadf3fbce4825a937c241edc3c72d5f5e8c7f957b760f380"
+        },
+        "operational": {
+          "statementCount": 5,
+          "byteLength": 790,
+          "md5": "d667cb519852f62aeb0483fc13663952",
+          "sha256": "d508429ed6deab67e5528b4b45221b679f507f7c1e5be7889db9375faacc1489"
+        }
+      }
+    },
+    {
+      "version": "20260503010000",
+      "file": "20260503010000_create_public_search_views.sql",
+      "provenanceClass": "CANONICAL_REMOTE_RECONSTRUCTION",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "TEXT_ARTIFACT_UNRECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_REMOTE_CANONICALIZATION",
+      "source": {
+        "evidenceClass": "REMOTE_EXACT_STATEMENTS",
+        "remoteTable": "supabase_migrations.schema_migrations",
+        "statementArrayComplete": true,
+        "note": "Canonical file rendered from the complete remote statement array, in ordinal order, without inferred SQL."
+      },
+      "remoteFingerprint": {
+        "statementCount": 10,
+        "normalizedMd5": "e6e0db0e25d9e9d6976d56e0e15240e5"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 10,
+          "byteLength": 4598,
+          "md5": "e6e0db0e25d9e9d6976d56e0e15240e5",
+          "sha256": "8ea60f828e4a9b75f7bf2296cf302754aa52462ea434e2b09480fb26c82fa72c"
+        },
+        "operational": {
+          "statementCount": 9,
+          "byteLength": 2234,
+          "md5": "3ae0c91d5df785ad6efee62bd0ca2cd9",
+          "sha256": "6245ab8ec0c716cda292a0d59e4da512f30b5c1dbe69bbb377c87c8da1ec8487"
+        }
+      }
+    },
+    {
+      "version": "20260514094500",
+      "file": "20260514094500_create_territory_communities.sql",
+      "provenanceClass": "CANONICAL_REMOTE_RECONSTRUCTION",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "TEXT_ARTIFACT_UNRECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_REMOTE_CANONICALIZATION",
+      "source": {
+        "evidenceClass": "REMOTE_EXACT_STATEMENTS",
+        "remoteTable": "supabase_migrations.schema_migrations",
+        "statementArrayComplete": true,
+        "note": "Canonical file rendered from the complete remote statement array, in ordinal order, without inferred SQL."
+      },
+      "remoteFingerprint": {
+        "statementCount": 12,
+        "normalizedMd5": "d9e2519d651f6283868118f3531c3e7c"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 12,
+          "byteLength": 4818,
+          "md5": "d9e2519d651f6283868118f3531c3e7c",
+          "sha256": "25d4ff0c58d31bfcf584c38f7334988a93a365e404cbbfcbaab34066036e8de0"
+        },
+        "operational": {
+          "statementCount": 12,
+          "byteLength": 4665,
+          "md5": "4bdd369ce2d9c333f29266f4dc772e56",
+          "sha256": "4bb44ca72fb3bfcb50ceb2cad992e5c344176dafcf4099504f1d9d5f5a2b25ce"
+        }
+      }
+    },
+    {
+      "version": "20260514103000",
+      "file": "20260514103000_seed_national_cities_ibge.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "d155bd4531d6fb8e62285450e7d9a978e2aaf5c1",
+        "blob": "8321bc00c9a8dc1f8dc777d191edc6f46d340555"
+      },
+      "remoteFingerprint": {
+        "statementCount": 3,
+        "normalizedMd5": "93a65a4f26cba076b694a5c6d5f958f8"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 3,
+          "byteLength": 312023,
+          "md5": "93a65a4f26cba076b694a5c6d5f958f8",
+          "sha256": "e9a016a38a0c73531ccfd4083d3322f3f3c0ca1ce28634a6062f9c72f1d06616"
+        },
+        "operational": {
+          "statementCount": 3,
+          "byteLength": 311859,
+          "md5": "8cdbc0ea34c80123094f2d00808531f8",
+          "sha256": "6d0477966b37bd4fa149316b9a0836276e297b9b16528e01901ae78689f872fb"
+        }
+      }
+    },
+    {
+      "version": "20260515113000",
+      "file": "20260515113000_fix_events_legacy_encoding.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_EXACT_GIT_RESTORATION",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "df9eee78581b37e23018805a778f2b3e8f41e2c2",
+        "blob": "36ebe92284ef80026eca76693c1d9c0eb9faffa9"
+      },
+      "remoteFingerprint": {
+        "statementCount": 5,
+        "normalizedMd5": "5a426ef985d873120712b16dfd2c7e29"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 5,
+          "byteLength": 5014,
+          "md5": "5a426ef985d873120712b16dfd2c7e29",
+          "sha256": "8dd3f7c4c5163540f76f3e55bb8e0d7fe14b765b70ded8352a892e59a85eb03e"
+        },
+        "operational": {
+          "statementCount": 5,
+          "byteLength": 5014,
+          "md5": "5a426ef985d873120712b16dfd2c7e29",
+          "sha256": "8dd3f7c4c5163540f76f3e55bb8e0d7fe14b765b70ded8352a892e59a85eb03e"
+        }
+      }
+    },
+    {
+      "version": "20260703232958",
+      "file": "20260703232958_revoke_anon_delivery_rpc_execute.sql",
+      "provenanceClass": "TEXT_ARTIFACT_UNRECOVERED",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "TEXT_ARTIFACT_UNRECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_TEXT_ARTIFACT_DOCUMENTATION",
+      "source": {
+        "evidenceClass": "REMOTE_EXACT_STATEMENTS",
+        "remoteTable": "supabase_migrations.schema_migrations",
+        "statementArrayComplete": true,
+        "note": "Local and remote operational statements are equivalent; only comments differ and the original text artifact was not recovered."
+      },
+      "remoteFingerprint": {
+        "statementCount": 37,
+        "normalizedMd5": "7e712a0f8fc8a9292a230d1911522742"
+      },
+      "remoteOperationalFingerprint": {
+        "statementCount": 37,
+        "byteLength": 4598,
+        "md5": "f743d389334b59ebe8c8d9dd829e0632",
+        "sha256": "5dcfaf8afd63f5c32269c8bf443f8f1854f6b3de2e7b6351f20d481ec9c4961a"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 37,
+          "byteLength": 5190,
+          "md5": "004d0ea2eb3ba493cf67fdc19a223750",
+          "sha256": "e00ae0400f493af05978a3ed36e2c4eae6030e8c6e7dd502adc478972cd73aa2"
+        },
+        "operational": {
+          "statementCount": 37,
+          "byteLength": 4598,
+          "md5": "f743d389334b59ebe8c8d9dd829e0632",
+          "sha256": "5dcfaf8afd63f5c32269c8bf443f8f1854f6b3de2e7b6351f20d481ec9c4961a"
+        }
+      }
+    },
+    {
+      "version": "20260707124929",
+      "file": "20260707124929_revoke_public_postgis_estimatedextent_execute.sql",
+      "provenanceClass": "CANONICAL_REMOTE_RECONSTRUCTION",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "TEXT_ARTIFACT_UNRECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_REMOTE_CANONICALIZATION",
+      "source": {
+        "evidenceClass": "REMOTE_EXACT_STATEMENTS",
+        "remoteTable": "supabase_migrations.schema_migrations",
+        "statementArrayComplete": true,
+        "note": "Canonical file rendered from the complete remote statement array, in ordinal order, without inferred SQL."
+      },
+      "remoteFingerprint": {
+        "statementCount": 12,
+        "normalizedMd5": "7848f909cf296e01f142227bf67839da"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 12,
+          "byteLength": 1225,
+          "md5": "7848f909cf296e01f142227bf67839da",
+          "sha256": "7054215b0da949281e1c3934e6b90b76bc0c70f4554473005c30f1c36d7311a3"
+        },
+        "operational": {
+          "statementCount": 12,
+          "byteLength": 995,
+          "md5": "eec5b9f16412b886a2a709e8d69b88d4",
+          "sha256": "2be6beb9b4902b5f761758c49503182975890cc9bf6d1de3f96ec8aed74e3dfc"
+        }
+      }
+    },
+    {
+      "version": "20260717130000",
+      "file": "20260717130000_consolidate_community_post_media_assets.sql",
+      "provenanceClass": "CANONICAL_REMOTE_RECONSTRUCTION",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "TEXT_ARTIFACT_UNRECOVERED",
+      "trackingStatus": "TRACKED",
+      "checkpointGroup": "HISTORICAL_REMOTE_CANONICALIZATION",
+      "source": {
+        "evidenceClass": "REMOTE_EXACT_STATEMENTS",
+        "remoteTable": "supabase_migrations.schema_migrations",
+        "statementArrayComplete": true,
+        "note": "Canonical file rendered from the complete remote statement array, in ordinal order, without inferred SQL."
+      },
+      "remoteFingerprint": {
+        "statementCount": 27,
+        "normalizedMd5": "af7ee1c56bce6a119e0a6585db58e2fb"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 27,
+          "byteLength": 16428,
+          "md5": "af7ee1c56bce6a119e0a6585db58e2fb",
+          "sha256": "cc02cd0dfb15e70f0ff74853790aa5f73cebb9ef7629447caa7c5b9143c681d0"
+        },
+        "operational": {
+          "statementCount": 27,
+          "byteLength": 15879,
+          "md5": "06fe7194e069250a8ca0400dd4c4621d",
+          "sha256": "82326f26aa742b5490932eabbef22634bfa51156be7c927f5c8e0f788cffe9d7"
+        }
+      }
+    },
+    {
+      "version": "20260718180000",
+      "file": "20260718180000_consolidate_professional_review_command.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "READY_FOR_GIT",
+      "checkpointGroup": "HISTORICAL_UNTRACKED_RECOVERY",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "a90c43859d61e05ae3444c9250f27167bfce8116",
+        "blob": "42359f3c0be9d058abdfd3bd4fa3626f369a5b92"
+      },
+      "remoteFingerprint": {
+        "statementCount": 8,
+        "normalizedMd5": "49f882b169f884ccd72b1872e74b38c0"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 8,
+          "byteLength": 3462,
+          "md5": "49f882b169f884ccd72b1872e74b38c0",
+          "sha256": "76e25f7f80d7edeec36e473b4acff5d749588c92baa75dd6c54c6b1ea03e9f25"
+        },
+        "operational": {
+          "statementCount": 8,
+          "byteLength": 3011,
+          "md5": "888bcdab0fdeac9a906b2906278cefb5",
+          "sha256": "7a5ece18aa9a39daceca8e11481879a440c7983b7c24d04773c0efddc15ab1f7"
+        }
+      }
+    },
+    {
+      "version": "20260718181000",
+      "file": "20260718181000_extract_professional_review_core_command.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "READY_FOR_GIT",
+      "checkpointGroup": "HISTORICAL_UNTRACKED_RECOVERY",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "a90c43859d61e05ae3444c9250f27167bfce8116",
+        "blob": "fd230139a48d5e99975dadfad66e4140a00ce149"
+      },
+      "remoteFingerprint": {
+        "statementCount": 18,
+        "normalizedMd5": "b6e1f93a38cb3420bba3fe0813e4cd4a"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 18,
+          "byteLength": 9237,
+          "md5": "b6e1f93a38cb3420bba3fe0813e4cd4a",
+          "sha256": "3528fe0f2ad18adfd53098c84903663754c6e58554c48c16325bbd85627a9f15"
+        },
+        "operational": {
+          "statementCount": 18,
+          "byteLength": 8703,
+          "md5": "c3c8375f0a4c53defc2c5f4a20c6febe",
+          "sha256": "d9a130521bc0333a2f5a4e6c8d75c93f8893e2fe3cf8c206616012cfcd62f9a9"
+        }
+      }
+    },
+    {
+      "version": "20260718210000",
+      "file": "20260718210000_enforce_private_alpha_access.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "READY_FOR_GIT",
+      "checkpointGroup": "HISTORICAL_UNTRACKED_RECOVERY",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "1fad6460820513659ce029370f0e18e67889ae28",
+        "blob": "0e21b61b6e84d4b90ce91137fb5d3e46bae5b247"
+      },
+      "remoteFingerprint": {
+        "statementCount": 25,
+        "normalizedMd5": "2effa4f5076cabeb43692967ff4ca9a2"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 25,
+          "byteLength": 7493,
+          "md5": "2effa4f5076cabeb43692967ff4ca9a2",
+          "sha256": "43ac0c0a3ce663ebd42f99f69a8510759e51ea48881d927be17d085dd91f26e1"
+        },
+        "operational": {
+          "statementCount": 25,
+          "byteLength": 7265,
+          "md5": "72cd849af9deaa2ccdd8856c6deff53a",
+          "sha256": "6b9c3452f311362eb15bd366a6d55e4bf9cee328ea704a8cb19af732a206047f"
+        }
+      }
+    },
+    {
+      "version": "20260718211000",
+      "file": "20260718211000_require_alpha_invite_for_all_auth_identities.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "READY_FOR_GIT",
+      "checkpointGroup": "HISTORICAL_UNTRACKED_RECOVERY",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "1fad6460820513659ce029370f0e18e67889ae28",
+        "blob": "9cd6998cd14d184c8d391c2860364ee8c55d9041"
+      },
+      "remoteFingerprint": {
+        "statementCount": 5,
+        "normalizedMd5": "a61ed71d5eb08d27ac8d52e3b4e32923"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 5,
+          "byteLength": 1640,
+          "md5": "a61ed71d5eb08d27ac8d52e3b4e32923",
+          "sha256": "2be41aef94486cb0ceee1d67d4207e61b29d7418ddf4709745f5bfc28a7fe7c2"
+        },
+        "operational": {
+          "statementCount": 5,
+          "byteLength": 1404,
+          "md5": "b0a16c30484e34bcb3ad42dd191b3331",
+          "sha256": "13b72904b808e4c5ee1aed5456333da18bc33e8bba6dfcbc1a530bd991477ba6"
+        }
+      }
+    },
+    {
+      "version": "20260718212000",
+      "file": "20260718212000_add_alpha_operational_invite_cleanup.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "READY_FOR_GIT",
+      "checkpointGroup": "HISTORICAL_UNTRACKED_RECOVERY",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "1fad6460820513659ce029370f0e18e67889ae28",
+        "blob": "91ae9645968ebce77bcd3d7fc89678b2f41f76e2"
+      },
+      "remoteFingerprint": {
+        "statementCount": 6,
+        "normalizedMd5": "4057e2d0be56971256611c2c18071fcf"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 6,
+          "byteLength": 1402,
+          "md5": "4057e2d0be56971256611c2c18071fcf",
+          "sha256": "de6e6783948d328b4b0e6a26881ca5c429b1dd9bae5c6f4b600cfae74f2b5655"
+        },
+        "operational": {
+          "statementCount": 6,
+          "byteLength": 1207,
+          "md5": "579d96065d6debf6fac7b39e2026148a",
+          "sha256": "17091d38168f22922501940b123d6f3003bf31908e39414e5aa43837a8fab6b8"
+        }
+      }
+    },
+    {
+      "version": "20260718230000",
+      "file": "20260718230000_add_private_alpha_admission_control.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "READY_FOR_GIT",
+      "checkpointGroup": "HISTORICAL_UNTRACKED_RECOVERY",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "caf45f4f58d2c4d2add2afc13dee5a650a5cbda7",
+        "blob": "56af47499e12efe730f0a8cb0624a69290dc6839"
+      },
+      "remoteFingerprint": {
+        "statementCount": 24,
+        "normalizedMd5": "8295ec13d94d1c649471f1ca3e1ea22f"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 24,
+          "byteLength": 6221,
+          "md5": "8295ec13d94d1c649471f1ca3e1ea22f",
+          "sha256": "71cc8d221c39671facbca53ebaa33e08a3459b1521add0760b8df5a8ba826921"
+        },
+        "operational": {
+          "statementCount": 24,
+          "byteLength": 6070,
+          "md5": "df593ebc981f11cfff11409f65b697b0",
+          "sha256": "d59055345ab77775647ac0dc4ed949a020c85ee1bb94879fe1664a9905cfe011"
+        }
+      }
+    },
+    {
+      "version": "20260719010000",
+      "file": "20260719010000_list_admin_user_accounts.sql",
+      "provenanceClass": "ORIGINAL_GIT_EXACT",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "ORIGINAL_TEXT_RECOVERED",
+      "trackingStatus": "READY_FOR_GIT",
+      "checkpointGroup": "HISTORICAL_UNTRACKED_RECOVERY",
+      "source": {
+        "evidenceClass": "ORIGINAL_GIT_EXACT",
+        "commit": "aad63fe7635db2e7354cac61b69020d26de6b7a8",
+        "blob": "51f839de2b3c35f983432d1f9708efd0b94b9f94"
+      },
+      "remoteFingerprint": {
+        "statementCount": 5,
+        "normalizedMd5": "1f5c1050f62c0930bb465ec027215e4f"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 5,
+          "byteLength": 4589,
+          "md5": "1f5c1050f62c0930bb465ec027215e4f",
+          "sha256": "381a6f93ce31e048b88d4a09161ae50b0d16bfc7d3f798d4f6a321caa2e47926"
+        },
+        "operational": {
+          "statementCount": 5,
+          "byteLength": 4396,
+          "md5": "00c567629cc895e09d9fda04a9392740",
+          "sha256": "ef02813ab997fae33d8fce59ddeda6cf2dfc87098d4235259eee2121a64b8781"
+        }
+      }
+    },
+    {
+      "version": "20260719120000",
+      "file": "20260719120000_optimize_rls_auth_initplan.sql",
+      "provenanceClass": "REMOTE_EXACT_STATEMENTS",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "REMOTE_STATEMENT_TEXT_EXACT",
+      "trackingStatus": "READY_FOR_GIT",
+      "checkpointGroup": "HISTORICAL_UNTRACKED_RECOVERY",
+      "source": {
+        "evidenceClass": "REMOTE_EXACT_STATEMENTS",
+        "remoteTable": "supabase_migrations.schema_migrations",
+        "statementArrayComplete": true,
+        "note": "The existing local file matches the complete normalized remote statement array; no exact Git blob was found."
+      },
+      "remoteFingerprint": {
+        "statementCount": 379,
+        "normalizedMd5": "8ee7e4bd179ac1d18c5b73c147e15edb"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 379,
+          "byteLength": 106064,
+          "md5": "8ee7e4bd179ac1d18c5b73c147e15edb",
+          "sha256": "4f336f583df0f4b261061a7c936c3b82cc07f99cba9a2c0d952d81b237823357"
+        },
+        "operational": {
+          "statementCount": 379,
+          "byteLength": 105793,
+          "md5": "7554c683f17dcacc81be70e43d009c60",
+          "sha256": "d7546b6f8a0f7f56769cd449e90ad7537374ab0f555286fa6a2693b859e5a60f"
+        }
+      }
+    },
+    {
+      "version": "20260719121000",
+      "file": "20260719121000_drop_duplicate_indexes.sql",
+      "provenanceClass": "REMOTE_EXACT_STATEMENTS",
+      "remotePresence": true,
+      "operationalStatus": "STATEMENT_EXACT",
+      "textArtifactStatus": "REMOTE_STATEMENT_TEXT_EXACT",
+      "trackingStatus": "READY_FOR_GIT",
+      "checkpointGroup": "HISTORICAL_UNTRACKED_RECOVERY",
+      "source": {
+        "evidenceClass": "REMOTE_EXACT_STATEMENTS",
+        "remoteTable": "supabase_migrations.schema_migrations",
+        "statementArrayComplete": true,
+        "note": "The existing local file matches the complete normalized remote statement array; no exact Git blob was found."
+      },
+      "remoteFingerprint": {
+        "statementCount": 23,
+        "normalizedMd5": "57aaec205001753c13be761fd03771dc"
+      },
+      "localFingerprint": {
+        "raw": {
+          "statementCount": 23,
+          "byteLength": 1430,
+          "md5": "57aaec205001753c13be761fd03771dc",
+          "sha256": "5dc9654b9963e2eb1b9935280d57b3337aff01d65d47a1be70c9f2b80f4fe62a"
+        },
+        "operational": {
+          "statementCount": 23,
+          "byteLength": 1249,
+          "md5": "3afb41fbcac9596541a7fd28d612331d",
+          "sha256": "0af717e312b557b063a43c42bc601bef6f910e78a2fbe652b8aa4c222acb5432"
+        }
+      }
+    }
+  ],
+  "localPendingNew": [
+    "20260719122000_reconcile_canonical_salvador.sql",
+    "20260720100000_seed_salvador_neighborhoods_and_top15_communities.sql",
+    "20260809184409_create_authoritative_community_interest_registration.sql",
+    "20260810151941_reconcile_community_poll_additive_compatibility.sql"
+  ],
+  "checkpointPlan": {
+    "HISTORICAL_REMOTE_CANONICALIZATION": [
+      "20260413100000_create_business_subscriptions.sql",
+      "20260416110000_create_vagas.sql",
+      "20260423000000_create_user_favorites_system.sql",
+      "20260425000000_create_public_business_snapshots_rpc.sql",
+      "20260428000001_fix_education_profiles_fk.sql",
+      "20260503010000_create_public_search_views.sql",
+      "20260514094500_create_territory_communities.sql",
+      "20260707124929_revoke_public_postgis_estimatedextent_execute.sql",
+      "20260717130000_consolidate_community_post_media_assets.sql"
+    ],
+    "HISTORICAL_EXACT_GIT_RESTORATION": [
+      "20260413100002_migrate_gastronomy_to_business_subscriptions.sql",
+      "20260415000000_create_activity_feed_system.sql",
+      "20260416120000_seed_vagas.sql",
+      "20260416130000_fix_vagas_location.sql",
+      "20260416140000_fix_vagas_to_correct_salvador.sql",
+      "20260416150000_add_vagas_missing_fields.sql",
+      "20260416190000_migrate_vaga_status_enum.sql",
+      "20260418020000_create_locations_system.sql",
+      "20260418040000_create_gastronomy_domain.sql",
+      "20260418050000_create_classifieds_professional_domain.sql",
+      "20260418070000_create_mobility_domain.sql",
+      "20260419000001_create_performance_indexes.sql",
+      "20260419140000_community_alerts_territorial_integration.sql",
+      "20260419141000_update_rpc_and_view.sql",
+      "20260419150002_create_user_deletion_schedule.sql",
+      "20260421000004_migrate_legacy_subscriptions.sql",
+      "20260421000005_mark_legacy_tables_readonly.sql",
+      "20260421120000_reconcile_community_qa_schema.sql",
+      "20260425030000_enable_premium_link_pizzaria_bella_napoli.sql",
+      "20260425040000_fix_reviews_rpc_is_verified.sql",
+      "20260426010000_add_pizza_extras_bella_napoli.sql",
+      "20260426130000_create_education_profiles.sql",
+      "20260428000002_fix_education_profiles_fk_to_profiles.sql",
+      "20260514103000_seed_national_cities_ibge.sql",
+      "20260515113000_fix_events_legacy_encoding.sql",
+      "20260520120000_seed_public_education_complexo_schools.sql"
+    ],
+    "HISTORICAL_TEXT_ARTIFACT_DOCUMENTATION": [
+      "20260703232958_revoke_anon_delivery_rpc_execute.sql"
+    ],
+    "HISTORICAL_UNTRACKED_RECOVERY": [
+      "20260718180000_consolidate_professional_review_command.sql",
+      "20260718181000_extract_professional_review_core_command.sql",
+      "20260718210000_enforce_private_alpha_access.sql",
+      "20260718211000_require_alpha_invite_for_all_auth_identities.sql",
+      "20260718212000_add_alpha_operational_invite_cleanup.sql",
+      "20260718230000_add_private_alpha_admission_control.sql",
+      "20260719010000_list_admin_user_accounts.sql",
+      "20260719120000_optimize_rls_auth_initplan.sql",
+      "20260719121000_drop_duplicate_indexes.sql"
+    ],
+    "LOCAL_PENDING_NEW": [
+      "20260719122000_reconcile_canonical_salvador.sql",
+      "20260720100000_seed_salvador_neighborhoods_and_top15_communities.sql",
+      "20260809184409_create_authoritative_community_interest_registration.sql",
+      "20260810151941_reconcile_community_poll_additive_compatibility.sql"
+    ],
+    "POLL_VOTES_RESOLUTION": "UNRESOLVED_OUTSIDE_THIS_TASK"
+  }
+}

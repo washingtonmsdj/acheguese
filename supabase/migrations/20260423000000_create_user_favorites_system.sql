@@ -1,7 +1,7 @@
 -- ============================================================================
 -- USER FAVORITES - Sistema de Favoritos de Estabelecimentos
 -- ============================================================================
--- Migração consolidada no histórico linear ativo:
+-- Migração consolidada das migrations_old:
 --   20260412000002_add_user_favorites.sql
 --   20260412000003_update_favorites_with_geopath.sql
 -- ============================================================================
@@ -50,6 +50,7 @@ END $$;
 ALTER TABLE user_favorite_businesses ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users manage own favorites" ON user_favorite_businesses;
+
 CREATE POLICY "Users manage own favorites"
   ON user_favorite_businesses FOR ALL
   TO authenticated
@@ -84,6 +85,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS trigger_update_business_favorites_count ON user_favorite_businesses;
+
 CREATE TRIGGER trigger_update_business_favorites_count
   AFTER INSERT OR DELETE ON user_favorite_businesses
   FOR EACH ROW
@@ -125,10 +127,10 @@ BEGIN
   SELECT
     ufb.id                AS favorite_id,
     bd.id                 AS business_id,
-    bd.business_name      AS business_name,
+    bd.name               AS business_name,
     bd.slug               AS business_slug,
     bd.description        AS business_description,
-    NULLIF(bd.metadata ->> 'banner_url', '') AS business_banner_url,
+    bd.banner_url         AS business_banner_url,
     bd.rating             AS business_rating,
     bd.total_reviews      AS business_total_reviews,
     bd.is_verified        AS business_is_verified,
@@ -215,6 +217,9 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- ============================================================================
 
 COMMENT ON TABLE user_favorite_businesses IS 'Favoritos dos usuários — estabelecimentos salvos';
+
 COMMENT ON FUNCTION get_user_favorite_businesses IS 'Retorna favoritos do usuário com geographic_path para construção de URLs canônicas';
+
 COMMENT ON FUNCTION is_business_favorited IS 'Verifica se negócio está nos favoritos do usuário';
+
 COMMENT ON FUNCTION toggle_business_favorite IS 'Adiciona ou remove favorito (toggle). Retorna TRUE se adicionou, FALSE se removou';

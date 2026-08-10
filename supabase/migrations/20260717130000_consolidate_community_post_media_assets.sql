@@ -1,7 +1,6 @@
 -- Move Community posts and lost-and-found images to the canonical MediaAsset
--- lifecycle. The fail-closed preflight requires the legacy bucket to be empty
--- and its browser writers are removed here; bucket deletion uses the supported
--- Storage API.
+-- lifecycle. The legacy bucket is emptied by the fail-closed preflight and its
+-- browser writers are removed here; bucket deletion uses the supported API.
 
 BEGIN;
 
@@ -28,6 +27,7 @@ END $$;
 
 ALTER TABLE public.media_asset_links
   DROP CONSTRAINT IF EXISTS media_asset_links_aggregate_type_check;
+
 ALTER TABLE public.media_asset_links
   ADD CONSTRAINT media_asset_links_aggregate_type_check CHECK (
     aggregate_type IN (
@@ -455,6 +455,7 @@ END;
 $$;
 
 DROP TRIGGER IF EXISTS posts_sync_media_asset_links ON public.posts;
+
 CREATE TRIGGER posts_sync_media_asset_links
   AFTER INSERT OR UPDATE OF images, author_profile_id OR DELETE
   ON public.posts
@@ -462,32 +463,43 @@ CREATE TRIGGER posts_sync_media_asset_links
 
 DROP TRIGGER IF EXISTS lost_found_posts_sync_media_asset_links
   ON public.lost_found_posts;
+
 CREATE TRIGGER lost_found_posts_sync_media_asset_links
   AFTER INSERT OR UPDATE OF imagens, autor_id OR DELETE
   ON public.lost_found_posts
   FOR EACH ROW EXECUTE FUNCTION private.sync_lost_found_media_asset_links();
 
 DROP POLICY IF EXISTS "Post images are publicly accessible" ON storage.objects;
+
 DROP POLICY IF EXISTS "Authenticated users can upload post images" ON storage.objects;
+
 DROP POLICY IF EXISTS "Users can upload their own post images" ON storage.objects;
+
 DROP POLICY IF EXISTS "Users can delete their post images" ON storage.objects;
+
 DROP POLICY IF EXISTS "Users can delete their own post images" ON storage.objects;
+
 DROP POLICY IF EXISTS post_images_owner_insert ON storage.objects;
+
 DROP POLICY IF EXISTS post_images_owner_delete ON storage.objects;
 
 DROP FUNCTION IF EXISTS private.can_upload_owned_post_image(UUID);
 
 REVOKE ALL ON FUNCTION private.guard_community_post_write()
   FROM PUBLIC, anon, authenticated;
+
 REVOKE ALL ON FUNCTION private.sync_post_media_asset_links()
   FROM PUBLIC, anon, authenticated;
+
 REVOKE ALL ON FUNCTION private.guard_lost_found_post_write()
   FROM PUBLIC, anon, authenticated;
+
 REVOKE ALL ON FUNCTION private.sync_lost_found_media_asset_links()
   FROM PUBLIC, anon, authenticated;
 
 COMMENT ON FUNCTION private.sync_post_media_asset_links() IS
   'Maintains canonical MediaAsset lifecycle links for Community post images.';
+
 COMMENT ON FUNCTION private.sync_lost_found_media_asset_links() IS
   'Maintains canonical MediaAsset lifecycle links for lost-and-found images.';
 

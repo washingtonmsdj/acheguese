@@ -1,4 +1,5 @@
--- Enable the premium short link for pizzaria-bella-napoli.
+-- HOTFIX: habilita link curto premium para teste da pizzaria-bella-napoli
+-- Data: 2026-04-25
 
 DO $$
 DECLARE
@@ -15,7 +16,7 @@ BEGIN
   LIMIT 1;
 
   IF v_business_id IS NULL THEN
-    RAISE EXCEPTION 'business_data not found for slug %', v_target_slug;
+    RAISE EXCEPTION 'business_data não encontrado para slug %', v_target_slug;
   END IF;
 
   UPDATE business_data

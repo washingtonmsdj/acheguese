@@ -8,7 +8,7 @@
 -- 1. VIEW PÚBLICA PARA BUSCA DE EMPRESAS
 -- ============================================================================
 
-CREATE OR REPLACE VIEW public.public_business_search AS
+CREATE OR REPLACE VIEW public_business_search AS
 SELECT 
   bd.id,
   bd.profile_id,
@@ -51,7 +51,7 @@ COMMENT ON VIEW public_business_search IS
 -- 2. VIEW PÚBLICA PARA BUSCA DE PROFISSIONAIS
 -- ============================================================================
 
-CREATE OR REPLACE VIEW public.public_professional_search AS
+CREATE OR REPLACE VIEW public_professional_search AS
 SELECT 
   pd.id,
   pd.profile_id,
@@ -92,6 +92,7 @@ COMMENT ON VIEW public_professional_search IS
 -- ============================================================================
 
 GRANT SELECT ON public_business_search TO anon, authenticated;
+
 GRANT SELECT ON public_professional_search TO anon, authenticated;
 
 -- ============================================================================

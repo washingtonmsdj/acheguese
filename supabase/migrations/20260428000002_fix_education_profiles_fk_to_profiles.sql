@@ -1,7 +1,7 @@
 -- ============================================================================
 -- MIGRATION: Corrigir FK de education_profiles para referenciar profiles(id)
 -- ============================================================================
--- O código usa o profile_id (da URL /central/empresas/:businessId) como
+-- O código usa o profile_id (da URL /perfil/empresas/:businessId) como
 -- business_id no education_profiles. A FK deve referenciar profiles(id),
 -- não business_data(id).
 -- ============================================================================

@@ -84,8 +84,8 @@ CREATE TABLE IF NOT EXISTS question_answers (
   content TEXT NOT NULL,
   likes_count INTEGER NOT NULL DEFAULT 0 CHECK (likes_count >= 0),
   is_best_answer BOOLEAN NOT NULL DEFAULT false,
-  professional_id UUID NULL REFERENCES professional_data(id) ON DELETE SET NULL,
-  business_id UUID NULL REFERENCES business_data(id) ON DELETE SET NULL,
+  professional_id UUID NULL REFERENCES professionals(id) ON DELETE SET NULL,
+  business_id UUID NULL REFERENCES businesses(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

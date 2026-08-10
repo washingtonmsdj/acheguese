@@ -15,9 +15,13 @@
 -- ─────────────────────────────────────────────────────────────────────────
 
 CREATE TYPE vaga_status AS ENUM ('ativa', 'pausada', 'encerrada', 'preenchida');
+
 CREATE TYPE vaga_contrato AS ENUM ('CLT', 'PJ', 'Temporário', 'Estágio', 'Freelance');
+
 CREATE TYPE vaga_modalidade AS ENUM ('Presencial', 'Remoto', 'Híbrido');
+
 CREATE TYPE vaga_nivel AS ENUM ('Júnior', 'Pleno', 'Sênior', 'Especialista');
+
 CREATE TYPE vaga_urgencia AS ENUM ('normal', 'urgente');
 
 -- ─────────────────────────────────────────────────────────────────────────
@@ -30,9 +34,7 @@ CREATE TABLE IF NOT EXISTS vagas (
   -- Identificação
   titulo TEXT NOT NULL,
   empresa TEXT NOT NULL,
-  empresa_logo TEXT, -- URL do logo da empresa
   descricao TEXT NOT NULL,
-  categoria TEXT, -- Categoria da vaga (ex: "tecnologia", "saude", etc)
   
   -- Localização (SSOT territorial)
   location_id UUID NOT NULL REFERENCES locations(id) ON DELETE CASCADE,
@@ -60,7 +62,6 @@ CREATE TABLE IF NOT EXISTS vagas (
   status vaga_status NOT NULL DEFAULT 'ativa',
   urgencia vaga_urgencia NOT NULL DEFAULT 'normal',
   destaque BOOLEAN NOT NULL DEFAULT false,
-  vagas_quantidade INTEGER DEFAULT 1, -- Número de vagas disponíveis
   
   -- Metadata
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -146,10 +147,15 @@ CREATE TRIGGER set_vagas_updated_at
 -- ─────────────────────────────────────────────────────────────────────────
 
 COMMENT ON TABLE vagas IS 'SSOT: Vagas de emprego centralizadas';
+
 COMMENT ON COLUMN vagas.location_id IS 'Referência territorial SSOT';
+
 COMMENT ON COLUMN vagas.salario_min IS 'Salário mínimo em centavos';
+
 COMMENT ON COLUMN vagas.salario_max IS 'Salário máximo em centavos';
+
 COMMENT ON COLUMN vagas.tags IS 'Tags para busca e categorização';
+
 COMMENT ON COLUMN vagas.expires_at IS 'Data de expiração automática da vaga';
 
 -- ══════════════════════════════════════════════════════════════════════════

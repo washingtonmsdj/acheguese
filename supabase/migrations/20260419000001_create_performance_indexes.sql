@@ -13,8 +13,8 @@
 
 -- Index para buscar notificações não lidas por usuário
 CREATE INDEX IF NOT EXISTS idx_notifications_user_unread 
-ON notifications(user_id, read)
-WHERE read = false;
+ON notifications(user_id, is_read) 
+WHERE is_read = false;
 
 -- Index para buscar notificações por usuário ordenadas por data
 CREATE INDEX IF NOT EXISTS idx_notifications_user_created 

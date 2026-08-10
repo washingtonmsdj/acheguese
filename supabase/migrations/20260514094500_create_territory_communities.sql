@@ -44,6 +44,7 @@ CREATE INDEX IF NOT EXISTS idx_territory_communities_territory
   ON territory_communities (territory_type, territory_id);
 
 DROP TRIGGER IF EXISTS update_territory_communities_updated_at ON territory_communities;
+
 CREATE TRIGGER update_territory_communities_updated_at
   BEFORE UPDATE ON territory_communities
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -51,6 +52,7 @@ CREATE TRIGGER update_territory_communities_updated_at
 ALTER TABLE territory_communities ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "territory_communities_public_select" ON territory_communities;
+
 CREATE POLICY "territory_communities_public_select"
   ON territory_communities FOR SELECT
   TO anon, authenticated
@@ -110,7 +112,6 @@ SET
   is_featured = EXCLUDED.is_featured,
   sort_order = EXCLUDED.sort_order,
   updated_at = now();
-
 INSERT INTO territory_communities (
   name,
   slug,
@@ -136,10 +137,10 @@ SELECT
   d.id,
   'coming_soon',
   'Achegue-se Pituba esta chegando',
-  'Em breve, moradores, comercios, servicos e oportunidades da Pituba em um so lugar.',
-  'Cadastre seu interesse e indique um comercio da Pituba.',
-  'Achegue-se Pituba esta chegando',
-  'A proxima comunidade planejada do Achegue-se em Salvador.',
+  'Em breve, uma comunidade digital para moradores, comercios, servicos e oportunidades da Pituba.',
+  'Cadastre seu interesse para ser avisado e indique comercios da regiao.',
+  'A comunidade da Pituba esta chegando',
+  'Cadastre seu interesse para ser avisado.',
   'Cadastrar interesse',
   'Quero minha empresa na Pituba',
   true,

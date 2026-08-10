@@ -58,6 +58,9 @@ BEGIN
     bd.metadata,
     bd.is_premium,
     bd.is_verified,
+    bd.tem_delivery,
+    bd.aceita_cartao,
+    bd.aceita_pix,
     bd.status,
     bd.created_at,
     bd.updated_at,
@@ -103,6 +106,9 @@ BEGIN
       bd.metadata,
       bd.is_premium,
       bd.is_verified,
+      bd.tem_delivery,
+      bd.aceita_cartao,
+      bd.aceita_pix,
       bd.status,
       bd.created_at,
       bd.updated_at,
@@ -243,18 +249,9 @@ BEGIN
         ),
         'geographic_path', v_row.geographic_path,
         'horario_funcionamento', COALESCE(v_row.opening_hours, '{}'::jsonb),
-        'tem_delivery', CASE
-          WHEN lower(COALESCE(v_row.metadata->>'tem_delivery', 'false')) = 'true' THEN true
-          ELSE false
-        END,
-        'aceita_cartao', CASE
-          WHEN lower(COALESCE(v_row.metadata->>'aceita_cartao', 'false')) = 'true' THEN true
-          ELSE false
-        END,
-        'aceita_pix', CASE
-          WHEN lower(COALESCE(v_row.metadata->>'aceita_pix', 'false')) = 'true' THEN true
-          ELSE false
-        END,
+        'tem_delivery', COALESCE(v_row.tem_delivery, false),
+        'aceita_cartao', COALESCE(v_row.aceita_cartao, false),
+        'aceita_pix', COALESCE(v_row.aceita_pix, false),
         'logo_url', v_row.metadata->>'logo_url',
         'banner_url', v_row.metadata->>'banner_url',
         'fotos', v_photos,
@@ -272,7 +269,7 @@ BEGIN
         'especialidades', '[]'::jsonb,
         'facilidades', '[]'::jsonb,
         'modos_atendimento', CASE
-          WHEN lower(COALESCE(v_row.metadata->>'tem_delivery', 'false')) = 'true' THEN jsonb_build_array('delivery')
+          WHEN COALESCE(v_row.tem_delivery, false) THEN jsonb_build_array('delivery')
           ELSE '[]'::jsonb
         END,
         'instagram', v_row.instagram,
@@ -354,6 +351,9 @@ BEGIN
     bd.metadata,
     bd.is_premium,
     bd.is_verified,
+    bd.tem_delivery,
+    bd.aceita_cartao,
+    bd.aceita_pix,
     bd.status,
     bd.created_at,
     bd.updated_at,
@@ -400,6 +400,9 @@ BEGIN
       bd.metadata,
       bd.is_premium,
       bd.is_verified,
+      bd.tem_delivery,
+      bd.aceita_cartao,
+      bd.aceita_pix,
       bd.status,
       bd.created_at,
       bd.updated_at,
@@ -612,18 +615,9 @@ BEGIN
         ),
         'geographic_path', v_row.geographic_path,
         'horario_funcionamento', COALESCE(v_row.opening_hours, '{}'::jsonb),
-        'tem_delivery', CASE
-          WHEN lower(COALESCE(v_row.metadata->>'tem_delivery', 'false')) = 'true' THEN true
-          ELSE false
-        END,
-        'aceita_cartao', CASE
-          WHEN lower(COALESCE(v_row.metadata->>'aceita_cartao', 'false')) = 'true' THEN true
-          ELSE false
-        END,
-        'aceita_pix', CASE
-          WHEN lower(COALESCE(v_row.metadata->>'aceita_pix', 'false')) = 'true' THEN true
-          ELSE false
-        END,
+        'tem_delivery', COALESCE(v_row.tem_delivery, false),
+        'aceita_cartao', COALESCE(v_row.aceita_cartao, false),
+        'aceita_pix', COALESCE(v_row.aceita_pix, false),
         'logo_url', v_row.metadata->>'logo_url',
         'banner_url', v_row.metadata->>'banner_url',
         'fotos', v_photos,
@@ -723,4 +717,5 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION get_public_business_snapshot_by_slug(TEXT, TEXT, TEXT, TEXT) TO anon, authenticated;
+
 GRANT EXECUTE ON FUNCTION get_public_gastronomy_snapshot_by_slug(TEXT, TEXT, TEXT, TEXT) TO anon, authenticated;

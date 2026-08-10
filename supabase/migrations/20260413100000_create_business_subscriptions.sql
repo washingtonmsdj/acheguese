@@ -43,6 +43,9 @@ ON business_subscriptions(current_period_end);
 
 -- Trigger para atualizar updated_at
 DROP TRIGGER IF EXISTS update_business_subscriptions_updated_at ON business_subscriptions;
+
+DROP TRIGGER IF EXISTS update_business_subscriptions_updated_at ON business_subscriptions;
+
 CREATE TRIGGER update_business_subscriptions_updated_at
   BEFORE UPDATE ON business_subscriptions
   FOR EACH ROW
@@ -56,7 +59,7 @@ ALTER TABLE business_subscriptions ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Empresas podem ver suas próprias assinaturas
 DROP POLICY IF EXISTS "Empresas podem ver suas próprias assinaturas" ON business_subscriptions;
-DROP POLICY IF EXISTS "Empresas podem ver suas próprias assinaturas" ON business_subscriptions;
+
 CREATE POLICY "Empresas podem ver suas próprias assinaturas" ON business_subscriptions FOR SELECT
   USING (
     business_id IN (
@@ -67,7 +70,7 @@ CREATE POLICY "Empresas podem ver suas próprias assinaturas" ON business_subscr
 
 -- Policy: Apenas sistema pode inserir/atualizar (via service role)
 DROP POLICY IF EXISTS "Sistema pode gerenciar assinaturas" ON business_subscriptions;
-DROP POLICY IF EXISTS "Sistema pode gerenciar assinaturas" ON business_subscriptions;
+
 CREATE POLICY "Sistema pode gerenciar assinaturas" ON business_subscriptions FOR ALL
   USING (auth.jwt()->>'role' = 'service_role');
 

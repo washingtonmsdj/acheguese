@@ -7,35 +7,11 @@
 -- ============================================================================
 
 -- ENUMS
-DO $migration$ BEGIN
-  CREATE TYPE ride_status AS ENUM ('pending', 'accepted', 'in_progress', 'completed', 'cancelled');
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
-END $migration$;
-
-DO $migration$ BEGIN
-  CREATE TYPE route_status AS ENUM ('active', 'full', 'cancelled', 'completed');
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
-END $migration$;
-
-DO $migration$ BEGIN
-  CREATE TYPE recurrence_type AS ENUM ('once', 'daily', 'weekdays', 'weekly');
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
-END $migration$;
-
-DO $migration$ BEGIN
-  CREATE TYPE reservation_status AS ENUM ('pending', 'confirmed', 'cancelled');
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
-END $migration$;
-
-DO $migration$ BEGIN
-  CREATE TYPE trip_status AS ENUM ('in_progress', 'completed', 'cancelled');
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
-END $migration$;
+CREATE TYPE ride_status AS ENUM ('pending', 'accepted', 'in_progress', 'completed', 'cancelled');
+CREATE TYPE route_status AS ENUM ('active', 'full', 'cancelled', 'completed');
+CREATE TYPE recurrence_type AS ENUM ('once', 'daily', 'weekdays', 'weekly');
+CREATE TYPE reservation_status AS ENUM ('pending', 'confirmed', 'cancelled');
+CREATE TYPE trip_status AS ENUM ('in_progress', 'completed', 'cancelled');
 
 -- 1. DRIVER_DATA
 CREATE TABLE IF NOT EXISTS driver_data (

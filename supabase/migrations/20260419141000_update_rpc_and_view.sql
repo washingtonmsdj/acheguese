@@ -6,7 +6,6 @@ CREATE OR REPLACE FUNCTION create_community_alert(payload jsonb)
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
 AS $func$
 DECLARE
   v_user_id             uuid := auth.uid();
@@ -18,11 +17,6 @@ DECLARE
   v_neighborhood_display text;
   v_city                text;
   v_alert_id            uuid;
-  v_category            text;
-  v_title               text;
-  v_description         text;
-  v_alert_count         integer;
-  v_duplicate_count     integer;
 BEGIN
   IF v_user_id IS NULL THEN
     RETURN jsonb_build_object('error', 'not_authenticated');
@@ -65,89 +59,20 @@ BEGIN
   v_neighborhood_display := v_location.name;
   v_city := v_location.parent_name;
 
-  v_category := payload->>'category';
-  v_title := COALESCE(NULLIF(payload->>'title', ''), v_category);
-  v_description := payload->>'description';
-
-  IF v_category NOT IN (
-    'tiroteio_disparos',
-    'assalto_em_andamento',
-    'tentativa_de_invasao',
-    'incendio_explosao',
-    'acidente_grave',
-    'alagamento_deslizamento',
-    'risco_na_via',
-    'pessoa_vulneravel_em_risco'
-  ) THEN
-    RETURN jsonb_build_object('error', 'invalid_category');
-  END IF;
-
-  IF char_length(COALESCE(v_description, '')) < 20 OR char_length(v_description) > 280 THEN
-    RETURN jsonb_build_object('error', 'invalid_description_length');
-  END IF;
-
-  SELECT COUNT(*)
-  INTO v_alert_count
-  FROM community_alerts
-  WHERE profile_id = v_profile_id
-    AND created_at > NOW() - INTERVAL '24 hours';
-
-  IF v_alert_count >= 3 THEN
-    RETURN jsonb_build_object('error', 'rate_limit_exceeded');
-  END IF;
-
-  SELECT COUNT(*)
-  INTO v_duplicate_count
-  FROM community_alerts
-  WHERE profile_id = v_profile_id
-    AND type = v_category
-    AND location_id = v_location_id
-    AND created_at > NOW() - INTERVAL '30 minutes'
-    AND removed_at IS NULL;
-
-  IF v_duplicate_count > 0 THEN
-    RETURN jsonb_build_object('error', 'duplicate_alert');
-  END IF;
-
   INSERT INTO community_alerts (
-    profile_id,
-    type,
-    title,
-    description,
-    status,
     location_id,
     latitude,
     longitude,
     neighborhood_display,
-    city,
-    coordinate_source
+    city
   ) VALUES (
-    v_profile_id,
-    v_category,
-    v_title,
-    v_description,
-    'ativo',
     v_location_id,
     v_latitude,
     v_longitude,
     v_neighborhood_display,
-    v_city,
-    CASE WHEN v_latitude IS NULL OR v_longitude IS NULL THEN NULL ELSE 'territory_centroid' END
+    v_city
   )
   RETURNING id INTO v_alert_id;
-
-  INSERT INTO community_alert_audit (alert_id, actor_id, action_type, metadata)
-  VALUES (
-    v_alert_id,
-    v_user_id,
-    'created',
-    jsonb_build_object(
-      'category', v_category,
-      'location_id', v_location_id,
-      'city', v_city,
-      'neighborhood', v_neighborhood_display
-    )
-  );
 
   RETURN jsonb_build_object(
     'success', true, 

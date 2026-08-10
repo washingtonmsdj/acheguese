@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS locations (
   CONSTRAINT unique_location_slug_per_parent UNIQUE (parent_id, slug),
   
   -- Validações
-  CONSTRAINT valid_geographic_path CHECK (geographic_path ~ '^/[a-z0-9/-]+$'),
+  CONSTRAINT valid_geographic_path CHECK (geographic_path ~ '^/[a-z0-9-/]+$'),
   CONSTRAINT valid_slug CHECK (slug ~ '^[a-z0-9-]+$')
 );
 
@@ -97,7 +97,7 @@ CREATE TRIGGER update_locations_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 COMMENT ON TABLE locations IS 
-'Sistema hierarquico de localizacoes geograficas canonicas.';
+'Hierarquia geográfica: country → state → city → district → neighborhood';
 
 COMMENT ON COLUMN locations.parent_id IS 
 'ID do location pai na hierarquia (NULL para country)';
@@ -459,6 +459,20 @@ BEGIN
       NULL;
   END;
 END $$;
+
+-- ══════════════════════════════════════════════════════════════════════════
+-- 9. SEED INICIAL (Brasil) - COMENTADO
+-- ══════════════════════════════════════════════════════════════════════════
+
+-- NOTA: Seed comentado devido a dados legados incompatíveis.
+-- Para popular o banco, executar manualmente após a migration:
+--
+-- INSERT INTO locations (id, parent_id, type, slug, name, full_name, geographic_path, metadata, status)
+-- VALUES 
+--   ('00000000-0000-0000-0000-000000000001'::UUID, NULL, 'country'::location_type, 'br', 'Brasil', 'Brasil', '/br', '{"country_code": "BR"}'::jsonb, 'active'::location_status),
+--   ('00000000-0000-0000-0000-000000000002'::UUID, '00000000-0000-0000-0000-000000000001'::UUID, 'state'::location_type, 'ba', 'Bahia', 'Bahia, Brasil', '/br/ba', '{"state_code": "BA"}'::jsonb, 'active'::location_status),
+--   ('00000000-0000-0000-0000-000000000003'::UUID, '00000000-0000-0000-0000-000000000002'::UUID, 'city'::location_type, 'salvador', 'Salvador', 'Salvador, Bahia, Brasil', '/br/ba/salvador', '{"population": 2900000}'::jsonb, 'active'::location_status)
+-- ON CONFLICT (geographic_path) DO NOTHING;
 
 -- ══════════════════════════════════════════════════════════════════════════
 -- 10. ATIVAR TRIGGER DE VALIDAÇÃO (APENAS PARA INSERT)
