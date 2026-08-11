@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
-import { spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { classifySupabaseCliFailure } from "./lib/supabase-cli-validation-state.mjs";
+import { parseSupabaseQueryRows } from "./lib/supabase-cli-query-json.mjs";
+import { runSupabaseCli } from "./lib/supabase-cli-runner.mjs";
 
 const VALID_PHASES = new Set(["additive", "cutover"]);
 export const REQUIRED_CUTOVER_EVIDENCE = [
@@ -218,37 +219,12 @@ select
 `.trim();
 }
 
-function extractJsonObject(output) {
-  const start = output.indexOf("{");
-  if (start < 0) throw new Error("Supabase CLI nao retornou objeto JSON.");
-
-  let depth = 0;
-  let inString = false;
-  let escaped = false;
-  for (let index = start; index < output.length; index += 1) {
-    const character = output[index];
-    if (inString) {
-      if (escaped) escaped = false;
-      else if (character === "\\") escaped = true;
-      else if (character === '"') inString = false;
-      continue;
-    }
-    if (character === '"') inString = true;
-    else if (character === "{") depth += 1;
-    else if (character === "}") {
-      depth -= 1;
-      if (depth === 0) return output.slice(start, index + 1);
-    }
-  }
-  throw new Error("Supabase CLI retornou JSON incompleto.");
-}
-
 export function parseSupabaseQueryJson(output) {
-  const parsed = JSON.parse(extractJsonObject(output));
-  if (!Array.isArray(parsed.rows) || parsed.rows.length === 0) {
+  const rows = parseSupabaseQueryRows(output);
+  if (rows.length === 0) {
     throw new Error("Supabase CLI JSON nao contem rows.");
   }
-  return parsed.rows[0];
+  return rows[0];
 }
 
 function runSupabaseQuery(sql) {
@@ -257,21 +233,11 @@ function runSupabaseQuery(sql) {
   );
   const sqlPath = join(tempDir, "preflight.sql");
   writeFileSync(sqlPath, sql);
-  const cli = join(
-    process.cwd(),
-    "node_modules",
-    ".bin",
-    process.platform === "win32" ? "supabase.cmd" : "supabase",
-  );
-
   try {
-    const result = spawnSync(
-      cli,
+    const result = runSupabaseCli(
       ["db", "query", "--linked", "--output", "json", "--file", sqlPath],
       {
         cwd: process.cwd(),
-        encoding: "utf8",
-        shell: process.platform === "win32",
       },
     );
     const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;

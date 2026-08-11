@@ -1,5 +1,5 @@
-import { spawnSync } from "node:child_process";
 import { classifySupabaseCliFailure } from "./lib/supabase-cli-validation-state.mjs";
+import { runSupabaseCli } from "./lib/supabase-cli-runner.mjs";
 import {
   classifyMigrationDrift,
   parseSupabaseMigrationListOutput,
@@ -12,14 +12,8 @@ interface MigrationDriftRow {
 }
 
 function runSupabaseMigrationList(): string {
-  const command = process.platform === "win32" ? "cmd.exe" : "supabase";
-  const args =
-    process.platform === "win32"
-      ? ["/d", "/s", "/c", "supabase", "migration", "list", "--linked"]
-      : ["migration", "list", "--linked"];
-  const result = spawnSync(command, args, {
+  const result = runSupabaseCli(["migration", "list", "--linked"], {
     cwd: process.cwd(),
-    encoding: "utf8",
   });
 
   const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;

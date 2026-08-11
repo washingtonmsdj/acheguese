@@ -128,7 +128,19 @@ describe("Poll read-only preflight", () => {
     const { parseSupabaseQueryJson } = await loadPollPreflightModule();
 
     expect(
-      parseSupabaseQueryJson(`warning before\n{"rows":[{"polls_total":0}]}\nwarning after`),
+      parseSupabaseQueryJson(
+        `warning before\n{"rows":[{"polls_total":0}]}\nwarning after`,
+      ),
+    ).toEqual({ polls_total: 0 });
+  });
+
+  it("extracts the current Supabase CLI root array", async () => {
+    const { parseSupabaseQueryJson } = await loadPollPreflightModule();
+
+    expect(
+      parseSupabaseQueryJson(
+        `warning before\n[{"polls_total":0}]\nwarning after`,
+      ),
     ).toEqual({ polls_total: 0 });
   });
 });

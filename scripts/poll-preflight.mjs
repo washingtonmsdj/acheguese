@@ -1,38 +1,39 @@
 #!/usr/bin/env node
 
-import { spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-import { classifySupabaseCliFailure } from './lib/supabase-cli-validation-state.mjs';
+import { classifySupabaseCliFailure } from "./lib/supabase-cli-validation-state.mjs";
+import { parseSupabaseQueryRows } from "./lib/supabase-cli-query-json.mjs";
+import { runSupabaseCli } from "./lib/supabase-cli-runner.mjs";
 
-const VALID_PHASES = new Set(['additive', 'cutover']);
+const VALID_PHASES = new Set(["additive", "cutover"]);
 
 function usage() {
   return [
-    'Uso:',
-    '  npm run poll:preflight -- --phase additive',
-    '  npm run poll:preflight -- --phase cutover',
-    '',
-    'Executa exclusivamente SELECTs no projeto Supabase linkado.',
-    'Saida final: POLL_PREFLIGHT_PASS ou POLL_PREFLIGHT_BLOCKED.',
-  ].join('\n');
+    "Uso:",
+    "  npm run poll:preflight -- --phase additive",
+    "  npm run poll:preflight -- --phase cutover",
+    "",
+    "Executa exclusivamente SELECTs no projeto Supabase linkado.",
+    "Saida final: POLL_PREFLIGHT_PASS ou POLL_PREFLIGHT_BLOCKED.",
+  ].join("\n");
 }
 
 export function parseArgs(argv) {
-  let phase = 'additive';
+  let phase = "additive";
 
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
-    if (arg === '--phase') {
+    if (arg === "--phase") {
       phase = argv[index + 1];
       index += 1;
       continue;
     }
 
-    if (arg === '--help' || arg === '-h') {
+    if (arg === "--help" || arg === "-h") {
       return { help: true, phase };
     }
 
@@ -221,65 +222,27 @@ select
 `.trim();
 }
 
-function extractJsonObject(output) {
-  const start = output.indexOf('{');
-  if (start < 0) throw new Error('Supabase CLI nao retornou objeto JSON.');
-
-  let depth = 0;
-  let inString = false;
-  let escaped = false;
-
-  for (let index = start; index < output.length; index += 1) {
-    const char = output[index];
-    if (inString) {
-      if (escaped) escaped = false;
-      else if (char === '\\') escaped = true;
-      else if (char === '"') inString = false;
-      continue;
-    }
-
-    if (char === '"') inString = true;
-    else if (char === '{') depth += 1;
-    else if (char === '}') {
-      depth -= 1;
-      if (depth === 0) return output.slice(start, index + 1);
-    }
-  }
-
-  throw new Error('Supabase CLI retornou JSON incompleto.');
-}
-
 export function parseSupabaseQueryJson(output) {
-  const parsed = JSON.parse(extractJsonObject(output));
-  if (!Array.isArray(parsed.rows) || parsed.rows.length === 0) {
-    throw new Error('Supabase CLI JSON nao contem rows.');
+  const rows = parseSupabaseQueryRows(output);
+  if (rows.length === 0) {
+    throw new Error("Supabase CLI JSON nao contem rows.");
   }
-  return parsed.rows[0];
+  return rows[0];
 }
 
 function runSupabaseQuery(sql) {
-  const tempDir = mkdtempSync(join(tmpdir(), 'achegue-poll-preflight-'));
-  const sqlPath = join(tempDir, 'preflight.sql');
+  const tempDir = mkdtempSync(join(tmpdir(), "achegue-poll-preflight-"));
+  const sqlPath = join(tempDir, "preflight.sql");
   writeFileSync(sqlPath, sql);
 
-  const localCli = join(
-    process.cwd(),
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'supabase.cmd' : 'supabase',
-  );
-
   try {
-    const result = spawnSync(
-      localCli,
-      ['db', 'query', '--linked', '--output', 'json', '--file', sqlPath],
+    const result = runSupabaseCli(
+      ["db", "query", "--linked", "--output", "json", "--file", sqlPath],
       {
         cwd: process.cwd(),
-        encoding: 'utf8',
-        shell: process.platform === 'win32',
       },
     );
-    const output = `${result.stdout ?? ''}${result.stderr ?? ''}`;
+    const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
 
     if (result.error) {
       throw new Error(
@@ -292,11 +255,11 @@ function runSupabaseQuery(sql) {
       throw new Error(
         [
           `${state}: nao foi possivel executar o Poll preflight read-only.`,
-          'Comando: supabase db query --linked --output json --file <readonly-query>',
+          "Comando: supabase db query --linked --output json --file <readonly-query>",
           output.trim(),
         ]
           .filter(Boolean)
-          .join('\n'),
+          .join("\n"),
       );
     }
 
@@ -314,42 +277,42 @@ function numericCount(row, key) {
 export function evaluatePollPreflight({ phase, schema, data }) {
   const blockers = [];
   const requiredCoreTables = [
-    'posts_exists',
-    'profiles_exists',
-    'polls_exists',
-    'options_exists',
+    "posts_exists",
+    "profiles_exists",
+    "polls_exists",
+    "options_exists",
   ];
 
   for (const key of requiredCoreTables) {
     if (schema[key] !== true) blockers.push(key);
   }
 
-  if (phase === 'cutover') {
-    if (schema.votes_exists !== true) blockers.push('votes_exists');
-    if (schema.profile_id_exists !== true) blockers.push('profile_id_exists');
+  if (phase === "cutover") {
+    if (schema.votes_exists !== true) blockers.push("votes_exists");
+    if (schema.profile_id_exists !== true) blockers.push("profile_id_exists");
   }
 
   const commonBlockers = [
-    'json_only_polls',
-    'duplicate_poll_post_groups',
-    'duplicate_position_groups',
-    'vote_poll_option_mismatch',
+    "json_only_polls",
+    "duplicate_poll_post_groups",
+    "duplicate_position_groups",
+    "vote_poll_option_mismatch",
   ];
   const cutoverBlockers = [
-    'duplicate_option_text_groups',
-    'invalid_option_count_polls',
-    'invalid_option_sequence_polls',
-    'invalid_question_rows',
-    'invalid_option_text_rows',
-    'votes_without_profile',
-    'vote_invalid_profile',
-    'canonical_vote_duplicate_groups',
-    'single_choice_profile_duplicate_groups',
+    "duplicate_option_text_groups",
+    "invalid_option_count_polls",
+    "invalid_option_sequence_polls",
+    "invalid_question_rows",
+    "invalid_option_text_rows",
+    "votes_without_profile",
+    "vote_invalid_profile",
+    "canonical_vote_duplicate_groups",
+    "single_choice_profile_duplicate_groups",
   ];
 
   for (const key of [
     ...commonBlockers,
-    ...(phase === 'cutover' ? cutoverBlockers : []),
+    ...(phase === "cutover" ? cutoverBlockers : []),
   ]) {
     if (numericCount(data, key) > 0) blockers.push(key);
   }
@@ -359,7 +322,8 @@ export function evaluatePollPreflight({ phase, schema, data }) {
     data,
     phase,
     schema,
-    status: blockers.length === 0 ? 'POLL_PREFLIGHT_PASS' : 'POLL_PREFLIGHT_BLOCKED',
+    status:
+      blockers.length === 0 ? "POLL_PREFLIGHT_PASS" : "POLL_PREFLIGHT_BLOCKED",
   };
 }
 
@@ -378,7 +342,7 @@ async function main() {
     schema.profiles_exists === true &&
     schema.polls_exists === true &&
     schema.options_exists === true &&
-    (schema.votes_exists === true || options.phase === 'additive')
+    (schema.votes_exists === true || options.phase === "additive")
   ) {
     data = runSupabaseQuery(
       buildPollDataPreflightSql({
@@ -397,13 +361,13 @@ async function main() {
 
   console.log(JSON.stringify(result, null, 2));
   console.log(result.status);
-  if (result.status === 'POLL_PREFLIGHT_BLOCKED') process.exitCode = 1;
+  if (result.status === "POLL_PREFLIGHT_BLOCKED") process.exitCode = 1;
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   main().catch((error) => {
     console.error(error instanceof Error ? error.message : String(error));
-    console.error('POLL_PREFLIGHT_BLOCKED');
+    console.error("POLL_PREFLIGHT_BLOCKED");
     process.exit(1);
   });
 }

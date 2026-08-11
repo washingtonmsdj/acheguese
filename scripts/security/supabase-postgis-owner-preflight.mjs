@@ -1,25 +1,25 @@
 #!/usr/bin/env node
 
-import { spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { fileURLToPath } from 'node:url';
-import { classifySupabaseCliFailure } from '../lib/supabase-cli-validation-state.mjs';
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+import { fileURLToPath } from "node:url";
+import { classifySupabaseCliFailure } from "../lib/supabase-cli-validation-state.mjs";
+import { runSupabaseCli } from "../lib/supabase-cli-runner.mjs";
 
-const POSTGIS_EXTENSION_EXCEPTION_ID = 'EXC-2026-07-08-POSTGIS-EXTENSION-OWNER';
-const PUBLIC_EXTENSION_NAMES = ['postgis', 'unaccent', 'pg_trgm', 'citext'];
+const POSTGIS_EXTENSION_EXCEPTION_ID = "EXC-2026-07-08-POSTGIS-EXTENSION-OWNER";
+const PUBLIC_EXTENSION_NAMES = ["postgis", "unaccent", "pg_trgm", "citext"];
 
 function usage() {
   return [
-    'Uso:',
-    '  node scripts/security/supabase-postgis-owner-preflight.mjs',
-    '  node scripts/security/supabase-postgis-owner-preflight.mjs --json',
-    '  node scripts/security/supabase-postgis-owner-preflight.mjs --fail-if-blocked',
-    '',
-    'Executa apenas SELECTs no catalogo Postgres remoto linkado.',
-    'Nao altera grants, RLS, extensoes ou migrations.',
-  ].join('\n');
+    "Uso:",
+    "  node scripts/security/supabase-postgis-owner-preflight.mjs",
+    "  node scripts/security/supabase-postgis-owner-preflight.mjs --json",
+    "  node scripts/security/supabase-postgis-owner-preflight.mjs --fail-if-blocked",
+    "",
+    "Executa apenas SELECTs no catalogo Postgres remoto linkado.",
+    "Nao altera grants, RLS, extensoes ou migrations.",
+  ].join("\n");
 }
 
 export function parseArgs(argv) {
@@ -29,17 +29,17 @@ export function parseArgs(argv) {
   };
 
   for (const arg of argv) {
-    if (arg === '--json') {
+    if (arg === "--json") {
       options.json = true;
       continue;
     }
 
-    if (arg === '--fail-if-blocked') {
+    if (arg === "--fail-if-blocked") {
       options.failIfBlocked = true;
       continue;
     }
 
-    if (arg === '--help' || arg === '-h') {
+    if (arg === "--help" || arg === "-h") {
       console.log(usage());
       process.exit(0);
     }
@@ -98,25 +98,23 @@ select
 }
 
 function runSupabaseQuery(sql) {
-  const tempDir = mkdtempSync(join(tmpdir(), 'achegue-postgis-preflight-'));
-  const sqlPath = join(tempDir, 'preflight.sql');
+  const tempDir = mkdtempSync(join(tmpdir(), "achegue-postgis-preflight-"));
+  const sqlPath = join(tempDir, "preflight.sql");
   writeFileSync(sqlPath, sql);
 
-  const command = process.platform === 'win32' ? 'cmd.exe' : 'supabase';
-  const args =
-    process.platform === 'win32'
-      ? ['/d', '/s', '/c', 'supabase', 'db', 'query', '--linked', '--output', 'json', '--file', sqlPath]
-      : ['db', 'query', '--linked', '--output', 'json', '--file', sqlPath];
-
   try {
-    const result = spawnSync(command, args, {
-      cwd: process.cwd(),
-      encoding: 'utf8',
-    });
-    const output = `${result.stdout ?? ''}${result.stderr ?? ''}`;
+    const result = runSupabaseCli(
+      ["db", "query", "--linked", "--output", "json", "--file", sqlPath],
+      {
+        cwd: process.cwd(),
+      },
+    );
+    const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
 
     if (result.error) {
-      throw new Error(`LOCAL_FAILURE: falha ao executar Supabase CLI: ${result.error.message}`);
+      throw new Error(
+        `LOCAL_FAILURE: falha ao executar Supabase CLI: ${result.error.message}`,
+      );
     }
 
     if (result.status !== 0) {
@@ -124,11 +122,11 @@ function runSupabaseQuery(sql) {
       throw new Error(
         [
           `${validationState}: nao foi possivel consultar o preflight PostGIS remoto.`,
-          'Comando: supabase db query --linked --output json --file <readonly catalog query>',
+          "Comando: supabase db query --linked --output json --file <readonly catalog query>",
           output.trim(),
         ]
           .filter(Boolean)
-          .join('\n'),
+          .join("\n"),
       );
     }
 
@@ -139,9 +137,9 @@ function runSupabaseQuery(sql) {
 }
 
 function extractJsonObject(output) {
-  const start = output.indexOf('{');
+  const start = output.indexOf("{");
   if (start < 0) {
-    throw new Error('Supabase CLI nao retornou objeto JSON.');
+    throw new Error("Supabase CLI nao retornou objeto JSON.");
   }
 
   let depth = 0;
@@ -154,7 +152,7 @@ function extractJsonObject(output) {
     if (inString) {
       if (escaped) {
         escaped = false;
-      } else if (char === '\\') {
+      } else if (char === "\\") {
         escaped = true;
       } else if (char === '"') {
         inString = false;
@@ -167,8 +165,8 @@ function extractJsonObject(output) {
       continue;
     }
 
-    if (char === '{') depth += 1;
-    if (char === '}') {
+    if (char === "{") depth += 1;
+    if (char === "}") {
       depth -= 1;
       if (depth === 0) {
         return output.slice(start, index + 1);
@@ -176,14 +174,14 @@ function extractJsonObject(output) {
     }
   }
 
-  throw new Error('Supabase CLI retornou JSON incompleto.');
+  throw new Error("Supabase CLI retornou JSON incompleto.");
 }
 
 export function parseSupabaseQueryJson(output) {
   const parsed = JSON.parse(extractJsonObject(output));
   const rows = parsed.rows;
   if (!Array.isArray(rows) || rows.length === 0) {
-    throw new Error('Supabase CLI JSON nao contem rows.');
+    throw new Error("Supabase CLI JSON nao contem rows.");
   }
 
   return rows[0];
@@ -208,8 +206,8 @@ export function normalizePostgisPreflightRow(row) {
 function isOwnedByCurrentRole(owner, roleContext) {
   return Boolean(
     owner &&
-      (roleContext.current_user_is_superuser === true ||
-        owner === roleContext.current_user),
+    (roleContext.current_user_is_superuser === true ||
+      owner === roleContext.current_user),
   );
 }
 
@@ -218,12 +216,12 @@ export function evaluatePostgisOwnerPreflight(snapshot) {
   const roleContext = snapshot.roleContext;
 
   for (const extension of snapshot.extensions) {
-    if (extension.extension_schema !== 'public') continue;
+    if (extension.extension_schema !== "public") continue;
     findings.push({
       object: `extension:${extension.extname}`,
       owner: extension.extension_owner,
       ready: isOwnedByCurrentRole(extension.extension_owner, roleContext),
-      risk: 'extension_in_public',
+      risk: "extension_in_public",
       summary: `Extensao ${extension.extname} permanece em public.`,
     });
   }
@@ -234,8 +232,8 @@ export function evaluatePostgisOwnerPreflight(snapshot) {
       object: `${table.table_schema}.${table.table_name}`,
       owner: table.table_owner,
       ready: isOwnedByCurrentRole(table.table_owner, roleContext),
-      risk: 'rls_disabled',
-      summary: 'public.spatial_ref_sys esta sem RLS.',
+      risk: "rls_disabled",
+      summary: "public.spatial_ref_sys esta sem RLS.",
     });
   }
 
@@ -245,8 +243,8 @@ export function evaluatePostgisOwnerPreflight(snapshot) {
       object: `public.${fn.signature}`,
       owner: fn.function_owner,
       ready: isOwnedByCurrentRole(fn.function_owner, roleContext),
-      risk: 'public_execute_security_definer',
-      summary: 'st_estimatedextent segue executavel por anon/authenticated.',
+      risk: "public_execute_security_definer",
+      summary: "st_estimatedextent segue executavel por anon/authenticated.",
     });
   }
 
@@ -259,10 +257,10 @@ export function evaluatePostgisOwnerPreflight(snapshot) {
     ready: findings.length > 0 && blockedFindings.length === 0,
     status:
       findings.length === 0
-        ? 'resolved'
+        ? "resolved"
         : blockedFindings.length === 0
-          ? 'ready'
-          : 'blocked',
+          ? "ready"
+          : "blocked",
   };
 }
 
@@ -278,25 +276,29 @@ function printResult(result, json) {
 
   for (const finding of result.findings) {
     console.log(
-      `- ${finding.ready ? 'READY' : 'BLOCKED'} ${finding.object} owner=${finding.owner ?? '<unknown>'} risk=${finding.risk}`,
+      `- ${finding.ready ? "READY" : "BLOCKED"} ${finding.object} owner=${finding.owner ?? "<unknown>"} risk=${finding.risk}`,
     );
   }
 
-  if (result.status === 'blocked') {
+  if (result.status === "blocked") {
     console.log(
-      'Nao use o marcador extension-owner-preflight em migration ate existir via de owner/plataforma aprovada.',
+      "Nao use o marcador extension-owner-preflight em migration ate existir via de owner/plataforma aprovada.",
     );
   }
 }
 
 async function main() {
   const options = parseArgs(process.argv.slice(2));
-  const row = parseSupabaseQueryJson(runSupabaseQuery(buildPostgisOwnerPreflightSql()));
-  const result = evaluatePostgisOwnerPreflight(normalizePostgisPreflightRow(row));
+  const row = parseSupabaseQueryJson(
+    runSupabaseQuery(buildPostgisOwnerPreflightSql()),
+  );
+  const result = evaluatePostgisOwnerPreflight(
+    normalizePostgisPreflightRow(row),
+  );
 
   printResult(result, options.json);
 
-  if (options.failIfBlocked && result.status === 'blocked') {
+  if (options.failIfBlocked && result.status === "blocked") {
     process.exit(1);
   }
 }

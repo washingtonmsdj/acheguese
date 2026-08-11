@@ -83,6 +83,14 @@ describe("Community Interest preflight CLI", () => {
       ),
     ).toEqual({ table_exists: false });
   });
+
+  it("parses the current Supabase CLI root array", () => {
+    expect(
+      parseSupabaseQueryJson(
+        `notice before json\n${JSON.stringify([{ table_exists: false }])}`,
+      ),
+    ).toEqual({ table_exists: false });
+  });
 });
 
 describe("Community Interest ADDITIVE preflight", () => {

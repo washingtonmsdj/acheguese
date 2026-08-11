@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
-import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { runSupabaseCli } from "../lib/supabase-cli-runner.mjs";
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -49,10 +49,9 @@ function walk(directory) {
 }
 
 function readRemotePrivilegedRpcNames() {
-  const result = spawnSync(
-    "supabase",
+  const result = runSupabaseCli(
     ["db", "query", "--linked", "--agent=no", "-o", "json", PRIVILEGED_RPC_SQL],
-    { cwd: ROOT, encoding: "utf8", shell: false },
+    { cwd: ROOT },
   );
 
   if (result.error) {

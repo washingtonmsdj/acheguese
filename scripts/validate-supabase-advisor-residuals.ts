@@ -1,7 +1,7 @@
-import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { runSupabaseCli } from "./lib/supabase-cli-runner.mjs";
 
 export interface AdvisorFinding {
   cache_key?: string;
@@ -76,40 +76,22 @@ export function loadAllowedResidualCacheKeys(): Set<string> {
 }
 
 function runSupabaseAdvisor(): string {
-  const command = process.platform === "win32" ? "cmd.exe" : "supabase";
-  const args =
-    process.platform === "win32"
-      ? [
-          "/d",
-          "/s",
-          "/c",
-          "supabase",
-          "db",
-          "advisors",
-          "--linked",
-          "--type",
-          "security",
-          "--fail-on",
-          "none",
-          "--output",
-          "json",
-        ]
-      : [
-          "db",
-          "advisors",
-          "--linked",
-          "--type",
-          "security",
-          "--fail-on",
-          "none",
-          "--output",
-          "json",
-        ];
-
-  const result = spawnSync(command, args, {
-    cwd: process.cwd(),
-    encoding: "utf8",
-  });
+  const result = runSupabaseCli(
+    [
+      "db",
+      "advisors",
+      "--linked",
+      "--type",
+      "security",
+      "--fail-on",
+      "none",
+      "--output",
+      "json",
+    ],
+    {
+      cwd: process.cwd(),
+    },
+  );
   const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
 
   if (result.error) {
