@@ -1,7 +1,11 @@
 import { useEffect, useMemo } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { CreatePostModal } from "@/core/community/components/composer/CreatePostModal";
+import { CommunityPortalGate } from "@/core/community/access";
+import { useActiveTerritory } from "@/core/location/hooks/useActiveTerritory";
+import { LocationStatus } from "@/core/location/types";
 import { useAppUrls } from "@/core/routing/hooks";
+import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import { Loader2 } from "lucide-react";
 
@@ -10,6 +14,17 @@ export default function NovoPostPage() {
   const location = useLocation();
   const appUrls = useAppUrls();
   const { user, isLoading } = useSessionContext();
+  const { activeLocation } = useActiveTerritory();
+  const resolved = useMemo<ResolvedTerritory>(() => {
+    if (
+      !activeLocation?.id ||
+      activeLocation.status !== LocationStatus.ACTIVE
+    ) {
+      return null;
+    }
+
+    return { kind: "location", location: activeLocation };
+  }, [activeLocation]);
 
   const defaultType = useMemo(() => {
     const params = new URLSearchParams(location.search);
@@ -56,11 +71,34 @@ export default function NovoPostPage() {
     return <Navigate to="/login" replace />;
   }
 
+  if (!resolved) {
+    return (
+      <section className="mx-auto flex min-h-[22rem] max-w-xl flex-col items-center justify-center px-4 py-10 text-center">
+        <div className="rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm">
+          <h1 className="text-xl font-semibold">
+            Selecione um territorio para publicar
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            A publicacao comunitaria exige um territorio ativo e valido.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <CreatePostModal
-      open
-      onClose={handleClose}
-      defaultType={defaultType}
-    />
+    <CommunityPortalGate resolved={resolved} action="create_post">
+      {(communityAccess) => (
+        <CreatePostModal
+          open
+          onClose={handleClose}
+          defaultType={defaultType}
+          resolvedTerritory={resolved}
+          canCreatePost={communityAccess.can.create_post}
+          canCreateAlert={communityAccess.can.create_alert}
+          canCreateIssue={communityAccess.can.create_issue}
+        />
+      )}
+    </CommunityPortalGate>
   );
 }

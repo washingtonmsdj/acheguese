@@ -2,6 +2,7 @@ import { LAUNCH_URLS } from "@/config/territory";
 import { useActiveTerritory } from "@/core/location/hooks/useActiveTerritory";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { useTerritorialContextOptional } from "@/core/routing/components/TerritorialLayout";
+import { TERRITORIAL_ROUTE_STATIC_SEGMENTS } from "@/core/routing/config/territorialRoutePatterns";
 import {
   buildCommunityTerritoryUrl,
   buildModuleTerritoryUrl,
@@ -32,7 +33,9 @@ export interface CommunityUrls {
   newPost: string;
 }
 
-function toPublicBaseFromGeographicPath(geographicPath: string | null | undefined): string | null {
+function toPublicBaseFromGeographicPath(
+  geographicPath: string | null | undefined,
+): string | null {
   if (!geographicPath) return null;
   try {
     return geoPathToPublicUrl(geographicPath);
@@ -41,62 +44,82 @@ function toPublicBaseFromGeographicPath(geographicPath: string | null | undefine
   }
 }
 
-export function useCommunityUrls(routeResolved?: ResolvedTerritory | null): CommunityUrls {
+export function useCommunityUrls(
+  routeResolved?: ResolvedTerritory | null,
+): CommunityUrls {
   const { activeLocation } = useActiveTerritory();
   const territorialContext = useTerritorialContextOptional();
   const contextCommunityBaseUrl =
-    (!routeResolved || territorialContext?.resolved === routeResolved)
+    !routeResolved || territorialContext?.resolved === routeResolved
       ? territorialContext?.communityBaseUrl
       : null;
 
-  let feedUrl: string;
+  let communityBaseUrl: string;
   let eventsUrl: string;
 
   if (routeResolved && contextCommunityBaseUrl) {
-    feedUrl = contextCommunityBaseUrl;
+    communityBaseUrl = contextCommunityBaseUrl;
     eventsUrl = `${contextCommunityBaseUrl}/${MODULE_SLUGS.events}`;
   } else if (routeResolved) {
     if (routeResolved.kind === "group") {
       const firstMember = routeResolved.group.members[0];
-      const memberBase = toPublicBaseFromGeographicPath(firstMember?.geographic_path);
+      const memberBase = toPublicBaseFromGeographicPath(
+        firstMember?.geographic_path,
+      );
       if (memberBase) {
         const parts = memberBase.split("/").filter(Boolean);
         if (parts.length < 2) {
-          feedUrl = LAUNCH_URLS.community;
+          communityBaseUrl = LAUNCH_URLS.community;
           eventsUrl = LAUNCH_URLS.events;
         } else {
           const [state, city] = parts;
           if (!state || !city) {
-            feedUrl = LAUNCH_URLS.community;
+            communityBaseUrl = LAUNCH_URLS.community;
             eventsUrl = LAUNCH_URLS.events;
           } else {
             const territoryBase = `/${state}/${city}/${routeResolved.group.slug}`;
-            feedUrl = buildCommunityTerritoryUrl(territoryBase);
-            eventsUrl = buildModuleTerritoryUrl(MODULE_SLUGS.events, territoryBase);
+            communityBaseUrl = buildCommunityTerritoryUrl(territoryBase);
+            eventsUrl = buildModuleTerritoryUrl(
+              MODULE_SLUGS.events,
+              territoryBase,
+            );
           }
         }
       } else {
-        feedUrl = LAUNCH_URLS.community;
+        communityBaseUrl = LAUNCH_URLS.community;
         eventsUrl = LAUNCH_URLS.events;
       }
     } else {
-      const territoryBase = toPublicBaseFromGeographicPath(routeResolved.location.geographic_path);
-      feedUrl = territoryBase ? buildCommunityTerritoryUrl(territoryBase) : LAUNCH_URLS.community;
-      eventsUrl = territoryBase ? buildModuleTerritoryUrl(MODULE_SLUGS.events, territoryBase) : LAUNCH_URLS.events;
+      const territoryBase = toPublicBaseFromGeographicPath(
+        routeResolved.location.geographic_path,
+      );
+      communityBaseUrl = territoryBase
+        ? buildCommunityTerritoryUrl(territoryBase)
+        : LAUNCH_URLS.community;
+      eventsUrl = territoryBase
+        ? buildModuleTerritoryUrl(MODULE_SLUGS.events, territoryBase)
+        : LAUNCH_URLS.events;
     }
   } else if (activeLocation?.geographic_path) {
-    const territoryBase = toPublicBaseFromGeographicPath(activeLocation.geographic_path);
-    feedUrl = territoryBase ? buildCommunityTerritoryUrl(territoryBase) : LAUNCH_URLS.community;
-    eventsUrl = territoryBase ? buildModuleTerritoryUrl(MODULE_SLUGS.events, territoryBase) : LAUNCH_URLS.events;
+    const territoryBase = toPublicBaseFromGeographicPath(
+      activeLocation.geographic_path,
+    );
+    communityBaseUrl = territoryBase
+      ? buildCommunityTerritoryUrl(territoryBase)
+      : LAUNCH_URLS.community;
+    eventsUrl = territoryBase
+      ? buildModuleTerritoryUrl(MODULE_SLUGS.events, territoryBase)
+      : LAUNCH_URLS.events;
   } else {
-    feedUrl = LAUNCH_URLS.community;
+    communityBaseUrl = LAUNCH_URLS.community;
     eventsUrl = LAUNCH_URLS.events;
   }
 
-  const alertsUrl = `${feedUrl}/feed?tab=alertas`;
-  const issuesUrl = `${feedUrl}/problemas`;
-  const communicationUrl = `${feedUrl}/comunicacao`;
-  const groupsUrl = `${feedUrl}/grupos`;
+  const feedUrl = `${communityBaseUrl}/${TERRITORIAL_ROUTE_STATIC_SEGMENTS.feed}`;
+  const alertsUrl = `${feedUrl}?tab=alertas`;
+  const issuesUrl = `${communityBaseUrl}/problemas`;
+  const communicationUrl = `${communityBaseUrl}/comunicacao`;
+  const groupsUrl = `${communityBaseUrl}/grupos`;
 
   return {
     feed: feedUrl,
@@ -104,7 +127,8 @@ export function useCommunityUrls(routeResolved?: ResolvedTerritory | null): Comm
     issues: issuesUrl,
     communication: communicationUrl,
     events: eventsUrl,
-    eventDetail: (id: string) => eventPublicRoutes.detailFromBase(eventsUrl, id),
+    eventDetail: (id: string) =>
+      eventPublicRoutes.detailFromBase(eventsUrl, id),
     eventFavorites: eventPublicRoutes.favoritesFromBase(eventsUrl),
     eventCalendar: eventPublicRoutes.calendarFromBase(eventsUrl),
     eventMap: eventPublicRoutes.mapFromBase(eventsUrl),

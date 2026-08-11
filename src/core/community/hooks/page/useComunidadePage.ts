@@ -1,6 +1,6 @@
 /**
  * useComunidadePage - Hook principal da página de comunidade
- * 
+ *
  * SSOT - Usa services via hooks especializados
  * Performance - Callbacks memoizados
  * Type safety - Interfaces tipadas
@@ -105,16 +105,14 @@ function toCommunityActorProfile(input: unknown): CommunityActorProfile | null {
     (typeof record.name === "string" && record.name) ||
     "Usuário";
 
-  const city =
-    (typeof record.city === "string" && record.city) ||
-    null;
+  const city = (typeof record.city === "string" && record.city) || null;
   const neighborhood =
-    (typeof record.neighborhood === "string" && record.neighborhood) ||
-    null;
+    (typeof record.neighborhood === "string" && record.neighborhood) || null;
   const locationId =
     (typeof record.locationId === "string" ? record.locationId : null) ??
     (typeof record.location_id === "string" ? record.location_id : null);
-  const verified = typeof record.verified === "boolean" ? record.verified : false;
+  const verified =
+    typeof record.verified === "boolean" ? record.verified : false;
   const profileType =
     (typeof record.profile_type === "string" && record.profile_type) ||
     (typeof record.profileType === "string" && record.profileType) ||
@@ -137,43 +135,58 @@ function toCommunityActorProfile(input: unknown): CommunityActorProfile | null {
 
 export function useComunidadePage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [modalState, setModalState] = useState<ModalState>({ type: null, data: null });
+  const [modalState, setModalState] = useState<ModalState>({
+    type: null,
+    data: null,
+  });
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
 
-  const { setTagFilter, immediateFilters, setLocationScope } = useCommunityFiltersAAA();
-  const {
-    likePost,
-    savePost,
-    sharePost,
-    deletePost,
-    isDeleting,
-  } = usePostActions();
+  const { setTagFilter, immediateFilters, setLocationScope } =
+    useCommunityFiltersAAA();
+  const { likePost, savePost, sharePost, deletePost, isDeleting } =
+    usePostActions();
   const { reportPostAsync } = useModeration();
   const { activeProfile: sessionProfile } = useSessionContext();
   const { effectiveProfile } = useMultiProfileContext();
   const profile = toCommunityActorProfile(effectiveProfile ?? sessionProfile);
-  
+
   // Integração com fundação geográfica
   const communityLocation = useCommunityLocation();
 
   const postId = searchParams.get("post");
   const { data: postData, isLoading: isLoadingPost } = usePostById(postId);
+  const openPostDetail = useCallback(
+    (nextPostId: string) => {
+      setSearchParams((previous) => {
+        const next = new URLSearchParams(previous);
+        next.set("post", nextPostId);
+        return next;
+      });
+    },
+    [setSearchParams],
+  );
 
-  const handleOpenCreatePost = useCallback((defaultType?: PostType) => {
-    const hasProfileLocation = Boolean(profile?.locationId);
-    const canCreatePost = communityLocation.hasActiveLocation || hasProfileLocation;
+  const handleOpenCreatePost = useCallback(
+    (defaultType?: PostType) => {
+      const hasProfileLocation = Boolean(profile?.locationId);
+      const canCreatePost =
+        communityLocation.hasActiveLocation || hasProfileLocation;
 
-    // Verificar se pode criar conteúdo
-    if (!canCreatePost) {
-      toast.error("Selecione uma localização no filtro ou atualize seu bairro no perfil");
-      return;
-    }
+      // Verificar se pode criar conteúdo
+      if (!canCreatePost) {
+        toast.error(
+          "Selecione uma localização no filtro ou atualize seu bairro no perfil",
+        );
+        return;
+      }
 
-    setModalState({
-      type: "create",
-      data: { defaultType: defaultType ?? "discussao" },
-    });
-  }, [communityLocation, profile?.locationId]);
+      setModalState({
+        type: "create",
+        data: { defaultType: defaultType ?? "discussao" },
+      });
+    },
+    [communityLocation, profile?.locationId],
+  );
 
   const handlePostClick = useCallback(
     async (postId: string, post?: UnifiedPost) => {
@@ -187,7 +200,7 @@ export function useComunidadePage() {
             ? vagaPayloadRoot.vaga
             : null;
         if (post?.content_intent === "vaga" || vagaPayload) {
-          setSearchParams({ post: postId });
+          openPostDetail(postId);
           return;
         }
 
@@ -196,20 +209,28 @@ export function useComunidadePage() {
           post?.display_format === "opportunity_card" ||
           Boolean(post?.content_payload);
         if (mayContainOpportunity && !isLaunchSurfaceEnabled("jobs")) {
-          setSearchParams({ post: postId });
+          openPostDetail(postId);
           return;
         }
       } catch (error) {
-        logger.warn("Falha ao resolver detalhe de oportunidade pelo feed", error as Error);
+        logger.warn(
+          "Falha ao resolver detalhe de oportunidade pelo feed",
+          error as Error,
+        );
       }
 
-      setSearchParams({ post: postId });
+      openPostDetail(postId);
     },
-    [setSearchParams],
+    [openPostDetail],
   );
 
   const handleClosePostDetail = useCallback(
-    () => setSearchParams({}),
+    () =>
+      setSearchParams((previous) => {
+        const next = new URLSearchParams(previous);
+        next.delete("post");
+        return next;
+      }),
     [setSearchParams],
   );
 
@@ -287,7 +308,9 @@ export function useComunidadePage() {
           editPostId: postId,
           initialContent: post.content ?? "",
           initialType: (post.type as PostType) ?? "discussao",
-          initialReach: (post.reach as "street" | "neighborhood" | "city") ?? "neighborhood",
+          initialReach:
+            (post.reach as "street" | "neighborhood" | "city") ??
+            "neighborhood",
         },
       });
     } catch (error) {
@@ -325,7 +348,7 @@ export function useComunidadePage() {
     handleCloseModal,
     deletePostDialogOpen: Boolean(deletePostId),
     isDeletingPost: isDeleting,
-    
+
     // Integração com fundação geográfica
     communityLocation,
   };

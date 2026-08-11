@@ -13,12 +13,17 @@ import {
   type CommunityAccessTarget,
   type CommunityAction,
 } from "./CommunityAccessPolicy";
+import type { UseCommunityAccessResult } from "./useCommunityAccess";
+
+type CommunityPortalGateChildren =
+  | ReactNode
+  | ((access: UseCommunityAccessResult) => ReactNode);
 
 export interface CommunityPortalGateProps {
   readonly resolved: CommunityAccessTarget;
   readonly activeMemberIds?: readonly string[];
   readonly action: CommunityAction;
-  readonly children?: ReactNode;
+  readonly children?: CommunityPortalGateChildren;
   readonly fallback?: ReactNode;
 }
 
@@ -106,7 +111,9 @@ export function CommunityPortalGate({
   fallback,
 }: CommunityPortalGateProps) {
   const location = useLocation();
-  const routeResolved = isCommunityAccessRouteTarget(resolved) ? resolved : null;
+  const routeResolved = isCommunityAccessRouteTarget(resolved)
+    ? resolved
+    : null;
   const appUrls = useAppUrls(routeResolved);
   const access = useCommunityAccess({ resolved, activeMemberIds });
 
@@ -115,7 +122,7 @@ export function CommunityPortalGate({
   }
 
   if (access.can[action]) {
-    return <>{children}</>;
+    return <>{typeof children === "function" ? children(access) : children}</>;
   }
 
   if (fallback) return <>{fallback}</>;
@@ -128,22 +135,23 @@ export function CommunityPortalGate({
     access.primaryAction === "login"
       ? loginHref
       : access.primaryAction === "create_profile"
-          ? appUrls.profile.manage
-          : access.primaryAction === "add_address" || access.primaryAction === "verify_address"
-            ? appUrls.profile.addresses
-            : appUrls.community.feed;
+        ? appUrls.profile.manage
+        : access.primaryAction === "add_address" ||
+            access.primaryAction === "verify_address"
+          ? appUrls.profile.addresses
+          : appUrls.community.feed;
   const actionLabel =
     access.primaryAction === "login"
       ? "Entrar"
       : access.primaryAction === "create_profile"
-          ? "Selecionar perfil"
-          : access.primaryAction === "add_address"
-            ? "Cadastrar endereco"
-            : access.primaryAction === "verify_address"
-              ? "Verificar residencia"
-              : access.primaryAction === "request_membership"
-                ? "Pedir entrada"
-                : "Acompanhar lancamento";
+        ? "Selecionar perfil"
+        : access.primaryAction === "add_address"
+          ? "Cadastrar endereco"
+          : access.primaryAction === "verify_address"
+            ? "Verificar residencia"
+            : access.primaryAction === "request_membership"
+              ? "Pedir entrada"
+              : "Acompanhar lancamento";
   const handleRequestMembership = async () => {
     try {
       await access.requestMembership();
@@ -158,11 +166,15 @@ export function CommunityPortalGate({
       <div className="rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-sm">
         <Icon className="mx-auto h-10 w-10 text-primary" aria-hidden="true" />
         <h2 className="mt-4 text-xl font-semibold">{copy.title}</h2>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">{copy.description}</p>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          {copy.description}
+        </p>
         {access.primaryAction === "request_membership" ? (
           <Button
             className="mt-5 w-full"
-            disabled={!access.canRequestMembership || access.isRequestingMembership}
+            disabled={
+              !access.canRequestMembership || access.isRequestingMembership
+            }
             onClick={handleRequestMembership}
           >
             {access.isRequestingMembership ? "Enviando..." : actionLabel}
