@@ -360,6 +360,17 @@ export async function checkRateLimit(
   return { allowed, remaining, resetAt: existing.resetAt };
 }
 
+export function getTrustedClientIp(req: Request): string | null {
+  const cfIp = req.headers.get('cf-connecting-ip')?.trim();
+  const realIp = req.headers.get('x-real-ip')?.trim();
+  const forwardedFor = req.headers.get('x-forwarded-for');
+  const lastForwardedIp = forwardedFor
+    ? forwardedFor.split(',').at(-1)?.trim() ?? null
+    : null;
+
+  return cfIp || realIp || lastForwardedIp || null;
+}
+
 /**
  * Middleware de rate limiting para edge functions.
  * Retorna Response 429 se o limite foi excedido, null caso contrário.
@@ -376,14 +387,7 @@ export async function rateLimitMiddleware(
   // Preferência: CF-Connecting-IP > x-real-ip > primeiro IP de x-forwarded-for
   // x-forwarded-for pode conter múltiplos IPs (client, proxy1, proxy2...)
   // O ÚLTIMO IP é o mais confiável (adicionado pelo proxy mais próximo ao servidor)
-  const cfIp = req.headers.get('cf-connecting-ip');
-  const realIp = req.headers.get('x-real-ip');
-  const forwardedFor = req.headers.get('x-forwarded-for');
-  const lastForwardedIp = forwardedFor
-    ? forwardedFor.split(',').at(-1)?.trim() ?? null
-    : null;
-
-  const ip = cfIp ?? realIp ?? lastForwardedIp ?? 'unknown';
+  const ip = getTrustedClientIp(req) ?? 'unknown';
   const ua = req.headers.get('user-agent') ?? 'unknown-ua';
   // Combinar IP + primeiros 32 chars do UA para reduzir colisões sem expor UA completo
   const identifier = `${ip}:${ua.slice(0, 32)}`;
@@ -400,7 +404,7 @@ export async function rateLimitMiddleware(
       {
         status: 429,
         headers: {
-          ...getAllSecurityHeaders(),
+          ...getAllSecurityHeaders('POST, OPTIONS', req),
           'Retry-After': String(retryAfter),
           'X-RateLimit-Limit': String(maxRequests),
           'X-RateLimit-Remaining': String(remaining),

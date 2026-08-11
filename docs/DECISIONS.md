@@ -26,7 +26,7 @@
 **Decisão:** o botão central da BottomNav vai para `/novo-post`. Substituiu o antigo "Bairro" porque o bairro já é o contexto ambiente.
 
 ## D-008 — Bairros `coming_soon` viram waitlist
-**Decisão:** bairros sem cobertura redirecionam para `/interesse` (`CommunityInterestPage`) com Turnstile anti-spam. Painel admin em `/admin/community-interest`. **Ref.:** `docs/09-reference/migrations-pending/README.md`.
+**Decisão:** bairros sem cobertura redirecionam para `/interesse` (`CommunityInterestPage`) com Turnstile anti-spam. O registro passa exclusivamente por `register-community-interest`; o painel admin fica em `/admin/community-interest`. **Ref.:** `supabase/migrations/20260809184409_create_authoritative_community_interest_registration.sql`.
 
 ## D-009 — Rascunhos de post são criptografados
 **Decisão:** rascunhos em `localStorage` usam AES-GCM com chave não-extraível em IndexedDB (`postDraftCrypto.ts`). Sync remoto com resolução last-write-wins.

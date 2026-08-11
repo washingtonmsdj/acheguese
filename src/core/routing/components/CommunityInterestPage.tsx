@@ -12,11 +12,13 @@ import { useToast } from "@/shared/components/ui/use-toast";
 import { useResolveTerritoryFromUrl } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
 import { registerCommunityInterest } from "@/core/routing/services";
+import { COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG } from "@/config/security.config";
 import { TurnstileWidget } from "@/shared/components/security/TurnstileWidget";
 import { TerritorialNotFound } from "./TerritorialNotFound";
 
 const TURNSTILE_SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "").trim();
-const MIN_FILL_MS = 3_000; // Bots preenchem instantaneamente; humanos demoram alguns segundos.
+const TURNSTILE_REQUIRED =
+  COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG.turnstileRequiredInProduction && import.meta.env.PROD;
 
 function titleCaseFromSlug(value?: string): string {
   if (!value) return "Comunidade local";
@@ -99,11 +101,15 @@ export function CommunityInterestPage() {
   const [honeypot, setHoneypot] = useState("");
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileError, setTurnstileError] = useState<string | null>(null);
+  const [turnstileGeneration, setTurnstileGeneration] = useState(0);
   const mountedAtRef = useRef<number>(Date.now());
   useEffect(() => {
     mountedAtRef.current = Date.now();
   }, []);
   const turnstileEnabled = TURNSTILE_SITE_KEY.length > 0;
+  const turnstileSatisfied = turnstileEnabled
+    ? Boolean(turnstileToken)
+    : !TURNSTILE_REQUIRED;
 
   const communityBase = useMemo(() => {
     if (!normalizedState || !normalizedCity) return null;
@@ -143,18 +149,17 @@ export function CommunityInterestPage() {
     }
   }
 
+  function resetTurnstile() {
+    setTurnstileToken(null);
+    setTurnstileGeneration((current) => current + 1);
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submitting) return;
 
-    // Honeypot: bots normalmente preenchem todos os campos, inclusive o oculto.
-    if (honeypot.trim().length > 0) {
-      setSubmitted(true); // silencia o bot sem indicar o motivo
-      return;
-    }
-
     // Timing check: rejeita submissões instantâneas (bots).
-    if (Date.now() - mountedAtRef.current < MIN_FILL_MS) {
+    if (Date.now() - mountedAtRef.current < COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG.minimumFillMs) {
       toast({
         title: "Aguarde um instante",
         description: "Confira os dados antes de enviar.",
@@ -173,6 +178,11 @@ export function CommunityInterestPage() {
       return;
     }
 
+    if (TURNSTILE_REQUIRED && !turnstileEnabled) {
+      setTurnstileError("Cadastro temporariamente indisponível: proteção anti-spam não configurada.");
+      return;
+    }
+
     if (turnstileEnabled && !turnstileToken) {
       setTurnstileError("Confirme que você não é um robô.");
       return;
@@ -182,8 +192,6 @@ export function CommunityInterestPage() {
     try {
       const territoryPath = communityBase ?? null;
       const source = typeof window !== "undefined" ? window.location.pathname : "community-interest";
-      const userAgent =
-        typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null;
 
       const result = await registerCommunityInterest({
         communityId,
@@ -196,13 +204,13 @@ export function CommunityInterestPage() {
         message: parsed.data.message || null,
         wantsUpdates: parsed.data.wants_updates,
         source,
-        userAgent,
-        turnstileToken: turnstileEnabled ? turnstileToken : null,
+        honeypot,
+        turnstileToken,
       });
 
       if (result.status === "turnstile_failed") {
         setTurnstileError("Falha na verificação anti-spam. Tente novamente.");
-        setTurnstileToken(null);
+        resetTurnstile();
         return;
       }
 
@@ -221,6 +229,7 @@ export function CommunityInterestPage() {
         description: `Vamos avisar quando ${territoryName} estiver pronta.`,
       });
     } catch (submitError) {
+      if (turnstileToken) resetTurnstile();
       toast({
         title: "Não foi possível registrar",
         description:
@@ -428,8 +437,9 @@ export function CommunityInterestPage() {
               {turnstileEnabled ? (
                 <div className="space-y-1.5">
                   <TurnstileWidget
+                    key={turnstileGeneration}
                     siteKey={TURNSTILE_SITE_KEY}
-                    action="community-interest"
+                    action={COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG.turnstileAction}
                     onVerify={(token) => {
                       setTurnstileToken(token);
                       setTurnstileError(null);
@@ -449,12 +459,16 @@ export function CommunityInterestPage() {
                     </p>
                   )}
                 </div>
+              ) : TURNSTILE_REQUIRED ? (
+                <p className="text-xs text-destructive">
+                  Cadastro temporariamente indisponível: proteção anti-spam não configurada.
+                </p>
               ) : null}
 
 
 
               <div className="flex flex-col gap-2 pt-2 sm:flex-row">
-                <Button type="submit" disabled={submitting} className="sm:min-w-40">
+                <Button type="submit" disabled={submitting || !turnstileSatisfied} className="sm:min-w-40">
                   {submitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -28,6 +28,19 @@
         "Unable to track public view"
       ]
     },
+    "register-community-interest": {
+      "kind": "public-registration-broker",
+      "label": "public authoritative Community Interest registration broker",
+      "requiredPatterns": [
+        "requireHttpMethod\\s*\\(",
+        "rateLimitMiddleware\\s*\\(",
+        "readJsonBody<unknown>\\s*\\(",
+        "getRequiredEnv\\s*\\(\\s*[\"']TURNSTILE_SECRET_KEY[\"']\\s*\\)",
+        "verifyTurnstileToken\\s*\\(",
+        "executeCommunityInterestRegistration\\s*\\(",
+        "getSupabaseAdminClient\\s*\\("
+      ]
+    },
     "auto-dispatch-ride": {
       "kind": "cron-secret",
       "label": "cron ride dispatch worker",
@@ -98,6 +111,17 @@
     }
   },
   "serviceRoleAllowlist": {
+    "register-community-interest": {
+      "kind": "public-registration-broker",
+      "risk": "Critical",
+      "label": "public authoritative Community Interest service_role broker",
+      "requiredPatterns": [
+        "rateLimitMiddleware\\s*\\(",
+        "verifyTurnstileToken\\s*\\(",
+        "getSupabaseAdminClient\\s*\\(",
+        "community_interest_registrations"
+      ]
+    },
     "admin-business-rpc": {
       "kind": "admin-broker",
       "risk": "Critical",

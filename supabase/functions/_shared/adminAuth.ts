@@ -24,7 +24,7 @@ export interface AdminAuthResult {
   role: AdminRole;
 }
 
-function getSupabaseClient() {
+export function getSupabaseAdminClient() {
   const url = Deno.env.get('SUPABASE_URL');
   const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -64,7 +64,7 @@ export async function requireAdmin(req: Request): Promise<AdminAuthResult | Resp
     }
 
     const token = authHeader.slice(7);
-    const supabase = getSupabaseClient();
+    const supabase = getSupabaseAdminClient();
 
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 

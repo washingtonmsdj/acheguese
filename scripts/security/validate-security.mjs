@@ -43,9 +43,9 @@ const CHECKS = [
     patterns: [
       // JWT legado (service_role e anon key)
       /eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g,
-      // Novo formato Supabase (sb_secret_ e sb_publishable_)
+      // Novo formato Supabase secreto. Chaves sb_publishable_ sao publicas por contrato
+      // e aparecem necessariamente no bundle do browser.
       /sb_secret_[A-Za-z0-9_-]{20,}/g,
-      /sb_publishable_[A-Za-z0-9_-]{20,}/g,
       // Stripe
       /sk_live_[A-Za-z0-9]+/g,
       /sk_test_[A-Za-z0-9]+/g,
@@ -125,17 +125,18 @@ const SENSITIVE_ENV_NAME_PATTERN =
   /(^|_)(SECRET|TOKEN|PASSWORD|PRIVATE|SERVICE_ROLE|API_KEY|APIKEY|WEBHOOK_SECRET)(_|$)/i;
 const EDGE_FUNCTION_AUTH_POLICY_PATH = join(
   ROOT_DIR,
-  'docs/governance/security/EDGE_FUNCTION_AUTH_POLICY.json',
+  'docs/09-reference/governance/security/EDGE_FUNCTION_AUTH_POLICY.json',
 );
 const EDGE_FUNCTION_AUTH_POLICY = loadEdgeFunctionAuthPolicy(EDGE_FUNCTION_AUTH_POLICY_PATH);
 const SERVICE_ROLE_BOUNDARY_POLICY_PATH = join(
   ROOT_DIR,
-  'docs/governance/security/SERVICE_ROLE_BOUNDARY_POLICY.json',
+  'docs/09-reference/governance/security/SERVICE_ROLE_BOUNDARY_POLICY.json',
 );
 const SERVICE_ROLE_BOUNDARY_POLICY = loadServiceRoleBoundaryPolicy(SERVICE_ROLE_BOUNDARY_POLICY_PATH);
 const SUPABASE_CONFIG_PATH = join(ROOT_DIR, 'supabase/config.toml');
 const EDGE_FUNCTIONS_DIR = join(ROOT_DIR, 'supabase/functions');
-const EDGE_FUNCTION_SERVICE_ROLE_PATTERN = /SUPABASE_SERVICE_ROLE_KEY|SERVICE_ROLE/g;
+const EDGE_FUNCTION_SERVICE_ROLE_PATTERN =
+  /SUPABASE_SERVICE_ROLE_KEY|SERVICE_ROLE|getSupabaseAdminClient/g;
 const EDGE_FUNCTION_NO_JWT_ALLOWLIST = new Set(Object.keys(EDGE_FUNCTION_AUTH_POLICY.noJwtAllowlist));
 const VERIFICATION_DOCUMENTS_MIGRATION =
   'supabase/migrations/20260604143000_private_verification_documents_storage.sql';
@@ -393,6 +394,97 @@ function validateEdgeFunctionAuthConfig() {
   return issues;
 }
 
+function validateTurnstileProductionContract() {
+  const issues = [];
+  const packageJson = JSON.parse(readFileSync(join(ROOT_DIR, 'package.json'), 'utf-8'));
+  const buildScript = packageJson.scripts?.['build:vercel'] ?? '';
+  const validatorScript = packageJson.scripts?.['validate:turnstile:production'] ?? '';
+  const deployVerifier = readFileSync(join(ROOT_DIR, 'scripts/verify-deploy-ready.mjs'), 'utf-8');
+  const productionValidator = readFileSync(
+    join(ROOT_DIR, 'scripts/security/validate-turnstile-production-config.mjs'),
+    'utf-8',
+  );
+  const registrationService = readFileSync(
+    join(ROOT_DIR, 'src/core/routing/services/CommunityInterestRegistrationService.ts'),
+    'utf-8',
+  );
+  const registrationBroker = readFileSync(
+    join(ROOT_DIR, 'supabase/functions/register-community-interest/index.ts'),
+    'utf-8',
+  );
+
+  const checks = [
+    {
+      ok: buildScript.includes('npm run validate:turnstile:production'),
+      file: 'package.json',
+      message: 'build:vercel nao exige validate:turnstile:production',
+    },
+    {
+      ok: validatorScript.includes('validate-turnstile-production-config.mjs'),
+      file: 'package.json',
+      message: 'script validate:turnstile:production ausente ou incorreto',
+    },
+    {
+      ok:
+        productionValidator.includes("VERCEL_ENV") &&
+        productionValidator.includes('VITE_TURNSTILE_SITE_KEY') &&
+        productionValidator.includes('LOCAL_FAILURE'),
+      file: 'scripts/security/validate-turnstile-production-config.mjs',
+      message: 'validator de producao nao bloqueia site key Turnstile ausente ou invalida',
+    },
+    {
+      ok: deployVerifier.includes("'VITE_TURNSTILE_SITE_KEY'"),
+      file: 'scripts/verify-deploy-ready.mjs',
+      message: 'inventario de deploy nao declara VITE_TURNSTILE_SITE_KEY obrigatoria',
+    },
+    {
+      ok:
+        registrationService.includes('functions.invoke("register-community-interest"') &&
+        !registrationService.includes('.from("community_interest_registrations")') &&
+        !registrationService.includes('verify-turnstile-token'),
+      file: 'src/core/routing/services/CommunityInterestRegistrationService.ts',
+      message: 'frontend nao delega o registro exclusivamente ao broker autoritativo',
+    },
+    {
+      ok:
+        registrationBroker.includes('executeCommunityInterestRegistration') &&
+        registrationBroker.includes('verifyTurnstileToken') &&
+        registrationBroker.includes('getSupabaseAdminClient') &&
+        registrationBroker.includes('rateLimitMiddleware'),
+      file: 'supabase/functions/register-community-interest/index.ts',
+      message: 'broker de registro nao aplica a fronteira autoritativa antiabuso',
+    },
+  ];
+
+  for (const envTemplate of ['.env.example', '.env.local.example']) {
+    const content = readFileSync(join(ROOT_DIR, envTemplate), 'utf-8');
+    checks.push(
+      {
+        ok: /^VITE_TURNSTILE_SITE_KEY=/m.test(content),
+        file: envTemplate,
+        message: `${envTemplate} nao declara VITE_TURNSTILE_SITE_KEY`,
+      },
+      {
+        ok: /^TURNSTILE_SECRET_KEY=/m.test(content),
+        file: envTemplate,
+        message: `${envTemplate} nao declara TURNSTILE_SECRET_KEY`,
+      },
+    );
+  }
+
+  for (const check of checks) {
+    if (check.ok) continue;
+    issues.push({
+      severity: 'CRITICO',
+      check: 'Contrato Turnstile de producao invalido',
+      file: check.file,
+      message: check.message,
+    });
+  }
+
+  return issues;
+}
+
 function validateServiceRoleBoundary() {
   const files = listTrackedFiles()
     .filter(shouldScanServiceRoleBoundaryFile)
@@ -549,22 +641,27 @@ function main() {
   allIssues.push(...edgeFunctionAuthIssues);
   console.log(edgeFunctionAuthIssues.length === 0 ? '   OK\n' : `   ${edgeFunctionAuthIssues.length} problema(s)\n`);
 
-  console.log('5) Validando fronteira Supabase runtime...');
+  console.log('5) Validando contrato Turnstile de producao...');
+  const turnstileIssues = validateTurnstileProductionContract();
+  allIssues.push(...turnstileIssues);
+  console.log(turnstileIssues.length === 0 ? '   OK\n' : `   ${turnstileIssues.length} problema(s)\n`);
+
+  console.log('6) Validando fronteira Supabase runtime...');
   const serviceRoleBoundaryIssues = validateServiceRoleBoundary();
   allIssues.push(...serviceRoleBoundaryIssues);
   console.log(serviceRoleBoundaryIssues.length === 0 ? '   OK\n' : `   ${serviceRoleBoundaryIssues.length} problema(s)\n`);
 
-  console.log('6) Validando fronteira Supabase na UI...');
+  console.log('7) Validando fronteira Supabase na UI...');
   const supabaseAccessBoundaryIssues = validateSupabaseAccessBoundary();
   allIssues.push(...supabaseAccessBoundaryIssues);
   console.log(supabaseAccessBoundaryIssues.length === 0 ? '   OK\n' : `   ${supabaseAccessBoundaryIssues.length} problema(s)\n`);
 
-  console.log('7) Validando broker Edge Function canonico...');
+  console.log('8) Validando broker Edge Function canonico...');
   const edgeFunctionBrokerBoundaryIssues = validateEdgeFunctionBrokerBoundary();
   allIssues.push(...edgeFunctionBrokerBoundaryIssues);
   console.log(edgeFunctionBrokerBoundaryIssues.length === 0 ? '   OK\n' : `   ${edgeFunctionBrokerBoundaryIssues.length} problema(s)\n`);
 
-  console.log('8) Validando documentos privados de verificacao...');
+  console.log('9) Validando documentos privados de verificacao...');
   const verificationDocumentIssues = validatePrivateVerificationDocuments();
   allIssues.push(...verificationDocumentIssues);
   console.log(verificationDocumentIssues.length === 0 ? '   OK\n' : `   ${verificationDocumentIssues.length} problema(s)\n`);

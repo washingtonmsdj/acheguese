@@ -23,6 +23,7 @@ const REQUIRED_PUBLIC_ASSETS = [
 const REQUIRED_ENV_VARS = [
   'VITE_SUPABASE_URL',
   'VITE_SUPABASE_PUBLISHABLE_KEY',
+  'VITE_TURNSTILE_SITE_KEY',
   'VITE_PUBLIC_SITE_URL',
   'VITE_CONTACT_EMAIL',
   'VITE_DPO_EMAIL',
@@ -85,11 +86,16 @@ const OPTIONAL_ENV_VARS = [
   'NOMINATIM_REQUEST_DELAY_MS',
 ];
 
+const REQUIRED_SUPABASE_EDGE_SECRETS = [
+  'TURNSTILE_SECRET_KEY',
+];
+
 const REQUIRED_SCRIPTS = [
   'typecheck:app',
   'lint',
   'build',
   'build:vercel',
+  'validate:turnstile:production',
   'validate:deps',
   'validate:taxonomy',
   'validate:architecture:incremental',
@@ -285,6 +291,8 @@ for (const group of REQUIRED_ENV_GROUPS) {
 }
 console.log('  Opcionais recomendadas:');
 for (const envVar of OPTIONAL_ENV_VARS) console.log(`    - ${envVar}`);
+console.log('  Secrets obrigatorios no Supabase Edge (validacao remota pendente):');
+for (const envVar of REQUIRED_SUPABASE_EDGE_SECRETS) console.log(`    - ${envVar}`);
 console.log();
 
 console.log('Estrutura de build');

@@ -19,6 +19,7 @@ import {
   registerCommunityInterest,
   type CommunityInterestRole,
 } from "@/core/routing/services";
+import { COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG } from "@/config/security.config";
 import { TurnstileWidget } from "@/shared/components/security/TurnstileWidget";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -27,7 +28,8 @@ import { cn } from "@/shared/utils/cn";
 import { slugifyTerritory } from "@/shared/utils/slugify";
 
 const TURNSTILE_SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "").trim();
-const MINIMUM_FILL_MS = 1_200;
+const TURNSTILE_REQUIRED =
+  COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG.turnstileRequiredInProduction && import.meta.env.PROD;
 const PreLaunchTerritoryMap = lazy(() =>
   import("@/app/pages/PreLaunchTerritoryMap").then((module) => ({
     default: module.PreLaunchTerritoryMap,
@@ -243,6 +245,7 @@ export default function PreLaunchLandingPage() {
   const [honeypot, setHoneypot] = useState("");
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileError, setTurnstileError] = useState<string | null>(null);
+  const [turnstileGeneration, setTurnstileGeneration] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitState, setSubmitState] = useState<SubmitState>({
     status: "idle",
@@ -254,6 +257,9 @@ export default function PreLaunchLandingPage() {
     [form.contact],
   );
   const turnstileEnabled = TURNSTILE_SITE_KEY.length > 0;
+  const turnstileSatisfied = turnstileEnabled
+    ? Boolean(turnstileToken)
+    : !TURNSTILE_REQUIRED;
   const canSubmit =
     form.name.trim().length >= 2 &&
     form.bairro.trim().length >= 2 &&
@@ -266,22 +272,19 @@ export default function PreLaunchLandingPage() {
     if (key === "contact") setTurnstileError(null);
   }
 
+  function resetTurnstile() {
+    setTurnstileToken(null);
+    setTurnstileGeneration((current) => current + 1);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submitting) return;
 
-    if (Date.now() - mountedAtRef.current < MINIMUM_FILL_MS) {
+    if (Date.now() - mountedAtRef.current < COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG.minimumFillMs) {
       setSubmitState({
         status: "error",
         message: "Revise os dados antes de enviar.",
-      });
-      return;
-    }
-
-    if (honeypot.trim()) {
-      setSubmitState({
-        status: "success",
-        message: "Cadastro recebido. Vamos avisar quando o Achegue-se abrir.",
       });
       return;
     }
@@ -291,6 +294,11 @@ export default function PreLaunchLandingPage() {
         status: "error",
         message: "Informe nome, contato válido e bairro.",
       });
+      return;
+    }
+
+    if (TURNSTILE_REQUIRED && !turnstileEnabled) {
+      setTurnstileError("Cadastro temporariamente indisponível: proteção anti-spam não configurada.");
       return;
     }
 
@@ -321,7 +329,7 @@ export default function PreLaunchLandingPage() {
         wantsUpdates: true,
         source: "prelaunch-home",
         honeypot,
-        turnstileToken: turnstileEnabled ? turnstileToken : null,
+        turnstileToken,
       });
 
       if (result.status === "already_registered") {
@@ -333,7 +341,7 @@ export default function PreLaunchLandingPage() {
       }
 
       if (result.status === "turnstile_failed") {
-        setTurnstileToken(null);
+        resetTurnstile();
         setTurnstileError("Não foi possível validar a proteção anti-spam. Tente novamente.");
         return;
       }
@@ -344,6 +352,7 @@ export default function PreLaunchLandingPage() {
         message: "Cadastro recebido. Vamos avisar quando o Achegue-se abrir.",
       });
     } catch (error) {
+      if (turnstileToken) resetTurnstile();
       setSubmitState({
         status: "error",
         message:
@@ -527,8 +536,9 @@ export default function PreLaunchLandingPage() {
               {turnstileEnabled ? (
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-2">
                   <TurnstileWidget
+                    key={turnstileGeneration}
                     siteKey={TURNSTILE_SITE_KEY}
-                    action="community-interest"
+                    action={COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG.turnstileAction}
                     theme="light"
                     className="min-h-[65px]"
                     onVerify={(token) => {
@@ -542,6 +552,11 @@ export default function PreLaunchLandingPage() {
                     }}
                   />
                 </div>
+              ) : TURNSTILE_REQUIRED ? (
+                <p className="flex items-start gap-2 rounded-2xl bg-red-50 px-3 py-2 text-sm leading-5 text-red-700">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                  Cadastro temporariamente indisponível: proteção anti-spam não configurada.
+                </p>
               ) : null}
 
               {turnstileError ? (
@@ -573,7 +588,7 @@ export default function PreLaunchLandingPage() {
 
               <Button
                 type="submit"
-                disabled={!canSubmit}
+                disabled={!canSubmit || !turnstileSatisfied}
                 className="h-11 min-h-11 w-full rounded-2xl bg-[#18B37E] text-base font-bold text-white shadow-[0_16px_36px_rgba(24,179,126,0.28)] transition-[background-color,box-shadow] hover:bg-[#149f70] focus-visible:ring-[#18B37E]/40 disabled:bg-slate-200 disabled:text-slate-600 disabled:shadow-none sm:h-[52px] sm:min-h-[52px]"
               >
                 {submitting ? (

@@ -261,6 +261,13 @@ export const SECURITY_DOMAINS = {
 } as const;
 
 const IS_DEV = typeof import.meta !== 'undefined' && Boolean(import.meta.env?.DEV);
+
+export const COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG = {
+  minimumFillMs: 3_000,
+  turnstileAction: 'community-interest',
+  turnstileRequiredInProduction: true,
+} as const;
+
 /**
  * Extract URLs from domain registry
  */

@@ -4,9 +4,8 @@
  * Painel administrativo da waitlist de bairros em `coming_soon`.
  * SSOT: consome `adminCommunityInterestService` e usa a baseline visual do admin.
  *
- * Depende de `community_interest_registrations` — migração pendente em
- * `docs/migrations-pending/20260720120000_create_community_interest_registrations.sql`.
- * Enquanto a tabela não existir, a page renderiza estados vazios/erro amigáveis.
+ * Depende de `community_interest_registrations`, definida em
+ * `supabase/migrations/20260809184409_create_authoritative_community_interest_registration.sql`.
  */
 
 import { useMemo, useState } from "react";

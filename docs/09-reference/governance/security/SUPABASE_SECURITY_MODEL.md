@@ -144,7 +144,7 @@ Funcoes sem JWT sao excecao operacional, nao default. Toda Edge Function deve
 ter `verify_jwt` declarado em `supabase/config.toml`; o gate `security:validate`
 falha quando uma funcao fica dependente de default implicito. A allowlist
 executavel sem JWT fica em
-`docs/governance/security/EDGE_FUNCTION_AUTH_POLICY.json`. O gate
+`docs/09-reference/governance/security/EDGE_FUNCTION_AUTH_POLICY.json`. O gate
 `security:validate` valida schema, categorias permitidas, regex obrigatorias e
 conflito com nomes que sempre exigem JWT por meio de
 `scripts/security/edge-function-auth-policy.mjs`; o contrato local
@@ -157,7 +157,7 @@ a autorizacao actor-bound no RPC.
 
 Toda Edge Function que usa `SUPABASE_SERVICE_ROLE_KEY` ou `SERVICE_ROLE` deve
 estar classificada em
-`docs/governance/security/EDGE_FUNCTION_AUTH_POLICY.json#serviceRoleAllowlist`.
+`docs/09-reference/governance/security/EDGE_FUNCTION_AUTH_POLICY.json#serviceRoleAllowlist`.
 Essa classificacao declara `kind`, `risk`, `label` e padroes obrigatorios que
 o gate confere contra o arquivo real. Classificacao ausente, obsoleta ou sem o
 controle obrigatorio falha em `security:validate`.
@@ -179,6 +179,10 @@ A allowlist atual de funcoes sem JWT e:
   MediaAsset.
 - `get-push-config`, `nominatim-proxy` e `sitemap`: endpoints publicos de
   leitura/proxy sem dado sensivel, com rate limit e validacao de entrada.
+- `register-community-interest`: broker publico autoritativo da waitlist, com
+  payload e metodo restritos, rate limit, honeypot, verificacao Turnstile de
+  action/hostname e `INSERT` server-side por `service_role`. `anon` e
+  `authenticated` nao possuem grant direto de `INSERT` na tabela.
 
 Qualquer novo `verify_jwt=false` precisa de justificativa no plano/auditoria,
 validacao de rate limit e atualizacao deliberada do gate
@@ -214,7 +218,7 @@ Regras:
 - qualquer vazamento suspeito exige rotacao.
 
 A fronteira executavel de `service_role` fora das Edge Functions fica em
-`docs/governance/security/SERVICE_ROLE_BOUNDARY_POLICY.json`. O gate
+`docs/09-reference/governance/security/SERVICE_ROLE_BOUNDARY_POLICY.json`. O gate
 `security:validate` consome esse arquivo e falha quando `SUPABASE_SERVICE_ROLE_KEY`,
 `SERVICE_ROLE_KEY` ou `VITE_SUPABASE_SERVICE_ROLE_KEY` aparecem em `src/`,
 `public/` ou API runtime fora de caminho allowlistado. Cada excecao precisa

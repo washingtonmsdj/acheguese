@@ -2,7 +2,7 @@
  * AdminCommunityInterestService
  *
  * SSOT das leituras administrativas de `community_interest_registrations`.
- * A tabela vive em `docs/migrations-pending/20260720120000_create_community_interest_registrations.sql`
+ * A tabela vive em `supabase/migrations/20260809184409_create_authoritative_community_interest_registration.sql`
  * e ainda não foi promovida aos tipos gerados do Supabase — por isso usamos um
  * client tipado localmente, no mesmo padrão de AdminCommunityAlertsService.
  */

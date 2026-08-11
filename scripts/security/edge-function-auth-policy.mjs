@@ -6,6 +6,8 @@ export const EDGE_FUNCTION_NO_JWT_POLICY_KINDS = new Set([
   'public-counter-broker',
   'public-proxy',
   'public-read',
+  'public-registration-broker',
+  'public-verification-broker',
   'signed-webhook',
 ]);
 
@@ -18,6 +20,7 @@ export const EDGE_FUNCTION_SERVICE_ROLE_POLICY_KINDS = new Set([
   'notification-broker',
   'public-auth-broker',
   'public-counter-broker',
+  'public-registration-broker',
   'signed-webhook',
   'user-data-broker',
 ]);
@@ -128,7 +131,7 @@ export function validateEdgeFunctionServiceRoleCoverage({
       issues.push({
         severity: 'CRITICO',
         check: 'Classificacao service_role sem implementacao',
-        file: 'docs/governance/security/EDGE_FUNCTION_AUTH_POLICY.json',
+        file: 'docs/09-reference/governance/security/EDGE_FUNCTION_AUTH_POLICY.json',
         message: `${functionName} esta em serviceRoleAllowlist, mas nao existe em supabase/functions`,
       });
       continue;

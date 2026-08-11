@@ -219,6 +219,9 @@ verify_jwt = true
 [functions.profile-rpc]
 verify_jwt = true
 
+[functions.register-community-interest]
+verify_jwt = false
+
 [functions.role-rpc]
 verify_jwt = true
 
