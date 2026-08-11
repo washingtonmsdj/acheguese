@@ -546,8 +546,12 @@ function main() {
   if (!documentationIndex) {
     violations.push(`Indice canonico ausente: ${DOCUMENTATION_INDEX_PATH}`);
   } else {
+    const normalizedDocumentationIndex = documentationIndex.replace(
+      /[\t ]+/g,
+      " ",
+    );
     for (const marker of DOCUMENTATION_INDEX_REQUIRED_MARKERS) {
-      if (!documentationIndex.includes(marker)) {
+      if (!normalizedDocumentationIndex.includes(marker)) {
         violations.push(
           `${DOCUMENTATION_INDEX_PATH} fora de sincronia com a taxonomia documental vigente; falta marcador "${marker}".`,
         );
