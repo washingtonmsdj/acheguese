@@ -88,7 +88,7 @@ Thumbs.db
 *service_role*
 *SERVICE_ROLE*
 *service-role*
-!docs/governance/security/SERVICE_ROLE_BOUNDARY_POLICY.json
+!docs/09-reference/governance/security/SERVICE_ROLE_BOUNDARY_POLICY.json
 !scripts/security/service-role-boundary.mjs
 
 # Firebase credentials

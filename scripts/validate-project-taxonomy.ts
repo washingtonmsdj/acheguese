@@ -5,14 +5,11 @@ import path from "path";
 
 const ROOT = process.cwd();
 const MODULES_README_PATH = "src/modules/README.md";
-const TAXONOMY_SSOT_PATH = "docs/architecture/TAXONOMY_SSOT.md";
-const CANONICAL_MAP_PATH = "docs/CANONICAL_MAP.md";
-const CORE_LAYER_SSOT_PATH = "docs/architecture/CORE_LAYER_SSOT.md";
-const GLOBAL_STRUCTURAL_AUDIT_PATH = "docs/AUDITORIA_ESTRUTURAL_GLOBAL.md";
-const STATUS_ATUAL_PATH = "docs/STATUS_ATUAL.md";
-const LEGACY_SSOT_INDEX_PATH = "docs/INDICE_DOCUMENTACAO_SSOT.md";
+const DOCUMENTATION_INDEX_PATH = "docs/DOCUMENTATION-INDEX.md";
+const PROJECT_MILESTONE_PATH = "docs/architecture/PROJECT-MILESTONE-1.md";
+const CORE_LAYER_SSOT_PATH = "docs/03-architecture/CORE_LAYER_SSOT.md";
 const COMMUNITY_FIRST_ARCHITECTURE_DOC_PATH =
-  "docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md";
+  "docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md";
 const COMMUNITY_FIRST_PLAN_PATH = "plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md";
 const ARCHITECTURE_REGISTRY_PATH = "scripts/lib/architecture-registry.ts";
 const VERTICAL_CONFIG_PATH = "src/core/verticals/config.ts";
@@ -136,8 +133,9 @@ const COMMUNITY_FIRST_DOC_MARKERS = [
   "`plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`",
 ] as const;
 
-const TAXONOMY_COMMUNITY_FIRST_MARKERS = [
-  "`Comunidade Local`",
+const PROJECT_MILESTONE_COMMUNITY_MARKERS = [
+  "### 3.3 Community",
+  "`docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`",
   "`territory_communities`",
   "`community_public_aliases`",
   "`community_memberships`",
@@ -204,9 +202,9 @@ const COMMUNITY_MODULE_EMPTY_FACADE_IMPORTS = [
   "@/modules/community-lost-found/pages/AchadoPerdidoDetailPage",
 ] as const;
 const ACTIVE_COMMUNITY_DOCS_WITHOUT_LEGACY_AGGREGATOR = [
-  CANONICAL_MAP_PATH,
+  DOCUMENTATION_INDEX_PATH,
   CORE_LAYER_SSOT_PATH,
-  GLOBAL_STRUCTURAL_AUDIT_PATH,
+  PROJECT_MILESTONE_PATH,
 ] as const;
 const ACTIVE_COMMUNITY_DOC_FORBIDDEN_MARKERS = [
   "src/modules/community/README.md",
@@ -216,47 +214,14 @@ const ACTIVE_COMMUNITY_DOC_FORBIDDEN_MARKERS = [
   "migrar para `src/modules/community`",
   "-> `src/modules/community`",
 ] as const;
-const GLOBAL_STRUCTURAL_AUDIT_REQUIRED_MARKERS = [
-  "`ai`",
-  "`central`",
-  "`communication-territorial`",
-  "`community-feed`",
-  "`community-issues`",
-  "`community-groups`",
-  "`community-events`",
-  "`community-lost-found`",
-  "`community-recommendations`",
-  "`work-opportunities`",
-  "Estado oficial atual: `gastronomy` e `education`.",
-  "`src/core/community-experience`",
-] as const;
-const GLOBAL_STRUCTURAL_AUDIT_FORBIDDEN_MARKERS = [
-  "  - `community`",
-  "community/{alerts",
-  "apenas `gastronomy` e vertical formal",
-  "agregador canonico `src/modules/community`",
-] as const;
-const STATUS_ATUAL_COMMUNITY_FIRST_MARKERS = [
-  "Atualizacao 2026-07-09 (Community First / SSOT operacional)",
-  "`plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`",
-  "`docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`",
-  "`src/core/community-experience`",
-  "`community_entity_links`",
-  "`community_memberships`",
-  "`src/modules/community-feed`",
-  "`src/modules/community` nao e modulo canonico vigente",
-  "Caminhos historicos",
-] as const;
-const LEGACY_SSOT_INDEX_REQUIRED_MARKERS = [
-  "Historico: este arquivo era um indice antigo",
-  "[INDEX_CANONICO.md](./INDEX_CANONICO.md)",
-  "[STATUS_ATUAL.md](./STATUS_ATUAL.md)",
-  "[architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md](./architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md)",
-] as const;
-const LEGACY_SSOT_INDEX_FORBIDDEN_MARKERS = [
-  "Sistema 100% implementado",
-  "RESUMO_FINAL_SSOT_COMPLETO.md",
-  "VALIDACAO_FINAL_E_PROXIMOS_PASSOS.md` (principal)",
+const DOCUMENTATION_INDEX_REQUIRED_MARKERS = [
+  "Status: CANONICO",
+  "docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
+  "docs/03-architecture/CORE_LAYER_SSOT.md",
+  "docs/architecture/PROJECT-MILESTONE-1.md",
+  "docs/01-product/STATUS.md | Product | SUBSTITUIDO",
+  "docs/03-architecture/CANONICAL_MAP.md | Architecture | SUBSTITUIDO",
+  "docs/10-archive/**",
 ] as const;
 const COMMUNITY_FIRST_PLAN_STATUS_REQUIRED_MARKERS = [
   "Status: concluido em 2026-07-09",
@@ -293,12 +258,16 @@ function extractVerticalKeysFromConfig(): string[] {
     return [];
   }
 
-  const match = content.match(/export\s+const\s+VERTICAL_KEYS[^=]*=\s*\[([^\]]*)\]/m);
+  const match = content.match(
+    /export\s+const\s+VERTICAL_KEYS[^=]*=\s*\[([^\]]*)\]/m,
+  );
   if (!match) {
     return [];
   }
 
-  return Array.from(match[1].matchAll(/["']([^"']+)["']/g)).map((item) => item[1]);
+  return Array.from(match[1].matchAll(/["']([^"']+)["']/g)).map(
+    (item) => item[1],
+  );
 }
 
 function listDirectories(relativeDir: string): string[] {
@@ -397,7 +366,9 @@ function main() {
 
   for (const requiredPath of REQUIRED_NESTED_PATHS) {
     if (!pathExists(requiredPath)) {
-      violations.push(`Path obrigatorio ausente para taxonomia oficial: ${requiredPath}`);
+      violations.push(
+        `Path obrigatorio ausente para taxonomia oficial: ${requiredPath}`,
+      );
     }
   }
 
@@ -414,7 +385,9 @@ function main() {
 
   const modulesReadme = readText(MODULES_README_PATH);
   if (!modulesReadme) {
-    violations.push(`Documento de taxonomia de modulos ausente: ${MODULES_README_PATH}`);
+    violations.push(
+      `Documento de taxonomia de modulos ausente: ${MODULES_README_PATH}`,
+    );
   } else {
     for (const moduleName of CANONICAL_MODULES) {
       if (!modulesReadme.includes(`- \`${moduleName}\``)) {
@@ -453,7 +426,9 @@ function main() {
   }
 
   if (!pathExists(COMMUNITY_FIRST_PLAN_PATH)) {
-    violations.push(`Plano Community First ausente: ${COMMUNITY_FIRST_PLAN_PATH}`);
+    violations.push(
+      `Plano Community First ausente: ${COMMUNITY_FIRST_PLAN_PATH}`,
+    );
   } else {
     const communityFirstPlan = readText(COMMUNITY_FIRST_PLAN_PATH);
     if (communityFirstPlan) {
@@ -477,7 +452,9 @@ function main() {
 
   const appLayoutRoutes = readText(APP_LAYOUT_ROUTES_PATH);
   if (!appLayoutRoutes) {
-    violations.push(`Shell de rotas da aplicacao ausente: ${APP_LAYOUT_ROUTES_PATH}`);
+    violations.push(
+      `Shell de rotas da aplicacao ausente: ${APP_LAYOUT_ROUTES_PATH}`,
+    );
   } else {
     for (const marker of APP_LAYOUT_ROUTE_REGISTRY_MARKERS) {
       if (!appLayoutRoutes.includes(marker)) {
@@ -498,7 +475,9 @@ function main() {
 
   const appLayoutRouteRegistry = readText(APP_LAYOUT_ROUTE_REGISTRY_PATH);
   if (!appLayoutRouteRegistry) {
-    violations.push(`Registry declarativo de rotas ausente: ${APP_LAYOUT_ROUTE_REGISTRY_PATH}`);
+    violations.push(
+      `Registry declarativo de rotas ausente: ${APP_LAYOUT_ROUTE_REGISTRY_PATH}`,
+    );
   } else {
     for (const component of APP_LAYOUT_EXTRACTED_ROUTE_COMPONENTS) {
       if (!appLayoutRouteRegistry.includes(component)) {
@@ -511,7 +490,9 @@ function main() {
 
   const lazyImports = readText(APP_LAZY_IMPORTS_PATH);
   if (!lazyImports) {
-    violations.push(`Registry de lazy imports ausente: ${APP_LAZY_IMPORTS_PATH}`);
+    violations.push(
+      `Registry de lazy imports ausente: ${APP_LAZY_IMPORTS_PATH}`,
+    );
   } else {
     for (const forbiddenImport of COMMUNITY_MODULE_EMPTY_FACADE_IMPORTS) {
       if (lazyImports.includes(forbiddenImport)) {
@@ -530,14 +511,16 @@ function main() {
     }
   }
 
-  const taxonomySsot = readText(TAXONOMY_SSOT_PATH);
-  if (!taxonomySsot) {
-    violations.push(`Documento TAXONOMY SSOT ausente: ${TAXONOMY_SSOT_PATH}`);
+  const projectMilestone = readText(PROJECT_MILESTONE_PATH);
+  if (!projectMilestone) {
+    violations.push(
+      `Marco arquitetural atual ausente: ${PROJECT_MILESTONE_PATH}`,
+    );
   } else {
-    for (const marker of TAXONOMY_COMMUNITY_FIRST_MARKERS) {
-      if (!taxonomySsot.includes(marker)) {
+    for (const marker of PROJECT_MILESTONE_COMMUNITY_MARKERS) {
+      if (!projectMilestone.includes(marker)) {
         violations.push(
-          `TAXONOMY SSOT sem marcador Community First "${marker}" em ${TAXONOMY_SSOT_PATH}`,
+          `${PROJECT_MILESTONE_PATH} sem marcador Community First "${marker}".`,
         );
       }
     }
@@ -559,54 +542,14 @@ function main() {
     }
   }
 
-  const globalAudit = readText(GLOBAL_STRUCTURAL_AUDIT_PATH);
-  if (globalAudit) {
-    for (const marker of GLOBAL_STRUCTURAL_AUDIT_REQUIRED_MARKERS) {
-      if (!globalAudit.includes(marker)) {
-        violations.push(
-          `${GLOBAL_STRUCTURAL_AUDIT_PATH} esta fora da taxonomia atual; falta marcador "${marker}".`,
-        );
-      }
-    }
-
-    for (const marker of GLOBAL_STRUCTURAL_AUDIT_FORBIDDEN_MARKERS) {
-      if (globalAudit.includes(marker)) {
-        violations.push(
-          `${GLOBAL_STRUCTURAL_AUDIT_PATH} ainda contem marcador legado "${marker}".`,
-        );
-      }
-    }
-  }
-
-  const statusAtual = readText(STATUS_ATUAL_PATH);
-  if (!statusAtual) {
-    violations.push(`Status operacional ausente: ${STATUS_ATUAL_PATH}`);
+  const documentationIndex = readText(DOCUMENTATION_INDEX_PATH);
+  if (!documentationIndex) {
+    violations.push(`Indice canonico ausente: ${DOCUMENTATION_INDEX_PATH}`);
   } else {
-    for (const marker of STATUS_ATUAL_COMMUNITY_FIRST_MARKERS) {
-      if (!statusAtual.includes(marker)) {
+    for (const marker of DOCUMENTATION_INDEX_REQUIRED_MARKERS) {
+      if (!documentationIndex.includes(marker)) {
         violations.push(
-          `${STATUS_ATUAL_PATH} deve declarar o estado Community First vigente antes do historico; falta marcador "${marker}".`,
-        );
-      }
-    }
-  }
-
-  const legacySsotIndex = readText(LEGACY_SSOT_INDEX_PATH);
-  if (!legacySsotIndex) {
-    violations.push(`Indice historico SSOT ausente: ${LEGACY_SSOT_INDEX_PATH}`);
-  } else {
-    for (const marker of LEGACY_SSOT_INDEX_REQUIRED_MARKERS) {
-      if (!legacySsotIndex.includes(marker)) {
-        violations.push(
-          `${LEGACY_SSOT_INDEX_PATH} deve apontar para os SSOTs vigentes; falta marcador "${marker}".`,
-        );
-      }
-    }
-
-    for (const marker of LEGACY_SSOT_INDEX_FORBIDDEN_MARKERS) {
-      if (legacySsotIndex.includes(marker)) {
-        violations.push(
-          `${LEGACY_SSOT_INDEX_PATH} ainda contem marcador legado "${marker}".`,
+          `${DOCUMENTATION_INDEX_PATH} fora de sincronia com a taxonomia documental vigente; falta marcador "${marker}".`,
         );
       }
     }
@@ -614,7 +557,9 @@ function main() {
 
   const architectureRegistry = readText(ARCHITECTURE_REGISTRY_PATH);
   if (!architectureRegistry) {
-    violations.push(`Architecture registry ausente: ${ARCHITECTURE_REGISTRY_PATH}`);
+    violations.push(
+      `Architecture registry ausente: ${ARCHITECTURE_REGISTRY_PATH}`,
+    );
   } else {
     if (!architectureRegistry.includes('id: "community-experience"')) {
       violations.push(
@@ -630,12 +575,13 @@ function main() {
 
   const verticalKeys = extractVerticalKeysFromConfig();
   if (verticalKeys.length === 0) {
-    violations.push(`Nao foi possivel ler VERTICAL_KEYS em ${VERTICAL_CONFIG_PATH}`);
+    violations.push(
+      `Nao foi possivel ler VERTICAL_KEYS em ${VERTICAL_CONFIG_PATH}`,
+    );
   }
 
   const verticalDocs = [
     [MODULES_README_PATH, modulesReadme],
-    [TAXONOMY_SSOT_PATH, taxonomySsot],
     [COMMUNITY_FIRST_ARCHITECTURE_DOC_PATH, communityFirstDoc],
   ] as const;
 
@@ -649,7 +595,10 @@ function main() {
     }
   }
 
-  const scannedSourceFiles = [...walkFiles("src"), ...walkFiles("scripts")].filter((filePath) => {
+  const scannedSourceFiles = [
+    ...walkFiles("src"),
+    ...walkFiles("scripts"),
+  ].filter((filePath) => {
     const normalized = normalize(filePath);
     return (
       normalized.endsWith(".ts") ||

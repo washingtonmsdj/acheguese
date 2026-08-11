@@ -28,7 +28,9 @@ describe("public view tracking security", () => {
     const vagasService = readProjectFile(
       "src/modules/classifieds/jobs/services/VagasService.ts",
     );
-    const edgeFunction = readProjectFile("supabase/functions/track-public-view/index.ts");
+    const edgeFunction = readProjectFile(
+      "supabase/functions/track-public-view/index.ts",
+    );
     const functionConfig = readProjectFile("supabase/config.toml");
     const migration = readProjectFile(
       "supabase/migrations/20260707122417_harden_public_view_counters_edge_broker.sql",
@@ -37,13 +39,22 @@ describe("public view tracking security", () => {
       "supabase/migrations/20260707123630_fix_public_view_counter_rpc_parameters.sql",
     );
     const edgeFunctionAuthPolicy = readProjectJson<{
-      noJwtAllowlist: Record<string, { label: string; requiredPatterns: string[] }>;
-    }>("docs/governance/security/EDGE_FUNCTION_AUTH_POLICY.json");
+      noJwtAllowlist: Record<
+        string,
+        { label: string; requiredPatterns: string[] }
+      >;
+    }>("docs/09-reference/governance/security/EDGE_FUNCTION_AUTH_POLICY.json");
 
-    expect(clientService).toContain('buildSupabaseFunctionUrl("track-public-view")');
+    expect(clientService).toContain(
+      'buildSupabaseFunctionUrl("track-public-view")',
+    );
     expect(clientService).toContain("PUBLIC_SUPABASE_CONFIG.publishableKey");
-    expect(businessMutations).toContain('PublicViewTrackingService.track("business"');
-    expect(professionalMutations).toContain('PublicViewTrackingService.track("professional"');
+    expect(businessMutations).toContain(
+      'PublicViewTrackingService.track("business"',
+    );
+    expect(professionalMutations).toContain(
+      'PublicViewTrackingService.track("professional"',
+    );
     expect(vagasService).toContain("PublicViewTrackingService.track('vaga'");
 
     expect(businessMutations).not.toContain("increment_business_views");
@@ -63,15 +74,33 @@ describe("public view tracking security", () => {
     expect(functionConfig).toContain("[functions.track-public-view]");
     expect(functionConfig).toContain("verify_jwt = false");
 
-    expect(migration).toContain("REVOKE ALL ON FUNCTION public.increment_business_views(uuid) FROM PUBLIC;");
-    expect(migration).toContain("REVOKE ALL ON FUNCTION public.increment_professional_views(uuid) FROM anon;");
-    expect(migration).toContain("REVOKE ALL ON FUNCTION public.increment_vaga_view_count(uuid) FROM authenticated;");
-    expect(migration).toContain("GRANT EXECUTE ON FUNCTION public.increment_business_views(uuid) TO service_role;");
-    expect(migration).toContain("GRANT EXECUTE ON FUNCTION public.increment_professional_views(uuid) TO service_role;");
-    expect(migration).toContain("GRANT EXECUTE ON FUNCTION public.increment_vaga_view_count(uuid) TO service_role;");
-    expect(migration).toContain("REVOKE ALL ON TABLE public.business_stats FROM PUBLIC, anon;");
-    expect(migration).toContain("REVOKE ALL ON TABLE public.professional_stats FROM PUBLIC, anon;");
-    expect(migration).toContain("REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER");
+    expect(migration).toContain(
+      "REVOKE ALL ON FUNCTION public.increment_business_views(uuid) FROM PUBLIC;",
+    );
+    expect(migration).toContain(
+      "REVOKE ALL ON FUNCTION public.increment_professional_views(uuid) FROM anon;",
+    );
+    expect(migration).toContain(
+      "REVOKE ALL ON FUNCTION public.increment_vaga_view_count(uuid) FROM authenticated;",
+    );
+    expect(migration).toContain(
+      "GRANT EXECUTE ON FUNCTION public.increment_business_views(uuid) TO service_role;",
+    );
+    expect(migration).toContain(
+      "GRANT EXECUTE ON FUNCTION public.increment_professional_views(uuid) TO service_role;",
+    );
+    expect(migration).toContain(
+      "GRANT EXECUTE ON FUNCTION public.increment_vaga_view_count(uuid) TO service_role;",
+    );
+    expect(migration).toContain(
+      "REVOKE ALL ON TABLE public.business_stats FROM PUBLIC, anon;",
+    );
+    expect(migration).toContain(
+      "REVOKE ALL ON TABLE public.professional_stats FROM PUBLIC, anon;",
+    );
+    expect(migration).toContain(
+      "REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER",
+    );
 
     expect(parameterFixMigration).toContain(
       "WHERE stats.profile_id = increment_business_views.business_id;",
@@ -79,21 +108,28 @@ describe("public view tracking security", () => {
     expect(parameterFixMigration).toContain(
       "WHERE stats.profile_id = increment_professional_views.professional_id;",
     );
-    expect(parameterFixMigration).toContain("COALESCE(stats.views_count, 0) + 1");
+    expect(parameterFixMigration).toContain(
+      "COALESCE(stats.views_count, 0) + 1",
+    );
     expect(parameterFixMigration).toContain(
       "GRANT EXECUTE ON FUNCTION public.increment_business_views(uuid) TO service_role;",
     );
     expect(parameterFixMigration).toContain(
       "GRANT EXECUTE ON FUNCTION public.increment_professional_views(uuid) TO service_role;",
     );
-    expect(parameterFixMigration).not.toContain("WHERE profile_id = business_id");
-    expect(parameterFixMigration).not.toContain("WHERE profile_id = professional_id");
-
-    expect(edgeFunctionAuthPolicy.noJwtAllowlist["track-public-view"]?.label).toBe(
-      "public view counter broker",
+    expect(parameterFixMigration).not.toContain(
+      "WHERE profile_id = business_id",
     );
+    expect(parameterFixMigration).not.toContain(
+      "WHERE profile_id = professional_id",
+    );
+
     expect(
-      edgeFunctionAuthPolicy.noJwtAllowlist["track-public-view"]?.requiredPatterns,
+      edgeFunctionAuthPolicy.noJwtAllowlist["track-public-view"]?.label,
+    ).toBe("public view counter broker");
+    expect(
+      edgeFunctionAuthPolicy.noJwtAllowlist["track-public-view"]
+        ?.requiredPatterns,
     ).toContain("VIEW_COUNTER_RPCS");
   });
 });

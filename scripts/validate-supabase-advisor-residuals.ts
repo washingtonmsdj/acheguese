@@ -38,6 +38,7 @@ interface CliOptions {
 const RESIDUAL_REGISTER_PATH = join(
   process.cwd(),
   "docs",
+  "09-reference",
   "governance",
   "security",
   "SUPABASE_ADVISOR_RESIDUALS.json",
@@ -59,7 +60,9 @@ export function loadAllowedResidualCacheKeys(): Set<string> {
   }
 
   const cacheKeys = register.residuals.map((residual) => residual.cacheKey);
-  const duplicateKeys = cacheKeys.filter((key, index) => cacheKeys.indexOf(key) !== index);
+  const duplicateKeys = cacheKeys.filter(
+    (key, index) => cacheKeys.indexOf(key) !== index,
+  );
 
   if (duplicateKeys.length > 0) {
     throw new Error(
@@ -223,7 +226,10 @@ export function parseAdvisorFindings(output: string): AdvisorFinding[] {
 }
 
 export function findingKey(finding: AdvisorFinding): string {
-  return finding.cache_key ?? `${finding.name ?? "<sem nome>"}: ${finding.detail ?? "<sem detalhe>"}`;
+  return (
+    finding.cache_key ??
+    `${finding.name ?? "<sem nome>"}: ${finding.detail ?? "<sem detalhe>"}`
+  );
 }
 
 export function validateAdvisorFindings(
@@ -262,7 +268,7 @@ function main() {
     }
     console.error("");
     console.error(
-      "Corrija o achado ou registre uma excecao formal em docs/governance/security/EXCEPTIONS.md.",
+      "Corrija o achado ou registre uma excecao formal em docs/09-reference/governance/security/EXCEPTIONS.md.",
     );
     process.exit(1);
   }

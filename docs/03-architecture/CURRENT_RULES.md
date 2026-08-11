@@ -165,7 +165,7 @@ Versao documental: 4.5
 - `supabase/migrations/` e a unica fonte de schema versionado.
 - O indice mestre da documentacao e `docs/INDEX_CANONICO.md`.
 - O relatorio executivo vigente de organizacao e blindagem e `docs/audits/MASTER_REPORT.md`.
-- A Security Authority vigente fica em `docs/governance/security/SECURITY_AUTHORITY.md`
+- A Security Authority vigente fica em `docs/09-reference/governance/security/SECURITY_AUTHORITY.md`
   e deve ser consultada antes de mudancas Critical/High em seguranca.
 - Documentos fora do indice canonico (principalmente historico/sessao) nao substituem status oficial.
 

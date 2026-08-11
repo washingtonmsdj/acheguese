@@ -148,7 +148,11 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
   {
     id: "admin",
     label: "admin",
-    sourceRoots: ["src/core/admin", "src/modules/admin", "src/core/verification"],
+    sourceRoots: [
+      "src/core/admin",
+      "src/modules/admin",
+      "src/core/verification",
+    ],
     docsPaths: [
       "src/modules/admin/README.md",
       "src/modules/admin/docs/ADMIN_LOCATIONS_INTERFACE.md",
@@ -181,7 +185,10 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     id: "business",
     label: "business",
     sourceRoots: ["src/core/business", "src/modules/business"],
-    docsPaths: ["src/core/business/README.md", "src/modules/business/README.md"],
+    docsPaths: [
+      "src/core/business/README.md",
+      "src/modules/business/README.md",
+    ],
     ssotPaths: [
       "src/core/business/services/BusinessService.ts",
       "src/core/business/services/BusinessUrlService.ts",
@@ -200,7 +207,11 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     ],
     adminRoutePrefixes: ["/admin/businesss"],
     criticality: "critical",
-    canonicalServiceBasenames: ["BusinessService.ts", "BusinessUrlService.ts", "NetworkService.ts"],
+    canonicalServiceBasenames: [
+      "BusinessService.ts",
+      "BusinessUrlService.ts",
+      "NetworkService.ts",
+    ],
     canonicalTypeBasenames: ["Business.ts"],
     adminSummary:
       "Boa cobertura administrativa para catalogo e reivindicacoes, mas ainda sem matriz formal do que e governado por admin vs dashboard do proprio negocio.",
@@ -212,7 +223,10 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
   {
     id: "gastronomy",
     label: "gastronomy",
-    sourceRoots: ["src/core/verticals/gastronomy", "src/modules/business/gastronomy"],
+    sourceRoots: [
+      "src/core/verticals/gastronomy",
+      "src/modules/business/gastronomy",
+    ],
     docsPaths: ["src/modules/business/gastronomy/README.md"],
     ssotPaths: [
       "src/core/verticals/gastronomy/services/GastronomyUrlService.ts",
@@ -274,7 +288,11 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "/vagas/:state/:city",
       "/vagas/publicar",
     ],
-    adminRoutePrefixes: ["/admin/services", "/admin/vagas", "/admin/verificacoes"],
+    adminRoutePrefixes: [
+      "/admin/services",
+      "/admin/vagas",
+      "/admin/verificacoes",
+    ],
     criticality: "high",
     canonicalServiceBasenames: [
       "ProfessionalService.ts",
@@ -324,12 +342,9 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
   {
     id: "community-experience",
     label: "community-experience",
-    sourceRoots: [
-      "src/core/community-experience",
-      "src/core/community/access",
-    ],
+    sourceRoots: ["src/core/community-experience", "src/core/community/access"],
     docsPaths: [
-      "docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
+      "docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
       "plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md",
     ],
     ssotPaths: [
@@ -349,7 +364,10 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "/comunidade/:state/:city/:groupSlugOrDistrict",
       "/:communitySlug",
     ],
-    adminRoutePrefixes: ["/admin/territory-communities", "/admin/territory-content"],
+    adminRoutePrefixes: [
+      "/admin/territory-communities",
+      "/admin/territory-content",
+    ],
     criticality: "critical",
     canonicalServiceBasenames: [
       "CommunityExperienceRepository.ts",
@@ -382,7 +400,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     ],
     docsPaths: [
       "src/modules/community-feed/README.md",
-      "docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
+      "docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
       "docs/posts",
     ],
     ssotPaths: [
@@ -400,9 +418,17 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "/comunidade/:communitySlug/*",
       "/novo-post",
     ],
-    adminRoutePrefixes: ["/admin/moderacao", "/admin/moderacao-completa", "/admin/zeladoria"],
+    adminRoutePrefixes: [
+      "/admin/moderacao",
+      "/admin/moderacao-completa",
+      "/admin/zeladoria",
+    ],
     criticality: "critical",
-    canonicalServiceBasenames: ["CommunityService.ts", "PostService.ts", "CommentService.ts"],
+    canonicalServiceBasenames: [
+      "CommunityService.ts",
+      "PostService.ts",
+      "CommentService.ts",
+    ],
     canonicalTypeBasenames: ["types.ts"],
     adminSummary:
       "Parcial. Moderacao existe, mas a gestao administrativa do ciclo de posts, grupos, recomendacoes, eventos e achados/perdidos nao esta consolidada numa cobertura unica.",
@@ -414,10 +440,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
   {
     id: "community-alerts",
     label: "community-alerts",
-    sourceRoots: [
-      "src/core/alerts",
-      "src/core/community/alerts",
-    ],
+    sourceRoots: ["src/core/alerts", "src/core/community/alerts"],
     docsPaths: [],
     ssotPaths: [
       "src/core/alerts/services/AlertService.ts",
@@ -430,10 +453,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     ],
     adminRoutePrefixes: ["/admin/community-alerts", "/admin/alertas"],
     criticality: "high",
-    canonicalServiceBasenames: [
-      "AlertService.ts",
-      "CommunityAlertService.ts",
-    ],
+    canonicalServiceBasenames: ["AlertService.ts", "CommunityAlertService.ts"],
     canonicalTypeBasenames: ["types.ts"],
     adminSummary:
       "Boa cobertura administrativa para alertas e issues. O admin ja consome contratos centrais; a lacuna atual e documental e de ownership unificado do dominio.",
@@ -445,14 +465,9 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
   {
     id: "community-issues",
     label: "community-issues",
-    sourceRoots: [
-      "src/core/community/issues",
-      "src/modules/community-issues",
-    ],
+    sourceRoots: ["src/core/community/issues", "src/modules/community-issues"],
     docsPaths: ["src/modules/community-issues/README.md"],
-    ssotPaths: [
-      "src/core/community/issues/services/CommunityIssueService.ts",
-    ],
+    ssotPaths: ["src/core/community/issues/services/CommunityIssueService.ts"],
     routePrefixes: [
       "/:communitySlug/problemas",
       "/comunidade/:state/:city/problemas",
@@ -491,14 +506,20 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     criticality: "medium",
     canonicalServiceBasenames: ["GroupService.ts"],
     canonicalTypeBasenames: ["types.ts"],
-    adminSummary: "Pendente. Ainda nao ha superficie administrativa dedicada a grupos comunitarios.",
+    adminSummary:
+      "Pendente. Ainda nao ha superficie administrativa dedicada a grupos comunitarios.",
     docsSummary: "Inicial. Boundary separado do antigo agregador community.",
-    ssotSummary: "Grupos devem depender de core/social e location_id quando territoriais.",
+    ssotSummary:
+      "Grupos devem depender de core/social e location_id quando territoriais.",
   },
   {
     id: "community-events",
     label: "community-events",
-    sourceRoots: ["src/modules/community-events", "src/core/verticals/events", "src/features/events"],
+    sourceRoots: [
+      "src/modules/community-events",
+      "src/core/verticals/events",
+      "src/features/events",
+    ],
     docsPaths: ["src/modules/community-events/README.md"],
     ssotPaths: [
       "src/core/verticals/events/services/EventReadService.ts",
@@ -508,11 +529,18 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     routePrefixes: ["/eventos/:state/:city", "/eventos/:id"],
     adminRoutePrefixes: ["/admin/eventos"],
     criticality: "medium",
-    canonicalServiceBasenames: ["EventReadService.ts", "EventMutationService.ts", "EventRuntimeService.ts"],
+    canonicalServiceBasenames: [
+      "EventReadService.ts",
+      "EventMutationService.ts",
+      "EventRuntimeService.ts",
+    ],
     canonicalTypeBasenames: ["types.ts"],
-    adminSummary: "Parcial. Admin eventos consome core/admin e core/verticals/events.",
-    docsSummary: "Boundary transversal criado; runtime canonico vive no vertical de eventos.",
-    ssotSummary: "Eventos comunitarios devem consumir core/verticals/events e location_id, sem depender do agregador community.",
+    adminSummary:
+      "Parcial. Admin eventos consome core/admin e core/verticals/events.",
+    docsSummary:
+      "Boundary transversal criado; runtime canonico vive no vertical de eventos.",
+    ssotSummary:
+      "Eventos comunitarios devem consumir core/verticals/events e location_id, sem depender do agregador community.",
   },
   {
     id: "community-recommendations",
@@ -524,13 +552,18 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     ],
     docsPaths: ["src/modules/community-recommendations/README.md", "docs/qa"],
     ssotPaths: ["src/core/community/services/CommunityQAService.ts"],
-    routePrefixes: ["/recomendacoes", "/recomendacoes/nova", "/recomendacoes/:id"],
+    routePrefixes: [
+      "/recomendacoes",
+      "/recomendacoes/nova",
+      "/recomendacoes/:id",
+    ],
     adminRoutePrefixes: ["/admin/moderacao"],
     criticality: "medium",
     canonicalServiceBasenames: ["CommunityQAService.ts"],
     canonicalTypeBasenames: ["qa-types.ts"],
     adminSummary: "Parcial. Moderacao cobre parte do ciclo.",
-    docsSummary: "Parcial. QA ja possui documentos, mas precisa remover prefixo conceitual community.",
+    docsSummary:
+      "Parcial. QA ja possui documentos, mas precisa remover prefixo conceitual community.",
     ssotSummary: "Recomendacoes dependem do contrato QA em core e location_id.",
   },
   {
@@ -543,7 +576,11 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     ],
     docsPaths: ["src/modules/community-lost-found/README.md"],
     ssotPaths: ["src/core/community/services/LostFoundRuntimeService.ts"],
-    routePrefixes: ["/achados-perdidos", "/achados-perdidos/novo", "/achados-perdidos/:id"],
+    routePrefixes: [
+      "/achados-perdidos",
+      "/achados-perdidos/novo",
+      "/achados-perdidos/:id",
+    ],
     adminRoutePrefixes: [],
     criticality: "medium",
     canonicalServiceBasenames: ["LostFoundRuntimeService.ts"],
@@ -575,7 +612,11 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/core/geocoding/services/GeocodingService.ts",
     ],
     routePrefixes: ["/mapa", "/mapa/:state/:city", "/perto-de-mim"],
-    adminRoutePrefixes: ["/admin/mapa", "/admin/locations", "/admin/pontos-turisticos"],
+    adminRoutePrefixes: [
+      "/admin/mapa",
+      "/admin/locations",
+      "/admin/pontos-turisticos",
+    ],
     criticality: "high",
     canonicalServiceBasenames: [
       "GeocodingService.ts",
@@ -607,9 +648,15 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "/classificados/novo",
       "/c/:publicId",
     ],
-    adminRoutePrefixes: ["/admin/classificados", "/admin/classificados/denuncias"],
+    adminRoutePrefixes: [
+      "/admin/classificados",
+      "/admin/classificados/denuncias",
+    ],
     criticality: "high",
-    canonicalServiceBasenames: ["ClassifiedService.ts", "ClassifiedUrlService.ts"],
+    canonicalServiceBasenames: [
+      "ClassifiedService.ts",
+      "ClassifiedUrlService.ts",
+    ],
     canonicalTypeBasenames: ["types.ts"],
     adminSummary:
       "Boa cobertura para catalogo e denuncias, mas ainda sem matriz de gestao de categorias, subcategorias, vendedor e historico de URL em um so lugar.",
@@ -621,7 +668,11 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
   {
     id: "mobility",
     label: "mobility",
-    sourceRoots: ["src/modules/mobility", "src/core/tracking", "src/core/safety"],
+    sourceRoots: [
+      "src/modules/mobility",
+      "src/core/tracking",
+      "src/core/safety",
+    ],
     docsPaths: ["src/core/safety/README.md", "src/core/tracking/README.md"],
     ssotPaths: [
       "src/modules/mobility/services/MobilityService.ts",
@@ -665,13 +716,20 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
   {
     id: "notifications",
     label: "notifications",
-    sourceRoots: ["src/core/notifications", "src/modules/admin", "src/modules/profile"],
+    sourceRoots: [
+      "src/core/notifications",
+      "src/modules/admin",
+      "src/modules/profile",
+    ],
     docsPaths: ["src/core/notifications/README.md"],
     ssotPaths: ["src/core/notifications/services/NotificationService.ts"],
     routePrefixes: ["/mensagens"],
     adminRoutePrefixes: ["/admin/notifications"],
     criticality: "high",
-    canonicalServiceBasenames: ["NotificationService.ts", "notification.service.ts"],
+    canonicalServiceBasenames: [
+      "NotificationService.ts",
+      "notification.service.ts",
+    ],
     canonicalTypeBasenames: ["notification.types.ts"],
     adminSummary:
       "Parcial. O sistema agora possui leitura administrativa oficial em `/admin/notifications`, mas ainda nao cobre templates, canais externos, auditoria de entrega nem politicas globais de notificacao.",
@@ -713,8 +771,6 @@ export const GOVERNANCE_ALLOWED_DB_PATH_MARKERS = [
 
 export const GOVERNANCE_SERVICE_FACADE_HINTS = [
   "compatibility facade",
-
-
 
   "canonical implementation moved",
   "re-export público",

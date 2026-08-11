@@ -12,7 +12,7 @@
  * o snapshot é enfileirado em localStorage para reenvio via `flushPendingSync`.
  */
 
-import { supabase } from "@/integrations/supabase/supabase";
+import { supabase } from "@/integrations/supabase";
 import type {
   PostDraftPayload,
   PostDraftSnapshot,
@@ -121,15 +121,20 @@ export async function fetchRemoteDraft(
 ): Promise<RemoteDraft | null> {
   if (!profileId) return null;
   try {
-    const { data } = await (supabase as unknown as {
-      from: (t: string) => {
-        select: (c: string) => {
-          eq: (col: string, val: string) => {
-            maybeSingle: () => Promise<{ data: RemoteDraftRow | null }>;
+    const { data } = await (
+      supabase as unknown as {
+        from: (t: string) => {
+          select: (c: string) => {
+            eq: (
+              col: string,
+              val: string,
+            ) => {
+              maybeSingle: () => Promise<{ data: RemoteDraftRow | null }>;
+            };
           };
         };
-      };
-    })
+      }
+    )
       .from(TABLE)
       .select("payload, updated_at")
       .eq("profile_id", profileId)
@@ -172,14 +177,16 @@ export async function upsertRemoteDraft(
     void _u;
     void _s;
 
-    const res = (await (supabase as unknown as {
-      from: (t: string) => {
-        upsert: (
-          row: Record<string, unknown>,
-          opts: { onConflict: string },
-        ) => Promise<{ error?: unknown }>;
-      };
-    })
+    const res = (await (
+      supabase as unknown as {
+        from: (t: string) => {
+          upsert: (
+            row: Record<string, unknown>,
+            opts: { onConflict: string },
+          ) => Promise<{ error?: unknown }>;
+        };
+      }
+    )
       .from(TABLE)
       .upsert(
         {
@@ -224,13 +231,15 @@ export async function deleteRemoteDraft(profileId: string): Promise<void> {
   if (!profileId) return;
   clearPending(profileId);
   try {
-    await (supabase as unknown as {
-      from: (t: string) => {
-        delete: () => {
-          eq: (col: string, val: string) => Promise<unknown>;
+    await (
+      supabase as unknown as {
+        from: (t: string) => {
+          delete: () => {
+            eq: (col: string, val: string) => Promise<unknown>;
+          };
         };
-      };
-    })
+      }
+    )
       .from(TABLE)
       .delete()
       .eq("profile_id", profileId);

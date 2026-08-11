@@ -1,5 +1,5 @@
 import { resolveMediaAssetSource } from "@/core/media/references/mediaAssetReference";
-import type { Database } from "@/integrations/supabase/types.generated";
+import type { Database } from "@/integrations/supabase";
 import {
   CLASSIFIED_STATUS,
   CLASSIFIED_STATUS_VALUES,
@@ -49,12 +49,18 @@ function ensureStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
 
   return value
-    .map((item) => typeof item === "string" ? resolveMediaAssetSource(item) : null)
+    .map((item) =>
+      typeof item === "string" ? resolveMediaAssetSource(item) : null,
+    )
     .filter((item): item is string => item !== null);
 }
 
 function mapTerritory(row: ClassifiedReadRow): ClassifiedTerritory {
-  if (!row.location_id || !row.territory || row.territory.id !== row.location_id) {
+  if (
+    !row.location_id ||
+    !row.territory ||
+    row.territory.id !== row.location_id
+  ) {
     throw new Error(`Classified ${row.id} has no canonical territory`);
   }
 

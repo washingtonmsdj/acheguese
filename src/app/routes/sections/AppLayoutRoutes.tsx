@@ -32,6 +32,7 @@ import { professionalPublicRoutes } from "@/core/professional/routes/professiona
 import { touristPointPublicRoutes } from "@/core/verticals/guide/routes/touristPointPublicRoutes";
 import { isFeatureEnabled } from "@/shared/utils/featureFlags";
 import { CommunityTerritoryRoutes } from "./CommunityTerritoryRoutes";
+import { ProtectedRoute } from "@/core/routing/components/ProtectedRoute";
 import {
   APP_LAYOUT_EVENT_TERRITORIAL_ROUTES,
   APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES,
@@ -291,6 +292,9 @@ export function AppLayoutRoutes() {
     surface: LaunchSurfaceKey,
     moduleName: string,
   ) => launchElement(surface, moduleName, <P.TerritorialLayout />);
+  const protectedElement = (element: ReactNode) => (
+    <ProtectedRoute>{element}</ProtectedRoute>
+  );
 
   return (
     <Routes>
@@ -419,22 +423,34 @@ export function AppLayoutRoutes() {
         <Route path="/inicio" element={<P.NationalHubPage />} />
 
         {/* Rotas de Billing e Assinaturas */}
-        <Route path="/planos" element={<P.PricingPage />} />
-        <Route path="/checkout/success" element={<P.CheckoutSuccessPage />} />
+        <Route path="/planos" element={protectedElement(<P.PricingPage />)} />
+        <Route
+          path="/checkout/success"
+          element={protectedElement(<P.CheckoutSuccessPage />)}
+        />
         <Route path="/checkout/cancel" element={<P.CheckoutCancelPage />} />
         <Route
           path="/settings/subscription"
-          element={<P.SubscriptionManagementPage />}
+          element={protectedElement(<P.SubscriptionManagementPage />)}
         />
 
         {/* Rotas de Notificacoes */}
-        <Route path="/notifications" element={<P.NotificationsPage />} />
-        <Route path="/notificacoes" element={<P.NotificationsPage />} />
+        <Route
+          path="/notifications"
+          element={protectedElement(<P.NotificationsPage />)}
+        />
+        <Route
+          path="/notificacoes"
+          element={protectedElement(<P.NotificationsPage />)}
+        />
         <Route
           path="/settings/notifications"
-          element={<P.NotificationPreferencesPage />}
+          element={protectedElement(<P.NotificationPreferencesPage />)}
         />
-        <Route path="/settings/email-logs" element={<P.EmailLogsPage />} />
+        <Route
+          path="/settings/email-logs"
+          element={protectedElement(<P.EmailLogsPage />)}
+        />
 
         {/* Rotas publicas de landing pages */}
         <Route path="/empresas-landing" element={<P.EmpresasLandingPage />} />
@@ -464,20 +480,23 @@ export function AppLayoutRoutes() {
         />
         <Route
           path="/servicos/cadastrar"
-          element={<P.CadastrarServicoPage />}
+          element={protectedElement(<P.CadastrarServicoPage />)}
         />
-        <Route path="/servicos/:id/editar" element={<P.EditarServicoPage />} />
+        <Route
+          path="/servicos/:id/editar"
+          element={protectedElement(<P.EditarServicoPage />)}
+        />
         <Route
           path="/servicos/orcamentos/:leadId"
-          element={<P.ProfessionalLeadTrackingPage />}
+          element={protectedElement(<P.ProfessionalLeadTrackingPage />)}
         />
         <Route
           path="/classificados/novo"
-          element={<P.NovoClassificadoPage />}
+          element={protectedElement(<P.NovoClassificadoPage />)}
         />
         <Route
           path="/classificados/editar/:id"
-          element={<P.EditarClassificadoPage />}
+          element={protectedElement(<P.EditarClassificadoPage />)}
         />
         <Route
           path="/classificados/vendedor/:sellerId"
@@ -494,38 +513,74 @@ export function AppLayoutRoutes() {
         />
         <Route
           path="/conta/preferencias"
-          element={<P.ContaPreferenciasPage />}
+          element={protectedElement(<P.ContaPreferenciasPage />)}
         />
         <Route
           path="/conta/notificacoes"
-          element={<P.NotificationPreferencesPage />}
+          element={protectedElement(<P.NotificationPreferencesPage />)}
         />
-        <Route path="/conta/privacidade" element={<P.PrivacySettingsPage />} />
+        <Route
+          path="/conta/privacidade"
+          element={protectedElement(<P.PrivacySettingsPage />)}
+        />
         <Route
           path="/conta/perfil/configuracoes"
-          element={<P.ProfileSettingsPage />}
+          element={protectedElement(<P.ProfileSettingsPage />)}
         />
-        <Route path="/conta/seguranca" element={<P.ContaSegurancaPage />} />
-        <Route path="/conta/enderecos" element={<P.ContaEnderecosPage />} />
+        <Route
+          path="/conta/seguranca"
+          element={protectedElement(<P.ContaSegurancaPage />)}
+        />
+        <Route
+          path="/conta/enderecos"
+          element={protectedElement(<P.ContaEnderecosPage />)}
+        />
         <Route
           path="/conta/profissional"
           element={<Navigate to="/central" replace />}
         />
-        <Route path="/conta/editar" element={<P.ContaEditarPage />} />
+        <Route
+          path="/conta/editar"
+          element={protectedElement(<P.ContaEditarPage />)}
+        />
         <Route
           path="/conta/editar/:profileId"
-          element={<P.ContaEditarPerfilPage />}
+          element={protectedElement(<P.ContaEditarPerfilPage />)}
         />
-        <Route path="/conta" element={<P.ContaPage />} />
+        <Route path="/conta" element={protectedElement(<P.ContaPage />)} />
         <Route path="/perfil" element={<Navigate to="/conta" replace />} />
-        <Route path="/perfil/editar" element={<Navigate to="/conta/editar" replace />} />
-        <Route path="/perfil/editar/:profileId" element={<Navigate to="/conta/editar" replace />} />
-        <Route path="/perfil/enderecos" element={<Navigate to="/conta/enderecos" replace />} />
-        <Route path="/perfil/seguranca" element={<Navigate to="/conta/seguranca" replace />} />
-        <Route path="/perfil/preferencias" element={<Navigate to="/conta/preferencias" replace />} />
-        <Route path="/perfil/notificacoes" element={<Navigate to="/conta/notificacoes" replace />} />
-        <Route path="/perfil/privacidade" element={<Navigate to="/conta/privacidade" replace />} />
-        <Route path="/perfil/configuracoes" element={<Navigate to="/conta/perfil/configuracoes" replace />} />
+        <Route
+          path="/perfil/editar"
+          element={<Navigate to="/conta/editar" replace />}
+        />
+        <Route
+          path="/perfil/editar/:profileId"
+          element={<Navigate to="/conta/editar" replace />}
+        />
+        <Route
+          path="/perfil/enderecos"
+          element={<Navigate to="/conta/enderecos" replace />}
+        />
+        <Route
+          path="/perfil/seguranca"
+          element={<Navigate to="/conta/seguranca" replace />}
+        />
+        <Route
+          path="/perfil/preferencias"
+          element={<Navigate to="/conta/preferencias" replace />}
+        />
+        <Route
+          path="/perfil/notificacoes"
+          element={<Navigate to="/conta/notificacoes" replace />}
+        />
+        <Route
+          path="/perfil/privacidade"
+          element={<Navigate to="/conta/privacidade" replace />}
+        />
+        <Route
+          path="/perfil/configuracoes"
+          element={<Navigate to="/conta/perfil/configuracoes" replace />}
+        />
         <Route path="/perfil/*" element={<Navigate to="/conta" replace />} />
         <Route
           path="/gamificacao"
@@ -538,27 +593,31 @@ export function AppLayoutRoutes() {
         <Route path="/empresas" element={<P.EmpresasLandingPage />} />
         <Route
           path="/empresas/cadastrar"
-          element={<P.EmpresasCadastroLandingPage />}
+          element={protectedElement(<P.EmpresasCadastroLandingPage />)}
         />
         <Route
           path="/edit-business/:profileId"
-          element={<P.EditarEmpresaPage />}
+          element={protectedElement(<P.EditarEmpresaPage />)}
         />
 
         <Route
           path="/mensagens"
-          element={launchElement(
-            "communityCommunication",
-            "Mensagens",
-            <P.MensagensPage />,
+          element={protectedElement(
+            launchElement(
+              "communityCommunication",
+              "Mensagens",
+              <P.MensagensPage />,
+            ),
           )}
         />
         <Route
           path="/chat/:conversationId"
-          element={launchElement(
-            "communityCommunication",
-            "Mensagens",
-            <P.ChatPage />,
+          element={protectedElement(
+            launchElement(
+              "communityCommunication",
+              "Mensagens",
+              <P.ChatPage />,
+            ),
           )}
         />
         <Route path="/mapa" element={<P.MapaPage />} />
@@ -590,7 +649,7 @@ export function AppLayoutRoutes() {
         <Route path="/recomendacoes" element={<P.RecomendacoesPage />} />
         <Route
           path="/recomendacoes/nova"
-          element={<P.NovaRecomendacaoPage />}
+          element={protectedElement(<P.NovaRecomendacaoPage />)}
         />
         <Route
           path="/recomendacoes/:id"
@@ -606,10 +665,12 @@ export function AppLayoutRoutes() {
         />
         <Route
           path="/achados-perdidos/novo"
-          element={launchElement(
-            "communityLostFound",
-            "Achados e perdidos",
-            <P.NovoAchadoPerdidoPage />,
+          element={protectedElement(
+            launchElement(
+              "communityLostFound",
+              "Achados e perdidos",
+              <P.NovoAchadoPerdidoPage />,
+            ),
           )}
         />
         <Route
@@ -628,7 +689,10 @@ export function AppLayoutRoutes() {
           path="/track/:token"
           element={launchElement("mobility", "Mobilidade", <P.TrackRidePage />)}
         />
-        <Route path="/novo-post" element={<P.NovoPostPage />} />
+        <Route
+          path="/novo-post"
+          element={protectedElement(<P.NovoPostPage />)}
+        />
         <Route path="/busca" element={<P.BuscaPage />} />
         <Route path="/buscar" element={<P.BuscarPage />} />
         <Route
@@ -828,7 +892,6 @@ export function AppLayoutRoutes() {
               />
             }
           />
-
         </Route>
         <Route
           path={buildTerritorialBareRoutePath()}
@@ -842,7 +905,6 @@ export function AppLayoutRoutes() {
               />
             }
           />
-
         </Route>
 
         {/* Landing de estado - lista cidades ativas */}

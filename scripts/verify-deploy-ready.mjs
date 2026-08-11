@@ -86,9 +86,10 @@ const OPTIONAL_ENV_VARS = [
 ];
 
 const REQUIRED_SCRIPTS = [
-  'build',
   'typecheck:app',
   'lint',
+  'build',
+  'build:vercel',
   'validate:deps',
   'validate:taxonomy',
   'validate:architecture:incremental',
@@ -234,7 +235,9 @@ console.log();
 console.log('vercel.json');
 try {
   const vercelConfig = readJson('vercel.json');
-  vercelConfig.buildCommand ? ok(`build command: ${vercelConfig.buildCommand}`) : fail('buildCommand nao definido');
+  vercelConfig.buildCommand === 'npm run build:vercel'
+    ? ok(`build command: ${vercelConfig.buildCommand}`)
+    : fail('buildCommand deve executar npm run build:vercel');
   vercelConfig.outputDirectory ? ok(`output directory: ${vercelConfig.outputDirectory}`) : fail('outputDirectory nao definido');
   Array.isArray(vercelConfig.rewrites) && vercelConfig.rewrites.length > 0 ? ok('rewrites configurados para SPA') : fail('rewrites nao configurados');
   Array.isArray(vercelConfig.headers) && vercelConfig.headers.length > 0 ? ok('headers configurados') : fail('headers nao configurados');
@@ -300,6 +303,10 @@ console.log('Billing canonico');
 for (const file of FORBIDDEN_BILLING_ARTIFACTS) {
   existsSync(file) ? fail(`${file} nao deve existir`) : ok(`${file} removido`);
 }
+console.log();
+
+console.log('Qualidade de codigo');
+runNpmScript('build:vercel');
 console.log();
 
 console.log('Arquitetura e SSOT');

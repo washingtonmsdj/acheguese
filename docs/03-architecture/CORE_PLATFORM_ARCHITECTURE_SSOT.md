@@ -548,8 +548,8 @@ depois que todos os leitores/escritores antigos forem removidos.
 
 ## 13. Referencias
 
-- `docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`
-- `docs/architecture/CORE_LAYER_SSOT.md`
+- `docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`
+- `docs/03-architecture/CORE_LAYER_SSOT.md`
 - `docs/COMMUNITY_TRANSVERSAL_ARCHITECTURE.md`
 - `docs/CURRENT_RULES.md`
 - `docs/DATA_MODELING.md`

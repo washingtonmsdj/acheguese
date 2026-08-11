@@ -39,6 +39,7 @@ Area: Supabase | Auth | Storage | Routes | PII | Other
 Responsavel:
 Criada em:
 Valida ate:
+Validacao: local | remota
 
 ### Contexto
 
@@ -63,6 +64,7 @@ Area: Supabase
 Responsavel: Tech/security owner
 Criada em: 2026-07-15
 Valida ate: 2026-10-15
+Validacao: remota
 
 ### Contexto
 
@@ -129,6 +131,7 @@ Area: Supabase
 Responsavel: Tech/security owner
 Criada em: 2026-07-08
 Valida ate: 2026-08-08
+Validacao: remota
 
 ### Contexto
 
@@ -179,8 +182,8 @@ extensoes, grants, RLS ou migrations; se retornar `blocked`, o marcador
 - `supabase db advisors --linked --type security --fail-on none --output json`
   em 2026-07-08: 12 achados totais.
 - Preflight remoto em 2026-07-08 para `alter table public.spatial_ref_sys enable
-  row level security` falhou com `ERROR: 42501: must be owner of table
-  spatial_ref_sys`.
+row level security` falhou com `ERROR: 42501: must be owner of table
+spatial_ref_sys`.
 - `npm run security:postgis:preflight` em 2026-07-08 retornou `status=blocked`
   para extensoes `citext`, `pg_trgm`, `postgis`, `unaccent`,
   `public.spatial_ref_sys` e tres overloads `public.st_estimatedextent`, todos
@@ -213,6 +216,9 @@ extensoes, grants, RLS ou migrations; se retornar `blocked`, o marcador
   preflight aprovado.
 - Execucao em 2026-07-13 de `npm run security:advisor:residuals` validou os
   mesmos 12 achados remotos, todos dentro da allowlist canonica.
+- Auditoria local em 2026-08-09 confirmou que a excecao venceu e que nenhuma
+  evidencia local prova o owner/estado atual dos objetos. Encerramento ou nova
+  vigencia exige preflight e Advisor remotos; a data nao foi renovada.
 
 ## EXC-2026-07-08-AUTH-HIBP-DASHBOARD
 
@@ -222,6 +228,7 @@ Area: Auth
 Responsavel: Tech/security owner
 Criada em: 2026-07-08
 Valida ate: 2026-08-08
+Validacao: remota
 
 ### Contexto
 
@@ -296,6 +303,9 @@ env var usada, nunca o valor do token.
   novamente ausencia de `SUPABASE_ACCESS_TOKEN` ou
   `SUPABASE_MANAGEMENT_API_TOKEN` com os escopos necessarios. Nenhum token
   implicito foi lido e nenhuma configuracao remota foi alterada.
+- Auditoria local em 2026-08-09 confirmou que a excecao venceu sem evidencia
+  nova do Dashboard/Advisor remoto. A data nao foi renovada; fechamento ou
+  nova vigencia exige prova remota de `password_hibp_enabled`.
 
 Achados residuais do Supabase Advisor tambem devem continuar registrados no
 relatorio canonico:

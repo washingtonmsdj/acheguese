@@ -73,6 +73,15 @@ function createFakeClient() {
 
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 const CONVERSATION_ID = "22222222-2222-4222-8222-222222222222";
+const ACTIVE_SUBSCRIPTION_LIMIT = 32;
+const RECENT_EVENT_FINGERPRINT_LIMIT = 256;
+
+function subscribeToConversation(service: RealtimeService, onEvent = vi.fn()) {
+  return service.subscribe("messaging.classified-conversation-messages", {
+    filterValues: { conversationId: CONVERSATION_ID },
+    onEvent,
+  });
+}
 
 describe("RealtimeService", () => {
   beforeEach(() => {
@@ -237,5 +246,97 @@ describe("RealtimeService", () => {
     subscription.unsubscribe();
     await vi.waitFor(() => expect(fake.removeChannel).toHaveBeenCalledOnce());
     expect(fake.channels[0].channel.untrack).toHaveBeenCalledOnce();
+  });
+
+  it("accepts active subscriptions below the defensive local bound", () => {
+    const fake = createFakeClient();
+    const service = new RealtimeService(fake.client);
+
+    for (let index = 0; index < ACTIVE_SUBSCRIPTION_LIMIT - 1; index += 1) {
+      subscribeToConversation(service);
+    }
+
+    expect(service.getActiveSubscriptions()).toHaveLength(
+      ACTIVE_SUBSCRIPTION_LIMIT - 1,
+    );
+    expect(fake.channel).toHaveBeenCalledTimes(ACTIVE_SUBSCRIPTION_LIMIT - 1);
+  });
+
+  it("accepts exactly the defensive active subscription bound", () => {
+    const fake = createFakeClient();
+    const service = new RealtimeService(fake.client);
+
+    for (let index = 0; index < ACTIVE_SUBSCRIPTION_LIMIT; index += 1) {
+      subscribeToConversation(service);
+    }
+
+    expect(service.getActiveSubscriptions()).toHaveLength(
+      ACTIVE_SUBSCRIPTION_LIMIT,
+    );
+    expect(fake.channel).toHaveBeenCalledTimes(ACTIVE_SUBSCRIPTION_LIMIT);
+  });
+
+  it("rejects a subscription above the bound before opening a channel", () => {
+    const fake = createFakeClient();
+    const service = new RealtimeService(fake.client);
+
+    for (let index = 0; index < ACTIVE_SUBSCRIPTION_LIMIT; index += 1) {
+      subscribeToConversation(service);
+    }
+
+    expect(() => subscribeToConversation(service)).toThrow(
+      "Realtime subscription limit reached",
+    );
+    expect(service.getActiveSubscriptions()).toHaveLength(
+      ACTIVE_SUBSCRIPTION_LIMIT,
+    );
+    expect(fake.channel).toHaveBeenCalledTimes(ACTIVE_SUBSCRIPTION_LIMIT);
+  });
+
+  it("releases capacity immediately when a subscription is cleaned up", async () => {
+    const fake = createFakeClient();
+    const service = new RealtimeService(fake.client);
+    const subscriptions = Array.from(
+      { length: ACTIVE_SUBSCRIPTION_LIMIT },
+      () => subscribeToConversation(service),
+    );
+
+    subscriptions[0].unsubscribe();
+    expect(service.getActiveSubscriptions()).toHaveLength(
+      ACTIVE_SUBSCRIPTION_LIMIT - 1,
+    );
+
+    expect(() => subscribeToConversation(service)).not.toThrow();
+    expect(service.getActiveSubscriptions()).toHaveLength(
+      ACTIVE_SUBSCRIPTION_LIMIT,
+    );
+    await vi.waitFor(() => expect(fake.removeChannel).toHaveBeenCalledOnce());
+  });
+
+  it("evicts the oldest fingerprint while retaining recent duplicate detection", () => {
+    const fake = createFakeClient();
+    const service = new RealtimeService(fake.client);
+    const onEvent = vi.fn();
+
+    subscribeToConversation(service, onEvent);
+    const dispatch = fake.channels[0].handlers[0].callback;
+    const payload = (index: number) =>
+      ({
+        eventType: "INSERT",
+        new: { id: `message-${index}` },
+        old: {},
+        commit_timestamp: `version-${index}`,
+      }) as never;
+
+    for (let index = 0; index <= RECENT_EVENT_FINGERPRINT_LIMIT; index += 1) {
+      dispatch(payload(index));
+    }
+    expect(onEvent).toHaveBeenCalledTimes(RECENT_EVENT_FINGERPRINT_LIMIT + 1);
+
+    dispatch(payload(RECENT_EVENT_FINGERPRINT_LIMIT));
+    expect(onEvent).toHaveBeenCalledTimes(RECENT_EVENT_FINGERPRINT_LIMIT + 1);
+
+    dispatch(payload(0));
+    expect(onEvent).toHaveBeenCalledTimes(RECENT_EVENT_FINGERPRINT_LIMIT + 2);
   });
 });

@@ -5,6 +5,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
+import { classifySupabaseCliFailure } from '../lib/supabase-cli-validation-state.mjs';
 
 const POSTGIS_EXTENSION_EXCEPTION_ID = 'EXC-2026-07-08-POSTGIS-EXTENSION-OWNER';
 const PUBLIC_EXTENSION_NAMES = ['postgis', 'unaccent', 'pg_trgm', 'citext'];
@@ -115,13 +116,14 @@ function runSupabaseQuery(sql) {
     const output = `${result.stdout ?? ''}${result.stderr ?? ''}`;
 
     if (result.error) {
-      throw new Error(`Falha ao executar Supabase CLI: ${result.error.message}`);
+      throw new Error(`LOCAL_FAILURE: falha ao executar Supabase CLI: ${result.error.message}`);
     }
 
     if (result.status !== 0) {
+      const validationState = classifySupabaseCliFailure(output);
       throw new Error(
         [
-          'Falha ao consultar preflight PostGIS no Supabase remoto.',
+          `${validationState}: nao foi possivel consultar o preflight PostGIS remoto.`,
           'Comando: supabase db query --linked --output json --file <readonly catalog query>',
           output.trim(),
         ]

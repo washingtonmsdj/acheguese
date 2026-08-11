@@ -1,4 +1,4 @@
-import type { Database } from "@/integrations/supabase/types.generated";
+import type { Database } from "@/integrations/supabase";
 import { CLASSIFIED_STATUS } from "../constants/statuses";
 import type { CreateClassifiedInput, UpdateClassifiedInput } from "./types";
 
@@ -26,7 +26,9 @@ export function toClassifiedInsert(
   };
 }
 
-export function toClassifiedUpdate(input: UpdateClassifiedInput): ClassifiedUpdate {
+export function toClassifiedUpdate(
+  input: UpdateClassifiedInput,
+): ClassifiedUpdate {
   const update: ClassifiedUpdate = {};
 
   if (input.title !== undefined) update.title = input.title;
@@ -37,7 +39,8 @@ export function toClassifiedUpdate(input: UpdateClassifiedInput): ClassifiedUpda
   if (input.photos !== undefined) update.photos = input.photos;
   if (input.location_id !== undefined) update.location_id = input.location_id;
   if (input.category_id !== undefined) update.category_id = input.category_id;
-  if (input.subcategory_id !== undefined) update.subcategory_id = input.subcategory_id;
+  if (input.subcategory_id !== undefined)
+    update.subcategory_id = input.subcategory_id;
   if (input.status !== undefined) update.status = input.status;
 
   return update;

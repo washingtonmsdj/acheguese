@@ -90,7 +90,7 @@ const SERVICE_ROLE_BOUNDARY_SCAN_PREFIXES = [
   'supabase/functions/',
   'scripts/',
   'public/',
-  'docs/governance/security/',
+  'docs/09-reference/governance/security/',
   'tests/e2e/',
   'tests/helpers/',
   'tests/operational/',

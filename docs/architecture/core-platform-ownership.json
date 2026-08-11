@@ -1,21 +1,13 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-07-18",
-  "architecture": "docs/architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md",
+  "architecture": "docs/03-architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md",
   "plan": "plans/CORE_PLATFORM_CONSOLIDATION_PLAN.md",
-  "sourceRoots": [
-    "src",
-    "api",
-    "supabase/functions"
-  ],
+  "sourceRoots": ["src", "api", "supabase/functions"],
   "policy": {
     "defaultMutationOwner": "one-writer-per-table-operation",
     "frontendAuthorization": "ui-hint-only",
-    "backendEnforcement": [
-      "rls",
-      "rpc",
-      "edge-function"
-    ],
+    "backendEnforcement": ["rls", "rpc", "edge-function"],
     "baselineUpdate": "requires-reviewed-architecture-change"
   },
   "controlledTables": [
@@ -1589,10 +1581,7 @@
       "access": "connect",
       "path": "src/core/realtime/services/RealtimeService.ts",
       "maxCalls": 3,
-      "details": [
-        "`${definition.channelPrefix}:${scopeId}`",
-        "subscriptionId"
-      ]
+      "details": ["`${definition.channelPrefix}:${scopeId}`", "subscriptionId"]
     },
     {
       "kind": "dynamic-storage",
@@ -1600,9 +1589,7 @@
       "access": "read",
       "path": "src/core/media/services/MediaService.ts",
       "maxCalls": 1,
-      "details": [
-        "options.bucket"
-      ]
+      "details": ["options.bucket"]
     },
     {
       "kind": "dynamic-storage",
@@ -1622,9 +1609,7 @@
       "access": "read",
       "path": "src/core/engagement/services/ProfileSavedEntityService.ts",
       "maxCalls": 2,
-      "details": [
-        "config.tableName as never"
-      ]
+      "details": ["config.tableName as never"]
     },
     {
       "kind": "dynamic-table",
@@ -1646,9 +1631,7 @@
       "access": "read",
       "path": "src/core/infrastructure/database/query-builders/QueryBuilder.ts",
       "maxCalls": 6,
-      "details": [
-        "table"
-      ]
+      "details": ["table"]
     },
     {
       "kind": "dynamic-table",
@@ -1656,9 +1639,7 @@
       "access": "read",
       "path": "src/core/tracking/services/TrackingService.ts",
       "maxCalls": 2,
-      "details": [
-        "tableName"
-      ]
+      "details": ["tableName"]
     },
     {
       "kind": "dynamic-table",
@@ -1666,9 +1647,7 @@
       "access": "read",
       "path": "src/integrations/supabase/services/supabaseHelpers.ts",
       "maxCalls": 2,
-      "details": [
-        "tableName as never"
-      ]
+      "details": ["tableName as never"]
     },
     {
       "kind": "dynamic-table",
@@ -1676,9 +1655,7 @@
       "access": "read",
       "path": "src/modules/admin/services/OperationalDiagnosticsService.ts",
       "maxCalls": 1,
-      "details": [
-        "definition.table"
-      ]
+      "details": ["definition.table"]
     },
     {
       "kind": "dynamic-table",
@@ -1686,9 +1663,7 @@
       "access": "write",
       "path": "src/core/engagement/services/ProfileSavedEntityService.ts",
       "maxCalls": 3,
-      "details": [
-        "config.tableName as never"
-      ]
+      "details": ["config.tableName as never"]
     },
     {
       "kind": "dynamic-table",
@@ -1710,9 +1685,7 @@
       "access": "write",
       "path": "src/core/infrastructure/database/query-builders/QueryBuilder.ts",
       "maxCalls": 4,
-      "details": [
-        "table"
-      ]
+      "details": ["table"]
     },
     {
       "kind": "dynamic-table",
@@ -1720,9 +1693,7 @@
       "access": "write",
       "path": "src/core/mobility/services/mobility.mutations.ts",
       "maxCalls": 1,
-      "details": [
-        "table"
-      ]
+      "details": ["table"]
     },
     {
       "kind": "dynamic-table",
@@ -1730,9 +1701,7 @@
       "access": "write",
       "path": "src/core/mobility/services/MobilityService.impl.ts",
       "maxCalls": 1,
-      "details": [
-        "table"
-      ]
+      "details": ["table"]
     },
     {
       "kind": "dynamic-table",
@@ -1740,9 +1709,7 @@
       "access": "write",
       "path": "src/core/tracking/services/TrackingService.ts",
       "maxCalls": 1,
-      "details": [
-        "tableName"
-      ]
+      "details": ["tableName"]
     },
     {
       "kind": "dynamic-table",
@@ -1750,9 +1717,7 @@
       "access": "write",
       "path": "src/integrations/supabase/services/supabaseHelpers.ts",
       "maxCalls": 6,
-      "details": [
-        "tableName as never"
-      ]
+      "details": ["tableName as never"]
     },
     {
       "kind": "dynamic-table",
@@ -1760,9 +1725,7 @@
       "access": "write",
       "path": "src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts",
       "maxCalls": 3,
-      "details": [
-        "table"
-      ]
+      "details": ["table"]
     },
     {
       "kind": "storage",

@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
@@ -19,6 +25,7 @@ const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const exceptionRegisterPath = join(
   repoRoot,
   "docs",
+  "09-reference",
   "governance",
   "security",
   "EXCEPTIONS.md",
@@ -26,6 +33,7 @@ const exceptionRegisterPath = join(
 const advisorResidualRegisterPath = join(
   repoRoot,
   "docs",
+  "09-reference",
   "governance",
   "security",
   "SUPABASE_ADVISOR_RESIDUALS.json",
@@ -41,6 +49,7 @@ const supabaseConfigPath = join(repoRoot, "supabase", "config.toml");
 const supabaseSecurityModelPath = join(
   repoRoot,
   "docs",
+  "09-reference",
   "governance",
   "security",
   "SUPABASE_SECURITY_MODEL.md",
@@ -48,6 +57,7 @@ const supabaseSecurityModelPath = join(
 const edgeFunctionAuthPolicyPath = join(
   repoRoot,
   "docs",
+  "09-reference",
   "governance",
   "security",
   "EDGE_FUNCTION_AUTH_POLICY.json",
@@ -55,6 +65,7 @@ const edgeFunctionAuthPolicyPath = join(
 const serviceRoleBoundaryPolicyPath = join(
   repoRoot,
   "docs",
+  "09-reference",
   "governance",
   "security",
   "SERVICE_ROLE_BOUNDARY_POLICY.json",
@@ -87,20 +98,31 @@ type EdgeFunctionAuthConfigIssue = {
 
 type EdgeFunctionAuthPolicy = {
   jwtRequiredNamePatterns: string[];
-  noJwtAllowlist: Record<string, { kind: string; label: string; requiredPatterns: string[] }>;
+  noJwtAllowlist: Record<
+    string,
+    { kind: string; label: string; requiredPatterns: string[] }
+  >;
   requireExplicitConfigForAllFunctions: boolean;
-  serviceRoleAllowlist: Record<string, { kind: string; label: string; requiredPatterns: string[]; risk: string }>;
+  serviceRoleAllowlist: Record<
+    string,
+    { kind: string; label: string; requiredPatterns: string[]; risk: string }
+  >;
   schemaVersion: string;
 };
 
 type EdgeFunctionAuthConfigModule = {
-  parseSupabaseFunctionAuthConfig: (content: string) => Map<string, EdgeFunctionAuthConfig>;
+  parseSupabaseFunctionAuthConfig: (
+    content: string,
+  ) => Map<string, EdgeFunctionAuthConfig>;
   validateEdgeFunctionAuthConfigContract: (input: {
     authPolicy: EdgeFunctionAuthPolicy;
     configContent: string;
     configFile?: string;
     implementedFunctionNames: string[];
-  }) => { functionConfigs: Map<string, EdgeFunctionAuthConfig>; issues: EdgeFunctionAuthConfigIssue[] };
+  }) => {
+    functionConfigs: Map<string, EdgeFunctionAuthConfig>;
+    issues: EdgeFunctionAuthConfigIssue[];
+  };
 };
 
 type EdgeFunctionAuthPolicyModule = {
@@ -191,7 +213,10 @@ type SupabaseAuthHibpModule = {
 type SupabasePostgisOwnerPreflightModule = {
   buildPostgisOwnerPreflightSql: () => string;
   evaluatePostgisOwnerPreflight: (snapshot: {
-    roleContext: { current_user: string | null; current_user_is_superuser: boolean };
+    roleContext: {
+      current_user: string | null;
+      current_user_is_superuser: boolean;
+    };
     extensions: Array<{
       extname: string;
       extension_owner: string | null;
@@ -216,7 +241,10 @@ type SupabasePostgisOwnerPreflightModule = {
     status: "blocked" | "ready" | "resolved";
   };
   normalizePostgisPreflightRow: (row: unknown) => {
-    roleContext: { current_user: string | null; current_user_is_superuser: boolean };
+    roleContext: {
+      current_user: string | null;
+      current_user_is_superuser: boolean;
+    };
     extensions: unknown[];
     spatialRefSys: unknown[];
     stEstimatedExtent: unknown[];
@@ -303,7 +331,9 @@ const invalidEdgeFunctionAuthPolicyCases: Array<
   [
     "invalid service_role required regex",
     (policy) => {
-      policy.serviceRoleAllowlist["admin-business-rpc"].requiredPatterns = ["("];
+      policy.serviceRoleAllowlist["admin-business-rpc"].requiredPatterns = [
+        "(",
+      ];
     },
     /not a valid regex/,
   ],
@@ -397,7 +427,10 @@ const invalidServiceRoleCoverageCases: Array<
       expectedMessage: "unclassified-function usa service_role",
       implementedFunctionNames: ["unclassified-function"],
       serviceRoleFunctionContents: new Map([
-        ["unclassified-function", "const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'); auth.getUser();"],
+        [
+          "unclassified-function",
+          "const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'); auth.getUser();",
+        ],
       ]),
     },
   ],
@@ -426,30 +459,43 @@ const invalidServiceRoleCoverageCases: Array<
       expectedMessage: "classified-function usa service_role",
       implementedFunctionNames: ["classified-function"],
       serviceRoleFunctionContents: new Map([
-        ["classified-function", "const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');"],
+        [
+          "classified-function",
+          "const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');",
+        ],
       ]),
     },
   ],
 ];
 
 async function loadEdgeFunctionAuthConfigModule(): Promise<EdgeFunctionAuthConfigModule> {
-  return (await import(edgeFunctionAuthConfigModulePath)) as EdgeFunctionAuthConfigModule;
+  return (await import(
+    edgeFunctionAuthConfigModulePath
+  )) as EdgeFunctionAuthConfigModule;
 }
 
 async function loadEdgeFunctionAuthPolicyModule(): Promise<EdgeFunctionAuthPolicyModule> {
-  return (await import(edgeFunctionAuthPolicyModulePath)) as EdgeFunctionAuthPolicyModule;
+  return (await import(
+    edgeFunctionAuthPolicyModulePath
+  )) as EdgeFunctionAuthPolicyModule;
 }
 
 async function loadServiceRoleBoundaryModule(): Promise<ServiceRoleBoundaryModule> {
-  return (await import(serviceRoleBoundaryModulePath)) as ServiceRoleBoundaryModule;
+  return (await import(
+    serviceRoleBoundaryModulePath
+  )) as ServiceRoleBoundaryModule;
 }
 
 async function loadSupabaseAccessBoundaryModule(): Promise<SupabaseAccessBoundaryModule> {
-  return (await import(supabaseAccessBoundaryModulePath)) as SupabaseAccessBoundaryModule;
+  return (await import(
+    supabaseAccessBoundaryModulePath
+  )) as SupabaseAccessBoundaryModule;
 }
 
 async function loadEdgeFunctionBrokerBoundaryModule(): Promise<EdgeFunctionBrokerBoundaryModule> {
-  return (await import(edgeFunctionBrokerBoundaryModulePath)) as EdgeFunctionBrokerBoundaryModule;
+  return (await import(
+    edgeFunctionBrokerBoundaryModulePath
+  )) as EdgeFunctionBrokerBoundaryModule;
 }
 
 async function loadSupabaseAuthHibpModule(): Promise<SupabaseAuthHibpModule> {
@@ -457,7 +503,9 @@ async function loadSupabaseAuthHibpModule(): Promise<SupabaseAuthHibpModule> {
 }
 
 async function loadSupabasePostgisOwnerPreflightModule(): Promise<SupabasePostgisOwnerPreflightModule> {
-  return (await import(supabasePostgisOwnerPreflightModulePath)) as SupabasePostgisOwnerPreflightModule;
+  return (await import(
+    supabasePostgisOwnerPreflightModulePath
+  )) as SupabasePostgisOwnerPreflightModule;
 }
 
 function createTempMigration(name: string, content: string): MigrationFile {
@@ -513,7 +561,9 @@ function parseIsoDate(value: string): Date | null {
 
 function startOfTodayUtc(): Date {
   const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
 }
 
 function readMarkdown(path: string): string {
@@ -557,7 +607,9 @@ function readSupabaseAuthConfig(): {
   )?.[1];
 
   if (!minimumPasswordLength || !passwordRequirements) {
-    throw new Error("Supabase auth password settings are missing from config.toml");
+    throw new Error(
+      "Supabase auth password settings are missing from config.toml",
+    );
   }
 
   return {
@@ -566,13 +618,18 @@ function readSupabaseAuthConfig(): {
   };
 }
 
-async function readSupabaseFunctionConfigs(): Promise<Map<string, EdgeFunctionAuthConfig>> {
-  const { parseSupabaseFunctionAuthConfig } = await loadEdgeFunctionAuthConfigModule();
+async function readSupabaseFunctionConfigs(): Promise<
+  Map<string, EdgeFunctionAuthConfig>
+> {
+  const { parseSupabaseFunctionAuthConfig } =
+    await loadEdgeFunctionAuthConfigModule();
   return parseSupabaseFunctionAuthConfig(readMarkdown(supabaseConfigPath));
 }
 
 function readEdgeFunctionNames(): string[] {
-  return readdirSync(join(repoRoot, "supabase", "functions"), { withFileTypes: true })
+  return readdirSync(join(repoRoot, "supabase", "functions"), {
+    withFileTypes: true,
+  })
     .filter((entry) => entry.isDirectory() && !entry.name.startsWith("_"))
     .map((entry) => entry.name)
     .sort();
@@ -585,7 +642,11 @@ function readEdgeFunctionServiceRoleContents(): Map<string, string> {
     const content = readMarkdown(
       join(repoRoot, "supabase", "functions", functionName, "index.ts"),
     );
-    if (/SUPABASE_SERVICE_ROLE_KEY|SERVICE_ROLE/.test(content)) {
+    if (
+      /SUPABASE_SERVICE_ROLE_KEY|SERVICE_ROLE|getSupabaseAdminClient/.test(
+        content,
+      )
+    ) {
       serviceRoleFunctionContents.set(functionName, content);
     }
   }
@@ -618,7 +679,9 @@ describe("Security Authority migration validator", () => {
     `);
 
     expect(violations).toContainEqual(
-      expect.stringContaining("Tabela publica criada sem decisao explicita de acesso Data API"),
+      expect.stringContaining(
+        "Tabela publica criada sem decisao explicita de acesso Data API",
+      ),
     );
   });
 
@@ -685,7 +748,9 @@ describe("Security Authority migration validator", () => {
     `);
 
     expect(violations).toContainEqual(
-      expect.stringContaining("RPC mutante SECURITY DEFINER exposto sem guarda de auth"),
+      expect.stringContaining(
+        "RPC mutante SECURITY DEFINER exposto sem guarda de auth",
+      ),
     );
   });
 
@@ -704,7 +769,9 @@ describe("Security Authority migration validator", () => {
     `);
 
     expect(violations).toContainEqual(
-      expect.stringContaining("RPC mutante SECURITY DEFINER exposto sem guarda de auth"),
+      expect.stringContaining(
+        "RPC mutante SECURITY DEFINER exposto sem guarda de auth",
+      ),
     );
   });
 
@@ -742,7 +809,9 @@ describe("Security Authority migration validator", () => {
     `);
 
     expect(violations).toContainEqual(
-      expect.stringContaining("Policy de listagem publica ampla em storage.objects"),
+      expect.stringContaining(
+        "Policy de listagem publica ampla em storage.objects",
+      ),
     );
   });
 
@@ -765,7 +834,9 @@ describe("Security Authority migration validator", () => {
     `);
 
     expect(violations).toContainEqual(
-      expect.stringContaining("Migration toca objeto PostGIS/extension-owner sem preflight vinculado"),
+      expect.stringContaining(
+        "Migration toca objeto PostGIS/extension-owner sem preflight vinculado",
+      ),
     );
   });
 
@@ -784,7 +855,9 @@ describe("Security Authority Supabase Auth config", () => {
     const authConfig = readSupabaseAuthConfig();
 
     expect(authConfig.minimumPasswordLength).toBe(PASSWORD_POLICY.MIN_LENGTH);
-    expect(authConfig.passwordRequirements).toBe("lower_upper_letters_digits_symbols");
+    expect(authConfig.passwordRequirements).toBe(
+      "lower_upper_letters_digits_symbols",
+    );
   });
 
   it("keeps leaked-password checks centralized on the auth compromise helper", () => {
@@ -822,7 +895,9 @@ describe("Security Authority Supabase Auth config", () => {
   });
 
   it("keeps the remote HIBP provider check executable through the Management API script", () => {
-    const pkg = readJson<{ scripts?: Record<string, string> }>(join(repoRoot, "package.json"));
+    const pkg = readJson<{ scripts?: Record<string, string> }>(
+      join(repoRoot, "package.json"),
+    );
     const scriptContent = readMarkdown(
       join(repoRoot, "scripts", "security", "supabase-auth-hibp.mjs"),
     );
@@ -862,9 +937,13 @@ describe("Security Authority Supabase Auth config", () => {
     });
 
     expect(() => validateProjectRef("abcdefghijklmnopqrst")).not.toThrow();
-    expect(() => validateProjectRef("bad ref!")).toThrow(/Project ref invalido/);
+    expect(() => validateProjectRef("bad ref!")).toThrow(
+      /Project ref invalido/,
+    );
     expect(() => validateTokenEnvName("SUPABASE_ACCESS_TOKEN")).not.toThrow();
-    expect(() => validateTokenEnvName("bad-token-env")).toThrow(/env var invalido/);
+    expect(() => validateTokenEnvName("bad-token-env")).toThrow(
+      /env var invalido/,
+    );
 
     const status = createHibpStatus({
       action: "check",
@@ -910,7 +989,9 @@ describe("Security Authority Supabase Auth config", () => {
 
 describe("Security Authority Edge Function auth config", () => {
   it("keeps no-JWT public Edge Functions explicitly allowlisted and documented", async () => {
-    const edgeFunctionAuthPolicy = readJson<EdgeFunctionAuthPolicy>(edgeFunctionAuthPolicyPath);
+    const edgeFunctionAuthPolicy = readJson<EdgeFunctionAuthPolicy>(
+      edgeFunctionAuthPolicyPath,
+    );
     const {
       EDGE_FUNCTION_NO_JWT_POLICY_KINDS,
       validateEdgeFunctionAuthPolicy,
@@ -919,19 +1000,28 @@ describe("Security Authority Edge Function auth config", () => {
     const allowedPublicNoJwtEdgeFunctions = Object.keys(
       edgeFunctionAuthPolicy.noJwtAllowlist,
     );
-    const jwtRequiredNamePatterns = edgeFunctionAuthPolicy.jwtRequiredNamePatterns.map(
-      (pattern) => new RegExp(pattern),
-    );
+    const jwtRequiredNamePatterns =
+      edgeFunctionAuthPolicy.jwtRequiredNamePatterns.map(
+        (pattern) => new RegExp(pattern),
+      );
     const noJwtFunctions = Array.from(functionConfigs.entries())
       .filter(([, config]) => config.verifyJwt === false)
       .map(([name]) => name)
       .sort();
     const securityModel = readMarkdown(supabaseSecurityModelPath);
 
-    expect(edgeFunctionAuthPolicy.schemaVersion).toBe("edge-function-auth-policy/v1");
-    expect(edgeFunctionAuthPolicy.requireExplicitConfigForAllFunctions).toBe(true);
-    expect(edgeFunctionAuthPolicy.jwtRequiredNamePatterns.length).toBeGreaterThan(0);
-    expect(() => validateEdgeFunctionAuthPolicy(edgeFunctionAuthPolicy)).not.toThrow();
+    expect(edgeFunctionAuthPolicy.schemaVersion).toBe(
+      "edge-function-auth-policy/v1",
+    );
+    expect(edgeFunctionAuthPolicy.requireExplicitConfigForAllFunctions).toBe(
+      true,
+    );
+    expect(
+      edgeFunctionAuthPolicy.jwtRequiredNamePatterns.length,
+    ).toBeGreaterThan(0);
+    expect(() =>
+      validateEdgeFunctionAuthPolicy(edgeFunctionAuthPolicy),
+    ).not.toThrow();
     expect(noJwtFunctions).toEqual([...allowedPublicNoJwtEdgeFunctions].sort());
 
     for (const functionName of allowedPublicNoJwtEdgeFunctions) {
@@ -941,7 +1031,9 @@ describe("Security Authority Edge Function auth config", () => {
       expect(EDGE_FUNCTION_NO_JWT_POLICY_KINDS.has(policy.kind)).toBe(true);
       expect(policy.label.trim().length).toBeGreaterThan(0);
       expect(policy.requiredPatterns.length).toBeGreaterThan(0);
-      expect(jwtRequiredNamePatterns.some((pattern) => pattern.test(functionName))).toBe(false);
+      expect(
+        jwtRequiredNamePatterns.some((pattern) => pattern.test(functionName)),
+      ).toBe(false);
       expect(securityModel).toContain(`\`${functionName}\``);
       for (const pattern of policy.requiredPatterns) {
         expect(() => new RegExp(pattern)).not.toThrow();
@@ -950,14 +1042,20 @@ describe("Security Authority Edge Function auth config", () => {
   });
 
   it("keeps every service_role Edge Function explicitly classified", async () => {
-    const edgeFunctionAuthPolicy = readJson<EdgeFunctionAuthPolicy>(edgeFunctionAuthPolicyPath);
+    const edgeFunctionAuthPolicy = readJson<EdgeFunctionAuthPolicy>(
+      edgeFunctionAuthPolicyPath,
+    );
     const {
       EDGE_FUNCTION_SERVICE_ROLE_POLICY_KINDS,
       validateEdgeFunctionServiceRoleCoverage,
     } = await loadEdgeFunctionAuthPolicyModule();
     const serviceRoleFunctionContents = readEdgeFunctionServiceRoleContents();
-    const serviceRoleFunctionNames = Array.from(serviceRoleFunctionContents.keys()).sort();
-    const classifiedFunctionNames = Object.keys(edgeFunctionAuthPolicy.serviceRoleAllowlist).sort();
+    const serviceRoleFunctionNames = Array.from(
+      serviceRoleFunctionContents.keys(),
+    ).sort();
+    const classifiedFunctionNames = Object.keys(
+      edgeFunctionAuthPolicy.serviceRoleAllowlist,
+    ).sort();
 
     expect(classifiedFunctionNames).toEqual(serviceRoleFunctionNames);
 
@@ -971,14 +1069,19 @@ describe("Security Authority Edge Function auth config", () => {
     for (const [functionName, classification] of Object.entries(
       edgeFunctionAuthPolicy.serviceRoleAllowlist,
     )) {
-      expect(EDGE_FUNCTION_SERVICE_ROLE_POLICY_KINDS.has(classification.kind)).toBe(true);
+      expect(
+        EDGE_FUNCTION_SERVICE_ROLE_POLICY_KINDS.has(classification.kind),
+      ).toBe(true);
       expect(classification.risk).toMatch(/^(Critical|High)$/);
       expect(classification.label.trim().length).toBeGreaterThan(0);
       expect(classification.requiredPatterns.length).toBeGreaterThan(0);
 
       const content = serviceRoleFunctionContents.get(functionName) ?? "";
       for (const pattern of classification.requiredPatterns) {
-        expect(new RegExp(pattern).test(content), `${functionName} missing ${pattern}`).toBe(true);
+        expect(
+          new RegExp(pattern).test(content),
+          `${functionName} missing ${pattern}`,
+        ).toBe(true);
       }
     }
   });
@@ -986,21 +1089,33 @@ describe("Security Authority Edge Function auth config", () => {
   it.each(invalidEdgeFunctionAuthPolicyCases)(
     "rejects invalid Edge Function auth policy: %s",
     async (_label, mutate, expectedError) => {
-      const { validateEdgeFunctionAuthPolicy } = await loadEdgeFunctionAuthPolicyModule();
+      const { validateEdgeFunctionAuthPolicy } =
+        await loadEdgeFunctionAuthPolicyModule();
       const invalidPolicy = structuredClone(
         readJson<EdgeFunctionAuthPolicy>(edgeFunctionAuthPolicyPath),
       );
 
       mutate(invalidPolicy);
 
-      expect(() => validateEdgeFunctionAuthPolicy(invalidPolicy)).toThrow(expectedError);
+      expect(() => validateEdgeFunctionAuthPolicy(invalidPolicy)).toThrow(
+        expectedError,
+      );
     },
   );
 
   it.each(invalidEdgeFunctionAuthConfigCases)(
     "rejects invalid Edge Function config contract: %s",
-    async (_label, { configContent, expectedCheck, expectedMessage, implementedFunctionNames }) => {
-      const { validateEdgeFunctionAuthConfigContract } = await loadEdgeFunctionAuthConfigModule();
+    async (
+      _label,
+      {
+        configContent,
+        expectedCheck,
+        expectedMessage,
+        implementedFunctionNames,
+      },
+    ) => {
+      const { validateEdgeFunctionAuthConfigContract } =
+        await loadEdgeFunctionAuthConfigModule();
       const { issues } = validateEdgeFunctionAuthConfigContract({
         authPolicy: structuredClone(baseEdgeFunctionAuthPolicy),
         configContent,
@@ -1019,8 +1134,17 @@ describe("Security Authority Edge Function auth config", () => {
 
   it.each(invalidServiceRoleCoverageCases)(
     "rejects invalid service_role coverage: %s",
-    async (_label, { expectedCheck, expectedMessage, implementedFunctionNames, serviceRoleFunctionContents }) => {
-      const { validateEdgeFunctionServiceRoleCoverage } = await loadEdgeFunctionAuthPolicyModule();
+    async (
+      _label,
+      {
+        expectedCheck,
+        expectedMessage,
+        implementedFunctionNames,
+        serviceRoleFunctionContents,
+      },
+    ) => {
+      const { validateEdgeFunctionServiceRoleCoverage } =
+        await loadEdgeFunctionAuthPolicyModule();
       const issues = validateEdgeFunctionServiceRoleCoverage({
         authPolicy: structuredClone(baseServiceRoleAuthPolicy),
         implementedFunctionNames,
@@ -1073,7 +1197,9 @@ describe("Security Authority service_role boundary", () => {
     expect(serviceRoleBoundaryPolicy.schemaVersion).toBe(
       "service-role-boundary-policy/v1",
     );
-    expect(() => validateServiceRoleBoundaryPolicy(serviceRoleBoundaryPolicy)).not.toThrow();
+    expect(() =>
+      validateServiceRoleBoundaryPolicy(serviceRoleBoundaryPolicy),
+    ).not.toThrow();
 
     for (const patternId of serviceRoleBoundaryPolicy.trackedPatternIds) {
       expect(SERVICE_ROLE_BOUNDARY_PATTERN_IDS.has(patternId)).toBe(true);
@@ -1100,7 +1226,8 @@ describe("Security Authority service_role boundary", () => {
     const serviceRoleBoundaryPolicy = readJson<ServiceRoleBoundaryPolicy>(
       serviceRoleBoundaryPolicyPath,
     );
-    const { validateServiceRoleBoundaryFiles } = await loadServiceRoleBoundaryModule();
+    const { validateServiceRoleBoundaryFiles } =
+      await loadServiceRoleBoundaryModule();
 
     const issues = validateServiceRoleBoundaryFiles({
       policy: serviceRoleBoundaryPolicy,
@@ -1125,7 +1252,8 @@ describe("Security Authority service_role boundary", () => {
     const serviceRoleBoundaryPolicy = readJson<ServiceRoleBoundaryPolicy>(
       serviceRoleBoundaryPolicyPath,
     );
-    const { validateServiceRoleBoundaryFiles } = await loadServiceRoleBoundaryModule();
+    const { validateServiceRoleBoundaryFiles } =
+      await loadServiceRoleBoundaryModule();
 
     const issues = validateServiceRoleBoundaryFiles({
       policy: serviceRoleBoundaryPolicy,
@@ -1150,7 +1278,8 @@ describe("Security Authority service_role boundary", () => {
     const serviceRoleBoundaryPolicy = readJson<ServiceRoleBoundaryPolicy>(
       serviceRoleBoundaryPolicyPath,
     );
-    const { validateServiceRoleBoundaryFiles } = await loadServiceRoleBoundaryModule();
+    const { validateServiceRoleBoundaryFiles } =
+      await loadServiceRoleBoundaryModule();
 
     const issues = validateServiceRoleBoundaryFiles({
       policy: serviceRoleBoundaryPolicy,
@@ -1170,7 +1299,8 @@ describe("Security Authority service_role boundary", () => {
     const serviceRoleBoundaryPolicy = readJson<ServiceRoleBoundaryPolicy>(
       serviceRoleBoundaryPolicyPath,
     );
-    const { validateServiceRoleBoundaryFiles } = await loadServiceRoleBoundaryModule();
+    const { validateServiceRoleBoundaryFiles } =
+      await loadServiceRoleBoundaryModule();
 
     const issues = validateServiceRoleBoundaryFiles({
       policy: serviceRoleBoundaryPolicy,
@@ -1190,7 +1320,8 @@ describe("Security Authority service_role boundary", () => {
     const serviceRoleBoundaryPolicy = readJson<ServiceRoleBoundaryPolicy>(
       serviceRoleBoundaryPolicyPath,
     );
-    const { validateServiceRoleBoundaryFiles } = await loadServiceRoleBoundaryModule();
+    const { validateServiceRoleBoundaryFiles } =
+      await loadServiceRoleBoundaryModule();
 
     const issues = validateServiceRoleBoundaryFiles({
       policy: serviceRoleBoundaryPolicy,
@@ -1202,7 +1333,8 @@ describe("Security Authority service_role boundary", () => {
         },
         {
           path: "src/integrations/supabase/cookieStorage.ts",
-          content: 'import type { SupportedStorage } from "@supabase/supabase-js";',
+          content:
+            'import type { SupportedStorage } from "@supabase/supabase-js";',
         },
       ],
     });
@@ -1214,7 +1346,8 @@ describe("Security Authority service_role boundary", () => {
     const serviceRoleBoundaryPolicy = readJson<ServiceRoleBoundaryPolicy>(
       serviceRoleBoundaryPolicyPath,
     );
-    const { validateServiceRoleBoundaryFiles } = await loadServiceRoleBoundaryModule();
+    const { validateServiceRoleBoundaryFiles } =
+      await loadServiceRoleBoundaryModule();
 
     const issues = validateServiceRoleBoundaryFiles({
       policy: serviceRoleBoundaryPolicy,
@@ -1229,7 +1362,9 @@ describe("Security Authority service_role boundary", () => {
     expect(issues).toContainEqual(
       expect.objectContaining({
         file: "src/core/session/services/unsafe-types.ts",
-        message: expect.stringContaining("import/export direto do pacote supabase-js no runtime"),
+        message: expect.stringContaining(
+          "import/export direto do pacote supabase-js no runtime",
+        ),
         severity: "CRITICO",
       }),
     );
@@ -1239,7 +1374,8 @@ describe("Security Authority service_role boundary", () => {
     const serviceRoleBoundaryPolicy = readJson<ServiceRoleBoundaryPolicy>(
       serviceRoleBoundaryPolicyPath,
     );
-    const { validateServiceRoleBoundaryFiles } = await loadServiceRoleBoundaryModule();
+    const { validateServiceRoleBoundaryFiles } =
+      await loadServiceRoleBoundaryModule();
 
     const issues = validateServiceRoleBoundaryFiles({
       policy: serviceRoleBoundaryPolicy,
@@ -1259,14 +1395,18 @@ describe("Security Authority service_role boundary", () => {
     expect(issues).toContainEqual(
       expect.objectContaining({
         file: "src/core/business/services/unsafe-client.ts",
-        message: expect.stringContaining("import/export de factory createClient Supabase no browser"),
+        message: expect.stringContaining(
+          "import/export de factory createClient Supabase no browser",
+        ),
         severity: "CRITICO",
       }),
     );
     expect(issues).toContainEqual(
       expect.objectContaining({
         file: "src/integrations/supabase/index.ts",
-        message: expect.stringContaining("import/export de factory createClient Supabase no browser"),
+        message: expect.stringContaining(
+          "import/export de factory createClient Supabase no browser",
+        ),
         severity: "CRITICO",
       }),
     );
@@ -1276,7 +1416,8 @@ describe("Security Authority service_role boundary", () => {
     const serviceRoleBoundaryPolicy = readJson<ServiceRoleBoundaryPolicy>(
       serviceRoleBoundaryPolicyPath,
     );
-    const { validateServiceRoleBoundaryFiles } = await loadServiceRoleBoundaryModule();
+    const { validateServiceRoleBoundaryFiles } =
+      await loadServiceRoleBoundaryModule();
 
     const issues = validateServiceRoleBoundaryFiles({
       policy: serviceRoleBoundaryPolicy,
@@ -1291,7 +1432,9 @@ describe("Security Authority service_role boundary", () => {
     expect(issues).toContainEqual(
       expect.objectContaining({
         file: "api/unsafe-admin.ts",
-        message: expect.stringContaining("import de factory createClient Supabase em API serverless"),
+        message: expect.stringContaining(
+          "import de factory createClient Supabase em API serverless",
+        ),
         severity: "CRITICO",
       }),
     );
@@ -1301,7 +1444,8 @@ describe("Security Authority service_role boundary", () => {
     const serviceRoleBoundaryPolicy = readJson<ServiceRoleBoundaryPolicy>(
       serviceRoleBoundaryPolicyPath,
     );
-    const { validateServiceRoleBoundaryFiles } = await loadServiceRoleBoundaryModule();
+    const { validateServiceRoleBoundaryFiles } =
+      await loadServiceRoleBoundaryModule();
 
     const issues = validateServiceRoleBoundaryFiles({
       policy: serviceRoleBoundaryPolicy,
@@ -1320,7 +1464,8 @@ describe("Security Authority service_role boundary", () => {
     const serviceRoleBoundaryPolicy = readJson<ServiceRoleBoundaryPolicy>(
       serviceRoleBoundaryPolicyPath,
     );
-    const { validateServiceRoleBoundaryFiles } = await loadServiceRoleBoundaryModule();
+    const { validateServiceRoleBoundaryFiles } =
+      await loadServiceRoleBoundaryModule();
 
     const issues = validateServiceRoleBoundaryFiles({
       policy: serviceRoleBoundaryPolicy,
@@ -1345,7 +1490,8 @@ describe("Security Authority service_role boundary", () => {
     const serviceRoleBoundaryPolicy = readJson<ServiceRoleBoundaryPolicy>(
       serviceRoleBoundaryPolicyPath,
     );
-    const { validateServiceRoleBoundaryFiles } = await loadServiceRoleBoundaryModule();
+    const { validateServiceRoleBoundaryFiles } =
+      await loadServiceRoleBoundaryModule();
 
     const issues = validateServiceRoleBoundaryFiles({
       policy: serviceRoleBoundaryPolicy,
@@ -1381,7 +1527,8 @@ describe("Security Authority service_role boundary", () => {
     const serviceRoleBoundaryPolicy = readJson<ServiceRoleBoundaryPolicy>(
       serviceRoleBoundaryPolicyPath,
     );
-    const { validateServiceRoleBoundaryFiles } = await loadServiceRoleBoundaryModule();
+    const { validateServiceRoleBoundaryFiles } =
+      await loadServiceRoleBoundaryModule();
 
     const issues = validateServiceRoleBoundaryFiles({
       policy: serviceRoleBoundaryPolicy,
@@ -1401,7 +1548,8 @@ describe("Security Authority service_role boundary", () => {
     const serviceRoleBoundaryPolicy = readJson<ServiceRoleBoundaryPolicy>(
       serviceRoleBoundaryPolicyPath,
     );
-    const { validateServiceRoleBoundaryFiles } = await loadServiceRoleBoundaryModule();
+    const { validateServiceRoleBoundaryFiles } =
+      await loadServiceRoleBoundaryModule();
 
     const issues = validateServiceRoleBoundaryFiles({
       policy: serviceRoleBoundaryPolicy,
@@ -1421,7 +1569,8 @@ describe("Security Authority service_role boundary", () => {
     const serviceRoleBoundaryPolicy = readJson<ServiceRoleBoundaryPolicy>(
       serviceRoleBoundaryPolicyPath,
     );
-    const { validateServiceRoleBoundaryFiles } = await loadServiceRoleBoundaryModule();
+    const { validateServiceRoleBoundaryFiles } =
+      await loadServiceRoleBoundaryModule();
 
     const issues = validateServiceRoleBoundaryFiles({
       policy: serviceRoleBoundaryPolicy,
@@ -1447,7 +1596,8 @@ describe("Security Authority service_role boundary", () => {
     const serviceRoleBoundaryPolicy = readJson<ServiceRoleBoundaryPolicy>(
       serviceRoleBoundaryPolicyPath,
     );
-    const { validateServiceRoleBoundaryFiles } = await loadServiceRoleBoundaryModule();
+    const { validateServiceRoleBoundaryFiles } =
+      await loadServiceRoleBoundaryModule();
 
     const issues = validateServiceRoleBoundaryFiles({
       policy: serviceRoleBoundaryPolicy,
@@ -1483,14 +1633,16 @@ describe("Security Authority service_role boundary", () => {
     const serviceRoleBoundaryPolicy = readJson<ServiceRoleBoundaryPolicy>(
       serviceRoleBoundaryPolicyPath,
     );
-    const { validateServiceRoleBoundaryFiles } = await loadServiceRoleBoundaryModule();
+    const { validateServiceRoleBoundaryFiles } =
+      await loadServiceRoleBoundaryModule();
 
     const issues = validateServiceRoleBoundaryFiles({
       policy: serviceRoleBoundaryPolicy,
       files: [
         {
           path: "scripts/lib/supabase-client.mjs",
-          content: "return createClient(url, key, { auth: { persistSession: false } });",
+          content:
+            "return createClient(url, key, { auth: { persistSession: false } });",
         },
       ],
     });
@@ -1502,7 +1654,8 @@ describe("Security Authority service_role boundary", () => {
     const serviceRoleBoundaryPolicy = readJson<ServiceRoleBoundaryPolicy>(
       serviceRoleBoundaryPolicyPath,
     );
-    const { validateServiceRoleBoundaryFiles } = await loadServiceRoleBoundaryModule();
+    const { validateServiceRoleBoundaryFiles } =
+      await loadServiceRoleBoundaryModule();
 
     const issues = validateServiceRoleBoundaryFiles({
       policy: serviceRoleBoundaryPolicy,
@@ -1513,7 +1666,8 @@ describe("Security Authority service_role boundary", () => {
         },
         {
           path: "scripts/economic-benchmark-ssot.mjs",
-          content: "const candidate = createClient(apiCandidate.url, apiCandidate.key);",
+          content:
+            "const candidate = createClient(apiCandidate.url, apiCandidate.key);",
         },
       ],
     });
@@ -1521,7 +1675,9 @@ describe("Security Authority service_role boundary", () => {
     expect(issues).toContainEqual(
       expect.objectContaining({
         file: "scripts/validate-comment-likes.mjs",
-        message: expect.stringContaining("criacao direta de cliente Supabase em script"),
+        message: expect.stringContaining(
+          "criacao direta de cliente Supabase em script",
+        ),
         severity: "CRITICO",
       }),
     );
@@ -1538,7 +1694,8 @@ describe("Security Authority service_role boundary", () => {
     const serviceRoleBoundaryPolicy = readJson<ServiceRoleBoundaryPolicy>(
       serviceRoleBoundaryPolicyPath,
     );
-    const { validateServiceRoleBoundaryFiles } = await loadServiceRoleBoundaryModule();
+    const { validateServiceRoleBoundaryFiles } =
+      await loadServiceRoleBoundaryModule();
 
     const issues = validateServiceRoleBoundaryFiles({
       policy: serviceRoleBoundaryPolicy,
@@ -1574,7 +1731,8 @@ describe("Security Authority service_role boundary", () => {
     const serviceRoleBoundaryPolicy = readJson<ServiceRoleBoundaryPolicy>(
       serviceRoleBoundaryPolicyPath,
     );
-    const { validateServiceRoleBoundaryFiles } = await loadServiceRoleBoundaryModule();
+    const { validateServiceRoleBoundaryFiles } =
+      await loadServiceRoleBoundaryModule();
 
     const issues = validateServiceRoleBoundaryFiles({
       policy: serviceRoleBoundaryPolicy,
@@ -1596,14 +1754,23 @@ describe("Security Authority service_role boundary", () => {
   });
 
   it("scans runtime boundary files while skipping local env files", async () => {
-    const { shouldScanServiceRoleBoundaryFile } = await loadServiceRoleBoundaryModule();
+    const { shouldScanServiceRoleBoundaryFile } =
+      await loadServiceRoleBoundaryModule();
 
     expect(shouldScanServiceRoleBoundaryFile("src/app/App.tsx")).toBe(true);
-    expect(shouldScanServiceRoleBoundaryFile("api/_shared/supabaseAdmin.ts")).toBe(true);
-    expect(shouldScanServiceRoleBoundaryFile("tests/e2e/gastronomy.spec.ts")).toBe(true);
-    expect(shouldScanServiceRoleBoundaryFile("tests/helpers/operational-env.ts")).toBe(true);
+    expect(
+      shouldScanServiceRoleBoundaryFile("api/_shared/supabaseAdmin.ts"),
+    ).toBe(true);
+    expect(
+      shouldScanServiceRoleBoundaryFile("tests/e2e/gastronomy.spec.ts"),
+    ).toBe(true);
+    expect(
+      shouldScanServiceRoleBoundaryFile("tests/helpers/operational-env.ts"),
+    ).toBe(true);
     expect(shouldScanServiceRoleBoundaryFile(".env.local")).toBe(false);
-    expect(shouldScanServiceRoleBoundaryFile("node_modules/pkg/index.js")).toBe(false);
+    expect(shouldScanServiceRoleBoundaryFile("node_modules/pkg/index.js")).toBe(
+      false,
+    );
   });
 });
 
@@ -1693,7 +1860,9 @@ describe("Security Authority Supabase UI access boundary", () => {
       ),
     ).toBe(true);
     expect(
-      shouldScanSupabaseAccessBoundaryFile("src/core/profiles/hooks/useProfileHub.ts"),
+      shouldScanSupabaseAccessBoundaryFile(
+        "src/core/profiles/hooks/useProfileHub.ts",
+      ),
     ).toBe(true);
     expect(
       shouldScanSupabaseAccessBoundaryFile(
@@ -1791,9 +1960,9 @@ describe("Security Authority Edge Function broker boundary", () => {
         "src/core/profiles/services/ProfileRpcService.test.ts",
       ),
     ).toBe(false);
-    expect(shouldScanEdgeFunctionBrokerBoundaryFile("scripts/security/check.mjs")).toBe(
-      false,
-    );
+    expect(
+      shouldScanEdgeFunctionBrokerBoundaryFile("scripts/security/check.mjs"),
+    ).toBe(false);
   });
 });
 
@@ -1802,7 +1971,7 @@ describe("Security Authority exception register", () => {
     const markdown = readMarkdown(exceptionRegisterPath);
     const exceptionSections = Array.from(
       markdown.matchAll(
-        /(?:^|\n)## (EXC-\d{4}-\d{2}-\d{2}-[A-Z0-9-]+)\n([\s\S]*?)(?=\n## |$)/g,
+        /(?:^|\r?\n)## (EXC-\d{4}-\d{2}-\d{2}-[A-Z0-9-]+)\r?\n([\s\S]*?)(?=\r?\n## |$)/g,
       ),
       ([, id, body]) => ({ id, body }),
     );
@@ -1811,7 +1980,15 @@ describe("Security Authority exception register", () => {
 
     const allowedStatuses = new Set(["aberta", "fechada"]);
     const allowedRisks = new Set(["Critical", "High", "Medium", "Low"]);
-    const allowedAreas = new Set(["Supabase", "Auth", "Storage", "Routes", "PII", "Other"]);
+    const allowedAreas = new Set([
+      "Supabase",
+      "Auth",
+      "Storage",
+      "Routes",
+      "PII",
+      "Other",
+    ]);
+    const allowedValidationScopes = new Set(["local", "remota"]);
     const requiredSubsections = [
       "Contexto",
       "Regra Afetada",
@@ -1821,6 +1998,8 @@ describe("Security Authority exception register", () => {
       "Evidencias",
     ];
     const today = startOfTodayUtc();
+    const expiredLocalExceptions: string[] = [];
+    const expiredRemoteExceptions: string[] = [];
 
     for (const { id, body } of exceptionSections) {
       const status = parseField(body, "Status");
@@ -1829,18 +2008,23 @@ describe("Security Authority exception register", () => {
       const owner = parseField(body, "Responsavel");
       const createdAt = parseField(body, "Criada em");
       const validUntil = parseField(body, "Valida ate");
+      const validationScope = parseField(body, "Validacao");
 
-      expect(status, `${id} status`).toSatisfy((value: string | null) =>
-        value !== null && allowedStatuses.has(value),
+      expect(status, `${id} status`).toSatisfy(
+        (value: string | null) => value !== null && allowedStatuses.has(value),
       );
-      expect(risk, `${id} risk`).toSatisfy((value: string | null) =>
-        value !== null && allowedRisks.has(value),
+      expect(risk, `${id} risk`).toSatisfy(
+        (value: string | null) => value !== null && allowedRisks.has(value),
       );
-      expect(area, `${id} area`).toSatisfy((value: string | null) =>
-        value !== null && allowedAreas.has(value),
+      expect(area, `${id} area`).toSatisfy(
+        (value: string | null) => value !== null && allowedAreas.has(value),
       );
       expect(owner, `${id} owner`).toSatisfy(
         (value: string | null) => value !== null && value.length > 0,
+      );
+      expect(validationScope, `${id} validation scope`).toSatisfy(
+        (value: string | null) =>
+          value !== null && allowedValidationScopes.has(value),
       );
 
       const createdDate = createdAt ? parseIsoDate(createdAt) : null;
@@ -1850,21 +2034,35 @@ describe("Security Authority exception register", () => {
       expect(validUntilDate, `${id} valid-until date`).not.toBeNull();
 
       if (createdDate && validUntilDate) {
-        expect(validUntilDate.getTime(), `${id} expiration before creation`).toBeGreaterThanOrEqual(
-          createdDate.getTime(),
-        );
+        expect(
+          validUntilDate.getTime(),
+          `${id} expiration before creation`,
+        ).toBeGreaterThanOrEqual(createdDate.getTime());
 
-        if (status === "aberta") {
-          expect(validUntilDate.getTime(), `${id} expired open exception`).toBeGreaterThanOrEqual(
-            today.getTime(),
-          );
+        if (status === "aberta" && validUntilDate.getTime() < today.getTime()) {
+          if (validationScope === "remota") {
+            expiredRemoteExceptions.push(id);
+          } else {
+            expiredLocalExceptions.push(id);
+          }
         }
       }
 
       for (const subsection of requiredSubsections) {
-        expect(body, `${id} missing subsection ${subsection}`).toContain(`### ${subsection}`);
+        expect(body, `${id} missing subsection ${subsection}`).toContain(
+          `### ${subsection}`,
+        );
       }
     }
+
+    expect(
+      expiredLocalExceptions,
+      `LOCAL_FAILURE: excecoes locais abertas e vencidas: ${expiredLocalExceptions.join(", ")}`,
+    ).toEqual([]);
+    expect(
+      expiredRemoteExceptions,
+      `REMOTE_VALIDATION_REQUIRED: excecoes abertas e vencidas exigem evidencia externa: ${expiredRemoteExceptions.join(", ")}`,
+    ).toEqual([]);
   });
 
   it("keeps referenced exception ids defined in the canonical register", () => {
@@ -1872,10 +2070,29 @@ describe("Security Authority exception register", () => {
     const definedIds = new Set(extractConcreteExceptionIds(registerMarkdown));
     const documentsWithExceptionReferences = [
       exceptionRegisterPath,
-      join(repoRoot, "docs", "STATUS_ATUAL.md"),
-      join(repoRoot, "docs", "audits", "SUPABASE_REMOTE_SECURITY_ADVISOR_2026-07-06.md"),
-      join(repoRoot, "docs", "audits", "SECURITY_AUTHORITY_PILOT_2026-07-07.md"),
-      join(repoRoot, "docs", "governance", "security", "SUPABASE_SECURITY_MODEL.md"),
+      join(repoRoot, "docs", "01-product", "STATUS.md"),
+      join(
+        repoRoot,
+        "docs",
+        "10-archive",
+        "audits",
+        "SUPABASE_REMOTE_SECURITY_ADVISOR_2026-07-06.md",
+      ),
+      join(
+        repoRoot,
+        "docs",
+        "10-archive",
+        "audits",
+        "SECURITY_AUTHORITY_PILOT_2026-07-07.md",
+      ),
+      join(
+        repoRoot,
+        "docs",
+        "09-reference",
+        "governance",
+        "security",
+        "SUPABASE_SECURITY_MODEL.md",
+      ),
       advisorResidualRegisterPath,
       join(repoRoot, "plans", "SECURITY_AUTHORITY_IMPLEMENTATION_PLAN.md"),
     ];
@@ -1885,40 +2102,55 @@ describe("Security Authority exception register", () => {
         extractConcreteExceptionIds(readMarkdown(path)),
       ),
     );
-    const missingIds = Array.from(referencedIds).filter((id) => !definedIds.has(id));
+    const missingIds = Array.from(referencedIds).filter(
+      (id) => !definedIds.has(id),
+    );
 
     expect(missingIds).toEqual([]);
   });
 
   it("keeps Supabase Advisor residual allowlist canonical and exception-backed", () => {
     const registerMarkdown = readMarkdown(exceptionRegisterPath);
-    const definedExceptionIds = new Set(extractConcreteExceptionIds(registerMarkdown));
+    const definedExceptionIds = new Set(
+      extractConcreteExceptionIds(registerMarkdown),
+    );
     const residualRegister = readJson<{
-      residuals: Array<{ cacheKey?: string; exceptionId?: string; summary?: string }>;
+      residuals: Array<{
+        cacheKey?: string;
+        exceptionId?: string;
+        summary?: string;
+      }>;
       schemaVersion?: string;
       sourceCommand?: string;
       updatedAt?: string;
     }>(advisorResidualRegisterPath);
 
-    expect(residualRegister.schemaVersion).toBe("supabase-advisor-residuals/v1");
+    expect(residualRegister.schemaVersion).toBe(
+      "supabase-advisor-residuals/v1",
+    );
     expect(residualRegister.sourceCommand).toBe(
       "supabase db advisors --linked --type security --fail-on none --output json",
     );
     expect(residualRegister.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(residualRegister.residuals.length).toBeGreaterThan(0);
 
-    const cacheKeys = residualRegister.residuals.map((residual) => residual.cacheKey);
+    const cacheKeys = residualRegister.residuals.map(
+      (residual) => residual.cacheKey,
+    );
     expect(new Set(cacheKeys).size).toBe(cacheKeys.length);
 
     for (const residual of residualRegister.residuals) {
       expect(residual.cacheKey).toSatisfy(
-        (value: string | undefined) => typeof value === "string" && value.length > 0,
+        (value: string | undefined) =>
+          typeof value === "string" && value.length > 0,
       );
       expect(residual.exceptionId).toSatisfy(
-        (value: string | undefined) => typeof value === "string" && definedExceptionIds.has(value),
+        (value: string | undefined) =>
+          typeof value === "string" && definedExceptionIds.has(value),
       );
       expect(residual.summary).toSatisfy(
-        (value: string | undefined) => typeof value === "string" && value.length > 0,
+        (value: string | undefined) =>
+          typeof value === "string" && value.length > 0,
       );
     }
   });
@@ -1926,11 +2158,18 @@ describe("Security Authority exception register", () => {
 
 describe("Supabase Advisor residual validator", () => {
   it("accepts an offline Advisor export containing known residual findings", () => {
-    const findings = parseAdvisorFindings(readMarkdown(advisorKnownResidualFixturePath));
-    const result = validateAdvisorFindings(findings, loadAllowedResidualCacheKeys());
+    const findings = parseAdvisorFindings(
+      readMarkdown(advisorKnownResidualFixturePath),
+    );
+    const result = validateAdvisorFindings(
+      findings,
+      loadAllowedResidualCacheKeys(),
+    );
 
     expect(result.unknownFindings).toEqual([]);
-    expect(result.currentKeys.has("auth_leaked_password_protection")).toBe(true);
+    expect(result.currentKeys.has("auth_leaked_password_protection")).toBe(
+      true,
+    );
     expect(result.resolvedKnownFindings.length).toBeGreaterThan(0);
   });
 
@@ -1947,21 +2186,25 @@ describe("Supabase Advisor residual validator", () => {
       ]
       A new version of Supabase CLI is available.
     `);
-    const result = validateAdvisorFindings(findings, loadAllowedResidualCacheKeys());
+    const result = validateAdvisorFindings(
+      findings,
+      loadAllowedResidualCacheKeys(),
+    );
 
     expect(result.unknownFindings).toHaveLength(1);
-    expect(result.unknownFindings[0].cache_key).toBe("new_unmapped_security_finding");
+    expect(result.unknownFindings[0].cache_key).toBe(
+      "new_unmapped_security_finding",
+    );
   });
 });
 
 describe("Supabase PostGIS owner preflight", () => {
   it("keeps the PostGIS owner preflight read-only and wired as an operational command", async () => {
-    const pkg = readJson<{ scripts?: Record<string, string> }>(join(repoRoot, "package.json"));
-    const {
-      buildPostgisOwnerPreflightSql,
-      parseArgs,
-      parseSupabaseQueryJson,
-    } = await loadSupabasePostgisOwnerPreflightModule();
+    const pkg = readJson<{ scripts?: Record<string, string> }>(
+      join(repoRoot, "package.json"),
+    );
+    const { buildPostgisOwnerPreflightSql, parseArgs, parseSupabaseQueryJson } =
+      await loadSupabasePostgisOwnerPreflightModule();
 
     const sql = buildPostgisOwnerPreflightSql();
 
@@ -1975,7 +2218,9 @@ describe("Supabase PostGIS owner preflight", () => {
     expect(sql).toMatch(/pg_extension/);
     expect(sql).toMatch(/spatial_ref_sys/);
     expect(sql).toMatch(/st_estimatedextent/);
-    expect(sql).not.toMatch(/\b(?:ALTER|REVOKE|GRANT|DROP|CREATE|UPDATE|DELETE|INSERT|TRUNCATE)\b/i);
+    expect(sql).not.toMatch(
+      /\b(?:ALTER|REVOKE|GRANT|DROP|CREATE|UPDATE|DELETE|INSERT|TRUNCATE)\b/i,
+    );
 
     expect(
       parseSupabaseQueryJson(`
@@ -1990,10 +2235,8 @@ describe("Supabase PostGIS owner preflight", () => {
   });
 
   it("blocks extension-owner migration markers when the current role does not own residual PostGIS objects", async () => {
-    const {
-      evaluatePostgisOwnerPreflight,
-      normalizePostgisPreflightRow,
-    } = await loadSupabasePostgisOwnerPreflightModule();
+    const { evaluatePostgisOwnerPreflight, normalizePostgisPreflightRow } =
+      await loadSupabasePostgisOwnerPreflightModule();
 
     const snapshot = normalizePostgisPreflightRow({
       role_context: {
