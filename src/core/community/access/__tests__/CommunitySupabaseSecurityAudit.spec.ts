@@ -27,25 +27,45 @@ describe("community supabase security audit", () => {
     );
     const publicProfileView = viewDefinition(publicProfiles, "public_profiles");
 
-    expect(foundation).toContain("ALTER TABLE public.addresses ENABLE ROW LEVEL SECURITY;");
+    expect(foundation).toContain(
+      "ALTER TABLE public.addresses ENABLE ROW LEVEL SECURITY;",
+    );
     expect(foundation).toContain('CREATE POLICY "Users manage own addresses"');
     expect(foundation).toContain("WITH CHECK (owner_user_id = auth.uid())");
     expect(foundation).toContain("CREATE VIEW public.addresses_public AS");
-    expect(foundation).toContain("GRANT SELECT ON public.addresses_public TO anon, authenticated;");
+    expect(foundation).toContain(
+      "GRANT SELECT ON public.addresses_public TO anon, authenticated;",
+    );
 
-    const addressesPublicStart = foundation.indexOf("CREATE VIEW public.addresses_public AS");
-    const addressesPublicEnd = foundation.indexOf("FROM public.addresses", addressesPublicStart);
-    const addressesPublicProjection = foundation.slice(addressesPublicStart, addressesPublicEnd);
-    expect(addressesPublicProjection).not.toMatch(/\bstreet\b|\bnumber\b|\bcomplement\b|\bpostal_code\b|\bowner_user_id\b/i);
+    const addressesPublicStart = foundation.indexOf(
+      "CREATE VIEW public.addresses_public AS",
+    );
+    const addressesPublicEnd = foundation.indexOf(
+      "FROM public.addresses",
+      addressesPublicStart,
+    );
+    const addressesPublicProjection = foundation.slice(
+      addressesPublicStart,
+      addressesPublicEnd,
+    );
+    expect(addressesPublicProjection).not.toMatch(
+      /\bstreet\b|\bnumber\b|\bcomplement\b|\bpostal_code\b|\bowner_user_id\b/i,
+    );
 
-    expect(foundation).toContain("ALTER TABLE public.user_residences ENABLE ROW LEVEL SECURITY;");
+    expect(foundation).toContain(
+      "ALTER TABLE public.user_residences ENABLE ROW LEVEL SECURITY;",
+    );
     expect(foundation).toContain('CREATE POLICY "Users manage own residences"');
     expect(foundation).toContain("USING (user_id = auth.uid())");
     expect(foundation).toContain("WITH CHECK (user_id = auth.uid())");
 
-    expect(publicProfiles).toContain("ADD COLUMN IF NOT EXISTS public_location_visibility");
+    expect(publicProfiles).toContain(
+      "ADD COLUMN IF NOT EXISTS public_location_visibility",
+    );
     expect(publicProfiles).toContain("FROM user_residences ur");
-    expect(publicProfileView).not.toMatch(/\bstreet\b|\bnumber\b|\bcomplement\b|\bpostal_code\b|\baddress_id\b/i);
+    expect(publicProfileView).not.toMatch(
+      /\bstreet\b|\bnumber\b|\bcomplement\b|\bpostal_code\b|\baddress_id\b/i,
+    );
   });
 
   it("keeps community and business identity tables under RLS with public reads scoped to public fields", () => {
@@ -59,21 +79,43 @@ describe("community supabase security audit", () => {
       "supabase/migrations/20260601090000_create_community_public_aliases.sql",
     );
 
-    expect(foundation).toContain("ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;");
-    expect(foundation).toContain("ALTER TABLE public.business_data ENABLE ROW LEVEL SECURITY;");
-    expect(foundation).toContain("CREATE TABLE IF NOT EXISTS public.business_data");
-    expect(foundation).toContain("profile_id UUID NOT NULL REFERENCES public.profiles");
+    expect(foundation).toContain(
+      "ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;",
+    );
+    expect(foundation).toContain(
+      "ALTER TABLE public.business_data ENABLE ROW LEVEL SECURITY;",
+    );
+    expect(foundation).toContain(
+      "CREATE TABLE IF NOT EXISTS public.business_data",
+    );
+    expect(foundation).toContain(
+      "profile_id UUID NOT NULL REFERENCES public.profiles",
+    );
 
-    expect(communities).toContain("ALTER TABLE territory_communities ENABLE ROW LEVEL SECURITY;");
-    expect(communities).toContain('CREATE POLICY "territory_communities_public_select"');
+    expect(communities).toContain(
+      "ALTER TABLE territory_communities ENABLE ROW LEVEL SECURITY;",
+    );
+    expect(communities).toContain(
+      'CREATE POLICY "territory_communities_public_select"',
+    );
     expect(communities).toContain("USING (true);");
-    expect(communities).toContain("GRANT SELECT ON territory_communities TO anon, authenticated;");
+    expect(communities).toContain(
+      "GRANT SELECT ON territory_communities TO anon, authenticated;",
+    );
 
-    expect(aliases).toContain("ALTER TABLE community_public_aliases ENABLE ROW LEVEL SECURITY;");
-    expect(aliases).toContain('CREATE POLICY "community_public_aliases_public_select"');
+    expect(aliases).toContain(
+      "ALTER TABLE community_public_aliases ENABLE ROW LEVEL SECURITY;",
+    );
+    expect(aliases).toContain(
+      'CREATE POLICY "community_public_aliases_public_select"',
+    );
     expect(aliases).toContain("status = 'active'");
-    expect(aliases).toContain("GRANT SELECT ON community_public_aliases TO anon, authenticated;");
-    expect(aliases).toContain("CONSTRAINT community_public_aliases_alias_not_reserved");
+    expect(aliases).toContain(
+      "GRANT SELECT ON community_public_aliases TO anon, authenticated;",
+    );
+    expect(aliases).toContain(
+      "CONSTRAINT community_public_aliases_alias_not_reserved",
+    );
   });
 
   it("keeps community memberships private, RLS-backed, and owned by community-experience", () => {
@@ -85,21 +127,43 @@ describe("community supabase security audit", () => {
     );
     const taxonomy = readProjectFile("scripts/validate-project-taxonomy.ts");
 
-    expect(memberships).toContain("CREATE TABLE IF NOT EXISTS public.community_memberships");
-    expect(memberships).toContain("community_id UUID NOT NULL REFERENCES public.territory_communities");
-    expect(memberships).toContain("profile_id UUID NOT NULL REFERENCES public.profiles");
-    expect(memberships).toContain("user_id UUID NOT NULL REFERENCES auth.users");
-    expect(memberships).toContain("ALTER TABLE public.community_memberships ENABLE ROW LEVEL SECURITY;");
-    expect(memberships).toContain("REVOKE ALL ON TABLE public.community_memberships FROM anon;");
+    expect(memberships).toContain(
+      "CREATE TABLE IF NOT EXISTS public.community_memberships",
+    );
+    expect(memberships).toContain(
+      "community_id UUID NOT NULL REFERENCES public.territory_communities",
+    );
+    expect(memberships).toContain(
+      "profile_id UUID NOT NULL REFERENCES public.profiles",
+    );
+    expect(memberships).toContain(
+      "user_id UUID NOT NULL REFERENCES auth.users",
+    );
+    expect(memberships).toContain(
+      "ALTER TABLE public.community_memberships ENABLE ROW LEVEL SECURITY;",
+    );
+    expect(memberships).toContain(
+      "REVOKE ALL ON TABLE public.community_memberships FROM anon;",
+    );
     expect(memberships).toContain(
       "GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.community_memberships TO authenticated;",
     );
-    expect(memberships).toContain("CREATE POLICY community_memberships_select_own_or_manager");
-    expect(memberships).toContain("CREATE POLICY community_memberships_insert_self_pending");
+    expect(memberships).toContain(
+      "CREATE POLICY community_memberships_select_own_or_manager",
+    );
+    expect(memberships).toContain(
+      "CREATE POLICY community_memberships_insert_self_pending",
+    );
     expect(memberships).toContain("AND join_method IN ('open', 'approval')");
-    expect(memberships).toContain("CREATE POLICY community_memberships_update_by_manager");
-    expect(memberships).toContain("CREATE POLICY community_memberships_delete_self_or_manager");
-    expect(memberships).toContain("CREATE OR REPLACE FUNCTION private.can_manage_community_membership");
+    expect(memberships).toContain(
+      "CREATE POLICY community_memberships_update_by_manager",
+    );
+    expect(memberships).toContain(
+      "CREATE POLICY community_memberships_delete_self_or_manager",
+    );
+    expect(memberships).toContain(
+      "CREATE OR REPLACE FUNCTION private.can_manage_community_membership",
+    );
     expect(memberships).toContain("SECURITY DEFINER");
     expect(memberships).toContain("SET search_path = public, private, pg_temp");
     expect(memberships).toContain("Not exposed as public RPC");
@@ -121,28 +185,56 @@ describe("community supabase security audit", () => {
     );
     const taxonomy = readProjectFile("scripts/validate-project-taxonomy.ts");
     const architecture = readProjectFile(
-      "docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
+      "docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
     );
 
-    expect(links).toContain("CREATE TABLE IF NOT EXISTS public.community_entity_links");
-    expect(links).toContain("community_id UUID NOT NULL REFERENCES public.territory_communities");
+    expect(links).toContain(
+      "CREATE TABLE IF NOT EXISTS public.community_entity_links",
+    );
+    expect(links).toContain(
+      "community_id UUID NOT NULL REFERENCES public.territory_communities",
+    );
     expect(links).toContain("entity_type TEXT NOT NULL");
     expect(links).toContain("entity_id UUID NOT NULL");
-    expect(links).toContain("CHECK (entity_type IN ('business', 'event', 'classified', 'professional', 'post', 'tourist_point'))");
-    expect(links).toContain("CHECK (link_type IN ('primary_territory', 'serves_area', 'featured', 'sponsored', 'member_submitted', 'official'))");
-    expect(links).toContain("CHECK (status IN ('pending', 'active', 'rejected', 'hidden', 'expired'))");
-    expect(links).toContain("ALTER TABLE public.community_entity_links ENABLE ROW LEVEL SECURITY;");
-    expect(links).toContain("GRANT SELECT ON TABLE public.community_entity_links TO anon;");
+    expect(links).toContain(
+      "CHECK (entity_type IN ('business', 'event', 'classified', 'professional', 'post', 'tourist_point'))",
+    );
+    expect(links).toContain(
+      "CHECK (link_type IN ('primary_territory', 'serves_area', 'featured', 'sponsored', 'member_submitted', 'official'))",
+    );
+    expect(links).toContain(
+      "CHECK (status IN ('pending', 'active', 'rejected', 'hidden', 'expired'))",
+    );
+    expect(links).toContain(
+      "ALTER TABLE public.community_entity_links ENABLE ROW LEVEL SECURITY;",
+    );
+    expect(links).toContain(
+      "GRANT SELECT ON TABLE public.community_entity_links TO anon;",
+    );
     expect(links).toContain(
       "GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.community_entity_links TO authenticated;",
     );
-    expect(links).toContain("CREATE POLICY community_entity_links_public_active_select");
-    expect(links).toContain("CREATE POLICY community_entity_links_insert_member_pending");
-    expect(links).toContain("CREATE POLICY community_entity_links_update_by_manager");
-    expect(links).toContain("CREATE POLICY community_entity_links_delete_by_manager");
-    expect(links).toContain("CREATE OR REPLACE FUNCTION private.can_manage_community_entity_link");
-    expect(links).toContain("CREATE OR REPLACE FUNCTION private.community_entity_link_target_is_visible");
-    expect(links).toContain("CREATE OR REPLACE FUNCTION private.enforce_community_entity_link_contract");
+    expect(links).toContain(
+      "CREATE POLICY community_entity_links_public_active_select",
+    );
+    expect(links).toContain(
+      "CREATE POLICY community_entity_links_insert_member_pending",
+    );
+    expect(links).toContain(
+      "CREATE POLICY community_entity_links_update_by_manager",
+    );
+    expect(links).toContain(
+      "CREATE POLICY community_entity_links_delete_by_manager",
+    );
+    expect(links).toContain(
+      "CREATE OR REPLACE FUNCTION private.can_manage_community_entity_link",
+    );
+    expect(links).toContain(
+      "CREATE OR REPLACE FUNCTION private.community_entity_link_target_is_visible",
+    );
+    expect(links).toContain(
+      "CREATE OR REPLACE FUNCTION private.enforce_community_entity_link_contract",
+    );
     expect(links).toContain("SECURITY DEFINER");
     expect(links).toContain("SET search_path = public, private, pg_temp");
     expect(links).toContain("Not exposed as public RPC");
@@ -160,19 +252,25 @@ describe("community supabase security audit", () => {
     const landingFeatured = readProjectFile(
       "src/core/landing/services/LandingFeaturedService.ts",
     );
-    const landingHook = readProjectFile("src/core/landing/hooks/useLandingFeatured.ts");
+    const landingHook = readProjectFile(
+      "src/core/landing/hooks/useLandingFeatured.ts",
+    );
     const territorialLanding = readProjectFile(
       "src/core/routing/components/TerritorialLandingPage.tsx",
     );
     const communitySidebar = readProjectFile(
       "src/core/community/components/CommunityRightSidebar.tsx",
     );
-    const communityPage = readProjectFile("src/core/community/pages/ComunidadePage.tsx");
+    const communityPage = readProjectFile(
+      "src/core/community/pages/ComunidadePage.tsx",
+    );
 
     expect(landingFeatured).toContain("CommunityEntityLinkService");
     expect(landingFeatured).toContain("getCommunityFeaturedBusinesses");
     expect(landingFeatured).toContain("getCommunityFeaturedServices");
-    expect(landingFeatured).toContain("getCommunityFeaturedGastronomyBusinesses");
+    expect(landingFeatured).toContain(
+      "getCommunityFeaturedGastronomyBusinesses",
+    );
     expect(landingFeatured).toContain("getCommunityFeaturedClassifieds");
     expect(landingFeatured).toContain("getGastronomyBusinessesByIds");
     expect(landingFeatured).toContain("orderGastronomyByLinkedBusinessIds");
@@ -207,45 +305,67 @@ describe("community supabase security audit", () => {
     const communityEventsRuntimeCompat = readProjectFile(
       "src/core/community/services/CommunityEventsRuntimeService.ts",
     );
-    const eventAdapter = readProjectFile("src/features/events/utils/eventAdapters.ts");
+    const eventAdapter = readProjectFile(
+      "src/features/events/utils/eventAdapters.ts",
+    );
     const architecture = readProjectFile(
-      "docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
+      "docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
     );
     const plan = readProjectFile("plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md");
 
-    expect(eventReadService).toContain('.from<EventRowWithLegacyCity>("events")');
+    expect(eventReadService).toContain(
+      '.from<EventRowWithLegacyCity>("events")',
+    );
     expect(eventReadService).toContain("applyTerritoryFilter");
     expect(eventReadService).toContain("getEventsPage");
     expect(eventReadService).toContain("getByBounds");
     expect(eventRuntimeService).toContain("eventsReadService.getEventsPage");
     expect(eventRuntimeService).toContain("eventsReadService.getByBounds");
-    expect(eventMutationService).toContain(".from(\"events\")");
-    expect(eventMutationService).toContain(".from(\"event_participants\")");
+    expect(eventMutationService).toContain('.from("events")');
+    expect(eventMutationService).toContain('.from("event_participants")');
     expect(eventMutationService).toContain("invokeSupabaseBroker");
-    expect(eventMutationService).toContain('const EVENT_RPC_FUNCTION_NAME = "event-rpc"');
-    expect(eventMutationService).toContain("functionName: EVENT_RPC_FUNCTION_NAME");
+    expect(eventMutationService).toContain(
+      'const EVENT_RPC_FUNCTION_NAME = "event-rpc"',
+    );
+    expect(eventMutationService).toContain(
+      "functionName: EVENT_RPC_FUNCTION_NAME",
+    );
     expect(eventMutationService).toContain('"joinEvent"');
     expect(eventMutationService).toContain('"checkInEventByCode"');
     expect(eventMutationService).not.toContain("incrementEventParticipants");
     expect(eventMutationService).not.toContain("decrementEventParticipants");
     expect(eventRpc).toContain("join_event_participation");
     expect(eventRpc).toContain("check_in_event_participation_by_code");
-    expect(eventRpcMigration).toContain("CREATE OR REPLACE FUNCTION public.join_event_participation");
-    expect(eventRpcMigration).toContain("CREATE OR REPLACE FUNCTION public.leave_event_participation");
-    expect(eventRpcMigration).toContain("CREATE OR REPLACE FUNCTION public.check_in_event_participation");
-    expect(eventRpcMigration).toContain("REVOKE ALL ON FUNCTION public.join_event_participation");
-    expect(eventRpcMigration).toContain("GRANT EXECUTE ON FUNCTION public.join_event_participation");
+    expect(eventRpcMigration).toContain(
+      "CREATE OR REPLACE FUNCTION public.join_event_participation",
+    );
+    expect(eventRpcMigration).toContain(
+      "CREATE OR REPLACE FUNCTION public.leave_event_participation",
+    );
+    expect(eventRpcMigration).toContain(
+      "CREATE OR REPLACE FUNCTION public.check_in_event_participation",
+    );
+    expect(eventRpcMigration).toContain(
+      "REVOKE ALL ON FUNCTION public.join_event_participation",
+    );
+    expect(eventRpcMigration).toContain(
+      "GRANT EXECUTE ON FUNCTION public.join_event_participation",
+    );
     expect(eventRuntimeService).toContain("eventMutationService.joinEvent");
-    expect(eventRuntimeService).not.toContain(".from(\"event_participants\")");
+    expect(eventRuntimeService).not.toContain('.from("event_participants")');
     expect(communityEventsRuntimeCompat).toContain(
       "@/core/verticals/events/services/EventRuntimeService",
     );
-    expect(communityEventsRuntimeCompat).not.toContain(".from(\"event_participants\")");
+    expect(communityEventsRuntimeCompat).not.toContain(
+      '.from("event_participants")',
+    );
     expect(eventAdapter).toContain('from "@/core/verticals/events"');
     expect(architecture).toContain("src/core/verticals/events");
     expect(architecture).toContain("EventRuntimeService");
     expect(architecture).toContain("EventMutationService");
-    expect(plan).toContain("criar/confirmar `core/verticals/events` para leitura publica");
+    expect(plan).toContain(
+      "criar/confirmar `core/verticals/events` para leitura publica",
+    );
     expect(plan).toContain("EventRuntimeService");
     expect(plan).toContain("EventMutationService");
   });
@@ -264,14 +384,28 @@ describe("community supabase security audit", () => {
     expect(hardening).toContain("ur.location_id = p_location_id");
     expect(hardening).toContain("ur.is_verified = TRUE");
 
-    expect(hardening).toContain("CREATE OR REPLACE FUNCTION public.create_community_alert");
-    expect(hardening).toContain("CREATE OR REPLACE FUNCTION public.create_community_issue");
-    expect(hardening).toContain("IF NOT public.auth_has_verified_residence_at_location(v_location_id) THEN");
+    expect(hardening).toContain(
+      "CREATE OR REPLACE FUNCTION public.create_community_alert",
+    );
+    expect(hardening).toContain(
+      "CREATE OR REPLACE FUNCTION public.create_community_issue",
+    );
+    expect(hardening).toContain(
+      "IF NOT public.auth_has_verified_residence_at_location(v_location_id) THEN",
+    );
     expect(hardening).toContain("verified_residence_required");
-    expect(hardening).toContain("REVOKE ALL ON FUNCTION public.create_community_alert(jsonb) FROM anon;");
-    expect(hardening).toContain("GRANT EXECUTE ON FUNCTION public.create_community_alert(jsonb) TO authenticated;");
-    expect(hardening).toContain("REVOKE ALL ON FUNCTION public.create_community_issue(JSONB) FROM anon;");
-    expect(hardening).toContain("GRANT EXECUTE ON FUNCTION public.create_community_issue(JSONB) TO authenticated;");
+    expect(hardening).toContain(
+      "REVOKE ALL ON FUNCTION public.create_community_alert(jsonb) FROM anon;",
+    );
+    expect(hardening).toContain(
+      "GRANT EXECUTE ON FUNCTION public.create_community_alert(jsonb) TO authenticated;",
+    );
+    expect(hardening).toContain(
+      "REVOKE ALL ON FUNCTION public.create_community_issue(JSONB) FROM anon;",
+    );
+    expect(hardening).toContain(
+      "GRANT EXECUTE ON FUNCTION public.create_community_issue(JSONB) TO authenticated;",
+    );
 
     expect(launchScope).toContain("communityAlerts: false");
     expect(launchScope).toContain("communityIssues: false");
@@ -292,22 +426,46 @@ describe("community supabase security audit", () => {
     );
 
     expect(social).toContain("ALTER TABLE posts ENABLE ROW LEVEL SECURITY;");
-    expect(social).toContain("ALTER TABLE community_posts ENABLE ROW LEVEL SECURITY;");
-    expect(social).toContain("ALTER TABLE post_likes_new ENABLE ROW LEVEL SECURITY;");
+    expect(social).toContain(
+      "ALTER TABLE community_posts ENABLE ROW LEVEL SECURITY;",
+    );
+    expect(social).toContain(
+      "ALTER TABLE post_likes_new ENABLE ROW LEVEL SECURITY;",
+    );
     expect(social).toContain("ALTER TABLE comments ENABLE ROW LEVEL SECURITY;");
     expect(groups).toContain("ALTER TABLE groups ENABLE ROW LEVEL SECURITY;");
-    expect(lostFound).toContain("ALTER TABLE lost_found_posts ENABLE ROW LEVEL SECURITY;");
-    expect(lostFound).toContain("ALTER TABLE lost_found_comments ENABLE ROW LEVEL SECURITY;");
+    expect(lostFound).toContain(
+      "ALTER TABLE lost_found_posts ENABLE ROW LEVEL SECURITY;",
+    );
+    expect(lostFound).toContain(
+      "ALTER TABLE lost_found_comments ENABLE ROW LEVEL SECURITY;",
+    );
 
-    expect(hardening).toContain('DROP POLICY IF EXISTS "Authors manage own posts" ON public.posts;');
-    expect(hardening).toContain('DROP POLICY IF EXISTS "Authors manage own community questions"');
-    expect(hardening).toContain('DROP POLICY IF EXISTS "Users manage own likes" ON public.post_likes_new;');
-    expect(hardening).toContain('DROP POLICY IF EXISTS "Authors manage own comments" ON public.comments;');
-    expect(hardening).toContain('DROP POLICY IF EXISTS "Authenticated users create groups" ON public.groups;');
-    expect(hardening).toContain('DROP POLICY IF EXISTS "Users manage own memberships" ON public.group_members_new;');
-    expect(hardening).toContain('DROP POLICY IF EXISTS "Authors update own posts" ON public.lost_found_posts;');
+    expect(hardening).toContain(
+      'DROP POLICY IF EXISTS "Authors manage own posts" ON public.posts;',
+    );
+    expect(hardening).toContain(
+      'DROP POLICY IF EXISTS "Authors manage own community questions"',
+    );
+    expect(hardening).toContain(
+      'DROP POLICY IF EXISTS "Users manage own likes" ON public.post_likes_new;',
+    );
+    expect(hardening).toContain(
+      'DROP POLICY IF EXISTS "Authors manage own comments" ON public.comments;',
+    );
+    expect(hardening).toContain(
+      'DROP POLICY IF EXISTS "Authenticated users create groups" ON public.groups;',
+    );
+    expect(hardening).toContain(
+      'DROP POLICY IF EXISTS "Users manage own memberships" ON public.group_members_new;',
+    );
+    expect(hardening).toContain(
+      'DROP POLICY IF EXISTS "Authors update own posts" ON public.lost_found_posts;',
+    );
     expect(hardening).toContain("WITH CHECK (");
-    expect(hardening).toContain("SELECT id FROM public.profiles WHERE user_id = auth.uid()");
+    expect(hardening).toContain(
+      "SELECT id FROM public.profiles WHERE user_id = auth.uid()",
+    );
   });
 
   it("keeps community report moderation behind own-profile or admin policies", () => {
@@ -315,11 +473,17 @@ describe("community supabase security audit", () => {
       "supabase/migrations/20260526024500_create_community_moderation_reports.sql",
     );
 
-    expect(reports).toContain("ALTER TABLE public.community_reports ENABLE ROW LEVEL SECURITY;");
+    expect(reports).toContain(
+      "ALTER TABLE public.community_reports ENABLE ROW LEVEL SECURITY;",
+    );
     expect(reports).toContain("CREATE POLICY community_reports_insert_own");
     expect(reports).toContain("reporter_profile_id IN (");
-    expect(reports).toContain("SELECT id FROM public.profiles WHERE user_id = auth.uid()");
-    expect(reports).toContain("CREATE POLICY community_reports_select_own_or_admin");
+    expect(reports).toContain(
+      "SELECT id FROM public.profiles WHERE user_id = auth.uid()",
+    );
+    expect(reports).toContain(
+      "CREATE POLICY community_reports_select_own_or_admin",
+    );
     expect(reports).toContain("OR public.is_admin_user(auth.uid())");
     expect(reports).toContain("CREATE POLICY community_reports_admin_update");
     expect(reports).toContain("CREATE POLICY community_reports_admin_delete");
@@ -333,19 +497,31 @@ describe("community supabase security audit", () => {
       "supabase/migrations/20260707212504_route_privacy_session_rpcs_through_edge_functions.sql",
     );
 
-    expect(hardening).toContain("CREATE OR REPLACE FUNCTION public.has_consent(");
-    expect(hardening).toContain("CREATE OR REPLACE FUNCTION public.record_consent(");
+    expect(hardening).toContain(
+      "CREATE OR REPLACE FUNCTION public.has_consent(",
+    );
+    expect(hardening).toContain(
+      "CREATE OR REPLACE FUNCTION public.record_consent(",
+    );
     expect(hardening).toContain("SET search_path = public, pg_temp");
     expect(hardening).toContain("v_request_user_id UUID := auth.uid();");
-    expect(hardening).toContain("COALESCE(auth.jwt() ->> 'role', '') = 'service_role'");
+    expect(hardening).toContain(
+      "COALESCE(auth.jwt() ->> 'role', '') = 'service_role'",
+    );
     expect(hardening).toContain("v_request_user_id <> p_user_id");
-    expect(hardening).toContain("public.is_admin_from_roles(v_request_user_id)");
+    expect(hardening).toContain(
+      "public.is_admin_from_roles(v_request_user_id)",
+    );
 
-    expect(hardening).toContain("REVOKE ALL ON FUNCTION public.has_consent(UUID, VARCHAR) FROM anon;");
+    expect(hardening).toContain(
+      "REVOKE ALL ON FUNCTION public.has_consent(UUID, VARCHAR) FROM anon;",
+    );
     expect(hardening).toContain(
       "REVOKE ALL ON FUNCTION public.record_consent(UUID, VARCHAR, BOOLEAN, INET, TEXT, VARCHAR, VARCHAR) FROM anon;",
     );
-    expect(hardening).toContain("GRANT EXECUTE ON FUNCTION public.has_consent(UUID, VARCHAR) TO authenticated;");
+    expect(hardening).toContain(
+      "GRANT EXECUTE ON FUNCTION public.has_consent(UUID, VARCHAR) TO authenticated;",
+    );
     expect(brokerRouting).toContain(
       "REVOKE ALL ON FUNCTION public.record_consent(uuid, character varying, boolean, inet, text, character varying, character varying)",
     );
@@ -357,17 +533,25 @@ describe("community supabase security audit", () => {
   });
 
   it("keeps username login email lookup out of the browser RPC surface", () => {
-    const authService = readProjectFile("src/core/auth/services/AuthService.ts");
-    const loginFunction = readProjectFile("supabase/functions/auth-username-login/index.ts");
+    const authService = readProjectFile(
+      "src/core/auth/services/AuthService.ts",
+    );
+    const loginFunction = readProjectFile(
+      "supabase/functions/auth-username-login/index.ts",
+    );
     const functionConfig = readProjectFile("supabase/config.toml");
     const hardening = readProjectFile(
       "supabase/migrations/20260707103853_harden_username_auth_rpc_surface.sql",
     );
 
     expect(authService).not.toContain("get_email_by_username");
-    expect(authService).toContain('buildSupabaseFunctionUrl("auth-username-login")');
+    expect(authService).toContain(
+      'buildSupabaseFunctionUrl("auth-username-login")',
+    );
     expect(authService).toContain("supabase.auth.setSession");
-    expect(authService).toContain("Para recuperar senha, informe o e-mail cadastrado.");
+    expect(authService).toContain(
+      "Para recuperar senha, informe o e-mail cadastrado.",
+    );
 
     expect(loginFunction).toContain("rateLimitMiddleware(req, 8, 60_000)");
     expect(loginFunction).toContain('rpc("get_email_by_username"');
@@ -383,8 +567,12 @@ describe("community supabase security audit", () => {
     expect(hardening).toContain("p.proname = 'get_email_by_username'");
     expect(hardening).toContain("REVOKE ALL ON FUNCTION %I.%I(%s) FROM PUBLIC");
     expect(hardening).toContain("REVOKE ALL ON FUNCTION %I.%I(%s) FROM anon");
-    expect(hardening).toContain("REVOKE ALL ON FUNCTION %I.%I(%s) FROM authenticated");
-    expect(hardening).toContain("GRANT EXECUTE ON FUNCTION %I.%I(%s) TO service_role");
+    expect(hardening).toContain(
+      "REVOKE ALL ON FUNCTION %I.%I(%s) FROM authenticated",
+    );
+    expect(hardening).toContain(
+      "GRANT EXECUTE ON FUNCTION %I.%I(%s) TO service_role",
+    );
   });
 
   it("keeps public site setting reads invoker-scoped and least-privilege", () => {
@@ -392,12 +580,16 @@ describe("community supabase security audit", () => {
       "supabase/migrations/20260707111214_harden_get_site_setting_invoker.sql",
     );
 
-    expect(hardening).toContain("REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER");
+    expect(hardening).toContain(
+      "REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER",
+    );
     expect(hardening).toContain("ON TABLE public.site_settings");
     expect(hardening).toContain("FROM anon, authenticated");
     expect(hardening).toContain("GRANT SELECT");
     expect(hardening).toContain("TO anon, authenticated");
-    expect(hardening).toContain("-- security-authority: public-rpc public.get_site_setting");
+    expect(hardening).toContain(
+      "-- security-authority: public-rpc public.get_site_setting",
+    );
     expect(hardening).toContain("ALTER FUNCTION public.get_site_setting(text)");
     expect(hardening).toContain("SECURITY INVOKER");
     expect(hardening).toContain("REVOKE ALL");
@@ -411,8 +603,12 @@ describe("community supabase security audit", () => {
       "supabase/migrations/20260707115617_harden_location_descendants_rpc_invoker.sql",
     );
 
-    expect(hardening).toContain("-- security-authority: public-rpc public.rpc_get_location_descendants_ids");
-    expect(hardening).toContain("ALTER FUNCTION public.rpc_get_location_descendants_ids(uuid)");
+    expect(hardening).toContain(
+      "-- security-authority: public-rpc public.rpc_get_location_descendants_ids",
+    );
+    expect(hardening).toContain(
+      "ALTER FUNCTION public.rpc_get_location_descendants_ids(uuid)",
+    );
     expect(hardening).toContain("SECURITY INVOKER");
     expect(hardening).toContain("SET search_path = public, pg_temp");
     expect(hardening).toContain("FROM PUBLIC, anon, authenticated");
@@ -425,8 +621,12 @@ describe("community supabase security audit", () => {
       "supabase/migrations/20260707120534_harden_brand_branches_rpc_invoker.sql",
     );
 
-    expect(hardening).toContain("-- security-authority: public-rpc public.get_brand_branches");
-    expect(hardening).toContain("ALTER FUNCTION public.get_brand_branches(uuid)");
+    expect(hardening).toContain(
+      "-- security-authority: public-rpc public.get_brand_branches",
+    );
+    expect(hardening).toContain(
+      "ALTER FUNCTION public.get_brand_branches(uuid)",
+    );
     expect(hardening).toContain("SECURITY INVOKER");
     expect(hardening).toContain("SET search_path = public, pg_temp");
     expect(hardening).toContain("FROM PUBLIC, anon, authenticated");
@@ -439,10 +639,16 @@ describe("community supabase security audit", () => {
       "supabase/migrations/20260707120937_harden_match_district_by_point_rpc_invoker.sql",
     );
 
-    expect(hardening).toContain("-- security-authority: public-rpc public.rpc_match_district_by_point");
-    expect(hardening).toContain("CREATE OR REPLACE FUNCTION public.rpc_match_district_by_point");
+    expect(hardening).toContain(
+      "-- security-authority: public-rpc public.rpc_match_district_by_point",
+    );
+    expect(hardening).toContain(
+      "CREATE OR REPLACE FUNCTION public.rpc_match_district_by_point",
+    );
     expect(hardening).toContain("SECURITY INVOKER");
-    expect(hardening).toContain("SET search_path = public, extensions, pg_temp");
+    expect(hardening).toContain(
+      "SET search_path = public, extensions, pg_temp",
+    );
     expect(hardening).toContain("ST_GeomFromGeoJSON(nb.geometry::text)");
     expect(hardening).toContain("ST_Contains(");
     expect(hardening).toContain("FROM PUBLIC, anon, authenticated");
@@ -456,15 +662,29 @@ describe("community supabase security audit", () => {
       "supabase/migrations/20260707121321_harden_lost_found_public_read_rpcs_invoker.sql",
     );
 
-    expect(hardening).toContain("-- security-authority: public-rpc public.count_lost_found_posts_by_type");
-    expect(hardening).toContain("ALTER FUNCTION public.count_lost_found_posts_by_type()");
+    expect(hardening).toContain(
+      "-- security-authority: public-rpc public.count_lost_found_posts_by_type",
+    );
+    expect(hardening).toContain(
+      "ALTER FUNCTION public.count_lost_found_posts_by_type()",
+    );
     expect(hardening).toContain("SECURITY INVOKER");
-    expect(hardening).toContain("ON FUNCTION public.count_lost_found_posts_by_type()");
+    expect(hardening).toContain(
+      "ON FUNCTION public.count_lost_found_posts_by_type()",
+    );
 
-    expect(hardening).toContain("-- security-authority: public-rpc public.find_similar_lost_found_posts");
-    expect(hardening).toContain("CREATE OR REPLACE FUNCTION public.find_similar_lost_found_posts");
-    expect(hardening).toContain("LIMIT LEAST(GREATEST(COALESCE(p_limit, 5), 1), 20)");
-    expect(hardening).toContain("ON FUNCTION public.find_similar_lost_found_posts(uuid, integer)");
+    expect(hardening).toContain(
+      "-- security-authority: public-rpc public.find_similar_lost_found_posts",
+    );
+    expect(hardening).toContain(
+      "CREATE OR REPLACE FUNCTION public.find_similar_lost_found_posts",
+    );
+    expect(hardening).toContain(
+      "LIMIT LEAST(GREATEST(COALESCE(p_limit, 5), 1), 20)",
+    );
+    expect(hardening).toContain(
+      "ON FUNCTION public.find_similar_lost_found_posts(uuid, integer)",
+    );
 
     expect(hardening).toContain("SET search_path = public, pg_temp");
     expect(hardening).toContain("FROM PUBLIC, anon, authenticated");
@@ -513,14 +733,18 @@ describe("community supabase security audit", () => {
     expect(hardening).toContain(
       'DROP POLICY IF EXISTS "Authenticated users can create addresses" ON public.addresses;',
     );
-    expect(hardening).toContain('DROP POLICY IF EXISTS "Users manage own addresses" ON public.addresses;');
+    expect(hardening).toContain(
+      'DROP POLICY IF EXISTS "Users manage own addresses" ON public.addresses;',
+    );
     expect(hardening).toContain("USING (owner_user_id = auth.uid())");
     expect(hardening).toContain("WITH CHECK (owner_user_id = auth.uid())");
 
     expect(hardening).toContain(
       'DROP POLICY IF EXISTS "Authenticated users can create reports" ON public.classified_reports;',
     );
-    expect(hardening).toContain("DROP POLICY IF EXISTS classified_reports_insert_own ON public.classified_reports;");
+    expect(hardening).toContain(
+      "DROP POLICY IF EXISTS classified_reports_insert_own ON public.classified_reports;",
+    );
     expect(hardening).toContain("CREATE POLICY classified_reports_insert_own");
     expect(hardening).toContain("reporter_id IN (");
     expect(hardening).toContain("WHERE p.user_id = auth.uid()");
@@ -540,7 +764,9 @@ describe("community supabase security audit", () => {
     ];
 
     for (const policyName of publicListingPolicies) {
-      expect(hardening).toContain(`DROP POLICY IF EXISTS ${policyName} ON storage.objects;`);
+      expect(hardening).toContain(
+        `DROP POLICY IF EXISTS ${policyName} ON storage.objects;`,
+      );
     }
   });
 
@@ -577,7 +803,9 @@ describe("community supabase security audit", () => {
     ];
 
     expect(hardening).toContain("pg_get_function_identity_arguments(p.oid)");
-    expect(hardening).toContain("SET search_path = public, extensions, pg_temp");
+    expect(hardening).toContain(
+      "SET search_path = public, extensions, pg_temp",
+    );
     expect(hardening).not.toContain("'exec_sql'");
 
     for (const functionName of functionNames) {
@@ -617,7 +845,9 @@ describe("community supabase security audit", () => {
     ];
 
     expect(hardening).toContain("pg_get_function_identity_arguments(p.oid)");
-    expect(hardening).toContain("SET search_path = public, extensions, pg_temp");
+    expect(hardening).toContain(
+      "SET search_path = public, extensions, pg_temp",
+    );
     expect(hardening).not.toMatch(/\bGRANT\b|\bREVOKE\b/i);
 
     for (const functionName of functionNames) {
