@@ -12,25 +12,12 @@
       content="Achegue-se conecta comunidade, negócios locais, serviços, gastronomia, mapa e perto de mim em experiências hiperlocais."
     />
     <meta name="author" content="Achegue-se" />
-    <meta name="google-site-verification" content="BNVlQYH3xXWXcPpp4ADSJsI4ufNhLbetluSD5bbtMq4" />
+    <meta
+      name="google-site-verification"
+      content="BNVlQYH3xXWXcPpp4ADSJsI4ufNhLbetluSD5bbtMq4"
+    />
 
-    <script>
-      (function () {
-        const isLocalhost =
-          location.hostname === "localhost" ||
-          location.hostname === "127.0.0.1" ||
-          location.hostname === "::1";
-
-        if (!isLocalhost) {
-          const ads = document.createElement("script");
-          ads.async = true;
-          ads.src =
-            "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6454131132519516";
-          ads.crossOrigin = "anonymous";
-          document.head.appendChild(ads);
-        }
-      })();
-    </script>
+    <script src="/adsense-bootstrap.js"></script>
 
     <meta property="og:title" content="Achegue-se" />
     <meta
@@ -44,37 +31,15 @@
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@AchegueSe" />
-    <meta name="twitter:image" content="https://acheguese.com.br/og-image.png" />
+    <meta
+      name="twitter:image"
+      content="https://acheguese.com.br/og-image.png"
+    />
   </head>
 
   <body>
     <div id="root"></div>
-    <script>
-      (function () {
-        const isLocalhost =
-          location.hostname === "localhost" ||
-          location.hostname === "127.0.0.1" ||
-          location.hostname === "::1";
-
-        if (!isLocalhost || !("serviceWorker" in navigator)) return;
-
-        navigator.serviceWorker
-          .getRegistrations()
-          .then((registrations) =>
-            Promise.all(registrations.map((registration) => registration.unregister()))
-          )
-          .then(() => ("caches" in window ? caches.keys() : []))
-          .then((keys) =>
-            Array.isArray(keys) ? Promise.all(keys.map((key) => caches.delete(key))) : undefined
-          )
-          .finally(() => {
-            if (sessionStorage.getItem("sw-dev-reset-done") !== "1") {
-              sessionStorage.setItem("sw-dev-reset-done", "1");
-              location.reload();
-            }
-          });
-      })();
-    </script>
+    <script src="/service-worker-bootstrap.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

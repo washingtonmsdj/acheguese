@@ -95,6 +95,8 @@ const REQUIRED_SCRIPTS = [
   'lint',
   'build',
   'build:vercel',
+  'validate:csp',
+  'validate:vercel:inputs',
   'validate:turnstile:production',
   'validate:deps',
   'validate:taxonomy',

@@ -3,13 +3,17 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
+  "packageManager": "npm@11.17.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:vercel": "npm run validate:turnstile:production && npm run typecheck:app && npm run lint && npm run build",
+    "build:vercel": "npm run validate:vercel:inputs && npm run validate:csp && npm run validate:turnstile:production && npm run typecheck:app && npm run lint && npm run build",
     "build:dev": "vite build --mode development",
     "build:fast": "node scripts/build-fast.mjs",
-    "build:analyze": "vite build && open dist/stats.html",
+    "build:analyze": "vite build --mode analyze",
     "lint": "eslint src api",
     "lint:fix": "eslint src api --fix",
     "lint:maps": "eslint src/core/maps src/integrations/maps --ext .ts,.tsx --config eslint.config.js",
@@ -24,6 +28,8 @@
     "typecheck:app": "tsc -p tsconfig.app.json --noEmit",
     "preview": "vite preview",
     "security:validate": "node scripts/security/validate-security.mjs",
+    "validate:csp": "tsx scripts/security/validate-csp.ts",
+    "validate:vercel:inputs": "node scripts/validate-vercel-build-inputs.mjs",
     "validate:turnstile:production": "node scripts/security/validate-turnstile-production-config.mjs",
     "security:advisor:residuals": "tsx scripts/validate-supabase-advisor-residuals.ts",
     "security:auth:hibp": "node scripts/security/supabase-auth-hibp.mjs --check",

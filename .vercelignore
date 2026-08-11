@@ -44,8 +44,7 @@ docs
 *.md
 !README.md
 
-# Scripts
-scripts
+# Operational scripts that are not build inputs
 apply-*.mjs
 apply-*.ps1
 apply-*.sh

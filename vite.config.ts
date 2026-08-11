@@ -70,10 +70,14 @@ function getVendorChunk(id: string): string | undefined {
   return undefined;
 }
 
-export default defineConfig(({ mode }) => {
-  const shouldUploadSourcemaps = mode === "production" && Boolean(process.env.SENTRY_AUTH_TOKEN);
+export default defineConfig(({ command, mode }) => {
+  const shouldUploadSourcemaps =
+    mode === "production" && Boolean(process.env.SENTRY_AUTH_TOKEN);
   const skipSourcemap = process.env.VITE_SKIP_SOURCEMAP === "true";
   const skipCompressedSize = process.env.VITE_SKIP_COMPRESSED_SIZE === "true";
+  const shouldAnalyzeBundle =
+    command === "build" &&
+    (mode === "analyze" || process.env.ANALYZE_BUNDLE === "true");
 
   return {
     server: {
@@ -100,7 +104,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       mode === "development" ? componentTagger() : null,
-      mode === "production" && !skipCompressedSize
+      shouldAnalyzeBundle
         ? visualizer({
             filename: "./dist/stats.html",
             open: false,

@@ -295,13 +295,10 @@ export const CSP_DIRECTIVES = {
   // 'unsafe-inline' e 'unsafe-eval' são permitidos APENAS em dev (Vite HMR).
   // Em produção o Vite gera bundles sem inline scripts — não precisamos deles.
   // Os domínios Vercel são necessários para Analytics e preview toolbar.
-  // Hashes específicos permitem inline scripts do index.html (AdSense loader e SW cleanup)
+  // Bootstraps do AdSense e SW cleanup são scripts same-origin externos.
   'script-src': [
     "'self'",
     ...(IS_DEV ? ["'unsafe-inline'", "'unsafe-eval'"] : []),
-    // Hashes dos inline scripts no index.html
-    "'sha256-9ll9gJXvcvz1hq1/HNwQ86RhAJQWeiZwEZzJ48i88bM='",
-    "'sha256-O162sKaTzi0Yi5Xk/VEeTYLMkdsIVbsGi1ephDdNhZU='",
     SECURITY_DOMAINS.CDN_JSDELIVR.url,
     SECURITY_DOMAINS.SUPABASE_HTTPS.url,
     SECURITY_DOMAINS.VERCEL_SCRIPTS.url,
@@ -868,6 +865,15 @@ export const CACHE_HEADERS = {
   // Service Worker - No cache
   SERVICE_WORKER: {
     pattern: '/sw.js',
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    },
+  },
+
+  SERVICE_WORKER_COMPAT: {
+    pattern: '/service-worker.js',
     headers: {
       'Cache-Control': 'no-cache, no-store, must-revalidate',
       'Pragma': 'no-cache',

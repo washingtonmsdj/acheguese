@@ -31,7 +31,7 @@ const VERCEL_CONFIG_TEMPLATE = {
   buildCommand: "npm run build:vercel",
   outputDirectory: "dist",
   devCommand: "npm run dev",
-  installCommand: "npm install",
+  installCommand: "npm ci",
   framework: "vite",
 
   rewrites: [
