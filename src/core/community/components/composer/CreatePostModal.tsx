@@ -58,6 +58,7 @@ import type { PostType } from "@/core/posts/types.ts";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
 import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
+import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 import {
   clearPostDraft,
@@ -103,7 +104,8 @@ interface CreatePostModalProps {
   initialContent?: string;
   initialType?: PostType;
   initialReach?: "street" | "neighborhood" | "city";
-  canCreatePost?: boolean;
+  resolvedTerritory?: ResolvedTerritory;
+  canCreatePost: boolean;
   canCreateAlert?: boolean;
   canCreateIssue?: boolean;
   blockedPostMessage?: string;
@@ -420,7 +422,8 @@ export function CreatePostModal({
   initialContent,
   initialType,
   initialReach,
-  canCreatePost = true,
+  resolvedTerritory,
+  canCreatePost,
   canCreateAlert = false,
   canCreateIssue = false,
   blockedPostMessage = DEFAULT_BLOCKED_POST_MESSAGE,
@@ -433,7 +436,7 @@ export function CreatePostModal({
     (effectiveProfile ?? sessionProfile) as RuntimePostProfile | null,
   );
   const form = useCreatePostForm();
-  const territoryFilter = useTerritoryFilter();
+  const territoryFilter = useTerritoryFilter(resolvedTerritory);
   const queryClient = useQueryClient();
   const [publishing, setPublishing] = React.useState(false);
   const [savingDraft, setSavingDraft] = React.useState(false);
@@ -814,9 +817,6 @@ export function CreatePostModal({
       },
     };
     if (isPollIntent) {
-      const options = pollOptions
-        .filter((opt) => opt.trim())
-        .map((opt) => opt.trim());
       return {
         content: pollQuestion.trim(),
         tags: [
@@ -827,13 +827,6 @@ export function CreatePostModal({
         structural: {
           ...structuralBase,
           display_format: "poll_card",
-          poll: {
-            question: pollQuestion.trim(),
-            options,
-            allow_multiple_choice: pollAllowMultiple,
-            duration_days: Number(pollDurationDays),
-            allow_comments: pollAllowComments,
-          },
         },
       };
     }
@@ -975,26 +968,43 @@ export function CreatePostModal({
       } else if (isOpportunityIntent) {
         toast.error("Oportunidades estao pausadas neste MVP.");
       } else {
-        const created = await postService.createPostWithImages(
-          {
-            author_profile_id: profile.id,
-            content: payload.content,
-            type: selectedIntent.structuralType,
-            location_id: resolvedLocationId,
-            reach: reachFromTerritorialLevel(distributionLevel),
-            tags: payload.tags,
-            content_intent: intent,
-            display_format: payload.structural.display_format,
-            distribution_channels:
-              payload.structural.distribution_territorial.channels,
-            content_payload: payload.structural as unknown as Record<
-              string,
-              unknown
-            >,
-          },
-          form.imageFiles,
-        );
-        createdPostId = (created as { id?: string })?.id ?? null;
+        const commonPostIntent = {
+          author_profile_id: profile.id,
+          content: payload.content,
+          location_id: resolvedLocationId,
+          reach: reachFromTerritorialLevel(distributionLevel),
+          tags: payload.tags,
+          content_intent: intent,
+          distribution_channels:
+            payload.structural.distribution_territorial.channels,
+        };
+        const created = isPollIntent
+          ? await postService.createPollPostWithImages(
+              {
+                ...commonPostIntent,
+                content_payload: payload.structural,
+                poll: {
+                  question: pollQuestion.trim(),
+                  options: pollOptions
+                    .filter((option) => option.trim())
+                    .map((option) => option.trim()),
+                  duration_days: Number(pollDurationDays),
+                  allow_multiple_choice: pollAllowMultiple,
+                  allow_comments: pollAllowComments,
+                },
+              },
+              form.imageFiles,
+            )
+          : await postService.createPostWithImages(
+              {
+                ...commonPostIntent,
+                type: selectedIntent.structuralType,
+                display_format: payload.structural.display_format,
+                content_payload: payload.structural,
+              },
+              form.imageFiles,
+            );
+        createdPostId = created.id;
         toast.success("Conteúdo publicado.");
       }
 

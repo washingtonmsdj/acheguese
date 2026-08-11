@@ -1,251 +1,139 @@
 /**
- * Poll write mutations.
+ * Authoritative Poll commands.
+ *
+ * The browser invokes one PostgreSQL transaction per command and never writes
+ * Poll tables or counters directly.
  */
 
 import { supabase } from "@/integrations/supabase";
-import type { Database, Json } from "@/integrations/supabase";
+import type { Json } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
-import type { CreatePollData, Poll, PollOption } from "../types";
+import type { Post, Poll } from "../types";
 import { PostError } from "../types";
+import { parsePollDto } from "./polls.queries";
+import * as postQueries from "./posts.queries";
 
-export type { CreatePollData, Poll };
-
-type PollRow = Database["public"]["Tables"]["community_polls"]["Row"];
-type PollInsert = Database["public"]["Tables"]["community_polls"]["Insert"];
-type PollUpdate = Database["public"]["Tables"]["community_polls"]["Update"];
-type PollOptionRow = Database["public"]["Tables"]["community_poll_options"]["Row"];
-type PollOptionInsert = Database["public"]["Tables"]["community_poll_options"]["Insert"];
-type PollOptionUpdate = Database["public"]["Tables"]["community_poll_options"]["Update"];
-type PollVoteInsert = Database["public"]["Tables"]["community_poll_votes"]["Insert"];
-
-function toPollOption(row: PollOptionRow): PollOption {
-  return {
-    id: row.id,
-    poll_id: row.poll_id,
-    text: row.text,
-    position: row.position,
-    votes: row.votes,
-    created_at: "",
+export interface CreatePollPostCommand {
+  author_profile_id: string;
+  content: string;
+  location_id: string;
+  reach?: "street" | "neighborhood" | "city";
+  images?: string[];
+  tags?: string[];
+  content_intent?: string;
+  distribution_channels?: string[];
+  content_payload?: Json;
+  poll: {
+    question: string;
+    options: string[];
+    duration_days: number;
+    allow_multiple_choice: boolean;
+    allow_comments: boolean;
   };
 }
 
-function toStoredPollOption(row: PollOptionRow): Array<Json> {
-  return [
-    {
-      id: row.id,
-      text: row.text,
-      votes: row.votes,
-      position: row.position,
-    } as Json,
-  ];
+function toError(value: unknown): Error {
+  return value instanceof Error ? value : new Error(String(value));
 }
 
-function toPoll(row: PollRow, optionRows: PollOptionRow[]): Poll {
-  const options = optionRows.map(toPollOption);
-  return {
-    id: row.id,
-    post_id: row.post_id,
-    question: row.question,
-    options,
-    total_votes: options.reduce((sum, option) => sum + option.votes, 0),
-    expires_at: row.expires_at ?? row.created_at,
-    created_at: row.created_at,
-    updated_at: row.created_at,
-  };
-}
-
-async function fetchPollOptions(pollId: string): Promise<PollOptionRow[]> {
-  const { data, error } = await supabase
-    .from("community_poll_options")
-    .select("*")
-    .eq("poll_id", pollId)
-    .order("position", { ascending: true });
-
-  if (error) {
-    throw new PostError(error.message, error.code);
+function readCreatedPostId(value: Json): string {
+  if (
+    value === null ||
+    Array.isArray(value) ||
+    typeof value !== "object" ||
+    typeof value.id !== "string"
+  ) {
+    throw new PostError(
+      "Resposta invalida ao criar enquete",
+      "INVALID_POLL_CREATE_RESPONSE",
+    );
   }
 
-  return data ?? [];
+  return value.id;
 }
 
-export async function createPoll(data: CreatePollData): Promise<Poll> {
+export async function createPostWithPoll(
+  command: CreatePollPostCommand,
+): Promise<Post> {
   try {
-    if (!data.question || data.question.trim().length < 10) {
-      throw new PostError("A pergunta deve ter pelo menos 10 caracteres", "INVALID_QUESTION");
-    }
-
-    if (!data.options || data.options.length < 2) {
-      throw new PostError("A enquete deve ter pelo menos 2 opcoes", "INVALID_OPTIONS");
-    }
-
-    if (data.options.length > 6) {
-      throw new PostError("Enquete pode ter no maximo 6 opcoes", "INVALID_OPTIONS");
-    }
-
-    if (data.options.some((option) => !option.text || option.text.trim().length < 1)) {
-      throw new PostError("Todas as opcoes devem ter texto", "INVALID_OPTION_TEXT");
-    }
-
-    const pollInsert: PollInsert = {
-      post_id: data.postId,
-      question: data.question.trim(),
-      expires_at: new Date(Date.now() + data.expiresInDays * 24 * 60 * 60 * 1000).toISOString(),
-      options: [],
+    const payload: Json = {
+      author_profile_id: command.author_profile_id,
+      content: command.content,
+      location_id: command.location_id,
+      reach: command.reach ?? "neighborhood",
+      images: command.images ?? [],
+      tags: command.tags ?? [],
+      content_intent: command.content_intent ?? null,
+      display_format: "poll_card",
+      distribution_channels: command.distribution_channels ?? [],
+      content_payload: command.content_payload ?? {},
+      poll: {
+        question: command.poll.question,
+        options: command.poll.options,
+        duration_days: command.poll.duration_days,
+        allow_multiple_choice: command.poll.allow_multiple_choice,
+        allow_comments: command.poll.allow_comments,
+      },
     };
 
-    const { data: poll, error: pollError } = await supabase
-      .from("community_polls")
-      .insert(pollInsert)
-      .select("*")
-      .single();
+    const { data, error } = await supabase.rpc("create_post_with_poll", {
+      payload,
+    });
 
-    if (pollError || !poll) {
-      throw new PostError(pollError?.message ?? "Erro ao criar enquete", pollError?.code ?? "CREATE_ERROR");
+    if (error) {
+      throw new PostError(error.message, error.code ?? "POLL_CREATE_FAILED");
     }
 
-    const optionsToInsert: PollOptionInsert[] = data.options.map((option, index) => ({
-      poll_id: poll.id,
-      text: option.text.trim(),
-      position: option.position || index,
-      votes: 0,
-    }));
-
-    const { data: options, error: optionsError } = await supabase
-      .from("community_poll_options")
-      .insert(optionsToInsert)
-      .select("*");
-
-    if (optionsError) {
-      await supabase.from("community_polls").delete().eq("id", poll.id);
-      throw new PostError(optionsError.message, optionsError.code);
+    const postId = readCreatedPostId(data);
+    const post = await postQueries.getPostById(postId);
+    if (!post) {
+      throw new PostError(
+        "Post da enquete nao encontrado apos criacao",
+        "POLL_POST_NOT_FOUND",
+      );
     }
 
-    const optionRows = options ?? [];
-    const pollOptionsJson = optionRows.flatMap(toStoredPollOption);
-    const pollUpdate: PollUpdate = { options: pollOptionsJson };
-
-    const { error: updateError } = await supabase
-      .from("community_polls")
-      .update(pollUpdate)
-      .eq("id", poll.id);
-
-    if (updateError) {
-      trackError(updateError as Error, {
-        component: "polls.mutations",
-        action: "createPoll",
-        metadata: { pollId: poll.id, step: "update_options" },
-      });
-    }
-
-    return toPoll(poll, optionRows);
+    return post;
   } catch (error) {
     if (error instanceof PostError) throw error;
 
-    logger.error("[polls.mutations] Error creating poll:", error);
-    trackError(error as Error, {
+    logger.error("[polls.mutations] Error creating Poll Post:", error);
+    trackError(toError(error), {
       component: "polls.mutations",
-      action: "createPoll",
-      metadata: { postId: data.postId },
+      action: "createPostWithPoll",
+      metadata: { locationId: command.location_id },
     });
-    throw new PostError("Erro ao criar enquete", "CREATE_ERROR");
+    throw new PostError("Erro ao criar enquete", "POLL_CREATE_FAILED");
   }
 }
 
-export async function updatePollVoteCounts(
+export async function votePoll(
   pollId: string,
   optionId: string,
-): Promise<{ options: PollOption[]; total_votes: number }> {
+  profileId: string,
+): Promise<Poll> {
   try {
-    const optionsBeforeUpdate = await fetchPollOptions(pollId);
-    const optionRow = optionsBeforeUpdate.find((option) => option.id === optionId);
-
-    if (!optionRow) {
-      throw new PostError("Opcao da enquete nao encontrada", "OPTION_NOT_FOUND");
-    }
-
-    const optionUpdate: PollOptionUpdate = { votes: optionRow.votes + 1 };
-    const { error: optionError } = await supabase
-      .from("community_poll_options")
-      .update(optionUpdate)
-      .eq("id", optionId);
-
-    if (optionError) {
-      throw new PostError(optionError.message, optionError.code);
-    }
-
-    const updatedOptions = await fetchPollOptions(pollId);
-    const totalVotes = updatedOptions.reduce((sum, option) => sum + option.votes, 0);
-
-    const pollUpdate: PollUpdate = {
-      options: updatedOptions.flatMap(toStoredPollOption),
-    };
-
-    const { error: pollError } = await supabase
-      .from("community_polls")
-      .update(pollUpdate)
-      .eq("id", pollId);
-
-    if (pollError) {
-      throw new PostError(pollError.message, pollError.code);
-    }
-
-    return {
-      options: updatedOptions.map(toPollOption),
-      total_votes: totalVotes,
-    };
-  } catch (error) {
-    if (error instanceof PostError) throw error;
-
-    logger.error("[polls.mutations] Error updating poll counts:", error);
-    trackError(error as Error, {
-      component: "polls.mutations",
-      action: "updatePollVoteCounts",
-      metadata: { pollId, optionId },
+    const { data, error } = await supabase.rpc("cast_community_poll_vote", {
+      p_poll_id: pollId,
+      p_option_id: optionId,
+      p_profile_id: profileId,
     });
-    throw new PostError("Erro ao atualizar votos", "UPDATE_ERROR");
-  }
-}
 
-export async function votePoll(pollId: string, optionId: string, userId: string): Promise<void> {
-  try {
-    const { data: existingVote, error: checkError } = await supabase
-      .from("community_poll_votes")
-      .select("id")
-      .eq("poll_id", pollId)
-      .eq("user_id", userId)
-      .single();
-
-    if (checkError && checkError.code !== "PGRST116") {
-      throw new PostError(checkError.message, checkError.code);
+    if (error) {
+      throw new PostError(error.message, error.code ?? "POLL_VOTE_FAILED");
     }
 
-    if (existingVote) {
-      throw new PostError("Voce ja votou nesta enquete", "ALREADY_VOTED");
-    }
-
-    const voteInsert: PollVoteInsert = {
-      poll_id: pollId,
-      option_id: optionId,
-      user_id: userId,
-    };
-
-    const { error: voteError } = await supabase.from("community_poll_votes").insert(voteInsert);
-
-    if (voteError) {
-      throw new PostError(voteError.message, voteError.code);
-    }
-
-    await updatePollVoteCounts(pollId, optionId);
+    return parsePollDto(data);
   } catch (error) {
     if (error instanceof PostError) throw error;
 
-    logger.error("[polls.mutations] Error voting in poll:", error);
-    trackError(error as Error, {
+    logger.error("[polls.mutations] Error voting in Poll:", error);
+    trackError(toError(error), {
       component: "polls.mutations",
       action: "votePoll",
-      metadata: { pollId, optionId, userId },
+      metadata: { pollId, optionId, profileId },
     });
-    throw new PostError("Erro ao registrar voto", "VOTE_ERROR");
+    throw new PostError("Erro ao registrar voto", "POLL_VOTE_FAILED");
   }
 }

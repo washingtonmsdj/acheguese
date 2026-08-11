@@ -9,7 +9,6 @@ import { PAGINATION } from "@/shared/constants";
 import { trackError } from "@/shared/utils/errorTracking";
 import type { PaginationParams, Post } from "../types";
 import { PostError } from "../types";
-import * as pollQueries from "./polls.queries";
 
 interface QueryResult<T> {
   data: T | null;
@@ -40,10 +39,6 @@ function boundedInteger(value: number, minimum: number, maximum: number): number
   return Math.min(Math.max(Math.trunc(value), minimum), maximum);
 }
 
-interface PollVoteRow {
-  option_id: string | null;
-}
-
 interface AuthorActivityPostRow {
   id: string;
   type: string;
@@ -65,7 +60,6 @@ export async function getPostUserInteractions(
   isLiked: boolean;
   isSaved: boolean;
   hasConfirmed: boolean;
-  pollVoteOptionId: string | null;
 }> {
   try {
     const activeProfile = await profileService.getActiveProfile(userId);
@@ -90,24 +84,10 @@ export async function getPostUserInteractions(
         : Promise.resolve({ data: null }),
     ]);
 
-    let pollVoteOptionId: string | null = null;
-    const poll = await pollQueries.getPollByPostId(postId);
-    if (poll) {
-      const { data: voteData } = await postsUserDb
-        .from("community_poll_votes")
-        .select("option_id")
-        .eq("poll_id", poll.id)
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      pollVoteOptionId = (voteData as PollVoteRow | null)?.option_id ?? null;
-    }
-
     return {
       isLiked: Boolean(likeData.data),
       isSaved: Boolean(savedData.data),
       hasConfirmed: false,
-      pollVoteOptionId,
     };
   } catch (error) {
     trackError(error as Error, {
@@ -119,7 +99,6 @@ export async function getPostUserInteractions(
       isLiked: false,
       isSaved: false,
       hasConfirmed: false,
-      pollVoteOptionId: null,
     };
   }
 }

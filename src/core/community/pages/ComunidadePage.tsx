@@ -611,6 +611,7 @@ export default function ComunidadePage({
               ? createPostModalData.initialReach
               : undefined
           }
+          resolvedTerritory={resolved}
           canCreatePost={communityAccess.can.create_post}
           canCreateAlert={communityAccess.can.create_alert}
           canCreateIssue={communityAccess.can.create_issue}

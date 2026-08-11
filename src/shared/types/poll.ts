@@ -18,7 +18,7 @@ export interface PollOption {
 }
 
 export interface Poll {
-  id?: string;
+  id: string;
   question: string;
   options: PollOption[];
   total_votes: number;

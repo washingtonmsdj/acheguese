@@ -55,8 +55,9 @@ export {
 // POLLS
 // ============================================================
 export { getPollById, getPollByPostId } from "./polls.queries";
-export { createPoll, updatePollVoteCounts, votePoll } from "./polls.mutations";
-export type { Poll, CreatePollData } from "./polls.mutations";
+export { createPostWithPoll, votePoll } from "./polls.mutations";
+export type { CreatePollPostCommand } from "./polls.mutations";
+export type { Poll } from "../types";
 
 // ============================================================
 // UNIFIED FACADE

@@ -11,7 +11,6 @@ interface CommunityPostContentProps {
   images?: string[];
   poll?: Poll;
   postType: PostType;
-  postId: string;
   tags: string[];
   onTagClick?: (tag: string) => void;
 }
@@ -25,7 +24,6 @@ export const CommunityPostContent = ({
   images,
   poll,
   postType,
-  postId,
   tags,
   onTagClick,
 }: CommunityPostContentProps) => {
@@ -35,7 +33,7 @@ export const CommunityPostContent = ({
 
       {poll && postType === "enquete" && (
         <div className="mt-4">
-          <PollCard pollId={postId} poll={poll} />
+          <PollCard pollId={poll.id} poll={poll} />
         </div>
       )}
 

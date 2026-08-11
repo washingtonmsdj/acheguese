@@ -4749,6 +4749,7 @@ export type Database = {
           id: string
           option_id: string
           poll_id: string
+          profile_id: string | null
           user_id: string
         }
         Insert: {
@@ -4756,6 +4757,7 @@ export type Database = {
           id?: string
           option_id: string
           poll_id: string
+          profile_id?: string | null
           user_id: string
         }
         Update: {
@@ -4763,6 +4765,7 @@ export type Database = {
           id?: string
           option_id?: string
           poll_id?: string
+          profile_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -4780,32 +4783,48 @@ export type Database = {
             referencedRelation: "community_polls"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "community_poll_votes_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       community_polls: {
         Row: {
+          allow_comments: boolean
+          allow_multiple_choice: boolean
           created_at: string
           expires_at: string | null
           id: string
           options: Json
           post_id: string
           question: string
+          updated_at: string
         }
         Insert: {
+          allow_comments?: boolean
+          allow_multiple_choice?: boolean
           created_at?: string
           expires_at?: string | null
           id?: string
           options?: Json
           post_id: string
           question: string
+          updated_at?: string
         }
         Update: {
+          allow_comments?: boolean
+          allow_multiple_choice?: boolean
           created_at?: string
           expires_at?: string | null
           id?: string
           options?: Json
           post_id?: string
           question?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -17800,6 +17819,22 @@ export type Database = {
       }
     }
     Functions: {
+      cast_community_poll_vote: {
+        Args: {
+          p_option_id: string
+          p_poll_id: string
+          p_profile_id: string
+        }
+        Returns: Json
+      }
+      create_post_with_poll: {
+        Args: { payload: Json }
+        Returns: Json
+      }
+      get_community_poll_for_post: {
+        Args: { p_post_id: string }
+        Returns: Json
+      }
       _postgis_deprecate: {
         Args: { newname: string; oldname: string; version: string }
         Returns: undefined

@@ -39,11 +39,12 @@ Para cada arquivo desta pasta, siga o [AI Agent Rules](../governance/security/AI
 
 | Ordem | Arquivo | Descrição | Risco |
 |-------|---------|-----------|-------|
-| 1 | `20260720120000_create_community_interest_registrations.sql` | Cria a tabela pública `community_interest_registrations` consumida pela página `/comunidade/:uf/:city/interesse`. Inclui RLS, índices e triggers de timestamp. | Baixo |
+| 1 | `20260720130000_create_community_post_drafts.sql` | Migration pendente mantida neste inventário; revisar isoladamente antes de promover. | A revisar |
+| 2 | `20260810152013_finalize_community_poll_cutover.sql` | CUTOVER Poll deliberadamente fora da fila ativa; promover com timestamp novo somente apos preflight e janela de observacao. | Alto |
 
 ## Depois de aplicar
 
-1. Confirme no Supabase que a tabela existe: `select count(*) from public.community_interest_registrations;`.
-2. Teste o formulário em `/comunidade/ba/salvador/pituba/interesse` (bairro `coming_soon`).
+1. Confirme no Supabase que o objeto criado pela migration existe.
+2. Teste o fluxo correspondente em ambiente controlado.
 3. Mova os arquivos aplicados de `docs/migrations-pending/` para `supabase/migrations/` (se ainda não estiverem lá) e commit.
 4. Atualize esta tabela removendo os arquivos aplicados.

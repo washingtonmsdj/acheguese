@@ -24,7 +24,6 @@ interface CommunityPostInteractions {
   isLiked: boolean;
   isSaved: boolean;
   hasConfirmed: boolean;
-  pollVoteOptionId: string | null;
 }
 
 export function usePostById(postId: string | null) {
@@ -55,15 +54,14 @@ export function usePostById(postId: string | null) {
             isLiked: false,
             isSaved: false,
             hasConfirmed: false,
-            pollVoteOptionId: null,
           };
 
       const pollData = await postService.getPollByPostId(post.id);
       const enrichedPoll: CommunityPost["poll"] = pollData
         ? {
             ...pollData,
-            user_voted: Boolean(interactions.pollVoteOptionId),
-            user_vote_option_id: interactions.pollVoteOptionId ?? undefined,
+            user_voted: pollData.user_voted,
+            user_vote_option_id: pollData.user_vote_option_id,
           }
         : undefined;
 

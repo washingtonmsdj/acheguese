@@ -1,6 +1,7 @@
 import * as queries from "./posts.queries";
 import * as mutations from "./posts.mutations";
 import * as pollMutations from "./polls.mutations";
+import type { CreatePollPostCommand } from "./polls.mutations";
 import * as pollQueries from "./polls.queries";
 import { trackError } from "@/shared/utils/errorTracking";
 import { PAGINATION } from "@/shared/constants";
@@ -15,8 +16,6 @@ import type {
   PostStats,
   PaginationParams,
   Poll,
-  PollOption,
-  CreatePollData,
   PostType,
 } from "../types";
 import { PostError } from "../types";
@@ -86,6 +85,31 @@ export class PostService {
     }
 
     return this.createPost({ ...data, images: references });
+  }
+
+  /** Creates Post + Poll + Options through one database transaction. */
+  async createPollPostWithImages(
+    data: Omit<CreatePollPostCommand, "images">,
+    imageFiles: File[],
+  ): Promise<Post> {
+    if (imageFiles.length > POST_LIMITS.MAX_IMAGES) {
+      throw new PostError(
+        `Maximo de ${POST_LIMITS.MAX_IMAGES} imagens permitidas`,
+        "TOO_MANY_IMAGES",
+      );
+    }
+
+    const references: string[] = [];
+    for (const imageFile of imageFiles) {
+      const asset = await mediaService.uploadMediaAsset(
+        data.author_profile_id,
+        imageFile,
+        "post_image",
+      );
+      references.push(asset.reference);
+    }
+
+    return pollMutations.createPostWithPoll({ ...data, images: references });
   }
 
   /**
@@ -254,13 +278,6 @@ export class PostService {
   // ============================================================================
 
   /**
-   * Cria uma enquete vinculada a um post
-   */
-  async createPoll(data: CreatePollData): Promise<Poll> {
-    return pollMutations.createPoll(data);
-  }
-
-  /**
    * Busca uma enquete por ID
    */
   async getPollById(pollId: string): Promise<Poll | null> {
@@ -337,20 +354,10 @@ export class PostService {
    */
   async votePoll(
     pollId: string,
-    userId: string,
     optionId: string,
-  ): Promise<void> {
-    await pollMutations.votePoll(pollId, optionId, userId);
-  }
-
-  /**
-   * Atualiza contadores de uma enquete apos voto
-   */
-  async updatePollVoteCounts(
-    pollId: string,
-    optionId: string,
-  ): Promise<{ options: PollOption[]; total_votes: number }> {
-    return pollMutations.updatePollVoteCounts(pollId, optionId);
+    profileId: string,
+  ): Promise<Poll> {
+    return pollMutations.votePoll(pollId, optionId, profileId);
   }
 
   // ============================================================================
@@ -417,7 +424,6 @@ export class PostService {
     isLiked: boolean;
     isSaved: boolean;
     hasConfirmed: boolean;
-    pollVoteOptionId: string | null;
   }> {
     try {
       void postType;
@@ -432,7 +438,6 @@ export class PostService {
         isLiked: false,
         isSaved: false,
         hasConfirmed: false,
-        pollVoteOptionId: null,
       };
     }
   }

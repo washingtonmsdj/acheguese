@@ -95,6 +95,10 @@ export interface Poll {
   expires_at: string;
   created_at: string;
   updated_at: string;
+  allow_multiple_choice: boolean;
+  allow_comments: boolean;
+  user_voted: boolean;
+  user_vote_option_id?: string;
 }
 
 export interface PollOption {
@@ -103,24 +107,6 @@ export interface PollOption {
   text: string;
   position: number;
   votes: number;
-  created_at: string;
-}
-
-export interface CreatePollData {
-  postId: string;
-  question: string;
-  options: Array<{
-    text: string;
-    position: number;
-  }>;
-  expiresInDays: number;
-}
-
-export interface PollVote {
-  id: string;
-  poll_id: string;
-  option_id: string;
-  user_id: string;
   created_at: string;
 }
 

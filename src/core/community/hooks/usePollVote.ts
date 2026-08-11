@@ -82,10 +82,11 @@ export function usePollVote({ pollId, initialPoll }: UsePollVoteProps) {
       const activeProfile = await profileService.getRequiredActiveProfile();
 
       // ✅ MIGRADO - Registrar voto usando PostsFacade.polls (SSOT v2.0)
-      await PostsFacade.polls.votePoll(pollId, optionId, activeProfile.user_id);
-
-      // ✅ MIGRADO - Atualizar contadores usando PostsFacade.polls (SSOT v2.0)
-      const result = await PostsFacade.polls.updatePollVoteCounts(pollId, optionId);
+      const result = await PostsFacade.polls.votePoll(
+        pollId,
+        optionId,
+        activeProfile.id,
+      );
 
       return {
         options: result.options.map((opt) => ({
@@ -153,6 +154,7 @@ export function usePollVote({ pollId, initialPoll }: UsePollVoteProps) {
 
       // Invalidate cache do feed
       queryClient.invalidateQueries({ queryKey: communityFeedQueryKeys.root });
+      queryClient.invalidateQueries({ queryKey: ["community-post"] });
 
       toast({
         title: "Voto registrado",

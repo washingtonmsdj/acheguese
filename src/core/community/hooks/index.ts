@@ -21,7 +21,6 @@ export { useUnifiedFeed } from "./feed/useUnifiedFeed";
 // Composer hooks
 export { useCreatePost } from "./composer/useCreatePost";
 export { usePostForm } from "./composer/usePostForm";
-export { useCreatePoll } from "./composer/useCreatePoll";
 export { useUnifiedComposer } from "./composer/useUnifiedComposer";
 export { useCreatePostForm } from "./composer/useCreatePostForm";
 

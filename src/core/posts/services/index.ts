@@ -56,10 +56,10 @@ export {
 // POLLS MUTATIONS
 // ============================================================
 export {
-  createPoll,
-  updatePollVoteCounts,
+  createPostWithPoll,
   votePoll,
 } from "./polls.mutations";
+export type { CreatePollPostCommand } from "./polls.mutations";
 
 // ============================================================
 // RUNTIME SERVICE
