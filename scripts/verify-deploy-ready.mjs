@@ -99,6 +99,7 @@ const REQUIRED_SCRIPTS = [
   'validate:hardcodes',
   'validate:upload:ssot',
   'validate:migrations',
+  'validate:migrations:provenance',
   'validate:migrations:remote',
   'validate:security-authority',
   'security:validate',
@@ -315,6 +316,7 @@ console.log();
 
 console.log('Supabase remoto');
 runNpmScript('validate:migrations');
+runNpmScript('validate:migrations:provenance');
 runNpmScript('validate:migrations:remote');
 console.log();
 

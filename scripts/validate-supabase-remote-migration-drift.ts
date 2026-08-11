@@ -1,4 +1,9 @@
 import { spawnSync } from "node:child_process";
+import { classifySupabaseCliFailure } from "./lib/supabase-cli-validation-state.mjs";
+import {
+  classifyMigrationDrift,
+  parseSupabaseMigrationListOutput,
+} from "./lib/supabase-migration-list-parser.mjs";
 
 interface MigrationDriftRow {
   local: string | null;
@@ -20,13 +25,16 @@ function runSupabaseMigrationList(): string {
   const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
 
   if (result.error) {
-    throw new Error(`Falha ao executar Supabase CLI: ${result.error.message}`);
+    throw new Error(
+      `LOCAL_FAILURE: falha ao executar Supabase CLI: ${result.error.message}`,
+    );
   }
 
   if (result.status !== 0) {
+    const validationState = classifySupabaseCliFailure(output);
     throw new Error(
       [
-        "Falha ao consultar migrations remotas com `supabase migration list --linked`.",
+        `${validationState}: nao foi possivel consultar migrations com \`supabase migration list --linked\`.`,
         output.trim(),
       ]
         .filter(Boolean)
@@ -37,23 +45,10 @@ function runSupabaseMigrationList(): string {
   return output;
 }
 
-function parseMigrationRows(output: string): MigrationDriftRow[] {
-  return output
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.includes("|"))
-    .map((line) => line.replace(/\|$/, ""))
-    .map((line) => line.split("|").map((part) => part.trim()))
-    .filter((parts) => parts.length >= 3)
-    .map(([local, remote, timeUtc]) => ({
-      local: local || null,
-      remote: remote || null,
-      timeUtc,
-    }))
-    .filter((row) => /^\d{14}$/.test(row.local ?? "") || /^\d{14}$/.test(row.remote ?? ""));
-}
-
-function formatVersions(rows: MigrationDriftRow[], side: "local" | "remote"): string {
+function formatVersions(
+  rows: MigrationDriftRow[],
+  side: "local" | "remote",
+): string {
   const versions = rows
     .map((row) => row[side])
     .filter((version): version is string => Boolean(version));
@@ -63,16 +58,19 @@ function formatVersions(rows: MigrationDriftRow[], side: "local" | "remote"): st
 
 function main() {
   const output = runSupabaseMigrationList();
-  const rows = parseMigrationRows(output);
-  const localOnly = rows.filter((row) => row.local && !row.remote);
-  const remoteOnly = rows.filter((row) => row.remote && !row.local);
+  const rows = parseSupabaseMigrationListOutput(output);
+  const { localOnly, remoteOnly } = classifyMigrationDrift(rows);
 
   if (localOnly.length === 0 && remoteOnly.length === 0) {
-    console.log("Historico de migrations local/remoto esta sincronizado.");
+    console.log(
+      "PASS: historico de migrations local/remoto esta sincronizado.",
+    );
     return;
   }
 
-  console.error("Drift de migrations Supabase detectado contra o projeto remoto linkado.\n");
+  console.error(
+    "LOCAL_FAILURE: drift de migrations Supabase detectado contra o projeto remoto linkado.\n",
+  );
   console.error(`Remotas ausentes localmente (${remoteOnly.length}):`);
   console.error(formatVersions(remoteOnly, "remote"));
   console.error("");
