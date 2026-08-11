@@ -1,6 +1,10 @@
--- Security Authority: authoritative Community Interest registration boundary.
--- Public clients cannot insert through the Data API. Creation is restricted to
--- the register-community-interest Edge Function using service_role.
+-- Community Interest ADDITIVE compatibility phase.
+--
+-- The target authority is register-community-interest using service_role, but
+-- the deployed legacy frontend still writes directly through the Data API.
+-- Keep only the explicitly documented legacy INSERT contract until the staged
+-- CUTOVER in docs/09-reference/migrations-pending is promoted with a new
+-- timestamp after operational evidence is collected.
 
 DO $migration$
 BEGIN
@@ -90,10 +94,9 @@ CREATE TRIGGER tg_community_interest_updated_at
 
 ALTER TABLE public.community_interest_registrations ENABLE ROW LEVEL SECURITY;
 
--- Remove the former public write boundary, if that draft was applied manually.
-DROP POLICY IF EXISTS community_interest_public_insert
-  ON public.community_interest_registrations;
-
+-- SECURITY: reset privileges to a deterministic least-privilege baseline. The
+-- migration is transactional, so the restricted legacy INSERT grant below is
+-- established atomically with this reset.
 REVOKE ALL PRIVILEGES ON TABLE public.community_interest_registrations
   FROM PUBLIC, anon, authenticated, service_role;
 
@@ -101,8 +104,65 @@ REVOKE ALL PRIVILEGES ON TABLE public.community_interest_registrations
 GRANT SELECT, UPDATE, DELETE ON TABLE public.community_interest_registrations
   TO authenticated;
 
--- The public registration broker receives only the privilege it needs.
+-- The target public registration broker receives only the privilege it needs.
 GRANT INSERT ON TABLE public.community_interest_registrations TO service_role;
+
+-- TEMPORARY LEGACY COMPATIBILITY
+-- Exact column contract emitted by the currently deployed direct-insert
+-- frontend. No server-owned or administrative column is granted. Remove this
+-- grant and policy only through the staged Community Interest CUTOVER.
+GRANT INSERT (
+  community_id,
+  community_slug,
+  territory_path,
+  full_name,
+  email,
+  phone,
+  role,
+  message,
+  wants_updates,
+  source,
+  user_agent,
+  turnstile_verified
+) ON public.community_interest_registrations TO anon, authenticated;
+
+DROP POLICY IF EXISTS community_interest_public_insert
+  ON public.community_interest_registrations;
+DROP POLICY IF EXISTS community_interest_legacy_insert
+  ON public.community_interest_registrations;
+CREATE POLICY community_interest_legacy_insert
+  ON public.community_interest_registrations
+  FOR INSERT
+  TO anon, authenticated
+  WITH CHECK (
+    user_id IS NULL
+    AND admin_status = 'new'
+    AND admin_notes IS NULL
+    AND reviewed_at IS NULL
+    AND reviewed_by IS NULL
+    AND char_length(btrim(full_name)) BETWEEN 2 AND 120
+    AND email ~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'
+    AND (
+      phone IS NULL
+      OR phone ~ '^[0-9+().[:space:]-]+$'
+    )
+    AND (
+      community_slug IS NULL
+      OR community_slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'
+    )
+    AND (
+      territory_path IS NULL
+      OR territory_path ~ '^/[a-z0-9]+(-[a-z0-9]+)*(/[a-z0-9]+(-[a-z0-9]+)*)*$'
+    )
+    AND (
+      source ~ '^[a-z0-9]+(-[a-z0-9]+)*$'
+      OR source ~ '^/[a-z0-9_-]+(/[a-z0-9_-]+)*$'
+    )
+  );
+
+COMMENT ON POLICY community_interest_legacy_insert
+  ON public.community_interest_registrations IS
+  'TEMPORARY LEGACY COMPATIBILITY: column-restricted direct INSERT for the deployed frontend. Remove only after broker rollout evidence and CUTOVER preflight.';
 
 DROP POLICY IF EXISTS community_interest_owner_select
   ON public.community_interest_registrations;
@@ -138,4 +198,4 @@ CREATE POLICY community_interest_admin_delete
   USING (private.is_admin((SELECT auth.uid())));
 
 COMMENT ON TABLE public.community_interest_registrations IS
-  'Community Interest waitlist. Public creation is authoritative only through register-community-interest; direct anon/authenticated INSERT is revoked.';
+  'Community Interest waitlist in ADDITIVE compatibility. register-community-interest is the target authority; restricted legacy direct INSERT remains temporarily until evidence-gated CUTOVER.';

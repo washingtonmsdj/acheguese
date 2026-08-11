@@ -18,7 +18,9 @@ const read = (path: string) => readFileSync(join(root, path), "utf8");
 const migration = read(
   "supabase/migrations/20260809184409_create_authoritative_community_interest_registration.sql",
 );
-const edgeFunction = read("supabase/functions/register-community-interest/index.ts");
+const edgeFunction = read(
+  "supabase/functions/register-community-interest/index.ts",
+);
 const frontendService = read(
   "src/core/routing/services/CommunityInterestRegistrationService.ts",
 );
@@ -27,7 +29,9 @@ const authPolicy = read(
   "docs/09-reference/governance/security/EDGE_FUNCTION_AUTH_POLICY.json",
 );
 
-function validPayload(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+function validPayload(
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> {
   return {
     communityId: null,
     communitySlug: "pituba",
@@ -47,13 +51,17 @@ function validPayload(overrides: Record<string, unknown> = {}): Record<string, u
 
 function acceptedVerifier() {
   return vi.fn(
-    async (_token: string): Promise<TurnstileVerificationResult> => ({ ok: true }),
+    async (_token: string): Promise<TurnstileVerificationResult> => ({
+      ok: true,
+    }),
   );
 }
 
 function acceptedInsert() {
   return vi.fn(
-    async (_row: CommunityInterestRegistrationRow): Promise<{ error: null }> => ({ error: null }),
+    async (
+      _row: CommunityInterestRegistrationRow,
+    ): Promise<{ error: null }> => ({ error: null }),
   );
 }
 
@@ -66,19 +74,20 @@ function providerFetch(payload: unknown, status = 200) {
 }
 
 describe("Community Interest database boundary", () => {
-  it("revokes direct Data API insert from public, anon and authenticated", () => {
+  it("keeps only the temporary column-restricted legacy writer", () => {
+    expect(migration).toContain("TEMPORARY LEGACY COMPATIBILITY");
     expect(migration).toMatch(
-      /REVOKE ALL PRIVILEGES ON TABLE public\.community_interest_registrations\s+FROM PUBLIC, anon, authenticated, service_role;/,
+      /GRANT INSERT \([\s\S]*?turnstile_verified\s*\) ON public\.community_interest_registrations TO anon, authenticated;/,
     );
-    expect(migration).not.toMatch(
-      /GRANT\s+INSERT[^;]*\b(?:anon|authenticated)\b/i,
+    expect(migration).toMatch(
+      /CREATE POLICY community_interest_legacy_insert[\s\S]*?FOR INSERT[\s\S]*?TO anon, authenticated[\s\S]*?WITH CHECK/,
     );
     expect(migration).not.toMatch(
       /CREATE POLICY community_interest_public_insert/i,
     );
   });
 
-  it("keeps RLS and grants insert only to the service role broker", () => {
+  it("keeps RLS, the broker grant and no anonymous read or mutation grants", () => {
     expect(migration).toContain(
       "ALTER TABLE public.community_interest_registrations ENABLE ROW LEVEL SECURITY;",
     );
@@ -87,6 +96,15 @@ describe("Community Interest database boundary", () => {
     );
     expect(migration).toMatch(
       /GRANT SELECT, UPDATE, DELETE ON TABLE public\.community_interest_registrations\s+TO authenticated;/,
+    );
+    expect(migration).not.toMatch(
+      /GRANT\s+SELECT[^;]*\sTO\s+(?:PUBLIC|anon)\b/i,
+    );
+    expect(migration).not.toMatch(
+      /GRANT\s+UPDATE[^;]*\sTO\s+(?:PUBLIC|anon)\b/i,
+    );
+    expect(migration).not.toMatch(
+      /GRANT\s+DELETE[^;]*\sTO\s+(?:PUBLIC|anon)\b/i,
     );
     expect(migration).toContain("private.is_admin((SELECT auth.uid()))");
   });
@@ -97,7 +115,9 @@ describe("Community Interest broker wiring", () => {
     expect(frontendService).toContain(
       'supabase.functions.invoke("register-community-interest"',
     );
-    expect(frontendService).not.toContain('.from("community_interest_registrations")');
+    expect(frontendService).not.toContain(
+      '.from("community_interest_registrations")',
+    );
     expect(frontendService).not.toContain("verify-turnstile-token");
     expect(frontendService).not.toContain("userAgent");
   });
@@ -169,7 +189,10 @@ describe("Community Interest authoritative operation", () => {
 
   it("does not insert when Turnstile rejects the token", async () => {
     const verifyTurnstile = vi.fn(
-      async (): Promise<TurnstileVerificationResult> => ({ ok: false, reason: "rejected" }),
+      async (): Promise<TurnstileVerificationResult> => ({
+        ok: false,
+        reason: "rejected",
+      }),
     );
     const insertRegistration = acceptedInsert();
 
@@ -209,7 +232,9 @@ describe("Community Interest authoritative operation", () => {
 
   it("preserves duplicate semantics for unique constraint violations", async () => {
     const insertRegistration = vi.fn(
-      async (_row: CommunityInterestRegistrationRow) => ({ error: { code: "23505" } }),
+      async (_row: CommunityInterestRegistrationRow) => ({
+        error: { code: "23505" },
+      }),
     );
 
     const result = await executeCommunityInterestRegistration(validPayload(), {
@@ -225,7 +250,10 @@ describe("Community Interest authoritative operation", () => {
     const insertRegistration = acceptedInsert();
 
     const result = await executeCommunityInterestRegistration(
-      validPayload({ fullName: "  Pessoa Teste  ", email: "PESSOA@EXAMPLE.COM" }),
+      validPayload({
+        fullName: "  Pessoa Teste  ",
+        email: "PESSOA@EXAMPLE.COM",
+      }),
       {
         userAgent: "server-agent",
         verifyTurnstile: acceptedVerifier(),
@@ -270,7 +298,10 @@ describe("Turnstile authoritative verification", () => {
   it("rejects an invalid token response", async () => {
     const result = await verifyTurnstileToken({
       ...baseOptions,
-      fetchImpl: providerFetch({ success: false, "error-codes": ["invalid-input-response"] }),
+      fetchImpl: providerFetch({
+        success: false,
+        "error-codes": ["invalid-input-response"],
+      }),
     });
     expect(result).toEqual({ ok: false, reason: "rejected" });
   });
@@ -278,7 +309,11 @@ describe("Turnstile authoritative verification", () => {
   it("rejects a mismatched action", async () => {
     const result = await verifyTurnstileToken({
       ...baseOptions,
-      fetchImpl: providerFetch({ success: true, action: "other-action", hostname: "achegue.se" }),
+      fetchImpl: providerFetch({
+        success: true,
+        action: "other-action",
+        hostname: "achegue.se",
+      }),
     });
     expect(result).toEqual({ ok: false, reason: "rejected" });
   });

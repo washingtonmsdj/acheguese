@@ -181,8 +181,11 @@ A allowlist atual de funcoes sem JWT e:
   leitura/proxy sem dado sensivel, com rate limit e validacao de entrada.
 - `register-community-interest`: broker publico autoritativo da waitlist, com
   payload e metodo restritos, rate limit, honeypot, verificacao Turnstile de
-  action/hostname e `INSERT` server-side por `service_role`. `anon` e
-  `authenticated` nao possuem grant direto de `INSERT` na tabela.
+  action/hostname e `INSERT` server-side por `service_role`. Durante a fase
+  ADDITIVE, `anon` e `authenticated` conservam apenas um grant temporario de
+  `INSERT` por coluna e uma policy `TEMPORARY LEGACY COMPATIBILITY`, sem
+  `SELECT`, `UPDATE` ou `DELETE` publico. A remocao ocorre somente pelo CUTOVER
+  evidence-gated mantido fora da fila ativa de migrations.
 
 Qualquer novo `verify_jwt=false` precisa de justificativa no plano/auditoria,
 validacao de rate limit e atualizacao deliberada do gate

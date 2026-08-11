@@ -7,6 +7,7 @@ Esta pasta reúne migrações e ajustes SQL que **ainda não foram aplicados** n
 Duas formas equivalentes:
 
 ### Opção A — Supabase CLI (recomendado)
+
 1. Copie os arquivos `.sql` desta pasta para `supabase/migrations/` mantendo o prefixo `YYYYMMDDHHMMSS_`.
 2. Rode:
    ```bash
@@ -18,6 +19,7 @@ Duas formas equivalentes:
 3. Rode `npm run validate:security-authority` para garantir que o SSOT de segurança continua verde.
 
 ### Opção B — SQL Editor do Supabase
+
 1. Abra o SQL Editor do projeto (`https://supabase.com/dashboard/project/<ref>/sql`).
 2. Cole o conteúdo de cada arquivo desta pasta **na ordem numérica** (menor timestamp primeiro).
 3. Execute um por vez, conferindo o resultado antes de seguir para o próximo.
@@ -37,10 +39,11 @@ Para cada arquivo desta pasta, siga o [AI Agent Rules](../governance/security/AI
 
 ## Arquivos nesta pasta
 
-| Ordem | Arquivo | Descrição | Risco |
-|-------|---------|-----------|-------|
-| 1 | `20260720130000_create_community_post_drafts.sql` | Migration pendente mantida neste inventário; revisar isoladamente antes de promover. | A revisar |
-| 2 | `20260810152013_finalize_community_poll_cutover.sql` | CUTOVER Poll deliberadamente fora da fila ativa; promover com timestamp novo somente apos preflight e janela de observacao. | Alto |
+| Ordem | Arquivo                                                  | Descrição                                                                                                                                                 | Risco     |
+| ----- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| 1     | `20260720130000_create_community_post_drafts.sql`        | Migration pendente mantida neste inventário; revisar isoladamente antes de promover.                                                                      | A revisar |
+| 2     | `20260810152013_finalize_community_poll_cutover.sql`     | CUTOVER Poll deliberadamente fora da fila ativa; promover com timestamp novo somente apos preflight e janela de observacao.                               | Alto      |
+| 3     | `20260810152014_finalize_community_interest_cutover.sql` | CUTOVER Community Interest fora da fila ativa; exige Edge, Turnstile, origins, frontend broker e smoke test comprovados antes de remover o writer legacy. | Alto      |
 
 ## Depois de aplicar
 
