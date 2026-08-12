@@ -35,6 +35,7 @@ export type CommunityAction =
   | "create_alert"
   | "comment"
   | "react"
+  | "vote_poll"
   | "save"
   | "send_message"
   | "join_group"
@@ -42,6 +43,9 @@ export type CommunityAction =
   | "report"
   | "moderate"
   | "manage_portal";
+
+export const POLL_VOTE_TERRITORY_POLICY =
+  "TERRITORIAL_ENGAGEMENT_MEMBER_ALLOWED" as const;
 
 export interface CommunityAccessResidence {
   readonly locationId: string | null;
@@ -103,6 +107,7 @@ const ACTIONS: readonly CommunityAction[] = [
   "create_alert",
   "comment",
   "react",
+  "vote_poll",
   "save",
   "send_message",
   "join_group",
@@ -133,6 +138,7 @@ function permissionsFor(
   if (level === "resident") {
     can.view_member_feed = true;
     can.react = true;
+    can.vote_poll = true;
     can.save = true;
     can.report = true;
     return can;
@@ -145,6 +151,7 @@ function permissionsFor(
     can.create_alert = true;
     can.comment = true;
     can.react = true;
+    can.vote_poll = true;
     can.save = true;
     can.send_message = true;
     can.join_group = true;
@@ -156,6 +163,7 @@ function permissionsFor(
   if (level === "community_member") {
     can.view_member_feed = true;
     can.react = true;
+    can.vote_poll = true;
     can.save = true;
     can.report = true;
     return can;
@@ -168,6 +176,7 @@ function permissionsFor(
     can.create_alert = true;
     can.comment = true;
     can.react = true;
+    can.vote_poll = true;
     can.save = true;
     can.send_message = true;
     can.join_group = true;

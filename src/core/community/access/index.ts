@@ -1,4 +1,5 @@
 export {
+  POLL_VOTE_TERRITORY_POLICY,
   resolveCommunityAccess,
   type CommunityAccessDecision,
   type CommunityAccessInput,

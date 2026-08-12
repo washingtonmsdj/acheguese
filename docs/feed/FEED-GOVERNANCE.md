@@ -173,6 +173,7 @@ Nenhuma tela, componente, hook publico ou modulo satelite pode chamar Supabase, 
 | Edicao | Feed Service `updateItem` | Deve validar autor/moderador, territorio, rollout e estado do item. |
 | Exclusao | Feed Service `deleteItem` ou `hideItem` | Deve validar autor/moderador, territorio e estado atual. |
 | Comentarios | Feed Service `listComments` / `createComment` / `updateComment` / `deleteComment` | Comentario herda o Territory do item pai e nao opera isolado. |
+| Voto em Poll | Feed Service `votePoll` | Deve exigir Post/Poll visivel no Territory autorizado, perfil ativo pertencente ao usuario, vinculo territorial/comunitario valido e `CommunityAccessPolicy.vote_poll`; residencia verificada nao e obrigatoria. |
 | Compartilhamento | Feed Service `createShareLink` / `recordShare` | Link sempre territorial, sem fallback global. |
 | Denuncias | Feed Service `reportTarget` | Denuncia inclui contexto territorial e alvo validado. |
 | Reacoes | Feed Service `reactToTarget` / `removeReaction` | Reacao sempre em alvo visivel no Territory atual. |

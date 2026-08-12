@@ -14,6 +14,31 @@ Os totais são derivados de `COUNT(community_poll_votes)`. A identidade canônic
 do voto é o perfil ativo (`profile_id`); `user_id` permanece como identidade de
 autenticação e auditoria.
 
+## Contrato territorial de VOTE_POLL
+
+A política canônica é `POLL_VOTE_TERRITORY_POLICY =
+TERRITORIAL_ENGAGEMENT_MEMBER_ALLOWED`. `VOTE_POLL` é uma ação explícita e
+independente de `react` na `CommunityAccessPolicy`.
+
+| Nível                       | VOTE_POLL |
+| --------------------------- | --------- |
+| `authenticated`             | DENY      |
+| `resident`                  | ALLOW     |
+| `verified_resident`         | ALLOW     |
+| `community_member`          | ALLOW     |
+| `verified_community_member` | ALLOW     |
+
+A decisão efetiva também exige que o Post/Poll esteja visível no território
+autorizado, que o perfil ativo pertença ao usuário autenticado e que exista
+vínculo territorial/comunitário válido para o contexto da Poll. Territory,
+Rollout e `CommunityAccessPolicy` participam da decisão. Residência verificada
+não é requisito obrigatório para votar; autenticação isolada ou visibilidade
+global do Post não bastam.
+
+O backend ainda precisa aplicar essas condições no RPC de voto e no boundary
+de Feed. A matriz local acima não autoriza, por si só, o RPC atual a ignorar
+essas validações.
+
 ## ADDITIVE
 
 `20260810151941_reconcile_community_poll_additive_compatibility.sql` suporta os

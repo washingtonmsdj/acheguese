@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  POLL_VOTE_TERRITORY_POLICY,
   resolveCommunityAccess,
   type CommunityAccessInput,
 } from "../CommunityAccessPolicy";
@@ -70,6 +71,7 @@ describe("CommunityAccessPolicy", () => {
     expect(decision.primaryAction).toBe("login");
     expect(decision.can.view_public_preview).toBe(true);
     expect(decision.can.create_post).toBe(false);
+    expect(decision.can.vote_poll).toBe(false);
   });
 
   it("bloqueia usuario autenticado sem residencia canonica", () => {
@@ -83,6 +85,7 @@ describe("CommunityAccessPolicy", () => {
     expect(decision.primaryAction).toBe("add_address");
     expect(decision.can.report).toBe(true);
     expect(decision.can.view_member_feed).toBe(false);
+    expect(decision.can.vote_poll).toBe(false);
   });
 
   it("bloqueia residencia fora do territorio comunitario atual", () => {
@@ -127,6 +130,7 @@ describe("CommunityAccessPolicy", () => {
     expect(decision.reason).toBe("unverified_residence");
     expect(decision.primaryAction).toBe("verify_address");
     expect(decision.can.view_member_feed).toBe(true);
+    expect(decision.can.vote_poll).toBe(true);
     expect(decision.can.create_post).toBe(false);
     expect(decision.can.create_issue).toBe(false);
     expect(decision.can.create_alert).toBe(false);
@@ -188,6 +192,7 @@ describe("CommunityAccessPolicy", () => {
     expect(decision.level).toBe("community_member");
     expect(decision.reason).toBe("unverified_residence");
     expect(decision.can.view_member_feed).toBe(true);
+    expect(decision.can.vote_poll).toBe(true);
     expect(decision.can.create_post).toBe(false);
     expect(decision.can.comment).toBe(false);
     expect(decision.can.send_message).toBe(false);
@@ -209,6 +214,7 @@ describe("CommunityAccessPolicy", () => {
     expect(decision.can.create_issue).toBe(true);
     expect(decision.can.create_alert).toBe(true);
     expect(decision.can.create_group).toBe(true);
+    expect(decision.can.vote_poll).toBe(true);
   });
 
   it("libera acoes comunitarias para morador verificado", () => {
@@ -220,6 +226,7 @@ describe("CommunityAccessPolicy", () => {
     expect(decision.can.create_issue).toBe(true);
     expect(decision.can.create_alert).toBe(true);
     expect(decision.can.comment).toBe(true);
+    expect(decision.can.vote_poll).toBe(true);
     expect(decision.can.send_message).toBe(true);
     expect(decision.can.join_group).toBe(true);
     expect(decision.can.manage_portal).toBe(false);
@@ -240,6 +247,31 @@ describe("CommunityAccessPolicy", () => {
     expect(decision.level).toBe("verified_resident");
     expect(decision.targetLocationIds).toEqual(["loc-santa-cruz"]);
     expect(decision.can.create_post).toBe(true);
+  });
+
+  it("mantem VOTE_POLL explicito e independente de residencia verificada ou de react", () => {
+    const resident = resolveCommunityAccess({
+      ...baseInput,
+      residence: {
+        locationId: "loc-santa-cruz",
+        isVerified: false,
+      },
+    });
+    const communityMember = resolveCommunityAccess({
+      ...baseInput,
+      residence: null,
+      membershipRequired: true,
+      membership: activeMembership,
+    });
+
+    expect(POLL_VOTE_TERRITORY_POLICY).toBe(
+      "TERRITORIAL_ENGAGEMENT_MEMBER_ALLOWED",
+    );
+    expect(Object.hasOwn(resident.can, "vote_poll")).toBe(true);
+    expect(resident.can.vote_poll).toBe(true);
+    expect(resident.can.react).toBe(true);
+    expect(communityMember.can.vote_poll).toBe(true);
+    expect(communityMember.can.comment).toBe(false);
   });
 
   it("distingue moderador de admin", () => {
