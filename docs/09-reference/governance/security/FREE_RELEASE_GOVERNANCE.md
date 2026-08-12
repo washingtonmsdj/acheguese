@@ -1,7 +1,7 @@
 # Controlled Release Governance - Supabase Free
 
 Status: ativo
-Data: 2026-08-11
+Data: 2026-08-12
 Owner: `washingto silva (@washingtonmsdj)`
 
 Esta policy autoriza somente uma janela controlada de release no Supabase Free.
@@ -24,26 +24,40 @@ Excecao vencida, evidencia ausente ou achado material novo produz `BLOCKER`.
 
 ## MANUAL_RELEASE_RECOVERY_SNAPSHOT
 
-O snapshot `20260811T212637Z` e um snapshot logico manual, restauravel, com
+O snapshot vigente `20260812T044423Z` e um snapshot logico manual, restauravel,
+com papel `POST_MIGRATION_RELEASE_RECOVERY_SNAPSHOT` e
 cobertura de Database, Auth e Storage. O pacote privado off-device teve tamanho,
 contagem, SHA-256 e readback verificados, e possui restore runbook.
 
+O snapshot `20260811T212637Z` continua preservado como
+`PRE_RELEASE_RECOVERY_SNAPSHOT` (339 migrations). Ele e historico e nao pode ser
+usado para afirmar freshness do remoto atual.
+
 Este controle nao e backup gerenciado, PITR nem full platform backup. Seu RPO e
-limitado a `2026-08-11T21:26:37Z`; a recuperacao e manual e o RTO nao e
+limitado a `2026-08-12T04:44:23.471Z`; a recuperacao e manual e o RTO nao e
 garantido. Dumps, conteudo Auth, PII, secrets e identificadores privados do
 destino off-device nao pertencem ao repositorio.
 
 ## Freshness
 
 O snapshot vale por no maximo 24 horas, ate
-`2026-08-12T21:26:37Z`. Um novo snapshot e obrigatorio antes das migrations se:
+`2026-08-13T04:44:23.471Z`. Um novo snapshot e obrigatorio antes de operacao
+mutavel se:
 
 - houver mudanca material em dados, schema, Auth ou Storage depois do snapshot;
 - a janela de execucao ultrapassar o timestamp de validade;
 - a verificacao off-device, hash ou readback deixar de ser comprovavel.
 
-O validator falha automaticamente depois da validade. A fila de quatro
-migrations e parte da evidencia; mudanca nessa fila exige nova avaliacao.
+O validator local comprova somente estrutura, validade, policy e evidencia
+off-device. Ele imprime `REMOTE_RECOVERY_FRESHNESS_NOT_PROVEN` e nunca se
+apresenta como prova do estado remoto.
+
+O gate remoto consulta read-only o projeto linkado e compara migration
+count/latest, Auth users/identities e Storage object count/bytes. Migrations
+divergentes falham automaticamente. Como o SSOT desta janela define
+`REQUIRE_FRESH_RECOVERY` para Auth e Storage, divergencias nesses agregados
+tambem exigem novo snapshot. A declaracao local
+`NO_KNOWN_MATERIAL_CHANGE` e apenas informativa e nao suprime divergencia.
 
 ## Limite Das Excecoes
 
@@ -56,4 +70,5 @@ Comando canonico:
 
 ```powershell
 npm run validate:free-release-governance
+npm run validate:free-release-governance:remote
 ```

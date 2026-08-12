@@ -111,6 +111,7 @@ const REQUIRED_SCRIPTS = [
   'validate:migrations:provenance',
   'validate:migrations:remote',
   'validate:free-release-governance',
+  'validate:free-release-governance:remote',
   'validate:security-authority',
   'security:validate',
   'security:config:validate',

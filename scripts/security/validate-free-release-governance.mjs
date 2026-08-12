@@ -2,7 +2,7 @@
 
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -17,6 +17,15 @@ const EXCEPTION_REGISTER_PATH = join(
 const HARD_EXCEPTION_EXPIRY = "2026-09-10";
 const MAX_EXCEPTION_DAYS = 30;
 const MAX_RECOVERY_AGE_HOURS = 24;
+const EXPECTED_RECOVERY_ROLE = "POST_MIGRATION_RELEASE_RECOVERY_SNAPSHOT";
+const REQUIRED_REMOTE_STATE_FIELDS = [
+  "migrationCount",
+  "latestMigration",
+  "authUsers",
+  "authIdentities",
+  "storageObjects",
+  "storageTotalBytes",
+];
 
 const REQUIRED_HIBP_MITIGATIONS = [
   "PASSWORD_MINIMUM_12",
@@ -99,6 +108,10 @@ function sameMembers(values, expected) {
     values.length === expected.length &&
     hasEvery(values, expected)
   );
+}
+
+function isNonNegativeInteger(value) {
+  return Number.isInteger(value) && value >= 0;
 }
 
 function exceptionRegisterSection(markdown, id) {
@@ -246,6 +259,10 @@ export function validateFreeReleaseGovernance(policy, options = {}) {
       issues.push("INVALID_RECOVERY_POLICY");
     if (recovery.authorityState !== "VERIFIED_COMPENSATING_CONTROL")
       issues.push("RECOVERY_NOT_VERIFIED");
+    if (recovery.snapshotRole !== EXPECTED_RECOVERY_ROLE)
+      issues.push("INVALID_RECOVERY_SNAPSHOT_ROLE");
+    if (!/^\d{8}T\d{6}Z$/.test(recovery.snapshotId ?? ""))
+      issues.push("INVALID_RECOVERY_SNAPSHOT_ID");
     if (!sameMembers(recovery.coverage, ["DATABASE", "AUTH", "STORAGE"]))
       issues.push("RECOVERY_COVERAGE_INCOMPLETE");
     const capturedAt = parseInstant(recovery.capturedAt);
@@ -275,11 +292,36 @@ export function validateFreeReleaseGovernance(policy, options = {}) {
     ) {
       issues.push("OFF_DEVICE_RECOVERY_NOT_VERIFIED");
     }
+    const remoteState = recovery.remoteState;
     if (
-      recovery.materialChangeAfterSnapshot !== false ||
-      recovery.sourceStateMutationAttestation !== "NO_KNOWN_MATERIAL_CHANGE"
+      !remoteState ||
+      REQUIRED_REMOTE_STATE_FIELDS.some(
+        (field) => remoteState[field] == null,
+      ) ||
+      !isNonNegativeInteger(remoteState?.migrationCount) ||
+      !/^\d{14}$/.test(remoteState?.latestMigration ?? "") ||
+      !isNonNegativeInteger(remoteState?.authUsers) ||
+      !isNonNegativeInteger(remoteState?.authIdentities) ||
+      !isNonNegativeInteger(remoteState?.storageObjects) ||
+      !isNonNegativeInteger(remoteState?.storageTotalBytes)
     ) {
-      issues.push("NEW_RECOVERY_SNAPSHOT_REQUIRED");
+      issues.push("RECOVERY_REMOTE_STATE_INVALID");
+    }
+    if (
+      recovery.freshnessPolicy?.remoteEvidenceRequiredForMutableOperations !==
+        true ||
+      recovery.freshnessPolicy?.migrationChangeHandling !==
+        "REQUIRE_FRESH_RECOVERY" ||
+      recovery.freshnessPolicy?.authStorageChangeHandling !==
+        "REQUIRE_FRESH_RECOVERY"
+    ) {
+      issues.push("RECOVERY_FRESHNESS_POLICY_INVALID");
+    }
+    if (
+      recovery.localDeclaration?.evidenceClass !==
+      "DECLARATION_ONLY_NOT_REMOTE_FRESHNESS"
+    ) {
+      issues.push("LOCAL_DECLARATION_EVIDENCE_CLASS_INVALID");
     }
     if (
       recovery.recoveryMode !== "MANUAL" ||
@@ -311,6 +353,7 @@ export function validateFreeReleaseGovernance(policy, options = {}) {
     !hasEvery(technicalPolicy?.unchangedMandatoryGates, [
       "MIGRATION_DRIFT",
       "MIGRATION_PROVENANCE",
+      "REMOTE_RECOVERY_FRESHNESS",
       "TURNSTILE_PRODUCTION",
       "CSP",
       "VERCEL_INPUTS",
@@ -368,8 +411,82 @@ export function validateFreeReleaseGovernance(policy, options = {}) {
       hibp: hibp?.authorityState,
       postgis: postgis?.authorityState,
       recovery: recovery?.authorityState,
+      remoteFreshness: "NOT_PROVEN_BY_LOCAL_VALIDATION",
       pitr: pitr?.authorityState,
     },
+  };
+}
+
+export function validateRemoteRecoveryFreshness(
+  policy,
+  remoteEvidence,
+  options = {},
+) {
+  const issues = [];
+  const differences = [];
+  const recovery = policy?.controls?.recovery;
+  const operation = options.operation ?? "mutable";
+
+  if (!recovery?.remoteState) {
+    return {
+      ok: false,
+      issues: ["RECOVERY_REMOTE_STATE_INVALID", "FRESH_RECOVERY_REQUIRED"],
+      differences,
+      state: "FRESH_RECOVERY_REQUIRED",
+    };
+  }
+
+  if (!remoteEvidence) {
+    if (operation === "mutable") {
+      issues.push("REMOTE_RECOVERY_EVIDENCE_REQUIRED");
+      issues.push("FRESH_RECOVERY_REQUIRED");
+    }
+    return {
+      ok: issues.length === 0,
+      issues,
+      differences,
+      state:
+        issues.length === 0
+          ? "REMOTE_RECOVERY_FRESHNESS_NOT_PROVEN"
+          : "FRESH_RECOVERY_REQUIRED",
+    };
+  }
+
+  const comparisons = [
+    ["migrationCount", "REMOTE_MIGRATION_COUNT_CHANGED"],
+    ["latestMigration", "REMOTE_LATEST_MIGRATION_CHANGED"],
+    ["authUsers", "REMOTE_AUTH_STATE_CHANGED_SINCE_RECOVERY"],
+    ["authIdentities", "REMOTE_AUTH_STATE_CHANGED_SINCE_RECOVERY"],
+    ["storageObjects", "REMOTE_STORAGE_STATE_CHANGED_SINCE_RECOVERY"],
+    ["storageTotalBytes", "REMOTE_STORAGE_STATE_CHANGED_SINCE_RECOVERY"],
+  ];
+
+  for (const [field, issue] of comparisons) {
+    if (remoteEvidence[field] == null) {
+      issues.push(`REMOTE_RECOVERY_EVIDENCE_MISSING:${field}`);
+      continue;
+    }
+    if (remoteEvidence[field] !== recovery.remoteState[field]) {
+      differences.push({
+        field,
+        snapshot: recovery.remoteState[field],
+        remote: remoteEvidence[field],
+      });
+      issues.push(issue);
+    }
+  }
+
+  const uniqueIssues = [...new Set(issues)];
+  if (uniqueIssues.length > 0) uniqueIssues.push("FRESH_RECOVERY_REQUIRED");
+
+  return {
+    ok: uniqueIssues.length === 0,
+    issues: uniqueIssues,
+    differences,
+    state:
+      uniqueIssues.length === 0
+        ? "REMOTE_RECOVERY_FRESHNESS_GATE_PASS"
+        : "FRESH_RECOVERY_REQUIRED",
   };
 }
 
@@ -386,12 +503,15 @@ async function main() {
     for (const issue of result.issues) console.error(`- ${issue}`);
     process.exit(1);
   }
-  console.log("FREE_RELEASE_GOVERNANCE_APPROVED");
-  console.log("SECURITY_AUTHORITY_RELEASE_GATE_PASS");
+  console.log("FREE_RELEASE_GOVERNANCE_LOCAL_VALIDATION_PASS");
+  console.log("REMOTE_RECOVERY_FRESHNESS_NOT_PROVEN");
   console.log(JSON.stringify(result.states));
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+if (
+  process.argv[1] &&
+  fileURLToPath(import.meta.url) === resolve(process.argv[1])
+) {
   main().catch((error) => {
     console.error(error instanceof Error ? error.message : String(error));
     process.exit(1);

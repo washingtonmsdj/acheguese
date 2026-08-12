@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   governanceFingerprint,
   validateFreeReleaseGovernance,
+  validateRemoteRecoveryFreshness,
 } from "../../scripts/security/validate-free-release-governance.mjs";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -21,7 +22,7 @@ const exceptionRegister = readFileSync(
   join(repoRoot, "docs/09-reference/governance/security/EXCEPTIONS.md"),
   "utf8",
 );
-const validNow = new Date("2026-08-11T23:00:00.000Z");
+const validNow = new Date("2026-08-12T06:00:00.000Z");
 
 function policyCopy() {
   return structuredClone(canonicalPolicy);
@@ -68,7 +69,7 @@ describe("controlled Supabase Free release governance", () => {
 
   it("E: rejects a stale recovery snapshot", () => {
     expect(
-      issuesFor(policyCopy(), new Date("2026-08-12T21:26:38.000Z")),
+      issuesFor(policyCopy(), new Date("2026-08-13T04:44:24.000Z")),
     ).toContain("RECOVERY_SNAPSHOT_STALE");
   });
 
@@ -110,6 +111,130 @@ describe("controlled Supabase Free release governance", () => {
         "TECHNICAL_GATE_OVERRIDE_FORBIDDEN",
         "GENERIC_TECHNICAL_OVERRIDE_FORBIDDEN",
       ]),
+    );
+  });
+});
+
+describe("remote recovery freshness", () => {
+  function matchingRemoteEvidence() {
+    return structuredClone(canonicalPolicy.controls.recovery.remoteState);
+  }
+
+  it("A: passes when snapshot 343 matches remote 343", () => {
+    const result = validateRemoteRecoveryFreshness(
+      policyCopy(),
+      matchingRemoteEvidence(),
+      { operation: "mutable" },
+    );
+    expect(result.ok).toBe(true);
+    expect(result.state).toBe("REMOTE_RECOVERY_FRESHNESS_GATE_PASS");
+  });
+
+  it("B: fails when snapshot 339 is compared with remote 343", () => {
+    const policy = policyCopy();
+    policy.controls.recovery.remoteState.migrationCount = 339;
+    const result = validateRemoteRecoveryFreshness(
+      policy,
+      matchingRemoteEvidence(),
+      { operation: "mutable" },
+    );
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        "REMOTE_MIGRATION_COUNT_CHANGED",
+        "FRESH_RECOVERY_REQUIRED",
+      ]),
+    );
+  });
+
+  it("C: fails when latest migration differs", () => {
+    const remote = matchingRemoteEvidence();
+    remote.latestMigration = "20260810151942";
+    expect(
+      validateRemoteRecoveryFreshness(policyCopy(), remote, {
+        operation: "mutable",
+      }).issues,
+    ).toContain("REMOTE_LATEST_MIGRATION_CHANGED");
+  });
+
+  it("D: local NO_KNOWN declaration cannot override migration drift", () => {
+    const policy = policyCopy();
+    policy.controls.recovery.localDeclaration.sourceStateMutationAttestation =
+      "NO_KNOWN_MATERIAL_CHANGE";
+    const remote = matchingRemoteEvidence();
+    remote.migrationCount += 1;
+    expect(
+      validateRemoteRecoveryFreshness(policy, remote, {
+        operation: "mutable",
+      }).issues,
+    ).toEqual(
+      expect.arrayContaining([
+        "REMOTE_MIGRATION_COUNT_CHANGED",
+        "FRESH_RECOVERY_REQUIRED",
+      ]),
+    );
+  });
+
+  it("E: local gate still rejects an expired snapshot", () => {
+    expect(
+      issuesFor(policyCopy(), new Date("2026-08-13T04:44:24.000Z")),
+    ).toContain("RECOVERY_SNAPSHOT_STALE");
+  });
+
+  it("F: local gate rejects missing off-device evidence", () => {
+    const policy = policyCopy();
+    policy.controls.recovery.offDevice.status = "MISSING";
+    expect(issuesFor(policy)).toContain("OFF_DEVICE_RECOVERY_NOT_VERIFIED");
+  });
+
+  it("G: detects Auth and Storage changes and applies canonical fail-closed policy", () => {
+    const authRemote = matchingRemoteEvidence();
+    authRemote.authUsers += 1;
+    expect(
+      validateRemoteRecoveryFreshness(policyCopy(), authRemote, {
+        operation: "mutable",
+      }).issues,
+    ).toEqual(
+      expect.arrayContaining([
+        "REMOTE_AUTH_STATE_CHANGED_SINCE_RECOVERY",
+        "FRESH_RECOVERY_REQUIRED",
+      ]),
+    );
+
+    const storageRemote = matchingRemoteEvidence();
+    storageRemote.storageTotalBytes += 1;
+    expect(
+      validateRemoteRecoveryFreshness(policyCopy(), storageRemote, {
+        operation: "mutable",
+      }).issues,
+    ).toEqual(
+      expect.arrayContaining([
+        "REMOTE_STORAGE_STATE_CHANGED_SINCE_RECOVERY",
+        "FRESH_RECOVERY_REQUIRED",
+      ]),
+    );
+  });
+
+  it("H: fails closed without remote evidence for a mutable operation", () => {
+    expect(
+      validateRemoteRecoveryFreshness(policyCopy(), undefined, {
+        operation: "mutable",
+      }).issues,
+    ).toEqual(
+      expect.arrayContaining([
+        "REMOTE_RECOVERY_EVIDENCE_REQUIRED",
+        "FRESH_RECOVERY_REQUIRED",
+      ]),
+    );
+  });
+
+  it("I: local validation explicitly reports remote freshness as not proven", () => {
+    const local = validateFreeReleaseGovernance(policyCopy(), {
+      now: validNow,
+    });
+    expect(local.ok).toBe(true);
+    expect(local.states.remoteFreshness).toBe("NOT_PROVEN_BY_LOCAL_VALIDATION");
+    expect(local.states.remoteFreshness).not.toBe(
+      "REMOTE_RECOVERY_FRESHNESS_GATE_PASS",
     );
   });
 });

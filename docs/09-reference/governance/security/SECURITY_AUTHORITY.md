@@ -80,6 +80,7 @@ ou trust devem passar por:
 ```powershell
 npm run validate:migrations
 npm run validate:migrations:remote
+npm run validate:free-release-governance:remote
 npm run validate:security-authority
 npm run security:validate
 npm run verify:deploy
@@ -121,11 +122,15 @@ Para autorizar uma janela controlada no Supabase Free, execute:
 
 ```powershell
 npm run validate:free-release-governance
+npm run validate:free-release-governance:remote
 ```
 
-O validator exige owner humano, excecoes HIBP/PostGIS vigentes, fingerprint
-PostGIS sem mudanca material, recovery manual fresh e off-device verificado.
-Ele nao transforma Free em Pro nem substitui qualquer gate tecnico.
+O primeiro validator exige owner humano, excecoes HIBP/PostGIS vigentes,
+fingerprint PostGIS sem mudanca material, recovery manual dentro da validade e
+off-device verificado. Ele nao afirma freshness remota. O segundo consulta o
+Supabase linkado em modo read-only e compara migrations, Auth e Storage com o
+snapshot vigente; operacao mutavel sem essa evidencia falha fechado. Nenhum dos
+dois transforma Free em Pro nem substitui qualquer gate tecnico.
 
 ## Estados De Controle
 
@@ -190,7 +195,8 @@ Authority.
   preflight de owner/plataforma vinculado a
   `EXC-2026-08-11-POSTGIS-PUBLIC-SURFACE`.
 - `verify:deploy` executa `validate:security-authority`, que cobre os
-  marcadores da Security Authority com teste isolado.
+  marcadores da Security Authority com teste isolado e exige o gate remoto de
+  recovery freshness.
 - `verify:deploy` executa `validate:deps` e `validate:ssot`, bloqueando
   violacao de camadas, ciclos, imports legados e quebras de SSOT antes do
   release.
