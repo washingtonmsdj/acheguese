@@ -1,7 +1,7 @@
 # Security Exceptions
 
 Status: ativo
-Data: 2026-07-08
+Data: 2026-08-11
 
 Excecao de seguranca e um desvio temporario, visivel e justificado. Ela nao e
 atalho permanente nem permissao para gambiarra.
@@ -123,15 +123,128 @@ negativo remoto e ownership declarado.
   18 casos aprovados; comandos derivam ator/ownership no servidor e a projecao
   publica nao retorna PII.
 
-## EXC-2026-07-08-POSTGIS-EXTENSION-OWNER
+## EXC-2026-08-11-AUTH-HIBP-FREE-PLAN
 
 Status: aberta
+Risco: High
+Area: Auth
+Responsavel: washingto silva (@washingtonmsdj)
+Criada em: 2026-08-11
+Valida ate: 2026-09-10
+Validacao: remota
+
+### Contexto
+
+O projeto permanece temporariamente no Supabase Free. O controle HIBP nativo do
+Auth esta indisponivel nesse plano; portanto o estado real e
+`HIBP_UNAVAILABLE_ON_PLAN`, nao `CONTROL_IMPLEMENTED`.
+
+### Regra Afetada
+
+Cadastro e troca de senha deveriam ser bloqueados pelo proprio provider quando
+a senha estiver presente em vazamentos conhecidos.
+
+### Risco
+
+Senhas ja comprometidas aumentam a probabilidade de credential stuffing e
+account takeover. A verificacao no app pode falhar aberta por indisponibilidade
+de rede e nao cobre chamadas que contornem as superficies do aplicativo.
+
+### Mitigacao Temporaria
+
+- minimo de 12 caracteres e requisitos de complexidade compartilhados;
+- secure password change habilitado;
+- consulta HIBP por k-anonymity em cadastro, reset e troca de senha;
+- a consulta local e explicitamente fail-open;
+- a mitigacao nao equivale a leaked-password protection no Auth provider.
+
+### Plano De Remocao
+
+Encerrar imediatamente no primeiro evento aplicavel: upgrade para plano com
+HIBP nativo; expiracao; abertura de cadastro/trafego acima do risco aceito; ou
+incidente de credential stuffing/account takeover. Habilitar o controle nativo,
+reexecutar o Advisor e fechar a excecao. Nao renovar automaticamente.
+
+### Evidencias
+
+- Advisor remoto em 2026-08-11: `auth_leaked_password_protection` permanece;
+- `supabase/config.toml` e o SSOT do app exigem comprimento e complexidade;
+- `checkPasswordCompromise` cobre as superficies de senha e permanece
+  classificado como fail-open;
+- SSOT executavel:
+  `docs/09-reference/governance/security/FREE_RELEASE_GOVERNANCE.json`.
+
+## EXC-2026-08-11-POSTGIS-PUBLIC-SURFACE
+
+Status: aberta
+Risco: High
+Area: Supabase
+Responsavel: washingto silva (@washingtonmsdj)
+Criada em: 2026-08-11
+Valida ate: 2026-09-10
+Validacao: remota
+
+### Contexto
+
+O preflight read-only de 2026-08-11 reconfirmou o estado material anterior:
+PostGIS `3.3.7` em `public`, objetos owned por `supabase_admin`,
+`spatial_ref_sys` sem RLS e tres overloads `st_estimatedextent` executaveis por
+roles do aplicativo. `citext`, `pg_trgm` e `unaccent` tambem permanecem em
+`public` sob o mesmo owner de plataforma.
+
+### Regra Afetada
+
+Extensoes e objetos auxiliares nao deveriam ampliar a superficie do schema
+exposto. Funcoes `SECURITY DEFINER` publicas e tabelas sem RLS exigem remocao ou
+contrato temporario explicito.
+
+### Risco
+
+A superficie residual inclui leitura de `spatial_ref_sys` por roles do app e
+EXECUTE dos tres overloads `st_estimatedextent`. O sistema possui consumidores
+reais de tipos geometry/geography, entao mover a extensao sem janela dedicada
+pode quebrar colunas, funcoes, indexes e queries geoespaciais.
+
+### Mitigacao Temporaria
+
+- preflight e Advisor remotos permanecem fail-closed;
+- nenhuma tentativa cega de owner/schema/grant e autorizada;
+- as quatro migrations de release (`20260719122000`, `20260720100000`,
+  `20260809184409`, `20260810151941`) nao possuem dependencia PostGIS direta;
+- o fingerprint do estado observado e validado; mudanca material bloqueia;
+- novos achados, grants ou consumidores exigem reavaliacao.
+
+### Plano De Remocao
+
+Executar janela dedicada e suportada pelo Supabase para revisar schema,
+ownership, grants, RLS e dependencias da extensao. Encerrar por remediation,
+mudanca de superficie/grants, novo Advisor relevante, exploracao/incidente ou
+expiracao. Nao renovar automaticamente.
+
+### Evidencias
+
+- `npm run security:postgis:preflight` em `2026-08-11T22:48:56.498Z`:
+  `status=blocked` por ownership, oito achados equivalentes ao baseline;
+- Advisor remoto: `extension_in_public`, `rls_disabled_in_public` e seis
+  achados dos overloads `st_estimatedextent` permanecem;
+- inventario remoto encontrou 11 colunas geometry/geography de produto;
+- busca local confirmou zero referencia PostGIS direta nas quatro migrations;
+- SSOT executavel e fingerprint:
+  `docs/09-reference/governance/security/FREE_RELEASE_GOVERNANCE.json`.
+
+## Excecoes Historicas Expiradas
+
+## EXC-2026-07-08-POSTGIS-EXTENSION-OWNER
+
+Status: fechada
 Risco: High
 Area: Supabase
 Responsavel: Tech/security owner
 Criada em: 2026-07-08
 Valida ate: 2026-08-08
 Validacao: remota
+Estado de encerramento: EXPIRED_EXCEPTION
+Encerrada em: 2026-08-08
 
 ### Contexto
 
@@ -222,13 +335,15 @@ spatial_ref_sys`.
 
 ## EXC-2026-07-08-AUTH-HIBP-DASHBOARD
 
-Status: aberta
+Status: fechada
 Risco: Medium
 Area: Auth
 Responsavel: Tech/security owner
 Criada em: 2026-07-08
 Valida ate: 2026-08-08
 Validacao: remota
+Estado de encerramento: EXPIRED_EXCEPTION
+Encerrada em: 2026-08-08
 
 ### Contexto
 

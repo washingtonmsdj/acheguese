@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { classifySupabaseCliFailure } from "../lib/supabase-cli-validation-state.mjs";
 import { runSupabaseCli } from "../lib/supabase-cli-runner.mjs";
 
-const POSTGIS_EXTENSION_EXCEPTION_ID = "EXC-2026-07-08-POSTGIS-EXTENSION-OWNER";
+const POSTGIS_EXTENSION_EXCEPTION_ID = "EXC-2026-08-11-POSTGIS-PUBLIC-SURFACE";
 const PUBLIC_EXTENSION_NAMES = ["postgis", "unaccent", "pg_trgm", "citext"];
 
 function usage() {

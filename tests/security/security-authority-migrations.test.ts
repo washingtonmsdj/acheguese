@@ -842,7 +842,7 @@ describe("Security Authority migration validator", () => {
 
   it("accepts extension-owner preflight marker for approved platform migrations", () => {
     const violations = validatePostExceptionFixture(`
-      -- security-authority: extension-owner-preflight EXC-2026-07-08-POSTGIS-EXTENSION-OWNER
+      -- security-authority: extension-owner-preflight EXC-2026-08-11-POSTGIS-PUBLIC-SURFACE
       REVOKE ALL ON FUNCTION public.st_estimatedextent(text, text) FROM anon;
     `);
 
@@ -2270,7 +2270,7 @@ describe("Supabase PostGIS owner preflight", () => {
 
     const result = evaluatePostgisOwnerPreflight(snapshot);
 
-    expect(result.exceptionId).toBe("EXC-2026-07-08-POSTGIS-EXTENSION-OWNER");
+    expect(result.exceptionId).toBe("EXC-2026-08-11-POSTGIS-PUBLIC-SURFACE");
     expect(result.status).toBe("blocked");
     expect(result.ready).toBe(false);
     expect(result.findings).toEqual(

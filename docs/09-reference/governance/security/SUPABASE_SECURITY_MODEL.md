@@ -82,7 +82,7 @@ bloqueados por owner (`public.spatial_ref_sys` ou
 `public.st_estimatedextent`) precisam declarar preflight de owner/plataforma:
 
 ```sql
--- security-authority: extension-owner-preflight EXC-2026-07-08-POSTGIS-EXTENSION-OWNER
+-- security-authority: extension-owner-preflight EXC-2026-08-11-POSTGIS-PUBLIC-SURFACE
 ```
 
 Esse marcador nao substitui a evidencia. Ele apenas impede que uma migration

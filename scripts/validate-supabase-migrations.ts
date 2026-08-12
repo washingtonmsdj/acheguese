@@ -9,9 +9,8 @@ const INVALID_DO_BLOCK_PATTERNS = [/^DO \$$/m, /^END \$;$/m];
 const SECURITY_DEFINER_HARDENING_VERSION = "20260526000001";
 const SECURITY_AUTHORITY_ENFORCEMENT_VERSION = "20260707000000";
 const EXTENSION_OWNER_PREFLIGHT_ENFORCEMENT_VERSION = "20260708000032";
-const EXTENSION_OWNER_EXCEPTION_ID = "EXC-2026-07-08-POSTGIS-EXTENSION-OWNER";
-const SQL_IDENTIFIER =
-  String.raw`(?:"[^"]+"|[A-Za-z_][\w$]*)(?:\s*\.\s*(?:"[^"]+"|[A-Za-z_][\w$]*))?`;
+const EXTENSION_OWNER_EXCEPTION_ID = "EXC-2026-08-11-POSTGIS-PUBLIC-SURFACE";
+const SQL_IDENTIFIER = String.raw`(?:"[^"]+"|[A-Za-z_][\w$]*)(?:\s*\.\s*(?:"[^"]+"|[A-Za-z_][\w$]*))?`;
 const MUTATING_RPC_NAME_PATTERN =
   /^public\.(create|update|delete|remove|insert|upsert|set|switch|revoke|mark|add|increment|decrement|accept|activate|cancel|log|record|track|process|expire|release|toggle|invite|approve|reject|publish|request)_/i;
 const RPC_AUTH_GUARD_PATTERN =
@@ -242,7 +241,8 @@ function validatePublicViewSecurityInvoker(files: MigrationFile[]): string[] {
 
   const reportedViews = new Set<string>();
   for (const grant of publicViewGrants) {
-    if (!createdViews.has(grant.view) || securityInvokerViews.has(grant.view)) continue;
+    if (!createdViews.has(grant.view) || securityInvokerViews.has(grant.view))
+      continue;
     if (reportedViews.has(grant.view)) continue;
 
     reportedViews.add(grant.view);
@@ -289,7 +289,9 @@ function validatePublicTableAccessDecisions(files: MigrationFile[]): string[] {
     const fileDecisions = new Set<string>();
     while ((match = grantTableRegex.exec(content))) {
       const grantees = match[2].toLowerCase();
-      if (!/\banon\b|\bauthenticated\b|\bservice_role\b|\bpublic\b/.test(grantees)) {
+      if (
+        !/\banon\b|\bauthenticated\b|\bservice_role\b|\bpublic\b/.test(grantees)
+      ) {
         continue;
       }
 
@@ -299,7 +301,9 @@ function validatePublicTableAccessDecisions(files: MigrationFile[]): string[] {
 
     while ((match = revokeTableRegex.exec(content))) {
       const grantees = match[2].toLowerCase();
-      if (!/\banon\b|\bauthenticated\b|\bservice_role\b|\bpublic\b/.test(grantees)) {
+      if (
+        !/\banon\b|\bauthenticated\b|\bservice_role\b|\bpublic\b/.test(grantees)
+      ) {
         continue;
       }
 
@@ -311,11 +315,20 @@ function validatePublicTableAccessDecisions(files: MigrationFile[]): string[] {
   }
 
   for (const creation of creations) {
-    const fileDecisions = grantOrRevokeDecisions.get(creation.file) ?? new Set<string>();
+    const fileDecisions =
+      grantOrRevokeDecisions.get(creation.file) ?? new Set<string>();
     const hasGrantOrRevokeDecision = fileDecisions.has(creation.table);
     const hasNoDataApiMarker =
-      hasSecurityAuthorityMarker(creation.content, "no-data-api", creation.table) ||
-      hasSecurityAuthorityMarker(creation.content, "internal-table", creation.table);
+      hasSecurityAuthorityMarker(
+        creation.content,
+        "no-data-api",
+        creation.table,
+      ) ||
+      hasSecurityAuthorityMarker(
+        creation.content,
+        "internal-table",
+        creation.table,
+      );
 
     if (hasGrantOrRevokeDecision || hasNoDataApiMarker) continue;
 
@@ -349,7 +362,8 @@ function validateAnonRpcGrantClassifications(files: MigrationFile[]): string[] {
 
       const functionName = normalizeSqlIdentifier(match[1]);
       if (!isPublicSchemaIdentifier(functionName)) continue;
-      if (hasSecurityAuthorityMarker(rawContent, "public-rpc", functionName)) continue;
+      if (hasSecurityAuthorityMarker(rawContent, "public-rpc", functionName))
+        continue;
 
       violations.push(
         [
@@ -364,7 +378,9 @@ function validateAnonRpcGrantClassifications(files: MigrationFile[]): string[] {
   return violations;
 }
 
-function validatePublicStorageListingClassifications(files: MigrationFile[]): string[] {
+function validatePublicStorageListingClassifications(
+  files: MigrationFile[],
+): string[] {
   const violations: string[] = [];
   const createStoragePolicyRegex =
     /\bCREATE\s+POLICY\b[\s\S]*?\bON\s+storage\.objects\b[\s\S]*?\bFOR\s+SELECT\b[\s\S]*?\bTO\s+[^;]*\banon\b[\s\S]*?\bUSING\s*\(\s*true\s*\)\s*;/gi;
@@ -375,7 +391,13 @@ function validatePublicStorageListingClassifications(files: MigrationFile[]): st
     if (!createStoragePolicyRegex.test(content)) continue;
     createStoragePolicyRegex.lastIndex = 0;
 
-    if (hasSecurityAuthorityMarker(rawContent, "public-storage-listing", "storage.objects")) {
+    if (
+      hasSecurityAuthorityMarker(
+        rawContent,
+        "public-storage-listing",
+        "storage.objects",
+      )
+    ) {
       continue;
     }
 
@@ -462,7 +484,8 @@ function validateExposedMutatingRpcGuards(files: MigrationFile[]): string[] {
 
   const orderedFiles = [...files].sort(
     (left, right) =>
-      left.version.localeCompare(right.version) || left.name.localeCompare(right.name),
+      left.version.localeCompare(right.version) ||
+      left.name.localeCompare(right.name),
   );
 
   for (const file of orderedFiles) {
@@ -521,7 +544,9 @@ function validateExposedMutatingRpcGuards(files: MigrationFile[]): string[] {
       });
     }
 
-    for (const change of functionEvents.sort((left, right) => left.index - right.index)) {
+    for (const change of functionEvents.sort(
+      (left, right) => left.index - right.index,
+    )) {
       if (!isPublicSchemaIdentifier(change.name)) continue;
 
       if (change.action === "drop") {
@@ -550,7 +575,10 @@ function validateExposedMutatingRpcGuards(files: MigrationFile[]): string[] {
       };
 
       for (const principal of browserPrincipals) {
-        if (!new RegExp(`\\b${principal}\\b`, "i").test(change.principals ?? "")) continue;
+        if (
+          !new RegExp(`\\b${principal}\\b`, "i").test(change.principals ?? "")
+        )
+          continue;
         if (change.action === "grant") {
           state.principals.add(principal);
           state.lastGrantFile = file.name;
@@ -662,6 +690,9 @@ function main() {
   console.log("Migrations Supabase estao consistentes.");
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {
+if (
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))
+) {
   main();
 }

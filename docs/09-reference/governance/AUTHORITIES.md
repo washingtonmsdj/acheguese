@@ -1,7 +1,7 @@
 # Governance Authorities
 
 Status: ativo
-Data: 2026-07-07
+Data: 2026-08-11
 
 Este diretorio registra autoridades tecnicas do projeto. Uma Authority e um
 ponto de entrada operacional para regras, evidencias e validacoes de uma area
@@ -11,6 +11,17 @@ quando cada um deve ser consultado.
 ## Authority Ativa
 
 - [Security Authority](./security/SECURITY_AUTHORITY.md)
+
+## Owner Humano Canonico
+
+- Nome: `washingto silva`
+- GitHub: `@washingtonmsdj`
+- Escopo: decisoes de seguranca e release do projeto Achegue-se.
+- Aprovado em: `2026-08-11`
+
+O owner humano e obrigatorio para excecoes temporarias e aceitacao de risco de
+release. Rotulos funcionais como `Tech/security owner` nao substituem esta
+identidade canonica.
 
 ## Decisao Atual
 
@@ -54,4 +65,3 @@ Toda Authority deve declarar:
 O plano operacional desta entrega esta em:
 
 - [Security Authority - plano de implementacao](../../plans/SECURITY_AUTHORITY_IMPLEMENTATION_PLAN.md)
-

@@ -58,7 +58,7 @@ Se tocar qualquer item acima, consultar:
   e evidenciada, registrar:
 
 ```sql
--- security-authority: extension-owner-preflight EXC-2026-07-08-POSTGIS-EXTENSION-OWNER
+-- security-authority: extension-owner-preflight EXC-2026-08-11-POSTGIS-PUBLIC-SURFACE
 ```
 
 - Evitar `SECURITY DEFINER`; se inevitavel, usar `SET search_path`, grants

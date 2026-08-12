@@ -1,0 +1,224 @@
+{
+  "schemaVersion": "acheguese-free-release-governance/v1",
+  "updatedAt": "2026-08-11",
+  "owner": {
+    "name": "washingto silva",
+    "github": "washingtonmsdj",
+    "role": "Security and release governance owner",
+    "approvedAt": "2026-08-11",
+    "status": "APPROVED"
+  },
+  "release": {
+    "plan": "SUPABASE_FREE",
+    "kind": "CONTROLLED_RELEASE_WINDOW",
+    "decision": "FREE_RELEASE_GOVERNANCE_APPROVED",
+    "technicalGateOverride": false
+  },
+  "exceptions": [
+    {
+      "id": "EXC-2026-08-11-AUTH-HIBP-FREE-PLAN",
+      "scope": "AUTH_HIBP_NATIVE_CONTROL",
+      "status": "OPEN",
+      "risk": "High",
+      "ownerGithub": "washingtonmsdj",
+      "createdAt": "2026-08-11",
+      "validUntil": "2026-09-10",
+      "mitigations": [
+        "PASSWORD_MINIMUM_12",
+        "PASSWORD_COMPLEXITY",
+        "SECURE_PASSWORD_CHANGE",
+        "APP_HIBP_K_ANONYMITY_FAIL_OPEN",
+        "NOT_EQUIVALENT_TO_AUTH_PROVIDER_PROTECTION"
+      ],
+      "closureTriggers": [
+        "PLAN_WITH_NATIVE_HIBP",
+        "EXCEPTION_EXPIRES",
+        "SIGNUP_OR_TRAFFIC_EXCEEDS_ACCEPTED_RISK",
+        "CREDENTIAL_STUFFING_OR_ACCOUNT_TAKEOVER"
+      ]
+    },
+    {
+      "id": "EXC-2026-08-11-POSTGIS-PUBLIC-SURFACE",
+      "scope": "POSTGIS_PUBLIC_EXTENSION_SURFACE",
+      "status": "OPEN",
+      "risk": "High",
+      "ownerGithub": "washingtonmsdj",
+      "createdAt": "2026-08-11",
+      "validUntil": "2026-09-10",
+      "mitigations": [
+        "NO_RELEASE_MIGRATION_DIRECT_DEPENDENCY",
+        "READ_ONLY_PREFLIGHT",
+        "ADVISOR_FAIL_CLOSED",
+        "NO_BLIND_OWNER_MIGRATION"
+      ],
+      "closureTriggers": [
+        "POSTGIS_REMEDIATED",
+        "SURFACE_OR_GRANTS_CHANGED",
+        "NEW_RELEVANT_ADVISOR_FINDING",
+        "EXPLOIT_OR_INCIDENT",
+        "EXCEPTION_EXPIRES"
+      ]
+    }
+  ],
+  "historicalExceptions": [
+    {
+      "id": "EXC-2026-07-08-AUTH-HIBP-DASHBOARD",
+      "state": "EXPIRED_EXCEPTION",
+      "validUntil": "2026-08-08"
+    },
+    {
+      "id": "EXC-2026-07-08-POSTGIS-EXTENSION-OWNER",
+      "state": "EXPIRED_EXCEPTION",
+      "validUntil": "2026-08-08"
+    }
+  ],
+  "controls": {
+    "hibp": {
+      "nativeControl": "HIBP_UNAVAILABLE_ON_PLAN",
+      "authorityState": "VALID_TEMPORARY_EXCEPTION",
+      "exceptionId": "EXC-2026-08-11-AUTH-HIBP-FREE-PLAN",
+      "appCheckMode": "K_ANONYMITY_FAIL_OPEN",
+      "equivalentToAuthProviderProtection": false
+    },
+    "postgis": {
+      "authorityState": "VALID_TEMPORARY_EXCEPTION",
+      "exceptionId": "EXC-2026-08-11-POSTGIS-PUBLIC-SURFACE",
+      "observedAt": "2026-08-11T22:48:56.498Z",
+      "acceptedStateSha256": "14cb769c7eac7533853d532c3a57061817ff2c28bff6e4b6b2ca09a8c2e7a9c1",
+      "observedMaterialState": {
+        "extensions": [
+          {
+            "name": "citext",
+            "version": "1.6",
+            "schema": "public",
+            "owner": "supabase_admin"
+          },
+          {
+            "name": "pg_trgm",
+            "version": "1.6",
+            "schema": "public",
+            "owner": "supabase_admin"
+          },
+          {
+            "name": "postgis",
+            "version": "3.3.7",
+            "schema": "public",
+            "owner": "supabase_admin"
+          },
+          {
+            "name": "unaccent",
+            "version": "1.1",
+            "schema": "public",
+            "owner": "supabase_admin"
+          }
+        ],
+        "spatialRefSys": {
+          "schema": "public",
+          "owner": "supabase_admin",
+          "rlsEnabled": false,
+          "selectRoles": ["anon", "authenticated"]
+        },
+        "stEstimatedExtent": {
+          "owner": "supabase_admin",
+          "securityDefiner": true,
+          "executeRoles": ["anon", "authenticated"],
+          "signatures": [
+            "st_estimatedextent(text,text)",
+            "st_estimatedextent(text,text,text)",
+            "st_estimatedextent(text,text,text,boolean)"
+          ]
+        },
+        "advisorCacheKeys": [
+          "rls_disabled_in_public_public_spatial_ref_sys",
+          "extension_in_public_unaccent",
+          "extension_in_public_pg_trgm",
+          "extension_in_public_citext",
+          "extension_in_public_postgis",
+          "anon_security_definer_function_executable_public_st_estimatedextent_text, text",
+          "anon_security_definer_function_executable_public_st_estimatedextent_text, text, text",
+          "anon_security_definer_function_executable_public_st_estimatedextent_text, text, text, boolean",
+          "authenticated_security_definer_function_executable_public_st_estimatedextent_text, text",
+          "authenticated_security_definer_function_executable_public_st_estimatedextent_text, text, text",
+          "authenticated_security_definer_function_executable_public_st_estimatedextent_text, text, text, boolean"
+        ]
+      },
+      "newMaterialFindings": [],
+      "realConsumers": {
+        "spatialColumns": [
+          "public.addresses.point",
+          "public.business_data.point",
+          "public.businesses.point",
+          "public.classifieds.point",
+          "public.community_alerts.point",
+          "public.driver_data.current_location",
+          "public.events.point",
+          "public.locations.boundary",
+          "public.service_areas.coverage_polygon",
+          "public.tourist_points.point",
+          "public.tourist_points_backup.point"
+        ],
+        "runtimeBoundaries": [
+          "src/core/geospatial",
+          "src/core/maps/services/NeighborhoodBoundaryService.ts"
+        ]
+      },
+      "releaseMigrations": [
+        "20260719122000",
+        "20260720100000",
+        "20260809184409",
+        "20260810151941"
+      ],
+      "directPostgisDependencies": []
+    },
+    "recovery": {
+      "policy": "MANUAL_RELEASE_RECOVERY_SNAPSHOT",
+      "authorityState": "VERIFIED_COMPENSATING_CONTROL",
+      "snapshotId": "20260811T212637Z",
+      "capturedAt": "2026-08-11T21:26:37Z",
+      "validUntil": "2026-08-12T21:26:37Z",
+      "maximumAgeHours": 24,
+      "coverage": ["DATABASE", "AUTH", "STORAGE"],
+      "offDevice": {
+        "provider": "PRIVATE_GOOGLE_DRIVE",
+        "status": "VERIFIED",
+        "private": true,
+        "localOnly": false,
+        "artifactCount": 1,
+        "artifactBytes": 47116748,
+        "sha256": "772a5a096c39040ed5dcbec5a4bffbf33b26ad94f677169801baccc73bf21fc9",
+        "readbackHashMatch": true
+      },
+      "restoreRunbook": "RESTORE-RUNBOOK.md",
+      "rpo": "SNAPSHOT_TIMESTAMP_ONLY",
+      "recoveryMode": "MANUAL",
+      "rto": "NOT_GUARANTEED",
+      "materialChangeAfterSnapshot": false,
+      "sourceStateMutationAttestation": "NO_KNOWN_MATERIAL_CHANGE"
+    },
+    "pitr": {
+      "managedPitr": "UNAVAILABLE_ON_PLAN",
+      "manualRecovery": "VERIFIED",
+      "residualRisk": "ACCEPTED_FOR_CONTROLLED_RELEASE_WINDOW",
+      "authorityState": "RESIDUAL_RISK_ACCEPTED"
+    }
+  },
+  "technicalGatePolicy": {
+    "exceptionsCoverOnly": [
+      "AUTH_HIBP_NATIVE_CONTROL",
+      "POSTGIS_PUBLIC_EXTENSION_SURFACE"
+    ],
+    "genericTechnicalOverride": false,
+    "unchangedMandatoryGates": [
+      "MIGRATION_DRIFT",
+      "MIGRATION_PROVENANCE",
+      "TURNSTILE_PRODUCTION",
+      "CSP",
+      "VERCEL_INPUTS",
+      "TYPECHECK_APP",
+      "LINT",
+      "POLL_PREFLIGHT",
+      "COMMUNITY_INTEREST_PREFLIGHT",
+      "SALVADOR_PREFLIGHT"
+    ]
+  }
+}

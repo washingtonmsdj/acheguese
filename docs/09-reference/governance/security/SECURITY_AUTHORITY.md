@@ -1,7 +1,7 @@
 # Security Authority
 
 Status: ativo
-Data: 2026-07-08
+Data: 2026-08-11
 
 Security Authority e o ponto de entrada operacional para mudancas que afetam
 seguranca, privacidade, autorizacao, Supabase, secrets, migrations, storage,
@@ -54,6 +54,8 @@ Riscos prioritarios:
 - [Advisor remoto Supabase](../../audits/SUPABASE_REMOTE_SECURITY_ADVISOR_2026-07-06.md)
 - [Drift remoto Supabase](../../audits/SUPABASE_REMOTE_MIGRATION_DRIFT_2026-07-06.md)
 - [Excecoes ativas](./EXCEPTIONS.md)
+- [Governanca de release controlado no Free](./FREE_RELEASE_GOVERNANCE.md)
+- [SSOT executavel do release Free](./FREE_RELEASE_GOVERNANCE.json)
 - [SSOT dos residuais do Advisor](./SUPABASE_ADVISOR_RESIDUALS.json)
 - [Policy de fronteira service_role](./SERVICE_ROLE_BOUNDARY_POLICY.json)
 - `scripts/security/validate-security.mjs`
@@ -115,6 +117,30 @@ Resultado `blocked` significa que a role remota atual ainda nao tem ownership
 suficiente; nao criar migration para `spatial_ref_sys` ou `st_estimatedextent`
 nesse estado.
 
+Para autorizar uma janela controlada no Supabase Free, execute:
+
+```powershell
+npm run validate:free-release-governance
+```
+
+O validator exige owner humano, excecoes HIBP/PostGIS vigentes, fingerprint
+PostGIS sem mudanca material, recovery manual fresh e off-device verificado.
+Ele nao transforma Free em Pro nem substitui qualquer gate tecnico.
+
+## Estados De Controle
+
+- `CONTROL_IMPLEMENTED`: o controle existe e foi comprovado.
+- `VALID_TEMPORARY_EXCEPTION`: risco especifico aceito por owner, com prazo,
+  mitigacoes e triggers de encerramento.
+- `VERIFIED_COMPENSATING_CONTROL`: controle alternativo comprovado, sem falsa
+  equivalencia com o controle ausente.
+- `EXPIRED_EXCEPTION`: registro historico que nao autoriza release.
+- `BLOCKER`: evidencia, owner, validade ou gate obrigatorio ausente.
+
+Na janela Free atual, HIBP e PostGIS usam `VALID_TEMPORARY_EXCEPTION`, recovery
+usa `VERIFIED_COMPENSATING_CONTROL` e PITR permanece
+`UNAVAILABLE_ON_PLAN / RESIDUAL_RISK_ACCEPTED`.
+
 Mudancas High devem ter ao menos typecheck, lint ou teste focado proporcional:
 
 ```powershell
@@ -162,7 +188,7 @@ Authority.
 - migration nova, a partir de `20260708000032`, que toca
   `public.spatial_ref_sys` ou `public.st_estimatedextent` precisa declarar
   preflight de owner/plataforma vinculado a
-  `EXC-2026-07-08-POSTGIS-EXTENSION-OWNER`.
+  `EXC-2026-08-11-POSTGIS-PUBLIC-SURFACE`.
 - `verify:deploy` executa `validate:security-authority`, que cobre os
   marcadores da Security Authority com teste isolado.
 - `verify:deploy` executa `validate:deps` e `validate:ssot`, bloqueando
@@ -191,7 +217,7 @@ As classificacoes aceitas ficam no proprio arquivo SQL como comentarios:
 -- security-authority: internal-table public.nome_da_tabela
 -- security-authority: public-rpc public.nome_da_funcao
 -- security-authority: public-storage-listing storage.objects
--- security-authority: extension-owner-preflight EXC-2026-07-08-POSTGIS-EXTENSION-OWNER
+-- security-authority: extension-owner-preflight EXC-2026-08-11-POSTGIS-PUBLIC-SURFACE
 ```
 
 O marcador `extension-owner-preflight` nao autoriza tentativa cega: ele so pode
