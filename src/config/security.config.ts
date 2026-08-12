@@ -194,6 +194,14 @@ export const SECURITY_DOMAINS = {
     alternatives: 'Disable Cloudflare Web Analytics injection',
   },
 
+  CLOUDFLARE_TURNSTILE: {
+    url: 'https://challenges.cloudflare.com',
+    purpose: 'Cloudflare Turnstile client script and challenge iframe',
+    risk: 'MEDIUM',
+    justification: 'Required for production anti-abuse verification on protected forms',
+    alternatives: 'Replace Turnstile with an equivalent server-verified anti-abuse provider',
+  },
+
   STRIPE_CHECKOUT: {
     url: 'https://checkout.stripe.com',
     purpose: 'Stripe hosted checkout redirect',
@@ -268,6 +276,11 @@ export const COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG = {
   turnstileRequiredInProduction: true,
 } as const;
 
+export const TURNSTILE_CLIENT_CONFIG = {
+  origin: SECURITY_DOMAINS.CLOUDFLARE_TURNSTILE.url,
+  scriptUrl: `${SECURITY_DOMAINS.CLOUDFLARE_TURNSTILE.url}/turnstile/v0/api.js`,
+} as const;
+
 /**
  * Extract URLs from domain registry
  */
@@ -304,6 +317,7 @@ export const CSP_DIRECTIVES = {
     SECURITY_DOMAINS.VERCEL_SCRIPTS.url,
     SECURITY_DOMAINS.VERCEL_LIVE.url,
     SECURITY_DOMAINS.CLOUDFLARE_INSIGHTS_SCRIPT.url,
+    SECURITY_DOMAINS.CLOUDFLARE_TURNSTILE.url,
     SECURITY_DOMAINS.GOOGLE_ADSENSE_SCRIPT.url,
     SECURITY_DOMAINS.GOOGLE_ADSENSE_ADS.url,
     SECURITY_DOMAINS.GOOGLE_ADSENSE_STATIC.url,
@@ -370,6 +384,7 @@ export const CSP_DIRECTIVES = {
   // Frames/iframes - For AdSense ads
   'frame-src': [
     "'self'",
+    SECURITY_DOMAINS.CLOUDFLARE_TURNSTILE.url,
     SECURITY_DOMAINS.GOOGLE_ADSENSE_ADS.url,
     SECURITY_DOMAINS.GOOGLE_DOUBLECLICK.url,
     SECURITY_DOMAINS.GOOGLE_ADTRAFFIC.url,
@@ -717,9 +732,9 @@ export const INPUT_VALIDATION = {
  * MUST be updated on every security config change.
  */
 export const SECURITY_AUDIT_LOG = {
-  lastReview: '2026-07-08',
+  lastReview: '2026-08-12',
   reviewer: 'Codex',
-  version: '2.21.0',
+  version: '2.22.0',
   changes: [
     'Initial SSOT implementation',
     'CSP directives centralized',
@@ -813,8 +828,11 @@ export const SECURITY_AUDIT_LOG = {
     'FIX: operador HIBP remoto valida entradas e gera status JSON sem expor PAT',
     // v2.21.0 - Supabase PostGIS owner preflight operator
     'FIX: operador PostGIS read-only valida ownership antes de permitir marker extension-owner-preflight',
+    // v2.22.0 - Cloudflare Turnstile CSP contract
+    'FIX: origem exata do Cloudflare Turnstile centralizada e autorizada somente em script-src e frame-src',
+    'FIX: URL do cliente Turnstile derivada do SECURITY_DOMAINS para impedir divergencia do SSOT',
   ],
-  nextReview: '2026-08-07',
+  nextReview: '2026-09-12',
 } as const;
 
 /**
@@ -896,9 +914,9 @@ export const CACHE_HEADERS = {
  * Metadata about this configuration file.
  */
 export const SECURITY_CONFIG_METADATA = {
-  version: '2.21.0',
+  version: '2.22.0',
   created: '2026-04-18',
-  lastModified: '2026-07-08',
+  lastModified: '2026-08-12',
   author: 'Kiro AI',
   purpose: 'Single Source of Truth for security configurations',
   criticality: 'CRITICAL',

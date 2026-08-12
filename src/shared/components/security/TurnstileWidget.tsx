@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
-
-const TURNSTILE_SRC = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+import { TURNSTILE_CLIENT_CONFIG } from "@/config/security.config";
 
 type TurnstileRenderOptions = {
   sitekey: string;
@@ -31,7 +30,7 @@ function loadTurnstileScript(): Promise<void> {
 
   scriptPromise = new Promise<void>((resolve, reject) => {
     const existing = document.querySelector<HTMLScriptElement>(
-      `script[src^="${TURNSTILE_SRC}"]`,
+      `script[src^="${TURNSTILE_CLIENT_CONFIG.scriptUrl}"]`,
     );
     if (existing) {
       existing.addEventListener("load", () => resolve());
@@ -39,7 +38,7 @@ function loadTurnstileScript(): Promise<void> {
       return;
     }
     const script = document.createElement("script");
-    script.src = `${TURNSTILE_SRC}?render=explicit`;
+    script.src = `${TURNSTILE_CLIENT_CONFIG.scriptUrl}?render=explicit`;
     script.async = true;
     script.defer = true;
     script.onload = () => resolve();

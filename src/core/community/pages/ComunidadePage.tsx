@@ -410,6 +410,26 @@ export default function ComunidadePage({
     setSearchParams,
   ]);
 
+  const communityModals = (
+    <CommunityModals
+      modalState={modalState}
+      postId={postId}
+      postData={postData}
+      isLoadingPost={isLoadingPost}
+      profileId={profile?.id}
+      onCloseModal={handleCloseModal}
+      onClosePostDetail={handleClosePostDetail}
+      onLike={handleLikePostWithAccess}
+      onSave={handleSavePostWithAccess}
+      onShare={sharePost}
+      onReport={handleReportPostWithAccess}
+      onSubmitReport={handleSubmitPostReport}
+      onTagClick={handleTagClick}
+      canComment={communityAccess.can.comment}
+      commentBlockedMessage={getBlockedCommunityActionMessage("comment")}
+    />
+  );
+
   if (!profile && resolved) {
     return (
       <TooltipProvider>
@@ -430,6 +450,7 @@ export default function ComunidadePage({
             activeView={activeView}
             onViewChange={setView}
           />
+          {communityModals}
         </div>
       </TooltipProvider>
     );
@@ -621,23 +642,7 @@ export default function ComunidadePage({
         />
 
         {/* Modais de Detalhes e Comentarios */}
-        <CommunityModals
-          modalState={modalState}
-          postId={postId}
-          postData={postData}
-          isLoadingPost={isLoadingPost}
-          profileId={profile?.id}
-          onCloseModal={handleCloseModal}
-          onClosePostDetail={handleClosePostDetail}
-          onLike={handleLikePostWithAccess}
-          onSave={handleSavePostWithAccess}
-          onShare={sharePost}
-          onReport={handleReportPostWithAccess}
-          onSubmitReport={handleSubmitPostReport}
-          onTagClick={handleTagClick}
-          canComment={communityAccess.can.comment}
-          commentBlockedMessage={getBlockedCommunityActionMessage("comment")}
-        />
+        {communityModals}
 
         <ConfirmActionDialog
           open={deletePostDialogOpen}

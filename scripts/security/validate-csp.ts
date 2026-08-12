@@ -3,7 +3,12 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { SECURITY_HEADERS } from "../../src/config/security.config";
+import {
+  SECURITY_DOMAINS,
+  SECURITY_HEADERS,
+  TURNSTILE_CLIENT_CONFIG,
+} from "../../src/config/security.config";
+import { parseCsp, validateTurnstileCspContract } from "./csp-contract";
 
 const root = process.cwd();
 const indexPath = resolve(root, "index.html");
@@ -38,15 +43,6 @@ function parseScriptTags(html: string): ScriptTag[] {
       src: extractAttribute(match[1], "src"),
     }),
   );
-}
-
-function parseCsp(value: string): Map<string, string[]> {
-  const directives = new Map<string, string[]>();
-  for (const section of value.split(";")) {
-    const tokens = section.trim().split(/\s+/).filter(Boolean);
-    if (tokens.length > 0) directives.set(tokens[0], tokens.slice(1));
-  }
-  return directives;
 }
 
 function sha256Source(body: string): string {
@@ -106,11 +102,27 @@ if (cspHeaders.length !== 1 || !cspHeaders[0]?.value) {
 
 const deployedCsp = cspHeaders[0]?.value ?? "";
 const ssotCsp = SECURITY_HEADERS["Content-Security-Policy"];
-if (deployedCsp !== ssotCsp) {
-  errors.push(
-    "CSP de vercel.json diverge do SSOT src/config/security.config.ts",
-  );
+const turnstileWidgetPath = resolve(
+  root,
+  "src/shared/components/security/TurnstileWidget.tsx",
+);
+const turnstileWidgetSource = existsSync(turnstileWidgetPath)
+  ? readFileSync(turnstileWidgetPath, "utf8")
+  : "";
+
+if (!turnstileWidgetSource) {
+  errors.push("TurnstileWidget.tsx ausente ou vazio");
 }
+
+errors.push(
+  ...validateTurnstileCspContract({
+    deployedCsp,
+    ssotCsp,
+    turnstileOrigin: SECURITY_DOMAINS.CLOUDFLARE_TURNSTILE.url,
+    turnstileScriptUrl: TURNSTILE_CLIENT_CONFIG.scriptUrl,
+    widgetSource: turnstileWidgetSource,
+  }),
+);
 
 const directives = parseCsp(deployedCsp);
 const scriptSources =
@@ -118,6 +130,10 @@ const scriptSources =
 
 if (scriptSources.includes("'unsafe-inline'")) {
   errors.push("script-src de produção não pode conter 'unsafe-inline'");
+}
+
+if (scriptSources.includes("'unsafe-eval'")) {
+  errors.push("script-src de produção não pode conter 'unsafe-eval'");
 }
 
 const scriptTags = parseScriptTags(html);
@@ -191,6 +207,7 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
+console.log("TURNSTILE_CSP_CONTRACT_PASS");
 console.log(
   `PASS: CSP sincronizada; ${scriptTags.length} scripts analisados, ${inlineScripts.length} inline, ${dynamicExternalUrls.size} origem dinâmica validada.`,
 );
