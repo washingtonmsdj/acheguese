@@ -1526,7 +1526,8 @@
     "20260719122000_reconcile_canonical_salvador.sql",
     "20260720100000_seed_salvador_neighborhoods_and_top15_communities.sql",
     "20260809184409_create_authoritative_community_interest_registration.sql",
-    "20260810151941_reconcile_community_poll_additive_compatibility.sql"
+    "20260810151941_reconcile_community_poll_additive_compatibility.sql",
+    "20260812061500_harden_community_poll_vote_territorial_authorization.sql"
   ],
   "checkpointPlan": {
     "HISTORICAL_REMOTE_CANONICALIZATION": [
@@ -1586,7 +1587,8 @@
       "20260719122000_reconcile_canonical_salvador.sql",
       "20260720100000_seed_salvador_neighborhoods_and_top15_communities.sql",
       "20260809184409_create_authoritative_community_interest_registration.sql",
-      "20260810151941_reconcile_community_poll_additive_compatibility.sql"
+      "20260810151941_reconcile_community_poll_additive_compatibility.sql",
+      "20260812061500_harden_community_poll_vote_territorial_authorization.sql"
     ],
     "POLL_VOTES_RESOLUTION": "UNRESOLVED_OUTSIDE_THIS_TASK"
   }
