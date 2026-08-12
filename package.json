@@ -110,6 +110,7 @@
     "test:poll:authority": "vitest --run --pool=forks --maxWorkers=1 tests/architecture/community-poll-runtime-characterization.test.ts && vitest --run --pool=forks --maxWorkers=1 tests/security/community-poll-authority-security.test.ts tests/security/community-poll-compatibility-window.test.ts tests/scripts/poll-preflight.test.ts",
     "poll:preflight": "node scripts/poll-preflight.mjs",
     "test:salvador:reconciliation": "vitest --run --pool=forks --maxWorkers=1 tests/scripts/salvador-preflight.test.ts",
+    "validate:salvador:seed-arbiter": "node scripts/salvador-preflight.mjs --conflict-arbiter-only",
     "test:migrations:provenance": "vitest --run --pool=threads --maxWorkers=1 tests/scripts/migration-provenance.test.ts tests/scripts/supabase-migration-list-parser.test.ts",
     "salvador:preflight": "node scripts/salvador-preflight.mjs",
     "test:ssot": "vitest --run --passWithNoTests tests/ssot-*.test.ts",

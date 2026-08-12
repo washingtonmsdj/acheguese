@@ -23,6 +23,10 @@ type SalvadorModule = {
     inventory: Record<string, number>;
     references: Record<string, number>;
   }) => { blockers: string[]; stage: string; status: string };
+  evaluateSalvadorSeedConflictArbiters: (sql: string) => {
+    issues: string[];
+    status: string;
+  };
   extractTargetNeighborhoodSlugs: (sql: string) => string[];
 };
 
@@ -117,15 +121,38 @@ describe("Salvador canonical reconciliation", () => {
   });
 
   it("declares 170 unique canonical neighborhoods without cross-root updates", async () => {
-    const { extractTargetNeighborhoodSlugs } = await loadModule();
+    const {
+      evaluateSalvadorSeedConflictArbiters,
+      extractTargetNeighborhoodSlugs,
+    } = await loadModule();
     const seed = readFileSync(seedPath, "utf8");
     const slugs = extractTargetNeighborhoodSlugs(seed);
 
     expect(slugs).toHaveLength(170);
     expect(new Set(slugs).size).toBe(170);
     expect(
-      seed.match(/ON CONFLICT \(parent_id, slug\) DO NOTHING;/g),
+      seed.match(
+        /ON CONFLICT \(slug, parent_id\)\s+WHERE parent_id IS NOT NULL\s+DO NOTHING;/g,
+      ),
     ).toHaveLength(170);
+    expect(evaluateSalvadorSeedConflictArbiters(seed)).toEqual({
+      issues: [],
+      status: "SALVADOR_SEED_CONFLICT_ARBITER_PASS",
+    });
+  });
+
+  it("rejects the previous conflict target when only the partial unique index exists", async () => {
+    const { evaluateSalvadorSeedConflictArbiters } = await loadModule();
+    const seed = readFileSync(seedPath, "utf8");
+    const previousSeed = seed.replace(
+      /ON CONFLICT \(slug, parent_id\)\s+WHERE parent_id IS NOT NULL\s+DO NOTHING;/g,
+      "ON CONFLICT (parent_id, slug) DO NOTHING;",
+    );
+
+    expect(evaluateSalvadorSeedConflictArbiters(previousSeed)).toEqual({
+      issues: ["location_partial_unique_arbiter"],
+      status: "SALVADOR_SEED_CONFLICT_ARBITER_BLOCKED",
+    });
   });
 
   it("pins all 15 communities to canonical neighborhood IDs", () => {

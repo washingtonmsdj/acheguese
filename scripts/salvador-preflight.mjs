@@ -50,6 +50,51 @@ export function extractTargetNeighborhoodSlugs(sql) {
   );
 }
 
+export function evaluateSalvadorSeedConflictArbiters(sql) {
+  const issues = [];
+  const locationInserts = Array.from(
+    sql.matchAll(/INSERT\s+INTO\s+(?:public\.)?locations\b[\s\S]*?;/gi),
+    (match) => match[0],
+  );
+  const communityInserts = Array.from(
+    sql.matchAll(
+      /INSERT\s+INTO\s+(?:public\.)?territory_communities\b[\s\S]*?;/gi,
+    ),
+    (match) => match[0],
+  );
+  const locationArbiter =
+    /ON\s+CONFLICT\s*\(\s*slug\s*,\s*parent_id\s*\)\s*WHERE\s+parent_id\s+IS\s+NOT\s+NULL\s*DO\s+NOTHING\s*;/i;
+  const communityArbiter =
+    /ON\s+CONFLICT\s*\(\s*slug\s*,\s*city_id\s*\)\s*DO\s+NOTHING\s*;/i;
+
+  if (locationInserts.length !== 170) {
+    issues.push("location_insert_count");
+  }
+  if (locationInserts.some((statement) => !locationArbiter.test(statement))) {
+    issues.push("location_partial_unique_arbiter");
+  }
+  if (communityInserts.length !== 15) {
+    issues.push("community_insert_count");
+  }
+  if (communityInserts.some((statement) => !communityArbiter.test(statement))) {
+    issues.push("community_unique_arbiter");
+  }
+  if ((sql.match(/\bON\s+CONFLICT\b/gi) ?? []).length !== 185) {
+    issues.push("conflict_clause_count");
+  }
+  if (/\bON\s+CONFLICT\s+DO\b/i.test(sql)) {
+    issues.push("generic_conflict_target");
+  }
+
+  return {
+    issues,
+    status:
+      issues.length === 0
+        ? "SALVADOR_SEED_CONFLICT_ARBITER_PASS"
+        : "SALVADOR_SEED_CONFLICT_ARBITER_BLOCKED",
+  };
+}
+
 export function buildLocationFkCatalogSql() {
   return `
 select coalesce(jsonb_agg(fk order by source_table, source_column), '[]'::jsonb) as location_fks
@@ -298,7 +343,15 @@ function main() {
     "migrations",
     "20260720100000_seed_salvador_neighborhoods_and_top15_communities.sql",
   );
-  const slugs = extractTargetNeighborhoodSlugs(readFileSync(seedPath, "utf8"));
+  const seed = readFileSync(seedPath, "utf8");
+  const arbiterResult = evaluateSalvadorSeedConflictArbiters(seed);
+  console.log(arbiterResult.status);
+  if (arbiterResult.status === "SALVADOR_SEED_CONFLICT_ARBITER_BLOCKED") {
+    throw new Error(arbiterResult.issues.join(", "));
+  }
+  if (process.argv.includes("--conflict-arbiter-only")) return;
+
+  const slugs = extractTargetNeighborhoodSlugs(seed);
   const [catalog = {}] = runSupabaseQuery(buildLocationFkCatalogSql());
   const locationFks = Array.isArray(catalog.location_fks)
     ? catalog.location_fks

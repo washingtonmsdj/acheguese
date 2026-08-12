@@ -49,852 +49,1192 @@ BEGIN
   VALUES (v_salvador_id, 'neighborhood', 'acupe', 'Acupe', 'Acupe, Salvador - BA',
           v_salvador_path || '/acupe', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'aeroporto', 'Aeroporto', 'Aeroporto, Salvador - BA',
           v_salvador_path || '/aeroporto', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'alto-da-terezinha', 'Alto da Terezinha', 'Alto da Terezinha, Salvador - BA',
           v_salvador_path || '/alto-da-terezinha', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'alto-das-pombas', 'Alto das Pombas', 'Alto das Pombas, Salvador - BA',
           v_salvador_path || '/alto-das-pombas', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'alto-do-cabrito', 'Alto do Cabrito', 'Alto do Cabrito, Salvador - BA',
           v_salvador_path || '/alto-do-cabrito', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'alto-do-coqueirinho', 'Alto do Coqueirinho', 'Alto do Coqueirinho, Salvador - BA',
           v_salvador_path || '/alto-do-coqueirinho', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'amaralina', 'Amaralina', 'Amaralina, Salvador - BA',
           v_salvador_path || '/amaralina', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'areia-branca', 'Areia Branca', 'Areia Branca, Salvador - BA',
           v_salvador_path || '/areia-branca', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'arenoso', 'Arenoso', 'Arenoso, Salvador - BA',
           v_salvador_path || '/arenoso', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'arraial-do-retiro', 'Arraial do Retiro', 'Arraial do Retiro, Salvador - BA',
           v_salvador_path || '/arraial-do-retiro', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'bairro-da-paz', 'Bairro da Paz', 'Bairro da Paz, Salvador - BA',
           v_salvador_path || '/bairro-da-paz', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'baixa-de-quintas', 'Baixa de Quintas', 'Baixa de Quintas, Salvador - BA',
           v_salvador_path || '/baixa-de-quintas', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'barbalho', 'Barbalho', 'Barbalho, Salvador - BA',
           v_salvador_path || '/barbalho', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'barra', 'Barra', 'Barra, Salvador - BA',
           v_salvador_path || '/barra', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'barreiras', 'Barreiras', 'Barreiras, Salvador - BA',
           v_salvador_path || '/barreiras', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'barris', 'Barris', 'Barris, Salvador - BA',
           v_salvador_path || '/barris', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'beiru-tancredo-neves', 'Beiru/Tancredo Neves', 'Beiru/Tancredo Neves, Salvador - BA',
           v_salvador_path || '/beiru-tancredo-neves', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'boa-viagem', 'Boa Viagem', 'Boa Viagem, Salvador - BA',
           v_salvador_path || '/boa-viagem', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'boa-vista-de-brotas', 'Boa Vista de Brotas', 'Boa Vista de Brotas, Salvador - BA',
           v_salvador_path || '/boa-vista-de-brotas', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'boa-vista-de-sao-caetano', 'Boa Vista de São Caetano', 'Boa Vista de São Caetano, Salvador - BA',
           v_salvador_path || '/boa-vista-de-sao-caetano', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'boca-da-mata', 'Boca da Mata', 'Boca da Mata, Salvador - BA',
           v_salvador_path || '/boca-da-mata', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'boca-do-rio', 'Boca do Rio', 'Boca do Rio, Salvador - BA',
           v_salvador_path || '/boca-do-rio', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'bom-jua', 'Bom Juá', 'Bom Juá, Salvador - BA',
           v_salvador_path || '/bom-jua', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'bonfim', 'Bonfim', 'Bonfim, Salvador - BA',
           v_salvador_path || '/bonfim', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'brotas', 'Brotas', 'Brotas, Salvador - BA',
           v_salvador_path || '/brotas', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'cabula', 'Cabula', 'Cabula, Salvador - BA',
           v_salvador_path || '/cabula', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'cabula-vi', 'Cabula VI', 'Cabula VI, Salvador - BA',
           v_salvador_path || '/cabula-vi', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'caixa-d-agua', 'Caixa D´Água', 'Caixa D´Água, Salvador - BA',
           v_salvador_path || '/caixa-d-agua', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'cajazeiras-ii', 'Cajazeiras II', 'Cajazeiras II, Salvador - BA',
           v_salvador_path || '/cajazeiras-ii', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'cajazeiras-iv', 'Cajazeiras IV', 'Cajazeiras IV, Salvador - BA',
           v_salvador_path || '/cajazeiras-iv', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'cajazeiras-v', 'Cajazeiras V', 'Cajazeiras V, Salvador - BA',
           v_salvador_path || '/cajazeiras-v', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'cajazeiras-vi', 'Cajazeiras VI', 'Cajazeiras VI, Salvador - BA',
           v_salvador_path || '/cajazeiras-vi', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'cajazeiras-vii', 'Cajazeiras VII', 'Cajazeiras VII, Salvador - BA',
           v_salvador_path || '/cajazeiras-vii', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'cajazeiras-viii', 'Cajazeiras VIII', 'Cajazeiras VIII, Salvador - BA',
           v_salvador_path || '/cajazeiras-viii', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'cajazeiras-x', 'Cajazeiras X', 'Cajazeiras X, Salvador - BA',
           v_salvador_path || '/cajazeiras-x', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'cajazeiras-xi', 'Cajazeiras XI', 'Cajazeiras XI, Salvador - BA',
           v_salvador_path || '/cajazeiras-xi', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'calabar', 'Calabar', 'Calabar, Salvador - BA',
           v_salvador_path || '/calabar', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'calabetao', 'Calabetão', 'Calabetão, Salvador - BA',
           v_salvador_path || '/calabetao', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'calcada', 'Calçada', 'Calçada, Salvador - BA',
           v_salvador_path || '/calcada', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'caminho-das-arvores', 'Caminho das Árvores', 'Caminho das Árvores, Salvador - BA',
           v_salvador_path || '/caminho-das-arvores', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'caminho-de-areia', 'Caminho de Areia', 'Caminho de Areia, Salvador - BA',
           v_salvador_path || '/caminho-de-areia', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'campinas-de-piraja', 'Campinas de Pirajá', 'Campinas de Pirajá, Salvador - BA',
           v_salvador_path || '/campinas-de-piraja', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'canabrava', 'Canabrava', 'Canabrava, Salvador - BA',
           v_salvador_path || '/canabrava', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'candeal', 'Candeal', 'Candeal, Salvador - BA',
           v_salvador_path || '/candeal', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'canela', 'Canela', 'Canela, Salvador - BA',
           v_salvador_path || '/canela', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'capelinha', 'Capelinha', 'Capelinha, Salvador - BA',
           v_salvador_path || '/capelinha', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'cassange', 'Cassange', 'Cassange, Salvador - BA',
           v_salvador_path || '/cassange', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'castelo-branco', 'Castelo Branco', 'Castelo Branco, Salvador - BA',
           v_salvador_path || '/castelo-branco', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'centro', 'Centro', 'Centro, Salvador - BA',
           v_salvador_path || '/centro', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'centro-administrativo-da-bahia', 'Centro Administrativo da Bahia', 'Centro Administrativo da Bahia, Salvador - BA',
           v_salvador_path || '/centro-administrativo-da-bahia', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'centro-historico', 'Centro Histórico', 'Centro Histórico, Salvador - BA',
           v_salvador_path || '/centro-historico', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'chame-chame', 'Chame-Chame', 'Chame-Chame, Salvador - BA',
           v_salvador_path || '/chame-chame', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'chapada-do-rio-vermelho', 'Chapada do Rio Vermelho', 'Chapada do Rio Vermelho, Salvador - BA',
           v_salvador_path || '/chapada-do-rio-vermelho', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'cidade-nova', 'Cidade Nova', 'Cidade Nova, Salvador - BA',
           v_salvador_path || '/cidade-nova', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'colinas-de-periperi', 'Colinas de Periperi', 'Colinas de Periperi, Salvador - BA',
           v_salvador_path || '/colinas-de-periperi', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'comercio', 'Comércio', 'Comércio, Salvador - BA',
           v_salvador_path || '/comercio', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'cosme-de-farias', 'Cosme de Farias', 'Cosme de Farias, Salvador - BA',
           v_salvador_path || '/cosme-de-farias', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'costa-azul', 'Costa Azul', 'Costa Azul, Salvador - BA',
           v_salvador_path || '/costa-azul', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'coutos', 'Coutos', 'Coutos, Salvador - BA',
           v_salvador_path || '/coutos', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'curuzu', 'Curuzu', 'Curuzu, Salvador - BA',
           v_salvador_path || '/curuzu', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'dois-de-julho', 'Dois de Julho', 'Dois de Julho, Salvador - BA',
           v_salvador_path || '/dois-de-julho', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'dom-avelar', 'Dom Avelar', 'Dom Avelar, Salvador - BA',
           v_salvador_path || '/dom-avelar', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'doron', 'Doron', 'Doron, Salvador - BA',
           v_salvador_path || '/doron', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'engenho-velho-da-federacao', 'Engenho Velho da Federação', 'Engenho Velho da Federação, Salvador - BA',
           v_salvador_path || '/engenho-velho-da-federacao', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'engenho-velho-de-brotas', 'Engenho Velho de Brotas', 'Engenho Velho de Brotas, Salvador - BA',
           v_salvador_path || '/engenho-velho-de-brotas', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'engomadeira', 'Engomadeira', 'Engomadeira, Salvador - BA',
           v_salvador_path || '/engomadeira', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'fazenda-coutos', 'Fazenda Coutos', 'Fazenda Coutos, Salvador - BA',
           v_salvador_path || '/fazenda-coutos', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'fazenda-grande-i', 'Fazenda Grande I', 'Fazenda Grande I, Salvador - BA',
           v_salvador_path || '/fazenda-grande-i', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'fazenda-grande-ii', 'Fazenda Grande II', 'Fazenda Grande II, Salvador - BA',
           v_salvador_path || '/fazenda-grande-ii', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'fazenda-grande-iii', 'Fazenda Grande III', 'Fazenda Grande III, Salvador - BA',
           v_salvador_path || '/fazenda-grande-iii', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'fazenda-grande-iv', 'Fazenda Grande IV', 'Fazenda Grande IV, Salvador - BA',
           v_salvador_path || '/fazenda-grande-iv', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'fazenda-grande-do-retiro', 'Fazenda Grande do Retiro', 'Fazenda Grande do Retiro, Salvador - BA',
           v_salvador_path || '/fazenda-grande-do-retiro', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'federacao', 'Federação', 'Federação, Salvador - BA',
           v_salvador_path || '/federacao', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'garcia', 'Garcia', 'Garcia, Salvador - BA',
           v_salvador_path || '/garcia', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'granjas-rurais-presidente-vargas', 'Granjas Rurais Presidente Vargas', 'Granjas Rurais Presidente Vargas, Salvador - BA',
           v_salvador_path || '/granjas-rurais-presidente-vargas', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'graca', 'Graça', 'Graça, Salvador - BA',
           v_salvador_path || '/graca', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'horto-florestal', 'Horto Florestal', 'Horto Florestal, Salvador - BA',
           v_salvador_path || '/horto-florestal', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'iapi', 'IAPI', 'IAPI, Salvador - BA',
           v_salvador_path || '/iapi', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'ilha-amarela', 'Ilha Amarela', 'Ilha Amarela, Salvador - BA',
           v_salvador_path || '/ilha-amarela', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'ilha-de-bom-jesus-dos-passos', 'Ilha de Bom Jesus dos Passos', 'Ilha de Bom Jesus dos Passos, Salvador - BA',
           v_salvador_path || '/ilha-de-bom-jesus-dos-passos', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'ilha-de-mare', 'Ilha de Maré', 'Ilha de Maré, Salvador - BA',
           v_salvador_path || '/ilha-de-mare', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'ilha-dos-frades-ilha-de-santo-antonio', 'Ilha dos Frades/Ilha de Santo Antônio', 'Ilha dos Frades/Ilha de Santo Antônio, Salvador - BA',
           v_salvador_path || '/ilha-dos-frades-ilha-de-santo-antonio', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'imbui', 'Imbuí', 'Imbuí, Salvador - BA',
           v_salvador_path || '/imbui', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'itacaranha', 'Itacaranha', 'Itacaranha, Salvador - BA',
           v_salvador_path || '/itacaranha', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'itaigara', 'Itaigara', 'Itaigara, Salvador - BA',
           v_salvador_path || '/itaigara', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'itapua', 'Itapuã', 'Itapuã, Salvador - BA',
           v_salvador_path || '/itapua', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'itinga', 'Itinga', 'Itinga, Salvador - BA',
           v_salvador_path || '/itinga', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'jaguaripe-i', 'Jaguaripe I', 'Jaguaripe I, Salvador - BA',
           v_salvador_path || '/jaguaripe-i', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'jardim-armacao', 'Jardim Armação', 'Jardim Armação, Salvador - BA',
           v_salvador_path || '/jardim-armacao', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'jardim-cajazeiras', 'Jardim Cajazeiras', 'Jardim Cajazeiras, Salvador - BA',
           v_salvador_path || '/jardim-cajazeiras', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'jardim-nova-esperanca', 'Jardim Nova Esperança', 'Jardim Nova Esperança, Salvador - BA',
           v_salvador_path || '/jardim-nova-esperanca', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'jardim-santo-inacio', 'Jardim Santo Inácio', 'Jardim Santo Inácio, Salvador - BA',
           v_salvador_path || '/jardim-santo-inacio', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'jardim-das-margaridas', 'Jardim das Margaridas', 'Jardim das Margaridas, Salvador - BA',
           v_salvador_path || '/jardim-das-margaridas', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'lapinha', 'Lapinha', 'Lapinha, Salvador - BA',
           v_salvador_path || '/lapinha', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'liberdade', 'Liberdade', 'Liberdade, Salvador - BA',
           v_salvador_path || '/liberdade', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'lobato', 'Lobato', 'Lobato, Salvador - BA',
           v_salvador_path || '/lobato', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'luiz-anselmo', 'Luiz Anselmo', 'Luiz Anselmo, Salvador - BA',
           v_salvador_path || '/luiz-anselmo', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'macaubas', 'Macaúbas', 'Macaúbas, Salvador - BA',
           v_salvador_path || '/macaubas', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'mangueira', 'Mangueira', 'Mangueira, Salvador - BA',
           v_salvador_path || '/mangueira', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'marechal-rondon', 'Marechal Rondon', 'Marechal Rondon, Salvador - BA',
           v_salvador_path || '/marechal-rondon', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'mares', 'Mares', 'Mares, Salvador - BA',
           v_salvador_path || '/mares', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'massaranduba', 'Massaranduba', 'Massaranduba, Salvador - BA',
           v_salvador_path || '/massaranduba', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'mata-escura', 'Mata Escura', 'Mata Escura, Salvador - BA',
           v_salvador_path || '/mata-escura', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'matatu', 'Matatu', 'Matatu, Salvador - BA',
           v_salvador_path || '/matatu', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'mirantes-de-periperi', 'Mirantes de Periperi', 'Mirantes de Periperi, Salvador - BA',
           v_salvador_path || '/mirantes-de-periperi', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'monte-serrat', 'Monte Serrat', 'Monte Serrat, Salvador - BA',
           v_salvador_path || '/monte-serrat', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'moradas-da-lagoa', 'Moradas da Lagoa', 'Moradas da Lagoa, Salvador - BA',
           v_salvador_path || '/moradas-da-lagoa', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'mussurunga', 'Mussurunga', 'Mussurunga, Salvador - BA',
           v_salvador_path || '/mussurunga', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'narandiba', 'Narandiba', 'Narandiba, Salvador - BA',
           v_salvador_path || '/narandiba', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'nazare', 'Nazaré', 'Nazaré, Salvador - BA',
           v_salvador_path || '/nazare', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'nordeste-de-amaralina', 'Nordeste de Amaralina', 'Nordeste de Amaralina, Salvador - BA',
           v_salvador_path || '/nordeste-de-amaralina', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'nova-brasilia', 'Nova Brasília', 'Nova Brasília, Salvador - BA',
           v_salvador_path || '/nova-brasilia', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'nova-constituinte', 'Nova Constituinte', 'Nova Constituinte, Salvador - BA',
           v_salvador_path || '/nova-constituinte', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'nova-esperanca', 'Nova Esperança', 'Nova Esperança, Salvador - BA',
           v_salvador_path || '/nova-esperanca', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'nova-sussuarana', 'Nova Sussuarana', 'Nova Sussuarana, Salvador - BA',
           v_salvador_path || '/nova-sussuarana', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'novo-horizonte', 'Novo Horizonte', 'Novo Horizonte, Salvador - BA',
           v_salvador_path || '/novo-horizonte', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'novo-marotinho', 'Novo Marotinho', 'Novo Marotinho, Salvador - BA',
           v_salvador_path || '/novo-marotinho', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'ondina', 'Ondina', 'Ondina, Salvador - BA',
           v_salvador_path || '/ondina', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'palestina', 'Palestina', 'Palestina, Salvador - BA',
           v_salvador_path || '/palestina', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'paripe', 'Paripe', 'Paripe, Salvador - BA',
           v_salvador_path || '/paripe', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'patamares', 'Patamares', 'Patamares, Salvador - BA',
           v_salvador_path || '/patamares', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'pau-miudo', 'Pau Miúdo', 'Pau Miúdo, Salvador - BA',
           v_salvador_path || '/pau-miudo', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'pau-da-lima', 'Pau da Lima', 'Pau da Lima, Salvador - BA',
           v_salvador_path || '/pau-da-lima', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'periperi', 'Periperi', 'Periperi, Salvador - BA',
           v_salvador_path || '/periperi', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'pernambues', 'Pernambués', 'Pernambués, Salvador - BA',
           v_salvador_path || '/pernambues', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'pero-vaz', 'Pero Vaz', 'Pero Vaz, Salvador - BA',
           v_salvador_path || '/pero-vaz', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'piata', 'Piatã', 'Piatã, Salvador - BA',
           v_salvador_path || '/piata', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'piraja', 'Pirajá', 'Pirajá, Salvador - BA',
           v_salvador_path || '/piraja', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'pituacu', 'Pituaçu', 'Pituaçu, Salvador - BA',
           v_salvador_path || '/pituacu', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'pituba', 'Pituba', 'Pituba, Salvador - BA',
           v_salvador_path || '/pituba', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'plataforma', 'Plataforma', 'Plataforma, Salvador - BA',
           v_salvador_path || '/plataforma', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'porto-seco-piraja', 'Porto Seco Pirajá', 'Porto Seco Pirajá, Salvador - BA',
           v_salvador_path || '/porto-seco-piraja', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'praia-grande', 'Praia Grande', 'Praia Grande, Salvador - BA',
           v_salvador_path || '/praia-grande', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'resgate', 'Resgate', 'Resgate, Salvador - BA',
           v_salvador_path || '/resgate', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'retiro', 'Retiro', 'Retiro, Salvador - BA',
           v_salvador_path || '/retiro', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'ribeira', 'Ribeira', 'Ribeira, Salvador - BA',
           v_salvador_path || '/ribeira', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'rio-sena', 'Rio Sena', 'Rio Sena, Salvador - BA',
           v_salvador_path || '/rio-sena', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'rio-vermelho', 'Rio Vermelho', 'Rio Vermelho, Salvador - BA',
           v_salvador_path || '/rio-vermelho', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'roma', 'Roma', 'Roma, Salvador - BA',
           v_salvador_path || '/roma', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'stiep', 'STIEP', 'STIEP, Salvador - BA',
           v_salvador_path || '/stiep', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'saboeiro', 'Saboeiro', 'Saboeiro, Salvador - BA',
           v_salvador_path || '/saboeiro', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'santa-cruz', 'Santa Cruz', 'Santa Cruz, Salvador - BA',
           v_salvador_path || '/santa-cruz', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'santa-luzia', 'Santa Luzia', 'Santa Luzia, Salvador - BA',
           v_salvador_path || '/santa-luzia', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'santa-monica', 'Santa Mônica', 'Santa Mônica, Salvador - BA',
           v_salvador_path || '/santa-monica', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'santo-agostinho', 'Santo Agostinho', 'Santo Agostinho, Salvador - BA',
           v_salvador_path || '/santo-agostinho', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'santo-antonio', 'Santo Antônio', 'Santo Antônio, Salvador - BA',
           v_salvador_path || '/santo-antonio', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'saramandaia', 'Saramandaia', 'Saramandaia, Salvador - BA',
           v_salvador_path || '/saramandaia', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'saude', 'Saúde', 'Saúde, Salvador - BA',
           v_salvador_path || '/saude', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'sete-de-abril', 'Sete de Abril', 'Sete de Abril, Salvador - BA',
           v_salvador_path || '/sete-de-abril', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'stella-maris', 'Stella Maris', 'Stella Maris, Salvador - BA',
           v_salvador_path || '/stella-maris', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'sussuarana', 'Sussuarana', 'Sussuarana, Salvador - BA',
           v_salvador_path || '/sussuarana', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'sao-caetano', 'São Caetano', 'São Caetano, Salvador - BA',
           v_salvador_path || '/sao-caetano', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'sao-cristovao', 'São Cristóvão', 'São Cristóvão, Salvador - BA',
           v_salvador_path || '/sao-cristovao', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'sao-goncalo', 'São Gonçalo', 'São Gonçalo, Salvador - BA',
           v_salvador_path || '/sao-goncalo', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'sao-joao-do-cabrito', 'São João do Cabrito', 'São João do Cabrito, Salvador - BA',
           v_salvador_path || '/sao-joao-do-cabrito', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'sao-marcos', 'São Marcos', 'São Marcos, Salvador - BA',
           v_salvador_path || '/sao-marcos', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'sao-rafael', 'São Rafael', 'São Rafael, Salvador - BA',
           v_salvador_path || '/sao-rafael', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'sao-tome', 'São Tomé', 'São Tomé, Salvador - BA',
           v_salvador_path || '/sao-tome', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'tororo', 'Tororó', 'Tororó, Salvador - BA',
           v_salvador_path || '/tororo', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'trobogy', 'Trobogy', 'Trobogy, Salvador - BA',
           v_salvador_path || '/trobogy', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'uruguai', 'Uruguai', 'Uruguai, Salvador - BA',
           v_salvador_path || '/uruguai', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'vale-das-pedrinhas', 'Vale das Pedrinhas', 'Vale das Pedrinhas, Salvador - BA',
           v_salvador_path || '/vale-das-pedrinhas', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'vale-dos-lagos', 'Vale dos Lagos', 'Vale dos Lagos, Salvador - BA',
           v_salvador_path || '/vale-dos-lagos', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'valeria', 'Valéria', 'Valéria, Salvador - BA',
           v_salvador_path || '/valeria', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'vila-canaria', 'Vila Canária', 'Vila Canária, Salvador - BA',
           v_salvador_path || '/vila-canaria', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'vila-laura', 'Vila Laura', 'Vila Laura, Salvador - BA',
           v_salvador_path || '/vila-laura', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'vila-ruy-barbosa-jardim-cruzeiro', 'Vila Ruy Barbosa\Jardim Cruzeiro', 'Vila Ruy Barbosa\Jardim Cruzeiro, Salvador - BA',
           v_salvador_path || '/vila-ruy-barbosa-jardim-cruzeiro', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'vista-alegre', 'Vista Alegre', 'Vista Alegre, Salvador - BA',
           v_salvador_path || '/vista-alegre', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'vitoria', 'Vitória', 'Vitória, Salvador - BA',
           v_salvador_path || '/vitoria', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
   INSERT INTO locations (parent_id, type, slug, name, full_name, geographic_path, status, metadata)
   VALUES (v_salvador_id, 'neighborhood', 'aguas-claras', 'Águas Claras', 'Águas Claras, Salvador - BA',
           v_salvador_path || '/aguas-claras', 'active',
           jsonb_build_object('source','salvador-ba-geosalvador-2022','official',true))
-  ON CONFLICT (parent_id, slug) DO NOTHING;
+  ON CONFLICT (slug, parent_id)
+  WHERE parent_id IS NOT NULL
+  DO NOTHING;
 END $$;
 
 -- ---------------------------------------------------------------------------
