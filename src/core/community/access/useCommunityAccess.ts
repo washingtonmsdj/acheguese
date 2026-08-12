@@ -57,6 +57,7 @@ function loadingDecision(
       create_alert: false,
       comment: false,
       react: false,
+      vote_poll: false,
       save: false,
       send_message: false,
       join_group: false,
