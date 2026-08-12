@@ -22,7 +22,7 @@ const exceptionRegister = readFileSync(
   join(repoRoot, "docs/09-reference/governance/security/EXCEPTIONS.md"),
   "utf8",
 );
-const validNow = new Date("2026-08-12T06:00:00.000Z");
+const validNow = new Date("2026-08-12T10:00:00.000Z");
 
 function policyCopy() {
   return structuredClone(canonicalPolicy);
@@ -69,7 +69,7 @@ describe("controlled Supabase Free release governance", () => {
 
   it("E: rejects a stale recovery snapshot", () => {
     expect(
-      issuesFor(policyCopy(), new Date("2026-08-13T04:44:24.000Z")),
+      issuesFor(policyCopy(), new Date("2026-08-13T09:43:57.000Z")),
     ).toContain("RECOVERY_SNAPSHOT_STALE");
   });
 
@@ -120,7 +120,7 @@ describe("remote recovery freshness", () => {
     return structuredClone(canonicalPolicy.controls.recovery.remoteState);
   }
 
-  it("A: passes when snapshot 343 matches remote 343", () => {
+  it("A: passes when snapshot 344 matches remote 344", () => {
     const result = validateRemoteRecoveryFreshness(
       policyCopy(),
       matchingRemoteEvidence(),
@@ -130,7 +130,7 @@ describe("remote recovery freshness", () => {
     expect(result.state).toBe("REMOTE_RECOVERY_FRESHNESS_GATE_PASS");
   });
 
-  it("B: fails when snapshot 339 is compared with remote 343", () => {
+  it("B: fails when snapshot 339 is compared with remote 344", () => {
     const policy = policyCopy();
     policy.controls.recovery.remoteState.migrationCount = 339;
     const result = validateRemoteRecoveryFreshness(
@@ -176,7 +176,7 @@ describe("remote recovery freshness", () => {
 
   it("E: local gate still rejects an expired snapshot", () => {
     expect(
-      issuesFor(policyCopy(), new Date("2026-08-13T04:44:24.000Z")),
+      issuesFor(policyCopy(), new Date("2026-08-13T09:43:57.000Z")),
     ).toContain("RECOVERY_SNAPSHOT_STALE");
   });
 

@@ -173,15 +173,15 @@
     "recovery": {
       "policy": "MANUAL_RELEASE_RECOVERY_SNAPSHOT",
       "authorityState": "VERIFIED_COMPENSATING_CONTROL",
-      "snapshotId": "20260812T044423Z",
-      "snapshotRole": "POST_MIGRATION_RELEASE_RECOVERY_SNAPSHOT",
-      "capturedAt": "2026-08-12T04:44:23.471Z",
-      "validUntil": "2026-08-13T04:44:23.471Z",
+      "snapshotId": "20260812T094356Z",
+      "snapshotRole": "POST_POLL_HARDENING_RECOVERY_SNAPSHOT",
+      "capturedAt": "2026-08-12T09:43:56.415Z",
+      "validUntil": "2026-08-13T09:43:56.415Z",
       "maximumAgeHours": 24,
       "coverage": ["DATABASE", "AUTH", "STORAGE"],
       "remoteState": {
-        "migrationCount": 343,
-        "latestMigration": "20260810151941",
+        "migrationCount": 344,
+        "latestMigration": "20260812061500",
         "authUsers": 287,
         "authIdentities": 284,
         "authMfaFactors": 0,
@@ -198,8 +198,8 @@
         "private": true,
         "localOnly": false,
         "artifactCount": 1,
-        "artifactBytes": 47236215,
-        "sha256": "08ee8085ac15bff397163a4edf910d18561a7739347598749faa1ff3865e71f7",
+        "artifactBytes": 2184733,
+        "sha256": "4e08526dd203f4ae1d663ec86d51c7e30af0acee5ae153bf6150a108062e5885",
         "readbackHashMatch": true
       },
       "restoreRunbook": "RESTORE-RUNBOOK.md",
@@ -213,10 +213,18 @@
       },
       "localDeclaration": {
         "materialChangeAfterSnapshot": false,
-        "sourceStateMutationAttestation": "NO_KNOWN_MATERIAL_CHANGE",
+        "sourceStateMutationAttestation": "POST_POLL_HARDENING_MIGRATION_CAPTURED",
         "evidenceClass": "DECLARATION_ONLY_NOT_REMOTE_FRESHNESS"
       },
       "historicalSnapshots": [
+        {
+          "snapshotId": "20260812T044423Z",
+          "snapshotRole": "POST_MIGRATION_RELEASE_RECOVERY_SNAPSHOT",
+          "migrationCount": 343,
+          "latestMigration": "20260810151941",
+          "sha256": "08ee8085ac15bff397163a4edf910d18561a7739347598749faa1ff3865e71f7",
+          "status": "PRESERVED"
+        },
         {
           "snapshotId": "20260811T212637Z",
           "snapshotRole": "PRE_RELEASE_RECOVERY_SNAPSHOT",

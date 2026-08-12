@@ -1986,6 +1986,7 @@ describe("Security Authority exception register", () => {
       "Storage",
       "Routes",
       "PII",
+      "Community Poll",
       "Other",
     ]);
     const allowedValidationScopes = new Set(["local", "remota"]);

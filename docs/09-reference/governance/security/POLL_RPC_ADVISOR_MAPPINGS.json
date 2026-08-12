@@ -1,0 +1,145 @@
+{
+  "schemaVersion": "poll-rpc-advisor-mappings/v1",
+  "updatedAt": "2026-08-12",
+  "owner": {
+    "name": "washingto silva",
+    "github": "washingtonmsdj"
+  },
+  "validUntil": "2026-09-11",
+  "mappings": [
+    {
+      "id": "POLL-GET-ANON-20260812",
+      "role": "anon",
+      "function": "get_community_poll_for_post",
+      "signature": "get_community_poll_for_post(p_post_id uuid)",
+      "advisorCacheKey": "anon_security_definer_function_executable_public_get_community_poll_for_post_p_post_id uuid",
+      "exceptionId": "EXC-2026-08-12-POLL-GET-ANON-SECURITY-DEFINER",
+      "owner": "postgres",
+      "securityMode": "SECURITY DEFINER",
+      "volatility": "STABLE",
+      "searchPath": "search_path=\"\"",
+      "grants": {
+        "public": false,
+        "anon": true,
+        "authenticated": true,
+        "postgres": true
+      },
+      "definitionMd5": "373bef417572dfebb6cd84bbe26cc93b",
+      "justification": "Aggregate Poll DTO read model must cross table RLS without exposing vote rows or private identity fields; the function enforces visible Post access and returns only the aggregate contract.",
+      "evidence": [
+        "Remote fingerprint recapture after migration 20260812061500",
+        "Authenticated and anon GET transactional checks returned aggregate DTO without profile_id/user_id",
+        "Invisible Post GET returned no DTO",
+        "Security Authority and Advisor residual gates"
+      ],
+      "triggers": [
+        "fingerprint changes",
+        "grant changes",
+        "Post visibility or DTO contract changes",
+        "new Advisor cache key"
+      ]
+    },
+    {
+      "id": "POLL-GET-AUTH-20260812",
+      "role": "authenticated",
+      "function": "get_community_poll_for_post",
+      "signature": "get_community_poll_for_post(p_post_id uuid)",
+      "advisorCacheKey": "authenticated_security_definer_function_executable_public_get_community_poll_for_post_p_post_id uuid",
+      "exceptionId": "EXC-2026-08-12-POLL-GET-AUTH-SECURITY-DEFINER",
+      "owner": "postgres",
+      "securityMode": "SECURITY DEFINER",
+      "volatility": "STABLE",
+      "searchPath": "search_path=\"\"",
+      "grants": {
+        "public": false,
+        "anon": true,
+        "authenticated": true,
+        "postgres": true
+      },
+      "definitionMd5": "373bef417572dfebb6cd84bbe26cc93b",
+      "justification": "Authenticated clients use the same aggregate Poll read model as anon clients; elevation is bounded by visible Post checks and the DTO excludes individual vote/profile identity.",
+      "evidence": [
+        "Remote fingerprint recapture after migration 20260812061500",
+        "Authenticated GET transactional check returned aggregate DTO without profile_id/user_id",
+        "Invisible Post GET returned no DTO",
+        "Security Authority and Advisor residual gates"
+      ],
+      "triggers": [
+        "fingerprint changes",
+        "grant changes",
+        "Post visibility or DTO contract changes",
+        "new Advisor cache key"
+      ]
+    },
+    {
+      "id": "POLL-CREATE-AUTH-20260812",
+      "role": "authenticated",
+      "function": "create_post_with_poll",
+      "signature": "create_post_with_poll(payload jsonb)",
+      "advisorCacheKey": "authenticated_security_definer_function_executable_public_create_post_with_poll_payload jsonb",
+      "exceptionId": "EXC-2026-08-12-POLL-CREATE-AUTH-SECURITY-DEFINER",
+      "owner": "postgres",
+      "securityMode": "SECURITY DEFINER",
+      "volatility": "VOLATILE",
+      "searchPath": "search_path=\"\"",
+      "grants": {
+        "public": false,
+        "anon": false,
+        "authenticated": true,
+        "postgres": true
+      },
+      "definitionMd5": "220205a5d9c6d953ae8bee1076629b51",
+      "justification": "Atomic Poll creation coordinates Post, Poll, options and legacy projection while enforcing auth.uid ownership and verified residence; invoker execution would not preserve this server-owned boundary.",
+      "evidence": [
+        "Remote fingerprint recapture after migration 20260812061500",
+        "Authenticated CREATE with verified residence succeeded inside rollback transaction",
+        "Anon CREATE denied",
+        "Invalid payload CREATE denied atomically",
+        "Security Authority and Advisor residual gates"
+      ],
+      "triggers": [
+        "fingerprint changes",
+        "grant changes",
+        "ownership/residence/payload validation changes",
+        "new Advisor cache key"
+      ]
+    },
+    {
+      "id": "POLL-VOTE-AUTH-20260812",
+      "role": "authenticated",
+      "function": "cast_community_poll_vote",
+      "signature": "cast_community_poll_vote(p_poll_id uuid, p_option_id uuid, p_profile_id uuid)",
+      "advisorCacheKey": "authenticated_security_definer_function_executable_public_cast_community_poll_vote_p_poll_id uuid, p_option_id uuid, p_profile_id uuid",
+      "exceptionId": "EXC-2026-08-12-POLL-VOTE-AUTH-SECURITY-DEFINER",
+      "owner": "postgres",
+      "securityMode": "SECURITY DEFINER",
+      "volatility": "VOLATILE",
+      "searchPath": "search_path=\"\"",
+      "grants": {
+        "public": false,
+        "anon": false,
+        "authenticated": true,
+        "postgres": true
+      },
+      "definitionMd5": "e460952f1cdcf85235c6c7779ab841e7",
+      "policy": "POLL_VOTE_TERRITORY_POLICY=TERRITORIAL_ENGAGEMENT_MEMBER_ALLOWED",
+      "justification": "The command must atomically lock the Poll and maintain authoritative vote projections while enforcing resource-derived territory, active profile ownership, membership/residence, Community rollout and single-choice rules; SECURITY DEFINER is retained for that server-owned transaction boundary, not as authorization by itself.",
+      "evidence": [
+        "Remote fingerprint recapture after migration 20260812061500",
+        "Authenticated pure DENY despite authenticated EXECUTE grant",
+        "Unverified resident, verified resident, unverified member and verified member ALLOW",
+        "Territory/community/profile spoof, no-link, inactive profile, rollout, invisible Post and cross-Poll option DENY",
+        "Single-choice retry idempotent and second option denied",
+        "Transactional ROLLBACK left Poll/Option/Vote counts unchanged",
+        "Security Authority and Advisor residual gates"
+      ],
+      "triggers": [
+        "fingerprint changes",
+        "grant changes",
+        "territorial policy or rollout changes",
+        "authenticated-pure allow",
+        "new Advisor cache key"
+      ]
+    }
+  ]
+}

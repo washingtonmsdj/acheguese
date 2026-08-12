@@ -24,24 +24,25 @@ Excecao vencida, evidencia ausente ou achado material novo produz `BLOCKER`.
 
 ## MANUAL_RELEASE_RECOVERY_SNAPSHOT
 
-O snapshot vigente `20260812T044423Z` e um snapshot logico manual, restauravel,
-com papel `POST_MIGRATION_RELEASE_RECOVERY_SNAPSHOT` e
+O snapshot vigente `20260812T094356Z` e um snapshot logico manual, restauravel,
+com papel `POST_POLL_HARDENING_RECOVERY_SNAPSHOT` e
 cobertura de Database, Auth e Storage. O pacote privado off-device teve tamanho,
 contagem, SHA-256 e readback verificados, e possui restore runbook.
 
-O snapshot `20260811T212637Z` continua preservado como
-`PRE_RELEASE_RECOVERY_SNAPSHOT` (339 migrations). Ele e historico e nao pode ser
-usado para afirmar freshness do remoto atual.
+Os snapshots `20260812T044423Z` (`POST_MIGRATION_RELEASE_RECOVERY_SNAPSHOT`,
+343 migrations) e `20260811T212637Z` (`PRE_RELEASE_RECOVERY_SNAPSHOT`, 339
+migrations) continuam preservados. Eles sao historicos e nao podem ser usados
+para afirmar freshness do remoto atual.
 
 Este controle nao e backup gerenciado, PITR nem full platform backup. Seu RPO e
-limitado a `2026-08-12T04:44:23.471Z`; a recuperacao e manual e o RTO nao e
+limitado a `2026-08-12T09:43:56.415Z`; a recuperacao e manual e o RTO nao e
 garantido. Dumps, conteudo Auth, PII, secrets e identificadores privados do
 destino off-device nao pertencem ao repositorio.
 
 ## Freshness
 
 O snapshot vale por no maximo 24 horas, ate
-`2026-08-13T04:44:23.471Z`. Um novo snapshot e obrigatorio antes de operacao
+`2026-08-13T09:43:56.415Z`. Um novo snapshot e obrigatorio antes de operacao
 mutavel se:
 
 - houver mudanca material em dados, schema, Auth ou Storage depois do snapshot;

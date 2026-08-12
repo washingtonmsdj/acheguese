@@ -1,4 +1,8 @@
+import { mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { classifySupabaseCliFailure } from "./lib/supabase-cli-validation-state.mjs";
+import { parseSupabaseQueryRows } from "./lib/supabase-cli-query-json.mjs";
 import { runSupabaseCli } from "./lib/supabase-cli-runner.mjs";
 import {
   classifyMigrationDrift,
@@ -39,6 +43,56 @@ function runSupabaseMigrationList(): string {
   return output;
 }
 
+function readLocalMigrationVersions(): Set<string> {
+  const migrationsDir = join(process.cwd(), "supabase", "migrations");
+  return new Set(
+    readdirSync(migrationsDir)
+      .map((fileName) => fileName.match(/^(\d{14})_.+\.sql$/)?.[1])
+      .filter((version): version is string => Boolean(version)),
+  );
+}
+
+function runSupabaseMigrationQuery(): Set<string> {
+  const tempDir = mkdtempSync(join(tmpdir(), "achegue-migration-drift-"));
+  const sqlPath = join(tempDir, "remote-migrations.sql");
+  writeFileSync(
+    sqlPath,
+    "select version::text as version from supabase_migrations.schema_migrations order by version;",
+    "utf8",
+  );
+
+  try {
+    const result = runSupabaseCli(
+      ["db", "query", "--linked", "--output", "json", "--file", sqlPath],
+      { cwd: process.cwd() },
+    );
+    const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
+    if (result.error || result.status !== 0) {
+      throw new Error(
+        [
+          `${classifySupabaseCliFailure(output)}: fallback read-only migration query failed.`,
+          output.trim(),
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      );
+    }
+
+    const rows = parseSupabaseQueryRows(output);
+    const versions = rows
+      .map((row) => (typeof row?.version === "string" ? row.version : ""))
+      .filter((version) => /^\d{14}$/.test(version));
+    if (versions.length === 0) {
+      throw new Error(
+        "REMOTE_VALIDATION_REQUIRED: fallback returned no migration versions.",
+      );
+    }
+    return new Set(versions);
+  } finally {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+
 function formatVersions(
   rows: MigrationDriftRow[],
   side: "local" | "remote",
@@ -51,9 +105,46 @@ function formatVersions(
 }
 
 function main() {
-  const output = runSupabaseMigrationList();
-  const rows = parseSupabaseMigrationListOutput(output);
-  const { localOnly, remoteOnly } = classifyMigrationDrift(rows);
+  let localOnly: MigrationDriftRow[];
+  let remoteOnly: MigrationDriftRow[];
+
+  try {
+    const output = runSupabaseMigrationList();
+    const rows = parseSupabaseMigrationListOutput(output);
+    ({ localOnly, remoteOnly } = classifyMigrationDrift(rows));
+  } catch (migrationListError) {
+    try {
+      const localVersions = readLocalMigrationVersions();
+      const remoteVersions = runSupabaseMigrationQuery();
+      const versions = new Set([...localVersions, ...remoteVersions]);
+      localOnly = [...versions]
+        .filter(
+          (version) =>
+            localVersions.has(version) && !remoteVersions.has(version),
+        )
+        .map((version) => ({ local: version, remote: null, timeUtc: "" }));
+      remoteOnly = [...versions]
+        .filter(
+          (version) =>
+            remoteVersions.has(version) && !localVersions.has(version),
+        )
+        .map((version) => ({ local: null, remote: version, timeUtc: "" }));
+      console.warn(
+        "WARN: `supabase migration list --linked` indisponivel; drift reconciliado por query read-only do historico remoto.",
+      );
+    } catch (fallbackError) {
+      throw new Error(
+        [
+          migrationListError instanceof Error
+            ? migrationListError.message
+            : String(migrationListError),
+          fallbackError instanceof Error
+            ? fallbackError.message
+            : String(fallbackError),
+        ].join("\n"),
+      );
+    }
+  }
 
   if (localOnly.length === 0 && remoteOnly.length === 0) {
     console.log(

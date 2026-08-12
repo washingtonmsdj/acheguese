@@ -1,6 +1,6 @@
 {
   "schemaVersion": "supabase-advisor-residuals/v1",
-  "updatedAt": "2026-08-11",
+  "updatedAt": "2026-08-12",
   "sourceCommand": "supabase db advisors --linked --type security --fail-on none --output json",
   "residuals": [
     {
@@ -377,6 +377,26 @@
       "cacheKey": "authenticated_security_definer_function_executable_public_upsert_profile_review_p_reviewed_profile_id uuid, p_reviewer_profile_id uuid, p_rating integer, p_comment text",
       "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
       "summary": "Profile Review command validating owned actor and completed engagement."
+    },
+    {
+      "cacheKey": "anon_security_definer_function_executable_public_get_community_poll_for_post_p_post_id uuid",
+      "exceptionId": "EXC-2026-08-12-POLL-GET-ANON-SECURITY-DEFINER",
+      "summary": "Intentional public aggregate Poll DTO read with visible-Post and no-private-identity contract."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_get_community_poll_for_post_p_post_id uuid",
+      "exceptionId": "EXC-2026-08-12-POLL-GET-AUTH-SECURITY-DEFINER",
+      "summary": "Authenticated aggregate Poll DTO read with visible-Post and no-private-identity contract."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_create_post_with_poll_payload jsonb",
+      "exceptionId": "EXC-2026-08-12-POLL-CREATE-AUTH-SECURITY-DEFINER",
+      "summary": "Authenticated atomic Poll creation with server-owned ownership and verified-residence validation."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_cast_community_poll_vote_p_poll_id uuid, p_option_id uuid, p_profile_id uuid",
+      "exceptionId": "EXC-2026-08-12-POLL-VOTE-AUTH-SECURITY-DEFINER",
+      "summary": "Authenticated Poll vote command with explicit territorial engagement membership policy and negative spoof tests."
     }
   ]
 }

@@ -99,6 +99,11 @@ privadas, a leitura Safety por token aleatorio e a projecao territorial
 consentida de Profile. O registro usa cache keys exatas; nao existe wildcard
 para novas funcoes.
 
+Os quatro mappings de Poll abaixo sao excecoes individualizadas e nao usam
+esta excecao como wildcard: cada role, assinatura, fingerprint, grant,
+justificativa e trigger de revalidacao esta registrado em
+`POLL_RPC_ADVISOR_MAPPINGS.json`.
+
 ### Plano De Remocao
 
 Revisar trimestralmente cada assinatura. Converter para `SECURITY INVOKER`
@@ -122,6 +127,206 @@ negativo remoto e ownership declarado.
 - testes de Coverage, Profile Verification e fronteira de PII em 2026-07-18:
   18 casos aprovados; comandos derivam ator/ownership no servidor e a projecao
   publica nao retorna PII.
+
+## EXC-2026-08-12-POLL-GET-ANON-SECURITY-DEFINER
+
+Status: aberta
+Risco: Medium
+Area: Community Poll
+Responsavel: washingto silva (@washingtonmsdj)
+Criada em: 2026-08-12
+Valida ate: 2026-09-11
+Validacao: remota
+
+### Contexto
+
+O Advisor identifica `anon` executando
+`public.get_community_poll_for_post(p_post_id uuid)` como `SECURITY DEFINER`.
+Esta e uma leitura publica intencional de DTO agregado.
+
+### Regra Afetada
+
+O read model agregado de Poll permanece exposto por RPC sem linhas privadas.
+
+### Risco
+
+Uma alteracao de visibilidade ou DTO poderia expor dados alem do contrato.
+
+### Mitigacao Temporaria
+
+Owner `postgres`, `STABLE`, `search_path=""`, `PUBLIC=NO`,
+`anon=YES`, `authenticated=YES`, fingerprint
+`373bef417572dfebb6cd84bbe26cc93b`. O RPC valida Post visivel e nao retorna
+linhas de voto, `profile_id` ou `user_id`; os testes anon/authenticated e Post
+invisivel passaram na transacao rollback-only.
+
+### Triggers
+
+Fingerprint, grants, DTO/visibilidade ou cache key Advisor novos exigem nova
+certificacao individual.
+
+### Plano De Remocao
+
+Converter para invoker quando as politicas RLS e os grants permitirem manter o
+mesmo contrato sem privilegio do owner.
+
+### Evidencias
+
+Fingerprint remoto, GET anon/authenticated e Post invisivel passaram; o
+mapping detalhado esta em `POLL_RPC_ADVISOR_MAPPINGS.json`.
+
+## EXC-2026-08-12-POLL-GET-AUTH-SECURITY-DEFINER
+
+Status: aberta
+Risco: Medium
+Area: Community Poll
+Responsavel: washingto silva (@washingtonmsdj)
+Criada em: 2026-08-12
+Valida ate: 2026-09-11
+Validacao: remota
+
+### Contexto
+
+O Advisor identifica `authenticated` executando
+`public.get_community_poll_for_post(p_post_id uuid)` como `SECURITY DEFINER`.
+O contrato e o mesmo read model agregado e sem identidade privada do mapping
+anonimo, com assinatura e fingerprint certificados separadamente.
+
+### Regra Afetada
+
+O read model agregado de Poll deve permanecer sem linhas de voto ou identidade.
+
+### Risco
+
+Uma alteracao de DTO ou visibilidade poderia ampliar a leitura autenticada.
+
+### Mitigacao Temporaria
+
+Owner `postgres`, `STABLE`, `search_path=""`, `PUBLIC=NO`,
+`anon=YES`, `authenticated=YES`, fingerprint
+`373bef417572dfebb6cd84bbe26cc93b`. Os testes authenticated e de Post
+invisivel passaram em transacao com rollback.
+
+### Triggers
+
+Fingerprint, grants, DTO/visibilidade ou cache key Advisor novos exigem nova
+certificacao individual.
+
+### Plano De Remocao
+
+Converter para invoker quando RLS e grants puderem sustentar a mesma leitura.
+
+### Evidencias
+
+Fingerprint remoto, GET authenticated e Post invisivel passaram; o mapping
+detalhado esta em `POLL_RPC_ADVISOR_MAPPINGS.json`.
+
+## EXC-2026-08-12-POLL-CREATE-AUTH-SECURITY-DEFINER
+
+Status: aberta
+Risco: Medium
+Area: Community Poll
+Responsavel: washingto silva (@washingtonmsdj)
+Criada em: 2026-08-12
+Valida ate: 2026-09-11
+Validacao: remota
+
+### Contexto
+
+O Advisor identifica `authenticated` executando
+`public.create_post_with_poll(payload jsonb)` como `SECURITY DEFINER`.
+O RPC e o comando atomico server-owned de criacao de Post, Poll, options e
+projection legada.
+
+### Regra Afetada
+
+Criacao de Post/Poll exige ownership, residencia verificada e atomicidade.
+
+### Risco
+
+Uma falha no broker SQL poderia criar recurso em nome de outro usuario ou
+deixar projection parcial.
+
+### Mitigacao Temporaria
+
+Owner `postgres`, `VOLATILE`, `search_path=""`, `PUBLIC=NO`, `anon=NO`,
+`authenticated=YES`, fingerprint
+`220205a5d9c6d953ae8bee1076629b51`. O comando deriva `auth.uid()`, exige
+ownership de Profile e residencia verificada; authenticated create passou,
+anon create e payload invalido falharam, todos em transacao rollback-only.
+
+### Triggers
+
+Fingerprint, grants, ownership/residence/payload contract ou cache key Advisor
+novos exigem nova certificacao individual.
+
+### Plano De Remocao
+
+Reavaliar invoker somente quando a mesma atomicidade e autorizacao server-owned
+forem garantidas pelas politicas RLS.
+
+### Evidencias
+
+CREATE autenticado, CREATE anon e payload invalido passaram na transacao
+rollback-only; o mapping detalhado esta em `POLL_RPC_ADVISOR_MAPPINGS.json`.
+
+## EXC-2026-08-12-POLL-VOTE-AUTH-SECURITY-DEFINER
+
+Status: aberta
+Risco: High
+Area: Community Poll
+Responsavel: washingto silva (@washingtonmsdj)
+Criada em: 2026-08-12
+Valida ate: 2026-09-11
+Validacao: remota
+
+### Contexto
+
+O Advisor identifica `authenticated` executando
+`public.cast_community_poll_vote(p_poll_id uuid, p_option_id uuid,
+p_profile_id uuid)` como `SECURITY DEFINER`. O grant de EXECUTE permite a
+invocacao do RPC, mas nao autoriza qualquer authenticated a votar.
+
+### Regra Afetada
+
+VOTE_POLL exige vinculo territorial/comunitario server-side e rollout ativo.
+
+### Risco
+
+Uma regressao poderia permitir voto apenas por autenticacao, spoof de profile
+ou territorio, ou escrita fora do contexto da Poll.
+
+### Mitigacao Temporaria
+
+Politica normativa:
+`POLL_VOTE_TERRITORY_POLICY=TERRITORIAL_ENGAGEMENT_MEMBER_ALLOWED`.
+Owner `postgres`, `VOLATILE`, `search_path=""`, `PUBLIC=NO`, `anon=NO`,
+`authenticated=YES`, fingerprint
+`e460952f1cdcf85235c6c7779ab841e7`. A migration
+`20260812061500_harden_community_poll_vote_territorial_authorization.sql`
+deriva o territorio do Poll -> Post -> location, exige Profile ativo
+pertencente a `auth.uid()`, residencia ou membership territorial valido e
+rollout Community ativo; residencia verificada nao e requisito para o allow.
+Authenticated puro, spoof de Profile/territorio/community, ausencia de link,
+rollout negado, Post invisivel e option cruzada falharam. Resident,
+verified_resident, community_member e verified_community_member passaram;
+single-choice e idempotencia passaram; o ROLLBACK deixou zero persistencia.
+
+### Triggers
+
+Fingerprint, grants, politica territorial, rollout, allow indevido de
+authenticated puro ou cache key Advisor novo exigem nova certificacao
+individual e bloqueiam release.
+
+### Plano De Remocao
+
+Reavaliar invoker apenas se o mesmo controle territorial, atomicidade e
+projection puderem ser garantidos sem privilegio do owner.
+
+### Evidencias
+
+A migration, fingerprints, matriz ALLOW/DENY e rollback/no-persistence estao
+registrados no mapping detalhado em `POLL_RPC_ADVISOR_MAPPINGS.json`.
 
 ## EXC-2026-08-11-AUTH-HIBP-FREE-PLAN
 
