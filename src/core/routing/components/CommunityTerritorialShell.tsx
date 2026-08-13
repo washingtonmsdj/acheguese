@@ -21,7 +21,10 @@ import {
   MODULE_SLUGS,
 } from "@/core/routing/utils/territoryUrls";
 import { resolveSeoPolicy } from "@/core/routing/seo/territorialSeoPolicy";
-import { parsePublicTerritoryPath } from "@/core/routing/utils/publicTerritoryPath";
+import {
+  isCommunityTerritoryStaticSegment,
+  parsePublicTerritoryPath,
+} from "@/core/routing/utils/publicTerritoryPath";
 import { resolvePublicTerritoryFallback } from "@/core/routing/utils/publicTerritoryFallbacks";
 
 function cityLabelFromSlug(value?: string): string {
@@ -121,12 +124,15 @@ export function CommunityTerritorialShell() {
 
   const state = params.state?.trim() || parsedPath.state || "";
   const city = params.city?.trim() || parsedPath.city || "";
-  const scopedSlug =
+  const rawScopedSlug =
     params.territorySlug?.trim() ||
     params.district?.trim() ||
     params.groupSlugOrDistrict?.trim() ||
     parsedPath.territorySlug ||
     "";
+  const scopedSlug = isCommunityTerritoryStaticSegment(rawScopedSlug)
+    ? ""
+    : rawScopedSlug;
   const publicCommunityFallback = useMemo(
     () =>
       scopedSlug

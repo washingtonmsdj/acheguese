@@ -326,7 +326,12 @@ export function buildCommunityScopedUrl(communityBaseUrl: string, suffix = ''): 
     .filter(Boolean)
     .map((segment) => cleanUrlSegment(segment, 'sufixo da comunidade'));
 
-  return suffixSegments.length ? `${cleanBase}/${suffixSegments.join('/')}` : cleanBase;
+  if (!suffixSegments.length) return cleanBase;
+
+  const suffixPath = suffixSegments.join('/');
+  return cleanBase.endsWith(`/${suffixPath}`)
+    ? cleanBase
+    : `${cleanBase}/${suffixPath}`;
 }
 
 export type CommunityTabSuffix = 'feed' | 'grupos';

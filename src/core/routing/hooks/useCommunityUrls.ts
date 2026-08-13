@@ -5,6 +5,7 @@ import { useTerritorialContextOptional } from "@/core/routing/components/Territo
 import { TERRITORIAL_ROUTE_STATIC_SEGMENTS } from "@/core/routing/config/territorialRoutePatterns";
 import {
   buildCommunityTerritoryUrl,
+  buildCommunityScopedUrl,
   buildModuleTerritoryUrl,
   geoPathToPublicUrl,
   MODULE_SLUGS,
@@ -115,7 +116,10 @@ export function useCommunityUrls(
     eventsUrl = LAUNCH_URLS.events;
   }
 
-  const feedUrl = `${communityBaseUrl}/${TERRITORIAL_ROUTE_STATIC_SEGMENTS.feed}`;
+  const feedUrl = buildCommunityScopedUrl(
+    communityBaseUrl,
+    TERRITORIAL_ROUTE_STATIC_SEGMENTS.feed,
+  );
   const alertsUrl = `${feedUrl}?tab=alertas`;
   const issuesUrl = `${communityBaseUrl}/problemas`;
   const communicationUrl = `${communityBaseUrl}/comunicacao`;

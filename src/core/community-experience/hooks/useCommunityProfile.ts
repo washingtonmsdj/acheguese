@@ -16,3 +16,17 @@ export function useCommunityProfile(resolved: CommunityExperienceResolvedTerrito
     gcTime: 20 * 60 * 1000,
   });
 }
+
+export function usePersistedCommunityProfile(resolved: CommunityExperienceResolvedTerritory) {
+  return useQuery({
+    queryKey: [
+      "persisted-community-profile",
+      resolved?.kind,
+      resolved?.kind === "group" ? resolved.group.id : resolved?.location.id,
+    ],
+    queryFn: () => CommunityExperienceService.findPersistedCommunityProfile(resolved),
+    enabled: Boolean(resolved),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 20 * 60 * 1000,
+  });
+}

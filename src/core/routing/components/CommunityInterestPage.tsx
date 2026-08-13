@@ -9,16 +9,28 @@ import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { useToast } from "@/shared/components/ui/use-toast";
-import { useResolveTerritoryFromUrl } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
-import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
+import {
+  TERRITORY_RESOLVE_STATUS,
+  useResolveTerritoryFromUrl,
+  type ResolvedTerritory,
+} from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import { usePersistedCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
+import { isCommunityStatusPubliclyRenderable } from "@/core/community-experience/constants/statuses";
+import type { TerritorialCommunityProfile } from "@/core/community-experience/types";
 import { registerCommunityInterest } from "@/core/routing/services";
 import { COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG } from "@/config/security.config";
 import { TurnstileWidget } from "@/shared/components/security/TurnstileWidget";
+import {
+  buildCityTerritoryBaseUrl,
+  buildLocationBaseUrl,
+} from "@/core/routing/utils/territoryUrls";
 import { TerritorialNotFound } from "./TerritorialNotFound";
 
 const TURNSTILE_SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "").trim();
 const TURNSTILE_REQUIRED =
   COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG.turnstileRequiredInProduction && import.meta.env.PROD;
+const COMMUNITY_UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function titleCaseFromSlug(value?: string): string {
   if (!value) return "Comunidade local";
@@ -85,14 +97,58 @@ const ROLE_OPTIONS: { value: InterestFormState["role"]; label: string }[] = [
   { value: "outro", label: "Outro" },
 ];
 
+type CommunityInterestTarget = {
+  communityId: string;
+  communitySlug: string;
+  territoryPath: string;
+};
+
+function resolveCommunityInterestTarget(
+  resolved: ResolvedTerritory,
+  profile: TerritorialCommunityProfile | null | undefined,
+  territoryPath: string | null,
+): CommunityInterestTarget | null {
+  if (!resolved || !profile || !territoryPath) return null;
+  if (!COMMUNITY_UUID_PATTERN.test(profile.id)) return null;
+  if (!isCommunityStatusPubliclyRenderable(profile.status)) return null;
+
+  const expectedTerritoryId =
+    resolved.kind === "group" ? resolved.group.id : resolved.location.id;
+  const expectedTerritoryType =
+    resolved.kind === "group"
+      ? "territorial_group"
+      : resolved.location.type === "city"
+        ? "city"
+        : resolved.location.type === "neighborhood"
+          ? "neighborhood"
+          : "district";
+  const expectedSlug =
+    resolved.kind === "group" ? resolved.group.slug : resolved.location.slug;
+
+  if (
+    profile.territory_id !== expectedTerritoryId ||
+    profile.territory_type !== expectedTerritoryType ||
+    profile.slug !== expectedSlug
+  ) {
+    return null;
+  }
+
+  return {
+    communityId: profile.id,
+    communitySlug: profile.slug,
+    territoryPath,
+  };
+}
+
 export function CommunityInterestPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { state, city } = useParams<{ state?: string; city?: string }>();
   const normalizedState = state?.trim() ?? "";
   const normalizedCity = city?.trim() ?? "";
-  const { resolved } = useResolveTerritoryFromUrl();
-  const { data: profile } = useCommunityProfile(resolved);
+  const { status: territoryStatus, resolved } = useResolveTerritoryFromUrl();
+  const { data: profile, isLoading: profileLoading } =
+    usePersistedCommunityProfile(resolved);
 
   const [form, setForm] = useState<InterestFormState>(INITIAL_STATE);
   const [errors, setErrors] = useState<Partial<Record<keyof InterestFormState, string>>>({});
@@ -128,17 +184,85 @@ export function CommunityInterestPage() {
     return titleCaseFromSlug(normalizedCity);
   }, [normalizedCity, resolved]);
 
-  const communitySlug = useMemo(() => {
-    if (resolved?.kind === "group") return resolved.group.slug;
-    if (resolved?.kind === "location") return resolved.location.slug;
-    return null;
-  }, [resolved]);
+  const cityExplorerHref = useMemo(() => {
+    if (resolved?.kind === "location") {
+      return buildCityTerritoryBaseUrl(buildLocationBaseUrl(resolved.location));
+    }
 
-  const communityId = useMemo(() => profile?.id ?? null, [profile]);
+    const memberPath = resolved?.kind === "group"
+      ? resolved.group.members.at(0)?.geographic_path
+      : null;
+    if (memberPath) return buildCityTerritoryBaseUrl(memberPath);
+    if (!normalizedState || !normalizedCity) return null;
+    return buildCityTerritoryBaseUrl(`/${normalizedState}/${normalizedCity}`);
+  }, [normalizedCity, normalizedState, resolved]);
+
+  const interestTarget = useMemo(
+    () => resolveCommunityInterestTarget(resolved, profile, communityBase),
+    [communityBase, profile, resolved],
+  );
+  const targetLoading =
+    territoryStatus === TERRITORY_RESOLVE_STATUS.IDLE ||
+    territoryStatus === TERRITORY_RESOLVE_STATUS.LOADING ||
+    (Boolean(resolved) && profileLoading);
 
   if (!communityBase) {
     return (
       <TerritorialNotFound message="A URL de interesse precisa informar estado e cidade válidos." />
+    );
+  }
+
+  if (targetLoading) {
+    return (
+      <div
+        className="flex min-h-screen items-center justify-center bg-background px-4"
+        data-community-interest-state="resolving"
+      >
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+          Verificando a comunidade…
+        </div>
+      </div>
+    );
+  }
+
+  if (!resolved) {
+    return (
+      <TerritorialNotFound message="Não foi possível resolver o território desta lista de interesse." />
+    );
+  }
+
+  if (!interestTarget) {
+    return (
+      <div
+        className="min-h-screen bg-background px-4 py-8 md:py-12"
+        data-community-interest-state="unavailable"
+      >
+        <Helmet>
+          <title>{`Escolha um bairro em ${territoryName} | Achegue-se`}</title>
+          <meta
+            name="description"
+            content="A lista de interesse atual exige uma comunidade de bairro válida."
+          />
+          <meta name="robots" content="noindex, follow" />
+        </Helmet>
+
+        <div className="mx-auto max-w-xl rounded-2xl border bg-card p-6 text-center shadow-sm md:p-8">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <MapPin className="h-6 w-6 text-primary" aria-hidden />
+          </div>
+          <h1 className="mt-4 text-2xl font-bold">Escolha um bairro</h1>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            A lista de interesse deste release está vinculada a comunidades de bairro.
+            Salvador ainda não possui uma Community municipal própria para receber este cadastro.
+          </p>
+          {cityExplorerHref ? (
+            <Button className="mt-6" onClick={() => navigate(cityExplorerHref)}>
+              Explorar bairros de {territoryName}
+            </Button>
+          ) : null}
+        </div>
+      </div>
     );
   }
 
@@ -156,7 +280,7 @@ export function CommunityInterestPage() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitting) return;
+    if (submitting || !interestTarget) return;
 
     // Timing check: rejeita submissões instantâneas (bots).
     if (Date.now() - mountedAtRef.current < COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG.minimumFillMs) {
@@ -190,13 +314,12 @@ export function CommunityInterestPage() {
 
     setSubmitting(true);
     try {
-      const territoryPath = communityBase ?? null;
       const source = typeof window !== "undefined" ? window.location.pathname : "community-interest";
 
       const result = await registerCommunityInterest({
-        communityId,
-        communitySlug,
-        territoryPath,
+        communityId: interestTarget.communityId,
+        communitySlug: interestTarget.communitySlug,
+        territoryPath: interestTarget.territoryPath,
         fullName: parsed.data.full_name,
         email: parsed.data.email,
         phone: parsed.data.phone || null,

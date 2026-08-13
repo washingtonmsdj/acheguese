@@ -20,6 +20,22 @@ function isPublicFallbackResolved(resolved: CommunityExperienceResolvedTerritory
   return resolved.kind === "location" && resolved.location.metadata?.public_fallback === true;
 }
 
+function getCommunityTerritoryIdentity(
+  resolved: Exclude<CommunityExperienceResolvedTerritory, null>,
+): { territoryType: CommunityTerritoryType; territoryId: string } {
+  return {
+    territoryType:
+      resolved.kind === "group"
+        ? "territorial_group"
+        : resolved.location.type === "city"
+          ? "city"
+          : resolved.location.type === "neighborhood"
+            ? "neighborhood"
+            : "district",
+    territoryId: resolved.kind === "group" ? resolved.group.id : resolved.location.id,
+  };
+}
+
 function fallbackFromResolved(
   resolved: Exclude<CommunityExperienceResolvedTerritory, null>,
 ): TerritorialCommunityProfile {
@@ -122,6 +138,22 @@ export class CommunityExperienceService {
     return CommunityExperienceRepository.findActivePublicAliasByCommunityId(communityId);
   }
 
+  static async findPersistedCommunityProfile(
+    resolved: CommunityExperienceResolvedTerritory,
+  ): Promise<TerritorialCommunityProfile | null> {
+    if (!resolved || isPublicFallbackResolved(resolved)) return null;
+
+    const { territoryType, territoryId } = getCommunityTerritoryIdentity(resolved);
+    try {
+      return await CommunityExperienceRepository.findCommunityProfileByTerritory(
+        territoryType,
+        territoryId,
+      );
+    } catch {
+      return null;
+    }
+  }
+
   static async getCommunityProfile(
     resolved: CommunityExperienceResolvedTerritory,
   ): Promise<TerritorialCommunityProfile> {
@@ -133,25 +165,8 @@ export class CommunityExperienceService {
       return fallbackFromResolved(resolved);
     }
 
-    const territoryType: CommunityTerritoryType =
-      resolved.kind === "group"
-        ? "territorial_group"
-        : resolved.location.type === "city"
-          ? "city"
-          : resolved.location.type === "neighborhood"
-            ? "neighborhood"
-            : "district";
-    const territoryId = resolved.kind === "group" ? resolved.group.id : resolved.location.id;
-
-    try {
-      const profile = await CommunityExperienceRepository.findCommunityProfileByTerritory(
-        territoryType,
-        territoryId,
-      );
-      if (profile) return profile;
-    } catch {
-      // fallback handled below
-    }
+    const profile = await this.findPersistedCommunityProfile(resolved);
+    if (profile) return profile;
 
     return fallbackFromResolved(resolved);
   }

@@ -95,10 +95,10 @@ Legenda de situação:
 | ----------------- | -------------------------------------------------------------------------------------------- |
 | Nome antigo       | `LaunchPausedPage`                                                                           |
 | Novo nome         | `TerritoryUnavailablePage`                                                                   |
-| Responsabilidade  | Cidade/território ainda não suportado — tela de pré-lançamento com cadastro de interesse.   |
+| Responsabilidade  | Cidade/território ainda não suportado — tela de pré-lançamento futura. No release atual, cadastro municipal permanece fail-closed até existir contrato próprio de city/territory interest; a waitlist vigente exige Community de bairro persistida. |
 | Rotas             | Fallback territorial via `createLaunchPausedRoute(...)`                                      |
 | Arquivo canônico  | `src/app/pages/TerritoryUnavailablePage.tsx` (alias → `LaunchPausedPage`)                    |
-| Dependências      | `CommunityInterestPage` (CTA), Turnstile                                                     |
+| Dependências      | Explorador territorial no release atual; `CommunityInterestPage` e Turnstile somente para Community persistida autorizada pelo contrato D-008. |
 | Situação          | **Futuro** — alias criado; `createLaunchPausedRoute` ainda referencia `LaunchPausedPage`.    |
 
 ---

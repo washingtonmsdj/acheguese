@@ -154,6 +154,9 @@ describe("community territory urls", () => {
     expect(buildCommunityScopedUrl("/comunidade/nordeste-de-amaralina")).toBe(
       "/comunidade/nordeste-de-amaralina",
     );
+    expect(
+      buildCommunityScopedUrl("/comunidade/ba/salvador/feed", "feed"),
+    ).toBe("/comunidade/ba/salvador/feed");
     expect(() => buildCommunityScopedUrl("/comunidade/nordeste-de-amaralina", "feed?tab=x")).toThrow(
       "segmento de URL",
     );

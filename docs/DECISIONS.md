@@ -34,7 +34,7 @@
 
 ## D-008 — Bairros `coming_soon` viram waitlist
 
-**Decisão:** bairros sem cobertura redirecionam para `/interesse` (`CommunityInterestPage`) com Turnstile anti-spam. O frontend novo registra exclusivamente por `register-community-interest`; durante a migration ADDITIVE, o frontend legado conserva um writer direto mínimo, por colunas, até o CUTOVER evidence-gated. O painel admin fica em `/admin/community-interest`. **Ref.:** `supabase/migrations/20260809184409_create_authoritative_community_interest_registration.sql`.
+**Decisão:** bairros `coming_soon` com Community persistida e identidade territorial inequívoca redirecionam para `/interesse` (`CommunityInterestPage`) com Turnstile anti-spam. O frontend não fabrica Community nem permite escrita a partir de perfil sintético. Uma rota municipal sem Community persistida permanece fail-closed e direciona o visitante ao explorador para escolher um bairro; `community_id = null` não autoriza, por si só, um contrato genérico de interesse por cidade ou território. Suporte futuro a city/territory interest exige decisão e modelo próprios, e nenhuma Community municipal deve ser criada apenas para satisfazer uma rota. O frontend novo registra exclusivamente por `register-community-interest`; durante a migration ADDITIVE, o frontend legado conserva um writer direto mínimo, por colunas, até o CUTOVER evidence-gated. O painel admin fica em `/admin/community-interest`. **Ref.:** `supabase/migrations/20260809184409_create_authoritative_community_interest_registration.sql`.
 
 ## D-009 — Rascunhos de post são criptografados
 
