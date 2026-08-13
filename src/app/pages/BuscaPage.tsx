@@ -34,7 +34,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useBusinessNavigation } from "@/modules/business/hooks/useBusinessNavigation";
 import { useGlobalSearch } from "@/core/search/hooks/useGlobalSearch";
 import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
-import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchScope";
+import {
+  isLaunchSurfaceEnabled,
+  type LaunchSurfaceKey,
+} from "@/config/launchScope";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import {
   TERRITORY_RESOLVE_STATUS,
@@ -127,7 +130,8 @@ const RAW_FILTERS: FilterOption[] = [
 ];
 
 const FILTERS: FilterOption[] = RAW_FILTERS.filter(
-  (filter) => !filter.launchSurface || isLaunchSurfaceEnabled(filter.launchSurface),
+  (filter) =>
+    !filter.launchSurface || isLaunchSurfaceEnabled(filter.launchSurface),
 );
 
 // ============================================================================
@@ -148,12 +152,12 @@ export default function BuscaPage() {
   });
   const routeResolvePending =
     Boolean(state && city) &&
-    (
-      territoryResolution.status === TERRITORY_RESOLVE_STATUS.IDLE ||
-      territoryResolution.status === TERRITORY_RESOLVE_STATUS.LOADING
-    );
+    (territoryResolution.status === TERRITORY_RESOLVE_STATUS.IDLE ||
+      territoryResolution.status === TERRITORY_RESOLVE_STATUS.LOADING);
   const searchEnabled = !routeResolvePending && !moduleTerritory.isLoading;
-  const territoryFilterKey = JSON.stringify(moduleTerritory.territoryFilter ?? null);
+  const territoryFilterKey = JSON.stringify(
+    moduleTerritory.territoryFilter ?? null,
+  );
   const searchTerritoryFilter = useMemo<TerritoryFilter | undefined>(() => {
     const parsed = JSON.parse(territoryFilterKey) as TerritoryFilter | null;
     return parsed ?? undefined;
@@ -188,12 +192,7 @@ export default function BuscaPage() {
       category: activeFilter,
       territoryFilter: searchTerritoryFilter,
     });
-  }, [
-    activeFilter,
-    searchTerritoryFilter,
-    searchEnabled,
-    updateFilters,
-  ]);
+  }, [activeFilter, searchTerritoryFilter, searchEnabled, updateFilters]);
 
   const handleFilterChange = (filter: SearchCategory) => {
     setActiveFilter(filter);
@@ -249,7 +248,7 @@ export default function BuscaPage() {
               key={filter.id}
               onClick={() => handleFilterChange(filter.id)}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all",
+                "flex shrink-0 items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all",
                 activeFilter === filter.id
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-secondary text-secondary-foreground border-border hover:bg-secondary/80",
@@ -441,11 +440,7 @@ function ResultsView({
         )}
 
         {documentSections.map((section) => (
-          <Section
-            key={section.type}
-            title={section.title}
-            icon={section.icon}
-          >
+          <Section key={section.type} title={section.title} icon={section.icon}>
             {section.documents.map((document) => (
               <SearchDocumentCard
                 key={`${document.type}-${document.id}`}
@@ -596,7 +591,10 @@ const DOCUMENT_TYPE_ICONS: Record<SearchDocument["type"], React.ReactNode> = {
   coupon: <Tag className="h-5 w-5 text-muted-foreground" />,
 };
 
-type GenericSearchDocumentType = Exclude<SearchDocument["type"], "business" | "professional">;
+type GenericSearchDocumentType = Exclude<
+  SearchDocument["type"],
+  "business" | "professional"
+>;
 
 const DOCUMENT_SECTION_ORDER: GenericSearchDocumentType[] = [
   "community",

@@ -1,5 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   Check,
@@ -12,9 +20,15 @@ import {
 import { TERRITORY_CONFIG } from "@/config/territory";
 import { boundaryService } from "@/core/geospatial";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
-import { LocationStatus, LocationType, type Location } from "@/core/location/types";
-import { DEFAULT_TILE_STYLE, MapLibreAdapter } from "@/core/maps";
+import {
+  LocationStatus,
+  LocationType,
+  type Location,
+} from "@/core/location/types";
 import type { TerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
+import { DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
+import { geoPathToPublicUrl } from "@/core/routing/utils/territoryUrls";
+import { isTerritoryPubliclyNavigable } from "@/core/routing/utils/territoryVisibility";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { useGeolocation } from "@/shared/hooks/useGeolocation";
@@ -23,6 +37,12 @@ import { normalizeTerritoryText } from "@/shared/utils/slugify";
 
 const OFFICIAL_LOGO_SRC = "/images/logo-icon.png";
 const LS_KEY = "achegue-se:last-city";
+
+const LazyMapLibreAdapter = lazy(() =>
+  import("@/core/maps/components/v3/MapLibreAdapter").then((module) => ({
+    default: module.MapLibreAdapter,
+  })),
+);
 
 interface ReverseGeocodeAddress {
   city?: string;
@@ -75,7 +95,7 @@ const BR_STATE_TO_UF: Record<string, string> = {
   roraima: "RR",
   "santa catarina": "SC",
   "sao paulo": "SP",
-  "sergipe": "SE",
+  sergipe: "SE",
   tocantins: "TO",
 };
 
@@ -173,11 +193,52 @@ const SALVADOR_CITY_BOUNDARY_RING: [number, number][] = [
   [-13.0127, -38.5856],
 ];
 
+const SALVADOR_BOUNDARY_SVG_POINTS = (() => {
+  const latitudes = SALVADOR_CITY_BOUNDARY_RING.map(([latitude]) => latitude);
+  const longitudes = SALVADOR_CITY_BOUNDARY_RING.map(
+    ([, longitude]) => longitude,
+  );
+  const minLatitude = Math.min(...latitudes);
+  const maxLatitude = Math.max(...latitudes);
+  const minLongitude = Math.min(...longitudes);
+  const maxLongitude = Math.max(...longitudes);
+
+  return SALVADOR_CITY_BOUNDARY_RING.map(([latitude, longitude]) => {
+    const x =
+      ((longitude - minLongitude) / (maxLongitude - minLongitude)) * 84 + 8;
+    const y = ((maxLatitude - latitude) / (maxLatitude - minLatitude)) * 84 + 8;
+    return `${x.toFixed(2)},${y.toFixed(2)}`;
+  }).join(" ");
+})();
+
+function HomeBoundaryFallback() {
+  return (
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.9),transparent_30%),linear-gradient(145deg,#dcece6,#edf4f1_55%,#dce8e4)]">
+      <svg
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <polygon
+          points={SALVADOR_BOUNDARY_SVG_POINTS}
+          fill="rgba(24,179,126,0.10)"
+          stroke="#18B37E"
+          strokeWidth="1.2"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+    </div>
+  );
+}
+
 function getLaunchCityPaths(): string[] {
   const country = TERRITORY_CONFIG.launch.country || "br";
   const state = TERRITORY_CONFIG.launch.state || "ba";
   const city = TERRITORY_CONFIG.launch.city || "salvador";
-  return Array.from(new Set([`/${country}/${state}/${city}`, `/${state}/${city}`]));
+  return Array.from(
+    new Set([`/${country}/${state}/${city}`, `/${state}/${city}`]),
+  );
 }
 
 async function findLaunchCityLocation(): Promise<Location | null> {
@@ -196,7 +257,10 @@ async function findLaunchCityLocation(): Promise<Location | null> {
 
   return (
     locations.find((location) => {
-      if (location.type !== LocationType.CITY || location.status !== LocationStatus.ACTIVE) {
+      if (
+        location.type !== LocationType.CITY ||
+        location.status !== LocationStatus.ACTIVE
+      ) {
         return false;
       }
 
@@ -207,18 +271,23 @@ async function findLaunchCityLocation(): Promise<Location | null> {
       const stateMatches =
         !normalizedState ||
         pathParts.includes(normalizedState) ||
-        normalizeTerritoryText(String(location.metadata?.state_code ?? "")) === normalizedState;
+        normalizeTerritoryText(String(location.metadata?.state_code ?? "")) ===
+          normalizedState;
 
       return cityMatches && stateMatches;
     }) ?? null
   );
 }
 
-function buildOfficialSalvadorCityPolygon(cityName: string): TerritoryPolygon | null {
+function buildOfficialSalvadorCityPolygon(
+  cityName: string,
+): TerritoryPolygon | null {
   if (normalizeTerritoryText(cityName) !== "salvador") return null;
 
   const latitudes = SALVADOR_CITY_BOUNDARY_RING.map(([latitude]) => latitude);
-  const longitudes = SALVADOR_CITY_BOUNDARY_RING.map(([, longitude]) => longitude);
+  const longitudes = SALVADOR_CITY_BOUNDARY_RING.map(
+    ([, longitude]) => longitude,
+  );
 
   return {
     name: cityName,
@@ -280,16 +349,21 @@ function HomeBoundaryPreview() {
         lineWidth: index === 0 ? 3 : 2,
         lineOpacity: index === 0 ? 0.95 : 0.55,
       }));
-      const fallback = storedPolygons.length === 0
-        ? buildOfficialSalvadorCityPolygon(homeCity.name)
-        : null;
+      const fallback =
+        storedPolygons.length === 0
+          ? buildOfficialSalvadorCityPolygon(homeCity.name)
+          : null;
 
-      setCityPolygons(storedPolygons.length > 0 ? storedPolygons : fallback ? [fallback] : []);
+      setCityPolygons(
+        storedPolygons.length > 0 ? storedPolygons : fallback ? [fallback] : [],
+      );
     };
 
     run().catch(() => {
       if (!cancelled) {
-        const fallback = buildOfficialSalvadorCityPolygon(homeCity?.name ?? "Salvador");
+        const fallback = buildOfficialSalvadorCityPolygon(
+          homeCity?.name ?? "Salvador",
+        );
         setCityPolygons(fallback ? [fallback] : []);
       }
     });
@@ -299,28 +373,27 @@ function HomeBoundaryPreview() {
     };
   }, [homeCity]);
 
-  const territoryPolygons = useMemo(
-    () => cityPolygons,
-    [cityPolygons],
-  );
+  const territoryPolygons = useMemo(() => cityPolygons, [cityPolygons]);
 
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#eef4f0]">
-      <MapLibreAdapter
-        styleUrl={DEFAULT_TILE_STYLE.styleUrl}
-        initialViewport={{ center: PREVIEW_MAP_CENTER, zoom: 9.15 }}
-        territoryPolygons={territoryPolygons}
-        markers={[]}
-        fitTerritoryBounds={territoryPolygons.length > 0}
-        territoryFitPadding={28}
-        territoryFitMaxZoom={9.4}
-        userLocationMarker={{ enabled: false, autoAdd: false }}
-        enableClustering={false}
-        attribution={false}
-        interactive={false}
-        hideNavigationControl
-        className="pointer-events-none h-full w-full"
-      />
+      <Suspense fallback={<HomeBoundaryFallback />}>
+        <LazyMapLibreAdapter
+          styleUrl={DEFAULT_TILE_STYLE.styleUrl}
+          initialViewport={{ center: PREVIEW_MAP_CENTER, zoom: 9.15 }}
+          territoryPolygons={territoryPolygons}
+          markers={[]}
+          fitTerritoryBounds={territoryPolygons.length > 0}
+          territoryFitPadding={28}
+          territoryFitMaxZoom={9.4}
+          userLocationMarker={{ enabled: false, autoAdd: false }}
+          enableClustering={false}
+          attribution={false}
+          interactive={false}
+          hideNavigationControl
+          className="pointer-events-none h-full w-full"
+        />
+      </Suspense>
       <div
         aria-hidden
         className="absolute right-3 top-[3.75rem] z-20 flex max-w-[8.4rem] flex-col items-end gap-1 text-right lg:right-6 lg:top-20 lg:max-w-[9rem]"
@@ -332,8 +405,14 @@ function HomeBoundaryPreview() {
           Salvador em destaque
         </span>
       </div>
-      <div aria-hidden className="absolute inset-x-0 top-0 z-10 h-24 bg-gradient-to-b from-white/80 via-white/35 to-white/0" />
-      <div aria-hidden className="absolute inset-x-0 bottom-0 z-10 h-24 bg-gradient-to-t from-white via-white/42 to-white/0 lg:h-32" />
+      <div
+        aria-hidden
+        className="absolute inset-x-0 top-0 z-10 h-24 bg-gradient-to-b from-white/80 via-white/35 to-white/0"
+      />
+      <div
+        aria-hidden
+        className="absolute inset-x-0 bottom-0 z-10 h-24 bg-gradient-to-t from-white via-white/42 to-white/0 lg:h-32"
+      />
     </div>
   );
 }
@@ -350,7 +429,8 @@ function extractUf(addr: ReverseGeocodeAddress): string | null {
 }
 
 function buildLabel(addr: ReverseGeocodeAddress): string | null {
-  const city = addr.city || addr.town || addr.village || addr.municipality || addr.suburb;
+  const city =
+    addr.city || addr.town || addr.village || addr.municipality || addr.suburb;
   const uf = extractUf(addr);
   if (city && uf) return `${city}, ${uf}`;
   if (city) return city;
@@ -363,7 +443,10 @@ async function reverseGeocode(
   signal: AbortSignal,
 ): Promise<string | null> {
   const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1&accept-language=pt-BR`;
-  const res = await fetch(url, { headers: { Accept: "application/json" }, signal });
+  const res = await fetch(url, {
+    headers: { Accept: "application/json" },
+    signal,
+  });
   if (!res.ok) return null;
   const data = (await res.json()) as { address?: ReverseGeocodeAddress };
   return buildLabel(data.address ?? {});
@@ -385,7 +468,10 @@ async function searchCities(
     `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1` +
     `&countrycodes=br&featuretype=city&limit=6&accept-language=pt-BR` +
     `&city=${encodeURIComponent(query)}`;
-  const res = await fetch(url, { headers: { Accept: "application/json" }, signal });
+  const res = await fetch(url, {
+    headers: { Accept: "application/json" },
+    signal,
+  });
   if (!res.ok) return [];
   const data = (await res.json()) as NominatimSearchItem[];
   const seen = new Set<string>();
@@ -426,456 +512,6 @@ function readStoredCity(): ResolvedLocation | string | null {
 function formatGeolocationError(err: string | null): string | null {
   if (!err) return null;
   const lower = err.toLowerCase();
-  if (lower.includes("denied") || lower.includes("permission")) {
-    return "Permissao de localizacao negada. Ative-a nas configuracoes do navegador e tente novamente.";
-  }
-  if (lower.includes("unavailable")) {
-    return "Nao foi possivel determinar sua posicao. Verifique se o GPS/Wi-Fi esta ativo e tente novamente.";
-  }
-  if (lower.includes("timeout")) {
-    return "A localizacao demorou demais para responder. Tente novamente em uma area com melhor sinal.";
-  }
-  if (lower.includes("suportada")) {
-    return "Seu dispositivo ou navegador nao oferece suporte a geolocalizacao. Digite sua cidade manualmente abaixo.";
-  }
-  return err;
-}
-
-export default function AchegueSeHomePage() {
-  const navigate = useNavigate();
-  const geo = useGeolocation();
-
-  const initial = useMemo(() => {
-    const stored = readStoredCity();
-    if (stored && typeof stored === "object") {
-      return { query: stored.label, resolved: stored as ResolvedLocation };
-    }
-    if (typeof stored === "string" && stored.trim()) {
-      return { query: stored, resolved: null };
-    }
-    return { query: "", resolved: null };
-  }, []);
-
-  const [cityQuery, setCityQuery] = useState<string>(initial.query);
-  const [resolved, setResolved] = useState<ResolvedLocation | null>(initial.resolved);
-  const [resolvingCity, setResolvingCity] = useState(false);
-  const [reverseError, setReverseError] = useState<string | null>(null);
-  const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-
-  const reverseAbortRef = useRef<AbortController | null>(null);
-  const searchAbortRef = useRef<AbortController | null>(null);
-  const manualEditRef = useRef(false);
-
-  const canSubmitCity = useMemo(() => cityQuery.trim().length > 1, [cityQuery]);
-  const geoErrorLabel = formatGeolocationError(geo.error);
-
-  const persistCity = useCallback((label: string, coords?: ResolvedLocation | null) => {
-    try {
-      const payload = coords ? coords : { label };
-      window.localStorage.setItem(LS_KEY, JSON.stringify(payload));
-    } catch {
-      // Local storage is optional for this entry flow.
-    }
-  }, []);
-
-  const cancelPendingRequests = useCallback(() => {
-    reverseAbortRef.current?.abort();
-    reverseAbortRef.current = null;
-    searchAbortRef.current?.abort();
-    searchAbortRef.current = null;
-  }, []);
-
-  useEffect(() => () => cancelPendingRequests(), [cancelPendingRequests]);
-
-  useEffect(() => {
-    if (!manualEditRef.current) return;
-    const q = cityQuery.trim();
-    if (q.length < 2) {
-      setSuggestions([]);
-      return;
-    }
-
-    const controller = new AbortController();
-    searchAbortRef.current?.abort();
-    searchAbortRef.current = controller;
-    const timeout = window.setTimeout(async () => {
-      try {
-        const results = await searchCities(q, controller.signal);
-        if (!controller.signal.aborted) {
-          setSuggestions(results);
-          setShowSuggestions(true);
-        }
-      } catch {
-        // Aborted requests and transient network failures do not block manual entry.
-      }
-    }, 300);
-
-    return () => {
-      window.clearTimeout(timeout);
-      controller.abort();
-    };
-  }, [cityQuery]);
-
-  const goToOnboarding = (label?: string, coords?: ResolvedLocation | null) => {
-    const finalLabel = (label ?? cityQuery).trim();
-    if (!finalLabel) return;
-    persistCity(finalLabel, coords ?? resolved);
-    navigate("/onboarding");
-  };
-
-  const openPublicTerritory = (path: string, label: string) => {
-    persistCity(label);
-    navigate(path);
-  };
-
-  const handleUseLocation = async () => {
-    setReverseError(null);
-    setResolved(null);
-    if (!("geolocation" in navigator)) {
-      setReverseError(
-        "Seu dispositivo ou navegador nao oferece suporte a geolocalizacao. Digite sua cidade manualmente abaixo.",
-      );
-      return;
-    }
-
-    const ok = await geo.requestPermission();
-    if (!ok) return;
-
-    setResolvingCity(true);
-    manualEditRef.current = false;
-    setShowSuggestions(false);
-
-    const controller = new AbortController();
-    reverseAbortRef.current?.abort();
-    reverseAbortRef.current = controller;
-
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const label = await reverseGeocode(
-            pos.coords.latitude,
-            pos.coords.longitude,
-            controller.signal,
-          );
-          if (controller.signal.aborted) return;
-          if (label) {
-            setCityQuery(label);
-            setResolved({
-              label,
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude,
-            });
-          } else {
-            setReverseError("Nao foi possivel identificar sua cidade automaticamente.");
-          }
-        } catch (err) {
-          if ((err as Error).name !== "AbortError") {
-            setReverseError("Falha ao consultar o servico de localizacao. Tente novamente.");
-          }
-        } finally {
-          if (!controller.signal.aborted) setResolvingCity(false);
-        }
-      },
-      (err) => {
-        const codeMap: Record<number, string> = {
-          1: "Permissao de localizacao negada. Ative-a nas configuracoes do navegador e tente novamente.",
-          2: "Nao foi possivel determinar sua posicao. Verifique se o GPS/Wi-Fi esta ativo e tente novamente.",
-          3: "A localizacao demorou demais para responder. Tente novamente em uma area com melhor sinal.",
-        };
-        setReverseError(codeMap[err.code] ?? err.message);
-        setResolvingCity(false);
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
-    );
-  };
-
-  const handleManualChange = (value: string) => {
-    manualEditRef.current = true;
-    cancelPendingRequests();
-    setResolved(null);
-    setResolvingCity(false);
-    setReverseError(null);
-    setCityQuery(value);
-  };
-
-  const handlePickSuggestion = (s: CitySuggestion) => {
-    manualEditRef.current = false;
-    setSuggestions([]);
-    setShowSuggestions(false);
-    setCityQuery(s.label);
-    setResolved({ label: s.label, lat: s.lat, lng: s.lng });
-  };
-
-  const handleSeedSuggestion = (label: string) => {
-    manualEditRef.current = false;
-    cancelPendingRequests();
-    setSuggestions([]);
-    setShowSuggestions(false);
-    setReverseError(null);
-    setResolved(null);
-    setCityQuery(label);
-    const path = PUBLIC_SALVADOR_DISTRICT_PATHS[normalizeTerritoryText(label)];
-    if (path) openPublicTerritory(path, label);
-  };
-
-  return (
-    <div className="min-h-[100dvh] w-full overflow-hidden bg-[#f8fafc] text-slate-950">
-      <main
-        id="main-content"
-        className={cn(
-          "mx-auto flex min-h-[100dvh] w-full flex-col",
-          "lg:grid lg:max-w-6xl lg:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.72fr)] lg:items-center lg:gap-10 lg:px-8 lg:py-8",
-        )}
-      >
-        <section
-          aria-label="Status ao vivo do Achegue-se"
-          className="th-live-section"
-        >
-          <div className="th-live-card relative block h-[238px] min-h-[238px] select-none overflow-hidden rounded-b-[26px] border-0 bg-[#e8f1ee] shadow-[0_18px_48px_rgba(15,23,42,0.13)] sm:h-[276px] lg:h-[min(500px,calc(100dvh-6rem))] lg:min-h-[440px] lg:rounded-[30px]">
-            <HomeBoundaryPreview />
-            <div aria-hidden className="absolute inset-x-0 top-0 z-10 h-24 bg-gradient-to-b from-white/78 via-white/38 to-white/0" />
-            <div aria-hidden className="absolute inset-x-0 bottom-0 z-10 h-20 bg-gradient-to-t from-white via-white/42 to-white/0 lg:h-32" />
-
-            <header
-              className="absolute left-4 top-[max(0.75rem,env(safe-area-inset-top))] z-30 flex w-fit max-w-[calc(100%-2rem)] items-center gap-2 rounded-full bg-white py-1.5 pl-1.5 pr-4 shadow-[0_14px_34px_rgba(15,23,42,0.20)] ring-1 ring-slate-950/10 backdrop-blur-md lg:left-6 lg:top-6 lg:gap-2.5 lg:pr-5"
-              aria-label="Achegue-se"
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f4fbf8] shadow-[inset_0_0_0_1px_rgba(24,179,126,0.18)] lg:h-10 lg:w-10">
-                <img src={OFFICIAL_LOGO_SRC} alt="" aria-hidden className="h-6 w-6 object-contain lg:h-7 lg:w-7" />
-              </span>
-              <span className="font-heading text-[20px] font-bold leading-none tracking-normal text-slate-950 lg:text-[23px]">
-                Achegue-<span className="text-[#18B37E]">se</span>
-              </span>
-            </header>
-
-            <div
-              className="th-live-copy absolute z-20 p-0"
-              style={{
-                left: "1rem",
-                top: "4.95rem",
-                width: "min(9rem, calc(100% - 2rem))",
-              }}
-            >
-              <ul className="th-live-status-list grid justify-items-start gap-[0.12rem]" aria-label="TerritÃ³rio disponÃ­vel no Achegue-se">
-                <li
-                  className="th-live-status flex w-fit max-w-full items-center gap-[0.24rem] rounded-[0.54rem] border border-white/90 bg-white/95 px-[0.24rem] py-[0.16rem] shadow-[0_6px_14px_rgba(15,23,42,0.07)] backdrop-blur-sm"
-                  style={homeStatusCardStyle}
-                >
-                  <span className="th-live-status-icon inline-flex h-[1.06rem] w-[1.06rem] shrink-0 items-center justify-center rounded-[0.38rem] bg-primary/10 text-primary">
-                    <MapPin className="h-[0.64rem] w-[0.64rem]" aria-hidden strokeWidth={2.25} />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-[9.4px] font-bold leading-tight text-slate-950">
-                      Salvador
-                    </span>
-                    <span className="block truncate text-[8.4px] leading-tight text-slate-600">
-                      territÃ³rio disponÃ­vel
-                    </span>
-                  </span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        <section className="flex flex-1 flex-col items-center px-5 py-3 text-center lg:items-start lg:justify-center lg:px-0 lg:py-0 lg:text-left">
-          <div className="space-y-1.5">
-            <h1 className="mx-auto max-w-[16rem] text-[28px] font-semibold leading-[0.98] tracking-normal text-slate-950 min-[380px]:max-w-[17rem] min-[380px]:text-[31px] lg:mx-0 lg:max-w-[21rem] lg:text-[44px]">
-              Tudo comeÃ§a pelo seu bairro
-            </h1>
-            <p className="mx-auto max-w-[20rem] text-[14px] leading-5 text-slate-600 lg:mx-0 lg:max-w-[24rem] lg:text-base lg:leading-7">
-              Escolha um bairro ou entre por Salvador inteira.
-            </p>
-          </div>
-
-          <div className="mt-4 w-full space-y-2.5 lg:mt-7 lg:max-w-[410px] lg:space-y-3">
-            <Button
-              type="button"
-              size="lg"
-              onClick={handleUseLocation}
-              disabled={geo.loading || resolvingCity}
-              className={cn(
-                "h-12 w-full gap-2 rounded-[1rem] bg-[#18B37E] text-[14px] font-semibold text-white",
-                "shadow-[0_12px_28px_rgba(24,179,126,0.26)] transition-all duration-150",
-                "hover:bg-[#149f70] active:scale-[0.98] disabled:opacity-70 disabled:shadow-none",
-              )}
-            >
-              {geo.loading || resolvingCity ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <Navigation className="h-5 w-5" />
-              )}
-              {resolvingCity ? "Identificando local..." : "Usar minha localizaÃ§Ã£o"}
-            </Button>
-
-            <div className="relative">
-              <MapPin
-                className="pointer-events-none absolute left-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-[#18B37E]"
-                aria-hidden
-              />
-              <Input
-                id="home-city"
-                value={cityQuery}
-                onChange={(event) => handleManualChange(event.target.value)}
-                onFocus={() => {
-                  if (suggestions.length > 0) setShowSuggestions(true);
-                }}
-                onBlur={() => {
-                  window.setTimeout(() => setShowSuggestions(false), 150);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && canSubmitCity) {
-                    setShowSuggestions(false);
-                    goToOnboarding();
-                  }
-                  if (event.key === "Escape") setShowSuggestions(false);
-                }}
-                placeholder="Buscar bairro ou cidade"
-                className={cn(
-                  "h-12 rounded-[1rem] border-slate-200 bg-white pl-12 pr-14 text-[14px] text-slate-950",
-                  "shadow-[0_10px_24px_rgba(15,23,42,0.08)] placeholder:text-slate-400",
-                  "focus-visible:border-[#18B37E] focus-visible:ring-2 focus-visible:ring-[#18B37E]/25 focus-visible:ring-offset-0",
-                )}
-                autoComplete="off"
-                inputMode="text"
-                role="combobox"
-                aria-expanded={showSuggestions && suggestions.length > 0}
-                aria-controls="home-city-suggestions"
-              />
-              <button
-                type="button"
-                aria-label="Confirmar local"
-                onClick={() => goToOnboarding()}
-                disabled={!canSubmitCity}
-                className={cn(
-                  "absolute right-2 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full",
-                  "transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18B37E]/60 focus-visible:ring-offset-2",
-                  canSubmitCity
-                    ? "bg-[#18B37E]/10 text-[#13845f] hover:bg-[#18B37E]/15 active:scale-90"
-                    : "text-slate-300",
-                )}
-              >
-                <ArrowRight className="h-5 w-5" />
-              </button>
-
-              {showSuggestions && suggestions.length > 0 ? (
-                <ul
-                  id="home-city-suggestions"
-                  role="listbox"
-                  className="absolute left-0 right-0 top-full z-20 mt-2 max-h-64 overflow-auto rounded-2xl border border-slate-200 bg-white p-1 shadow-xl"
-                >
-                  {suggestions.map((s) => (
-                    <li key={s.id}>
-                      <button
-                        type="button"
-                        role="option"
-                        aria-selected={cityQuery === s.label}
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => handlePickSuggestion(s)}
-                        className="flex min-h-11 w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm text-slate-800 transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18B37E]/40"
-                      >
-                        <MapPin className="h-4 w-4 shrink-0 text-[#18B37E]" />
-                        <span className="truncate">{s.label}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => openPublicTerritory(PUBLIC_SALVADOR_PATH, "Salvador")}
-              className="h-11 w-full rounded-[1rem] border-[#18B37E]/25 bg-white/80 text-[13.5px] font-semibold text-[#13845f] shadow-[0_8px_18px_rgba(15,23,42,0.06)] transition-all hover:border-[#18B37E]/45 hover:bg-[#18B37E]/[0.06] active:scale-[0.98]"
-            >
-              Ver Salvador inteira
-            </Button>
-
-            {resolved ? (
-              <div className="rounded-2xl border border-[#18B37E]/20 bg-[#18B37E]/[0.07] p-3.5">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#18B37E]/15 text-[#13845f]">
-                    <MapPin className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0 flex-1 text-left">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#13845f]">
-                      Local encontrado
-                    </p>
-                    <p className="mt-0.5 truncate text-sm font-semibold text-slate-950">
-                      {resolved.label}
-                    </p>
-                    <p className="mt-0.5 text-[11px] tabular-nums text-slate-500">
-                      {resolved.lat.toFixed(5)} / {resolved.lng.toFixed(5)}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    aria-label="Descartar local encontrado"
-                    onClick={() => setResolved(null)}
-                    className="-mr-1 -mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-white/70 hover:text-slate-900 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18B37E]/50"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={() => goToOnboarding(resolved.label, resolved)}
-                  className="mt-3 h-11 w-full gap-2 rounded-xl bg-[#18B37E] text-white transition-transform hover:bg-[#149f70] active:scale-[0.98]"
-                >
-                  <Check className="h-4 w-4" />
-                  Confirmar
-                </Button>
-              </div>
-            ) : null}
-
-            {geoErrorLabel || reverseError ? (
-              <div
-                role="alert"
-                className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-[13px] leading-relaxed text-red-700"
-              >
-                {geoErrorLabel || reverseError}
-              </div>
-            ) : null}
-
-            <div className="space-y-1.5 pt-0.5">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-[12px] font-medium text-slate-500">TerritÃ³rios sugeridos</p>
-                <p className="text-[11px] font-medium text-slate-400">Acesso pÃºblico</p>
-              </div>
-              <div className="flex flex-wrap gap-1.5" aria-label="Sugestoes de local">
-                {recentSuggestions.map((label) => (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={() => handleSeedSuggestion(label)}
-                    className="rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-[11.5px] font-medium text-slate-700 shadow-sm transition-colors hover:border-[#18B37E]/40 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18B37E]/30"
-                  >
-                    <span className="mr-1 inline-block text-[#18B37E]" aria-hidden>
-                      ðŸ“
-                    </span>
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <footer className="px-5 pb-3 text-center text-[11.5px] leading-snug text-slate-500 lg:col-start-2 lg:px-0 lg:pb-0 lg:text-left lg:text-[12px] lg:leading-relaxed">
-          <p>VocÃª verÃ¡ primeiro o que realmente acontece perto de vocÃª.</p>
-          <div className="mt-1.5 flex flex-wrap items-center justify-center gap-1.5 lg:mt-2 lg:gap-2 lg:justify-start">
-            <span className="rounded-full bg-[#18B37E]/10 px-2.5 py-1 text-[11px] font-medium text-[#13845f]">
-              Salvador
-            </span>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
-              explore sem cadastro
-            </span>
-          </div>
-        </footer>
-      </main>
-    </div>
-  );
-}
+  if (lower.includes("denied") || lower.includes("permÛ­¸¶‰žËkºwµçeÑåEÕ•Éä¡±…‰•°¤ì(€€€½¹ÍÐÁ…Ñ €ôAU	1%}M1Y=I}%MQI%Q}AQ!Mm¹½Éµ…±¥é•Q•ÉÉ¥Ñ½ÉåQ•áÐ¡±…‰•°¥tì(€€€¥˜€¡Á…Ñ ¤½Á•¹AÕ‰±¥Q•ÉÉ¥Ñ½Éä¡Á…Ñ °±…‰•°¤ì(€ôì((€É•ÑÕÉ¸€ (€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰µ¥¸µ µlÄÀÁ‘Ù¡tÜµ™Õ±°½Ù•É™±½Üµ¡¥‘‘•¸‰œµl˜á™…™tÑ•áÐµÍ±…Ñ”´äÔÀˆø(€€€€€€ñµ…¥¸(€€€€€€€¥ô‰µ…¥¸µ½¹Ñ•¹Ðˆ(€€€€€€€±…ÍÍ9…µ”õí¸ (€€€€€€€€€€‰µàµ…ÕÑ¼™±•àµ¥¸µ µlÄÀÁ‘Ù¡tÜµ™Õ±°™±•àµ½°ˆ°(€€€€€€€€€€‰±œéÉ¥±œéµ…àµÜ´Ùá°±œéÉ¥µ½±Ìµmµ¥¹µ…à À°Ä¸Àá™È¥}µ¥¹µ…à ÌØÁÁà°À¸ÜÉ™È¥t±œé¥Ñ•µÌµ•¹Ñ•È±œé…À´ÄÀ±œéÁà´à±œéÁä´àˆ°(€€€€€€€€¥ô(€€€€€€ø(€€€€€€€€ñÍ•Ñ¥½¸(€€€€€€€€€…É¥„µ±…‰•°ô‰MÑ…ÑÕÌ…¼Ù¥Ù¼‘¼¡•Õ”µÍ”ˆ(€€€€€€€€€±…ÍÍ9…µ”ô‰Ñ µ±¥Ù”µÍ•Ñ¥½¸ˆ(€€€€€€€€ø(€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰Ñ µ±¥Ù”µ…ÉÉ•±…Ñ¥Ù”‰±½¬ µlÈÌáÁátµ¥¸µ µlÈÌáÁátÍ•±•Ðµ¹½¹”½Ù•É™±½Üµ¡¥‘‘•¸É½Õ¹‘•µˆµlÈÙÁát‰½É‘•È´À‰œµl”á˜Å••tÍ¡…‘½ÜµlÁ|ÄáÁá|ÐáÁá}É‰„ ÄÔ°ÈÌ°ÐÈ°À¸ÄÌ¥tÍ´é µlÈÜÙÁát±œé µmµ¥¸ ÔÀÁÁà±…±Œ ÄÀÁ‘Ù ´ÙÉ•´¤¥t±œéµ¥¸µ µlÐÐÁÁát±œéÉ½Õ¹‘•µlÌÁÁátˆø(€€€€€€€€€€€€ñ!½µ•	½Õ¹‘…ÉåAÉ•Ù¥•Ü€¼ø(€€€€€€€€€€€€ñ‘¥Ø(€€€€€€€€€€€€€…É¥„µ¡¥‘‘•¸(€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰…‰Í½±ÕÑ”¥¹Í•Ðµà´ÀÑ½À´Àè´ÄÀ ´ÈÐ‰œµÉ…‘¥•¹ÐµÑ¼µˆ™É½´µÝ¡¥Ñ”¼ÜàÙ¥„µÝ¡¥Ñ”¼ÌàÑ¼µÝ¡¥Ñ”¼Àˆ(€€€€€€€€€€€€¼ø(€€€€€€€€€€€€ñ‘¥Ø(€€€€€€€€€€€€€…É¥„µ¡¥‘‘•¸(€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰…‰Í½±ÕÑ”¥¹Í•Ðµà´À‰½ÑÑ½´´Àè´ÄÀ ´ÈÀ‰œµÉ…‘¥•¹ÐµÑ¼µÐ™É½´µÝ¡¥Ñ”Ù¥„µÝ¡¥Ñ”¼ÐÈÑ¼µÝ¡¥Ñ”¼À±œé ´ÌÈˆ(€€€€€€€€€€€€¼ø((€€€€€€€€€€€€ñ¡•…‘•È(€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰…‰Í½±ÕÑ”±•™Ð´ÐÑ½Àµmµ…à À¸ÜÕÉ•´±•¹Ø¡Í…™”µ…É•„µ¥¹Í•ÐµÑ½À¤¥tè´ÌÀ™±•àÜµ™¥Ðµ…àµÜµm…±Œ ÄÀÀ”´ÉÉ•´¥t¥Ñ•µÌµ•¹Ñ•È…À´ÈÉ½Õ¹‘•µ™Õ±°‰œµÝ¡¥Ñ”Áä´Ä¸ÔÁ°´Ä¸ÔÁÈ´ÐÍ¡…‘½ÜµlÁ|ÄÑÁá|ÌÑÁá}É‰„ ÄÔ°ÈÌ°ÐÈ°À¸ÈÀ¥tÉ¥¹œ´ÄÉ¥¹œµÍ±…Ñ”´äÔÀ¼ÄÀ‰…­‘É½Àµ‰±ÕÈµµ±œé±•™Ð´Ø±œéÑ½À´Ø±œé…À´È¸Ô±œéÁÈ´Ôˆ(€€€€€€€€€€€€€…É¥„µ±…‰•°ô‰¡•Õ”µÍ”ˆ(€€€€€€€€€€€€ø(€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰™±•à ´äÜ´ä¥Ñ•µÌµ•¹Ñ•È©ÕÍÑ¥™äµ•¹Ñ•ÈÉ½Õ¹‘•µ™Õ±°‰œµl˜Ñ™‰˜átÍ¡…‘½Üµm¥¹Í•Ñ|Á|Á|Á|ÅÁá}É‰„ ÈÐ°ÄÜä°ÄÈØ°À¸Äà¥t±œé ´ÄÀ±œéÜ´ÄÀˆø(€€€€€€€€€€€€€€€€ñ¥µœ(€€€€€€€€€€€€€€€€€ÍÉŒõí=%%1}1==}MIô(€€€€€€€€€€€€€€€€€…±Ðôˆˆ(€€€€€€€€€€€€€€€€€…É¥„µ¡¥‘‘•¸(€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰ ´ØÜ´Ø½‰©•Ðµ½¹Ñ…¥¸±œé ´Ü±œéÜ´Üˆ(€€€€€€€€€€€€€€€€¼ø(€€€€€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰™½¹Ðµ¡•…‘¥¹œÑ•áÐµlÈÁÁát™½¹Ðµ‰½±±•…‘¥¹œµ¹½¹”ÑÉ…­¥¹œµ¹½Éµ…°Ñ•áÐµÍ±…Ñ”´äÔÀ±œéÑ•áÐµlÈÍÁátˆø(€€€€€€€€€€€€€€€¡•Õ”´ñÍÁ…¸±…ÍÍ9…µ”ô‰Ñ•áÐµlŒÄáÌÝtˆùÍ”ð½ÍÁ…¸ø(€€€€€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€€€€€ð½¡•…‘•Èø(€€€€€€€€€€€€ñ1¥¹¬(€€€€€€€€€€€€€Ñ¼ôˆ½±½¥¸ˆ(€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰…‰Í½±ÕÑ”É¥¡Ð´ÐÑ½Àµmµ…à À¸åÉ•´±•¹Ø¡Í…™”µ…É•„µ¥¹Í•ÐµÑ½À¤¥tè´ÌÀ¥¹±¥¹”µ™±•à ´ä¥Ñ•µÌµ•¹Ñ•ÈÉ½Õ¹‘•µ™Õ±°‰œµÍ±…Ñ”´äÔÀ¼àÔÁà´Ì¸ÔÑ•áÐµáÌ™½¹ÐµÍ•µ¥‰½±Ñ•áÐµÝ¡¥Ñ”Í¡…‘½Üµ±œ‰…­‘É½Àµ‰±ÕÈµµÑÉ…¹Í¥Ñ¥½¸¡½Ù•Èé‰œµÍ±…Ñ”´äÔÀ™½ÕÌµÙ¥Í¥‰±”é½ÕÑ±¥¹”µ¹½¹”™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œ´È™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œµlŒÄáÌÝt±œéÉ¥¡Ð´Ø±œéÑ½À´Üˆ(€€€€€€€€€€€€ø(€€€€€€€€€€€€€¹ÑÉ…È(€€€€€€€€€€€€ð½1¥¹¬ø((€€€€€€€€€€€€ñ‘¥Ø(€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰Ñ µ±¥Ù”µ½Áä…‰Í½±ÕÑ”è´ÈÀÀ´Àˆ(€€€€€€€€€€€€€ÍÑå±”õíì(€€€€€€€€€€€€€€€±•™Ðè€ˆÅÉ•´ˆ°(€€€€€€€€€€€€€€€Ñ½Àè€ˆÐ¸äÕÉ•´ˆ°(€€€€€€€€€€€€€€€Ý¥‘Ñ è€‰µ¥¸ åÉ•´°…±Œ ÄÀÀ”€´€ÉÉ•´¤¤ˆ°(€€€€€€€€€€€€€õô(€€€€€€€€€€€€ø(€€€€€€€€€€€€€€ñÕ°(€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰Ñ µ±¥Ù”µÍÑ…ÑÕÌµ±¥ÍÐÉ¥©ÕÍÑ¥™äµ¥Ñ•µÌµÍÑ…ÉÐ…ÀµlÀ¸ÄÉÉ•µtˆ(€€€€€€€€€€€€€€€…É¥„µ±…‰•°ô‰Q•ÉÉ¥ÓÍÉ¥¼‘¥ÍÁ½»µÙ•°¹¼¡•Õ”µÍ”ˆ(€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€ñ±¤(€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰Ñ µ±¥Ù”µÍÑ…ÑÕÌ™±•àÜµ™¥Ðµ…àµÜµ™Õ±°¥Ñ•µÌµ•¹Ñ•È…ÀµlÀ¸ÈÑÉ•µtÉ½Õ¹‘•µlÀ¸ÔÑÉ•µt‰½É‘•È‰½É‘•ÈµÝ¡¥Ñ”¼äÀ‰œµÝ¡¥Ñ”¼äÔÁàµlÀ¸ÈÑÉ•µtÁäµlÀ¸ÄÙÉ•µtÍ¡…‘½ÜµlÁ|ÙÁá|ÄÑÁá}É‰„ ÄÔ°ÈÌ°ÐÈ°À¸ÀÜ¥t‰…­‘É½Àµ‰±ÕÈµÍ´ˆ(€€€€€€€€€€€€€€€€€ÍÑå±”õí¡½µ•MÑ…ÑÕÍ…É‘MÑå±•ô(€€€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰Ñ µ±¥Ù”µÍÑ…ÑÕÌµ¥½¸¥¹±¥¹”µ™±•à µlÄ¸ÀÙÉ•µtÜµlÄ¸ÀÙÉ•µtÍ¡É¥¹¬´À¥Ñ•µÌµ•¹Ñ•È©ÕÍÑ¥™äµ•¹Ñ•ÈÉ½Õ¹‘•µlÀ¸ÌáÉ•µt‰œµÁÉ¥µ…Éä¼ÄÀÑ•áÐµÁÉ¥µ…Éäˆø(€€€€€€€€€€€€€€€€€€€€ñ5…ÁA¥¸(€€€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰ µlÀ¸ØÑÉ•µtÜµlÀ¸ØÑÉ•µtˆ(€€€€€€€€€€€€€€€€€€€€€…É¥„µ¡¥‘‘•¸(€€€€€€€€€€€€€€€€€€€€€ÍÑÉ½­•]¥‘Ñ õìÈ¸ÈÕô(€€€€€€€€€€€€€€€€€€€€¼ø(€€€€€€€€€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰µ¥¸µÜ´Àˆø(€€€€€€€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰‰±½¬ÑÉÕ¹…Ñ”Ñ•áÐµlä¸ÑÁát™½¹Ðµ‰½±±•…‘¥¹œµÑ¥¡ÐÑ•áÐµÍ±…Ñ”´äÔÀˆø(€€€€€€€€€€€€€€€€€€€€€M…±Ù…‘½È(€€€€€€€€€€€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰‰±½¬ÑÉÕ¹…Ñ”Ñ•áÐµlà¸ÑÁát±•…‘¥¹œµÑ¥¡ÐÑ•áÐµÍ±…Ñ”´ØÀÀˆø(€€€€€€€€€€€€€€€€€€€€€Ñ•ÉÉ¥ÓÍÉ¥¼‘¥ÍÁ½»µÙ•°(€€€€€€€€€€€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€€€€€€€€€ð½±¤ø(€€€€€€€€€€€€€€ð½Õ°ø(€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€ð½‘¥Øø(€€€€€€€€ð½Í•Ñ¥½¸ø((€€€€€€€€ñÍ•Ñ¥½¸±…ÍÍ9…µ”ô‰™±•à™±•à´Ä™±•àµ½°¥Ñ•µÌµ•¹Ñ•ÈÁà´ÔÁä´ÌÑ•áÐµ•¹Ñ•È±œé¥Ñ•µÌµÍÑ…ÉÐ±œé©ÕÍÑ¥™äµ•¹Ñ•È±œéÁà´À±œéÁä´À±œéÑ•áÐµ±•™Ðˆø(€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰ÍÁ…”µä´Ä¸Ôˆø(€€€€€€€€€€€€ñ Ä±…ÍÍ9…µ”ô‰µàµ…ÕÑ¼µ…àµÜµlÄÙÉ•µtÑ•áÐµlÈáÁát™½¹ÐµÍ•µ¥‰½±±•…‘¥¹œµlÀ¸äátÑÉ…­¥¹œµ¹½Éµ…°Ñ•áÐµÍ±…Ñ”´äÔÀµ¥¸µlÌàÁÁátéµ…àµÜµlÄÝÉ•µtµ¥¸µlÌàÁÁátéÑ•áÐµlÌÅÁát±œéµà´À±œéµ…àµÜµlÈÅÉ•µt±œéÑ•áÐµlÐÑÁátˆø(€€€€€€€€€€€€€QÕ‘¼½µ—„Á•±¼Í•Ô‰…¥ÉÉ¼(€€€€€€€€€€€€ð½ Äø(€€€€€€€€€€€€ñÀ±…ÍÍ9…µ”ô‰µàµ…ÕÑ¼µ…àµÜµlÈÁÉ•µtÑ•áÐµlÄÑÁát±•…‘¥¹œ´ÔÑ•áÐµÍ±…Ñ”´ØÀÀ±œéµà´À±œéµ…àµÜµlÈÑÉ•µt±œéÑ•áÐµ‰…Í”±œé±•…‘¥¹œ´Üˆø(€€€€€€€€€€€€€Í½±¡„Õ´‰…¥ÉÉ¼½Ô•¹ÑÉ”Á½ÈM…±Ù…‘½È¥¹Ñ•¥É„¸(€€€€€€€€€€€€ð½Àø(€€€€€€€€€€ð½‘¥Øø((€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰µÐ´ÐÜµ™Õ±°ÍÁ…”µä´È¸Ô±œéµÐ´Ü±œéµ…àµÜµlÐÄÁÁát±œéÍÁ…”µä´Ìˆø(€€€€€€€€€€€€ñ	ÕÑÑ½¸(€€€€€€€€€€€€€ÑåÁ”ô‰‰ÕÑÑ½¸ˆ(€€€€€€€€€€€€€Í¥é”ô‰±œˆ(€€€€€€€€€€€€€½¹±¥¬õí¡…¹‘±•UÍ•1½…Ñ¥½¹ô(€€€€€€€€€€€€€‘¥Í…‰±•õí•¼¹±½…‘¥¹œñðÉ•Í½±Ù¥¹¥Ñåô(€€€€€€€€€€€€€±…ÍÍ9…µ”õí¸ (€€€€€€€€€€€€€€€€‰ ´ÄÈÜµ™Õ±°…À´ÈÉ½Õ¹‘•µlÅÉ•µt‰œµlŒÄáÌÝtÑ•áÐµlÄÑÁát™½¹ÐµÍ•µ¥‰½±Ñ•áÐµÝ¡¥Ñ”ˆ°(€€€€€€€€€€€€€€€€‰Í¡…‘½ÜµlÁ|ÄÉÁá|ÈáÁá}É‰„ ÈÐ°ÄÜä°ÄÈØ°À¸ÈØ¥tÑÉ…¹Í¥Ñ¥½¸µ…±°‘ÕÉ…Ñ¥½¸´ÄÔÀˆ°(€€€€€€€€€€€€€€€€‰¡½Ù•Èé‰œµlŒÄÐå˜ÜÁt…Ñ¥Ù”éÍ…±”µlÀ¸äát‘¥Í…‰±•é½Á…¥Ñä´ÜÀ‘¥Í…‰±•éÍ¡…‘½Üµ¹½¹”ˆ°(€€€€€€€€€€€€€€¥ô(€€€€€€€€€€€€ø(€€€€€€€€€€€€€í•¼¹±½…‘¥¹œñðÉ•Í½±Ù¥¹¥Ñä€ü€ (€€€€€€€€€€€€€€€€ñ1½…‘•ÈÈ±…ÍÍ9…µ”ô‰ ´ÔÜ´Ô…¹¥µ…Ñ”µÍÁ¥¸ˆ€¼ø(€€€€€€€€€€€€€€¤€è€ (€€€€€€€€€€€€€€€€ñ9…Ù¥…Ñ¥½¸±…ÍÍ9…µ”ô‰ ´ÔÜ´Ôˆ€¼ø(€€€€€€€€€€€€€€¥ô(€€€€€€€€€€€€€íÉ•Í½±Ù¥¹¥Ñä(€€€€€€€€€€€€€€€€ü€‰%‘•¹Ñ¥™¥…¹‘¼±½…°¸¸¸ˆ(€€€€€€€€€€€€€€€€è€‰UÍ…Èµ¥¹¡„±½…±¥é‡Ÿ¼‰ô(€€€€€€€€€€€€ð½	ÕÑÑ½¸ø((€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰É•±…Ñ¥Ù”ˆø(€€€€€€€€€€€€€€ñ5…ÁA¥¸(€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰Á½¥¹Ñ•Èµ•Ù•¹ÑÌµ¹½¹”…‰Í½±ÕÑ”±•™Ð´ÐÑ½À´Ä¼Èè´ÄÀ ´ÔÜ´Ô€µÑÉ…¹Í±…Ñ”µä´Ä¼ÈÑ•áÐµlŒÄáÌÝtˆ(€€€€€€€€€€€€€€€…É¥„µ¡¥‘‘•¸(€€€€€€€€€€€€€€¼ø(€€€€€€€€€€€€€€ñ%¹ÁÕÐ(€€€€€€€€€€€€€€€¥ô‰¡½µ”µ¥Ñäˆ(€€€€€€€€€€€€€€€Ù…±Õ”õí¥ÑåEÕ•Éåô(€€€€€€€€€€€€€€€½¹¡…¹”õì¡•Ù•¹Ð¤€ôø¡…¹‘±•5…¹Õ…±¡…¹”¡•Ù•¹Ð¹Ñ…É•Ð¹Ù…±Õ”¥ô(€€€€€€€€€€€€€€€½¹½ÕÌõì ¤€ôøì(€€€€€€€€€€€€€€€€€¥˜€¡ÍÕ•ÍÑ¥½¹Ì¹±•¹Ñ €ø€À¤Í•ÑM¡½ÝMÕ•ÍÑ¥½¹Ì¡ÑÉÕ”¤ì(€€€€€€€€€€€€€€€õô(€€€€€€€€€€€€€€€½¹	±ÕÈõì ¤€ôøì(€€€€€€€€€€€€€€€€€Ý¥¹‘½Ü¹Í•ÑQ¥µ•½ÕÐ  ¤€ôøÍ•ÑM¡½ÝMÕ•ÍÑ¥½¹Ì¡™…±Í”¤°€ÄÔÀ¤ì(€€€€€€€€€€€€€€€õô(€€€€€€€€€€€€€€€½¹-•å½Ý¸õì¡•Ù•¹Ð¤€ôøì(€€€€€€€€€€€€€€€€€¥˜€¡•Ù•¹Ð¹­•ä€ôôô€‰¹Ñ•Èˆ€˜˜…¹MÕ‰µ¥Ñ¥Ñä¤ì(€€€€€€€€€€€€€€€€€€€Í•ÑM¡½ÝMÕ•ÍÑ¥½¹Ì¡™…±Í”¤ì(€€€€€€€€€€€€€€€€€€€Ù½¥½Á•¹I•Í½±Ù•‘Q•ÉÉ¥Ñ½Éä ¤ì(€€€€€€€€€€€€€€€€€ô(€€€€€€€€€€€€€€€€€¥˜€¡•Ù•¹Ð¹­•ä€ôôô€‰Í…Á”ˆ¤Í•ÑM¡½ÝMÕ•ÍÑ¥½¹Ì¡™…±Í”¤ì(€€€€€€€€€€€€€€€õô(€€€€€€€€€€€€€€€Á±…•¡½±‘•Èô‰	ÕÍ…È‰…¥ÉÉ¼½Ô¥‘…‘”ˆ(€€€€€€€€€€€€€€€±…ÍÍ9…µ”õí¸ (€€€€€€€€€€€€€€€€€€‰ ´ÄÈÉ½Õ¹‘•µlÅÉ•µt‰½É‘•ÈµÍ±…Ñ”´ÈÀÀ‰œµÝ¡¥Ñ”Á°´ÄÈÁÈ´ÄÐÑ•áÐµlÄÑÁátÑ•áÐµÍ±…Ñ”´äÔÀˆ°(€€€€€€€€€€€€€€€€€€‰Í¡…‘½ÜµlÁ|ÄÁÁá|ÈÑÁá}É‰„ ÄÔ°ÈÌ°ÐÈ°À¸Àà¥tÁ±…•¡½±‘•ÈéÑ•áÐµÍ±…Ñ”´ÐÀÀˆ°(€€€€€€€€€€€€€€€€€€‰™½ÕÌµÙ¥Í¥‰±”é‰½É‘•ÈµlŒÄáÌÝt™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œ´È™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œµlŒÄáÌÝt¼ÈÔ™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œµ½™™Í•Ð´Àˆ°(€€€€€€€€€€€€€€€€¥ô(€€€€€€€€€€€€€€€…ÕÑ½½µÁ±•Ñ”ô‰½™˜ˆ(€€€€€€€€€€€€€€€¥¹ÁÕÑ5½‘”ô‰Ñ•áÐˆ(€€€€€€€€€€€€€€€É½±”ô‰½µ‰½‰½àˆ(€€€€€€€€€€€€€€€…É¥„µ•áÁ…¹‘•õíÍ¡½ÝMÕ•ÍÑ¥½¹Ì€˜˜ÍÕ•ÍÑ¥½¹Ì¹±•¹Ñ €ø€Áô(€€€€€€€€€€€€€€€…É¥„µ½¹ÑÉ½±Ìô‰¡½µ”µ¥ÑäµÍÕ•ÍÑ¥½¹Ìˆ(€€€€€€€€€€€€€€¼ø(€€€€€€€€€€€€€€ñ‰ÕÑÑ½¸(€€€€€€€€€€€€€€€ÑåÁ”ô‰‰ÕÑÑ½¸ˆ(€€€€€€€€€€€€€€€…É¥„µ±…‰•°ô‰½¹™¥Éµ…È±½…°ˆ(€€€€€€€€€€€€€€€½¹±¥¬õì ¤€ôøÙ½¥½Á•¹I•Í½±Ù•‘Q•ÉÉ¥Ñ½Éä ¥ô(€€€€€€€€€€€€€€€‘¥Í…‰±•õì……¹MÕ‰µ¥Ñ¥Ñäñð½Á•¹¥¹Q•ÉÉ¥Ñ½Éåô(€€€€€€€€€€€€€€€±…ÍÍ9…µ”õí¸ (€€€€€€€€€€€€€€€€€€‰…‰Í½±ÕÑ”É¥¡Ð´ÈÑ½À´Ä¼Èè´ÄÀ™±•à ´ÄÀÜ´ÄÀ€µÑÉ…¹Í±…Ñ”µä´Ä¼È¥Ñ•µÌµ•¹Ñ•È©ÕÍÑ¥™äµ•¹Ñ•ÈÉ½Õ¹‘•µ™Õ±°ˆ°(€€€€€€€€€€€€€€€€€€‰ÑÉ…¹Í¥Ñ¥½¸µ…±°‘ÕÉ…Ñ¥½¸´ÄÔÀ™½ÕÌµÙ¥Í¥‰±”é½ÕÑ±¥¹”µ¹½¹”™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œ´È™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œµlŒÄáÌÝt¼ØÀ™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œµ½™™Í•Ð´Èˆ°(€€€€€€€€€€€€€€€€€…¹MÕ‰µ¥Ñ¥Ñä(€€€€€€€€€€€€€€€€€€€€ü€‰‰œµlŒÄáÌÝt¼ÄÀÑ•áÐµlŒÄÌàÐÕ™t¡½Ù•Èé‰œµlŒÄáÌÝt¼ÄÔ…Ñ¥Ù”éÍ…±”´äÀˆ(€€€€€€€€€€€€€€€€€€€€è€‰Ñ•áÐµÍ±…Ñ”´ÌÀÀˆ°(€€€€€€€€€€€€€€€€¥ô(€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€í½Á•¹¥¹Q•ÉÉ¥Ñ½Éä€ü€ (€€€€€€€€€€€€€€€€€€ñ1½…‘•ÈÈ±…ÍÍ9…µ”ô‰ ´ÔÜ´Ô…¹¥µ…Ñ”µÍÁ¥¸ˆ€¼ø(€€€€€€€€€€€€€€€€¤€è€ (€€€€€€€€€€€€€€€€€€ñÉÉ½ÝI¥¡Ð±…ÍÍ9…µ”ô‰ ´ÔÜ´Ôˆ€¼ø(€€€€€€€€€€€€€€€€¥ô(€€€€€€€€€€€€€€ð½‰ÕÑÑ½¸ø((€€€€€€€€€€€€€íÍ¡½ÝMÕ•ÍÑ¥½¹Ì€˜˜ÍÕ•ÍÑ¥½¹Ì¹±•¹Ñ €ø€À€ü€ (€€€€€€€€€€€€€€€€ñÕ°(€€€€€€€€€€€€€€€€€¥ô‰¡½µ”µ¥ÑäµÍÕ•ÍÑ¥½¹Ìˆ(€€€€€€€€€€€€€€€€€É½±”ô‰±¥ÍÑ‰½àˆ(€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰…‰Í½±ÕÑ”±•™Ð´ÀÉ¥¡Ð´ÀÑ½Àµ™Õ±°è´ÈÀµÐ´Èµ…àµ ´ØÐ½Ù•É™±½Üµ…ÕÑ¼É½Õ¹‘•´Éá°‰½É‘•È‰½É‘•ÈµÍ±…Ñ”´ÈÀÀ‰œµÝ¡¥Ñ”À´ÄÍ¡…‘½Üµá°ˆ(€€€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€€íÍÕ•ÍÑ¥½¹Ì¹µ…À ¡Ì¤€ôø€ (€€€€€€€€€€€€€€€€€€€€ñ±¤­•äõíÌ¹¥‘ôø(€€€€€€€€€€€€€€€€€€€€€€ñ‰ÕÑÑ½¸(€€€€€€€€€€€€€€€€€€€€€€€ÑåÁ”ô‰‰ÕÑÑ½¸ˆ(€€€€€€€€€€€€€€€€€€€€€€€É½±”ô‰½ÁÑ¥½¸ˆ(€€€€€€€€€€€€€€€€€€€€€€€…É¥„µÍ•±•Ñ•õí¥ÑåEÕ•Éä€ôôôÌ¹±…‰•±ô(€€€€€€€€€€€€€€€€€€€€€€€½¹5½ÕÍ•½Ý¸õì¡•Ù•¹Ð¤€ôø•Ù•¹Ð¹ÁÉ•Ù•¹Ñ•™…Õ±Ð ¥ô(€€€€€€€€€€€€€€€€€€€€€€€½¹±¥¬õì ¤€ôø¡…¹‘±•A¥­MÕ•ÍÑ¥½¸¡Ì¥ô(€€€€€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰™±•àµ¥¸µ ´ÄÄÜµ™Õ±°¥Ñ•µÌµ•¹Ñ•È…À´ÈÉ½Õ¹‘•µá°Áà´ÌÁä´È¸ÔÑ•áÐµ±•™ÐÑ•áÐµÍ´Ñ•áÐµÍ±…Ñ”´àÀÀÑÉ…¹Í¥Ñ¥½¸µ½±½ÉÌ¡½Ù•Èé‰œµÍ±…Ñ”´ÄÀÀ™½ÕÌµÙ¥Í¥‰±”é½ÕÑ±¥¹”µ¹½¹”™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œ´È™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œµlŒÄáÌÝt¼ÐÀˆ(€€€€€€€€€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€€€€€€€€€ñ5…ÁA¥¸±…ÍÍ9…µ”ô‰ ´ÐÜ´ÐÍ¡É¥¹¬´ÀÑ•áÐµlŒÄáÌÝtˆ€¼ø(€€€€€€€€€€€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰ÑÉÕ¹…Ñ”ˆùíÌ¹±…‰•±ôð½ÍÁ…¸ø(€€€€€€€€€€€€€€€€€€€€€€ð½‰ÕÑÑ½¸ø(€€€€€€€€€€€€€€€€€€€€ð½±¤ø(€€€€€€€€€€€€€€€€€€¤¥ô(€€€€€€€€€€€€€€€€ð½Õ°ø(€€€€€€€€€€€€€€¤€è¹Õ±±ô(€€€€€€€€€€€€ð½‘¥Øø((€€€€€€€€€€€€ñ	ÕÑÑ½¸(€€€€€€€€€€€€€ÑåÁ”ô‰‰ÕÑÑ½¸ˆ(€€€€€€€€€€€€€Ù…É¥…¹Ðô‰½ÕÑ±¥¹”ˆ(€€€€€€€€€€€€€½¹±¥¬õì ¤€ôø(€€€€€€€€€€€€€€€½Á•¹AÕ‰±¥Q•ÉÉ¥Ñ½Éä¡AU	1%}M1Y=I}AQ °€‰M…±Ù…‘½Èˆ¤(€€€€€€€€€€€€€ô(€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰ ´ÄÄÜµ™Õ±°É½Õ¹‘•µlÅÉ•µt‰½É‘•ÈµlŒÄáÌÝt¼ÈÔ‰œµÝ¡¥Ñ”¼àÀÑ•áÐµlÄÌ¸ÕÁát™½¹ÐµÍ•µ¥‰½±Ñ•áÐµlŒÄÌàÐÕ™tÍ¡…‘½ÜµlÁ|áÁá|ÄáÁá}É‰„ ÄÔ°ÈÌ°ÐÈ°À¸ÀØ¥tÑÉ…¹Í¥Ñ¥½¸µ…±°¡½Ù•Èé‰½É‘•ÈµlŒÄáÌÝt¼ÐÔ¡½Ù•Èé‰œµlŒÄáÌÝt½lÀ¸ÀÙt…Ñ¥Ù”éÍ…±”µlÀ¸äátˆ(€€€€€€€€€€€€ø(€€€€€€€€€€€€€Y•ÈM…±Ù…‘½È¥¹Ñ•¥É„(€€€€€€€€€€€€ð½	ÕÑÑ½¸ø((€€€€€€€€€€€íÉ•Í½±Ù•€ü€ (€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰É½Õ¹‘•´Éá°‰½É‘•È‰½É‘•ÈµlŒÄáÌÝt¼ÈÀ‰œµlŒÄáÌÝt½lÀ¸ÀÝtÀ´Ì¸Ôˆø(€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰™±•à¥Ñ•µÌµÍÑ…ÉÐ…À´Ìˆø(€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰™±•à ´äÜ´äÍ¡É¥¹¬´À¥Ñ•µÌµ•¹Ñ•È©ÕÍÑ¥™äµ•¹Ñ•ÈÉ½Õ¹‘•µ™Õ±°‰œµlŒÄáÌÝt¼ÄÔÑ•áÐµlŒÄÌàÐÕ™tˆø(€€€€€€€€€€€€€€€€€€€€ñ5…ÁA¥¸±…ÍÍ9…µ”ô‰ ´ÐÜ´Ðˆ€¼ø(€€€€€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰µ¥¸µÜ´À™±•à´ÄÑ•áÐµ±•™Ðˆø(€€€€€€€€€€€€€€€€€€€€ñÀ±…ÍÍ9…µ”ô‰Ñ•áÐµlÄÁÁát™½¹ÐµÍ•µ¥‰½±ÕÁÁ•É…Í”ÑÉ…­¥¹œµlÀ¸Àá•µtÑ•áÐµlŒÄÌàÐÕ™tˆø(€€€€€€€€€€€€€€€€€€€€€1½…°•¹½¹ÑÉ…‘¼(€€€€€€€€€€€€€€€€€€€€ð½Àø(€€€€€€€€€€€€€€€€€€€€ñÀ±…ÍÍ9…µ”ô‰µÐ´À¸ÔÑÉÕ¹…Ñ”Ñ•áÐµÍ´™½¹ÐµÍ•µ¥‰½±Ñ•áÐµÍ±…Ñ”´äÔÀˆø(€€€€€€€€€€€€€€€€€€€€€íÉ•Í½±Ù•¹±…‰•±ô(€€€€€€€€€€€€€€€€€€€€ð½Àø(€€€€€€€€€€€€€€€€€€€€ñÀ±…ÍÍ9…µ”ô‰µÐ´À¸ÔÑ•áÐµlÄÅÁátÑ•áÐµÍ±…Ñ”´ÔÀÀˆø(€€€€€€€€€€€€€€€€€€€€€AÉ½¹Ñ¼Á…É„…‰É¥È¼½¹Ñ•áÑ¼Ã
+é‰±¥¼‘¥ÍÁ½»
+µÙ•°¸(€€€€€€€€€€€€€€€€€€€€ð½Àø(€€€€€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€€€€€€€ñ‰ÕÑÑ½¸(€€€€€€€€€€€€€€€€€€€ÑåÁ”ô‰‰ÕÑÑ½¸ˆ(€€€€€€€€€€€€€€€€€€€…É¥„µ±…‰•°ô‰•Í…ÉÑ…È±½…°•¹½¹ÑÉ…‘¼ˆ(€€€€€€€€€€€€€€€€€€€½¹±¥¬õì ¤€ôøÍ•ÑI•Í½±Ù•¡¹Õ±°¥ô(€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ôˆµµÈ´Ä€µµÐ´Ä™±•à ´äÜ´äÍ¡É¥¹¬´À¥Ñ•µÌµ•¹Ñ•È©ÕÍÑ¥™äµ•¹Ñ•ÈÉ½Õ¹‘•µ™Õ±°Ñ•áÐµÍ±…Ñ”´ÔÀÀÑÉ…¹Í¥Ñ¥½¸µ½±½ÉÌ¡½Ù•Èé‰œµÝ¡¥Ñ”¼ÜÀ¡½Ù•ÈéÑ•áÐµÍ±…Ñ”´äÀÀ…Ñ¥Ù”éÍ…±”´äÀ™½ÕÌµÙ¥Í¥‰±”é½ÕÑ±¥¹”µ¹½¹”™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œ´È™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œµlŒÄáÌÝt¼ÔÀˆ(€€€€€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€€€€€ñ`±…ÍÍ9…µ”ô‰ ´ÐÜ´Ðˆ€¼ø(€€€€€€€€€€€€€€€€€€ð½‰ÕÑÑ½¸ø(€€€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€€€€€ñ	ÕÑÑ½¸(€€€€€€€€€€€€€€€€€ÑåÁ”ô‰‰ÕÑÑ½¸ˆ(€€€€€€€€€€€€€€€€€Í¥é”ô‰Í´ˆ(€€€€€€€€€€€€€€€€€½¹±¥¬õì ¤€ôø(€€€€€€€€€€€€€€€€€€€Ù½¥½Á•¹I•Í½±Ù•‘Q•ÉÉ¥Ñ½Éä¡É•Í½±Ù•¹±…‰•°°É•Í½±Ù•¤(€€€€€€€€€€€€€€€€€ô(€€€€€€€€€€€€€€€€€‘¥Í…‰±•õí½Á•¹¥¹Q•ÉÉ¥Ñ½Éåô(€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰µÐ´Ì ´ÄÄÜµ™Õ±°…À´ÈÉ½Õ¹‘•µá°‰œµlŒÄáÌÝtÑ•áÐµÝ¡¥Ñ”ÑÉ…¹Í¥Ñ¥½¸µÑÉ…¹Í™½É´¡½Ù•Èé‰œµlŒÄÐå˜ÜÁt…Ñ¥Ù”éÍ…±”µlÀ¸äátˆ(€€€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€€€ñ¡•¬±…ÍÍ9…µ”ô‰ ´ÐÜ´Ðˆ€¼ø(€€€€€€€€€€€€€€€€€½¹™¥Éµ…È(€€€€€€€€€€€€€€€€ð½	ÕÑÑ½¸ø(€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€¤€è¹Õ±±ô((€€€€€€€€€€€í•½ÉÉ½É1…‰•°ñðÉ•Ù•ÉÍ•ÉÉ½È€ü€ (€€€€€€€€€€€€€€ñ‘¥Ø(€€€€€€€€€€€€€€€É½±”ô‰…±•ÉÐˆ(€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰É½Õ¹‘•µá°‰½É‘•È‰½É‘•ÈµÉ•´ÈÀÀ‰œµÉ•´ÔÀÁà´ÌÁä´È¸ÔÑ•áÐµlÄÍÁát±•…‘¥¹œµÉ•±…á•Ñ•áÐµÉ•´ÜÀÀˆ(€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€í•½ÉÉ½É1…‰•°ñðÉ•Ù•ÉÍ•ÉÉ½Éô(€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€¤€è¹Õ±±ô((€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰ÍÁ…”µä´Ä¸ÔÁÐ´À¸Ôˆø(€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰™±•à¥Ñ•µÌµ•¹Ñ•È©ÕÍÑ¥™äµ‰•ÑÝ••¸…À´Ìˆø(€€€€€€€€€€€€€€€€ñÀ±…ÍÍ9…µ”ô‰Ñ•áÐµlÄÉÁát™½¹Ðµµ•‘¥Õ´Ñ•áÐµÍ±…Ñ”´ÔÀÀˆø(€€€€€€€€€€€€€€€€€Q•ÉÉ¥ÓÍÉ¥½ÌÍÕ•É¥‘½Ì(€€€€€€€€€€€€€€€€ð½Àø(€€€€€€€€€€€€€€€€ñÀ±…ÍÍ9…µ”ô‰Ñ•áÐµlÄÅÁát™½¹Ðµµ•‘¥Õ´Ñ•áÐµÍ±…Ñ”´ÐÀÀˆø(€€€€€€€€€€€€€€€€€•ÍÍ¼Ãé‰±¥¼(€€€€€€€€€€€€€€€€ð½Àø(€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€€€ñ‘¥Ø(€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰™±•à™±•àµÝÉ…À…À´Ä¸Ôˆ(€€€€€€€€€€€€€€€…É¥„µ±…‰•°ô‰MÕ•ÍÑ½•Ì‘”±½…°ˆ(€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€íÉ••¹ÑMÕ•ÍÑ¥½¹Ì¹µ…À ¡±…‰•°¤€ôø€ (€€€€€€€€€€€€€€€€€€ñ‰ÕÑÑ½¸(€€€€€€€€€€€€€€€€€€€­•äõí±…‰•±ô(€€€€€€€€€€€€€€€€€€€ÑåÁ”ô‰‰ÕÑÑ½¸ˆ(€€€€€€€€€€€€€€€€€€€½¹±¥¬õì ¤€ôø¡…¹‘±•M••‘MÕ•ÍÑ¥½¸¡±…‰•°¥ô(€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰É½Õ¹‘•µ™Õ±°‰½É‘•È‰½É‘•ÈµÍ±…Ñ”´ÈÀÀ‰œµÝ¡¥Ñ”Áà´È¸ÔÁä´Ä¸ÔÑ•áÐµlÄÄ¸ÕÁát™½¹Ðµµ•‘¥Õ´Ñ•áÐµÍ±…Ñ”´ÜÀÀÍ¡…‘½ÜµÍ´ÑÉ…¹Í¥Ñ¥½¸µ½±½ÉÌ¡½Ù•Èé‰½É‘•ÈµlŒÄáÌÝt¼ÐÀ¡½Ù•ÈéÑ•áÐµÍ±…Ñ”´äÔÀ™½ÕÌµÙ¥Í¥‰±”é½ÕÑ±¥¹”µ¹½¹”™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œ´È™½ÕÌµÙ¥Í¥‰±”éÉ¥¹œµlŒÄáÌÝt¼ÌÀˆ(€€€€€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€€€€€ñÍÁ…¸(€€€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰µÈ´Ä¥¹±¥¹”µ‰±½¬Ñ•áÐµlŒÄáÌÝtˆ(€€€€€€€€€€€€€€€€€€€€€…É¥„µ¡¥‘‘•¸(€€€€€€€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€€€€€€ƒÂ~N4(€€€€€€€€€€€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€€€€€€€€€€€€í±…‰•±ô(€€€€€€€€€€€€€€€€€€ð½‰ÕÑÑ½¸ø(€€€€€€€€€€€€€€€€¤¥ô(€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€ð½‘¥Øø(€€€€€€€€ð½Í•Ñ¥½¸ø((€€€€€€€€ñ™½½Ñ•È±…ÍÍ9…µ”ô‰Áà´ÔÁˆ´ÌÑ•áÐµ•¹Ñ•ÈÑ•áÐµlÄÄ¸ÕÁát±•…‘¥¹œµÍ¹ÕœÑ•áÐµÍ±…Ñ”´ÔÀÀ±œé½°µÍÑ…ÉÐ´È±œéÁà´À±œéÁˆ´À±œéÑ•áÐµ±•™Ð±œéÑ•áÐµlÄÉÁát±œé±•…‘¥¹œµÉ•±…á•ˆø(€€€€€€€€€€ñÀùY½¨Ù•Ë„ÁÉ¥µ•¥É¼¼ÅÕ”É•…±µ•¹Ñ”…½¹Ñ•”Á•ÉÑ¼‘”Ù½¨¸ð½Àø(€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰µÐ´Ä¸Ô™±•à™±•àµÝÉ…À¥Ñ•µÌµ•¹Ñ•È©ÕÍÑ¥™äµ•¹Ñ•È…À´Ä¸Ô±œéµÐ´È±œé…À´È±œé©ÕÍÑ¥™äµÍÑ…ÉÐˆø(€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰É½Õ¹‘•µ™Õ±°‰œµlŒÄáÌÝt¼ÄÀÁà´È¸ÔÁä´ÄÑ•áÐµlÄÅÁát™½¹Ðµµ•‘¥Õ´Ñ•áÐµlŒÄÌàÐÕ™tˆø(€€€€€€€€€€€€€M…±Ù…‘½È(€€€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰É½Õ¹‘•µ™Õ±°‰œµÍ±…Ñ”´ÄÀÀÁà´È¸ÔÁä´ÄÑ•áÐµlÄÅÁát™½¹Ðµµ•‘¥Õ´Ñ•áÐµÍ±…Ñ”´ØÀÀˆø(€€€€€€€€€€€€€•áÁ±½É”Í•´…‘…ÍÑÉ¼(€€€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€€€ð½‘¥Øø(€€€€€€€€ð½™½½Ñ•Èø(€€€€€€ð½µ…¥¸ø(€€€€ð½‘¥Øø(€€¤ì)ô

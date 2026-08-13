@@ -86,7 +86,9 @@ function titleCase(value: string): string {
 
 function formatEventDate(value: string): string {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "Data a confirmar" : DATE_FORMATTER.format(date);
+  return Number.isNaN(date.getTime())
+    ? "Data a confirmar"
+    : DATE_FORMATTER.format(date);
 }
 
 function formatRelativeDate(value: string): string {
@@ -94,9 +96,10 @@ function formatRelativeDate(value: string): string {
   if (!Number.isFinite(timestamp)) return "recente";
   const days = Math.round((timestamp - Date.now()) / (24 * 60 * 60 * 1000));
   if (Math.abs(days) < 7) return RELATIVE_TIME_FORMATTER.format(days, "day");
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(
-    timestamp,
-  );
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+  }).format(timestamp);
 }
 
 function formatPrice(value: number): string {
@@ -143,7 +146,11 @@ function SectionHeader({
   );
 }
 
-function Surface({ children, className, ...props }: HTMLAttributes<HTMLDivElement>) {
+function Surface({
+  children,
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       {...props}
@@ -159,7 +166,10 @@ function Surface({ children, className, ...props }: HTMLAttributes<HTMLDivElemen
 
 function HomeLoading() {
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.8fr)]" aria-label="Carregando informaÃ§Ãµes do territÃ³rio">
+    <div
+      className="grid gap-5 lg:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.8fr)]"
+      aria-label="Carregando informaÃ§Ãµes do territÃ³rio"
+    >
       <div className="space-y-4">
         <div className="h-7 w-56 animate-pulse rounded-full bg-muted" />
         <div className="h-36 animate-pulse rounded-3xl bg-muted" />
@@ -170,7 +180,29 @@ function HomeLoading() {
   );
 }
 
-function EventRow({ event, eventsBaseUrl }: { event: PublicEvent; eventsBaseUrl: string }) {
+function HomeSectionLoading({ rows = 2 }: { rows?: number }) {
+  return (
+    <div
+      className="grid gap-3 sm:grid-cols-2"
+      aria-label="Atualizando esta seÃ§Ã£o"
+    >
+      {Array.from({ length: rows }, (_, index) => (
+        <div
+          key={index}
+          className="h-24 animate-pulse rounded-2xl border border-border/60 bg-muted/70"
+        />
+      ))}
+    </div>
+  );
+}
+
+function EventRow({
+  event,
+  eventsBaseUrl,
+}: {
+  event: PublicEvent;
+  eventsBaseUrl: string;
+}) {
   return (
     <Link
       to={eventPublicRoutes.detailFromBase(eventsBaseUrl, event.id)}
@@ -190,7 +222,10 @@ function EventRow({ event, eventsBaseUrl }: { event: PublicEvent; eventsBaseUrl:
           {event.venue_name ?? event.location ?? "Local a confirmar"}
         </span>
       </span>
-      <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" aria-hidden="true" />
+      <ArrowRight
+        className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary"
+        aria-hidden="true"
+      />
     </Link>
   );
 }
@@ -228,7 +263,11 @@ function HighlightRow({ highlight }: { highlight: TerritorialHighlight }) {
     );
   }
 
-  return <div className="flex gap-4 rounded-2xl border border-border/70 bg-background/55 p-4">{content}</div>;
+  return (
+    <div className="flex gap-4 rounded-2xl border border-border/70 bg-background/55 p-4">
+      {content}
+    </div>
+  );
 }
 
 function OpportunityRow({
@@ -257,7 +296,10 @@ function OpportunityRow({
           {opportunity.professional_category}
         </span>
       </span>
-      <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" aria-hidden="true" />
+      <ArrowRight
+        className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary"
+        aria-hidden="true"
+      />
     </Link>
   );
 }
@@ -269,14 +311,15 @@ function ClassifiedRow({
   classified: FeaturedClassified;
   fallbackHref: string;
 }) {
-  const href = classifiedUrlService.buildPublicUrl({
-    id: classified.id,
-    public_id: classified.public_id,
-    slug: classified.slug,
-    geographic_path: classified.geographic_path,
-    category_slug: classified.category_slug,
-    subcategory_slug: classified.subcategory_slug,
-  }) ?? fallbackHref;
+  const href =
+    classifiedUrlService.buildPublicUrl({
+      id: classified.id,
+      public_id: classified.public_id,
+      slug: classified.slug,
+      geographic_path: classified.geographic_path,
+      category_slug: classified.category_slug,
+      subcategory_slug: classified.subcategory_slug,
+    }) ?? fallbackHref;
 
   return (
     <Link
@@ -297,12 +340,21 @@ function ClassifiedRow({
           {classified.territory_name ?? classified.category}
         </span>
       </span>
-      <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" aria-hidden="true" />
+      <ArrowRight
+        className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary"
+        aria-hidden="true"
+      />
     </Link>
   );
 }
 
-function CommunityPostRow({ post, communityUrl }: { post: Post; communityUrl: string }) {
+function CommunityPostRow({
+  post,
+  communityUrl,
+}: {
+  post: Post;
+  communityUrl: string;
+}) {
   const author = post.profile?.displayName ?? "Pessoa da comunidade";
   const separator = communityUrl.includes("?") ? "&" : "?";
 
@@ -316,25 +368,43 @@ function CommunityPostRow({ post, communityUrl }: { post: Post; communityUrl: st
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="truncate font-semibold text-foreground">{author}</span>
+          <span className="truncate font-semibold text-foreground">
+            {author}
+          </span>
           <span aria-hidden="true">Â·</span>
-          <span className="shrink-0">{formatRelativeDate(post.created_at)}</span>
+          <span className="shrink-0">
+            {formatRelativeDate(post.created_at)}
+          </span>
         </span>
         <span className="mt-1 block line-clamp-2 text-sm leading-6 text-foreground">
-          {getPublicPostPreview(post.content, 150, "ConteÃºdo sem resumo disponÃ­vel.")}
+          {getPublicPostPreview(
+            post.content,
+            150,
+            "ConteÃºdo sem resumo disponÃ­vel.",
+          )}
         </span>
         <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground group-hover:text-primary">
           <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" />
-          {post.comments_count} {post.comments_count === 1 ? "resposta" : "respostas"}
+          {post.comments_count}{" "}
+          {post.comments_count === 1 ? "resposta" : "respostas"}
         </span>
       </span>
     </Link>
   );
 }
 
-function BusinessItem({ business, href }: { business: FeaturedBusiness; href: string }) {
+function BusinessItem({
+  business,
+  href,
+}: {
+  business: FeaturedBusiness;
+  href: string;
+}) {
   return (
-    <Link to={href} className="group flex items-center gap-3 rounded-2xl p-2.5 transition hover:bg-muted/55">
+    <Link
+      to={href}
+      className="group flex items-center gap-3 rounded-2xl p-2.5 transition hover:bg-muted/55"
+    >
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 font-semibold text-emerald-800">
         {getInitial(business.name)}
       </span>
@@ -343,7 +413,12 @@ function BusinessItem({ business, href }: { business: FeaturedBusiness; href: st
           <span className="truncate text-sm font-semibold text-foreground group-hover:text-primary">
             {business.name}
           </span>
-          {business.is_verified ? <BadgeCheck className="h-4 w-4 shrink-0 text-sky-600" aria-label="Verificado" /> : null}
+          {business.is_verified ? (
+            <BadgeCheck
+              className="h-4 w-4 shrink-0 text-sky-600"
+              aria-label="Verificado"
+            />
+          ) : null}
         </span>
         <span className="block truncate text-xs text-muted-foreground">
           {business.category || "ComÃ©rcio local"}
@@ -354,9 +429,18 @@ function BusinessItem({ business, href }: { business: FeaturedBusiness; href: st
   );
 }
 
-function ServiceItem({ service, href }: { service: FeaturedService; href: string }) {
+function ServiceItem({
+  service,
+  href,
+}: {
+  service: FeaturedService;
+  href: string;
+}) {
   return (
-    <Link to={href} className="group flex items-center gap-3 rounded-2xl p-2.5 transition hover:bg-muted/55">
+    <Link
+      to={href}
+      className="group flex items-center gap-3 rounded-2xl p-2.5 transition hover:bg-muted/55"
+    >
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 font-semibold text-sky-800">
         {getInitial(service.name)}
       </span>
@@ -365,10 +449,16 @@ function ServiceItem({ service, href }: { service: FeaturedService; href: string
           <span className="truncate text-sm font-semibold text-foreground group-hover:text-primary">
             {service.name}
           </span>
-          {service.is_verified ? <BadgeCheck className="h-4 w-4 shrink-0 text-sky-600" aria-label="Verificado" /> : null}
+          {service.is_verified ? (
+            <BadgeCheck
+              className="h-4 w-4 shrink-0 text-sky-600"
+              aria-label="Verificado"
+            />
+          ) : null}
         </span>
         <span className="block truncate text-xs text-muted-foreground">
-          {service.category || "ServiÃ§o local"} Â· {service.price_range ?? "A combinar"}
+          {service.category || "ServiÃ§o local"} Â·{" "}
+          {service.price_range ?? "A combinar"}
         </span>
       </span>
     </Link>
@@ -383,420 +473,4 @@ function getBusinessHref(
     slug: string;
     is_premium?: boolean;
     geographic_path: string;
-  }) => string,
-): string {
-  if (!business.slug || !business.geographic_path) return fallbackHref;
-  const geographicParts = business.geographic_path.split("/").filter(Boolean);
-  if (geographicParts.length < 4) return fallbackHref;
-
-  return canonical({
-    id: business.id,
-    slug: business.slug,
-    is_premium: business.is_premium,
-    geographic_path: business.geographic_path,
-  });
-}
-
-export default function TerritoryHomePage() {
-  const navigate = useNavigate();
-  const params = useParams();
-  const { resolved, baseUrl, communityBaseUrl, activeMemberIds } = useTerritorialContext();
-  const { user, activeProfile } = useSessionContext();
-  const { unreadCount } = useUnifiedNotifications();
-  const appUrls = useAppUrls(resolved);
-  const territory = useModuleTerritoryFilter({
-    routeResolved: resolved,
-    activeMemberIds,
-    nearbyEnabled: false,
-    includeDescendants: true,
-  });
-  const access = useCommunityAccess({ resolved, activeMemberIds });
-  const data = useTerritoryHomeData({
-    resolved,
-    territoryFilter: territory.territoryFilter,
-    resolvedLocationIds: territory.resolvedLocationIds,
-    territoryLoading: territory.isLoading,
-  });
-
-  const cityBaseUrl = buildCityTerritoryBaseUrl(baseUrl);
-  const isCityHome = cityBaseUrl === baseUrl;
-  const territoryName =
-    resolved.kind === "group" ? resolved.group.name : resolved.location.name;
-  const cityName = titleCase(params.city ?? "cidade");
-  const stateLabel = (params.state ?? "").toLocaleUpperCase("pt-BR");
-  const locationLine = isCityHome
-    ? `${stateLabel} Â· visÃ£o ampla da cidade`
-    : `${cityName}, ${stateLabel}`;
-
-  const urls = useMemo<HomeUrls>(() => ({
-    business: appUrls.business.list,
-    classifieds: appUrls.classifieds.list,
-    community: communityBaseUrl,
-    events: buildModuleTerritoryUrl(MODULE_SLUGS.events, baseUrl),
-    gastronomy: buildModuleTerritoryUrl(MODULE_SLUGS.gastronomy, baseUrl),
-    jobs: buildModuleTerritoryUrl(MODULE_SLUGS.jobs, baseUrl),
-    map: buildModuleTerritoryUrl(MODULE_SLUGS.map, baseUrl),
-    search: buildModuleTerritoryUrl(MODULE_SLUGS.search, baseUrl),
-    services: appUrls.services.list,
-  }), [
-    appUrls.business.list,
-    appUrls.classifieds.list,
-    appUrls.services.list,
-    baseUrl,
-    communityBaseUrl,
-  ]);
-
-  const quickActions = useMemo(() => {
-    const actions: Array<{
-      label: string;
-      description: string;
-      href: string;
-      icon: LucideIcon;
-      tone: string;
-    }> = [
-      { label: "Buscar", description: "Tudo no territÃ³rio", href: urls.search, icon: Search, tone: "bg-emerald-100 text-emerald-800" },
-      { label: "ServiÃ§os", description: "Profissionais locais", href: urls.services, icon: Wrench, tone: "bg-sky-100 text-sky-800" },
-      { label: "Empresas", description: "ComÃ©rcio por perto", href: urls.business, icon: Store, tone: "bg-violet-100 text-violet-800" },
-      { label: "Classificados", description: "Comprar e vender", href: urls.classifieds, icon: Tag, tone: "bg-amber-100 text-amber-800" },
-      { label: "Mapa", description: "Ver por localizaÃ§Ã£o", href: urls.map, icon: Map, tone: "bg-rose-100 text-rose-800" },
-      { label: "Gastronomia", description: "Onde comer", href: urls.gastronomy, icon: UtensilsCrossed, tone: "bg-orange-100 text-orange-800" },
-    ];
-    return actions.filter((action) => {
-      if (action.href === urls.gastronomy) return isLaunchSurfaceEnabled("gastronomy");
-      if (action.href === urls.map) return isLaunchSurfaceEnabled("map");
-      return true;
-    });
-  }, [urls]);
-
-  const hasWorthKnowing =
-    data.highlights.length > 0 ||
-    data.events.length > 0 ||
-    data.opportunities.length > 0 ||
-    data.classifieds.length > 0;
-  const hasUsefulPlaces = data.businesses.length > 0 || data.services.length > 0;
-  const canCreatePost = !access.isLoading && access.can.create_post;
-
-  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const query = String(new FormData(event.currentTarget).get("q") ?? "").trim();
-    navigate(query ? `${urls.search}?q=${encodeURIComponent(query)}` : urls.search);
-  };
-
-  return (
-    <div className="min-h-[100dvh] bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.09),transparent_30rem),linear-gradient(to_bottom,hsl(var(--background)),hsl(var(--muted)/0.35))] pb-10 text-foreground md:pb-16">
-      <header
-        className="sticky top-0 z-40 border-b border-border/70 bg-background/88 backdrop-blur-xl"
-        style={{ paddingTop: "env(safe-area-inset-top)" }}
-      >
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
-          <Link
-            to="/"
-            className="group flex min-w-0 items-center gap-3 rounded-2xl pr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35"
-            aria-label={`Trocar territÃ³rio. VocÃª estÃ¡ em ${territoryName}.`}
-          >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
-              <MapPin className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <span className="min-w-0">
-              <span className="flex items-center gap-1.5">
-                <span className="truncate font-display text-lg font-semibold leading-tight sm:text-xl">
-                  {territoryName}
-                </span>
-                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-y-0.5" aria-hidden="true" />
-              </span>
-              <span className="block truncate text-xs text-muted-foreground">{locationLine}</span>
-            </span>
-          </Link>
-
-          <div className="flex items-center gap-2">
-            {canCreatePost ? (
-              <Link
-                to="/novo-post"
-                className="hidden h-10 items-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 sm:inline-flex"
-              >
-                Publicar
-              </Link>
-            ) : null}
-            {!user ? (
-              <Link to="/login" className="hidden text-sm font-semibold text-foreground hover:text-primary sm:block">
-                Entrar
-              </Link>
-            ) : null}
-            <Link
-              to={user ? "/notificacoes" : "/login"}
-              className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-card text-foreground transition hover:border-primary/25 hover:text-primary"
-              aria-label={user && unreadCount > 0 ? `${unreadCount} notificaÃ§Ãµes nÃ£o lidas` : "NotificaÃ§Ãµes"}
-            >
-              <Bell className="h-5 w-5" aria-hidden="true" />
-              {user && unreadCount > 0 ? (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
-              ) : null}
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-7xl px-4 pb-24 pt-7 sm:px-6 sm:pt-10 lg:px-8">
-        <section className="grid items-end gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(24rem,0.72fr)] lg:gap-12">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-              Hoje em {territoryName}
-            </p>
-            <h1 className="mt-3 max-w-3xl font-display text-3xl font-semibold leading-[1.08] tracking-[-0.03em] sm:text-5xl lg:text-[3.5rem]">
-              O que importa por aqui, em um sÃ³ lugar.
-            </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-              Descubra o que mudou, o que merece atenÃ§Ã£o e o que vocÃª consegue resolver em {territoryName}.
-            </p>
-            {activeProfile?.displayName ? (
-              <p className="mt-3 text-sm font-medium text-foreground">
-                OlÃ¡, {activeProfile.displayName.split(" ")[0]}. Este Ã© o seu contexto territorial atual.
-              </p>
-            ) : null}
-          </div>
-
-          <form onSubmit={handleSearch} role="search" className="relative">
-            <label htmlFor="territory-home-search" className="sr-only">
-              Buscar em {territoryName}
-            </label>
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-            <input
-              id="territory-home-search"
-              name="q"
-              type="search"
-              autoComplete="off"
-              placeholder={`Buscar em ${territoryName}`}
-              className="h-14 w-full rounded-2xl border border-border bg-card pl-12 pr-14 text-sm shadow-[0_18px_45px_-32px_rgba(15,23,42,0.65)] outline-none transition placeholder:text-muted-foreground focus:border-primary/45 focus:ring-4 focus:ring-primary/10"
-            />
-            <button
-              type="submit"
-              className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl bg-primary text-primary-foreground transition hover:bg-primary/90"
-              aria-label="Buscar"
-            >
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </button>
-          </form>
-        </section>
-
-        {data.happeningSoon.length > 0 ? (
-          <section className="mt-8" aria-labelledby="home-now-title" data-testid="home-now-section">
-            <Surface className="overflow-hidden border-orange-200/80 bg-gradient-to-r from-orange-50 to-card p-5 sm:p-6">
-              <SectionHeader
-                title={`Agora em ${territoryName}`}
-                description="Somente informaÃ§Ãµes com horÃ¡rio atual ou muito prÃ³ximo."
-                href={urls.events}
-              />
-              <div className="grid gap-3 md:grid-cols-2">
-                {data.happeningSoon.slice(0, 2).map((event) => (
-                  <EventRow key={event.id} event={event} eventsBaseUrl={urls.events} />
-                ))}
-              </div>
-            </Surface>
-          </section>
-        ) : null}
-
-        <section className="mt-8" aria-labelledby="quick-actions-title">
-          <SectionHeader title="Resolver por aqui" description="Atalhos que mantÃªm o contexto deste territÃ³rio." />
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            {quickActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <Link
-                  key={action.label}
-                  to={action.href}
-                  className="group rounded-2xl border border-border/75 bg-card p-4 transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md"
-                >
-                  <span className={cn("flex h-10 w-10 items-center justify-center rounded-xl", action.tone)}>
-                    <Icon className="h-5 w-5" aria-hidden="true" />
-                  </span>
-                  <span className="mt-3 block text-sm font-semibold text-foreground group-hover:text-primary">{action.label}</span>
-                  <span className="mt-1 hidden text-xs leading-5 text-muted-foreground sm:block">{action.description}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-
-        {data.isLoading ? (
-          <section className="mt-10"><HomeLoading /></section>
-        ) : (
-          <div className="mt-10 grid gap-7 lg:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.8fr)] lg:items-start">
-            <div className="space-y-7">
-              <section aria-labelledby="worth-knowing-title" data-testid="worth-knowing-section">
-                <SectionHeader
-                  title={`Vale saber em ${territoryName}`}
-                  description="InformaÃ§Ã£o pÃºblica, vÃ¡lida e vinculada a este territÃ³rio."
-                />
-                {hasWorthKnowing ? (
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {data.highlights.slice(0, 2).map((highlight) => (
-                      <HighlightRow key={highlight.id} highlight={highlight} />
-                    ))}
-                    {data.events.slice(0, 2).map((event) => (
-                      <EventRow key={event.id} event={event} eventsBaseUrl={urls.events} />
-                    ))}
-                    {data.opportunities.slice(0, 2).map((opportunity) => (
-                      <OpportunityRow key={opportunity.id} opportunity={opportunity} jobsUrl={urls.jobs} />
-                    ))}
-                    {data.classifieds.slice(0, 2).map((classified) => (
-                      <ClassifiedRow key={classified.id} classified={classified} fallbackHref={urls.classifieds} />
-                    ))}
-                  </div>
-                ) : (
-                  <Surface className="p-6 sm:p-8" data-testid="territory-home-empty">
-                    <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <p className="font-semibold text-foreground">Ainda hÃ¡ pouca atividade recente registrada por aqui.</p>
-                        <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-                          A Home nÃ£o completa esse espaÃ§o com conteÃºdo fictÃ­cio. VocÃª pode explorar os serviÃ§os disponÃ­veis ou ampliar a visÃ£o para a cidade.
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 flex-wrap gap-2">
-                        <Link to={urls.search} className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground">
-                          Explorar
-                          <Compass className="h-4 w-4" aria-hidden="true" />
-                        </Link>
-                        {!isCityHome ? (
-                          <Link to={cityBaseUrl} className="inline-flex h-10 items-center rounded-full border border-border bg-card px-4 text-sm font-semibold text-foreground">
-                            Ver {cityName} inteira
-                          </Link>
-                        ) : null}
-                      </div>
-                    </div>
-                  </Surface>
-                )}
-              </section>
-
-              <section aria-labelledby="community-summary-title" data-testid="community-summary-section">
-                <Surface className="p-5 sm:p-6">
-                  <SectionHeader
-                    title={`Community em ${territoryName}`}
-                    description="A camada de participaÃ§Ã£o local: conversas, colaboraÃ§Ã£o e vida comunitÃ¡ria."
-                    href={urls.community}
-                    linkLabel="Abrir Community"
-                  />
-                  {data.posts.length > 0 ? (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {data.posts.slice(0, 4).map((post) => (
-                        <CommunityPostRow key={post.id} post={post} communityUrl={urls.community} />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="rounded-2xl bg-muted/55 p-5">
-                      <p className="font-semibold text-foreground">Nenhuma conversa recente neste contexto.</p>
-                      <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                        VocÃª ainda pode acompanhar a Community pÃºblica. Participar depende do seu perfil, vÃ­nculo territorial e das policies atuais.
-                      </p>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <Link to={urls.community} className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-semibold text-foreground hover:border-primary/30">
-                          Ver Community
-                          <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                        </Link>
-                        {canCreatePost ? (
-                          <Link to="/novo-post" className="inline-flex h-10 items-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground">
-                            Publicar
-                          </Link>
-                        ) : null}
-                      </div>
-                    </div>
-                  )}
-                </Surface>
-              </section>
-            </div>
-
-            <aside className="space-y-6 lg:sticky lg:top-24" aria-label="ServiÃ§os e contexto do territÃ³rio">
-              <Surface className="p-4 sm:p-5">
-                <SectionHeader
-                  title="Empresas e serviÃ§os Ãºteis"
-                  description={hasUsefulPlaces ? "Cadastros pÃºblicos disponÃ­veis neste territÃ³rio." : undefined}
-                  href={hasUsefulPlaces ? urls.business : undefined}
-                />
-                {hasUsefulPlaces ? (
-                  <div className="space-y-1">
-                    {data.businesses.slice(0, 4).map((business) => (
-                      <BusinessItem
-                        key={business.id}
-                        business={business}
-                        href={getBusinessHref(business, urls.business, appUrls.business.canonical)}
-                      />
-                    ))}
-                    {data.services.slice(0, Math.max(0, 6 - data.businesses.length)).map((service) => (
-                      <ServiceItem key={service.id} service={service} href={urls.services} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="rounded-2xl bg-muted/55 p-5 text-sm leading-6 text-muted-foreground">
-                    Ainda nÃ£o hÃ¡ empresas ou profissionais pÃºblicos suficientes para destacar aqui.
-                  </div>
-                )}
-              </Surface>
-
-              <Surface className="overflow-hidden p-5 sm:p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Seu contexto</p>
-                    <h2 className="mt-2 font-display text-xl font-semibold">{territoryName}</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">{locationLine}</p>
-                  </div>
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                    <MapPin className="h-5 w-5" aria-hidden="true" />
-                  </span>
-                </div>
-                <div className="mt-5 grid grid-cols-3 gap-2">
-                  {[
-                    ["Empresas", urls.business],
-                    ["ServiÃ§os", urls.services],
-                    ["AnÃºncios", urls.classifieds],
-                  ].map(([label, href]) => (
-                    <Link key={label} to={href} className="rounded-2xl bg-muted/55 p-3 text-center text-xs font-semibold text-foreground transition hover:bg-primary/10 hover:text-primary">
-                      {label}
-                    </Link>
-                  ))}
-                </div>
-                <div className="mt-3 grid gap-2">
-                  <Link to={urls.map} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:border-primary/30">
-                    <Map className="h-4 w-4" aria-hidden="true" />
-                    Ver no mapa
-                  </Link>
-                  {!isCityHome ? (
-                    <Link to={cityBaseUrl} className="inline-flex h-11 items-center justify-center rounded-xl bg-muted text-sm font-semibold text-foreground hover:bg-muted/80">
-                      Ampliar para {cityName}
-                    </Link>
-                  ) : null}
-                </div>
-              </Surface>
-            </aside>
-          </div>
-        )}
-
-        {data.hasError ? (
-          <div className="mt-7 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950" role="status">
-            Parte das informaÃ§Ãµes nÃ£o pÃ´de ser atualizada. O restante da Home continua disponÃ­vel sem substituir dados ausentes por conteÃºdo fictÃ­cio.
-          </div>
-        ) : null}
-
-        <section className="mt-12 border-t border-border/70 pt-8" aria-labelledby="discover-more-title">
-          <SectionHeader title="Descobrir mais" description={`Outras formas de explorar ${territoryName}.`} />
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { label: "Explorar e buscar", description: "Encontre lugares, serviÃ§os e conteÃºdo.", href: urls.search, icon: Search },
-              { label: "Eventos", description: "Agenda vÃ¡lida do territÃ³rio.", href: urls.events, icon: CalendarDays },
-              { label: "Vagas e oportunidades", description: "O que ainda estÃ¡ disponÃ­vel por perto.", href: urls.jobs, icon: BriefcaseBusiness },
-              { label: "ComÃ©rcio local", description: "Empresas e profissionais cadastrados.", href: urls.business, icon: Building2 },
-            ].map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link key={item.label} to={item.href} className="group flex items-center gap-4 rounded-2xl border border-border/75 bg-card p-4 transition hover:border-primary/30 hover:shadow-sm">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-5 w-5" aria-hidden="true" /></span>
-                  <span className="min-w-0"><span className="block font-semibold text-foreground group-hover:text-primary">{item.label}</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">{item.description}</span></span>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      </main>
-    </div>
-  );
-}
+  }ã_6¶‰žËkºwµç@Ü´ÄÀ¥Ñ•µÌµ•¹Ñ•È©ÕÍÑ¥™äµ•¹Ñ•ÈÉ½Õ¹‘•µá°ˆ°(€€€€€€€€€€€€€€€€€€€€€…Ñ¥½¸¹Ñ½¹”°(€€€€€€€€€€€€€€€€€€€€¥ô(€€€€€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€€€€€ñ%½¸±…ÍÍ9…µ”ô‰ ´ÔÜ´Ôˆ…É¥„µ¡¥‘‘•¸ô‰ÑÉÕ”ˆ€¼ø(€€€€€€€€€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰µÐ´Ì‰±½¬Ñ•áÐµÍ´™½¹ÐµÍ•µ¥‰½±Ñ•áÐµ™½É•É½Õ¹É½ÕÀµ¡½Ù•ÈéÑ•áÐµÁÉ¥µ…Éäˆø(€€€€€€€€€€€€€€€€€€€í…Ñ¥½¸¹±…‰•±ô(€€€€€€€€€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰µÐ´Ä¡¥‘‘•¸Ñ•áÐµáÌ±•…‘¥¹œ´ÔÑ•áÐµµÕÑ•µ™½É•É½Õ¹Í´é‰±½¬ˆø(€€€€€€€€€€€€€€€€€€€í…Ñ¥½¸¹‘•ÍÉ¥ÁÑ¥½¹ô(€€€€€€€€€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€€€€€€€€€ð½1¥¹¬ø(€€€€€€€€€€€€€€¤ì(€€€€€€€€€€€ô¥ô(€€€€€€€€€€ð½‘¥Øø(€€€€€€€€ð½Í•Ñ¥½¸ø((€€€€€€€í‘…Ñ„¹±½…‘¥¹œ¹Ñ•ÉÉ¥Ñ½Éä€ü€ (€€€€€€€€€€ñÍ•Ñ¥½¸±…ÍÍ9…µ”ô‰µÐ´àˆø(€€€€€€€€€€€€ñ!½µ•1½…‘¥¹œ€¼ø(€€€€€€€€€€ð½Í•Ñ¥½¸ø(€€€€€€€€¤€è€ (€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰µÐ´àÉ¥…À´Ü±œéµÐ´ÄÀ±œéÉ¥µ½±Ìµmµ¥¹µ…à À°Ä¸ØÕ™È¥}µ¥¹µ…à ÈÁÉ•´°À¸á™È¥t±œé¥Ñ•µÌµÍÑ…ÉÐˆø(€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰½¹Ñ•¹ÑÌ±œé½°µÍÑ…ÉÐ´Ä±œé‰±½¬±œéÍÁ…”µä´Üˆø(€€€€€€€€€€€€€€ñÍ•Ñ¥½¸(€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰½É‘•È´Äˆ(€€€€€€€€€€€€€€€…É¥„µ±…‰•±±•‘‰äô‰Ý½ÉÑ µ­¹½Ý¥¹œµÑ¥Ñ±”ˆ(€€€€€€€€€€€€€€€‘…Ñ„µÑ•ÍÑ¥ô‰Ý½ÉÑ µ­¹½Ý¥¹œµÍ•Ñ¥½¸ˆ(€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€ñM•Ñ¥½¹!•…‘•È(€€€€€€€€€€€€€€€€€Ñ¥Ñ±”õíÝ½ÉÑ¡-¹½Ý¥¹Q¥Ñ±•ô(€€€€€€€€€€€€€€€€€‘•ÍÉ¥ÁÑ¥½¸õíÝ½ÉÑ¡-¹½Ý¥¹•ÍÉ¥ÁÑ¥½¹ô(€€€€€€€€€€€€€€€€¼ø(€€€€€€€€€€€€€€€í‘…Ñ„¹±½…‘¥¹œ¹Ý½ÉÑ¡-¹½Ý¥¹œ€ü€ (€€€€€€€€€€€€€€€€€€ñ!½µ•M•Ñ¥½¹1½…‘¥¹œ€¼ø(€€€€€€€€€€€€€€€€¤€è¡…Í]½ÉÑ¡-¹½Ý¥¹œ€ü€ (€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰É¥…À´ÌÍ´éÉ¥µ½±Ì´Èˆø(€€€€€€€€€€€€€€€€€€€í‘…Ñ„¹¡¥¡±¥¡ÑÌ¹Í±¥” À°€È¤¹µ…À ¡¡¥¡±¥¡Ð¤€ôø€ (€€€€€€€€€€€€€€€€€€€€€€ñ!¥¡±¥¡ÑI½Ü­•äõí¡¥¡±¥¡Ð¹¥‘ô¡¥¡±¥¡Ðõí¡¥¡±¥¡Ñô€¼ø(€€€€€€€€€€€€€€€€€€€€¤¥ô(€€€€€€€€€€€€€€€€€€€í‘…Ñ„¹•Ù•¹ÑÌ¹Í±¥” À°€È¤¹µ…À ¡•Ù•¹Ð¤€ôø€ (€€€€€€€€€€€€€€€€€€€€€€ñÙ•¹ÑI½Ü(€€€€€€€€€€€€€€€€€€€€€€€­•äõí•Ù•¹Ð¹¥‘ô(€€€€€€€€€€€€€€€€€€€€€€€•Ù•¹Ðõí•Ù•¹Ñô(€€€€€€€€€€€€€€€€€€€€€€€•Ù•¹ÑÍ	…Í•UÉ°õíÕÉ±Ì¹•Ù•¹ÑÍô(€€€€€€€€€€€€€€€€€€€€€€¼ø(€€€€€€€€€€€€€€€€€€€€¤¥ô(€€€€€€€€€€€€€€€€€€€í‘…Ñ„¹½ÁÁ½ÉÑÕ¹¥Ñ¥•Ì¹Í±¥” À°€È¤¹µ…À ¡½ÁÁ½ÉÑÕ¹¥Ñä¤€ôø€ (€€€€€€€€€€€€€€€€€€€€€€ñ=ÁÁ½ÉÑÕ¹¥ÑåI½Ü(€€€€€€€€€€€€€€€€€€€€€€€­•äõí½ÁÁ½ÉÑÕ¹¥Ñä¹¥‘ô(€€€€€€€€€€€€€€€€€€€€€€€½ÁÁ½ÉÑÕ¹¥Ñäõí½ÁÁ½ÉÑÕ¹¥Ñåô(€€€€€€€€€€€€€€€€€€€€€€€©½‰ÍUÉ°õíÕÉ±Ì¹©½‰Íô(€€€€€€€€€€€€€€€€€€€€€€¼ø(€€€€€€€€€€€€€€€€€€€€¤¥ô(€€€€€€€€€€€€€€€€€€€í‘…Ñ„¹±…ÍÍ¥™¥•‘Ì¹Í±¥” À°€È¤¹µ…À ¡±…ÍÍ¥™¥•¤€ôø€ (€€€€€€€€€€€€€€€€€€€€€€ñ±…ÍÍ¥™¥•‘I½Ü(€€€€€€€€€€€€€€€€€€€€€€€­•äõí±…ÍÍ¥™¥•¹¥‘ô(€€€€€€€€€€€€€€€€€€€€€€€±…ÍÍ¥™¥•õí±…ÍÍ¥™¥•‘ô(€€€€€€€€€€€€€€€€€€€€€€€™…±±‰…­!É•˜õíÕÉ±Ì¹±…ÍÍ¥™¥•‘Íô(€€€€€€€€€€€€€€€€€€€€€€¼ø(€€€€€€€€€€€€€€€€€€€€¤¥ô(€€€€€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€€€€€¤€è€ (€€€€€€€€€€€€€€€€€€ñMÕÉ™…”(€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰À´ØÍ´éÀ´àˆ(€€€€€€€€€€€€€€€€€€€‘…Ñ„µÑ•ÍÑ¥ô‰Ñ•ÉÉ¥Ñ½Éäµ¡½µ”µ•µÁÑäˆ(€€€€€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰™±•à™±•àµ½°…À´ÔÍ´é™±•àµÉ½ÜÍ´é¥Ñ•µÌµ•¹Ñ•ÈÍ´é©ÕÍÑ¥™äµ‰•ÑÝ••¸ˆø(€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Øø(€€€€€€€€€€€€€€€€€€€€€€€€ñÀ±…ÍÍ9…µ”ô‰™½¹ÐµÍ•µ¥‰½±Ñ•áÐµ™½É•É½Õ¹ˆø(€€€€€€€€€€€€€€€€€€€€€€€€€í¥Í¥Ñå!½µ”(€€€€€€€€€€€€€€€€€€€€€€€€€€€€ü€‰¥¹‘„»¼£„…ÑÕ…±¥é‡ŸÕ•ÌÉ••¹Ñ•ÌÁ…É„‘•ÍÑ……È¹„¥‘…‘”¸ˆ(€€€€€€€€€€€€€€€€€€€€€€€€€€€€è€‰¥¹‘„£„Á½Õ„…Ñ¥Ù¥‘…‘”É••¹Ñ”É•¥ÍÑÉ…‘„Á½È…ÅÕ¤¸‰ô(€€€€€€€€€€€€€€€€€€€€€€€€ð½Àø(€€€€€€€€€€€€€€€€€€€€€€€€ñÀ±…ÍÍ9…µ”ô‰µÐ´Èµ…àµÜµá°Ñ•áÐµÍ´±•…‘¥¹œ´ØÑ•áÐµµÕÑ•µ™½É•É½Õ¹ˆø(€€€€€€€€€€€€€€€€€€€€€€€€€í¥Í¥Ñå!½µ”(€€€€€€€€€€€€€€€€€€€€€€€€€€€€ü€‰!½µ”»¼½µÁ±•Ñ„•ÍÍ”•ÍÁ‡¼½´½¹Ñ—é‘¼™¥Óµ¥¼¸áÁ±½É”•µÁÉ•Í…Ì°Í•ÉÙ§½Ì”…»é¹¥½ÌÃé‰±¥½Ì‘”M…±Ù…‘½È¸ˆ(€€€€€€€€€€€€€€€€€€€€€€€€€€€€è€‰!½µ”»¼½µÁ±•Ñ„•ÍÍ”•ÍÁ‡¼½´½¹Ñ—é‘¼™¥Óµ¥¼¸áÁ±½É”½ÌÍ•ÉÙ§½Ì‘¥ÍÁ½»µÙ•¥Ì½Ô…µÁ±¥”„Ù¥Ï¼Á…É„„¥‘…‘”¸‰ô(€€€€€€€€€€€€€€€€€€€€€€€€ð½Àø(€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰™±•àÍ¡É¥¹¬´À™±•àµÝÉ…À…À´Èˆø(€€€€€€€€€€€€€€€€€€€€€€€€ñ1¥¹¬(€€€€€€€€€€€€€€€€€€€€€€€€€Ñ¼õíÕÉ±Ì¹Í•…É¡ô(€€€€€€€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰¥¹±¥¹”µ™±•à ´ÄÀ¥Ñ•µÌµ•¹Ñ•È…À´ÈÉ½Õ¹‘•µ™Õ±°‰œµÁÉ¥µ…ÉäÁà´ÐÑ•áÐµÍ´™½¹ÐµÍ•µ¥‰½±Ñ•áÐµÁÉ¥µ…Éäµ™½É•É½Õ¹ˆ(€€€€€€€€€€€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€€€€€€€€€€áÁ±½É…È(€€€€€€€€€€€€€€€€€€€€€€€€€€ñ½µÁ…ÍÌ±…ÍÍ9…µ”ô‰ ´ÐÜ´Ðˆ…É¥„µ¡¥‘‘•¸ô‰ÑÉÕ”ˆ€¼ø(€€€€€€€€€€€€€€€€€€€€€€€€ð½1¥¹¬ø(€€€€€€€€€€€€€€€€€€€€€€€ì…¥Í¥Ñå!½µ”€ü€ (€€€€€€€€€€€€€€€€€€€€€€€€€€ñ1¥¹¬(€€€€€€€€€€€€€€€€€€€€€€€€€€€Ñ¼õí¥Ñå	…Í•UÉ±ô(€€€€€€€€€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰¥¹±¥¹”µ™±•à ´ÄÀ¥Ñ•µÌµ•¹Ñ•ÈÉ½Õ¹‘•µ™Õ±°‰½É‘•È‰½É‘•Èµ‰½É‘•È‰œµ…ÉÁà´ÐÑ•áÐµÍ´™½¹ÐµÍ•µ¥‰½±Ñ•áÐµ™½É•É½Õ¹ˆ(€€€€€€€€€€€€€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€€€€€€€€€€€€Y•Èí¥Ñå9…µ•ô¥¹Ñ•¥É„(€€€€€€€€€€€€€€€€€€€€€€€€€€ð½1¥¹¬ø(€€€€€€€€€€€€€€€€€€€€€€€€¤€è¹Õ±±ô(€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€€€€€€€ð½MÕÉ™…”ø(€€€€€€€€€€€€€€€€¥ô(€€€€€€€€€€€€€€ð½Í•Ñ¥½¸ø((€€€€€€€€€€€€€€ñÍ•Ñ¥½¸(€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰½É‘•È´Ìˆ(€€€€€€€€€€€€€€€…É¥„µ±…‰•±±•‘‰äô‰½µµÕ¹¥ÑäµÍÕµµ…ÉäµÑ¥Ñ±”ˆ(€€€€€€€€€€€€€€€‘…Ñ„µÑ•ÍÑ¥ô‰½µµÕ¹¥ÑäµÍÕµµ…ÉäµÍ•Ñ¥½¸ˆ(€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€ñMÕÉ™…”±…ÍÍ9…µ”ô‰À´ÔÍ´éÀ´Øˆø(€€€€€€€€€€€€€€€€€€ñM•Ñ¥½¹!•…‘•È(€€€€€€€€€€€€€€€€€€€Ñ¥Ñ±”õì(€€€€€€€€€€€€€€€€€€€€€¥Í¥Ñå!½µ”(€€€€€€€€€€€€€€€€€€€€€€€€ü½µµÕ¹¥Ñä‘”€‘íÑ•ÉÉ¥Ñ½Éå9…µ•õ€(€€€€€€€€€€€€€€€€€€€€€€€€è½µµÕ¹¥Ñä•´€‘íÑ•ÉÉ¥Ñ½Éå9…µ•õ€(€€€€€€€€€€€€€€€€€€€ô(€€€€€€€€€€€€€€€€€€€‘•ÍÉ¥ÁÑ¥½¸õì(€€€€€€€€€€€€€€€€€€€€€¥Í¥Ñå!½µ”(€€€€€€€€€€€€€€€€€€€€€€€€ü€‰½¹Ù•ÉÍ…ÌÃé‰±¥…Ì‘½ÌÑ•ÉÉ¥ÓÍÉ¥½Ì‘”M…±Ù…‘½È°Í•´½¹™Õ¹‘¥È¥‘…‘”½´‰…¥ÉÉ¼¸ˆ(€€€€€€€€€€€€€€€€€€€€€€€€è€‰…µ…‘„‘”Á…ÉÑ¥¥Á‡Ÿ¼±½…°è½¹Ù•ÉÍ…Ì°½±…‰½É‡Ÿ¼”Ù¥‘„½µÕ¹¥Ó…É¥„¸ˆ(€€€€€€€€€€€€€€€€€€€ô(€€€€€€€€€€€€€€€€€€€¡É•˜õíÕÉ±Ì¹½µµÕ¹¥Ñåô(€€€€€€€€€€€€€€€€€€€±¥¹­1…‰•°ô‰‰É¥È½µµÕ¹¥Ñäˆ(€€€€€€€€€€€€€€€€€€¼ø(€€€€€€€€€€€€€€€€€í‘…Ñ„¹±½…‘¥¹œ¹½µµÕ¹¥Ñä€ü€ (€€€€€€€€€€€€€€€€€€€€ñ!½µ•M•Ñ¥½¹1½…‘¥¹œ€¼ø(€€€€€€€€€€€€€€€€€€¤€è‘…Ñ„¹Á½ÍÑÌ¹±•¹Ñ €ø€À€ü€ (€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰É¥…À´ÌÍ´éÉ¥µ½±Ì´Èˆø(€€€€€€€€€€€€€€€€€€€€€í‘…Ñ„¹Á½ÍÑÌ¹Í±¥” À°€Ð¤¹µ…À ¡Á½ÍÐ¤€ôø€ (€€€€€€€€€€€€€€€€€€€€€€€€ñ½µµÕ¹¥ÑåA½ÍÑI½Ü(€€€€€€€€€€€€€€€€€€€€€€€€€­•äõíÁ½ÍÐ¹¥‘ô(€€€€€€€€€€€€€€€€€€€€€€€€€Á½ÍÐõíÁ½ÍÑô(€€€€€€€€€€€€€€€€€€€€€€€€€½µµÕ¹¥ÑåUÉ°õíÕÉ±Ì¹½µµÕ¹¥Ñåô(€€€€€€€€€€€€€€€€€€€€€€€€¼ø(€€€€€€€€€€€€€€€€€€€€€€¤¥ô(€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€€€€€€€¤€è€ (€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰É½Õ¹‘•´Éá°‰œµµÕÑ•¼ÔÔÀ´Ôˆø(€€€€€€€€€€€€€€€€€€€€€€ñÀ±…ÍÍ9…µ”ô‰™½¹ÐµÍ•µ¥‰½±Ñ•áÐµ™½É•É½Õ¹ˆø(€€€€€€€€€€€€€€€€€€€€€€€9•¹¡Õµ„½¹Ù•ÉÍ„É••¹Ñ”¹•ÍÑ”½¹Ñ•áÑ¼¸(€€€€€€€€€€€€€€€€€€€€€€ð½Àø(€€€€€€€€€€€€€€€€€€€€€€ñÀ±…ÍÍ9…µ”ô‰µÐ´ÄÑ•áÐµÍ´±•…‘¥¹œ´ØÑ•áÐµµÕÑ•µ™½É•É½Õ¹ˆø(€€€€€€€€€€€€€€€€€€€€€€€Y½¨…¥¹‘„Á½‘”…½µÁ…¹¡…È„½µµÕ¹¥ÑäÃé‰±¥„¸(€€€€€€€€€€€€€€€€€€€€€€€A…ÉÑ¥¥Á…È‘•Á•¹‘”‘¼Í•ÔÁ•É™¥°°Ûµ¹Õ±¼Ñ•ÉÉ¥Ñ½É¥…°”(€€€€€€€€€€€€€€€€€€€€€€€‘…ÌÁ½±¥¥•Ì…ÑÕ…¥Ì¸(€€€€€€€€€€€€€€€€€€€€€€ð½Àø(€€€€€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰µÐ´Ð™±•à™±•àµÝÉ…À…À´Èˆø(€€€€€€€€€€€€€€€€€€€€€€€€ñ1¥¹¬(€€€€€€€€€€€€€€€€€€€€€€€€€Ñ¼õíÕÉ±Ì¹½µµÕ¹¥Ñåô(€€€€€€€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰¥¹±¥¹”µ™±•à ´ÄÀ¥Ñ•µÌµ•¹Ñ•È…À´ÈÉ½Õ¹‘•µ™Õ±°‰½É‘•È‰½É‘•Èµ‰½É‘•È‰œµ…ÉÁà´ÐÑ•áÐµÍ´™½¹ÐµÍ•µ¥‰½±Ñ•áÐµ™½É•É½Õ¹¡½Ù•Èé‰½É‘•ÈµÁÉ¥µ…Éä¼ÌÀˆ(€€€€€€€€€€€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€€€€€€€€€€Y•È½µµÕ¹¥Ñä(€€€€€€€€€€€€€€€€€€€€€€€€€€ñÉÉ½ÝI¥¡Ð±…ÍÍ9…µ”ô‰ ´ÐÜ´Ðˆ…É¥„µ¡¥‘‘•¸ô‰ÑÉÕ”ˆ€¼ø(€€€€€€€€€€€€€€€€€€€€€€€€ð½1¥¹¬ø(€€€€€€€€€€€€€€€€€€€€€€€í…¹É•…Ñ•A½ÍÐ€ü€ (€€€€€€€€€€€€€€€€€€€€€€€€€€ñ1¥¹¬(€€€€€€€€€€€€€€€€€€€€€€€€€€€Ñ¼ôˆ½¹½Ù¼µÁ½ÍÐˆ(€€€€€€€€€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰¥¹±¥¹”µ™±•à ´ÄÀ¥Ñ•µÌµ•¹Ñ•ÈÉ½Õ¹‘•µ™Õ±°‰œµÁÉ¥µ…ÉäÁà´ÐÑ•áÐµÍ´™½¹ÐµÍ•µ¥‰½±Ñ•áÐµÁÉ¥µ…Éäµ™½É•É½Õ¹ˆ(€€€€€€€€€€€€€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€€€€€€€€€€€€AÕ‰±¥…È(€€€€€€€€€€€€€€€€€€€€€€€€€€ð½1¥¹¬ø(€€€€€€€€€€€€€€€€€€€€€€€€¤€è¹Õ±±ô(€€€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€€€€€€€¥ô(€€€€€€€€€€€€€€€€ð½MÕÉ™…”ø(€€€€€€€€€€€€€€ð½Í•Ñ¥½¸ø(€€€€€€€€€€€€ð½‘¥Øø((€€€€€€€€€€€€ñ…Í¥‘”(€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰½É‘•È´ÈÍÁ…”µä´Ø±œé½É‘•Èµ¹½¹”±œé½°µÍÑ…ÉÐ´È±œéÉ½ÜµÍÑ…ÉÐ´Ä±œéÍÑ¥­ä±œéÑ½À´ÈÐˆ(€€€€€€€€€€€€€…É¥„µ±…‰•°ô‰M•ÉÙ§½Ì”½¹Ñ•áÑ¼‘¼Ñ•ÉÉ¥ÓÍÉ¥¼ˆ(€€€€€€€€€€€€ø(€€€€€€€€€€€€€€ñMÕÉ™…”±…ÍÍ9…µ”ô‰À´ÐÍ´éÀ´Ôˆø(€€€€€€€€€€€€€€€€ñM•Ñ¥½¹!•…‘•È(€€€€€€€€€€€€€€€€€Ñ¥Ñ±”ô‰µÁÉ•Í…Ì”Í•ÉÙ§½ÌƒéÑ•¥Ìˆ(€€€€€€€€€€€€€€€€€‘•ÍÉ¥ÁÑ¥½¸õì(€€€€€€€€€€€€€€€€€€€¡…ÍUÍ•™Õ±A±…•Ì(€€€€€€€€€€€€€€€€€€€€€€ü¥Í¥Ñå!½µ”(€€€€€€€€€€€€€€€€€€€€€€€€ü€‰…‘…ÍÑÉ½ÌÃé‰±¥½Ì•¹½¹ÑÉ…‘½Ì¹½ÌÑ•ÉÉ¥ÓÍÉ¥½Ì‘”M…±Ù…‘½È¸ˆ(€€€€€€€€€€€€€€€€€€€€€€€€è€‰…‘…ÍÑÉ½ÌÃé‰±¥½Ì‘¥ÍÁ½»µÙ•¥Ì¹•ÍÑ”Ñ•ÉÉ¥ÓÍÉ¥¼¸ˆ(€€€€€€€€€€€€€€€€€€€€€€èÕ¹‘•™¥¹•(€€€€€€€€€€€€€€€€€ô(€€€€€€€€€€€€€€€€€¡É•˜õí¡…ÍUÍ•™Õ±A±…•Ì€üÕÉ±Ì¹‰ÕÍ¥¹•ÍÌ€èÕ¹‘•™¥¹•‘ô(€€€€€€€€€€€€€€€€¼ø(€€€€€€€€€€€€€€€í‘…Ñ„¹±½…‘¥¹œ¹ÕÍ•™Õ±A±…•Ì€ü€ (€€€€€€€€€€€€€€€€€€ñ!½µ•M•Ñ¥½¹1½…‘¥¹œÉ½ÝÌõìÅô€¼ø(€€€€€€€€€€€€€€€€¤€è¡…ÍUÍ•™Õ±A±…•Ì€ü€ (€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰ÍÁ…”µä´Äˆø(€€€€€€€€€€€€€€€€€€€í‘…Ñ„¹‰ÕÍ¥¹•ÍÍ•Ì¹Í±¥” À°€Ð¤¹µ…À ¡‰ÕÍ¥¹•ÍÌ¤€ôø€ (€€€€€€€€€€€€€€€€€€€€€€ñ	ÕÍ¥¹•ÍÍ%Ñ•´(€€€€€€€€€€€€€€€€€€€€€€€­•äõí‰ÕÍ¥¹•ÍÌ¹¥‘ô(€€€€€€€€€€€€€€€€€€€€€€€‰ÕÍ¥¹•ÍÌõí‰ÕÍ¥¹•ÍÍô(€€€€€€€€€€€€€€€€€€€€€€€¡É•˜õí•Ñ	ÕÍ¥¹•ÍÍ!É•˜ (€€€€€€€€€€€€€€€€€€€€€€€€€‰ÕÍ¥¹•ÍÌ°(€€€€€€€€€€€€€€€€€€€€€€€€€ÕÉ±Ì¹‰ÕÍ¥¹•ÍÌ°(€€€€€€€€€€€€€€€€€€€€€€€€€…ÁÁUÉ±Ì¹‰ÕÍ¥¹•ÍÌ¹…¹½¹¥…°°(€€€€€€€€€€€€€€€€€€€€€€€€¥ô(€€€€€€€€€€€€€€€€€€€€€€¼ø(€€€€€€€€€€€€€€€€€€€€¤¥ô(€€€€€€€€€€€€€€€€€€€í‘…Ñ„¹Í•ÉÙ¥•Ì(€€€€€€€€€€€€€€€€€€€€€€¹Í±¥” À°5…Ñ ¹µ…à À°€Ø€´‘…Ñ„¹‰ÕÍ¥¹•ÍÍ•Ì¹±•¹Ñ ¤¤(€€€€€€€€€€€€€€€€€€€€€€¹µ…À ¡Í•ÉÙ¥”¤€ôø€ (€€€€€€€€€€€€€€€€€€€€€€€€ñM•ÉÙ¥•%Ñ•´(€€€€€€€€€€€€€€€€€€€€€€€€€­•äõíÍ•ÉÙ¥”¹¥‘ô(€€€€€€€€€€€€€€€€€€€€€€€€€Í•ÉÙ¥”õíÍ•ÉÙ¥•ô(€€€€€€€€€€€€€€€€€€€€€€€€€¡É•˜õíÕÉ±Ì¹Í•ÉÙ¥•Íô(€€€€€€€€€€€€€€€€€€€€€€€€¼ø(€€€€€€€€€€€€€€€€€€€€€€¤¥ô(€€€€€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€€€€€¤€è€ (€€€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰É½Õ¹‘•´Éá°‰œµµÕÑ•¼ÔÔÀ´ÔÑ•áÐµÍ´±•…‘¥¹œ´ØÑ•áÐµµÕÑ•µ™½É•É½Õ¹ˆø(€€€€€€€€€€€€€€€€€€€¥¹‘„»¼£„•µÁÉ•Í…Ì½ÔÁÉ½™¥ÍÍ¥½¹…¥ÌÃé‰±¥½ÌÍÕ™¥¥•¹Ñ•Ì(€€€€€€€€€€€€€€€€€€€Á…É„‘•ÍÑ……È…ÅÕ¤¸(€€€€€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€€€€€¥ô(€€€€€€€€€€€€€€ð½MÕÉ™…”ø((€€€€€€€€€€€€€€ñMÕÉ™…”±…ÍÍ9…µ”ô‰½Ù•É™±½Üµ¡¥‘‘•¸À´ÔÍ´éÀ´Øˆø(€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰™±•à¥Ñ•µÌµÍÑ…ÉÐ©ÕÍÑ¥™äµ‰•ÑÝ••¸…À´Ðˆø(€€€€€€€€€€€€€€€€€€ñ‘¥Øø(€€€€€€€€€€€€€€€€€€€€ñÀ±…ÍÍ9…µ”ô‰Ñ•áÐµáÌ™½¹ÐµÍ•µ¥‰½±ÕÁÁ•É…Í”ÑÉ…­¥¹œµlÀ¸ÄÉ•µtÑ•áÐµÁÉ¥µ…Éäˆø(€€€€€€€€€€€€€€€€€€€€€M•Ô½¹Ñ•áÑ¼(€€€€€€€€€€€€€€€€€€€€ð½Àø(€€€€€€€€€€€€€€€€€€€€ñ È±…ÍÍ9…µ”ô‰µÐ´È™½¹Ðµ‘¥ÍÁ±…äÑ•áÐµá°™½¹ÐµÍ•µ¥‰½±ˆø(€€€€€€€€€€€€€€€€€€€€€íÑ•ÉÉ¥Ñ½Éå9…µ•ô(€€€€€€€€€€€€€€€€€€€€ð½ Èø(€€€€€€€€€€€€€€€€€€€€ñÀ±…ÍÍ9…µ”ô‰µÐ´ÄÑ•áÐµÍ´Ñ•áÐµµÕÑ•µ™½É•É½Õ¹ˆø(€€€€€€€€€€€€€€€€€€€€€í±½…Ñ¥½¹1¥¹•ô(€€€€€€€€€€€€€€€€€€€€ð½Àø(€€€€€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰™±•à ´ÄÄÜ´ÄÄÍ¡É¥¹¬´À¥Ñ•µÌµ•¹Ñ•È©ÕÍÑ¥™äµ•¹Ñ•ÈÉ½Õ¹‘•´Éá°‰œµÁÉ¥µ…Éä¼ÄÀÑ•áÐµÁÉ¥µ…Éäˆø(€€€€€€€€€€€€€€€€€€€€ñ5…ÁA¥¸±…ÍÍ9…µ”ô‰ ´ÔÜ´Ôˆ…É¥„µ¡¥‘‘•¸ô‰ÑÉÕ”ˆ€¼ø(€€€€€€€€€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰µÐ´ÔÉ¥É¥µ½±Ì´Ì…À´Èˆø(€€€€€€€€€€€€€€€€€íl(€€€€€€€€€€€€€€€€€€€l‰µÁÉ•Í…Ìˆ°ÕÉ±Ì¹‰ÕÍ¥¹•ÍÍt°(€€€€€€€€€€€€€€€€€€€l‰M•ÉÙ§½Ìˆ°ÕÉ±Ì¹Í•ÉÙ¥•Ít°(€€€€€€€€€€€€€€€€€€€l‰»é¹¥½Ìˆ°ÕÉ±Ì¹±…ÍÍ¥™¥•‘Ít°(€€€€€€€€€€€€€€€€€t¹µ…À ¡m±…‰•°°¡É•™t¤€ôø€ (€€€€€€€€€€€€€€€€€€€€ñ1¥¹¬(€€€€€€€€€€€€€€€€€€€€€­•äõí±…‰•±ô(€€€€€€€€€€€€€€€€€€€€€Ñ¼õí¡É•™ô(€€€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰É½Õ¹‘•´Éá°‰œµµÕÑ•¼ÔÔÀ´ÌÑ•áÐµ•¹Ñ•ÈÑ•áÐµáÌ™½¹ÐµÍ•µ¥‰½±Ñ•áÐµ™½É•É½Õ¹ÑÉ…¹Í¥Ñ¥½¸¡½Ù•Èé‰œµÁÉ¥µ…Éä¼ÄÀ¡½Ù•ÈéÑ•áÐµÁÉ¥µ…Éäˆ(€€€€€€€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€€€€€€í±…‰•±ô(€€€€€€€€€€€€€€€€€€€€ð½1¥¹¬ø(€€€€€€€€€€€€€€€€€€¤¥ô(€€€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰µÐ´ÌÉ¥…À´Èˆø(€€€€€€€€€€€€€€€€€€ñ1¥¹¬(€€€€€€€€€€€€€€€€€€€Ñ¼õíÕÉ±Ì¹µ…Áô(€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰¥¹±¥¹”µ™±•à ´ÄÄ¥Ñ•µÌµ•¹Ñ•È©ÕÍÑ¥™äµ•¹Ñ•È…À´ÈÉ½Õ¹‘•µá°‰½É‘•È‰½É‘•Èµ‰½É‘•È‰œµ…ÉÑ•áÐµÍ´™½¹ÐµÍ•µ¥‰½±Ñ•áÐµ™½É•É½Õ¹¡½Ù•Èé‰½É‘•ÈµÁÉ¥µ…Éä¼ÌÀˆ(€€€€€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€€€€€ñ5…À±…ÍÍ9…µ”ô‰ ´ÐÜ´Ðˆ…É¥„µ¡¥‘‘•¸ô‰ÑÉÕ”ˆ€¼ø(€€€€€€€€€€€€€€€€€€€Y•È¹¼µ…Á„(€€€€€€€€€€€€€€€€€€ð½1¥¹¬ø(€€€€€€€€€€€€€€€€€ì…¥Í¥Ñå!½µ”€ü€ (€€€€€€€€€€€€€€€€€€€€ñ1¥¹¬(€€€€€€€€€€€€€€€€€€€€€Ñ¼õí¥Ñå	…Í•UÉ±ô(€€€€€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰¥¹±¥¹”µ™±•à ´ÄÄ¥Ñ•µÌµ•¹Ñ•È©ÕÍÑ¥™äµ•¹Ñ•ÈÉ½Õ¹‘•µá°‰œµµÕÑ•Ñ•áÐµÍ´™½¹ÐµÍ•µ¥‰½±Ñ•áÐµ™½É•É½Õ¹¡½Ù•Èé‰œµµÕÑ•¼àÀˆ(€€€€€€€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€€€€€€µÁ±¥…ÈÁ…É„í¥Ñå9…µ•ô(€€€€€€€€€€€€€€€€€€€€ð½1¥¹¬ø(€€€€€€€€€€€€€€€€€€¤€è¹Õ±±ô(€€€€€€€€€€€€€€€€ð½‘¥Øø(€€€€€€€€€€€€€€ð½MÕÉ™…”ø(€€€€€€€€€€€€ð½…Í¥‘”ø(€€€€€€€€€€ð½‘¥Øø(€€€€€€€€¥ô((€€€€€€€í‘…Ñ„¹¡…ÍÉÉ½È€ü€ (€€€€€€€€€€ñ‘¥Ø(€€€€€€€€€€€±…ÍÍ9…µ”ô‰µÐ´ÜÉ½Õ¹‘•´Éá°‰½É‘•È‰½É‘•Èµ…µ‰•È´ÈÀÀ‰œµ…µ‰•È´ÔÀÁà´ÐÁä´ÌÑ•áÐµÍ´Ñ•áÐµ…µ‰•È´äÔÀˆ(€€€€€€€€€€€É½±”ô‰ÍÑ…ÑÕÌˆ(€€€€€€€€€€ø(€€€€€€€€€€€A…ÉÑ”‘…Ì¥¹™½Éµ‡ŸÕ•Ì»¼ÃÑ‘”Í•È…ÑÕ…±¥é…‘„¸<É•ÍÑ…¹Ñ”‘„!½µ”(€€€€€€€€€€€½¹Ñ¥¹Õ„‘¥ÍÁ½»µÙ•°Í•´ÍÕ‰ÍÑ¥ÑÕ¥È‘…‘½Ì…ÕÍ•¹Ñ•ÌÁ½È½¹Ñ—é‘¼(€€€€€€€€€€€™¥Óµ¥¼¸(€€€€€€€€€€ð½‘¥Øø(€€€€€€€€¤€è¹Õ±±ô((€€€€€€€€ñÍ•Ñ¥½¸(€€€€€€€€€±…ÍÍ9…µ”ô‰µÐ´ÄÈ‰½É‘•ÈµÐ‰½É‘•Èµ‰½É‘•È¼ÜÀÁÐ´àˆ(€€€€€€€€€…É¥„µ±…‰•±±•‘‰äô‰‘¥Í½Ù•Èµµ½É”µÑ¥Ñ±”ˆ(€€€€€€€€ø(€€€€€€€€€€ñM•Ñ¥½¹!•…‘•È(€€€€€€€€€€€Ñ¥Ñ±”ô‰•Í½‰É¥Èµ…¥Ìˆ(€€€€€€€€€€€‘•ÍÉ¥ÁÑ¥½¸õí=ÕÑÉ…Ì™½Éµ…Ì‘”•áÁ±½É…È€‘íÑ•ÉÉ¥Ñ½Éå9…µ•ô¹ô(€€€€€€€€€€¼ø(€€€€€€€€€€ñ‘¥Ø±…ÍÍ9…µ”ô‰É¥…À´ÌÍ´éÉ¥µ½±Ì´È±œéÉ¥µ½±Ì´Ðˆø(€€€€€€€€€€€íl(€€€€€€€€€€€€€ì(€€€€€€€€€€€€€€€±…‰•°è€‰áÁ±½É…È”‰ÕÍ…Èˆ°(€€€€€€€€€€€€€€€‘•ÍÉ¥ÁÑ¥½¸è€‰¹½¹ÑÉ”±Õ…É•Ì°Í•ÉÙ§½Ì”½¹Ñ—é‘¼¸ˆ°(€€€€€€€€€€€€€€€¡É•˜èÕÉ±Ì¹Í•…É °(€€€€€€€€€€€€€€€¥½¸èM•…É °(€€€€€€€€€€€€€ô°(€€€€€€€€€€€€€ì(€€€€€€€€€€€€€€€±…‰•°è€‰Ù•¹Ñ½Ìˆ°(€€€€€€€€€€€€€€€‘•ÍÉ¥ÁÑ¥½¸è€‰•¹‘„Û…±¥‘„‘¼Ñ•ÉÉ¥ÓÍÉ¥¼¸ˆ°(€€€€€€€€€€€€€€€¡É•˜èÕÉ±Ì¹•Ù•¹ÑÌ°(€€€€€€€€€€€€€€€¥½¸è…±•¹‘…É…åÌ°(€€€€€€€€€€€€€ô°(€€€€€€€€€€€€€ì(€€€€€€€€€€€€€€€±…‰•°è€‰Y……Ì”½Á½ÉÑÕ¹¥‘…‘•Ìˆ°(€€€€€€€€€€€€€€€‘•ÍÉ¥ÁÑ¥½¸è€‰<ÅÕ”…¥¹‘„•ÍÓ„‘¥ÍÁ½»µÙ•°Á½ÈÁ•ÉÑ¼¸ˆ°(€€€€€€€€€€€€€€€¡É•˜èÕÉ±Ì¹©½‰Ì°(€€€€€€€€€€€€€€€¥½¸è	É¥•™…Í•	ÕÍ¥¹•ÍÌ°(€€€€€€€€€€€€€ô°(€€€€€€€€€€€€€ì(€€€€€€€€€€€€€€€±…‰•°è€‰½·¥É¥¼±½…°ˆ°(€€€€€€€€€€€€€€€‘•ÍÉ¥ÁÑ¥½¸è€‰µÁÉ•Í…Ì”ÁÉ½™¥ÍÍ¥½¹…¥Ì…‘…ÍÑÉ…‘½Ì¸ˆ°(€€€€€€€€€€€€€€€¡É•˜èÕÉ±Ì¹‰ÕÍ¥¹•ÍÌ°(€€€€€€€€€€€€€€€¥½¸è	Õ¥±‘¥¹œÈ°(€€€€€€€€€€€€€ô°(€€€€€€€€€€€t¹µ…À ¡¥Ñ•´¤€ôøì(€€€€€€€€€€€€€½¹ÍÐ%½¸€ô¥Ñ•´¹¥½¸ì(€€€€€€€€€€€€€É•ÑÕÉ¸€ (€€€€€€€€€€€€€€€€ñ1¥¹¬(€€€€€€€€€€€€€€€€€­•äõí¥Ñ•´¹±…‰•±ô(€€€€€€€€€€€€€€€€€Ñ¼õí¥Ñ•´¹¡É•™ô(€€€€€€€€€€€€€€€€€±…ÍÍ9…µ”ô‰É½ÕÀ™±•à¥Ñ•µÌµ•¹Ñ•È…À´ÐÉ½Õ¹‘•´Éá°‰½É‘•È‰½É‘•Èµ‰½É‘•È¼ÜÔ‰œµ…ÉÀ´ÐÑÉ…¹Í¥Ñ¥½¸¡½Ù•Èé‰½É‘•ÈµÁÉ¥µ…Éä¼ÌÀ¡½Ù•ÈéÍ¡…‘½ÜµÍ´ˆ(€€€€€€€€€€€€€€€€ø(€€€€€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰™±•à ´ÄÄÜ´ÄÄÍ¡É¥¹¬´À¥Ñ•µÌµ•¹Ñ•È©ÕÍÑ¥™äµ•¹Ñ•ÈÉ½Õ¹‘•µá°‰œµÁÉ¥µ…Éä¼ÄÀÑ•áÐµÁÉ¥µ…Éäˆø(€€€€€€€€€€€€€€€€€€€€ñ%½¸±…ÍÍ9…µ”ô‰ ´ÔÜ´Ôˆ…É¥„µ¡¥‘‘•¸ô‰ÑÉÕ”ˆ€¼ø(€€€€€€€€€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰µ¥¸µÜ´Àˆø(€€€€€€€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰‰±½¬™½¹ÐµÍ•µ¥‰½±Ñ•áÐµ™½É•É½Õ¹É½ÕÀµ¡½Ù•ÈéÑ•áÐµÁÉ¥µ…Éäˆø(€€€€€€€€€€€€€€€€€€€€€í¥Ñ•´¹±…‰•±ô(€€€€€€€€€€€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€€€€€€€€€€€€€ñÍÁ…¸±…ÍÍ9…µ”ô‰µÐ´Ä‰±½¬Ñ•áÐµáÌ±•…‘¥¹œ´ÔÑ•áÐµµÕÑ•µ™½É•É½Õ¹ˆø(€€€€€€€€€€€€€€€€€€€€€í¥Ñ•´¹‘•ÍÉ¥ÁÑ¥½¹ô(€€€€€€€€€€€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€€€€€€€€€€€ð½ÍÁ…¸ø(€€€€€€€€€€€€€€€€ð½1¥¹¬ø(€€€€€€€€€€€€€€¤ì(€€€€€€€€€€€ô¥ô(€€€€€€€€€€ð½‘¥Øø(€€€€€€€€ð½Í•Ñ¥½¸ø(€€€€€€ð½µ…¥¸ø(€€€€ð½‘¥Øø(€€¤ì)ô

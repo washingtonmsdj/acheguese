@@ -86,6 +86,7 @@
     "validate:seo:phase": "npm run typecheck && npm run lint && npm run test:e2e:seo",
     "test:e2e:community-territorial": "playwright test tests/e2e/community-territorial-operational.spec.ts --project=chromium --reporter=list",
     "test:e2e:community-feed-resilience": "playwright test tests/e2e/community-feed-resilience.spec.ts --project=chromium --reporter=list",
+    "test:e2e:home": "playwright test tests/e2e/territory-home-operational.spec.ts --project=chromium --reporter=list",
     "test:e2e:communication-territorial": "playwright test tests/e2e/communication-territorial-operational.spec.ts --project=chromium --reporter=list",
     "validate:community:phase": "npm run typecheck && npm run lint && npm run test:e2e:community-territorial",
     "test:e2e:mobility-operational": "playwright test tests/e2e/mobility-operational.spec.ts --project=chromium --reporter=list",
