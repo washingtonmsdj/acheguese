@@ -60,7 +60,10 @@ interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
   eq: (column: string, value: unknown) => QueryBuilder<TRow>;
   in: (column: string, values: unknown[]) => QueryBuilder<TRow>;
   ilike: (column: string, pattern: string) => QueryBuilder<TRow>;
-  order: (column: string, options?: { ascending?: boolean }) => QueryBuilder<TRow>;
+  order: (
+    column: string,
+    options?: { ascending?: boolean },
+  ) => QueryBuilder<TRow>;
   range: (from: number, to: number) => QueryBuilder<TRow>;
   maybeSingle: () => Promise<QuerySingleResult<TRow>>;
   limit: (value: number) => QueryBuilder<TRow>;
@@ -80,6 +83,48 @@ interface BusinessCommunityLinkEligibilityRow {
 
 const businessQueriesDb = supabase as unknown as BusinessQueriesDbClient;
 
+// Keep the public list projection explicit. `public_business_search.*` also
+// includes a correlated gastronomy flag that is not used by this surface and
+// can force territorial queries past the PostgREST statement timeout.
+const PUBLIC_BUSINESS_LIST_SELECT = `
+  id,
+  profile_id,
+  business_name,
+  slug,
+  category,
+  description,
+  location_id,
+  address_id,
+  latitude,
+  longitude,
+  status,
+  is_premium,
+  is_verified,
+  rating,
+  recommendations_count,
+  business_role,
+  metadata,
+  created_at,
+  updated_at,
+  address:addresses!address_id(
+    id,
+    street,
+    number,
+    complement,
+    postal_code,
+    latitude,
+    longitude
+  ),
+  location:locations!location_id(
+    id,
+    name,
+    full_name,
+    geographic_path,
+    canonical_lat,
+    canonical_lng
+  )
+`;
+
 /**
  * Buscar empresas (com filtros)
  * ETAPA 9: Carrega relações canônicas quando disponíveis
@@ -89,7 +134,8 @@ export async function getBusinesses(
 ): Promise<Business[]> {
   try {
     // Check if table exists first
-    const { error: checkError } = await supabaseTyped.from("business_data")
+    const { error: checkError } = await supabaseTyped
+      .from("business_data")
       .select("profile_id")
       .limit(1);
 
@@ -101,41 +147,52 @@ export async function getBusinesses(
       return [];
     }
 
-    let query = supabaseTyped.from("business_data")
-      .select(`
+    let query = supabaseTyped
+      .from("business_data")
+      .select(
+        `
         *,
         address:addresses!address_id(*),
         location:locations!location_id(*)
-      `)
+      `,
+      )
       .eq("status", "active")
       .in("business_role", ["standalone", "branch"]);
 
     // Aplicar filtros
     if (filters.category && filters.category !== "todos") {
-      query = (query as unknown as { eq: (field: string, value: string) => typeof query }).eq("category", filters.category);
+      query = (
+        query as unknown as {
+          eq: (field: string, value: string) => typeof query;
+        }
+      ).eq("category", filters.category);
     }
 
     if (filters.search) {
       const sanitizedSearch = sanitizeForILike(filters.search);
       if (sanitizedSearch) {
-        query = (query as unknown as { or: (condition: string) => typeof query }).or(
+        query = (
+          query as unknown as { or: (condition: string) => typeof query }
+        ).or(
           `business_name.ilike.%${sanitizedSearch}%,description.ilike.%${sanitizedSearch}%`,
         );
       }
     }
 
     if (filters.neighborhood) {
-      query = (query as unknown as { eq: (field: string, value: string) => typeof query }).eq(
-        "metadata->>neighborhood",
-        filters.neighborhood,
-      );
+      query = (
+        query as unknown as {
+          eq: (field: string, value: string) => typeof query;
+        }
+      ).eq("metadata->>neighborhood", filters.neighborhood);
     }
 
     if (filters.hasDelivery) {
-      query = (query as unknown as { eq: (field: string, value: string) => typeof query }).eq(
-        "metadata->>tem_delivery",
-        "true",
-      );
+      query = (
+        query as unknown as {
+          eq: (field: string, value: string) => typeof query;
+        }
+      ).eq("metadata->>tem_delivery", "true");
     }
 
     // SSOT - Filtro territorial usando utilitário compartilhado
@@ -152,38 +209,61 @@ export async function getBusinesses(
     // Ordenação
     switch (filters.sortBy) {
       case "rating":
-        query = (query as unknown as { order: (field: string, opts: { ascending: boolean }) => typeof query }).order(
-          "rating",
-          { ascending: false },
-        );
+        query = (
+          query as unknown as {
+            order: (
+              field: string,
+              opts: { ascending: boolean },
+            ) => typeof query;
+          }
+        ).order("rating", { ascending: false });
         break;
       case "recommendations_count":
-        query = (query as unknown as { order: (field: string, opts: { ascending: boolean }) => typeof query }).order(
-          "recommendations_count",
-          { ascending: false },
-        );
-        query = (query as unknown as { order: (field: string, opts: { ascending: boolean }) => typeof query }).order(
-          "rating",
-          { ascending: false },
-        );
+        query = (
+          query as unknown as {
+            order: (
+              field: string,
+              opts: { ascending: boolean },
+            ) => typeof query;
+          }
+        ).order("recommendations_count", { ascending: false });
+        query = (
+          query as unknown as {
+            order: (
+              field: string,
+              opts: { ascending: boolean },
+            ) => typeof query;
+          }
+        ).order("rating", { ascending: false });
         break;
       case "name":
-        query = (query as unknown as { order: (field: string, opts: { ascending: boolean }) => typeof query }).order(
-          "business_name",
-          { ascending: true },
-        );
+        query = (
+          query as unknown as {
+            order: (
+              field: string,
+              opts: { ascending: boolean },
+            ) => typeof query;
+          }
+        ).order("business_name", { ascending: true });
         break;
       default:
-        query = (query as unknown as { order: (field: string, opts: { ascending: boolean }) => typeof query }).order(
-          "created_at",
-          { ascending: false },
-        );
+        query = (
+          query as unknown as {
+            order: (
+              field: string,
+              opts: { ascending: boolean },
+            ) => typeof query;
+          }
+        ).order("created_at", { ascending: false });
     }
 
     const { data, error } = await query;
 
     if (error) {
-      logger.warn(" Error fetching businesses:", (error as { message?: string }).message);
+      logger.warn(
+        " Error fetching businesses:",
+        (error as { message?: string }).message,
+      );
       return [];
     }
 
@@ -207,7 +287,9 @@ export async function getBusinesses(
         ...d,
         profiles: profilesMap.get(d.profile_id) || {
           id: d.profile_id,
-          name: (d as unknown as { business_name?: string }).business_name || "Empresa",
+          name:
+            (d as unknown as { business_name?: string }).business_name ||
+            "Empresa",
         },
       } as BusinessDataWithProfiles),
     );
@@ -224,14 +306,16 @@ export async function getBusinesses(
  * Buscar empresas com paginação (para infinite scroll)
  * FASE 1 IA: Usa public_business_search (view pública segura)
  */
-export async function getBusinessesList(params: {
-  pageParam?: number;
-  category?: string;
-  searchQuery?: string;
-  sortBy?: BusinessFilters["sortBy"];
-  pageSize?: number;
-  filter?: TerritoryFilter;
-} = {}): Promise<{ businesses: Business[]; nextPage?: number }> {
+export async function getBusinessesList(
+  params: {
+    pageParam?: number;
+    category?: string;
+    searchQuery?: string;
+    sortBy?: BusinessFilters["sortBy"];
+    pageSize?: number;
+    filter?: TerritoryFilter;
+  } = {},
+): Promise<{ businesses: Business[]; nextPage?: number }> {
   const {
     pageParam = 0,
     category,
@@ -243,7 +327,9 @@ export async function getBusinessesList(params: {
 
   // Validação
   if (!isValidPageParam(pageParam)) {
-    logger.warn("Invalid pageParam provided to getBusinessesList", { pageParam });
+    logger.warn("Invalid pageParam provided to getBusinessesList", {
+      pageParam,
+    });
     return { businesses: [], nextPage: undefined };
   }
 
@@ -254,27 +340,32 @@ export async function getBusinessesList(params: {
 
   try {
     // FASE 1 IA: Usar view pública segura
-    const checkResult = await supabaseTyped.from("public_business_search")
+    const checkResult = await supabaseTyped
+      .from("public_business_search")
       .select("profile_id")
       .limit(1);
 
     if (checkResult.error) {
-      logger.warn(" public_business_search view not accessible:", checkResult.error.message);
+      logger.warn(
+        " public_business_search view not accessible:",
+        checkResult.error.message,
+      );
       return { businesses: [], nextPage: undefined };
     }
 
-    let query = supabaseTyped.from("public_business_search")
-      .select(`
-        *,
-        address:addresses!address_id(*),
-        location:locations!location_id(*)
-      `)
+    let query = supabaseTyped
+      .from("public_business_search")
+      .select(PUBLIC_BUSINESS_LIST_SELECT)
       .in("business_role", ["standalone", "branch"])
       .range(pageParam * pageSize, (pageParam + 1) * pageSize - 1);
 
     // Aplicar filtros
     if (category && category !== "todos") {
-      query = (query as unknown as { eq: (field: string, value: string) => typeof query }).eq("category", category);
+      query = (
+        query as unknown as {
+          eq: (field: string, value: string) => typeof query;
+        }
+      ).eq("category", category);
     }
 
     if (searchQuery?.trim()) {
@@ -282,7 +373,9 @@ export async function getBusinessesList(params: {
       if (sanitized) {
         const safeQuery = sanitizeForILike(sanitized);
         if (safeQuery) {
-          query = (query as unknown as { or: (condition: string) => typeof query }).or(
+          query = (
+            query as unknown as { or: (condition: string) => typeof query }
+          ).or(
             `business_name.ilike.%${safeQuery}%,category.ilike.%${safeQuery}%,metadata->>neighborhood.ilike.%${safeQuery}%`,
           );
         }
@@ -312,39 +405,65 @@ export async function getBusinessesList(params: {
       ) as typeof query;
     }
 
-    query = (query as unknown as {
-      order: (field: string, opts: { ascending: boolean }) => typeof query
-    }).order("is_premium", { ascending: false });
+    query = (
+      query as unknown as {
+        order: (field: string, opts: { ascending: boolean }) => typeof query;
+      }
+    ).order("is_premium", { ascending: false });
 
     switch (sortBy) {
       case "recommendations_count":
-        query = (query as unknown as {
-          order: (field: string, opts: { ascending: boolean }) => typeof query
-        }).order("recommendations_count", { ascending: false })
+        query = (
+          query as unknown as {
+            order: (
+              field: string,
+              opts: { ascending: boolean },
+            ) => typeof query;
+          }
+        )
+          .order("recommendations_count", { ascending: false })
           .order("rating", { ascending: false });
         break;
       case "name":
-        query = (query as unknown as {
-          order: (field: string, opts: { ascending: boolean }) => typeof query
-        }).order("business_name", { ascending: true });
+        query = (
+          query as unknown as {
+            order: (
+              field: string,
+              opts: { ascending: boolean },
+            ) => typeof query;
+          }
+        ).order("business_name", { ascending: true });
         break;
       case "created_at":
-        query = (query as unknown as {
-          order: (field: string, opts: { ascending: boolean }) => typeof query
-        }).order("created_at", { ascending: false });
+        query = (
+          query as unknown as {
+            order: (
+              field: string,
+              opts: { ascending: boolean },
+            ) => typeof query;
+          }
+        ).order("created_at", { ascending: false });
         break;
       case "rating":
       default:
-        query = (query as unknown as {
-          order: (field: string, opts: { ascending: boolean }) => typeof query
-        }).order("rating", { ascending: false });
+        query = (
+          query as unknown as {
+            order: (
+              field: string,
+              opts: { ascending: boolean },
+            ) => typeof query;
+          }
+        ).order("rating", { ascending: false });
         break;
     }
 
     const { data, error } = await query;
 
     if (error) {
-      logger.warn(" Error fetching businesses list:", (error as { message?: string }).message);
+      logger.warn(
+        " Error fetching businesses list:",
+        (error as { message?: string }).message,
+      );
       return { businesses: [], nextPage: undefined };
     }
 
@@ -357,7 +476,9 @@ export async function getBusinessesList(params: {
 
     if (profileIds.length > 0) {
       const profilesData = await profileService.getProfilesByIds(profileIds);
-      profilesData.forEach((p: { id: string; name: string }) => profilesMap.set(p.id, p));
+      profilesData.forEach((p: { id: string; name: string }) =>
+        profilesMap.set(p.id, p),
+      );
     }
 
     const businesses = ((data as BusinessDataWithProfiles[]) || []).map((d) =>
@@ -365,14 +486,19 @@ export async function getBusinessesList(params: {
         ...d,
         profiles: profilesMap.get(d.profile_id) || {
           id: d.profile_id,
-          name: (d as unknown as { business_name?: string }).business_name || "Empresa",
+          name:
+            (d as unknown as { business_name?: string }).business_name ||
+            "Empresa",
         },
       } as BusinessDataWithProfiles),
     );
 
     return {
       businesses,
-      nextPage: data && (data as unknown[]).length === pageSize ? pageParam + 1 : undefined,
+      nextPage:
+        data && (data as unknown[]).length === pageSize
+          ? pageParam + 1
+          : undefined,
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -429,7 +555,8 @@ export async function getBusinessProfile(id: string): Promise<{
   is_premium: boolean;
 } | null> {
   try {
-    const { data, error } = await supabaseTyped.from("business_data")
+    const { data, error } = await supabaseTyped
+      .from("business_data")
       .select("slug, category, metadata, is_premium")
       .eq("profile_id", id)
       .single();
@@ -468,20 +595,25 @@ export async function getBusinessById(id: string): Promise<Business> {
   }
 
   try {
-    const { data, error } = await supabaseTyped.from("business_data")
-      .select(`
+    const { data, error } = await supabaseTyped
+      .from("business_data")
+      .select(
+        `
         *,
         profiles(id, name, avatar_url, bio),
         address:addresses!address_id(*),
         location:locations!location_id(*)
-      `)
+      `,
+      )
       .eq("profile_id", id)
       .maybeSingle();
 
     if (error) throw error;
     if (!data) throw new Error("Empresa não encontrada");
 
-    const business = mapBusinessDataToBusiness(data as BusinessDataWithProfiles);
+    const business = mapBusinessDataToBusiness(
+      data as BusinessDataWithProfiles,
+    );
     const contact = business.business_data_id
       ? await EntityContactService.getVisibleForEntity(
           "business",
@@ -579,7 +711,8 @@ export async function getBusinessBySlug(slug: string): Promise<{
   }
 
   try {
-    const { data, error } = await supabaseTyped.from("business_data")
+    const { data, error } = await supabaseTyped
+      .from("business_data")
       .select("id, profile_id, slug, business_name, is_premium")
       .eq("slug", slug)
       .eq("status", "active")
@@ -612,18 +745,13 @@ export async function getBusinessBySlug(slug: string): Promise<{
   }
 }
 
-export {
-  checkSlugExists,
-  getSimilarSlugs,
-} from "./business.slug-queries";
+export { checkSlugExists, getSimilarSlugs } from "./business.slug-queries";
 
 /**
  * Buscar businesses por IDs (para uso em serviços agregadores)
  * FASE 1 IA: Usa public_business_search (view pública segura)
  */
-export async function getBusinessesByIds(
-  ids: string[],
-): Promise<
+export async function getBusinessesByIds(ids: string[]): Promise<
   Array<{
     id: string;
     name: string;
@@ -642,8 +770,10 @@ export async function getBusinessesByIds(
   if (ids.length === 0) return [];
 
   try {
-    const { data, error } = await supabaseTyped.from("public_business_search")
-      .select(`
+    const { data, error } = await supabaseTyped
+      .from("public_business_search")
+      .select(
+        `
         profile_id,
         business_name,
         category,
@@ -654,7 +784,8 @@ export async function getBusinessesByIds(
         is_verified,
         metadata,
         geographic_path
-      `)
+      `,
+      )
       .in("profile_id", ids);
 
     if (error) {
@@ -717,7 +848,8 @@ export async function searchBusinessesByName(
     const sanitizedQuery = sanitizeForILike(sanitized);
     if (!sanitizedQuery) return [];
 
-    const { data, error } = await supabaseTyped.from("business_data")
+    const { data, error } = await supabaseTyped
+      .from("business_data")
       .select("profile_id, business_name, category")
       .eq("status", "active")
       .ilike("business_name", `%${sanitizedQuery}%`)
@@ -729,7 +861,11 @@ export async function searchBusinessesByName(
     }
 
     return ((data as unknown[]) || []).map((b: unknown) => {
-      const typed = b as { profile_id?: string; business_name?: string; category?: string };
+      const typed = b as {
+        profile_id?: string;
+        business_name?: string;
+        category?: string;
+      };
       return {
         id: typed.profile_id || "",
         name: typed.business_name || "",
@@ -737,7 +873,9 @@ export async function searchBusinessesByName(
       };
     });
   } catch (error) {
-    logger.error("Error searching businesses by name", error as Error, { query });
+    logger.error("Error searching businesses by name", error as Error, {
+      query,
+    });
     return [];
   }
 }
@@ -800,7 +938,9 @@ export async function getProductsPage(
     .range(from, to);
 
   if (error) {
-    throw new Error(`Erro ao buscar página de produtos: ${(error as { message?: string }).message}`);
+    throw new Error(
+      `Erro ao buscar página de produtos: ${(error as { message?: string }).message}`,
+    );
   }
 
   return (data || []).map(mapProductRecordToProduct);
@@ -834,15 +974,18 @@ export async function getSimilarBusinesses(
   limit = 5,
 ): Promise<Partial<Business>[]> {
   try {
-    const { data, error } = await supabaseTyped.from("business_data")
-      .select(`
+    const { data, error } = await supabaseTyped
+      .from("business_data")
+      .select(
+        `
         profile_id,
         business_name,
         category,
         slug,
         is_verified,
         is_premium
-      `)
+      `,
+      )
       .eq("category", category)
       .eq("status", "active")
       .neq("profile_id", businessId)
@@ -883,7 +1026,8 @@ export async function getSimilarBusinesses(
  */
 export async function getGallery(businessId: string): Promise<string[]> {
   try {
-    const { data, error } = await supabaseTyped.from("business_gallery")
+    const { data, error } = await supabaseTyped
+      .from("business_gallery")
       .select("image_url")
       .eq("business_id", businessId)
       .order("created_at", { ascending: false });
@@ -913,7 +1057,10 @@ export async function getGallery(businessId: string): Promise<string[]> {
       .order("created_at", { ascending: false });
 
     if (fallbackError) {
-      logger.error("Error fetching business gallery by profile fallback:", fallbackError);
+      logger.error(
+        "Error fetching business gallery by profile fallback:",
+        fallbackError,
+      );
       return [];
     }
 

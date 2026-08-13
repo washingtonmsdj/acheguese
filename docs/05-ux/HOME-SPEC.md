@@ -1,7 +1,7 @@
 # Territory Home — contrato canônico
 
 > Status: SSOT de produto e implementação da Home territorial.
-> Versão: 3.3 (cobertura territorial, rollout gradual da Community, polimento e prova E2E).
+> Versão: 4.2 (cobertura territorial, rollout gradual da Community e fundação visual Território Vivo).
 > Escopo: entrada territorial, Home pública, navegação primária, regras de composição e relação com rollout da Community.
 
 ## 1. Decisão de produto
@@ -89,24 +89,24 @@ A expansão da Community deve ser evidence-gated, considerando demanda/interesse
 7. Resumo de Community, respeitando seu rollout independente.
 8. Contexto territorial e ampliação bairro → cidade.
 9. Descoberta adicional.
-10. Bottom navigation mobile.
+10. Navegação adaptativa por viewport.
 
 Se uma seção não tiver conteúdo real, ela deve ser omitida ou exibir um estado vazio útil. A ordem pode formar duas colunas no desktop, mas o modelo de dados e a prioridade semântica são os mesmos do mobile.
 
 ## 6. Dados e composição
 
-| Bloco                           | Fonte canônica                                         | Regra                                             |
-| ------------------------------- | ------------------------------------------------------ | ------------------------------------------------- |
-| território                      | `TerritorialLayout` + `useModuleTerritoryFilter`       | rota resolvida; cidade inclui descendentes        |
-| busca/URLs                      | builders de `territoryUrls` + hooks de URLs de domínio | todo destino preserva o território                |
-| posts                           | `PostService.getFeed`                                  | somente publicados e recentes para resumo da Home |
-| eventos                         | `EventReadService`                                     | status permitido **e** data vigente               |
-| vagas                           | `WorkOpportunitiesService`                             | lifecycle ativo; conjunto de locations resolvido  |
-| empresas/serviços/classificados | `LandingFeaturedService`                               | registros públicos do território                  |
-| destaques                       | `TerritorialHighlightService`                          | ativos e dentro da janela editorial               |
+| Bloco                           | Fonte canônica                                         | Regra                                                                                         |
+| ------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| território                      | `TerritorialLayout` + `useModuleTerritoryFilter`       | rota resolvida; cidade inclui descendentes                                                    |
+| busca/URLs                      | builders de `territoryUrls` + hooks de URLs de domínio | todo destino preserva o território                                                            |
+| posts                           | `PostService.getFeed`                                  | somente publicados e recentes para resumo da Home                                             |
+| eventos                         | `EventReadService`                                     | status permitido **e** data vigente                                                           |
+| vagas                           | `WorkOpportunitiesService`                             | lifecycle ativo; conjunto de locations resolvido                                              |
+| empresas/serviços/classificados | `LandingFeaturedService`                               | registros públicos do território                                                              |
+| destaques                       | `TerritorialHighlightService`                          | ativos e dentro da janela editorial                                                           |
 | Community                       | `CommunityExperienceService` + rollout                 | ativa somente onde o contrato comunitário estiver liberado; `coming_soon` não bloqueia a Home |
-| publicação                      | `useCommunityAccess` / `CommunityAccessPolicy`         | CTA apenas com `create_post = true`               |
-| sessão                          | `SessionContext`                                       | personalização sem alterar visibilidade pública   |
+| publicação                      | `useCommunityAccess` / `CommunityAccessPolicy`         | CTA apenas com `create_post = true`                                                           |
+| sessão                          | `SessionContext`                                       | personalização sem alterar visibilidade pública                                               |
 
 Falhas parciais não derrubam a Home. Cada grupo de dados possui loading independente; conteúdo resolvido aparece sem esperar todas as fontes. A seção afetada fica vazia e a interface informa que parte dos dados não pôde ser atualizada. Não existe fallback editorial fictício na Home de Production.
 
@@ -162,6 +162,17 @@ Busca não ocupa uma segunda tab concorrente com Explorar. Mapa, serviços, empr
 
 No desktop, a Home usa largura real: conteúdo principal e rail lateral com serviços/contexto. Não é uma coluna mobile centralizada.
 
+### Contrato visual Território Vivo
+
+- mobile abaixo de 768 px: topbar territorial, conteúdo editorial e bottom navigation com cinco modos;
+- tablet entre 768 e 1279 px: navigation rail fixa de 72 px; o conteúdo nunca fica sem navegação;
+- desktop a partir de 1280 px: sidebar fixa de 224 px, conteúdo principal fluido e rail contextual somente quando agrega informação;
+- a sidebar representa `Hoje`, `Explorar`, `Community`, `Atividade` e `Conta/Entrar`; módulos são destinos contextuais;
+- Home e Explorar compartilham topbar, busca, superfícies, títulos, estados e linguagem visual;
+- mapas entram sob demanda e como contexto; não substituem a Home;
+- `prefers-reduced-motion` reduz transições e animações no shell;
+- todos os alvos principais preservam pelo menos 40 px, e a navegação fixa preserva 52–64 px por item conforme o viewport.
+
 ## 10. Microcopy
 
 - Preferir “Hoje em [território]”, “Vale saber” e “Resolver por aqui”.
@@ -181,6 +192,7 @@ No desktop, a Home usa largura real: conteúdo principal e rail lateral com serv
 - refresh direto mantém o mesmo contexto;
 - nenhuma seção contém mock/fallback fictício em Production;
 - mobile não tem overflow horizontal e desktop usa composição própria;
+- 320 px preserva conteúdo e navegação; 390×844 é a referência mobile; 820 px exibe rail; 1440×1000 exibe sidebar e rail contextual;
 - loading, erro parcial e vazio são distinguíveis;
 - console não contém erro novo e requests territoriais não falham por URL incorreta.
 

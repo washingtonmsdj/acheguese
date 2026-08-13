@@ -1,6 +1,8 @@
 # Navigation System - Achegue-se
 
-Status: proposta de sistema de navegacao, sem implementacao.
+Status: fundacao adaptativa implementada em Home territorial e Explorar na
+Fase 4.2. Community, Feed, Perfil e demais superficies continuam no shell
+anterior ate migracao explicita.
 
 ## Objetivo da navegacao
 
@@ -16,7 +18,7 @@ Entradas globais:
 
 - Hoje
 - Explorar
-- Comunidade
+- Community
 - Atividade
 - Conta
 
@@ -111,15 +113,16 @@ Elementos que devem ser evitados na Top Bar mobile:
 - Alternancia de tema como item primario.
 - Entradas administrativas permanentes.
 
-### FAB
+### Acao de publicacao
 
-O FAB deve representar "criar/publicar", nao um modulo especifico.
+A publicacao deve representar uma intencao contextual, nao um modulo fixo nem
+um destino permanente da navegacao.
 
-Acao primaria:
+Acao possivel:
 
 - Publicar.
 
-Ao tocar:
+Quando a superficie oferecer um seletor de intencao:
 
 - Postagem.
 - Pergunta.
@@ -128,9 +131,12 @@ Ao tocar:
 - Evento.
 - Empresa/Servico, se o usuario tiver permissao ou intencao comercial.
 
-Regra:
+Regras:
 
-- O FAB deve abrir um seletor de intencao, nao uma tela tecnica.
+- a acao so aparece quando rollout, perfil ativo e policy permitem;
+- autenticacao isolada nao habilita publicacao;
+- Home e Explorar nao reservam um FAB global apenas para preencher layout;
+- quando adotado, o seletor abre intencoes compreensiveis, nao formatos tecnicos.
 
 ### Busca mobile
 
@@ -212,10 +218,10 @@ Conta:
 
 Desktop deve aproveitar espaco, mas nao expor tudo ao mesmo tempo.
 
-Layout recomendado:
+Layout implementado na fundacao Territorio Vivo:
 
 - Sidebar esquerda com modos principais.
-- Top bar com busca, territorio, notificacoes e perfil.
+- Top bar territorial com troca de contexto, notificacoes e conta/entrada.
 - Area central para conteudo.
 - Painel direito contextual somente quando agregar valor.
 
@@ -223,10 +229,9 @@ Sidebar principal:
 
 - Hoje.
 - Explorar.
-- Comunidade.
-- Resolver.
-- Mapa.
-- Central.
+- Community.
+- Atividade.
+- Conta/Entrar.
 
 Dentro de cada modo, usar navegacao secundaria contextual.
 
@@ -234,8 +239,8 @@ Dentro de cada modo, usar navegacao secundaria contextual.
 
 Regras:
 
-- Mostrar no maximo 6 entradas principais.
-- Agrupar modulos sob "Resolver" em vez de listar todos no nivel principal.
+- Mostrar exatamente os cinco modos globais na fundacao atual.
+- Expor Resolver, mapa e modulos dentro da Home/Explorar, nao no nivel principal.
 - Exibir "Central" apenas para usuarios autenticados e com papel relevante.
 - Ao entrar em uma comunidade, a sidebar pode se tornar contextual, mas mantendo saida clara para modos globais.
 
@@ -269,6 +274,15 @@ Painel direito deve ser contextual:
 - Em Central: status e proximas acoes.
 
 Nao deve virar uma segunda navegacao global.
+
+### Breakpoints canônicos da fundacao
+
+- `< 768 px`: bottom navigation fixa; padding inferior respeita safe area.
+- `768–1279 px`: navigation rail fixa de 72 px.
+- `>= 1280 px`: sidebar de 224 px; rail contextual pertence a cada modo.
+
+Os três formatos usam o mesmo array de modos e o mesmo resolvedor de contexto
+territorial. Trocar viewport nao muda a arquitetura de informacao.
 
 ## Navegacao por estado de login
 

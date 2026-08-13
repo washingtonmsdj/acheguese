@@ -5,6 +5,7 @@ import { adminRolesService } from "@/core/admin/services/AdminRolesService";
 import { residenceService } from "@/core/residence/services/ResidenceService";
 import { useCommunityRollout } from "@/core/community/hooks/useCommunityRollout";
 import { useSessionContext } from "@/core/session";
+import type { RolloutStatus } from "@/core/rollout/types";
 import { CommunityExperienceService } from "@/core/community-experience/services/CommunityExperienceService";
 import { CommunityMembershipService } from "@/core/community-experience/services/CommunityMembershipService";
 import {
@@ -33,6 +34,8 @@ export interface UseCommunityAccessResult extends Omit<
   readonly isAuthenticated: boolean;
   readonly isAdmin: boolean;
   readonly isModerator: boolean;
+  readonly isCommunityAvailable: boolean;
+  readonly communityRolloutStatus: RolloutStatus | null;
   readonly residenceLocationId: string | null;
   readonly isResidenceVerified: boolean;
   readonly communityId: string | null;
@@ -92,10 +95,12 @@ export function useCommunityAccess({
   const routeResolved = isCommunityAccessRouteTarget(resolved)
     ? resolved
     : undefined;
-  const { isLoading: rolloutLoading, isBlocked } = useCommunityRollout(
-    routeResolved,
-    targetLocationIds[0] ?? null,
-  );
+  const {
+    isActive: isCommunityRolloutActive,
+    isLoading: rolloutLoading,
+    isBlocked,
+    rollout,
+  } = useCommunityRollout(routeResolved, targetLocationIds[0] ?? null);
   const isAuthenticated = Boolean(user?.id);
   const routeTargetKey = useMemo(
     () => getCommunityAccessTargetKey(routeResolved ?? null),
@@ -265,6 +270,9 @@ export function useCommunityAccess({
     isAuthenticated,
     isAdmin: decision.level === "admin",
     isModerator: decision.level === "moderator" || decision.level === "admin",
+    isCommunityAvailable:
+      !rolloutLoading && isCommunityRolloutActive && !isBlocked,
+    communityRolloutStatus: rollout?.status ?? null,
     residenceLocationId: residenceQuery.data?.location_id ?? null,
     isResidenceVerified: Boolean(residenceQuery.data?.is_verified),
     communityId,

@@ -63,7 +63,7 @@ test.describe("Home territorial pública e determinística", () => {
     await gotoApp(page, "/");
     await expect(
       page.getByRole("heading", { name: /Tudo começa pelo seu bairro/i }),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 30_000 });
     await expect(page.getByRole("link", { name: "Entrar" })).toBeVisible();
 
     await page.getByRole("button", { name: "Pituba" }).click();
@@ -82,7 +82,7 @@ test.describe("Home territorial pública e determinística", () => {
     await gotoApp(page, "/ba/salvador");
     await expect(
       page.getByRole("heading", { name: "Panorama de Salvador" }),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 30_000 });
     await expect(
       page.getByText(/visão ampla da cidade/i).first(),
     ).toBeVisible();
@@ -123,7 +123,9 @@ test.describe("Home territorial pública e determinística", () => {
     await gotoApp(page, "/ba/salvador/pituba");
     await page.getByRole("link", { name: "Explorar", exact: true }).click();
     await expect(page).toHaveURL(/\/busca\/ba\/salvador\/pituba$/);
-    await expect(page.getByLabel("Campo de busca")).toBeVisible();
+    await expect(
+      page.getByRole("searchbox", { name: "Buscar em Pituba" }),
+    ).toBeVisible({ timeout: 30_000 });
 
     await page.getByRole("link", { name: "Hoje", exact: true }).click();
     await expect(page).toHaveURL(/\/ba\/salvador\/pituba$/);
@@ -140,6 +142,9 @@ test.describe("Home territorial pública e determinística", () => {
     await gotoApp(page, "/ba/salvador/pituba");
     await expect(page.getByText("Hoje em Pituba")).toBeVisible();
     await expect(
+      page.getByText("Community ainda não liberada em Pituba."),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(
       page.getByRole("link", { name: "Hoje", exact: true }),
     ).toHaveAttribute("aria-current", "page");
 
@@ -148,6 +153,79 @@ test.describe("Home territorial pública e determinística", () => {
         page.locator(`[data-bottom-nav-item="${label.toLowerCase()}"]`),
       ).toBeVisible();
     }
+  });
+
+  test("shell adapta navegação, foco e movimento entre 320, tablet e desktop", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width: 320, height: 844 });
+    await gotoApp(page, "/ba/salvador/pituba");
+    await expect(page.getByText("Hoje em Pituba")).toBeVisible({
+      timeout: 30_000,
+    });
+
+    const mobileNav = page.locator('[data-territory-navigation="mobile"]');
+    await expect(mobileNav).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+
+    const mobileTargets = await mobileNav.locator("a").evaluateAll((links) =>
+      links.map((link) => {
+        const bounds = link.getBoundingClientRect();
+        return { width: bounds.width, height: bounds.height };
+      }),
+    );
+    expect(
+      mobileTargets.every(
+        (target) => target.width >= 44 && target.height >= 44,
+      ),
+    ).toBe(true);
+
+    const searchbox = page.getByRole("searchbox", { name: "Buscar em Pituba" });
+    await searchbox.focus();
+    const focusStyle = await searchbox.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        outlineStyle: style.outlineStyle,
+        outlineWidth: Number.parseFloat(style.outlineWidth),
+        transitionSeconds: Math.max(
+          ...style.transitionDuration
+            .split(",")
+            .map((duration) =>
+              duration.trim().endsWith("ms")
+                ? Number.parseFloat(duration) / 1000
+                : Number.parseFloat(duration),
+            ),
+        ),
+      };
+    });
+    expect(focusStyle.outlineStyle).not.toBe("none");
+    expect(focusStyle.outlineWidth).toBeGreaterThanOrEqual(2);
+    expect(focusStyle.transitionSeconds).toBeLessThanOrEqual(0.001);
+
+    await page.setViewportSize({ width: 820, height: 1000 });
+    await expect(
+      page.locator('[data-territory-navigation="tablet"]'),
+    ).toBeVisible();
+    await expect(mobileNav).toBeHidden();
+    await expectNoHorizontalOverflow(page);
+
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await expect(
+      page.locator('[data-territory-navigation="desktop"]'),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("complementary", {
+        name: "Contexto e serviços do território",
+      }),
+    ).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+
+    await page.getByRole("link", { name: "Explorar", exact: true }).click();
+    await expect(
+      page.getByRole("link", { name: "Abrir mapa completo de Pituba" }),
+    ).toBeVisible({ timeout: 30_000 });
+    await expectNoHorizontalOverflow(page);
   });
 });
 

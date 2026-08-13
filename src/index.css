@@ -72,44 +72,56 @@
     --sidebar-border: 0 0% 20%;
     --sidebar-ring: 171 77% 56%;
 
+    /* Territorio Vivo — foundation shared by territorial product surfaces. */
+    --territory-canvas: 164 44% 5%;
+    --territory-surface: 164 33% 9%;
+    --territory-surface-raised: 164 26% 12%;
+    --territory-ink: 140 30% 96%;
+    --territory-muted: 158 13% 70%;
+    --territory-brand: 166 60% 54%;
+    --territory-brand-strong: 164 64% 66%;
+    --territory-warm: 16 82% 67%;
+    --territory-sun: 42 82% 65%;
+    --territory-border: 164 24% 21%;
+    --territory-focus: 166 70% 58%;
+
     /* ==========================================================
      * Semantic content category tokens (SSOT visual do Achegue-se)
      * Cada categoria de conteúdo tem uma cor própria e padronizada.
      * Uso: text-[hsl(var(--category-alert))] | bg-[hsl(var(--category-alert)/0.12)]
      * ou via helpers em src/shared/design-system/contentCategories.ts
      * ========================================================== */
-    --category-alert: 0 78% 58%;              /* Alertas de segurança / urgência */
+    --category-alert: 0 78% 58%; /* Alertas de segurança / urgência */
     --category-alert-foreground: 0 0% 100%;
-    --category-event: 322 78% 58%;            /* Eventos, encontros */
+    --category-event: 322 78% 58%; /* Eventos, encontros */
     --category-event-foreground: 0 0% 100%;
-    --category-gastronomy: 24 92% 55%;        /* Gastronomia, restaurantes */
+    --category-gastronomy: 24 92% 55%; /* Gastronomia, restaurantes */
     --category-gastronomy-foreground: 0 0% 100%;
-    --category-mobility: 234 76% 62%;         /* Mobilidade, transporte */
+    --category-mobility: 234 76% 62%; /* Mobilidade, transporte */
     --category-mobility-foreground: 0 0% 100%;
-    --category-discussion: 217 91% 60%;       /* Discussões, conversas */
+    --category-discussion: 217 91% 60%; /* Discussões, conversas */
     --category-discussion-foreground: 0 0% 100%;
-    --category-business: 171 77% 45%;         /* Empresas, comércio local */
+    --category-business: 171 77% 45%; /* Empresas, comércio local */
     --category-business-foreground: 0 0% 100%;
-    --category-civic: 32 95% 52%;             /* Zeladoria urbana / relato cívico */
+    --category-civic: 32 95% 52%; /* Zeladoria urbana / relato cívico */
     --category-civic-foreground: 0 0% 100%;
-    --category-help: 84 68% 45%;              /* Favor, empréstimo, ajuda */
+    --category-help: 84 68% 45%; /* Favor, empréstimo, ajuda */
     --category-help-foreground: 0 0% 100%;
-    --category-classified: 43 92% 52%;        /* Classificados */
+    --category-classified: 43 92% 52%; /* Classificados */
     --category-classified-foreground: 0 0% 12%;
-    --category-recommendation: 160 84% 39%;   /* Recomendações positivas */
+    --category-recommendation: 160 84% 39%; /* Recomendações positivas */
     --category-recommendation-foreground: 0 0% 100%;
-    --category-question: 45 92% 55%;          /* Perguntas */
+    --category-question: 45 92% 55%; /* Perguntas */
     --category-question-foreground: 0 0% 12%;
-    --category-poll: 262 74% 62%;             /* Enquetes */
+    --category-poll: 262 74% 62%; /* Enquetes */
     --category-poll-foreground: 0 0% 100%;
-    --category-found: 190 80% 48%;            /* Achados e perdidos */
+    --category-found: 190 80% 48%; /* Achados e perdidos */
     --category-found-foreground: 0 0% 100%;
-    --category-giveaway: 14 84% 58%;          /* Desapego */
+    --category-giveaway: 14 84% 58%; /* Desapego */
     --category-giveaway-foreground: 0 0% 100%;
-    --category-neutral: 220 9% 55%;           /* Post genérico / neutro */
+    --category-neutral: 220 9% 55%; /* Post genérico / neutro */
     --category-neutral-foreground: 0 0% 100%;
   }
-
 
   .light {
     --background: 0 0% 100%;
@@ -147,6 +159,18 @@
     --sidebar-border: 0 0% 90%;
     --sidebar-ring: 171 77% 40%;
 
+    --territory-canvas: 132 17% 94%;
+    --territory-surface: 0 0% 100%;
+    --territory-surface-raised: 138 18% 97%;
+    --territory-ink: 162 27% 11%;
+    --territory-muted: 158 9% 41%;
+    --territory-brand: 168 78% 27%;
+    --territory-brand-strong: 168 81% 22%;
+    --territory-warm: 16 61% 49%;
+    --territory-sun: 43 85% 32%;
+    --territory-border: 140 18% 86%;
+    --territory-focus: 168 78% 32%;
+
     /* Semantic content category tokens - light mode */
     --category-alert: 0 72% 48%;
     --category-alert-foreground: 0 0% 100%;
@@ -179,7 +203,6 @@
     --category-neutral: 220 9% 45%;
     --category-neutral-foreground: 0 0% 100%;
   }
-
 }
 
 @layer base {
@@ -346,7 +369,9 @@
  * Aplicados em cards do concept: Agora, Ações rápidas,
  * Acontecendo, Explore e Hoje. Idênticos em mobile e tablet.
  * ========================================================= */
-.th-section { margin-top: 1.25rem; }
+.th-section {
+  margin-top: 1.25rem;
+}
 .th-section-header {
   display: flex;
   align-items: baseline;
@@ -366,9 +391,11 @@
   font-size: 13px;
   font-weight: 500;
   color: hsl(var(--primary));
-  transition: opacity .2s;
+  transition: opacity 0.2s;
 }
-.th-section-link:hover { opacity: .8; }
+.th-section-link:hover {
+  opacity: 0.8;
+}
 
 .th-card {
   display: flex;
@@ -382,10 +409,14 @@
   border: 1px solid hsl(var(--border));
   background: hsl(var(--card));
   padding: 0.75rem;
-  transition: background-color .2s;
+  transition: background-color 0.2s;
 }
-.th-card:hover { background: hsl(var(--muted)); }
-.th-card--top { align-items: flex-start; }
+.th-card:hover {
+  background: hsl(var(--muted));
+}
+.th-card--top {
+  align-items: flex-start;
+}
 
 .th-card-icon {
   display: flex;
@@ -396,7 +427,10 @@
   justify-content: center;
   border-radius: 9999px;
 }
-.th-card-body { min-width: 0; flex: 1; }
+.th-card-body {
+  min-width: 0;
+  flex: 1;
+}
 .th-card-meta {
   display: flex;
   min-width: 0;
@@ -442,9 +476,11 @@
   background: hsl(var(--card));
   padding: 0.625rem;
   overflow: hidden;
-  transition: background-color .2s;
+  transition: background-color 0.2s;
 }
-.th-pulse-card:hover { background: hsl(var(--muted)); }
+.th-pulse-card:hover {
+  background: hsl(var(--muted));
+}
 .th-pulse-title {
   font-size: 12.5px;
   font-weight: 600;
@@ -476,9 +512,11 @@
   align-items: center;
   justify-content: center;
   border-radius: 1rem;
-  transition: transform .2s;
+  transition: transform 0.2s;
 }
-.th-tile:hover .th-tile-icon { transform: scale(1.03); }
+.th-tile:hover .th-tile-icon {
+  transform: scale(1.03);
+}
 .th-tile-label {
   width: 100%;
   font-size: 12px;
@@ -496,7 +534,9 @@
   padding: 0.75rem;
   gap: 0.5rem;
 }
-.th-tile--framed:hover { background: hsl(var(--muted)); }
+.th-tile--framed:hover {
+  background: hsl(var(--muted));
+}
 .th-tile--framed .th-tile-icon {
   height: 2.5rem;
   width: 2.5rem;
@@ -516,9 +556,11 @@
   border: 1px solid hsl(var(--border));
   background: hsl(var(--card));
   padding: 0.75rem;
-  transition: background-color .2s;
+  transition: background-color 0.2s;
 }
-.th-today-card:hover { background: hsl(var(--muted)); }
+.th-today-card:hover {
+  background: hsl(var(--muted));
+}
 .th-today-title {
   font-size: 13px;
   font-weight: 600;
@@ -538,4 +580,43 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Territorio Vivo — reusable layout behavior, not page-specific styling. */
+.territory-vivo {
+  min-height: 100dvh;
+  background:
+    radial-gradient(
+      circle at 8% 0%,
+      hsl(var(--territory-brand) / 0.1),
+      transparent 28rem
+    ),
+    hsl(var(--territory-canvas));
+  color: hsl(var(--territory-ink));
+}
+
+.territory-vivo :focus-visible {
+  outline: 2px solid hsl(var(--territory-focus));
+  outline-offset: 3px;
+}
+
+.territory-vivo-safe-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 5.25rem);
+}
+
+@media (min-width: 768px) {
+  .territory-vivo-safe-bottom {
+    padding-bottom: 2.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .territory-vivo *,
+  .territory-vivo *::before,
+  .territory-vivo *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

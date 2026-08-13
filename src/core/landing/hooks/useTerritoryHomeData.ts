@@ -27,6 +27,7 @@ interface UseTerritoryHomeDataInput {
   territoryFilter: TerritoryFilter;
   resolvedLocationIds: readonly string[];
   territoryLoading: boolean;
+  communityEnabled: boolean;
 }
 
 function toFeedParams(filter: TerritoryFilter): FeedParams {
@@ -53,6 +54,7 @@ export function useTerritoryHomeData({
   territoryFilter,
   resolvedLocationIds,
   territoryLoading,
+  communityEnabled,
 }: UseTerritoryHomeDataInput) {
   const filterKey = territoryFilterKey(territoryFilter);
   const filterReady = isTerritoryFilterReady(territoryFilter);
@@ -66,7 +68,8 @@ export function useTerritoryHomeData({
   const postsQuery = useQuery({
     queryKey: ["territory-home", "posts", filterKey],
     queryFn: () => postService.getFeed(toFeedParams(territoryFilter)),
-    enabled: filterReady && isLaunchSurfaceEnabled("community"),
+    enabled:
+      filterReady && communityEnabled && isLaunchSurfaceEnabled("community"),
     staleTime: HOME_STALE_TIME,
     retry: false,
   });
@@ -191,7 +194,7 @@ export function useTerritoryHomeData({
       eventsQuery.isLoading ||
       opportunitiesQuery.isLoading ||
       highlights.isLoading,
-    community: territoryLoading || postsQuery.isLoading,
+    community: territoryLoading || (communityEnabled && postsQuery.isLoading),
     usefulPlaces:
       territoryLoading ||
       featured.loading.businesses ||
@@ -212,7 +215,7 @@ export function useTerritoryHomeData({
     isLoading:
       territoryLoading ||
       featured.isLoading ||
-      postsQuery.isLoading ||
+      (communityEnabled && postsQuery.isLoading) ||
       eventsQuery.isLoading ||
       opportunitiesQuery.isLoading ||
       highlights.isLoading,

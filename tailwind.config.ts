@@ -15,6 +15,7 @@ export default {
       fontFamily: {
         sans: ["DM Sans", "sans-serif"],
         display: ["Space Grotesk", "sans-serif"],
+        heading: ["Space Grotesk", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -71,6 +72,18 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
+        },
+        territory: {
+          canvas: "hsl(var(--territory-canvas))",
+          surface: "hsl(var(--territory-surface))",
+          raised: "hsl(var(--territory-surface-raised))",
+          ink: "hsl(var(--territory-ink))",
+          muted: "hsl(var(--territory-muted))",
+          brand: "hsl(var(--territory-brand))",
+          "brand-strong": "hsl(var(--territory-brand-strong))",
+          warm: "hsl(var(--territory-warm))",
+          sun: "hsl(var(--territory-sun))",
+          border: "hsl(var(--territory-border))",
         },
         category: {
           alert: {
@@ -139,6 +152,12 @@ export default {
         lg: "var(--radius-lg)",
         md: "var(--radius-md)",
         sm: "var(--radius-sm)",
+        territory: "1rem",
+        "territory-highlight": "1.25rem",
+      },
+      boxShadow: {
+        "territory-highlight":
+          "0 24px 70px -48px hsl(var(--shadow-color) / 0.55)",
       },
       keyframes: {
         "accordion-down": {

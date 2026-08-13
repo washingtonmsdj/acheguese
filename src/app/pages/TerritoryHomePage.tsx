@@ -1,14 +1,13 @@
-import { useMemo, type FormEvent, type HTMLAttributes } from "react";
+import { useMemo, type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowRight,
   BadgeCheck,
-  Bell,
   BriefcaseBusiness,
   Building2,
   CalendarDays,
-  ChevronDown,
   Compass,
+  Info,
   Map,
   MapPin,
   MessageCircle,
@@ -16,12 +15,26 @@ import {
   ShieldCheck,
   Store,
   Tag,
+  Users,
   UtensilsCrossed,
   Wrench,
   type LucideIcon,
 } from "lucide-react";
+import {
+  TerritorySearch,
+  TerritorySectionHeading,
+  TerritoryState,
+  TerritorySurface,
+  TerritoryTopbar,
+} from "@/app/components/territory-vivo";
+import {
+  isSalvadorCommunityLaunchTerritory,
+  SALVADOR_COMMUNITY_LAUNCH_CLUSTER,
+} from "@/config/communityLaunch";
 import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { TERRITORY_CONFIG } from "@/config/territory";
 import { useCommunityAccess } from "@/core/community/access/useCommunityAccess";
+import { classifiedUrlService } from "@/core/classifieds/services";
 import { useTerritoryHomeData } from "@/core/landing/hooks/useTerritoryHomeData";
 import type {
   FeaturedBusiness,
@@ -32,38 +45,32 @@ import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerrito
 import { useUnifiedNotifications } from "@/core/notifications/useUnifiedNotifications";
 import type { Post } from "@/core/posts/types";
 import { getPublicPostPreview } from "@/core/posts/utils/publicPostContent";
-import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useTerritorialContext } from "@/core/routing/components/TerritorialLayout";
+import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import {
   buildCityTerritoryBaseUrl,
+  buildCommunityTerritoryUrl,
   buildModuleTerritoryUrl,
   MODULE_SLUGS,
 } from "@/core/routing/utils/territoryUrls";
 import { useSessionContext } from "@/core/session";
 import type { TerritorialHighlight } from "@/core/territorial/highlights/types";
-import { eventPublicRoutes } from "@/core/verticals/events/routes/eventPublicRoutes";
 import type { PublicEvent } from "@/core/verticals/events";
+import { eventPublicRoutes } from "@/core/verticals/events/routes/eventPublicRoutes";
 import type { WorkOpportunityCard } from "@/core/work-opportunities/types";
-import { classifiedUrlService } from "@/core/classifieds/services";
 import { cn } from "@/shared/utils/cn";
 
 interface HomeUrls {
   business: string;
   classifieds: string;
   community: string;
+  communityInterest: string;
   events: string;
   gastronomy: string;
   jobs: string;
   map: string;
   search: string;
   services: string;
-}
-
-interface SectionHeaderProps {
-  title: string;
-  description?: string;
-  href?: string;
-  linkLabel?: string;
 }
 
 const DATE_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
@@ -115,84 +122,74 @@ function getInitial(value: string): string {
   return value.trim().charAt(0).toLocaleUpperCase("pt-BR") || "A";
 }
 
-function SectionHeader({
+interface StoryRowProps {
+  icon: ReactNode;
+  kicker: string;
+  title: string;
+  meta?: string;
+  href?: string;
+  imageUrl?: string;
+  toneClassName: string;
+}
+
+function StoryRow({
+  icon,
+  kicker,
   title,
-  description,
+  meta,
   href,
-  linkLabel = "Ver tudo",
-}: SectionHeaderProps) {
-  return (
-    <div className="mb-4 flex items-end justify-between gap-4">
-      <div className="min-w-0">
-        <h2 className="font-display text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-          {title}
-        </h2>
-        {description ? (
-          <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
-            {description}
-          </p>
-        ) : null}
-      </div>
-      {href ? (
-        <Link
-          to={href}
-          className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-primary hover:underline"
-        >
-          {linkLabel}
-          <ArrowRight className="h-4 w-4" aria-hidden="true" />
-        </Link>
-      ) : null}
-    </div>
-  );
-}
-
-function Surface({
-  children,
-  className,
-  ...props
-}: HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      {...props}
-      className={cn(
-        "rounded-3xl border border-border/75 bg-card shadow-[0_18px_55px_-42px_rgba(15,23,42,0.55)]",
-        className,
-      )}
-    >
-      {children}
-    </div>
-  );
-}
-
-function HomeLoading() {
-  return (
-    <div
-      className="grid gap-5 lg:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.8fr)]"
-      aria-label="Carregando informações do território"
-    >
-      <div className="space-y-4">
-        <div className="h-7 w-56 animate-pulse rounded-full bg-muted" />
-        <div className="h-36 animate-pulse rounded-3xl bg-muted" />
-        <div className="h-36 animate-pulse rounded-3xl bg-muted" />
-      </div>
-      <div className="h-80 animate-pulse rounded-3xl bg-muted" />
-    </div>
-  );
-}
-
-function HomeSectionLoading({ rows = 2 }: { rows?: number }) {
-  return (
-    <div
-      className="grid gap-3 sm:grid-cols-2"
-      aria-label="Atualizando esta seção"
-    >
-      {Array.from({ length: rows }, (_, index) => (
-        <div
-          key={index}
-          className="h-24 animate-pulse rounded-2xl border border-border/60 bg-muted/70"
+  imageUrl,
+  toneClassName,
+}: StoryRowProps) {
+  const content = (
+    <>
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt=""
+          className="h-14 w-16 shrink-0 rounded-territory object-cover sm:h-16 sm:w-20"
         />
-      ))}
-    </div>
+      ) : (
+        <span
+          className={cn(
+            "flex h-11 w-11 shrink-0 items-center justify-center rounded-territory",
+            toneClassName,
+          )}
+        >
+          {icon}
+        </span>
+      )}
+      <span className="min-w-0 flex-1">
+        <span className="block text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-territory-muted">
+          {kicker}
+        </span>
+        <span className="mt-1 block line-clamp-2 font-heading text-[0.9375rem] font-semibold leading-6 text-territory-ink group-hover:text-territory-brand sm:text-base">
+          {title}
+        </span>
+        {meta ? (
+          <span className="mt-1 block truncate text-sm text-territory-muted">
+            {meta}
+          </span>
+        ) : null}
+      </span>
+      {href ? (
+        <ArrowRight
+          className="mt-1 h-4 w-4 shrink-0 text-territory-muted transition-transform group-hover:translate-x-0.5 group-hover:text-territory-brand"
+          aria-hidden="true"
+        />
+      ) : null}
+    </>
+  );
+
+  const className =
+    "group flex gap-3 border-b border-territory-border/75 py-4 first:pt-0 last:border-b-0 last:pb-0 sm:gap-4";
+
+  return href ? (
+    <Link to={href} className={className}>
+      {content}
+    </Link>
+  ) : (
+    <div className={className}>{content}</div>
   );
 }
 
@@ -204,69 +201,27 @@ function EventRow({
   eventsBaseUrl: string;
 }) {
   return (
-    <Link
-      to={eventPublicRoutes.detailFromBase(eventsBaseUrl, event.id)}
-      className="group flex gap-4 rounded-2xl border border-border/70 bg-background/55 p-4 transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-card hover:shadow-sm"
-    >
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-orange-100 text-orange-700">
-        <CalendarDays className="h-5 w-5" aria-hidden="true" />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="text-xs font-semibold uppercase tracking-[0.08em] text-orange-700">
-          Evento · {formatEventDate(event.date)}
-        </span>
-        <span className="mt-1 block line-clamp-2 font-semibold leading-6 text-foreground group-hover:text-primary">
-          {event.title}
-        </span>
-        <span className="mt-1 block truncate text-sm text-muted-foreground">
-          {event.venue_name ?? event.location ?? "Local a confirmar"}
-        </span>
-      </span>
-      <ArrowRight
-        className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary"
-        aria-hidden="true"
-      />
-    </Link>
+    <StoryRow
+      href={eventPublicRoutes.detailFromBase(eventsBaseUrl, event.id)}
+      icon={<CalendarDays className="h-5 w-5" aria-hidden="true" />}
+      kicker={`Evento · ${formatEventDate(event.date)}`}
+      title={event.title}
+      meta={event.venue_name ?? event.location ?? "Local a confirmar"}
+      toneClassName="bg-[hsl(var(--category-event)/0.14)] text-category-event"
+    />
   );
 }
 
 function HighlightRow({ highlight }: { highlight: TerritorialHighlight }) {
-  const content = (
-    <>
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
-        <ShieldCheck className="h-5 w-5" aria-hidden="true" />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="text-xs font-semibold uppercase tracking-[0.08em] text-sky-700">
-          Destaque local
-        </span>
-        <span className="mt-1 block line-clamp-2 font-semibold leading-6 text-foreground">
-          {highlight.title}
-        </span>
-        {highlight.subtitle ? (
-          <span className="mt-1 block line-clamp-2 text-sm text-muted-foreground">
-            {highlight.subtitle}
-          </span>
-        ) : null}
-      </span>
-    </>
-  );
-
-  if (highlight.cta_url?.startsWith("/")) {
-    return (
-      <Link
-        to={highlight.cta_url}
-        className="flex gap-4 rounded-2xl border border-border/70 bg-background/55 p-4 transition hover:border-primary/30 hover:bg-card"
-      >
-        {content}
-      </Link>
-    );
-  }
-
   return (
-    <div className="flex gap-4 rounded-2xl border border-border/70 bg-background/55 p-4">
-      {content}
-    </div>
+    <StoryRow
+      href={highlight.cta_url?.startsWith("/") ? highlight.cta_url : undefined}
+      icon={<ShieldCheck className="h-5 w-5" aria-hidden="true" />}
+      kicker="Destaque local"
+      title={highlight.title}
+      meta={highlight.subtitle ?? undefined}
+      toneClassName="bg-[hsl(var(--category-discussion)/0.14)] text-category-discussion"
+    />
   );
 }
 
@@ -278,29 +233,14 @@ function OpportunityRow({
   jobsUrl: string;
 }) {
   return (
-    <Link
-      to={jobsUrl}
-      className="group flex gap-4 rounded-2xl border border-border/70 bg-background/55 p-4 transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-card hover:shadow-sm"
-    >
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
-        <BriefcaseBusiness className="h-5 w-5" aria-hidden="true" />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="text-xs font-semibold uppercase tracking-[0.08em] text-violet-700">
-          Oportunidade · {opportunity.territory_name ?? "por perto"}
-        </span>
-        <span className="mt-1 block line-clamp-2 font-semibold leading-6 text-foreground group-hover:text-primary">
-          {opportunity.headline}
-        </span>
-        <span className="mt-1 block truncate text-sm text-muted-foreground">
-          {opportunity.professional_category}
-        </span>
-      </span>
-      <ArrowRight
-        className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary"
-        aria-hidden="true"
-      />
-    </Link>
+    <StoryRow
+      href={jobsUrl}
+      icon={<BriefcaseBusiness className="h-5 w-5" aria-hidden="true" />}
+      kicker={`Oportunidade · ${opportunity.territory_name ?? "por perto"}`}
+      title={opportunity.headline}
+      meta={opportunity.professional_category}
+      toneClassName="bg-[hsl(var(--category-poll)/0.14)] text-category-poll"
+    />
   );
 }
 
@@ -322,29 +262,15 @@ function ClassifiedRow({
     }) ?? fallbackHref;
 
   return (
-    <Link
-      to={href}
-      className="group flex gap-4 rounded-2xl border border-border/70 bg-background/55 p-4 transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-card hover:shadow-sm"
-    >
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-800">
-        <Tag className="h-5 w-5" aria-hidden="true" />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="text-xs font-semibold uppercase tracking-[0.08em] text-amber-800">
-          Classificado · {formatPrice(classified.price)}
-        </span>
-        <span className="mt-1 block line-clamp-2 font-semibold leading-6 text-foreground group-hover:text-primary">
-          {classified.titulo}
-        </span>
-        <span className="mt-1 block truncate text-sm text-muted-foreground">
-          {classified.territory_name ?? classified.category}
-        </span>
-      </span>
-      <ArrowRight
-        className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary"
-        aria-hidden="true"
-      />
-    </Link>
+    <StoryRow
+      href={href}
+      icon={<Tag className="h-5 w-5" aria-hidden="true" />}
+      kicker={`Classificado · ${formatPrice(classified.price)}`}
+      title={classified.titulo}
+      meta={classified.territory_name ?? classified.category}
+      imageUrl={classified.photos[0]}
+      toneClassName="bg-[hsl(var(--category-classified)/0.16)] text-category-classified"
+    />
   );
 }
 
@@ -361,14 +287,14 @@ function CommunityPostRow({
   return (
     <Link
       to={`${communityUrl}${separator}post=${encodeURIComponent(post.id)}`}
-      className="group flex gap-3 rounded-2xl border border-border/70 p-4 transition hover:border-primary/30 hover:bg-muted/35"
+      className="group flex gap-3 border-b border-territory-border/75 py-4 first:pt-0 last:border-b-0 last:pb-0"
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-territory-brand/12 font-semibold text-territory-brand">
         {getInitial(author)}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span className="truncate font-semibold text-foreground">
+        <span className="flex items-center gap-2 text-xs text-territory-muted">
+          <span className="truncate font-semibold text-territory-ink">
             {author}
           </span>
           <span aria-hidden="true">·</span>
@@ -376,14 +302,14 @@ function CommunityPostRow({
             {formatRelativeDate(post.created_at)}
           </span>
         </span>
-        <span className="mt-1 block line-clamp-2 text-sm leading-6 text-foreground">
+        <span className="mt-1 block line-clamp-2 text-sm leading-6 text-territory-ink group-hover:text-territory-brand">
           {getPublicPostPreview(
             post.content,
             150,
             "Conteúdo sem resumo disponível.",
           )}
         </span>
-        <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground group-hover:text-primary">
+        <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-territory-muted">
           <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" />
           {post.comments_count}{" "}
           {post.comments_count === 1 ? "resposta" : "respostas"}
@@ -403,24 +329,32 @@ function BusinessItem({
   return (
     <Link
       to={href}
-      className="group flex items-center gap-3 rounded-2xl p-2.5 transition hover:bg-muted/55"
+      className="group flex items-center gap-3 border-b border-territory-border/70 py-3 first:pt-0 last:border-b-0 last:pb-0"
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 font-semibold text-emerald-800">
-        {getInitial(business.name)}
-      </span>
+      {business.logo_url ? (
+        <img
+          src={business.logo_url}
+          alt=""
+          className="h-10 w-10 shrink-0 rounded-territory object-cover"
+        />
+      ) : (
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-territory bg-[hsl(var(--category-business)/0.14)] font-semibold text-category-business">
+          {getInitial(business.name)}
+        </span>
+      )}
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
-          <span className="truncate text-sm font-semibold text-foreground group-hover:text-primary">
+          <span className="truncate text-sm font-semibold text-territory-ink group-hover:text-territory-brand">
             {business.name}
           </span>
           {business.is_verified ? (
             <BadgeCheck
-              className="h-4 w-4 shrink-0 text-sky-600"
+              className="h-4 w-4 shrink-0 text-category-discussion"
               aria-label="Verificado"
             />
           ) : null}
         </span>
-        <span className="block truncate text-xs text-muted-foreground">
+        <span className="block truncate text-xs text-territory-muted">
           {business.category || "Comércio local"}
           {business.rating > 0 ? ` · ${business.rating.toFixed(1)} ★` : ""}
         </span>
@@ -439,29 +373,58 @@ function ServiceItem({
   return (
     <Link
       to={href}
-      className="group flex items-center gap-3 rounded-2xl p-2.5 transition hover:bg-muted/55"
+      className="group flex items-center gap-3 border-b border-territory-border/70 py-3 first:pt-0 last:border-b-0 last:pb-0"
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 font-semibold text-sky-800">
-        {getInitial(service.name)}
-      </span>
+      {service.logo_url ? (
+        <img
+          src={service.logo_url}
+          alt=""
+          className="h-10 w-10 shrink-0 rounded-territory object-cover"
+        />
+      ) : (
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-territory bg-[hsl(var(--category-discussion)/0.14)] font-semibold text-category-discussion">
+          {getInitial(service.name)}
+        </span>
+      )}
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
-          <span className="truncate text-sm font-semibold text-foreground group-hover:text-primary">
+          <span className="truncate text-sm font-semibold text-territory-ink group-hover:text-territory-brand">
             {service.name}
           </span>
           {service.is_verified ? (
             <BadgeCheck
-              className="h-4 w-4 shrink-0 text-sky-600"
+              className="h-4 w-4 shrink-0 text-category-discussion"
               aria-label="Verificado"
             />
           ) : null}
         </span>
-        <span className="block truncate text-xs text-muted-foreground">
+        <span className="block truncate text-xs text-territory-muted">
           {service.category || "Serviço local"} ·{" "}
           {service.price_range ?? "A combinar"}
         </span>
       </span>
     </Link>
+  );
+}
+
+function SectionSkeleton({ rows = 3 }: { rows?: number }) {
+  return (
+    <TerritorySurface
+      className="p-5 sm:p-6"
+      aria-label="Atualizando esta seção"
+    >
+      <div className="space-y-4">
+        {Array.from({ length: rows }, (_, index) => (
+          <div key={index} className="flex animate-pulse gap-3">
+            <div className="h-11 w-11 rounded-territory bg-territory-raised" />
+            <div className="flex-1 space-y-2 py-1">
+              <div className="h-3 w-24 rounded-full bg-territory-raised" />
+              <div className="h-4 w-4/5 rounded-full bg-territory-raised" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </TerritorySurface>
   );
 }
 
@@ -476,9 +439,8 @@ function getBusinessHref(
   }) => string,
 ): string {
   if (!business.slug || !business.geographic_path) return fallbackHref;
-  const geographicParts = business.geographic_path.split("/").filter(Boolean);
-  if (geographicParts.length < 4) return fallbackHref;
-
+  if (business.geographic_path.split("/").filter(Boolean).length < 4)
+    return fallbackHref;
   return canonical({
     id: business.id,
     slug: business.slug,
@@ -502,19 +464,30 @@ export default function TerritoryHomePage() {
     includeDescendants: true,
   });
   const access = useCommunityAccess({ resolved, activeMemberIds });
+  const stateSlug = params.state ?? TERRITORY_CONFIG.launch.state;
+  const citySlug = params.city ?? TERRITORY_CONFIG.launch.city;
+  const isOfficialCommunityTerritory =
+    stateSlug === "ba" &&
+    citySlug === "salvador" &&
+    isSalvadorCommunityLaunchTerritory(params.neighborhood);
+  const isCommunityAvailable =
+    isOfficialCommunityTerritory && access.isCommunityAvailable;
   const data = useTerritoryHomeData({
     resolved,
     territoryFilter: territory.territoryFilter,
     resolvedLocationIds: territory.resolvedLocationIds,
     territoryLoading: territory.isLoading,
+    communityEnabled: !access.isLoading && isCommunityAvailable,
   });
 
   const cityBaseUrl = buildCityTerritoryBaseUrl(baseUrl);
   const isCityHome = cityBaseUrl === baseUrl;
+  const isSalvadorCity =
+    isCityHome && stateSlug === "ba" && citySlug === "salvador";
   const territoryName =
     resolved.kind === "group" ? resolved.group.name : resolved.location.name;
-  const cityName = titleCase(params.city ?? "cidade");
-  const stateLabel = (params.state ?? "").toLocaleUpperCase("pt-BR");
+  const cityName = titleCase(citySlug);
+  const stateLabel = stateSlug.toLocaleUpperCase("pt-BR");
   const locationLine = isCityHome
     ? `${stateLabel} · visão ampla da cidade`
     : `${cityName}, ${stateLabel}`;
@@ -524,6 +497,7 @@ export default function TerritoryHomePage() {
       business: appUrls.business.list,
       classifieds: appUrls.classifieds.list,
       community: communityBaseUrl,
+      communityInterest: buildCommunityTerritoryUrl(baseUrl, "interesse"),
       events: buildModuleTerritoryUrl(MODULE_SLUGS.events, baseUrl),
       gastronomy: buildModuleTerritoryUrl(MODULE_SLUGS.gastronomy, baseUrl),
       jobs: buildModuleTerritoryUrl(MODULE_SLUGS.jobs, baseUrl),
@@ -553,50 +527,48 @@ export default function TerritoryHomePage() {
         description: "Tudo no território",
         href: urls.search,
         icon: Search,
-        tone: "bg-emerald-100 text-emerald-800",
+        tone: "bg-territory-brand/14 text-territory-brand",
       },
       {
         label: "Serviços",
         description: "Profissionais locais",
         href: urls.services,
         icon: Wrench,
-        tone: "bg-sky-100 text-sky-800",
+        tone: "bg-[hsl(var(--category-discussion)/0.14)] text-category-discussion",
       },
       {
         label: "Empresas",
         description: "Comércio por perto",
         href: urls.business,
         icon: Store,
-        tone: "bg-violet-100 text-violet-800",
+        tone: "bg-[hsl(var(--category-business)/0.14)] text-category-business",
       },
       {
         label: "Classificados",
         description: "Comprar e vender",
         href: urls.classifieds,
         icon: Tag,
-        tone: "bg-amber-100 text-amber-800",
+        tone: "bg-[hsl(var(--category-classified)/0.15)] text-category-classified",
       },
       {
         label: "Mapa",
         description: "Ver por localização",
         href: urls.map,
         icon: Map,
-        tone: "bg-rose-100 text-rose-800",
+        tone: "bg-territory-warm/14 text-territory-warm",
       },
       {
         label: "Gastronomia",
         description: "Onde comer",
         href: urls.gastronomy,
         icon: UtensilsCrossed,
-        tone: "bg-orange-100 text-orange-800",
+        tone: "bg-[hsl(var(--category-gastronomy)/0.14)] text-category-gastronomy",
       },
     ];
-    return actions.filter((action) => {
-      if (action.href === urls.gastronomy)
-        return isLaunchSurfaceEnabled("gastronomy");
-      if (action.href === urls.map) return isLaunchSurfaceEnabled("map");
-      return true;
-    });
+    return actions.filter(
+      (action) =>
+        action.href !== urls.gastronomy || isLaunchSurfaceEnabled("gastronomy"),
+    );
   }, [urls]);
 
   const hasWorthKnowing =
@@ -606,152 +578,71 @@ export default function TerritoryHomePage() {
     data.classifieds.length > 0;
   const hasUsefulPlaces =
     data.businesses.length > 0 || data.services.length > 0;
-  const canCreatePost = !access.isLoading && access.can.create_post;
+  const canCreatePost =
+    !access.isLoading && isCommunityAvailable && access.can.create_post;
   const worthKnowingTitle = isCityHome
     ? `Panorama de ${territoryName}`
     : `Vale saber em ${territoryName}`;
-  const worthKnowingDescription = isCityHome
-    ? "Uma visão ampla do que está válido nos territórios da cidade."
-    : "Informação pública, válida e vinculada a este território.";
 
-  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const query = String(
-      new FormData(event.currentTarget).get("q") ?? "",
-    ).trim();
-    navigate(
-      query ? `${urls.search}?q=${encodeURIComponent(query)}` : urls.search,
-    );
-  };
+  const welcomeName = activeProfile?.displayName?.split(" ")[0];
+  const heroTitle = isCityHome
+    ? `${territoryName} hoje, sem perder os bairros de vista.`
+    : `O que merece atenção em ${territoryName} hoje.`;
 
   return (
-    <div className="min-h-[100dvh] bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.09),transparent_30rem),linear-gradient(to_bottom,hsl(var(--background)),hsl(var(--muted)/0.35))] pb-10 text-foreground md:pb-16">
-      <header
-        className="sticky top-0 z-40 border-b border-border/70 bg-background/88 backdrop-blur-xl"
-        style={{ paddingTop: "env(safe-area-inset-top)" }}
-      >
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
-          <Link
-            to="/?trocar=territorio"
-            className="group flex min-w-0 items-center gap-3 rounded-2xl pr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35"
-            aria-label={`Trocar território. Você está em ${territoryName}.`}
-          >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
-              <MapPin className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <span className="min-w-0">
-              <span className="flex items-center gap-1.5">
-                <span className="truncate font-display text-lg font-semibold leading-tight sm:text-xl">
-                  {territoryName}
-                </span>
-                <ChevronDown
-                  className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-y-0.5"
-                  aria-hidden="true"
-                />
-              </span>
-              <span className="block truncate text-xs text-muted-foreground">
-                {locationLine}
-              </span>
-            </span>
-          </Link>
+    <div className="min-h-[100dvh] text-territory-ink">
+      <TerritoryTopbar
+        territoryName={territoryName}
+        contextLabel={locationLine}
+        isAuthenticated={Boolean(user)}
+        unreadCount={unreadCount}
+        canCreatePost={canCreatePost}
+      />
 
-          <div className="flex items-center gap-2">
-            {canCreatePost ? (
-              <Link
-                to="/novo-post"
-                className="hidden h-10 items-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 sm:inline-flex"
-              >
-                Publicar
-              </Link>
-            ) : null}
-            {!user ? (
-              <Link
-                to="/login"
-                className="inline-flex h-9 items-center rounded-full px-2.5 text-xs font-semibold text-foreground transition hover:bg-muted hover:text-primary sm:h-auto sm:px-0 sm:text-sm sm:hover:bg-transparent"
-              >
-                Entrar
-              </Link>
-            ) : null}
-            <Link
-              to={user ? "/notificacoes" : "/login"}
-              className="relative flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-card text-foreground transition hover:border-primary/25 hover:text-primary"
-              aria-label={
-                user && unreadCount > 0
-                  ? `${unreadCount} notificações não lidas`
-                  : "Notificações"
-              }
-            >
-              <Bell className="h-5 w-5" aria-hidden="true" />
-              {user && unreadCount > 0 ? (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
-              ) : null}
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-7xl px-4 pb-24 pt-5 sm:px-6 sm:pt-8 lg:px-8">
-        <section className="grid items-end gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,0.68fr)] lg:gap-10">
+      <main className="mx-auto w-full max-w-[76rem] px-4 pb-6 pt-6 sm:px-6 sm:pt-8 lg:px-8">
+        <section className="grid items-end gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.72fr)] lg:gap-10">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-              Hoje em {territoryName}
+            <p className="text-[0.6875rem] font-bold uppercase tracking-[0.16em] text-territory-brand">
+              {welcomeName ? `Olá, ${welcomeName}` : `Hoje em ${territoryName}`}
             </p>
-            <h1 className="mt-2.5 max-w-3xl font-display text-[2rem] font-semibold leading-[1.08] tracking-[-0.03em] sm:text-5xl lg:text-[3.2rem]">
-              O que importa por aqui, em um só lugar.
+            <h1 className="mt-2 max-w-3xl font-heading text-[2rem] font-semibold leading-[1.12] tracking-[-0.035em] text-territory-ink sm:text-4xl lg:text-[2.5rem]">
+              {heroTitle}
             </h1>
-            <p className="mt-3 max-w-2xl text-[15px] leading-6 text-muted-foreground sm:text-lg sm:leading-7">
-              Descubra o que mudou, o que merece atenção e o que você consegue
-              resolver em {territoryName}.
+            <p className="mt-3 max-w-2xl text-[0.9375rem] leading-6 text-territory-muted sm:text-base sm:leading-7">
+              Onde estou, o que mudou e o que consigo resolver por aqui — com
+              dados reais deste território.
             </p>
-            {activeProfile?.displayName ? (
-              <p className="mt-3 text-sm font-medium text-foreground">
-                Olá, {activeProfile.displayName.split(" ")[0]}. Este é o seu
-                contexto territorial atual.
-              </p>
-            ) : null}
           </div>
 
-          <form onSubmit={handleSearch} role="search" className="relative">
-            <label htmlFor="territory-home-search" className="sr-only">
-              Buscar em {territoryName}
-            </label>
-            <Search
-              className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <input
-              id="territory-home-search"
-              name="q"
-              type="search"
-              autoComplete="off"
-              placeholder={`Buscar em ${territoryName}`}
-              className="h-14 w-full rounded-2xl border border-border bg-card pl-12 pr-14 text-sm shadow-[0_18px_45px_-32px_rgba(15,23,42,0.65)] outline-none transition placeholder:text-muted-foreground focus:border-primary/45 focus:ring-4 focus:ring-primary/10"
-            />
-            <button
-              type="submit"
-              className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl bg-primary text-primary-foreground transition hover:bg-primary/90"
-              aria-label="Buscar"
-            >
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </button>
-          </form>
+          <TerritorySearch
+            id="territory-home-search"
+            label={`Buscar em ${territoryName}`}
+            placeholder={`Buscar em ${territoryName}`}
+            onSubmit={(query) =>
+              navigate(
+                query
+                  ? `${urls.search}?q=${encodeURIComponent(query)}`
+                  : urls.search,
+              )
+            }
+          />
         </section>
 
         {data.happeningSoon.length > 0 ? (
           <section
-            className="mt-8"
+            className="mt-7"
             aria-labelledby="home-now-title"
             data-testid="home-now-section"
           >
-            <Surface className="overflow-hidden border-orange-200/80 bg-gradient-to-r from-orange-50 to-card p-5 sm:p-6">
-              <SectionHeader
+            <TerritorySurface tone="highlight" className="p-5 sm:p-6">
+              <TerritorySectionHeading
+                id="home-now-title"
                 title={`Agora em ${territoryName}`}
-                description="Somente informações com horário atual ou muito próximo."
+                eyebrow="Informação atual"
+                description="Somente eventos em andamento ou com horário realmente próximo."
                 href={urls.events}
               />
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-x-6 sm:grid-cols-2">
                 {data.happeningSoon.slice(0, 2).map((event) => (
                   <EventRow
                     key={event.id}
@@ -760,17 +651,16 @@ export default function TerritoryHomePage() {
                   />
                 ))}
               </div>
-            </Surface>
+            </TerritorySurface>
           </section>
         ) : null}
 
-        <section className="mt-7 sm:mt-8" aria-labelledby="quick-actions-title">
-          <div className="[&_p]:hidden sm:[&_p]:block">
-            <SectionHeader
-              title="Resolver por aqui"
-              description="Atalhos que mantêm o contexto deste território."
-            />
-          </div>
+        <section className="mt-8" aria-labelledby="resolver-title">
+          <TerritorySectionHeading
+            id="resolver-title"
+            title="Resolver por aqui"
+            description="Intenções frequentes, sempre dentro do território atual."
+          />
           <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-6">
             {quickActions.map((action) => {
               const Icon = action.icon;
@@ -778,7 +668,7 @@ export default function TerritoryHomePage() {
                 <Link
                   key={action.label}
                   to={action.href}
-                  className="group min-w-[7.25rem] snap-start rounded-2xl border border-border/75 bg-card p-3.5 transition hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-md sm:min-w-0 sm:p-4"
+                  className="group min-w-[7.75rem] snap-start rounded-territory border border-territory-border bg-territory-surface p-3.5 transition-colors hover:border-territory-brand/35 hover:bg-territory-raised sm:min-w-0 sm:p-4"
                 >
                   <span
                     className={cn(
@@ -788,10 +678,10 @@ export default function TerritoryHomePage() {
                   >
                     <Icon className="h-5 w-5" aria-hidden="true" />
                   </span>
-                  <span className="mt-3 block text-sm font-semibold text-foreground group-hover:text-primary">
+                  <span className="mt-3 block text-sm font-semibold text-territory-ink group-hover:text-territory-brand">
                     {action.label}
                   </span>
-                  <span className="mt-1 hidden text-xs leading-5 text-muted-foreground sm:block">
+                  <span className="mt-1 hidden text-xs leading-5 text-territory-muted sm:block">
                     {action.description}
                   </span>
                 </Link>
@@ -800,262 +690,341 @@ export default function TerritoryHomePage() {
           </div>
         </section>
 
-        {data.loading.territory ? (
-          <section className="mt-8">
-            <HomeLoading />
-          </section>
-        ) : (
-          <div className="mt-8 grid gap-7 lg:mt-10 lg:grid-cols-[minmax(0,1.65fr)_minmax(20rem,0.8fr)] lg:items-start">
-            <div className="contents lg:col-start-1 lg:block lg:space-y-7">
-              <section
-                className="order-1"
-                aria-labelledby="worth-knowing-title"
-                data-testid="worth-knowing-section"
-              >
-                <SectionHeader
-                  title={worthKnowingTitle}
-                  description={worthKnowingDescription}
-                />
-                {data.loading.worthKnowing ? (
-                  <HomeSectionLoading />
-                ) : hasWorthKnowing ? (
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {data.highlights.slice(0, 2).map((highlight) => (
-                      <HighlightRow key={highlight.id} highlight={highlight} />
-                    ))}
-                    {data.events.slice(0, 2).map((event) => (
-                      <EventRow
-                        key={event.id}
-                        event={event}
-                        eventsBaseUrl={urls.events}
-                      />
-                    ))}
-                    {data.opportunities.slice(0, 2).map((opportunity) => (
-                      <OpportunityRow
-                        key={opportunity.id}
-                        opportunity={opportunity}
-                        jobsUrl={urls.jobs}
-                      />
-                    ))}
-                    {data.classifieds.slice(0, 2).map((classified) => (
-                      <ClassifiedRow
-                        key={classified.id}
-                        classified={classified}
-                        fallbackHref={urls.classifieds}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <Surface
-                    className="p-6 sm:p-8"
-                    data-testid="territory-home-empty"
-                  >
-                    <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <p className="font-semibold text-foreground">
-                          {isCityHome
-                            ? "Ainda não há atualizações recentes para destacar na cidade."
-                            : "Ainda há pouca atividade recente registrada por aqui."}
-                        </p>
-                        <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
-                          {isCityHome
-                            ? "A Home não completa esse espaço com conteúdo fictício. Explore empresas, serviços e anúncios públicos de Salvador."
-                            : "A Home não completa esse espaço com conteúdo fictício. Explore os serviços disponíveis ou amplie a visão para a cidade."}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 flex-wrap gap-2">
-                        <Link
-                          to={urls.search}
-                          className="inline-flex h-10 items-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground"
-                        >
-                          Explorar
-                          <Compass className="h-4 w-4" aria-hidden="true" />
-                        </Link>
-                        {!isCityHome ? (
-                          <Link
-                            to={cityBaseUrl}
-                            className="inline-flex h-10 items-center rounded-full border border-border bg-card px-4 text-sm font-semibold text-foreground"
-                          >
-                            Ver {cityName} inteira
-                          </Link>
-                        ) : null}
-                      </div>
-                    </div>
-                  </Surface>
-                )}
-              </section>
-
-              <section
-                className="order-3"
-                aria-labelledby="community-summary-title"
-                data-testid="community-summary-section"
-              >
-                <Surface className="p-5 sm:p-6">
-                  <SectionHeader
-                    title={
-                      isCityHome
-                        ? `Community de ${territoryName}`
-                        : `Community em ${territoryName}`
-                    }
-                    description={
-                      isCityHome
-                        ? "Conversas públicas dos territórios de Salvador, sem confundir cidade com bairro."
-                        : "A camada de participação local: conversas, colaboração e vida comunitária."
-                    }
-                    href={urls.community}
-                    linkLabel="Abrir Community"
-                  />
-                  {data.loading.community ? (
-                    <HomeSectionLoading />
-                  ) : data.posts.length > 0 ? (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {data.posts.slice(0, 4).map((post) => (
-                        <CommunityPostRow
-                          key={post.id}
-                          post={post}
-                          communityUrl={urls.community}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="rounded-2xl bg-muted/55 p-5">
-                      <p className="font-semibold text-foreground">
-                        Nenhuma conversa recente neste contexto.
-                      </p>
-                      <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                        Você ainda pode acompanhar a Community pública.
-                        Participar depende do seu perfil, vínculo territorial e
-                        das policies atuais.
-                      </p>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <Link
-                          to={urls.community}
-                          className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-semibold text-foreground hover:border-primary/30"
-                        >
-                          Ver Community
-                          <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                        </Link>
-                        {canCreatePost ? (
-                          <Link
-                            to="/novo-post"
-                            className="inline-flex h-10 items-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground"
-                          >
-                            Publicar
-                          </Link>
-                        ) : null}
-                      </div>
-                    </div>
-                  )}
-                </Surface>
-              </section>
-            </div>
-
-            <aside
-              className="order-2 space-y-6 lg:order-none lg:col-start-2 lg:row-start-1 lg:sticky lg:top-24"
-              aria-label="Serviços e contexto do território"
-            >
-              <Surface className="p-4 sm:p-5">
-                <SectionHeader
-                  title="Empresas e serviços úteis"
-                  description={
-                    hasUsefulPlaces
-                      ? isCityHome
-                        ? "Cadastros públicos encontrados nos territórios de Salvador."
-                        : "Cadastros públicos disponíveis neste território."
-                      : undefined
-                  }
-                  href={hasUsefulPlaces ? urls.business : undefined}
-                />
-                {data.loading.usefulPlaces ? (
-                  <HomeSectionLoading rows={1} />
-                ) : hasUsefulPlaces ? (
-                  <div className="space-y-1">
-                    {data.businesses.slice(0, 4).map((business) => (
-                      <BusinessItem
-                        key={business.id}
-                        business={business}
-                        href={getBusinessHref(
-                          business,
-                          urls.business,
-                          appUrls.business.canonical,
-                        )}
-                      />
-                    ))}
-                    {data.services
-                      .slice(0, Math.max(0, 6 - data.businesses.length))
-                      .map((service) => (
-                        <ServiceItem
-                          key={service.id}
-                          service={service}
-                          href={urls.services}
-                        />
-                      ))}
-                  </div>
-                ) : (
-                  <div className="rounded-2xl bg-muted/55 p-5 text-sm leading-6 text-muted-foreground">
-                    Ainda não há empresas ou profissionais públicos suficientes
-                    para destacar aqui.
-                  </div>
-                )}
-              </Surface>
-
-              <Surface className="overflow-hidden p-5 sm:p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
-                      Seu contexto
-                    </p>
-                    <h2 className="mt-2 font-display text-xl font-semibold">
-                      {territoryName}
-                    </h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {locationLine}
-                    </p>
-                  </div>
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                    <MapPin className="h-5 w-5" aria-hidden="true" />
-                  </span>
-                </div>
-                <div className="mt-5 grid grid-cols-3 gap-2">
-                  {[
-                    ["Empresas", urls.business],
-                    ["Serviços", urls.services],
-                    ["Anúncios", urls.classifieds],
-                  ].map(([label, href]) => (
-                    <Link
-                      key={label}
-                      to={href}
-                      className="rounded-2xl bg-muted/55 p-3 text-center text-xs font-semibold text-foreground transition hover:bg-primary/10 hover:text-primary"
-                    >
-                      {label}
-                    </Link>
+        <div className="mt-10 grid gap-10 xl:grid-cols-[minmax(0,1fr)_19rem] xl:items-start xl:gap-12">
+          <section
+            className="order-1 xl:col-start-1"
+            aria-labelledby="worth-knowing-title"
+            data-testid="worth-knowing-section"
+          >
+            <TerritorySectionHeading
+              id="worth-knowing-title"
+              title={worthKnowingTitle}
+              description={
+                isCityHome
+                  ? "Uma leitura ampla do que está válido nos territórios da cidade."
+                  : "Informação pública, válida e vinculada a este território."
+              }
+            />
+            {data.loading.worthKnowing ? (
+              <SectionSkeleton />
+            ) : hasWorthKnowing ? (
+              <TerritorySurface className="p-5 sm:p-6">
+                <div className="grid gap-x-8 md:grid-cols-2">
+                  {data.highlights.slice(0, 2).map((highlight) => (
+                    <HighlightRow key={highlight.id} highlight={highlight} />
+                  ))}
+                  {data.events.slice(0, 2).map((event) => (
+                    <EventRow
+                      key={event.id}
+                      event={event}
+                      eventsBaseUrl={urls.events}
+                    />
+                  ))}
+                  {data.opportunities.slice(0, 2).map((opportunity) => (
+                    <OpportunityRow
+                      key={opportunity.id}
+                      opportunity={opportunity}
+                      jobsUrl={urls.jobs}
+                    />
+                  ))}
+                  {data.classifieds.slice(0, 2).map((classified) => (
+                    <ClassifiedRow
+                      key={classified.id}
+                      classified={classified}
+                      fallbackHref={urls.classifieds}
+                    />
                   ))}
                 </div>
-                <div className="mt-3 grid gap-2">
-                  <Link
-                    to={urls.map}
-                    className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-border bg-card text-sm font-semibold text-foreground hover:border-primary/30"
-                  >
-                    <Map className="h-4 w-4" aria-hidden="true" />
-                    Ver no mapa
-                  </Link>
-                  {!isCityHome ? (
-                    <Link
-                      to={cityBaseUrl}
-                      className="inline-flex h-11 items-center justify-center rounded-xl bg-muted text-sm font-semibold text-foreground hover:bg-muted/80"
-                    >
-                      Ampliar para {cityName}
-                    </Link>
-                  ) : null}
+              </TerritorySurface>
+            ) : (
+              <TerritoryState
+                icon={<Info className="h-5 w-5" aria-hidden="true" />}
+                title={
+                  isCityHome
+                    ? "Ainda não há atualizações recentes para destacar na cidade."
+                    : "Ainda há pouca atividade recente registrada por aqui."
+                }
+                description={
+                  isCityHome
+                    ? "Não preenchemos este espaço com conteúdo fictício. Explore cadastros públicos de Salvador."
+                    : "Não preenchemos este espaço com conteúdo fictício. Explore o que já existe ou amplie a visão para Salvador."
+                }
+                primaryAction={{ label: "Explorar", href: urls.search }}
+                secondaryAction={
+                  isCityHome
+                    ? undefined
+                    : { label: `Ver ${cityName} inteira`, href: cityBaseUrl }
+                }
+                testId="territory-home-empty"
+              />
+            )}
+          </section>
+
+          <aside
+            className="order-2 space-y-6 xl:col-start-2 xl:row-span-3 xl:row-start-1 xl:sticky xl:top-24"
+            aria-label="Contexto e serviços do território"
+          >
+            <TerritorySurface className="p-5">
+              <TerritorySectionHeading
+                title="Empresas e serviços"
+                description={
+                  hasUsefulPlaces
+                    ? `Cadastros públicos em ${territoryName}.`
+                    : undefined
+                }
+                href={hasUsefulPlaces ? urls.business : undefined}
+                className="mb-4"
+              />
+              {data.loading.usefulPlaces ? (
+                <div
+                  className="space-y-3"
+                  aria-label="Atualizando lugares úteis"
+                >
+                  {[0, 1, 2].map((item) => (
+                    <div
+                      key={item}
+                      className="h-12 animate-pulse rounded-territory bg-territory-raised"
+                    />
+                  ))}
                 </div>
-              </Surface>
-            </aside>
-          </div>
-        )}
+              ) : hasUsefulPlaces ? (
+                <div>
+                  {data.businesses.slice(0, 4).map((business) => (
+                    <BusinessItem
+                      key={business.id}
+                      business={business}
+                      href={getBusinessHref(
+                        business,
+                        urls.business,
+                        appUrls.business.canonical,
+                      )}
+                    />
+                  ))}
+                  {data.services
+                    .slice(0, Math.max(0, 6 - data.businesses.length))
+                    .map((service) => (
+                      <ServiceItem
+                        key={service.id}
+                        service={service}
+                        href={urls.services}
+                      />
+                    ))}
+                </div>
+              ) : (
+                <p className="text-sm leading-6 text-territory-muted">
+                  Ainda não há empresas ou profissionais públicos suficientes
+                  para destacar aqui.
+                </p>
+              )}
+            </TerritorySurface>
+
+            <TerritorySurface tone="inset" className="overflow-hidden p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-territory-brand">
+                    Seu contexto
+                  </p>
+                  <h2 className="mt-2 font-heading text-xl font-semibold text-territory-ink">
+                    {territoryName}
+                  </h2>
+                  <p className="mt-1 text-sm text-territory-muted">
+                    {locationLine}
+                  </p>
+                </div>
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-territory bg-territory-brand/12 text-territory-brand">
+                  <MapPin className="h-5 w-5" aria-hidden="true" />
+                </span>
+              </div>
+              <div className="mt-5 grid gap-2">
+                <Link
+                  to={urls.map}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-territory-brand text-sm font-semibold text-[hsl(var(--territory-canvas))] hover:bg-territory-brand-strong"
+                >
+                  <Map className="h-4 w-4" aria-hidden="true" />
+                  Explorar no mapa
+                </Link>
+                {!isCityHome ? (
+                  <Link
+                    to={cityBaseUrl}
+                    className="inline-flex min-h-11 items-center justify-center rounded-xl border border-territory-border bg-territory-surface text-sm font-semibold text-territory-ink hover:border-territory-brand/35"
+                  >
+                    Ampliar para {cityName}
+                  </Link>
+                ) : null}
+              </div>
+            </TerritorySurface>
+          </aside>
+
+          <section
+            className="order-3 xl:col-start-1"
+            aria-labelledby="community-summary-title"
+            data-testid="community-summary-section"
+          >
+            <TerritorySectionHeading
+              id="community-summary-title"
+              title={
+                isCityHome
+                  ? `Community em ${territoryName}`
+                  : `Community de ${territoryName}`
+              }
+              description="A camada de participação local, sem substituir o território nem os serviços públicos."
+              href={isCommunityAvailable ? urls.community : undefined}
+              linkLabel="Abrir Community"
+            />
+
+            {access.isLoading ? (
+              <SectionSkeleton rows={2} />
+            ) : isSalvadorCity ? (
+              <TerritorySurface className="p-5 sm:p-6">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-territory bg-territory-brand/12 text-territory-brand">
+                    <Users className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <p className="font-heading font-semibold text-territory-ink">
+                      Primeiro cluster: Complexo do Nordeste de Amaralina
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-territory-muted">
+                      A participação começa por quatro territórios
+                      independentes, sem bloquear o restante da Home de
+                      Salvador.
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-5 grid gap-2 sm:grid-cols-2">
+                  {SALVADOR_COMMUNITY_LAUNCH_CLUSTER.map((item) => {
+                    const territoryBase = `/${stateSlug}/${citySlug}/${item.slug}`;
+                    return (
+                      <Link
+                        key={item.slug}
+                        to={buildCommunityTerritoryUrl(territoryBase)}
+                        className="flex min-h-11 items-center justify-between rounded-xl border border-territory-border px-3 text-sm font-semibold text-territory-ink hover:border-territory-brand/35 hover:text-territory-brand"
+                      >
+                        {item.name}
+                        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                      </Link>
+                    );
+                  })}
+                </div>
+                {isCommunityAvailable && data.posts.length > 0 ? (
+                  <div className="mt-6 border-t border-territory-border pt-5">
+                    {data.posts.slice(0, 3).map((post) => (
+                      <CommunityPostRow
+                        key={post.id}
+                        post={post}
+                        communityUrl={urls.community}
+                      />
+                    ))}
+                  </div>
+                ) : null}
+              </TerritorySurface>
+            ) : !isCommunityAvailable ? (
+              <TerritoryState
+                icon={<Users className="h-5 w-5" aria-hidden="true" />}
+                title={`Community ainda não liberada em ${territoryName}.`}
+                description="Empresas, serviços, mapa e conteúdo público continuam disponíveis. A restrição vale somente para a camada de participação."
+                primaryAction={{
+                  label: "Acompanhar liberação",
+                  href: urls.communityInterest,
+                }}
+                secondaryAction={{
+                  label: "Continuar explorando",
+                  href: urls.search,
+                }}
+              />
+            ) : data.loading.community ? (
+              <SectionSkeleton rows={2} />
+            ) : data.posts.length > 0 ? (
+              <TerritorySurface className="p-5 sm:p-6">
+                <div className="grid gap-x-8 md:grid-cols-2">
+                  {data.posts.slice(0, 4).map((post) => (
+                    <CommunityPostRow
+                      key={post.id}
+                      post={post}
+                      communityUrl={urls.community}
+                    />
+                  ))}
+                </div>
+              </TerritorySurface>
+            ) : (
+              <TerritoryState
+                icon={<MessageCircle className="h-5 w-5" aria-hidden="true" />}
+                title="Nenhuma conversa recente neste território."
+                description="A Community está disponível. Participar depende do perfil ativo, vínculo territorial e policies atuais."
+                primaryAction={{ label: "Ver Community", href: urls.community }}
+                secondaryAction={
+                  canCreatePost
+                    ? { label: "Publicar", href: "/novo-post" }
+                    : undefined
+                }
+              />
+            )}
+          </section>
+
+          <section
+            className="order-4 border-t border-territory-border pt-8 xl:col-start-1"
+            aria-labelledby="discover-more-title"
+          >
+            <TerritorySectionHeading
+              id="discover-more-title"
+              title="Continuar explorando"
+              description={`Outras formas úteis de navegar por ${territoryName}.`}
+            />
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                {
+                  label: "Explorar e buscar",
+                  description: "Resultados, categorias, filtros e mapa.",
+                  href: urls.search,
+                  icon: Compass,
+                },
+                {
+                  label: "Eventos",
+                  description: "Agenda válida deste contexto.",
+                  href: urls.events,
+                  icon: CalendarDays,
+                },
+                {
+                  label: "Vagas e oportunidades",
+                  description: "O que ainda está disponível por perto.",
+                  href: urls.jobs,
+                  icon: BriefcaseBusiness,
+                },
+                {
+                  label: "Comércio local",
+                  description: "Empresas e profissionais cadastrados.",
+                  href: urls.business,
+                  icon: Building2,
+                },
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.label}
+                    to={item.href}
+                    className="group flex items-center gap-4 rounded-territory border border-territory-border bg-territory-surface p-4 transition-colors hover:border-territory-brand/35 hover:bg-territory-raised"
+                  >
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-territory-brand/12 text-territory-brand">
+                      <Icon className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block font-semibold text-territory-ink group-hover:text-territory-brand">
+                        {item.label}
+                      </span>
+                      <span className="mt-1 block text-xs leading-5 text-territory-muted">
+                        {item.description}
+                      </span>
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        </div>
 
         {data.hasError ? (
           <div
-            className="mt-7 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+            className="mt-8 rounded-territory border border-territory-sun/30 bg-territory-sun/10 px-4 py-3 text-sm text-territory-ink"
             role="status"
           >
             Parte das informações não pôde ser atualizada. O restante da Home
@@ -1063,65 +1032,6 @@ export default function TerritoryHomePage() {
             fictício.
           </div>
         ) : null}
-
-        <section
-          className="mt-12 border-t border-border/70 pt-8"
-          aria-labelledby="discover-more-title"
-        >
-          <SectionHeader
-            title="Descobrir mais"
-            description={`Outras formas de explorar ${territoryName}.`}
-          />
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              {
-                label: "Explorar e buscar",
-                description: "Encontre lugares, serviços e conteúdo.",
-                href: urls.search,
-                icon: Search,
-              },
-              {
-                label: "Eventos",
-                description: "Agenda válida do território.",
-                href: urls.events,
-                icon: CalendarDays,
-              },
-              {
-                label: "Vagas e oportunidades",
-                description: "O que ainda está disponível por perto.",
-                href: urls.jobs,
-                icon: BriefcaseBusiness,
-              },
-              {
-                label: "Comércio local",
-                description: "Empresas e profissionais cadastrados.",
-                href: urls.business,
-                icon: Building2,
-              },
-            ].map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.label}
-                  to={item.href}
-                  className="group flex items-center gap-4 rounded-2xl border border-border/75 bg-card p-4 transition hover:border-primary/30 hover:shadow-sm"
-                >
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <Icon className="h-5 w-5" aria-hidden="true" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block font-semibold text-foreground group-hover:text-primary">
-                      {item.label}
-                    </span>
-                    <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                      {item.description}
-                    </span>
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
       </main>
     </div>
   );

@@ -1,10 +1,12 @@
 # Design Decisions - Achegue-se
 
-Status: decisoes de UX e Product Design, sem implementacao.
+Status: decisoes aprovadas; fundacao Territorio Vivo implementada na Home
+territorial e em Explorar na Fase 4.2.
 
 ## Direcao principal
 
-O Achegue-se deve seguir uma experiencia visual **Hybrid com base Territorio First**.
+O Achegue-se segue o conceito **Territorio Vivo**: uma experiencia Hybrid com
+base Territory First.
 
 Isso significa:
 
@@ -100,16 +102,18 @@ Por que:
 
 - Empresa e parte do territorio, mas precisa de conversao e gestao.
 
-### 7. FAB por intencao
+### 7. Publicacao contextual por intencao
 
 Entrou:
 
-- FAB "Publicar".
-- Seletor: perguntar, avisar, vender, divulgar, cadastrar.
+- acao "Publicar" somente quando rollout, perfil e policy permitirem;
+- seletor futuro por intencao: perguntar, avisar, vender, divulgar, cadastrar;
+- nenhum FAB global obrigatorio na fundacao da Home/Explorar.
 
 Por que:
 
-- Usuario entende intencoes melhor que formatos internos.
+- Usuario entende intencoes melhor que formatos internos, sem receber uma acao
+  que nao pode executar.
 
 ### 8. Atividade unifica mensagens e notificacoes
 
@@ -458,4 +462,3 @@ Antes de qualquer nova tela ou modulo entrar na navegacao, responder:
 3. Em qual territorio isso faz sentido?
 4. O usuario entende sem conhecer o modulo?
 5. Se sumir da Home, o produto fica pior ou apenas menos cheio?
-

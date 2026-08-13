@@ -1,9 +1,12 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import { fileURLToPath } from "node:url";
 import { componentTagger } from "lovable-tagger";
 import { visualizer } from "rollup-plugin-visualizer";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
+
+const configDir = path.dirname(fileURLToPath(import.meta.url));
 
 function getVendorChunk(id: string): string | undefined {
   if (!id.includes("node_modules")) {
@@ -129,15 +132,15 @@ export default defineConfig(({ command, mode }) => {
 
     resolve: {
       alias: {
-        "@": path.resolve(__dirname, "./src"),
-        "@/app": path.resolve(__dirname, "./src/app"),
-        "@/shared": path.resolve(__dirname, "./src/shared"),
-        "@/core": path.resolve(__dirname, "./src/core"),
-        "@/integrations": path.resolve(__dirname, "./src/integrations"),
-        "@/modules": path.resolve(__dirname, "./src/modules"),
-        "@/components": path.resolve(__dirname, "./src/components"),
-        "@/services": path.resolve(__dirname, "./src/services"),
-        "@/hooks": path.resolve(__dirname, "./src/hooks"),
+        "@": path.resolve(configDir, "./src"),
+        "@/app": path.resolve(configDir, "./src/app"),
+        "@/shared": path.resolve(configDir, "./src/shared"),
+        "@/core": path.resolve(configDir, "./src/core"),
+        "@/integrations": path.resolve(configDir, "./src/integrations"),
+        "@/modules": path.resolve(configDir, "./src/modules"),
+        "@/components": path.resolve(configDir, "./src/components"),
+        "@/services": path.resolve(configDir, "./src/services"),
+        "@/hooks": path.resolve(configDir, "./src/hooks"),
         lodash: "lodash-es",
       },
       extensions: [".mjs", ".js", ".mts", ".ts", ".jsx", ".tsx", ".json"],

@@ -1,14 +1,19 @@
 # UI Concept - Achegue-se
 
-Status: conceito visual de alta fidelidade descrito em texto. Sem React, sem Tailwind, sem implementacao.
+Status: conceito aprovado e fundacao implementada em React/Tailwind na Home
+territorial e em Explorar (Fase 4.2).
 
 ## Direcao visual principal
 
-Direcao escolhida para prototipacao:
+Conceito oficial:
 
-> Hybrid com base Territorio First.
+> Territorio Vivo — uma experiencia Hybrid com base Territory First.
 
 O produto deve parecer uma camada viva do bairro: proximo, organizado, util e confiavel. A interface nao deve parecer uma rede social generica, nem marketplace puro, nem painel administrativo.
+
+A implementacao canônica fica em `src/app/components/territory-vivo/` e usa os
+tokens do tema existente. O nome identifica uma familia de primitives e um
+contrato de layout; nao cria um segundo design system.
 
 ## Personalidade visual
 
@@ -273,6 +278,18 @@ Prioridade:
 └──────────────────────────────────────┘
 ```
 
+## Layout adaptativo implementado
+
+- Mobile: topbar territorial, conteudo editorial e bottom navigation.
+- Tablet: navigation rail; nunca herda o vazio lateral do desktop sem navegacao.
+- Desktop: sidebar de modos, conteudo principal e rail contextual quando util.
+- Home: densidade baixa, informacao real e estados honestos.
+- Explorar: densidade media, busca, filtros, colecoes e mapa carregado sob demanda.
+
+O desktop adiciona contexto e composicao; nao e uma coluna mobile apenas mais
+larga. Bordas separam superficies, sombras sao excepcionais e cards representam
+objetos, destinos ou estados — nunca uma arvore de cards aninhados.
+
 ## Decisao final
 
 O visual deve fazer o usuario pensar:
@@ -282,4 +299,3 @@ O visual deve fazer o usuario pensar:
 Nao:
 
 > "Este app tem muitos modulos."
-
