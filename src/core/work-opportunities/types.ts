@@ -65,6 +65,8 @@ export interface WorkOpportunityCreateInput {
 
 export interface WorkOpportunityFilters {
   territoryLocationId?: string;
+  /** Conjunto territorial já resolvido (cidade com descendentes ou grupo). */
+  territoryLocationIds?: readonly string[];
   professionalCategory?: string;
   opportunityType?: WorkOpportunityType;
   urgency?: WorkOpportunityUrgency;

@@ -614,7 +614,9 @@ class WorkOpportunitiesServiceClass {
         .order("created_at", { ascending: false })
         .limit(filters.limit ?? 30);
 
-      if (filters.territoryLocationId) {
+      if (filters.territoryLocationIds?.length) {
+        query = query.in("territory_location_id", [...filters.territoryLocationIds]);
+      } else if (filters.territoryLocationId) {
         query = query.eq("territory_location_id", filters.territoryLocationId);
       }
 
@@ -655,7 +657,9 @@ class WorkOpportunitiesServiceClass {
         .order("created_at", { ascending: false })
         .limit(filters.limit ?? 40);
 
-      if (filters.territoryLocationId) {
+      if (filters.territoryLocationIds?.length) {
+        query = query.in("territory_location_id", [...filters.territoryLocationIds]);
+      } else if (filters.territoryLocationId) {
         query = query.eq("territory_location_id", filters.territoryLocationId);
       }
 
@@ -721,7 +725,11 @@ class WorkOpportunitiesServiceClass {
     } finally {
       this.logSlowOperation("listPublicOpportunityCards", startedAt, {
         hasSearch: Boolean(filters.search),
-        hasTerritory: Boolean(filters.territoryLocationId || filters.territory),
+        hasTerritory: Boolean(
+          filters.territoryLocationIds?.length ||
+          filters.territoryLocationId ||
+          filters.territory,
+        ),
         hasCategory: Boolean(filters.professionalCategory),
         limit: filters.limit ?? 40,
       });

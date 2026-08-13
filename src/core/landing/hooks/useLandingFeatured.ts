@@ -19,6 +19,8 @@ const FEATURED_LIMIT = 4;
 interface UseLandingFeaturedOptions {
   communityId?: string | null;
   enabled?: boolean;
+  includeStats?: boolean;
+  limit?: number;
 }
 
 export function useLandingFeatured(
@@ -28,45 +30,47 @@ export function useLandingFeatured(
   const filterKey = territoryFilterKey(filter);
   const enabled = isTerritoryFilterReady(filter) && (options.enabled ?? true);
   const communityId = options.communityId ?? null;
+  const includeStats = options.includeStats ?? true;
+  const featuredLimit = options.limit ?? FEATURED_LIMIT;
   const discoveryKey = communityId ? `community:${communityId}` : `territory:${filterKey}`;
   const svc = createLandingFeaturedService();
 
   const businesses = useQuery({
-    queryKey: ['landing', 'businesses', discoveryKey],
+    queryKey: ['landing', 'businesses', discoveryKey, featuredLimit],
     queryFn: () =>
       communityId
-        ? svc.getCommunityFeaturedBusinesses(communityId, filter, FEATURED_LIMIT)
-        : svc.getFeaturedBusinesses(filter, FEATURED_LIMIT),
+        ? svc.getCommunityFeaturedBusinesses(communityId, filter, featuredLimit)
+        : svc.getFeaturedBusinesses(filter, featuredLimit),
     enabled,
     staleTime: STALE_TIME,
   });
 
   const services = useQuery({
-    queryKey: ['landing', 'services', discoveryKey],
+    queryKey: ['landing', 'services', discoveryKey, featuredLimit],
     queryFn: () =>
       communityId
-        ? svc.getCommunityFeaturedServices(communityId, filter, FEATURED_LIMIT)
-        : svc.getFeaturedServices(filter, FEATURED_LIMIT),
+        ? svc.getCommunityFeaturedServices(communityId, filter, featuredLimit)
+        : svc.getFeaturedServices(filter, featuredLimit),
     enabled,
     staleTime: STALE_TIME,
   });
 
   const gastronomy = useQuery({
-    queryKey: ['landing', 'gastronomy', discoveryKey],
+    queryKey: ['landing', 'gastronomy', discoveryKey, featuredLimit],
     queryFn: () =>
       communityId
-        ? svc.getCommunityFeaturedGastronomyBusinesses(communityId, filter, FEATURED_LIMIT)
-        : svc.getFeaturedGastronomyBusinesses(filter, FEATURED_LIMIT),
+        ? svc.getCommunityFeaturedGastronomyBusinesses(communityId, filter, featuredLimit)
+        : svc.getFeaturedGastronomyBusinesses(filter, featuredLimit),
     enabled,
     staleTime: STALE_TIME,
   });
 
   const classifieds = useQuery({
-    queryKey: ['landing', 'classifieds', discoveryKey],
+    queryKey: ['landing', 'classifieds', discoveryKey, featuredLimit],
     queryFn: () =>
       communityId
-        ? svc.getCommunityFeaturedClassifieds(communityId, filter, FEATURED_LIMIT)
-        : svc.getFeaturedClassifieds(filter, FEATURED_LIMIT),
+        ? svc.getCommunityFeaturedClassifieds(communityId, filter, featuredLimit)
+        : svc.getFeaturedClassifieds(filter, featuredLimit),
     enabled,
     staleTime: STALE_TIME,
   });
@@ -74,7 +78,7 @@ export function useLandingFeatured(
   const stats = useQuery({
     queryKey: ['landing', 'stats', filterKey],
     queryFn: () => svc.getTerritoryStats(filter),
-    enabled,
+    enabled: enabled && includeStats,
     staleTime: STALE_TIME,
   });
 
@@ -89,6 +93,12 @@ export function useLandingFeatured(
       services.isLoading   ||
       gastronomy.isLoading ||
       classifieds.isLoading ||
-      stats.isLoading,
+      (includeStats && stats.isLoading),
+    isError:
+      businesses.isError ||
+      services.isError ||
+      gastronomy.isError ||
+      classifieds.isError ||
+      (includeStats && stats.isError),
   };
 }

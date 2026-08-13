@@ -62,6 +62,7 @@ export interface FeaturedService {
   rating: number;
   is_verified: boolean;
   price_range?: string;
+  slug?: string;
 }
 
 export interface FeaturedClassified {
@@ -108,6 +109,13 @@ interface FeaturedServiceRow {
   price_range: string | null;
   price_type: string | null;
   hourly_rate: number | null;
+  slug: string | null;
+}
+
+interface ClassifiedSellerProfileRow {
+  display_name?: string | null;
+  name?: string | null;
+  username?: string | null;
 }
 
 interface FeaturedClassifiedRow {
@@ -126,6 +134,24 @@ interface FeaturedClassifiedRow {
   } | null;
   classified_categories?: { slug?: string | null } | null;
   classified_subcategories?: { slug?: string | null } | null;
+  seller_profile?: ClassifiedSellerProfileRow | ClassifiedSellerProfileRow[] | null;
+}
+
+function hasTestIdentityMarker(value: string | null | undefined): boolean {
+  if (!value) return false;
+  return /(?:^|[\s[\]_.-])(?:e2e|tests?|testes?|mock|seed)(?:$|[\s[\]_.-])/i.test(value);
+}
+
+function getSellerProfile(row: FeaturedClassifiedRow): ClassifiedSellerProfileRow | null {
+  if (Array.isArray(row.seller_profile)) return row.seller_profile[0] ?? null;
+  return row.seller_profile ?? null;
+}
+
+function isTestClassifiedRow(row: FeaturedClassifiedRow): boolean {
+  const seller = getSellerProfile(row);
+  return [seller?.display_name, seller?.name, seller?.username].some(
+    hasTestIdentityMarker,
+  );
 }
 
 function getErrorMessage(err: unknown): string {
@@ -197,6 +223,7 @@ function mapFeaturedServiceRow(row: FeaturedServiceRow): FeaturedService {
     rating: row.rating ?? 0,
     is_verified: row.is_verified ?? false,
     price_range: priceDisplay,
+    slug: row.slug ?? undefined,
   };
 }
 
@@ -382,7 +409,7 @@ export class LandingFeaturedService {
     try {
       let query = landingDb
         .from<FeaturedServiceRow>("professional_data")
-        .select("id, professional_name, service_category, metadata, rating, is_verified, price_range, price_type, hourly_rate")
+        .select("id, professional_name, service_category, metadata, rating, is_verified, price_range, price_type, hourly_rate, slug")
         .eq("is_accepting_clients", true)
         .eq("visibility", "public_listed")
         .not("location_id", "is", null)
@@ -420,7 +447,7 @@ export class LandingFeaturedService {
     try {
       const { data, error } = await landingDb
         .from<FeaturedServiceRow>("professional_data")
-        .select("id, professional_name, service_category, metadata, rating, is_verified, price_range, price_type, hourly_rate")
+        .select("id, professional_name, service_category, metadata, rating, is_verified, price_range, price_type, hourly_rate, slug")
         .eq("is_accepting_clients", true)
         .eq("visibility", "public_listed")
         .in("id", linkedIds);
@@ -463,7 +490,8 @@ export class LandingFeaturedService {
           slug,
           locations(name, geographic_path),
           classified_categories(slug),
-          classified_subcategories(slug)
+          classified_subcategories(slug),
+          seller_profile:profiles!classifieds_profile_id_fkey(display_name, name, username)
         `)
         .eq("status", "active")
         .order("created_at", { ascending: false })
@@ -478,7 +506,7 @@ export class LandingFeaturedService {
       }
 
       const rows = (data ?? []) as FeaturedClassifiedRow[];
-      return rows.map(mapFeaturedClassifiedRow);
+      return rows.filter((row) => !isTestClassifiedRow(row)).map(mapFeaturedClassifiedRow);
     } catch (err) {
       logger.warn("LandingFeaturedService.getFeaturedClassifieds unexpected", getErrorMessage(err));
       return [];
@@ -511,7 +539,8 @@ export class LandingFeaturedService {
           slug,
           locations(name, geographic_path),
           classified_categories(slug),
-          classified_subcategories(slug)
+          classified_subcategories(slug),
+          seller_profile:profiles!classifieds_profile_id_fkey(display_name, name, username)
         `)
         .eq("status", "active")
         .in("id", linkedIds);
@@ -522,6 +551,7 @@ export class LandingFeaturedService {
       }
 
       return orderRowsByLinkedEntityIds(linkedIds, (data ?? []) as FeaturedClassifiedRow[])
+        .filter((row) => !isTestClassifiedRow(row))
         .map(mapFeaturedClassifiedRow);
     } catch (err) {
       logger.warn(

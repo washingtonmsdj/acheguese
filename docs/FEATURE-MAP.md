@@ -27,8 +27,9 @@ Domain status: Feed = STATUS: FROZEN.
 | Funcionalidade | Status | Onde aparece | Como o usuário chega |
 |---|---|---|---|
 | Territory Selector (mudar bairro/cidade) | ✅ | `TerritorySelectorPage` | header do bairro → "Mudar de bairro" |
-| Territory Home (home do bairro) | ✅ | `TerritoryHomePage` | `/`, `/inicio`, `/comunidade/:uf/:city/:hood` |
-| Territory Explorer (cidade) | ✅ | `TerritoryExplorerPage` | `/:state/:city` |
+| Entrada/resolução territorial | ✅ | `RootRouteEntry` / `AchegueSeHomePageMap` | `/` |
+| Territory Home (cidade ou bairro/grupo) | ✅ | `TerritoryHomePage` | `/:state/:city[/:territory]` |
+| Explorar (busca + mapa) | ✅ | módulos territoriais de busca/mapa | `/busca/:state/:city[/:territory]` · `/mapa/...` |
 | Territory Feed (timeline completa) | ✅ | `TerritoryFeedPage` | Home → "Ver mais do bairro" |
 | Territory Unavailable (bairro coming_soon) | ✅ | `TerritoryUnavailablePage` | redirecionamento automático + `/interesse` |
 | Waitlist de interesse (bairro futuro) | ✅ | `CommunityInterestPage` | banner "Bairro chegando em breve" |
@@ -43,8 +44,8 @@ Status do dominio Feed: FROZEN. Documento oficial: `docs/feed/FEED-FREEZE.md`.
 
 | Funcionalidade | Status | Onde aparece | Como o usuário chega |
 |---|---|---|---|
-| Feed do bairro (timeline unificada) | ✅ | `CommunityFeed` | Home → chip "Ver mais do bairro" / botão central da BottomNav |
-| Publicar post (composer + rascunho AES-GCM) | ✅ | `NovoPostPage` / `CreatePostModal` | BottomNav **Postar** (`/novo-post`) |
+| Feed do bairro (timeline unificada) | ✅ | `CommunityFeed` | Home → resumo de Community → Community territorial |
+| Publicar post (composer + rascunho AES-GCM) | ✅ | `NovoPostPage` / `CreatePostModal` | CTA contextual somente com `create_post` permitido |
 | Rascunho offline com resolução de conflito | ✅ | `postDraftCrypto` + service | reabertura do composer |
 | Detalhe do post (modal) | ✅ | `PostDetailModal` via `FeedService.getDetail()` | tap no card do feed · URL territorial com `?post=<id>` |
 | Comentários (thread + composer humanizado) | ✅ | `PostCommentsPanel` | dentro do post |
@@ -168,7 +169,7 @@ Chegada: menu admin (visível só para roles apropriados).
 - **`/notificacoes` × `/notifications`** — manter `/notificacoes` (pt-BR).
 - **`/perfil/*` × `/conta/*`** — mesmos destinos; `/perfil/*` é canônico, `/conta/*` mantido por compatibilidade.
 - **`/empresas` × `/empresas-landing`** — `/empresas` é canônico.
-- **`/inicio` × `/`** — ambos apontam para Territory Home; `/` é canônico com redirecionamento por território ativo.
+- **`/inicio` × `/`** — `/` resolve território; `/inicio` mantém o hub nacional legado. A Home canônica está em `/:uf/:cidade[/:territorio]`.
 
 ## Funcionalidades sem entrada visível na UI
 

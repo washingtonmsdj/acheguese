@@ -4,7 +4,7 @@
 
 - `navigation.config.ts`: itens da sidebar operacional desktop.
 - `AppSidebar.tsx`: renderizacao da sidebar operacional.
-- `src/core/navigation/BottomNav.tsx`: navegacao publica mobile global/territorial. Ela resolve somente destinos da cidade e respeita o escopo de lancamento; nunca consome o contexto interno de uma comunidade.
+- `src/core/navigation/BottomNav.tsx`: navegacao publica mobile territorial. Ela preserva cidade/bairro/grupo resolvidos e respeita o escopo de lancamento.
 - `src/core/navigation/publicHeaderNavigation.ts`: catalogo SSOT dos destinos do menu recolhivel, com ordem, rotulo, descricao, icone e launch gate.
 - `src/core/navigation/PublicHeaderMobileMenu.tsx`: menu recolhivel de Home e Cidade; a Comunidade possui navegacao local propria e nao renderiza este menu no mobile.
 
@@ -13,7 +13,7 @@ Nao existe uma segunda bottom nav em `app/components/navigation`. A barra mobile
 ## Responsabilidades
 
 - Sidebar: navegacao operacional ampla em telas medias e grandes.
-- Bottom nav: quatro destinos globais recorrentes (`Inicio`, `Explorar`, `Bairro`, `Busca`) e um menu territorial de overflow no mobile.
+- Bottom nav: quatro destinos territoriais recorrentes (`Hoje`, `Explorar`, `Community`, `Busca`) e um menu de modulos habilitados no mobile. `Publicar` e uma acao contextual, nao um destino global.
 - Menu do header: acesso recolhivel ao conjunto completo de secoes publicas, contextualizado pelas URLs de Home, Cidade ou Comunidade.
 - Headers de pagina: marca, territorio e acoes de sessao; nao devem recriar regras de URL.
 

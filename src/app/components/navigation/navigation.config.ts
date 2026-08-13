@@ -70,9 +70,9 @@ const RAW_NAV_SECTIONS: NavSection[] = [
       {
         id: 'home',
         icon: Home,
-        label: 'Início',
+        label: 'Hoje',
         href: '/',
-        description: 'Página inicial',
+        description: 'Home do território atual',
       },
       {
         id: 'neighborhood',

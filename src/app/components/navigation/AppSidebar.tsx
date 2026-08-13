@@ -49,6 +49,7 @@ import { useTheme } from '@/shared/hooks/useTheme';
 import { useHomeCommunityHref } from '@/core/routing/hooks/useHomeCommunityHref';
 import { useCommunityNavigationContext } from '@/core/routing/hooks/useCommunityNavigationContext';
 import { useResolveTerritoryFromUrl } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
+import { parsePublicTerritoryPath } from '@/core/routing/utils/publicTerritoryPath';
 import {
   buildModuleTerritoryUrl,
   MODULE_SLUGS,
@@ -271,8 +272,11 @@ export function AppSidebar() {
     ].filter((section) => section.items.length > 0);
   }, [communityContext, moduleVisibility]);
 
-  const homeHref = '/';
+  const parsedTerritory = parsePublicTerritoryPath(location.pathname);
   const activeCityBase = `/${active.state}/${active.city}`;
+  const homeHref = parsedTerritory.state && parsedTerritory.city
+    ? `/${parsedTerritory.state}/${parsedTerritory.city}${parsedTerritory.territorySlug ? `/${parsedTerritory.territorySlug}` : ''}`
+    : activeCityBase;
   const activeModuleUrls = {
     business: buildModuleTerritoryUrl(MODULE_SLUGS.business, activeCityBase),
     gastronomy: GastronomyUrlService.getTerritoryUrl(activeCityBase),
@@ -369,7 +373,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarHeader className="border-b border-sidebar-border p-0">
         <Link
-          to={homeHref}
+          to="/"
           className={cn(
             'w-full rounded-lg transition-colors hover:bg-sidebar-accent/60',
             collapsed

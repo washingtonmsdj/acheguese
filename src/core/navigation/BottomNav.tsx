@@ -6,13 +6,14 @@
 
 import React, { useState } from 'react';
 import {
-  Building2, Wrench, Tag, Home, Compass,
-  MoreHorizontal, Map, Search, UtensilsCrossed, Calendar, Briefcase,
-  SquarePen,
+  Building2, Wrench, Tag, Sun, Compass, Users,
+  MoreHorizontal, Search, UtensilsCrossed, Calendar, Briefcase,
 } from 'lucide-react';
 import { useNavigate, useLocation as useRouterLocation } from 'react-router-dom';
 import { cn } from '@/shared/utils/cn';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
+import { parsePublicTerritoryPath } from '@/core/routing/utils/publicTerritoryPath';
+import { buildCommunityTerritoryUrl } from '@/core/routing/utils/territoryUrls';
 import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from '@/config/launchScope';
 import {
   Sheet,
@@ -48,7 +49,12 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
   }
 
   const cityBase = `/${active.state}/${active.city}`;
-  const cityModule = (module: string) => `/${module}${cityBase}`;
+  const parsedTerritory = parsePublicTerritoryPath(pathname);
+  const territoryBase = parsedTerritory.state && parsedTerritory.city
+    ? `/${parsedTerritory.state}/${parsedTerritory.city}${parsedTerritory.territorySlug ? `/${parsedTerritory.territorySlug}` : ''}`
+    : cityBase;
+  const territoryModule = (module: string) => `/${module}${territoryBase}`;
+  const communityHref = buildCommunityTerritoryUrl(territoryBase);
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/';
@@ -56,10 +62,10 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
   };
 
   const mainTabs = [
-    { path: '/', label: 'Início', icon: Home, badge: 0 },
-    { path: cityBase, label: 'Explorar', icon: Compass, badge: 0 },
-    { path: '/novo-post', label: 'Postar', icon: SquarePen, badge: 0 },
-    { path: cityModule('busca'), label: 'Busca', icon: Search, badge: 0 },
+    { path: territoryBase, label: 'Hoje', icon: Sun, badge: 0, exact: true },
+    { path: territoryModule('mapa'), label: 'Explorar', icon: Compass, badge: 0 },
+    { path: communityHref, label: 'Community', icon: Users, badge: 0 },
+    { path: territoryModule('busca'), label: 'Busca', icon: Search, badge: 0 },
   ];
 
   const moreItems: Array<{
@@ -69,13 +75,12 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
     badge: number;
     surface: LaunchSurfaceKey;
   }> = [
-    { path: cityModule('empresas'), label: 'Empresas', icon: Building2, badge: 0, surface: 'business' as const },
-    { path: cityModule('gastronomia'), label: 'Gastronomia', icon: UtensilsCrossed, badge: 0, surface: 'gastronomy' as const },
-    { path: cityModule('servicos'), label: 'Serviços', icon: Wrench, badge: 0, surface: 'services' as const },
-    { path: cityModule('eventos'), label: 'Eventos', icon: Calendar, badge: 0, surface: 'events' as const },
-    { path: cityModule('vagas'), label: 'Vagas', icon: Briefcase, badge: 0, surface: 'jobs' as const },
-    { path: cityModule('classificados'), label: 'Classificados', icon: Tag, badge: 0, surface: 'classifieds' as const },
-    { path: cityModule('mapa'), label: 'Mapa', icon: Map, badge: 0, surface: 'map' as const },
+    { path: territoryModule('empresas'), label: 'Empresas', icon: Building2, badge: 0, surface: 'business' as const },
+    { path: territoryModule('gastronomia'), label: 'Gastronomia', icon: UtensilsCrossed, badge: 0, surface: 'gastronomy' as const },
+    { path: territoryModule('servicos'), label: 'Serviços', icon: Wrench, badge: 0, surface: 'services' as const },
+    { path: territoryModule('eventos'), label: 'Eventos', icon: Calendar, badge: 0, surface: 'events' as const },
+    { path: territoryModule('vagas'), label: 'Vagas', icon: Briefcase, badge: 0, surface: 'jobs' as const },
+    { path: territoryModule('classificados'), label: 'Classificados', icon: Tag, badge: 0, surface: 'classifieds' as const },
   ].filter((item) => isLaunchSurfaceEnabled(item.surface));
   const isMoreActive = moreItems.some((item) => isActive(item.path));
 
@@ -91,8 +96,10 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
       aria-label="Navegacao principal mobile"
     >
       <div className="flex h-16 items-stretch justify-around px-1">
-        {mainTabs.map(({ path, label, icon: Icon, badge }) => {
-          const activeTab = isActive(path);
+        {mainTabs.map(({ path, label, icon: Icon, badge, exact }) => {
+          const activeTab = exact
+            ? pathname.replace(/\/+$/, '') === path.replace(/\/+$/, '')
+            : isActive(path);
           return (
             <button
               key={label}
@@ -143,7 +150,7 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
           </SheetTrigger>
           <SheetContent side="bottom" className="rounded-t-lg pb-safe font-sans">
             <SheetHeader className="pb-2">
-              <SheetTitle className="font-display text-base">Explorar cidade</SheetTitle>
+              <SheetTitle className="font-display text-base">Explorar território</SheetTitle>
             </SheetHeader>
             <div className="grid grid-cols-3 gap-2 py-4">
               {moreItems.map(({ path, label, icon: Icon, badge }) => {

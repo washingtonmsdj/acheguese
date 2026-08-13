@@ -10,17 +10,18 @@ Domain status: Feed = STATUS: FROZEN.
 
 | Rota | Página (canônica) | Objetivo | Responsável | Jornada | Status | Legado / sucessora |
 |---|---|---|---|---|---|---|
-| `/` | `RootRouteEntry` → `TerritoryHomePage` \| `SplashPage` | Entrada raiz. Se há território salvo, entra no bairro; se não, splash. | app/routes | Primeira visita · Retorno | ✅ | — |
+| `/` | `RootRouteEntry` → redirect territorial \| `AchegueSeHomePageMap` | Entrada/resolução territorial. Se há território salvo, redireciona; sem contexto, permite escolher e explorar publicamente. | app/routes | Primeira visita · Retorno | ✅ | não é Home de conteúdo |
 | `/onboarding` | `OnboardingPage` | Escolher cidade + bairro | app/pages | Primeira visita | ✅ | — |
-| `/inicio` | `TerritoryHomePage` | Home do bairro (Territory Home) | app/pages | Retorno · pós-login | ✅ | alias de `/` |
-| `/comunidade/:uf/:city/:hood` | `TerritoryHomePage` | Home do bairro específico | routes/territorial | Deep-link, share | ✅ | ex-`TerritorialCommunityHomePage` ↪ TerritoryHome |
-| `/comunidade/:uf/:city` | `TerritoryExplorerPage` | Cidade (contexto amplo) | app/pages | Explorar cidade | ✅ | ex-`ComunidadeCidadePage` ↪ Explorer |
+| `/inicio` | `NationalHubPage` | Hub nacional legado | app/pages | Entrada ampla | ✅ | não é alias da Home |
+| `/:state/:city` | `TerritoryHomePage` | Home territorial ampla da cidade | routes/territorial | Entrada pública · retorno | ✅ | Home canônica de cidade |
+| `/:state/:city/:territory` | `TerritoryHomePage` | Home territorial prioritária de bairro/grupo | routes/territorial | Deep-link · retorno | ✅ | Home canônica local |
+| `/comunidade/:uf/:city[/:territory]` | `ComunidadePage` | Participação comunitária do território | routes/territorial | Home → Community | ✅ | Community não é a Home |
 | `/comunidade/:uf/:city/:hood/feed` | `TerritoryFeedPage` | Timeline completa do bairro | app/pages | Home → "Ver mais" | ✅ | ex-`ComunidadeFeedPage` |
 | `/comunidade/:uf/:city/:hood?post=:postId` | `PostDetailModal` via `FeedService.getDetail()` | Deep-link territorial de post | Feed | Tap no card / share / busca | ✅ | query param canonico |
 | `/p/:slug/*` | `PremiumBusinessSiteRoute` | Mini-site premium de empresa | business | Link premium | ✅ | nao pertence ao Feed |
 | `/interesse` | `CommunityInterestPage` | Waitlist para bairro coming_soon | community | Bairro indisponível | ✅ | — |
 | `/br`, `/brasil` | `NationalHubPage` | Hub país (SEO + escolha de UF) | app/pages | SEO / entrada externa | ✅ | — |
-| `/:state`, `/:state/:city` | `PublicCityLandingPage` | Landing pública (SEO) | app/pages | Google / links | ✅ | — |
+| `/:state` | rota de entrada estadual | Entrada ampla/SEO do estado | app/routes | Google / links | ✅ | `/:state/:city` já é Territory Home |
 | `/territory/unavailable` | `TerritoryUnavailablePage` | Território sem cobertura | app/pages | Redirect | ✅ | — |
 | `/mudar-bairro` | `TerritorySelectorPage` | Trocar de território | app/pages | Header → "Mudar" | ✅ | — |
 

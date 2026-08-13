@@ -2,12 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight,
-  Bell,
   Check,
   Loader2,
   MapPin,
   Navigation,
-  Store,
   X,
 } from "lucide-react";
 
@@ -15,7 +13,7 @@ import { TERRITORY_CONFIG } from "@/config/territory";
 import { boundaryService } from "@/core/geospatial";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { LocationStatus, LocationType, type Location } from "@/core/location/types";
-import { DEFAULT_TILE_STYLE, MapLibreAdapter, type MapMarker } from "@/core/maps";
+import { DEFAULT_TILE_STYLE, MapLibreAdapter } from "@/core/maps";
 import type { TerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -81,12 +79,6 @@ const BR_STATE_TO_UF: Record<string, string> = {
   tocantins: "TO",
 };
 
-const statusChips = [
-  { value: "170", label: "bairros", icon: MapPin, tone: "green" },
-  { value: "12", label: "lugares abertos", icon: Store, tone: "green" },
-  { value: "2", label: "avisos hoje", icon: Bell, tone: "orange" },
-] as const;
-
 const homeStatusCardStyle = {
   minWidth: "6.25rem",
   background: "rgba(255, 255, 255, 0.9)",
@@ -94,52 +86,14 @@ const homeStatusCardStyle = {
 };
 
 const recentSuggestions = ["Pituba", "Barra", "Rio Vermelho"];
+const PUBLIC_SALVADOR_PATH = "/ba/salvador";
+const PUBLIC_SALVADOR_DISTRICT_PATHS: Record<string, string> = {
+  pituba: "/ba/salvador/pituba",
+  barra: "/ba/salvador/barra",
+  "rio vermelho": "/ba/salvador/rio-vermelho",
+};
 
 const PREVIEW_MAP_CENTER = { latitude: -12.95, longitude: -38.55 };
-const PREVIEW_CITY_MARKERS: MapMarker[] = [
-  {
-    id: "salvador",
-    type: "service",
-    coordinates: { latitude: -12.9777, longitude: -38.5016 },
-    title: "Salvador",
-    subtitle: "destaque territorial",
-    status: "active",
-    score: 100,
-    isPremium: true,
-  },
-  {
-    id: "lauro-de-freitas",
-    type: "service",
-    coordinates: { latitude: -12.8944, longitude: -38.3277 },
-    title: "Lauro de Freitas",
-    subtitle: "região metropolitana",
-    status: "active",
-  },
-  {
-    id: "camacari",
-    type: "service",
-    coordinates: { latitude: -12.6975, longitude: -38.3254 },
-    title: "Camaçari",
-    subtitle: "região metropolitana",
-    status: "active",
-  },
-  {
-    id: "simoes-filho",
-    type: "service",
-    coordinates: { latitude: -12.7846, longitude: -38.4028 },
-    title: "Simões Filho",
-    subtitle: "região metropolitana",
-    status: "active",
-  },
-  {
-    id: "feira-de-santana",
-    type: "service",
-    coordinates: { latitude: -12.2664, longitude: -38.9663 },
-    title: "Feira de Santana",
-    subtitle: "interior da Bahia",
-    status: "active",
-  },
-];
 
 // Source: IBGE Malhas Municipais, municipio 2927408 (Salvador), GeoJSON qualidade intermediaria.
 // Used only while the SSOT does not expose a stored municipal boundary for Salvador.
@@ -350,18 +304,13 @@ function HomeBoundaryPreview() {
     [cityPolygons],
   );
 
-  const mapMarkers = useMemo<MapMarker[]>(
-    () => PREVIEW_CITY_MARKERS,
-    [],
-  );
-
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#eef4f0]">
       <MapLibreAdapter
         styleUrl={DEFAULT_TILE_STYLE.styleUrl}
         initialViewport={{ center: PREVIEW_MAP_CENTER, zoom: 9.15 }}
         territoryPolygons={territoryPolygons}
-        markers={mapMarkers}
+        markers={[]}
         fitTerritoryBounds={territoryPolygons.length > 0}
         territoryFitPadding={28}
         territoryFitMaxZoom={9.4}
@@ -519,7 +468,6 @@ export default function AchegueSeHomePage() {
   const manualEditRef = useRef(false);
 
   const canSubmitCity = useMemo(() => cityQuery.trim().length > 1, [cityQuery]);
-  const cityScaleLabel = "170 bairros";
   const geoErrorLabel = formatGeolocationError(geo.error);
 
   const persistCity = useCallback((label: string, coords?: ResolvedLocation | null) => {
@@ -574,6 +522,11 @@ export default function AchegueSeHomePage() {
     if (!finalLabel) return;
     persistCity(finalLabel, coords ?? resolved);
     navigate("/onboarding");
+  };
+
+  const openPublicTerritory = (path: string, label: string) => {
+    persistCity(label);
+    navigate(path);
   };
 
   const handleUseLocation = async () => {
@@ -662,6 +615,8 @@ export default function AchegueSeHomePage() {
     setReverseError(null);
     setResolved(null);
     setCityQuery(label);
+    const path = PUBLIC_SALVADOR_DISTRICT_PATHS[normalizeTerritoryText(label)];
+    if (path) openPublicTerritory(path, label);
   };
 
   return (
@@ -702,7 +657,7 @@ export default function AchegueSeHomePage() {
                 width: "min(9rem, calc(100% - 2rem))",
               }}
             >
-              <ul className="th-live-status-list grid justify-items-start gap-[0.12rem]" aria-label="Status ao vivo do Achegue-se">
+              <ul className="th-live-status-list grid justify-items-start gap-[0.12rem]" aria-label="Território disponível no Achegue-se">
                 <li
                   className="th-live-status flex w-fit max-w-full items-center gap-[0.24rem] rounded-[0.54rem] border border-white/90 bg-white/95 px-[0.24rem] py-[0.16rem] shadow-[0_6px_14px_rgba(15,23,42,0.07)] backdrop-blur-sm"
                   style={homeStatusCardStyle}
@@ -715,51 +670,10 @@ export default function AchegueSeHomePage() {
                       Salvador
                     </span>
                     <span className="block truncate text-[8.4px] leading-tight text-slate-600">
-                      cidade ativa
+                      território disponível
                     </span>
                   </span>
                 </li>
-                {statusChips.map((chip) => {
-                  const Icon = chip.icon;
-                  const isOrange = chip.tone === "orange";
-                  const isPlaces = chip.label.includes("lugares");
-                  const primaryLabel = isOrange
-                    ? `${chip.value} avisos`
-                    : isPlaces
-                      ? `${chip.value} lugares`
-                      : `${chip.value} ${chip.label}`;
-                  const detailLabel = isOrange
-                    ? "hoje"
-                    : isPlaces
-                      ? "abertos agora"
-                      : "em Salvador";
-                  return (
-                    <li
-                      key={`${chip.value ?? "near"}-${chip.label}`}
-                      className="th-live-status flex w-fit max-w-full items-center gap-[0.24rem] rounded-[0.54rem] border border-white/90 bg-white/95 px-[0.24rem] py-[0.16rem] shadow-[0_6px_14px_rgba(15,23,42,0.07)] backdrop-blur-sm"
-                      style={homeStatusCardStyle}
-                    >
-                      <span
-                        className={cn(
-                          "th-live-status-icon inline-flex h-[1.06rem] w-[1.06rem] shrink-0 items-center justify-center rounded-[0.38rem]",
-                          isOrange
-                            ? "bg-orange-50 text-[#f97316]"
-                            : "bg-primary/10 text-primary",
-                        )}
-                      >
-                        <Icon className="h-[0.64rem] w-[0.64rem]" aria-hidden strokeWidth={2.25} />
-                      </span>
-                      <span className="min-w-0 leading-none">
-                        <span className="block truncate text-[9.4px] font-bold leading-tight text-slate-950">
-                          {primaryLabel}
-                        </span>
-                        <span className="block truncate text-[8.4px] leading-tight text-slate-600">
-                          {detailLabel}
-                        </span>
-                      </span>
-                    </li>
-                  );
-                })}
               </ul>
             </div>
           </div>
@@ -873,7 +787,7 @@ export default function AchegueSeHomePage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => goToOnboarding("Salvador")}
+              onClick={() => openPublicTerritory(PUBLIC_SALVADOR_PATH, "Salvador")}
               className="h-11 w-full rounded-[1rem] border-[#18B37E]/25 bg-white/80 text-[13.5px] font-semibold text-[#13845f] shadow-[0_8px_18px_rgba(15,23,42,0.06)] transition-all hover:border-[#18B37E]/45 hover:bg-[#18B37E]/[0.06] active:scale-[0.98]"
             >
               Ver Salvador inteira
@@ -928,8 +842,8 @@ export default function AchegueSeHomePage() {
 
             <div className="space-y-1.5 pt-0.5">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-[12px] font-medium text-slate-500">Mais acessados</p>
-                <p className="text-[11px] font-medium text-slate-400">{cityScaleLabel}</p>
+                <p className="text-[12px] font-medium text-slate-500">Territórios sugeridos</p>
+                <p className="text-[11px] font-medium text-slate-400">Acesso público</p>
               </div>
               <div className="flex flex-wrap gap-1.5" aria-label="Sugestoes de local">
                 {recentSuggestions.map((label) => (
@@ -957,10 +871,7 @@ export default function AchegueSeHomePage() {
               Salvador
             </span>
             <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
-              {cityScaleLabel}
-            </span>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600">
-              contornos reais
+              explore sem cadastro
             </span>
           </div>
         </footer>
