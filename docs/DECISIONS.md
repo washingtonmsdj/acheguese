@@ -8,9 +8,9 @@
 
 **Contexto:** o produto é hiperlocal. **Decisão:** `Territory` (country → state → city → neighborhood) é a raiz de toda navegação, feed e conteúdo. Cidade e bairro são **tipos** de Territory, não domínios separados. **Referência:** `02-domain/TERRITORY-DOMAIN.md`.
 
-## D-002 — Home = Territory Home do bairro ativo
+## D-002 — `/` é entrada territorial; Home exige território resolvido
 
-**Decisão:** a tela principal representa o **território ativo** (default: bairro). Não existe "home global". Visitante sem território cai em Splash → Onboarding. Cidade não é home; é `TerritoryExplorerPage`. **Referência:** `05-ux/HOME-REVIEW.md`.
+**Decisão:** `/` resolve ou seleciona território e não é Home de conteúdo. `/:uf/:cidade` é a Home territorial ampla da cidade e `/:uf/:cidade/:territorio` é a Home prioritária de bairro ou grupo resolvido. Visitantes podem explorar conteúdo público sem onboarding obrigatório. **Referência:** `05-ux/HOME-SPEC.md`.
 
 ## D-003 — Community-first
 
@@ -28,9 +28,9 @@
 
 **Decisão:** proibido `text-white`, `bg-black`, `bg-[#...]` em componentes. Toda cor vem de tokens semânticos em `index.css` + `contentCategories.ts`. **Ref.:** `04-design/DESIGN-TOKENS.md`.
 
-## D-007 — BottomNav central = "Postar"
+## D-007 — Publicação é ação contextual, não tab global
 
-**Decisão:** o botão central da BottomNav vai para `/novo-post`. Substituiu o antigo "Bairro" porque o bairro já é o contexto ambiente.
+**Decisão:** a navegação primária territorial começa por `Hoje` e preserva o território atual. `Publicar`/`Postar` só aparece quando `CommunityAccessPolicy` autoriza `create_post`; não é destino global permanente para visitante ou perfil inelegível. **Referência:** `05-ux/HOME-SPEC.md`.
 
 ## D-008 — Bairros `coming_soon` viram waitlist
 
@@ -83,3 +83,7 @@
 ## D-020 — Documentos históricos ficam em `10-archive/`
 
 **Decisão:** snapshots com palavras "FINAL", "100%", "COMPLETO", "PRONTO PARA PRODUÇÃO" não são fonte de decisão. Se conflitam com um doc numerado (`01-` … `09-`), o numerado vence.
+
+## D-021 — Cobertura do produto é independente do rollout da Community
+
+**Contexto:** abrir a camada social simultaneamente em todos os bairros dilui atividade e faz comunidades locais parecerem vazias. **Decisão:** o Achegue-se pode oferecer Home, busca, empresas, serviços, classificados, vagas, eventos e demais módulos públicos em toda Salvador enquanto a Community é ativada de forma territorial e gradual. O primeiro cluster oficial de lançamento da Community é o **Complexo do Nordeste de Amaralina**, inicialmente concentrando Nordeste de Amaralina, Santa Cruz, Vale das Pedrinhas e Chapada, preservando a identidade canônica de cada Territory. Os demais bairros continuam utilizáveis no produto; quando a Community não estiver ativa, a Home deve permanecer útil e mostrar estado `coming_soon`/waitlist apenas para a camada comunitária. A expansão da Community deve ocorrer por evidência operacional e de demanda — interesse local, capacidade de moderação, atividade e condições de lançamento — e não por calendário automático. **Referências:** `03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`, `05-ux/HOME-SPEC.md`.
