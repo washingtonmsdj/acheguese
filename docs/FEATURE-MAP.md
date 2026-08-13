@@ -26,8 +26,8 @@ Domain status: Feed = STATUS: FROZEN.
 
 | Funcionalidade | Status | Onde aparece | Como o usuário chega |
 |---|---|---|---|
-| Territory Selector (mudar bairro/cidade) | ✅ | `TerritorySelectorPage` | header do bairro → "Mudar de bairro" |
-| Entrada/resolução territorial | ✅ | `RootRouteEntry` / `AchegueSeHomePageMap` | `/` |
+| Territory Entry (mudar bairro/cidade) | ✅ | `TerritoryEntryPage` | troca territorial → `/?trocar=territorio` |
+| Entrada/resolução territorial | ✅ | `RootRouteEntry` / `TerritoryEntryPage` | `/` |
 | Territory Home (cidade ou bairro/grupo) | ✅ | `TerritoryHomePage` | `/:state/:city[/:territory]` |
 | Explorar (busca + mapa) | ✅ | módulos territoriais de busca/mapa | `/busca/:state/:city[/:territory]` · `/mapa/...` |
 | Territory Feed (timeline completa) | ✅ | `TerritoryFeedPage` | Home → "Ver mais do bairro" |

@@ -10,7 +10,7 @@ Domain status: Feed = STATUS: FROZEN.
 
 | Rota | Página (canônica) | Objetivo | Responsável | Jornada | Status | Legado / sucessora |
 |---|---|---|---|---|---|---|
-| `/` | `RootRouteEntry` → redirect territorial \| `AchegueSeHomePageMap` | Entrada/resolução territorial. Se há território salvo, redireciona; sem contexto, permite escolher e explorar publicamente. | app/routes | Primeira visita · Retorno | ✅ | não é Home de conteúdo |
+| `/` | `RootRouteEntry` → redirect territorial \| `TerritoryEntryPage` | Entrada/resolução territorial. Se há território salvo, redireciona; sem contexto, permite escolher e explorar publicamente. | app/routes | Primeira visita · Retorno | ✅ | implementação canônica; não é Home de conteúdo |
 | `/onboarding` | `OnboardingPage` | Escolher cidade + bairro | app/pages | Primeira visita | ✅ | — |
 | `/inicio` | `NationalHubPage` | Hub nacional legado | app/pages | Entrada ampla | ✅ | não é alias da Home |
 | `/:state/:city` | `TerritoryHomePage` | Home territorial ampla da cidade | routes/territorial | Entrada pública · retorno | ✅ | Home canônica de cidade |
@@ -23,7 +23,6 @@ Domain status: Feed = STATUS: FROZEN.
 | `/br`, `/brasil` | `NationalHubPage` | Hub país (SEO + escolha de UF) | app/pages | SEO / entrada externa | ✅ | — |
 | `/:state` | rota de entrada estadual | Entrada ampla/SEO do estado | app/routes | Google / links | ✅ | `/:state/:city` já é Territory Home |
 | `/territory/unavailable` | `TerritoryUnavailablePage` | Território sem cobertura | app/pages | Redirect | ✅ | — |
-| `/mudar-bairro` | `TerritorySelectorPage` | Trocar de território | app/pages | Header → "Mudar" | ✅ | — |
 
 ## Comunidade — módulos transversais
 

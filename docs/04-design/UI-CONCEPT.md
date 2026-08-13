@@ -1,7 +1,7 @@
 # UI Concept - Achegue-se
 
 Status: conceito aprovado e fundacao implementada em React/Tailwind na Home
-territorial e em Explorar (Fase 4.2).
+territorial, em Explorar (Fase 4.2) e na entrada territorial `/` (Fase 4.3).
 
 ## Direcao visual principal
 

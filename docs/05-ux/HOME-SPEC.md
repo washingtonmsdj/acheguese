@@ -1,7 +1,7 @@
 # Territory Home — contrato canônico
 
 > Status: SSOT de produto e implementação da Home territorial.
-> Versão: 4.2 (cobertura territorial, rollout gradual da Community e fundação visual Território Vivo).
+> Versão: 4.3 (cobertura territorial, rollout gradual da Community e entrada territorial Território Vivo).
 > Escopo: entrada territorial, Home pública, navegação primária, regras de composição e relação com rollout da Community.
 
 ## 1. Decisão de produto
@@ -26,6 +26,18 @@ Ela deve ser útil antes de social, funcionar publicamente e ser honesta quando 
 | `/inicio`                                                | Hub nacional legado; não é alias da Home territorial.        |
 
 O retorno de `/` pode redirecionar para o último território ou território do perfil. Sem contexto, `/` apresenta um seletor público. Escolher Salvador ou um bairro suportado permite explorar sem cadastro e sem onboarding obrigatório. Texto livre só abre uma Home quando resolve um território ativo e publicamente navegável; falha de resolução nunca empurra o visitante para cadastro.
+
+### Contrato visual e operacional de `/`
+
+- existe uma única implementação canônica: `TerritoryEntryPage`; aliases e seletores históricos não são superfícies paralelas;
+- o mapa de Salvador é o elemento territorial principal no desktop e um contexto compacto no mobile; boundary só vem do SSOT geoespacial, sem contorno fictício de Production;
+- localização, busca por cidade/bairro e entrada por Salvador inteira são caminhos equivalentes de resolução pública;
+- a busca prioriza territórios ativos e publicamente navegáveis do catálogo canônico; geocodificação externa só complementa descoberta de cidades;
+- localização negada, território sem cobertura e falha transitória possuem mensagens próprias e sempre preservam a entrada pública por Salvador;
+- `achegue:last_territory` é o único estado recente consumido na entrada e permanece restrito à sessão; a opção `?trocar=territorio` mostra o contexto anterior sem impedir nova escolha;
+- bairros sugeridos são identificados como sugestões editoriais, nunca como “recentes” sem histórico real;
+- Salvador inteira está disponível para exploração; o cluster do Complexo do Nordeste de Amaralina aparece separadamente como rollout editorial da Community;
+- a entrada não exibe a navegação territorial completa antes de existir contexto: oferece marca, login opcional, resolução e explicação curta do valor do produto.
 
 ## 3. Públicos
 
@@ -184,6 +196,8 @@ No desktop, a Home usa largura real: conteúdo principal e rail lateral com serv
 ## 11. Critérios de aceite
 
 - Salvador e Pituba resolvem e mantêm URLs canônicas.
+- `/` possui uma única implementação, mapa responsivo e diferencia Salvador, bairro e Community;
+- localização negada e território não encontrado preservam alternativa pública explícita;
 - território sem atividade apresenta vazio honesto;
 - visitante público explora sem onboarding obrigatório;
 - bairros fora do cluster inicial continuam com Home e módulos públicos utilizáveis;

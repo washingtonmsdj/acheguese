@@ -26,7 +26,7 @@ Para cada jornada mapeamos:
 
 ## 1. Primeira visita
 
-- **Início:** `/` → `AchegueSeHomePage` (TerritorySelectorPage).
+- **Início:** `/` → `RootRouteEntry` → `TerritoryEntryPage` quando não há contexto anterior.
 - **Intenção:** entender o que é o Achegue-se.
 - **Cliques até valor:** 2 (selecionar cidade → ver bairro).
 - **Perdido:** o seletor de cidade é a home. O visitante não sabe se já está "dentro" ou "fora" do produto.

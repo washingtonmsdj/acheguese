@@ -62,7 +62,9 @@ test.describe("Home territorial pública e determinística", () => {
 
     await gotoApp(page, "/");
     await expect(
-      page.getByRole("heading", { name: /Tudo começa pelo seu bairro/i }),
+      page.getByRole("heading", {
+        name: /Encontre o que importa perto de você/i,
+      }),
     ).toBeVisible({ timeout: 30_000 });
     await expect(page.getByRole("link", { name: "Entrar" })).toBeVisible();
 
@@ -131,7 +133,9 @@ test.describe("Home territorial pública e determinística", () => {
     await expect(page).toHaveURL(/\/ba\/salvador\/pituba$/);
     await page.getByRole("link", { name: /Trocar território/i }).click();
     await expect(page).toHaveURL(/\/\?trocar=territorio$/);
-    await page.getByRole("button", { name: /Ver Salvador inteira/i }).click();
+    await page
+      .getByRole("button", { name: /Explorar Salvador inteira/i })
+      .click();
     await expect(page).toHaveURL(/\/ba\/salvador$/);
     health.assertHealthy();
   });
@@ -225,6 +229,107 @@ test.describe("Home territorial pública e determinística", () => {
     await expect(
       page.getByRole("link", { name: "Abrir mapa completo de Pituba" }),
     ).toBeVisible({ timeout: 30_000 });
+    await expectNoHorizontalOverflow(page);
+  });
+});
+
+test.describe("Entrada territorial responsiva", () => {
+  test.describe.configure({ timeout: 120_000 });
+
+  test.beforeEach(async ({ page }) => {
+    await installTerritoryHomeFixtures(page);
+  });
+
+  test("resolve busca pública e adapta o mapa de 320 a desktop", async ({
+    page,
+  }) => {
+    const health = observeBrowserHealth(page);
+    await page.setViewportSize({ width: 320, height: 844 });
+    await gotoApp(page, "/?trocar=territorio");
+
+    await expect(
+      page.getByRole("heading", {
+        name: "Salvador disponível por inteiro",
+      }),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(
+      page.getByRole("button", { name: "Usar minha localização" }),
+    ).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+
+    const search = page.getByRole("combobox", {
+      name: "Buscar cidade ou bairro",
+    });
+    await search.fill("Pitu");
+    await expect(
+      page.getByRole("option", { name: /Pituba, Salvador/ }),
+    ).toBeVisible();
+    await page.getByRole("option", { name: /Pituba, Salvador/ }).click();
+    await expect(page).toHaveURL(/\/ba\/salvador\/pituba$/);
+
+    await gotoApp(page, "/?trocar=territorio");
+    await page.setViewportSize({ width: 820, height: 1000 });
+    await expectNoHorizontalOverflow(page);
+    await expect(
+      page.getByText("Um ponto de partida para a vida local"),
+    ).toBeVisible();
+
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await expectNoHorizontalOverflow(page);
+    const layout = await page
+      .getByTestId("territory-entry-layout")
+      .evaluate((element) => getComputedStyle(element).gridTemplateColumns);
+    expect(layout.split(" ").length).toBeGreaterThanOrEqual(2);
+    health.assertHealthy();
+  });
+
+  test("explica localização negada, território indisponível e retorno recente", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      sessionStorage.setItem(
+        "achegue:last_territory",
+        JSON.stringify({
+          name: "Pituba",
+          baseUrl: "/ba/salvador/pituba",
+        }),
+      );
+      Object.defineProperty(navigator, "geolocation", {
+        configurable: true,
+        value: {
+          getCurrentPosition: (
+            _success: PositionCallback,
+            error: PositionErrorCallback,
+          ) => {
+            const deniedError: GeolocationPositionError = {
+              code: 1,
+              message: "Permission denied",
+              PERMISSION_DENIED: 1,
+              POSITION_UNAVAILABLE: 2,
+              TIMEOUT: 3,
+            };
+            error(deniedError);
+          },
+        },
+      });
+    });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await gotoApp(page, "/?trocar=territorio");
+
+    await expect(page.getByText("Seu último território")).toBeVisible();
+    await page.getByRole("button", { name: "Usar minha localização" }).click();
+    await expect(page.getByRole("alert")).toContainText(
+      "A localização foi bloqueada",
+    );
+
+    const search = page.getByRole("combobox", {
+      name: "Buscar cidade ou bairro",
+    });
+    await search.fill("Recife");
+    await page.getByRole("button", { name: "Confirmar território" }).click();
+    await expect(page.getByRole("alert")).toContainText(
+      "ainda não está disponível",
+    );
     await expectNoHorizontalOverflow(page);
   });
 });

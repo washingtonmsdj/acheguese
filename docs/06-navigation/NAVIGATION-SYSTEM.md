@@ -1,14 +1,19 @@
 # Navigation System - Achegue-se
 
 Status: fundacao adaptativa implementada em Home territorial e Explorar na
-Fase 4.2. Community, Feed, Perfil e demais superficies continuam no shell
-anterior ate migracao explicita.
+Fase 4.2; entrada territorial `/` migrada na Fase 4.3. Community, Feed, Perfil
+e demais superficies continuam no shell anterior ate migracao explicita.
 
 ## Objetivo da navegacao
 
 A navegacao deve esconder a complexidade estrutural do produto e revelar opcoes conforme contexto, intencao e permissao.
 
 O usuario nao deve navegar por uma lista de modulos. Ele deve navegar por modos de uso.
+
+Antes da resolução territorial, `/` não exibe os modos globais como se já
+houvesse contexto. Essa superfície oferece localização, busca, Salvador inteira,
+bairros sugeridos e login opcional. Depois da escolha, a URL territorial assume
+e a navegação adaptativa passa a representar o contexto resolvido.
 
 ## Modelo recomendado
 

@@ -5,11 +5,11 @@
  *
  * Se o usuário já tem um território ativo/anterior, redireciona `/` para a
  * Territory Home desse bairro, evitando cair sempre no Selector.
- * Caso contrário, renderiza o Selector (AchegueSeHomePage) normalmente.
+ * Caso contrário, renderiza a entrada territorial canônica.
  */
 import { useSyncExternalStore } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
-import AchegueSeHomePage from "@/app/pages/AchegueSeHomePageMap";
+import TerritoryEntryPage from "@/app/pages/TerritoryEntryPage";
 import PreLaunchLandingPage from "@/app/pages/PreLaunchLandingPage";
 import {
   lastTerritoryStore,
@@ -39,7 +39,7 @@ function ResolvedTerritoryRoot() {
   const isExplicitTerritoryChange = searchParams.get("trocar") === "territorio";
 
   if (isExplicitTerritoryChange) {
-    return <AchegueSeHomePage />;
+    return <TerritoryEntryPage recentTerritory={lastTerritory} />;
   }
 
   const target =
@@ -49,5 +49,5 @@ function ResolvedTerritoryRoot() {
     return <Navigate to={target} replace />;
   }
 
-  return <AchegueSeHomePage />;
+  return <TerritoryEntryPage />;
 }

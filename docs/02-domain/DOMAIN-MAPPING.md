@@ -17,12 +17,11 @@ Consolidação do domínio **Territory**. Nesta etapa **não há renomeação de
 
 | Nome atual | Nome canônico | Status | Motivo | Dependências | Plano de migração |
 |------------|---------------|--------|--------|--------------|-------------------|
-| `TerritorySelectorPage.tsx` | `TerritorySelectorPage` | ✅ Canônico | Entrada de seleção de território. | `lazyImports`, rotas `/inicio`. | Manter. |
+| `TerritoryEntryPage.tsx` | `TerritoryEntryPage` | ✅ Canônico | Entrada e resolução territorial pública. | `RootRouteEntry`, rota `/`. | Manter como implementação única. |
 | `TerritoryExplorerPage.tsx` | `TerritoryExplorerPage` | ✅ Canônico | Exploração ampla de um território (city-scope). | `lazyImports`. | Manter. |
 | `TerritoryHomePage.tsx` | `TerritoryHomePage` | ✅ Canônico | Home oficial de qualquer território. | `TerritorialModulePages`. | Manter. |
 | `TerritoryFeedPage.tsx` | `TerritoryFeedPage` | ✅ Canônico | Timeline completa do território. | `lazyImports`. | Manter. |
 | `TerritoryUnavailablePage.tsx` | `TerritoryUnavailablePage` | ✅ Canônico | Território sem suporte. | rotas. | Manter. |
-| `AchegueSeHomePage.tsx` | `TerritorySelectorPage` | 🟦 Alias temporário | Implementação real do selector; nome de marca. | `TerritorySelectorPage.tsx`. | Após F2, mover conteúdo para `TerritorySelectorPage.tsx` e remover. |
 | `PublicCityLandingPage.tsx` (+ `.css`) | `TerritoryExplorerPage` | 🟦 Alias temporário | Implementação real do explorer. | `TerritoryExplorerPage.tsx`. | Consolidar em `TerritoryExplorerPage` na Sprint DOMAIN.2. |
 | `CidadeLandingPage.tsx` (+ `.css`, `*.sections.tsx`, `*.neighborhood-*.tsx`, `*.constants.ts`, `*.utils.ts`) | `TerritoryExplorerPage` (sections) | 🟨 Legado | Versão pré-Territory da landing de cidade. | Rotas legadas `/cidade/*`. | Mover partes reutilizáveis para `territory/sections/`; deprecar. |
 | `LaunchPausedPage.tsx` | `TerritoryUnavailablePage` | 🟦 Alias temporário | Implementação real do unavailable. | `TerritoryUnavailablePage.tsx`. | Consolidar em `TerritoryUnavailablePage`. |

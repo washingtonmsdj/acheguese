@@ -81,6 +81,12 @@ function locationRowsForRequest(url: URL): TerritoryRow[] {
     url.searchParams.get("geographic_path"),
   );
   if (geographicPath) {
+    if (geographicPath.endsWith("%")) {
+      const prefix = geographicPath.slice(0, -1);
+      return ALL_TERRITORIES.filter((row) =>
+        row.geographic_path.startsWith(prefix),
+      );
+    }
     return ALL_TERRITORIES.filter(
       (row) => row.geographic_path === geographicPath,
     );
@@ -194,6 +200,26 @@ async function fulfillPostgrest(route: Route, rows: unknown[]): Promise<void> {
  * data and the suite performs no database mutation.
  */
 export async function installTerritoryHomeFixtures(page: Page): Promise<void> {
+  await page.route("https://nominatim.openstreetmap.org/**", async (route) => {
+    const url = new URL(route.request().url());
+    const body = url.pathname.endsWith("/reverse")
+      ? {
+          address: {
+            neighbourhood: "Pituba",
+            city: "Salvador",
+            state: "Bahia",
+            state_code: "BA",
+            country_code: "br",
+          },
+        }
+      : [];
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json; charset=utf-8",
+      body: JSON.stringify(body),
+    });
+  });
+
   await page.route(/\/rest\/v1\/([^?]+)/, async (route) => {
     const url = new URL(route.request().url());
     const table = url.pathname.split("/rest/v1/")[1]?.split("/")[0] ?? "";

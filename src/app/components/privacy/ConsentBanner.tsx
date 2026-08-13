@@ -86,9 +86,10 @@ export function ConsentBanner() {
     pathname === "/aceitar-termos" ||
     pathname === "/onboarding" ||
     pathname === "/reset-password";
-  const mobileBannerBottomClass = isAuthSurface
-    ? "bottom-[calc(env(safe-area-inset-bottom)+0.75rem)]"
-    : "bottom-[calc(env(safe-area-inset-bottom)+5.5rem)]";
+  const mobileBannerBottomClass =
+    isAuthSurface || pathname === "/"
+      ? "bottom-[calc(env(safe-area-inset-bottom)+0.75rem)]"
+      : "bottom-[calc(env(safe-area-inset-bottom)+5.5rem)]";
 
   const rejectOptionalConsents = () =>
     saveConsentsMutation.mutate({
@@ -218,7 +219,8 @@ export function ConsentBanner() {
                 Privacidade e Cookies
               </h3>
               <p className="mt-0.5 truncate text-xs leading-snug text-muted-foreground">
-                Utilizamos cookies e dados pessoais para melhorar sua experiência.
+                Utilizamos cookies e dados pessoais para melhorar sua
+                experiência.
               </p>
             </div>
             <div className="flex shrink-0 flex-nowrap items-center gap-2">

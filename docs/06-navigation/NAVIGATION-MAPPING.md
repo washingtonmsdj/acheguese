@@ -2,6 +2,10 @@
 
 Sprint TERRITORY.2 — padronização de nomenclatura das páginas para refletir a arquitetura baseada em Territory.
 
+> Atualização Fase 4.3: a entrada territorial concluiu sua migração incremental;
+> o contrato de `TerritoryEntryPage` abaixo substitui, para `/`, as restrições
+> históricas de aliases desta sprint.
+
 Escopo desta etapa:
 
 - Apenas renomear/consolidar responsabilidades conceitualmente.
@@ -17,18 +21,18 @@ Legenda de situação:
 
 ---
 
-## 1. TerritorySelectorPage
+## 1. TerritoryEntryPage
 
-| Item              | Valor                                                                                        |
-| ----------------- | -------------------------------------------------------------------------------------------- |
-| Nome antigo       | `AchegueSeHomePage`                                                                          |
-| Novo nome         | `TerritorySelectorPage`                                                                      |
-| Responsabilidade  | Detectar localização, escolher cidade, escolher território. **Não é uma Home.**              |
-| Rotas             | `/`                                                                                          |
-| Arquivo canônico  | `src/app/pages/TerritorySelectorPage.tsx` (alias → `AchegueSeHomePage`)                      |
-| Dependências      | `useGeolocation`, Nominatim, `achegue-se:last-city` (localStorage)                           |
-| Situação          | **Futuro** — alias criado; rota `/` ainda importa `AchegueSeHomePage` diretamente.           |
-| Remoção prevista  | `AchegueSeHomePage.tsx` após migração dos imports para o alias.                              |
+| Item              | Valor                                                                                         |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| Nomes removidos   | `AchegueSeHomePage`, `AchegueSeHomePageMap`, `TerritorySelectorPage`                          |
+| Nome canônico     | `TerritoryEntryPage`                                                                          |
+| Responsabilidade  | Resolver localização, cidade ou bairro antes da Home. **Não é uma Home de conteúdo.**         |
+| Rotas             | `/`; `/?trocar=territorio` para escolha explícita                                             |
+| Arquivo canônico  | `src/app/pages/TerritoryEntryPage.tsx`                                                        |
+| Dependências      | catálogo `locations`, boundary canônica, Nominatim complementar e `LastTerritoryStore`        |
+| Situação          | **Migrado na Fase 4.3** — implementação única consumida por `RootRouteEntry`.                 |
+| Regra de retorno  | contexto anterior válido redireciona; troca explícita mostra o último território como atalho. |
 
 ---
 
@@ -109,7 +113,6 @@ Nenhuma remoção nesta sprint. Candidatos futuros:
 
 - `src/app/pages/PublicCityLandingPage.tsx` — quando `TerritoryExplorerPage` tiver implementação própria e nenhum import restar.
 - `src/app/pages/CidadeLandingPage.tsx` + `CidadeLanding.*` — quando as seções `feed/grupos/business/...` migrarem para páginas dedicadas de módulo.
-- `src/app/pages/AchegueSeHomePage.tsx` — quando todos os imports migrarem para `TerritorySelectorPage`.
 - `src/app/pages/LaunchPausedPage.tsx` — quando `createLaunchPausedRoute` migrar para `TerritoryUnavailablePage`.
 
 ## Regras da migração
@@ -117,4 +120,4 @@ Nenhuma remoção nesta sprint. Candidatos futuros:
 1. Nenhum comportamento pode mudar nesta etapa.
 2. Nenhuma rota pode ser removida.
 3. Nenhum arquivo antigo pode ser deletado enquanto houver import ativo.
-4. Nova refatoração deve importar sempre o **nome canônico** (`TerritoryHomePage`, `TerritorySelectorPage`, etc.), nunca o legado.
+4. Nova refatoração deve importar sempre o **nome canônico** (`TerritoryHomePage`, `TerritoryEntryPage`, etc.), nunca o legado.
