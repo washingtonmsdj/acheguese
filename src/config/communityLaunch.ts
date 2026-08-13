@@ -15,15 +15,19 @@ export const SALVADOR_COMMUNITY_LAUNCH_CLUSTER: readonly CommunityLaunchTerritor
     { name: "Chapada", slug: "chapada" },
   ] as const;
 
-const SALVADOR_COMMUNITY_LAUNCH_SLUGS = new Set(
-  SALVADOR_COMMUNITY_LAUNCH_CLUSTER.map((territory) => territory.slug),
-);
+export const SALVADOR_COMMUNITY_LAUNCH_GROUP_SLUG =
+  "complexo-do-nordeste-de-amaralina";
+
+const SALVADOR_COMMUNITY_LAUNCH_SLUGS = new Set([
+  SALVADOR_COMMUNITY_LAUNCH_GROUP_SLUG,
+  ...SALVADOR_COMMUNITY_LAUNCH_CLUSTER.map((territory) => territory.slug),
+]);
 
 export function isSalvadorCommunityLaunchTerritory(
-  neighborhoodSlug: string | undefined,
+  territorySlug: string | undefined,
 ): boolean {
   return Boolean(
-    neighborhoodSlug &&
-    SALVADOR_COMMUNITY_LAUNCH_SLUGS.has(neighborhoodSlug.toLowerCase()),
+    territorySlug &&
+    SALVADOR_COMMUNITY_LAUNCH_SLUGS.has(territorySlug.toLowerCase()),
   );
 }

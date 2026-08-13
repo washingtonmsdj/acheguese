@@ -466,10 +466,12 @@ export default function TerritoryHomePage() {
   const access = useCommunityAccess({ resolved, activeMemberIds });
   const stateSlug = params.state ?? TERRITORY_CONFIG.launch.state;
   const citySlug = params.city ?? TERRITORY_CONFIG.launch.city;
+  const resolvedTerritorySlug =
+    resolved.kind === "group" ? resolved.group.slug : resolved.location.slug;
   const isOfficialCommunityTerritory =
     stateSlug === "ba" &&
     citySlug === "salvador" &&
-    isSalvadorCommunityLaunchTerritory(params.neighborhood);
+    isSalvadorCommunityLaunchTerritory(resolvedTerritorySlug);
   const isCommunityAvailable =
     isOfficialCommunityTerritory && access.isCommunityAvailable;
   const data = useTerritoryHomeData({
