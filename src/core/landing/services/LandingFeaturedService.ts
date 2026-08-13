@@ -32,7 +32,10 @@ type LandingQuery<TRow> = PromiseLike<LandingQueryPayload<TRow>> & {
   limit(value: number): LandingQuery<TRow>;
   not(column: string, operator: string, value: unknown): LandingQuery<TRow>;
   order(column: string, options?: { ascending?: boolean }): LandingQuery<TRow>;
-  select(columns?: string, options?: { count?: "exact"; head?: boolean }): LandingQuery<TRow>;
+  select(
+    columns?: string,
+    options?: { count?: "exact"; head?: boolean },
+  ): LandingQuery<TRow>;
 };
 
 type LandingDbClient = {
@@ -97,6 +100,7 @@ interface FeaturedBusinessRow {
   is_verified: boolean | null;
   slug: string | null;
   location?: { geographic_path?: string | null } | null;
+  owner_profile?: PublicProfileIdentityRow | PublicProfileIdentityRow[] | null;
 }
 
 interface FeaturedServiceRow {
@@ -110,9 +114,10 @@ interface FeaturedServiceRow {
   price_type: string | null;
   hourly_rate: number | null;
   slug: string | null;
+  owner_profile?: PublicProfileIdentityRow | PublicProfileIdentityRow[] | null;
 }
 
-interface ClassifiedSellerProfileRow {
+interface PublicProfileIdentityRow {
   display_name?: string | null;
   name?: string | null;
   username?: string | null;
@@ -134,17 +139,45 @@ interface FeaturedClassifiedRow {
   } | null;
   classified_categories?: { slug?: string | null } | null;
   classified_subcategories?: { slug?: string | null } | null;
-  seller_profile?: ClassifiedSellerProfileRow | ClassifiedSellerProfileRow[] | null;
+  seller_profile?: PublicProfileIdentityRow | PublicProfileIdentityRow[] | null;
 }
 
 function hasTestIdentityMarker(value: string | null | undefined): boolean {
   if (!value) return false;
-  return /(?:^|[\s[\]_.-])(?:e2e|tests?|testes?|mock|seed)(?:$|[\s[\]_.-])/i.test(value);
+  return /(?:^|[\s[\]_.-])(?:e2e|tests?|testes?|mock|seed)(?:$|[\s[\]_.-])/i.test(
+    value,
+  );
 }
 
-function getSellerProfile(row: FeaturedClassifiedRow): ClassifiedSellerProfileRow | null {
+function getProfileIdentity(
+  value:
+    | PublicProfileIdentityRow
+    | PublicProfileIdentityRow[]
+    | null
+    | undefined,
+): PublicProfileIdentityRow | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
+
+function getSellerProfile(
+  row: FeaturedClassifiedRow,
+): PublicProfileIdentityRow | null {
   if (Array.isArray(row.seller_profile)) return row.seller_profile[0] ?? null;
   return row.seller_profile ?? null;
+}
+
+function hasTestProfileIdentity(
+  value:
+    | PublicProfileIdentityRow
+    | PublicProfileIdentityRow[]
+    | null
+    | undefined,
+): boolean {
+  const profile = getProfileIdentity(value);
+  return [profile?.display_name, profile?.name, profile?.username].some(
+    hasTestIdentityMarker,
+  );
 }
 
 function isTestClassifiedRow(row: FeaturedClassifiedRow): boolean {
@@ -184,7 +217,9 @@ function mapFeaturedBusinessRow(row: FeaturedBusinessRow): FeaturedBusiness {
   };
 }
 
-function mapGastronomyBusinessToFeaturedBusiness(business: GastronomyBusiness): FeaturedBusiness {
+function mapGastronomyBusinessToFeaturedBusiness(
+  business: GastronomyBusiness,
+): FeaturedBusiness {
   return {
     id: business.id,
     name: business.name,
@@ -227,7 +262,9 @@ function mapFeaturedServiceRow(row: FeaturedServiceRow): FeaturedService {
   };
 }
 
-function mapFeaturedClassifiedRow(row: FeaturedClassifiedRow): FeaturedClassified {
+function mapFeaturedClassifiedRow(
+  row: FeaturedClassifiedRow,
+): FeaturedClassified {
   return {
     id: row.id,
     titulo: row.title ?? row.description ?? "Classificado",
@@ -273,10 +310,13 @@ async function getLinkedEntityIds(
 ): Promise<string[] | null> {
   if (!communityId) return null;
 
-  const links = await CommunityEntityLinkService.listActiveByCommunity(communityId, {
-    entityTypes: [entityType],
-    limit,
-  });
+  const links = await CommunityEntityLinkService.listActiveByCommunity(
+    communityId,
+    {
+      entityTypes: [entityType],
+      limit,
+    },
+  );
 
   if (links.length === 0) return null;
   return links.map((link) => link.entity_id);
@@ -291,7 +331,9 @@ export class LandingFeaturedService {
     try {
       let query = landingDb
         .from<FeaturedBusinessRow>("business_data")
-        .select("id, profile_id, business_name, category, metadata, rating, is_premium, is_verified, slug, location:locations!location_id(geographic_path)")
+        .select(
+          "id, profile_id, business_name, category, metadata, rating, is_premium, is_verified, slug, location:locations!location_id(geographic_path), owner_profile:profiles!business_data_profile_id_fkey(display_name, name, username)",
+        )
         .eq("status", "active")
         .not("location_id", "is", null)
         .order("is_premium", { ascending: false })
@@ -303,14 +345,22 @@ export class LandingFeaturedService {
 
       const { data, error } = await query;
       if (error) {
-        logger.warn("LandingFeaturedService.getFeaturedBusinesses", error.message);
+        logger.warn(
+          "LandingFeaturedService.getFeaturedBusinesses",
+          error.message,
+        );
         return [];
       }
 
       const rows = (data ?? []) as FeaturedBusinessRow[];
-      return rows.map(mapFeaturedBusinessRow);
+      return rows
+        .filter((row) => !hasTestProfileIdentity(row.owner_profile))
+        .map(mapFeaturedBusinessRow);
     } catch (err) {
-      logger.warn("LandingFeaturedService.getFeaturedBusinesses unexpected", getErrorMessage(err));
+      logger.warn(
+        "LandingFeaturedService.getFeaturedBusinesses unexpected",
+        getErrorMessage(err),
+      );
       return [];
     }
   }
@@ -328,16 +378,25 @@ export class LandingFeaturedService {
     try {
       const { data, error } = await landingDb
         .from<FeaturedBusinessRow>("business_data")
-        .select("id, profile_id, business_name, category, metadata, rating, is_premium, is_verified, slug, location:locations!location_id(geographic_path)")
+        .select(
+          "id, profile_id, business_name, category, metadata, rating, is_premium, is_verified, slug, location:locations!location_id(geographic_path), owner_profile:profiles!business_data_profile_id_fkey(display_name, name, username)",
+        )
         .eq("status", "active")
         .in("id", linkedIds);
 
       if (error) {
-        logger.warn("LandingFeaturedService.getCommunityFeaturedBusinesses", error.message);
+        logger.warn(
+          "LandingFeaturedService.getCommunityFeaturedBusinesses",
+          error.message,
+        );
         return [];
       }
 
-      return orderRowsByLinkedEntityIds(linkedIds, (data ?? []) as FeaturedBusinessRow[])
+      return orderRowsByLinkedEntityIds(
+        linkedIds,
+        (data ?? []) as FeaturedBusinessRow[],
+      )
+        .filter((row) => !hasTestProfileIdentity(row.owner_profile))
         .map(mapFeaturedBusinessRow);
     } catch (err) {
       logger.warn(
@@ -355,7 +414,9 @@ export class LandingFeaturedService {
     if (filter.scope === "none") return [];
 
     try {
-      const businesses = await getGastronomyBusinesses({ territoryFilter: filter });
+      const businesses = await getGastronomyBusinesses({
+        territoryFilter: filter,
+      });
       return businesses
         .slice(0, limit)
         .map(mapGastronomyBusinessToFeaturedBusiness);
@@ -384,13 +445,18 @@ export class LandingFeaturedService {
 
     try {
       const businesses = await getGastronomyBusinessesByIds(linkedIds);
-      const orderedBusinesses = orderGastronomyByLinkedBusinessIds(linkedIds, businesses);
+      const orderedBusinesses = orderGastronomyByLinkedBusinessIds(
+        linkedIds,
+        businesses,
+      );
 
       if (orderedBusinesses.length === 0) {
         return this.getFeaturedGastronomyBusinesses(fallbackFilter, limit);
       }
 
-      return orderedBusinesses.slice(0, limit).map(mapGastronomyBusinessToFeaturedBusiness);
+      return orderedBusinesses
+        .slice(0, limit)
+        .map(mapGastronomyBusinessToFeaturedBusiness);
     } catch (err) {
       logger.warn(
         "LandingFeaturedService.getCommunityFeaturedGastronomyBusinesses unexpected",
@@ -409,7 +475,9 @@ export class LandingFeaturedService {
     try {
       let query = landingDb
         .from<FeaturedServiceRow>("professional_data")
-        .select("id, professional_name, service_category, metadata, rating, is_verified, price_range, price_type, hourly_rate, slug")
+        .select(
+          "id, professional_name, service_category, metadata, rating, is_verified, price_range, price_type, hourly_rate, slug, owner_profile:profiles!professional_data_profile_id_fkey(display_name, name, username)",
+        )
         .eq("is_accepting_clients", true)
         .eq("visibility", "public_listed")
         .not("location_id", "is", null)
@@ -422,14 +490,22 @@ export class LandingFeaturedService {
 
       const { data, error } = await query;
       if (error) {
-        logger.warn("LandingFeaturedService.getFeaturedServices", error.message);
+        logger.warn(
+          "LandingFeaturedService.getFeaturedServices",
+          error.message,
+        );
         return [];
       }
 
       const rows = (data ?? []) as FeaturedServiceRow[];
-      return rows.map(mapFeaturedServiceRow);
+      return rows
+        .filter((row) => !hasTestProfileIdentity(row.owner_profile))
+        .map(mapFeaturedServiceRow);
     } catch (err) {
-      logger.warn("LandingFeaturedService.getFeaturedServices unexpected", getErrorMessage(err));
+      logger.warn(
+        "LandingFeaturedService.getFeaturedServices unexpected",
+        getErrorMessage(err),
+      );
       return [];
     }
   }
@@ -439,7 +515,11 @@ export class LandingFeaturedService {
     fallbackFilter: TerritoryFilter,
     limit = 4,
   ): Promise<FeaturedService[]> {
-    const linkedIds = await getLinkedEntityIds(communityId, "professional", limit);
+    const linkedIds = await getLinkedEntityIds(
+      communityId,
+      "professional",
+      limit,
+    );
     if (!linkedIds) {
       return this.getFeaturedServices(fallbackFilter, limit);
     }
@@ -447,17 +527,26 @@ export class LandingFeaturedService {
     try {
       const { data, error } = await landingDb
         .from<FeaturedServiceRow>("professional_data")
-        .select("id, professional_name, service_category, metadata, rating, is_verified, price_range, price_type, hourly_rate, slug")
+        .select(
+          "id, professional_name, service_category, metadata, rating, is_verified, price_range, price_type, hourly_rate, slug, owner_profile:profiles!professional_data_profile_id_fkey(display_name, name, username)",
+        )
         .eq("is_accepting_clients", true)
         .eq("visibility", "public_listed")
         .in("id", linkedIds);
 
       if (error) {
-        logger.warn("LandingFeaturedService.getCommunityFeaturedServices", error.message);
+        logger.warn(
+          "LandingFeaturedService.getCommunityFeaturedServices",
+          error.message,
+        );
         return [];
       }
 
-      return orderRowsByLinkedEntityIds(linkedIds, (data ?? []) as FeaturedServiceRow[])
+      return orderRowsByLinkedEntityIds(
+        linkedIds,
+        (data ?? []) as FeaturedServiceRow[],
+      )
+        .filter((row) => !hasTestProfileIdentity(row.owner_profile))
         .map(mapFeaturedServiceRow);
     } catch (err) {
       logger.warn(
@@ -478,7 +567,8 @@ export class LandingFeaturedService {
       // eslint-disable-next-line ssot/no-direct-classified-access
       let query = landingDb
         .from<FeaturedClassifiedRow>("classifieds")
-        .select(`
+        .select(
+          `
           id,
           title,
           description,
@@ -492,7 +582,8 @@ export class LandingFeaturedService {
           classified_categories(slug),
           classified_subcategories(slug),
           seller_profile:profiles!classifieds_profile_id_fkey(display_name, name, username)
-        `)
+        `,
+        )
         .eq("status", "active")
         .order("created_at", { ascending: false })
         .limit(limit);
@@ -501,14 +592,22 @@ export class LandingFeaturedService {
 
       const { data, error } = await query;
       if (error) {
-        logger.warn("LandingFeaturedService.getFeaturedClassifieds", error.message);
+        logger.warn(
+          "LandingFeaturedService.getFeaturedClassifieds",
+          error.message,
+        );
         return [];
       }
 
       const rows = (data ?? []) as FeaturedClassifiedRow[];
-      return rows.filter((row) => !isTestClassifiedRow(row)).map(mapFeaturedClassifiedRow);
+      return rows
+        .filter((row) => !isTestClassifiedRow(row))
+        .map(mapFeaturedClassifiedRow);
     } catch (err) {
-      logger.warn("LandingFeaturedService.getFeaturedClassifieds unexpected", getErrorMessage(err));
+      logger.warn(
+        "LandingFeaturedService.getFeaturedClassifieds unexpected",
+        getErrorMessage(err),
+      );
       return [];
     }
   }
@@ -518,7 +617,11 @@ export class LandingFeaturedService {
     fallbackFilter: TerritoryFilter,
     limit = 4,
   ): Promise<FeaturedClassified[]> {
-    const linkedIds = await getLinkedEntityIds(communityId, "classified", limit);
+    const linkedIds = await getLinkedEntityIds(
+      communityId,
+      "classified",
+      limit,
+    );
     if (!linkedIds) {
       return this.getFeaturedClassifieds(fallbackFilter, limit);
     }
@@ -527,7 +630,8 @@ export class LandingFeaturedService {
       // eslint-disable-next-line ssot/no-direct-classified-access
       const { data, error } = await landingDb
         .from<FeaturedClassifiedRow>("classifieds")
-        .select(`
+        .select(
+          `
           id,
           title,
           description,
@@ -541,16 +645,23 @@ export class LandingFeaturedService {
           classified_categories(slug),
           classified_subcategories(slug),
           seller_profile:profiles!classifieds_profile_id_fkey(display_name, name, username)
-        `)
+        `,
+        )
         .eq("status", "active")
         .in("id", linkedIds);
 
       if (error) {
-        logger.warn("LandingFeaturedService.getCommunityFeaturedClassifieds", error.message);
+        logger.warn(
+          "LandingFeaturedService.getCommunityFeaturedClassifieds",
+          error.message,
+        );
         return [];
       }
 
-      return orderRowsByLinkedEntityIds(linkedIds, (data ?? []) as FeaturedClassifiedRow[])
+      return orderRowsByLinkedEntityIds(
+        linkedIds,
+        (data ?? []) as FeaturedClassifiedRow[],
+      )
         .filter((row) => !isTestClassifiedRow(row))
         .map(mapFeaturedClassifiedRow);
     } catch (err) {
@@ -562,7 +673,9 @@ export class LandingFeaturedService {
     }
   }
 
-  static async getTerritoryStats(filter: TerritoryFilter): Promise<TerritoryStats> {
+  static async getTerritoryStats(
+    filter: TerritoryFilter,
+  ): Promise<TerritoryStats> {
     if (filter.scope === "none") {
       return { businesses: 0, services: 0, classifieds: 0 };
     }
@@ -599,9 +712,14 @@ export class LandingFeaturedService {
     ]);
 
     return {
-      businesses: businessRes.status === "fulfilled" ? businessRes.value.count ?? 0 : 0,
-      services: serviceRes.status === "fulfilled" ? serviceRes.value.count ?? 0 : 0,
-      classifieds: classifiedRes.status === "fulfilled" ? classifiedRes.value.count ?? 0 : 0,
+      businesses:
+        businessRes.status === "fulfilled" ? (businessRes.value.count ?? 0) : 0,
+      services:
+        serviceRes.status === "fulfilled" ? (serviceRes.value.count ?? 0) : 0,
+      classifieds:
+        classifiedRes.status === "fulfilled"
+          ? (classifiedRes.value.count ?? 0)
+          : 0,
     };
   }
 }

@@ -124,7 +124,8 @@ export function useTerritoryHomeData({
     () =>
       featured.businesses.filter(
         (item) =>
-          !hasTechnicalSeedLabel(item.name) && !hasTechnicalSeedLabel(item.slug),
+          !hasTechnicalSeedLabel(item.name) &&
+          !hasTechnicalSeedLabel(item.slug),
       ),
     [featured.businesses],
   );
@@ -132,7 +133,8 @@ export function useTerritoryHomeData({
     () =>
       featured.services.filter(
         (item) =>
-          !hasTechnicalSeedLabel(item.name) && !hasTechnicalSeedLabel(item.slug),
+          !hasTechnicalSeedLabel(item.name) &&
+          !hasTechnicalSeedLabel(item.slug),
       ),
     [featured.services],
   );
@@ -140,7 +142,8 @@ export function useTerritoryHomeData({
     () =>
       featured.gastronomy.filter(
         (item) =>
-          !hasTechnicalSeedLabel(item.name) && !hasTechnicalSeedLabel(item.slug),
+          !hasTechnicalSeedLabel(item.name) &&
+          !hasTechnicalSeedLabel(item.slug),
       ),
     [featured.gastronomy],
   );
@@ -180,6 +183,21 @@ export function useTerritoryHomeData({
     [highlights.data],
   );
 
+  const loading = {
+    territory: territoryLoading,
+    worthKnowing:
+      territoryLoading ||
+      featured.loading.classifieds ||
+      eventsQuery.isLoading ||
+      opportunitiesQuery.isLoading ||
+      highlights.isLoading,
+    community: territoryLoading || postsQuery.isLoading,
+    usefulPlaces:
+      territoryLoading ||
+      featured.loading.businesses ||
+      featured.loading.services,
+  } as const;
+
   return {
     businesses,
     services,
@@ -190,6 +208,7 @@ export function useTerritoryHomeData({
     happeningSoon,
     opportunities,
     highlights: publicHighlights,
+    loading,
     isLoading:
       territoryLoading ||
       featured.isLoading ||

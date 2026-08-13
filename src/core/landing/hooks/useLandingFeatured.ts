@@ -8,10 +8,13 @@
  * Usa createLandingFeaturedService() como ponto único para dados reais da landing.
  */
 
-import { useQuery } from '@tanstack/react-query';
-import { createLandingFeaturedService } from './createLandingFeaturedService';
-import { isTerritoryFilterReady, territoryFilterKey } from '@/core/location/hooks/useTerritoryFilter';
-import type { TerritoryFilter } from '@/core/location/types';
+import { useQuery } from "@tanstack/react-query";
+import { createLandingFeaturedService } from "./createLandingFeaturedService";
+import {
+  isTerritoryFilterReady,
+  territoryFilterKey,
+} from "@/core/location/hooks/useTerritoryFilter";
+import type { TerritoryFilter } from "@/core/location/types";
 
 const STALE_TIME = 5 * 60 * 1000;
 const FEATURED_LIMIT = 4;
@@ -32,11 +35,13 @@ export function useLandingFeatured(
   const communityId = options.communityId ?? null;
   const includeStats = options.includeStats ?? true;
   const featuredLimit = options.limit ?? FEATURED_LIMIT;
-  const discoveryKey = communityId ? `community:${communityId}` : `territory:${filterKey}`;
+  const discoveryKey = communityId
+    ? `community:${communityId}`
+    : `territory:${filterKey}`;
   const svc = createLandingFeaturedService();
 
   const businesses = useQuery({
-    queryKey: ['landing', 'businesses', discoveryKey, featuredLimit],
+    queryKey: ["landing", "businesses", discoveryKey, featuredLimit],
     queryFn: () =>
       communityId
         ? svc.getCommunityFeaturedBusinesses(communityId, filter, featuredLimit)
@@ -46,7 +51,7 @@ export function useLandingFeatured(
   });
 
   const services = useQuery({
-    queryKey: ['landing', 'services', discoveryKey, featuredLimit],
+    queryKey: ["landing", "services", discoveryKey, featuredLimit],
     queryFn: () =>
       communityId
         ? svc.getCommunityFeaturedServices(communityId, filter, featuredLimit)
@@ -56,41 +61,63 @@ export function useLandingFeatured(
   });
 
   const gastronomy = useQuery({
-    queryKey: ['landing', 'gastronomy', discoveryKey, featuredLimit],
+    queryKey: ["landing", "gastronomy", discoveryKey, featuredLimit],
     queryFn: () =>
       communityId
-        ? svc.getCommunityFeaturedGastronomyBusinesses(communityId, filter, featuredLimit)
+        ? svc.getCommunityFeaturedGastronomyBusinesses(
+            communityId,
+            filter,
+            featuredLimit,
+          )
         : svc.getFeaturedGastronomyBusinesses(filter, featuredLimit),
     enabled,
     staleTime: STALE_TIME,
   });
 
   const classifieds = useQuery({
-    queryKey: ['landing', 'classifieds', discoveryKey, featuredLimit],
+    queryKey: ["landing", "classifieds", discoveryKey, featuredLimit],
     queryFn: () =>
       communityId
-        ? svc.getCommunityFeaturedClassifieds(communityId, filter, featuredLimit)
+        ? svc.getCommunityFeaturedClassifieds(
+            communityId,
+            filter,
+            featuredLimit,
+          )
         : svc.getFeaturedClassifieds(filter, featuredLimit),
     enabled,
     staleTime: STALE_TIME,
   });
 
   const stats = useQuery({
-    queryKey: ['landing', 'stats', filterKey],
+    queryKey: ["landing", "stats", filterKey],
     queryFn: () => svc.getTerritoryStats(filter),
     enabled: enabled && includeStats,
     staleTime: STALE_TIME,
   });
 
   return {
-    businesses:  businesses.data  ?? [],
-    services:    services.data    ?? [],
-    gastronomy:  gastronomy.data  ?? [],
+    businesses: businesses.data ?? [],
+    services: services.data ?? [],
+    gastronomy: gastronomy.data ?? [],
     classifieds: classifieds.data ?? [],
     stats: stats.data ?? { businesses: 0, services: 0, classifieds: 0 },
+    loading: {
+      businesses: businesses.isLoading,
+      services: services.isLoading,
+      gastronomy: gastronomy.isLoading,
+      classifieds: classifieds.isLoading,
+      stats: includeStats && stats.isLoading,
+    },
+    errors: {
+      businesses: businesses.isError,
+      services: services.isError,
+      gastronomy: gastronomy.isError,
+      classifieds: classifieds.isError,
+      stats: includeStats && stats.isError,
+    },
     isLoading:
       businesses.isLoading ||
-      services.isLoading   ||
+      services.isLoading ||
       gastronomy.isLoading ||
       classifieds.isLoading ||
       (includeStats && stats.isLoading),

@@ -7,22 +7,8 @@ import { lazy } from "react";
 import { createLaunchPausedRoute } from "./launchPausedComponent";
 
 // ============================================================
-// LAYOUT E PROVIDERS
-// ============================================================
-export const AppLayoutSidebar = lazy(() =>
-  import("@/app/components/AppLayoutSidebar").then((m) => ({
-    default: m.AppLayoutSidebar,
-  })),
-);
-
-// ============================================================
 // ROTEAMENTO TERRITORIAL
 // ============================================================
-export const TerritorialLayout = lazy(() =>
-  import("@/core/routing/components/TerritorialLayout").then((m) => ({
-    default: m.TerritorialLayout,
-  })),
-);
 export const CommunityTerritorialShell = lazy(() =>
   import("@/core/routing/components/CommunityTerritorialShell").then((m) => ({
     default: m.CommunityTerritorialShell,
@@ -41,11 +27,6 @@ export const CommunityAliasRoute = lazy(() =>
 export const CommunityEntityAliasRoute = lazy(() =>
   import("@/core/routing/components/CommunityEntityAliasRoute").then((m) => ({
     default: m.CommunityEntityAliasRoute,
-  })),
-);
-export const TerritorialIndexPage = lazy(() =>
-  import("@/core/routing/components/TerritorialIndexPage").then((m) => ({
-    default: m.TerritorialIndexPage,
   })),
 );
 export const TerritorialCommunityPage = lazy(() =>
@@ -122,9 +103,6 @@ export const TerritorialMapPage = lazy(() =>
 // ============================================================
 // PAGINAS PUBLICAS (Landing Pages)
 // ============================================================
-export const PublicCityLandingPage = lazy(
-  () => import("@/app/pages/TerritoryHomePage"),
-);
 export const NationalHubPage = lazy(
   () => import("@/app/pages/NationalHubPage"),
 );

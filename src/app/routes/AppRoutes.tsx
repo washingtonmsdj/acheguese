@@ -12,6 +12,8 @@ import {
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
 } from "@/core/routing/config/territorialRoutePatterns";
 import LaunchPausedPage from "@/app/pages/LaunchPausedPage";
+import RootRouteEntry from "@/app/routes/RootRouteEntry";
+import { AppLayoutRoutes } from "@/app/routes/sections/AppLayoutRoutes";
 
 const QrResolverPage = lazy(() =>
   import("@/core/qr/pages/QrResolverPage").then((module) => ({
@@ -34,7 +36,6 @@ const AboutPage = lazy(() => import("@/app/pages/AboutPage"));
 const ContactPage = lazy(() => import("@/app/pages/ContactPage"));
 const OnboardingPage = lazy(() => import("@/app/pages/OnboardingPage"));
 const ResetPasswordPage = lazy(() => import("@/app/pages/ResetPasswordPage"));
-const RootRouteEntry = lazy(() => import("@/app/routes/RootRouteEntry"));
 const EmpresaCatalogoPublicoPage = lazy(
   () => import("@/modules/business/pages/EmpresaCatalogoPublicoPage"),
 );
@@ -66,12 +67,6 @@ const AdminRoutes = lazy(() =>
     default: module.AdminRoutes,
   })),
 );
-const AppLayoutRoutes = lazy(() =>
-  import("./sections/AppLayoutRoutes").then((module) => ({
-    default: module.AppLayoutRoutes,
-  })),
-);
-
 const PRELAUNCH_LOCKDOWN_ENABLED =
   (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "false") === "true";
 

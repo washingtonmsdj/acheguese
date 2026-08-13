@@ -1,5 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   Check,
@@ -12,9 +20,15 @@ import {
 import { TERRITORY_CONFIG } from "@/config/territory";
 import { boundaryService } from "@/core/geospatial";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
-import { LocationStatus, LocationType, type Location } from "@/core/location/types";
-import { DEFAULT_TILE_STYLE, MapLibreAdapter } from "@/core/maps";
+import {
+  LocationStatus,
+  LocationType,
+  type Location,
+} from "@/core/location/types";
 import type { TerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
+import { DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
+import { geoPathToPublicUrl } from "@/core/routing/utils/territoryUrls";
+import { isTerritoryPubliclyNavigable } from "@/core/routing/utils/territoryVisibility";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { useGeolocation } from "@/shared/hooks/useGeolocation";
@@ -23,6 +37,12 @@ import { normalizeTerritoryText } from "@/shared/utils/slugify";
 
 const OFFICIAL_LOGO_SRC = "/images/logo-icon.png";
 const LS_KEY = "achegue-se:last-city";
+
+const LazyMapLibreAdapter = lazy(() =>
+  import("@/core/maps/components/v3/MapLibreAdapter").then((module) => ({
+    default: module.MapLibreAdapter,
+  })),
+);
 
 interface ReverseGeocodeAddress {
   city?: string;
@@ -75,7 +95,7 @@ const BR_STATE_TO_UF: Record<string, string> = {
   roraima: "RR",
   "santa catarina": "SC",
   "sao paulo": "SP",
-  "sergipe": "SE",
+  sergipe: "SE",
   tocantins: "TO",
 };
 
@@ -173,11 +193,52 @@ const SALVADOR_CITY_BOUNDARY_RING: [number, number][] = [
   [-13.0127, -38.5856],
 ];
 
+const SALVADOR_BOUNDARY_SVG_POINTS = (() => {
+  const latitudes = SALVADOR_CITY_BOUNDARY_RING.map(([latitude]) => latitude);
+  const longitudes = SALVADOR_CITY_BOUNDARY_RING.map(
+    ([, longitude]) => longitude,
+  );
+  const minLatitude = Math.min(...latitudes);
+  const maxLatitude = Math.max(...latitudes);
+  const minLongitude = Math.min(...longitudes);
+  const maxLongitude = Math.max(...longitudes);
+
+  return SALVADOR_CITY_BOUNDARY_RING.map(([latitude, longitude]) => {
+    const x =
+      ((longitude - minLongitude) / (maxLongitude - minLongitude)) * 84 + 8;
+    const y = ((maxLatitude - latitude) / (maxLatitude - minLatitude)) * 84 + 8;
+    return `${x.toFixed(2)},${y.toFixed(2)}`;
+  }).join(" ");
+})();
+
+function HomeBoundaryFallback() {
+  return (
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.9),transparent_30%),linear-gradient(145deg,#dcece6,#edf4f1_55%,#dce8e4)]">
+      <svg
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <polygon
+          points={SALVADOR_BOUNDARY_SVG_POINTS}
+          fill="rgba(24,179,126,0.10)"
+          stroke="#18B37E"
+          strokeWidth="1.2"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+    </div>
+  );
+}
+
 function getLaunchCityPaths(): string[] {
   const country = TERRITORY_CONFIG.launch.country || "br";
   const state = TERRITORY_CONFIG.launch.state || "ba";
   const city = TERRITORY_CONFIG.launch.city || "salvador";
-  return Array.from(new Set([`/${country}/${state}/${city}`, `/${state}/${city}`]));
+  return Array.from(
+    new Set([`/${country}/${state}/${city}`, `/${state}/${city}`]),
+  );
 }
 
 async function findLaunchCityLocation(): Promise<Location | null> {
@@ -196,7 +257,10 @@ async function findLaunchCityLocation(): Promise<Location | null> {
 
   return (
     locations.find((location) => {
-      if (location.type !== LocationType.CITY || location.status !== LocationStatus.ACTIVE) {
+      if (
+        location.type !== LocationType.CITY ||
+        location.status !== LocationStatus.ACTIVE
+      ) {
         return false;
       }
 
@@ -207,18 +271,23 @@ async function findLaunchCityLocation(): Promise<Location | null> {
       const stateMatches =
         !normalizedState ||
         pathParts.includes(normalizedState) ||
-        normalizeTerritoryText(String(location.metadata?.state_code ?? "")) === normalizedState;
+        normalizeTerritoryText(String(location.metadata?.state_code ?? "")) ===
+          normalizedState;
 
       return cityMatches && stateMatches;
     }) ?? null
   );
 }
 
-function buildOfficialSalvadorCityPolygon(cityName: string): TerritoryPolygon | null {
+function buildOfficialSalvadorCityPolygon(
+  cityName: string,
+): TerritoryPolygon | null {
   if (normalizeTerritoryText(cityName) !== "salvador") return null;
 
   const latitudes = SALVADOR_CITY_BOUNDARY_RING.map(([latitude]) => latitude);
-  const longitudes = SALVADOR_CITY_BOUNDARY_RING.map(([, longitude]) => longitude);
+  const longitudes = SALVADOR_CITY_BOUNDARY_RING.map(
+    ([, longitude]) => longitude,
+  );
 
   return {
     name: cityName,
@@ -280,16 +349,21 @@ function HomeBoundaryPreview() {
         lineWidth: index === 0 ? 3 : 2,
         lineOpacity: index === 0 ? 0.95 : 0.55,
       }));
-      const fallback = storedPolygons.length === 0
-        ? buildOfficialSalvadorCityPolygon(homeCity.name)
-        : null;
+      const fallback =
+        storedPolygons.length === 0
+          ? buildOfficialSalvadorCityPolygon(homeCity.name)
+          : null;
 
-      setCityPolygons(storedPolygons.length > 0 ? storedPolygons : fallback ? [fallback] : []);
+      setCityPolygons(
+        storedPolygons.length > 0 ? storedPolygons : fallback ? [fallback] : [],
+      );
     };
 
     run().catch(() => {
       if (!cancelled) {
-        const fallback = buildOfficialSalvadorCityPolygon(homeCity?.name ?? "Salvador");
+        const fallback = buildOfficialSalvadorCityPolygon(
+          homeCity?.name ?? "Salvador",
+        );
         setCityPolygons(fallback ? [fallback] : []);
       }
     });
@@ -299,28 +373,27 @@ function HomeBoundaryPreview() {
     };
   }, [homeCity]);
 
-  const territoryPolygons = useMemo(
-    () => cityPolygons,
-    [cityPolygons],
-  );
+  const territoryPolygons = useMemo(() => cityPolygons, [cityPolygons]);
 
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#eef4f0]">
-      <MapLibreAdapter
-        styleUrl={DEFAULT_TILE_STYLE.styleUrl}
-        initialViewport={{ center: PREVIEW_MAP_CENTER, zoom: 9.15 }}
-        territoryPolygons={territoryPolygons}
-        markers={[]}
-        fitTerritoryBounds={territoryPolygons.length > 0}
-        territoryFitPadding={28}
-        territoryFitMaxZoom={9.4}
-        userLocationMarker={{ enabled: false, autoAdd: false }}
-        enableClustering={false}
-        attribution={false}
-        interactive={false}
-        hideNavigationControl
-        className="pointer-events-none h-full w-full"
-      />
+      <Suspense fallback={<HomeBoundaryFallback />}>
+        <LazyMapLibreAdapter
+          styleUrl={DEFAULT_TILE_STYLE.styleUrl}
+          initialViewport={{ center: PREVIEW_MAP_CENTER, zoom: 9.15 }}
+          territoryPolygons={territoryPolygons}
+          markers={[]}
+          fitTerritoryBounds={territoryPolygons.length > 0}
+          territoryFitPadding={28}
+          territoryFitMaxZoom={9.4}
+          userLocationMarker={{ enabled: false, autoAdd: false }}
+          enableClustering={false}
+          attribution={false}
+          interactive={false}
+          hideNavigationControl
+          className="pointer-events-none h-full w-full"
+        />
+      </Suspense>
       <div
         aria-hidden
         className="absolute right-3 top-[3.75rem] z-20 flex max-w-[8.4rem] flex-col items-end gap-1 text-right lg:right-6 lg:top-20 lg:max-w-[9rem]"
@@ -332,8 +405,14 @@ function HomeBoundaryPreview() {
           Salvador em destaque
         </span>
       </div>
-      <div aria-hidden className="absolute inset-x-0 top-0 z-10 h-24 bg-gradient-to-b from-white/80 via-white/35 to-white/0" />
-      <div aria-hidden className="absolute inset-x-0 bottom-0 z-10 h-24 bg-gradient-to-t from-white via-white/42 to-white/0 lg:h-32" />
+      <div
+        aria-hidden
+        className="absolute inset-x-0 top-0 z-10 h-24 bg-gradient-to-b from-white/80 via-white/35 to-white/0"
+      />
+      <div
+        aria-hidden
+        className="absolute inset-x-0 bottom-0 z-10 h-24 bg-gradient-to-t from-white via-white/42 to-white/0 lg:h-32"
+      />
     </div>
   );
 }
@@ -350,7 +429,8 @@ function extractUf(addr: ReverseGeocodeAddress): string | null {
 }
 
 function buildLabel(addr: ReverseGeocodeAddress): string | null {
-  const city = addr.city || addr.town || addr.village || addr.municipality || addr.suburb;
+  const city =
+    addr.city || addr.town || addr.village || addr.municipality || addr.suburb;
   const uf = extractUf(addr);
   if (city && uf) return `${city}, ${uf}`;
   if (city) return city;
@@ -363,7 +443,10 @@ async function reverseGeocode(
   signal: AbortSignal,
 ): Promise<string | null> {
   const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1&accept-language=pt-BR`;
-  const res = await fetch(url, { headers: { Accept: "application/json" }, signal });
+  const res = await fetch(url, {
+    headers: { Accept: "application/json" },
+    signal,
+  });
   if (!res.ok) return null;
   const data = (await res.json()) as { address?: ReverseGeocodeAddress };
   return buildLabel(data.address ?? {});
@@ -385,7 +468,10 @@ async function searchCities(
     `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1` +
     `&countrycodes=br&featuretype=city&limit=6&accept-language=pt-BR` +
     `&city=${encodeURIComponent(query)}`;
-  const res = await fetch(url, { headers: { Accept: "application/json" }, signal });
+  const res = await fetch(url, {
+    headers: { Accept: "application/json" },
+    signal,
+  });
   if (!res.ok) return [];
   const data = (await res.json()) as NominatimSearchItem[];
   const seen = new Set<string>();
@@ -441,6 +527,34 @@ function formatGeolocationError(err: string | null): string | null {
   return err;
 }
 
+async function resolvePublicTerritoryPath(
+  label: string,
+): Promise<string | null> {
+  const normalizedLabel = normalizeTerritoryText(label.split(",")[0] ?? label);
+  if (!normalizedLabel) return null;
+  if (normalizedLabel === "salvador") return PUBLIC_SALVADOR_PATH;
+
+  const knownPath = PUBLIC_SALVADOR_DISTRICT_PATHS[normalizedLabel];
+  if (knownPath) return knownPath;
+
+  const launchCity = await findLaunchCityLocation();
+  if (!launchCity) return null;
+
+  const location = await createLocationRepository().findBySlugWithinParent(
+    normalizedLabel,
+    launchCity.id,
+  );
+  if (
+    !location ||
+    location.status !== LocationStatus.ACTIVE ||
+    !isTerritoryPubliclyNavigable(location.metadata)
+  ) {
+    return null;
+  }
+
+  return geoPathToPublicUrl(location.geographic_path);
+}
+
 export default function AchegueSeHomePage() {
   const navigate = useNavigate();
   const geo = useGeolocation();
@@ -457,8 +571,11 @@ export default function AchegueSeHomePage() {
   }, []);
 
   const [cityQuery, setCityQuery] = useState<string>(initial.query);
-  const [resolved, setResolved] = useState<ResolvedLocation | null>(initial.resolved);
+  const [resolved, setResolved] = useState<ResolvedLocation | null>(
+    initial.resolved,
+  );
   const [resolvingCity, setResolvingCity] = useState(false);
+  const [openingTerritory, setOpeningTerritory] = useState(false);
   const [reverseError, setReverseError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -470,14 +587,17 @@ export default function AchegueSeHomePage() {
   const canSubmitCity = useMemo(() => cityQuery.trim().length > 1, [cityQuery]);
   const geoErrorLabel = formatGeolocationError(geo.error);
 
-  const persistCity = useCallback((label: string, coords?: ResolvedLocation | null) => {
-    try {
-      const payload = coords ? coords : { label };
-      window.localStorage.setItem(LS_KEY, JSON.stringify(payload));
-    } catch {
-      // Local storage is optional for this entry flow.
-    }
-  }, []);
+  const persistCity = useCallback(
+    (label: string, coords?: ResolvedLocation | null) => {
+      try {
+        const payload = coords ? coords : { label };
+        window.localStorage.setItem(LS_KEY, JSON.stringify(payload));
+      } catch {
+        // Local storage is optional for this entry flow.
+      }
+    },
+    [],
+  );
 
   const cancelPendingRequests = useCallback(() => {
     reverseAbortRef.current?.abort();
@@ -517,11 +637,33 @@ export default function AchegueSeHomePage() {
     };
   }, [cityQuery]);
 
-  const goToOnboarding = (label?: string, coords?: ResolvedLocation | null) => {
+  const openResolvedTerritory = async (
+    label?: string,
+    coords?: ResolvedLocation | null,
+  ) => {
     const finalLabel = (label ?? cityQuery).trim();
     if (!finalLabel) return;
-    persistCity(finalLabel, coords ?? resolved);
-    navigate("/onboarding");
+
+    setOpeningTerritory(true);
+    setReverseError(null);
+    try {
+      const path = await resolvePublicTerritoryPath(finalLabel);
+      if (!path) {
+        setReverseError(
+          "Este territÃ³rio ainda nÃ£o estÃ¡ disponÃ­vel para exploraÃ§Ã£o pÃºblica. VocÃª pode entrar por Salvador enquanto ampliamos a cobertura.",
+        );
+        return;
+      }
+
+      persistCity(finalLabel, coords ?? resolved);
+      navigate(path);
+    } catch {
+      setReverseError(
+        "NÃ£o foi possÃ­vel confirmar este territÃ³rio agora. Tente novamente ou explore Salvador.",
+      );
+    } finally {
+      setOpeningTerritory(false);
+    }
   };
 
   const openPublicTerritory = (path: string, label: string) => {
@@ -567,11 +709,15 @@ export default function AchegueSeHomePage() {
               lng: pos.coords.longitude,
             });
           } else {
-            setReverseError("Nao foi possivel identificar sua cidade automaticamente.");
+            setReverseError(
+              "Nao foi possivel identificar sua cidade automaticamente.",
+            );
           }
         } catch (err) {
           if ((err as Error).name !== "AbortError") {
-            setReverseError("Falha ao consultar o servico de localizacao. Tente novamente.");
+            setReverseError(
+              "Falha ao consultar o servico de localizacao. Tente novamente.",
+            );
           }
         } finally {
           if (!controller.signal.aborted) setResolvingCity(false);
@@ -634,20 +780,37 @@ export default function AchegueSeHomePage() {
         >
           <div className="th-live-card relative block h-[238px] min-h-[238px] select-none overflow-hidden rounded-b-[26px] border-0 bg-[#e8f1ee] shadow-[0_18px_48px_rgba(15,23,42,0.13)] sm:h-[276px] lg:h-[min(500px,calc(100dvh-6rem))] lg:min-h-[440px] lg:rounded-[30px]">
             <HomeBoundaryPreview />
-            <div aria-hidden className="absolute inset-x-0 top-0 z-10 h-24 bg-gradient-to-b from-white/78 via-white/38 to-white/0" />
-            <div aria-hidden className="absolute inset-x-0 bottom-0 z-10 h-20 bg-gradient-to-t from-white via-white/42 to-white/0 lg:h-32" />
+            <div
+              aria-hidden
+              className="absolute inset-x-0 top-0 z-10 h-24 bg-gradient-to-b from-white/78 via-white/38 to-white/0"
+            />
+            <div
+              aria-hidden
+              className="absolute inset-x-0 bottom-0 z-10 h-20 bg-gradient-to-t from-white via-white/42 to-white/0 lg:h-32"
+            />
 
             <header
               className="absolute left-4 top-[max(0.75rem,env(safe-area-inset-top))] z-30 flex w-fit max-w-[calc(100%-2rem)] items-center gap-2 rounded-full bg-white py-1.5 pl-1.5 pr-4 shadow-[0_14px_34px_rgba(15,23,42,0.20)] ring-1 ring-slate-950/10 backdrop-blur-md lg:left-6 lg:top-6 lg:gap-2.5 lg:pr-5"
               aria-label="Achegue-se"
             >
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f4fbf8] shadow-[inset_0_0_0_1px_rgba(24,179,126,0.18)] lg:h-10 lg:w-10">
-                <img src={OFFICIAL_LOGO_SRC} alt="" aria-hidden className="h-6 w-6 object-contain lg:h-7 lg:w-7" />
+                <img
+                  src={OFFICIAL_LOGO_SRC}
+                  alt=""
+                  aria-hidden
+                  className="h-6 w-6 object-contain lg:h-7 lg:w-7"
+                />
               </span>
               <span className="font-heading text-[20px] font-bold leading-none tracking-normal text-slate-950 lg:text-[23px]">
                 Achegue-<span className="text-[#18B37E]">se</span>
               </span>
             </header>
+            <Link
+              to="/login"
+              className="absolute right-4 top-[max(0.9rem,env(safe-area-inset-top))] z-30 inline-flex h-9 items-center rounded-full bg-slate-950/85 px-3.5 text-xs font-semibold text-white shadow-lg backdrop-blur-md transition hover:bg-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18B37E] lg:right-6 lg:top-7"
+            >
+              Entrar
+            </Link>
 
             <div
               className="th-live-copy absolute z-20 p-0"
@@ -657,13 +820,20 @@ export default function AchegueSeHomePage() {
                 width: "min(9rem, calc(100% - 2rem))",
               }}
             >
-              <ul className="th-live-status-list grid justify-items-start gap-[0.12rem]" aria-label="Território disponível no Achegue-se">
+              <ul
+                className="th-live-status-list grid justify-items-start gap-[0.12rem]"
+                aria-label="Território disponível no Achegue-se"
+              >
                 <li
                   className="th-live-status flex w-fit max-w-full items-center gap-[0.24rem] rounded-[0.54rem] border border-white/90 bg-white/95 px-[0.24rem] py-[0.16rem] shadow-[0_6px_14px_rgba(15,23,42,0.07)] backdrop-blur-sm"
                   style={homeStatusCardStyle}
                 >
                   <span className="th-live-status-icon inline-flex h-[1.06rem] w-[1.06rem] shrink-0 items-center justify-center rounded-[0.38rem] bg-primary/10 text-primary">
-                    <MapPin className="h-[0.64rem] w-[0.64rem]" aria-hidden strokeWidth={2.25} />
+                    <MapPin
+                      className="h-[0.64rem] w-[0.64rem]"
+                      aria-hidden
+                      strokeWidth={2.25}
+                    />
                   </span>
                   <span className="min-w-0">
                     <span className="block truncate text-[9.4px] font-bold leading-tight text-slate-950">
@@ -706,7 +876,9 @@ export default function AchegueSeHomePage() {
               ) : (
                 <Navigation className="h-5 w-5" />
               )}
-              {resolvingCity ? "Identificando local..." : "Usar minha localização"}
+              {resolvingCity
+                ? "Identificando local..."
+                : "Usar minha localização"}
             </Button>
 
             <div className="relative">
@@ -727,7 +899,7 @@ export default function AchegueSeHomePage() {
                 onKeyDown={(event) => {
                   if (event.key === "Enter" && canSubmitCity) {
                     setShowSuggestions(false);
-                    goToOnboarding();
+                    void openResolvedTerritory();
                   }
                   if (event.key === "Escape") setShowSuggestions(false);
                 }}
@@ -746,8 +918,8 @@ export default function AchegueSeHomePage() {
               <button
                 type="button"
                 aria-label="Confirmar local"
-                onClick={() => goToOnboarding()}
-                disabled={!canSubmitCity}
+                onClick={() => void openResolvedTerritory()}
+                disabled={!canSubmitCity || openingTerritory}
                 className={cn(
                   "absolute right-2 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full",
                   "transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18B37E]/60 focus-visible:ring-offset-2",
@@ -756,7 +928,11 @@ export default function AchegueSeHomePage() {
                     : "text-slate-300",
                 )}
               >
-                <ArrowRight className="h-5 w-5" />
+                {openingTerritory ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <ArrowRight className="h-5 w-5" />
+                )}
               </button>
 
               {showSuggestions && suggestions.length > 0 ? (
@@ -787,7 +963,9 @@ export default function AchegueSeHomePage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => openPublicTerritory(PUBLIC_SALVADOR_PATH, "Salvador")}
+              onClick={() =>
+                openPublicTerritory(PUBLIC_SALVADOR_PATH, "Salvador")
+              }
               className="h-11 w-full rounded-[1rem] border-[#18B37E]/25 bg-white/80 text-[13.5px] font-semibold text-[#13845f] shadow-[0_8px_18px_rgba(15,23,42,0.06)] transition-all hover:border-[#18B37E]/45 hover:bg-[#18B37E]/[0.06] active:scale-[0.98]"
             >
               Ver Salvador inteira
@@ -806,8 +984,8 @@ export default function AchegueSeHomePage() {
                     <p className="mt-0.5 truncate text-sm font-semibold text-slate-950">
                       {resolved.label}
                     </p>
-                    <p className="mt-0.5 text-[11px] tabular-nums text-slate-500">
-                      {resolved.lat.toFixed(5)} / {resolved.lng.toFixed(5)}
+                    <p className="mt-0.5 text-[11px] text-slate-500">
+                      Pronto para abrir o contexto pÃºblico disponÃ­vel.
                     </p>
                   </div>
                   <button
@@ -822,7 +1000,10 @@ export default function AchegueSeHomePage() {
                 <Button
                   type="button"
                   size="sm"
-                  onClick={() => goToOnboarding(resolved.label, resolved)}
+                  onClick={() =>
+                    void openResolvedTerritory(resolved.label, resolved)
+                  }
+                  disabled={openingTerritory}
                   className="mt-3 h-11 w-full gap-2 rounded-xl bg-[#18B37E] text-white transition-transform hover:bg-[#149f70] active:scale-[0.98]"
                 >
                   <Check className="h-4 w-4" />
@@ -842,10 +1023,17 @@ export default function AchegueSeHomePage() {
 
             <div className="space-y-1.5 pt-0.5">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-[12px] font-medium text-slate-500">Territórios sugeridos</p>
-                <p className="text-[11px] font-medium text-slate-400">Acesso público</p>
+                <p className="text-[12px] font-medium text-slate-500">
+                  Territórios sugeridos
+                </p>
+                <p className="text-[11px] font-medium text-slate-400">
+                  Acesso público
+                </p>
               </div>
-              <div className="flex flex-wrap gap-1.5" aria-label="Sugestoes de local">
+              <div
+                className="flex flex-wrap gap-1.5"
+                aria-label="Sugestoes de local"
+              >
                 {recentSuggestions.map((label) => (
                   <button
                     key={label}
@@ -853,7 +1041,10 @@ export default function AchegueSeHomePage() {
                     onClick={() => handleSeedSuggestion(label)}
                     className="rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-[11.5px] font-medium text-slate-700 shadow-sm transition-colors hover:border-[#18B37E]/40 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#18B37E]/30"
                   >
-                    <span className="mr-1 inline-block text-[#18B37E]" aria-hidden>
+                    <span
+                      className="mr-1 inline-block text-[#18B37E]"
+                      aria-hidden
+                    >
                       📍
                     </span>
                     {label}

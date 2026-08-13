@@ -19,7 +19,7 @@ vi.mock("@/core/ai", async () => {
       loading?: boolean;
     }) => (
       <div data-testid="ai-results">
-        {loading ? "loading" : error ?? "results"}
+        {loading ? "loading" : (error ?? "results")}
       </div>
     ),
     useAISearch: () => ({
@@ -99,11 +99,13 @@ describe("BuscarPage", () => {
   });
 
   it("hydrates q from the URL and searches inside the resolved community territory", async () => {
-    renderSearchPage("/busca/ba/salvador/complexo-do-nordeste-de-amaralina?q=pizzaria");
+    renderSearchPage(
+      "/busca/ba/salvador/complexo-do-nordeste-de-amaralina?q=pizzaria",
+    );
 
     expect(screen.getByLabelText("Busca inteligente")).toHaveValue("pizzaria");
     expect(
-      screen.getByText("Território aplicado: Complexo do Nordeste de Amaralina"),
+      screen.getByText("Procurando em: Complexo do Nordeste de Amaralina"),
     ).toBeInTheDocument();
 
     await waitFor(() => {

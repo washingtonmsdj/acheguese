@@ -13,6 +13,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
 import { SEO } from "@/app/components/SEO";
 import PreLaunchLandingPage from "@/app/pages/PreLaunchLandingPage";
+import { AppRoutes } from "@/app/routes/AppRoutes";
 import { AdminRoutes } from "@/app/routes/sections/AdminRoutes";
 import { queryClient } from "@/shared/utils/queryClient";
 import { FullScreenLoader } from "@/shared/components/loading/PageLoader";
@@ -37,15 +38,11 @@ const AuthHashRedirect = lazy(() =>
 );
 
 const TerritoryModeInitializer = lazy(() =>
-  import("@/core/location/components/TerritoryModeInitializer").then((module) => ({
-    default: module.TerritoryModeInitializer,
-  })),
-);
-
-const AppRoutes = lazy(() =>
-  import("@/app/routes/AppRoutes").then((module) => ({
-    default: module.AppRoutes,
-  })),
+  import("@/core/location/components/TerritoryModeInitializer").then(
+    (module) => ({
+      default: module.TerritoryModeInitializer,
+    }),
+  ),
 );
 
 const LoginPage = lazy(() => import("@/app/pages/LoginPage"));
@@ -69,7 +66,11 @@ function PreLaunchRoutes() {
 function PreLaunchLoginRoute() {
   const { search } = useLocation();
   const redirect = new URLSearchParams(search).get("redirect") ?? "";
-  return redirect.startsWith("/admin") ? <LoginPage /> : <Navigate to="/" replace />;
+  return redirect.startsWith("/admin") ? (
+    <LoginPage />
+  ) : (
+    <Navigate to="/" replace />
+  );
 }
 
 export function AppRuntime() {

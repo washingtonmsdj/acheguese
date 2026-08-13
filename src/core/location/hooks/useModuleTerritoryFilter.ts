@@ -1,17 +1,17 @@
-import { useMemo } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { TERRITORY_CONFIG } from '@/config/territory';
-import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
-import { isPublicTerritoryFallbackLocation } from '@/core/routing/utils/publicTerritoryFallbacks';
-import { isValidUUID } from '@/shared/utils/validation';
-import { createLocationRepository } from '../repositories/createLocationRepository';
-import { useResolvedUserLocation } from './useResolvedUserLocation';
-import { useUserTerritory } from './useUserTerritory';
-import type { Location, TerritoryFilter } from '../types';
-import { LocationStatus } from '../types';
+import { useMemo } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { TERRITORY_CONFIG } from "@/config/territory";
+import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import { isPublicTerritoryFallbackLocation } from "@/core/routing/utils/publicTerritoryFallbacks";
+import { isValidUUID } from "@/shared/utils/validation";
+import { createLocationRepository } from "../repositories/createLocationRepository";
+import { useResolvedUserLocation } from "./useResolvedUserLocation";
+import { useUserTerritory } from "./useUserTerritory";
+import type { Location, TerritoryFilter } from "../types";
+import { LocationStatus } from "../types";
 
-export type ModuleTerritorySource = 'url' | 'filter' | 'nearby' | 'fallback';
+export type ModuleTerritorySource = "url" | "filter" | "nearby" | "fallback";
 
 export interface ModuleTerritoryUiFilter {
   stateSlug?: string | null;
@@ -56,8 +56,8 @@ interface RouteParams {
 }
 
 function publicPathToGeoPath(path: string): string {
-  const clean = path.replace(/^\/+/, '');
-  return clean.startsWith('br/') ? `/${clean}` : `/br/${clean}`;
+  const clean = path.replace(/^\/+/, "");
+  return clean.startsWith("br/") ? `/${clean}` : `/br/${clean}`;
 }
 
 function getRouteLocation(
@@ -70,7 +70,7 @@ function getRouteLocation(
 } {
   if (!routeResolved) return { location: null, ids: [], label: null };
 
-  if (routeResolved.kind === 'location') {
+  if (routeResolved.kind === "location") {
     return {
       location: routeResolved.location,
       ids: [routeResolved.location.id],
@@ -108,13 +108,13 @@ export function useModuleTerritoryFilter({
   routeResolved,
   activeMemberIds,
   uiFilter,
-  searchParamKeys = ['location', 'bairro'],
+  searchParamKeys = ["location", "bairro"],
   nearbyEnabled = true,
   includeDescendants = true,
 }: UseModuleTerritoryFilterOptions = {}): ModuleTerritoryFilterResult {
   const routeParams = useParams() as Readonly<RouteParams>;
   const [searchParams] = useSearchParams();
-  const userTerritory = useUserTerritory();
+  const userTerritory = useUserTerritory({ enabled: nearbyEnabled });
   const nearbyLocation = useResolvedUserLocation({
     autoResolve: nearbyEnabled,
     tryGps: nearbyEnabled,
@@ -127,11 +127,13 @@ export function useModuleTerritoryFilter({
   const isFallbackRouteResolved = useMemo(() => {
     if (!routeResolved) return false;
 
-    if (routeResolved.kind === 'location') {
+    if (routeResolved.kind === "location") {
       return isPublicTerritoryFallbackLocation(routeResolved.location);
     }
 
-    return routeResolved.group.members.some((member) => isPublicTerritoryFallbackLocation(member));
+    return routeResolved.group.members.some((member) =>
+      isPublicTerritoryFallbackLocation(member),
+    );
   }, [routeResolved]);
 
   const queryLocationSlug = searchParamKeys
@@ -155,14 +157,16 @@ export function useModuleTerritoryFilter({
   }, [isFallbackRouteResolved, routeLocation.location]);
 
   const effectiveFilterPath = canonicalFallbackPath ?? filterPath;
+  const hasResolvedRouteLocation =
+    routeLocation.ids.length > 0 && !isFallbackRouteResolved;
 
   const { data: filterLocation, isLoading: isFilterLoading } = useQuery({
-    queryKey: ['module-territory-filter', 'filter', effectiveFilterPath],
+    queryKey: ["module-territory-filter", "filter", effectiveFilterPath],
     queryFn: async () => {
       if (!effectiveFilterPath) return null;
       return createLocationRepository().findByPath(effectiveFilterPath);
     },
-    enabled: Boolean(effectiveFilterPath),
+    enabled: Boolean(effectiveFilterPath) && !hasResolvedRouteLocation,
     staleTime: 10 * 60 * 1000,
   });
 
@@ -171,8 +175,9 @@ export function useModuleTerritoryFilter({
   );
 
   const { data: fallbackLocation, isLoading: isFallbackLoading } = useQuery({
-    queryKey: ['module-territory-filter', 'fallback', fallbackPath],
+    queryKey: ["module-territory-filter", "fallback", fallbackPath],
     queryFn: () => createLocationRepository().findByPath(fallbackPath),
+    enabled: !hasResolvedRouteLocation,
     staleTime: 30 * 60 * 1000,
   });
 
@@ -195,18 +200,20 @@ export function useModuleTerritoryFilter({
   const selected = useMemo<SelectedTerritoryCandidate>(() => {
     if (canonicalRouteLocation.ids.length > 0) {
       return {
-        source: 'url' as const,
+        source: "url" as const,
         location: canonicalRouteLocation.location,
         ids: canonicalRouteLocation.ids,
-        label: canonicalRouteLocation.label ?? 'Localidade',
+        label: canonicalRouteLocation.label ?? "Localidade",
         centerCoords: null,
-        path: canonicalRouteLocation.location?.geographic_path ?? effectiveFilterPath,
+        path:
+          canonicalRouteLocation.location?.geographic_path ??
+          effectiveFilterPath,
       };
     }
 
     if (filterLocation?.status === LocationStatus.ACTIVE) {
       return {
-        source: 'filter' as const,
+        source: "filter" as const,
         location: filterLocation,
         ids: [filterLocation.id],
         label: filterLocation.name,
@@ -219,10 +226,10 @@ export function useModuleTerritoryFilter({
       const gpsLocationId = nearbyLocation.location?.locationId;
       if (gpsLocationId) {
         return {
-          source: 'nearby' as const,
+          source: "nearby" as const,
           location: null,
           ids: [gpsLocationId],
-          label: 'Perto de voce',
+          label: "Perto de voce",
           centerCoords: nearbyLocation.coords,
           path: null,
         };
@@ -231,7 +238,7 @@ export function useModuleTerritoryFilter({
 
     if (nearbyEnabled && userTerritory.homeDistrict) {
       return {
-        source: 'nearby' as const,
+        source: "nearby" as const,
         location: null,
         ids: [userTerritory.homeDistrict.id],
         label: userTerritory.homeDistrict.name,
@@ -242,7 +249,7 @@ export function useModuleTerritoryFilter({
 
     if (nearbyEnabled && userTerritory.homeCity) {
       return {
-        source: 'nearby' as const,
+        source: "nearby" as const,
         location: null,
         ids: [userTerritory.homeCity.id],
         label: userTerritory.homeCity.name,
@@ -253,7 +260,7 @@ export function useModuleTerritoryFilter({
 
     if (fallbackLocation) {
       return {
-        source: 'fallback' as const,
+        source: "fallback" as const,
         location: fallbackLocation,
         ids: [fallbackLocation.id],
         label: fallbackLocation.name,
@@ -263,7 +270,7 @@ export function useModuleTerritoryFilter({
     }
 
     return {
-      source: 'fallback' as const,
+      source: "fallback" as const,
       location: null,
       ids: [] as string[],
       label: TERRITORY_CONFIG.launch.name,
@@ -283,7 +290,10 @@ export function useModuleTerritoryFilter({
   ]);
 
   const canonicalSelectedPath = useMemo(() => {
-    if (selected.location && !isPublicTerritoryFallbackLocation(selected.location)) {
+    if (
+      selected.location &&
+      !isPublicTerritoryFallbackLocation(selected.location)
+    ) {
       return null;
     }
 
@@ -294,8 +304,15 @@ export function useModuleTerritoryFilter({
     return selected.location?.geographic_path ?? null;
   }, [selected.location, selected.path]);
 
-  const { data: canonicalSelectedLocation, isLoading: isCanonicalSelectedLoading } = useQuery({
-    queryKey: ['module-territory-filter', 'selected-fallback', canonicalSelectedPath],
+  const {
+    data: canonicalSelectedLocation,
+    isLoading: isCanonicalSelectedLoading,
+  } = useQuery({
+    queryKey: [
+      "module-territory-filter",
+      "selected-fallback",
+      canonicalSelectedPath,
+    ],
     queryFn: async () => {
       if (!canonicalSelectedPath) return null;
       return createLocationRepository().findByPath(canonicalSelectedPath);
@@ -304,16 +321,15 @@ export function useModuleTerritoryFilter({
     staleTime: 10 * 60 * 1000,
   });
 
-  const isAwaitingCanonicalSelected = Boolean(canonicalSelectedPath) && isCanonicalSelectedLoading;
+  const isAwaitingCanonicalSelected =
+    Boolean(canonicalSelectedPath) && isCanonicalSelectedLoading;
 
   const normalizedSelected = useMemo(() => {
     if (
       !canonicalSelectedLocation ||
       canonicalSelectedLocation.status !== LocationStatus.ACTIVE ||
-      (
-        selected.location !== null &&
-        !isPublicTerritoryFallbackLocation(selected.location)
-      )
+      (selected.location !== null &&
+        !isPublicTerritoryFallbackLocation(selected.location))
     ) {
       return selected;
     }
@@ -330,10 +346,19 @@ export function useModuleTerritoryFilter({
     normalizedSelected.ids.length === 1 &&
     isValidUUID(normalizedSelected.ids[0]);
 
-  const { data: descendantIds = normalizedSelected.ids, isLoading: isDescendantsLoading } = useQuery({
-    queryKey: ['module-territory-filter', 'descendants', normalizedSelected.ids, includeDescendants],
+  const {
+    data: descendantIds = normalizedSelected.ids,
+    isLoading: isDescendantsLoading,
+  } = useQuery({
+    queryKey: [
+      "module-territory-filter",
+      "descendants",
+      normalizedSelected.ids,
+      includeDescendants,
+    ],
     queryFn: async () => {
-      if (!includeDescendants || normalizedSelected.ids.length !== 1) return normalizedSelected.ids;
+      if (!includeDescendants || normalizedSelected.ids.length !== 1)
+        return normalizedSelected.ids;
       const repo = createLocationRepository();
       const result = await repo.findDescendants(normalizedSelected.ids[0], {
         include_self: true,
@@ -356,13 +381,15 @@ export function useModuleTerritoryFilter({
     !isPublicTerritoryFallbackLocation(normalizedSelected.location)
       ? descendantIds
       : normalizedSelected.ids;
-  const safeResolvedLocationIds = resolvedLocationIds.filter((id) => isValidUUID(id));
+  const safeResolvedLocationIds = resolvedLocationIds.filter((id) =>
+    isValidUUID(id),
+  );
   const territoryFilter: TerritoryFilter =
     safeResolvedLocationIds.length === 0
-      ? { scope: 'none' }
+      ? { scope: "none" }
       : safeResolvedLocationIds.length === 1
-        ? { scope: 'location', location_id: safeResolvedLocationIds[0] }
-        : { scope: 'group', location_ids: safeResolvedLocationIds };
+        ? { scope: "location", location_id: safeResolvedLocationIds[0] }
+        : { scope: "group", location_ids: safeResolvedLocationIds };
 
   return {
     resolvedLocationIds: safeResolvedLocationIds,
@@ -376,8 +403,9 @@ export function useModuleTerritoryFilter({
       isFallbackLoading ||
       isCanonicalSelectedLoading ||
       isAwaitingCanonicalSelected ||
-      (!isPublicTerritoryFallbackLocation(normalizedSelected.location) && isDescendantsLoading) ||
-      userTerritory.loading ||
+      (!isPublicTerritoryFallbackLocation(normalizedSelected.location) &&
+        isDescendantsLoading) ||
+      (nearbyEnabled && userTerritory.loading) ||
       (nearbyEnabled && nearbyLocation.isLoading),
   };
 }

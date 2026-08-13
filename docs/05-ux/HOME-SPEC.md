@@ -1,7 +1,7 @@
 # Territory Home — contrato canônico
 
 > Status: SSOT de produto e implementação da Home territorial.
-> Versão: 3.3 (cobertura territorial + rollout gradual da Community).
+> Versão: 3.3 (cobertura territorial, rollout gradual da Community, polimento e prova E2E).
 > Escopo: entrada territorial, Home pública, navegação primária, regras de composição e relação com rollout da Community.
 
 ## 1. Decisão de produto
@@ -16,16 +16,16 @@ Ela deve ser útil antes de social, funcionar publicamente e ser honesta quando 
 
 ## 2. Contrato de rotas
 
-| Rota | Papel |
-|---|---|
-| `/` | Entrada e resolução territorial. Nunca é a Home de conteúdo. |
-| `/:uf/:cidade` | Home territorial ampla da cidade. |
-| `/:uf/:cidade/:territorio` | Home territorial prioritária de bairro ou grupo resolvido. |
-| `/comunidade/:uf/:cidade[/:territorio]` ou alias público | Community: participação e vida comunitária do contexto. |
-| `/busca/:uf/:cidade[/:territorio]` e `/mapa/...` | Explorar: descoberta, busca e mapa. |
-| `/inicio` | Hub nacional legado; não é alias da Home territorial. |
+| Rota                                                     | Papel                                                        |
+| -------------------------------------------------------- | ------------------------------------------------------------ |
+| `/`                                                      | Entrada e resolução territorial. Nunca é a Home de conteúdo. |
+| `/:uf/:cidade`                                           | Home territorial ampla da cidade.                            |
+| `/:uf/:cidade/:territorio`                               | Home territorial prioritária de bairro ou grupo resolvido.   |
+| `/comunidade/:uf/:cidade[/:territorio]` ou alias público | Community: participação e vida comunitária do contexto.      |
+| `/busca/:uf/:cidade[/:territorio]` e `/mapa/...`         | Explorar: descoberta, busca e mapa.                          |
+| `/inicio`                                                | Hub nacional legado; não é alias da Home territorial.        |
 
-O retorno de `/` pode redirecionar para o último território ou território do perfil. Sem contexto, `/` apresenta um seletor público. Escolher Salvador ou um bairro suportado permite explorar sem cadastro e sem onboarding obrigatório.
+O retorno de `/` pode redirecionar para o último território ou território do perfil. Sem contexto, `/` apresenta um seletor público. Escolher Salvador ou um bairro suportado permite explorar sem cadastro e sem onboarding obrigatório. Texto livre só abre uma Home quando resolve um território ativo e publicamente navegável; falha de resolução nunca empurra o visitante para cadastro.
 
 ## 3. Públicos
 
@@ -85,8 +85,8 @@ A expansão da Community deve ser evidence-gated, considerando demanda/interesse
 3. `Agora`, somente quando houver informação temporalmente atual.
 4. Atalhos contextuais.
 5. `Vale saber em [território]`.
-6. Resumo de Community, respeitando seu rollout independente.
-7. Empresas e serviços úteis.
+6. Empresas e serviços úteis.
+7. Resumo de Community, respeitando seu rollout independente.
 8. Contexto territorial e ampliação bairro → cidade.
 9. Descoberta adicional.
 10. Bottom navigation mobile.
@@ -95,20 +95,22 @@ Se uma seção não tiver conteúdo real, ela deve ser omitida ou exibir um esta
 
 ## 6. Dados e composição
 
-| Bloco | Fonte canônica | Regra |
-|---|---|---|
-| território | `TerritorialLayout` + `useModuleTerritoryFilter` | rota resolvida; cidade inclui descendentes |
-| busca/URLs | builders de `territoryUrls` + hooks de URLs de domínio | todo destino preserva o território |
-| posts | `PostService.getFeed` | somente publicados e recentes para resumo da Home |
-| eventos | `EventReadService` | status permitido **e** data vigente |
-| vagas | `WorkOpportunitiesService` | lifecycle ativo; conjunto de locations resolvido |
-| empresas/serviços/classificados | `LandingFeaturedService` | registros públicos do território |
-| destaques | `TerritorialHighlightService` | ativos e dentro da janela editorial |
-| Community | `CommunityExperienceService` + rollout | ativa somente onde o contrato comunitário estiver liberado; `coming_soon` não bloqueia a Home |
-| publicação | `useCommunityAccess` / `CommunityAccessPolicy` | CTA apenas com `create_post = true` |
-| sessão | `SessionContext` | personalização sem alterar visibilidade pública |
+| Bloco                           | Fonte canônica                                         | Regra                                             |
+| ------------------------------- | ------------------------------------------------------ | ------------------------------------------------- |
+| território                      | `TerritorialLayout` + `useModuleTerritoryFilter`       | rota resolvida; cidade inclui descendentes        |
+| busca/URLs                      | builders de `territoryUrls` + hooks de URLs de domínio | todo destino preserva o território                |
+| posts                           | `PostService.getFeed`                                  | somente publicados e recentes para resumo da Home |
+| eventos                         | `EventReadService`                                     | status permitido **e** data vigente               |
+| vagas                           | `WorkOpportunitiesService`                             | lifecycle ativo; conjunto de locations resolvido  |
+| empresas/serviços/classificados | `LandingFeaturedService`                               | registros públicos do território                  |
+| destaques                       | `TerritorialHighlightService`                          | ativos e dentro da janela editorial               |
+| Community                       | `CommunityExperienceService` + rollout                 | ativa somente onde o contrato comunitário estiver liberado; `coming_soon` não bloqueia a Home |
+| publicação                      | `useCommunityAccess` / `CommunityAccessPolicy`         | CTA apenas com `create_post = true`               |
+| sessão                          | `SessionContext`                                       | personalização sem alterar visibilidade pública   |
 
-Falhas parciais não derrubam a Home. A seção afetada fica vazia e a interface informa que parte dos dados não pôde ser atualizada. Não existe fallback editorial fictício na Home de Production.
+Falhas parciais não derrubam a Home. Cada grupo de dados possui loading independente; conteúdo resolvido aparece sem esperar todas as fontes. A seção afetada fica vazia e a interface informa que parte dos dados não pôde ser atualizada. Não existe fallback editorial fictício na Home de Production.
+
+Entidades econômicas e conteúdo técnico são filtrados por marcadores canônicos já disponíveis e, defensivamente, por identidade pública explicitamente técnica. Nome comercial legítimo não deve ser ocultado por inferência frágil. Enquanto o schema não possuir proveniência explícita (`production`, `seed`, `e2e`), casos ambíguos permanecem uma dívida de dados, não uma licença para inventar classificação na UI.
 
 ## 7. Freshness e veracidade
 
@@ -126,7 +128,7 @@ Falhas parciais não derrubam a Home. A seção afetada fica vazia e a interface
 
 ### Loading
 
-Skeletons preservam a estrutura. Nenhum mock ocupa o lugar do conteúdo.
+Skeletons preservam a estrutura. A resolução territorial bloqueia apenas a fundação da página; depois disso, `Vale saber`, Community e empresas/serviços carregam progressivamente. Nenhum mock ocupa o lugar do conteúdo.
 
 ### Pouca atividade
 
@@ -149,10 +151,12 @@ Não executar queries globais como fallback. Retornar ao fluxo de resolução te
 No mobile, a navegação territorial começa por:
 
 1. `Hoje` → Home do território atual;
-2. `Explorar` → mapa territorial;
+2. `Explorar` → busca e descoberta federada no território atual;
 3. `Community` → participação no mesmo território, respeitando rollout;
-4. `Busca` → busca territorial;
-5. `Mais` → módulos públicos habilitados pelo launch scope.
+4. `Atividade` → notificações do usuário, ou login quando visitante;
+5. `Conta` / `Entrar` → identidade e preferências.
+
+Busca não ocupa uma segunda tab concorrente com Explorar. Mapa, serviços, empresas, classificados e gastronomia permanecem como atalhos contextuais da Home e superfícies de descoberta. `Mais` deixa de ser depósito de módulos: destinos sem prioridade primária devem ser encontrados pela Home, por Explorar ou pelo contexto da Conta.
 
 `Publicar` não é destino global permanente. É ação contextual condicionada à policy e à disponibilidade comunitária do contexto.
 
@@ -180,7 +184,15 @@ No desktop, a Home usa largura real: conteúdo principal e rail lateral com serv
 - loading, erro parcial e vazio são distinguíveis;
 - console não contém erro novo e requests territoriais não falham por URL incorreta.
 
-## 12. Evolução posterior
+## 12. Prova E2E
+
+- a suíte pública intercepta apenas leituras PostgREST no navegador de teste e injeta territórios determinísticos; não existe caminho de fixture no bundle de Production;
+- cidade, bairro com conteúdo, território vazio, busca, troca territorial, refresh, navegação e deep-link são cobertos sem depender do estado corrente do banco;
+- sessão autenticada usa exclusivamente `E2E_USER_EMAIL` e `E2E_USER_PASSWORD` fornecidos ao ambiente; sem essas credenciais o cenário é explicitamente pulado, nunca preenchido com segredo padrão;
+- a suíte não publica Post nem executa mutation;
+- console sem exceção, requests críticos sem HTTP 4xx/5xx e ausência de overflow horizontal fazem parte da prova pública.
+
+## 13. Evolução posterior
 
 - telemetria de utilidade e atalhos semânticos;
 - métricas de demanda para orientar expansão da Community;

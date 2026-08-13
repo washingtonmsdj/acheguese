@@ -38,9 +38,41 @@ export function selectRecentPosts(
 
 export function hasTechnicalSeedLabel(value: string | null | undefined): boolean {
   if (!value) return false;
-  return /(?:^|[\s[\]_-])(?:ai[\s_-]*seed|seed|e2e|mock(?:[\s_-]*data)?|tests?|testes?|demo)(?:$|[\s[\]_-])/i.test(
-    value,
-  );
+
+  const technicalTokens = new Set([
+    "seed",
+    "aiseed",
+    "e2e",
+    "mock",
+    "mockdata",
+    "test",
+    "tests",
+    "teste",
+    "testes",
+    "demo",
+  ]);
+  const tokens: string[] = [];
+  let currentToken = "";
+
+  for (const character of value.toLocaleLowerCase("pt-BR").normalize("NFD")) {
+    const code = character.charCodeAt(0);
+    const isAsciiLetter = code >= 97 && code <= 122;
+    const isDigit = code >= 48 && code <= 57;
+
+    if (isAsciiLetter || isDigit) {
+      currentToken += character;
+      continue;
+    }
+
+    if (currentToken) {
+      tokens.push(currentToken);
+      currentToken = "";
+    }
+  }
+
+  if (currentToken) tokens.push(currentToken);
+
+  return tokens.some((token) => technicalTokens.has(token));
 }
 
 export function isCurrentOrFutureEvent(event: PublicEvent, now: number): boolean {

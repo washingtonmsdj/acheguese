@@ -10,6 +10,10 @@
 import type { ReactNode } from "react";
 import { Navigate, Routes, Route } from "react-router-dom";
 import RootRouteEntry from "@/app/routes/RootRouteEntry";
+import { AppLayoutSidebar } from "@/app/components/AppLayoutSidebar";
+import TerritoryHomePage from "@/app/pages/TerritoryHomePage";
+import { TerritorialIndexPage } from "@/core/routing/components/TerritorialIndexPage";
+import { TerritorialLayout } from "@/core/routing/components/TerritorialLayout";
 import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
 import { LAUNCH_CITY_PATH } from "@/config/territory";
 import {
@@ -291,7 +295,7 @@ export function AppLayoutRoutes() {
   const launchTerritorialLayout = (
     surface: LaunchSurfaceKey,
     moduleName: string,
-  ) => launchElement(surface, moduleName, <P.TerritorialLayout />);
+  ) => launchElement(surface, moduleName, <TerritorialLayout />);
   const protectedElement = (element: ReactNode) => (
     <ProtectedRoute>{element}</ProtectedRoute>
   );
@@ -412,7 +416,7 @@ export function AppLayoutRoutes() {
         <Route path="checkout" element={<P.PremiumBusinessCheckoutPage />} />
       </Route>
 
-      <Route element={<P.AppLayoutSidebar />}>
+      <Route element={<AppLayoutSidebar />}>
         {/* Pagina inicial */}
         {/*
          * Opcao B: Home canonica em /:uf/:cidade da cidade de lancamento.
@@ -853,7 +857,7 @@ export function AppLayoutRoutes() {
         {/* Detalhe com territorio (4 segmentos): /pontos-turisticos/:state/:city/:district/:slug */}
         <Route
           path={touristPointPublicRoutes.detailWithTerritoryRoutePath()}
-          element={<P.TerritorialLayout />}
+          element={<TerritorialLayout />}
         >
           <Route index element={<P.GuideTouristPointDetailPage />} />
         </Route>
@@ -861,7 +865,7 @@ export function AppLayoutRoutes() {
         {/* Rota territorial de 3 segmentos: listagem de distrito/grupo ou detalhe sem distrito */}
         <Route
           path={touristPointPublicRoutes.districtOrDetailRoutePath()}
-          element={<P.TerritorialLayout />}
+          element={<TerritorialLayout />}
         >
           <Route index element={<P.TouristPointRouteResolver />} />
         </Route>
@@ -869,7 +873,7 @@ export function AppLayoutRoutes() {
         {/* Listagem cidade (2 segmentos): /pontos-turisticos/:state/:city */}
         <Route
           path={touristPointPublicRoutes.cityRoutePath()}
-          element={<P.TerritorialLayout />}
+          element={<TerritorialLayout />}
         >
           <Route index element={<P.GuideTouristPointsPage />} />
         </Route>
@@ -882,27 +886,23 @@ export function AppLayoutRoutes() {
         {/* Landing territorial generico */}
         <Route
           path={buildTerritorialBareRoutePath([TERRITORIAL_PARAMS.district])}
-          element={<P.TerritorialLayout />}
+          element={<TerritorialLayout />}
         >
           <Route
             index
             element={
-              <P.TerritorialIndexPage
-                CityLandingComponent={P.PublicCityLandingPage}
-              />
+              <TerritorialIndexPage CityLandingComponent={TerritoryHomePage} />
             }
           />
         </Route>
         <Route
           path={buildTerritorialBareRoutePath()}
-          element={<P.TerritorialLayout />}
+          element={<TerritorialLayout />}
         >
           <Route
             index
             element={
-              <P.TerritorialIndexPage
-                CityLandingComponent={P.PublicCityLandingPage}
-              />
+              <TerritorialIndexPage CityLandingComponent={TerritoryHomePage} />
             }
           />
         </Route>
@@ -939,7 +939,7 @@ export function AppLayoutRoutes() {
             TERRITORIAL_STATIC.gastronomyPremium,
             [TERRITORIAL_PARAMS.district, TERRITORIAL_PARAMS.slug],
           )}
-          element={<P.TerritorialLayout />}
+          element={<TerritorialLayout />}
         >
           <Route index element={<P.GastronomyPremiumDetailPage />} />
           <Route path="checkout" element={<P.GastronomyCheckoutPage />} />
@@ -951,7 +951,7 @@ export function AppLayoutRoutes() {
             TERRITORIAL_PARAMS.district,
             TERRITORIAL_PARAMS.slug,
           ])}
-          element={<P.TerritorialLayout />}
+          element={<TerritorialLayout />}
         >
           <Route index element={<P.GastronomyDetailPage />} />
           <Route path="checkout" element={<P.GastronomyCheckoutPage />} />
@@ -962,7 +962,7 @@ export function AppLayoutRoutes() {
           path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.gastronomy, [
             TERRITORIAL_PARAMS.district,
           ])}
-          element={<P.TerritorialLayout />}
+          element={<TerritorialLayout />}
         >
           <Route index element={<P.GastronomyLandingPage />} />
         </Route>
@@ -970,7 +970,7 @@ export function AppLayoutRoutes() {
         {/* Listagem cidade: /gastronomia/:uf/:cidade */}
         <Route
           path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.gastronomy)}
-          element={<P.TerritorialLayout />}
+          element={<TerritorialLayout />}
         >
           <Route index element={<P.GastronomyLandingPage />} />
         </Route>
