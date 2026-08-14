@@ -59,15 +59,19 @@ export function AppLayoutSidebar() {
       (/^[a-z]{2}$/i.test(pathSegments[1] ?? "") &&
         pathSegments.length >= 3 &&
         pathSegments.length <= 4));
+  const isAccountRoute = pathSegments[0] === "conta";
+  const isPublicPersonalProfileRoute =
+    pathSegments[0] === "u" && pathSegments.length === 2;
   const usesTerritoryVivoShell =
     isBarePublicTerritorialRoute ||
     isTerritoryVivoExploreRoute ||
-    isCommunityPublicLandingRoute;
+    isCommunityPublicLandingRoute ||
+    isAccountRoute ||
+    isPublicPersonalProfileRoute;
 
   // Ocultar sidebar na home e na página de perfil (que tem sua própria sidebar)
   const hideGlobalSidebar =
     pathname === "/" ||
-    pathname.startsWith("/conta") ||
     isBarePublicTerritorialRoute ||
     isTerritoryVivoExploreRoute ||
     isCommunityPublicLandingRoute ||

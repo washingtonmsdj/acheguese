@@ -1,23 +1,19 @@
-/**
- * ContaHubLayout - Layout principal do hub de conta
- *
- * SSOT: layout reutilizavel com props tipadas.
- */
-
 import { Helmet } from "react-helmet-async";
-import type { ReactNode } from "react";
+import type { ChangeEvent, ReactNode } from "react";
 
-import { ProfileHeaderCompact, ProfileSectionsNav } from "@/modules/profile/components/hub";
-import type { MultiProfileRecord, Profile as RuntimeProfile } from "@/core/profiles/services/multi-profile/types";
+import { ProfileHeaderCompact } from "@/modules/profile/components/hub";
+import type {
+  MultiProfileRecord,
+  Profile as RuntimeProfile,
+} from "@/core/profiles/services/multi-profile/types";
 import type { ProfileRow } from "@/core/profiles/services/types";
-import type { AccountSnapshot, Context, Identity } from "@/modules/profile/sections/types";
-import type { ProfileSectionId } from "@/modules/profile/sections/types";
-import type { SectionNavItem } from "@/modules/profile/components/hub/ProfileSectionsNav";
+import type {
+  AccountSnapshot,
+  Context,
+  Identity,
+} from "@/modules/profile/sections/types";
 
 export interface ContaHubLayoutProps {
-  readonly activeSection: ProfileSectionId;
-  readonly onSectionChange: (section: ProfileSectionId) => void;
-  readonly sectionItems: readonly SectionNavItem<ProfileSectionId>[];
   readonly personalProfile: MultiProfileRecord | RuntimeProfile | null;
   readonly profile: MultiProfileRecord | RuntimeProfile | ProfileRow | null;
   readonly allProfiles?: readonly (MultiProfileRecord | RuntimeProfile)[];
@@ -39,16 +35,13 @@ export interface ContaHubLayoutProps {
     readonly level: number;
     readonly rank?: string;
   };
-  readonly onAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  readonly onAvatarChange: (event: ChangeEvent<HTMLInputElement>) => void;
   readonly children: ReactNode;
   readonly pageTitle?: string;
   readonly pageDescription?: string;
 }
 
 export function ContaHubLayout({
-  activeSection,
-  onSectionChange,
-  sectionItems,
   personalProfile,
   profile,
   allProfiles,
@@ -64,8 +57,8 @@ export function ContaHubLayout({
   reputation,
   onAvatarChange,
   children,
-  pageTitle = "Minha conta | Área organizada",
-  pageDescription = "Área privada da conta com navegação por seções e conteúdo segmentado por contexto.",
+  pageTitle = "Minha conta | Achegue-se",
+  pageDescription = "Identidade, território, preferências e segurança da sua conta.",
 }: ContaHubLayoutProps) {
   return (
     <>
@@ -74,54 +67,39 @@ export function ContaHubLayout({
         <meta name="description" content={pageDescription} />
       </Helmet>
 
-      <div className="relative flex min-h-screen overflow-hidden bg-[radial-gradient(circle_at_12%_0%,hsl(var(--primary)/0.14),transparent_30%),radial-gradient(circle_at_90%_10%,hsl(var(--accent)/0.24),transparent_34%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.36))]">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/35 to-transparent" />
-
-        <aside className="hidden lg:flex lg:w-[264px] lg:shrink-0 lg:flex-col lg:border-r lg:border-border/70 lg:bg-card/88 lg:shadow-[12px_0_40px_rgba(15,23,42,0.04)] lg:backdrop-blur-xl xl:w-[292px]">
-          <ProfileSectionsNav
-            items={sectionItems}
-            activeId={activeSection}
-            onChange={onSectionChange}
-            variant="sidebar"
-            profile={personalProfile}
-            isVerified={isVerified}
-            handle={handle}
-            canOpenPublicProfile={canOpenPublicProfile}
-          />
-        </aside>
-
-        <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto">
-            <div className="mx-auto max-w-7xl space-y-4 px-3 pb-24 pt-3 sm:px-5 sm:pb-14 sm:pt-5 md:space-y-6 lg:px-7 lg:pt-7">
-              <ProfileHeaderCompact
-                activeProfile={personalProfile}
-                profile={profile}
-                allProfiles={allProfiles}
-                userEmail={userEmail}
-                accountSnapshot={accountSnapshot}
-                identity={identity}
-                context={context}
-                notifications={notifications}
-                isVerified={isVerified}
-                canOpenPublicProfile={canOpenPublicProfile}
-                handle={handle}
-                territoryLabel={territoryLabel}
-                reputation={reputation}
-                onAvatarChange={onAvatarChange}
-              />
-
-              <div className="lg:hidden">
-                <ProfileSectionsNav
-                  items={sectionItems}
-                  activeId={activeSection}
-                  onChange={onSectionChange}
-                  variant="tabs"
-                />
-              </div>
-
-              <div className="space-y-4 sm:space-y-6">{children}</div>
-            </div>
+      <div className="territory-vivo min-h-[100dvh] bg-territory-canvas text-territory-ink">
+        <main className="mx-auto w-full max-w-[1180px] px-3 pb-24 pt-4 sm:px-6 sm:pt-6 md:pb-10 lg:px-8 lg:pt-8">
+          <div className="mb-4 sm:mb-6">
+            <p className="text-[0.6875rem] font-bold uppercase tracking-[0.16em] text-territory-brand">
+              Área pessoal
+            </p>
+            <h1 className="mt-1 font-heading text-2xl font-semibold text-territory-ink sm:text-3xl">
+              Conta
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-territory-muted">
+              Sua identidade, seu território e seus controles pessoais dentro do
+              Achegue-se.
+            </p>
           </div>
+
+          <ProfileHeaderCompact
+            activeProfile={personalProfile}
+            profile={profile}
+            allProfiles={allProfiles}
+            userEmail={userEmail}
+            accountSnapshot={accountSnapshot}
+            identity={identity}
+            context={context}
+            notifications={notifications}
+            isVerified={isVerified}
+            canOpenPublicProfile={canOpenPublicProfile}
+            handle={handle}
+            territoryLabel={territoryLabel}
+            reputation={reputation}
+            onAvatarChange={onAvatarChange}
+          />
+
+          <div className="mt-4 space-y-4 sm:mt-6 sm:space-y-6">{children}</div>
         </main>
       </div>
     </>

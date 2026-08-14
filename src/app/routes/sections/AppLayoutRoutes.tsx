@@ -8,7 +8,7 @@
  */
 
 import type { ReactNode } from "react";
-import { Navigate, Routes, Route } from "react-router-dom";
+import { Navigate, Routes, Route, useParams } from "react-router-dom";
 import RootRouteEntry from "@/app/routes/RootRouteEntry";
 import { AppLayoutSidebar } from "@/app/components/AppLayoutSidebar";
 import TerritoryHomePage from "@/app/pages/TerritoryHomePage";
@@ -45,6 +45,20 @@ import {
 
 // Lazy imports organizados por dominio
 import * as P from "../lazyImports";
+
+function LegacyProfileEditRedirect() {
+  const { profileId } = useParams<{ profileId: string }>();
+  return (
+    <Navigate
+      to={
+        profileId
+          ? `/conta/editar/${encodeURIComponent(profileId)}`
+          : "/conta/editar"
+      }
+      replace
+    />
+  );
+}
 
 const TERRITORIAL_PARAMS = TERRITORIAL_ROUTE_PARAMS;
 const TERRITORIAL_STATIC = TERRITORIAL_ROUTE_STATIC_SEGMENTS;
@@ -559,7 +573,7 @@ export function AppLayoutRoutes() {
         />
         <Route
           path="/perfil/editar/:profileId"
-          element={<Navigate to="/conta/editar" replace />}
+          element={<LegacyProfileEditRedirect />}
         />
         <Route
           path="/perfil/enderecos"

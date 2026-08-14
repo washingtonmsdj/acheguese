@@ -1,12 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import {
-  ArrowLeft,
-  Building2,
-  Home,
-  MapPin,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowLeft, Building2, Home, MapPin, ShieldCheck } from "lucide-react";
 
 import { ResidenceManager } from "@/core/residence/components/ResidenceManager";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
@@ -28,9 +22,9 @@ export default function ContaEnderecosPage() {
         <title>Meus endereços</title>
       </Helmet>
 
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.10),transparent_28%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.32))]">
-        <main className="mx-auto w-full max-w-6xl px-4 pb-8 pt-4 sm:px-6 sm:pb-10 sm:pt-6 lg:px-8">
-          <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
+      <div className="territory-vivo min-h-[100dvh] bg-territory-canvas text-territory-ink">
+        <main className="mx-auto w-full max-w-[1180px] px-3 pb-24 pt-4 sm:px-6 sm:pb-10 sm:pt-6 lg:px-8">
+          <div className="sticky top-0 z-20 -mx-3 mb-5 border-b border-territory-border bg-territory-canvas/95 px-3 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
                 <Button
@@ -63,7 +57,7 @@ export default function ContaEnderecosPage() {
 
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
             <div className="space-y-5">
-              <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
+              <section className="rounded-territory-highlight border border-territory-border bg-territory-surface p-5 sm:p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="space-y-2">
                     <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
@@ -73,25 +67,29 @@ export default function ContaEnderecosPage() {
                       Seu endereço fica protegido
                     </h2>
                     <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                      O perfil público mostra apenas contexto territorial, como cidade,
-                      bairro ou comunidade. Rua, número e complemento seguem privados.
+                      O perfil público mostra apenas contexto territorial, como
+                      cidade, bairro ou comunidade. Rua, número e complemento
+                      seguem privados.
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-2 sm:w-auto sm:grid-cols-1">
                     <div className="rounded-2xl border border-border/60 bg-muted/20 px-3 py-2 text-xs">
-                      <p className="font-medium text-foreground">Residencia</p>
                       <p className="font-medium text-foreground">Residência</p>
-                      <p className="mt-1 text-muted-foreground">Base canonicamente privada</p>
+                      <p className="mt-1 text-muted-foreground">
+                        Base canonicamente privada
+                      </p>
                     </div>
                     <div className="rounded-2xl border border-border/60 bg-muted/20 px-3 py-2 text-xs">
                       <p className="font-medium text-foreground">Território</p>
-                      <p className="mt-1 text-muted-foreground">Derivado para uso público</p>
+                      <p className="mt-1 text-muted-foreground">
+                        Derivado para uso público
+                      </p>
                     </div>
                   </div>
                 </div>
               </section>
 
-              <Card className="rounded-3xl border-primary/20 bg-primary/5 shadow-sm">
+              <Card className="rounded-territory-highlight border-territory-brand/20 bg-territory-brand/5 shadow-none">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-sm">
                     <MapPin className="h-4 w-4" />
@@ -101,11 +99,12 @@ export default function ContaEnderecosPage() {
                 <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
                   <p>
                     O perfil público exibe somente contexto territorial
-                    (bairro/comunidade), nunca rua, número, complemento ou referência
-                    detalhada.
+                    (bairro/comunidade), nunca rua, número, complemento ou
+                    referência detalhada.
                   </p>
                   <p>
-                    Se você atua profissionalmente, gerencie a cobertura operacional na{" "}
+                    Se você atua profissionalmente, gerencie a cobertura
+                    operacional na{" "}
                     <button
                       type="button"
                       className="font-medium text-primary underline underline-offset-2"
@@ -118,13 +117,13 @@ export default function ContaEnderecosPage() {
                 </CardContent>
               </Card>
 
-              <section className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
+              <section className="rounded-territory-highlight border border-territory-border bg-territory-surface p-4 sm:p-6">
                 <ResidenceManager />
               </section>
             </div>
 
             <aside className="space-y-4">
-              <Card className="rounded-3xl border-border/70 bg-card/85 shadow-sm">
+              <Card className="rounded-territory-highlight border-territory-border bg-territory-surface shadow-none">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-sm">
                     <Home className="h-4 w-4" />
@@ -136,7 +135,8 @@ export default function ContaEnderecosPage() {
                     A residência confirma seu território principal de uso.
                   </div>
                   <div className="rounded-2xl border border-border/60 bg-muted/20 p-3">
-                    Publicação e grupos podem depender de verificação territorial.
+                    Publicação e grupos podem depender de verificação
+                    territorial.
                   </div>
                   <div className="rounded-2xl border border-border/60 bg-muted/20 p-3">
                     Alterações devem refletir sua base real de moradia.
@@ -144,7 +144,7 @@ export default function ContaEnderecosPage() {
                 </CardContent>
               </Card>
 
-              <Card className="rounded-3xl border-border/70 bg-card/85 shadow-sm">
+              <Card className="rounded-territory-highlight border-territory-border bg-territory-surface shadow-none">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-sm">
                     <Building2 className="h-4 w-4" />

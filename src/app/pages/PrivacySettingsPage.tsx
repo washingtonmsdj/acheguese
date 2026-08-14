@@ -98,9 +98,14 @@ function ConsentRow({
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-3">
-        <div className="pt-0.5 text-muted-foreground">{getConsentIcon(type)}</div>
+        <div className="pt-0.5 text-muted-foreground">
+          {getConsentIcon(type)}
+        </div>
         <div>
-          <Label htmlFor={`consent-${type}`} className="font-medium text-foreground">
+          <Label
+            htmlFor={`consent-${type}`}
+            className="font-medium text-foreground"
+          >
             {label}
           </Label>
           {consent?.granted_at ? (
@@ -273,21 +278,21 @@ export default function PrivacySettingsPage() {
         <title>Privacidade e dados</title>
       </Helmet>
 
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.10),transparent_28%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.32))]">
+      <div className="territory-vivo min-h-[100dvh] bg-territory-canvas text-territory-ink">
         <main
           id="main-content"
           tabIndex={-1}
-          className="mx-auto w-full max-w-5xl px-4 pb-8 pt-4 focus:outline-none sm:px-6 sm:pb-10 sm:pt-6 lg:px-8"
+          className="mx-auto w-full max-w-[1080px] px-3 pb-24 pt-4 focus:outline-none sm:px-6 sm:pb-10 sm:pt-6 lg:px-8"
         >
-          <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
+          <div className="sticky top-0 z-20 -mx-3 mb-5 border-b border-territory-border bg-territory-canvas/95 px-3 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
             <div className="flex items-start gap-3">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0 rounded-full"
-                  onClick={() => navigate(appUrls.settings)}
-                  type="button"
-                >
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 rounded-full"
+                onClick={() => navigate(appUrls.settings)}
+                type="button"
+              >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div className="min-w-0">
@@ -305,7 +310,7 @@ export default function PrivacySettingsPage() {
           </div>
 
           {deletionStatus?.status === "scheduled" ? (
-            <Card className="mb-5 rounded-3xl border-destructive/50 bg-destructive/5 shadow-sm">
+            <Card className="mb-5 rounded-territory-highlight border-destructive/50 bg-destructive/5 shadow-none">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-destructive">
                   <Clock className="h-5 w-5" />
@@ -314,14 +319,16 @@ export default function PrivacySettingsPage() {
                 <CardDescription>
                   Sua conta será permanentemente excluída em{" "}
                   {deletionStatus.days_remaining} dias (
-                  {new Date(deletionStatus.scheduled_purge_at!).toLocaleDateString("pt-BR")}
+                  {new Date(
+                    deletionStatus.scheduled_purge_at!,
+                  ).toLocaleDateString("pt-BR")}
                   ).
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm leading-6 text-muted-foreground">
-                  Durante esse período você ainda pode cancelar a exclusão. Depois
-                  da data final, os dados não poderão ser recuperados.
+                  Durante esse período você ainda pode cancelar a exclusão.
+                  Depois da data final, os dados não poderão ser recuperados.
                 </p>
                 <Button
                   variant="outline"
@@ -335,23 +342,23 @@ export default function PrivacySettingsPage() {
             </Card>
           ) : null}
 
-          <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
+          <section className="rounded-territory-highlight border border-territory-border bg-territory-surface p-5 sm:p-6">
             <div className="space-y-2">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
                 Direitos do titular
               </p>
-                <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                  Controle dos seus dados
-                </h2>
-                <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                Esta área concentra exportação, consentimentos e fluxos de exclusão
-                conforme a política de privacidade e a LGPD.
-                </p>
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                Controle dos seus dados
+              </h2>
+              <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
+                Esta área concentra exportação, consentimentos e fluxos de
+                exclusão conforme a política de privacidade e a LGPD.
+              </p>
             </div>
           </section>
 
           <div className="mt-5 space-y-5">
-            <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+            <Card className="rounded-territory-highlight border-territory-border bg-territory-surface shadow-none">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Download className="h-5 w-5" />
@@ -388,7 +395,7 @@ export default function PrivacySettingsPage() {
               </CardFooter>
             </Card>
 
-            <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+            <Card className="rounded-territory-highlight border-territory-border bg-territory-surface shadow-none">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5" />
@@ -406,7 +413,9 @@ export default function PrivacySettingsPage() {
                 ) : (
                   <div className="space-y-3">
                     {Object.entries(consentLabels).map(([type, label]) => {
-                      const consent = consents?.find((item) => item.consent_type === type);
+                      const consent = consents?.find(
+                        (item) => item.consent_type === type,
+                      );
                       return (
                         <ConsentRow
                           key={type}
@@ -428,7 +437,7 @@ export default function PrivacySettingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-3xl border-destructive/50 bg-card/90 shadow-sm">
+            <Card className="rounded-territory-highlight border-destructive/50 bg-territory-surface shadow-none">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-destructive">
                   <Trash2 className="h-5 w-5" />
@@ -443,18 +452,20 @@ export default function PrivacySettingsPage() {
                   <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
                   <div className="text-sm">
                     <p className="mb-1 font-medium text-destructive">
-                    Esta ação não pode ser desfeita após 30 dias
+                      Esta ação não pode ser desfeita após 30 dias
                     </p>
                     <p className="leading-6 text-muted-foreground">
-                      Sua conta é desativada imediatamente e os dados entram em fila
-                      de remoção permanente. Antes do prazo final, você ainda pode
-                      cancelar.
+                      Sua conta é desativada imediatamente e os dados entram em
+                      fila de remoção permanente. Antes do prazo final, você
+                      ainda pode cancelar.
                     </p>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="delete-reason">Motivo da exclusão (opcional)</Label>
+                  <Label htmlFor="delete-reason">
+                    Motivo da exclusão (opcional)
+                  </Label>
                   <Textarea
                     id="delete-reason"
                     className="min-h-[120px]"
@@ -521,7 +532,9 @@ export default function PrivacySettingsPage() {
               >
                 <div className="flex items-center gap-3">
                   <FileText className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-sm font-medium">Política de Privacidade</span>
+                  <span className="text-sm font-medium">
+                    Política de Privacidade
+                  </span>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </a>

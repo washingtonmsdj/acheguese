@@ -3,7 +3,10 @@ import { Helmet } from "react-helmet-async";
 import { ArrowLeft, Link2, Settings2, Shield, Users } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import { canProfileHaveMembers, getProfileTypeLabel } from "@/core/profiles/utils/profileDomainRules";
+import {
+  canProfileHaveMembers,
+  getProfileTypeLabel,
+} from "@/core/profiles/utils/profileDomainRules";
 import { PrivacySettings } from "@/core/profiles/components/PrivacySettings";
 import { ProfileLinksManager } from "@/core/profiles/components/ProfileLinksManager";
 import { ProfileMembersManagerImproved } from "@/core/profiles/components/ProfileMembersManagerImproved";
@@ -11,7 +14,12 @@ import { useActiveProfile } from "@/core/profiles/hooks/useActiveProfile";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/shared/components/ui/tabs";
 
 type ProfileSettingsTab = "privacy" | "links" | "members";
 
@@ -22,19 +30,22 @@ const TAB_META: Record<
   privacy: {
     eyebrow: "Privacidade do perfil",
     title: "Controle o que aparece na sua identidade",
-    description: "Visibilidade pública, dados sensíveis e apresentação do perfil ativo.",
+    description:
+      "Visibilidade pública, dados sensíveis e apresentação do perfil ativo.",
     icon: Shield,
   },
   links: {
     eyebrow: "Vínculos da identidade",
     title: "Gerencie conexões e relações operacionais",
-    description: "Perfis relacionados, ligações da conta e contexto da identidade ativa.",
+    description:
+      "Perfis relacionados, ligações da conta e contexto da identidade ativa.",
     icon: Link2,
   },
   members: {
     eyebrow: "Membros e permissões",
     title: "Convites, papéis e acesso do time",
-    description: "Organize quem participa do perfil profissional ou empresarial.",
+    description:
+      "Organize quem participa do perfil profissional ou empresarial.",
     icon: Users,
   },
 };
@@ -52,7 +63,9 @@ export default function ProfileSettingsPage() {
   const appUrls = useAppUrls();
   const { activeProfile, loading } = useActiveProfile();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<ProfileSettingsTab>(normalizeTab(searchParams.get("tab")));
+  const [activeTab, setActiveTab] = useState<ProfileSettingsTab>(
+    normalizeTab(searchParams.get("tab")),
+  );
 
   const canHaveMembers = canProfileHaveMembers(activeProfile);
 
@@ -95,8 +108,15 @@ export default function ProfileSettingsPage() {
   if (!activeProfile) {
     return (
       <div className="mx-auto flex min-h-[60vh] w-full max-w-xl flex-col items-center justify-center gap-3 px-4 text-center">
-        <p className="text-sm text-muted-foreground">Nenhum perfil ativo encontrado.</p>
-        <Button variant="outline" size="sm" onClick={() => navigate(appUrls.profile.home)} type="button">
+        <p className="text-sm text-muted-foreground">
+          Nenhum perfil ativo encontrado.
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate(appUrls.profile.home)}
+          type="button"
+        >
           Voltar para a conta
         </Button>
       </div>
@@ -112,17 +132,17 @@ export default function ProfileSettingsPage() {
         <title>Configurações da identidade</title>
       </Helmet>
 
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.08),transparent_30%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.3))]">
-        <main className="mx-auto w-full max-w-6xl px-4 pb-8 pt-4 sm:px-6 sm:pb-10 sm:pt-6 lg:px-8">
-          <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
+      <div className="territory-vivo min-h-[100dvh] bg-territory-canvas text-territory-ink">
+        <main className="mx-auto w-full max-w-[1180px] px-3 pb-24 pt-4 sm:px-6 sm:pb-10 sm:pt-6 lg:px-8">
+          <div className="sticky top-0 z-20 -mx-3 mb-5 border-b border-territory-border bg-territory-canvas/95 px-3 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
             <div className="flex items-start gap-3">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0 rounded-full"
-                  onClick={() => navigate(appUrls.settings)}
-                  type="button"
-                >
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 rounded-full"
+                onClick={() => navigate(appUrls.settings)}
+                type="button"
+              >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div className="min-w-0">
@@ -139,7 +159,7 @@ export default function ProfileSettingsPage() {
             </div>
           </div>
 
-          <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
+          <section className="rounded-territory-highlight border border-territory-border bg-territory-surface p-5 sm:p-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="min-w-0 space-y-2">
                 <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
@@ -152,7 +172,9 @@ export default function ProfileSettingsPage() {
                   {currentMeta.description}
                 </p>
                 <div className="flex flex-wrap gap-2 pt-1">
-                  <Badge variant="secondary">{getProfileTypeLabel(activeProfile)}</Badge>
+                  <Badge variant="secondary">
+                    {getProfileTypeLabel(activeProfile)}
+                  </Badge>
                   <Badge variant="outline">@{activeProfile.handle}</Badge>
                 </div>
               </div>
@@ -163,9 +185,12 @@ export default function ProfileSettingsPage() {
                     <CurrentIcon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-foreground">{activeProfile.display_name}</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      {activeProfile.display_name}
+                    </p>
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                      Ajustes aplicados à identidade atual. Preferências de conta ficam em{" "}
+                      Ajustes aplicados à identidade atual. Preferências de
+                      conta ficam em{" "}
                       <button
                         type="button"
                         className="font-medium text-primary underline-offset-4 hover:underline"
@@ -181,19 +206,31 @@ export default function ProfileSettingsPage() {
             </div>
           </section>
 
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-5">
-            <TabsList className="flex h-auto w-full gap-2 overflow-x-auto rounded-3xl border border-border/70 bg-card/90 p-2">
-              <TabsTrigger value="privacy" className="min-w-fit gap-2 rounded-2xl px-4 py-2.5">
+          <Tabs
+            value={activeTab}
+            onValueChange={handleTabChange}
+            className="mt-5"
+          >
+            <TabsList className="flex h-auto w-full gap-2 overflow-x-auto rounded-territory border border-territory-border bg-territory-surface p-2">
+              <TabsTrigger
+                value="privacy"
+                className="min-w-fit gap-2 rounded-2xl px-4 py-2.5"
+              >
                 <Shield className="h-4 w-4" />
                 Privacidade
               </TabsTrigger>
-              <TabsTrigger value="links" className="min-w-fit gap-2 rounded-2xl px-4 py-2.5">
+              <TabsTrigger
+                value="links"
+                className="min-w-fit gap-2 rounded-2xl px-4 py-2.5"
+              >
                 <Link2 className="h-4 w-4" />
-                Vinculos
-                Vínculos
+                Vinculos Vínculos
               </TabsTrigger>
               {canHaveMembers ? (
-                <TabsTrigger value="members" className="min-w-fit gap-2 rounded-2xl px-4 py-2.5">
+                <TabsTrigger
+                  value="members"
+                  className="min-w-fit gap-2 rounded-2xl px-4 py-2.5"
+                >
                   <Users className="h-4 w-4" />
                   Membros
                 </TabsTrigger>
@@ -201,35 +238,40 @@ export default function ProfileSettingsPage() {
             </TabsList>
 
             <TabsContent value="privacy" className="mt-5">
-              <div className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
+              <div className="rounded-territory-highlight border border-territory-border bg-territory-surface p-4 sm:p-6">
                 <PrivacySettings profile={activeProfile} onUpdate={() => {}} />
               </div>
             </TabsContent>
 
             <TabsContent value="links" className="mt-5">
-              <div className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
+              <div className="rounded-territory-highlight border border-territory-border bg-territory-surface p-4 sm:p-6">
                 <ProfileLinksManager profileId={activeProfile.id} />
               </div>
             </TabsContent>
 
             {canHaveMembers ? (
               <TabsContent value="members" className="mt-5">
-                <div className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
+                <div className="rounded-territory-highlight border border-territory-border bg-territory-surface p-4 sm:p-6">
                   <ProfileMembersManagerImproved
                     profileId={activeProfile.id}
-                    profileType={activeProfile.profile_type as "business" | "professional"}
+                    profileType={
+                      activeProfile.profile_type as "business" | "professional"
+                    }
                   />
                 </div>
               </TabsContent>
             ) : null}
           </Tabs>
 
-          <section className="mt-5 rounded-3xl border border-border/70 bg-card/80 p-4 shadow-sm sm:p-5">
+          <section className="mt-5 rounded-territory-highlight border border-territory-border bg-territory-raised p-4 sm:p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-semibold text-foreground">Voltar para ajustes da conta</p>
+                <p className="text-sm font-semibold text-foreground">
+                  Voltar para ajustes da conta
+                </p>
                 <p className="text-sm leading-6 text-muted-foreground">
-                  Notificações, privacidade LGPD e configurações gerais ficam separadas da identidade.
+                  Notificações, privacidade LGPD e configurações gerais ficam
+                  separadas da identidade.
                 </p>
               </div>
               <Button

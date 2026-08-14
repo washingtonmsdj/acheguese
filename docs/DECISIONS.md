@@ -46,7 +46,7 @@
 
 ## D-011 — Perfis: modelo multi-perfil por usuário
 
-**Decisão:** um usuário pode ter vários perfis (pessoal / negócio / profissional). Hub `/perfil` é responsivo (mobile-first e desktop). Rotas `/conta/*` são aliases legados.
+**Decisão:** um usuário pode ter vários perfis (pessoal / negócio / profissional). A superfície privada canônica é `/conta` e participa do shell global Território Vivo. Rotas `/perfil/*` são aliases legados preservados por compatibilidade. A apresentação pública pessoal permanece exclusiva em `/u/:username`, sem expor dados privados da conta.
 
 ## D-012 — Cloud como backend padrão (Lovable Cloud / Supabase)
 

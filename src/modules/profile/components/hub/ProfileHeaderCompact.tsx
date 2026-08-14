@@ -4,45 +4,36 @@ import {
   Bell,
   Camera,
   CheckCircle2,
-  Globe,
+  Globe2,
   MapPin,
-  MoreHorizontal,
   Pencil,
-  Star,
   Users,
 } from "lucide-react";
-import { motion } from "framer-motion";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
-import { Badge } from "@/shared/components/ui/badge";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/shared/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/shared/components/ui/popover";
-import { cn } from "@/shared/utils/cn";
-import { getRecordValue } from "@/shared/utils/recordLookup";
 import {
   buildProfileEditUrl,
   buildPublicProfileUrl,
 } from "@/core/profiles/utils/publicProfileUrl";
 import { getProfileTypeLabel } from "@/core/profiles/utils/profileDomainRules";
-import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { ProfileCompletenessWidget } from "@/modules/profile/components/ProfileCompletenessWidget";
 import type { ProfileCompletenessRecord } from "@/modules/profile/hooks/useProfileCompleteness";
 
-import type { MultiProfileRecord, Profile as RuntimeProfile } from "@/core/profiles/services/multi-profile/types";
+import type {
+  MultiProfileRecord,
+  Profile as RuntimeProfile,
+} from "@/core/profiles/services/multi-profile/types";
 import type { ProfileRow } from "@/core/profiles/services/types";
-import type { Context, Identity, AccountSnapshot } from "@/modules/profile/sections/types";
+import type {
+  AccountSnapshot,
+  Context,
+  Identity,
+} from "@/modules/profile/sections/types";
 
 interface ProfileHeaderCompactProps {
   activeProfile: MultiProfileRecord | RuntimeProfile | null;
@@ -52,7 +43,11 @@ interface ProfileHeaderCompactProps {
   accountSnapshot: AccountSnapshot;
   identity: Identity | null;
   context: Context | null;
-  notifications: { unread: number; highPriority: number; urgentPriority: number };
+  notifications: {
+    unread: number;
+    highPriority: number;
+    urgentPriority: number;
+  };
   isVerified: boolean;
   canOpenPublicProfile: boolean;
   handle: string;
@@ -62,7 +57,7 @@ interface ProfileHeaderCompactProps {
     level: number;
     rank?: string;
   };
-  onAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onAvatarChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onNavigate?: (path: string) => void;
 }
 
@@ -76,104 +71,17 @@ function getInitials(name?: string | null): string {
     .toUpperCase();
 }
 
-function formatPlanLabel(value?: string | null): string {
-  if (!value) return "Básico";
-  const map: Record<string, string> = {
-    free: "Free",
-    pro: "Pro",
-    delivery: "Delivery",
-    basic: "Básico",
-    premium: "Premium",
-    enterprise: "Enterprise",
-  };
-  const firstLetter = value.at(0);
-  return (
-    getRecordValue(map, value) ??
-    (firstLetter ? firstLetter.toUpperCase() + value.slice(1) : value)
-  );
-}
-
-function getAccountTone(state: AccountSnapshot["accountState"]): string {
-  switch (state) {
-    case "active":
-      return "border-success/30 bg-success/10 text-success";
-    case "blocked":
-      return "border-destructive/30 bg-destructive/10 text-destructive";
-    case "suspended":
-      return "border-warning/30 bg-warning/10 text-warning";
-    default:
-      return "border-border bg-muted text-muted-foreground";
-  }
-}
-
-function getAccountStateLabel(state: AccountSnapshot["accountState"]): string {
-  switch (state) {
-    case "active":
-      return "Ativa";
-    case "blocked":
-      return "Bloqueada";
-    case "suspended":
-      return "Suspensa";
-    default:
-      return "Inativa";
-  }
-}
-
-function getVerificationLabel(status: string): string {
-  switch (status) {
-    case "approved":
-      return "Residência aprovada";
-    case "rejected":
-      return "Residência rejeitada";
-    case "pending":
-      return "Em análise";
-    default:
-      return "Sem verificação";
-  }
-}
-
-function getVerificationTone(status: string): string {
-  switch (status) {
-    case "approved":
-      return "border-success/30 bg-success/10 text-success";
-    case "rejected":
-      return "border-destructive/30 bg-destructive/10 text-destructive";
-    case "pending":
-      return "border-warning/30 bg-warning/10 text-warning";
-    default:
-      return "border-border bg-muted text-muted-foreground";
-  }
-}
-
-export function ProfileHeaderCompact({
-  activeProfile,
-  profile,
-  allProfiles,
-  userEmail,
-  accountSnapshot,
-  identity,
-  context,
-  notifications,
-  isVerified,
-  canOpenPublicProfile,
-  handle,
-  territoryLabel,
-  reputation,
-  onAvatarChange,
-  onNavigate,
-}: ProfileHeaderCompactProps) {
+export function ProfileHeaderCompact(props: ProfileHeaderCompactProps) {
   const navigate = useNavigate();
-  const appUrls = useAppUrls();
   const fileRef = useRef<HTMLInputElement>(null);
-
-  const displayName = activeProfile?.display_name || profile?.display_name || userEmail;
+  const activeProfile = props.activeProfile;
+  const profile = props.profile;
+  const displayName =
+    activeProfile?.display_name || profile?.display_name || "Minha conta";
   const avatarUrl = activeProfile?.avatar_url || profile?.avatar_url;
   const bio = activeProfile?.bio || profile?.bio;
   const editorProfileId = activeProfile?.id ?? profile?.id;
-  const planLabel = formatPlanLabel(identity?.plan?.type || context?.plan?.type);
-  const totalAlerts = notifications.highPriority + notifications.urgentPriority;
-  const fullReputation = identity?.reputation || context?.reputation;
-  const fullTerritoryLabel = territoryLabel || "Não configurado";
+  const profileCount = props.allProfiles?.length ?? (activeProfile ? 1 : 0);
   const completenessProfile: ProfileCompletenessRecord | null = activeProfile
     ? {
         id: activeProfile.id,
@@ -191,379 +99,144 @@ export function ProfileHeaderCompact({
 
   const openEditor = () => {
     if (!editorProfileId) return;
-    if (onNavigate) {
-      onNavigate(buildProfileEditUrl(editorProfileId));
+    const path = buildProfileEditUrl(editorProfileId);
+    if (props.onNavigate) {
+      props.onNavigate(path);
       return;
     }
-    navigate(buildProfileEditUrl(editorProfileId));
-  };
-
-  const openPublicProfile = () => {
-    navigate(buildPublicProfileUrl(handle));
+    navigate(path);
   };
 
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="relative overflow-hidden rounded-[24px] border border-border/70 bg-gradient-to-br from-primary/10 via-card/96 to-accent/10 p-3 shadow-[0_26px_100px_-70px_rgba(0,0,0,0.9)] backdrop-blur-sm sm:rounded-[28px] sm:p-5"
+    <section
+      className="rounded-territory-highlight border border-territory-border bg-territory-surface p-4 sm:p-6"
+      data-account-identity
     >
-      <div className="flex items-start gap-3 sm:gap-4">
+      <div className="flex items-start gap-4 sm:items-center">
         <div className="relative shrink-0">
-          <Avatar className="h-16 w-16 border-2 border-card shadow-md sm:h-20 sm:w-20 md:h-24 md:w-24 md:border-4">
-            <AvatarImage src={avatarUrl || undefined} />
-            <AvatarFallback className="text-lg font-semibold sm:text-xl md:text-2xl">
+          <Avatar className="h-20 w-20 border border-territory-border bg-territory-raised sm:h-24 sm:w-24">
+            <AvatarImage src={avatarUrl || undefined} alt="" />
+            <AvatarFallback className="bg-territory-raised text-xl font-semibold text-territory-ink sm:text-2xl">
               {getInitials(displayName)}
             </AvatarFallback>
           </Avatar>
-
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md transition-transform hover:scale-110 sm:h-8 sm:w-8"
+            className="absolute -bottom-1 -right-1 flex h-10 w-10 items-center justify-center rounded-full border-2 border-territory-surface bg-territory-brand text-white transition-colors hover:bg-territory-brand-strong"
             aria-label="Alterar foto de perfil"
           >
-            <Camera className="h-3.5 w-3.5" />
+            <Camera className="h-4 w-4" aria-hidden="true" />
           </button>
-
           <input
             ref={fileRef}
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={onAvatarChange}
+            onChange={props.onAvatarChange}
             aria-label="Upload de foto de perfil"
           />
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <h1 className="truncate text-lg font-bold tracking-tight text-foreground sm:text-xl md:text-2xl">
-                  {displayName}
-                </h1>
-                {isVerified ? (
-                  <CheckCircle2
-                    className="h-4 w-4 shrink-0 text-primary sm:h-5 sm:w-5"
-                    aria-label="Verificado"
-                  />
-                ) : null}
-              </div>
-
-              <div className="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-muted-foreground sm:mt-1 sm:gap-1.5 sm:text-sm">
-                {canOpenPublicProfile ? (
-                  <button
-                    type="button"
-                    onClick={openPublicProfile}
-                    className="font-medium text-primary hover:underline"
-                  >
-                    @{handle || "sem-handle"}
-                  </button>
-                ) : (
-                  <span className="font-medium">@{handle || "sem-handle"}</span>
-                )}
-
-                <span className="text-border">|</span>
-
-                <Badge
-                  variant="secondary"
-                  className="h-4 text-[9px] font-medium sm:h-5 sm:text-[10px]"
-                >
-                  {getProfileTypeLabel(activeProfile)}
-                </Badge>
-              </div>
-
-              {bio ? (
-                <p className="mt-2 hidden max-w-2xl text-sm text-muted-foreground md:line-clamp-2">
-                  {bio}
-                </p>
-              ) : (
-                <p className="mt-2 hidden max-w-2xl text-sm italic text-muted-foreground/70 md:block">
-                  Adicione uma bio para se apresentar
-                </p>
-              )}
-            </div>
-
-            <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
-              <Button size="sm" className="hidden gap-1.5 md:inline-flex" onClick={openEditor}>
-                <Pencil className="h-3.5 w-3.5" />
-                Editar
-              </Button>
-
-              <Button
-                size="icon"
-                variant="default"
-                className="h-8 w-8 md:hidden"
-                onClick={openEditor}
-                aria-label="Editar perfil"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-              </Button>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="h-8 w-8"
-                    aria-label="Mais opções"
-                  >
-                    <MoreHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>Identidade ativa</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-
-                  {canOpenPublicProfile ? (
-                    <DropdownMenuItem onClick={openPublicProfile}>
-                      <Globe className="mr-2 h-4 w-4" />
-                      Abrir perfil público
-                    </DropdownMenuItem>
-                  ) : null}
-
-                  <DropdownMenuItem
-                    onClick={() => navigate(appUrls.profile.settings("privacy"))}
-                  >
-                    Privacidade
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+          <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-territory-brand">
+            Identidade ativa
+          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <h1 className="min-w-0 truncate font-heading text-2xl font-semibold text-territory-ink sm:text-3xl">
+              {displayName}
+            </h1>
+            {props.isVerified ? (
+              <CheckCircle2
+                className="h-5 w-5 shrink-0 text-territory-brand"
+                aria-label="Perfil verificado"
+              />
+            ) : null}
           </div>
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-territory-muted">
+            {props.handle ? (
+              <span>@{props.handle}</span>
+            ) : (
+              <span>Sem nome público</span>
+            )}
+            <span>{getProfileTypeLabel(activeProfile)}</span>
+          </div>
+          {bio ? (
+            <p className="mt-3 line-clamp-2 max-w-2xl text-sm leading-6 text-territory-muted">
+              {bio}
+            </p>
+          ) : (
+            <p className="mt-3 text-sm text-territory-muted">
+              Complete sua apresentação para deixar sua identidade mais clara.
+            </p>
+          )}
+        </div>
+
+        <div className="hidden shrink-0 items-center gap-2 sm:flex">
+          {props.canOpenPublicProfile ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="border-territory-border bg-territory-surface text-territory-ink"
+              onClick={() => navigate(buildPublicProfileUrl(props.handle))}
+            >
+              <Globe2 className="mr-2 h-4 w-4" />
+              Ver público
+            </Button>
+          ) : null}
+          <Button type="button" onClick={openEditor}>
+            <Pencil className="mr-2 h-4 w-4" />
+            Editar
+          </Button>
         </div>
       </div>
 
-      {bio ? (
-        <p className="mt-2 line-clamp-2 text-xs text-muted-foreground sm:text-sm md:hidden">
-          {bio}
-        </p>
-      ) : (
-        <p className="mt-2 text-xs italic text-muted-foreground/70 md:hidden">
-          Adicione uma bio para se apresentar
-        </p>
-      )}
-
-      <div className="mt-3 space-y-2 sm:mt-4 sm:space-y-3">
-        <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:gap-2 sm:text-xs">
-          <div className="flex items-center gap-1">
-            <span className="hidden font-medium text-muted-foreground sm:inline">Status:</span>
-            <Badge
-              variant="outline"
-              className={cn(
-                "h-5 text-[9px] font-semibold sm:h-6 sm:text-[10px]",
-                getAccountTone(accountSnapshot.accountState),
-              )}
-            >
-              {getAccountStateLabel(accountSnapshot.accountState)}
-            </Badge>
-          </div>
-
-          <span className="text-muted-foreground/30">|</span>
-
-          <div className="flex items-center gap-1">
-            <span className="hidden font-medium text-muted-foreground sm:inline">Plano:</span>
-            <Badge
-              variant="outline"
-              className={cn(
-                "h-5 text-[9px] font-semibold sm:h-6 sm:text-[10px]",
-                identity?.plan?.isPremium || context?.plan?.isPremium
-                  ? "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400"
-                  : "",
-              )}
-            >
-              {planLabel}
-              {identity?.plan?.isPremium || context?.plan?.isPremium ? " *" : ""}
-            </Badge>
-          </div>
-
-          <span className="hidden text-muted-foreground/30 sm:inline">|</span>
-
-          <div className="hidden items-center gap-1 xs:flex">
-            <span className="hidden font-medium text-muted-foreground sm:inline">
-              Verificação:
-            </span>
-            <Badge
-              variant="outline"
-              className={cn(
-                "h-5 text-[9px] font-semibold sm:h-6 sm:text-[10px]",
-                getVerificationTone(accountSnapshot.verificationStatus),
-              )}
-            >
-              {getVerificationLabel(accountSnapshot.verificationStatus)}
-            </Badge>
-          </div>
-
-          {reputation ? (
-            <>
-              <span className="hidden text-muted-foreground/30 md:inline">|</span>
-              <div className="hidden items-center gap-1 md:flex">
-                <Star className="h-3 w-3 fill-amber-500 text-amber-500 sm:h-3.5 sm:w-3.5" />
-                <Badge
-                  variant="outline"
-                  className="h-5 gap-1 border-amber-500/30 bg-amber-500/10 text-[9px] font-semibold text-amber-700 dark:text-amber-400 sm:h-6 sm:text-[10px]"
-                >
-                  Nível {reputation.level} | {reputation.score} pts
-                </Badge>
-              </div>
-            </>
-          ) : null}
-
-          {territoryLabel ? (
-            <>
-              <span className="hidden text-muted-foreground/30 lg:inline">|</span>
-              <div className="hidden items-center gap-1 lg:flex">
-                <MapPin className="h-3 w-3 text-muted-foreground sm:h-3.5 sm:w-3.5" />
-                <span className="text-[10px] font-medium text-foreground sm:text-xs">
-                  {territoryLabel}
-                </span>
-              </div>
-            </>
-          ) : null}
-
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                className="ml-auto inline-flex items-center gap-1 rounded-full border border-border bg-card/60 px-2 py-1 text-[9px] font-medium text-muted-foreground transition-colors hover:bg-accent/40 hover:text-foreground sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-[10px]"
-              >
-                <MoreHorizontal className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                <span className="hidden xs:inline">Mais</span>
-              </button>
-            </PopoverTrigger>
-
-            <PopoverContent className="w-72 sm:w-80" align="end">
-              <div className="space-y-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Território
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-foreground">{fullTerritoryLabel}</p>
-                </div>
-
-                {fullReputation ? (
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Reputação completa
-                    </p>
-                    <div className="mt-1 space-y-1 text-sm">
-                      <p>
-                        <span className="font-medium">Score:</span> {fullReputation.score ?? 0}
-                      </p>
-                      <p>
-                        <span className="font-medium">Nível:</span> {fullReputation.level ?? 1}
-                      </p>
-                      {fullReputation.rank ? (
-                        <p>
-                          <span className="font-medium">Rank:</span> {fullReputation.rank}
-                        </p>
-                      ) : null}
-                    </div>
-                  </div>
-                ) : null}
-
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Notificações
-                  </p>
-                  <div className="mt-1 space-y-1 text-sm">
-                    <p>
-                      {notifications.unread > 0 ? (
-                        <span className="font-semibold text-warning">
-                          {notifications.unread} não lidas
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">Em dia</span>
-                      )}
-                    </p>
-                    {notifications.highPriority > 0 ? (
-                      <p className="text-xs text-muted-foreground">
-                        {notifications.highPriority} de alta prioridade
-                      </p>
-                    ) : null}
-                  </div>
-                </div>
-
-                {totalAlerts > 0 ? (
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Prioridade
-                    </p>
-                    <p className="mt-1 text-sm font-semibold text-destructive">
-                      {totalAlerts} pendências urgentes
-                    </p>
-                  </div>
-                ) : null}
-
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Email
-                  </p>
-                  <p className="mt-1 truncate text-sm text-muted-foreground">{userEmail}</p>
-                </div>
-
-                {identity?.plan?.expiresAt || context?.plan?.expiresAt ? (
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Plano expira em
-                    </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {new Date(
-                        identity?.plan?.expiresAt || context?.plan?.expiresAt || "",
-                      ).toLocaleDateString("pt-BR")}
-                    </p>
-                  </div>
-                ) : null}
-              </div>
-            </PopoverContent>
-          </Popover>
+      <div className="mt-4 grid gap-2 border-t border-territory-border pt-4 text-sm sm:grid-cols-3">
+        <div className="flex min-h-11 items-center gap-2 text-territory-muted">
+          <MapPin className="h-4 w-4 shrink-0 text-territory-brand" />
+          <span className="truncate">
+            {props.territoryLabel || "Território não definido"}
+          </span>
         </div>
-
-        <div className="hidden flex-wrap items-center gap-2 text-xs md:flex">
-          {activeProfile ? (
-            <>
-              <div className="flex items-center gap-1.5">
-                <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="font-medium text-foreground">
-                  {allProfiles?.length ?? 1} {(allProfiles?.length ?? 1) === 1 ? "perfil" : "perfis"}
-                </span>
-              </div>
-              <span className="text-muted-foreground/30">|</span>
-            </>
-          ) : null}
-
-          {notifications.unread > 0 ? (
-            <>
-              <div className="flex items-center gap-1.5">
-                <Bell className="h-3.5 w-3.5 text-warning" />
-                <span className="font-semibold text-warning">
-                  {notifications.unread}{" "}
-                  {notifications.unread === 1 ? "notificação" : "notificações"}
-                </span>
-              </div>
-              <span className="text-muted-foreground/30">|</span>
-            </>
-          ) : null}
-
-          {totalAlerts > 0 ? (
-            <div className="flex items-center gap-1.5">
-              <span className="font-semibold text-destructive">
-                ! {totalAlerts}{" "}
-                {totalAlerts === 1 ? "pendência prioritária" : "pendências prioritárias"}
-              </span>
-            </div>
-          ) : null}
+        <div className="flex min-h-11 items-center gap-2 text-territory-muted">
+          <Users className="h-4 w-4 shrink-0 text-territory-brand" />
+          <span>
+            {profileCount === 1 ? "1 perfil" : `${profileCount} perfis`}
+          </span>
         </div>
+        <div className="flex min-h-11 items-center gap-2 text-territory-muted">
+          <Bell className="h-4 w-4 shrink-0 text-territory-brand" />
+          <span>
+            {props.notifications.unread > 0
+              ? `${props.notifications.unread} não lidas`
+              : "Notificações em dia"}
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-3 flex gap-2 sm:hidden">
+        <Button type="button" className="min-h-11 flex-1" onClick={openEditor}>
+          <Pencil className="mr-2 h-4 w-4" />
+          Editar
+        </Button>
+        {props.canOpenPublicProfile ? (
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-11 flex-1 border-territory-border bg-territory-surface text-territory-ink"
+            onClick={() => navigate(buildPublicProfileUrl(props.handle))}
+          >
+            <Globe2 className="mr-2 h-4 w-4" />
+            Ver público
+          </Button>
+        ) : null}
       </div>
 
       {completenessProfile ? (
-        <div className="mt-3 sm:mt-4">
+        <div className="mt-4 border-t border-territory-border pt-4">
           <ProfileCompletenessWidget profile={completenessProfile} />
         </div>
       ) : null}
-    </motion.section>
+    </section>
   );
 }

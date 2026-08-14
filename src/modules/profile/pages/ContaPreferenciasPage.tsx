@@ -54,11 +54,17 @@ export default function ContaPreferenciasPage() {
   const [searchParams] = useSearchParams();
   const legacyTab = searchParams.get("tab");
 
-  if (legacyTab === "privacy" || legacyTab === "links" || legacyTab === "members") {
+  if (
+    legacyTab === "privacy" ||
+    legacyTab === "links" ||
+    legacyTab === "members"
+  ) {
     return <Navigate to={appUrls.profile.settings(legacyTab)} replace />;
   }
 
-  const resolveHref = (hrefKey: (typeof PREFERENCE_CARDS)[number]["hrefKey"]) => {
+  const resolveHref = (
+    hrefKey: (typeof PREFERENCE_CARDS)[number]["hrefKey"],
+  ) => {
     switch (hrefKey) {
       case "notifications":
         return "/conta/notificacoes";
@@ -79,9 +85,9 @@ export default function ContaPreferenciasPage() {
         <title>Preferências da conta</title>
       </Helmet>
 
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.10),transparent_28%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.32))]">
-        <main className="mx-auto w-full max-w-5xl px-4 pb-8 pt-4 sm:px-6 sm:pb-10 sm:pt-6 lg:px-8">
-          <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
+      <div className="territory-vivo min-h-[100dvh] bg-territory-canvas text-territory-ink">
+        <main className="mx-auto w-full max-w-[1080px] px-3 pb-24 pt-4 sm:px-6 sm:pb-10 sm:pt-6 lg:px-8">
+          <div className="sticky top-0 z-20 -mx-3 mb-5 border-b border-territory-border bg-territory-canvas/95 px-3 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
             <div className="flex items-start gap-3">
               <Button
                 variant="ghost"
@@ -92,21 +98,21 @@ export default function ContaPreferenciasPage() {
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                    Conta e preferências
-                  </p>
-                  <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                    Preferências da conta
-                  </h1>
-                  <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                    Notificações, privacidade e ajustes da identidade ativa.
-                  </p>
-                </div>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Conta e preferências
+                </p>
+                <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                  Preferências da conta
+                </h1>
+                <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+                  Notificações, privacidade e ajustes da identidade ativa.
+                </p>
+              </div>
             </div>
           </div>
 
-          <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
+          <section className="rounded-territory-highlight border border-territory-border bg-territory-surface p-5 sm:p-6">
             <div className="space-y-2">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
                 Atalhos principais
@@ -127,7 +133,7 @@ export default function ContaPreferenciasPage() {
               return (
                 <Card
                   key={item.title}
-                  className="rounded-3xl border-border/70 bg-card/90 shadow-sm"
+                  className="rounded-territory-highlight border-territory-border bg-territory-surface shadow-none"
                 >
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-base">

@@ -59,7 +59,9 @@ function PreferenceRow({
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-3">
-        {icon ? <div className="pt-0.5 text-muted-foreground">{icon}</div> : null}
+        {icon ? (
+          <div className="pt-0.5 text-muted-foreground">{icon}</div>
+        ) : null}
         <div>
           <Label htmlFor={id} className="font-medium text-foreground">
             {label}
@@ -128,7 +130,7 @@ export default function NotificationPreferencesPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="territory-vivo flex min-h-[70dvh] items-center justify-center bg-territory-canvas px-4">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -140,13 +142,13 @@ export default function NotificationPreferencesPage() {
         <title>Preferências de notificações</title>
       </Helmet>
 
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.10),transparent_28%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.32))]">
+      <div className="territory-vivo min-h-[100dvh] bg-territory-canvas text-territory-ink">
         <main
           id="main-content"
           tabIndex={-1}
-          className="mx-auto w-full max-w-5xl px-4 pb-8 pt-4 focus:outline-none sm:px-6 sm:pb-10 sm:pt-6 lg:px-8"
+          className="mx-auto w-full max-w-[1080px] px-3 pb-24 pt-4 focus:outline-none sm:px-6 sm:pb-10 sm:pt-6 lg:px-8"
         >
-          <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
+          <div className="sticky top-0 z-20 -mx-3 mb-5 border-b border-territory-border bg-territory-canvas/95 px-3 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
             <div className="flex items-start gap-3">
               <Button
                 variant="ghost"
@@ -171,7 +173,7 @@ export default function NotificationPreferencesPage() {
             </div>
           </div>
 
-          <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
+          <section className="rounded-territory-highlight border border-territory-border bg-territory-surface p-5 sm:p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="space-y-2">
                 <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
@@ -181,8 +183,8 @@ export default function NotificationPreferencesPage() {
                   Controle o que chega até você
                 </h2>
                 <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                  Ajuste notificações por e-mail, push e app interno sem misturar
-                  com as configurações de privacidade da conta.
+                  Ajuste notificações por e-mail, push e app interno sem
+                  misturar com as configurações de privacidade da conta.
                 </p>
               </div>
               <div className="hidden items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary sm:flex">
@@ -193,7 +195,7 @@ export default function NotificationPreferencesPage() {
           </section>
 
           <div className="mt-5 space-y-5">
-            <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+            <Card className="rounded-territory-highlight border-territory-border bg-territory-surface shadow-none">
               <CardHeader>
                 <CardTitle>Canais de notificação</CardTitle>
                 <CardDescription>
@@ -234,7 +236,7 @@ export default function NotificationPreferencesPage() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+            <Card className="rounded-territory-highlight border-territory-border bg-territory-surface shadow-none">
               <CardHeader>
                 <CardTitle>Tipos de notificação</CardTitle>
                 <CardDescription>
@@ -273,14 +275,17 @@ export default function NotificationPreferencesPage() {
                   description="Promoções e novidades da plataforma."
                   checked={preferences.marketing_enabled}
                   onCheckedChange={(checked) =>
-                    setPreferences({ ...preferences, marketing_enabled: checked })
+                    setPreferences({
+                      ...preferences,
+                      marketing_enabled: checked,
+                    })
                   }
                 />
               </CardContent>
             </Card>
 
             <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+              <Card className="rounded-territory-highlight border-territory-border bg-territory-surface shadow-none">
                 <CardHeader>
                   <CardTitle>Frequência</CardTitle>
                   <CardDescription>
@@ -307,7 +312,7 @@ export default function NotificationPreferencesPage() {
                 </CardContent>
               </Card>
 
-              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+              <Card className="rounded-territory-highlight border-territory-border bg-territory-surface shadow-none">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Clock className="h-5 w-5" />
@@ -357,7 +362,7 @@ export default function NotificationPreferencesPage() {
               </Card>
             </div>
 
-            <section className="rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-6">
+            <section className="rounded-territory-highlight border border-territory-border bg-territory-surface p-4 sm:p-6">
               <PushNotificationSettings />
             </section>
 

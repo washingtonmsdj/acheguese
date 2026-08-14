@@ -65,9 +65,9 @@ export default function ContaSegurancaPage() {
         <title>Minha conta | Segurança</title>
       </Helmet>
 
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.10),transparent_28%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.32))]">
-        <main className="mx-auto w-full max-w-5xl px-4 pb-8 pt-4 sm:px-6 sm:pb-10 sm:pt-6 lg:px-8">
-          <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
+      <div className="territory-vivo min-h-[100dvh] bg-territory-canvas text-territory-ink">
+        <main className="mx-auto w-full max-w-[1080px] px-3 pb-24 pt-4 sm:px-6 sm:pb-10 sm:pt-6 lg:px-8">
+          <div className="sticky top-0 z-20 -mx-3 mb-5 border-b border-territory-border bg-territory-canvas/95 px-3 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
                 <Button
@@ -100,7 +100,7 @@ export default function ContaSegurancaPage() {
 
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
             <div className="space-y-5">
-              <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
+              <section className="rounded-territory-highlight border border-territory-border bg-territory-surface p-5 sm:p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="space-y-2">
                     <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
@@ -110,24 +110,31 @@ export default function ContaSegurancaPage() {
                       {user.email}
                     </h2>
                     <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                      Esta área cuida apenas do acesso da conta. Identidade pública,
-                      perfis vinculados e configurações operacionais seguem separados.
+                      Esta área cuida apenas do acesso da conta. Identidade
+                      pública, perfis vinculados e configurações operacionais
+                      seguem separados.
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-2 sm:w-auto sm:grid-cols-1">
                     <div className="rounded-2xl border border-border/60 bg-muted/20 px-3 py-2 text-xs">
-                      <p className="font-medium text-foreground">Email principal</p>
-                      <p className="mt-1 text-muted-foreground">Login e recuperação</p>
+                      <p className="font-medium text-foreground">
+                        Email principal
+                      </p>
+                      <p className="mt-1 text-muted-foreground">
+                        Login e recuperação
+                      </p>
                     </div>
                     <div className="rounded-2xl border border-border/60 bg-muted/20 px-3 py-2 text-xs">
                       <p className="font-medium text-foreground">Senha forte</p>
-                      <p className="mt-1 text-muted-foreground">Obrigatória para acesso</p>
+                      <p className="mt-1 text-muted-foreground">
+                        Obrigatória para acesso
+                      </p>
                     </div>
                   </div>
                 </div>
               </section>
 
-              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+              <Card className="rounded-territory-highlight border-territory-border bg-territory-surface shadow-none">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-sm">
                     <Mail className="h-4 w-4" />
@@ -135,7 +142,9 @@ export default function ContaSegurancaPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <p className="text-sm font-medium text-foreground">{user.email}</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {user.email}
+                  </p>
                   <p className="text-sm leading-6 text-muted-foreground">
                     Esse e-mail é usado para entrar na conta e receber fluxos de
                     recuperação. Alterações devem passar pelo suporte.
@@ -143,7 +152,7 @@ export default function ContaSegurancaPage() {
                 </CardContent>
               </Card>
 
-              <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
+              <section className="rounded-territory-highlight border border-territory-border bg-territory-surface p-5 sm:p-6">
                 <ChangePasswordForm
                   onSave={handleChangePassword}
                   onCancel={() => {
@@ -152,17 +161,17 @@ export default function ContaSegurancaPage() {
                 />
               </section>
 
-              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
+              <Card className="rounded-territory-highlight border-territory-border bg-territory-surface shadow-none">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-sm">
                     <Mail className="h-4 w-4" />
-                    Recuperacao por email
                     Recuperação por e-mail
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <p className="text-sm leading-6 text-muted-foreground">
-                    Envie um fluxo de redefinição para o e-mail principal da conta.
+                    Envie um fluxo de redefinição para o e-mail principal da
+                    conta.
                   </p>
                   <Button
                     type="button"
@@ -185,7 +194,7 @@ export default function ContaSegurancaPage() {
                 </CardContent>
               </Card>
 
-              <Card className="rounded-3xl border-destructive/30 bg-card/90 shadow-sm">
+              <Card className="rounded-territory-highlight border-destructive/30 bg-territory-surface shadow-none">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-sm text-destructive">
                     <AlertTriangle className="h-4 w-4" />
@@ -194,8 +203,8 @@ export default function ContaSegurancaPage() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <p className="text-sm leading-6 text-muted-foreground">
-                    Excluir a conta remove perfis, dados e conteudo associados. Essa
-                    ação é permanente.
+                    Excluir a conta remove perfis, dados e conteudo associados.
+                    Essa ação é permanente.
                   </p>
                   <Button
                     type="button"
@@ -214,7 +223,7 @@ export default function ContaSegurancaPage() {
             </div>
 
             <aside className="space-y-4">
-              <Card className="rounded-3xl border-border/70 bg-card/85 shadow-sm">
+              <Card className="rounded-territory-highlight border-territory-border bg-territory-surface shadow-none">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-sm">
                     <LockKeyhole className="h-4 w-4" />
