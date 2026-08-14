@@ -84,6 +84,9 @@ export default {
           warm: "hsl(var(--territory-warm))",
           sun: "hsl(var(--territory-sun))",
           border: "hsl(var(--territory-border))",
+          focus: "hsl(var(--territory-focus))",
+          "on-image": "hsl(var(--territory-on-image))",
+          "image-overlay": "hsl(var(--territory-image-overlay))",
         },
         category: {
           alert: {

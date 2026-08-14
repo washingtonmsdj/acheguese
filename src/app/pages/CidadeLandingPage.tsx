@@ -95,14 +95,14 @@ import { mapClassifiedsLayerRuntimeService } from "@/core/maps/services/MapClass
 import { mapGastronomyLayerRuntimeService } from "@/core/maps/services/MapGastronomyLayerRuntimeService";
 import { mapServicesLayerRuntimeService } from "@/core/maps/services/MapServicesLayerRuntimeService";
 import type { BoundingBox } from "@/core/maps/types/core";
-import { useCommunityFeedSimple } from "@/core/community/hooks/feed/useCommunityFeed";
-import { CommunityOverviewSurface } from "@/core/community/components/page/CommunityOverviewSurface";
+import { useCommunityFeedSimple } from "@/core/community-feed/hooks/useCommunityFeed";
+import { CommunityOverviewSurface } from "@/core/community-feed/components/CommunityOverviewSurface";
 import {
   isCommunityOverviewView,
   isCommunitySocialView,
   type CommunityOverviewSection,
   type CommunityOverviewView,
-} from "@/core/community/components/page/communityOverviewNavigation";
+} from "@/core/community-feed/navigation";
 import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
 import { PublicHeaderMobileMenu } from "@/core/navigation/PublicHeaderMobileMenu";
 import {
@@ -143,15 +143,13 @@ import {
   type PopulationMetric,
 } from "./CidadeLanding.neighborhood-panels";
 import { NeighborhoodTerritoryHero } from "./CidadeLanding.neighborhood-hero";
-import { NeighborhoodTerritoryArt } from "@/core/community/components/public/NeighborhoodTerritoryArt";
+import { NeighborhoodTerritoryArt } from "@/core/community-feed/components/NeighborhoodTerritoryArt";
 import "./CidadeLandingPage.css";
 
 const CommunityCreatePostModal = lazy(() =>
-  import("@/core/community/components/composer/CreatePostModal").then(
-    (module) => ({
-      default: module.CreatePostModal,
-    }),
-  ),
+  import("@/core/community-feed/components/CreatePostModal").then((module) => ({
+    default: module.CreatePostModal,
+  })),
 );
 
 type Coordinates = {
@@ -1706,7 +1704,6 @@ function NeighborhoodLandingContent({
             navigate(canInteract ? urls.feed : lockedActionHref)
           }
           loginHref={enterHref}
-          publishHref={interactionHref}
           communityProfile={communityProfileQuery.data ?? null}
           mode={canInteract ? "member" : "public"}
           onOpenCreatePost={() => setCreatePostOpen(true)}

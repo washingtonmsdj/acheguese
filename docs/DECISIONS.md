@@ -87,3 +87,14 @@
 ## D-021 — Cobertura do produto é independente do rollout da Community
 
 **Contexto:** abrir a camada social simultaneamente em todos os bairros dilui atividade e faz comunidades locais parecerem vazias. **Decisão:** o Achegue-se pode oferecer Home, busca, empresas, serviços, classificados, vagas, eventos e demais módulos públicos em toda Salvador enquanto a Community é ativada de forma territorial e gradual. O primeiro cluster oficial de lançamento da Community é o **Complexo do Nordeste de Amaralina**, inicialmente concentrando Nordeste de Amaralina, Santa Cruz, Vale das Pedrinhas e Chapada, preservando a identidade canônica de cada Territory. Os demais bairros continuam utilizáveis no produto; quando a Community não estiver ativa, a Home deve permanecer útil e mostrar estado `coming_soon`/waitlist apenas para a camada comunitária. A expansão da Community deve ocorrer por evidência operacional e de demanda — interesse local, capacidade de moderação, atividade e condições de lançamento — e não por calendário automático. **Referências:** `03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`, `05-ux/HOME-SPEC.md`.
+
+## D-022 — Estado ativo da Community exige perfil persistido e rollout
+
+**Decisao:** `territory_communities.status` e a fonte da identidade e do estado
+especifico da Community; `module_rollouts` e a fonte de habilitacao operacional.
+Somente perfil persistido `active` combinado com rollout efetivo ativo abre
+overview e Feed. Rollout herdado nao fabrica Community. Perfil persistido
+`coming_soon`, `launching` ou `waiting_list` pode oferecer interesse pelo
+contrato D-008; ausencia/inatividade/erro permanece fail-closed e mantem acesso
+a Home e Explorar. **Referencia:**
+`03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`.

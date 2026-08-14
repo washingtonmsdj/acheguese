@@ -405,7 +405,7 @@ export const GruposPage = lazy(
   () => import("@/core/community-groups/pages/GruposPage"),
 );
 export const ComunidadePage = lazy(
-  () => import("@/core/community/pages/ComunidadePage"),
+  () => import("@/core/community-feed/pages/ComunidadePage"),
 );
 export const GrupoDetailPage = lazy(
   () => import("@/core/community-groups/pages/GrupoDetailPage"),
@@ -438,7 +438,7 @@ export const AchadoPerdidoDetailPage =
   createLaunchPausedRoute("Achados e perdidos");
 export const ProblemasPage = createLaunchPausedRoute("Problemas");
 export const NovoPostPage = lazy(
-  () => import("@/core/community/pages/NovoPostPage"),
+  () => import("@/core/community-feed/pages/NovoPostPage"),
 );
 
 // Comunicacao Territorial

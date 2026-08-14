@@ -64,7 +64,6 @@ describe("CommunityOverviewSurface navigation", () => {
           }}
           onRequireLogin={vi.fn()}
           loginHref="/login"
-          publishHref="/login"
         />
       </MemoryRouter>,
     );
@@ -106,7 +105,7 @@ describe("CommunityOverviewSurface navigation", () => {
           }}
           onRequireLogin={vi.fn()}
           loginHref="/login"
-          publishHref="/login"
+          canCreatePost
           onViewChange={onViewChange}
         />
       </MemoryRouter>,
@@ -195,7 +194,6 @@ describe("CommunityOverviewSurface navigation", () => {
           }}
           onRequireLogin={vi.fn()}
           loginHref="/login"
-          publishHref="/login"
           onViewChange={onViewChange}
         />
       </MemoryRouter>,
@@ -256,19 +254,32 @@ describe("CommunityOverviewSurface navigation", () => {
           }}
           onRequireLogin={vi.fn()}
           loginHref="/login"
-          publishHref="/login"
         />
       </MemoryRouter>,
     );
 
-    const navigation = screen.getByRole("navigation", {
-      name: "Navegacao da comunidade",
-    });
+    const navigation = document.querySelector(
+      '[data-community-sections-menu="true"]',
+    );
+    const sectionsTrigger = document.querySelector(
+      '[data-community-sections-trigger="true"]',
+    );
+    expect(sectionsTrigger).not.toBeNull();
+    fireEvent.click(sectionsTrigger as HTMLElement);
+    const openedNavigation = document.querySelector(
+      '[data-community-sections-menu="true"]',
+    );
+    expect(navigation).toBeNull();
+    expect(openedNavigation).not.toBeNull();
     expect(
-      within(navigation).getByRole("link", { name: "Mapa" }),
+      within(openedNavigation as HTMLElement).getByRole("link", {
+        name: "Mapa",
+      }),
     ).toHaveAttribute("href", "/mapa");
     expect(
-      within(navigation).getByRole("link", { name: "Eventos" }),
+      within(openedNavigation as HTMLElement).getByRole("link", {
+        name: "Eventos",
+      }),
     ).toHaveAttribute("href", "#eventos");
     expect(screen.queryByText("Achados")).toBeNull();
   });
@@ -286,7 +297,6 @@ describe("CommunityOverviewSurface navigation", () => {
           }}
           onRequireLogin={vi.fn()}
           loginHref="/login"
-          publishHref="/login"
           activeSection="business"
         >
           <div>Empresas da comunidade</div>
@@ -330,7 +340,6 @@ describe("CommunityOverviewSurface navigation", () => {
           }}
           onRequireLogin={vi.fn()}
           loginHref="/login"
-          publishHref="/login"
           activeView="business"
         />
       </MemoryRouter>,

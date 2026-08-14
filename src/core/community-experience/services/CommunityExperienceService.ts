@@ -13,11 +13,20 @@ import type {
 } from "@/core/community-experience/types";
 import type { TerritoryFilter } from "@/core/location/types";
 
-export type { CommunityStatus, CommunityTerritoryType, TerritorialCommunityProfile };
+export type {
+  CommunityStatus,
+  CommunityTerritoryType,
+  TerritorialCommunityProfile,
+};
 export type { CommunitySearchResult };
 
-function isPublicFallbackResolved(resolved: CommunityExperienceResolvedTerritory): boolean {
-  return resolved.kind === "location" && resolved.location.metadata?.public_fallback === true;
+function isPublicFallbackResolved(
+  resolved: CommunityExperienceResolvedTerritory,
+): boolean {
+  return (
+    resolved.kind === "location" &&
+    resolved.location.metadata?.public_fallback === true
+  );
 }
 
 function getCommunityTerritoryIdentity(
@@ -32,7 +41,8 @@ function getCommunityTerritoryIdentity(
           : resolved.location.type === "neighborhood"
             ? "neighborhood"
             : "district",
-    territoryId: resolved.kind === "group" ? resolved.group.id : resolved.location.id,
+    territoryId:
+      resolved.kind === "group" ? resolved.group.id : resolved.location.id,
   };
 }
 
@@ -62,14 +72,16 @@ function fallbackFromResolved(
 
   if (
     resolved.kind === "location" &&
-    (resolved.location.type === "neighborhood" || resolved.location.type === "district")
+    (resolved.location.type === "neighborhood" ||
+      resolved.location.type === "district")
   ) {
     return {
       id: `community-${resolved.location.slug}`,
       name: `Achegue-se ${resolved.location.name}`,
       slug: resolved.location.slug,
       city_id: resolved.location.parent_id ?? null,
-      territory_type: resolved.location.type === "neighborhood" ? "neighborhood" : "district",
+      territory_type:
+        resolved.location.type === "neighborhood" ? "neighborhood" : "district",
       territory_id: resolved.location.id,
       status: COMMUNITY_EXPERIENCE_STATUS.INACTIVE,
       headline: null,
@@ -87,10 +99,13 @@ function fallbackFromResolved(
   return {
     id: "community-city-default",
     name: "Comunidade local",
-    slug: resolved.kind === "group" ? resolved.group.slug : resolved.location.slug,
+    slug:
+      resolved.kind === "group" ? resolved.group.slug : resolved.location.slug,
     city_id: null,
-    territory_type: resolved.kind === "group" ? "territorial_group" : "district",
-    territory_id: resolved.kind === "group" ? resolved.group.id : resolved.location.id,
+    territory_type:
+      resolved.kind === "group" ? "territorial_group" : "district",
+    territory_id:
+      resolved.kind === "group" ? resolved.group.id : resolved.location.id,
     status: COMMUNITY_EXPERIENCE_STATUS.INACTIVE,
     headline: null,
     description: null,
@@ -105,25 +120,34 @@ function fallbackFromResolved(
 }
 
 export class CommunityExperienceService {
-  static async findCommunityById(id: string): Promise<TerritoryCommunityRecord | null> {
+  static async findCommunityById(
+    id: string,
+  ): Promise<TerritoryCommunityRecord | null> {
     return CommunityExperienceRepository.findCommunityById(id);
   }
 
-  static async findSingleActiveCommunityBySlug(alias: string): Promise<CommunitySlugLookup> {
+  static async findSingleActiveCommunityBySlug(
+    alias: string,
+  ): Promise<CommunitySlugLookup> {
     return CommunityExperienceRepository.findSingleActiveCommunityBySlug(alias);
   }
 
   static async findCommunityByTerritoryReference(
     reference: CommunityPublicAliasTerritoryReference,
   ): Promise<TerritoryCommunityRecord | null> {
-    return CommunityExperienceRepository.findCommunityByTerritoryReference(reference);
+    return CommunityExperienceRepository.findCommunityByTerritoryReference(
+      reference,
+    );
   }
 
   static async findCommunityByCityAndSlug(
     cityId: string,
     slug: string,
   ): Promise<TerritoryCommunityRecord | null> {
-    return CommunityExperienceRepository.findCommunityByCityAndSlug(cityId, slug);
+    return CommunityExperienceRepository.findCommunityByCityAndSlug(
+      cityId,
+      slug,
+    );
   }
 
   static async findActivePublicAlias(
@@ -135,7 +159,9 @@ export class CommunityExperienceService {
   static async findActivePublicAliasByCommunityId(
     communityId: string,
   ): Promise<CommunityPublicAliasRecord | null> {
-    return CommunityExperienceRepository.findActivePublicAliasByCommunityId(communityId);
+    return CommunityExperienceRepository.findActivePublicAliasByCommunityId(
+      communityId,
+    );
   }
 
   static async findPersistedCommunityProfile(
@@ -143,15 +169,12 @@ export class CommunityExperienceService {
   ): Promise<TerritorialCommunityProfile | null> {
     if (!resolved || isPublicFallbackResolved(resolved)) return null;
 
-    const { territoryType, territoryId } = getCommunityTerritoryIdentity(resolved);
-    try {
-      return await CommunityExperienceRepository.findCommunityProfileByTerritory(
-        territoryType,
-        territoryId,
-      );
-    } catch {
-      return null;
-    }
+    const { territoryType, territoryId } =
+      getCommunityTerritoryIdentity(resolved);
+    return CommunityExperienceRepository.findCommunityProfileByTerritory(
+      territoryType,
+      territoryId,
+    );
   }
 
   static async getCommunityProfile(

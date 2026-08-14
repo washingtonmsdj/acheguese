@@ -60,7 +60,9 @@ export function AppLayoutSidebar() {
         pathSegments.length >= 3 &&
         pathSegments.length <= 4));
   const usesTerritoryVivoShell =
-    isBarePublicTerritorialRoute || isTerritoryVivoExploreRoute;
+    isBarePublicTerritorialRoute ||
+    isTerritoryVivoExploreRoute ||
+    isCommunityPublicLandingRoute;
 
   // Ocultar sidebar na home e na página de perfil (que tem sua própria sidebar)
   const hideGlobalSidebar =

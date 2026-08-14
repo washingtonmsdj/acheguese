@@ -33,7 +33,7 @@ import {
 } from "@/config/communityLaunch";
 import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 import { TERRITORY_CONFIG } from "@/config/territory";
-import { useCommunityAccess } from "@/core/community/access/useCommunityAccess";
+import { useCommunityAccess } from "@/core/community-experience/access";
 import { classifiedUrlService } from "@/core/classifieds/services";
 import { useTerritoryHomeData } from "@/core/landing/hooks/useTerritoryHomeData";
 import type {

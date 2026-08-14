@@ -7,4 +7,4 @@
  *
  * Ver NAVIGATION-MAPPING.md.
  */
-export { default } from "@/core/community/pages/ComunidadePage";
+export { default } from "@/core/community-feed/pages/ComunidadePage";

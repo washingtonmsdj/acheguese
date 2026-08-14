@@ -84,6 +84,8 @@
     --territory-sun: 42 82% 65%;
     --territory-border: 164 24% 21%;
     --territory-focus: 166 70% 58%;
+    --territory-on-image: 0 0% 100%;
+    --territory-image-overlay: 164 50% 4%;
 
     /* ==========================================================
      * Semantic content category tokens (SSOT visual do Achegue-se)
@@ -170,6 +172,8 @@
     --territory-sun: 43 85% 32%;
     --territory-border: 140 18% 86%;
     --territory-focus: 168 78% 32%;
+    --territory-on-image: 0 0% 100%;
+    --territory-image-overlay: 164 50% 4%;
 
     /* Semantic content category tokens - light mode */
     --category-alert: 0 72% 48%;

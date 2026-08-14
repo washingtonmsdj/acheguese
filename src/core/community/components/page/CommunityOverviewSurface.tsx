@@ -26,7 +26,6 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-
 import {
   buildBusinessHref,
   buildCommunityViewHref,
@@ -101,16 +100,16 @@ import { getRecordValue } from "@/shared/utils/recordLookup";
 
 type CommunityOverviewMode = "public" | "member";
 
-interface CommunityOverviewSurfaceProps {
+export interface CommunityOverviewSurfaceProps {
   resolved?: ResolvedTerritory;
   territoryName: string;
   territoryFilter: TerritoryFilter;
   onRequireLogin: () => void;
   loginHref: string;
-  publishHref: string;
   communityId?: string | null;
   communityProfile?: TerritorialCommunityProfile | null;
   mode?: CommunityOverviewMode;
+  canCreatePost?: boolean;
   onOpenCreatePost?: (defaultType?: PostType) => void;
   activeView?: CommunityOverviewView;
   onViewChange?: (view: CommunityOverviewView) => void;
@@ -138,7 +137,6 @@ interface FocusShortcut {
   surface?: LaunchSurfaceKey;
 }
 
-
 const COMMUNITY_FEED_CONTEXT_SHORTCUTS = [
   { view: "feed", label: "Posts", icon: MessageCircle },
   { view: "groups", label: "Grupos", icon: Users },
@@ -152,29 +150,28 @@ const COMMUNITY_FEED_CONTEXT_SHORTCUTS = [
 type CommunityFeedContextTab =
   (typeof COMMUNITY_FEED_CONTEXT_SHORTCUTS)[number]["view"];
 
-
 function EventPreviewItem({ event }: { event: PublicEvent }) {
   const dateParts = getEventDateParts(event.date);
 
   return (
-    <article className="rounded-xl border border-white/10 bg-white/[0.035] p-3">
+    <article className="rounded-xl border border-territory-border bg-territory-raised p-3">
       <div className="flex min-w-0 gap-3">
-        <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl border border-white/10 bg-black/24 text-center">
-          <span className="text-lg font-bold leading-none text-white">
+        <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl border border-territory-border bg-territory-canvas text-center">
+          <span className="text-lg font-bold leading-none text-territory-ink">
             {dateParts.day}
           </span>
-          <span className="mt-1 text-[10px] font-semibold uppercase text-white/48">
+          <span className="mt-1 text-[10px] font-semibold uppercase text-territory-muted">
             {dateParts.month}
           </span>
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-white">
+          <p className="truncate text-sm font-semibold text-territory-ink">
             {event.title}
           </p>
-          <p className="mt-1 truncate text-xs text-teal-200">
+          <p className="mt-1 truncate text-xs text-territory-brand">
             {normalizeCategoryLabel(event.category)}
           </p>
-          <p className="mt-1 line-clamp-2 text-xs leading-5 text-white/54">
+          <p className="mt-1 line-clamp-2 text-xs leading-5 text-territory-muted">
             {dateParts.time}
             {event.location ? ` - ${event.location}` : ""}
           </p>
@@ -211,21 +208,21 @@ function GroupPreviewItem({ group, href }: { group: GroupRow; href: string }) {
   return (
     <Link
       to={href}
-      className="group flex min-w-0 items-center gap-3 rounded-xl px-1.5 py-1.5 transition-colors hover:bg-white/[0.055]"
+      className="group flex min-w-0 items-center gap-3 rounded-xl px-1.5 py-1.5 transition-colors hover:bg-territory-raised"
     >
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-300/12 text-teal-200">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-territory-brand/12 text-territory-brand">
         <Users className="h-4 w-4" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-semibold text-white">
+        <span className="block truncate text-sm font-semibold text-territory-ink">
           {group.name}
         </span>
-        <span className="block truncate text-xs text-white/52">
+        <span className="block truncate text-xs text-territory-muted">
           {normalizeCategoryLabel(group.category)} - {formatCount(membersCount)}{" "}
           membros
         </span>
       </span>
-      <span className="shrink-0 rounded-lg border border-teal-300/25 px-2 py-1 text-xs font-semibold text-teal-200">
+      <span className="shrink-0 rounded-lg border border-territory-brand/25 px-2 py-1 text-xs font-semibold text-territory-brand">
         Abrir
       </span>
     </Link>
@@ -294,17 +291,17 @@ function DiscussionPreviewItem({ post }: { post: DiscussionPreviewPost }) {
   return (
     <a
       href={`#post-${post.id}`}
-      className="group block rounded-xl px-1.5 py-1 transition-colors hover:bg-white/[0.055]"
+      className="group block rounded-xl px-1.5 py-1 transition-colors hover:bg-territory-raised"
     >
       <div className="flex min-w-0 items-start gap-3">
-        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-teal-300/10 text-amber-300">
+        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-territory-brand/10 text-territory-sun">
           <Icon className="h-4 w-4" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block line-clamp-2 text-sm font-semibold leading-5 text-white/84">
+          <span className="block line-clamp-2 text-sm font-semibold leading-5 text-territory-ink">
             {getPublicPostPreview(post.content, 76)}
           </span>
-          <span className="mt-0.5 flex items-center gap-2 text-xs text-white/42">
+          <span className="mt-0.5 flex items-center gap-2 text-xs text-territory-muted">
             <span>{post.comments_count ?? 0} respostas</span>
             <span aria-hidden="true">-</span>
             <span>{formatPublicPostDate(post.created_at)}</span>
@@ -329,9 +326,9 @@ function SurfacePanel({
       id={id}
       tabIndex={id ? -1 : undefined}
       className={cn(
-        "rounded-2xl border border-white/10 bg-[#071922]/88 p-4 text-white shadow-xl shadow-black/10 backdrop-blur",
+        "rounded-territory-highlight border border-territory-border bg-territory-surface p-4 text-territory-ink shadow-territory-highlight",
         id &&
-          "scroll-mt-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300/70",
+          "scroll-mt-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand/70",
         className,
       )}
     >
@@ -351,11 +348,11 @@ function SectionHeader({
 }) {
   return (
     <div className="mb-3 flex items-center justify-between gap-3">
-      <h2 className="text-sm font-semibold text-white">{title}</h2>
+      <h2 className="text-sm font-semibold text-territory-ink">{title}</h2>
       {actionHref && actionLabel ? (
         <Link
           to={actionHref}
-          className="shrink-0 text-xs font-semibold text-teal-300 transition-colors hover:text-teal-200"
+          className="shrink-0 text-xs font-semibold text-territory-brand transition-colors hover:text-territory-brand-strong"
         >
           {actionLabel}
         </Link>
@@ -373,7 +370,7 @@ function CommunityFeedContextNavigation({
 }) {
   return (
     <div
-      className="flex min-w-0 gap-6 overflow-x-auto rounded-xl border border-white/10 bg-[#071922]/88 px-3 shadow-xl shadow-black/10 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="flex min-w-0 gap-6 overflow-x-auto rounded-xl border border-territory-border bg-territory-surface px-3 shadow-territory-highlight [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       role="group"
       aria-label="Navegação contextual do feed"
     >
@@ -385,10 +382,10 @@ function CommunityFeedContextNavigation({
           onClick={() => onContextTabChange(view)}
           aria-pressed={activeContextTab === view}
           className={cn(
-            "relative inline-flex min-h-10 shrink-0 items-center gap-1.5 border-0 px-0 text-xs font-medium transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-transparent hover:text-teal-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300/70",
+            "relative inline-flex min-h-10 shrink-0 items-center gap-1.5 border-0 px-0 text-xs font-medium transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-transparent hover:text-territory-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand/70",
             activeContextTab === view
-              ? "font-semibold text-teal-300 after:bg-teal-300"
-              : "text-white/62",
+              ? "font-semibold text-territory-brand after:bg-territory-brand"
+              : "text-territory-muted",
           )}
           aria-controls="community-feed-context-panel"
         >
@@ -414,7 +411,7 @@ function CommunityPostSortControls({
       aria-label="Ordenação dos posts"
       data-community-post-sort="true"
     >
-      <span className="shrink-0 text-xs font-medium text-white/48">
+      <span className="shrink-0 text-xs font-medium text-territory-muted">
         Ordenar:
       </span>
       {COMMUNITY_FEED_SORT_FILTERS.map(({ id, label }) => (
@@ -424,10 +421,10 @@ function CommunityPostSortControls({
           aria-pressed={value === id}
           onClick={() => onChange(id)}
           className={cn(
-            "inline-flex min-h-8 shrink-0 items-center rounded-lg border px-2.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300/70",
+            "inline-flex min-h-8 shrink-0 items-center rounded-lg border px-2.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand/70",
             value === id
-              ? "border-teal-300/35 bg-teal-300/12 text-teal-100"
-              : "border-white/10 bg-white/[0.035] text-white/60 hover:border-white/20 hover:text-white",
+              ? "border-territory-brand/35 bg-territory-brand/12 text-territory-brand"
+              : "border-territory-border bg-territory-raised text-territory-muted hover:border-territory-brand/25 hover:text-territory-ink",
           )}
         >
           {label}
@@ -468,7 +465,7 @@ function CommunityGroupsPreview({
           {[0, 1, 2, 3].slice(0, itemLimit ?? 4).map((index) => (
             <div
               key={index}
-              className="h-14 animate-pulse rounded-xl bg-white/[0.04]"
+              className="h-14 animate-pulse rounded-xl bg-territory-raised"
             />
           ))}
         </div>
@@ -483,7 +480,7 @@ function CommunityGroupsPreview({
           ))}
         </div>
       ) : (
-        <p className="text-sm leading-5 text-white/50">
+        <p className="text-sm leading-5 text-territory-muted">
           Nenhum grupo ativo neste território.
         </p>
       )}
@@ -516,7 +513,7 @@ function CommunityDiscussionsPreview({
           {[0, 1, 2, 3].slice(0, itemLimit ?? 4).map((index) => (
             <div
               key={index}
-              className="h-11 animate-pulse rounded-xl bg-white/[0.04]"
+              className="h-11 animate-pulse rounded-xl bg-territory-raised"
             />
           ))}
         </div>
@@ -527,7 +524,7 @@ function CommunityDiscussionsPreview({
           ))}
         </div>
       ) : (
-        <p className="text-sm leading-5 text-white/50">
+        <p className="text-sm leading-5 text-territory-muted">
           Nenhuma discussão em alta agora.
         </p>
       )}
@@ -563,18 +560,22 @@ function CommunityModulePreview({
       className="overflow-hidden p-0"
       id={`preview-${title.toLowerCase()}`}
     >
-      <div className="flex min-w-0 items-start gap-3 border-b border-white/10 px-3 py-3 sm:px-4">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-300/12 text-teal-200">
+      <div className="flex min-w-0 items-start gap-3 border-b border-territory-border px-3 py-3 sm:px-4">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/12 text-territory-brand">
           <Icon className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <h2 className="text-base font-semibold text-white">{title}</h2>
-            <span className="text-xs font-medium text-teal-200">
+            <h2 className="text-base font-semibold text-territory-ink">
+              {title}
+            </h2>
+            <span className="text-xs font-medium text-territory-brand">
               {countLabel}
             </span>
           </div>
-          <p className="mt-1 text-sm leading-5 text-white/52">{description}</p>
+          <p className="mt-1 text-sm leading-5 text-territory-muted">
+            {description}
+          </p>
         </div>
       </div>
 
@@ -587,12 +588,12 @@ function CommunityModulePreview({
             {[0, 1, 2].map((index) => (
               <div
                 key={index}
-                className="h-[4.75rem] animate-pulse rounded-xl bg-white/[0.04]"
+                className="h-[4.75rem] animate-pulse rounded-xl bg-territory-raised"
               />
             ))}
           </div>
         ) : isEmpty ? (
-          <p className="rounded-xl border border-dashed border-white/10 px-3 py-8 text-center text-sm text-white/50">
+          <p className="rounded-xl border border-dashed border-territory-border px-3 py-8 text-center text-sm text-territory-muted">
             {emptyMessage}
           </p>
         ) : (
@@ -600,10 +601,10 @@ function CommunityModulePreview({
         )}
       </div>
 
-      <div className="border-t border-white/10 p-3">
+      <div className="border-t border-territory-border p-3">
         <Link
           to={actionHref}
-          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-teal-300/25 bg-teal-300/10 px-4 text-sm font-semibold text-teal-100 transition-colors hover:bg-teal-300/15 hover:text-white"
+          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-territory-brand/25 bg-territory-brand/10 px-4 text-sm font-semibold text-territory-brand transition-colors hover:bg-territory-brand/15 hover:text-territory-brand-strong"
         >
           {actionLabel}
           <ChevronRight className="h-4 w-4" />
@@ -622,7 +623,7 @@ function BusinessPreviewRow({
 }) {
   const content = (
     <>
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-blue-500/12 text-blue-300">
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-territory-border bg-category-business/12 text-category-business">
         {business.logo_url ? (
           <SafeImage
             src={business.logo_url}
@@ -635,16 +636,16 @@ function BusinessPreviewRow({
         )}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-1.5 text-[0.68rem] font-semibold uppercase text-blue-300">
+        <span className="flex items-center gap-1.5 text-[0.68rem] font-semibold uppercase text-category-business">
           Negócio local
           {business.is_verified ? (
             <BadgeCheck className="h-3.5 w-3.5" aria-label="Verificada" />
           ) : null}
         </span>
-        <strong className="mt-0.5 block truncate text-sm font-semibold text-white">
+        <strong className="mt-0.5 block truncate text-sm font-semibold text-territory-ink">
           {business.name}
         </strong>
-        <span className="block truncate text-xs text-white/52">
+        <span className="block truncate text-xs text-territory-muted">
           {normalizeCategoryLabel(business.category)}
           {business.rating > 0
             ? ` · ${business.rating.toFixed(1).replace(".", ",")}`
@@ -652,7 +653,7 @@ function BusinessPreviewRow({
         </span>
       </span>
       {href ? (
-        <ChevronRight className="h-4 w-4 shrink-0 text-white/35" />
+        <ChevronRight className="h-4 w-4 shrink-0 text-territory-muted" />
       ) : null}
     </>
   );
@@ -660,12 +661,12 @@ function BusinessPreviewRow({
   return href ? (
     <Link
       to={href}
-      className="flex min-h-[4.75rem] min-w-0 items-center gap-3 rounded-xl border border-white/10 bg-[#081e28]/70 px-3 py-2 transition-colors hover:border-teal-300/25 hover:bg-white/[0.055]"
+      className="flex min-h-[4.75rem] min-w-0 items-center gap-3 rounded-xl border border-territory-border bg-territory-raised px-3 py-2 transition-colors hover:border-territory-brand/25 hover:bg-territory-brand/5"
     >
       {content}
     </Link>
   ) : (
-    <div className="flex min-h-[4.75rem] min-w-0 items-center gap-3 rounded-xl border border-white/10 bg-[#081e28]/70 px-3 py-2">
+    <div className="flex min-h-[4.75rem] min-w-0 items-center gap-3 rounded-xl border border-territory-border bg-territory-raised px-3 py-2">
       {content}
     </div>
   );
@@ -673,8 +674,8 @@ function BusinessPreviewRow({
 
 function ServicePreviewRow({ service }: { service: FeaturedService }) {
   return (
-    <article className="flex min-h-[4.75rem] min-w-0 items-center gap-3 rounded-xl border border-white/10 bg-[#081e28]/70 px-3 py-2">
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-violet-500/12 text-violet-300">
+    <article className="flex min-h-[4.75rem] min-w-0 items-center gap-3 rounded-xl border border-territory-border bg-territory-raised px-3 py-2">
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-territory-border bg-category-discussion/12 text-category-discussion">
         {service.logo_url ? (
           <SafeImage
             src={service.logo_url}
@@ -687,16 +688,16 @@ function ServicePreviewRow({ service }: { service: FeaturedService }) {
         )}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-1.5 text-[0.68rem] font-semibold uppercase text-violet-300">
+        <span className="flex items-center gap-1.5 text-[0.68rem] font-semibold uppercase text-category-discussion">
           Serviço local
           {service.is_verified ? (
             <BadgeCheck className="h-3.5 w-3.5" aria-label="Verificado" />
           ) : null}
         </span>
-        <strong className="mt-0.5 block truncate text-sm font-semibold text-white">
+        <strong className="mt-0.5 block truncate text-sm font-semibold text-territory-ink">
           {service.name}
         </strong>
-        <span className="block truncate text-xs text-white/52">
+        <span className="block truncate text-xs text-territory-muted">
           {normalizeCategoryLabel(service.category)} ·{" "}
           {service.price_range ?? "A combinar"}
         </span>
@@ -709,7 +710,7 @@ function ClassifiedPreviewRow({ item }: { item: FeaturedClassified }) {
   const href = ClassifiedUrlService.buildPublicUrl(item);
   const content = (
     <>
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-amber-500/12 text-amber-300">
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-territory-border bg-category-classified/12 text-category-classified">
         {item.photos[0] ? (
           <SafeImage
             src={item.photos[0]}
@@ -722,19 +723,19 @@ function ClassifiedPreviewRow({ item }: { item: FeaturedClassified }) {
         )}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="text-[0.68rem] font-semibold uppercase text-amber-300">
+        <span className="text-[0.68rem] font-semibold uppercase text-category-classified">
           Classificado local
         </span>
-        <strong className="mt-0.5 block truncate text-sm font-semibold text-white">
+        <strong className="mt-0.5 block truncate text-sm font-semibold text-territory-ink">
           {item.titulo}
         </strong>
-        <span className="block truncate text-xs text-white/52">
+        <span className="block truncate text-xs text-territory-muted">
           {normalizeCategoryLabel(item.category)} ·{" "}
           {formatBrlNoCents(item.price)}
         </span>
       </span>
       {href ? (
-        <ChevronRight className="h-4 w-4 shrink-0 text-white/35" />
+        <ChevronRight className="h-4 w-4 shrink-0 text-territory-muted" />
       ) : null}
     </>
   );
@@ -742,12 +743,12 @@ function ClassifiedPreviewRow({ item }: { item: FeaturedClassified }) {
   return href ? (
     <Link
       to={href}
-      className="flex min-h-[4.75rem] min-w-0 items-center gap-3 rounded-xl border border-white/10 bg-[#081e28]/70 px-3 py-2 transition-colors hover:border-teal-300/25 hover:bg-white/[0.055]"
+      className="flex min-h-[4.75rem] min-w-0 items-center gap-3 rounded-xl border border-territory-border bg-territory-raised px-3 py-2 transition-colors hover:border-territory-brand/25 hover:bg-territory-brand/5"
     >
       {content}
     </Link>
   ) : (
-    <div className="flex min-h-[4.75rem] min-w-0 items-center gap-3 rounded-xl border border-white/10 bg-[#081e28]/70 px-3 py-2">
+    <div className="flex min-h-[4.75rem] min-w-0 items-center gap-3 rounded-xl border border-territory-border bg-territory-raised px-3 py-2">
       {content}
     </div>
   );
@@ -838,18 +839,20 @@ function EmptyCommunityState({
   ctaLabel?: string;
 }) {
   return (
-    <div className="rounded-xl border border-dashed border-white/12 bg-white/[0.03] px-3 py-4">
+    <div className="rounded-xl border border-dashed border-territory-border bg-territory-raised px-3 py-4">
       <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-300/12 text-teal-200">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/12 text-territory-brand">
           <Icon className="h-4 w-4" />
         </span>
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-white">{title}</p>
-          <p className="mt-1 text-sm leading-5 text-white/52">{description}</p>
+          <p className="text-sm font-semibold text-territory-ink">{title}</p>
+          <p className="mt-1 text-sm leading-5 text-territory-muted">
+            {description}
+          </p>
           {ctaHref && ctaLabel ? (
             <Link
               to={ctaHref}
-              className="mt-3 inline-flex min-h-8 items-center rounded-lg border border-white/10 bg-white/[0.04] px-3 text-xs font-semibold text-teal-200 transition-colors hover:bg-white/[0.08]"
+              className="mt-3 inline-flex min-h-8 items-center rounded-lg border border-territory-border bg-territory-surface px-3 text-xs font-semibold text-territory-brand transition-colors hover:bg-territory-brand/10"
             >
               {ctaLabel}
             </Link>
@@ -866,10 +869,10 @@ export function CommunityOverviewSurface({
   territoryFilter,
   onRequireLogin,
   loginHref,
-  publishHref,
   communityId = null,
   communityProfile = null,
   mode = "public",
+  canCreatePost = false,
   onOpenCreatePost,
   activeView,
   onViewChange,
@@ -895,9 +898,9 @@ export function CommunityOverviewSurface({
   );
   const visualMockEnabled = useMemo(() => {
     const params = new URLSearchParams(routeLocation.search);
-    // Mock visual disponível em qualquer ambiente via ?visualMock=community-concept
-    // Popula feed, grupos, negócios, serviços, classificados, gastronomia, eventos e stats
+    // Fixture estritamente local para revisão visual. Production sempre usa dados reais.
     return (
+      import.meta.env.DEV &&
       params.get("visualMock") === COMMUNITY_OVERVIEW_VISUAL_MOCK_QUERY_VALUE
     );
   }, [routeLocation.search]);
@@ -1447,289 +1450,130 @@ export function CommunityOverviewSurface({
 
   return (
     <div
-      className="w-full min-w-0 px-3 py-4 text-white sm:px-4 md:px-6 xl:px-0 xl:py-0"
+      className="mx-auto w-full max-w-[76rem] min-w-0 px-4 py-5 text-territory-ink sm:px-6 sm:py-7 lg:px-8"
       data-community-overview="community-first"
+      data-community-state="active"
       data-visual-mock={
         visualMockEnabled
           ? COMMUNITY_OVERVIEW_VISUAL_MOCK_QUERY_VALUE
           : undefined
       }
     >
-      <div className="grid min-w-0 gap-5 xl:grid-cols-[14.375rem_minmax(0,1fr)] xl:gap-0">
-        <aside className="hidden border-r border-white/10 bg-[#06131b]/72 xl:block">
-          <div className="sticky top-0 space-y-5 px-5 py-6">
-            <p className="px-1 text-xs font-medium text-white/58">Comunidade</p>
-            <nav className="space-y-2" aria-label="Navegacao da comunidade">
-              {moduleLinks.map((item) => {
-                return (
-                  <ModuleNavLink
-                    key={item.key}
-                    item={item}
-                    onViewChange={handleViewChange}
-                    onNavigate={handleModuleNavigate}
-                    className={cn(
-                      "flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-normal transition-colors",
-                      item.isActive
-                        ? "bg-teal-400/16 text-teal-100"
-                        : "text-white/68 hover:bg-white/[0.06] hover:text-white",
-                    )}
+      <main className="min-w-0 space-y-4 xl:grid xl:grid-cols-[minmax(0,1fr)_20rem] xl:gap-x-5 xl:gap-y-4 xl:space-y-0">
+        <section
+          data-community-hero="true"
+          className="relative isolate overflow-hidden rounded-territory-highlight border border-territory-border bg-territory-image-overlay shadow-territory-highlight xl:col-span-2 xl:col-start-1 xl:row-start-1"
+          style={{
+            backgroundImage: `linear-gradient(90deg, hsl(var(--territory-image-overlay) / 0.84) 0%, hsl(var(--territory-image-overlay) / 0.64) 43%, hsl(var(--territory-image-overlay) / 0.16) 100%), url(${heroImage})`,
+            backgroundPosition: "center 48%",
+            backgroundSize: "cover",
+          }}
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,hsl(var(--territory-brand)/0.12),transparent_32%)]" />
+          <div className="relative px-4 py-5 sm:min-h-[14rem] sm:px-6 sm:py-6 lg:px-8 xl:min-h-[13rem]">
+            <div className="flex min-w-0 flex-col justify-between gap-5 xl:grid xl:h-full xl:grid-cols-[minmax(0,1fr)_21rem] xl:items-center xl:gap-7">
+              <div className="flex min-w-0 flex-row items-center gap-3 sm:gap-4 xl:gap-4">
+                <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-territory-on-image/20 bg-territory-on-image/10 shadow-xl shadow-territory-image-overlay/25 sm:h-20 sm:w-20 md:h-24 md:w-24 md:rounded-2xl xl:h-24 xl:w-24">
+                  <SafeImage
+                    src={heroImage}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    loading="eager"
                   />
-                );
-              })}
-            </nav>
+                </div>
+                <div className="min-w-0 xl:max-w-[36rem]">
+                  <h1 className="text-xl font-semibold leading-tight text-territory-on-image sm:text-3xl md:text-4xl xl:text-[1.75rem]">
+                    {communityTitle}
+                  </h1>
+                  <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs font-normal text-territory-on-image/80 sm:mt-1 sm:gap-2 sm:text-sm xl:text-xs">
+                    <MapPin className="h-3.5 w-3.5 shrink-0 text-territory-brand-strong sm:h-4 sm:w-4" />
+                    <span className="truncate">
+                      {communityLocationLine}
+                      {locationLabel !== communityLocationLine
+                        ? ` - ${locationLabel}`
+                        : ""}
+                    </span>
+                  </p>
+                  <p className="mt-1 line-clamp-2 max-w-xl overflow-hidden text-xs font-normal leading-4 text-territory-on-image/70 sm:mt-2 sm:text-base sm:leading-6 xl:text-xs xl:leading-[1.15rem]">
+                    {description}
+                  </p>
+                </div>
+              </div>
 
-            <button
-              type="button"
-              onClick={handleShareCommunity}
-              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-teal-300/30 px-4 text-sm font-semibold text-teal-200 transition-colors hover:bg-teal-300/10"
-            >
-              <UserPlus className="h-4 w-4" />
-              Convidar amigos
-            </button>
-          </div>
-        </aside>
-
-        <main className="min-w-0 space-y-4 xl:grid xl:grid-cols-[minmax(0,1fr)_23.75rem] xl:gap-x-4 xl:gap-y-2 xl:px-5 xl:py-3 xl:space-y-0">
-          <section
-            data-community-hero="true"
-            className={cn(
-              "relative isolate overflow-hidden rounded-2xl border border-white/12 bg-[#06141d] shadow-2xl shadow-black/20 sm:rounded-[24px] xl:col-start-1 xl:row-start-1",
-              isEmbeddedModule && "xl:col-span-2",
-            )}
-            style={{
-              backgroundImage: `linear-gradient(90deg, rgba(2,12,18,0.84) 0%, rgba(2,12,18,0.64) 43%, rgba(2,12,18,0.16) 100%), url(${heroImage})`,
-              backgroundPosition: "center 48%",
-              backgroundSize: "cover",
-            }}
-          >
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(45,212,191,0.12),transparent_32%)]" />
-            <div className="relative px-3 py-3 sm:min-h-[14rem] sm:px-5 sm:py-3 lg:min-h-[15rem] lg:px-7 lg:py-4 xl:h-[136px] xl:min-h-0 xl:px-5 xl:py-4">
-              <div className="flex min-w-0 flex-col justify-between gap-2 sm:gap-3 xl:grid xl:h-full xl:grid-cols-[minmax(0,1fr)_21rem] xl:items-center xl:gap-5">
-                <div className="flex min-w-0 flex-row items-center gap-3 sm:gap-4 xl:gap-4">
-                  <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-white/22 bg-white/10 shadow-xl shadow-black/25 sm:h-20 sm:w-20 md:h-24 md:w-24 md:rounded-2xl xl:h-24 xl:w-24">
-                    <SafeImage
-                      src={heroImage}
-                      alt=""
-                      className="h-full w-full object-cover"
-                      loading="eager"
-                    />
-                  </div>
-                  <div className="min-w-0 xl:max-w-[36rem]">
-                    <h1 className="text-xl font-semibold leading-tight text-white sm:text-3xl md:text-4xl xl:text-[1.75rem]">
-                      {communityTitle}
-                    </h1>
-                    <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-xs font-normal text-white/78 sm:mt-1 sm:gap-2 sm:text-sm xl:text-xs">
-                      <MapPin className="h-3.5 w-3.5 shrink-0 text-teal-300 sm:h-4 sm:w-4" />
-                      <span className="truncate">
-                        {communityLocationLine}
-                        {locationLabel !== communityLocationLine
-                          ? ` - ${locationLabel}`
-                          : ""}
-                      </span>
-                    </p>
-                    <p className="mt-1 line-clamp-2 max-w-xl overflow-hidden text-xs font-normal leading-4 text-white/70 sm:mt-2 sm:text-base sm:leading-6 xl:text-xs xl:leading-[1.15rem]">
-                      {description}
-                    </p>
-                  </div>
+              <div className="flex flex-col-reverse gap-2 xl:grid xl:grid-cols-[minmax(0,7.25rem)_12rem] xl:items-center xl:gap-3">
+                <div className="grid grid-cols-4 gap-1.5 sm:gap-2 xl:grid-cols-1 xl:gap-2">
+                  {statItems.map((item, index) => {
+                    const Icon = item.icon;
+                    return (
+                      <div
+                        key={item.label}
+                        className={cn(
+                          "min-w-0 rounded-lg border border-territory-on-image/10 bg-territory-image-overlay/25 px-1.5 py-1 backdrop-blur sm:rounded-xl sm:px-2.5 md:rounded-2xl md:px-4 md:py-2 xl:rounded-none xl:border-0 xl:bg-transparent xl:px-0 xl:py-0 xl:backdrop-blur-0",
+                          index >= 2 ? "xl:hidden" : "",
+                        )}
+                      >
+                        <div className="flex items-center gap-1 text-territory-on-image sm:gap-2">
+                          <Icon className="h-3.5 w-3.5 shrink-0 text-territory-brand-strong sm:h-4 sm:w-4 xl:text-territory-on-image/80" />
+                          <strong className="truncate text-xs sm:text-sm md:text-base xl:text-xl">
+                            {formatCount(item.value)}
+                          </strong>
+                        </div>
+                        <p className="mt-0.5 truncate text-[0.55rem] leading-tight text-territory-on-image/60 sm:text-[0.66rem] md:text-xs xl:mt-1">
+                          {item.label}
+                        </p>
+                      </div>
+                    );
+                  })}
                 </div>
 
-                <div className="flex flex-col-reverse gap-2 xl:grid xl:grid-cols-[minmax(0,7.25rem)_12rem] xl:items-center xl:gap-3">
-                  <div className="grid grid-cols-4 gap-1.5 sm:gap-2 xl:grid-cols-1 xl:gap-2">
-                    {statItems.map((item, index) => {
-                      const Icon = item.icon;
-                      return (
-                        <div
-                          key={item.label}
-                          className={cn(
-                            "min-w-0 rounded-lg border border-white/10 bg-black/24 px-1.5 py-1 backdrop-blur sm:rounded-xl sm:px-2.5 md:rounded-2xl md:px-4 md:py-2 xl:rounded-none xl:border-0 xl:bg-transparent xl:px-0 xl:py-0 xl:backdrop-blur-0",
-                            index >= 2 ? "xl:hidden" : "",
-                          )}
-                        >
-                          <div className="flex items-center gap-1 text-white sm:gap-2">
-                            <Icon className="h-3.5 w-3.5 shrink-0 text-teal-300 sm:h-4 sm:w-4 xl:text-white/82" />
-                            <strong className="truncate text-xs sm:text-sm md:text-base xl:text-xl">
-                              {formatCount(item.value)}
-                            </strong>
-                          </div>
-                          <p className="mt-0.5 truncate text-[0.55rem] leading-tight text-white/58 sm:text-[0.66rem] md:text-xs xl:mt-1">
-                            {item.label}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-2 sm:flex sm:shrink-0 sm:flex-nowrap sm:gap-3 sm:overflow-x-auto sm:pb-1 sm:[-ms-overflow-style:none] sm:[scrollbar-width:none] md:flex-wrap md:justify-end md:overflow-visible md:pb-0 xl:flex-col xl:gap-2 xl:pb-0 sm:[&::-webkit-scrollbar]:hidden">
-                    {mode === "member" ? (
-                      <Button
-                        type="button"
-                        onClick={() => onOpenCreatePost?.()}
-                        className="min-h-8 w-full rounded-lg bg-teal-400 px-2 text-xs font-semibold text-slate-950 hover:bg-teal-300 sm:min-h-9 sm:w-auto sm:shrink-0 sm:rounded-xl sm:px-3 sm:text-sm md:min-h-11 md:px-5 xl:w-48 xl:text-xs"
-                      >
-                        <MessageCircle className="mr-2 h-4 w-4" />
-                        Criar publicação
-                      </Button>
-                    ) : (
-                      <Link
-                        to={loginHref}
-                        className="inline-flex min-h-8 w-full items-center justify-center rounded-lg bg-teal-400 px-2 text-xs font-semibold text-slate-950 transition-colors hover:bg-teal-300 sm:min-h-9 sm:w-auto sm:shrink-0 sm:rounded-xl sm:px-3 sm:text-sm md:min-h-11 md:px-5 xl:w-48 xl:text-xs"
-                      >
-                        <LogIn className="mr-2 h-4 w-4 xl:hidden" />
-                        <span className="xl:hidden">Participar</span>
-                        <span className="hidden xl:inline">
-                          Participar da comunidade
-                        </span>
-                      </Link>
-                    )}
-                  </div>
+                <div className="grid grid-cols-1 gap-2 sm:flex sm:shrink-0 sm:flex-nowrap sm:gap-3 sm:overflow-x-auto sm:pb-1 sm:[-ms-overflow-style:none] sm:[scrollbar-width:none] md:flex-wrap md:justify-end md:overflow-visible md:pb-0 xl:flex-col xl:gap-2 xl:pb-0 sm:[&::-webkit-scrollbar]:hidden">
+                  {mode === "member" && canCreatePost ? (
+                    <Button
+                      type="button"
+                      onClick={() => onOpenCreatePost?.()}
+                      className="min-h-8 w-full rounded-lg bg-territory-brand px-2 text-xs font-semibold text-territory-image-overlay hover:bg-territory-brand-strong sm:min-h-9 sm:w-auto sm:shrink-0 sm:rounded-xl sm:px-3 sm:text-sm md:min-h-11 md:px-5 xl:w-48 xl:text-xs"
+                    >
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      Criar publicação
+                    </Button>
+                  ) : mode === "public" ? (
+                    <Link
+                      to={loginHref}
+                      className="inline-flex min-h-8 w-full items-center justify-center rounded-lg bg-territory-brand px-2 text-xs font-semibold text-territory-image-overlay transition-colors hover:bg-territory-brand-strong sm:min-h-9 sm:w-auto sm:shrink-0 sm:rounded-xl sm:px-3 sm:text-sm md:min-h-11 md:px-5 xl:w-48 xl:text-xs"
+                    >
+                      <LogIn className="mr-2 h-4 w-4 xl:hidden" />
+                      <span className="xl:hidden">Participar</span>
+                      <span className="hidden xl:inline">
+                        Participar da comunidade
+                      </span>
+                    </Link>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={handleShareCommunity}
+                    className="inline-flex min-h-9 w-full items-center justify-center rounded-xl border border-territory-on-image/20 bg-territory-image-overlay/15 px-3 text-xs font-semibold text-territory-on-image transition-colors hover:bg-territory-on-image/10 sm:w-auto xl:w-48"
+                  >
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Convidar amigos
+                  </button>
                 </div>
               </div>
             </div>
-            <div className="relative hidden border-t border-white/10 px-4 py-2 xl:flex xl:min-h-12 xl:items-center xl:gap-5">
-              {focusShortcutLinks.map((item) => {
-                const Icon = item.icon;
-                const view = item.view;
-                const className = cn(
-                  "inline-flex min-h-9 items-center gap-2 rounded-xl px-3 text-sm font-medium transition-colors",
-                  item.isActive
-                    ? "bg-teal-400/15 text-teal-100"
-                    : "text-white/70 hover:bg-white/[0.06] hover:text-white",
-                );
-                const content = (
-                  <>
-                    <Icon className="h-4 w-4 shrink-0" />
-                    <span>{item.label}</span>
-                  </>
-                );
-
-                return view ? (
-                  <button
-                    key={item.label}
-                    type="button"
-                    onClick={() => handleViewChange(view)}
-                    className={className}
-                    aria-pressed={item.isActive}
-                    aria-controls="community-primary-content"
-                  >
-                    {content}
-                  </button>
-                ) : item.href?.startsWith("#") ? (
-                  <a key={item.label} href={item.href} className={className}>
-                    {content}
-                  </a>
-                ) : (
-                  <Link
-                    key={item.label}
-                    to={item.href ?? "#"}
-                    className={className}
-                  >
-                    {content}
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
-
-          <div className="sm:hidden" data-community-mobile-primary-nav="true">
-            <div className="grid grid-cols-4 gap-1.5">
-              {moduleLinks.slice(0, 3).map((item) => (
-                <ModuleNavLink
-                  key={item.key}
-                  item={item}
-                  onViewChange={handleViewChange}
-                  labelClassName="max-w-none whitespace-nowrap"
-                  className={cn(
-                    "inline-flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 overflow-hidden rounded-lg border px-1 text-[0.625rem] font-semibold leading-none transition-colors min-[360px]:text-[0.6875rem] min-[480px]:min-h-11 min-[480px]:flex-row min-[480px]:gap-1.5 min-[480px]:px-2",
-                    item.isActive
-                      ? "border-teal-300/40 bg-teal-300/15 text-teal-100"
-                      : "border-white/10 bg-white/[0.04] text-white/75 hover:text-white",
-                  )}
-                />
-              ))}
-              <button
-                type="button"
-                data-community-sections-trigger="true"
-                onClick={() => setMobileSectionsExpanded((current) => !current)}
-                className={cn(
-                  "inline-flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 overflow-hidden rounded-lg border border-white/10 bg-white/[0.04] px-1 text-[0.625rem] font-semibold leading-none text-white/75 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300 min-[360px]:text-[0.6875rem] min-[480px]:min-h-11 min-[480px]:flex-row min-[480px]:gap-1.5 min-[480px]:px-2",
-                  (mobileSectionsExpanded || isEmbeddedModule) &&
-                    "border-teal-300/35 bg-teal-300/10 text-teal-100",
-                )}
-                aria-expanded={mobileSectionsExpanded}
-                aria-controls={mobileSectionsId}
-              >
-                <LayoutGrid
-                  className="h-3.5 w-3.5 shrink-0"
-                  aria-hidden="true"
-                />
-                <span>Seções</span>
-              </button>
-            </div>
-            {mobileSectionsExpanded ? (
-              <nav
-                id={mobileSectionsId}
-                data-community-sections-menu="true"
-                className="mt-2 grid grid-cols-2 gap-1.5 rounded-2xl border border-white/10 bg-[#071922]/96 p-2 shadow-xl shadow-black/20"
-                aria-label="Outras seções da comunidade"
-              >
-                {moduleLinks.slice(3).map((item) => (
-                  <ModuleNavLink
-                    key={item.key}
-                    item={item}
-                    onViewChange={handleViewChange}
-                    onNavigate={handleModuleNavigate}
-                    className={cn(
-                      "flex min-h-11 min-w-0 items-center gap-2 rounded-xl px-2.5 text-xs font-medium transition-colors hover:bg-white/[0.055] hover:text-white",
-                      item.isActive
-                        ? "bg-teal-300/12 text-teal-100"
-                        : "text-white/68",
-                    )}
-                  />
-                ))}
-              </nav>
-            ) : null}
           </div>
-
-          <div className="hidden gap-2 overflow-x-auto pb-1 sm:flex xl:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {moduleLinks.map((item) => (
-              <ModuleNavLink
-                key={item.key}
-                item={item}
-                onViewChange={handleViewChange}
-                className={cn(
-                  "inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-4 text-xs font-semibold transition-colors",
-                  item.isActive
-                    ? "border-teal-300/40 bg-teal-300/15 text-teal-100"
-                    : "border-white/10 bg-white/[0.04] text-white/65 hover:text-white",
-                )}
-              />
-            ))}
-          </div>
-
-          <div className="hidden gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 xl:hidden [&::-webkit-scrollbar]:hidden">
+          <div className="relative hidden border-t border-territory-on-image/10 px-4 py-2 xl:flex xl:min-h-12 xl:items-center xl:gap-5">
             {focusShortcutLinks.map((item) => {
               const Icon = item.icon;
               const view = item.view;
               const className = cn(
-                "group flex min-h-14 min-w-[13.5rem] items-center gap-3 rounded-2xl border px-3 py-2.5 text-white shadow-xl shadow-black/10 backdrop-blur transition-colors hover:border-teal-300/30 hover:bg-white/[0.06] sm:min-w-0",
+                "inline-flex min-h-9 items-center gap-2 rounded-xl px-3 text-sm font-medium transition-colors",
                 item.isActive
-                  ? "border-teal-300/35 bg-teal-300/12"
-                  : "border-white/10 bg-[#071922]/88",
+                  ? "bg-territory-brand/15 text-territory-on-image"
+                  : "text-territory-on-image/70 hover:bg-territory-on-image/[0.06] hover:text-territory-on-image",
               );
               const content = (
                 <>
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-300/12 text-teal-200 transition-colors group-hover:bg-teal-300/18">
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold">
-                      {item.label}
-                    </span>
-                    <span className="block truncate text-xs text-white/50">
-                      {item.detail}
-                    </span>
-                  </span>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-white/40" />
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span>{item.label}</span>
                 </>
               );
 
@@ -1759,24 +1603,153 @@ export function CommunityOverviewSurface({
               );
             })}
           </div>
+        </section>
 
-          <div
-            id="community-primary-content"
-            className={cn(
-              "grid min-w-0 gap-4 xl:col-start-1 xl:row-start-2",
-              (isEmbeddedModule || selectedView !== "feed") && "xl:col-span-2",
-            )}
-            aria-live="polite"
-            data-community-module-content={
-              isEmbeddedModule ? activeSection : undefined
-            }
-          >
-            <div className="order-1 min-w-0 space-y-4 xl:space-y-2">
-              {selectedView === "feed" ? (
-                children ? (
-                  children
-                ) : (
-                  <>
+        <div className="sm:hidden" data-community-mobile-primary-nav="true">
+          <div className="grid grid-cols-4 gap-1.5">
+            {moduleLinks.slice(0, 3).map((item) => (
+              <ModuleNavLink
+                key={item.key}
+                item={item}
+                onViewChange={handleViewChange}
+                labelClassName="max-w-none whitespace-nowrap"
+                className={cn(
+                  "inline-flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 overflow-hidden rounded-lg border px-1 text-[0.625rem] font-semibold leading-none transition-colors min-[360px]:text-[0.6875rem] min-[480px]:min-h-11 min-[480px]:flex-row min-[480px]:gap-1.5 min-[480px]:px-2",
+                  item.isActive
+                    ? "border-territory-brand/40 bg-territory-brand/15 text-territory-brand-strong"
+                    : "border-territory-border bg-territory-surface text-territory-muted hover:text-territory-ink",
+                )}
+              />
+            ))}
+            <button
+              type="button"
+              data-community-sections-trigger="true"
+              onClick={() => setMobileSectionsExpanded((current) => !current)}
+              className={cn(
+                "inline-flex min-h-12 min-w-0 flex-col items-center justify-center gap-1 overflow-hidden rounded-lg border border-territory-border bg-territory-surface px-1 text-[0.625rem] font-semibold leading-none text-territory-muted transition-colors hover:text-territory-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-focus min-[360px]:text-[0.6875rem] min-[480px]:min-h-11 min-[480px]:flex-row min-[480px]:gap-1.5 min-[480px]:px-2",
+                (mobileSectionsExpanded || isEmbeddedModule) &&
+                  "border-territory-brand/35 bg-territory-brand/10 text-territory-brand-strong",
+              )}
+              aria-expanded={mobileSectionsExpanded}
+              aria-controls={mobileSectionsId}
+            >
+              <LayoutGrid className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>Seções</span>
+            </button>
+          </div>
+          {mobileSectionsExpanded ? (
+            <nav
+              id={mobileSectionsId}
+              data-community-sections-menu="true"
+              className="mt-2 grid grid-cols-2 gap-1.5 rounded-2xl border border-territory-border bg-territory-raised p-2 shadow-territory-highlight"
+              aria-label="Outras seções da comunidade"
+            >
+              {moduleLinks.slice(3).map((item) => (
+                <ModuleNavLink
+                  key={item.key}
+                  item={item}
+                  onViewChange={handleViewChange}
+                  onNavigate={handleModuleNavigate}
+                  className={cn(
+                    "flex min-h-11 min-w-0 items-center gap-2 rounded-xl px-2.5 text-xs font-medium transition-colors hover:bg-territory-brand/10 hover:text-territory-ink",
+                    item.isActive
+                      ? "bg-territory-brand/12 text-territory-brand-strong"
+                      : "text-territory-muted",
+                  )}
+                />
+              ))}
+            </nav>
+          ) : null}
+        </div>
+
+        <div className="hidden gap-2 overflow-x-auto pb-1 sm:flex xl:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {moduleLinks.map((item) => (
+            <ModuleNavLink
+              key={item.key}
+              item={item}
+              onViewChange={handleViewChange}
+              className={cn(
+                "inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-4 text-xs font-semibold transition-colors",
+                item.isActive
+                  ? "border-territory-brand/40 bg-territory-brand/15 text-territory-brand-strong"
+                  : "border-territory-border bg-territory-surface text-territory-muted hover:text-territory-ink",
+              )}
+            />
+          ))}
+        </div>
+
+        <div className="hidden gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 xl:hidden [&::-webkit-scrollbar]:hidden">
+          {focusShortcutLinks.map((item) => {
+            const Icon = item.icon;
+            const view = item.view;
+            const className = cn(
+              "group flex min-h-14 min-w-[13.5rem] items-center gap-3 rounded-2xl border px-3 py-2.5 text-territory-ink shadow-territory-highlight backdrop-blur transition-colors hover:border-territory-brand/30 hover:bg-territory-brand/[0.06] sm:min-w-0",
+              item.isActive
+                ? "border-territory-brand/35 bg-territory-brand/12"
+                : "border-territory-border bg-territory-raised",
+            );
+            const content = (
+              <>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/12 text-territory-brand-strong transition-colors group-hover:bg-territory-brand/20">
+                  <Icon className="h-4 w-4" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold">
+                    {item.label}
+                  </span>
+                  <span className="block truncate text-xs text-territory-muted">
+                    {item.detail}
+                  </span>
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-territory-muted" />
+              </>
+            );
+
+            return view ? (
+              <button
+                key={item.label}
+                type="button"
+                onClick={() => handleViewChange(view)}
+                className={className}
+                aria-pressed={item.isActive}
+                aria-controls="community-primary-content"
+              >
+                {content}
+              </button>
+            ) : item.href?.startsWith("#") ? (
+              <a key={item.label} href={item.href} className={className}>
+                {content}
+              </a>
+            ) : (
+              <Link
+                key={item.label}
+                to={item.href ?? "#"}
+                className={className}
+              >
+                {content}
+              </Link>
+            );
+          })}
+        </div>
+
+        <div
+          id="community-primary-content"
+          className={cn(
+            "grid min-w-0 gap-4 xl:col-start-1 xl:row-start-2",
+            (isEmbeddedModule || selectedView !== "feed") && "xl:col-span-2",
+          )}
+          aria-live="polite"
+          data-community-module-content={
+            isEmbeddedModule ? activeSection : undefined
+          }
+        >
+          <div className="order-1 min-w-0 space-y-4 xl:space-y-2">
+            {selectedView === "feed" ? (
+              children ? (
+                children
+              ) : (
+                <>
+                  {canCreatePost ? (
                     <CommunityComposerEntry
                       id="feed"
                       communityName={communityTitle}
@@ -1784,435 +1757,435 @@ export function CommunityOverviewSurface({
                       avatarUrl={visualMockEnabled ? personaMorador : undefined}
                       className="xl:p-3"
                     />
+                  ) : null}
 
-                    <CommunityFeedContextNavigation
-                      activeContextTab={feedContextTab}
-                      onContextTabChange={handleFeedContextTabChange}
-                    />
+                  <CommunityFeedContextNavigation
+                    activeContextTab={feedContextTab}
+                    onContextTabChange={handleFeedContextTabChange}
+                  />
 
-                    <div
-                      id="community-feed-context-panel"
-                      className="space-y-3"
-                      data-community-feed-context-panel={feedContextTab}
-                    >
-                      {feedContextTab === "feed" ? (
-                        <>
-                          <SurfacePanel className="p-2.5">
-                            <CommunityPostSortControls
-                              value={postSort}
-                              onChange={setPostSort}
-                            />
-                            {displayLoadingFeed ? (
-                              <div className="mt-3 space-y-2">
-                                {[0, 1, 2].map((index) => (
-                                  <div
-                                    key={index}
-                                    className="h-32 animate-pulse rounded-2xl border border-white/10 bg-white/[0.04]"
-                                  />
-                                ))}
-                              </div>
-                            ) : displayFeedError ? (
-                              <p className="rounded-xl border border-red-400/20 bg-red-500/10 px-3 py-4 text-sm text-red-100">
-                                Erro ao carregar feed:{" "}
-                                {error?.message ??
-                                  "tente novamente em instantes."}
-                              </p>
-                            ) : displayPosts.length === 0 ? (
-                              <p className="rounded-xl border border-dashed border-white/10 bg-white/[0.03] px-3 py-8 text-center text-sm text-white/50">
-                                Nenhuma publicação pública encontrada neste
-                                território.
-                              </p>
-                            ) : (
-                              <div className="space-y-3">
-                                {sortedDisplayPosts.map((post) => {
-                                  const Icon = getPublicPostTypeIcon(post.type);
-                                  const avatarUrl = getPublicPostAvatar(post);
-                                  const summary = getPublicPostSummary(post);
-                                  const postImages = getPublicPostImages(post);
-                                  return (
-                                    <article
-                                      id={`post-${post.id}`}
-                                      key={post.id}
-                                      data-feed-post-id={post.id}
-                                      className="rounded-xl border border-white/10 bg-[#081e28]/92 px-3 py-2.5 shadow-lg shadow-black/10 [content-visibility:auto] [contain-intrinsic-size:0_520px]"
-                                    >
-                                      <div className="flex min-w-0 items-start gap-3">
-                                        <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-teal-300/12 text-teal-200">
-                                          {avatarUrl ? (
-                                            <SafeImage
-                                              src={avatarUrl}
-                                              alt=""
-                                              className="h-full w-full object-cover"
-                                              loading="lazy"
-                                            />
-                                          ) : (
-                                            <Icon className="h-4 w-4" />
-                                          )}
-                                        </span>
-                                        <div className="min-w-0 flex-1">
-                                          <p className="truncate text-xs font-semibold text-white">
-                                            {getPublicPostAuthor(post)}
-                                            <span className="mx-1.5 font-normal text-white/30">
-                                              •
-                                            </span>
-                                            <span className="font-normal text-white/48">
-                                              {getPublicPostRole(post)}
-                                            </span>
-                                          </p>
-                                          <p className="mt-0.5 text-[0.68rem] text-white/40">
-                                            {formatPublicPostDate(
-                                              post.created_at,
-                                            )}{" "}
-                                            atrás
-                                          </p>
-                                        </div>
-                                        <button
-                                          type="button"
-                                          onClick={onRequireLogin}
-                                          className="px-1 text-lg leading-none text-white/46"
-                                          aria-label="Mais opções"
-                                        >
-                                          •••
-                                        </button>
-                                      </div>
-                                      <div className="mt-1.5">
-                                        <span className="inline-flex min-h-4 items-center rounded px-1.5 text-[0.61rem] font-medium text-teal-200 ring-1 ring-inset ring-teal-300/15">
-                                          {getPublicPostTypeLabel(post.type)}
-                                        </span>
-                                        <h3 className="mt-1 text-[0.92rem] font-semibold leading-[1.15rem] text-white/92">
-                                          {getPublicPostTitle(post)}
-                                        </h3>
-                                        {summary ? (
-                                          <p className="mt-0.5 text-[0.7rem] leading-4 text-white/52">
-                                            {summary}
-                                          </p>
-                                        ) : null}
-                                        {postImages.length > 0 ? (
-                                          <ImageGallery
-                                            images={postImages}
-                                            className="mt-2"
+                  <div
+                    id="community-feed-context-panel"
+                    className="space-y-3"
+                    data-community-feed-context-panel={feedContextTab}
+                  >
+                    {feedContextTab === "feed" ? (
+                      <>
+                        <SurfacePanel className="p-2.5">
+                          <CommunityPostSortControls
+                            value={postSort}
+                            onChange={setPostSort}
+                          />
+                          {displayLoadingFeed ? (
+                            <div className="mt-3 space-y-2">
+                              {[0, 1, 2].map((index) => (
+                                <div
+                                  key={index}
+                                  className="h-32 animate-pulse rounded-2xl border border-territory-border bg-territory-raised"
+                                />
+                              ))}
+                            </div>
+                          ) : displayFeedError ? (
+                            <p className="rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-4 text-sm text-destructive">
+                              Erro ao carregar feed:{" "}
+                              {error?.message ??
+                                "tente novamente em instantes."}
+                            </p>
+                          ) : displayPosts.length === 0 ? (
+                            <p className="rounded-xl border border-dashed border-territory-border bg-territory-raised px-3 py-8 text-center text-sm text-territory-muted">
+                              Nenhuma publicação pública encontrada neste
+                              território.
+                            </p>
+                          ) : (
+                            <div className="space-y-3">
+                              {sortedDisplayPosts.map((post) => {
+                                const Icon = getPublicPostTypeIcon(post.type);
+                                const avatarUrl = getPublicPostAvatar(post);
+                                const summary = getPublicPostSummary(post);
+                                const postImages = getPublicPostImages(post);
+                                return (
+                                  <article
+                                    id={`post-${post.id}`}
+                                    key={post.id}
+                                    data-feed-post-id={post.id}
+                                    className="rounded-xl border border-territory-border bg-territory-raised px-3 py-2.5 shadow-territory-highlight [content-visibility:auto] [contain-intrinsic-size:0_520px]"
+                                  >
+                                    <div className="flex min-w-0 items-start gap-3">
+                                      <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-territory-border bg-territory-brand/12 text-territory-brand-strong">
+                                        {avatarUrl ? (
+                                          <SafeImage
+                                            src={avatarUrl}
+                                            alt=""
+                                            className="h-full w-full object-cover"
+                                            loading="lazy"
                                           />
-                                        ) : null}
+                                        ) : (
+                                          <Icon className="h-4 w-4" />
+                                        )}
+                                      </span>
+                                      <div className="min-w-0 flex-1">
+                                        <p className="truncate text-xs font-semibold text-territory-ink">
+                                          {getPublicPostAuthor(post)}
+                                          <span className="mx-1.5 font-normal text-territory-muted/60">
+                                            •
+                                          </span>
+                                          <span className="font-normal text-territory-muted">
+                                            {getPublicPostRole(post)}
+                                          </span>
+                                        </p>
+                                        <p className="mt-0.5 text-[0.68rem] text-territory-muted">
+                                          {formatPublicPostDate(
+                                            post.created_at,
+                                          )}{" "}
+                                          atrás
+                                        </p>
                                       </div>
-                                      <div className="mt-1.5 flex items-center gap-6 border-t border-white/[0.07] pt-1.5 text-[0.7rem] text-white/48">
-                                        <button
-                                          type="button"
-                                          onClick={onRequireLogin}
-                                          className="inline-flex items-center gap-1.5 hover:text-white"
-                                        >
-                                          <MessageCircle className="h-3.5 w-3.5" />
-                                          {post.comments_count ?? 0}
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={onRequireLogin}
-                                          className="inline-flex items-center gap-1.5 hover:text-white"
-                                        >
-                                          <Heart className="h-3.5 w-3.5" />
-                                          {post.likes_count ?? 0}
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={() =>
-                                            handleSharePost(post.id)
-                                          }
-                                          className="inline-flex items-center gap-1.5 hover:text-white"
-                                        >
-                                          <Share2 className="h-3.5 w-3.5" />
-                                          Compartilhar
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={onRequireLogin}
-                                          className="ml-auto inline-flex items-center hover:text-white"
-                                          aria-label="Salvar publicação"
-                                        >
-                                          <Bookmark className="h-3.5 w-3.5" />
-                                        </button>
-                                      </div>
-                                    </article>
-                                  );
-                                })}
-                              </div>
-                            )}
+                                      <button
+                                        type="button"
+                                        onClick={onRequireLogin}
+                                        className="px-1 text-lg leading-none text-territory-muted hover:text-territory-ink"
+                                        aria-label="Mais opções"
+                                      >
+                                        •••
+                                      </button>
+                                    </div>
+                                    <div className="mt-1.5">
+                                      <span className="inline-flex min-h-4 items-center rounded px-1.5 text-[0.61rem] font-medium text-territory-brand-strong ring-1 ring-inset ring-territory-brand/20">
+                                        {getPublicPostTypeLabel(post.type)}
+                                      </span>
+                                      <h3 className="mt-1 text-[0.92rem] font-semibold leading-[1.15rem] text-territory-ink">
+                                        {getPublicPostTitle(post)}
+                                      </h3>
+                                      {summary ? (
+                                        <p className="mt-0.5 text-[0.7rem] leading-4 text-territory-muted">
+                                          {summary}
+                                        </p>
+                                      ) : null}
+                                      {postImages.length > 0 ? (
+                                        <ImageGallery
+                                          images={postImages}
+                                          className="mt-2"
+                                        />
+                                      ) : null}
+                                    </div>
+                                    <div className="mt-1.5 flex items-center gap-6 border-t border-territory-border pt-1.5 text-[0.7rem] text-territory-muted">
+                                      <button
+                                        type="button"
+                                        onClick={onRequireLogin}
+                                        className="inline-flex items-center gap-1.5 hover:text-territory-ink"
+                                      >
+                                        <MessageCircle className="h-3.5 w-3.5" />
+                                        {post.comments_count ?? 0}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={onRequireLogin}
+                                        className="inline-flex items-center gap-1.5 hover:text-territory-ink"
+                                      >
+                                        <Heart className="h-3.5 w-3.5" />
+                                        {post.likes_count ?? 0}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleSharePost(post.id)}
+                                        className="inline-flex items-center gap-1.5 hover:text-territory-ink"
+                                      >
+                                        <Share2 className="h-3.5 w-3.5" />
+                                        Compartilhar
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={onRequireLogin}
+                                        className="ml-auto inline-flex items-center hover:text-territory-ink"
+                                        aria-label="Salvar publicação"
+                                      >
+                                        <Bookmark className="h-3.5 w-3.5" />
+                                      </button>
+                                    </div>
+                                  </article>
+                                );
+                              })}
+                            </div>
+                          )}
 
-                            {displayHasNextPage ? (
-                              <div className="mt-4 flex justify-center">
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  onClick={loadMore}
-                                  disabled={displayIsFetchingNextPage}
-                                  className="rounded-xl border-white/15 bg-white/[0.03] text-white hover:bg-white/10"
-                                >
-                                  {displayIsFetchingNextPage
-                                    ? "Carregando..."
-                                    : "Carregar mais"}
-                                </Button>
-                              </div>
-                            ) : null}
-                          </SurfacePanel>
-                        </>
-                      ) : feedContextTab === "groups" ? (
-                        <CommunityGroupsPreview
-                          id="feed-groups-tab"
-                          className="p-3 sm:p-4"
-                          groups={displayGroups}
-                          loading={displayLoadingGroups}
-                          actionHref={communityUrls.groups}
-                          groupHref={(group) =>
+                          {displayHasNextPage ? (
+                            <div className="mt-4 flex justify-center">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={loadMore}
+                                disabled={displayIsFetchingNextPage}
+                                className="rounded-xl border-territory-border bg-territory-raised text-territory-ink hover:bg-territory-brand/10"
+                              >
+                                {displayIsFetchingNextPage
+                                  ? "Carregando..."
+                                  : "Carregar mais"}
+                              </Button>
+                            </div>
+                          ) : null}
+                        </SurfacePanel>
+                      </>
+                    ) : feedContextTab === "groups" ? (
+                      <CommunityGroupsPreview
+                        id="feed-groups-tab"
+                        className="p-3 sm:p-4"
+                        groups={displayGroups}
+                        loading={displayLoadingGroups}
+                        actionHref={communityUrls.groups}
+                        groupHref={(group) =>
+                          visualMockEnabled
+                            ? "#feed-groups-tab"
+                            : communityUrls.groupDetail(group.id)
+                        }
+                      />
+                    ) : (
+                      <CommunityDiscussionsPreview
+                        id="feed-discussions-tab"
+                        className="p-3 sm:p-4"
+                        title="Discussões da comunidade"
+                        posts={trendingDiscussions}
+                        loading={displayLoadingFeed}
+                      />
+                    )}
+                  </div>
+                </>
+              )
+            ) : selectedView === "groups" ? (
+              (children ?? (
+                <SurfacePanel id="groups-view" className="p-3 sm:p-4">
+                  <div className="mb-4 flex min-w-0 items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h2 className="text-base font-semibold text-territory-ink">
+                        Grupos da comunidade
+                      </h2>
+                      <p className="mt-1 text-sm leading-5 text-territory-muted">
+                        Conversas organizadas por interesses e necessidades
+                        locais.
+                      </p>
+                    </div>
+                    {mode === "public" ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={onRequireLogin}
+                        className="shrink-0 rounded-xl border-territory-brand/30 bg-territory-brand/10 text-xs text-territory-brand-strong hover:bg-territory-brand/15 hover:text-territory-ink"
+                      >
+                        Participar
+                      </Button>
+                    ) : null}
+                  </div>
+                  {displayLoadingGroups ? (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {[0, 1, 2, 3].map((index) => (
+                        <div
+                          key={index}
+                          className="h-16 animate-pulse rounded-xl border border-territory-border bg-territory-raised"
+                        />
+                      ))}
+                    </div>
+                  ) : displayGroups.length > 0 ? (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {displayGroups.map((group) => (
+                        <GroupPreviewItem
+                          key={group.id}
+                          group={group}
+                          href={
                             visualMockEnabled
-                              ? "#feed-groups-tab"
+                              ? "#groups-view"
                               : communityUrls.groupDetail(group.id)
                           }
                         />
-                      ) : (
-                        <CommunityDiscussionsPreview
-                          id="feed-discussions-tab"
-                          className="p-3 sm:p-4"
-                          title="Discussões da comunidade"
-                          posts={trendingDiscussions}
-                          loading={displayLoadingFeed}
-                        />
-                      )}
+                      ))}
                     </div>
-                  </>
-                )
-              ) : selectedView === "groups" ? (
-                (children ?? (
-                  <SurfacePanel id="groups-view" className="p-3 sm:p-4">
-                    <div className="mb-4 flex min-w-0 items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <h2 className="text-base font-semibold text-white">
-                          Grupos da comunidade
-                        </h2>
-                        <p className="mt-1 text-sm leading-5 text-white/52">
-                          Conversas organizadas por interesses e necessidades
-                          locais.
-                        </p>
-                      </div>
-                      {mode === "public" ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={onRequireLogin}
-                          className="shrink-0 rounded-xl border-teal-300/30 bg-teal-300/10 text-xs text-teal-100 hover:bg-teal-300/15 hover:text-white"
-                        >
-                          Participar
-                        </Button>
-                      ) : null}
-                    </div>
-                    {displayLoadingGroups ? (
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        {[0, 1, 2, 3].map((index) => (
-                          <div
-                            key={index}
-                            className="h-16 animate-pulse rounded-xl border border-white/10 bg-white/[0.04]"
-                          />
-                        ))}
-                      </div>
-                    ) : displayGroups.length > 0 ? (
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        {displayGroups.map((group) => (
-                          <GroupPreviewItem
-                            key={group.id}
-                            group={group}
-                            href={
-                              visualMockEnabled
-                                ? "#groups-view"
-                                : communityUrls.groupDetail(group.id)
-                            }
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <EmptyCommunityState
-                        icon={Users}
-                        title="Nenhum grupo ativo"
-                        description="Os primeiros grupos desta comunidade aparecerão aqui assim que forem publicados."
-                      />
-                    )}
-                  </SurfacePanel>
-                ))
-              ) : selectedView === "discussions" ? (
-                (children ?? (
-                  <div className="space-y-3">
+                  ) : (
+                    <EmptyCommunityState
+                      icon={Users}
+                      title="Nenhum grupo ativo"
+                      description="Os primeiros grupos desta comunidade aparecerão aqui assim que forem publicados."
+                    />
+                  )}
+                </SurfacePanel>
+              ))
+            ) : selectedView === "discussions" ? (
+              (children ?? (
+                <div className="space-y-3">
+                  {canCreatePost ? (
                     <CommunityComposerEntry
                       communityName={communityTitle}
                       onOpenCreatePost={handleOpenComposer}
                       avatarUrl={visualMockEnabled ? personaMorador : undefined}
                     />
-                    <SurfacePanel id="discussions-view" className="p-3 sm:p-4">
-                      <div className="mb-4">
-                        <h2 className="text-base font-semibold text-white">
-                          Discussões da comunidade
-                        </h2>
-                        <p className="mt-1 text-sm leading-5 text-white/52">
-                          Perguntas, recomendações e assuntos com participação
-                          dos moradores.
-                        </p>
+                  ) : null}
+                  <SurfacePanel id="discussions-view" className="p-3 sm:p-4">
+                    <div className="mb-4">
+                      <h2 className="text-base font-semibold text-territory-ink">
+                        Discussões da comunidade
+                      </h2>
+                      <p className="mt-1 text-sm leading-5 text-territory-muted">
+                        Perguntas, recomendações e assuntos com participação dos
+                        moradores.
+                      </p>
+                    </div>
+                    {displayLoadingFeed ? (
+                      <div className="space-y-2">
+                        {[0, 1, 2, 3].map((index) => (
+                          <div
+                            key={index}
+                            className="h-14 animate-pulse rounded-xl border border-territory-border bg-territory-raised"
+                          />
+                        ))}
                       </div>
-                      {displayLoadingFeed ? (
-                        <div className="space-y-2">
-                          {[0, 1, 2, 3].map((index) => (
-                            <div
-                              key={index}
-                              className="h-14 animate-pulse rounded-xl border border-white/10 bg-white/[0.04]"
-                            />
-                          ))}
-                        </div>
-                      ) : trendingDiscussions.length > 0 ? (
-                        <div className="space-y-3">
-                          {displayPosts.map((post) => (
-                            <DiscussionPreviewItem key={post.id} post={post} />
-                          ))}
-                        </div>
-                      ) : (
-                        <EmptyCommunityState
-                          icon={MessageCircle}
-                          title="Nenhuma discussão publicada"
-                          description="As conversas públicas desta comunidade aparecerão aqui."
-                        />
-                      )}
-                    </SurfacePanel>
-                  </div>
-                ))
-              ) : selectedView === "business" ? (
-                <CommunityModulePreview
-                  icon={Building2}
-                  title="Empresas da comunidade"
-                  description="Negócios ativos e verificados que atendem este território."
-                  countLabel={`${formatCount(stats?.businesses ?? displayBusinesses.length)} locais`}
-                  actionHref={moduleUrls.business}
-                  actionLabel="Ver todas as empresas"
-                  loading={displayLoadingBusinesses}
-                  isEmpty={displayBusinesses.length === 0}
-                  emptyMessage="Nenhuma empresa ativa cadastrada nesta comunidade."
-                >
-                  {displayBusinesses.map((business) => (
-                    <BusinessPreviewRow
-                      key={business.id}
-                      business={business}
-                      href={buildBusinessHref(business, businessUrls.canonical)}
-                    />
-                  ))}
-                </CommunityModulePreview>
-              ) : selectedView === "services" ? (
-                <CommunityModulePreview
-                  icon={Wrench}
-                  title="Serviços da comunidade"
-                  description="Prestadores disponíveis para necessidades locais e recorrentes."
-                  countLabel={`${formatCount(stats?.services ?? displayServices.length)} prestadores`}
-                  actionHref={moduleUrls.services}
-                  actionLabel="Ver todos os serviços"
-                  loading={displayLoadingServices}
-                  isEmpty={displayServices.length === 0}
-                  emptyMessage="Nenhum prestador ativo encontrado nesta comunidade."
-                >
-                  {displayServices.map((service) => (
-                    <ServicePreviewRow key={service.id} service={service} />
-                  ))}
-                </CommunityModulePreview>
-              ) : selectedView === "classifieds" ? (
-                <CommunityModulePreview
-                  icon={Tag}
-                  title="Classificados da comunidade"
-                  description="Itens anunciados por pessoas e negócios deste território."
-                  countLabel={`${formatCount(stats?.classifieds ?? displayClassifieds.length)} ativos`}
-                  actionHref={moduleUrls.classifieds}
-                  actionLabel="Ver todos os classificados"
-                  loading={displayLoadingClassifieds}
-                  isEmpty={displayClassifieds.length === 0}
-                  emptyMessage="Nenhum classificado ativo encontrado nesta comunidade."
-                >
-                  {displayClassifieds.map((item) => (
-                    <ClassifiedPreviewRow key={item.id} item={item} />
-                  ))}
-                </CommunityModulePreview>
-              ) : (
-                <CommunityModulePreview
-                  icon={UtensilsCrossed}
-                  title="Gastronomia da comunidade"
-                  description="Restaurantes, lanchonetes e sabores encontrados perto de você."
-                  countLabel={`${formatCount(displayGastronomy.length)} lugares`}
-                  actionHref={moduleUrls.gastronomy}
-                  actionLabel="Ver toda a gastronomia"
-                  loading={displayLoadingGastronomy}
-                  isEmpty={displayGastronomy.length === 0}
-                  emptyMessage="Nenhum estabelecimento gastronômico encontrado nesta comunidade."
-                >
-                  {displayGastronomy.map((business) => (
-                    <BusinessPreviewRow
-                      key={business.id}
-                      business={business}
-                      href={buildBusinessHref(business, businessUrls.canonical)}
-                    />
-                  ))}
-                </CommunityModulePreview>
-              )}
-            </div>
-          </div>
-
-          {!isEmbeddedModule && selectedView === "feed" ? (
-            <div className="min-w-0 space-y-4 xl:col-start-2 xl:row-span-5 xl:row-start-1 xl:space-y-2">
-              <SurfacePanel id="eventos" className="p-3">
-                <SectionHeader
-                  title="Próximos eventos"
-                  actionHref={fullEventsEnabled ? moduleUrls.events : undefined}
-                  actionLabel={fullEventsEnabled ? "Ver todos" : undefined}
-                />
-                {!communityEventsPreviewEnabled ? (
-                  <EmptyCommunityState
-                    icon={CalendarDays}
-                    title="Módulo de eventos aguardando ativação"
-                    description="A agenda já está prevista na página, mas a prévia comunitária de eventos segue desligada no launch scope."
-                  />
-                ) : displayLoadingEvents ? (
-                  <div className="space-y-2">
-                    {[0, 1].map((index) => (
-                      <div
-                        key={index}
-                        className="h-20 animate-pulse rounded-xl border border-white/10 bg-white/[0.04]"
+                    ) : trendingDiscussions.length > 0 ? (
+                      <div className="space-y-3">
+                        {displayPosts.map((post) => (
+                          <DiscussionPreviewItem key={post.id} post={post} />
+                        ))}
+                      </div>
+                    ) : (
+                      <EmptyCommunityState
+                        icon={MessageCircle}
+                        title="Nenhuma discussão publicada"
+                        description="As conversas públicas desta comunidade aparecerão aqui."
                       />
-                    ))}
-                  </div>
-                ) : displayEvents.length > 0 ? (
-                  <div className="space-y-2">
-                    {displayEvents.map((event) => (
-                      <EventPreviewItem key={event.id} event={event} />
-                    ))}
-                  </div>
-                ) : (
-                  <EmptyCommunityState
-                    icon={CalendarDays}
-                    title="Nenhum evento público nesta comunidade"
-                    description="Quando eventos aprovados existirem para este território, eles aparecem aqui em modo de leitura."
-                    ctaHref={fullEventsEnabled ? moduleUrls.events : undefined}
-                    ctaLabel={fullEventsEnabled ? "Abrir eventos" : undefined}
+                    )}
+                  </SurfacePanel>
+                </div>
+              ))
+            ) : selectedView === "business" ? (
+              <CommunityModulePreview
+                icon={Building2}
+                title="Empresas da comunidade"
+                description="Negócios ativos e verificados que atendem este território."
+                countLabel={`${formatCount(stats?.businesses ?? displayBusinesses.length)} locais`}
+                actionHref={moduleUrls.business}
+                actionLabel="Ver todas as empresas"
+                loading={displayLoadingBusinesses}
+                isEmpty={displayBusinesses.length === 0}
+                emptyMessage="Nenhuma empresa ativa cadastrada nesta comunidade."
+              >
+                {displayBusinesses.map((business) => (
+                  <BusinessPreviewRow
+                    key={business.id}
+                    business={business}
+                    href={buildBusinessHref(business, businessUrls.canonical)}
                   />
-                )}
-              </SurfacePanel>
+                ))}
+              </CommunityModulePreview>
+            ) : selectedView === "services" ? (
+              <CommunityModulePreview
+                icon={Wrench}
+                title="Serviços da comunidade"
+                description="Prestadores disponíveis para necessidades locais e recorrentes."
+                countLabel={`${formatCount(stats?.services ?? displayServices.length)} prestadores`}
+                actionHref={moduleUrls.services}
+                actionLabel="Ver todos os serviços"
+                loading={displayLoadingServices}
+                isEmpty={displayServices.length === 0}
+                emptyMessage="Nenhum prestador ativo encontrado nesta comunidade."
+              >
+                {displayServices.map((service) => (
+                  <ServicePreviewRow key={service.id} service={service} />
+                ))}
+              </CommunityModulePreview>
+            ) : selectedView === "classifieds" ? (
+              <CommunityModulePreview
+                icon={Tag}
+                title="Classificados da comunidade"
+                description="Itens anunciados por pessoas e negócios deste território."
+                countLabel={`${formatCount(stats?.classifieds ?? displayClassifieds.length)} ativos`}
+                actionHref={moduleUrls.classifieds}
+                actionLabel="Ver todos os classificados"
+                loading={displayLoadingClassifieds}
+                isEmpty={displayClassifieds.length === 0}
+                emptyMessage="Nenhum classificado ativo encontrado nesta comunidade."
+              >
+                {displayClassifieds.map((item) => (
+                  <ClassifiedPreviewRow key={item.id} item={item} />
+                ))}
+              </CommunityModulePreview>
+            ) : (
+              <CommunityModulePreview
+                icon={UtensilsCrossed}
+                title="Gastronomia da comunidade"
+                description="Restaurantes, lanchonetes e sabores encontrados perto de você."
+                countLabel={`${formatCount(displayGastronomy.length)} lugares`}
+                actionHref={moduleUrls.gastronomy}
+                actionLabel="Ver toda a gastronomia"
+                loading={displayLoadingGastronomy}
+                isEmpty={displayGastronomy.length === 0}
+                emptyMessage="Nenhum estabelecimento gastronômico encontrado nesta comunidade."
+              >
+                {displayGastronomy.map((business) => (
+                  <BusinessPreviewRow
+                    key={business.id}
+                    business={business}
+                    href={buildBusinessHref(business, businessUrls.canonical)}
+                  />
+                ))}
+              </CommunityModulePreview>
+            )}
+          </div>
+        </div>
 
-              <SurfacePanel className="xl:hidden">
-                <SectionHeader title="Anúncio local" />
-                {loadingAd ? (
-                  <div className="h-24 animate-pulse rounded-xl border border-white/10 bg-white/[0.04]" />
-                ) : campaign ? (
-                  <SponsoredAdCard
-                    campaign={campaign}
-                    variant="compact"
-                    className="border-teal-300/20 bg-teal-300/10 text-white"
-                  />
-                ) : (
-                  <p className="rounded-xl border border-dashed border-white/10 bg-white/[0.03] px-3 py-4 text-sm text-white/50">
-                    Nenhuma campanha patrocinada ativa para este território.
-                  </p>
-                )}
-              </SurfacePanel>
-            </div>
-          ) : null}
-        </main>
-      </div>
+        {!isEmbeddedModule && selectedView === "feed" ? (
+          <div className="min-w-0 space-y-4 xl:col-start-2 xl:row-start-2 xl:space-y-3">
+            <SurfacePanel id="eventos" className="p-3">
+              <SectionHeader
+                title="Próximos eventos"
+                actionHref={fullEventsEnabled ? moduleUrls.events : undefined}
+                actionLabel={fullEventsEnabled ? "Ver todos" : undefined}
+              />
+              {!communityEventsPreviewEnabled ? (
+                <EmptyCommunityState
+                  icon={CalendarDays}
+                  title="Módulo de eventos aguardando ativação"
+                  description="A agenda já está prevista na página, mas a prévia comunitária de eventos segue desligada no launch scope."
+                />
+              ) : displayLoadingEvents ? (
+                <div className="space-y-2">
+                  {[0, 1].map((index) => (
+                    <div
+                      key={index}
+                      className="h-20 animate-pulse rounded-xl border border-territory-border bg-territory-raised"
+                    />
+                  ))}
+                </div>
+              ) : displayEvents.length > 0 ? (
+                <div className="space-y-2">
+                  {displayEvents.map((event) => (
+                    <EventPreviewItem key={event.id} event={event} />
+                  ))}
+                </div>
+              ) : (
+                <EmptyCommunityState
+                  icon={CalendarDays}
+                  title="Nenhum evento público nesta comunidade"
+                  description="Quando eventos aprovados existirem para este território, eles aparecem aqui em modo de leitura."
+                  ctaHref={fullEventsEnabled ? moduleUrls.events : undefined}
+                  ctaLabel={fullEventsEnabled ? "Abrir eventos" : undefined}
+                />
+              )}
+            </SurfacePanel>
+
+            <SurfacePanel className="xl:hidden">
+              <SectionHeader title="Anúncio local" />
+              {loadingAd ? (
+                <div className="h-24 animate-pulse rounded-xl border border-territory-border bg-territory-raised" />
+              ) : campaign ? (
+                <SponsoredAdCard
+                  campaign={campaign}
+                  variant="compact"
+                  className="border-territory-brand/20 bg-territory-brand/10 text-territory-ink"
+                />
+              ) : (
+                <p className="rounded-xl border border-dashed border-territory-border bg-territory-raised px-3 py-4 text-sm text-territory-muted">
+                  Nenhuma campanha patrocinada ativa para este território.
+                </p>
+              )}
+            </SurfacePanel>
+          </div>
+        ) : null}
+      </main>
     </div>
   );
 }

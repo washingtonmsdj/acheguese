@@ -29,12 +29,11 @@ import {
   buildModuleTerritoryUrl,
 } from "@/core/routing/utils/territoryUrls";
 import { createLaunchPausedRoute } from "@/app/routes/launchPausedComponent";
-import TerritoryHomePage from "@/app/pages/TerritoryHomePage";
-import type { CommunityOverviewSection } from "@/core/community/components/page/communityOverviewNavigation";
+import type { CommunityOverviewSection } from "@/core/community-feed/navigation";
 
 // Lazy imports dos módulos existentes
 const ComunidadePage = lazy(
-  () => import("@/core/community/pages/ComunidadePage"),
+  () => import("@/core/community-feed/pages/ComunidadePage"),
 );
 const CidadeLandingPage = lazy(() => import("@/app/pages/CidadeLandingPage"));
 // Sprint TERRITORY.1: Territory Home passa a ser a home única de qualquer território
@@ -92,16 +91,20 @@ function resolvePersistentCommunitySection(
   if (!firstSegment) {
     const requestedView = new URLSearchParams(search).get("view");
     if (requestedView === "groups" || requestedView === "discussions") {
-      return { section: requestedView, embedOutlet: false };
+      return {
+        section: requestedView,
+        embedOutlet: false,
+        renderOutletOnly: true,
+      };
     }
-    return { section: "feed", embedOutlet: false };
+    return { section: "feed", embedOutlet: false, renderOutletOnly: true };
   }
 
   if (firstSegment === "feed") {
     return { section: "feed", embedOutlet: false, renderOutletOnly: true };
   }
   if (firstSegment === "grupos") {
-    return { section: "groups", embedOutlet: segments.length > 1 };
+    return { section: "groups", embedOutlet: false, renderOutletOnly: true };
   }
 
   switch (firstSegment) {
@@ -130,23 +133,8 @@ export function CommunityPersistentPortalLayout() {
     territorialContext.communityBaseUrl,
   );
 
-  // Sprint TERRITORY.1: no índice do território (sem sub-rota e sem ?view=...),
-  // a Territory Home substitui a antiga home baseada em CidadeLandingPage.
-  // Feed/Grupos/Discussões continuam servidos pelo CidadeLandingPage seccionado.
-  const isTerritoryHomeIndex =
-    presentation.section === "feed" &&
-    !presentation.embedOutlet &&
-    !location.pathname
-      .replace(territorialContext.communityBaseUrl, "")
-      .replace(/^\/+|\/+$/g, "") &&
-    !new URLSearchParams(location.search).get("view");
-
-  if (isTerritoryHomeIndex) {
-    return <Suspense fallback={<ModulePageLoader />}>{outlet}</Suspense>;
-  }
-
-  // `/feed` e o entrypoint inequívoco da timeline completa. O shell territorial
-  // externo permanece montado, mas o overview não envolve nem duplica a timeline.
+  // Overview, Feed, Grupos e Discussões usam uma única superfície Community.
+  // O portal legado permanece apenas como moldura temporária de módulos adjacentes.
   if (presentation.renderOutletOnly) {
     return <Suspense fallback={<ModulePageLoader />}>{outlet}</Suspense>;
   }
@@ -385,20 +373,15 @@ export function TerritorialCommunityPage() {
   );
 }
 
-export function TerritorialCommunityHomePage() {
-  // Sprint TERRITORY.1: renderiza a Territory Home oficial em vez do antigo
-  // CidadeLandingPage. O feed completo permanece disponível em `.../feed`.
-  return (
-    <Suspense fallback={<ModulePageLoader />}>
-      <TerritoryHomePage />
-    </Suspense>
-  );
-}
-
 export function TerritorialCommunityEntryPage() {
-  // Antes: variava conforme cidade/bairro/grupo. Agora a Territory Home é única
-  // e o próprio TerritoryHomePage se especializa pelo território ativo.
-  return <TerritorialCommunityHomePage />;
+  const { resolved, activeMemberIds } = useTerritorialContext();
+  return (
+    <CityStatusGate module="comunidade" enforceActive>
+      <Suspense fallback={<ModulePageLoader />}>
+        <ComunidadePage resolved={resolved} activeMemberIds={activeMemberIds} />
+      </Suspense>
+    </CityStatusGate>
+  );
 }
 
 export function TerritorialCommunityIssuesPage() {

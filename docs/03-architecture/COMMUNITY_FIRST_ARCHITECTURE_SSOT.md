@@ -98,6 +98,24 @@ comunidade; nao e SSOT de dados. Essa superficie deve consumir:
 - anuncios por `core/business/promotions`;
 - feed publico por contratos de comunidade/feed existentes.
 
+### Estado publico da Community
+
+`CommunitySurfacePolicy` combina duas fontes que possuem responsabilidades
+diferentes:
+
+- `territory_communities.status` define se existe uma identidade Community
+  persistida e se ela esta `active`, `coming_soon`, `launching` ou
+  `waiting_list`;
+- `module_rollouts` define se o modulo Community esta operacionalmente
+  habilitado para o escopo territorial resolvido.
+
+Uma Community so e `active` quando o perfil persistido esta `active` **e** o
+rollout efetivo esta ativo. Rollout herdado de cidade ou de grupo nao fabrica
+identidade Community. Perfil `coming_soon`/`launching`/`waiting_list` exibe o
+estado de interesse permitido pelo contrato existente. Ausencia de perfil,
+perfil inativo ou erro de resolucao produzem estado seguro e explicito, nunca
+feed, membros, contadores ou identidade sinteticos.
+
 Blocos visuais do concept que ainda nao possuem contrato publico completo
 devem existir como estados seguros, nao como dados simulados. Exemplos
 vigentes: membros em destaque aguardam contrato de consentimento/agregado
@@ -106,11 +124,19 @@ bloco local enquanto a launch surface publica de `events` estiver desligada.
 Navegacao para esses blocos pode usar ancora local, mas nao deve promover rota
 pausada nem inventar contadores.
 
-Rotas publicas de comunidade nao devem herdar chrome operacional global
-(`AppSidebar`, `AppTopbar` ou bottom nav) nem banners de transicao legados. O
-alias `/comunidade/:alias` ja e a superficie publica canonica da Comunidade
-Local; links para o territorio publico devem aparecer como navegacao contextual
-quando fizerem sentido, nao como faixa obrigatoria no topo da pagina.
+Rotas publicas de comunidade herdam somente a navegacao territorial adaptativa
+do sistema Territorio Vivo: bottom navigation no mobile, rail no tablet e
+sidebar + contexto no desktop. Elas nao devem montar `AppSidebar`, `AppTopbar`,
+`BottomNav` legado, banners de transicao ou um segundo shell interno. O alias
+`/comunidade/:alias` e a superficie publica canonica da Comunidade Local;
+`/feed`, `?view=groups`, `?view=discussions` e `/grupos` permanecem no mesmo
+contexto e preservam query params/deep-links. Links para a Home territorial e
+Explorar sao navegacao contextual, nao uma faixa duplicada.
+
+`Publicar` e o composer aparecem somente quando `CommunityAccessPolicy`
+autoriza `create_post`. Visitante publico recebe convite para participar; uma
+fixture visual jamais substitui sessao ou policy e so pode ser habilitada em
+`DEV`.
 
 `src/core/community/access/useCommunityAccess.ts` e o gate central de
 permissoes da experiencia comunitaria. Ele pode consumir

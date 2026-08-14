@@ -35,6 +35,9 @@ export interface UseCommunityAccessResult extends Omit<
   readonly isAdmin: boolean;
   readonly isModerator: boolean;
   readonly isCommunityAvailable: boolean;
+  readonly isCommunityAvailabilityLoading: boolean;
+  readonly communityAvailabilityError: Error | null;
+  readonly refreshCommunityAvailability: () => Promise<void>;
   readonly communityRolloutStatus: RolloutStatus | null;
   readonly residenceLocationId: string | null;
   readonly isResidenceVerified: boolean;
@@ -100,6 +103,8 @@ export function useCommunityAccess({
     isLoading: rolloutLoading,
     isBlocked,
     rollout,
+    error: communityAvailabilityError,
+    refresh: refreshCommunityAvailability,
   } = useCommunityRollout(routeResolved, targetLocationIds[0] ?? null);
   const isAuthenticated = Boolean(user?.id);
   const routeTargetKey = useMemo(
@@ -272,6 +277,9 @@ export function useCommunityAccess({
     isModerator: decision.level === "moderator" || decision.level === "admin",
     isCommunityAvailable:
       !rolloutLoading && isCommunityRolloutActive && !isBlocked,
+    isCommunityAvailabilityLoading: rolloutLoading,
+    communityAvailabilityError,
+    refreshCommunityAvailability,
     communityRolloutStatus: rollout?.status ?? null,
     residenceLocationId: residenceQuery.data?.location_id ?? null,
     isResidenceVerified: Boolean(residenceQuery.data?.is_verified),

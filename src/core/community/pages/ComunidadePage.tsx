@@ -51,8 +51,19 @@ import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritory
 import type { TerritoryFilter } from "@/core/location";
 import type { TerritorialFeedChannel } from "@/core/community/hooks/feed/territorialFeedEngine";
 import { withQueryParams } from "@/core/landing/utils/landingPresentation";
-import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
+import { usePersistedCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
 import { isPersistedCommunityId } from "@/core/community-experience/types";
+import { resolveCommunitySurfaceState } from "@/core/community-experience/policies/CommunitySurfacePolicy";
+import { CommunityAvailabilityState } from "../components/page/CommunityAvailabilityState";
+import { TerritoryTopbar } from "@/shared/components/territory-vivo/TerritoryTopbar";
+import { useUnifiedNotifications } from "@/core/notifications/useUnifiedNotifications";
+import { useTerritorialContextOptional } from "@/core/routing/components/TerritorialLayout";
+import {
+  MODULE_SLUGS,
+  buildCommunityTerritoryUrl,
+  buildModuleTerritoryUrl,
+} from "@/core/routing/utils/territoryUrls";
+import { SALVADOR_COMMUNITY_LAUNCH_GROUP_SLUG } from "@/config/communityLaunch";
 
 const GruposPage = lazy(() => import("./GruposPage"));
 
@@ -118,6 +129,8 @@ export default function ComunidadePage({
     resolveCommunityFeedChannelFromTab(requestedTab);
   const [showBanner, setShowBanner] = React.useState(true);
   const appUrls = useAppUrls(resolved); // SSOT URLs com contexto territorial
+  const territorialContext = useTerritorialContextOptional();
+  const { unreadCount } = useUnifiedNotifications();
   const moduleTerritory = useModuleTerritoryFilter({
     routeResolved: resolved,
     activeMemberIds,
@@ -134,7 +147,7 @@ export default function ComunidadePage({
     resolved: resolved ?? null,
     activeMemberIds,
   });
-  const communityProfileQuery = useCommunityProfile(resolved ?? null);
+  const communityProfileQuery = usePersistedCommunityProfile(resolved ?? null);
   const linkedCommunityId = isPersistedCommunityId(
     communityProfileQuery.data?.id,
   )
@@ -276,16 +289,39 @@ export default function ComunidadePage({
       : resolved?.kind === "location"
         ? resolved.location.name
         : "comunidade";
+  const territoryHomeHref = territorialContext?.baseUrl ?? "/ba/salvador";
+  const communityBaseHref =
+    territorialContext?.communityBaseUrl ??
+    buildCommunityTerritoryUrl(territoryHomeHref);
+  const communityInterestHref = communityProfileQuery.data
+    ? `${communityBaseHref}/interesse`
+    : undefined;
+  const exploreHref = buildModuleTerritoryUrl(
+    MODULE_SLUGS.search,
+    territoryHomeHref,
+  );
+  const activeCommunityHref = buildCommunityTerritoryUrl(
+    `/ba/salvador/${SALVADOR_COMMUNITY_LAUNCH_GROUP_SLUG}`,
+  );
+  const communitySurfaceState = resolveCommunitySurfaceState({
+    profile: communityProfileQuery.data ?? null,
+    isProfileLoading: communityProfileQuery.isLoading,
+    isRolloutLoading: communityAccess.isCommunityAvailabilityLoading,
+    isRolloutActive: communityAccess.isCommunityAvailable,
+    hasError: Boolean(
+      communityProfileQuery.error || communityAccess.communityAvailabilityError,
+    ),
+  });
+  const territoryContextLabel =
+    resolved?.kind === "group"
+      ? "Community territorial de Salvador"
+      : resolved?.kind === "location" && resolved.location.type === "city"
+        ? "Community em nível de cidade"
+        : "Community do território";
   const loginHref = useMemo(() => {
     const redirect = `${location.pathname}${location.search}`;
     return withQueryParams(appUrls.auth.login, { redirect });
   }, [appUrls.auth.login, location.pathname, location.search]);
-  const publishRedirectHref = useMemo(() => {
-    const targetPath = withQueryParams(location.pathname, {
-      action: "publicar",
-    });
-    return withQueryParams(appUrls.auth.login, { redirect: targetPath });
-  }, [appUrls.auth.login, location.pathname]);
   const handleRequireLogin = useCallback(() => {
     navigate(loginHref);
   }, [loginHref, navigate]);
@@ -430,23 +466,58 @@ export default function ComunidadePage({
     />
   );
 
+  const communityTopbar = (
+    <TerritoryTopbar
+      territoryName={territoryName}
+      contextLabel={territoryContextLabel}
+      isAuthenticated={communityAccess.isAuthenticated}
+      unreadCount={unreadCount}
+      canCreatePost={
+        communitySurfaceState === "active" && communityAccess.can.create_post
+      }
+    />
+  );
+
+  if (communitySurfaceState !== "active") {
+    return (
+      <TooltipProvider>
+        <div className="min-h-[100dvh] text-territory-ink">
+          {communityTopbar}
+          <CommunityAvailabilityState
+            state={communitySurfaceState}
+            territoryName={territoryName}
+            profile={communityProfileQuery.data ?? null}
+            territoryHomeHref={territoryHomeHref}
+            exploreHref={exploreHref}
+            activeCommunityHref={activeCommunityHref}
+            interestHref={communityInterestHref}
+            onRetry={() => {
+              void Promise.all([
+                communityProfileQuery.refetch(),
+                communityAccess.refreshCommunityAvailability(),
+              ]);
+            }}
+          />
+        </div>
+      </TooltipProvider>
+    );
+  }
+
   if (!profile && resolved) {
     return (
       <TooltipProvider>
-        <div
-          className="min-h-screen w-full max-w-full overflow-x-hidden bg-background"
-          role="main"
-        >
+        <div className="min-h-[100dvh] w-full max-w-full overflow-x-hidden">
+          {communityTopbar}
           <CommunityOverviewSurface
             resolved={resolved}
             territoryName={territoryName}
             territoryFilter={territoryFilter}
             onRequireLogin={handleRequireLogin}
             loginHref={loginHref}
-            publishHref={publishRedirectHref}
             communityId={linkedCommunityId}
             communityProfile={communityProfileQuery.data ?? null}
             mode="public"
+            canCreatePost={false}
             activeView={activeView}
             onViewChange={setView}
           />
@@ -516,10 +587,8 @@ export default function ComunidadePage({
 
   return (
     <TooltipProvider>
-      <div
-        className="min-h-screen w-full max-w-full overflow-x-hidden bg-background"
-        role="main"
-      >
+      <div className="min-h-[100dvh] w-full max-w-full overflow-x-hidden">
+        {communityTopbar}
         <div className="min-w-0">
           <CommunityOverviewSurface
             resolved={resolved}
@@ -527,10 +596,10 @@ export default function ComunidadePage({
             territoryFilter={communityTerritoryFilter}
             onRequireLogin={handleRequireLogin}
             loginHref={loginHref}
-            publishHref={publishRedirectHref}
             communityId={linkedCommunityId}
             communityProfile={communityProfileQuery.data ?? null}
             mode="member"
+            canCreatePost={communityAccess.can.create_post}
             onOpenCreatePost={handleOpenCreatePostWithAccess}
             activeView={activeView}
             onViewChange={setView}
@@ -590,6 +659,7 @@ export default function ComunidadePage({
                     canSave={communityAccess.can.save}
                     canReport={communityAccess.can.report}
                     canSendMessage={communityAccess.can.send_message}
+                    canCreatePost={communityAccess.can.create_post}
                     onBlockedAction={handleBlockedCommunityAction}
                     contentMode={
                       activeView === "discussions" ? "discussions" : "feed"

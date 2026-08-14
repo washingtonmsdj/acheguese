@@ -24,15 +24,20 @@ export function useCommunityRollout(
   const [isActive, setIsActive] = useState<boolean>(false);
   const [rollout, setRollout] = useState<EffectiveRollout | null>(null);
   const [config, setConfig] = useState<CommunityRolloutConfig>(null);
-  const [accessCheck, setAccessCheck] = useState<{ blocked: boolean; reason?: string }>({ blocked: false });
+  const [accessCheck, setAccessCheck] = useState<{
+    blocked: boolean;
+    reason?: string;
+  }>({ blocked: false });
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   const { activeLocationId } = useCommunityLocation();
 
   const checkRolloutStatus = useCallback(async () => {
     const locationId = fallbackLocationId ?? activeLocationId;
     const hasContext = resolved
-      ? (resolved.kind === "location" || (resolved.kind === "group" && resolved.group.members.length > 0))
+      ? resolved.kind === "location" ||
+        (resolved.kind === "group" && resolved.group.members.length > 0)
       : !!locationId;
 
     if (!hasContext) {
@@ -45,20 +50,27 @@ export function useCommunityRollout(
     }
 
     setIsLoading(true);
+    setError(null);
     try {
       const active = resolved
         ? await communityRolloutService.isCommunityActive(resolved)
-        : await communityRolloutService.isCommunityActiveForLocation(locationId!);
+        : await communityRolloutService.isCommunityActiveForLocation(
+            locationId!,
+          );
       setIsActive(active);
 
       const effectiveRollout = resolved
         ? await communityRolloutService.getCommunityRollout(resolved)
-        : await communityRolloutService.getCommunityRolloutForLocation(locationId!);
+        : await communityRolloutService.getCommunityRolloutForLocation(
+            locationId!,
+          );
       setRollout(effectiveRollout);
 
       const moduleConfig = resolved
         ? await communityRolloutService.getCommunityConfig(resolved)
-        : await communityRolloutService.getCommunityConfigForLocation(locationId!);
+        : await communityRolloutService.getCommunityConfigForLocation(
+            locationId!,
+          );
       setConfig(moduleConfig);
 
       const access = resolved
@@ -67,10 +79,18 @@ export function useCommunityRollout(
       setAccessCheck(access);
     } catch (error: unknown) {
       logger.error("Error checking community rollout:", error);
+      setError(
+        error instanceof Error
+          ? error
+          : new Error("Falha ao verificar o rollout da Community"),
+      );
       setIsActive(false);
       setRollout(null);
       setConfig(null);
-      setAccessCheck({ blocked: true, reason: "Erro ao verificar disponibilidade" });
+      setAccessCheck({
+        blocked: true,
+        reason: "Erro ao verificar disponibilidade",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -87,6 +107,7 @@ export function useCommunityRollout(
     isLoading,
     isBlocked: accessCheck.blocked,
     blockReason: accessCheck.reason,
+    error,
     canUseFeatures: !accessCheck.blocked,
     refresh: checkRolloutStatus,
     rolloutSource: rollout?.source || null,

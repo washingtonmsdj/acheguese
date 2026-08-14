@@ -1,14 +1,8 @@
 import { Link } from "react-router-dom";
-import {
-  Globe2,
-  Lock,
-  MapPin,
-  PencilLine,
-  Users,
-} from "lucide-react";
+import { Globe2, Lock, MapPin, PencilLine, Users } from "lucide-react";
 
 import type { MapMarker, TerritoryPolygon } from "@/core/maps";
-import { NeighborhoodTerritoryArt } from "@/core/community/components/public/NeighborhoodTerritoryArt";
+import { NeighborhoodTerritoryArt } from "@/core/community-feed/components/NeighborhoodTerritoryArt";
 
 type NeighborhoodTerritoryHeroProps = {
   territoryName: string;
@@ -37,7 +31,9 @@ export function NeighborhoodTerritoryHero({
   canInteract,
   isCommunityMode,
 }: NeighborhoodTerritoryHeroProps) {
-  const territoryContextLabel = isGroup ? `${memberCount} areas conectadas` : `${cityName}, ${stateLabel}`;
+  const territoryContextLabel = isGroup
+    ? `${memberCount} areas conectadas`
+    : `${cityName}, ${stateLabel}`;
   const title = isCommunityMode ? "Meu bairro" : territoryName;
   const description = isCommunityMode
     ? "Comunidade, servicos e negocios perto de voce."
@@ -45,11 +41,18 @@ export function NeighborhoodTerritoryHero({
   const ariaLabel = isCommunityMode
     ? `Comunidade publica de ${territoryName}`
     : `Territorio publico de ${territoryName}`;
-  const primaryActionLabel = isCommunityMode ? "Entrar no bairro" : "Abrir portal comunitario";
-  const interactionActionLabel = isCommunityMode ? "Publicar" : "Publicar no portal comunitario";
+  const primaryActionLabel = isCommunityMode
+    ? "Entrar no bairro"
+    : "Abrir portal comunitario";
+  const interactionActionLabel = isCommunityMode
+    ? "Publicar"
+    : "Publicar no portal comunitario";
 
   return (
-    <section className="neighborhood-community-hero neighborhood-community-hero-territorial" aria-label={ariaLabel}>
+    <section
+      className="neighborhood-community-hero neighborhood-community-hero-territorial"
+      aria-label={ariaLabel}
+    >
       <div className="neighborhood-community-hero-copy">
         <span className="neighborhood-community-eyebrow">
           <MapPin aria-hidden="true" />
@@ -74,7 +77,9 @@ export function NeighborhoodTerritoryHero({
           </span>
           <span>
             <Lock aria-hidden="true" />
-            {isCommunityMode ? "Para publicar, confirme sua moradia" : "Interacoes ficam no portal comunitario"}
+            {isCommunityMode
+              ? "Para publicar, confirme sua moradia"
+              : "Interacoes ficam no portal comunitario"}
           </span>
         </div>
         <div className="neighborhood-community-hero-actions">
@@ -84,7 +89,11 @@ export function NeighborhoodTerritoryHero({
           </Link>
           <Link
             to={interactionHref}
-            aria-label={canInteract ? "Publicar no bairro" : "Entrar ou verificar moradia para publicar"}
+            aria-label={
+              canInteract
+                ? "Publicar no bairro"
+                : "Entrar ou verificar moradia para publicar"
+            }
           >
             <PencilLine aria-hidden="true" />
             {interactionActionLabel}
@@ -93,7 +102,11 @@ export function NeighborhoodTerritoryHero({
       </div>
 
       <div className="neighborhood-community-hero-map" aria-hidden="true">
-        <NeighborhoodTerritoryArt polygons={polygons} markers={markers} decorative />
+        <NeighborhoodTerritoryArt
+          polygons={polygons}
+          markers={markers}
+          decorative
+        />
       </div>
     </section>
   );

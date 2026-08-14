@@ -31,7 +31,6 @@ import {
 } from "@/core/community/state/newPostHighlight";
 import { CommunityComposerEntry } from "../composer/CommunityComposerEntry";
 import { PostCardSkeleton } from "../PostCardSkeleton";
-import { TerritoryFeedHeader } from "./TerritoryFeedHeader";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { MessageCirclePlus } from "lucide-react";
 
@@ -75,6 +74,7 @@ interface CommunityFeedProps {
   canSave?: boolean;
   canReport?: boolean;
   canSendMessage?: boolean;
+  canCreatePost?: boolean;
   onBlockedAction?: (action: CommunityAction) => void;
   locationScope?: LocationScope;
   territoryFilter?: TerritoryFilter;
@@ -99,6 +99,7 @@ export function CommunityFeed({
   canSave = true,
   canReport = true,
   canSendMessage = true,
+  canCreatePost = false,
   onBlockedAction,
   locationScope = "city",
   territoryFilter,
@@ -291,17 +292,16 @@ export function CommunityFeed({
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-4 px-4">
-      <TerritoryFeedHeader
-        territoryName={communityName}
-        territoryType={locationScope === "city" ? "cidade" : "bairro"}
-      />
-      <CommunityComposerEntry
-        communityName={communityName}
-        onOpenCreatePost={onOpenCreatePost}
-      />
+    <div className="w-full space-y-4">
+      {canCreatePost ? (
+        <CommunityComposerEntry
+          communityName={communityName}
+          onOpenCreatePost={onOpenCreatePost}
+          className="border-territory-border bg-territory-surface shadow-territory-highlight"
+        />
+      ) : null}
 
-      <div className="rounded-2xl border border-border/60 bg-card p-3 md:p-4">
+      <div className="rounded-territory-highlight border border-territory-border bg-territory-surface p-3 shadow-territory-highlight md:p-4">
         {contentMode === "discussions" ? (
           <div className="mb-3 border-b border-border/60 pb-3">
             <h2 className="text-sm font-semibold text-foreground">
@@ -384,7 +384,7 @@ export function CommunityFeed({
             title={`Ainda sem publicações em ${communityName}.`}
             description="Seja o primeiro morador a compartilhar algo por aqui — uma dica, um alerta ou uma pergunta."
             action={
-              onOpenCreatePost
+              onOpenCreatePost && canCreatePost
                 ? { label: "Publicar no bairro", onClick: onOpenCreatePost }
                 : undefined
             }
@@ -415,7 +415,6 @@ export function CommunityFeed({
           />
         )}
       </div>
-
 
       <InfiniteScrollTrigger
         onLoadMore={loadMore}

@@ -2437,3 +2437,33 @@ Avancar para fechamento total da Fase 3 (sem abrir Fase 4):
 - Residual critico CP-014: produtores de `trust_events` ainda aceitam ator,
   alvo, papel e contexto do cliente; a denuncia de conversa aponta o proprio
   ator como alvo. A Fase 1D corrige Trust/Messaging sem criar tabela paralela.
+
+## Atualizacao 2026-08-14 (Fase 4.4 - Community e Feed Territorio Vivo)
+
+- Community e Feed passaram a usar a navegacao adaptativa Territorio Vivo:
+  bottom navigation no mobile, rail no tablet e sidebar + contexto no desktop,
+  sem `AppSidebar`, `AppTopbar`, `BottomNav` ou header territorial duplicados.
+- O estado publico foi formalizado por `CommunitySurfacePolicy`: perfil
+  persistido `active` + rollout efetivo ativo abre a Community; rollout herdado
+  isoladamente nao fabrica identidade. `coming_soon` preserva interesse pelo
+  contrato existente; ausencia, inatividade e erro permanecem fail-closed.
+- O cluster oficial Complexo do Nordeste de Amaralina abre a Community a partir
+  de Nordeste de Amaralina, Santa Cruz, Vale das Pedrinhas e Chapada. Pituba
+  permanece `coming_soon`; Valeria e Salvador em nivel de cidade nao simulam
+  Community.
+- `/comunidade/:alias`, `/feed`, `/grupos`, `?view=groups` e
+  `?view=discussions` usam a mesma superficie canonica, preservando query params
+  e deep-links. Fixtures visuais ficaram limitadas a `DEV`; Publicar e composer
+  dependem de `CommunityAccessPolicy.create_post`.
+- Foi materializada a fronteira fina `src/core/community-feed`, exigida pelo
+  validador transversal, sem duplicar logica do bounded context legado.
+- Validacao local: 34 testes focados passaram; E2E Territorio Vivo passou em
+  5/5 cenarios reais; `typecheck:app`, lint, arquitetura Community, governance,
+  taxonomy, SSOT, hardcodes, documentacao e build passaram. O lint manteve dois
+  warnings preexistentes de mapa fora deste escopo; o build manteve warnings
+  preexistentes de chunk circular em `core/location`.
+- `verify:deploy` confirmou Vercel, migrations remotas e os demais gates de
+  codigo, mas a Security Authority bloqueou a publicacao por
+  `RECOVERY_SNAPSHOT_STALE`. A migration remota nao mudou nesta fase; nenhuma
+  declaracao de freshness foi fabricada e nenhum deploy foi iniciado enquanto
+  o snapshot manual continuou fora da janela de 24 horas.

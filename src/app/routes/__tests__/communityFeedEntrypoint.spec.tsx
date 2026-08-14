@@ -50,11 +50,7 @@ vi.mock("@/app/pages/CidadeLandingPage", () => ({
   ),
 }));
 
-vi.mock("@/app/pages/TerritoryHomePage", () => ({
-  default: () => <div data-testid="territory-home">Territory Home</div>,
-}));
-
-vi.mock("@/core/community/pages/ComunidadePage", () => ({
+vi.mock("@/core/community-feed/pages/ComunidadePage", () => ({
   default: function MockComunidadePage() {
     const [searchParams] = useSearchParams();
     const postId = searchParams.get("post");
@@ -103,17 +99,14 @@ describe("canonical community feed entrypoint", () => {
     );
   });
 
-  it("preserves the territory Home and the community overview surfaces", async () => {
+  it("uses the Community overview at the Community root", async () => {
     const home = renderCommunityRoute("/comunidade/pituba");
-    expect(await screen.findByTestId("territory-home")).toBeVisible();
+    expect(await screen.findByTestId("full-community-feed")).toBeVisible();
     expect(screen.queryByTestId("community-overview")).not.toBeInTheDocument();
     home.unmount();
 
     renderCommunityRoute("/comunidade/pituba?view=groups");
-    expect(await screen.findByTestId("community-overview")).toHaveAttribute(
-      "data-section",
-      "groups",
-    );
-    expect(screen.queryByTestId("full-community-feed")).not.toBeInTheDocument();
+    expect(await screen.findByTestId("full-community-feed")).toBeVisible();
+    expect(screen.queryByTestId("community-overview")).not.toBeInTheDocument();
   });
 });

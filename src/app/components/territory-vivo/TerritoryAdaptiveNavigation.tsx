@@ -46,6 +46,9 @@ function isModeActive(pathname: string, mode: PrimaryMode): boolean {
   if (mode.label === "Atividade") {
     return current === "/notificacoes" || current.startsWith("/notificacoes/");
   }
+  if (mode.label === "Community") {
+    return current === "/comunidade" || current.startsWith("/comunidade/");
+  }
   if (mode.label === "Entrar") {
     return current === "/login" || current.startsWith("/login/");
   }

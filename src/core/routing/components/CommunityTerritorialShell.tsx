@@ -1,19 +1,15 @@
 import { useEffect, useLayoutEffect, useMemo } from "react";
-import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Outlet, useLocation, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { AlertTriangle } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
 import { PageLoader } from "@/shared/components/loading/PageLoader";
 import { useCommunityScopeResolver } from "@/core/community/hooks/useCommunityScopeResolver";
-import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
-import { isCommunityStatusPubliclyRenderable } from "@/core/community-experience/constants/statuses";
 import { useGroupAvailability } from "@/core/territorial/hooks/useGroupAvailability";
 import type { GroupModuleAvailability } from "@/core/territorial/types";
 import { ModuleKey } from "@/core/rollout/types";
 import { ErrorBoundary } from "@/shared/components/errors/ErrorBoundary";
 import { lastTerritoryStore } from "@/core/routing/stores/LastTerritoryStore";
 import { TerritorialSEO } from "@/core/routing/seo/TerritorialSEO";
-import { BottomNav } from "@/core/navigation/BottomNav";
 import type { TerritorialLayoutContext } from "./TerritorialLayout";
 import { TerritorialNotFound } from "./TerritorialNotFound";
 import {
@@ -54,9 +50,13 @@ function useCommunitySeoHead(canonicalHref: string, robots: string) {
   }, [canonicalHref, robots]);
 }
 
-function resolveModuleKeyFromCommunityPath(pathname: string, hasScopedTerritory: boolean): ModuleKey {
+function resolveModuleKeyFromCommunityPath(
+  pathname: string,
+  hasScopedTerritory: boolean,
+): ModuleKey {
   const parts = pathname.split("/").filter(Boolean);
-  const moduleSlug = parts[hasScopedTerritory ? 4 : 3] ?? MODULE_SLUGS.community;
+  const moduleSlug =
+    parts[hasScopedTerritory ? 4 : 3] ?? MODULE_SLUGS.community;
 
   switch (moduleSlug) {
     case MODULE_SLUGS.business:
@@ -89,12 +89,19 @@ function resolveModuleKeyFromCommunityPath(pathname: string, hasScopedTerritory:
   }
 }
 
-function PartialCoverageBanner({ activeCount, totalCount }: { activeCount: number; totalCount: number }) {
+function PartialCoverageBanner({
+  activeCount,
+  totalCount,
+}: {
+  activeCount: number;
+  totalCount: number;
+}) {
   return (
     <div className="flex items-center gap-2 border-b border-amber-500/20 bg-amber-500/10 px-4 py-2 text-xs text-amber-700 dark:text-amber-400">
       <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
       <span>
-        Cobertura parcial: {activeCount} de {totalCount} bairros disponiveis neste modulo.
+        Cobertura parcial: {activeCount} de {totalCount} bairros disponiveis
+        neste modulo.
       </span>
     </div>
   );
@@ -110,7 +117,6 @@ function UnavailableModuleBanner() {
 }
 
 export function CommunityTerritorialShell() {
-  const navigate = useNavigate();
   const location = useLocation();
   const { resolved, isLoading: scopeLoading } = useCommunityScopeResolver();
   const params = useParams<{
@@ -148,16 +154,18 @@ export function CommunityTerritorialShell() {
     [city, scopedSlug, state],
   );
   const effectiveResolved = resolved ?? publicCommunityFallback;
-  const communityProfileQuery = useCommunityProfile(effectiveResolved);
   const routeParts = location.pathname.split("/").filter(Boolean);
   const hasInvalidRouteParams = !state || !city;
-  const hasLegacyAreaSegment = routeParts[0] === MODULE_SLUGS.community && routeParts[3] === "area";
-  const hasInvalidCommunityRoute = hasInvalidRouteParams || hasLegacyAreaSegment;
-  const territoryBase = scopedSlug ? `/${state}/${city}/${scopedSlug}` : `/${state}/${city}`;
+  const hasLegacyAreaSegment =
+    routeParts[0] === MODULE_SLUGS.community && routeParts[3] === "area";
+  const hasInvalidCommunityRoute =
+    hasInvalidRouteParams || hasLegacyAreaSegment;
+  const territoryBase = scopedSlug
+    ? `/${state}/${city}/${scopedSlug}`
+    : `/${state}/${city}`;
   const communityBase = hasInvalidRouteParams
     ? `/${MODULE_SLUGS.community}`
     : buildCommunityTerritoryUrl(territoryBase);
-  const cityHref = `/${state}/${city}`;
   const cityName = cityLabelFromSlug(city);
   const territoryName = resolved
     ? resolved.kind === "group"
@@ -170,10 +178,12 @@ export function CommunityTerritorialShell() {
       : effectiveResolved.location.name
     : territoryName;
   const currentModuleKey = useMemo(
-    () => resolveModuleKeyFromCommunityPath(location.pathname, Boolean(scopedSlug)),
+    () =>
+      resolveModuleKeyFromCommunityPath(location.pathname, Boolean(scopedSlug)),
     [location.pathname, scopedSlug],
   );
-  const groupId = effectiveResolved?.kind === "group" ? effectiveResolved.group.id : null;
+  const groupId =
+    effectiveResolved?.kind === "group" ? effectiveResolved.group.id : null;
   const {
     availability,
     active_member_ids,
@@ -182,19 +192,29 @@ export function CommunityTerritorialShell() {
   } = useGroupAvailability(groupId, currentModuleKey);
 
   useEffect(() => {
-    if (!effectiveResolved || !effectiveTerritoryName || hasInvalidCommunityRoute) return;
+    if (
+      !effectiveResolved ||
+      !effectiveTerritoryName ||
+      hasInvalidCommunityRoute
+    )
+      return;
 
     lastTerritoryStore.set({
       name: effectiveTerritoryName,
       baseUrl: territoryBase,
     });
-  }, [effectiveResolved, effectiveTerritoryName, hasInvalidCommunityRoute, territoryBase]);
+  }, [
+    effectiveResolved,
+    effectiveTerritoryName,
+    hasInvalidCommunityRoute,
+    territoryBase,
+  ]);
 
-  const communityStatus = publicCommunityFallback ? "active" : communityProfileQuery.data?.status ?? "active";
   const seoPolicy = resolveSeoPolicy(location.pathname);
-  const canonicalHref = typeof window !== "undefined"
-    ? `${window.location.origin}${seoPolicy.canonicalPath}`
-    : seoPolicy.canonicalPath;
+  const canonicalHref =
+    typeof window !== "undefined"
+      ? `${window.location.origin}${seoPolicy.canonicalPath}`
+      : seoPolicy.canonicalPath;
   useCommunitySeoHead(canonicalHref, seoPolicy.robots);
 
   if (hasInvalidCommunityRoute) {
@@ -209,7 +229,7 @@ export function CommunityTerritorialShell() {
     );
   }
 
-  if (scopeLoading && !effectiveResolved) {
+  if (scopeLoading) {
     return (
       <PageLoader
         fullScreen
@@ -233,30 +253,15 @@ export function CommunityTerritorialShell() {
     );
   }
 
-  if (!isCommunityStatusPubliclyRenderable(communityStatus)) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-10 text-center text-foreground">
-        <h1 className="text-2xl font-bold sm:text-3xl">Comunidade indisponivel neste momento</h1>
-        <p className="mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
-          Esta area ainda nao esta ativa para experiencia comunitaria. Voce pode navegar pela cidade ou acessar a comunidade principal.
-        </p>
-        <div className="mt-6 flex w-full max-w-xl flex-col gap-3 sm:flex-row sm:justify-center">
-          <Button className="w-full sm:w-auto" onClick={() => navigate(cityHref)}>Navegar por {cityName}</Button>
-          <Button className="w-full sm:w-auto" variant="outline" onClick={() => navigate(communityBase)}>
-            Abrir comunidade de {cityName}
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const effectiveAvailability: GroupModuleAvailability = effectiveResolved.kind === "group" ? availability : "full";
+  const effectiveAvailability: GroupModuleAvailability =
+    effectiveResolved.kind === "group" ? availability : "full";
   const outletContext: TerritorialLayoutContext = {
     resolved: effectiveResolved,
     baseUrl: territoryBase,
     communityBaseUrl: communityBase,
     groupAvailability: effectiveAvailability,
-    activeMemberIds: effectiveResolved.kind === "group" ? active_member_ids ?? [] : [],
+    activeMemberIds:
+      effectiveResolved.kind === "group" ? (active_member_ids ?? []) : [],
   };
 
   return (
@@ -268,7 +273,7 @@ export function CommunityTerritorialShell() {
       </Helmet>
 
       <div
-        className="min-h-screen overflow-x-hidden bg-background pb-20 md:pb-0"
+        className="min-h-[100dvh] overflow-x-hidden"
         data-community-territorial-shell="canonical"
       >
         {effectiveResolved.kind === "group" && currentModuleKey ? (
@@ -279,15 +284,15 @@ export function CommunityTerritorialShell() {
                 totalCount={availabilityResult.total_active_members}
               />
             ) : null}
-            {effectiveAvailability === "none" && !availabilityLoading ? <UnavailableModuleBanner /> : null}
+            {effectiveAvailability === "none" && !availabilityLoading ? (
+              <UnavailableModuleBanner />
+            ) : null}
           </>
         ) : null}
 
         <ErrorBoundary>
           <Outlet context={outletContext} />
         </ErrorBoundary>
-
-        <BottomNav />
       </div>
     </>
   );

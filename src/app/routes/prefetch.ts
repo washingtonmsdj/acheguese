@@ -5,8 +5,15 @@
  * reduzindo latência percebida no primeiro clique dos atalhos.
  */
 
-import { APP_MODULE_SLUGS, buildAppModulePath, isAppModulePath } from "@/config/moduleSlugs";
-import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchScope";
+import {
+  APP_MODULE_SLUGS,
+  buildAppModulePath,
+  isAppModulePath,
+} from "@/config/moduleSlugs";
+import {
+  isLaunchSurfaceEnabled,
+  type LaunchSurfaceKey,
+} from "@/config/launchScope";
 import { LAUNCH_URLS } from "@/config/territory";
 
 const PREFETCHERS: Array<{
@@ -26,7 +33,8 @@ const PREFETCHERS: Array<{
   },
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.services),
-    load: () => import("@/modules/professionals/services/pages/ServicosLandingPage"),
+    load: () =>
+      import("@/modules/professionals/services/pages/ServicosLandingPage"),
     surface: "services",
   },
   {
@@ -36,12 +44,13 @@ const PREFETCHERS: Array<{
   },
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.gastronomy),
-    load: () => import("@/modules/business/gastronomy/pages/GastronomyLandingPage"),
+    load: () =>
+      import("@/modules/business/gastronomy/pages/GastronomyLandingPage"),
     surface: "gastronomy",
   },
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.community),
-    load: () => import("@/core/community/pages/ComunidadePage"),
+    load: () => import("@/core/community-feed/pages/ComunidadePage"),
     surface: "community",
   },
   {
@@ -73,8 +82,14 @@ const IDLE_WARMUP_ROUTES: Array<{
   surface?: LaunchSurfaceKey;
 }> = [
   { href: buildAppModulePath(APP_MODULE_SLUGS.business), surface: "business" },
-  { href: buildAppModulePath(APP_MODULE_SLUGS.gastronomy), surface: "gastronomy" },
-  { href: buildAppModulePath(APP_MODULE_SLUGS.classifieds), surface: "classifieds" },
+  {
+    href: buildAppModulePath(APP_MODULE_SLUGS.gastronomy),
+    surface: "gastronomy",
+  },
+  {
+    href: buildAppModulePath(APP_MODULE_SLUGS.classifieds),
+    surface: "classifieds",
+  },
   { href: LAUNCH_URLS.community, surface: "community" },
   { href: buildAppModulePath(APP_MODULE_SLUGS.services), surface: "services" },
   { href: buildAppModulePath(APP_MODULE_SLUGS.map), surface: "map" },
@@ -84,9 +99,9 @@ const IDLE_WARMUP_ROUTES: Array<{
 ];
 
 export function getLaunchWarmupHrefs(): string[] {
-  return IDLE_WARMUP_ROUTES
-    .filter((entry) => !entry.surface || isLaunchSurfaceEnabled(entry.surface))
-    .map((entry) => entry.href);
+  return IDLE_WARMUP_ROUTES.filter(
+    (entry) => !entry.surface || isLaunchSurfaceEnabled(entry.surface),
+  ).map((entry) => entry.href);
 }
 
 function normalizePath(href: string): string {
@@ -112,8 +127,14 @@ function runIdle(callback: () => void): void {
   if (typeof window === "undefined") return;
 
   if ("requestIdleCallback" in window) {
-    (window as Window & { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number })
-      .requestIdleCallback(callback, { timeout: 1200 });
+    (
+      window as Window & {
+        requestIdleCallback: (
+          cb: () => void,
+          opts?: { timeout: number },
+        ) => number;
+      }
+    ).requestIdleCallback(callback, { timeout: 1200 });
     return;
   }
 
