@@ -24,17 +24,25 @@ describe("posts vs community_posts SSOT", () => {
   });
 
   it("keeps social feed, profile stats, and LGPD flows on canonical tables", () => {
-    const profileQueries = readProjectFile("src/core/profiles/services/profile.queries.ts");
-    expect(profileQueries).toMatch(/postService\.getPostsCountByAuthor\(activeProfile\.id\)/);
+    const profileQueries = readProjectFile(
+      "src/core/profiles/services/profile.queries.ts",
+    );
+    expect(profileQueries).toMatch(
+      /postService\.getPostsCountByAuthor\(activeProfile\.id\)/,
+    );
 
-    const exportFunction = readProjectFile("supabase/functions/user-export-data/index.ts");
+    const exportFunction = readProjectFile(
+      "supabase/functions/user-export-data/index.ts",
+    );
     expect(exportFunction).not.toMatch(/\.single\(\)/);
     expect(exportFunction).toMatch(/const profileIds = \(profiles \?\? \[\]\)/);
     expect(exportFunction).toMatch(/\.from\('posts'\)/);
     expect(exportFunction).toMatch(/\.from\('community_questions'\)/);
     expect(exportFunction).toMatch(/\.from\('question_answers'\)/);
 
-    const deleteFunction = readProjectFile("supabase/functions/user-delete-account/index.ts");
+    const deleteFunction = readProjectFile(
+      "supabase/functions/user-delete-account/index.ts",
+    );
     expect(deleteFunction).toMatch(/\.from\('posts'\)/);
     expect(deleteFunction).toMatch(/\.from\('community_questions'\)/);
     expect(deleteFunction).toMatch(/\.from\('question_answers'\)/);
@@ -42,17 +50,25 @@ describe("posts vs community_posts SSOT", () => {
 
   it("keeps architecture docs from reintroducing the obsolete Q&A table contract", () => {
     const plan = readProjectFile("plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md");
-    expect(plan).toMatch(/community_posts.*nao deve ser consultada por runtime/i);
+    expect(plan).toMatch(
+      /community_posts.*nao deve ser consultada por runtime/i,
+    );
 
-    const territorialFiltersGuide = readProjectFile("docs/posts/GUIA_FILTROS_TERRITORIAIS.md");
-    expect(territorialFiltersGuide).toMatch(/community_questions/);
-    expect(territorialFiltersGuide).toMatch(/question_answers/);
-    expect(territorialFiltersGuide).not.toMatch(
+    const postsArchitecture = readProjectFile(
+      "docs/07-modules/ARQUITETURA_POSTS_SSOT.md",
+    );
+    expect(postsArchitecture).toMatch(/community_questions/);
+    expect(postsArchitecture).toMatch(/question_answers/);
+    expect(postsArchitecture).not.toMatch(
       /CommunityQAService[\s\S]{0,160}community_posts/,
     );
 
-    const communityArchitecture = readProjectFile("docs/COMMUNITY_TRANSVERSAL_ARCHITECTURE.md");
-    expect(communityArchitecture).toMatch(/feed social usa `posts`/);
-    expect(communityArchitecture).toMatch(/community_questions.*question_answers/);
+    const communityArchitecture = readProjectFile(
+      "docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
+    );
+    expect(communityArchitecture).toMatch(/Posts\/feed: `posts`/);
+    expect(communityArchitecture).toMatch(
+      /community_questions[\s\S]*question_answers/,
+    );
   });
 });

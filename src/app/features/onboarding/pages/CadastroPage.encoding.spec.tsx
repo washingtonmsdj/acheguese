@@ -25,11 +25,15 @@ const navigateMock = vi.fn();
 
 vi.mock("react-router-dom", async () => {
   const actual =
-    await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
+    await vi.importActual<typeof import("react-router-dom")>(
+      "react-router-dom",
+    );
   return { ...actual, useNavigate: () => navigateMock };
 });
 
-vi.mock("@/core/auth/hooks/useAuth", () => ({ useAuth: () => ({ user: null }) }));
+vi.mock("@/core/auth/hooks/useAuth", () => ({
+  useAuth: () => ({ user: null }),
+}));
 vi.mock("@/core/auth/services/AuthService", () => ({
   AuthService: { signUp: vi.fn() },
 }));
@@ -39,7 +43,9 @@ vi.mock("@/core/auth/utils/compromisedPassword", () => ({
 vi.mock("@/core/auth/utils/pendingSignup", () => ({
   setPendingSignupEmail: vi.fn(),
 }));
-vi.mock("@/shared/hooks/use-toast", () => ({ useToast: () => ({ toast: vi.fn() }) }));
+vi.mock("@/shared/hooks/use-toast", () => ({
+  useToast: () => ({ toast: vi.fn() }),
+}));
 
 // Nomes já normalizados — simulando que o hook useLocationCascade cumpre seu
 // contrato de normalizar antes de expor à UI. É essa versão que a UI renderiza
@@ -67,6 +73,10 @@ function renderPage() {
       </MemoryRouter>
     </HelmetProvider>,
   );
+}
+
+function getNextButton() {
+  return screen.getAllByRole("button", { name: /Próximo/i })[0];
 }
 
 async function fillStep0(user: ReturnType<typeof userEvent.setup>) {
@@ -102,25 +112,31 @@ describe("Cadastro — normalização de encoding (integração)", () => {
     renderPage();
 
     await fillStep0(user);
-    await user.click(screen.getByRole("button", { name: /Próximo/i }));
+    await user.click(getNextButton());
 
     // Renderiza a versão normalizada — a UI nunca deve mostrar "SÃ£o Paulo".
     const stateCombo = await screen.findByRole("combobox", { name: /Estado/i });
     await user.click(stateCombo);
-    await user.click(await screen.findByRole("option", { name: NORMALIZED_STATE }));
+    await user.click(
+      await screen.findByRole("option", { name: NORMALIZED_STATE }),
+    );
 
     await user.click(screen.getByRole("combobox", { name: /Cidade/i }));
-    await user.click(await screen.findByRole("option", { name: NORMALIZED_CITY }));
+    await user.click(
+      await screen.findByRole("option", { name: NORMALIZED_CITY }),
+    );
 
     await user.click(screen.getByRole("combobox", { name: /Bairro/i }));
     await user.click(
       await screen.findByRole("option", { name: NORMALIZED_NEIGHBORHOOD }),
     );
 
-    await user.click(screen.getByRole("button", { name: /Próximo/i }));
+    await user.click(getNextButton());
 
     await user.click(await screen.findByLabelText(/Li e aceito os Termos/i));
-    await user.click(screen.getByRole("button", { name: /Criar minha conta/i }));
+    await user.click(
+      screen.getByRole("button", { name: /Criar minha conta/i }),
+    );
 
     await waitFor(() => expect(AuthService.signUp).toHaveBeenCalledTimes(1));
 
@@ -149,10 +165,12 @@ describe("Cadastro — normalização de encoding (integração)", () => {
     renderPage();
 
     await fillStep0(user);
-    await user.click(screen.getByRole("button", { name: /Próximo/i }));
+    await user.click(getNextButton());
 
     await user.click(await screen.findByRole("combobox", { name: /Estado/i }));
-    await user.click(await screen.findByRole("option", { name: NORMALIZED_STATE }));
+    await user.click(
+      await screen.findByRole("option", { name: NORMALIZED_STATE }),
+    );
 
     // O trigger do Select deve mostrar o valor normalizado — não a versão
     // mojibaked. Isso garante que a comparação "selected" usa o nome

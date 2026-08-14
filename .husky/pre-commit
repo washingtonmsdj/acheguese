@@ -1,12 +1,9 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # Check for secrets before commit
 echo "🔒 Checking for secrets..."
 
 # Check if gitleaks is installed
 if command -v gitleaks >/dev/null 2>&1; then
-    gitleaks protect --staged --verbose
+    gitleaks git --pre-commit --config .gitleaks.toml --redact --verbose
     if [ $? -ne 0 ]; then
         echo "❌ Secrets detected! Commit blocked."
         echo "   Remove secrets from staged files or add to allowlist in .gitleaks.toml"
@@ -21,6 +18,7 @@ fi
 # Check SSOT compliance
 sh .husky/check-ssot
 
-# Run lint-staged for code quality
-echo "🔍 Running lint-staged..."
-npx lint-staged
+# Deterministic quality gates: both commands are repository dependencies.
+echo "🔍 Running TypeScript and ESLint gates..."
+npm run typecheck:app
+npm run lint

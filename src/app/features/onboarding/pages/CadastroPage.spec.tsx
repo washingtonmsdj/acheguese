@@ -23,7 +23,9 @@ const navigateMock = vi.fn();
 
 vi.mock("react-router-dom", async () => {
   const actual =
-    await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
+    await vi.importActual<typeof import("react-router-dom")>(
+      "react-router-dom",
+    );
   return {
     ...actual,
     useNavigate: () => navigateMock,
@@ -71,6 +73,10 @@ function renderPage() {
   );
 }
 
+function getNextButton() {
+  return screen.getAllByRole("button", { name: /Próximo/i })[0];
+}
+
 async function fillStep0(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByPlaceholderText(/Seu nome/i), "Ana Souza");
   await user.type(screen.getByPlaceholderText(/^seunome/i), "ana_souza");
@@ -103,13 +109,13 @@ describe("CadastroPage (integração)", () => {
     const user = userEvent.setup();
     renderPage();
 
-    await user.click(screen.getByRole("button", { name: /Próximo/i }));
+    await user.click(getNextButton());
 
     expect(
       await screen.findByText(/Nome deve ter pelo menos 3 caracteres/i),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Deve comecar com letra e ter 3-30/i),
+      screen.getByText(/Deve começar com letra e ter 3-30/i),
     ).toBeInTheDocument();
     // signUp não deve ser chamado enquanto houver erros
     expect(AuthService.signUp).not.toHaveBeenCalled();
@@ -121,18 +127,16 @@ describe("CadastroPage (integração)", () => {
 
     // Step 0
     await fillStep0(user);
-    await user.click(screen.getByRole("button", { name: /Próximo/i }));
+    await user.click(getNextButton());
 
     // Step 1 — seleciona território
-    await user.click(
-      await screen.findByRole("combobox", { name: /Estado/i }),
-    );
+    await user.click(await screen.findByRole("combobox", { name: /Estado/i }));
     await user.click(await screen.findByRole("option", { name: "Bahia" }));
     await user.click(screen.getByRole("combobox", { name: /Cidade/i }));
     await user.click(await screen.findByRole("option", { name: "Salvador" }));
     await user.click(screen.getByRole("combobox", { name: /Bairro/i }));
     await user.click(await screen.findByRole("option", { name: "Pituba" }));
-    await user.click(screen.getByRole("button", { name: /Próximo/i }));
+    await user.click(getNextButton());
 
     // Step 2 — botão desabilitado sem aceite
     const submit = await screen.findByRole("button", {
@@ -169,19 +173,19 @@ describe("CadastroPage (integração)", () => {
     renderPage();
 
     await fillStep0(user);
-    await user.click(screen.getByRole("button", { name: /Próximo/i }));
-    await user.click(
-      await screen.findByRole("combobox", { name: /Estado/i }),
-    );
+    await user.click(getNextButton());
+    await user.click(await screen.findByRole("combobox", { name: /Estado/i }));
     await user.click(await screen.findByRole("option", { name: "Bahia" }));
     await user.click(screen.getByRole("combobox", { name: /Cidade/i }));
     await user.click(await screen.findByRole("option", { name: "Salvador" }));
     await user.click(screen.getByRole("combobox", { name: /Bairro/i }));
     await user.click(await screen.findByRole("option", { name: "Pituba" }));
-    await user.click(screen.getByRole("button", { name: /Próximo/i }));
+    await user.click(getNextButton());
 
     await user.click(await screen.findByLabelText(/Li e aceito os Termos/i));
-    await user.click(screen.getByRole("button", { name: /Criar minha conta/i }));
+    await user.click(
+      screen.getByRole("button", { name: /Criar minha conta/i }),
+    );
 
     // Erro amigável exibido em algum lugar do formulário
     await waitFor(() =>
@@ -202,7 +206,7 @@ describe("CadastroPage (integração)", () => {
     renderPage();
 
     await fillStep0(user);
-    await user.click(screen.getByRole("button", { name: /Próximo/i }));
+    await user.click(getNextButton());
 
     await user.click(await screen.findByRole("combobox", { name: /Estado/i }));
     await user.click(await screen.findByRole("option", { name: "Bahia" }));
@@ -210,7 +214,7 @@ describe("CadastroPage (integração)", () => {
     await user.click(await screen.findByRole("option", { name: "Salvador" }));
     await user.click(screen.getByRole("combobox", { name: /Bairro/i }));
     await user.click(await screen.findByRole("option", { name: "Pituba" }));
-    await user.click(screen.getByRole("button", { name: /Próximo/i }));
+    await user.click(getNextButton());
 
     await user.click(await screen.findByLabelText(/Li e aceito os Termos/i));
 
@@ -227,7 +231,11 @@ describe("CadastroPage (integração)", () => {
     expect(screen.getByLabelText(/Li e aceito os Termos/i)).toBeDisabled();
 
     // Voltar e Próximo (neste step não existe Próximo) devem estar desabilitados
-    expect(screen.getByRole("button", { name: /Voltar/i })).toBeDisabled();
+    expect(
+      screen
+        .getAllByRole("button", { name: /Voltar/i })
+        .every((button) => button.hasAttribute("disabled")),
+    ).toBe(true);
 
     resolveSignUp();
 

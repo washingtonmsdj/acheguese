@@ -24,6 +24,15 @@ description = "Supabase Publishable Key (novo formato sb_publishable_...)"
 regex = '''sb_publishable_[A-Za-z0-9_\-]{20,}'''
 tags = ["key", "supabase", "medium"]
 
+[[rules.allowlists]]
+description = "Supabase publishable keys are public client identifiers in tracked frontend env/build outputs"
+paths = [
+    '''^\.env$''',
+    '''^\.env\.production$''',
+    '''^\.env\.development$''',
+    '''^dist/''',
+]
+
 [[rules]]
 id = "postgresql-connection-string"
 description = "PostgreSQL connection string with password"

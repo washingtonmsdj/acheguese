@@ -59,9 +59,7 @@ describe("gastronomy operational SSOT flow", () => {
     expect(notificationSource).toContain(
       "CASE WHEN v_customer_url IS NOT NULL THEN 'Abrir pedido' ELSE NULL END",
     );
-    expect(notificationSource).toContain(
-      "'/central/motoboy/entregas'",
-    );
+    expect(notificationSource).toContain("'/central/motoboy/entregas'");
     expect(notificationSource).toContain("v_idempotency_key");
     expect(notificationSource).toContain("'event_label', v_event_label");
   });
@@ -192,22 +190,14 @@ describe("gastronomy operational SSOT flow", () => {
       "supabase/migrations/20260714114000_migrate_social_work_trust_notifications.sql",
     );
 
-    expect(trustSource).toContain(
-      "private.trust_notification_action_url",
-    );
+    expect(trustSource).toContain("private.trust_notification_action_url");
     expect(trustSource).toContain("v_subject_action_url TEXT := '/conta'");
     expect(trustSource).toContain("'/admin/moderacao'");
     expect(trustSource).toContain("'Ver contexto'");
     expect(trustSource).toContain("'Ver fila'");
-    expect(trustSource).toContain(
-      "'audience', 'subject'",
-    );
-    expect(trustSource).toContain(
-      "'audience', 'actor'",
-    );
-    expect(trustSource).toContain(
-      "'audience', 'admin'",
-    );
+    expect(trustSource).toContain("'audience', 'subject'");
+    expect(trustSource).toContain("'audience', 'actor'");
+    expect(trustSource).toContain("'audience', 'admin'");
   });
 
   it("enforces transactional notification category across delivery and trust flows", () => {
@@ -234,7 +224,9 @@ describe("gastronomy operational SSOT flow", () => {
     expect(deliveryNotificationSource).toContain(
       "v_metadata || jsonb_build_object('audience', 'courier')",
     );
-    expect(deliveryNotificationSource).toContain("private.enqueue_notification(");
+    expect(deliveryNotificationSource).toContain(
+      "private.enqueue_notification(",
+    );
     expect(notificationServiceSource).toContain("p_type: input.type");
     expect(notificationServiceSource).toContain(
       'p_category: input.category ?? "social"',
@@ -243,9 +235,7 @@ describe("gastronomy operational SSOT flow", () => {
 
     expect(trustSource).toContain("'transactional'");
 
-    expect(sqlSource).toContain(
-      "p_category = 'transactional'",
-    );
+    expect(sqlSource).toContain("p_category = 'transactional'");
     expect(sqlSource).toContain("RETURN NULL;");
   });
 
@@ -288,7 +278,7 @@ describe("gastronomy operational SSOT flow", () => {
       'deliveryFulfillmentMode === "platform_courier"',
     );
     expect(checkoutHookSource).toContain(
-      "Ajuste a loja para frota propria ou use retirada/no local.",
+      "Ajuste a loja para frota própria ou use retirada/no local.",
     );
     expect(checkoutHookSource).not.toContain("useMotoboy");
     expect(checkoutHookSource).not.toContain("requestDelivery(");

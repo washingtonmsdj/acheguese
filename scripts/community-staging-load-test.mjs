@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -30,7 +28,9 @@ export function validateStagingTarget(rawUrl, stagingProjectRef) {
   const expectedHost = `${stagingProjectRef}.supabase.co`;
 
   if (target.protocol !== "https:" || target.hostname !== expectedHost) {
-    throw new Error(`Target must be HTTPS on the declared staging project: ${expectedHost}`);
+    throw new Error(
+      `Target must be HTTPS on the declared staging project: ${expectedHost}`,
+    );
   }
   if (!target.pathname.startsWith("/rest/v1/")) {
     throw new Error("Only read-only PostgREST staging targets are accepted");
@@ -42,7 +42,9 @@ function boundedInteger(name, fallback, minimum, maximum) {
   const raw = process.env[name];
   const value = raw ? Number(raw) : fallback;
   if (!Number.isInteger(value) || value < minimum || value > maximum) {
-    throw new Error(`${name} must be an integer between ${minimum} and ${maximum}`);
+    throw new Error(
+      `${name} must be an integer between ${minimum} and ${maximum}`,
+    );
   }
   return value;
 }
@@ -93,7 +95,9 @@ export async function runLoadTest({
 }
 
 export function summarize(results, elapsedSeconds) {
-  const durations = results.map((result) => result.durationMs).sort((a, b) => a - b);
+  const durations = results
+    .map((result) => result.durationMs)
+    .sort((a, b) => a - b);
   const successfulRequests = results.filter((result) => result.ok).length;
   const statusCounts = results.reduce((counts, result) => {
     const key = String(result.status);
@@ -106,16 +110,26 @@ export function summarize(results, elapsedSeconds) {
       durations.length === 0
         ? 0
         : Number(
-            (durations.reduce((total, value) => total + value, 0) / durations.length).toFixed(2),
+            (
+              durations.reduce((total, value) => total + value, 0) /
+              durations.length
+            ).toFixed(2),
           ),
     error_rate_percent:
       results.length === 0
         ? 100
-        : Number((100 * (results.length - successfulRequests) / results.length).toFixed(2)),
+        : Number(
+            (
+              (100 * (results.length - successfulRequests)) /
+              results.length
+            ).toFixed(2),
+          ),
     p50_ms: Number(percentile(durations, 50).toFixed(2)),
     p95_ms: Number(percentile(durations, 95).toFixed(2)),
     p99_ms: Number(percentile(durations, 99).toFixed(2)),
-    requests_per_second: Number((results.length / Math.max(elapsedSeconds, 0.001)).toFixed(2)),
+    requests_per_second: Number(
+      (results.length / Math.max(elapsedSeconds, 0.001)).toFixed(2),
+    ),
     status_counts: statusCounts,
     successful_requests: successfulRequests,
     total_requests: results.length,
@@ -155,11 +169,16 @@ async function main() {
     MAX_CONCURRENCY,
   );
   const outputPath =
-    process.env.COMMUNITY_LOAD_OUTPUT?.trim()
-    || ".tmp/community-load/community-staging-load.json";
+    process.env.COMMUNITY_LOAD_OUTPUT?.trim() ||
+    ".tmp/community-load/community-staging-load.json";
 
   const startedAt = performance.now();
-  const results = await runLoadTest({ apiKey, concurrency, durationSeconds, target });
+  const results = await runLoadTest({
+    apiKey,
+    concurrency,
+    durationSeconds,
+    target,
+  });
   const elapsedSeconds = (performance.now() - startedAt) / 1000;
   const summary = summarize(results, elapsedSeconds);
   const metadata = {
@@ -171,21 +190,31 @@ async function main() {
   };
 
   writeReport(summary, metadata, outputPath);
-  console.log(JSON.stringify({ output: path.resolve(outputPath), summary }, null, 2));
+  console.log(
+    JSON.stringify({ output: path.resolve(outputPath), summary }, null, 2),
+  );
 
-  const maximumErrorRate = Number(process.env.COMMUNITY_LOAD_MAX_ERROR_RATE_PERCENT ?? "1");
+  const maximumErrorRate = Number(
+    process.env.COMMUNITY_LOAD_MAX_ERROR_RATE_PERCENT ?? "1",
+  );
   const maximumP95 = Number(process.env.COMMUNITY_LOAD_MAX_P95_MS ?? "1000");
-  if (summary.error_rate_percent > maximumErrorRate || summary.p95_ms > maximumP95) {
+  if (
+    summary.error_rate_percent > maximumErrorRate ||
+    summary.p95_ms > maximumP95
+  ) {
     process.exitCode = 2;
   }
 }
 
-const isDirectExecution = process.argv[1]
-  && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+const isDirectExecution =
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
 if (isDirectExecution) {
   main().catch((error) => {
-    console.error(`[community-load] ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `[community-load] ${error instanceof Error ? error.message : String(error)}`,
+    );
     process.exitCode = 1;
   });
 }

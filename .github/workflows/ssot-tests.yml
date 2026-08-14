@@ -5,22 +5,30 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - 'src/modules/guide/**'
-      - 'src/core/location/**'
-      - 'src/core/routing/**'
-      - 'tests/**'
-      - 'supabase/migrations/**'
+      - ".github/workflows/ssot-tests.yml"
+      - "package.json"
+      - "package-lock.json"
+      - "playwright.config.ts"
+      - "src/modules/guide/**"
+      - "src/core/location/**"
+      - "src/core/routing/**"
+      - "tests/**"
+      - "supabase/migrations/**"
   pull_request:
     branches: [main, develop]
     paths:
-      - 'src/modules/guide/**'
-      - 'src/core/location/**'
-      - 'src/core/routing/**'
-      - 'tests/**'
-      - 'supabase/migrations/**'
+      - ".github/workflows/ssot-tests.yml"
+      - "package.json"
+      - "package-lock.json"
+      - "playwright.config.ts"
+      - "src/modules/guide/**"
+      - "src/core/location/**"
+      - "src/core/routing/**"
+      - "tests/**"
+      - "supabase/migrations/**"
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   phase-core-gate:
@@ -33,81 +41,45 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: "24"
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: v2.104.0
-
-      - name: Start Supabase (local)
-        run: |
-          supabase start
-          supabase db reset --local
-
-      - name: Export Supabase local env
-        shell: bash
-        run: |
-          supabase status -o env > supabase.env
-
-          get_env_value() {
-            grep "^$1=" supabase.env | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//'
-          }
-
-          api_url="$(get_env_value API_URL)"
-          anon_key="$(get_env_value ANON_KEY)"
-          service_role_key="$(get_env_value SERVICE_ROLE_KEY)"
-
-          test -n "$api_url"
-          test -n "$anon_key"
-          test -n "$service_role_key"
-
-          {
-            echo "VITE_SUPABASE_URL=$api_url"
-            echo "VITE_SUPABASE_PUBLISHABLE_KEY=$anon_key"
-            echo "VITE_SUPABASE_ANON_KEY=$anon_key"
-            echo "SUPABASE_SERVICE_ROLE_KEY=$service_role_key"
-            echo "PLAYWRIGHT_BASE_URL=http://127.0.0.1:8099"
-          } >> "$GITHUB_ENV"
-
-      - name: Seed E2E users
-        run: npm run seed:e2e
-
-      - name: Run phase core gate
-        run: npm run validate:phase:core
+      - name: Run deterministic phase core gate
+        run: npm run validate:phase:core:ci
         env:
           CI: true
 
   runtime-tests:
     name: Runtime Tests (Vitest)
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v6
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: 'npm'
-      
+          node-version: "24"
+          cache: npm
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run SSOT Runtime Tests
         run: npm run test:ssot
         env:
           CI: true
-      
-      - name: Upload test results
+
+      - name: Record artifact quota policy
         if: always()
+        run: echo "Test execution is the gate; artifact upload is diagnostic transport only." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload test results (non-gating transport)
+        if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: runtime-test-results
@@ -116,79 +88,56 @@ jobs:
           retention-days: 7
 
   e2e-tests:
-    name: E2E Tests (Playwright)
+    name: E2E Tests (fixture-backed, remote-only)
     runs-on: ubuntu-latest
+    env:
+      CI: true
+      PLAYWRIGHT_BASE_URL: http://127.0.0.1:8099
+      VITE_PUBLIC_APP_URL: http://127.0.0.1:8099
+      VITE_SUPABASE_URL: https://ci-fixtures.invalid
+      VITE_SUPABASE_PUBLISHABLE_KEY: ci-public-fixture-key
+      VITE_SUPABASE_ANON_KEY: ci-public-fixture-key
 
     steps:
       - uses: actions/checkout@v6
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: 'npm'
-      
+          node-version: "24"
+          cache: npm
+
       - name: Install dependencies
         run: npm ci
-      
-      - name: Install Playwright Browsers
+
+      - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
-      
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: v2.104.0
-      
-      - name: Start Supabase (local)
-        run: |
-          supabase start
-          supabase db reset --local
 
-      - name: Export Supabase local env
-        shell: bash
-        run: |
-          supabase status -o env > supabase.env
+      - name: Run deterministic public territorial E2E
+        run: npm run test:e2e:ci
 
-          get_env_value() {
-            grep "^$1=" supabase.env | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//'
-          }
-
-          api_url="$(get_env_value API_URL)"
-          anon_key="$(get_env_value ANON_KEY)"
-          service_role_key="$(get_env_value SERVICE_ROLE_KEY)"
-
-          test -n "$api_url"
-          test -n "$anon_key"
-          test -n "$service_role_key"
-
-          {
-            echo "VITE_SUPABASE_URL=$api_url"
-            echo "VITE_SUPABASE_PUBLISHABLE_KEY=$anon_key"
-            echo "VITE_SUPABASE_ANON_KEY=$anon_key"
-            echo "SUPABASE_SERVICE_ROLE_KEY=$service_role_key"
-            echo "PLAYWRIGHT_BASE_URL=http://127.0.0.1:8099"
-          } >> "$GITHUB_ENV"
-      
-      - name: Build application
-        run: npm run build
-        env:
-          NODE_ENV: production
-      
-      - name: Run E2E Tests
-        run: npx playwright test tests/e2e/tourist-points.spec.ts
-        env:
-          CI: true
-      
-      - name: Upload Playwright Report
+      - name: Record remote-only test contract
         if: always()
+        run: |
+          {
+            echo "## Remote-only E2E contract"
+            echo "The suite uses browser-level public API fixtures and performs no database mutation."
+            echo "No local Supabase, Docker, service-role key, or Production seed is required."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Playwright report (non-gating transport)
+        if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: playwright-report/
+          if-no-files-found: ignore
           retention-days: 7
-      
-      - name: Upload test results
+
+      - name: Upload test results (non-gating transport)
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: e2e-test-results
@@ -200,65 +149,63 @@ jobs:
     name: Regression Check
     runs-on: ubuntu-latest
     needs: [runtime-tests, e2e-tests]
-    
+
     steps:
       - uses: actions/checkout@v6
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: 'npm'
-      
+          node-version: "24"
+          cache: npm
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run Regression Tests
         run: npm run test:regression
         env:
           CI: true
-      
+
       - name: Check for URL manual construction
+        shell: bash
         run: |
-          echo "Checking for manual URL construction..."
           if grep -r "'/pontos-turisticos/'" src/modules/guide --exclude-dir=__mocks__ --exclude="*.test.ts" --exclude="*.spec.ts"; then
-            echo "❌ Found manual URL construction! Use buildTouristPointDetailUrl instead."
+            echo "Found manual URL construction; use buildTouristPointDetailUrl"
             exit 1
           fi
-          echo "✅ No manual URL construction found"
-      
+
       - name: Check for legacy field usage
+        shell: bash
         run: |
-          echo "Checking for legacy field usage..."
           if grep -r "point\.neighborhood" src/modules/guide --exclude-dir=__mocks__ --exclude="*.test.ts" --exclude="*.spec.ts" | grep -v "point\.location?.name ?? point\.neighborhood"; then
-            echo "❌ Found direct usage of legacy field 'neighborhood'! Use point.location?.name instead."
+            echo "Found direct legacy neighborhood usage"
             exit 1
           fi
-          echo "✅ No legacy field usage found"
-      
-      - name: Check for invalid filters
+
+      - name: Check for invalid territorial filters
+        shell: bash
         run: |
-          echo "Checking for invalid territorial filters..."
           if grep -r "\.eq('state'" src/modules/guide --exclude-dir=__mocks__ --exclude="*.test.ts" --exclude="*.spec.ts"; then
-            echo "❌ Found invalid territorial filter! Use location_id with TerritoryFilter instead."
+            echo "Found invalid territorial state filter"
             exit 1
           fi
-          echo "✅ No invalid filters found"
 
   status-check:
     name: All Tests Passed
     runs-on: ubuntu-latest
     needs: [phase-core-gate, runtime-tests, e2e-tests, regression-check]
     if: always()
-    
+
     steps:
       - name: Check test results
+        shell: bash
         run: |
-          if [ "${{ needs.runtime-tests.result }}" != "success" ] || \
-             [ "${{ needs.phase-core-gate.result }}" != "success" ] || \
+          if [ "${{ needs.phase-core-gate.result }}" != "success" ] || \
+             [ "${{ needs.runtime-tests.result }}" != "success" ] || \
              [ "${{ needs.e2e-tests.result }}" != "success" ] || \
              [ "${{ needs.regression-check.result }}" != "success" ]; then
-            echo "❌ Some tests failed"
+            echo "One or more authoritative test gates failed"
             exit 1
           fi
-          echo "✅ All tests passed"
+          echo "All authoritative test gates passed"

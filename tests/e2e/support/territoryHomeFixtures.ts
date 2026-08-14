@@ -203,6 +203,22 @@ async function fulfillPostgrest(route: Route, rows: unknown[]): Promise<void> {
  * data and the suite performs no database mutation.
  */
 export async function installTerritoryHomeFixtures(page: Page): Promise<void> {
+  await page.route(/\/auth\/v1\/.*/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json; charset=utf-8",
+      body: JSON.stringify({ user: null }),
+    });
+  });
+
+  await page.route(/\/(?:storage|functions)\/v1\/.*/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json; charset=utf-8",
+      body: JSON.stringify([]),
+    });
+  });
+
   await page.route("https://nominatim.openstreetmap.org/**", async (route) => {
     const url = new URL(route.request().url());
     const body = url.pathname.endsWith("/reverse")

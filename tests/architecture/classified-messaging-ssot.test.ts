@@ -53,9 +53,7 @@ describe("Classified Messaging SSOT", () => {
   });
 
   it("eliminates the per-conversation inbox N+1 and paginates from the UI", () => {
-    expect(service).toContain(
-      'rpc(\n      "list_classified_conversation_previews"',
-    );
+    expect(service).toMatch(/rpc\(\s*"list_classified_conversation_previews"/);
     expect(service).not.toContain("getLastMessage");
     expect(service).not.toContain("getUnreadCount");
     expect(service).not.toContain("getClassifiedsByIds");

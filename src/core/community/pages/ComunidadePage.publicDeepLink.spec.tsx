@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   handleReportPost: vi.fn(),
   handleClosePostDetail: vi.fn(),
   toastInfo: vi.fn(),
+  usePersistedCommunityProfile: vi.fn(),
 }));
 
 vi.mock("@tanstack/react-query", () => ({
@@ -106,6 +107,7 @@ vi.mock("@/shared/components/ConfirmActionDialog", () => ({
 
 vi.mock("@/core/community-experience/hooks/useCommunityProfile", () => ({
   useCommunityProfile: () => ({ data: null }),
+  usePersistedCommunityProfile: mocks.usePersistedCommunityProfile,
 }));
 
 vi.mock("@/core/community-experience/types", () => ({
@@ -256,7 +258,12 @@ function accessState(member = false) {
     communityId: null,
     primaryAction: member ? "open_feed" : "login",
     isLoading: false,
+    isAuthenticated: member,
     isResidenceVerified: member,
+    isCommunityAvailable: true,
+    isCommunityAvailabilityLoading: false,
+    communityAvailabilityError: null,
+    refreshCommunityAvailability: vi.fn(),
     can: {
       view_member_feed: member,
       create_post: member,
@@ -277,6 +284,17 @@ describe("ComunidadePage public Post deep-link boundary", () => {
     currentLocation = "";
     mocks.useCommunityAccess.mockReturnValue(accessState(false));
     mocks.useComunidadePage.mockReturnValue(pageState(null));
+    mocks.usePersistedCommunityProfile.mockReturnValue({
+      data: {
+        id: "community-salvador",
+        name: "Community Salvador",
+        slug: "salvador",
+        status: "active",
+      },
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
   });
 
   it("keeps the public overview and opens PostDetailModal after the Post loads", async () => {

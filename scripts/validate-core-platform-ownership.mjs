@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -99,12 +97,16 @@ function validateCallsiteSet({ actual, expected, label }) {
     expectedByKey.set(key, entry);
   }
 
-  const actualByKey = new Map(actual.map((entry) => [callsiteKey(entry), entry]));
+  const actualByKey = new Map(
+    actual.map((entry) => [callsiteKey(entry), entry]),
+  );
   for (const entry of actual) {
     const key = callsiteKey(entry);
     const allowance = expectedByKey.get(key);
     if (!allowance) {
-      violations.push(`${label}: novo acesso nao autorizado: ${key} (${entry.count} chamada(s))`);
+      violations.push(
+        `${label}: novo acesso nao autorizado: ${key} (${entry.count} chamada(s))`,
+      );
       continue;
     }
     if (entry.count > allowance.maxCalls) {
@@ -120,7 +122,9 @@ function validateCallsiteSet({ actual, expected, label }) {
 
   for (const [key, allowance] of expectedByKey) {
     if (!actualByKey.has(key)) {
-      improvements.push(`${label}: acesso legado removido: ${key} (${allowance.maxCalls})`);
+      improvements.push(
+        `${label}: acesso legado removido: ${key} (${allowance.maxCalls})`,
+      );
     }
   }
 
@@ -132,7 +136,10 @@ function validateManifestShape(manifest, root) {
   if (manifest.schemaVersion !== 1) {
     violations.push("schemaVersion deve ser 1");
   }
-  if (!Array.isArray(manifest.sourceRoots) || manifest.sourceRoots.length === 0) {
+  if (
+    !Array.isArray(manifest.sourceRoots) ||
+    manifest.sourceRoots.length === 0
+  ) {
     violations.push("sourceRoots deve ser uma lista nao vazia");
   }
   if (!Array.isArray(manifest.controlledTables)) {
@@ -148,11 +155,15 @@ function validateManifestShape(manifest, root) {
   const names = new Set();
   for (const rule of manifest.controlledTables ?? []) {
     if (!rule.name || names.has(`table:${rule.name}`)) {
-      violations.push(`controlledTables possui nome ausente/duplicado: ${rule.name ?? "<missing>"}`);
+      violations.push(
+        `controlledTables possui nome ausente/duplicado: ${rule.name ?? "<missing>"}`,
+      );
     }
     names.add(`table:${rule.name}`);
     if (!rule.currentOwner || !rule.targetOwner || !rule.status) {
-      violations.push(`Tabela ${rule.name}: currentOwner, targetOwner e status sao obrigatorios`);
+      violations.push(
+        `Tabela ${rule.name}: currentOwner, targetOwner e status sao obrigatorios`,
+      );
     }
     if (rule.status !== "canonical" && !rule.finding) {
       violations.push(`Tabela ${rule.name}: recurso em migracao exige finding`);
@@ -161,11 +172,15 @@ function validateManifestShape(manifest, root) {
 
   for (const rule of manifest.controlledRpcs ?? []) {
     if (!rule.name || names.has(`rpc:${rule.name}`)) {
-      violations.push(`controlledRpcs possui nome ausente/duplicado: ${rule.name ?? "<missing>"}`);
+      violations.push(
+        `controlledRpcs possui nome ausente/duplicado: ${rule.name ?? "<missing>"}`,
+      );
     }
     names.add(`rpc:${rule.name}`);
     if (!rule.currentOwner || !rule.targetOwner || !rule.status) {
-      violations.push(`RPC ${rule.name}: currentOwner, targetOwner e status sao obrigatorios`);
+      violations.push(
+        `RPC ${rule.name}: currentOwner, targetOwner e status sao obrigatorios`,
+      );
     }
     if (rule.status !== "canonical" && !rule.finding) {
       violations.push(`RPC ${rule.name}: recurso em migracao exige finding`);
@@ -179,7 +194,9 @@ function validateManifestShape(manifest, root) {
   ];
   for (const callsite of declaredCallsites) {
     if (!callsite.path || path.isAbsolute(callsite.path)) {
-      violations.push(`Caminho deve ser relativo ao repositorio: ${callsite.path ?? "<missing>"}`);
+      violations.push(
+        `Caminho deve ser relativo ao repositorio: ${callsite.path ?? "<missing>"}`,
+      );
       continue;
     }
     if (!fs.existsSync(path.join(root, callsite.path))) {
@@ -190,7 +207,11 @@ function validateManifestShape(manifest, root) {
   return violations;
 }
 
-export function validateManifestAgainstRecords(manifest, groupedRecords, root = ROOT) {
+export function validateManifestAgainstRecords(
+  manifest,
+  groupedRecords,
+  root = ROOT,
+) {
   const violations = validateManifestShape(manifest, root);
   const improvements = [];
 
@@ -233,13 +254,19 @@ export function validateManifestAgainstRecords(manifest, groupedRecords, root = 
 
 function readManifest(manifestPath) {
   if (!fs.existsSync(manifestPath)) {
-    throw new Error(`Manifest nao encontrado: ${normalize(path.relative(ROOT, manifestPath))}`);
+    throw new Error(
+      `Manifest nao encontrado: ${normalize(path.relative(ROOT, manifestPath))}`,
+    );
   }
   return JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 }
 
 function writeManifest(manifestPath, manifest) {
-  fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
+  fs.writeFileSync(
+    manifestPath,
+    `${JSON.stringify(manifest, null, 2)}\n`,
+    "utf8",
+  );
 }
 
 function printList(title, items, writer = console.log) {
@@ -253,7 +280,9 @@ function main() {
   const args = new Set(process.argv.slice(2));
   const jsonOutput = args.has("--json");
   const acceptCurrentBaseline = args.has("--accept-current-baseline");
-  const manifestPathArgument = process.argv.find((argument) => argument.startsWith("--manifest="));
+  const manifestPathArgument = process.argv.find((argument) =>
+    argument.startsWith("--manifest="),
+  );
   const manifestPath = manifestPathArgument
     ? path.resolve(ROOT, manifestPathArgument.slice("--manifest=".length))
     : DEFAULT_MANIFEST_PATH;
@@ -290,7 +319,10 @@ function main() {
     console.log(
       `Core Platform ownership: ${manifest.controlledTables.length} tabela(s), ${manifest.controlledRpcs.length} RPC(s), ${manifest.incrementalBaseline.length} callsite(s) incrementais.`,
     );
-    printList("Melhorias detectadas; reduza o baseline no mesmo PR", result.improvements);
+    printList(
+      "Melhorias detectadas; reduza o baseline no mesmo PR",
+      result.improvements,
+    );
     printList("Violacoes bloqueantes", result.violations, console.error);
   }
 
@@ -298,6 +330,9 @@ function main() {
   console.log("Core Platform ownership validado.");
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   main();
 }

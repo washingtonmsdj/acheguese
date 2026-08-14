@@ -8,9 +8,9 @@ import {
 } from "@/core/community/utils/communityFeedTab";
 
 describe("communityFeedTab SSOT", () => {
-  it("redirects paused public tabs to para_voce", () => {
-    expect(resolveCommunityFeedChannelFromTab("vagas")).toBe("para_voce");
-    expect(resolveCommunityFeedChannelFromTab("eventos")).toBe("para_voce");
+  it("maps active public tabs and redirects paused tabs to para_voce", () => {
+    expect(resolveCommunityFeedChannelFromTab("vagas")).toBe("oportunidades");
+    expect(resolveCommunityFeedChannelFromTab("eventos")).toBe("eventos");
     expect(resolveCommunityFeedChannelFromTab("alertas")).toBe("para_voce");
   });
 
@@ -20,10 +20,14 @@ describe("communityFeedTab SSOT", () => {
     );
   });
 
-  it("does not emit query tabs for paused channels", () => {
-    expect(resolveCommunityFeedQueryTabFromChannel("oportunidades")).toBeNull();
-    expect(resolveCommunityFeedQueryTabFromChannel("vagas")).toBeNull();
-    expect(resolveCommunityFeedQueryTabFromChannel("eventos")).toBeNull();
+  it("emits canonical query tabs only for active channels", () => {
+    expect(resolveCommunityFeedQueryTabFromChannel("oportunidades")).toBe(
+      "oportunidades",
+    );
+    expect(resolveCommunityFeedQueryTabFromChannel("vagas")).toBe(
+      "oportunidades",
+    );
+    expect(resolveCommunityFeedQueryTabFromChannel("eventos")).toBe("eventos");
     expect(resolveCommunityFeedQueryTabFromChannel("alertas")).toBeNull();
   });
 

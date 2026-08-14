@@ -386,7 +386,7 @@
         "supabase/migrations/20260714125000_create_media_asset_core.sql",
         "supabase/migrations/20260717130000_consolidate_community_post_media_assets.sql",
         "scripts/security/community-feed-anon-probe.mjs",
-        "docs/architecture/MEDIA_ASSET_SSOT.md"
+        "docs/07-modules/MEDIA_ASSET_SSOT.md"
       ]
     },
     {

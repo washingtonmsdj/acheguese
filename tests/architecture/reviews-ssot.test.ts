@@ -16,9 +16,7 @@ const adminAggregateMigration = read(
 );
 const queries = read("src/core/reviews/services/reviews.queries.ts");
 const mutations = read("src/core/reviews/services/reviews.mutations.ts");
-const engagement = read(
-  "src/core/reviews/services/ReviewEngagementService.ts",
-);
+const engagement = read("src/core/reviews/services/ReviewEngagementService.ts");
 const businessAdapter = read(
   "src/core/business/services/BusinessReviewService.ts",
 );
@@ -61,7 +59,7 @@ describe("Reviews Core SSOT", () => {
     expect(queries).toContain('.from("reviews")');
     expect(queries).toContain('rpc("get_profile_review_stats"');
     expect(queries).not.toContain("getTableName");
-    expect(mutations).toContain('rpc(\n    "upsert_profile_review"');
+    expect(mutations).toMatch(/rpc\(\s*"upsert_profile_review"/);
     expect(mutations).toContain('rpc("delete_profile_review"');
     expect(mutations).not.toContain('.from("reviews")');
   });
@@ -85,9 +83,7 @@ describe("Reviews Core SSOT", () => {
   it("owns reports and helpfulness in the reusable Review Core service", () => {
     expect(engagement).toContain('rpc("create_review_report"');
     expect(engagement).toContain('rpc("set_review_helpfulness"');
-    expect(engagement).toContain(
-      'rpc(\n      "get_current_review_helpfulness"',
-    );
+    expect(engagement).toMatch(/rpc\(\s*"get_current_review_helpfulness"/);
     expect(gastronomyAdapter).toContain("ReviewEngagementService");
     expect(gastronomyAdapter).not.toContain('.from("review_helpfulness")');
     expect(migration).toContain(
@@ -109,7 +105,9 @@ describe("Reviews Core SSOT", () => {
 
   it("keeps administrative aggregates in a bounded server-owned read model", () => {
     expect(queries).toContain('rpc("get_review_aggregates_admin"');
-    expect(adminAggregateMigration).toContain("private.is_admin_user(auth.uid())");
+    expect(adminAggregateMigration).toContain(
+      "private.is_admin_user(auth.uid())",
+    );
     expect(adminAggregateMigration).toContain(
       "cardinality(v_profile_ids), 0) NOT BETWEEN 1 AND 200",
     );

@@ -23,7 +23,7 @@ describe("community CTA contracts on public surfaces", () => {
     );
 
     expect(territorialLanding).toContain("Abrir portal comunitario");
-    expect(moduleFallback).toContain("Abrir portal comunitario");
+    expect(moduleFallback).toContain("Abrir portal comunitário");
     expect(neighborhoodHero).toContain("Abrir portal comunitario");
     expect(neighborhoodHero).toContain("Publicar no portal comunitario");
   });

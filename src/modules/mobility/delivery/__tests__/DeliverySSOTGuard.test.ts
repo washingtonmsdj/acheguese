@@ -46,7 +46,7 @@ describe("delivery ssot guard", () => {
     expect(linkServiceSource).toContain("ride_requests");
     expect(checkoutSource).toContain("platform_courier");
     expect(checkoutSource).toContain(
-      "Entrega por rede de motoboy ainda nao esta disponivel neste lancamento.",
+      "Entrega por rede de motoboy ainda não está disponível neste lançamento.",
     );
     expect(checkoutSource).not.toContain("requestDelivery(");
     expect(

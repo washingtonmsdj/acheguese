@@ -22,21 +22,36 @@ const activeMember: CapabilityPreviewSubject = {
 
 describe("authorization capability preview policy", () => {
   it("denies anonymous, inactive, suspended and blocked subjects", () => {
-    expect(evaluateCapabilityPreview(null, "createPost").reason).toBe("anonymous");
+    expect(evaluateCapabilityPreview(null, "createPost").reason).toBe(
+      "anonymous",
+    );
     expect(
-      evaluateCapabilityPreview({ ...activeMember, isActive: false }, "createPost").status,
+      evaluateCapabilityPreview(
+        { ...activeMember, isActive: false },
+        "createPost",
+      ).status,
     ).toBe("denied");
     expect(
-      evaluateCapabilityPreview({ ...activeMember, isSuspended: true }, "createPost").reason,
+      evaluateCapabilityPreview(
+        { ...activeMember, isSuspended: true },
+        "createPost",
+      ).reason,
     ).toBe("suspended-profile");
     expect(
-      evaluateCapabilityPreview({ ...activeMember, isBlocked: true }, "createPost").reason,
+      evaluateCapabilityPreview(
+        { ...activeMember, isBlocked: true },
+        "createPost",
+      ).reason,
     ).toBe("blocked-profile");
   });
 
   it("allows basic create actions only as UI hints for an active profile", () => {
-    expect(evaluateCapabilityPreview(activeMember, "createPost").status).toBe("allowed");
-    expect(evaluateCapabilityPreview(activeMember, "createComment").status).toBe("allowed");
+    expect(evaluateCapabilityPreview(activeMember, "createPost").status).toBe(
+      "allowed",
+    );
+    expect(
+      evaluateCapabilityPreview(activeMember, "createComment").status,
+    ).toBe("allowed");
   });
 
   it("requires an explicit target owner hint for target-dependent actions", () => {
@@ -54,22 +69,27 @@ describe("authorization capability preview policy", () => {
       ownerProfileIdHint: "profile-other",
     };
 
-    expect(evaluateCapabilityPreview(activeMember, "editPost", {}, ownTarget).status).toBe(
-      "allowed",
-    );
-    expect(evaluateCapabilityPreview(activeMember, "deletePost", {}, foreignTarget).status).toBe(
-      "denied",
-    );
+    expect(
+      evaluateCapabilityPreview(activeMember, "editPost", {}, ownTarget).status,
+    ).toBe("allowed");
+    expect(
+      evaluateCapabilityPreview(activeMember, "deletePost", {}, foreignTarget)
+        .status,
+    ).toBe("denied");
   });
 
   it("shows elevated controls to moderator and admin roles", () => {
     for (const role of ["moderator", "admin", "super_admin"] as const) {
       expect(
-        evaluateCapabilityPreview({ ...activeMember, roles: [role] }, "moderateContent")
-          .status,
+        evaluateCapabilityPreview(
+          { ...activeMember, roles: [role] },
+          "moderateContent",
+        ).status,
       ).toBe("allowed");
     }
-    expect(evaluateCapabilityPreview(activeMember, "moderateContent").status).toBe("denied");
+    expect(
+      evaluateCapabilityPreview(activeMember, "moderateContent").status,
+    ).toBe("denied");
   });
 
   it("limits a community moderator hint to community moderation visibility", () => {
@@ -99,26 +119,40 @@ describe("authorization capability preview policy", () => {
 describe("authorization architecture regression guards", () => {
   it("keeps the browser service free from direct aggregate-table reads", () => {
     const service = readFileSync(
-      resolve(root, "src/core/authorization/services/CapabilityPreviewService.ts"),
+      resolve(
+        root,
+        "src/core/authorization/services/CapabilityPreviewService.ts",
+      ),
       "utf8",
     );
     expect(service).not.toMatch(/\.from\s*(?:<[^>]+>)?\s*\(/);
     expect(service).not.toContain("@/integrations/supabase");
-    expect(service).not.toMatch(/\b(posts|comments|messages|businesses|communities|community_moderators)\b/);
-    expect(service).toContain("never proof that a backend command is authorized");
+    expect(service).not.toMatch(
+      /\b(posts|comments|messages|businesses|communities|community_moderators)\b/,
+    );
+    expect(service).toContain(
+      "never proof that a backend command is authorized",
+    );
   });
 
   it("does not retain the legacy authorization or parallel permissions modules", () => {
     expect(
-      existsSync(resolve(root, "src/core/authorization/services/AuthorizationEngine.ts")),
+      existsSync(
+        resolve(root, "src/core/authorization/services/AuthorizationEngine.ts"),
+      ),
     ).toBe(false);
-    expect(existsSync(resolve(root, "src/core/permissions/index.ts"))).toBe(false);
+    expect(existsSync(resolve(root, "src/core/permissions/index.ts"))).toBe(
+      false,
+    );
   });
 
   it("maps every preview action to a backend enforcement owner and evidence", () => {
     const map = JSON.parse(
       readFileSync(
-        resolve(root, "docs/architecture/authorization-enforcement-map.json"),
+        resolve(
+          root,
+          "docs/03-architecture/authorization-enforcement-map.json",
+        ),
         "utf8",
       ),
     ) as {
@@ -139,7 +173,10 @@ describe("authorization architecture regression guards", () => {
       expect(entry.enforcement.length).toBeGreaterThan(0);
       expect(entry.evidence.length).toBeGreaterThan(0);
       for (const evidence of entry.evidence) {
-        expect(existsSync(resolve(root, evidence)), `${entry.action}: ${evidence}`).toBe(true);
+        expect(
+          existsSync(resolve(root, evidence)),
+          `${entry.action}: ${evidence}`,
+        ).toBe(true);
       }
     }
   });

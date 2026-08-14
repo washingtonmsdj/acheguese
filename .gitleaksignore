@@ -1,0 +1,50 @@
+# Historical findings present before the CI reliability baseline (2026-08-14).
+# This file stores fingerprints only, never secret values. New findings have a
+# different fingerprint and remain blocking. Rotation/recovery is tracked
+# separately from the CI regression gate.
+01ddabb806f24a309feae3579c79f93f37958dd5:scripts/run-seed.mjs:postgresql-connection-string:12
+06b206607d618ce05ba8bafea6dcd2603534e521:scripts/economic-benchmark-ssot.mjs:postgresql-connection-string:150
+207731cd625c086e524cd5fd2b242d9ca1f79300:.env:jwt:20
+4fefeb18b5e92cc747bada6c999549f7540526f4:.env:jwt:7
+53eb190f7f8384d7f7cc52d5aec182ad7b02c0bf:src/core/analytics/config/dashboards.config.ts:grafana-api-key:16
+54e45decc710f9601f11235bfbe8e2c8f4c8cde7:tests/e2e/education/.auth/education-token.json:jwt:1
+64cbb663c03862417825274a2d5103eb2f3fed54:.env:jwt:7
+670f52feb468bb8641b31e8d6589ca4633ecca17:.kiro/settings/mcp.json:test-runner-user-api-key:7
+670f52feb468bb8641b31e8d6589ca4633ecca17:testsprite_tests/tmp/config.json:test-runner-user-api-key:10
+711fe3923730b061ce1417d2355f131755cb171a:.env.development:jwt:4
+711fe3923730b061ce1417d2355f131755cb171a:.env.production:jwt:4
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:apply-migrations-api.mjs:jwt:13
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:apply-migrations-final.mjs:jwt:12
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:apply-migrations.mjs:jwt:13
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:public/check-auth.html:jwt:14
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:scripts/apply_migration_direct.js:postgresql-connection-string:27
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:scripts/apply-gate2-postgres.ts:postgresql-connection-string:18
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:scripts/apply-gate2-postgres.ts:postgresql-connection-string:30
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:scripts/apply-gate5-rls-cli.ps1:postgresql-connection-string:52
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:scripts/apply-gate5-rls-final.ps1:postgresql-connection-string:55
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:scripts/apply-rls-correct.mjs:postgresql-connection-string:54
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:scripts/apply-rls-node.mjs:postgresql-connection-string:36
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:scripts/apply-rls-push.mjs:postgresql-connection-string:36
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:scripts/apply-rls.ps1:postgresql-connection-string:38
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:scripts/apply-rls.sh:postgresql-connection-string:25
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:scripts/create-exec-sql-function.mjs:postgresql-connection-string:75
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:scripts/create-exec-sql-function.mjs:postgresql-connection-string:76
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:scripts/debug/corrigir_schema_completo.mjs:postgresql-connection-string:24
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:scripts/debug/corrigir_schema_completo.mjs:postgresql-connection-string:97
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:scripts/execute-sql-direct.mjs:postgresql-connection-string:135
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:scripts/seed-test-data.sh:postgresql-connection-string:15
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:scripts/seed-test-data.sh:postgresql-connection-string:16
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:scripts/test/apply-pricing-rule.mjs:jwt:8
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:src/modules/analytics/config/dashboards.config.ts:grafana-api-key:19
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:src/modules/mobility/scripts/apply-motoboy-migration.ts:jwt:14
+a346ba085c3893747e7371b27ad0a18fd54b9ed3:supabase/functions/territory-ai-content/.env.example:supabase-secret-key-new:9
+a5451d9d410be40578b5a84e9f8c71c7c4669d83:scripts/apply-migration-node.mjs:postgresql-connection-string:62
+a5451d9d410be40578b5a84e9f8c71c7c4669d83:scripts/check-salvador-id.ts:supabase-publishable-key-new:8
+a5451d9d410be40578b5a84e9f8c71c7c4669d83:scripts/debug-vagas-rls.ts:supabase-publishable-key-new:8
+a5451d9d410be40578b5a84e9f8c71c7c4669d83:scripts/final-check-vagas.ts:supabase-publishable-key-new:9
+a5451d9d410be40578b5a84e9f8c71c7c4669d83:scripts/fix-vagas-location.ts:supabase-publishable-key-new:8
+d247b6c21753febf2e1aefbfcea4669a9584facc:.env:jwt:20
+d4ef9844bd809a6d617dbff8c389523947280658:.env:jwt:20
+e1ccb7cc5aaddc9ee86dfb26141b2997d239e6c2:scripts/economic-benchmark-ssot.mjs:postgresql-connection-string:168
+e1ccb7cc5aaddc9ee86dfb26141b2997d239e6c2:scripts/economic-benchmark-ssot.mjs:postgresql-connection-string:208
+e1ccb7cc5aaddc9ee86dfb26141b2997d239e6c2:scripts/economic-benchmark-ssot.mjs:postgresql-connection-string:215

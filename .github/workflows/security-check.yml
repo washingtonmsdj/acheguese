@@ -2,34 +2,34 @@ name: Security Check
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   security-validation:
     name: Validate No Hardcoded Credentials
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: 'npm'
-      
+          node-version: "24"
+          cache: "npm"
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run security validation
         run: npm run security:validate
-      
+
       - name: Check for .env.local in commits
         run: |
           tracked_env_local="$(git ls-files | grep -E '(^|/)\.env(\.[^.]+)?\.local$' || true)"
@@ -40,7 +40,7 @@ jobs:
             exit 1
           fi
           echo "✅ No .env.local file found in repository"
-      
+
       - name: Validate .gitignore
         run: |
           if ! grep -q "\.env\.local" .gitignore; then
@@ -52,23 +52,23 @@ jobs:
   lint-and-typecheck:
     name: Lint and Type Check
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: 'npm'
-      
+          node-version: "24"
+          cache: "npm"
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run ESLint
         run: npm run lint
-      
+
       - name: Run TypeScript type check
         run: npm run typecheck
 
@@ -87,20 +87,20 @@ jobs:
   maps-architecture-enforcement:
     name: Maps Architecture Enforcement
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: 'npm'
-      
+          node-version: "24"
+          cache: "npm"
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Validate Maps Blindagem - Test Violation 1
         run: |
           echo "🧪 Testing direct provider import detection..."
@@ -110,7 +110,7 @@ jobs:
           else
             echo "✅ PASSOU: Violação 1 detectada corretamente"
           fi
-      
+
       - name: Validate Maps Blindagem - Test Violation 2
         run: |
           echo "🧪 Testing cross-layer import detection..."
@@ -120,7 +120,7 @@ jobs:
           else
             echo "✅ PASSOU: Violação 2 detectada corretamente"
           fi
-      
+
       - name: Validate Maps Blindagem - Setup Exception
         run: |
           echo "🧪 Testing setup.ts exception..."
@@ -130,7 +130,7 @@ jobs:
           else
             echo "✅ PASSOU: setup.ts exception funciona corretamente"
           fi
-      
+
       - name: Full Maps Architecture Check
         run: |
           echo "🔍 Verificando toda a arquitetura de maps..."
@@ -139,23 +139,23 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: 'npm'
-      
+          node-version: "24"
+          cache: "npm"
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run unit tests
         run: npm run test
-      
+
       - name: Upload coverage reports
         uses: codecov/codecov-action@v6
         if: always()

@@ -29,6 +29,7 @@ const suspiciousMojibakeTokens = [
 
 const publicSurfaceFiles = [
   "src/app/components/Breadcrumbs.tsx",
+  "src/app/pages/TerritoryHomePage.tsx",
   "src/app/pages/PublicCityLandingPage.tsx",
   "src/app/pages/CidadeLandingPage.tsx",
   "src/app/pages/EmpresasLandingPage.tsx",
@@ -44,7 +45,10 @@ describe("public territorial copy regression", () => {
     for (const file of publicSurfaceFiles) {
       const content = read(file);
       for (const token of suspiciousMojibakeTokens) {
-        expect(content.includes(token), `${file} should not contain ${token}`).toBe(false);
+        expect(
+          content.includes(token),
+          `${file} should not contain ${token}`,
+        ).toBe(false);
       }
     }
   });
@@ -69,17 +73,17 @@ describe("public territorial copy regression", () => {
     expect(panels).toContain("Enviar alerta ou informação");
   });
 
-  it("preserves canonical city and landing module labels", () => {
+  it("preserves canonical city and territorial Home labels", () => {
     const cityLanding = read("src/app/pages/CidadeLandingPage.tsx");
     expect(cityLanding).toContain("Serviços");
     expect(cityLanding).toContain("Território verificado");
     expect(cityLanding).toContain("Resultados conectados ao território atual");
 
-    const mainLanding = read("src/app/pages/PublicCityLandingPage.tsx");
-    expect(mainLanding).toContain("Tudo do seu bairro,");
-    expect(mainLanding).toContain("Comunidades em destaque");
-    expect(mainLanding).toContain("Ranking das comunidades");
-    expect(mainLanding).toContain("Anúncios de empresas locais");
+    const territoryHome = read("src/app/pages/TerritoryHomePage.tsx");
+    expect(territoryHome).toContain("Hoje em ${territoryName}");
+    expect(territoryHome).toContain("Panorama de ${territoryName}");
+    expect(territoryHome).toContain("Vale saber em ${territoryName}");
+    expect(territoryHome).toContain("Community em ${territoryName}");
 
     const breadcrumbs = read("src/app/components/Breadcrumbs.tsx");
     expect(breadcrumbs).toContain('configuracoes: "Configurações"');

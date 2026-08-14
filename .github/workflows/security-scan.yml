@@ -6,51 +6,39 @@ on:
   pull_request:
     branches: [main, develop]
   schedule:
-    # Roda todo dia às 3am
-    - cron: '0 3 * * *'
+    - cron: "0 3 * * *"
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   security-scan:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: 'npm'
-      
+          node-version: "24"
+          cache: npm
+
       - name: Install dependencies
         run: npm ci
-      
-      # ══════════════════════════════════════════════════════════════
-      # SCAN 1: ESLint Security Rules
-      # ══════════════════════════════════════════════════════════════
+
       - name: Run ESLint Security Scan
+        id: eslint_security
         run: npm run lint:security
-        continue-on-error: false
-      
-      # ══════════════════════════════════════════════════════════════
-      # SCAN 2: Dependency Vulnerabilities
-      # ══════════════════════════════════════════════════════════════
-      - name: Run npm audit
-        run: |
-          npm audit --audit-level=high || {
-            echo "❌ High/Critical vulnerabilities found!"
-            exit 1
-          }
-      
-      # ══════════════════════════════════════════════════════════════
-      # SCAN 3: SAST (Static Application Security Testing)
-      # ══════════════════════════════════════════════════════════════
+
+      - name: Run npm audit (high and critical gate)
+        id: npm_audit
+        run: npm audit --audit-level=high
+
       - name: Run Semgrep Security Scan
+        id: semgrep
         uses: returntocorp/semgrep-action@v1
         with:
           config: >-
@@ -58,76 +46,75 @@ jobs:
             p/react
             p/typescript
             p/xss
-      
-      # ══════════════════════════════════════════════════════════════
-      # SCAN 4: Secret Detection
-      # ══════════════════════════════════════════════════════════════
+
       - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-      # ══════════════════════════════════════════════════════════════
-      # SCAN 5: Custom XSS Pattern Detection
-      # ══════════════════════════════════════════════════════════════
-      - name: Scan for XSS Patterns
+        id: gitleaks
+        shell: bash
         run: |
-          echo "🔍 Scanning for XSS vulnerabilities..."
-          
-          # Procura innerHTML sem sanitização
+          version="8.30.1"
+          archive="gitleaks_${version}_linux_x64.tar.gz"
+          release="https://github.com/gitleaks/gitleaks/releases/download/v${version}"
+          curl --fail --silent --show-error --location "$release/$archive" --output "$archive"
+          curl --fail --silent --show-error --location "$release/gitleaks_${version}_checksums.txt" --output checksums.txt
+          grep " $archive$" checksums.txt | sha256sum --check --strict
+          tar -xzf "$archive" gitleaks
+          ./gitleaks git . --config .gitleaks.toml --redact --no-banner
+
+          baseline_count="$(grep -Ev '^(#|[[:space:]]*$)' .gitleaksignore | wc -l | tr -d ' ')"
+          echo "Historical Gitleaks baseline: ${baseline_count} fingerprint(s)." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Scan for XSS patterns
+        id: xss_patterns
+        shell: bash
+        run: |
           if grep -r "\.innerHTML\s*=" src/ | grep -v "DOMPurify"; then
-            echo "❌ Found innerHTML without DOMPurify!"
+            echo "Found innerHTML without DOMPurify"
             exit 1
           fi
-          
-          # Procura dangerouslySetInnerHTML
           if grep -r "dangerouslySetInnerHTML" src/; then
-            echo "❌ Found dangerouslySetInnerHTML!"
+            echo "Found dangerouslySetInnerHTML"
             exit 1
           fi
-          
-          # Procura localStorage com tokens
           if grep -r "localStorage.*token" src/ | grep -v "// SAFE:"; then
-            echo "❌ Found token storage in localStorage!"
+            echo "Found token storage in localStorage"
             exit 1
           fi
-          
-          # Procura document.cookie
           if grep -r "document\.cookie" src/ | grep -v "// SAFE:"; then
-            echo "❌ Found document.cookie access!"
+            echo "Found document.cookie access"
             exit 1
           fi
-          
-          echo "✅ No XSS patterns found"
-      
-      # ══════════════════════════════════════════════════════════════
-      # SCAN 6: TypeScript Type Safety
-      # ══════════════════════════════════════════════════════════════
+
       - name: TypeScript Strict Check
+        id: typescript_strict
         run: npx tsc --noEmit --strict
-      
-      # ══════════════════════════════════════════════════════════════
-      # REPORT: Gerar relatório de segurança
-      # ══════════════════════════════════════════════════════════════
-      - name: Generate Security Report
+
+      - name: Generate truthful security report
         if: always()
+        shell: bash
         run: |
-          echo "# Security Scan Report" > security-report.md
-          echo "" >> security-report.md
-          echo "**Date:** $(date)" >> security-report.md
-          echo "**Commit:** ${{ github.sha }}" >> security-report.md
-          echo "" >> security-report.md
-          echo "## Scans Performed" >> security-report.md
-          echo "- ✅ ESLint Security Rules" >> security-report.md
-          echo "- ✅ npm audit" >> security-report.md
-          echo "- ✅ Semgrep SAST" >> security-report.md
-          echo "- ✅ Gitleaks Secret Detection" >> security-report.md
-          echo "- ✅ Custom XSS Pattern Detection" >> security-report.md
-          echo "- ✅ TypeScript Strict Check" >> security-report.md
-      
-      - name: Upload Security Report
+          {
+            echo "# Security Scan Report"
+            echo
+            echo "**Commit:** ${{ github.sha }}"
+            echo
+            echo "| Gate | Outcome |"
+            echo "| --- | --- |"
+            echo "| ESLint security | ${{ steps.eslint_security.outcome }} |"
+            echo "| npm audit (high/critical) | ${{ steps.npm_audit.outcome }} |"
+            echo "| Semgrep | ${{ steps.semgrep.outcome }} |"
+            echo "| Gitleaks | ${{ steps.gitleaks.outcome }} |"
+            echo "| XSS patterns | ${{ steps.xss_patterns.outcome }} |"
+            echo "| TypeScript strict | ${{ steps.typescript_strict.outcome }} |"
+            echo
+            echo "The artifact is a convenience copy. Scanner outcomes above are the security gate."
+          } | tee security-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload security report (non-gating transport)
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: security-report
           path: security-report.md
+          if-no-files-found: error
+          retention-days: 7
