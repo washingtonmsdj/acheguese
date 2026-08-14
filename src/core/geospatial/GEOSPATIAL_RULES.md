@@ -1,7 +1,7 @@
 # REGRAS GEOESPACIAIS
 
-**Data**: 2026-03-28  
-**Versão**: 1.0.0  
+**Data**: 2026-08-13
+**Versão**: 1.1.0
 **Status**: ✅ OFICIAL
 
 ---
@@ -39,6 +39,7 @@ WHERE ST_Contains(boundary, ST_MakePoint(lng, lat))
 ```
 
 **Características**:
+
 - Confidence: 1.0
 - Resolution method: 'boundary_containment'
 - Requer boundary definido
@@ -58,6 +59,7 @@ LIMIT 1;
 ```
 
 **Características**:
+
 - Confidence: 0.5
 - Resolution method: 'proximity_fallback'
 - Usa canonical_lat/lng de metadata
@@ -106,6 +108,7 @@ longitude: -180 a 180
 ```
 
 **Exemplo válido**:
+
 ```typescript
 {
   type: 'Polygon',
@@ -153,7 +156,10 @@ longitude: -180 a 180
 const newLocation = await createLocationFromCoordinates(lat, lng);
 
 // ✅ CORRETO: resolver location existente
-const result = await geospatialService.resolvePointToLocation({ latitude, longitude });
+const result = await geospatialService.resolvePointToLocation({
+  latitude,
+  longitude,
+});
 if (result) {
   const location = await locationService.getLocationById(result.location_id);
 }
@@ -186,12 +192,12 @@ const resolution = await geospatialService.resolvePointToLocationWithFallback({
 if (resolution) {
   await addressService.createAddress({
     location_id: resolution.location_id,
-    address_type: 'exact',
+    address_type: "exact",
     street: userInput.street,
     number: userInput.number,
     latitude: userInput.latitude,
     longitude: userInput.longitude,
-    geocoding_source: 'user_input',
+    geocoding_source: "user_input",
     geocoding_confidence: resolution.confidence,
   });
 }
@@ -208,7 +214,7 @@ const resolution = await geospatialService.resolvePointToLocation({
 });
 
 if (resolution && resolution.location_id !== address.location_id) {
-  console.warn('Address location mismatch', {
+  console.warn("Address location mismatch", {
     declared: address.location_id,
     resolved: resolution.location_id,
     confidence: resolution.confidence,
@@ -220,9 +226,9 @@ if (resolution && resolution.location_id !== address.location_id) {
 
 ```typescript
 // Usar RPC ou query SQL direta
-const { data } = await supabase.rpc('find_addresses_near_point', {
-  lat: -12.9750,
-  lng: -38.4750,
+const { data } = await supabase.rpc("find_addresses_near_point", {
+  lat: -12.975,
+  lng: -38.475,
   radius_meters: 1000,
 });
 ```
@@ -236,7 +242,7 @@ const { data } = await supabase.rpc('find_addresses_near_point', {
 ```json
 {
   "type": "Point",
-  "coordinates": [-38.4750, -12.9750]
+  "coordinates": [-38.475, -12.975]
 }
 ```
 
@@ -247,17 +253,20 @@ const { data } = await supabase.rpc('find_addresses_near_point', {
 ```json
 {
   "type": "Polygon",
-  "coordinates": [[
-    [-38.5000, -13.0000],
-    [-38.4900, -13.0000],
-    [-38.4900, -12.9900],
-    [-38.5000, -12.9900],
-    [-38.5000, -13.0000]
-  ]]
+  "coordinates": [
+    [
+      [-38.5, -13.0],
+      [-38.49, -13.0],
+      [-38.49, -12.99],
+      [-38.5, -12.99],
+      [-38.5, -13.0]
+    ]
+  ]
 }
 ```
 
 **Regras**:
+
 - Primeiro anel: exterior
 - Anéis adicionais: buracos (opcional)
 - Fechado: primeiro = último
@@ -285,14 +294,24 @@ ORDER BY ST_Distance(point1::geography, point2::geography)
 
 ---
 
-## 10. PREPARAÇÃO PARA FUTURO
+## 10. MALHAS OFICIAIS PARA VISUALIZAÇÃO
 
-### Malhas Oficiais (NÃO implementado ainda)
+O `BoundaryService` resolve geometrias para mapas nesta ordem:
 
-```
-IBGE → boundaries oficiais
-Prefeitura → boundaries municipais
-```
+1. `location_boundaries` quando habilitado;
+2. `locations.boundary`;
+3. `neighborhood_boundaries` para distrito/bairro;
+4. fonte oficial declarada em metadata (`source_url` + `source_object_id`);
+5. registro oficial versionado e lazy em `core/geospatial/data`;
+6. somente o centro canônico, sem inventar polígono.
+
+A malha municipal de Salvador (`IBGE 2927408`) usa o GeoJSON oficial de
+qualidade intermediária, com 73 pontos e carregamento em chunk separado. Essa
+fonte existe para visualização quando a geometria remota estiver ausente.
+
+**Importante:** a malha versionada não cria território, não altera o banco e
+não participa de autorização ou containment PostgreSQL. A hierarquia continua
+em `core/location`, e as geometrias persistidas continuam tendo prioridade.
 
 ### Geocoding (NÃO implementado ainda)
 
@@ -309,5 +328,5 @@ coordenadas → endereço completo
 
 ---
 
-**Versão**: 1.0.0  
+**Versão**: 1.1.0
 **Status**: ✅ FUNDAÇÃO COMPLETA

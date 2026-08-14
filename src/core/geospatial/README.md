@@ -1,8 +1,8 @@
 # Core Geospatial Module
 
 **Status**: ✅ FUNDAÇÃO COMPLETA  
-**Versão**: 1.0.0  
-**Data**: 2026-03-28
+**Versão**: 1.1.0
+**Data**: 2026-08-13
 
 ---
 
@@ -11,6 +11,7 @@
 Módulo responsável por **operações geoespaciais** com PostGIS.
 
 **NÃO confundir com**:
+
 - `core/location`: Hierarquia territorial oficial (SSOT)
 - `core/address`: Endereços postais (SSOT de endereços)
 - `integrations/maps`: Providers externos (Google, OSM)
@@ -24,6 +25,7 @@ Módulo responsável por **operações geoespaciais** com PostGIS.
 - Resolver ponto geográfico para território (containment)
 - Fallback por proximidade quando boundary não disponível
 - Gerenciar boundaries de locations (polígonos)
+- Resolver malhas oficiais versionadas para visualização quando o banco não possui geometria
 - Sincronizar latitude/longitude com point geometry
 - Consultas espaciais (ST_Contains, ST_Distance)
 
@@ -33,7 +35,7 @@ Módulo responsável por **operações geoespaciais** com PostGIS.
 - Gerenciar endereços postais (use `core/address`)
 - Geocoding (use `integrations/maps` - etapa futura)
 - Reverse geocoding (etapa futura)
-- Importar malhas oficiais (etapa futura)
+- Usar malha visual como substituto da governança territorial ou da autorização
 - Redefinir SSOT territorial
 
 ---
@@ -42,6 +44,9 @@ Módulo responsável por **operações geoespaciais** com PostGIS.
 
 ```
 src/core/geospatial/
+├── data/
+│   ├── officialBoundaryRegistry.ts
+│   └── brBaSalvadorMunicipality.ts
 ├── services/
 │   ├── GeospatialService.ts
 │   └── __tests__/
@@ -64,18 +69,18 @@ src/core/geospatial/
 ### 1. Resolver Ponto para Território (Containment)
 
 ```typescript
-import { geospatialService } from '@/core/geospatial';
+import { geospatialService } from "@/core/geospatial";
 
 const result = await geospatialService.resolvePointToLocation({
-  latitude: -12.9750,
-  longitude: -38.4750,
-  location_type: 'district', // Opcional, default 'district'
+  latitude: -12.975,
+  longitude: -38.475,
+  location_type: "district", // Opcional, default 'district'
 });
 
 if (result) {
-  console.log(result.location_id);          // 'loc-nordeste-de-amaralina'
-  console.log(result.resolution_method);    // 'boundary_containment'
-  console.log(result.confidence);           // 1.0
+  console.log(result.location_id); // 'loc-nordeste-de-amaralina'
+  console.log(result.resolution_method); // 'boundary_containment'
+  console.log(result.confidence); // 1.0
 }
 ```
 
@@ -84,48 +89,50 @@ if (result) {
 ```typescript
 // Tenta boundary primeiro, depois proximidade
 const result = await geospatialService.resolvePointToLocationWithFallback({
-  latitude: -12.8000,
-  longitude: -38.3000,
-  location_type: 'district',
+  latitude: -12.8,
+  longitude: -38.3,
+  location_type: "district",
 });
 
 if (result) {
-  console.log(result.resolution_method);    // 'proximity_fallback'
-  console.log(result.confidence);           // 0.5
-  console.log(result.distance_meters);      // 15234.56
+  console.log(result.resolution_method); // 'proximity_fallback'
+  console.log(result.confidence); // 0.5
+  console.log(result.distance_meters); // 15234.56
 }
 ```
 
 ### 3. Definir Boundary de Location
 
 ```typescript
-await geospatialService.setLocationBoundary('loc-barra', {
-  type: 'Polygon',
-  coordinates: [[
-    [-38.5200, -13.0200],
-    [-38.5100, -13.0200],
-    [-38.5100, -13.0100],
-    [-38.5200, -13.0100],
-    [-38.5200, -13.0200], // Fechado (primeiro = último)
-  ]],
+await geospatialService.setLocationBoundary("loc-barra", {
+  type: "Polygon",
+  coordinates: [
+    [
+      [-38.52, -13.02],
+      [-38.51, -13.02],
+      [-38.51, -13.01],
+      [-38.52, -13.01],
+      [-38.52, -13.02], // Fechado (primeiro = último)
+    ],
+  ],
 });
 ```
 
 ### 4. Verificar se Location Tem Boundary
 
 ```typescript
-const hasBoundary = await geospatialService.hasBoundary('loc-barra');
+const hasBoundary = await geospatialService.hasBoundary("loc-barra");
 // true ou false
 ```
 
 ### 5. Obter Boundary de Location
 
 ```typescript
-const boundary = await geospatialService.getLocationBoundary('loc-barra');
+const boundary = await geospatialService.getLocationBoundary("loc-barra");
 
 if (boundary) {
-  console.log(boundary.type);          // 'Polygon'
-  console.log(boundary.coordinates);   // [[[lng, lat], ...]]
+  console.log(boundary.type); // 'Polygon'
+  console.log(boundary.coordinates); // [[[lng, lat], ...]]
 }
 ```
 
@@ -133,8 +140,8 @@ if (boundary) {
 
 ```typescript
 const point = geospatialService.coordinatesToGeoJSON({
-  latitude: -12.9750,
-  longitude: -38.4750,
+  latitude: -12.975,
+  longitude: -38.475,
 });
 
 // { type: 'Point', coordinates: [-38.4750, -12.9750] }
@@ -180,6 +187,7 @@ SELECT * FROM resolve_point_to_location(
 ```
 
 **Retorna**:
+
 - location_id
 - location_name
 - location_slug
@@ -198,6 +206,7 @@ SELECT * FROM resolve_point_to_location_with_fallback(
 ```
 
 **Retorna**:
+
 - location_id
 - location_name
 - location_slug
@@ -228,6 +237,7 @@ latitude/longitude → point (GEOMETRY)
 ```
 
 **Comportamento**:
+
 - INSERT ou UPDATE de latitude/longitude → point atualizado automaticamente
 - latitude ou longitude NULL → point NULL
 
@@ -247,7 +257,10 @@ locations.metadata.canonical → Ponto representativo (fallback)
 const location = await createLocationFromPoint(lat, lng);
 
 // ✅ CORRETO: resolver location existente por coordenadas
-const result = await geospatialService.resolvePointToLocation({ latitude, longitude });
+const result = await geospatialService.resolvePointToLocation({
+  latitude,
+  longitude,
+});
 if (result) {
   const location = await locationService.getLocationById(result.location_id);
 }
@@ -262,15 +275,18 @@ if (result) {
 **Cobertura**: 17 testes
 
 **Point Resolution** (5 testes):
+
 - resolvePointToLocation: 3 testes (dentro boundary, fora boundary, coordenadas inválidas)
 - resolvePointToLocationWithFallback: 2 testes (boundary disponível, fallback proximidade)
 
 **Boundary Management** (9 testes):
+
 - hasBoundary: 3 testes (com boundary, sem boundary, id vazio)
 - setLocationBoundary: 4 testes (válido, location inexistente, polígono não fechado, menos de 4 pontos)
 - getLocationBoundary: 2 testes (existente, não existente)
 
 **Helpers** (3 testes):
+
 - coordinatesToGeoJSON: 3 testes (válido, latitude inválida, longitude inválida)
 
 **Status**: ✅ 17/17 passed
@@ -280,10 +296,12 @@ if (result) {
 ## Validações Implementadas
 
 ### Coordenadas
+
 - ✅ Latitude: -90 a 90
 - ✅ Longitude: -180 a 180
 
 ### Boundary
+
 - ✅ Tipo deve ser 'Polygon'
 - ✅ Deve ter coordenadas
 - ✅ Polígono deve ter pelo menos 4 pontos
@@ -291,6 +309,7 @@ if (result) {
 - ✅ Location deve existir
 
 ### Resolution
+
 - ✅ Boundary containment tem prioridade
 - ✅ Proximity fallback quando boundary não disponível
 - ✅ Retorna null quando não encontra
@@ -304,12 +323,12 @@ if (result) {
 ```typescript
 // Ao criar/atualizar address com coordenadas
 await addressService.createAddress({
-  location_id: 'loc-barra',
-  address_type: 'exact',
-  street: 'Rua Exemplo',
-  number: '123',
-  latitude: -13.0100,
-  longitude: -38.5200,
+  location_id: "loc-barra",
+  address_type: "exact",
+  street: "Rua Exemplo",
+  number: "123",
+  latitude: -13.01,
+  longitude: -38.52,
   // point será criado automaticamente pelo trigger
 });
 ```
@@ -336,7 +355,8 @@ ORDER BY ST_Distance(
 ## Pendências Fora do Escopo (ETAPA 4)
 
 **NÃO implementado ainda**:
-- ❌ Importação de malhas oficiais (IBGE)
+
+- ❌ Pipeline global de importação/sincronização de malhas oficiais no banco
 - ❌ Geocoding (Google, OSM)
 - ❌ Reverse geocoding
 - ❌ Integração com providers externos
@@ -346,6 +366,8 @@ ORDER BY ST_Distance(
 - ❌ Consultas espaciais avançadas (intersect, buffer, etc)
 
 **Implementado**:
+
+- ✅ Registro visual lazy da malha municipal oficial de Salvador (IBGE 2927408)
 - ✅ PostGIS habilitado
 - ✅ locations.boundary (POLYGON, índice GiST)
 - ✅ addresses.point (POINT, índice GiST)

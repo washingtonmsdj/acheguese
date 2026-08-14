@@ -70,8 +70,12 @@ test.describe("Home territorial pública e determinística", () => {
 
     await page.getByRole("button", { name: "Pituba" }).click();
     await expect(page).toHaveURL(/\/ba\/salvador\/pituba$/);
-    await expect(page.getByText("Hoje em Pituba")).toBeVisible();
-    await expect(page.getByText("Oficina Horizonte")).toBeVisible();
+    await expect(page.getByText("Hoje em Pituba")).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(page.getByText("Oficina Horizonte")).toBeVisible({
+      timeout: 30_000,
+    });
     await expectNoHorizontalOverflow(page);
     health.assertHealthy();
   });
@@ -255,6 +259,22 @@ test.describe("Entrada territorial responsiva", () => {
     await expect(
       page.getByRole("button", { name: "Usar minha localização" }),
     ).toBeVisible();
+    await expect(
+      page.getByTestId("territory-entry-map-boundary-status"),
+    ).toContainText("Limite oficial");
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => window.__mapState?.territoryPolygonCount ?? 0),
+        { timeout: 30_000 },
+      )
+      .toBeGreaterThan(0);
+    await expect
+      .poll(() => page.evaluate(() => window.__mapState?.zoom ?? 0), {
+        timeout: 30_000,
+      })
+      .toBeGreaterThan(7);
+    const cityZoom = await page.evaluate(() => window.__mapState?.zoom ?? 0);
     await expectNoHorizontalOverflow(page);
 
     const search = page.getByRole("combobox", {
@@ -265,6 +285,29 @@ test.describe("Entrada territorial responsiva", () => {
       page.getByRole("option", { name: /Pituba, Salvador/ }),
     ).toBeVisible();
     await page.getByRole("option", { name: /Pituba, Salvador/ }).click();
+    await expect(page).toHaveURL(/\/?\?trocar=territorio$/);
+    await expect(
+      page.getByRole("heading", { name: "Pituba em destaque" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Abrir mapa de Pituba" }),
+    ).toHaveAttribute("href", "/mapa/ba/salvador/pituba");
+    await expect
+      .poll(() => page.evaluate(() => window.__mapState?.territoryBounds), {
+        timeout: 30_000,
+      })
+      .toEqual({
+        west: -38.47,
+        south: -13.01,
+        east: -38.44,
+        north: -12.98,
+      });
+    await expect
+      .poll(() => page.evaluate(() => window.__mapState?.zoom ?? 0), {
+        timeout: 30_000,
+      })
+      .toBeGreaterThan(cityZoom + 2);
+    await page.getByRole("button", { name: "Confirmar território" }).click();
     await expect(page).toHaveURL(/\/ba\/salvador\/pituba$/);
 
     await gotoApp(page, "/?trocar=territorio");

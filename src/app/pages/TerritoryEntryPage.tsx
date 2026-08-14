@@ -84,6 +84,7 @@ interface TerritorySuggestion {
   id: string;
   label: string;
   path?: string;
+  location?: Location;
   latitude?: number;
   longitude?: number;
   kind: "territory" | "city";
@@ -291,7 +292,10 @@ async function searchLocalTerritories(
 ): Promise<TerritorySuggestion[]> {
   const normalizedQuery = normalizeTerritoryText(query);
   const cityMatches = "salvador".includes(normalizedQuery);
-  const locations = await getLaunchTerritories();
+  const [city, locations] = await Promise.all([
+    getLaunchCity(),
+    getLaunchTerritories(),
+  ]);
   const matches = locations
     .filter(
       (location) =>
@@ -303,6 +307,7 @@ async function searchLocalTerritories(
       id: `territory-${location.id}`,
       label: `${location.name}, Salvador`,
       path: geoPathToPublicUrl(location.geographic_path),
+      location,
       kind: "territory" as const,
     }));
 
@@ -312,6 +317,7 @@ async function searchLocalTerritories(
           id: "territory-salvador",
           label: "Salvador inteira",
           path: PUBLIC_SALVADOR_PATH,
+          ...(city ? { location: city } : {}),
           kind: "territory" as const,
         },
         ...matches,
@@ -398,6 +404,9 @@ export default function TerritoryEntryPage({
   const [isOpening, setIsOpening] = useState(false);
   const [resolvedLocation, setResolvedLocation] =
     useState<ResolvedLocation | null>(null);
+  const [previewTerritory, setPreviewTerritory] = useState<Location | null>(
+    null,
+  );
   const [message, setMessage] = useState<string | null>(null);
   const searchAbortRef = useRef<AbortController | null>(null);
   const reverseAbortRef = useRef<AbortController | null>(null);
@@ -506,6 +515,7 @@ export default function TerritoryEntryPage({
     manualQueryRef.current = true;
     reverseAbortRef.current?.abort();
     setResolvedLocation(null);
+    setPreviewTerritory(null);
     setIsLocating(false);
     setMessage(null);
     setQuery(value);
@@ -518,10 +528,7 @@ export default function TerritoryEntryPage({
     setMessage(null);
     setQuery(suggestion.label);
     if (suggestion.path) {
-      openTerritory(
-        suggestion.path,
-        suggestion.label.replace(", Salvador", ""),
-      );
+      setPreviewTerritory(suggestion.location ?? null);
       return;
     }
     if (
@@ -533,12 +540,14 @@ export default function TerritoryEntryPage({
         latitude: suggestion.latitude,
         longitude: suggestion.longitude,
       });
+      setPreviewTerritory(null);
     }
   };
 
   const handleUseLocation = async () => {
     setMessage(null);
     setResolvedLocation(null);
+    setPreviewTerritory(null);
     setShowSuggestions(false);
     manualQueryRef.current = false;
     if (!("geolocation" in navigator)) {
@@ -572,6 +581,17 @@ export default function TerritoryEntryPage({
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
       });
+      const normalizedLabel = normalizeTerritoryText(
+        label.split(",")[0] ?? label,
+      );
+      const localTerritories = await getLaunchTerritories();
+      setPreviewTerritory(
+        localTerritories.find(
+          (location) =>
+            normalizeTerritoryText(location.name) === normalizedLabel ||
+            normalizeTerritoryText(location.slug) === normalizedLabel,
+        ) ?? null,
+      );
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       setMessage(geolocationErrorMessage(error));
@@ -611,7 +631,11 @@ export default function TerritoryEntryPage({
         data-testid="territory-entry-layout"
         className="mx-auto grid w-full max-w-[90rem] gap-5 px-4 pb-8 sm:px-6 sm:pb-10 md:grid-cols-[minmax(0,1.08fr)_minmax(22rem,0.92fr)] md:items-stretch md:gap-6 lg:px-10 xl:grid-cols-[minmax(0,1.22fr)_minmax(26rem,0.78fr)] xl:gap-8"
       >
-        <TerritoryEntryMap city={launchCity} isLoading={isMapLoading} />
+        <TerritoryEntryMap
+          city={launchCity}
+          territory={previewTerritory}
+          isLoading={isMapLoading}
+        />
 
         <section
           className="flex min-w-0 flex-col justify-center md:py-2"

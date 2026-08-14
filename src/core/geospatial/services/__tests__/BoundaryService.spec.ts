@@ -1,13 +1,10 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   BoundaryServiceClass,
   type BoundaryServiceDeps,
-} from '../BoundaryService';
-import {
-  type ILocationRepository,
-  type Location,
-} from '@/core/location';
-import { LocationStatus, LocationType } from '@/core/location/types';
+} from "../BoundaryService";
+import { type ILocationRepository, type Location } from "@/core/location";
+import { LocationStatus, LocationType } from "@/core/location/types";
 
 type SupabaseRows = Record<string, Record<string, unknown>>;
 
@@ -16,14 +13,14 @@ function buildLocation(partial: Partial<Location>): Location {
     id: partial.id ?? crypto.randomUUID(),
     parent_id: partial.parent_id ?? null,
     type: partial.type ?? LocationType.CITY,
-    slug: partial.slug ?? 'location',
-    name: partial.name ?? 'Location',
-    full_name: partial.full_name ?? partial.name ?? 'Location',
-    geographic_path: partial.geographic_path ?? '/br/ba/location',
+    slug: partial.slug ?? "location",
+    name: partial.name ?? "Location",
+    full_name: partial.full_name ?? partial.name ?? "Location",
+    geographic_path: partial.geographic_path ?? "/br/ba/location",
     status: partial.status ?? LocationStatus.ACTIVE,
     metadata: partial.metadata ?? {},
-    created_at: partial.created_at ?? '2026-01-01T00:00:00.000Z',
-    updated_at: partial.updated_at ?? '2026-01-01T00:00:00.000Z',
+    created_at: partial.created_at ?? "2026-01-01T00:00:00.000Z",
+    updated_at: partial.updated_at ?? "2026-01-01T00:00:00.000Z",
   };
 }
 
@@ -63,7 +60,9 @@ function createService(
 ): BoundaryServiceClass {
   const deps: BoundaryServiceDeps = {
     locationRepository: createRepository(locations),
-    supabaseClient: createSupabaseStub(rowsByTable) as unknown as BoundaryServiceDeps['supabaseClient'],
+    supabaseClient: createSupabaseStub(
+      rowsByTable,
+    ) as unknown as BoundaryServiceDeps["supabaseClient"],
     locationCacheTtlMs: 60_000,
     customBoundariesEnabled,
   };
@@ -73,40 +72,40 @@ function createService(
 
 function createStateCityDistrict() {
   const state = buildLocation({
-    id: 'state-ba',
+    id: "state-ba",
     type: LocationType.STATE,
-    slug: 'ba',
-    name: 'Bahia',
-    geographic_path: '/br/ba',
-    metadata: { state_code: 'BA' },
+    slug: "ba",
+    name: "Bahia",
+    geographic_path: "/br/ba",
+    metadata: { state_code: "BA" },
   });
   const city = buildLocation({
-    id: 'city-salvador',
+    id: "city-salvador",
     parent_id: state.id,
     type: LocationType.CITY,
-    slug: 'salvador',
-    name: 'Salvador',
-    geographic_path: '/br/ba/salvador',
+    slug: "salvador",
+    name: "Salvador",
+    geographic_path: "/br/ba/salvador",
     metadata: { center_latitude: -12.9714, center_longitude: -38.5124 },
   });
   const district = buildLocation({
-    id: 'district-rio-vermelho',
+    id: "district-rio-vermelho",
     parent_id: city.id,
     type: LocationType.DISTRICT,
-    slug: 'rio-vermelho',
-    name: 'Rio Vermelho',
-    geographic_path: '/br/ba/salvador/rio-vermelho',
+    slug: "rio-vermelho",
+    name: "Rio Vermelho",
+    geographic_path: "/br/ba/salvador/rio-vermelho",
   });
 
   return { state, city, district };
 }
 
-describe('BoundaryService', () => {
+describe("BoundaryService", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
-  it('uses stored custom polygon when available', async () => {
+  it("uses stored custom polygon when available", async () => {
     const { state, city, district } = createStateCityDistrict();
 
     const service = createService(
@@ -115,7 +114,7 @@ describe('BoundaryService', () => {
         location_boundaries: {
           [district.id]: {
             boundary: {
-              type: 'Polygon',
+              type: "Polygon",
               coordinates: [
                 [
                   [-38.5, -12.99],
@@ -134,9 +133,9 @@ describe('BoundaryService', () => {
     );
 
     const result = await service.getNeighborhoodBounds({
-      neighborhood: 'Rio Vermelho',
-      city: 'Salvador',
-      state: 'BA',
+      neighborhood: "Rio Vermelho",
+      city: "Salvador",
+      state: "BA",
       locationId: district.id,
     });
 
@@ -145,13 +144,58 @@ describe('BoundaryService', () => {
     expect(result.rings[0][0]).toEqual([-12.99, -38.5]);
   });
 
-  it('skips optional location_boundaries when disabled', async () => {
+  it("uses the versioned official IBGE boundary for Salvador when remote geometry is absent", async () => {
+    const { state, city } = createStateCityDistrict();
+    const service = createService([state, city]);
+
+    const result = await service.getCityBounds({
+      city: "Salvador",
+      state: "BA",
+    });
+
+    expect(result.rings).toHaveLength(1);
+    expect(result.rings[0]).toHaveLength(73);
+    expect(result.rings[0][0]).toEqual([-13.0127, -38.5856]);
+    expect(result.rings[0][72]).toEqual([-13.0127, -38.5856]);
+  });
+
+  it("keeps inline database geometry ahead of the versioned official boundary", async () => {
+    const { state, city } = createStateCityDistrict();
+    const service = createService([state, city], {
+      locations: {
+        [city.id]: {
+          boundary: {
+            type: "Polygon",
+            coordinates: [
+              [
+                [-38.52, -12.99],
+                [-38.48, -12.99],
+                [-38.48, -12.95],
+                [-38.52, -12.99],
+              ],
+            ],
+          },
+        },
+      },
+    });
+
+    const result = await service.getCityBounds({
+      city: "Salvador",
+      state: "BA",
+    });
+
+    expect(result.rings).toHaveLength(1);
+    expect(result.rings[0]).toHaveLength(4);
+    expect(result.rings[0][0]).toEqual([-12.99, -38.52]);
+  });
+
+  it("skips optional location_boundaries when disabled", async () => {
     const { state, city, district } = createStateCityDistrict();
     const supabaseStub = createSupabaseStub({
       location_boundaries: {
         [district.id]: {
           boundary: {
-            type: 'Polygon',
+            type: "Polygon",
             coordinates: [
               [
                 [-38.5, -12.99],
@@ -168,28 +212,29 @@ describe('BoundaryService', () => {
     });
     const service = new BoundaryServiceClass({
       locationRepository: createRepository([state, city, district]),
-      supabaseClient: supabaseStub as unknown as BoundaryServiceDeps['supabaseClient'],
+      supabaseClient:
+        supabaseStub as unknown as BoundaryServiceDeps["supabaseClient"],
       customBoundariesEnabled: false,
     });
 
     const result = await service.getNeighborhoodBounds({
-      neighborhood: 'Rio Vermelho',
-      city: 'Salvador',
-      state: 'BA',
+      neighborhood: "Rio Vermelho",
+      city: "Salvador",
+      state: "BA",
       locationId: district.id,
     });
 
-    expect(supabaseStub.from).not.toHaveBeenCalledWith('location_boundaries');
+    expect(supabaseStub.from).not.toHaveBeenCalledWith("location_boundaries");
     expect(result.rings).toEqual([]);
   });
 
-  it('uses legacy neighborhood boundary geometry when available', async () => {
+  it("uses legacy neighborhood boundary geometry when available", async () => {
     const { state, city, district } = createStateCityDistrict();
     const service = createService([state, city, district], {
       neighborhood_boundaries: {
         [district.id]: {
           geometry: {
-            type: 'Polygon',
+            type: "Polygon",
             coordinates: [
               [
                 [-38.49, -12.98],
@@ -204,9 +249,9 @@ describe('BoundaryService', () => {
     });
 
     const result = await service.getNeighborhoodBounds({
-      neighborhood: 'Rio Vermelho',
-      city: 'Salvador',
-      state: 'BA',
+      neighborhood: "Rio Vermelho",
+      city: "Salvador",
+      state: "BA",
       locationId: district.id,
     });
 
@@ -214,20 +259,20 @@ describe('BoundaryService', () => {
     expect(result.rings[0][0]).toEqual([-12.98, -38.49]);
   });
 
-  it('hydrates boundary from the official FeatureServer declared on location metadata', async () => {
+  it("hydrates boundary from the official FeatureServer declared on location metadata", async () => {
     const { state, city } = createStateCityDistrict();
     const district = buildLocation({
-      id: 'district-nordeste',
+      id: "district-nordeste",
       parent_id: city.id,
       type: LocationType.DISTRICT,
-      slug: 'nordeste-de-amaralina',
-      name: 'Nordeste de Amaralina',
-      geographic_path: '/br/ba/salvador/nordeste-de-amaralina',
+      slug: "nordeste-de-amaralina",
+      name: "Nordeste de Amaralina",
+      geographic_path: "/br/ba/salvador/nordeste-de-amaralina",
       metadata: {
         center_latitude: -13.006,
         center_longitude: -38.459,
         source_url:
-          'https://services6.arcgis.com/demo/arcgis/rest/services/bairros/FeatureServer/0',
+          "https://services6.arcgis.com/demo/arcgis/rest/services/bairros/FeatureServer/0",
         source_object_id: 112,
       },
     });
@@ -237,7 +282,7 @@ describe('BoundaryService', () => {
         features: [
           {
             geometry: {
-              type: 'Polygon',
+              type: "Polygon",
               coordinates: [
                 [
                   [-38.46, -13.01],
@@ -251,13 +296,13 @@ describe('BoundaryService', () => {
         ],
       }),
     }));
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal("fetch", fetchMock);
 
     const service = createService([state, city, district]);
     const result = await service.getNeighborhoodBounds({
-      neighborhood: 'Nordeste de Amaralina',
-      city: 'Salvador',
-      state: 'BA',
+      neighborhood: "Nordeste de Amaralina",
+      city: "Salvador",
+      state: "BA",
       locationId: district.id,
     });
 
@@ -267,11 +312,11 @@ describe('BoundaryService', () => {
 
     const firstCall = fetchMock.mock.calls[0] as unknown as [string];
     const requestUrl = new URL(firstCall[0]);
-    expect(requestUrl.searchParams.get('where')).toBe('OBJECTID = 112');
-    expect(requestUrl.searchParams.get('f')).toBe('geojson');
+    expect(requestUrl.searchParams.get("where")).toBe("OBJECTID = 112");
+    expect(requestUrl.searchParams.get("f")).toBe("geojson");
   });
 
-  it('does not invent a boundary when only a canonical center exists', async () => {
+  it("does not invent a boundary when only a canonical center exists", async () => {
     const { state, city, district } = createStateCityDistrict();
     const centeredDistrict = {
       ...district,
@@ -280,9 +325,9 @@ describe('BoundaryService', () => {
 
     const service = createService([state, city, centeredDistrict]);
     const result = await service.getNeighborhoodBounds({
-      neighborhood: 'Rio Vermelho',
-      city: 'Salvador',
-      state: 'BA',
+      neighborhood: "Rio Vermelho",
+      city: "Salvador",
+      state: "BA",
       locationId: centeredDistrict.id,
     });
 
@@ -290,22 +335,22 @@ describe('BoundaryService', () => {
     expect(result.center).toEqual([-12.98, -38.49]);
   });
 
-  it('uses parent center when district lacks its own boundary and center metadata', async () => {
+  it("uses parent center when district lacks its own boundary and center metadata", async () => {
     const { state, city } = createStateCityDistrict();
     const district = buildLocation({
-      id: 'district-pituba',
+      id: "district-pituba",
       parent_id: city.id,
       type: LocationType.DISTRICT,
-      slug: 'pituba',
-      name: 'Pituba',
-      geographic_path: '/br/ba/salvador/pituba',
+      slug: "pituba",
+      name: "Pituba",
+      geographic_path: "/br/ba/salvador/pituba",
     });
 
     const service = createService([state, city, district]);
     const result = await service.getNeighborhoodBounds({
-      neighborhood: 'Pituba',
-      city: 'Salvador',
-      state: 'Bahia',
+      neighborhood: "Pituba",
+      city: "Salvador",
+      state: "Bahia",
     });
 
     expect(result.rings).toEqual([]);

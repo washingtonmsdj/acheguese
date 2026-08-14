@@ -1,11 +1,13 @@
 import { lazy, Suspense, useMemo } from "react";
 import { ArrowUpRight, Map, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
-import type { Location } from "@/core/location/types";
+import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
+import { LocationType, type Location } from "@/core/location/types";
 import { LAUNCH_URLS } from "@/config/territory";
 import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import { DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import { geoPathToPublicUrl } from "@/core/routing/utils/territoryUrls";
 
 const SALVADOR_VIEWPORT = {
   center: { latitude: -12.95, longitude: -38.48 },
@@ -20,18 +22,44 @@ const LazyMapLibreAdapter = lazy(() =>
 
 interface TerritoryEntryMapProps {
   city: Location | null;
+  territory?: Location | null;
   isLoading: boolean;
 }
 
 export default function TerritoryEntryMap({
   city,
+  territory = null,
   isLoading,
 }: TerritoryEntryMapProps) {
+  const activeTerritory = territory ?? city;
   const resolved = useMemo<ResolvedTerritory>(
-    () => (city ? { kind: "location", location: city } : null),
-    [city],
+    () =>
+      activeTerritory ? { kind: "location", location: activeTerritory } : null,
+    [activeTerritory],
   );
   const { polygons } = useTerritoryPolygon(resolved);
+  const entryPolygons = useMemo(
+    () =>
+      polygons.map((polygon) => ({
+        ...polygon,
+        color: "#42d3b2",
+        fillOpacity: 0.14,
+        lineWidth: 3,
+        lineOpacity: 1,
+      })),
+    [polygons],
+  );
+  const isCity = !activeTerritory || activeTerritory.type === LocationType.CITY;
+  const territoryName = activeTerritory?.name ?? "Salvador";
+  const locationLabel = isCity
+    ? `${territoryName}, BA`
+    : `${territoryName} · Salvador`;
+  const mapHref = activeTerritory
+    ? buildAppModulePath(
+        APP_MODULE_SLUGS.map,
+        geoPathToPublicUrl(activeTerritory.geographic_path),
+      )
+    : LAUNCH_URLS.map;
 
   return (
     <section
@@ -52,11 +80,11 @@ export default function TerritoryEntryMap({
           <LazyMapLibreAdapter
             styleUrl={DEFAULT_TILE_STYLE.styleUrl}
             initialViewport={SALVADOR_VIEWPORT}
-            territoryPolygons={polygons}
+            territoryPolygons={entryPolygons}
             resolved={resolved}
-            fitTerritoryBounds={polygons.length > 0}
+            fitTerritoryBounds={entryPolygons.length > 0}
             territoryFitPadding={40}
-            territoryFitMaxZoom={10.5}
+            territoryFitMaxZoom={isCity ? 10.5 : 13.5}
             markers={[]}
             userLocationMarker={{ enabled: false, autoAdd: false }}
             enableClustering={false}
@@ -75,8 +103,17 @@ export default function TerritoryEntryMap({
 
       <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full border border-white/20 bg-[hsl(var(--territory-canvas)/0.86)] px-3 py-2 text-xs font-semibold text-territory-ink shadow-territory-highlight backdrop-blur-md sm:left-5 sm:top-5">
         <MapPin className="h-4 w-4 text-territory-brand" aria-hidden="true" />
-        Salvador, BA
+        {locationLabel}
       </div>
+
+      {entryPolygons.length > 0 ? (
+        <div
+          data-testid="territory-entry-map-boundary-status"
+          className="absolute right-4 top-4 rounded-full border border-territory-brand/30 bg-[hsl(var(--territory-canvas)/0.86)] px-3 py-2 text-[0.6875rem] font-semibold text-territory-brand shadow-territory-highlight backdrop-blur-md sm:right-5 sm:top-5"
+        >
+          Limite oficial
+        </div>
+      ) : null}
 
       <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-4 sm:p-5 md:p-6">
         <div className="min-w-0 rounded-xl bg-[hsl(var(--territory-canvas)/0.86)] px-3 py-2 backdrop-blur-sm md:bg-transparent md:p-0 md:backdrop-blur-none">
@@ -84,23 +121,27 @@ export default function TerritoryEntryMap({
             id="territory-entry-map-title"
             className="font-heading text-lg font-semibold text-territory-ink sm:text-xl"
           >
-            Salvador disponível por inteiro
+            {isCity
+              ? `${territoryName} disponível por inteiro`
+              : `${territoryName} em destaque`}
           </h2>
           <p className="mt-1 max-w-md text-xs leading-5 text-territory-muted sm:text-sm">
-            Escolha a cidade ou aproxime a experiência de um bairro.
+            {isCity
+              ? "Escolha a cidade ou aproxime a experiência de um bairro."
+              : "Confira o limite do bairro antes de entrar no território."}
           </p>
         </div>
         <Link
-          to={LAUNCH_URLS.map}
+          to={mapHref}
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-territory-brand text-[hsl(var(--territory-canvas))] hover:bg-territory-brand-strong"
-          aria-label="Abrir mapa de Salvador"
+          aria-label={`Abrir mapa de ${territoryName}`}
         >
           <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </div>
 
       <span className="sr-only">
-        <Map aria-hidden="true" /> Mapa territorial de Salvador
+        <Map aria-hidden="true" /> Mapa territorial de {territoryName}
       </span>
     </section>
   );

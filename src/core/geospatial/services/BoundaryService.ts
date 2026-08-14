@@ -8,12 +8,13 @@
  * - Nominatim não é usado para polígonos, bounds ou definição territorial.
  * - Quando não existir polígono cadastrado, o serviço retorna somente o centro canônico do território.
  */
-import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
-import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
-import type { ILocationRepository } from '@/core/location/repositories/ILocationRepository';
-import type { Location } from '@/core/location/types';
-import { LocationStatus, LocationType } from '@/core/location/types';
+import { logger } from "@/shared/utils/logger";
+import { supabase } from "@/integrations/supabase";
+import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
+import type { ILocationRepository } from "@/core/location/repositories/ILocationRepository";
+import type { Location } from "@/core/location/types";
+import { LocationStatus, LocationType } from "@/core/location/types";
+import { loadVersionedOfficialBoundary } from "../data/officialBoundaryRegistry";
 
 export interface BoundsResult {
   rings: [number, number][][];
@@ -50,13 +51,13 @@ interface CachedTerritoryIndex {
 }
 
 interface GeoJsonBoundary {
-  type: 'Polygon' | 'MultiPolygon' | string;
+  type: "Polygon" | "MultiPolygon" | string;
   coordinates: unknown;
 }
 
 interface BoundaryRow {
   boundary: {
-    type: 'Polygon' | 'MultiPolygon';
+    type: "Polygon" | "MultiPolygon";
     coordinates: unknown;
   } | null;
   center_lat: number | null;
@@ -105,21 +106,23 @@ interface BoundaryDbClient {
 
 const DEFAULT_LOCATION_CACHE_TTL_MS = 5 * 60 * 1000;
 const DEFAULT_CUSTOM_BOUNDARIES_ENABLED =
-  import.meta.env.VITE_ENABLE_LOCATION_BOUNDARIES === 'true';
-const FALLBACK_BOUNDARY_RINGS_KEY = 'fallback_boundary_rings';
+  import.meta.env.VITE_ENABLE_LOCATION_BOUNDARIES === "true";
+const FALLBACK_BOUNDARY_RINGS_KEY = "fallback_boundary_rings";
 
 function normalizeText(value?: string | null): string {
-  return (value ?? '')
+  return (value ?? "")
     .trim()
     .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s-]/g, ' ')
-    .replace(/[\s_-]+/g, ' ')
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .replace(/[\s_-]+/g, " ")
     .trim();
 }
 
-function getLocationCenterFromMetadata(location: Location): [number, number] | null {
+function getLocationCenterFromMetadata(
+  location: Location,
+): [number, number] | null {
   const latitude = location.metadata?.center_latitude;
   const longitude = location.metadata?.center_longitude;
 
@@ -132,16 +135,13 @@ function isPublicFallbackLocation(location: Location): boolean {
   return location.metadata?.public_fallback === true;
 }
 
-function isUsableCenter(
-  latitude: unknown,
-  longitude: unknown,
-): boolean {
+function isUsableCenter(latitude: unknown, longitude: unknown): boolean {
   return (
-    typeof latitude === 'number' &&
+    typeof latitude === "number" &&
     Number.isFinite(latitude) &&
     latitude >= -90 &&
     latitude <= 90 &&
-    typeof longitude === 'number' &&
+    typeof longitude === "number" &&
     Number.isFinite(longitude) &&
     longitude >= -180 &&
     longitude <= 180 &&
@@ -166,12 +166,17 @@ class BoundaryServiceClass {
   private metadataSourceBoundaryCache = new Map<string, BoundsResult | null>();
 
   constructor(deps: BoundaryServiceDeps = {}) {
-    this.locationRepository = deps.locationRepository ?? createLocationRepository();
-    this.supabaseClient = deps.supabaseClient ?? (supabase as unknown as BoundaryDbClient);
-    this.locationCacheTtlMs = deps.locationCacheTtlMs ?? DEFAULT_LOCATION_CACHE_TTL_MS;
+    this.locationRepository =
+      deps.locationRepository ?? createLocationRepository();
+    this.supabaseClient =
+      deps.supabaseClient ?? (supabase as unknown as BoundaryDbClient);
+    this.locationCacheTtlMs =
+      deps.locationCacheTtlMs ?? DEFAULT_LOCATION_CACHE_TTL_MS;
     this.customBoundariesEnabled =
       deps.customBoundariesEnabled ?? DEFAULT_CUSTOM_BOUNDARIES_ENABLED;
-    this.locationBoundariesAvailable = this.customBoundariesEnabled ? null : false;
+    this.locationBoundariesAvailable = this.customBoundariesEnabled
+      ? null
+      : false;
   }
 
   static getInstance(): BoundaryServiceClass {
@@ -186,16 +191,22 @@ class BoundaryServiceClass {
       const city = await this.resolveCity(input.city, input.state);
       return this.resolveBoundsForLocation(city);
     } catch (error) {
-      logger.error('[BoundaryService] Error getting city bounds', error);
+      logger.error("[BoundaryService] Error getting city bounds", error);
       return { rings: [], center: this.FALLBACK_CENTER };
     }
   }
 
-  async getNeighborhoodBounds(input: NeighborhoodBoundsInput): Promise<BoundsResult> {
+  async getNeighborhoodBounds(
+    input: NeighborhoodBoundsInput,
+  ): Promise<BoundsResult> {
     try {
       const district = input.locationId
         ? await this.locationRepository.findById(input.locationId)
-        : await this.resolveDistrict(input.neighborhood, input.city, input.state);
+        : await this.resolveDistrict(
+            input.neighborhood,
+            input.city,
+            input.state,
+          );
 
       if (district) {
         return this.resolveBoundsForLocation(district);
@@ -204,7 +215,10 @@ class BoundaryServiceClass {
       const city = await this.resolveCity(input.city, input.state);
       return this.resolveBoundsForLocation(city);
     } catch (error) {
-      logger.error('[BoundaryService] Error getting neighborhood bounds', error);
+      logger.error(
+        "[BoundaryService] Error getting neighborhood bounds",
+        error,
+      );
       return { rings: [], center: this.FALLBACK_CENTER };
     }
   }
@@ -213,21 +227,24 @@ class BoundaryServiceClass {
     try {
       return this.resolveBoundsForLocation(location);
     } catch (error) {
-      logger.error('[BoundaryService] Error getting location bounds', error);
+      logger.error("[BoundaryService] Error getting location bounds", error);
       return { rings: [], center: this.FALLBACK_CENTER };
     }
   }
 
   async getCustomBoundary(locationId: string): Promise<BoundsResult | null> {
-    if (!this.customBoundariesEnabled || this.locationBoundariesAvailable === false) {
+    if (
+      !this.customBoundariesEnabled ||
+      this.locationBoundariesAvailable === false
+    ) {
       return null;
     }
 
     try {
       const { data, error } = await this.supabaseClient
-        .from<BoundaryRow>('location_boundaries')
-        .select('boundary, center_lat, center_lng')
-        .eq('location_id', locationId)
+        .from<BoundaryRow>("location_boundaries")
+        .select("boundary, center_lat, center_lng")
+        .eq("location_id", locationId)
         .maybeSingle();
 
       if (error) {
@@ -236,7 +253,7 @@ class BoundaryServiceClass {
           if (!this.locationBoundariesUnavailableLogged) {
             this.locationBoundariesUnavailableLogged = true;
             logger.warn(
-              '[BoundaryService] location_boundaries unavailable; using canonical fallback sources',
+              "[BoundaryService] location_boundaries unavailable; using canonical fallback sources",
               {
                 code: error.code,
                 message: error.message,
@@ -261,8 +278,9 @@ class BoundaryServiceClass {
         return null;
       }
 
-      const center = this.toCenter(data.center_lat, data.center_lng)
-        ?? this.calculateCenter(rings);
+      const center =
+        this.toCenter(data.center_lat, data.center_lng) ??
+        this.calculateCenter(rings);
 
       if (!center) {
         return null;
@@ -270,42 +288,44 @@ class BoundaryServiceClass {
 
       return { rings, center };
     } catch (error) {
-      logger.error('[BoundaryService] Error getting custom boundary', error);
+      logger.error("[BoundaryService] Error getting custom boundary", error);
       return null;
     }
   }
 
   async setCustomBoundary(
     locationId: string,
-    boundary: { type: 'Polygon' | 'MultiPolygon'; coordinates: unknown },
+    boundary: { type: "Polygon" | "MultiPolygon"; coordinates: unknown },
     center?: [number, number],
   ): Promise<void> {
     if (!this.customBoundariesEnabled) {
-      throw new Error('location_boundaries support is disabled');
+      throw new Error("location_boundaries support is disabled");
     }
 
     if (this.locationBoundariesAvailable === false) {
-      throw new Error('location_boundaries table is unavailable');
+      throw new Error("location_boundaries table is unavailable");
     }
 
     try {
       const rings = this.extractRingsFromGeoJSON(boundary);
       if (rings.length === 0) {
-        throw new Error('Invalid boundary geometry');
+        throw new Error("Invalid boundary geometry");
       }
 
       const resolvedCenter = center ?? this.calculateCenter(rings);
 
-      const { error } = await this.supabaseClient.from('location_boundaries').upsert(
-        {
-          location_id: locationId,
-          boundary,
-          center_lat: resolvedCenter[0],
-          center_lng: resolvedCenter[1],
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: 'location_id' },
-      );
+      const { error } = await this.supabaseClient
+        .from("location_boundaries")
+        .upsert(
+          {
+            location_id: locationId,
+            boundary,
+            center_lat: resolvedCenter[0],
+            center_lng: resolvedCenter[1],
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "location_id" },
+        );
 
       if (error) {
         if (this.isLocationBoundariesTableUnavailable(error)) {
@@ -316,7 +336,7 @@ class BoundaryServiceClass {
 
       this.locationBoundariesAvailable = true;
     } catch (error) {
-      logger.error('[BoundaryService] Error setting custom boundary', error);
+      logger.error("[BoundaryService] Error setting custom boundary", error);
       throw error;
     }
   }
@@ -326,21 +346,26 @@ class BoundaryServiceClass {
     this.territoryIndexPromise = null;
   }
 
-  private async resolveBoundsForLocation(location: Location | null): Promise<BoundsResult> {
+  private async resolveBoundsForLocation(
+    location: Location | null,
+  ): Promise<BoundsResult> {
     if (!location) {
       return { rings: [], center: this.FALLBACK_CENTER };
     }
 
     if (isPublicFallbackLocation(location)) {
-      const metadataFallbackBoundary = this.getFallbackBoundaryFromMetadata(location);
+      const metadataFallbackBoundary =
+        this.getFallbackBoundaryFromMetadata(location);
       if (metadataFallbackBoundary) return metadataFallbackBoundary;
 
-      const canonicalLocation = await this.resolveCanonicalLocationForFallback(location);
+      const canonicalLocation =
+        await this.resolveCanonicalLocationForFallback(location);
       if (canonicalLocation) {
         return this.resolveBoundsForLocation(canonicalLocation);
       }
 
-      const metadataSourceBoundary = await this.getMetadataSourceBoundary(location);
+      const metadataSourceBoundary =
+        await this.getMetadataSourceBoundary(location);
       if (metadataSourceBoundary) return metadataSourceBoundary;
 
       return {
@@ -349,36 +374,53 @@ class BoundaryServiceClass {
       };
     }
 
-    const customBoundary = await this.getCustomBoundary(location.id);
+    const [customBoundary, inlineLocationBoundary] = await Promise.all([
+      this.getCustomBoundary(location.id),
+      this.getInlineLocationBoundary(location.id),
+    ]);
     if (customBoundary) return customBoundary;
-
-    const inlineLocationBoundary = await this.getInlineLocationBoundary(location.id);
     if (inlineLocationBoundary) return inlineLocationBoundary;
 
-    const neighborhoodBoundary = await this.getNeighborhoodBoundary(location.id);
-    if (neighborhoodBoundary) return neighborhoodBoundary;
+    if (
+      location.type === LocationType.DISTRICT ||
+      location.type === LocationType.NEIGHBORHOOD
+    ) {
+      const neighborhoodBoundary = await this.getNeighborhoodBoundary(
+        location.id,
+      );
+      if (neighborhoodBoundary) return neighborhoodBoundary;
+    }
 
-    const metadataSourceBoundary = await this.getMetadataSourceBoundary(location);
+    const metadataSourceBoundary =
+      await this.getMetadataSourceBoundary(location);
     if (metadataSourceBoundary) return metadataSourceBoundary;
+
+    const versionedOfficialBoundary =
+      await this.getVersionedOfficialBoundary(location);
+    if (versionedOfficialBoundary) return versionedOfficialBoundary;
 
     const center = await this.resolveLocationCenter(location);
     return { rings: [], center };
   }
 
-  private async resolveCanonicalLocationForFallback(location: Location): Promise<Location | null> {
-    if (!location.geographic_path) {
-      return null;
-    }
-
+  private async getVersionedOfficialBoundary(
+    location: Location,
+  ): Promise<BoundsResult | null> {
     try {
-      const canonical = await this.locationRepository.findByPath(location.geographic_path);
-      if (!canonical || canonical.id === location.id || isPublicFallbackLocation(canonical)) {
-        return null;
-      }
+      const asset = await loadVersionedOfficialBoundary(location);
+      if (!asset) return null;
 
-      return canonical;
+      const rings = this.extractRingsFromGeoJSON(asset.geometry);
+      if (rings.length === 0) return null;
+
+      return {
+        rings,
+        center:
+          getLocationCenterFromMetadata(location) ??
+          this.calculateCenter(rings),
+      };
     } catch (error) {
-      logger.warn('[BoundaryService] Canonical fallback location unavailable', {
+      logger.warn("[BoundaryService] Versioned official boundary unavailable", {
         locationId: location.id,
         geographicPath: location.geographic_path,
         error,
@@ -387,7 +429,39 @@ class BoundaryServiceClass {
     }
   }
 
-  private getFallbackBoundaryFromMetadata(location: Location): BoundsResult | null {
+  private async resolveCanonicalLocationForFallback(
+    location: Location,
+  ): Promise<Location | null> {
+    if (!location.geographic_path) {
+      return null;
+    }
+
+    try {
+      const canonical = await this.locationRepository.findByPath(
+        location.geographic_path,
+      );
+      if (
+        !canonical ||
+        canonical.id === location.id ||
+        isPublicFallbackLocation(canonical)
+      ) {
+        return null;
+      }
+
+      return canonical;
+    } catch (error) {
+      logger.warn("[BoundaryService] Canonical fallback location unavailable", {
+        locationId: location.id,
+        geographicPath: location.geographic_path,
+        error,
+      });
+      return null;
+    }
+  }
+
+  private getFallbackBoundaryFromMetadata(
+    location: Location,
+  ): BoundsResult | null {
     const rawRings = location.metadata?.[FALLBACK_BOUNDARY_RINGS_KEY];
     if (!Array.isArray(rawRings)) {
       return null;
@@ -416,7 +490,8 @@ class BoundaryServiceClass {
 
     return {
       rings,
-      center: getLocationCenterFromMetadata(location) ?? this.calculateCenter(rings),
+      center:
+        getLocationCenterFromMetadata(location) ?? this.calculateCenter(rings),
     };
   }
 
@@ -429,13 +504,13 @@ class BoundaryServiceClass {
 
     try {
       const { data, error } = await this.supabaseClient
-        .from<InlineLocationBoundaryRow>('locations')
-        .select('boundary')
-        .eq('id', locationId)
+        .from<InlineLocationBoundaryRow>("locations")
+        .select("boundary")
+        .eq("id", locationId)
         .maybeSingle();
 
       if (error) {
-        if (this.isQueryTargetUnavailable(error, ['locations', 'boundary'])) {
+        if (this.isQueryTargetUnavailable(error, ["locations", "boundary"])) {
           this.inlineLocationBoundaryAvailable = false;
         }
         return null;
@@ -454,7 +529,10 @@ class BoundaryServiceClass {
 
       return { rings, center: this.calculateCenter(rings) };
     } catch (error) {
-      logger.error('[BoundaryService] Error getting inline location boundary', error);
+      logger.error(
+        "[BoundaryService] Error getting inline location boundary",
+        error,
+      );
       return null;
     }
   }
@@ -468,13 +546,13 @@ class BoundaryServiceClass {
 
     try {
       const { data, error } = await this.supabaseClient
-        .from<NeighborhoodBoundaryRow>('neighborhood_boundaries')
-        .select('geometry')
-        .eq('location_id', locationId)
+        .from<NeighborhoodBoundaryRow>("neighborhood_boundaries")
+        .select("geometry")
+        .eq("location_id", locationId)
         .maybeSingle();
 
       if (error) {
-        if (this.isQueryTargetUnavailable(error, ['neighborhood_boundaries'])) {
+        if (this.isQueryTargetUnavailable(error, ["neighborhood_boundaries"])) {
           this.neighborhoodBoundariesAvailable = false;
         }
         return null;
@@ -494,7 +572,10 @@ class BoundaryServiceClass {
 
       return { rings, center: this.calculateCenter(rings) };
     } catch (error) {
-      logger.error('[BoundaryService] Error getting neighborhood boundary', error);
+      logger.error(
+        "[BoundaryService] Error getting neighborhood boundary",
+        error,
+      );
       return null;
     }
   }
@@ -512,19 +593,19 @@ class BoundaryServiceClass {
       return this.metadataSourceBoundaryCache.get(cacheKey) ?? null;
     }
 
-    if (typeof fetch !== 'function') {
+    if (typeof fetch !== "function") {
       this.metadataSourceBoundaryCache.set(cacheKey, null);
       return null;
     }
 
     try {
-      const url = new URL(`${source.sourceUrl.replace(/\/+$/, '')}/query`);
+      const url = new URL(`${source.sourceUrl.replace(/\/+$/, "")}/query`);
       url.search = new URLSearchParams({
         where: `OBJECTID = ${source.objectId}`,
-        outFields: '*',
-        returnGeometry: 'true',
-        f: 'geojson',
-        outSR: '4326',
+        outFields: "*",
+        returnGeometry: "true",
+        f: "geojson",
+        outSR: "4326",
       }).toString();
 
       const response = await fetch(url.toString());
@@ -533,7 +614,9 @@ class BoundaryServiceClass {
       }
 
       const payload = (await response.json()) as GeoJsonFeatureCollection;
-      const geometry = payload.features?.find((feature) => feature.geometry)?.geometry;
+      const geometry = payload.features?.find(
+        (feature) => feature.geometry,
+      )?.geometry;
       const rings = geometry ? this.extractRingsFromGeoJSON(geometry) : [];
 
       if (rings.length === 0) {
@@ -543,12 +626,14 @@ class BoundaryServiceClass {
 
       const result = {
         rings,
-        center: getLocationCenterFromMetadata(location) ?? this.calculateCenter(rings),
+        center:
+          getLocationCenterFromMetadata(location) ??
+          this.calculateCenter(rings),
       };
       this.metadataSourceBoundaryCache.set(cacheKey, result);
       return result;
     } catch (error) {
-      logger.warn('[BoundaryService] Official boundary source unavailable', {
+      logger.warn("[BoundaryService] Official boundary source unavailable", {
         locationId: location.id,
         sourceUrl: source.sourceUrl,
         sourceObjectId: source.objectId,
@@ -559,7 +644,9 @@ class BoundaryServiceClass {
     }
   }
 
-  private async resolveLocationCenter(location: Location): Promise<[number, number]> {
+  private async resolveLocationCenter(
+    location: Location,
+  ): Promise<[number, number]> {
     const directCenter = getLocationCenterFromMetadata(location);
     if (directCenter) {
       return directCenter;
@@ -583,11 +670,14 @@ class BoundaryServiceClass {
     return this.FALLBACK_CENTER;
   }
 
-  private async resolveCity(city: string, state: string): Promise<Location | null> {
+  private async resolveCity(
+    city: string,
+    state: string,
+  ): Promise<Location | null> {
     const index = await this.getTerritoryIndex();
     const matchedState = this.matchState(state, index.states);
     const cityCandidates = matchedState
-      ? index.citiesByStateId.get(matchedState.id) ?? []
+      ? (index.citiesByStateId.get(matchedState.id) ?? [])
       : index.cities;
 
     return this.matchLocation(city, cityCandidates, (location) => [
@@ -614,14 +704,17 @@ class BoundaryServiceClass {
     );
   }
 
-  private matchState(rawState: string, candidates: Location[]): Location | null {
+  private matchState(
+    rawState: string,
+    candidates: Location[],
+  ): Location | null {
     return this.matchLocation(rawState, candidates, (location) => [
       location.name,
       location.slug,
-      typeof location.metadata?.state_code === 'string'
+      typeof location.metadata?.state_code === "string"
         ? location.metadata.state_code
         : null,
-      typeof location.metadata?.abbreviation === 'string'
+      typeof location.metadata?.abbreviation === "string"
         ? location.metadata.abbreviation
         : null,
     ]);
@@ -658,7 +751,8 @@ class BoundaryServiceClass {
         .filter(Boolean)
         .some(
           (token) =>
-            token.includes(normalizedNeedle) || normalizedNeedle.includes(token),
+            token.includes(normalizedNeedle) ||
+            normalizedNeedle.includes(token),
         ),
     );
 
@@ -693,7 +787,9 @@ class BoundaryServiceClass {
       (location) => location.status === LocationStatus.ACTIVE,
     );
 
-    const byId = new Map(activeLocations.map((location) => [location.id, location]));
+    const byId = new Map(
+      activeLocations.map((location) => [location.id, location]),
+    );
     const states = activeLocations.filter(
       (location) => location.type === LocationType.STATE,
     );
@@ -749,7 +845,7 @@ class BoundaryServiceClass {
   private isLocationBoundariesTableUnavailable(
     error: BoundaryQueryError | null | undefined,
   ): boolean {
-    return this.isQueryTargetUnavailable(error, ['location_boundaries']);
+    return this.isQueryTargetUnavailable(error, ["location_boundaries"]);
   }
 
   private isQueryTargetUnavailable(
@@ -767,33 +863,37 @@ class BoundaryServiceClass {
       error.hint,
     ]
       .filter(Boolean)
-      .join(' ')
+      .join(" ")
       .toLowerCase();
 
-    return requiredTokens.every((token) => combinedMessage.includes(token.toLowerCase()))
-      && (
-        combinedMessage.includes('pgrst205')
-        || combinedMessage.includes('pgrst204')
-        || combinedMessage.includes('404')
-        || combinedMessage.includes('does not exist')
-        || combinedMessage.includes('could not find')
-        || combinedMessage.includes('undefined table')
-        || combinedMessage.includes('schema cache')
-      );
+    return (
+      requiredTokens.every((token) =>
+        combinedMessage.includes(token.toLowerCase()),
+      ) &&
+      (combinedMessage.includes("pgrst205") ||
+        combinedMessage.includes("pgrst204") ||
+        combinedMessage.includes("404") ||
+        combinedMessage.includes("does not exist") ||
+        combinedMessage.includes("could not find") ||
+        combinedMessage.includes("undefined table") ||
+        combinedMessage.includes("schema cache"))
+    );
   }
 
-  private parseBoundaryGeometry(value: GeoJsonBoundary | string | null): GeoJsonBoundary | null {
+  private parseBoundaryGeometry(
+    value: GeoJsonBoundary | string | null,
+  ): GeoJsonBoundary | null {
     if (!value) {
       return null;
     }
 
-    if (typeof value !== 'string') {
+    if (typeof value !== "string") {
       return value;
     }
 
     try {
       const parsed = JSON.parse(value) as GeoJsonBoundary;
-      return parsed && typeof parsed.type === 'string' ? parsed : null;
+      return parsed && typeof parsed.type === "string" ? parsed : null;
     } catch {
       return null;
     }
@@ -806,8 +906,8 @@ class BoundaryServiceClass {
     const sourceObjectId = location.metadata?.source_object_id;
 
     if (
-      typeof sourceUrl !== 'string' ||
-      !sourceUrl.includes('/FeatureServer/') ||
+      typeof sourceUrl !== "string" ||
+      !sourceUrl.includes("/FeatureServer/") ||
       sourceObjectId === null ||
       sourceObjectId === undefined
     ) {
@@ -826,26 +926,31 @@ class BoundaryServiceClass {
     type: string;
     coordinates: unknown;
   }): [number, number][][] {
-    const isValidCoord = (candidate: unknown): candidate is [number, number] => {
+    const isValidCoord = (
+      candidate: unknown,
+    ): candidate is [number, number] => {
       if (!Array.isArray(candidate) || candidate.length < 2) {
         return false;
       }
 
       const [lng, lat] = candidate;
       return (
-        typeof lng === 'number' &&
+        typeof lng === "number" &&
         Number.isFinite(lng) &&
-        typeof lat === 'number' &&
+        typeof lat === "number" &&
         Number.isFinite(lat)
       );
     };
 
-    const toLatLng = ([lng, lat]: [number, number]): [number, number] => [lat, lng];
+    const toLatLng = ([lng, lat]: [number, number]): [number, number] => [
+      lat,
+      lng,
+    ];
     const sanitizeRing = (ring: unknown[]): [number, number][] =>
       ring.filter(isValidCoord).map(toLatLng);
 
     try {
-      if (geojson.type === 'Polygon') {
+      if (geojson.type === "Polygon") {
         const polygon = Array.isArray(geojson.coordinates)
           ? (geojson.coordinates as unknown[][])
           : [];
@@ -853,7 +958,7 @@ class BoundaryServiceClass {
         return ring.length >= 3 ? [ring] : [];
       }
 
-      if (geojson.type === 'MultiPolygon') {
+      if (geojson.type === "MultiPolygon") {
         const polygons = Array.isArray(geojson.coordinates)
           ? (geojson.coordinates as unknown[][][])
           : [];
@@ -867,7 +972,10 @@ class BoundaryServiceClass {
 
       return [];
     } catch (error) {
-      logger.error('[BoundaryService] Error extracting rings from GeoJSON', error);
+      logger.error(
+        "[BoundaryService] Error extracting rings from GeoJSON",
+        error,
+      );
       return [];
     }
   }
@@ -893,4 +1001,3 @@ class BoundaryServiceClass {
 
 export { BoundaryServiceClass };
 export const boundaryService = BoundaryServiceClass.getInstance();
-

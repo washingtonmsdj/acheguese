@@ -35,6 +35,9 @@ export const HOME_TERRITORIES = {
       is_landing_enabled: true,
       is_navigable: true,
       state_code: "BA",
+      source_url:
+        "https://services6.arcgis.com/GP5qdNaePRPh2SdT/arcgis/rest/services/bairros_app_dados_2010_e_2022/FeatureServer/0",
+      source_object_id: 131,
     },
     created_at: CREATED_AT,
     updated_at: CREATED_AT,
@@ -217,6 +220,34 @@ export async function installTerritoryHomeFixtures(page: Page): Promise<void> {
       status: 200,
       contentType: "application/json; charset=utf-8",
       body: JSON.stringify(body),
+    });
+  });
+
+  await page.route("https://services6.arcgis.com/**", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/geo+json; charset=utf-8",
+      body: JSON.stringify({
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            properties: { name: "Pituba" },
+            geometry: {
+              type: "Polygon",
+              coordinates: [
+                [
+                  [-38.47, -13.01],
+                  [-38.44, -13.01],
+                  [-38.44, -12.98],
+                  [-38.47, -12.98],
+                  [-38.47, -13.01],
+                ],
+              ],
+            },
+          },
+        ],
+      }),
     });
   });
 

@@ -10,6 +10,14 @@ interface MapE2EState {
   lastCenter?: { lat: number; lng: number };
   webglContextLost?: boolean;
   errors?: string[];
+  territoryPolygonCount?: number;
+  territoryCoordinateCount?: number;
+  territoryBounds?: {
+    west: number;
+    south: number;
+    east: number;
+    north: number;
+  };
 }
 
 interface Window {
