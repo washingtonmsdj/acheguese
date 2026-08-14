@@ -22,7 +22,12 @@ const exceptionRegister = readFileSync(
   join(repoRoot, "docs/09-reference/governance/security/EXCEPTIONS.md"),
   "utf8",
 );
-const validNow = new Date("2026-08-12T10:00:00.000Z");
+const validNow = new Date(
+  Date.parse(canonicalPolicy.controls.recovery.capturedAt) + 60_000,
+);
+const expiredRecoveryNow = new Date(
+  Date.parse(canonicalPolicy.controls.recovery.validUntil) + 1_000,
+);
 
 function policyCopy() {
   return structuredClone(canonicalPolicy);
@@ -68,9 +73,9 @@ describe("controlled Supabase Free release governance", () => {
   });
 
   it("E: rejects a stale recovery snapshot", () => {
-    expect(
-      issuesFor(policyCopy(), new Date("2026-08-13T09:43:57.000Z")),
-    ).toContain("RECOVERY_SNAPSHOT_STALE");
+    expect(issuesFor(policyCopy(), expiredRecoveryNow)).toContain(
+      "RECOVERY_SNAPSHOT_STALE",
+    );
   });
 
   it("F: rejects recovery without off-device readback verification", () => {
@@ -175,9 +180,9 @@ describe("remote recovery freshness", () => {
   });
 
   it("E: local gate still rejects an expired snapshot", () => {
-    expect(
-      issuesFor(policyCopy(), new Date("2026-08-13T09:43:57.000Z")),
-    ).toContain("RECOVERY_SNAPSHOT_STALE");
+    expect(issuesFor(policyCopy(), expiredRecoveryNow)).toContain(
+      "RECOVERY_SNAPSHOT_STALE",
+    );
   });
 
   it("F: local gate rejects missing off-device evidence", () => {

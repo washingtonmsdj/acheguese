@@ -1,6 +1,6 @@
 {
   "schemaVersion": "acheguese-free-release-governance/v1",
-  "updatedAt": "2026-08-12",
+  "updatedAt": "2026-08-14",
   "owner": {
     "name": "washingto silva",
     "github": "washingtonmsdj",
@@ -173,10 +173,10 @@
     "recovery": {
       "policy": "MANUAL_RELEASE_RECOVERY_SNAPSHOT",
       "authorityState": "VERIFIED_COMPENSATING_CONTROL",
-      "snapshotId": "20260812T094356Z",
+      "snapshotId": "20260814T102848Z",
       "snapshotRole": "POST_POLL_HARDENING_RECOVERY_SNAPSHOT",
-      "capturedAt": "2026-08-12T09:43:56.415Z",
-      "validUntil": "2026-08-13T09:43:56.415Z",
+      "capturedAt": "2026-08-14T10:29:10.1307726Z",
+      "validUntil": "2026-08-15T10:29:10.1307726Z",
       "maximumAgeHours": 24,
       "coverage": ["DATABASE", "AUTH", "STORAGE"],
       "remoteState": {
@@ -198,8 +198,8 @@
         "private": true,
         "localOnly": false,
         "artifactCount": 1,
-        "artifactBytes": 2184733,
-        "sha256": "4e08526dd203f4ae1d663ec86d51c7e30af0acee5ae153bf6150a108062e5885",
+        "artifactBytes": 47309418,
+        "sha256": "b2c46169b6c868d74ac59f6821352afcdbd870fa4c5a111e580e8420853baaa9",
         "readbackHashMatch": true
       },
       "restoreRunbook": "RESTORE-RUNBOOK.md",
@@ -213,10 +213,18 @@
       },
       "localDeclaration": {
         "materialChangeAfterSnapshot": false,
-        "sourceStateMutationAttestation": "POST_POLL_HARDENING_MIGRATION_CAPTURED",
+        "sourceStateMutationAttestation": "COMMUNITY_FEED_RELEASE_RECOVERY_CAPTURED",
         "evidenceClass": "DECLARATION_ONLY_NOT_REMOTE_FRESHNESS"
       },
       "historicalSnapshots": [
+        {
+          "snapshotId": "20260812T094356Z",
+          "snapshotRole": "POST_POLL_HARDENING_RECOVERY_SNAPSHOT",
+          "migrationCount": 344,
+          "latestMigration": "20260812061500",
+          "sha256": "4e08526dd203f4ae1d663ec86d51c7e30af0acee5ae153bf6150a108062e5885",
+          "status": "PRESERVED"
+        },
         {
           "snapshotId": "20260812T044423Z",
           "snapshotRole": "POST_MIGRATION_RELEASE_RECOVERY_SNAPSHOT",
