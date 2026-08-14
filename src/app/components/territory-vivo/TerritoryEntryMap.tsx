@@ -5,7 +5,10 @@ import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
 import { LocationType, type Location } from "@/core/location/types";
 import { LAUNCH_URLS } from "@/config/territory";
 import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
-import { DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
+import {
+  DEFAULT_TILE_STYLE,
+  NEIGHBORHOOD_COLORS,
+} from "@/core/maps/providers/MapProvider";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { geoPathToPublicUrl } from "@/core/routing/utils/territoryUrls";
 
@@ -38,16 +41,25 @@ export default function TerritoryEntryMap({
     [activeTerritory],
   );
   const { polygons } = useTerritoryPolygon(resolved);
+  const territoryMapColor = useMemo(() => {
+    if (typeof document === "undefined") return NEIGHBORHOOD_COLORS[1];
+
+    const brandToken = getComputedStyle(document.documentElement)
+      .getPropertyValue("--territory-brand")
+      .trim();
+
+    return brandToken ? `hsl(${brandToken})` : NEIGHBORHOOD_COLORS[1];
+  }, []);
   const entryPolygons = useMemo(
     () =>
       polygons.map((polygon) => ({
         ...polygon,
-        color: "#42d3b2",
+        color: territoryMapColor,
         fillOpacity: 0.14,
         lineWidth: 3,
         lineOpacity: 1,
       })),
-    [polygons],
+    [polygons, territoryMapColor],
   );
   const isCity = !activeTerritory || activeTerritory.type === LocationType.CITY;
   const territoryName = activeTerritory?.name ?? "Salvador";
