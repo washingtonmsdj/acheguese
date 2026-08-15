@@ -141,7 +141,6 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
       });
       await expect(accountMenu).toBeVisible({ timeout: 30_000 });
       await accountMenu.click();
-      await page.getByRole("menuitem", { name: /^Sair$/ }).click();
       await expect(page).toHaveURL(/\/login(?:\?|$)/, { timeout: 30_000 });
 
       await page.goto("/conta", { waitUntil: "domcontentloaded" });
