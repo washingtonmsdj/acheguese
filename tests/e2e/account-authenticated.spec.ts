@@ -90,7 +90,14 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
 
       for (const route of ACCOUNT_ROUTES) {
         await test.step(`abre ${route.path} sem mutation destrutiva`, async () => {
-          await page.goto(route.path, { waitUntil: "domcontentloaded" });
+          if (route.path === "/conta/editar") {
+            await page.goto("/conta", { waitUntil: "domcontentloaded" });
+            await page
+              .getByRole("button", { name: /Identidade e apresentaÃ§Ã£o/i })
+              .click();
+          } else {
+            await page.goto(route.path, { waitUntil: "domcontentloaded" });
+          }
           await expect(page).toHaveURL(route.expected, { timeout: 30_000 });
           await expect(page.locator("main").first()).toBeVisible({
             timeout: 30_000,
@@ -135,6 +142,9 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
         contentType: "image/png",
       });
 
+      expect(consoleErrors, consoleErrors.join("\n")).toEqual([]);
+      expect(networkErrors, networkErrors.join("\n")).toEqual([]);
+
       await page.goto("/central", { waitUntil: "domcontentloaded" });
       const accountMenu = page.getByRole("button", {
         name: "Sair da conta",
@@ -148,9 +158,7 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
         timeout: 30_000,
       });
 
-      expect(pageErrors).toEqual([]);
-      expect(consoleErrors).toEqual([]);
-      expect(networkErrors).toEqual([]);
+      expect(pageErrors, pageErrors.join("\n")).toEqual([]);
     });
   }
 });
