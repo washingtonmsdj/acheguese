@@ -92,9 +92,7 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
         await test.step(`abre ${route.path} sem mutation destrutiva`, async () => {
           if (route.path === "/conta/editar") {
             await page.goto("/conta", { waitUntil: "domcontentloaded" });
-            await page
-              .getByRole("button", { name: /Identidade e apresentaÃ§Ã£o/i })
-              .click();
+            await page.getByRole("button", { name: /^Editar$/i }).click();
           } else {
             await page.goto(route.path, { waitUntil: "domcontentloaded" });
           }
