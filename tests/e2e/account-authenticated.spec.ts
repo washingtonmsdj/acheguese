@@ -63,7 +63,12 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
       const networkErrors: string[] = [];
 
       page.on("console", (message) => {
-        if (message.type() === "error") consoleErrors.push(message.text());
+        const isTurnstileConsoleNoise = message
+          .text()
+          .includes("font-size:0;color:transparent");
+        if (message.type() === "error" && !isTurnstileConsoleNoise) {
+          consoleErrors.push(message.text());
+        }
       });
       page.on("pageerror", (error) => pageErrors.push(error.message));
       page.on("response", (response) => {
