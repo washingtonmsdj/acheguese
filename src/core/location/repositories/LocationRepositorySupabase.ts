@@ -56,6 +56,20 @@ export class LocationRepositorySupabase implements ILocationRepository {
     return rowToLocation(data);
   }
 
+  async findActiveStateByName(name: string): Promise<Location | null> {
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select('*')
+      .eq('type', 'state')
+      .eq('status', 'active')
+      .ilike('name', name.trim())
+      .maybeSingle();
+
+    if (error) throw new LocationError(LocationErrorCode.DATABASE_ERROR, error.message);
+    if (!data) return null;
+    return rowToLocation(data);
+  }
+
   async findBySlugWithinParent(slug: string, parent_id: string): Promise<Location | null> {
     const { data, error } = await supabase
       .from(TABLE)

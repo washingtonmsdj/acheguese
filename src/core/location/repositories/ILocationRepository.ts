@@ -18,6 +18,12 @@ export interface ILocationRepository {
   findByPath(path: string): Promise<Location | null>;
 
   /**
+   * Busca um estado ativo por nome, sem carregar a árvore territorial.
+   * Implementações podem omitir este fallback quando o consumidor usa o UF canônico.
+   */
+  findActiveStateByName?(name: string): Promise<Location | null>;
+
+  /**
    * Busca localização por slug dentro de um parent
    */
   findBySlugWithinParent(slug: string, parent_id: string): Promise<Location | null>;

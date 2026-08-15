@@ -1,6 +1,7 @@
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { LocationStatus, LocationType, type Location } from "@/core/location/types";
 import { logger } from "@/shared/utils/logger";
+import { slugifyTerritory } from "@/shared/utils/slugify";
 
 export interface CityResolution {
   cityId: string;
@@ -40,35 +41,38 @@ export async function resolveCityToLocationIds(
 ): Promise<CityResolution | null> {
   try {
     const locationRepository = createLocationRepository();
-    const normalizedState = state.trim().toLowerCase();
-    const normalizedCity = city.trim().toLowerCase();
+    const normalizedState = slugifyTerritory(state);
+    const normalizedCity = slugifyTerritory(city);
 
-    const allLocations = await locationRepository.findAll();
-    const stateLocation = allLocations.find((location) => {
-      if (location.type !== LocationType.STATE || location.status !== LocationStatus.ACTIVE) {
-        return false;
-      }
-      const name = location.name?.trim().toLowerCase();
-      const slug = location.slug?.trim().toLowerCase();
-      return name === normalizedState || slug === normalizedState;
-    });
+    // O caminho territorial é único e indexado. O resolver não deve carregar
+    // a árvore nacional inteira para localizar uma UF.
+    let stateLocation = await locationRepository.findByPath(`/br/${normalizedState}`);
+    if (
+      !stateLocation &&
+      locationRepository.findActiveStateByName &&
+      state.trim().length > 2
+    ) {
+      stateLocation = await locationRepository.findActiveStateByName(state);
+    }
 
-    if (!stateLocation) {
+    if (
+      !stateLocation ||
+      stateLocation.type !== LocationType.STATE ||
+      stateLocation.status !== LocationStatus.ACTIVE
+    ) {
       logger.warn("TerritorialResolver: Estado nao encontrado", { state });
       return null;
     }
 
-    const cityChildren = await locationRepository.findChildren(stateLocation.id, {
-      type: LocationType.CITY,
-      status: LocationStatus.ACTIVE,
-      page: 1,
-      page_size: 5000,
-    });
-    const cityLocation = cityChildren.locations.find(
-      (location) => location.name?.trim().toLowerCase() === normalizedCity,
+    const cityLocation = await locationRepository.findByPath(
+      `/br/${stateLocation.slug}/${normalizedCity}`,
     );
 
-    if (!cityLocation) {
+    if (
+      !cityLocation ||
+      cityLocation.type !== LocationType.CITY ||
+      cityLocation.status !== LocationStatus.ACTIVE
+    ) {
       logger.warn("TerritorialResolver: Cidade nao encontrada", { state, city });
       return null;
     }
