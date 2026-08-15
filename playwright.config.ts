@@ -10,6 +10,7 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://127.0.0.1:8099";
 const parsedBaseURL = new URL(baseURL);
 const webServerHost = parsedBaseURL.hostname;
 const webServerPort = parsedBaseURL.port || (parsedBaseURL.protocol === "https:" ? "443" : "80");
+const usesLocalWebServer = ["127.0.0.1", "localhost"].includes(webServerHost);
 
 // Compatible with ESM and CJS.
 const __filename = typeof __dirname !== "undefined" ? "" : fileURLToPath(import.meta.url);
@@ -36,12 +37,14 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
 
-  webServer: {
-    command: `npm run dev -- --host ${webServerHost} --port ${webServerPort} --strictPort`,
-    url: baseURL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
-  },
+  webServer: usesLocalWebServer
+    ? {
+        command: `npm run dev -- --host ${webServerHost} --port ${webServerPort} --strictPort`,
+        url: baseURL,
+        reuseExistingServer: !process.env.CI,
+        timeout: 120000,
+      }
+    : undefined,
 
   projects: [
     {
