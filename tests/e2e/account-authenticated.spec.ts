@@ -125,10 +125,10 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
         });
       }
 
-      await test.step("Conta -> Empresas e vÃ­nculos abre a Central canÃ´nica", async () => {
+      await test.step("Conta -> Empresas e vínculos abre a Central canônica", async () => {
         await page.goto("/conta", { waitUntil: "domcontentloaded" });
         await expect(
-          page.getByRole("heading", { name: "Empresas e vÃ­nculos" }),
+          page.getByRole("heading", { name: "Empresas e vínculos" }),
         ).toBeVisible({ timeout: 30_000 });
         await page.getByRole("button", { name: "Abrir Central" }).click();
         await expect(page).toHaveURL(/\/central\/empresas(?:\?|$)/, {

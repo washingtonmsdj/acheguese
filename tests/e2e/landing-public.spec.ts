@@ -83,7 +83,7 @@ test.describe('public landing routes', () => {
     const routes = [
       { path: '/empresas/ba/salvador', text: /Empresas|Salvador/i },
       { path: '/empresas/ba/salvador/pituba', text: /Empresas|Pituba/i },
-      { path: '/empresas/ba/salvador/valeria', text: /Empresas|Val[eÃ©]ria/i },
+      { path: '/empresas/ba/salvador/valeria', text: /Empresas|Val[eé]ria/i },
       { path: '/servicos/ba/salvador/pituba', text: /ServiÃ§os|Servicos|Pituba/i },
     ];
 
