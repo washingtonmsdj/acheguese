@@ -1,277 +1,433 @@
 #!/usr/bin/env tsx
 /**
- * Script para criar usuários de teste E2E no Supabase
- * 
- * Uso:
- *   npm run seed:e2e          # Criar usuários (idempotente)
- *   npm run seed:e2e:reset    # Deletar e recriar usuários
- *   npm run seed:e2e:verbose  # Logs detalhados
+ * Provisiona a identidade técnica usada pelo E2E autenticado remote-only.
+ *
+ * Credenciais são obrigatórias no ambiente e nunca possuem fallback:
+ *   E2E_USER_EMAIL
+ *   E2E_USER_PASSWORD
+ *
+ * Operações:
+ *   npm run seed:e2e          cria ou reconcilia a fixture
+ *   npm run seed:e2e:reset    recria a fixture de forma determinística
+ *   npm run seed:e2e:revoke   revoga a fixture marcada
  */
 
 import type { User } from "@supabase/supabase-js";
-import { createServiceRoleClient, loadSupabaseScriptEnv } from "./lib/supabase-client";
+import {
+  createServiceRoleClient,
+  loadSupabaseScriptEnv,
+} from "./lib/supabase-client";
 
-// Carregar variáveis de ambiente
 const E2E_ENV_FILES = [".env.test", ".env.local"];
+const FIXTURE_KIND = "account-authenticated-e2e";
+const FIXTURE_VERSION = "1";
+const FIXTURE_DISPLAY_NAME = "Conta técnica E2E";
+const SALVADOR_GEOGRAPHIC_PATH = "/br/ba/salvador";
+
 loadSupabaseScriptEnv(E2E_ENV_FILES);
 
-interface SeedOptions {
-  reset?: boolean;
-  verbose?: boolean;
+type FixtureOperation = "provision" | "reset" | "revoke";
+
+interface ProfileFixtureRow {
+  id: string;
 }
 
-interface TestUser {
-  email: string;
-  password: string;
-  fullName: string;
-  role: "user" | "admin";
-}
-
-interface SeedStateRow {
+interface LocationFixtureRow {
   id: string;
   name: string;
 }
 
-interface SeedCityRow {
-  id: string;
-  name: string;
-  state_id: string | null;
-  states?: SeedStateRow | SeedStateRow[] | null;
-}
-
-interface SeedNeighborhoodRow {
-  id: string;
-  name: string;
-  city_id: string | null;
-  cities?: SeedCityRow | SeedCityRow[] | null;
-}
-
-function resolveSeedCity(row: SeedNeighborhoodRow | null): SeedCityRow | null {
-  if (!row?.cities) return null;
-  return Array.isArray(row.cities) ? (row.cities[0] ?? null) : row.cities;
-}
-
-function resolveSeedStateName(city: SeedCityRow | null): string | null {
-  if (!city?.states) return null;
-  const state = Array.isArray(city.states) ? city.states[0] : city.states;
-  return state?.name ?? null;
-}
-
-const TEST_USERS: TestUser[] = [
-  {
-    email: process.env.E2E_USER_EMAIL || "e2e-user@example.com",
-    password: process.env.E2E_USER_PASSWORD || "E2eTest@2024!",
-    fullName: "E2E Test User",
-    role: "user",
-  },
-  {
-    email: process.env.E2E_ADMIN_EMAIL || "e2e-admin@example.com",
-    password: process.env.E2E_ADMIN_PASSWORD || "E2eAdmin@2024!",
-    fullName: "E2E Test Admin",
-    role: "admin",
-  },
-];
-
-async function seedE2EUsers(options: SeedOptions = {}) {
-  const { reset = false, verbose = false } = options;
-
-  // Validar variáveis de ambiente
-  const supabase = createServiceRoleClient({ envFiles: E2E_ENV_FILES });
-
-  console.log("🚀 Iniciando seed de usuários E2E...\n");
-
-  // Buscar um bairro de teste para associar aos perfis (opcional)
-  const { data: neighborhoods } = await supabase
-    .from("neighborhoods")
-    .select("id, name, city_id, cities(id, name, state_id, states(id, name))")
-    .limit(1)
-    .single();
-
-  let neighborhoodId = null;
-  let cityId = null;
-  let stateId = null;
-  const seedNeighborhood = (neighborhoods as SeedNeighborhoodRow | null) ?? null;
-  const seedCity = resolveSeedCity(seedNeighborhood);
-  const seedStateName = resolveSeedStateName(seedCity);
-
-  if (seedNeighborhood) {
-    neighborhoodId = seedNeighborhood.id;
-    cityId = seedNeighborhood.city_id;
-    stateId = seedCity?.state_id ?? null;
-
-    if (verbose) {
-      console.log(`📍 Usando localização de teste:`);
-      console.log(`   Bairro: ${seedNeighborhood.name}`);
-      console.log(`   Cidade: ${seedCity?.name ?? "N/A"}`);
-      console.log(`   Estado: ${seedStateName ?? "N/A"}\n`);
-    }
-  } else {
-    console.log(`⚠️  Aviso: Nenhum bairro encontrado no banco`);
-    console.log(`   Criando usuários sem dados territoriais\n`);
-  }
-
-  for (const testUser of TEST_USERS) {
-    console.log(`👤 Processando: ${testUser.email} (${testUser.role})`);
-
-    // Verificar se usuário já existe
-    const { data: existingUsers } = await supabase.auth.admin.listUsers();
-    const existingUser = ((existingUsers?.users ?? []) as User[]).find(
-      (u) => u.email === testUser.email
+function requireCredential(
+  name: "E2E_USER_EMAIL" | "E2E_USER_PASSWORD",
+): string {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(
+      `${name} is required; no default E2E credential is allowed.`,
     );
-
-    if (existingUser && !reset) {
-      console.log(`   ℹ️  Usuário já existe (ID: ${existingUser.id})`);
-      console.log(`   ✅ Pulando criação (use --reset para recriar)\n`);
-      continue;
-    }
-
-    if (existingUser && reset) {
-      console.log(`   🗑️  Deletando usuário existente...`);
-      
-      // Deletar role primeiro (se existir)
-      const { error: roleDeleteError } = await supabase
-        .from("user_roles")
-        .delete()
-        .eq("user_id", existingUser.id);
-
-      if (roleDeleteError && verbose) {
-        console.log(`   ⚠️  Aviso ao deletar role: ${roleDeleteError.message}`);
-      }
-
-      // Deletar perfil (devido a foreign key)
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("user_id", existingUser.id);
-
-      if (profileError && verbose) {
-        console.log(`   ⚠️  Aviso ao deletar perfil: ${profileError.message}`);
-      }
-
-      // Deletar usuário
-      const { error: userError } = await supabase.auth.admin.deleteUser(
-        existingUser.id
-      );
-
-      if (userError) {
-        console.error(`   ❌ Erro ao deletar usuário: ${userError.message}`);
-        throw new Error(`Erro ao deletar usuário existente: ${userError.message}`);
-      }
-
-      console.log(`   ✅ Usuário deletado`);
-    }
-
-    // Criar novo usuário
-    console.log(`   📝 Criando usuário...`);
-    const { data: newUser, error: createError } =
-      await supabase.auth.admin.createUser({
-        email: testUser.email,
-        password: testUser.password,
-        email_confirm: true,
-        user_metadata: {
-          full_name: testUser.fullName,
-        },
-      });
-
-    if (createError || !newUser.user) {
-      console.error(`   ❌ Erro ao criar usuário: ${createError?.message}`);
-      throw new Error(`Erro ao criar usuário E2E: ${createError?.message}`);
-    }
-
-    console.log(`   ✅ Usuário criado (ID: ${newUser.user.id})`);
-
-    // O trigger handle_new_user cria o perfil pessoal; aqui garantimos os dados E2E.
-    console.log(`   📝 Atualizando perfil...`);
-    const { data: savedProfile, error: profileError } = await supabase.from("profiles").update({
-      name: testUser.fullName,
-      display_name: testUser.fullName,
-      profile_type: "personal",
-      neighborhood: neighborhoodId ? seedNeighborhood?.name ?? null : null,
-      city: neighborhoodId ? seedCity?.name ?? null : null,
-      location_id: neighborhoodId,
-    }).eq("user_id", newUser.user.id).eq("profile_type", "personal").select("id").maybeSingle();
-
-    if (profileError || !savedProfile) {
-      const errorMessage = profileError?.message ?? "perfil pessoal nao encontrado apos criar usuario";
-      console.error(`   ❌ Erro ao criar perfil: ${errorMessage}`);
-      
-      // Tentar deletar usuário órfão
-      await supabase.auth.admin.deleteUser(newUser.user.id);
-      throw new Error(`Erro ao salvar perfil E2E: ${errorMessage}`);
-    }
-
-    console.log(`   ✅ Perfil atualizado`);
-
-    // Se for admin, adicionar role na tabela user_roles
-    if (testUser.role === "admin") {
-      console.log(`   📝 Adicionando role de admin...`);
-      const { data: existingAdminRole, error: roleLookupError } = await supabase
-        .from("user_roles")
-        .select("id")
-        .eq("user_id", newUser.user.id)
-        .eq("role", "admin")
-        .limit(1)
-        .maybeSingle();
-
-      if (roleLookupError) {
-        console.error(`   ❌ Erro ao buscar role: ${roleLookupError.message}`);
-        await supabase.from("profiles").delete().eq("user_id", newUser.user.id);
-        await supabase.auth.admin.deleteUser(newUser.user.id);
-        throw new Error(`Erro ao buscar role admin E2E: ${roleLookupError.message}`);
-      }
-
-      const rolePayload = {
-        user_id: newUser.user.id,
-        role: "admin",
-        role_enum: "admin",
-        is_active: true,
-        granted_at: new Date().toISOString(),
-      };
-
-      const { error: roleError } = existingAdminRole
-        ? await supabase.from("user_roles").update(rolePayload).eq("id", existingAdminRole.id)
-        : await supabase.from("user_roles").insert(rolePayload);
-
-      if (roleError) {
-        console.error(`   ❌ Erro ao adicionar role: ${roleError.message}`);
-        
-        // Tentar deletar perfil e usuário órfãos
-        await supabase.from("profiles").delete().eq("user_id", newUser.user.id);
-        await supabase.auth.admin.deleteUser(newUser.user.id);
-        throw new Error(`Erro ao adicionar role admin E2E: ${roleError.message}`);
-      }
-
-      console.log(`   ✅ Role de admin adicionada`);
-    }
-
-    console.log(`   ✅ ${testUser.role === "admin" ? "Admin" : "Usuário"} de teste pronto!\n`);
   }
-
-  console.log("✨ Seed concluído!\n");
-  console.log("📋 Credenciais criadas:");
-  console.log("─".repeat(50));
-  
-  for (const testUser of TEST_USERS) {
-    console.log(`\n${testUser.role === "admin" ? "🔐 ADMIN" : "👤 USUÁRIO"}:`);
-    console.log(`   Email:    ${testUser.email}`);
-    console.log(`   Senha:    ${testUser.password}`);
-    console.log(`   Role:     ${testUser.role}`);
-  }
-  
-  console.log("\n" + "─".repeat(50));
-  console.log("\n✅ Usuários prontos para testes E2E!");
-  console.log("   Execute: npx playwright test\n");
+  return value;
 }
 
-// Parse argumentos da linha de comando
-const args = process.argv.slice(2);
-const options: SeedOptions = {
-  reset: args.includes("--reset"),
-  verbose: args.includes("--verbose"),
-};
+function validateCredentials(email: string, password: string): void {
+  if (!/(^|[._+\-])e2e([._+@\-]|$)/i.test(email)) {
+    throw new Error("E2E_USER_EMAIL must identify an explicit E2E account.");
+  }
+  if (password.length < 20) {
+    throw new Error("E2E_USER_PASSWORD must contain at least 20 characters.");
+  }
+}
 
-// Executar seed
-seedE2EUsers(options).catch((error) => {
-  console.error("❌ Erro fatal:", error.message);
-  process.exit(1);
+function isManagedFixture(user: User): boolean {
+  return (
+    user.app_metadata?.acheguese_fixture === FIXTURE_KIND &&
+    user.user_metadata?.acheguese_fixture === FIXTURE_KIND
+  );
+}
+
+async function findManagedUser(
+  supabase: ReturnType<typeof createServiceRoleClient>,
+  email: string,
+): Promise<User | null> {
+  const { data: profiles, error: profileError } = await supabase
+    .from("profiles")
+    .select("user_id")
+    .eq("display_name", FIXTURE_DISPLAY_NAME)
+    .eq("profile_type", "personal")
+    .eq("is_public", false)
+    .limit(2);
+
+  if (profileError) {
+    throw new Error(
+      `Unable to locate private E2E profile: ${profileError.message}`,
+    );
+  }
+  if (!profiles || profiles.length === 0) return null;
+  if (profiles.length > 1) {
+    throw new Error(
+      "More than one profile matches the guarded private E2E identity.",
+    );
+  }
+
+  const userId = profiles[0]?.user_id;
+  if (typeof userId !== "string" || !userId) {
+    throw new Error("Private E2E profile has no Auth user owner.");
+  }
+
+  const { data, error } = await supabase.auth.admin.getUserById(userId);
+  if (error || !data.user) {
+    throw new Error(
+      `Unable to inspect private E2E Auth user: ${error?.message ?? "not found"}`,
+    );
+  }
+  if (data.user.email?.toLocaleLowerCase() !== email.toLocaleLowerCase()) {
+    throw new Error("Private E2E fixture email differs from E2E_USER_EMAIL.");
+  }
+  if (!isManagedFixture(data.user)) {
+    throw new Error(
+      "Private profile owner lacks the matching Auth E2E markers.",
+    );
+  }
+
+  return data.user;
+}
+
+async function deleteManagedFixture(
+  supabase: ReturnType<typeof createServiceRoleClient>,
+  user: User,
+): Promise<void> {
+  if (!isManagedFixture(user)) {
+    throw new Error(
+      "Refusing to delete an Auth user without the canonical Achegue-se E2E marker.",
+    );
+  }
+
+  const { error } = await supabase.auth.admin.deleteUser(user.id);
+  if (error)
+    throw new Error(`Unable to revoke E2E Auth user: ${error.message}`);
+}
+
+async function resolveSalvador(
+  supabase: ReturnType<typeof createServiceRoleClient>,
+): Promise<LocationFixtureRow> {
+  const { data, error } = await supabase
+    .from("locations")
+    .select("id, name")
+    .eq("type", "city")
+    .eq("geographic_path", SALVADOR_GEOGRAPHIC_PATH)
+    .maybeSingle();
+
+  if (error || !data) {
+    throw new Error(
+      `Canonical Salvador location is unavailable: ${error?.message ?? "not found"}`,
+    );
+  }
+
+  return data as LocationFixtureRow;
+}
+
+async function createFixtureUser(
+  supabase: ReturnType<typeof createServiceRoleClient>,
+  email: string,
+  password: string,
+): Promise<User> {
+  const metadata = {
+    full_name: FIXTURE_DISPLAY_NAME,
+    acheguese_fixture: FIXTURE_KIND,
+    fixture_version: FIXTURE_VERSION,
+  };
+  const { data, error } = await supabase.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    app_metadata: metadata,
+    user_metadata: metadata,
+  });
+
+  if (error || !data.user) {
+    throw new Error(
+      `Unable to create E2E Auth user: ${error?.message ?? "unknown error"}`,
+    );
+  }
+
+  return data.user;
+}
+
+async function adoptTechnicalUser(
+  supabase: ReturnType<typeof createServiceRoleClient>,
+  username: string,
+  email: string,
+  password: string,
+): Promise<User> {
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, user_id, profile_type, display_name, name, username")
+    .eq("username", username)
+    .maybeSingle();
+  if (profileError || !profile) {
+    throw new Error(
+      `Technical adoption profile is unavailable: ${profileError?.message ?? "not found"}`,
+    );
+  }
+
+  const profileText = [profile.display_name, profile.name, profile.username]
+    .filter(Boolean)
+    .join(" ");
+  if (
+    profile.profile_type !== "personal" ||
+    !/e2e|teste|test|auth.*flow/i.test(profileText)
+  ) {
+    throw new Error(
+      "Refusing to adopt a profile that is not explicitly technical.",
+    );
+  }
+
+  const { data: authData, error: authError } =
+    await supabase.auth.admin.getUserById(profile.user_id);
+  if (authError || !authData.user) {
+    throw new Error(
+      `Technical adoption Auth user is unavailable: ${authError?.message ?? "not found"}`,
+    );
+  }
+  if (!/e2e|teste|test/i.test(authData.user.email ?? "")) {
+    throw new Error(
+      "Refusing to adopt an Auth identity without a technical email.",
+    );
+  }
+
+  const checks = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id")
+      .eq("user_id", profile.user_id)
+      .limit(2),
+    supabase
+      .from("posts")
+      .select("id")
+      .eq("author_profile_id", profile.id)
+      .limit(1),
+    supabase
+      .from("comments")
+      .select("id")
+      .eq("author_profile_id", profile.id)
+      .limit(1),
+    supabase
+      .from("post_likes_new")
+      .select("id")
+      .eq("liker_profile_id", profile.id)
+      .limit(1),
+    supabase
+      .from("user_residences")
+      .select("id")
+      .eq("user_id", profile.user_id)
+      .limit(1),
+    supabase
+      .from("profile_links")
+      .select("id")
+      .or(`from_profile_id.eq.${profile.id},to_profile_id.eq.${profile.id}`)
+      .limit(1),
+  ]);
+  const checkErrors = checks.flatMap((check) =>
+    check.error ? [check.error.message] : [],
+  );
+  if (checkErrors.length > 0) {
+    throw new Error(
+      `Technical adoption audit failed: ${checkErrors.join("; ")}`,
+    );
+  }
+  const [profileCount, ...domainCounts] = checks.map(
+    (check) => check.data?.length ?? 0,
+  );
+  if (profileCount !== 1 || domainCounts.some((count) => count !== 0)) {
+    throw new Error(
+      "Refusing to adopt a technical identity that owns product data.",
+    );
+  }
+
+  const metadata = {
+    full_name: FIXTURE_DISPLAY_NAME,
+    acheguese_fixture: FIXTURE_KIND,
+    fixture_version: FIXTURE_VERSION,
+  };
+  const { data, error } = await supabase.auth.admin.updateUserById(
+    profile.user_id,
+    {
+      email,
+      password,
+      email_confirm: true,
+      app_metadata: { ...authData.user.app_metadata, ...metadata },
+      user_metadata: { ...authData.user.user_metadata, ...metadata },
+    },
+  );
+  if (error || !data.user) {
+    throw new Error(
+      `Unable to adopt technical Auth user: ${error?.message ?? "unknown error"}`,
+    );
+  }
+
+  return data.user;
+}
+
+async function reconcileFixtureUser(
+  supabase: ReturnType<typeof createServiceRoleClient>,
+  user: User,
+  password: string,
+): Promise<User> {
+  if (!isManagedFixture(user)) {
+    throw new Error(
+      "E2E email is already owned by an Auth user without the canonical fixture marker.",
+    );
+  }
+
+  const metadata = {
+    full_name: FIXTURE_DISPLAY_NAME,
+    acheguese_fixture: FIXTURE_KIND,
+    fixture_version: FIXTURE_VERSION,
+  };
+  const { data, error } = await supabase.auth.admin.updateUserById(user.id, {
+    password,
+    email_confirm: true,
+    app_metadata: { ...user.app_metadata, ...metadata },
+    user_metadata: { ...user.user_metadata, ...metadata },
+  });
+
+  if (error || !data.user) {
+    throw new Error(
+      `Unable to reconcile E2E Auth user: ${error?.message ?? "unknown error"}`,
+    );
+  }
+
+  return data.user;
+}
+
+async function reconcileMinimalProfile(
+  supabase: ReturnType<typeof createServiceRoleClient>,
+  user: User,
+  salvador: LocationFixtureRow,
+): Promise<void> {
+  const { data: profileData, error: profileLookupError } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("profile_type", "personal")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (profileLookupError || !profileData) {
+    throw new Error(
+      `Canonical personal profile was not created by Auth trigger: ${
+        profileLookupError?.message ?? "not found"
+      }`,
+    );
+  }
+
+  const profile = profileData as ProfileFixtureRow;
+  const { error: profileUpdateError } = await supabase
+    .from("profiles")
+    .update({
+      name: FIXTURE_DISPLAY_NAME,
+      display_name: FIXTURE_DISPLAY_NAME,
+      profile_type: "personal",
+      handle: null,
+      slug: null,
+      bio: null,
+      short_bio: null,
+      avatar_url: null,
+      contact_email: null,
+      phone: null,
+      whatsapp: null,
+      website: null,
+      city: salvador.name,
+      state: "BA",
+      neighborhood: null,
+      location_id: salvador.id,
+      main_territory_location_id: salvador.id,
+      is_active: true,
+      is_suspended: false,
+      suspended_at: null,
+      suspension_reason: null,
+      suspended_until: null,
+      is_public: false,
+      public_location_visibility: "hidden",
+      show_contact_email: false,
+      show_phone: false,
+    })
+    .eq("id", profile.id);
+
+  if (profileUpdateError) {
+    throw new Error(
+      `Unable to reconcile minimal E2E profile: ${profileUpdateError.message}`,
+    );
+  }
+}
+
+function parseOperation(): FixtureOperation {
+  const reset = process.argv.includes("--reset");
+  const revoke = process.argv.includes("--revoke");
+  if (reset && revoke) throw new Error("Choose either --reset or --revoke.");
+  if (revoke) return "revoke";
+  if (reset) return "reset";
+  return "provision";
+}
+
+async function manageFixture(): Promise<void> {
+  const operation = parseOperation();
+  const email = requireCredential("E2E_USER_EMAIL");
+  const password = requireCredential("E2E_USER_PASSWORD");
+  validateCredentials(email, password);
+
+  const supabase = createServiceRoleClient({ envFiles: E2E_ENV_FILES });
+  let existingUser = await findManagedUser(supabase, email);
+
+  if (operation === "revoke") {
+    if (!existingUser) {
+      console.log("E2E fixture is already revoked.");
+      return;
+    }
+    await deleteManagedFixture(supabase, existingUser);
+    console.log("E2E fixture revoked.");
+    return;
+  }
+
+  const adoptionUsername = process.env.E2E_ADOPT_USERNAME?.trim();
+  const user = existingUser
+    ? await reconcileFixtureUser(supabase, existingUser, password)
+    : adoptionUsername
+      ? await adoptTechnicalUser(supabase, adoptionUsername, email, password)
+      : await createFixtureUser(supabase, email, password);
+  const salvador = await resolveSalvador(supabase);
+  await reconcileMinimalProfile(supabase, user, salvador);
+
+  console.log(
+    `E2E fixture ${operation === "reset" ? "reset" : "provisioned"}: Auth + one private personal profile.`,
+  );
+}
+
+manageFixture().catch((error) => {
+  console.error(
+    "E2E fixture operation failed:",
+    error instanceof Error ? error.message : String(error),
+  );
+  process.exitCode = 1;
 });

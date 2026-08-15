@@ -126,7 +126,7 @@ export function TerritoryAdaptiveNavigation() {
                 >
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </span>
-                <span className="max-w-full truncate text-[0.625rem] font-semibold leading-none min-[360px]:text-[0.6875rem]">
+                <span className="max-w-full whitespace-nowrap text-[0.5625rem] font-semibold leading-none min-[360px]:text-[0.625rem]">
                   {mode.label}
                 </span>
               </Link>

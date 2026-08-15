@@ -46,9 +46,16 @@ export function UserProfileDropdown({ onLogout }: UserProfileDropdownProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="group focus:outline-none">
+        <button
+          type="button"
+          className="group focus:outline-none"
+          aria-label="Abrir menu da conta"
+        >
           <Avatar className="w-9 h-9 ring-2 ring-primary/30 hover:ring-primary transition-all cursor-pointer">
-            <AvatarImage src={activeProfile?.avatarUrl} alt={activeProfile?.displayName} />
+            <AvatarImage
+              src={activeProfile?.avatarUrl}
+              alt={activeProfile?.displayName}
+            />
             <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-xs">
               {getInitials(activeProfile?.displayName)}
             </AvatarFallback>
@@ -60,14 +67,19 @@ export function UserProfileDropdown({ onLogout }: UserProfileDropdownProps) {
         <DropdownMenuLabel className="font-normal">
           <div className="flex items-start gap-3 py-2">
             <Avatar className="w-12 h-12">
-              <AvatarImage src={activeProfile?.avatarUrl} alt={activeProfile?.displayName} />
+              <AvatarImage
+                src={activeProfile?.avatarUrl}
+                alt={activeProfile?.displayName}
+              />
               <AvatarFallback className="bg-primary text-primary-foreground">
                 {getInitials(activeProfile?.displayName)}
               </AvatarFallback>
             </Avatar>
 
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate">{activeProfile?.displayName}</p>
+              <p className="text-sm font-semibold truncate">
+                {activeProfile?.displayName}
+              </p>
               {profileLocation && (
                 <p className="text-xs text-muted-foreground truncate">
                   {profileLocation}

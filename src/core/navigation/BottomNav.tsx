@@ -122,7 +122,7 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
               </span>
               <span
                 className={cn(
-                  "max-w-full truncate text-[10px] font-medium leading-none min-[360px]:text-[11px]",
+                  "max-w-full whitespace-nowrap text-[9px] font-medium leading-none min-[360px]:text-[10px]",
                   activeTab && "font-semibold",
                 )}
               >

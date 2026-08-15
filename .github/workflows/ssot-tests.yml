@@ -9,6 +9,10 @@ on:
       - "package.json"
       - "package-lock.json"
       - "playwright.config.ts"
+      - "scripts/seed-e2e-users.ts"
+      - "src/app/**"
+      - "src/core/navigation/**"
+      - "src/modules/profile/**"
       - "src/modules/guide/**"
       - "src/core/location/**"
       - "src/core/routing/**"
@@ -21,6 +25,10 @@ on:
       - "package.json"
       - "package-lock.json"
       - "playwright.config.ts"
+      - "scripts/seed-e2e-users.ts"
+      - "src/app/**"
+      - "src/core/navigation/**"
+      - "src/modules/profile/**"
       - "src/modules/guide/**"
       - "src/core/location/**"
       - "src/core/routing/**"
@@ -145,6 +153,55 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  authenticated_account_e2e:
+    name: Authenticated Account E2E (remote-only)
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+      PLAYWRIGHT_BASE_URL: https://acheguese.com.br
+      E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+      E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run non-destructive authenticated Account E2E
+        run: npm run test:e2e:account-authenticated
+
+      - name: Record authenticated fixture contract
+        if: always()
+        shell: bash
+        run: |
+          if [ -n "$E2E_USER_EMAIL" ] && [ -n "$E2E_USER_PASSWORD" ]; then
+            echo "Authenticated Account E2E ran with the dedicated remote fixture." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Authenticated Account E2E was explicitly skipped because fixture credentials are not configured." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "The suite validates the deployed Production surface against the canonical remote Supabase project." >> "$GITHUB_STEP_SUMMARY"
+          echo "No service-role key is exposed to the browser job." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload authenticated E2E report (non-gating transport)
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: authenticated-account-e2e-report
+          path: playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
+
   regression-check:
     name: Regression Check
     runs-on: ubuntu-latest
@@ -194,7 +251,14 @@ jobs:
   status-check:
     name: All Tests Passed
     runs-on: ubuntu-latest
-    needs: [phase-core-gate, runtime-tests, e2e-tests, regression-check]
+    needs:
+      [
+        phase-core-gate,
+        runtime-tests,
+        e2e-tests,
+        authenticated_account_e2e,
+        regression-check,
+      ]
     if: always()
 
     steps:
@@ -204,6 +268,7 @@ jobs:
           if [ "${{ needs.phase-core-gate.result }}" != "success" ] || \
              [ "${{ needs.runtime-tests.result }}" != "success" ] || \
              [ "${{ needs.e2e-tests.result }}" != "success" ] || \
+             [ "${{ needs.authenticated_account_e2e.result }}" != "success" ] || \
              [ "${{ needs.regression-check.result }}" != "success" ]; then
             echo "One or more authoritative test gates failed"
             exit 1
