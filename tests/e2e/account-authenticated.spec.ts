@@ -73,7 +73,10 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
       });
       page.on("requestfailed", (request) => {
         const reason = request.failure()?.errorText ?? "request failed";
-        if (!reason.includes("ERR_ABORTED")) {
+        const isTurnstileChallengeProbe =
+          request.url().includes(".challenges.cloudflare.com/") &&
+          reason.includes("ERR_NAME_NOT_RESOLVED");
+        if (!reason.includes("ERR_ABORTED") && !isTurnstileChallengeProbe) {
           networkErrors.push(`${reason} ${request.url()}`);
         }
       });
