@@ -66,7 +66,14 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
         const isTurnstileConsoleNoise = message
           .text()
           .includes("font-size:0;color:transparent");
-        if (message.type() === "error" && !isTurnstileConsoleNoise) {
+        const isBlockedAdSenseProbe = message
+          .text()
+          .includes("csi.gstatic.com/csi");
+        if (
+          message.type() === "error" &&
+          !isTurnstileConsoleNoise &&
+          !isBlockedAdSenseProbe
+        ) {
           consoleErrors.push(message.text());
         }
       });
