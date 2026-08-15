@@ -11,6 +11,20 @@ function readProjectFile(path: string): string {
 }
 
 describe("public territorial surface audit", () => {
+  it("keeps businesses gated by the resolved territory and canonical public data", () => {
+    const pageSource = readProjectFile("src/app/pages/EmpresasLandingPage.tsx");
+    const listHookSource = readProjectFile("src/core/business/hooks/useBusinessList.ts");
+    const accountSource = readProjectFile("src/modules/profile/pages/ContaHubPage.tsx");
+
+    expect(pageSource).toContain("territoryFilter: moduleTerritory.territoryFilter");
+    expect(pageSource).toContain("useSpatialSearchHybrid");
+    expect(pageSource).toContain("locationIds: moduleTerritory.resolvedLocationIds");
+    expect(pageSource).toContain("normalizeRealBusinessEntry");
+    expect(pageSource).not.toContain("normalizeNearbyBusiness");
+    expect(listHookSource).toContain("enabled: enabled && filterReady");
+    expect(accountSource).toContain("navigate(data.appUrls.profile.businesses)");
+  });
+
   it("keeps services landing URL-first through module territory injection", () => {
     const pageSource = readProjectFile(
       "src/modules/professionals/services/pages/ServicosLandingPage.tsx",

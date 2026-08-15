@@ -338,7 +338,7 @@ export default function ContaHubPage() {
               type="button"
               variant="outline"
               className="mt-4 min-h-11 w-full border-territory-border bg-territory-surface text-territory-ink"
-              onClick={() => navigate("/central")}
+              onClick={() => navigate(data.appUrls.profile.businesses)}
             >
               Abrir Central
             </Button>

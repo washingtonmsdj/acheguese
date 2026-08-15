@@ -103,7 +103,10 @@ export function useBusinessList({
       }),
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 0,
-    enabled: enabled, // ✅ Sempre habilitado - filtro é opcional
+    // A lista pública nunca pode abrir sem um território resolvido. Antes,
+    // a query rodava durante a resolução e o primeiro resultado podia ser
+    // global, antes de o filtro correto entrar na chave da consulta.
+    enabled: enabled && filterReady,
     staleTime: STALE_TIME,
     gcTime: CACHE_TIME,
     refetchOnWindowFocus: false,

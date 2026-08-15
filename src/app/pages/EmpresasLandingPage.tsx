@@ -14,7 +14,7 @@ import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritory
 import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import { ModuleLocationDialog } from "@/core/location/components/ModuleLocationDialog";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
-import { useNearbyEntities } from "@/core/geospatial/hooks/useSpatialSearch";
+import { useSpatialSearchHybrid } from "@/core/geospatial/hooks/useSpatialSearch";
 import { useRobustGeolocation } from "@/shared/hooks";
 import { Input } from "@/shared/components/ui/input";
 import {
@@ -33,7 +33,6 @@ import {
   buildBusinessHighlights,
   getBusinessUrl,
   getTerritoryName,
-  normalizeNearbyBusiness,
   normalizeRealBusinessEntry,
   sortBusinesses,
 } from "@/app/features/business-landing/utils";
@@ -250,16 +249,25 @@ export default function EmpresasLandingPage({
   const { coords: userLocation } = useRobustGeolocation({ useCache: true });
   const { polygons: territoryPolygons, isLoading: isLoadingBounds } = useTerritoryPolygon(resolved ?? null);
 
-  const { data: nearbyBusinesses } = useNearbyEntities({
-    userLocation,
+  // A proximidade usa o mesmo filtro territorial da lista. O RPC espacial
+  // devolve apenas identidade, coordenadas e distância; os cards continuam
+  // vindo do BusinessService para não fabricarmos categoria, horário ou nome.
+  const { data: nearbyBusinesses } = useSpatialSearchHybrid({
+    center: userLocation ?? { latitude: 0, longitude: 0 },
     entityType: "business",
     radiusKm: 5,
-    locationId: resolved?.kind === "location" ? resolved.location.id : undefined,
+    locationIds: moduleTerritory.resolvedLocationIds,
     limit: 50,
+    enabled: userLocation !== null && moduleTerritory.resolvedLocationIds.length > 0,
   });
 
-  const { businesses: realBusinesses } = useBusinessList({
+  const {
+    businesses: realBusinesses,
+    isLoading: isBusinessesLoading,
+    isError: isBusinessesError,
+  } = useBusinessList({
     searchQuery: searchQuery.trim() || undefined,
+    category: activeCategory === "all" ? undefined : normalizeBusinessCategoryId(activeCategory),
     enabled: true,
     routeResolved: resolved,
     activeMemberIds,
@@ -267,11 +275,24 @@ export default function EmpresasLandingPage({
   });
 
   const businessesToShow = useMemo(() => {
+    const normalizedBusinesses = realBusinesses.map(normalizeRealBusinessEntry);
+
     if (sortBy === "distance" && nearbyBusinesses?.length) {
-      return nearbyBusinesses.map((business) => normalizeNearbyBusiness(business));
+      const distanceByBusinessId = new Map(
+        nearbyBusinesses.map((result) => [result.id, result.distance_meters]),
+      );
+
+      return normalizedBusinesses.map((business) => ({
+        ...business,
+        distanceMeters:
+          distanceByBusinessId.get(business.id) ??
+          (business.business_data_id
+            ? distanceByBusinessId.get(business.business_data_id)
+            : undefined),
+      }));
     }
 
-    return realBusinesses.map((business) => normalizeRealBusinessEntry(business));
+    return normalizedBusinesses;
   }, [nearbyBusinesses, realBusinesses, sortBy]);
 
   const favoriteCandidateIds = useMemo(
@@ -450,6 +471,8 @@ export default function EmpresasLandingPage({
 
       <EmpresasListaSection
         businesses={filteredBusinesses}
+        isLoading={isBusinessesLoading}
+        isError={isBusinessesError}
         mapHref={moduleUrls.map}
         savedBusinesses={savedBusinesses}
         onToggleSave={handleToggleSave}

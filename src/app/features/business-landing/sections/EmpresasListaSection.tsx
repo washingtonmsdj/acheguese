@@ -8,6 +8,8 @@ const PAGE_SIZE = 6;
 
 export function EmpresasListaSection({
   businesses,
+  isLoading = false,
+  isError = false,
   mapHref,
   savedBusinesses,
   onToggleSave,
@@ -44,7 +46,19 @@ export function EmpresasListaSection({
         </Link>
       </div>
 
-      {businesses.length > 0 ? (
+      {isLoading ? (
+        <div className="rounded-[24px] border border-white/10 bg-white/[0.02] px-6 py-14 text-center" role="status">
+          <Search className="mx-auto h-10 w-10 animate-pulse text-white/28" />
+          <h3 className="mt-4 text-lg font-semibold text-white">Carregando empresas do território</h3>
+          <p className="mt-2 text-sm text-white/48">Estamos resolvendo o contexto antes de mostrar resultados.</p>
+        </div>
+      ) : isError ? (
+        <div className="rounded-[24px] border border-dashed border-amber-300/20 bg-amber-300/[0.03] px-6 py-14 text-center" role="alert">
+          <Search className="mx-auto h-10 w-10 text-amber-200/50" />
+          <h3 className="mt-4 text-lg font-semibold text-white">Não foi possível carregar as empresas</h3>
+          <p className="mt-2 text-sm text-white/48">Tente novamente ou escolha outro território.</p>
+        </div>
+      ) : businesses.length > 0 ? (
         <>
           <div className="grid gap-3 xl:grid-cols-2">
             {visibleBusinesses.map((business) => (

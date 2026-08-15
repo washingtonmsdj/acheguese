@@ -6,32 +6,6 @@ import type {
   BusinessSortOption,
 } from "../sections/types";
 
-type NearbyBusinessResult = {
-  id?: string;
-  entity_id?: string;
-  slug?: string;
-  latitude?: number;
-  longitude?: number;
-  distance_meters?: number;
-  entity_data?: {
-    name?: string;
-    category?: string;
-    rating?: number;
-    total_reviews?: number;
-    description?: string;
-    is_premium?: boolean;
-    phone?: string;
-    whatsapp?: string;
-    slug?: string;
-    geographic_path?: string;
-    logo_url?: string;
-    address?: {
-      latitude?: number;
-      longitude?: number;
-    };
-  };
-};
-
 type BusinessAddressLike = {
   latitude?: number;
   longitude?: number;
@@ -104,46 +78,6 @@ export function getBusinessTerritoryLabel(geographicPath?: string | null): strin
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
-}
-
-export function normalizeNearbyBusiness(result: NearbyBusinessResult): Business {
-  const distanceLabel =
-    typeof result.distance_meters === "number"
-      ? `${(result.distance_meters / 1000).toFixed(1).replace(".", ",")} km`
-      : "N/A";
-
-  return {
-    id: result.entity_id || result.id || "",
-    business_data_id: result.entity_id || result.id,
-    name: result.entity_data?.name || "Empresa",
-    slug: result.entity_data?.slug || result.slug,
-    category: result.entity_data?.category || "Outros",
-    rating: result.entity_data?.rating || 0,
-    reviews: result.entity_data?.total_reviews || 0,
-    distance: distanceLabel,
-    walkTime: "N/A",
-    description: result.entity_data?.description || "",
-    tags: buildBusinessTags({
-      whatsapp: result.entity_data?.whatsapp,
-    }),
-    premium: result.entity_data?.is_premium || false,
-    isOpen: false,
-    statusText: "Horario nao informado",
-    neighborRecs: 0,
-    favoritesCount: 0,
-    lastVisit: "",
-    coords: {
-      lat: result.entity_data?.address?.latitude || result.latitude || 0,
-      lng: result.entity_data?.address?.longitude || result.longitude || 0,
-    },
-    phone: result.entity_data?.phone || "",
-    whatsapp: result.entity_data?.whatsapp || "",
-    logoUrl: result.entity_data?.logo_url || null,
-    is_premium: result.entity_data?.is_premium,
-    geographic_path: result.entity_data?.geographic_path,
-    distanceMeters: result.distance_meters,
-    is_verified: false,
-  };
 }
 
 export function normalizeRealBusinessEntry(business: CoreBusiness): Business {
