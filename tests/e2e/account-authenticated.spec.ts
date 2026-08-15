@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
-  completeLoginForm,
+  bootstrapFixtureSession,
   hasE2EUserCredentials,
   requireE2EUserCredentials,
 } from "../../e2e/helpers/auth";
@@ -50,7 +50,7 @@ async function expectNoHorizontalOverflow(page: Page) {
 test.describe("Conta autenticada — fixture remota determinística", () => {
   test.skip(
     !hasE2EUserCredentials(),
-    "E2E autenticado exige E2E_USER_EMAIL/E2E_USER_PASSWORD; nenhuma credencial padrão é inventada.",
+    "E2E autenticado exige E2E_USER_EMAIL/E2E_USER_PASSWORD; nenhum segredo padrão é inventado.",
   );
 
   for (const viewport of VIEWPORTS) {
@@ -79,9 +79,13 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
       });
 
       await page.setViewportSize(viewport);
+      await page.context().clearCookies();
       await page.goto("/conta", { waitUntil: "domcontentloaded" });
       await expect(page).toHaveURL(/\/login\?redirect=%2Fconta$/);
-      await completeLoginForm(page, credentials.email, credentials.password);
+      await expect(page.locator("#login-identifier")).toBeVisible({
+        timeout: 30_000,
+      });
+      await bootstrapFixtureSession(page, credentials.email, credentials.password);
       await expect(page).toHaveURL(/\/conta(?:\?|$)/, { timeout: 30_000 });
 
       for (const route of ACCOUNT_ROUTES) {
@@ -133,7 +137,7 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
 
       await page.goto("/central", { waitUntil: "domcontentloaded" });
       const accountMenu = page.getByRole("button", {
-        name: "Abrir menu da conta",
+        name: "Sair da conta",
       });
       await expect(accountMenu).toBeVisible({ timeout: 30_000 });
       await accountMenu.click();

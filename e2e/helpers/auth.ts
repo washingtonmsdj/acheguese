@@ -1,10 +1,14 @@
 import { Page } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
 
 // Credenciais de teste — lidas de variáveis de ambiente
 export const TEST_USER = {
   email: process.env.E2E_USER_EMAIL ?? "",
   password: process.env.E2E_USER_PASSWORD ?? "",
 };
+
+const AUTH_COOKIE_NAME = "sb-auth-acheguese-auth-token";
+const AUTH_COOKIE_CHUNK_SIZE = 3_800;
 
 export const TEST_ADMIN = {
   email: process.env.E2E_ADMIN_EMAIL ?? "",
@@ -22,6 +26,133 @@ export function requireE2EUserCredentials() {
     );
   }
   return TEST_USER;
+}
+
+function splitCookieValue(value: string): string[] {
+  const chunks: string[] = [];
+  let current = "";
+
+  for (const character of value) {
+    const next = current + character;
+    if (
+      current.length > 0 &&
+      encodeURIComponent(next).length > AUTH_COOKIE_CHUNK_SIZE
+    ) {
+      chunks.push(current);
+      current = character;
+      continue;
+    }
+
+    current = next;
+  }
+
+  if (current.length > 0 || value.length === 0) chunks.push(current);
+  return chunks;
+}
+
+async function resolvePublicSupabaseConfig(page: Page): Promise<{
+  url: string;
+  publishableKey: string;
+}> {
+  const configuredUrl =
+    process.env.E2E_SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "";
+  const configuredKey =
+    process.env.E2E_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+    "";
+  if (configuredUrl && configuredKey) {
+    return { url: configuredUrl, publishableKey: configuredKey };
+  }
+
+  const origin = new URL(page.url()).origin;
+  const indexResponse = await fetch(origin);
+  if (!indexResponse.ok) {
+    throw new Error(`Unable to discover public Supabase config: HTTP ${indexResponse.status}`);
+  }
+  const indexHtml = await indexResponse.text();
+  const scriptSources = [...indexHtml.matchAll(/<script[^>]+src=["']([^"']+\.js)["']/gi)]
+    .map((match) => new URL(match[1], origin).toString());
+  const bundles = await Promise.all(
+    scriptSources.map(async (source) => {
+      const response = await fetch(source);
+      return response.ok ? response.text() : "";
+    }),
+  );
+  const publicBundles = [indexHtml, ...bundles].join("\n");
+  const url = publicBundles.match(/https:\/\/[a-z0-9-]+\.supabase\.co/i)?.[0] ?? "";
+  const publishableKey =
+    publicBundles.match(/sb_publishable_[A-Za-z0-9_-]+/)?.[0] ??
+    publicBundles.match(/eyJ[A-Za-z0-9_.-]{40,}/)?.[0] ??
+    "";
+
+  if (!url || !publishableKey) {
+    throw new Error("Unable to discover the public Supabase browser configuration from Production.");
+  }
+  return { url, publishableKey };
+}
+
+/**
+ * Authenticates the dedicated fixture through the public Supabase Auth API
+ * and installs the resulting session in the same cookie contract used by the
+ * browser client. This avoids making CI depend on solving Cloudflare
+ * Turnstile while preserving the real Production session and authorization
+ * path for the application.
+ */
+export async function bootstrapFixtureSession(
+  page: Page,
+  email: string,
+  password: string,
+): Promise<void> {
+  const { url, publishableKey } = await resolvePublicSupabaseConfig(page);
+
+  const client = createClient(
+    url,
+    publishableKey,
+    {
+      auth: { persistSession: false, autoRefreshToken: false },
+    },
+  );
+  const { data, error } = await client.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error || !data.session) {
+    throw new Error(`Fixture Auth bootstrap failed: ${error?.message ?? "session missing"}`);
+  }
+
+  const serializedSession = JSON.stringify(data.session);
+  const chunks = splitCookieValue(serializedSession);
+  const appUrl = new URL(page.url());
+  const cookieBase = {
+    domain: appUrl.hostname,
+    httpOnly: false,
+    secure: appUrl.protocol === "https:",
+    sameSite: "Strict" as const,
+    path: "/",
+  };
+
+  await page.context().clearCookies();
+  if (chunks.length === 1) {
+    await page.context().addCookies([
+      { ...cookieBase, name: AUTH_COOKIE_NAME, value: chunks[0] },
+    ]);
+  } else {
+    await page.context().addCookies([
+      {
+        ...cookieBase,
+        name: `${AUTH_COOKIE_NAME}.chunks`,
+        value: String(chunks.length),
+      },
+      ...chunks.map((chunk, index) => ({
+        ...cookieBase,
+        name: `${AUTH_COOKIE_NAME}.${index}`,
+        value: chunk,
+      })),
+    ]);
+  }
+
+  await page.reload({ waitUntil: "domcontentloaded", timeout: 60_000 });
 }
 
 async function waitForLoginForm(page: Page) {

@@ -102,11 +102,11 @@ export default function ContaSegurancaPage() {
             <div className="space-y-5">
               <section className="rounded-territory-highlight border border-territory-border bg-territory-surface p-5 sm:p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="space-y-2">
+                  <div className="min-w-0 space-y-2">
                     <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
                       Autenticação
                     </p>
-                    <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                    <h2 className="break-all text-2xl font-semibold tracking-tight text-foreground">
                       {user.email}
                     </h2>
                     <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -142,7 +142,7 @@ export default function ContaSegurancaPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <p className="text-sm font-medium text-foreground">
+                  <p className="break-all text-sm font-medium text-foreground">
                     {user.email}
                   </p>
                   <p className="text-sm leading-6 text-muted-foreground">
