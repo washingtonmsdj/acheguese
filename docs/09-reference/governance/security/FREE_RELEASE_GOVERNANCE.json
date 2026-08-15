@@ -1,6 +1,6 @@
 {
   "schemaVersion": "acheguese-free-release-governance/v1",
-  "updatedAt": "2026-08-14",
+  "updatedAt": "2026-08-15",
   "owner": {
     "name": "washingto silva",
     "github": "washingtonmsdj",
@@ -173,10 +173,10 @@
     "recovery": {
       "policy": "MANUAL_RELEASE_RECOVERY_SNAPSHOT",
       "authorityState": "VERIFIED_COMPENSATING_CONTROL",
-      "snapshotId": "20260814T102848Z",
+      "snapshotId": "20260815T123607Z",
       "snapshotRole": "POST_POLL_HARDENING_RECOVERY_SNAPSHOT",
-      "capturedAt": "2026-08-14T10:29:10.1307726Z",
-      "validUntil": "2026-08-15T10:29:10.1307726Z",
+      "capturedAt": "2026-08-15T12:36:07.7899488Z",
+      "validUntil": "2026-08-16T12:36:07.7899488Z",
       "maximumAgeHours": 24,
       "coverage": ["DATABASE", "AUTH", "STORAGE"],
       "remoteState": {
@@ -198,8 +198,8 @@
         "private": true,
         "localOnly": false,
         "artifactCount": 1,
-        "artifactBytes": 47309418,
-        "sha256": "b2c46169b6c868d74ac59f6821352afcdbd870fa4c5a111e580e8420853baaa9",
+        "artifactBytes": 47109352,
+        "sha256": "94fbdc13cfd8b8ce6910857f8dd81f19d0d94ab77f3e2ba23400fff63a7a0f6e",
         "readbackHashMatch": true
       },
       "restoreRunbook": "RESTORE-RUNBOOK.md",
@@ -213,10 +213,18 @@
       },
       "localDeclaration": {
         "materialChangeAfterSnapshot": false,
-        "sourceStateMutationAttestation": "COMMUNITY_FEED_RELEASE_RECOVERY_CAPTURED",
+        "sourceStateMutationAttestation": "BUSINESS_TERRITORY_VIVO_RELEASE_RECOVERY_CAPTURED",
         "evidenceClass": "DECLARATION_ONLY_NOT_REMOTE_FRESHNESS"
       },
       "historicalSnapshots": [
+        {
+          "snapshotId": "20260814T102848Z",
+          "snapshotRole": "POST_POLL_HARDENING_RECOVERY_SNAPSHOT",
+          "migrationCount": 344,
+          "latestMigration": "20260812061500",
+          "sha256": "b2c46169b6c868d74ac59f6821352afcdbd870fa4c5a111e580e8420853baaa9",
+          "status": "PRESERVED"
+        },
         {
           "snapshotId": "20260812T094356Z",
           "snapshotRole": "POST_POLL_HARDENING_RECOVERY_SNAPSHOT",

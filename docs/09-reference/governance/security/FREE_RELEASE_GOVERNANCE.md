@@ -1,7 +1,7 @@
 # Controlled Release Governance - Supabase Free
 
 Status: ativo
-Data: 2026-08-14
+Data: 2026-08-15
 Owner: `washingto silva (@washingtonmsdj)`
 
 Esta policy autoriza somente uma janela controlada de release no Supabase Free.
@@ -24,26 +24,30 @@ Excecao vencida, evidencia ausente ou achado material novo produz `BLOCKER`.
 
 ## MANUAL_RELEASE_RECOVERY_SNAPSHOT
 
-O snapshot vigente `20260814T102848Z` e um snapshot logico manual, restauravel,
+O snapshot vigente `20260815T123607Z` e um snapshot logico manual, restauravel,
 com papel `POST_POLL_HARDENING_RECOVERY_SNAPSHOT` e
-cobertura de Database, Auth e Storage. O pacote privado off-device teve tamanho,
-contagem, SHA-256 e readback verificados, e possui restore runbook.
+capturado em `2026-08-15T12:36:07.7899488Z`, com validade ate
+`2026-08-16T12:36:07.7899488Z`, cobertura de Database, Auth e Storage. O pacote
+privado off-device tem 47.109.352 bytes, SHA-256
+`94fbdc13cfd8b8ce6910857f8dd81f19d0d94ab77f3e2ba23400fff63a7a0f6e`, contagem,
+readback e sincronizacao verificados, e possui restore runbook.
 
-Os snapshots `20260812T094356Z` (`POST_POLL_HARDENING_RECOVERY_SNAPSHOT`, 344
+O snapshot `20260814T102848Z` (`POST_POLL_HARDENING_RECOVERY_SNAPSHOT`, 344
+migrations) e os snapshots `20260812T094356Z` (`POST_POLL_HARDENING_RECOVERY_SNAPSHOT`, 344
 migrations), `20260812T044423Z` (`POST_MIGRATION_RELEASE_RECOVERY_SNAPSHOT`,
 343 migrations) e `20260811T212637Z` (`PRE_RELEASE_RECOVERY_SNAPSHOT`, 339
 migrations) continuam preservados. Eles sao historicos e nao podem ser usados
 para afirmar freshness do remoto atual.
 
 Este controle nao e backup gerenciado, PITR nem full platform backup. Seu RPO e
-limitado a `2026-08-14T10:29:10.1307726Z`; a recuperacao e manual e o RTO nao e
+limitado a `2026-08-15T12:36:07.7899488Z`; a recuperacao e manual e o RTO nao e
 garantido. Dumps, conteudo Auth, PII, secrets e identificadores privados do
 destino off-device nao pertencem ao repositorio.
 
 ## Freshness
 
 O snapshot vale por no maximo 24 horas, ate
-`2026-08-15T10:29:10.1307726Z`. Um novo snapshot e obrigatorio antes de operacao
+`2026-08-16T12:36:07.7899488Z`. Um novo snapshot e obrigatorio antes de operacao
 mutavel se:
 
 - houver mudanca material em dados, schema, Auth ou Storage depois do snapshot;
