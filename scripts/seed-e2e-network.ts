@@ -14,12 +14,14 @@
 
 import fs from 'fs';
 import { createServiceRoleClient, loadSupabaseScriptEnv } from './lib/supabase-client';
+import {
+  assertIsolatedBusinessMutationTarget,
+  technicalBusinessMetadata,
+} from './lib/e2e-business-safety';
 
 const E2E_ENV_FILES = ['.env.test', '.env.local'];
 
 loadSupabaseScriptEnv(E2E_ENV_FILES);
-
-const supabase = createServiceRoleClient({ envFiles: E2E_ENV_FILES });
 
 const RESET = process.argv.includes('--reset');
 
@@ -33,6 +35,8 @@ const SEED = {
 };
 
 async function run() {
+  assertIsolatedBusinessMutationTarget('seed-e2e-network');
+  const supabase = createServiceRoleClient({ envFiles: E2E_ENV_FILES });
   console.log('🌱 Seed E2E rede/filiais\n');
 
   // 1. Buscar 2 locations do tipo district para usar nos testes
@@ -173,7 +177,7 @@ async function run() {
         specialties: [],
         facilities: [],
         email: 'e2e@test.local',
-        metadata: {},
+        metadata: technicalBusinessMetadata(),
       })
       .select('id, profile_id')
       .maybeSingle();

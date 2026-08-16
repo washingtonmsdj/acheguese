@@ -9,6 +9,10 @@ import {
   hasOperationalAnonEnv,
   hasOperationalAdminEnv,
 } from "../helpers/operational-env";
+import {
+  hasIsolatedBusinessMutationTarget,
+  technicalBusinessMetadata,
+} from "./support/businessMutationGuard";
 
 const admin = createOptionalOperationalAdminClient();
 const repoRoot = process.cwd();
@@ -472,6 +476,7 @@ async function bootstrapBusinessForUser(input: {
         slug: input.slug,
         location_id: location.id,
         status: "active",
+        metadata: technicalBusinessMetadata(),
       })
       .eq("id", businessDataId);
 
@@ -490,6 +495,7 @@ async function bootstrapBusinessForUser(input: {
         slug: input.slug,
         location_id: location.id,
         status: "active",
+        metadata: technicalBusinessMetadata(),
       })
       .select("id")
       .single();
@@ -757,7 +763,7 @@ test("keeps pizza and a basic niche covered by the onboarding release contract",
 
 test.describe("gastronomy onboarding e2e", () => {
   test.skip(
-    !hasSupabaseAdminEnv(),
+    !hasSupabaseAdminEnv() || !hasIsolatedBusinessMutationTarget(),
     "Defina VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY e SUPABASE_SERVICE_ROLE_KEY.",
   );
 

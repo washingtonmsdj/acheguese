@@ -6,6 +6,7 @@ import {
   getOperationalEnv,
   type OperationalSupabaseClient,
 } from '../../helpers/operational-env';
+import { hasIsolatedBusinessMutationTarget, technicalBusinessMetadata } from '../support/businessMutationGuard';
 
 const TEST_EMAIL = process.env.E2E_USER_EMAIL || '';
 const TEST_PASSWORD = process.env.E2E_USER_PASSWORD || '';
@@ -44,7 +45,8 @@ test.setTimeout(180_000);
 function requiredEnvAvailable(): boolean {
   return (
     Boolean(TEST_EMAIL && TEST_PASSWORD) &&
-    getMissingOperationalEnv({ requireServiceRole: true }).length === 0
+    getMissingOperationalEnv({ requireServiceRole: true }).length === 0 &&
+    hasIsolatedBusinessMutationTarget()
   );
 }
 
@@ -134,6 +136,7 @@ async function ensureEducationBusiness(): Promise<string> {
     business_role: 'standalone',
     is_verified: true,
     location_id: location.data?.id ?? null,
+    metadata: technicalBusinessMetadata(),
   };
 
   if (existingBusiness.data?.id) {

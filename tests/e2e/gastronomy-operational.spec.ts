@@ -11,6 +11,10 @@ import {
   DEFAULT_MOBILE_VIEWPORT,
   expectNoHorizontalOverflow,
 } from "./support/publicRouteAssertions";
+import {
+  hasIsolatedBusinessMutationTarget,
+  technicalBusinessMetadata,
+} from "./support/businessMutationGuard";
 
 const BUSINESS_ID = process.env.E2E_GASTRONOMY_BUSINESS_ID || null;
 const operationalEnv = getOperationalEnv();
@@ -159,6 +163,7 @@ async function ensureBusinessProfileForE2EUser(): Promise<{
           description: "Empresa automatica para fluxo E2E.",
           category: "restaurante",
           status: "active",
+          metadata: technicalBusinessMetadata(),
         })
         .select("id")
         .single();
@@ -171,6 +176,7 @@ async function ensureBusinessProfileForE2EUser(): Promise<{
           category: "restaurante",
           subcategory: "e2e-gastronomia",
           status: "active",
+          metadata: technicalBusinessMetadata(),
         })
         .eq("id", businessDataId);
     }
@@ -622,6 +628,10 @@ async function resolveBusinessId(page: Page) {
 
 test.describe("Gastronomia operacional autenticada", () => {
   test.describe.configure({ timeout: 180_000 });
+  test.skip(
+    !hasIsolatedBusinessMutationTarget(),
+    "Fixtures de business exigem uma base remota isolada explicitamente configurada.",
+  );
 
   test.beforeAll(async () => {
     if (!TEST_EMAIL || !TEST_PASSWORD) return;

@@ -7,6 +7,10 @@ import {
   hasOperationalAnonEnv,
   hasOperationalAdminEnv,
 } from "../helpers/operational-env";
+import {
+  hasIsolatedBusinessMutationTarget,
+  technicalBusinessMetadata,
+} from "./support/businessMutationGuard";
 
 const admin = createOptionalOperationalAdminClient();
 
@@ -306,6 +310,7 @@ async function bootstrapInstitutionalBusinessForUser(input: {
     business_city: "Salvador",
     business_state: "BA",
     metadata: {
+      ...technicalBusinessMetadata(),
       phone: "71999990000",
       whatsapp: "5571999990000",
       modos_atendimento: ["presencial"],
@@ -581,7 +586,7 @@ async function waitForFavoritesCount(
 
 test.describe("business engagement e2e", () => {
   test.skip(
-    !hasSupabaseAdminEnv(),
+    !hasSupabaseAdminEnv() || !hasIsolatedBusinessMutationTarget(),
     "Defina VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY e SUPABASE_SERVICE_ROLE_KEY.",
   );
 
