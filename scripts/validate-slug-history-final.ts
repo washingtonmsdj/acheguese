@@ -1,5 +1,5 @@
 #!/usr/bin/env tsx
-import { createServiceRoleClient } from './lib/supabase-client';
+import { createServiceRoleClient, loadSupabaseScriptEnv } from './lib/supabase-client';
 import { assertIsolatedBusinessMutationTarget } from './lib/e2e-business-safety';
 
 interface BusinessRow {
@@ -21,6 +21,7 @@ function getErrorMessage(error: unknown): string {
 }
 
 async function main() {
+  loadSupabaseScriptEnv();
   assertIsolatedBusinessMutationTarget('validate-slug-history-final');
   const supabase = createServiceRoleClient();
 
