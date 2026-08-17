@@ -1,5 +1,5 @@
 import { SidebarTrigger } from "@/shared/components/ui/sidebar";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Bell, Home, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
@@ -13,13 +13,12 @@ import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
  * Header principal da Central.
  */
 export function CentralHeader() {
-  const navigate = useNavigate();
   const { activeProfile, user } = useSessionContext();
   const publicHomeUrl = buildPublicAbsoluteUrl("/");
 
   const handleLogout = async () => {
     await AuthService.signOut();
-    navigate("/login", { replace: true });
+    window.location.replace("/login");
   };
 
   return (
