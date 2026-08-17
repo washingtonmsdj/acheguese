@@ -182,7 +182,7 @@ jobs:
               }
           )
 
-          $manualUrls = @($sourceFiles | Select-String -SimpleMatch "'/pontos-turisticos/'")
+          $manualUrls = @($sourceFiles | Select-String -SimpleMatch -Pattern "'/pontos-turisticos/'")
           if ($manualUrls.Count -gt 0) {
             $manualUrls | ForEach-Object { Write-Host $_.ToString() }
             Write-Error "Found manual URL construction; use buildTouristPointDetailUrl"
@@ -191,7 +191,7 @@ jobs:
 
           $legacyNeighborhood = @(
             $sourceFiles |
-              Select-String -SimpleMatch "point.neighborhood" |
+              Select-String -SimpleMatch -Pattern "point.neighborhood" |
               Where-Object { -not $_.Line.Contains("point.location?.name ?? point.neighborhood") }
           )
           if ($legacyNeighborhood.Count -gt 0) {
@@ -200,7 +200,7 @@ jobs:
             exit 1
           }
 
-          $invalidStateFilters = @($sourceFiles | Select-String -SimpleMatch ".eq('state'")
+          $invalidStateFilters = @($sourceFiles | Select-String -SimpleMatch -Pattern ".eq('state'")
           if ($invalidStateFilters.Count -gt 0) {
             $invalidStateFilters | ForEach-Object { Write-Host $_.ToString() }
             Write-Error "Found invalid territorial state filter"
