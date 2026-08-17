@@ -45,6 +45,15 @@ vi.mock("@/shared/utils/logger", () => ({
   },
 }));
 
+vi.mock("@/shared/config/publicSupabase", () => ({
+  PUBLIC_SUPABASE_CONFIG: {
+    url: "https://logout-regression.invalid",
+    publishableKey: "logout-regression-fixture-key",
+  },
+  buildSupabaseFunctionUrl: (name: string) =>
+    `https://logout-regression.invalid/functions/v1/${name}`,
+}));
+
 import { AUTH_STORAGE_KEY } from "@/config/security.config";
 import { AuthService } from "@/core/auth/services/AuthService";
 
