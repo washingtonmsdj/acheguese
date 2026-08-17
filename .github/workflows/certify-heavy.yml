@@ -30,11 +30,11 @@ jobs:
       - name: Validate runner platform
         shell: powershell
         run: |
-          if ($env:RUNNER_OS -ne "Windows") {
-            Write-Error "Certification blocked: runner must be Windows. Detected RUNNER_OS=$env:RUNNER_OS"
+          if ($env:RUNNER_OS -ne "Windows" -or $env:RUNNER_ARCH -ne "X64") {
+            Write-Error "Certification blocked: runner must be Windows x64. Detected RUNNER_OS=$env:RUNNER_OS RUNNER_ARCH=$env:RUNNER_ARCH"
             exit 1
           }
-          Write-Host "Runner platform confirmed: Windows / $env:RUNNER_ARCH"
+          Write-Host "Runner platform confirmed: Windows x64"
 
       - name: Validate and attest certification target
         id: target
@@ -44,6 +44,7 @@ jobs:
           TARGET_SHA: ${{ inputs.sha }}
         run: |
           $ErrorActionPreference = "Stop"
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
           $expectedRepository = "washingtonmsdj/acheguese"
 
           if ($env:GITHUB_REPOSITORY -ne $expectedRepository) {
