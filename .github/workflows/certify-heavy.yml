@@ -7,6 +7,11 @@ on:
         description: "Exact 40-character commit SHA from washingtonmsdj/acheguese"
         required: true
         type: string
+      account_base_url:
+        description: "HTTPS Achegue-se Production or project Preview URL for authenticated Account E2E"
+        required: true
+        default: "https://acheguese.com.br"
+        type: string
 
 permissions:
   contents: read
@@ -113,6 +118,49 @@ jobs:
           }
           Write-Host "Pinned checkout confirmed: $actualSha"
 
+      - name: Validate authenticated Account E2E target
+        id: account_target
+        shell: powershell
+        env:
+          ACCOUNT_BASE_URL: ${{ inputs.account_base_url }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $rawUrl = ([string]$env:ACCOUNT_BASE_URL).Trim()
+
+          try {
+            $uri = [Uri]$rawUrl
+          } catch {
+            Write-Error "Certification blocked: account_base_url is not a valid absolute URL."
+            exit 1
+          }
+
+          if (-not $uri.IsAbsoluteUri -or $uri.Scheme -ne "https" -or -not $uri.IsDefaultPort) {
+            Write-Error "Certification blocked: Account E2E target must be default-port HTTPS."
+            exit 1
+          }
+
+          if ($uri.UserInfo -or $uri.Query -or $uri.Fragment -or $uri.AbsolutePath -ne "/") {
+            Write-Error "Certification blocked: Account E2E target must be a bare HTTPS origin with no credentials, path, query, or fragment."
+            exit 1
+          }
+
+          $host = $uri.DnsSafeHost.ToLowerInvariant()
+          $isProduction = @("acheguese.com.br", "www.acheguese.com.br", "acheguese.vercel.app") -contains $host
+          $isProjectPreview = $host -match '^acheguese-[a-z0-9-]+-jogo-brasils-projects\.vercel\.app$'
+
+          if (-not $isProduction -and -not $isProjectPreview) {
+            Write-Error "Certification blocked: Account E2E target is outside the Achegue-se Production/Preview allowlist. Host=$host"
+            exit 1
+          }
+
+          $normalizedUrl = $uri.GetLeftPart([UriPartial]::Authority)
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "base_url=$normalizedUrl" -Encoding UTF8
+          @(
+            "## Authenticated Account target",
+            "- Base URL: $normalizedUrl",
+            "- Retries: 0"
+          ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -139,7 +187,7 @@ jobs:
         shell: powershell
         env:
           CI: true
-          PLAYWRIGHT_BASE_URL: https://acheguese.com.br
+          PLAYWRIGHT_BASE_URL: ${{ steps.account_target.outputs.base_url }}
           E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
           E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
         run: |
@@ -147,7 +195,7 @@ jobs:
             Write-Error "Certification blocked: authenticated E2E credentials are not configured."
             exit 1
           }
-          npm run test:e2e:account-authenticated
+          npm run test:e2e:account-authenticated -- --retries=0
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Run regression tests with non-empty discovery
@@ -218,6 +266,7 @@ jobs:
             "## Certification contract",
             "The self-hosted runner is repository-scoped Windows x64 with dedicated labels; WSL is not required.",
             "The workflow accepts only an exact SHA that exists in washingtonmsdj/acheguese and checks out that immutable SHA.",
+            "Authenticated Account E2E accepts only allowlisted Achegue-se Production/project Preview HTTPS origins and runs with zero retries.",
             "Public territorial E2E is fixture-backed and uses no local Supabase, Docker, service-role key, or Production seed.",
             "Authenticated Account E2E uses only E2E_USER_EMAIL/E2E_USER_PASSWORD from GitHub Actions and covers mobile, tablet, and desktop in the target test suite.",
             "Regression discovery fails closed when no regression test files are present.",
