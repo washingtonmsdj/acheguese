@@ -1,0 +1,237 @@
+name: Heavy Pre-Merge Certification
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Exact 40-character commit SHA from washingtonmsdj/acheguese"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  certify-heavy:
+    name: Heavy gates for explicit SHA
+    runs-on:
+      - self-hosted
+      - windows
+      - x64
+      - acheguese-heavy-windows
+      - playwright-chromium
+      - remote-only
+    timeout-minutes: 90
+
+    steps:
+      - name: Validate runner platform
+        shell: powershell
+        run: |
+          if ($env:RUNNER_OS -ne "Windows" -or $env:RUNNER_ARCH -ne "X64") {
+            Write-Error "Certification blocked: runner must be Windows x64. Detected RUNNER_OS=$env:RUNNER_OS RUNNER_ARCH=$env:RUNNER_ARCH"
+            exit 1
+          }
+          Write-Host "Runner platform confirmed: Windows x64"
+
+      - name: Validate and attest certification target
+        id: target
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_SHA: ${{ inputs.sha }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+          $expectedRepository = "washingtonmsdj/acheguese"
+
+          if ($env:GITHUB_REPOSITORY -ne $expectedRepository) {
+            Write-Error "Certification blocked: unexpected repository $env:GITHUB_REPOSITORY."
+            exit 1
+          }
+
+          if ($env:GITHUB_EVENT_NAME -ne "workflow_dispatch") {
+            Write-Error "Certification blocked: only workflow_dispatch is allowed."
+            exit 1
+          }
+
+          $targetSha = [string]$env:TARGET_SHA
+          $targetSha = $targetSha.Trim().ToLowerInvariant()
+          if ($targetSha -notmatch '^[0-9a-f]{40}$') {
+            Write-Error "Certification blocked: input must be an exact 40-character SHA."
+            exit 1
+          }
+
+          $headers = @{
+            Accept = "application/vnd.github+json"
+            Authorization = "Bearer $env:GH_TOKEN"
+            "X-GitHub-Api-Version" = "2022-11-28"
+          }
+          $request = @{
+            Uri = "https://api.github.com/repos/$expectedRepository/commits/$targetSha"
+            Headers = $headers
+            Method = "Get"
+          }
+
+          try {
+            Invoke-RestMethod @request | Out-Null
+          } catch {
+            Write-Error "Certification blocked: SHA does not resolve in $expectedRepository. $($_.Exception.Message)"
+            exit 1
+          }
+
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "sha=$targetSha" -Encoding UTF8
+          @(
+            "## Heavy certification target",
+            "- Repository: $env:GITHUB_REPOSITORY",
+            "- SHA: $targetSha",
+            "- Actor: $env:GITHUB_ACTOR",
+            "- Workflow run: $env:GITHUB_RUN_ID",
+            "- Workflow ref: $env:GITHUB_WORKFLOW_REF"
+          ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
+
+      - name: Checkout attested SHA only
+        uses: actions/checkout@v6
+        with:
+          repository: washingtonmsdj/acheguese
+          ref: ${{ steps.target.outputs.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Assert checkout matches attested SHA
+        shell: powershell
+        env:
+          EXPECTED_SHA: ${{ steps.target.outputs.sha }}
+        run: |
+          $actualSha = (git rev-parse HEAD).Trim().ToLowerInvariant()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($actualSha -ne $env:EXPECTED_SHA) {
+            Write-Error "Certification blocked: checkout SHA mismatch. Expected=$env:EXPECTED_SHA Actual=$actualSha"
+            exit 1
+          }
+          Write-Host "Pinned checkout confirmed: $actualSha"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium
+
+      - name: Run deterministic public territorial E2E
+        env:
+          CI: true
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:8099
+          VITE_PUBLIC_APP_URL: http://127.0.0.1:8099
+          VITE_SUPABASE_URL: https://ci-fixtures.invalid
+          VITE_SUPABASE_PUBLISHABLE_KEY: ci-public-fixture-key
+          VITE_SUPABASE_ANON_KEY: ci-public-fixture-key
+        run: npm run test:e2e:ci
+
+      - name: Run non-destructive authenticated Account E2E
+        shell: powershell
+        env:
+          CI: true
+          PLAYWRIGHT_BASE_URL: https://acheguese.com.br
+          E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+          E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:E2E_USER_EMAIL) -or [string]::IsNullOrWhiteSpace($env:E2E_USER_PASSWORD)) {
+            Write-Error "Certification blocked: authenticated E2E credentials are not configured."
+            exit 1
+          }
+          npm run test:e2e:account-authenticated
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Run regression tests with non-empty discovery
+        shell: powershell
+        env:
+          CI: true
+        run: |
+          $regressionFiles = @(
+            Get-ChildItem -Path "tests" -File -Filter "regression-*.test.ts" |
+              Sort-Object Name |
+              ForEach-Object { $_.FullName }
+          )
+
+          if ($regressionFiles.Count -eq 0) {
+            Write-Error "Certification blocked: no regression-*.test.ts files were found."
+            exit 1
+          }
+
+          Write-Host "Regression files ($($regressionFiles.Count)):"
+          $regressionFiles | ForEach-Object { Write-Host " - $_" }
+          $vitestArgs = @("vitest", "--run") + $regressionFiles
+          & npx @vitestArgs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Validate territorial regression boundaries
+        shell: powershell
+        run: |
+          $sourceFiles = @(
+            Get-ChildItem -Path "src/modules/guide" -Recurse -File |
+              Where-Object {
+                $_.FullName -notmatch '[\\/]__mocks__[\\/]' -and
+                $_.Name -notmatch '\.(test|spec)\.[^.]+$'
+              }
+          )
+
+          $manualUrls = @($sourceFiles | Select-String -SimpleMatch -Pattern "'/pontos-turisticos/'")
+          if ($manualUrls.Count -gt 0) {
+            $manualUrls | ForEach-Object { Write-Host $_.ToString() }
+            Write-Error "Found manual URL construction; use buildTouristPointDetailUrl"
+            exit 1
+          }
+
+          $legacyNeighborhood = @(
+            $sourceFiles |
+              Select-String -SimpleMatch -Pattern "point.neighborhood" |
+              Where-Object { -not $_.Line.Contains("point.location?.name ?? point.neighborhood") }
+          )
+          if ($legacyNeighborhood.Count -gt 0) {
+            $legacyNeighborhood | ForEach-Object { Write-Host $_.ToString() }
+            Write-Error "Found direct legacy neighborhood usage"
+            exit 1
+          }
+
+          $invalidStateFilters = @($sourceFiles | Select-String -SimpleMatch -Pattern ".eq('state'")
+          if ($invalidStateFilters.Count -gt 0) {
+            $invalidStateFilters | ForEach-Object { Write-Host $_.ToString() }
+            Write-Error "Found invalid territorial state filter"
+            exit 1
+          }
+
+          Write-Host "Territorial regression boundaries passed."
+
+      - name: Record certification contract
+        if: always()
+        shell: powershell
+        run: |
+          @(
+            "## Certification contract",
+            "The self-hosted runner is repository-scoped Windows x64 with dedicated labels; WSL is not required.",
+            "The workflow accepts only an exact SHA that exists in washingtonmsdj/acheguese and checks out that immutable SHA.",
+            "Public territorial E2E is fixture-backed and uses no local Supabase, Docker, service-role key, or Production seed.",
+            "Authenticated Account E2E uses only E2E_USER_EMAIL/E2E_USER_PASSWORD from GitHub Actions and covers mobile, tablet, and desktop in the target test suite.",
+            "Regression discovery fails closed when no regression test files are present.",
+            "No automatic fallback to GitHub-hosted runners exists."
+          ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
+
+      - name: Upload certification reports (non-gating transport)
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: heavy-certification-${{ github.run_id }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
