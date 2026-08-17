@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - name: Validate runner platform
-        shell: pwsh
+        shell: powershell
         run: |
           if ($env:RUNNER_OS -ne "Windows") {
             Write-Error "Certification blocked: runner must be Windows. Detected RUNNER_OS=$env:RUNNER_OS"
@@ -38,7 +38,7 @@ jobs:
 
       - name: Validate and attest certification target
         id: target
-        shell: pwsh
+        shell: powershell
         env:
           GH_TOKEN: ${{ github.token }}
           TARGET_SHA: ${{ inputs.sha }}
@@ -56,7 +56,8 @@ jobs:
             exit 1
           }
 
-          $targetSha = ($env:TARGET_SHA ?? "").Trim().ToLowerInvariant()
+          $targetSha = [string]$env:TARGET_SHA
+          $targetSha = $targetSha.Trim().ToLowerInvariant()
           if ($targetSha -notmatch '^[0-9a-f]{40}$') {
             Write-Error "Certification blocked: input must be an exact 40-character SHA."
             exit 1
@@ -67,18 +68,20 @@ jobs:
             Authorization = "Bearer $env:GH_TOKEN"
             "X-GitHub-Api-Version" = "2022-11-28"
           }
+          $request = @{
+            Uri = "https://api.github.com/repos/$expectedRepository/commits/$targetSha"
+            Headers = $headers
+            Method = "Get"
+          }
 
           try {
-            Invoke-RestMethod \
-              -Uri "https://api.github.com/repos/$expectedRepository/commits/$targetSha" \
-              -Headers $headers \
-              -Method Get | Out-Null
+            Invoke-RestMethod @request | Out-Null
           } catch {
             Write-Error "Certification blocked: SHA does not resolve in $expectedRepository. $($_.Exception.Message)"
             exit 1
           }
 
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "sha=$targetSha" -Encoding utf8
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "sha=$targetSha" -Encoding UTF8
           @(
             "## Heavy certification target",
             "- Repository: $env:GITHUB_REPOSITORY",
@@ -86,7 +89,7 @@ jobs:
             "- Actor: $env:GITHUB_ACTOR",
             "- Workflow run: $env:GITHUB_RUN_ID",
             "- Workflow ref: $env:GITHUB_WORKFLOW_REF"
-          ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding utf8
+          ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
 
       - name: Checkout attested SHA only
         uses: actions/checkout@v6
@@ -97,7 +100,7 @@ jobs:
           persist-credentials: false
 
       - name: Assert checkout matches attested SHA
-        shell: pwsh
+        shell: powershell
         env:
           EXPECTED_SHA: ${{ steps.target.outputs.sha }}
         run: |
@@ -132,7 +135,7 @@ jobs:
         run: npm run test:e2e:ci
 
       - name: Run non-destructive authenticated Account E2E
-        shell: pwsh
+        shell: powershell
         env:
           CI: true
           PLAYWRIGHT_BASE_URL: https://acheguese.com.br
@@ -147,7 +150,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Run regression tests with non-empty discovery
-        shell: pwsh
+        shell: powershell
         env:
           CI: true
         run: |
@@ -164,11 +167,12 @@ jobs:
 
           Write-Host "Regression files ($($regressionFiles.Count)):"
           $regressionFiles | ForEach-Object { Write-Host " - $_" }
-          & npx vitest --run @regressionFiles
+          $vitestArgs = @("vitest", "--run") + $regressionFiles
+          & npx @vitestArgs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Validate territorial regression boundaries
-        shell: pwsh
+        shell: powershell
         run: |
           $sourceFiles = @(
             Get-ChildItem -Path "src/modules/guide" -Recurse -File |
@@ -207,7 +211,7 @@ jobs:
 
       - name: Record certification contract
         if: always()
-        shell: pwsh
+        shell: powershell
         run: |
           @(
             "## Certification contract",
@@ -217,7 +221,7 @@ jobs:
             "Authenticated Account E2E uses only E2E_USER_EMAIL/E2E_USER_PASSWORD from GitHub Actions and covers mobile, tablet, and desktop in the target test suite.",
             "Regression discovery fails closed when no regression test files are present.",
             "No automatic fallback to GitHub-hosted runners exists."
-          ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding utf8
+          ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
 
       - name: Upload certification reports (non-gating transport)
         if: always()
