@@ -1,0 +1,204 @@
+name: Security Gate Self-Hosted Diagnostic
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+concurrency:
+  group: security-diagnostic-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  security-diagnostic:
+    name: Security gates on repository-owned self-hosted runner
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on:
+      - self-hosted
+      - windows
+      - x64
+      - acheguese-heavy-windows
+      - remote-only
+    timeout-minutes: 45
+
+    steps:
+      - name: Validate runner and PR provenance
+        shell: powershell
+        env:
+          TARGET_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          if ($env:RUNNER_OS -ne "Windows" -or $env:RUNNER_ARCH -ne "X64") {
+            Write-Error "Diagnostic blocked: runner must be Windows x64."
+            exit 1
+          }
+          if ($env:GITHUB_REPOSITORY -ne "washingtonmsdj/acheguese") {
+            Write-Error "Diagnostic blocked: unexpected repository $env:GITHUB_REPOSITORY."
+            exit 1
+          }
+          if ($env:HEAD_REPOSITORY -ne $env:GITHUB_REPOSITORY) {
+            Write-Error "Diagnostic blocked: self-hosted runner never executes fork PR code."
+            exit 1
+          }
+          $sha = ([string]$env:TARGET_SHA).Trim().ToLowerInvariant()
+          if ($sha -notmatch '^[0-9a-f]{40}$') {
+            Write-Error "Diagnostic blocked: PR head is not an exact SHA."
+            exit 1
+          }
+          Write-Host "Diagnostic target: $sha"
+
+      - name: Checkout exact PR head SHA
+        uses: actions/checkout@v6
+        with:
+          repository: washingtonmsdj/acheguese
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Assert checkout SHA
+        shell: powershell
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          $actualSha = (git rev-parse HEAD).Trim().ToLowerInvariant()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($actualSha -ne $env:EXPECTED_SHA.ToLowerInvariant()) {
+            Write-Error "Checkout SHA mismatch. Expected=$env:EXPECTED_SHA Actual=$actualSha"
+            exit 1
+          }
+          Write-Host "Pinned checkout confirmed: $actualSha"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Record toolchain
+        shell: powershell
+        run: |
+          node --version
+          npm --version
+          git --version
+
+      - name: Install dependencies
+        id: npm_ci
+        continue-on-error: true
+        shell: powershell
+        run: npm ci --prefer-offline --no-audit --no-fund
+
+      - name: Security validation
+        id: security_validate
+        if: steps.npm_ci.outcome == 'success'
+        continue-on-error: true
+        shell: powershell
+        run: npm run security:validate
+
+      - name: ESLint security
+        id: lint_security
+        if: steps.npm_ci.outcome == 'success'
+        continue-on-error: true
+        shell: powershell
+        run: npm run lint:security
+
+      - name: npm audit high and critical
+        id: npm_audit
+        if: steps.npm_ci.outcome == 'success'
+        continue-on-error: true
+        shell: powershell
+        run: npm audit --audit-level=high
+
+      - name: Application lint
+        id: lint
+        if: steps.npm_ci.outcome == 'success'
+        continue-on-error: true
+        shell: powershell
+        run: npm run lint
+
+      - name: Application typecheck
+        id: typecheck
+        if: steps.npm_ci.outcome == 'success'
+        continue-on-error: true
+        shell: powershell
+        run: npm run typecheck:app
+
+      - name: Unit tests
+        id: tests
+        if: steps.npm_ci.outcome == 'success'
+        continue-on-error: true
+        shell: powershell
+        run: npm run test
+
+      - name: Validate tracked local env files
+        id: env_guard
+        continue-on-error: true
+        shell: powershell
+        run: |
+          $tracked = @(git ls-files | Where-Object { $_ -match '(^|/)\.env(\.[^.]+)?\.local$' })
+          if ($tracked.Count -gt 0) {
+            $tracked | ForEach-Object { Write-Host $_ }
+            Write-Error "Tracked .env.local-style files found."
+            exit 1
+          }
+          Write-Host "No tracked .env.local-style files found."
+
+      - name: Aggregate diagnostic result
+        if: always()
+        shell: powershell
+        env:
+          NPM_CI: ${{ steps.npm_ci.outcome }}
+          SECURITY_VALIDATE: ${{ steps.security_validate.outcome }}
+          LINT_SECURITY: ${{ steps.lint_security.outcome }}
+          NPM_AUDIT: ${{ steps.npm_audit.outcome }}
+          LINT: ${{ steps.lint.outcome }}
+          TYPECHECK: ${{ steps.typecheck.outcome }}
+          TESTS: ${{ steps.tests.outcome }}
+          ENV_GUARD: ${{ steps.env_guard.outcome }}
+          TARGET_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          $results = @(
+            "npm ci=$env:NPM_CI",
+            "security:validate=$env:SECURITY_VALIDATE",
+            "lint:security=$env:LINT_SECURITY",
+            "npm audit=$env:NPM_AUDIT",
+            "lint=$env:LINT",
+            "typecheck:app=$env:TYPECHECK",
+            "unit tests=$env:TESTS",
+            "env guard=$env:ENV_GUARD"
+          )
+          @(
+            "## Security gate self-hosted diagnostic",
+            "- SHA: $env:TARGET_SHA",
+            "- Purpose: distinguish repository failures from GitHub-hosted runner/account failures."
+          ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
+          $results | ForEach-Object {
+            "- $_" | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
+            Write-Host $_
+          }
+
+          $failed = @(
+            $env:NPM_CI,
+            $env:SECURITY_VALIDATE,
+            $env:LINT_SECURITY,
+            $env:NPM_AUDIT,
+            $env:LINT,
+            $env:TYPECHECK,
+            $env:TESTS,
+            $env:ENV_GUARD
+          ) | Where-Object { $_ -ne "success" }
+
+          if ($failed.Count -gt 0) {
+            Write-Error "One or more diagnostic gates failed. See the summary for exact outcomes."
+            exit 1
+          }
+          Write-Host "SECURITY_SELFHOSTED_DIAGNOSTIC_PASS"
