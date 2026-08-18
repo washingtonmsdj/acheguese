@@ -92,6 +92,39 @@ async function resolvePublicSupabaseConfig(page: Page): Promise<{
 }
 
 /**
+ * Seeds the Vercel Deployment Protection bypass cookie only for protected
+ * Preview runs. The associated APIRequestContext shares the browser cookie jar,
+ * so subsequent page navigations are authorized without injecting Vercel-only
+ * headers into cross-origin application requests such as Supabase API calls.
+ */
+export async function bootstrapProtectedPreviewAccess(page: Page): Promise<void> {
+  if (process.env.ACCOUNT_TARGET_IS_PREVIEW !== "true") return;
+
+  const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim() ?? "";
+  const configuredBaseUrl = process.env.PLAYWRIGHT_BASE_URL?.trim() ?? "";
+  if (!bypassSecret || !configuredBaseUrl) {
+    throw new Error(
+      "Protected Preview E2E requires VERCEL_AUTOMATION_BYPASS_SECRET and PLAYWRIGHT_BASE_URL.",
+    );
+  }
+
+  const target = new URL("/", configuredBaseUrl).toString();
+  const response = await page.context().request.get(target, {
+    headers: {
+      "x-vercel-protection-bypass": bypassSecret,
+      "x-vercel-set-bypass-cookie": "true",
+    },
+    timeout: 30_000,
+  });
+
+  if (!response.ok()) {
+    throw new Error(
+      `Unable to establish Vercel Preview automation bypass: HTTP ${response.status()}.`,
+    );
+  }
+}
+
+/**
  * Authenticates the dedicated fixture through the public Supabase Auth API
  * and installs the resulting session in the same cookie contract used by the
  * browser client. This avoids making CI depend on solving Cloudflare
