@@ -19,6 +19,7 @@ Converter os achados da auditoria em trabalho implementável, verificável e rev
 6. **Mudanças de banco via migration versionada**, nunca ajuste manual sem representação no repositório.
 7. **Um SSOT por regra**: documentação explica; scripts/tests/policies provam.
 8. **Sem mass refactor durante hardening**: reduzir blast radius.
+9. **Gate vermelho não é normalidade**: CI de segurança deve voltar a distinguir regressão nova de dívida conhecida.
 
 ## 3. Priorização
 
@@ -27,6 +28,31 @@ Converter os achados da auditoria em trabalho implementável, verificável e rev
 Nenhum incidente crítico confirmado no snapshot de 2026-08-18. Se qualquer evidência sensível já tiver sido gravada em bucket público, credencial real for encontrada no histórico ou bypass de RLS/admin for reproduzido, o item correspondente sobe imediatamente para P0 e exige rotação/containment antes de feature work.
 
 ### P1 — Executar primeiro
+
+#### CI-001 — Restaurar `Security Scan` e `Security Check`
+
+**Objetivo:** recuperar a confiabilidade dos gates de segurança antes de usar CI como prova para os demais hardenings.
+
+Evidência inicial: os dois gates já falhavam em PRs anteriores ao PR documental, incluindo #10, #11 e #14. A falha não foi introduzida pela documentação. Tracker específico: issue #17.
+
+Implementação:
+
+- [ ] Obter logs completos do último run de `Security Scan` e `Security Check`.
+- [ ] Identificar o primeiro step realmente falhando em cada workflow.
+- [ ] Distinguir falha de código/dependência/scanner de falha de runner/workflow/infra.
+- [ ] Confirmar comportamento na base `main` ou em branch sem mudança funcional equivalente.
+- [ ] Corrigir a causa raiz em PR independente.
+- [ ] Não usar `continue-on-error`, remoção de scanner ou exclusão ampla como atalho para verde.
+- [ ] Melhorar o summary/artifact do workflow se a causa da falha atual estiver difícil de diagnosticar.
+- [ ] Provar pelo menos um run verde após a correção.
+
+Critérios de aceite:
+
+- `Security Scan` verde em commit equivalente ao `main` ou PR limpo;
+- `Security Check` verde;
+- scans continuam gating para riscos que já eram gating;
+- uma falha proposital controlada continua deixando o check vermelho quando houver teste seguro para isso;
+- causa raiz e correção registradas na issue #17/PR.
 
 #### SEC-001 — Tornar `safety-evidence` privado
 
@@ -191,14 +217,15 @@ Um item só pode ser marcado como concluído quando possuir:
 ## 6. Sequência recomendada de PRs
 
 1. **PR A — documentação e baseline**: este plano, índice, checklist e matriz.
-2. **PR B — storage safety + bucket limits**: SEC-001 e parte de SEC-005.
-3. **PR C — auth compromised passwords**: SEC-002 + probe.
-4. **PR D — privileged DB hardening**: SEC-003 + SEC-004 em lotes pequenos.
-5. **PR E — anonymous analytics boundary**: SEC-006.
-6. **PR F — environment/secrets hygiene**: SEC-007.
-7. **PR G — RLS performance**: SEC-008, guiado por medições.
-8. **PR H — security-config drift automation**: SEC-009.
-9. **PR I — public production/SEO verification**: WEB-001 e automação de smoke.
+2. **PR B — restaurar security CI gates**: CI-001; prerequisite para voltar a confiar em evidência automatizada.
+3. **PR C — storage safety + bucket limits**: SEC-001 e parte de SEC-005.
+4. **PR D — auth compromised passwords**: SEC-002 + probe.
+5. **PR E — privileged DB hardening**: SEC-003 + SEC-004 em lotes pequenos.
+6. **PR F — anonymous analytics boundary**: SEC-006.
+7. **PR G — environment/secrets hygiene**: SEC-007.
+8. **PR H — RLS performance**: SEC-008, guiado por medições.
+9. **PR I — security-config drift automation**: SEC-009.
+10. **PR J — public production/SEO verification**: WEB-001 e automação de smoke.
 
 Evitar juntar todos os hardenings em uma migration/PR gigante. Segurança deve ser revisável e reversível.
 
@@ -220,6 +247,8 @@ node scripts/verify-deploy-ready.mjs
 ```
 
 Para alterações específicas, executar também os probes do domínio afetado (`security:profiles:pii-probe`, `security:entities:private-data-probe`, `security:messaging:authz-probe`, `security:moderation:authz-probe`, etc.).
+
+Enquanto `CI-001` estiver aberto, um check vermelho não pode ser ignorado como “já conhecido” sem triagem do run. A dívida preexistente precisa ser separada explicitamente de regressões novas.
 
 ## 8. Regra para novas descobertas
 
