@@ -8,6 +8,24 @@ Plano: [`SECURITY-REMEDIATION-PLAN-2026-08.md`](./SECURITY-REMEDIATION-PLAN-2026
 
 ## P1 — Prioridade imediata
 
+### CI-001 — Restaurar `Security Scan` e `Security Check`
+
+Tracker: issue #17.
+
+- [ ] Obter logs completos do último `Security Scan` falho.
+- [ ] Obter logs completos do último `Security Check` falho.
+- [ ] Identificar o primeiro step realmente falhando em cada workflow.
+- [ ] Separar causa de código/dependência/scanner de causa de runner/workflow/infra.
+- [ ] Confirmar que a falha é reproduzível na base/branch sem alteração funcional equivalente.
+- [ ] Corrigir a causa raiz em PR independente.
+- [ ] Não transformar gate em `continue-on-error` como correção.
+- [ ] Preservar scanners/controles equivalentes.
+- [ ] Melhorar summary/artifact de diagnóstico se necessário.
+- [ ] Provar um `Security Scan` verde.
+- [ ] Provar um `Security Check` verde.
+
+**DoD:** gates voltam a diferenciar regressão nova de dívida conhecida e permanecem efetivamente bloqueantes.
+
 ### SEC-001 — `safety-evidence` privado
 
 - [ ] Revalidar contagem de objetos e consumidores atuais.
@@ -152,6 +170,8 @@ Plano: [`SECURITY-REMEDIATION-PLAN-2026-08.md`](./SECURITY-REMEDIATION-PLAN-2026
 
 ## Gate transversal antes de marcar qualquer P1/P2 como concluído
 
+- [ ] `Security Scan` saudável ou falha do run explicitamente triada enquanto CI-001 estiver aberto
+- [ ] `Security Check` saudável ou falha do run explicitamente triada enquanto CI-001 estiver aberto
 - [ ] `npm run security:validate`
 - [ ] `npm audit --audit-level=high`
 - [ ] `npm run validate:migrations` quando houver DB change
@@ -167,8 +187,9 @@ Plano: [`SECURITY-REMEDIATION-PLAN-2026-08.md`](./SECURITY-REMEDIATION-PLAN-2026
 
 ## Controle de progresso
 
-| ID | Prioridade | Estado | PR | Evidência | Observação |
+| ID | Prioridade | Estado | PR/Issue | Evidência | Observação |
 | --- | --- | --- | --- | --- | --- |
+| CI-001 | P1 | IN_PROGRESS | issue #17 | runs históricos falhos | restaurar gates |
 | SEC-001 | P1 | TODO | — | — | storage sensível |
 | SEC-002 | P1 | TODO | — | — | auth |
 | SEC-003 | P1 | TODO | — | — | DB hardening |
