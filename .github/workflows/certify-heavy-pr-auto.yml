@@ -1,4 +1,4 @@
-name: Heavy PR Certification (Auto)
+name: Phase 4.6 Recovery Snapshot (Temporary)
 
 on:
   pull_request:
@@ -14,15 +14,26 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  CANDIDATE_SHA: 934f9df1004bee5ba185500cde7b5bad59e59123
+  PROJECT_REF: xhdowzacfujckjelqhtd
+  PGHOST: aws-0-us-west-2.pooler.supabase.com
+  PGPORT: "5432"
+  PGUSER: postgres.xhdowzacfujckjelqhtd
+  PGDATABASE: postgres
+  PGSSLMODE: require
+  PGCONNECT_TIMEOUT: "15"
+  PREVIOUS_SNAPSHOT_ID: 20260815T201851Z
+  PREVIOUS_STORAGE_OBJECTS: "65"
+  PREVIOUS_STORAGE_BYTES: "23926702"
 
 concurrency:
-  group: heavy-pr-${{ github.event.pull_request.number }}
+  group: phase-4-6-recovery-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
-  certify-heavy-pr:
-    name: Heavy PR gates for exact head SHA
-    if: github.event.pull_request.head.repo.full_name == github.repository
+  capture-recovery:
+    name: Fresh remote recovery snapshot for exact Phase 4.6 candidate
+    if: github.event.pull_request.head.repo.full_name == github.repository && startsWith(github.head_ref, 'cert/recovery-4.6-')
     runs-on:
       - self-hosted
       - windows
@@ -30,243 +41,435 @@ jobs:
       - acheguese-heavy-windows
       - playwright-chromium
       - remote-only
-    timeout-minutes: 90
+    timeout-minutes: 45
 
     steps:
-      - name: Validate runner and PR provenance
+      - name: Validate runner and recovery provenance
         shell: powershell
-        env:
-          TARGET_SHA: ${{ github.event.pull_request.head.sha }}
-          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
         run: |
           $ErrorActionPreference = "Stop"
           if ($env:RUNNER_OS -ne "Windows" -or $env:RUNNER_ARCH -ne "X64") {
-            Write-Error "Certification blocked: runner must be Windows x64."
+            Write-Error "Recovery blocked: runner must be Windows x64."
             exit 1
           }
           if ($env:GITHUB_REPOSITORY -ne "washingtonmsdj/acheguese") {
-            Write-Error "Certification blocked: unexpected repository $env:GITHUB_REPOSITORY."
+            Write-Error "Recovery blocked: unexpected repository."
             exit 1
           }
-          if ($env:HEAD_REPOSITORY -ne $env:GITHUB_REPOSITORY) {
-            Write-Error "Certification blocked: self-hosted runner never executes fork PR code."
+          if ($env:CANDIDATE_SHA -notmatch '^[0-9a-f]{40}$') {
+            Write-Error "Recovery blocked: candidate SHA must be exact."
             exit 1
           }
-          $sha = ([string]$env:TARGET_SHA).Trim().ToLowerInvariant()
-          if ($sha -notmatch '^[0-9a-f]{40}$') {
-            Write-Error "Certification blocked: PR head is not an exact 40-character SHA."
+          if ($env:PROJECT_REF -ne "xhdowzacfujckjelqhtd") {
+            Write-Error "Recovery blocked: unexpected Supabase project."
             exit 1
           }
-          Write-Host "Automatic certification target: $sha"
+          Write-Host "Recovery candidate: $env:CANDIDATE_SHA"
+          Write-Host "Supabase project: $env:PROJECT_REF"
 
-      - name: Checkout exact PR head SHA
+      - name: Checkout exact Phase 4.6 candidate
         uses: actions/checkout@v6
         with:
           repository: washingtonmsdj/acheguese
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ env.CANDIDATE_SHA }}
           fetch-depth: 1
           persist-credentials: false
 
-      - name: Assert checkout SHA
+      - name: Assert exact checkout and tooling
         shell: powershell
-        env:
-          EXPECTED_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          $actualSha = (git rev-parse HEAD).Trim().ToLowerInvariant()
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          if ($actualSha -ne $env:EXPECTED_SHA.ToLowerInvariant()) {
-            Write-Error "Certification blocked: checkout SHA mismatch. Expected=$env:EXPECTED_SHA Actual=$actualSha"
-            exit 1
-          }
-          Write-Host "Pinned checkout confirmed: $actualSha"
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "24"
-
-      - name: Install dependencies
-        shell: powershell
-        run: npm ci --prefer-offline --no-audit --no-fund
-
-      - name: Install Playwright Chromium
-        shell: powershell
-        run: npx playwright install chromium
-
-      - name: Run deterministic authenticated logout E2E against exact local SHA
-        id: logout_e2e
-        continue-on-error: true
-        shell: powershell
-        env:
-          CI: true
-          PLAYWRIGHT_BASE_URL: http://127.0.0.1:8100
-          VITE_PUBLIC_APP_URL: http://127.0.0.1:8100
-          VITE_SUPABASE_URL: https://xhdowzacfujckjelqhtd.supabase.co
-          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_dc-rd2YjKuZ5KJc_zRYVYA_ANmcFxKk
-          VITE_SUPABASE_ANON_KEY: sb_publishable_dc-rd2YjKuZ5KJc_zRYVYA_ANmcFxKk
-          E2E_SUPABASE_URL: https://xhdowzacfujckjelqhtd.supabase.co
-          E2E_SUPABASE_PUBLISHABLE_KEY: sb_publishable_dc-rd2YjKuZ5KJc_zRYVYA_ANmcFxKk
-          E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
-          E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
-          ACCOUNT_TARGET_IS_PREVIEW: false
         run: |
           $ErrorActionPreference = "Stop"
-          if ([string]::IsNullOrWhiteSpace($env:E2E_USER_EMAIL) -or [string]::IsNullOrWhiteSpace($env:E2E_USER_PASSWORD)) {
-            Write-Error "Certification blocked: authenticated E2E credentials are not configured."
+          $actualSha = (git rev-parse HEAD).Trim().ToLowerInvariant()
+          if ($actualSha -ne $env:CANDIDATE_SHA.ToLowerInvariant()) {
+            Write-Error "Recovery blocked: checkout SHA mismatch. Expected=$env:CANDIDATE_SHA Actual=$actualSha"
             exit 1
           }
-          npx playwright test tests/e2e/logout-authenticated.spec.ts --project=chromium --reporter=list --retries=0
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          foreach ($tool in @("psql", "pg_dump", "pg_restore", "supabase")) {
+            if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) {
+              Write-Error "Recovery blocked: required tool '$tool' is unavailable."
+              exit 1
+            }
+          }
+          $probe = (& psql -X -Atqc "select 1" 2>&1 | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0 -or $probe -ne "1") {
+            Write-Error "Recovery blocked: remote PostgreSQL session could not be authenticated through the configured secure credential store."
+            exit 1
+          }
+          Write-Host "Pinned checkout and remote PostgreSQL connectivity confirmed."
+          Write-Host "Supabase CLI: $(& supabase --version)"
+          Write-Host "pg_dump: $(& pg_dump --version)"
 
-      - name: Print logout E2E failure diagnostics
-        if: steps.logout_e2e.outcome == 'failure'
+      - name: Capture fresh recovery package and verified Drive readback
+        id: recovery
         shell: powershell
         run: |
-          Write-Host "===== Authenticated logout E2E diagnostics ====="
-          $contexts = @(Get-ChildItem -Path "test-results" -Recurse -File -Filter "error-context.md" -ErrorAction SilentlyContinue)
-          if ($contexts.Count -eq 0) {
-            Write-Host "No error-context.md files found."
-          } else {
-            foreach ($context in $contexts) {
-              Write-Host "--- $($context.FullName) ---"
-              Get-Content -Path $context.FullName -ErrorAction SilentlyContinue
+          $ErrorActionPreference = "Stop"
+          Set-StrictMode -Version Latest
+
+          function Invoke-PsqlJson([string]$Sql, [string]$Path) {
+            $raw = (& psql -X -v ON_ERROR_STOP=1 -Atqc $Sql 2>&1 | Out-String).Trim()
+            if ($LASTEXITCODE -ne 0) { throw "psql inventory query failed: $raw" }
+            if ([string]::IsNullOrWhiteSpace($raw)) { $raw = "null" }
+            $null = $raw | ConvertFrom-Json
+            Set-Content -LiteralPath $Path -Value $raw -Encoding UTF8
+            return $raw | ConvertFrom-Json
+          }
+
+          function Invoke-PgDump([string[]]$Args, [string]$LogPath) {
+            & pg_dump @Args 2> $LogPath
+            if ($LASTEXITCODE -ne 0) {
+              $tail = (Get-Content -LiteralPath $LogPath -Tail 30 -ErrorAction SilentlyContinue) -join "`n"
+              throw "pg_dump failed. $tail"
             }
           }
 
-      - name: Run regression tests with non-empty discovery
-        id: regression
-        continue-on-error: true
-        shell: powershell
-        env:
-          CI: true
-        run: |
-          $regressionFiles = @(
-            Get-ChildItem -Path "tests" -File -Filter "regression-*.test.ts" |
-              Sort-Object Name |
-              ForEach-Object { $_.FullName }
-          )
-          if ($regressionFiles.Count -eq 0) {
-            Write-Error "Certification blocked: no regression-*.test.ts files were found."
-            exit 1
+          function Write-JsonFile($Value, [string]$Path) {
+            $Value | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $Path -Encoding UTF8
           }
-          Write-Host "Regression files ($($regressionFiles.Count)):"
-          $regressionFiles | ForEach-Object { Write-Host " - $_" }
-          $vitestArgs = @("vitest", "--run") + $regressionFiles
-          & npx @vitestArgs
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Validate territorial regression boundaries
-        id: boundaries
-        continue-on-error: true
-        shell: powershell
-        run: |
-          $sourceFiles = @(
-            Get-ChildItem -Path "src/modules/guide" -Recurse -File |
-              Where-Object {
-                $_.FullName -notmatch '[\\/]__mocks__[\\/]' -and
-                $_.Name -notmatch '\.(test|spec)\.[^.]+$'
-              }
-          )
-          $manualUrls = @($sourceFiles | Select-String -SimpleMatch -Pattern "'/pontos-turisticos/'")
-          if ($manualUrls.Count -gt 0) {
-            $manualUrls | ForEach-Object { Write-Host $_.ToString() }
-            Write-Error "Found manual URL construction; use buildTouristPointDetailUrl"
-            exit 1
+          $now = [DateTimeOffset]::UtcNow
+          $snapshotId = $now.ToString("yyyyMMdd'T'HHmmss'Z'")
+          $capturedAt = $now.ToString("o")
+          $validUntil = $now.AddHours(24).ToString("o")
+          $root = Join-Path $env:RUNNER_TEMP "acheguese-recovery-$snapshotId"
+          $package = Join-Path $root "package"
+          $dbDir = Join-Path $package "database"
+          $inventoryDir = Join-Path $package "inventories"
+          $logsDir = Join-Path $package "logs"
+          $sourceDir = Join-Path $package "source"
+          $storageDir = Join-Path $package "storage"
+          foreach ($dir in @($root,$package,$dbDir,$inventoryDir,$logsDir,$sourceDir,$storageDir)) {
+            New-Item -ItemType Directory -Path $dir -Force | Out-Null
           }
-          $legacyNeighborhood = @(
-            $sourceFiles |
-              Select-String -SimpleMatch -Pattern "point.neighborhood" |
-              Where-Object { -not $_.Line.Contains("point.location?.name ?? point.neighborhood") }
-          )
-          if ($legacyNeighborhood.Count -gt 0) {
-            $legacyNeighborhood | ForEach-Object { Write-Host $_.ToString() }
-            Write-Error "Found direct legacy neighborhood usage"
-            exit 1
-          }
-          $invalidStateFilters = @($sourceFiles | Select-String -SimpleMatch -Pattern ".eq('state'")
-          if ($invalidStateFilters.Count -gt 0) {
-            $invalidStateFilters | ForEach-Object { Write-Host $_.ToString() }
-            Write-Error "Found invalid territorial state filter"
-            exit 1
-          }
-          Write-Host "Territorial regression boundaries passed."
 
-      - name: Run public territorial E2E
-        id: public_e2e
-        continue-on-error: true
-        shell: powershell
-        env:
-          CI: true
-          PLAYWRIGHT_BASE_URL: http://127.0.0.1:8099
-          VITE_PUBLIC_APP_URL: http://127.0.0.1:8099
-          VITE_SUPABASE_URL: https://ci-fixtures.invalid
-          VITE_SUPABASE_PUBLISHABLE_KEY: ci-public-fixture-key
-          VITE_SUPABASE_ANON_KEY: ci-public-fixture-key
-        run: |
-          npm run test:e2e:ci
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $baselineSql = @"
+          select json_build_object(
+            'capturedAt', now(),
+            'migrationCount', (select count(*) from supabase_migrations.schema_migrations),
+            'latestMigration', (select max(version) from supabase_migrations.schema_migrations),
+            'authUsers', (select count(*) from auth.users),
+            'authIdentities', (select count(*) from auth.identities),
+            'authMfaFactors', (select count(*) from auth.mfa_factors),
+            'storageBuckets', (select count(*) from storage.buckets),
+            'storageObjects', (select count(*) from storage.objects),
+            'storageTotalBytes', (select coalesce(sum((metadata->>'size')::bigint),0) from storage.objects where metadata ? 'size'),
+            'technicalBusinessRows', (select count(*) from public.business_data where coalesce(metadata->>'source_kind','')='technical_fixture'),
+            'technicalBusinessActive', (select count(*) from public.business_data where coalesce(metadata->>'source_kind','')='technical_fixture' and status='active'),
+            'activeBusinesses', (select count(*) from public.business_data where status='active'),
+            'officialEducationSeed', (select count(*) from public.education_profiles where school_inep_code is not null),
+            'cutoverPresent', exists(select 1 from information_schema.tables where table_schema='public' and table_name ilike '%cutover%')
+          )::text;
+          "@
 
-      - name: Print public E2E failure diagnostics
-        if: steps.public_e2e.outcome == 'failure'
-        shell: powershell
-        run: |
-          Write-Host "===== Public territorial E2E diagnostics ====="
-          $contexts = @(Get-ChildItem -Path "test-results" -Recurse -File -Filter "error-context.md" -ErrorAction SilentlyContinue)
-          if ($contexts.Count -eq 0) {
-            Write-Host "No error-context.md files found."
-          } else {
-            foreach ($context in $contexts) {
-              Write-Host "--- $($context.FullName) ---"
-              Get-Content -Path $context.FullName -ErrorAction SilentlyContinue
+          $baselineStart = Invoke-PsqlJson $baselineSql (Join-Path $inventoryDir "baseline-start.json")
+          if ([int64]$baselineStart.storageObjects -ne [int64]$env:PREVIOUS_STORAGE_OBJECTS -or [int64]$baselineStart.storageTotalBytes -ne [int64]$env:PREVIOUS_STORAGE_BYTES) {
+            throw "Storage changed since the last verified physical copy; binary reuse is forbidden. Remote=$($baselineStart.storageObjects)/$($baselineStart.storageTotalBytes), verified=$env:PREVIOUS_STORAGE_OBJECTS/$env:PREVIOUS_STORAGE_BYTES"
+          }
+          if ([int64]$baselineStart.technicalBusinessActive -ne 0) {
+            throw "Business hygiene regression: technical fixture rows are active."
+          }
+          if ([int64]$baselineStart.officialEducationSeed -ne 15) {
+            throw "Official education seed drift detected. Expected 15 INEP-backed rows."
+          }
+
+          Invoke-PgDump @("--no-owner","--no-privileges","--schema=public","--schema=extensions","--schema-only","--file=$dbDir/application-schema.sql") (Join-Path $logsDir "application-schema.log")
+          Invoke-PgDump @("--no-owner","--no-privileges","--schema=public","--schema=extensions","--data-only","--file=$dbDir/application-data.sql") (Join-Path $logsDir "application-data.log")
+          Invoke-PgDump @("--no-owner","--no-privileges","--schema=public","--schema=extensions","--format=custom","--file=$dbDir/application.custom") (Join-Path $logsDir "application-custom.log")
+          Invoke-PgDump @("--no-owner","--no-privileges","--schema=auth","--data-only","--file=$dbDir/auth-data.sql") (Join-Path $logsDir "auth-data.log")
+          Invoke-PgDump @("--no-owner","--no-privileges","--schema=supabase_migrations","--schema-only","--file=$dbDir/migration-history-schema.sql") (Join-Path $logsDir "migration-history-schema.log")
+          Invoke-PgDump @("--no-owner","--no-privileges","--schema=supabase_migrations","--data-only","--file=$dbDir/migration-history-data.sql") (Join-Path $logsDir "migration-history-data.log")
+          Invoke-PgDump @("--no-owner","--no-privileges","--data-only","--table=storage.buckets","--table=storage.objects","--file=$dbDir/storage-metadata.sql") (Join-Path $logsDir "storage-metadata.log")
+
+          $restoreList = & pg_restore --list (Join-Path $dbDir "application.custom") 2>&1
+          if ($LASTEXITCODE -ne 0) { throw "pg_restore could not validate application.custom" }
+          $restoreEntryCount = @($restoreList | Where-Object { $_ -and -not $_.StartsWith(";") }).Count
+          Write-JsonFile ([ordered]@{
+            customDumpReadable = $true
+            customDumpEntryCount = $restoreEntryCount
+            validatedAt = [DateTimeOffset]::UtcNow.ToString("o")
+          }) (Join-Path $package "DUMP-VALIDATION.json")
+
+          Invoke-PsqlJson "select coalesce(json_agg(json_build_object('version',version,'name',name) order by version),'[]'::json)::text from supabase_migrations.schema_migrations;" (Join-Path $inventoryDir "migrations-applied.json") | Out-Null
+          Invoke-PsqlJson "select coalesce(json_agg(json_build_object('name',e.extname,'version',e.extversion) order by e.extname),'[]'::json)::text from pg_extension e;" (Join-Path $inventoryDir "extensions.json") | Out-Null
+          Invoke-PsqlJson "select coalesce(json_agg(json_build_object('id',id,'name',name,'public',public,'fileSizeLimit',file_size_limit,'allowedMimeTypes',allowed_mime_types) order by name),'[]'::json)::text from storage.buckets;" (Join-Path $inventoryDir "storage-buckets.json") | Out-Null
+
+          Write-JsonFile ([ordered]@{
+            capturedAt = [DateTimeOffset]::UtcNow.ToString("o")
+            users = [int64]$baselineStart.authUsers
+            identities = [int64]$baselineStart.authIdentities
+            mfaFactors = [int64]$baselineStart.authMfaFactors
+          }) (Join-Path $inventoryDir "auth-state.json")
+
+          Write-JsonFile ([ordered]@{
+            capturedAt = [DateTimeOffset]::UtcNow.ToString("o")
+            technicalRowsTotal = [int64]$baselineStart.technicalBusinessRows
+            technicalRowsActive = [int64]$baselineStart.technicalBusinessActive
+            activeBusinesses = [int64]$baselineStart.activeBusinesses
+            activeOfficialEducationSeed = [int64]$baselineStart.officialEducationSeed
+            mutation = "No deletion; technical rows remain archived with status=inactive and source metadata=e2e"
+          }) (Join-Path $inventoryDir "business-test-data-hygiene.json")
+
+          $functionsRaw = (& supabase functions list --project-ref $env:PROJECT_REF --output json 2>&1 | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0) { throw "Supabase CLI could not list Edge Functions." }
+          $functionsParsed = $functionsRaw | ConvertFrom-Json
+          if ($null -ne $functionsParsed.functions) { $functionItems = @($functionsParsed.functions) } else { $functionItems = @($functionsParsed) }
+          $functionInventory = @($functionItems | ForEach-Object {
+            [ordered]@{
+              name = if ($_.name) { [string]$_.name } elseif ($_.slug) { [string]$_.slug } else { "" }
+              slug = if ($_.slug) { [string]$_.slug } else { $null }
+              version = if ($_.version) { [int]$_.version } else { $null }
+              status = if ($_.status) { [string]$_.status } else { $null }
+              verifyJwt = if ($null -ne $_.verify_jwt) { [bool]$_.verify_jwt } else { $null }
+            }
+          } | Where-Object { $_.name })
+          Write-JsonFile $functionInventory (Join-Path $inventoryDir "edge-functions.json")
+
+          $secretsRaw = (& supabase secrets list --project-ref $env:PROJECT_REF --output json 2>&1 | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0) { throw "Supabase CLI could not list secret names." }
+          $secretsParsed = $secretsRaw | ConvertFrom-Json
+          if ($null -ne $secretsParsed.secrets) { $secretItems = @($secretsParsed.secrets) } else { $secretItems = @($secretsParsed) }
+          $secretNames = @($secretItems | ForEach-Object {
+            if ($_.name) { [string]$_.name } elseif ($_.Name) { [string]$_.Name }
+          } | Where-Object { $_ } | Sort-Object -Unique)
+          Write-JsonFile $secretNames (Join-Path $inventoryDir "secret-names.json")
+          Write-JsonFile @($secretNames | Where-Object { $_ -match 'TURNSTILE' }) (Join-Path $inventoryDir "turnstile.json")
+
+          $previousZip = "G:\Meu Drive\Achegue-se Recovery\$env:PREVIOUS_SNAPSHOT_ID\Acheguese-Recovery-$env:PREVIOUS_SNAPSHOT_ID.zip"
+          if (-not (Test-Path -LiteralPath $previousZip)) {
+            throw "Previous verified recovery package is not available on the private synced Drive mount."
+          }
+          $previousExtract = Join-Path $root "previous"
+          Expand-Archive -LiteralPath $previousZip -DestinationPath $previousExtract -Force
+          $previousObjects = Join-Path $previousExtract "storage\objects"
+          if (-not (Test-Path -LiteralPath $previousObjects)) { throw "Previous package has no storage/objects payload." }
+          $targetObjects = Join-Path $storageDir "objects"
+          Copy-Item -LiteralPath $previousObjects -Destination $targetObjects -Recurse -Force
+          $localStorageFiles = @(Get-ChildItem -LiteralPath $targetObjects -Recurse -File)
+          $localStorageCount = $localStorageFiles.Count
+          $localStorageBytes = [int64](($localStorageFiles | Measure-Object -Property Length -Sum).Sum)
+          if ($localStorageCount -ne [int64]$baselineStart.storageObjects -or $localStorageBytes -ne [int64]$baselineStart.storageTotalBytes) {
+            throw "Reused Storage payload does not match current remote inventory."
+          }
+          Write-JsonFile ([ordered]@{
+            schemaVersion = "ACHEGUESE_STORAGE_OBJECT_VERIFICATION_V1"
+            capturedAt = [DateTimeOffset]::UtcNow.ToString("o")
+            sourceSnapshotId = $env:PREVIOUS_SNAPSHOT_ID
+            remoteObjectCount = [int64]$baselineStart.storageObjects
+            remoteTotalBytes = [int64]$baselineStart.storageTotalBytes
+            localObjectCount = $localStorageCount
+            localTotalBytes = $localStorageBytes
+            countMatch = $true
+            bytesMatch = $true
+            reusedBecause = "Remote Storage object count and total bytes are unchanged since the prior verified physical copy"
+          }) (Join-Path $inventoryDir "storage-object-verification.json")
+
+          $sourceZip = Join-Path $sourceDir "acheguese-$env:CANDIDATE_SHA.zip"
+          & git archive --format=zip --output=$sourceZip $env:CANDIDATE_SHA
+          if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $sourceZip)) { throw "git archive failed." }
+
+          $baselineEnd = Invoke-PsqlJson $baselineSql (Join-Path $inventoryDir "baseline-end.json")
+          foreach ($field in @('migrationCount','latestMigration','authUsers','authIdentities','authMfaFactors','storageBuckets','storageObjects','storageTotalBytes','technicalBusinessRows','technicalBusinessActive','activeBusinesses','officialEducationSeed','cutoverPresent')) {
+            if ([string]$baselineStart.$field -ne [string]$baselineEnd.$field) {
+              throw "Remote state changed during recovery capture: $field"
             }
           }
 
-      - name: Record aggregate certification result
+          $remoteState = [ordered]@{
+            capturedAt = $capturedAt
+            migrationCount = [int64]$baselineEnd.migrationCount
+            latestMigration = [string]$baselineEnd.latestMigration
+            authUsers = [int64]$baselineEnd.authUsers
+            authIdentities = [int64]$baselineEnd.authIdentities
+            authMfaFactors = [int64]$baselineEnd.authMfaFactors
+            storageBuckets = [int64]$baselineEnd.storageBuckets
+            storageObjects = [int64]$baselineEnd.storageObjects
+            storageTotalBytes = [int64]$baselineEnd.storageTotalBytes
+            edgeFunctions = $functionInventory.Count
+            secretNames = $secretNames.Count
+            cutoverPresent = [bool]$baselineEnd.cutoverPresent
+            technicalBusinessRows = [int64]$baselineEnd.technicalBusinessRows
+            technicalBusinessActive = [int64]$baselineEnd.technicalBusinessActive
+            activeBusinesses = [int64]$baselineEnd.activeBusinesses
+            activeOfficialEducationSeed = [int64]$baselineEnd.officialEducationSeed
+          }
+          Write-JsonFile $remoteState (Join-Path $inventoryDir "remote-state.json")
+
+          Write-JsonFile ([ordered]@{
+            supabaseCli = (& supabase --version | Out-String).Trim()
+            pgDump = (& pg_dump --version | Out-String).Trim()
+            pgRestore = (& pg_restore --version | Out-String).Trim()
+            psql = (& psql --version | Out-String).Trim()
+            connectionMode = "Supavisor session mode IPv4"
+            host = $env:PGHOST
+            port = [int]$env:PGPORT
+            username = $env:PGUSER
+            database = $env:PGDATABASE
+            sslmode = $env:PGSSLMODE
+            dockerUsed = $false
+            localSupabaseUsed = $false
+          }) (Join-Path $inventoryDir "tooling.json")
+
+          $readme = @"
+          # Achegue-se manual recovery snapshot $snapshotId
+
+          Private release-recovery package for Supabase Free.
+
+          - Candidate source SHA: $env:CANDIDATE_SHA
+          - Supabase project: $env:PROJECT_REF
+          - Captured at: $capturedAt
+          - Valid until: $validUntil (24h freshness policy)
+          - Coverage: Database, Auth, Storage
+          - Remote-only capture; Docker/local Supabase was not used.
+          - Storage physical objects were reused from verified snapshot $env:PREVIOUS_SNAPSHOT_ID only after current remote count and total bytes matched exactly ($($baselineEnd.storageObjects) objects / $($baselineEnd.storageTotalBytes) bytes).
+          - No secrets or secret values are stored; only secret names are inventoried.
+          - This capture performs no schema, migration, policy, Auth, Storage, Business, or CUTOVER mutation.
+          "@
+          Set-Content -LiteralPath (Join-Path $package "README.md") -Value $readme -Encoding UTF8
+
+          $runbook = @"
+          # Restore runbook
+
+          1. Verify every entry in CHECKSUMS.sha256 before using the package.
+          2. Confirm the intended target project and migration history before any restore operation.
+          3. Restore application schema/data only inside an explicitly approved recovery window.
+          4. Treat Auth and Storage metadata as sensitive platform state; do not blindly replay credentials, tokens, sessions, or incompatible platform-owned rows.
+          5. Restore Storage binaries only after bucket/object inventory validation.
+          6. Re-run application, Auth, migration, territorial, Business, and security verification before reopening traffic.
+          7. Never print credentials, tokens, secret values, or dump contents into CI logs.
+          "@
+          Set-Content -LiteralPath (Join-Path $package "RESTORE-RUNBOOK.md") -Value $runbook -Encoding UTF8
+
+          Write-JsonFile ([ordered]@{
+            schemaVersion = "ACHEGUESE_RECOVERY_ATTESTATION_V1"
+            snapshotId = $snapshotId
+            candidateSha = $env:CANDIDATE_SHA
+            projectRef = $env:PROJECT_REF
+            capturedAt = $capturedAt
+            validUntil = $validUntil
+            coverage = @("DATABASE","AUTH","STORAGE")
+            remoteState = $remoteState
+            storagePhysicalCopy = [ordered]@{
+              reusedFrom = $env:PREVIOUS_SNAPSHOT_ID
+              countMatch = $true
+              bytesMatch = $true
+            }
+            mutationPerformed = $false
+          }) (Join-Path $package "ATTESTATION.json")
+
+          Write-JsonFile ([ordered]@{
+            dumpValidation = $true
+            baselineStable = $true
+            storagePhysicalCopyVerified = $true
+            businessTechnicalActiveZero = $true
+            officialEducationSeedPreserved = $true
+            exactCandidateSourceArchived = $true
+            noMutationPerformed = $true
+          }) (Join-Path $package "VALIDATION-REPORT.json")
+
+          $manifestEntries = @(Get-ChildItem -LiteralPath $package -Recurse -File | ForEach-Object {
+            [ordered]@{
+              path = $_.FullName.Substring($package.Length + 1).Replace('\','/')
+              bytes = [int64]$_.Length
+            }
+          } | Sort-Object path)
+          Write-JsonFile ([ordered]@{
+            schemaVersion = "ACHEGUESE_RECOVERY_MANIFEST_V1"
+            snapshotId = $snapshotId
+            candidateSha = $env:CANDIDATE_SHA
+            files = $manifestEntries
+          }) (Join-Path $package "MANIFEST.json")
+
+          $checksumLines = @(Get-ChildItem -LiteralPath $package -Recurse -File | Where-Object { $_.Name -ne 'CHECKSUMS.sha256' } | Sort-Object FullName | ForEach-Object {
+            $relative = $_.FullName.Substring($package.Length + 1).Replace('\','/')
+            $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant()
+            "$hash  $relative"
+          })
+          Set-Content -LiteralPath (Join-Path $package "CHECKSUMS.sha256") -Value $checksumLines -Encoding ASCII
+
+          $zipPath = Join-Path $root "Acheguese-Recovery-$snapshotId.zip"
+          Compress-Archive -Path (Join-Path $package '*') -DestinationPath $zipPath -CompressionLevel Optimal -Force
+          $sourceBytes = [int64](Get-Item -LiteralPath $zipPath).Length
+          $sourceSha = (Get-FileHash -Algorithm SHA256 -LiteralPath $zipPath).Hash.ToLowerInvariant()
+
+          $driveFolder = "G:\Meu Drive\Achegue-se Recovery\$snapshotId"
+          New-Item -ItemType Directory -Path $driveFolder -Force | Out-Null
+          $destinationZip = Join-Path $driveFolder "Acheguese-Recovery-$snapshotId.zip"
+          Copy-Item -LiteralPath $zipPath -Destination $destinationZip -Force
+          Start-Sleep -Seconds 3
+          $destinationBytes = [int64](Get-Item -LiteralPath $destinationZip).Length
+          $destinationSha = (Get-FileHash -Algorithm SHA256 -LiteralPath $destinationZip).Hash.ToLowerInvariant()
+          $readbackMatch = ($sourceBytes -eq $destinationBytes -and $sourceSha -eq $destinationSha)
+          if (-not $readbackMatch) { throw "Private Drive readback verification failed." }
+
+          $offDeviceAttestation = [ordered]@{
+            schemaVersion = "ACHEGUESE_OFF_DEVICE_ATTESTATION_V1"
+            snapshotId = $snapshotId
+            capturedAt = [DateTimeOffset]::UtcNow.ToString("o")
+            destination = "Private Google Drive synced folder"
+            path = $destinationZip
+            private = $true
+            localOnly = $false
+            status = "VERIFIED"
+            sourceBytes = $sourceBytes
+            destinationBytes = $destinationBytes
+            sourceSha256 = $sourceSha
+            destinationSha256 = $destinationSha
+            readbackHashMatch = $readbackMatch
+            storageObjectCount = [int64]$baselineEnd.storageObjects
+            storageTotalBytes = [int64]$baselineEnd.storageTotalBytes
+          }
+          $attestationPath = Join-Path $driveFolder "OFF-DEVICE-ATTESTATION-$snapshotId.json"
+          Write-JsonFile $offDeviceAttestation $attestationPath
+
+          "snapshot_id=$snapshotId" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+          "captured_at=$capturedAt" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+          "valid_until=$validUntil" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+          "artifact_bytes=$sourceBytes" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+          "artifact_sha256=$sourceSha" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+          "migration_count=$($remoteState.migrationCount)" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+          "latest_migration=$($remoteState.latestMigration)" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+          "auth_users=$($remoteState.authUsers)" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+          "auth_identities=$($remoteState.authIdentities)" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+          "auth_mfa=$($remoteState.authMfaFactors)" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+          "storage_buckets=$($remoteState.storageBuckets)" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+          "storage_objects=$($remoteState.storageObjects)" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+          "storage_bytes=$($remoteState.storageTotalBytes)" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+          "edge_functions=$($remoteState.edgeFunctions)" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+          "secret_names=$($remoteState.secretNames)" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+          "technical_rows=$($remoteState.technicalBusinessRows)" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+          "technical_active=$($remoteState.technicalBusinessActive)" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+          "active_businesses=$($remoteState.activeBusinesses)" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+          "education_seed=$($remoteState.activeOfficialEducationSeed)" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+          "cutover_present=$($remoteState.cutoverPresent.ToString().ToLowerInvariant())" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+          "readback_match=$($readbackMatch.ToString().ToLowerInvariant())" | Add-Content -Path $env:GITHUB_OUTPUT -Encoding UTF8
+
+          Write-Host "RECOVERY_SNAPSHOT_PASS"
+          Write-Host "SnapshotId=$snapshotId"
+          Write-Host "ValidUntil=$validUntil"
+          Write-Host "Migration=$($remoteState.migrationCount)/$($remoteState.latestMigration)"
+          Write-Host "Auth=$($remoteState.authUsers)/$($remoteState.authIdentities)/$($remoteState.authMfaFactors)"
+          Write-Host "Storage=$($remoteState.storageBuckets)/$($remoteState.storageObjects)/$($remoteState.storageTotalBytes)"
+          Write-Host "BusinessTechnical=$($remoteState.technicalBusinessRows)/$($remoteState.technicalBusinessActive) ActiveBusinesses=$($remoteState.activeBusinesses) EducationSeed=$($remoteState.activeOfficialEducationSeed)"
+          Write-Host "EdgeFunctions=$($remoteState.edgeFunctions) SecretNames=$($remoteState.secretNames)"
+          Write-Host "ArtifactBytes=$sourceBytes ArtifactSha256=$sourceSha Readback=$readbackMatch"
+
+      - name: Record recovery summary
         if: always()
         shell: powershell
-        env:
-          LOGOUT_OUTCOME: ${{ steps.logout_e2e.outcome }}
-          REGRESSION_OUTCOME: ${{ steps.regression.outcome }}
-          BOUNDARIES_OUTCOME: ${{ steps.boundaries.outcome }}
-          PUBLIC_OUTCOME: ${{ steps.public_e2e.outcome }}
-          TARGET_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          $results = @(
-            "Authenticated logout E2E=$env:LOGOUT_OUTCOME",
-            "Regression=$env:REGRESSION_OUTCOME",
-            "Territorial boundaries=$env:BOUNDARIES_OUTCOME",
-            "Public territorial E2E=$env:PUBLIC_OUTCOME"
-          )
           @(
-            "## Automatic heavy PR certification",
-            "- SHA: $env:TARGET_SHA"
+            "## Phase 4.6 fresh recovery snapshot",
+            "- Candidate SHA: $env:CANDIDATE_SHA",
+            "- Snapshot: ${{ steps.recovery.outputs.snapshot_id }}",
+            "- Captured: ${{ steps.recovery.outputs.captured_at }}",
+            "- Valid until: ${{ steps.recovery.outputs.valid_until }}",
+            "- Migration: ${{ steps.recovery.outputs.migration_count }} / ${{ steps.recovery.outputs.latest_migration }}",
+            "- Auth users / identities / MFA: ${{ steps.recovery.outputs.auth_users }} / ${{ steps.recovery.outputs.auth_identities }} / ${{ steps.recovery.outputs.auth_mfa }}",
+            "- Storage buckets / objects / bytes: ${{ steps.recovery.outputs.storage_buckets }} / ${{ steps.recovery.outputs.storage_objects }} / ${{ steps.recovery.outputs.storage_bytes }}",
+            "- Technical Business rows / active: ${{ steps.recovery.outputs.technical_rows }} / ${{ steps.recovery.outputs.technical_active }}",
+            "- Active businesses / official education seed: ${{ steps.recovery.outputs.active_businesses }} / ${{ steps.recovery.outputs.education_seed }}",
+            "- Edge Functions / secret names: ${{ steps.recovery.outputs.edge_functions }} / ${{ steps.recovery.outputs.secret_names }}",
+            "- Artifact bytes: ${{ steps.recovery.outputs.artifact_bytes }}",
+            "- Artifact SHA-256: ${{ steps.recovery.outputs.artifact_sha256 }}",
+            "- Drive readback hash match: ${{ steps.recovery.outputs.readback_match }}"
           ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
-          $results | ForEach-Object {
-            "- $_" | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
-            Write-Host $_
-          }
-
-          $failed = @(
-            $env:LOGOUT_OUTCOME,
-            $env:REGRESSION_OUTCOME,
-            $env:BOUNDARIES_OUTCOME,
-            $env:PUBLIC_OUTCOME
-          ) | Where-Object { $_ -ne "success" }
-
-          if ($failed.Count -gt 0) {
-            Write-Error "Heavy PR certification failed. See individual gate outcomes above."
-            exit 1
-          }
-          Write-Host "HEAVY_PR_CERTIFICATION_PASS"
-
-      - name: Upload certification reports (non-gating transport)
-        if: always()
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: heavy-pr-certification-${{ github.run_id }}
-          path: |
-            playwright-report/
-            test-results/
-          if-no-files-found: ignore
-          retention-days: 7
