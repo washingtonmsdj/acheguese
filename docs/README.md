@@ -15,7 +15,7 @@ Domínios de produto: **Comunidade** (feed, posts, alertas, achados/perdidos, gr
 
 ## Estrutura da documentação
 
-```
+```text
 docs/
 ├── README.md            ← você está aqui (SSOT — porta de entrada)
 ├── FEATURE-MAP.md       ← todas as funcionalidades, status e como o usuário chega
@@ -29,8 +29,8 @@ docs/
 ├── 05-ux/               UX: auditorias e conteúdo editorial de Home/Feed/Post
 ├── 06-navigation/       navegação: mapeamento de rotas e arquitetura da informação
 ├── 07-modules/          contratos SSOT por módulo/domínio
-├── 08-roadmap/          próximos passos, recuperação, pré-launch
-├── 09-reference/        referência técnica: segurança, migrations, husky, governance
+├── 08-roadmap/          próximos passos, recuperação, pré-launch e hardening ativo
+├── 09-reference/        referência técnica, segurança, auditorias, migrations e governance
 └── 10-archive/          histórico. NÃO USAR como fonte de decisão.
 ```
 
@@ -79,9 +79,13 @@ Contratos em [`07-modules/`](./07-modules/): Posts/Feed, Social Engagement, Comm
 - [Próximos passos](./08-roadmap/NEXT-STEPS.md)
 - [Recovery roadmap](./08-roadmap/RECOVERY-ROADMAP.md)
 - [Migração mobile (Capacitor)](./08-roadmap/MONOREPO_MIGRATION_PLAN.md)
+- [Plano de remediação de segurança — 2026-08](./08-roadmap/SECURITY-REMEDIATION-PLAN-2026-08.md)
+- [Checklist de implementação de segurança](./08-roadmap/SECURITY-IMPLEMENTATION-CHECKLIST.md)
 
 ### Referência
 - [Segurança](./09-reference/SECURITY.md) · [Governance](./09-reference/governance/AUTHORITIES.md)
+- [Auditoria de segurança — 2026-08](./09-reference/SECURITY-AUDIT-2026-08.md)
+- [Matriz de verificação de segurança](./09-reference/SECURITY-VERIFICATION-MATRIX.md)
 - [Migrations](./09-reference/MIGRATIONS.md) · [Migrations pendentes](./09-reference/migrations-pending/README.md)
 - [Edge Function secrets](./09-reference/EDGE_FUNCTION_SECRETS.md) · [Supabase secrets](./09-reference/SUPABASE_SECRETS.md)
 - [Husky hooks](./09-reference/HUSKY_HOOKS.md)
@@ -92,7 +96,7 @@ Contratos em [`07-modules/`](./07-modules/): Posts/Feed, Social Engagement, Comm
 ## Arquivados (NÃO usar como fonte)
 
 Tudo em [`10-archive/`](./10-archive/) foi consolidado, superado ou é snapshot histórico.
-Inclui: auditorias antigas, sprints concluídas, iteracões de Education, Profile phases, Mobility guides antigos, docs de comunicação territorial legados, typecheck fixes, root-legacy (`*-MOBILE.md`, `PHASE1-REVIEW`, etc.), architecture-legacy.
+Inclui: auditorias antigas, sprints concluídas, iterações de Education, Profile phases, Mobility guides antigos, docs de comunicação territorial legados, typecheck fixes, root-legacy (`*-MOBILE.md`, `PHASE1-REVIEW`, etc.), architecture-legacy.
 
 **Se um documento em `10-archive/` conflita com um documento acima, o de cima vence.**
 
@@ -106,3 +110,4 @@ Inclui: auditorias antigas, sprints concluídas, iteracões de Education, Profil
 4. **Toda funcionalidade** precisa aparecer no [`FEATURE-MAP.md`](./FEATURE-MAP.md) com um caminho de navegação.
 5. **Toda rota** precisa aparecer no [`SCREEN-MAP.md`](./SCREEN-MAP.md) com propósito claro.
 6. **Toda decisão viva** entra em [`DECISIONS.md`](./DECISIONS.md). Decisões superadas não são copiadas.
+7. **Todo roadmap de segurança ativo** deve estar em `08-roadmap/`; auditoria, matriz e referência técnica ficam em `09-reference/`.
