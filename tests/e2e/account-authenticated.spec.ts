@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   bootstrapFixtureSession,
+  bootstrapProtectedPreviewAccess,
   hasE2EUserCredentials,
   requireE2EUserCredentials,
 } from "../../e2e/helpers/auth";
@@ -95,6 +96,7 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
 
       await page.setViewportSize(viewport);
       await page.context().clearCookies();
+      await bootstrapProtectedPreviewAccess(page);
       await page.goto("/conta", { waitUntil: "domcontentloaded" });
       await expect(page).toHaveURL(/\/login\?redirect=%2Fconta$/);
       await expect(page.locator("#login-identifier")).toBeVisible({
