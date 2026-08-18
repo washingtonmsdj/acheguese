@@ -191,6 +191,8 @@ jobs:
           CI: true
           PLAYWRIGHT_BASE_URL: ${{ steps.account_target.outputs.base_url }}
           ACCOUNT_TARGET_IS_PREVIEW: ${{ steps.account_target.outputs.is_preview }}
+          E2E_SUPABASE_URL: https://xhdowzacfujckjelqhtd.supabase.co
+          E2E_SUPABASE_PUBLISHABLE_KEY: sb_publishable_dc-rd2YjKuZ5KJc_zRYVYA_ANmcFxKk
           E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
           E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
@@ -309,7 +311,7 @@ jobs:
             "Authenticated Account E2E accepts only allowlisted Achegue-se Production/project Preview HTTPS origins and runs with zero retries.",
             "Protected Vercel Preview E2E uses only the official VERCEL_AUTOMATION_BYPASS_SECRET GitHub Actions secret and an ephemeral Playwright config; the target SHA remains unchanged.",
             "Public territorial E2E is fixture-backed and uses no local Supabase, Docker, service-role key, or Production seed.",
-            "Authenticated Account E2E uses only E2E_USER_EMAIL/E2E_USER_PASSWORD from GitHub Actions and covers mobile, tablet, and desktop in the target test suite.",
+            "Authenticated Account E2E uses explicit public Supabase project configuration plus only E2E_USER_EMAIL/E2E_USER_PASSWORD from GitHub Actions and covers mobile, tablet, and desktop in the target test suite.",
             "Regression discovery fails closed when no regression test files are present.",
             "No automatic fallback to GitHub-hosted runners exists."
           ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
