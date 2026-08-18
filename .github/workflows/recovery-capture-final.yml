@@ -1,0 +1,61 @@
+name: Final Recovery Capture (Temporary)
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  capture:
+    name: Capture verified pre-Phase-4.6 recovery
+    if: github.event.pull_request.head.ref == 'ops/recovery-refresh-20260818' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on:
+      - self-hosted
+      - windows
+      - x64
+      - acheguese-heavy-windows
+      - remote-only
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout exact operational head
+        uses: actions/checkout@v6
+        with:
+          repository: washingtonmsdj/acheguese
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Assert operational provenance
+        shell: powershell
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $actual = (git rev-parse HEAD).Trim().ToLowerInvariant()
+          if ($actual -ne $env:EXPECTED_SHA.ToLowerInvariant()) {
+            Write-Error "Recovery blocked: checkout SHA mismatch."
+            exit 1
+          }
+          if ($env:GITHUB_REPOSITORY -ne 'washingtonmsdj/acheguese') {
+            Write-Error "Recovery blocked: unexpected repository."
+            exit 1
+          }
+          Write-Host "Pinned operational checkout confirmed: $actual"
+
+      - name: Capture fresh remote-only recovery snapshot
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & powershell -NoProfile -ExecutionPolicy Bypass -File scripts/ops/capture-final-recovery.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
