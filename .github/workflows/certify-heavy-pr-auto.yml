@@ -239,9 +239,12 @@ jobs:
           )
           @(
             "## Automatic heavy PR certification",
-            "- SHA: $env:TARGET_SHA",
-            "- $($results -join "`n- ")"
+            "- SHA: $env:TARGET_SHA"
           ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
+          $results | ForEach-Object {
+            "- $_" | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
+            Write-Host $_
+          }
 
           $failed = @(
             $env:ACCOUNT_OUTCOME,
