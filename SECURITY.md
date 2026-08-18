@@ -1,17 +1,17 @@
 # Security Policy
 
-This file is the repository-root entry point for security. The canonical documentation hierarchy is defined by `docs/README.md`; detailed security guidance lives under the numbered documentation structure.
+This file is the repository-root entry point for security. The canonical documentation hierarchy is defined by [docs/README.md](./docs/README.md); detailed security guidance lives under the numbered documentation structure.
 
 ## Canonical Docs
 
-- Documentation SSOT: `docs/README.md`
-- General project security: `docs/09-reference/SECURITY.md`
-- Supabase local secret workflow: `docs/09-reference/SUPABASE_SECRETS.md`
-- Supabase Edge Function runtime secrets: `docs/09-reference/EDGE_FUNCTION_SECRETS.md`
-- Active security audit: `docs/09-reference/SECURITY-AUDIT-2026-08.md`
-- Active remediation plan: `docs/08-roadmap/SECURITY-REMEDIATION-PLAN-2026-08.md`
-- Implementation checklist: `docs/08-roadmap/SECURITY-IMPLEMENTATION-CHECKLIST.md`
-- Verification matrix: `docs/09-reference/SECURITY-VERIFICATION-MATRIX.md`
+- [Documentation SSOT](./docs/README.md)
+- [General project security](./docs/09-reference/SECURITY.md)
+- [Supabase local secret workflow](./docs/09-reference/SUPABASE_SECRETS.md)
+- [Supabase Edge Function runtime secrets](./docs/09-reference/EDGE_FUNCTION_SECRETS.md)
+- [Active security audit](./docs/09-reference/SECURITY-AUDIT-2026-08.md)
+- [Active remediation plan](./docs/08-roadmap/SECURITY-REMEDIATION-PLAN-2026-08.md)
+- [Implementation checklist](./docs/08-roadmap/SECURITY-IMPLEMENTATION-CHECKLIST.md)
+- [Verification matrix](./docs/09-reference/SECURITY-VERIFICATION-MATRIX.md)
 
 ## Non-Negotiable Rules
 
