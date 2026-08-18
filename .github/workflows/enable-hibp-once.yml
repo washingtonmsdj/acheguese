@@ -1,0 +1,79 @@
+name: Enable Supabase HIBP Protection (Temporary)
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+concurrency:
+  group: enable-hibp-once
+  cancel-in-progress: false
+
+jobs:
+  enable-hibp:
+    name: Enable and verify leaked-password protection
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on:
+      - self-hosted
+      - windows
+      - x64
+      - acheguese-heavy-windows
+      - remote-only
+    timeout-minutes: 10
+
+    steps:
+      - name: Validate runner and exact repository
+        shell: powershell
+        env:
+          TARGET_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          if ($env:RUNNER_OS -ne "Windows" -or $env:RUNNER_ARCH -ne "X64") {
+            Write-Error "Blocked: expected Windows x64 runner."
+            exit 1
+          }
+          if ($env:GITHUB_REPOSITORY -ne "washingtonmsdj/acheguese") {
+            Write-Error "Blocked: unexpected repository."
+            exit 1
+          }
+          if ($env:TARGET_SHA -notmatch '^[0-9a-fA-F]{40}$') {
+            Write-Error "Blocked: invalid exact head SHA."
+            exit 1
+          }
+
+      - name: Checkout exact PR head SHA
+        uses: actions/checkout@v6
+        with:
+          repository: washingtonmsdj/acheguese
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Enable and verify HIBP protection
+        shell: powershell
+        env:
+          SUPABASE_PROJECT_REF: xhdowzacfujckjelqhtd
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_MANAGEMENT_API_TOKEN: ${{ secrets.SUPABASE_MANAGEMENT_API_TOKEN }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          node scripts/security/supabase-auth-hibp.mjs --apply --project-ref xhdowzacfujckjelqhtd --json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node scripts/security/supabase-auth-hibp.mjs --check --project-ref xhdowzacfujckjelqhtd --json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host "SUPABASE_HIBP_ENABLED_AND_VERIFIED"
