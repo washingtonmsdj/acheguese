@@ -164,6 +164,7 @@ jobs:
           TYPECHECK: ${{ steps.typecheck.outcome }}
           TESTS: ${{ steps.tests.outcome }}
           ENV_GUARD: ${{ steps.env_guard.outcome }}
+          ALL_CHECKS_PASSED: ${{ steps.npm_ci.outcome == 'success' && steps.security_validate.outcome == 'success' && steps.lint_security.outcome == 'success' && steps.npm_audit.outcome == 'success' && steps.lint.outcome == 'success' && steps.typecheck.outcome == 'success' && steps.tests.outcome == 'success' && steps.env_guard.outcome == 'success' }}
           TARGET_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           $results = @(
@@ -186,18 +187,8 @@ jobs:
             Write-Host $_
           }
 
-          $failed = @(
-            $env:NPM_CI,
-            $env:SECURITY_VALIDATE,
-            $env:LINT_SECURITY,
-            $env:NPM_AUDIT,
-            $env:LINT,
-            $env:TYPECHECK,
-            $env:TESTS,
-            $env:ENV_GUARD
-          ) | Where-Object { $_ -ne "success" }
-
-          if ($failed.Count -gt 0) {
+          Write-Host "all checks passed expression=$env:ALL_CHECKS_PASSED"
+          if ($env:ALL_CHECKS_PASSED -ne "true") {
             Write-Error "One or more diagnostic gates failed. See the summary for exact outcomes."
             exit 1
           }
