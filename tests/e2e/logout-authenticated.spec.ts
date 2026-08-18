@@ -13,6 +13,13 @@ const VIEWPORTS = [
 
 test.setTimeout(120_000);
 
+async function gotoCentral(page: Parameters<typeof test>[0] extends never ? never : any) {
+  await page.goto("/central", {
+    waitUntil: "commit",
+    timeout: 60_000,
+  });
+}
+
 test.describe("Logout autenticado — contrato determinístico", () => {
   test.skip(
     !hasE2EUserCredentials(),
@@ -28,12 +35,12 @@ test.describe("Logout autenticado — contrato determinístico", () => {
       await page.setViewportSize(viewport);
       await page.context().clearCookies();
 
-      await page.goto("/central", {
-        waitUntil: "domcontentloaded",
-        timeout: 60_000,
-      });
+      // `commit` avoids making the first cold Vite navigation depend on every
+      // document resource reaching DOMContentLoaded. The URL assertions below
+      // still prove that the SPA guard actually booted and redirected.
+      await gotoCentral(page);
       await expect(page).toHaveURL(/\/login\?redirect=%2Fcentral$/, {
-        timeout: 30_000,
+        timeout: 60_000,
       });
 
       await bootstrapFixtureSession(
@@ -42,10 +49,7 @@ test.describe("Logout autenticado — contrato determinístico", () => {
         credentials.password,
       );
 
-      await page.goto("/central", {
-        waitUntil: "domcontentloaded",
-        timeout: 60_000,
-      });
+      await gotoCentral(page);
       await expect(page).toHaveURL(/\/central(?:\?|$)/, { timeout: 30_000 });
 
       const logoutButton = page.getByRole("button", { name: "Sair da conta" });
@@ -54,12 +58,9 @@ test.describe("Logout autenticado — contrato determinístico", () => {
 
       await expect(page).toHaveURL(/\/login(?:\?|$)/, { timeout: 30_000 });
 
-      await page.goto("/central", {
-        waitUntil: "domcontentloaded",
-        timeout: 60_000,
-      });
+      await gotoCentral(page);
       await expect(page).toHaveURL(/\/login\?redirect=%2Fcentral$/, {
-        timeout: 30_000,
+        timeout: 60_000,
       });
     });
   }
