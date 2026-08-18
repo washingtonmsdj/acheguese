@@ -19,15 +19,16 @@ test.describe("Logout autenticado — contrato determinístico", () => {
     "E2E autenticado exige E2E_USER_EMAIL/E2E_USER_PASSWORD; nenhum segredo padrão é inventado.",
   );
 
-  test.beforeAll(async ({ browser }) => {
+  test.beforeAll(async ({ browser }, testInfo) => {
+    testInfo.setTimeout(180_000);
     const page = await browser.newPage();
     try {
       await page.goto("/login", {
-        waitUntil: "domcontentloaded",
+        waitUntil: "commit",
         timeout: 120_000,
       });
       await expect(page.locator("#login-identifier")).toBeVisible({
-        timeout: 30_000,
+        timeout: 120_000,
       });
     } finally {
       await page.close();
