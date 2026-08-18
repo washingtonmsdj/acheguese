@@ -1,22 +1,57 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
-// Após Sprint DOCS.1, a porta de entrada única é docs/README.md.
-// Ele é o SSOT documental e o único doc validado por completude de links.
-const LIVE_DOCS = ["docs/README.md"] as const;
+// docs/README.md remains the single documentation SSOT. Root entry points and
+// active security execution docs are validated as live navigation surfaces so
+// they cannot silently drift to deleted or moved files.
+const LIVE_DOCS = [
+  "README.md",
+  "SECURITY.md",
+  "docs/README.md",
+  "docs/08-roadmap/SECURITY-REMEDIATION-PLAN-2026-08.md",
+  "docs/08-roadmap/SECURITY-IMPLEMENTATION-CHECKLIST.md",
+  "docs/09-reference/SECURITY-AUDIT-2026-08.md",
+  "docs/09-reference/SECURITY-VERIFICATION-MATRIX.md",
+] as const;
 
-function extractRelativeLinks(markdown: string): string[] {
-  const matches = [...markdown.matchAll(/\[[^\]]+\]\((\.[^)]+)\)/g)];
-  return matches.map((match) => match[1]).filter((link) => link.startsWith("./"));
+function extractLocalLinks(markdown: string): string[] {
+  const matches = [...markdown.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)];
+
+  return matches
+    .map((match) => match[1].trim())
+    .map((link) => {
+      if (link.startsWith("<") && link.endsWith(">")) {
+        return link.slice(1, -1).trim();
+      }
+      return link;
+    })
+    .filter((link) => link.length > 0)
+    .filter(
+      (link) =>
+        !link.startsWith("#") &&
+        !/^https?:\/\//i.test(link) &&
+        !/^mailto:/i.test(link) &&
+        !/^tel:/i.test(link) &&
+        !/^data:/i.test(link),
+    );
+}
+
+function normalizeLocalTarget(link: string): string {
+  const withoutFragment = link.split("#", 1)[0];
+  const withoutQuery = withoutFragment.split("?", 1)[0];
+  return decodeURIComponent(withoutQuery);
 }
 
 function validateFile(filePath: string): string[] {
   const content = readFileSync(filePath, "utf8");
-  const links = extractRelativeLinks(content);
+  const links = extractLocalLinks(content);
   const missing: string[] = [];
 
   for (const link of links) {
-    const target = resolve(dirname(filePath), link.slice(2));
+    const localTarget = normalizeLocalTarget(link);
+    if (!localTarget) continue;
+
+    const target = resolve(dirname(filePath), localTarget);
     if (!existsSync(target)) {
       missing.push(`${filePath} -> ${link}`);
     }
@@ -44,7 +79,9 @@ function main(): void {
     process.exit(1);
   }
 
-  console.log("Links dos docs vivos validados com sucesso.");
+  console.log(
+    `Links dos docs vivos validados com sucesso (${LIVE_DOCS.length} arquivos).`,
+  );
 }
 
 main();
