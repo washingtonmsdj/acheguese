@@ -7,11 +7,13 @@
  */
 
 import { supabase } from "@/integrations/supabase";
+import { createBrowserAuthStorage } from "@/integrations/supabase/cookieStorage";
 import { SessionService } from "@/core/session/services/SessionService";
 import { logger } from "@/shared/utils/logger";
 import { RoleService } from "@/core/authorization/services/RoleService";
 import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
 import { isCurrentTermsAcceptance } from "@/core/legal/termsOfService";
+import { AUTH_STORAGE_KEY } from "@/config/security.config";
 import { AuthError } from "./types";
 import {
   buildSupabaseFunctionUrl,
@@ -25,6 +27,13 @@ interface UsernameLoginResponse {
   };
   error?: string;
 }
+
+const SIGN_OUT_TIMEOUT_MS = 8_000;
+
+type SignOutAttemptResult =
+  | { kind: "completed"; error: unknown | null }
+  | { kind: "failed"; error: unknown }
+  | { kind: "timeout" };
 
 export class AuthService {
   private static adminCache = new Map<string, boolean>();
@@ -278,9 +287,41 @@ export class AuthService {
     });
     if (error) throw error;
   }
+
+  private static async clearLocalAuthStorage(): Promise<void> {
+    const storage = createBrowserAuthStorage();
+    await storage.removeItem(AUTH_STORAGE_KEY);
+    await storage.removeItem(`${AUTH_STORAGE_KEY}-code-verifier`);
+
+    const remainingSession = await storage.getItem(AUTH_STORAGE_KEY);
+    if (remainingSession !== null) {
+      throw new Error("Não foi possível encerrar a sessão local com segurança.");
+    }
+  }
+
   static async signOut(): Promise<void> {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+    const timeoutPromise = new Promise<SignOutAttemptResult>((resolve) => {
+      timeoutHandle = setTimeout(
+        () => resolve({ kind: "timeout" }),
+        SIGN_OUT_TIMEOUT_MS,
+      );
+    });
+
+    const signOutPromise: Promise<SignOutAttemptResult> = supabase.auth
+      .signOut({ scope: "local" })
+      .then(({ error }) => ({ kind: "completed" as const, error }))
+      .catch((error: unknown) => ({ kind: "failed" as const, error }));
+
+    const result = await Promise.race([signOutPromise, timeoutPromise]);
+    if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);
+
+    if (result.kind === "completed" && !result.error) return;
+
+    await AuthService.clearLocalAuthStorage();
+    logger.warn("AuthService.signOut recovered with local auth cleanup", {
+      reason: result.kind,
+    });
   }
 
   static async resetPassword(email: string): Promise<void> {

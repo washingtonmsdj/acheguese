@@ -1,0 +1,272 @@
+name: Heavy PR Certification (Auto)
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+concurrency:
+  group: heavy-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  certify-heavy-pr:
+    name: Heavy PR gates for exact head SHA
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on:
+      - self-hosted
+      - windows
+      - x64
+      - acheguese-heavy-windows
+      - playwright-chromium
+      - remote-only
+    timeout-minutes: 90
+
+    steps:
+      - name: Validate runner and PR provenance
+        shell: powershell
+        env:
+          TARGET_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          if ($env:RUNNER_OS -ne "Windows" -or $env:RUNNER_ARCH -ne "X64") {
+            Write-Error "Certification blocked: runner must be Windows x64."
+            exit 1
+          }
+          if ($env:GITHUB_REPOSITORY -ne "washingtonmsdj/acheguese") {
+            Write-Error "Certification blocked: unexpected repository $env:GITHUB_REPOSITORY."
+            exit 1
+          }
+          if ($env:HEAD_REPOSITORY -ne $env:GITHUB_REPOSITORY) {
+            Write-Error "Certification blocked: self-hosted runner never executes fork PR code."
+            exit 1
+          }
+          $sha = ([string]$env:TARGET_SHA).Trim().ToLowerInvariant()
+          if ($sha -notmatch '^[0-9a-f]{40}$') {
+            Write-Error "Certification blocked: PR head is not an exact 40-character SHA."
+            exit 1
+          }
+          Write-Host "Automatic certification target: $sha"
+
+      - name: Checkout exact PR head SHA
+        uses: actions/checkout@v6
+        with:
+          repository: washingtonmsdj/acheguese
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Assert checkout SHA
+        shell: powershell
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          $actualSha = (git rev-parse HEAD).Trim().ToLowerInvariant()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($actualSha -ne $env:EXPECTED_SHA.ToLowerInvariant()) {
+            Write-Error "Certification blocked: checkout SHA mismatch. Expected=$env:EXPECTED_SHA Actual=$actualSha"
+            exit 1
+          }
+          Write-Host "Pinned checkout confirmed: $actualSha"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Install dependencies
+        shell: powershell
+        run: npm ci --prefer-offline --no-audit --no-fund
+
+      - name: Install Playwright Chromium
+        shell: powershell
+        run: npx playwright install chromium
+
+      - name: Run deterministic authenticated logout E2E against exact local SHA
+        id: logout_e2e
+        continue-on-error: true
+        shell: powershell
+        env:
+          CI: true
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:8100
+          VITE_PUBLIC_APP_URL: http://127.0.0.1:8100
+          VITE_SUPABASE_URL: https://xhdowzacfujckjelqhtd.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_dc-rd2YjKuZ5KJc_zRYVYA_ANmcFxKk
+          VITE_SUPABASE_ANON_KEY: sb_publishable_dc-rd2YjKuZ5KJc_zRYVYA_ANmcFxKk
+          E2E_SUPABASE_URL: https://xhdowzacfujckjelqhtd.supabase.co
+          E2E_SUPABASE_PUBLISHABLE_KEY: sb_publishable_dc-rd2YjKuZ5KJc_zRYVYA_ANmcFxKk
+          E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+          E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
+          ACCOUNT_TARGET_IS_PREVIEW: false
+        run: |
+          $ErrorActionPreference = "Stop"
+          if ([string]::IsNullOrWhiteSpace($env:E2E_USER_EMAIL) -or [string]::IsNullOrWhiteSpace($env:E2E_USER_PASSWORD)) {
+            Write-Error "Certification blocked: authenticated E2E credentials are not configured."
+            exit 1
+          }
+          npx playwright test tests/e2e/logout-authenticated.spec.ts --project=chromium --reporter=list --retries=0
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Print logout E2E failure diagnostics
+        if: steps.logout_e2e.outcome == 'failure'
+        shell: powershell
+        run: |
+          Write-Host "===== Authenticated logout E2E diagnostics ====="
+          $contexts = @(Get-ChildItem -Path "test-results" -Recurse -File -Filter "error-context.md" -ErrorAction SilentlyContinue)
+          if ($contexts.Count -eq 0) {
+            Write-Host "No error-context.md files found."
+          } else {
+            foreach ($context in $contexts) {
+              Write-Host "--- $($context.FullName) ---"
+              Get-Content -Path $context.FullName -ErrorAction SilentlyContinue
+            }
+          }
+
+      - name: Run regression tests with non-empty discovery
+        id: regression
+        continue-on-error: true
+        shell: powershell
+        env:
+          CI: true
+        run: |
+          $regressionFiles = @(
+            Get-ChildItem -Path "tests" -File -Filter "regression-*.test.ts" |
+              Sort-Object Name |
+              ForEach-Object { $_.FullName }
+          )
+          if ($regressionFiles.Count -eq 0) {
+            Write-Error "Certification blocked: no regression-*.test.ts files were found."
+            exit 1
+          }
+          Write-Host "Regression files ($($regressionFiles.Count)):"
+          $regressionFiles | ForEach-Object { Write-Host " - $_" }
+          $vitestArgs = @("vitest", "--run") + $regressionFiles
+          & npx @vitestArgs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Validate territorial regression boundaries
+        id: boundaries
+        continue-on-error: true
+        shell: powershell
+        run: |
+          $sourceFiles = @(
+            Get-ChildItem -Path "src/modules/guide" -Recurse -File |
+              Where-Object {
+                $_.FullName -notmatch '[\\/]__mocks__[\\/]' -and
+                $_.Name -notmatch '\.(test|spec)\.[^.]+$'
+              }
+          )
+          $manualUrls = @($sourceFiles | Select-String -SimpleMatch -Pattern "'/pontos-turisticos/'")
+          if ($manualUrls.Count -gt 0) {
+            $manualUrls | ForEach-Object { Write-Host $_.ToString() }
+            Write-Error "Found manual URL construction; use buildTouristPointDetailUrl"
+            exit 1
+          }
+          $legacyNeighborhood = @(
+            $sourceFiles |
+              Select-String -SimpleMatch -Pattern "point.neighborhood" |
+              Where-Object { -not $_.Line.Contains("point.location?.name ?? point.neighborhood") }
+          )
+          if ($legacyNeighborhood.Count -gt 0) {
+            $legacyNeighborhood | ForEach-Object { Write-Host $_.ToString() }
+            Write-Error "Found direct legacy neighborhood usage"
+            exit 1
+          }
+          $invalidStateFilters = @($sourceFiles | Select-String -SimpleMatch -Pattern ".eq('state'")
+          if ($invalidStateFilters.Count -gt 0) {
+            $invalidStateFilters | ForEach-Object { Write-Host $_.ToString() }
+            Write-Error "Found invalid territorial state filter"
+            exit 1
+          }
+          Write-Host "Territorial regression boundaries passed."
+
+      - name: Run public territorial E2E
+        id: public_e2e
+        continue-on-error: true
+        shell: powershell
+        env:
+          CI: true
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:8099
+          VITE_PUBLIC_APP_URL: http://127.0.0.1:8099
+          VITE_SUPABASE_URL: https://ci-fixtures.invalid
+          VITE_SUPABASE_PUBLISHABLE_KEY: ci-public-fixture-key
+          VITE_SUPABASE_ANON_KEY: ci-public-fixture-key
+        run: |
+          npm run test:e2e:ci
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Print public E2E failure diagnostics
+        if: steps.public_e2e.outcome == 'failure'
+        shell: powershell
+        run: |
+          Write-Host "===== Public territorial E2E diagnostics ====="
+          $contexts = @(Get-ChildItem -Path "test-results" -Recurse -File -Filter "error-context.md" -ErrorAction SilentlyContinue)
+          if ($contexts.Count -eq 0) {
+            Write-Host "No error-context.md files found."
+          } else {
+            foreach ($context in $contexts) {
+              Write-Host "--- $($context.FullName) ---"
+              Get-Content -Path $context.FullName -ErrorAction SilentlyContinue
+            }
+          }
+
+      - name: Record aggregate certification result
+        if: always()
+        shell: powershell
+        env:
+          LOGOUT_OUTCOME: ${{ steps.logout_e2e.outcome }}
+          REGRESSION_OUTCOME: ${{ steps.regression.outcome }}
+          BOUNDARIES_OUTCOME: ${{ steps.boundaries.outcome }}
+          PUBLIC_OUTCOME: ${{ steps.public_e2e.outcome }}
+          TARGET_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          $results = @(
+            "Authenticated logout E2E=$env:LOGOUT_OUTCOME",
+            "Regression=$env:REGRESSION_OUTCOME",
+            "Territorial boundaries=$env:BOUNDARIES_OUTCOME",
+            "Public territorial E2E=$env:PUBLIC_OUTCOME"
+          )
+          @(
+            "## Automatic heavy PR certification",
+            "- SHA: $env:TARGET_SHA"
+          ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
+          $results | ForEach-Object {
+            "- $_" | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
+            Write-Host $_
+          }
+
+          $failed = @(
+            $env:LOGOUT_OUTCOME,
+            $env:REGRESSION_OUTCOME,
+            $env:BOUNDARIES_OUTCOME,
+            $env:PUBLIC_OUTCOME
+          ) | Where-Object { $_ -ne "success" }
+
+          if ($failed.Count -gt 0) {
+            Write-Error "Heavy PR certification failed. See individual gate outcomes above."
+            exit 1
+          }
+          Write-Host "HEAVY_PR_CERTIFICATION_PASS"
+
+      - name: Upload certification reports (non-gating transport)
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: heavy-pr-certification-${{ github.run_id }}
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7

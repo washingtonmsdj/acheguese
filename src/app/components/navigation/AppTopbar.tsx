@@ -1,5 +1,5 @@
 import { SidebarTrigger } from "@/shared/components/ui/sidebar";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Bell, LogOut, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
@@ -26,14 +26,13 @@ function getInitials(value?: string | null): string {
  * Topbar global da aplicacao.
  */
 export function AppTopbar() {
-  const navigate = useNavigate();
   const { activeProfile, user } = useSessionContext();
   const appUrls = useAppUrls();
   const showMessages = isLaunchSurfaceEnabled("communityCommunication");
 
   const handleLogout = async () => {
     await AuthService.signOut();
-    navigate("/login", { replace: true });
+    window.location.replace("/login");
   };
 
   return (
