@@ -26,7 +26,7 @@ function Add-PostgresToPath {
   }
 
   $bins = @(Get-ChildItem -LiteralPath $root -Directory -ErrorAction Stop |
-    Sort-Object { [version]($_.Name -replace '[^0-9\.]','') } -Descending |
+    Sort-Object { [int]($_.Name -replace '[^0-9]','') } -Descending |
     ForEach-Object { Join-Path $_.FullName "bin" } |
     Where-Object { Test-Path -LiteralPath (Join-Path $_ "psql.exe") })
 
