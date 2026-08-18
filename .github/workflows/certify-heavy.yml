@@ -144,12 +144,12 @@ jobs:
             exit 1
           }
 
-          $host = $uri.DnsSafeHost.ToLowerInvariant()
-          $isProduction = @("acheguese.com.br", "www.acheguese.com.br", "acheguese.vercel.app") -contains $host
-          $isProjectPreview = $host -match '^acheguese-[a-z0-9-]+-jogo-brasils-projects\.vercel\.app$'
+          $targetHost = $uri.DnsSafeHost.ToLowerInvariant()
+          $isProduction = @("acheguese.com.br", "www.acheguese.com.br", "acheguese.vercel.app") -contains $targetHost
+          $isProjectPreview = $targetHost -match '^acheguese-[a-z0-9-]+-jogo-brasils-projects\.vercel\.app$'
 
           if (-not $isProduction -and -not $isProjectPreview) {
-            Write-Error "Certification blocked: Account E2E target is outside the Achegue-se Production/Preview allowlist. Host=$host"
+            Write-Error "Certification blocked: Account E2E target is outside the Achegue-se Production/Preview allowlist. Host=$targetHost"
             exit 1
           }
 
