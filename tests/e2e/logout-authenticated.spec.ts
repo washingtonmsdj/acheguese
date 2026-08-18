@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import {
   bootstrapFixtureSession,
   hasE2EUserCredentials,
@@ -13,7 +13,7 @@ const VIEWPORTS = [
 
 test.setTimeout(120_000);
 
-async function gotoCentral(page: Parameters<typeof test>[0] extends never ? never : any) {
+async function gotoCentral(page: Page) {
   await page.goto("/central", {
     waitUntil: "commit",
     timeout: 60_000,
