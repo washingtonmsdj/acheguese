@@ -16,9 +16,6 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   CANDIDATE_SHA: 934f9df1004bee5ba185500cde7b5bad59e59123
   PROJECT_REF: xhdowzacfujckjelqhtd
-  PREVIOUS_SNAPSHOT_ID: 20260815T201851Z
-  PREVIOUS_STORAGE_OBJECTS: "65"
-  PREVIOUS_STORAGE_BYTES: "23926702"
 
 concurrency:
   group: phase-4-6-recovery-${{ github.event.pull_request.number }}
@@ -35,7 +32,7 @@ jobs:
       - acheguese-heavy-windows
       - playwright-chromium
       - remote-only
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     steps:
       - name: Validate runner and recovery provenance
@@ -78,20 +75,14 @@ jobs:
           persist-credentials: false
           path: candidate
 
-      - name: Capture fresh recovery package and verified Drive readback
+      - name: Capture fresh recovery package to private Drive sync target
         id: recovery
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
-          $script = Join-Path $env:GITHUB_WORKSPACE "harness\tools\recovery-capture-temp.ps1"
+          $script = Join-Path $env:GITHUB_WORKSPACE "harness\tools\recovery-capture-temp-v2.ps1"
           $candidate = Join-Path $env:GITHUB_WORKSPACE "candidate"
-          & $script `
-            -CandidateSha $env:CANDIDATE_SHA `
-            -CandidatePath $candidate `
-            -ProjectRef $env:PROJECT_REF `
-            -PreviousSnapshotId $env:PREVIOUS_SNAPSHOT_ID `
-            -PreviousStorageObjects ([int64]$env:PREVIOUS_STORAGE_OBJECTS) `
-            -PreviousStorageBytes ([int64]$env:PREVIOUS_STORAGE_BYTES)
+          & $script -CandidateSha $env:CANDIDATE_SHA -CandidatePath $candidate -ProjectRef $env:PROJECT_REF
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Record recovery summary
@@ -107,17 +98,20 @@ jobs:
             "- Migration: ${{ steps.recovery.outputs.migration_count }} / ${{ steps.recovery.outputs.latest_migration }}",
             "- Auth users / identities / MFA: ${{ steps.recovery.outputs.auth_users }} / ${{ steps.recovery.outputs.auth_identities }} / ${{ steps.recovery.outputs.auth_mfa }}",
             "- Storage buckets / objects / bytes: ${{ steps.recovery.outputs.storage_buckets }} / ${{ steps.recovery.outputs.storage_objects }} / ${{ steps.recovery.outputs.storage_bytes }}",
+            "- Storage mode: fresh remote download; per-object SHA-256 captured",
             "- Technical Business rows / active: ${{ steps.recovery.outputs.technical_rows }} / ${{ steps.recovery.outputs.technical_active }}",
             "- Active businesses / official education seed: ${{ steps.recovery.outputs.active_businesses }} / ${{ steps.recovery.outputs.education_seed }}",
             "- Edge Functions / secret names: ${{ steps.recovery.outputs.edge_functions }} / ${{ steps.recovery.outputs.secret_names }}",
             "- Artifact bytes: ${{ steps.recovery.outputs.artifact_bytes }}",
             "- Artifact SHA-256: ${{ steps.recovery.outputs.artifact_sha256 }}",
-            "- Drive readback hash match: ${{ steps.recovery.outputs.readback_match }}"
+            "- Drive sync-target local readback hash match: ${{ steps.recovery.outputs.readback_match }}",
+            "- Cloud-side Drive confirmation: performed separately after this job"
           ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
 
-      - name: Cleanup temporary recovery harness
+      - name: Cleanup sensitive runner temp data
         if: always()
         shell: powershell
         run: |
           Remove-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE "harness") -Recurse -Force -ErrorAction SilentlyContinue
           Remove-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE "candidate") -Recurse -Force -ErrorAction SilentlyContinue
+          Get-ChildItem -LiteralPath $env:RUNNER_TEMP -Directory -Filter "acheguese-recovery-*" -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
