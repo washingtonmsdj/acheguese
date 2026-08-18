@@ -22,6 +22,8 @@ O maior risco sistêmico atual é **complexidade e drift entre múltiplos domín
 
 Não foi confirmada nesta auditoria uma vulnerabilidade crítica explorável que justifique declarar incidente ativo. Foram identificadas configurações de risco e itens de hardening que devem ser tratados antes do crescimento de volume e dados sensíveis.
 
+Após a abertura do PR documental desta auditoria, foi confirmada uma falha operacional preexistente: `Security Scan` e `Security Check` já estavam falhando de forma recorrente em PRs anteriores com a mesma base `main`. Isso não prova vulnerabilidade no produto, mas reduz a confiabilidade dos gates como mecanismo de detecção de novas regressões e passa a ser tratado como `CI-001`.
+
 ## 3. Baseline técnico observado
 
 ### 3.1 Banco e autorização
@@ -53,12 +55,15 @@ O repositório possui gates de segurança que incluem ESLint security, `npm audi
 
 A configuração Vercel observada possui CSP, HSTS, proteção contra framing, MIME sniffing, políticas de referrer/features e cache explícito para assets/HTML/service workers.
 
+Entretanto, os workflows `Security Scan` e `Security Check` foram observados falhando em múltiplos PRs anteriores ao PR documental atual. Até o fechamento deste snapshot, a API identificou os runs/jobs, mas o download dos logs retornou `BlobNotFound`; portanto a causa raiz do step ainda não está confirmada e deve ser investigada sem mascarar o gate.
+
 ## 4. Achados ativos
 
 | ID | Severidade | Classe | Achado | Estado |
 | --- | --- | --- | --- | --- |
 | SEC-001 | Alta | configuração de risco | Bucket `safety-evidence` público apesar da semântica de evidência sensível | Aberto |
 | SEC-002 | Alta | hardening de autenticação | Proteção contra senhas vazadas/comprometidas desabilitada no Supabase Auth | Aberto |
+| CI-001 | Alta | assurance/operabilidade | `Security Scan` e `Security Check` falham de forma recorrente, reduzindo a capacidade do CI de distinguir regressão nova de dívida preexistente | Aberto — issue #17 |
 | SEC-003 | Média | hardening DB | Warnings de `function_search_path_mutable` em funções; reduzir dependência de resolução implícita | Aberto |
 | SEC-004 | Média | revisão de autorização | Views `SECURITY DEFINER` apontadas pelo advisor precisam de revisão explícita de necessidade/semântica | Aberto |
 | SEC-005 | Média | storage hardening | Buckets com ausência de limites explícitos de tamanho/MIME | Aberto |
@@ -79,6 +84,10 @@ No snapshot auditado o bucket estava vazio. Portanto, a auditoria **não confirm
 
 É uma redução direta do risco de credential stuffing/reuso de credenciais. Deve ser ativada e validada sem depender de mudança de frontend.
 
+### CI-001 — gates de segurança vermelhos
+
+A falha do CI é preexistente ao PR documental: foi observada em PRs #10, #11 e #14, além do PR #16. Isso significa que a documentação não introduziu a regressão. O risco aqui é de **assurance**: quando um gate está permanentemente vermelho, uma vulnerabilidade nova pode ficar misturada ao ruído conhecido. A correção deve restaurar o gate; não convertê-lo silenciosamente em `continue-on-error`.
+
 ### SEC-003/004 — funções/views privilegiadas
 
 O advisor fornece sinal de hardening, não prova de exploração. Na amostra manual, funções privilegiadas relevantes possuíam autorização interna adequada. A correção deve preservar a semântica existente e adicionar testes de regressão.
@@ -95,7 +104,7 @@ Não classificar como vulnerabilidade automaticamente. O risco é custo crescent
 - Idempotência em billing.
 - CORS/security headers centralizados em Edge Functions.
 - Respostas 5xx genéricas ao cliente.
-- CI com múltiplos scanners/gates.
+- CI com múltiplos scanners/gates — a composição é boa, embora `CI-001` exija restaurar a saúde operacional desses gates.
 - TypeScript strict e validações arquiteturais/SSOT.
 - CSP sem `unsafe-eval` em `script-src` no snapshot auditado.
 
@@ -103,6 +112,7 @@ Não classificar como vulnerabilidade automaticamente. O risco é custo crescent
 
 - A amostragem manual de RPCs não prova segurança de todas as funções do banco.
 - A ferramenta de navegação não conseguiu completar uma auditoria visual end-to-end de `acheguese.com.br` nesta rodada.
+- Os logs completos do `Security Scan`/`Security Check` não puderam ser baixados pela API no momento do diagnóstico inicial; a causa raiz de `CI-001` ainda precisa de logs de Actions.
 - Estado de advisor, policies, buckets e funções pode mudar após este snapshot; reauditorias devem comparar contra este documento.
 
 ## 8. Próxima decisão
