@@ -1,0 +1,128 @@
+name: Recovery Runner Diagnostic (Temporary)
+
+on:
+  push:
+    branches:
+      - ops/recovery-refresh-20260818
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  diagnose:
+    name: Inspect recovery prerequisites
+    runs-on:
+      - self-hosted
+      - windows
+      - x64
+      - acheguese-heavy-windows
+      - remote-only
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact branch head
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Inspect tools, credentials, and prior Drive snapshot
+        shell: powershell
+        env:
+          GH_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GH_SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          GH_SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          GH_SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          Write-Host "RECOVERY_DIAGNOSTIC_BEGIN"
+          Write-Host "HEAD=$((git rev-parse HEAD).Trim())"
+          Write-Host "RUNNER=$env:RUNNER_NAME"
+          Write-Host "HOST=$env:COMPUTERNAME"
+
+          $commands = @("supabase", "pg_dump", "psql", "node", "npx", "tar", "7z")
+          foreach ($name in $commands) {
+            $cmd = Get-Command $name -ErrorAction SilentlyContinue
+            Write-Host ("TOOL_{0}={1}" -f $name.ToUpperInvariant().Replace('-','_'), [bool]$cmd)
+          }
+
+          Write-Host ("SECRET_SUPABASE_SERVICE_ROLE_KEY={0}" -f (-not [string]::IsNullOrWhiteSpace($env:GH_SUPABASE_SERVICE_ROLE_KEY)))
+          Write-Host ("SECRET_SUPABASE_DB_PASSWORD={0}" -f (-not [string]::IsNullOrWhiteSpace($env:GH_SUPABASE_DB_PASSWORD)))
+          Write-Host ("SECRET_SUPABASE_ACCESS_TOKEN={0}" -f (-not [string]::IsNullOrWhiteSpace($env:GH_SUPABASE_ACCESS_TOKEN)))
+          Write-Host ("SECRET_SUPABASE_DB_URL={0}" -f (-not [string]::IsNullOrWhiteSpace($env:GH_SUPABASE_DB_URL)))
+
+          $machineEnvNames = @(
+            "SUPABASE_URL",
+            "SUPABASE_SERVICE_ROLE_KEY",
+            "SUPABASE_DB_PASSWORD",
+            "SUPABASE_ACCESS_TOKEN",
+            "SUPABASE_DB_URL"
+          )
+          foreach ($name in $machineEnvNames) {
+            $present = -not [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name, "Process")) -or
+                       -not [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name, "User")) -or
+                       -not [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name, "Machine"))
+            Write-Host ("MACHINE_ENV_{0}={1}" -f $name, $present)
+          }
+
+          Write-Host "FILESYSTEM_DRIVES=$((Get-PSDrive -PSProvider FileSystem | ForEach-Object Name) -join ',')"
+
+          $snapshot = "20260815T201851Z"
+          $candidateBases = [System.Collections.Generic.List[string]]::new()
+          $candidateBases.Add($env:USERPROFILE)
+          foreach ($drive in Get-PSDrive -PSProvider FileSystem) {
+            $candidateBases.Add($drive.Root)
+            $candidateBases.Add((Join-Path $drive.Root "My Drive"))
+            $candidateBases.Add((Join-Path $drive.Root "Google Drive"))
+            $candidateBases.Add((Join-Path $drive.Root "Meu Drive"))
+          }
+          $candidateBases.Add((Join-Path $env:USERPROFILE "My Drive"))
+          $candidateBases.Add((Join-Path $env:USERPROFILE "Google Drive"))
+          $candidateBases.Add((Join-Path $env:USERPROFILE "Meu Drive"))
+          $candidateBases.Add((Join-Path $env:USERPROFILE "Google Drive Streaming"))
+
+          $found = $null
+          $visited = New-Object 'System.Collections.Generic.HashSet[string]'
+
+          function Find-SnapshotLimited([string]$base, [int]$maxDepth) {
+            if (-not (Test-Path -LiteralPath $base -PathType Container)) { return $null }
+            $queue = New-Object System.Collections.Queue
+            $queue.Enqueue(@($base, 0))
+            while ($queue.Count -gt 0) {
+              $item = $queue.Dequeue()
+              $path = [string]$item[0]
+              $depth = [int]$item[1]
+              if ($visited.Contains($path)) { continue }
+              [void]$visited.Add($path)
+              if ((Split-Path -Leaf $path) -eq $snapshot) { return $path }
+              if ($depth -ge $maxDepth) { continue }
+              try {
+                foreach ($dir in Get-ChildItem -LiteralPath $path -Directory -Force -ErrorAction SilentlyContinue) {
+                  if ($dir.Name -in @("node_modules", ".git", "Windows", "Program Files", "Program Files (x86)", "$Recycle.Bin")) { continue }
+                  $queue.Enqueue(@($dir.FullName, $depth + 1))
+                }
+              } catch {}
+            }
+            return $null
+          }
+
+          foreach ($base in ($candidateBases | Select-Object -Unique)) {
+            $found = Find-SnapshotLimited $base 6
+            if ($found) { break }
+          }
+
+          if ($found) {
+            Write-Host "PRIOR_SNAPSHOT_FOUND=true"
+            Write-Host "PRIOR_SNAPSHOT_PARENT=$((Split-Path -Parent $found))"
+            $files = @(Get-ChildItem -LiteralPath $found -Recurse -File -ErrorAction SilentlyContinue)
+            Write-Host "PRIOR_SNAPSHOT_FILE_COUNT=$($files.Count)"
+            Write-Host "PRIOR_SNAPSHOT_TOTAL_BYTES=$(($files | Measure-Object Length -Sum).Sum)"
+            Write-Host "PRIOR_SNAPSHOT_NAMES=$((($files | Select-Object -ExpandProperty Name) -join ','))"
+          } else {
+            Write-Host "PRIOR_SNAPSHOT_FOUND=false"
+          }
+
+          Write-Host "RECOVERY_DIAGNOSTIC_END"
