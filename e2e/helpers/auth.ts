@@ -122,6 +122,11 @@ export async function bootstrapProtectedPreviewAccess(page: Page): Promise<void>
       `Unable to establish Vercel Preview automation bypass: HTTP ${response.status()}.`,
     );
   }
+
+  // The workflow config injects bypass headers at BrowserContext scope. Once
+  // the same-origin request has established Vercel's cookie, remove those
+  // global headers before the SPA makes cross-origin requests to Supabase.
+  await page.context().setExtraHTTPHeaders({});
 }
 
 /**
