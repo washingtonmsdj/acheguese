@@ -93,8 +93,8 @@ jobs:
         shell: powershell
         run: npx playwright install chromium
 
-      - name: Run authenticated Account E2E against exact local SHA
-        id: account_e2e
+      - name: Run deterministic authenticated logout E2E against exact local SHA
+        id: logout_e2e
         continue-on-error: true
         shell: powershell
         env:
@@ -115,14 +115,14 @@ jobs:
             Write-Error "Certification blocked: authenticated E2E credentials are not configured."
             exit 1
           }
-          npm run test:e2e:account-authenticated -- --retries=0
+          npx playwright test tests/e2e/logout-authenticated.spec.ts --project=chromium --reporter=list --retries=0
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Print Account E2E failure diagnostics
-        if: steps.account_e2e.outcome == 'failure'
+      - name: Print logout E2E failure diagnostics
+        if: steps.logout_e2e.outcome == 'failure'
         shell: powershell
         run: |
-          Write-Host "===== Account E2E diagnostics ====="
+          Write-Host "===== Authenticated logout E2E diagnostics ====="
           $contexts = @(Get-ChildItem -Path "test-results" -Recurse -File -Filter "error-context.md" -ErrorAction SilentlyContinue)
           if ($contexts.Count -eq 0) {
             Write-Host "No error-context.md files found."
@@ -225,14 +225,14 @@ jobs:
         if: always()
         shell: powershell
         env:
-          ACCOUNT_OUTCOME: ${{ steps.account_e2e.outcome }}
+          LOGOUT_OUTCOME: ${{ steps.logout_e2e.outcome }}
           REGRESSION_OUTCOME: ${{ steps.regression.outcome }}
           BOUNDARIES_OUTCOME: ${{ steps.boundaries.outcome }}
           PUBLIC_OUTCOME: ${{ steps.public_e2e.outcome }}
           TARGET_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           $results = @(
-            "Account E2E=$env:ACCOUNT_OUTCOME",
+            "Authenticated logout E2E=$env:LOGOUT_OUTCOME",
             "Regression=$env:REGRESSION_OUTCOME",
             "Territorial boundaries=$env:BOUNDARIES_OUTCOME",
             "Public territorial E2E=$env:PUBLIC_OUTCOME"
@@ -247,7 +247,7 @@ jobs:
           }
 
           $failed = @(
-            $env:ACCOUNT_OUTCOME,
+            $env:LOGOUT_OUTCOME,
             $env:REGRESSION_OUTCOME,
             $env:BOUNDARIES_OUTCOME,
             $env:PUBLIC_OUTCOME
