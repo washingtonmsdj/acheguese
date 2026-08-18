@@ -44,8 +44,10 @@ npm run build
 - Status oficial: [docs/architecture/PROJECT-MILESTONE-1.md](./docs/architecture/PROJECT-MILESTONE-1.md)
 - Arquitetura Community First: [docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md](./docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md)
 - Auditoria estrutural ativa: [docs/audits/MASTER_REPORT.md](./docs/audits/MASTER_REPORT.md)
-- Regras SSOT: [docs/CURRENT_RULES.md](./docs/CURRENT_RULES.md)
+- Regras SSOT/engenharia: [docs/CURRENT_RULES.md](./docs/CURRENT_RULES.md)
 - Seguranca: [SECURITY.md](./SECURITY.md)
+- Plano de remediacao de seguranca: [docs/audits/SECURITY-REMEDIATION-PLAN-2026-08.md](./docs/audits/SECURITY-REMEDIATION-PLAN-2026-08.md)
+- Checklist de implementacao: [docs/audits/SECURITY-IMPLEMENTATION-CHECKLIST.md](./docs/audits/SECURITY-IMPLEMENTATION-CHECKLIST.md)
 
 ## Politica documental da raiz
 
