@@ -132,7 +132,11 @@ export async function bootstrapFixtureSession(
     path: "/",
   };
 
-  await page.context().clearCookies();
+  // Preserve unrelated cookies such as the Vercel automation-bypass cookie.
+  // Only the Achegue-se Supabase session contract must be replaced here.
+  await page.context().clearCookies({
+    name: new RegExp(`^${AUTH_COOKIE_NAME}(?:\\.chunks|\\.\\d+)?$`),
+  });
   if (chunks.length === 1) {
     await page.context().addCookies([
       { ...cookieBase, name: AUTH_COOKIE_NAME, value: chunks[0] },
