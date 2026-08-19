@@ -8,6 +8,14 @@ on:
       - opened
       - synchronize
       - reopened
+    # Heavy Playwright/regression certification protects product, DB and test
+    # changes. Docs-only and workflow-only PRs use their own focused checks and
+    # must not starve the single repository self-hosted runner.
+    # GitHub paths-ignore skips only when every changed path matches.
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - ".github/workflows/**"
 
 permissions:
   contents: read
