@@ -7,6 +7,18 @@ const BATCH1 = "20260818225113_tighten_browser_table_grants_batch1.sql";
 const BATCH2 = "20260818225150_tighten_anon_read_update_grants_batch2.sql";
 const FUNCTION_AUDIT =
   "20260819081931_harden_function_audit_browser_write_grants.sql";
+const NO_POLICY_TABLES_MIGRATION =
+  "20260819082244_revoke_browser_grants_from_no_policy_tables.sql";
+
+const NO_POLICY_TABLES = [
+  "analytics_sessions",
+  "gastronomy_business_categories",
+  "gastronomy_business_tags",
+  "gastronomy_businesses",
+  "gastronomy_categories",
+  "gastronomy_tags",
+  "tourist_points_backup",
+] as const;
 
 function migrationsFromBaseline() {
   return readdirSync(MIGRATIONS_DIR)
@@ -24,11 +36,16 @@ describe("browser table grant hardening", () => {
     expect(migrations.some(({ name }) => name === BATCH1)).toBe(true);
     expect(migrations.some(({ name }) => name === BATCH2)).toBe(true);
     expect(migrations.some(({ name }) => name === FUNCTION_AUDIT)).toBe(true);
+    expect(
+      migrations.some(({ name }) => name === NO_POLICY_TABLES_MIGRATION),
+    ).toBe(true);
 
     const batch1 = migrations.find(({ name }) => name === BATCH1)?.sql ?? "";
     const batch2 = migrations.find(({ name }) => name === BATCH2)?.sql ?? "";
     const functionAudit =
       migrations.find(({ name }) => name === FUNCTION_AUDIT)?.sql ?? "";
+    const noPolicyTables =
+      migrations.find(({ name }) => name === NO_POLICY_TABLES_MIGRATION)?.sql ?? "";
 
     expect(batch1).toMatch(/revoke\s+all\s+privileges\s+on\s+table\s+public\.api_cache\s+from\s+anon,\s*authenticated/i);
     expect(batch1).toContain("public.billing_plans");
@@ -50,6 +67,13 @@ describe("browser table grant hardening", () => {
     expect(functionAudit).not.toMatch(
       /revoke\s+select\s+on\s+table\s+public\.function_audit/i,
     );
+
+    expect(noPolicyTables).toContain("revoke all privileges on table public.%I from anon, authenticated");
+    expect(noPolicyTables).toContain("c.relrowsecurity");
+    expect(noPolicyTables).toContain("from pg_policies p");
+    for (const table of NO_POLICY_TABLES) {
+      expect(noPolicyTables).toContain(`'${table}'`);
+    }
   });
 
   it("does not silently restore browser writes to service-authoritative tables", () => {
@@ -77,6 +101,28 @@ describe("browser table grant hardening", () => {
     }
 
     expect(regressions, "service-authoritative tables must not regain browser DML").toEqual([]);
+  });
+
+  it("does not silently restore any browser grant to RLS-without-policy tables", () => {
+    const later = migrationsFromBaseline().filter(
+      ({ name }) => name !== BATCH1 && name !== BATCH2,
+    );
+    const regressions: string[] = [];
+
+    for (const { name, sql } of later) {
+      for (const table of NO_POLICY_TABLES) {
+        const grant = new RegExp(
+          `grant\\s+(?:all(?:\\s+privileges)?|select|insert|update|delete|truncate|references|trigger)(?:\\s*,[\\s\\w]+)*\\s+on(?:\\s+table)?\\s+public\\.${table}\\s+to\\s+(?:anon|authenticated)`,
+          "i",
+        );
+        if (grant.test(sql)) regressions.push(`${name}: ${table}`);
+      }
+    }
+
+    expect(
+      regressions,
+      "RLS-without-policy tables must remain unreachable by browser roles until access is explicitly designed",
+    ).toEqual([]);
   });
 
   it("does not silently restore anonymous consent or audit-log grants", () => {
