@@ -39,7 +39,11 @@ yarn-error.log*
 *~
 
 # Documentation
-docs
+docs/**
+!docs/09-reference/
+!docs/09-reference/governance/
+!docs/09-reference/governance/security/
+!docs/09-reference/governance/security/EDGE_FUNCTION_AUTH_POLICY.json
 .archive
 *.md
 !README.md
