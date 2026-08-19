@@ -4,8 +4,10 @@ import { join } from "node:path";
 
 const MIGRATIONS_DIR = join(process.cwd(), "supabase", "migrations");
 const BASELINE = "20260818221457_dedupe_exact_rls_policies_batch1.sql";
+const TERRITORY_DEDUPE =
+  "20260819080218_dedupe_territory_ai_content_public_read_policy.sql";
 
-const REDUNDANT_POLICIES = [
+const BASELINE_REDUNDANT_POLICIES = [
   "Products viewable",
   "Services viewable",
   "driver_locations_select_policy",
@@ -14,6 +16,12 @@ const REDUNDANT_POLICIES = [
   "Admins podem suspender perfis",
   "Admins veem todos os perfis",
   "Usuários veem seus próprios perfis completos",
+] as const;
+
+const TERRITORY_REDUNDANT_POLICY = "public_read_territory_ai_content";
+const REDUNDANT_POLICIES = [
+  ...BASELINE_REDUNDANT_POLICIES,
+  TERRITORY_REDUNDANT_POLICY,
 ] as const;
 
 function migrationsFromBaseline() {
@@ -35,10 +43,24 @@ describe("SEC-008 exact RLS policy dedupe", () => {
     const baseline = migrationsFromBaseline().find(({ name }) => name === BASELINE);
     expect(baseline, `${BASELINE} must remain versioned`).toBeDefined();
 
-    for (const policy of REDUNDANT_POLICIES) {
+    for (const policy of BASELINE_REDUNDANT_POLICIES) {
       expect(baseline?.sql).toContain(policy);
     }
     expect(baseline?.sql).toContain("is distinct from");
+  });
+
+  it("keeps the final territory AI exact dedupe fail-closed", () => {
+    const migration = migrationsFromBaseline().find(
+      ({ name }) => name === TERRITORY_DEDUPE,
+    );
+
+    expect(migration, `${TERRITORY_DEDUPE} must remain versioned`).toBeDefined();
+    expect(migration?.sql).toContain("Anyone reads territory content");
+    expect(migration?.sql).toContain(TERRITORY_REDUNDANT_POLICY);
+    expect(migration?.sql).toContain("is distinct from");
+    expect(migration?.sql).toContain(
+      'drop policy "public_read_territory_ai_content" on public.territory_ai_content',
+    );
   });
 
   it("does not silently recreate a removed redundant policy later", () => {
