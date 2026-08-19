@@ -39,7 +39,13 @@ yarn-error.log*
 *~
 
 # Documentation
-docs
+docs/**
+!docs/architecture/
+!docs/architecture/core-platform-ownership.json
+!docs/09-reference/
+!docs/09-reference/governance/
+!docs/09-reference/governance/security/
+!docs/09-reference/governance/security/*.json
 .archive
 *.md
 !README.md
