@@ -67,6 +67,8 @@ jobs:
       # GitHub Actions secrets use alternate variable names so an absent secret
       # cannot overwrite a PAT already provisioned in the self-hosted runner
       # process environment. Values are never printed; only the selected source.
+      # This comment-only commit intentionally retriggers the one-shot workflow
+      # after CI runner starvation mitigation; runtime logic is unchanged.
       - name: Enable and verify HIBP protection
         shell: powershell
         env:
