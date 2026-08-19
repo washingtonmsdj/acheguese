@@ -64,6 +64,9 @@ jobs:
         with:
           node-version: "24"
 
+      # GitHub Actions secrets use alternate variable names so an absent secret
+      # cannot overwrite a PAT already provisioned in the self-hosted runner
+      # process environment. Values are never printed; only the selected source.
       - name: Enable and verify HIBP protection
         shell: powershell
         env:
