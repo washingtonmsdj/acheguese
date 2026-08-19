@@ -164,7 +164,6 @@ jobs:
           TYPECHECK: ${{ steps.typecheck.outcome }}
           TESTS: ${{ steps.tests.outcome }}
           ENV_GUARD: ${{ steps.env_guard.outcome }}
-          ALL_CHECKS_PASSED: ${{ steps.npm_ci.outcome == 'success' && steps.security_validate.outcome == 'success' && steps.lint_security.outcome == 'success' && steps.npm_audit.outcome == 'success' && steps.lint.outcome == 'success' && steps.typecheck.outcome == 'success' && steps.tests.outcome == 'success' && steps.env_guard.outcome == 'success' }}
           TARGET_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           $results = @(
@@ -186,10 +185,36 @@ jobs:
             "- $_" | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
             Write-Host $_
           }
+          Write-Host "Diagnostic outcomes recorded."
 
-          Write-Host "all checks passed expression=$env:ALL_CHECKS_PASSED"
-          if ($env:ALL_CHECKS_PASSED -ne "true") {
-            Write-Error "One or more diagnostic gates failed. See the summary for exact outcomes."
-            exit 1
-          }
-          Write-Host "SECURITY_SELFHOSTED_DIAGNOSTIC_PASS"
+      - name: Enforce diagnostic gates
+        if: >-
+          always() &&
+          (
+            steps.npm_ci.outcome != 'success' ||
+            steps.security_validate.outcome != 'success' ||
+            steps.lint_security.outcome != 'success' ||
+            steps.npm_audit.outcome != 'success' ||
+            steps.lint.outcome != 'success' ||
+            steps.typecheck.outcome != 'success' ||
+            steps.tests.outcome != 'success' ||
+            steps.env_guard.outcome != 'success'
+          )
+        shell: powershell
+        run: |
+          Write-Error "One or more diagnostic gates failed. See the summary for exact outcomes."
+          exit 1
+
+      - name: Confirm diagnostic pass
+        if: >-
+          always() &&
+          steps.npm_ci.outcome == 'success' &&
+          steps.security_validate.outcome == 'success' &&
+          steps.lint_security.outcome == 'success' &&
+          steps.npm_audit.outcome == 'success' &&
+          steps.lint.outcome == 'success' &&
+          steps.typecheck.outcome == 'success' &&
+          steps.tests.outcome == 'success' &&
+          steps.env_guard.outcome == 'success'
+        shell: powershell
+        run: Write-Host "SECURITY_SELFHOSTED_DIAGNOSTIC_PASS"
