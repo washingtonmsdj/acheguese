@@ -12,7 +12,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
   getAllSecurityHeaders,
   auditLog,
-  getAuditInfo,
+  getTrustedClientIp,
   errorResponse,
 } from './security.ts';
 
@@ -22,6 +22,14 @@ export interface AdminAuthResult {
   isAdmin: boolean;
   userId: string;
   role: AdminRole;
+}
+
+function getAdminAuditInfo(req: Request): { ip?: string; userAgent: string } {
+  const ip = getTrustedClientIp(req);
+  return {
+    ...(ip ? { ip } : {}),
+    userAgent: req.headers.get('user-agent') || 'unknown',
+  };
 }
 
 export function getSupabaseAdminClient() {
@@ -47,7 +55,7 @@ export function getSupabaseAdminClient() {
  *   const { userId, role } = auth;
  */
 export async function requireAdmin(req: Request): Promise<AdminAuthResult | Response> {
-  const auditInfo = getAuditInfo(req);
+  const auditInfo = getAdminAuditInfo(req);
 
   try {
     const authHeader = req.headers.get('Authorization');
