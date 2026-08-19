@@ -35,6 +35,11 @@ function resolveAnalyticsEntity(event: AnalyticsTrackingInput): { entityType: st
   return null;
 }
 
+function currentSessionId(): string | undefined {
+  const sessionId = canonicalAnalyticsService.getSessionId();
+  return isNonEmptyString(sessionId) ? sessionId : undefined;
+}
+
 class AnalyticsTrackingService {
   async trackEvent(event: AnalyticsTrackingInput): Promise<void> {
     const resolvedEntity = resolveAnalyticsEntity(event);
@@ -46,6 +51,7 @@ class AnalyticsTrackingService {
       event_type: event.event_type,
       event_source: "web" satisfies AnalyticsEventSource,
       user_id: event.user_id,
+      session_id: currentSessionId(),
       metadata: event.metadata,
     });
   }
@@ -56,6 +62,7 @@ class AnalyticsTrackingService {
       entity_id: businessId,
       event_type: "page_view",
       user_id: userId,
+      session_id: currentSessionId(),
       metadata: {
         url: typeof window === "undefined" ? undefined : window.location.href,
         referrer: typeof document === "undefined" ? undefined : document.referrer,
@@ -75,6 +82,7 @@ class AnalyticsTrackingService {
       entity_id: businessId,
       event_type: "business_interaction",
       user_id: userId,
+      session_id: currentSessionId(),
       metadata: {
         action,
         ...metadata,
