@@ -4,7 +4,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   auditLog,
   getAllSecurityHeaders,
-  getAuditInfo,
   getRequiredEnv,
   jsonResponse,
   rateLimitMiddleware,
@@ -20,6 +19,17 @@ const MAX_BATCHES_PER_RUN = 5;
 interface OrphanRow {
   id: string;
   object_path: string;
+}
+
+function getAuditIp(req: Request): string | undefined {
+  const cfIp = req.headers.get("cf-connecting-ip")?.trim();
+  const realIp = req.headers.get("x-real-ip")?.trim();
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  const lastForwardedIp = forwardedFor
+    ? forwardedFor.split(",").at(-1)?.trim()
+    : undefined;
+
+  return cfIp || realIp || lastForwardedIp || undefined;
 }
 
 serve(async (req) => {
@@ -77,7 +87,8 @@ serve(async (req) => {
       resource: "media-assets-cleanup",
       status: "success",
       details: { batches, deleted },
-      ...getAuditInfo(req),
+      ip: getAuditIp(req),
+      userAgent: req.headers.get("user-agent") ?? "unknown",
     });
     return jsonResponse(
       { batches, deleted },
