@@ -19,28 +19,34 @@ Estado atual definido por `config.ts`:
 
 ## Compatibilidade em retirada
 
-Pastas `events`, `guide` e `jobs` sob `src/core/verticals/` não ganham status de vertical empresarial por estarem neste diretório.
+Pastas `events`, `guide` e `jobs` sob `src/core/verticals/` não ganham status de vertical empresarial por estarem neste diretório. Todas as três já tiveram a implementação real migrada para owners canônicos; os caminhos antigos permanecem somente como shims temporários para callers ainda não migrados.
+
+### `events`
+
+O core canônico de Eventos vive em:
+
+- `src/core/events`
+
+Ele concentra types, mappers, configuração de leitura, rotas e services de leitura/mutation/runtime. `src/core/verticals/events` agora contém somente reexports de compatibilidade e não pode receber lógica, testes ou novos callers.
+
+A superfície de produto ainda está em transição: deve convergir de `src/features/events` para `src/modules/community-events`.
 
 ### `guide`
 
-A implementação de rotas de pontos turísticos já foi migrada para o owner canônico:
+A implementação de rotas de pontos turísticos vive em:
 
 - `src/core/guide/tourist-points/routes`
 
-`src/core/verticals/guide/routes` contém somente shims de reexport temporários para callers antigos. Código novo não pode importar esse caminho legado.
+`src/core/verticals/guide/routes` contém somente shims de reexport temporários.
 
 ### `jobs`
 
-A implementação de rotas de vagas e distribuição de publicação já foi migrada para:
+A implementação de rotas de vagas e distribuição de publicação vive em:
 
 - `src/core/work-opportunities/routes`
 - `src/core/work-opportunities/services`
 
 `src/core/verticals/jobs/routes` e `src/core/verticals/jobs/services` contêm somente shims de reexport temporários. Trabalho estruturado de classificados continua pertencendo a `src/modules/classifieds/jobs`; oportunidades rápidas pertencem ao bounded context `work-opportunities`.
-
-### `events`
-
-Eventos ainda é a dívida substancial restante sob `core/verticals`: possui contratos, mappers, config, rotas e services reais. A superfície de produto deve convergir para `src/modules/community-events`; contratos reutilizáveis devem convergir para um owner `src/core` fora da taxonomia empresarial, preservando shims apenas durante a janela de compatibilidade.
 
 Não adicionar novos domínios não empresariais em `src/core/verticals/`.
 
