@@ -67,6 +67,7 @@ interface PublicProfileRow {
 
 interface RoleRow {
   role_enum: string | null;
+  expires_at: string | null;
 }
 
 function mapProfile(
@@ -95,6 +96,14 @@ function mapProfile(
 
 function choosePrimaryProfile(profiles: AdminUserProfile[]): AdminUserProfile | null {
   return profiles.find((profile) => profile.profile_type === 'personal') ?? profiles[0] ?? null;
+}
+
+function hasCurrentRoleValidity(role: RoleRow, nowMs: number): boolean {
+  if (!role.role_enum) return false;
+  if (!role.expires_at) return true;
+
+  const expiresAtMs = Date.parse(role.expires_at);
+  return Number.isFinite(expiresAtMs) && expiresAtMs > nowMs;
 }
 
 serve(async (req: Request) => {
@@ -154,7 +163,12 @@ serve(async (req: Request) => {
         .from('public_profiles')
         .select('id, city, neighborhood')
         .eq('user_id', userId),
-      supabaseAdmin.from('user_roles').select('*').eq('user_id', userId).is('revoked_at', null),
+      supabaseAdmin
+        .from('user_roles')
+        .select('role_enum, expires_at')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .is('revoked_at', null),
       supabaseAdmin
         .from('role_history')
         .select('*')
@@ -198,6 +212,8 @@ serve(async (req: Request) => {
       ...getAuditInfo(req),
     });
 
+    const nowMs = Date.now();
+
     return new Response(
       JSON.stringify({
         user: {
@@ -212,7 +228,7 @@ serve(async (req: Request) => {
           primary_profile: primaryProfile,
           profiles,
           roles: ((rolesResult.data ?? []) as RoleRow[])
-            .filter((role) => role.role_enum)
+            .filter((role) => hasCurrentRoleValidity(role, nowMs))
             .map((role) => role.role_enum as string),
           role_history: roleHistoryResult.data ?? [],
         },
