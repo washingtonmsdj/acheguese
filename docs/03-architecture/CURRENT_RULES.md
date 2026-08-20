@@ -1,200 +1,143 @@
 # Regras Vigentes do Sistema
 
-Data-base: 2026-07-15
-Status: ativo
-Versao documental: 4.5
+Data-base: 2026-08-20  
+Status: ativo  
+Versão documental: 5.0
 
-## 1. Regras de identidade e ownership
+Este documento contém somente **invariantes globais**. Regras detalhadas de um domínio pertencem ao owner de código e ao SSOT correspondente em `docs/07-modules/`. Não duplicar contratos inteiros aqui.
 
-- `user_id` identifica autenticacao e contexto administrativo.
-- `profile_id` identifica a entidade operacional do usuario no ecossistema.
-- ownership social usa colunas explicitas do tipo `*_profile_id`.
-- ownership administrativo usa colunas explicitas do tipo `*_user_id`.
-- username, handle e slug nao podem representar a mesma coisa em rotas diferentes sem contrato unico.
+A navegação documental oficial começa em [`docs/README.md`](../README.md). O mapa de ownership fica em [`CANONICAL_MAP.md`](./CANONICAL_MAP.md), e a arquitetura transversal em [`CORE_PLATFORM_ARCHITECTURE_SSOT.md`](./CORE_PLATFORM_ARCHITECTURE_SSOT.md).
 
-## 2. Regras de fronteira arquitetural
+## 1. Identidade e ownership
 
-- Acesso ao Supabase fica restrito a `services/`, `repositories/`, `migrations/`, `scripts/` e `supabase/functions/`.
-- Paginas e hooks nao devem conter regra de negocio; fazem apenas orquestracao de estado, fetch e render.
-- Cada dominio deve ter um service canonico por responsabilidade. Wrappers de compatibilidade sao permitidos apenas quando explicitamente documentados.
-- Cada tabela mutavel deve ter um unico owner de escrita. Consultas adicionais
-  so podem existir como read models declarados e sem mutacao paralela.
-- Tipos canonicos nao podem ser duplicados entre `shared/`, `core/` e `modules/` quando ja existir fonte oficial.
-- Modulos nao podem importar implementacoes internas uns dos outros. Integracao cruzada passa por `core/`, adapters formais ou contratos compartilhados.
-- `core/admin` agrega dominios; ele nao deve depender de implementacoes internas de `modules/*`.
-- Rotas publicas devem ter namespace unico por entidade. O mesmo padrao nao pode servir a tipos diferentes ao mesmo tempo.
-- `Core Platform` compartilha contratos e infraestrutura; nao absorve regras
-  especificas de dominio apenas para reduzir o numero de arquivos.
-- A decisao de autorizacao no navegador e somente hint de UI. RLS, RPC e Edge
-  Function sao a autoridade obrigatoria para toda escrita.
-- `CapabilityPreviewService` pode apenas controlar visibilidade. O mapa
-  `docs/architecture/authorization-enforcement-map.json` deve cobrir toda acao
-  declarada e apontar owner, enforcement backend e evidencia.
-- Criacao de notificacao para outro User nao pode partir de API client-side
-  self-service; deve usar trigger, RPC/Edge confiavel ou outbox server-side.
-- O contrato cross-user canonico e `private.notification_outbox`; destinatario
-  vem do agregado no backend, payload e texto sao limitados, HTML e URL
-  scheme-relative sao rejeitados e a chave idempotente e obrigatoria.
-- Preferencias de notificacao usam somente
-  `NotificationPreferencesService`. O browser nao envia `user_id`, nao escreve
-  a tabela diretamente e patches omitidos preservam o estado atual. Entrega
-  transacional permanece obrigatoria; contrato em
-  `NOTIFICATION_PREFERENCES_SSOT.md`.
-- Favoritos de Empresa usam `BusinessFavoriteStore` como owner de persistencia
-  e `BusinessFavoriteService` como adapter de dominio. O browser nao envia
-  `user_id`, nao acessa `user_favorite_businesses` diretamente e define estado
-  por comando idempotente, nunca por toggle read-then-write. Gastronomia nao
-  possui writer proprio. Contrato em `BUSINESS_FAVORITES_SSOT.md`.
-- `core/posts` e o unico owner de Post, CRUD, leitura territorial e cursor.
-  `core/feed` nao exporta service ou tipos de Post; enquanto nao existir
-  federacao real, ele contem somente chaves de cache da composicao. Contrato
-  em `POSTS_FEED_SSOT.md`.
-- Likes e saves de Post usam somente `PostEngagementService`; likes de Comment
-  usam `core/comments`; grupos usam `SocialGroupInteractionsService`; shares
-  usam `core/posts`. A API nao recebe identidade de ator. Saves de outros
-  dominios conservam tabelas proprias por adapters allowlisted; tabela/coluna
-  arbitraria nao e contrato publico. Contrato em `SOCIAL_ENGAGEMENT_SSOT.md`.
-- Busca publica global e comunitaria usa somente `SearchService` e os providers
-  registrados em `core/search`. Dominios conservam consulta, ranking e URL;
-  Community apenas filtra por `communityId`, territorio e vinculos ativos.
-  Escopo incompleto falha fechado, limites ficam em `searchConfig.ts` e a
-  telemetria nunca registra o texto pesquisado. Contrato em `SEARCH_SSOT.md`.
-- Dominios de imagem publica, incluindo Posts e Achados/Perdidos, persistem
-  somente `MediaAssetRef` no formato
-  `storage://media-assets/{profile}/{preset}/v{version}/{asset}.jpg`. Upload
-  passa por `media-assets`; browser nao escolhe bucket/path, nao escreve
-  metadata e nao envia URL externa. MIME por bytes, dimensao, Profile owner,
-  quota, link e cleanup sao server-owned. `media-assets` e apenas para imagens
-  publicas; documentos privados permanecem fora. Contrato em
-  `MEDIA_ASSET_SSOT.md`. Buckets privados de documentos e evidencias possuem
-  contratos separados e nao podem ser usados para descoberta publica.
-- Em Safety, o navegador nunca escreve `safety_audit_log` ou
-  `emergency_delivery_log`. Alertas, incidentes, evidencias e shares validam o
-  perfil/viagem por RLS; status, revogacao, notificacao e auditoria sao
-  comandos ou produtores server-side.
-- Denuncias de Classificado, Vaga, Avaliacao e Corrida usam exclusivamente os
-  comandos de `docs/architecture/SENSITIVE_REPORT_COMMANDS.md`. Reporter e
-  moderador sao derivados no banco; escrita direta nas quatro tabelas e
-  proibida para o navegador.
-- O protocolo visual/taxonomia base de denuncia fica em `core/moderation`, mas
-  status, SLA e acao corretiva permanecem no dominio. A fila federada e somente
-  read model administrativo; nao persiste nem altera status mestre.
-- Denuncias comunitarias usam somente `CommunityReportService` e
-  `community_reports`, com alvos `post`, `comment`, `profile`,
-  `lost_found_post`, `lost_found_comment`, `question` e `answer`. Reporter e
-  autor do alvo sao derivados no banco; IDs ou texto sensivel nao podem ser
-  copiados para a projecao federada.
-- Auditoria compartilhada usa os contratos append-only de `core/audit`; sinks
-  continuam backend-only e especificos do dominio. O browser nao le
-  `community_social_audit_log` diretamente e usa somente o reader admin
-  paginado. Contrato em `AUDIT_MODERATION_SSOT.md`.
-- O contexto de Profile verifica ban somente por `ActiveBanReader` e
-  `has_current_active_ban`. O RPC deriva `auth.uid()`, nao recebe User ID e
-  retorna apenas booleano; `banned_users` nao e legivel diretamente pelo
-  navegador, inclusive em sessao admin.
-- TTL, anonimizacao e legal hold de reports/auditoria exigem aprovacao de
-  Privacidade/DPO. Ausencia de prazo aprovado e bloqueio de lancamento, nao
-  autorizacao para inventar uma duracao.
-- `trust_events` e `trust_admin_actions` sao agregados append-only sem acesso
-  direto pelo navegador. Incidentes usam `TrustIncidentService`; feedback,
-  rating, late cancellation, politica e acao admin usam comandos especificos
-  server-owned. Ator, alvo, papel, contexto, admin e evidencia canonica sao
-  derivados no banco. Contratos em `TRUST_MESSAGING_COMMANDS.md` e
-  `TRUST_OPERATIONAL_COMMANDS.md`.
-- Reviews cujo alvo e Profile usam exclusivamente `public.reviews` e
-  `src/core/reviews`. `BusinessReviewService` e adapter de policy; Gastronomia
-  nao e owner de persistencia. Review de Profissional, helpfulness e report
-  passam por comandos server-owned, sem selector de tabela ou escrita direta.
-  `event_reviews` permanece no dominio de Eventos. Contrato em
-  `REVIEWS_SSOT.md`.
-- `conversations`/`messages` sao exclusivamente o agregado de Messaging de
-  Classificados e seu unico adapter publico e `ClassifiedMessagingService`.
-  Direct message iniciado por Post usa exclusivamente `community_direct_*` e
-  `CommunityDirectMessagingService`. Ambos usam read models keyset
-  server-owned; loops de consultas por conversa sao proibidos. Ride e Group
-  conservam agregados proprios. Compartilhar port ou Realtime nao autoriza
-  compartilhar tabela, lifecycle ou enforcement. Contratos em
-  `CLASSIFIED_MESSAGING_SSOT.md` e `COMMUNITY_DIRECT_MESSAGING_SSOT.md`.
-- Em Community Direct Messaging, ator e destinatario efetivo sao derivados de
-  JWT, Profile, membership e autoria do Post no backend. Escrita direta e
-  proibida; bloqueio de qualquer participante interrompe envio; denuncia
-  deriva o alvo, deduplica pendencia e usa auditoria privada sem corpo da
-  mensagem. Localizacao/midia nao podem ser simuladas fora do contrato.
-- Toda subscription Realtime passa por `core/realtime` e por topico fechado em
-  `realtimeRegistry.ts`. Apenas o owner pode chamar `.channel(`. Filtro nao
-  substitui RLS; UUID e validado antes do connect, cleanup e obrigatorio e o
-  SDK Supabase e o owner de reconnect/backoff. Broadcast nao e persistencia.
-  Contrato em `REALTIME_SSOT.md`.
-- O ownership transversal vigente esta em
-  `docs/architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md`.
-- O manifest executavel fica em
-  `docs/architecture/core-platform-ownership.json`; toda alteracao de callsite
-  controlado exige `npm run validate:architecture:core-platform` e revisao da
-  reducao/aumento da allowlist.
+- `user_id` identifica autenticação/conta e contexto administrativo.
+- `profile_id` identifica a entidade operacional do usuário no ecossistema.
+- Ownership social usa colunas explícitas `*_profile_id`; ownership administrativo usa `*_user_id` quando a conta é realmente o ator.
+- Username, handle e slug só podem coexistir quando houver semântica e rota canônicas claras.
+- O navegador não escolhe identidade privilegiada (`user_id`, `profile_id`, `admin_id`) quando o backend puder derivá-la do JWT/contexto.
 
-## 2.1 Regras de taxonomia (vertical vs horizontal)
+## 2. Topologia de código
 
-- `business`/`empresas` e dominio base horizontal das entidades empresariais.
-- `business` nao e vertical.
-- Vertical empresarial oficial existe somente quando declarado em `src/core/verticals/config.ts`.
-- Estado oficial atual: apenas `gastronomy` esta formalizada como vertical.
-- Capacidade implementada em codigo nao implica reconhecimento oficial de vertical sem declaracao no SSOT.
+A autoridade executável da topologia é `src/modules/README.md` + gates em `tests/architecture/`.
 
-## 2.2 Regras de roteamento publico e comunitario
+- `src/app`: composição da aplicação, providers, router e shells.
+- `src/app/features`: fluxos/landings de aplicação, não bounded contexts.
+- `src/modules`: superfícies e API pública dos bounded contexts de produto.
+- `src/core`: regras, contratos, state machines e serviços reutilizáveis.
+- `src/integrations`: adapters de serviços externos.
+- `src/shared`: primitives realmente transversais.
+- `src/config`: configuração de runtime do frontend.
+- `src/assets` e `src/styles`: assets/estilos transversais, sem ownership de regra de negócio.
+- `src/test`: setup de runner, não suite de produto.
 
-- Entidades publicas usam namespace publico canonico:
-  `/empresas/:state/:city/:territory/:slug`,
-  `/gastronomia/:state/:city/:territory/:slug` e equivalentes por modulo.
-- O portal comunitario usa contexto explicito em `/comunidade/...`; rotas publicas
-  de entidade nao devem redirecionar automaticamente para comunidade.
-- Rotas comunitarias de entidade podem renderizar a entidade dentro do contexto
-  comunitario e devem oferecer saida explicita para o site publico quando houver
-  equivalente publico.
-- Aliases comunitarios antigos nao devem redirecionar automaticamente. Quando a
-  URL nao for canonica, a rota deve falhar visivelmente em vez de preservar uma
-  segunda superficie publica.
-- Acoes comunitarias que criam ou alteram conteudo local exigem perfil autenticado
-  e residencia canonica verificada no territorio aplicavel. Enderecos completos
-  de residencia nao podem aparecer em superficies publicas.
+Namespaces legados (`src/features`, `src/__tests__` top-level e outros explicitamente allowlisted) existem apenas durante migração controlada e **não podem crescer**.
 
-## 3. Regras documentais
+Não criar novo eixo top-level em `src/` sem atualizar primeiro o SSOT e os testes arquiteturais.
 
-- Documento global vivo fica em `docs/`.
-- Documento tecnico de dominio fica no proprio dominio.
-- Historico, snapshots e relatorios de sessao nao devem permanecer no repositorio principal.
-- `supabase/migrations/` e a unica fonte de schema versionado.
-- O indice mestre da documentacao e `docs/INDEX_CANONICO.md`.
-- O relatorio executivo vigente de organizacao e blindagem e `docs/audits/MASTER_REPORT.md`.
-- A Security Authority vigente fica em `docs/09-reference/governance/security/SECURITY_AUTHORITY.md`
-  e deve ser consultada antes de mudancas Critical/High em seguranca.
-- Documentos fora do indice canonico (principalmente historico/sessao) nao substituem status oficial.
+## 3. Fronteiras arquiteturais
 
-## 4. Gates obrigatorios
+- Page/component não acessa persistência diretamente. Escrita/leitura remota passa pelo owner canônico (`service`, `repository`, RPC/Edge adapter ou contrato equivalente).
+- Hooks orquestram estado e lifecycle; regra de negócio persistente pertence ao domínio.
+- Cada responsabilidade mutável tem um owner de escrita. Read models adicionais não autorizam writer paralelo.
+- Módulos não importam implementação interna de outro módulo. Integração cruzada passa por API pública, `core`, adapter ou contrato compartilhado.
+- `src/core` não importa/reexporta UI interna de `src/modules` para contornar ownership.
+- Tipo ou constante canônica não deve ser duplicada em `shared/core/modules` quando já existir owner oficial.
+- Compatibilidade é temporária e deve ter destino e critério de remoção documentados.
 
-Execute antes de consolidacoes estruturais e antes de build:
+## 4. Banco, segurança e autorização
+
+- `supabase/migrations/` é a fonte versionada do schema. Toda mudança estrutural remota precisa de migration equivalente e provenance verificável.
+- Decisão de autorização no browser é apenas hint de UI. RLS, RPC e/ou Edge Function são a autoridade obrigatória para escrita e leitura sensível.
+- Não enviar pelo browser IDs privilegiados, tabela, coluna, bucket/path ou papel quando o backend puder derivar o alvo/ator.
+- Escrita cross-user (notificações, mensagens, auditoria, moderação, trust etc.) exige comando server-owned ou produtor confiável; client self-service não é autoridade.
+- Agregados de auditoria/trust e dados privados devem falhar fechado e obedecer aos contratos de segurança do domínio.
+- `SECURITY DEFINER`, grants, RLS e superfícies públicas seguem menor privilégio e são rastreados pelo plano em `docs/08-roadmap/AUDITORIA_E_PLANO_IMPLEMENTACAO.md`.
+- O mapa executável de enforcement é [`authorization-enforcement-map.json`](./authorization-enforcement-map.json).
+- Mudança Critical/High de segurança deve respeitar [`SECURITY_AUTHORITY.md`](../09-reference/governance/security/SECURITY_AUTHORITY.md).
+
+## 5. SSOT por domínio
+
+Contratos específicos ficam em `docs/07-modules/` e no owner de código. Exemplos: Posts/Feed, Messaging, Reviews, Realtime, Media Asset, Notifications, Audit/Moderation, Entity Private Data, Gastronomy e Mobility.
+
+Regras globais:
+
+- Post/Feed: persistência e lifecycle pertencem ao owner canônico; composição não cria writer paralelo.
+- Messaging: agregados distintos não compartilham tabela/lifecycle só porque compartilham UI ou Realtime.
+- Realtime: subscriptions passam pelo owner/registry canônico; filtro não substitui RLS.
+- Media pública: upload/path/metadata são server-owned; UI trabalha com referências do contrato.
+- Reviews/Reports/Trust/Moderation: ator, alvo e autoridade são derivados server-side; filas federadas são read models, não segundo estado mestre.
+- Notifications: preferência e entrega cross-user seguem owners canônicos; browser não cria notificação para outro usuário diretamente.
+
+Ao alterar um desses domínios, leia o arquivo SSOT correspondente em `docs/07-modules/` antes de criar novo service, tabela, RPC ou writer.
+
+## 6. Taxonomia empresarial
+
+- `business`/`empresas` é domínio horizontal base; não é vertical.
+- Vertical empresarial oficial existe somente quando declarada em `src/core/verticals/config.ts`.
+- Estado oficial atual: `gastronomy` e `education`.
+- Estar fisicamente em `src/core/verticals/` não transforma um domínio em vertical. `events`, `guide` e `jobs` são dívida de compatibilidade em migração e não novas verticais.
+
+## 7. Território, rotas e superfícies
+
+- Território é contexto estrutural do produto; filtros/ownership territorial usam IDs canônicos, não apenas texto de bairro/cidade.
+- Entidade pública deve ter namespace canônico único. Alias legado não cria segunda superfície oficial.
+- Contexto comunitário pode incorporar entidade pública, mas não muda o owner da entidade.
+- Ações locais sensíveis devem validar identidade/perfil/território no backend quando aplicável.
+- Rotas e telas oficiais são inventariadas em `docs/SCREEN-MAP.md`; funcionalidades em `docs/FEATURE-MAP.md`.
+
+## 8. Testes e certificação funcional
+
+- Unit/integration específicos podem ficar co-localizados com o owner.
+- Invariantes de arquitetura/SSOT ficam em `tests/architecture/`.
+- Segurança negativa/autorização fica em `tests/security/`.
+- Fluxos de produto/release ficam em `tests/e2e/`.
+- Placeholder, feature pausada, fallback de erro ou `test.skip` por ausência de fixture **não contam como certificação funcional**.
+- Um módulo só é saudável quando owner/SSOT + banco + autorização + runtime + fluxo real concordam.
+
+## 9. Documentação e artifacts
+
+- `docs/README.md` é a porta de entrada operacional da documentação viva.
+- `docs/DOCUMENTATION-INDEX.md` é inventário/classificação, não um segundo SSOT de arquitetura.
+- Documento técnico específico pode ficar junto do owner de código quando isso reduz duplicação.
+- Histórico, snapshots, handoffs e relatórios encerrados não definem decisão atual.
+- `.kiro/`, `.lovable/`, screenshots e outputs de QA são artifacts de ferramenta/processo; não são autoridade arquitetural.
+- Git preserva histórico; documento substituído/arquivado não precisa permanecer indefinidamente na árvore ativa.
+
+## 10. Gates obrigatórios
+
+Antes de consolidar mudança estrutural:
 
 ```bash
 npm run audit:architecture
 npm run validate:architecture:governance
+npm run validate:architecture:core-platform
 npm run validate:taxonomy
 npm run validate:ssot
 npm run validate:docs-structure
+npm run validate:docs-live-links
+npm run typecheck
+npm run lint
 ```
 
-## 5. Proibicoes explicitas
+Gates especializados do domínio também são obrigatórios quando o escopo os toca.
 
-- Nao criar novo service paralelo para dominio que ja possui service canonico.
-- Nao acessar `supabase.from(...)` em page, hook, component ou utilitario de UI.
-- Nao mover regra de negocio para hook de pagina por conveniencia.
-- Nao criar nova pagina administrativa sem owner de dominio, contrato de dados e cobertura documental.
-- Nao introduzir nova rota publica de identidade sem decidir o namespace oficial.
-- Nao fornecer `user_id`, `profile_id` privilegiado, `admin_id`, tabela,
-  bucket ou coluna pela UI quando o backend puder deriva-los do contexto.
+## 11. Proibições explícitas
 
-## 6. Prioridade atual de blindagem
+- Não criar service paralelo porque o owner existente parece inconveniente.
+- Não acessar Supabase diretamente em page/component ou hook de UI fora de boundary explicitamente permitido.
+- Não colocar regra de negócio em shell/layout.
+- Não criar nova rota pública sem namespace/owner definidos.
+- Não criar pasta top-level em `src` para “organizar depois”.
+- Não tratar documentação, plano, spec de ferramenta ou screenshot como prova de runtime.
+- Não enfraquecer gate para fazer PR ficar verde; corrigir a causa ou registrar bloqueio de infraestrutura.
 
-- consolidar identidade publica e rotas de perfil
-- retirar imports cruzados entre modulos
-- consolidar wrappers e services duplicados
-- padronizar front-end base em hero, filtros, cards, estados e tabelas admin
-- fechar lacunas administrativas, especialmente em notifications, profile e map
+## 12. Ordem estrutural atual
+
+1. estabilizar owners, topologia, documentação e gates;
+2. migrar namespaces legados e remover configuração/artifacts sem caller;
+3. certificar módulos funcionalmente contra contratos reais;
+4. inventariar shells/layouts duplicados;
+5. consolidar primitives e shell responsivo;
+6. redesenhar Home/Comunidade/Central e módulos sobre rotas/owners estáveis.
+
+Layout novo não deve cristalizar uma arquitetura que ainda está sendo removida.
