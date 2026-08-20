@@ -22,15 +22,6 @@
       ],
       "@/modules/*": [
         "./src/modules/*"
-      ],
-      "@/components/*": [
-        "./src/components/*"
-      ],
-      "@/services/*": [
-        "./src/services/*"
-      ],
-      "@/hooks/*": [
-        "./src/hooks/*"
       ]
     },
     "skipLibCheck": true,
