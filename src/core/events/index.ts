@@ -1,23 +1,24 @@
 export {
   EventReadService,
   eventsReadService,
-} from "@/core/verticals/events/services/EventReadService";
+} from "./services/EventReadService";
 export {
   EventMutationService,
   eventMutationService,
-} from "@/core/verticals/events/services/EventMutationService";
+} from "./services/EventMutationService";
 export {
   EventRuntimeService,
   EventsService,
   eventRuntimeService,
   eventService,
-} from "@/core/verticals/events/services/EventRuntimeService";
-export { EventLinkEligibilityService } from "@/core/verticals/events/services/EventLinkEligibilityService";
+} from "./services/EventRuntimeService";
+export { EventLinkEligibilityService } from "./services/EventLinkEligibilityService";
+export { eventPublicRoutes, eventTerritorialRoutePaths } from "./routes/eventPublicRoutes";
 
 export type {
   CommunityEvent,
   Event,
-} from "@/core/verticals/events/services/EventRuntimeService";
+} from "./services/EventRuntimeService";
 
 export type {
   CreateEventInput,
@@ -37,4 +38,4 @@ export type {
   PublicEventLocationType,
   PublicEventStatus,
   UpdateEventInput,
-} from "@/core/verticals/events/types";
+} from "./types";
