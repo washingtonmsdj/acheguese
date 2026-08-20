@@ -41,6 +41,22 @@ function parseVerticalKeys(): string[] {
 }
 
 describe("source structure governance", () => {
+  it("freezes the top-level src directory taxonomy", () => {
+    expect(listDirectories("src")).toEqual([
+      "__tests__",
+      "app",
+      "assets",
+      "config",
+      "core",
+      "features",
+      "integrations",
+      "modules",
+      "shared",
+      "styles",
+      "test",
+    ]);
+  });
+
   it("does not allow new top-level domains under legacy src/features", () => {
     const roots = listDirectories("src/features");
     const allowedLegacyRoots = new Set(["events"]);
@@ -58,6 +74,20 @@ describe("source structure governance", () => {
     expect(modulesReadme).toContain("`src/features` **não é um namespace canônico**");
     expect(modulesReadme).toContain("src/app/features");
     expect(modulesReadme).toContain("src/integrations");
+    expect(modulesReadme).toContain("src/assets");
+    expect(modulesReadme).toContain("src/styles");
+  });
+
+  it("does not advertise phantom top-level component/service/hook aliases", () => {
+    const rootConfig = read("tsconfig.json");
+    const appConfig = read("tsconfig.app.json");
+    const viteConfig = read("vite.config.ts");
+
+    for (const config of [rootConfig, appConfig, viteConfig]) {
+      expect(config).not.toContain("./src/components");
+      expect(config).not.toContain("./src/services");
+      expect(config).not.toContain("./src/hooks");
+    }
   });
 
   it("requires a real canonical public API for the Events migration", () => {
