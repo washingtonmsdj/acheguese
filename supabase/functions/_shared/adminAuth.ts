@@ -88,12 +88,11 @@ export async function requireAdmin(req: Request): Promise<AdminAuthResult | Resp
       return errorResponse('Invalid or expired token', 401);
     }
 
-    // SSOT: verificar roles em user_roles
-    // Verifica revoked_at IS NULL **e** is_active = true para garantir
-    // que roles desativados (is_active=false) não concedam acesso admin.
+    // SSOT: verificar roles em user_roles.
+    // A role só é válida enquanto estiver ativa, não revogada e não expirada.
     const { data: roles, error: rolesError } = await supabase
       .from('user_roles')
-      .select('role_enum')
+      .select('role_enum, expires_at')
       .eq('user_id', user.id)
       .eq('is_active', true)
       .is('revoked_at', null);
@@ -102,8 +101,16 @@ export async function requireAdmin(req: Request): Promise<AdminAuthResult | Resp
       return errorResponse('Failed to verify permissions', 500);
     }
 
+    const nowMs = Date.now();
     const adminRole = roles?.find(
-      (r: { role_enum: string }) => r.role_enum === 'admin' || r.role_enum === 'super_admin',
+      (r: { role_enum: string; expires_at: string | null }) => {
+        const isAdminRole = r.role_enum === 'admin' || r.role_enum === 'super_admin';
+        if (!isAdminRole) return false;
+        if (r.expires_at === null) return true;
+
+        const expiresAt = Date.parse(r.expires_at);
+        return Number.isFinite(expiresAt) && expiresAt > nowMs;
+      },
     );
 
     if (!adminRole) {
