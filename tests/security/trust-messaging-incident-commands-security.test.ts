@@ -11,6 +11,12 @@ function read(path: string): string {
 const migration = read(
   "supabase/migrations/20260714119000_harden_trust_messaging_incident_commands.sql",
 );
+const publicAuthGuardsMigration = read(
+  "supabase/migrations/20260714120000_add_explicit_auth_guards_to_trust_messaging_rpcs.sql",
+);
+const privateGrantMigration = read(
+  "supabase/migrations/20260820023000_restrict_private_classified_command_grants.sql",
+);
 const messagingService = read(
   "src/core/messaging/services/ClassifiedMessagingService.ts",
 );
@@ -128,6 +134,54 @@ describe("Trust and Classified Messaging server-owned commands", () => {
       /\.from\("(?:conversations|messages)"\)[\s\S]{0,250}\.(?:insert|update|delete)\(/,
     );
     expect(messagingService).not.toContain("message_reports");
+  });
+
+  it("keeps private classified implementation commands off browser grants", () => {
+    const commands = [
+      ["create_classified_conversation", "UUID"],
+      ["send_classified_message", "UUID, TEXT"],
+      ["mark_classified_messages_read", "UUID"],
+      ["block_classified_conversation", "UUID, TEXT"],
+      ["moderate_classified_conversation", "UUID, TEXT, TEXT"],
+      ["report_classified_comment", "UUID, UUID, TEXT, TEXT"],
+      ["report_classified_conversation", "UUID, TEXT, TEXT"],
+      ["report_classified_message", "UUID, TEXT, TEXT"],
+    ] as const;
+
+    for (const [command, signature] of commands) {
+      expect(privateGrantMigration).toContain(
+        `REVOKE ALL ON FUNCTION private.${command}(${signature})`,
+      );
+      expect(privateGrantMigration).toContain(
+        `GRANT EXECUTE ON FUNCTION private.${command}(${signature})`,
+      );
+      expect(publicAuthGuardsMigration).toContain(`public.${command}`);
+      expect(publicAuthGuardsMigration).toContain(`private.${command}`);
+    }
+
+    expect(
+      privateGrantMigration.match(/FROM PUBLIC, anon, authenticated;/g)?.length,
+    ).toBe(commands.length);
+    expect(privateGrantMigration.match(/TO service_role;/g)?.length).toBe(
+      commands.length,
+    );
+    expect(privateGrantMigration).not.toMatch(
+      /\b(?:INSERT|UPDATE|DELETE|TRUNCATE)\b/i,
+    );
+    expect(privateGrantMigration).not.toMatch(
+      /CREATE\s+OR\s+REPLACE\s+FUNCTION/i,
+    );
+    expect(privateGrantMigration).not.toMatch(
+      /REVOKE\s+.*ON\s+SCHEMA\s+private/i,
+    );
+    expect(
+      publicAuthGuardsMigration.match(/authentication_required/g)?.length,
+    ).toBeGreaterThanOrEqual(commands.length);
+    expect(
+      publicAuthGuardsMigration.match(/FROM PUBLIC, anon;/g)?.length,
+    ).toBeGreaterThanOrEqual(commands.length);
+    expect(messagingService).not.toContain('schema("private")');
+    expect(incidentService).not.toContain('schema("private")');
   });
 
   it("removes browser-supplied incident identities and evidence payloads", () => {
