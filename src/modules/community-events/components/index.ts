@@ -14,3 +14,8 @@ export { EventsErrorBoundary } from "./EventsErrorBoundary";
 export { EventsGlobalSidebar } from "./EventsGlobalSidebar";
 export { EventAnalyticsCard } from "./EventAnalyticsCard";
 export { EventShareModal } from "./EventShareModal";
+export { EventCheckin } from "./EventCheckin";
+export { EventRelated } from "./EventRelated";
+export { EventReminders } from "./EventReminders";
+export { EventReviews } from "./EventReviews";
+export { EventsMap } from "./EventsMap";
