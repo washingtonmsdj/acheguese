@@ -15,7 +15,7 @@ const publicAuthGuardsMigration = read(
   "supabase/migrations/20260714120000_add_explicit_auth_guards_to_trust_messaging_rpcs.sql",
 );
 const privateGrantMigration = read(
-  "supabase/migrations/20260820023000_restrict_private_classified_command_grants.sql",
+  "supabase/migrations/20260820025810_restrict_private_classified_command_grants.sql",
 );
 const messagingService = read(
   "src/core/messaging/services/ClassifiedMessagingService.ts",
