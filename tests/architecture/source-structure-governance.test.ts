@@ -19,6 +19,17 @@ function listDirectories(relativePath: string): string[] {
     .sort();
 }
 
+function listFiles(relativePath: string): string[] {
+  const absolute = path.join(ROOT, relativePath);
+  if (!fs.existsSync(absolute)) return [];
+
+  return fs
+    .readdirSync(absolute, { withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => entry.name)
+    .sort();
+}
+
 function parseVerticalKeys(): string[] {
   const config = read("src/core/verticals/config.ts");
   const match = config.match(/VERTICAL_KEYS[^=]*=\s*\[([^\]]*)\]/m);
@@ -85,5 +96,17 @@ describe("source structure governance", () => {
     );
 
     expect(unexpected).toEqual([]);
+  });
+
+  it("freezes the top-level src/__tests__ exception", () => {
+    expect(listDirectories("src/__tests__")).toEqual([
+      "maps-architecture-validation",
+    ]);
+    expect(listFiles("src/__tests__")).toEqual([]);
+  });
+
+  it("freezes the legacy root e2e exception", () => {
+    expect(listDirectories("e2e")).toEqual(["helpers"]);
+    expect(listFiles("e2e")).toEqual(["network-branches.spec.ts"]);
   });
 });
