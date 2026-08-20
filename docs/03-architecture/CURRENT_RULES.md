@@ -30,7 +30,7 @@ A autoridade executável da topologia é `src/modules/README.md` + gates em `tes
 - `src/assets` e `src/styles`: assets/estilos transversais, sem ownership de regra de negócio.
 - `src/test`: setup de runner, não suite de produto.
 
-Namespaces legados (`src/features`, `src/__tests__` top-level e outros explicitamente allowlisted) existem apenas durante migração controlada e **não podem crescer**.
+Namespaces legados explicitamente allowlisted existem apenas durante migração controlada e **não podem crescer**. O único eixo de produto ainda permitido como dívida top-level em `src` é `src/features/events`, com destino definido em `src/modules/community-events`.
 
 Não criar novo eixo top-level em `src/` sem atualizar primeiro o SSOT e os testes arquiteturais.
 
@@ -89,6 +89,7 @@ Ao alterar um desses domínios, leia o arquivo SSOT correspondente em `docs/07-m
 
 - Unit/integration específicos podem ficar co-localizados com o owner.
 - Invariantes de arquitetura/SSOT ficam em `tests/architecture/`.
+- Fixtures negativas de arquitetura ficam em `tests/architecture/fixtures/`, nunca em `src`.
 - Segurança negativa/autorização fica em `tests/security/`.
 - Fluxos de produto/release ficam em `tests/e2e/`.
 - Placeholder, feature pausada, fallback de erro ou `test.skip` por ausência de fixture **não contam como certificação funcional**.
