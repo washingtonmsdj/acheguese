@@ -39,7 +39,7 @@ Entrypoints como `src/main.tsx`, `src/App.tsx`, `src/App.css`, `src/index.css`, 
 
 `src/features` **não é um namespace canônico**. Ele existe apenas por compatibilidade enquanto o domínio legado de Eventos é migrado. Nenhum novo bounded context, página, service ou hook deve ser criado ali.
 
-`src/__tests__` no topo também não é destino canônico. A única exceção atual são fixtures negativas de arquitetura de Maps durante sua migração para `tests/architecture`.
+Não existe mais um `src/__tests__` top-level. Testes unitários devem ser co-localizados com o owner; invariantes e fixtures transversais pertencem a `tests/architecture`, `tests/security`, `tests/e2e` ou outra categoria explícita de `tests/`.
 
 ## Taxonomy rules
 
