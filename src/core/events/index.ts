@@ -13,6 +13,7 @@ export {
   eventService,
 } from "./services/EventRuntimeService";
 export { EventLinkEligibilityService } from "./services/EventLinkEligibilityService";
+export * from "./services/EventEngagementService";
 export { eventPublicRoutes, eventTerritorialRoutePaths } from "./routes/eventPublicRoutes";
 
 export type {
