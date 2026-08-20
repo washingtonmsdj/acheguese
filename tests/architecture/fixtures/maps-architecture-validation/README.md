@@ -1,69 +1,44 @@
-# Testes de Validação de Arquitetura de Maps
+# Fixtures de Validação da Arquitetura de Maps
 
-Esta pasta contém arquivos com **violações intencionais** da arquitetura de maps, usados para validar que a blindagem arquitetural está funcionando corretamente.
+Esta pasta contém arquivos com **violações intencionais** da arquitetura de Maps. Eles existem para provar que a blindagem arquitetural realmente detecta imports proibidos.
 
-## ⚠️ IMPORTANTE
+## Importante
 
-Estes arquivos **devem falhar** no lint. Eles existem para garantir que:
-
-1. O plugin ESLint customizado está detectando violações
-2. As regras de blindagem estão ativas
-3. A arquitetura está sendo protegida
-
-## Arquivos de Teste
+Estes arquivos **devem falhar quando executados pelo validador de Maps**. Eles não são código de produto e, por isso, ficam em `tests/architecture/fixtures/`, fora de `src`.
 
 ### `test-violation-direct-provider.ts`
-Testa a detecção de importação direta de providers.
 
-**Violação esperada**: `maps/no-direct-provider-import`
+Testa a detecção de importação direta de provider.
 
-**Mensagem esperada**: 
-```
-❌ MAPS BLINDAGEM: Não importe '@/integrations/maps/providers/OSMTileProvider' 
-diretamente. Use providerRegistry de '@/core/maps'
-```
+Violação esperada: `maps/no-direct-provider-import`.
 
 ### `test-violation-cross-layer.ts`
-Testa a detecção de importação cross-layer (modules → integrations/maps).
 
-**Violação esperada**: `maps/no-cross-layer-import`
+Testa a detecção de importação cross-layer (`modules` → `integrations/maps`).
 
-**Mensagem esperada**:
-```
-❌ MAPS BLINDAGEM: Modules não podem importar de integrations/maps. 
-Use '@/core/maps'
-```
+Violação esperada: `maps/no-cross-layer-import`.
 
-## Como Validar
-
-Execute o script de validação completo:
+## Como validar
 
 ```bash
 npm run validate:maps
 ```
 
-Este script:
-1. Valida lint do módulo maps (deve passar)
-2. Executa testes do módulo maps (deve passar)
-3. Valida que violações intencionais são detectadas (deve falhar corretamente)
+O script:
 
-## Configuração
+1. valida o lint dos owners canônicos de Maps;
+2. executa os testes do módulo;
+3. executa estas fixtures com `eslint --no-ignore` e exige que as violações sejam detectadas com a mensagem de blindagem.
 
-Estes arquivos são **ignorados** no lint normal via `eslint.config.js`:
+## Integração com ESLint
 
-```javascript
-ignores: [
-  // ...
-  "src/__tests__/maps-architecture-validation/**/*.ts",
-]
-```
-
-Isso evita poluir o lint geral do repositório com violações intencionais.
+`tests/**/*.ts` já fica fora do lint normal do repositório. O validador arquitetural usa `--no-ignore` especificamente para estas fixtures, portanto mover os casos negativos para `tests/architecture/fixtures/` não enfraquece o gate.
 
 ## Manutenção
 
-Se adicionar novas regras de blindagem:
+Ao adicionar uma nova regra de blindagem:
 
-1. Crie um arquivo de teste de violação aqui
-2. Adicione validação no script `validate-maps-architecture.mjs`
-3. Documente a violação esperada neste README
+1. crie uma fixture negativa nesta pasta;
+2. registre o arquivo em `scripts/validate-maps-architecture.mjs`;
+3. documente aqui a violação esperada;
+4. mantenha fixtures negativas fora de `src`.
