@@ -67,17 +67,19 @@ BEGIN
   END IF;
 
   IF has_function_privilege('anon', 'private.auth_can_view_group(uuid)', 'EXECUTE')
+     OR has_function_privilege('anon', 'private.current_active_profile_id()', 'EXECUTE')
      OR has_function_privilege('anon', 'private.is_admin(uuid)', 'EXECUTE')
      OR has_function_privilege('anon', 'private.is_admin_from_roles(uuid)', 'EXECUTE')
      OR has_function_privilege('anon', 'private.is_admin_user(uuid)', 'EXECUTE') THEN
-    RAISE EXCEPTION 'anon must not execute private authorization helpers';
+    RAISE EXCEPTION 'anon must not execute private authorization/profile helpers';
   END IF;
 
   IF NOT has_function_privilege('authenticated', 'private.auth_can_view_group(uuid)', 'EXECUTE')
+     OR NOT has_function_privilege('authenticated', 'private.current_active_profile_id()', 'EXECUTE')
      OR NOT has_function_privilege('authenticated', 'private.is_admin(uuid)', 'EXECUTE')
      OR NOT has_function_privilege('authenticated', 'private.is_admin_from_roles(uuid)', 'EXECUTE')
      OR NOT has_function_privilege('authenticated', 'private.is_admin_user(uuid)', 'EXECUTE') THEN
-    RAISE EXCEPTION 'authenticated must retain private authorization helper EXECUTE';
+    RAISE EXCEPTION 'authenticated must retain private authorization/profile helper EXECUTE';
   END IF;
 
   SELECT count(*)
@@ -85,7 +87,13 @@ BEGIN
   FROM pg_proc p
   JOIN pg_namespace n ON n.oid = p.pronamespace
   WHERE n.nspname = 'private'
-    AND p.proname IN ('auth_can_view_group', 'is_admin', 'is_admin_from_roles', 'is_admin_user')
+    AND p.proname IN (
+      'auth_can_view_group',
+      'current_active_profile_id',
+      'is_admin',
+      'is_admin_from_roles',
+      'is_admin_user'
+    )
     AND (
       p.prosecdef IS DISTINCT FROM TRUE
       OR p.proconfig IS NULL
@@ -97,7 +105,7 @@ BEGIN
     );
 
   IF v_bad_definer_count <> 0 THEN
-    RAISE EXCEPTION 'private authorization helpers must remain SECURITY DEFINER with fixed search_path';
+    RAISE EXCEPTION 'private authorization/profile helpers must remain SECURITY DEFINER with fixed search_path';
   END IF;
 END
 $contract$;
