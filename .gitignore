@@ -36,7 +36,8 @@ dist-ssr
 *.local
 
 # Environment
-# .env é o template público com placeholders — DEVE ser commitado
+# .env contém defaults públicos de desenvolvimento/browser e é versionado por decisão explícita.
+# Nunca adicionar segredos server-side nesse arquivo.
 !.env
 .env.local
 .env.*.local
@@ -51,7 +52,7 @@ dist-ssr
 !.env.remote.example
 !.env.e2e.network.example
 
-# IMPORTANTE: .env.production é template, não commitar com valores reais
+# IMPORTANTE: .env.production é template versionado; não preencher com valores secretos reais.
 
 # Editor directories and files
 .vscode/*
@@ -127,7 +128,6 @@ backups/
 !LICENSE
 !package.json
 !package-lock.json
-!bun.lockb
 !eslint.config.js
 !postcss.config.js
 !tailwind.config.ts
@@ -167,7 +167,7 @@ test-output.txt
 !src/core/profiles/domain/ProfileType.communication.test.ts
 !src/core/public-identity/utils/reserved-names.communication.test.ts
 
-# Runtime artifacts
+# Runtime / QA artifacts
 /.codex-logs/
 /.codex-artifacts/
 /artifacts/
@@ -176,3 +176,4 @@ test-output.txt
 /test-results/
 /testsprite_tests/tmp/
 /tests/e2e/**/.auth/
+/product-qa-screenshots/
