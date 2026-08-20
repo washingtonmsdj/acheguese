@@ -11,3 +11,7 @@ export {
   workOpportunityCirculationAnalyticsService,
   WorkOpportunityCirculationAnalyticsService,
 } from "./WorkOpportunityCirculationAnalyticsService";
+export {
+  vagaPublicationDistributionService,
+  VagaPublicationDistributionService,
+} from "./VagaPublicationDistributionService";
