@@ -34,5 +34,5 @@ export type {
   EventRegistration,
   EventFilters,
   EventStats,
-  EventCTA as EventCTAType,
+  EventCTAType,
 } from "@/features/events";
