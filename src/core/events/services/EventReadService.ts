@@ -5,8 +5,8 @@ import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
 import {
   mapEventRow,
   type EventRowWithLegacyCity,
-} from "@/core/verticals/events/mappers";
-import { EVENT_PAGE_SIZE } from "@/core/verticals/events/config/eventReadConfig";
+} from "../mappers";
+import { EVENT_PAGE_SIZE } from "../config/eventReadConfig";
 import type {
   EventBoundsOptions,
   EventFilters,
@@ -16,7 +16,7 @@ import type {
   EventSortOrder,
   PublicEvent,
   PublicEventStatus,
-} from "@/core/verticals/events/types";
+} from "../types";
 
 type ErrorLike = { message?: string | null } | null;
 
