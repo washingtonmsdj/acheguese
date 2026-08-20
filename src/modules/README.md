@@ -30,9 +30,16 @@
 - `src/core`: regras de domínio reutilizáveis, serviços, state machines e contratos compartilhados entre superfícies.
 - `src/integrations`: adapters de serviços externos e infraestrutura de integração.
 - `src/shared`: primitives realmente transversais, sem ownership de domínio.
-- `src/config`: configuração de runtime/build que não pertence a um domínio.
+- `src/config`: configuração de runtime que pertence ao frontend/aplicação, mas não a um domínio.
+- `src/assets`: assets estáticos importados pelo bundle; assets públicos servidos diretamente pertencem a `public/`.
+- `src/styles`: estilos globais, contracts/tipagens de CSS e composição visual transversal. Estilo específico de componente/domínio deve ficar junto do owner.
+- `src/test`: infraestrutura global do runner de testes. Não é destino para suites de produto.
+
+Entrypoints como `src/main.tsx`, `src/App.tsx`, `src/App.css`, `src/index.css`, `src/global.d.ts` e `src/vite-env.d.ts` podem permanecer na raiz de `src` por responsabilidade de bootstrap/build.
 
 `src/features` **não é um namespace canônico**. Ele existe apenas por compatibilidade enquanto o domínio legado de Eventos é migrado. Nenhum novo bounded context, página, service ou hook deve ser criado ali.
+
+`src/__tests__` no topo também não é destino canônico. A única exceção atual são fixtures negativas de arquitetura de Maps durante sua migração para `tests/architecture`.
 
 ## Taxonomy rules
 
