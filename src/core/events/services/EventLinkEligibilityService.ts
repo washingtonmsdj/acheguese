@@ -1,5 +1,5 @@
-import { eventsReadService } from "@/core/verticals/events/services/EventReadService";
-import type { PublicEventStatus } from "@/core/verticals/events/types";
+import { eventsReadService } from "./EventReadService";
+import type { PublicEventStatus } from "../types";
 import { logger } from "@/shared/utils/logger";
 
 const COMMUNITY_LINK_ELIGIBLE_EVENT_STATUSES = new Set<PublicEventStatus>([
