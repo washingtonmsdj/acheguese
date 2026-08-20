@@ -5,6 +5,7 @@ Este diretório contém suites transversais que não pertencem naturalmente a um
 ## Estrutura canônica
 
 - `tests/architecture/` — invariantes de arquitetura, ownership, SSOT e boundaries.
+- `tests/architecture/fixtures/` — fixtures usadas por gates arquiteturais, inclusive casos propositalmente inválidos.
 - `tests/security/` — regressões de autorização, exposição e contratos de segurança.
 - `tests/e2e/` — fluxos Playwright de produto e release.
 - `tests/scripts/` — testes dos scripts/gates de engenharia.
@@ -17,7 +18,7 @@ Testes unitários de uma implementação específica podem permanecer ao lado do
 
 `src/test/setup.ts` **não é uma suite**: é o setup global carregado por `vitest.config.ts`.
 
-`src/__tests__/` no topo de `src` não é um destino canônico para novas suites. Conteúdo transversal existente ali deve migrar para `tests/architecture`, `tests/security` ou outra categoria adequada; testes realmente unitários devem ser co-localizados com seu owner.
+Não existe mais um `src/__tests__/` top-level. Fixtures transversais de arquitetura pertencem a `tests/architecture/fixtures/`; testes realmente unitários devem ser co-localizados com seu owner.
 
 ## E2E
 
@@ -32,8 +33,9 @@ O diretório raiz `e2e/` é uma exceção legada atualmente usada pelo fluxo esp
 3. Invariantes de SSOT/ownership pertencem a `tests/architecture`.
 4. Autorização negativa e exposição pertencem a `tests/security`.
 5. Fluxos de usuário e rotas pertencem a `tests/e2e`.
-6. Não criar novas categorias de topo sem atualizar este contrato e os gates correspondentes.
-7. Números de cobertura e contagem de testes não são documentados manualmente aqui; métricas devem vir do runner/CI para não envelhecerem silenciosamente.
+6. Fixtures propositalmente inválidas usadas por gates devem ficar fora de `src`.
+7. Não criar novas categorias de topo sem atualizar este contrato e os gates correspondentes.
+8. Números de cobertura e contagem de testes não são documentados manualmente aqui; métricas devem vir do runner/CI para não envelhecerem silenciosamente.
 
 ## Comandos principais
 
