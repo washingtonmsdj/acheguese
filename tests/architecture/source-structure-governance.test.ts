@@ -49,6 +49,17 @@ describe("source structure governance", () => {
     expect(modulesReadme).toContain("src/integrations");
   });
 
+  it("requires a real canonical public API for the Events migration", () => {
+    const moduleIndex = read("src/modules/community-events/index.ts");
+    const moduleReadme = read("src/modules/community-events/README.md");
+
+    expect(moduleIndex.trim()).not.toBe("export {};");
+    expect(moduleIndex).toContain("EventsListPage");
+    expect(moduleIndex).toContain("EventDetailPage");
+    expect(moduleReadme).toContain("src/modules/community-events/index.ts");
+    expect(moduleReadme).toContain("src/features/events");
+  });
+
   it("keeps the vertical README synchronized with config.ts", () => {
     const keys = parseVerticalKeys();
     const readme = read("src/core/verticals/README.md");
