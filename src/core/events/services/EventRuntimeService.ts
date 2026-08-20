@@ -1,6 +1,6 @@
 import type { TerritoryFilter } from "@/core/location/types";
-import { eventMutationService } from "@/core/verticals/events/services/EventMutationService";
-import { eventsReadService } from "@/core/verticals/events/services/EventReadService";
+import { eventMutationService } from "./EventMutationService";
+import { eventsReadService } from "./EventReadService";
 import type {
   CreateEventInput,
   EventCheckInByCodeResult,
@@ -13,7 +13,7 @@ import type {
   PublicEvent,
   PublicEventStatus,
   UpdateEventInput,
-} from "@/core/verticals/events/types";
+} from "../types";
 
 export type Event = PublicEvent;
 export type CommunityEvent = PublicEvent;
