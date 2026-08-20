@@ -4,14 +4,14 @@ import { logger } from "@/shared/utils/logger";
 import {
   mapEventRow,
   type EventRowWithLegacyCity,
-} from "@/core/verticals/events/mappers";
+} from "../mappers";
 import type {
   CreateEventInput,
   EventCheckInByCodeResult,
   EventParticipantRow,
   PublicEvent,
   UpdateEventInput,
-} from "@/core/verticals/events/types";
+} from "../types";
 
 type EventRpcAction = "joinEvent" | "leaveEvent" | "checkInEvent" | "checkInEventByCode";
 
