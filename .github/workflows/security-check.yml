@@ -101,40 +101,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Validate Maps Blindagem - Test Violation 1
-        run: |
-          echo "🧪 Testing direct provider import detection..."
-          if npx eslint src/test-maps-violation-1.ts; then
-            echo "❌ FALHOU: Violação 1 não foi detectada!"
-            exit 1
-          else
-            echo "✅ PASSOU: Violação 1 detectada corretamente"
-          fi
+      - name: Validate Maps architecture SSOT
+        run: npm run validate:maps
 
-      - name: Validate Maps Blindagem - Test Violation 2
-        run: |
-          echo "🧪 Testing cross-layer import detection..."
-          if npx eslint src/modules/test-maps-violation-2.ts; then
-            echo "❌ FALHOU: Violação 2 não foi detectada!"
-            exit 1
-          else
-            echo "✅ PASSOU: Violação 2 detectada corretamente"
-          fi
-
-      - name: Validate Maps Blindagem - Setup Exception
-        run: |
-          echo "🧪 Testing setup.ts exception..."
-          if ! npx eslint src/integrations/maps/setup.ts; then
-            echo "❌ FALHOU: setup.ts foi bloqueado incorretamente!"
-            exit 1
-          else
-            echo "✅ PASSOU: setup.ts exception funciona corretamente"
-          fi
-
-      - name: Full Maps Architecture Check
-        run: |
-          echo "🔍 Verificando toda a arquitetura de maps..."
-          npx eslint "src/core/maps/**/*.{ts,tsx}" "src/integrations/maps/**/*.{ts,tsx}"
+      - name: Lint canonical Maps owners
+        run: npm run lint:maps
 
   test:
     name: Run Tests
