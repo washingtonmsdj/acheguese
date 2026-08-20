@@ -5,7 +5,7 @@ import type {
   PublicEventCoordinateSource,
   PublicEventLocationType,
   PublicEventStatus,
-} from "@/core/verticals/events/types";
+} from "./types";
 
 export type EventRowWithLegacyCity = EventRow & {
   city?: string | null;
