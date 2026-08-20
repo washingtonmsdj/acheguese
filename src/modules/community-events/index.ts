@@ -1,9 +1,9 @@
 /**
  * Community Events - public module API.
  *
- * Transitional facade while the legacy implementation under `src/features/events`
- * is migrated into this bounded context. New consumers must import from this
- * module API instead of reaching into the legacy namespace.
+ * The product surface is being migrated from `src/features/events` into this
+ * bounded context. Components/pages still listed from the legacy namespace are
+ * compatibility-only; types, hooks and adapters already live here.
  */
 
 export {
@@ -34,5 +34,10 @@ export type {
   EventRegistration,
   EventFilters,
   EventStats,
-  EventCTAType,
-} from "@/features/events";
+  EventCTA as EventCTAType,
+} from "./types";
+
+export { useEventTerritoryFilter, useFavorites } from "./hooks";
+export { mapCommunityEventToEvent } from "./utils/eventAdapters";
+export { parseEventCheckinQrPayload } from "./utils/checkinQr";
+export * from "./constants";
