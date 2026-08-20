@@ -1,9 +1,9 @@
 -- Restrict direct browser execution of Classified Messaging internal commands.
 --
--- The public SECURITY DEFINER wrappers are the browser authority surface and
--- already require auth.uid() while granting EXECUTE only to authenticated.
--- These private helpers are implementation details invoked by those wrappers;
--- they are not RLS helpers, trigger functions, views, or browser RPCs.
+-- The public privileged wrappers are the browser authority surface and already
+-- require auth.uid() while granting EXECUTE only to authenticated. These private
+-- helpers are implementation details invoked by those wrappers; they are not RLS
+-- helpers, trigger functions, views, or browser RPCs.
 --
 -- Preserve service_role for trusted server-side maintenance/diagnostics. Do not
 -- change schema USAGE here because other private RLS helpers rely on that
