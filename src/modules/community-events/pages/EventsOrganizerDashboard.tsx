@@ -1,0 +1,716 @@
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
+import { Plus, Calendar, Home, QrCode, Loader2 } from 'lucide-react';
+import { Button } from '@/shared/components/ui/button';
+import { Badge } from '@/shared/components/ui/badge';
+import { Textarea } from '@/shared/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui/dialog';
+import { useToast } from '@/shared/hooks/use-toast';
+import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
+import type { EventStatus } from '../types';
+import { useSessionContext } from '@/core/session/hooks/useSessionContext';
+import {
+  eventRuntimeService,
+  type EventParticipantRow,
+} from '@/core/verticals/events';
+import { parseEventCheckinQrPayload } from '../utils/checkinQr';
+import { mapCommunityEventToEvent } from '../utils/eventAdapters';
+import {
+  filterOrganizerEvents,
+  getOrganizerDashboardStats,
+  type OrganizerParticipant,
+} from './EventsOrganizerDashboard.model';
+import {
+  serializeOrganizerFaq,
+  serializeOrganizerGallery,
+  serializeOrganizerSchedule,
+} from './EventsOrganizerForm.model';
+import {
+  EventsOrganizerFiltersSection,
+  EventsOrganizerListSection,
+  EventsOrganizerStatsSection,
+} from './EventsOrganizerDashboardSections';
+import { eventPublicRoutes } from '@/core/verticals/events/routes/eventPublicRoutes';
+
+export default function EventsOrganizerDashboard() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { activeProfile } = useSessionContext();
+  const { toast } = useToast();
+  const { confirm, ConfirmDialog } = useConfirmActionDialog();
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<EventStatus | 'all'>('all');
+  const [participantsOpen, setParticipantsOpen] = useState(false);
+  const [participantsLoading, setParticipantsLoading] = useState(false);
+  const [checkInLoadingProfileId, setCheckInLoadingProfileId] = useState<string | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [selectedEventTitle, setSelectedEventTitle] = useState('');
+  const [qrPayloadInput, setQrPayloadInput] = useState('');
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scannerSupported, setScannerSupported] = useState(false);
+  const [scannerError, setScannerError] = useState<string | null>(null);
+  const [scannerBusy, setScannerBusy] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const scanFrameRef = useRef<number | null>(null);
+  const scanningLockRef = useRef(false);
+  const recentPayloadsRef = useRef<Set<string>>(new Set());
+
+  const [participants, setParticipants] = useState<OrganizerParticipant[]>([]);
+
+  const { data: organizerEvents = [] } = useQuery({
+    queryKey: ['events-organizer-dashboard', activeProfile?.id],
+    enabled: Boolean(activeProfile?.id),
+    queryFn: async () => {
+      if (!activeProfile?.id) return [];
+      const rows = await eventRuntimeService.getEventsByOrganizerProfile(activeProfile.id, 200);
+      return rows.map(mapCommunityEventToEvent);
+    },
+  });
+
+  const filteredEvents = useMemo(
+    () => filterOrganizerEvents(organizerEvents, search, statusFilter),
+    [organizerEvents, search, statusFilter],
+  );
+
+  const stats = useMemo(() => getOrganizerDashboardStats(organizerEvents), [organizerEvents]);
+
+  const handleCreateEvent = () => {
+    navigate('/central/eventos/novo');
+  };
+
+  const handleEditEvent = (eventId: string) => {
+    navigate(`/central/eventos/editar/${eventId}`);
+  };
+
+  const handleViewEvent = (eventId: string) => {
+    navigate(eventPublicRoutes.detail(eventId));
+  };
+
+  const handleDuplicateEvent = async (eventId: string) => {
+    if (!activeProfile?.id) {
+      toast({
+        title: 'Perfil ativo necessario',
+        description: 'Selecione um perfil antes de duplicar eventos.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const sourceEvent = organizerEvents.find((event) => event.id === eventId);
+    if (!sourceEvent) {
+      toast({
+        title: 'Evento nao encontrado',
+        description: 'Atualize a lista e tente novamente.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const duplicated = await eventRuntimeService.createEvent(activeProfile.id, {
+        title: `Copia de ${sourceEvent.title}`,
+        description: sourceEvent.description,
+        date: sourceEvent.start_date,
+        end_date: sourceEvent.end_date,
+        event_date: sourceEvent.start_date,
+        location: sourceEvent.location.address || sourceEvent.location.venue_name || 'Local a definir',
+        category: sourceEvent.category,
+        subtitle: sourceEvent.subtitle,
+        tags: sourceEvent.tags,
+        duration_minutes: sourceEvent.duration_minutes,
+        timezone: sourceEvent.timezone,
+        location_type: sourceEvent.location.type,
+        venue_name: sourceEvent.location.venue_name,
+        address: sourceEvent.location.address,
+        neighborhood: sourceEvent.location.neighborhood,
+        city: sourceEvent.location.city,
+        state: sourceEvent.location.state,
+        zipcode: sourceEvent.location.zipcode,
+        online_url: sourceEvent.location.online_url,
+        online_platform: sourceEvent.location.online_platform,
+        location_instructions: sourceEvent.location.instructions,
+        is_free: sourceEvent.is_free,
+        price: sourceEvent.tickets[0]?.price,
+        waitlist_enabled: sourceEvent.waitlist_enabled,
+        requirements: sourceEvent.requirements,
+        what_to_bring: sourceEvent.what_to_bring,
+        age_restriction: sourceEvent.age_restriction,
+        dress_code: sourceEvent.dress_code,
+        accessibility_info: sourceEvent.accessibility_info,
+        banner_image_url: sourceEvent.banner_image_url,
+        video_url: sourceEvent.video_url,
+        gallery: serializeOrganizerGallery(sourceEvent.gallery),
+        schedule: serializeOrganizerSchedule(sourceEvent.schedule),
+        faq: serializeOrganizerFaq(sourceEvent.faq),
+        meta_title: sourceEvent.meta_title,
+        meta_description: sourceEvent.meta_description,
+        meta_keywords: sourceEvent.meta_keywords,
+        features: sourceEvent.features,
+        organizer_contact: sourceEvent.organizer.contact,
+        image_url: sourceEvent.cover_image_url === '/placeholder.svg' ? undefined : sourceEvent.cover_image_url,
+        max_participants: sourceEvent.capacity,
+        latitude: sourceEvent.location.latitude,
+        longitude: sourceEvent.location.longitude,
+        coordinate_source:
+          sourceEvent.location.latitude && sourceEvent.location.longitude ? 'exact' : undefined,
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: ['events-organizer-dashboard', activeProfile.id],
+      });
+
+      toast({
+        title: 'Evento duplicado',
+        description: 'A copia foi criada e aberta para edicao.',
+      });
+      navigate(`/central/eventos/editar/${duplicated.id}`);
+    } catch (error) {
+      toast({
+        title: 'Erro ao duplicar evento',
+        description: error instanceof Error ? error.message : 'Nao foi possivel duplicar o evento.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    const confirmed = await confirm({
+      title: 'Excluir evento',
+      description: 'Este evento sera removido do painel do organizador.',
+      confirmLabel: 'Excluir',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+
+    try {
+      await eventRuntimeService.deleteEvent(eventId);
+      await queryClient.invalidateQueries({
+        queryKey: ['events-organizer-dashboard', activeProfile?.id],
+      });
+      toast({ title: 'Evento excluido', description: 'O evento foi removido com sucesso.' });
+    } catch (error) {
+      toast({
+        title: 'Erro ao excluir evento',
+        description: error instanceof Error ? error.message : 'Nao foi possivel excluir o evento.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleExportData = () => {
+    if (filteredEvents.length === 0) {
+      toast({
+        title: 'Nada para exportar',
+        description: 'A lista atual nao possui eventos.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const csvHeader = [
+      'id',
+      'titulo',
+      'status',
+      'categoria',
+      'inicio',
+      'local',
+      'participantes',
+      'capacidade',
+    ];
+    const csvRows = filteredEvents.map((event) => [
+      event.id,
+      event.title,
+      event.status,
+      event.category,
+      event.start_date,
+      event.location.address || event.location.venue_name || '',
+      String(event.participants_count),
+      event.capacity ? String(event.capacity) : '',
+    ]);
+    const escapeCsvValue = (value: string) => `"${value.replace(/"/g, '""')}"`;
+    const csv = [csvHeader, ...csvRows]
+      .map((row) => row.map(escapeCsvValue).join(','))
+      .join('\n');
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `eventos-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: 'Exportacao concluida',
+      description: `${filteredEvents.length} evento(s) exportado(s) em CSV.`,
+    });
+  };
+
+  const handleViewAnalytics = (eventId: string) => {
+    navigate(`/central/eventos/analytics/${eventId}`);
+  };
+
+  const handleViewParticipants = async (eventId: string, eventTitle: string) => {
+    setParticipantsOpen(true);
+    setParticipantsLoading(true);
+    setSelectedEventId(eventId);
+    setSelectedEventTitle(eventTitle);
+    setParticipants([]);
+
+    try {
+      const rows = await eventRuntimeService.getEventParticipants(eventId);
+      const mapped = rows.map((row: EventParticipantRow) => {
+        const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+        return {
+          id: row.profile_id ?? profile?.id ?? '',
+          name: profile?.name ?? 'Participante',
+          avatarUrl: profile?.avatar_url ?? null,
+          checkedInAt: row.checked_in_at ?? null,
+          joinedAt: row.joined_at ?? null,
+        };
+      });
+      setParticipants(mapped.filter((item) => item.id));
+    } finally {
+      setParticipantsLoading(false);
+    }
+  };
+
+  const handleOrganizerCheckIn = useCallback(async (profileId: string) => {
+    if (!selectedEventId) return;
+
+    setCheckInLoadingProfileId(profileId);
+    try {
+      const checkedInAt = await eventRuntimeService.checkInEvent(selectedEventId, profileId);
+      setParticipants((prev) =>
+        prev.map((participant) =>
+          participant.id === profileId
+            ? { ...participant, checkedInAt }
+            : participant
+        )
+      );
+      toast({
+        title: 'Check-in confirmado',
+        description: 'Participante marcado como presente.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Falha ao confirmar check-in',
+        description: error instanceof Error ? error.message : 'Não foi possível confirmar o check-in.',
+        variant: 'destructive',
+      });
+    } finally {
+      setCheckInLoadingProfileId(null);
+    }
+  }, [selectedEventId, toast]);
+
+  const handleCheckInFromQrPayload = async () => {
+    if (!selectedEventId) return;
+    if (!qrPayloadInput.trim()) {
+      toast({
+        title: 'Payload vazio',
+        description: 'Cole o conteúdo do QR Code para validar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    let parsedUnknown: unknown;
+    try {
+      parsedUnknown = JSON.parse(qrPayloadInput);
+    } catch {
+      toast({
+        title: 'QR inválido',
+        description: 'O conteúdo informado não é um JSON válido.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    let parsed;
+    try {
+      parsed = parseEventCheckinQrPayload(parsedUnknown);
+    } catch (error) {
+      toast({
+        title: 'QR inválido',
+        description: error instanceof Error ? error.message : 'Formato inválido.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (parsed.eventId !== selectedEventId) {
+      toast({
+        title: 'Evento não confere',
+        description: 'Este QR pertence a outro evento.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setCheckInLoadingProfileId('__qr__');
+    try {
+      const result = await eventRuntimeService.checkInEventByCode(
+        selectedEventId,
+        parsed.checkinCode
+      );
+      setParticipants((prev) =>
+        prev.map((participant) =>
+          participant.id === result.profileId
+            ? { ...participant, checkedInAt: result.checkedInAt }
+            : participant
+        )
+      );
+      toast({
+        title: 'Check-in confirmado',
+        description: 'Participante marcado como presente via QR.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Falha ao validar QR',
+        description: error instanceof Error ? error.message : 'Não foi possível validar o QR.',
+        variant: 'destructive',
+      });
+    } finally {
+      setCheckInLoadingProfileId(null);
+    }
+  };
+
+  const stopScanner = useCallback(() => {
+    if (scanFrameRef.current) {
+      cancelAnimationFrame(scanFrameRef.current);
+      scanFrameRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    scanningLockRef.current = false;
+    setScannerBusy(false);
+  }, []);
+
+  const processQrRawValue = useCallback(async (rawValue: string) => {
+    if (scanningLockRef.current) return;
+    const trimmed = rawValue.trim();
+    if (!trimmed || recentPayloadsRef.current.has(trimmed)) return;
+
+    let parsedUnknown: unknown;
+    try {
+      parsedUnknown = JSON.parse(trimmed);
+    } catch {
+      return;
+    }
+
+    let payload;
+    try {
+      payload = parseEventCheckinQrPayload(parsedUnknown);
+    } catch {
+      return;
+    }
+    if (!selectedEventId || payload.eventId !== selectedEventId) return;
+
+    scanningLockRef.current = true;
+    setScannerBusy(true);
+    recentPayloadsRef.current.add(trimmed);
+    try {
+      const result = await eventRuntimeService.checkInEventByCode(
+        selectedEventId,
+        payload.checkinCode
+      );
+      setParticipants((prev) =>
+        prev.map((participant) =>
+          participant.id === result.profileId
+            ? { ...participant, checkedInAt: result.checkedInAt }
+            : participant
+        )
+      );
+      toast({
+        title: 'Check-in confirmado',
+        description: 'Participante marcado como presente via scanner.',
+      });
+      setScannerOpen(false);
+      stopScanner();
+    } catch (error) {
+      toast({
+        title: 'Falha ao validar QR',
+        description: error instanceof Error ? error.message : 'Não foi possível validar o QR.',
+        variant: 'destructive',
+      });
+    } finally {
+      scanningLockRef.current = false;
+      setScannerBusy(false);
+    }
+  }, [selectedEventId, stopScanner, toast]);
+
+  useEffect(() => {
+    setScannerSupported(typeof window !== 'undefined' && 'BarcodeDetector' in window);
+  }, []);
+
+  useEffect(() => {
+    if (!scannerOpen) {
+      stopScanner();
+      return;
+    }
+    if (!scannerSupported) {
+      setScannerError('Leitura por câmera não suportada neste navegador.');
+      return;
+    }
+
+    let cancelled = false;
+    setScannerError(null);
+
+    const start = async () => {
+      try {
+        const mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } },
+          audio: false,
+        });
+        if (cancelled) {
+          mediaStream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+        streamRef.current = mediaStream;
+        if (!videoRef.current) return;
+        videoRef.current.srcObject = mediaStream;
+        await videoRef.current.play();
+
+        const DetectorCtor = (window as unknown as {
+          BarcodeDetector?: new (options?: { formats?: string[] }) => {
+            detect: (input: ImageBitmapSource) => Promise<Array<{ rawValue?: string }>>;
+          };
+        }).BarcodeDetector;
+        if (!DetectorCtor) {
+          setScannerError('Leitura por câmera não suportada neste navegador.');
+          return;
+        }
+
+        const detector = new DetectorCtor({ formats: ['qr_code'] });
+
+        const scanLoop = async () => {
+          if (cancelled || !videoRef.current || !scannerOpen) return;
+          try {
+            const barcodes = await detector.detect(videoRef.current);
+            for (const barcode of barcodes) {
+              if (barcode.rawValue) {
+                await processQrRawValue(barcode.rawValue);
+              }
+            }
+          } catch {
+            void 0;
+          }
+          scanFrameRef.current = requestAnimationFrame(scanLoop);
+        };
+        scanFrameRef.current = requestAnimationFrame(scanLoop);
+      } catch (error) {
+        setScannerError(
+          error instanceof Error
+            ? `Não foi possível acessar a câmera: ${error.message}`
+            : 'Não foi possível acessar a câmera.'
+        );
+      }
+    };
+
+    start();
+    return () => {
+      cancelled = true;
+      stopScanner();
+    };
+  }, [processQrRawValue, scannerOpen, scannerSupported, stopScanner]);
+  return (
+    <>
+      {/* SEO */}
+      <Helmet>
+        <title>Meus Eventos | Dashboard | Achegue-se</title>
+        <meta name="robots" content="noindex" />
+      </Helmet>
+
+      {/* Page Container */}
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+        {/* Header */}
+        <div className="border-b border-border/50 bg-background/80 backdrop-blur-sm">
+          <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
+            {/* Breadcrumbs */}
+            <nav className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+              <Link to="/" className="flex items-center gap-1 transition-colors hover:text-foreground">
+                <Home className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Início</span>
+              </Link>
+              <span>/</span>
+              <span className="font-medium text-foreground">Meus Eventos</span>
+            </nav>
+
+            {/* Title & Actions */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
+                  Meus Eventos
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  Gerencie e acompanhe seus eventos
+                </p>
+              </div>
+              <Button onClick={handleCreateEvent} className="gap-2" size="lg">
+                <Plus className="h-5 w-5" />
+                Criar Evento
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <EventsOrganizerStatsSection stats={stats} />
+
+        <EventsOrganizerFiltersSection
+          onExportData={handleExportData}
+          search={search}
+          setSearch={setSearch}
+          setStatusFilter={setStatusFilter}
+          statusFilter={statusFilter}
+        />
+
+        <EventsOrganizerListSection
+          events={filteredEvents}
+          onCreateEvent={handleCreateEvent}
+          onDeleteEvent={handleDeleteEvent}
+          onDuplicateEvent={handleDuplicateEvent}
+          onEditEvent={handleEditEvent}
+          onViewAnalytics={handleViewAnalytics}
+          onViewEvent={handleViewEvent}
+          onViewParticipants={handleViewParticipants}
+          search={search}
+        />
+      </div>
+
+      <Dialog open={participantsOpen} onOpenChange={setParticipantsOpen}>
+        <DialogContent className="max-h-[80vh] max-w-lg overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Participantes - {selectedEventTitle}</DialogTitle>
+          </DialogHeader>
+          {participantsLoading ? (
+            <p className="text-sm text-muted-foreground">Carregando participantes...</p>
+          ) : participants.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum participante inscrito ainda.</p>
+          ) : (
+            <div className="space-y-3">
+              <div className="rounded-lg border border-border bg-card p-3">
+                <p className="mb-2 text-xs font-medium text-foreground">Check-in via QR (colar payload)</p>
+                <div className="mb-2 flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1"
+                    onClick={() => {
+                      setScannerError(null);
+                      setScannerOpen(true);
+                    }}
+                    disabled={!scannerSupported}
+                  >
+                    <QrCode className="h-3.5 w-3.5" />
+                    Abrir câmera
+                  </Button>
+                  {!scannerSupported && (
+                    <span className="text-xs text-muted-foreground">
+                      Câmera não suportada neste navegador.
+                    </span>
+                  )}
+                </div>
+                <Textarea
+                  value={qrPayloadInput}
+                  onChange={(e) => setQrPayloadInput(e.target.value)}
+                  placeholder='{"eventId":"...","checkinCode":"..."}'
+                  className="min-h-[80px] text-xs"
+                />
+                <div className="mt-2">
+                  <Button
+                    size="sm"
+                    className="gap-1"
+                    onClick={handleCheckInFromQrPayload}
+                    disabled={checkInLoadingProfileId === '__qr__'}
+                  >
+                    <QrCode className="h-3.5 w-3.5" />
+                    {checkInLoadingProfileId === '__qr__'
+                      ? 'Validando...'
+                      : 'Validar QR e Confirmar'}
+                  </Button>
+                </div>
+              </div>
+              <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">{participants.length}</span> inscritos
+                {' • '}
+                <span className="font-medium text-foreground">
+                  {participants.filter((participant) => participant.checkedInAt).length}
+                </span>{' '}
+                check-ins confirmados
+              </div>
+              {participants.map((participant) => (
+                <div key={participant.id} className="flex items-center gap-3 rounded-lg border border-border p-3">
+                  <img
+                    src={participant.avatarUrl || '/placeholder.svg'}
+                    alt={participant.name}
+                    className="h-8 w-8 rounded-full object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-foreground">{participant.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {participant.checkedInAt
+                        ? `Check-in: ${new Date(participant.checkedInAt).toLocaleString('pt-BR')}`
+                        : 'Check-in pendente'}
+                    </p>
+                  </div>
+                  <Badge variant={participant.checkedInAt ? 'default' : 'secondary'}>
+                    {participant.checkedInAt ? 'Check-in OK' : 'Pendente'}
+                  </Badge>
+                  {!participant.checkedInAt && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1"
+                      onClick={() => handleOrganizerCheckIn(participant.id)}
+                      disabled={checkInLoadingProfileId === participant.id}
+                    >
+                      {checkInLoadingProfileId === participant.id ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <QrCode className="h-3 w-3" />
+                      )}
+                      Confirmar
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={scannerOpen} onOpenChange={(open) => { setScannerOpen(open); if (!open) stopScanner(); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Scanner de QR do evento</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="overflow-hidden rounded-lg border border-border bg-black">
+              <video ref={videoRef} className="h-72 w-full object-cover" playsInline muted />
+            </div>
+            {scannerBusy && (
+              <p className="text-xs text-muted-foreground">Processando QR detectado...</p>
+            )}
+            {scannerError && (
+              <p className="text-xs text-destructive">{scannerError}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Aponte a câmera para o QR de check-in do participante. A confirmação é automática quando o QR for válido para este evento.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <ConfirmDialog />
+
+    </>
+  );
+}

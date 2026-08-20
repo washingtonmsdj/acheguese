@@ -1,34 +1,15 @@
-/**
- * EVENTS - EXPORTS
- *
- * Barrel file para facilitar imports
- *
- * @version 2.0.0
- */
-
-// ============================================================================
-// COMPONENTS
-// ============================================================================
-
-export { EventHero } from './components/EventHero';
-export { EventTickets } from './components/EventTickets';
-export { EventDescription } from './components/EventDescription';
-export { EventSchedule } from './components/EventSchedule';
-export { EventCTA } from './components/EventCTA';
-export { EventCard } from './components/EventCard';
-export { EventSkeleton } from './components/EventSkeleton';
-
-// ============================================================================
-// PAGES
-// ============================================================================
-
-export { default as EventDetailPage } from './pages/EventDetailPage';
-export { default as EventsListPage } from './pages/EventsListPage';
-
-// ============================================================================
-// TYPES
-// ============================================================================
-
+/** Compatibility bridge. New code must import from `@/modules/community-events`. */
+export {
+  EventHero,
+  EventTickets,
+  EventDescription,
+  EventSchedule,
+  EventCTA,
+  EventCard,
+  EventSkeleton,
+  EventDetailPage,
+  EventsListPage,
+} from "@/modules/community-events";
 export type {
   Event,
   EventType,
@@ -45,9 +26,5 @@ export type {
   EventRegistration,
   EventFilters,
   EventStats,
-  EventCTA as EventCTAType,
-} from './types';
-
-// ============================================================================
-// UTILS
-// ============================================================================
+  EventCTAType,
+} from "@/modules/community-events";

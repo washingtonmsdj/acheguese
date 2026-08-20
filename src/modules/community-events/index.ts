@@ -1,26 +1,36 @@
 /**
- * Community Events - public module API.
+ * Community Events - canonical public module API.
  *
- * The product surface is being migrated from `src/features/events` into this
- * bounded context. Only the pages/components still explicitly imported from
- * the legacy namespace remain compatibility debt.
+ * Product UI lives under this bounded context. Legacy `src/features/events`
+ * paths exist only as compatibility bridges while deep imports are retired.
  */
 
 export {
   EventHero,
   EventTickets,
   EventDescription,
+  EventSchedule,
   EventCTA,
   EventCard,
+  EventSkeleton,
   EventTicketManager,
+  EventCalendar,
+  EventFAQ,
+  EventGallery,
+  EventNotFound,
+  EventsErrorBoundary,
+  EventsGlobalSidebar,
+  EventAnalyticsCard,
+  EventShareModal,
+  EventCheckin,
+  EventRelated,
+  EventReminders,
+  EventReviews,
+  EventsMap,
 } from "./components";
 
-export {
-  EventSchedule,
-  EventSkeleton,
-  EventDetailPage,
-  EventsListPage,
-} from "@/features/events";
+export { default as EventDetailPage } from "./pages/EventDetailPage";
+export { default as EventsListPage } from "./pages/EventsListPage";
 
 export type {
   Event,
