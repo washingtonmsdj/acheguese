@@ -117,8 +117,8 @@ export default defineConfig(({ command, mode }) => {
         : null,
       shouldUploadSourcemaps
         ? sentryVitePlugin({
-            org: process.env.SENTRY_ORG || "ordax",
-            project: process.env.SENTRY_PROJECT || "ordax-saas",
+            org: process.env.SENTRY_ORG || "acheguese",
+            project: process.env.SENTRY_PROJECT || "acheguese-web",
             authToken: process.env.SENTRY_AUTH_TOKEN,
             telemetry: false,
             sourcemaps: {
@@ -138,9 +138,6 @@ export default defineConfig(({ command, mode }) => {
         "@/core": path.resolve(configDir, "./src/core"),
         "@/integrations": path.resolve(configDir, "./src/integrations"),
         "@/modules": path.resolve(configDir, "./src/modules"),
-        "@/components": path.resolve(configDir, "./src/components"),
-        "@/services": path.resolve(configDir, "./src/services"),
-        "@/hooks": path.resolve(configDir, "./src/hooks"),
         lodash: "lodash-es",
       },
       extensions: [".mjs", ".js", ".mts", ".ts", ".jsx", ".tsx", ".json"],
