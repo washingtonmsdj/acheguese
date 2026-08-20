@@ -2,17 +2,21 @@
  * Community Events - public module API.
  *
  * The product surface is being migrated from `src/features/events` into this
- * bounded context. Components/pages still listed from the legacy namespace are
- * compatibility-only; types, hooks and adapters already live here.
+ * bounded context. Only the pages/components still explicitly imported from
+ * the legacy namespace remain compatibility debt.
  */
 
 export {
   EventHero,
   EventTickets,
   EventDescription,
-  EventSchedule,
   EventCTA,
   EventCard,
+  EventTicketManager,
+} from "./components";
+
+export {
+  EventSchedule,
   EventSkeleton,
   EventDetailPage,
   EventsListPage,
