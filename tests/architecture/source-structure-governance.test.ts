@@ -127,6 +127,48 @@ describe("source structure governance", () => {
     expect(unexpected).toEqual([]);
   });
 
+  it("keeps guide compatibility path shim-only", () => {
+    expect(listDirectories("src/core/verticals/guide/routes")).toEqual([]);
+    expect(listFiles("src/core/verticals/guide/routes")).toEqual([
+      "touristPointPublicRoutes.ts",
+      "useTouristPointPublicUrls.ts",
+    ]);
+    expect(
+      read("src/core/verticals/guide/routes/touristPointPublicRoutes.ts"),
+    ).toContain("@/core/guide/tourist-points/routes");
+    expect(
+      read("src/core/verticals/guide/routes/useTouristPointPublicUrls.ts"),
+    ).toContain("@/core/guide/tourist-points/routes");
+    expect(listFiles("src/core/guide/tourist-points/routes")).toContain(
+      "touristPointPublicRoutes.ts",
+    );
+  });
+
+  it("keeps jobs compatibility path shim-only", () => {
+    expect(listDirectories("src/core/verticals/jobs/routes")).toEqual([]);
+    expect(listFiles("src/core/verticals/jobs/routes")).toEqual([
+      "jobPublicRoutes.ts",
+    ]);
+    expect(listDirectories("src/core/verticals/jobs/services")).toEqual([]);
+    expect(listFiles("src/core/verticals/jobs/services")).toEqual([
+      "VagaPublicationDistributionService.ts",
+    ]);
+    expect(read("src/core/verticals/jobs/routes/jobPublicRoutes.ts")).toContain(
+      "@/core/work-opportunities/routes",
+    );
+    expect(
+      read(
+        "src/core/verticals/jobs/services/VagaPublicationDistributionService.ts",
+      ),
+    ).toContain("@/core/work-opportunities/services");
+    expect(listFiles("src/core/work-opportunities/routes")).toContain(
+      "jobPublicRoutes.ts",
+    );
+    expect(listFiles("src/core/work-opportunities/services")).toContain(
+      "VagaPublicationDistributionService.ts",
+    );
+  });
+
   it("keeps architecture fixtures out of the product source tree", () => {
     expect(listDirectories("src/__tests__")).toEqual([]);
     expect(listFiles("src/__tests__")).toEqual([]);
