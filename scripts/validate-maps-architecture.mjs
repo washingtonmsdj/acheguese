@@ -106,8 +106,8 @@ function main() {
   section('3. VALIDAÇÃO DE VIOLAÇÕES INTENCIONAIS');
   
   const violationFiles = [
-    'src/__tests__/maps-architecture-validation/test-violation-direct-provider.ts',
-    'src/__tests__/maps-architecture-validation/test-violation-cross-layer.ts',
+    'tests/architecture/fixtures/maps-architecture-validation/test-violation-direct-provider.ts',
+    'tests/architecture/fixtures/maps-architecture-validation/test-violation-cross-layer.ts',
   ];
   
   let allViolationsDetected = true;
