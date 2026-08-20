@@ -1,5 +1,2 @@
-export const EVENT_PAGE_SIZE = {
-  DEFAULT: 12,
-  MIN: 1,
-  MAX: 50,
-} as const;
+// Compatibility shim. New callers must use @/core/events/config/eventReadConfig.
+export * from "@/core/events/config/eventReadConfig";
