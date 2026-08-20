@@ -30,6 +30,26 @@ function listFiles(relativePath: string): string[] {
     .sort();
 }
 
+function listSourceFilesRecursively(relativePath: string): string[] {
+  const absolute = path.join(ROOT, relativePath);
+  if (!fs.existsSync(absolute)) return [];
+
+  const files: string[] = [];
+  for (const entry of fs.readdirSync(absolute, { withFileTypes: true })) {
+    const child = path.join(relativePath, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...listSourceFilesRecursively(child));
+      continue;
+    }
+
+    if (entry.isFile() && /\.(?:ts|tsx)$/.test(entry.name)) {
+      files.push(child.replaceAll(path.sep, "/"));
+    }
+  }
+
+  return files.sort();
+}
+
 function parseVerticalKeys(): string[] {
   const config = read("src/core/verticals/config.ts");
   const match = config.match(/VERTICAL_KEYS[^=]*=\s*\[([^\]]*)\]/m);
@@ -98,6 +118,28 @@ describe("source structure governance", () => {
     expect(moduleIndex).toContain("EventDetailPage");
     expect(moduleReadme).toContain("src/modules/community-events/index.ts");
     expect(moduleReadme).toContain("src/features/events");
+  });
+
+  it("keeps legacy Events source shim-only and the canonical module independent from it", () => {
+    const legacyFiles = listSourceFilesRecursively("src/features/events");
+    expect(legacyFiles.length).toBeGreaterThan(0);
+
+    for (const file of legacyFiles) {
+      const source = read(file);
+      const nonEmptyLines = source
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+
+      expect(nonEmptyLines.length, file).toBeLessThanOrEqual(40);
+      expect(source, file).toMatch(/@\/modules\/community-events|@\/core\/events/);
+    }
+
+    const canonicalFiles = listSourceFilesRecursively("src/modules/community-events");
+    expect(canonicalFiles.length).toBeGreaterThan(legacyFiles.length);
+    for (const file of canonicalFiles) {
+      expect(read(file), file).not.toContain("@/features/events");
+    }
   });
 
   it("keeps the vertical README synchronized with config.ts", () => {
