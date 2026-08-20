@@ -43,7 +43,6 @@ function parseVerticalKeys(): string[] {
 describe("source structure governance", () => {
   it("freezes the top-level src directory taxonomy", () => {
     expect(listDirectories("src")).toEqual([
-      "__tests__",
       "app",
       "assets",
       "config",
@@ -128,11 +127,16 @@ describe("source structure governance", () => {
     expect(unexpected).toEqual([]);
   });
 
-  it("freezes the top-level src/__tests__ exception", () => {
-    expect(listDirectories("src/__tests__")).toEqual([
-      "maps-architecture-validation",
-    ]);
+  it("keeps architecture fixtures out of the product source tree", () => {
+    expect(listDirectories("src/__tests__")).toEqual([]);
     expect(listFiles("src/__tests__")).toEqual([]);
+    expect(
+      listFiles("tests/architecture/fixtures/maps-architecture-validation"),
+    ).toEqual([
+      "README.md",
+      "test-violation-cross-layer.ts",
+      "test-violation-direct-provider.ts",
+    ]);
   });
 
   it("freezes the legacy root e2e exception", () => {
