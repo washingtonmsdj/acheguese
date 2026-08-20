@@ -1,170 +1,50 @@
-# Testes Unitários
+# Testes — Achegue-se
 
-> Testes automatizados para o Ordax
-> 
-> Cobertura atual: **110 testes** adicionados na expansão de Abril 2026
+Este diretório contém suites transversais que não pertencem naturalmente a um único arquivo de implementação.
 
----
+## Estrutura canônica
 
-## Estrutura de Testes
+- `tests/architecture/` — invariantes de arquitetura, ownership, SSOT e boundaries.
+- `tests/security/` — regressões de autorização, exposição e contratos de segurança.
+- `tests/e2e/` — fluxos Playwright de produto e release.
+- `tests/scripts/` — testes dos scripts/gates de engenharia.
+- `tests/fixtures/` e helpers — fixtures compartilhadas quando realmente necessárias.
+- arquivos `tests/*.test.ts[x]` — somente regressões transversais ainda não classificadas; novos testes devem preferir uma categoria explícita.
 
-```
-tests/                          # Testes de integração e E2E
-  ├── operational/              # Testes operacionais (Gate 2-7)
-  ├── e2e/                      # Testes end-to-end
-  └── legacy/                   # Testes antigos (arquivados)
+## Testes co-localizados
 
-src/                            # Testes unitários (co-localizados)
-  ├── shared/utils/
-  │   ├── dateUtils.test.ts     # 22 testes - datas
-  │   ├── validation.test.ts    # 35 testes - validação
-  │   ├── formatters.test.ts    # 14 testes - formatação
-  │   └── currency.test.ts      # 13 testes - moeda
-  ├── core/session/services/
-  │   └── SessionService.test.ts # Testes de sessão
-  └── core/location/services/
-      └── LocationService.test.ts # 26 testes - serviço de localização
-```
+Testes unitários de uma implementação específica podem permanecer ao lado do owner em `src/**`, usando `*.test.*`, `*.spec.*` ou `__tests__/` local ao domínio.
 
----
+`src/test/setup.ts` **não é uma suite**: é o setup global carregado por `vitest.config.ts`.
 
-## Testes Criados na Expansão
+`src/__tests__/` no topo de `src` não é um destino canônico para novas suites. Conteúdo transversal existente ali deve migrar para `tests/architecture`, `tests/security` ou outra categoria adequada; testes realmente unitários devem ser co-localizados com seu owner.
 
-### 1. dateUtils.test.ts (22 testes)
+## E2E
 
-| Função | Testes |
-|--------|--------|
-| `formatRelativeTime` | 8 testes (agora, minutos, horas, dias, semanas, meses, anos) |
-| `formatTime` | 2 testes |
-| `formatShortDate` | 2 testes |
-| `formatDateTime` | 2 testes |
-| `isToday` | 3 testes |
-| `isTomorrow` | 3 testes |
-| `getDaysDifference` | 4 testes |
+O owner principal dos fluxos end-to-end é `tests/e2e/`.
 
-### 2. validation.test.ts (35 testes)
+O diretório raiz `e2e/` é uma exceção legada atualmente usada pelo fluxo específico `test:e2e:network`. Nenhum novo teste de produto deve ser criado ali; a exceção deve ser removida quando a configuração de network for consolidada.
 
-| Função | Testes |
-|--------|--------|
-| `isValidEmail` | 6 testes |
-| `isValidCNPJ` | 4 testes |
-| `isValidCPF` | 4 testes |
-| `isValidPhone` | 4 testes |
-| `isValidCEP` | 3 testes |
-| `isValidUUID` | 4 testes |
-| `isValidURL` | 3 testes |
-| `isValidLength` | 4 testes |
-| `isInRange` | 4 testes |
-| `isInFuture` | 2 testes |
-| `isInPast` | 2 testes |
-| `isNotEmpty` | 2 testes |
-| `isObjectNotEmpty` | 2 testes |
+## Regras
 
-### 3. formatters.test.ts (14 testes)
+1. Teste deve provar um contrato real, não apenas ausência de crash.
+2. Placeholder, feature pausada, fallback de erro ou `test.skip` por falta de fixture não podem ser tratados como certificação funcional de release.
+3. Invariantes de SSOT/ownership pertencem a `tests/architecture`.
+4. Autorização negativa e exposição pertencem a `tests/security`.
+5. Fluxos de usuário e rotas pertencem a `tests/e2e`.
+6. Não criar novas categorias de topo sem atualizar este contrato e os gates correspondentes.
+7. Números de cobertura e contagem de testes não são documentados manualmente aqui; métricas devem vir do runner/CI para não envelhecerem silenciosamente.
 
-| Função | Testes |
-|--------|--------|
-| `getInitials` | 4 testes |
-| `getRelativeTime` | 5 testes |
-| `formatNumber` | 4 testes |
-| `truncateText` | 4 testes |
+## Comandos principais
 
-### 4. currency.test.ts (13 testes)
-
-| Função | Testes |
-|--------|--------|
-| `formatBrl` | 5 testes |
-| `formatBrlCompact` | 6 testes |
-
-### 5. LocationService.test.ts (26 testes)
-
-| Método | Testes |
-|--------|--------|
-| `getLocationById` | 3 testes |
-| `getLocationByPath` | 3 testes |
-| `getLocationBySlugWithinParent` | 4 testes |
-| `getAncestors` | 3 testes |
-| `getDescendants` | 3 testes |
-| `getChildren` | 3 testes |
-| `validateLocation` | 4 testes |
-| `getLocationTree` | 2 testes |
-| Error handling | 1 teste |
-
----
-
-## Executando Testes
-
-### Todos os testes unitários
 ```bash
 npm run test
+npm run typecheck
+npm run lint
+npm run validate:ssot
+npm run audit:architecture
+npm run validate:taxonomy
+npm run test:e2e:operations
 ```
 
-### Testes específicos
-```bash
-# Apenas utilitários
-npx vitest run src/shared/utils/
-
-# Apenas um arquivo
-npx vitest run src/shared/utils/dateUtils.test.ts
-
-# Watch mode
-npx vitest watch src/shared/utils/
-```
-
-### Com cobertura
-```bash
-npx vitest run --coverage
-```
-
----
-
-## Convenções
-
-### Nomenclatura
-- Arquivos: `*.test.ts` ou `*.test.tsx`
-- Descrições: `deve [comportamento esperado]`
-- Agrupamento: por função ou módulo
-
-### Boas Práticas
-1. **Isolamento**: Cada teste deve ser independente
-2. **Determinismo**: Mesmo input = mesmo output
-3. **Cobertura**: Testar casos de sucesso e falha
-4. **Performance**: Evitar operações assíncronas desnecessárias
-
-### Exemplo
-```typescript
-describe('minhaFuncao', () => {
-  it('deve retornar resultado esperado para input válido', () => {
-    expect(minhaFuncao('valido')).toBe('resultado');
-  });
-
-  it('deve lançar erro para input inválido', () => {
-    expect(() => minhaFuncao(null)).toThrow();
-  });
-});
-```
-
----
-
-## Próximos Passos
-
-- [x] Expandir testes para `core/session` (SessionService já possui testes)
-- [x] Expandir testes para `core/location` (LocationService - 26 testes criados)
-- [ ] Criar testes para hooks de UI
-- [ ] Criar testes para outros services de negócio (business, alerts, etc.)
-- [ ] Criar testes para repositories
-- [ ] Atingir meta de 85%+ de cobertura
-
----
-
-## Métricas
-
-| Métrica | Antes | Depois | Meta |
-|---------|-------|--------|------|
-| Testes unitários | 45 | 110 | 150+ |
-| Cobertura (est.) | ~40% | ~55% | 85%+ |
-| Arquivos testados | 18 | 24 | 50+ |
-
----
-
-*Documento atualizado em Abril 2026*
+A lista completa e executável de suites permanece em `package.json`; este documento define ownership e organização, não duplica o catálogo de scripts.
