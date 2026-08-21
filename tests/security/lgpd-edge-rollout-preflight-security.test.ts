@@ -6,9 +6,17 @@ const ROOT = process.cwd();
 const PREFLIGHT = join(ROOT, 'scripts', 'security', 'supabase-lgpd-edge-rollout-preflight.mjs');
 const DELETE_HANDLER = join(ROOT, 'supabase', 'functions', 'user-delete-account', 'index.ts');
 const EXPORT_HANDLER = join(ROOT, 'supabase', 'functions', 'user-export-data', 'index.ts');
+const EXPORT_MATRIX = join(
+  ROOT,
+  'docs',
+  '09-reference',
+  'governance',
+  'privacy',
+  'LGPD_EXPORT_MATRIX.json',
+);
 
 describe('LGPD Edge rollout preflight', () => {
-  it('is explicitly scoped to the two stale LGPD handlers and issue #68', () => {
+  it('is explicitly scoped to the two blocked LGPD handlers and issue #68', () => {
     const source = readFileSync(PREFLIGHT, 'utf8');
 
     expect(source).toContain("'user-delete-account': Object.freeze({");
@@ -52,6 +60,59 @@ describe('LGPD Edge rollout preflight', () => {
       expect(handler).toContain(marker);
       expect(preflight).toContain(marker);
     }
+  });
+
+  it('requires the canonical export matrix and explicit implementation certification', () => {
+    const source = readFileSync(PREFLIGHT, 'utf8');
+    const matrix = JSON.parse(readFileSync(EXPORT_MATRIX, 'utf8')) as {
+      schemaVersion?: string;
+      rules?: Record<string, unknown>;
+    };
+
+    expect(source).toContain('LGPD_EXPORT_MATRIX.json');
+    expect(source).toContain("const EXPORT_MATRIX_SCHEMA_VERSION = 'lgpd-export-matrix/v1';");
+    expect(source).toContain("'const LGPD_EXPORT_MATRIX_IMPLEMENTATION_COMPLETE = true;'");
+    expect(source).toContain('requiresExportMatrix: true');
+
+    expect(matrix.schemaVersion).toBe('lgpd-export-matrix/v1');
+    expect(matrix.rules?.default).toBe('exclude');
+    expect(matrix.rules?.selectStarForbidden).toBe(true);
+    expect(matrix.rules?.sharedRowsRequireRedaction).toBe(true);
+    expect(matrix.rules?.requiredQueryFailure).toBe('fail-closed');
+  });
+
+  it('blocks select-star, raw auth metadata and operational log/session dumps in exports', () => {
+    const source = readFileSync(PREFLIGHT, 'utf8');
+
+    for (const marker of [
+      ".from('application_logs')",
+      'app_metadata:',
+      'identity_data:',
+      ".select('*')",
+      ".select('*,",
+    ]) {
+      expect(source).toContain(marker);
+    }
+  });
+
+  it('only becomes ready when stale markers, required markers and matrix checks all pass', () => {
+    const source = readFileSync(PREFLIGHT, 'utf8');
+
+    expect(source).toContain(
+      'const ready = staleMarkers.length === 0 && missingMarkers.length === 0 && exportMatrix.ready;',
+    );
+    expect(source).toContain('missingMarkers');
+    expect(source).toContain('exportMatrixReady');
+    expect(source).toContain('Matriz de exportacao: INVALIDA/AUSENTE');
+  });
+
+  it('keeps user-delete-account independent of the export matrix', () => {
+    const source = readFileSync(PREFLIGHT, 'utf8');
+    const deleteBlock = source.split("'user-delete-account': Object.freeze({")[1]
+      ?.split("'user-export-data': Object.freeze({")[0];
+
+    expect(deleteBlock).toContain('requiredMarkers: Object.freeze([])');
+    expect(deleteBlock).toContain('requiresExportMatrix: false');
   });
 
   it('never reads secrets, calls Supabase, or performs a deploy', () => {
