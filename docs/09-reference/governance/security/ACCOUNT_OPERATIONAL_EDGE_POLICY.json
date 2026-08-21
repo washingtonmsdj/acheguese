@@ -1,6 +1,6 @@
 {
   "schemaVersion": "account-operational-edge-policy/v1",
-  "guardPattern": "requireOperationalAccount\\s*\\(",
+  "guardPattern": "(?:requireOperationalAccount|requireAuthenticatedUser)\\s*\\(",
   "adminRequiredPattern": "require(?:Admin|SuperAdmin)\\s*\\(",
   "blockedStatuses": [
     "scheduled",
@@ -38,6 +38,7 @@
   "notes": [
     "admin-broker functions are classified admin-only; active admins cannot enter self-service deletion hold",
     "ai-broker functions with an explicit requireAdmin/requireSuperAdmin pattern are classified admin-only instead of guarded",
+    "requireAuthenticatedUser is accepted as a guarded path only because the shared businessAuth helper is regression-tested to call requireOperationalAccount after JWT validation",
     "systemKinds do not act as the authenticated end-user through a service-role mutation path",
     "all other serviceRoleAllowlist entries must resolve to one explicit mode or validation fails"
   ]
