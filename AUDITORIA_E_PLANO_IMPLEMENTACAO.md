@@ -1,921 +1,1032 @@
 # Achegue-se — Auditoria Técnica e Plano Canônico de Implementação
 
 **Status:** ATIVO / CANÔNICO  
-**Versão do plano:** V2 — reauditoria de 20/08/2026  
+**Versão do plano:** V2.1 — execução iniciada em 20/08/2026  
 **Data da reauditoria:** 2026-08-20  
+**Última atualização operacional:** 2026-08-20  
 **Escopo:** GitHub + Supabase + Vercel  
 **Repositório:** `washingtonmsdj/acheguese`  
-**Branch auditada:** `main`  
-**SHA de referência:** `983d95e72426ae41c1680afbabe395b3ebf61717`  
+**Branch:** `main`  
+**SHA operacional antes desta atualização:** `ae1017f9db8f0f4e5b21a14c92e81604d91374aa`  
 **Supabase:** projeto `Achegue-se` / ref `xhdowzacfujckjelqhtd`  
 **Vercel:** projeto `acheguese` / domínio `acheguese.com.br`
 
-> Este arquivo é o **SSOT operacional da auditoria, correções, hardening e rollout transversal**. Um item só pode ser marcado como concluído quando o código, a configuração e o runtime correspondente tiverem sido comprovados. Código escrito, PR aberto ou migration versionada não equivalem a produção corrigida.
+> Este arquivo é o **SSOT operacional da auditoria, correções, hardening e rollout transversal**. Um item só é `PROD/DONE` quando o runtime correspondente foi comprovado. Código merged, migration versionada ou guard integrado não equivalem a produção corrigida.
 
 ---
 
-## 1. Objetivo e regra de leitura
+## 1. Legenda de estado
 
-Este plano responde quatro perguntas:
+- `GIT/DONE` — alteração integrada à `main`, sem implicar promoção de runtime;
+- `PROD/DONE` — alteração aplicada/implantada e comprovada no ambiente remoto correspondente;
+- `READY/PR` — implementação existe em PR, ainda não integrada;
+- `OPEN` — implementação real ainda falta;
+- `BLOCKED` — próxima ação depende de CI, Vercel, plataforma, configuração administrativa ou validação autoritativa;
+- `PLATFORM` — objeto/control plane pertence à plataforma e não deve ser forçado pelo papel atual;
+- `P1` — segurança, privacidade, autoridade, rollout ou operação crítica;
+- `P2` — hardening, performance ou manutenção relevante sem evidência atual de incidente crítico.
 
-1. **O que já foi corrigido e comprovado?**
-2. **O que está implementado, mas ainda não foi integrado ou promovido?**
-3. **O que ainda precisa ser implementado?**
-4. **O que está bloqueado por CI, Vercel, Supabase ou autoridade da plataforma?**
+Regra de execução:
 
-Legenda usada neste documento:
-
-- `DONE` — implementado e reconciliado no ambiente correspondente;
-- `READY/PR` — implementação existe em PR, mas ainda não integra `main`/runtime;
-- `OPEN` — trabalho real ainda precisa ser feito;
-- `BLOCKED` — a próxima ação depende de infraestrutura/plataforma/validação autoritativa;
-- `PLATFORM` — alteração depende de owner/extensão/plataforma e não deve ser forçada pelo papel atual;
-- `P1` — bloqueia segurança, privacidade, integridade de rollout ou operação crítica;
-- `P2` — hardening, menor privilégio, performance ou manutenção relevante, mas sem evidência atual de incidente crítico.
-
----
-
-## 2. Resumo executivo — estado real em 20/08/2026
-
-O projeto possui uma base de segurança significativa — RLS ampla, validações de arquitetura, migrations versionadas, CSP/HSTS, brokers privilegiados, testes e vários gates fail-closed — porém **a principal dívida atual mudou**.
-
-A reauditoria não aponta mais “migration desconhecida” como o maior risco. As migrations críticas mais recentes já foram reconciliadas em Git. O risco principal agora está em **fluxos ativos cujo runtime ainda não está certificado ou cujo contrato está quebrado**.
-
-### Estado confirmado
-
-- `main` em `983d95e72426ae41c1680afbabe395b3ebf61717`;
-- Supabase remoto com **366 migrations registradas**;
-- migration remota mais recente: `20260820081746_harden_classified_report_rpc_contract`;
-- Supabase remoto com **43 Edge Functions implantadas** no inventário atual;
-- migrations críticas `20260820012139`, `20260820025810` e `20260820081746` já reconciliadas em `main`;
-- gate de migrations remoto/proveniência já existe em `package.json` (`validate:migrations:remote`, `validate:migrations:provenance`);
-- guard fail-closed de canary para `admin-list-users` já está em `main`;
-- nenhum DDL novo e nenhum Edge deploy foram executados durante esta reauditoria.
-
-### Riscos que hoje concentram P1
-
-1. **LGPD/exclusão de conta:** fluxo ativo, mas arquitetura antiga está quebrada por drift de schema; `privacy-rpc.cancelAccountDeletion` implantado referencia objetos removidos.
-2. **Edge runtime/proveniência:** há funções versionadas com callers ativos, mas ausentes do runtime, além de runtimes implantados atrás do source desejado.
-3. **CI autoritativa:** GitHub Actions continua falhando antes dos steps de repositório; Vercel também apresenta `build-rate-limit` em previews.
-4. **Sessão/Auth:** `public.user_sessions` não representa as sessões reais; a autoridade deve permanecer em Supabase Auth.
-5. **Admin e território:** contratos ativos estavam inconsistentes; correções existem em PR, ainda sem rollout.
-6. **HIBP:** compromised password protection permanece desabilitado.
-7. **SECURITY DEFINER / menor privilégio:** inventário está muito mais claro, mas allowlist semântica e grants residuais ainda não foram concluídos.
-8. **PostGIS:** advisory residual depende de ownership `supabase_admin` e não deve ser forçado pelo papel atual.
+1. não reduzir gates para obter verde;
+2. não equiparar merge a deploy;
+3. não aplicar DDL novo enquanto a validação autoritativa estiver quebrada;
+4. não implantar Edge a partir de source conhecido como stale;
+5. toda promoção deve registrar SHA Git, versão runtime, contrato, configuração e prova pós-rollout.
 
 ---
 
-## 3. Estado das migrations e proveniência
+## 2. Resumo executivo atual
 
-### 3.1 Baseline remoto
+A execução do plano **foi iniciada**. O primeiro lote priorizou mecanismos fail-closed, proveniência e migrations de hardening que podem ser versionadas sem alterar produção automaticamente.
 
-- migrations registradas: **366**;
-- versão mais recente observada: **`20260820081746`**;
-- migrations críticas recentes presentes no remoto:
-  - `20260820000837_harden_active_admin_role_validity_contract`;
-  - `20260820012139_filter_admin_role_display_validity`;
-  - `20260820025810_restrict_private_classified_command_grants`;
-  - `20260820081746_harden_classified_report_rpc_contract`.
+### 2.1 O que entrou na `main` neste lote
 
-### 3.2 O que foi reconciliado
+`GIT/DONE`:
 
-`DONE`:
+- PR #69 — bloqueio fail-closed de rollout dos handlers LGPD stale;
+- PR #62 — migration para remover `authenticated EXECUTE` do helper órfão `private.group_can_manage_members(uuid,uuid)`;
+- PR #64 — preflight de nomes de secrets para cron handlers e `territory-ai-content`;
+- PR #60 — migration para restaurar autoridade `authenticated` de `public.vaga_applications`;
+- PR #72 — substituto limpo do #61; migration que revoga `anon EXECUTE` de quatro helpers administrativos privados e preserva `current_active_profile_id()`;
+- PR #59 — `admin-get-user` adicionado ao caminho canário de deploy protegido;
+- PR #70 — fundação reversível de autoridade LGPD versionada;
+- PR #65 — preflight remoto de drift de `verify_jwt`/existência de Edge Functions.
 
-- `20260820025810_restrict_private_classified_command_grants` — reconciliada via PR #45;
-- `20260820081746_harden_classified_report_rpc_contract` — reconciliada via PR #54;
-- `20260820012139_filter_admin_role_display_validity` + source de `admin-get-user` — reconciliados via PR #57;
-- guard de deploy de `admin-list-users` — reconciliado via PR #58;
-- `supabase/migration-provenance.json` registra as migrations reconciliadas;
-- scripts `validate:migrations:provenance` e `validate:migrations:remote` já fazem parte do fluxo de validação.
+PR #61 foi fechado como `superseded` pelo #72 porque sua branch empilhada reapresentava o diff do #60 após squash-merge.
 
-### 3.3 O que ainda falta em migrations
+### 2.2 O que **não** foi promovido
 
-`OPEN/BLOCKED`:
+`PROD/PENDING`:
 
-- provar continuamente que Git e remoto permanecem equivalentes após cada merge;
-- fazer o gate remoto rodar em infraestrutura CI confiável;
-- não aplicar migrations novas enquanto CI/validação autoritativa estiver indisponível;
-- tratar qualquer migration existente no histórico remoto, mas ausente no catálogo real, como **drift forense**, não como autorização para “reaplicar” SQL antigo.
+- nenhuma das migrations novas deste lote foi aplicada ao Supabase;
+- nenhum Edge Function foi implantado;
+- nenhum secret foi lido, alterado ou criado;
+- nenhum handler LGPD stale foi implantado;
+- `admin-get-user` remoto continua no runtime existente;
+- #66 e #67 continuam sem merge porque mudam runtime/frontend e não possuem typecheck/build autoritativos.
 
-### Correção do diagnóstico antigo F-002
+### 2.3 Bloqueios dominantes continuam ativos
 
-O antigo F-002, descrito como “migrations amplamente divergentes”, deixa de ser tratado como mismatch genérico. O estado atual é:
-
-- **migrations críticas conhecidas reconciliadas**;
-- **proveniência/gate implementados**;
-- risco residual concentrado em **drift de objetos pós-migration** e na falta de CI autoritativa.
+- GitHub Actions continua falhando antes de executar steps do repositório (`steps=null`);
+- Heavy PR segue sem execução confiável nos runs observados;
+- Vercel continua retornando `build-rate-limit` para código novo;
+- `main` continua sem branch protection (`protected=false`);
+- o conector atual não expõe write de branch protection/rulesets;
+- HIBP/compromised password protection continua pendente;
+- objetos PostGIS extension-owned continuam dependentes de `supabase_admin`/plataforma.
 
 ---
 
-## 4. Inventário de Edge Functions — runtime versus código
+## 3. Baseline remoto que continua autoritativo
 
-### 4.1 Runtime remoto atual
+### 3.1 Supabase migrations
 
-Foram observadas **43 Edge Functions implantadas**. Entre as mais relevantes para esta auditoria:
+Último baseline remoto comprovado:
 
-- `admin-list-users`;
-- `admin-get-user`;
-- `privacy-rpc`;
-- `session-context`;
-- `role-commands`;
-- `profile-commands`;
-- `billing-entitlements`;
-- `media-assets` / `media-assets-cleanup`;
-- `process-timeouts`;
-- `auto-dispatch-ride`;
-- `get-push-config`;
-- `nominatim-proxy`;
-- demais brokers de community, mobility, delivery, events e billing.
+- **366 migrations registradas**;
+- versão remota mais recente: `20260820081746_harden_classified_report_rpc_contract`.
 
-Não usar contagens históricas antigas de Edge Functions como autoridade. O baseline atual verificado é o inventário remoto desta reauditoria.
+As migrations abaixo agora existem em Git, mas **não constam como aplicadas no remoto**:
 
-### 4.2 Funções versionadas/configuradas ausentes do runtime — classificação
+1. `20260821001800_restrict_vaga_applications_browser_authority.sql` — PR #60;
+2. `20260821002600_revoke_residual_anon_private_admin_helper_execute.sql` — PR #72;
+3. `20260821003100_revoke_orphan_authenticated_group_member_helper_execute.sql` — PR #62;
+4. `20260821011000_create_account_deletion_request_authority.sql` — PR #70.
 
-#### A. Caller ativo; rollout necessário após correção/validação
+Portanto, até aplicação controlada e pós-probe, esses itens são `GIT/DONE` e `PROD/PENDING`.
 
-- `admin-get-user-auth-summary`
-  - caller ativo na governança administrativa;
-  - contrato cliente ↔ handler estava quebrado;
-  - correção em PR #66;
-  - não implantar antes da integração e gate.
+### 3.2 Edge Functions
 
-- `territorial-get-tree`
-  - caller ativo em `AdminTerritoryManagement`;
-  - handler antigo retornava shape incompatível;
-  - correção em PR #67.
+Inventário remoto atual comprovado: **43 Edge Functions**.
 
-- `territorial-update-location`
-  - caller ativo;
-  - handler auditado como próximo do schema atual;
-  - rollout deve fazer parte do lote territorial certificado.
+Configuração Git: **55 slugs** em `supabase/config.toml`.
 
-- `territorial-update-group`
-  - caller ativo;
-  - rollout deve acompanhar leitura/update territorial.
+Não há slug remoto sem configuração local no snapshot auditado.
 
-- `territory-ai-content`
-  - rota/admin caller ativo;
-  - depende de `LOVABLE_API_KEY` + `ALLOWED_ORIGINS`;
-  - preflight de secrets ampliado em PR #64.
+Configuradas/versionadas, mas não implantadas: **12**:
 
-#### B. Caller ativo, mas **deploy proibido no source atual**
+1. `admin-create-user`;
+2. `admin-get-user-auth-summary`;
+3. `admin-suspend-profile`;
+4. `ai-image`;
+5. `ai-text`;
+6. `ai-vision`;
+7. `territorial-get-tree`;
+8. `territorial-update-group-visibility`;
+9. `territorial-update-location-visibility`;
+10. `territory-ai-content`;
+11. `user-delete-account`;
+12. `user-export-data`.
+
+A existência em Git **não autoriza deploy**. Cada slug precisa de caller, contrato, auth policy, secrets, source provenance e critério de produto.
+
+---
+
+## 4. Execução realizada — evidência e efeito
+
+## 4.1 PR #69 — guard LGPD stale
+
+**Estado:** `GIT/DONE`  
+**Produção:** não altera runtime  
+**Merge:** `cf16fabe7d0f1b364a531f268b8ba2bfbf77a9c6`
+
+O guard bloqueia rollout de:
 
 - `user-delete-account`;
-- `user-export-data`.
+- `user-export-data`;
 
-Motivo: o source atual referencia schema/autoridade obsoletos e não pode ser promovido com segurança. Ver F-010 / issue #68.
+enquanto os sources contiverem marcadores comprovados de schema/autoridade obsoletos.
 
-#### C. Sem consumidor ativo confirmado / infraestrutura dormente
-
-- `admin-create-user` — nenhum caller ativo confirmado além do próprio source/configuração;
-- `admin-suspend-profile` — método cliente existe, mas nenhum caller de produto foi encontrado;
-- `ai-text`;
-- `ai-vision`;
-- `ai-image` — hook existe, mas consumidor final não foi confirmado.
-
-**Regra:** não implantar essas funções apenas porque estão no Git. Primeiro decidir entre remover, documentar como futura ou reativar com owner de produto e teste de integração.
+A validação reabriu os dois handlers e confirmou os marcadores stale presentes. Portanto o bloqueio não é teórico.
 
 ---
 
-## 5. P1 — backlog crítico atualizado
+## 4.2 PR #62 — helper órfão autenticado
 
-## P1-01 — Proteção de `main`
+**Estado:** `GIT/DONE / PROD/PENDING`  
+**Merge:** `bd436260379e08fd48a133daed88912f33084a1b`
 
-**Status:** `OPEN`
+Migration:
 
-Ainda falta garantir por configuração do GitHub:
+`20260821003100_revoke_orphan_authenticated_group_member_helper_execute.sql`
 
-- PR obrigatório para `main`;
-- checks obrigatórios;
-- bloqueio de force-push;
-- restrição de bypass;
-- política de review compatível com o tamanho do projeto.
+Probe remoto anterior ao merge comprovou para:
 
-**Critério de aceite:** proteção observada diretamente na configuração do repositório e comprovada com branch/PR de teste.
+`private.group_can_manage_members(uuid,uuid)`:
 
----
+- `SECURITY DEFINER=true`;
+- `anon EXECUTE=false`;
+- `authenticated EXECUTE=true`;
+- `service_role EXECUTE=true`;
+- referências em policies atuais: **0**.
 
-## P1-02 — CI-001: GitHub Actions falha antes do código
+A migration revoga browser EXECUTE e preserva `service_role`, com pós-condições fail-closed.
 
-**Status:** `BLOCKED`
-**Issue:** #17
-
-Evidência repetida:
-
-- jobs falham antes de qualquer step do repositório;
-- `steps=null` em jobs de Security Check;
-- Heavy PR Certification permanece sem runner/execução autoritativa em eventos observados;
-- logs indisponíveis/`BlobNotFound` em execuções afetadas.
-
-**Não fazer:** remover scanners, transformar gate obrigatório em opcional ou repetir cegamente runs sem resolver a infraestrutura.
-
-**Critério de aceite:** pelo menos uma sequência representativa de PRs com jobs executando steps reais e gates obrigatórios verdes.
+**Não aplicada ao Supabase.**
 
 ---
 
-## P1-03 — CI-002: Vercel `build-rate-limit`
+## 4.3 PR #64 — preflight de Edge secrets
 
-**Status:** `BLOCKED`
+**Estado:** `GIT/DONE`  
+**Merge:** `bc7ebc4c63eefa599e313c068271f6c5369907c7`
 
-Vercel deixou de ser fallback confiável para validar código novo em determinados PRs. O problema observado é de infraestrutura/quota de build e ocorre antes da validação da alteração.
+O preflight usa somente `supabase secrets list --project-ref ... --output json` e valida **nomes**, nunca valores/digests.
 
-Impacto confirmado:
+Contratos agora cobertos:
 
-- PR #59 não recebeu uma validação nova autoritativa;
-- PRs reconciliados com blobs já previamente validados puderam usar prova composicional, mas **código realmente novo não deve usar esse atalho**.
+- `media-assets-cleanup` → `ALLOWED_ORIGINS`, `CRON_SECRET`;
+- `process-timeouts` → `ALLOWED_ORIGINS`, `CRON_SECRET`;
+- `auto-dispatch-ride` → `ALLOWED_ORIGINS`, `CRON_SECRET`;
+- `territory-ai-content` → `ALLOWED_ORIGINS`, `LOVABLE_API_KEY`;
+- requisitos anteriores de `get-push-config`/`nominatim-proxy` permanecem.
 
-**Critério de aceite:** preview builds novos voltam a executar normalmente e um commit inédito passa o pipeline completo.
-
----
-
-## P1-04 — Edge provenance e rollout guard
-
-**Status:** `READY/PR + OPEN`
-
-Já existe em `main`:
-
-- canary fail-closed de `admin-list-users`;
-- check-only por padrão;
-- `--apply` explícito;
-- SHA esperado de 40 caracteres;
-- worktree limpa;
-- branch `main`/detached SHA;
-- project-ref coerente com `supabase/config.toml`;
-- SHA-256 do bundle;
-- deploy limitado a `supabase functions deploy <slug> --project-ref <ref> --use-api`;
-- proibição de `--prune` e `--no-verify-jwt`.
-
-Em PR:
-
-- #59 — adiciona `admin-get-user` ao canary guard;
-- #62 — gate mais amplo de proveniência de runtime Edge;
-- #64 — preflight de secrets/configuração.
-
-Ainda falta:
-
-- validar código novo dos PRs com CI autoritativa;
-- integrar os gates;
-- produzir runbook único de rollout;
-- registrar SHA/source/bundle/runtime version após cada promoção.
-
-**Critério de aceite:** nenhuma Edge crítica pode ser implantada por caminho não auditável; drift runtime ↔ Git deve ser detectável automaticamente.
+Nenhum secret foi lido/alterado neste lote.
 
 ---
 
-## P1-05 / F-010 — LGPD: exclusão, cancelamento e exportação de dados
+## 4.4 PR #60 — `vaga_applications`
 
-**Status:** `CRITICAL / OPEN`
-**Issue canônico:** #68
-**PRs relacionados:** #69 e #70
+**Estado:** `GIT/DONE / PROD/PENDING`  
+**Merge:** `1e9457d3c145a3208709c4b0dac43ffc31061f63`
 
-Este é o maior novo achado da reauditoria.
+Probe remoto imediatamente anterior ao merge comprovou:
 
-### Drift confirmado
+- RLS ativo;
+- tabela com 0 linhas;
+- `anon` e `authenticated` ainda com privilégios excessivos, inclusive `TRUNCATE`, `TRIGGER` e `REFERENCES`;
+- quatro policies ainda em role `PUBLIC`.
 
-A migration histórica `20260419150002_create_user_deletion_schedule` consta como aplicada no histórico remoto, porém:
+A migration versionada:
 
-- `public.user_deletion_schedule` não existe mais no catálogo atual;
-- não foi encontrada migration posterior registrada justificando o `DROP`;
-- `public.cancel_account_deletion_for_user(uuid,text)` ainda existe e é restrita a `service_role`, mas seu corpo referencia:
-  - `public.user_deletion_schedule` — ausente;
-  - `public.profiles.deleted_at` — coluna ausente.
+- restringe as quatro policies a `authenticated`;
+- remove privilégios de `PUBLIC`/`anon`;
+- regranta a `authenticated` exatamente `SELECT, INSERT, UPDATE, DELETE`;
+- preserva service role/owner;
+- falha se o contrato final divergir.
 
-Consequência: a ação implantada `privacy-rpc.cancelAccountDeletion` pode falhar por dependência de schema inexistente.
+A migration original do domínio já estabelecia esse contrato authenticated-only e o caller ativo exige `activeProfile`.
 
-### `user-delete-account` não pode ser implantada como está
-
-O source atual contém referências incompatíveis, incluindo:
-
-- `businesses.owner_id` em vez do modelo atual por perfil;
-- `ride_requests.passenger_id` em vez de `passenger_profile_id`;
-- `profiles.deleted_at` / `document_number` inexistentes;
-- `user_roles.granted` inexistente;
-- campos antigos em classifieds/subscriptions;
-- revogação de sessão via `public.user_sessions`, que não é autoridade real de Auth.
-
-Além disso:
-
-- não há worker de purge no repositório;
-- não há job remoto `pg_cron` para processar a fila antiga de exclusão;
-- recriar apenas a tabela histórica criaria uma promessa de “purge em 30 dias” sem executor.
-
-### `user-export-data` também precisa ser reescrita
-
-O export atual usa relacionamentos antigos e coleta manualmente conjuntos de tabelas. O schema atual possui grande quantidade de relações ligadas a `profiles`, inclusive mensagens, moderação, mobilidade, pedidos, anúncios e auditoria.
-
-Não usar `select *` dinâmico ou “exportar tudo por FK” como atalho: isso pode incluir dados de terceiros, moderação ou segurança que não pertencem ao titular.
-
-### Arquitetura segura definida até aqui
-
-A UI atual promete que, durante `status=scheduled`, o usuário ainda pode cancelar a exclusão. Portanto **ban + logout imediato** quebraria o próprio fluxo de cancelamento autenticado.
-
-O alvo deve ser um **modo de conta pendente de exclusão**:
-
-- autenticação mínima permanece disponível para privacidade/cancelamento;
-- operações normais da aplicação ficam indisponíveis;
-- estado deve ser reversível durante a janela;
-- purge só começa após a janela e torna-se fase irreversível separada.
-
-Controles existentes que podem suportar essa fase:
-
-- `profiles.is_active`;
-- `profiles.is_suspended` / `suspended_until`;
-- `profile_members.is_active`;
-- `user_roles.is_active` + `revoked_at`;
-- Supabase Auth como autoridade de sessão.
-
-### PR #69 — guard de rollout LGPD
-
-Bloqueia explicitamente rollout dos sources antigos de `user-delete-account` e `user-export-data` enquanto marcadores de schema obsoleto permanecerem.
-
-### PR #70 — fundação de autoridade reversível
-
-Propõe `account_deletion_requests` e RPCs service-role-only com:
-
-- estados `scheduled/cancelled/processing/completed/failed`;
-- janela de 30 dias;
-- RLS;
-- browser sem acesso direto;
-- `SECURITY DEFINER` + `search_path` fixo + timeout;
-- retries idempotentes sem estender a janela;
-- cancelamento sem depender de `profiles.deleted_at`.
-
-O PR deliberadamente **não** faz purge, delete de Auth, delete de Storage, ban, logout ou anonimização.
-
-### O que ainda precisa ser implementado para fechar F-010
-
-1. boundary global de “pending deletion” que permita apenas privacidade/reativação;
-2. broker de pedido com preconditions do schema atual;
-3. snapshot/hold reversível de perfis e roles sem ressuscitar privilégios revogados por admin;
-4. cancelamento que restaure apenas estado colocado em hold pelo próprio fluxo;
-5. matriz formal de exportação LGPD por domínio/tabela/campo;
-6. nova `user-export-data` com prova de completude e redaction de terceiros;
-7. worker/scheduler de purge idempotente e observável;
-8. tratamento explícito de objetos Storage antes do Auth user;
-9. política de anonimização/retenção por domínio;
-10. remoção final de Auth somente na fase irreversível;
-11. testes positivos/negativos e recovery/compensação;
-12. só então liberar rollout das Edge Functions.
-
-**Critério de aceite:** request → modo restrito → cancelamento/recovery → vencimento → purge completo, todos comprovados em ambiente não-prod, com auditoria e idempotência.
+**Não aplicada ao Supabase.**
 
 ---
 
-## P1-06 / F-011 — Autoridade de sessão
+## 4.5 PR #72 — helpers privados anônimos
 
-**Status:** `READY/PR + OPEN`
-**PRs relacionados:** #60 e #61
+**Estado:** `GIT/DONE / PROD/PENDING`  
+**Merge:** `72bf53bfa89497bdd9f4ad8b6bc3bb67768b1c33`
 
-Achado confirmado em auditoria anterior:
+Substitui #61.
 
-- `public.user_sessions` estava vazio;
-- `auth.sessions` possuía as sessões reais;
-- portanto `public.user_sessions` não pode ser tratado como autoridade de revogação.
-
-Regra canônica:
-
-- autenticação/sessão: Supabase Auth;
-- qualquer tracker público pode ser telemetria, nunca a autoridade que “desloga” usuários;
-- operações privilegiadas devem derivar identidade de token/sessão real.
-
-Ainda falta integrar os guards que proíbem regressão para o modelo stale e remover/renomear semântica que sugira autoridade onde só existe telemetria.
-
-**Critério de aceite:** nenhum fluxo crítico depende de `public.user_sessions` para determinar validade de sessão.
-
----
-
-## P1-07 / F-012 — Admin runtime e contratos
-
-**Status:** `READY/PR + OPEN`
-
-### `admin-get-user`
-
-O source desejado em `main` já filtra role válida por:
-
-- `is_active=true`;
-- `revoked_at IS NULL`;
-- `expires_at` ainda válido.
-
-O runtime remoto observado permanece atrás do source desejado. O rollout deve usar o guard de #59 quando houver validação autoritativa.
-
-### `admin-get-user-auth-summary`
-
-Caller ativo confirmado. O handler retorna envelope `summary`, mas o loader cliente lia campos top-level/snake_case.
-
-PR #66:
-
-- corrige loader;
-- tipa o DTO;
-- adiciona regressão de contrato.
-
-**Critério de aceite:** integração do PR + deploy controlado + página administrativa retornando auth summary real sem `null/false` por mismatch de shape.
-
----
-
-## P1-08 — Território administrativo
-
-**Status:** `READY/PR + OPEN`
-
-Caller ativo confirmado em `AdminTerritoryManagement`.
-
-`territorial-get-tree` versionada tinha múltiplos mismatches:
-
-- retornava `{ tree: ... }` enquanto o cliente esperava dados top-level;
-- só raízes aninhadas em `locations`;
-- grupos não retornavam como coleção top-level;
-- memberships ausentes;
-- flags operacionais estavam escondidas em `metadata`;
-- cache era `public` apesar de endpoint administrativo.
-
-PR #67 reconcilia:
-
-- `locations` planas;
-- `groups` planos;
-- memberships serializáveis convertidos novamente para `Map` no domínio;
-- flags canônicas no topo;
-- cache `private, no-store`;
-- auth admin e env fail-closed mantidos.
-
-Ainda falta:
-
-- integrar #67;
-- certificar `territorial-update-location` e `territorial-update-group` no mesmo lote;
-- validar secret preflight;
-- promover o trio por deploy auditado;
-- validar tela administrativa end-to-end.
-
----
-
-## P1-09 / F-004 — Compromised password protection / HIBP
-
-**Status:** `OPEN`
-**Issue:** #13
-
-O advisor do Supabase continua informando que compromised/leaked password protection está desabilitado.
-
-**Ação:** habilitar a proteção no Auth Dashboard e comprovar o comportamento.
-
-**Critério de aceite:** advisor não reporta mais `auth_leaked_password_protection` e teste controlado de senha comprometida falha conforme esperado.
-
----
-
-## P1-10 / F-005 — SECURITY DEFINER allowlist semântica
-
-**Status:** `OPEN`, com inventário estrutural avançado
-**Issue principal:** #15
-
-Baseline atual auditado:
-
-- total `SECURITY DEFINER`: **382**;
-- `public`: **241**;
-- `private`: **141**.
-
-Superfície pública:
-
-- 66 executáveis por `authenticated`;
-- 9 executáveis por `anon`;
-- 3 executáveis por `PUBLIC`;
-- 57 authenticated-only no recorte analisado.
-
-Dos 9 anon-executable, seis RPCs de aplicação têm semântica pública plausível e devem ser avaliadas para allowlist explícita:
-
-- `get_community_poll_for_post(uuid)`;
-- `get_professional_trust_reputation(uuid)`;
-- `get_ride_rating_summary(uuid)`;
-- `get_shared_ride_safety_data(text)`;
-- `profile_public_territory_projection(uuid,uuid)`;
-- `track_analytics_event(...)`.
-
-As outras três são overloads PostGIS `st_estimatedextent`.
-
-Estruturalmente:
-
-- 24 funções authenticated-only mutantes analisadas tinham markers de autorização/erro;
-- 33 funções authenticated-only de leitura tinham markers `auth.*`/`private.*`;
-- isto **não substitui revisão semântica**.
-
-Ainda falta:
-
-- completar allowlist por função;
-- registrar justificativa e owner;
-- provar grants mínimos;
-- bloquear novas SECURITY DEFINER sem entry de governança.
-
-**Critério de aceite:** toda SECURITY DEFINER browser-executable classificada como pública/intencional, autenticada/intencional ou indevida/corrigida.
-
----
-
-## P1-11 / F-009 — Grants privados e `vaga_applications`
-
-**Status:** `OPEN`
-
-Grants observados em funções `private` SECURITY DEFINER:
-
-- `PUBLIC`: 0;
-- `anon`: 5;
-- `authenticated`: 38;
-- `service_role`: 50.
-
-Cinco helpers privados ainda executáveis por `anon`:
+Fresh caller audit comprovou que os quatro helpers abaixo não possuem caller anônimo `SECURITY INVOKER` legítimo:
 
 - `private.auth_can_view_group(uuid)`;
-- `private.current_active_profile_id()`;
 - `private.is_admin(uuid)`;
 - `private.is_admin_from_roles(uuid)`;
 - `private.is_admin_user(uuid)`.
 
-Em `vaga_applications`:
+A migration revoga `PUBLIC, anon EXECUTE` desses quatro e preserva `authenticated`.
 
-- RLS está habilitado;
-- probe como `anon` retornou zero linhas;
-- porém grants de tabela e policies `TO public` são mais amplos que o necessário.
+`private.current_active_profile_id()` **não é alterada**, pois `public.list_community_groups_page(...)` é `SECURITY INVOKER`, executável por `anon` e depende dela.
 
-Sequência segura:
-
-1. confirmar semântica do produto;
-2. trocar policies de operações autenticadas de `public` para `authenticated`;
-3. revogar DML desnecessário de `anon`;
-4. reavaliar quais helpers privados ainda precisam de EXECUTE por `anon`;
-5. adicionar regressão SQL;
-6. recontar catálogo.
-
-**Critério de aceite:** nenhuma permissão anon existe apenas por herança histórica ou conveniência.
+**Não aplicada ao Supabase.**
 
 ---
 
-## P1-12 / F-006 — PostGIS e objetos extension-owned
+## 4.6 PR #59 — canary `admin-get-user`
 
-**Status:** `PLATFORM/BLOCKED`
+**Estado:** `GIT/DONE / PROD/PENDING`  
+**Merge:** `b40077e55ddf7be8b7b0b1e83aa539917fc154de`
+
+O deploy guard agora permite somente:
+
+- `admin-list-users`;
+- `admin-get-user`.
+
+Para `--apply` continua exigindo:
+
+- SHA Git exato de 40 hex;
+- worktree limpa;
+- `main` ou checkout detached do SHA autorizado;
+- project ref igual ao `project_id` versionado;
+- `verify_jwt=true`;
+- source contract esperado;
+- hash SHA-256 do bundle;
+- Supabase CLI oficial;
+- sem `--prune`;
+- sem `--no-verify-jwt`.
+
+O source atual de `admin-get-user` foi rechecado e contém:
+
+- `requireAdmin(req)`;
+- body limitado a 4096 bytes;
+- `getUserSchema`;
+- `auth.admin.getUserById(userId)`;
+- filtro de roles `is_active=true`, `revoked_at IS NULL` e `expires_at` válido.
+
+**Nenhum `--apply` foi executado.**
+
+Runtime remoto observado continua:
+
+- `admin-get-user` v18;
+- `verify_jwt=true`.
+
+---
+
+## 4.7 PR #70 — authority LGPD reversível
+
+**Estado:** `GIT/DONE / PROD/PENDING`  
+**Merge:** `b84cf6c0a64a144c84a96d7351a82ba24eea295a`
+
+Migration:
+
+`20260821011000_create_account_deletion_request_authority.sql`
+
+Precondições revalidadas no remoto antes do merge:
+
+- `public.account_deletion_requests` não existe;
+- `request_account_deletion_for_user(uuid,text,boolean)` não existe;
+- `cancel_account_deletion_for_user(uuid,text)` existe;
+- `public.user_deletion_schedule` não existe;
+- `profiles.deleted_at` não existe.
+
+O cancel RPC remoto atual é `SECURITY DEFINER`, service-role-only, mas seu corpo ainda referencia exatamente os dois objetos ausentes acima.
+
+A nova fundação cria:
+
+- `account_deletion_requests` com estados `scheduled/cancelled/processing/completed/failed`;
+- janela de 30 dias;
+- slots de snapshot reversível;
+- RLS e browser roles sem acesso direto;
+- request RPC service-role-only;
+- substituição compatível do cancel RPC;
+- `SECURITY DEFINER` + `search_path=pg_catalog, public, pg_temp` + `statement_timeout=5s`;
+- retries idempotentes sem ampliar uma janela já `scheduled`;
+- pós-condições de catálogo e grants.
+
+A migration deliberadamente **não**:
+
+- bane usuário;
+- revoga sessão;
+- anonimiza perfil;
+- apaga Storage;
+- apaga `auth.users`;
+- cria scheduler/purge worker.
+
+**Não aplicada ao Supabase.**
+
+---
+
+## 4.8 PR #65 — drift remoto de auth Edge
+
+**Estado:** `GIT/DONE`  
+**Merge:** `ae1017f9db8f0f4e5b21a14c92e81604d91374aa`
+
+Novo preflight read-only compara:
+
+- `[functions.<slug>] verify_jwt` de `supabase/config.toml`;
+- `EDGE_FUNCTION_AUTH_POLICY.json`;
+- `supabase functions list --project-ref <ref> --output json`.
+
+Falha em:
+
+- função remota sem config;
+- `verify_jwt` ilegível;
+- drift remoto ↔ Git;
+- `verify_jwt=false` fora da allowlist;
+- opcionalmente, em `--strict-existence`, função configurada não implantada.
+
+O snapshot remoto atual deve bloquear deliberadamente em pelo menos:
+
+- `sitemap`: remoto `verify_jwt=true`, Git `verify_jwt=false`.
+
+Isso **não autoriza** mudar o Git para combinar com o runtime antigo; o alvo continua sendo rollout controlado da política/source atual, se a Edge `sitemap` continuar necessária.
+
+---
+
+## 5. Bloqueios comprovados durante a execução
+
+## 5.1 CI-001 — hosted jobs morrem antes dos steps
+
+**Status:** `BLOCKED`  
+**Issue:** #17
+
+Evidência nova registrada no issue #17:
+
+- PR #72, Security Check run `32437493854`:
+  - `Run Tests`: `failure`, `steps=null`;
+  - `Lint and Type Check`: `failure`, `steps=null`;
+  - `Validate No Hardcoded Credentials`: `failure`, `steps=null`;
+  - `Maps Architecture Enforcement`: `failure`, `steps=null`.
+- PR #66, Security Check run `32434625632`: mesmos quatro jobs com `steps=null`;
+- PR #59, run `32431194609`: mesmos quatro jobs com `steps=null`;
+- PR #70, run `32435433932`: mesmos quatro jobs com `steps=null`;
+- PR #65, run `32433611650`: mesmos quatro jobs com `steps=null`.
+
+Conclusão operacional: a falha continua localizada **antes da execução do código do repositório**.
+
+Não fazer:
+
+- `continue-on-error` para mascarar o resultado;
+- remover scanners;
+- repetir runs cegamente;
+- tratar ausência de steps como falha do código alterado.
+
+Critério de aceite:
+
+- jobs hosted iniciam steps reais;
+- typecheck/lint/test/security executam;
+- sequência representativa de PRs passa de forma reproduzível.
+
+---
+
+## 5.2 Vercel build-rate-limit
+
+**Status:** `BLOCKED`
+
+Todos os SHAs novos inspecionados continuam recebendo status Vercel `failure` apontando para `upgradeToPro=build-rate-limit`.
+
+Portanto Vercel não serve atualmente como fallback para validar código funcional novo.
+
+Critério de aceite:
+
+- preview build inédito executa normalmente;
+- build/typecheck do commit realmente roda;
+- resultado deixa de ser pré-build/quota.
+
+---
+
+## 5.3 Branch protection
+
+**Status:** `BLOCKED / ADMIN`
+**Issue:** #28
+
+Estado remoto confirmado:
+
+- `main protected=false`;
+- required status checks desligados.
+
+O conector GitHub disponível nesta execução não expõe write de branch protection/rulesets. Não contornar via ações indiretas.
+
+Primeira configuração segura, quando houver acesso administrativo:
+
+- exigir PR;
+- bloquear force-push;
+- bloquear delete de `main`;
+- exigir resolução de conversas/review compatível;
+- minimizar bypass;
+- **não** tornar os checks atualmente quebrados obrigatórios até CI/Vercel voltarem a funcionar, para evitar deadlock de merges;
+- depois adicionar checks estáveis como obrigatórios.
+
+---
+
+## 6. PRs funcionais preparados, mas deliberadamente não merged
+
+## 6.1 PR #66 — admin auth summary
+
+**Estado:** `READY/PR + BLOCKED`
+
+Bug confirmado:
+
+- handler versionado retorna `{ summary: { ...camelCase } }`;
+- loader em `main` lê campos top-level/snake_case;
+- após um rollout futuro, a UI continuaria produzindo `null/false`.
+
+O #66 corrige o DTO/loader e adiciona teste de contrato.
+
+Caller ativo confirmado em `AdminProfileGovernanceService`.
+
+**Por que não foi merged:** muda frontend em runtime e não há typecheck/build autoritativo disponível.
+
+---
+
+## 6.2 PR #67 — território administrativo
+
+**Estado:** `READY/PR + BLOCKED`
+
+Schema remoto foi revalidado e contém todas as colunas/FK usados pelo handler proposto, inclusive:
+
+`territorial_groups_anchor_city_id_fkey` → `anchor_city_id REFERENCES locations(id)`.
+
+O #67 corrige:
+
+- dataset plano `locations`;
+- coleção top-level `groups`;
+- `groupMembers` serializável → `Map` no domínio;
+- flags canônicas no topo;
+- `private, no-store`;
+- env fail-closed;
+- método/auth admin.
+
+**Por que não foi merged:** altera cliente + Edge source funcional e não há typecheck/build autoritativo.
+
+---
+
+## 6.3 PR #63 — autoridade de sessão
+
+**Estado:** `READY/PR + BLOCKED`
+
+Achado já confirmado:
+
+- `public.user_sessions`: 0 linhas no probe auditado;
+- `auth.sessions`: centenas de sessões reais;
+- runtime `session-rpc` usa Supabase Auth para revogação;
+- source Git anterior anunciava ações extras baseadas em `user_sessions` que não representam a autoridade real.
+
+O #63 reconcilia Git/cliente com Supabase Auth.
+
+**Não mergear enquanto código funcional novo não puder ser typechecked/buildado de forma autoritativa.**
+
+---
+
+## 7. P1 — estado atual por domínio
+
+## P1-01 — Branch protection
+
+**Estado:** `BLOCKED / ADMIN`
+
+Ação restante: aplicar proteção no GitHub quando houver write administrativo e depois comprovar por leitura + PR de teste.
+
+---
+
+## P1-02 — CI autoritativa
+
+**Estado:** `BLOCKED`
+
+Maior bloqueio transversal. Sem recuperar CI, código funcional deve permanecer em PR.
+
+---
+
+## P1-03 — Vercel
+
+**Estado:** `BLOCKED`
+
+Resolver quota/build-rate-limit ou estabelecer outro gate autoritativo equivalente.
+
+---
+
+## P1-04 — Edge provenance / auth / secrets
+
+**Estado:** `GIT/DONE + PROD/OPEN`
+
+Já em Git:
+
+- canary `admin-list-users` + `admin-get-user`;
+- secrets preflight;
+- remote `verify_jwt` drift preflight;
+- migrations provenance/remoto já existentes.
+
+Ainda falta:
+
+- rodar preflights em ambiente autorizado;
+- resolver drift `sitemap`;
+- certificar source/shared bundle dos próximos rollouts;
+- registrar runtime version/hash após deploy;
+- não usar `--strict-existence` até as 12 funções ausentes serem classificadas/resolvidas.
+
+---
+
+## P1-05 — LGPD exclusão/exportação
+
+**Estado:** `CRITICAL / GIT-PARTIAL / PROD-BROKEN`
+**Issue:** #68
+
+O runtime atual ainda não está LGPD-ready.
+
+Já entregue em Git:
+
+- rollout guard stale (#69);
+- authority reversível (#70).
+
+Ainda falta implementar:
+
+1. boundary global de `pending deletion`;
+2. broker de request que derive identidade do JWT e chame a authority service-role-only;
+3. snapshot/hold reversível de perfis/roles sem reativar privilégios revogados administrativamente;
+4. cancel/restore que reverta somente o que o fluxo colocou em hold;
+5. matriz formal de exportação por domínio/campo/ownership;
+6. nova `user-export-data` com redaction de dados de terceiros/segurança;
+7. worker/scheduler de purge idempotente;
+8. política de retenção/anonymization por domínio;
+9. cleanup explícito de Storage ownership;
+10. remoção final do usuário no Supabase Auth somente na fase irreversível;
+11. compensation/recovery para falha parcial;
+12. testes E2E não-prod de request → restricted → cancel e request → expiry → purge.
+
+Até tudo isso existir:
+
+- `user-delete-account` antigo = **não implantável**;
+- `user-export-data` antigo = **não implantável**;
+- não reaplicar `user_deletion_schedule` histórico como atalho.
+
+---
+
+## P1-06 — Sessão/Auth
+
+**Estado:** `READY/PR + BLOCKED`
+
+Autoridade canônica:
+
+- sessão/revogação = Supabase Auth;
+- tabelas públicas de sessão, se mantidas, são telemetria, nunca fonte autoritativa.
+
+Próximo passo após CI: validar e integrar #63.
+
+---
+
+## P1-07 — Admin
+
+**Estado:** `PARTIAL`
+
+- `admin-get-user` source já reconciliado em Git;
+- canary guard agora cobre `admin-get-user` (#59);
+- runtime remoto ainda v18;
+- `admin-get-user-auth-summary` continua ausente do runtime;
+- #66 corrige contrato cliente/handler, mas está bloqueado por CI.
+
+Próximo rollout admin somente após:
+
+1. CI funcional;
+2. #66 integrado;
+3. secrets/config preflight;
+4. canary check-only no SHA autorizado;
+5. deploy controlado;
+6. smoke test da página administrativa;
+7. registro de versão/proveniência.
+
+---
+
+## P1-08 — Território
+
+**Estado:** `READY/PR + BLOCKED`
+
+- #67 preparado;
+- schema remoto compatível com o handler proposto;
+- funções territoriais de gestão ainda ausentes do runtime;
+- secrets de `territory-ai-content` agora possuem preflight versionado.
+
+Próximo rollout territorial somente após CI, integração de #67 e certificação do lote de update/read.
+
+---
+
+## P1-09 — HIBP
+
+**Estado:** `OPEN`
+**Issue:** #13
+
+Compromised/leaked password protection permanece pendente.
+
+Aceite:
+
+- habilitar no Auth;
+- advisor deixa de reportar o problema;
+- teste controlado confirma rejeição esperada.
+
+---
+
+## P1-10 — SECURITY DEFINER
+
+**Estado:** `OPEN`, com inventário estrutural avançado
+**Issue:** #15
+
+Baseline:
+
+- total: **382**;
+- `public`: **241**;
+- `private`: **141**;
+- public executável por authenticated: 66;
+- public executável por anon: 9;
+- public `PUBLIC`: 3;
+- private anon EXECUTE antes das migrations pendentes: 5;
+- private authenticated EXECUTE antes das migrations pendentes: 38.
+
+Atenção: os números de grants remotos **não devem ser reduzidos no plano ainda**, pois as migrations #60/#62/#72 não foram aplicadas.
+
+Ainda falta:
+
+- allowlist semântica por função;
+- justificativa/owner;
+- prova de menor privilégio;
+- gate para novas SECURITY DEFINER browser-executable.
+
+---
+
+## P1-11 — Grants privados / `vaga_applications`
+
+**Estado:** `GIT/DONE / PROD/PENDING`
+
+Código/migrations estão em `main` (#60, #62, #72), mas catálogo remoto continua no estado anterior até aplicação.
+
+Ordem remota obrigatória quando gates voltarem:
+
+1. `20260821001800_restrict_vaga_applications_browser_authority`;
+2. `20260821002600_revoke_residual_anon_private_admin_helper_execute`;
+3. `20260821003100_revoke_orphan_authenticated_group_member_helper_execute`;
+4. recontar grants/policies e executar probes de regressão.
+
+Não aplicar fora dessa ordem lógica.
+
+---
+
+## P1-12 — PostGIS
+
+**Estado:** `PLATFORM/BLOCKED`
 **Issue:** #12
 
-Achados:
+Três overloads `st_estimatedextent` continuam sem explicit `search_path` sob ownership de extensão/plataforma.
 
-- os três `st_estimatedextent` expostos sem `search_path` explícito são ownership `supabase_admin`/PostGIS;
-- `spatial_ref_sys` também é objeto extension-owned;
-- advisor aponta extensões no schema `public` (`postgis`, `citext`, `pg_trgm`, `unaccent`);
-- papel operacional atual não é superuser e não deve forçar mudança de ownership/ACL da extensão.
+Não forçar owner/ACL/move de extensão com papel operacional atual.
 
-Já existe preflight fail-closed de ownership.
+Aceite:
 
-**Não fazer:** reaplicar agressivamente `REVOKE`, mover extensão ou alterar owner sem caminho suportado pela plataforma.
-
-**Critério de aceite:** remediação owner-approved pela Supabase ou exceção formal/documentada com monitoramento.
+- remediação suportada pela Supabase, ou
+- exceção formal documentada com monitoramento.
 
 ---
 
-## 6. P2 — segurança estrutural e performance
+## 8. P2 — dívida quantificada
 
-## P2-01 — Tabelas com RLS ativo e zero policies
+## P2-01 — RLS ativo e zero policies
 
-**Status:** `OPEN / CLASSIFICATION`
+**Estado:** `OPEN / CLASSIFICATION`
 
-Advisor atual reporta **20 tabelas** com RLS habilitado e nenhuma policy, incluindo superfícies `private` e `public`.
+Baseline: **20 tabelas**.
 
-Exemplos:
+Não criar policies automaticamente. Classificar cada uma como:
 
-- `private.alpha_execution_log`;
-- `private.alpha_rollout_control`;
-- `private.community_direct_message_audit`;
-- `private.notification_outbox`;
-- `public.analytics_sessions`;
-- `public.banned_users`;
-- `public.community_social_audit_log`;
-- `public.emergency_delivery`;
-- `public.group_message_reactions`;
-- `public.review_helpfulness`;
-- `public.trust_admin_actions`;
-- `public.trust_events`;
-- `public.user_active_profiles`.
-
-RLS sem policy pode ser **deny-all intencional**. Não criar policies automaticamente.
-
-Ação:
-
-1. classificar cada tabela como server-only/deny-all ou browser-accessível;
-2. documentar deny-all intencional;
-3. criar policy somente onde o produto exige acesso;
-4. adicionar teste de catálogo.
+- server-only / deny-all intencional;
+- browser-accessível com policy faltante;
+- legado a remover.
 
 ---
 
-## P2-02 — Foreign keys sem índice de suporte
+## P2-02 — Foreign keys sem índice
 
-**Status:** `OPEN`
+**Estado:** `OPEN`
 
-Probe de catálogo encontrou **104 foreign keys sem índice de suporte correspondente** no recorte `public/private`.
+Baseline: **104 foreign keys** sem índice de suporte correspondente no recorte auditado.
 
-Não criar 104 índices cegamente. Priorizar por:
-
-1. tabelas de alto tráfego;
-2. JOIN/DELETE/UPDATE reais;
-3. tamanho e crescimento;
-4. `EXPLAIN (ANALYZE, BUFFERS)` em ambiente seguro;
-5. impacto de write amplification.
-
-**Critério de aceite P2:** top offenders por tráfego corrigidos e backlog residual explicitamente aceito.
+Priorizar por tráfego, cardinalidade, JOIN/DELETE/UPDATE reais e `EXPLAIN`, não por contagem bruta.
 
 ---
 
-## P2-03 — Custo de políticas RLS
+## P2-03 — custo de RLS
 
-**Status:** `OPEN`
+**Estado:** `OPEN`
 
-Há **602 policies** no recorte `public/private`.
+Baseline:
 
-Leitura estrutural encontrou:
-
-- 352 policies com chamadas Auth no `USING`;
+- **602 policies** no recorte `public/private`;
+- 352 com chamadas Auth no `USING`;
 - 152 `WITH CHECK` com chamadas Auth.
 
-Isso não significa que todas estejam erradas. O advisor/performance deve orientar quais chamadas por-row precisam virar initPlan (`(select auth.uid())`, etc.) ou ser reestruturadas.
-
-Ação:
-
-- priorizar tabelas quentes;
-- eliminar chamadas repetidas por linha onde semanticamente seguro;
-- evitar multiplicidade de permissive policies redundantes;
-- medir antes/depois.
+Priorizar hot paths e medir antes/depois.
 
 ---
 
-## P2-04 — Índices redundantes/unused e políticas permissivas múltiplas
+## P2-04 — índices/policies redundantes
 
-**Status:** `OPEN`
+**Estado:** `OPEN`
 
-Manter como trilha separada do P1. Usar advisor + métricas de uso, não somente heurísticas estáticas.
-
-Objetivo:
-
-- remover índice realmente redundante somente após confirmar constraints/queries;
-- consolidar policies permissivas quando isso simplificar o planner sem mudar autorização;
-- não trocar segurança por micro-otimização.
+Usar advisor + métricas. Não remover índice ou consolidar policy apenas por heurística estática.
 
 ---
 
-## 7. PRs abertos e ordem recomendada
+## 9. Edge drift específico que ainda precisa ser tratado
 
-PRs de segurança/contrato ativos nesta reauditoria:
+### `sitemap`
 
-- #59 — `admin-get-user` no guarded canary;
-- #60 — stale public session issue canary;
-- #61 — bloqueio de public session authority;
-- #62 — Edge runtime provenance gate;
-- #64 — Edge secrets preflight, incluindo `territory-ai-content`;
-- #66 — contrato `admin-get-user-auth-summary`;
-- #67 — contrato `territorial-get-tree`;
-- #69 — bloqueio de rollout LGPD stale;
-- #70 — fundação reversível de deletion request;
-- #52/#53 — reorganização estrutural ampla do repositório.
+**Estado:** `OPEN / DRIFT CONFIRMED`
 
-### Ordem recomendada
+Remoto:
 
-#### Fase A — gates que reduzem risco sem tocar produção
+- v14;
+- `verify_jwt=true`;
+- source antigo;
+- histórico de CORS `*`/fallback/rotas antigas observado na auditoria.
 
-1. #69 — blocklist/preflight LGPD;
-2. #62 — provenance gate;
-3. #64 — secrets preflight;
-4. #60/#61 — sessão stale/authority guards.
+Git:
 
-Todos precisam de validação CI real antes de merge quando houver código novo.
+- `verify_jwt=false`;
+- manifesto classifica como `public-read`;
+- source atual é a direção desejada se a Edge continuar necessária.
 
-#### Fase B — reconciliação de contratos
+Antes de deploy:
 
-5. #66 — admin auth summary;
-6. #67 — território;
-7. #59 — canary `admin-get-user` após validação autoritativa.
+1. confirmar se a Edge ainda é necessária, pois o repo também possui sitemap estático;
+2. preflight de secrets/config;
+3. CI/build;
+4. rollout controlado ou depreciação explícita.
 
-#### Fase C — autoridade LGPD
+### `get-push-config`
 
-8. #70 — somente após revisão de migration/proveniência e CI autoritativa;
-9. implementar boundary `pending deletion`;
-10. broker reversível;
-11. export matrix/export broker;
-12. purge worker/scheduler;
-13. probes não-prod;
-14. rollout.
+**Estado:** `OPEN / SOURCE-DRIFT`
 
-#### Fase D — rollouts Edge controlados
+Runtime remoto observado possui fallback VAPID legado; Git atual exige `VAPID_PUBLIC_KEY` e falha fechado.
 
-Promover apenas funções cujo caller, contrato, secrets e source hash tenham sido certificados.
+Não copiar fallback de produção para Git. Confirmar secret por nome e promover source atual somente com gate.
 
-#### Fase E — refactor estrutural
+### `media-assets-cleanup`
 
-#52 e #53 devem ficar por último. Eles movem grande quantidade de arquivos e podem mascarar ou conflitar com paths de segurança, migrations e documentação.
+**Estado:** `PARTIAL DRIFT`
 
-**Regra:** não fazer cleanup estrutural amplo enquanto os PRs de segurança/proveniência e o plano canônico ainda estiverem em movimento.
+Entrypoint remoto estava alinhado, mas bundle `_shared/security.ts` é revisão antiga em relação à `main`.
+
+Próximo rollout deve registrar bundle compartilhado, não apenas entrypoint.
 
 ---
 
-## 8. O que NÃO deve ser feito agora
+## 10. Ordem de execução a partir de agora
 
-- não implantar `user-delete-account` atual;
-- não implantar `user-export-data` atual;
-- não reaplicar `20260419150002_create_user_deletion_schedule` como atalho;
-- não executar purge de contas até existir worker idempotente e política de retenção;
-- não usar `public.user_sessions` como autoridade de logout/revogação;
-- não promover `admin-get-user-auth-summary` antes de integrar contrato;
-- não promover `territorial-get-tree` antigo;
-- não implantar Edge “porque existe no Git” sem caller/owner/contrato;
-- não desabilitar gates para contornar CI-001;
-- não usar Vercel rate-limited como prova de código novo;
-- não forçar DDL em objetos PostGIS extension-owned;
-- não criar policies em tabelas RLS deny-all sem entender a intenção;
-- não criar 104 índices automaticamente;
-- não mergear #52/#53 antes da estabilização dos PRs críticos.
+## Fase 0 — recuperar capacidade de provar código
+
+1. resolver CI-001;
+2. resolver Vercel build-rate-limit ou estabelecer gate autoritativo equivalente;
+3. aplicar branch protection administrativa sem deadlock de checks quebrados;
+4. provar PR novo com typecheck/lint/tests/build/security executados de verdade.
+
+## Fase 1 — integrar código funcional já preparado
+
+Depois da Fase 0:
+
+1. #63 — sessão/Auth;
+2. #66 — admin auth summary;
+3. #67 — território;
+4. rebase/refresh de qualquer PR funcional cujo base SHA tenha envelhecido;
+5. executar validação completa antes de merge.
+
+## Fase 2 — aplicar hardenings de banco já versionados
+
+Em ambiente controlado e com provenance gate verde:
+
+1. aplicar #60 migration;
+2. probes de grants/policies;
+3. aplicar #72 migration;
+4. probes de anon callers;
+5. aplicar #62 migration;
+6. recontar SECURITY DEFINER/grants;
+7. rodar advisors security/performance;
+8. registrar resultado no issue #15 e neste plano.
+
+## Fase 3 — LGPD foundation não-prod
+
+A migration #70 deve ser tratada separadamente do lote simples de grants porque substitui o cancel RPC ativo.
+
+Antes de produção:
+
+1. executar migration em não-prod/dev branch;
+2. provar preconditions/postconditions;
+3. testar request/retry/cancel;
+4. provar que `privacy-rpc` continua compatível;
+5. implementar `pending deletion` + hold/restore;
+6. só então considerar aplicação em produção.
+
+## Fase 4 — Edge admin/território
+
+1. executar secrets preflight;
+2. executar remote auth drift preflight;
+3. corrigir/deprecar `sitemap` conscientemente;
+4. canary check-only no SHA exato;
+5. deploy `admin-get-user` somente após gate verde;
+6. rollout `admin-get-user-auth-summary` após #66;
+7. rollout territorial após #67;
+8. smoke tests e registro de runtime version/hash.
+
+## Fase 5 — completar LGPD
+
+1. request broker;
+2. restricted mode;
+3. restore compensável;
+4. export matrix;
+5. export broker;
+6. purge worker/scheduler;
+7. Storage cleanup;
+8. retention/anonymization;
+9. Auth final delete;
+10. E2E não-prod;
+11. rollout certificado.
+
+## Fase 6 — Auth/least privilege/P2
+
+1. HIBP;
+2. F-005 allowlist;
+3. fechar grants remotos após migrations;
+4. classificar 20 tabelas RLS sem policy;
+5. resolver/formalizar PostGIS;
+6. atacar FKs/RLS por hot path.
+
+## Fase 7 — refactor estrutural
+
+#52/#53 ficam por último. Não mover em massa migrations/security docs enquanto os controles críticos ainda estão sendo estabilizados.
 
 ---
 
-## 9. Roadmap operacional
-
-### Etapa 0 — restaurar capacidade de provar mudanças
-
-- [ ] resolver CI-001 / runners;
-- [ ] resolver Vercel `build-rate-limit` ou estabelecer outro gate autoritativo equivalente;
-- [ ] confirmar branch protection de `main`;
-- [ ] integrar provenance/secrets/session guards.
-
-### Etapa 1 — fechar runtime admin/território
-
-- [ ] integrar #66;
-- [ ] integrar #67;
-- [ ] validar #59;
-- [ ] executar preflight de secrets;
-- [ ] rollout controlado de admin/território;
-- [ ] smoke tests de telas administrativas.
-
-### Etapa 2 — reconstruir LGPD
-
-- [ ] integrar guard #69;
-- [ ] validar foundation #70;
-- [ ] criar modo global `pending deletion`;
-- [ ] criar broker request/restore;
-- [ ] formalizar export matrix;
-- [ ] reescrever export;
-- [ ] implementar worker/scheduler de purge;
-- [ ] Storage cleanup policy;
-- [ ] Auth final-delete;
-- [ ] recovery/compensation tests;
-- [ ] end-to-end em não-prod;
-- [ ] rollout certificado.
-
-### Etapa 3 — Auth e least privilege
-
-- [ ] habilitar HIBP;
-- [ ] fechar F-005 allowlist;
-- [ ] fechar F-009 grants/policies;
-- [ ] classificar 20 tabelas RLS sem policies;
-- [ ] resolver ou formalizar F-006/PostGIS.
-
-### Etapa 4 — performance
-
-- [ ] rankear 104 FKs sem índice por tráfego/custo;
-- [ ] otimizar policies RLS hot-path;
-- [ ] revisar permissive policies múltiplas;
-- [ ] revisar índices redundantes/unused;
-- [ ] medir regressão antes/depois.
-
-### Etapa 5 — organização do repositório
-
-- [ ] rebase/revisão #52;
-- [ ] rebase/revisão #53;
-- [ ] preservar paths canônicos de migrations/security docs;
-- [ ] atualizar referências quebradas após move;
-- [ ] somente então consolidar documentação em nova árvore.
-
----
-
-## 10. Gates mínimos antes de produção
-
-Um release de segurança só pode ser promovido quando, no mínimo:
+## 11. Gates mínimos antes de qualquer produção
 
 ### Git / CI
 
 - [ ] branch protection ativa;
 - [ ] PR revisado;
 - [ ] CI executa steps reais;
-- [ ] typecheck passa;
-- [ ] lint passa;
-- [ ] testes relevantes passam;
-- [ ] build passa;
-- [ ] security gates passam.
+- [ ] typecheck verde;
+- [ ] lint verde;
+- [ ] testes relevantes verdes;
+- [ ] build verde;
+- [ ] security gates verdes.
 
 ### Migrations
 
 - [ ] `validate:migrations`;
 - [ ] `validate:migrations:provenance`;
 - [ ] `validate:migrations:remote`;
-- [ ] migration ainda não aplicada ou exatamente reconciliada;
-- [ ] pós-condições de catálogo explícitas;
-- [ ] rollback/compensação definidos quando aplicável.
+- [ ] versão ainda não aplicada ou exatamente reconciliada;
+- [ ] preconditions conferidas no catálogo remoto;
+- [ ] pós-condições explícitas;
+- [ ] rollback/compensação definido quando aplicável;
+- [ ] pós-probe e advisors após apply.
 
 ### Edge
 
 - [ ] caller confirmado;
 - [ ] contrato cliente/handler confirmado;
-- [ ] `verify_jwt` coerente com o desenho;
-- [ ] secrets obrigatórios comprovados por nome, nunca impressos;
-- [ ] bundle/source hash registrado;
+- [ ] `verify_jwt` coerente com manifesto/config/runtime;
+- [ ] secrets obrigatórios comprovados por nome;
+- [ ] source/shared bundle hash registrado;
 - [ ] project ref correto;
-- [ ] deploy guard/check-only passa;
+- [ ] check-only passa;
+- [ ] apply somente no SHA autorizado;
 - [ ] smoke test pós-deploy;
-- [ ] runtime version/provenance registrados.
+- [ ] versão runtime/proveniência registradas.
 
 ### Segurança
 
-- [ ] nenhuma credencial em logs;
 - [ ] browser sem service-role authority;
-- [ ] RLS/grants verificados;
+- [ ] RLS/grants rechecados;
 - [ ] authz fail-closed;
-- [ ] operação destrutiva idempotente ou compensável;
+- [ ] credenciais nunca impressas;
+- [ ] destrutivo idempotente ou compensável;
 - [ ] advisor rechecado.
 
 ---
 
-## 11. Critério de “security-ready”
+## 12. Critério de `security-ready`
 
-O projeto pode ser considerado **security-ready para operação normal** quando:
+O projeto só é `security-ready` quando:
 
 - CI autoritativa estiver estável;
 - branch protection estiver ativa;
 - HIBP estiver habilitado;
-- drift Edge crítico estiver reconciliado;
-- `admin-get-user`/admin summary/território estiverem certificados no runtime;
-- nenhum fluxo ativo depender de `public.user_sessions` como autoridade;
-- F-005/F-009 estiverem fechados ou tiverem allowlist formal;
-- PostGIS residual estiver formalmente resolvido/excepcionado pela autoridade correta;
+- drift Edge crítico estiver resolvido/depreciado explicitamente;
+- admin/território estiverem certificados no runtime;
+- sessão usar Supabase Auth como autoridade;
+- F-005/F-009 estiverem fechados ou formalmente allowlisted;
+- PostGIS residual estiver resolvido ou excepcionado pela autoridade correta;
 - tabelas RLS sem policy estiverem classificadas;
-- nenhuma função ativa e privilegiada estiver “versionada, mas não implantada” sem decisão explícita.
+- nenhuma função privilegiada estiver “configurada mas não implantada” sem decisão explícita.
 
 ---
 
-## 12. Critério de “LGPD-ready”
+## 13. Critério de `LGPD-ready`
 
-Além de `security-ready`, o produto só deve ser considerado **LGPD-ready para exclusão/exportação self-service** quando:
+Além de `security-ready`, exclusão/exportação self-service só é `LGPD-ready` quando:
 
-- pedido de exclusão for persistido em autoridade atual;
-- usuário entrar em modo restrito reversível;
-- cancelamento dentro da janela funcionar;
-- perfis/roles restaurados forem exatamente os colocados em hold pelo fluxo;
-- exportação tiver matriz de cobertura aprovada;
-- export não expuser dados de terceiros/segurança;
-- purge tiver scheduler/worker real;
+- authority atual de request existir em produção;
+- restricted mode for real e reversível;
+- cancelamento restaurar somente estado colocado em hold pelo fluxo;
+- export matrix estiver aprovada;
+- export não vazar dados de terceiros/segurança;
+- purge worker/scheduler existir;
 - Storage tiver tratamento explícito;
-- Auth user for removido somente na fase final;
+- Auth for removido somente na fase final;
 - retries forem idempotentes;
-- falhas parciais tiverem recuperação/compensação;
-- fluxo completo tiver prova não-prod.
+- falhas parciais tiverem compensação;
+- fluxo completo tiver prova não-prod e pós-rollout.
 
-Até lá, `user-delete-account` e `user-export-data` antigos permanecem **não implantáveis**.
+Até lá, handlers LGPD antigos permanecem **não implantáveis**.
 
 ---
 
-## 13. Issues canônicos
+## 14. Issues/PRs canônicos
 
-- #12 — PostGIS/platform advisory blockers;
-- #13 — compromised password protection/HIBP;
+Issues:
+
+- #12 — PostGIS/platform blockers;
+- #13 — HIBP;
 - #15 — exposed surfaces / SECURITY DEFINER / grants;
-- #17 — CI runner failing before repository steps;
+- #17 — CI-001;
+- #28 — branch protection;
 - #68 — LGPD deletion/export authority.
 
-Evitar abrir issues duplicados; subtarefas devem ser registradas nos issues canônicos ou vinculadas explicitamente.
+PRs funcionais bloqueados:
+
+- #63 — session/Auth authority;
+- #66 — admin auth summary;
+- #67 — territorial contract.
+
+PRs integrados neste lote:
+
+- #59;
+- #60;
+- #62;
+- #64;
+- #65;
+- #69;
+- #70;
+- #72, substituindo #61.
+
+Refactor adiado:
+
+- #52;
+- #53.
 
 ---
 
-## 14. Histórico desta reauditoria
+## 15. Histórico operacional
 
-### 20/08/2026
+### 20/08/2026 — reauditoria V2
 
-- atualizado SHA de referência para `983d95e72426ae41c1680afbabe395b3ebf61717`;
-- confirmado baseline de 366 migrations remotas;
-- confirmado runtime atual de 43 Edge Functions;
-- reclassificado F-002: migrations críticas conhecidas reconciliadas, gate/proveniência ainda dependem de CI confiável;
-- incorporados PRs #59, #60, #61, #62, #64, #66, #67, #69 e #70 ao roadmap;
-- adicionado F-010 LGPD como P1 crítico;
-- documentado drift de `user_deletion_schedule`/`cancel_account_deletion_for_user`;
-- documentada proibição de rollout dos handlers LGPD stale;
-- adicionada classificação de Edge ausente por caller/risco;
-- adicionada autoridade de sessão Supabase Auth;
-- adicionada dívida de 20 tabelas RLS sem policies para classificação;
-- medidos 104 foreign keys sem índice de suporte;
-- medidos 602 policies no recorte `public/private` para trilha de performance;
-- separado backlog P1 de segurança/privacidade do P2 de performance;
-- #52/#53 movidos explicitamente para depois da estabilização de segurança.
+- baseline de 366 migrations e 43 Edge Functions;
+- 55 configs Edge / 12 ausentes do runtime;
+- F-010 LGPD elevado a P1 crítico;
+- 382 SECURITY DEFINER inventariadas;
+- 20 tabelas RLS sem policies para classificação;
+- 104 FKs sem índice de suporte;
+- 602 policies RLS medidas;
+- CI-001 e Vercel quota confirmados como bloqueios externos à execução dos steps;
+- `main` confirmada sem branch protection.
+
+### 20/08/2026 — execução lote 1
+
+- #69 merged: guard LGPD stale;
+- #62 merged: orphan helper revoke migration versionada;
+- #64 merged: Edge secrets preflight ampliado;
+- #60 merged: `vaga_applications` authority migration versionada;
+- #61 encerrado como superseded;
+- #72 merged: anon private helper revoke migration versionada;
+- #59 merged: canary `admin-get-user` protegido;
+- #70 merged: reversible LGPD authority foundation versionada;
+- #65 merged: remote Edge auth drift preflight;
+- #66 revalidado e mantido bloqueado por CI;
+- #67 revalidado contra schema remoto e mantido bloqueado por CI;
+- evidência nova de `steps=null` registrada no #17;
+- nenhuma migration aplicada;
+- nenhum Edge deploy executado;
+- nenhum secret alterado.
 
 ---
 
-## 15. Próxima execução recomendada
+## 16. Próxima execução canônica
 
-A próxima sequência técnica deve ser:
+A próxima execução deve começar por **recuperar capacidade de validação**, e em paralelo pode continuar preparando PRs sem promover runtime:
 
-1. recuperar validação autoritativa de CI/Vercel;
-2. integrar os guards de baixo risco (#69, #62, #64, #60/#61) após validação;
-3. integrar contratos #66/#67;
-4. validar e integrar #59;
-5. concluir boundary global de `pending deletion` antes de qualquer broker destrutivo;
-6. validar #70 e só aplicar a nova authority migration após gates/proveniência;
-7. reconstruir export/purge LGPD;
-8. fechar HIBP + F-005 + F-009;
-9. tratar P2/performance;
-10. somente então retomar #52/#53.
+1. diagnosticar/resolver CI-001 e starvation/runner;
+2. resolver Vercel build-rate-limit;
+3. aplicar branch protection quando houver write administrativo;
+4. manter #63/#66/#67 em draft até typecheck/build reais;
+5. preparar o próximo lote LGPD (`pending deletion` + broker reversível) em PR separado, sem deploy;
+6. quando CI voltar, validar/mergear os PRs funcionais;
+7. somente então aplicar as migrations de menor privilégio e testar #70 em não-prod;
+8. seguir para rollouts Edge auditados.
 
-Este plano deve ser atualizado a cada mudança de estado (`OPEN` → `READY/PR` → `DONE`) com evidência de Git e runtime, nunca por expectativa.
+Este arquivo deve continuar distinguindo sempre **Git integrado** de **produção comprovada**.
