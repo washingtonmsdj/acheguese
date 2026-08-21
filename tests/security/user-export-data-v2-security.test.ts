@@ -24,6 +24,11 @@ const matrix = JSON.parse(
   }>;
 };
 
+function expectSectionKey(section: string) {
+  const escaped = section.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  expect(source).toMatch(new RegExp(`\\b${escaped}\\s*(?::|,)`));
+}
+
 describe("user-export-data v2", () => {
   it("remains explicitly uncertified for production rollout", () => {
     expect(source).toContain(
@@ -49,6 +54,7 @@ describe("user-export-data v2", () => {
     expect(source).toContain("const PAGE_SIZE = 500;");
     expect(source).toContain("const MAX_ROWS_PER_SECTION = 50_000;");
     expect(source).toContain("query.range(from, to)");
+    expect(source).toContain("enforceSectionLimit(section, rows)");
     expect(source).toContain("EXPORT_SECTION_FAILED:${section}");
     expect(source).toContain("EXPORT_SECTION_TOO_LARGE:${section}");
     expect(source).toContain('overflow_behavior: "fail-closed"');
@@ -56,13 +62,11 @@ describe("user-export-data v2", () => {
     expect(source).toContain("EXPORT_AUDIT_FAILED");
   });
 
-  it("covers every non-excluded canonical matrix section and source", () => {
+  it("covers every non-excluded canonical matrix section and public source", () => {
     expect(matrix.schemaVersion).toBe("lgpd-export-matrix/v1");
 
     for (const section of matrix.sections.filter((entry) => entry.scope !== "excluded")) {
-      expect(source, `missing output section ${section.section}`).toContain(
-        `${section.section}:`,
-      );
+      expectSectionKey(section.section);
 
       for (const sourceName of section.sources) {
         if (sourceName.startsWith("public.")) {
@@ -106,17 +110,42 @@ describe("user-export-data v2", () => {
     }
   });
 
-  it("redacts shared ride/order counterpart identifiers before serialization", () => {
+  it("redacts ride details by the subject role", () => {
     expect(source).toContain("function sanitizeRides(");
-    expect(source).toContain("function sanitizeOrders(");
+    expect(source).toContain("const isPassenger = Boolean(");
+    expect(source).toContain("const isDriver = Boolean(");
     expect(source).toContain("subject_roles: subjectRoles");
+    expect(source).toContain(
+      "origin: isPassenger ? row.origin : undefined",
+    );
+    expect(source).toContain(
+      "destination: isPassenger ? row.destination : undefined",
+    );
+    expect(source).not.toContain("observation: row.observation");
     expect(source).not.toMatch(/return\s*\{[^}]*passenger_profile_id/s);
     expect(source).not.toMatch(/return\s*\{[^}]*driver_profile_id/s);
+  });
+
+  it("redacts order financial splits by the subject role", () => {
+    expect(source).toContain("function sanitizeOrders(");
+    expect(source).toContain("const isCustomer = Boolean(");
+    expect(source).toContain("const isMerchant = Boolean(");
+    expect(source).toContain("const isCourier = Boolean(");
+    expect(source).toContain(
+      "merchant_net_amount: isMerchant ? row.merchant_net_amount : undefined",
+    );
+    expect(source).toContain(
+      "courier_amount: isCourier ? row.courier_amount : undefined",
+    );
+    expect(source).toContain(
+      "payment_method: isCustomer ? row.payment_method : undefined",
+    );
+    expect(source).not.toContain("notes: row.notes");
+    expect(source).not.toContain("source_reference: row.source_reference");
+    expect(source).not.toContain("source_id: row.source_id");
     expect(source).not.toMatch(/return\s*\{[^}]*customer_profile_id/s);
     expect(source).not.toMatch(/return\s*\{[^}]*merchant_profile_id/s);
     expect(source).not.toMatch(/return\s*\{[^}]*courier_profile_id/s);
-    expect(source).not.toContain("source_reference: row.source_reference");
-    expect(source).not.toContain("source_id: row.source_id");
   });
 
   it("exports only messages authored by subject-owned profiles", () => {
@@ -147,11 +176,25 @@ describe("user-export-data v2", () => {
     }
   });
 
-  it("exports subject report submissions without moderation internals", () => {
-    expect(source).toContain("function sanitizeReports(");
-    expect(source).toContain("reports_submitted: sanitizeReports(reportSections.flat())");
-    expect(source).toContain('"group_message_reports"');
+  it("exports subject report submissions without target or moderation identifiers", () => {
+    expect(source).toContain("function sanitizeReports(kind: string");
+    for (const kind of [
+      "community",
+      "direct_message",
+      "review",
+      "ride",
+      "vaga",
+      "group_message",
+    ]) {
+      expect(source).toContain(`sanitizeReports("${kind}"`);
+    }
     for (const marker of [
+      "target_id: row.target_id",
+      "review_id: row.review_id",
+      "ride_id: row.ride_id",
+      "vaga_id: row.vaga_id",
+      "group_id: row.group_id",
+      "message_id: row.message_id",
       "admin_notes: row.admin_notes",
       "moderator_notes: row.moderator_notes",
       "resolution_notes: row.resolution_notes",
@@ -170,11 +213,25 @@ describe("user-export-data v2", () => {
     expect(source).toContain(
       '"id,anomaly_type,severity,action_taken,auto_resolved,resolved_at,detected_at,created_at"',
     );
-    expect(source).toContain(
-      '"id,profile_id,action,reason,performed_at"',
-    );
+    expect(source).toContain('"id,action,reason,performed_at"');
     expect(source).not.toContain("performed_by: row.performed_by");
     expect(source).not.toContain("resolved_by: row.resolved_by");
+  });
+
+  it("does not serialize matrix-excluded identifiers from strict sections", () => {
+    expect(source).toContain(
+      '"table_name,field_name,operation,access_reason,access_reason_category,accessed_at,source,retention_until"',
+    );
+    expect(source).toContain(
+      '"id,preset,mime_type,byte_size,width,height,state,attached_at,deleted_at,created_at,updated_at"',
+    );
+    expect(source).toContain(
+      '"verification_type,submitted_at,reviewed_at,status,review_reason,created_at,updated_at"',
+    );
+    expect(source).toContain(
+      '"relationship,is_primary,is_active,created_at,updated_at"',
+    );
+    expect(source).not.toContain('"action_url"');
   });
 
   it("never serializes storage/push/session secrets", () => {
@@ -188,18 +245,8 @@ describe("user-export-data v2", () => {
   });
 
   it("aligns output keys with the canonical matrix section names", () => {
-    for (const section of [
-      "account",
-      "auth_identities",
-      "auth_factors",
-      "profiles",
-      "profile_memberships",
-      "community_membership_and_actions",
-      "favorites_and_saved_items",
-      "security_state_summary",
-      "push_credentials",
-    ]) {
-      expect(source).toContain(`${section}:`);
+    for (const section of matrix.sections.filter((entry) => entry.scope !== "excluded")) {
+      expectSectionKey(section.section);
     }
   });
 
