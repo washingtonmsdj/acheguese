@@ -1,13 +1,14 @@
 /**
  * Send Push Edge Function
- * 
+ *
  * Sends push notification to user via Firebase Cloud Messaging.
- * 
+ *
  * Rate Limit: 100 requests per minute
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { requireOperationalAccount } from '../_shared/accountOperational.ts';
 import { validateBody, sendPushSchema, validationErrorResponse, type SendPushBody } from '../_shared/validation.ts';
 import {
   errorResponse,
@@ -25,7 +26,6 @@ const FIREBASE_PROJECT_ID = Deno.env.get('FIREBASE_PROJECT_ID');
 const ALLOWED_METHODS = 'POST, OPTIONS';
 
 serve(async (req: Request) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { status: 204, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) });
   }
@@ -33,12 +33,10 @@ serve(async (req: Request) => {
   const methodError = requireHttpMethod(req, ['POST'], ALLOWED_METHODS);
   if (methodError) return methodError;
 
-  // Rate limiting
   const rateLimitResponse = await rateLimitMiddleware(req, 100, 60000);
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
-    // 2. Validate authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return errorResponse('Missing authorization header', 401);
@@ -50,7 +48,6 @@ serve(async (req: Request) => {
     });
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Get user from token
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await authClient.auth.getUser(token);
 
@@ -58,7 +55,14 @@ serve(async (req: Request) => {
       return errorResponse('Invalid token', 401);
     }
 
-    // 3. Parse and validate input
+    const accountOperationalError = await requireOperationalAccount(
+      supabase,
+      user.id,
+      req,
+      ALLOWED_METHODS,
+    );
+    if (accountOperationalError) return accountOperationalError;
+
     const rawBody = await readJsonBody<SendPushBody>(req, {
       maxBytes: 16_000,
       methods: ALLOWED_METHODS,
@@ -71,8 +75,6 @@ serve(async (req: Request) => {
     }
     const { userId, notification } = validation.data!;
 
-    // Verificar ownership: apenas o próprio usuário pode enviar push para si mesmo.
-    // Admins que precisem enviar notificações devem usar a service role diretamente.
     if (user.id !== userId) {
       return errorResponse('Cannot send push notification for another user', 403);
     }
@@ -81,7 +83,6 @@ serve(async (req: Request) => {
       return errorResponse('Missing required fields: notification.title, notification.body', 400);
     }
 
-    // 4. Check user preferences
     const { data: preferences } = await supabase
       .from('notification_preferences')
       .select('*')
@@ -92,7 +93,6 @@ serve(async (req: Request) => {
       return errorResponse('Push notifications disabled by user', 403);
     }
 
-    // Check quiet hours
     if (preferences && preferences.quiet_hours_start && preferences.quiet_hours_end) {
       const now = new Date();
       const currentHour = now.getHours();
@@ -112,7 +112,6 @@ serve(async (req: Request) => {
       }
     }
 
-    // 5. Get user's push subscriptions
     const { data: subscriptions, error: subsError } = await supabase
       .from('push_subscriptions')
       .select('*')
@@ -123,7 +122,6 @@ serve(async (req: Request) => {
       return errorResponse('No active push subscriptions found', 404);
     }
 
-    // 6. Send push notifications
     let successCount = 0;
     let failureCount = 0;
     const errors: string[] = [];
@@ -209,7 +207,6 @@ serve(async (req: Request) => {
       throw error;
     }
 
-    // Helper function to create JWT for OAuth2 (RS256 via Web Crypto API)
     async function createJWT(serviceAccount: { client_email: string; private_key: string }): Promise<string> {
       const header = { alg: 'RS256', typ: 'JWT' };
 
@@ -222,7 +219,6 @@ serve(async (req: Request) => {
         iat: now,
       };
 
-      // Base64url encode (sem padding, substituindo +/ por -_)
       const base64url = (input: string): string =>
         btoa(input).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
@@ -234,12 +230,7 @@ serve(async (req: Request) => {
       return `${signingInput}.${signature}`;
     }
 
-    /**
-     * Assina dados com chave privada RSA-SHA256 usando a Web Crypto API nativa do Deno.
-     * Substitui o placeholder `btoa(data)` que não era uma assinatura criptográfica real.
-     */
     async function signRS256(data: string, pemPrivateKey: string): Promise<string> {
-      // Remove cabeçalho/rodapé PEM e espaços em branco
       const pemBody = pemPrivateKey
         .replace(/-----BEGIN PRIVATE KEY-----/, '')
         .replace(/-----END PRIVATE KEY-----/, '')
@@ -262,13 +253,11 @@ serve(async (req: Request) => {
         encoder.encode(data),
       );
 
-      // Base64url encode da assinatura
       const signatureBytes = new Uint8Array(signatureBuffer);
       const base64 = btoa(String.fromCharCode(...signatureBytes));
       return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     }
 
-    // 7. Return response
     return new Response(
       JSON.stringify({
         success: true,
@@ -287,4 +276,3 @@ serve(async (req: Request) => {
     return errorResponse('Internal server error', 500, error);
   }
 });
-
