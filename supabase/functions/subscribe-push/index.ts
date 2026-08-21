@@ -1,13 +1,14 @@
 /**
  * Subscribe Push Edge Function
- * 
+ *
  * Stores push notification subscription in database.
- * 
+ *
  * Rate Limit: 10 requests per minute per user
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { requireOperationalAccount } from '../_shared/accountOperational.ts';
 import {
   errorResponse,
   getAllSecurityHeaders,
@@ -34,7 +35,6 @@ interface SubscribePushRequest {
 }
 
 serve(async (req: Request) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { status: 204, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) });
   }
@@ -42,12 +42,10 @@ serve(async (req: Request) => {
   const methodError = requireHttpMethod(req, ['POST'], ALLOWED_METHODS);
   if (methodError) return methodError;
 
-  // Rate limiting
   const rateLimitResponse = await rateLimitMiddleware(req, 10, 60000);
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
-    // 2. Validate authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return errorResponse('Missing authorization header', 401);
@@ -59,7 +57,6 @@ serve(async (req: Request) => {
     });
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Get user from token
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await authClient.auth.getUser(token);
 
@@ -67,7 +64,14 @@ serve(async (req: Request) => {
       return errorResponse('Invalid token', 401);
     }
 
-    // 3. Parse and validate input
+    const accountOperationalError = await requireOperationalAccount(
+      supabase,
+      user.id,
+      req,
+      ALLOWED_METHODS,
+    );
+    if (accountOperationalError) return accountOperationalError;
+
     const rawBody = await readJsonBody<SubscribePushRequest>(req, {
       maxBytes: 16_000,
       methods: ALLOWED_METHODS,
@@ -81,12 +85,10 @@ serve(async (req: Request) => {
       return errorResponse('Missing or invalid required fields', 400);
     }
 
-    // Verify user is subscribing for themselves
     if (user.id !== userId) {
       return errorResponse('Cannot subscribe for another user', 403);
     }
 
-    // 4. Check if subscription already exists
     const { data: existing } = await supabase
       .from('push_subscriptions')
       .select('id')
@@ -95,7 +97,6 @@ serve(async (req: Request) => {
       .single();
 
     if (existing) {
-      // Update existing subscription
       const { error: updateError } = await supabase
         .from('push_subscriptions')
         .update({
@@ -123,7 +124,6 @@ serve(async (req: Request) => {
       );
     }
 
-    // 5. Create new subscription
     const { data: newSubscription, error: insertError } = await supabase
       .from('push_subscriptions')
       .insert({
@@ -143,7 +143,6 @@ serve(async (req: Request) => {
       return errorResponse('Failed to create subscription', 500);
     }
 
-    // 6. Return success
     return new Response(
       JSON.stringify({
         success: true,
@@ -157,4 +156,3 @@ serve(async (req: Request) => {
     return errorResponse('Internal server error', 500, error);
   }
 });
-
