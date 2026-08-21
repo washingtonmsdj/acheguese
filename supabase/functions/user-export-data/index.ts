@@ -53,7 +53,14 @@ function pickStringArray(values: unknown[]): string[] {
   );
 }
 
-function dedupeRows(rows: JsonRecord[]): JsonRecord[] {
+function enforceSectionLimit(section: string, rows: JsonRecord[]): JsonRecord[] {
+  if (rows.length > MAX_ROWS_PER_SECTION) {
+    throw new Error(`EXPORT_SECTION_TOO_LARGE:${section}`);
+  }
+  return rows;
+}
+
+function dedupeRows(section: string, rows: JsonRecord[]): JsonRecord[] {
   const seen = new Set<string>();
   const result: JsonRecord[] = [];
 
@@ -65,7 +72,7 @@ function dedupeRows(rows: JsonRecord[]): JsonRecord[] {
     result.push(row);
   }
 
-  return result;
+  return enforceSectionLimit(section, result);
 }
 
 async function requireAllRows(
@@ -87,9 +94,7 @@ async function requireAllRows(
 
     const page = safeArray(data);
     rows.push(...page);
-    if (rows.length > MAX_ROWS_PER_SECTION) {
-      throw new Error(`EXPORT_SECTION_TOO_LARGE:${section}`);
-    }
+    enforceSectionLimit(section, rows);
     if (page.length < PAGE_SIZE) break;
   }
 
@@ -174,7 +179,7 @@ async function requireRowsByAnyProfileColumn(
       )
     ),
   );
-  return dedupeRows(parts.flat());
+  return dedupeRows(section, parts.flat());
 }
 
 function redactUserMetadata(value: unknown): JsonRecord {
@@ -245,9 +250,11 @@ function sanitizeRides(rows: JsonRecord[], profileIds: Set<string>): JsonRecord[
     const driver = typeof row.driver_profile_id === "string"
       ? row.driver_profile_id
       : null;
+    const isPassenger = Boolean(passenger && profileIds.has(passenger));
+    const isDriver = Boolean(driver && profileIds.has(driver));
     const subjectRoles = [
-      passenger && profileIds.has(passenger) ? "passenger" : null,
-      driver && profileIds.has(driver) ? "driver" : null,
+      isPassenger ? "passenger" : null,
+      isDriver ? "driver" : null,
     ].filter((value): value is string => Boolean(value));
 
     return {
@@ -260,13 +267,12 @@ function sanitizeRides(rows: JsonRecord[], profileIds: Set<string>): JsonRecord[
       available_seats: row.available_seats,
       created_at: row.created_at,
       updated_at: row.updated_at,
-      pickup_location_id: row.pickup_location_id,
-      dropoff_location_id: row.dropoff_location_id,
-      origin: row.origin,
-      destination: row.destination,
+      pickup_location_id: isPassenger ? row.pickup_location_id : undefined,
+      dropoff_location_id: isPassenger ? row.dropoff_location_id : undefined,
+      origin: isPassenger ? row.origin : undefined,
+      destination: isPassenger ? row.destination : undefined,
       departure_time: row.departure_time,
-      payment_method: row.payment_method,
-      observation: row.observation,
+      payment_method: isPassenger ? row.payment_method : undefined,
       ride_mode: row.ride_mode,
       source_type: row.source_type,
       pickup_confirmed_at: row.pickup_confirmed_at,
@@ -289,10 +295,13 @@ function sanitizeOrders(rows: JsonRecord[], profileIds: Set<string>): JsonRecord
     const courier = typeof row.courier_profile_id === "string"
       ? row.courier_profile_id
       : null;
+    const isCustomer = Boolean(customer && profileIds.has(customer));
+    const isMerchant = Boolean(merchant && profileIds.has(merchant));
+    const isCourier = Boolean(courier && profileIds.has(courier));
     const subjectRoles = [
-      customer && profileIds.has(customer) ? "customer" : null,
-      merchant && profileIds.has(merchant) ? "merchant" : null,
-      courier && profileIds.has(courier) ? "courier" : null,
+      isCustomer ? "customer" : null,
+      isMerchant ? "merchant" : null,
+      isCourier ? "courier" : null,
     ].filter((value): value is string => Boolean(value));
 
     return {
@@ -306,14 +315,11 @@ function sanitizeOrders(rows: JsonRecord[], profileIds: Set<string>): JsonRecord
       delivery_fee: row.delivery_fee,
       discount_total: row.discount_total,
       order_total: row.order_total,
-      platform_fee_amount: row.platform_fee_amount,
-      merchant_net_amount: row.merchant_net_amount,
-      courier_amount: row.courier_amount,
+      platform_fee_amount: isMerchant ? row.platform_fee_amount : undefined,
+      merchant_net_amount: isMerchant ? row.merchant_net_amount : undefined,
+      courier_amount: isCourier ? row.courier_amount : undefined,
       currency: row.currency,
-      payment_method: row.payment_method,
-      notes: row.notes,
-      failure_reason: row.failure_reason,
-      cancellation_reason: row.cancellation_reason,
+      payment_method: isCustomer ? row.payment_method : undefined,
       paid_at: row.paid_at,
       refunded_at: row.refunded_at,
       accepted_at: row.accepted_at,
@@ -330,16 +336,10 @@ function sanitizeOrders(rows: JsonRecord[], profileIds: Set<string>): JsonRecord
   });
 }
 
-function sanitizeReports(rows: JsonRecord[]): JsonRecord[] {
+function sanitizeReports(kind: string, rows: JsonRecord[]): JsonRecord[] {
   return rows.map((row) => ({
-    id: row.id,
+    kind,
     target_type: row.target_type,
-    target_id: row.target_id,
-    review_id: row.review_id,
-    ride_id: row.ride_id,
-    vaga_id: row.vaga_id,
-    group_id: row.group_id,
-    message_id: row.message_id,
     reason: row.reason,
     report_type: row.report_type,
     severity: row.severity,
@@ -500,7 +500,10 @@ async function collectExport(
     userId,
     "owner_user_id",
   );
-  const professionalData = dedupeRows([...professionalByProfile, ...professionalByUser]);
+  const professionalData = dedupeRows(
+    "professional_profiles",
+    [...professionalByProfile, ...professionalByUser],
+  );
   const professionalStats = await requireProfileRows(
     "professional_stats",
     supabaseAdmin,
@@ -624,7 +627,10 @@ async function collectExport(
     "author_profile_id",
     profileIds,
   );
-  const workOpportunities = dedupeRows([...opportunitiesByUser, ...opportunitiesByProfile]);
+  const workOpportunities = dedupeRows(
+    "work_opportunities",
+    [...opportunitiesByUser, ...opportunitiesByProfile],
+  );
   const communicationPublications = await requireProfileRows(
     "communication_publications",
     supabaseAdmin,
@@ -749,7 +755,7 @@ async function collectExport(
     "mobility",
     supabaseAdmin,
     "ride_requests",
-    "id,passenger_profile_id,driver_profile_id,route_id,status,suggested_price,final_price,available_seats,created_at,updated_at,pickup_location_id,dropoff_location_id,origin,destination,departure_time,payment_method,observation,ride_mode,source_type,pickup_confirmed_at,delivered_at,started_at,completed_at,cancelled_at",
+    "id,passenger_profile_id,driver_profile_id,route_id,status,suggested_price,final_price,available_seats,created_at,updated_at,pickup_location_id,dropoff_location_id,origin,destination,departure_time,payment_method,ride_mode,source_type,pickup_confirmed_at,delivered_at,started_at,completed_at,cancelled_at",
     ["passenger_profile_id", "driver_profile_id"],
     profileIds,
   );
@@ -765,7 +771,7 @@ async function collectExport(
     "orders",
     supabaseAdmin,
     "orders",
-    "id,customer_profile_id,merchant_profile_id,courier_profile_id,payment_mode,delivery_mode,logistics_status,financial_status,items_total,delivery_fee,discount_total,order_total,platform_fee_amount,merchant_net_amount,courier_amount,currency,payment_method,notes,failure_reason,cancellation_reason,paid_at,refunded_at,accepted_at,preparing_at,ready_for_pickup_at,picked_up_at,delivered_at,canceled_at,failed_at,created_at,updated_at,source_type",
+    "id,customer_profile_id,merchant_profile_id,courier_profile_id,payment_mode,delivery_mode,logistics_status,financial_status,items_total,delivery_fee,discount_total,order_total,platform_fee_amount,merchant_net_amount,courier_amount,currency,payment_method,paid_at,refunded_at,accepted_at,preparing_at,ready_for_pickup_at,picked_up_at,delivered_at,canceled_at,failed_at,created_at,updated_at,source_type",
     ["customer_profile_id", "merchant_profile_id", "courier_profile_id"],
     profileIds,
   );
@@ -774,14 +780,14 @@ async function collectExport(
     "subscriptions",
     supabaseAdmin,
     "user_subscriptions",
-    "id,plan_type,status,active,amount_cents,started_at,expires_at,created_at,updated_at,plan_code,canceled_at,trial_start,entity_family,vertical,subscription_scope,business_id,status_v2,price_cents,billing_period,trial_ends_at,current_period_start,current_period_end,cancel_at_period_end",
+    "id,plan_type,status,active,amount_cents,started_at,expires_at,created_at,updated_at,plan_code,canceled_at,trial_start,entity_family,vertical,subscription_scope,status_v2,price_cents,billing_period,trial_ends_at,current_period_start,current_period_end,cancel_at_period_end",
     userId,
   );
   const billingTransactions = await requireUserRows(
     "billing_transactions",
     supabaseAdmin,
     "billing_transactions",
-    "id,business_id,subscription_id,transaction_type,amount_cents,currency,status,created_at",
+    "id,transaction_type,amount_cents,currency,status,created_at",
     userId,
   );
 
@@ -789,7 +795,7 @@ async function collectExport(
     "notifications",
     supabaseAdmin,
     "notifications",
-    "id,type,title,message,is_read,created_at,priority,read,deleted_at,updated_at,category,action_url,action_label,read_at",
+    "id,type,title,message,is_read,created_at,priority,read,deleted_at,updated_at,category,action_label,read_at",
     userId,
   );
   const emailLogs = await requireUserRows(
@@ -800,12 +806,19 @@ async function collectExport(
     userId,
   );
 
-  const reportSections = await Promise.all([
+  const [
+    communityReports,
+    directMessageReports,
+    reviewReports,
+    rideReports,
+    vagaReports,
+    groupMessageReports,
+  ] = await Promise.all([
     requireProfileRows(
       "community_reports_submitted",
       supabaseAdmin,
       "community_reports",
-      "id,target_type,target_id,reporter_profile_id,reason,description,evidence_urls,status,reviewed_at,created_at,updated_at",
+      "id,target_type,reporter_profile_id,reason,description,evidence_urls,status,reviewed_at,created_at,updated_at",
       "reporter_profile_id",
       profileIds,
     ),
@@ -813,7 +826,7 @@ async function collectExport(
       "direct_message_reports_submitted",
       supabaseAdmin,
       "community_direct_message_reports",
-      "id,thread_id,message_id,reporter_profile_id,reason,description,status,reviewed_at,created_at,updated_at",
+      "id,reporter_profile_id,reason,description,status,reviewed_at,created_at,updated_at",
       "reporter_profile_id",
       profileIds,
     ),
@@ -821,7 +834,7 @@ async function collectExport(
       "review_reports_submitted",
       supabaseAdmin,
       "review_reports",
-      "id,review_id,reporter_profile_id,reason,description,status,reviewed_at,created_at,updated_at",
+      "id,reporter_profile_id,reason,description,status,reviewed_at,created_at,updated_at",
       "reporter_profile_id",
       profileIds,
     ),
@@ -829,7 +842,7 @@ async function collectExport(
       "ride_reports_submitted",
       supabaseAdmin,
       "ride_reports",
-      "id,ride_id,reporter_profile_id,reporter_type,report_type,severity,status,title,description,evidence_urls,reported_at,reviewed_at,created_at,updated_at",
+      "id,reporter_profile_id,reporter_type,report_type,severity,status,title,description,evidence_urls,reported_at,reviewed_at,created_at,updated_at",
       "reporter_profile_id",
       profileIds,
     ),
@@ -837,7 +850,7 @@ async function collectExport(
       "vaga_reports_submitted",
       supabaseAdmin,
       "vaga_reports",
-      "id,vaga_id,reporter_profile_id,reason,description,status,reviewed_at,created_at,updated_at",
+      "id,reporter_profile_id,reason,description,status,reviewed_at,created_at,updated_at",
       "reporter_profile_id",
       profileIds,
     ),
@@ -845,7 +858,7 @@ async function collectExport(
       "group_message_reports_submitted",
       supabaseAdmin,
       "group_message_reports",
-      "id,group_id,message_id,reporter_profile_id,reason,details,status,reviewed_at,created_at",
+      "id,reporter_profile_id,reason,details,status,reviewed_at,created_at",
       "reporter_profile_id",
       profileIds,
     ),
@@ -855,21 +868,21 @@ async function collectExport(
     "ai_image_generations",
     supabaseAdmin,
     "ai_image_generations",
-    "id,feature,mode,prompt,negative_prompt,model,reference_urls,generated_urls,selected_url,status,error_message,created_at,updated_at",
+    "id,feature,mode,prompt,negative_prompt,model,reference_urls,generated_urls,selected_url,status,created_at,updated_at",
     userId,
   );
   const tryonGenerations = await requireUserRows(
     "tryon_generations",
     supabaseAdmin,
     "tryon_generations",
-    "id,product_image_url,category,target_gender,style,status,generated_urls,selected_url,error_message,created_at,updated_at",
+    "id,product_image_url,category,target_gender,style,status,generated_urls,selected_url,created_at,updated_at",
     userId,
   );
   const aiUsage = await requireUserRows(
     "ai_usage",
     supabaseAdmin,
     "ai_usage_log",
-    "id,feature,capability,model,status,tokens_in,tokens_out,latency_ms,error_code,created_at",
+    "id,feature,capability,model,status,tokens_in,tokens_out,latency_ms,created_at",
     userId,
   );
   const aiModeration = await requireUserRows(
@@ -884,7 +897,7 @@ async function collectExport(
     "analytics_events",
     supabaseAdmin,
     "analytics_events",
-    "id,entity_type,entity_id,event_type,event_source,session_id,ip_address,user_agent,referrer,latitude,longitude,city,state,country,created_at,event",
+    "id,entity_type,event_type,event_source,session_id,ip_address,user_agent,referrer,latitude,longitude,city,state,country,created_at,event",
     userId,
   );
   const analyticsSessions = await requireUserRows(
@@ -899,7 +912,7 @@ async function collectExport(
     "pii_access_summary",
     supabaseAdmin,
     "pii_access_log",
-    "id,table_name,field_name,operation,access_reason,access_reason_category,accessed_at,source,retention_until",
+    "table_name,field_name,operation,access_reason,access_reason_category,accessed_at,source,retention_until",
     userId,
     "subject_user_id",
     "accessed_at",
@@ -909,7 +922,7 @@ async function collectExport(
     "media_assets:user",
     supabaseAdmin,
     "media_assets",
-    "id,owner_profile_id,preset,mime_type,byte_size,width,height,state,attached_at,deleted_at,created_at,updated_at",
+    "id,preset,mime_type,byte_size,width,height,state,attached_at,deleted_at,created_at,updated_at",
     userId,
     "owner_user_id",
   );
@@ -917,17 +930,20 @@ async function collectExport(
     "media_assets:profile",
     supabaseAdmin,
     "media_assets",
-    "id,owner_profile_id,preset,mime_type,byte_size,width,height,state,attached_at,deleted_at,created_at,updated_at",
+    "id,preset,mime_type,byte_size,width,height,state,attached_at,deleted_at,created_at,updated_at",
     "owner_profile_id",
     profileIds,
   );
-  const mediaAssets = dedupeRows([...mediaByUser, ...mediaByProfile]);
+  const mediaAssets = dedupeRows(
+    "media_assets",
+    [...mediaByUser, ...mediaByProfile],
+  );
 
   const verification = await requireProfileRows(
     "verification",
     supabaseAdmin,
     "verification",
-    "verification_type,submitted_at,reviewed_at,status,review_reason,created_at,updated_at,profile_id",
+    "verification_type,submitted_at,reviewed_at,status,review_reason,created_at,updated_at",
     "profile_id",
     profileIds,
     "submitted_at",
@@ -951,7 +967,7 @@ async function collectExport(
     "security:profile_audit",
     supabaseAdmin,
     "profile_audit_log",
-    "id,profile_id,action,reason,performed_at",
+    "id,action,reason,performed_at",
     "profile_id",
     profileIds,
   );
@@ -960,7 +976,7 @@ async function collectExport(
     "emergency_contacts",
     supabaseAdmin,
     "emergency_contacts",
-    "profile_id,relationship,is_primary,is_active,created_at,updated_at",
+    "relationship,is_primary,is_active,created_at,updated_at",
     "profile_id",
     profileIds,
     "created_at",
@@ -1065,7 +1081,14 @@ async function collectExport(
     orders: sanitizeOrders(ordersRaw, profileIdSet),
     billing: { subscriptions, transactions: billingTransactions },
     notifications: { in_app: notifications, email: emailLogs },
-    reports_submitted: sanitizeReports(reportSections.flat()),
+    reports_submitted: [
+      ...sanitizeReports("community", communityReports),
+      ...sanitizeReports("direct_message", directMessageReports),
+      ...sanitizeReports("review", reviewReports),
+      ...sanitizeReports("ride", rideReports),
+      ...sanitizeReports("vaga", vagaReports),
+      ...sanitizeReports("group_message", groupMessageReports),
+    ],
     ai_activity: {
       image_generations: aiImageGenerations,
       tryon_generations: tryonGenerations,
@@ -1092,10 +1115,12 @@ async function collectExport(
     "provider/internal auth metadata and credentials",
     "third-party message bodies and conversation dumps",
     "counterparty profile identifiers in rides and orders",
+    "passenger route details when the subject is only the driver",
+    "merchant/courier financial splits unless the subject owns that role",
     "recipient/proof-of-delivery data",
-    "moderation reviewer/admin identifiers and internal notes",
+    "report target identifiers and moderation workflow internals",
     "billing provider identifiers and internal snapshots",
-    "raw analytics metadata/properties",
+    "raw analytics metadata/properties and entity identifiers",
     "storage paths, storage references and hashes",
     "live driver location precision",
     "emergency-contact names, phones and emails",
