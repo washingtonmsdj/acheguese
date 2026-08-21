@@ -50,7 +50,8 @@ export function useSessions() {
     loadData();
   }, []);
 
-  // Revogar sessão
+  // Revogação individual não é suportada pela autoridade atual do Supabase Auth.
+  // O service falha fechado em vez de fingir sucesso no tracker legado.
   const revokeSession = async (sessionId: string, reason?: string) => {
     try {
       setLoading(true);
@@ -59,48 +60,44 @@ export function useSessions() {
       const success = await sessionService.revokeSession(sessionId, reason);
       
       if (!success) {
-        throw new Error('Falha ao revogar sessão');
+        throw new Error('Revogação individual de sessão não suportada');
       }
 
-      // Recarregar dados
       await loadData();
-
       return true;
     } catch (err) {
       logger.error('useSessions.revokeSession', err);
-      setError('Erro ao revogar sessão');
+      setError('Revogação individual de sessão indisponível');
       return false;
     } finally {
       setLoading(false);
     }
   };
 
-  // Revogar todas as sessões
+  // Revogar todas as outras sessões, ou todas incluindo a atual.
   const revokeAllSessions = async (exceptCurrent: boolean = true) => {
     try {
       setLoading(true);
       setError(null);
 
-      const count = await sessionService.revokeAllSessions(exceptCurrent);
+      const success = await sessionService.revokeAllSessions(exceptCurrent);
       
-      if (count === 0) {
+      if (!success) {
         throw new Error('Nenhuma sessão foi revogada');
       }
 
-      // Recarregar dados
       await loadData();
-
-      return count;
+      return true;
     } catch (err) {
       logger.error('useSessions.revokeAllSessions', err);
       setError('Erro ao revogar sessões');
-      return 0;
+      return false;
     } finally {
       setLoading(false);
     }
   };
 
-  // Marcar sessão como confiável
+  // Marcar sessão como confiável no tracker legado.
   const trustSession = async (sessionId: string) => {
     try {
       setLoading(true);
@@ -112,9 +109,7 @@ export function useSessions() {
         throw new Error('Falha ao marcar sessão como confiável');
       }
 
-      // Recarregar dados
       await loadData();
-
       return true;
     } catch (err) {
       logger.error('useSessions.trustSession', err);
