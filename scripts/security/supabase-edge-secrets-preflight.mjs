@@ -25,6 +25,18 @@ const FUNCTION_SECRET_REQUIREMENTS = Object.freeze({
     'NOMINATIM_DEFAULT_ADDRESSDETAILS',
     'NOMINATIM_DEFAULT_LIMIT',
   ]),
+  'media-assets-cleanup': Object.freeze([
+    'ALLOWED_ORIGINS',
+    'CRON_SECRET',
+  ]),
+  'process-timeouts': Object.freeze([
+    'ALLOWED_ORIGINS',
+    'CRON_SECRET',
+  ]),
+  'auto-dispatch-ride': Object.freeze([
+    'ALLOWED_ORIGINS',
+    'CRON_SECRET',
+  ]),
 });
 
 function usage() {
@@ -32,7 +44,7 @@ function usage() {
     'Uso:',
     '  node scripts/security/supabase-edge-secrets-preflight.mjs',
     '  node scripts/security/supabase-edge-secrets-preflight.mjs --function get-push-config',
-    '  node scripts/security/supabase-edge-secrets-preflight.mjs --function nominatim-proxy --json',
+    '  node scripts/security/supabase-edge-secrets-preflight.mjs --function media-assets-cleanup --json',
     '',
     'Opcoes:',
     '  --function <slug>      Valida uma funcao suportada. Pode ser repetido.',
