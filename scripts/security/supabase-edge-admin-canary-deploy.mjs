@@ -20,13 +20,22 @@ const CANARY_FUNCTIONS = Object.freeze({
       'supabase/functions/_shared/validation.ts',
     ]),
   }),
+  'admin-get-user': Object.freeze({
+    verifyJwt: true,
+    requiredFiles: Object.freeze([
+      'supabase/functions/admin-get-user/index.ts',
+      'supabase/functions/_shared/adminAuth.ts',
+      'supabase/functions/_shared/security.ts',
+      'supabase/functions/_shared/validation.ts',
+    ]),
+  }),
 });
 
 function usage() {
   return [
     'Uso:',
-    '  node scripts/security/supabase-edge-admin-canary-deploy.mjs --function admin-list-users --expected-sha <40-hex>',
-    '  node scripts/security/supabase-edge-admin-canary-deploy.mjs --function admin-list-users --expected-sha <40-hex> --apply',
+    '  node scripts/security/supabase-edge-admin-canary-deploy.mjs --function <admin-list-users|admin-get-user> --expected-sha <40-hex>',
+    '  node scripts/security/supabase-edge-admin-canary-deploy.mjs --function <admin-list-users|admin-get-user> --expected-sha <40-hex> --apply',
     '',
     'Opcoes:',
     '  --function <slug>       Funcao canario permitida.',
@@ -240,6 +249,29 @@ function assertSourceContracts(functionSlug) {
     }
     if (/\.from\(["']profiles["']\)/.test(entrypoint)) {
       throw new Error('admin-list-users voltou a paginar profiles diretamente.');
+    }
+  }
+
+  if (functionSlug === 'admin-get-user') {
+    const requiredGetUserMarkers = [
+      'const auth = await requireAdmin(req);',
+      'readJsonBody<GetUserBody>(req, {',
+      'maxBytes: 4096',
+      'validateBody<GetUserBody>(rawBody.data, getUserSchema)',
+      '.auth.admin.getUserById(userId)',
+      ".select('role_enum, expires_at')",
+      ".eq('is_active', true)",
+      ".is('revoked_at', null)",
+      'function hasCurrentRoleValidity',
+      'Date.parse(role.expires_at)',
+      'Number.isFinite(expiresAtMs) && expiresAtMs > nowMs',
+      '.filter((role) => hasCurrentRoleValidity(role, nowMs))',
+    ];
+
+    for (const marker of requiredGetUserMarkers) {
+      if (!entrypoint.includes(marker)) {
+        throw new Error(`admin-get-user sem contrato obrigatorio: ${marker}`);
+      }
     }
   }
 
