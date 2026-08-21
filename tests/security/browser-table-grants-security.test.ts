@@ -9,6 +9,8 @@ const FUNCTION_AUDIT =
   "20260819081931_harden_function_audit_browser_write_grants.sql";
 const NO_POLICY_TABLES_MIGRATION =
   "20260819082244_revoke_browser_grants_from_no_policy_tables.sql";
+const VAGA_APPLICATIONS_HARDENING =
+  "20260821001800_restrict_vaga_applications_browser_authority.sql";
 
 const NO_POLICY_TABLES = [
   "analytics_sessions",
@@ -39,6 +41,9 @@ describe("browser table grant hardening", () => {
     expect(
       migrations.some(({ name }) => name === NO_POLICY_TABLES_MIGRATION),
     ).toBe(true);
+    expect(
+      migrations.some(({ name }) => name === VAGA_APPLICATIONS_HARDENING),
+    ).toBe(true);
 
     const batch1 = migrations.find(({ name }) => name === BATCH1)?.sql ?? "";
     const batch2 = migrations.find(({ name }) => name === BATCH2)?.sql ?? "";
@@ -46,6 +51,8 @@ describe("browser table grant hardening", () => {
       migrations.find(({ name }) => name === FUNCTION_AUDIT)?.sql ?? "";
     const noPolicyTables =
       migrations.find(({ name }) => name === NO_POLICY_TABLES_MIGRATION)?.sql ?? "";
+    const vagaApplications =
+      migrations.find(({ name }) => name === VAGA_APPLICATIONS_HARDENING)?.sql ?? "";
 
     expect(batch1).toMatch(/revoke\s+all\s+privileges\s+on\s+table\s+public\.api_cache\s+from\s+anon,\s*authenticated/i);
     expect(batch1).toContain("public.billing_plans");
@@ -74,6 +81,32 @@ describe("browser table grant hardening", () => {
     for (const table of NO_POLICY_TABLES) {
       expect(noPolicyTables).toContain(`'${table}'`);
     }
+
+    expect(vagaApplications).toMatch(
+      /revoke\s+all\s+privileges\s+on\s+table\s+public\.vaga_applications[\s\S]*from\s+public,\s*anon,\s*authenticated/i,
+    );
+    expect(vagaApplications).toMatch(
+      /grant\s+select,\s*insert,\s*update,\s*delete\s+on\s+table\s+public\.vaga_applications[\s\S]*to\s+authenticated/i,
+    );
+    for (const policy of [
+      "vaga_applications_select",
+      "vaga_applications_insert",
+      "vaga_applications_update",
+      "vaga_applications_delete_admin",
+    ]) {
+      expect(vagaApplications).toMatch(
+        new RegExp(
+          `alter\\s+policy\\s+"${policy}"[\\s\\S]*?on\\s+public\\.vaga_applications[\\s\\S]*?to\\s+authenticated`,
+          "i",
+        ),
+      );
+    }
+    expect(vagaApplications).toContain(
+      "postcondition failed: anon retains table privileges on vaga_applications",
+    );
+    expect(vagaApplications).toContain(
+      "postcondition failed: vaga_applications policies are not authenticated-only",
+    );
   });
 
   it("does not silently restore browser writes to service-authoritative tables", () => {
@@ -136,5 +169,37 @@ describe("browser table grant hardening", () => {
       .map(({ name }) => name);
 
     expect(regressions, "anonymous grants must remain aligned with authenticated-only RLS policies").toEqual([]);
+  });
+
+  it("keeps vaga_applications authenticated-only after the hardening migration", () => {
+    const later = migrationsFromBaseline().filter(
+      ({ name }) => name > VAGA_APPLICATIONS_HARDENING,
+    );
+    const regressions: string[] = [];
+
+    for (const { name, sql } of later) {
+      if (
+        /grant\s+(?:all(?:\s+privileges)?|select|insert|update|delete|truncate|references|trigger|maintain)(?:\s*,[\s\w]+)*\s+on(?:\s+table)?\s+public\.vaga_applications\s+to\s+anon\b/i.test(sql)
+      ) {
+        regressions.push(`${name}: anonymous table grant`);
+      }
+
+      if (
+        /grant\s+(?:all(?:\s+privileges)?|truncate|references|trigger|maintain)(?:\s*,[\s\w]+)*\s+on(?:\s+table)?\s+public\.vaga_applications\s+to\s+authenticated\b/i.test(sql)
+      ) {
+        regressions.push(`${name}: elevated authenticated table grant`);
+      }
+
+      if (
+        /alter\s+policy\s+"?vaga_applications_(?:select|insert|update|delete_admin)"?[\s\S]*?on\s+public\.vaga_applications[\s\S]*?to\s+(?:public|anon)\b/i.test(sql)
+      ) {
+        regressions.push(`${name}: anonymous policy role`);
+      }
+    }
+
+    expect(
+      regressions,
+      "vaga_applications must remain authenticated-only with CRUD-only browser authority",
+    ).toEqual([]);
   });
 });
