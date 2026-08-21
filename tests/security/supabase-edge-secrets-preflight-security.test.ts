@@ -23,6 +23,18 @@ const NOMINATIM = join(
   "nominatim-proxy",
   "index.ts",
 );
+const TERRITORY_AI = join(
+  ROOT,
+  "supabase",
+  "functions",
+  "territory-ai-content",
+  "index.ts",
+);
+const CRON_FUNCTIONS = [
+  "media-assets-cleanup",
+  "process-timeouts",
+  "auto-dispatch-ride",
+] as const;
 
 function requiredEnvNames(source: string): string[] {
   return [...source.matchAll(/getRequiredEnv\(['\"]([^'\"]+)['\"]\)/g)]
@@ -70,6 +82,41 @@ describe("Supabase Edge secrets preflight", () => {
       expect(preflight).toContain(`'${name}'`);
     }
     expect(preflight).toContain("'ALLOWED_ORIGINS'");
+  });
+
+  it("covers every verify-jwt-disabled cron mutation that requires CRON_SECRET", () => {
+    const preflight = readFileSync(PREFLIGHT, "utf8");
+
+    for (const slug of CRON_FUNCTIONS) {
+      const functionSource = readFileSync(
+        join(ROOT, "supabase", "functions", slug, "index.ts"),
+        "utf8",
+      );
+
+      expect(functionSource).toContain("requireCronSecret");
+      expect(preflight).toContain(`'${slug}': Object.freeze([`);
+
+      const block = preflight.match(
+        new RegExp(`'${slug}': Object\\.freeze\\(\\[([\\s\\S]*?)\\]\\)`),
+      )?.[1] ?? "";
+      expect(block).toContain("'CRON_SECRET'");
+      expect(block).toContain("'ALLOWED_ORIGINS'");
+    }
+  });
+
+  it("blocks territory AI rollout unless its provider key and origin policy are configured", () => {
+    const preflight = readFileSync(PREFLIGHT, "utf8");
+    const functionSource = readFileSync(TERRITORY_AI, "utf8");
+
+    expect(functionSource).toContain('LOVABLE_API_KEY');
+    expect(functionSource).toContain('isOriginAllowed');
+    expect(functionSource).toContain('requireAdmin');
+
+    const block = preflight.match(
+      /'territory-ai-content': Object\.freeze\(\[([\s\S]*?)\]\)/,
+    )?.[1] ?? "";
+    expect(block).toContain("'LOVABLE_API_KEY'");
+    expect(block).toContain("'ALLOWED_ORIGINS'");
   });
 
   it("fails closed when required configuration or CLI access is missing", () => {
