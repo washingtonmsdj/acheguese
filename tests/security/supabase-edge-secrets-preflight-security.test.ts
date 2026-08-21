@@ -23,6 +23,13 @@ const NOMINATIM = join(
   "nominatim-proxy",
   "index.ts",
 );
+const TERRITORY_AI = join(
+  ROOT,
+  "supabase",
+  "functions",
+  "territory-ai-content",
+  "index.ts",
+);
 const CRON_FUNCTIONS = [
   "media-assets-cleanup",
   "process-timeouts",
@@ -95,6 +102,21 @@ describe("Supabase Edge secrets preflight", () => {
       expect(block).toContain("'CRON_SECRET'");
       expect(block).toContain("'ALLOWED_ORIGINS'");
     }
+  });
+
+  it("blocks territory AI rollout unless its provider key and origin policy are configured", () => {
+    const preflight = readFileSync(PREFLIGHT, "utf8");
+    const functionSource = readFileSync(TERRITORY_AI, "utf8");
+
+    expect(functionSource).toContain('LOVABLE_API_KEY');
+    expect(functionSource).toContain('isOriginAllowed');
+    expect(functionSource).toContain('requireAdmin');
+
+    const block = preflight.match(
+      /'territory-ai-content': Object\.freeze\(\[([\s\S]*?)\]\)/,
+    )?.[1] ?? "";
+    expect(block).toContain("'LOVABLE_API_KEY'");
+    expect(block).toContain("'ALLOWED_ORIGINS'");
   });
 
   it("fails closed when required configuration or CLI access is missing", () => {
