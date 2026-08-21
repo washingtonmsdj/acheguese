@@ -7,7 +7,26 @@
 
 BEGIN;
 
-CREATE TABLE IF NOT EXISTS public.account_deletion_requests (
+-- Fail closed on unversioned/out-of-band authority state. The historical
+-- cancel RPC is expected to exist and is deliberately replaced below, but the
+-- new table/request RPC must not pre-exist this migration.
+DO $$
+BEGIN
+  IF to_regclass('public.account_deletion_requests') IS NOT NULL THEN
+    RAISE EXCEPTION
+      'account_deletion_requests already exists before its authority migration';
+  END IF;
+
+  IF to_regprocedure(
+      'public.request_account_deletion_for_user(uuid,text,boolean)'
+    ) IS NOT NULL THEN
+    RAISE EXCEPTION
+      'request_account_deletion_for_user already exists before its authority migration';
+  END IF;
+END;
+$$;
+
+CREATE TABLE public.account_deletion_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL UNIQUE,
   status TEXT NOT NULL DEFAULT 'scheduled'
@@ -30,7 +49,7 @@ CREATE TABLE IF NOT EXISTS public.account_deletion_requests (
   )
 );
 
-CREATE INDEX IF NOT EXISTS account_deletion_requests_due_idx
+CREATE INDEX account_deletion_requests_due_idx
   ON public.account_deletion_requests (scheduled_purge_at)
   WHERE status = 'scheduled';
 
@@ -44,7 +63,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.account_deletion_requests T
 COMMENT ON TABLE public.account_deletion_requests IS
   'Authoritative reversible account-deletion request state. Browser roles have no direct access; service_role brokers only.';
 
-CREATE OR REPLACE FUNCTION public.request_account_deletion_for_user(
+CREATE FUNCTION public.request_account_deletion_for_user(
   p_user_id UUID,
   p_reason TEXT DEFAULT NULL,
   p_export_requested BOOLEAN DEFAULT FALSE
@@ -197,13 +216,31 @@ GRANT EXECUTE ON FUNCTION public.cancel_account_deletion_for_user(UUID, TEXT) TO
 DO $$
 DECLARE
   v_privilege TEXT;
+  v_rel_oid OID;
+  v_request_oid OID;
+  v_cancel_oid OID;
+  v_request_security_definer BOOLEAN;
+  v_cancel_security_definer BOOLEAN;
+  v_request_config TEXT[];
+  v_cancel_config TEXT[];
 BEGIN
-  IF to_regclass('public.account_deletion_requests') IS NULL THEN
+  v_rel_oid := to_regclass('public.account_deletion_requests');
+  IF v_rel_oid IS NULL THEN
     RAISE EXCEPTION 'account_deletion_requests was not created';
   END IF;
 
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_class
+    WHERE oid = v_rel_oid
+      AND relrowsecurity
+  ) THEN
+    RAISE EXCEPTION 'RLS is not enabled on account_deletion_requests';
+  END IF;
+
   FOREACH v_privilege IN ARRAY ARRAY[
-    'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'TRUNCATE', 'REFERENCES', 'TRIGGER'
+    'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'TRUNCATE',
+    'REFERENCES', 'TRIGGER', 'MAINTAIN'
   ] LOOP
     IF has_table_privilege('anon', 'public.account_deletion_requests', v_privilege) THEN
       RAISE EXCEPTION 'anon unexpectedly has % on account_deletion_requests', v_privilege;
@@ -220,39 +257,65 @@ BEGIN
     RAISE EXCEPTION 'service_role CRUD grant missing on account_deletion_requests';
   END IF;
 
-  IF has_function_privilege(
-      'anon',
-      'public.request_account_deletion_for_user(uuid,text,boolean)',
-      'EXECUTE'
-    ) OR has_function_privilege(
-      'authenticated',
-      'public.request_account_deletion_for_user(uuid,text,boolean)',
-      'EXECUTE'
-    ) THEN
+  FOREACH v_privilege IN ARRAY ARRAY[
+    'TRUNCATE', 'REFERENCES', 'TRIGGER', 'MAINTAIN'
+  ] LOOP
+    IF has_table_privilege('service_role', 'public.account_deletion_requests', v_privilege) THEN
+      RAISE EXCEPTION 'service_role unexpectedly has % on account_deletion_requests', v_privilege;
+    END IF;
+  END LOOP;
+
+  v_request_oid := to_regprocedure(
+    'public.request_account_deletion_for_user(uuid,text,boolean)'
+  );
+  v_cancel_oid := to_regprocedure(
+    'public.cancel_account_deletion_for_user(uuid,text)'
+  );
+
+  IF v_request_oid IS NULL OR v_cancel_oid IS NULL THEN
+    RAISE EXCEPTION 'deletion request authority function missing after creation';
+  END IF;
+
+  SELECT prosecdef, proconfig
+  INTO v_request_security_definer, v_request_config
+  FROM pg_proc
+  WHERE oid = v_request_oid;
+
+  SELECT prosecdef, proconfig
+  INTO v_cancel_security_definer, v_cancel_config
+  FROM pg_proc
+  WHERE oid = v_cancel_oid;
+
+  IF NOT v_request_security_definer OR NOT v_cancel_security_definer THEN
+    RAISE EXCEPTION 'deletion request authority function is not SECURITY DEFINER';
+  END IF;
+
+  IF NOT v_request_config @> ARRAY[
+      'search_path=pg_catalog, public, pg_temp',
+      'statement_timeout=5s'
+    ]::TEXT[] THEN
+    RAISE EXCEPTION 'request_account_deletion_for_user runtime config drifted';
+  END IF;
+
+  IF NOT v_cancel_config @> ARRAY[
+      'search_path=pg_catalog, public, pg_temp',
+      'statement_timeout=5s'
+    ]::TEXT[] THEN
+    RAISE EXCEPTION 'cancel_account_deletion_for_user runtime config drifted';
+  END IF;
+
+  IF has_function_privilege('anon', v_request_oid, 'EXECUTE')
+     OR has_function_privilege('authenticated', v_request_oid, 'EXECUTE') THEN
     RAISE EXCEPTION 'browser role can execute request_account_deletion_for_user';
   END IF;
 
-  IF has_function_privilege(
-      'anon',
-      'public.cancel_account_deletion_for_user(uuid,text)',
-      'EXECUTE'
-    ) OR has_function_privilege(
-      'authenticated',
-      'public.cancel_account_deletion_for_user(uuid,text)',
-      'EXECUTE'
-    ) THEN
+  IF has_function_privilege('anon', v_cancel_oid, 'EXECUTE')
+     OR has_function_privilege('authenticated', v_cancel_oid, 'EXECUTE') THEN
     RAISE EXCEPTION 'browser role can execute cancel_account_deletion_for_user';
   END IF;
 
-  IF NOT has_function_privilege(
-      'service_role',
-      'public.request_account_deletion_for_user(uuid,text,boolean)',
-      'EXECUTE'
-    ) OR NOT has_function_privilege(
-      'service_role',
-      'public.cancel_account_deletion_for_user(uuid,text)',
-      'EXECUTE'
-    ) THEN
+  IF NOT has_function_privilege('service_role', v_request_oid, 'EXECUTE')
+     OR NOT has_function_privilege('service_role', v_cancel_oid, 'EXECUTE') THEN
     RAISE EXCEPTION 'service_role execute grant missing for deletion request authority';
   END IF;
 END;
