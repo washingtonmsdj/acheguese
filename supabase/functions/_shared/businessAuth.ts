@@ -1,6 +1,7 @@
 import { type SupabaseClient as SupabaseClientBase } from "https://esm.sh/@supabase/supabase-js@2";
 // deno-lint-ignore no-explicit-any
 type SupabaseClient = SupabaseClientBase<any, any, any>;
+import { requireOperationalAccount } from "./accountOperational.ts";
 import { getAllSecurityHeaders } from "./security.ts";
 
 export function jsonSecurityResponse(
@@ -54,6 +55,14 @@ export async function requireAuthenticatedUser(
       req,
     );
   }
+
+  const accountOperationalError = await requireOperationalAccount(
+    supabase,
+    user.id,
+    req,
+    "POST, OPTIONS",
+  );
+  if (accountOperationalError) return accountOperationalError;
 
   return { user: { id: user.id } };
 }
