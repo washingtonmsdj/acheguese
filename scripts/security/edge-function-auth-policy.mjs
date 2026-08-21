@@ -1,4 +1,9 @@
 import { existsSync, readFileSync } from 'fs';
+import { join } from 'node:path';
+import {
+  loadAccountOperationalEdgePolicy,
+  validateAccountOperationalEdgeCoverage,
+} from './account-operational-edge-policy.mjs';
 
 export const EDGE_FUNCTION_NO_JWT_POLICY_KINDS = new Set([
   'cron-secret',
@@ -26,6 +31,15 @@ export const EDGE_FUNCTION_SERVICE_ROLE_POLICY_KINDS = new Set([
 ]);
 
 const EDGE_FUNCTION_SERVICE_ROLE_RISK_LEVELS = new Set(['Critical', 'High']);
+const ACCOUNT_OPERATIONAL_POLICY_PATH = join(
+  process.cwd(),
+  'docs/09-reference/governance/security/ACCOUNT_OPERATIONAL_EDGE_POLICY.json',
+);
+const CANONICAL_ACCOUNT_OPERATIONAL_MARKERS = [
+  'privacy-rpc',
+  'user-export-data',
+  'user-delete-account',
+];
 
 export function loadEdgeFunctionAuthPolicy(policyPath) {
   if (!existsSync(policyPath)) {
@@ -174,7 +188,45 @@ export function validateEdgeFunctionServiceRoleCoverage({
     });
   }
 
+  if (shouldValidateAccountOperationalBoundary(authPolicy)) {
+    if (!existsSync(ACCOUNT_OPERATIONAL_POLICY_PATH)) {
+      issues.push({
+        severity: 'CRITICO',
+        check: 'Account operational Edge policy ausente',
+        file: 'docs/09-reference/governance/security/ACCOUNT_OPERATIONAL_EDGE_POLICY.json',
+        message: 'O auth policy canonico exige o boundary de pending deletion, mas a policy operacional nao existe',
+      });
+    } else {
+      try {
+        const operationalPolicy = loadAccountOperationalEdgePolicy(
+          ACCOUNT_OPERATIONAL_POLICY_PATH,
+        );
+        const operationalResult = validateAccountOperationalEdgeCoverage({
+          authPolicy,
+          operationalPolicy,
+          serviceRoleFunctionContents,
+          fileForFunction,
+        });
+        issues.push(...operationalResult.issues);
+      } catch (error) {
+        issues.push({
+          severity: 'CRITICO',
+          check: 'Account operational Edge policy invalida',
+          file: 'docs/09-reference/governance/security/ACCOUNT_OPERATIONAL_EDGE_POLICY.json',
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+  }
+
   return issues;
+}
+
+function shouldValidateAccountOperationalBoundary(authPolicy) {
+  if (!isPlainObject(authPolicy?.serviceRoleAllowlist)) return false;
+  return CANONICAL_ACCOUNT_OPERATIONAL_MARKERS.every(
+    (functionName) => Boolean(authPolicy.serviceRoleAllowlist[functionName]),
+  );
 }
 
 export function compileRegexList(patterns, fieldName, options = {}) {
