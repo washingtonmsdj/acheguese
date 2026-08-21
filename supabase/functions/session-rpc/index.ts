@@ -12,8 +12,8 @@ import {
   auditLog,
   extractBearerToken,
   getAllSecurityHeaders,
-  getAuditInfo,
   getRequiredEnv,
+  getTrustedClientIp,
   jsonResponse,
   rateLimitMiddleware,
   readJsonBody,
@@ -26,9 +26,7 @@ const ACTIONS = {
   getActiveProfile: true,
   switchActiveProfile: true,
   checkMfaRequired: true,
-  revokeSession: true,
   revokeAllSessions: true,
-  updateSessionActivity: true,
 } as const;
 
 type SessionRpcAction = keyof typeof ACTIONS;
@@ -54,6 +52,13 @@ class RequestValidationError extends Error {
 
 function responseHeaders(req: Request): Record<string, string> {
   return getAllSecurityHeaders(ALLOWED_METHODS, req);
+}
+
+function auditInfo(req: Request) {
+  return {
+    ip: getTrustedClientIp(req) ?? undefined,
+    userAgent: req.headers.get("user-agent") ?? "unknown",
+  };
 }
 
 function requireUuid(value: unknown, field: string): string {
@@ -123,73 +128,29 @@ function normalizeReason(value: unknown, fallback: string): string {
   return value;
 }
 
-async function handleRevokeSession(
-  supabaseAdmin: SupabaseClient,
-  userId: string,
-  params: Record<string, unknown>,
-) {
-  const sessionId = requireUuid(params.sessionId ?? params.session_id, "sessionId");
-  const reason = normalizeReason(params.reason, "Revogado pelo usuario");
-  const { data, error } = await supabaseAdmin
-    .from("user_sessions")
-    .update({
-      is_active: false,
-      revoked_at: new Date().toISOString(),
-      revoked_by: userId,
-      revoked_reason: reason,
-    })
-    .eq("id", sessionId)
-    .eq("user_id", userId)
-    .eq("is_active", true)
-    .select("id");
-
-  if (error) throw error;
-  return { revoked: Array.isArray(data) && data.length > 0 };
-}
-
 async function handleRevokeAllSessions(
   supabaseAdmin: SupabaseClient,
-  userId: string,
   token: string,
   params: Record<string, unknown>,
 ) {
   const exceptCurrent = params.exceptCurrent !== false && params.except_current !== false;
-  const reason = normalizeReason(params.reason, "Logout em todos os dispositivos");
-  let query = supabaseAdmin
-    .from("user_sessions")
-    .update({
-      is_active: false,
-      revoked_at: new Date().toISOString(),
-      revoked_by: userId,
-      revoked_reason: reason,
-    })
-    .eq("user_id", userId)
-    .eq("is_active", true);
+  normalizeReason(params.reason, "Logout em todos os dispositivos");
 
-  if (exceptCurrent) {
-    query = query.neq("session_token", token);
-  }
-
-  const { data, error } = await query.select("id");
+  // Supabase Auth is the authoritative session store. The legacy
+  // public.user_sessions table is not populated by the current sign-in flow,
+  // so mutating it does not revoke real refresh tokens.
+  const scope = exceptCurrent ? "others" : "global";
+  const { error } = await supabaseAdmin.auth.admin.signOut(token, scope);
   if (error) throw error;
-  return { revokedCount: Array.isArray(data) ? data.length : 0 };
-}
 
-async function handleUpdateSessionActivity(
-  supabaseAdmin: SupabaseClient,
-  userId: string,
-  token: string,
-) {
-  const { data, error } = await supabaseAdmin
-    .from("user_sessions")
-    .update({ last_activity_at: new Date().toISOString() })
-    .eq("user_id", userId)
-    .eq("session_token", token)
-    .eq("is_active", true)
-    .select("id");
-
-  if (error) throw error;
-  return { updated: Array.isArray(data) && data.length > 0 };
+  // Access JWTs already issued can remain valid until exp. The Auth logout
+  // revokes the affected refresh-token/session chain; callers requesting
+  // global logout must also clear the current client session locally.
+  return {
+    revoked: true,
+    scope,
+    requiresLocalSignOut: scope === "global",
+  };
 }
 
 async function dispatchAction(
@@ -205,12 +166,8 @@ async function dispatchAction(
       return handleSwitchActiveProfile(supabaseAdmin, auth.userId, params);
     case "checkMfaRequired":
       return handleCheckMfaRequired(supabaseAdmin, auth.userId);
-    case "revokeSession":
-      return handleRevokeSession(supabaseAdmin, auth.userId, params);
     case "revokeAllSessions":
-      return handleRevokeAllSessions(supabaseAdmin, auth.userId, auth.token, params);
-    case "updateSessionActivity":
-      return handleUpdateSessionActivity(supabaseAdmin, auth.userId, auth.token);
+      return handleRevokeAllSessions(supabaseAdmin, auth.token, params);
   }
 }
 
@@ -260,7 +217,7 @@ serve(async (req: Request) => {
       resource: "session-rpc",
       status: "success",
       details: { action: safeAction },
-      ...getAuditInfo(req),
+      ...auditInfo(req),
     });
 
     return jsonResponse({ data }, 200, ALLOWED_METHODS, req);
@@ -277,7 +234,7 @@ serve(async (req: Request) => {
       resource: "session-rpc",
       status: "failure",
       details: { action: safeAction, reason: "session_rpc_failed" },
-      ...getAuditInfo(req),
+      ...auditInfo(req),
     });
     return jsonResponse({ error: "Internal server error" }, 500, ALLOWED_METHODS, req);
   }
