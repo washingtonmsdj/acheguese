@@ -35,6 +35,8 @@ const CONSENT_TYPES = new Set([
 const SAFE_VERSION_REGEX = /^[A-Za-z0-9_.:-]{1,32}$/;
 const ACTIONS = {
   recordConsent: true,
+  getDeletionStatus: true,
+  requestAccountDeletion: true,
   cancelAccountDeletion: true,
 } as const;
 
@@ -55,6 +57,16 @@ class RequestValidationError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "RequestValidationError";
+  }
+}
+
+class PrivacyRpcHttpError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "PrivacyRpcHttpError";
+    this.status = status;
   }
 }
 
@@ -182,6 +194,79 @@ async function handleRecordConsent(
   return { consentId: data as string };
 }
 
+async function handleGetDeletionStatus(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+) {
+  const { data, error } = await supabaseAdmin.rpc(
+    "get_account_deletion_status_for_user",
+    { p_user_id: userId },
+  );
+
+  if (error) throw error;
+  return data ?? null;
+}
+
+function mapDeletionRequestError(error: unknown): never {
+  const message = error instanceof Error
+    ? error.message
+    : typeof error === "object" && error !== null && "message" in error
+      ? String((error as { message?: unknown }).message ?? "")
+      : String(error);
+
+  if (message.includes("ACCOUNT_DELETION_ADMIN_REQUIRES_DPO")) {
+    throw new PrivacyRpcHttpError(
+      "Contas administrativas devem solicitar exclusao ao DPO.",
+      403,
+    );
+  }
+  if (message.includes("ACCOUNT_DELETION_ACTIVE_BUSINESS")) {
+    throw new PrivacyRpcHttpError(
+      "Transfira ou encerre os negocios vinculados antes de excluir a conta.",
+      409,
+    );
+  }
+  if (message.includes("ACCOUNT_DELETION_ACTIVE_RIDE")) {
+    throw new PrivacyRpcHttpError(
+      "Conclua ou cancele as corridas e entregas em andamento antes de excluir a conta.",
+      409,
+    );
+  }
+  if (message.includes("ACCOUNT_DELETION_ACTIVE_ORDER")) {
+    throw new PrivacyRpcHttpError(
+      "Conclua os pedidos e pendencias financeiras antes de excluir a conta.",
+      409,
+    );
+  }
+
+  throw error;
+}
+
+async function handleRequestAccountDeletion(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+  params: Record<string, unknown>,
+) {
+  const reason = normalizeOptionalString(params.reason, "reason", 1000);
+  const exportRequested = params.exportRequested === undefined
+    ? false
+    : requireBoolean(params.exportRequested, "exportRequested");
+
+  const { data, error } = await supabaseAdmin.rpc(
+    "request_account_deletion_for_user",
+    {
+      p_user_id: userId,
+      p_reason: reason,
+      p_export_requested: exportRequested,
+    },
+  );
+
+  if (error) mapDeletionRequestError(error);
+  if (!data) throw new Error("Deletion request authority returned no data");
+
+  return data;
+}
+
 async function handleCancelAccountDeletion(
   supabaseAdmin: SupabaseClient,
   userId: string,
@@ -195,28 +280,7 @@ async function handleCancelAccountDeletion(
   );
 
   if (error) throw error;
-  if (data !== true) return { cancelled: false };
-
-  const { data: authData, error: authReadError } =
-    await supabaseAdmin.auth.admin.getUserById(userId);
-  if (authReadError || !authData.user) {
-    throw authReadError ?? new Error("User not found after cancellation");
-  }
-
-  const userMetadata = { ...authData.user.user_metadata };
-  delete userMetadata.account_status;
-  delete userMetadata.deletion_requested_at;
-  delete userMetadata.scheduled_purge_at;
-  delete userMetadata.deletion_reason;
-
-  const { error: authUpdateError } =
-    await supabaseAdmin.auth.admin.updateUserById(userId, {
-      email_confirm: true,
-      user_metadata: userMetadata,
-    });
-  if (authUpdateError) throw authUpdateError;
-
-  return { cancelled: true };
+  return { cancelled: data === true };
 }
 
 async function dispatchAction(
@@ -229,6 +293,10 @@ async function dispatchAction(
   switch (action) {
     case "recordConsent":
       return handleRecordConsent(req, supabaseAdmin, userId, params);
+    case "getDeletionStatus":
+      return handleGetDeletionStatus(supabaseAdmin, userId);
+    case "requestAccountDeletion":
+      return handleRequestAccountDeletion(supabaseAdmin, userId, params);
     case "cancelAccountDeletion":
       return handleCancelAccountDeletion(supabaseAdmin, userId);
   }
@@ -287,6 +355,9 @@ serve(async (req: Request) => {
   } catch (error: unknown) {
     if (error instanceof RequestValidationError) {
       return jsonResponse({ error: error.message }, 400, ALLOWED_METHODS, req);
+    }
+    if (error instanceof PrivacyRpcHttpError) {
+      return jsonResponse({ error: error.message }, error.status, ALLOWED_METHODS, req);
     }
 
     console.error("[privacy-rpc]", error);
