@@ -966,7 +966,7 @@ async function collectExport(
     "created_at",
   );
   const pushDevices = await requireUserRows(
-    "push_devices",
+    "push_credentials",
     supabaseAdmin,
     "push_subscriptions",
     "device_name,user_agent,is_active,created_at,last_used_at",
@@ -975,14 +975,27 @@ async function collectExport(
     "created_at",
   );
 
+  const authUser = mapAuthUser(
+    authData.user as unknown as Record<string, unknown>,
+  );
+  const {
+    identities: authIdentities,
+    factors: authFactors,
+    ...account
+  } = authUser;
+
   const sections: JsonRecord = {
-    account: mapAuthUser(authData.user as unknown as Record<string, unknown>),
+    account,
+    auth_identities: authIdentities,
+    auth_factors: authFactors,
     profiles: {
       profiles,
       personal_social_profiles: personalSocialProfiles,
     },
-    profile_memberships: profileMembers,
-    active_profile_selection: activeProfiles,
+    profile_memberships: {
+      memberships: profileMembers,
+      active_profile_selection: activeProfiles,
+    },
     roles,
     residences: { residences, addresses },
     privacy_preferences: {
@@ -1072,7 +1085,7 @@ async function collectExport(
       profile_audit: profileAudit,
     },
     emergency_contacts: emergencyContacts,
-    push_devices: pushDevices,
+    push_credentials: pushDevices,
   };
 
   const redactions = [
