@@ -12,10 +12,13 @@ const config = readFileSync(resolve(root, "supabase/config.toml"), "utf8");
 const vercelConfig = readFileSync(resolve(root, "vercel.json"), "utf8");
 
 describe("Supabase Edge admin canary deploy guard", () => {
-  it("allows only the reconciled admin-list-users canary", () => {
+  it("allows only the two reconciled administrative canaries", () => {
     expect(script).toContain("'admin-list-users': Object.freeze({");
+    expect(script).toContain("'admin-get-user': Object.freeze({");
+    expect(script).toContain("<admin-list-users|admin-get-user>");
     expect(script).toContain("Funcao canario nao permitida");
-    expect(script).not.toContain("admin-get-user': Object.freeze({");
+    expect(script).not.toContain("'admin-create-user': Object.freeze({");
+    expect(script).not.toContain("'admin-suspend-profile': Object.freeze({");
   });
 
   it("deploys source-derived code only from an exact clean Git revision", () => {
@@ -32,24 +35,43 @@ describe("Supabase Edge admin canary deploy guard", () => {
     expect(config).toContain('project_id = "xhdowzacfujckjelqhtd"');
   });
 
-  it("keeps JWT verification fail-closed", () => {
+  it("keeps JWT verification fail-closed for both canaries", () => {
     expect(script).toContain("assertJwtConfig");
     expect(script).toContain("verifyJwt: true");
     expect(config).toMatch(
       /\[functions\.admin-list-users\][\s\S]*?verify_jwt\s*=\s*true/,
+    );
+    expect(config).toMatch(
+      /\[functions\.admin-get-user\][\s\S]*?verify_jwt\s*=\s*true/,
     );
     expect(script).toContain("Nunca usa --prune nem --no-verify-jwt");
     expect(script).not.toMatch(/\['functions', 'deploy'[\s\S]*'--no-verify-jwt'/);
     expect(script).not.toMatch(/\['functions', 'deploy'[\s\S]*'--prune'/);
   });
 
-  it("requires the reconciled RPC and hardened adminAuth contracts", () => {
+  it("requires the reconciled list RPC and hardened shared adminAuth contracts", () => {
     expect(script).toContain("admin_list_user_account_contexts");
     expect(script).toContain("admin-list-users voltou a paginar profiles diretamente");
     expect(script).toContain(".select('role_enum, expires_at')");
     expect(script).toContain(".eq('is_active', true)");
     expect(script).toContain(".is('revoked_at', null)");
     expect(script).toContain("expiresAt > nowMs");
+  });
+
+  it("requires admin-get-user authentication, bounded input and current role display", () => {
+    for (const marker of [
+      "const auth = await requireAdmin(req);",
+      "readJsonBody<GetUserBody>(req, {",
+      "maxBytes: 4096",
+      "validateBody<GetUserBody>(rawBody.data, getUserSchema)",
+      ".auth.admin.getUserById(userId)",
+      "function hasCurrentRoleValidity",
+      "Date.parse(role.expires_at)",
+      "Number.isFinite(expiresAtMs) && expiresAtMs > nowMs",
+      ".filter((role) => hasCurrentRoleValidity(role, nowMs))",
+    ]) {
+      expect(script).toContain(marker);
+    }
   });
 
   it("uses the official API-based single-function deploy path", () => {
@@ -59,9 +81,10 @@ describe("Supabase Edge admin canary deploy guard", () => {
     expect(script).toContain("SUPABASE_ACCESS_TOKEN: accessToken");
   });
 
-  it("hashes the exact source bundle before any apply", () => {
+  it("hashes the exact source bundles before any apply", () => {
     for (const path of [
       "supabase/functions/admin-list-users/index.ts",
+      "supabase/functions/admin-get-user/index.ts",
       "supabase/functions/_shared/adminAuth.ts",
       "supabase/functions/_shared/security.ts",
       "supabase/functions/_shared/validation.ts",
