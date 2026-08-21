@@ -9,6 +9,7 @@ import {
   isAllowedImageReference,
   isAllowedTryOnProductImageReference,
 } from "../_ai/requestGuards.ts";
+import { requireOperationalAccount } from "../_shared/accountOperational.ts";
 import {
   getAllSecurityHeaders,
   isValidUUID,
@@ -322,6 +323,13 @@ Deno.serve(async (req) => {
     }
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+    const accountOperationalError = await requireOperationalAccount(
+      admin,
+      user.id,
+      req,
+      "POST, OPTIONS",
+    );
+    if (accountOperationalError) return accountOperationalError;
 
     const { data: gen, error: genError } = await admin
       .from("tryon_generations")
