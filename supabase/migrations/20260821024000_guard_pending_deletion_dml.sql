@@ -9,6 +9,10 @@
 -- statement, not per row), applies to every application-owned base table in
 -- public, and deliberately excludes extension-owned relations such as PostGIS
 -- spatial_ref_sys.
+--
+-- Future migrations that CREATE TABLE public.* must call
+-- private.ensure_pending_deletion_write_guards() after creating the table. A
+-- repository security test enforces that convention.
 
 BEGIN;
 
@@ -24,6 +28,10 @@ BEGIN
 
   IF to_regprocedure('private.guard_pending_deletion_write()') IS NOT NULL THEN
     RAISE EXCEPTION 'guard_pending_deletion_write already exists out-of-band';
+  END IF;
+
+  IF to_regprocedure('private.ensure_pending_deletion_write_guards()') IS NOT NULL THEN
+    RAISE EXCEPTION 'ensure_pending_deletion_write_guards already exists out-of-band';
   END IF;
 
   IF EXISTS (
@@ -80,9 +88,16 @@ REVOKE ALL ON FUNCTION private.guard_pending_deletion_write() FROM PUBLIC;
 REVOKE ALL ON FUNCTION private.guard_pending_deletion_write() FROM anon;
 REVOKE ALL ON FUNCTION private.guard_pending_deletion_write() FROM authenticated;
 
-DO $$
+CREATE FUNCTION private.ensure_pending_deletion_write_guards()
+RETURNS INTEGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public, private, pg_temp
+SET statement_timeout = '30s'
+AS $$
 DECLARE
   v_table RECORD;
+  v_created INTEGER := 0;
 BEGIN
   FOR v_table IN
     SELECT c.oid, c.relname
@@ -101,34 +116,54 @@ BEGIN
       )
     ORDER BY c.relname
   LOOP
-    EXECUTE format(
-      'CREATE TRIGGER account_operational_write_guard BEFORE INSERT OR UPDATE OR DELETE ON public.%I FOR EACH STATEMENT EXECUTE FUNCTION private.guard_pending_deletion_write()',
-      v_table.relname
-    );
+    IF NOT EXISTS (
+      SELECT 1
+      FROM pg_trigger trigger_row
+      WHERE trigger_row.tgrelid = v_table.oid
+        AND trigger_row.tgname = 'account_operational_write_guard'
+        AND NOT trigger_row.tgisinternal
+    ) THEN
+      EXECUTE format(
+        'CREATE TRIGGER account_operational_write_guard BEFORE INSERT OR UPDATE OR DELETE ON public.%I FOR EACH STATEMENT EXECUTE FUNCTION private.guard_pending_deletion_write()',
+        v_table.relname
+      );
+      v_created := v_created + 1;
+    END IF;
   END LOOP;
+
+  RETURN v_created;
 END;
 $$;
 
+REVOKE ALL ON FUNCTION private.ensure_pending_deletion_write_guards() FROM PUBLIC;
+REVOKE ALL ON FUNCTION private.ensure_pending_deletion_write_guards() FROM anon;
+REVOKE ALL ON FUNCTION private.ensure_pending_deletion_write_guards() FROM authenticated;
+
+SELECT private.ensure_pending_deletion_write_guards();
+
 DO $$
 DECLARE
-  v_function_oid OID := to_regprocedure('private.guard_pending_deletion_write()');
+  v_guard_oid OID := to_regprocedure('private.guard_pending_deletion_write()');
+  v_ensure_oid OID := to_regprocedure('private.ensure_pending_deletion_write_guards()');
   v_expected_tables INTEGER;
   v_guarded_tables INTEGER;
   v_bad_trigger_count INTEGER;
 BEGIN
-  IF v_function_oid IS NULL THEN
+  IF v_guard_oid IS NULL OR v_ensure_oid IS NULL THEN
     RAISE EXCEPTION 'pending deletion write guard function missing after creation';
   END IF;
 
-  IF has_function_privilege('anon', v_function_oid, 'EXECUTE')
-     OR has_function_privilege('authenticated', v_function_oid, 'EXECUTE') THEN
-    RAISE EXCEPTION 'browser role can execute pending deletion trigger function directly';
+  IF has_function_privilege('anon', v_guard_oid, 'EXECUTE')
+     OR has_function_privilege('authenticated', v_guard_oid, 'EXECUTE')
+     OR has_function_privilege('anon', v_ensure_oid, 'EXECUTE')
+     OR has_function_privilege('authenticated', v_ensure_oid, 'EXECUTE') THEN
+    RAISE EXCEPTION 'browser role can execute pending deletion guard internals directly';
   END IF;
 
   IF NOT EXISTS (
     SELECT 1
     FROM pg_proc function_row
-    WHERE function_row.oid = v_function_oid
+    WHERE function_row.oid = v_guard_oid
       AND function_row.prosecdef
       AND function_row.proconfig @> ARRAY[
         'search_path=pg_catalog, public, private, pg_temp',
@@ -136,6 +171,19 @@ BEGIN
       ]::TEXT[]
   ) THEN
     RAISE EXCEPTION 'pending deletion trigger function runtime config drifted';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_proc function_row
+    WHERE function_row.oid = v_ensure_oid
+      AND function_row.prosecdef
+      AND function_row.proconfig @> ARRAY[
+        'search_path=pg_catalog, public, private, pg_temp',
+        'statement_timeout=30s'
+      ]::TEXT[]
+  ) THEN
+    RAISE EXCEPTION 'pending deletion guard installer runtime config drifted';
   END IF;
 
   SELECT COUNT(*)
@@ -187,7 +235,7 @@ BEGIN
       OR (trigger_row.tgtype & 8) = 0
       OR (trigger_row.tgtype & 16) = 0
       OR trigger_row.tgenabled <> 'O'
-      OR trigger_row.tgfoid <> v_function_oid
+      OR trigger_row.tgfoid <> v_guard_oid
     );
 
   IF v_bad_trigger_count <> 0 THEN
