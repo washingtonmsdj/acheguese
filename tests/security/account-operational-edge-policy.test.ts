@@ -55,12 +55,13 @@ describe("account operational Edge boundary", () => {
       .sort();
     expect(guarded.length).toBeGreaterThan(0);
 
+    const guardPattern = new RegExp(operationalPolicy.guardPattern);
     for (const functionName of guarded) {
       const source = readFileSync(
         join(root, "supabase/functions", functionName, "index.ts"),
         "utf8",
       );
-      expect(source).toContain("requireOperationalAccount");
+      expect(guardPattern.test(source)).toBe(true);
     }
   });
 
@@ -74,7 +75,7 @@ describe("account operational Edge boundary", () => {
     ]);
   });
 
-  it("uses the shared fail-closed helper as the only operational-state Edge implementation", () => {
+  it("uses the shared fail-closed helper as the only operational-state implementation", () => {
     const helper = readFileSync(
       join(root, "supabase/functions/_shared/accountOperational.ts"),
       "utf8",
@@ -83,6 +84,21 @@ describe("account operational Edge boundary", () => {
     expect(helper).toContain('.select("status")');
     expect(helper).toContain("ACCOUNT_PENDING_DELETION_READ_ONLY");
     expect(helper).toContain("Account state unavailable");
+
+    const businessAuth = readFileSync(
+      join(root, "supabase/functions/_shared/businessAuth.ts"),
+      "utf8",
+    );
+    expect(businessAuth).toContain("requireOperationalAccount");
+    expect(businessAuth.indexOf("requireOperationalAccount(")).toBeGreaterThan(
+      businessAuth.indexOf("supabase.auth.getUser(token)"),
+    );
+
+    const emergencyEmail = readFileSync(
+      join(root, "supabase/functions/send-emergency-email/index.ts"),
+      "utf8",
+    );
+    expect(emergencyEmail).toContain("requireAuthenticatedUser(req, supabase)");
 
     const sharedFiles = readdirSync(join(root, "supabase/functions/_shared"));
     expect(sharedFiles.filter((name) => name === "accountOperational.ts")).toEqual([
