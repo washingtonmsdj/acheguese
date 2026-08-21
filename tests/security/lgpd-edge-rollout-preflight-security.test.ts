@@ -45,21 +45,31 @@ describe('LGPD Edge rollout preflight', () => {
     }
   });
 
-  it('fails closed while export uses legacy ownership/session keys', () => {
+  it('keeps rewritten export blocked by certification even after legacy markers are removed', () => {
     const preflight = readFileSync(PREFLIGHT, 'utf8');
     const handler = readFileSync(EXPORT_HANDLER, 'utf8');
 
-    const provenStaleMarkers = [
+    const removedLegacyMarkers = [
       ".eq('owner_id', userId)",
       ".eq('passenger_id', userId)",
       ".from('user_sessions')",
       ".eq('organizer_id', userId)",
     ];
 
-    for (const marker of provenStaleMarkers) {
-      expect(handler).toContain(marker);
+    for (const marker of removedLegacyMarkers) {
+      expect(handler).not.toContain(marker);
       expect(preflight).toContain(marker);
     }
+
+    expect(handler).toContain(
+      'const LGPD_EXPORT_MATRIX_IMPLEMENTATION_COMPLETE = false;',
+    );
+    expect(handler).not.toContain(
+      'const LGPD_EXPORT_MATRIX_IMPLEMENTATION_COMPLETE = true;',
+    );
+    expect(preflight).toContain(
+      "'const LGPD_EXPORT_MATRIX_IMPLEMENTATION_COMPLETE = true;'",
+    );
   });
 
   it('requires the canonical export matrix and explicit implementation certification', () => {
