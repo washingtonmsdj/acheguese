@@ -1,0 +1,176 @@
+{
+  "schemaVersion": "lgpd-purge-policy/v1",
+  "authority": "account-deletion-irreversible-phase",
+  "projectRef": "xhdowzacfujckjelqhtd",
+  "catalogSnapshotDate": "2026-08-21",
+  "rolloutReady": false,
+  "rules": {
+    "authUserHardDeleteMustBeLast": true,
+    "storageCleanupMustPrecedeAuthDelete": true,
+    "storageOwnershipColumn": "owner_id",
+    "deprecatedStorageOwnershipColumn": "owner",
+    "authDeleteMethod": "supabase.auth.admin.deleteUser(userId)",
+    "existingJwtMayRemainValidUntilExp": true,
+    "unknownUserReferenceBehavior": "block",
+    "requiredQueryFailure": "fail-closed",
+    "partialFailureBehavior": "persist-failed-state-and-require-idempotent-retry",
+    "directAuthDeleteFromBrowser": false
+  },
+  "remoteFoundation": {
+    "accountDeletionRequestsExists": false,
+    "requestRpcExists": false,
+    "cancelRpcExists": true,
+    "pgCronInstalled": true,
+    "pgNetInstalled": true
+  },
+  "authUserForeignKeyBlockers": {
+    "strategy": "must-resolve-before-auth-delete",
+    "reason": "NO ACTION foreign keys can prevent auth.users deletion even though every observed column is nullable",
+    "columns": [
+      "public.admin_users.granted_by",
+      "public.commercial_catalog_version.created_by",
+      "public.education_lead_events.actor_user_id",
+      "public.education_leads.owner_user_id",
+      "public.location_versions.created_by",
+      "public.module_rollouts.created_by",
+      "public.module_rollouts.updated_by",
+      "public.neighborhood_boundaries.created_by",
+      "public.pii_access_log.accessed_by",
+      "public.pii_access_log.approved_by",
+      "public.profile_audit_log.performed_by",
+      "public.profile_members.invited_by",
+      "public.session_anomalies.resolved_by",
+      "public.site_settings.updated_by",
+      "public.territory_change_events.processed_by",
+      "public.tourist_points.updated_by",
+      "public.user_consents.granted_by",
+      "public.user_consents.revoked_by",
+      "public.user_mfa_status.exemption_granted_by",
+      "public.user_sessions.revoked_by"
+    ]
+  },
+  "nonForeignKeyUserIdentifiers": {
+    "strategy": "explicit-domain-policy-required",
+    "reason": "these base-table user-like columns do not reference auth.users and therefore are not cleaned automatically by auth deletion",
+    "columns": [
+      {
+        "column": "private.alpha_access_audit_log.actor_user_id",
+        "nullable": true,
+        "classification": "retention-decision-required"
+      },
+      {
+        "column": "private.alpha_access_audit_log.subject_user_id",
+        "nullable": true,
+        "classification": "retention-decision-required"
+      },
+      {
+        "column": "private.business_favorites_audit_log.actor_user_id",
+        "nullable": true,
+        "classification": "retention-decision-required"
+      },
+      {
+        "column": "private.business_favorites_audit_log.owner_user_id",
+        "nullable": false,
+        "classification": "retention-decision-required"
+      },
+      {
+        "column": "private.entity_contact_audit_log.actor_user_id",
+        "nullable": false,
+        "classification": "retention-decision-required"
+      },
+      {
+        "column": "private.messaging_trust_audit_log.actor_user_id",
+        "nullable": true,
+        "classification": "retention-decision-required"
+      },
+      {
+        "column": "private.notification_preferences_audit_log.actor_user_id",
+        "nullable": true,
+        "classification": "retention-decision-required"
+      },
+      {
+        "column": "private.notification_preferences_audit_log.user_id",
+        "nullable": false,
+        "classification": "retention-decision-required"
+      },
+      {
+        "column": "private.professional_credentials_audit_log.actor_user_id",
+        "nullable": false,
+        "classification": "retention-decision-required"
+      },
+      {
+        "column": "private.sensitive_report_audit_log.actor_user_id",
+        "nullable": true,
+        "classification": "retention-decision-required"
+      },
+      {
+        "column": "public.ai_image_generations.user_id",
+        "nullable": false,
+        "classification": "explicit-subject-cleanup-required"
+      },
+      {
+        "column": "public.ai_moderation_log.user_id",
+        "nullable": true,
+        "classification": "retention-decision-required"
+      },
+      {
+        "column": "public.ai_rate_limits.user_id",
+        "nullable": false,
+        "classification": "explicit-subject-cleanup-required"
+      },
+      {
+        "column": "public.ai_usage_log.user_id",
+        "nullable": true,
+        "classification": "retention-decision-required"
+      },
+      {
+        "column": "public.classified_reports.reporter_id",
+        "nullable": false,
+        "classification": "retention-decision-required"
+      },
+      {
+        "column": "public.tryon_generations.user_id",
+        "nullable": false,
+        "classification": "explicit-subject-cleanup-required"
+      }
+    ]
+  },
+  "unresolved": [
+    {
+      "id": "PURGE-001",
+      "severity": "critical",
+      "reason": "define delete/nullify/anonymize behavior for every NO ACTION auth.users reference before hard delete"
+    },
+    {
+      "id": "PURGE-002",
+      "severity": "critical",
+      "reason": "define retention/anonymization behavior for every user-like identifier without auth.users FK"
+    },
+    {
+      "id": "PURGE-003",
+      "severity": "critical",
+      "reason": "define post-completion retention for public.account_deletion_requests.user_id so the deletion authority does not silently retain a raw subject identifier forever"
+    },
+    {
+      "id": "PURGE-004",
+      "severity": "critical",
+      "reason": "implement bounded Storage cleanup by storage.objects.owner_id before Auth deletion"
+    },
+    {
+      "id": "PURGE-005",
+      "severity": "critical",
+      "reason": "implement claim/lock, irreversible worker, idempotent retries and compensation for partial purge failure"
+    },
+    {
+      "id": "PURGE-006",
+      "severity": "critical",
+      "reason": "certify non-production request-to-expiry-to-purge and partial-failure recovery before enabling scheduler"
+    }
+  ],
+  "notes": [
+    "This file is a technical purge authority inventory, not legal advice or a final statutory retention schedule.",
+    "CASCADE and SET NULL foreign keys are not themselves sufficient proof that all personal data in the affected row has been deleted or anonymized.",
+    "The worker must fail closed when catalog drift introduces an unclassified user reference.",
+    "No cron job, Edge deployment or database mutation is authorized while rolloutReady is false."
+  ]
+}
