@@ -10,6 +10,13 @@ const migration = readFileSync(
   ),
   "utf8",
 );
+const dmlGuardMigration = readFileSync(
+  join(
+    root,
+    "supabase/migrations/20260821024000_guard_pending_deletion_dml.sql",
+  ),
+  "utf8",
+);
 const privacyRpc = readFileSync(
   join(root, "supabase/functions/privacy-rpc/index.ts"),
   "utf8",
@@ -48,9 +55,15 @@ describe("LGPD pending deletion operational boundary", () => {
     expect(migration).toContain(
       "get_account_deletion_status_for_user already exists out-of-band",
     );
+    expect(dmlGuardMigration).toContain(
+      "IF to_regclass('public.account_deletion_requests') IS NULL THEN",
+    );
+    expect(dmlGuardMigration).toContain(
+      "IF to_regprocedure('private.auth_account_operational()') IS NULL THEN",
+    );
   });
 
-  it("blocks pending accounts through the central profile authorization choke points", () => {
+  it("blocks pending accounts through profile authorization choke points as defense in depth", () => {
     expect(migration).toContain(
       "CREATE FUNCTION private.auth_account_operational()",
     );
@@ -73,9 +86,59 @@ describe("LGPD pending deletion operational boundary", () => {
     ).toBeGreaterThanOrEqual(10);
   });
 
-  it("keeps the account-level helper and deletion authority off browser roles", () => {
+  it("adds a statement-level DML guard across every application-owned public base table", () => {
+    expect(dmlGuardMigration).toContain(
+      "CREATE FUNCTION private.guard_pending_deletion_write()",
+    );
+    expect(dmlGuardMigration).toContain(
+      "v_role TEXT := COALESCE(auth.role(), '')",
+    );
+    expect(dmlGuardMigration).toContain("v_user_id UUID := auth.uid()");
+    expect(dmlGuardMigration).toContain("IF v_role <> 'authenticated' THEN");
+    expect(dmlGuardMigration).toContain("AUTHENTICATED_USER_CONTEXT_MISSING");
+    expect(dmlGuardMigration).toContain("ACCOUNT_PENDING_DELETION_READ_ONLY");
+    expect(dmlGuardMigration).toContain(
+      "request.status IN ('scheduled', 'processing', 'failed', 'completed')",
+    );
+    expect(dmlGuardMigration).toContain(
+      "BEFORE INSERT OR UPDATE OR DELETE ON public.%I FOR EACH STATEMENT",
+    );
+    expect(dmlGuardMigration).toContain(
+      "EXECUTE FUNCTION private.guard_pending_deletion_write()",
+    );
+  });
+
+  it("discovers application tables from the catalog and excludes extension-owned relations", () => {
+    expect(dmlGuardMigration).toContain("n.nspname = 'public'");
+    expect(dmlGuardMigration).toContain("c.relkind = 'r'");
+    expect(dmlGuardMigration).toContain("dependency.deptype = 'e'");
+    expect(dmlGuardMigration).toContain("JOIN pg_extension extension_row");
+    expect(dmlGuardMigration).toContain(
+      "pending deletion DML guard coverage mismatch",
+    );
+    expect(dmlGuardMigration).toContain(
+      "pending deletion DML guard was attached to extension-owned relation",
+    );
+    expect(dmlGuardMigration).not.toContain("spatial_ref_sys'\n      ");
+  });
+
+  it("verifies trigger shape, enabled state and exact guard function binding", () => {
+    expect(dmlGuardMigration).toContain("trigger_row.tgname = 'account_operational_write_guard'");
+    expect(dmlGuardMigration).toContain("(trigger_row.tgtype & 1) <> 0");
+    expect(dmlGuardMigration).toContain("(trigger_row.tgtype & 2) = 0");
+    expect(dmlGuardMigration).toContain("(trigger_row.tgtype & 4) = 0");
+    expect(dmlGuardMigration).toContain("(trigger_row.tgtype & 8) = 0");
+    expect(dmlGuardMigration).toContain("(trigger_row.tgtype & 16) = 0");
+    expect(dmlGuardMigration).toContain("trigger_row.tgenabled <> 'O'");
+    expect(dmlGuardMigration).toContain("trigger_row.tgfoid <> v_function_oid");
+  });
+
+  it("keeps account-level helpers and deletion authority off browser roles", () => {
     expect(migration).toContain(
       "REVOKE ALL ON FUNCTION private.auth_account_operational() FROM authenticated",
+    );
+    expect(dmlGuardMigration).toContain(
+      "REVOKE ALL ON FUNCTION private.guard_pending_deletion_write() FROM authenticated",
     );
     expect(migration).toContain(
       "REVOKE ALL ON FUNCTION public.get_account_deletion_status_for_user(UUID) FROM authenticated",
@@ -152,6 +215,8 @@ describe("LGPD pending deletion operational boundary", () => {
   it("does not add destructive purge operations to the pending boundary", () => {
     expect(migration).not.toContain("DELETE FROM auth.users");
     expect(migration).not.toContain("DROP TABLE public.account_deletion_requests");
+    expect(dmlGuardMigration).not.toContain("DELETE FROM auth.users");
+    expect(dmlGuardMigration).not.toContain("DROP TABLE");
     expect(privacyRpc).not.toContain("auth.admin.deleteUser");
   });
 });
