@@ -37,6 +37,10 @@ const FUNCTION_SECRET_REQUIREMENTS = Object.freeze({
     'ALLOWED_ORIGINS',
     'CRON_SECRET',
   ]),
+  'territory-ai-content': Object.freeze([
+    'ALLOWED_ORIGINS',
+    'LOVABLE_API_KEY',
+  ]),
 });
 
 function usage() {
