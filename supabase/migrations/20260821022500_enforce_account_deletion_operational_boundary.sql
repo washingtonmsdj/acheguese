@@ -269,6 +269,7 @@ SET statement_timeout = '5s'
 AS $$
 DECLARE
   v_request public.account_deletion_requests%ROWTYPE;
+  v_request_exists BOOLEAN := FALSE;
   v_now TIMESTAMPTZ := clock_timestamp();
   v_owned_profile_ids UUID[];
   v_days INTEGER;
@@ -282,8 +283,9 @@ BEGIN
   FROM public.account_deletion_requests
   WHERE user_id = p_user_id
   FOR UPDATE;
+  v_request_exists := FOUND;
 
-  IF FOUND AND v_request.status = 'scheduled' THEN
+  IF v_request_exists AND v_request.status = 'scheduled' THEN
     UPDATE public.account_deletion_requests
     SET
       reason = LEFT(COALESCE(NULLIF(BTRIM(p_reason), ''), reason), 1000),
@@ -292,7 +294,7 @@ BEGIN
     WHERE id = v_request.id
     RETURNING * INTO v_request;
   ELSE
-    IF FOUND AND v_request.status IN ('processing', 'completed') THEN
+    IF v_request_exists AND v_request.status IN ('processing', 'completed') THEN
       RAISE EXCEPTION 'deletion request cannot be restarted from status %', v_request.status
         USING ERRCODE = '55000';
     END IF;
@@ -355,7 +357,7 @@ BEGIN
       RAISE EXCEPTION 'ACCOUNT_DELETION_ACTIVE_ORDER' USING ERRCODE = '55000';
     END IF;
 
-    IF FOUND THEN
+    IF v_request_exists THEN
       UPDATE public.account_deletion_requests
       SET
         status = 'scheduled',
