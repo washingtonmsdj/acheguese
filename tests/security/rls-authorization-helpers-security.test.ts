@@ -74,4 +74,23 @@ describe("rls authorization helpers security", () => {
     expect(edgeFunction).toContain('supabaseAdmin.rpc("is_admin"');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("is_super_admin"');
   });
+
+  it("removes the orphaned authenticated grant from group_can_manage_members", () => {
+    const migration = readProjectFile(
+      "supabase/migrations/20260821003100_revoke_orphan_authenticated_group_member_helper_execute.sql",
+    );
+
+    expect(migration).toMatch(
+      /revoke\s+execute\s+on\s+function\s+private\.group_can_manage_members\(uuid,\s*uuid\)[\s\S]*from\s+public,\s*anon,\s*authenticated/i,
+    );
+    expect(migration).toMatch(
+      /grant\s+execute\s+on\s+function\s+private\.group_can_manage_members\(uuid,\s*uuid\)[\s\S]*to\s+service_role/i,
+    );
+    expect(migration).toContain(
+      "precondition drift: a policy references group_can_manage_members; direct authenticated EXECUTE requires re-review",
+    );
+    expect(migration).toContain(
+      "postcondition failed: authenticated still executes orphan helper %",
+    );
+  });
 });
