@@ -30,6 +30,7 @@ describe("LGPD irreversible purge policy", () => {
       "PURGE-004",
       "PURGE-005",
       "PURGE-006",
+      "PURGE-007",
     ]);
   });
 
@@ -53,22 +54,36 @@ describe("LGPD irreversible purge policy", () => {
       classification: string;
     }>;
 
-    expect(entries).toHaveLength(16);
+    expect(entries).toHaveLength(15);
     expect(entries).toContainEqual({
       column: "public.ai_image_generations.user_id",
       nullable: false,
       classification: "explicit-subject-cleanup-required",
     });
     expect(entries).toContainEqual({
-      column: "public.classified_reports.reporter_id",
-      nullable: false,
-      classification: "retention-decision-required",
-    });
-    expect(entries).toContainEqual({
       column: "private.notification_preferences_audit_log.user_id",
       nullable: false,
-      classification: "retention-decision-required",
+      classification: "retain-anonymize-reference",
     });
+  });
+
+  it("locks the profile purge fanout and the classified report schema drift", () => {
+    expect(policy.profileDeletionFanout.snapshot).toEqual({
+      totalForeignKeys: 157,
+      cascade: 106,
+      noAction: 5,
+      restrict: 3,
+      setNull: 43,
+      setNullOnNotNullColumn: 1,
+    });
+    expect(policy.profileDeletionFanout.hardBlockers).toContainEqual(
+      expect.objectContaining({
+        column: "public.classified_reports.reporter_id",
+        onDelete: "SET NULL",
+        nullable: false,
+        constraint: "classified_reports_reporter_id_fkey",
+      }),
+    );
   });
 
   it("requires canonical Storage ownership cleanup before Auth hard-delete", () => {
