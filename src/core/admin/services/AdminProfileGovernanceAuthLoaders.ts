@@ -7,27 +7,41 @@ import type {
   AdminProfileIdentityEffectiveContext,
 } from './AdminProfileGovernanceTypes';
 
+interface AdminAuthSummaryBrokerResponse {
+  summary?: {
+    email?: string | null;
+    phone?: string | null;
+    emailConfirmed?: boolean;
+    createdAt?: string | null;
+    lastSignInAt?: string | null;
+  } | null;
+}
+
 export async function loadAuthSummary(userId: string): Promise<AdminProfileIdentityAuthSummary | null> {
   try {
-    const { data, error } = await supabase.functions.invoke('admin-get-user-auth-summary', {
-      body: { userId },
-    });
+    const { data, error } = await supabase.functions.invoke<AdminAuthSummaryBrokerResponse>(
+      'admin-get-user-auth-summary',
+      {
+        body: { userId },
+      },
+    );
 
     if (error) {
       logger.error('AdminProfileGovernanceService.loadAuthSummary', error);
       return null;
     }
 
-    if (!data) {
+    const summary = data?.summary;
+    if (!summary) {
       return null;
     }
 
     return {
-      email: data.email ?? null,
-      phone: data.phone ?? null,
-      emailConfirmed: Boolean(data.email_confirmed_at),
-      createdAt: data.created_at ?? null,
-      lastSignInAt: data.last_sign_in_at ?? null,
+      email: summary.email ?? null,
+      phone: summary.phone ?? null,
+      emailConfirmed: summary.emailConfirmed === true,
+      createdAt: summary.createdAt ?? null,
+      lastSignInAt: summary.lastSignInAt ?? null,
     };
   } catch (error) {
     logger.error('AdminProfileGovernanceService.loadAuthSummary', error);
