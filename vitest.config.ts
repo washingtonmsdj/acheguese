@@ -21,6 +21,7 @@ export default defineConfig(({ mode }) => ({
         external: [
           /scripts[\\/]security[\\/]supabase-auth-hibp\.mjs$/,
           /scripts[\\/]security[\\/]supabase-postgis-owner-preflight\.mjs$/,
+          /scripts[\\/]security[\\/]lgpd-purge-policy\.mjs$/,
         ],
       },
     },
