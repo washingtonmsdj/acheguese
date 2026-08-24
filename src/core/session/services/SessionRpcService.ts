@@ -4,9 +4,7 @@ export type SessionRpcAction =
   | "getActiveProfile"
   | "switchActiveProfile"
   | "checkMfaRequired"
-  | "revokeSession"
-  | "revokeAllSessions"
-  | "updateSessionActivity";
+  | "revokeAllSessions";
 
 export interface SessionRpcProfileRow {
   id: string;
@@ -41,16 +39,10 @@ interface MfaRequiredBrokerData {
   required: boolean;
 }
 
-interface RevokeSessionBrokerData {
+export interface RevokeAllSessionsBrokerData {
   revoked: boolean;
-}
-
-interface RevokeAllSessionsBrokerData {
-  revokedCount: number;
-}
-
-interface UpdateSessionActivityBrokerData {
-  updated: boolean;
+  scope: "others" | "global";
+  requiresLocalSignOut: boolean;
 }
 
 const FUNCTION_NAME = "session-rpc";
@@ -86,24 +78,13 @@ export class SessionRpcService {
     return result?.required ?? null;
   }
 
-  static async revokeSession(sessionId: string, reason?: string): Promise<boolean> {
-    const result = await this.invoke<RevokeSessionBrokerData>("revokeSession", {
-      sessionId,
-      reason,
-    });
-    return result?.revoked === true;
-  }
-
-  static async revokeAllSessions(exceptCurrent = true, reason?: string): Promise<number> {
-    const result = await this.invoke<RevokeAllSessionsBrokerData>("revokeAllSessions", {
+  static async revokeAllSessions(
+    exceptCurrent = true,
+    reason?: string,
+  ): Promise<RevokeAllSessionsBrokerData | null> {
+    return this.invoke<RevokeAllSessionsBrokerData>("revokeAllSessions", {
       exceptCurrent,
       reason,
     });
-    return result?.revokedCount ?? 0;
-  }
-
-  static async updateSessionActivity(): Promise<boolean> {
-    const result = await this.invoke<UpdateSessionActivityBrokerData>("updateSessionActivity");
-    return result?.updated === true;
   }
 }

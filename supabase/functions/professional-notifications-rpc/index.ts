@@ -8,6 +8,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireOperationalAccount } from "../_shared/accountOperational.ts";
 import {
   auditLog,
   extractBearerToken,
@@ -21,7 +22,7 @@ import {
 } from "../_shared/security.ts";
 
 const ALLOWED_METHODS = "POST, OPTIONS";
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
 const ACTIONS = {
   leadMessage: true,
   leadQuote: true,
@@ -372,6 +373,14 @@ serve(async (req: Request) => {
 
   const auth = await requireUser(req, supabaseAdmin);
   if (auth instanceof Response) return auth;
+
+  const accountOperationalError = await requireOperationalAccount(
+    supabaseAdmin,
+    auth.userId,
+    req,
+    ALLOWED_METHODS,
+  );
+  if (accountOperationalError) return accountOperationalError;
 
   const rawBody = await readJsonBody<RequestBody>(req, {
     maxBytes: 16_384,

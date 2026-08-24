@@ -128,7 +128,11 @@ function normalizeAnomalySeverity(value: string): SessionAnomaly["severity"] {
 
 class SessionService {
   /**
-   * Listar sessões ativas do usuário atual
+   * Listar sessões ativas do usuário atual.
+   *
+   * `public.user_sessions` é legado e não é o store autoritativo do Supabase
+   * Auth. Este método permanece apenas para compatibilidade até a UI de sessões
+   * ser migrada para uma fonte suportada pelo Auth.
    */
   async getActiveSessions(): Promise<UserSession[]> {
     try {
@@ -158,7 +162,8 @@ class SessionService {
   }
 
   /**
-   * Listar todas as sessões do usuário (ativas e revogadas)
+   * Listar todas as sessões do usuário (ativas e revogadas).
+   * Fonte legada; ver getActiveSessions().
    */
   async getAllSessions(limit: number = 50): Promise<UserSession[]> {
     try {
@@ -188,26 +193,49 @@ class SessionService {
   }
 
   /**
-   * Revogar uma sessão específica
+   * Revogação individual não é suportada pelo broker autoritativo atual.
+   * Falha fechado em vez de atualizar `public.user_sessions`, que não revoga
+   * refresh tokens reais do Supabase Auth.
    */
   async revokeSession(sessionId: string, reason?: string): Promise<boolean> {
-    try {
-      return SessionRpcService.revokeSession(sessionId, reason || 'Revogado pelo usuario');
-    } catch (error) {
-      logger.error('SessionService.revokeSession', error);
-      return false;
-    }
+    logger.warn('SessionService.revokeSession.unsupported', {
+      sessionId,
+      reason: reason ?? null,
+      authority: 'supabase_auth',
+    });
+    return false;
   }
 
   /**
-   * Revogar todas as sessões (exceto a atual)
+   * Revogar todas as outras sessões, ou todas incluindo a atual.
+   * Supabase Auth é a autoridade. Para escopo global, o broker revoga a cadeia
+   * no servidor e o cliente também precisa limpar sua sessão local.
    */
-  async revokeAllSessions(exceptCurrent: boolean = true): Promise<number> {
+  async revokeAllSessions(exceptCurrent: boolean = true): Promise<boolean> {
     try {
-      return SessionRpcService.revokeAllSessions(exceptCurrent, 'Logout em todos os dispositivos');
+      const result = await SessionRpcService.revokeAllSessions(
+        exceptCurrent,
+        'Logout em todos os dispositivos',
+      );
+
+      if (!result?.revoked) {
+        return false;
+      }
+
+      if (result.requiresLocalSignOut) {
+        const { error } = await supabase.auth.signOut({ scope: 'local' });
+        if (error) {
+          logger.error('SessionService.revokeAllSessions.localSignOut', error, {
+            scope: result.scope,
+          });
+          return false;
+        }
+      }
+
+      return true;
     } catch (error) {
       logger.error('SessionService.revokeAllSessions', error);
-      return 0;
+      return false;
     }
   }
 
@@ -298,7 +326,8 @@ class SessionService {
   }
 
   /**
-   * Marcar sessão como confiável
+   * Marcar sessão como confiável no registro legado.
+   * Não altera a sessão do Supabase Auth.
    */
   async trustSession(sessionId: string): Promise<boolean> {
     try {
@@ -320,20 +349,20 @@ class SessionService {
   }
 
   /**
-   * Atualizar atividade da sessão
+   * Atividade de sessão é mantida pelo Supabase Auth. Não escrever no tracker
+   * legado `public.user_sessions`, que está fora do fluxo atual de login.
    */
   async updateActivity(sessionToken: string): Promise<boolean> {
-    try {
-      if (!sessionToken) return false;
-      return SessionRpcService.updateSessionActivity();
-    } catch (error) {
-      logger.error('SessionService.updateActivity', error);
-      return false;
-    }
+    if (!sessionToken) return false;
+    logger.debug('SessionService.updateActivity.skipped', {
+      authority: 'supabase_auth',
+    });
+    return false;
   }
 
   /**
-   * Buscar sessão atual
+   * Buscar sessão atual no tracker legado.
+   * Pode retornar null mesmo quando existe sessão válida no Supabase Auth.
    */
   async getCurrentSession(): Promise<UserSession | null> {
     try {

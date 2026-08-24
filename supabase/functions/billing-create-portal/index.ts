@@ -13,6 +13,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import Stripe from 'https://esm.sh/stripe@14.21.0'
+import { requireOperationalAccount } from '../_shared/accountOperational.ts'
 import { validateBody, createPortalSchema, validationErrorResponse, type CreatePortalBody } from '../_shared/validation.ts'
 import {
   errorResponse,
@@ -32,7 +33,6 @@ serve(async (req: Request) => {
   const methodError = requireHttpMethod(req, ['POST'], ALLOWED_METHODS)
   if (methodError) return methodError
 
-  // Rate limiting via SSOT — 30 req/min por IP
   const rl = await rateLimitMiddleware(req, 30, 60000)
   if (rl) return rl
 
@@ -54,6 +54,19 @@ serve(async (req: Request) => {
       return errorResponse('Invalid token', 401)
     }
 
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    const accountOperationalError = await requireOperationalAccount(
+      supabaseAdmin,
+      user.id,
+      req,
+      ALLOWED_METHODS,
+    )
+    if (accountOperationalError) return accountOperationalError
+
     const rawBody = await readJsonBody<CreatePortalBody>(req, {
       maxBytes: 4096,
       methods: ALLOWED_METHODS,
@@ -66,15 +79,6 @@ serve(async (req: Request) => {
     }
     const { returnUrl } = validation.data!
 
-    // ════════════════════════════════════════════════════════════════════════
-    // 6. EXECUTAR OPERAÇÃO
-    // ════════════════════════════════════════════════════════════════════════
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-
-    // Buscar customer ID do usuário
     const { data: subscription, error: subError } = await supabaseAdmin
       .from('user_subscriptions')
       .select('stripe_customer_id')
@@ -88,7 +92,6 @@ serve(async (req: Request) => {
       return errorResponse('No active subscription found', 404)
     }
 
-    // Criar sessão do portal
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
       apiVersion: '2023-10-16',
     })
@@ -98,9 +101,6 @@ serve(async (req: Request) => {
       return_url: returnUrl,
     })
 
-    // ════════════════════════════════════════════════════════════════════════
-    // 7. AUDIT LOG
-    // ════════════════════════════════════════════════════════════════════════
     await supabaseAdmin.rpc('log_billing_action', {
       p_user_id: user.id,
       p_action: 'portal_accessed',
@@ -126,4 +126,3 @@ serve(async (req: Request) => {
     return errorResponse('Internal server error', 500, error)
   }
 })
-
