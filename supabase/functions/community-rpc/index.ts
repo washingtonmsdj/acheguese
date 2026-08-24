@@ -7,6 +7,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireOperationalAccount } from "../_shared/accountOperational.ts";
 import {
   extractBearerToken,
   getAllSecurityHeaders,
@@ -266,6 +267,14 @@ serve(async (req: Request) => {
 
   const auth = await requireUser(req, supabaseAdmin);
   if (auth instanceof Response) return auth;
+
+  const accountOperationalError = await requireOperationalAccount(
+    supabaseAdmin,
+    auth.userId,
+    req,
+    ALLOWED_METHODS,
+  );
+  if (accountOperationalError) return accountOperationalError;
 
   const rawBody = await readJsonBody<RequestBody>(req, {
     maxBytes: 16_384,

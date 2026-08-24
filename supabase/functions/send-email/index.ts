@@ -1,14 +1,15 @@
 /**
  * Send Email Edge Function
- * 
+ *
  * Sends emails using Resend API.
  * Respects user preferences and quiet hours.
- * 
+ *
  * Rate Limit: 50 requests per minute per client plus 10 per minute per user
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { requireOperationalAccount } from '../_shared/accountOperational.ts';
 import { validateBody, sendEmailSchema, validationErrorResponse, type SendEmailBody } from '../_shared/validation.ts';
 import {
   checkRateLimit,
@@ -49,7 +50,6 @@ function isCategoryEmailEnabled(
 }
 
 serve(async (req: Request) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { status: 204, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) });
   }
@@ -57,12 +57,10 @@ serve(async (req: Request) => {
   const methodError = requireHttpMethod(req, ['POST'], ALLOWED_METHODS);
   if (methodError) return methodError;
 
-  // Rate limiting
   const rateLimitResponse = await rateLimitMiddleware(req, 50, 60000);
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
-    // 2. Validate authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return errorResponse('Missing authorization header', 401);
@@ -74,7 +72,6 @@ serve(async (req: Request) => {
     });
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Get user from token
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await authClient.auth.getUser(token);
 
@@ -82,7 +79,14 @@ serve(async (req: Request) => {
       return errorResponse('Invalid token', 401);
     }
 
-    // 3. Parse and validate input
+    const accountOperationalError = await requireOperationalAccount(
+      supabase,
+      user.id,
+      req,
+      ALLOWED_METHODS,
+    );
+    if (accountOperationalError) return accountOperationalError;
+
     const rawBody = await readJsonBody<SendEmailBody>(req, {
       maxBytes: 120_000,
       methods: ALLOWED_METHODS,
@@ -122,7 +126,6 @@ serve(async (req: Request) => {
       );
     }
 
-    // 4. Check user preferences
     const { data: preferences } = await supabase
       .from('notification_preferences')
       .select('*')
@@ -130,17 +133,14 @@ serve(async (req: Request) => {
       .single();
 
     if (preferences) {
-      // Check if email is enabled
       if (!preferences.email_enabled) {
         return errorResponse('Email notifications disabled by user', 403);
       }
 
-      // Check category preferences
       if (!isCategoryEmailEnabled(preferences, category)) {
         return errorResponse(`${category} emails disabled by user`, 403);
       }
 
-      // Check quiet hours
       if (preferences.quiet_hours_start && preferences.quiet_hours_end) {
         const now = new Date();
         const currentHour = now.getHours();
@@ -163,7 +163,6 @@ serve(async (req: Request) => {
       }
     }
 
-    // 5. Send email via Resend
     let emailStatus: 'sent' | 'failed' = 'sent';
     let errorMessage: string | null = null;
     let emailId: string | null = null;
@@ -188,21 +187,21 @@ serve(async (req: Request) => {
         }),
       });
 
-        const resendData = await resendResponse.json();
+      const resendData = await resendResponse.json();
 
-        if (!resendResponse.ok) {
-          emailStatus = 'failed';
-          errorMessage = resendData.message || 'Failed to send email';
-          console.error('Resend API error:', resendData);
-        } else {
-          emailId = resendData.id;
-        }
-      } catch (error) {
+      if (!resendResponse.ok) {
         emailStatus = 'failed';
-        errorMessage = String(error);
-        console.error('Error sending email via Resend:', error);
+        errorMessage = resendData.message || 'Failed to send email';
+        console.error('Resend API error:', resendData);
+      } else {
+        emailId = resendData.id;
       }
-    // 6. Log email
+    } catch (error) {
+      emailStatus = 'failed';
+      errorMessage = String(error);
+      console.error('Error sending email via Resend:', error);
+    }
+
     const { error: logError } = await supabase.from('email_logs').insert({
       user_id: userId,
       recipient_email: to,
@@ -221,7 +220,6 @@ serve(async (req: Request) => {
       console.error('Error logging email:', logError);
     }
 
-    // 7. Return response
     if (emailStatus === 'failed') {
       return errorResponse('Failed to send email', 500);
     }
@@ -242,4 +240,3 @@ serve(async (req: Request) => {
     return errorResponse('Internal server error', 500, error);
   }
 });
-

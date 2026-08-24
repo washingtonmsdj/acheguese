@@ -12,6 +12,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import Stripe from 'https://esm.sh/stripe@14.21.0'
+import { requireOperationalAccount } from '../_shared/accountOperational.ts'
 import { validateBody, createCheckoutSchema, validationErrorResponse, type CreateCheckoutBody } from '../_shared/validation.ts'
 import {
   errorResponse,
@@ -110,6 +111,19 @@ serve(async (req: Request) => {
       return errorResponse('Invalid token', 401)
     }
 
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    const accountOperationalError = await requireOperationalAccount(
+      supabaseAdmin,
+      user.id,
+      req,
+      ALLOWED_METHODS,
+    )
+    if (accountOperationalError) return accountOperationalError
+
     const rawBody = await readJsonBody<CreateCheckoutBody>(req, {
       maxBytes: 8192,
       methods: ALLOWED_METHODS,
@@ -132,14 +146,6 @@ serve(async (req: Request) => {
     const normalizedPlanCode = normalizePlanCode(planCode)
     const catalogItemCode = toCatalogItemCode(normalizedPlanCode)
     const resolvedScope = businessId ? 'business' : (subscriptionScope ?? 'user')
-
-    // ════════════════════════════════════════════════════════════════════════
-    // 6. EXECUTAR OPERAÇÃO
-    // ════════════════════════════════════════════════════════════════════════
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
 
     if ((businessId && resolvedScope !== 'business') || (!businessId && resolvedScope === 'business')) {
       return errorResponse('Business checkout requires business_id and business subscription scope', 400)
@@ -195,7 +201,6 @@ serve(async (req: Request) => {
       return errorResponse('Free plan does not require checkout', 400)
     }
 
-    // Buscar ou criar customer no Stripe
     const { data: subscription } = await supabaseAdmin
       .from('user_subscriptions')
       .select('stripe_customer_id')
@@ -218,7 +223,6 @@ serve(async (req: Request) => {
     let customerId = subscription?.stripe_customer_id
 
     if (!customerId) {
-      // Criar customer no Stripe
       const customer = await stripe.customers.create({
         email: user.email,
         metadata: {
@@ -244,7 +248,6 @@ serve(async (req: Request) => {
       stripeMetadata.vertical = vertical ?? catalogItem.vertical!
     }
 
-    // Criar sessão de checkout
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
@@ -263,9 +266,6 @@ serve(async (req: Request) => {
       },
     })
 
-    // ════════════════════════════════════════════════════════════════════════
-    // 7. AUDIT LOG
-    // ════════════════════════════════════════════════════════════════════════
     await supabaseAdmin.rpc('log_billing_action', {
       p_user_id: user.id,
       p_action: 'checkout_created',
@@ -285,9 +285,6 @@ serve(async (req: Request) => {
       },
     })
 
-    // ════════════════════════════════════════════════════════════════════════
-    // 8. RETORNAR SUCESSO
-    // ════════════════════════════════════════════════════════════════════════
     return new Response(
       JSON.stringify({ sessionId: session.id, url: session.url }),
       { status: 200, headers: getAllSecurityHeaders(ALLOWED_METHODS, req) }
@@ -297,4 +294,3 @@ serve(async (req: Request) => {
     return errorResponse('Internal server error', 500, error)
   }
 })
-

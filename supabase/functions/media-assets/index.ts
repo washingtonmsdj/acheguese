@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+import { requireOperationalAccount } from "../_shared/accountOperational.ts";
 import {
   auditLog,
   extractBearerToken,
@@ -71,6 +72,14 @@ serve(async (req) => {
   if (authError || !authData.user) {
     return jsonResponse({ error: "Unauthorized" }, 401, ALLOWED_METHODS, req);
   }
+
+  const accountOperationalError = await requireOperationalAccount(
+    supabaseAdmin,
+    authData.user.id,
+    req,
+    ALLOWED_METHODS,
+  );
+  if (accountOperationalError) return accountOperationalError;
 
   let assetId: string | null = null;
   let objectPath: string | null = null;
