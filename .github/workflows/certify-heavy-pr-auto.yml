@@ -97,6 +97,18 @@ jobs:
         shell: powershell
         run: npm ci --prefer-offline --no-audit --no-fund
 
+      - name: Run critical LGPD/security contract tests
+        shell: powershell
+        env:
+          CI: true
+        run: |
+          npx vitest --run `
+            tests/security/lgpd-purge-policy-security.test.ts `
+            tests/security/account-operational-edge-policy.test.ts `
+            tests/security/session-rpc-auth-authority-security.test.ts `
+            --reporter=verbose
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Install Playwright Chromium
         shell: powershell
         run: npx playwright install chromium
