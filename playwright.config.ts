@@ -11,6 +11,9 @@ const parsedBaseURL = new URL(baseURL);
 const webServerHost = parsedBaseURL.hostname;
 const webServerPort = parsedBaseURL.port || (parsedBaseURL.protocol === "https:" ? "443" : "80");
 const usesLocalWebServer = ["127.0.0.1", "localhost"].includes(webServerHost);
+// CI can provide a separately built and readiness-checked preview server.
+// Keep the existing Vite DEV server behavior for local Playwright use.
+const skipWebServer = process.env.PLAYWRIGHT_SKIP_WEBSERVER === "1";
 
 // Compatible with ESM and CJS.
 const __filename = typeof __dirname !== "undefined" ? "" : fileURLToPath(import.meta.url);
@@ -37,7 +40,7 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
 
-  webServer: usesLocalWebServer
+  webServer: usesLocalWebServer && !skipWebServer
     ? {
         command: `npm run dev -- --host ${webServerHost} --port ${webServerPort} --strictPort`,
         url: baseURL,
