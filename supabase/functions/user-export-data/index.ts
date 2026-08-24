@@ -1,321 +1,1402 @@
 /**
  * User Export Data - Edge Function
  *
- * Implementa direito de acesso (Art. 18 LGPD).
- * Exporta todos os dados pessoais do usuário em formato JSON.
- *
- * @version 1.1.0
- * @lgpd Art. 18, I - Direito de acesso aos dados
+ * LGPD Art. 18 subject-data export built from the canonical export matrix.
+ * Rollout stays blocked until CI/typecheck/integration/smoke validation is
+ * complete and the certification marker is promoted in a separate review.
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
-  getAllSecurityHeaders,
-  rateLimitMiddleware,
-  errorResponse,
   auditLog,
+  extractBearerToken,
+  getAllSecurityHeaders,
   getAuditInfo,
+  getRequiredEnv,
+  jsonResponse,
+  rateLimitMiddleware,
   requireHttpMethod,
 } from "../_shared/security.ts";
 
-serve(async (req: Request) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { status: 204, headers: getAllSecurityHeaders('POST, OPTIONS', req) });
+const ALLOWED_METHODS = "POST, OPTIONS";
+const FORMAT_VERSION = "2.0-draft";
+const MATRIX_VERSION = "lgpd-export-matrix/v1";
+const LGPD_EXPORT_MATRIX_IMPLEMENTATION_COMPLETE = false;
+const PAGE_SIZE = 500;
+const MAX_ROWS_PER_SECTION = 50_000;
+
+// deno-lint-ignore no-explicit-any
+type SupabaseClient = ReturnType<typeof createClient<any, any, any>>;
+// deno-lint-ignore no-explicit-any
+type QueryBuilder = any;
+type JsonRecord = Record<string, unknown>;
+type PageResult = { data: unknown; error: { code?: string } | null };
+type PageFactory = (from: number, to: number) => PromiseLike<PageResult>;
+type FilterFactory = (query: QueryBuilder) => QueryBuilder;
+type ExportTable =
+  | "profiles"
+  | "personal_social_profiles"
+  | "profile_members"
+  | "user_active_profiles"
+  | "user_roles"
+  | "user_residences"
+  | "addresses"
+  | "user_consents"
+  | "notification_preferences"
+  | "user_mfa_status"
+  | "businesses"
+  | "business_data"
+  | "business_products"
+  | "business_stats"
+  | "professional_data"
+  | "professional_stats"
+  | "driver_data"
+  | "driver_profiles"
+  | "driver_availability"
+  | "driver_routes"
+  | "posts"
+  | "comments"
+  | "community_posts"
+  | "community_questions"
+  | "question_answers"
+  | "classifieds"
+  | "events"
+  | "vagas"
+  | "work_opportunities"
+  | "communication_publications"
+  | "community_direct_messages"
+  | "messages"
+  | "group_messages_new"
+  | "community_memberships"
+  | "group_members_new"
+  | "community_poll_votes"
+  | "community_issue_supports"
+  | "profile_favorites"
+  | "classified_favorites"
+  | "professional_favorites"
+  | "event_favorites"
+  | "tourist_point_saved_items"
+  | "vaga_saved_items"
+  | "user_favorite_businesses"
+  | "ride_requests"
+  | "route_reservations"
+  | "orders"
+  | "user_subscriptions"
+  | "billing_transactions"
+  | "notifications"
+  | "email_logs"
+  | "community_reports"
+  | "community_direct_message_reports"
+  | "review_reports"
+  | "ride_reports"
+  | "vaga_reports"
+  | "group_message_reports"
+  | "ai_image_generations"
+  | "tryon_generations"
+  | "ai_usage_log"
+  | "ai_moderation_log"
+  | "analytics_events"
+  | "analytics_sessions"
+  | "pii_access_log"
+  | "media_assets"
+  | "verification"
+  | "banned_users"
+  | "session_anomalies"
+  | "profile_audit_log"
+  | "emergency_contacts"
+  | "push_subscriptions";
+
+function responseHeaders(req: Request): Record<string, string> {
+  return getAllSecurityHeaders(ALLOWED_METHODS, req);
+}
+
+function safeArray(value: unknown): JsonRecord[] {
+  return Array.isArray(value)
+    ? value.filter((entry): entry is JsonRecord =>
+        typeof entry === "object" && entry !== null && !Array.isArray(entry)
+      )
+    : [];
+}
+
+function pickStringArray(values: unknown[]): string[] {
+  return values.filter((value): value is string =>
+    typeof value === "string" && value.length > 0
+  );
+}
+
+function enforceSectionLimit(section: string, rows: JsonRecord[]): JsonRecord[] {
+  if (rows.length > MAX_ROWS_PER_SECTION) {
+    throw new Error(`EXPORT_SECTION_TOO_LARGE:${section}`);
+  }
+  return rows;
+}
+
+function dedupeRows(section: string, rows: JsonRecord[]): JsonRecord[] {
+  const seen = new Set<string>();
+  const result: JsonRecord[] = [];
+
+  for (const row of rows) {
+    const id = typeof row.id === "string" ? row.id : null;
+    const key = id ? `id:${id}` : JSON.stringify(row);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(row);
   }
 
-  const methodError = requireHttpMethod(req, ['POST'], 'POST, OPTIONS');
+  return enforceSectionLimit(section, result);
+}
+
+function selectExportTable(
+  supabaseAdmin: SupabaseClient,
+  table: ExportTable,
+  columns: string,
+): QueryBuilder {
+  switch (table) {
+    case "profiles": return supabaseAdmin.from("profiles").select(columns);
+    case "personal_social_profiles": return supabaseAdmin.from("personal_social_profiles").select(columns);
+    case "profile_members": return supabaseAdmin.from("profile_members").select(columns);
+    case "user_active_profiles": return supabaseAdmin.from("user_active_profiles").select(columns);
+    case "user_roles": return supabaseAdmin.from("user_roles").select(columns);
+    case "user_residences": return supabaseAdmin.from("user_residences").select(columns);
+    case "addresses": return supabaseAdmin.from("addresses").select(columns);
+    case "user_consents": return supabaseAdmin.from("user_consents").select(columns);
+    case "notification_preferences": return supabaseAdmin.from("notification_preferences").select(columns);
+    case "user_mfa_status": return supabaseAdmin.from("user_mfa_status").select(columns);
+    case "businesses": return supabaseAdmin.from("businesses").select(columns);
+    case "business_data": return supabaseAdmin.from("business_data").select(columns);
+    case "business_products": return supabaseAdmin.from("business_products").select(columns);
+    case "business_stats": return supabaseAdmin.from("business_stats").select(columns);
+    case "professional_data": return supabaseAdmin.from("professional_data").select(columns);
+    case "professional_stats": return supabaseAdmin.from("professional_stats").select(columns);
+    case "driver_data": return supabaseAdmin.from("driver_data").select(columns);
+    case "driver_profiles": return supabaseAdmin.from("driver_profiles").select(columns);
+    case "driver_availability": return supabaseAdmin.from("driver_availability").select(columns);
+    case "driver_routes": return supabaseAdmin.from("driver_routes").select(columns);
+    case "posts": return supabaseAdmin.from("posts").select(columns);
+    case "comments": return supabaseAdmin.from("comments").select(columns);
+    case "community_posts": return supabaseAdmin.from("community_posts").select(columns);
+    case "community_questions": return supabaseAdmin.from("community_questions").select(columns);
+    case "question_answers": return supabaseAdmin.from("question_answers").select(columns);
+    case "classifieds": return supabaseAdmin.from("classifieds").select(columns);
+    case "events": return supabaseAdmin.from("events").select(columns);
+    case "vagas": return supabaseAdmin.from("vagas").select(columns);
+    case "work_opportunities": return supabaseAdmin.from("work_opportunities").select(columns);
+    case "communication_publications": return supabaseAdmin.from("communication_publications").select(columns);
+    case "community_direct_messages": return supabaseAdmin.from("community_direct_messages").select(columns);
+    case "messages": return supabaseAdmin.from("messages").select(columns);
+    case "group_messages_new": return supabaseAdmin.from("group_messages_new").select(columns);
+    case "community_memberships": return supabaseAdmin.from("community_memberships").select(columns);
+    case "group_members_new": return supabaseAdmin.from("group_members_new").select(columns);
+    case "community_poll_votes": return supabaseAdmin.from("community_poll_votes").select(columns);
+    case "community_issue_supports": return supabaseAdmin.from("community_issue_supports").select(columns);
+    case "profile_favorites": return supabaseAdmin.from("profile_favorites").select(columns);
+    case "classified_favorites": return supabaseAdmin.from("classified_favorites").select(columns);
+    case "professional_favorites": return supabaseAdmin.from("professional_favorites").select(columns);
+    case "event_favorites": return supabaseAdmin.from("event_favorites").select(columns);
+    case "tourist_point_saved_items": return supabaseAdmin.from("tourist_point_saved_items").select(columns);
+    case "vaga_saved_items": return supabaseAdmin.from("vaga_saved_items").select(columns);
+    case "user_favorite_businesses": return supabaseAdmin.from("user_favorite_businesses").select(columns);
+    case "ride_requests": return supabaseAdmin.from("ride_requests").select(columns);
+    case "route_reservations": return supabaseAdmin.from("route_reservations").select(columns);
+    case "orders": return supabaseAdmin.from("orders").select(columns);
+    case "user_subscriptions": return supabaseAdmin.from("user_subscriptions").select(columns);
+    case "billing_transactions": return supabaseAdmin.from("billing_transactions").select(columns);
+    case "notifications": return supabaseAdmin.from("notifications").select(columns);
+    case "email_logs": return supabaseAdmin.from("email_logs").select(columns);
+    case "community_reports": return supabaseAdmin.from("community_reports").select(columns);
+    case "community_direct_message_reports": return supabaseAdmin.from("community_direct_message_reports").select(columns);
+    case "review_reports": return supabaseAdmin.from("review_reports").select(columns);
+    case "ride_reports": return supabaseAdmin.from("ride_reports").select(columns);
+    case "vaga_reports": return supabaseAdmin.from("vaga_reports").select(columns);
+    case "group_message_reports": return supabaseAdmin.from("group_message_reports").select(columns);
+    case "ai_image_generations": return supabaseAdmin.from("ai_image_generations").select(columns);
+    case "tryon_generations": return supabaseAdmin.from("tryon_generations").select(columns);
+    case "ai_usage_log": return supabaseAdmin.from("ai_usage_log").select(columns);
+    case "ai_moderation_log": return supabaseAdmin.from("ai_moderation_log").select(columns);
+    case "analytics_events": return supabaseAdmin.from("analytics_events").select(columns);
+    case "analytics_sessions": return supabaseAdmin.from("analytics_sessions").select(columns);
+    case "pii_access_log": return supabaseAdmin.from("pii_access_log").select(columns);
+    case "media_assets": return supabaseAdmin.from("media_assets").select(columns);
+    case "verification": return supabaseAdmin.from("verification").select(columns);
+    case "banned_users": return supabaseAdmin.from("banned_users").select(columns);
+    case "session_anomalies": return supabaseAdmin.from("session_anomalies").select(columns);
+    case "profile_audit_log": return supabaseAdmin.from("profile_audit_log").select(columns);
+    case "emergency_contacts": return supabaseAdmin.from("emergency_contacts").select(columns);
+    case "push_subscriptions": return supabaseAdmin.from("push_subscriptions").select(columns);
+  }
+}
+
+async function requireAllRows(
+  section: string,
+  pageFactory: PageFactory,
+): Promise<JsonRecord[]> {
+  const rows: JsonRecord[] = [];
+
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const to = from + PAGE_SIZE - 1;
+    const { data, error } = await pageFactory(from, to);
+    if (error) {
+      console.error("[user-export-data] required section failed", {
+        section,
+        code: typeof error.code === "string" ? error.code : "unknown",
+      });
+      throw new Error(`EXPORT_SECTION_FAILED:${section}`);
+    }
+
+    const page = safeArray(data);
+    rows.push(...page);
+    enforceSectionLimit(section, rows);
+    if (page.length < PAGE_SIZE) break;
+  }
+
+  return rows;
+}
+
+async function requireTableRows(
+  section: string,
+  supabaseAdmin: SupabaseClient,
+  table: ExportTable,
+  columns: string,
+  filter: FilterFactory,
+  orderColumn = "id",
+): Promise<JsonRecord[]> {
+  return requireAllRows(section, (from, to) => {
+    let query = selectExportTable(supabaseAdmin, table, columns);
+    query = filter(query);
+    if (orderColumn) {
+      query = query.order(orderColumn, { ascending: true });
+    }
+    return query.range(from, to);
+  });
+}
+
+async function requireUserRows(
+  section: string,
+  supabaseAdmin: SupabaseClient,
+  table: ExportTable,
+  columns: string,
+  userId: string,
+  userColumn = "user_id",
+  orderColumn = "id",
+): Promise<JsonRecord[]> {
+  return requireTableRows(
+    section,
+    supabaseAdmin,
+    table,
+    columns,
+    (query) => query.eq(userColumn, userId),
+    orderColumn,
+  );
+}
+
+async function requireProfileRows(
+  section: string,
+  supabaseAdmin: SupabaseClient,
+  table: ExportTable,
+  columns: string,
+  profileColumn: string,
+  profileIds: string[],
+  orderColumn = "id",
+): Promise<JsonRecord[]> {
+  if (profileIds.length === 0) return [];
+  return requireTableRows(
+    section,
+    supabaseAdmin,
+    table,
+    columns,
+    (query) => query.in(profileColumn, profileIds),
+    orderColumn,
+  );
+}
+
+async function requireRowsByAnyProfileColumn(
+  section: string,
+  supabaseAdmin: SupabaseClient,
+  table: ExportTable,
+  columns: string,
+  profileColumns: string[],
+  profileIds: string[],
+): Promise<JsonRecord[]> {
+  if (profileIds.length === 0) return [];
+  const parts = await Promise.all(
+    profileColumns.map((column) =>
+      requireProfileRows(
+        `${section}:${column}`,
+        supabaseAdmin,
+        table,
+        columns,
+        column,
+        profileIds,
+      )
+    ),
+  );
+  return dedupeRows(section, parts.flat());
+}
+
+function redactUserMetadata(value: unknown): JsonRecord {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+
+  const blockedKey = /(token|secret|password|credential|authorization|api[_-]?key|refresh)/i;
+  const result: JsonRecord = {};
+  for (const [key, entry] of Object.entries(value as JsonRecord)) {
+    if (blockedKey.test(key)) continue;
+    if (
+      entry === null ||
+      typeof entry === "string" ||
+      typeof entry === "number" ||
+      typeof entry === "boolean"
+    ) {
+      result[key] = entry;
+    }
+  }
+  return result;
+}
+
+function mapAuthUser(user: Record<string, unknown>): JsonRecord {
+  const identities = Array.isArray(user.identities)
+    ? user.identities.map((identity) => {
+        const row = identity as Record<string, unknown>;
+        return {
+          provider: row.provider ?? null,
+          created_at: row.created_at ?? null,
+          updated_at: row.updated_at ?? null,
+          last_sign_in_at: row.last_sign_in_at ?? null,
+        };
+      })
+    : [];
+
+  const factors = Array.isArray(user.factors)
+    ? user.factors.map((factor) => {
+        const row = factor as Record<string, unknown>;
+        return {
+          status: row.status ?? null,
+          friendly_name: row.friendly_name ?? null,
+          factor_type: row.factor_type ?? null,
+          created_at: row.created_at ?? null,
+          updated_at: row.updated_at ?? null,
+        };
+      })
+    : [];
+
+  return {
+    id: user.id ?? null,
+    email: user.email ?? null,
+    phone: user.phone ?? null,
+    email_confirmed_at: user.email_confirmed_at ?? null,
+    phone_confirmed_at: user.phone_confirmed_at ?? null,
+    created_at: user.created_at ?? null,
+    updated_at: user.updated_at ?? null,
+    last_sign_in_at: user.last_sign_in_at ?? null,
+    user_metadata: redactUserMetadata(user.user_metadata),
+    identities,
+    factors,
+  };
+}
+
+function sanitizeRides(rows: JsonRecord[], profileIds: Set<string>): JsonRecord[] {
+  return rows.map((row) => {
+    const passenger = typeof row.passenger_profile_id === "string"
+      ? row.passenger_profile_id
+      : null;
+    const driver = typeof row.driver_profile_id === "string"
+      ? row.driver_profile_id
+      : null;
+    const isPassenger = Boolean(passenger && profileIds.has(passenger));
+    const isDriver = Boolean(driver && profileIds.has(driver));
+    const subjectRoles = [
+      isPassenger ? "passenger" : null,
+      isDriver ? "driver" : null,
+    ].filter((value): value is string => Boolean(value));
+
+    return {
+      id: row.id,
+      subject_roles: subjectRoles,
+      route_id: row.route_id,
+      status: row.status,
+      suggested_price: row.suggested_price,
+      final_price: row.final_price,
+      available_seats: row.available_seats,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      pickup_location_id: isPassenger ? row.pickup_location_id : undefined,
+      dropoff_location_id: isPassenger ? row.dropoff_location_id : undefined,
+      origin: isPassenger ? row.origin : undefined,
+      destination: isPassenger ? row.destination : undefined,
+      departure_time: row.departure_time,
+      payment_method: isPassenger ? row.payment_method : undefined,
+      ride_mode: row.ride_mode,
+      source_type: row.source_type,
+      pickup_confirmed_at: row.pickup_confirmed_at,
+      delivered_at: row.delivered_at,
+      started_at: row.started_at,
+      completed_at: row.completed_at,
+      cancelled_at: row.cancelled_at,
+    };
+  });
+}
+
+function sanitizeOrders(rows: JsonRecord[], profileIds: Set<string>): JsonRecord[] {
+  return rows.map((row) => {
+    const customer = typeof row.customer_profile_id === "string"
+      ? row.customer_profile_id
+      : null;
+    const merchant = typeof row.merchant_profile_id === "string"
+      ? row.merchant_profile_id
+      : null;
+    const courier = typeof row.courier_profile_id === "string"
+      ? row.courier_profile_id
+      : null;
+    const isCustomer = Boolean(customer && profileIds.has(customer));
+    const isMerchant = Boolean(merchant && profileIds.has(merchant));
+    const isCourier = Boolean(courier && profileIds.has(courier));
+    const subjectRoles = [
+      isCustomer ? "customer" : null,
+      isMerchant ? "merchant" : null,
+      isCourier ? "courier" : null,
+    ].filter((value): value is string => Boolean(value));
+
+    return {
+      id: row.id,
+      subject_roles: subjectRoles,
+      payment_mode: row.payment_mode,
+      delivery_mode: row.delivery_mode,
+      logistics_status: row.logistics_status,
+      financial_status: row.financial_status,
+      items_total: row.items_total,
+      delivery_fee: row.delivery_fee,
+      discount_total: row.discount_total,
+      order_total: row.order_total,
+      platform_fee_amount: isMerchant ? row.platform_fee_amount : undefined,
+      merchant_net_amount: isMerchant ? row.merchant_net_amount : undefined,
+      courier_amount: isCourier ? row.courier_amount : undefined,
+      currency: row.currency,
+      payment_method: isCustomer ? row.payment_method : undefined,
+      paid_at: row.paid_at,
+      refunded_at: row.refunded_at,
+      accepted_at: row.accepted_at,
+      preparing_at: row.preparing_at,
+      ready_for_pickup_at: row.ready_for_pickup_at,
+      picked_up_at: row.picked_up_at,
+      delivered_at: row.delivered_at,
+      canceled_at: row.canceled_at,
+      failed_at: row.failed_at,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      source_type: row.source_type,
+    };
+  });
+}
+
+function sanitizeReports(kind: string, rows: JsonRecord[]): JsonRecord[] {
+  return rows.map((row) => ({
+    kind,
+    target_type: row.target_type,
+    reason: row.reason,
+    report_type: row.report_type,
+    severity: row.severity,
+    title: row.title,
+    description: row.description ?? row.details,
+    evidence_urls: row.evidence_urls,
+    status: row.status,
+    reported_at: row.reported_at,
+    reviewed_at: row.reviewed_at,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  }));
+}
+
+async function collectExport(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+): Promise<{ payload: JsonRecord; sectionCount: number }> {
+  const { data: authData, error: authError } =
+    await supabaseAdmin.auth.admin.getUserById(userId);
+  if (authError || !authData?.user) {
+    throw new Error("EXPORT_AUTH_USER_UNAVAILABLE");
+  }
+
+  const profiles = await requireUserRows(
+    "profiles",
+    supabaseAdmin,
+    "profiles",
+    "id,profile_type,name,display_name,username,bio,avatar_url,neighborhood,city,location_id,phone,whatsapp,is_active,verified_at,is_suspended,suspended,suspended_at,suspension_reason,suspended_until,reputation,pontos,street,created_at,updated_at,verified,handle,show_contact_email,show_phone,show_linked_profiles,show_business_links,show_professional_links,is_public,contact_email,website,location,state,country,reputation_score,trust_score,slug,public_location_visibility,short_bio,main_territory_location_id,community_reputation_score",
+    userId,
+  );
+  const profileIds = pickStringArray(profiles.map((row) => row.id));
+  const profileIdSet = new Set(profileIds);
+
+  const personalSocialProfiles = await requireUserRows(
+    "personal_social_profiles",
+    supabaseAdmin,
+    "personal_social_profiles",
+    "profile_id,name,display_name,username,avatar_url,short_bio,bio,main_territory_location_id,community_reputation_score,groups_count,created_at,updated_at",
+    userId,
+    "user_id",
+    "profile_id",
+  );
+  const profileMembers = await requireUserRows(
+    "profile_memberships",
+    supabaseAdmin,
+    "profile_members",
+    "profile_id,role,joined_at,is_active",
+    userId,
+  );
+  const activeProfiles = await requireUserRows(
+    "active_profile_selection",
+    supabaseAdmin,
+    "user_active_profiles",
+    "profile_id,created_at,updated_at",
+    userId,
+    "user_id",
+    "profile_id",
+  );
+  const roles = await requireUserRows(
+    "roles",
+    supabaseAdmin,
+    "user_roles",
+    "role_enum,is_active,granted_at,expires_at,revoked_at,reason,created_at,updated_at",
+    userId,
+  );
+
+  const residences = await requireUserRows(
+    "residences",
+    supabaseAdmin,
+    "user_residences",
+    "id,country,is_primary,is_verified,verification_requested_at,created_at,updated_at,address_id,location_id",
+    userId,
+  );
+  const addressIds = pickStringArray(residences.map((row) => row.address_id));
+  const addresses = addressIds.length === 0
+    ? []
+    : await requireTableRows(
+      "addresses",
+      supabaseAdmin,
+      "addresses",
+      "id,location_id,postal_code,street,number,complement,address_type,latitude,longitude,geocoded_at,geocoding_source,geocoding_confidence,is_verified,verified_at,created_at,updated_at,precision,verification_status,verified_reason",
+      (query) => query.in("id", addressIds),
+    );
+
+  const consents = await requireUserRows(
+    "consents",
+    supabaseAdmin,
+    "user_consents",
+    "id,consent_type,granted,granted_at,revoked_at,revoke_reason,terms_version,privacy_policy_version,created_at,updated_at",
+    userId,
+  );
+  const notificationPreferences = await requireUserRows(
+    "notification_preferences",
+    supabaseAdmin,
+    "notification_preferences",
+    "email_enabled,push_enabled,inapp_enabled,transactional_enabled,social_enabled,system_enabled,marketing_enabled,frequency,quiet_hours_start,quiet_hours_end,quiet_hours_days,created_at,updated_at",
+    userId,
+    "user_id",
+    "created_at",
+  );
+  const mfaStatus = await requireUserRows(
+    "mfa_status",
+    supabaseAdmin,
+    "user_mfa_status",
+    "mfa_enabled,mfa_method,enrolled_at,last_verified_at,backup_codes_generated,backup_codes_count,grace_period_expires_at,is_exempt,exemption_reason,exemption_granted_at,created_at,updated_at",
+    userId,
+    "user_id",
+    "created_at",
+  );
+
+  const businesses = await requireProfileRows(
+    "businesses",
+    supabaseAdmin,
+    "businesses",
+    "id,profile_id,slug,name,description,category,subcategoria,phone,whatsapp,email,website,instagram,facebook,location_id,address,neighborhood,cep,latitude,longitude,status,is_premium,is_verified,rating,total_reviews,total_products,created_at,updated_at",
+    "profile_id",
+    profileIds,
+  );
+  const businessData = await requireProfileRows(
+    "business_data",
+    supabaseAdmin,
+    "business_data",
+    "id,profile_id,business_name,description,category,subcategory,website,instagram,facebook,opening_hours,payment_methods,specialties,facilities,is_premium,is_verified,status,rating,total_reviews,total_products,slug,location_id,created_at,updated_at,legal_name,cnpj,tax_id,company_type,industry,employee_count,founded_year,business_address,business_city,business_state,business_zip,business_hours,address_id,business_role,is_headquarters,unit_name,latitude,longitude",
+    "profile_id",
+    profileIds,
+  );
+  const businessProducts = await requireProfileRows(
+    "business_products",
+    supabaseAdmin,
+    "business_products",
+    "id,profile_id,nome,descricao,preco,preco_promocional,imagem,categoria,estoque,ativo,destaque,promocao,created_at,updated_at",
+    "profile_id",
+    profileIds,
+  );
+  const businessStats = await requireProfileRows(
+    "business_stats",
+    supabaseAdmin,
+    "business_stats",
+    "id,profile_id,views_count,favorites_count,shares_count,updated_at,business_id",
+    "profile_id",
+    profileIds,
+  );
+
+  const professionalByProfile = await requireProfileRows(
+    "professional_profiles:profile",
+    supabaseAdmin,
+    "professional_data",
+    "id,profile_id,professional_name,service_category,service_subcategory,description,certifications,experience_years,education,price_range,service_areas,service_radius_km,available_hours,is_accepting_clients,is_verified,verified_at,rating,location_id,created_at,updated_at,profession,specialties,years_experience,services_offered,service_area,hourly_rate,accepts_remote,address_id,slug,price_type,visibility,availability_notes,portfolio_items,owner_user_id",
+    "profile_id",
+    profileIds,
+  );
+  const professionalByUser = await requireUserRows(
+    "professional_profiles:owner",
+    supabaseAdmin,
+    "professional_data",
+    "id,profile_id,professional_name,service_category,service_subcategory,description,certifications,experience_years,education,price_range,service_areas,service_radius_km,available_hours,is_accepting_clients,is_verified,verified_at,rating,location_id,created_at,updated_at,profession,specialties,years_experience,services_offered,service_area,hourly_rate,accepts_remote,address_id,slug,price_type,visibility,availability_notes,portfolio_items,owner_user_id",
+    userId,
+    "owner_user_id",
+  );
+  const professionalData = dedupeRows(
+    "professional_profiles",
+    [...professionalByProfile, ...professionalByUser],
+  );
+  const professionalStats = await requireProfileRows(
+    "professional_stats",
+    supabaseAdmin,
+    "professional_stats",
+    "id,profile_id,views_count,contacts_count,favorites_count,shares_count,jobs_completed,response_rate,average_response_time,updated_at",
+    "profile_id",
+    profileIds,
+  );
+
+  const driverData = await requireProfileRows(
+    "driver_data",
+    supabaseAdmin,
+    "driver_data",
+    "id,profile_id,is_online,is_verified,subscription_active,vehicle,rating,total_rides,total_rides_completed,total_rides_cancelled,acceptance_rate,cancellation_rate,created_at,updated_at,license_number,license_category,license_expiry,license_state,vehicle_type,vehicle_plate,vehicle_model,vehicle_year,vehicle_color,is_available,documents_verified,documents_verified_at,background_check_status,background_check_date,can_do_delivery,can_do_rides",
+    "profile_id",
+    profileIds,
+  );
+  const driverProfiles = await requireProfileRows(
+    "driver_profiles",
+    supabaseAdmin,
+    "driver_profiles",
+    "id,profile_id,rating,total_rides,total_earnings,is_verified,created_at,updated_at",
+    "profile_id",
+    profileIds,
+  );
+  const driverAvailability = await requireProfileRows(
+    "driver_availability",
+    supabaseAdmin,
+    "driver_availability",
+    "profile_id,is_online,is_available,last_location_update,updated_at,last_seen_at,active_ride_id,busy_since,active_ride_mode",
+    "profile_id",
+    profileIds,
+    "profile_id",
+  );
+  const driverRoutes = await requireProfileRows(
+    "driver_routes",
+    supabaseAdmin,
+    "driver_routes",
+    "id,driver_profile_id,origin,destination,waypoints,departure_time,available_seats,price_per_seat,status,recurrence,created_at,updated_at",
+    "driver_profile_id",
+    profileIds,
+  );
+
+  const posts = await requireProfileRows(
+    "posts",
+    supabaseAdmin,
+    "posts",
+    "id,author_profile_id,content,type,image_url,video_url,images,location_id,likes_count,comments_count,tags,confirmations_count,is_verified,is_published,created_at,updated_at,reach,content_intent,display_format,distribution_channels,content_payload,is_hidden,is_removed,removed_reason,removed_at,shares_count",
+    "author_profile_id",
+    profileIds,
+  );
+  const comments = await requireProfileRows(
+    "comments",
+    supabaseAdmin,
+    "comments",
+    "id,post_id,author_profile_id,content,parent_id,likes_count,replies_count,created_at,updated_at,is_best_answer,is_hidden,is_removed,removed_reason,removed_at",
+    "author_profile_id",
+    profileIds,
+  );
+  const communityPosts = await requireProfileRows(
+    "community_posts",
+    supabaseAdmin,
+    "community_posts",
+    "id,author_profile_id,type,content,tags,location_id,confirmations_count,is_verified,created_at,updated_at",
+    "author_profile_id",
+    profileIds,
+  );
+  const communityQuestions = await requireProfileRows(
+    "community_questions",
+    supabaseAdmin,
+    "community_questions",
+    "id,author_profile_id,type,content,tags,location_id,confirmations_count,is_verified,created_at,updated_at,title,description,category,resolved,answers_count",
+    "author_profile_id",
+    profileIds,
+  );
+  const questionAnswers = await requireProfileRows(
+    "question_answers",
+    supabaseAdmin,
+    "question_answers",
+    "id,question_id,author_profile_id,content,likes_count,is_best_answer,created_at,updated_at",
+    "author_profile_id",
+    profileIds,
+  );
+  const classifieds = await requireRowsByAnyProfileColumn(
+    "classifieds",
+    supabaseAdmin,
+    "classifieds",
+    "id,seller_id,title,description,price,category,condition,photos,location_id,status,created_at,updated_at,is_active,slug,public_id,category_id,subcategory_id,reach,is_featured,profile_id",
+    ["profile_id", "seller_id"],
+    profileIds,
+  );
+  const events = await requireProfileRows(
+    "events",
+    supabaseAdmin,
+    "events",
+    "id,organizer_profile_id,title,description,date,end_date,location,location_id,category,image_url,max_participants,current_participants,status,is_free,price,created_at,updated_at,event_date,subtitle,tags,duration_minutes,timezone,location_type,venue_name,address,neighborhood,city,state,zipcode,online_url,online_platform,location_instructions,waitlist_enabled,requirements,what_to_bring,age_restriction,dress_code,accessibility_info,published_at",
+    "organizer_profile_id",
+    profileIds,
+  );
+  const vagas = await requireProfileRows(
+    "vagas",
+    supabaseAdmin,
+    "vagas",
+    "id,titulo,empresa,descricao,location_id,contrato,modalidade,nivel,tags,salario_texto,salario_min,salario_max,beneficios,status,urgencia,destaque,created_at,updated_at,expires_at,categoria,vagas_quantidade,slug,contrato_tipo,salary_mode,application_channel,view_count,application_count,published_at,owner_profile_id",
+    "owner_profile_id",
+    profileIds,
+  );
+  const opportunitiesByUser = await requireUserRows(
+    "work_opportunities:user",
+    supabaseAdmin,
+    "work_opportunities",
+    "id,author_profile_id,opportunity_type,headline,description,professional_category,territory_location_id,reach,urgency,availability_notes,availability_start_at,availability_end_at,compensation_notes,visibility,status,is_feed_distributed,post_id,created_at,updated_at,published_at,closed_at",
+    userId,
+    "author_user_id",
+  );
+  const opportunitiesByProfile = await requireProfileRows(
+    "work_opportunities:profile",
+    supabaseAdmin,
+    "work_opportunities",
+    "id,author_profile_id,opportunity_type,headline,description,professional_category,territory_location_id,reach,urgency,availability_notes,availability_start_at,availability_end_at,compensation_notes,visibility,status,is_feed_distributed,post_id,created_at,updated_at,published_at,closed_at",
+    "author_profile_id",
+    profileIds,
+  );
+  const workOpportunities = dedupeRows(
+    "work_opportunities",
+    [...opportunitiesByUser, ...opportunitiesByProfile],
+  );
+  const communicationPublications = await requireProfileRows(
+    "communication_publications",
+    supabaseAdmin,
+    "communication_publications",
+    "id,author_profile_id,location_id,publication_type,title,summary,body,source_url,status,trust_label,published_at,expires_at,created_at,updated_at,content_format",
+    "author_profile_id",
+    profileIds,
+  );
+
+  const directMessages = await requireProfileRows(
+    "direct_messages_sent",
+    supabaseAdmin,
+    "community_direct_messages",
+    "id,thread_id,sender_profile_id,body,is_removed,removed_at,removed_reason,created_at",
+    "sender_profile_id",
+    profileIds,
+  );
+  const messages = await requireProfileRows(
+    "messages_sent",
+    supabaseAdmin,
+    "messages",
+    "id,conversation_id,sender_profile_id,text,read_at,created_at",
+    "sender_profile_id",
+    profileIds,
+  );
+  const groupMessages = await requireProfileRows(
+    "group_messages_sent",
+    supabaseAdmin,
+    "group_messages_new",
+    "id,group_id,sender_profile_id,content,created_at,message_type,media_url,media_mime_type,audio_duration_seconds",
+    "sender_profile_id",
+    profileIds,
+  );
+
+  const communityMemberships = await requireUserRows(
+    "community_memberships",
+    supabaseAdmin,
+    "community_memberships",
+    "id,community_id,profile_id,role,status,join_method,verified_by_residence,requested_at,approved_at,joined_at,last_seen_at,created_at,updated_at",
+    userId,
+  );
+  const groupMemberships = await requireProfileRows(
+    "group_memberships",
+    supabaseAdmin,
+    "group_members_new",
+    "id,group_id,member_profile_id,role,joined_at",
+    "member_profile_id",
+    profileIds,
+  );
+  const pollVotes = await requireUserRows(
+    "community_poll_votes",
+    supabaseAdmin,
+    "community_poll_votes",
+    "id,poll_id,option_id,created_at,profile_id",
+    userId,
+  );
+  const issueSupports = await requireProfileRows(
+    "community_issue_supports",
+    supabaseAdmin,
+    "community_issue_supports",
+    "id,issue_id,profile_id,created_at",
+    "profile_id",
+    profileIds,
+  );
+
+  const profileFavorites = await requireUserRows(
+    "profile_favorites",
+    supabaseAdmin,
+    "profile_favorites",
+    "id,profile_id,created_at",
+    userId,
+  );
+  const classifiedFavorites = await requireProfileRows(
+    "classified_favorites",
+    supabaseAdmin,
+    "classified_favorites",
+    "id,classified_id,profile_id,created_at",
+    "profile_id",
+    profileIds,
+  );
+  const professionalFavorites = await requireProfileRows(
+    "professional_favorites",
+    supabaseAdmin,
+    "professional_favorites",
+    "id,professional_id,profile_id,created_at",
+    "profile_id",
+    profileIds,
+  );
+  const eventFavorites = await requireProfileRows(
+    "event_favorites",
+    supabaseAdmin,
+    "event_favorites",
+    "id,event_id,profile_id,created_at",
+    "profile_id",
+    profileIds,
+  );
+  const touristSaved = await requireProfileRows(
+    "tourist_point_saved_items",
+    supabaseAdmin,
+    "tourist_point_saved_items",
+    "id,tourist_point_id,profile_id,created_at",
+    "profile_id",
+    profileIds,
+  );
+  const vagaSaved = await requireProfileRows(
+    "vaga_saved_items",
+    supabaseAdmin,
+    "vaga_saved_items",
+    "id,vaga_id,profile_id,created_at",
+    "profile_id",
+    profileIds,
+  );
+  const favoriteBusinesses = await requireUserRows(
+    "user_favorite_businesses",
+    supabaseAdmin,
+    "user_favorite_businesses",
+    "id,business_id,notify_on_promotions,notify_on_new_items,notes,tags,created_at,updated_at",
+    userId,
+  );
+
+  const ridesRaw = await requireRowsByAnyProfileColumn(
+    "mobility",
+    supabaseAdmin,
+    "ride_requests",
+    "id,passenger_profile_id,driver_profile_id,route_id,status,suggested_price,final_price,available_seats,created_at,updated_at,pickup_location_id,dropoff_location_id,origin,destination,departure_time,payment_method,ride_mode,source_type,pickup_confirmed_at,delivered_at,started_at,completed_at,cancelled_at",
+    ["passenger_profile_id", "driver_profile_id"],
+    profileIds,
+  );
+  const routeReservations = await requireProfileRows(
+    "route_reservations",
+    supabaseAdmin,
+    "route_reservations",
+    "id,route_id,passenger_profile_id,seats,status,created_at,updated_at",
+    "passenger_profile_id",
+    profileIds,
+  );
+  const ordersRaw = await requireRowsByAnyProfileColumn(
+    "orders",
+    supabaseAdmin,
+    "orders",
+    "id,customer_profile_id,merchant_profile_id,courier_profile_id,payment_mode,delivery_mode,logistics_status,financial_status,items_total,delivery_fee,discount_total,order_total,platform_fee_amount,merchant_net_amount,courier_amount,currency,payment_method,paid_at,refunded_at,accepted_at,preparing_at,ready_for_pickup_at,picked_up_at,delivered_at,canceled_at,failed_at,created_at,updated_at,source_type",
+    ["customer_profile_id", "merchant_profile_id", "courier_profile_id"],
+    profileIds,
+  );
+
+  const subscriptions = await requireUserRows(
+    "subscriptions",
+    supabaseAdmin,
+    "user_subscriptions",
+    "id,plan_type,status,active,amount_cents,started_at,expires_at,created_at,updated_at,plan_code,canceled_at,trial_start,entity_family,vertical,subscription_scope,status_v2,price_cents,billing_period,trial_ends_at,current_period_start,current_period_end,cancel_at_period_end",
+    userId,
+  );
+  const billingTransactions = await requireUserRows(
+    "billing_transactions",
+    supabaseAdmin,
+    "billing_transactions",
+    "id,transaction_type,amount_cents,currency,status,created_at",
+    userId,
+  );
+
+  const notifications = await requireUserRows(
+    "notifications",
+    supabaseAdmin,
+    "notifications",
+    "id,type,title,message,is_read,created_at,priority,read,deleted_at,updated_at,category,action_label,read_at",
+    userId,
+  );
+  const emailLogs = await requireUserRows(
+    "email_logs",
+    supabaseAdmin,
+    "email_logs",
+    "id,template,subject,status,created_at",
+    userId,
+  );
+
+  const [
+    communityReports,
+    directMessageReports,
+    reviewReports,
+    rideReports,
+    vagaReports,
+    groupMessageReports,
+  ] = await Promise.all([
+    requireProfileRows(
+      "community_reports_submitted",
+      supabaseAdmin,
+      "community_reports",
+      "id,target_type,reporter_profile_id,reason,description,evidence_urls,status,reviewed_at,created_at,updated_at",
+      "reporter_profile_id",
+      profileIds,
+    ),
+    requireProfileRows(
+      "direct_message_reports_submitted",
+      supabaseAdmin,
+      "community_direct_message_reports",
+      "id,reporter_profile_id,reason,description,status,reviewed_at,created_at,updated_at",
+      "reporter_profile_id",
+      profileIds,
+    ),
+    requireProfileRows(
+      "review_reports_submitted",
+      supabaseAdmin,
+      "review_reports",
+      "id,reporter_profile_id,reason,description,status,reviewed_at,created_at,updated_at",
+      "reporter_profile_id",
+      profileIds,
+    ),
+    requireProfileRows(
+      "ride_reports_submitted",
+      supabaseAdmin,
+      "ride_reports",
+      "id,reporter_profile_id,reporter_type,report_type,severity,status,title,description,evidence_urls,reported_at,reviewed_at,created_at,updated_at",
+      "reporter_profile_id",
+      profileIds,
+    ),
+    requireProfileRows(
+      "vaga_reports_submitted",
+      supabaseAdmin,
+      "vaga_reports",
+      "id,reporter_profile_id,reason,description,status,reviewed_at,created_at,updated_at",
+      "reporter_profile_id",
+      profileIds,
+    ),
+    requireProfileRows(
+      "group_message_reports_submitted",
+      supabaseAdmin,
+      "group_message_reports",
+      "id,reporter_profile_id,reason,details,status,reviewed_at,created_at",
+      "reporter_profile_id",
+      profileIds,
+    ),
+  ]);
+
+  const aiImageGenerations = await requireUserRows(
+    "ai_image_generations",
+    supabaseAdmin,
+    "ai_image_generations",
+    "id,feature,mode,prompt,negative_prompt,model,reference_urls,generated_urls,selected_url,status,created_at,updated_at",
+    userId,
+  );
+  const tryonGenerations = await requireUserRows(
+    "tryon_generations",
+    supabaseAdmin,
+    "tryon_generations",
+    "id,product_image_url,category,target_gender,style,status,generated_urls,selected_url,created_at,updated_at",
+    userId,
+  );
+  const aiUsage = await requireUserRows(
+    "ai_usage",
+    supabaseAdmin,
+    "ai_usage_log",
+    "id,feature,capability,model,status,tokens_in,tokens_out,latency_ms,created_at",
+    userId,
+  );
+  const aiModeration = await requireUserRows(
+    "ai_moderation",
+    supabaseAdmin,
+    "ai_moderation_log",
+    "id,feature,input_type,blocked,reason,severity,created_at",
+    userId,
+  );
+
+  const analyticsEvents = await requireUserRows(
+    "analytics_events",
+    supabaseAdmin,
+    "analytics_events",
+    "id,entity_type,event_type,event_source,session_id,ip_address,user_agent,referrer,latitude,longitude,city,state,country,created_at,event",
+    userId,
+  );
+  const analyticsSessions = await requireUserRows(
+    "analytics_sessions",
+    supabaseAdmin,
+    "analytics_sessions",
+    "id,session_id,ip_address,user_agent,first_seen_at,last_seen_at",
+    userId,
+  );
+
+  const piiAccess = await requireUserRows(
+    "pii_access_summary",
+    supabaseAdmin,
+    "pii_access_log",
+    "table_name,field_name,operation,access_reason,access_reason_category,accessed_at,source,retention_until",
+    userId,
+    "subject_user_id",
+    "accessed_at",
+  );
+
+  const mediaByUser = await requireUserRows(
+    "media_assets:user",
+    supabaseAdmin,
+    "media_assets",
+    "id,preset,mime_type,byte_size,width,height,state,attached_at,deleted_at,created_at,updated_at",
+    userId,
+    "owner_user_id",
+  );
+  const mediaByProfile = await requireProfileRows(
+    "media_assets:profile",
+    supabaseAdmin,
+    "media_assets",
+    "id,preset,mime_type,byte_size,width,height,state,attached_at,deleted_at,created_at,updated_at",
+    "owner_profile_id",
+    profileIds,
+  );
+  const mediaAssets = dedupeRows(
+    "media_assets",
+    [...mediaByUser, ...mediaByProfile],
+  );
+
+  const verification = await requireProfileRows(
+    "verification",
+    supabaseAdmin,
+    "verification",
+    "verification_type,submitted_at,reviewed_at,status,review_reason,created_at,updated_at",
+    "profile_id",
+    profileIds,
+    "submitted_at",
+  );
+
+  const bannedUsers = await requireUserRows(
+    "security:banned_users",
+    supabaseAdmin,
+    "banned_users",
+    "id,reason,banned_at,expires_at,is_active",
+    userId,
+  );
+  const sessionAnomalies = await requireUserRows(
+    "security:session_anomalies",
+    supabaseAdmin,
+    "session_anomalies",
+    "id,anomaly_type,severity,action_taken,auto_resolved,resolved_at,detected_at,created_at",
+    userId,
+  );
+  const profileAudit = await requireProfileRows(
+    "security:profile_audit",
+    supabaseAdmin,
+    "profile_audit_log",
+    "id,action,reason,performed_at",
+    "profile_id",
+    profileIds,
+  );
+
+  const emergencyContacts = await requireProfileRows(
+    "emergency_contacts",
+    supabaseAdmin,
+    "emergency_contacts",
+    "relationship,is_primary,is_active,created_at,updated_at",
+    "profile_id",
+    profileIds,
+    "created_at",
+  );
+  const pushDevices = await requireUserRows(
+    "push_credentials",
+    supabaseAdmin,
+    "push_subscriptions",
+    "device_name,user_agent,is_active,created_at,last_used_at",
+    userId,
+    "user_id",
+    "created_at",
+  );
+
+  const authUser = mapAuthUser(
+    authData.user as unknown as Record<string, unknown>,
+  );
+  const {
+    identities: authIdentities,
+    factors: authFactors,
+    ...account
+  } = authUser;
+
+  const sections: JsonRecord = {
+    account,
+    auth_identities: authIdentities,
+    auth_factors: authFactors,
+    profiles: {
+      profiles,
+      personal_social_profiles: personalSocialProfiles,
+    },
+    profile_memberships: {
+      memberships: profileMembers,
+      active_profile_selection: activeProfiles,
+    },
+    roles,
+    residences: { residences, addresses },
+    privacy_preferences: {
+      consents,
+      notification_preferences: notificationPreferences,
+      mfa_status: mfaStatus,
+    },
+    business_profiles: {
+      businesses,
+      business_data: businessData,
+      products: businessProducts,
+      stats: businessStats,
+    },
+    professional_profiles: {
+      profiles: professionalData,
+      stats: professionalStats,
+    },
+    driver_profiles: {
+      data: driverData,
+      profiles: driverProfiles,
+      availability: driverAvailability,
+      routes: driverRoutes,
+    },
+    authored_content: {
+      posts,
+      comments,
+      community_posts: communityPosts,
+      community_questions: communityQuestions,
+      question_answers: questionAnswers,
+      classifieds,
+      events,
+      vagas,
+      work_opportunities: workOpportunities,
+      communication_publications: communicationPublications,
+    },
+    messages_sent: {
+      marketplace_messages: messages,
+      direct_messages: directMessages,
+      group_messages: groupMessages,
+    },
+    community_membership_and_actions: {
+      memberships: communityMemberships,
+      group_memberships: groupMemberships,
+      poll_votes: pollVotes,
+      issue_supports: issueSupports,
+    },
+    favorites_and_saved_items: {
+      profiles: profileFavorites,
+      classifieds: classifiedFavorites,
+      professionals: professionalFavorites,
+      events: eventFavorites,
+      tourist_points: touristSaved,
+      vagas: vagaSaved,
+      businesses: favoriteBusinesses,
+    },
+    mobility: {
+      rides: sanitizeRides(ridesRaw, profileIdSet),
+      route_reservations: routeReservations.map((row) => ({
+        id: row.id,
+        route_id: row.route_id,
+        seats: row.seats,
+        status: row.status,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      })),
+    },
+    orders: sanitizeOrders(ordersRaw, profileIdSet),
+    billing: { subscriptions, transactions: billingTransactions },
+    notifications: { in_app: notifications, email: emailLogs },
+    reports_submitted: [
+      ...sanitizeReports("community", communityReports),
+      ...sanitizeReports("direct_message", directMessageReports),
+      ...sanitizeReports("review", reviewReports),
+      ...sanitizeReports("ride", rideReports),
+      ...sanitizeReports("vaga", vagaReports),
+      ...sanitizeReports("group_message", groupMessageReports),
+    ],
+    ai_activity: {
+      image_generations: aiImageGenerations,
+      tryon_generations: tryonGenerations,
+      usage: aiUsage,
+      moderation: aiModeration,
+    },
+    analytics: {
+      events: analyticsEvents,
+      sessions: analyticsSessions,
+    },
+    pii_access_summary: piiAccess,
+    media_assets: mediaAssets,
+    verification,
+    security_state_summary: {
+      bans: bannedUsers,
+      session_anomalies: sessionAnomalies,
+      profile_audit: profileAudit,
+    },
+    emergency_contacts: emergencyContacts,
+    push_credentials: pushDevices,
+  };
+
+  const redactions = [
+    "provider/internal auth metadata and credentials",
+    "third-party message bodies and conversation dumps",
+    "counterparty profile identifiers in rides and orders",
+    "passenger route details when the subject is only the driver",
+    "merchant/courier financial splits unless the subject owns that role",
+    "recipient/proof-of-delivery data",
+    "report target identifiers and moderation workflow internals",
+    "billing provider identifiers and internal snapshots",
+    "raw analytics metadata/properties and entity identifiers",
+    "storage paths, storage references and hashes",
+    "live driver location precision",
+    "emergency-contact names, phones and emails",
+    "push endpoint/p256dh/auth credentials",
+    "legacy session tracker",
+    "raw application/security audit logs",
+  ];
+
+  return {
+    payload: {
+      export_metadata: {
+        subject_user_id: userId,
+        generated_at: new Date().toISOString(),
+        lgpd_reference: "Art. 18, I",
+        format_version: FORMAT_VERSION,
+        matrix_version: MATRIX_VERSION,
+        matrix_implementation_complete: LGPD_EXPORT_MATRIX_IMPLEMENTATION_COMPLETE,
+        pagination: {
+          page_size: PAGE_SIZE,
+          max_rows_per_section: MAX_ROWS_PER_SECTION,
+          overflow_behavior: "fail-closed",
+        },
+        sections: Object.keys(sections),
+        redactions,
+      },
+      data: sections,
+    },
+    sectionCount: Object.keys(sections).length,
+  };
+}
+
+serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: responseHeaders(req) });
+  }
+
+  const methodError = requireHttpMethod(req, ["POST"], ALLOWED_METHODS);
   if (methodError) return methodError;
 
-  // Rate limit: 5 requests por hora por usuário
   const rateLimitResponse = await rateLimitMiddleware(req, 5, 60 * 60 * 1000);
   if (rateLimitResponse) return rateLimitResponse;
 
+  const token = extractBearerToken(req);
+  if (!token) {
+    return jsonResponse({ error: "Unauthorized" }, 401, ALLOWED_METHODS, req);
+  }
+
+  const supabaseAdmin = createClient(
+    getRequiredEnv("SUPABASE_URL"),
+    getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY"),
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
+
+  const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
+  if (authError || !authData.user) {
+    return jsonResponse({ error: "Invalid or expired token" }, 401, ALLOWED_METHODS, req);
+  }
+
+  const userId = authData.user.id;
+
   try {
-    // Get JWT from request
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader) {
-      return errorResponse('Unauthorized', 401);
-    }
+    const { payload, sectionCount } = await collectExport(supabaseAdmin, userId);
+    const json = JSON.stringify(payload, null, 2);
+    const sizeBytes = new TextEncoder().encode(json).length;
 
-    const jwt = authHeader.replace('Bearer ', '');
-
-    // Initialize Supabase clients
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-
-    // Client with user's JWT (for validation)
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: `Bearer ${jwt}` } },
-      auth: { autoRefreshToken: false, persistSession: false },
+    const { error: piiAuditError } = await supabaseAdmin.rpc("log_pii_access", {
+      p_subject_user_id: userId,
+      p_table_name: "subject_data_export",
+      p_record_id: userId,
+      p_operation: "EXPORT",
+      p_reason: "LGPD Art. 18 - Direito de acesso aos dados",
+      p_reason_category: "data_export",
+      p_data_sample: null,
+      p_source: "edge:user-export-data:v2",
     });
-
-    // Service role client (for data export)
-    const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Verify user
-    const { data: { user }, error: userError } = await userClient.auth.getUser(jwt);
-    if (userError || !user) {
-      return errorResponse('Invalid token', 401);
+    if (piiAuditError) {
+      throw new Error("EXPORT_AUDIT_FAILED");
     }
 
-    const userId = user.id;
-
-    // Log audit
-    const auditInfo = getAuditInfo(req);
     auditLog({
       timestamp: new Date().toISOString(),
       userId,
-      action: 'DATA_EXPORT_REQUEST',
-      resource: 'user_export_data',
-      status: 'success',
-      ...auditInfo,
-    });
-
-    // Registrar acesso a PII
-    await serviceClient.rpc('log_pii_access', {
-      p_subject_user_id: userId,
-      p_table_name: 'all_user_data',
-      p_record_id: userId,
-      p_operation: 'EXPORT',
-      p_reason: 'LGPD Art. 18 - Direito de acesso aos dados',
-      p_reason_category: 'data_export',
-      p_data_sample: null,
-      p_source: 'edge:user-export-data',
-    });
-
-    // Coletar dados de todas as tabelas relacionadas ao usuário
-  const userData: Record<string, unknown> = {
-      export_metadata: {
-        user_id: userId,
-        email: user.email,
-        exported_at: new Date().toISOString(),
-        lgpd_reference: 'Art. 18, I',
-        format_version: '1.0',
+      action: "DATA_EXPORT_COMPLETED",
+      resource: "user-export-data",
+      status: "success",
+      details: {
+        formatVersion: FORMAT_VERSION,
+        matrixVersion: MATRIX_VERSION,
+        matrixComplete: LGPD_EXPORT_MATRIX_IMPLEMENTATION_COMPLETE,
+        sizeBytes,
+        sectionCount,
       },
-    };
+      ...getAuditInfo(req),
+    });
 
-    // 1. Dados do auth.users (via admin API)
-    const { data: authUser, error: authError } = await serviceClient.auth.admin.getUserById(userId);
-    if (!authError && authUser) {
-      userData.auth_user = {
-        id: authUser.user.id,
-        email: authUser.user.email,
-        phone: authUser.user.phone,
-        email_confirmed_at: authUser.user.email_confirmed_at,
-        phone_confirmed_at: authUser.user.phone_confirmed_at,
-        created_at: authUser.user.created_at,
-        updated_at: authUser.user.updated_at,
-        last_sign_in_at: authUser.user.last_sign_in_at,
-        app_metadata: authUser.user.app_metadata,
-        user_metadata: authUser.user.user_metadata,
-        identities: authUser.user.identities?.map(i => ({
-          provider: i.provider,
-          identity_data: i.identity_data,
-          last_sign_in_at: i.last_sign_in_at,
-          created_at: i.created_at,
-        })),
-        factors: authUser.user.factors?.map(f => ({
-          id: f.id,
-          status: f.status,
-          friendly_name: f.friendly_name,
-          factor_type: f.factor_type,
-          created_at: f.created_at,
-          updated_at: f.updated_at,
-        })),
-      };
-    }
-
-    // 2. Profiles
-    const { data: profiles } = await serviceClient
-      .from('profiles')
-      .select('*')
-      .eq('user_id', userId);
-    if (profiles?.length) {
-      userData.profiles = profiles;
-      userData.profile = profiles[0];
-    }
-    const profileIds = (profiles ?? [])
-      .map((profile) => profile.id)
-      .filter((id): id is string => typeof id === 'string' && id.length > 0);
-
-    // 3. User Roles
-    const { data: roles } = await serviceClient
-      .from('user_roles')
-      .select('*')
-      .eq('user_id', userId);
-    if (roles?.length) userData.roles = roles;
-
-    // 4. Addresses
-    const { data: addresses } = await serviceClient
-      .from('addresses')
-      .select('*, user_residences!inner(*)')
-      .eq('user_residences.user_id', userId);
-    if (addresses?.length) userData.addresses = addresses;
-
-    // 5. Businesses (se for dono)
-    const { data: businesses } = await serviceClient
-      .from('businesses')
-      .select('*, business_data(*), business_gallery(*)')
-      .eq('owner_id', userId);
-    if (businesses?.length) userData.businesses = businesses;
-
-    // 6. Gastronomy
-    const { data: gastronomy } = await serviceClient
-      .from('gastronomy_profiles')
-      .select('*, menus(*)')
-      .eq('business_id', userId);
-    if (gastronomy?.length) userData.gastronomy = gastronomy;
-
-    // 7. Classifieds
-    const { data: classifieds } = await serviceClient
-      .from('classifieds')
-      .select('*')
-      .eq('seller_id', userId);
-    if (classifieds?.length) userData.classifieds = classifieds;
-
-    // 8. Professional
-    const { data: professional } = await serviceClient
-      .from('professional_data')
-      .select('*, professional_jobs(*), professional_stats(*)')
-      .eq('user_id', userId);
-    if (professional?.length) userData.professional = professional;
-
-    // 9. Mobility (motorista)
-    const { data: driverProfile } = await serviceClient
-      .from('driver_profiles')
-      .select('*, driver_vehicles(*), driver_availability(*)')
-      .eq('user_id', userId);
-    if (driverProfile?.length) userData.driver_profile = driverProfile;
-
-    // 10. Ride requests (como passageiro)
-    const { data: rideRequests } = await serviceClient
-      .from('ride_requests')
-      .select('*, ride_offers(*), mobility_messages(*)')
-      .eq('passenger_id', userId);
-    if (rideRequests?.length) userData.ride_requests = rideRequests;
-
-    // 11. Notifications
-    const { data: notifications } = await serviceClient
-      .from('notifications')
-      .select('*')
-      .eq('user_id', userId);
-    if (notifications?.length) userData.notifications = notifications;
-
-    // 12. Messages
-    const { data: conversations } = await serviceClient
-      .from('conversation_participants')
-      .select('*, conversations(*), messages(*)')
-      .eq('user_id', userId);
-    if (conversations?.length) userData.conversations = conversations;
-
-    // 13. Community feed and Q&A
-    if (profileIds.length) {
-      const { data: posts } = await serviceClient
-        .from('posts')
-        .select('*')
-        .in('author_profile_id', profileIds);
-      if (posts?.length) userData.posts = posts;
-
-      const { data: communityQuestions } = await serviceClient
-        .from('community_questions')
-        .select('*')
-        .in('author_profile_id', profileIds);
-      if (communityQuestions?.length) userData.community_questions = communityQuestions;
-
-      const { data: questionAnswers } = await serviceClient
-        .from('question_answers')
-        .select('*')
-        .in('author_profile_id', profileIds);
-      if (questionAnswers?.length) userData.question_answers = questionAnswers;
-    }
-
-    // 14. Events created
-    const { data: events } = await serviceClient
-      .from('events')
-      .select('*')
-      .eq('organizer_id', userId);
-    if (events?.length) userData.events = events;
-
-    // 15. Billing/Subscriptions
-    const { data: subscriptions } = await serviceClient
-      .from('user_subscriptions')
-      .select('*, billing_transactions(*)')
-      .eq('user_id', userId);
-    if (subscriptions?.length) userData.subscriptions = subscriptions;
-
-    // 16. User Consents
-    const { data: consents } = await serviceClient
-      .from('user_consents')
-      .select('*')
-      .eq('user_id', userId);
-    if (consents?.length) userData.consents = consents;
-
-    // 17. Sessions
-    const { data: sessions } = await serviceClient
-      .from('user_sessions')
-      .select('*')
-      .eq('user_id', userId);
-    if (sessions?.length) userData.sessions = sessions;
-
-    // 18. Analytics events (anonymized)
-    const { data: analytics } = await serviceClient
-      .from('analytics_events')
-      .select('event_type, event_name, created_at, metadata')
-      .eq('user_id', userId)
-      .limit(1000);
-    if (analytics?.length) userData.analytics = analytics;
-
-    // 19. Application logs
-    const { data: appLogs } = await serviceClient
-      .from('application_logs')
-      .select('level, message, created_at')
-      .eq('user_id', userId)
-      .limit(1000);
-    if (appLogs?.length) userData.application_logs = appLogs;
-
-    // 20. PII Access Logs
-    const { data: piiLogs } = await serviceClient
-      .from('pii_access_log')
-      .select('*')
-      .eq('subject_user_id', userId);
-    if (piiLogs?.length) userData.pii_access_log = piiLogs;
-
-    // Calcular tamanho do arquivo
-    const jsonString = JSON.stringify(userData, null, 2);
-    const sizeInBytes = new TextEncoder().encode(jsonString).length;
-
-    // Registrar exportação na tabela de audit (opcional)
-    try {
-      await serviceClient.from('application_logs').insert({
-        level: 'info',
-        message: `LGPD: Dados exportados para usuário ${userId}`,
-        user_id: userId,
-        context: { size_bytes: sizeInBytes, tables_exported: Object.keys(userData).length },
-        source: 'user-export-data',
-      });
-    } catch {
-      // Não falhar se logging falhar
-    }
-
-    return new Response(
-      JSON.stringify(userData, null, 2),
-      {
-        status: 200,
-        headers: {
-          ...getAllSecurityHeaders('POST, OPTIONS', req),
-          'Content-Disposition': `attachment; filename="meus-dados-${userId.slice(0, 8)}-${new Date().toISOString().split('T')[0]}.json"`,
-          'X-Export-Size': String(sizeInBytes),
-          'X-Export-Tables': String(Object.keys(userData).length),
-        },
-      }
-    );
-
+    return new Response(json, {
+      status: 200,
+      headers: {
+        ...responseHeaders(req),
+        "Content-Type": "application/json; charset=utf-8",
+        "Content-Disposition": `attachment; filename="meus-dados-${userId.slice(0, 8)}-${new Date().toISOString().slice(0, 10)}.json"`,
+        "Cache-Control": "no-store",
+        "X-Content-Type-Options": "nosniff",
+        "X-Export-Format-Version": FORMAT_VERSION,
+        "X-Export-Matrix-Version": MATRIX_VERSION,
+      },
+    });
   } catch (error: unknown) {
-    console.error('[user-export-data]', error);
-    return errorResponse('Export failed', 500, error);
+    const code = error instanceof Error ? error.message : "EXPORT_FAILED";
+    console.error("[user-export-data] export failed", { code });
+    auditLog({
+      timestamp: new Date().toISOString(),
+      userId,
+      action: "DATA_EXPORT_FAILED",
+      resource: "user-export-data",
+      status: "failure",
+      details: { code },
+      ...getAuditInfo(req),
+    });
+    return jsonResponse(
+      { error: "Export failed" },
+      500,
+      ALLOWED_METHODS,
+      req,
+    );
   }
 });
-

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "caller": "supabase/functions/user-export-data/index.ts",
+  "role": "account-export",
+  "rationale": "The authenticated LGPD subject-data export may read only the controlled tables listed here, in addition to readers already declared directly by the Core Platform ownership manifest. This authority grants read-only ownership visibility; it does not authorize writes, rollout, deployment, or dynamic table access.",
+  "controlledTableReaders": [
+    "banned_users",
+    "comments",
+    "community_direct_message_reports",
+    "community_direct_messages",
+    "community_reports",
+    "emergency_contacts",
+    "media_assets",
+    "messages",
+    "notification_preferences",
+    "review_reports",
+    "ride_reports",
+    "user_favorite_businesses",
+    "vaga_reports"
+  ]
+}
