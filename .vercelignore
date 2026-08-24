@@ -42,6 +42,7 @@ yarn-error.log*
 docs/**
 !docs/architecture/
 !docs/architecture/core-platform-ownership.json
+!docs/architecture/core-platform-account-export-authority.json
 !docs/09-reference/
 !docs/09-reference/governance/
 !docs/09-reference/governance/security/
