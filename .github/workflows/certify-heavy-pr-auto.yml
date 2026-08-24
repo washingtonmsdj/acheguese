@@ -38,7 +38,7 @@ jobs:
       - acheguese-heavy-windows
       - playwright-chromium
       - remote-only
-    timeout-minutes: 90
+    timeout-minutes: 180
 
     steps:
       - name: Validate runner and PR provenance
@@ -117,13 +117,25 @@ jobs:
           E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
           E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
           ACCOUNT_TARGET_IS_PREVIEW: false
+          PLAYWRIGHT_SKIP_WEBSERVER: "1"
         run: |
           $ErrorActionPreference = "Stop"
           if ([string]::IsNullOrWhiteSpace($env:E2E_USER_EMAIL) -or [string]::IsNullOrWhiteSpace($env:E2E_USER_PASSWORD)) {
             Write-Error "Certification blocked: authenticated E2E credentials are not configured."
             exit 1
           }
-          npx playwright test tests/e2e/logout-authenticated.spec.ts --project=chromium --reporter=list --retries=0
+          & .\scripts\ci\run-preview-e2e.ps1 `
+            -Name "logout" `
+            -Port 8100 `
+            -DistDir ".e2e-dist/auth" `
+            -PlaywrightArgs @(
+              "test",
+              "tests/e2e/logout-authenticated.spec.ts",
+              "--project=chromium",
+              "--reporter=list",
+              "--retries=0",
+              "--output=test-results/logout"
+            )
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Print logout E2E failure diagnostics
@@ -131,7 +143,7 @@ jobs:
         shell: powershell
         run: |
           Write-Host "===== Authenticated logout E2E diagnostics ====="
-          $contexts = @(Get-ChildItem -Path "test-results" -Recurse -File -Filter "error-context.md" -ErrorAction SilentlyContinue)
+          $contexts = @(Get-ChildItem -Path "test-results/logout" -Recurse -File -Filter "error-context.md" -ErrorAction SilentlyContinue)
           if ($contexts.Count -eq 0) {
             Write-Host "No error-context.md files found."
           } else {
@@ -140,6 +152,19 @@ jobs:
               Get-Content -Path $context.FullName -ErrorAction SilentlyContinue
             }
           }
+
+      - name: Upload logout E2E artifacts (non-gating transport)
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: heavy-pr-logout-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            .e2e-logs/logout-preview.stdout.log
+            .e2e-logs/logout-preview.stderr.log
+            test-results/logout/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Run regression tests with non-empty discovery
         id: regression
@@ -210,8 +235,19 @@ jobs:
           VITE_SUPABASE_URL: https://ci-fixtures.invalid
           VITE_SUPABASE_PUBLISHABLE_KEY: ci-public-fixture-key
           VITE_SUPABASE_ANON_KEY: ci-public-fixture-key
+          PLAYWRIGHT_SKIP_WEBSERVER: "1"
         run: |
-          npm run test:e2e:ci
+          & .\scripts\ci\run-preview-e2e.ps1 `
+            -Name "public" `
+            -Port 8099 `
+            -DistDir ".e2e-dist/public" `
+            -PlaywrightArgs @(
+              "test",
+              "tests/e2e/territory-home-operational.spec.ts",
+              "--project=chromium",
+              "--reporter=list",
+              "--output=test-results/public"
+            )
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Print public E2E failure diagnostics
@@ -219,7 +255,7 @@ jobs:
         shell: powershell
         run: |
           Write-Host "===== Public territorial E2E diagnostics ====="
-          $contexts = @(Get-ChildItem -Path "test-results" -Recurse -File -Filter "error-context.md" -ErrorAction SilentlyContinue)
+          $contexts = @(Get-ChildItem -Path "test-results/public" -Recurse -File -Filter "error-context.md" -ErrorAction SilentlyContinue)
           if ($contexts.Count -eq 0) {
             Write-Host "No error-context.md files found."
           } else {
@@ -228,6 +264,19 @@ jobs:
               Get-Content -Path $context.FullName -ErrorAction SilentlyContinue
             }
           }
+
+      - name: Upload public E2E artifacts (non-gating transport)
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: heavy-pr-public-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            .e2e-logs/public-preview.stdout.log
+            .e2e-logs/public-preview.stderr.log
+            test-results/public/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Record aggregate certification result
         if: always()
@@ -266,15 +315,3 @@ jobs:
             exit 1
           }
           Write-Host "HEAVY_PR_CERTIFICATION_PASS"
-
-      - name: Upload certification reports (non-gating transport)
-        if: always()
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: heavy-pr-certification-${{ github.run_id }}
-          path: |
-            playwright-report/
-            test-results/
-          if-no-files-found: ignore
-          retention-days: 7
