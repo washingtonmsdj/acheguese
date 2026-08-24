@@ -1,0 +1,281 @@
+{
+  "schemaVersion": "lgpd-purge-policy/v1",
+  "authority": "account-deletion-irreversible-phase",
+  "projectRef": "xhdowzacfujckjelqhtd",
+  "catalogSnapshotDate": "2026-08-21",
+  "rolloutReady": false,
+  "rules": {
+    "authUserHardDeleteMustBeLast": true,
+    "profileDeletionMustBeClassifiedBeforeAuthDelete": true,
+    "storageCleanupMustPrecedeAuthDelete": true,
+    "storageOwnershipColumn": "owner_id",
+    "deprecatedStorageOwnershipColumn": "owner",
+    "authDeleteMethod": "supabase.auth.admin.deleteUser(userId)",
+    "existingJwtMayRemainValidUntilExp": true,
+    "unknownUserReferenceBehavior": "block",
+    "unknownCascadeBehavior": "block",
+    "requiredQueryFailure": "fail-closed",
+    "partialFailureBehavior": "persist-failed-state-and-require-idempotent-retry",
+    "directAuthDeleteFromBrowser": false
+  },
+  "remoteFoundation": {
+    "accountDeletionRequestsExists": false,
+    "requestRpcExists": false,
+    "cancelRpcExists": true,
+    "pgCronInstalled": true,
+    "pgNetInstalled": true
+  },
+  "authUserForeignKeyBlockers": {
+    "strategy": "nullify-reference-before-auth-delete",
+    "migrationStatus": "not-implemented",
+    "reason": "all observed direct auth.users NO ACTION columns are nullable, so the technical target is to detach the actor/assignee reference before hard-delete instead of deleting the retained row",
+    "columns": [
+      "public.admin_users.granted_by",
+      "public.commercial_catalog_version.created_by",
+      "public.education_lead_events.actor_user_id",
+      "public.education_leads.owner_user_id",
+      "public.location_versions.created_by",
+      "public.module_rollouts.created_by",
+      "public.module_rollouts.updated_by",
+      "public.neighborhood_boundaries.created_by",
+      "public.pii_access_log.accessed_by",
+      "public.pii_access_log.approved_by",
+      "public.profile_audit_log.performed_by",
+      "public.profile_members.invited_by",
+      "public.session_anomalies.resolved_by",
+      "public.site_settings.updated_by",
+      "public.territory_change_events.processed_by",
+      "public.tourist_points.updated_by",
+      "public.user_consents.granted_by",
+      "public.user_consents.revoked_by",
+      "public.user_mfa_status.exemption_granted_by",
+      "public.user_sessions.revoked_by"
+    ],
+    "domainNotes": {
+      "public.education_leads.owner_user_id": "nullable internal assignee on a lead containing third-party guardian/student PII; deleting the lead because the assignee deletes their account is not an acceptable generic purge rule",
+      "public.pii_access_log.accessed_by": "audit actor reference; retain/nullify is safer than deleting the audit row by default",
+      "public.pii_access_log.approved_by": "audit approver reference; retain/nullify is safer than deleting the audit row by default"
+    }
+  },
+  "profileDeletionFanout": {
+    "snapshot": {
+      "totalForeignKeys": 157,
+      "cascade": 106,
+      "noAction": 5,
+      "restrict": 3,
+      "setNull": 43,
+      "setNullOnNotNullColumn": 1
+    },
+    "hardBlockers": [
+      {
+        "column": "public.communication_publications.author_profile_id",
+        "onDelete": "RESTRICT",
+        "nullable": false,
+        "classification": "schema-or-retention-resolution-required"
+      },
+      {
+        "column": "public.community_user_moderation_actions.actor_profile_id",
+        "onDelete": "RESTRICT",
+        "nullable": false,
+        "classification": "retain-moderation-evidence-and-anonymize-actor-required"
+      },
+      {
+        "column": "public.trust_admin_actions.applied_by_profile_id",
+        "onDelete": "RESTRICT",
+        "nullable": false,
+        "classification": "retain-trust-evidence-and-anonymize-actor-required"
+      },
+      {
+        "column": "public.classified_reports.reporter_id",
+        "onDelete": "SET NULL",
+        "nullable": false,
+        "classification": "remote-constraint-drift-and-schema-repair-required",
+        "constraint": "classified_reports_reporter_id_fkey",
+        "remoteDefinition": "FOREIGN KEY (reporter_id) REFERENCES profiles(id) ON DELETE SET NULL",
+        "gitBaseline": "20260529102000 creates reporter_id REFERENCES profiles(id) ON DELETE CASCADE; 20260714118000 requires reporter_id NOT NULL"
+      }
+    ],
+    "nullableNoActionReferences": [
+      "public.comments.business_id",
+      "public.comments.professional_id",
+      "public.issue_blocked_terms.created_by",
+      "public.operational_verifications.verified_by",
+      "public.vagas.owner_profile_id"
+    ],
+    "cascadeReview": {
+      "status": "full-domain-review-required",
+      "count": 106,
+      "reason": "profile deletion currently cascades through authored, shared, transactional, moderation and safety records; cascade semantics alone do not prove that destroying the whole row is appropriate for account deletion",
+      "highRiskExamples": [
+        "public.community_direct_message_reports.reported_profile_id",
+        "public.community_direct_message_reports.reporter_profile_id",
+        "public.community_reports.reporter_profile_id",
+        "public.group_message_reports.reporter_profile_id",
+        "public.review_reports.reporter_profile_id",
+        "public.ride_reports.reporter_profile_id",
+        "public.vaga_reports.reporter_profile_id",
+        "public.safety_incidents.reported_by",
+        "public.safety_evidence.uploaded_by",
+        "public.safety_audit_log.performed_by",
+        "public.orders.customer_profile_id",
+        "public.orders.merchant_profile_id",
+        "public.reviews.reviewed_profile_id",
+        "public.reviews.reviewer_profile_id",
+        "public.community_direct_messages.sender_profile_id",
+        "public.messages.sender_profile_id",
+        "public.conversations.buyer_id",
+        "public.conversations.seller_id"
+      ]
+    }
+  },
+  "nonForeignKeyUserIdentifiers": {
+    "strategy": "explicit-domain-policy-required",
+    "reason": "these base-table user identifiers do not reference auth.users and therefore are not cleaned automatically by Auth deletion",
+    "columns": [
+      {
+        "column": "private.alpha_access_audit_log.actor_user_id",
+        "nullable": true,
+        "classification": "retain-anonymize-reference"
+      },
+      {
+        "column": "private.alpha_access_audit_log.subject_user_id",
+        "nullable": true,
+        "classification": "retain-anonymize-reference"
+      },
+      {
+        "column": "private.business_favorites_audit_log.actor_user_id",
+        "nullable": true,
+        "classification": "retain-anonymize-reference"
+      },
+      {
+        "column": "private.business_favorites_audit_log.owner_user_id",
+        "nullable": false,
+        "classification": "retain-anonymize-reference"
+      },
+      {
+        "column": "private.entity_contact_audit_log.actor_user_id",
+        "nullable": false,
+        "classification": "retain-anonymize-reference"
+      },
+      {
+        "column": "private.messaging_trust_audit_log.actor_user_id",
+        "nullable": true,
+        "classification": "retain-anonymize-reference"
+      },
+      {
+        "column": "private.notification_preferences_audit_log.actor_user_id",
+        "nullable": true,
+        "classification": "retain-anonymize-reference"
+      },
+      {
+        "column": "private.notification_preferences_audit_log.user_id",
+        "nullable": false,
+        "classification": "retain-anonymize-reference"
+      },
+      {
+        "column": "private.professional_credentials_audit_log.actor_user_id",
+        "nullable": false,
+        "classification": "retain-anonymize-reference"
+      },
+      {
+        "column": "private.sensitive_report_audit_log.actor_user_id",
+        "nullable": true,
+        "classification": "retain-anonymize-reference"
+      },
+      {
+        "column": "public.ai_image_generations.user_id",
+        "nullable": false,
+        "classification": "explicit-subject-cleanup-required"
+      },
+      {
+        "column": "public.ai_moderation_log.user_id",
+        "nullable": true,
+        "classification": "retain-anonymize-reference"
+      },
+      {
+        "column": "public.ai_rate_limits.user_id",
+        "nullable": false,
+        "classification": "explicit-subject-cleanup-required"
+      },
+      {
+        "column": "public.ai_usage_log.user_id",
+        "nullable": true,
+        "classification": "retention-decision-required"
+      },
+      {
+        "column": "public.tryon_generations.user_id",
+        "nullable": false,
+        "classification": "explicit-subject-cleanup-required"
+      }
+    ],
+    "minimizedAuditEvidence": {
+      "private.business_favorites_audit_log": "stores actor/owner/business/action/changed field names; note/tag values are deliberately excluded",
+      "private.entity_contact_audit_log": "append-only contact mutation audit; contact values are deliberately excluded",
+      "private.professional_credentials_audit_log": "append-only credential mutation audit without credential values",
+      "private.notification_preferences_audit_log": "stores changed-field flags rather than notification preference values",
+      "private.sensitive_report_audit_log": "stores moderation/report audit envelope and bounded metadata"
+    }
+  },
+  "explicitSubjectCleanupBeforeAuth": [
+    "public.ai_image_generations.user_id",
+    "public.ai_rate_limits.user_id",
+    "public.tryon_generations.user_id"
+  ],
+  "retainedAuditAnonymizationRequired": [
+    "private.alpha_access_audit_log.actor_user_id",
+    "private.alpha_access_audit_log.subject_user_id",
+    "private.business_favorites_audit_log.actor_user_id",
+    "private.business_favorites_audit_log.owner_user_id",
+    "private.entity_contact_audit_log.actor_user_id",
+    "private.messaging_trust_audit_log.actor_user_id",
+    "private.notification_preferences_audit_log.actor_user_id",
+    "private.notification_preferences_audit_log.user_id",
+    "private.professional_credentials_audit_log.actor_user_id",
+    "private.sensitive_report_audit_log.actor_user_id",
+    "public.ai_moderation_log.user_id"
+  ],
+  "unresolved": [
+    {
+      "id": "PURGE-001",
+      "severity": "critical",
+      "reason": "implement and verify pre-delete nullification for the 20 direct auth.users NO ACTION references"
+    },
+    {
+      "id": "PURGE-002",
+      "severity": "critical",
+      "reason": "implement nullable/anonymized identifiers for retained minimized-audit rows and decide the remaining public.ai_usage_log retention behavior"
+    },
+    {
+      "id": "PURGE-003",
+      "severity": "critical",
+      "reason": "define post-completion retention for public.account_deletion_requests.user_id so the deletion authority does not silently retain a raw subject identifier forever"
+    },
+    {
+      "id": "PURGE-004",
+      "severity": "critical",
+      "reason": "implement bounded Storage cleanup by storage.objects.owner_id before Auth deletion"
+    },
+    {
+      "id": "PURGE-005",
+      "severity": "critical",
+      "reason": "implement claim/lock, irreversible worker, idempotent retries and compensation for partial purge failure"
+    },
+    {
+      "id": "PURGE-006",
+      "severity": "critical",
+      "reason": "certify non-production request-to-expiry-to-purge and partial-failure recovery before enabling scheduler"
+    },
+    {
+      "id": "PURGE-007",
+      "severity": "critical",
+      "reason": "classify the 106 profile CASCADE references, resolve 3 non-null RESTRICT references, and repair the classified_reports SET NULL/NOT NULL drift before profiles can be deleted safely"
+    }
+  ],
+  "notes": [
+    "This file is a technical purge authority inventory, not legal advice or a final statutory retention schedule.",
+    "CASCADE and SET NULL foreign keys are not themselves sufficient proof that all personal data in the affected row has been deleted or anonymized.",
+    "The worker must fail closed when catalog drift introduces an unclassified user or profile reference.",
+    "Auth deletion transitively deletes public.profiles because profiles.user_id is ON DELETE CASCADE; profile fanout therefore belongs to the Auth hard-delete safety review.",
+    "No cron job, Edge deployment or database mutation is authorized while rolloutReady is false."
+  ]
+}
