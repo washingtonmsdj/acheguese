@@ -13,6 +13,14 @@ const DEFAULT_MANIFEST_PATH = path.join(
   "architecture",
   "core-platform-ownership.json",
 );
+const DEFAULT_ACCOUNT_EXPORT_AUTHORITY_PATH = path.join(
+  ROOT,
+  "docs",
+  "architecture",
+  "core-platform-account-export-authority.json",
+);
+const ACCOUNT_EXPORT_CALLER = "supabase/functions/user-export-data/index.ts";
+const ACCOUNT_EXPORT_ROLE = "account-export";
 const BASELINE_KINDS = new Set([
   "channel",
   "dynamic-channel",
@@ -54,7 +62,18 @@ export function buildIncrementalBaseline(groupedRecords) {
     .sort((left, right) => callsiteKey(left).localeCompare(callsiteKey(right)));
 }
 
-function tableRuleCallsites(rule) {
+function accountExportReaderCallsites(authority) {
+  return (authority.controlledTableReaders ?? []).map((table) => ({
+    kind: "table",
+    resource: table,
+    access: "read",
+    path: authority.caller,
+    maxCalls: 1,
+    role: authority.role,
+  }));
+}
+
+function tableRuleCallsites(rule, accountExportAuthority) {
   const readers = (rule.allowedReaders ?? []).map((entry) => ({
     kind: "table",
     resource: rule.name,
@@ -67,7 +86,10 @@ function tableRuleCallsites(rule) {
     access: "write",
     ...entry,
   }));
-  return [...readers, ...writers];
+  const accountExportReaders = accountExportReaderCallsites(
+    accountExportAuthority,
+  ).filter((entry) => entry.resource === rule.name);
+  return [...readers, ...accountExportReaders, ...writers];
 }
 
 function rpcRuleCallsites(rule) {
@@ -131,7 +153,84 @@ function validateCallsiteSet({ actual, expected, label }) {
   return { violations, improvements };
 }
 
-function validateManifestShape(manifest, root) {
+function validateAccountExportAuthority(authority, manifest, root) {
+  const violations = [];
+  if (!authority || typeof authority !== "object" || Array.isArray(authority)) {
+    return ["Account export authority deve ser um objeto"];
+  }
+  if (authority.schemaVersion !== 1) {
+    violations.push("Account export authority schemaVersion deve ser 1");
+  }
+  if (authority.caller !== ACCOUNT_EXPORT_CALLER) {
+    violations.push(
+      `Account export authority caller deve ser ${ACCOUNT_EXPORT_CALLER}`,
+    );
+  }
+  if (authority.role !== ACCOUNT_EXPORT_ROLE) {
+    violations.push(
+      `Account export authority role deve ser ${ACCOUNT_EXPORT_ROLE}`,
+    );
+  }
+  if (
+    typeof authority.rationale !== "string" ||
+    authority.rationale.trim().length === 0
+  ) {
+    violations.push("Account export authority rationale deve ser nao vazio");
+  }
+  if (
+    !Array.isArray(authority.controlledTableReaders) ||
+    authority.controlledTableReaders.length === 0
+  ) {
+    violations.push(
+      "Account export authority controlledTableReaders deve ser uma lista nao vazia",
+    );
+    return violations;
+  }
+
+  const callerPath = authority.caller;
+  if (path.isAbsolute(callerPath) || !fs.existsSync(path.join(root, callerPath))) {
+    violations.push(`Account export authority caller invalido: ${callerPath}`);
+  }
+
+  const controlledNames = new Set(
+    (manifest.controlledTables ?? []).map((rule) => rule.name),
+  );
+  const seen = new Set();
+  for (const table of authority.controlledTableReaders) {
+    if (typeof table !== "string" || table.length === 0) {
+      violations.push("Account export authority possui tabela invalida");
+      continue;
+    }
+    if (seen.has(table)) {
+      violations.push(`Account export authority possui tabela duplicada: ${table}`);
+      continue;
+    }
+    seen.add(table);
+    if (!controlledNames.has(table)) {
+      violations.push(
+        `Account export authority referencia tabela fora de controlledTables: ${table}`,
+      );
+    }
+  }
+
+  const directAccountExportReaders = (manifest.controlledTables ?? [])
+    .flatMap((rule) =>
+      (rule.allowedReaders ?? [])
+        .filter((entry) => entry.path === ACCOUNT_EXPORT_CALLER)
+        .map(() => rule.name),
+    );
+  for (const table of authority.controlledTableReaders) {
+    if (directAccountExportReaders.includes(table)) {
+      violations.push(
+        `Account export authority duplica reader ja declarado no manifest principal: ${table}`,
+      );
+    }
+  }
+
+  return violations;
+}
+
+function validateManifestShape(manifest, accountExportAuthority, root) {
   const violations = [];
   if (manifest.schemaVersion !== 1) {
     violations.push("schemaVersion deve ser 1");
@@ -187,8 +286,14 @@ function validateManifestShape(manifest, root) {
     }
   }
 
+  violations.push(
+    ...validateAccountExportAuthority(accountExportAuthority, manifest, root),
+  );
+
   const declaredCallsites = [
-    ...(manifest.controlledTables ?? []).flatMap(tableRuleCallsites),
+    ...(manifest.controlledTables ?? []).flatMap((rule) =>
+      tableRuleCallsites(rule, accountExportAuthority)
+    ),
     ...(manifest.controlledRpcs ?? []).flatMap(rpcRuleCallsites),
     ...(manifest.incrementalBaseline ?? []),
   ];
@@ -211,8 +316,13 @@ export function validateManifestAgainstRecords(
   manifest,
   groupedRecords,
   root = ROOT,
+  accountExportAuthority = readJsonFile(DEFAULT_ACCOUNT_EXPORT_AUTHORITY_PATH),
 ) {
-  const violations = validateManifestShape(manifest, root);
+  const violations = validateManifestShape(
+    manifest,
+    accountExportAuthority,
+    root,
+  );
   const improvements = [];
 
   for (const rule of manifest.controlledTables ?? []) {
@@ -221,7 +331,7 @@ export function validateManifestAgainstRecords(
     );
     const result = validateCallsiteSet({
       actual,
-      expected: tableRuleCallsites(rule),
+      expected: tableRuleCallsites(rule, accountExportAuthority),
       label: `table:${rule.name}`,
     });
     violations.push(...result.violations);
@@ -252,13 +362,13 @@ export function validateManifestAgainstRecords(
   return { violations, improvements };
 }
 
-function readManifest(manifestPath) {
-  if (!fs.existsSync(manifestPath)) {
+function readJsonFile(filePath) {
+  if (!fs.existsSync(filePath)) {
     throw new Error(
-      `Manifest nao encontrado: ${normalize(path.relative(ROOT, manifestPath))}`,
+      `Arquivo nao encontrado: ${normalize(path.relative(ROOT, filePath))}`,
     );
   }
-  return JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
 function writeManifest(manifestPath, manifest) {
@@ -283,10 +393,22 @@ function main() {
   const manifestPathArgument = process.argv.find((argument) =>
     argument.startsWith("--manifest="),
   );
+  const accountExportAuthorityPathArgument = process.argv.find((argument) =>
+    argument.startsWith("--account-export-authority="),
+  );
   const manifestPath = manifestPathArgument
     ? path.resolve(ROOT, manifestPathArgument.slice("--manifest=".length))
     : DEFAULT_MANIFEST_PATH;
-  const manifest = readManifest(manifestPath);
+  const accountExportAuthorityPath = accountExportAuthorityPathArgument
+    ? path.resolve(
+      ROOT,
+      accountExportAuthorityPathArgument.slice(
+        "--account-export-authority=".length,
+      ),
+    )
+    : DEFAULT_ACCOUNT_EXPORT_AUTHORITY_PATH;
+  const manifest = readJsonFile(manifestPath);
+  const accountExportAuthority = readJsonFile(accountExportAuthorityPath);
   const groupedRecords = groupAccessCounts(
     collectProjectAccess(ROOT, manifest.sourceRoots),
   );
@@ -301,13 +423,20 @@ function main() {
     return;
   }
 
-  const result = validateManifestAgainstRecords(manifest, groupedRecords, ROOT);
+  const result = validateManifestAgainstRecords(
+    manifest,
+    groupedRecords,
+    ROOT,
+    accountExportAuthority,
+  );
   if (jsonOutput) {
     console.log(
       JSON.stringify(
         {
           controlledTables: manifest.controlledTables.length,
           controlledRpcs: manifest.controlledRpcs.length,
+          accountExportControlledReaders:
+            accountExportAuthority.controlledTableReaders.length,
           baselineCallsites: manifest.incrementalBaseline.length,
           ...result,
         },
@@ -317,7 +446,7 @@ function main() {
     );
   } else {
     console.log(
-      `Core Platform ownership: ${manifest.controlledTables.length} tabela(s), ${manifest.controlledRpcs.length} RPC(s), ${manifest.incrementalBaseline.length} callsite(s) incrementais.`,
+      `Core Platform ownership: ${manifest.controlledTables.length} tabela(s), ${manifest.controlledRpcs.length} RPC(s), ${accountExportAuthority.controlledTableReaders.length} account-export reader(s), ${manifest.incrementalBaseline.length} callsite(s) incrementais.`,
     );
     printList(
       "Melhorias detectadas; reduza o baseline no mesmo PR",
