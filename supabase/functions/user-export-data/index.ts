@@ -34,6 +34,78 @@ type JsonRecord = Record<string, unknown>;
 type PageResult = { data: unknown; error: { code?: string } | null };
 type PageFactory = (from: number, to: number) => PromiseLike<PageResult>;
 type FilterFactory = (query: QueryBuilder) => QueryBuilder;
+type ExportTable =
+  | "profiles"
+  | "personal_social_profiles"
+  | "profile_members"
+  | "user_active_profiles"
+  | "user_roles"
+  | "user_residences"
+  | "addresses"
+  | "user_consents"
+  | "notification_preferences"
+  | "user_mfa_status"
+  | "businesses"
+  | "business_data"
+  | "business_products"
+  | "business_stats"
+  | "professional_data"
+  | "professional_stats"
+  | "driver_data"
+  | "driver_profiles"
+  | "driver_availability"
+  | "driver_routes"
+  | "posts"
+  | "comments"
+  | "community_posts"
+  | "community_questions"
+  | "question_answers"
+  | "classifieds"
+  | "events"
+  | "vagas"
+  | "work_opportunities"
+  | "communication_publications"
+  | "community_direct_messages"
+  | "messages"
+  | "group_messages_new"
+  | "community_memberships"
+  | "group_members_new"
+  | "community_poll_votes"
+  | "community_issue_supports"
+  | "profile_favorites"
+  | "classified_favorites"
+  | "professional_favorites"
+  | "event_favorites"
+  | "tourist_point_saved_items"
+  | "vaga_saved_items"
+  | "user_favorite_businesses"
+  | "ride_requests"
+  | "route_reservations"
+  | "orders"
+  | "user_subscriptions"
+  | "billing_transactions"
+  | "notifications"
+  | "email_logs"
+  | "community_reports"
+  | "community_direct_message_reports"
+  | "review_reports"
+  | "ride_reports"
+  | "vaga_reports"
+  | "group_message_reports"
+  | "ai_image_generations"
+  | "tryon_generations"
+  | "ai_usage_log"
+  | "ai_moderation_log"
+  | "analytics_events"
+  | "analytics_sessions"
+  | "pii_access_log"
+  | "media_assets"
+  | "verification"
+  | "banned_users"
+  | "session_anomalies"
+  | "profile_audit_log"
+  | "emergency_contacts"
+  | "push_subscriptions";
 
 function responseHeaders(req: Request): Record<string, string> {
   return getAllSecurityHeaders(ALLOWED_METHODS, req);
@@ -75,6 +147,86 @@ function dedupeRows(section: string, rows: JsonRecord[]): JsonRecord[] {
   return enforceSectionLimit(section, result);
 }
 
+function selectExportTable(
+  supabaseAdmin: SupabaseClient,
+  table: ExportTable,
+  columns: string,
+): QueryBuilder {
+  switch (table) {
+    case "profiles": return supabaseAdmin.from("profiles").select(columns);
+    case "personal_social_profiles": return supabaseAdmin.from("personal_social_profiles").select(columns);
+    case "profile_members": return supabaseAdmin.from("profile_members").select(columns);
+    case "user_active_profiles": return supabaseAdmin.from("user_active_profiles").select(columns);
+    case "user_roles": return supabaseAdmin.from("user_roles").select(columns);
+    case "user_residences": return supabaseAdmin.from("user_residences").select(columns);
+    case "addresses": return supabaseAdmin.from("addresses").select(columns);
+    case "user_consents": return supabaseAdmin.from("user_consents").select(columns);
+    case "notification_preferences": return supabaseAdmin.from("notification_preferences").select(columns);
+    case "user_mfa_status": return supabaseAdmin.from("user_mfa_status").select(columns);
+    case "businesses": return supabaseAdmin.from("businesses").select(columns);
+    case "business_data": return supabaseAdmin.from("business_data").select(columns);
+    case "business_products": return supabaseAdmin.from("business_products").select(columns);
+    case "business_stats": return supabaseAdmin.from("business_stats").select(columns);
+    case "professional_data": return supabaseAdmin.from("professional_data").select(columns);
+    case "professional_stats": return supabaseAdmin.from("professional_stats").select(columns);
+    case "driver_data": return supabaseAdmin.from("driver_data").select(columns);
+    case "driver_profiles": return supabaseAdmin.from("driver_profiles").select(columns);
+    case "driver_availability": return supabaseAdmin.from("driver_availability").select(columns);
+    case "driver_routes": return supabaseAdmin.from("driver_routes").select(columns);
+    case "posts": return supabaseAdmin.from("posts").select(columns);
+    case "comments": return supabaseAdmin.from("comments").select(columns);
+    case "community_posts": return supabaseAdmin.from("community_posts").select(columns);
+    case "community_questions": return supabaseAdmin.from("community_questions").select(columns);
+    case "question_answers": return supabaseAdmin.from("question_answers").select(columns);
+    case "classifieds": return supabaseAdmin.from("classifieds").select(columns);
+    case "events": return supabaseAdmin.from("events").select(columns);
+    case "vagas": return supabaseAdmin.from("vagas").select(columns);
+    case "work_opportunities": return supabaseAdmin.from("work_opportunities").select(columns);
+    case "communication_publications": return supabaseAdmin.from("communication_publications").select(columns);
+    case "community_direct_messages": return supabaseAdmin.from("community_direct_messages").select(columns);
+    case "messages": return supabaseAdmin.from("messages").select(columns);
+    case "group_messages_new": return supabaseAdmin.from("group_messages_new").select(columns);
+    case "community_memberships": return supabaseAdmin.from("community_memberships").select(columns);
+    case "group_members_new": return supabaseAdmin.from("group_members_new").select(columns);
+    case "community_poll_votes": return supabaseAdmin.from("community_poll_votes").select(columns);
+    case "community_issue_supports": return supabaseAdmin.from("community_issue_supports").select(columns);
+    case "profile_favorites": return supabaseAdmin.from("profile_favorites").select(columns);
+    case "classified_favorites": return supabaseAdmin.from("classified_favorites").select(columns);
+    case "professional_favorites": return supabaseAdmin.from("professional_favorites").select(columns);
+    case "event_favorites": return supabaseAdmin.from("event_favorites").select(columns);
+    case "tourist_point_saved_items": return supabaseAdmin.from("tourist_point_saved_items").select(columns);
+    case "vaga_saved_items": return supabaseAdmin.from("vaga_saved_items").select(columns);
+    case "user_favorite_businesses": return supabaseAdmin.from("user_favorite_businesses").select(columns);
+    case "ride_requests": return supabaseAdmin.from("ride_requests").select(columns);
+    case "route_reservations": return supabaseAdmin.from("route_reservations").select(columns);
+    case "orders": return supabaseAdmin.from("orders").select(columns);
+    case "user_subscriptions": return supabaseAdmin.from("user_subscriptions").select(columns);
+    case "billing_transactions": return supabaseAdmin.from("billing_transactions").select(columns);
+    case "notifications": return supabaseAdmin.from("notifications").select(columns);
+    case "email_logs": return supabaseAdmin.from("email_logs").select(columns);
+    case "community_reports": return supabaseAdmin.from("community_reports").select(columns);
+    case "community_direct_message_reports": return supabaseAdmin.from("community_direct_message_reports").select(columns);
+    case "review_reports": return supabaseAdmin.from("review_reports").select(columns);
+    case "ride_reports": return supabaseAdmin.from("ride_reports").select(columns);
+    case "vaga_reports": return supabaseAdmin.from("vaga_reports").select(columns);
+    case "group_message_reports": return supabaseAdmin.from("group_message_reports").select(columns);
+    case "ai_image_generations": return supabaseAdmin.from("ai_image_generations").select(columns);
+    case "tryon_generations": return supabaseAdmin.from("tryon_generations").select(columns);
+    case "ai_usage_log": return supabaseAdmin.from("ai_usage_log").select(columns);
+    case "ai_moderation_log": return supabaseAdmin.from("ai_moderation_log").select(columns);
+    case "analytics_events": return supabaseAdmin.from("analytics_events").select(columns);
+    case "analytics_sessions": return supabaseAdmin.from("analytics_sessions").select(columns);
+    case "pii_access_log": return supabaseAdmin.from("pii_access_log").select(columns);
+    case "media_assets": return supabaseAdmin.from("media_assets").select(columns);
+    case "verification": return supabaseAdmin.from("verification").select(columns);
+    case "banned_users": return supabaseAdmin.from("banned_users").select(columns);
+    case "session_anomalies": return supabaseAdmin.from("session_anomalies").select(columns);
+    case "profile_audit_log": return supabaseAdmin.from("profile_audit_log").select(columns);
+    case "emergency_contacts": return supabaseAdmin.from("emergency_contacts").select(columns);
+    case "push_subscriptions": return supabaseAdmin.from("push_subscriptions").select(columns);
+  }
+}
+
 async function requireAllRows(
   section: string,
   pageFactory: PageFactory,
@@ -104,13 +256,13 @@ async function requireAllRows(
 async function requireTableRows(
   section: string,
   supabaseAdmin: SupabaseClient,
-  table: string,
+  table: ExportTable,
   columns: string,
   filter: FilterFactory,
   orderColumn = "id",
 ): Promise<JsonRecord[]> {
   return requireAllRows(section, (from, to) => {
-    let query = supabaseAdmin.from(table).select(columns);
+    let query = selectExportTable(supabaseAdmin, table, columns);
     query = filter(query);
     if (orderColumn) {
       query = query.order(orderColumn, { ascending: true });
@@ -122,7 +274,7 @@ async function requireTableRows(
 async function requireUserRows(
   section: string,
   supabaseAdmin: SupabaseClient,
-  table: string,
+  table: ExportTable,
   columns: string,
   userId: string,
   userColumn = "user_id",
@@ -141,7 +293,7 @@ async function requireUserRows(
 async function requireProfileRows(
   section: string,
   supabaseAdmin: SupabaseClient,
-  table: string,
+  table: ExportTable,
   columns: string,
   profileColumn: string,
   profileIds: string[],
@@ -161,7 +313,7 @@ async function requireProfileRows(
 async function requireRowsByAnyProfileColumn(
   section: string,
   supabaseAdmin: SupabaseClient,
-  table: string,
+  table: ExportTable,
   columns: string,
   profileColumns: string[],
   profileIds: string[],
