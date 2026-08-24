@@ -1,5 +1,5 @@
 {
-  "buildCommand": "node --check scripts/security/supabase-edge-admin-canary-deploy.mjs && npm run security:validate && npm run lint:security && npm run validate:upload:ssot && npm run validate:architecture:core-platform && npm run build:vercel",
+  "buildCommand": "node --check scripts/security/supabase-edge-admin-canary-deploy.mjs && npm run security:validate && npm run lint:security && npm run validate:upload:ssot && npm run validate:architecture:core-platform && npm run generate:sitemap && node scripts/validate-production-sitemap.mjs public && npm run build:vercel && node scripts/validate-production-sitemap.mjs dist",
   "outputDirectory": "dist",
   "devCommand": "npm run dev",
   "installCommand": "npm ci",
