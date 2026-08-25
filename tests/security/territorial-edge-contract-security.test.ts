@@ -23,11 +23,26 @@ describe('territorial-get-tree admin contract', () => {
     expect(edge).toContain('JSON.stringify({ locations, groups, groupMembers })');
     expect(edge).toContain("type: 'group'");
     expect(edge).toContain('parent_id: group.anchor_city_id');
-    expect(edge).toContain("is_selector_active: metadataFlag(metadata, 'is_selector_active')");
     expect(edge).toContain('const groupMembers = Object.fromEntries(memberIdsMap.entries())');
 
     expect(edge).not.toContain('JSON.stringify({ tree })');
     expect(edge).not.toContain("'Cache-Control': 'public");
+  });
+
+  it('preserves canonical territorial visibility defaults', () => {
+    const edge = readFileSync(EDGE, 'utf8');
+
+    expect(edge).toContain(
+      "is_selector_active: metadataBoolean(metadata, 'is_selector_active', false)",
+    );
+    expect(edge).toContain(
+      "is_landing_enabled: metadataBoolean(metadata, 'is_landing_enabled', true)",
+    );
+    expect(edge).toContain(
+      "is_navigable: metadataBoolean(metadata, 'is_navigable', true)",
+    );
+    expect(edge).not.toContain("is_landing_enabled: metadataBoolean(metadata, 'is_landing_enabled', false)");
+    expect(edge).not.toContain("is_navigable: metadataBoolean(metadata, 'is_navigable', false)");
   });
 
   it('keeps authenticated admin data non-cacheable by shared intermediaries', () => {
