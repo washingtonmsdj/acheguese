@@ -1,6 +1,19 @@
 name: Security Check
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "scripts/**"
+      - "supabase/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig*.json"
+      - ".eslintrc*.json"
+      - ".gitignore"
+      - ".github/workflows/security-check.yml"
   pull_request:
     branches: [main, develop]
     paths:
