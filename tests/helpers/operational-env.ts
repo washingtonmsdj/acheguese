@@ -1,4 +1,8 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import {
+  assertApprovedOperationalMutationTarget,
+  hasApprovedOperationalMutationTarget,
+} from './operational-mutation-safety';
 
 export type OperationalSupabaseClient = SupabaseClient<any, 'public', any>;
 type OperationalSuite = () => void;
@@ -29,6 +33,7 @@ const ENV_LABELS: Record<keyof OperationalEnv, string> = {
   serviceRoleKey: 'SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SECRET_KEY',
   supabaseUrl: 'VITE_SUPABASE_URL',
 };
+const SAFE_MUTATION_TARGET_LABEL = 'approved isolated E2E mutation target';
 let operationalClientSequence = 0;
 
 function readEnv(key: string): string | undefined {
@@ -74,7 +79,17 @@ export function getMissingOperationalEnv(requirements: OperationalEnvRequirement
     if (!env.driverPassword) missing.push('driverPassword');
   }
 
-  return missing.map((key) => ENV_LABELS[key]);
+  const labels = missing.map((key) => ENV_LABELS[key]);
+  if (
+    requirements.requireServiceRole &&
+    env.supabaseUrl &&
+    env.serviceRoleKey &&
+    !hasApprovedOperationalMutationTarget(env.supabaseUrl)
+  ) {
+    labels.push(SAFE_MUTATION_TARGET_LABEL);
+  }
+
+  return labels;
 }
 
 export function requireOperationalEnv(requirements: OperationalEnvRequirements = {}): Required<OperationalEnv> {
@@ -108,12 +123,17 @@ export function createOperationalAnonClient(): OperationalSupabaseClient {
 
 export function createOperationalAdminClient(): OperationalSupabaseClient {
   const env = requireOperationalEnv({ requireServiceRole: true });
+  assertApprovedOperationalMutationTarget(env.supabaseUrl);
   return createOperationalClient(env.supabaseUrl, env.serviceRoleKey, 'admin');
 }
 
 export function createOptionalOperationalAdminClient(): OperationalSupabaseClient | null {
   const env = getOperationalEnv();
-  if (!env.supabaseUrl || !env.serviceRoleKey) {
+  if (
+    !env.supabaseUrl ||
+    !env.serviceRoleKey ||
+    !hasApprovedOperationalMutationTarget(env.supabaseUrl)
+  ) {
     return null;
   }
 
