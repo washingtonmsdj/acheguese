@@ -11,6 +11,7 @@ const SENSITIVE_TABLES = [
   "addresses",
   "driver_data",
   "driver_locations",
+  "driver_profiles",
   "profile_members",
   "issue_blocked_terms",
 ] as const;
@@ -21,6 +22,7 @@ const REMOVED_PERMISSIVE_POLICIES = [
   "Addresses viewable by all",
   "Driver data viewable",
   "driver_locations_select_policy",
+  "Anyone can read driver profiles",
   "Members viewable by authenticated",
   "Owners manage members",
 ] as const;
