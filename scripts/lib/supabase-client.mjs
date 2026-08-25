@@ -7,12 +7,18 @@
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import { existsSync, readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { basename, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { assertApprovedRemoteMutationTarget } from './remote-mutation-safety.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const ROOT_DIR = resolve(__dirname, '../..');
+const GUARDED_MUTATING_E2E_ENTRYPOINTS = new Set([
+  'seed-e2e-users',
+  'seed-e2e-network',
+  'validate-slug-history-final',
+]);
 
 export const DEFAULT_SUPABASE_SCRIPT_ENV_FILES = ['.env.local', '.env.remote', '.env.test', '.env'];
 
@@ -25,6 +31,18 @@ export function loadSupabaseScriptEnv(envFiles = DEFAULT_SUPABASE_SCRIPT_ENV_FIL
 function getCleanEnv(name) {
   const value = process.env[name]?.trim();
   return value ? value.replace(/^['"]|['"]$/g, '') : undefined;
+}
+
+function currentEntrypointName() {
+  const argvEntry = String(process.argv[1] || '').trim();
+  if (!argvEntry) return '';
+  return basename(argvEntry).replace(/\.[^.]+$/, '');
+}
+
+function assertKnownMutatingE2ETarget(url) {
+  const entrypoint = currentEntrypointName();
+  if (!GUARDED_MUTATING_E2E_ENTRYPOINTS.has(entrypoint)) return;
+  assertApprovedRemoteMutationTarget(url);
 }
 
 function addSupabaseClientCandidate(candidates, seen, url, key, source, kind) {
@@ -92,6 +110,8 @@ export function createServiceRoleClient(config = {}) {
         'Carregue secrets locais com .\\scripts\\security\\Import-LocalSupabaseSecrets.ps1',
     );
   }
+
+  assertKnownMutatingE2ETarget(url);
 
   return createClient(url, serviceRoleKey, {
     auth: {
