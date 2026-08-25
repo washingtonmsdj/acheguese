@@ -16,7 +16,6 @@ export {
 
 // Re-exports de queries (alias via BusinessService)
 export {
-  getBusinesses,
   getBusinessesList,
   getBusinessProfile,
   getBusinessById,
@@ -111,7 +110,66 @@ import * as BusinessQueries from "./business.queries";
 import * as BusinessMutations from "./business.mutations";
 import * as BusinessAdmin from "./business.admin";
 import * as BusinessHelpers from "./business.helpers";
-import type { BusinessStats } from "../types";
+import type { Business, BusinessFilters, BusinessStats } from "../types";
+
+const PUBLIC_BUSINESS_PAGE_SIZE = 100;
+const PUBLIC_BUSINESS_MAX_PAGES = 100;
+
+/**
+ * Lista publica canonica de empresas.
+ *
+ * O caminho legado em business.queries acessa business_data diretamente e e
+ * mantido apenas temporariamente para compatibilidade interna. A fachada publica
+ * usa exclusivamente public_business_search, evitando SELECT * na tabela-base.
+ */
+export async function getBusinesses(
+  filters: BusinessFilters = {},
+): Promise<Business[]> {
+  const businesses: Business[] = [];
+  let pageParam = 0;
+
+  for (let pageIndex = 0; pageIndex < PUBLIC_BUSINESS_MAX_PAGES; pageIndex += 1) {
+    const page = await BusinessQueries.getBusinessesList({
+      pageParam,
+      pageSize: PUBLIC_BUSINESS_PAGE_SIZE,
+      category: filters.category,
+      searchQuery: filters.search,
+      sortBy: filters.sortBy === "distancia" ? undefined : filters.sortBy,
+      filter: filters.territoryFilter,
+    });
+
+    businesses.push(...page.businesses);
+
+    if (page.nextPage === undefined) {
+      break;
+    }
+
+    pageParam = page.nextPage;
+  }
+
+  const wantedNeighborhood = filters.neighborhood?.trim().toLocaleLowerCase("pt-BR");
+
+  return businesses.filter((business) => {
+    if (filters.hasDelivery && !business.tem_delivery) {
+      return false;
+    }
+
+    if (wantedNeighborhood) {
+      const locationName = business.location?.name?.trim().toLocaleLowerCase("pt-BR") ?? "";
+      const cityName = business.business_city?.trim().toLocaleLowerCase("pt-BR") ?? "";
+
+      if (
+        locationName !== wantedNeighborhood &&
+        !locationName.includes(wantedNeighborhood) &&
+        cityName !== wantedNeighborhood
+      ) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+}
 
 /**
  * Fachada estatica para consumo dos modulos de empresa.
@@ -122,7 +180,7 @@ export class BusinessService {
   static mapBusinessDataToBusiness = BusinessMappers.mapBusinessDataToBusiness;
 
   // ===== QUERIES =====
-  static getBusinesses = BusinessQueries.getBusinesses;
+  static getBusinesses = getBusinesses;
   static getBusinessesList = BusinessQueries.getBusinessesList;
   static getBusinessProfile = BusinessQueries.getBusinessProfile;
   static getBusinessById = BusinessQueries.getBusinessById;
