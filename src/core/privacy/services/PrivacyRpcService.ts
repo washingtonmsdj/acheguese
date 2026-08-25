@@ -1,6 +1,10 @@
 import { invokeSupabaseBroker } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 
-type PrivacyRpcAction = "recordConsent" | "cancelAccountDeletion";
+type PrivacyRpcAction =
+  | "recordConsent"
+  | "getDeletionStatus"
+  | "requestAccountDeletion"
+  | "cancelAccountDeletion";
 
 interface RecordConsentBrokerData {
   consentId: string;
@@ -10,12 +14,39 @@ interface CancelAccountDeletionBrokerData {
   cancelled: boolean;
 }
 
+export type AccountDeletionStatus =
+  | "scheduled"
+  | "cancelled"
+  | "processing"
+  | "completed"
+  | "failed";
+
+export interface AccountDeletionStatusBrokerData {
+  requestId: string;
+  status: AccountDeletionStatus;
+  requestedAt: string;
+  scheduledPurgeAt: string;
+  daysRemaining: number;
+  exportRequested: boolean;
+}
+
+export interface RequestAccountDeletionBrokerData
+  extends AccountDeletionStatusBrokerData {
+  daysUntilPurge: number;
+  recoveryPossibleUntil: string;
+}
+
 export interface RecordConsentInput {
   consentType: string;
   granted: boolean;
   userAgent?: string | null;
   termsVersion?: string;
   privacyVersion?: string;
+}
+
+export interface RequestAccountDeletionInput {
+  reason?: string | null;
+  exportRequested?: boolean;
 }
 
 const FUNCTION_NAME = "privacy-rpc";
@@ -44,6 +75,24 @@ export class PrivacyRpcService {
       privacyVersion: input.privacyVersion,
     });
     return result.consentId;
+  }
+
+  static async getDeletionStatus(): Promise<AccountDeletionStatusBrokerData | null> {
+    // The broker returns `{ data: null }` when there is no deletion request.
+    // Transport/broker failures must remain failures so route guards can fail closed.
+    return this.invoke<AccountDeletionStatusBrokerData | null>("getDeletionStatus");
+  }
+
+  static async requestAccountDeletion(
+    input: RequestAccountDeletionInput,
+  ): Promise<RequestAccountDeletionBrokerData> {
+    return this.invoke<RequestAccountDeletionBrokerData>(
+      "requestAccountDeletion",
+      {
+        reason: input.reason ?? null,
+        exportRequested: input.exportRequested ?? false,
+      },
+    );
   }
 
   static async cancelAccountDeletion(): Promise<boolean> {
