@@ -14,13 +14,18 @@ import { assertApprovedRemoteMutationTarget } from './remote-mutation-safety.mjs
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const ROOT_DIR = resolve(__dirname, '../..');
-const GUARDED_MUTATING_E2E_ENTRYPOINTS = new Set([
+const GUARDED_MUTATING_OPERATIONAL_ENTRYPOINTS = new Set([
   'seed-e2e-users',
   'seed-e2e-network',
   'validate-slug-history-final',
   'validate-reconciliation-final',
   'validate-e2e-setup',
   'validate-gate3-metadata',
+  'community-feed-authz-probe',
+  'community-direct-messaging-authz-probe',
+  'reviews-core-authz-probe',
+  'trust-operational-authz-probe',
+  'moderation-audit-authz-probe',
 ]);
 
 export const DEFAULT_SUPABASE_SCRIPT_ENV_FILES = ['.env.local', '.env.remote', '.env.test', '.env'];
@@ -42,9 +47,9 @@ function currentEntrypointName() {
   return basename(argvEntry).replace(/\.[^.]+$/, '');
 }
 
-function assertKnownMutatingE2ETarget(url) {
+function assertKnownMutatingOperationalTarget(url) {
   const entrypoint = currentEntrypointName();
-  if (!GUARDED_MUTATING_E2E_ENTRYPOINTS.has(entrypoint)) return;
+  if (!GUARDED_MUTATING_OPERATIONAL_ENTRYPOINTS.has(entrypoint)) return;
   assertApprovedRemoteMutationTarget(url);
 }
 
@@ -114,7 +119,7 @@ export function createServiceRoleClient(config = {}) {
     );
   }
 
-  assertKnownMutatingE2ETarget(url);
+  assertKnownMutatingOperationalTarget(url);
 
   return createClient(url, serviceRoleKey, {
     auth: {
@@ -139,7 +144,7 @@ export function createAnonClient(config = {}) {
     );
   }
 
-  assertKnownMutatingE2ETarget(url);
+  assertKnownMutatingOperationalTarget(url);
 
   return createClient(url, anonKey, {
     auth: {
