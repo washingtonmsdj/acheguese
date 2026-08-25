@@ -194,4 +194,28 @@ describe("Community Poll authoritative contract", () => {
     expect(additiveMigration).toContain("COALESCE(payload->'content_payload', '{}'::jsonb) - 'poll'");
     expect(additiveMigration).toContain("jsonb_build_object('poll_id', v_poll_id)");
   });
+
+  it("27. keeps the anonymous poll-read definer fail-closed to visible Posts", () => {
+    const pollReadFunction = additiveMigration.slice(
+      additiveMigration.indexOf("FUNCTION public.get_community_poll_for_post"),
+      additiveMigration.indexOf("FUNCTION public.cast_community_poll_vote"),
+    );
+
+    expect(pollReadFunction).toContain("SECURITY DEFINER");
+    expect(pollReadFunction).toContain("SET search_path = ''");
+    expect(pollReadFunction).toMatch(
+      /post\.is_published = TRUE[\s\S]*post\.is_hidden = FALSE[\s\S]*post\.is_removed = FALSE/,
+    );
+    expect(pollReadFunction).toContain("private.auth_owns_active_profile(post.author_profile_id)");
+    expect(pollReadFunction).toContain("private.is_admin_user(v_user_id)");
+    expect(additiveMigration).toMatch(
+      /GRANT EXECUTE ON FUNCTION public\.get_community_poll_for_post\(UUID\)[\s\S]*TO anon, authenticated;/,
+    );
+    expect(additiveMigration).not.toMatch(
+      /GRANT EXECUTE ON FUNCTION public\.create_post_with_poll\(JSONB\)[\s\S]*TO anon/,
+    );
+    expect(additiveMigration).not.toMatch(
+      /GRANT EXECUTE ON FUNCTION public\.cast_community_poll_vote\(UUID, UUID, UUID\)[\s\S]*TO anon/,
+    );
+  });
 });
