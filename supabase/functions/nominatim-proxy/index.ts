@@ -12,13 +12,12 @@
  * GET /functions/v1/nominatim-proxy?q=<query>
  * GET /functions/v1/nominatim-proxy?postalcode=<cep>&country=br
  * GET /functions/v1/nominatim-proxy?reverse=1&lat=<lat>&lon=<lon>&zoom=<zoom>
- * 
- * @version 2.0.0 - Added database caching
+ *
+ * @version 2.1.0 - Strict parameter validation + deploy-safe public defaults
  */
 
 import {
   getAllSecurityHeaders,
-  getRequiredEnv,
   jsonResponse,
   methodNotAllowedResponse,
   rateLimitMiddleware,
@@ -32,16 +31,46 @@ import {
 } from '../_shared/url_validation.ts';
 
 const ALLOWED_METHODS = 'GET, OPTIONS';
+
+// These settings are public protocol/configuration values, not secrets. Safe
+// defaults preserve the existing production behavior while still allowing an
+// operator to override them explicitly without making an absent env var turn
+// the proxy into a startup outage.
+const DEFAULTS = {
+  baseUrl: 'https://nominatim.openstreetmap.org',
+  userAgent: 'Achegue-se/1.0 (https://acheguese.com.br)',
+  acceptLanguage: 'pt-BR,pt;q=0.9',
+  country: 'br',
+  countryCodes: 'br',
+  format: 'json',
+  addressDetails: '1',
+  limit: '3',
+} as const;
+
+function envOrDefault(name: string, fallback: string): string {
+  const configured = Deno.env.get(name)?.trim();
+  return configured || fallback;
+}
+
 const NOMINATIM_BASE = getNominatimBaseUrl();
-const NOMINATIM_USER_AGENT = getRequiredEnv('NOMINATIM_USER_AGENT');
-const NOMINATIM_ACCEPT_LANGUAGE = getRequiredEnv('NOMINATIM_ACCEPT_LANGUAGE');
+const NOMINATIM_USER_AGENT = envOrDefault('NOMINATIM_USER_AGENT', DEFAULTS.userAgent);
+const NOMINATIM_ACCEPT_LANGUAGE = envOrDefault(
+  'NOMINATIM_ACCEPT_LANGUAGE',
+  DEFAULTS.acceptLanguage,
+);
 
 function getNominatimBaseUrl(): string {
-  const configuredUrl = getRequiredEnv('NOMINATIM_BASE_URL');
+  const configuredUrl = envOrDefault('NOMINATIM_BASE_URL', DEFAULTS.baseUrl);
   const parsedUrl = new URL(configuredUrl);
 
   if (parsedUrl.protocol !== 'https:') {
     throw new Error('NOMINATIM_BASE_URL must use https');
+  }
+
+  // Credentials and fragments are never meaningful for the upstream base and
+  // make configuration mistakes materially riskier.
+  if (parsedUrl.username || parsedUrl.password || parsedUrl.hash) {
+    throw new Error('NOMINATIM_BASE_URL must not contain credentials or fragments');
   }
 
   return trimTrailingSlashes(parsedUrl.toString());
@@ -99,10 +128,9 @@ function readZoomParam(value: string | null): string | null {
 }
 
 Deno.serve(async (req: Request) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, {
-      status: 204, 
+      status: 204,
       headers: getAllSecurityHeaders(ALLOWED_METHODS, req),
     });
   }
@@ -111,7 +139,6 @@ Deno.serve(async (req: Request) => {
     return methodNotAllowedResponse(ALLOWED_METHODS, req);
   }
 
-  // Rate limiting (mais permissivo para geocoding)
   const rateLimitResponse = await rateLimitMiddleware(req, 60, 60000);
   if (rateLimitResponse) return rateLimitResponse;
 
@@ -128,29 +155,50 @@ Deno.serve(async (req: Request) => {
     const url = new URL(req.url);
     q = url.searchParams.get('q');
     postalcode = url.searchParams.get('postalcode');
-    const defaultCountry = getRequiredEnv('NOMINATIM_DEFAULT_COUNTRY');
-    const defaultCountryCodes = getRequiredEnv('NOMINATIM_DEFAULT_COUNTRY_CODES');
+    const defaultCountry = envOrDefault('NOMINATIM_DEFAULT_COUNTRY', DEFAULTS.country);
+    const defaultCountryCodes = envOrDefault(
+      'NOMINATIM_DEFAULT_COUNTRY_CODES',
+      DEFAULTS.countryCodes,
+    );
     country = readCountryParam(url.searchParams.get('country'), defaultCountry);
     reverse = url.searchParams.get('reverse') === '1';
     lat = url.searchParams.get('lat');
     lon = url.searchParams.get('lon');
     zoom = readZoomParam(url.searchParams.get('zoom'));
-    const format = readFormatParam(url.searchParams.get('format'), getRequiredEnv('NOMINATIM_DEFAULT_FORMAT'));
+    const format = readFormatParam(
+      url.searchParams.get('format'),
+      envOrDefault('NOMINATIM_DEFAULT_FORMAT', DEFAULTS.format),
+    );
     const addressdetails = readBooleanParam(
       url.searchParams.get('addressdetails'),
-      getRequiredEnv('NOMINATIM_DEFAULT_ADDRESSDETAILS'),
+      envOrDefault('NOMINATIM_DEFAULT_ADDRESSDETAILS', DEFAULTS.addressDetails),
     );
-    const limit = readLimitParam(url.searchParams.get('limit'), getRequiredEnv('NOMINATIM_DEFAULT_LIMIT'));
+    const limit = readLimitParam(
+      url.searchParams.get('limit'),
+      envOrDefault('NOMINATIM_DEFAULT_LIMIT', DEFAULTS.limit),
+    );
     const countryCodes = readCountryCodesParam(url.searchParams.get('countrycodes'), defaultCountryCodes);
 
     if (reverse) {
       if (!lat || !lon) {
-        return jsonResponse({ error: 'Parametros obrigatorios para reverse: lat e lon' }, 400, ALLOWED_METHODS, req);
+        return jsonResponse(
+          { error: 'Parametros obrigatorios para reverse: lat e lon' },
+          400,
+          ALLOWED_METHODS,
+          req,
+        );
       }
 
-      const latNum = parseFloat(lat);
-      const lonNum = parseFloat(lon);
-      if (isNaN(latNum) || isNaN(lonNum) || latNum < -90 || latNum > 90 || lonNum < -180 || lonNum > 180) {
+      const latNum = Number.parseFloat(lat);
+      const lonNum = Number.parseFloat(lon);
+      if (
+        Number.isNaN(latNum) ||
+        Number.isNaN(lonNum) ||
+        latNum < -90 ||
+        latNum > 90 ||
+        lonNum < -180 ||
+        lonNum > 180
+      ) {
         return jsonResponse({ error: 'Coordenadas invalidas' }, 400, ALLOWED_METHODS, req);
       }
 
@@ -188,7 +236,12 @@ Deno.serve(async (req: Request) => {
         `&format=${encodeURIComponent(format)}` +
         `&limit=${encodeURIComponent(limit)}`;
     } else {
-      return jsonResponse({ error: 'Parametro obrigatorio: q, postalcode ou reverse=1' }, 400, ALLOWED_METHODS, req);
+      return jsonResponse(
+        { error: 'Parametro obrigatorio: q, postalcode ou reverse=1' },
+        400,
+        ALLOWED_METHODS,
+        req,
+      );
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Invalid request';
@@ -201,9 +254,8 @@ Deno.serve(async (req: Request) => {
     );
   }
 
-  // Generate cache key
   const cacheKey = generateCacheKey('geocoding', {
-    type: reverse ? 'reverse' : (q ? 'search' : 'postalcode'),
+    type: reverse ? 'reverse' : q ? 'search' : 'postalcode',
     q: q || undefined,
     postalcode: postalcode || undefined,
     country,
@@ -213,17 +265,19 @@ Deno.serve(async (req: Request) => {
   });
 
   try {
-    // Use cache wrapper
     const data = await withCache(
       cacheKey,
       async () => {
-        // Fetch from Nominatim
         const response = await fetch(nominatimUrl, {
           headers: {
             'User-Agent': NOMINATIM_USER_AGENT,
             'Accept-Language': NOMINATIM_ACCEPT_LANGUAGE,
           },
         });
+
+        if (!response.ok) {
+          throw new Error(`Nominatim upstream returned ${response.status}`);
+        }
 
         const rawBody = await response.text();
         let parsedData: unknown;
@@ -235,8 +289,8 @@ Deno.serve(async (req: Request) => {
 
         return parsedData;
       },
-      CACHE_TTL.VERY_LONG, // 30 days
-      'geocoding'
+      CACHE_TTL.VERY_LONG,
+      'geocoding',
     );
 
     return new Response(JSON.stringify(data), {
