@@ -28,6 +28,10 @@ type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
 
 type MobilityRideReadDbClient = {
   from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+  rpc<TRow = Record<string, unknown>>(
+    fn: string,
+    params?: Record<string, unknown>,
+  ): Promise<{ data: TRow | null; error: ErrorLike }>;
 };
 
 const mobilityRideReadDb = supabase as unknown as MobilityRideReadDbClient;
@@ -163,13 +167,13 @@ export async function getOperationalVerificationEntries(
   rideId: string,
   limit = 5,
 ): Promise<unknown[]> {
-  const { data, error } = await mobilityRideReadDb
-    .from<OperationalVerificationRow>("operational_verifications")
-    .select("*")
-    .eq("ride_id", rideId)
-    .order("created_at", { ascending: false })
-    .limit(limit);
+  if (limit <= 0) return [];
+
+  const { data, error } = await mobilityRideReadDb.rpc<OperationalVerificationRow>(
+    "get_operational_verification_status",
+    { p_ride_id: rideId },
+  );
 
   if (error) throw error;
-  return data ?? [];
+  return data ? [data] : [];
 }
