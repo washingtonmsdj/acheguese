@@ -17,6 +17,7 @@ const SENSITIVE_TABLES = [
   "profile_favorites_new",
   "profile_members",
   "question_answer_likes",
+  "user_follows",
   "issue_blocked_terms",
 ] as const;
 
@@ -31,6 +32,7 @@ const REMOVED_PERMISSIVE_POLICIES = [
   "Event review helpfulness is visible to authenticated users",
   "Anyone can read favorites",
   "Answer likes viewable by authenticated",
+  "Follows viewable",
   "Members viewable by authenticated",
   "Owners manage members",
 ] as const;
