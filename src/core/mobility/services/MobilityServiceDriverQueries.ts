@@ -31,6 +31,10 @@ type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
 
 type MobilityDriverQueriesDbClient = {
   from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+  rpc<TRow = Record<string, unknown>>(
+    fn: string,
+    params?: Record<string, unknown>,
+  ): Promise<QueryPayload<TRow>>;
 };
 
 const mobilityDriverQueriesDb = supabase as unknown as MobilityDriverQueriesDbClient;
@@ -124,10 +128,10 @@ export async function getDriverProfiles(): Promise<{ data: unknown[]; error: unk
 export async function getDriverDataByProfileIds(profileIds: string[]): Promise<unknown[]> {
   if (!profileIds.length) return [];
 
-  const query = await mobilityDriverQueriesDb
-    .from<DriverDataSummaryRow>("driver_data")
-    .select("profile_id, rating, can_do_delivery, can_do_rides, is_verified, subscription_active")
-    .in("profile_id", profileIds);
+  const query = await mobilityDriverQueriesDb.rpc<DriverDataSummaryRow>(
+    "get_driver_dispatch_summaries",
+    { p_profile_ids: profileIds },
+  );
 
   if (query.error) throw query.error;
 
