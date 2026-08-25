@@ -1,0 +1,273 @@
+-- LGPD pending-deletion write boundary.
+--
+-- This migration complements 20260821022500 by closing browser-originated
+-- write paths that do not traverse the profile authorization helpers.
+-- Accounts in scheduled/processing/failed/completed remain authenticated only
+-- so they can reach the privacy recovery surface; their application DML is
+-- rejected at the table boundary.
+--
+-- The guard is statement-level (one account-state lookup per DML statement),
+-- covers every application-owned public table (ordinary or partitioned), and
+-- excludes extension-owned relations such as PostGIS spatial_ref_sys.
+--
+-- Future migrations that CREATE TABLE public.* must call
+-- private.ensure_pending_deletion_write_guards() after creating the table.
+-- Repository governance tests enforce that convention.
+
+BEGIN;
+
+DO $$
+BEGIN
+  IF to_regclass('public.account_deletion_requests') IS NULL THEN
+    RAISE EXCEPTION 'account deletion authority foundation is missing';
+  END IF;
+
+  IF to_regprocedure('private.auth_account_operational()') IS NULL THEN
+    RAISE EXCEPTION 'pending deletion account-state helper is missing';
+  END IF;
+
+  IF to_regprocedure('private.guard_pending_deletion_write()') IS NOT NULL THEN
+    RAISE EXCEPTION 'guard_pending_deletion_write already exists out-of-band';
+  END IF;
+
+  IF to_regprocedure('private.ensure_pending_deletion_write_guards()') IS NOT NULL THEN
+    RAISE EXCEPTION 'ensure_pending_deletion_write_guards already exists out-of-band';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM pg_trigger trigger_row
+    WHERE trigger_row.tgname = 'account_operational_write_guard'
+      AND NOT trigger_row.tgisinternal
+  ) THEN
+    RAISE EXCEPTION 'account_operational_write_guard trigger already exists out-of-band';
+  END IF;
+END;
+$$;
+
+CREATE FUNCTION private.guard_pending_deletion_write()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public, private, pg_temp
+SET statement_timeout = '2s'
+AS $$
+DECLARE
+  v_role TEXT := COALESCE(current_setting('role', true), '');
+  v_user_id UUID := auth.uid();
+BEGIN
+  -- Only authenticated user JWTs are subject to the hold. service_role and
+  -- internal database jobs must remain able to process cancellation/export,
+  -- eventual purge, and maintenance workflows.
+  IF v_role <> 'authenticated' THEN
+    RETURN NULL;
+  END IF;
+
+  -- An authenticated database role without a JWT subject must fail closed.
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'AUTHENTICATED_USER_CONTEXT_MISSING'
+      USING ERRCODE = '42501';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.account_deletion_requests request
+    WHERE request.user_id = v_user_id
+      AND request.status IN ('scheduled', 'processing', 'failed', 'completed')
+  ) THEN
+    RAISE EXCEPTION 'ACCOUNT_PENDING_DELETION_READ_ONLY'
+      USING ERRCODE = '42501';
+  END IF;
+
+  RETURN NULL;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION private.guard_pending_deletion_write() FROM PUBLIC;
+REVOKE ALL ON FUNCTION private.guard_pending_deletion_write() FROM anon;
+REVOKE ALL ON FUNCTION private.guard_pending_deletion_write() FROM authenticated;
+
+CREATE FUNCTION private.ensure_pending_deletion_write_guards()
+RETURNS INTEGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public, private, pg_temp
+SET statement_timeout = '30s'
+AS $$
+DECLARE
+  v_table RECORD;
+  v_created INTEGER := 0;
+BEGIN
+  FOR v_table IN
+    SELECT c.oid, c.relname
+    FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public'
+      AND c.relkind IN ('r', 'p')
+      AND NOT EXISTS (
+        SELECT 1
+        FROM pg_depend dependency
+        JOIN pg_extension extension_row
+          ON extension_row.oid = dependency.refobjid
+        WHERE dependency.classid = 'pg_class'::regclass
+          AND dependency.objid = c.oid
+          AND dependency.deptype = 'e'
+      )
+    ORDER BY c.relname
+  LOOP
+    IF NOT EXISTS (
+      SELECT 1
+      FROM pg_trigger trigger_row
+      WHERE trigger_row.tgrelid = v_table.oid
+        AND trigger_row.tgname = 'account_operational_write_guard'
+        AND NOT trigger_row.tgisinternal
+    ) THEN
+      EXECUTE format(
+        'CREATE TRIGGER account_operational_write_guard BEFORE INSERT OR UPDATE OR DELETE ON public.%I FOR EACH STATEMENT EXECUTE FUNCTION private.guard_pending_deletion_write()',
+        v_table.relname
+      );
+      v_created := v_created + 1;
+    END IF;
+  END LOOP;
+
+  RETURN v_created;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION private.ensure_pending_deletion_write_guards() FROM PUBLIC;
+REVOKE ALL ON FUNCTION private.ensure_pending_deletion_write_guards() FROM anon;
+REVOKE ALL ON FUNCTION private.ensure_pending_deletion_write_guards() FROM authenticated;
+
+SELECT private.ensure_pending_deletion_write_guards();
+
+DO $$
+DECLARE
+  v_guard_oid OID := to_regprocedure('private.guard_pending_deletion_write()');
+  v_ensure_oid OID := to_regprocedure('private.ensure_pending_deletion_write_guards()');
+  v_expected_tables INTEGER;
+  v_guarded_tables INTEGER;
+  v_bad_trigger_count INTEGER;
+  v_guard_definition TEXT;
+BEGIN
+  IF v_guard_oid IS NULL OR v_ensure_oid IS NULL THEN
+    RAISE EXCEPTION 'pending deletion write guard function missing after creation';
+  END IF;
+
+  IF has_function_privilege('anon', v_guard_oid, 'EXECUTE')
+     OR has_function_privilege('authenticated', v_guard_oid, 'EXECUTE')
+     OR has_function_privilege('anon', v_ensure_oid, 'EXECUTE')
+     OR has_function_privilege('authenticated', v_ensure_oid, 'EXECUTE') THEN
+    RAISE EXCEPTION 'browser role can execute pending deletion guard internals directly';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_proc function_row
+    WHERE function_row.oid = v_guard_oid
+      AND function_row.prosecdef
+      AND function_row.proconfig @> ARRAY[
+        'search_path=pg_catalog, public, private, pg_temp',
+        'statement_timeout=2s'
+      ]::TEXT[]
+  ) THEN
+    RAISE EXCEPTION 'pending deletion trigger function runtime config drifted';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_proc function_row
+    WHERE function_row.oid = v_ensure_oid
+      AND function_row.prosecdef
+      AND function_row.proconfig @> ARRAY[
+        'search_path=pg_catalog, public, private, pg_temp',
+        'statement_timeout=30s'
+      ]::TEXT[]
+  ) THEN
+    RAISE EXCEPTION 'pending deletion guard installer runtime config drifted';
+  END IF;
+
+  SELECT prosrc INTO v_guard_definition FROM pg_proc WHERE oid = v_guard_oid;
+  IF v_guard_definition LIKE '%auth.role()%' THEN
+    RAISE EXCEPTION 'deprecated auth.role() remains in pending-deletion DML guard';
+  END IF;
+
+  IF POSITION('current_setting' IN v_guard_definition) = 0
+     OR POSITION('role' IN v_guard_definition) = 0 THEN
+    RAISE EXCEPTION 'pending-deletion DML guard does not use effective request role';
+  END IF;
+
+  SELECT COUNT(*)
+  INTO v_expected_tables
+  FROM pg_class c
+  JOIN pg_namespace n ON n.oid = c.relnamespace
+  WHERE n.nspname = 'public'
+    AND c.relkind IN ('r', 'p')
+    AND NOT EXISTS (
+      SELECT 1
+      FROM pg_depend dependency
+      JOIN pg_extension extension_row
+        ON extension_row.oid = dependency.refobjid
+      WHERE dependency.classid = 'pg_class'::regclass
+        AND dependency.objid = c.oid
+        AND dependency.deptype = 'e'
+    );
+
+  SELECT COUNT(DISTINCT trigger_row.tgrelid)
+  INTO v_guarded_tables
+  FROM pg_trigger trigger_row
+  JOIN pg_class c ON c.oid = trigger_row.tgrelid
+  JOIN pg_namespace n ON n.oid = c.relnamespace
+  WHERE n.nspname = 'public'
+    AND c.relkind IN ('r', 'p')
+    AND trigger_row.tgname = 'account_operational_write_guard'
+    AND NOT trigger_row.tgisinternal;
+
+  IF v_guarded_tables <> v_expected_tables THEN
+    RAISE EXCEPTION
+      'pending deletion DML guard coverage mismatch: expected %, guarded %',
+      v_expected_tables,
+      v_guarded_tables;
+  END IF;
+
+  SELECT COUNT(*)
+  INTO v_bad_trigger_count
+  FROM pg_trigger trigger_row
+  JOIN pg_class c ON c.oid = trigger_row.tgrelid
+  JOIN pg_namespace n ON n.oid = c.relnamespace
+  WHERE n.nspname = 'public'
+    AND c.relkind IN ('r', 'p')
+    AND trigger_row.tgname = 'account_operational_write_guard'
+    AND NOT trigger_row.tgisinternal
+    AND (
+      -- Statement-level BEFORE INSERT + DELETE + UPDATE = tgtype bits 2+4+8+16.
+      (trigger_row.tgtype & 1) <> 0
+      OR (trigger_row.tgtype & 2) = 0
+      OR (trigger_row.tgtype & 4) = 0
+      OR (trigger_row.tgtype & 8) = 0
+      OR (trigger_row.tgtype & 16) = 0
+      OR trigger_row.tgenabled <> 'O'
+      OR trigger_row.tgfoid <> v_guard_oid
+    );
+
+  IF v_bad_trigger_count <> 0 THEN
+    RAISE EXCEPTION 'one or more pending deletion DML guards have invalid trigger shape';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM pg_trigger trigger_row
+    JOIN pg_depend dependency
+      ON dependency.classid = 'pg_class'::regclass
+     AND dependency.objid = trigger_row.tgrelid
+     AND dependency.deptype = 'e'
+    JOIN pg_extension extension_row
+      ON extension_row.oid = dependency.refobjid
+    WHERE trigger_row.tgname = 'account_operational_write_guard'
+      AND NOT trigger_row.tgisinternal
+  ) THEN
+    RAISE EXCEPTION 'pending deletion DML guard was attached to extension-owned relation';
+  END IF;
+END;
+$$;
+
+COMMIT;
