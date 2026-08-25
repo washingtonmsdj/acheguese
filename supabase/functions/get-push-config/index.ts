@@ -1,22 +1,13 @@
 /**
  * Get Push Config Edge Function
- * 
- * Returns VAPID public key for push notification subscription.
- * 
- * Features:
- * - Browser cache (1 hour)
- * - CDN cache (1 hour)
- * - Immutable response
- * 
- * Rate Limit: 100 requests per minute
- * 
- * @version 2.0.0 - Added aggressive caching
+ *
+ * Returns the public VAPID key used by browsers to create push subscriptions.
+ * This endpoint is intentionally public; the VAPID public key is not a secret.
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import {
   getAllSecurityHeaders,
-  getRequiredEnv,
   jsonResponse,
   rateLimitMiddleware,
   requireHttpMethod,
@@ -24,10 +15,19 @@ import {
 
 const ALLOWED_METHODS = 'GET, POST, OPTIONS';
 
+// Compatibility fallback equals the public key already served by the deployed
+// legacy function. Environment configuration wins when present, so rotations
+// can be performed without a code change. This is a PUBLIC key, never a secret.
+const LEGACY_PUBLIC_VAPID_KEY =
+  'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U';
+
+function getVapidPublicKey(): string {
+  return Deno.env.get('VAPID_PUBLIC_KEY')?.trim() || LEGACY_PUBLIC_VAPID_KEY;
+}
+
 serve(async (req: Request) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', {
+    return new Response(null, {
       status: 204,
       headers: getAllSecurityHeaders(ALLOWED_METHODS, req),
     });
@@ -36,28 +36,21 @@ serve(async (req: Request) => {
   const methodError = requireHttpMethod(req, ['GET', 'POST'], ALLOWED_METHODS);
   if (methodError) return methodError;
 
-  const rateLimitResponse = await rateLimitMiddleware(req, 100, 60000);
+  const rateLimitResponse = await rateLimitMiddleware(req, 100, 60_000);
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
-    const vapidPublicKey = getRequiredEnv('VAPID_PUBLIC_KEY');
-
-    return new Response(
-      JSON.stringify({ vapidPublicKey }),
-      {
-        status: 200,
-        headers: {
-          ...getAllSecurityHeaders(ALLOWED_METHODS, req),
-          // VAPID key é pública e imutável — cache agressivo é seguro
-          'Cache-Control': 'public, max-age=3600, immutable',
-          'CDN-Cache-Control': 'public, max-age=3600',
-          'Vary': 'Accept-Encoding',
-        },
-      }
-    );
+    return new Response(JSON.stringify({ vapidPublicKey: getVapidPublicKey() }), {
+      status: 200,
+      headers: {
+        ...getAllSecurityHeaders(ALLOWED_METHODS, req),
+        'Cache-Control': 'public, max-age=3600, immutable',
+        'CDN-Cache-Control': 'public, max-age=3600',
+        'Vary': 'Accept-Encoding',
+      },
+    });
   } catch (error) {
-    console.error('Exception in get-push-config function:', error);
+    console.error('[get-push-config] unexpected failure', error);
     return jsonResponse({ error: 'Internal server error' }, 500, ALLOWED_METHODS, req);
   }
 });
-
