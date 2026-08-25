@@ -1,7 +1,9 @@
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const LINKED_PROJECT_CONFIG = resolve(process.cwd(), 'supabase/config.toml');
+const ROOT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+const LINKED_PROJECT_CONFIG = resolve(ROOT_DIR, 'supabase/config.toml');
 const REMOTE_TARGET_ENV = 'E2E_REMOTE_MUTATION_TARGET';
 const REMOTE_APPROVAL_ENV = 'E2E_REMOTE_MUTATION_APPROVED';
 
@@ -24,7 +26,12 @@ function normalizeHostname(value: string): string | null {
 }
 
 function isLoopbackHostname(hostname: string): boolean {
-  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '::1' ||
+    hostname === '[::1]'
+  );
 }
 
 function isProductionApplicationTarget(): boolean {
