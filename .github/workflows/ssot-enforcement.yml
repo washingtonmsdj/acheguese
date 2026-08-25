@@ -8,11 +8,12 @@ on:
       - "supabase/**"
       - ".eslintrc*.json"
       - "package.json"
-  push:
-    branches: [main, develop]
-    paths:
-      - "src/**"
-      - "supabase/**"
+      - ".github/workflows/ssot-enforcement.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ssot-enforcement-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
@@ -89,7 +90,6 @@ jobs:
         run: |
           echo "🔍 Verificando acesso direto a tabelas de subscription..."
 
-          # Verifica gastronomy_subscriptions
           if grep -r "from('gastronomy_subscriptions')" src/ \
             --exclude-dir=node_modules \
             --exclude-dir=__tests__ \
@@ -113,7 +113,6 @@ jobs:
             exit 1
           fi
 
-          # Verifica business_subscriptions
           if grep -r "from('business_subscriptions')" src/ \
             --exclude-dir=node_modules \
             --exclude-dir=__tests__ \
@@ -130,7 +129,6 @@ jobs:
         run: |
           echo "🔍 Verificando cálculos de planTier em componentes..."
 
-          # Verifica se componentes calculam entitlement localmente
           if grep -r "planTier === 'pro'" src/ \
             --include="*.tsx" \
             --exclude-dir=node_modules \
@@ -151,7 +149,6 @@ jobs:
             echo "  const { can } = useEntitlements({ business_id });"
             echo "  if (can('canUseFeature')) { ... }"
             echo ""
-            # Não falha, apenas avisa
           fi
 
       - name: Summary

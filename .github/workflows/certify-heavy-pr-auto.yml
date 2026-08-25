@@ -106,6 +106,8 @@ jobs:
             tests/security/lgpd-purge-policy-security.test.ts `
             tests/security/account-operational-edge-policy.test.ts `
             tests/security/session-rpc-auth-authority-security.test.ts `
+            --pool=threads `
+            --maxWorkers=1 `
             --reporter=verbose
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
