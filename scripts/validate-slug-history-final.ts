@@ -1,19 +1,16 @@
 #!/usr/bin/env tsx
-import { createServiceRoleClient } from './lib/supabase-client';
+import {
+  createServiceRoleClient,
+  getSupabaseConfig,
+  loadSupabaseScriptEnv,
+} from './lib/supabase-client';
+import { assertApprovedRemoteMutationTarget } from './lib/remote-mutation-safety';
 
 interface BusinessRow {
   id: string;
   slug: string;
   location_id: string | null;
   profile_id: string;
-}
-
-interface ProfileRow {
-  id: string;
-}
-
-interface LocationRow {
-  id: string;
 }
 
 interface BusinessSlugHistoryRow {
@@ -27,10 +24,16 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-const supabase = createServiceRoleClient();
-
 async function main() {
-  console.log('VALIDACAO REAL: BUSINESS SLUG HISTORY\n');
+  loadSupabaseScriptEnv();
+  const config = getSupabaseConfig();
+  assertApprovedRemoteMutationTarget(config.url);
+  const supabase = createServiceRoleClient({
+    url: config.url,
+    serviceRoleKey: config.serviceRoleKey,
+  });
+
+  console.log('VALIDACAO ISOLADA: BUSINESS SLUG HISTORY\n');
   console.log('------------------------------------------------------------------\n');
 
   console.log('STEP 1: VALIDAR ESTRUTURA CRIADA\n');
@@ -44,8 +47,6 @@ async function main() {
     if (error) {
       console.error('Tabela business_slug_history nao existe');
       console.error('Erro:', error.message);
-      console.log('\nAcao necessaria: aplicar migration manualmente no Supabase Dashboard');
-      console.log('Ver: INSTRUCOES_APLICAR_MIGRATION.md\n');
       process.exit(1);
     }
 
@@ -56,140 +57,118 @@ async function main() {
   }
 
   console.log('\n------------------------------------------------------------------');
-  console.log('STEP 2: TESTE PONTA A PONTA COM DADOS REAIS\n');
+  console.log('STEP 2: TESTE PONTA A PONTA EM FIXTURE TECNICA\n');
+
+  const testBusinessId = process.env.SLUG_HISTORY_TEST_BUSINESS_ID?.trim();
+  if (!testBusinessId) {
+    console.error('SLUG_HISTORY_TEST_BUSINESS_ID ausente.');
+    console.error('O validador nao cria nem escolhe uma empresa automaticamente.');
+    process.exit(1);
+  }
 
   try {
-    let testBusiness: BusinessRow;
-
-    const { data: businesses } = await supabase
+    const { data: business, error: businessError } = await supabase
       .from('business_data')
       .select('id, slug, location_id, profile_id')
-      .not('slug', 'is', null)
-      .limit(1);
+      .eq('id', testBusinessId)
+      .eq('metadata->>source', 'e2e')
+      .eq('metadata->>source_kind', 'technical_fixture')
+      .maybeSingle();
 
-    const businessRows = (businesses ?? []) as BusinessRow[];
-
-    if (businessRows.length > 0) {
-      testBusiness = businessRows[0];
-    } else {
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('profile_type', 'business')
-        .limit(1);
-
-      const profileRows = (profiles ?? []) as ProfileRow[];
-      if (profileRows.length === 0) {
-        console.error('Nenhum profile business disponivel');
-        console.log('Crie um profile business primeiro ou use uma empresa existente');
-        process.exit(1);
-      }
-
-      const { data: location } = await supabase
-        .from('locations')
-        .select('id')
-        .eq('type', 'city')
-        .limit(1)
-        .single();
-
-      const locationRow = location as LocationRow | null;
-      if (!locationRow) {
-        console.error('Nenhuma location disponivel');
-        process.exit(1);
-      }
-
-      const { data: newBusiness, error: createError } = await supabase
-        .from('business_data')
-        .insert({
-          profile_id: profileRows[0].id,
-          slug: `test-business-${Date.now()}`,
-          location_id: locationRow.id,
-          business_name: 'Test Business Slug History',
-        })
-        .select('id, slug, location_id, profile_id')
-        .single();
-
-      if (createError || !newBusiness) {
-        console.error('Erro ao criar empresa de teste:', createError?.message);
-        process.exit(1);
-      }
-
-      testBusiness = newBusiness as BusinessRow;
-      console.log('OK: empresa de teste criada');
+    if (businessError || !business) {
+      console.error(
+        'Fixture tecnica E2E explicita nao encontrada:',
+        businessError?.message ?? 'ausente',
+      );
+      process.exit(1);
     }
 
-    console.log('OK: empresa de teste', {
+    const testBusiness = business as BusinessRow;
+    if (!testBusiness.slug?.trim()) {
+      console.error('Fixture tecnica E2E nao possui slug valido.');
+      process.exit(1);
+    }
+
+    console.log('OK: fixture tecnica selecionada', {
       id: testBusiness.id,
       slug: testBusiness.slug,
     });
 
     const originalSlug = testBusiness.slug;
     const newSlug = `test-slug-${Date.now()}`;
+    let slugChanged = false;
 
-    const { error: updateError } = await supabase
-      .from('business_data')
-      .update({ slug: newSlug })
-      .eq('id', testBusiness.id);
+    try {
+      const { error: updateError } = await supabase
+        .from('business_data')
+        .update({ slug: newSlug })
+        .eq('id', testBusiness.id);
 
-    if (updateError) {
-      console.error('Erro ao alterar slug:', updateError.message);
-      process.exit(1);
-    }
+      if (updateError) throw updateError;
+      slugChanged = true;
 
-    console.log('OK: slug alterado', { de: originalSlug, para: newSlug });
+      console.log('OK: slug alterado', { de: originalSlug, para: newSlug });
 
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    const { data: history, error: historyError } = await supabase
-      .from('business_slug_history')
-      .select('business_id, old_slug, old_canonical_url, change_reason')
-      .eq('business_id', testBusiness.id)
-      .eq('old_slug', originalSlug);
+      const { data: history, error: historyError } = await supabase
+        .from('business_slug_history')
+        .select('business_id, old_slug, old_canonical_url, change_reason')
+        .eq('business_id', testBusiness.id)
+        .eq('old_slug', originalSlug);
 
-    const historyRows = (history ?? []) as BusinessSlugHistoryRow[];
+      const historyRows = (history ?? []) as BusinessSlugHistoryRow[];
 
-    if (historyError || historyRows.length === 0) {
-      console.error('Historico nao foi registrado');
-      console.error('Trigger pode nao estar funcionando');
-      process.exit(1);
-    }
+      if (historyError || historyRows.length === 0) {
+        throw new Error('Historico nao foi registrado; trigger pode nao estar funcionando.');
+      }
 
-    console.log('OK: historico registrado', {
-      old_slug: historyRows[0].old_slug,
-      old_canonical_url: historyRows[0].old_canonical_url,
-      change_reason: historyRows[0].change_reason,
-    });
+      console.log('OK: historico registrado', {
+        old_slug: historyRows[0].old_slug,
+        old_canonical_url: historyRows[0].old_canonical_url,
+        change_reason: historyRows[0].change_reason,
+      });
 
-    const oldUrl = historyRows[0].old_canonical_url;
-    const { data: resolved } = await supabase
-      .from('business_slug_history')
-      .select('business_id')
-      .eq('old_canonical_url', oldUrl)
-      .single();
+      const oldUrl = historyRows[0].old_canonical_url;
+      const { data: resolved, error: resolveError } = await supabase
+        .from('business_slug_history')
+        .select('business_id')
+        .eq('old_canonical_url', oldUrl)
+        .single();
 
-    const resolvedRow = resolved as Pick<BusinessSlugHistoryRow, 'business_id'> | null;
-    if (resolvedRow && resolvedRow.business_id === testBusiness.id) {
+      if (resolveError) throw resolveError;
+
+      const resolvedRow = resolved as Pick<BusinessSlugHistoryRow, 'business_id'> | null;
+      if (!resolvedRow || resolvedRow.business_id !== testBusiness.id) {
+        throw new Error('URL antiga nao resolve corretamente.');
+      }
+
       console.log('OK: URL antiga resolve para business_id correto');
       console.log('Redirect 308:', oldUrl, '->', `/empresas/.../.../${newSlug}`);
-    } else {
-      console.error('URL antiga nao resolve corretamente');
+
+      console.log('\n------------------------------------------------------------------');
+      console.log('CHECKLIST FINAL DE ACEITACAO\n');
+      console.log('OK: alvo de mutacao provado como isolado');
+      console.log('OK: fixture tecnica explicitamente selecionada');
+      console.log('OK: tabela business_slug_history existe');
+      console.log('OK: trigger grava historico automaticamente');
+      console.log('OK: URL antiga resolve para business_id');
+      console.log('OK: redirect 308 para URL canonica atual');
+      console.log('\n------------------------------------------------------------------');
+      console.log('FEATURE SLUG HISTORY VALIDADA EM ALVO ISOLADO');
+      console.log('------------------------------------------------------------------\n');
+    } finally {
+      if (slugChanged) {
+        const { error: restoreError } = await supabase
+          .from('business_data')
+          .update({ slug: originalSlug })
+          .eq('id', testBusiness.id);
+
+        if (restoreError) {
+          throw new Error(`Falha ao restaurar slug original: ${restoreError.message}`);
+        }
+      }
     }
-
-    await supabase
-      .from('business_data')
-      .update({ slug: originalSlug })
-      .eq('id', testBusiness.id);
-
-    console.log('\n------------------------------------------------------------------');
-    console.log('CHECKLIST FINAL DE ACEITACAO\n');
-    console.log('OK: migration aplicada no banco real');
-    console.log('OK: tabela business_slug_history existe');
-    console.log('OK: trigger grava historico automaticamente');
-    console.log('OK: URL antiga resolve para business_id');
-    console.log('OK: redirect 308 para URL canonica atual');
-    console.log('\n------------------------------------------------------------------');
-    console.log('FEATURE SLUG HISTORY CONCLUIDA E VALIDADA NO BANCO REAL');
-    console.log('------------------------------------------------------------------\n');
   } catch (error) {
     console.error('Erro no teste:', getErrorMessage(error));
     process.exit(1);
