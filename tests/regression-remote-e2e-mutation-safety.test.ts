@@ -5,6 +5,7 @@ import {
   getRemoteMutationTargetSafety,
   linkedProductionProjectRef,
 } from '../scripts/lib/remote-mutation-safety';
+import { createServiceRoleClient } from '../scripts/lib/supabase-client';
 import {
   createOptionalOperationalAdminClient,
   hasOperationalAdminEnv,
@@ -24,6 +25,7 @@ const ENV_KEYS = [
   'SUPABASE_SECRET_KEY',
 ] as const;
 const originalEnv = new Map<string, string | undefined>();
+const originalEntrypoint = process.argv[1];
 const isolatedUrl = 'https://isolatedproject123456.supabase.co';
 
 describe('regression: remote E2E mutation safety', () => {
@@ -32,6 +34,7 @@ describe('regression: remote E2E mutation safety', () => {
       originalEnv.set(key, process.env[key]);
       delete process.env[key];
     }
+    process.argv[1] = originalEntrypoint;
   });
 
   afterEach(() => {
@@ -41,6 +44,7 @@ describe('regression: remote E2E mutation safety', () => {
       else process.env[key] = value;
     }
     originalEnv.clear();
+    process.argv[1] = originalEntrypoint;
   });
 
   it('closes the divergent SUPABASE_URL versus VITE_SUPABASE_URL production bypass', () => {
@@ -65,6 +69,19 @@ describe('regression: remote E2E mutation safety', () => {
     expect(safety.kind).toBe('remote-isolated');
   });
 
+  it('blocks direct seed-e2e-users service-role client creation against Production', () => {
+    process.argv[1] = resolve(root, 'scripts/seed-e2e-users.ts');
+    const productionUrl = `https://${linkedProductionProjectRef()}.supabase.co`;
+
+    expect(() =>
+      createServiceRoleClient({
+        url: productionUrl,
+        serviceRoleKey: 'test-service-role-key',
+        envFiles: [],
+      }),
+    ).toThrow(/linked Production project/);
+  });
+
   it('keeps known mutating Playwright suites blocked while Heavy read-only specs remain eligible', () => {
     const playwright = read('playwright.config.ts');
 
@@ -85,9 +102,10 @@ describe('regression: remote E2E mutation safety', () => {
     expect(playwright).not.toContain('territory-home-operational.spec.ts');
   });
 
-  it('removes automatic real-business selection from slug validation and binds the network seed to provenance', () => {
+  it('removes automatic real-business selection and keeps seeders provenance-bound', () => {
     const slugValidator = read('scripts/validate-slug-history-final.ts');
     const networkSeeder = read('scripts/seed-e2e-network.ts');
+    const supabaseClient = read('scripts/lib/supabase-client.mjs');
 
     expect(slugValidator).toContain('SLUG_HISTORY_TEST_BUSINESS_ID');
     expect(slugValidator).toContain("metadata->>source_kind', 'technical_fixture");
@@ -97,5 +115,13 @@ describe('regression: remote E2E mutation safety', () => {
     expect(networkSeeder).toContain("acheguese_fixture: FIXTURE_KIND");
     expect(networkSeeder).toContain("source_kind: 'technical_fixture'");
     expect(networkSeeder).toContain('isTechnicalBusinessFixture(existingStandalone.metadata)');
+
+    for (const entrypoint of [
+      'seed-e2e-users',
+      'seed-e2e-network',
+      'validate-slug-history-final',
+    ]) {
+      expect(supabaseClient).toContain(`'${entrypoint}'`);
+    }
   });
 });
