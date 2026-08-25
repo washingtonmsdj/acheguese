@@ -2,6 +2,7 @@ import { dirname, join } from "path";
 import dotenv from "dotenv";
 import { defineConfig, devices } from "@playwright/test";
 import { fileURLToPath } from "url";
+import { getRemoteMutationTargetSafety } from "./scripts/lib/remote-mutation-safety";
 
 dotenv.config({ path: ".env.test" });
 dotenv.config({ path: ".env.local", override: true });
@@ -15,6 +16,22 @@ const usesLocalWebServer = ["127.0.0.1", "localhost"].includes(webServerHost);
 // Keep the existing Vite DEV server behavior for local Playwright use.
 const skipWebServer = process.env.PLAYWRIGHT_SKIP_WEBSERVER === "1";
 
+const mutationTargetSafety = getRemoteMutationTargetSafety(
+  process.env.VITE_SUPABASE_URL,
+);
+const mutatingE2EIgnore = mutationTargetSafety.safe
+  ? []
+  : [
+      /[\\/]admin-pricing\.spec\.ts$/,
+      /[\\/]auth-business\.spec\.ts$/,
+      /[\\/]business-recommendation-operational\.spec\.ts$/,
+      /[\\/]communication-territorial-operational\.spec\.ts$/,
+      /[\\/]community-access-gate\.spec\.ts$/,
+      /[\\/]gastronomy-onboarding\.spec\.ts$/,
+      /[\\/]gastronomy-operational\.spec\.ts$/,
+      /[\\/]education[\\/].*\.spec\.ts$/,
+    ];
+
 // Compatible with ESM and CJS.
 const __filename = typeof __dirname !== "undefined" ? "" : fileURLToPath(import.meta.url);
 const __dirnameCompat = typeof __dirname !== "undefined" ? __dirname : dirname(__filename);
@@ -26,7 +43,7 @@ const EDUCATION_AUTH_FILE = join(
 
 export default defineConfig({
   testDir: "./tests/e2e",
-  testIgnore: /\.test\.ts$/,
+  testIgnore: [/\.test\.ts$/, ...mutatingE2EIgnore],
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
