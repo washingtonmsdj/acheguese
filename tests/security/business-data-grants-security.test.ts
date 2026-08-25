@@ -11,28 +11,31 @@ function readProjectFile(path: string): string {
 }
 
 describe("business_data grants security", () => {
-  it("keeps broad business_data writes out of anon/authenticated Data API grants", () => {
-    const migration = readProjectFile(
+  it("keeps broad business_data writes out of browser Data API grants", () => {
+    const historicalWriteBoundary = readProjectFile(
       "supabase/migrations/20260707162026_harden_business_data_column_grants.sql",
     );
     const adminService = readProjectFile("src/core/admin/services/AdminBusinessService.ts");
     const adminFunction = readProjectFile("supabase/functions/admin-business-rpc/index.ts");
 
-    expect(migration).toContain("REVOKE ALL ON TABLE public.business_data FROM anon");
-    expect(migration).toContain("GRANT SELECT ON TABLE public.business_data TO anon");
-    expect(migration).toContain("REVOKE ALL ON TABLE public.business_data FROM authenticated");
-    expect(migration).toContain("GRANT SELECT ON TABLE public.business_data TO authenticated");
-    expect(migration).toContain("GRANT INSERT (");
-    expect(migration).toContain("GRANT UPDATE (");
-    expect(migration).not.toMatch(/GRANT (?:INSERT|UPDATE) \([\s\S]*is_verified/);
-    expect(migration).not.toMatch(/GRANT (?:INSERT|UPDATE) \([\s\S]*is_premium/);
-    expect(migration).not.toMatch(/GRANT (?:INSERT|UPDATE) \([\s\S]*favorites_count/);
-    expect(migration).not.toMatch(/GRANT (?:INSERT|UPDATE) \([\s\S]*recommendations_count/);
-    expect(migration).not.toMatch(/GRANT (?:INSERT|UPDATE) \([\s\S]*rating/);
-    expect(migration).not.toMatch(/GRANT (?:INSERT|UPDATE) \([\s\S]*total_reviews/);
-    expect(migration).not.toMatch(/GRANT (?:INSERT|UPDATE) \([\s\S]*total_products/);
-    expect(migration).not.toContain("GRANT DELETE ON TABLE public.business_data TO authenticated");
-    expect(migration).not.toContain("GRANT TRUNCATE ON TABLE public.business_data");
+    expect(historicalWriteBoundary).toContain(
+      "REVOKE ALL ON TABLE public.business_data FROM authenticated",
+    );
+    expect(historicalWriteBoundary).toContain("GRANT INSERT (");
+    expect(historicalWriteBoundary).toContain("GRANT UPDATE (");
+    expect(historicalWriteBoundary).not.toMatch(/GRANT (?:INSERT|UPDATE) \([\s\S]*is_verified/);
+    expect(historicalWriteBoundary).not.toMatch(/GRANT (?:INSERT|UPDATE) \([\s\S]*is_premium/);
+    expect(historicalWriteBoundary).not.toMatch(/GRANT (?:INSERT|UPDATE) \([\s\S]*favorites_count/);
+    expect(historicalWriteBoundary).not.toMatch(/GRANT (?:INSERT|UPDATE) \([\s\S]*recommendations_count/);
+    expect(historicalWriteBoundary).not.toMatch(/GRANT (?:INSERT|UPDATE) \([\s\S]*rating/);
+    expect(historicalWriteBoundary).not.toMatch(/GRANT (?:INSERT|UPDATE) \([\s\S]*total_reviews/);
+    expect(historicalWriteBoundary).not.toMatch(/GRANT (?:INSERT|UPDATE) \([\s\S]*total_products/);
+    expect(historicalWriteBoundary).not.toContain(
+      "GRANT DELETE ON TABLE public.business_data TO authenticated",
+    );
+    expect(historicalWriteBoundary).not.toContain(
+      "GRANT TRUNCATE ON TABLE public.business_data",
+    );
 
     expect(adminService).toContain("invokeSupabaseBrokerCommand");
     expect(adminService).toContain('functionName: "admin-business-rpc"');
@@ -44,5 +47,53 @@ describe("business_data grants security", () => {
     expect(adminFunction).toContain("setPremium");
     expect(adminFunction).toContain('from("business_data")');
     expect(adminFunction).toContain("SUPABASE_SERVICE_ROLE_KEY");
+  });
+
+  it("keeps public business discovery on a sanitized read-only projection", () => {
+    const privacyBoundary = readProjectFile(
+      "supabase/migrations/20260825254000_isolate_public_business_catalog.sql",
+    );
+    const facade = readProjectFile("src/core/business/services/BusinessService.ts");
+
+    expect(privacyBoundary).toContain(
+      "WITH (security_barrier = true, security_invoker = false)",
+    );
+    expect(privacyBoundary).toContain("REVOKE ALL ON TABLE public.business_data FROM anon");
+    expect(privacyBoundary).toContain(
+      "GRANT SELECT ON TABLE public.public_business_search TO anon, authenticated",
+    );
+    expect(privacyBoundary).toContain('DROP POLICY IF EXISTS "Active businesses viewable"');
+    expect(privacyBoundary).toContain('CREATE POLICY "business_data_private_read"');
+    expect(privacyBoundary).toContain("private.auth_can_access_profile(profile_id)");
+
+    for (const publicMetadataKey of [
+      "logo_url",
+      "banner_url",
+      "modos_atendimento",
+      "tem_delivery",
+      "aceita_cartao",
+      "aceita_pix",
+      "neighborhood",
+      "cep",
+      "city",
+      "state",
+    ]) {
+      expect(privacyBoundary).toContain(`'${publicMetadataKey}'`);
+    }
+
+    for (const privateMetadataKey of [
+      "source_authority_profile_id",
+      "custody_status",
+      "coordinate_geocoding_source",
+      "coordinate_source",
+      "archived_at",
+      "source_kind",
+    ]) {
+      expect(privacyBoundary).not.toContain(`'${privateMetadataKey}', bd.metadata`);
+    }
+
+    expect(facade).toContain("BusinessQueries.getBusinessesList");
+    expect(facade).not.toContain("static getBusinesses = BusinessQueries.getBusinesses");
+    expect(facade).toContain("static getBusinesses = getBusinesses");
   });
 });
