@@ -18,6 +18,8 @@ const GUARDED_MUTATING_E2E_ENTRYPOINTS = new Set([
   'seed-e2e-users',
   'seed-e2e-network',
   'validate-slug-history-final',
+  'validate-reconciliation-final',
+  'validate-e2e-setup',
 ]);
 
 export const DEFAULT_SUPABASE_SCRIPT_ENV_FILES = ['.env.local', '.env.remote', '.env.test', '.env'];
@@ -135,6 +137,8 @@ export function createAnonClient(config = {}) {
         '  VITE_SUPABASE_PUBLISHABLE_KEY',
     );
   }
+
+  assertKnownMutatingE2ETarget(url);
 
   return createClient(url, anonKey, {
     auth: {
