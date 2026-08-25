@@ -12,7 +12,13 @@ export interface UserConsentRecord {
 }
 
 export interface DeletionStatusRecord {
-  status: "scheduled" | "processing" | "completed" | "cancelled" | null;
+  status:
+    | "scheduled"
+    | "processing"
+    | "completed"
+    | "cancelled"
+    | "failed"
+    | null;
   scheduled_purge_at: string | null;
   days_remaining: number | null;
 }
@@ -31,11 +37,6 @@ interface ConsentRow {
   privacy_policy_version: string;
 }
 
-interface DeletionStatusRow {
-  status: DeletionStatusRecord["status"];
-  scheduled_purge_at: string | null;
-}
-
 interface PrivacySettingsDbClient {
   from: (table: string) => {
     select: (_columns: string) => {
@@ -52,11 +53,6 @@ interface PrivacySettingsDbClient {
             options: { ascending: boolean },
           ) => Promise<QueryResult<ConsentRow[]>>;
         };
-        order: (
-          column: string,
-          options: { ascending: boolean },
-        ) => Promise<QueryResult<ConsentRow[]>>;
-        single: () => Promise<QueryResult<DeletionStatusRow>>;
       };
     };
   };
@@ -78,27 +74,15 @@ export class PrivacySettingsService {
   }
 
   static async getDeletionStatus(
-    userId: string,
+    _userId: string,
   ): Promise<DeletionStatusRecord | null> {
-    const { data, error } = await this.db
-      .from("user_deletion_schedule")
-      .select("status, scheduled_purge_at")
-      .eq("user_id", userId)
-      .single();
-
-    if (error) return null;
-
-    const daysRemaining = data.scheduled_purge_at
-      ? Math.ceil(
-          (new Date(data.scheduled_purge_at).getTime() - Date.now()) /
-            (1000 * 60 * 60 * 24),
-        )
-      : null;
+    const status = await PrivacyRpcService.getDeletionStatus();
+    if (!status) return null;
 
     return {
-      status: data.status as DeletionStatusRecord["status"],
-      scheduled_purge_at: data.scheduled_purge_at,
-      days_remaining: daysRemaining && daysRemaining > 0 ? daysRemaining : 0,
+      status: status.status,
+      scheduled_purge_at: status.scheduledPurgeAt,
+      days_remaining: status.daysRemaining,
     };
   }
 
@@ -154,26 +138,13 @@ export class PrivacySettingsService {
     accessToken: string;
     reason: string;
   }): Promise<{ days_until_purge: number }> {
-    const response = await fetch(
-      buildSupabaseFunctionUrl("user-delete-account"),
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${input.accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          confirmation: true,
-          reason: input.reason,
-        }),
-      },
-    );
+    if (!input.accessToken) throw new Error("Sessao nao encontrada");
 
-    const payload = await response.json();
-    if (!response.ok) {
-      throw new Error(payload.error || "Falha na solicitacao");
-    }
+    const result = await PrivacyRpcService.requestAccountDeletion({
+      reason: input.reason,
+      exportRequested: false,
+    });
 
-    return payload.details as { days_until_purge: number };
+    return { days_until_purge: result.daysUntilPurge };
   }
 }

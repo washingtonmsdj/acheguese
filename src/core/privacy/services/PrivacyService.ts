@@ -10,6 +10,7 @@
 import { DPO_REQUEST_STATUS } from "@/core/privacy/constants/dpoRequestStatus";
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import { PrivacyRpcService } from "./PrivacyRpcService";
 
 // Types
 
@@ -45,7 +46,7 @@ export interface DeleteAccountParams {
   reason?: string;
   /** Must be true as an explicit user confirmation. */
   confirmation: true;
-  /** When true, exports the data before deletion. */
+  /** When true, requests an export before final purge. */
   exportFirst?: boolean;
 }
 
@@ -114,27 +115,24 @@ export class PrivacyService {
   }
 
   /**
-   * Schedules account deletion for the authenticated user.
-   * Performs immediate soft-delete plus purge after 30 days.
+   * Schedules account deletion for the authenticated user through the
+   * authoritative privacy broker. This does not invoke the stale destructive
+   * `user-delete-account` handler.
    */
   static async deleteAccount(params: DeleteAccountParams): Promise<DeleteAccountResponse> {
-    const { data, error } = await supabase.functions.invoke("user-delete-account", {
-      body: {
-        confirmation: params.confirmation,
-        reason: params.reason,
-        export_first: params.exportFirst ?? false,
-      },
-    });
-
-    if (error) {
-      logger.error("[PrivacyService] Error scheduling account deletion", error);
-      throw new Error(error.message || "Failed to schedule account deletion");
+    if (!params.confirmation) {
+      throw new Error("Confirmation required to delete account");
     }
 
+    const result = await PrivacyRpcService.requestAccountDeletion({
+      reason: params.reason ?? null,
+      exportRequested: params.exportFirst ?? false,
+    });
+
     return {
-      scheduledPurgeAt: data.details.scheduled_purge_at,
-      daysUntilPurge: data.details.days_until_purge,
-      recoveryPossibleUntil: data.details.recovery_possible_until,
+      scheduledPurgeAt: result.scheduledPurgeAt,
+      daysUntilPurge: result.daysUntilPurge,
+      recoveryPossibleUntil: result.recoveryPossibleUntil,
     };
   }
 }
