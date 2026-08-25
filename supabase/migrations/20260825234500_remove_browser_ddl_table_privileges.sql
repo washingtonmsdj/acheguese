@@ -13,10 +13,10 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
 REVOKE TRUNCATE, REFERENCES, TRIGGER, MAINTAIN ON TABLES
 FROM anon, authenticated;
 
--- Some Supabase-managed migrations create objects as supabase_admin.
-ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public
-REVOKE TRUNCATE, REFERENCES, TRIGGER, MAINTAIN ON TABLES
-FROM anon, authenticated;
+-- NOTE: supabase_admin owns a separate default ACL. The migration executor is
+-- not authorized to mutate another role's default privileges, so that platform-
+-- managed default remains an explicit follow-up. Existing public relations are
+-- still hardened above regardless of owner.
 
 DO $$
 DECLARE
