@@ -11,9 +11,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
-  errorResponse,
   getAllSecurityHeaders,
   getRequiredEnv,
+  jsonResponse,
   rateLimitMiddleware,
   requireHttpMethod,
 } from '../_shared/security.ts';
@@ -127,14 +127,14 @@ serve(async (req: Request) => {
         is_navigable: isNavigable(metadata),
         member_count: memberIds.length,
         member_ids: memberIds,
-        anchor_city_name: anchorCity?.name ?? null,
+        anchor_city_name: anchorCity?.name,
         metadata,
       };
     });
 
     const groupMembers = Object.fromEntries(memberIdsMap.entries());
 
-    await supabaseAdmin.from('function_audit').insert({
+    const { error: auditError } = await supabaseAdmin.from('function_audit').insert({
       function_name: 'territorial-get-tree',
       user_id: userId,
       input: {},
@@ -145,7 +145,10 @@ serve(async (req: Request) => {
       },
       success: true,
       duration_ms: 0,
-    }).then(() => {}, (err: unknown) => console.error('Audit log error:', err));
+    });
+    if (auditError) {
+      console.error('Audit log error:', auditError);
+    }
 
     return new Response(
       JSON.stringify({ locations, groups, groupMembers }),
@@ -159,6 +162,11 @@ serve(async (req: Request) => {
     );
   } catch (error) {
     console.error('Error in territorial-get-tree:', error);
-    return errorResponse('Internal server error', 500, error);
+    return jsonResponse(
+      { error: 'Internal server error' },
+      500,
+      ALLOWED_METHODS,
+      req,
+    );
   }
 });
