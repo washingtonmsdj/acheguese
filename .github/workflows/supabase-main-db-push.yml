@@ -95,16 +95,22 @@ jobs:
           Write-Host "Exact main SHA accepted: $targetSha"
           Write-Host "Apply requested: $env:APPLY_REQUESTED"
 
-      - name: Checkout exact main SHA
+      - name: Checkout isolated Supabase source at exact SHA
         uses: actions/checkout@v6
         with:
           repository: washingtonmsdj/acheguese
           ref: ${{ steps.target.outputs.sha }}
           fetch-depth: 1
           persist-credentials: false
+          clean: false
+          path: gate
+          sparse-checkout: |
+            supabase
+          sparse-checkout-cone-mode: true
 
       - name: Assert checkout provenance
         shell: powershell
+        working-directory: gate
         env:
           EXPECTED_SHA: ${{ steps.target.outputs.sha }}
         run: |
@@ -114,7 +120,7 @@ jobs:
             throw "Checkout provenance mismatch. expected=$env:EXPECTED_SHA actual=$actual"
           }
           if (git status --porcelain) {
-            throw "Worktree must be clean before production DB operations."
+            throw "Isolated worktree must be clean before production DB operations."
           }
 
       - name: Validate required Supabase credentials
@@ -133,10 +139,10 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: "24"
-          cache: npm
 
       - name: Pin Supabase CLI and link exact project
         shell: powershell
+        working-directory: gate
         run: |
           $ErrorActionPreference = "Stop"
           $version = (& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" --version).Trim()
@@ -156,6 +162,7 @@ jobs:
       - name: Prove migration history delta is exactly approved
         id: migrations
         shell: powershell
+        working-directory: gate
         run: |
           $ErrorActionPreference = "Stop"
           $expected = @(
@@ -175,12 +182,10 @@ jobs:
 
           $localOnly = New-Object System.Collections.Generic.List[string]
           $remoteOnly = New-Object System.Collections.Generic.List[string]
-          $separator = [char]0x2502
 
           foreach ($line in $migrationOutput) {
             $text = [string]$line
-            if (-not $text.Contains($separator)) { continue }
-            $parts = $text.Split($separator)
+            $parts = @([regex]::Split($text, '\s*[|│]\s*'))
             if ($parts.Count -lt 2) { continue }
 
             $localMatch = [regex]::Match($parts[0], '\d{14}')
@@ -219,6 +224,7 @@ jobs:
 
       - name: Dry-run production DB push
         shell: powershell
+        working-directory: gate
         run: |
           $ErrorActionPreference = "Stop"
           & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" db push --linked --dry-run --password $env:SUPABASE_DB_PASSWORD
@@ -227,6 +233,7 @@ jobs:
       - name: Apply approved migrations
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.apply == true }}
         shell: powershell
+        working-directory: gate
         run: |
           $ErrorActionPreference = "Stop"
           & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" db push --linked --password $env:SUPABASE_DB_PASSWORD
@@ -235,6 +242,7 @@ jobs:
       - name: Verify migration history fully synchronized
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.apply == true }}
         shell: powershell
+        working-directory: gate
         run: |
           $ErrorActionPreference = "Stop"
           $migrationOutput = @(& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" migration list --linked --password $env:SUPABASE_DB_PASSWORD 2>&1)
@@ -244,12 +252,10 @@ jobs:
           }
           $migrationOutput | ForEach-Object { Write-Host $_ }
 
-          $separator = [char]0x2502
           $mismatches = New-Object System.Collections.Generic.List[string]
           foreach ($line in $migrationOutput) {
             $text = [string]$line
-            if (-not $text.Contains($separator)) { continue }
-            $parts = $text.Split($separator)
+            $parts = @([regex]::Split($text, '\s*[|│]\s*'))
             if ($parts.Count -lt 2) { continue }
             $localMatch = [regex]::Match($parts[0], '\d{14}')
             $remoteMatch = [regex]::Match($parts[1], '\d{14}')
@@ -268,6 +274,7 @@ jobs:
       - name: Lint remote database
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.apply == true }}
         shell: powershell
+        working-directory: gate
         run: |
           $ErrorActionPreference = "Stop"
           & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" db lint --linked --level error --password $env:SUPABASE_DB_PASSWORD
@@ -276,6 +283,7 @@ jobs:
       - name: Deploy privacy-rpc from exact SHA
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.apply == true }}
         shell: powershell
+        working-directory: gate
         run: |
           $ErrorActionPreference = "Stop"
           & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" functions deploy privacy-rpc --project-ref $env:SUPABASE_PROJECT_REF --use-api
@@ -299,5 +307,6 @@ jobs:
             "- Apply requested: $env:APPLY_REQUESTED",
             "- Approved versions: 20260821001800, 20260821002600, 20260821011000, 20260821022500, 20260821024000",
             "- Push-triggered executions are always dry-run only.",
+            "- Checkout is isolated under gate/ to avoid self-hosted workspace locks.",
             "- No seed, reset, repair, branch creation, or destructive fallback is permitted by this workflow."
           ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
