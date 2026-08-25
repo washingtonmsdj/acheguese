@@ -35,6 +35,8 @@ const CONSENT_TYPES = new Set([
 const SAFE_VERSION_REGEX = /^[A-Za-z0-9_.:-]{1,32}$/;
 const ACTIONS = {
   recordConsent: true,
+  getDeletionStatus: true,
+  requestAccountDeletion: true,
   cancelAccountDeletion: true,
 } as const;
 
@@ -58,8 +60,45 @@ class RequestValidationError extends Error {
   }
 }
 
+class PrivacyRpcHttpError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "PrivacyRpcHttpError";
+    this.status = status;
+  }
+}
+
 function responseHeaders(req: Request): Record<string, string> {
   return getAllSecurityHeaders(ALLOWED_METHODS, req);
+}
+
+/**
+ * Hosted Edge Functions expose modern secret keys as a JSON dictionary in
+ * SUPABASE_SECRET_KEYS. Local tooling can expose SUPABASE_SECRET_KEY directly.
+ * Keep the legacy service-role key only as a backwards-compatible fallback
+ * while the project completes its key migration.
+ */
+function getSupabaseServerKey(): string {
+  const secretKeysJson = Deno.env.get("SUPABASE_SECRET_KEYS")?.trim();
+  if (secretKeysJson) {
+    try {
+      const parsed = JSON.parse(secretKeysJson) as Record<string, unknown>;
+      const defaultKey =
+        typeof parsed.default === "string" ? parsed.default.trim() : "";
+      if (defaultKey) return defaultKey;
+    } catch {
+      console.warn(
+        "[privacy-rpc] SUPABASE_SECRET_KEYS is not valid JSON; using compatible fallback",
+      );
+    }
+  }
+
+  const localSecretKey = Deno.env.get("SUPABASE_SECRET_KEY")?.trim();
+  if (localSecretKey) return localSecretKey;
+
+  return getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY");
 }
 
 function requireConsentType(value: unknown): string {
@@ -97,7 +136,8 @@ function normalizeVersion(value: unknown, fallback: string): string {
 }
 
 function getTrustedIp(req: Request): string | null {
-  const candidate = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-real-ip");
+  const candidate =
+    req.headers.get("cf-connecting-ip") ?? req.headers.get("x-real-ip");
   if (!candidate) return null;
 
   const value = candidate.trim();
@@ -142,12 +182,22 @@ async function requireUser(
 ): Promise<UserAuthResult | Response> {
   const token = extractBearerToken(req);
   if (!token) {
-    return jsonResponse({ error: "Missing or invalid authorization header" }, 401, ALLOWED_METHODS, req);
+    return jsonResponse(
+      { error: "Missing or invalid authorization header" },
+      401,
+      ALLOWED_METHODS,
+      req,
+    );
   }
 
   const { data, error } = await supabaseAdmin.auth.getUser(token);
   if (error || !data.user) {
-    return jsonResponse({ error: "Invalid or expired token" }, 401, ALLOWED_METHODS, req);
+    return jsonResponse(
+      { error: "Invalid or expired token" },
+      401,
+      ALLOWED_METHODS,
+      req,
+    );
   }
 
   return { userId: data.user.id };
@@ -159,10 +209,19 @@ async function handleRecordConsent(
   userId: string,
   params: Record<string, unknown>,
 ) {
-  const consentType = requireConsentType(params.consentType ?? params.consent_type);
+  const consentType = requireConsentType(
+    params.consentType ?? params.consent_type,
+  );
   const granted = requireBoolean(params.granted, "granted");
-  const userAgent = normalizeOptionalString(params.userAgent ?? params.user_agent, "userAgent", 1024);
-  const termsVersion = normalizeVersion(params.termsVersion ?? params.terms_version, "1.0");
+  const userAgent = normalizeOptionalString(
+    params.userAgent ?? params.user_agent,
+    "userAgent",
+    1024,
+  );
+  const termsVersion = normalizeVersion(
+    params.termsVersion ?? params.terms_version,
+    "1.0",
+  );
   const privacyVersion = normalizeVersion(
     params.privacyVersion ?? params.privacy_version,
     "1.0",
@@ -182,6 +241,87 @@ async function handleRecordConsent(
   return { consentId: data as string };
 }
 
+async function handleGetDeletionStatus(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+) {
+  const { data, error } = await supabaseAdmin.rpc(
+    "get_account_deletion_status_for_user",
+    { p_user_id: userId },
+  );
+
+  if (error) throw error;
+  return data ?? null;
+}
+
+function mapDeletionRequestError(error: unknown): never {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "object" && error !== null && "message" in error
+        ? String((error as { message?: unknown }).message ?? "")
+        : String(error);
+
+  if (message.includes("ACCOUNT_DELETION_ADMIN_REQUIRES_DPO")) {
+    throw new PrivacyRpcHttpError(
+      "Contas administrativas devem solicitar exclusao ao DPO.",
+      403,
+    );
+  }
+  if (message.includes("ACCOUNT_DELETION_ACTIVE_BUSINESS")) {
+    throw new PrivacyRpcHttpError(
+      "Transfira ou encerre os negocios vinculados antes de excluir a conta.",
+      409,
+    );
+  }
+  if (message.includes("ACCOUNT_DELETION_ACTIVE_RIDE")) {
+    throw new PrivacyRpcHttpError(
+      "Conclua ou cancele as corridas e entregas em andamento antes de excluir a conta.",
+      409,
+    );
+  }
+  if (message.includes("ACCOUNT_DELETION_ACTIVE_ORDER")) {
+    throw new PrivacyRpcHttpError(
+      "Conclua os pedidos e pendencias financeiras antes de excluir a conta.",
+      409,
+    );
+  }
+  if (message.includes("deletion request cannot be restarted")) {
+    throw new PrivacyRpcHttpError(
+      "A solicitacao de exclusao ja esta em processamento ou concluida.",
+      409,
+    );
+  }
+
+  throw error;
+}
+
+async function handleRequestAccountDeletion(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+  params: Record<string, unknown>,
+) {
+  const reason = normalizeOptionalString(params.reason, "reason", 1000);
+  const exportRequested =
+    params.exportRequested === undefined
+      ? false
+      : requireBoolean(params.exportRequested, "exportRequested");
+
+  const { data, error } = await supabaseAdmin.rpc(
+    "request_account_deletion_for_user",
+    {
+      p_user_id: userId,
+      p_reason: reason,
+      p_export_requested: exportRequested,
+    },
+  );
+
+  if (error) mapDeletionRequestError(error);
+  if (!data) throw new Error("Deletion request authority returned no data");
+
+  return data;
+}
+
 async function handleCancelAccountDeletion(
   supabaseAdmin: SupabaseClient,
   userId: string,
@@ -197,6 +337,9 @@ async function handleCancelAccountDeletion(
   if (error) throw error;
   if (data !== true) return { cancelled: false };
 
+  // Preserve recovery compatibility with accounts touched by the historical
+  // destructive handler. New requests use the DB authority, but cancellation
+  // must still clear legacy deletion metadata if it is present.
   const { data: authData, error: authReadError } =
     await supabaseAdmin.auth.admin.getUserById(userId);
   if (authReadError || !authData.user) {
@@ -229,6 +372,10 @@ async function dispatchAction(
   switch (action) {
     case "recordConsent":
       return handleRecordConsent(req, supabaseAdmin, userId, params);
+    case "getDeletionStatus":
+      return handleGetDeletionStatus(supabaseAdmin, userId);
+    case "requestAccountDeletion":
+      return handleRequestAccountDeletion(supabaseAdmin, userId, params);
     case "cancelAccountDeletion":
       return handleCancelAccountDeletion(supabaseAdmin, userId);
   }
@@ -247,7 +394,7 @@ serve(async (req: Request) => {
 
   const supabaseAdmin = createClient(
     getRequiredEnv("SUPABASE_URL"),
-    getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY"),
+    getSupabaseServerKey(),
     { auth: { autoRefreshToken: false, persistSession: false } },
   );
 
@@ -262,7 +409,12 @@ serve(async (req: Request) => {
 
   const action = rawBody.data?.action;
   if (!action || !(action in ACTIONS)) {
-    return jsonResponse({ error: "Invalid action" }, 400, ALLOWED_METHODS, req);
+    return jsonResponse(
+      { error: "Invalid action" },
+      400,
+      ALLOWED_METHODS,
+      req,
+    );
   }
 
   const safeAction = action as PrivacyRpcAction;
@@ -272,7 +424,13 @@ serve(async (req: Request) => {
       : {};
 
   try {
-    const data = await dispatchAction(req, supabaseAdmin, auth.userId, safeAction, params);
+    const data = await dispatchAction(
+      req,
+      supabaseAdmin,
+      auth.userId,
+      safeAction,
+      params,
+    );
     auditLog({
       timestamp: new Date().toISOString(),
       userId: auth.userId,
@@ -286,7 +444,20 @@ serve(async (req: Request) => {
     return jsonResponse({ data }, 200, ALLOWED_METHODS, req);
   } catch (error: unknown) {
     if (error instanceof RequestValidationError) {
-      return jsonResponse({ error: error.message }, 400, ALLOWED_METHODS, req);
+      return jsonResponse(
+        { error: error.message },
+        400,
+        ALLOWED_METHODS,
+        req,
+      );
+    }
+    if (error instanceof PrivacyRpcHttpError) {
+      return jsonResponse(
+        { error: error.message },
+        error.status,
+        ALLOWED_METHODS,
+        req,
+      );
     }
 
     console.error("[privacy-rpc]", error);
@@ -299,6 +470,11 @@ serve(async (req: Request) => {
       details: { action: safeAction, reason: "privacy_rpc_failed" },
       ...getAuditInfo(req),
     });
-    return jsonResponse({ error: "Internal server error" }, 500, ALLOWED_METHODS, req);
+    return jsonResponse(
+      { error: "Internal server error" },
+      500,
+      ALLOWED_METHODS,
+      req,
+    );
   }
 });
