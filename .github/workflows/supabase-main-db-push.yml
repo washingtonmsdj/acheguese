@@ -1,0 +1,290 @@
+name: Supabase Main DB Push
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Exact 40-character SHA currently at main"
+        required: true
+        type: string
+      apply:
+        description: "Apply the five approved LGPD migrations and deploy privacy-rpc"
+        required: true
+        default: false
+        type: boolean
+      confirmation:
+        description: "For apply=true, type APPLY_5_LGPD_MIGRATIONS"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-main-db-push-production
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  SUPABASE_CLI_VERSION: "2.115.0"
+  SUPABASE_PROJECT_REF: "xhdowzacfujckjelqhtd"
+
+jobs:
+  push-production-db:
+    name: Main-only production migration gate
+    runs-on:
+      - self-hosted
+      - windows
+      - x64
+      - acheguese-heavy-windows
+      - remote-only
+    timeout-minutes: 45
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Validate immutable main target
+        id: target
+        shell: powershell
+        env:
+          TARGET_SHA: ${{ inputs.sha }}
+          APPLY_REQUESTED: ${{ inputs.apply }}
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $targetSha = ([string]$env:TARGET_SHA).Trim().ToLowerInvariant()
+          if ($targetSha -notmatch '^[0-9a-f]{40}$') {
+            throw "Target SHA must be exactly 40 lowercase/uppercase hex characters."
+          }
+
+          if ($env:GITHUB_REPOSITORY -ne "washingtonmsdj/acheguese") {
+            throw "Unexpected repository: $env:GITHUB_REPOSITORY"
+          }
+
+          $headers = @{
+            Accept = "application/vnd.github+json"
+            Authorization = "Bearer $env:GH_TOKEN"
+            "X-GitHub-Api-Version" = "2022-11-28"
+          }
+          $main = Invoke-RestMethod -Uri "https://api.github.com/repos/washingtonmsdj/acheguese/branches/main" -Headers $headers -Method Get
+          $mainSha = ([string]$main.commit.sha).Trim().ToLowerInvariant()
+
+          if ($mainSha -ne $targetSha) {
+            throw "Refusing stale target. main=$mainSha requested=$targetSha"
+          }
+
+          if ($env:APPLY_REQUESTED -eq "true" -and $env:CONFIRMATION -ne "APPLY_5_LGPD_MIGRATIONS") {
+            throw "Apply mode requires exact confirmation APPLY_5_LGPD_MIGRATIONS."
+          }
+
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "sha=$targetSha" -Encoding UTF8
+          Write-Host "Exact main SHA accepted: $targetSha"
+
+      - name: Checkout exact main SHA
+        uses: actions/checkout@v6
+        with:
+          repository: washingtonmsdj/acheguese
+          ref: ${{ steps.target.outputs.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Assert checkout provenance
+        shell: powershell
+        env:
+          EXPECTED_SHA: ${{ steps.target.outputs.sha }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $actual = (git rev-parse HEAD).Trim().ToLowerInvariant()
+          if ($actual -ne $env:EXPECTED_SHA) {
+            throw "Checkout provenance mismatch. expected=$env:EXPECTED_SHA actual=$actual"
+          }
+          if (git status --porcelain) {
+            throw "Worktree must be clean before production DB operations."
+          }
+
+      - name: Validate required Supabase credentials
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          if ([string]::IsNullOrWhiteSpace($env:SUPABASE_ACCESS_TOKEN)) {
+            throw "GitHub Actions secret SUPABASE_ACCESS_TOKEN is missing."
+          }
+          if ([string]::IsNullOrWhiteSpace($env:SUPABASE_DB_PASSWORD)) {
+            throw "GitHub Actions secret SUPABASE_DB_PASSWORD is missing."
+          }
+          Write-Host "Required Supabase credentials are present."
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Pin Supabase CLI and link exact project
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          $version = (& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" --version).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($version -ne $env:SUPABASE_CLI_VERSION) {
+            throw "Unexpected Supabase CLI version: $version"
+          }
+
+          & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" link --project-ref $env:SUPABASE_PROJECT_REF --password $env:SUPABASE_DB_PASSWORD
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $linkedRef = (Get-Content "supabase/.temp/project-ref" -Raw).Trim()
+          if ($linkedRef -ne $env:SUPABASE_PROJECT_REF) {
+            throw "Linked Supabase project mismatch: $linkedRef"
+          }
+
+      - name: Prove migration history delta is exactly approved
+        id: migrations
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          $expected = @(
+            "20260821001800",
+            "20260821002600",
+            "20260821011000",
+            "20260821022500",
+            "20260821024000"
+          )
+
+          $migrationOutput = @(& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" migration list --linked --password $env:SUPABASE_DB_PASSWORD 2>&1)
+          if ($LASTEXITCODE -ne 0) {
+            $migrationOutput | ForEach-Object { Write-Host $_ }
+            throw "supabase migration list failed."
+          }
+          $migrationOutput | ForEach-Object { Write-Host $_ }
+
+          $localOnly = New-Object System.Collections.Generic.List[string]
+          $remoteOnly = New-Object System.Collections.Generic.List[string]
+          $separator = [char]0x2502
+
+          foreach ($line in $migrationOutput) {
+            $text = [string]$line
+            if (-not $text.Contains($separator)) { continue }
+            $parts = $text.Split($separator)
+            if ($parts.Count -lt 2) { continue }
+
+            $localMatch = [regex]::Match($parts[0], '\d{14}')
+            $remoteMatch = [regex]::Match($parts[1], '\d{14}')
+
+            if ($localMatch.Success -and -not $remoteMatch.Success) {
+              $localOnly.Add($localMatch.Value)
+            } elseif (-not $localMatch.Success -and $remoteMatch.Success) {
+              $remoteOnly.Add($remoteMatch.Value)
+            }
+          }
+
+          $localOnly = @($localOnly | Sort-Object -Unique)
+          $remoteOnly = @($remoteOnly | Sort-Object -Unique)
+
+          if ($remoteOnly.Count -ne 0) {
+            throw "Remote-only migrations detected: $($remoteOnly -join ', ')"
+          }
+
+          $delta = @(Compare-Object -ReferenceObject $expected -DifferenceObject $localOnly)
+          if ($delta.Count -ne 0) {
+            throw "Pending migration set differs from approved five. Expected=$($expected -join ',') Actual=$($localOnly -join ',')"
+          }
+
+          $localFiles = @(
+            Get-ChildItem "supabase/migrations" -File -Filter "*.sql" |
+              ForEach-Object { if ($_.BaseName -match '^(\d{14})_') { $Matches[1] } } |
+              Where-Object { $_ -in $expected } |
+              Sort-Object -Unique
+          )
+          if (@(Compare-Object -ReferenceObject $expected -DifferenceObject $localFiles).Count -ne 0) {
+            throw "One or more approved migration files are missing from the exact checkout."
+          }
+
+          Write-Host "Approved pending migrations: $($localOnly -join ', ')"
+
+      - name: Dry-run production DB push
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" db push --linked --dry-run --password $env:SUPABASE_DB_PASSWORD
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Apply approved migrations
+        if: ${{ inputs.apply == true }}
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" db push --linked --password $env:SUPABASE_DB_PASSWORD
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify migration history fully synchronized
+        if: ${{ inputs.apply == true }}
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          $migrationOutput = @(& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" migration list --linked --password $env:SUPABASE_DB_PASSWORD 2>&1)
+          if ($LASTEXITCODE -ne 0) {
+            $migrationOutput | ForEach-Object { Write-Host $_ }
+            throw "Post-push migration list failed."
+          }
+          $migrationOutput | ForEach-Object { Write-Host $_ }
+
+          $separator = [char]0x2502
+          $mismatches = New-Object System.Collections.Generic.List[string]
+          foreach ($line in $migrationOutput) {
+            $text = [string]$line
+            if (-not $text.Contains($separator)) { continue }
+            $parts = $text.Split($separator)
+            if ($parts.Count -lt 2) { continue }
+            $localMatch = [regex]::Match($parts[0], '\d{14}')
+            $remoteMatch = [regex]::Match($parts[1], '\d{14}')
+            if ($localMatch.Success -xor $remoteMatch.Success) {
+              $mismatches.Add($text.Trim())
+            } elseif ($localMatch.Success -and $remoteMatch.Success -and $localMatch.Value -ne $remoteMatch.Value) {
+              $mismatches.Add($text.Trim())
+            }
+          }
+
+          if ($mismatches.Count -ne 0) {
+            throw "Migration history is not synchronized after push: $($mismatches -join ' | ')"
+          }
+          Write-Host "Local and remote migration histories are synchronized."
+
+      - name: Lint remote database
+        if: ${{ inputs.apply == true }}
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" db lint --linked --level error --password $env:SUPABASE_DB_PASSWORD
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Deploy privacy-rpc from exact SHA
+        if: ${{ inputs.apply == true }}
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" functions deploy privacy-rpc --project-ref $env:SUPABASE_PROJECT_REF --use-api
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Record gate summary
+        if: always()
+        shell: powershell
+        env:
+          TARGET_SHA: ${{ steps.target.outputs.sha }}
+          APPLY_REQUESTED: ${{ inputs.apply }}
+        run: |
+          @(
+            "## Supabase production migration gate",
+            "- Repository: washingtonmsdj/acheguese",
+            "- Target SHA: $env:TARGET_SHA",
+            "- Branch authority: main only",
+            "- Project ref: $env:SUPABASE_PROJECT_REF",
+            "- Supabase CLI: $env:SUPABASE_CLI_VERSION",
+            "- Apply requested: $env:APPLY_REQUESTED",
+            "- Approved versions: 20260821001800, 20260821002600, 20260821011000, 20260821022500, 20260821024000",
+            "- No seed, reset, repair, branch creation, or destructive fallback is permitted by this workflow."
+          ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
