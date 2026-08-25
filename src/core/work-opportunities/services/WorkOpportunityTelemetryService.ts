@@ -26,6 +26,7 @@ class WorkOpportunityTelemetryServiceClass {
         event_type: eventType,
         event_source: context.source === "search" ? "search" : "web",
         user_id: context.actorUserId ?? undefined,
+        session_id: AnalyticsService.getSessionId(),
         metadata: {
           event_name: eventName,
           source: context.source ?? "direct",
