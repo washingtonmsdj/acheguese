@@ -1,29 +1,28 @@
 #!/usr/bin/env tsx
 /**
- * Seed de dados para testes E2E de rede/filiais
+ * Seed de dados para testes E2E de rede/filiais.
  *
- * Cria dados determinísticos e previsíveis:
- *   - 1 usuário de teste com empresa standalone
- *   - 2 locations (bairros) reais do banco para usar nos testes
- *   - Exporta IDs para os testes consumirem via env
- *
- * Uso:
- *   npx tsx scripts/seed-e2e-network.ts
- *   npx tsx scripts/seed-e2e-network.ts --reset
+ * Este seeder e mutavel e fail-closed: somente localhost ou um projeto remoto
+ * explicitamente aprovado e diferente do project_id de Production pode ser usado.
  */
 
 import fs from 'fs';
-import { createServiceRoleClient, loadSupabaseScriptEnv } from './lib/supabase-client';
+import {
+  createServiceRoleClient,
+  getSupabaseConfig,
+  loadSupabaseScriptEnv,
+} from './lib/supabase-client';
+import { assertApprovedRemoteMutationTarget } from './lib/remote-mutation-safety';
 
 const E2E_ENV_FILES = ['.env.test', '.env.local'];
-
-loadSupabaseScriptEnv(E2E_ENV_FILES);
-
-const supabase = createServiceRoleClient({ envFiles: E2E_ENV_FILES });
-
 const RESET = process.argv.includes('--reset');
+const FIXTURE_KIND = 'network-e2e';
+const TECHNICAL_BUSINESS_METADATA = {
+  source: 'e2e',
+  source_kind: 'technical_fixture',
+};
 
-// IDs fixos para determinismo
+// IDs/identificadores fixos para determinismo.
 const SEED = {
   USER_EMAIL: 'e2e-network@test.local',
   USER_PASSWORD: 'E2eNetwork@2024!',
@@ -32,10 +31,38 @@ const SEED = {
   HUB_SLUG: 'e2e-brand-hub-test',
 };
 
-async function run() {
-  console.log('🌱 Seed E2E rede/filiais\n');
+function isTechnicalAuthFixture(user: {
+  app_metadata?: Record<string, unknown>;
+  user_metadata?: Record<string, unknown>;
+}): boolean {
+  return (
+    user.app_metadata?.acheguese_fixture === FIXTURE_KIND &&
+    user.user_metadata?.acheguese_fixture === FIXTURE_KIND
+  );
+}
 
-  // 1. Buscar 2 locations do tipo district para usar nos testes
+function isTechnicalBusinessFixture(metadata: unknown): boolean {
+  if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) return false;
+  const record = metadata as Record<string, unknown>;
+  return (
+    record.source === TECHNICAL_BUSINESS_METADATA.source &&
+    record.source_kind === TECHNICAL_BUSINESS_METADATA.source_kind
+  );
+}
+
+async function run() {
+  loadSupabaseScriptEnv(E2E_ENV_FILES);
+  const config = getSupabaseConfig({ envFiles: E2E_ENV_FILES });
+  assertApprovedRemoteMutationTarget(config.url);
+  const supabase = createServiceRoleClient({
+    url: config.url,
+    serviceRoleKey: config.serviceRoleKey,
+    envFiles: E2E_ENV_FILES,
+  });
+
+  console.log('🌱 Seed E2E rede/filiais em alvo isolado\n');
+
+  // 1. Buscar 2 locations do tipo district para usar nos testes.
   const { data: districts, error: locErr } = await supabase
     .from('locations')
     .select('id, name, geographic_path, type')
@@ -45,7 +72,6 @@ async function run() {
 
   if (locErr || !districts || districts.length < 2) {
     console.error('❌ Não foi possível encontrar 2 bairros ativos no banco.');
-    console.error('   Verifique se a tabela locations tem registros do tipo district.');
     process.exit(1);
   }
 
@@ -53,41 +79,64 @@ async function run() {
   console.log(`📍 Bairro 1: ${loc1.name} (${loc1.id})`);
   console.log(`📍 Bairro 2: ${loc2.name} (${loc2.id})\n`);
 
-  // 2. Limpar dados anteriores se --reset
-  if (RESET) {
-    console.log('🗑️  Limpando dados anteriores...');
-    await supabase.from('business_data').delete().like('slug', 'e2e-%');
-    const { data: users } = await supabase.auth.admin.listUsers();
-    const existing = users?.users.find(u => u.email === SEED.USER_EMAIL);
-    if (existing) {
-      await supabase.from('profiles').delete().eq('id', existing.id);
-      await supabase.auth.admin.deleteUser(existing.id);
-    }
-    console.log('✅ Dados anteriores removidos\n');
+  const { data: users, error: listUsersError } = await supabase.auth.admin.listUsers();
+  if (listUsersError) throw listUsersError;
+  let existingUser = users?.users.find((user) => user.email === SEED.USER_EMAIL);
+
+  if (existingUser && !isTechnicalAuthFixture(existingUser)) {
+    throw new Error(
+      `Refusing to adopt Auth user ${SEED.USER_EMAIL} without the ${FIXTURE_KIND} fixture marker.`,
+    );
   }
 
-  // 3. Criar/reusar usuário de teste
-  const { data: existingUsers } = await supabase.auth.admin.listUsers();
-  let userId = existingUsers?.users.find(u => u.email === SEED.USER_EMAIL)?.id;
+  // 2. Limpar apenas fixtures tecnicas marcadas se --reset.
+  if (RESET) {
+    console.log('🗑️  Limpando fixtures técnicas anteriores...');
+    const { error: businessDeleteError } = await supabase
+      .from('business_data')
+      .delete()
+      .like('slug', 'e2e-%')
+      .eq('metadata->>source', TECHNICAL_BUSINESS_METADATA.source)
+      .eq('metadata->>source_kind', TECHNICAL_BUSINESS_METADATA.source_kind);
+    if (businessDeleteError) throw businessDeleteError;
+
+    if (existingUser) {
+      const { error: deleteUserError } = await supabase.auth.admin.deleteUser(existingUser.id);
+      if (deleteUserError) throw deleteUserError;
+      existingUser = undefined;
+    }
+    console.log('✅ Fixtures técnicas anteriores removidas\n');
+  }
+
+  // 3. Criar/reusar usuário técnico de teste.
+  let userId = existingUser?.id;
 
   if (!userId) {
+    const marker = {
+      acheguese_fixture: FIXTURE_KIND,
+      fixture_version: '1',
+    };
     const { data: newUser, error: userErr } = await supabase.auth.admin.createUser({
       email: SEED.USER_EMAIL,
       password: SEED.USER_PASSWORD,
       email_confirm: true,
-      user_metadata: { full_name: 'E2E Network Test User' },
+      app_metadata: marker,
+      user_metadata: {
+        ...marker,
+        full_name: 'E2E Network Test User',
+      },
     });
     if (userErr || !newUser.user) {
       console.error('❌ Erro ao criar usuário:', userErr?.message);
       process.exit(1);
     }
     userId = newUser.user.id;
-    console.log(`✅ Usuário criado: ${SEED.USER_EMAIL} (${userId})`);
+    console.log(`✅ Usuário técnico criado: ${SEED.USER_EMAIL} (${userId})`);
   } else {
-    console.log(`ℹ️  Usuário já existe: ${SEED.USER_EMAIL} (${userId})`);
+    console.log(`ℹ️  Usuário técnico já existe: ${SEED.USER_EMAIL} (${userId})`);
   }
 
-  // Garantir que o perfil pessoal existe (idempotente)
+  // Garantir que o perfil pessoal existe (idempotente).
   const { data: existingPersonalProfile } = await supabase
     .from('profiles')
     .select('id')
@@ -111,20 +160,28 @@ async function run() {
     console.log(`ℹ️  Perfil pessoal já existe (${existingPersonalProfile.id})`);
   }
 
-  // 4. Criar perfil de negócio para a empresa de teste
-  let businessProfileId: string | null = null;
+  // 4. Criar perfil de negócio para a empresa de teste.
+  let businessProfileId: string;
 
-  // Verificar se já existe um perfil de negócio para este usuário com o slug de teste
-  const { data: existingBizProfile } = await supabase
+  const { data: existingBizProfile, error: existingBizProfileError } = await supabase
     .from('profiles')
-    .select('id')
+    .select('id, user_id, name')
     .eq('username', SEED.STANDALONE_SLUG)
     .eq('profile_type', 'business')
     .maybeSingle();
+  if (existingBizProfileError) throw existingBizProfileError;
 
   if (existingBizProfile) {
+    if (
+      existingBizProfile.user_id !== userId ||
+      existingBizProfile.name !== 'E2E Empresa Standalone'
+    ) {
+      throw new Error(
+        `Refusing to adopt business profile ${SEED.STANDALONE_SLUG} that is not owned by the technical fixture user.`,
+      );
+    }
     businessProfileId = existingBizProfile.id;
-    console.log(`ℹ️  Perfil de negócio já existe (${businessProfileId})`);
+    console.log(`ℹ️  Perfil de negócio técnico já existe (${businessProfileId})`);
   } else {
     const { data: bizProfile, error: bizProfileErr } = await supabase
       .from('profiles')
@@ -143,15 +200,16 @@ async function run() {
       process.exit(1);
     }
     businessProfileId = bizProfile.id;
-    console.log(`✅ Perfil de negócio criado (${businessProfileId})`);
+    console.log(`✅ Perfil de negócio técnico criado (${businessProfileId})`);
   }
 
-  // 5. Criar empresa standalone (se não existir)
-  const { data: existingStandalone } = await supabase
+  // 5. Criar empresa standalone somente com provenance tecnica.
+  const { data: existingStandalone, error: existingStandaloneError } = await supabase
     .from('business_data')
-    .select('id, profile_id')
+    .select('id, profile_id, metadata')
     .eq('slug', SEED.STANDALONE_SLUG)
     .maybeSingle();
+  if (existingStandaloneError) throw existingStandaloneError;
 
   let standaloneId: string;
   let standaloneProfileId: string;
@@ -173,7 +231,7 @@ async function run() {
         specialties: [],
         facilities: [],
         email: 'e2e@test.local',
-        metadata: {},
+        metadata: TECHNICAL_BUSINESS_METADATA,
       })
       .select('id, profile_id')
       .maybeSingle();
@@ -184,14 +242,22 @@ async function run() {
     }
     standaloneId = standalone.id;
     standaloneProfileId = standalone.profile_id;
-    console.log(`✅ Standalone criado: ${SEED.STANDALONE_SLUG} (${standaloneId})`);
+    console.log(`✅ Standalone técnico criado: ${SEED.STANDALONE_SLUG} (${standaloneId})`);
   } else {
+    if (
+      existingStandalone.profile_id !== businessProfileId ||
+      !isTechnicalBusinessFixture(existingStandalone.metadata)
+    ) {
+      throw new Error(
+        `Refusing to adopt business_data ${SEED.STANDALONE_SLUG} without matching technical provenance.`,
+      );
+    }
     standaloneId = existingStandalone.id;
     standaloneProfileId = existingStandalone.profile_id;
-    console.log(`ℹ️  Standalone já existe: ${SEED.STANDALONE_SLUG} (${standaloneId})`);
+    console.log(`ℹ️  Standalone técnico já existe: ${SEED.STANDALONE_SLUG} (${standaloneId})`);
   }
 
-  // 6. Adicionar profile_members para o usuário ter acesso à empresa
+  // 6. Adicionar profile_members para o usuário ter acesso à empresa.
   const { error: memberErr } = await supabase.from('profile_members').upsert({
     profile_id: standaloneProfileId,
     user_id: userId,
@@ -204,7 +270,7 @@ async function run() {
   }
   console.log(`✅ Vínculo profile_members criado (user: ${userId}, profile: ${standaloneProfileId}, role: owner)`);
 
-  // 7. Escrever .env.e2e.network com os IDs para os testes consumirem
+  // 7. Escrever .env.e2e.network com os IDs para os testes consumirem.
   const envContent = [
     `# Auto-gerado por seed-e2e-network.ts — NÃO editar manualmente`,
     `E2E_NETWORK_USER_EMAIL=${SEED.USER_EMAIL}`,
@@ -226,14 +292,14 @@ async function run() {
   console.log('\n✅ .env.e2e.network gerado com IDs de teste\n');
 
   console.log('📋 Resumo:');
-  console.log(`   Usuário:    ${SEED.USER_EMAIL} / ${SEED.USER_PASSWORD}`);
+  console.log(`   Usuário:    ${SEED.USER_EMAIL}`);
   console.log(`   Standalone: ${SEED.STANDALONE_SLUG} → dashboard: /dashboard/business/${standaloneProfileId}`);
   console.log(`   Bairro 1:   ${loc1.name} (${loc1.geographic_path})`);
   console.log(`   Bairro 2:   ${loc2.name} (${loc2.geographic_path})`);
   console.log('\n✨ Seed concluído. Execute: npm run test:e2e:network\n');
 }
 
-run().catch(err => {
-  console.error('❌ Erro fatal:', err.message);
+run().catch((error) => {
+  console.error('❌ Erro fatal:', error instanceof Error ? error.message : String(error));
   process.exit(1);
 });
