@@ -26,7 +26,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: supabase-main-db-push-production-v2
+  group: supabase-main-db-push-production-v3
   cancel-in-progress: true
 
 env:
@@ -37,7 +37,12 @@ env:
 jobs:
   push-production-db:
     name: Main-only production migration gate
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - windows
+      - x64
+      - acheguese-heavy-windows
+      - remote-only
     timeout-minutes: 30
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
@@ -46,7 +51,7 @@ jobs:
     steps:
       - name: Validate immutable main target
         id: target
-        shell: pwsh
+        shell: powershell
         env:
           EVENT_REF: ${{ github.ref }}
           EVENT_SHA: ${{ github.sha }}
@@ -97,13 +102,14 @@ jobs:
           ref: ${{ steps.target.outputs.sha }}
           fetch-depth: 1
           persist-credentials: false
+          clean: false
           path: gate
           sparse-checkout: |
             supabase
           sparse-checkout-cone-mode: true
 
       - name: Assert checkout provenance
-        shell: pwsh
+        shell: powershell
         working-directory: gate
         env:
           EXPECTED_SHA: ${{ steps.target.outputs.sha }}
@@ -118,7 +124,7 @@ jobs:
           }
 
       - name: Validate required Supabase credentials
-        shell: pwsh
+        shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
           if ([string]::IsNullOrWhiteSpace($env:SUPABASE_ACCESS_TOKEN)) {
@@ -135,7 +141,7 @@ jobs:
           node-version: "24"
 
       - name: Pin Supabase CLI and link exact project
-        shell: pwsh
+        shell: powershell
         working-directory: gate
         run: |
           $ErrorActionPreference = "Stop"
@@ -155,7 +161,7 @@ jobs:
 
       - name: Prove migration history delta is exactly approved
         id: migrations
-        shell: pwsh
+        shell: powershell
         working-directory: gate
         run: |
           $ErrorActionPreference = "Stop"
@@ -217,7 +223,7 @@ jobs:
           Write-Host "Approved pending migrations: $($localOnly -join ', ')"
 
       - name: Dry-run production DB push
-        shell: pwsh
+        shell: powershell
         working-directory: gate
         run: |
           $ErrorActionPreference = "Stop"
@@ -226,7 +232,7 @@ jobs:
 
       - name: Apply approved migrations
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.apply == true }}
-        shell: pwsh
+        shell: powershell
         working-directory: gate
         run: |
           $ErrorActionPreference = "Stop"
@@ -235,7 +241,7 @@ jobs:
 
       - name: Verify migration history fully synchronized
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.apply == true }}
-        shell: pwsh
+        shell: powershell
         working-directory: gate
         run: |
           $ErrorActionPreference = "Stop"
@@ -267,7 +273,7 @@ jobs:
 
       - name: Lint remote database
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.apply == true }}
-        shell: pwsh
+        shell: powershell
         working-directory: gate
         run: |
           $ErrorActionPreference = "Stop"
@@ -276,7 +282,7 @@ jobs:
 
       - name: Deploy privacy-rpc from exact SHA
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.apply == true }}
-        shell: pwsh
+        shell: powershell
         working-directory: gate
         run: |
           $ErrorActionPreference = "Stop"
@@ -285,7 +291,7 @@ jobs:
 
       - name: Record gate summary
         if: always()
-        shell: pwsh
+        shell: powershell
         env:
           TARGET_SHA: ${{ steps.target.outputs.sha }}
           APPLY_REQUESTED: ${{ steps.target.outputs.apply }}
@@ -301,6 +307,6 @@ jobs:
             "- Apply requested: $env:APPLY_REQUESTED",
             "- Approved versions: 20260821001800, 20260821002600, 20260821011000, 20260821022500, 20260821024000",
             "- Push-triggered executions are always dry-run only.",
-            "- Runner is ephemeral GitHub-hosted Ubuntu; no repository state is reused.",
+            "- Checkout is isolated under gate/ to avoid shared self-hosted workspace cleanup locks.",
             "- No seed, reset, repair, branch creation, or destructive fallback is permitted by this workflow."
           ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
