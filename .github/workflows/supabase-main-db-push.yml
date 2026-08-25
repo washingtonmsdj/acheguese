@@ -1,6 +1,10 @@
 name: Supabase Main DB Push
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/supabase-main-db-push.yml"
   workflow_dispatch:
     inputs:
       sha:
@@ -50,9 +54,9 @@ jobs:
         id: target
         shell: powershell
         env:
-          TARGET_SHA: ${{ inputs.sha }}
-          APPLY_REQUESTED: ${{ inputs.apply }}
-          CONFIRMATION: ${{ inputs.confirmation }}
+          TARGET_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.sha || github.sha }}
+          APPLY_REQUESTED: ${{ github.event_name == 'workflow_dispatch' && inputs.apply || false }}
+          CONFIRMATION: ${{ github.event_name == 'workflow_dispatch' && inputs.confirmation || '' }}
         run: |
           $ErrorActionPreference = "Stop"
 
@@ -63,6 +67,10 @@ jobs:
 
           if ($env:GITHUB_REPOSITORY -ne "washingtonmsdj/acheguese") {
             throw "Unexpected repository: $env:GITHUB_REPOSITORY"
+          }
+
+          if ($env:GITHUB_EVENT_NAME -ne "push" -and $env:GITHUB_EVENT_NAME -ne "workflow_dispatch") {
+            throw "Unsupported event: $env:GITHUB_EVENT_NAME"
           }
 
           $headers = @{
@@ -77,12 +85,18 @@ jobs:
             throw "Refusing stale target. main=$mainSha requested=$targetSha"
           }
 
+          if ($env:GITHUB_EVENT_NAME -eq "push" -and $env:APPLY_REQUESTED -eq "true") {
+            throw "Push-triggered runs are dry-run only."
+          }
+
           if ($env:APPLY_REQUESTED -eq "true" -and $env:CONFIRMATION -ne "APPLY_5_LGPD_MIGRATIONS") {
             throw "Apply mode requires exact confirmation APPLY_5_LGPD_MIGRATIONS."
           }
 
           Add-Content -Path $env:GITHUB_OUTPUT -Value "sha=$targetSha" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "apply=$($env:APPLY_REQUESTED.ToLowerInvariant())" -Encoding UTF8
           Write-Host "Exact main SHA accepted: $targetSha"
+          Write-Host "Apply requested: $env:APPLY_REQUESTED"
 
       - name: Checkout exact main SHA
         uses: actions/checkout@v6
@@ -214,7 +228,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Apply approved migrations
-        if: ${{ inputs.apply == true }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.apply == true }}
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
@@ -222,7 +236,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify migration history fully synchronized
-        if: ${{ inputs.apply == true }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.apply == true }}
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
@@ -255,7 +269,7 @@ jobs:
           Write-Host "Local and remote migration histories are synchronized."
 
       - name: Lint remote database
-        if: ${{ inputs.apply == true }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.apply == true }}
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
@@ -263,7 +277,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Deploy privacy-rpc from exact SHA
-        if: ${{ inputs.apply == true }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.apply == true }}
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
@@ -275,16 +289,18 @@ jobs:
         shell: powershell
         env:
           TARGET_SHA: ${{ steps.target.outputs.sha }}
-          APPLY_REQUESTED: ${{ inputs.apply }}
+          APPLY_REQUESTED: ${{ steps.target.outputs.apply }}
         run: |
           @(
             "## Supabase production migration gate",
             "- Repository: washingtonmsdj/acheguese",
+            "- Event: $env:GITHUB_EVENT_NAME",
             "- Target SHA: $env:TARGET_SHA",
             "- Branch authority: main only",
             "- Project ref: $env:SUPABASE_PROJECT_REF",
             "- Supabase CLI: $env:SUPABASE_CLI_VERSION",
             "- Apply requested: $env:APPLY_REQUESTED",
             "- Approved versions: 20260821001800, 20260821002600, 20260821011000, 20260821022500, 20260821024000",
+            "- Push-triggered executions are always dry-run only.",
             "- No seed, reset, repair, branch creation, or destructive fallback is permitted by this workflow."
           ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
