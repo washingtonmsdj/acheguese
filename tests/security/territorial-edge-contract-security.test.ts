@@ -32,17 +32,13 @@ describe('territorial-get-tree admin contract', () => {
   it('preserves canonical territorial visibility defaults', () => {
     const edge = readFileSync(EDGE, 'utf8');
 
-    expect(edge).toContain(
-      "is_selector_active: metadataBoolean(metadata, 'is_selector_active', false)",
-    );
-    expect(edge).toContain(
-      "is_landing_enabled: metadataBoolean(metadata, 'is_landing_enabled', true)",
-    );
-    expect(edge).toContain(
-      "is_navigable: metadataBoolean(metadata, 'is_navigable', true)",
-    );
-    expect(edge).not.toContain("is_landing_enabled: metadataBoolean(metadata, 'is_landing_enabled', false)");
-    expect(edge).not.toContain("is_navigable: metadataBoolean(metadata, 'is_navigable', false)");
+    expect(edge).toContain('return metadata.is_selector_active === true');
+    expect(edge).toContain('return metadata.is_landing_enabled !== false');
+    expect(edge).toContain('return metadata.is_navigable !== false');
+    expect(edge).toContain('is_selector_active: isSelectorActive(metadata)');
+    expect(edge).toContain('is_landing_enabled: isLandingEnabled(metadata)');
+    expect(edge).toContain('is_navigable: isNavigable(metadata)');
+    expect(edge).not.toContain('metadata[flag]');
   });
 
   it('keeps authenticated admin data non-cacheable by shared intermediaries', () => {
