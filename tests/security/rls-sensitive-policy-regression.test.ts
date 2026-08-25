@@ -15,6 +15,7 @@ const SENSITIVE_TABLES = [
   "driver_profiles",
   "profile_favorites_new",
   "profile_members",
+  "question_answer_likes",
   "issue_blocked_terms",
 ] as const;
 
@@ -27,6 +28,7 @@ const REMOVED_PERMISSIVE_POLICIES = [
   "Public can read online drivers",
   "Anyone can read driver profiles",
   "Anyone can read favorites",
+  "Answer likes viewable by authenticated",
   "Members viewable by authenticated",
   "Owners manage members",
 ] as const;
