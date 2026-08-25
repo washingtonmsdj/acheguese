@@ -76,6 +76,7 @@ if (urls.length < REQUIRED_PATHS.length) {
 }
 
 const uniqueUrls = new Set(urls);
+const canonicalPaths = new Set();
 if (uniqueUrls.size !== urls.length) {
   throw new Error("sitemap contains duplicate <loc> URLs");
 }
@@ -99,6 +100,7 @@ for (const rawUrl of urls) {
   }
 
   const pathname = url.pathname.replace(/\/+$/, "") || "/";
+  canonicalPaths.add(pathname);
   const leakedPrefix = NON_INDEXABLE_PREFIXES.find(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
@@ -114,9 +116,9 @@ for (const rawUrl of urls) {
 }
 
 for (const requiredPath of REQUIRED_PATHS) {
-  const requiredUrl = new URL(requiredPath, CANONICAL_ORIGIN).toString();
-  if (!uniqueUrls.has(requiredUrl)) {
-    throw new Error(`required sitemap URL is missing: ${requiredUrl}`);
+  const normalizedRequiredPath = requiredPath.replace(/\/+$/, "") || "/";
+  if (!canonicalPaths.has(normalizedRequiredPath)) {
+    throw new Error(`required sitemap path is missing: ${normalizedRequiredPath}`);
   }
 }
 
