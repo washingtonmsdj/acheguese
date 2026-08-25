@@ -1,0 +1,9 @@
+{
+  "allowedDivergences": {
+    "Permissions-Policy": {
+      "frontend": "geolocation=(self), microphone=(), camera=()",
+      "edge": "geolocation=(), microphone=(), camera=()",
+      "reason": "Edge JSON responses do not require browser geolocation; the interactive frontend does. Microphone and camera remain denied in both contexts."
+    }
+  }
+}
