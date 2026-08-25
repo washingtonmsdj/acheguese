@@ -5,7 +5,10 @@ import {
   getRemoteMutationTargetSafety,
   linkedProductionProjectRef,
 } from '../scripts/lib/remote-mutation-safety';
-import { createServiceRoleClient } from '../scripts/lib/supabase-client';
+import {
+  createAnonClient,
+  createServiceRoleClient,
+} from '../scripts/lib/supabase-client';
 import {
   createOptionalOperationalAdminClient,
   hasOperationalAdminEnv,
@@ -82,6 +85,19 @@ describe('regression: remote E2E mutation safety', () => {
     ).toThrow(/linked Production project/);
   });
 
+  it('blocks validate-e2e-setup anon side effects against Production', () => {
+    process.argv[1] = resolve(root, 'scripts/validate-e2e-setup.ts');
+    const productionUrl = `https://${linkedProductionProjectRef()}.supabase.co`;
+
+    expect(() =>
+      createAnonClient({
+        url: productionUrl,
+        anonKey: 'test-publishable-key',
+        envFiles: [],
+      }),
+    ).toThrow(/linked Production project/);
+  });
+
   it('keeps known mutating Playwright suites blocked while Heavy read-only specs remain eligible', () => {
     const playwright = read('playwright.config.ts');
 
@@ -102,7 +118,7 @@ describe('regression: remote E2E mutation safety', () => {
     expect(playwright).not.toContain('territory-home-operational.spec.ts');
   });
 
-  it('removes automatic real-business selection and keeps seeders provenance-bound', () => {
+  it('removes automatic real-business selection and keeps mutating scripts provenance/target-bound', () => {
     const slugValidator = read('scripts/validate-slug-history-final.ts');
     const networkSeeder = read('scripts/seed-e2e-network.ts');
     const supabaseClient = read('scripts/lib/supabase-client.mjs');
@@ -120,6 +136,8 @@ describe('regression: remote E2E mutation safety', () => {
       'seed-e2e-users',
       'seed-e2e-network',
       'validate-slug-history-final',
+      'validate-reconciliation-final',
+      'validate-e2e-setup',
     ]) {
       expect(supabaseClient).toContain(`'${entrypoint}'`);
     }
