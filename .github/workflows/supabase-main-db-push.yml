@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       sha:
-        description: "Exact 40-character SHA currently at main"
+        description: "Exact 40-character SHA selected from main"
         required: true
         type: string
       apply:
@@ -27,7 +27,7 @@ permissions:
 
 concurrency:
   group: supabase-main-db-push-production
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
@@ -47,48 +47,45 @@ jobs:
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-      GH_TOKEN: ${{ github.token }}
 
     steps:
       - name: Validate immutable main target
         id: target
         shell: powershell
         env:
+          EVENT_REF: ${{ github.ref }}
+          EVENT_SHA: ${{ github.sha }}
           TARGET_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.sha || github.sha }}
           APPLY_REQUESTED: ${{ github.event_name == 'workflow_dispatch' && inputs.apply || false }}
           CONFIRMATION: ${{ github.event_name == 'workflow_dispatch' && inputs.confirmation || '' }}
         run: |
           $ErrorActionPreference = "Stop"
 
-          $targetSha = ([string]$env:TARGET_SHA).Trim().ToLowerInvariant()
-          if ($targetSha -notmatch '^[0-9a-f]{40}$') {
-            throw "Target SHA must be exactly 40 lowercase/uppercase hex characters."
-          }
-
           if ($env:GITHUB_REPOSITORY -ne "washingtonmsdj/acheguese") {
             throw "Unexpected repository: $env:GITHUB_REPOSITORY"
           }
-
+          if ($env:EVENT_REF -ne "refs/heads/main") {
+            throw "Only refs/heads/main is authorized. Received $env:EVENT_REF"
+          }
           if ($env:GITHUB_EVENT_NAME -ne "push" -and $env:GITHUB_EVENT_NAME -ne "workflow_dispatch") {
             throw "Unsupported event: $env:GITHUB_EVENT_NAME"
           }
 
-          $headers = @{
-            Accept = "application/vnd.github+json"
-            Authorization = "Bearer $env:GH_TOKEN"
-            "X-GitHub-Api-Version" = "2022-11-28"
+          $targetSha = ([string]$env:TARGET_SHA).Trim().ToLowerInvariant()
+          $eventSha = ([string]$env:EVENT_SHA).Trim().ToLowerInvariant()
+          if ($targetSha -notmatch '^[0-9a-f]{40}$') {
+            throw "Target SHA must be exactly 40 hex characters."
           }
-          $main = Invoke-RestMethod -Uri "https://api.github.com/repos/washingtonmsdj/acheguese/branches/main" -Headers $headers -Method Get
-          $mainSha = ([string]$main.commit.sha).Trim().ToLowerInvariant()
-
-          if ($mainSha -ne $targetSha) {
-            throw "Refusing stale target. main=$mainSha requested=$targetSha"
+          if ($eventSha -notmatch '^[0-9a-f]{40}$') {
+            throw "Actions event SHA is invalid."
+          }
+          if ($targetSha -ne $eventSha) {
+            throw "Requested SHA must equal the exact main SHA selected by Actions. selected=$eventSha requested=$targetSha"
           }
 
           if ($env:GITHUB_EVENT_NAME -eq "push" -and $env:APPLY_REQUESTED -eq "true") {
             throw "Push-triggered runs are dry-run only."
           }
-
           if ($env:APPLY_REQUESTED -eq "true" -and $env:CONFIRMATION -ne "APPLY_5_LGPD_MIGRATIONS") {
             throw "Apply mode requires exact confirmation APPLY_5_LGPD_MIGRATIONS."
           }
