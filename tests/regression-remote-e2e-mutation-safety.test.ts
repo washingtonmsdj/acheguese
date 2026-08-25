@@ -138,6 +138,7 @@ describe('regression: remote E2E mutation safety', () => {
       'validate-slug-history-final',
       'validate-reconciliation-final',
       'validate-e2e-setup',
+      'validate-gate3-metadata',
     ]) {
       expect(supabaseClient).toContain(`'${entrypoint}'`);
     }
