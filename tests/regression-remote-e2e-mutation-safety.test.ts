@@ -118,7 +118,7 @@ describe('regression: remote E2E mutation safety', () => {
     expect(playwright).not.toContain('territory-home-operational.spec.ts');
   });
 
-  it('removes automatic real-business selection and keeps mutating scripts provenance/target-bound', () => {
+  it('removes automatic real-business selection and locks every known mutating operational entrypoint', () => {
     const slugValidator = read('scripts/validate-slug-history-final.ts');
     const networkSeeder = read('scripts/seed-e2e-network.ts');
     const supabaseClient = read('scripts/lib/supabase-client.mjs');
@@ -139,6 +139,11 @@ describe('regression: remote E2E mutation safety', () => {
       'validate-reconciliation-final',
       'validate-e2e-setup',
       'validate-gate3-metadata',
+      'community-feed-authz-probe',
+      'community-direct-messaging-authz-probe',
+      'reviews-core-authz-probe',
+      'trust-operational-authz-probe',
+      'moderation-audit-authz-probe',
     ]) {
       expect(supabaseClient).toContain(`'${entrypoint}'`);
     }
