@@ -28,8 +28,17 @@ function metadataOf(value: unknown): Metadata {
     : {};
 }
 
-function metadataFlag(metadata: Metadata, flag: string): boolean {
-  return metadata[flag] === true;
+/**
+ * Keep Edge serialization aligned with the public territorial visibility SSOT:
+ * selector visibility is opt-in, while landing/navigation are opt-out.
+ */
+function metadataBoolean(
+  metadata: Metadata,
+  flag: string,
+  defaultValue: boolean,
+): boolean {
+  const value = metadata[flag];
+  return typeof value === 'boolean' ? value : defaultValue;
 }
 
 serve(async (req: Request) => {
@@ -89,9 +98,9 @@ serve(async (req: Request) => {
         parent_id: location.parent_id,
         geographic_path: location.geographic_path,
         status: location.status,
-        is_selector_active: metadataFlag(metadata, 'is_selector_active'),
-        is_landing_enabled: metadataFlag(metadata, 'is_landing_enabled'),
-        is_navigable: metadataFlag(metadata, 'is_navigable'),
+        is_selector_active: metadataBoolean(metadata, 'is_selector_active', false),
+        is_landing_enabled: metadataBoolean(metadata, 'is_landing_enabled', true),
+        is_navigable: metadataBoolean(metadata, 'is_navigable', true),
         metadata,
       };
     });
@@ -110,9 +119,9 @@ serve(async (req: Request) => {
         type: 'group',
         parent_id: group.anchor_city_id,
         status: group.status,
-        is_selector_active: metadataFlag(metadata, 'is_selector_active'),
-        is_landing_enabled: metadataFlag(metadata, 'is_landing_enabled'),
-        is_navigable: metadataFlag(metadata, 'is_navigable'),
+        is_selector_active: metadataBoolean(metadata, 'is_selector_active', false),
+        is_landing_enabled: metadataBoolean(metadata, 'is_landing_enabled', true),
+        is_navigable: metadataBoolean(metadata, 'is_navigable', true),
         member_count: memberIds.length,
         member_ids: memberIds,
         anchor_city_name: anchorCity?.name ?? null,
