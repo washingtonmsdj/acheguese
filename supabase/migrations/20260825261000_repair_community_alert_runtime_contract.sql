@@ -3,6 +3,13 @@
 -- territory_centroid coordinate source. Align storage, RLS and admin reads with
 -- the current application contract.
 
+-- Remove the obsolete vocabulary constraints before normalizing legacy dev
+-- rows; otherwise the old checks reject the canonical values during UPDATE.
+ALTER TABLE public.community_alerts
+  DROP CONSTRAINT IF EXISTS community_alerts_status_check,
+  DROP CONSTRAINT IF EXISTS community_alerts_type_check,
+  DROP CONSTRAINT IF EXISTS community_alerts_coordinate_source_check;
+
 -- Development data is legacy-only here. Normalize it before installing the
 -- canonical constraints so there is one vocabulary going forward.
 UPDATE public.community_alerts
@@ -33,11 +40,6 @@ SET type = CASE type
   ELSE type
 END
 WHERE type IN ('security', 'infrastructure', 'health', 'environment', 'other');
-
-ALTER TABLE public.community_alerts
-  DROP CONSTRAINT IF EXISTS community_alerts_status_check,
-  DROP CONSTRAINT IF EXISTS community_alerts_type_check,
-  DROP CONSTRAINT IF EXISTS community_alerts_coordinate_source_check;
 
 ALTER TABLE public.community_alerts
   ADD CONSTRAINT community_alerts_status_check
