@@ -20,6 +20,7 @@ const GUARDED_MUTATING_E2E_ENTRYPOINTS = new Set([
   'validate-slug-history-final',
   'validate-reconciliation-final',
   'validate-e2e-setup',
+  'validate-gate3-metadata',
 ]);
 
 export const DEFAULT_SUPABASE_SCRIPT_ENV_FILES = ['.env.local', '.env.remote', '.env.test', '.env'];
