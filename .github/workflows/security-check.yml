@@ -1,10 +1,24 @@
 name: Security Check
 
 on:
-  push:
-    branches: [main, develop]
   pull_request:
     branches: [main, develop]
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "scripts/**"
+      - "supabase/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig*.json"
+      - ".eslintrc*.json"
+      - ".gitignore"
+      - ".github/workflows/security-check.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: security-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"

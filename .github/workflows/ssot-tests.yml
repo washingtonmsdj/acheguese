@@ -2,22 +2,6 @@ name: SSOT Territorial Tests
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main, develop]
-    paths:
-      - ".github/workflows/ssot-tests.yml"
-      - "package.json"
-      - "package-lock.json"
-      - "playwright.config.ts"
-      - "scripts/seed-e2e-users.ts"
-      - "src/app/**"
-      - "src/core/navigation/**"
-      - "src/modules/profile/**"
-      - "src/modules/guide/**"
-      - "src/core/location/**"
-      - "src/core/routing/**"
-      - "tests/**"
-      - "supabase/migrations/**"
   pull_request:
     branches: [main, develop]
     paths:
@@ -34,6 +18,10 @@ on:
       - "src/core/routing/**"
       - "tests/**"
       - "supabase/migrations/**"
+
+concurrency:
+  group: ssot-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
