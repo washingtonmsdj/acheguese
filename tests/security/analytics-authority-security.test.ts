@@ -7,6 +7,8 @@ const MIGRATIONS_DIR = join(ROOT, "supabase", "migrations");
 const BASELINE = "20260818222234_harden_analytics_event_rpc_authority.sql";
 const INTERACTION_ENUM_MIGRATION =
   "20260818222702_add_business_interaction_analytics_event_type.sql";
+const ANON_SESSION_MIGRATION =
+  "20260825201000_require_anonymous_analytics_session.sql";
 const ACTIVE_WRAPPER = join(
   ROOT,
   "src",
@@ -14,6 +16,21 @@ const ACTIVE_WRAPPER = join(
   "analytics",
   "services",
   "AnalyticsService.ts",
+);
+const CANONICAL_ANALYTICS_SERVICE = join(
+  ROOT,
+  "src",
+  "core",
+  "analytics",
+  "AnalyticsService.ts",
+);
+const WORK_OPPORTUNITY_TELEMETRY = join(
+  ROOT,
+  "src",
+  "core",
+  "work-opportunities",
+  "services",
+  "WorkOpportunityTelemetryService.ts",
 );
 
 function migrationsFromBaseline() {
@@ -66,6 +83,39 @@ describe("SEC-006 analytics authority hardening", () => {
     expect(wrapper).toContain("canonicalAnalyticsService.getSessionId()");
     expect(wrapper.match(/session_id:\s*currentSessionId\(\)/g)?.length).toBe(3);
     expect(wrapper).toContain('event_type: "business_interaction"');
+  });
+
+  it("requires anonymous analytics to remain session-bound and rate-limitable", () => {
+    const migration = migrationsFromBaseline().find(
+      ({ name }) => name === ANON_SESSION_MIGRATION,
+    );
+    expect(
+      migration,
+      `${ANON_SESSION_MIGRATION} must remain versioned`,
+    ).toBeDefined();
+
+    const sql = migration?.sql ?? "";
+    expect(sql).toContain("analytics_session_required");
+    expect(sql).toMatch(
+      /if\s+not\s+v_is_service_role\s+and\s+v_auth_uid\s+is\s+null\s+and\s+v_session_id\s+is\s+null\s+then/i,
+    );
+    expect(sql).toMatch(
+      /revoke\s+all\s+on\s+function\s+public\.track_analytics_event[\s\S]*from\s+public/i,
+    );
+    expect(sql).toMatch(
+      /grant\s+execute\s+on\s+function\s+public\.track_analytics_event[\s\S]*to\s+anon,\s*authenticated,\s*service_role/i,
+    );
+
+    const service = readFileSync(CANONICAL_ANALYTICS_SERVICE, "utf8");
+    expect(service).toContain(
+      "const sessionId = input.session_id || this.getSessionId() || null;",
+    );
+    expect(service).toContain("p_session_id: sessionId");
+
+    const opportunityTelemetry = readFileSync(WORK_OPPORTUNITY_TELEMETRY, "utf8");
+    expect(opportunityTelemetry).toContain(
+      "session_id: AnalyticsService.getSessionId()",
+    );
   });
 
   it("does not silently re-grant direct analytics table DML to browser roles", () => {
