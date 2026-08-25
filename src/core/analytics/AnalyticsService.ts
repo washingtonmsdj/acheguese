@@ -143,13 +143,14 @@ export const AnalyticsService = {
     metadata?: AnalyticsMetadata;
   }): Promise<ServiceResult<string>> {
     try {
+      const sessionId = input.session_id || this.getSessionId() || null;
       const { data, error } = await analyticsDb.rpc<string>("track_analytics_event", {
         p_entity_type: input.entity_type,
         p_entity_id: input.entity_id,
         p_event_type: input.event_type,
         p_event_source: input.event_source || "web",
         p_user_id: input.user_id || null,
-        p_session_id: input.session_id || null,
+        p_session_id: sessionId,
         p_metadata: input.metadata || {},
       });
 
