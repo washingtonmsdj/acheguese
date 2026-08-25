@@ -1,22 +1,12 @@
 /**
  * GATE 7: OPERATIONAL VERIFICATION SERVICE
- * 
- * Service para gerenciar verificações operacionais (PIN) de corridas e entregas.
- * 
- * Data: 08/04/2026
- * Status: Novo escopo pós-fechamento da mobilidade
- * 
- * Responsabilidades:
- * - Gerar PIN quando exigido
- * - Validar PIN fornecido
- * - Gerenciar status de verificação
- * - Registrar tentativas
- * - Verificar expiração
+ *
+ * Browser-facing facade for server-authoritative PIN verification.
+ * PIN generation, hashing, expiry, attempt counting and verification state
+ * changes live in Postgres RPCs. Browser code never receives pin_hash.
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
-import { secureRandomDigits } from '@/shared/utils/secureRandom';
-import bcrypt from 'bcryptjs';
 import { profileService } from '@/core/profiles/services/ProfileService';
 import type {
   OperationalVerification,
@@ -25,93 +15,109 @@ import type {
   VerifyPINParams,
   VerifyPINResult,
   VerificationStatusSummary,
-  PIN_CONFIG,
-  VERIFICATION_ERRORS,
-  VERIFICATION_SUCCESS,
 } from '../types/OperationalVerification';
 import {
   PIN_CONFIG as CONFIG,
   VERIFICATION_ERRORS as ERRORS,
   VERIFICATION_SUCCESS as SUCCESS,
 } from '../types/OperationalVerification';
-import { OPERATIONAL_VERIFICATION_STATUS } from '../constants/dispatchStatus';
+
 export interface ServiceResult<T = void> {
   success: boolean;
   data?: T;
   error?: string;
 }
 
-export class OperationalVerificationService {
-  // ============================================
-  // CRIAR VERIFICAÇÃO
-  // ============================================
+type RpcError = { message?: string | null; code?: string | null } | null;
+type RpcResult<T> = { data: T | null; error: RpcError };
+type OperationalVerificationRpcClient = {
+  rpc<T = unknown>(
+    functionName: string,
+    args: Record<string, unknown>,
+  ): Promise<RpcResult<T>>;
+};
 
+const verificationRpc = supabase as unknown as OperationalVerificationRpcClient;
+
+type CreateVerificationRpcResult = {
+  verification_id?: unknown;
+  pin?: unknown;
+  expires_at?: unknown;
+};
+
+type VerifyPinRpcResult = {
+  verified?: unknown;
+  code?: unknown;
+  attempts_remaining?: unknown;
+};
+
+type VerificationStatusRpcResult = {
+  id: string;
+  ride_id: string;
+  verification_type: 'pin';
+  is_required: boolean;
+  required_by: OperationalVerification['required_by'];
+  required_at: string | null;
+  status: OperationalVerification['status'];
+  pin_generated_at: string | null;
+  pin_expires_at: string | null;
+  verified_at: string | null;
+  verified_by: string | null;
+  verification_attempts: number;
+  last_attempt_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+function verificationErrorForCode(code: string): string {
+  switch (code) {
+    case 'verification_not_found':
+      return ERRORS.VERIFICATION_NOT_FOUND;
+    case 'already_verified':
+      return ERRORS.VERIFICATION_ALREADY_VERIFIED;
+    case 'pin_expired':
+      return ERRORS.PIN_EXPIRED;
+    case 'max_attempts_reached':
+      return ERRORS.MAX_ATTEMPTS_REACHED;
+    case 'invalid_pin':
+      return ERRORS.INVALID_PIN;
+    default:
+      return ERRORS.INVALID_PIN;
+  }
+}
+
+export class OperationalVerificationService {
   /**
-   * Cria uma verificação operacional e gera PIN se necessário
+   * Creates a verification through the canonical database command.
+   * Plaintext PIN is returned once by the RPC and is never persisted as plaintext.
    */
   static async createVerification(
-    params: CreateVerificationParams
+    params: CreateVerificationParams,
   ): Promise<ServiceResult<CreateVerificationResult>> {
     try {
       const { rideId, verificationType, isRequired, requiredBy } = params;
+      const { data, error } = await verificationRpc.rpc<CreateVerificationRpcResult>(
+        'create_operational_pin_verification',
+        {
+          p_ride_id: rideId,
+          p_is_required: isRequired,
+          p_required_by: requiredBy,
+          p_verification_type: verificationType,
+        },
+      );
 
-      // Se não é exigido, criar registro mas sem PIN
-      if (!isRequired) {
-        const { data, error } = await supabase
-          .from('operational_verifications')
-          .insert({
-            ride_id: rideId,
-            verification_type: verificationType,
-            is_required: false,
-            status: 'not_required',
-          })
-          .select('id')
-          .single();
-
-        if (error) throw error;
-
-        return {
-          success: true,
-          data: {
-            verificationId: data.id,
-          },
-        };
+      if (error) throw new Error(error.message || 'Failed to create verification');
+      if (!data || typeof data.verification_id !== 'string') {
+        throw new Error('Invalid operational verification creation response');
       }
-
-      // Gerar PIN de 4 dígitos
-      const pin = this.generatePIN();
-      const pinHash = await bcrypt.hash(pin, CONFIG.BCRYPT_ROUNDS);
-
-      // Calcular expiração (24h)
-      const now = new Date();
-      const expiresAt = new Date(now.getTime() + CONFIG.EXPIRATION_HOURS * 60 * 60 * 1000);
-
-      // Criar registro
-      const { data, error } = await supabase
-        .from('operational_verifications')
-        .insert({
-          ride_id: rideId,
-          verification_type: verificationType,
-          is_required: true,
-          required_by: requiredBy,
-          required_at: now.toISOString(),
-          status: OPERATIONAL_VERIFICATION_STATUS.PENDING,
-          pin_hash: pinHash,
-          pin_generated_at: now.toISOString(),
-          pin_expires_at: expiresAt.toISOString(),
-          verification_attempts: 0,
-        })
-        .select('id')
-        .single();
-
-      if (error) throw error;
 
       return {
         success: true,
         data: {
-          verificationId: data.id,
-          pin, // Retornar PIN em texto puro APENAS na criação
-          expiresAt: expiresAt.toISOString(),
+          verificationId: data.verification_id,
+          pin: typeof data.pin === 'string' ? data.pin : undefined,
+          expiresAt:
+            typeof data.expires_at === 'string' ? data.expires_at : undefined,
         },
       };
     } catch (error) {
@@ -123,124 +129,60 @@ export class OperationalVerificationService {
     }
   }
 
-  // ============================================
-  // VALIDAR PIN
-  // ============================================
-
   /**
-   * Valida PIN fornecido contra hash armazenado
+   * Verifies a PIN entirely in Postgres. `verifiedBy` remains in the public
+   * TypeScript contract for callers, but the database deliberately ignores any
+   * caller-supplied actor identity and derives verified_by from the active session.
    */
   static async verifyPIN(
-    params: VerifyPINParams
+    params: VerifyPINParams,
   ): Promise<ServiceResult<VerifyPINResult>> {
     try {
-      const { rideId, pin, verifiedBy } = params;
-
-      // Buscar verificação
-      const { data: verification, error: fetchError } = await supabase
-        .from('operational_verifications')
-        .select('*')
-        .eq('ride_id', rideId)
-        .eq('verification_type', 'pin')
-        .single();
-
-      if (fetchError || !verification) {
-        return {
-          success: false,
-          error: ERRORS.VERIFICATION_NOT_FOUND,
-        };
+      const { rideId, pin } = params;
+      if (!this.isValidPINFormat(pin)) {
+        return { success: false, error: ERRORS.INVALID_PIN };
       }
 
-      // Verificar se já foi verificado
-      if (verification.status === 'verified') {
-        return {
-          success: false,
-          error: ERRORS.VERIFICATION_ALREADY_VERIFIED,
-        };
+      const { data, error } = await verificationRpc.rpc<VerifyPinRpcResult>(
+        'verify_operational_pin',
+        { p_ride_id: rideId, p_pin: pin },
+      );
+
+      if (error) throw new Error(error.message || 'Failed to verify PIN');
+      if (!data || typeof data.verified !== 'boolean') {
+        throw new Error('Invalid operational PIN verification response');
       }
 
-      // Verificar se expirou
-      if (verification.pin_expires_at) {
-        const expiresAt = new Date(verification.pin_expires_at);
-        if (expiresAt < new Date()) {
-          await supabase
-            .from('operational_verifications')
-            .update({ status: 'failed' })
-            .eq('id', verification.id);
+      const code = typeof data.code === 'string' ? data.code : 'invalid_pin';
+      const attemptsRemaining =
+        typeof data.attempts_remaining === 'number'
+          ? data.attempts_remaining
+          : undefined;
 
-          return {
-            success: false,
-            error: ERRORS.PIN_EXPIRED,
-          };
-        }
-      }
-
-      // Verificar tentativas
-      if (verification.verification_attempts >= CONFIG.MAX_ATTEMPTS) {
-        return {
-          success: false,
-          error: ERRORS.MAX_ATTEMPTS_REACHED,
-        };
-      }
-
-      // Validar PIN
-      const isValid = await bcrypt.compare(pin, verification.pin_hash);
-
-      // Atualizar registro
-      const now = new Date().toISOString();
-
-      if (isValid) {
-        // PIN correto
-        await supabase
-          .from('operational_verifications')
-          .update({
-            status: 'verified',
-            verified_at: now,
-            verified_by: verifiedBy,
-            verification_attempts: verification.verification_attempts + 1,
-            last_attempt_at: now,
-          })
-          .eq('id', verification.id);
-
+      if (data.verified === true) {
         return {
           success: true,
           data: {
             verified: true,
+            attemptsRemaining,
             message: SUCCESS.PIN_VERIFIED,
           },
         };
-      } else {
-        // PIN incorreto
-        const newAttempts = verification.verification_attempts + 1;
-        const attemptsRemaining = CONFIG.MAX_ATTEMPTS - newAttempts;
-
-        const updateData: Record<string, unknown> = {
-          verification_attempts: newAttempts,
-          last_attempt_at: now,
-        };
-
-        // Se esgotou tentativas, marcar como failed
-        if (attemptsRemaining <= 0) {
-          updateData.status = 'failed';
-        }
-
-        await supabase
-          .from('operational_verifications')
-          .update(updateData)
-          .eq('id', verification.id);
-
-        return {
-          success: false,
-          error: ERRORS.INVALID_PIN,
-          data: {
-            verified: false,
-            attemptsRemaining,
-            message: attemptsRemaining > 0
-              ? `Invalid PIN. ${attemptsRemaining} attempts remaining.`
-              : ERRORS.MAX_ATTEMPTS_REACHED,
-          },
-        };
       }
+
+      const errorMessage = verificationErrorForCode(code);
+      return {
+        success: false,
+        error: errorMessage,
+        data: {
+          verified: false,
+          attemptsRemaining,
+          message:
+            code === 'invalid_pin' && attemptsRemaining !== undefined
+              ? `Invalid PIN. ${attemptsRemaining} attempts remaining.`
+              : errorMessage,
+        },
+      };
     } catch (error) {
       logger.error('Error verifying PIN:', error);
       return {
@@ -250,49 +192,48 @@ export class OperationalVerificationService {
     }
   }
 
-  // ============================================
-  // OBTER STATUS
-  // ============================================
-
   /**
-   * Obtém status da verificação para uma corrida
+   * Returns the sanitized verification projection. `pin_hash` is intentionally
+   * represented as null for compatibility with the legacy interface and is never
+   * returned by the database RPC.
    */
   static async getVerificationStatus(
-    rideId: string
+    rideId: string,
   ): Promise<OperationalVerification | null> {
     try {
-      const { data, error } = await supabase
-        .from('operational_verifications')
-        .select('*')
-        .eq('ride_id', rideId)
-        .eq('verification_type', 'pin')
-        .single();
+      const { data, error } = await verificationRpc.rpc<VerificationStatusRpcResult>(
+        'get_operational_verification_status',
+        { p_ride_id: rideId },
+      );
 
-      if (error || !data) return null;
+      if (error) throw new Error(error.message || 'Failed to read verification status');
+      if (!data) return null;
 
-      return data as OperationalVerification;
+      return {
+        ...data,
+        pin_hash: null,
+      } as OperationalVerification;
     } catch (error) {
       logger.error('Error getting verification status:', error);
       return null;
     }
   }
 
-  /**
-   * Obtém resumo do status da verificação
-   */
   static async getVerificationStatusSummary(
-    rideId: string
+    rideId: string,
   ): Promise<VerificationStatusSummary | null> {
     try {
       const verification = await this.getVerificationStatus(rideId);
-
       if (!verification) return null;
 
       return {
         isRequired: verification.is_required,
         status: verification.status,
         verified: verification.status === 'verified',
-        attemptsRemaining: CONFIG.MAX_ATTEMPTS - verification.verification_attempts,
+        attemptsRemaining: Math.max(
+          0,
+          CONFIG.MAX_ATTEMPTS - verification.verification_attempts,
+        ),
         expiresAt: verification.pin_expires_at,
       };
     } catch (error) {
@@ -301,15 +242,9 @@ export class OperationalVerificationService {
     }
   }
 
-  // ============================================
-  // VERIFICAR SE PIN É EXIGIDO
-  // ============================================
-
   /**
-   * GATE 7 FASE 2.5: Resolve se PIN é exigido para uma CORRIDA
-   * 
-   * Precedência: admin global > passageiro > motorista
-   * Regra: Se qualquer nível exigir, a corrida exige PIN
+   * GATE 7 FASE 2.5: Resolve se PIN é exigido para uma CORRIDA.
+   * Precedência: admin global > passageiro > motorista.
    */
   static async resolveRidePINRequirement(params: {
     passengerId: string;
@@ -320,10 +255,7 @@ export class OperationalVerificationService {
     reason: string;
   }> {
     try {
-      // 1. Verificar admin global (prioridade máxima)
-      // Por enquanto, usar variável de ambiente como configuração global
       const adminRequires = process.env.REQUIRE_PIN_FOR_ALL_RIDES === 'true';
-      
       if (adminRequires) {
         return {
           isRequired: true,
@@ -332,7 +264,6 @@ export class OperationalVerificationService {
         };
       }
 
-      // 2. Verificar preferência do passageiro
       const passenger = await profileService.getProfileById(params.passengerId) as {
         requires_pin_for_rides?: boolean | null;
       } | null;
@@ -345,7 +276,6 @@ export class OperationalVerificationService {
         };
       }
 
-      // 3. Verificar preferência do motorista (se já atribuído)
       if (params.driverProfileId) {
         const driver = await profileService.getProfileById(params.driverProfileId) as {
           requires_pin_for_rides?: boolean | null;
@@ -360,7 +290,6 @@ export class OperationalVerificationService {
         }
       }
 
-      // Nenhum nível exige PIN
       return {
         isRequired: false,
         requiredBy: null,
@@ -377,10 +306,8 @@ export class OperationalVerificationService {
   }
 
   /**
-   * GATE 7 FASE 2.5: Resolve se PIN é exigido para uma ENTREGA
-   * 
-   * Precedência: admin global > operação/remetente/empresa
-   * Regra: Motoboy NÃO decide exigência de PIN da entrega
+   * GATE 7 FASE 2.5: Resolve se PIN é exigido para uma ENTREGA.
+   * Precedência: admin global > operação/remetente/empresa.
    */
   static async resolveDeliveryPINRequirement(params: {
     senderProfileId: string;
@@ -391,9 +318,7 @@ export class OperationalVerificationService {
     reason: string;
   }> {
     try {
-      // 1. Verificar admin global (prioridade máxima)
       const adminRequires = process.env.REQUIRE_PIN_FOR_ALL_DELIVERIES === 'true';
-      
       if (adminRequires) {
         return {
           isRequired: true,
@@ -402,7 +327,6 @@ export class OperationalVerificationService {
         };
       }
 
-      // 2. Verificar preferência do remetente
       const sender = await profileService.getProfileById(params.senderProfileId) as {
         requires_pin_for_deliveries?: boolean | null;
       } | null;
@@ -415,7 +339,6 @@ export class OperationalVerificationService {
         };
       }
 
-      // Nenhum nível exige PIN
       return {
         isRequired: false,
         requiredBy: null,
@@ -431,25 +354,7 @@ export class OperationalVerificationService {
     }
   }
 
-  // ============================================
-  // HELPERS PRIVADOS
-  // ============================================
-
-  /**
-   * Gera PIN de 4 dígitos
-   */
-  private static generatePIN(): string {
-    return secureRandomDigits(CONFIG.LENGTH);
-  }
-
-  /**
-   * Valida formato de PIN
-   */
   static isValidPINFormat(pin: string): boolean {
     return /^\d{4}$/.test(pin);
   }
 }
-
-
-
-
