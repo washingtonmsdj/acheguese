@@ -41,11 +41,24 @@ describe('territorial-get-tree admin contract', () => {
     expect(edge).not.toContain('metadata[flag]');
   });
 
-  it('keeps authenticated admin data non-cacheable by shared intermediaries', () => {
+  it('keeps authenticated admin data non-cacheable and origin-aware on failures', () => {
     const edge = readFileSync(EDGE, 'utf8');
 
     expect(edge).toContain("'Cache-Control': 'private, no-store'");
     expect(edge).toContain('getAllSecurityHeaders(ALLOWED_METHODS, req)');
+    expect(edge).toContain("{ error: 'Internal server error' }");
+    expect(edge).toContain('ALLOWED_METHODS,\n      req,');
+    expect(edge).not.toContain("errorResponse('Internal server error'");
+  });
+
+  it('logs ordinary Supabase audit insert errors without exposing the dataset', () => {
+    const edge = readFileSync(EDGE, 'utf8');
+
+    expect(edge).toContain("const { error: auditError } = await supabaseAdmin.from('function_audit').insert");
+    expect(edge).toContain("console.error('Audit log error:', auditError)");
+    expect(edge).toContain('locations: locations.length');
+    expect(edge).toContain('groups: groups.length');
+    expect(edge).not.toContain('output: { locations, groups, groupMembers }');
   });
 
   it('normalizes JSON memberships to the Map expected by domain consumers', () => {
