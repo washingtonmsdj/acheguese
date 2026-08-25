@@ -27,7 +27,15 @@ function functionHeaders(sql: string): string[] {
   return headers;
 }
 
-describe("SECURITY DEFINER search_path regression guard", () => {
+function functionName(header: string): string | null {
+  return header.match(/\bfunction\s+([^\s(]+)\s*\(/i)?.[1] ?? null;
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+describe("SECURITY DEFINER regression guard", () => {
   it("keeps every newly declared SECURITY DEFINER function on an explicit search_path", () => {
     const regressions: string[] = [];
 
@@ -45,6 +53,38 @@ describe("SECURITY DEFINER search_path regression guard", () => {
     expect(
       regressions,
       "new SECURITY DEFINER functions must pin search_path explicitly",
+    ).toEqual([]);
+  });
+
+  it("revokes PostgreSQL's default PUBLIC execute privilege for every new SECURITY DEFINER", () => {
+    const regressions: string[] = [];
+
+    for (const { name, sql } of migrationsFromBaseline()) {
+      const normalized = sql.replace(/--[^\n]*/g, " ").replace(/\s+/g, " ");
+
+      for (const header of functionHeaders(sql)) {
+        if (!/\bsecurity\s+definer\b/i.test(header)) continue;
+
+        const fn = functionName(header);
+        if (!fn) {
+          regressions.push(`${name}: unable to resolve function name`);
+          continue;
+        }
+
+        const revokePublic = new RegExp(
+          `\\brevoke\\s+(?:all(?:\\s+privileges)?|execute)\\s+on\\s+function\\s+${escapeRegex(fn)}\\s*\\([^;]*?\\)\\s+from\\s+public\\b`,
+          "i",
+        );
+
+        if (!revokePublic.test(normalized)) {
+          regressions.push(`${name}: ${fn}`);
+        }
+      }
+    }
+
+    expect(
+      regressions,
+      "new SECURITY DEFINER functions must revoke default PUBLIC execution before explicit role grants",
     ).toEqual([]);
   });
 });
