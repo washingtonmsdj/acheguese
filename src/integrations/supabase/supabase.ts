@@ -13,7 +13,7 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types.generated";
 import { createBrowserAuthStorage } from "./cookieStorage";
-import { AUTH_STORAGE_KEY } from "@/config/security.config";
+import { AUTH_STORAGE_KEY } from "@/shared/config/security.config";
 import { PUBLIC_SUPABASE_CONFIG } from "@/shared/config/publicSupabase";
 
 const viteEnv = typeof import.meta !== "undefined" ? import.meta.env : undefined;
