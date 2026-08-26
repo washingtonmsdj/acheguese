@@ -14,7 +14,6 @@ const RETIRED_ROOT_ARTIFACTS = ["handoff", "product-qa-screenshots"] as const;
 
 const CONFIG_BRIDGES = new Map([
   ["src/config/security.config.ts", "@/shared/config/security.config"],
-  ["src/config/reactQuery.config.ts", "@/shared/config/reactQuery.config"],
   ["src/config/moduleSlugs.ts", "@/app/config/moduleSlugs"],
   ["src/config/modules.ts", "@/app/config/modules"],
   ["src/config/launchScope.ts", "@/app/config/launchScope"],
@@ -110,7 +109,7 @@ describe("global repository reorganization contract", () => {
     }
   });
 
-  it("keeps legacy src/config paths as one-way compatibility bridges", () => {
+  it("keeps remaining legacy src/config paths as one-way compatibility bridges", () => {
     for (const [bridgeFile, canonicalImport] of CONFIG_BRIDGES) {
       const absolutePath = path.join(ROOT, bridgeFile);
       expect(fs.existsSync(absolutePath), bridgeFile).toBe(true);
@@ -122,14 +121,13 @@ describe("global repository reorganization contract", () => {
     }
   });
 
-  it("freezes src/config to compatibility bridges only", () => {
+  it("freezes src/config to the remaining compatibility bridges only", () => {
     expect(listFiles("src/config")).toEqual([
       "categories.ts",
       "communityLaunch.ts",
       "launchScope.ts",
       "moduleSlugs.ts",
       "modules.ts",
-      "reactQuery.config.ts",
       "security.config.ts",
       "territory.ts",
     ]);
