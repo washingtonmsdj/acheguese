@@ -2,8 +2,8 @@ import {
   CLASSIFIED_CATEGORIES as CLASSIFIED_CATEGORY_VALUES,
   CLASSIFIED_CATEGORY_LABELS,
   type ClassifiedCategory,
-} from "@/config/categories";
-import { isLaunchClassifiedCategoryEnabled } from "@/config/launchScope";
+} from "@/core/taxonomy/categories";
+import { isLaunchClassifiedCategoryEnabled } from "@/app/config/launchScope";
 
 export interface ClassifiedCategoryOption {
   id: ClassifiedCategory | "todos";
