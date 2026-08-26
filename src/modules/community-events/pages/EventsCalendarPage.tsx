@@ -13,7 +13,7 @@ import { motion } from 'framer-motion';
 import { Calendar, Home, List, Map } from 'lucide-react';
 import { EventCalendar } from '../components/EventCalendar';
 import { Button } from '@/shared/components/ui/button';
-import { eventRuntimeService } from '@/core/verticals/events';
+import { eventRuntimeService } from '@/core/community-events';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
 import { useCommunityUrls } from '@/core/routing/hooks/useCommunityUrls';

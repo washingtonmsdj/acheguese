@@ -26,7 +26,7 @@ import { cn } from '@/shared/utils/cn';
 import QRCodeLib from 'qrcode';
 import { useToast } from '@/shared/hooks/use-toast';
 import { useSessionContext } from '@/core/session';
-import { eventRuntimeService } from '@/core/verticals/events';
+import { eventRuntimeService } from '@/core/community-events';
 import type { Event } from '../types';
 
 interface EventCheckinProps {
