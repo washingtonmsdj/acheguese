@@ -13,7 +13,7 @@ import { logger } from "@/shared/utils/logger";
 import { RoleService } from "@/core/authorization/services/RoleService";
 import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
 import { isCurrentTermsAcceptance } from "@/core/legal/termsOfService";
-import { AUTH_STORAGE_KEY } from "@/config/security.config";
+import { AUTH_STORAGE_KEY } from "@/shared/config/security.config";
 import { AuthError } from "./types";
 import {
   buildSupabaseFunctionUrl,
