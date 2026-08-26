@@ -11,6 +11,9 @@ function readProjectFile(path: string): string {
 const lockMigration = readProjectFile(
   "supabase/migrations/20260826010000_lock_legacy_delivery_requests_browser_surface.sql",
 );
+const helperRpcMigration = readProjectFile(
+  "supabase/migrations/20260826040200_restrict_legacy_delivery_helper_rpcs.sql",
+);
 const ssotGuard = readProjectFile(
   "src/modules/mobility/delivery/__tests__/DeliverySSOTGuard.test.ts",
 );
@@ -35,6 +38,23 @@ describe("legacy delivery_requests browser boundary", () => {
     ]) {
       expect(lockMigration).toContain(`DROP POLICY IF EXISTS ${policy}`);
     }
+  });
+
+  it("keeps legacy delivery helper RPCs server-only", () => {
+    for (const signature of [
+      "public.get_available_deliveries(NUMERIC, NUMERIC, NUMERIC)",
+      "public.get_delivery_stats(UUID, TIMESTAMPTZ, TIMESTAMPTZ)",
+      "public.get_next_delivery_request_number(UUID)",
+      "public.log_delivery_status_change()",
+    ]) {
+      expect(helperRpcMigration).toContain(`REVOKE ALL ON FUNCTION ${signature}`);
+      expect(helperRpcMigration).toContain(`GRANT EXECUTE ON FUNCTION ${signature}`);
+    }
+
+    expect(helperRpcMigration).toContain("FROM PUBLIC, anon, authenticated");
+    expect(helperRpcMigration).toContain("TO service_role");
+    expect(helperRpcMigration).toContain("has_function_privilege('anon'");
+    expect(helperRpcMigration).toContain("has_function_privilege('authenticated'");
   });
 
   it("keeps platform motoboy runtime off the legacy table", () => {
