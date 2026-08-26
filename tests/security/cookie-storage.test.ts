@@ -8,7 +8,7 @@ import {
 import {
   AUTH_BROWSER_STORAGE_CONFIG,
   AUTH_STORAGE_KEY,
-} from "@/config/security.config";
+} from "@/shared/config/security.config";
 
 function clearCookies(): void {
   document.cookie.split(";").forEach((cookie) => {
