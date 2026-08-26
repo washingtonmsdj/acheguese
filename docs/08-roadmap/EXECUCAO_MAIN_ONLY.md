@@ -4,7 +4,7 @@
 **Data do checkpoint GitHub:** 2026-08-26  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**HEAD técnico anterior a esta sincronização:** `2571f0d075ada3f5e840e8d2196a4e7d6a187b98`
+**HEAD técnico anterior a esta sincronização:** `c2e323c27c62cf4cbbbade711a19eb6acaa15349`
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Owners técnicos específicos continuam sendo fonte de verdade para domínio, segurança e schema.
 
@@ -26,7 +26,7 @@ Este documento consolida ordem de execução, blockers e Definition of Done. Own
 - `main` permanece sem proteção/ruleset autoritativo no último snapshot confirmado (#28).
 - os workflows SSOT foram corrigidos para reagir a `push` na `main`; `scripts/**` e `eslint.config.js` também passaram a disparar o enforcement quando alterados.
 - a camada GitHub Actions já apresentou falhas pre-step com `steps=null`; portanto nenhum check desse tipo pode ser tratado como prova verde até executar comandos reais (#17).
-- o status externo do SHA `2571f0d` voltou a `Vercel=failure` apontando para `upgradeToPro=build-rate-limit`; isso é blocker de certificação/deploy, não prova de erro de compilação.
+- o último status Vercel inspecionado nesta estabilização falhou por `upgradeToPro=build-rate-limit`; isso é blocker de certificação/deploy, não prova de erro de compilação.
 
 ## P0 — SSOT, CI e proteção
 
@@ -87,22 +87,41 @@ Owners: #85 e #68 (LGPD).
 - [ ] E2E/smoke/deploy do mesmo SHA comprovados;
 - [ ] somente depois remover `launch-paused`.
 
-### Events — resíduo estrutural prioritário
+### Events — owner físico consolidado
 
 - [x] classificar Events como bounded context comunitário, não vertical empresarial;
-- [x] mover persistência de engagement para `core` e deixar bridge legado;
-- [x] adicionar gate que pré-valida `src/features/events` contra as fronteiras do destino;
-- [ ] caracterizar e corrigir violações restantes sob regras de `src/modules/**`;
-- [ ] mover implementação física para `src/modules/community-events`;
-- [ ] atualizar rota, tsconfig, deploy validator e callers no mesmo lote;
-- [ ] remover `src/features` quando o último caller desaparecer e bloquear sua recriação.
+- [x] mover persistência de engagement para `core` e manter bridge one-way no módulo;
+- [x] pré-validar a implementação antiga contra as fronteiras do destino durante a migração;
+- [x] mover a implementação física para `src/modules/community-events` preservando a árvore de código;
+- [x] atualizar a rota territorial para carregar `@/modules/community-events/pages/EventsListPage`;
+- [x] atualizar o deploy validator para inspecionar o owner canônico de Events;
+- [x] remover integralmente `src/features` e retirar a allowlist de migração;
+- [x] adicionar `tests/architecture/events-owner-migration.test.ts` para bloquear recriação do namespace legado e drift de rota/deploy;
+- [x] retirar `src/features/events` do architecture registry.
+
+**Ainda não certificado:**
+
+- [ ] inventariar e reduzir o namespace histórico `src/core/verticals/events` sem criar segundo owner;
+- [ ] provar schema/RLS/grants e fluxos reais do módulo no ambiente alvo;
+- [ ] provar typecheck/test/build/E2E/deploy do mesmo SHA.
+
+### Higiene de repositório e testes
+
+- [x] zero implementações `*.test.*`/`*.spec.*` diretamente em `tests/`; ratchet arquitetural exige a raiz limpa;
+- [x] Mobility integration migrado para `tests/integration/mobility` com imports `@/`;
+- [x] `playwright.mapa.config.ts` morto removido e script Maps apontado ao config canônico;
+- [x] Security Check Maps deixou de referenciar arquivos sintéticos inexistentes e usa os validators canônicos;
+- [x] `tsconfig.typecheck.events-checkin.json` órfão removido;
+- [x] `bun.lock` removido; `package-lock.json` permanece como lockfile do package manager npm declarado;
+- [x] guard de artifacts de raiz impede regressão dessas decisões.
 
 ## P1 — certificação funcional dos módulos (#50)
 
 Arquitetura limpa não equivale a módulo certificado.
 
 - Education continua `launch-paused` apesar do ownership técnico ter sido corrigido.
-- Gastronomy possui implementação real, mas superfícies operacionais permanecem parcialmente pausadas.
+- Gastronomy possui implementação real e dívida direta de integração do módulo zerada, mas ainda depende de prova de banco/RLS/E2E/deploy.
+- Events agora possui owner físico canônico, mas não está certificado funcionalmente.
 - Mobilidade territorial permanece pausada.
 
 Ordem de certificação:
@@ -117,7 +136,7 @@ Para cada módulo exigir: entrypoint canônico, banco/RPC atual, autorização p
 
 ## P2 — higiene E2E e branches
 
-- [ ] concluir provenance explícita das fixtures `business_data` (`source=e2e`, `source_kind=technical_fixture`) nos writers rastreados por #83;
+- [x] provenance explícita das fixtures `business_data` (`source=e2e`, `source_kind=technical_fixture`) centralizada nos clients operacionais e protegida por regression guard (#83, concluído no nível de código);
 - [ ] classificar as 89 refs históricas e reconstruir na `main` qualquer delta útil antes de removê-las (#84).
 
 ## Definition of Done — MVP
@@ -137,17 +156,17 @@ O Achegue-se só pode ser marcado **MVP READY** quando todos os itens abaixo for
 
 ## Commits relevantes desta retomada
 
-- `f64a063` — reconciliação documental/SSOT;
-- `208d6b1` — workflows SSOT em push da `main`;
-- `1eaa0e0` — fronteira pública de configuração;
-- `fa57cac` — persistence de engagement de Events para `core`;
-- `1c50eb4` — gate de migração de Events;
-- `6c2e80a` — ratchet de persistência de Education;
-- `22c7806` — Observability de Education para `core`;
-- `7dcaaf1` — Tracking de Education para `core`;
-- `9e6a57b` — contratos de Education para `core`;
-- `f3d3c0d` — read model de Education para `core`;
-- `2571f0d` — write model e regra de etapas escolares para `core`; dívida direta do módulo chega a zero.
+- `fa57cac` — persistência de engagement de Events para `core`;
+- `9de277e` — Gastronomy com dívida direta de integração do módulo zerada e ratchet estruturado;
+- `bf2c34b` / `cd17991` — provenance E2E centralizada e cobertura do caminho anon/admin;
+- `91c387c` a `0493b0d` — reorganização dos testes até zero implementações na raiz;
+- `45bf4a7` — workflow Maps alinhado aos gates canônicos;
+- `caea8f6` / `6e14903` / `b47bb39` — remoção de artifacts órfãos e guard de raiz;
+- `0da8e2e` — implementação de Events movida para `src/modules/community-events`, com rota e deploy guard no owner canônico;
+- `3707218` — `src/features` removido e ratchets atualizados;
+- `63a2ab2` — guard de ownership de Events;
+- `2ef08e9` — registry sem o source root aposentado de Events;
+- `c2e323c` — regras arquiteturais sincronizadas com a conclusão da migração.
 
 ## Trackers canônicos
 
@@ -157,5 +176,5 @@ O Achegue-se só pode ser marcado **MVP READY** quando todos os itens abaixo for
 - #28 — proteção da `main`;
 - #51 — estrutura/owners/namespaces;
 - #50 — certificação funcional dos módulos;
-- #83 — provenance E2E;
+- #83 — provenance E2E (concluído no nível de código);
 - #84 — branches históricas.
