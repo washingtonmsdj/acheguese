@@ -9,7 +9,6 @@ const GASTRONOMY_ROOT = "src/modules/business/gastronomy";
 // Transitional runtime debt only. This set must shrink monotonically as
 // infrastructure ownership moves to src/core/business (or another canonical core owner).
 const ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES = new Set([
-  "src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts",
   "src/modules/business/gastronomy/services/menu.queries.ts",
 ]);
 
@@ -27,6 +26,8 @@ const REQUIRED_CORE_BRIDGES = new Map([
   ["src/modules/business/gastronomy/niches/types.ts", "@/core/business/niches/types"],
   ["src/modules/business/gastronomy/niches/versioning/types.ts", "@/core/business/niches/versioning/types"],
   ["src/modules/business/gastronomy/niches/versioning/NicheVersioningService.ts", "@/core/business/niches/versioning/NicheVersioningService"],
+  ["src/modules/business/gastronomy/niches/pizzaria/types.ts", "@/core/business/niches/pizzaria/types"],
+  ["src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts", "@/core/business/niches/pizzaria/PizzaAdminService"],
 ]);
 
 const CODE_FILE_RE = /\.(ts|tsx|js|jsx)$/;
