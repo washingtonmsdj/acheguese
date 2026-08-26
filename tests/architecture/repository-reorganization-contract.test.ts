@@ -6,6 +6,7 @@ const ROOT = process.cwd();
 const PERMANENT_PLAN = "URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md";
 const LEGACY_FEATURE_ROOTS = ["events"] as const;
 const RETIRED_SOURCE_ROOTS = ["src/test", "src/__tests__", "src/types"] as const;
+const RETIRED_ROOT_ARTIFACTS = ["handoff", "product-qa-screenshots"] as const;
 
 const CONFIG_BRIDGES = new Map([
   ["src/config/security.config.ts", "@/shared/config/security.config"],
@@ -41,6 +42,13 @@ const CANONICAL_E2E_TARGETS = [
   "tests/e2e/helpers/geolocation.ts",
   "tests/e2e/helpers/network.ts",
   "tests/e2e/network-branches.spec.ts",
+] as const;
+
+const ARCHIVED_ROOT_ARTIFACT_TARGETS = [
+  "docs/08-roadmap/handoff/CP-016_MEDIA_ASSET_CONTINUATION.md",
+  "docs/08-roadmap/handoff/README.md",
+  "docs/10-archive/root-legacy/PRODUCT-QA.md",
+  "docs/10-archive/root-legacy/product-qa-screenshots",
 ] as const;
 
 function listDirectories(relativePath: string): string[] {
@@ -80,6 +88,16 @@ describe("global repository reorganization contract", () => {
   it("does not recreate retired generic source roots", () => {
     for (const relativePath of RETIRED_SOURCE_ROOTS) {
       expect(fs.existsSync(path.join(ROOT, relativePath)), relativePath).toBe(false);
+    }
+  });
+
+  it("does not recreate retired root artifact directories", () => {
+    for (const relativePath of RETIRED_ROOT_ARTIFACTS) {
+      expect(fs.existsSync(path.join(ROOT, relativePath)), relativePath).toBe(false);
+    }
+
+    for (const relativePath of ARCHIVED_ROOT_ARTIFACT_TARGETS) {
+      expect(fs.existsSync(path.join(ROOT, relativePath)), relativePath).toBe(true);
     }
   });
 
