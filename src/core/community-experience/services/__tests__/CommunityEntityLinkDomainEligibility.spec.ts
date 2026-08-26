@@ -4,7 +4,7 @@ import { ClassifiedLinkEligibilityService } from "@/core/classifieds/services/Cl
 import { TouristPointLinkEligibilityService } from "@/core/guide/tourist-points/services/TouristPointLinkEligibilityService";
 import { PostLinkEligibilityService } from "@/core/posts/services/PostLinkEligibilityService";
 import { ProfessionalLinkEligibilityService } from "@/core/professional/services/ProfessionalLinkEligibilityService";
-import { EventLinkEligibilityService } from "@/core/verticals/events/services/EventLinkEligibilityService";
+import { EventLinkEligibilityService } from "@/core/community-events/services/EventLinkEligibilityService";
 
 const mocks = vi.hoisted(() => ({
   getClassifiedById: vi.fn(),
@@ -37,7 +37,7 @@ vi.mock("@/core/professional/services/ProfessionalService", () => ({
   },
 }));
 
-vi.mock("@/core/verticals/events/services/EventReadService", () => ({
+vi.mock("@/core/community-events/services/EventReadService", () => ({
   eventsReadService: {
     getEventById: mocks.getEventById,
   },
