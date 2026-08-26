@@ -43,7 +43,7 @@ import { NeighborhoodTerritoryArt } from '@/core/community/components/public/Nei
 import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 import { boundaryService } from '@/core/geospatial';
 import { spatialSearchService } from '@/core/geospatial/services/SpatialSearchService';
-import { useTouristPointPublicUrls } from '@/core/verticals/guide/routes/useTouristPointPublicUrls';
+import { useTouristPointPublicUrls } from '@/core/guide/tourist-points/routes/useTouristPointPublicUrls';
 import { EntityStatus } from '@/shared/types/enums';
 import type { BoundingBox, MapLayerKey, MapMarker, MapViewport } from '../types/core';
 import { LocationStatus, type Location, type TerritoryFilter } from '@/core/location/types';
