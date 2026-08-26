@@ -36,7 +36,7 @@ import { cn } from '@/shared/utils/cn';
 import { useFavorites } from '../hooks/useFavorites';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import { useCommunityUrls } from '@/core/routing/hooks/useCommunityUrls';
-import { eventRuntimeService } from '@/core/verticals/events';
+import { eventRuntimeService } from '@/core/community-events';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 import { useEventTerritoryFilter } from '../hooks/useEventTerritoryFilter';
 import {
