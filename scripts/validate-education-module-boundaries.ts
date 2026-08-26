@@ -6,16 +6,22 @@ import path from "node:path";
 const ROOT = process.cwd();
 const EDUCATION_ROOT = "src/modules/business/education";
 
-// Transitional debt only. This set must shrink to zero as persistence moves
-// to src/core/education. Adding another runtime file is a regression.
-const ALLOWED_DIRECT_INTEGRATION_FILES = new Set([
-  "src/modules/business/education/services/education.mutations.ts",
-]);
+// Zero is the architectural target and current baseline. Any new runtime
+// direct integration from the module is a regression.
+const ALLOWED_DIRECT_INTEGRATION_FILES = new Set<string>();
 
 const REQUIRED_CORE_BRIDGES = new Map([
   [
     "src/modules/business/education/services/education.queries.ts",
     "@/core/education/services/education.queries",
+  ],
+  [
+    "src/modules/business/education/services/education.mutations.ts",
+    "@/core/education/services/education.mutations",
+  ],
+  [
+    "src/modules/business/education/constants/schoolStageOptions.ts",
+    "@/core/education/constants/schoolStageOptions",
   ],
 ]);
 
@@ -76,7 +82,7 @@ function main(): void {
       actualDirectIntegrationFiles.add(relative);
       if (!ALLOWED_DIRECT_INTEGRATION_FILES.has(relative)) {
         violations.push(
-          `${relative}: new direct integrations access is forbidden; move ownership to src/core/education.`,
+          `${relative}: direct integrations access is forbidden; persistence belongs to src/core/education.`,
         );
       }
     }
@@ -112,7 +118,7 @@ function main(): void {
   }
 
   console.log(
-    `Education module boundary valid: ${actualDirectIntegrationFiles.size} direct-integration file remains; canonical read bridge enforced.`,
+    "Education module boundary valid: zero direct runtime integrations; canonical read/write/constants bridges enforced.",
   );
 }
 

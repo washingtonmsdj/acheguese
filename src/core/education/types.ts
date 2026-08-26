@@ -8,4 +8,6 @@ export type {
   EducationLead,
   EducationLeadEvent,
   EducationEvent,
+  EducationLeadStatus,
+  EducationNicheKey,
 } from "./contracts";

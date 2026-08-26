@@ -20,25 +20,27 @@ A consolidação de ownership já moveu para `src/core/education`:
 - contratos de domínio em `contracts.ts`;
 - `EducationObservabilityService`;
 - `EducationTrackingService`;
-- `education.queries.ts` como read model canônico.
+- `education.queries.ts` como read model canônico;
+- `education.mutations.ts` como write model canônico;
+- `constants/schoolStageOptions.ts` como regra de domínio compartilhada.
 
-Os paths antigos de types/services no módulo são apenas bridges one-way de compatibilidade quando necessários.
+Os paths antigos de types/services/constants no módulo são bridges one-way de compatibilidade quando necessários.
 
-Resta **um** arquivo runtime do módulo com acesso direto a `@/integrations/*`, congelado por `scripts/validate-education-module-boundaries.ts`:
+**Dívida direta de infraestrutura na camada de módulo: zero.** `scripts/validate-education-module-boundaries.ts` bloqueia qualquer novo import runtime de `@/integrations/*` ou do pacote Supabase em `src/modules/business/education` e também verifica os bridges canônicos.
 
-- `services/education.mutations.ts`
-
-Nenhum novo arquivo do módulo pode acessar infraestrutura diretamente. A direção canônica é mover também o write model para `src/core/education`, deixando `src/modules/business/education` responsável por composição de produto/UI e regras específicas sem ownership de persistência.
+Isso melhora a arquitetura, mas **não certifica o módulo para produção**. O `launch-paused` só pode ser removido depois da validação de banco, autorização, runtime, E2E e deployment do mesmo SHA.
 
 ## Regras de arquitetura
 
 - páginas, components e hooks não acessam Supabase diretamente;
-- código novo no módulo não importa `@/integrations/*` nem o pacote Supabase diretamente;
-- cada arquivo removido da dívida deve ser removido da allowlist no mesmo commit;
+- código runtime no módulo não importa `@/integrations/*` nem o pacote Supabase diretamente;
+- persistência e integração pertencem a `src/core/education`;
 - `core` não pode depender de `modules`;
 - contratos compartilhados pertencem a `src/core/education/contracts.ts`;
 - read model canônico pertence a `src/core/education/services/education.queries.ts`;
-- não criar facade paralela que mantenha dois writers/read models concorrentes;
+- write model canônico pertence a `src/core/education/services/education.mutations.ts`;
+- regra compartilhada de etapas escolares pertence a `src/core/education/constants/schoolStageOptions.ts`;
+- não criar facade paralela que mantenha writers/read models concorrentes;
 - bridges de compatibilidade são one-way e temporárias;
 - não remover `launch-paused` apenas porque a tela renderiza.
 
@@ -61,7 +63,8 @@ Educação só sai de `launch-paused` quando houver evidência para, no mínimo:
 
 - `src/core/verticals/config.ts` — registra `education` como vertical empresarial oficial;
 - `src/core/education/contracts.ts` — contratos do domínio;
-- `src/core/education/services/` — ownership canônico de serviços de infraestrutura/domínio;
+- `src/core/education/services/` — ownership canônico de read/write/observabilidade/tracking;
+- `src/core/education/constants/` — regras de domínio compartilhadas;
 - `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — ordem e Definition of Done do MVP;
 - issue #50 — certificação funcional dos módulos;
 - issue #51 — limpeza estrutural/owners/namespaces.
