@@ -4,8 +4,12 @@ import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
 const PERMANENT_PLAN = "URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md";
-const LEGACY_FEATURE_ROOTS = ["events"] as const;
-const RETIRED_SOURCE_ROOTS = ["src/test", "src/__tests__", "src/types"] as const;
+const RETIRED_SOURCE_ROOTS = [
+  "src/test",
+  "src/__tests__",
+  "src/types",
+  "src/features",
+] as const;
 const RETIRED_ROOT_ARTIFACTS = ["handoff", "product-qa-screenshots"] as const;
 
 const CONFIG_BRIDGES = new Map([
@@ -51,17 +55,6 @@ const ARCHIVED_ROOT_ARTIFACT_TARGETS = [
   "docs/10-archive/root-legacy/product-qa-screenshots",
 ] as const;
 
-function listDirectories(relativePath: string): string[] {
-  const absolutePath = path.join(ROOT, relativePath);
-  if (!fs.existsSync(absolutePath)) return [];
-
-  return fs
-    .readdirSync(absolutePath, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name)
-    .sort();
-}
-
 function listFiles(relativePath: string): string[] {
   const absolutePath = path.join(ROOT, relativePath);
   if (!fs.existsSync(absolutePath)) return [];
@@ -101,12 +94,14 @@ describe("global repository reorganization contract", () => {
     }
   });
 
-  it("ratchets src/features to the single known legacy owner during migration", () => {
-    expect(listDirectories("src/features")).toEqual([...LEGACY_FEATURE_ROOTS]);
-  });
-
-  it("keeps the canonical Events product destination present before the physical move", () => {
+  it("keeps Events implemented under the canonical community module owner", () => {
     expect(fs.existsSync(path.join(ROOT, "src/modules/community-events"))).toBe(true);
+    expect(
+      fs.existsSync(
+        path.join(ROOT, "src/modules/community-events/pages/EventsListPage.tsx"),
+      ),
+    ).toBe(true);
+    expect(fs.existsSync(path.join(ROOT, "src/features"))).toBe(false);
   });
 
   it("keeps migrated config implementations under canonical owners", () => {

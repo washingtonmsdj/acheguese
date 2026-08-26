@@ -7,7 +7,7 @@ const read = (path: string) => readFileSync(resolve(repoRoot, path), 'utf8');
 const exists = (path: string) => existsSync(resolve(repoRoot, path));
 
 describe('compatibility surface cleanup', () => {
-  it('keeps community alerts on the canonical core owner without validator allowlists', () => {
+  it('keeps community alerts canonical and removes completed Events migration allowlists', () => {
     const communityValidator = read(
       'scripts/validate-community-transversal-boundaries.ts',
     );
@@ -15,29 +15,29 @@ describe('compatibility surface cleanup', () => {
 
     expect(exists('src/modules/community-alerts')).toBe(false);
     expect(communityValidator).not.toContain('CORE_COMMUNITY_IMPORT_ALLOWLIST');
-    expect(communityValidator).toContain('LEGACY_TRANSVERSAL_MIGRATION_ROOTS');
-    expect(communityValidator).toContain('"src/features/events"');
+    expect(communityValidator).not.toContain('LEGACY_TRANSVERSAL_MIGRATION_ROOTS');
+    expect(exists('src/features')).toBe(false);
     expect(taxonomyValidator).not.toContain('DEPRECATED_COMPAT_MODULE_ROOTS');
     expect(taxonomyValidator).not.toContain('CORE_TO_MODULE_IMPORT_ALLOWLIST');
     expect(taxonomyValidator).toContain('"community-alerts",');
   });
 
-  it('keeps Event engagement persistence owned by core ahead of module migration', () => {
+  it('keeps Event engagement persistence owned by core after module migration', () => {
     const canonical = read(
       'src/core/verticals/events/services/EventEngagementService.ts',
     );
-    const legacy = read(
-      'src/features/events/services/EventEngagementService.ts',
+    const moduleBridge = read(
+      'src/modules/community-events/services/EventEngagementService.ts',
     );
     const eventsBarrel = read('src/core/verticals/events/index.ts');
 
     expect(canonical).toContain('from "@/integrations/supabase"');
     expect(canonical).toContain('export class EventEngagementService');
-    expect(legacy).toContain(
+    expect(moduleBridge).toContain(
       '@/core/verticals/events/services/EventEngagementService',
     );
-    expect(legacy).not.toContain('@/integrations/supabase');
-    expect(legacy).not.toContain('.from(');
+    expect(moduleBridge).not.toContain('@/integrations/supabase');
+    expect(moduleBridge).not.toContain('.from(');
     expect(eventsBarrel).toContain(
       '@/core/verticals/events/services/EventEngagementService',
     );

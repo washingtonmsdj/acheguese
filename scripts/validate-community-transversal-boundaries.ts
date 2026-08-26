@@ -14,8 +14,6 @@ const TRANSVERSAL_MODULES = [
   "community-lost-found",
 ] as const;
 
-const LEGACY_TRANSVERSAL_MIGRATION_ROOTS = ["src/features/events"] as const;
-
 const CORE_DOMAIN_PATHS = [
   "src/core/community-feed",
   "src/core/community/alerts",
@@ -118,15 +116,7 @@ function main() {
     validateModuleCompatibleRoot(moduleRoot, violations);
   }
 
-  // Ratchet de migracao: enquanto um bounded context ainda estiver em namespace
-  // legado, ele precisa obedecer antecipadamente as mesmas regras do destino em
-  // src/modules. Quando a pasta legado desaparecer, este check vira no-op e pode
-  // ser removido junto com a conclusao da migracao.
-  for (const legacyRoot of LEGACY_TRANSVERSAL_MIGRATION_ROOTS) {
-    validateModuleCompatibleRoot(legacyRoot, violations);
-  }
-
-  const scanRoots = ["src/app", "src/core", "src/features", "src/shared", "tests"];
+  const scanRoots = ["src/app", "src/core", "src/shared", "tests"];
   for (const scanRoot of scanRoots) {
     for (const filePath of walk(path.join(ROOT, scanRoot))) {
       const relative = normalize(path.relative(ROOT, filePath));
@@ -148,7 +138,6 @@ function main() {
 
   const externalRoots = [
     "src/app",
-    "src/features",
     "src/shared",
     "src/modules/business",
     "src/modules/classifieds",
