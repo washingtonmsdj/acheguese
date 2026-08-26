@@ -213,7 +213,6 @@ export interface Product {
 export interface ProductRecord {
   id: string;
   profile_id: string;
-  user_id: string;
   nome: string;
   descricao?: string;
   preco?: number;

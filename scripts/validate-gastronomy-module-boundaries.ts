@@ -6,15 +6,14 @@ import path from "node:path";
 const ROOT = process.cwd();
 const GASTRONOMY_ROOT = "src/modules/business/gastronomy";
 
-// Transitional runtime debt only. This set must shrink monotonically as
-// infrastructure ownership moves to src/core/business (or another canonical core owner).
-const ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES = new Set([
-  "src/modules/business/gastronomy/services/menu.queries.ts",
-]);
+// Gastronomy runtime integration debt is expected to stay at zero.
+const ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES = new Set<string>();
 
 const REQUIRED_CORE_BRIDGES = new Map([
   ["src/modules/business/gastronomy/types/gastronomy/index.ts", "@/core/business/types/gastronomy"],
+  ["src/modules/business/gastronomy/types/menu.ts", "@/core/business/types/gastronomyMenu"],
   ["src/modules/business/gastronomy/services/gastronomy.queries.ts", "@/core/business/services/gastronomy.queries"],
+  ["src/modules/business/gastronomy/services/menu.queries.ts", "@/core/business/services/menu.queries"],
   ["src/modules/business/gastronomy/services/review.queries.ts", "@/core/business/services/gastronomy.review.queries"],
   ["src/modules/business/gastronomy/services/favorites.queries.ts", "@/core/business/services/gastronomy.favorites.queries"],
   ["src/modules/business/gastronomy/services/DeliveryAreaService.ts", "@/core/business/services/GastronomyDeliveryAreaService"],
@@ -112,7 +111,7 @@ function main(): void {
     process.exit(1);
   }
 
-  console.log(`Gastronomy module boundary valid: ${actualDirectRuntimeIntegrationFiles.size} known runtime integration files frozen for migration; canonical bridges enforced; type-only integration imports are not counted as runtime debt.`);
+  console.log(`Gastronomy module boundary valid: ${actualDirectRuntimeIntegrationFiles.size} runtime integration files; canonical bridges enforced; type-only integration imports are not counted as runtime debt.`);
 }
 
 main();
