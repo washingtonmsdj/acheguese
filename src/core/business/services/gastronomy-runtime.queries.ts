@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase";
+import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 import { logger } from "@/shared/utils/logger";
 import { resolveGastronomyBusinessId } from "./resolveGastronomyBusinessId";
 
@@ -12,10 +13,6 @@ export interface GastronomyQuickMetrics {
 
 interface ViewRecord {
   viewed_at: string;
-}
-
-interface ReviewRecord {
-  rating: number;
 }
 
 export interface SimilarGastronomyBusiness {
@@ -40,16 +37,27 @@ export async function fetchGastronomyQuickMetrics(
     rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
   };
 
-  const [summaryRes, reviewsRes, viewsLast7Res] = await Promise.all([
+  const reviewStatsPromise = ReviewsService.getReviewStats(
+    businessProfileId,
+    "business",
+  ).catch((error) => {
+    logger.error("[gastronomy-runtime] reviews error", error);
+    return {
+      total: 0,
+      average: 0,
+      distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      total_reviews: 0,
+      average_rating: 0,
+      rating_distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+    };
+  });
+
+  const [summaryRes, reviewStats, viewsLast7Res] = await Promise.all([
     rpcClient.rpc("get_business_views_summary", {
       p_business_profile_id: businessProfileId,
       p_week_start: weekAgo,
     }),
-    rpcClient.rpc("get_business_reviews", {
-      p_business_profile_id: businessProfileId,
-      p_limit: 500,
-      p_offset: 0,
-    }),
+    reviewStatsPromise,
     rpcClient.rpc("get_business_views_last_7_days", {
       p_business_profile_id: businessProfileId,
       p_week_start: weekAgo,
@@ -57,7 +65,6 @@ export async function fetchGastronomyQuickMetrics(
   ]);
 
   if (summaryRes.error) logger.error("[gastronomy-runtime] views error", summaryRes.error);
-  if (reviewsRes.error) logger.error("[gastronomy-runtime] reviews error", reviewsRes.error);
 
   const dayMap = new Map<string, number>();
   for (let i = 6; i >= 0; i -= 1) {
@@ -74,12 +81,6 @@ export async function fetchGastronomyQuickMetrics(
     }
   });
 
-  const reviews: ReviewRecord[] = Array.isArray(reviewsRes.data) ? (reviewsRes.data as ReviewRecord[]) : [];
-  const avgRating =
-    reviews.length > 0
-      ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
-      : 0;
-
   const summaryRows = Array.isArray(summaryRes.data)
     ? (summaryRes.data as Array<{ total_views?: number; views_this_week?: number }>)
     : [];
@@ -88,8 +89,8 @@ export async function fetchGastronomyQuickMetrics(
   return {
     totalViews: summary.total_views ?? 0,
     viewsThisWeek: summary.views_this_week ?? 0,
-    totalReviews: reviews.length,
-    avgRating: Math.round(avgRating * 10) / 10,
+    totalReviews: reviewStats.total,
+    avgRating: Math.round(reviewStats.average * 10) / 10,
     recentViews: Array.from(dayMap.entries()).map(([date, count]) => ({ date, count })),
   };
 }
