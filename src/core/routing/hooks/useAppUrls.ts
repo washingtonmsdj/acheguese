@@ -24,7 +24,7 @@ import type { ResolvedTerritory } from './useResolveTerritoryFromUrl';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
 import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
-import { jobPublicRoutes } from '@/core/verticals/jobs/routes/jobPublicRoutes';
+import { jobPublicRoutes } from '@/core/work-opportunities/routes/jobPublicRoutes';
 import { LAUNCH_URLS } from '@/config/territory';
 import { classifiedUrlService, type ClassifiedUrlContext } from '@/core/classifieds/services';
 

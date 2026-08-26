@@ -11,7 +11,7 @@ import {
   extractCommunityTerritoryBaseUrl,
   MODULE_SLUGS,
 } from "@/core/routing/utils/territoryUrls";
-import { jobPublicRoutes } from "@/core/verticals/jobs/routes/jobPublicRoutes";
+import { jobPublicRoutes } from "@/core/work-opportunities/routes/jobPublicRoutes";
 import {
   CONTRATO_LABELS,
   MODALIDADE_LABELS,
