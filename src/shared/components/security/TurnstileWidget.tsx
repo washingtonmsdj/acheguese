@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { TURNSTILE_CLIENT_CONFIG } from "@/config/security.config";
+import { TURNSTILE_CLIENT_CONFIG } from "@/shared/config/security.config";
 
 type TurnstileRenderOptions = {
   sitekey: string;
