@@ -2,20 +2,36 @@ name: SSOT Territorial Tests
 
 on:
   workflow_dispatch:
-  pull_request:
-    branches: [main, develop]
+  push:
+    branches: [main]
     paths:
       - ".github/workflows/ssot-tests.yml"
+      - "README.md"
+      - "SECURITY.md"
+      - "docs/**"
       - "package.json"
       - "package-lock.json"
       - "playwright.config.ts"
       - "scripts/seed-e2e-users.ts"
       - "src/app/**"
-      - "src/core/navigation/**"
-      - "src/modules/profile/**"
-      - "src/modules/guide/**"
-      - "src/core/location/**"
-      - "src/core/routing/**"
+      - "src/core/**"
+      - "src/modules/**"
+      - "tests/**"
+      - "supabase/migrations/**"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - ".github/workflows/ssot-tests.yml"
+      - "README.md"
+      - "SECURITY.md"
+      - "docs/**"
+      - "package.json"
+      - "package-lock.json"
+      - "playwright.config.ts"
+      - "scripts/seed-e2e-users.ts"
+      - "src/app/**"
+      - "src/core/**"
+      - "src/modules/**"
       - "tests/**"
       - "supabase/migrations/**"
 

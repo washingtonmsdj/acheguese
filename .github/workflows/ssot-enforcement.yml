@@ -1,13 +1,31 @@
 name: SSOT Enforcement
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "docs/**"
+      - "README.md"
+      - "SECURITY.md"
+      - "supabase/**"
+      - ".eslintrc*.json"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/ssot-enforcement.yml"
   pull_request:
     branches: [main, develop]
     paths:
       - "src/**"
+      - "tests/**"
+      - "docs/**"
+      - "README.md"
+      - "SECURITY.md"
       - "supabase/**"
       - ".eslintrc*.json"
       - "package.json"
+      - "package-lock.json"
       - ".github/workflows/ssot-enforcement.yml"
   workflow_dispatch:
 
