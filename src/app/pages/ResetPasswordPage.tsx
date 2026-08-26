@@ -11,7 +11,7 @@ import { AuthFooter } from "@/app/components/auth/AuthFooter";
 import { AuthTurnstileGate } from "@/app/components/auth/AuthTurnstileGate";
 import { useAuthTurnstile } from "@/app/components/auth/useAuthTurnstile";
 import { PasswordInput } from "@/app/components/auth/PasswordInput";
-import { AUTH_BROWSER_STORAGE_CONFIG } from "@/config/security.config";
+import { AUTH_BROWSER_STORAGE_CONFIG } from "@/shared/config/security.config";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { AuthService } from "@/core/auth/services/AuthService";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
