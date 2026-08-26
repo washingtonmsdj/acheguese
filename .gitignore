@@ -36,7 +36,8 @@ dist-ssr
 *.local
 
 # Environment
-# .env é o template público com placeholders — DEVE ser commitado
+# .env é baseline público deliberado. Somente valores seguros para browser/repositório.
+# Segredos e overrides privados pertencem a .env.local ou ao secret store do provider.
 !.env
 .env.local
 .env.*.local
@@ -51,7 +52,7 @@ dist-ssr
 !.env.remote.example
 !.env.e2e.network.example
 
-# IMPORTANTE: .env.production é template, não commitar com valores reais
+# IMPORTANTE: .env.production é template; nunca preencher/commitar segredos reais.
 
 # Editor directories and files
 .vscode/*
