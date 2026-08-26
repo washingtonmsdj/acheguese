@@ -1,4 +1,8 @@
-export type { EducationProfileStatus } from "@/core/education/types";
+export type {
+  EducationAnalyticsEventType,
+  EducationNicheKey,
+  EducationProfileStatus,
+} from "@/core/education/types";
 export {
   EducationObservabilityService,
   trackEducationError,
@@ -11,3 +15,5 @@ export type {
   EducationEventType,
   EducationMetrics,
 } from "@/core/education/services/EducationObservabilityService";
+export { EducationTrackingService } from "@/core/education/services/EducationTrackingService";
+export type { TrackEventOptions } from "@/core/education/services/EducationTrackingService";

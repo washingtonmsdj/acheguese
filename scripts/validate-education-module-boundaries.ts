@@ -5,20 +5,14 @@ import path from "node:path";
 
 const ROOT = process.cwd();
 const EDUCATION_ROOT = "src/modules/business/education";
-
-// Transitional debt only. This set must shrink as persistence moves to
-// src/core/education. Adding a fourth runtime file is a regression.
 const ALLOWED_DIRECT_INTEGRATION_FILES = new Set([
-  "src/modules/business/education/services/EducationTrackingService.ts",
   "src/modules/business/education/services/education.mutations.ts",
   "src/modules/business/education/services/education.queries.ts",
 ]);
 
 const CODE_FILE_RE = /\.(ts|tsx|js|jsx)$/;
-const DIRECT_INTEGRATION_RE =
-  /(?:from\s+["']@\/integrations\/|import\(\s*["']@\/integrations\/)/;
-const DIRECT_SUPABASE_PACKAGE_RE =
-  /(?:from\s+["']@supabase\/supabase-js["']|import\(\s*["']@supabase\/supabase-js["']\s*\))/;
+const DIRECT_INTEGRATION_RE = /(?:from\s+["']@\/integrations\/|import\(\s*["']@\/integrations\/)/;
+const DIRECT_SUPABASE_PACKAGE_RE = /@supabase\/supabase-js/;
 
 function normalize(filePath: string): string {
   return filePath.replace(/\\/g, "/");
@@ -26,27 +20,16 @@ function normalize(filePath: string): string {
 
 function isRuntimeCodeFile(filePath: string): boolean {
   const normalized = normalize(filePath);
-  return (
-    CODE_FILE_RE.test(normalized) &&
-    !normalized.includes("/__tests__/") &&
-    !normalized.includes(".test.") &&
-    !normalized.includes(".spec.")
-  );
+  return CODE_FILE_RE.test(normalized) && !normalized.includes("/__tests__/") && !normalized.includes(".test.") && !normalized.includes(".spec.");
 }
 
 function walk(dir: string): string[] {
   if (!fs.existsSync(dir)) return [];
-
   const files: string[] = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...walk(fullPath));
-      continue;
-    }
-    if (entry.isFile() && isRuntimeCodeFile(fullPath)) {
-      files.push(fullPath);
-    }
+    if (entry.isDirectory()) files.push(...walk(fullPath));
+    else if (entry.isFile() && isRuntimeCodeFile(fullPath)) files.push(fullPath);
   }
   return files;
 }
@@ -66,26 +49,20 @@ function main(): void {
     const content = fs.readFileSync(filePath, "utf8");
 
     if (DIRECT_SUPABASE_PACKAGE_RE.test(content)) {
-      violations.push(
-        `${relative}: direct @supabase/supabase-js import is forbidden in the Education module.`,
-      );
+      violations.push(`${relative}: direct Supabase package import is forbidden in the Education module.`);
     }
 
     if (DIRECT_INTEGRATION_RE.test(content)) {
       actualDirectIntegrationFiles.add(relative);
       if (!ALLOWED_DIRECT_INTEGRATION_FILES.has(relative)) {
-        violations.push(
-          `${relative}: new direct integrations access is forbidden. Move persistence/integration ownership to src/core/education.`,
-        );
+        violations.push(`${relative}: new direct integrations access is forbidden; move ownership to src/core/education.`);
       }
     }
   }
 
   for (const legacyFile of ALLOWED_DIRECT_INTEGRATION_FILES) {
     if (!actualDirectIntegrationFiles.has(legacyFile)) {
-      violations.push(
-        `${legacyFile}: transitional allowlist entry is stale. Remove it from ALLOWED_DIRECT_INTEGRATION_FILES in the same migration commit.`,
-      );
+      violations.push(`${legacyFile}: transitional allowlist entry is stale and must be removed in the same migration commit.`);
     }
   }
 
@@ -95,9 +72,7 @@ function main(): void {
     process.exit(1);
   }
 
-  console.log(
-    `Education module boundary valid: ${actualDirectIntegrationFiles.size} known direct-integration files frozen for migration; no new runtime access allowed.`,
-  );
+  console.log(`Education module boundary valid: ${actualDirectIntegrationFiles.size} known direct-integration files frozen for migration; no new runtime access allowed.`);
 }
 
 main();

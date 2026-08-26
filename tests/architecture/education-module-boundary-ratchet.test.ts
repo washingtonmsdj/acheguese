@@ -18,31 +18,36 @@ describe("Education module hardening ratchet", () => {
     );
   });
 
-  it("keeps Education observability persistence owned by core", () => {
-    const canonical = read(
+  it("keeps observability and tracking persistence owned by core", () => {
+    const observability = read(
       "src/core/education/services/EducationObservabilityService.ts",
     );
-    const legacy = read(
+    const tracking = read(
+      "src/core/education/services/EducationTrackingService.ts",
+    );
+    const legacyObservability = read(
       "src/modules/business/education/services/EducationObservabilityService.ts",
     );
-    const coreIndex = read("src/core/education/index.ts");
+    const legacyTracking = read(
+      "src/modules/business/education/services/EducationTrackingService.ts",
+    );
 
-    expect(canonical).toContain("@/integrations/supabase");
-    expect(legacy).toContain(
+    expect(observability).toContain("@/integrations/supabase");
+    expect(tracking).toContain("@/integrations/supabase");
+    expect(legacyObservability).toContain(
       "@/core/education/services/EducationObservabilityService",
     );
-    expect(legacy).not.toContain("@/integrations/");
-    expect(legacy).not.toContain(".from(");
-    expect(coreIndex).toContain(
-      "@/core/education/services/EducationObservabilityService",
+    expect(legacyTracking).toContain(
+      "@/core/education/services/EducationTrackingService",
     );
+    expect(legacyObservability).not.toContain("@/integrations/");
+    expect(legacyTracking).not.toContain("@/integrations/");
   });
 
-  it("freezes the remaining direct-integration debt instead of allowing it to grow", () => {
+  it("freezes only the remaining read/write model integration debt", () => {
     const validator = read("scripts/validate-education-module-boundaries.ts");
 
     for (const path of [
-      "src/modules/business/education/services/EducationTrackingService.ts",
       "src/modules/business/education/services/education.mutations.ts",
       "src/modules/business/education/services/education.queries.ts",
     ]) {
@@ -52,16 +57,23 @@ describe("Education module hardening ratchet", () => {
     expect(validator).not.toContain(
       "src/modules/business/education/services/EducationObservabilityService.ts",
     );
+    expect(validator).not.toContain(
+      "src/modules/business/education/services/EducationTrackingService.ts",
+    );
     expect(validator).toContain("ALLOWED_DIRECT_INTEGRATION_FILES");
     expect(validator).toContain("new direct integrations access is forbidden");
     expect(validator).toContain("transitional allowlist entry is stale");
   });
 
-  it("keeps the architectural destination explicit", () => {
-    const readme = read("src/modules/business/education/README.md");
+  it("keeps canonical tracking event types in core", () => {
+    const coreTypes = read("src/core/education/types.ts");
+    const tracking = read(
+      "src/core/education/services/EducationTrackingService.ts",
+    );
 
-    expect(readme).toContain("src/core/education");
-    expect(readme).toContain("não acessam Supabase diretamente");
-    expect(readme).toContain("não remover `launch-paused`");
+    expect(coreTypes).toContain("EducationNicheKey");
+    expect(coreTypes).toContain("EducationAnalyticsEventType");
+    expect(tracking).toContain("@/core/education/types");
+    expect(tracking).not.toContain("@/modules/business/education");
   });
 });

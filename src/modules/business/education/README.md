@@ -15,11 +15,15 @@ A existência de páginas, services ou testes históricos **não equivale a cert
 
 A implementação existente inclui Explorer, detalhe, setup, dashboard, programas, leads, eventos, analytics, planos, hooks, nichos e services. O Explorer já possui estados explícitos de loading/error/empty e resolução territorial.
 
-A consolidação de ownership já começou: `EducationObservabilityService` passou para `src/core/education/services`, mantendo apenas uma ponte de compatibilidade no módulo.
+A consolidação de ownership já moveu para `src/core/education/services`:
 
-Ainda restam três arquivos runtime do módulo com acesso direto a `@/integrations/*`. Esse baseline está congelado por `scripts/validate-education-module-boundaries.ts`; nenhum novo arquivo pode repetir o padrão:
+- `EducationObservabilityService`;
+- `EducationTrackingService`.
 
-- `services/EducationTrackingService.ts`
+Os paths antigos no módulo são apenas bridges one-way de compatibilidade.
+
+Ainda restam **dois** arquivos runtime do módulo com acesso direto a `@/integrations/*`. Esse baseline está congelado por `scripts/validate-education-module-boundaries.ts`; nenhum novo arquivo pode repetir o padrão:
+
 - `services/education.mutations.ts`
 - `services/education.queries.ts`
 
@@ -28,10 +32,10 @@ A direção canônica é migrar persistência, autorização e integração para
 ## Regras de arquitetura
 
 - páginas, components e hooks não acessam Supabase diretamente;
-- código novo no módulo não importa `@/integrations/*` nem `@supabase/supabase-js`;
+- código novo no módulo não importa `@/integrations/*` nem o pacote Supabase diretamente;
 - cada arquivo removido da dívida acima deve ser removido da allowlist no mesmo commit;
 - `core` não pode depender de `modules`;
-- contratos compartilhados devem convergir para `src/core/education` antes da migração de persistence services;
+- contratos compartilhados devem convergir para `src/core/education` antes da migração dos read/write models;
 - não criar facade paralela que mantenha dois writers/read models concorrentes;
 - bridges de compatibilidade são one-way e temporárias;
 - não remover `launch-paused` apenas porque a tela renderiza.
@@ -50,10 +54,6 @@ Educação só sai de `launch-paused` quando houver evidência para, no mínimo:
 8. E2E que não trate placeholder, fallback ou `paused` como sucesso;
 9. smoke responsivo/mobile;
 10. deployment do mesmo SHA comprovado no provider.
-
-## Nichos
-
-Os nichos existentes permanecem como capacidade de produto, não como declaração de readiness. O escopo de lançamento deve ser explicitamente certificado antes de ser exposto como suportado em produção.
 
 ## SSOT relacionado
 
