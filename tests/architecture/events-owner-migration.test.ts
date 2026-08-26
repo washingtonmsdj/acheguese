@@ -17,10 +17,40 @@ describe("community Events canonical owner", () => {
       "src/modules/community-events/index.ts",
       "src/modules/community-events/pages/EventsListPage.tsx",
       "src/modules/community-events/pages/EventDetailPage.tsx",
-      "src/modules/community-events/services/EventEngagementService.ts",
       "src/modules/community-events/types/index.ts",
+      "src/core/community-events/index.ts",
+      "src/core/community-events/types.ts",
+      "src/core/community-events/services/EventReadService.ts",
+      "src/core/community-events/services/EventMutationService.ts",
+      "src/core/community-events/services/EventRuntimeService.ts",
+      "src/core/community-events/services/EventEngagementService.ts",
+      "src/core/community-events/services/EventLinkEligibilityService.ts",
+      "src/core/community-events/routes/eventPublicRoutes.ts",
     ]) {
       expect(exists(path), path).toBe(true);
+    }
+  });
+
+  it("keeps the historical core vertical namespace bridge-only", () => {
+    const bridgePaths = [
+      "src/core/verticals/events/index.ts",
+      "src/core/verticals/events/types.ts",
+      "src/core/verticals/events/mappers.ts",
+      "src/core/verticals/events/config/eventReadConfig.ts",
+      "src/core/verticals/events/services/EventReadService.ts",
+      "src/core/verticals/events/services/EventMutationService.ts",
+      "src/core/verticals/events/services/EventRuntimeService.ts",
+      "src/core/verticals/events/services/EventEngagementService.ts",
+      "src/core/verticals/events/services/EventLinkEligibilityService.ts",
+      "src/core/verticals/events/routes/eventPublicRoutes.ts",
+    ];
+
+    for (const path of bridgePaths) {
+      const content = read(path);
+      expect(content, path).toContain("@/core/community-events");
+      expect(content, path).not.toContain("@/integrations/supabase");
+      expect(content, path).not.toContain(".from(");
+      expect(content.length, `${path} must stay bridge-sized`).toBeLessThan(256);
     }
   });
 
@@ -52,12 +82,17 @@ describe("community Events canonical owner", () => {
   });
 
   it("keeps engagement persistence outside the UI module", () => {
+    const canonical = read(
+      "src/core/community-events/services/EventEngagementService.ts",
+    );
     const bridge = read(
       "src/modules/community-events/services/EventEngagementService.ts",
     );
 
+    expect(canonical).toContain('from "@/integrations/supabase"');
+    expect(canonical).toContain("export class EventEngagementService");
     expect(bridge).toContain(
-      '@/core/verticals/events/services/EventEngagementService',
+      '@/core/community-events/services/EventEngagementService',
     );
     expect(bridge).not.toContain("@/integrations/supabase");
     expect(bridge).not.toContain(".from(");

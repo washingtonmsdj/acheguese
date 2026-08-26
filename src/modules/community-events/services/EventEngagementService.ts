@@ -1,8 +1,8 @@
 /**
- * Compatibility bridge for the legacy Events feature namespace.
+ * Compatibility bridge for module-local imports.
  *
- * Persistence and engagement rules are owned by core. Keep this file as a
- * one-way re-export until src/features/events is fully migrated to
- * src/modules/community-events.
+ * Persistence and engagement rules are owned by src/core/community-events.
+ * Keep this file as a one-way re-export until module callers converge on the
+ * canonical core contract.
  */
-export * from "@/core/verticals/events/services/EventEngagementService";
+export * from "@/core/community-events/services/EventEngagementService";

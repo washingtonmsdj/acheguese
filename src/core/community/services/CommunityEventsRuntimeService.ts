@@ -1,10 +1,10 @@
-// Compatibility bridge. New event consumers must import from "@/core/verticals/events".
+// Compatibility bridge. New event consumers must import from "@/core/community-events".
 export {
   EventRuntimeService as CommunityEventsRuntimeService,
   EventsService,
   eventRuntimeService as communityEventsRuntimeService,
   eventService,
-} from "@/core/verticals/events/services/EventRuntimeService";
+} from "@/core/community-events/services/EventRuntimeService";
 export type {
   CommunityEvent,
   CreateEventInput,
@@ -16,4 +16,4 @@ export type {
   GetEventsPageInput,
   GetEventsPageOutput,
   UpdateEventInput,
-} from "@/core/verticals/events/services/EventRuntimeService";
+} from "@/core/community-events/services/EventRuntimeService";

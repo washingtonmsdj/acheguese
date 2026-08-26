@@ -22,8 +22,11 @@ describe('compatibility surface cleanup', () => {
     expect(taxonomyValidator).toContain('"community-alerts",');
   });
 
-  it('keeps Event engagement persistence owned by core after module migration', () => {
+  it('keeps Event engagement persistence on the canonical community-events core owner', () => {
     const canonical = read(
+      'src/core/community-events/services/EventEngagementService.ts',
+    );
+    const historicalBridge = read(
       'src/core/verticals/events/services/EventEngagementService.ts',
     );
     const moduleBridge = read(
@@ -33,14 +36,15 @@ describe('compatibility surface cleanup', () => {
 
     expect(canonical).toContain('from "@/integrations/supabase"');
     expect(canonical).toContain('export class EventEngagementService');
+    expect(historicalBridge).toContain(
+      '@/core/community-events/services/EventEngagementService',
+    );
     expect(moduleBridge).toContain(
-      '@/core/verticals/events/services/EventEngagementService',
+      '@/core/community-events/services/EventEngagementService',
     );
+    expect(historicalBridge).not.toContain('@/integrations/supabase');
     expect(moduleBridge).not.toContain('@/integrations/supabase');
-    expect(moduleBridge).not.toContain('.from(');
-    expect(eventsBarrel).toContain(
-      '@/core/verticals/events/services/EventEngagementService',
-    );
+    expect(eventsBarrel).toContain('@/core/community-events');
   });
 
   it('removes deprecated APIs and unconsumed duplicate types', () => {
