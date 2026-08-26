@@ -7,7 +7,6 @@ const ALLOWED_LEGACY_ROOT_TESTS = new Set([
   "public-search-route-regression.test.ts",
   "public-shell-admin-boundary-regression.test.ts",
   "public-territorial-copy-regression.test.ts",
-  "regression-remote-e2e-mutation-safety.test.ts",
   "regression-tourist-points.test.ts",
 ]);
 
