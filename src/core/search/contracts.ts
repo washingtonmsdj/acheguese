@@ -7,7 +7,7 @@ import type {
 import type { TerritoryFilter } from "@/core/location/types";
 import type { Post } from "@/core/posts/types";
 import type { Professional } from "@/core/professional/types";
-import type { PublicEvent } from "@/core/verticals/events";
+import type { PublicEvent } from "@/core/community-events";
 
 export type SearchCategory =
   | "all"

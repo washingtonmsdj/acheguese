@@ -8,7 +8,7 @@ import {
   type CommunityEvent,
   type EventSortBy,
   type EventSortOrder,
-} from "@/core/verticals/events";
+} from "@/core/community-events";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import type { TerritoryFilter } from "@/core/location/types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";

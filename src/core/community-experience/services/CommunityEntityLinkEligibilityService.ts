@@ -3,7 +3,7 @@ import { ClassifiedLinkEligibilityService } from "@/core/classifieds/services";
 import { TouristPointLinkEligibilityService } from "@/core/guide/tourist-points";
 import { PostLinkEligibilityService } from "@/core/posts/services";
 import { ProfessionalLinkEligibilityService } from "@/core/professional/services";
-import { EventLinkEligibilityService } from "@/core/verticals/events";
+import { EventLinkEligibilityService } from "@/core/community-events";
 import type {
   CommunityEntityLinkRequestInput,
   CommunityEntityType,
