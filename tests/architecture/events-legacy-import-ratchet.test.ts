@@ -7,9 +7,7 @@ const srcRoot = resolve(root, "src");
 const historicalOwnerRoot = "src/core/verticals/events";
 const historicalImport = "@/core/verticals/events";
 
-const ALLOWED_HISTORICAL_EVENTS_CALLERS = new Set([
-  "src/core/community/components/page/CommunityOverviewSurface.tsx",
-]);
+const ALLOWED_HISTORICAL_EVENTS_CALLERS = new Set<string>();
 
 function collectSourceFiles(directory: string): string[] {
   const files: string[] = [];
