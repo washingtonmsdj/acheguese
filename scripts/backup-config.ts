@@ -21,8 +21,8 @@ const CONFIG_FILES = [
   'package-lock.json',
   'tsconfig.json',
   'vite.config.ts',
-  'src/config/security.config.ts',
-  'src/config/reactQuery.config.ts',
+  'src/shared/config/security.config.ts',
+  'src/shared/config/reactQuery.config.ts',
 ];
 
 const CONFIG_DIRS = [
