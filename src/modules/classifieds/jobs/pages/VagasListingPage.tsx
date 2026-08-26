@@ -21,7 +21,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useAuth } from "@/core/auth/hooks/useAuth";
-import { jobPublicRoutes } from "@/core/verticals/jobs/routes/jobPublicRoutes";
+import { jobPublicRoutes } from "@/core/work-opportunities/routes/jobPublicRoutes";
 import { useVagas } from "../hooks/useVagas";
 import { useVagasLocation } from "../hooks/useVagasLocation";
 import { VagasHeader, VagaCard, VagasFilters, VagasLoading, VagasEmpty, VagasError } from "../components";

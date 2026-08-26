@@ -28,7 +28,7 @@ import {
 } from "@/core/routing/utils/territoryUrls";
 import { useCommunityNavigationContext } from "@/core/routing/hooks/useCommunityNavigationContext";
 import { buildCommunityNavigationModuleUrls } from "@/core/routing/utils/communityNavigationContext";
-import { jobPublicRoutes } from "@/core/verticals/jobs/routes/jobPublicRoutes";
+import { jobPublicRoutes } from "@/core/work-opportunities/routes/jobPublicRoutes";
 import { TERRITORY_CONFIG } from "@/config/territory";
 import { VagasPublicLayout } from "./VagasPublicLayout";
 import { VagasHeader } from "../components";

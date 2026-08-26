@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import type { Tables, TablesUpdate } from "@/integrations/supabase";
-import { VagaPublicationDistributionService } from "@/core/verticals/jobs/services/VagaPublicationDistributionService";
+import { VagaPublicationDistributionService } from "@/core/work-opportunities/services/VagaPublicationDistributionService";
 import { logger } from "@/shared/utils/logger";
 import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
 
