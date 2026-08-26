@@ -6,6 +6,7 @@
  *   - Sempre filtrar por entity_family + vertical
  *   - Retornar apenas itens published
  *   - Incluir políticas de entitlement e pricing
+ *   - Identificadores Stripe permanecem server-only
  *
  * FASE: 3 - Services e Contratos
  * REFERÊNCIA: F3_SERVICES_RESTANTES.md
@@ -84,7 +85,6 @@ export interface CatalogItem {
     price_cents: number;
     currency: string;
     billing_period: string;
-    stripe_price_id: string;
   };
 }
 
@@ -188,8 +188,7 @@ export class CatalogService {
           catalog_pricing_policy (
             price_cents,
             currency,
-            billing_period,
-            stripe_price_id
+            billing_period
           )
         `)
         .eq('entity_family', context.entity_family)
@@ -261,8 +260,7 @@ export class CatalogService {
           catalog_pricing_policy (
             price_cents,
             currency,
-            billing_period,
-            stripe_price_id
+            billing_period
           )
         `)
         .eq('item_code', planCode)
@@ -320,8 +318,7 @@ export class CatalogService {
           catalog_pricing_policy (
             price_cents,
             currency,
-            billing_period,
-            stripe_price_id
+            billing_period
           )
         `)
         .eq('item_type', 'addon')
