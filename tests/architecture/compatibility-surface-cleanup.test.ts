@@ -26,25 +26,17 @@ describe('compatibility surface cleanup', () => {
     const canonical = read(
       'src/core/community-events/services/EventEngagementService.ts',
     );
-    const historicalBridge = read(
-      'src/core/verticals/events/services/EventEngagementService.ts',
-    );
     const moduleBridge = read(
       'src/modules/community-events/services/EventEngagementService.ts',
     );
-    const eventsBarrel = read('src/core/verticals/events/index.ts');
 
+    expect(exists('src/core/verticals/events')).toBe(false);
     expect(canonical).toContain('from "@/integrations/supabase"');
     expect(canonical).toContain('export class EventEngagementService');
-    expect(historicalBridge).toContain(
-      '@/core/community-events/services/EventEngagementService',
-    );
     expect(moduleBridge).toContain(
       '@/core/community-events/services/EventEngagementService',
     );
-    expect(historicalBridge).not.toContain('@/integrations/supabase');
     expect(moduleBridge).not.toContain('@/integrations/supabase');
-    expect(eventsBarrel).toContain('@/core/community-events');
   });
 
   it('removes deprecated APIs and unconsumed duplicate types', () => {
