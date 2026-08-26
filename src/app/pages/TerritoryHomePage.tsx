@@ -55,8 +55,8 @@ import {
 } from "@/core/routing/utils/territoryUrls";
 import { useSessionContext } from "@/core/session";
 import type { TerritorialHighlight } from "@/core/territorial/highlights/types";
-import type { PublicEvent } from "@/core/verticals/events";
-import { eventPublicRoutes } from "@/core/verticals/events/routes/eventPublicRoutes";
+import type { PublicEvent } from "@/core/community-events";
+import { eventPublicRoutes } from "@/core/community-events/routes/eventPublicRoutes";
 import type { WorkOpportunityCard } from "@/core/work-opportunities/types";
 import { cn } from "@/shared/utils/cn";
 
