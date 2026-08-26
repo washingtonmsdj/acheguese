@@ -15,6 +15,8 @@ describe('compatibility surface cleanup', () => {
 
     expect(exists('src/modules/community-alerts')).toBe(false);
     expect(communityValidator).not.toContain('CORE_COMMUNITY_IMPORT_ALLOWLIST');
+    expect(communityValidator).toContain('LEGACY_TRANSVERSAL_MIGRATION_ROOTS');
+    expect(communityValidator).toContain('"src/features/events"');
     expect(taxonomyValidator).not.toContain('DEPRECATED_COMPAT_MODULE_ROOTS');
     expect(taxonomyValidator).not.toContain('CORE_TO_MODULE_IMPORT_ALLOWLIST');
     expect(taxonomyValidator).toContain('"community-alerts",');

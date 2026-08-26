@@ -14,6 +14,8 @@ const TRANSVERSAL_MODULES = [
   "community-lost-found",
 ] as const;
 
+const LEGACY_TRANSVERSAL_MIGRATION_ROOTS = ["src/features/events"] as const;
+
 const CORE_DOMAIN_PATHS = [
   "src/core/community-feed",
   "src/core/community/alerts",
@@ -59,6 +61,43 @@ function walk(dir: string): string[] {
   return files;
 }
 
+function validateModuleCompatibleRoot(
+  relativeRoot: string,
+  violations: string[],
+): void {
+  const fullRoot = path.join(ROOT, relativeRoot);
+  if (!fs.existsSync(fullRoot)) return;
+
+  for (const filePath of walk(fullRoot)) {
+    const relative = normalize(path.relative(ROOT, filePath));
+    const content = fs.readFileSync(filePath, "utf8");
+
+    for (const match of content.matchAll(MODULE_IMPORT_RE)) {
+      violations.push(
+        `${relative}: modulo transversal nao pode importar outro modulo (${match[1]}). Use core/*.`,
+      );
+    }
+
+    for (const match of content.matchAll(DYNAMIC_MODULE_IMPORT_RE)) {
+      violations.push(
+        `${relative}: modulo transversal nao pode importar dinamicamente outro modulo (${match[1]}). Use core/*.`,
+      );
+    }
+
+    if (DIRECT_DB_RE.test(content)) {
+      violations.push(
+        `${relative}: modulo transversal nao pode acessar Supabase direto. Use service/repository em core.`,
+      );
+    }
+
+    if (CORE_COMMUNITY_LEGACY_IMPORT_RE.test(content)) {
+      violations.push(
+        `${relative}: modulo transversal nao deve importar @/core/community/*. Use core/community-* ou outro owner canonico.`,
+      );
+    }
+  }
+}
+
 function main() {
   const violations: string[] = [];
 
@@ -70,40 +109,21 @@ function main() {
   }
 
   for (const moduleName of TRANSVERSAL_MODULES) {
-    const moduleRoot = path.join(ROOT, "src", "modules", moduleName);
-    if (!fs.existsSync(moduleRoot)) {
-      violations.push(`Modulo transversal ausente: src/modules/${moduleName}`);
+    const moduleRoot = `src/modules/${moduleName}`;
+    if (!fs.existsSync(path.join(ROOT, moduleRoot))) {
+      violations.push(`Modulo transversal ausente: ${moduleRoot}`);
       continue;
     }
 
-    for (const filePath of walk(moduleRoot)) {
-      const relative = normalize(path.relative(ROOT, filePath));
-      const content = fs.readFileSync(filePath, "utf8");
+    validateModuleCompatibleRoot(moduleRoot, violations);
+  }
 
-      for (const match of content.matchAll(MODULE_IMPORT_RE)) {
-        violations.push(
-          `${relative}: modulo transversal nao pode importar outro modulo (${match[1]}). Use core/*.`,
-        );
-      }
-
-      for (const match of content.matchAll(DYNAMIC_MODULE_IMPORT_RE)) {
-        violations.push(
-          `${relative}: modulo transversal nao pode importar dinamicamente outro modulo (${match[1]}). Use core/*.`,
-        );
-      }
-
-      if (DIRECT_DB_RE.test(content)) {
-        violations.push(
-          `${relative}: modulo transversal nao pode acessar Supabase direto. Use service/repository em core.`,
-        );
-      }
-
-      if (CORE_COMMUNITY_LEGACY_IMPORT_RE.test(content)) {
-        violations.push(
-          `${relative}: modulo transversal nao deve importar @/core/community/*. Use core/community-* ou outro owner canonico.`,
-        );
-      }
-    }
+  // Ratchet de migracao: enquanto um bounded context ainda estiver em namespace
+  // legado, ele precisa obedecer antecipadamente as mesmas regras do destino em
+  // src/modules. Quando a pasta legado desaparecer, este check vira no-op e pode
+  // ser removido junto com a conclusao da migracao.
+  for (const legacyRoot of LEGACY_TRANSVERSAL_MIGRATION_ROOTS) {
+    validateModuleCompatibleRoot(legacyRoot, violations);
   }
 
   const scanRoots = ["src/app", "src/core", "src/features", "src/shared", "tests"];

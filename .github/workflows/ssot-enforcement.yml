@@ -54,6 +54,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate community module boundaries
+        run: npm run validate:architecture:community
+
       - name: Run ESLint Billing Rules
         run: |
           echo "🔍 Verificando conformidade SSOT com regras de billing..."
@@ -175,6 +178,7 @@ jobs:
           echo "✅ Todos os checks de SSOT Enforcement passaram!"
           echo ""
           echo "Verificações realizadas:"
+          echo "  ✅ Community module boundaries"
           echo "  ✅ ESLint billing rules"
           echo "  ✅ Testes de contrato"
           echo "  ✅ PLANS hardcoded"
