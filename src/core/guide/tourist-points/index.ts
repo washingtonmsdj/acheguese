@@ -12,3 +12,5 @@ export {
   useNearbyTouristPoints,
 } from './hooks/useTouristPoints';
 export { TouristPointsMap } from './components/TouristPointsMap';
+export * from './routes/touristPointPublicRoutes';
+export * from './routes/useTouristPointPublicUrls';
