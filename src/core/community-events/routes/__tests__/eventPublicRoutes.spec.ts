@@ -4,7 +4,7 @@ import {
   EVENT_PUBLIC_ROUTE_PARAMS,
   eventPublicRoutes,
   eventTerritorialRoutePaths,
-} from "@/core/verticals/events/routes/eventPublicRoutes";
+} from "@/core/community-events/routes/eventPublicRoutes";
 
 describe("eventPublicRoutes", () => {
   it("builds legacy public event utility routes from module slug SSOT", () => {
