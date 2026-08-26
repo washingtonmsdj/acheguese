@@ -18,13 +18,16 @@ const ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES = new Set([
   "src/modules/business/gastronomy/services/favorites.queries.ts",
   "src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts",
   "src/modules/business/gastronomy/services/menu.queries.ts",
-  "src/modules/business/gastronomy/services/review.queries.ts",
 ]);
 
 const REQUIRED_CORE_BRIDGES = new Map([
   [
     "src/modules/business/gastronomy/services/gastronomy.queries.ts",
     "@/core/business/services/gastronomy.queries",
+  ],
+  [
+    "src/modules/business/gastronomy/services/review.queries.ts",
+    "@/core/business/services/gastronomy.review.queries",
   ],
 ]);
 
@@ -129,7 +132,7 @@ function main(): void {
   }
 
   console.log(
-    `Gastronomy module boundary valid: ${actualDirectRuntimeIntegrationFiles.size} known runtime integration files frozen for migration; type-only integration imports are not counted as runtime debt.`,
+    `Gastronomy module boundary valid: ${actualDirectRuntimeIntegrationFiles.size} known runtime integration files frozen for migration; canonical bridges enforced; type-only integration imports are not counted as runtime debt.`,
   );
 }
 

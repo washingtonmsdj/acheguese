@@ -29,7 +29,8 @@ O fluxo existente cobre cadastro gastronômico, cardápio, carrinho, checkout, p
 ## Fonte de verdade e fronteiras
 
 - Leituras compartilhadas de negócios gastronômicos pertencem a `src/core/business/services/gastronomy.queries.ts`.
-- `src/modules/business/gastronomy/services/gastronomy.queries.ts` é apenas bridge one-way de compatibilidade para o read model de `core`.
+- `src/modules/business/gastronomy/services/gastronomy.queries.ts` é bridge one-way de compatibilidade para o read model de `core`.
+- Queries de reviews de Gastronomy pertencem a `src/core/business/services/gastronomy.review.queries.ts`; o path antigo no módulo é bridge one-way.
 - Writes compartilhados de perfil gastronômico já possuem owner em `src/core/business/services/gastronomy.mutations.ts`.
 - `MenuService` e `menu.queries.ts` ainda concentram cardápio no módulo durante a consolidação.
 - `GastronomyCheckoutService` e `useGastronomyCheckout` concentram criação de pedido.
@@ -38,7 +39,7 @@ O fluxo existente cobre cadastro gastronômico, cardápio, carrinho, checkout, p
 
 ## Dívida arquitetural congelada
 
-O baseline atual possui **10 arquivos runtime** em `src/modules/business/gastronomy` que ainda importam `@/integrations/*` diretamente. `scripts/validate-gastronomy-module-boundaries.ts` congela exatamente esse conjunto e impede crescimento:
+O baseline atual possui **9 arquivos runtime** em `src/modules/business/gastronomy` que ainda importam `@/integrations/*` diretamente. `scripts/validate-gastronomy-module-boundaries.ts` congela exatamente esse conjunto e impede crescimento:
 
 - `niches/pizzaria/PizzaAdminService.ts`
 - `niches/versioning/NicheVersioningService.ts`
@@ -49,11 +50,12 @@ O baseline atual possui **10 arquivos runtime** em `src/modules/business/gastron
 - `services/favorites.queries.ts`
 - `services/gastronomy-runtime.queries.ts`
 - `services/menu.queries.ts`
-- `services/review.queries.ts`
+
+`services/review.queries.ts` já foi retirado da dívida runtime e agora é apenas bridge para `core`.
 
 Imports estritamente `type` de contratos gerados não são contados como acesso runtime. Testes também não compõem o baseline runtime.
 
-A allowlist é um **ratchet temporário**, não uma permissão permanente: cada arquivo migrado para um owner `core` deve ser removido da allowlist no mesmo commit. Adicionar um 11º arquivo runtime é regressão arquitetural.
+A allowlist é um **ratchet temporário**, não uma permissão permanente: cada arquivo migrado para um owner `core` deve ser removido da allowlist no mesmo commit. Adicionar um 10º arquivo runtime é regressão arquitetural.
 
 ## Critério para certificação MVP
 
