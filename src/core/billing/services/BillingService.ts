@@ -12,7 +12,7 @@
 
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
-import { SECURITY_DOMAINS } from '@/config/security.config';
+import { SECURITY_DOMAINS } from '@/shared/config/security.config';
 import {
   getAllowedRedirectOriginsFromEnv,
   navigateToSafeRedirect,
