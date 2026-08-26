@@ -30,7 +30,7 @@ export function validateTurnstileCspContract({
 
   if (deployedCsp !== ssotCsp) {
     errors.push(
-      "CSP de vercel.json diverge do SSOT src/config/security.config.ts",
+      "CSP de vercel.json diverge do SSOT src/shared/config/security.config.ts",
     );
   }
 
