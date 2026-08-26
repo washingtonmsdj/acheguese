@@ -1,6 +1,6 @@
 import type { Post } from "@/core/posts/types";
 import { hasTechnicalSeedMarker } from "@/core/posts/utils/publicPostContent";
-import type { PublicEvent } from "@/core/verticals/events";
+import type { PublicEvent } from "@/core/community-events";
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;

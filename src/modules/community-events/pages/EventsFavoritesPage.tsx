@@ -16,7 +16,7 @@ import { Heart, Home, Sparkles, Trash2 } from 'lucide-react';
 import { EventCard } from '../components/EventCard';
 import { Button } from '@/shared/components/ui/button';
 import { useFavorites } from '../hooks/useFavorites';
-import { eventRuntimeService } from '@/core/verticals/events';
+import { eventRuntimeService } from '@/core/community-events';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';

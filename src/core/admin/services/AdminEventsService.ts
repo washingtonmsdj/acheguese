@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase";
 import type { Tables } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { buildSafeILikePattern } from "@/shared/utils/sqlSanitization";
-import { eventMutationService } from "@/core/verticals/events";
+import { eventMutationService } from "@/core/community-events";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 

@@ -5,7 +5,7 @@ import type { CommunitySearchResult } from "@/core/community-experience/types";
 import type { Post } from "@/core/posts/types";
 import type { Professional } from "@/core/professional/types";
 import { buildCommunityPortalUrl } from "@/core/routing/policies";
-import type { PublicEvent } from "@/core/verticals/events";
+import type { PublicEvent } from "@/core/community-events";
 import type { SearchDocument } from "./SearchService";
 
 export type ProfessionalSearchDocumentInput = Professional & {
