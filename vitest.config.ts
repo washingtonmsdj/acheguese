@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => ({
   test: {
     globals: true,
     environment: "jsdom",
-    setupFiles: ["./src/test/setup.ts"],
+    setupFiles: ["./tests/setup.ts"],
     // Suite operacional compartilha fixtures remotas e não é segura em paralelo por arquivo.
     fileParallelism: false,
     testTimeout: 120000, // 2 minutos para testes operacionais (Gate 6/7 com auto-dispatch)
@@ -40,7 +40,7 @@ export default defineConfig(({ mode }) => ({
       reporter: ["text", "json", "html"],
       exclude: [
         "node_modules/",
-        "src/test/",
+        "tests/setup.ts",
         "**/*.d.ts",
         "**/*.config.*",
         "**/dist/**",
