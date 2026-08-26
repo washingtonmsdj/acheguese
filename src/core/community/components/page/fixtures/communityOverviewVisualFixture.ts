@@ -10,7 +10,7 @@ import type {
   FeaturedClassified,
   FeaturedService,
 } from "@/core/landing/services/LandingFeaturedService";
-import type { PublicEvent } from "@/core/verticals/events";
+import type { PublicEvent } from "@/core/community-events";
 
 export const COMMUNITY_OVERVIEW_VISUAL_MOCK_QUERY_VALUE = "community-concept";
 
