@@ -2,7 +2,6 @@
  * Business services exports.
  */
 
-
 // Gastronomy queries
 export {
   getGastronomyProfile,
@@ -14,7 +13,13 @@ export {
   hasGastronomyProfile,
 } from "./gastronomy.queries";
 
-// Gastronomy mutations
+// Canonical Gastronomy profile writer/facade
+export {
+  GastronomyProfileService,
+  type ServiceResult as GastronomyProfileServiceResult,
+} from "./GastronomyProfileService";
+
+// Compatibility mutation API; delegates to GastronomyProfileService.
 export {
   createGastronomyProfile,
   updateGastronomyProfile,
