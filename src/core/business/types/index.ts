@@ -213,6 +213,7 @@ export interface Product {
 export interface ProductRecord {
   id: string;
   profile_id: string;
+  user_id: string;
   nome: string;
   descricao?: string;
   preco?: number;
@@ -280,3 +281,30 @@ export type {
   TerritorySlugParams,
   PaginatedGastronomyBusinesses,
 } from "./gastronomy";
+
+export type {
+  Menu,
+  MenuCategory,
+  MenuItem,
+  MenuItemVariant,
+  MenuItemAddon,
+  MenuItemAvailability,
+  DiscountType,
+  MenuPromotion,
+  MenuItemWithRelations,
+  MenuWithCategories,
+  PublicGastronomyFoodItem,
+  CreateMenuInput,
+  UpdateMenuInput,
+  CreateMenuCategoryInput,
+  UpdateMenuCategoryInput,
+  CreateMenuItemInput,
+  UpdateMenuItemInput,
+  CreateMenuItemVariantInput,
+  UpdateMenuItemVariantInput,
+  CreateMenuItemAddonInput,
+  UpdateMenuItemAddonInput,
+  CreateMenuPromotionInput,
+  UpdateMenuPromotionInput,
+  MenuItemFilters,
+} from "./gastronomyMenu";
