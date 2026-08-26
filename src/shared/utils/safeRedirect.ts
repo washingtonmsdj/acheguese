@@ -1,4 +1,4 @@
-import { INPUT_VALIDATION } from '@/config/security.config';
+import { INPUT_VALIDATION } from '@/shared/config/security.config';
 import { logger } from '@/shared/utils/logger';
 import { getRecordValue } from '@/shared/utils/recordLookup';
 
