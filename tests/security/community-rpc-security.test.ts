@@ -21,7 +21,7 @@ describe("community content rpc broker security", () => {
       "src/core/community/services/CommunityRpcService.ts",
     );
     const eventService = readProjectFile(
-      "src/core/verticals/events/services/EventMutationService.ts",
+      "src/core/community-events/services/EventMutationService.ts",
     );
     const alertService = readProjectFile(
       "src/core/community/alerts/services/CommunityAlertService.ts",
