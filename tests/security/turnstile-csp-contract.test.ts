@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   SECURITY_DOMAINS,
   TURNSTILE_CLIENT_CONFIG,
-} from "../../src/config/security.config";
+} from "../../src/shared/config/security.config";
 import {
   parseCsp,
   validateTurnstileCspContract,
@@ -15,7 +15,7 @@ import {
 const root = process.cwd();
 const turnstileOrigin = SECURITY_DOMAINS.CLOUDFLARE_TURNSTILE.url;
 const canonicalWidgetSource = `
-  import { TURNSTILE_CLIENT_CONFIG } from "@/config/security.config";
+  import { TURNSTILE_CLIENT_CONFIG } from "@/shared/config/security.config";
   const scriptUrl = TURNSTILE_CLIENT_CONFIG.scriptUrl;
 `;
 const canonicalCsp =
@@ -98,7 +98,7 @@ describe("Cloudflare Turnstile CSP contract", () => {
         contractInput({ deployedCsp: `${canonicalCsp} report-uri /csp;` }),
       ),
     ).toContain(
-      "CSP de vercel.json diverge do SSOT src/config/security.config.ts",
+      "CSP de vercel.json diverge do SSOT src/shared/config/security.config.ts",
     );
   });
 
