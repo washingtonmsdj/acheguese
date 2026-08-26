@@ -19,7 +19,6 @@ const CONFIG_BRIDGES = new Map([
   ["src/config/launchScope.ts", "@/app/config/launchScope"],
   ["src/config/territory.ts", "@/app/config/territory"],
   ["src/config/communityLaunch.ts", "@/core/community/config/communityLaunch"],
-  ["src/config/categories.ts", "@/core/taxonomy/categories"],
 ] as const);
 
 const CANONICAL_CONFIG_TARGETS = [
@@ -123,7 +122,6 @@ describe("global repository reorganization contract", () => {
 
   it("freezes src/config to the remaining compatibility bridges only", () => {
     expect(listFiles("src/config")).toEqual([
-      "categories.ts",
       "communityLaunch.ts",
       "launchScope.ts",
       "moduleSlugs.ts",
