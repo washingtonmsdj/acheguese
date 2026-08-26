@@ -4,7 +4,7 @@ Esta pasta contém arquivos com **violações intencionais** da arquitetura de m
 
 ## ⚠️ IMPORTANTE
 
-Estes arquivos **devem falhar** no lint. Eles existem para garantir que:
+Estes arquivos **devem falhar** no lint quando executados explicitamente pelo validator. Eles existem para garantir que:
 
 1. O plugin ESLint customizado está detectando violações
 2. As regras de blindagem estão ativas
@@ -17,9 +17,9 @@ Testa a detecção de importação direta de providers.
 
 **Violação esperada**: `maps/no-direct-provider-import`
 
-**Mensagem esperada**: 
-```
-❌ MAPS BLINDAGEM: Não importe '@/integrations/maps/providers/OSMTileProvider' 
+**Mensagem esperada**:
+```text
+❌ MAPS BLINDAGEM: Não importe '@/integrations/maps/providers/OSMTileProvider'
 diretamente. Use providerRegistry de '@/core/maps'
 ```
 
@@ -29,8 +29,8 @@ Testa a detecção de importação cross-layer (modules → integrations/maps).
 **Violação esperada**: `maps/no-cross-layer-import`
 
 **Mensagem esperada**:
-```
-❌ MAPS BLINDAGEM: Modules não podem importar de integrations/maps. 
+```text
+❌ MAPS BLINDAGEM: Modules não podem importar de integrations/maps.
 Use '@/core/maps'
 ```
 
@@ -43,27 +43,20 @@ npm run validate:maps
 ```
 
 Este script:
-1. Valida lint do módulo maps (deve passar)
-2. Executa testes do módulo maps (deve passar)
-3. Valida que violações intencionais são detectadas (deve falhar corretamente)
+1. Valida lint do módulo maps
+2. Executa testes do módulo maps
+3. Executa estes fixtures com `eslint --no-ignore` e confirma que as violações intencionais são detectadas
 
-## Configuração
+## Owner arquitetural
 
-Estes arquivos são **ignorados** no lint normal via `eslint.config.js`:
+Estes arquivos pertencem a `tests/architecture/maps-architecture-validation/` porque são fixtures de validação arquitetural global, e não source de aplicação.
 
-```javascript
-ignores: [
-  // ...
-  "src/__tests__/maps-architecture-validation/**/*.ts",
-]
-```
-
-Isso evita poluir o lint geral do repositório com violações intencionais.
+O lint normal já ignora `tests/**/*.ts`; o validator usa `--no-ignore` para executar explicitamente os fixtures de violação.
 
 ## Manutenção
 
 Se adicionar novas regras de blindagem:
 
-1. Crie um arquivo de teste de violação aqui
-2. Adicione validação no script `validate-maps-architecture.mjs`
+1. Crie um fixture de violação nesta pasta
+2. Adicione a validação em `scripts/validate-maps-architecture.mjs`
 3. Documente a violação esperada neste README
