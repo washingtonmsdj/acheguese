@@ -5,9 +5,9 @@
  */
 
 import { logger } from "@/shared/utils/logger";
-import { supabase } from "@/integrations/supabase";
 import { BusinessReviewService } from "@/core/business/services/BusinessReviewService";
 import { ReviewEngagementService } from "@/core/reviews/services/ReviewEngagementService";
+import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 
 // Read shape exposed by the business review projection.
 
@@ -70,22 +70,35 @@ export class ReviewQueryService {
     offset?: number;
   }): Promise<Review[]> {
     try {
-      const { data, error } = await supabase.rpc("get_business_reviews", {
-        p_business_profile_id: params.businessProfileId,
-        p_limit: params.limit ?? 20,
-        p_offset: params.offset ?? 0,
-      });
+      const limit = Math.min(Math.max(Math.trunc(params.limit ?? 20), 1), 100);
+      const offset = Math.max(Math.trunc(params.offset ?? 0), 0);
+      const fetchLimit = Math.min(limit + offset, 100);
+      const reviews = await ReviewsService.getReviewsForProfile(
+        params.businessProfileId,
+        "business",
+        fetchLimit,
+      );
 
-      if (error) {
-        logger.error("Failed to fetch business reviews", error, {
-          businessProfileId: params.businessProfileId,
-        });
-        throw error;
-      }
-
-      return data || [];
+      return reviews.slice(offset, offset + limit).map((review) => ({
+        id: review.id,
+        reviewer_profile_id: review.reviewer_profile_id,
+        reviewer_name: review.reviewer_profile?.name || "Usuário",
+        reviewer_avatar: review.reviewer_profile?.avatar_url ?? null,
+        rating: review.rating,
+        comment: review.comment,
+        photos: review.photos,
+        business_response: review.business_response,
+        business_response_at: review.business_response_at,
+        order_id: review.order_id,
+        helpful_count: review.helpful_count,
+        not_helpful_count: review.not_helpful_count,
+        created_at: review.created_at,
+        is_verified: review.order_id !== null,
+      }));
     } catch (error) {
-      logger.error("Error in getBusinessReviews", error);
+      logger.error("Error in getBusinessReviews", error, {
+        businessProfileId: params.businessProfileId,
+      });
       throw error;
     }
   }
@@ -231,61 +244,20 @@ export class ReviewQueryService {
     distribution: Record<number, number>;
   }> {
     try {
-      const { data, error } = await supabase.rpc("get_business_reviews", {
-        p_business_profile_id: businessProfileId,
-        p_limit: 500,
-        p_offset: 0,
-      });
-
-      if (error) {
-        logger.error("Failed to get review stats", error, {
-          businessProfileId,
-        });
-        throw error;
-      }
-
-      const reviews = Array.isArray(data) ? data : [];
-      const total = reviews.length;
-
-      if (total === 0) {
-        return {
-          total: 0,
-          average: 0,
-          distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-        };
-      }
-
-      const sum = reviews.reduce((acc, r) => {
-        const rating = Number(r?.rating ?? 0);
-        return acc + (Number.isFinite(rating) ? rating : 0);
-      }, 0);
-      const average = sum / total;
-
-      const distribution = reviews.reduce((acc, r) => {
-        const rating = Number(r?.rating ?? 0);
-        const normalizedRating = Math.max(1, Math.min(5, Math.round(rating)));
-        const currentCount = acc.get(normalizedRating) ?? 0;
-        acc.set(normalizedRating, currentCount + 1);
-        return acc;
-      }, new Map<number, number>());
-
-      //  Garantir que todas as estrelas estejam no objeto
-      for (let i = 1; i <= 5; i++) {
-        if (!distribution.has(i)) {
-          distribution.set(i, 0);
-        }
-      }
+      const stats = await ReviewsService.getReviewStats(
+        businessProfileId,
+        "business",
+      );
 
       return {
-        total,
-        average,
-        distribution: Object.fromEntries(distribution.entries()) as Record<
-          number,
-          number
-        >,
+        total: stats.total,
+        average: stats.average,
+        distribution: stats.distribution,
       };
     } catch (error) {
-      logger.error("Error in getBusinessReviewStats", error);
+      logger.error("Error in getBusinessReviewStats", error, {
+        businessProfileId,
+      });
       throw error;
     }
   }
