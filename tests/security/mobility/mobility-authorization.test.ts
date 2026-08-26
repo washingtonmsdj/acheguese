@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { MotoboyAuthorizationService } from '../src/core/mobility/services/MotoboyAuthorizationService';
+import { MotoboyAuthorizationService } from '@/core/mobility/services/MotoboyAuthorizationService';
 
 // Mock do Supabase com chain completo
 const mockSupabaseQuery = {
@@ -16,13 +16,13 @@ const mockSupabaseQuery = {
   single: vi.fn(() => Promise.resolve({ data: { id: 'profile-123' }, error: null })),
 };
 
-vi.mock('../src/integrations/supabase', () => ({
+vi.mock('@/integrations/supabase', () => ({
   supabase: {
     from: vi.fn(() => mockSupabaseQuery),
   },
 }));
 
-vi.mock('../src/core/profiles/services/ProfileService', () => ({
+vi.mock('@/core/profiles/services/ProfileService', () => ({
   profileService: {
     getProfileById: vi.fn(() => Promise.resolve({ id: 'profile-123', is_suspended: false })),
     getProfileByType: vi.fn(() => Promise.resolve({ id: 'profile-123', is_suspended: false })),
@@ -32,7 +32,7 @@ vi.mock('../src/core/profiles/services/ProfileService', () => ({
 }));
 
 // Mock do MobilityRolloutService
-vi.mock('../src/core/mobility/services/MobilityRolloutService', () => ({
+vi.mock('@/core/mobility/services/MobilityRolloutService', () => ({
   mobilityRolloutService: {
     isMobilityActive: vi.fn(() => Promise.resolve(true)),
     isMotoboyEnabled: vi.fn(() => Promise.resolve(true)),
@@ -40,7 +40,7 @@ vi.mock('../src/core/mobility/services/MobilityRolloutService', () => ({
 }));
 
 // Mock do EntitlementsService
-vi.mock('../src/core/billing/entitlements', () => ({
+vi.mock('@/core/billing/entitlements', () => ({
   EntitlementsService: {
     canUseMotoboyNetwork: vi.fn((planTier: string) => {
       return ['business', 'gastronomy', 'premium'].includes(planTier);
@@ -148,7 +148,7 @@ describe('MotoboyAuthorizationService', () => {
 
   describe('canRequestDelivery - Rollout', () => {
     it('deve negar quando mobilidade desabilitada', async () => {
-      const { mobilityRolloutService } = await import('../src/core/mobility/services/MobilityRolloutService');
+      const { mobilityRolloutService } = await import('@/core/mobility/services/MobilityRolloutService');
       vi.mocked(mobilityRolloutService.isMobilityActive).mockResolvedValueOnce(false);
 
       const result = await MotoboyAuthorizationService.canRequestDelivery({
@@ -162,7 +162,7 @@ describe('MotoboyAuthorizationService', () => {
     });
 
     it('deve negar quando modo motoboy desabilitado', async () => {
-      const { mobilityRolloutService } = await import('../src/core/mobility/services/MobilityRolloutService');
+      const { mobilityRolloutService } = await import('@/core/mobility/services/MobilityRolloutService');
       vi.mocked(mobilityRolloutService.isMotoboyEnabled).mockResolvedValueOnce(false);
 
       const result = await MotoboyAuthorizationService.canRequestDelivery({
