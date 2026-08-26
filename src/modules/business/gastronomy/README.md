@@ -29,31 +29,29 @@ O fluxo existente cobre cadastro gastronômico, cardápio, carrinho, checkout, p
 ## Fonte de verdade e fronteiras
 
 - Leituras compartilhadas de negócios gastronômicos pertencem a `src/core/business/services/gastronomy.queries.ts`.
-- `src/modules/business/gastronomy/services/gastronomy.queries.ts` é bridge one-way de compatibilidade para o read model de `core`.
-- Queries de reviews pertencem a `src/core/business/services/gastronomy.review.queries.ts`.
-- Queries de favoritos pertencem a `src/core/business/services/gastronomy.favorites.queries.ts`.
+- Queries de reviews e favoritos pertencem aos owners `src/core/business/services/gastronomy.review.queries.ts` e `gastronomy.favorites.queries.ts`.
 - Áreas de entrega pertencem a `src/core/business/services/GastronomyDeliveryAreaService.ts`.
+- Resolução de identificador gastronômico pertence a `src/core/business/services/resolveGastronomyBusinessId.ts`.
+- Métricas/leituras runtime auxiliares pertencem a `src/core/business/services/gastronomy-runtime.queries.ts`.
 - Os antigos paths correspondentes no módulo são bridges one-way.
 - Writes compartilhados de perfil gastronômico já possuem owner em `src/core/business/services/gastronomy.mutations.ts`.
 - `MenuService` e `menu.queries.ts` ainda concentram cardápio no módulo durante a consolidação.
 - `GastronomyCheckoutService` e `useGastronomyCheckout` concentram criação de pedido.
-- `OrderDeliverySSOTService` e `ride_requests` concentram o elo pedido/entrega quando houver integração operacional explícita.
 
 ## Dívida arquitetural congelada
 
-O baseline atual possui **7 arquivos runtime** em `src/modules/business/gastronomy` que ainda importam `@/integrations/*` diretamente. `scripts/validate-gastronomy-module-boundaries.ts` congela exatamente esse conjunto:
+O baseline atual possui **6 arquivos runtime** em `src/modules/business/gastronomy` que ainda importam `@/integrations/*` diretamente. `scripts/validate-gastronomy-module-boundaries.ts` congela exatamente esse conjunto:
 
 - `niches/pizzaria/PizzaAdminService.ts`
 - `niches/versioning/NicheVersioningService.ts`
 - `services/GastronomyProfileService.ts`
 - `services/MenuService.ts`
 - `services/activity.queries.ts`
-- `services/gastronomy-runtime.queries.ts`
 - `services/menu.queries.ts`
 
 Imports estritamente `type` de contratos gerados não são contados como acesso runtime. Testes também não compõem o baseline runtime.
 
-A allowlist é um **ratchet temporário**, não uma permissão permanente: cada arquivo migrado para um owner `core` deve ser removido da allowlist no mesmo commit. Adicionar um 8º arquivo runtime é regressão arquitetural.
+A allowlist é um **ratchet temporário**, não uma permissão permanente: cada arquivo migrado para um owner `core` deve ser removido da allowlist no mesmo commit. Adicionar um 7º arquivo runtime é regressão arquitetural.
 
 ## Critério para certificação MVP
 
