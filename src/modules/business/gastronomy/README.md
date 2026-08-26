@@ -32,7 +32,8 @@ O fluxo existente cobre cadastro gastronômico, cardápio, carrinho, checkout, p
 - `src/modules/business/gastronomy/services/gastronomy.queries.ts` é bridge one-way de compatibilidade para o read model de `core`.
 - Queries de reviews pertencem a `src/core/business/services/gastronomy.review.queries.ts`.
 - Queries de favoritos pertencem a `src/core/business/services/gastronomy.favorites.queries.ts`.
-- Os antigos paths `services/review.queries.ts` e `services/favorites.queries.ts` no módulo são bridges one-way.
+- Áreas de entrega pertencem a `src/core/business/services/GastronomyDeliveryAreaService.ts`.
+- Os antigos paths correspondentes no módulo são bridges one-way.
 - Writes compartilhados de perfil gastronômico já possuem owner em `src/core/business/services/gastronomy.mutations.ts`.
 - `MenuService` e `menu.queries.ts` ainda concentram cardápio no módulo durante a consolidação.
 - `GastronomyCheckoutService` e `useGastronomyCheckout` concentram criação de pedido.
@@ -40,11 +41,10 @@ O fluxo existente cobre cadastro gastronômico, cardápio, carrinho, checkout, p
 
 ## Dívida arquitetural congelada
 
-O baseline atual possui **8 arquivos runtime** em `src/modules/business/gastronomy` que ainda importam `@/integrations/*` diretamente. `scripts/validate-gastronomy-module-boundaries.ts` congela exatamente esse conjunto:
+O baseline atual possui **7 arquivos runtime** em `src/modules/business/gastronomy` que ainda importam `@/integrations/*` diretamente. `scripts/validate-gastronomy-module-boundaries.ts` congela exatamente esse conjunto:
 
 - `niches/pizzaria/PizzaAdminService.ts`
 - `niches/versioning/NicheVersioningService.ts`
-- `services/DeliveryAreaService.ts`
 - `services/GastronomyProfileService.ts`
 - `services/MenuService.ts`
 - `services/activity.queries.ts`
@@ -53,7 +53,7 @@ O baseline atual possui **8 arquivos runtime** em `src/modules/business/gastrono
 
 Imports estritamente `type` de contratos gerados não são contados como acesso runtime. Testes também não compõem o baseline runtime.
 
-A allowlist é um **ratchet temporário**, não uma permissão permanente: cada arquivo migrado para um owner `core` deve ser removido da allowlist no mesmo commit. Adicionar um 9º arquivo runtime é regressão arquitetural.
+A allowlist é um **ratchet temporário**, não uma permissão permanente: cada arquivo migrado para um owner `core` deve ser removido da allowlist no mesmo commit. Adicionar um 8º arquivo runtime é regressão arquitetural.
 
 ## Critério para certificação MVP
 

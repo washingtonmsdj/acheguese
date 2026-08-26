@@ -11,7 +11,6 @@ const GASTRONOMY_ROOT = "src/modules/business/gastronomy";
 const ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES = new Set([
   "src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts",
   "src/modules/business/gastronomy/niches/versioning/NicheVersioningService.ts",
-  "src/modules/business/gastronomy/services/DeliveryAreaService.ts",
   "src/modules/business/gastronomy/services/GastronomyProfileService.ts",
   "src/modules/business/gastronomy/services/MenuService.ts",
   "src/modules/business/gastronomy/services/activity.queries.ts",
@@ -20,26 +19,16 @@ const ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES = new Set([
 ]);
 
 const REQUIRED_CORE_BRIDGES = new Map([
-  [
-    "src/modules/business/gastronomy/services/gastronomy.queries.ts",
-    "@/core/business/services/gastronomy.queries",
-  ],
-  [
-    "src/modules/business/gastronomy/services/review.queries.ts",
-    "@/core/business/services/gastronomy.review.queries",
-  ],
-  [
-    "src/modules/business/gastronomy/services/favorites.queries.ts",
-    "@/core/business/services/gastronomy.favorites.queries",
-  ],
+  ["src/modules/business/gastronomy/services/gastronomy.queries.ts", "@/core/business/services/gastronomy.queries"],
+  ["src/modules/business/gastronomy/services/review.queries.ts", "@/core/business/services/gastronomy.review.queries"],
+  ["src/modules/business/gastronomy/services/favorites.queries.ts", "@/core/business/services/gastronomy.favorites.queries"],
+  ["src/modules/business/gastronomy/services/DeliveryAreaService.ts", "@/core/business/services/GastronomyDeliveryAreaService"],
 ]);
 
 const CODE_FILE_RE = /\.(ts|tsx|js|jsx)$/;
 const TYPE_ONLY_IMPORT_RE = /import\s+type\s+[\s\S]*?from\s+["'][^"']+["'];?/g;
-const DIRECT_INTEGRATION_RE =
-  /(?:from\s+["']@\/integrations\/|import\(\s*["']@\/integrations\/)/;
-const DIRECT_SUPABASE_PACKAGE_RE =
-  /(?:from\s+["']@supabase\/supabase-js["']|import\(\s*["']@supabase\/supabase-js["']\s*\))/;
+const DIRECT_INTEGRATION_RE = /(?:from\s+["']@\/integrations\/|import\(\s*["']@\/integrations\/)/;
+const DIRECT_SUPABASE_PACKAGE_RE = /(?:from\s+["']@supabase\/supabase-js["']|import\(\s*["']@supabase\/supabase-js["']\s*\))/;
 
 function normalize(filePath: string): string {
   return filePath.replace(/\\/g, "/");
@@ -47,17 +36,14 @@ function normalize(filePath: string): string {
 
 function isRuntimeCodeFile(filePath: string): boolean {
   const normalized = normalize(filePath);
-  return (
-    CODE_FILE_RE.test(normalized) &&
-    !normalized.includes("/__tests__/") &&
-    !normalized.includes(".test.") &&
-    !normalized.includes(".spec.")
-  );
+  return CODE_FILE_RE.test(normalized)
+    && !normalized.includes("/__tests__/")
+    && !normalized.includes(".test.")
+    && !normalized.includes(".spec.");
 }
 
 function walk(dir: string): string[] {
   if (!fs.existsSync(dir)) return [];
-
   const files: string[] = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const fullPath = path.join(dir, entry.name);
@@ -89,7 +75,6 @@ function main(): void {
     if (DIRECT_SUPABASE_PACKAGE_RE.test(runtimeContent)) {
       violations.push(`${relative}: direct runtime @supabase/supabase-js import is forbidden in the Gastronomy module.`);
     }
-
     if (DIRECT_INTEGRATION_RE.test(runtimeContent)) {
       actualDirectRuntimeIntegrationFiles.add(relative);
       if (!ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES.has(relative)) {
