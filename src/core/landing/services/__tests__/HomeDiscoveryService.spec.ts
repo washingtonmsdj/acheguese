@@ -71,13 +71,13 @@ vi.mock("@/core/classifieds/services", () => ({
   },
 }));
 
-vi.mock("@/core/verticals/events", () => ({
+vi.mock("@/core/community-events", () => ({
   eventsReadService: {
     getEventsPage: mocks.getEventsPage,
   },
 }));
 
-vi.mock("@/core/verticals/events/routes/eventPublicRoutes", () => ({
+vi.mock("@/core/community-events/routes/eventPublicRoutes", () => ({
   eventPublicRoutes: {
     detail: mocks.eventDetailUrl,
   },
