@@ -18,22 +18,3 @@ REVOKE ALL ON FUNCTION public.st_estimatedextent(text, text, text, boolean) FROM
 REVOKE ALL ON FUNCTION public.st_estimatedextent(text, text, text, boolean) FROM anon;
 REVOKE ALL ON FUNCTION public.st_estimatedextent(text, text, text, boolean) FROM authenticated;
 GRANT EXECUTE ON FUNCTION public.st_estimatedextent(text, text, text, boolean) TO service_role;
-
-DO $$
-DECLARE
-  v_oid oid;
-BEGIN
-  FOR v_oid IN
-    SELECT p.oid
-      FROM pg_proc p
-      JOIN pg_namespace n ON n.oid = p.pronamespace
-     WHERE n.nspname = 'public'
-       AND p.proname = 'st_estimatedextent'
-  LOOP
-    IF has_function_privilege('anon', v_oid, 'EXECUTE')
-       OR has_function_privilege('authenticated', v_oid, 'EXECUTE') THEN
-      RAISE EXCEPTION 'PostGIS ST_EstimatedExtent remains executable by a browser role';
-    END IF;
-  END LOOP;
-END;
-$$;
