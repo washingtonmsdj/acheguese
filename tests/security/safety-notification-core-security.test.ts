@@ -14,6 +14,9 @@ const migration = readProjectFile(
 const contactEmailMigration = readProjectFile(
   "supabase/migrations/20260714117000_normalize_emergency_contact_email.sql",
 );
+const contactPrivacyMigration = readProjectFile(
+  "supabase/migrations/20260826004000_restrict_emergency_contacts_to_direct_owner.sql",
+);
 const safetyService = readProjectFile(
   "src/core/safety/services/SafetyService.ts",
 );
@@ -58,6 +61,25 @@ describe("Safety Core Platform security", () => {
     expect(migration).toContain("ride.id = ride_shares.ride_id");
     expect(migration).toContain(
       "incident.reported_by = safety_evidence.uploaded_by",
+    );
+  });
+
+  it("keeps emergency-contact PII visible only to the direct profile owner", () => {
+    expect(contactPrivacyMigration).toContain(
+      "CREATE POLICY emergency_contacts_select_own",
+    );
+    expect(contactPrivacyMigration).toContain(
+      "profile.id = emergency_contacts.profile_id",
+    );
+    expect(contactPrivacyMigration).toContain(
+      "profile.user_id = (SELECT auth.uid())",
+    );
+    expect(contactPrivacyMigration).not.toContain(
+      "private.auth_can_access_profile(profile_id)",
+    );
+    expect(contactPrivacyMigration).not.toContain("profile_members");
+    expect(contactPrivacyMigration).toContain(
+      "has_table_privilege('anon', 'public.emergency_contacts', 'SELECT')",
     );
   });
 
