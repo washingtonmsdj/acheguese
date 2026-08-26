@@ -95,6 +95,18 @@ describe("Safety Core Platform security", () => {
     expect(safetyService).not.toContain("createAuditEntry");
   });
 
+  it("keeps emergency delivery logs as active server-only rate-limit and delivery state", () => {
+    const deliveryLogReferences =
+      emergencyEmailFunction.match(/\.from\('emergency_delivery_log'\)/g) ?? [];
+
+    expect(deliveryLogReferences.length).toBeGreaterThanOrEqual(4);
+    expect(emergencyEmailFunction).toContain(
+      ".select('id', { count: 'exact', head: true })",
+    );
+    expect(emergencyEmailFunction).toContain("status: 'sent'");
+    expect(emergencyEmailFunction).toContain("status: 'failed'");
+  });
+
   it("derives Safety notification recipients in the database", () => {
     expect(migration).toContain(
       "CREATE OR REPLACE FUNCTION private.enqueue_safety_notification",
