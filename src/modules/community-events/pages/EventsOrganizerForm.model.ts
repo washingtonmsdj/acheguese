@@ -1,6 +1,6 @@
 import type { EventCategory } from '../types';
 
-import type { CreateEventInput } from '@/core/verticals/events';
+import type { CreateEventInput } from '@/core/community-events';
 import type { Json } from '@/shared/types/json';
 
 export type OrganizerLocationType = 'physical' | 'online' | 'hybrid';
