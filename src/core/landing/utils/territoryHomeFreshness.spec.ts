@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Post } from "@/core/posts/types";
-import type { PublicEvent } from "@/core/verticals/events";
+import type { PublicEvent } from "@/core/community-events";
 import {
   isCurrentOrFutureEvent,
   hasTechnicalSeedLabel,

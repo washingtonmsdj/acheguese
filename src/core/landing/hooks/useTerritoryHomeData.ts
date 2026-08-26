@@ -17,7 +17,7 @@ import { postService } from "@/core/posts/services";
 import type { FeedParams } from "@/core/posts/types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { useTerritorialHighlights } from "@/core/territorial/highlights/useTerritorialHighlights";
-import { eventsReadService } from "@/core/verticals/events";
+import { eventsReadService } from "@/core/community-events";
 import { WorkOpportunitiesService } from "@/core/work-opportunities/services/WorkOpportunitiesService";
 
 const HOME_STALE_TIME = 2 * 60 * 1000;
