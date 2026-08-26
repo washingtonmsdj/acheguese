@@ -12,7 +12,7 @@ import {
   type AllowedURLProtocol,
   type BlockedImageExtension,
   type BlockedURLProtocol,
-} from '@/config/security.config';
+} from '@/shared/config/security.config';
 import { logger } from '@/shared/utils/logger';
 import { resolveMediaAssetReference } from '@/shared/media/mediaAssetReference';
 
