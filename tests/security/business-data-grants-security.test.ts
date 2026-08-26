@@ -53,6 +53,9 @@ describe("business_data grants security", () => {
     const privacyBoundary = readProjectFile(
       "supabase/migrations/20260825254000_isolate_public_business_catalog.sql",
     );
+    const readModelBoundary = readProjectFile(
+      "supabase/migrations/20260826003600_replace_public_business_search_with_read_model.sql",
+    );
     const facade = readProjectFile("src/core/business/services/BusinessService.ts");
 
     expect(privacyBoundary).toContain(
@@ -66,6 +69,43 @@ describe("business_data grants security", () => {
     expect(privacyBoundary).toContain('CREATE POLICY "business_data_private_read"');
     expect(privacyBoundary).toContain("private.auth_can_access_profile(profile_id)");
 
+    expect(readModelBoundary).toContain(
+      "DROP VIEW IF EXISTS public.public_business_search RESTRICT",
+    );
+    expect(readModelBoundary).toContain(
+      "CREATE TABLE public.public_business_search",
+    );
+    expect(readModelBoundary).toContain(
+      "ALTER TABLE public.public_business_search ENABLE ROW LEVEL SECURITY",
+    );
+    expect(readModelBoundary).toContain(
+      'CREATE POLICY "public_business_search_public_read"',
+    );
+    expect(readModelBoundary).toContain(
+      "GRANT SELECT ON TABLE public.public_business_search TO anon, authenticated, service_role",
+    );
+    expect(readModelBoundary).toContain(
+      "REVOKE ALL ON FUNCTION private.sync_public_business_search_row()",
+    );
+    expect(readModelBoundary).toContain(
+      "DROP TRIGGER IF EXISTS trg_sync_public_business_search",
+    );
+    expect(readModelBoundary).toContain(
+      "AFTER INSERT OR UPDATE OR DELETE ON public.business_data",
+    );
+    expect(readModelBoundary).toContain(
+      "FROM public.public_business_search bd",
+    );
+    expect(readModelBoundary).toContain(
+      "public snapshot functions are not invoker/read-model backed",
+    );
+    expect(readModelBoundary).not.toContain(
+      "CREATE OR REPLACE VIEW public.public_business_search",
+    );
+    expect(readModelBoundary).not.toContain(
+      "security_invoker = false",
+    );
+
     for (const publicMetadataKey of [
       "logo_url",
       "banner_url",
@@ -78,7 +118,7 @@ describe("business_data grants security", () => {
       "city",
       "state",
     ]) {
-      expect(privacyBoundary).toContain(`'${publicMetadataKey}'`);
+      expect(readModelBoundary).toContain(`'${publicMetadataKey}'`);
     }
 
     for (const privateMetadataKey of [
@@ -89,7 +129,8 @@ describe("business_data grants security", () => {
       "archived_at",
       "source_kind",
     ]) {
-      expect(privacyBoundary).not.toContain(`'${privateMetadataKey}', bd.metadata`);
+      expect(readModelBoundary).not.toContain(`'${privateMetadataKey}', NEW.metadata`);
+      expect(readModelBoundary).not.toContain(`'${privateMetadataKey}', bd.metadata`);
     }
 
     expect(facade).toContain("BusinessQueries.getBusinessesList");
