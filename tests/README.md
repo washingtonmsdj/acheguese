@@ -1,170 +1,79 @@
-# Testes Unitários
+# Testes
 
-> Testes automatizados para o Ordax
-> 
-> Cobertura atual: **110 testes** adicionados na expansão de Abril 2026
+Este diretório reúne as suítes de teste não co-localizadas do Achegue-se.
 
----
+A organização é por **responsabilidade**, não por fase histórica de implementação. Testes unitários que pertencem diretamente a um módulo/service podem continuar co-localizados em `src/**`.
 
-## Estrutura de Testes
+## Estrutura canônica
 
-```
-tests/                          # Testes de integração e E2E
-  ├── operational/              # Testes operacionais (Gate 2-7)
-  ├── e2e/                      # Testes end-to-end
-  └── legacy/                   # Testes antigos (arquivados)
-
-src/                            # Testes unitários (co-localizados)
-  ├── shared/utils/
-  │   ├── dateUtils.test.ts     # 22 testes - datas
-  │   ├── validation.test.ts    # 35 testes - validação
-  │   ├── formatters.test.ts    # 14 testes - formatação
-  │   └── currency.test.ts      # 13 testes - moeda
-  ├── core/session/services/
-  │   └── SessionService.test.ts # Testes de sessão
-  └── core/location/services/
-      └── LocationService.test.ts # 26 testes - serviço de localização
+```text
+tests/
+├── architecture/   # boundaries, SSOT, ownership e ratchets estruturais
+├── e2e/            # Playwright e contratos end-to-end versionados
+├── fixtures/       # fixtures reutilizáveis
+├── helpers/        # helpers compartilhados entre suítes
+├── integration/    # banco, Supabase e integração entre componentes/services
+├── operational/    # gates e verificações operacionais
+├── regression/     # regressões funcionais/estruturais já corrigidas
+├── scripts/        # testes de scripts e tooling
+├── security/       # autorização, LGPD, secrets e hardening
+├── setup.ts        # setup global do Vitest
+└── README.md
 ```
 
----
+## Regra para a raiz de `tests/`
 
-## Testes Criados na Expansão
+Novos arquivos `*.test.*` ou `*.spec.*` **não devem ser criados diretamente em `tests/`**.
 
-### 1. dateUtils.test.ts (22 testes)
+O guard `tests/architecture/test-root-layout-ratchet.test.ts` bloqueia novas implementações na raiz. Os poucos arquivos ainda tolerados ali são dívida histórica explícita e devem apenas diminuir.
 
-| Função | Testes |
-|--------|--------|
-| `formatRelativeTime` | 8 testes (agora, minutos, horas, dias, semanas, meses, anos) |
-| `formatTime` | 2 testes |
-| `formatShortDate` | 2 testes |
-| `formatDateTime` | 2 testes |
-| `isToday` | 3 testes |
-| `isTomorrow` | 3 testes |
-| `getDaysDifference` | 4 testes |
+Legados atualmente tolerados:
 
-### 2. validation.test.ts (35 testes)
+- `mobility-integration.test.ts` — vários imports relativos; requer normalização coordenada antes do move.
+- `posts-community-posts-ssot.test.ts` — citado pelo plano Community First ativo.
+- `public-search-route-regression.test.ts` — possui documentação/contrato de status associado.
+- `public-shell-admin-boundary-regression.test.ts` — possui documentação ativa associada.
+- `public-territorial-copy-regression.test.ts` — path consumido por comando versionado.
+- `regression-tourist-points.test.ts` — preservado até um move byte-safe do arquivo completo.
 
-| Função | Testes |
-|--------|--------|
-| `isValidEmail` | 6 testes |
-| `isValidCNPJ` | 4 testes |
-| `isValidCPF` | 4 testes |
-| `isValidPhone` | 4 testes |
-| `isValidCEP` | 3 testes |
-| `isValidUUID` | 4 testes |
-| `isValidURL` | 3 testes |
-| `isValidLength` | 4 testes |
-| `isInRange` | 4 testes |
-| `isInFuture` | 2 testes |
-| `isInPast` | 2 testes |
-| `isNotEmpty` | 2 testes |
-| `isObjectNotEmpty` | 2 testes |
+Nenhum desses arquivos deve servir como precedente para novos testes na raiz.
 
-### 3. formatters.test.ts (14 testes)
+## Convenções
 
-| Função | Testes |
-|--------|--------|
-| `getInitials` | 4 testes |
-| `getRelativeTime` | 5 testes |
-| `formatNumber` | 4 testes |
-| `truncateText` | 4 testes |
+- `architecture/`: prova regras de dependência, ownership, SSOT e ausência de superfícies legadas.
+- `integration/`: pode depender de serviços, banco ou ambiente integrado; deve deixar a dependência explícita.
+- `regression/`: protege comportamento que já quebrou ou uma dívida que já foi corrigida.
+- `security/`: protege autorização, identidade, RLS/RPC, exposição de secrets, LGPD e segurança operacional.
+- `e2e/`: fluxos end-to-end; fixtures mutáveis devem ser identificáveis como fixtures técnicas e nunca depender implicitamente de dados reais de produção.
 
-### 4. currency.test.ts (13 testes)
+Prefira imports por alias `@/` para código em `src/`. Imports relativos que dependem da profundidade física do teste dificultam reorganização e devem ser removidos progressivamente.
 
-| Função | Testes |
-|--------|--------|
-| `formatBrl` | 5 testes |
-| `formatBrlCompact` | 6 testes |
+## Execução
 
-### 5. LocationService.test.ts (26 testes)
+A autoridade dos comandos é o `package.json`. Para a suíte Vitest geral:
 
-| Método | Testes |
-|--------|--------|
-| `getLocationById` | 3 testes |
-| `getLocationByPath` | 3 testes |
-| `getLocationBySlugWithinParent` | 4 testes |
-| `getAncestors` | 3 testes |
-| `getDescendants` | 3 testes |
-| `getChildren` | 3 testes |
-| `validateLocation` | 4 testes |
-| `getLocationTree` | 2 testes |
-| Error handling | 1 teste |
-
----
-
-## Executando Testes
-
-### Todos os testes unitários
 ```bash
 npm run test
 ```
 
-### Testes específicos
+Para um arquivo ou diretório específico:
+
 ```bash
-# Apenas utilitários
-npx vitest run src/shared/utils/
-
-# Apenas um arquivo
-npx vitest run src/shared/utils/dateUtils.test.ts
-
-# Watch mode
-npx vitest watch src/shared/utils/
+npx vitest run tests/architecture/
+npx vitest run tests/security/
+npx vitest run caminho/do/teste.test.ts
 ```
 
-### Com cobertura
-```bash
-npx vitest run --coverage
-```
+Playwright e gates especializados devem ser executados pelos scripts versionados do `package.json`, sem inventar comandos paralelos.
 
----
+## Critério de organização
 
-## Convenções
+Um move de teste só é considerado concluído quando:
 
-### Nomenclatura
-- Arquivos: `*.test.ts` ou `*.test.tsx`
-- Descrições: `deve [comportamento esperado]`
-- Agrupamento: por função ou módulo
+1. o arquivo está no diretório owner correto;
+2. imports relativos quebráveis foram normalizados quando necessário;
+3. scripts/docs que usam path literal foram atualizados no mesmo corte;
+4. o path antigo foi removido;
+5. nenhum segundo SSOT ou wrapper desnecessário ficou para trás.
 
-### Boas Práticas
-1. **Isolamento**: Cada teste deve ser independente
-2. **Determinismo**: Mesmo input = mesmo output
-3. **Cobertura**: Testar casos de sucesso e falha
-4. **Performance**: Evitar operações assíncronas desnecessárias
-
-### Exemplo
-```typescript
-describe('minhaFuncao', () => {
-  it('deve retornar resultado esperado para input válido', () => {
-    expect(minhaFuncao('valido')).toBe('resultado');
-  });
-
-  it('deve lançar erro para input inválido', () => {
-    expect(() => minhaFuncao(null)).toThrow();
-  });
-});
-```
-
----
-
-## Próximos Passos
-
-- [x] Expandir testes para `core/session` (SessionService já possui testes)
-- [x] Expandir testes para `core/location` (LocationService - 26 testes criados)
-- [ ] Criar testes para hooks de UI
-- [ ] Criar testes para outros services de negócio (business, alerts, etc.)
-- [ ] Criar testes para repositories
-- [ ] Atingir meta de 85%+ de cobertura
-
----
-
-## Métricas
-
-| Métrica | Antes | Depois | Meta |
-|---------|-------|--------|------|
-| Testes unitários | 45 | 110 | 150+ |
-| Cobertura (est.) | ~40% | ~55% | 85%+ |
-| Arquivos testados | 18 | 24 | 50+ |
-
----
-
-*Documento atualizado em Abril 2026*
+> Estado estrutural atualizado em 2026-08-26. Este documento descreve organização; não certifica que CI, E2E, banco ou deploy passaram para o SHA atual.
