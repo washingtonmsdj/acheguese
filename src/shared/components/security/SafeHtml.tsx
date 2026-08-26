@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import DOMPurify, { type Config as DomPurifyConfig } from 'dompurify';
 import { createElement, useMemo, type ReactNode } from 'react';
-import { HTML_SANITIZATION_CONFIG } from '@/config/security.config';
+import { HTML_SANITIZATION_CONFIG } from '@/shared/config/security.config';
 
 interface SafeHtmlProps {
   content: string;
