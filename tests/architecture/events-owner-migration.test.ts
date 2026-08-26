@@ -7,9 +7,10 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 const exists = (path: string) => existsSync(resolve(root, path));
 
 describe("community Events canonical owner", () => {
-  it("keeps the retired features namespace absent", () => {
+  it("keeps retired Events namespaces absent", () => {
     expect(exists("src/features")).toBe(false);
     expect(exists("src/features/events")).toBe(false);
+    expect(exists("src/core/verticals/events")).toBe(false);
   });
 
   it("keeps Events implementation under community-events", () => {
@@ -28,29 +29,6 @@ describe("community Events canonical owner", () => {
       "src/core/community-events/routes/eventPublicRoutes.ts",
     ]) {
       expect(exists(path), path).toBe(true);
-    }
-  });
-
-  it("keeps the historical core vertical namespace bridge-only", () => {
-    const bridgePaths = [
-      "src/core/verticals/events/index.ts",
-      "src/core/verticals/events/types.ts",
-      "src/core/verticals/events/mappers.ts",
-      "src/core/verticals/events/config/eventReadConfig.ts",
-      "src/core/verticals/events/services/EventReadService.ts",
-      "src/core/verticals/events/services/EventMutationService.ts",
-      "src/core/verticals/events/services/EventRuntimeService.ts",
-      "src/core/verticals/events/services/EventEngagementService.ts",
-      "src/core/verticals/events/services/EventLinkEligibilityService.ts",
-      "src/core/verticals/events/routes/eventPublicRoutes.ts",
-    ];
-
-    for (const path of bridgePaths) {
-      const content = read(path);
-      expect(content, path).toContain("@/core/community-events");
-      expect(content, path).not.toContain("@/integrations/supabase");
-      expect(content, path).not.toContain(".from(");
-      expect(content.length, `${path} must stay bridge-sized`).toBeLessThan(256);
     }
   });
 
