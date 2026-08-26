@@ -5,6 +5,7 @@ const storageMocks = vi.hoisted(() => ({
   upload: vi.fn(),
   getPublicUrl: vi.fn(),
   remove: vi.fn(),
+  createSignedUrl: vi.fn(),
 }));
 
 const functionMocks = vi.hoisted(() => ({
@@ -43,12 +44,17 @@ beforeEach(() => {
     upload: storageMocks.upload,
     getPublicUrl: storageMocks.getPublicUrl,
     remove: storageMocks.remove,
+    createSignedUrl: storageMocks.createSignedUrl,
   });
   storageMocks.upload.mockResolvedValue({ error: null });
   storageMocks.getPublicUrl.mockReturnValue({
     data: { publicUrl: "https://cdn.example.com/unused-public-url.pdf" },
   });
   storageMocks.remove.mockResolvedValue({ error: null });
+  storageMocks.createSignedUrl.mockResolvedValue({
+    data: { signedUrl: "https://signed.example.com/private-object" },
+    error: null,
+  });
   functionMocks.invoke.mockReset();
   vi.clearAllMocks();
 });
@@ -145,11 +151,62 @@ describe("mediaService upload validation", () => {
     expect(storageMocks.getPublicUrl).not.toHaveBeenCalled();
   });
 
+  it("uploads private evidence without creating a public URL", async () => {
+    const file = new File(["evidence"], "clip.mp4", { type: "video/mp4" });
+    const path = "11111111-1111-4111-8111-111111111111/evidence.mp4";
+
+    const result = await mediaService.uploadPrivateFile(file, {
+      bucket: "safety-evidence",
+      path,
+      allowedMimeTypes: ["video/mp4"],
+      maxSizeBytes: 10 * 1024 * 1024,
+    });
+
+    expect(result).toEqual({
+      path,
+      reference: `storage://safety-evidence/${path}`,
+    });
+    expect(storageMocks.from).toHaveBeenCalledWith("safety-evidence");
+    expect(storageMocks.upload).toHaveBeenCalledWith(path, file, {
+      upsert: false,
+      contentType: "video/mp4",
+    });
+    expect(storageMocks.getPublicUrl).not.toHaveBeenCalled();
+  });
+
+  it("creates bounded signed URLs for private evidence", async () => {
+    const signedUrl = await mediaService.createPrivateSignedUrl(
+      "safety-evidence",
+      "11111111-1111-4111-8111-111111111111/evidence.pdf",
+      9999,
+    );
+
+    expect(signedUrl).toBe("https://signed.example.com/private-object");
+    expect(storageMocks.createSignedUrl).toHaveBeenCalledWith(
+      "11111111-1111-4111-8111-111111111111/evidence.pdf",
+      900,
+    );
+  });
+
+  it("fails closed when the legacy public helper targets safety evidence", async () => {
+    const file = new File(["image"], "evidence.png", { type: "image/png" });
+
+    await expect(
+      mediaService.uploadToBucket(file, {
+        bucket: "safety-evidence",
+        pathPrefix: "incident",
+      }),
+    ).rejects.toMatchObject({ code: "PRIVATE_BUCKET_REQUIRES_PRIVATE_API" });
+
+    expect(storageMocks.upload).not.toHaveBeenCalled();
+    expect(storageMocks.getPublicUrl).not.toHaveBeenCalled();
+  });
+
   it("rejects non-image bucket uploads before storage is called", async () => {
     const file = new File(["not an image"], "payload.txt", { type: "text/plain" });
 
     await expect(
-      mediaService.uploadToBucket(file, { bucket: "banners" }),
+      mediaService.uploadToBucket(file, { bucket: "business_images" }),
     ).rejects.toMatchObject({ code: "INVALID_FILE_TYPE" });
 
     expect(storageMocks.upload).not.toHaveBeenCalled();
