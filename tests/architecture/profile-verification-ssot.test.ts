@@ -29,6 +29,29 @@ describe("Profile verification SSOT", () => {
     expect(migration).toContain("review_profile_verification");
   });
 
+  it("binds self-service verification requests to the authenticated profile owner", () => {
+    expect(migration).toContain("v_actor_user_id UUID := auth.uid()");
+    expect(migration).toContain(
+      "NOT private.auth_owns_active_profile(p_profile_id)",
+    );
+    expect(migration).toContain("profile_verification_profile_not_owned");
+    expect(migration).toContain(
+      "'storage://verification-documents/' || p_profile_id::TEXT || '/%'",
+    );
+    expect(migration).toContain(
+      "REVOKE ALL ON FUNCTION public.request_profile_verification(\n  UUID, TEXT, TEXT, TEXT, TEXT\n) FROM PUBLIC, anon",
+    );
+    expect(migration).toContain(
+      "GRANT EXECUTE ON FUNCTION public.request_profile_verification(\n  UUID, TEXT, TEXT, TEXT, TEXT\n) TO authenticated",
+    );
+
+    const service = read(
+      "src/core/verification/services/VerificationService.ts",
+    );
+    expect(service).toContain('supabase.rpc("request_profile_verification"');
+    expect(service).toContain("p_profile_id: params.profile_id");
+  });
+
   it("binds administrative decisions to an authenticated admin actor", () => {
     expect(migration).toContain("COALESCE(auth.role(), '') <> 'service_role'");
     expect(migration).toContain("private.is_admin_user(p_actor_user_id)");
