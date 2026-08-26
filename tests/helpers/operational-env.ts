@@ -12,6 +12,13 @@ type DescribeLike = {
 };
 type OperationalClientKind = 'anon' | 'admin';
 
+type BusinessDataFixturePayload = Record<string, unknown>;
+
+export const E2E_BUSINESS_FIXTURE_PROVENANCE = {
+  source: 'e2e',
+  source_kind: 'technical_fixture',
+} as const;
+
 export interface OperationalEnvRequirements {
   requireAnonKey?: boolean;
   requireDriverCredentials?: boolean;
@@ -41,6 +48,64 @@ function readEnv(key: string): string | undefined {
   return process.env[key] || viteEnv?.[key];
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+export function withE2EBusinessFixtureProvenance<T>(payload: T): T {
+  const enrich = (row: unknown): unknown => {
+    if (!isRecord(row)) return row;
+
+    const metadata = isRecord(row.metadata) ? row.metadata : {};
+    return {
+      ...row,
+      metadata: {
+        ...metadata,
+        ...E2E_BUSINESS_FIXTURE_PROVENANCE,
+      },
+    } satisfies BusinessDataFixturePayload;
+  };
+
+  return (Array.isArray(payload) ? payload.map(enrich) : enrich(payload)) as T;
+}
+
+function wrapBusinessDataQueryBuilder<T extends object>(builder: T): T {
+  return new Proxy(builder, {
+    get(target, property, receiver) {
+      const value = Reflect.get(target, property, receiver);
+      if (
+        (property === 'insert' || property === 'update' || property === 'upsert') &&
+        typeof value === 'function'
+      ) {
+        return (payload: unknown, ...args: unknown[]) =>
+          Reflect.apply(value, target, [withE2EBusinessFixtureProvenance(payload), ...args]);
+      }
+
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
+}
+
+function wrapOperationalAdminClient(
+  client: OperationalSupabaseClient,
+): OperationalSupabaseClient {
+  return new Proxy(client, {
+    get(target, property, receiver) {
+      if (property === 'from') {
+        return (relation: string) => {
+          const builder = target.from(relation);
+          return relation === 'business_data'
+            ? wrapBusinessDataQueryBuilder(builder)
+            : builder;
+        };
+      }
+
+      const value = Reflect.get(target, property, receiver);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  }) as OperationalSupabaseClient;
+}
+
 function createOperationalClient(
   supabaseUrl: string,
   supabaseKey: string,
@@ -48,13 +113,17 @@ function createOperationalClient(
 ): OperationalSupabaseClient {
   operationalClientSequence += 1;
 
-  return createClient(supabaseUrl, supabaseKey, {
+  const client = createClient(supabaseUrl, supabaseKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
       storageKey: `achegue-operational-${kind}-${operationalClientSequence}`,
     },
   });
+
+  return kind === 'admin'
+    ? wrapOperationalAdminClient(client)
+    : client;
 }
 
 export function getOperationalEnv(): OperationalEnv {
