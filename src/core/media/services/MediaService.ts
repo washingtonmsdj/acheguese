@@ -70,7 +70,11 @@ export interface UploadMediaAssetOptions {
 }
 
 interface UploadToBucketOptions {
-  bucket: PublicImageUploadBucket;
+  // safety-evidence remains accepted only so the legacy SafetyService method
+  // compiles while it is being retired. uploadToBucket fails closed for it.
+  bucket:
+    | PublicImageUploadBucket
+    | typeof MEDIA_STORAGE_BUCKETS.SAFETY_EVIDENCE;
   pathPrefix?: string;
   fileName?: string;
   preset?:
@@ -450,6 +454,13 @@ class MediaServiceClass {
     file: File,
     options: UploadToBucketOptions,
   ): Promise<UploadResult> {
+    if (options.bucket === MEDIA_STORAGE_BUCKETS.SAFETY_EVIDENCE) {
+      throw new MediaError(
+        "Bucket privado requer uploadPrivateFile",
+        "PRIVATE_BUCKET_REQUIRES_PRIVATE_API",
+      );
+    }
+
     this.assertImageFileAllowed(file);
 
     const preset = options.preset ?? "site_asset";
