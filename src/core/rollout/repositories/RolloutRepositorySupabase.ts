@@ -18,6 +18,8 @@ import type {
 import { ROLLOUT_PAGINATION, RolloutErrorCode } from "../types/index";
 
 const TABLE = "module_rollouts";
+const PUBLIC_ROLLOUT_COLUMNS =
+  "id,module_key,location_id,status,config,created_at,updated_at";
 
 type QueryResult<T> = Promise<{
   data: T;
@@ -86,7 +88,7 @@ export class RolloutRepositorySupabase implements IRolloutRepository {
   ): Promise<ModuleRollout | null> {
     const { data, error } = await rolloutDb
       .from<ModuleRolloutRow>(TABLE)
-      .select("*")
+      .select(PUBLIC_ROLLOUT_COLUMNS)
       .eq("module_key", module_key)
       .eq("location_id", location_id)
       .maybeSingle();
@@ -110,7 +112,7 @@ export class RolloutRepositorySupabase implements IRolloutRepository {
 
     const { data, error } = await rolloutDb
       .from<ModuleRolloutRow>(TABLE)
-      .select("*")
+      .select(PUBLIC_ROLLOUT_COLUMNS)
       .eq("module_key", module_key)
       .in("location_id", location_ids);
 
@@ -136,7 +138,7 @@ export class RolloutRepositorySupabase implements IRolloutRepository {
 
     let query = rolloutDb
       .from<ModuleRolloutRow>(TABLE)
-      .select("*", { count: "exact" })
+      .select(PUBLIC_ROLLOUT_COLUMNS, { count: "exact" })
       .eq("module_key", module_key)
       .order("created_at", { ascending: false })
       .range(offset, offset + page_size - 1);
@@ -159,7 +161,7 @@ export class RolloutRepositorySupabase implements IRolloutRepository {
   async findByLocation(location_id: string): Promise<ModuleRollout[]> {
     const { data, error } = await rolloutDb
       .from<ModuleRolloutRow>(TABLE)
-      .select("*")
+      .select(PUBLIC_ROLLOUT_COLUMNS)
       .eq("location_id", location_id)
       .order("module_key", { ascending: true });
 
@@ -191,7 +193,7 @@ export class RolloutRepositorySupabase implements IRolloutRepository {
         },
         { onConflict: "module_key,location_id" },
       )
-      .select()
+      .select(PUBLIC_ROLLOUT_COLUMNS)
       .single();
 
     if (error) {
