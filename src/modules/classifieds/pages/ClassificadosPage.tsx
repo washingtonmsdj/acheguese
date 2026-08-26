@@ -29,7 +29,7 @@ import {
   Plus,
 } from "lucide-react";
 import { useClassificadosPage } from "@/modules/classifieds/hooks/useClassificadosPage";
-import { CLASSIFIED_CATEGORIES, CLASSIFIED_CATEGORY_LABELS } from "@/config/categories";
+import { CLASSIFIED_CATEGORIES, CLASSIFIED_CATEGORY_LABELS } from "@/core/taxonomy/categories";
 import { isLaunchClassifiedCategoryEnabled } from "@/config/launchScope";
 import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
 import { ClassificadosLayout } from "./ClassificadosLayout";
