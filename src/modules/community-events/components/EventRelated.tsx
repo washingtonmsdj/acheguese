@@ -13,7 +13,7 @@ import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { EventCard } from './EventCard';
 import type { Event } from '../types';
-import { eventPublicRoutes } from '@/core/verticals/events/routes/eventPublicRoutes';
+import { eventPublicRoutes } from '@/core/community-events/routes/eventPublicRoutes';
 
 interface EventRelatedProps {
   currentEvent: Event;

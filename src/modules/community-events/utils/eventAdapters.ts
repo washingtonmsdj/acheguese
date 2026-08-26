@@ -1,4 +1,4 @@
-import type { PublicEvent } from "@/core/verticals/events";
+import type { PublicEvent } from "@/core/community-events";
 import type { Event, EventCategory, EventFAQ, EventGalleryItem, EventScheduleItem } from "../types";
 import { isEventCategory } from "../constants";
 import { normalizePersistedTextEncoding } from "@/shared/utils/textEncodingRepair";

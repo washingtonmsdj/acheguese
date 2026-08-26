@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { BarChart3, Home } from 'lucide-react';
 import { EventAnalyticsCard } from '../components/EventAnalyticsCard';
 import { EventNotFound } from '../components/EventNotFound';
-import { eventRuntimeService } from '@/core/verticals/events';
+import { eventRuntimeService } from '@/core/community-events';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 
 export default function EventsOrganizerAnalyticsPage() {
