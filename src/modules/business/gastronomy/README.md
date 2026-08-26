@@ -2,9 +2,9 @@
 
 **Status:** HARDENING — V1 OPERACIONAL AINDA NÃO MVP CERTIFICADO  
 **Owner de UI/aplicação:** `src/modules/business/gastronomy`  
-**Owner de contracts/read-write compartilhados:** `src/core/business`
+**Owner de contracts, persistence e integrações:** `src/core/business`
 
-O fluxo existente cobre cadastro gastronômico, cardápio, carrinho, checkout, pedido e operação inicial do lojista. Essa cobertura de implementação **não equivale a certificação de produção**: algumas superfícies seguem pausadas e ainda existe dívida de acesso runtime direto à infraestrutura dentro do módulo.
+O fluxo implementado cobre cadastro gastronômico, cardápio, carrinho, checkout, pedido e operação inicial do lojista. Implementação funcional e ownership arquitetural correto não equivalem, isoladamente, a certificação de produção.
 
 ## Escopo v1 implementado
 
@@ -20,38 +20,32 @@ O fluxo existente cobre cadastro gastronômico, cardápio, carrinho, checkout, p
 
 ## Fonte de verdade e fronteiras
 
-- Contracts compartilhados de Gastronomy pertencem a `src/core/business/types/gastronomy.ts`; `types/gastronomy/index.ts` no módulo é superfície de compatibilidade e só mantém `CuisineType` como taxonomia local.
-- `GastronomyStatus` deriva do SSOT `src/core/business/constants/gastronomyProfileStatus.ts`; não há segunda union local.
-- Leituras compartilhadas de negócios pertencem a `src/core/business/services/gastronomy.queries.ts`.
-- Activity, reviews, favoritos e runtime reads pertencem aos services `gastronomy.activity.queries.ts`, `gastronomy.review.queries.ts`, `gastronomy.favorites.queries.ts` e `gastronomy-runtime.queries.ts` em `core`.
-- Áreas de entrega pertencem a `src/core/business/services/GastronomyDeliveryAreaService.ts`.
-- Resolução de identificador gastronômico pertence a `src/core/business/services/resolveGastronomyBusinessId.ts`.
-- Os antigos paths correspondentes no módulo são bridges one-way.
-- Writes compartilhados de perfil gastronômico já possuem owner em `src/core/business/services/gastronomy.mutations.ts`.
-- `MenuService` e `menu.queries.ts` ainda concentram cardápio no módulo durante a consolidação.
-- `GastronomyCheckoutService` e `useGastronomyCheckout` concentram criação de pedido.
+- Contracts compartilhados de Gastronomy pertencem a `src/core/business/types/gastronomy.ts`.
+- Contracts persistentes/read-model de cardápio pertencem a `src/core/business/types/gastronomyMenu.ts`; `types/menu.ts` no módulo mantém apenas estado de carrinho/checkout e reexports de compatibilidade.
+- `GastronomyStatus` deriva de `src/core/business/constants/gastronomyProfileStatus.ts`.
+- Leituras de negócios, activity, reviews, favoritos, runtime e menu pertencem a services em `src/core/business`.
+- `GastronomyProfileService` é o writer/facade canônico de perfil. `gastronomy.mutations.ts` preserva a API histórica com ownership explícito, mas delega a persistência ao serviço canônico.
+- `MenuService`, áreas de entrega e resolução de identificador gastronômico pertencem a `src/core/business/services`.
+- Contratos e persistence de versionamento de nichos pertencem a `src/core/business/niches`.
+- Contratos admin e persistence da pizzaria pertencem a `src/core/business/niches/pizzaria`.
+- Os antigos paths correspondentes no módulo são bridges one-way para os owners canônicos.
+- `GastronomyCheckoutService`, carrinho, páginas, hooks e componentes permanecem no módulo como camada de aplicação/UI.
 
-## Dívida arquitetural congelada
+## Dívida de integração do módulo
 
-O baseline atual possui **5 arquivos runtime** em `src/modules/business/gastronomy` que ainda importam `@/integrations/*` diretamente. `scripts/validate-gastronomy-module-boundaries.ts` congela exatamente esse conjunto:
+O baseline runtime de acesso direto a `@/integrations/*` dentro de `src/modules/business/gastronomy` é **zero**.
 
-- `niches/pizzaria/PizzaAdminService.ts`
-- `niches/versioning/NicheVersioningService.ts`
-- `services/GastronomyProfileService.ts`
-- `services/MenuService.ts`
-- `services/menu.queries.ts`
+`scripts/validate-gastronomy-module-boundaries.ts` mantém a allowlist vazia e impede a reintrodução de acesso runtime direto à infraestrutura. Imports estritamente `type` de contratos gerados não são considerados persistence runtime.
 
-Imports estritamente `type` de contratos gerados não são contados como acesso runtime. Testes também não compõem o baseline runtime.
-
-A allowlist é um **ratchet temporário**, não uma permissão permanente: cada arquivo migrado para um owner `core` deve ser removido da allowlist no mesmo commit. Adicionar um 6º arquivo runtime é regressão arquitetural.
+Zero dívida de integração no módulo **não significa MVP certificado**. A certificação depende também de banco, autorização, testes, build e deploy do mesmo SHA.
 
 ## Fora do v1 / não certificado
 
 - Analytics gastronômico dedicado.
 - Promoções dedicadas de Gastronomia.
 - Gestão avançada de entregas/motoboy dentro do módulo.
-- UI genérica de nichos e hooks de versionamento sem consumidor real.
-- Qualquer superfície ainda `launch-paused` até contrato/runtime/E2E serem comprovados.
+- UI genérica de nichos sem consumidor operacional comprovado.
+- Qualquer superfície sem evidência real de contrato/runtime/E2E.
 
 ## Critério para certificação MVP
 
