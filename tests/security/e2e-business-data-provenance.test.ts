@@ -59,11 +59,20 @@ describe('E2E business_data fixture provenance', () => {
     });
   });
 
-  it('keeps every writer from issue #83 behind the operational admin boundary', () => {
+  it('keeps every writer from issue #83 behind operational Supabase factories', () => {
     for (const path of writerPaths) {
       const source = readFileSync(resolve(root, path), 'utf8');
-      expect(source, path).toContain('createOptionalOperationalAdminClient');
+      expect(source, path).toMatch(/create(?:Optional)?Operational(?:Anon|Admin)Client/);
       expect(source, path).toMatch(/\.from\(["']business_data["']\)/);
+      expect(source, path).not.toMatch(/\bcreateClient\s*\(/);
     }
+  });
+
+  it('covers approved anon and admin operational clients at the shared factory', () => {
+    const source = readFileSync(resolve(root, 'tests/helpers/operational-env.ts'), 'utf8');
+
+    expect(source).toContain("relation === 'business_data'");
+    expect(source).toContain("kind === 'admin' || hasApprovedOperationalMutationTarget(supabaseUrl)");
+    expect(source).toContain('wrapOperationalBusinessDataClient(client)');
   });
 });
