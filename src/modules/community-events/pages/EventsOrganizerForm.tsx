@@ -22,11 +22,11 @@ import {
   type EventsOrganizerFieldChange,
 } from './EventsOrganizerForm.model';
 import { EventsOrganizerFormStepContent } from './EventsOrganizerFormStepContent';
-import { eventRuntimeService } from '@/core/verticals/events';
+import { eventRuntimeService } from '@/core/community-events';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 import { useSessionContext } from '@/core/session/hooks/useSessionContext';
 import { useToast } from '@/shared/hooks/use-toast';
-import { eventPublicRoutes } from '@/core/verticals/events/routes/eventPublicRoutes';
+import { eventPublicRoutes } from '@/core/community-events/routes/eventPublicRoutes';
 
 const STEPS = [
   { id: 1, title: 'Informacoes Basicas', icon: FileText },
