@@ -19,7 +19,7 @@ import { useSessionContext } from '@/core/session/hooks/useSessionContext';
 import {
   eventRuntimeService,
   type EventParticipantRow,
-} from '@/core/verticals/events';
+} from '@/core/community-events';
 import { parseEventCheckinQrPayload } from '../utils/checkinQr';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 import {
@@ -37,7 +37,7 @@ import {
   EventsOrganizerListSection,
   EventsOrganizerStatsSection,
 } from './EventsOrganizerDashboardSections';
-import { eventPublicRoutes } from '@/core/verticals/events/routes/eventPublicRoutes';
+import { eventPublicRoutes } from '@/core/community-events/routes/eventPublicRoutes';
 
 export default function EventsOrganizerDashboard() {
   const navigate = useNavigate();
