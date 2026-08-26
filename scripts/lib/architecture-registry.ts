@@ -518,7 +518,6 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     sourceRoots: [
       "src/modules/community-events",
       "src/core/verticals/events",
-      "src/features/events",
     ],
     docsPaths: ["src/modules/community-events/README.md"],
     ssotPaths: [
