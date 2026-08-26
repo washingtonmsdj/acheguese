@@ -18,6 +18,7 @@ import {
 } from "@/core/media/config/mediaPresets";
 import {
   MEDIA_STORAGE_BUCKETS,
+  type PrivateStorageBucket,
   type PublicImageUploadBucket,
 } from "@/core/media/config/storageBuckets";
 import {
@@ -42,6 +43,11 @@ export class MediaError extends Error {
 
 export interface UploadResult {
   url: string;
+  path: string;
+}
+
+export interface PrivateUploadResult {
+  reference: string;
   path: string;
 }
 
@@ -76,6 +82,14 @@ interface UploadToBucketOptions {
   upsert?: boolean;
 }
 
+interface UploadPrivateFileOptions {
+  bucket: PrivateStorageBucket;
+  path: string;
+  upsert?: boolean;
+  maxSizeBytes?: number;
+  allowedMimeTypes?: readonly string[];
+}
+
 class MediaServiceClass {
   private readonly ALLOWED_IMAGE_TYPES = [
     "image/jpeg",
@@ -99,6 +113,21 @@ class MediaServiceClass {
     return "jpg";
   }
 
+  private normalizePrivatePath(path: string): string {
+    const normalized = path.replace(/^\/+|\/+$/g, "");
+    const segments = normalized.split("/");
+
+    if (
+      !normalized ||
+      path.includes("\\") ||
+      segments.some((segment) => !segment || segment === "." || segment === "..")
+    ) {
+      throw new MediaError("Caminho de storage inválido", "INVALID_STORAGE_PATH");
+    }
+
+    return normalized;
+  }
+
   private assertMaxFileSize(
     file: File,
     maxSizeBytes: number,
@@ -111,7 +140,7 @@ class MediaServiceClass {
 
   private assertAllowedMimeType(
     file: File,
-    allowedTypes: string[],
+    allowedTypes: readonly string[],
     message: string,
   ): void {
     if (!allowedTypes.includes(file.type)) {
@@ -345,6 +374,76 @@ class MediaServiceClass {
         "UNEXPECTED_ERROR",
       );
     }
+  }
+
+  async uploadPrivateFile(
+    file: File,
+    options: UploadPrivateFileOptions,
+  ): Promise<PrivateUploadResult> {
+    if (options.maxSizeBytes !== undefined) {
+      this.assertMaxFileSize(
+        file,
+        options.maxSizeBytes,
+        "Arquivo privado excede o limite permitido",
+      );
+    }
+    if (options.allowedMimeTypes) {
+      this.assertAllowedMimeType(
+        file,
+        options.allowedMimeTypes,
+        "Tipo de arquivo privado não permitido",
+      );
+    }
+
+    const path = this.normalizePrivatePath(options.path);
+    const { error } = await supabase.storage
+      .from(options.bucket)
+      .upload(path, file, {
+        upsert: options.upsert ?? false,
+        contentType: file.type,
+      });
+
+    if (error) {
+      logger.error("Error uploading private storage file:", error);
+      throw new MediaError("Erro ao enviar arquivo privado", "UPLOAD_FAILED");
+    }
+
+    return {
+      path,
+      reference: `storage://${options.bucket}/${path}`,
+    };
+  }
+
+  async removePrivateFiles(
+    bucket: PrivateStorageBucket,
+    paths: string[],
+  ): Promise<void> {
+    if (!paths.length) return;
+    const normalizedPaths = paths.map((path) => this.normalizePrivatePath(path));
+    const { error } = await supabase.storage.from(bucket).remove(normalizedPaths);
+    if (error) {
+      logger.error("Error deleting private storage files:", error);
+      throw new MediaError("Erro ao remover arquivo privado", "DELETE_FAILED");
+    }
+  }
+
+  async createPrivateSignedUrl(
+    bucket: PrivateStorageBucket,
+    path: string,
+    expiresInSeconds = 300,
+  ): Promise<string> {
+    const normalizedPath = this.normalizePrivatePath(path);
+    const ttl = Math.max(60, Math.min(900, Math.trunc(expiresInSeconds)));
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(normalizedPath, ttl);
+
+    if (error || !data?.signedUrl) {
+      logger.error("Error signing private storage URL:", error);
+      throw new MediaError("Erro ao assinar arquivo privado", "SIGNED_URL_FAILED");
+    }
+
+    return data.signedUrl;
   }
 
   async uploadToBucket(
