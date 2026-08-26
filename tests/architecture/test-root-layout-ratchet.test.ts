@@ -1,10 +1,6 @@
 import { readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const ALLOWED_LEGACY_ROOT_TESTS = new Set([
-  "mobility-integration.test.ts",
-]);
-
 const CANONICAL_TEST_DIRECTORIES = [
   "architecture",
   "e2e",
@@ -26,16 +22,8 @@ function rootTestFiles(): string[] {
 }
 
 describe("tests root layout ratchet", () => {
-  it("does not allow new test implementations at tests/ root", () => {
-    const unexpected = rootTestFiles().filter(
-      (file) => !ALLOWED_LEGACY_ROOT_TESTS.has(file),
-    );
-
-    expect(unexpected).toEqual([]);
-  });
-
-  it("keeps the remaining legacy root debt explicit", () => {
-    expect(rootTestFiles()).toEqual(["mobility-integration.test.ts"]);
+  it("keeps tests/ root free from test implementations", () => {
+    expect(rootTestFiles()).toEqual([]);
   });
 
   it("keeps canonical responsibility directories present", () => {
