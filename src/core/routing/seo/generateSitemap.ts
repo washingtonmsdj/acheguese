@@ -13,7 +13,7 @@ import {
   buildModuleTerritoryUrl,
   geoPathToPublicUrl,
 } from '@/core/routing/utils/territoryUrls';
-import { touristPointPublicRoutes } from '@/core/verticals/guide/routes/touristPointPublicRoutes';
+import { touristPointPublicRoutes } from '@/core/guide/tourist-points/routes/touristPointPublicRoutes';
 import { LocationsReadService } from '@/core/location/services/LocationsReadService';
 import { TerritorialGroupsReadService } from '@/core/location/services/TerritorialGroupsReadService';
 import {

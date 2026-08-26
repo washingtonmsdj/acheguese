@@ -3,7 +3,7 @@ import { LAUNCH_URLS } from "@/config/territory";
 import { isReservedSlug } from "@/core/routing/reservedSlugs";
 import { useTerritorialContextOptional } from "@/core/routing/components/TerritorialLayout";
 import { gastronomyPublicRoutes } from "@/core/verticals/gastronomy/routes/gastronomyPublicRoutes";
-import { touristPointPublicRoutes } from "@/core/verticals/guide/routes/touristPointPublicRoutes";
+import { touristPointPublicRoutes } from "@/core/guide/tourist-points/routes/touristPointPublicRoutes";
 import {
   buildCommunityTerritoryUrl,
   hasPublicCityTerritoryPath,
