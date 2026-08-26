@@ -193,18 +193,18 @@ CREATE POLICY "tryon storage user delete"
 
 -- public-assets: public read is provided by the public bucket itself. Mutations
 -- are canonical platform-admin only.
-DROP POLICY IF EXISTS public-assets_insert_admin ON storage.objects;
-DROP POLICY IF EXISTS public-assets_update_admin ON storage.objects;
-DROP POLICY IF EXISTS public-assets_delete_admin ON storage.objects;
+DROP POLICY IF EXISTS "public-assets_insert_admin" ON storage.objects;
+DROP POLICY IF EXISTS "public-assets_update_admin" ON storage.objects;
+DROP POLICY IF EXISTS "public-assets_delete_admin" ON storage.objects;
 
-CREATE POLICY public-assets_insert_admin
+CREATE POLICY "public-assets_insert_admin"
   ON storage.objects FOR INSERT TO authenticated
   WITH CHECK (
     bucket_id = 'public-assets'
     AND COALESCE(private.is_admin_from_roles(auth.uid()), FALSE)
   );
 
-CREATE POLICY public-assets_update_admin
+CREATE POLICY "public-assets_update_admin"
   ON storage.objects FOR UPDATE TO authenticated
   USING (
     bucket_id = 'public-assets'
@@ -215,7 +215,7 @@ CREATE POLICY public-assets_update_admin
     AND COALESCE(private.is_admin_from_roles(auth.uid()), FALSE)
   );
 
-CREATE POLICY public-assets_delete_admin
+CREATE POLICY "public-assets_delete_admin"
   ON storage.objects FOR DELETE TO authenticated
   USING (
     bucket_id = 'public-assets'
