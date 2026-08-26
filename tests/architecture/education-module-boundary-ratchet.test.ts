@@ -18,11 +18,30 @@ describe("Education module hardening ratchet", () => {
     );
   });
 
-  it("freezes the known direct-integration debt instead of allowing it to grow", () => {
+  it("keeps Education observability persistence owned by core", () => {
+    const canonical = read(
+      "src/core/education/services/EducationObservabilityService.ts",
+    );
+    const legacy = read(
+      "src/modules/business/education/services/EducationObservabilityService.ts",
+    );
+    const coreIndex = read("src/core/education/index.ts");
+
+    expect(canonical).toContain("@/integrations/supabase");
+    expect(legacy).toContain(
+      "@/core/education/services/EducationObservabilityService",
+    );
+    expect(legacy).not.toContain("@/integrations/");
+    expect(legacy).not.toContain(".from(");
+    expect(coreIndex).toContain(
+      "@/core/education/services/EducationObservabilityService",
+    );
+  });
+
+  it("freezes the remaining direct-integration debt instead of allowing it to grow", () => {
     const validator = read("scripts/validate-education-module-boundaries.ts");
 
     for (const path of [
-      "src/modules/business/education/services/EducationObservabilityService.ts",
       "src/modules/business/education/services/EducationTrackingService.ts",
       "src/modules/business/education/services/education.mutations.ts",
       "src/modules/business/education/services/education.queries.ts",
@@ -30,6 +49,9 @@ describe("Education module hardening ratchet", () => {
       expect(validator).toContain(path);
     }
 
+    expect(validator).not.toContain(
+      "src/modules/business/education/services/EducationObservabilityService.ts",
+    );
     expect(validator).toContain("ALLOWED_DIRECT_INTEGRATION_FILES");
     expect(validator).toContain("new direct integrations access is forbidden");
     expect(validator).toContain("transitional allowlist entry is stale");

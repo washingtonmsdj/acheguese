@@ -7,9 +7,8 @@ const ROOT = process.cwd();
 const EDUCATION_ROOT = "src/modules/business/education";
 
 // Transitional debt only. This set must shrink as persistence moves to
-// src/core/education. Adding a fifth runtime file is a regression.
+// src/core/education. Adding a fourth runtime file is a regression.
 const ALLOWED_DIRECT_INTEGRATION_FILES = new Set([
-  "src/modules/business/education/services/EducationObservabilityService.ts",
   "src/modules/business/education/services/EducationTrackingService.ts",
   "src/modules/business/education/services/education.mutations.ts",
   "src/modules/business/education/services/education.queries.ts",

@@ -2,7 +2,7 @@
 
 **Status:** HARDENING — NOT MVP CERTIFIED  
 **Owner de UI/aplicação:** `src/modules/business/education`  
-**Owner técnico de domínio/persistência em consolidação:** `src/core/education`  
+**Owner técnico de domínio/persistência:** `src/core/education`  
 **Roteamento público:** permanece `launch-paused` até certificação funcional
 
 ## Objetivo
@@ -15,9 +15,10 @@ A existência de páginas, services ou testes históricos **não equivale a cert
 
 A implementação existente inclui Explorer, detalhe, setup, dashboard, programas, leads, eventos, analytics, planos, hooks, nichos e services. O Explorer já possui estados explícitos de loading/error/empty e resolução territorial.
 
-Entretanto, o domínio ainda possui dívida arquitetural: quatro arquivos runtime do módulo acessam `@/integrations/*` diretamente. Esse baseline está congelado por `scripts/validate-education-module-boundaries.ts`; nenhum novo arquivo pode repetir o padrão:
+A consolidação de ownership já começou: `EducationObservabilityService` passou para `src/core/education/services`, mantendo apenas uma ponte de compatibilidade no módulo.
 
-- `services/EducationObservabilityService.ts`
+Ainda restam três arquivos runtime do módulo com acesso direto a `@/integrations/*`. Esse baseline está congelado por `scripts/validate-education-module-boundaries.ts`; nenhum novo arquivo pode repetir o padrão:
+
 - `services/EducationTrackingService.ts`
 - `services/education.mutations.ts`
 - `services/education.queries.ts`
@@ -32,6 +33,7 @@ A direção canônica é migrar persistência, autorização e integração para
 - `core` não pode depender de `modules`;
 - contratos compartilhados devem convergir para `src/core/education` antes da migração de persistence services;
 - não criar facade paralela que mantenha dois writers/read models concorrentes;
+- bridges de compatibilidade são one-way e temporárias;
 - não remover `launch-paused` apenas porque a tela renderiza.
 
 ## Critério para despausar o MVP
@@ -56,7 +58,7 @@ Os nichos existentes permanecem como capacidade de produto, não como declaraç�
 ## SSOT relacionado
 
 - `src/core/verticals/config.ts` — registra `education` como vertical empresarial oficial;
-- `src/core/education/` — owner técnico em consolidação;
+- `src/core/education/` — owner técnico de contratos/persistência em consolidação;
 - `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — ordem e Definition of Done do MVP;
 - issue #50 — certificação funcional dos módulos;
 - issue #51 — limpeza estrutural/owners/namespaces.
