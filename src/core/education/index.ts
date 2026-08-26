@@ -1,8 +1,28 @@
+export type { EducationProfileStatus } from "@/core/education/types";
 export type {
+  EducationAnalyticsEvent,
   EducationAnalyticsEventType,
+  EducationEvent,
+  EducationLead,
+  EducationLeadEvent,
+  EducationLeadStatus,
+  EducationLevel,
   EducationNicheKey,
-  EducationProfileStatus,
-} from "@/core/education/types";
+  EducationProfile,
+  EducationProgram,
+  EducationPublicProfile,
+  EducationPublicRoute,
+  SchoolAccessibilityFeatureKey,
+  SchoolAgeRange,
+  SchoolBasicResourceKey,
+  SchoolEquipmentFeatureKey,
+  SchoolEventType,
+  SchoolFacilityFeatureKey,
+  SchoolNetwork,
+  SchoolShift,
+  SchoolType,
+  TrackEventPayload,
+} from "@/core/education/contracts";
 export {
   EducationObservabilityService,
   trackEducationError,

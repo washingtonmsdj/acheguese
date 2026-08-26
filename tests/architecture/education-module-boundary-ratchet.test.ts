@@ -44,6 +44,22 @@ describe("Education module hardening ratchet", () => {
     expect(legacyTracking).not.toContain("@/integrations/");
   });
 
+  it("keeps Education domain contracts owned by core", () => {
+    const contracts = read("src/core/education/contracts.ts");
+    const moduleTypes = read("src/modules/business/education/types/index.ts");
+    const tracking = read(
+      "src/core/education/services/EducationTrackingService.ts",
+    );
+
+    expect(contracts).toContain("export type EducationNicheKey");
+    expect(contracts).toContain("export interface EducationProfile");
+    expect(contracts).toContain("export type EducationAnalyticsEventType");
+    expect(moduleTypes).toContain("@/core/education/contracts");
+    expect(moduleTypes).not.toContain("export interface EducationProfile");
+    expect(tracking).toContain("@/core/education/contracts");
+    expect(tracking).not.toContain("@/modules/business/education");
+  });
+
   it("freezes only the remaining read/write model integration debt", () => {
     const validator = read("scripts/validate-education-module-boundaries.ts");
 
@@ -63,17 +79,5 @@ describe("Education module hardening ratchet", () => {
     expect(validator).toContain("ALLOWED_DIRECT_INTEGRATION_FILES");
     expect(validator).toContain("new direct integrations access is forbidden");
     expect(validator).toContain("transitional allowlist entry is stale");
-  });
-
-  it("keeps canonical tracking event types in core", () => {
-    const coreTypes = read("src/core/education/types.ts");
-    const tracking = read(
-      "src/core/education/services/EducationTrackingService.ts",
-    );
-
-    expect(coreTypes).toContain("EducationNicheKey");
-    expect(coreTypes).toContain("EducationAnalyticsEventType");
-    expect(tracking).toContain("@/core/education/types");
-    expect(tracking).not.toContain("@/modules/business/education");
   });
 });

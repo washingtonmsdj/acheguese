@@ -3,11 +3,6 @@
  *
  * Servico centralizado para tracking de eventos do dominio Education.
  * Persistencia de analytics pertence a core/education.
- *
- * Principios:
- * - Fire-and-forget: tracking nunca bloqueia a UI
- * - Fallback silencioso: erros de tracking nao quebram a aplicacao
- * - Session-based: identifica usuarios unicos por sessao
  */
 
 import { supabase } from '@/integrations/supabase';
@@ -16,7 +11,7 @@ import { secureRandomString } from '@/shared/utils/secureRandom';
 import type {
   EducationAnalyticsEventType,
   EducationNicheKey,
-} from '@/core/education/types';
+} from '@/core/education/contracts';
 
 type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -73,9 +68,7 @@ export const EducationTrackingService = {
           metadata: (options.metadata ?? {}) as Json,
         })
         .then(({ error }) => {
-          if (error) {
-            logger.warn('[EducationTrackingService] Failed to track event:', error);
-          }
+          if (error) logger.warn('[EducationTrackingService] Failed to track event:', error);
         });
     } catch (err) {
       logger.warn('[EducationTrackingService] Error tracking event:', err);
@@ -87,12 +80,7 @@ export const EducationTrackingService = {
     nicheKey: EducationNicheKey,
     businessId?: string,
   ): Promise<void> {
-    await this.trackEvent({
-      educationProfileId,
-      businessId,
-      nicheKey,
-      eventType: 'profile_view',
-    });
+    await this.trackEvent({ educationProfileId, businessId, nicheKey, eventType: 'profile_view' });
   },
 
   async trackProgramView(
@@ -101,13 +89,7 @@ export const EducationTrackingService = {
     programId: string,
     businessId?: string,
   ): Promise<void> {
-    await this.trackEvent({
-      educationProfileId,
-      businessId,
-      nicheKey,
-      eventType: 'program_view',
-      programId,
-    });
+    await this.trackEvent({ educationProfileId, businessId, nicheKey, eventType: 'program_view', programId });
   },
 
   async trackEventView(
@@ -116,13 +98,7 @@ export const EducationTrackingService = {
     educationEventId: string,
     businessId?: string,
   ): Promise<void> {
-    await this.trackEvent({
-      educationProfileId,
-      businessId,
-      nicheKey,
-      eventType: 'event_view',
-      educationEventId,
-    });
+    await this.trackEvent({ educationProfileId, businessId, nicheKey, eventType: 'event_view', educationEventId });
   },
 
   async trackWhatsAppClick(
@@ -130,12 +106,7 @@ export const EducationTrackingService = {
     nicheKey: EducationNicheKey,
     businessId?: string,
   ): Promise<void> {
-    await this.trackEvent({
-      educationProfileId,
-      businessId,
-      nicheKey,
-      eventType: 'whatsapp_click',
-    });
+    await this.trackEvent({ educationProfileId, businessId, nicheKey, eventType: 'whatsapp_click' });
   },
 
   async trackEnrollmentCTAClick(
@@ -144,13 +115,7 @@ export const EducationTrackingService = {
     businessId?: string,
     metadata?: { ctaLabel?: string },
   ): Promise<void> {
-    await this.trackEvent({
-      educationProfileId,
-      businessId,
-      nicheKey,
-      eventType: 'enrollment_cta_click',
-      metadata,
-    });
+    await this.trackEvent({ educationProfileId, businessId, nicheKey, eventType: 'enrollment_cta_click', metadata });
   },
 
   async trackLeadSubmitted(
@@ -165,14 +130,7 @@ export const EducationTrackingService = {
       desiredShift?: string;
     },
   ): Promise<void> {
-    await this.trackEvent({
-      educationProfileId,
-      businessId,
-      nicheKey,
-      eventType: 'lead_submitted',
-      leadId,
-      metadata,
-    });
+    await this.trackEvent({ educationProfileId, businessId, nicheKey, eventType: 'lead_submitted', leadId, metadata });
   },
 
   async trackEventInterest(
@@ -182,13 +140,6 @@ export const EducationTrackingService = {
     businessId?: string,
     metadata?: { eventType?: string },
   ): Promise<void> {
-    await this.trackEvent({
-      educationProfileId,
-      businessId,
-      nicheKey,
-      eventType: 'event_interest',
-      educationEventId,
-      metadata,
-    });
+    await this.trackEvent({ educationProfileId, businessId, nicheKey, eventType: 'event_interest', educationEventId, metadata });
   },
 };
