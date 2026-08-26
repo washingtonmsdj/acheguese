@@ -9,8 +9,8 @@ import { ProfessionalService } from "@/core/professional/services/ProfessionalSe
 import { ProfessionalUrlService } from "@/core/professional/services/ProfessionalUrlService";
 import { searchPublicPosts } from "@/core/posts/services";
 import type { Professional } from "@/core/professional/types";
-import { eventsReadService } from "@/core/verticals/events";
-import { eventPublicRoutes } from "@/core/verticals/events/routes/eventPublicRoutes";
+import { eventsReadService } from "@/core/community-events";
+import { eventPublicRoutes } from "@/core/community-events/routes/eventPublicRoutes";
 import {
   WorkOpportunitiesService,
   type WorkOpportunityCard,
