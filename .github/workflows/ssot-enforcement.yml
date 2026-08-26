@@ -64,6 +64,9 @@ jobs:
       - name: Validate Education migration boundaries
         run: npx tsx scripts/validate-education-module-boundaries.ts
 
+      - name: Validate Gastronomy migration boundaries
+        run: npx tsx scripts/validate-gastronomy-module-boundaries.ts
+
       - name: Run ESLint Billing Rules
         run: |
           echo "🔍 Verificando conformidade SSOT com regras de billing..."
@@ -187,6 +190,7 @@ jobs:
           echo "Verificações realizadas:"
           echo "  ✅ Community module boundaries"
           echo "  ✅ Education migration boundaries"
+          echo "  ✅ Gastronomy migration boundaries"
           echo "  ✅ ESLint billing rules"
           echo "  ✅ Testes de contrato"
           echo "  ✅ PLANS hardcoded"
