@@ -41,7 +41,7 @@ vi.mock("@/core/professional/services", () => ({
   },
 }));
 
-vi.mock("@/core/verticals/events", () => ({
+vi.mock("@/core/community-events", () => ({
   EventLinkEligibilityService: {
     isCommunityLinkEligible: mocks.eventEligible,
   },
