@@ -86,7 +86,7 @@ function wrapBusinessDataQueryBuilder<T extends object>(builder: T): T {
   });
 }
 
-function wrapOperationalAdminClient(
+function wrapOperationalBusinessDataClient(
   client: OperationalSupabaseClient,
 ): OperationalSupabaseClient {
   return new Proxy(client, {
@@ -121,8 +121,11 @@ function createOperationalClient(
     },
   });
 
-  return kind === 'admin'
-    ? wrapOperationalAdminClient(client)
+  const shouldAttachFixtureProvenance =
+    kind === 'admin' || hasApprovedOperationalMutationTarget(supabaseUrl);
+
+  return shouldAttachFixtureProvenance
+    ? wrapOperationalBusinessDataClient(client)
     : client;
 }
 
