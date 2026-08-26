@@ -1,6 +1,6 @@
 # Achegue-se
 
-Plataforma modular de servicos locais com foco em gastronomia, mobilidade, classificados, comunidade e negocios.
+Plataforma hiperlocal e community-first para comunidade, empresas, classificados, profissionais, mobilidade e educação.
 
 ## Stack
 
@@ -9,61 +9,64 @@ Plataforma modular de servicos locais com foco em gastronomia, mobilidade, class
 - Tailwind + Radix UI
 - Vitest + Playwright
 
-## Estrutura do codigo
+## Estrutura do código
 
 ```text
 src/
-  app/            shell da aplicacao (rotas, providers, paginas)
+  app/            shell da aplicação (rotas, providers e fluxos de aplicação)
   core/           contratos e capacidades transversais (SSOT)
-  modules/        dominios de produto
-  shared/         UI e utilitarios compartilhados
+  modules/        bounded contexts de produto
+  shared/         UI e utilitários compartilhados
   integrations/   adaptadores externos
 ```
 
-## Setup rapido
+`src/features` é namespace legado e não recebe código novo. O único resíduo atual é Eventos e sua consolidação deve ocorrer no owner `src/modules/community-events` sem criar facade concorrente.
+
+## Setup rápido
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Validacoes principais
+## Validações principais
 
 ```bash
+npm run security:validate
 npm run validate:ssot
 npm run validate:architecture:incremental -- --json
 npm run validate:architecture:governance -- --json
+npm run validate:taxonomy
 npm run validate:docs-structure
 npm run typecheck
 npm run build
 ```
 
-## Documentacao oficial
+## Fontes de verdade
 
-- Auditoria tecnica e plano operacional ativo: [AUDITORIA_E_PLANO_IMPLEMENTACAO.md](./AUDITORIA_E_PLANO_IMPLEMENTACAO.md)
-- Indice canonico: [docs/INDEX_CANONICO.md](./docs/INDEX_CANONICO.md)
-- Status oficial: [docs/architecture/PROJECT-MILESTONE-1.md](./docs/architecture/PROJECT-MILESTONE-1.md)
-- Arquitetura Community First: [docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md](./docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md)
-- Regras SSOT: [docs/CURRENT_RULES.md](./docs/CURRENT_RULES.md)
-- Seguranca: [SECURITY.md](./SECURITY.md)
+A documentação possui **uma porta de entrada canônica**:
 
-## Prioridades operacionais atuais
+- [docs/README.md](./docs/README.md) — índice e autoridade documental;
+- [docs/03-architecture/CURRENT_RULES.md](./docs/03-architecture/CURRENT_RULES.md) — regras arquiteturais vigentes;
+- [docs/08-roadmap/EXECUCAO_MAIN_ONLY.md](./docs/08-roadmap/EXECUCAO_MAIN_ONLY.md) — execução operacional corrente e critérios de MVP;
+- [SECURITY.md](./SECURITY.md) — regras de segurança e gates de release.
 
-A auditoria transversal de 19/08/2026 identificou como prioridades principais:
+Documentos em `docs/10-archive/` são históricos e **nunca** substituem uma fonte ativa. Checkpoints antigos de auditoria também não devem ser tratados como estado atual sem revalidação.
 
-1. proteger a branch `main` e tornar os gates de CI obrigatorios;
-2. reconciliar migrations e Edge Functions do Supabase de producao com o GitHub;
-3. criar deteccao automatica de drift/provenance entre GitHub, Supabase e releases;
-4. concluir os itens de hardening de Auth, RPCs privilegiados, grants e performance descritos no plano canonico.
+## Política da `main`
 
-O estado, checklist, criterios de aceite e ordem de implementacao ficam exclusivamente em [AUDITORIA_E_PLANO_IMPLEMENTACAO.md](./AUDITORIA_E_PLANO_IMPLEMENTACAO.md).
+- `main` é a única linha ativa de desenvolvimento.
+- Não criar branch nova para continuar a estabilização atual.
+- Mudança persistente de schema precisa de migration versionada.
+- Merge/commit não equivale a produção validada.
+- Não reduzir gates para obter verde.
+- Código, documentação, testes e runtime devem apontar para o mesmo owner/SSOT.
 
-## Politica documental da raiz
+## Política documental da raiz
 
-A raiz contem somente documentos de entrada e governanca transversal:
+A raiz mantém somente os documentos de entrada e governança transversal:
 
-- `README.md` — entrada do projeto;
-- `SECURITY.md` — politica de seguranca e gates obrigatorios;
-- `AUDITORIA_E_PLANO_IMPLEMENTACAO.md` — auditoria transversal ativa e plano canonico de correcao/hardening.
+- `README.md`;
+- `SECURITY.md`.
 
-Demais documentos de dominio, arquitetura, referencia e historico permanecem em `docs/`.
+Planos, arquitetura, status e histórico pertencem a `docs/` e devem estar referenciados pelo índice canônico.
