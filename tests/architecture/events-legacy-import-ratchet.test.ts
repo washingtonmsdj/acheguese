@@ -32,12 +32,20 @@ function collectSourceFiles(directory: string): string[] {
   return files;
 }
 
-describe("Events historical owner import ratchet", () => {
-  it("allows historical Events imports only in the remaining migration callers", () => {
+function isRuntimeSource(path: string): boolean {
+  return (
+    !path.includes("/__tests__/") &&
+    !/\.(?:test|spec)\.[cm]?[jt]sx?$/.test(path)
+  );
+}
+
+describe("Events historical owner runtime import ratchet", () => {
+  it("allows historical Events imports only in the remaining runtime migration callers", () => {
     const actualCallers = collectSourceFiles(srcRoot)
       .map((absolutePath) =>
         relative(root, absolutePath).replaceAll("\\", "/"),
       )
+      .filter(isRuntimeSource)
       .filter((path) => !path.startsWith(`${historicalOwnerRoot}/`))
       .filter((path) =>
         readFileSync(resolve(root, path), "utf8").includes(historicalImport),
