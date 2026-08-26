@@ -11,10 +11,10 @@ Bounded context canônico de Eventos da Comunidade.
 - Consome capacidades transversais de core aprovadas; não importa implementação interna de outros `src/modules/*`.
 - `location_id` e a origem territorial; datas, participantes, mídia e lifecycle permanecem no domínio de Eventos.
 - `EventReadService`, `EventMutationService`, `EventRuntimeService`, `EventEngagementService` e `EventLinkEligibilityService` têm implementação canônica em `src/core/community-events`.
-- `src/core/community/services/CommunityEventsRuntimeService.ts` existe apenas como compatibilidade para imports antigos e não deve receber código novo.
+- A facade histórica `src/core/community/services/CommunityEventsRuntimeService.ts` foi removida; callers devem usar o owner canônico diretamente.
 
 ## Regra de consolidação
 
-`src/modules/community-events` é o único owner da UI/aplicação e `src/core/community-events` é o único owner dos contratos e serviços reutilizáveis. A rota territorial e os guards de deploy apontam diretamente para o módulo. Callers runtime devem usar `@/core/community-events` e não devem recriar namespaces históricos.
+`src/modules/community-events` é o único owner da UI/aplicação e `src/core/community-events` é o único owner dos contratos e serviços reutilizáveis. A rota territorial e os guards de deploy apontam diretamente para o módulo. Callers runtime devem usar `@/core/community-events` e não devem recriar namespaces ou facades históricos.
 
 Essa consolidação estrutural não equivale a certificação funcional, de banco, RLS, E2E, build ou deploy.
