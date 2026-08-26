@@ -1,4 +1,6 @@
 import { supabase } from '@/integrations/supabase';
+import { MEDIA_STORAGE_BUCKETS } from '@/core/media/config/storageBuckets';
+import { mediaService } from '@/core/media/services/MediaService';
 import { logger } from '@/shared/utils/logger';
 import type {
   SafetyEvidence,
@@ -7,11 +9,11 @@ import type {
   UploadSafetyEvidenceInput,
 } from '../types';
 
-const BUCKET = 'safety-evidence';
+const BUCKET = MEDIA_STORAGE_BUCKETS.SAFETY_EVIDENCE;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const STORAGE_PREFIX = `storage://${BUCKET}/`;
 
-const ALLOWED_MIME_TYPES = new Set([
+const ALLOWED_MIME_TYPES: readonly string[] = [
   'image/jpeg',
   'image/png',
   'image/webp',
@@ -21,7 +23,7 @@ const ALLOWED_MIME_TYPES = new Set([
   'audio/wav',
   'audio/ogg',
   'application/pdf',
-]);
+];
 
 const EXTENSION_BY_MIME: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -102,29 +104,27 @@ class SafetyEvidenceService {
         return { success: false, error: 'Arquivo inválido ou maior que 10MB' };
       }
 
-      if (!ALLOWED_MIME_TYPES.has(input.file.type)) {
+      if (!ALLOWED_MIME_TYPES.includes(input.file.type)) {
         return { success: false, error: 'Tipo de arquivo não permitido para evidência' };
       }
 
       const extension = EXTENSION_BY_MIME[input.file.type];
       const path = `${input.incidentId}/${crypto.randomUUID()}.${extension}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from(BUCKET)
-        .upload(path, input.file, {
-          upsert: false,
-          contentType: input.file.type,
-        });
-
-      if (uploadError) throw uploadError;
-      uploadedPath = path;
+      const upload = await mediaService.uploadPrivateFile(input.file, {
+        bucket: BUCKET,
+        path,
+        upsert: false,
+        maxSizeBytes: MAX_FILE_SIZE,
+        allowedMimeTypes: ALLOWED_MIME_TYPES,
+      });
+      uploadedPath = upload.path;
 
       const { data, error } = await supabase
         .from('safety_evidence')
         .insert({
           incident_id: input.incidentId,
           evidence_type: input.evidenceType,
-          file_url: `${STORAGE_PREFIX}${path}`,
+          file_url: upload.reference,
           file_name: input.file.name,
           file_size: input.file.size,
           mime_type: input.file.type,
@@ -141,10 +141,9 @@ class SafetyEvidenceService {
       return { success: true, data: mapRow(data as SafetyEvidenceRow) };
     } catch (error) {
       if (uploadedPath) {
-        const { error: cleanupError } = await supabase.storage
-          .from(BUCKET)
-          .remove([uploadedPath]);
-        if (cleanupError) {
+        try {
+          await mediaService.removePrivateFiles(BUCKET, [uploadedPath]);
+        } catch (cleanupError) {
           logger.error('[SafetyEvidenceService] Failed to clean orphan evidence object', cleanupError);
         }
       }
@@ -163,17 +162,16 @@ class SafetyEvidenceService {
     const path = fileUrl.slice(STORAGE_PREFIX.length);
     if (!path || path.includes('..')) return null;
 
-    const ttl = Math.max(60, Math.min(900, Math.trunc(expiresInSeconds)));
-    const { data, error } = await supabase.storage
-      .from(BUCKET)
-      .createSignedUrl(path, ttl);
-
-    if (error) {
+    try {
+      return await mediaService.createPrivateSignedUrl(
+        BUCKET,
+        path,
+        expiresInSeconds,
+      );
+    } catch (error) {
       logger.error('[SafetyEvidenceService] Error signing evidence URL', error);
       return null;
     }
-
-    return data.signedUrl;
   }
 }
 
