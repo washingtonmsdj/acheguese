@@ -15,7 +15,6 @@ const ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES = new Set([
   "src/modules/business/gastronomy/services/GastronomyProfileService.ts",
   "src/modules/business/gastronomy/services/MenuService.ts",
   "src/modules/business/gastronomy/services/activity.queries.ts",
-  "src/modules/business/gastronomy/services/favorites.queries.ts",
   "src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts",
   "src/modules/business/gastronomy/services/menu.queries.ts",
 ]);
@@ -28,6 +27,10 @@ const REQUIRED_CORE_BRIDGES = new Map([
   [
     "src/modules/business/gastronomy/services/review.queries.ts",
     "@/core/business/services/gastronomy.review.queries",
+  ],
+  [
+    "src/modules/business/gastronomy/services/favorites.queries.ts",
+    "@/core/business/services/gastronomy.favorites.queries",
   ],
 ]);
 
@@ -58,11 +61,8 @@ function walk(dir: string): string[] {
   const files: string[] = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...walk(fullPath));
-    } else if (entry.isFile() && isRuntimeCodeFile(fullPath)) {
-      files.push(fullPath);
-    }
+    if (entry.isDirectory()) files.push(...walk(fullPath));
+    else if (entry.isFile() && isRuntimeCodeFile(fullPath)) files.push(fullPath);
   }
   return files;
 }
@@ -87,26 +87,20 @@ function main(): void {
     const runtimeContent = withoutTypeOnlyImports(content);
 
     if (DIRECT_SUPABASE_PACKAGE_RE.test(runtimeContent)) {
-      violations.push(
-        `${relative}: direct runtime @supabase/supabase-js import is forbidden in the Gastronomy module.`,
-      );
+      violations.push(`${relative}: direct runtime @supabase/supabase-js import is forbidden in the Gastronomy module.`);
     }
 
     if (DIRECT_INTEGRATION_RE.test(runtimeContent)) {
       actualDirectRuntimeIntegrationFiles.add(relative);
       if (!ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES.has(relative)) {
-        violations.push(
-          `${relative}: new direct runtime integrations access is forbidden. Move persistence/integration ownership to core.`,
-        );
+        violations.push(`${relative}: new direct runtime integrations access is forbidden. Move persistence/integration ownership to core.`);
       }
     }
   }
 
   for (const legacyFile of ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES) {
     if (!actualDirectRuntimeIntegrationFiles.has(legacyFile)) {
-      violations.push(
-        `${legacyFile}: transitional allowlist entry is stale. Remove it from ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES in the same migration commit.`,
-      );
+      violations.push(`${legacyFile}: transitional allowlist entry is stale. Remove it from ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES in the same migration commit.`);
     }
   }
 
@@ -116,12 +110,9 @@ function main(): void {
       violations.push(`${bridgeFile}: required compatibility bridge is missing.`);
       continue;
     }
-
     const content = fs.readFileSync(absolute, "utf8");
     if (!content.includes(canonicalImport)) {
-      violations.push(
-        `${bridgeFile}: compatibility bridge must point one-way to ${canonicalImport}.`,
-      );
+      violations.push(`${bridgeFile}: compatibility bridge must point one-way to ${canonicalImport}.`);
     }
   }
 
@@ -131,9 +122,7 @@ function main(): void {
     process.exit(1);
   }
 
-  console.log(
-    `Gastronomy module boundary valid: ${actualDirectRuntimeIntegrationFiles.size} known runtime integration files frozen for migration; canonical bridges enforced; type-only integration imports are not counted as runtime debt.`,
-  );
+  console.log(`Gastronomy module boundary valid: ${actualDirectRuntimeIntegrationFiles.size} known runtime integration files frozen for migration; canonical bridges enforced; type-only integration imports are not counted as runtime debt.`);
 }
 
 main();
