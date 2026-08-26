@@ -19,24 +19,25 @@ A consolidação de ownership já moveu para `src/core/education`:
 
 - contratos de domínio em `contracts.ts`;
 - `EducationObservabilityService`;
-- `EducationTrackingService`.
+- `EducationTrackingService`;
+- `education.queries.ts` como read model canônico.
 
 Os paths antigos de types/services no módulo são apenas bridges one-way de compatibilidade quando necessários.
 
-Ainda restam **dois** arquivos runtime do módulo com acesso direto a `@/integrations/*`. Esse baseline está congelado por `scripts/validate-education-module-boundaries.ts`; nenhum novo arquivo pode repetir o padrão:
+Resta **um** arquivo runtime do módulo com acesso direto a `@/integrations/*`, congelado por `scripts/validate-education-module-boundaries.ts`:
 
 - `services/education.mutations.ts`
-- `services/education.queries.ts`
 
-A direção canônica é mover esses read/write models para `src/core/education`, deixando `src/modules/business/education` responsável por composição de produto/UI e regras específicas que não possuam acesso direto à infraestrutura.
+Nenhum novo arquivo do módulo pode acessar infraestrutura diretamente. A direção canônica é mover também o write model para `src/core/education`, deixando `src/modules/business/education` responsável por composição de produto/UI e regras específicas sem ownership de persistência.
 
 ## Regras de arquitetura
 
 - páginas, components e hooks não acessam Supabase diretamente;
 - código novo no módulo não importa `@/integrations/*` nem o pacote Supabase diretamente;
-- cada arquivo removido da dívida acima deve ser removido da allowlist no mesmo commit;
+- cada arquivo removido da dívida deve ser removido da allowlist no mesmo commit;
 - `core` não pode depender de `modules`;
 - contratos compartilhados pertencem a `src/core/education/contracts.ts`;
+- read model canônico pertence a `src/core/education/services/education.queries.ts`;
 - não criar facade paralela que mantenha dois writers/read models concorrentes;
 - bridges de compatibilidade são one-way e temporárias;
 - não remover `launch-paused` apenas porque a tela renderiza.
@@ -60,7 +61,7 @@ Educação só sai de `launch-paused` quando houver evidência para, no mínimo:
 
 - `src/core/verticals/config.ts` — registra `education` como vertical empresarial oficial;
 - `src/core/education/contracts.ts` — contratos do domínio;
-- `src/core/education/services/` — serviços de infraestrutura/domínio em consolidação;
+- `src/core/education/services/` — ownership canônico de serviços de infraestrutura/domínio;
 - `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — ordem e Definition of Done do MVP;
 - issue #50 — certificação funcional dos módulos;
 - issue #51 — limpeza estrutural/owners/namespaces.
