@@ -8,12 +8,12 @@
  * - Cache agressivo para reduzir API calls
  * - Prefetch para melhor UX
  * 
- * @see src/config/reactQuery.config.ts - Configuração de cache
+ * @see src/shared/config/reactQuery.config.ts - Configuração de cache
  * @version 1.0.0
  */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { QUERY_KEYS, createQueryOptions } from '@/config/reactQuery.config';
+import { QUERY_KEYS, createQueryOptions } from '@/shared/config/reactQuery.config';
 import { LocationsReadService } from '@/core/location/services/LocationsReadService';
 /**
  * Location type
