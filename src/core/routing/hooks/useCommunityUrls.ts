@@ -10,7 +10,7 @@ import {
   geoPathToPublicUrl,
   MODULE_SLUGS,
 } from "@/core/routing/utils/territoryUrls";
-import { eventPublicRoutes } from "@/core/verticals/events/routes/eventPublicRoutes";
+import { eventPublicRoutes } from "@/core/community-events/routes/eventPublicRoutes";
 
 export interface CommunityUrls {
   feed: string;
