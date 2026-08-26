@@ -13,7 +13,7 @@ import {
   AUTH_BROWSER_STORAGE_CONFIG,
   AUTH_COOKIE_PREFIX,
   SECURE_COOKIE_CONFIG,
-} from "@/config/security.config";
+} from "@/shared/config/security.config";
 
 const COOKIE_OPTIONS = SECURE_COOKIE_CONFIG;
 const CHUNK_METADATA_SUFFIX = ".chunks";
