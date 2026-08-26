@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { resolveCityToLocationIds, resolveNeighborhoodInCity } from '../src/core/location/helpers/territorialResolver';
+import { resolveCityToLocationIds, resolveNeighborhoodInCity } from '@/core/location/helpers/territorialResolver';
 
 describe('SSOT Territorial - tourist_points (Helper)', () => {
   describe('Helper Territorial', () => {
