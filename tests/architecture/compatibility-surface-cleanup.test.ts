@@ -20,6 +20,27 @@ describe('compatibility surface cleanup', () => {
     expect(taxonomyValidator).toContain('"community-alerts",');
   });
 
+  it('keeps Event engagement persistence owned by core ahead of module migration', () => {
+    const canonical = read(
+      'src/core/verticals/events/services/EventEngagementService.ts',
+    );
+    const legacy = read(
+      'src/features/events/services/EventEngagementService.ts',
+    );
+    const eventsBarrel = read('src/core/verticals/events/index.ts');
+
+    expect(canonical).toContain('from "@/integrations/supabase"');
+    expect(canonical).toContain('export class EventEngagementService');
+    expect(legacy).toContain(
+      '@/core/verticals/events/services/EventEngagementService',
+    );
+    expect(legacy).not.toContain('@/integrations/supabase');
+    expect(legacy).not.toContain('.from(');
+    expect(eventsBarrel).toContain(
+      '@/core/verticals/events/services/EventEngagementService',
+    );
+  });
+
   it('removes deprecated APIs and unconsumed duplicate types', () => {
     const paymentMethods = read('src/core/business/constants/paymentMethods.ts');
     const residentAddress = read(

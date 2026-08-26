@@ -13,11 +13,23 @@ export {
   eventService,
 } from "@/core/verticals/events/services/EventRuntimeService";
 export { EventLinkEligibilityService } from "@/core/verticals/events/services/EventLinkEligibilityService";
+export {
+  EventEngagementService,
+  EVENT_REMINDER_TIMES,
+  EVENT_REVIEW_LIMITS,
+  validateEventReviewInput,
+} from "@/core/verticals/events/services/EventEngagementService";
 
 export type {
   CommunityEvent,
   Event,
 } from "@/core/verticals/events/services/EventRuntimeService";
+
+export type {
+  EventReminderTime,
+  EventReview,
+  SubmitEventReviewInput,
+} from "@/core/verticals/events/services/EventEngagementService";
 
 export type {
   CreateEventInput,
