@@ -1,24 +1,22 @@
 /**
- * 🍽️ GASTRONOMY TYPES - Core SSOT
+ * Gastronomy types - Core SSOT.
  *
- * Tipos base para operações de gastronomia no core
- * Essenciais para queries/mutations de dados
- *
- * @version 3.0.0 - Core SSOT
+ * Shared contracts for Gastronomy persistence/read models. Product/UI-only
+ * contracts may extend these in the module, but must not redefine them.
  */
 
 import type { Business } from './Business';
 import type { TerritoryFilter } from '@/core/location/types';
 import type { Json } from '@/integrations/supabase';
+import type { GastronomyProfileStatus } from '@/core/business/constants/gastronomyProfileStatus';
 
 export type PriceRange = '$' | '$$' | '$$$' | '$$$$';
-
-export type GastronomyStatus = 'active' | 'inactive' | 'temporarily_closed';
+export type GastronomyStatus = GastronomyProfileStatus;
 
 export interface GastronomyProfile {
   id: string;
   business_id: string;
-  /** Nicho gastronômico especializado (SSOT: modules/business/gastronomy/niches) */
+  /** Opaque specialized niche key resolved by the vertical/niche layer. */
   niche_key?: string;
   cuisine_type: string;
   cuisine_subtypes: string[];
@@ -45,7 +43,6 @@ export interface GastronomyProfile {
 
 export interface CreateGastronomyProfileInput {
   business_id: string;
-  /** Nicho gastronômico especializado (SSOT: modules/business/gastronomy/niches) */
   niche_key?: string;
   cuisine_type: string;
   cuisine_subtypes?: string[];
@@ -90,6 +87,44 @@ export interface GastronomyBusinessFilters {
   is_open_now?: boolean;
   search?: string;
   territoryFilter?: TerritoryFilter;
+}
+
+export interface OpeningStatus {
+  is_open: boolean;
+  status_text: string;
+  next_change?: {
+    time: string;
+    action: 'opens' | 'closes';
+  };
+}
+
+export interface DeliveryInfo {
+  enabled: boolean;
+  fee?: number;
+  time_min?: number;
+  time_max?: number;
+  minimum_order?: number;
+}
+
+export type ActivityType = 'review' | 'favorite' | 'order' | 'visit';
+
+export interface GastronomyActivity {
+  id: string;
+  type: ActivityType;
+  user_name: string;
+  user_avatar: string | null;
+  business_id: string;
+  business_name: string;
+  business_slug: string;
+  action_label: string;
+  created_at: string;
+  time_ago: string;
+}
+
+export interface GastronomyActivityFilters {
+  territoryFilter?: TerritoryFilter;
+  limit?: number;
+  types?: ActivityType[];
 }
 
 export interface TerritorySlugParams {

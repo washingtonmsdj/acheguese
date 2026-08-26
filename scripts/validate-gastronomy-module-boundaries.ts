@@ -13,17 +13,18 @@ const ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES = new Set([
   "src/modules/business/gastronomy/niches/versioning/NicheVersioningService.ts",
   "src/modules/business/gastronomy/services/GastronomyProfileService.ts",
   "src/modules/business/gastronomy/services/MenuService.ts",
-  "src/modules/business/gastronomy/services/activity.queries.ts",
   "src/modules/business/gastronomy/services/menu.queries.ts",
 ]);
 
 const REQUIRED_CORE_BRIDGES = new Map([
+  ["src/modules/business/gastronomy/types/gastronomy/index.ts", "@/core/business/types/gastronomy"],
   ["src/modules/business/gastronomy/services/gastronomy.queries.ts", "@/core/business/services/gastronomy.queries"],
   ["src/modules/business/gastronomy/services/review.queries.ts", "@/core/business/services/gastronomy.review.queries"],
   ["src/modules/business/gastronomy/services/favorites.queries.ts", "@/core/business/services/gastronomy.favorites.queries"],
   ["src/modules/business/gastronomy/services/DeliveryAreaService.ts", "@/core/business/services/GastronomyDeliveryAreaService"],
   ["src/modules/business/gastronomy/services/resolveGastronomyBusinessId.ts", "@/core/business/services/resolveGastronomyBusinessId"],
   ["src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts", "@/core/business/services/gastronomy-runtime.queries"],
+  ["src/modules/business/gastronomy/services/activity.queries.ts", "@/core/business/services/gastronomy.activity.queries"],
 ]);
 
 const CODE_FILE_RE = /\.(ts|tsx|js|jsx)$/;
