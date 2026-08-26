@@ -5,7 +5,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { useState, useEffect, useCallback } from 'react';
-import { safetyService } from '../instance';
+import { safetyEvidenceService } from '../services/SafetyEvidenceService';
 import type { SafetyEvidence, UploadSafetyEvidenceInput } from '../types';
 
 export function useSafetyEvidence(incidentId?: string) {
@@ -20,7 +20,7 @@ export function useSafetyEvidence(incidentId?: string) {
     try {
       setLoading(true);
       setError(null);
-      const data = await safetyService.listIncidentEvidence(incidentId);
+      const data = await safetyEvidenceService.listIncidentEvidence(incidentId);
       setEvidence(data);
     } catch (err) {
       logger.error('[useSafetyEvidence] Error fetching evidence:', err);
@@ -37,7 +37,7 @@ export function useSafetyEvidence(incidentId?: string) {
   const uploadEvidence = async (input: UploadSafetyEvidenceInput, uploadedBy: string) => {
     setUploading(true);
     try {
-      const result = await safetyService.uploadSafetyEvidence(input, uploadedBy);
+      const result = await safetyEvidenceService.upload(input, uploadedBy);
       if (result.success) {
         await fetchEvidence();
       }
