@@ -1,4 +1,4 @@
-﻿import { createQueryClient, QUERY_KEYS } from "@/config/reactQuery.config";
+﻿import { createQueryClient, QUERY_KEYS } from "@/shared/config/reactQuery.config";
 
 export const queryClient = createQueryClient();
 
