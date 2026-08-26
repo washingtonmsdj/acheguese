@@ -53,7 +53,7 @@ const ClassificadosPage = lazy(
   () => import("@/modules/classifieds/pages/ClassificadosPage"),
 );
 const EventsListPage = lazy(
-  () => import("@/features/events/pages/EventsListPage"),
+  () => import("@/modules/community-events/pages/EventsListPage"),
 );
 const GastronomyPage = lazy(
   () => import("@/modules/business/gastronomy/pages/GastronomyLandingPage"),

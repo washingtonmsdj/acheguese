@@ -365,7 +365,7 @@ try {
     ? ok('sem dialogos nativos de navegador no runtime')
     : fail(`dialogos nativos encontrados: ${nativeDialogFindings.join(', ')}`);
 
-  const eventFiles = collectRuntimeSourceFiles('src/features/events');
+  const eventFiles = collectRuntimeSourceFiles('src/modules/community-events');
   const eventPlaceholderPattern = /\bTODO\b|\bFIXME\b|sera implementado|será implementado/i;
   const eventPlaceholderFindings = eventFiles.filter((file) =>
     eventPlaceholderPattern.test(readFileSync(file, 'utf-8')),
