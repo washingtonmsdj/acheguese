@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { PublicEvent } from "@/core/verticals/events";
+import type { PublicEvent } from "@/core/community-events";
 import { mapCommunityEventToEvent } from "./eventAdapters";
 
 const baseCommunityEvent: PublicEvent = {
