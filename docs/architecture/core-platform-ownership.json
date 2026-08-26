@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-07-18",
+  "updatedAt": "2026-08-26",
   "architecture": "docs/03-architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md",
   "plan": "plans/CORE_PLATFORM_CONSOLIDATION_PLAN.md",
   "sourceRoots": ["src", "api", "supabase/functions"],
@@ -342,20 +342,20 @@
     {
       "name": "safety_evidence",
       "status": "canonical",
-      "currentOwner": "src/core/safety/services/SafetyService.ts",
-      "targetOwner": "src/core/safety/services/SafetyService.ts",
+      "currentOwner": "src/core/safety/services/SafetyEvidenceService.ts",
+      "targetOwner": "src/core/safety/services/SafetyEvidenceService.ts",
       "allowedReaders": [
         {
-          "path": "src/core/safety/services/SafetyService.ts",
+          "path": "src/core/safety/services/SafetyEvidenceService.ts",
           "maxCalls": 1,
-          "role": "canonical"
+          "role": "canonical-private-evidence-read-model"
         }
       ],
       "allowedWriters": [
         {
-          "path": "src/core/safety/services/SafetyService.ts",
+          "path": "src/core/safety/services/SafetyEvidenceService.ts",
           "maxCalls": 1,
-          "role": "canonical"
+          "role": "canonical-private-evidence-command"
         }
       ]
     },
@@ -1588,15 +1588,15 @@
       "resource": "<dynamic>",
       "access": "read",
       "path": "src/core/media/services/MediaService.ts",
-      "maxCalls": 1,
-      "details": ["options.bucket"]
+      "maxCalls": 2,
+      "details": ["bucket", "options.bucket"]
     },
     {
       "kind": "dynamic-storage",
       "resource": "<dynamic>",
       "access": "write",
       "path": "src/core/media/services/MediaService.ts",
-      "maxCalls": 3,
+      "maxCalls": 5,
       "details": [
         "MEDIA_STORAGE_BUCKETS.VERIFICATION_DOCUMENTS",
         "bucket",
