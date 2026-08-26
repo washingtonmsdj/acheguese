@@ -3,11 +3,6 @@ import { describe, expect, it } from "vitest";
 
 const ALLOWED_LEGACY_ROOT_TESTS = new Set([
   "mobility-integration.test.ts",
-  "posts-community-posts-ssot.test.ts",
-  "public-search-route-regression.test.ts",
-  "public-shell-admin-boundary-regression.test.ts",
-  "public-territorial-copy-regression.test.ts",
-  "regression-tourist-points.test.ts",
 ]);
 
 const CANONICAL_TEST_DIRECTORIES = [
@@ -37,6 +32,10 @@ describe("tests root layout ratchet", () => {
     );
 
     expect(unexpected).toEqual([]);
+  });
+
+  it("keeps the remaining legacy root debt explicit", () => {
+    expect(rootTestFiles()).toEqual(["mobility-integration.test.ts"]);
   });
 
   it("keeps canonical responsibility directories present", () => {
