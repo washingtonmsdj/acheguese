@@ -11,7 +11,6 @@ const GASTRONOMY_ROOT = "src/modules/business/gastronomy";
 const ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES = new Set([
   "src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts",
   "src/modules/business/gastronomy/niches/versioning/NicheVersioningService.ts",
-  "src/modules/business/gastronomy/services/GastronomyProfileService.ts",
   "src/modules/business/gastronomy/services/MenuService.ts",
   "src/modules/business/gastronomy/services/menu.queries.ts",
 ]);
@@ -25,6 +24,7 @@ const REQUIRED_CORE_BRIDGES = new Map([
   ["src/modules/business/gastronomy/services/resolveGastronomyBusinessId.ts", "@/core/business/services/resolveGastronomyBusinessId"],
   ["src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts", "@/core/business/services/gastronomy-runtime.queries"],
   ["src/modules/business/gastronomy/services/activity.queries.ts", "@/core/business/services/gastronomy.activity.queries"],
+  ["src/modules/business/gastronomy/services/GastronomyProfileService.ts", "@/core/business/services/GastronomyProfileService"],
 ]);
 
 const CODE_FILE_RE = /\.(ts|tsx|js|jsx)$/;
