@@ -2,7 +2,7 @@
 
 Data-base: 2026-08-26  
 Status: ATIVO / CANONICO  
-Versao documental: 4.6
+Versao documental: 4.7
 
 Este documento define regras arquiteturais globais. Contratos detalhados de domínio permanecem nos owners executáveis e nos documentos específicos listados em `docs/README.md`; este arquivo não deve duplicar implementação.
 
@@ -41,7 +41,7 @@ Regras:
 - `src/core` contém contratos/capacidades transversais e não importa nem reexporta implementação de `src/modules`.
 - `src/integrations` contém adapters de infraestrutura/provedores.
 - `src/shared` contém UI/utilitários realmente compartilhados, sem absorver regra de domínio.
-- `src/features` é namespace legado fechado para código novo. O resíduo atual `src/features/events` deve migrar para `src/modules/community-events` conforme #51.
+- `src/features` é namespace aposentado; não deve existir nem ser recriado. Eventos pertence a `src/modules/community-events`.
 - módulos não importam implementação interna de outros módulos; integração cruzada passa por `core`, adapter formal ou contrato compartilhado.
 - páginas/componentes não acessam Supabase diretamente; acesso fica em services/repositories, migrations, scripts e Edge Functions conforme o boundary aplicável.
 - páginas e hooks orquestram estado/fetch/render; regra de negócio pertence ao owner de domínio.
@@ -147,7 +147,7 @@ Mudanças de segurança/schema executam adicionalmente os gates indicados em `SE
 ## 11. Proibições explícitas
 
 - não criar service paralelo para responsabilidade que já possui owner;
-- não criar código novo em `src/features`;
+- não recriar `src/features`;
 - não importar implementação interna entre módulos;
 - não colocar regra de negócio em page/hook por conveniência;
 - não criar rota pública concorrente para a mesma identidade;
@@ -160,6 +160,6 @@ Mudanças de segurança/schema executam adicionalmente os gates indicados em `SE
 1. restaurar gates confiáveis e proteção da `main`;
 2. continuar hardening de RLS/RPC/grants e fechar LGPD antes de rollout;
 3. remover drift documental e namespaces concorrentes;
-4. consolidar Eventos em `src/modules/community-events`;
+4. reduzir o namespace histórico `src/core/verticals/events` sem reabrir owner paralelo de Eventos;
 5. certificar módulos por fluxo funcional real;
 6. somente então executar refatoração visual ampla/performance não comprovada.
