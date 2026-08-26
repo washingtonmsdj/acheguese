@@ -1,22 +1,18 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
-/**
- * BusinessOwnershipService - SSOT para verificação de ownership de negócios
- * 
- * REGRAS:
- * - Centraliza lógica de verificação de ownership
- * - Resolve profile_id do business
- * - Verifica se usuário é owner/admin via profile_members
- * 
- * @version 1.0.0
- */
 
+/**
+ * BusinessOwnershipService - SSOT de autoridade de gestao de empresas.
+ *
+ * Contrato canonico:
+ * - dono direto do profile (profiles.user_id) pode gerenciar;
+ * - membership precisa estar ativa;
+ * - somente roles owner/admin podem gerenciar;
+ * - member nao possui autoridade de gestao.
+ *
+ * Esse contrato deve permanecer alinhado a private.can_manage_profile no banco.
+ */
 export class BusinessOwnershipService {
-  /**
-   * Resolve o profile_id do owner de um business
-   * @param businessId - ID do business (business_data.id)
-   * @returns profile_id do owner ou null
-   */
   static async resolveOwnerProfileId(businessId: string): Promise<string | null> {
     try {
       const { data, error } = await supabase
@@ -37,12 +33,6 @@ export class BusinessOwnershipService {
     }
   }
 
-  /**
-   * Verifica se um usuário é owner ou admin de um business
-   * @param businessId - ID do business (business_data.id)
-   * @param userId - ID do usuário
-   * @returns true se o usuário é owner/admin
-   */
   static async isOwner(businessId: string, userId: string): Promise<boolean> {
     try {
       const ownerProfileId = await this.resolveOwnerProfileId(businessId);
@@ -51,35 +41,42 @@ export class BusinessOwnershipService {
         return false;
       }
 
-      const { data, error } = await supabase
-        .from('profile_members')
-        .select('role')
-        .eq('profile_id', ownerProfileId)
-        .eq('user_id', userId)
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', ownerProfileId)
         .maybeSingle();
 
-      if (error) {
-        logger.error('[BusinessOwnershipService] Error checking ownership:', error);
+      if (profileError) {
+        logger.error('[BusinessOwnershipService] Error checking direct profile owner:', profileError);
         return false;
       }
 
-      if (!data) {
+      if (profile?.user_id === userId) {
+        return true;
+      }
+
+      const { data: membership, error: membershipError } = await supabase
+        .from('profile_members')
+        .select('role, is_active')
+        .eq('profile_id', ownerProfileId)
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .in('role', ['owner', 'admin'])
+        .maybeSingle();
+
+      if (membershipError) {
+        logger.error('[BusinessOwnershipService] Error checking active membership:', membershipError);
         return false;
       }
 
-      return ['owner', 'admin'].includes(data.role);
+      return Boolean(membership?.is_active && ['owner', 'admin'].includes(membership.role));
     } catch (error) {
       logger.error('[BusinessOwnershipService] Unexpected error checking ownership:', error);
       return false;
     }
   }
 
-  /**
-   * Verifica ownership e lança erro se não for owner
-   * @param businessId - ID do business
-   * @param userId - ID do usuário
-   * @throws Error se não for owner
-   */
   static async requireOwnership(businessId: string, userId: string): Promise<void> {
     const isOwner = await this.isOwner(businessId, userId);
     if (!isOwner) {

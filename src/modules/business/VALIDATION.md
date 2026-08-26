@@ -1,7 +1,7 @@
 # Validacao atual — Modulo de Empresas
 
 **Data do checkpoint:** 2026-08-26  
-**Baseline de source auditado:** `702012411cba62b019da89d79597e7d903ed6af4`  
+**Baseline inicial auditado:** `702012411cba62b019da89d79597e7d903ed6af4`  
 **Status:** HARDENING — NAO MVP CERTIFICADO
 
 Este arquivo substitui a validacao historica de 2026-07-04. Resultados antigos de lint/test/E2E nao devem ser usados como certificacao do HEAD atual.
@@ -19,13 +19,13 @@ Este arquivo substitui a validacao historica de 2026-07-04. Resultados antigos d
 
 RLS esta habilitado nas tabelas centrais verificadas: `business_data`, `profiles`, `profile_members`, `business_gallery`, `business_hours`, `business_services` e `business_stats`.
 
-`business_data` usa `private.can_operate_business_profile(profile_id)` em `USING` e `WITH CHECK`. Esse helper aceita owner da conta e memberships ativos com roles `owner`, `admin`, `manager` e `moderator`.
+A constraint real de `profile_members.role` permite somente `owner`, `admin` e `member`. No checkpoint, todas as memberships existentes estavam ativas e com role `owner`.
 
-A autorizacao ainda nao e uniforme nos subrecursos:
+O contrato de gestao foi reconciliado para um unico significado: dono direto de `profiles.user_id` ou membership ativa `owner/admin`. `member` nao possui autoridade de gestao. `private.can_operate_business_profile` permanece apenas como compatibilidade para policies existentes e delega a `private.can_manage_profile`.
 
-- `business_hours` usa `private.can_manage_profile`, limitado a owner/admin;
-- `business_gallery`, `business_services`, `business_products`, `business_stats` e `business_views` ainda usam predicates historicos baseados diretamente em `profiles.user_id` em pelo menos parte das operacoes;
-- isso precisa ser reconciliado com a matriz de roles oficial antes da certificacao.
+As policies de `business_gallery`, `business_products`, `business_services` e `business_stats` foram reconciliadas para a mesma autoridade, com `USING` e `WITH CHECK` explicitos. `BusinessOwnershipService` foi alinhado ao mesmo contrato e agora exige membership ativa, alem de reconhecer o dono direto do profile.
+
+`business_views` permanece fora dessa reconciliacao porque o pente-fino provou que nao existe writer runtime atual para a tabela; ela nao deve ser promovida como SSOT de analytics.
 
 ### Billing
 
@@ -42,6 +42,7 @@ No banco alvo durante o checkpoint:
 - `business_gallery`: 3;
 - `business_stats`: 0;
 - `business_subscriptions` legado: 5;
+- `business_views`: 0;
 - perfis `profile_type='business'`: 186;
 - perfis business sem `business_data`: 89;
 - desses 89, 80 possuem nome com padrao tecnico e 83 possuem nome/identificador com padrao tecnico de teste/fixture/auditoria;
@@ -54,16 +55,18 @@ Esses numeros nao autorizam remocao automatica. Provenance deve ser comprovada a
 
 O write model geral cria/sincroniza multiplos recursos: endereco, profile, profile_members, business_data, business_stats, horarios e contatos. Essas operacoes nao aparecem encapsuladas em uma unica transacao SQL no client source atual.
 
-Tambem existe `useBusinessCreateMultiProfile`, que cria um profile pelo `MultiProfileService` e depois completa os dados de Business. Esse caminho deve ser reconciliado com `BusinessService.createBusiness` para impedir regras concorrentes e reduzir estados parciais.
+O self-service de `CriarEmpresaPage` usa `useBusinessCreateMultiProfile`; `BusinessService.createBusiness` permanece utilizado pela superficie administrativa. Eles atendem superficies diferentes, mas ainda precisam compartilhar uma unica regra transacional/compensatoria para evitar divergencia e estado parcial.
 
-### Estatisticas
+### Analytics e estatisticas
 
 A Central usa `BusinessManagementService.getBusinessStats`, que le `business_data`/Business atual. A API separada `BusinessService.getStats()` permanece incompleta (`active`/`by_category`) e deve ser reconciliada ou removida antes de ser considerada contrato confiavel.
 
+O servico `business-analytics.service.ts` ainda possui drift de schema: le `business_views` (sem writer runtime e vazia) e consulta `analytics_events.event_name`, coluna que nao existe no banco atual. O SSOT canonico de analytics e `src/core/analytics/AnalyticsService.ts`, que usa `analytics_events.event_type`, `entity_type` e `entity_id` via RPCs canonicas. Essa duplicacao deve ser eliminada.
+
 ## Bloqueadores abertos
 
-- consolidar um unico fluxo de criacao e garantir atomicidade/compensacao;
-- unificar policies de subrecursos com a matriz de roles oficial;
+- consolidar a regra de criacao entre self-service/admin e garantir atomicidade/compensacao;
+- migrar `business-analytics.service.ts` para o Analytics SSOT e apos prova remover/isolar `business_views`;
 - reconciliar/remover tabelas legadas (`businesses`, `business_subscriptions`) com prova de nao uso/perda;
 - classificar e limpar dados tecnicos por provenance explicita;
 - reconciliar `business_stats` ou remover a dependencia morta;
@@ -73,4 +76,4 @@ A Central usa `BusinessManagementService.getBusinessStats`, que le `business_dat
 
 ## Conclusao
 
-O modulo de Empresas possui implementacao ampla e uma base de seguranca relevante, mas **nao esta comprovadamente completo nem sem erros**. Arquitetura de integracao pode ser fechada em zero no modulo; os maiores riscos restantes sao consistencia de autorizacao, atomicidade/duplicacao do fluxo de criacao, legado de schema/dados e ausencia de certificacao executavel atual.
+O modulo de Empresas possui implementacao ampla e uma base de seguranca relevante, mas **nao esta comprovadamente completo nem sem erros**. A fronteira de integracao e a matriz de autoridade foram endurecidas; os maiores riscos restantes sao atomicidade do fluxo de criacao, analytics duplicado/quebrado, legado de schema/dados e ausencia de certificacao executavel atual.
