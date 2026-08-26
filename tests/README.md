@@ -23,13 +23,13 @@ tests/
 
 ## Regra para a raiz de `tests/`
 
-Novos arquivos `*.test.*` ou `*.spec.*` **não devem ser criados diretamente em `tests/`**.
+Arquivos `*.test.*` ou `*.spec.*` **não são permitidos diretamente em `tests/`**.
 
-O guard `tests/architecture/test-root-layout-ratchet.test.ts` bloqueia novas implementações na raiz. A dívida histórica foi reduzida a um único arquivo:
+O guard `tests/architecture/test-root-layout-ratchet.test.ts` exige que a raiz tenha **zero implementações de teste**. Toda a dívida histórica de testes soltos foi removida em 2026-08-26.
 
-- `mobility-integration.test.ts` — ainda usa vários imports relativos dinâmicos que dependem da profundidade atual; requer normalização coordenada antes do move.
+O último legado, `mobility-integration.test.ts`, foi movido para `tests/integration/mobility/mobility-integration.test.ts`; seus imports dinâmicos de `src` foram normalizados de `../src/...` para o alias `@/...`.
 
-Nenhum outro teste é permitido na raiz. Em 2026-08-26, os guards SSOT de Posts, rotas públicas, shell público, copy territorial e Tourist Points foram movidos byte-a-byte para `tests/regression/**`, sem alterar seus blobs.
+Os guards SSOT de Posts, rotas públicas, shell público, copy territorial e Tourist Points também foram consolidados em `tests/regression/**`.
 
 ## Convenções
 
@@ -39,7 +39,7 @@ Nenhum outro teste é permitido na raiz. Em 2026-08-26, os guards SSOT de Posts,
 - `security/`: protege autorização, identidade, RLS/RPC, exposição de secrets, LGPD e segurança operacional.
 - `e2e/`: fluxos end-to-end; fixtures mutáveis devem ser identificáveis como fixtures técnicas e nunca depender implicitamente de dados reais de produção.
 
-Prefira imports por alias `@/` para código em `src/`. Imports relativos que dependem da profundidade física do teste dificultam reorganização e devem ser removidos progressivamente.
+Prefira imports por alias `@/` para código em `src/`. Imports relativos que dependem da profundidade física do teste não devem ser reintroduzidos.
 
 ## Provenance de fixtures E2E
 
