@@ -21,8 +21,8 @@ import {
   opportunityToSearchDocument,
   truncateSearchDescription,
 } from "@/core/search/services/SearchDocumentMapper";
-import { eventsReadService } from "@/core/verticals/events";
-import { eventPublicRoutes } from "@/core/verticals/events/routes/eventPublicRoutes";
+import { eventsReadService } from "@/core/community-events";
+import { eventPublicRoutes } from "@/core/community-events/routes/eventPublicRoutes";
 import {
   WorkOpportunitiesService,
   type WorkOpportunityCard,

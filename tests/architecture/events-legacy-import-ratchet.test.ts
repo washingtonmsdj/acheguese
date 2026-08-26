@@ -10,7 +10,6 @@ const historicalImport = "@/core/verticals/events";
 const ALLOWED_HISTORICAL_EVENTS_CALLERS = new Set([
   "src/app/pages/TerritoryHomePage.tsx",
   "src/core/community/components/page/CommunityOverviewSurface.tsx",
-  "src/core/landing/services/HomeDiscoveryService.ts",
 ]);
 
 function collectSourceFiles(directory: string): string[] {
