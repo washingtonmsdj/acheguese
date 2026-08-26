@@ -56,7 +56,7 @@ import { useFavorites } from '../hooks/useFavorites';
 import { cn } from '@/shared/utils/cn';
 import { buildGoogleMapsSearchUrl } from '@/shared/utils/contactLinks';
 import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
-import { eventRuntimeService } from '@/core/verticals/events';
+import { eventRuntimeService } from '@/core/community-events';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 import { EventEngagementService } from '../services/EventEngagementService';
