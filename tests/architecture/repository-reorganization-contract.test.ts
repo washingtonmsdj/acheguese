@@ -15,6 +15,7 @@ const CONFIG_BRIDGES = new Map([
   ["src/config/launchScope.ts", "@/app/config/launchScope"],
   ["src/config/territory.ts", "@/app/config/territory"],
   ["src/config/communityLaunch.ts", "@/core/community/config/communityLaunch"],
+  ["src/config/categories.ts", "@/core/taxonomy/categories"],
 ] as const);
 
 const CANONICAL_CONFIG_TARGETS = [
@@ -25,6 +26,21 @@ const CANONICAL_CONFIG_TARGETS = [
   "src/app/config/launchScope.ts",
   "src/app/config/territory.ts",
   "src/core/community/config/communityLaunch.ts",
+  "src/core/taxonomy/categories.ts",
+] as const;
+
+const LEGACY_E2E_BRIDGES = new Map([
+  ["e2e/helpers/auth.ts", "tests/e2e/helpers/auth"],
+  ["e2e/helpers/geolocation.ts", "tests/e2e/helpers/geolocation"],
+  ["e2e/helpers/network.ts", "tests/e2e/helpers/network"],
+  ["e2e/network-branches.spec.ts", "tests/e2e/network-branches.spec"],
+] as const);
+
+const CANONICAL_E2E_TARGETS = [
+  "tests/e2e/helpers/auth.ts",
+  "tests/e2e/helpers/geolocation.ts",
+  "tests/e2e/helpers/network.ts",
+  "tests/e2e/network-branches.spec.ts",
 ] as const;
 
 function listDirectories(relativePath: string): string[] {
@@ -89,10 +105,11 @@ describe("global repository reorganization contract", () => {
       const content = fs.readFileSync(absolutePath, "utf8");
       expect(content).toContain("Compatibility bridge");
       expect(content).toContain(canonicalImport);
+      expect(content.length, `${bridgeFile} must stay bridge-sized`).toBeLessThan(512);
     }
   });
 
-  it("freezes src/config to the known taxonomy debt plus compatibility bridges", () => {
+  it("freezes src/config to compatibility bridges only", () => {
     expect(listFiles("src/config")).toEqual([
       "categories.ts",
       "communityLaunch.ts",
@@ -103,5 +120,22 @@ describe("global repository reorganization contract", () => {
       "security.config.ts",
       "territory.ts",
     ]);
+  });
+
+  it("keeps legacy root e2e files as compatibility bridges only", () => {
+    for (const relativePath of CANONICAL_E2E_TARGETS) {
+      expect(fs.existsSync(path.join(ROOT, relativePath)), relativePath).toBe(true);
+    }
+
+    for (const [bridgeFile, canonicalTarget] of LEGACY_E2E_BRIDGES) {
+      const absolutePath = path.join(ROOT, bridgeFile);
+      expect(fs.existsSync(absolutePath), bridgeFile).toBe(true);
+
+      const content = fs.readFileSync(absolutePath, "utf8");
+      expect(content).toContain(canonicalTarget);
+      expect(content.length, `${bridgeFile} must stay bridge-sized`).toBeLessThan(256);
+      expect(content).not.toContain("test.describe(");
+      expect(content).not.toContain("dotenv.config(");
+    }
   });
 });
