@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-import { AUTH_STORAGE_KEY } from "@/config/security.config";
+import { AUTH_STORAGE_KEY } from "@/shared/config/security.config";
 
 const currentDir = resolve(fileURLToPath(import.meta.url), "..");
 const repoRoot = resolve(currentDir, "../../../..");
