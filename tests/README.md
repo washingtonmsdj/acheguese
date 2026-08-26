@@ -25,18 +25,11 @@ tests/
 
 Novos arquivos `*.test.*` ou `*.spec.*` **não devem ser criados diretamente em `tests/`**.
 
-O guard `tests/architecture/test-root-layout-ratchet.test.ts` bloqueia novas implementações na raiz. Os poucos arquivos ainda tolerados ali são dívida histórica explícita e devem apenas diminuir.
+O guard `tests/architecture/test-root-layout-ratchet.test.ts` bloqueia novas implementações na raiz. A dívida histórica foi reduzida a um único arquivo:
 
-Legados atualmente tolerados:
+- `mobility-integration.test.ts` — ainda usa vários imports relativos dinâmicos que dependem da profundidade atual; requer normalização coordenada antes do move.
 
-- `mobility-integration.test.ts` — vários imports relativos; requer normalização coordenada antes do move.
-- `posts-community-posts-ssot.test.ts` — citado pelo plano Community First ativo.
-- `public-search-route-regression.test.ts` — possui documentação/contrato de status associado.
-- `public-shell-admin-boundary-regression.test.ts` — possui documentação ativa associada.
-- `public-territorial-copy-regression.test.ts` — path consumido por comando versionado.
-- `regression-tourist-points.test.ts` — preservado até um move byte-safe do arquivo completo.
-
-Nenhum desses arquivos deve servir como precedente para novos testes na raiz.
+Nenhum outro teste é permitido na raiz. Em 2026-08-26, os guards SSOT de Posts, rotas públicas, shell público, copy territorial e Tourist Points foram movidos byte-a-byte para `tests/regression/**`, sem alterar seus blobs.
 
 ## Convenções
 
@@ -47,6 +40,19 @@ Nenhum desses arquivos deve servir como precedente para novos testes na raiz.
 - `e2e/`: fluxos end-to-end; fixtures mutáveis devem ser identificáveis como fixtures técnicas e nunca depender implicitamente de dados reais de produção.
 
 Prefira imports por alias `@/` para código em `src/`. Imports relativos que dependem da profundidade física do teste dificultam reorganização e devem ser removidos progressivamente.
+
+## Provenance de fixtures E2E
+
+Clients operacionais criados por `tests/helpers/operational-env.ts` aplicam provenance técnica aos writes autorizados de `business_data`:
+
+```json
+{
+  "source": "e2e",
+  "source_kind": "technical_fixture"
+}
+```
+
+Metadata funcional existente é preservada. Para clients anon, o enriquecimento só é aplicado quando o alvo de mutação está explicitamente aprovado como ambiente E2E isolado. Isso identifica fixtures; não substitui os guards de segurança contra Production.
 
 ## Execução
 
