@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `a81bae776f087a82b793c53cd185d6ecde6e584c`  
+Baseline reviewed: `5ebe8edff5ff1349e1e7f626e80c298246c3bf57`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -63,6 +63,8 @@ Rules:
 | `scripts/validate-project-taxonomy.ts` | `tools/architecture/validate-project-taxonomy.ts` | package/docs/callers use canonical owner directly; legacy CLI/source-inspection compatibility no longer required |
 | `scripts/validate-public-url-ssot.ts` | `tools/architecture/validate-public-url-ssot.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
 | `scripts/validate-upload-ssot.ts` | `tools/architecture/validate-upload-ssot.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
+| `scripts/validate-security-config.ts` | `tools/security/validate-security-config.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
+| `scripts/validate-security-fixes.ts` | `tools/security/validate-security-fixes.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
 | `scripts/validate-critical-file-sizes.ts` | `tools/architecture/validate-critical-file-sizes.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-architecture-governance.ts` | `tools/architecture/validate-architecture-governance.ts` | npm/docs/callers point to canonical path; legacy CLI/module compatibility no longer required |
 | `scripts/validate-architecture-phase1.mjs` | `tools/architecture/validate-architecture-phase1.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
