@@ -1,4 +1,4 @@
-import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
+import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
 import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
