@@ -119,7 +119,7 @@ describe('regression: remote E2E mutation safety', () => {
   });
 
   it('removes automatic real-business selection and locks every known mutating operational entrypoint', () => {
-    const slugValidator = read('scripts/validate-slug-history-final.ts');
+    const slugValidator = read('tools/supabase/validate-slug-history-final.ts');
     const networkSeeder = read('tools/seeds/seed-e2e-network.ts');
     const supabaseClient = read('tools/supabase/supabase-client.mjs');
 
