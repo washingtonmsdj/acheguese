@@ -13,7 +13,7 @@ Este arquivo substitui a validacao historica de 2026-07-04. Resultados antigos d
 - UI/aplicacao permanece em `src/modules/business`.
 - Domain/read-write/integrations pertencem a `src/core/business`.
 - O acesso runtime direto encontrado no modulo geral estava em `public/services/PublicSnapshotRpcService.ts`; ownership foi movido para core e o path antigo virou bridge.
-- `scripts/validate-business-module-boundaries.ts` exige zero acesso runtime direto a `@/integrations/*` e `@supabase/supabase-js` em todo `src/modules/business`.
+- `tools/architecture/validate-business-module-boundaries.ts` exige zero acesso runtime direto a `@/integrations/*` e `@supabase/supabase-js` em todo `src/modules/business`.
 
 ### RLS e autorizacao no banco alvo
 
