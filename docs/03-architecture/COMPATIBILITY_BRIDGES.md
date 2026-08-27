@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `29d823370f8e5b82705ae9e148b83b4968bba8a5`  
+Baseline reviewed: `5cffd3b56f3cff4eddc8005cdd00496a1440d768`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -66,8 +66,6 @@ Rules:
 | `scripts/generate-supabase-types.ts` | `tools/supabase/generate-supabase-types.ts` | public npm command and callers point to canonical path |
 | `scripts/generate-hardening-architecture-report.ts` | `tools/architecture/generate-hardening-architecture-report.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/generate-architecture-audit.ts` | `tools/architecture/generate-architecture-audit.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
-| `scripts/diagnose-typecheck.mjs` | `tools/architecture/diagnose-typecheck.mjs` | package/docs/callers point to canonical path; legacy diagnostic entrypoint no longer required |
-| `scripts/validate-maps-architecture.mjs` | `tools/architecture/validate-maps-architecture.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-core-platform-ownership.mjs` | `tools/architecture/validate-core-platform-ownership.mjs` | package/tests/callers use canonical owner directly; legacy CLI/module compatibility no longer required |
 | `scripts/validate-session-context.ts` | `tools/architecture/validate-session-context.ts` | package/docs/callers use canonical owner directly; legacy CLI/module compatibility no longer required |
 | `scripts/validate-project-taxonomy.ts` | `tools/architecture/validate-project-taxonomy.ts` | package/docs/callers use canonical owner directly; legacy CLI/source-inspection compatibility no longer required |
@@ -96,7 +94,6 @@ Rules:
 | `scripts/security/validate-free-release-governance-remote.mjs` | `tools/security/validate-free-release-governance-remote.mjs` | package command uses canonical remote read-only gate directly; legacy CLI/import entrypoint no longer required |
 | `scripts/security/supabase-postgis-owner-preflight.mjs` | `tools/security/supabase-postgis-owner-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
 | `scripts/security/validate-poll-rpc-advisor-mappings.mjs` | `tools/security/validate-poll-rpc-advisor-mappings.mjs` | package/tests import canonical local mappings validator directly |
-| `scripts/validate-critical-file-sizes.ts` | `tools/architecture/validate-critical-file-sizes.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-architecture-governance.ts` | `tools/architecture/validate-architecture-governance.ts` | npm/docs/callers point to canonical path; legacy CLI/module compatibility no longer required |
 | `scripts/validate-architecture-phase1.mjs` | `tools/architecture/validate-architecture-phase1.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-architecture-boundaries-incremental.mjs` | `tools/architecture/validate-architecture-boundaries-incremental.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
@@ -220,6 +217,9 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/security/validate-csp.ts` → npm `validate:csp` now calls `tools/security/validate-csp.ts` directly; old bridge removed.
 - `scripts/security/validate-turnstile-production-config.mjs` → npm `validate:turnstile:production` now calls the canonical security validator directly; old bridge removed.
 - `scripts/validate-vercel-build-inputs.mjs` → npm `validate:vercel:inputs` now calls `tools/release/validate-vercel-build-inputs.mjs` directly; old bridge removed.
+- `scripts/validate-maps-architecture.mjs` → npm `validate:maps` and the Maps fixture README now use `tools/architecture/validate-maps-architecture.mjs`; old bridge removed.
+- `scripts/diagnose-typecheck.mjs` → npm `typecheck:diagnose` now calls `tools/architecture/diagnose-typecheck.mjs` directly; remaining references are archived typecheck documentation; old bridge removed.
+- `scripts/validate-critical-file-sizes.ts` → npm `validate:architecture:file-sizes` now calls `tools/architecture/validate-critical-file-sizes.ts` directly; remaining reference is archived architecture history; old bridge removed.
 
 ## G2 closure condition for bridges
 
