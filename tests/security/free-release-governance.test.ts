@@ -6,7 +6,7 @@ import {
   governanceFingerprint,
   validateFreeReleaseGovernance,
   validateRemoteRecoveryFreshness,
-} from "../../scripts/security/validate-free-release-governance.mjs";
+} from "../../tools/security/validate-free-release-governance.mjs";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const canonicalPolicy = JSON.parse(
