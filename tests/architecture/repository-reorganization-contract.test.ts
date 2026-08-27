@@ -10,6 +10,7 @@ const RETIRED_SOURCE_ROOTS = [
   "src/types",
   "src/features",
 ] as const;
+const RETIRED_SOURCE_FILES = ["src/App.css"] as const;
 const RETIRED_ROOT_ARTIFACTS = ["handoff", "product-qa-screenshots"] as const;
 
 const CONFIG_BRIDGES = new Map([
@@ -78,6 +79,12 @@ describe("global repository reorganization contract", () => {
 
   it("does not recreate retired generic source roots", () => {
     for (const relativePath of RETIRED_SOURCE_ROOTS) {
+      expect(fs.existsSync(path.join(ROOT, relativePath)), relativePath).toBe(false);
+    }
+  });
+
+  it("does not recreate retired source files", () => {
+    for (const relativePath of RETIRED_SOURCE_FILES) {
       expect(fs.existsSync(path.join(ROOT, relativePath)), relativePath).toBe(false);
     }
   });
