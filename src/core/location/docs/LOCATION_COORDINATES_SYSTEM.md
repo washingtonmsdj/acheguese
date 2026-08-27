@@ -246,5 +246,5 @@ const { coords, status, sourceMessage } = useResolvedUserLocation();
 
 - `docs/MIGRATION_LOCATION_CENTERS_PROFESSIONAL.sql` - Migração completa
 - `src/core/location/services/LocationGeocodingService.ts` - Serviço de geocoding
-- `scripts/geocode-locations.ts` - Script CLI
+- `tools/seeds/geocode-locations.ts` - Script CLI
 - `./LOCATION_COORDINATES_SYSTEM.md` - Esta documentação
