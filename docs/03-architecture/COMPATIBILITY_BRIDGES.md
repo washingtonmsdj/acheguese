@@ -57,6 +57,17 @@ Rules:
 | `scripts/lib/supabase-client.ts` | `tools/supabase/supabase-client.ts` | all TS tooling imports canonical owner directly |
 | `scripts/lib/supabase-migration-list-parser.mjs` | `tools/migrations/supabase-migration-list-parser.mjs` | all migration tooling/tests import canonical owner directly |
 
+## Business public module-local bridges
+
+These bridges are explicitly required by the Business boundary guard and expose canonical core-owned public snapshot contracts.
+
+| Legacy path | Canonical owner |
+| --- | --- |
+| `src/modules/business/public/types/publicSnapshots.ts` | `src/core/business/types/publicSnapshots` |
+| `src/modules/business/public/services/PublicSnapshotRpcService.ts` | `src/core/business/services/PublicSnapshotRpcService` |
+
+Removal gate for both Business public bridges: zero legacy-path callers plus Business boundary/regression tests passing on the same SHA.
+
 ## Education module-local bridges
 
 All Education persistence/contracts are owned by `src/core/education`.
@@ -74,23 +85,27 @@ Removal gate for every Education bridge: zero legacy-path callers plus Education
 
 ## Gastronomy module-local bridges
 
-All persistence/domain ownership below is canonical in `src/core/business`.
+All persistence/domain ownership below is canonical in `src/core/business`. The complete set includes every bridge enforced by `validate-gastronomy-module-boundaries.ts`, not only files discoverable by comment-text search.
 
 | Legacy path | Canonical owner |
 | --- | --- |
-| `src/modules/business/gastronomy/niches/types.ts` | `src/core/business/niches/types` |
-| `src/modules/business/gastronomy/services/MenuService.ts` | `src/core/business/services/MenuService` |
+| `src/modules/business/gastronomy/types/gastronomy/index.ts` | `src/core/business/types/gastronomy` |
+| `src/modules/business/gastronomy/types/menu.ts` | `src/core/business/types/gastronomyMenu` |
+| `src/modules/business/gastronomy/services/gastronomy.queries.ts` | `src/core/business/services/gastronomy.queries` |
 | `src/modules/business/gastronomy/services/menu.queries.ts` | `src/core/business/services/menu.queries` |
-| `src/modules/business/gastronomy/niches/versioning/types.ts` | `src/core/business/niches/versioning/types` |
 | `src/modules/business/gastronomy/services/review.queries.ts` | `src/core/business/services/gastronomy.review.queries` |
-| `src/modules/business/gastronomy/services/activity.queries.ts` | `src/core/business/services/gastronomy.activity.queries` |
 | `src/modules/business/gastronomy/services/favorites.queries.ts` | `src/core/business/services/gastronomy.favorites.queries` |
 | `src/modules/business/gastronomy/services/DeliveryAreaService.ts` | `src/core/business/services/GastronomyDeliveryAreaService` |
-| `src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts` | `src/core/business/niches/pizzaria/PizzaAdminService` |
-| `src/modules/business/gastronomy/services/GastronomyProfileService.ts` | `src/core/business/services/GastronomyProfileService` |
-| `src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts` | `src/core/business/services/gastronomy-runtime.queries` |
 | `src/modules/business/gastronomy/services/resolveGastronomyBusinessId.ts` | `src/core/business/services/resolveGastronomyBusinessId` |
+| `src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts` | `src/core/business/services/gastronomy-runtime.queries` |
+| `src/modules/business/gastronomy/services/activity.queries.ts` | `src/core/business/services/gastronomy.activity.queries` |
+| `src/modules/business/gastronomy/services/GastronomyProfileService.ts` | `src/core/business/services/GastronomyProfileService` |
+| `src/modules/business/gastronomy/services/MenuService.ts` | `src/core/business/services/MenuService` |
+| `src/modules/business/gastronomy/niches/types.ts` | `src/core/business/niches/types` |
+| `src/modules/business/gastronomy/niches/versioning/types.ts` | `src/core/business/niches/versioning/types` |
 | `src/modules/business/gastronomy/niches/versioning/NicheVersioningService.ts` | `src/core/business/niches/versioning/NicheVersioningService` |
+| `src/modules/business/gastronomy/niches/pizzaria/types.ts` | `src/core/business/niches/pizzaria/types` |
+| `src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts` | `src/core/business/niches/pizzaria/PizzaAdminService` |
 
 Removal gate for every Gastronomy bridge: zero legacy-path callers plus Gastronomy/Business boundary and regression tests passing on the same SHA.
 
