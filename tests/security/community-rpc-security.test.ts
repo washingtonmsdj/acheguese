@@ -145,7 +145,7 @@ describe("community content rpc broker security", () => {
       "supabase/migrations/20260714093000_add_community_rpc_audit_retention.sql",
     );
     const loadHarness = readProjectFile(
-      "scripts/community-staging-load-test.mjs",
+      "tools/release/community-staging-load-test.mjs",
     );
 
     expect(edgeFunction).toMatch(
