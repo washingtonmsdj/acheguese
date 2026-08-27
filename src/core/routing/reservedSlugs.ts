@@ -3,7 +3,7 @@
  * Lista de slugs reservados que não podem ser usados como identificadores públicos
  */
 
-import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
+import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
 
 export const RESERVED_SLUGS = [
   'admin', 'api', 'auth', 'login', 'logout', 'signup', 'register',
