@@ -4,7 +4,7 @@ import {
   validateManifestAgainstRecords,
 } from "../../scripts/validate-core-platform-ownership.mjs";
 
-const EXISTING_PATH = "scripts/core-platform/access-analyzer.mjs";
+const EXISTING_PATH = "tools/architecture/core-platform/access-analyzer.mjs";
 
 function createManifest(overrides = {}) {
   return {
