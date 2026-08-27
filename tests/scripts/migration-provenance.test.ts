@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   fingerprintMigrationSql,
   splitSqlStatements,
-} from "../../scripts/lib/migration-statement-fingerprint.mjs";
+} from "../../tools/migrations/migration-statement-fingerprint.mjs";
 
 describe("migration statement fingerprint", () => {
   it("preserva ponto e virgula dentro de strings e blocos dollar-quoted", () => {
