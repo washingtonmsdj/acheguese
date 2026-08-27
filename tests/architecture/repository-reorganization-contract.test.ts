@@ -60,6 +60,12 @@ const ARCHIVED_ROOT_ARTIFACT_TARGETS = [
   "docs/10-archive/root-legacy/product-qa-screenshots",
 ] as const;
 
+const LEGACY_SECURITY_CONFIG_IMPORT = ["@/config", "security.config"].join("/");
+const ALLOWED_LEGACY_SECURITY_CONFIG_CALLERS = [
+  "src/app/pages/PreLaunchLandingPage.tsx",
+  "src/core/routing/components/CommunityInterestPage.tsx",
+] as const;
+
 function listFiles(relativePath: string): string[] {
   const absolutePath = path.join(ROOT, relativePath);
   if (!fs.existsSync(absolutePath)) return [];
@@ -69,6 +75,27 @@ function listFiles(relativePath: string): string[] {
     .filter((entry) => entry.isFile())
     .map((entry) => entry.name)
     .sort();
+}
+
+function listFilesRecursively(relativePath: string): string[] {
+  const absolutePath = path.join(ROOT, relativePath);
+  if (!fs.existsSync(absolutePath)) return [];
+
+  const files: string[] = [];
+  const visit = (directory: string) => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const absoluteEntry = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        visit(absoluteEntry);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      files.push(path.relative(ROOT, absoluteEntry).split(path.sep).join("/"));
+    }
+  };
+
+  visit(absolutePath);
+  return files.sort();
 }
 
 describe("global repository reorganization contract", () => {
@@ -143,6 +170,18 @@ describe("global repository reorganization contract", () => {
       expect(content).toContain(canonicalImport);
       expect(content.length, `${bridgeFile} must stay bridge-sized`).toBeLessThan(512);
     }
+  });
+
+  it("ratchets legacy security config imports to the two remaining runtime callers", () => {
+    const callers = [...listFilesRecursively("src"), ...listFilesRecursively("tests")]
+      .filter((relativePath) => relativePath !== "src/config/security.config.ts")
+      .filter((relativePath) => {
+        const content = fs.readFileSync(path.join(ROOT, relativePath), "utf8");
+        return content.includes(LEGACY_SECURITY_CONFIG_IMPORT);
+      })
+      .sort();
+
+    expect(callers).toEqual([...ALLOWED_LEGACY_SECURITY_CONFIG_CALLERS].sort());
   });
 
   it("freezes src/config to the remaining compatibility bridges only", () => {
