@@ -241,7 +241,7 @@
       ]
     },
     {
-      "path": "scripts/seed-e2e-network.ts",
+      "path": "tools/seeds/seed-e2e-network.ts",
       "kind": "operator-script",
       "risk": "High",
       "label": "E2E seed script using operator-supplied service_role outside browser runtime.",
@@ -249,7 +249,7 @@
       "allowedPatternIds": ["service-role-key-literal"]
     },
     {
-      "path": "scripts/seed-e2e-users.ts",
+      "path": "tools/seeds/seed-e2e-users.ts",
       "kind": "operator-script",
       "risk": "High",
       "label": "E2E user seed script using operator-supplied service_role outside browser runtime.",
