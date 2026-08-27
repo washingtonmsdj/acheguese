@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `e68e4e421c1890e54bb5347268c14a28b1be7ba7`  
+Baseline reviewed: `a9e403a7dbd48bfbb8362f25146621612d1e3be2`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -85,6 +85,7 @@ Rules:
 | `scripts/security/validate-security.mjs` | `tools/security/validate-security.mjs` | package/docs/callers use canonical security orchestrator directly; legacy command no longer required |
 | `scripts/security/validate-free-release-governance.mjs` | `tools/security/validate-free-release-governance.mjs` | package/test/remote wrapper import canonical local governance validator directly |
 | `scripts/security/validate-free-release-governance-remote.mjs` | `tools/security/validate-free-release-governance-remote.mjs` | package command uses canonical remote read-only gate directly; legacy CLI/import entrypoint no longer required |
+| `scripts/security/supabase-postgis-owner-preflight.mjs` | `tools/security/supabase-postgis-owner-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
 | `scripts/security/validate-poll-rpc-advisor-mappings.mjs` | `tools/security/validate-poll-rpc-advisor-mappings.mjs` | package/tests import canonical local mappings validator directly |
 | `scripts/validate-critical-file-sizes.ts` | `tools/architecture/validate-critical-file-sizes.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-architecture-governance.ts` | `tools/architecture/validate-architecture-governance.ts` | npm/docs/callers point to canonical path; legacy CLI/module compatibility no longer required |
@@ -179,6 +180,9 @@ These paths were not kept as bridges because no compatibility caller required th
 
 - `scripts/community-staging-load-test.spec.ts` → moved to `tests/scripts/community-staging-load-test.spec.ts` and old path removed.
 - `scripts/backup-config.ts` → moved to `tools/maintenance/backup-config.ts` and old path removed.
+- `scripts/security/supabase-edge-secrets-preflight.mjs` → moved to `tools/security/supabase-edge-secrets-preflight.mjs`; security test updated to canonical path and old path removed.
+- `scripts/security/supabase-edge-runtime-auth-drift.mjs` → moved to `tools/security/supabase-edge-runtime-auth-drift.mjs`; security test updated to canonical path and old path removed.
+- `scripts/security/supabase-lgpd-edge-rollout-preflight.mjs` → moved to `tools/security/supabase-lgpd-edge-rollout-preflight.mjs`; security test updated to canonical path and old path removed.
 
 ## G2 closure condition for bridges
 
