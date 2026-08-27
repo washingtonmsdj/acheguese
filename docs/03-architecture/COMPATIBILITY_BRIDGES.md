@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `9eadedbdd657c806db4cbc2eab6757f06e2ff25e`  
+Baseline reviewed: `a3b76383a3bcdf47077950930d4571718f5a4cea`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -68,6 +68,7 @@ Rules:
 | `scripts/salvador-preflight.mjs` | `tools/supabase/salvador-preflight.mjs` | package/tests/callers use canonical preflight owner directly; legacy CLI/module compatibility no longer required |
 | `scripts/validate-supabase-advisor-residuals.ts` | `tools/supabase/validate-supabase-advisor-residuals.ts` | package/tests/docs use canonical validator directly; legacy CLI/module compatibility no longer required |
 | `scripts/validate-supabase-remote-migration-drift.ts` | `tools/supabase/validate-supabase-remote-migration-drift.ts` | package/docs/callers use canonical remote drift gate directly; legacy entrypoint no longer required |
+| `scripts/validate-migration-provenance.mjs` | `tools/migrations/validate-migration-provenance.mjs` | package/docs/callers point to canonical provenance gate; legacy entrypoint no longer required |
 | `scripts/location/municipal-neighborhood-sources.ts` | `tools/seeds/municipal-neighborhood-sources.ts` | all callers/docs use canonical manifest directly; legacy re-export no longer required |
 | `scripts/generate-service-template.ts` | `tools/architecture/generate-service-template.ts` | public npm command and docs point to canonical path |
 | `scripts/generate-migration-template.ts` | `tools/migrations/generate-migration-template.ts` | public npm command and docs point to canonical path |
@@ -126,13 +127,6 @@ Rules:
 | `scripts/validate-communication-territorial-boundaries.ts` | `tools/architecture/validate-communication-territorial-boundaries.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-docs-structure.ts` | `tools/architecture/validate-docs-structure.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-doc-live-links.ts` | `tools/architecture/validate-doc-live-links.ts` | package/docs/callers point to canonical path; legacy command no longer required |
-| `scripts/lib/architecture-registry.ts` | `tools/architecture/architecture-registry.ts` | architecture validators/readers use canonical owner directly |
-| `scripts/lib/migration-statement-fingerprint.mjs` | `tools/migrations/migration-statement-fingerprint.mjs` | all migration tooling imports canonical owner directly |
-| `scripts/lib/remote-mutation-safety.mjs` | `tools/supabase/remote-mutation-safety.mjs` | all runtime tooling imports canonical owner directly |
-| `scripts/lib/remote-mutation-safety.ts` | `tools/supabase/remote-mutation-safety.ts` | all TS tooling imports canonical owner directly |
-| `scripts/lib/supabase-cli-json.mjs` | `tools/supabase/supabase-cli-json.mjs` | all CLI tooling imports canonical owner directly |
-| `scripts/lib/supabase-cli-query-json.mjs` | `tools/supabase/supabase-cli-query-json.mjs` | all CLI tooling imports canonical owner directly |
-| `scripts/lib/supabase-cli-validation-state.mjs` | `tools/supabase/supabase-cli-validation-state.mjs` | all CLI tooling imports canonical owner directly |
 | `scripts/lib/supabase-client.d.mts` | `tools/supabase/supabase-client.d.mts` | no consumer needs legacy declaration resolution |
 | `scripts/lib/supabase-client.mjs` | `tools/supabase/supabase-client.mjs` | all runtime tooling imports canonical owner directly |
 | `scripts/lib/supabase-client.ts` | `tools/supabase/supabase-client.ts` | all TS tooling imports canonical owner directly |
@@ -219,6 +213,13 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/validate-business-district-required.ts` → moved to `tools/supabase/validate-business-district-required.ts`; canonical read-only validator now imports `tools/supabase/supabase-client.ts` directly and old path removed.
 - `scripts/lib/supabase-cli-runner.mjs` → tests/tooling migrated to `tools/supabase/supabase-cli-runner.mjs`; old bridge removed.
 - `scripts/lib/supabase-migration-list-parser.mjs` → migration tooling/test migrated to `tools/migrations/supabase-migration-list-parser.mjs`; old bridge removed.
+- `scripts/lib/migration-statement-fingerprint.mjs` → provenance tooling/test migrated to `tools/migrations/migration-statement-fingerprint.mjs`; old bridge removed.
+- `scripts/lib/remote-mutation-safety.mjs` → runtime tooling already used `tools/supabase/remote-mutation-safety.mjs`; old bridge removed.
+- `scripts/lib/remote-mutation-safety.ts` → typed tooling already used `tools/supabase/remote-mutation-safety.ts`; old bridge removed.
+- `scripts/lib/supabase-cli-json.mjs` → CLI parsing consumers already used `tools/supabase/supabase-cli-json.mjs`; old bridge removed.
+- `scripts/lib/supabase-cli-query-json.mjs` → query parsing consumers already used `tools/supabase/supabase-cli-query-json.mjs`; old bridge removed.
+- `scripts/lib/supabase-cli-validation-state.mjs` → validation-state consumers already used `tools/supabase/supabase-cli-validation-state.mjs`; old bridge removed.
+- `scripts/lib/architecture-registry.ts` → architecture validator already targets `tools/architecture/architecture-registry.ts`; old bridge removed.
 
 ## G2 closure condition for bridges
 
