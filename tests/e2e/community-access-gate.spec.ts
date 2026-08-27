@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { type User } from "@supabase/supabase-js";
-import { login } from "../../e2e/helpers/auth";
+import { login } from "./helpers/auth";
 import {
   createOptionalOperationalAdminClient,
   hasOperationalAnonEnv,
