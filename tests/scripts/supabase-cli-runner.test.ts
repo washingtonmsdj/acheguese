@@ -4,7 +4,7 @@ import {
   SUPABASE_CLI_ENTRYPOINT,
   createSupabaseCliInvocation,
   runSupabaseCli,
-} from "../../scripts/lib/supabase-cli-runner.mjs";
+} from "../../tools/supabase/supabase-cli-runner.mjs";
 
 describe("Supabase CLI runner", () => {
   it("passes spaces, special characters and project refs as literal arguments", () => {
