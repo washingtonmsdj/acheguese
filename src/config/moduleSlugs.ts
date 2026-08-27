@@ -1,3 +1,3 @@
 // Compatibility bridge during global repository reorganization.
-// Canonical owner: src/app/config/moduleSlugs.ts
-export * from "@/app/config/moduleSlugs";
+// Canonical owner: src/shared/config/moduleSlugs.ts
+export * from "@/shared/config/moduleSlugs";
