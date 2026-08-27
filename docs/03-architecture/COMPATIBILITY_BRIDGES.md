@@ -26,7 +26,7 @@ Rules:
 | `src/config/launchScope.ts` | `src/app/config/launchScope.ts` | all callers import canonical owner directly |
 | `src/config/moduleSlugs.ts` | `src/shared/config/moduleSlugs.ts` | all callers import canonical owner directly |
 | `src/config/modules.ts` | `src/app/config/modules.ts` | all callers import canonical owner directly |
-| `src/config/territory.ts` | `src/core/routing/config/territory.ts` | all callers import canonical owner directly |
+| `src/config/territory.ts` | `src/app/config/territory.ts` | all callers import canonical owner directly; then retire the app bridge in a separate guarded cut |
 | `src/app/config/territory.ts` | `src/core/routing/config/territory.ts` | all app callers import canonical owner directly |
 | `src/app/config/moduleSlugs.ts` | `src/shared/config/moduleSlugs.ts` | all app callers import canonical owner directly |
 
