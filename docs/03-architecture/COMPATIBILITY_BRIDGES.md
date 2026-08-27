@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `a3b76383a3bcdf47077950930d4571718f5a4cea`  
+Baseline reviewed: `70eb4c66218dcbf1f719788ada7fb788754fdf74`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -127,9 +127,7 @@ Rules:
 | `scripts/validate-communication-territorial-boundaries.ts` | `tools/architecture/validate-communication-territorial-boundaries.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-docs-structure.ts` | `tools/architecture/validate-docs-structure.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-doc-live-links.ts` | `tools/architecture/validate-doc-live-links.ts` | package/docs/callers point to canonical path; legacy command no longer required |
-| `scripts/lib/supabase-client.d.mts` | `tools/supabase/supabase-client.d.mts` | no consumer needs legacy declaration resolution |
-| `scripts/lib/supabase-client.mjs` | `tools/supabase/supabase-client.mjs` | all runtime tooling imports canonical owner directly |
-| `scripts/lib/supabase-client.ts` | `tools/supabase/supabase-client.ts` | all TS tooling imports canonical owner directly |
+| `scripts/lib/supabase-client.ts` | `tools/supabase/supabase-client.ts` | `scripts/media-assets-cp016-backfill.ts` must be moved or retargeted to the canonical client without weakening its existing project/apply confirmation guards |
 
 ## Business public module-local bridges
 
@@ -220,6 +218,8 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/lib/supabase-cli-query-json.mjs` → query parsing consumers already used `tools/supabase/supabase-cli-query-json.mjs`; old bridge removed.
 - `scripts/lib/supabase-cli-validation-state.mjs` → validation-state consumers already used `tools/supabase/supabase-cli-validation-state.mjs`; old bridge removed.
 - `scripts/lib/architecture-registry.ts` → architecture validator already targets `tools/architecture/architecture-registry.ts`; old bridge removed.
+- `scripts/lib/supabase-client.mjs` → mutating `.mjs` validators now import `tools/supabase/supabase-client.mjs` directly; old runtime bridge removed.
+- `scripts/lib/supabase-client.d.mts` → no remaining consumer required legacy declaration resolution after the runtime bridge retirement; old declaration bridge removed.
 
 ## G2 closure condition for bridges
 
