@@ -1,5 +1,5 @@
 import { GastronomyUrlService } from "@/core/verticals/gastronomy/services/GastronomyUrlService";
-import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
+import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
 import { buildModuleTerritoryEntityUrl } from "@/core/routing/utils/territoryUrls";
 import { VERTICAL_KEYS, type VerticalKey } from './config';
 import { getRecordValue } from '@/shared/utils/recordLookup';
