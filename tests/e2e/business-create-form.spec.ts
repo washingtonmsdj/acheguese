@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { loginAsUser } from "../../e2e/helpers/auth";
+import { loginAsUser } from "./helpers/auth";
 
 const TEST_EMAIL = process.env.E2E_USER_EMAIL || "";
 const TEST_PASSWORD = process.env.E2E_USER_PASSWORD || "";
