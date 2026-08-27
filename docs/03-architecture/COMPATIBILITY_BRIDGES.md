@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `e74e841f4f4c834537a1008a9da477a0e38f8b92`  
+Baseline reviewed: `a909872821656a02ea65e1f15d7b1e06a3ba1df3`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -46,10 +46,15 @@ Rules:
 | `scripts/generate-migration-template.ts` | `tools/migrations/generate-migration-template.ts` | public npm command and docs point to canonical path |
 | `scripts/generate-supabase-types.ts` | `tools/supabase/generate-supabase-types.ts` | public npm command and callers point to canonical path |
 | `scripts/generate-hardening-architecture-report.ts` | `tools/architecture/generate-hardening-architecture-report.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
+| `scripts/generate-architecture-audit.ts` | `tools/architecture/generate-architecture-audit.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-critical-file-sizes.ts` | `tools/architecture/validate-critical-file-sizes.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
+| `scripts/validate-architecture-governance.ts` | `tools/architecture/validate-architecture-governance.ts` | npm/docs/callers point to canonical path; legacy CLI/module compatibility no longer required |
 | `scripts/validate-business-module-boundaries.ts` | `tools/architecture/validate-business-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-education-module-boundaries.ts` | `tools/architecture/validate-education-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-gastronomy-module-boundaries.ts` | `tools/architecture/validate-gastronomy-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
+| `scripts/validate-delivery-architecture-boundaries.ts` | `tools/architecture/validate-delivery-architecture-boundaries.ts` | package/docs/callers point to canonical path; legacy command no longer required |
+| `scripts/validate-community-transversal-boundaries.ts` | `tools/architecture/validate-community-transversal-boundaries.ts` | package/docs/callers point to canonical path; legacy command no longer required |
+| `scripts/validate-communication-territorial-boundaries.ts` | `tools/architecture/validate-communication-territorial-boundaries.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/lib/architecture-registry.ts` | `tools/architecture/architecture-registry.ts` | architecture validators/readers use canonical owner directly |
 | `scripts/lib/migration-statement-fingerprint.mjs` | `tools/migrations/migration-statement-fingerprint.mjs` | all migration tooling imports canonical owner directly |
 | `scripts/lib/remote-mutation-safety.mjs` | `tools/supabase/remote-mutation-safety.mjs` | all runtime tooling imports canonical owner directly |
