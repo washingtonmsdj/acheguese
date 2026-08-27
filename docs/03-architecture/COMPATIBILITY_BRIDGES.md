@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `78bda594b2f6371016bea8da9c8a85e527ad8227`  
+Baseline reviewed: `29d823370f8e5b82705ae9e148b83b4968bba8a5`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -45,7 +45,6 @@ Rules:
 | `scripts/run-vercel-production-build.mjs` | `tools/release/run-vercel-production-build.mjs` | Vercel/build callers point to canonical path; legacy production entrypoint no longer required |
 | `scripts/validate-production-sitemap.mjs` | `tools/release/validate-production-sitemap.mjs` | release/build callers point to canonical path; legacy command no longer required |
 | `scripts/generate-sitemap.ts` | `tools/release/generate-sitemap.ts` | package/docs/callers point to canonical path; legacy command no longer required |
-| `scripts/validate-vercel-build-inputs.mjs` | `tools/release/validate-vercel-build-inputs.mjs` | package/build callers point to canonical path; legacy command no longer required |
 | `scripts/generate-economic-benchmark-blocker-report.mjs` | `tools/release/generate-economic-benchmark-blocker-report.mjs` | package/callers use canonical owner directly; legacy entrypoint no longer required |
 | `scripts/run-economic-benchmark-all.mjs` | `tools/release/run-economic-benchmark-all.mjs` | package command points to canonical runner; legacy entrypoint no longer required |
 | `scripts/economic-benchmark-ssot.mjs` | `tools/release/economic-benchmark-ssot.mjs` | package/economic benchmark callers use canonical SSOT directly; legacy entrypoint no longer required |
@@ -220,6 +219,7 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/build-fast.mjs` → npm `build:fast` now calls `tools/release/build-fast.mjs` directly; historical typecheck docs remain archival only; old bridge removed.
 - `scripts/security/validate-csp.ts` → npm `validate:csp` now calls `tools/security/validate-csp.ts` directly; old bridge removed.
 - `scripts/security/validate-turnstile-production-config.mjs` → npm `validate:turnstile:production` now calls the canonical security validator directly; old bridge removed.
+- `scripts/validate-vercel-build-inputs.mjs` → npm `validate:vercel:inputs` now calls `tools/release/validate-vercel-build-inputs.mjs` directly; old bridge removed.
 
 ## G2 closure condition for bridges
 
