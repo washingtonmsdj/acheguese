@@ -1,4 +1,4 @@
-import type { PublicBusinessSnapshot, PublicSlugRouteParams } from "@/modules/business/public/types/publicSnapshots";
+import type { PublicBusinessSnapshot, PublicSlugRouteParams } from "@/core/business/types/publicSnapshots";
 import {
   isTonePizzariaRouteFixture,
   TONE_PIZZARIA_ROUTE_FIXTURE_SLUG,
