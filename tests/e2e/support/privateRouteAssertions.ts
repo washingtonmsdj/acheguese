@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import { loginAsUser } from '../../../e2e/helpers/auth';
+import { loginAsUser } from '../helpers/auth';
 import { DEFAULT_MOBILE_VIEWPORT, expectNoHorizontalOverflow } from './publicRouteAssertions';
 
 type PrivateViewport = {
