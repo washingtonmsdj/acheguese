@@ -4,6 +4,16 @@ import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
 const PERMANENT_PLAN = "URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md";
+const CANONICAL_SOURCE_ROOTS = [
+  "app",
+  "assets",
+  "config",
+  "core",
+  "integrations",
+  "modules",
+  "shared",
+  "styles",
+] as const;
 const RETIRED_SOURCE_ROOTS = [
   "src/test",
   "src/__tests__",
@@ -89,6 +99,17 @@ const ARCHIVED_ROOT_ARTIFACT_TARGETS = [
   "docs/10-archive/root-legacy/product-qa-screenshots",
 ] as const;
 
+function listDirectories(relativePath: string): string[] {
+  const absolutePath = path.join(ROOT, relativePath);
+  if (!fs.existsSync(absolutePath)) return [];
+
+  return fs
+    .readdirSync(absolutePath, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort();
+}
+
 function listFiles(relativePath: string): string[] {
   const absolutePath = path.join(ROOT, relativePath);
   if (!fs.existsSync(absolutePath)) return [];
@@ -132,6 +153,10 @@ describe("global repository reorganization contract", () => {
     expect(content).toContain("NÃO MOVA ESTE ARQUIVO");
     expect(content).toContain("G0 — Repository Census");
     expect(content).toContain("G7 — Repository / MVP Certification");
+  });
+
+  it("freezes top-level src directories to the canonical architecture taxonomy", () => {
+    expect(listDirectories("src")).toEqual([...CANONICAL_SOURCE_ROOTS].sort());
   });
 
   it("does not recreate retired generic source roots", () => {
