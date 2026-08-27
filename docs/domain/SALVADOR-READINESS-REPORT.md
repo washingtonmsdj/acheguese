@@ -89,7 +89,7 @@ Esse fallback é **aceitável somente para continuidade da navegação e diagnó
 
 ### Pipeline
 
-Existe uma fonte municipal cadastrada em scripts/location/municipal-neighborhood-sources.ts e o script scripts/sync-municipal-neighborhoods.ts consulta o ArcGIS, cria/atualiza os 170 bairros e salva metadata, centro e bounding box. Ele **não grava a geometria em location_boundaries**. A importação de polygons continua manual por migration/repair; o roadmap ainda registra um ETL específico de boundaries como pendência.
+Existe uma fonte municipal cadastrada em tools/seeds/municipal-neighborhood-sources.ts e o script tools/seeds/sync-municipal-neighborhoods.ts consulta o ArcGIS, cria/atualiza os 170 bairros e salva metadata, centro e bounding box. Ele **não grava a geometria em location_boundaries**. A importação de polygons continua manual por migration/repair; o roadmap ainda registra um ETL específico de boundaries como pendência.
 
 Conclusão: existe pipeline de catálogo de bairros, mas não existe pipeline operacional completo de importação, validação e upsert dos 170 polygons.
 
