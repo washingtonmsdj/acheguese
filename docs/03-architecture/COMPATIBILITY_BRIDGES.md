@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `05883c9c50ad350c3b062396433b026f73dada38`  
+Baseline reviewed: `083121dc138036b83389d12aab02ab9a0491e4db`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -52,6 +52,7 @@ Rules:
 | `scripts/compare-economic-benchmark.mjs` | `tools/release/compare-economic-benchmark.mjs` | economic SSOT/callers use canonical owner directly; legacy entrypoint no longer required |
 | `scripts/finalize-economic-benchmark.mjs` | `tools/release/finalize-economic-benchmark.mjs` | economic SSOT/callers use canonical owner directly; legacy entrypoint no longer required |
 | `scripts/generate-economic-benchmark-blocker-report.mjs` | `tools/release/generate-economic-benchmark-blocker-report.mjs` | package/callers use canonical owner directly; legacy entrypoint no longer required |
+| `scripts/generate-economic-staging-report.mjs` | `tools/release/generate-economic-staging-report.mjs` | economic SSOT uses canonical owner directly; legacy entrypoint no longer required |
 | `scripts/generate-service-template.ts` | `tools/architecture/generate-service-template.ts` | public npm command and docs point to canonical path |
 | `scripts/generate-migration-template.ts` | `tools/migrations/generate-migration-template.ts` | public npm command and docs point to canonical path |
 | `scripts/generate-supabase-types.ts` | `tools/supabase/generate-supabase-types.ts` | public npm command and callers point to canonical path |
