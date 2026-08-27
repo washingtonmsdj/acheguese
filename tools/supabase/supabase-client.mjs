@@ -1,7 +1,7 @@
 /**
  * Runtime Supabase helper for Node-executed operational scripts.
  * Keep service_role env access centralized here; TypeScript scripts use
- * scripts/lib/supabase-client.ts as a typed facade over this implementation.
+ * tools/supabase/supabase-client.ts as a typed facade over this implementation.
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -115,7 +115,7 @@ export function createServiceRoleClient(config = {}) {
         'Configure as variaveis de ambiente:\n' +
         '  SUPABASE_SERVICE_ROLE_KEY\n' +
         '  SUPABASE_URL ou VITE_SUPABASE_URL\n' +
-        'Carregue secrets locais com .\\scripts\\security\\Import-LocalSupabaseSecrets.ps1',
+        'Carregue secrets locais com .\\tools\\security\\Import-LocalSupabaseSecrets.ps1',
     );
   }
 
