@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { loginAsUser } from "../../e2e/helpers/auth";
+import { loginAsUser } from "./helpers/auth";
 import {
   createOperationalAnonClient,
   getOperationalEnv,
