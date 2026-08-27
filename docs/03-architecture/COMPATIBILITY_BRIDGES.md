@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `5cffd3b56f3cff4eddc8005cdd00496a1440d768`  
+Baseline reviewed: `ff62e7eaa01d7c3ba7d8dd699c52c20fe73b3f00`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -71,8 +71,6 @@ Rules:
 | `scripts/validate-project-taxonomy.ts` | `tools/architecture/validate-project-taxonomy.ts` | package/docs/callers use canonical owner directly; legacy CLI/source-inspection compatibility no longer required |
 | `scripts/validate-public-url-ssot.ts` | `tools/architecture/validate-public-url-ssot.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
 | `scripts/validate-upload-ssot.ts` | `tools/architecture/validate-upload-ssot.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
-| `scripts/validate-security-config.ts` | `tools/security/validate-security-config.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
-| `scripts/validate-security-fixes.ts` | `tools/security/validate-security-fixes.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
 | `scripts/security/audit-privileged-rpc-browser-callers.mjs` | `tools/security/audit-privileged-rpc-browser-callers.mjs` | package command uses canonical audit directly; legacy entrypoint no longer required |
 | `scripts/security/entity-private-data-exposure-probe.mjs` | `tools/security/entity-private-data-exposure-probe.mjs` | package/docs use canonical probe directly; legacy entrypoint no longer required |
 | `scripts/security/classified-messaging-inbox-authz-probe.mjs` | `tools/security/classified-messaging-inbox-authz-probe.mjs` | package command uses canonical read-only probe directly; legacy entrypoint no longer required |
@@ -220,6 +218,8 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/validate-maps-architecture.mjs` → npm `validate:maps` and the Maps fixture README now use `tools/architecture/validate-maps-architecture.mjs`; old bridge removed.
 - `scripts/diagnose-typecheck.mjs` → npm `typecheck:diagnose` now calls `tools/architecture/diagnose-typecheck.mjs` directly; remaining references are archived typecheck documentation; old bridge removed.
 - `scripts/validate-critical-file-sizes.ts` → npm `validate:architecture:file-sizes` now calls `tools/architecture/validate-critical-file-sizes.ts` directly; remaining reference is archived architecture history; old bridge removed.
+- `scripts/validate-security-fixes.ts` → npm `security:scan` now calls `tools/security/validate-security-fixes.ts` directly; old bridge removed.
+- `scripts/validate-security-config.ts` → npm `security:config:validate` now calls `tools/security/validate-security-config.ts` directly; old bridge removed.
 
 ## G2 closure condition for bridges
 
