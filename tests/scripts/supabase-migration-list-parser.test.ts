@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   classifyMigrationDrift,
   parseSupabaseMigrationListOutput,
-} from "../../scripts/lib/supabase-migration-list-parser.mjs";
+} from "../../tools/migrations/supabase-migration-list-parser.mjs";
 
 describe("Supabase migration list parser", () => {
   it("conta a saida completa em memoria mesmo acima de 20 mil caracteres", () => {
