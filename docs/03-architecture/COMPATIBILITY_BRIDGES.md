@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `a9e403a7dbd48bfbb8362f25146621612d1e3be2`  
+Baseline reviewed: `9799800470f15ef79c17db9a50607ee54f72f41c`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -73,6 +73,7 @@ Rules:
 | `scripts/validate-security-config.ts` | `tools/security/validate-security-config.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
 | `scripts/validate-security-fixes.ts` | `tools/security/validate-security-fixes.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
 | `scripts/security/audit-privileged-rpc-browser-callers.mjs` | `tools/security/audit-privileged-rpc-browser-callers.mjs` | package command uses canonical audit directly; legacy entrypoint no longer required |
+| `scripts/security/entity-private-data-exposure-probe.mjs` | `tools/security/entity-private-data-exposure-probe.mjs` | package/docs use canonical probe directly; legacy entrypoint no longer required |
 | `scripts/security/csp-contract.ts` | `tools/security/csp-contract.ts` | validator/tests import canonical security contract directly |
 | `scripts/security/validate-csp.ts` | `tools/security/validate-csp.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
 | `scripts/security/validate-turnstile-production-config.mjs` | `tools/security/validate-turnstile-production-config.mjs` | package/build callers use canonical owner directly; legacy command no longer required |
