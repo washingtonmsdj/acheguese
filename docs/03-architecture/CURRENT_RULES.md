@@ -2,7 +2,7 @@
 
 Data-base: 2026-08-26  
 Status: ATIVO / CANONICO  
-Versao documental: 4.7
+Versao documental: 4.8
 
 Este documento define regras arquiteturais globais. Contratos detalhados de domínio permanecem nos owners executáveis e nos documentos específicos listados em `docs/README.md`; este arquivo não deve duplicar implementação.
 
@@ -160,6 +160,6 @@ Mudanças de segurança/schema executam adicionalmente os gates indicados em `SE
 1. restaurar gates confiáveis e proteção da `main`;
 2. continuar hardening de RLS/RPC/grants e fechar LGPD antes de rollout;
 3. remover drift documental e namespaces concorrentes;
-4. reduzir o namespace histórico `src/core/verticals/events` sem reabrir owner paralelo de Eventos;
+4. reconciliar registries/owners com paths realmente existentes e reduzir bridges genéricos remanescentes sem reabrir namespaces aposentados;
 5. certificar módulos por fluxo funcional real;
 6. somente então executar refatoração visual ampla/performance não comprovada.
