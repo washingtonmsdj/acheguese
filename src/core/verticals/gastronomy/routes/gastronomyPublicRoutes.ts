@@ -1,4 +1,4 @@
-import { APP_MODULE_SLUGS, buildAppModulePath } from '@/config/moduleSlugs';
+import { APP_MODULE_SLUGS, buildAppModulePath } from '@/shared/config/moduleSlugs';
 
 export const GASTRONOMY_PUBLIC_ROUTE_SEGMENTS = {
   favorites: 'favoritos',
