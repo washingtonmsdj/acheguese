@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-const modulePath = "../../scripts/salvador-preflight.mjs";
+const modulePath = "../../tools/supabase/salvador-preflight.mjs";
 const canonicalId = "63c41c29-adce-40f5-a552-e52d176123c3";
 const legacyId = "00000000-0000-0000-0000-000000000001";
 const migrationPath = join(
