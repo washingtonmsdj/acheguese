@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const ROOT = process.cwd();
-const PREFLIGHT = join(ROOT, 'scripts', 'security', 'supabase-lgpd-edge-rollout-preflight.mjs');
+const PREFLIGHT = join(ROOT, 'tools', 'security', 'supabase-lgpd-edge-rollout-preflight.mjs');
 const DELETE_HANDLER = join(ROOT, 'supabase', 'functions', 'user-delete-account', 'index.ts');
 const EXPORT_HANDLER = join(ROOT, 'supabase', 'functions', 'user-export-data', 'index.ts');
 const EXPORT_MATRIX = join(
