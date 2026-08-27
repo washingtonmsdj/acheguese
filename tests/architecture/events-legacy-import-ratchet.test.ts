@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -36,6 +36,10 @@ function isRuntimeSource(path: string): boolean {
 }
 
 describe("Events historical owner runtime import ratchet", () => {
+  it("keeps the historical Events owner physically retired", () => {
+    expect(existsSync(resolve(root, historicalOwnerRoot))).toBe(false);
+  });
+
   it("allows historical Events imports only in the remaining runtime migration callers", () => {
     const actualCallers = collectSourceFiles(srcRoot)
       .map((absolutePath) =>
