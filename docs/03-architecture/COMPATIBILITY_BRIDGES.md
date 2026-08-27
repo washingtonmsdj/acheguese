@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `70eb4c66218dcbf1f719788ada7fb788754fdf74`  
+Baseline reviewed: `fe725878bd0749a7ad1a7b5527e93705519bf9f6`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -62,7 +62,6 @@ Rules:
 | `scripts/validate-e2e-setup.ts` | `tools/release/validate-e2e-setup.ts` | package/manual E2E validation callers use canonical validator directly; legacy entrypoint no longer required |
 | `scripts/verify-deploy-ready.mjs` | `tools/release/verify-deploy-ready.mjs` | package/docs/callers point to canonical deploy gate; legacy entrypoint no longer required |
 | `scripts/generate-vercel-config.ts` | `tools/security/generate-vercel-config.ts` | package/docs/callers use canonical generator directly; legacy entrypoint no longer required |
-| `scripts/sanitize-secrets.ts` | `tools/security/sanitize-secrets.ts` | manual callers/security governance point to canonical sanitizer; legacy entrypoint no longer required |
 | `scripts/community-interest-preflight.mjs` | `tools/supabase/community-interest-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
 | `scripts/poll-preflight.mjs` | `tools/supabase/poll-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
 | `scripts/salvador-preflight.mjs` | `tools/supabase/salvador-preflight.mjs` | package/tests/callers use canonical preflight owner directly; legacy CLI/module compatibility no longer required |
@@ -220,6 +219,7 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/lib/architecture-registry.ts` → architecture validator already targets `tools/architecture/architecture-registry.ts`; old bridge removed.
 - `scripts/lib/supabase-client.mjs` → mutating `.mjs` validators now import `tools/supabase/supabase-client.mjs` directly; old runtime bridge removed.
 - `scripts/lib/supabase-client.d.mts` → no remaining consumer required legacy declaration resolution after the runtime bridge retirement; old declaration bridge removed.
+- `scripts/sanitize-secrets.ts` → security tooling and policy references use `tools/security/sanitize-secrets.ts`; old bridge removed.
 
 ## G2 closure condition for bridges
 
