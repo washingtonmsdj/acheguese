@@ -76,7 +76,7 @@ if (!fs.existsSync(manifestPath)) {
       fail(`${entry.version} deveria estar tracked no Git.`);
     } else if (entry.trackingStatus === "READY_FOR_GIT" && !isTracked) {
       readyForGit += 1;
-    } else if (!["TRACKED", "READY_FOR_GIT"].includes(entry.trackingStatus)) {
+    } else if (!new Set(["TRACKED", "READY_FOR_GIT"]).has(entry.trackingStatus)) {
       fail(`trackingStatus invalido em ${entry.version}.`);
     }
 
