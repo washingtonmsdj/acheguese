@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `df04d221e7d47049236ee41c5b5f183823ec7b7e`  
+Baseline reviewed: `0e7ae3a41d2816edd486634459bdc45c1d81ab98`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -42,36 +42,22 @@ Rules:
 | --- | --- | --- |
 | `scripts/backup-storage.ts` | `tools/maintenance/backup-storage.ts` | docs/policies/callers migrated to canonical path |
 | `scripts/restore-storage.ts` | `tools/maintenance/restore-storage.ts` | docs/policies/callers migrated to canonical path |
-| `scripts/run-vercel-production-build.mjs` | `tools/release/run-vercel-production-build.mjs` | Vercel/build callers point to canonical path; legacy production entrypoint no longer required |
-| `scripts/validate-production-sitemap.mjs` | `tools/release/validate-production-sitemap.mjs` | release/build callers point to canonical path; legacy command no longer required |
 | `scripts/generate-sitemap.ts` | `tools/release/generate-sitemap.ts` | package/docs/callers point to canonical path; legacy command no longer required |
-| `scripts/generate-economic-benchmark-blocker-report.mjs` | `tools/release/generate-economic-benchmark-blocker-report.mjs` | package/callers use canonical owner directly; legacy entrypoint no longer required |
-| `scripts/run-economic-benchmark-all.mjs` | `tools/release/run-economic-benchmark-all.mjs` | package command points to canonical runner; legacy entrypoint no longer required |
 | `scripts/economic-benchmark-ssot.mjs` | `tools/release/economic-benchmark-ssot.mjs` | package/economic benchmark callers use canonical SSOT directly; legacy entrypoint no longer required |
 | `scripts/community-staging-load-test.mjs` | `tools/release/community-staging-load-test.mjs` | package/tests/callers use canonical staging harness directly; legacy CLI/module compatibility no longer required |
-| `scripts/diagnose-economic-db-connectivity.mjs` | `tools/release/diagnose-economic-db-connectivity.mjs` | package/economic benchmark callers use canonical diagnostic directly; legacy entrypoint no longer required |
 | `scripts/security/supabase-edge-admin-canary-deploy.mjs` | `tools/release/supabase-edge-admin-canary-deploy.mjs` | tests/deploy callers use canonical release guard directly; legacy entrypoint no longer required |
-| `scripts/validate-e2e-setup.ts` | `tools/release/validate-e2e-setup.ts` | package/manual E2E validation callers use canonical validator directly; legacy entrypoint no longer required |
 | `scripts/verify-deploy-ready.mjs` | `tools/release/verify-deploy-ready.mjs` | package/docs/callers point to canonical deploy gate; legacy entrypoint no longer required |
-| `scripts/generate-vercel-config.ts` | `tools/security/generate-vercel-config.ts` | package/docs/callers use canonical generator directly; legacy entrypoint no longer required |
 | `scripts/community-interest-preflight.mjs` | `tools/supabase/community-interest-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
 | `scripts/poll-preflight.mjs` | `tools/supabase/poll-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
 | `scripts/salvador-preflight.mjs` | `tools/supabase/salvador-preflight.mjs` | package/tests/callers use canonical preflight owner directly; legacy CLI/module compatibility no longer required |
 | `scripts/validate-supabase-advisor-residuals.ts` | `tools/supabase/validate-supabase-advisor-residuals.ts` | package/tests/docs use canonical validator directly; legacy CLI/module compatibility no longer required |
 | `scripts/validate-supabase-remote-migration-drift.ts` | `tools/supabase/validate-supabase-remote-migration-drift.ts` | package/docs/callers use canonical remote drift gate directly; legacy entrypoint no longer required |
-| `scripts/validate-migration-provenance.mjs` | `tools/migrations/validate-migration-provenance.mjs` | package/docs/callers point to canonical provenance gate; legacy entrypoint no longer required |
 | `scripts/location/municipal-neighborhood-sources.ts` | `tools/seeds/municipal-neighborhood-sources.ts` | all callers/docs use canonical manifest directly; legacy re-export no longer required |
-| `scripts/validate-core-platform-ownership.mjs` | `tools/architecture/validate-core-platform-ownership.mjs` | package/tests/callers use canonical owner directly; legacy CLI/module compatibility no longer required |
 | `scripts/validate-session-context.ts` | `tools/architecture/validate-session-context.ts` | package/docs/callers use canonical owner directly; legacy CLI/module compatibility no longer required |
 | `scripts/validate-project-taxonomy.ts` | `tools/architecture/validate-project-taxonomy.ts` | package/docs/callers use canonical owner directly; legacy CLI/source-inspection compatibility no longer required |
-| `scripts/security/audit-privileged-rpc-browser-callers.mjs` | `tools/security/audit-privileged-rpc-browser-callers.mjs` | package command uses canonical audit directly; legacy entrypoint no longer required |
 | `scripts/security/entity-private-data-exposure-probe.mjs` | `tools/security/entity-private-data-exposure-probe.mjs` | package/docs use canonical probe directly; legacy entrypoint no longer required |
-| `scripts/security/classified-messaging-inbox-authz-probe.mjs` | `tools/security/classified-messaging-inbox-authz-probe.mjs` | package command uses canonical read-only probe directly; legacy entrypoint no longer required |
-| `scripts/security/profile-pii-exposure-probe.mjs` | `tools/security/profile-pii-exposure-probe.mjs` | package command uses canonical read-only probe directly; legacy entrypoint no longer required |
 | `scripts/security/community-feed-anon-probe.mjs` | `tools/security/community-feed-anon-probe.mjs` | package/authorization-map callers use canonical mutating probe directly; legacy entrypoint no longer required |
-| `scripts/security/community-feed-authz-probe.mjs` | `tools/security/community-feed-authz-probe.mjs` | package command uses canonical guarded mutating probe directly; legacy entrypoint no longer required |
 | `scripts/security/reviews-core-authz-probe.mjs` | `tools/security/reviews-core-authz-probe.mjs` | package command uses canonical guarded mutating probe directly; legacy entrypoint no longer required |
-| `scripts/security/trust-operational-authz-probe.mjs` | `tools/security/trust-operational-authz-probe.mjs` | package command uses canonical guarded mutating probe directly; legacy entrypoint no longer required |
 | `scripts/security/community-direct-messaging-authz-probe.mjs` | `tools/security/community-direct-messaging-authz-probe.mjs` | package command uses canonical guarded mutating probe directly; legacy entrypoint no longer required |
 | `scripts/security/moderation-audit-authz-probe.mjs` | `tools/security/moderation-audit-authz-probe.mjs` | package command uses canonical guarded mutating probe directly; legacy entrypoint no longer required |
 | `scripts/security/supabase-auth-hibp.mjs` | `tools/security/supabase-auth-hibp.mjs` | package/tests use canonical security tooling directly; legacy CLI/module compatibility no longer required |
@@ -81,20 +67,15 @@ Rules:
 | `scripts/security/service-role-boundary.mjs` | `tools/security/service-role-boundary.mjs` | security validators/tests import canonical boundary helper directly |
 | `scripts/security/supabase-access-boundary.mjs` | `tools/security/supabase-access-boundary.mjs` | security validators/tests import canonical boundary helper directly |
 | `scripts/security/validate-security.mjs` | `tools/security/validate-security.mjs` | package/docs/callers use canonical security orchestrator directly; legacy command no longer required |
-| `scripts/security/validate-free-release-governance.mjs` | `tools/security/validate-free-release-governance.mjs` | package/test/remote wrapper import canonical local governance validator directly |
-| `scripts/security/validate-free-release-governance-remote.mjs` | `tools/security/validate-free-release-governance-remote.mjs` | package command uses canonical remote read-only gate directly; legacy CLI/import entrypoint no longer required |
 | `scripts/security/supabase-postgis-owner-preflight.mjs` | `tools/security/supabase-postgis-owner-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
 | `scripts/security/validate-poll-rpc-advisor-mappings.mjs` | `tools/security/validate-poll-rpc-advisor-mappings.mjs` | package/tests import canonical local mappings validator directly |
 | `scripts/validate-architecture-governance.ts` | `tools/architecture/validate-architecture-governance.ts` | npm/docs/callers point to canonical path; legacy CLI/module compatibility no longer required |
 | `scripts/validate-architecture-boundaries-incremental.mjs` | `tools/architecture/validate-architecture-boundaries-incremental.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/check-ssot-compliance.ts` | `tools/architecture/check-ssot-compliance.ts` | Husky/package/docs point to canonical path; legacy checker entrypoint no longer required |
-| `scripts/validate-ssot-compliance.ts` | `tools/architecture/validate-ssot-compliance.ts` | package/callers point to canonical path; legacy CLI/module compatibility no longer required |
 | `scripts/validate-business-module-boundaries.ts` | `tools/architecture/validate-business-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-education-module-boundaries.ts` | `tools/architecture/validate-education-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-gastronomy-module-boundaries.ts` | `tools/architecture/validate-gastronomy-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
-| `scripts/validate-delivery-architecture-boundaries.ts` | `tools/architecture/validate-delivery-architecture-boundaries.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-community-transversal-boundaries.ts` | `tools/architecture/validate-community-transversal-boundaries.ts` | package/docs/callers point to canonical path; legacy command no longer required |
-| `scripts/validate-communication-territorial-boundaries.ts` | `tools/architecture/validate-communication-territorial-boundaries.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-docs-structure.ts` | `tools/architecture/validate-docs-structure.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-doc-live-links.ts` | `tools/architecture/validate-doc-live-links.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/lib/supabase-client.ts` | `tools/supabase/supabase-client.ts` | `scripts/media-assets-cp016-backfill.ts` must be moved or retargeted to the canonical client without weakening its existing project/apply confirmation guards |
@@ -220,6 +201,25 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/validate-ssot-hardcodes.ts` → npm `validate:hardcodes` now calls the canonical validator, whose owner preserves direct-execution behavior; remaining references are archived audits; old bridge removed.
 - `scripts/validate-public-url-ssot.ts` → npm `validate:url:ssot` now calls `tools/architecture/validate-public-url-ssot.ts` directly; old bridge removed.
 - `scripts/validate-upload-ssot.ts` → npm `validate:upload:ssot` now calls `tools/architecture/validate-upload-ssot.ts` directly; old bridge removed.
+- `scripts/validate-ssot-compliance.ts` → npm SSOT commands now call `tools/architecture/validate-ssot-compliance.ts` directly; canonical owner preserves direct-execution behavior; old bridge removed.
+- `scripts/security/validate-free-release-governance.mjs` → package/test callers use `tools/security/validate-free-release-governance.mjs` directly; old bridge removed.
+- `scripts/security/validate-free-release-governance-remote.mjs` → npm remote governance gate now calls `tools/security/validate-free-release-governance-remote.mjs` directly; old bridge removed.
+- `scripts/validate-e2e-setup.ts` → npm `validate:e2e` uses `tools/release/validate-e2e-setup.ts` directly; old bridge removed.
+- `scripts/generate-vercel-config.ts` → npm Vercel config generators use `tools/security/generate-vercel-config.ts` directly; old bridge removed.
+- `scripts/diagnose-economic-db-connectivity.mjs` → npm economic DB diagnostic calls `tools/release/diagnose-economic-db-connectivity.mjs` directly; old bridge removed.
+- `scripts/generate-economic-benchmark-blocker-report.mjs` → npm blocker-report command uses `tools/release/generate-economic-benchmark-blocker-report.mjs` directly; old bridge removed.
+- `scripts/run-economic-benchmark-all.mjs` → npm economic run-all command uses `tools/release/run-economic-benchmark-all.mjs` directly; old bridge removed.
+- `scripts/security/audit-privileged-rpc-browser-callers.mjs` → npm security audit uses `tools/security/audit-privileged-rpc-browser-callers.mjs` directly; old bridge removed.
+- `scripts/security/profile-pii-exposure-probe.mjs` → npm profile PII probe uses `tools/security/profile-pii-exposure-probe.mjs` directly; old bridge removed.
+- `scripts/security/classified-messaging-inbox-authz-probe.mjs` → npm classified messaging probe uses the canonical security tool directly; old bridge removed.
+- `scripts/security/community-feed-authz-probe.mjs` → npm community authz probe uses the canonical security tool directly; old bridge removed.
+- `scripts/security/trust-operational-authz-probe.mjs` → npm trust probe uses the canonical security tool directly; old bridge removed.
+- `scripts/validate-delivery-architecture-boundaries.ts` → npm delivery architecture validation calls the canonical tool directly; old bridge removed.
+- `scripts/validate-communication-territorial-boundaries.ts` → npm communication architecture validation calls the canonical tool directly; old bridge removed.
+- `scripts/run-vercel-production-build.mjs` → `vercel.json` now invokes `tools/release/run-vercel-production-build.mjs` directly; old bridge removed.
+- `scripts/validate-production-sitemap.mjs` → production build tooling already uses `tools/release/validate-production-sitemap.mjs`; old bridge removed.
+- `scripts/validate-migration-provenance.mjs` → npm migration provenance gate calls `tools/migrations/validate-migration-provenance.mjs` directly; old bridge removed.
+- `scripts/validate-core-platform-ownership.mjs` → npm and the validator regression test now use `tools/architecture/validate-core-platform-ownership.mjs`; legacy fixture reference was decoupled; old bridge removed.
 
 ## G2 closure condition for bridges
 
