@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `a909872821656a02ea65e1f15d7b1e06a3ba1df3`  
+Baseline reviewed: `58835cea97eb56d90b66b84940e4296f3c4aa40f`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -55,6 +55,8 @@ Rules:
 | `scripts/validate-delivery-architecture-boundaries.ts` | `tools/architecture/validate-delivery-architecture-boundaries.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-community-transversal-boundaries.ts` | `tools/architecture/validate-community-transversal-boundaries.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-communication-territorial-boundaries.ts` | `tools/architecture/validate-communication-territorial-boundaries.ts` | package/docs/callers point to canonical path; legacy command no longer required |
+| `scripts/validate-docs-structure.ts` | `tools/architecture/validate-docs-structure.ts` | package/docs/callers point to canonical path; legacy command no longer required |
+| `scripts/validate-doc-live-links.ts` | `tools/architecture/validate-doc-live-links.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/lib/architecture-registry.ts` | `tools/architecture/architecture-registry.ts` | architecture validators/readers use canonical owner directly |
 | `scripts/lib/migration-statement-fingerprint.mjs` | `tools/migrations/migration-statement-fingerprint.mjs` | all migration tooling imports canonical owner directly |
 | `scripts/lib/remote-mutation-safety.mjs` | `tools/supabase/remote-mutation-safety.mjs` | all runtime tooling imports canonical owner directly |
