@@ -10,7 +10,7 @@ import {
   parseCsp,
   validateTurnstileCspContract,
   type TurnstileCspContractInput,
-} from "../../scripts/security/csp-contract";
+} from "../../tools/security/csp-contract";
 
 const root = process.cwd();
 const turnstileOrigin = SECURITY_DOMAINS.CLOUDFLARE_TURNSTILE.url;
