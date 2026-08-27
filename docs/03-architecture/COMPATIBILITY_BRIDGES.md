@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `7675d44dbde535f8263262fe2e5cf8f5bbc6d34e`  
+Baseline reviewed: `331bd9edec2a217b09a6d57f4f2307544e467aa9`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -90,7 +90,6 @@ Rules:
 | `scripts/security/supabase-auth-hibp.mjs` | `tools/security/supabase-auth-hibp.mjs` | package/tests use canonical security tooling directly; legacy CLI/module compatibility no longer required |
 | `scripts/security/validate-csp.ts` | `tools/security/validate-csp.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
 | `scripts/security/validate-turnstile-production-config.mjs` | `tools/security/validate-turnstile-production-config.mjs` | package/build callers point to canonical owner directly; legacy command no longer required |
-| `scripts/security/account-operational-edge-policy.mjs` | `tools/security/account-operational-edge-policy.mjs` | security validators/tests import canonical policy helper directly |
 | `scripts/security/edge-function-auth-config.mjs` | `tools/security/edge-function-auth-config.mjs` | security validators/tests import canonical auth config helper directly |
 | `scripts/security/edge-function-auth-policy.mjs` | `tools/security/edge-function-auth-policy.mjs` | security validators/tests import canonical auth policy helper directly |
 | `scripts/security/edge-function-broker-boundary.mjs` | `tools/security/edge-function-broker-boundary.mjs` | security validators/tests import canonical boundary helper directly |
@@ -220,6 +219,7 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/generate-economic-staging-report.mjs` → economic tooling uses `tools/release/generate-economic-staging-report.mjs`; old bridge removed.
 - `scripts/core-platform/access-analyzer.mjs` → architecture tests and ownership fixtures now use `tools/architecture/core-platform/access-analyzer.mjs`; old bridge removed.
 - `scripts/security/csp-contract.ts` → Turnstile CSP contract test and validator use `tools/security/csp-contract.ts`; old bridge removed.
+- `scripts/security/account-operational-edge-policy.mjs` → account operational Edge policy test imports `tools/security/account-operational-edge-policy.mjs` directly; old bridge removed.
 
 ## G2 closure condition for bridges
 
