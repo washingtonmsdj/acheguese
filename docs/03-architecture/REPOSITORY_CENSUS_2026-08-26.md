@@ -1,17 +1,19 @@
 # Repository Census — Reorganização Global
 
-**Data:** 2026-08-26  
+**Criado em:** 2026-08-26  
+**Atualizado em:** 2026-08-27  
 **Missão:** `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`  
-**Status:** G0 EM EXECUÇÃO  
-**Baseline inicial:** `289066361bf77cb451e9e39ac3f6bfe45a6e9c86`
+**Status:** G0 CONCLUÍDO — baseline vivo; revalidar antes de cada corte  
+**Baseline inicial:** `289066361bf77cb451e9e39ac3f6bfe45a6e9c86`  
+**Snapshot verificado:** `73f88d5890672ca8e46e075acdafff44ae0cfb32`
 
-Este documento é o inventário operacional da reorganização global. Ele não substitui o plano permanente da raiz; registra o estado encontrado e classifica os próximos cortes.
+Este documento é o inventário operacional da reorganização global. Ele não substitui o plano permanente da raiz. O baseline inicial foi preservado acima; as classificações abaixo refletem o snapshot verificado atual e devem ser rechecadas antes de writes porque a missão opera diretamente na `main`.
 
 ## Legenda
 
 - **KEEP** — owner/local atual está correto.
 - **MOVE** — deve migrar fisicamente para owner canônico.
-- **BRIDGE** — compatibilidade temporária; implementação deve viver em outro owner.
+- **BRIDGE** — compatibilidade temporária apontando em uma direção para o owner canônico.
 - **MERGE** — conteúdo sobreposto deve ser consolidado em SSOT único.
 - **RETIRE** — legado candidato a remoção depois de prova de não uso.
 - **INVESTIGATE** — precisa de callers/contracts/provenance antes da decisão.
@@ -20,100 +22,77 @@ Este documento é o inventário operacional da reorganização global. Ele não 
 
 ## 1. Raiz do repositório
 
-A raiz atual mistura configuração legítima de build com diretórios operacionais/históricos.
-
-### KEEP na raiz
+### KEEP
 
 - `README.md`
 - `SECURITY.md`
-- `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md` — **PERMANENTE; nunca mover**
-- `package.json`
-- `package-lock.json`
-- configs de Vite/TS/ESLint/Tailwind/PostCSS/Playwright
-- `.github/`, `.husky/`, `.gitignore`, `.gitleaks*`, `.vercelignore`
-- `index.html`
-- `api/`
-- `src/`
-- `supabase/`
-- `public/`
-- `docs/`
-- `tests/`
+- `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md` — **PERMANENTE; nunca mover/renomear/excluir**
+- `package.json` / `package-lock.json`
+- configs Vite/TypeScript/ESLint/Tailwind/PostCSS/Playwright/Vitest
+- `.github/`, `.husky/`, `.kiro/`, `.lovable/`
+- `api/`, `docs/`, `public/`, `src/`, `supabase/`, `tests/`
 
-### INVESTIGATE / organizar
+### Dívida ainda ativa
 
-| Path atual | Classificação | Destino/decisão provável |
+| Path | Classificação | Owner alvo / regra |
 |---|---|---|
-| `e2e/` | MOVE | consolidar em `tests/e2e/`; hoje contém helpers + `network-branches.spec.ts` |
-| `scripts/` | MOVE gradual | `tools/{architecture,security,migrations,seeds,release,...}` preservando comandos do `package.json` |
-| `plans/` | MOVE/RETIRE | planos ativos para `docs/08-roadmap` ou arquivo histórico para `docs/10-archive`; validar links antes |
-| `handoff/` | INVESTIGATE | documentação operacional; definir `docs/` vs artefato temporário |
-| `product-qa-screenshots/` | INVESTIGATE | artefatos de QA; avaliar Git/LFS/CI artifacts vs `docs/` |
-| `templates/` | INVESTIGATE | classificar templates de código/documento/build antes de mover |
-| `eslint-rules/` | KEEP provável | tooling de lint; futuro `tools/eslint-rules` só se imports/config permitirem |
-| `.kiro/` | INVESTIGATE | metadata/specs de ferramenta; não mover sem entender consumidor |
-| `.lovable/` | KEEP enquanto integração ativa | metadata de integração Lovable |
-| `bun.lock` | INVESTIGATE | projeto declara `npm@11.17.0`; reconciliar lockfile concorrente antes de remover |
+| `scripts/` | MOVE gradual | `tools/{architecture,security,migrations,seeds,release,...}` preservando comandos públicos |
+| `tools/` | KEEP + EXPAND | hoje já possui `templates/`; receber ferramentas por lotes funcionais |
+| `plans/` | INVESTIGATE/MOVE/RETIRE | plano ativo → `docs/08-roadmap`; histórico → `docs/10-archive` após validar links |
+| `e2e/` | BRIDGE/RETIRE | restou compatibilidade de helper; owner canônico é `tests/e2e/` |
+| `eslint-rules/` | KEEP provável | tooling de lint; só mover se callers/config forem atualizados no mesmo corte |
 
-### Achado crítico de organização
-
-Há dois roots E2E: `e2e/` e `tests/e2e/`. O `package.json` já usa `tests/e2e/*` para praticamente todos os fluxos, exceto `test:e2e:network`, que ainda aponta para `e2e/network-branches.spec.ts`.
-
-**Primeiro move físico recomendado:** migrar `e2e/network-branches.spec.ts` para `tests/e2e/network-branches.spec.ts` e atualizar o script. Os helpers de `e2e/helpers` devem ser tratados em corte separado porque possuem referências históricas.
+Os antigos roots `handoff/`, `product-qa-screenshots/` e `templates/` já foram retirados da raiz e possuem regression guard. Não recriá-los.
 
 ---
 
-## 2. `src/` — roots atuais
+## 2. `src/` — snapshot atual
 
-Roots de diretório encontrados:
+Roots atuais:
 
-- `__tests__`
-- `app`
-- `assets`
-- `config`
-- `core`
-- `features`
-- `integrations`
-- `modules`
-- `shared`
-- `styles`
-- `test`
-- `types`
+- `app/`
+- `assets/`
+- `config/`
+- `core/`
+- `integrations/`
+- `modules/`
+- `shared/`
+- `styles/`
 
-Arquivos de bootstrap na raiz de `src`:
+Arquivos de bootstrap atuais:
 
 - `App.tsx`
-- `App.css`
-- `main.tsx`
 - `index.css`
-- `global.d.ts`
+- `main.tsx`
 - `vite-env.d.ts`
 
-### Classificação
+### Estado das dívidas antigas
 
-| Path | Classificação | Regra alvo |
-|---|---|---|
-| `src/app` | KEEP | composition root, providers, router, layouts |
-| `src/assets` | KEEP | assets de aplicação |
-| `src/core` | KEEP | SSOT/domain/read-write/authz |
-| `src/integrations` | KEEP | adapters externos apenas |
-| `src/modules` | KEEP | UI/aplicação por domínio |
-| `src/shared` | KEEP + AUDIT | apenas primitives transversais; impedir virar pasta de descarte |
-| `src/styles` | KEEP | estilos globais/design tokens conforme owners |
-| `src/features` | MOVE/RETIRE | namespace histórico; hoje contém apenas `events` |
-| `src/__tests__` | MOVE/INVESTIGATE | testes globais devem convergir para `tests/`; unitários locais podem ficar junto ao owner |
-| `src/test` | MOVE/INVESTIGATE | mesma regra; separar setup/helpers de testes de produto |
-| `src/types` | INVESTIGATE | tipos de domínio devem ir para `core/<owner>`; tipos realmente globais para `shared/types` |
-| `src/config` | INVESTIGATE | separar config de app (`app`) de config compartilhada (`shared`) e config de domínio (`core`) |
+- `src/features` — **RETIRADO**; não recriar.
+- `src/test` — **RETIRADO**; não recriar.
+- `src/__tests__` — **RETIRADO**; não recriar como root genérico.
+- `src/types` — **RETIRADO**; domínio deve ficar em `core/<owner>` e tipos transversais em `shared/types`.
+- `src/App.css` e `src/global.d.ts` — **RETIRADOS**.
 
-### Invariante imediata
+### `src/config`
 
-Nenhum novo root em `src/features` pode ser criado. O único legado atual permitido durante a migração é `events`.
+Classificação: **BRIDGE temporário**.
+
+O regression guard atual congela `src/config` aos bridges:
+
+- `communityLaunch.ts` → `src/core/community/config/communityLaunch.ts`
+- `launchScope.ts` → `src/app/config/launchScope.ts`
+- `moduleSlugs.ts` → `src/app/config/moduleSlugs.ts`
+- `modules.ts` → `src/app/config/modules.ts`
+- `territory.ts` → `src/app/config/territory.ts`
+
+Não adicionar implementação nova em `src/config`.
 
 ---
 
-## 3. `src/modules` — inventário canônico atual
+## 3. `src/modules` — owners de produto atuais
 
-O validator `scripts/validate-project-taxonomy.ts` já define os seguintes 17 módulos de topo:
+Módulos de topo verificados:
 
 1. `admin`
 2. `ai`
@@ -133,140 +112,58 @@ O validator `scripts/validate-project-taxonomy.ts` já define os seguintes 17 m�
 16. `profile`
 17. `work-opportunities`
 
-### Observações G0
+Classificação: **KEEP**, sujeitos aos boundaries.
 
-- `business` possui verticais internas e já passou por hardening de Education/Gastronomy.
-- `community-*` está fragmentado por bounded contexts explícitos; não criar agregador genérico `modules/community` sem decisão arquitetural nova.
-- `community-events` é o destino de produto para Events, mas a implementação histórica ainda vive em `src/features/events`.
-- `profile` coexistindo com `src/core/profiles` é esperado se module = UI e core = domínio, mas callers/boundaries devem ser auditados.
-- `central` deve ser tratado como shell/central operacional e não virar SSOT de domínios que já possuem owner em core.
+Regras:
+
+- module = UI/aplicação/orchestration de produto;
+- persistência, autorização e contracts canônicos devem pertencer ao `core` correspondente;
+- não criar agregador genérico `modules/community` apenas por estética;
+- `community-events` já é o owner físico de Events; o antigo `src/features/events` não existe mais.
 
 ---
 
-## 4. `src/features`
+## 4. `src/core` — owners de domínio
+
+Roots observados incluem:
+
+`address`, `admin`, `ai`, `alerts`, `analytics`, `audit`, `auth`, `authorization`, `banners`, `billing`, `business`, `city`, `classifieds`, `comments`, `communication-territorial`, `community`, `community-events`, `community-experience`, `community-feed`, `community-groups`, `community-issues`, `community-lost-found`, `community-recommendations`, `contact`, `coverage`, `education`, `engagement`, `family`, `favorites`, `feed`, `geocoding`, `geospatial`, `governance`, `guide`, `infrastructure`, `landing`, `legal`, `location`, `maps`, `media`, `messaging`, `metrics`, `mobility`, `moderation`, `navigation`, `nearby`, `notifications`, `posts`, `pricing`, `privacy`, `professional`, `profiles`, `public-identity`, `qr`, `realtime`, `residence`, `reviews`, `rollout`, `routing`, `safety`, `search`, `service-areas`, `session`, `social`, `subscription`, `taxonomy`, `telemetry`, `territorial`, `tracking`, `trust`, `users`, `verification`, `verticals`, `work-opportunities`.
+
+A quantidade de roots não prova duplicação. Os seguintes grupos ficam **INVESTIGATE para G4/G5**, por contracts/callers/provenance:
+
+- `auth` / `session` / `authorization` / `profiles`;
+- `analytics` / `metrics` / `telemetry` / `tracking`;
+- `address` / `city` / `location` / `geocoding` / `geospatial` / `territorial` / `service-areas`;
+- `community` / `community-experience` / `community-feed` / `feed` e demais bounded contexts `community-*`;
+- `billing` / `pricing` / `subscription`;
+- `professional` / `work-opportunities`;
+- `media` vs `shared/media`;
+- `taxonomy` vs `shared/taxonomy`.
+
+**Boundary atual:** busca de código no snapshot encontrou zero imports `@/modules/*` em `src/core` para `.ts` e `.tsx`; `scripts/validate-project-taxonomy.ts` já possui guard contra essa dependência invertida.
+
+---
+
+## 5. `src/integrations`
 
 Estado atual:
 
-```text
-src/features/
-└── events/
-```
-
-Classificação: **MOVE + BRIDGE temporário**.
-
-Destino:
-
-- UI/aplicação de Events → `src/modules/community-events`;
-- domain/read-write/persistência → owners de `src/core/community*`/core apropriado;
-- `src/features/events` deve terminar sem implementação própria.
-
-### Bloqueios já conhecidos para o move coordenado
-
-O corte de Events precisa atualizar no mesmo lote:
-
-- route caller em `src/app/routes/territorial/TerritorialModulePages.tsx`;
-- `tsconfig.typecheck.events-checkin.json`;
-- `scripts/verify-deploy-ready.mjs`;
-- validators/tests que ainda apontem para `src/features/events`;
-- bridges de `EventEngagementService`/página quando necessário.
-
-Mover apenas a subtree sem atualizar deploy guard criaria falso positivo de validação.
-
----
-
-## 5. `src/core`
-
-`src/core` já contém dezenas de owners explícitos. Owners observados incluem, entre outros:
-
-- `address`
-- `admin`
-- `ai`
-- `alerts`
-- `analytics`
-- `audit`
-- `auth`
-- `authorization`
-- `banners`
-- `billing`
-- `business`
-- `city`
-- `classifieds`
-- `comments`
-- `communication-territorial`
-- `community`
-- `community-experience`
-- `community-feed`
-- `community-groups`
-- `community-issues`
-- `community-lost-found`
-- `community-recommendations`
-- `contact`
-- `coverage`
-- `education`
-- `engagement`
-- `family`
-- `favorites`
-- `feed`
-- `geocoding`
-- `geospatial`
-- `governance`
-- `guide`
-- `infrastructure`
-- `landing`
-- `legal`
-- `location`
-- `maps`
-- `media`
-- `messaging`
-- `metrics`
-- `mobility`
-- `moderation`
-- `navigation`
-- `nearby`
-- outros owners ainda a classificar no censo profundo.
-
-### Risco estrutural
-
-Quantidade alta de roots em `core` não é automaticamente problema. O problema é quando conceitos próximos possuem owners paralelos sem contrato claro, por exemplo:
-
-- `analytics` vs `metrics`;
-- `location` vs `geocoding` vs `geospatial` vs `city` vs `address`;
-- `community` vs `community-experience` vs `community-feed` e demais bounded contexts;
-- `feed` vs `community-feed`;
-- `alerts` vs notifications/messaging owners;
-- `authorization` vs auth/profile membership helpers.
-
-Esses grupos entram em **G4 Global SSOT**, não devem ser fundidos apenas pelo nome.
-
-### Boundary já existente
-
-`validate-project-taxonomy.ts` já detecta imports/reexports runtime `src/core → @/modules/*`. Preservar e ampliar esse SSOT de validação, não criar regra concorrente.
-
----
-
-## 6. `src/integrations`
-
-Estado atual:
-
-```text
-src/integrations/
-├── maps/
-└── supabase/
-```
+- `maps/`
+- `supabase/`
 
 Classificação: **KEEP**.
 
-Regra:
+Regra: somente adapters técnicos externos. Domínio não nasce aqui.
 
-- apenas adapters técnicos externos;
-- regra de negócio não deve nascer aqui;
-- módulos devem preferir owner de domínio em `core`, não importar integrations diretamente.
+### Dívida module → integrations
 
-Education, Gastronomy e Business já receberam ratchets específicos contra direct runtime integrations. G3 deverá generalizar a regra de maneira sustentável para os demais módulos.
+Busca textual no snapshot encontrou **14 arquivos TypeScript** sob `src/modules` contendo referência `@/integrations/`. A amostra inclui `src/modules/ai/core/client/aiClient.ts`, `src/modules/ai/virtual-tryon/services/tryon.service.ts` e paths de `src/modules/business/gastronomy`.
+
+Esse número é inventário bruto e inclui testes co-localizados; em G1 o validator deve distinguir runtime de testes e transformar apenas a dívida runtime existente em allowlist monotônica. **Nenhuma nova ocorrência runtime deve ser permitida.**
 
 ---
 
-## 7. `src/shared`
+## 6. `src/shared`
 
 Roots atuais:
 
@@ -282,163 +179,111 @@ Roots atuais:
 - `taxonomy`
 - `types`
 - `utils`
-- `validation`
 
-### Classificação inicial
+Classificação:
 
-- `components`, `design-system`, `hooks`, `utils` — **KEEP/AUDIT**.
-- `types`, `schemas`, `constants`, `config` — **AUDIT** para garantir que não contêm domínio com owner conhecido.
-- `services` — **ALTO RISCO DE PASTA GENÉRICA**; cada service deve provar que é realmente transversal, senão migrar para `core/<domínio>`.
-- `media` — **INVESTIGATE** porque já existe `src/core/media`; evitar dois owners conceituais.
-- `taxonomy` — **INVESTIGATE** para diferenciar taxonomia global de taxonomia de domínio.
-- `validation` — **INVESTIGATE** para separar helpers compartilhados de validação de domínio.
+- `components`, `design-system`, `hooks`, `utils` — **KEEP/AUDIT**;
+- `config`, `constants`, `schemas`, `types`, `lib` — **AUDIT** para impedir domínio sem owner;
+- `services` — **INVESTIGATE**, alto risco de pasta genérica;
+- `media` — **INVESTIGATE** contra `core/media`;
+- `taxonomy` — **INVESTIGATE** contra `core/taxonomy`.
+
+`shared` não pode virar pasta de descarte.
 
 ---
 
-## 8. Testes
+## 7. Testes
 
-### Roots existentes
+Owner global atual: `tests/`.
 
-- `tests/`
-- `tests/e2e/`
+Subroots observados:
+
+- `architecture/`
 - `e2e/`
-- `src/__tests__/`
-- `src/test/`
-- testes co-localizados em `src/**/__tests__`, `*.spec.*`, `*.test.*`.
+- `fixtures/`
+- `helpers/`
+- `integration/`
+- `operational/`
+- `regression/`
+- `scripts/`
+- `security/`
 
-### `tests/` já possui boa base
+Unitários muito locais podem permanecer co-localizados no source.
 
-Pastas observadas:
+### Compatibilidade E2E restante
 
-- `architecture`
-- `e2e`
-- `fixtures`
-- `helpers`
-- `operational`
-- `scripts`
-- `security`
-
-Mas existem muitos testes soltos na raiz de `tests`, incluindo suites `fase*`, regression, SSOT e mobility.
-
-### Destino alvo
-
-- architecture → `tests/architecture`
-- security → `tests/security`
-- e2e → `tests/e2e`
-- integration → criar/usar `tests/integration`
-- regression → criar/usar `tests/regression`
-- script/tool tests → `tests/tools` ou manter `tests/scripts` até scripts→tools ser concluído
-- fixtures/helpers → manter enquanto realmente globais
-- unitários co-localizados → permitidos junto ao owner
-
-Não mover testes em massa antes de atualizar scripts de package/CI e imports relativos.
+`e2e/` deixou de ser owner de specs. O contrato de reorganização preserva apenas bridge mínimo de autenticação em `e2e/helpers/auth.ts` apontando para `tests/e2e/helpers/auth.ts`; arquivos históricos de geolocation/network e `e2e/network-branches.spec.ts` já foram retirados. O próximo corte deve remover o bridge somente quando todos os callers tiverem migrado.
 
 ---
 
-## 9. `scripts/`
+## 8. `scripts/` → `tools/`
 
-O root `scripts` mistura pelo menos as seguintes responsabilidades:
+A classificação funcional permanece:
 
-### Architecture / SSOT
+| Responsabilidade atual | Destino alvo |
+|---|---|
+| validators de arquitetura/SSOT | `tools/architecture/` |
+| segurança | `tools/security/` |
+| migrations/schema/types | `tools/migrations/` |
+| seeds/E2E data | `tools/seeds/` |
+| deploy/release/CI | `tools/release/`, `tools/ci/` ou owner explícito |
+| benchmarks/diagnostics/maintenance | owner técnico explícito a definir |
 
-Exemplos:
+`package.json` ainda possui muitos comandos apontando literalmente para `scripts/*`. Portanto a migração será feita em commits pequenos, preservando os nomes públicos dos scripts npm.
 
-- `validate-project-taxonomy.ts`
-- `validate-architecture-governance.ts`
-- `validate-core-platform-ownership.mjs`
-- `validate-architecture-boundaries-incremental.mjs`
-- `generate-architecture-audit.ts`
-- module boundary validators
-
-Destino futuro: `tools/architecture/`.
-
-### Security
-
-Já existe `scripts/security/`, além de scripts de segurança ainda soltos.
-
-Destino futuro: `tools/security/`.
-
-### Migration / schema tooling
-
-- `generate-migration-template.ts`
-- `generate-supabase-types.ts`
-- migration validators
-- reconciliation helpers
-
-Destino futuro: `tools/migrations/` ou subowner equivalente.
-
-### Seeds / E2E data
-
-- `seed-e2e-users.ts`
-- `seed-e2e-network.ts`
-
-Destino futuro: `tools/seeds/`.
-
-### Release / deploy / CI
-
-- `run-vercel-production-build.mjs`
-- `verify-deploy-ready.mjs`
-- `deploy-security-updates.sh`
-- `monitor-security-deployment.sh`
-- `scripts/ci/`
-- `scripts/devops/`
-
-Destino futuro: `tools/release/`, `tools/ci/` ou `tools/devops/` após mapa de callers.
-
-### Benchmarks / diagnostics / maintenance
-
-Há benchmark econômico, connectivity diagnostics, backup/restore, sync geográfico e maintenance scripts misturados no topo.
-
-**Conclusão:** scripts→tools deve ser uma migração por grupos funcionais, nunca rename massivo, pois `package.json`, workflows e docs possuem muitos callers literais.
+`tools/` hoje já contém `templates/`, cuja estrutura foi atualizada para separar `core/` e `module/` e possui regression guard.
 
 ---
 
-## 10. Duplicidades/overlaps prioritários para investigação
+## 9. Mapa owner atual → owner alvo
 
-| Grupo | Estado | Fase |
-|---|---|---|
-| `features/events` vs `modules/community-events` | confirmado | G2 |
-| `e2e/` vs `tests/e2e/` | confirmado | G2 |
-| `src/test` vs `src/__tests__` vs `tests/` | confirmado | G2 |
-| `core/analytics` vs business analytics read model | bug/SSOT paralelo já identificado | G4 |
-| `shared/media` vs `core/media` | investigar | G4 |
-| `shared/services` vs owners de core | investigar | G0/G4 |
-| `core/location/geocoding/geospatial/address/city` | boundaries precisam ser documentados | G4 |
-| `core/auth/authorization/profiles` | autoridade transversal precisa convergir | G4/G5 |
-| `business_subscriptions` vs `user_subscriptions` | legado DB confirmado | G5 |
-| `business_stats` vs métricas atuais | legado/owner não reconciliado | G5 |
-| `bun.lock` vs packageManager npm/package-lock | toolchain concorrente | G0/G1 |
-
----
-
-## 11. Fila de execução física recomendada
-
-Do menor risco para o maior:
-
-1. `e2e/network-branches.spec.ts` → `tests/e2e/network-branches.spec.ts` + package script.
-2. classificar/migrar `e2e/helpers/*` para `tests/e2e/helpers` ou `tests/helpers` conforme callers.
-3. consolidar testes globais soltos por categoria sem alterar comportamento.
-4. congelar novos arquivos em `src/features`; preparar move coordenado de Events.
-5. mover Events completo para `src/modules/community-events`/core apropriado, atualizando route/tsconfig/deploy validators no mesmo commit/lote.
-6. auditar `src/shared/services`, `shared/media`, `src/types`, `src/config` e mover domínio para owners.
-7. migrar `scripts` em lotes para `tools` com comandos públicos preservados.
-8. classificar `plans`, `handoff`, QA artifacts e templates da raiz.
+| Item | Atual | Alvo | Estado |
+|---|---|---|---|
+| bootstrap/router/providers | `src/app` | `src/app` | KEEP |
+| UI/aplicação por produto | `src/modules/*` | `src/modules/*` | KEEP |
+| domínio/SSOT/persistência/authz | `src/core/*` | `src/core/*` | KEEP + G4 AUDIT |
+| adapters Supabase/maps | `src/integrations/*` | `src/integrations/*` | KEEP |
+| primitives transversais | `src/shared/*` | `src/shared/*` | KEEP + AUDIT |
+| Events legado | `src/features/events` | `src/modules/community-events` + core | RETIRADO/MIGRADO |
+| generic source test roots | `src/test`, `src/__tests__` | `tests/*` ou co-location real | RETIRADOS |
+| generic source types | `src/types` | `shared/types` ou `core/<owner>` | RETIRADO |
+| app/domain config | `src/config/*` | `src/app/config`, `src/core/*`, `src/shared/config` | BRIDGES restantes |
+| E2E global | `e2e/*` | `tests/e2e/*` | quase concluído; 1 bridge auth |
+| scripts operacionais | `scripts/*` | `tools/*` por responsabilidade | MOVE gradual |
+| planos históricos/ativos | `plans/*` | `docs/08-roadmap` ou `docs/10-archive` | INVESTIGATE |
 
 ---
 
-## 12. Próximas ações G0/G1
+## 10. Guards já instalados
 
-- instalar regression guard do documento permanente da raiz;
-- ratchet de `src/features`: somente `events` pode existir durante a migração;
-- ampliar o owner existente `validate-project-taxonomy.ts` para roots de `src` quando o baseline estiver completamente classificado;
-- mapear callers de `e2e/helpers`;
-- executar o primeiro move físico de E2E;
-- continuar censo profundo de `core` e `shared` por imports/callers, não por nome apenas.
+Não criar validators concorrentes quando já existir owner:
+
+- `tests/architecture/repository-reorganization-contract.test.ts` protege o arquivo permanente, roots já retirados, Events canônico, config bridges, templates e E2E bridges;
+- `scripts/validate-project-taxonomy.ts` protege módulos canônicos, paths legados e `core → modules`;
+- `scripts/validate-architecture-boundaries-incremental.mjs` mantém baseline incremental para cross-module, Supabase em TSX e outras violações existentes.
+
+Lacuna para G1: generalizar **module → integrations runtime** com allowlist monotônica e stale-allowlist failure, reutilizando o validator incremental ou um único owner claramente conectado a ele.
 
 ---
 
-## Conclusão do checkpoint
+## 11. Resultado G0
 
-A estrutura não exige um monorepo para ficar organizada. O maior ganho imediato vem de **um modular monolith com owners físicos rígidos e ratchets de migração**.
+Checklist do censo:
 
-O repositório já possui uma base arquitetural relevante, mas acumulou namespaces e convenções em épocas diferentes. A missão global deve consolidá-los gradualmente, preservando comportamento e instalando guards a cada dívida removida.
+- [x] diretórios de raiz inventariados;
+- [x] roots atuais de `src` inventariados;
+- [x] `src/modules` inventariado;
+- [x] `src/core` inventariado;
+- [x] `src/features` revalidado como ausente;
+- [x] `src/integrations` inventariado;
+- [x] `src/shared` inventariado;
+- [x] testes globais/co-localizados e bridge E2E classificados;
+- [x] `scripts` classificado por responsabilidade e `tools` identificado como destino gradual;
+- [x] namespaces históricos/arquivos soltos relevantes classificados;
+- [x] overlaps/SSOTs candidatos identificados sem fusão por heurística;
+- [x] `core → modules` revalidado sem ocorrência alias no snapshot e protegido por guard;
+- [x] `module → integrations` identificado como dívida ativa a ratchetar em G1;
+- [x] mapa owner atual → owner alvo registrado;
+- [x] itens classificados como KEEP / MOVE / BRIDGE / MERGE / RETIRE / INVESTIGATE.
+
+**Decisão:** G0 está concluído como inventário. A dívida encontrada não precisa estar removida para fechar G0; ela alimenta G1–G5. O próximo passo obrigatório é **G1 — Architecture Taxonomy**, começando pela proteção completa dos roots canônicos e pelo ratchet `module → integrations`.
