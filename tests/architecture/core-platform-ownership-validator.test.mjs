@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildIncrementalBaseline,
   validateManifestAgainstRecords,
-} from "../../scripts/validate-core-platform-ownership.mjs";
+} from "../../tools/architecture/validate-core-platform-ownership.mjs";
 
 const EXISTING_PATH = "tools/architecture/core-platform/access-analyzer.mjs";
 
@@ -57,7 +57,7 @@ describe("core platform ownership validator", () => {
       [
         groupedRecord(),
         groupedRecord({
-          file: "scripts/validate-core-platform-ownership.mjs",
+          file: "scripts/legacy-undocumented-writer.mjs",
         }),
       ],
       process.cwd(),
