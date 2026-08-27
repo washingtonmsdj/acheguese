@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `52ac748c4e972e997d1be50afda5572f01eb52e7`  
+Baseline reviewed: `e74e841f4f4c834537a1008a9da477a0e38f8b92`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -41,9 +41,12 @@ Rules:
 | Legacy path | Canonical owner | Removal gate |
 | --- | --- | --- |
 | `scripts/backup-storage.ts` | `tools/maintenance/backup-storage.ts` | docs/policies/callers migrated to canonical path |
+| `scripts/restore-storage.ts` | `tools/maintenance/restore-storage.ts` | docs/policies/callers migrated to canonical path |
 | `scripts/generate-service-template.ts` | `tools/architecture/generate-service-template.ts` | public npm command and docs point to canonical path |
 | `scripts/generate-migration-template.ts` | `tools/migrations/generate-migration-template.ts` | public npm command and docs point to canonical path |
 | `scripts/generate-supabase-types.ts` | `tools/supabase/generate-supabase-types.ts` | public npm command and callers point to canonical path |
+| `scripts/generate-hardening-architecture-report.ts` | `tools/architecture/generate-hardening-architecture-report.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
+| `scripts/validate-critical-file-sizes.ts` | `tools/architecture/validate-critical-file-sizes.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-business-module-boundaries.ts` | `tools/architecture/validate-business-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-education-module-boundaries.ts` | `tools/architecture/validate-education-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-gastronomy-module-boundaries.ts` | `tools/architecture/validate-gastronomy-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
