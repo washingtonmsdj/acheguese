@@ -4,7 +4,7 @@ import {
   bootstrapProtectedPreviewAccess,
   hasE2EUserCredentials,
   requireE2EUserCredentials,
-} from "../../e2e/helpers/auth";
+} from "./helpers/auth";
 
 const VIEWPORTS = [
   { name: "mobile", width: 390, height: 844, navigation: "mobile" },
