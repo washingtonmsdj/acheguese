@@ -9,7 +9,7 @@ import {
   APP_MODULE_SLUGS,
   buildAppModulePath,
   isAppModulePath,
-} from "@/config/moduleSlugs";
+} from "@/shared/config/moduleSlugs";
 import {
   isLaunchSurfaceEnabled,
   type LaunchSurfaceKey,
