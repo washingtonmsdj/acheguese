@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-const pollPreflightModulePath = "../../scripts/poll-preflight.mjs";
+const pollPreflightModulePath = "../../tools/supabase/poll-preflight.mjs";
 
 type PollPreflightModule = {
   buildPollDataPreflightSql: (options: {
