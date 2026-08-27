@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `64125997e3846de4e6dd4125b792c593cff7cf64`  
+Baseline reviewed: `f471e26d883124402411df0440c544eb4fcb8f28`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -54,6 +54,7 @@ Rules:
 | `scripts/generate-economic-benchmark-blocker-report.mjs` | `tools/release/generate-economic-benchmark-blocker-report.mjs` | package/callers use canonical owner directly; legacy entrypoint no longer required |
 | `scripts/generate-economic-staging-report.mjs` | `tools/release/generate-economic-staging-report.mjs` | economic SSOT uses canonical owner directly; legacy entrypoint no longer required |
 | `scripts/run-economic-benchmark-all.mjs` | `tools/release/run-economic-benchmark-all.mjs` | package command points to canonical runner; legacy entrypoint no longer required |
+| `scripts/economic-benchmark-ssot.mjs` | `tools/release/economic-benchmark-ssot.mjs` | package/economic benchmark callers use canonical SSOT directly; legacy entrypoint no longer required |
 | `scripts/community-staging-load-test.mjs` | `tools/release/community-staging-load-test.mjs` | package/tests/callers use canonical staging harness directly; legacy CLI/module compatibility no longer required |
 | `scripts/diagnose-economic-db-connectivity.mjs` | `tools/release/diagnose-economic-db-connectivity.mjs` | package/economic benchmark callers use canonical diagnostic directly; legacy entrypoint no longer required |
 | `scripts/security/supabase-edge-admin-canary-deploy.mjs` | `tools/release/supabase-edge-admin-canary-deploy.mjs` | tests/deploy callers use canonical release guard directly; legacy entrypoint no longer required |
