@@ -23,7 +23,7 @@ Keep public Supabase config pointed at the linked remote project and keep the ad
 Use the PowerShell helper to fetch project keys and store the admin secret encrypted with Windows DPAPI for the current user:
 
 ```powershell
-.\scripts\security\Save-LocalSupabaseSecrets.ps1 -FetchFromSupabase
+.\tools\security\Save-LocalSupabaseSecrets.ps1 -FetchFromSupabase
 ```
 
 This stores the encrypted payload outside the repository at:
@@ -35,7 +35,7 @@ This stores the encrypted payload outside the repository at:
 When you need to run admin scripts:
 
 ```powershell
-.\scripts\security\Import-LocalSupabaseSecrets.ps1
+.\tools\security\Import-LocalSupabaseSecrets.ps1
 ```
 
 This loads these variables into the current PowerShell session:
@@ -47,7 +47,7 @@ This loads these variables into the current PowerShell session:
 ### 3. Rewrite a public `.env.local` if needed
 
 ```powershell
-.\scripts\security\Import-LocalSupabaseSecrets.ps1 -WritePublicEnvFile .env.local
+.\tools\security\Import-LocalSupabaseSecrets.ps1 -WritePublicEnvFile .env.local
 ```
 
 This writes only public variables to `.env.local`. It does not persist the service-role secret.
@@ -65,7 +65,7 @@ If another developer or another AI agent needs to operate this project, the expe
 
 1. Use `.env.local` only for public Supabase config.
 2. Never write `SUPABASE_SERVICE_ROLE_KEY` or `VITE_SUPABASE_SERVICE_ROLE_KEY` into repository env files.
-3. Run `Import-LocalSupabaseSecrets.ps1` before executing admin scripts.
+3. Run `tools/security/Import-LocalSupabaseSecrets.ps1` before executing admin scripts.
 4. Prefer backend secrets or shell-only env vars for administrative operations.
 
 ## Rotation
