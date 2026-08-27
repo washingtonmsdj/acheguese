@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `d96ccd19c7016e2b8a2d2c1c54d1edc823a9b47b`  
+Baseline reviewed: `e9ccd8a033d717f9a16b27db930a16c33d756daf`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -80,6 +80,7 @@ Rules:
 | `scripts/security/community-feed-authz-probe.mjs` | `tools/security/community-feed-authz-probe.mjs` | package command uses canonical guarded mutating probe directly; legacy entrypoint no longer required |
 | `scripts/security/reviews-core-authz-probe.mjs` | `tools/security/reviews-core-authz-probe.mjs` | package command uses canonical guarded mutating probe directly; legacy entrypoint no longer required |
 | `scripts/security/trust-operational-authz-probe.mjs` | `tools/security/trust-operational-authz-probe.mjs` | package command uses canonical guarded mutating probe directly; legacy entrypoint no longer required |
+| `scripts/security/community-direct-messaging-authz-probe.mjs` | `tools/security/community-direct-messaging-authz-probe.mjs` | package command uses canonical guarded mutating probe directly; legacy entrypoint no longer required |
 | `scripts/security/csp-contract.ts` | `tools/security/csp-contract.ts` | validator/tests import canonical security contract directly |
 | `scripts/security/validate-csp.ts` | `tools/security/validate-csp.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
 | `scripts/security/validate-turnstile-production-config.mjs` | `tools/security/validate-turnstile-production-config.mjs` | package/build callers point to canonical owner directly; legacy command no longer required |
