@@ -60,6 +60,8 @@ const CHECKS = [
       '.env.local.example',
       '.env.remote.example',
       '.gitleaks.toml',
+      'tools/security/validate-security.mjs',
+      'tools/security/sanitize-secrets.ts',
       'scripts/security/validate-security.mjs',
       'scripts/sanitize-secrets.ts',
       'docs/',
@@ -74,7 +76,12 @@ const CHECKS = [
       /'Access-Control-Allow-Origin':\s*'\*'/g,
       /"Access-Control-Allow-Origin":\s*"\*"/g,
     ],
-    exclude: ['scripts/security/validate-security.mjs', 'docs/', '.md'],
+    exclude: [
+      'tools/security/validate-security.mjs',
+      'scripts/security/validate-security.mjs',
+      'docs/',
+      '.md',
+    ],
   },
   {
     id: 'vite-service-role',
@@ -87,6 +94,7 @@ const CHECKS = [
     exclude: [
       'docs/',
       '.md',
+      'tools/security/validate-security.mjs',
       'scripts/security/validate-security.mjs',
       'src/integrations/supabase/supabaseAdmin.ts',
     ],
@@ -99,6 +107,7 @@ const SCAN_PREFIXES = [
   'src/core/admin/',
   'src/modules/admin/',
   'scripts/',
+  'tools/',
   'public/',
   '.kiro/',
   '.env',
@@ -399,9 +408,9 @@ function validateTurnstileProductionContract() {
   const packageJson = JSON.parse(readFileSync(join(ROOT_DIR, 'package.json'), 'utf-8'));
   const buildScript = packageJson.scripts?.['build:vercel'] ?? '';
   const validatorScript = packageJson.scripts?.['validate:turnstile:production'] ?? '';
-  const deployVerifier = readFileSync(join(ROOT_DIR, 'scripts/verify-deploy-ready.mjs'), 'utf-8');
+  const deployVerifier = readFileSync(join(ROOT_DIR, 'tools/release/verify-deploy-ready.mjs'), 'utf-8');
   const productionValidator = readFileSync(
-    join(ROOT_DIR, 'scripts/security/validate-turnstile-production-config.mjs'),
+    join(ROOT_DIR, 'tools/security/validate-turnstile-production-config.mjs'),
     'utf-8',
   );
   const registrationService = readFileSync(
@@ -429,12 +438,12 @@ function validateTurnstileProductionContract() {
         productionValidator.includes("VERCEL_ENV") &&
         productionValidator.includes('VITE_TURNSTILE_SITE_KEY') &&
         productionValidator.includes('LOCAL_FAILURE'),
-      file: 'scripts/security/validate-turnstile-production-config.mjs',
+      file: 'tools/security/validate-turnstile-production-config.mjs',
       message: 'validator de producao nao bloqueia site key Turnstile ausente ou invalida',
     },
     {
       ok: deployVerifier.includes("'VITE_TURNSTILE_SITE_KEY'"),
-      file: 'scripts/verify-deploy-ready.mjs',
+      file: 'tools/release/verify-deploy-ready.mjs',
       message: 'inventario de deploy nao declara VITE_TURNSTILE_SITE_KEY obrigatoria',
     },
     {
