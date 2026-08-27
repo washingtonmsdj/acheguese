@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `f9e927bc61c00f2adcdd09fec77302c5f1a4896b`  
+Baseline reviewed: `fa01d7d6c91e8613d89fb131c7a77c45bd926b03`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -71,7 +71,6 @@ Rules:
 | `scripts/generate-supabase-types.ts` | `tools/supabase/generate-supabase-types.ts` | public npm command and callers point to canonical path |
 | `scripts/generate-hardening-architecture-report.ts` | `tools/architecture/generate-hardening-architecture-report.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/generate-architecture-audit.ts` | `tools/architecture/generate-architecture-audit.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
-| `scripts/generate-violations-report.ts` | `tools/architecture/generate-violations-report.ts` | callers point to canonical report owner; legacy entrypoint no longer required |
 | `scripts/diagnose-typecheck.mjs` | `tools/architecture/diagnose-typecheck.mjs` | package/docs/callers point to canonical path; legacy diagnostic entrypoint no longer required |
 | `scripts/validate-maps-architecture.mjs` | `tools/architecture/validate-maps-architecture.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/core-platform/access-analyzer.mjs` | `tools/architecture/core-platform/access-analyzer.mjs` | validator/tests/callers use canonical owner directly; legacy module compatibility no longer required |
@@ -220,6 +219,7 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/ci/run-preview-e2e.ps1` → workflow/callers already use `tools/release/run-preview-e2e.ps1`; old PowerShell bridge removed.
 - `scripts/devops/push-to-github.ps1` → manual release helper is canonical at `tools/release/push-to-github.ps1`; old bridge removed.
 - `scripts/deploy-security-updates.sh` → security deploy helper is canonical at `tools/release/deploy-security-updates.sh`; old bridge removed.
+- `scripts/generate-violations-report.ts` → architecture callers use `tools/architecture/generate-violations-report.ts`; old bridge removed.
 
 ## G2 closure condition for bridges
 
