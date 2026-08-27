@@ -52,6 +52,23 @@ const CANONICAL_TOOLING_TARGETS = [
   "tools/templates/module-template",
 ] as const;
 
+const RETIRED_TEMPLATE_FILES = [
+  "tools/templates/module-template/.eslintrc.json",
+  "tools/templates/module-template/index.ts",
+  "tools/templates/module-template/hooks/use[Nome].ts",
+  "tools/templates/module-template/services/[nome].service.ts",
+  "tools/templates/module-template/types/[nome].types.ts",
+] as const;
+
+const CANONICAL_TEMPLATE_FILES = [
+  "tools/templates/module-template/core/index.ts",
+  "tools/templates/module-template/core/repositories/[nome].repository.ts",
+  "tools/templates/module-template/core/services/[nome].service.ts",
+  "tools/templates/module-template/core/types/[nome].types.ts",
+  "tools/templates/module-template/module/index.ts",
+  "tools/templates/module-template/module/hooks/use[Nome].ts",
+] as const;
+
 const LEGACY_E2E_BRIDGES = new Map([
   ["e2e/helpers/auth.ts", "tests/e2e/helpers/auth"],
   ["e2e/network-branches.spec.ts", "tests/e2e/network-branches.spec"],
@@ -141,6 +158,26 @@ describe("global repository reorganization contract", () => {
   it("keeps migrated tooling under canonical owners", () => {
     for (const relativePath of CANONICAL_TOOLING_TARGETS) {
       expect(fs.existsSync(path.join(ROOT, relativePath)), relativePath).toBe(true);
+    }
+  });
+
+  it("keeps the module template aligned with core/module boundaries", () => {
+    for (const relativePath of RETIRED_TEMPLATE_FILES) {
+      expect(fs.existsSync(path.join(ROOT, relativePath)), relativePath).toBe(false);
+    }
+
+    for (const relativePath of CANONICAL_TEMPLATE_FILES) {
+      expect(fs.existsSync(path.join(ROOT, relativePath)), relativePath).toBe(true);
+    }
+
+    const moduleFiles = listFilesRecursively("tools/templates/module-template/module");
+    expect(moduleFiles.some((relativePath) => relativePath.includes("/services/"))).toBe(false);
+
+    for (const relativePath of moduleFiles) {
+      const content = fs.readFileSync(path.join(ROOT, relativePath), "utf8");
+      expect(content).not.toMatch(/from\s+["']@\/integrations\//);
+      expect(content).not.toMatch(/import\s+.*supabase/i);
+      expect(content).not.toContain("@/lib/supabase");
     }
   });
 
