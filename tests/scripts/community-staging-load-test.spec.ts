@@ -4,7 +4,7 @@ import {
   percentile,
   summarize,
   validateStagingTarget,
-} from "./community-staging-load-test.mjs";
+} from "../../scripts/community-staging-load-test.mjs";
 
 describe("community staging load harness", () => {
   it("accepts only the explicitly declared Supabase staging PostgREST host", () => {
