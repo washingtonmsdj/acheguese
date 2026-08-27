@@ -133,7 +133,7 @@
     "test:e2e:seo": "playwright test tests/e2e/territorial-seo.spec.ts tests/e2e/community-social-seo.spec.ts --project=chromium --reporter=list",
     "test:e2e:ui": "playwright test tests/e2e/tourist-points.spec.ts --ui",
     "test:e2e:report": "playwright show-report",
-    "test:e2e:network": "playwright test e2e/network-branches.spec.ts --reporter=list",
+    "test:e2e:network": "playwright test tests/e2e/network-branches.spec.ts --reporter=list",
     "test:regression": "vitest --run --passWithNoTests tests/regression-*.test.ts",
     "test:all": "npm run test:ssot && npm run test:e2e && npm run test:regression",
     "test:maps": "vitest --run src/core/maps",
