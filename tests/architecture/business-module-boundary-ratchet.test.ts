@@ -24,7 +24,7 @@ describe("Business module architecture hardening", () => {
   });
 
   it("locks the entire Business module to zero direct runtime integration access", () => {
-    const validator = read("scripts/validate-business-module-boundaries.ts");
+    const validator = read("tools/architecture/validate-business-module-boundaries.ts");
 
     expect(validator).toContain('const BUSINESS_ROOT = "src/modules/business"');
     expect(validator).toContain("direct runtime @/integrations/* access is forbidden");

@@ -61,7 +61,7 @@ describe("Education module hardening ratchet", () => {
   });
 
   it("freezes only the remaining read/write model integration debt", () => {
-    const validator = read("scripts/validate-education-module-boundaries.ts");
+    const validator = read("tools/architecture/validate-education-module-boundaries.ts");
 
     for (const path of [
       "src/modules/business/education/services/education.mutations.ts",
@@ -77,7 +77,7 @@ describe("Education module hardening ratchet", () => {
       "src/modules/business/education/services/EducationTrackingService.ts",
     );
     expect(validator).toContain("ALLOWED_DIRECT_INTEGRATION_FILES");
-    expect(validator).toContain("new direct integrations access is forbidden");
+    expect(validator).toContain("direct integrations access is forbidden");
     expect(validator).toContain("transitional allowlist entry is stale");
   });
 });

@@ -7,7 +7,7 @@ const read = (path: string) => readFileSync(resolve(repoRoot, path), "utf8");
 
 describe("Gastronomy module boundary ratchet", () => {
   it("keeps runtime integration debt at zero", () => {
-    const validator = read("scripts/validate-gastronomy-module-boundaries.ts");
+    const validator = read("tools/architecture/validate-gastronomy-module-boundaries.ts");
     const readme = read("src/modules/business/gastronomy/README.md");
 
     expect(validator).toContain(
