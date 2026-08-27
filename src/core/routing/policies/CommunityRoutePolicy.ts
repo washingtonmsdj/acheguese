@@ -1,5 +1,5 @@
-import type { AppModuleSlug } from "@/config/moduleSlugs";
-import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
+import type { AppModuleSlug } from "@/shared/config/moduleSlugs";
+import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
 
 function cleanPathSegment(value: string, label: string): string {
   const segment = value.trim().replace(/^\/+|\/+$/g, "");
