@@ -25,6 +25,7 @@ const RETIRED_E2E_FILES = [
   "tests/e2e/helpers/geolocation.ts",
   "e2e/helpers/network.ts",
   "tests/e2e/helpers/network.ts",
+  "e2e/network-branches.spec.ts",
 ] as const;
 
 const CONFIG_BRIDGES = new Map([
@@ -74,7 +75,6 @@ const CANONICAL_TEMPLATE_FILES = [
 
 const LEGACY_E2E_BRIDGES = new Map([
   ["e2e/helpers/auth.ts", "tests/e2e/helpers/auth"],
-  ["e2e/network-branches.spec.ts", "tests/e2e/network-branches.spec"],
 ] as const);
 
 const CANONICAL_E2E_TARGETS = [
