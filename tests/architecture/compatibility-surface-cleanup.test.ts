@@ -28,17 +28,13 @@ describe('compatibility surface cleanup', () => {
     const canonical = read(
       'src/core/community-events/services/EventEngagementService.ts',
     );
-    const moduleBridge = read(
-      'src/modules/community-events/services/EventEngagementService.ts',
-    );
 
     expect(exists('src/core/verticals/events')).toBe(false);
     expect(canonical).toContain('from "@/integrations/supabase"');
     expect(canonical).toContain('export class EventEngagementService');
-    expect(moduleBridge).toContain(
-      '@/core/community-events/services/EventEngagementService',
-    );
-    expect(moduleBridge).not.toContain('@/integrations/supabase');
+    expect(
+      exists('src/modules/community-events/services/EventEngagementService.ts'),
+    ).toBe(false);
   });
 
   it('removes deprecated APIs and unconsumed duplicate types', () => {
