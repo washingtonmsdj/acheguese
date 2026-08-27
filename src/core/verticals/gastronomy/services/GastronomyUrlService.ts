@@ -1,4 +1,4 @@
-import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
+import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
 import {
   BusinessUrlService,
   type BusinessUrlContext,
