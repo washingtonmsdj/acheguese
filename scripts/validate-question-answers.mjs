@@ -1,4 +1,4 @@
-import { createServiceRoleClient } from './lib/supabase-client.mjs';
+import { createServiceRoleClient } from '../tools/supabase/supabase-client.mjs';
 
 const s = createServiceRoleClient();
 const PROF_A = 'e114b313-3d76-452b-8dca-3bb8079ca59e';
