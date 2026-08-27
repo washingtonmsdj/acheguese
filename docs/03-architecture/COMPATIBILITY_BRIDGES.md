@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `9ba576822d591b8d56ab3c10efe7878cd4e946d7`  
+Baseline reviewed: `6bb6e15e0152bad291e187a443ba7f635bf9a33d`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -54,6 +54,8 @@ Rules:
 | `scripts/generate-economic-benchmark-blocker-report.mjs` | `tools/release/generate-economic-benchmark-blocker-report.mjs` | package/callers use canonical owner directly; legacy entrypoint no longer required |
 | `scripts/generate-economic-staging-report.mjs` | `tools/release/generate-economic-staging-report.mjs` | economic SSOT uses canonical owner directly; legacy entrypoint no longer required |
 | `scripts/run-economic-benchmark-all.mjs` | `tools/release/run-economic-benchmark-all.mjs` | package command points to canonical runner; legacy entrypoint no longer required |
+| `scripts/community-interest-preflight.mjs` | `tools/supabase/community-interest-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
+| `scripts/poll-preflight.mjs` | `tools/supabase/poll-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
 | `scripts/generate-service-template.ts` | `tools/architecture/generate-service-template.ts` | public npm command and docs point to canonical path |
 | `scripts/generate-migration-template.ts` | `tools/migrations/generate-migration-template.ts` | public npm command and docs point to canonical path |
 | `scripts/generate-supabase-types.ts` | `tools/supabase/generate-supabase-types.ts` | public npm command and callers point to canonical path |
