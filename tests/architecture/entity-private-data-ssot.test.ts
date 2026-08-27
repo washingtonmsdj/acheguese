@@ -73,7 +73,7 @@ describe("Entity private-data SSOT", () => {
 
   it("keeps anonymous snapshots contact-free before authenticated hydration", () => {
     const snapshots = read(
-      "src/modules/business/public/services/PublicSnapshotRpcService.ts",
+      "src/core/business/services/PublicSnapshotRpcService.ts",
     );
     expect(snapshots).toContain("phone: undefined");
     expect(snapshots).toContain("whatsapp: undefined");
