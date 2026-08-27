@@ -6,7 +6,7 @@ import {
   evaluateCommunityInterestPreflight,
   parseArgs,
   parseSupabaseQueryJson,
-} from "../../scripts/community-interest-preflight.mjs";
+} from "../../tools/supabase/community-interest-preflight.mjs";
 
 const dependencies = {
   auth_users_exists: true,
