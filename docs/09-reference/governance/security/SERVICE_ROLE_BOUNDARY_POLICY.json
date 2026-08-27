@@ -230,7 +230,7 @@
       "allowedPatternIds": ["service-role-key-literal"]
     },
     {
-      "path": "scripts/sanitize-secrets.ts",
+      "path": "tools/security/sanitize-secrets.ts",
       "kind": "security-tooling",
       "risk": "High",
       "label": "Secret sanitization helper may reference service_role key names.",
@@ -313,7 +313,7 @@
       "allowedPatternIds": ["service-role-key-literal"]
     },
     {
-      "path": "scripts/verify-deploy-ready.mjs",
+      "path": "tools/release/verify-deploy-ready.mjs",
       "kind": "deploy-gate",
       "risk": "High",
       "label": "Deploy gate may require service_role to be configured in the deployment provider.",
