@@ -35,7 +35,7 @@ O fluxo implementado cobre cadastro gastronômico, cardápio, carrinho, checkout
 
 O baseline runtime de acesso direto a `@/integrations/*` dentro de `src/modules/business/gastronomy` é **zero**.
 
-`scripts/validate-gastronomy-module-boundaries.ts` mantém a allowlist vazia e impede a reintrodução de acesso runtime direto à infraestrutura. Imports estritamente `type` de contratos gerados não são considerados persistence runtime.
+`tools/architecture/validate-gastronomy-module-boundaries.ts` mantém a allowlist vazia e impede a reintrodução de acesso runtime direto à infraestrutura. Imports estritamente `type` de contratos gerados não são considerados persistence runtime.
 
 Zero dívida de integração no módulo **não significa MVP certificado**. A certificação depende também de banco, autorização, testes, build e deploy do mesmo SHA.
 
