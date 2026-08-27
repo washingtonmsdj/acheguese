@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "generatedFrom": "G0 repository census",
+  "policy": "Temporary runtime module -> integrations exceptions. Entries may only decrease; stale entries are failures.",
+  "entries": [
+    {
+      "file": "src/modules/admin/services/OperationalDiagnosticsService.ts",
+      "specifier": "@/integrations/supabase"
+    },
+    {
+      "file": "src/modules/admin/services/PlanChangeValidator.ts",
+      "specifier": "@/integrations/supabase"
+    },
+    {
+      "file": "src/modules/ai/core/client/aiClient.ts",
+      "specifier": "@/integrations/supabase"
+    },
+    {
+      "file": "src/modules/ai/virtual-tryon/services/tryon.service.ts",
+      "specifier": "@/integrations/supabase"
+    },
+    {
+      "file": "src/modules/classifieds/jobs/services/VagaReportService.ts",
+      "specifier": "@/integrations/supabase"
+    },
+    {
+      "file": "src/modules/classifieds/jobs/services/VagasPublishPermissionService.ts",
+      "specifier": "@/integrations/supabase"
+    },
+    {
+      "file": "src/modules/classifieds/jobs/services/VagasService.ts",
+      "specifier": "@/integrations/supabase"
+    },
+    {
+      "file": "src/modules/mobility/scripts/validateDispatch.ts",
+      "specifier": "@/integrations/supabase"
+    }
+  ]
+}
