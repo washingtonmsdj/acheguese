@@ -38,11 +38,22 @@
       ]
     },
     {
-      "prefix": "scripts/security/",
+      "prefix": "tools/security/",
       "kind": "security-tooling",
       "risk": "High",
-      "label": "Security validators and encrypted local secret helpers may inspect service_role names.",
+      "label": "Canonical security validators and encrypted local secret helpers may inspect service_role names.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
+      "allowedPatternIds": [
+        "service-role-env-access",
+        "service-role-key-literal"
+      ]
+    },
+    {
+      "prefix": "scripts/security/",
+      "kind": "security-tooling-compatibility",
+      "risk": "High",
+      "label": "Temporary compatibility bridges for security tooling may reference service_role names during G2.",
+      "authority": "docs/03-architecture/COMPATIBILITY_BRIDGES.md",
       "allowedPatternIds": [
         "service-role-env-access",
         "service-role-key-literal"
@@ -146,7 +157,7 @@
       "allowedPatternIds": ["runtime-supabase-package-import"]
     },
     {
-      "path": "src/config/security.config.ts",
+      "path": "src/shared/config/security.config.ts",
       "kind": "security-audit-history",
       "risk": "Low",
       "label": "Runtime security SSOT contains historical audit text; env access remains forbidden.",
@@ -167,7 +178,7 @@
       ]
     },
     {
-      "path": "scripts/backup-storage.ts",
+      "path": "tools/maintenance/backup-storage.ts",
       "kind": "operator-script",
       "risk": "High",
       "label": "Administrative storage backup script requiring operator-supplied service_role.",
@@ -175,15 +186,15 @@
       "allowedPatternIds": ["service-role-key-literal"]
     },
     {
-      "path": "scripts/economic-benchmark-ssot.mjs",
+      "path": "tools/release/economic-benchmark-ssot.mjs",
       "kind": "operator-script",
       "risk": "High",
-      "label": "Operational benchmark script using the shared script Supabase helper.",
+      "label": "Operational benchmark script using the canonical Supabase tooling helper.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
       "allowedPatternIds": ["service-role-key-literal"]
     },
     {
-      "path": "scripts/geocode-locations.ts",
+      "path": "tools/seeds/geocode-locations.ts",
       "kind": "operator-script",
       "risk": "High",
       "label": "Administrative geocoding script requiring operator-supplied service_role.",
@@ -191,10 +202,10 @@
       "allowedPatternIds": ["service-role-key-literal"]
     },
     {
-      "path": "scripts/lib/supabase-client.mjs",
+      "path": "tools/supabase/supabase-client.mjs",
       "kind": "operator-script-helper",
       "risk": "High",
-      "label": "Runtime helper for administrative scripts that need service_role.",
+      "label": "Canonical runtime helper for administrative tools that need service_role.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
       "allowedPatternIds": [
         "service-role-env-access",
@@ -203,15 +214,15 @@
       ]
     },
     {
-      "path": "scripts/lib/supabase-client.ts",
+      "path": "tools/supabase/supabase-client.ts",
       "kind": "operator-script-helper",
       "risk": "High",
-      "label": "Typed facade over scripts/lib/supabase-client.mjs; runtime env access stays in the .mjs helper.",
+      "label": "Typed facade over tools/supabase/supabase-client.mjs; runtime env access stays in the .mjs helper.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
       "allowedPatternIds": ["service-role-key-literal"]
     },
     {
-      "path": "scripts/restore-storage.ts",
+      "path": "tools/maintenance/restore-storage.ts",
       "kind": "operator-script",
       "risk": "High",
       "label": "Administrative storage restore script requiring operator-supplied service_role.",
@@ -246,7 +257,7 @@
       "allowedPatternIds": ["service-role-key-literal"]
     },
     {
-      "path": "scripts/sync-municipal-neighborhoods.ts",
+      "path": "tools/seeds/sync-municipal-neighborhoods.ts",
       "kind": "operator-script",
       "risk": "High",
       "label": "Administrative territorial sync script requiring operator-supplied service_role.",
@@ -254,7 +265,7 @@
       "allowedPatternIds": ["service-role-key-literal"]
     },
     {
-      "path": "scripts/sync-national-districts-ibge.ts",
+      "path": "tools/seeds/sync-national-districts-ibge.ts",
       "kind": "operator-script",
       "risk": "High",
       "label": "Administrative territorial sync script requiring operator-supplied service_role.",
@@ -262,10 +273,10 @@
       "allowedPatternIds": ["service-role-key-literal"]
     },
     {
-      "path": "scripts/validate-e2e-setup.ts",
+      "path": "tools/release/validate-e2e-setup.ts",
       "kind": "operator-script",
       "risk": "High",
-      "label": "E2E readiness script checks operator-supplied service_role availability.",
+      "label": "E2E readiness tool checks operator-supplied service_role availability.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
       "allowedPatternIds": ["service-role-key-literal"]
     },
