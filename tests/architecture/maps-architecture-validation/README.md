@@ -58,5 +58,5 @@ O lint normal já ignora `tests/**/*.ts`; o validator usa `--no-ignore` para exe
 Se adicionar novas regras de blindagem:
 
 1. Crie um fixture de violação nesta pasta
-2. Adicione a validação em `scripts/validate-maps-architecture.mjs`
+2. Adicione a validação em `tools/architecture/validate-maps-architecture.mjs`
 3. Documente a violação esperada neste README
