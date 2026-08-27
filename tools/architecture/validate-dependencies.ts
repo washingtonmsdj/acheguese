@@ -1,0 +1,505 @@
+import { readFileSync, readdirSync, statSync } from 'fs';
+import { join, relative, normalize as normalizePath } from 'path';
+
+interface DependencyNode {
+  path: string;
+  layer: string;
+  module?: string;
+  imports: string[];
+}
+
+interface ValidationResult {
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+  graph: Map<string, DependencyNode>;
+  legacyImports?: Map<string, number>;
+}
+
+const LAYER_ORDER = {
+  'integrations': 0,
+  'shared': 1,
+  'core': 2,
+  'modules': 3,
+  'app': 4
+};
+
+const ALLOWED_DEPENDENCIES: Record<string, string[]> = {
+  'app': ['app', 'modules', 'core', 'shared'],
+  'modules': ['modules', 'core', 'shared'],  // modules can import from same layer (different submodules via barrel exports)
+  'core': ['core', 'integrations', 'shared'],  // core can import from core (different subsystems)
+  'shared': ['shared'],  // shared can import from shared (UI components, utils, types)
+  'integrations': ['integrations', 'shared']
+};
+
+const NORMALIZED_LAYER_ALIASES: Record<string, string> = {
+  'assets': 'shared',
+  'config': 'shared',
+};
+
+const ALLOWED_IMPORT_PATH_EXCEPTIONS: Array<{
+  from: string;
+  to: string;
+  patterns: RegExp[];
+}> = [
+  {
+    // Integrations podem depender de contratos canonicos sem puxar implementacoes de negocio.
+    from: 'integrations',
+    to: 'core',
+    patterns: [
+      /^@\/core\/maps\/types(?:\/.*)?$/,
+      /^@\/core\/routing\/types(?:\/.*)?$/,
+      /^@\/core\/location\/repositories\/ILocationRepository$/,
+      /^@\/core\/coverage\/index$/,
+    ],
+  },
+];
+
+const FORBIDDEN_IMPORT_PATHS: Array<{
+  pattern: RegExp;
+  message: string;
+}> = [
+  {
+    pattern: /^@\/core\/infrastructure\/supabase(?:\/.*)?$/,
+    message: 'Use @/integrations/supabase as the single Supabase entrypoint',
+  },
+  {
+    pattern:
+      /^@\/integrations\/supabase\/(?:supabase|types(?:\.generated)?|services\/supabaseHelpers)$/,
+    message: 'Import Supabase client, generated types and helpers from @/integrations/supabase',
+  },
+];
+
+const DATA_BOUNDARY_PATH_PATTERNS = [
+  /\/services\//,
+  /\/repositories\//,
+  /\/adapters\//,
+  /\/types\//,
+  /\/scripts\//,
+  /\/__tests__\//,
+  /\.test\./,
+  /\.spec\./,
+  /(?:Service|Client)\.ts$/,
+];
+
+function isSupabaseEntrypointAllowedForFile(
+  sourceLayer: string,
+  sourceFile: string,
+  importPath: string,
+): boolean {
+  if (importPath !== '@/integrations/supabase') {
+    return false;
+  }
+
+  if (!['app', 'modules'].includes(sourceLayer)) {
+    return false;
+  }
+
+  return DATA_BOUNDARY_PATH_PATTERNS.some((pattern) => pattern.test(sourceFile));
+}
+
+function normalizeImportLayer(importLayer: string): string {
+  return NORMALIZED_LAYER_ALIASES[importLayer] || importLayer;
+}
+
+function isAllowedImportPathException(
+  sourceLayer: string,
+  targetLayer: string,
+  importPath: string
+): boolean {
+  return ALLOWED_IMPORT_PATH_EXCEPTIONS.some((rule) =>
+    rule.from === sourceLayer &&
+    rule.to === targetLayer &&
+    rule.patterns.some((pattern) => pattern.test(importPath))
+  );
+}
+
+function getLayer(filePath: string): string | null {
+  const normalized = filePath.replace(/\\/g, '/');
+  if (normalized.startsWith('app/') || normalized.includes('/app/')) return 'app';
+  if (normalized.startsWith('modules/') || normalized.includes('/modules/')) return 'modules';
+  if (normalized.startsWith('core/') || normalized.includes('/core/')) return 'core';
+  if (normalized.startsWith('shared/') || normalized.includes('/shared/')) return 'shared';
+  if (normalized.startsWith('integrations/') || normalized.includes('/integrations/')) return 'integrations';
+  return null;
+}
+
+function getModule(filePath: string): string | null {
+  const normalized = filePath.replace(/\\/g, '/');
+  const match = normalized.match(/modules\/([^/]+)/);
+  return match ? match[1] : null;
+}
+
+function extractImports(content: string, filePath: string): string[] {
+  const imports: string[] = [];
+  
+  // Remove comentários de linha única e multi-linha antes de processar
+  const contentWithoutComments = content
+    .replace(/\/\*[\s\S]*?\*\//g, '') // Remove /* */ comments
+    .replace(/\/\/.*/g, ''); // Remove // comments
+  
+  const importRegex = /import\s+(?:[\w\s{},*]+\s+from\s+)?['"]([^'"]+)['"]/g;
+  
+  let match;
+  while ((match = importRegex.exec(contentWithoutComments)) !== null) {
+    const importPath = match[1];
+    
+    // Only track internal imports starting with @/
+    if (importPath.startsWith('@/')) {
+      imports.push(importPath);
+    }
+  }
+  
+  return imports;
+}
+
+function getAllTypeScriptFiles(dir: string, baseDir: string = dir): string[] {
+  const files: string[] = [];
+  
+  try {
+    const entries = readdirSync(dir);
+    
+    for (const entry of entries) {
+      const fullPath = join(dir, entry);
+      let stat;
+      try {
+        stat = statSync(fullPath);
+      } catch {
+        continue;
+      }
+      
+      if (stat.isDirectory()) {
+        // Skip node_modules and dist
+        if (entry === 'node_modules' || entry === 'dist' || entry === '.git') {
+          continue;
+        }
+        files.push(...getAllTypeScriptFiles(fullPath, baseDir));
+      } else if (entry.endsWith('.ts') || entry.endsWith('.tsx')) {
+        const relativePath = relative(baseDir, fullPath).replace(/\\/g, '/');
+        files.push(relativePath);
+      }
+    }
+  } catch (error) {
+    console.error(`Error reading directory ${dir}:`, error);
+  }
+  
+  return files;
+}
+
+function buildDependencyGraph(srcDir: string): Map<string, DependencyNode> {
+  const graph = new Map<string, DependencyNode>();
+  const files = getAllTypeScriptFiles(srcDir);
+  
+  console.log(`Found ${files.length} TypeScript files`);
+  
+  for (const file of files) {
+    const fullPath = join(srcDir, file);
+    const layer = getLayer(file);
+    
+    if (!layer) continue;
+    
+    try {
+      const content = readFileSync(fullPath, 'utf-8');
+      const imports = extractImports(content, file);
+      
+      graph.set(file, {
+        path: file,
+        layer,
+        module: getModule(file),
+        imports
+      });
+    } catch (error) {
+      console.error(`Error reading ${fullPath}:`, error);
+    }
+  }
+  
+  return graph;
+}
+
+function resolveAliasImport(
+  importPath: string,
+  fileSet: Set<string>,
+): string | null {
+  if (!importPath.startsWith('@/')) return null;
+
+  const normalizedImport = normalizePath(importPath.replace(/^@\//, ''))
+    .replace(/\\/g, '/');
+
+  const candidates = normalizedImport.endsWith('.ts') || normalizedImport.endsWith('.tsx')
+    ? [normalizedImport]
+    : [
+        `${normalizedImport}.ts`,
+        `${normalizedImport}.tsx`,
+        `${normalizedImport}/index.ts`,
+        `${normalizedImport}/index.tsx`,
+      ];
+
+  for (const candidate of candidates) {
+    if (fileSet.has(candidate)) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+function buildAdjacency(graph: Map<string, DependencyNode>): Map<string, string[]> {
+  const adjacency = new Map<string, string[]>();
+  const fileSet = new Set(graph.keys());
+
+  for (const [file, node] of graph.entries()) {
+    const neighbors = new Set<string>();
+    for (const importPath of node.imports) {
+      const resolved = resolveAliasImport(importPath, fileSet);
+      if (resolved && resolved !== file) {
+        neighbors.add(resolved);
+      }
+    }
+    adjacency.set(file, [...neighbors]);
+  }
+
+  return adjacency;
+}
+
+function canonicalCycleKey(cycle: string[]): string {
+  // cycle vem no formato [a,b,c,a]
+  const body = cycle.slice(0, -1);
+  if (body.length === 0) return '';
+
+  const rotations: string[] = [];
+  for (let i = 0; i < body.length; i++) {
+    const rotated = [...body.slice(i), ...body.slice(0, i)];
+    rotations.push(rotated.join('->'));
+  }
+
+  const reversedBody = [...body].reverse();
+  for (let i = 0; i < reversedBody.length; i++) {
+    const rotated = [...reversedBody.slice(i), ...reversedBody.slice(0, i)];
+    rotations.push(rotated.join('->'));
+  }
+
+  rotations.sort();
+  return rotations[0];
+}
+
+function detectCircularDependencies(graph: Map<string, DependencyNode>): string[][] {
+  const adjacency = buildAdjacency(graph);
+  const cycles: string[][] = [];
+  const seenKeys = new Set<string>();
+  const state = new Map<string, 0 | 1 | 2>(); // 0=unvisited, 1=visiting, 2=done
+  const stack: string[] = [];
+  const stackIndex = new Map<string, number>();
+
+  function dfs(node: string): void {
+    state.set(node, 1);
+    stackIndex.set(node, stack.length);
+    stack.push(node);
+
+    const neighbors = adjacency.get(node) ?? [];
+    for (const neighbor of neighbors) {
+      const neighborState = state.get(neighbor) ?? 0;
+      if (neighborState === 0) {
+        dfs(neighbor);
+        continue;
+      }
+
+      if (neighborState === 1) {
+        const start = stackIndex.get(neighbor);
+        if (start === undefined) continue;
+        const cycle = [...stack.slice(start), neighbor];
+        if (cycle.length > 2) {
+          const key = canonicalCycleKey(cycle);
+          if (!seenKeys.has(key)) {
+            seenKeys.add(key);
+            cycles.push(cycle);
+          }
+        }
+      }
+    }
+
+    stack.pop();
+    stackIndex.delete(node);
+    state.set(node, 2);
+  }
+
+  for (const file of graph.keys()) {
+    if ((state.get(file) ?? 0) === 0) {
+      dfs(file);
+    }
+  }
+
+  return cycles;
+}
+
+function validateDependencyRules(graph: Map<string, DependencyNode>): ValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  const legacyImports = new Map<string, number>();
+  
+  for (const [file, node] of graph.entries()) {
+    for (const importPath of node.imports) {
+      const forbiddenImport = FORBIDDEN_IMPORT_PATHS.find((rule) => rule.pattern.test(importPath));
+      if (forbiddenImport) {
+        errors.push(
+          `❌ Forbidden Supabase import: ${file}\n` +
+          `   ${forbiddenImport.message}\n` +
+          `   Import: ${importPath}`
+        );
+        continue;
+      }
+
+      const rawImportLayer = importPath.split('/')[1];
+      const importLayer = normalizeImportLayer(rawImportLayer);
+      
+      // Track legacy imports (old architecture paths)
+      if (['components', 'services', 'hooks', 'types', 'lib', 'contexts', 'stores', 'validation'].includes(rawImportLayer)) {
+        legacyImports.set(rawImportLayer, (legacyImports.get(rawImportLayer) || 0) + 1);
+        continue; // Don't report as errors - these are migration TODOs
+      }
+      
+      // Check for cross-module imports (modules importing from other modules)
+      if (node.layer === 'modules' && rawImportLayer === 'modules') {
+        const sourceModule = node.module;
+        const targetModuleMatch = importPath.match(/@\/modules\/([^/]+)/);
+        const targetModule = targetModuleMatch ? targetModuleMatch[1] : null;
+        
+        if (sourceModule && targetModule && sourceModule !== targetModule) {
+          errors.push(
+            `❌ Cross-module import: ${file}\n` +
+            `   Module "${sourceModule}" cannot import from module "${targetModule}"\n` +
+            `   Import: ${importPath}\n` +
+            `   Solution: Move shared logic to @/core or use events`
+          );
+        }
+        continue; // Skip further validation for same-layer module imports
+      }
+      
+      // Check if this is an allowed dependency
+      const allowedLayers = ALLOWED_DEPENDENCIES[node.layer] || [];
+
+      if (isAllowedImportPathException(node.layer, importLayer, importPath)) {
+        continue;
+      }
+
+      if (isSupabaseEntrypointAllowedForFile(node.layer, file, importPath)) {
+        continue;
+      }
+      
+      if (!allowedLayers.includes(importLayer)) {
+        errors.push(
+          `❌ Invalid dependency: ${file}\n` +
+          `   Layer "${node.layer}" cannot import from "${importLayer}"\n` +
+          `   Import: ${importPath}\n` +
+          `   Allowed: ${allowedLayers.join(', ') || 'none'}`
+        );
+      }
+      
+      // Check for direct Supabase imports (external library)
+      if (importPath.includes('@supabase/supabase-js')) {
+        errors.push(
+          `❌ Direct Supabase import: ${file}\n` +
+          `   Use @/integrations/supabase or @/core/* services instead\n` +
+          `   Import: ${importPath}`
+        );
+      }
+    }
+  }
+  
+  return {
+    valid: errors.length === 0,
+    errors,
+    warnings,
+    graph,
+    legacyImports
+  };
+}
+
+function generateReport(result: ValidationResult, cycles: string[][]): void {
+  console.log('\n=== Dependency Graph Validation Report ===\n');
+  
+  // Count nodes by layer
+  const layerCounts = new Map<string, number>();
+  for (const node of result.graph.values()) {
+    layerCounts.set(node.layer, (layerCounts.get(node.layer) || 0) + 1);
+  }
+  
+  console.log('📊 Files by Layer:');
+  for (const [layer, count] of layerCounts.entries()) {
+    console.log(`   ${layer}: ${count} files`);
+  }
+  console.log();
+  
+  // Legacy imports
+  if (result.legacyImports && result.legacyImports.size > 0) {
+    console.log('⚠️  Legacy Import Paths (Migration TODO):');
+    for (const [path, count] of result.legacyImports.entries()) {
+      console.log(`   @/${path}: ${count} imports`);
+    }
+    console.log();
+  }
+  
+  // Check for circular dependencies
+  console.log('🔄 Checking for circular dependencies...');
+  if (cycles.length > 0) {
+    console.log(`   ⚠️  Found ${cycles.length} potential circular dependencies`);
+    console.log('   (Note: Some may be false positives due to import resolution)');
+    if (cycles.length <= 5) {
+      for (const cycle of cycles) {
+        console.log(`   ${cycle.join(' → ')}`);
+      }
+    }
+  } else {
+    console.log('   ✅ No circular dependencies detected');
+  }
+  console.log();
+  
+  // Validation results
+  console.log('🔍 Dependency Rule Validation:');
+  if (result.errors.length === 0) {
+    console.log('   ✅ All dependency rules are satisfied');
+  } else {
+    console.log(`   ❌ Found ${result.errors.length} violations:\n`);
+    // Show ALL violations for complete analysis
+    for (const error of result.errors) {
+      console.log(error);
+      console.log();
+    }
+  }
+  
+  if (result.warnings.length > 0) {
+    console.log('\n⚠️  Warnings:');
+    for (const warning of result.warnings) {
+      console.log(`   ${warning}`);
+    }
+  }
+  
+  console.log('\n=== Summary ===');
+  console.log(`Total files analyzed: ${result.graph.size}`);
+  console.log(`Circular dependencies: ${cycles.length}`);
+  console.log(`Architecture violations: ${result.errors.length}`);
+  console.log(`Legacy imports: ${result.legacyImports ? Array.from(result.legacyImports.values()).reduce((a, b) => a + b, 0) : 0}`);
+  console.log(`Warnings: ${result.warnings.length}`);
+  
+  const hasLegacy = result.legacyImports && result.legacyImports.size > 0;
+  if (result.valid && cycles.length === 0) {
+    console.log(`Status: ✅ PASSED ${hasLegacy ? '(with legacy imports to migrate)' : ''}`);
+  } else {
+    console.log(`Status: ❌ FAILED`);
+  }
+  console.log();
+}
+
+// Main execution
+const srcDir = join(process.cwd(), 'src');
+console.log('Building dependency graph...');
+const graph = buildDependencyGraph(srcDir);
+console.log(`Analyzed ${graph.size} files`);
+
+const result = validateDependencyRules(graph);
+const cycles = detectCircularDependencies(graph);
+generateReport(result, cycles);
+
+// Exit with error code if validation failed
+if (!result.valid || cycles.length > 0) {
+  process.exit(1);
+}
