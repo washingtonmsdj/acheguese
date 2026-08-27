@@ -52,7 +52,7 @@ vi.mock("@/shared/components/ui/use-toast", () => ({
   useToast: () => ({ toast: mocks.toast }),
 }));
 
-vi.mock("@/config/security.config", () => ({
+vi.mock("@/shared/config/security.config", () => ({
   COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG: {
     minimumFillMs: 0,
     turnstileRequiredInProduction: true,
