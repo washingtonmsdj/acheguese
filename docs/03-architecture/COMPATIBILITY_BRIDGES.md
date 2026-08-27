@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `5ebe8edff5ff1349e1e7f626e80c298246c3bf57`  
+Baseline reviewed: `c8b2c0eafcb4a5316b92fdd14d5f1df4e813b74d`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -65,6 +65,16 @@ Rules:
 | `scripts/validate-upload-ssot.ts` | `tools/architecture/validate-upload-ssot.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
 | `scripts/validate-security-config.ts` | `tools/security/validate-security-config.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
 | `scripts/validate-security-fixes.ts` | `tools/security/validate-security-fixes.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
+| `scripts/security/csp-contract.ts` | `tools/security/csp-contract.ts` | validator/tests import canonical security contract directly |
+| `scripts/security/validate-csp.ts` | `tools/security/validate-csp.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
+| `scripts/security/validate-turnstile-production-config.mjs` | `tools/security/validate-turnstile-production-config.mjs` | package/build callers use canonical owner directly; legacy command no longer required |
+| `scripts/security/account-operational-edge-policy.mjs` | `tools/security/account-operational-edge-policy.mjs` | security validators/tests import canonical policy helper directly |
+| `scripts/security/edge-function-auth-config.mjs` | `tools/security/edge-function-auth-config.mjs` | security validators/tests import canonical auth config helper directly |
+| `scripts/security/edge-function-auth-policy.mjs` | `tools/security/edge-function-auth-policy.mjs` | security validators/tests import canonical auth policy helper directly |
+| `scripts/security/edge-function-broker-boundary.mjs` | `tools/security/edge-function-broker-boundary.mjs` | security validators/tests import canonical boundary helper directly |
+| `scripts/security/service-role-boundary.mjs` | `tools/security/service-role-boundary.mjs` | security validators/tests import canonical boundary helper directly |
+| `scripts/security/supabase-access-boundary.mjs` | `tools/security/supabase-access-boundary.mjs` | security validators/tests import canonical boundary helper directly |
+| `scripts/security/validate-security.mjs` | `tools/security/validate-security.mjs` | package/docs/callers use canonical security orchestrator directly; legacy command no longer required |
 | `scripts/validate-critical-file-sizes.ts` | `tools/architecture/validate-critical-file-sizes.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-architecture-governance.ts` | `tools/architecture/validate-architecture-governance.ts` | npm/docs/callers point to canonical path; legacy CLI/module compatibility no longer required |
 | `scripts/validate-architecture-phase1.mjs` | `tools/architecture/validate-architecture-phase1.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
