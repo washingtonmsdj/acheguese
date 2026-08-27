@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `7bf1f99aae1ac46294a370d27304b920a51a967a`  
+Baseline reviewed: `df04d221e7d47049236ee41c5b5f183823ec7b7e`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -64,8 +64,6 @@ Rules:
 | `scripts/validate-core-platform-ownership.mjs` | `tools/architecture/validate-core-platform-ownership.mjs` | package/tests/callers use canonical owner directly; legacy CLI/module compatibility no longer required |
 | `scripts/validate-session-context.ts` | `tools/architecture/validate-session-context.ts` | package/docs/callers use canonical owner directly; legacy CLI/module compatibility no longer required |
 | `scripts/validate-project-taxonomy.ts` | `tools/architecture/validate-project-taxonomy.ts` | package/docs/callers use canonical owner directly; legacy CLI/source-inspection compatibility no longer required |
-| `scripts/validate-public-url-ssot.ts` | `tools/architecture/validate-public-url-ssot.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
-| `scripts/validate-upload-ssot.ts` | `tools/architecture/validate-upload-ssot.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
 | `scripts/security/audit-privileged-rpc-browser-callers.mjs` | `tools/security/audit-privileged-rpc-browser-callers.mjs` | package command uses canonical audit directly; legacy entrypoint no longer required |
 | `scripts/security/entity-private-data-exposure-probe.mjs` | `tools/security/entity-private-data-exposure-probe.mjs` | package/docs use canonical probe directly; legacy entrypoint no longer required |
 | `scripts/security/classified-messaging-inbox-authz-probe.mjs` | `tools/security/classified-messaging-inbox-authz-probe.mjs` | package command uses canonical read-only probe directly; legacy entrypoint no longer required |
@@ -89,10 +87,8 @@ Rules:
 | `scripts/security/validate-poll-rpc-advisor-mappings.mjs` | `tools/security/validate-poll-rpc-advisor-mappings.mjs` | package/tests import canonical local mappings validator directly |
 | `scripts/validate-architecture-governance.ts` | `tools/architecture/validate-architecture-governance.ts` | npm/docs/callers point to canonical path; legacy CLI/module compatibility no longer required |
 | `scripts/validate-architecture-boundaries-incremental.mjs` | `tools/architecture/validate-architecture-boundaries-incremental.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
-| `scripts/validate-dependencies.ts` | `tools/architecture/validate-dependencies.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/check-ssot-compliance.ts` | `tools/architecture/check-ssot-compliance.ts` | Husky/package/docs point to canonical path; legacy checker entrypoint no longer required |
 | `scripts/validate-ssot-compliance.ts` | `tools/architecture/validate-ssot-compliance.ts` | package/callers point to canonical path; legacy CLI/module compatibility no longer required |
-| `scripts/validate-ssot-hardcodes.ts` | `tools/architecture/validate-ssot-hardcodes.ts` | package/docs/callers point to canonical path; legacy CLI/module compatibility no longer required |
 | `scripts/validate-business-module-boundaries.ts` | `tools/architecture/validate-business-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-education-module-boundaries.ts` | `tools/architecture/validate-education-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-gastronomy-module-boundaries.ts` | `tools/architecture/validate-gastronomy-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
@@ -220,6 +216,10 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/generate-service-template.ts` → npm `generate:service` now calls `tools/architecture/generate-service-template.ts` directly; archived docs keep historical commands only; old bridge removed.
 - `scripts/generate-migration-template.ts` → npm `generate:migration` now calls `tools/migrations/generate-migration-template.ts` directly; archived docs keep historical commands only; old bridge removed.
 - `scripts/generate-supabase-types.ts` → npm `generate:types` now calls `tools/supabase/generate-supabase-types.ts` directly; old bridge removed.
+- `scripts/validate-dependencies.ts` → npm `validate:deps` now calls `tools/architecture/validate-dependencies.ts` directly; remaining reference is archived audit history; old bridge removed.
+- `scripts/validate-ssot-hardcodes.ts` → npm `validate:hardcodes` now calls the canonical validator, whose owner preserves direct-execution behavior; remaining references are archived audits; old bridge removed.
+- `scripts/validate-public-url-ssot.ts` → npm `validate:url:ssot` now calls `tools/architecture/validate-public-url-ssot.ts` directly; old bridge removed.
+- `scripts/validate-upload-ssot.ts` → npm `validate:upload:ssot` now calls `tools/architecture/validate-upload-ssot.ts` directly; old bridge removed.
 
 ## G2 closure condition for bridges
 
