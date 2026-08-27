@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `fa01d7d6c91e8613d89fb131c7a77c45bd926b03`  
+Baseline reviewed: `f6e0c1d3afcb862b2a66b609a3b7708cfb745444`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -47,10 +47,7 @@ Rules:
 | `scripts/validate-production-sitemap.mjs` | `tools/release/validate-production-sitemap.mjs` | release/build callers point to canonical path; legacy command no longer required |
 | `scripts/generate-sitemap.ts` | `tools/release/generate-sitemap.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-vercel-build-inputs.mjs` | `tools/release/validate-vercel-build-inputs.mjs` | package/build callers point to canonical path; legacy command no longer required |
-| `scripts/compare-economic-benchmark.mjs` | `tools/release/compare-economic-benchmark.mjs` | economic SSOT/callers use canonical owner directly; legacy entrypoint no longer required |
-| `scripts/finalize-economic-benchmark.mjs` | `tools/release/finalize-economic-benchmark.mjs` | economic SSOT/callers use canonical owner directly; legacy entrypoint no longer required |
 | `scripts/generate-economic-benchmark-blocker-report.mjs` | `tools/release/generate-economic-benchmark-blocker-report.mjs` | package/callers use canonical owner directly; legacy entrypoint no longer required |
-| `scripts/generate-economic-staging-report.mjs` | `tools/release/generate-economic-staging-report.mjs` | economic SSOT uses canonical owner directly; legacy entrypoint no longer required |
 | `scripts/run-economic-benchmark-all.mjs` | `tools/release/run-economic-benchmark-all.mjs` | package command points to canonical runner; legacy entrypoint no longer required |
 | `scripts/economic-benchmark-ssot.mjs` | `tools/release/economic-benchmark-ssot.mjs` | package/economic benchmark callers use canonical SSOT directly; legacy entrypoint no longer required |
 | `scripts/community-staging-load-test.mjs` | `tools/release/community-staging-load-test.mjs` | package/tests/callers use canonical staging harness directly; legacy CLI/module compatibility no longer required |
@@ -220,6 +217,9 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/devops/push-to-github.ps1` → manual release helper is canonical at `tools/release/push-to-github.ps1`; old bridge removed.
 - `scripts/deploy-security-updates.sh` → security deploy helper is canonical at `tools/release/deploy-security-updates.sh`; old bridge removed.
 - `scripts/generate-violations-report.ts` → architecture callers use `tools/architecture/generate-violations-report.ts`; old bridge removed.
+- `scripts/compare-economic-benchmark.mjs` → economic tooling uses `tools/release/compare-economic-benchmark.mjs`; old bridge removed.
+- `scripts/finalize-economic-benchmark.mjs` → economic tooling uses `tools/release/finalize-economic-benchmark.mjs`; old bridge removed.
+- `scripts/generate-economic-staging-report.mjs` → economic tooling uses `tools/release/generate-economic-staging-report.mjs`; old bridge removed.
 
 ## G2 closure condition for bridges
 
