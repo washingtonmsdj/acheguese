@@ -24,7 +24,7 @@ Empresas e o bounded context base para perfis comerciais. Gastronomy e Education
 
 Codigo em `src/modules/business` nao deve acessar `@/integrations/*` nem `@supabase/supabase-js` em runtime. Persistencia, RPCs, repositories e integracoes pertencem a `src/core/business` ou a outro owner `core` explicito.
 
-`scripts/validate-business-module-boundaries.ts` protege essa regra para todo o modulo, incluindo Gastronomy e Education. Imports estritamente `type` nao sao tratados como acesso runtime.
+`tools/architecture/validate-business-module-boundaries.ts` protege essa regra para todo o modulo, incluindo Gastronomy e Education. Imports estritamente `type` nao sao tratados como acesso runtime.
 
 Os snapshots publicos usam contracts em `src/core/business/types/publicSnapshots.ts` e RPC boundary em `src/core/business/services/PublicSnapshotRpcService.ts`; os antigos paths em `src/modules/business/public` sao bridges de compatibilidade.
 
