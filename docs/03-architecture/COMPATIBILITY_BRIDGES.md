@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `278bbbbce9e7b6c659fc48eb181844d7e353c5c7`  
+Baseline reviewed: `9eadedbdd657c806db4cbc2eab6757f06e2ff25e`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -66,6 +66,8 @@ Rules:
 | `scripts/community-interest-preflight.mjs` | `tools/supabase/community-interest-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
 | `scripts/poll-preflight.mjs` | `tools/supabase/poll-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
 | `scripts/salvador-preflight.mjs` | `tools/supabase/salvador-preflight.mjs` | package/tests/callers use canonical preflight owner directly; legacy CLI/module compatibility no longer required |
+| `scripts/validate-supabase-advisor-residuals.ts` | `tools/supabase/validate-supabase-advisor-residuals.ts` | package/tests/docs use canonical validator directly; legacy CLI/module compatibility no longer required |
+| `scripts/validate-supabase-remote-migration-drift.ts` | `tools/supabase/validate-supabase-remote-migration-drift.ts` | package/docs/callers use canonical remote drift gate directly; legacy entrypoint no longer required |
 | `scripts/location/municipal-neighborhood-sources.ts` | `tools/seeds/municipal-neighborhood-sources.ts` | all callers/docs use canonical manifest directly; legacy re-export no longer required |
 | `scripts/generate-service-template.ts` | `tools/architecture/generate-service-template.ts` | public npm command and docs point to canonical path |
 | `scripts/generate-migration-template.ts` | `tools/migrations/generate-migration-template.ts` | public npm command and docs point to canonical path |
@@ -130,12 +132,10 @@ Rules:
 | `scripts/lib/remote-mutation-safety.ts` | `tools/supabase/remote-mutation-safety.ts` | all TS tooling imports canonical owner directly |
 | `scripts/lib/supabase-cli-json.mjs` | `tools/supabase/supabase-cli-json.mjs` | all CLI tooling imports canonical owner directly |
 | `scripts/lib/supabase-cli-query-json.mjs` | `tools/supabase/supabase-cli-query-json.mjs` | all CLI tooling imports canonical owner directly |
-| `scripts/lib/supabase-cli-runner.mjs` | `tools/supabase/supabase-cli-runner.mjs` | all CLI tooling/tests import canonical owner directly |
 | `scripts/lib/supabase-cli-validation-state.mjs` | `tools/supabase/supabase-cli-validation-state.mjs` | all CLI tooling imports canonical owner directly |
 | `scripts/lib/supabase-client.d.mts` | `tools/supabase/supabase-client.d.mts` | no consumer needs legacy declaration resolution |
 | `scripts/lib/supabase-client.mjs` | `tools/supabase/supabase-client.mjs` | all runtime tooling imports canonical owner directly |
 | `scripts/lib/supabase-client.ts` | `tools/supabase/supabase-client.ts` | all TS tooling imports canonical owner directly |
-| `scripts/lib/supabase-migration-list-parser.mjs` | `tools/migrations/supabase-migration-list-parser.mjs` | all migration tooling/tests import canonical owner directly |
 
 ## Business public module-local bridges
 
@@ -215,6 +215,10 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/validate-reconciliation-final.ts` → moved to `tools/supabase/validate-reconciliation-final.ts`; policy updated and old path removed.
 - `scripts/validate-gate3-metadata.mjs` → moved to `tools/supabase/validate-gate3-metadata.mjs`; policy updated and old path removed.
 - `scripts/validate-etapa12-remote.ts` → moved to `tools/supabase/validate-etapa12-remote.ts`; policy updated and old path removed.
+- `scripts/validate-implementation.ts` → moved to `tools/supabase/validate-implementation.ts`; canonical read-only validator now imports `tools/supabase/supabase-client.ts` directly and old path removed.
+- `scripts/validate-business-district-required.ts` → moved to `tools/supabase/validate-business-district-required.ts`; canonical read-only validator now imports `tools/supabase/supabase-client.ts` directly and old path removed.
+- `scripts/lib/supabase-cli-runner.mjs` → tests/tooling migrated to `tools/supabase/supabase-cli-runner.mjs`; old bridge removed.
+- `scripts/lib/supabase-migration-list-parser.mjs` → migration tooling/test migrated to `tools/migrations/supabase-migration-list-parser.mjs`; old bridge removed.
 
 ## G2 closure condition for bridges
 
