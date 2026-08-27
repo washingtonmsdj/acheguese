@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `42ea240c291cf867da36e4cd7942808711b0cb7c`  
+Baseline reviewed: `d4126cded477772f0de39e37fe29d920a5467eeb`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -207,6 +207,8 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/geocode-locations.ts` → moved to `tools/seeds/geocode-locations.ts`; package/security policy/docs updated and old path removed.
 - `scripts/sync-national-districts-ibge.ts` → moved to `tools/seeds/sync-national-districts-ibge.ts`; package/security policy updated and old path removed.
 - `scripts/sync-municipal-neighborhoods.ts` → moved to `tools/seeds/sync-municipal-neighborhoods.ts`; package/security policy/docs updated and old path removed.
+- `scripts/seed-e2e-users.ts` → moved to `tools/seeds/seed-e2e-users.ts`; package/workflow/security guards/policy updated and old path removed.
+- `scripts/seed-e2e-network.ts` → moved to `tools/seeds/seed-e2e-network.ts`; package/security guards/policy updated and old path removed.
 
 ## G2 closure condition for bridges
 
