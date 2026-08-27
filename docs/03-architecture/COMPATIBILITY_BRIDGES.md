@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `390d66a8eeaa1f4239f82f88dbb89d7a675483b6`  
+Baseline reviewed: `149e61cfc8a925bfc49fd1e3dc09b45367d164eb`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -48,6 +48,7 @@ Rules:
 | `scripts/generate-sitemap.ts` | `tools/release/generate-sitemap.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-vercel-build-inputs.mjs` | `tools/release/validate-vercel-build-inputs.mjs` | package/build callers point to canonical path; legacy command no longer required |
 | `scripts/ci/run-preview-e2e.ps1` | `tools/release/run-preview-e2e.ps1` | workflow/callers point to canonical path; legacy PowerShell entrypoint no longer required |
+| `scripts/devops/push-to-github.ps1` | `tools/release/push-to-github.ps1` | manual callers use canonical path; legacy helper entrypoint no longer required |
 | `scripts/generate-service-template.ts` | `tools/architecture/generate-service-template.ts` | public npm command and docs point to canonical path |
 | `scripts/generate-migration-template.ts` | `tools/migrations/generate-migration-template.ts` | public npm command and docs point to canonical path |
 | `scripts/generate-supabase-types.ts` | `tools/supabase/generate-supabase-types.ts` | public npm command and callers point to canonical path |
