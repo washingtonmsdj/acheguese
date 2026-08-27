@@ -2,7 +2,7 @@
  * Validação final de constraints com estratégia adequada para RLS
  */
 
-import { createServiceRoleClient } from './lib/supabase-client';
+import { createServiceRoleClient } from '../tools/supabase/supabase-client';
 
 const supabase = createServiceRoleClient();
 
