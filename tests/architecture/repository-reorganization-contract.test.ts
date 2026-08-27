@@ -12,6 +12,10 @@ const RETIRED_SOURCE_ROOTS = [
 ] as const;
 const RETIRED_SOURCE_FILES = ["src/App.css", "src/global.d.ts"] as const;
 const RETIRED_ROOT_ARTIFACTS = ["handoff", "product-qa-screenshots"] as const;
+const RETIRED_E2E_FILES = [
+  "e2e/helpers/geolocation.ts",
+  "tests/e2e/helpers/geolocation.ts",
+] as const;
 
 const CONFIG_BRIDGES = new Map([
   ["src/config/security.config.ts", "@/shared/config/security.config"],
@@ -39,14 +43,12 @@ const CANONICAL_SOURCE_TARGETS = [
 
 const LEGACY_E2E_BRIDGES = new Map([
   ["e2e/helpers/auth.ts", "tests/e2e/helpers/auth"],
-  ["e2e/helpers/geolocation.ts", "tests/e2e/helpers/geolocation"],
   ["e2e/helpers/network.ts", "tests/e2e/helpers/network"],
   ["e2e/network-branches.spec.ts", "tests/e2e/network-branches.spec"],
 ] as const);
 
 const CANONICAL_E2E_TARGETS = [
   "tests/e2e/helpers/auth.ts",
-  "tests/e2e/helpers/geolocation.ts",
   "tests/e2e/helpers/network.ts",
   "tests/e2e/network-branches.spec.ts",
 ] as const;
@@ -106,6 +108,12 @@ describe("global repository reorganization contract", () => {
 
     for (const relativePath of ARCHIVED_ROOT_ARTIFACT_TARGETS) {
       expect(fs.existsSync(path.join(ROOT, relativePath)), relativePath).toBe(true);
+    }
+  });
+
+  it("does not recreate retired E2E compatibility files", () => {
+    for (const relativePath of RETIRED_E2E_FILES) {
+      expect(fs.existsSync(path.join(ROOT, relativePath)), relativePath).toBe(false);
     }
   });
 
