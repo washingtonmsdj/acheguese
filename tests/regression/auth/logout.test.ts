@@ -54,7 +54,7 @@ vi.mock("@/shared/config/publicSupabase", () => ({
     `https://logout-regression.invalid/functions/v1/${name}`,
 }));
 
-import { AUTH_STORAGE_KEY } from "@/config/security.config";
+import { AUTH_STORAGE_KEY } from "@/shared/config/security.config";
 import { AuthService } from "@/core/auth/services/AuthService";
 
 describe("auth logout regression guard", () => {
