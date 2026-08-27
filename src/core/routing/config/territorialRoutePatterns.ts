@@ -1,5 +1,5 @@
-import type { AppModuleSlug } from "@/config/moduleSlugs";
-import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
+import type { AppModuleSlug } from "@/shared/config/moduleSlugs";
+import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
 
 export const TERRITORIAL_ROUTE_PARAMS = {
   state: ":state",
