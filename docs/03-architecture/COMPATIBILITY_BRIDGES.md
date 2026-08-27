@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `9aaae5ff66c78c80610f250896564dd06bb448cd`  
+Baseline reviewed: `70fe06c6c4e0edcdec8c96484774bc0f34c9ef5b`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -53,6 +53,7 @@ Rules:
 | `scripts/generate-hardening-architecture-report.ts` | `tools/architecture/generate-hardening-architecture-report.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/generate-architecture-audit.ts` | `tools/architecture/generate-architecture-audit.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/generate-violations-report.ts` | `tools/architecture/generate-violations-report.ts` | callers point to canonical report owner; legacy entrypoint no longer required |
+| `scripts/diagnose-typecheck.mjs` | `tools/architecture/diagnose-typecheck.mjs` | package/docs/callers point to canonical path; legacy diagnostic entrypoint no longer required |
 | `scripts/validate-critical-file-sizes.ts` | `tools/architecture/validate-critical-file-sizes.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-architecture-governance.ts` | `tools/architecture/validate-architecture-governance.ts` | npm/docs/callers point to canonical path; legacy CLI/module compatibility no longer required |
 | `scripts/validate-architecture-phase1.mjs` | `tools/architecture/validate-architecture-phase1.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
