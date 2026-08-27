@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `43f21fa277bec637af6aaad01edf7c5f73ba4674`  
+Baseline reviewed: `78bda594b2f6371016bea8da9c8a85e527ad8227`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -87,8 +87,6 @@ Rules:
 | `scripts/security/community-direct-messaging-authz-probe.mjs` | `tools/security/community-direct-messaging-authz-probe.mjs` | package command uses canonical guarded mutating probe directly; legacy entrypoint no longer required |
 | `scripts/security/moderation-audit-authz-probe.mjs` | `tools/security/moderation-audit-authz-probe.mjs` | package command uses canonical guarded mutating probe directly; legacy entrypoint no longer required |
 | `scripts/security/supabase-auth-hibp.mjs` | `tools/security/supabase-auth-hibp.mjs` | package/tests use canonical security tooling directly; legacy CLI/module compatibility no longer required |
-| `scripts/security/validate-csp.ts` | `tools/security/validate-csp.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
-| `scripts/security/validate-turnstile-production-config.mjs` | `tools/security/validate-turnstile-production-config.mjs` | package/build callers point to canonical owner directly; legacy command no longer required |
 | `scripts/security/edge-function-auth-config.mjs` | `tools/security/edge-function-auth-config.mjs` | security validators/tests import canonical auth config helper directly |
 | `scripts/security/edge-function-auth-policy.mjs` | `tools/security/edge-function-auth-policy.mjs` | security validators/tests import canonical auth policy helper directly |
 | `scripts/security/edge-function-broker-boundary.mjs` | `tools/security/edge-function-broker-boundary.mjs` | security validators/tests import canonical boundary helper directly |
@@ -220,6 +218,8 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/security/csp-contract.ts` → Turnstile CSP contract test and validator use `tools/security/csp-contract.ts`; old bridge removed.
 - `scripts/security/account-operational-edge-policy.mjs` → account operational Edge policy test imports `tools/security/account-operational-edge-policy.mjs` directly; old bridge removed.
 - `scripts/build-fast.mjs` → npm `build:fast` now calls `tools/release/build-fast.mjs` directly; historical typecheck docs remain archival only; old bridge removed.
+- `scripts/security/validate-csp.ts` → npm `validate:csp` now calls `tools/security/validate-csp.ts` directly; old bridge removed.
+- `scripts/security/validate-turnstile-production-config.mjs` → npm `validate:turnstile:production` now calls the canonical security validator directly; old bridge removed.
 
 ## G2 closure condition for bridges
 
