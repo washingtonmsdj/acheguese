@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `8a59024d5e36308c53ef4ad802507ee44d776770`  
+Baseline reviewed: `7bf1f99aae1ac46294a370d27304b920a51a967a`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -61,9 +61,6 @@ Rules:
 | `scripts/validate-supabase-remote-migration-drift.ts` | `tools/supabase/validate-supabase-remote-migration-drift.ts` | package/docs/callers use canonical remote drift gate directly; legacy entrypoint no longer required |
 | `scripts/validate-migration-provenance.mjs` | `tools/migrations/validate-migration-provenance.mjs` | package/docs/callers point to canonical provenance gate; legacy entrypoint no longer required |
 | `scripts/location/municipal-neighborhood-sources.ts` | `tools/seeds/municipal-neighborhood-sources.ts` | all callers/docs use canonical manifest directly; legacy re-export no longer required |
-| `scripts/generate-service-template.ts` | `tools/architecture/generate-service-template.ts` | public npm command and docs point to canonical path |
-| `scripts/generate-migration-template.ts` | `tools/migrations/generate-migration-template.ts` | public npm command and docs point to canonical path |
-| `scripts/generate-supabase-types.ts` | `tools/supabase/generate-supabase-types.ts` | public npm command and callers point to canonical path |
 | `scripts/validate-core-platform-ownership.mjs` | `tools/architecture/validate-core-platform-ownership.mjs` | package/tests/callers use canonical owner directly; legacy CLI/module compatibility no longer required |
 | `scripts/validate-session-context.ts` | `tools/architecture/validate-session-context.ts` | package/docs/callers use canonical owner directly; legacy CLI/module compatibility no longer required |
 | `scripts/validate-project-taxonomy.ts` | `tools/architecture/validate-project-taxonomy.ts` | package/docs/callers use canonical owner directly; legacy CLI/source-inspection compatibility no longer required |
@@ -220,6 +217,9 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/generate-hardening-architecture-report.ts` → npm `report:architecture:hardening` now calls `tools/architecture/generate-hardening-architecture-report.ts` directly; old bridge removed.
 - `scripts/generate-architecture-audit.ts` → npm `audit:architecture` now calls `tools/architecture/generate-architecture-audit.ts` directly; old bridge removed.
 - `scripts/validate-architecture-phase1.mjs` → npm `validate:architecture:phase1` now calls `tools/architecture/validate-architecture-phase1.mjs` directly; old bridge removed.
+- `scripts/generate-service-template.ts` → npm `generate:service` now calls `tools/architecture/generate-service-template.ts` directly; archived docs keep historical commands only; old bridge removed.
+- `scripts/generate-migration-template.ts` → npm `generate:migration` now calls `tools/migrations/generate-migration-template.ts` directly; archived docs keep historical commands only; old bridge removed.
+- `scripts/generate-supabase-types.ts` → npm `generate:types` now calls `tools/supabase/generate-supabase-types.ts` directly; old bridge removed.
 
 ## G2 closure condition for bridges
 
