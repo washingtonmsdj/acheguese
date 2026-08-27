@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `e90568fecaf1c187928d13ba6c7598218259abb0`  
+Baseline reviewed: `42ea240c291cf867da36e4cd7942808711b0cb7c`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -64,6 +64,7 @@ Rules:
 | `scripts/community-interest-preflight.mjs` | `tools/supabase/community-interest-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
 | `scripts/poll-preflight.mjs` | `tools/supabase/poll-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
 | `scripts/salvador-preflight.mjs` | `tools/supabase/salvador-preflight.mjs` | package/tests/callers use canonical preflight owner directly; legacy CLI/module compatibility no longer required |
+| `scripts/location/municipal-neighborhood-sources.ts` | `tools/seeds/municipal-neighborhood-sources.ts` | all callers/docs use canonical manifest directly; legacy re-export no longer required |
 | `scripts/generate-service-template.ts` | `tools/architecture/generate-service-template.ts` | public npm command and docs point to canonical path |
 | `scripts/generate-migration-template.ts` | `tools/migrations/generate-migration-template.ts` | public npm command and docs point to canonical path |
 | `scripts/generate-supabase-types.ts` | `tools/supabase/generate-supabase-types.ts` | public npm command and callers point to canonical path |
@@ -203,6 +204,9 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/security/supabase-lgpd-edge-rollout-preflight.mjs` → moved to `tools/security/supabase-lgpd-edge-rollout-preflight.mjs`; security test updated to canonical path and old path removed.
 - `scripts/security/Import-LocalSupabaseSecrets.ps1` → moved to `tools/security/Import-LocalSupabaseSecrets.ps1`; docs/runtime guidance updated and old path removed.
 - `scripts/security/Save-LocalSupabaseSecrets.ps1` → moved to `tools/security/Save-LocalSupabaseSecrets.ps1`; docs updated and old path removed.
+- `scripts/geocode-locations.ts` → moved to `tools/seeds/geocode-locations.ts`; package/security policy/docs updated and old path removed.
+- `scripts/sync-national-districts-ibge.ts` → moved to `tools/seeds/sync-national-districts-ibge.ts`; package/security policy updated and old path removed.
+- `scripts/sync-municipal-neighborhoods.ts` → moved to `tools/seeds/sync-municipal-neighborhoods.ts`; package/security policy/docs updated and old path removed.
 
 ## G2 closure condition for bridges
 
