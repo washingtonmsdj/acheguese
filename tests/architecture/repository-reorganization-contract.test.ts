@@ -90,6 +90,7 @@ function listFilesRecursively(relativePath: string): string[] {
         continue;
       }
       if (!entry.isFile()) continue;
+      if (!/\.(?:[cm]?[jt]sx?)$/.test(entry.name)) continue;
       files.push(path.relative(ROOT, absoluteEntry).split(path.sep).join("/"));
     }
   };
