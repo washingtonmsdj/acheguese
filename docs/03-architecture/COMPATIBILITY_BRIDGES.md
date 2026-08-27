@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `d0a3e0e423c5022c9508bcfe56c8d0f6bc9fc2fd`  
+Baseline reviewed: `245b91e9cfe5a1011a667ebf863f522f012991e5`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -60,6 +60,7 @@ Rules:
 | `scripts/diagnose-economic-db-connectivity.mjs` | `tools/release/diagnose-economic-db-connectivity.mjs` | package/economic benchmark callers use canonical diagnostic directly; legacy entrypoint no longer required |
 | `scripts/security/supabase-edge-admin-canary-deploy.mjs` | `tools/release/supabase-edge-admin-canary-deploy.mjs` | tests/deploy callers use canonical release guard directly; legacy entrypoint no longer required |
 | `scripts/validate-e2e-setup.ts` | `tools/release/validate-e2e-setup.ts` | package/manual E2E validation callers use canonical validator directly; legacy entrypoint no longer required |
+| `scripts/generate-vercel-config.ts` | `tools/security/generate-vercel-config.ts` | package/docs/callers use canonical generator directly; legacy entrypoint no longer required |
 | `scripts/community-interest-preflight.mjs` | `tools/supabase/community-interest-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
 | `scripts/poll-preflight.mjs` | `tools/supabase/poll-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
 | `scripts/generate-service-template.ts` | `tools/architecture/generate-service-template.ts` | public npm command and docs point to canonical path |
