@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `fe725878bd0749a7ad1a7b5527e93705519bf9f6`  
+Baseline reviewed: `f9e927bc61c00f2adcdd09fec77302c5f1a4896b`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -47,9 +47,6 @@ Rules:
 | `scripts/validate-production-sitemap.mjs` | `tools/release/validate-production-sitemap.mjs` | release/build callers point to canonical path; legacy command no longer required |
 | `scripts/generate-sitemap.ts` | `tools/release/generate-sitemap.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-vercel-build-inputs.mjs` | `tools/release/validate-vercel-build-inputs.mjs` | package/build callers point to canonical path; legacy command no longer required |
-| `scripts/ci/run-preview-e2e.ps1` | `tools/release/run-preview-e2e.ps1` | workflow/callers point to canonical path; legacy PowerShell entrypoint no longer required |
-| `scripts/devops/push-to-github.ps1` | `tools/release/push-to-github.ps1` | manual callers use canonical path; legacy helper entrypoint no longer required |
-| `scripts/deploy-security-updates.sh` | `tools/release/deploy-security-updates.sh` | manual/docs callers use canonical release helper; legacy shell entrypoint no longer required |
 | `scripts/compare-economic-benchmark.mjs` | `tools/release/compare-economic-benchmark.mjs` | economic SSOT/callers use canonical owner directly; legacy entrypoint no longer required |
 | `scripts/finalize-economic-benchmark.mjs` | `tools/release/finalize-economic-benchmark.mjs` | economic SSOT/callers use canonical owner directly; legacy entrypoint no longer required |
 | `scripts/generate-economic-benchmark-blocker-report.mjs` | `tools/release/generate-economic-benchmark-blocker-report.mjs` | package/callers use canonical owner directly; legacy entrypoint no longer required |
@@ -220,6 +217,9 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/lib/supabase-client.mjs` → mutating `.mjs` validators now import `tools/supabase/supabase-client.mjs` directly; old runtime bridge removed.
 - `scripts/lib/supabase-client.d.mts` → no remaining consumer required legacy declaration resolution after the runtime bridge retirement; old declaration bridge removed.
 - `scripts/sanitize-secrets.ts` → security tooling and policy references use `tools/security/sanitize-secrets.ts`; old bridge removed.
+- `scripts/ci/run-preview-e2e.ps1` → workflow/callers already use `tools/release/run-preview-e2e.ps1`; old PowerShell bridge removed.
+- `scripts/devops/push-to-github.ps1` → manual release helper is canonical at `tools/release/push-to-github.ps1`; old bridge removed.
+- `scripts/deploy-security-updates.sh` → security deploy helper is canonical at `tools/release/deploy-security-updates.sh`; old bridge removed.
 
 ## G2 closure condition for bridges
 
