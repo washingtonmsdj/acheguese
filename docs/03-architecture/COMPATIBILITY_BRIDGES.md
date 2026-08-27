@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `bd125bcadf37e33da60b0386e1e7dcf9a2406632`  
+Baseline reviewed: `7675d44dbde535f8263262fe2e5cf8f5bbc6d34e`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -88,7 +88,6 @@ Rules:
 | `scripts/security/community-direct-messaging-authz-probe.mjs` | `tools/security/community-direct-messaging-authz-probe.mjs` | package command uses canonical guarded mutating probe directly; legacy entrypoint no longer required |
 | `scripts/security/moderation-audit-authz-probe.mjs` | `tools/security/moderation-audit-authz-probe.mjs` | package command uses canonical guarded mutating probe directly; legacy entrypoint no longer required |
 | `scripts/security/supabase-auth-hibp.mjs` | `tools/security/supabase-auth-hibp.mjs` | package/tests use canonical security tooling directly; legacy CLI/module compatibility no longer required |
-| `scripts/security/csp-contract.ts` | `tools/security/csp-contract.ts` | validator/tests import canonical security contract directly |
 | `scripts/security/validate-csp.ts` | `tools/security/validate-csp.ts` | package/docs/callers use canonical owner directly; legacy command no longer required |
 | `scripts/security/validate-turnstile-production-config.mjs` | `tools/security/validate-turnstile-production-config.mjs` | package/build callers point to canonical owner directly; legacy command no longer required |
 | `scripts/security/account-operational-edge-policy.mjs` | `tools/security/account-operational-edge-policy.mjs` | security validators/tests import canonical policy helper directly |
@@ -220,6 +219,7 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/finalize-economic-benchmark.mjs` → economic tooling uses `tools/release/finalize-economic-benchmark.mjs`; old bridge removed.
 - `scripts/generate-economic-staging-report.mjs` → economic tooling uses `tools/release/generate-economic-staging-report.mjs`; old bridge removed.
 - `scripts/core-platform/access-analyzer.mjs` → architecture tests and ownership fixtures now use `tools/architecture/core-platform/access-analyzer.mjs`; old bridge removed.
+- `scripts/security/csp-contract.ts` → Turnstile CSP contract test and validator use `tools/security/csp-contract.ts`; old bridge removed.
 
 ## G2 closure condition for bridges
 
