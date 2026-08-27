@@ -4,11 +4,11 @@ import { resolve } from 'node:path';
 import {
   getRemoteMutationTargetSafety,
   linkedProductionProjectRef,
-} from '../../scripts/lib/remote-mutation-safety';
+} from '../../tools/supabase/remote-mutation-safety';
 import {
   createAnonClient,
   createServiceRoleClient,
-} from '../../scripts/lib/supabase-client';
+} from '../../tools/supabase/supabase-client';
 import {
   createOptionalOperationalAdminClient,
   hasOperationalAdminEnv,
@@ -73,7 +73,7 @@ describe('regression: remote E2E mutation safety', () => {
   });
 
   it('blocks direct seed-e2e-users service-role client creation against Production', () => {
-    process.argv[1] = resolve(root, 'scripts/seed-e2e-users.ts');
+    process.argv[1] = resolve(root, 'tools/seeds/seed-e2e-users.ts');
     const productionUrl = `https://${linkedProductionProjectRef()}.supabase.co`;
 
     expect(() =>
@@ -86,7 +86,7 @@ describe('regression: remote E2E mutation safety', () => {
   });
 
   it('blocks validate-e2e-setup anon side effects against Production', () => {
-    process.argv[1] = resolve(root, 'scripts/validate-e2e-setup.ts');
+    process.argv[1] = resolve(root, 'tools/release/validate-e2e-setup.ts');
     const productionUrl = `https://${linkedProductionProjectRef()}.supabase.co`;
 
     expect(() =>
@@ -120,8 +120,8 @@ describe('regression: remote E2E mutation safety', () => {
 
   it('removes automatic real-business selection and locks every known mutating operational entrypoint', () => {
     const slugValidator = read('scripts/validate-slug-history-final.ts');
-    const networkSeeder = read('scripts/seed-e2e-network.ts');
-    const supabaseClient = read('scripts/lib/supabase-client.mjs');
+    const networkSeeder = read('tools/seeds/seed-e2e-network.ts');
+    const supabaseClient = read('tools/supabase/supabase-client.mjs');
 
     expect(slugValidator).toContain('SLUG_HISTORY_TEST_BUSINESS_ID');
     expect(slugValidator).toContain("metadata->>source_kind', 'technical_fixture");
