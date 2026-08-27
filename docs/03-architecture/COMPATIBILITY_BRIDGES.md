@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `08eef76220967d31941b9b21d7cbf6aa94674bf2`  
+Baseline reviewed: `0306d0ad61a4a604fecbb115675c38095ec039f1`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -186,6 +186,8 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/security/supabase-edge-secrets-preflight.mjs` → moved to `tools/security/supabase-edge-secrets-preflight.mjs`; security test updated to canonical path and old path removed.
 - `scripts/security/supabase-edge-runtime-auth-drift.mjs` → moved to `tools/security/supabase-edge-runtime-auth-drift.mjs`; security test updated to canonical path and old path removed.
 - `scripts/security/supabase-lgpd-edge-rollout-preflight.mjs` → moved to `tools/security/supabase-lgpd-edge-rollout-preflight.mjs`; security test updated to canonical path and old path removed.
+- `scripts/security/Import-LocalSupabaseSecrets.ps1` → moved to `tools/security/Import-LocalSupabaseSecrets.ps1`; docs/runtime guidance updated and old path removed.
+- `scripts/security/Save-LocalSupabaseSecrets.ps1` → moved to `tools/security/Save-LocalSupabaseSecrets.ps1`; docs updated and old path removed.
 
 ## G2 closure condition for bridges
 
