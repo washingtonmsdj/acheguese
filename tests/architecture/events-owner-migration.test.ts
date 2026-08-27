@@ -59,20 +59,15 @@ describe("community Events canonical owner", () => {
     expect(validator).not.toContain('"src/features/events"');
   });
 
-  it("keeps engagement persistence outside the UI module", () => {
+  it("keeps engagement persistence only on the canonical core owner", () => {
     const canonical = read(
       "src/core/community-events/services/EventEngagementService.ts",
-    );
-    const bridge = read(
-      "src/modules/community-events/services/EventEngagementService.ts",
     );
 
     expect(canonical).toContain('from "@/integrations/supabase"');
     expect(canonical).toContain("export class EventEngagementService");
-    expect(bridge).toContain(
-      '@/core/community-events/services/EventEngagementService',
-    );
-    expect(bridge).not.toContain("@/integrations/supabase");
-    expect(bridge).not.toContain(".from(");
+    expect(
+      exists("src/modules/community-events/services/EventEngagementService.ts"),
+    ).toBe(false);
   });
 });
