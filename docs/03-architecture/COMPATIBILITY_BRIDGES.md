@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `c140c33af9fa566e7b76b61ff71d62dae5e88363`  
+Baseline reviewed: `9aaae5ff66c78c80610f250896564dd06bb448cd`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -52,6 +52,7 @@ Rules:
 | `scripts/generate-supabase-types.ts` | `tools/supabase/generate-supabase-types.ts` | public npm command and callers point to canonical path |
 | `scripts/generate-hardening-architecture-report.ts` | `tools/architecture/generate-hardening-architecture-report.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/generate-architecture-audit.ts` | `tools/architecture/generate-architecture-audit.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
+| `scripts/generate-violations-report.ts` | `tools/architecture/generate-violations-report.ts` | callers point to canonical report owner; legacy entrypoint no longer required |
 | `scripts/validate-critical-file-sizes.ts` | `tools/architecture/validate-critical-file-sizes.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-architecture-governance.ts` | `tools/architecture/validate-architecture-governance.ts` | npm/docs/callers point to canonical path; legacy CLI/module compatibility no longer required |
 | `scripts/validate-architecture-phase1.mjs` | `tools/architecture/validate-architecture-phase1.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
@@ -59,6 +60,7 @@ Rules:
 | `scripts/validate-dependencies.ts` | `tools/architecture/validate-dependencies.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/check-ssot-compliance.ts` | `tools/architecture/check-ssot-compliance.ts` | Husky/package/docs point to canonical path; legacy checker entrypoint no longer required |
 | `scripts/validate-ssot-compliance.ts` | `tools/architecture/validate-ssot-compliance.ts` | package/callers point to canonical path; legacy CLI/module compatibility no longer required |
+| `scripts/validate-ssot-hardcodes.ts` | `tools/architecture/validate-ssot-hardcodes.ts` | package/docs/callers point to canonical path; legacy CLI/module compatibility no longer required |
 | `scripts/validate-business-module-boundaries.ts` | `tools/architecture/validate-business-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-education-module-boundaries.ts` | `tools/architecture/validate-education-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-gastronomy-module-boundaries.ts` | `tools/architecture/validate-gastronomy-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
