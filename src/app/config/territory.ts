@@ -1,4 +1,4 @@
-import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
+import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
 
 type PublicEnv = Partial<Record<string, string>>;
 
