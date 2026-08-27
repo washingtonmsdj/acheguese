@@ -18,7 +18,7 @@ import { usePersistedCommunityProfile } from "@/core/community-experience/hooks/
 import { isCommunityStatusPubliclyRenderable } from "@/core/community-experience/constants/statuses";
 import type { TerritorialCommunityProfile } from "@/core/community-experience/types";
 import { registerCommunityInterest } from "@/core/routing/services";
-import { COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG } from "@/config/security.config";
+import { COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG } from "@/shared/config/security.config";
 import { TurnstileWidget } from "@/shared/components/security/TurnstileWidget";
 import {
   buildCityTerritoryBaseUrl,
