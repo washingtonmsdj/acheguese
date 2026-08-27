@@ -9,7 +9,7 @@ const exists = (path: string) => existsSync(resolve(repoRoot, path));
 describe('compatibility surface cleanup', () => {
   it('keeps community alerts canonical and removes completed Events migration allowlists', () => {
     const communityValidator = read(
-      'scripts/validate-community-transversal-boundaries.ts',
+      'tools/architecture/validate-community-transversal-boundaries.ts',
     );
     const taxonomyValidator = read('scripts/validate-project-taxonomy.ts');
 

@@ -53,7 +53,7 @@ describe("community Events canonical owner", () => {
   });
 
   it("removes the completed legacy migration allowance", () => {
-    const validator = read("scripts/validate-community-transversal-boundaries.ts");
+    const validator = read("tools/architecture/validate-community-transversal-boundaries.ts");
 
     expect(validator).not.toContain("LEGACY_TRANSVERSAL_MIGRATION_ROOTS");
     expect(validator).not.toContain('"src/features/events"');
