@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   loadAccountOperationalEdgePolicy,
   validateAccountOperationalEdgeCoverage,
-} from "../../scripts/security/account-operational-edge-policy.mjs";
+} from "../../tools/security/account-operational-edge-policy.mjs";
 
 const root = process.cwd();
 const authPolicy = JSON.parse(
