@@ -11,7 +11,9 @@ describe('compatibility surface cleanup', () => {
     const communityValidator = read(
       'tools/architecture/validate-community-transversal-boundaries.ts',
     );
-    const taxonomyValidator = read('scripts/validate-project-taxonomy.ts');
+    const taxonomyValidator = read(
+      'tools/architecture/validate-project-taxonomy.ts',
+    );
 
     expect(exists('src/modules/community-alerts')).toBe(false);
     expect(communityValidator).not.toContain('CORE_COMMUNITY_IMPORT_ALLOWLIST');
