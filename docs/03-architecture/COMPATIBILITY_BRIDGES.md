@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `1fd966b1569d2fe859565e315a71646fa11ad1df`  
+Baseline reviewed: `118591ab01cd8f5cca316c4505532e289098c968`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -54,6 +54,8 @@ Rules:
 | `scripts/generate-architecture-audit.ts` | `tools/architecture/generate-architecture-audit.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-critical-file-sizes.ts` | `tools/architecture/validate-critical-file-sizes.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-architecture-governance.ts` | `tools/architecture/validate-architecture-governance.ts` | npm/docs/callers point to canonical path; legacy CLI/module compatibility no longer required |
+| `scripts/validate-architecture-phase1.mjs` | `tools/architecture/validate-architecture-phase1.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
+| `scripts/validate-architecture-boundaries-incremental.mjs` | `tools/architecture/validate-architecture-boundaries-incremental.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-business-module-boundaries.ts` | `tools/architecture/validate-business-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-education-module-boundaries.ts` | `tools/architecture/validate-education-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-gastronomy-module-boundaries.ts` | `tools/architecture/validate-gastronomy-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
