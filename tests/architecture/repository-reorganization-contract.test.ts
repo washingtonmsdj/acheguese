@@ -15,6 +15,8 @@ const RETIRED_ROOT_ARTIFACTS = ["handoff", "product-qa-screenshots"] as const;
 const RETIRED_E2E_FILES = [
   "e2e/helpers/geolocation.ts",
   "tests/e2e/helpers/geolocation.ts",
+  "e2e/helpers/network.ts",
+  "tests/e2e/helpers/network.ts",
 ] as const;
 
 const CONFIG_BRIDGES = new Map([
@@ -43,13 +45,11 @@ const CANONICAL_SOURCE_TARGETS = [
 
 const LEGACY_E2E_BRIDGES = new Map([
   ["e2e/helpers/auth.ts", "tests/e2e/helpers/auth"],
-  ["e2e/helpers/network.ts", "tests/e2e/helpers/network"],
   ["e2e/network-branches.spec.ts", "tests/e2e/network-branches.spec"],
 ] as const);
 
 const CANONICAL_E2E_TARGETS = [
   "tests/e2e/helpers/auth.ts",
-  "tests/e2e/helpers/network.ts",
   "tests/e2e/network-branches.spec.ts",
 ] as const;
 
