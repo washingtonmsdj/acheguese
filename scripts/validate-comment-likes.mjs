@@ -1,4 +1,4 @@
-import { createAnonClient, createServiceRoleClient } from './lib/supabase-client.mjs';
+import { createAnonClient, createServiceRoleClient } from '../tools/supabase/supabase-client.mjs';
 
 const s = createServiceRoleClient();
 
