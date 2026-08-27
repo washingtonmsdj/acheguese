@@ -217,22 +217,22 @@ Destino gradual do atual `scripts/` por responsabilidade. A migração deve pres
 
 Checklist:
 
-- [ ] inventariar todos os diretórios de raiz;
-- [ ] inventariar roots de `src`;
-- [ ] inventariar `src/modules`;
-- [ ] inventariar `src/core`;
-- [ ] inventariar `src/features`;
-- [ ] inventariar `src/integrations`;
-- [ ] inventariar `src/shared`;
-- [ ] inventariar testes dispersos (`tests`, `src/test`, `src/__tests__`, colocados no domínio);
-- [ ] inventariar `scripts` por responsabilidade;
-- [ ] identificar arquivos soltos e namespaces históricos;
-- [ ] identificar módulos duplicados/paralelos;
-- [ ] identificar imports `core → modules`;
-- [ ] identificar imports `module → integrations`;
-- [ ] identificar SSOTs duplicados;
-- [ ] gerar mapa owner atual → owner alvo;
-- [ ] classificar cada item como KEEP / MOVE / BRIDGE / MERGE / RETIRE / INVESTIGATE.
+- [x] inventariar todos os diretórios de raiz;
+- [x] inventariar roots de `src`;
+- [x] inventariar `src/modules`;
+- [x] inventariar `src/core`;
+- [x] inventariar `src/features`;
+- [x] inventariar `src/integrations`;
+- [x] inventariar `src/shared`;
+- [x] inventariar testes dispersos (`tests`, `src/test`, `src/__tests__`, colocados no domínio);
+- [x] inventariar `scripts` por responsabilidade;
+- [x] identificar arquivos soltos e namespaces históricos;
+- [x] identificar módulos duplicados/paralelos;
+- [x] identificar imports `core → modules`;
+- [x] identificar imports `module → integrations`;
+- [x] identificar SSOTs duplicados;
+- [x] gerar mapa owner atual → owner alvo;
+- [x] classificar cada item como KEEP / MOVE / BRIDGE / MERGE / RETIRE / INVESTIGATE.
 
 **Saída:** inventário versionado em `docs/` + validators iniciais.
 
@@ -240,13 +240,13 @@ Checklist:
 
 **Objetivo:** impedir novas ambiguidades enquanto a reorganização ocorre.
 
-- [ ] formalizar taxonomia em documentação arquitetural;
-- [ ] validator contra novos roots não autorizados em `src`;
-- [ ] validator contra novos arquivos de implementação em `src/features`;
-- [ ] validator `core → modules`;
-- [ ] validator de module → integrations;
-- [ ] mapear exceções temporárias com allowlists monotônicas;
-- [ ] stale allowlist deve falhar.
+- [x] formalizar taxonomia em documentação arquitetural;
+- [x] validator contra novos roots não autorizados em `src`;
+- [x] validator contra novos arquivos de implementação em `src/features`;
+- [x] validator `core → modules`;
+- [x] validator de module → integrations;
+- [x] mapear exceções temporárias com allowlists monotônicas;
+- [x] stale allowlist deve falhar.
 
 ## G2 — Physical Reorganization
 
@@ -459,14 +459,24 @@ Atualizar esta seção somente com marcos relevantes. Não transformar este arqu
 - [x] estrutura alvo definida;
 - [x] fases G0–G7 definidas;
 - [x] este arquivo permanente criado na raiz;
-- [ ] G0 Repository Census concluído;
-- [ ] G1 Architecture Taxonomy concluída;
+- [x] G0 Repository Census concluído;
+- [x] G1 Architecture Taxonomy concluída;
 - [ ] G2 Physical Reorganization concluída;
 - [ ] G3 Global Boundaries concluído;
 - [ ] G4 Global SSOT concluído;
 - [ ] G5 Database/RLS concluído;
 - [ ] G6 módulos certificados;
 - [ ] G7 MVP certificado.
+
+### 2026-08-27 — G0/G1
+
+- [x] censo revalidado e atualizado em `docs/03-architecture/REPOSITORY_CENSUS_2026-08-26.md`;
+- [x] `src/features`, `src/test`, `src/__tests__` e `src/types` revalidados como roots aposentados;
+- [x] roots canônicos de `src` congelados por regression guard (`4f646d0`);
+- [x] dívida runtime `module → integrations` inventariada em allowlist exata de 8 entradas (`12bdf13`);
+- [x] validator incremental passou a bloquear nova dívida `module → integrations`, impedir absorção no baseline e falhar allowlist stale (`9430f6f`);
+- [ ] validação hosted do SHA `9430f6f` — **BLOCKED por runner/provider**: jobs retornaram `steps: []`, `runner_id: 0` e nenhum runner executou comandos; não inferir PASS nem source failure;
+- [ ] próximo marco: G2 Physical Reorganization em cortes pequenos, preservando comportamento e os guards de G1.
 
 ---
 
