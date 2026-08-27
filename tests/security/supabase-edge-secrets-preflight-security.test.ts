@@ -5,7 +5,7 @@ import { join } from "node:path";
 const ROOT = process.cwd();
 const PREFLIGHT = join(
   ROOT,
-  "scripts",
+  "tools",
   "security",
   "supabase-edge-secrets-preflight.mjs",
 );

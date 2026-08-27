@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const script = readFileSync(
-  resolve(root, "scripts/security/supabase-edge-runtime-auth-drift.mjs"),
+  resolve(root, "tools/security/supabase-edge-runtime-auth-drift.mjs"),
   "utf8",
 );
 const config = readFileSync(resolve(root, "supabase/config.toml"), "utf8");
