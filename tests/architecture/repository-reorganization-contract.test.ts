@@ -10,7 +10,7 @@ const RETIRED_SOURCE_ROOTS = [
   "src/types",
   "src/features",
 ] as const;
-const RETIRED_SOURCE_FILES = ["src/App.css"] as const;
+const RETIRED_SOURCE_FILES = ["src/App.css", "src/global.d.ts"] as const;
 const RETIRED_ROOT_ARTIFACTS = ["handoff", "product-qa-screenshots"] as const;
 
 const CONFIG_BRIDGES = new Map([
@@ -31,6 +31,10 @@ const CANONICAL_CONFIG_TARGETS = [
   "src/app/config/territory.ts",
   "src/core/community/config/communityLaunch.ts",
   "src/core/taxonomy/categories.ts",
+] as const;
+
+const CANONICAL_SOURCE_TARGETS = [
+  "src/core/maps/types/mapE2EState.d.ts",
 ] as const;
 
 const LEGACY_E2E_BRIDGES = new Map([
@@ -86,6 +90,12 @@ describe("global repository reorganization contract", () => {
   it("does not recreate retired source files", () => {
     for (const relativePath of RETIRED_SOURCE_FILES) {
       expect(fs.existsSync(path.join(ROOT, relativePath)), relativePath).toBe(false);
+    }
+  });
+
+  it("keeps migrated source files under canonical owners", () => {
+    for (const relativePath of CANONICAL_SOURCE_TARGETS) {
+      expect(fs.existsSync(path.join(ROOT, relativePath)), relativePath).toBe(true);
     }
   });
 
