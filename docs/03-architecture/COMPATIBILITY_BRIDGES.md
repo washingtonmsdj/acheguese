@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `03378cd8c429aa61434b6417efc39efd0d9cb945`  
+Baseline reviewed: `edc05cdd40aeecbab91e2b9582e291de272c0e7c`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -41,7 +41,6 @@ Rules:
 | Legacy path | Canonical owner | Removal gate |
 | --- | --- | --- |
 | `scripts/backup-storage.ts` | `tools/maintenance/backup-storage.ts` | docs/policies/callers migrated to canonical path |
-| `scripts/restore-storage.ts` | `tools/maintenance/restore-storage.ts` | docs/policies/callers migrated to canonical path |
 | `scripts/generate-sitemap.ts` | `tools/release/generate-sitemap.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/economic-benchmark-ssot.mjs` | `tools/release/economic-benchmark-ssot.mjs` | package/economic benchmark callers use canonical SSOT directly; legacy entrypoint no longer required |
 | `scripts/security/supabase-edge-admin-canary-deploy.mjs` | `tools/release/supabase-edge-admin-canary-deploy.mjs` | tests/deploy callers use canonical release guard directly; legacy entrypoint no longer required |
@@ -68,24 +67,11 @@ Rules:
 | `scripts/validate-architecture-governance.ts` | `tools/architecture/validate-architecture-governance.ts` | npm/docs/callers point to canonical path; legacy CLI/module compatibility no longer required |
 | `scripts/validate-architecture-boundaries-incremental.mjs` | `tools/architecture/validate-architecture-boundaries-incremental.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/check-ssot-compliance.ts` | `tools/architecture/check-ssot-compliance.ts` | Husky/package/docs point to canonical path; legacy checker entrypoint no longer required |
-| `scripts/validate-business-module-boundaries.ts` | `tools/architecture/validate-business-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-education-module-boundaries.ts` | `tools/architecture/validate-education-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
-| `scripts/validate-gastronomy-module-boundaries.ts` | `tools/architecture/validate-gastronomy-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-community-transversal-boundaries.ts` | `tools/architecture/validate-community-transversal-boundaries.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-docs-structure.ts` | `tools/architecture/validate-docs-structure.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-doc-live-links.ts` | `tools/architecture/validate-doc-live-links.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/lib/supabase-client.ts` | `tools/supabase/supabase-client.ts` | `scripts/media-assets-cp016-backfill.ts` must be moved or retargeted to the canonical client without weakening its existing project/apply confirmation guards |
-
-## Business public module-local bridges
-
-These bridges are explicitly required by the Business boundary guard and expose canonical core-owned public snapshot contracts.
-
-| Legacy path | Canonical owner |
-| --- | --- |
-| `src/modules/business/public/types/publicSnapshots.ts` | `src/core/business/types/publicSnapshots` |
-| `src/modules/business/public/services/PublicSnapshotRpcService.ts` | `src/core/business/services/PublicSnapshotRpcService` |
-
-Removal gate for both Business public bridges: zero legacy-path callers plus Business boundary/regression tests passing on the same SHA.
 
 ## Education module-local bridges
 
@@ -127,12 +113,6 @@ All persistence/domain ownership below is canonical in `src/core/business`. The 
 | `src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts` | `src/core/business/niches/pizzaria/PizzaAdminService` |
 
 Removal gate for every Gastronomy bridge: zero legacy-path callers plus Gastronomy/Business boundary and regression tests passing on the same SHA.
-
-## Community Events module-local bridge
-
-| Legacy path | Canonical owner | Removal gate |
-| --- | --- | --- |
-| `src/modules/community-events/services/EventEngagementService.ts` | `src/core/community-events/services/EventEngagementService` | zero legacy-path callers plus Community Events regression tests |
 
 ## Already retired during this G2 execution
 
@@ -220,6 +200,12 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/community-interest-preflight.mjs` → npm and unit tests now use `tools/supabase/community-interest-preflight.mjs`; old bridge removed.
 - `scripts/poll-preflight.mjs` → npm and unit tests now use `tools/supabase/poll-preflight.mjs`; old bridge removed.
 - `scripts/salvador-preflight.mjs` → npm Salvador preflight commands call `tools/supabase/salvador-preflight.mjs` directly; canonical owner preserves CLI execution; old bridge removed.
+- `scripts/restore-storage.ts` → no live caller required the maintenance compatibility entrypoint; canonical owner remains `tools/maintenance/restore-storage.ts`.
+- `scripts/validate-business-module-boundaries.ts` → Business docs and npm callers use `tools/architecture/validate-business-module-boundaries.ts`; old bridge removed.
+- `scripts/validate-gastronomy-module-boundaries.ts` → Gastronomy docs/workflow use `tools/architecture/validate-gastronomy-module-boundaries.ts`; old bridge removed.
+- `src/modules/community-events/services/EventEngagementService.ts` → zero runtime callers; architecture regression tests now require the bridge to remain absent and the canonical owner stays in `src/core/community-events/services/EventEngagementService.ts`.
+- `src/modules/business/public/services/PublicSnapshotRpcService.ts` → callers/tests now use `src/core/business/services/PublicSnapshotRpcService.ts`; Business boundary ratchet blocks bridge recreation.
+- `src/modules/business/public/types/publicSnapshots.ts` → runtime callers now import `src/core/business/types/publicSnapshots.ts`; Business boundary ratchet blocks bridge recreation.
 
 ## G2 closure condition for bridges
 
