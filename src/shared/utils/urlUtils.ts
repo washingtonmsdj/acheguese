@@ -4,7 +4,7 @@
  * Mantido em shared sem dependencias de core.
  */
 
-import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
+import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
 
 export const RESERVED_SLUGS = [
   "admin",
