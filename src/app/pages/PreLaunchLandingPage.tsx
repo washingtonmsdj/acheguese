@@ -19,7 +19,7 @@ import {
   registerCommunityInterest,
   type CommunityInterestRole,
 } from "@/core/routing/services";
-import { COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG } from "@/config/security.config";
+import { COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG } from "@/shared/config/security.config";
 import { TurnstileWidget } from "@/shared/components/security/TurnstileWidget";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
