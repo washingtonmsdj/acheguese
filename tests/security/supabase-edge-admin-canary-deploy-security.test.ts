@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const script = readFileSync(
-  resolve(root, "scripts/security/supabase-edge-admin-canary-deploy.mjs"),
+  resolve(root, "tools/release/supabase-edge-admin-canary-deploy.mjs"),
   "utf8",
 );
 const config = readFileSync(resolve(root, "supabase/config.toml"), "utf8");
