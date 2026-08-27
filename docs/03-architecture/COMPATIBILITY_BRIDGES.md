@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `245b91e9cfe5a1011a667ebf863f522f012991e5`  
+Baseline reviewed: `e90568fecaf1c187928d13ba6c7598218259abb0`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -63,6 +63,7 @@ Rules:
 | `scripts/generate-vercel-config.ts` | `tools/security/generate-vercel-config.ts` | package/docs/callers use canonical generator directly; legacy entrypoint no longer required |
 | `scripts/community-interest-preflight.mjs` | `tools/supabase/community-interest-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
 | `scripts/poll-preflight.mjs` | `tools/supabase/poll-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
+| `scripts/salvador-preflight.mjs` | `tools/supabase/salvador-preflight.mjs` | package/tests/callers use canonical preflight owner directly; legacy CLI/module compatibility no longer required |
 | `scripts/generate-service-template.ts` | `tools/architecture/generate-service-template.ts` | public npm command and docs point to canonical path |
 | `scripts/generate-migration-template.ts` | `tools/migrations/generate-migration-template.ts` | public npm command and docs point to canonical path |
 | `scripts/generate-supabase-types.ts` | `tools/supabase/generate-supabase-types.ts` | public npm command and callers point to canonical path |
