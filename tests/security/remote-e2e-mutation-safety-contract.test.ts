@@ -7,7 +7,7 @@ const read = (path: string) => readFileSync(resolve(root, path), 'utf8');
 
 const operationalEnv = read('tests/helpers/operational-env.ts');
 const playwrightConfig = read('playwright.config.ts');
-const slugHistoryValidator = read('scripts/validate-slug-history-final.ts');
+const slugHistoryValidator = read('tools/supabase/validate-slug-history-final.ts');
 const networkSeeder = read('tools/seeds/seed-e2e-network.ts');
 
 describe('Remote E2E mutation safety integration', () => {
