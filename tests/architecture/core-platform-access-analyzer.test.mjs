@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { analyzeSourceText, groupAccessCounts } from "../../scripts/core-platform/access-analyzer.mjs";
+import { analyzeSourceText, groupAccessCounts } from "../../tools/architecture/core-platform/access-analyzer.mjs";
 
 describe("core platform access analyzer", () => {
   it("classifies static table reads and writes", () => {
