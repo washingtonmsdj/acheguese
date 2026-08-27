@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `f471e26d883124402411df0440c544eb4fcb8f28`  
+Baseline reviewed: `0ee53d87f41efb9bc46688980fc6e23768e79b3f`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -49,6 +49,7 @@ Rules:
 | `scripts/validate-vercel-build-inputs.mjs` | `tools/release/validate-vercel-build-inputs.mjs` | package/build callers point to canonical path; legacy command no longer required |
 | `scripts/ci/run-preview-e2e.ps1` | `tools/release/run-preview-e2e.ps1` | workflow/callers point to canonical path; legacy PowerShell entrypoint no longer required |
 | `scripts/devops/push-to-github.ps1` | `tools/release/push-to-github.ps1` | manual callers use canonical path; legacy helper entrypoint no longer required |
+| `scripts/deploy-security-updates.sh` | `tools/release/deploy-security-updates.sh` | manual/docs callers use canonical release helper; legacy shell entrypoint no longer required |
 | `scripts/compare-economic-benchmark.mjs` | `tools/release/compare-economic-benchmark.mjs` | economic SSOT/callers use canonical owner directly; legacy entrypoint no longer required |
 | `scripts/finalize-economic-benchmark.mjs` | `tools/release/finalize-economic-benchmark.mjs` | economic SSOT/callers use canonical owner directly; legacy entrypoint no longer required |
 | `scripts/generate-economic-benchmark-blocker-report.mjs` | `tools/release/generate-economic-benchmark-blocker-report.mjs` | package/callers use canonical owner directly; legacy entrypoint no longer required |
