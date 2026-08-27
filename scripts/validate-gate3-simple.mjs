@@ -4,7 +4,7 @@
  * Testa constraints diretamente sem criar corridas
  */
 
-import { createAnonClient } from './lib/supabase-client.mjs';
+import { createAnonClient } from '../tools/supabase/supabase-client.mjs';
 
 const supabase = createAnonClient({ envFiles: ['.env.test', '.env.local', '.env'] });
 
