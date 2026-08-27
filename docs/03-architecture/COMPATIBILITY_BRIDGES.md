@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `331bd9edec2a217b09a6d57f4f2307544e467aa9`  
+Baseline reviewed: `43f21fa277bec637af6aaad01edf7c5f73ba4674`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -42,7 +42,6 @@ Rules:
 | --- | --- | --- |
 | `scripts/backup-storage.ts` | `tools/maintenance/backup-storage.ts` | docs/policies/callers migrated to canonical path |
 | `scripts/restore-storage.ts` | `tools/maintenance/restore-storage.ts` | docs/policies/callers migrated to canonical path |
-| `scripts/build-fast.mjs` | `tools/release/build-fast.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/run-vercel-production-build.mjs` | `tools/release/run-vercel-production-build.mjs` | Vercel/build callers point to canonical path; legacy production entrypoint no longer required |
 | `scripts/validate-production-sitemap.mjs` | `tools/release/validate-production-sitemap.mjs` | release/build callers point to canonical path; legacy command no longer required |
 | `scripts/generate-sitemap.ts` | `tools/release/generate-sitemap.ts` | package/docs/callers point to canonical path; legacy command no longer required |
@@ -220,6 +219,7 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/core-platform/access-analyzer.mjs` → architecture tests and ownership fixtures now use `tools/architecture/core-platform/access-analyzer.mjs`; old bridge removed.
 - `scripts/security/csp-contract.ts` → Turnstile CSP contract test and validator use `tools/security/csp-contract.ts`; old bridge removed.
 - `scripts/security/account-operational-edge-policy.mjs` → account operational Edge policy test imports `tools/security/account-operational-edge-policy.mjs` directly; old bridge removed.
+- `scripts/build-fast.mjs` → npm `build:fast` now calls `tools/release/build-fast.mjs` directly; historical typecheck docs remain archival only; old bridge removed.
 
 ## G2 closure condition for bridges
 
