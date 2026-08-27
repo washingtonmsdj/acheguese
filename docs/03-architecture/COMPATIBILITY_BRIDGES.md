@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `34e845a228e026133ac1ab369a23f1f4ea56917a`  
+Baseline reviewed: `275451b2d38be7a2e99599902f70786adab74799`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -59,6 +59,7 @@ Rules:
 | `scripts/validate-maps-architecture.mjs` | `tools/architecture/validate-maps-architecture.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/core-platform/access-analyzer.mjs` | `tools/architecture/core-platform/access-analyzer.mjs` | validator/tests/callers use canonical owner directly; legacy module compatibility no longer required |
 | `scripts/validate-core-platform-ownership.mjs` | `tools/architecture/validate-core-platform-ownership.mjs` | package/tests/callers use canonical owner directly; legacy CLI/module compatibility no longer required |
+| `scripts/validate-session-context.ts` | `tools/architecture/validate-session-context.ts` | package/docs/callers use canonical owner directly; legacy CLI/module compatibility no longer required |
 | `scripts/validate-critical-file-sizes.ts` | `tools/architecture/validate-critical-file-sizes.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-architecture-governance.ts` | `tools/architecture/validate-architecture-governance.ts` | npm/docs/callers point to canonical path; legacy CLI/module compatibility no longer required |
 | `scripts/validate-architecture-phase1.mjs` | `tools/architecture/validate-architecture-phase1.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
