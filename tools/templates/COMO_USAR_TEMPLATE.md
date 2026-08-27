@@ -1,311 +1,88 @@
-# 🚀 Como Usar o Template de Módulo
+# Como usar o template de bounded context
 
-## 📋 Pré-requisitos
+Status: atual
+Owner: tooling de arquitetura
 
-- Ter definido o domínio do módulo (ex: empresas, usuários, produtos)
-- Ter criado a tabela no banco de dados
-- Ter configurado RLS (Row Level Security) na tabela
+Este template existe para criar novos domínios sem reintroduzir a arquitetura legada que a reorganização global está removendo.
 
----
+## Regra principal
 
-## 🎯 Passo a Passo
+Um domínio novo é dividido em dois owners físicos:
 
-### 1. Copiar Template
+- `src/core/[nome]`: contratos, regras de domínio, services e boundary de persistência.
+- `src/modules/[nome]`: UI, hooks e composição de aplicação do produto.
 
-```bash
-# Copiar template para novo módulo
-cp -r templates/module-template src/modules/[nome-do-modulo]
+`src/modules/[nome]` **não pode** importar `@/integrations/*`, Supabase ou tabelas diretamente.
 
-# Exemplo: módulo de empresas
-cp -r templates/module-template src/modules/businesses
-```
-
-### 2. Renomear Arquivos
-
-Renomear os arquivos com placeholders:
+## 1. Copiar o esqueleto
 
 ```bash
-# Antes
-hooks/use[Nome].ts
-services/[nome].service.ts
-types/[nome].types.ts
-
-# Depois (exemplo: businesses)
-hooks/useBusinesses.ts
-services/business.service.ts
-types/business.types.ts
+mkdir -p src/core/[nome] src/modules/[nome]
+cp -r tools/templates/module-template/core/. src/core/[nome]/
+cp -r tools/templates/module-template/module/. src/modules/[nome]/
 ```
 
-### 3. Substituir Placeholders
+## 2. Substituir placeholders
 
-Substituir os seguintes placeholders em TODOS os arquivos:
+- `[Nome]`: PascalCase, por exemplo `Business`.
+- `[nome]`: kebab/camel coerente com o diretório, por exemplo `business`.
+- `[item]` / `[itens]`: nome de leitura para entidade/coleção.
+- `[domínio]`: descrição humana do bounded context.
 
-| Placeholder | Substituir por | Exemplo |
-|-------------|----------------|---------|
-| `[Nome]` | Nome do módulo (PascalCase) | `Business` |
-| `[nome]` | nome do módulo (camelCase) | `business` |
-| `[tabela]` | nome da tabela no banco | `businesses` |
-| `[itens]` | plural do domínio | `Businesses` |
-| `[item]` | singular do domínio | `Business` |
-| `[domínio]` | descrição do domínio | `empresas` |
+Não adicione `[tabela]` ou `user_id` ao template por padrão. Persistência, ownership e IDs dependem do domínio e devem seguir os contracts reais do projeto.
 
-**Exemplo completo para módulo de empresas:**
-- `[Nome]` → `Business`
-- `[nome]` → `business`
-- `[tabela]` → `businesses`
-- `[itens]` → `Businesses`
-- `[item]` → `Business`
-- `[domínio]` → `empresas`
+## 3. Definir contratos em core
 
-### 4. Implementar Lógica Específica
+Comece por `src/core/[nome]/types/[nome].types.ts` e pelo repository contract. O módulo deve consumir esses contratos pelo barrel de core, sem duplicar tipos.
 
-#### 4.1. Types (`types/business.types.ts`)
+## 4. Implementar persistência no owner correto
 
-```typescript
-// Definir enums específicos
-export const BusinessType = {
-  RESTAURANT: 'restaurant',
-  STORE: 'store',
-  SERVICE: 'service',
-} as const;
+O template fornece apenas o **repository contract**. A implementação deve ficar no core e pode usar o adapter canônico necessário, por exemplo `@/integrations/supabase`, somente quando o domínio realmente precisar dele.
 
-// Definir interface principal
-export interface Business {
-  id: string;
-  user_id: string;
-  name: string;
-  type: BusinessType;
-  created_at: string;
-  updated_at: string;
-}
+Antes de escrever persistência:
 
-// Definir filtros
-export interface BusinessFilters {
-  type?: BusinessType;
-  city?: string;
-  limit?: number;
-}
+1. confirmar schema/migration real;
+2. confirmar RLS/grants;
+3. confirmar ownership/roles pelo SSOT existente;
+4. evitar segundo writer/read model para a mesma entidade;
+5. adicionar regression/architecture guard quando a boundary for crítica.
 
-// Definir params
-export interface CreateBusinessParams {
-  user_id: string;
-  name: string;
-  type: BusinessType;
-}
+## 5. Implementar a camada de módulo
+
+`src/modules/[nome]` recebe/consome a API de core. Hooks podem usar TanStack Query e estado de apresentação, mas não devem conhecer tabela, RPC de infraestrutura ou credenciais.
+
+## 6. Wiring
+
+A composição concreta do repository/service deve acontecer no owner de core ou na composition layer do app, conforme o domínio. Não crie um service paralelo dentro do módulo apenas para facilitar import.
+
+## 7. Imports esperados
+
+```ts
+// UI / aplicação
+import { use[Nome] } from "@/modules/[nome]";
+
+// contratos ou services de domínio
+import type { [Nome] } from "@/core/[nome]";
 ```
 
-#### 4.2. Service (`services/business.service.ts`)
+Evite deep imports públicos quando um barrel canônico existir.
 
-```typescript
-// Implementar métodos específicos
-class BusinessService {
-  private readonly TABLE = 'businesses';
+## Checklist antes de considerar o novo domínio integrado
 
-  // Métodos básicos já estão no template
-  // Adicionar métodos específicos se necessário
-  
-  async searchByName(name: string): Promise<Business[]> {
-    try {
-      const { data, error } = await supabase
-        .from(this.TABLE)
-        .select('*')
-        .ilike('name', `%${name}%`);
+- [ ] `src/core/[nome]` é o único owner de contratos/regras/persistência.
+- [ ] `src/modules/[nome]` contém somente UI/aplicação.
+- [ ] zero import de `@/integrations/*` no módulo.
+- [ ] zero acesso direto a Supabase no módulo.
+- [ ] ownership/RLS foram verificados contra o banco real.
+- [ ] não existe SSOT paralelo em `shared`, `features`, `services` genérico ou outro módulo.
+- [ ] exports públicos têm barrels claros.
+- [ ] architecture/regression tests protegem a boundary.
+- [ ] typecheck/test/build só são marcados como PASS após execução real.
 
-      if (error) throw error;
+## Referências do repositório
 
-      return (data as Business[]) || [];
-    } catch (error) {
-      logger.error('Erro ao buscar empresas por nome:', error);
-      throw error;
-    }
-  }
-}
-```
+- Plano permanente: `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
+- Arquitetura: `docs/03-architecture/`
+- Template: `tools/templates/module-template/`
 
-#### 4.3. Hook (`hooks/useBusinesses.ts`)
-
-```typescript
-// Adicionar métodos específicos se necessário
-export function useBusinesses(options: UseBusinessesOptions = {}) {
-  // ... código do template ...
-
-  // Adicionar ações específicas
-  const createBusiness = useCallback(async (params: CreateBusinessParams) => {
-    try {
-      const business = await businessService.createBusiness(params);
-      setItems(prev => [business, ...prev]);
-      return business;
-    } catch (err) {
-      logger.error('Erro ao criar empresa:', err);
-      throw err;
-    }
-  }, []);
-
-  return {
-    items,
-    loading,
-    error,
-    refresh,
-    createBusiness, // Nova ação
-  };
-}
-```
-
-### 5. Atualizar index.ts
-
-```typescript
-// Exportar tudo que for público
-export { useBusinesses } from './hooks/useBusinesses';
-export { businessService } from './services/business.service';
-export {
-  BusinessType,
-  type Business,
-  type BusinessFilters,
-  type CreateBusinessParams,
-} from './types/business.types';
-```
-
-### 6. Atualizar .eslintrc.json
-
-```json
-{
-  "rules": {
-    "no-restricted-syntax": [
-      "error",
-      {
-        "selector": "CallExpression[callee.property.name='from'][arguments.0.value='businesses']",
-        "message": "❌ PROIBIDO: Acesso direto à tabela 'businesses'. Use businessService de '@/modules/businesses'"
-      }
-    ]
-  }
-}
-```
-
-### 7. Atualizar README.md
-
-- Substituir placeholders
-- Adicionar exemplos específicos
-- Documentar métodos customizados
-- Adicionar regras de negócio específicas
-
----
-
-## ✅ Checklist de Validação
-
-### Estrutura
-- [ ] Pasta criada em `src/modules/[nome]/`
-- [ ] Todos os arquivos renomeados
-- [ ] Todos os placeholders substituídos
-
-### Código
-- [ ] Types implementados
-- [ ] Service implementado (CRUD básico)
-- [ ] Hook implementado
-- [ ] index.ts com exports corretos
-- [ ] .eslintrc.json configurado
-
-### Documentação
-- [ ] README.md atualizado
-- [ ] Exemplos de uso adicionados
-- [ ] Contrato arquitetural documentado
-
-### Testes
-- [ ] Compilação sem erros
-- [ ] ESLint sem warnings
-- [ ] Imports funcionando
-- [ ] Funcionalidade básica testada
-
----
-
-## 📚 Exemplo Completo: Módulo de Empresas
-
-### Estrutura Final
-
-```
-src/modules/businesses/
-├── index.ts
-├── README.md
-├── .eslintrc.json
-├── hooks/
-│   └── useBusinesses.ts
-├── services/
-│   └── business.service.ts
-└── types/
-    └── business.types.ts
-```
-
-### Uso no Código
-
-```typescript
-// Importar do módulo
-import { 
-  useBusinesses, 
-  businessService,
-  BusinessType 
-} from '@/modules/businesses';
-
-// Usar no componente
-function BusinessList() {
-  const { items, loading } = useBusinesses({
-    filters: { type: BusinessType.RESTAURANT }
-  });
-
-  return (
-    <div>
-      {items.map(business => (
-        <div key={business.id}>{business.name}</div>
-      ))}
-    </div>
-  );
-}
-
-// Criar empresa
-await businessService.createBusiness({
-  user_id: 'uuid',
-  name: 'Minha Empresa',
-  type: BusinessType.RESTAURANT,
-});
-```
-
----
-
-## 🚫 Erros Comuns
-
-### 1. Esquecer de Renomear Arquivos
-❌ `hooks/use[Nome].ts`
-✅ `hooks/useBusinesses.ts`
-
-### 2. Placeholders Não Substituídos
-❌ `[Nome]Service`
-✅ `BusinessService`
-
-### 3. Imports Diretos
-❌ `import { businessService } from '@/modules/businesses/services/business.service'`
-✅ `import { businessService } from '@/modules/businesses'`
-
-### 4. Acesso Direto ao Banco
-❌ `supabase.from('businesses').select('*')`
-✅ `businessService.fetchBusinesses(userId)`
-
----
-
-## 🎓 Próximos Passos
-
-1. Implementar lógica específica do domínio
-2. Adicionar helpers se necessário
-3. Criar componentes específicos
-4. Adicionar testes
-5. Documentar casos de uso
-
----
-
-## 📖 Referências
-
-- **Padrão de Arquitetura:** `docs/architecture/PADRAO_MODULOS_SSOT.md`
-- **Módulo de Referência:** `src/modules/notifications/`
-- **Template:** `templates/module-template/`
-
----
-
-**Versão:** 1.0.0
-**Data:** 2024-03-16
+Este template é um esqueleto arquitetural. Regras específicas de domínio devem ser derivadas do SSOT real, nunca inventadas pelo scaffolding.
