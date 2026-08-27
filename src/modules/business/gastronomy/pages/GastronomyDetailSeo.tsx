@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 
-import type { PublicGastronomySnapshot } from "@/modules/business/public/types/publicSnapshots";
+import type { PublicGastronomySnapshot } from "@/core/business/types/publicSnapshots";
 
 type GastronomyDetailSeoProps = {
   snapshot: PublicGastronomySnapshot | undefined;
