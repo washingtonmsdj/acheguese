@@ -1,5 +1,5 @@
 import { test } from "@playwright/test";
-import { hasE2EUserCredentials } from "../../e2e/helpers/auth";
+import { hasE2EUserCredentials } from "./helpers/auth";
 import { DEFAULT_MOBILE_VIEWPORT } from "./support/publicRouteAssertions";
 import {
   expectMobilePrivateSurface,
