@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `ff62e7eaa01d7c3ba7d8dd699c52c20fe73b3f00`  
+Baseline reviewed: `8a59024d5e36308c53ef4ad802507ee44d776770`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -64,8 +64,6 @@ Rules:
 | `scripts/generate-service-template.ts` | `tools/architecture/generate-service-template.ts` | public npm command and docs point to canonical path |
 | `scripts/generate-migration-template.ts` | `tools/migrations/generate-migration-template.ts` | public npm command and docs point to canonical path |
 | `scripts/generate-supabase-types.ts` | `tools/supabase/generate-supabase-types.ts` | public npm command and callers point to canonical path |
-| `scripts/generate-hardening-architecture-report.ts` | `tools/architecture/generate-hardening-architecture-report.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
-| `scripts/generate-architecture-audit.ts` | `tools/architecture/generate-architecture-audit.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-core-platform-ownership.mjs` | `tools/architecture/validate-core-platform-ownership.mjs` | package/tests/callers use canonical owner directly; legacy CLI/module compatibility no longer required |
 | `scripts/validate-session-context.ts` | `tools/architecture/validate-session-context.ts` | package/docs/callers use canonical owner directly; legacy CLI/module compatibility no longer required |
 | `scripts/validate-project-taxonomy.ts` | `tools/architecture/validate-project-taxonomy.ts` | package/docs/callers use canonical owner directly; legacy CLI/source-inspection compatibility no longer required |
@@ -93,7 +91,6 @@ Rules:
 | `scripts/security/supabase-postgis-owner-preflight.mjs` | `tools/security/supabase-postgis-owner-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
 | `scripts/security/validate-poll-rpc-advisor-mappings.mjs` | `tools/security/validate-poll-rpc-advisor-mappings.mjs` | package/tests import canonical local mappings validator directly |
 | `scripts/validate-architecture-governance.ts` | `tools/architecture/validate-architecture-governance.ts` | npm/docs/callers point to canonical path; legacy CLI/module compatibility no longer required |
-| `scripts/validate-architecture-phase1.mjs` | `tools/architecture/validate-architecture-phase1.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-architecture-boundaries-incremental.mjs` | `tools/architecture/validate-architecture-boundaries-incremental.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-dependencies.ts` | `tools/architecture/validate-dependencies.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/check-ssot-compliance.ts` | `tools/architecture/check-ssot-compliance.ts` | Husky/package/docs point to canonical path; legacy checker entrypoint no longer required |
@@ -220,6 +217,9 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/validate-critical-file-sizes.ts` → npm `validate:architecture:file-sizes` now calls `tools/architecture/validate-critical-file-sizes.ts` directly; remaining reference is archived architecture history; old bridge removed.
 - `scripts/validate-security-fixes.ts` → npm `security:scan` now calls `tools/security/validate-security-fixes.ts` directly; old bridge removed.
 - `scripts/validate-security-config.ts` → npm `security:config:validate` now calls `tools/security/validate-security-config.ts` directly; old bridge removed.
+- `scripts/generate-hardening-architecture-report.ts` → npm `report:architecture:hardening` now calls `tools/architecture/generate-hardening-architecture-report.ts` directly; old bridge removed.
+- `scripts/generate-architecture-audit.ts` → npm `audit:architecture` now calls `tools/architecture/generate-architecture-audit.ts` directly; old bridge removed.
+- `scripts/validate-architecture-phase1.mjs` → npm `validate:architecture:phase1` now calls `tools/architecture/validate-architecture-phase1.mjs` directly; old bridge removed.
 
 ## G2 closure condition for bridges
 
