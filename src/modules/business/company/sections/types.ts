@@ -9,7 +9,7 @@ import type { NavigateFunction } from "react-router-dom";
 import type { AuthUser } from "@/core/auth/services/types";
 import type { Business } from "@/core/business/types";
 import type { VerticalKey } from "@/core/verticals";
-import type { PublicGastronomyPreviewItem } from "@/modules/business/public/types/publicSnapshots";
+import type { PublicGastronomyPreviewItem } from "@/core/business/types/publicSnapshots";
 
 // ============================================
 // Business Extended (com campos adicionais)
