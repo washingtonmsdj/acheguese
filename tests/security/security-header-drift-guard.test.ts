@@ -25,7 +25,7 @@ const NOMINATIM_PROXY = readFileSync(
 );
 const DRIFT_CONTRACT = JSON.parse(
   readFileSync(
-    join(ROOT, "scripts/security/security-header-drift-contract.json"),
+    join(ROOT, "tools/security/security-header-drift-contract.json"),
     "utf8",
   ),
 ) as {

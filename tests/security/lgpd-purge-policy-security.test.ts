@@ -5,14 +5,14 @@ import {
   inspectLgpdPurgeReadiness,
   loadLgpdPurgePolicy,
   validateLgpdPurgePolicy,
-} from "../../scripts/security/lgpd-purge-policy.mjs";
+} from "../../tools/security/lgpd-purge-policy.mjs";
 
 const ROOT = process.cwd();
 const POLICY_PATH = join(
   ROOT,
   "docs/09-reference/governance/privacy/LGPD_PURGE_POLICY.json",
 );
-const SCRIPT_PATH = join(ROOT, "scripts/security/lgpd-purge-policy.mjs");
+const SCRIPT_PATH = join(ROOT, "tools/security/lgpd-purge-policy.mjs");
 
 const policy = loadLgpdPurgePolicy(POLICY_PATH);
 
