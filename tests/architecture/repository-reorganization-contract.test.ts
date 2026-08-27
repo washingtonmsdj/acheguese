@@ -10,7 +10,11 @@ const RETIRED_SOURCE_ROOTS = [
   "src/types",
   "src/features",
 ] as const;
-const RETIRED_SOURCE_FILES = ["src/App.css", "src/global.d.ts"] as const;
+const RETIRED_SOURCE_FILES = [
+  "src/App.css",
+  "src/global.d.ts",
+  "src/config/security.config.ts",
+] as const;
 const RETIRED_ROOT_ARTIFACTS = [
   "handoff",
   "product-qa-screenshots",
@@ -24,7 +28,6 @@ const RETIRED_E2E_FILES = [
 ] as const;
 
 const CONFIG_BRIDGES = new Map([
-  ["src/config/security.config.ts", "@/shared/config/security.config"],
   ["src/config/moduleSlugs.ts", "@/app/config/moduleSlugs"],
   ["src/config/modules.ts", "@/app/config/modules"],
   ["src/config/launchScope.ts", "@/app/config/launchScope"],
@@ -84,12 +87,6 @@ const ARCHIVED_ROOT_ARTIFACT_TARGETS = [
   "docs/08-roadmap/handoff/README.md",
   "docs/10-archive/root-legacy/PRODUCT-QA.md",
   "docs/10-archive/root-legacy/product-qa-screenshots",
-] as const;
-
-const LEGACY_SECURITY_CONFIG_IMPORT = ["@/config", "security.config"].join("/");
-const ALLOWED_LEGACY_SECURITY_CONFIG_CALLERS = [
-  "src/app/pages/PreLaunchLandingPage.tsx",
-  "src/core/routing/components/CommunityInterestPage.tsx",
 ] as const;
 
 function listFiles(relativePath: string): string[] {
@@ -225,25 +222,12 @@ describe("global repository reorganization contract", () => {
     }
   });
 
-  it("ratchets legacy security config imports to the two remaining runtime callers", () => {
-    const callers = [...listFilesRecursively("src"), ...listFilesRecursively("tests")]
-      .filter((relativePath) => relativePath !== "src/config/security.config.ts")
-      .filter((relativePath) => {
-        const content = fs.readFileSync(path.join(ROOT, relativePath), "utf8");
-        return content.includes(LEGACY_SECURITY_CONFIG_IMPORT);
-      })
-      .sort();
-
-    expect(callers).toEqual([...ALLOWED_LEGACY_SECURITY_CONFIG_CALLERS].sort());
-  });
-
   it("freezes src/config to the remaining compatibility bridges only", () => {
     expect(listFiles("src/config")).toEqual([
       "communityLaunch.ts",
       "launchScope.ts",
       "moduleSlugs.ts",
       "modules.ts",
-      "security.config.ts",
       "territory.ts",
     ]);
   });
