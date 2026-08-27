@@ -281,34 +281,34 @@
       "allowedPatternIds": ["service-role-key-literal"]
     },
     {
-      "path": "scripts/validate-etapa12-remote.ts",
+      "path": "tools/supabase/validate-etapa12-remote.ts",
       "kind": "operator-script",
       "risk": "High",
-      "label": "Remote validation script requiring operator-supplied service_role.",
+      "label": "Remote validation tool requiring operator-supplied service_role.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
       "allowedPatternIds": ["service-role-key-literal"]
     },
     {
-      "path": "scripts/validate-gate3-metadata.mjs",
+      "path": "tools/supabase/validate-gate3-metadata.mjs",
       "kind": "operator-script",
       "risk": "High",
-      "label": "Remote metadata validation script using the shared script Supabase helper.",
+      "label": "Remote metadata validation tool using the canonical Supabase helper.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
       "allowedPatternIds": ["service-role-key-literal"]
     },
     {
-      "path": "scripts/validate-reconciliation-final.ts",
+      "path": "tools/supabase/validate-reconciliation-final.ts",
       "kind": "operator-script",
       "risk": "High",
-      "label": "Remote reconciliation validation script requiring operator-supplied service_role.",
+      "label": "Remote reconciliation validation tool requiring operator-supplied service_role.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
       "allowedPatternIds": ["service-role-key-literal"]
     },
     {
-      "path": "scripts/validate-slug-history-final.ts",
+      "path": "tools/supabase/validate-slug-history-final.ts",
       "kind": "operator-script",
       "risk": "High",
-      "label": "Remote slug-history validation script requiring operator-supplied service_role.",
+      "label": "Remote slug-history validation tool requiring operator-supplied service_role.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
       "allowedPatternIds": ["service-role-key-literal"]
     },
