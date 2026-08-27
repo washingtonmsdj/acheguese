@@ -11,16 +11,10 @@ const TYPE_ONLY_IMPORT_RE = /import\s+type\s+[\s\S]*?from\s+["'][^"']+["'];?/g;
 const DIRECT_INTEGRATION_RE = /(?:from\s+["']@\/integrations\/|import\(\s*["']@\/integrations\/)/;
 const DIRECT_SUPABASE_PACKAGE_RE = /(?:from\s+["']@supabase\/supabase-js["']|import\(\s*["']@supabase\/supabase-js["']\s*\))/;
 
-const REQUIRED_CORE_BRIDGES = new Map([
-  [
-    "src/modules/business/public/types/publicSnapshots.ts",
-    "@/core/business/types/publicSnapshots",
-  ],
-  [
-    "src/modules/business/public/services/PublicSnapshotRpcService.ts",
-    "@/core/business/services/PublicSnapshotRpcService",
-  ],
-]);
+const RETIRED_PUBLIC_SNAPSHOT_BRIDGES = [
+  "src/modules/business/public/types/publicSnapshots.ts",
+  "src/modules/business/public/services/PublicSnapshotRpcService.ts",
+] as const;
 
 function normalize(filePath: string): string {
   return filePath.replace(/\\/g, "/");
@@ -76,16 +70,9 @@ function main(): void {
     }
   }
 
-  for (const [bridgeFile, canonicalImport] of REQUIRED_CORE_BRIDGES) {
-    const absolute = path.join(ROOT, bridgeFile);
-    if (!fs.existsSync(absolute)) {
-      violations.push(`${bridgeFile}: required compatibility bridge is missing.`);
-      continue;
-    }
-
-    const content = fs.readFileSync(absolute, "utf8");
-    if (!content.includes(canonicalImport)) {
-      violations.push(`${bridgeFile}: compatibility bridge must point one-way to ${canonicalImport}.`);
+  for (const retiredBridge of RETIRED_PUBLIC_SNAPSHOT_BRIDGES) {
+    if (fs.existsSync(path.join(ROOT, retiredBridge))) {
+      violations.push(`${retiredBridge}: retired compatibility bridge was recreated.`);
     }
   }
 
@@ -95,7 +82,7 @@ function main(): void {
     process.exit(1);
   }
 
-  console.log("Business module boundary valid: zero direct runtime integration access; canonical public snapshot bridges enforced.");
+  console.log("Business module boundary valid: zero direct runtime integration access; retired public snapshot bridges remain absent.");
 }
 
 main();
