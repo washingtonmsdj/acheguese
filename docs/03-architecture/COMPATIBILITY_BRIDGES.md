@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `0e7ae3a41d2816edd486634459bdc45c1d81ab98`  
+Baseline reviewed: `03378cd8c429aa61434b6417efc39efd0d9cb945`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -44,12 +44,8 @@ Rules:
 | `scripts/restore-storage.ts` | `tools/maintenance/restore-storage.ts` | docs/policies/callers migrated to canonical path |
 | `scripts/generate-sitemap.ts` | `tools/release/generate-sitemap.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/economic-benchmark-ssot.mjs` | `tools/release/economic-benchmark-ssot.mjs` | package/economic benchmark callers use canonical SSOT directly; legacy entrypoint no longer required |
-| `scripts/community-staging-load-test.mjs` | `tools/release/community-staging-load-test.mjs` | package/tests/callers use canonical staging harness directly; legacy CLI/module compatibility no longer required |
 | `scripts/security/supabase-edge-admin-canary-deploy.mjs` | `tools/release/supabase-edge-admin-canary-deploy.mjs` | tests/deploy callers use canonical release guard directly; legacy entrypoint no longer required |
 | `scripts/verify-deploy-ready.mjs` | `tools/release/verify-deploy-ready.mjs` | package/docs/callers point to canonical deploy gate; legacy entrypoint no longer required |
-| `scripts/community-interest-preflight.mjs` | `tools/supabase/community-interest-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
-| `scripts/poll-preflight.mjs` | `tools/supabase/poll-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
-| `scripts/salvador-preflight.mjs` | `tools/supabase/salvador-preflight.mjs` | package/tests/callers use canonical preflight owner directly; legacy CLI/module compatibility no longer required |
 | `scripts/validate-supabase-advisor-residuals.ts` | `tools/supabase/validate-supabase-advisor-residuals.ts` | package/tests/docs use canonical validator directly; legacy CLI/module compatibility no longer required |
 | `scripts/validate-supabase-remote-migration-drift.ts` | `tools/supabase/validate-supabase-remote-migration-drift.ts` | package/docs/callers use canonical remote drift gate directly; legacy entrypoint no longer required |
 | `scripts/location/municipal-neighborhood-sources.ts` | `tools/seeds/municipal-neighborhood-sources.ts` | all callers/docs use canonical manifest directly; legacy re-export no longer required |
@@ -220,6 +216,10 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/validate-production-sitemap.mjs` → production build tooling already uses `tools/release/validate-production-sitemap.mjs`; old bridge removed.
 - `scripts/validate-migration-provenance.mjs` → npm migration provenance gate calls `tools/migrations/validate-migration-provenance.mjs` directly; old bridge removed.
 - `scripts/validate-core-platform-ownership.mjs` → npm and the validator regression test now use `tools/architecture/validate-core-platform-ownership.mjs`; legacy fixture reference was decoupled; old bridge removed.
+- `scripts/community-staging-load-test.mjs` → load-harness unit/security callers now use `tools/release/community-staging-load-test.mjs`; old bridge removed.
+- `scripts/community-interest-preflight.mjs` → npm and unit tests now use `tools/supabase/community-interest-preflight.mjs`; old bridge removed.
+- `scripts/poll-preflight.mjs` → npm and unit tests now use `tools/supabase/poll-preflight.mjs`; old bridge removed.
+- `scripts/salvador-preflight.mjs` → npm Salvador preflight commands call `tools/supabase/salvador-preflight.mjs` directly; canonical owner preserves CLI execution; old bridge removed.
 
 ## G2 closure condition for bridges
 
