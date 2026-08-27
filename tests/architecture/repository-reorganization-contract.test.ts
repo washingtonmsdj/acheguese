@@ -11,7 +11,11 @@ const RETIRED_SOURCE_ROOTS = [
   "src/features",
 ] as const;
 const RETIRED_SOURCE_FILES = ["src/App.css", "src/global.d.ts"] as const;
-const RETIRED_ROOT_ARTIFACTS = ["handoff", "product-qa-screenshots"] as const;
+const RETIRED_ROOT_ARTIFACTS = [
+  "handoff",
+  "product-qa-screenshots",
+  "templates",
+] as const;
 const RETIRED_E2E_FILES = [
   "e2e/helpers/geolocation.ts",
   "tests/e2e/helpers/geolocation.ts",
@@ -41,6 +45,11 @@ const CANONICAL_CONFIG_TARGETS = [
 
 const CANONICAL_SOURCE_TARGETS = [
   "src/core/maps/types/mapE2EState.d.ts",
+] as const;
+
+const CANONICAL_TOOLING_TARGETS = [
+  "tools/templates/COMO_USAR_TEMPLATE.md",
+  "tools/templates/module-template",
 ] as const;
 
 const LEGACY_E2E_BRIDGES = new Map([
@@ -125,6 +134,12 @@ describe("global repository reorganization contract", () => {
 
   it("keeps migrated source files under canonical owners", () => {
     for (const relativePath of CANONICAL_SOURCE_TARGETS) {
+      expect(fs.existsSync(path.join(ROOT, relativePath)), relativePath).toBe(true);
+    }
+  });
+
+  it("keeps migrated tooling under canonical owners", () => {
+    for (const relativePath of CANONICAL_TOOLING_TARGETS) {
       expect(fs.existsSync(path.join(ROOT, relativePath)), relativePath).toBe(true);
     }
   });
