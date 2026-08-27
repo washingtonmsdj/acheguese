@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `f6e0c1d3afcb862b2a66b609a3b7708cfb745444`  
+Baseline reviewed: `bd125bcadf37e33da60b0386e1e7dcf9a2406632`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -70,7 +70,6 @@ Rules:
 | `scripts/generate-architecture-audit.ts` | `tools/architecture/generate-architecture-audit.ts` | npm/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/diagnose-typecheck.mjs` | `tools/architecture/diagnose-typecheck.mjs` | package/docs/callers point to canonical path; legacy diagnostic entrypoint no longer required |
 | `scripts/validate-maps-architecture.mjs` | `tools/architecture/validate-maps-architecture.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
-| `scripts/core-platform/access-analyzer.mjs` | `tools/architecture/core-platform/access-analyzer.mjs` | validator/tests/callers use canonical owner directly; legacy module compatibility no longer required |
 | `scripts/validate-core-platform-ownership.mjs` | `tools/architecture/validate-core-platform-ownership.mjs` | package/tests/callers use canonical owner directly; legacy CLI/module compatibility no longer required |
 | `scripts/validate-session-context.ts` | `tools/architecture/validate-session-context.ts` | package/docs/callers use canonical owner directly; legacy CLI/module compatibility no longer required |
 | `scripts/validate-project-taxonomy.ts` | `tools/architecture/validate-project-taxonomy.ts` | package/docs/callers use canonical owner directly; legacy CLI/source-inspection compatibility no longer required |
@@ -220,6 +219,7 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/compare-economic-benchmark.mjs` → economic tooling uses `tools/release/compare-economic-benchmark.mjs`; old bridge removed.
 - `scripts/finalize-economic-benchmark.mjs` → economic tooling uses `tools/release/finalize-economic-benchmark.mjs`; old bridge removed.
 - `scripts/generate-economic-staging-report.mjs` → economic tooling uses `tools/release/generate-economic-staging-report.mjs`; old bridge removed.
+- `scripts/core-platform/access-analyzer.mjs` → architecture tests and ownership fixtures now use `tools/architecture/core-platform/access-analyzer.mjs`; old bridge removed.
 
 ## G2 closure condition for bridges
 
