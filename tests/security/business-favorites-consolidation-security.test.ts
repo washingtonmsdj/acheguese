@@ -19,7 +19,7 @@ const businessAdapter = read(
   'src/core/business/services/BusinessFavoriteService.ts',
 );
 const gastronomyAdapter = read(
-  'src/modules/business/gastronomy/services/favorites.queries.ts',
+  'src/core/business/services/gastronomy.favorites.queries.ts',
 );
 
 describe('Business Favorites Core ownership', () => {
