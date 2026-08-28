@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 closure review  
-Baseline reviewed: `716b890ec9d8576b208e43c9cbb29504f7a37f3c`  
+Baseline reviewed: `6ab27e3af8a4b23e56f30cadd66ec4e2e032bdb9`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -17,7 +17,7 @@ The detailed historical retirement ledger that previously lived in this file rem
 3. No bridge may contain independent business, persistence, security-policy, or release logic.
 4. A bridge may remain during G2 only when a current caller still requires the legacy path.
 5. Removing the final live caller requires removing the bridge from this registry in the same structural cut.
-6. `tools/**` must not depend on `scripts/**`.
+6. Operational tooling is canonical under `tools/**`; the retired `scripts/**` root must not be recreated.
 7. Historical module/service bridges already retired are protected by their architecture ratchets and must not be recreated.
 
 ## Global source/config bridges
@@ -36,21 +36,9 @@ The detailed historical retirement ledger that previously lived in this file rem
 | --- | --- | --- | --- |
 | `e2e/helpers/auth.ts` | `tests/e2e/helpers/auth.ts` | current E2E specs still use the legacy helper location | migrate all E2E specs to `tests/e2e/helpers/auth.ts` |
 
-## Tooling bridges — `scripts/` → canonical `tools/`
+## Tooling bridge state
 
-There is no implementation ownership left in `scripts/`. The paths below are compatibility entrypoints/modules only.
-
-| Legacy path | Canonical owner | Why it still exists | Removal gate |
-| --- | --- | --- | --- |
-| `scripts/validate-supabase-advisor-residuals.ts` | `tools/supabase/validate-supabase-advisor-residuals.ts` | `tests/security/security-authority-migrations.test.ts` still imports the legacy module path | migrate that test import to the canonical owner |
-| `scripts/validate-supabase-migrations.ts` | `tools/migrations/validate-supabase-migrations.ts` | `package.json` still exposes `validate:migrations` through the legacy CLI path and the security-authority test imports it | migrate package command + test import to the canonical owner |
-| `scripts/security/edge-function-auth-config.mjs` | `tools/security/edge-function-auth-config.mjs` | security-authority regression test imports the legacy module path | migrate the regression test to the canonical owner |
-| `scripts/security/edge-function-auth-policy.mjs` | `tools/security/edge-function-auth-policy.mjs` | security-authority regression test imports the legacy module path | migrate the regression test to the canonical owner |
-| `scripts/security/edge-function-broker-boundary.mjs` | `tools/security/edge-function-broker-boundary.mjs` | security-authority regression test imports the legacy module path | migrate the regression test to the canonical owner |
-| `scripts/security/service-role-boundary.mjs` | `tools/security/service-role-boundary.mjs` | security-authority regression test imports the legacy module path | migrate the regression test to the canonical owner |
-| `scripts/security/supabase-access-boundary.mjs` | `tools/security/supabase-access-boundary.mjs` | security-authority regression test imports the legacy module path | migrate the regression test to the canonical owner |
-| `scripts/security/supabase-auth-hibp.mjs` | `tools/security/supabase-auth-hibp.mjs` | security-authority regression test imports the legacy module and compatibility CLI behavior is preserved | migrate the regression test/module caller to the canonical owner |
-| `scripts/security/supabase-postgis-owner-preflight.mjs` | `tools/security/supabase-postgis-owner-preflight.mjs` | security-authority regression test imports the legacy module and compatibility CLI behavior is preserved | migrate the regression test/module caller to the canonical owner |
+No `scripts/**` compatibility path remains active. Operational tooling is canonical under `tools/**` by responsibility. `package.json`, security regressions and the service-role boundary policy now point to canonical tooling owners, and `tests/architecture/compatibility-surface-cleanup.test.ts` blocks recreation of the retired root.
 
 ## Module bridge state
 
@@ -84,6 +72,7 @@ No legacy Guide routing compatibility bridge remains active. Public tourist-poin
 
 ## Recent retirements relevant to G2 closure
 
+- `scripts/**` → retired completely after `tests/security/security-authority-migrations.test.ts`, `package.json` and service-role policy migrated to canonical `tools/**` owners; root absence is ratcheted by `tests/architecture/compatibility-surface-cleanup.test.ts`.
 - `src/core/verticals/guide/routes/touristPointPublicRoutes.ts` and `src/core/verticals/guide/routes/useTouristPointPublicUrls.ts` → canonical owner `src/core/guide/tourist-points/routes`; final application caller migrated and the historical Guide vertical namespace was removed and ratcheted.
 - `scripts/validate-project-taxonomy.ts` → canonical owner `tools/architecture/validate-project-taxonomy.ts`; final live test caller migrated and legacy path removed.
 - `scripts/media-assets-cp016-backfill.ts` → canonical owner `tools/migrations/media-assets-cp016-backfill.ts`; architecture test migrated and legacy implementation removed.
@@ -96,8 +85,8 @@ No legacy Guide routing compatibility bridge remains active. Public tourist-poin
 G2 may close with the explicitly tracked compatibility debt above only if all of the following hold on the reviewed SHA:
 
 - `src/features`, `src/test`, and `src/__tests__` are absent;
-- `scripts/` contains only the bridges listed here and no implementation owner;
-- no canonical `tools/**` owner depends on `scripts/**`;
+- `scripts/` is absent and operational tooling is canonical in `tools/**`;
+- no canonical `tools/**` owner depends on a retired `scripts/**` path;
 - no `src/core/**` implementation depends on `src/modules/**`;
 - module → integration runtime exceptions remain explicitly ratcheted and cannot grow;
 - workflows/build/deploy guards observe canonical `tools/**` paths;
