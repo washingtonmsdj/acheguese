@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `4ac92857487cea8c860f63caf6fa7302f35ba765`  
+Baseline reviewed: `55398376b77a20a50be8920ea552e7b7d8b7f1b5`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -38,9 +38,6 @@ Rules:
 
 | Legacy path | Canonical owner | Removal gate |
 | --- | --- | --- |
-| `scripts/backup-storage.ts` | `tools/maintenance/backup-storage.ts` | docs/policies/callers migrated to canonical path |
-| `scripts/security/supabase-edge-admin-canary-deploy.mjs` | `tools/release/supabase-edge-admin-canary-deploy.mjs` | tests/deploy callers use canonical release guard directly; legacy entrypoint no longer required |
-| `scripts/verify-deploy-ready.mjs` | `tools/release/verify-deploy-ready.mjs` | package/docs/callers point to canonical deploy gate; legacy entrypoint no longer required |
 | `scripts/validate-supabase-advisor-residuals.ts` | `tools/supabase/validate-supabase-advisor-residuals.ts` | package/tests/docs use canonical validator directly; legacy CLI/module compatibility no longer required |
 | `scripts/validate-supabase-remote-migration-drift.ts` | `tools/supabase/validate-supabase-remote-migration-drift.ts` | package/docs/callers use canonical remote drift gate directly; legacy entrypoint no longer required |
 | `scripts/location/municipal-neighborhood-sources.ts` | `tools/seeds/municipal-neighborhood-sources.ts` | all callers/docs use canonical manifest directly; legacy re-export no longer required |
@@ -62,21 +59,27 @@ Rules:
 
 ## Gastronomy module-local bridges
 
-All persistence/domain ownership below is canonical in `src/core/business`. The complete set includes every bridge enforced by `validate-gastronomy-module-boundaries.ts`, not only files discoverable by comment-text search.
+Persistence/domain ownership for these pure compatibility paths is canonical in `src/core/business`. These are the only Gastronomy paths still enforced as bridges by `validate-gastronomy-module-boundaries.ts`.
 
 | Legacy path | Canonical owner |
 | --- | --- |
-| `src/modules/business/gastronomy/types/gastronomy/index.ts` | `src/core/business/types/gastronomy` |
-| `src/modules/business/gastronomy/types/menu.ts` | `src/core/business/types/gastronomyMenu` |
-| `src/modules/business/gastronomy/services/DeliveryAreaService.ts` | `src/core/business/services/GastronomyDeliveryAreaService` |
 | `src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts` | `src/core/business/services/gastronomy-runtime.queries` |
 | `src/modules/business/gastronomy/services/GastronomyProfileService.ts` | `src/core/business/services/GastronomyProfileService` |
 | `src/modules/business/gastronomy/services/MenuService.ts` | `src/core/business/services/MenuService` |
 | `src/modules/business/gastronomy/niches/types.ts` | `src/core/business/niches/types` |
-| `src/modules/business/gastronomy/niches/pizzaria/types.ts` | `src/core/business/niches/pizzaria/types` |
 | `src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts` | `src/core/business/niches/pizzaria/PizzaAdminService` |
 
 Removal gate for every Gastronomy bridge: zero legacy-path callers plus Gastronomy/Business boundary and regression tests passing on the same SHA.
+
+### Gastronomy module-local contract surfaces
+
+These files are not compatibility bridges. They intentionally reuse canonical core contracts while retaining module-owned taxonomy, cart/checkout, or pizza build/snapshot contracts.
+
+| Module path | Canonical contracts reused | Module-owned responsibility |
+| --- | --- | --- |
+| `src/modules/business/gastronomy/types/gastronomy/index.ts` | `src/core/business/types/gastronomy` | `CuisineType` product taxonomy surface |
+| `src/modules/business/gastronomy/types/menu.ts` | `src/core/business/types/gastronomyMenu` | cart and checkout state contracts |
+| `src/modules/business/gastronomy/niches/pizzaria/types.ts` | `src/core/business/niches/pizzaria/types` | pizza build, snapshot, validation and pricing composition contracts |
 
 ## Already retired during this G2 execution
 
@@ -84,6 +87,9 @@ These paths were not kept as bridges because no compatibility caller required th
 
 - `scripts/community-staging-load-test.spec.ts` → moved to `tests/scripts/community-staging-load-test.spec.ts` and old path removed.
 - `scripts/backup-config.ts` → moved to `tools/maintenance/backup-config.ts` and old path removed.
+- `scripts/backup-storage.ts` → canonical maintenance owner is `tools/maintenance/backup-storage.ts`; the remaining legacy-path occurrence is a negative security fixture, not a runtime caller.
+- `scripts/verify-deploy-ready.mjs` → package, live security docs and architecture test use `tools/release/verify-deploy-ready.mjs` / `npm run verify:deploy`; historical source-list mentions do not keep a runtime bridge alive.
+- `scripts/security/supabase-edge-admin-canary-deploy.mjs` → security test and Vercel production build now inspect/syntax-check `tools/release/supabase-edge-admin-canary-deploy.mjs` directly; old bridge removed.
 - `scripts/security/supabase-edge-secrets-preflight.mjs` → moved to `tools/security/supabase-edge-secrets-preflight.mjs`; security test updated to canonical path and old path removed.
 - `scripts/security/supabase-edge-runtime-auth-drift.mjs` → moved to `tools/security/supabase-edge-runtime-auth-drift.mjs`; security test updated to canonical path and old path removed.
 - `scripts/security/supabase-lgpd-edge-rollout-preflight.mjs` → moved to `tools/security/supabase-lgpd-edge-rollout-preflight.mjs`; security test updated to canonical path and old path removed.
@@ -195,6 +201,7 @@ These paths were not kept as bridges because no compatibility caller required th
 - `src/modules/business/gastronomy/services/favorites.queries.ts` → runtime hooks/card and security tests now consume or inspect `src/core/business/services/gastronomy.favorites.queries.ts`; Gastronomy ratchet blocks bridge recreation.
 - `src/modules/business/gastronomy/services/review.queries.ts` → review UI/hooks and review security/SSOT tests now consume or inspect `src/core/business/services/gastronomy.review.queries.ts`; Gastronomy ratchet blocks bridge recreation.
 - `src/modules/business/gastronomy/services/menu.queries.ts` → module facade/barrel, `useMenuItems` and onboarding evidence now consume `src/core/business/services/menu.queries.ts`; Gastronomy ratchet blocks bridge recreation.
+- `src/modules/business/gastronomy/services/DeliveryAreaService.ts` → delivery hooks/UI and checkout now consume `src/core/business/services/GastronomyDeliveryAreaService.ts` directly; checkout test mocks the canonical owner and Gastronomy ratchet blocks bridge recreation.
 - `src/modules/business/gastronomy/niches/versioning/types.ts` → barrel, admin visibility logic and tests now consume `src/core/business/niches/versioning/types.ts`; Gastronomy ratchet blocks bridge recreation.
 - `src/modules/business/gastronomy/niches/versioning/NicheVersioningService.ts` → barrel, unit/security tests now consume `src/core/business/niches/versioning/NicheVersioningService.ts`; Gastronomy ratchet blocks bridge recreation.
 
