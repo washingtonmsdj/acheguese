@@ -9,7 +9,10 @@ const script = readFileSync(
   "utf8",
 );
 const config = readFileSync(resolve(root, "supabase/config.toml"), "utf8");
-const vercelConfig = readFileSync(resolve(root, "vercel.json"), "utf8");
+const vercelBuild = readFileSync(
+  resolve(root, "tools/release/run-vercel-production-build.mjs"),
+  "utf8",
+);
 
 describe("Supabase Edge admin canary deploy guard", () => {
   it("allows only the two reconciled administrative canaries", () => {
@@ -104,9 +107,9 @@ describe("Supabase Edge admin canary deploy guard", () => {
     expect(script).toContain("EDGE_ADMIN_CANARY_DEPLOY_APPLIED");
   });
 
-  it("makes Vercel syntax-check the deploy guard before every production build", () => {
-    expect(vercelConfig).toContain(
-      "node --check scripts/security/supabase-edge-admin-canary-deploy.mjs",
+  it("makes Vercel syntax-check the canonical deploy guard before every production build", () => {
+    expect(vercelBuild).toContain(
+      '["node", ["--check", "tools/release/supabase-edge-admin-canary-deploy.mjs"]]',
     );
   });
 });
