@@ -18,7 +18,7 @@ import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-r
 import { usePostById } from "@/core/community/hooks/usePostById";
 import { useCommunityLocation } from "@/core/community/hooks/useCommunityLocation";
 import { postService } from "@/core/posts/services";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import { logger } from "@/shared/utils/logger";
 import type { PostType } from "@/core/posts/types/Post";
 import type { UnifiedPost } from "@/shared/types/posts";
