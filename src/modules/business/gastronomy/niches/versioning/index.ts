@@ -6,6 +6,6 @@
  * @version 1.0.0
  */
 
-export * from './types';
-export * from './NicheVersioningService';
+export * from '@/core/business/niches/versioning/types';
+export * from '@/core/business/niches/versioning/NicheVersioningService';
 export * from './AdminSectionVisibilityService';
