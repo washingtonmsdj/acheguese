@@ -13,7 +13,7 @@ import {
 import {
   isLaunchSurfaceEnabled,
   type LaunchSurfaceKey,
-} from "@/config/launchScope";
+} from "@/app/config/launchScope";
 
 export type PublicHeaderNavItemId =
   | "home"
