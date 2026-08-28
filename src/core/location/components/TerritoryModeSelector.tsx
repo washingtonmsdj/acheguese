@@ -21,7 +21,7 @@ import { useFormattedTerritoryLabel } from '../hooks/useFormattedTerritoryLabel'
 import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 import { extractRouteContext, geoPathToPublicUrl } from '@/core/routing/utils/territoryUrls';
 import { normalizeTerritoryPath } from '@/core/routing/utils/pathNormalization'; // SSOT
-import { getContextMessageFromPath } from '@/config/modules';
+import { getContextMessageFromPath } from '@/app/config/modules';
 import { TerritoryButton, type TerritoryButtonData } from './TerritoryButton';
 import { LocationType } from '../types';
 import {
