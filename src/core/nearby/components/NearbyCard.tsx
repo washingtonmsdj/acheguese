@@ -2,7 +2,7 @@ import React from "react";
 import { AlertTriangle, Calendar, Clock, Landmark, MapPin, Navigation, Store } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Card } from "@/shared/components/ui/card";
-import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
+import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
 import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
 import type { NearbyEntity } from "../hooks/useNearbyEntities";
 
