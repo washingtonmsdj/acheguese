@@ -3,7 +3,7 @@ import {
   TERRITORIAL_ROUTE_PARAMS,
   buildTerritorialModuleRoutePath,
 } from "@/core/routing/config/territorialRoutePatterns";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import type { MapLayerKey } from "../types/core";
 
 export const MAP_RUNTIME_LAYER_KEYS: MapLayerKey[] = [
