@@ -22,7 +22,7 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("@/config/launchScope", () => ({
+vi.mock("@/app/config/launchScope", () => ({
   isLaunchSurfaceEnabled: mocks.isLaunchSurfaceEnabled,
 }));
 
