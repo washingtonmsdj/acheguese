@@ -49,7 +49,7 @@ import {
   isLaunchCommunityPostEnabled,
   isLaunchSurfaceEnabled,
   type LaunchSurfaceKey,
-} from "@/config/launchScope";
+} from "@/app/config/launchScope";
 import { useAdDelivery, SponsoredAdCard } from "@/core/business/promotions";
 import { useBusinessUrls } from "@/core/business/hooks/useBusinessUrls";
 import { ClassifiedUrlService } from "@/core/classifieds/services/ClassifiedUrlService";
