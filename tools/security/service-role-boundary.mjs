@@ -63,9 +63,9 @@ const SERVICE_ROLE_BOUNDARY_MATCHERS = [
   },
   {
     id: 'script-supabase-client-factory',
-    label: 'criacao direta de cliente Supabase em script',
+    label: 'criacao direta de cliente Supabase em tooling',
     pattern: /\bcreateClient\s*\(/g,
-    scanPrefixes: ['scripts/'],
+    scanPrefixes: ['scripts/', 'tools/'],
   },
 ];
 
@@ -89,6 +89,7 @@ const SERVICE_ROLE_BOUNDARY_SCAN_PREFIXES = [
   'api/',
   'supabase/functions/',
   'scripts/',
+  'tools/',
   'public/',
   'docs/09-reference/governance/security/',
   'tests/e2e/',
