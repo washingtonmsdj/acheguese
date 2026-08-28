@@ -31,8 +31,8 @@ import {
   isSalvadorCommunityLaunchTerritory,
   SALVADOR_COMMUNITY_LAUNCH_CLUSTER,
 } from "@/core/community/config/communityLaunch";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
-import { TERRITORY_CONFIG } from "@/config/territory";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
+import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { useCommunityAccess } from "@/core/community-experience/access";
 import { classifiedUrlService } from "@/core/classifieds/services";
 import { useTerritoryHomeData } from "@/core/landing/hooks/useTerritoryHomeData";
