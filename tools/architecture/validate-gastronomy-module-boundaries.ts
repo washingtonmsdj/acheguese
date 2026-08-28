@@ -12,7 +12,6 @@ const ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES = new Set<string>();
 const REQUIRED_CORE_BRIDGES = new Map([
   ["src/modules/business/gastronomy/types/gastronomy/index.ts", "@/core/business/types/gastronomy"],
   ["src/modules/business/gastronomy/types/menu.ts", "@/core/business/types/gastronomyMenu"],
-  ["src/modules/business/gastronomy/services/menu.queries.ts", "@/core/business/services/menu.queries"],
   ["src/modules/business/gastronomy/services/DeliveryAreaService.ts", "@/core/business/services/GastronomyDeliveryAreaService"],
   ["src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts", "@/core/business/services/gastronomy-runtime.queries"],
   ["src/modules/business/gastronomy/services/GastronomyProfileService.ts", "@/core/business/services/GastronomyProfileService"],
@@ -30,6 +29,7 @@ const RETIRED_CORE_BRIDGES = new Set([
   "src/modules/business/gastronomy/services/activity.queries.ts",
   "src/modules/business/gastronomy/services/favorites.queries.ts",
   "src/modules/business/gastronomy/services/review.queries.ts",
+  "src/modules/business/gastronomy/services/menu.queries.ts",
 ]);
 
 const CODE_FILE_RE = /\.(ts|tsx|js|jsx)$/;
