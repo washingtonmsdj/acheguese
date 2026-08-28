@@ -9,16 +9,23 @@ const GASTRONOMY_ROOT = "src/modules/business/gastronomy";
 // Gastronomy runtime integration debt is expected to stay at zero.
 const ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES = new Set<string>();
 
+// Pure legacy -> core compatibility bridges. These files must stay bridge-only.
 const REQUIRED_CORE_BRIDGES = new Map([
-  ["src/modules/business/gastronomy/types/gastronomy/index.ts", "@/core/business/types/gastronomy"],
-  ["src/modules/business/gastronomy/types/menu.ts", "@/core/business/types/gastronomyMenu"],
   ["src/modules/business/gastronomy/services/DeliveryAreaService.ts", "@/core/business/services/GastronomyDeliveryAreaService"],
   ["src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts", "@/core/business/services/gastronomy-runtime.queries"],
   ["src/modules/business/gastronomy/services/GastronomyProfileService.ts", "@/core/business/services/GastronomyProfileService"],
   ["src/modules/business/gastronomy/services/MenuService.ts", "@/core/business/services/MenuService"],
   ["src/modules/business/gastronomy/niches/types.ts", "@/core/business/niches/types"],
-  ["src/modules/business/gastronomy/niches/pizzaria/types.ts", "@/core/business/niches/pizzaria/types"],
   ["src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts", "@/core/business/niches/pizzaria/PizzaAdminService"],
+]);
+
+// These are NOT bridges. They intentionally combine canonical core contracts
+// with module-owned UI/cart/taxonomy contracts and therefore remain legitimate
+// module surfaces during G2.
+const MODULE_LOCAL_CONTRACT_SURFACES = new Map([
+  ["src/modules/business/gastronomy/types/gastronomy/index.ts", "@/core/business/types/gastronomy"],
+  ["src/modules/business/gastronomy/types/menu.ts", "@/core/business/types/gastronomyMenu"],
+  ["src/modules/business/gastronomy/niches/pizzaria/types.ts", "@/core/business/niches/pizzaria/types"],
 ]);
 
 const RETIRED_CORE_BRIDGES = new Set([
@@ -108,6 +115,18 @@ function main(): void {
     }
   }
 
+  for (const [surfaceFile, canonicalImport] of MODULE_LOCAL_CONTRACT_SURFACES) {
+    const absolute = path.join(ROOT, surfaceFile);
+    if (!fs.existsSync(absolute)) {
+      violations.push(`${surfaceFile}: required module-local contract surface is missing.`);
+      continue;
+    }
+    const content = fs.readFileSync(absolute, "utf8");
+    if (!content.includes(canonicalImport)) {
+      violations.push(`${surfaceFile}: module contract surface must reuse canonical contracts from ${canonicalImport}.`);
+    }
+  }
+
   for (const retiredBridge of RETIRED_CORE_BRIDGES) {
     if (fs.existsSync(path.join(ROOT, retiredBridge))) {
       violations.push(`${retiredBridge}: retired compatibility bridge was recreated.`);
@@ -120,7 +139,7 @@ function main(): void {
     process.exit(1);
   }
 
-  console.log(`Gastronomy module boundary valid: ${actualDirectRuntimeIntegrationFiles.size} runtime integration files; required bridges enforced; retired bridges absent; type-only integration imports are not counted as runtime debt.`);
+  console.log(`Gastronomy module boundary valid: ${actualDirectRuntimeIntegrationFiles.size} runtime integration files; ${REQUIRED_CORE_BRIDGES.size} pure bridges enforced; ${MODULE_LOCAL_CONTRACT_SURFACES.size} module contract surfaces preserved; retired bridges absent; type-only integration imports are not counted as runtime debt.`);
 }
 
 main();
