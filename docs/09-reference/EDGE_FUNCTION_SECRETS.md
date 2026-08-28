@@ -96,8 +96,8 @@ Before launch, run:
 
 ```powershell
 npm run security:validate
-node scripts/verify-deploy-ready.mjs
+npm run verify:deploy
 ```
 
-`scripts/verify-deploy-ready.mjs` intentionally fails when required runtime
-variables are missing or still contain placeholders.
+`verify:deploy` intentionally fails when required runtime variables are missing
+or still contain placeholders.
