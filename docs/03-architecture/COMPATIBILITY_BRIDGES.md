@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `57f6af8832e79c3674fa338aa46177b174dd918b`  
+Baseline reviewed: `4ac92857487cea8c860f63caf6fa7302f35ba765`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -68,17 +68,11 @@ All persistence/domain ownership below is canonical in `src/core/business`. The 
 | --- | --- |
 | `src/modules/business/gastronomy/types/gastronomy/index.ts` | `src/core/business/types/gastronomy` |
 | `src/modules/business/gastronomy/types/menu.ts` | `src/core/business/types/gastronomyMenu` |
-| `src/modules/business/gastronomy/services/menu.queries.ts` | `src/core/business/services/menu.queries` |
-| `src/modules/business/gastronomy/services/review.queries.ts` | `src/core/business/services/gastronomy.review.queries` |
-| `src/modules/business/gastronomy/services/favorites.queries.ts` | `src/core/business/services/gastronomy.favorites.queries` |
 | `src/modules/business/gastronomy/services/DeliveryAreaService.ts` | `src/core/business/services/GastronomyDeliveryAreaService` |
 | `src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts` | `src/core/business/services/gastronomy-runtime.queries` |
-| `src/modules/business/gastronomy/services/activity.queries.ts` | `src/core/business/services/gastronomy.activity.queries` |
 | `src/modules/business/gastronomy/services/GastronomyProfileService.ts` | `src/core/business/services/GastronomyProfileService` |
 | `src/modules/business/gastronomy/services/MenuService.ts` | `src/core/business/services/MenuService` |
 | `src/modules/business/gastronomy/niches/types.ts` | `src/core/business/niches/types` |
-| `src/modules/business/gastronomy/niches/versioning/types.ts` | `src/core/business/niches/versioning/types` |
-| `src/modules/business/gastronomy/niches/versioning/NicheVersioningService.ts` | `src/core/business/niches/versioning/NicheVersioningService` |
 | `src/modules/business/gastronomy/niches/pizzaria/types.ts` | `src/core/business/niches/pizzaria/types` |
 | `src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts` | `src/core/business/niches/pizzaria/PizzaAdminService` |
 
@@ -197,6 +191,12 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/validate-architecture-governance.ts` → canonical owner preserves direct execution at `tools/architecture/validate-architecture-governance.ts`; remaining old-path mention is a historical source list in a completed architecture plan.
 - `src/modules/business/gastronomy/services/gastronomy.queries.ts` → module facade/barrel now consume `src/core/business/services/gastronomy.queries.ts` directly; Gastronomy ratchet blocks bridge recreation.
 - `src/modules/business/gastronomy/services/resolveGastronomyBusinessId.ts` → no compatibility caller remained; canonical owner stays at `src/core/business/services/resolveGastronomyBusinessId.ts`; Gastronomy ratchet blocks bridge recreation.
+- `src/modules/business/gastronomy/services/activity.queries.ts` → `useGastronomyActivity.ts` now consumes `src/core/business/services/gastronomy.activity.queries.ts` directly; Gastronomy ratchet blocks bridge recreation.
+- `src/modules/business/gastronomy/services/favorites.queries.ts` → runtime hooks/card and security tests now consume or inspect `src/core/business/services/gastronomy.favorites.queries.ts`; Gastronomy ratchet blocks bridge recreation.
+- `src/modules/business/gastronomy/services/review.queries.ts` → review UI/hooks and review security/SSOT tests now consume or inspect `src/core/business/services/gastronomy.review.queries.ts`; Gastronomy ratchet blocks bridge recreation.
+- `src/modules/business/gastronomy/services/menu.queries.ts` → module facade/barrel, `useMenuItems` and onboarding evidence now consume `src/core/business/services/menu.queries.ts`; Gastronomy ratchet blocks bridge recreation.
+- `src/modules/business/gastronomy/niches/versioning/types.ts` → barrel, admin visibility logic and tests now consume `src/core/business/niches/versioning/types.ts`; Gastronomy ratchet blocks bridge recreation.
+- `src/modules/business/gastronomy/niches/versioning/NicheVersioningService.ts` → barrel, unit/security tests now consume `src/core/business/niches/versioning/NicheVersioningService.ts`; Gastronomy ratchet blocks bridge recreation.
 
 ## G2 closure condition for bridges
 
