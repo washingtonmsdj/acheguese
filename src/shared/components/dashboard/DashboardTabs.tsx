@@ -9,7 +9,6 @@ import {
 import { Eye, BarChart3, CreditCard, Settings, GitBranch, UtensilsCrossed, QrCode } from "lucide-react";
 import { DashboardTab } from "@/shared/types/dashboard";
 import { ReactNode } from "react";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 
 interface DashboardTabsProps {
   activeTab: DashboardTab;
@@ -17,6 +16,8 @@ interface DashboardTabsProps {
   children: ReactNode;
   /** Tabs extras condicionais (ex: gastronomia para empresas elegíveis) */
   extraTabs?: { value: DashboardTab; label: string; icon: React.ElementType }[];
+  /** Tabs ocultadas pelo shell de aplicação conforme launch scope/permissões. */
+  hiddenTabs?: readonly DashboardTab[];
 }
 
 const BASE_TABS: { value: DashboardTab; label: string; icon: React.ElementType }[] = [
@@ -29,12 +30,6 @@ const BASE_TABS: { value: DashboardTab; label: string; icon: React.ElementType }
   { value: "cupons",          label: "Cupons",         icon: CreditCard },
 ];
 
-function isDashboardTabEnabled(tab: DashboardTab): boolean {
-  if (tab === "analytics") return isLaunchSurfaceEnabled("publicAnalytics");
-  if (tab === "cupons") return isLaunchSurfaceEnabled("coupons");
-  return true;
-}
-
 export const GASTRONOMY_TAB = { value: "gastronomia" as DashboardTab, label: "Gastronomia", icon: UtensilsCrossed };
 
 export function DashboardTabs({
@@ -42,8 +37,11 @@ export function DashboardTabs({
   onTabChange,
   children,
   extraTabs = [],
+  hiddenTabs = [],
 }: DashboardTabsProps) {
-  const allTabs = [...BASE_TABS, ...extraTabs].filter((tab) => isDashboardTabEnabled(tab.value));
+  const allTabs = [...BASE_TABS, ...extraTabs].filter(
+    (tab) => !hiddenTabs.includes(tab.value),
+  );
   const visibleActiveTab = allTabs.some((tab) => tab.value === activeTab) ? activeTab : "visao-geral";
   const cols = allTabs.length;
   const colsClass: Record<number, string> = {

@@ -24,7 +24,7 @@ import { QrEntityType } from '@/core/qr/types';
 import { PlanTier, SubscriptionService, useBusinessSubscription } from "@/core/billing";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
-import type { BusinessData } from "@/shared/types/dashboard";
+import type { BusinessData, DashboardTab } from "@/shared/types/dashboard";
 
 // Vertical gastronomia - importado do modulo gastronomy, orquestrado aqui na camada app/shell
 import { isEligibleForVertical } from '@/core/verticals/config';
@@ -78,6 +78,10 @@ export default function DashboardEmpresaPage() {
   const handleBack = () => navigate(appUrls.profile.home);
   const showAnalytics = isLaunchSurfaceEnabled("publicAnalytics");
   const showCoupons = isLaunchSurfaceEnabled("coupons");
+  const hiddenDashboardTabs: DashboardTab[] = [
+    !showAnalytics ? "analytics" : null,
+    !showCoupons ? "cupons" : null,
+  ].filter((tab): tab is DashboardTab => tab !== null);
 
   const businessPublicUrlContext = useMemo(() => {
     if (!business?.slug || !business.geographic_path) return null;
@@ -145,7 +149,12 @@ export default function DashboardEmpresaPage() {
         </div>
       )}
 
-      <DashboardTabs activeTab={activeTab} onTabChange={setActiveTab} extraTabs={extraTabs}>
+      <DashboardTabs
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        extraTabs={extraTabs}
+        hiddenTabs={hiddenDashboardTabs}
+      >
         <TabPanel value="visao-geral">
           <EmpresaDashboardTab businessId={business.id} />
         </TabPanel>
