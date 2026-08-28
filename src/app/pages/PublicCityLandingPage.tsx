@@ -28,8 +28,8 @@ import {
 } from "lucide-react";
 import { useRef } from "react";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
-import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchScope";
-import { LAUNCH_CITY_PATH, LAUNCH_URLS } from "@/config/territory";
+import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/app/config/launchScope";
+import { LAUNCH_CITY_PATH, LAUNCH_URLS } from "@/core/routing/config/territory";
 import {
   HomeDiscoveryService,
   type HomeCommunityActivity,
