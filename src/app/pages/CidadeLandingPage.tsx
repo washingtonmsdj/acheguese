@@ -51,11 +51,11 @@ import bairroPituba from "@/assets/bairro-pituba.jpg";
 import bairroRioVermelho from "@/assets/bairro-riovermelho.jpg";
 import empresasHero from "@/assets/empresas-hero.jpg";
 import neighborhoodFeatured from "@/assets/neighborhood-featured.jpg";
-import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
+import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
 import {
   isLaunchSurfaceEnabled,
   type LaunchSurfaceKey,
-} from "@/config/launchScope";
+} from "@/app/config/launchScope";
 import { BusinessLogo } from "@/shared/components/ui/business-logo";
 import { useTheme } from "@/shared/hooks/useTheme";
 import { getRecordValue } from "@/shared/utils/recordLookup";
