@@ -106,5 +106,5 @@ Profile como fallback.
 
 - `tests/security/entity-private-data-boundary-security.test.ts`;
 - `tests/architecture/entity-private-data-ssot.test.ts`;
-- `scripts/security/entity-private-data-exposure-probe.mjs`;
+- `tools/security/entity-private-data-exposure-probe.mjs`;
 - `docs/audits/ENTITY_PRIVATE_DATA_BOUNDARY_2026-07-18.md`.
