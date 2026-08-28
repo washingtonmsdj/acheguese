@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
+import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
 import {
   REQUIRED_CITY_TERRITORIAL_MODULES,
   TERRITORIAL_ROUTE_PARAMS,
