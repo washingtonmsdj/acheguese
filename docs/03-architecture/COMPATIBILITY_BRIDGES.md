@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `832735eec57b244a41b27e3a13777438a53245ed`  
+Baseline reviewed: `67290a41bd860cda54f113a803218ba8a385bcc7`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -39,7 +39,6 @@ Rules:
 | Legacy path | Canonical owner | Removal gate |
 | --- | --- | --- |
 | `scripts/validate-supabase-advisor-residuals.ts` | `tools/supabase/validate-supabase-advisor-residuals.ts` | package/tests/docs use canonical validator directly; legacy CLI/module compatibility no longer required |
-| `scripts/location/municipal-neighborhood-sources.ts` | `tools/seeds/municipal-neighborhood-sources.ts` | all callers/docs use canonical manifest directly; legacy re-export no longer required |
 | `scripts/validate-project-taxonomy.ts` | `tools/architecture/validate-project-taxonomy.ts` | package/docs/callers use canonical owner directly; legacy CLI/source-inspection compatibility no longer required |
 | `scripts/security/supabase-auth-hibp.mjs` | `tools/security/supabase-auth-hibp.mjs` | package/tests use canonical security tooling directly; legacy CLI/module compatibility no longer required |
 | `scripts/security/edge-function-auth-config.mjs` | `tools/security/edge-function-auth-config.mjs` | security validators/tests import canonical auth config helper directly |
@@ -98,6 +97,7 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/geocode-locations.ts` → moved to `tools/seeds/geocode-locations.ts`; package/security policy/docs updated and old path removed.
 - `scripts/sync-national-districts-ibge.ts` → moved to `tools/seeds/sync-national-districts-ibge.ts`; package/security policy updated and old path removed.
 - `scripts/sync-municipal-neighborhoods.ts` → moved to `tools/seeds/sync-municipal-neighborhoods.ts`; package/security policy/docs updated and old path removed.
+- `scripts/location/municipal-neighborhood-sources.ts` → live Territory domain documentation and canonical sync tooling use `tools/seeds/municipal-neighborhood-sources.ts`; remaining old-path mentions are dated roadmap/audit or migration provenance only, so the compatibility re-export was removed.
 - `scripts/seed-e2e-users.ts` → moved to `tools/seeds/seed-e2e-users.ts`; package/workflow/security guards/policy updated and old path removed.
 - `scripts/seed-e2e-network.ts` → moved to `tools/seeds/seed-e2e-network.ts`; package/security guards/policy updated and old path removed.
 - `scripts/validate-slug-history-final.ts` → moved to `tools/supabase/validate-slug-history-final.ts`; mutation-safety tests/policy updated and old path removed.
