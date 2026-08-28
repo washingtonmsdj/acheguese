@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { GripVertical, Pencil, Trash2, Plus } from 'lucide-react';
-import type { MenuCategory } from '@/modules/business/gastronomy/services/MenuService';
+import type { MenuCategory } from '@/core/business/services/MenuService';
 
 interface CategoryListProps {
   categories: MenuCategory[];
