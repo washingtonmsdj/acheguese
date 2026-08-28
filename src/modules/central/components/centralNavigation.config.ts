@@ -1,6 +1,6 @@
 import type { ElementType } from 'react';
 import { Building2, Car, Home, User, Bike, Calendar, Radio } from 'lucide-react';
-import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from '@/config/launchScope';
+import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from '@/app/config/launchScope';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import { centralRoutes } from '@/modules/central/routes/centralRoutes';
 
