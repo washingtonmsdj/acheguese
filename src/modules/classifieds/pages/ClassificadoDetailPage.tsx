@@ -59,7 +59,7 @@ import { formatBrlNoCents } from "@/shared/utils/currency";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 import { classifiedMessagingService } from "@/core/messaging/services/ClassifiedMessagingService";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import { useVisibleProfileContact } from "@/core/profiles";
 
 interface ClassificadoDetailPageProps {
