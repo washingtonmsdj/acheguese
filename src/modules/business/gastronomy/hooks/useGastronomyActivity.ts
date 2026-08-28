@@ -13,7 +13,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { ActivityQueryService } from '../services/activity.queries';
+import { ActivityQueryService } from '@/core/business/services/gastronomy.activity.queries';
 import type { GastronomyActivityFilters } from '../types/gastronomy';
 
 /**
@@ -73,4 +73,3 @@ export function useBusinessActivity(businessId: string | undefined, limit = 20) 
     staleTime: 1000 * 60 * 5, // 5 minutos
   });
 }
-
