@@ -17,7 +17,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
-import { APP_MODULE_SLUGS } from '@/config/moduleSlugs';
+import { APP_MODULE_SLUGS } from '@/shared/config/moduleSlugs';
 import { PublicIdentityService } from '@/core/public-identity/services/PublicIdentityService';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { createTerritorialGroupRepository } from '@/core/location/repositories/createTerritorialGroupRepository';
