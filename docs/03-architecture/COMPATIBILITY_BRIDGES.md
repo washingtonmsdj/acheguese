@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `273a3afa9264e70eff7d6d6fcb3da1673c894ed8`  
+Baseline reviewed: `3755ac6828db6e8a286188d92a748feb2cb14837`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -41,7 +41,6 @@ Rules:
 | Legacy path | Canonical owner | Removal gate |
 | --- | --- | --- |
 | `scripts/backup-storage.ts` | `tools/maintenance/backup-storage.ts` | docs/policies/callers migrated to canonical path |
-| `scripts/economic-benchmark-ssot.mjs` | `tools/release/economic-benchmark-ssot.mjs` | package/economic benchmark callers use canonical SSOT directly; legacy entrypoint no longer required |
 | `scripts/security/supabase-edge-admin-canary-deploy.mjs` | `tools/release/supabase-edge-admin-canary-deploy.mjs` | tests/deploy callers use canonical release guard directly; legacy entrypoint no longer required |
 | `scripts/verify-deploy-ready.mjs` | `tools/release/verify-deploy-ready.mjs` | package/docs/callers point to canonical deploy gate; legacy entrypoint no longer required |
 | `scripts/validate-supabase-advisor-residuals.ts` | `tools/supabase/validate-supabase-advisor-residuals.ts` | package/tests/docs use canonical validator directly; legacy CLI/module compatibility no longer required |
@@ -63,7 +62,6 @@ Rules:
 | `scripts/security/supabase-postgis-owner-preflight.mjs` | `tools/security/supabase-postgis-owner-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
 | `scripts/validate-architecture-governance.ts` | `tools/architecture/validate-architecture-governance.ts` | npm/docs/callers point to canonical path; legacy CLI/module compatibility no longer required |
 | `scripts/validate-architecture-boundaries-incremental.mjs` | `tools/architecture/validate-architecture-boundaries-incremental.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
-| `scripts/check-ssot-compliance.ts` | `tools/architecture/check-ssot-compliance.ts` | Husky/package/docs point to canonical path; legacy checker entrypoint no longer required |
 | `scripts/validate-community-transversal-boundaries.ts` | `tools/architecture/validate-community-transversal-boundaries.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/lib/supabase-client.ts` | `tools/supabase/supabase-client.ts` | `scripts/media-assets-cp016-backfill.ts` must be moved or retargeted to the canonical client without weakening its existing project/apply confirmation guards |
 
@@ -197,6 +195,8 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/generate-sitemap.ts` → current decision documentation and npm tooling use `tools/release/generate-sitemap.ts`; old bridge removed.
 - `scripts/validate-docs-structure.ts` → current decision documentation uses `tools/architecture/validate-docs-structure.ts`; old bridge removed.
 - `scripts/validate-doc-live-links.ts` → canonical owner remains `tools/architecture/validate-doc-live-links.ts`; the only non-registry legacy reference is in a document explicitly marked substituted/historical.
+- `scripts/check-ssot-compliance.ts` → Husky and current SSOT documentation now call `tools/architecture/check-ssot-compliance.ts`; old bridge removed.
+- `scripts/economic-benchmark-ssot.mjs` → current SSOT documentation and package benchmark commands use `tools/release/economic-benchmark-ssot.mjs`; remaining old-path mentions are historical fingerprints/fixtures only.
 
 ## G2 closure condition for bridges
 
