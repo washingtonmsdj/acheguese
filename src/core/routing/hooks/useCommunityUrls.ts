@@ -1,4 +1,4 @@
-import { LAUNCH_URLS } from "@/config/territory";
+import { LAUNCH_URLS } from "@/core/routing/config/territory";
 import { useActiveTerritory } from "@/core/location/hooks/useActiveTerritory";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { useTerritorialContextOptional } from "@/core/routing/components/TerritorialLayout";
