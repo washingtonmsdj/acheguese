@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { businessFavoriteKeys } from '@/core/favorites/businessFavoriteKeys';
-import { useSessionContext } from '@/core/session';
-import { isValidUUID } from '@/shared/utils/validation';
 import {
   FavoritesQueryService,
   type UpdateFavoritePreferencesInput,
-} from '../services/favorites.queries';
+} from '@/core/business/services/gastronomy.favorites.queries';
+import { businessFavoriteKeys } from '@/core/favorites/businessFavoriteKeys';
+import { useSessionContext } from '@/core/session';
+import { isValidUUID } from '@/shared/utils/validation';
 
 const gastronomyFavoriteKeys = {
   details: (
