@@ -66,6 +66,7 @@ describe("Gastronomy module boundary ratchet", () => {
   it("does not recreate retired Gastronomy read/resolver bridges", () => {
     const retiredBridges = [
       "src/modules/business/gastronomy/services/gastronomy.queries.ts",
+      "src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts",
       "src/modules/business/gastronomy/services/resolveGastronomyBusinessId.ts",
       "src/modules/business/gastronomy/services/activity.queries.ts",
       "src/modules/business/gastronomy/services/favorites.queries.ts",
