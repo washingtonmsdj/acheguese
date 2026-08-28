@@ -13,7 +13,7 @@
 
 import { Badge } from "@/shared/components/ui/badge";
 import { SectionFrame } from "@/modules/profile/components/hub";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
 import type { PlanosSectionProps } from "./types";
 
