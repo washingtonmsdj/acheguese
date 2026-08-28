@@ -1,6 +1,6 @@
 import { Eye, Heart, MessageCircle, Clock } from "lucide-react";
 import { motion } from "framer-motion";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
 interface AdStatsProps {
   views?: number;
