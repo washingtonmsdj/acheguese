@@ -24,6 +24,8 @@ const RETIRED_SOURCE_FILES = [
   "src/App.css",
   "src/global.d.ts",
   "src/config/security.config.ts",
+  "src/app/config/moduleSlugs.ts",
+  "src/app/config/territory.ts",
 ] as const;
 const RETIRED_ROOT_ARTIFACTS = [
   "handoff",
@@ -39,20 +41,20 @@ const RETIRED_E2E_FILES = [
 ] as const;
 
 const CONFIG_BRIDGES = new Map([
-  ["src/config/moduleSlugs.ts", "@/app/config/moduleSlugs"],
+  ["src/config/moduleSlugs.ts", "@/shared/config/moduleSlugs"],
   ["src/config/modules.ts", "@/app/config/modules"],
   ["src/config/launchScope.ts", "@/app/config/launchScope"],
-  ["src/config/territory.ts", "@/app/config/territory"],
+  ["src/config/territory.ts", "@/core/routing/config/territory"],
   ["src/config/communityLaunch.ts", "@/core/community/config/communityLaunch"],
 ] as const);
 
 const CANONICAL_CONFIG_TARGETS = [
   "src/shared/config/security.config.ts",
   "src/shared/config/reactQuery.config.ts",
-  "src/app/config/moduleSlugs.ts",
+  "src/shared/config/moduleSlugs.ts",
   "src/app/config/modules.ts",
   "src/app/config/launchScope.ts",
-  "src/app/config/territory.ts",
+  "src/core/routing/config/territory.ts",
   "src/core/community/config/communityLaunch.ts",
   "src/core/taxonomy/categories.ts",
 ] as const;
