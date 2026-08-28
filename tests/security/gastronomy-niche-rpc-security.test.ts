@@ -13,7 +13,7 @@ function readProjectFile(path: string): string {
 describe("gastronomy niche RPC security", () => {
   it("keeps capability/versioning mutations behind trusted server paths", () => {
     const service = readProjectFile(
-      "src/modules/business/gastronomy/niches/versioning/NicheVersioningService.ts",
+      "src/core/business/niches/versioning/NicheVersioningService.ts",
     );
     const migration = readProjectFile(
       "supabase/migrations/20260707153515_harden_gastronomy_niche_capability_rpcs.sql",
