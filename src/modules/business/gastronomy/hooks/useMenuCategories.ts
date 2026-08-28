@@ -1,11 +1,11 @@
 /**
  * useMenuCategories — Hook para gerenciar categorias do cardápio
  *
- * SSOT: Consome MenuService do modules/business/gastronomy
+ * SSOT: Consome MenuService de core/business.
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MenuService, type MenuCategory } from '@/modules/business/gastronomy/services/MenuService';
+import { MenuService, type MenuCategory } from '@/core/business/services/MenuService';
 import { toast } from 'sonner';
 
 export function useMenuCategories(menuId: string) {
