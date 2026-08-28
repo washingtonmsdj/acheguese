@@ -22,8 +22,8 @@ import { createLocationRepository } from '@/core/location/repositories/createLoc
 import { createTerritorialGroupRepository } from '@/core/location/repositories/createTerritorialGroupRepository';
 import { TerritoryCommunityRouteService } from '@/core/routing/services/TerritoryCommunityRouteService';
 import { resolveCommunityPublicAliasTerritory } from '@/core/routing/services/CommunityPublicAliasTerritoryResolver';
-import { APP_MODULE_SLUGS, isAppModulePath } from '@/config/moduleSlugs';
-import { TERRITORY_CONFIG } from '@/config/territory';
+import { APP_MODULE_SLUGS, isAppModulePath } from '@/shared/config/moduleSlugs';
+import { TERRITORY_CONFIG } from '@/core/routing/config/territory';
 import type { ResolvedTerritory } from '../types/territoryResolution';
 import { isTerritoryPubliclyNavigable } from '../utils/territoryVisibility';
 import { parsePublicTerritoryPath } from '../utils/publicTerritoryPath';
