@@ -28,7 +28,7 @@ import {
   TerritorySectionHeading,
   TerritorySurface,
 } from "@/app/components/territory-vivo";
-import { SALVADOR_COMMUNITY_LAUNCH_CLUSTER } from "@/config/communityLaunch";
+import { SALVADOR_COMMUNITY_LAUNCH_CLUSTER } from "@/core/community/config/communityLaunch";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/config/territory";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import {
