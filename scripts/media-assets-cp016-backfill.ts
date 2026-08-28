@@ -8,7 +8,7 @@ import {
 import {
   createServiceRoleClient,
   getSupabaseConfig,
-} from "./lib/supabase-client";
+} from "../tools/supabase/supabase-client";
 
 const MIGRATION_KEY = "CP-016";
 const MEDIA_BUCKET = "media-assets";
