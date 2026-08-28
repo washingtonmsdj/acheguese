@@ -22,15 +22,10 @@ describe("Gastronomy module boundary ratchet", () => {
 
   it("keeps menu contracts and persistence owned by core", () => {
     const moduleMenuTypes = read("src/modules/business/gastronomy/types/menu.ts");
-    const moduleMenuQueries = read(
-      "src/modules/business/gastronomy/services/menu.queries.ts",
-    );
     const coreMenuTypes = read("src/core/business/types/gastronomyMenu.ts");
     const coreMenuQueries = read("src/core/business/services/menu.queries.ts");
 
     expect(moduleMenuTypes).toContain("@/core/business/types/gastronomyMenu");
-    expect(moduleMenuQueries).toContain("@/core/business/services/menu.queries");
-    expect(moduleMenuQueries).not.toContain("@/integrations/");
     expect(coreMenuTypes).toContain("export interface MenuItem");
     expect(coreMenuQueries).toContain("@/integrations/supabase");
   });
@@ -42,6 +37,7 @@ describe("Gastronomy module boundary ratchet", () => {
       "src/modules/business/gastronomy/services/activity.queries.ts",
       "src/modules/business/gastronomy/services/favorites.queries.ts",
       "src/modules/business/gastronomy/services/review.queries.ts",
+      "src/modules/business/gastronomy/services/menu.queries.ts",
     ];
 
     for (const bridge of retiredBridges) {
