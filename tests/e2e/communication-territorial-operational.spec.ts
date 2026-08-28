@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import type { User } from '@supabase/supabase-js';
-import { login, loginAsUser } from '../../e2e/helpers/auth';
+import { login, loginAsUser } from './helpers/auth';
 import { createOptionalOperationalAdminClient } from '../helpers/operational-env';
 import {
   expectPausedLaunchSurface,
