@@ -12,7 +12,6 @@ const ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES = new Set<string>();
 // Pure legacy -> core compatibility bridges. These files must stay bridge-only.
 const REQUIRED_CORE_BRIDGES = new Map([
   ["src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts", "@/core/business/services/gastronomy-runtime.queries"],
-  ["src/modules/business/gastronomy/services/GastronomyProfileService.ts", "@/core/business/services/GastronomyProfileService"],
   ["src/modules/business/gastronomy/services/MenuService.ts", "@/core/business/services/MenuService"],
   ["src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts", "@/core/business/niches/pizzaria/PizzaAdminService"],
 ]);
@@ -44,6 +43,7 @@ const RETIRED_CORE_BRIDGES = new Set([
   "src/modules/business/gastronomy/services/review.queries.ts",
   "src/modules/business/gastronomy/services/menu.queries.ts",
   "src/modules/business/gastronomy/services/DeliveryAreaService.ts",
+  "src/modules/business/gastronomy/services/GastronomyProfileService.ts",
   "src/modules/business/gastronomy/niches/types.ts",
   "src/modules/business/gastronomy/niches/versioning/types.ts",
   "src/modules/business/gastronomy/niches/versioning/NicheVersioningService.ts",
