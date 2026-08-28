@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { validatePollRpcAdvisorMappings } from "../../scripts/security/validate-poll-rpc-advisor-mappings.mjs";
+import { validatePollRpcAdvisorMappings } from "../../tools/security/validate-poll-rpc-advisor-mappings.mjs";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const mappingPath = join(
