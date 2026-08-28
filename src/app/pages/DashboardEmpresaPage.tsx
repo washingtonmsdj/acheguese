@@ -31,7 +31,7 @@ import { isEligibleForVertical } from '@/core/verticals/config';
 import { useGastronomyStatus } from "@/core/verticals/gastronomy/hooks/useGastronomyStatus";
 import { GastronomyVerticalCTA } from "@/core/verticals/gastronomy/components/GastronomyVerticalCTA";
 import GastronomySetupPage from "@/modules/business/gastronomy/pages/GastronomySetupPage";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
 const AnalyticsDashboard = React.lazy(() => import("@/core/business/components/AnalyticsDashboard"));
 const CouponManager = React.lazy(() => import("@/core/business/components/CouponManager"));
