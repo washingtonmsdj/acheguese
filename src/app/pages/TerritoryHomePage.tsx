@@ -30,7 +30,7 @@ import {
 import {
   isSalvadorCommunityLaunchTerritory,
   SALVADOR_COMMUNITY_LAUNCH_CLUSTER,
-} from "@/config/communityLaunch";
+} from "@/core/community/config/communityLaunch";
 import { isLaunchSurfaceEnabled } from "@/config/launchScope";
 import { TERRITORY_CONFIG } from "@/config/territory";
 import { useCommunityAccess } from "@/core/community-experience/access";
