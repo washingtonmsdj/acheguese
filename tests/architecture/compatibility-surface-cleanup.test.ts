@@ -37,6 +37,16 @@ describe('compatibility surface cleanup', () => {
     ).toBe(false);
   });
 
+  it('keeps tourist-point routing on the canonical guide core owner', () => {
+    const appRoutes = read('src/app/routes/sections/AppLayoutRoutes.tsx');
+
+    expect(exists('src/core/verticals/guide')).toBe(false);
+    expect(appRoutes).toContain(
+      '@/core/guide/tourist-points/routes/touristPointPublicRoutes',
+    );
+    expect(appRoutes).not.toContain('@/core/verticals/guide/');
+  });
+
   it('removes deprecated APIs and unconsumed duplicate types', () => {
     const paymentMethods = read('src/core/business/constants/paymentMethods.ts');
     const residentAddress = read(
