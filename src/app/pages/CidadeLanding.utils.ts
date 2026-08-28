@@ -1,4 +1,4 @@
-import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
+import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import {
   formatRelativeTime as formatLandingRelativeTime,
