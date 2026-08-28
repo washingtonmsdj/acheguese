@@ -1,7 +1,7 @@
 # SSOT Registry — Single Source of Truth
 
 > Mapa completo de todos os SSOTs do projeto.
-> Última atualização: 2026-07-28
+> Última atualização: 2026-08-27
 > Status documental: CANONICO. Este registry permanece como mapa tecnico de SSOTs; o boundary publico do Feed esta congelado em `docs/feed/FEED-FREEZE.md`.
 
 ---
@@ -15,7 +15,7 @@ Violações são detectadas automaticamente por:
 ```bash
 npm run check:ssot
 # ou
-npx tsx scripts/check-ssot-compliance.ts
+npx tsx tools/architecture/check-ssot-compliance.ts
 ```
 
 ---
@@ -365,7 +365,7 @@ SSOTs da camada `src/modules/` — features verticais.
 
 | | |
 |---|---|
-| **Arquivo** | `scripts/economic-benchmark-ssot.mjs` |
+| **Arquivo** | `tools/release/economic-benchmark-ssot.mjs` |
 | **Responsabilidade** | Orquestracao canônica do benchmark operacional de circulacao economica (before/after/compare/report/finalize) |
 | **Escopo** | Feed economico, oportunidades e vagas estruturadas |
 | **Artefatos** | `.tmp/bench/economic-circulation-*.txt` + `.md` |
@@ -432,7 +432,7 @@ interface MinhaVaga { titulo: string; ... } // ❌ usar Vaga de vagas.types.ts
 
 1. Criar `src/core/{dominio}/types/index.ts` ou `src/modules/{feature}/types/{feature}.types.ts`
 2. Documentar com cabeçalho identificando como SSOT
-3. Adicionar tabela protegida em `scripts/check-ssot-compliance.ts`
+3. Adicionar tabela protegida em `tools/architecture/check-ssot-compliance.ts`
 4. Registrar neste documento
 
 ---
