@@ -9,8 +9,8 @@
 
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
-import { APP_MODULE_SLUGS } from '@/config/moduleSlugs';
-import { TERRITORY_CONFIG } from '@/config/territory';
+import { APP_MODULE_SLUGS } from '@/shared/config/moduleSlugs';
+import { TERRITORY_CONFIG } from '@/core/routing/config/territory';
 import {
   buildModuleTerritoryEntityUrl,
   buildModuleTerritoryUrlFromSegments,
