@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
+import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
 import { TERRITORIAL_ROUTE_STATIC_SEGMENTS } from "@/core/routing/config/territorialRoutePatterns";
 import { parsePublicTerritoryPath } from "../publicTerritoryPath";
 
