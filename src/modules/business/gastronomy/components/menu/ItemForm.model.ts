@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { MenuCategory, MenuItem } from '@/modules/business/gastronomy/services/MenuService';
+import type { MenuCategory, MenuItem } from '@/core/business/services/MenuService';
 import { isMediaAssetReference } from '@/core/media';
 
 export const NO_CATEGORY_VALUE = '__none__';
