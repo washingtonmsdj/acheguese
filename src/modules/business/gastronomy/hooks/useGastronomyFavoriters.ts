@@ -6,8 +6,8 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { FavoritesQueryService } from '@/core/business/services/gastronomy.favorites.queries';
 import { isValidUUID } from '@/shared/utils/validation';
-import { FavoritesQueryService } from '@/modules/business/gastronomy/services/favorites.queries';
 
 async function fetchFavoritersCount(businessDataId: string): Promise<number> {
   return FavoritesQueryService.getBusinessFavoritesCount(businessDataId);
