@@ -1,6 +1,6 @@
 import { BarChart3, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
 interface Props {
   businessId: string;
