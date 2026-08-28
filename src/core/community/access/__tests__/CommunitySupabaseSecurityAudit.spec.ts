@@ -125,7 +125,9 @@ describe("community supabase security audit", () => {
     const repository = readProjectFile(
       "src/core/community-experience/repositories/CommunityMembershipRepository.ts",
     );
-    const taxonomy = readProjectFile("scripts/validate-project-taxonomy.ts");
+    const taxonomy = readProjectFile(
+      "tools/architecture/validate-project-taxonomy.ts",
+    );
 
     expect(memberships).toContain(
       "CREATE TABLE IF NOT EXISTS public.community_memberships",
@@ -183,7 +185,9 @@ describe("community supabase security audit", () => {
     const service = readProjectFile(
       "src/core/community-experience/services/CommunityEntityLinkService.ts",
     );
-    const taxonomy = readProjectFile("scripts/validate-project-taxonomy.ts");
+    const taxonomy = readProjectFile(
+      "tools/architecture/validate-project-taxonomy.ts",
+    );
     const architecture = readProjectFile(
       "docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
     );
@@ -288,30 +292,26 @@ describe("community supabase security audit", () => {
     expect(communityPage).toContain("communityId={linkedCommunityId}");
   });
 
-  it("keeps event reads and mutations centralized in core/verticals/events before broad reactivation", () => {
+  it("keeps event reads and mutations centralized in core/community-events", () => {
     const eventReadService = readProjectFile(
-      "src/core/verticals/events/services/EventReadService.ts",
+      "src/core/community-events/services/EventReadService.ts",
     );
     const eventMutationService = readProjectFile(
-      "src/core/verticals/events/services/EventMutationService.ts",
+      "src/core/community-events/services/EventMutationService.ts",
     );
     const eventRpc = readProjectFile("supabase/functions/event-rpc/index.ts");
     const eventRpcMigration = readProjectFile(
       "supabase/migrations/20260709005208_atomic_event_participation_rpcs.sql",
     );
     const eventRuntimeService = readProjectFile(
-      "src/core/verticals/events/services/EventRuntimeService.ts",
-    );
-    const communityEventsRuntimeCompat = readProjectFile(
-      "src/core/community/services/CommunityEventsRuntimeService.ts",
+      "src/core/community-events/services/EventRuntimeService.ts",
     );
     const eventAdapter = readProjectFile(
-      "src/features/events/utils/eventAdapters.ts",
+      "src/modules/community-events/utils/eventAdapters.ts",
     );
-    const architecture = readProjectFile(
-      "docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
+    const moduleReadme = readProjectFile(
+      "src/modules/community-events/README.md",
     );
-    const plan = readProjectFile("plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md");
 
     expect(eventReadService).toContain(
       '.from<EventRowWithLegacyCity>("events")',
@@ -353,21 +353,13 @@ describe("community supabase security audit", () => {
     );
     expect(eventRuntimeService).toContain("eventMutationService.joinEvent");
     expect(eventRuntimeService).not.toContain('.from("event_participants")');
-    expect(communityEventsRuntimeCompat).toContain(
-      "@/core/verticals/events/services/EventRuntimeService",
-    );
-    expect(communityEventsRuntimeCompat).not.toContain(
-      '.from("event_participants")',
-    );
-    expect(eventAdapter).toContain('from "@/core/verticals/events"');
-    expect(architecture).toContain("src/core/verticals/events");
-    expect(architecture).toContain("EventRuntimeService");
-    expect(architecture).toContain("EventMutationService");
-    expect(plan).toContain(
-      "criar/confirmar `core/verticals/events` para leitura publica",
-    );
-    expect(plan).toContain("EventRuntimeService");
-    expect(plan).toContain("EventMutationService");
+    expect(eventAdapter).toContain('from "@/core/community-events"');
+    expect(moduleReadme).toContain("src/core/community-events");
+    expect(moduleReadme).toContain("src/features/events");
+    expect(moduleReadme).toContain("src/core/verticals/events");
+    expect(moduleReadme).toContain("foram removidos e não devem voltar");
+    expect(moduleReadme).toContain("EventRuntimeService");
+    expect(moduleReadme).toContain("EventMutationService");
   });
 
   it("requires verified residence for community alert and issue creation RPCs", () => {
