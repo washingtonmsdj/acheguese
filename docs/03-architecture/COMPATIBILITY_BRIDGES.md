@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 closure review  
-Baseline reviewed: `9bdf680c9321726e307f55def5487d6f1c79dee3`  
+Baseline reviewed: `22a94afe20f22ca0cb7bcf1758a10b402aa46aaa`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -25,7 +25,6 @@ The detailed historical retirement ledger that previously lived in this file rem
 
 | Legacy path | Canonical owner | Why it still exists | Removal gate |
 | --- | --- | --- | --- |
-| `src/config/launchScope.ts` | `src/app/config/launchScope.ts` | current callers still import the global compatibility path | migrate all current callers to the app owner |
 | `src/config/territory.ts` | `src/core/routing/config/territory.ts` | current callers still import `@/config/territory` | migrate all current callers directly to `core/routing` |
 
 ## Global E2E compatibility state
@@ -68,6 +67,7 @@ No legacy Guide routing compatibility bridge remains active. Public tourist-poin
 
 ## Recent retirements relevant to G2 closure
 
+- `src/config/launchScope.ts` → retired after all runtime and test callers migrated to `src/app/config/launchScope.ts`; bridge absence and legacy-import absence are ratcheted by `tests/architecture/repository-reorganization-contract.test.ts`, and the community security audit now reads the canonical owner directly.
 - `src/config/modules.ts` → retired after its final source caller (`src/core/location/components/TerritoryModeSelector.tsx`) migrated to `src/app/config/modules.ts`; bridge absence and legacy-import absence are ratcheted by `tests/architecture/repository-reorganization-contract.test.ts`.
 - `src/config/moduleSlugs.ts` → retired after all source callers migrated to `src/shared/config/moduleSlugs.ts`; bridge absence and legacy-import absence are ratcheted by `tests/architecture/repository-reorganization-contract.test.ts`.
 - `src/config/communityLaunch.ts` → retired after the final runtime caller (`src/core/community/pages/ComunidadePage.tsx`) migrated to `src/core/community/config/communityLaunch.ts`; bridge absence and legacy-import absence are ratcheted by `tests/architecture/community-launch-config-import-ratchet.test.ts` and `tests/architecture/repository-reorganization-contract.test.ts`.
