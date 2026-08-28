@@ -1,12 +1,12 @@
 /**
  * useMenuItems — Hook para gerenciar itens do cardápio
  *
- * SSOT: Consome MenuService do modules/business/gastronomy
+ * SSOT: Consome MenuService de core/business.
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getMenuItem } from '@/core/business/services/menu.queries';
-import { MenuService, type MenuItem } from '@/modules/business/gastronomy/services/MenuService';
+import { MenuService, type MenuItem } from '@/core/business/services/MenuService';
 import { toast } from 'sonner';
 
 export function useMenuItems(menuId: string, categoryId?: string) {
