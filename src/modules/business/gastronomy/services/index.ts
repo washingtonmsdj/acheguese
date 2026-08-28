@@ -8,7 +8,7 @@ export { GastronomyFacade, type GastronomyFacadeContract } from './GastronomySer
 // Canonical services
 export { MenuService } from './MenuService';
 export { MenuService as menuService } from './MenuService';
-export { GastronomyProfileService } from './GastronomyProfileService';
+export { GastronomyProfileService } from '@/core/business/services/GastronomyProfileService';
 export { GastronomyUrlService } from './GastronomyUrlService';
 export { OrderTrustService } from './OrderTrustService';
 
