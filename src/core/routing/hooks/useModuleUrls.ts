@@ -1,5 +1,5 @@
 import { useLocation, useParams } from 'react-router-dom';
-import { LAUNCH_URLS } from '@/config/territory';
+import { LAUNCH_URLS } from '@/core/routing/config/territory';
 import { isReservedSlug } from '@/core/routing/reservedSlugs';
 import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
 import {
