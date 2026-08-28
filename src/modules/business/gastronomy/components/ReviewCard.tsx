@@ -5,7 +5,8 @@
 import { useState } from 'react';
 import { BadgeCheck, Flag, Star, ThumbsDown, ThumbsUp, MoreVertical } from 'lucide-react';
 
-import { formatRelativeTime } from '@/shared/utils/textUtils';
+import type { Review } from '@/core/business/services/gastronomy.review.queries';
+import { resolveMediaAssetSource } from '@/core/media';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -16,8 +17,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
 import { Separator } from '@/shared/components/ui/separator';
-import { resolveMediaAssetSource } from '@/core/media';
-import type { Review } from '../services/review.queries';
+import { formatRelativeTime } from '@/shared/utils/textUtils';
 
 interface ReviewCardProps {
   review: Review;
