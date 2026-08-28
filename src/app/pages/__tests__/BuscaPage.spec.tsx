@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => ({
   updateFilters: vi.fn(),
 }));
 
-vi.mock("@/config/launchScope", () => ({
+vi.mock("@/app/config/launchScope", () => ({
   isLaunchSurfaceEnabled: mocks.isLaunchSurfaceEnabled,
 }));
 
