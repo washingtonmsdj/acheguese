@@ -5,8 +5,8 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getMenuItem } from '@/core/business/services/menu.queries';
 import { MenuService, type MenuItem } from '@/modules/business/gastronomy/services/MenuService';
-import { getMenuItem } from '@/modules/business/gastronomy/services/menu.queries';
 import { toast } from 'sonner';
 
 export function useMenuItems(menuId: string, categoryId?: string) {
@@ -144,5 +144,3 @@ export function useMenuItem(itemId: string | undefined) {
     error,
   };
 }
-
-
