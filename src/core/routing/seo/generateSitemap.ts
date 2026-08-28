@@ -5,7 +5,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from '@/config/launchScope';
+import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from '@/app/config/launchScope';
 import type { Location, TerritorialGroupWithMembers } from '@/core/location/types';
 import {
   MODULE_SLUGS,
