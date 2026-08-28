@@ -49,17 +49,6 @@
       ]
     },
     {
-      "prefix": "scripts/security/",
-      "kind": "security-tooling-compatibility",
-      "risk": "High",
-      "label": "Temporary compatibility bridges for security tooling may reference service_role names during G2.",
-      "authority": "docs/03-architecture/COMPATIBILITY_BRIDGES.md",
-      "allowedPatternIds": [
-        "service-role-env-access",
-        "service-role-key-literal"
-      ]
-    },
-    {
       "prefix": "docs/09-reference/governance/security/",
       "kind": "security-documentation",
       "risk": "Low",
