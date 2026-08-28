@@ -18,7 +18,7 @@ describe("business reviews rpc broker security", () => {
       "src/core/business/services/BusinessReviewService.ts",
     );
     const reviewQueries = readProjectFile(
-      "src/modules/business/gastronomy/services/review.queries.ts",
+      "src/core/business/services/gastronomy.review.queries.ts",
     );
 
     expect(config).toContain("[functions.business-reviews-rpc]");
