@@ -1,216 +1,100 @@
 # Compatibility Bridges Registry
 
-Status: CANONICAL — G2 in progress  
-Baseline reviewed: `b7dd01247e1c14578a1a2d01a34192fcd552a2fd`  
+Status: CANONICAL — G2 closure review  
+Baseline reviewed: `a56322e383d17cafa8d9c56e2696b9a5301d2b49`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
 
-This registry makes temporary compatibility paths explicit during G2 physical reorganization.
+This file is the current live compatibility-debt ledger for G2. It lists only compatibility paths that still exist on `main` and therefore still require an explicit removal gate.
 
-Rules:
+The detailed historical retirement ledger that previously lived in this file remains preserved in Git history, including blob `5c1132f07786fc1fb1661eb7b872d49e779db819`. Retired paths must not be reintroduced merely because they are no longer repeated here.
+
+## Rules
 
 1. Every bridge is legacy → canonical owner only.
 2. A canonical owner must never import a legacy bridge.
-3. No bridge may contain independent business/persistence logic.
-4. Removing a bridge requires proving its legacy path has no remaining callers/references that require compatibility.
-5. A removed bridge must also be removed from this registry.
-6. A new bridge must be added here in the same cut that introduces it; bridges are debt, not a permanent architecture surface.
-7. `tools/**` must not depend on `scripts/**`.
+3. No bridge may contain independent business, persistence, security-policy, or release logic.
+4. A bridge may remain during G2 only when a current caller still requires the legacy path.
+5. Removing the final live caller requires removing the bridge from this registry in the same structural cut.
+6. `tools/**` must not depend on `scripts/**`.
+7. Historical module/service bridges already retired are protected by their architecture ratchets and must not be recreated.
 
 ## Global source/config bridges
 
-| Legacy path | Canonical owner | Removal gate |
-| --- | --- | --- |
-| `src/config/communityLaunch.ts` | `src/core/community/config/communityLaunch.ts` | all callers import canonical owner directly |
-| `src/config/launchScope.ts` | `src/app/config/launchScope.ts` | all callers import canonical owner directly |
-| `src/config/moduleSlugs.ts` | `src/shared/config/moduleSlugs.ts` | all callers import canonical owner directly |
-| `src/config/modules.ts` | `src/app/config/modules.ts` | all callers import canonical owner directly |
-| `src/config/territory.ts` | `src/core/routing/config/territory.ts` | all callers import canonical owner directly |
+| Legacy path | Canonical owner | Why it still exists | Removal gate |
+| --- | --- | --- | --- |
+| `src/config/communityLaunch.ts` | `src/core/community/config/communityLaunch.ts` | current callers still import the global compatibility path | migrate all current callers to the core owner |
+| `src/config/launchScope.ts` | `src/app/config/launchScope.ts` | current callers still import the global compatibility path | migrate all current callers to the app owner |
+| `src/config/moduleSlugs.ts` | `src/shared/config/moduleSlugs.ts` | current callers still import the global compatibility path | migrate all current callers to the shared owner |
+| `src/config/modules.ts` | `src/app/config/modules.ts` | current callers still import the global compatibility path | migrate all current callers to the app owner |
+| `src/config/territory.ts` | `src/core/routing/config/territory.ts` | current callers still import `@/config/territory` | migrate all current callers directly to `core/routing` |
 
 ## Global test compatibility
 
-| Legacy path | Canonical owner | Removal gate |
-| --- | --- | --- |
-| `e2e/helpers/auth.ts` | `tests/e2e/helpers/auth.ts` | all E2E specs use `tests/e2e/helpers/auth.ts` directly |
+| Legacy path | Canonical owner | Why it still exists | Removal gate |
+| --- | --- | --- | --- |
+| `e2e/helpers/auth.ts` | `tests/e2e/helpers/auth.ts` | current E2E specs still use the legacy helper location | migrate all E2E specs to `tests/e2e/helpers/auth.ts` |
 
-## Tooling bridges — scripts → tools
+## Tooling bridges — `scripts/` → canonical `tools/`
 
-| Legacy path | Canonical owner | Removal gate |
-| --- | --- | --- |
-| `scripts/validate-supabase-advisor-residuals.ts` | `tools/supabase/validate-supabase-advisor-residuals.ts` | package/tests/docs use canonical validator directly; legacy CLI/module compatibility no longer required |
-| `scripts/validate-project-taxonomy.ts` | `tools/architecture/validate-project-taxonomy.ts` | package/docs/callers use canonical owner directly; legacy CLI/source-inspection compatibility no longer required |
-| `scripts/security/supabase-auth-hibp.mjs` | `tools/security/supabase-auth-hibp.mjs` | package/tests use canonical security tooling directly; legacy CLI/module compatibility no longer required |
-| `scripts/security/edge-function-auth-config.mjs` | `tools/security/edge-function-auth-config.mjs` | security validators/tests import canonical auth config helper directly |
-| `scripts/security/edge-function-auth-policy.mjs` | `tools/security/edge-function-auth-policy.mjs` | security validators/tests import canonical auth policy helper directly |
-| `scripts/security/edge-function-broker-boundary.mjs` | `tools/security/edge-function-broker-boundary.mjs` | security validators/tests import canonical boundary helper directly |
-| `scripts/security/service-role-boundary.mjs` | `tools/security/service-role-boundary.mjs` | security validators/tests import canonical boundary helper directly |
-| `scripts/security/supabase-access-boundary.mjs` | `tools/security/supabase-access-boundary.mjs` | security validators/tests import canonical boundary helper directly |
-| `scripts/security/supabase-postgis-owner-preflight.mjs` | `tools/security/supabase-postgis-owner-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
+There is no implementation ownership left in `scripts/`. The paths below are compatibility entrypoints/modules only.
 
-## Gastronomy module-local bridges
+| Legacy path | Canonical owner | Why it still exists | Removal gate |
+| --- | --- | --- | --- |
+| `scripts/validate-supabase-advisor-residuals.ts` | `tools/supabase/validate-supabase-advisor-residuals.ts` | `tests/security/security-authority-migrations.test.ts` still imports the legacy module path | migrate that test import to the canonical owner |
+| `scripts/validate-supabase-migrations.ts` | `tools/migrations/validate-supabase-migrations.ts` | `package.json` still exposes `validate:migrations` through the legacy CLI path and the security-authority test imports it | migrate package command + test import to the canonical owner |
+| `scripts/security/edge-function-auth-config.mjs` | `tools/security/edge-function-auth-config.mjs` | security-authority regression test imports the legacy module path | migrate the regression test to the canonical owner |
+| `scripts/security/edge-function-auth-policy.mjs` | `tools/security/edge-function-auth-policy.mjs` | security-authority regression test imports the legacy module path | migrate the regression test to the canonical owner |
+| `scripts/security/edge-function-broker-boundary.mjs` | `tools/security/edge-function-broker-boundary.mjs` | security-authority regression test imports the legacy module path | migrate the regression test to the canonical owner |
+| `scripts/security/service-role-boundary.mjs` | `tools/security/service-role-boundary.mjs` | security-authority regression test imports the legacy module path | migrate the regression test to the canonical owner |
+| `scripts/security/supabase-access-boundary.mjs` | `tools/security/supabase-access-boundary.mjs` | security-authority regression test imports the legacy module path | migrate the regression test to the canonical owner |
+| `scripts/security/supabase-auth-hibp.mjs` | `tools/security/supabase-auth-hibp.mjs` | security-authority regression test imports the legacy module and compatibility CLI behavior is preserved | migrate the regression test/module caller to the canonical owner |
+| `scripts/security/supabase-postgis-owner-preflight.mjs` | `tools/security/supabase-postgis-owner-preflight.mjs` | security-authority regression test imports the legacy module and compatibility CLI behavior is preserved | migrate the regression test/module caller to the canonical owner |
 
-Persistence/domain ownership for these pure compatibility paths is canonical in `src/core/business`. These are the only Gastronomy paths still enforced as bridges by `validate-gastronomy-module-boundaries.ts`.
+## Module bridge state
 
-| Legacy path | Canonical owner |
-| --- | --- |
-| `src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts` | `src/core/business/services/gastronomy-runtime.queries` |
-| `src/modules/business/gastronomy/services/MenuService.ts` | `src/core/business/services/MenuService` |
-| `src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts` | `src/core/business/niches/pizzaria/PizzaAdminService` |
+### Business
 
-Removal gate for every Gastronomy bridge: zero legacy-path callers plus Gastronomy/Business boundary and regression tests passing on the same SHA.
+No Business public service/type compatibility bridge remains active. Canonical public snapshot ownership is in `src/core/business` and the Business boundary ratchet protects against recreation.
 
-### Gastronomy module-local contract surfaces
+### Education
 
-These files are not compatibility bridges. They intentionally reuse canonical core contracts while retaining module-owned taxonomy, cart/checkout, or pizza build/snapshot contracts.
+No Education persistence/service compatibility bridge remains active. Canonical ownership is in `src/core/education` and the Education boundary ratchet protects against recreation.
+
+### Gastronomy
+
+No Gastronomy persistence/service compatibility bridge remains active. Canonical ownership is in `src/core/business`; `validate-gastronomy-module-boundaries.ts` and its ratchet treat the historical paths as retired and forbid recreation.
+
+The following module-local contract surfaces are intentional module contracts, not bridges:
 
 | Module path | Canonical contracts reused | Module-owned responsibility |
 | --- | --- | --- |
-| `src/modules/business/gastronomy/types/gastronomy/index.ts` | `src/core/business/types/gastronomy` | `CuisineType` product taxonomy surface |
-| `src/modules/business/gastronomy/types/menu.ts` | `src/core/business/types/gastronomyMenu` | cart and checkout state contracts |
-| `src/modules/business/gastronomy/niches/pizzaria/types.ts` | `src/core/business/niches/pizzaria/types` | pizza build, snapshot, validation and pricing composition contracts |
+| `src/modules/business/gastronomy/types/gastronomy/index.ts` | `src/core/business/types/gastronomy` | product cuisine taxonomy |
+| `src/modules/business/gastronomy/types/menu.ts` | `src/core/business/types/gastronomyMenu` | cart/checkout state contracts |
+| `src/modules/business/gastronomy/niches/pizzaria/types.ts` | `src/core/business/niches/pizzaria/types` | pizza build/snapshot composition contracts |
 
-## Already retired during this G2 execution
+### Community Events
 
-These paths were not kept as bridges because no compatibility caller required them at the cut:
+No module-local Event service compatibility bridge remains active. UI/application ownership is `src/modules/community-events`; reusable contracts and services are canonical in `src/core/community-events`. Historical `src/features/events`, `src/core/verticals/events`, and the old Community runtime facade are retired and must not be recreated.
 
-- `scripts/community-staging-load-test.spec.ts` → moved to `tests/scripts/community-staging-load-test.spec.ts` and old path removed.
-- `scripts/backup-config.ts` → moved to `tools/maintenance/backup-config.ts` and old path removed.
-- `scripts/backup-storage.ts` → canonical maintenance owner is `tools/maintenance/backup-storage.ts`; the remaining legacy-path occurrence is a negative security fixture, not a runtime caller.
-- `scripts/verify-deploy-ready.mjs` → package, live security docs and architecture test use `tools/release/verify-deploy-ready.mjs` / `npm run verify:deploy`; historical source-list mentions do not keep a runtime bridge alive.
-- `scripts/validate-supabase-remote-migration-drift.ts` → npm `validate:migrations:remote` and the live Security Authority use `tools/supabase/validate-supabase-remote-migration-drift.ts`; zero `src/**`/`tests/**` callers remained and the old bridge was removed.
-- `scripts/lib/supabase-client.ts` → CP-016 imports `tools/supabase/supabase-client.ts` directly, the live Supabase Security Model and service-role policy point to `tools/supabase/**`, and the remaining test occurrence is a synthetic negative fixture; old typed bridge removed.
-- `scripts/validate-architecture-boundaries-incremental.mjs` → npm `validate:architecture:incremental` and the canonical documentation index point to `tools/architecture/validate-architecture-boundaries-incremental.mjs`; zero `src/**`/`tests/**` callers remained, while substituted plans/census keep only historical references; old bridge removed.
-- `scripts/security/validate-security.mjs` → npm `security:validate` and the live Security Authority use `tools/security/validate-security.mjs`; zero `src/**`, `tests/**` or `.github/**` callers remained, and the implementation plan is explicitly historical rather than operational; old bridge removed.
-- `scripts/security/supabase-edge-admin-canary-deploy.mjs` → security test and Vercel production build now inspect/syntax-check `tools/release/supabase-edge-admin-canary-deploy.mjs` directly; old bridge removed.
-- `scripts/security/community-feed-anon-probe.mjs` → the authorization enforcement map and npm command use `tools/security/community-feed-anon-probe.mjs`; zero `src/**`/`tests/**` callers remained and the old bridge was removed.
-- `scripts/security/reviews-core-authz-probe.mjs` → review authorization evidence and npm command use `tools/security/reviews-core-authz-probe.mjs`; zero `src/**`/`tests/**` callers remained and the old bridge was removed.
-- `scripts/security/community-direct-messaging-authz-probe.mjs` → community direct messaging authorization evidence and npm command use `tools/security/community-direct-messaging-authz-probe.mjs`; zero `src/**`/`tests/**` callers remained and the old bridge was removed.
-- `scripts/security/moderation-audit-authz-probe.mjs` → moderation authorization evidence and npm command use `tools/security/moderation-audit-authz-probe.mjs`; zero `src/**`/`tests/**` callers remained and the old bridge was removed.
-- `scripts/security/supabase-edge-secrets-preflight.mjs` → moved to `tools/security/supabase-edge-secrets-preflight.mjs`; security test updated to canonical path and old path removed.
-- `scripts/security/supabase-edge-runtime-auth-drift.mjs` → moved to `tools/security/supabase-edge-runtime-auth-drift.mjs`; security test updated to canonical path and old path removed.
-- `scripts/security/supabase-lgpd-edge-rollout-preflight.mjs` → moved to `tools/security/supabase-lgpd-edge-rollout-preflight.mjs`; security test updated to canonical path and old path removed.
-- `scripts/security/Import-LocalSupabaseSecrets.ps1` → moved to `tools/security/Import-LocalSupabaseSecrets.ps1`; docs/runtime guidance updated and old path removed.
-- `scripts/security/Save-LocalSupabaseSecrets.ps1` → moved to `tools/security/Save-LocalSupabaseSecrets.ps1`; docs updated and old path removed.
-- `scripts/geocode-locations.ts` → moved to `tools/seeds/geocode-locations.ts`; package/security policy/docs updated and old path removed.
-- `scripts/sync-national-districts-ibge.ts` → moved to `tools/seeds/sync-national-districts-ibge.ts`; package/security policy updated and old path removed.
-- `scripts/sync-municipal-neighborhoods.ts` → moved to `tools/seeds/sync-municipal-neighborhoods.ts`; package/security policy/docs updated and old path removed.
-- `scripts/location/municipal-neighborhood-sources.ts` → live Territory domain documentation and canonical sync tooling use `tools/seeds/municipal-neighborhood-sources.ts`; remaining old-path mentions are dated roadmap/audit or migration provenance only, so the compatibility re-export was removed.
-- `scripts/seed-e2e-users.ts` → moved to `tools/seeds/seed-e2e-users.ts`; package/workflow/security guards/policy updated and old path removed.
-- `scripts/seed-e2e-network.ts` → moved to `tools/seeds/seed-e2e-network.ts`; package/security guards/policy updated and old path removed.
-- `scripts/validate-slug-history-final.ts` → moved to `tools/supabase/validate-slug-history-final.ts`; mutation-safety tests/policy updated and old path removed.
-- `scripts/validate-reconciliation-final.ts` → moved to `tools/supabase/validate-reconciliation-final.ts`; policy updated and old path removed.
-- `scripts/validate-gate3-metadata.mjs` → moved to `tools/supabase/validate-gate3-metadata.mjs`; policy updated and old path removed.
-- `scripts/validate-etapa12-remote.ts` → moved to `tools/supabase/validate-etapa12-remote.ts`; policy updated and old path removed.
-- `scripts/validate-implementation.ts` → moved to `tools/supabase/validate-implementation.ts`; canonical read-only validator now imports `tools/supabase/supabase-client.ts` directly and old path removed.
-- `scripts/validate-business-district-required.ts` → moved to `tools/supabase/validate-business-district-required.ts`; canonical read-only validator now imports `tools/supabase/supabase-client.ts` directly and old path removed.
-- `scripts/lib/supabase-cli-runner.mjs` → tests/tooling migrated to `tools/supabase/supabase-cli-runner.mjs`; old bridge removed.
-- `scripts/lib/supabase-migration-list-parser.mjs` → migration tooling/test migrated to `tools/migrations/supabase-migration-list-parser.mjs`; old bridge removed.
-- `scripts/lib/migration-statement-fingerprint.mjs` → provenance tooling/test migrated to `tools/migrations/migration-statement-fingerprint.mjs`; old bridge removed.
-- `scripts/lib/remote-mutation-safety.mjs` → runtime tooling already used `tools/supabase/remote-mutation-safety.mjs`; old bridge removed.
-- `scripts/lib/remote-mutation-safety.ts` → typed tooling already used `tools/supabase/remote-mutation-safety.ts`; old bridge removed.
-- `scripts/lib/supabase-cli-json.mjs` → CLI parsing consumers already used `tools/supabase/supabase-cli-json.mjs`; old bridge removed.
-- `scripts/lib/supabase-cli-query-json.mjs` → query parsing consumers already used `tools/supabase/supabase-cli-query-json.mjs`; old bridge removed.
-- `scripts/lib/supabase-cli-validation-state.mjs` → validation-state consumers already used `tools/supabase/supabase-cli-validation-state.mjs`; old bridge removed.
-- `scripts/lib/architecture-registry.ts` → architecture validator already targets `tools/architecture/architecture-registry.ts`; old bridge removed.
-- `scripts/lib/supabase-client.mjs` → mutating `.mjs` validators now import `tools/supabase/supabase-client.mjs` directly; old runtime bridge removed.
-- `scripts/lib/supabase-client.d.mts` → no remaining consumer required legacy declaration resolution after the runtime bridge retirement; old declaration bridge removed.
-- `scripts/sanitize-secrets.ts` → security tooling and policy references use `tools/security/sanitize-secrets.ts`; old bridge removed.
-- `scripts/ci/run-preview-e2e.ps1` → workflow/callers already use `tools/release/run-preview-e2e.ps1`; old PowerShell bridge removed.
-- `scripts/devops/push-to-github.ps1` → manual release helper is canonical at `tools/release/push-to-github.ps1`; old bridge removed.
-- `scripts/deploy-security-updates.sh` → security deploy helper is canonical at `tools/release/deploy-security-updates.sh`; old bridge removed.
-- `scripts/generate-violations-report.ts` → architecture callers use `tools/architecture/generate-violations-report.ts`; old bridge removed.
-- `scripts/compare-economic-benchmark.mjs` → economic tooling uses `tools/release/compare-economic-benchmark.mjs`; old bridge removed.
-- `scripts/finalize-economic-benchmark.mjs` → economic tooling uses `tools/release/finalize-economic-benchmark.mjs`; old bridge removed.
-- `scripts/generate-economic-staging-report.mjs` → economic tooling uses `tools/release/generate-economic-staging-report.mjs`; old bridge removed.
-- `scripts/core-platform/access-analyzer.mjs` → architecture tests and ownership fixtures now use `tools/architecture/core-platform/access-analyzer.mjs`; old bridge removed.
-- `scripts/security/csp-contract.ts` → Turnstile CSP contract test and validator use `tools/security/csp-contract.ts`; old bridge removed.
-- `scripts/security/account-operational-edge-policy.mjs` → account operational Edge policy test imports `tools/security/account-operational-edge-policy.mjs` directly; old bridge removed.
-- `scripts/build-fast.mjs` → npm `build:fast` now calls `tools/release/build-fast.mjs` directly; historical typecheck docs remain archival only; old bridge removed.
-- `scripts/security/validate-csp.ts` → npm `validate:csp` now calls `tools/security/validate-csp.ts` directly; old bridge removed.
-- `scripts/security/validate-turnstile-production-config.mjs` → npm `validate:turnstile:production` now calls the canonical security validator directly; old bridge removed.
-- `scripts/validate-vercel-build-inputs.mjs` → npm `validate:vercel:inputs` now calls `tools/release/validate-vercel-build-inputs.mjs` directly; old bridge removed.
-- `scripts/validate-maps-architecture.mjs` → npm `validate:maps` and the Maps fixture README now use `tools/architecture/validate-maps-architecture.mjs`; old bridge removed.
-- `scripts/diagnose-typecheck.mjs` → npm `typecheck:diagnose` now calls `tools/architecture/diagnose-typecheck.mjs` directly; remaining references are archived typecheck documentation; old bridge removed.
-- `scripts/validate-critical-file-sizes.ts` → npm `validate:architecture:file-sizes` now calls `tools/architecture/validate-critical-file-sizes.ts` directly; remaining reference is archived architecture history; old bridge removed.
-- `scripts/validate-security-fixes.ts` → npm `security:scan` now calls `tools/security/validate-security-fixes.ts` directly; old bridge removed.
-- `scripts/validate-security-config.ts` → npm `security:config:validate` now calls `tools/security/validate-security-config.ts` directly; old bridge removed.
-- `scripts/generate-hardening-architecture-report.ts` → npm `report:architecture:hardening` now calls `tools/architecture/generate-hardening-architecture-report.ts` directly; old bridge removed.
-- `scripts/generate-architecture-audit.ts` → npm `audit:architecture` now calls `tools/architecture/generate-architecture-audit.ts` directly; old bridge removed.
-- `scripts/validate-architecture-phase1.mjs` → npm `validate:architecture:phase1` now calls `tools/architecture/validate-architecture-phase1.mjs` directly; old bridge removed.
-- `scripts/generate-service-template.ts` → npm `generate:service` now calls `tools/architecture/generate-service-template.ts` directly; archived docs keep historical commands only; old bridge removed.
-- `scripts/generate-migration-template.ts` → npm `generate:migration` now calls `tools/migrations/generate-migration-template.ts` directly; archived docs keep historical commands only; old bridge removed.
-- `scripts/generate-supabase-types.ts` → npm `generate:types` now calls `tools/supabase/generate-supabase-types.ts` directly; old bridge removed.
-- `scripts/validate-dependencies.ts` → npm `validate:deps` now calls `tools/architecture/validate-dependencies.ts` directly; remaining reference is archived audit history; old bridge removed.
-- `scripts/validate-ssot-hardcodes.ts` → npm `validate:hardcodes` now calls the canonical validator, whose owner preserves direct-execution behavior; remaining references are archived audits; old bridge removed.
-- `scripts/validate-public-url-ssot.ts` → npm `validate:url:ssot` now calls `tools/architecture/validate-public-url-ssot.ts` directly; old bridge removed.
-- `scripts/validate-upload-ssot.ts` → npm `validate:upload:ssot` now calls `tools/architecture/validate-upload-ssot.ts` directly; old bridge removed.
-- `scripts/validate-ssot-compliance.ts` → npm SSOT commands now call `tools/architecture/validate-ssot-compliance.ts` directly; canonical owner preserves direct-execution behavior; old bridge removed.
-- `scripts/security/validate-free-release-governance.mjs` → package/test callers use `tools/security/validate-free-release-governance.mjs` directly; old bridge removed.
-- `scripts/security/validate-free-release-governance-remote.mjs` → npm remote governance gate now calls `tools/security/validate-free-release-governance-remote.mjs` directly; old bridge removed.
-- `scripts/validate-e2e-setup.ts` → npm `validate:e2e` uses `tools/release/validate-e2e-setup.ts` directly; old bridge removed.
-- `scripts/generate-vercel-config.ts` → npm Vercel config generators use `tools/security/generate-vercel-config.ts` directly; old bridge removed.
-- `scripts/diagnose-economic-db-connectivity.mjs` → npm economic DB diagnostic calls `tools/release/diagnose-economic-db-connectivity.mjs` directly; old bridge removed.
-- `scripts/generate-economic-benchmark-blocker-report.mjs` → npm blocker-report command uses `tools/release/generate-economic-benchmark-blocker-report.mjs` directly; old bridge removed.
-- `scripts/run-economic-benchmark-all.mjs` → npm economic run-all command uses `tools/release/run-economic-benchmark-all.mjs` directly; old bridge removed.
-- `scripts/security/audit-privileged-rpc-browser-callers.mjs` → npm security audit uses `tools/security/audit-privileged-rpc-browser-callers.mjs` directly; old bridge removed.
-- `scripts/security/profile-pii-exposure-probe.mjs` → npm profile PII probe uses `tools/security/profile-pii-exposure-probe.mjs` directly; old bridge removed.
-- `scripts/security/classified-messaging-inbox-authz-probe.mjs` → npm classified messaging probe uses the canonical security tool directly; old bridge removed.
-- `scripts/security/community-feed-authz-probe.mjs` → npm community authz probe uses the canonical security tool directly; old bridge removed.
-- `scripts/security/trust-operational-authz-probe.mjs` → npm trust probe uses the canonical security tool directly; old bridge removed.
-- `scripts/validate-delivery-architecture-boundaries.ts` → npm delivery architecture validation calls the canonical tool directly; old bridge removed.
-- `scripts/validate-communication-territorial-boundaries.ts` → npm communication architecture validation calls the canonical tool directly; old bridge removed.
-- `scripts/run-vercel-production-build.mjs` → `vercel.json` now invokes `tools/release/run-vercel-production-build.mjs` directly; old bridge removed.
-- `scripts/validate-production-sitemap.mjs` → production build tooling already uses `tools/release/validate-production-sitemap.mjs`; old bridge removed.
-- `scripts/validate-migration-provenance.mjs` → npm migration provenance gate calls `tools/migrations/validate-migration-provenance.mjs` directly; old bridge removed.
-- `scripts/validate-core-platform-ownership.mjs` → npm and the validator regression test now use `tools/architecture/validate-core-platform-ownership.mjs`; legacy fixture reference was decoupled; old bridge removed.
-- `scripts/community-staging-load-test.mjs` → load-harness unit/security callers now use `tools/release/community-staging-load-test.mjs`; old bridge removed.
-- `scripts/community-interest-preflight.mjs` → npm and unit tests now use `tools/supabase/community-interest-preflight.mjs`; old bridge removed.
-- `scripts/poll-preflight.mjs` → npm and unit tests now use `tools/supabase/poll-preflight.mjs`; old bridge removed.
-- `scripts/salvador-preflight.mjs` → npm Salvador preflight commands call `tools/supabase/salvador-preflight.mjs` directly; canonical owner preserves CLI execution; old bridge removed.
-- `scripts/restore-storage.ts` → no live caller required the maintenance compatibility entrypoint; canonical owner remains `tools/maintenance/restore-storage.ts`.
-- `scripts/validate-business-module-boundaries.ts` → Business docs and npm callers use `tools/architecture/validate-business-module-boundaries.ts`; old bridge removed.
-- `scripts/validate-gastronomy-module-boundaries.ts` → Gastronomy docs/workflow use `tools/architecture/validate-gastronomy-module-boundaries.ts`; old bridge removed.
-- `src/modules/community-events/services/EventEngagementService.ts` → zero runtime callers; architecture regression tests now require the bridge to remain absent and the canonical owner stays in `src/core/community-events/services/EventEngagementService.ts`.
-- `src/modules/business/public/services/PublicSnapshotRpcService.ts` → callers/tests now use `src/core/business/services/PublicSnapshotRpcService.ts`; Business boundary ratchet blocks bridge recreation.
-- `src/modules/business/public/types/publicSnapshots.ts` → runtime callers now import `src/core/business/types/publicSnapshots.ts`; Business boundary ratchet blocks bridge recreation.
-- `scripts/validate-education-module-boundaries.ts` → workflow/docs use `tools/architecture/validate-education-module-boundaries.ts`; old bridge removed.
-- `src/modules/business/education/types/index.ts` → zero runtime callers; contracts remain canonical at `src/core/education/contracts.ts`; Education ratchet blocks bridge recreation.
-- `src/modules/business/education/services/education.queries.ts` → zero runtime callers; read model remains canonical at `src/core/education/services/education.queries.ts`; Education ratchet blocks bridge recreation.
-- `src/modules/business/education/services/education.mutations.ts` → zero runtime callers; write model remains canonical at `src/core/education/services/education.mutations.ts`; Education ratchet blocks bridge recreation.
-- `src/modules/business/education/constants/schoolStageOptions.ts` → zero runtime callers; shared domain options remain canonical at `src/core/education/constants/schoolStageOptions.ts`; Education ratchet blocks bridge recreation.
-- `src/modules/business/education/services/EducationTrackingService.ts` → zero runtime callers; tracking remains canonical at `src/core/education/services/EducationTrackingService.ts`; Education ratchet blocks bridge recreation.
-- `src/modules/business/education/services/EducationObservabilityService.ts` → zero runtime callers; observability remains canonical at `src/core/education/services/EducationObservabilityService.ts`; Education ratchet blocks bridge recreation.
-- `scripts/validate-session-context.ts` → no live runtime caller remained; historical session-context specs preserve the old path only as history; canonical owner remains `tools/architecture/validate-session-context.ts`.
-- `scripts/security/validate-poll-rpc-advisor-mappings.mjs` → Poll security test now imports `tools/security/validate-poll-rpc-advisor-mappings.mjs` directly; old bridge removed.
-- `scripts/generate-sitemap.ts` → current decision documentation and npm tooling use `tools/release/generate-sitemap.ts`; old bridge removed.
-- `scripts/validate-docs-structure.ts` → current decision documentation uses `tools/architecture/validate-docs-structure.ts`; old bridge removed.
-- `scripts/validate-doc-live-links.ts` → canonical owner remains `tools/architecture/validate-doc-live-links.ts`; the only non-registry legacy reference is in a document explicitly marked substituted/historical.
-- `scripts/check-ssot-compliance.ts` → Husky and current SSOT documentation now call `tools/architecture/check-ssot-compliance.ts`; old bridge removed.
-- `scripts/economic-benchmark-ssot.mjs` → current SSOT documentation and package benchmark commands use `tools/release/economic-benchmark-ssot.mjs`; remaining old-path mentions are historical fingerprints/fixtures only.
-- `src/app/config/territory.ts` → intermediate bridge removed after `src/config/territory.ts` was collapsed directly to `src/core/routing/config/territory.ts`; repository reorganization contract blocks recreation.
-- `src/app/config/moduleSlugs.ts` → no live caller remained; canonical owner is `src/shared/config/moduleSlugs.ts`; repository reorganization contract blocks recreation.
-- `scripts/security/entity-private-data-exposure-probe.mjs` → Entity Private Data SSOT now cites `tools/security/entity-private-data-exposure-probe.mjs` directly; old bridge removed.
-- `scripts/validate-community-transversal-boundaries.ts` → canonical owner remains `tools/architecture/validate-community-transversal-boundaries.ts`; the remaining old-path mention is a historical baseline inside a completed hardening plan.
-- `scripts/validate-architecture-governance.ts` → canonical owner preserves direct execution at `tools/architecture/validate-architecture-governance.ts`; remaining old-path mention is a historical source list in a completed architecture plan.
-- `src/modules/business/gastronomy/services/gastronomy.queries.ts` → module facade/barrel now consume `src/core/business/services/gastronomy.queries.ts` directly; Gastronomy ratchet blocks bridge recreation.
-- `src/modules/business/gastronomy/services/resolveGastronomyBusinessId.ts` → no compatibility caller remained; canonical owner stays at `src/core/business/services/resolveGastronomyBusinessId.ts`; Gastronomy ratchet blocks bridge recreation.
-- `src/modules/business/gastronomy/services/activity.queries.ts` → `useGastronomyActivity.ts` now consumes `src/core/business/services/gastronomy.activity.queries.ts` directly; Gastronomy ratchet blocks bridge recreation.
-- `src/modules/business/gastronomy/services/favorites.queries.ts` → runtime hooks/card and security tests now consume or inspect `src/core/business/services/gastronomy.favorites.queries.ts`; Gastronomy ratchet blocks bridge recreation.
-- `src/modules/business/gastronomy/services/review.queries.ts` → review UI/hooks and review security/SSOT tests now consume or inspect `src/core/business/services/gastronomy.review.queries.ts`; Gastronomy ratchet blocks bridge recreation.
-- `src/modules/business/gastronomy/services/menu.queries.ts` → module facade/barrel, `useMenuItems` and onboarding evidence now consume `src/core/business/services/menu.queries.ts`; Gastronomy ratchet blocks bridge recreation.
-- `src/modules/business/gastronomy/services/DeliveryAreaService.ts` → delivery hooks/UI and checkout now consume `src/core/business/services/GastronomyDeliveryAreaService.ts` directly; checkout test mocks the canonical owner and Gastronomy ratchet blocks bridge recreation.
-- `src/modules/business/gastronomy/niches/types.ts` → zero live callers remained; canonical niche contracts stay at `src/core/business/niches/types.ts`; Gastronomy ratchet keeps the legacy import forbidden and blocks bridge recreation.
-- `src/modules/business/gastronomy/services/GastronomyProfileService.ts` → runtime callers already import `src/core/business/services/GastronomyProfileService.ts`; the write SSOT test inspects the core owner directly and Gastronomy ratchet keeps the legacy import forbidden.
-- `src/modules/business/gastronomy/niches/versioning/types.ts` → barrel, admin visibility logic and tests now consume `src/core/business/niches/versioning/types.ts`; Gastronomy ratchet blocks bridge recreation.
-- `src/modules/business/gastronomy/niches/versioning/NicheVersioningService.ts` → barrel, unit/security tests now consume `src/core/business/niches/versioning/NicheVersioningService.ts`; Gastronomy ratchet blocks bridge recreation.
+## Recent retirements relevant to G2 closure
 
-## G2 closure condition for bridges
+- `scripts/validate-project-taxonomy.ts` → canonical owner `tools/architecture/validate-project-taxonomy.ts`; final live test caller migrated and legacy path removed.
+- `scripts/media-assets-cp016-backfill.ts` → canonical owner `tools/migrations/media-assets-cp016-backfill.ts`; architecture test migrated and legacy implementation removed.
+- `src/modules/business/gastronomy/services/MenuService.ts` → canonical owner `src/core/business/services/MenuService.ts`; final Gastronomy compatibility service bridge removed and ratcheted as retired.
+- `scripts/lib/**` → removed after consumers migrated to `tools/supabase`, `tools/migrations`, and `tools/architecture`.
+- legacy Events owners `src/features/events/**` and `src/core/verticals/events/**` → removed; current owner is `src/core/community-events` / `src/modules/community-events`.
 
-G2 is not complete merely because the canonical owners exist. Before G2 closure:
+## G2 closure conditions for remaining bridges
 
-- every compatibility path must either be removed or remain explicitly justified here;
-- no canonical owner may depend back on a legacy path;
-- no bridge may contain independent implementation;
-- bridge chains should be collapsed to point directly to the final canonical owner;
-- remaining bridge count must be treated as tracked migration debt, not accepted architecture.
+G2 may close with the explicitly tracked compatibility debt above only if all of the following hold on the reviewed SHA:
+
+- `src/features`, `src/test`, and `src/__tests__` are absent;
+- `scripts/` contains only the bridges listed here and no implementation owner;
+- no canonical `tools/**` owner depends on `scripts/**`;
+- no `src/core/**` implementation depends on `src/modules/**`;
+- module → integration runtime exceptions remain explicitly ratcheted and cannot grow;
+- workflows/build/deploy guards observe canonical `tools/**` paths;
+- every remaining bridge has a current caller and a concrete removal gate;
+- architecture ratchets prevent retired bridges/namespaces from being recreated.
