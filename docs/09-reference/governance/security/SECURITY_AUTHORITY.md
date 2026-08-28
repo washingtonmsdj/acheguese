@@ -58,11 +58,11 @@ Riscos prioritarios:
 - [SSOT executavel do release Free](./FREE_RELEASE_GOVERNANCE.json)
 - [SSOT dos residuais do Advisor](./SUPABASE_ADVISOR_RESIDUALS.json)
 - [Policy de fronteira service_role](./SERVICE_ROLE_BOUNDARY_POLICY.json)
-- `scripts/security/validate-security.mjs`
-- `scripts/validate-supabase-advisor-residuals.ts`
+- `tools/security/validate-security.mjs`
+- `tools/supabase/validate-supabase-advisor-residuals.ts`
 - `scripts/validate-supabase-migrations.ts`
-- `scripts/validate-supabase-remote-migration-drift.ts`
-- `scripts/verify-deploy-ready.mjs`
+- `tools/supabase/validate-supabase-remote-migration-drift.ts`
+- `tools/release/verify-deploy-ready.mjs`
 - `supabase/migrations/`
 
 ## Docs Da Authority
