@@ -7,7 +7,7 @@ import {
 } from "@/shared/components/ui/card";
 import { Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import { Button } from "@/shared/components/ui/button";
 import { useAppUrls } from "@/core/routing/hooks";
 
