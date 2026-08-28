@@ -11,7 +11,7 @@ import type { GastronomyBusiness } from "../types/gastronomy";
 import { OrderDeliverySSOTService } from "@/core/mobility/delivery/services/OrderDeliverySSOTService";
 import { GastronomyOrderOriginAdapter } from "@/core/mobility/delivery/order/adapters/GastronomyOrderOriginAdapter";
 import type { OrderRecord } from "@/core/mobility/delivery/order/types";
-import { DeliveryAreaService } from "./DeliveryAreaService";
+import { DeliveryAreaService } from "@/core/business/services/GastronomyDeliveryAreaService";
 import {
   isPlatformCourierUnavailableForCheckout,
   normalizeFulfillmentMode,
