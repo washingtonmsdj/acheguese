@@ -7,7 +7,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { SectionFrame, EmptyPanel } from "@/modules/profile/components/hub";
 import { useEntitlements } from "@/core/billing/hooks/useEntitlements";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
 import type { DeliverySectionProps } from "./types";
 import type { ProfileBusinessModuleSnapshot } from "@/core/profiles/services/ProfileBusinessTypes";
