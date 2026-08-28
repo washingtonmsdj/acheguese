@@ -5,7 +5,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { useBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
 export default function BusinessPlansPage() {
   const { businessId, planTier, entitlements, isGastronomyActive } =
