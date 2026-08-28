@@ -7,7 +7,7 @@ import {
   Truck,
   MessageCircle,
 } from "lucide-react";
-import { isLaunchBusinessCategoryEnabled } from "@/config/launchScope";
+import { isLaunchBusinessCategoryEnabled } from "@/app/config/launchScope";
 import { getAllCategories } from "@/core/business/config/categoryFilters";
 import type { Category, QuickFilter } from "../sections/types";
 
