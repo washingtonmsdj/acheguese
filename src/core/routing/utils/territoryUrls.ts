@@ -26,7 +26,7 @@
  */
 
 import type { Location, TerritorialGroup } from '@/core/location/types';
-import { ROUTING_MODULE_SLUGS } from '@/config/moduleSlugs';
+import { ROUTING_MODULE_SLUGS } from '@/shared/config/moduleSlugs';
 
 // ── Slugs de módulo canônicos ────────────────────────────────────────────────
 export const MODULE_SLUGS = ROUTING_MODULE_SLUGS;
