@@ -25,6 +25,7 @@ const RETIRED_SOURCE_FILES = [
   "src/global.d.ts",
   "src/config/security.config.ts",
   "src/config/communityLaunch.ts",
+  "src/config/moduleSlugs.ts",
   "src/app/config/moduleSlugs.ts",
   "src/app/config/territory.ts",
 ] as const;
@@ -44,7 +45,6 @@ const RETIRED_E2E_FILES = [
 ] as const;
 
 const CONFIG_BRIDGES = new Map([
-  ["src/config/moduleSlugs.ts", "@/shared/config/moduleSlugs"],
   ["src/config/modules.ts", "@/app/config/modules"],
   ["src/config/launchScope.ts", "@/app/config/launchScope"],
   ["src/config/territory.ts", "@/core/routing/config/territory"],
@@ -171,6 +171,13 @@ describe("global repository reorganization contract", () => {
     }
   });
 
+  it("does not import the retired module slugs compatibility path", () => {
+    for (const relativePath of listFilesRecursively("src")) {
+      const content = fs.readFileSync(path.join(ROOT, relativePath), "utf8");
+      expect(content, relativePath).not.toContain("@/config/moduleSlugs");
+    }
+  });
+
   it("keeps migrated source files under canonical owners", () => {
     for (const relativePath of CANONICAL_SOURCE_TARGETS) {
       expect(fs.existsSync(path.join(ROOT, relativePath)), relativePath).toBe(true);
@@ -250,7 +257,6 @@ describe("global repository reorganization contract", () => {
   it("freezes src/config to the remaining compatibility bridges only", () => {
     expect(listFiles("src/config")).toEqual([
       "launchScope.ts",
-      "moduleSlugs.ts",
       "modules.ts",
       "territory.ts",
     ]);

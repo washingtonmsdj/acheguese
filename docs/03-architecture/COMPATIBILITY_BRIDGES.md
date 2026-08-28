@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 closure review  
-Baseline reviewed: `22d959d5b182e29ffc49be76f82818c6642ac42a`  
+Baseline reviewed: `4a7cf73d8566e3b0e04317e69a695325ed3304f0`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -26,7 +26,6 @@ The detailed historical retirement ledger that previously lived in this file rem
 | Legacy path | Canonical owner | Why it still exists | Removal gate |
 | --- | --- | --- | --- |
 | `src/config/launchScope.ts` | `src/app/config/launchScope.ts` | current callers still import the global compatibility path | migrate all current callers to the app owner |
-| `src/config/moduleSlugs.ts` | `src/shared/config/moduleSlugs.ts` | current callers still import the global compatibility path | migrate all current callers to the shared owner |
 | `src/config/modules.ts` | `src/app/config/modules.ts` | current callers still import the global compatibility path | migrate all current callers to the app owner |
 | `src/config/territory.ts` | `src/core/routing/config/territory.ts` | current callers still import `@/config/territory` | migrate all current callers directly to `core/routing` |
 
@@ -70,6 +69,7 @@ No legacy Guide routing compatibility bridge remains active. Public tourist-poin
 
 ## Recent retirements relevant to G2 closure
 
+- `src/config/moduleSlugs.ts` → retired after all source callers migrated to `src/shared/config/moduleSlugs.ts`; bridge absence and legacy-import absence are ratcheted by `tests/architecture/repository-reorganization-contract.test.ts`.
 - `src/config/communityLaunch.ts` → retired after the final runtime caller (`src/core/community/pages/ComunidadePage.tsx`) migrated to `src/core/community/config/communityLaunch.ts`; bridge absence and legacy-import absence are ratcheted by `tests/architecture/community-launch-config-import-ratchet.test.ts` and `tests/architecture/repository-reorganization-contract.test.ts`.
 - `e2e/**` → retired completely after all E2E callers migrated to `tests/e2e/helpers/auth.ts`; root absence is ratcheted by `tests/architecture/repository-reorganization-contract.test.ts`.
 - `scripts/**` → retired completely after `tests/security/security-authority-migrations.test.ts`, `package.json` and service-role policy migrated to canonical `tools/**` owners; root absence is ratcheted by `tests/architecture/compatibility-surface-cleanup.test.ts`.
