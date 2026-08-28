@@ -38,7 +38,7 @@ import {
 import {
   isLaunchSurfaceEnabled,
   type LaunchSurfaceKey,
-} from "@/config/launchScope";
+} from "@/app/config/launchScope";
 import { useBusinessNavigation } from "@/modules/business/hooks/useBusinessNavigation";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
