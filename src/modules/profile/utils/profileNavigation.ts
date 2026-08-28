@@ -2,7 +2,7 @@ import { getAllProfileSections, type ProfileSectionId } from "@/modules/profile/
 import type { SectionNavItem } from "@/modules/profile/components/hub/ProfileSectionsNav";
 import type { ProfileBusinessModuleSnapshot } from "@/core/profiles/services/ProfileBusinessTypes";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
-import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/app/config/launchScope";
 
 const PROFILE_SECTION_SURFACES: Partial<Record<ProfileSectionId, LaunchSurfaceKey>> = {
   mobilidade: "mobility",
