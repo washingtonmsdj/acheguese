@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
-import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
+import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import {
   buildCommunityScopedEntityUrl,
