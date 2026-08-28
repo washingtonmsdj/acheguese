@@ -8,8 +8,8 @@ import {
   PopoverTrigger,
 } from "@/shared/components/ui/popover";
 import { Input } from "@/shared/components/ui/input";
-import { APP_MODULE_SLUGS, buildAppModulePath, type AppModuleSlug } from "@/config/moduleSlugs";
-import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchScope";
+import { APP_MODULE_SLUGS, buildAppModulePath, type AppModuleSlug } from "@/shared/config/moduleSlugs";
+import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/app/config/launchScope";
 import { useLocations } from "@/core/location/hooks/useLocations";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 import { useCityMetadataList } from "@/core/city/hooks/useCityMetadataList";
