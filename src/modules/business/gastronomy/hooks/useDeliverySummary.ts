@@ -5,7 +5,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { DeliveryAreaService } from '@/modules/business/gastronomy/services/DeliveryAreaService';
+import { DeliveryAreaService } from '@/core/business/services/GastronomyDeliveryAreaService';
 
 export function useDeliverySummary(businessId: string) {
   const { data: summary, isLoading, error } = useQuery({
