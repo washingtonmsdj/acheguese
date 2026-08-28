@@ -3,8 +3,8 @@ import { Route } from "react-router-dom";
 import {
   isLaunchSurfaceEnabled,
   type LaunchSurfaceKey,
-} from "@/config/launchScope";
-import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
+} from "@/app/config/launchScope";
+import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
 import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
