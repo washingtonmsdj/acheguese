@@ -16,8 +16,8 @@
  * @module core/maps/services
  */
 import { logger } from '@/shared/utils/logger';
-import { APP_MODULE_SLUGS, buildAppModulePath } from '@/config/moduleSlugs';
-import { LAUNCH_URLS } from '@/config/territory';
+import { APP_MODULE_SLUGS, buildAppModulePath } from '@/shared/config/moduleSlugs';
+import { LAUNCH_URLS } from '@/core/routing/config/territory';
 import { ProfessionalUrlService } from '@/core/professional/services/ProfessionalUrlService';
 import type { MapMarker, MapEntityType, MapEntityStatus, Coordinates } from '../types';
 import { isValidCoordinates } from '../types';
