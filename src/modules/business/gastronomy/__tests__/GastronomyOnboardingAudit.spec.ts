@@ -20,7 +20,7 @@ describe("gastronomy onboarding hardening", () => {
       "src/core/business/services/gastronomy-runtime.queries.ts",
     );
     const pizzaAdminService = read(
-      "src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts",
+      "src/core/business/niches/pizzaria/PizzaAdminService.ts",
     );
 
     expect(profileService).toContain("ensureOperationalMenuSetup");
@@ -57,7 +57,7 @@ describe("gastronomy onboarding hardening", () => {
 
   it("uses a fallback category when the plan hides category selection", () => {
     const menuService = read(
-      "src/modules/business/gastronomy/services/MenuService.ts",
+      "src/core/business/services/MenuService.ts",
     );
     const menuPage = read(
       "src/modules/business/gastronomy/pages/MenuManagementPage.tsx",
