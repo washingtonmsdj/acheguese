@@ -3,9 +3,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import type { ProfileNicheConfig } from '@/core/business/niches/versioning/types';
 import { AdminSectionVisibilityService } from '../AdminSectionVisibilityService';
 import type { AdminSection, NicheCapability } from '../../types';
-import type { ProfileNicheConfig } from '../types';
 
 describe('AdminSectionVisibilityService', () => {
   describe('isSectionVisible', () => {
@@ -191,8 +191,8 @@ describe('AdminSectionVisibilityService', () => {
 
       expect(configurableSections).toContain('pizza_sizes');
       expect(configurableSections).toContain('pizza_flavors');
-      expect(configurableSections).not.toContain('basic_menu'); // Já visível
-      expect(configurableSections).not.toContain('sushi_builder'); // Não em missing
+      expect(configurableSections).not.toContain('basic_menu');
+      expect(configurableSections).not.toContain('sushi_builder');
     });
   });
 
