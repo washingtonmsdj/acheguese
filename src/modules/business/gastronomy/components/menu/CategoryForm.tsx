@@ -28,7 +28,7 @@ import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { Switch } from '@/shared/components/ui/switch';
 import { Button } from '@/shared/components/ui/button';
-import type { MenuCategory } from '@/modules/business/gastronomy/services/MenuService';
+import type { MenuCategory } from '@/core/business/services/MenuService';
 
 const categorySchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório').max(100),
