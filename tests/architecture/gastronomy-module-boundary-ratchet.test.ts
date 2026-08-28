@@ -36,25 +36,23 @@ describe("Gastronomy module boundary ratchet", () => {
   });
 
   it("does not recreate retired Gastronomy read/resolver bridges", () => {
-    expect(
-      exists("src/modules/business/gastronomy/services/gastronomy.queries.ts"),
-    ).toBe(false);
-    expect(
-      exists(
-        "src/modules/business/gastronomy/services/resolveGastronomyBusinessId.ts",
-      ),
-    ).toBe(false);
+    const retiredBridges = [
+      "src/modules/business/gastronomy/services/gastronomy.queries.ts",
+      "src/modules/business/gastronomy/services/resolveGastronomyBusinessId.ts",
+      "src/modules/business/gastronomy/services/activity.queries.ts",
+    ];
+
+    for (const bridge of retiredBridges) {
+      expect(exists(bridge), bridge).toBe(false);
+    }
 
     const validator = read(
       "tools/architecture/validate-gastronomy-module-boundaries.ts",
     );
     expect(validator).toContain("const RETIRED_CORE_BRIDGES = new Set([");
-    expect(validator).toContain(
-      "src/modules/business/gastronomy/services/gastronomy.queries.ts",
-    );
-    expect(validator).toContain(
-      "src/modules/business/gastronomy/services/resolveGastronomyBusinessId.ts",
-    );
+    for (const bridge of retiredBridges) {
+      expect(validator).toContain(bridge);
+    }
   });
 
   it("keeps pizza and niche persistence behind core bridges", () => {
