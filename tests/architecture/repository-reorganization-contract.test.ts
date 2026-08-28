@@ -31,6 +31,7 @@ const RETIRED_ROOT_ARTIFACTS = [
   "handoff",
   "product-qa-screenshots",
   "templates",
+  "e2e",
 ] as const;
 const RETIRED_E2E_FILES = [
   "e2e/helpers/geolocation.ts",
@@ -38,6 +39,7 @@ const RETIRED_E2E_FILES = [
   "e2e/helpers/network.ts",
   "tests/e2e/helpers/network.ts",
   "e2e/network-branches.spec.ts",
+  "e2e/helpers/auth.ts",
 ] as const;
 
 const CONFIG_BRIDGES = new Map([
@@ -84,10 +86,6 @@ const CANONICAL_TEMPLATE_FILES = [
   "tools/templates/module-template/module/index.ts",
   "tools/templates/module-template/module/hooks/use[Nome].ts",
 ] as const;
-
-const LEGACY_E2E_BRIDGES = new Map([
-  ["e2e/helpers/auth.ts", "tests/e2e/helpers/auth"],
-] as const);
 
 const CANONICAL_E2E_TARGETS = [
   "tests/e2e/helpers/auth.ts",
@@ -259,20 +257,11 @@ describe("global repository reorganization contract", () => {
     ]);
   });
 
-  it("keeps legacy root e2e files as compatibility bridges only", () => {
+  it("keeps E2E helpers and specs under the canonical tests/e2e owner", () => {
+    expect(fs.existsSync(path.join(ROOT, "e2e"))).toBe(false);
+
     for (const relativePath of CANONICAL_E2E_TARGETS) {
       expect(fs.existsSync(path.join(ROOT, relativePath)), relativePath).toBe(true);
-    }
-
-    for (const [bridgeFile, canonicalTarget] of LEGACY_E2E_BRIDGES) {
-      const absolutePath = path.join(ROOT, bridgeFile);
-      expect(fs.existsSync(absolutePath), bridgeFile).toBe(true);
-
-      const content = fs.readFileSync(absolutePath, "utf8");
-      expect(content).toContain(canonicalTarget);
-      expect(content.length, `${bridgeFile} must stay bridge-sized`).toBeLessThan(256);
-      expect(content).not.toContain("test.describe(");
-      expect(content).not.toContain("dotenv.config(");
     }
   });
 });
