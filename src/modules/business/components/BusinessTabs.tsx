@@ -21,7 +21,7 @@ import { PortfolioTab } from "./tabs/PortfolioTab";
 import { PromocoesTab } from "./tabs/PromocoesTab";
 import { AgendamentosTab } from "./tabs/AgendamentosTab";
 import { logger } from "@/shared/utils/logger";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
 export function BusinessTabs({
   business,
