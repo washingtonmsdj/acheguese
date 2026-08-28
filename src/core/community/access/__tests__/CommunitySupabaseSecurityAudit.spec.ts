@@ -366,7 +366,7 @@ describe("community supabase security audit", () => {
     const hardening = readProjectFile(
       "supabase/migrations/20260706100000_harden_community_creation_residence_authorization.sql",
     );
-    const launchScope = readProjectFile("src/config/launchScope.ts");
+    const launchScope = readProjectFile("src/app/config/launchScope.ts");
 
     expect(hardening).toContain(
       "CREATE OR REPLACE FUNCTION public.auth_has_verified_residence_at_location",

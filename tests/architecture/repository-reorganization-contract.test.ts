@@ -25,6 +25,7 @@ const RETIRED_SOURCE_FILES = [
   "src/global.d.ts",
   "src/config/security.config.ts",
   "src/config/communityLaunch.ts",
+  "src/config/launchScope.ts",
   "src/config/moduleSlugs.ts",
   "src/config/modules.ts",
   "src/app/config/moduleSlugs.ts",
@@ -46,7 +47,6 @@ const RETIRED_E2E_FILES = [
 ] as const;
 
 const CONFIG_BRIDGES = new Map([
-  ["src/config/launchScope.ts", "@/app/config/launchScope"],
   ["src/config/territory.ts", "@/core/routing/config/territory"],
 ] as const);
 
@@ -171,6 +171,13 @@ describe("global repository reorganization contract", () => {
     }
   });
 
+  it("does not import the retired launch scope compatibility path", () => {
+    for (const relativePath of listFilesRecursively("src")) {
+      const content = fs.readFileSync(path.join(ROOT, relativePath), "utf8");
+      expect(content, relativePath).not.toContain("@/config/launchScope");
+    }
+  });
+
   it("does not import the retired module slugs compatibility path", () => {
     for (const relativePath of listFilesRecursively("src")) {
       const content = fs.readFileSync(path.join(ROOT, relativePath), "utf8");
@@ -262,10 +269,7 @@ describe("global repository reorganization contract", () => {
   });
 
   it("freezes src/config to the remaining compatibility bridges only", () => {
-    expect(listFiles("src/config")).toEqual([
-      "launchScope.ts",
-      "territory.ts",
-    ]);
+    expect(listFiles("src/config")).toEqual(["territory.ts"]);
   });
 
   it("keeps E2E helpers and specs under the canonical tests/e2e owner", () => {
