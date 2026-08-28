@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { ReviewQueryService } from "@/core/business/services/gastronomy.review.queries";
 import { useSessionContext } from "@/core/session";
 import { Badge } from "@/shared/components/ui/badge";
 import {
@@ -18,7 +19,6 @@ import {
 } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { ReviewForm } from "../ReviewForm";
-import { ReviewQueryService } from "../../services/review.queries";
 import type { OrderWithItems } from "../../services/OrderService";
 
 interface OrderPublicReviewPanelProps {
