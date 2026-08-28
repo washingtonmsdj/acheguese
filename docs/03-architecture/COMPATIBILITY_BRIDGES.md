@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `3755ac6828db6e8a286188d92a748feb2cb14837`  
+Baseline reviewed: `638e808eadc0f5dbf053e477382ccb5b8aca29e3`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -26,9 +26,7 @@ Rules:
 | `src/config/launchScope.ts` | `src/app/config/launchScope.ts` | all callers import canonical owner directly |
 | `src/config/moduleSlugs.ts` | `src/shared/config/moduleSlugs.ts` | all callers import canonical owner directly |
 | `src/config/modules.ts` | `src/app/config/modules.ts` | all callers import canonical owner directly |
-| `src/config/territory.ts` | `src/app/config/territory.ts` | all callers import canonical owner directly; then retire the app bridge in a separate guarded cut |
-| `src/app/config/territory.ts` | `src/core/routing/config/territory.ts` | all app callers import canonical owner directly |
-| `src/app/config/moduleSlugs.ts` | `src/shared/config/moduleSlugs.ts` | all app callers import canonical owner directly |
+| `src/config/territory.ts` | `src/core/routing/config/territory.ts` | all callers import canonical owner directly |
 
 ## Global test compatibility
 
@@ -47,7 +45,6 @@ Rules:
 | `scripts/validate-supabase-remote-migration-drift.ts` | `tools/supabase/validate-supabase-remote-migration-drift.ts` | package/docs/callers use canonical remote drift gate directly; legacy entrypoint no longer required |
 | `scripts/location/municipal-neighborhood-sources.ts` | `tools/seeds/municipal-neighborhood-sources.ts` | all callers/docs use canonical manifest directly; legacy re-export no longer required |
 | `scripts/validate-project-taxonomy.ts` | `tools/architecture/validate-project-taxonomy.ts` | package/docs/callers use canonical owner directly; legacy CLI/source-inspection compatibility no longer required |
-| `scripts/security/entity-private-data-exposure-probe.mjs` | `tools/security/entity-private-data-exposure-probe.mjs` | package/docs use canonical probe directly; legacy entrypoint no longer required |
 | `scripts/security/community-feed-anon-probe.mjs` | `tools/security/community-feed-anon-probe.mjs` | package/authorization-map callers use canonical mutating probe directly; legacy entrypoint no longer required |
 | `scripts/security/reviews-core-authz-probe.mjs` | `tools/security/reviews-core-authz-probe.mjs` | package command uses canonical guarded mutating probe directly; legacy entrypoint no longer required |
 | `scripts/security/community-direct-messaging-authz-probe.mjs` | `tools/security/community-direct-messaging-authz-probe.mjs` | package command uses canonical guarded mutating probe directly; legacy entrypoint no longer required |
@@ -60,9 +57,7 @@ Rules:
 | `scripts/security/supabase-access-boundary.mjs` | `tools/security/supabase-access-boundary.mjs` | security validators/tests import canonical boundary helper directly |
 | `scripts/security/validate-security.mjs` | `tools/security/validate-security.mjs` | package/docs/callers use canonical security orchestrator directly; legacy command no longer required |
 | `scripts/security/supabase-postgis-owner-preflight.mjs` | `tools/security/supabase-postgis-owner-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
-| `scripts/validate-architecture-governance.ts` | `tools/architecture/validate-architecture-governance.ts` | npm/docs/callers point to canonical path; legacy CLI/module compatibility no longer required |
 | `scripts/validate-architecture-boundaries-incremental.mjs` | `tools/architecture/validate-architecture-boundaries-incremental.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
-| `scripts/validate-community-transversal-boundaries.ts` | `tools/architecture/validate-community-transversal-boundaries.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/lib/supabase-client.ts` | `tools/supabase/supabase-client.ts` | `scripts/media-assets-cp016-backfill.ts` must be moved or retargeted to the canonical client without weakening its existing project/apply confirmation guards |
 
 ## Gastronomy module-local bridges
@@ -197,6 +192,11 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/validate-doc-live-links.ts` → canonical owner remains `tools/architecture/validate-doc-live-links.ts`; the only non-registry legacy reference is in a document explicitly marked substituted/historical.
 - `scripts/check-ssot-compliance.ts` → Husky and current SSOT documentation now call `tools/architecture/check-ssot-compliance.ts`; old bridge removed.
 - `scripts/economic-benchmark-ssot.mjs` → current SSOT documentation and package benchmark commands use `tools/release/economic-benchmark-ssot.mjs`; remaining old-path mentions are historical fingerprints/fixtures only.
+- `src/app/config/territory.ts` → intermediate bridge removed after `src/config/territory.ts` was collapsed directly to `src/core/routing/config/territory.ts`; repository reorganization contract blocks recreation.
+- `src/app/config/moduleSlugs.ts` → no live caller remained; canonical owner is `src/shared/config/moduleSlugs.ts`; repository reorganization contract blocks recreation.
+- `scripts/security/entity-private-data-exposure-probe.mjs` → Entity Private Data SSOT now cites `tools/security/entity-private-data-exposure-probe.mjs` directly; old bridge removed.
+- `scripts/validate-community-transversal-boundaries.ts` → canonical owner remains `tools/architecture/validate-community-transversal-boundaries.ts`; the remaining old-path mention is a historical baseline inside a completed hardening plan.
+- `scripts/validate-architecture-governance.ts` → canonical owner preserves direct execution at `tools/architecture/validate-architecture-governance.ts`; remaining old-path mention is a historical source list in a completed architecture plan.
 
 ## G2 closure condition for bridges
 
