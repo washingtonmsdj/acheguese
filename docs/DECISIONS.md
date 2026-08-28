@@ -52,9 +52,9 @@
 
 **Decisão:** persistência, auth, storage e edge functions usam Cloud gerenciado. Roles em tabela separada `user_roles` com `has_role()` security-definer. Nunca armazenar role em `profiles`.
 
-## D-013 — Raiz do repo somente `README.md` e `SECURITY.md`
+## D-013 — Raiz do repo é mínima e governada
 
-**Decisão:** validador `scripts/validate-docs-structure.ts`. Todo doc vive em `docs/`.
+**Decisão:** a raiz documental permanente contém `README.md`, `SECURITY.md` e `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`; o último é a exceção permanente de governança durante e após a reorganização global. Demais documentos vivem em `docs/`. O validador canônico é `tools/architecture/validate-docs-structure.ts`.
 
 ## D-014 — SSOT documental: `docs/README.md` é a porta de entrada
 
@@ -68,9 +68,9 @@
 
 **Decisão:** todas as functions críticas validam JWT server-side e usam `getClaims` para role checking. `verify_jwt=true` no `config.toml`.
 
-## D-017 — Sitemap oficial gerado por script
+## D-017 — Sitemap oficial gerado por tooling canônico
 
-**Decisão:** `scripts/generate-sitemap.ts` produz `public/sitemap.xml` a partir do território seed. Bairros `coming_soon` são incluídos apontando para `/interesse`.
+**Decisão:** `tools/release/generate-sitemap.ts` produz `public/sitemap.xml` a partir do território seed. Bairros `coming_soon` são incluídos apontando para `/interesse`.
 
 ## D-018 — Voz de estados vazios / loading
 
