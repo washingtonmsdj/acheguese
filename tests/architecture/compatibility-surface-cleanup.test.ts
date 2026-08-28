@@ -47,6 +47,21 @@ describe('compatibility surface cleanup', () => {
     expect(appRoutes).not.toContain('@/core/verticals/guide/');
   });
 
+  it('keeps operational tooling on canonical tools owners', () => {
+    const packageJson = read('package.json');
+    const securityPolicy = read(
+      'docs/09-reference/governance/security/SERVICE_ROLE_BOUNDARY_POLICY.json',
+    );
+
+    expect(exists('scripts')).toBe(false);
+    expect(packageJson).not.toContain('"tsx scripts/');
+    expect(packageJson).not.toContain('"node scripts/');
+    expect(packageJson).toContain(
+      '"validate:migrations": "tsx tools/migrations/validate-supabase-migrations.ts"',
+    );
+    expect(securityPolicy).not.toContain('"prefix": "scripts/security/"');
+  });
+
   it('removes deprecated APIs and unconsumed duplicate types', () => {
     const paymentMethods = read('src/core/business/constants/paymentMethods.ts');
     const residentAddress = read(
