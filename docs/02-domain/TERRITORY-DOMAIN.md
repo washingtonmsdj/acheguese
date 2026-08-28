@@ -58,7 +58,7 @@ Regras:
 
 - **Country / State / City / District / Neighborhood não são módulos.** Se existir uma pasta com esse nome (ex.: `core/city`), ela é **legado** conforme `DOMAIN-MAPPING.md`.
 - **City e Neighborhood** são os dois tipos mais expostos no produto: a UI usa "cidade" e "bairro" como *labels*, mas a estrutura é sempre `Territory`.
-- **District** existe apenas como fallback quando a cidade não tem `Neighborhood` mapeado (ver `scripts/location/municipal-neighborhood-sources.ts`).
+- **District** existe apenas como fallback quando a cidade não tem `Neighborhood` mapeado (ver `tools/seeds/municipal-neighborhood-sources.ts`).
 
 ### 3.2. Community
 
