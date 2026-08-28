@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -6,12 +6,7 @@ const root = process.cwd();
 const srcRoot = resolve(root, "src");
 const legacyImport = "@/config/communityLaunch";
 const legacyBridge = "src/config/communityLaunch.ts";
-
-const ALLOWED_LEGACY_CALLERS = new Set([
-  "src/app/pages/TerritoryEntryPage.tsx",
-  "src/app/pages/TerritoryHomePage.tsx",
-  "src/core/community/pages/ComunidadePage.tsx",
-]);
+const canonicalImport = "@/core/community/config/communityLaunch";
 
 function collectSourceFiles(directory: string): string[] {
   const files: string[] = [];
@@ -31,13 +26,20 @@ function collectSourceFiles(directory: string): string[] {
 }
 
 describe("communityLaunch legacy config import ratchet", () => {
-  it("allows the legacy bridge only in the three remaining runtime callers", () => {
+  it("keeps communityLaunch on the canonical core owner and forbids bridge recreation", () => {
+    expect(existsSync(resolve(root, legacyBridge))).toBe(false);
+
     const callers = collectSourceFiles(srcRoot)
       .map((absolutePath) => relative(root, absolutePath).replaceAll("\\", "/"))
-      .filter((path) => path !== legacyBridge)
       .filter((path) => readFileSync(resolve(root, path), "utf8").includes(legacyImport))
       .sort();
 
-    expect(callers).toEqual([...ALLOWED_LEGACY_CALLERS].sort());
+    expect(callers).toEqual([]);
+
+    const comunidadePage = readFileSync(
+      resolve(root, "src/core/community/pages/ComunidadePage.tsx"),
+      "utf8",
+    );
+    expect(comunidadePage).toContain(canonicalImport);
   });
 });

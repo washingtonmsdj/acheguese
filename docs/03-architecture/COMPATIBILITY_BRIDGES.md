@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 closure review  
-Baseline reviewed: `216116708eef3d9d1bce35d4dcfa1d60a30275e2`  
+Baseline reviewed: `22d959d5b182e29ffc49be76f82818c6642ac42a`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -19,13 +19,12 @@ The detailed historical retirement ledger that previously lived in this file rem
 5. Removing the final live caller requires removing the bridge from this registry in the same structural cut.
 6. Operational tooling is canonical under `tools/**`; the retired `scripts/**` root must not be recreated.
 7. E2E specs/helpers are canonical under `tests/e2e/**`; the retired root `e2e/**` must not be recreated.
-8. Historical module/service bridges already retired are protected by their architecture ratchets and must not be recreated.
+8. Historical module/service/config bridges already retired are protected by their architecture ratchets and must not be recreated.
 
 ## Global source/config bridges
 
 | Legacy path | Canonical owner | Why it still exists | Removal gate |
 | --- | --- | --- | --- |
-| `src/config/communityLaunch.ts` | `src/core/community/config/communityLaunch.ts` | current callers still import the global compatibility path | migrate all current callers to the core owner |
 | `src/config/launchScope.ts` | `src/app/config/launchScope.ts` | current callers still import the global compatibility path | migrate all current callers to the app owner |
 | `src/config/moduleSlugs.ts` | `src/shared/config/moduleSlugs.ts` | current callers still import the global compatibility path | migrate all current callers to the shared owner |
 | `src/config/modules.ts` | `src/app/config/modules.ts` | current callers still import the global compatibility path | migrate all current callers to the app owner |
@@ -71,6 +70,7 @@ No legacy Guide routing compatibility bridge remains active. Public tourist-poin
 
 ## Recent retirements relevant to G2 closure
 
+- `src/config/communityLaunch.ts` → retired after the final runtime caller (`src/core/community/pages/ComunidadePage.tsx`) migrated to `src/core/community/config/communityLaunch.ts`; bridge absence and legacy-import absence are ratcheted by `tests/architecture/community-launch-config-import-ratchet.test.ts` and `tests/architecture/repository-reorganization-contract.test.ts`.
 - `e2e/**` → retired completely after all E2E callers migrated to `tests/e2e/helpers/auth.ts`; root absence is ratcheted by `tests/architecture/repository-reorganization-contract.test.ts`.
 - `scripts/**` → retired completely after `tests/security/security-authority-migrations.test.ts`, `package.json` and service-role policy migrated to canonical `tools/**` owners; root absence is ratcheted by `tests/architecture/compatibility-surface-cleanup.test.ts`.
 - `src/core/verticals/guide/routes/touristPointPublicRoutes.ts` and `src/core/verticals/guide/routes/useTouristPointPublicUrls.ts` → canonical owner `src/core/guide/tourist-points/routes`; final application caller migrated and the historical Guide vertical namespace was removed and ratcheted.

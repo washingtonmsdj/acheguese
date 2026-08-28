@@ -63,7 +63,7 @@ import {
   buildCommunityTerritoryUrl,
   buildModuleTerritoryUrl,
 } from "@/core/routing/utils/territoryUrls";
-import { SALVADOR_COMMUNITY_LAUNCH_GROUP_SLUG } from "@/config/communityLaunch";
+import { SALVADOR_COMMUNITY_LAUNCH_GROUP_SLUG } from "@/core/community/config/communityLaunch";
 
 const GruposPage = lazy(() => import("./GruposPage"));
 

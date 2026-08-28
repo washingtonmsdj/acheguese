@@ -24,6 +24,7 @@ const RETIRED_SOURCE_FILES = [
   "src/App.css",
   "src/global.d.ts",
   "src/config/security.config.ts",
+  "src/config/communityLaunch.ts",
   "src/app/config/moduleSlugs.ts",
   "src/app/config/territory.ts",
 ] as const;
@@ -47,7 +48,6 @@ const CONFIG_BRIDGES = new Map([
   ["src/config/modules.ts", "@/app/config/modules"],
   ["src/config/launchScope.ts", "@/app/config/launchScope"],
   ["src/config/territory.ts", "@/core/routing/config/territory"],
-  ["src/config/communityLaunch.ts", "@/core/community/config/communityLaunch"],
 ] as const);
 
 const CANONICAL_CONFIG_TARGETS = [
@@ -249,7 +249,6 @@ describe("global repository reorganization contract", () => {
 
   it("freezes src/config to the remaining compatibility bridges only", () => {
     expect(listFiles("src/config")).toEqual([
-      "communityLaunch.ts",
       "launchScope.ts",
       "moduleSlugs.ts",
       "modules.ts",
