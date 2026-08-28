@@ -9,9 +9,16 @@ Escopo: `src/core`
 > `social`, `favorites`, `notifications`, `reviews` e `realtime` possuem
 > consolidacoes abertas em `CORE_PLATFORM_ARCHITECTURE_SSOT.md`. Em conflito
 > de ownership por operacao/tabela, prevalece esse SSOT mais especifico.
+>
+> Nota G2 (2026-08-28): `src/core/business/**` e owner canonico de contratos,
+> persistencia, queries e services de negocio reutilizaveis quando a capacidade
+> precisa ser compartilhada entre superficies. A UI e a composicao de produto
+> permanecem em `src/modules/business/**`. O namespace legado
+> `src/core/gastronomy` continua proibido; Gastronomy compartilhada usa
+> `src/core/business/**`, conforme `docs/07-modules/GASTRONOMY_CONSOLIDATION_SSOT.md`.
 
 ## Papel oficial da camada `core`
-`src/core` é fundação transversal reutilizável do sistema: autenticação/sessão/perfis, autorização/permissões, localização/território/mapas/geoespacial, comunicação/notificações/realtime, billing/subscription/pricing, observabilidade e governança.
+`src/core` é fundação transversal reutilizável do sistema e também abriga contratos/services de negócio compartilhados que não pertencem a uma única superfície de UI: autenticação/sessão/perfis, autorização/permissões, localização/território/mapas/geoespacial, comunicação/notificações/realtime, billing/subscription/pricing, contratos e persistência compartilhados de business, observabilidade e governança.
 
 ## Matriz completa: pasta atual -> classificação -> destino
 
@@ -25,7 +32,7 @@ Escopo: `src/core`
 | authorization | core transversal legítimo | manter em `src/core/authorization` |
 | banners | domínio de produto | migrar para `src/modules/business` |
 | billing | core transversal legítimo | manter em `src/core/billing` |
-| business | domínio de produto | migrar para `src/modules/business` |
+| business | domínio de negócio compartilhado | manter contratos, persistência, queries e services reutilizáveis em `src/core/business`; UI/composição de produto em `src/modules/business` |
 | city | subdomínio territorial transversal | consolidar em `src/core/location`/`territorial` |
 | civic | legado historico removido | nao recriar; fluxos civicos atuais devem passar por owners comunitarios explicitos como `src/core/community-issues` ou `src/core/community/alerts` ate ADR dedicada |
 | comments | core transversal legítimo | manter em `src/core/comments` |
@@ -36,7 +43,7 @@ Escopo: `src/core`
 | favorites | core transversal legítimo | manter em `src/core/favorites` |
 | feed | core transversal legítimo | manter em `src/core/feed` |
 | gamification | core transversal legítimo | manter em `src/core/gamification` |
-| gastronomy | vertical de produto | **migrado** para `src/modules/business/gastronomy` |
+| gastronomy | namespace vertical legado removido | nao recriar `src/core/gastronomy`; produto/UI ficam em `src/modules/business/gastronomy` e ownership compartilhavel de persistencia/contratos fica em `src/core/business/**` |
 | geocoding | core transversal legítimo | manter em `src/core/geocoding` |
 | geospatial | core transversal legítimo | manter em `src/core/geospatial` |
 | governance | core transversal legítimo | manter em `src/core/governance` |
@@ -92,7 +99,9 @@ Escopo: `src/core`
   - `src/core/classifieds` -> `src/modules/classifieds`
   - `src/core/events` legado substituido por `src/core/verticals/events` e
     `src/modules/community-events`
-  - `src/core/gastronomy` -> `src/modules/business/gastronomy`
+  - `src/core/gastronomy` legado removido; Gastronomy de produto/UI permanece
+    em `src/modules/business/gastronomy` e persistencia/contratos reutilizaveis
+    sao canonicos em `src/core/business/**`
   - `src/core/lostfound` legado substituido por `src/core/community-lost-found`
     e `src/modules/community-lost-found`
   - `src/core/tourist-points` -> `src/modules/guide/tourist-points`
@@ -116,7 +125,7 @@ Escopo: `src/core`
 
 ```text
 src/core/
-  address auth authorization billing coverage geocoding geospatial
+  address auth authorization billing business coverage geocoding geospatial
   governance location maps media messaging moderation notifications
   permissions posts pricing privacy profiles public-identity qr realtime
   reviews rollout safety search service-areas session social subscription
@@ -129,9 +138,8 @@ src/core/
 ```
 
 ## Blindagem anti-regressão
-- `scripts/validate-project-taxonomy.ts` bloqueia reintrodução em `src/core` de:
+- `tools/architecture/validate-project-taxonomy.ts` bloqueia reintrodução em `src/core` de:
   - `admin-identidade`, `admin-motoristas`, `community-alerts`, `supabase`, `profile`, `promotions`, `services`, `vagas`, `classifieds`, `civic`, `events`, `tourist-points`, `landing`, `lostfound`, `gastronomy`
   - referencias ativas que tentem recriar `src/modules/community` como destino
     atual para issues, eventos, lost-found ou civic.
 - Regra operacional: novo diretório em `src/core` só entra com ADR/SSOT e validador atualizado no mesmo PR.
-
