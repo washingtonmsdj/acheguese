@@ -33,7 +33,7 @@ import {
   gastronomyPublicRoutes,
 } from "@/core/verticals/gastronomy/routes/gastronomyPublicRoutes";
 import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
-import { touristPointPublicRoutes } from "@/core/verticals/guide/routes/touristPointPublicRoutes";
+import { touristPointPublicRoutes } from "@/core/guide/tourist-points/routes/touristPointPublicRoutes";
 import { isFeatureEnabled } from "@/shared/utils/featureFlags";
 import { CommunityTerritoryRoutes } from "./CommunityTerritoryRoutes";
 import { ProtectedRoute } from "@/core/routing/components/ProtectedRoute";
