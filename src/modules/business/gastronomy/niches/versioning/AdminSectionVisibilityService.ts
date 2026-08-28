@@ -10,13 +10,13 @@
  * @version 1.0.0
  */
 
-import type { AdminSection, NicheCapability } from '../types';
 import type {
   AdminSectionVisibility,
   AdminSectionsVisibilityMap,
   ProfileNicheConfig,
-} from './types';
+} from '@/core/business/niches/versioning/types';
 import { getRecordValue } from '@/shared/utils/recordLookup';
+import type { AdminSection, NicheCapability } from '../types';
 
 /**
  * Mapeamento de seções de admin para capabilities necessárias
@@ -73,7 +73,6 @@ export class AdminSectionVisibilityService {
       return false;
     }
 
-    // Seção é visível se tem TODAS as capabilities necessárias
     return requiredCaps.every((cap) => enabledCapabilities.includes(cap));
   }
 
@@ -156,9 +155,6 @@ export class AdminSectionVisibilityService {
       const requiredCaps = getRecordValue(ADMIN_SECTION_REQUIREMENTS, section) || [];
       if (requiredCaps.length === 0) return false;
 
-      // Seção é configurável se:
-      // 1. Não está totalmente visível ainda
-      // 2. Pelo menos uma capability necessária está em missing_capabilities
       const isVisible = this.isSectionVisible(section, enabledCapabilities);
       const hasMissingCaps = requiredCaps.some((cap) =>
         missingCapabilities.includes(cap),
@@ -214,7 +210,6 @@ export class AdminSectionVisibilityService {
       }
     }
 
-    // Remover grupos vazios
     return Object.fromEntries(
       Object.entries(groups).filter(([_, sections]) => sections.length > 0),
     );
