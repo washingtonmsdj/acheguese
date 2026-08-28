@@ -1,9 +1,19 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const repoRoot = resolve(__dirname, "../..");
 const read = (path: string) => readFileSync(resolve(repoRoot, path), "utf8");
+const exists = (path: string) => existsSync(resolve(repoRoot, path));
+
+const RETIRED_EDUCATION_BRIDGES = [
+  "src/modules/business/education/types/index.ts",
+  "src/modules/business/education/services/education.queries.ts",
+  "src/modules/business/education/services/education.mutations.ts",
+  "src/modules/business/education/constants/schoolStageOptions.ts",
+  "src/modules/business/education/services/EducationTrackingService.ts",
+  "src/modules/business/education/services/EducationObservabilityService.ts",
+] as const;
 
 describe("Education module hardening ratchet", () => {
   it("does not advertise Education as production-ready while public routes are paused", () => {
@@ -25,59 +35,35 @@ describe("Education module hardening ratchet", () => {
     const tracking = read(
       "src/core/education/services/EducationTrackingService.ts",
     );
-    const legacyObservability = read(
-      "src/modules/business/education/services/EducationObservabilityService.ts",
-    );
-    const legacyTracking = read(
-      "src/modules/business/education/services/EducationTrackingService.ts",
-    );
 
     expect(observability).toContain("@/integrations/supabase");
     expect(tracking).toContain("@/integrations/supabase");
-    expect(legacyObservability).toContain(
-      "@/core/education/services/EducationObservabilityService",
-    );
-    expect(legacyTracking).toContain(
-      "@/core/education/services/EducationTrackingService",
-    );
-    expect(legacyObservability).not.toContain("@/integrations/");
-    expect(legacyTracking).not.toContain("@/integrations/");
-  });
-
-  it("keeps Education domain contracts owned by core", () => {
-    const contracts = read("src/core/education/contracts.ts");
-    const moduleTypes = read("src/modules/business/education/types/index.ts");
-    const tracking = read(
-      "src/core/education/services/EducationTrackingService.ts",
-    );
-
-    expect(contracts).toContain("export type EducationNicheKey");
-    expect(contracts).toContain("export interface EducationProfile");
-    expect(contracts).toContain("export type EducationAnalyticsEventType");
-    expect(moduleTypes).toContain("@/core/education/contracts");
-    expect(moduleTypes).not.toContain("export interface EducationProfile");
     expect(tracking).toContain("@/core/education/contracts");
     expect(tracking).not.toContain("@/modules/business/education");
   });
 
-  it("freezes only the remaining read/write model integration debt", () => {
+  it("keeps Education domain contracts owned by core", () => {
+    const contracts = read("src/core/education/contracts.ts");
+
+    expect(contracts).toContain("export type EducationNicheKey");
+    expect(contracts).toContain("export interface EducationProfile");
+    expect(contracts).toContain("export type EducationAnalyticsEventType");
+  });
+
+  it("retires all Education core bridges and blocks their recreation", () => {
     const validator = read("tools/architecture/validate-education-module-boundaries.ts");
 
-    for (const path of [
-      "src/modules/business/education/services/education.mutations.ts",
-      "src/modules/business/education/services/education.queries.ts",
-    ]) {
+    for (const path of RETIRED_EDUCATION_BRIDGES) {
+      expect(exists(path), path).toBe(false);
       expect(validator).toContain(path);
     }
 
-    expect(validator).not.toContain(
-      "src/modules/business/education/services/EducationObservabilityService.ts",
-    );
-    expect(validator).not.toContain(
-      "src/modules/business/education/services/EducationTrackingService.ts",
-    );
-    expect(validator).toContain("ALLOWED_DIRECT_INTEGRATION_FILES");
+    expect(validator).toContain("RETIRED_CORE_BRIDGES");
+    expect(validator).not.toContain("REQUIRED_CORE_BRIDGES");
+    expect(validator).not.toContain("ALLOWED_DIRECT_INTEGRATION_FILES");
     expect(validator).toContain("direct integrations access is forbidden");
-    expect(validator).toContain("transitional allowlist entry is stale");
+    expect(validator).toContain(
+      "retired compatibility bridge must not be recreated",
+    );
   });
 });
