@@ -1,6 +1,6 @@
 import * as GastronomyHelpers from './gastronomy.helpers';
 import * as GastronomyQueries from '@/core/business/services/gastronomy.queries';
-import * as MenuQueries from './menu.queries';
+import * as MenuQueries from '@/core/business/services/menu.queries';
 
 /**
  * Read-side facade kept for hooks that need a compact query/helper contract.
