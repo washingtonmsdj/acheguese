@@ -38,7 +38,7 @@ import { useTerritoryLabels } from '@/core/location/hooks/useTerritoryLabels';
 import { useTerritoryPolygon, type TerritoryPolygon } from '../hooks/useTerritoryPolygon';
 import { useQuery } from '@tanstack/react-query';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
-import { APP_MODULE_SLUGS, buildAppModulePath } from '@/config/moduleSlugs';
+import { APP_MODULE_SLUGS, buildAppModulePath } from '@/shared/config/moduleSlugs';
 import { NeighborhoodTerritoryArt } from '@/core/community/components/public/NeighborhoodTerritoryArt';
 import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 import { boundaryService } from '@/core/geospatial';
