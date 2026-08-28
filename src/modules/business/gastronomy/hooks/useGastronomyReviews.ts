@@ -5,7 +5,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { useSessionContext } from "@/core/session";
 import {
   ReviewQueryService,
   type Review,
@@ -14,7 +13,8 @@ import {
   type BusinessResponseInput,
   type ReportReviewInput,
   type VoteReviewInput,
-} from "../services/review.queries";
+} from "@/core/business/services/gastronomy.review.queries";
+import { useSessionContext } from "@/core/session";
 
 const QUERY_KEYS = {
   businessReviews: (businessProfileId: string) => [
