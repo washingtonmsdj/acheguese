@@ -178,7 +178,7 @@ describe("MediaAsset SSOT", () => {
     const migration = read(
       "supabase/migrations/20260717120000_create_cp016_media_backfill_commands.sql",
     );
-    const executor = read("scripts/media-assets-cp016-backfill.ts");
+    const executor = read("tools/migrations/media-assets-cp016-backfill.ts");
     const jpegValidation = read("supabase/functions/_shared/jpegValidation.ts");
 
     expect(migration).toContain("source_sha256");
