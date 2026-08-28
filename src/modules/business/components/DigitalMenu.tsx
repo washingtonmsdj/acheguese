@@ -27,7 +27,7 @@ import type { LucideIcon } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { formatBrl } from "@/shared/utils/currency";
 import { toast } from "sonner";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 interface Product {
   id: string;
   name: string;
