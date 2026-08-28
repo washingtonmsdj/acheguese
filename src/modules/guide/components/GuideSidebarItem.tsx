@@ -8,7 +8,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Camera } from 'lucide-react';
 import { SidebarMenuButton, SidebarMenuItem } from '@/shared/components/ui/sidebar';
-import { APP_MODULE_SLUGS, isAppModulePath } from '@/config/moduleSlugs';
+import { APP_MODULE_SLUGS, isAppModulePath } from '@/shared/config/moduleSlugs';
 import { useGuideUrls } from '../hooks/useGuideUrls';
 
 export function GuideSidebarItem() {
