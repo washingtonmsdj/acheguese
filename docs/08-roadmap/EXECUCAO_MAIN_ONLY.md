@@ -1,10 +1,10 @@
 # Achegue-se — Execução `main`-only e prontidão MVP
 
 **Status:** ATIVO — SSOT OPERACIONAL  
-**Data do checkpoint GitHub:** 2026-08-26  
+**Data do checkpoint GitHub:** 2026-08-27  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**HEAD técnico anterior a esta sincronização:** `c2e323c27c62cf4cbbbade711a19eb6acaa15349`
+**HEAD técnico anterior a esta sincronização:** `9a601de885c2631f6ae5904b7b9eb7b22662dd72`
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Owners técnicos específicos continuam sendo fonte de verdade para domínio, segurança e schema.
 
@@ -25,7 +25,7 @@ Este documento consolida ordem de execução, blockers e Definition of Done. Own
 - 90 branches foram inventariadas anteriormente: `main` + 89 refs históricas pendentes de classificação segura (#84).
 - `main` permanece sem proteção/ruleset autoritativo no último snapshot confirmado (#28).
 - os workflows SSOT foram corrigidos para reagir a `push` na `main`; `scripts/**` e `eslint.config.js` também passaram a disparar o enforcement quando alterados.
-- a camada GitHub Actions já apresentou falhas pre-step com `steps=null`; portanto nenhum check desse tipo pode ser tratado como prova verde até executar comandos reais (#17).
+- a camada GitHub Actions continua apresentando falhas pre-step com `steps=[]`/runner não provisionado; portanto nenhum check desse tipo pode ser tratado como prova verde até executar comandos reais (#17).
 - o último status Vercel inspecionado nesta estabilização falhou por `upgradeToPro=build-rate-limit`; isso é blocker de certificação/deploy, não prova de erro de compilação.
 
 ## P0 — SSOT, CI e proteção
@@ -74,9 +74,10 @@ Owners: #85 e #68 (LGPD).
 - [x] mover read model `education.queries.ts` para `src/core/education/services`;
 - [x] mover write model `education.mutations.ts` para `src/core/education/services`;
 - [x] mover `schoolStageOptions` compartilhado para `src/core/education/constants`;
-- [x] manter paths antigos apenas como bridges one-way;
+- [x] aposentar os seis paths de compatibilidade em `src/modules/business/education` após zero callers de runtime;
 - [x] levar o baseline de acesso runtime direto a `@/integrations/*` em `src/modules/business/education` de 4 arquivos para **zero**;
-- [x] validator `scripts/validate-education-module-boundaries.ts` bloqueia regressão e exige os bridges canônicos.
+- [x] `tools/architecture/validate-education-module-boundaries.ts` bloqueia acesso runtime direto e a recriação dos bridges aposentados;
+- [x] `tests/architecture/education-module-boundary-ratchet.test.ts` exige owners canônicos e ausência física dos bridges aposentados.
 
 **Ainda não certificado:**
 
@@ -90,13 +91,13 @@ Owners: #85 e #68 (LGPD).
 ### Events — owner físico consolidado
 
 - [x] classificar Events como bounded context comunitário, não vertical empresarial;
-- [x] mover persistência de engagement para `core` e manter bridge one-way no módulo;
+- [x] mover persistência de engagement para `core` e aposentar o bridge module-local após zero callers;
 - [x] pré-validar a implementação antiga contra as fronteiras do destino durante a migração;
 - [x] mover a implementação física para `src/modules/community-events` preservando a árvore de código;
 - [x] atualizar a rota territorial para carregar `@/modules/community-events/pages/EventsListPage`;
 - [x] atualizar o deploy validator para inspecionar o owner canônico de Events;
 - [x] remover integralmente `src/features` e retirar a allowlist de migração;
-- [x] adicionar `tests/architecture/events-owner-migration.test.ts` para bloquear recriação do namespace legado e drift de rota/deploy;
+- [x] adicionar `tests/architecture/events-owner-migration.test.ts` para bloquear recriação do namespace legado, do bridge de engagement e drift de rota/deploy;
 - [x] retirar `src/features/events` do architecture registry.
 
 **Ainda não certificado:**
@@ -166,7 +167,9 @@ O Achegue-se só pode ser marcado **MVP READY** quando todos os itens abaixo for
 - `3707218` — `src/features` removido e ratchets atualizados;
 - `63a2ab2` — guard de ownership de Events;
 - `2ef08e9` — registry sem o source root aposentado de Events;
-- `c2e323c` — regras arquiteturais sincronizadas com a conclusão da migração.
+- `c2e323c` — regras arquiteturais sincronizadas com a conclusão da migração;
+- `0bf6e2d` — bridge de engagement de Events aposentado e testes convertidos para bloquear recriação;
+- `84b1921` — seis bridges locais de Education aposentados após zero callers de runtime.
 
 ## Trackers canônicos
 
