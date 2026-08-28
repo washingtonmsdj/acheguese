@@ -1,5 +1,5 @@
-import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/config/territory";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import { BusinessUrlService } from "@/core/business";
 import {
   adDeliveryService,
