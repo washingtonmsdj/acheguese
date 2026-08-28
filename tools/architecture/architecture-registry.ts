@@ -232,7 +232,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/core/verticals/gastronomy/services/GastronomyUrlService.ts",
       "src/modules/business/gastronomy/services/GastronomyService.ts",
       "src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts",
-      "src/modules/business/gastronomy/services/GastronomyProfileService.ts",
+      "src/core/business/services/GastronomyProfileService.ts",
       "src/modules/business/gastronomy/services/MenuService.ts",
       "src/modules/business/gastronomy/services/GastronomyMapService.ts",
     ],
@@ -479,8 +479,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     canonicalTypeBasenames: ["types.ts"],
     adminSummary:
       "Boa cobertura administrativa para issues. O modulo transversal agora e separado de alertas e feed.",
-    docsSummary:
-      "Inicial. README local documenta boundary e dependencia em location_id.",
+    docsSummary: "Inicial. README local documenta boundary e dependencia em location_id.",
     ssotSummary:
       "Issues comunitarias consomem core/community/issues e nao devem importar outros modulos.",
   },
