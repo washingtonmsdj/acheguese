@@ -6,23 +6,13 @@ import path from "node:path";
 const ROOT = process.cwd();
 const EDUCATION_ROOT = "src/modules/business/education";
 
-// Zero is the architectural target and current baseline. Any new runtime
-// direct integration from the module is a regression.
-const ALLOWED_DIRECT_INTEGRATION_FILES = new Set<string>();
-
-const REQUIRED_CORE_BRIDGES = new Map([
-  [
-    "src/modules/business/education/services/education.queries.ts",
-    "@/core/education/services/education.queries",
-  ],
-  [
-    "src/modules/business/education/services/education.mutations.ts",
-    "@/core/education/services/education.mutations",
-  ],
-  [
-    "src/modules/business/education/constants/schoolStageOptions.ts",
-    "@/core/education/constants/schoolStageOptions",
-  ],
+const RETIRED_CORE_BRIDGES = new Set([
+  "src/modules/business/education/types/index.ts",
+  "src/modules/business/education/services/education.queries.ts",
+  "src/modules/business/education/services/education.mutations.ts",
+  "src/modules/business/education/constants/schoolStageOptions.ts",
+  "src/modules/business/education/services/EducationTrackingService.ts",
+  "src/modules/business/education/services/EducationObservabilityService.ts",
 ]);
 
 const CODE_FILE_RE = /\.(ts|tsx|js|jsx)$/;
@@ -66,7 +56,6 @@ function main(): void {
   }
 
   const violations: string[] = [];
-  const actualDirectIntegrationFiles = new Set<string>();
 
   for (const filePath of walk(fullRoot)) {
     const relative = normalize(path.relative(ROOT, filePath));
@@ -79,34 +68,16 @@ function main(): void {
     }
 
     if (DIRECT_INTEGRATION_RE.test(content)) {
-      actualDirectIntegrationFiles.add(relative);
-      if (!ALLOWED_DIRECT_INTEGRATION_FILES.has(relative)) {
-        violations.push(
-          `${relative}: direct integrations access is forbidden; persistence belongs to src/core/education.`,
-        );
-      }
-    }
-  }
-
-  for (const legacyFile of ALLOWED_DIRECT_INTEGRATION_FILES) {
-    if (!actualDirectIntegrationFiles.has(legacyFile)) {
       violations.push(
-        `${legacyFile}: transitional allowlist entry is stale and must be removed in the same migration commit.`,
+        `${relative}: direct integrations access is forbidden; persistence belongs to src/core/education.`,
       );
     }
   }
 
-  for (const [bridgeFile, canonicalImport] of REQUIRED_CORE_BRIDGES) {
-    const absolute = path.join(ROOT, bridgeFile);
-    if (!fs.existsSync(absolute)) {
-      violations.push(`${bridgeFile}: required compatibility bridge is missing.`);
-      continue;
-    }
-
-    const content = fs.readFileSync(absolute, "utf8");
-    if (!content.includes(canonicalImport)) {
+  for (const bridgeFile of RETIRED_CORE_BRIDGES) {
+    if (fs.existsSync(path.join(ROOT, bridgeFile))) {
       violations.push(
-        `${bridgeFile}: compatibility bridge must point one-way to ${canonicalImport}.`,
+        `${bridgeFile}: retired compatibility bridge must not be recreated. Import the canonical src/core/education owner directly.`,
       );
     }
   }
@@ -118,7 +89,7 @@ function main(): void {
   }
 
   console.log(
-    "Education module boundary valid: zero direct runtime integrations; canonical read/write/constants bridges enforced.",
+    "Education module boundary valid: zero direct runtime integrations; retired core bridges remain absent.",
   );
 }
 
