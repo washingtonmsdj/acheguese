@@ -13,7 +13,7 @@ import {
   loadAllowedResidualCacheKeys,
   parseAdvisorFindings,
   validateAdvisorFindings,
-} from "../../scripts/validate-supabase-advisor-residuals";
+} from "../../tools/supabase/validate-supabase-advisor-residuals";
 import {
   validateMigrationFiles,
   type MigrationFile,
@@ -71,19 +71,19 @@ const serviceRoleBoundaryPolicyPath = join(
   "SERVICE_ROLE_BOUNDARY_POLICY.json",
 );
 const edgeFunctionAuthConfigModulePath =
-  "../../scripts/security/edge-function-auth-config.mjs";
+  "../../tools/security/edge-function-auth-config.mjs";
 const edgeFunctionAuthPolicyModulePath =
-  "../../scripts/security/edge-function-auth-policy.mjs";
+  "../../tools/security/edge-function-auth-policy.mjs";
 const serviceRoleBoundaryModulePath =
-  "../../scripts/security/service-role-boundary.mjs";
+  "../../tools/security/service-role-boundary.mjs";
 const supabaseAccessBoundaryModulePath =
-  "../../scripts/security/supabase-access-boundary.mjs";
+  "../../tools/security/supabase-access-boundary.mjs";
 const edgeFunctionBrokerBoundaryModulePath =
-  "../../scripts/security/edge-function-broker-boundary.mjs";
+  "../../tools/security/edge-function-broker-boundary.mjs";
 const supabaseAuthHibpModulePath =
-  "../../scripts/security/supabase-auth-hibp.mjs";
+  "../../tools/security/supabase-auth-hibp.mjs";
 const supabasePostgisOwnerPreflightModulePath =
-  "../../scripts/security/supabase-postgis-owner-preflight.mjs";
+  "../../tools/security/supabase-postgis-owner-preflight.mjs";
 
 type EdgeFunctionAuthConfig = {
   verifyJwt?: boolean;
@@ -899,11 +899,11 @@ describe("Security Authority Supabase Auth config", () => {
       join(repoRoot, "package.json"),
     );
     const scriptContent = readMarkdown(
-      join(repoRoot, "scripts", "security", "supabase-auth-hibp.mjs"),
+      join(repoRoot, "tools", "security", "supabase-auth-hibp.mjs"),
     );
 
     expect(pkg.scripts?.["security:auth:hibp"]).toBe(
-      "node scripts/security/supabase-auth-hibp.mjs --check",
+      "node tools/security/supabase-auth-hibp.mjs --check",
     );
     expect(scriptContent).toContain("/projects/${projectRef}/config/auth");
     expect(scriptContent).toContain("password_hibp_enabled");
@@ -1451,7 +1451,7 @@ describe("Security Authority service_role boundary", () => {
       policy: serviceRoleBoundaryPolicy,
       files: [
         {
-          path: "scripts/lib/supabase-client.mjs",
+          path: "tools/supabase/supabase-client.mjs",
           content: "const key = process.env.SUPABASE_SERVICE_ROLE_KEY;",
         },
       ],
@@ -1640,7 +1640,7 @@ describe("Security Authority service_role boundary", () => {
       policy: serviceRoleBoundaryPolicy,
       files: [
         {
-          path: "scripts/lib/supabase-client.mjs",
+          path: "tools/supabase/supabase-client.mjs",
           content:
             "return createClient(url, key, { auth: { persistSession: false } });",
         },
@@ -2210,7 +2210,7 @@ describe("Supabase PostGIS owner preflight", () => {
     const sql = buildPostgisOwnerPreflightSql();
 
     expect(pkg.scripts?.["security:postgis:preflight"]).toBe(
-      "node scripts/security/supabase-postgis-owner-preflight.mjs --json",
+      "node tools/security/supabase-postgis-owner-preflight.mjs --json",
     );
     expect(parseArgs(["--json", "--fail-if-blocked"])).toEqual({
       failIfBlocked: true,
@@ -2259,7 +2259,7 @@ describe("Supabase PostGIS owner preflight", () => {
           table_schema: "public",
         },
       ],
-      st_estimatedextent: [
+      st_estimated_extent: [
         {
           anon_execute: true,
           authenticated_execute: true,
