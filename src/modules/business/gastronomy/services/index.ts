@@ -19,7 +19,7 @@ export {
   fetchSimilarGastronomyBusinesses,
   type GastronomyQuickMetrics,
   type SimilarGastronomyBusiness,
-} from './gastronomy-runtime.queries';
+} from '@/core/business/services/gastronomy-runtime.queries';
 
 // Granular queries/mutations
 export {
