@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
-import { TERRITORY_CONFIG } from "@/config/territory";
+import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
+import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 
 const STORAGE_KEY = "acheguese:last-browsing-city";
