@@ -13,8 +13,8 @@ import {
 import {
   isLaunchSurfaceEnabled,
   type LaunchSurfaceKey,
-} from "@/config/launchScope";
-import { LAUNCH_URLS } from "@/config/territory";
+} from "@/app/config/launchScope";
+import { LAUNCH_URLS } from "@/core/routing/config/territory";
 
 const PREFETCHERS: Array<{
   test: (path: string) => boolean;
