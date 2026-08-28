@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
+import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
 import {
   TERRITORIAL_ROUTE_PARAMS,
   buildTerritorialModuleRoutePath,
