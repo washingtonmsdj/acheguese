@@ -59,7 +59,7 @@ import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-r
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
 import { useTerritoryFilter } from "@/core/location/hooks/useTerritoryFilter";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import {
   clearPostDraft,
   hasMeaningfulDraft,
@@ -718,8 +718,6 @@ export function CreatePostModal({
     };
   }, [open, editPostId, profile?.id]);
 
-
-
   const displayName = profile?.displayName ?? "Usuário";
   const avatarUrl = profile?.avatarUrl;
   const initials = displayName
@@ -1008,16 +1006,12 @@ export function CreatePostModal({
         toast.success("Conteúdo publicado.");
       }
 
-      // Atualiza o feed imediatamente para trazer o novo post ao topo
-      // (ordem canônica é created_at DESC, então o recém-criado aparece primeiro).
       queryClient.invalidateQueries({ queryKey: communityFeedQueryKeys.root });
 
-      // Emite o post recém-criado para destaque + auto-scroll no feed.
       if (createdPostId) {
         emitNewPost(createdPostId);
       }
 
-      // Limpa o rascunho após publicação bem-sucedida (local + remoto).
       if (!editPostId && profile?.id) {
         clearPostDraft(profile.id);
         void deleteRemoteDraft(profile.id);
@@ -1086,7 +1080,6 @@ export function CreatePostModal({
     setHasStoredDraft(false);
     setConfirmDiscardOpen(false);
     toast.success("Rascunho descartado.");
-    // Reabilita autosave assim que o usuário voltar a digitar.
     window.setTimeout(() => {
       suppressAutosaveRef.current = false;
     }, 300);
@@ -1104,7 +1097,6 @@ export function CreatePostModal({
   };
 
   const handleDismissDraftBanner = () => {
-    // Mantém o rascunho armazenado; só esconde o banner nesta sessão.
     setPendingDraftForRestore(null);
   };
 
@@ -1152,11 +1144,6 @@ export function CreatePostModal({
         return null;
     }
   }, [saveStatus, formattedSavedAt]);
-
-
-
-
-
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
