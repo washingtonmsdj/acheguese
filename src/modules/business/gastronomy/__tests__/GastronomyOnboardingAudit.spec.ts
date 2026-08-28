@@ -14,7 +14,7 @@ describe("gastronomy onboarding hardening", () => {
       "src/modules/business/gastronomy/services/GastronomyProfileService.ts",
     );
     const menuQueries = read(
-      "src/modules/business/gastronomy/services/menu.queries.ts",
+      "src/core/business/services/menu.queries.ts",
     );
     const runtimeQueries = read(
       "src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts",
