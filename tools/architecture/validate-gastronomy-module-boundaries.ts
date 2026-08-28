@@ -11,7 +11,6 @@ const ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES = new Set<string>();
 
 // Pure legacy -> core compatibility bridges. These files must stay bridge-only.
 const REQUIRED_CORE_BRIDGES = new Map([
-  ["src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts", "@/core/business/services/gastronomy-runtime.queries"],
   ["src/modules/business/gastronomy/services/MenuService.ts", "@/core/business/services/MenuService"],
   ["src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts", "@/core/business/niches/pizzaria/PizzaAdminService"],
 ]);
@@ -37,6 +36,7 @@ const MODULE_LOCAL_CONTRACT_SURFACES = new Map([
 
 const RETIRED_CORE_BRIDGES = new Set([
   "src/modules/business/gastronomy/services/gastronomy.queries.ts",
+  "src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts",
   "src/modules/business/gastronomy/services/resolveGastronomyBusinessId.ts",
   "src/modules/business/gastronomy/services/activity.queries.ts",
   "src/modules/business/gastronomy/services/favorites.queries.ts",
