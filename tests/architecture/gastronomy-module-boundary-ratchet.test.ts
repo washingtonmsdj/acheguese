@@ -40,6 +40,7 @@ describe("Gastronomy module boundary ratchet", () => {
       "src/modules/business/gastronomy/services/gastronomy.queries.ts",
       "src/modules/business/gastronomy/services/resolveGastronomyBusinessId.ts",
       "src/modules/business/gastronomy/services/activity.queries.ts",
+      "src/modules/business/gastronomy/services/favorites.queries.ts",
     ];
 
     for (const bridge of retiredBridges) {
