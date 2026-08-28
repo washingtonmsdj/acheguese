@@ -42,7 +42,7 @@ describe("community Events canonical owner", () => {
   });
 
   it("keeps deploy hygiene scanning the canonical Events owner", () => {
-    const deployGuard = read("scripts/verify-deploy-ready.mjs");
+    const deployGuard = read("tools/release/verify-deploy-ready.mjs");
 
     expect(deployGuard).toContain(
       "collectRuntimeSourceFiles('src/modules/community-events')",
