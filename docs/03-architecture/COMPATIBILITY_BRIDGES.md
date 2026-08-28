@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 closure review  
-Baseline reviewed: `6ab27e3af8a4b23e56f30cadd66ec4e2e032bdb9`  
+Baseline reviewed: `216116708eef3d9d1bce35d4dcfa1d60a30275e2`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -18,7 +18,8 @@ The detailed historical retirement ledger that previously lived in this file rem
 4. A bridge may remain during G2 only when a current caller still requires the legacy path.
 5. Removing the final live caller requires removing the bridge from this registry in the same structural cut.
 6. Operational tooling is canonical under `tools/**`; the retired `scripts/**` root must not be recreated.
-7. Historical module/service bridges already retired are protected by their architecture ratchets and must not be recreated.
+7. E2E specs/helpers are canonical under `tests/e2e/**`; the retired root `e2e/**` must not be recreated.
+8. Historical module/service bridges already retired are protected by their architecture ratchets and must not be recreated.
 
 ## Global source/config bridges
 
@@ -30,11 +31,9 @@ The detailed historical retirement ledger that previously lived in this file rem
 | `src/config/modules.ts` | `src/app/config/modules.ts` | current callers still import the global compatibility path | migrate all current callers to the app owner |
 | `src/config/territory.ts` | `src/core/routing/config/territory.ts` | current callers still import `@/config/territory` | migrate all current callers directly to `core/routing` |
 
-## Global test compatibility
+## Global E2E compatibility state
 
-| Legacy path | Canonical owner | Why it still exists | Removal gate |
-| --- | --- | --- | --- |
-| `e2e/helpers/auth.ts` | `tests/e2e/helpers/auth.ts` | current E2E specs still use the legacy helper location | migrate all E2E specs to `tests/e2e/helpers/auth.ts` |
+No legacy root `e2e/**` compatibility path remains active. E2E specs and helpers are canonical under `tests/e2e/**`; `tests/architecture/repository-reorganization-contract.test.ts` prevents recreation of the retired root.
 
 ## Tooling bridge state
 
@@ -72,6 +71,7 @@ No legacy Guide routing compatibility bridge remains active. Public tourist-poin
 
 ## Recent retirements relevant to G2 closure
 
+- `e2e/**` → retired completely after all E2E callers migrated to `tests/e2e/helpers/auth.ts`; root absence is ratcheted by `tests/architecture/repository-reorganization-contract.test.ts`.
 - `scripts/**` → retired completely after `tests/security/security-authority-migrations.test.ts`, `package.json` and service-role policy migrated to canonical `tools/**` owners; root absence is ratcheted by `tests/architecture/compatibility-surface-cleanup.test.ts`.
 - `src/core/verticals/guide/routes/touristPointPublicRoutes.ts` and `src/core/verticals/guide/routes/useTouristPointPublicUrls.ts` → canonical owner `src/core/guide/tourist-points/routes`; final application caller migrated and the historical Guide vertical namespace was removed and ratcheted.
 - `scripts/validate-project-taxonomy.ts` → canonical owner `tools/architecture/validate-project-taxonomy.ts`; final live test caller migrated and legacy path removed.
@@ -86,6 +86,7 @@ G2 may close with the explicitly tracked compatibility debt above only if all of
 
 - `src/features`, `src/test`, and `src/__tests__` are absent;
 - `scripts/` is absent and operational tooling is canonical in `tools/**`;
+- `e2e/` is absent and E2E specs/helpers are canonical in `tests/e2e/**`;
 - no canonical `tools/**` owner depends on a retired `scripts/**` path;
 - no `src/core/**` implementation depends on `src/modules/**`;
 - module → integration runtime exceptions remain explicitly ratcheted and cannot grow;
