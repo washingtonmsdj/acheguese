@@ -58,7 +58,7 @@ import { buildCommunityNavigationModuleUrls } from '@/core/routing/utils/communi
 import { useGroupAvailability } from '@/core/territorial/hooks/useGroupAvailability';
 import { ModuleKey } from '@/core/rollout/types';
 import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
-import { isLaunchSurfaceEnabled } from '@/config/launchScope';
+import { isLaunchSurfaceEnabled } from '@/app/config/launchScope';
 
 function getInitials(value?: string | null): string {
   if (!value) return 'U';
