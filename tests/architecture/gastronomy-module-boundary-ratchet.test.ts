@@ -20,7 +20,7 @@ describe("Gastronomy module boundary ratchet", () => {
     expect(readme).not.toContain("baseline atual possui **5 arquivos runtime**");
   });
 
-  it("forbids product callers of remaining compatibility bridges", () => {
+  it("forbids product callers of retired compatibility bridges", () => {
     const validator = read("tools/architecture/validate-gastronomy-module-boundaries.ts");
     const legacyImports = [
       "@/modules/business/gastronomy/services/gastronomy-runtime.queries",
@@ -63,7 +63,7 @@ describe("Gastronomy module boundary ratchet", () => {
     expect(coreMenuQueries).toContain("@/integrations/supabase");
   });
 
-  it("does not recreate retired Gastronomy read/resolver bridges", () => {
+  it("does not recreate retired Gastronomy bridges", () => {
     const retiredBridges = [
       "src/modules/business/gastronomy/services/gastronomy.queries.ts",
       "src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts",
@@ -73,6 +73,9 @@ describe("Gastronomy module boundary ratchet", () => {
       "src/modules/business/gastronomy/services/review.queries.ts",
       "src/modules/business/gastronomy/services/menu.queries.ts",
       "src/modules/business/gastronomy/services/DeliveryAreaService.ts",
+      "src/modules/business/gastronomy/services/GastronomyProfileService.ts",
+      "src/modules/business/gastronomy/services/MenuService.ts",
+      "src/modules/business/gastronomy/niches/types.ts",
       "src/modules/business/gastronomy/niches/versioning/types.ts",
       "src/modules/business/gastronomy/niches/versioning/NicheVersioningService.ts",
       "src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts",
