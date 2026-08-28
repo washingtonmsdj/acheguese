@@ -6,7 +6,7 @@ import { Button } from "@/shared/components/ui/button";
 import { useSessionContext } from "@/core/session";
 import { AuthService } from "@/core/auth/services/AuthService";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
 function getInitials(value?: string | null): string {
   if (!value) return "U";
