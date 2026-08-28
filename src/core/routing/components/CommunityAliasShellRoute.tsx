@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Outlet, useLocation, useParams } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
-import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
+import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
 import { useCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
 import { isCommunityStatusPubliclyRenderable } from "@/core/community-experience/constants/statuses";
 import { useGroupAvailability } from "@/core/territorial/hooks/useGroupAvailability";
