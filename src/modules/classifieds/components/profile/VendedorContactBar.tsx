@@ -20,7 +20,7 @@ import { classifiedMessagingService } from "@/core/messaging/services/Classified
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import { useVisibleProfileContact } from "@/core/profiles";
 
 interface VendedorContactBarProps {
