@@ -18,6 +18,16 @@ const REQUIRED_CORE_BRIDGES = new Map([
   ["src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts", "@/core/business/niches/pizzaria/PizzaAdminService"],
 ]);
 
+// The compatibility files above may still exist while central manifests catch up,
+// but product/runtime code must not create new callers of their legacy module paths.
+const FORBIDDEN_COMPATIBILITY_IMPORTS = new Map([
+  ["@/modules/business/gastronomy/services/gastronomy-runtime.queries", "@/core/business/services/gastronomy-runtime.queries"],
+  ["@/modules/business/gastronomy/services/GastronomyProfileService", "@/core/business/services/GastronomyProfileService"],
+  ["@/modules/business/gastronomy/services/MenuService", "@/core/business/services/MenuService"],
+  ["@/modules/business/gastronomy/niches/types", "@/core/business/niches/types"],
+  ["@/modules/business/gastronomy/niches/pizzaria/PizzaAdminService", "@/core/business/niches/pizzaria/PizzaAdminService"],
+]);
+
 // These are NOT bridges. They intentionally combine canonical core contracts
 // with module-owned UI/cart/taxonomy contracts and therefore remain legitimate
 // module surfaces during G2.
@@ -86,6 +96,12 @@ function main(): void {
     const content = fs.readFileSync(filePath, "utf8");
     const runtimeContent = withoutTypeOnlyImports(content);
 
+    for (const [legacyImport, canonicalImport] of FORBIDDEN_COMPATIBILITY_IMPORTS) {
+      if (content.includes(legacyImport)) {
+        violations.push(`${relative}: compatibility import ${legacyImport} is forbidden for product/runtime callers. Import ${canonicalImport} directly.`);
+      }
+    }
+
     if (DIRECT_SUPABASE_PACKAGE_RE.test(runtimeContent)) {
       violations.push(`${relative}: direct runtime @supabase/supabase-js import is forbidden in the Gastronomy module.`);
     }
@@ -139,7 +155,7 @@ function main(): void {
     process.exit(1);
   }
 
-  console.log(`Gastronomy module boundary valid: ${actualDirectRuntimeIntegrationFiles.size} runtime integration files; ${REQUIRED_CORE_BRIDGES.size} pure bridges enforced; ${MODULE_LOCAL_CONTRACT_SURFACES.size} module contract surfaces preserved; retired bridges absent; type-only integration imports are not counted as runtime debt.`);
+  console.log(`Gastronomy module boundary valid: ${actualDirectRuntimeIntegrationFiles.size} runtime integration files; ${REQUIRED_CORE_BRIDGES.size} pure bridges enforced; ${FORBIDDEN_COMPATIBILITY_IMPORTS.size} legacy caller imports forbidden; ${MODULE_LOCAL_CONTRACT_SURFACES.size} module contract surfaces preserved; retired bridges absent; type-only integration imports are not counted as runtime debt.`);
 }
 
 main();
