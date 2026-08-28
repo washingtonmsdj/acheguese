@@ -23,9 +23,9 @@ import {
   LayoutGrid,
   type LucideIcon,
 } from 'lucide-react';
-import { APP_MODULE_SLUGS, buildAppModulePath } from '@/config/moduleSlugs';
-import { LAUNCH_URLS } from '@/config/territory';
-import { filterLaunchSections } from '@/config/launchScope';
+import { APP_MODULE_SLUGS, buildAppModulePath } from '@/shared/config/moduleSlugs';
+import { LAUNCH_URLS } from '@/core/routing/config/territory';
+import { filterLaunchSections } from '@/app/config/launchScope';
 import { gastronomyPublicRoutes } from '@/core/verticals/gastronomy/routes/gastronomyPublicRoutes';
 
 export interface NavItem {
