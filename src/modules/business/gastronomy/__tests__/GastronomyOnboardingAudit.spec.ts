@@ -11,7 +11,7 @@ function read(relativePath: string) {
 describe("gastronomy onboarding hardening", () => {
   it("guarantees menu and base category bootstrap during setup save", () => {
     const profileService = read(
-      "src/modules/business/gastronomy/services/GastronomyProfileService.ts",
+      "src/core/business/services/GastronomyProfileService.ts",
     );
     const menuQueries = read(
       "src/core/business/services/menu.queries.ts",
