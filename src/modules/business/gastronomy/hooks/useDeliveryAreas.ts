@@ -5,7 +5,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { DeliveryAreaService, type DeliveryArea } from '@/modules/business/gastronomy/services/DeliveryAreaService';
+import { DeliveryAreaService, type DeliveryArea } from '@/core/business/services/GastronomyDeliveryAreaService';
 import { toast } from 'sonner';
 
 export function useDeliveryAreas(businessId: string) {
