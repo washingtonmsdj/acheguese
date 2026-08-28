@@ -30,9 +30,11 @@ export {
   getGastronomyBusinesses,
   getGastronomyBusinessesByIds,
   hasGastronomyProfile,
-  type PaginatedGastronomyBusinesses,
-  type TerritorySlugParams,
-} from './gastronomy.queries';
+} from '@/core/business/services/gastronomy.queries';
+export type {
+  PaginatedGastronomyBusinesses,
+  TerritorySlugParams,
+} from '@/core/business/types';
 
 export {
   getMenu,
@@ -77,5 +79,3 @@ export {
   validateMinimumOrder,
   validateItemAvailability,
 } from './gastronomy.helpers';
-
-
