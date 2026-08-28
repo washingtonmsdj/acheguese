@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `55398376b77a20a50be8920ea552e7b7d8b7f1b5`  
+Baseline reviewed: `8e24f66b7c48c13b32f54a094cd7f42e584faa1c`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -42,10 +42,6 @@ Rules:
 | `scripts/validate-supabase-remote-migration-drift.ts` | `tools/supabase/validate-supabase-remote-migration-drift.ts` | package/docs/callers use canonical remote drift gate directly; legacy entrypoint no longer required |
 | `scripts/location/municipal-neighborhood-sources.ts` | `tools/seeds/municipal-neighborhood-sources.ts` | all callers/docs use canonical manifest directly; legacy re-export no longer required |
 | `scripts/validate-project-taxonomy.ts` | `tools/architecture/validate-project-taxonomy.ts` | package/docs/callers use canonical owner directly; legacy CLI/source-inspection compatibility no longer required |
-| `scripts/security/community-feed-anon-probe.mjs` | `tools/security/community-feed-anon-probe.mjs` | package/authorization-map callers use canonical mutating probe directly; legacy entrypoint no longer required |
-| `scripts/security/reviews-core-authz-probe.mjs` | `tools/security/reviews-core-authz-probe.mjs` | package command uses canonical guarded mutating probe directly; legacy entrypoint no longer required |
-| `scripts/security/community-direct-messaging-authz-probe.mjs` | `tools/security/community-direct-messaging-authz-probe.mjs` | package command uses canonical guarded mutating probe directly; legacy entrypoint no longer required |
-| `scripts/security/moderation-audit-authz-probe.mjs` | `tools/security/moderation-audit-authz-probe.mjs` | package command uses canonical guarded mutating probe directly; legacy entrypoint no longer required |
 | `scripts/security/supabase-auth-hibp.mjs` | `tools/security/supabase-auth-hibp.mjs` | package/tests use canonical security tooling directly; legacy CLI/module compatibility no longer required |
 | `scripts/security/edge-function-auth-config.mjs` | `tools/security/edge-function-auth-config.mjs` | security validators/tests import canonical auth config helper directly |
 | `scripts/security/edge-function-auth-policy.mjs` | `tools/security/edge-function-auth-policy.mjs` | security validators/tests import canonical auth policy helper directly |
@@ -90,6 +86,10 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/backup-storage.ts` → canonical maintenance owner is `tools/maintenance/backup-storage.ts`; the remaining legacy-path occurrence is a negative security fixture, not a runtime caller.
 - `scripts/verify-deploy-ready.mjs` → package, live security docs and architecture test use `tools/release/verify-deploy-ready.mjs` / `npm run verify:deploy`; historical source-list mentions do not keep a runtime bridge alive.
 - `scripts/security/supabase-edge-admin-canary-deploy.mjs` → security test and Vercel production build now inspect/syntax-check `tools/release/supabase-edge-admin-canary-deploy.mjs` directly; old bridge removed.
+- `scripts/security/community-feed-anon-probe.mjs` → the authorization enforcement map and npm command use `tools/security/community-feed-anon-probe.mjs`; zero `src/**`/`tests/**` callers remained and the old bridge was removed.
+- `scripts/security/reviews-core-authz-probe.mjs` → review authorization evidence and npm command use `tools/security/reviews-core-authz-probe.mjs`; zero `src/**`/`tests/**` callers remained and the old bridge was removed.
+- `scripts/security/community-direct-messaging-authz-probe.mjs` → community direct messaging authorization evidence and npm command use `tools/security/community-direct-messaging-authz-probe.mjs`; zero `src/**`/`tests/**` callers remained and the old bridge was removed.
+- `scripts/security/moderation-audit-authz-probe.mjs` → moderation authorization evidence and npm command use `tools/security/moderation-audit-authz-probe.mjs`; zero `src/**`/`tests/**` callers remained and the old bridge was removed.
 - `scripts/security/supabase-edge-secrets-preflight.mjs` → moved to `tools/security/supabase-edge-secrets-preflight.mjs`; security test updated to canonical path and old path removed.
 - `scripts/security/supabase-edge-runtime-auth-drift.mjs` → moved to `tools/security/supabase-edge-runtime-auth-drift.mjs`; security test updated to canonical path and old path removed.
 - `scripts/security/supabase-lgpd-edge-rollout-preflight.mjs` → moved to `tools/security/supabase-lgpd-edge-rollout-preflight.mjs`; security test updated to canonical path and old path removed.
