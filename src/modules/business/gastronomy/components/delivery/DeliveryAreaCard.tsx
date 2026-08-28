@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { MapPin, Edit, Trash2, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
-import type { DeliveryArea } from '@/modules/business/gastronomy/services/DeliveryAreaService';
+import type { DeliveryArea } from '@/core/business/services/GastronomyDeliveryAreaService';
 import { formatBrl } from '../../utils/currency';
 
 interface DeliveryAreaCardProps {
