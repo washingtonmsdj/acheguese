@@ -15,7 +15,7 @@ import {
   WorkOpportunitiesService,
   type WorkOpportunityCard,
 } from "@/core/work-opportunities";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import {
   getCommunitySearchCandidateLimit,
   SEARCH_RESULT_LIMITS,
