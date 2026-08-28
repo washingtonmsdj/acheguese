@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `8e24f66b7c48c13b32f54a094cd7f42e584faa1c`  
+Baseline reviewed: `0868b7510efa6bd3eb80c6801e62afff592d1db6`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -39,7 +39,6 @@ Rules:
 | Legacy path | Canonical owner | Removal gate |
 | --- | --- | --- |
 | `scripts/validate-supabase-advisor-residuals.ts` | `tools/supabase/validate-supabase-advisor-residuals.ts` | package/tests/docs use canonical validator directly; legacy CLI/module compatibility no longer required |
-| `scripts/validate-supabase-remote-migration-drift.ts` | `tools/supabase/validate-supabase-remote-migration-drift.ts` | package/docs/callers use canonical remote drift gate directly; legacy entrypoint no longer required |
 | `scripts/location/municipal-neighborhood-sources.ts` | `tools/seeds/municipal-neighborhood-sources.ts` | all callers/docs use canonical manifest directly; legacy re-export no longer required |
 | `scripts/validate-project-taxonomy.ts` | `tools/architecture/validate-project-taxonomy.ts` | package/docs/callers use canonical owner directly; legacy CLI/source-inspection compatibility no longer required |
 | `scripts/security/supabase-auth-hibp.mjs` | `tools/security/supabase-auth-hibp.mjs` | package/tests use canonical security tooling directly; legacy CLI/module compatibility no longer required |
@@ -51,7 +50,7 @@ Rules:
 | `scripts/security/validate-security.mjs` | `tools/security/validate-security.mjs` | package/docs/callers use canonical security orchestrator directly; legacy command no longer required |
 | `scripts/security/supabase-postgis-owner-preflight.mjs` | `tools/security/supabase-postgis-owner-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
 | `scripts/validate-architecture-boundaries-incremental.mjs` | `tools/architecture/validate-architecture-boundaries-incremental.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
-| `scripts/lib/supabase-client.ts` | `tools/supabase/supabase-client.ts` | `scripts/media-assets-cp016-backfill.ts` must be moved or retargeted to the canonical client without weakening its existing project/apply confirmation guards |
+| `scripts/lib/supabase-client.ts` | `tools/supabase/supabase-client.ts` | live security documentation must point to the canonical `tools/supabase` helper; CP-016 already imports the canonical typed facade directly |
 
 ## Gastronomy module-local bridges
 
@@ -85,6 +84,7 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/backup-config.ts` → moved to `tools/maintenance/backup-config.ts` and old path removed.
 - `scripts/backup-storage.ts` → canonical maintenance owner is `tools/maintenance/backup-storage.ts`; the remaining legacy-path occurrence is a negative security fixture, not a runtime caller.
 - `scripts/verify-deploy-ready.mjs` → package, live security docs and architecture test use `tools/release/verify-deploy-ready.mjs` / `npm run verify:deploy`; historical source-list mentions do not keep a runtime bridge alive.
+- `scripts/validate-supabase-remote-migration-drift.ts` → npm `validate:migrations:remote` and the live Security Authority use `tools/supabase/validate-supabase-remote-migration-drift.ts`; zero `src/**`/`tests/**` callers remained and the old bridge was removed.
 - `scripts/security/supabase-edge-admin-canary-deploy.mjs` → security test and Vercel production build now inspect/syntax-check `tools/release/supabase-edge-admin-canary-deploy.mjs` directly; old bridge removed.
 - `scripts/security/community-feed-anon-probe.mjs` → the authorization enforcement map and npm command use `tools/security/community-feed-anon-probe.mjs`; zero `src/**`/`tests/**` callers remained and the old bridge was removed.
 - `scripts/security/reviews-core-authz-probe.mjs` → review authorization evidence and npm command use `tools/security/reviews-core-authz-probe.mjs`; zero `src/**`/`tests/**` callers remained and the old bridge was removed.
