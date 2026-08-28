@@ -20,7 +20,7 @@ import {
 import { Textarea } from '@/shared/components/ui/textarea';
 import { Switch } from '@/shared/components/ui/switch';
 import { resolveMediaAssetSource } from '@/core/media';
-import type { MenuCategory } from '@/modules/business/gastronomy/services/MenuService';
+import type { MenuCategory } from '@/core/business/services/MenuService';
 import { NO_CATEGORY_VALUE, type ItemFormValues } from './ItemForm.model';
 
 interface BaseSectionProps {
