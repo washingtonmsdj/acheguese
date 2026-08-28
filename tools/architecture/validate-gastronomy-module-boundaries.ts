@@ -12,12 +12,10 @@ const ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES = new Set<string>();
 const REQUIRED_CORE_BRIDGES = new Map([
   ["src/modules/business/gastronomy/types/gastronomy/index.ts", "@/core/business/types/gastronomy"],
   ["src/modules/business/gastronomy/types/menu.ts", "@/core/business/types/gastronomyMenu"],
-  ["src/modules/business/gastronomy/services/gastronomy.queries.ts", "@/core/business/services/gastronomy.queries"],
   ["src/modules/business/gastronomy/services/menu.queries.ts", "@/core/business/services/menu.queries"],
   ["src/modules/business/gastronomy/services/review.queries.ts", "@/core/business/services/gastronomy.review.queries"],
   ["src/modules/business/gastronomy/services/favorites.queries.ts", "@/core/business/services/gastronomy.favorites.queries"],
   ["src/modules/business/gastronomy/services/DeliveryAreaService.ts", "@/core/business/services/GastronomyDeliveryAreaService"],
-  ["src/modules/business/gastronomy/services/resolveGastronomyBusinessId.ts", "@/core/business/services/resolveGastronomyBusinessId"],
   ["src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts", "@/core/business/services/gastronomy-runtime.queries"],
   ["src/modules/business/gastronomy/services/activity.queries.ts", "@/core/business/services/gastronomy.activity.queries"],
   ["src/modules/business/gastronomy/services/GastronomyProfileService.ts", "@/core/business/services/GastronomyProfileService"],
@@ -27,6 +25,11 @@ const REQUIRED_CORE_BRIDGES = new Map([
   ["src/modules/business/gastronomy/niches/versioning/NicheVersioningService.ts", "@/core/business/niches/versioning/NicheVersioningService"],
   ["src/modules/business/gastronomy/niches/pizzaria/types.ts", "@/core/business/niches/pizzaria/types"],
   ["src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts", "@/core/business/niches/pizzaria/PizzaAdminService"],
+]);
+
+const RETIRED_CORE_BRIDGES = new Set([
+  "src/modules/business/gastronomy/services/gastronomy.queries.ts",
+  "src/modules/business/gastronomy/services/resolveGastronomyBusinessId.ts",
 ]);
 
 const CODE_FILE_RE = /\.(ts|tsx|js|jsx)$/;
@@ -105,13 +108,19 @@ function main(): void {
     }
   }
 
+  for (const retiredBridge of RETIRED_CORE_BRIDGES) {
+    if (fs.existsSync(path.join(ROOT, retiredBridge))) {
+      violations.push(`${retiredBridge}: retired compatibility bridge was recreated.`);
+    }
+  }
+
   if (violations.length > 0) {
     console.error("Gastronomy module boundary violations:\n");
     for (const violation of violations) console.error(`- ${violation}`);
     process.exit(1);
   }
 
-  console.log(`Gastronomy module boundary valid: ${actualDirectRuntimeIntegrationFiles.size} runtime integration files; canonical bridges enforced; type-only integration imports are not counted as runtime debt.`);
+  console.log(`Gastronomy module boundary valid: ${actualDirectRuntimeIntegrationFiles.size} runtime integration files; required bridges enforced; retired bridges absent; type-only integration imports are not counted as runtime debt.`);
 }
 
 main();
