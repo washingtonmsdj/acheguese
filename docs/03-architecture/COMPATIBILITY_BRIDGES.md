@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `7f5ff2fc8d286b76064ab027898df92a249d60fa`  
+Baseline reviewed: `b7dd01247e1c14578a1a2d01a34192fcd552a2fd`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -55,7 +55,6 @@ Persistence/domain ownership for these pure compatibility paths is canonical in 
 | Legacy path | Canonical owner |
 | --- | --- |
 | `src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts` | `src/core/business/services/gastronomy-runtime.queries` |
-| `src/modules/business/gastronomy/services/GastronomyProfileService.ts` | `src/core/business/services/GastronomyProfileService` |
 | `src/modules/business/gastronomy/services/MenuService.ts` | `src/core/business/services/MenuService` |
 | `src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts` | `src/core/business/niches/pizzaria/PizzaAdminService` |
 
@@ -202,6 +201,7 @@ These paths were not kept as bridges because no compatibility caller required th
 - `src/modules/business/gastronomy/services/menu.queries.ts` → module facade/barrel, `useMenuItems` and onboarding evidence now consume `src/core/business/services/menu.queries.ts`; Gastronomy ratchet blocks bridge recreation.
 - `src/modules/business/gastronomy/services/DeliveryAreaService.ts` → delivery hooks/UI and checkout now consume `src/core/business/services/GastronomyDeliveryAreaService.ts` directly; checkout test mocks the canonical owner and Gastronomy ratchet blocks bridge recreation.
 - `src/modules/business/gastronomy/niches/types.ts` → zero live callers remained; canonical niche contracts stay at `src/core/business/niches/types.ts`; Gastronomy ratchet keeps the legacy import forbidden and blocks bridge recreation.
+- `src/modules/business/gastronomy/services/GastronomyProfileService.ts` → runtime callers already import `src/core/business/services/GastronomyProfileService.ts`; the write SSOT test inspects the core owner directly and Gastronomy ratchet keeps the legacy import forbidden.
 - `src/modules/business/gastronomy/niches/versioning/types.ts` → barrel, admin visibility logic and tests now consume `src/core/business/niches/versioning/types.ts`; Gastronomy ratchet blocks bridge recreation.
 - `src/modules/business/gastronomy/niches/versioning/NicheVersioningService.ts` → barrel, unit/security tests now consume `src/core/business/niches/versioning/NicheVersioningService.ts`; Gastronomy ratchet blocks bridge recreation.
 
