@@ -13,7 +13,7 @@ function readProjectFile(path: string): string {
 describe("business favorites count RPC security", () => {
   it("reads the canonical counter through business_data RLS instead of a privileged RPC", () => {
     const gastronomyAdapter = readProjectFile(
-      "src/modules/business/gastronomy/services/favorites.queries.ts",
+      "src/core/business/services/gastronomy.favorites.queries.ts",
     );
     const store = readProjectFile(
       "src/core/favorites/services/BusinessFavoriteStore.ts",
