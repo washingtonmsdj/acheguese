@@ -33,7 +33,7 @@ import {
 } from "@/core/business/utils/businessManagementRoutes";
 import { buildBusinessPremiumUrl } from "@/core/business/utils/businessPublicUrls";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import type { BusinessDashboardContextValue } from "@/modules/business/dashboard/businessDashboardContext";
 
 interface NavItem {
