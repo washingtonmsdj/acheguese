@@ -21,7 +21,7 @@ const businessAdapter = read(
   "src/core/business/services/BusinessReviewService.ts",
 );
 const gastronomyAdapter = read(
-  "src/modules/business/gastronomy/services/review.queries.ts",
+  "src/core/business/services/gastronomy.review.queries.ts",
 );
 
 function runtimeSourceFiles(directory: string): string[] {
