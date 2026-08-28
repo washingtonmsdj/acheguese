@@ -24,9 +24,9 @@ A consolidação de ownership já moveu para `src/core/education`:
 - `education.mutations.ts` como write model canônico;
 - `constants/schoolStageOptions.ts` como regra de domínio compartilhada.
 
-Os paths antigos de types/services/constants no módulo são bridges one-way de compatibilidade quando necessários.
+Os antigos paths de types/services/constants no módulo foram aposentados após a convergência dos callers. Novos imports devem apontar diretamente para os owners em `src/core/education`; recriar os bridges é regressão arquitetural.
 
-**Dívida direta de infraestrutura na camada de módulo: zero.** `scripts/validate-education-module-boundaries.ts` bloqueia qualquer novo import runtime de `@/integrations/*` ou do pacote Supabase em `src/modules/business/education` e também verifica os bridges canônicos.
+**Dívida direta de infraestrutura na camada de módulo: zero.** `tools/architecture/validate-education-module-boundaries.ts` bloqueia qualquer novo import runtime de `@/integrations/*` ou do pacote Supabase em `src/modules/business/education` e também bloqueia a recriação dos bridges aposentados.
 
 Isso melhora a arquitetura, mas **não certifica o módulo para produção**. O `launch-paused` só pode ser removido depois da validação de banco, autorização, runtime, E2E e deployment do mesmo SHA.
 
@@ -41,7 +41,7 @@ Isso melhora a arquitetura, mas **não certifica o módulo para produção**. O 
 - write model canônico pertence a `src/core/education/services/education.mutations.ts`;
 - regra compartilhada de etapas escolares pertence a `src/core/education/constants/schoolStageOptions.ts`;
 - não criar facade paralela que mantenha writers/read models concorrentes;
-- bridges de compatibilidade são one-way e temporárias;
+- não recriar bridges aposentados em `src/modules/business/education`;
 - não remover `launch-paused` apenas porque a tela renderiza.
 
 ## Critério para despausar o MVP
@@ -65,6 +65,7 @@ Educação só sai de `launch-paused` quando houver evidência para, no mínimo:
 - `src/core/education/contracts.ts` — contratos do domínio;
 - `src/core/education/services/` — ownership canônico de read/write/observabilidade/tracking;
 - `src/core/education/constants/` — regras de domínio compartilhadas;
+- `tools/architecture/validate-education-module-boundaries.ts` — ratchet da fronteira do módulo e dos bridges aposentados;
 - `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — ordem e Definition of Done do MVP;
 - issue #50 — certificação funcional dos módulos;
 - issue #51 — limpeza estrutural/owners/namespaces.
