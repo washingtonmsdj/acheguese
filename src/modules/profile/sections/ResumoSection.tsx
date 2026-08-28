@@ -28,7 +28,7 @@ import {
 import { DashboardMetricCard } from "@/modules/profile/components/cards";
 
 import type { ResumoSectionProps } from "./types";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
 export function ResumoSection({
   operations,
