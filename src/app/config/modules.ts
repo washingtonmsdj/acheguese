@@ -20,7 +20,7 @@ import {
   Car,
   GraduationCap,
 } from 'lucide-react';
-import { APP_MODULE_SLUGS } from '@/config/moduleSlugs';
+import { APP_MODULE_SLUGS } from '@/shared/config/moduleSlugs';
 
 export interface ModuleConfig {
   /** Identificador único do módulo */
