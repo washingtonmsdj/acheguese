@@ -13,17 +13,11 @@ describe("Gastronomy write SSOT", () => {
     const compatibilityMutations = read(
       "src/core/business/services/gastronomy.mutations.ts",
     );
-    const moduleBridge = read(
-      "src/modules/business/gastronomy/services/GastronomyProfileService.ts",
-    );
 
     expect(canonical).toContain("@/integrations/supabase");
+    expect(canonical).toContain("ensureOperationalMenuSetup");
     expect(compatibilityMutations).toContain("./GastronomyProfileService");
     expect(compatibilityMutations).not.toContain("@/integrations/");
     expect(compatibilityMutations).not.toContain(".from('gastronomy_profiles')");
-    expect(moduleBridge).toContain(
-      "@/core/business/services/GastronomyProfileService",
-    );
-    expect(moduleBridge).not.toContain("@/integrations/");
   });
 });
