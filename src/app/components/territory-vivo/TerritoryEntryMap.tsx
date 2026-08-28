@@ -1,9 +1,9 @@
 import { lazy, Suspense, useMemo } from "react";
 import { ArrowUpRight, Map, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
-import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
+import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
 import { LocationType, type Location } from "@/core/location/types";
-import { LAUNCH_URLS } from "@/config/territory";
+import { LAUNCH_URLS } from "@/core/routing/config/territory";
 import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import {
   DEFAULT_TILE_STYLE,
