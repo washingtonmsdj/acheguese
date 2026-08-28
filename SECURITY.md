@@ -89,10 +89,10 @@ npm run validate:taxonomy
 npm run validate:docs-structure
 npm run typecheck
 npm run build
-node scripts/verify-deploy-ready.mjs
+npm run verify:deploy
 ```
 
-`verify-deploy-ready.mjs` deve usar o ambiente de release e falhar em valores ausentes/placeholders. Se CI/runner externo não iniciar os steps, isso deve ser tratado como indisponibilidade do gate, não como teste aprovado.
+`verify:deploy` deve usar o ambiente de release e falhar em valores ausentes/placeholders. Se CI/runner externo não iniciar os steps, isso deve ser tratado como indisponibilidade do gate, não como teste aprovado.
 
 ## Prioridades atuais — 2026-08-26
 
