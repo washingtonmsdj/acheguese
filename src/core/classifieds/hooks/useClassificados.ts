@@ -12,7 +12,7 @@ import {
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { ClassifiedData } from "../services/types";
 import type { TerritoryFilter } from "@/core/location/types";
-import { isLaunchClassifiedCategoryEnabled } from "@/config/launchScope";
+import { isLaunchClassifiedCategoryEnabled } from "@/app/config/launchScope";
 export interface ClassificadoWithVendedor {
   id: string;
   public_id: string;
