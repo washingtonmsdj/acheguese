@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { Star, MessageSquarePlus } from 'lucide-react';
 
+import type { Review } from '@/core/business/services/gastronomy.review.queries';
 import { Button } from '@/shared/components/ui/button';
 import {
   Dialog,
@@ -15,12 +16,11 @@ import {
 } from '@/shared/components/ui/dialog';
 import { Progress } from '@/shared/components/ui/progress';
 import { Separator } from '@/shared/components/ui/separator';
+import { getRecordValue } from '@/shared/utils/recordLookup';
 import { ReviewCard } from './ReviewCard';
 import { ReviewForm } from './ReviewForm';
 import { useReviewsManager } from '../hooks/useGastronomyReviews';
 import { useUserReviewVote } from '../hooks/useGastronomyReviews';
-import type { Review } from '../services/review.queries';
-import { getRecordValue } from '@/shared/utils/recordLookup';
 
 interface ReviewsSectionProps {
   businessProfileId: string;
