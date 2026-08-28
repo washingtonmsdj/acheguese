@@ -1,13 +1,13 @@
 import { Route } from "react-router-dom";
 import type { ReactNode } from "react";
-import { APP_MODULE_SLUGS } from "@/config/moduleSlugs";
+import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
 import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
   buildCommunityAliasRoutePath,
   buildCommunityTerritoryRoutePath,
 } from "@/core/routing/config/territorialRoutePatterns";
-import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/app/config/launchScope";
 import * as P from "../lazyImports";
 
 const TERRITORIAL_PARAMS = TERRITORIAL_ROUTE_PARAMS;
