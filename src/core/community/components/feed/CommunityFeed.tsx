@@ -17,7 +17,7 @@ import {
   COMMUNITY_FEED_SORT_FILTERS,
   type CommunityFeedSortType,
 } from "@/core/community/utils/communityFeedTab";
-import { isLaunchCommunityPostEnabled } from "@/config/launchScope";
+import { isLaunchCommunityPostEnabled } from "@/app/config/launchScope";
 import { COMMUNITY_FEED_COPY } from "@/core/community/utils/communityCopy";
 import type { CommunityAction } from "@/core/community/access";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
