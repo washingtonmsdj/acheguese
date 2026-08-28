@@ -1,5 +1,5 @@
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import type { ProfileBusinessModuleSnapshot } from "./types";
 
 type BusinessWorkspaceInput = {
