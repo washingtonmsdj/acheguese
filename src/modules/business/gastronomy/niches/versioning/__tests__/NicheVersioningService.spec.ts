@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { NicheVersioningService } from '@/core/business/niches/versioning/NicheVersioningService';
 import { supabase } from '@/integrations/supabase';
-import { NicheVersioningService } from '../NicheVersioningService';
 
 vi.mock('@/integrations/supabase', () => ({
   supabase: {
