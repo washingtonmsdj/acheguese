@@ -1,5 +1,5 @@
 import * as GastronomyHelpers from './gastronomy.helpers';
-import * as GastronomyQueries from './gastronomy.queries';
+import * as GastronomyQueries from '@/core/business/services/gastronomy.queries';
 import * as MenuQueries from './menu.queries';
 
 /**
