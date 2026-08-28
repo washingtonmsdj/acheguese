@@ -38,6 +38,8 @@ describe("Gastronomy module boundary ratchet", () => {
       "src/modules/business/gastronomy/services/favorites.queries.ts",
       "src/modules/business/gastronomy/services/review.queries.ts",
       "src/modules/business/gastronomy/services/menu.queries.ts",
+      "src/modules/business/gastronomy/niches/versioning/types.ts",
+      "src/modules/business/gastronomy/niches/versioning/NicheVersioningService.ts",
     ];
 
     for (const bridge of retiredBridges) {
@@ -53,19 +55,16 @@ describe("Gastronomy module boundary ratchet", () => {
     }
   });
 
-  it("keeps pizza and niche persistence behind core bridges", () => {
+  it("keeps pizza persistence behind its remaining core bridge", () => {
     const pizza = read(
       "src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts",
     );
     const versioning = read(
-      "src/modules/business/gastronomy/niches/versioning/NicheVersioningService.ts",
+      "src/core/business/niches/versioning/NicheVersioningService.ts",
     );
 
     expect(pizza).toContain("@/core/business/niches/pizzaria/PizzaAdminService");
-    expect(versioning).toContain(
-      "@/core/business/niches/versioning/NicheVersioningService",
-    );
+    expect(versioning).toContain("@/integrations/supabase");
     expect(pizza).not.toContain("@/integrations/");
-    expect(versioning).not.toContain("@/integrations/");
   });
 });
