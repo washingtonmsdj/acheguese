@@ -14,7 +14,7 @@ import { Label } from '@/shared/components/ui/label';
 import { Badge } from '@/shared/components/ui/badge';
 import { ConfirmActionDialog } from '@/shared/components/ConfirmActionDialog';
 import { MapPin, Plus, Trash2, X, Edit2 } from 'lucide-react';
-import type { DeliveryArea, DeliveryNeighborhood } from '@/modules/business/gastronomy/services/DeliveryAreaService';
+import type { DeliveryArea, DeliveryNeighborhood } from '@/core/business/services/GastronomyDeliveryAreaService';
 import { formatBrl } from '../../utils/currency';
 
 interface NeighborhoodManagerProps {
@@ -358,4 +358,3 @@ export function NeighborhoodManager({ area, onClose }: NeighborhoodManagerProps)
     </Card>
   );
 }
-
