@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-07-15",
+  "updatedAt": "2026-08-28",
   "authorityRule": "A frontend capability preview only controls visibility. Every protected command is independently enforced by RLS, an RPC, or an Edge Function.",
   "remoteAudit": "tests/security/authorization-enforcement-remote-audit.sql",
   "actions": [
@@ -102,7 +102,7 @@
       "evidence": [
         "supabase/migrations/20260715093000_create_community_direct_messaging_commands.sql",
         "tests/architecture/community-direct-messaging-ssot.test.ts",
-        "scripts/security/community-direct-messaging-authz-probe.mjs"
+        "tools/security/community-direct-messaging-authz-probe.mjs"
       ]
     },
     {
@@ -119,7 +119,7 @@
       "evidence": [
         "supabase/migrations/20260715093000_create_community_direct_messaging_commands.sql",
         "tests/architecture/community-direct-messaging-ssot.test.ts",
-        "scripts/security/community-direct-messaging-authz-probe.mjs"
+        "tools/security/community-direct-messaging-authz-probe.mjs"
       ]
     },
     {
@@ -135,7 +135,7 @@
       "evidence": [
         "supabase/migrations/20260715093000_create_community_direct_messaging_commands.sql",
         "tests/architecture/community-direct-messaging-ssot.test.ts",
-        "scripts/security/community-direct-messaging-authz-probe.mjs"
+        "tools/security/community-direct-messaging-authz-probe.mjs"
       ]
     },
     {
@@ -152,7 +152,7 @@
       "evidence": [
         "supabase/migrations/20260715093000_create_community_direct_messaging_commands.sql",
         "tests/architecture/community-direct-messaging-ssot.test.ts",
-        "scripts/security/community-direct-messaging-authz-probe.mjs"
+        "tools/security/community-direct-messaging-authz-probe.mjs"
       ]
     },
     {
@@ -169,7 +169,7 @@
         "supabase/migrations/20260715092000_create_community_direct_messaging_schema.sql",
         "supabase/migrations/20260715093000_create_community_direct_messaging_commands.sql",
         "tests/architecture/community-direct-messaging-ssot.test.ts",
-        "scripts/security/community-direct-messaging-authz-probe.mjs"
+        "tools/security/community-direct-messaging-authz-probe.mjs"
       ]
     },
     {
@@ -293,7 +293,7 @@
       ],
       "evidence": [
         "supabase/migrations/20260715094000_consolidate_review_core.sql",
-        "scripts/security/reviews-core-authz-probe.mjs"
+        "tools/security/reviews-core-authz-probe.mjs"
       ]
     },
     {
@@ -308,7 +308,7 @@
       ],
       "evidence": [
         "supabase/migrations/20260715096000_fix_profile_review_delete_contract.sql",
-        "scripts/security/reviews-core-authz-probe.mjs"
+        "tools/security/reviews-core-authz-probe.mjs"
       ]
     },
     {
@@ -340,7 +340,7 @@
       ],
       "evidence": [
         "supabase/migrations/20260715094000_consolidate_review_core.sql",
-        "scripts/security/reviews-core-authz-probe.mjs"
+        "tools/security/reviews-core-authz-probe.mjs"
       ]
     },
     {
@@ -355,7 +355,7 @@
       ],
       "evidence": [
         "supabase/migrations/20260714118000_harden_sensitive_report_commands.sql",
-        "scripts/security/reviews-core-authz-probe.mjs"
+        "tools/security/reviews-core-authz-probe.mjs"
       ]
     },
     {
@@ -385,7 +385,7 @@
       "evidence": [
         "supabase/migrations/20260714125000_create_media_asset_core.sql",
         "supabase/migrations/20260717130000_consolidate_community_post_media_assets.sql",
-        "scripts/security/community-feed-anon-probe.mjs",
+        "tools/security/community-feed-anon-probe.mjs",
         "docs/07-modules/MEDIA_ASSET_SSOT.md"
       ]
     },
@@ -397,7 +397,7 @@
       "enforcement": ["rls:community_reports_insert_own"],
       "evidence": [
         "supabase/migrations/20260715105000_extend_community_report_targets.sql",
-        "scripts/security/moderation-audit-authz-probe.mjs"
+        "tools/security/moderation-audit-authz-probe.mjs"
       ]
     }
   ]
