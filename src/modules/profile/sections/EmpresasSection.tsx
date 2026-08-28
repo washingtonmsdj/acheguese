@@ -21,7 +21,7 @@ import {
 import { BusinessOwnerQuickAccess } from "@/modules/profile/components/BusinessOwnerQuickAccess";
 
 import type { EmpresasSectionProps } from "./types";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
 export function EmpresasSection({
   businessModules,
