@@ -1,5 +1,5 @@
-import { APP_MODULE_SLUGS } from '@/config/moduleSlugs';
-import { TERRITORY_CONFIG } from '@/config/territory';
+import { APP_MODULE_SLUGS } from '@/shared/config/moduleSlugs';
+import { TERRITORY_CONFIG } from '@/core/routing/config/territory';
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import { buildGroupBaseUrl, geoPathToPublicUrl } from '@/core/routing/utils/territoryUrls';
