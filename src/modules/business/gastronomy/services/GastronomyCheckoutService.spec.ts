@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GastronomyCheckoutService } from "./GastronomyCheckoutService";
-import { DeliveryAreaService } from "./DeliveryAreaService";
+import { DeliveryAreaService } from "@/core/business/services/GastronomyDeliveryAreaService";
 import { GastronomyOrderOriginAdapter } from "@/core/mobility/delivery/order/adapters/GastronomyOrderOriginAdapter";
 import { OrderDeliverySSOTService } from "@/core/mobility/delivery/services/OrderDeliverySSOTService";
 
-vi.mock("./DeliveryAreaService", () => ({
+vi.mock("@/core/business/services/GastronomyDeliveryAreaService", () => ({
   DeliveryAreaService: {
     checkEligibility: vi.fn(),
   },
