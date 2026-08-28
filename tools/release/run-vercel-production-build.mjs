@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 
 const steps = [
+  ["node", ["--check", "tools/release/supabase-edge-admin-canary-deploy.mjs"]],
   ["npm", ["run", "security:validate"]],
   ["npm", ["run", "lint:security"]],
   ["npm", ["run", "validate:upload:ssot"]],
