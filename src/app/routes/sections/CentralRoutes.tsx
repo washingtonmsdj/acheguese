@@ -1,6 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import type { ReactNode } from "react";
-import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/app/config/launchScope";
 import LaunchPausedPage from "@/app/pages/LaunchPausedPage";
 import * as P from "../centralLazyImports";
 
