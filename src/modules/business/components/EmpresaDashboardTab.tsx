@@ -29,7 +29,7 @@ import { getFavoritersOfProfile } from "@/core/favorites/services/favorites.quer
 import { SubscriptionService, useBusinessSubscription } from "@/core/billing";
 import { PlanTier } from "@/core/billing/types";
 import { toast } from "sonner";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
 const AnalyticsDashboard = React.lazy(() => import("./AnalyticsDashboard"));
 const CouponManager = React.lazy(() => import("./CouponManager"));
