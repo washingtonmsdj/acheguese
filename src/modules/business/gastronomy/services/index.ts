@@ -52,7 +52,7 @@ export {
   getPublicMenuCatalog,
   getPublicFoodItems,
   getPublicFoodCatalog,
-} from './menu.queries';
+} from '@/core/business/services/menu.queries';
 
 export {
   isGastronomyBusinessOpen,
