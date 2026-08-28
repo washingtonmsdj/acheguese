@@ -13,7 +13,7 @@ import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { Switch } from '@/shared/components/ui/switch';
 import { MapPin, Save, X } from 'lucide-react';
-import type { DeliveryArea } from '@/modules/business/gastronomy/services/DeliveryAreaService';
+import type { DeliveryArea } from '@/core/business/services/GastronomyDeliveryAreaService';
 
 interface DeliveryAreaFormProps {
   area?: DeliveryArea | null;
