@@ -60,8 +60,14 @@ Toda Authority deve declarar:
 - Excecao deve ter validade, responsavel, mitigacao e plano de remocao.
 - Mudanca critica sem evidencia deve ser tratada como incompleta.
 
-## Plano De Implementacao
+## Registro De Implementacao
 
-O plano operacional desta entrega esta em:
+O plano usado para construir a primeira versao da Security Authority fica
+preservado apenas como evidencia historica de implementacao:
 
 - [Security Authority - plano de implementacao](../../plans/SECURITY_AUTHORITY_IMPLEMENTATION_PLAN.md)
+
+Esse plano nao e fonte operacional atual e paths/comandos registrados nele podem
+representar o estado da epoca. Para regras, tooling e comandos vigentes, usar
+sempre [Security Authority](./security/SECURITY_AUTHORITY.md) e os SSOTs
+executaveis referenciados por ela.
