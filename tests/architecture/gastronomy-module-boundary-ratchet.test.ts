@@ -55,6 +55,7 @@ describe("Gastronomy module boundary ratchet", () => {
       "src/modules/business/gastronomy/services/favorites.queries.ts",
       "src/modules/business/gastronomy/services/review.queries.ts",
       "src/modules/business/gastronomy/services/menu.queries.ts",
+      "src/modules/business/gastronomy/services/DeliveryAreaService.ts",
       "src/modules/business/gastronomy/niches/versioning/types.ts",
       "src/modules/business/gastronomy/niches/versioning/NicheVersioningService.ts",
     ];
