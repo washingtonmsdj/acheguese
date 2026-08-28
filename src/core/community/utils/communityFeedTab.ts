@@ -1,4 +1,4 @@
-import { isLaunchCommunityFeedChannelEnabled } from "@/config/launchScope";
+import { isLaunchCommunityFeedChannelEnabled } from "@/app/config/launchScope";
 import type { TerritorialFeedChannel } from "@/core/community/hooks/feed/territorialFeedEngine";
 
 export type CommunityMainTab = "feed" | "grupos";
