@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import { useLandingFeatured } from "@/core/landing/hooks/useLandingFeatured";
 import {
   selectEventsHappeningSoon,
