@@ -9,11 +9,11 @@
 import { Link } from 'react-router-dom';
 import { Star, Truck, UtensilsCrossed } from 'lucide-react';
 
+import type { FavoriteBusiness } from '@/core/business/services/gastronomy.favorites.queries';
+import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 import { Badge } from '@/shared/components/ui/badge';
 import { BusinessLogo } from '@/shared/components/ui/business-logo';
-import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 import { getCuisineLabel } from '../constants';
-import type { FavoriteBusiness } from '../services/favorites.queries';
 
 interface FavoriteBusinessCardProps {
   favorite: FavoriteBusiness;
