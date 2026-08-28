@@ -9,13 +9,10 @@ const GASTRONOMY_ROOT = "src/modules/business/gastronomy";
 // Gastronomy runtime integration debt is expected to stay at zero.
 const ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES = new Set<string>();
 
-// Pure legacy -> core compatibility bridges. These files must stay bridge-only.
-const REQUIRED_CORE_BRIDGES = new Map([
-  ["src/modules/business/gastronomy/services/MenuService.ts", "@/core/business/services/MenuService"],
-]);
+// All legacy -> core compatibility bridges have been retired.
+const REQUIRED_CORE_BRIDGES = new Map<string, string>();
 
-// The compatibility files above may still exist while central manifests catch up,
-// but product/runtime code must not create new callers of their legacy module paths.
+// Historical compatibility imports remain forbidden even after their bridges are retired.
 const FORBIDDEN_COMPATIBILITY_IMPORTS = new Map([
   ["@/modules/business/gastronomy/services/gastronomy-runtime.queries", "@/core/business/services/gastronomy-runtime.queries"],
   ["@/modules/business/gastronomy/services/GastronomyProfileService", "@/core/business/services/GastronomyProfileService"],
@@ -43,6 +40,7 @@ const RETIRED_CORE_BRIDGES = new Set([
   "src/modules/business/gastronomy/services/menu.queries.ts",
   "src/modules/business/gastronomy/services/DeliveryAreaService.ts",
   "src/modules/business/gastronomy/services/GastronomyProfileService.ts",
+  "src/modules/business/gastronomy/services/MenuService.ts",
   "src/modules/business/gastronomy/niches/types.ts",
   "src/modules/business/gastronomy/niches/versioning/types.ts",
   "src/modules/business/gastronomy/niches/versioning/NicheVersioningService.ts",
