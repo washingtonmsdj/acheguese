@@ -14,7 +14,6 @@ const REQUIRED_CORE_BRIDGES = new Map([
   ["src/modules/business/gastronomy/types/menu.ts", "@/core/business/types/gastronomyMenu"],
   ["src/modules/business/gastronomy/services/menu.queries.ts", "@/core/business/services/menu.queries"],
   ["src/modules/business/gastronomy/services/review.queries.ts", "@/core/business/services/gastronomy.review.queries"],
-  ["src/modules/business/gastronomy/services/favorites.queries.ts", "@/core/business/services/gastronomy.favorites.queries"],
   ["src/modules/business/gastronomy/services/DeliveryAreaService.ts", "@/core/business/services/GastronomyDeliveryAreaService"],
   ["src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts", "@/core/business/services/gastronomy-runtime.queries"],
   ["src/modules/business/gastronomy/services/GastronomyProfileService.ts", "@/core/business/services/GastronomyProfileService"],
@@ -30,6 +29,7 @@ const RETIRED_CORE_BRIDGES = new Set([
   "src/modules/business/gastronomy/services/gastronomy.queries.ts",
   "src/modules/business/gastronomy/services/resolveGastronomyBusinessId.ts",
   "src/modules/business/gastronomy/services/activity.queries.ts",
+  "src/modules/business/gastronomy/services/favorites.queries.ts",
 ]);
 
 const CODE_FILE_RE = /\.(ts|tsx|js|jsx)$/;
