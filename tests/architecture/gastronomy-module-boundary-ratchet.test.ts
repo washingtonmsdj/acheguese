@@ -20,6 +20,22 @@ describe("Gastronomy module boundary ratchet", () => {
     expect(readme).not.toContain("baseline atual possui **5 arquivos runtime**");
   });
 
+  it("forbids product callers of remaining compatibility bridges", () => {
+    const validator = read("tools/architecture/validate-gastronomy-module-boundaries.ts");
+    const legacyImports = [
+      "@/modules/business/gastronomy/services/gastronomy-runtime.queries",
+      "@/modules/business/gastronomy/services/GastronomyProfileService",
+      "@/modules/business/gastronomy/services/MenuService",
+      "@/modules/business/gastronomy/niches/types",
+      "@/modules/business/gastronomy/niches/pizzaria/PizzaAdminService",
+    ];
+
+    expect(validator).toContain("const FORBIDDEN_COMPATIBILITY_IMPORTS = new Map([");
+    for (const legacyImport of legacyImports) {
+      expect(validator).toContain(legacyImport);
+    }
+  });
+
   it("keeps mixed module contracts explicit instead of misclassifying them as bridges", () => {
     const validator = read("tools/architecture/validate-gastronomy-module-boundaries.ts");
     const gastronomyTypes = read(
