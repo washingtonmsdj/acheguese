@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { BusinessCategory } from '@/core/business/types/Business';
-import { GastronomyProfileService } from '@/modules/business/gastronomy/services/GastronomyProfileService';
+import { GastronomyProfileService } from '@/core/business/services/GastronomyProfileService';
 import { getBusinessCategoryByBusinessDataId } from '@/modules/business/gastronomy/services/gastronomy-runtime.queries';
 import type {
   CreateGastronomyProfileInput,
