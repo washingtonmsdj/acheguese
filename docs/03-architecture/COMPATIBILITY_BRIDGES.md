@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `edc05cdd40aeecbab91e2b9582e291de272c0e7c`  
+Baseline reviewed: `452a2b7558e37f152984ef991d1a3ba234895ad6`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -67,26 +67,10 @@ Rules:
 | `scripts/validate-architecture-governance.ts` | `tools/architecture/validate-architecture-governance.ts` | npm/docs/callers point to canonical path; legacy CLI/module compatibility no longer required |
 | `scripts/validate-architecture-boundaries-incremental.mjs` | `tools/architecture/validate-architecture-boundaries-incremental.mjs` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/check-ssot-compliance.ts` | `tools/architecture/check-ssot-compliance.ts` | Husky/package/docs point to canonical path; legacy checker entrypoint no longer required |
-| `scripts/validate-education-module-boundaries.ts` | `tools/architecture/validate-education-module-boundaries.ts` | workflows/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-community-transversal-boundaries.ts` | `tools/architecture/validate-community-transversal-boundaries.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-docs-structure.ts` | `tools/architecture/validate-docs-structure.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/validate-doc-live-links.ts` | `tools/architecture/validate-doc-live-links.ts` | package/docs/callers point to canonical path; legacy command no longer required |
 | `scripts/lib/supabase-client.ts` | `tools/supabase/supabase-client.ts` | `scripts/media-assets-cp016-backfill.ts` must be moved or retargeted to the canonical client without weakening its existing project/apply confirmation guards |
-
-## Education module-local bridges
-
-All Education persistence/contracts are owned by `src/core/education`.
-
-| Legacy path | Canonical owner |
-| --- | --- |
-| `src/modules/business/education/types/index.ts` | `src/core/education/contracts` |
-| `src/modules/business/education/services/education.queries.ts` | `src/core/education/services/education.queries` |
-| `src/modules/business/education/services/education.mutations.ts` | `src/core/education/services/education.mutations` |
-| `src/modules/business/education/constants/schoolStageOptions.ts` | `src/core/education/constants/schoolStageOptions` |
-| `src/modules/business/education/services/EducationTrackingService.ts` | `src/core/education/services/EducationTrackingService` |
-| `src/modules/business/education/services/EducationObservabilityService.ts` | `src/core/education/services/EducationObservabilityService` |
-
-Removal gate for every Education bridge: zero legacy-path callers plus Education boundary/regression tests passing on the same SHA.
 
 ## Gastronomy module-local bridges
 
@@ -206,6 +190,13 @@ These paths were not kept as bridges because no compatibility caller required th
 - `src/modules/community-events/services/EventEngagementService.ts` → zero runtime callers; architecture regression tests now require the bridge to remain absent and the canonical owner stays in `src/core/community-events/services/EventEngagementService.ts`.
 - `src/modules/business/public/services/PublicSnapshotRpcService.ts` → callers/tests now use `src/core/business/services/PublicSnapshotRpcService.ts`; Business boundary ratchet blocks bridge recreation.
 - `src/modules/business/public/types/publicSnapshots.ts` → runtime callers now import `src/core/business/types/publicSnapshots.ts`; Business boundary ratchet blocks bridge recreation.
+- `scripts/validate-education-module-boundaries.ts` → workflow/docs use `tools/architecture/validate-education-module-boundaries.ts`; old bridge removed.
+- `src/modules/business/education/types/index.ts` → zero runtime callers; contracts remain canonical at `src/core/education/contracts.ts`; Education ratchet blocks bridge recreation.
+- `src/modules/business/education/services/education.queries.ts` → zero runtime callers; read model remains canonical at `src/core/education/services/education.queries.ts`; Education ratchet blocks bridge recreation.
+- `src/modules/business/education/services/education.mutations.ts` → zero runtime callers; write model remains canonical at `src/core/education/services/education.mutations.ts`; Education ratchet blocks bridge recreation.
+- `src/modules/business/education/constants/schoolStageOptions.ts` → zero runtime callers; shared domain options remain canonical at `src/core/education/constants/schoolStageOptions.ts`; Education ratchet blocks bridge recreation.
+- `src/modules/business/education/services/EducationTrackingService.ts` → zero runtime callers; tracking remains canonical at `src/core/education/services/EducationTrackingService.ts`; Education ratchet blocks bridge recreation.
+- `src/modules/business/education/services/EducationObservabilityService.ts` → zero runtime callers; observability remains canonical at `src/core/education/services/EducationObservabilityService.ts`; Education ratchet blocks bridge recreation.
 
 ## G2 closure condition for bridges
 
