@@ -42,7 +42,7 @@ import { useResolveTerritoryFromUrl } from '@/core/routing/hooks/useResolveTerri
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import { LocationType } from '@/core/location/types';
 import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
-import { APP_MODULE_SLUGS } from '@/config/moduleSlugs';
+import { APP_MODULE_SLUGS } from '@/shared/config/moduleSlugs';
 import { buildModuleTerritoryUrlFromSegments } from '@/core/routing/utils/territoryUrls';
 
 import { useEducationList } from '../hooks/useEducationList';
