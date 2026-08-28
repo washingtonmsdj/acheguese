@@ -20,12 +20,29 @@ describe("Gastronomy module boundary ratchet", () => {
     expect(readme).not.toContain("baseline atual possui **5 arquivos runtime**");
   });
 
-  it("keeps menu contracts and persistence owned by core", () => {
-    const moduleMenuTypes = read("src/modules/business/gastronomy/types/menu.ts");
+  it("keeps mixed module contracts explicit instead of misclassifying them as bridges", () => {
+    const validator = read("tools/architecture/validate-gastronomy-module-boundaries.ts");
+    const gastronomyTypes = read(
+      "src/modules/business/gastronomy/types/gastronomy/index.ts",
+    );
+    const menuTypes = read("src/modules/business/gastronomy/types/menu.ts");
+    const pizzaTypes = read(
+      "src/modules/business/gastronomy/niches/pizzaria/types.ts",
+    );
+
+    expect(validator).toContain("const MODULE_LOCAL_CONTRACT_SURFACES = new Map([");
+    expect(gastronomyTypes).toContain("@/core/business/types/gastronomy");
+    expect(gastronomyTypes).toContain("CuisineType");
+    expect(menuTypes).toContain("@/core/business/types/gastronomyMenu");
+    expect(menuTypes).toContain("export interface CartItem");
+    expect(pizzaTypes).toContain("@/core/business/niches/pizzaria/types");
+    expect(pizzaTypes).toContain("export interface PizzaBuildSelection");
+  });
+
+  it("keeps menu persistence owned by core", () => {
     const coreMenuTypes = read("src/core/business/types/gastronomyMenu.ts");
     const coreMenuQueries = read("src/core/business/services/menu.queries.ts");
 
-    expect(moduleMenuTypes).toContain("@/core/business/types/gastronomyMenu");
     expect(coreMenuTypes).toContain("export interface MenuItem");
     expect(coreMenuQueries).toContain("@/integrations/supabase");
   });
