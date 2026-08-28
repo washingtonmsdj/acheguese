@@ -7,7 +7,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { Switch } from '@/shared/components/ui/switch';
 import { Pencil, Trash2, Image as ImageIcon, Clock, PackageX } from 'lucide-react';
-import type { MenuItem } from '@/modules/business/gastronomy/services/MenuService';
+import type { MenuItem } from '@/core/business/services/MenuService';
 import { formatBrl } from '../../utils/currency';
 
 interface ItemCardProps {
