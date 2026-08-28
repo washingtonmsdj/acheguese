@@ -14,12 +14,12 @@ import { AppLayoutSidebar } from "@/app/components/AppLayoutSidebar";
 import TerritoryHomePage from "@/app/pages/TerritoryHomePage";
 import { TerritorialIndexPage } from "@/core/routing/components/TerritorialIndexPage";
 import { TerritorialLayout } from "@/core/routing/components/TerritorialLayout";
-import { APP_MODULE_SLUGS, buildAppModulePath } from "@/config/moduleSlugs";
-import { LAUNCH_CITY_PATH } from "@/config/territory";
+import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
+import { LAUNCH_CITY_PATH } from "@/core/routing/config/territory";
 import {
   isLaunchSurfaceEnabled,
   type LaunchSurfaceKey,
-} from "@/config/launchScope";
+} from "@/app/config/launchScope";
 import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
