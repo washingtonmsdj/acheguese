@@ -6,7 +6,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { GastronomyProfileService } from '@/modules/business/gastronomy/services/GastronomyProfileService';
+import { GastronomyProfileService } from '@/core/business/services/GastronomyProfileService';
 
 export type GastronomyActivationStatus =
   | 'not_configured'   // elegível mas sem perfil
