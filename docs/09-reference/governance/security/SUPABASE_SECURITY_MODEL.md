@@ -147,9 +147,9 @@ executavel sem JWT fica em
 `docs/09-reference/governance/security/EDGE_FUNCTION_AUTH_POLICY.json`. O gate
 `security:validate` valida schema, categorias permitidas, regex obrigatorias e
 conflito com nomes que sempre exigem JWT por meio de
-`scripts/security/edge-function-auth-policy.mjs`; o contrato local
+`tools/security/edge-function-auth-policy.mjs`; o contrato local
 `[functions.*]` em `supabase/config.toml` e validado por
-`scripts/security/edge-function-auth-config.mjs`.
+`tools/security/edge-function-auth-config.mjs`.
 
 Validadores de UUID em brokers devem aceitar somente a forma canonica completa
 (`8-4-4-4-12`) e possuir teste de regressao. Validacao sintatica nunca substitui
@@ -230,14 +230,15 @@ documental pode conter literal; acesso runtime a env continua proibido salvo
 em backend, Edge Function ou script operacional classificado.
 
 Para scripts administrativos, o ponto unico de leitura runtime de
-`SUPABASE_SERVICE_ROLE_KEY` e `scripts/lib/supabase-client.mjs`. O arquivo
-`scripts/lib/supabase-client.ts` e apenas uma fachada tipada para scripts
-TypeScript. Scripts operacionais migrados devem importar `createServiceRoleClient`
+`SUPABASE_SERVICE_ROLE_KEY` e `tools/supabase/supabase-client.mjs`. O arquivo
+`tools/supabase/supabase-client.ts` e a fachada tipada canonica para tooling
+TypeScript. Scripts operacionais devem importar `createServiceRoleClient`
 da fachada adequada ao runtime e nao acessar `process.env.SUPABASE_SERVICE_ROLE_KEY`
 diretamente.
 O mesmo helper tambem e o unico ponto permitido para chamar `createClient(...)`
-em `scripts/`; scripts devem usar `createServiceRoleClient`, `createAnonClient`
-ou `createSupabaseScriptClient`. Essa regra e validada por `security:validate`.
+no tooling administrativo; scripts devem usar `createServiceRoleClient`,
+`createAnonClient` ou `createSupabaseScriptClient`. Essa regra e validada por
+`security:validate`.
 
 Para testes E2E/operacionais, o ponto unico de leitura runtime de
 `SUPABASE_SERVICE_ROLE_KEY`, do alias legado `SUPABASE_SECRET_KEY`, de
@@ -276,7 +277,7 @@ chamar Supabase quando a decisao de autorizacao estiver em RLS, RPC ou Edge
 Function auditavel. Essa regra evita duplicar filtros de ownership/territorio
 em telas e reduz risco de BOLA/IDOR por consulta improvisada. O gate
 `security:validate` aplica essa fronteira por meio de
-`scripts/security/supabase-access-boundary.mjs`.
+`tools/security/supabase-access-boundary.mjs`.
 
 Chamadas para Edge Functions no formato broker `{ action, params }` devem usar
 o helper de infraestrutura
@@ -288,7 +289,7 @@ comportamento transversal do client Supabase, nao para concentrar modelos de
 negocio. Em 2026-07-08, nao deve existir `body: { action, params }` fora desse
 helper. Essa regra e executavel: `security:validate` bloqueia envelopes broker
 fora do helper por meio de
-`scripts/security/edge-function-broker-boundary.mjs`.
+`tools/security/edge-function-broker-boundary.mjs`.
 
 ## Advisor Remoto
 
