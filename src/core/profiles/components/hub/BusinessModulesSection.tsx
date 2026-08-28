@@ -16,7 +16,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { SectionFrame } from "./SectionFrame";
 import { EmptyPanel } from "./EmptyPanel";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
-import { isLaunchSurfaceEnabled } from "@/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
 import type { ProfileBusinessModuleSnapshot } from "@/core/profiles/services/ProfileBusinessTypes";
 
