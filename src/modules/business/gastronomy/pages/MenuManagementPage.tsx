@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from '@/shared/components/ui/select';
 import { ArrowLeft, Plus, Search } from 'lucide-react';
-import type { MenuCategory, MenuItem } from '@/modules/business/gastronomy/services/MenuService';
+import type { MenuCategory, MenuItem } from '@/core/business/services/MenuService';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 export default function MenuManagementPage() {
