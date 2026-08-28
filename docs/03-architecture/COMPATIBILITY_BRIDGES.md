@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `093cf3532495c349b6c8c612535dcfa5e6253514`  
+Baseline reviewed: `832735eec57b244a41b27e3a13777438a53245ed`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -47,7 +47,6 @@ Rules:
 | `scripts/security/edge-function-broker-boundary.mjs` | `tools/security/edge-function-broker-boundary.mjs` | security validators/tests import canonical boundary helper directly |
 | `scripts/security/service-role-boundary.mjs` | `tools/security/service-role-boundary.mjs` | security validators/tests import canonical boundary helper directly |
 | `scripts/security/supabase-access-boundary.mjs` | `tools/security/supabase-access-boundary.mjs` | security validators/tests import canonical boundary helper directly |
-| `scripts/security/validate-security.mjs` | `tools/security/validate-security.mjs` | package/docs/callers use canonical security orchestrator directly; legacy command no longer required |
 | `scripts/security/supabase-postgis-owner-preflight.mjs` | `tools/security/supabase-postgis-owner-preflight.mjs` | package/tests use canonical preflight owner directly; legacy CLI/import entrypoint no longer required |
 
 ## Gastronomy module-local bridges
@@ -85,6 +84,7 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/validate-supabase-remote-migration-drift.ts` → npm `validate:migrations:remote` and the live Security Authority use `tools/supabase/validate-supabase-remote-migration-drift.ts`; zero `src/**`/`tests/**` callers remained and the old bridge was removed.
 - `scripts/lib/supabase-client.ts` → CP-016 imports `tools/supabase/supabase-client.ts` directly, the live Supabase Security Model and service-role policy point to `tools/supabase/**`, and the remaining test occurrence is a synthetic negative fixture; old typed bridge removed.
 - `scripts/validate-architecture-boundaries-incremental.mjs` → npm `validate:architecture:incremental` and the canonical documentation index point to `tools/architecture/validate-architecture-boundaries-incremental.mjs`; zero `src/**`/`tests/**` callers remained, while substituted plans/census keep only historical references; old bridge removed.
+- `scripts/security/validate-security.mjs` → npm `security:validate` and the live Security Authority use `tools/security/validate-security.mjs`; zero `src/**`, `tests/**` or `.github/**` callers remained, and the implementation plan is explicitly historical rather than operational; old bridge removed.
 - `scripts/security/supabase-edge-admin-canary-deploy.mjs` → security test and Vercel production build now inspect/syntax-check `tools/release/supabase-edge-admin-canary-deploy.mjs` directly; old bridge removed.
 - `scripts/security/community-feed-anon-probe.mjs` → the authorization enforcement map and npm command use `tools/security/community-feed-anon-probe.mjs`; zero `src/**`/`tests/**` callers remained and the old bridge was removed.
 - `scripts/security/reviews-core-authz-probe.mjs` → review authorization evidence and npm command use `tools/security/reviews-core-authz-probe.mjs`; zero `src/**`/`tests/**` callers remained and the old bridge was removed.
