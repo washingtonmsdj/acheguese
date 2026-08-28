@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — G2 in progress  
-Baseline reviewed: `638e808eadc0f5dbf053e477382ccb5b8aca29e3`  
+Baseline reviewed: `57f6af8832e79c3674fa338aa46177b174dd918b`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -68,12 +68,10 @@ All persistence/domain ownership below is canonical in `src/core/business`. The 
 | --- | --- |
 | `src/modules/business/gastronomy/types/gastronomy/index.ts` | `src/core/business/types/gastronomy` |
 | `src/modules/business/gastronomy/types/menu.ts` | `src/core/business/types/gastronomyMenu` |
-| `src/modules/business/gastronomy/services/gastronomy.queries.ts` | `src/core/business/services/gastronomy.queries` |
 | `src/modules/business/gastronomy/services/menu.queries.ts` | `src/core/business/services/menu.queries` |
 | `src/modules/business/gastronomy/services/review.queries.ts` | `src/core/business/services/gastronomy.review.queries` |
 | `src/modules/business/gastronomy/services/favorites.queries.ts` | `src/core/business/services/gastronomy.favorites.queries` |
 | `src/modules/business/gastronomy/services/DeliveryAreaService.ts` | `src/core/business/services/GastronomyDeliveryAreaService` |
-| `src/modules/business/gastronomy/services/resolveGastronomyBusinessId.ts` | `src/core/business/services/resolveGastronomyBusinessId` |
 | `src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts` | `src/core/business/services/gastronomy-runtime.queries` |
 | `src/modules/business/gastronomy/services/activity.queries.ts` | `src/core/business/services/gastronomy.activity.queries` |
 | `src/modules/business/gastronomy/services/GastronomyProfileService.ts` | `src/core/business/services/GastronomyProfileService` |
@@ -197,6 +195,8 @@ These paths were not kept as bridges because no compatibility caller required th
 - `scripts/security/entity-private-data-exposure-probe.mjs` → Entity Private Data SSOT now cites `tools/security/entity-private-data-exposure-probe.mjs` directly; old bridge removed.
 - `scripts/validate-community-transversal-boundaries.ts` → canonical owner remains `tools/architecture/validate-community-transversal-boundaries.ts`; the remaining old-path mention is a historical baseline inside a completed hardening plan.
 - `scripts/validate-architecture-governance.ts` → canonical owner preserves direct execution at `tools/architecture/validate-architecture-governance.ts`; remaining old-path mention is a historical source list in a completed architecture plan.
+- `src/modules/business/gastronomy/services/gastronomy.queries.ts` → module facade/barrel now consume `src/core/business/services/gastronomy.queries.ts` directly; Gastronomy ratchet blocks bridge recreation.
+- `src/modules/business/gastronomy/services/resolveGastronomyBusinessId.ts` → no compatibility caller remained; canonical owner stays at `src/core/business/services/resolveGastronomyBusinessId.ts`; Gastronomy ratchet blocks bridge recreation.
 
 ## G2 closure condition for bridges
 
