@@ -15,7 +15,7 @@ import { DeliverySummaryWidget } from '../components/delivery/DeliverySummaryWid
 import { Button } from '@/shared/components/ui/button';
 import { ConfirmActionDialog } from '@/shared/components/ConfirmActionDialog';
 import { MapPin, Plus } from 'lucide-react';
-import type { DeliveryArea } from '@/modules/business/gastronomy/services/DeliveryAreaService';
+import type { DeliveryArea } from '@/core/business/services/GastronomyDeliveryAreaService';
 
 export default function DeliveryAreaPage() {
   const { businessId } = useParams<{ businessId: string }>();
