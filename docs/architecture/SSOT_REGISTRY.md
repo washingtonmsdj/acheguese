@@ -238,10 +238,15 @@ super_admin → admin → moderator → business_owner → driver → user
 
 | | |
 |---|---|
-| **Arquivo** | `src/core/messaging/types.ts` |
-| **Service** | `src/core/messaging/MessagingService.ts` |
-| **Responsabilidade** | Conversas e mensagens diretas |
-| **Tipos principais** | `Conversation`, `Message` |
+| **Contratos** | `src/core/messaging/contracts.ts` |
+| **Classified owner** | `src/core/messaging/services/ClassifiedMessagingService.ts` |
+| **Community Direct owner** | `src/core/messaging/services/CommunityDirectMessagingService.ts` |
+| **Realtime transport** | `src/core/realtime/services/RealtimeService.ts` |
+| **Responsabilidade** | Boundary horizontal de mensagens com agregados explicitamente separados; não existe `MessagingService` genérico |
+| **Tabelas Classified** | `conversations`, `messages` |
+| **Tabelas Community Direct** | `community_direct_threads`, `community_direct_thread_participants`, `community_direct_messages`, `community_direct_message_reports` |
+
+> A UI de Mensagens/Chat permanece launch-paused e não pertence a `src/core/messaging`. Quando retomada, deve viver em `src/modules/messaging` consumindo as facades de core.
 
 ---
 
@@ -361,12 +366,16 @@ SSOTs da camada `src/modules/` — features verticais.
 
 ---
 
-### 27. Notification Types
+### 27. Notifications
 
 | | |
 |---|---|
-| **Arquivo** | `src/core/notifications/types.ts` |
-| **Responsabilidade** | Sistema de notificações push e in-app |
+| **Tipos** | `src/core/notifications/types.ts` |
+| **Inbox** | `src/core/notifications/services/NotificationService.ts` |
+| **Preferências** | `src/core/notifications/services/NotificationPreferencesService.ts` |
+| **Delivery server-side** | `private.notification_outbox` + `private.enqueue_notification` + dispatcher |
+| **Realtime** | `src/core/realtime/services/RealtimeService.ts` |
+| **Responsabilidade** | Inbox self-service, preferências e entrega server-owned de notificações |
 
 ---
 
@@ -401,6 +410,10 @@ Tabelas que **só podem ser acessadas via service SSOT**. Acesso direto em hooks
 | `reviews` | `ReviewsService` |
 | `user_subscriptions` | `services/SubscriptionService` + `BusinessSubscriptionService` (read); `billing-webhook` (write) |
 | `commercial_catalog_version`, `catalog_item`, `catalog_*_policy` | `CatalogService` / `BillingPlanService` (read); trusted server/service_role (write) |
+| `conversations`, `messages` | `ClassifiedMessagingService`; mutations pelos RPCs server-owned |
+| `community_direct_threads`, `community_direct_thread_participants`, `community_direct_messages`, `community_direct_message_reports` | `CommunityDirectMessagingService`; mutations pelos RPCs do agregado |
+| `notifications` | `NotificationService` para inbox self-state; `create_notification`/outbox para criação; sem INSERT/hard DELETE browser |
+| `notification_preferences` | `NotificationPreferencesService` via RPCs canônicos |
 | `gastronomy_establishments` | `GastronomyService` |
 | `menu_categories` | `MenuService` |
 | `menu_items` | `MenuService` |
