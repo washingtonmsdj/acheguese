@@ -1,335 +1,86 @@
-# Core Territorial Module
+# Core Territorial
 
-**Status**: ✅ FUNDAÇÃO COMPLETA  
-**Versão**: 1.0.0  
-**Data**: 2026-03-28
+**Status:** G4 HARDENED — TERRITORIAL GROUP AUTHORITY CLOSED  
+**Owner:** `src/core/territorial`  
+**Escopo:** grupos territoriais, memberships, disponibilidade/rollout de grupo e gestão territorial composta.
 
----
+## Fronteira canônica
 
-## Visão Geral
+- `core/location` → geografia oficial e estrutura de `locations`;
+- `core/territorial` → `territorial_groups`, `territorial_group_members`, resolução de grupos, memberships e visibilidade territorial;
+- `core/coverage` → cobertura de entidades;
+- `core/rollout` → rollout individual por localização;
+- `core/geospatial` → boundary/espacialidade especializada da geografia.
 
-Módulo responsável por **grupos territoriais** (agrupamentos funcionais de bairros).
+Grupos territoriais **não são locations fake**. Eles agregam locations reais sem alterar a árvore geográfica.
 
-**NÃO confundir com**:
-- `core/location`: Hierarquia territorial oficial (SSOT)
-- `core/coverage`: Cobertura de entidades (quem atende onde)
-- `core/rollout`: Ativação de módulos por território
+## Contracts e persistência
 
----
+Contracts canônicos vivem em:
 
-## Responsabilidades
+- `src/core/territorial/contracts/index.ts`;
+- `src/core/territorial/repositories/ITerritorialGroupRepository.ts`;
+- `src/core/territorial/repositories/TerritorialGroupRepositorySupabase.ts`;
+- `src/core/territorial/repositories/createTerritorialGroupRepository.ts`.
 
-### O que este módulo faz ✅
+A facade pública é `@/core/territorial`.
 
-- Gerenciar grupos territoriais (agrupamentos de bairros)
-- Resolver membros de um grupo (bairros que compõem o grupo)
-- Verificar disponibilidade de módulo por grupo
-- Ativar/desativar módulo para grupo inteiro
-- Reconciliar rollout após mudança de membros
-- Verificar se bairro pertence a grupo
-- Listar grupos que contêm um bairro
+`TerritorialGroupService` é a autoridade de regras de negócio para CRUD e membership. Consumers novos não devem importar persistência interna nem paths históricos de `core/location`.
 
-### O que este módulo NÃO faz ❌
+## Backend gateways
 
-- Gerenciar hierarquia territorial oficial (use `core/location`)
-- Criar bairros fake em `locations` (grupos são entidade separada)
-- Definir cobertura de entidades (use `core/coverage`)
-- Controlar rollout individual de bairros (use `core/rollout`)
-- Geocoding ou coordenadas (use `integrations/maps`)
+As Edge Functions territoriais são gateways backend explícitos, não segundos SSOTs:
 
----
+- `territorial-get-tree` → read model administrativo;
+- `territorial-update-group-visibility` → atualização protegida de flags de visibilidade em metadata;
+- `territorial-update-location-visibility` → atualização protegida de flags de visibilidade de locations.
 
-## Estrutura
+A orchestration de source passa por `TerritorialManagementService` / `territorial.mutations.ts`, que invocam essas funções e não fazem write paralelo direto.
 
-```
-src/core/territorial/
-├── services/
-│   ├── TerritorialGroupService.ts          # CRUD e queries de grupos
-│   └── __tests__/
-│       └── TerritorialGroupService.test.ts
-├── GroupAvailabilityService.ts             # Disponibilidade de módulo por grupo
-├── TerritorialRolloutService.ts            # Operações administrativas de rollout
-├── types.ts                                # Tipos públicos
-├── index.ts                                # Barrel export
-├── TERRITORIAL_GROUPS_SEMANTICS.md         # Documentação de semântica
-└── README.md                               # Este arquivo
-```
+## Regras principais
 
----
+- slug de grupo é único por cidade âncora;
+- cidade âncora precisa ser `city`;
+- membros precisam ser locality selecionável (`district`/`neighborhood` conforme contrato atual) e pertencer à cidade âncora;
+- membros inativos não entram em resolução ativa;
+- grupo ativo não pode ficar vazio;
+- visibilidade territorial é controlada pelos flags canônicos `is_selector_active`, `is_landing_enabled` e `is_navigable`;
+- `territorial_groups` e `territorial_group_members` não podem ganhar implementação paralela em `core/location`.
 
-## Uso Básico
+## Compatibilidade histórica
 
-### 1. Criar Grupo
+Os antigos artefatos funcionais de grupos em `core/location` foram aposentados. Permanecem apenas bridges mínimos de repository, one-way para este owner, enquanto dois callers históricos são migrados gradualmente.
 
-```typescript
-import { territorialGroupService } from '@/core/territorial';
+O validator `tools/architecture/validate-territory-ssot.ts` garante:
 
-// Criar grupo vazio (inativo)
-const group = await territorialGroupService.createGroup({
-  slug: 'orla-de-salvador',
-  name: 'Orla de Salvador',
-  description: 'Bairros da orla marítima',
-  anchor_city_id: 'loc-salvador',
-});
+- nenhum novo caller do repository legado;
+- nenhuma implementação de grupo recriada em `core/location`;
+- nenhum acesso direto às tabelas de grupo em `src` fora do owner;
+- gateways backend explícitos e limitados por operação;
+- stale allowlists falham;
+- ownership de escrita de `locations` também permanece separado por operação.
 
-// Criar grupo com membros iniciais
-const groupWithMembers = await territorialGroupService.createGroup({
-  slug: 'zona-turistica',
-  name: 'Zona Turística',
-  anchor_city_id: 'loc-salvador',
-  member_location_ids: ['loc-barra', 'loc-rio-vermelho'],
-});
-```
+## Integração de Landing e routing
 
-### 2. Gerenciar Membros
+Landing, sitemap e gestão administrativa territorial consomem facades/adapters canônicos. O adapter `src/core/landing/services/territorialLanding.queries.ts` compõe dados territoriais sem recriar persistência de grupos em Landing.
 
-```typescript
-// Adicionar membros
-await territorialGroupService.addMembers('tg-orla', ['loc-ondina', 'loc-amaralina']);
+## G4 fechado
 
-// Remover membros
-await territorialGroupService.removeMembers('tg-orla', ['loc-amaralina']);
+A autoridade de source está fechada porque:
 
-// Substituir todos os membros (transacional)
-await territorialGroupService.replaceMembers('tg-orla', ['loc-barra', 'loc-rio-vermelho']);
-```
+1. contracts, repository e service de grupos possuem owner único;
+2. `core/location` não contém implementação concorrente de grupos;
+3. writes especializados de visibilidade passam pelos gateways backend autorizados;
+4. os bridges restantes são one-way, explícitos e monotônicos;
+5. o ratchet impede regressão estrutural;
+6. a validação read-only do banco remoto conhecido confirmou schema, constraints e RLS compatíveis com a separação `locations` vs grupos.
 
-### 3. Atualizar Grupo
-
-```typescript
-// Atualizar nome
-await territorialGroupService.updateGroup('tg-orla', {
-  name: 'Orla Marítima de Salvador',
-});
-
-// Atualizar slug
-await territorialGroupService.updateGroup('tg-orla', {
-  slug: 'orla-maritima',
-});
-
-// Ativar grupo (requer pelo menos 1 membro)
-await territorialGroupService.activateGroup('tg-orla');
-
-// Desativar grupo
-await territorialGroupService.deactivateGroup('tg-orla');
-```
-
-### 4. Buscar Grupo
-
-```typescript
-// Por ID
-const group = await territorialGroupService.getGroupById('tg-complexo-nordeste');
-
-// Por slug e cidade
-const group = await territorialGroupService.getGroupBySlugAndCity(
-  'complexo-do-nordeste-de-amaralina',
-  'loc-salvador'
-);
-
-// Com membros
-const groupWithMembers = await territorialGroupService.getGroupWithMembers('tg-complexo-nordeste');
-```
-
-### 5. Resolver Membros
-
-```typescript
-// Apenas membros ativos
-const activeMembers = await territorialGroupService.listActiveMembers('tg-complexo-nordeste');
-
-// Todos os membros (incluindo inativos)
-const allMembers = await territorialGroupService.listAllMembers('tg-complexo-nordeste');
-
-// Apenas IDs (para filtro)
-const locationIds = await territorialGroupService.resolveGroupToLocationIds('tg-complexo-nordeste');
-// Retorna: ['loc-nordeste-de-amaralina', 'loc-santa-cruz', ...]
-```
-
-### 6. Verificar Membership
-
-```typescript
-// Verificar se bairro pertence a grupo
-const isMember = await territorialGroupService.isMemberOfGroup(
-  'loc-nordeste-de-amaralina',
-  'tg-complexo-nordeste'
-);
-
-// Buscar grupos que contêm um bairro
-const groups = await territorialGroupService.findGroupsContainingLocation('loc-nordeste-de-amaralina');
-```
-
-### 7. Verificar Disponibilidade de Módulo
-
-```typescript
-import { groupAvailabilityService } from '@/core/territorial';
-import { ModuleKey } from '@/core/rollout/types';
-
-const availability = await groupAvailabilityService.getGroupModuleAvailability(
-  'tg-complexo-nordeste',
-  ModuleKey.COMMUNITY
-);
-
-// availability.availability: 'full' | 'partial' | 'none'
-// availability.active_member_ids: ['loc-nordeste', 'loc-santa-cruz']
-```
-
-### 8. Ativar Módulo para Grupo (Admin)
-
-```typescript
-import { territorialRolloutService } from '@/core/territorial';
-import { RolloutStatus } from '@/core/rollout/types';
-
-const result = await territorialRolloutService.activateRolloutForGroup({
-  group_id: 'tg-complexo-nordeste',
-  module_key: ModuleKey.MOBILITY,
-  status: RolloutStatus.ACTIVE
-});
-
-// result.applied_to: ['loc-nordeste', 'loc-santa-cruz', ...]
-// result.skipped: []  (membros inativos)
-```
-
----
-
-## Integração com Filtro Territorial
-
-### TerritoryFilter
-
-```typescript
-import { useModuleTerritoryFilter } from '@/core/location';
-
-// Em pagina de modulo com rota territorial
-const { resolved, activeMemberIds } = useTerritorialContext();
-const { territoryFilter: filter } = useModuleTerritoryFilter({
-  routeResolved: resolved,
-  activeMemberIds,
-});
-
-// filter.scope === 'location' → bairro único
-// filter.scope === 'group'    → grupo de bairros
-// filter.scope === 'none'     → sem filtro
-```
-
-### Aplicação em Queries
-
-```typescript
-// Exemplo: buscar businesses
-let query = supabase.from('business_data').select('*');
-
-if (filter.scope === 'location') {
-  query = query.eq('location_id', filter.location_id);
-} else if (filter.scope === 'group') {
-  query = query.in('location_id', filter.location_ids);
-} else {
-  // scope === 'none': não executar query ou retornar vazio
-  return [];
-}
-
-const { data } = await query;
-```
-
----
-
-## Regras de Negócio
-
-### 1. Grupos NÃO São Locations
-
-```typescript
-// ❌ ERRADO
-const group = await locationService.getLocationById('tg-complexo-nordeste');
-
-// ✅ CORRETO
-const group = await territorialGroupService.getGroupById('tg-complexo-nordeste');
-```
-
-### 2. Membros São Sempre Districts
-
-```typescript
-// ✅ CORRETO
-group.members.every(m => m.type === 'district')
-
-// ❌ ERRADO
-group.members.some(m => m.type === 'city')
-```
-
-### 3. Membros Inativos São Ignorados
-
-```typescript
-// Apenas membros ativos
-const activeMembers = await territorialGroupService.listActiveMembers(groupId);
-
-// Todos os membros (incluindo inativos)
-const allMembers = await territorialGroupService.listAllMembers(groupId);
-```
-
-### 4. Slug Único por Cidade
-
-```sql
-CONSTRAINT territorial_groups_slug_city_unique UNIQUE (slug, anchor_city_id)
-```
-
----
-
-## Testes
-
-**Arquivo**: `services/__tests__/TerritorialGroupService.test.ts`
-
-**Cobertura**: 42 testes
-
-**READ Operations** (17 testes):
-- getGroupById: 3 testes
-- getGroupBySlugAndCity: 2 testes
-- getGroupWithMembers: 1 teste
-- listActiveMembers: 1 teste
-- listAllMembers: 1 teste
-- findGroupsContainingLocation: 2 testes
-- resolveGroupToLocationIds: 2 testes
-- isMemberOfGroup: 2 testes
-- isGroupActive: 2 testes
-- listAllGroups: 1 teste
-
-**WRITE Operations** (25 testes):
-- createGroup: 6 testes (válido, com membros, slug duplicado, cidade inexistente, cidade não-city, campos vazios)
-- updateGroup: 5 testes (nome, slug, slug duplicado, ativação vazio, grupo inexistente)
-- activateGroup: 2 testes (com membros, grupo vazio)
-- deactivateGroup: 1 teste
-- addMembers: 5 testes (válido, outra cidade, não-district, inexistente, duplicatas)
-- removeMembers: 2 testes (válido, grupo inexistente)
-- replaceMembers: 4 testes (válido, grupo ativo vazio, grupo inativo vazio, validação)
-
-**Status**: ✅ 42/42 passed
-
----
-
-## Validações Implementadas
-
-### Criação de Grupo
-- ✅ Slug, name, anchor_city_id obrigatórios
-- ✅ Cidade âncora deve existir
-- ✅ Cidade âncora deve ser do tipo 'city'
-- ✅ Slug único por cidade
-- ✅ Grupo criado como 'inactive' por padrão
-
-### Atualização de Grupo
-- ✅ Slug único por cidade (se mudando)
-- ✅ Grupo ativo deve ter pelo menos 1 membro
-
-### Membership
-- ✅ Membro deve existir
-- ✅ Membro deve ser do tipo 'district'
-- ✅ Membro deve pertencer à cidade âncora
-- ✅ Membro deve estar ativo
-- ✅ Duplicatas ignoradas silenciosamente
-- ✅ Grupo ativo não pode ficar vazio
-
----
+A auditoria exaustiva de migrations, grants, RLS e dados permanece em G5.
 
 ## Referências
 
-- [TERRITORIAL_GROUPS_SEMANTICS.md](./TERRITORIAL_GROUPS_SEMANTICS.md) - Semântica formal
-- [TERRITORIAL_FOUNDATION.md](../../docs/TERRITORIAL_FOUNDATION.md) - Fundação territorial
-- [GEOGRAPHIC_FOUNDATION.md](../../docs/GEOGRAPHIC_FOUNDATION.md) - Fundação geográfica
-
----
-
-**Versão**: 1.0.0  
-**Status**: ✅ FUNDAÇÃO COMPLETA (READ + WRITE)
+- `src/core/location/README.md`
+- `src/core/territorial/TERRITORIAL_GROUPS_SEMANTICS.md`
+- `docs/02-domain/GEOGRAPHIC_FOUNDATION.md`
+- `tools/architecture/validate-territory-ssot.ts`
+- `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
