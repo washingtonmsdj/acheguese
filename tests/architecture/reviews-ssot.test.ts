@@ -14,6 +14,9 @@ const deleteContractMigration = read(
 const adminAggregateMigration = read(
   "supabase/migrations/20260715110000_create_review_aggregate_admin_read_model.sql",
 );
+const brokerManagementMigration = read(
+  "supabase/migrations/20260829171858_add_broker_profile_management_authority.sql",
+);
 const queries = read("src/core/reviews/services/reviews.queries.ts");
 const mutations = read("src/core/reviews/services/reviews.mutations.ts");
 const engagement = read("src/core/reviews/services/ReviewEngagementService.ts");
@@ -22,6 +25,9 @@ const businessAdapter = read(
 );
 const gastronomyAdapter = read(
   "src/core/business/services/gastronomy.review.queries.ts",
+);
+const businessBroker = read(
+  "supabase/functions/business-reviews-rpc/index.ts",
 );
 
 function runtimeSourceFiles(directory: string): string[] {
@@ -62,6 +68,14 @@ describe("Reviews Core SSOT", () => {
     expect(mutations).toMatch(/rpc\(\s*"upsert_profile_review"/);
     expect(mutations).toContain('rpc("delete_profile_review"');
     expect(mutations).not.toContain('.from("reviews")');
+
+    const directReviewReaders = runtimeSourceFiles("src").filter((path) => {
+      const source = read(path);
+      return /\.from\(\s*["']reviews["']\s*\)/.test(source);
+    });
+    expect(directReviewReaders).toEqual([
+      "src/core/reviews/services/reviews.queries.ts",
+    ]);
   });
 
   it("enforces actor ownership, completed work, rate limits and server writes", () => {
@@ -96,11 +110,36 @@ describe("Reviews Core SSOT", () => {
       'const FUNCTION_NAME = "business-reviews-rpc"',
     );
     expect(gastronomyAdapter).toContain("BusinessReviewService");
+    expect(gastronomyAdapter).not.toContain("get_business_reviews");
     expect(businessAdapter).not.toContain("p_user_id");
     expect(businessAdapter).not.toContain("gastronomy");
-    expect(migration).toContain(
-      "LIMIT LEAST(GREATEST(COALESCE(p_limit, 20), 1), 100)",
+  });
+
+  it("keeps business admin and response authority on canonical helpers", () => {
+    expect(businessBroker).toContain('supabaseAdmin.rpc("is_admin"');
+    expect(businessBroker).toContain('"broker_user_can_manage_profile"');
+    expect(businessBroker).not.toContain('.from("user_roles")');
+    expect(brokerManagementMigration).toContain(
+      "SELECT private.user_can_manage_profile(p_user_id, p_profile_id)",
     );
+    expect(brokerManagementMigration).toContain(
+      "GRANT EXECUTE ON FUNCTION public.broker_user_can_manage_profile(uuid, uuid) TO service_role",
+    );
+    expect(brokerManagementMigration).toContain(
+      "REVOKE ALL ON FUNCTION public.broker_user_can_manage_profile(uuid, uuid) FROM authenticated",
+    );
+  });
+
+  it("keeps dormant business review SQL commands out of the active broker", () => {
+    for (const functionName of [
+      "can_user_review_business",
+      "create_business_review",
+      "update_business_review",
+      "delete_business_review",
+      "add_business_review_response",
+    ]) {
+      expect(businessBroker).not.toContain(`rpc(\"${functionName}\"`);
+    }
   });
 
   it("keeps administrative aggregates in a bounded server-owned read model", () => {

@@ -1,138 +1,185 @@
 # Reviews SSOT
 
-Status: canonico
-Data: 2026-07-15
-Finding encerrado: CP-013
+Status: canônico — G4 fechado no nível de autoridade/source
+Última revalidação: 2026-08-29
+Finding histórico: CP-013
 
-## 1. Decisao
+## 1. Decisão
 
-`public.reviews` e a unica fonte de verdade para avaliacoes cujo alvo e um
-Profile: Empresa, Profissional ou Servico. `core/reviews` possui o agregado
-base, as leituras comuns e os comandos de engajamento. Business conserva a
-regra comercial em um adapter tipado; Gastronomia apenas compoe a experiencia.
+`public.reviews` é a única fonte de verdade para avaliações cujo alvo é um
+Profile: Empresa, Profissional ou Serviço. `src/core/reviews` possui o agregado
+base, as leituras comuns, a mutação profissional e os comandos de engajamento.
+Business conserva apenas a política comercial e o broker autenticado; Gastronomia
+compõe a experiência sem possuir persistência paralela.
 
-Nao existe selecao dinamica de tabela, dual-write ou tabela de avaliacao por
-vertical. As tabelas legadas remotas `business_reviews_new` e
-`professional_reviews_new` foram migradas, verificadas e removidas.
+Não existe seleção dinâmica de tabela, dual-write ou tabela de avaliação por
+vertical. As tabelas legadas `business_reviews_new` e
+`professional_reviews_new` foram reconciliadas e removidas em 2026-07.
 
-`event_reviews` permanece no dominio de Eventos. Seu alvo, elegibilidade,
-lifecycle e moderacao sao diferentes; compartilhar componentes ou contratos
-de leitura nao autoriza fundir a persistencia.
+`event_reviews` permanece intencionalmente no domínio de Eventos. Seu alvo,
+elegibilidade, lifecycle e moderação são diferentes; compartilhar UI ou
+contratos não autoriza fundir essa persistência com o agregado Profile Review.
 
 ## 2. Owners
 
-| Responsabilidade                 | Owner                                                  |
-| -------------------------------- | ------------------------------------------------------ |
-| Tipos, mapeamento e leitura base | `src/core/reviews`                                     |
-| Review de Profissional           | `src/core/reviews/services/reviews.mutations.ts`       |
-| Report e helpfulness             | `src/core/reviews/services/ReviewEngagementService.ts` |
-| Politica de review de Empresa    | `src/core/business/services/BusinessReviewService.ts`  |
-| Broker comercial privilegiado    | `supabase/functions/business-reviews-rpc/index.ts`     |
-| Experiencia de Gastronomia       | `src/modules/business/gastronomy`                      |
-| Enforcement                      | RLS, grants, RPCs e Edge Function                      |
+| Responsabilidade | Owner |
+| --- | --- |
+| Tipos, mapeamento e leitura base | `src/core/reviews` |
+| Review de Profissional | `src/core/reviews/services/reviews.mutations.ts` |
+| Report e helpfulness | `src/core/reviews/services/ReviewEngagementService.ts` |
+| Política de review de Empresa | `src/core/business/services/BusinessReviewService.ts` |
+| Broker privilegiado de Business | `supabase/functions/business-reviews-rpc/index.ts` |
+| Experiência de Gastronomia | `src/modules/business/gastronomy` |
+| Mídia de review | `src/core/media` + preset `review_photo` |
+| Enforcement | RLS, grants, RPCs e Edge Function |
 
-Gastronomia nao possui service de persistencia proprio. Admin pode compor
-read models explicitamente allowlisted, mas nao se torna segundo owner.
+Gastronomia não possui service de persistência próprio. Admin pode compor read
+models explicitamente autorizados, mas não se torna segundo owner.
 
-## 3. Modelo canonico
+## 3. Modelo canônico
 
-| Recurso                              | Responsabilidade                                            |
-| ------------------------------------ | ----------------------------------------------------------- |
-| `reviews`                            | rating, comentario, tipo, autor, alvo e lifecycle canonicos |
-| `review_helpfulness`                 | voto por Profile e Review                                   |
-| `review_reports`                     | denuncia com reporter derivado pelo backend                 |
-| `private.review_command_rate_limits` | limite de comandos por ator                                 |
-| `review_media_assets`                | vinculo com `MediaAssetRef` publico aprovado                |
+| Recurso | Responsabilidade |
+| --- | --- |
+| `reviews` | rating, comentário, tipo, autor, alvo e lifecycle canônicos |
+| `review_helpfulness` | voto por Profile e Review; sem escrita/leitura direta de browser |
+| `review_reports` | denúncia com reporter derivado pelo backend |
+| `private.review_command_rate_limits` | limite de comandos por ator |
+| `media_assets` / `media_asset_links` | mídia canônica referenciada por `MediaAssetRef` |
 
-As extensoes comerciais sao campos tipados do mesmo agregado. Dados de
-pedido, atendimento e ownership continuam em seus dominios e sao consultados
-para elegibilidade; eles nao sao copiados para `reviews` como uma segunda
+Não existe `review_media_assets` no schema atual. A documentação antiga que a
+tratava como tabela própria ficou obsoleta após o cutover de MediaAsset.
+
+Dados de pedido, atendimento e ownership continuam em seus domínios e são
+consultados para elegibilidade; não são copiados para `reviews` como segunda
 fonte de verdade.
 
-## 4. Comandos e autorizacao
+## 4. Comandos e autorização
 
-- `upsert_profile_review` cria ou atualiza review de Profissional somente para
-  o cliente de atendimento concluido;
-- `delete_profile_review` permite hard delete pelo autor ou admin;
-- `get_profile_review_stats` calcula agregado no banco, sem baixar a colecao;
-- `get_review_aggregates_admin` agrega ate 200 Profiles por chamada, exige
-  admin e e consumido somente por `ReviewsService`;
-- `set_review_helpfulness` deriva o ator, proibe auto-voto e e idempotente;
-- `get_current_review_helpfulness` le apenas o voto do Profile autenticado;
-- `create_review_report` deriva reporter, limita e deduplica a denuncia;
-- `business-reviews-rpc` valida Profile, ownership e pedido entregue quando o
-  review comercial esta vinculado a pedido.
+### Professional/Profile
 
-O browser nao recebe grant de escrita em `reviews` ou
-`review_helpfulness`. Identidade, elegibilidade, papel administrativo e alvo
-efetivo sao derivados/validados no backend. Escrita direta e spoof de Profile
-falham fechados.
+- `upsert_profile_review` exige JWT e Profile ativo do ator, e delega à regra
+  privada de elegibilidade profissional;
+- `delete_profile_review` exige autor ativo ou admin, aplica rate limit e opera
+  apenas `review_type = 'professional'`;
+- `get_profile_review_stats` calcula agregado no banco sem baixar a coleção;
+- `get_review_aggregates_admin` exige admin internamente e aceita no máximo 200
+  Profiles por lote.
 
-Hard delete e o contrato vigente porque o constraint remoto de status nao
-possui estado `deleted`. Votos, reports e links de midia associados seguem as
-FKs/cascades documentadas; ampliar silenciosamente o enum seria criar um novo
-lifecycle sem regra de produto.
+### Engagement
 
-## 5. Leitura e escala
+- `set_review_helpfulness` exige Profile ativo do próprio ator, proíbe auto-voto,
+  aplica rate limit e lock transacional;
+- `get_current_review_helpfulness` só resolve o voto do Profile ativo do ator;
+- `create_review_report` deriva `reporter_profile_id` do Profile ativo;
+- `moderate_review_report` exige autoridade administrativa no backend.
 
-- consultas exigem tipo/status explicitos e usam limites fechados;
-- estatisticas usam agregacao no banco;
-- governanca admin divide listas maiores em lotes de 200, sem consulta por
-  Profile e sem acesso direto a `reviews` fora do owner;
-- indices cobrem alvo/tipo/status, autor e elegibilidade profissional;
-- comandos sensiveis usam rate limit por Profile e `statement_timeout`;
-- `get_business_reviews` limita pagina a 100 e offset a 5000;
-- falha de schema ou autorizacao nao e convertida em lista vazia de sucesso.
+`review_helpfulness` não possui policy de browser e os grants da tabela ficam
+restritos a `service_role`; o RPC autenticado é a autoridade de interação.
 
-O offset limitado do read model comercial permanece como compatibilidade. Se
-paginacao profunda aparecer em metrica real, ela deve migrar para keyset; nao
-se cria complexidade preventiva sem consumidor ou evidencia.
+### Business
 
-## 6. Midia, privacidade e moderacao
+O browser chama somente `BusinessReviewService`, que invoca
+`business-reviews-rpc`. O broker:
 
-Imagem de Review usa apenas `MediaAssetRef` do preset versionado `review`.
-Browser nao escolhe bucket/path e URL externa arbitraria nao entra no
-agregado. Texto, rating, resposta comercial e motivo de denuncia possuem
-limites server-side. Auditoria e rate limit ficam em schema privado e nao
-expõem corpo livre para telemetria.
+1. exige JWT válido e deriva `userId` do token;
+2. bloqueia mutação quando a conta está em estado de exclusão operacional;
+3. usa o helper canônico `is_admin` para autoridade administrativa — não lê
+   `user_roles` diretamente;
+4. valida Profile de reviewer, review comercial e, quando informado, pedido
+   entregue e relação customer/merchant;
+5. para publicar `business_response`, exige gestão do Profile da Empresa pelo
+   wrapper service-role-only `broker_user_can_manage_profile`, que delega a
+   `private.user_can_manage_profile` (dono direto ou membership ativa
+   `owner/admin`); membership `member` não autoriza resposta pública;
+6. executa a escrita server-side com service role depois de validar o ator.
 
-Helpfulness e report sao capacidades do Core Review. Resposta da Empresa,
-elegibilidade por pedido e apresentacao gastronomica permanecem em Business.
-Moderacao administrativa pode federar a fila, mas `review_reports` continua o
-status mestre desse dominio.
+A migration `20260829171858_add_broker_profile_management_authority.sql`
+expõe apenas o adapter técnico necessário ao broker. `PUBLIC`, `anon` e
+`authenticated` não podem executá-lo; somente `service_role` pode chamá-lo.
+A regra de negócio continua pertencendo a `private.user_can_manage_profile`.
 
-## 7. Migracao e evidencias
+## 5. RPCs comerciais legados
 
-A migration `20260715094000_consolidate_review_core.sql`:
+Os RPCs abaixo ainda existem no banco remoto, porém estão sem caller runtime no
+HEAD e com `EXECUTE` restrito a `service_role`:
 
-1. migrou 2 reviews profissionais e 0 reviews comerciais legados;
-2. comparou cada linha de origem com o agregado canonico;
-3. removeu as duas tabelas legadas com `DROP TABLE ... RESTRICT`;
-4. endureceu RLS, grants, indices, comandos e read models.
+- `can_user_review_business`;
+- `create_business_review`;
+- `update_business_review`;
+- `delete_business_review`;
+- `add_business_review_response`.
 
-As migrations `20260715095000` e `20260715096000` fecharam lifecycle do rate
-limit e o contrato definitivo de exclusao. Todas estao aplicadas no Supabase
-remoto de desenvolvimento e os tipos foram regenerados.
+Eles **não são autoridade ativa**: o Edge Function atual não os chama e executa
+o contrato comercial diretamente sobre `reviews` depois da validação
+server-side. Não serão apagados em G4 somente por nome/heurística. A retirada
+física exige provenance/dependency audit em G5; até lá permanecem classificados
+como legado dormente, inacessível ao browser.
 
-A migration `20260715110000_create_review_aggregate_admin_read_model.sql`
-removeu o ultimo acesso direto do loader de governanca e criou o read model
-admin agregado e limitado.
+O mesmo vale para `get_business_reviews`: não há caller runtime atual no source;
+o read path comercial ativo usa `ReviewsService`. A função histórica não deve
+voltar a ser tratada como read model canônico sem nova decisão arquitetural.
 
-Evidencias executadas:
+## 6. Leitura, escala e mídia
 
-- `npm run test:reviews:ssot`: 7 testes de ownership e fronteira;
-- `npm run security:reviews:authz-probe`: 31 casos remotos positivos e
-  negativos com fixtures temporarias e cleanup;
-- `npm run typecheck:app -- --pretty false`;
-- `npm run validate:migrations`.
+- queries comuns vivem em `src/core/reviews/services/reviews.queries.ts`;
+- o runtime em `src/**` não acessa `reviews` diretamente fora do owner;
+- estatísticas são agregadas no banco;
+- governança admin usa lotes limitados a 200;
+- mídia usa somente referências `storage://media-assets/.../review_photo/...`
+  aprovadas pelo Core Media;
+- URL externa arbitrária não entra no agregado comercial;
+- comandos sensíveis usam limites server-side e, onde aplicável, rate limit e
+  `statement_timeout`.
 
-O probe comprova os contratos testados de autorizacao e persistencia. Ele nao
-prova milhares de requisicoes por segundo; p50/p95/p99 e concorrencia ainda
-exigem staging explicitamente autorizado.
+Paginação profunda, carga p50/p95/p99 e concorrência são requisitos de
+certificação operacional/staging (G6/G7), não justificativa para criar um
+segundo read model em G4.
 
-## 8. Rollback
+## 7. Evidência de G4 — 2026-08-29
 
-Rollback de codigo desabilita os consumidores novos antes de alterar o schema.
-Rollback de dados usa backup/restauracao do agregado canonico. Recriar tabelas
-legadas, reintroduzir selector de tabela ou dual-write nao sao estrategias de
-rollback aceitas.
+Revalidação source + remoto confirmou:
+
+- `reviews`, `review_helpfulness`, `review_reports` e `event_reviews` com RLS
+  habilitado;
+- browser sem grant de escrita em `reviews` e sem grants diretos em
+  `review_helpfulness`;
+- schema de `reviews`, `review_helpfulness` e `review_reports` alinhado aos
+  contratos atuais do Core;
+- RPCs Professional/helpfulness autenticados validando ator/Profile ativo;
+- aggregate admin validando admin internamente e limitando batch;
+- report derivando reporter e moderação exigindo admin;
+- `business-reviews-rpc` remoto atualizado para versão 10, `ACTIVE`, com
+  `verify_jwt = true`, proteção de conta operacional, `is_admin` canônico e
+  gestão de Business delegada ao helper canônico;
+- wrapper `broker_user_can_manage_profile` restrito a `service_role`;
+- nenhum alerta novo do Security Advisor atribuído ao wrapper criado.
+
+Regression guards ativos:
+
+- `tests/architecture/reviews-ssot.test.ts`;
+- `tests/security/business-reviews-rpc-security.test.ts`;
+- comando `npm run test:reviews:ssot`.
+
+A infraestrutura hosted continua sendo uma evidência separada. Enquanto os
+jobs não executarem steps, não existe PASS same-SHA inferido para lint,
+typecheck ou testes deste corte.
+
+## 8. Dívidas que pertencem a G5/G6/G7
+
+G4 fecha autoridade/source conhecido; não fecha automaticamente:
+
+- provenance e retirada dos cinco RPCs comerciais legados dormentes;
+- auditoria exaustiva migration ↔ remoto de toda a história de Reviews;
+- triagem global dos warnings do Security Advisor — inclusive warnings
+  genéricos de `SECURITY DEFINER` que precisam ser avaliados pela semântica de
+  cada RPC, não removidos mecanicamente;
+- carga, concorrência, p50/p95/p99 e paginação profunda;
+- certificação funcional de Gastronomia/Professional/Events;
+- build/deploy/smoke do mesmo SHA em G7.
+
+## 9. Rollback
+
+Rollback de código desabilita consumidores novos antes de alterar o schema.
+Rollback de dados usa backup/restauração do agregado canônico. Recriar tabelas
+legadas, reintroduzir selector de tabela, direct browser writes ou dual-write
+não são estratégias de rollback aceitas.
