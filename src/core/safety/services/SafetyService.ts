@@ -5,21 +5,20 @@
  * - Gerenciar alertas de emergência
  * - Compartilhamento seguro de viagens
  * - Registro de incidentes
- * - Evidências de segurança
  * - Auditoria de ações de segurança
+ *
+ * Evidências privadas possuem owner dedicado em SafetyEvidenceService.
  *
  * Regras:
  * - ZERO acessos diretos ao supabase fora deste service
- * - Todas as operações de safety passam por aqui
+ * - Todas as operações de safety passam por aqui, exceto o agregado dedicado de evidências
  * - Auditoria automática de ações críticas
  *
  * Padrão: Banco → Service → Hook → Component
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
-import type { Database, Json } from '@/integrations/supabase';
 import { trackError } from '@/shared/utils/errorTracking';
-import { mediaService } from '@/core/media/services/MediaService';
 import { SafetyEmergencyContactsService } from './SafetyEmergencyContactsService';
 import { SafetyRideShareService } from './SafetyRideShareService';
 import { SAFETY_ALERT_STATUS } from '@/core/safety/constants/status';
@@ -35,9 +34,6 @@ import type {
   CreateSafetyIncidentInput,
   SafetyIncidentStatus,
   SafetyIncidentType,
-  SafetyEvidence,
-  SafetyEvidenceType,
-  UploadSafetyEvidenceInput,
   EmergencyContact,
   CreateEmergencyContactInput,
   UpdateEmergencyContactInput,
@@ -78,21 +74,6 @@ type SafetyIncidentRow = {
   resolved_at?: string | null;
 };
 
-type SafetyEvidenceRow = {
-  id: string;
-  incident_id: string;
-  evidence_type: string;
-  file_url: string;
-  file_name: string;
-  file_size: number;
-  mime_type: string;
-  uploaded_by: string;
-  metadata?: Record<string, unknown> | null;
-  created_at: string;
-};
-
-type SafetyEvidenceInsert = Database['public']['Tables']['safety_evidence']['Insert'];
-
 interface QueryResult<T> {
   data: T | null;
   error: { message: string; code?: string } | null;
@@ -131,7 +112,7 @@ export class SafetyService {
       enableAutoMonitoring: true,
       emergencyContactsEnabled: true,
       shareExpirationHours: 24,
-      maxEvidenceFileSize: 10 * 1024 * 1024, // 10MB
+      maxEvidenceFileSize: 10 * 1024 * 1024,
     };
     this.rideShareService = new SafetyRideShareService({
       getShareExpirationHours: () => this.config.shareExpirationHours,
@@ -145,9 +126,7 @@ export class SafetyService {
     return SafetyService.instance;
   }
 
-  /**
-   * Configura o serviço
-   */
+  /** Configura o serviço. */
   configure(config: Partial<SafetyServiceConfig>): void {
     this.config = { ...this.config, ...config };
   }
@@ -156,9 +135,6 @@ export class SafetyService {
   // EMERGENCY ALERTS
   // ============================================
 
-  /**
-   * Cria alerta de emergência
-   */
   async createEmergencyAlert(
     input: CreateEmergencyAlertInput
   ): Promise<SafetyResult<EmergencyAlert>> {
@@ -207,9 +183,6 @@ export class SafetyService {
     }
   }
 
-  /**
-   * Obtém alerta de emergência por ID
-   */
   async getEmergencyAlert(alertId: string): Promise<EmergencyAlert | null> {
     try {
       const { data, error } = await safetyDb
@@ -228,9 +201,6 @@ export class SafetyService {
     }
   }
 
-  /**
-   * Lista alertas de emergência
-   */
   async listEmergencyAlerts(filter: SafetyFilter = {}): Promise<EmergencyAlert[]> {
     try {
       let query = safetyDb
@@ -252,7 +222,6 @@ export class SafetyService {
       }
 
       const { data, error } = await query;
-
       if (error) throw error;
 
       return (data || []).map((item) => this.mapToEmergencyAlert(item));
@@ -262,9 +231,6 @@ export class SafetyService {
     }
   }
 
-  /**
-   * Atualiza status do alerta
-   */
   async updateAlertStatus(
     alertId: string,
     status: EmergencyAlertStatus,
@@ -297,25 +263,16 @@ export class SafetyService {
   // RIDE SHARE
   // ============================================
 
-  /**
-   * Cria compartilhamento de viagem
-   */
   async createRideShare(
     input: CreateRideShareInput
   ): Promise<SafetyResult<RideShare>> {
     return this.rideShareService.createRideShare(input);
   }
 
-  /**
-   * Obtém dados de viagem compartilhada por token
-   */
   async getSharedRideData(shareToken: string): Promise<SharedRideData | null> {
     return this.rideShareService.getSharedRideData(shareToken);
   }
 
-  /**
-   * Revoga compartilhamento de viagem
-   */
   async revokeRideShare(shareId: string): Promise<SafetyResult<void>> {
     return this.rideShareService.revokeRideShare(shareId);
   }
@@ -324,9 +281,6 @@ export class SafetyService {
   // SAFETY INCIDENTS
   // ============================================
 
-  /**
-   * Cria incidente de segurança
-   */
   async createSafetyIncident(
     input: CreateSafetyIncidentInput
   ): Promise<SafetyResult<SafetyIncident>> {
@@ -351,11 +305,9 @@ export class SafetyService {
 
       if (error) throw error;
 
-      const incident = this.mapToSafetyIncident(data);
-
       return {
         success: true,
-        data: incident,
+        data: this.mapToSafetyIncident(data),
       };
     } catch (error) {
       logger.error('[SafetyService] Error creating safety incident:', error);
@@ -366,9 +318,6 @@ export class SafetyService {
     }
   }
 
-  /**
-   * Obtém incidente por ID
-   */
   async getSafetyIncident(incidentId: string): Promise<SafetyIncident | null> {
     try {
       const { data, error } = await safetyDb
@@ -387,9 +336,6 @@ export class SafetyService {
     }
   }
 
-  /**
-   * Lista incidentes
-   */
   async listSafetyIncidents(filter: SafetyFilter = {}): Promise<SafetyIncident[]> {
     try {
       let query = supabase
@@ -411,7 +357,6 @@ export class SafetyService {
       }
 
       const { data, error } = await query;
-
       if (error) throw error;
 
       return (data || []).map((item) => this.mapToSafetyIncident(item));
@@ -421,9 +366,6 @@ export class SafetyService {
     }
   }
 
-  /**
-   * Atualiza status do incidente
-   */
   async updateIncidentStatus(
     incidentId: string,
     status: SafetyIncidentStatus,
@@ -449,86 +391,6 @@ export class SafetyService {
         success: false,
         error: error instanceof Error ? error.message : 'Erro ao atualizar incidente',
       };
-    }
-  }
-
-  // ============================================
-  // SAFETY EVIDENCE
-  // ============================================
-
-  /**
-   * Upload de evidência
-   */
-  async uploadSafetyEvidence(
-    input: UploadSafetyEvidenceInput,
-    uploadedBy: string
-  ): Promise<SafetyResult<SafetyEvidence>> {
-    try {
-      // Validar tamanho do arquivo
-      if (input.file.size > this.config.maxEvidenceFileSize) {
-        return {
-          success: false,
-          error: `Arquivo muito grande. Máximo: ${this.config.maxEvidenceFileSize / (1024 * 1024)}MB`,
-        };
-      }
-
-      const upload = await mediaService.uploadToBucket(input.file, {
-        bucket: 'safety-evidence',
-        pathPrefix: input.incidentId,
-        preset: 'post_image',
-        upsert: false,
-      });
-
-      const evidenceInsert: SafetyEvidenceInsert = {
-        incident_id: input.incidentId,
-        evidence_type: input.evidenceType,
-        file_url: upload.url,
-        file_name: input.file.name,
-        file_size: input.file.size,
-        mime_type: input.file.type,
-        uploaded_by: uploadedBy,
-        metadata: (input.metadata || {}) as Json,
-        created_at: new Date().toISOString(),
-      };
-
-      const { data, error } = await safetyDb
-        .from<SafetyEvidenceRow>('safety_evidence')
-        .insert(evidenceInsert)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      return {
-        success: true,
-        data: this.mapToSafetyEvidence(data),
-      };
-    } catch (error) {
-      logger.error('[SafetyService] Error uploading evidence:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro ao fazer upload',
-      };
-    }
-  }
-
-  /**
-   * Lista evidências de um incidente
-   */
-  async listIncidentEvidence(incidentId: string): Promise<SafetyEvidence[]> {
-    try {
-      const { data, error } = await safetyDb
-        .from<SafetyEvidenceRow>('safety_evidence')
-        .select('*')
-        .eq('incident_id', incidentId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      return (data || []).map((item) => this.mapToSafetyEvidence(item));
-    } catch (error) {
-      logger.error('[SafetyService] Error listing evidence:', error);
-      return [];
     }
   }
 
@@ -580,44 +442,20 @@ export class SafetyService {
     };
   }
 
-  private mapToSafetyEvidence(data: SafetyEvidenceRow): SafetyEvidence {
-    return {
-      id: data.id,
-      incidentId: data.incident_id,
-      evidenceType: data.evidence_type as SafetyEvidenceType,
-      fileUrl: data.file_url,
-      fileName: data.file_name,
-      fileSize: data.file_size,
-      mimeType: data.mime_type,
-      uploadedBy: data.uploaded_by,
-      metadata: data.metadata || {},
-      createdAt: data.created_at,
-    };
-  }
-
   // ============================================
   // EMERGENCY CONTACTS
   // ============================================
 
-  /**
-   * Cria contato de emergência
-   */
   async createEmergencyContact(
     input: CreateEmergencyContactInput
   ): Promise<SafetyResult<EmergencyContact>> {
     return SafetyEmergencyContactsService.createEmergencyContact(input);
   }
 
-  /**
-   * Lista contatos de emergência de um perfil
-   */
   async listEmergencyContacts(profileId: string): Promise<EmergencyContact[]> {
     return SafetyEmergencyContactsService.listEmergencyContacts(profileId);
   }
 
-  /**
-   * Atualiza contato de emergência
-   */
   async updateEmergencyContact(
     contactId: string,
     updates: UpdateEmergencyContactInput
@@ -625,16 +463,10 @@ export class SafetyService {
     return SafetyEmergencyContactsService.updateEmergencyContact(contactId, updates);
   }
 
-  /**
-   * Deleta contato de emergência (soft delete)
-   */
   async deleteEmergencyContact(contactId: string): Promise<SafetyResult<void>> {
     return SafetyEmergencyContactsService.deleteEmergencyContact(contactId);
   }
 
-  /**
-   * Notifica contatos de emergência sobre um alerta
-   */
   async notifyEmergencyContacts(
     profileId: string,
     alert: EmergencyAlert
@@ -658,6 +490,4 @@ export class SafetyService {
 
 }
 
-// Singleton instance
 export const safetyService = SafetyService.getInstance();
-
