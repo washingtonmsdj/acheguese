@@ -13,7 +13,7 @@
 
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
 import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
-import { LAUNCH_URLS } from '@/config/territory';
+import { LAUNCH_URLS } from '@/core/routing/config/territory';
 import { classifiedUrlService } from '@/core/classifieds/services';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import type { ClassifiedUrlContext } from '@/core/classifieds/services/ClassifiedUrlService';
