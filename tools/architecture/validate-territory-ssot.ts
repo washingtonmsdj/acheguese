@@ -20,19 +20,10 @@ const RETIRED_LOCATION_GROUP_FILES = [
   "src/core/location/hooks/useTerritorialGroups.ts",
   "src/core/location/services/SelectorTerritoryService.ts",
   "src/core/location/services/TerritorialGroupsReadService.ts",
-] as const;
-
-// Runtime callers of the old location-owned group repository are no longer
-// allowed. The physical compatibility files are retired separately below.
-const LEGACY_REPOSITORY_IMPORT_ALLOWLIST = new Set<string>();
-
-// These paths are compatibility bridges only. They must point one-way to
-// core/territorial and may not regain Supabase/group implementation.
-const LEGACY_LOCATION_GROUP_BRIDGES = new Set([
   "src/core/location/repositories/ITerritorialGroupRepository.ts",
   "src/core/location/repositories/TerritorialGroupRepositorySupabase.ts",
   "src/core/location/repositories/createTerritorialGroupRepository.ts",
-]);
+] as const;
 
 // Hardened backend gateways are explicit operation owners, not alternate domain
 // implementations. territorial-get-tree is read-only. Visibility mutations may
@@ -51,6 +42,7 @@ const LOCATION_BOUNDARY_WRITER =
   "src/core/geospatial/repositories/GeospatialRepositorySupabase.ts";
 
 const LOCATION_TYPES = "src/core/location/types/index.ts";
+const LOCATION_BARREL = "src/core/location/index.ts";
 const LANDING_SERVICE = "src/core/landing/services/LandingService.ts";
 const TERRITORIAL_LANDING_ADAPTER = "src/core/landing/services/territorialLanding.queries.ts";
 const CODE_FILE_RE = /\.(ts|tsx|js|jsx)$/;
@@ -153,7 +145,6 @@ function validateLocationWriter(
 
 function main(): void {
   const violations: string[] = [];
-  const seenRepositoryAllowlist = new Set<string>();
 
   for (const retired of RETIRED_LOCATION_GROUP_FILES) {
     if (fs.existsSync(path.join(ROOT, retired))) {
@@ -175,13 +166,9 @@ function main(): void {
     }
 
     if (isSourceFile && content.includes(LEGACY_GROUP_REPOSITORY_IMPORT)) {
-      if (!LEGACY_REPOSITORY_IMPORT_ALLOWLIST.has(relative)) {
-        violations.push(
-          `${relative}: direct import of the legacy territorial-group repository from core/location is forbidden. Consume @/core/territorial instead.`,
-        );
-      } else {
-        seenRepositoryAllowlist.add(relative);
-      }
+      violations.push(
+        `${relative}: retired territorial-group repository import from core/location is forbidden. Consume @/core/territorial instead.`,
+      );
     }
 
     if (GROUP_TABLE_ACCESS_RE.test(content)) {
@@ -214,39 +201,13 @@ function main(): void {
     const locationWrites = findTableWrites(content, "locations");
     validateLocationWriter(relative, content, locationWrites, violations);
 
-    if (LEGACY_LOCATION_GROUP_BRIDGES.has(relative)) {
-      if (!content.includes("@/core/territorial")) {
-        violations.push(
-          `${relative}: compatibility bridge must delegate one-way to core/territorial.`,
-        );
-      }
-      if (GROUP_TABLE_ACCESS_RE.test(content)) {
-        violations.push(
-          `${relative}: compatibility bridge may not contain territorial-group persistence.`,
-        );
-      }
-      continue;
-    }
-
     if (
       relative.startsWith("src/core/location/") &&
       /TerritorialGroup/.test(path.basename(relative))
     ) {
       violations.push(
-        `${relative}: new territorial-group implementation under core/location is forbidden; group ownership belongs to core/territorial.`,
+        `${relative}: territorial-group artifact under core/location is forbidden; group ownership belongs to core/territorial.`,
       );
-    }
-  }
-
-  for (const allowed of LEGACY_REPOSITORY_IMPORT_ALLOWLIST) {
-    if (!seenRepositoryAllowlist.has(allowed)) {
-      violations.push(`${allowed}: stale legacy repository allowlist entry. Remove it from validate-territory-ssot.ts.`);
-    }
-  }
-
-  for (const bridge of LEGACY_LOCATION_GROUP_BRIDGES) {
-    if (!fs.existsSync(path.join(ROOT, bridge))) {
-      violations.push(`${bridge}: stale compatibility-bridge inventory. Remove it from validate-territory-ssot.ts.`);
     }
   }
 
@@ -270,6 +231,14 @@ function main(): void {
     }
   }
 
+  const locationBarrelPath = path.join(ROOT, LOCATION_BARREL);
+  if (fs.existsSync(locationBarrelPath)) {
+    const locationBarrel = fs.readFileSync(locationBarrelPath, "utf8");
+    if (/TerritorialGroupRepository|createTerritorialGroupRepository/.test(locationBarrel)) {
+      violations.push(`${LOCATION_BARREL}: location public API must not export territorial-group persistence.`);
+    }
+  }
+
   const landingServicePath = path.join(ROOT, LANDING_SERVICE);
   const territorialLandingPath = path.join(ROOT, TERRITORIAL_LANDING_ADAPTER);
   if (!fs.existsSync(territorialLandingPath)) {
@@ -289,7 +258,7 @@ function main(): void {
   }
 
   console.log(
-    "Territory SSOT valid: core/location owns structural geography; core/territorial owns groups and visibility orchestration; geospatial owns boundary enrichment only; hardened Edge Functions are explicit backend gateways; legacy group paths remain one-way bridges only.",
+    "Territory SSOT valid: core/location owns structural geography; core/territorial owns groups and visibility orchestration; geospatial owns boundary enrichment only; hardened Edge Functions are explicit backend gateways; legacy group repository paths are fully retired.",
   );
 }
 
