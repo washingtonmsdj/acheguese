@@ -10,7 +10,6 @@ const DIRECT_PROFILE_MEMBERS_RE =
   /\.from(?:<[^>]+>)?\s*\(\s*(["'])profile_members\1\s*\)/g;
 
 const ALLOWED_DIRECT_PROFILE_MEMBER_OWNERS = [
-  "src/core/admin/services/AdminProfileGovernanceService.ts",
   "src/core/profiles/services/multi-profile/profileMembersService.ts",
 ] as const;
 
@@ -111,7 +110,18 @@ describe("G4 profile membership SSOT", () => {
     expect(loaders).not.toMatch(DIRECT_PROFILE_MEMBERS_RE);
   });
 
-  it("tracks every remaining direct profile_members runtime owner explicitly", () => {
+  it("keeps admin membership detail delegated with error semantics preserved", () => {
+    const adminService = fs.readFileSync(
+      path.join(ROOT, "src/core/admin/services/AdminProfileGovernanceService.ts"),
+      "utf8",
+    );
+
+    expect(adminService).toContain("ProfileMembersService.getProfileMembersResult(profileId)");
+    expect(adminService).toContain("membersResult.error");
+    expect(adminService).not.toMatch(DIRECT_PROFILE_MEMBERS_RE);
+  });
+
+  it("keeps profile_members direct access exclusive to its canonical owner", () => {
     const owners = new Set<string>();
 
     for (const filePath of walk(SRC)) {

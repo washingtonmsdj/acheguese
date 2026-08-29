@@ -9,6 +9,7 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService, ProfileService } from "@/core/profiles/services/ProfileService";
+import { ProfileMembersService } from "@/core/profiles/services/multi-profile/profileMembersService";
 import { getProfessionalLinkedEntityByProfileId } from "@/core/professional/services/professional.linked-entity";
 import { adminNotificationsService } from "./AdminNotificationsService";
 import type {
@@ -348,11 +349,12 @@ class AdminProfileGovernanceService {
           .order("started_at", { ascending: false })
           .limit(1)
           .maybeSingle(),
-        supabase
-          .from("profile_members")
-          .select("*")
-          .eq("profile_id", profileId)
-          .order("joined_at", { ascending: true }),
+        ProfileMembersService.getProfileMembersResult(profileId).then((result) => ({
+          data: (result.data ?? []) as unknown as RawRecord[],
+          error: result.success
+            ? null
+            : new Error(result.error ?? "Failed to fetch profile members"),
+        })),
         // ✅ SSOT: Usar profileService.getProfilesByUserId
         profileService.getProfilesByUserId(userId).then((data: unknown[]) => ({ data, error: null })),
         supabase.from("business_data").select("*").eq("profile_id", profileId).maybeSingle(),
