@@ -10,7 +10,7 @@
  *   e `useCommunityModals` para abrir o `PostDetailModal`).
  */
 
-import { LAUNCH_URLS } from "@/config/territory";
+import { LAUNCH_URLS } from "@/core/routing/config/territory";
 import { logger } from "@/shared/utils/logger";
 import { toast } from "sonner";
 
