@@ -1,51 +1,77 @@
-# Location Module
+# Location Core
 
-SSOT (Single Source of Truth) territorial do produto. Gerencia a hierarquia geográfica canônica e contexto de localização da aplicação.
+**Status:** G4 HARDENING — GEOGRAPHIC OWNER ATIVO  
+**Owner:** `src/core/location`  
+**Escopo:** hierarquia geográfica canônica e contexto de localização da aplicação.
+
+`core/location` não é o owner de grupos territoriais. A fronteira canônica é:
+
+- `src/core/location` → `Location`, árvore geográfica, `location_id`, `geographic_path`, resolução, contexto e filtros geográficos;
+- `src/core/territorial` → grupos territoriais, membership de grupos, disponibilidade/rollout de grupo e gestão territorial composta;
+- `src/core/coverage` → cobertura de entidades;
+- `src/core/rollout` → rollout individual por território.
 
 ## Responsabilidades
 
-- Entidade `Location` (country → state → city → district)
-- Hierarquia geográfica: `location_id`, `parent_id`, `type`, `slug`
-- Caminho geográfico: `geographic_path` (padrão: `/br/ba/salvador/pituba`)
-- Resolução por ID, path, slug
-- Navegação de árvore: ancestors, descendants, children
-- Contexto geográfico do app
-- Validação de localização ativa
-- Integridade da árvore geográfica
+- entidade `Location` (`country → state → city → district/neighborhood`);
+- hierarquia: `id`, `parent_id`, `type`, `slug`;
+- caminho geográfico `geographic_path`;
+- resolução por ID, path e slug;
+- navegação de árvore: ancestors, descendants e children;
+- contexto geográfico ativo da aplicação;
+- geocoding/resolução de endereço pelos adapters canônicos;
+- filtro territorial baseado em locations e IDs resolvidos;
+- histórico/residência exposto separadamente pelo contrato público quando aplicável.
+
+## O que não pertence a Location
+
+- CRUD de `territorial_groups`;
+- regras de membership de `territorial_group_members`;
+- disponibilidade ou rollout de grupos;
+- aliases de negócio/comunidade;
+- cobertura de atendimento de entidades.
+
+Essas responsabilidades devem delegar aos respectivos owners, principalmente `@/core/territorial` para grupos.
 
 ## Padrão `geographic_path`
 
-```
+```text
 /{country_code}/{state_code}/{city_slug}/{district_slug}
 ```
 
 Exemplos:
-- `/br` - País: Brasil
-- `/br/ba` - Estado: Bahia
-- `/br/ba/salvador` - Cidade: Salvador
-- `/br/ba/salvador/pituba` - Bairro: Pituba
 
-## Dependências
+- `/br` — país;
+- `/br/ba` — estado;
+- `/br/ba/salvador` — cidade;
+- `/br/ba/salvador/pituba` — bairro/localidade.
 
-```typescript
-// ✅ Pode usar
-import { slugify } from '@/shared/utils';
-import type { UUID } from '@/shared/types';
+## Dívida G4 em redução
 
-// ❌ NÃO pode usar
-import { CoverageService } from '@/core/coverage';
-import { RolloutService } from '@/core/rollout';
-import { mapsClient } from '@/integrations/maps';
-```
+A implementação histórica colocou contracts/repository de `TerritorialGroup` dentro de `core/location`. Essa estrutura não representa a fronteira alvo e está sendo retirada em cortes pequenos.
 
-## Status
+Já aposentados nesta retomada:
 
-**Etapa 1**: ✅ Estrutura aprovada e congelada  
-**Etapa 2**: 🔜 Contratos públicos (próxima)  
-**Etapa 3**: ⏳ Schema de dados  
-**Etapa 4**: ⏳ Migrations  
-**Etapa 5**: ⏳ Implementação  
+- `src/core/location/hooks/useTerritorialGroups.ts`;
+- `src/core/location/services/SelectorTerritoryService.ts`.
+
+Callers novos não podem importar `createTerritorialGroupRepository` de `core/location`. O ratchet `tools/architecture/validate-territory-ssot.ts` congela as poucas exceções legadas restantes e falha para novas dependências ou allowlist stale.
+
+## Critério G4
+
+Location/Territory só fecha G4 quando:
+
+1. `core/location` for a única autoridade de geografia/locations;
+2. `core/territorial` for a única autoridade de grupos territoriais;
+3. contracts/repositories de grupo não tiverem implementação concorrente em `core/location`;
+4. consumidores externos usarem as facades canônicas;
+5. ratchets impedirem recriação da dívida;
+6. o estado remoto conhecido não contradizer essas autoridades.
+
+Reconciliação exaustiva de schema, migrations, RLS/grants e dados continua pertencendo a G5.
 
 ## Referências
 
-- [GEOGRAPHIC_FOUNDATION.md](../../../docs/GEOGRAPHIC_FOUNDATION.md)
+- `docs/02-domain/GEOGRAPHIC_FOUNDATION.md`
+- `src/core/territorial/README.md`
+- `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
