@@ -4,10 +4,6 @@
   "policy": "Temporary runtime module -> integrations exceptions. Entries may only decrease; stale entries are failures.",
   "entries": [
     {
-      "file": "src/modules/ai/virtual-tryon/services/tryon.service.ts",
-      "specifier": "@/integrations/supabase"
-    },
-    {
       "file": "src/modules/classifieds/jobs/services/VagasService.ts",
       "specifier": "@/integrations/supabase"
     }
