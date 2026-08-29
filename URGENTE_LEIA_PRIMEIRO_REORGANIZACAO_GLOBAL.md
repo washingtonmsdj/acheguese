@@ -9,7 +9,7 @@
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
 **Status:** EM EXECUÇÃO — G4 Global SSOT Hardening  
-**Checkpoint técnico antes desta atualização:** `e5a9c823044b57a0e0d49d4d2ef56f5cfd08fe1c`  
+**Checkpoint técnico antes desta atualização:** `6ba5b1e176fcf52738a4c47a7e17246a9e98101e`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
 **Monorepo:** NÃO atualmente; manter monorepo-ready, sem migrar para workspaces/Turborepo agora
@@ -291,8 +291,8 @@ Ordem prioritária:
 - [x] Auth/session — owner/source consolidado em `src/core/auth` + `src/core/session`; providers/hooks paralelos aposentados e direct auth runtime concentrado nos owners/adapters canônicos;
 - [x] Profiles/memberships/roles — owners de profiles, memberships e roles consolidados em `src/core`; runtime não consulta `user_roles` diretamente fora da autoridade canônica e callers de membership convergem para o owner;
 - [ ] Business — **EM EXECUÇÃO**; owner, single-create authority e writer de `business_data` protegidos por ratchets, mas atomicidade/autorização de subrecursos e legados ainda impedem fechamento;
-- [ ] Territory/location;
-- [ ] Public URL/slug;
+- [x] Territory/location — `core/location` é owner da geografia estrutural, `core/territorial` é owner de grupos/orquestração territorial, `core/geospatial` limita-se a boundary enrichment e Edge Functions endurecidas mantêm apenas gateways especializados de visibilidade; callers e bridges do antigo repository de grupos em `core/location` foram aposentados e o ratchet impede recriação;
+- [x] Public URL/slug — `core/public-identity` governa política, disponibilidade e geração de identificadores estáveis; Profile, Business, Professional e Classifieds mantêm builders/resolvers explícitos por domínio, com semântica própria de identidade, e `validate-public-url-ssot.ts` bloqueia imports internos e unicidade concorrente;
 - [ ] Media/uploads;
 - [ ] Analytics;
 - [ ] Reviews;
@@ -512,9 +512,12 @@ Atualizar esta seção somente com marcos relevantes. Não transformar este arqu
 - [x] writer administrativo de `business_data` corrigido: `AdminService.toggleBusinessStatus()` passou a delegar ao Business owner (`9b977fa`);
 - [x] ratchet de writer único adicionado ao validator existente: mutações runtime de `business_data` fora de `src/core/business` agora são regressão arquitetural (`4db9ec3`);
 - [x] README de Business sincronizado com single-create authority e writer ownership (`e5a9c82`);
+- [x] Territory/location fechado no source: `core/location` mantém CRUD/hierarquia geográfica, `core/territorial` concentra grupos e orquestração de visibilidade, `core/geospatial` só enriquece `boundary`, e os três bridges históricos de repository territorial sob `core/location` foram aposentados; `validate-territory-ssot.ts` bloqueia sua recriação;
+- [x] Public URL/slug fechado no source: `PublicIdentityService.generateAvailableIdentifier()` passou a confirmar candidatos por existência exata, Business e Professional removeram fallbacks próprios de `ilike + contador`, consumidores externos passaram a carregar a facade `@/core/public-identity`, e `validate-public-url-ssot.ts` protege identidade e builders públicos por domínio;
 - [ ] Business ainda não fecha G4: permanecem atomicidade/compensação do create, autorização divergente de subrecursos e legados/provenance de dados;
-- [ ] infraestrutura hosted continua sem prova confiável: no SHA `8095775`, `SSOT Enforcement` terminou com `steps: []` e `runner_id: 0`; Vercel reportou `build-rate-limit`. Não converter esses blockers em PASS nem em source failure;
-- [ ] próximo alvo seguro: reconciliar a autoridade dos subrecursos de Business e caracterizar a atomicidade/compensação do create; mudanças destrutivas de banco continuam reservadas para G5 com provenance e prova remota.
+- [ ] validação hosted do SHA `6ba5b1e176fcf52738a4c47a7e17246a9e98101e` — **BLOCKED por runner/provider**: `SSOT Enforcement` e `Security Check` criaram jobs, porém os jobs observados retornaram `steps: []`; o job SSOT não produziu log baixável. Não converter isso em PASS nem em source failure;
+- [ ] limpeza de refs temporárias `tmp-public-url-ssot` e `tmp-public-url-ssot-2` — criadas durante tentativa de Git Data, nunca usadas para merge; o conector atual não expõe delete-ref, portanto devem ser removidas pelo próximo executor com capacidade de apagar refs remotas;
+- [ ] próximo alvo seguro de G4: `Media/uploads`; Business permanece aberto e deve ser retomado quando o corte puder preservar atomicidade/autorização com evidência suficiente.
 
 ---
 
