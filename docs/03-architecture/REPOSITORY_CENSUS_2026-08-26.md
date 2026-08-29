@@ -1,13 +1,13 @@
 # Repository Census — Reorganização Global
 
 **Criado em:** 2026-08-26  
-**Atualizado em:** 2026-08-27  
+**Atualizado em:** 2026-08-28  
 **Missão:** `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`  
-**Status:** G0 CONCLUÍDO — baseline vivo; revalidar antes de cada corte  
+**Status:** G0 CONCLUÍDO — snapshot operacional atualizado durante fechamento de G2  
 **Baseline inicial:** `289066361bf77cb451e9e39ac3f6bfe45a6e9c86`  
-**Snapshot verificado:** `73f88d5890672ca8e46e075acdafff44ae0cfb32`
+**Snapshot verificado:** `96c9681eb8ff8ea780971f1128f8ebd61bacbca9`
 
-Este documento é o inventário operacional da reorganização global. Ele não substitui o plano permanente da raiz. O baseline inicial foi preservado acima; as classificações abaixo refletem o snapshot verificado atual e devem ser rechecadas antes de writes porque a missão opera diretamente na `main`.
+Este documento é o inventário operacional da reorganização global. Ele não substitui o plano permanente da raiz. O baseline inicial permanece registrado para rastreabilidade; as classificações abaixo refletem a árvore atual verificada e devem ser revalidadas antes de qualquer write porque a missão opera diretamente na `main`.
 
 ## Legenda
 
@@ -17,6 +17,7 @@ Este documento é o inventário operacional da reorganização global. Ele não 
 - **MERGE** — conteúdo sobreposto deve ser consolidado em SSOT único.
 - **RETIRE** — legado candidato a remoção depois de prova de não uso.
 - **INVESTIGATE** — precisa de callers/contracts/provenance antes da decisão.
+- **RETIRED** — removido fisicamente e protegido contra recriação.
 
 ---
 
@@ -30,19 +31,22 @@ Este documento é o inventário operacional da reorganização global. Ele não 
 - `package.json` / `package-lock.json`
 - configs Vite/TypeScript/ESLint/Tailwind/PostCSS/Playwright/Vitest
 - `.github/`, `.husky/`, `.kiro/`, `.lovable/`
-- `api/`, `docs/`, `public/`, `src/`, `supabase/`, `tests/`
+- `api/`, `docs/`, `public/`, `src/`, `supabase/`, `tests/`, `tools/`
 
-### Dívida ainda ativa
+### Dívida ainda deliberadamente aberta
 
 | Path | Classificação | Owner alvo / regra |
 |---|---|---|
-| `scripts/` | MOVE gradual | `tools/{architecture,security,migrations,seeds,release,...}` preservando comandos públicos |
-| `tools/` | KEEP + EXPAND | hoje já possui `templates/`; receber ferramentas por lotes funcionais |
-| `plans/` | INVESTIGATE/MOVE/RETIRE | plano ativo → `docs/08-roadmap`; histórico → `docs/10-archive` após validar links |
-| `e2e/` | BRIDGE/RETIRE | restou compatibilidade de helper; owner canônico é `tests/e2e/` |
-| `eslint-rules/` | KEEP provável | tooling de lint; só mover se callers/config forem atualizados no mesmo corte |
+| `plans/` | INVESTIGATE/MOVE/RETIRE | plano ativo → `docs/08-roadmap`; histórico → `docs/10-archive` somente após validar links e autoridade |
+| `eslint-rules/` | KEEP provável | tooling de lint; mover somente se callers/config forem atualizados no mesmo corte |
 
-Os antigos roots `handoff/`, `product-qa-screenshots/` e `templates/` já foram retirados da raiz e possuem regression guard. Não recriá-los.
+### Roots já retirados
+
+- `scripts/` — **RETIRED**; tooling operacional é canônico em `tools/**`.
+- `e2e/` — **RETIRED**; owner global é `tests/e2e/**`.
+- `handoff/`, `product-qa-screenshots/`, `templates/` — **RETIRED** da raiz; material válido foi movido/arquivado e há regression guards.
+
+Não recriar roots aposentados para conveniência temporária.
 
 ---
 
@@ -52,84 +56,60 @@ Roots atuais:
 
 - `app/`
 - `assets/`
-- `config/`
 - `core/`
 - `integrations/`
 - `modules/`
 - `shared/`
 - `styles/`
 
-Arquivos de bootstrap atuais:
+Arquivos de bootstrap atuais permanecem sob `src/`, incluindo `App.tsx`, `main.tsx`, `index.css` e declarations necessárias ao Vite.
 
-- `App.tsx`
-- `index.css`
-- `main.tsx`
-- `vite-env.d.ts`
+### Roots/arquivos genéricos aposentados
 
-### Estado das dívidas antigas
+- `src/config` — **RETIRED**; não existe mais como root de compatibilidade.
+- `src/features` — **RETIRED**; `src/app/features` continua permitido como composição de aplicação.
+- `src/test` — **RETIRED**.
+- `src/__tests__` — **RETIRED** como root genérico; testes co-localizados específicos continuam permitidos.
+- `src/types` — **RETIRED**; domínio fica em `core/<owner>` e tipos transversais em `shared/types`.
+- `src/App.css` e `src/global.d.ts` — **RETIRED**.
 
-- `src/features` — **RETIRADO**; não recriar.
-- `src/test` — **RETIRADO**; não recriar.
-- `src/__tests__` — **RETIRADO**; não recriar como root genérico.
-- `src/types` — **RETIRADO**; domínio deve ficar em `core/<owner>` e tipos transversais em `shared/types`.
-- `src/App.css` e `src/global.d.ts` — **RETIRADOS**.
+### Configuração — owners canônicos
 
-### `src/config`
+O antigo `src/config/**` foi completamente aposentado. Não adicionar implementação ou bridge novo nesse caminho.
 
-Classificação: **BRIDGE temporário**.
+| Responsabilidade | Owner canônico |
+|---|---|
+| launch scope | `src/app/config/launchScope.ts` |
+| registry de módulos | `src/app/config/modules.ts` |
+| slugs de módulos | `src/shared/config/moduleSlugs.ts` |
+| configuração territorial | `src/core/routing/config/territory.ts` |
+| lançamento da Community | `src/core/community/config/communityLaunch.ts` |
 
-O regression guard atual congela `src/config` aos bridges:
-
-- `communityLaunch.ts` → `src/core/community/config/communityLaunch.ts`
-- `launchScope.ts` → `src/app/config/launchScope.ts`
-- `moduleSlugs.ts` → `src/app/config/moduleSlugs.ts`
-- `modules.ts` → `src/app/config/modules.ts`
-- `territory.ts` → `src/app/config/territory.ts`
-
-Não adicionar implementação nova em `src/config`.
+`tests/architecture/repository-reorganization-contract.test.ts` protege a ausência de `src/config` e dos imports de compatibilidade aposentados.
 
 ---
 
-## 3. `src/modules` — owners de produto atuais
+## 3. `src/modules` — owners de produto
 
-Módulos de topo verificados:
+Os módulos representam UI, aplicação e orchestration de produto. O inventário G0 identificou bounded contexts como `business`, `classifieds`, `communication-territorial`, `community-events`, `community-feed`, `community-groups`, `community-issues`, `community-lost-found`, `community-recommendations`, `mobility`, `professionals`, `profile` e `work-opportunities`, entre outros.
 
-1. `admin`
-2. `ai`
-3. `business`
-4. `central`
-5. `classifieds`
-6. `communication-territorial`
-7. `community-events`
-8. `community-feed`
-9. `community-groups`
-10. `community-issues`
-11. `community-lost-found`
-12. `community-recommendations`
-13. `guide`
-14. `mobility`
-15. `professionals`
-16. `profile`
-17. `work-opportunities`
-
-Classificação: **KEEP**, sujeitos aos boundaries.
+Classificação geral: **KEEP**, sujeitos aos boundaries.
 
 Regras:
 
 - module = UI/aplicação/orchestration de produto;
-- persistência, autorização e contracts canônicos devem pertencer ao `core` correspondente;
+- persistência, autorização e contracts canônicos pertencem ao `core` correspondente;
 - não criar agregador genérico `modules/community` apenas por estética;
-- `community-events` já é o owner físico de Events; o antigo `src/features/events` não existe mais.
+- `community-events` é o owner físico da experiência de Events; o antigo `src/features/events` não existe mais;
+- exceções module → integration devem permanecer explicitamente ratcheted e não podem crescer silenciosamente.
 
 ---
 
 ## 4. `src/core` — owners de domínio
 
-Roots observados incluem:
+`src/core` contém os owners reutilizáveis de domínio, infraestrutura interna, contracts, services, repositories e políticas de autorização/persistência.
 
-`address`, `admin`, `ai`, `alerts`, `analytics`, `audit`, `auth`, `authorization`, `banners`, `billing`, `business`, `city`, `classifieds`, `comments`, `communication-territorial`, `community`, `community-events`, `community-experience`, `community-feed`, `community-groups`, `community-issues`, `community-lost-found`, `community-recommendations`, `contact`, `coverage`, `education`, `engagement`, `family`, `favorites`, `feed`, `geocoding`, `geospatial`, `governance`, `guide`, `infrastructure`, `landing`, `legal`, `location`, `maps`, `media`, `messaging`, `metrics`, `mobility`, `moderation`, `navigation`, `nearby`, `notifications`, `posts`, `pricing`, `privacy`, `professional`, `profiles`, `public-identity`, `qr`, `realtime`, `residence`, `reviews`, `rollout`, `routing`, `safety`, `search`, `service-areas`, `session`, `social`, `subscription`, `taxonomy`, `telemetry`, `territorial`, `tracking`, `trust`, `users`, `verification`, `verticals`, `work-opportunities`.
-
-A quantidade de roots não prova duplicação. Os seguintes grupos ficam **INVESTIGATE para G4/G5**, por contracts/callers/provenance:
+A quantidade de roots não prova duplicação. Os seguintes grupos continuam **INVESTIGATE para G4/G5**, por contracts/callers/provenance — não consolidar por semelhança de nome:
 
 - `auth` / `session` / `authorization` / `profiles`;
 - `analytics` / `metrics` / `telemetry` / `tracking`;
@@ -140,45 +120,28 @@ A quantidade de roots não prova duplicação. Os seguintes grupos ficam **INVES
 - `media` vs `shared/media`;
 - `taxonomy` vs `shared/taxonomy`.
 
-**Boundary atual:** busca de código no snapshot encontrou zero imports `@/modules/*` em `src/core` para `.ts` e `.tsx`; `scripts/validate-project-taxonomy.ts` já possui guard contra essa dependência invertida.
+**Boundary obrigatório:** `src/core/**` não pode depender de `src/modules/**`. O guard canônico fica no tooling de arquitetura sob `tools/architecture/**` e nos testes de arquitetura associados.
 
 ---
 
 ## 5. `src/integrations`
 
-Estado atual:
+Estado estrutural:
 
 - `maps/`
 - `supabase/`
 
 Classificação: **KEEP**.
 
-Regra: somente adapters técnicos externos. Domínio não nasce aqui.
+Regra: adapters técnicos externos. Domínio não nasce aqui.
 
-### Dívida module → integrations
-
-Busca textual no snapshot encontrou **14 arquivos TypeScript** sob `src/modules` contendo referência `@/integrations/`. A amostra inclui `src/modules/ai/core/client/aiClient.ts`, `src/modules/ai/virtual-tryon/services/tryon.service.ts` e paths de `src/modules/business/gastronomy`.
-
-Esse número é inventário bruto e inclui testes co-localizados; em G1 o validator deve distinguir runtime de testes e transformar apenas a dívida runtime existente em allowlist monotônica. **Nenhuma nova ocorrência runtime deve ser permitida.**
+Dívida histórica module → integrations foi transformada em boundary/ratchet durante G1. O censo não congela um número bruto antigo: o validator é a autoridade para a allowlist atual e deve falhar se surgirem novas exceções ou se uma exceção ficar stale.
 
 ---
 
 ## 6. `src/shared`
 
-Roots atuais:
-
-- `components`
-- `config`
-- `constants`
-- `design-system`
-- `hooks`
-- `lib`
-- `media`
-- `schemas`
-- `services`
-- `taxonomy`
-- `types`
-- `utils`
+Roots transversais incluem componentes, config, constants, design-system, hooks, lib, media, schemas, services, taxonomy, types e utils.
 
 Classificação:
 
@@ -188,50 +151,40 @@ Classificação:
 - `media` — **INVESTIGATE** contra `core/media`;
 - `taxonomy` — **INVESTIGATE** contra `core/taxonomy`.
 
-`shared` não pode virar pasta de descarte.
+`shared` não pode virar pasta de descarte e não deve depender de `app`, `modules` ou `core` para obter configuração de domínio. Durante a retirada de `src/config/territory.ts`, o `LandingFooter` sem callers foi removido em vez de criar uma dependência `shared → core`.
 
 ---
 
 ## 7. Testes
 
-Owner global atual: `tests/`.
+Owner global: `tests/`.
 
-Subroots observados:
+Subroots incluem arquitetura, E2E, fixtures, helpers, integration, operational, regression, scripts e security. Unitários muito locais podem permanecer co-localizados no source quando o bounded context justificar.
 
-- `architecture/`
-- `e2e/`
-- `fixtures/`
-- `helpers/`
-- `integration/`
-- `operational/`
-- `regression/`
-- `scripts/`
-- `security/`
+### E2E
 
-Unitários muito locais podem permanecer co-localizados no source.
+- `e2e/` na raiz — **RETIRED**.
+- specs e helpers canônicos — `tests/e2e/**`.
+- `tests/architecture/repository-reorganization-contract.test.ts` bloqueia recriação do root legado.
 
-### Compatibilidade E2E restante
-
-`e2e/` deixou de ser owner de specs. O contrato de reorganização preserva apenas bridge mínimo de autenticação em `e2e/helpers/auth.ts` apontando para `tests/e2e/helpers/auth.ts`; arquivos históricos de geolocation/network e `e2e/network-branches.spec.ts` já foram retirados. O próximo corte deve remover o bridge somente quando todos os callers tiverem migrado.
+Não existe mais bridge global de autenticação sob `e2e/helpers/auth.ts`.
 
 ---
 
-## 8. `scripts/` → `tools/`
+## 8. Tooling operacional
 
-A classificação funcional permanece:
+`tools/**` é o owner canônico do tooling operacional por responsabilidade.
 
-| Responsabilidade atual | Destino alvo |
+| Responsabilidade | Owner |
 |---|---|
 | validators de arquitetura/SSOT | `tools/architecture/` |
 | segurança | `tools/security/` |
 | migrations/schema/types | `tools/migrations/` |
-| seeds/E2E data | `tools/seeds/` |
-| deploy/release/CI | `tools/release/`, `tools/ci/` ou owner explícito |
-| benchmarks/diagnostics/maintenance | owner técnico explícito a definir |
+| Supabase helpers operacionais | `tools/supabase/` |
+| seeds/E2E data | `tools/seeds/` quando aplicável |
+| deploy/release/CI | owner explícito sob `tools/` ou workflow correspondente |
 
-`package.json` ainda possui muitos comandos apontando literalmente para `scripts/*`. Portanto a migração será feita em commits pequenos, preservando os nomes públicos dos scripts npm.
-
-`tools/` hoje já contém `templates/`, cuja estrutura foi atualizada para separar `core/` e `module/` e possui regression guard.
+O root `scripts/**` foi completamente aposentado. `package.json`, regressions de segurança e policies já apontam aos owners canônicos. Não recriar wrappers em `scripts/` para manter comandos antigos; preserve o comando público npm apontando diretamente ao owner correto.
 
 ---
 
@@ -244,46 +197,45 @@ A classificação funcional permanece:
 | domínio/SSOT/persistência/authz | `src/core/*` | `src/core/*` | KEEP + G4 AUDIT |
 | adapters Supabase/maps | `src/integrations/*` | `src/integrations/*` | KEEP |
 | primitives transversais | `src/shared/*` | `src/shared/*` | KEEP + AUDIT |
-| Events legado | `src/features/events` | `src/modules/community-events` + core | RETIRADO/MIGRADO |
-| generic source test roots | `src/test`, `src/__tests__` | `tests/*` ou co-location real | RETIRADOS |
-| generic source types | `src/types` | `shared/types` ou `core/<owner>` | RETIRADO |
-| app/domain config | `src/config/*` | `src/app/config`, `src/core/*`, `src/shared/config` | BRIDGES restantes |
-| E2E global | `e2e/*` | `tests/e2e/*` | quase concluído; 1 bridge auth |
-| scripts operacionais | `scripts/*` | `tools/*` por responsabilidade | MOVE gradual |
+| Events legado | `src/features/events` | `src/modules/community-events` + `src/core/community-events` | RETIRED/MIGRADO |
+| generic source test roots | `src/test`, `src/__tests__` | `tests/*` ou co-location real | RETIRED |
+| generic source types | `src/types` | `shared/types` ou `core/<owner>` | RETIRED |
+| global compatibility config | `src/config/*` | owners específicos em `app`, `core`, `shared` | RETIRED |
+| E2E global legado | `e2e/*` | `tests/e2e/*` | RETIRED |
+| tooling legado | `scripts/*` | `tools/*` por responsabilidade | RETIRED |
 | planos históricos/ativos | `plans/*` | `docs/08-roadmap` ou `docs/10-archive` | INVESTIGATE |
 
 ---
 
-## 10. Guards já instalados
+## 10. Guards instalados
 
-Não criar validators concorrentes quando já existir owner:
+Não criar validators concorrentes quando já existir owner.
 
-- `tests/architecture/repository-reorganization-contract.test.ts` protege o arquivo permanente, roots já retirados, Events canônico, config bridges, templates e E2E bridges;
-- `scripts/validate-project-taxonomy.ts` protege módulos canônicos, paths legados e `core → modules`;
-- `scripts/validate-architecture-boundaries-incremental.mjs` mantém baseline incremental para cross-module, Supabase em TSX e outras violações existentes.
+- `tests/architecture/repository-reorganization-contract.test.ts` protege o arquivo permanente, taxonomia de roots, paths de source aposentados, configuração canônica, templates e E2E.
+- `tests/architecture/compatibility-surface-cleanup.test.ts` protege roots/namespaces de compatibilidade já retirados.
+- tooling canônico de taxonomia e boundaries reside em `tools/architecture/**`.
+- regras específicas de bounded context permanecem em seus tests/validators próprios quando representam contratos distintos.
 
-Lacuna para G1: generalizar **module → integrations runtime** com allowlist monotônica e stale-allowlist failure, reutilizando o validator incremental ou um único owner claramente conectado a ele.
+G1 está concluído; novas mudanças de boundary devem fortalecer os ratchets existentes, não criar mecanismos paralelos sem necessidade.
 
 ---
 
-## 11. Resultado G0
+## 11. Resultado do censo no estado atual
 
-Checklist do censo:
+Checklist estrutural relevante ao fechamento de G2:
 
 - [x] diretórios de raiz inventariados;
-- [x] roots atuais de `src` inventariados;
-- [x] `src/modules` inventariado;
-- [x] `src/core` inventariado;
-- [x] `src/features` revalidado como ausente;
-- [x] `src/integrations` inventariado;
-- [x] `src/shared` inventariado;
-- [x] testes globais/co-localizados e bridge E2E classificados;
-- [x] `scripts` classificado por responsabilidade e `tools` identificado como destino gradual;
-- [x] namespaces históricos/arquivos soltos relevantes classificados;
-- [x] overlaps/SSOTs candidatos identificados sem fusão por heurística;
-- [x] `core → modules` revalidado sem ocorrência alias no snapshot e protegido por guard;
-- [x] `module → integrations` identificado como dívida ativa a ratchetar em G1;
-- [x] mapa owner atual → owner alvo registrado;
-- [x] itens classificados como KEEP / MOVE / BRIDGE / MERGE / RETIRE / INVESTIGATE.
+- [x] roots de `src` congelados pela taxonomia canônica;
+- [x] `src/features`, `src/test`, `src/__tests__`, `src/types` e `src/config` retirados;
+- [x] `scripts/` retirado e tooling operacional consolidado em `tools/**`;
+- [x] `e2e/` retirado e owner canônico consolidado em `tests/e2e/**`;
+- [x] compatibility bridges globais reduzidos a zero;
+- [x] Events legado retirado dos owners históricos;
+- [x] `core → modules` protegido por boundary;
+- [x] module → integrations protegido por ratchet de G1;
+- [x] itens de sobreposição sem prova continuam INVESTIGATE em vez de sofrer merge por heurística;
+- [ ] `plans/` ainda exige classificação deliberada entre roadmap ativo, referência e archive;
+- [ ] documentação histórica/operacional ainda deve ser sincronizada onde mencionar paths já aposentados;
+- [ ] certificação same-SHA de testes/typecheck/build ainda é necessária antes de declarar G2 formalmente encerrado.
 
-**Decisão:** G0 está concluído como inventário. A dívida encontrada não precisa estar removida para fechar G0; ela alimenta G1–G5. O próximo passo obrigatório é **G1 — Architecture Taxonomy**, começando pela proteção completa dos roots canônicos e pelo ratchet `module → integrations`.
+**Decisão:** G0 permanece concluído como inventário e G1 permanece concluído como taxonomia/boundaries. A remoção física de bridges/roots prevista em G2 está substancialmente concluída no snapshot acima; G2 ainda não deve ser declarado certificado até finalizar a classificação documental pendente e executar a certificação no mesmo SHA alvo.
