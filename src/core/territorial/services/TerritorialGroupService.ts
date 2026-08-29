@@ -1,8 +1,8 @@
 /**
  * TerritorialGroupService - Serviço de gerenciamento de grupos territoriais
- * 
+ *
  * SSOT para operações de grupos territoriais (agrupamentos de bairros).
- * 
+ *
  * Regras:
  * - Grupos NÃO são locations fake
  * - Grupos agregam apenas districts (bairros) de uma mesma cidade
@@ -11,9 +11,14 @@
  * - Grupo só pode ficar ativo se tiver pelo menos 1 membro válido
  */
 
-import type { ITerritorialGroupRepository, CreateTerritorialGroupData, UpdateTerritorialGroupData } from '@/core/location/repositories/ITerritorialGroupRepository';
-import { createTerritorialGroupRepository } from '@/core/location/repositories/createTerritorialGroupRepository';
-import type { Location, TerritorialGroup, TerritorialGroupWithMembers } from '@/core/location/types';
+import type {
+  ITerritorialGroupRepository,
+  CreateTerritorialGroupData,
+  UpdateTerritorialGroupData,
+} from '@/core/territorial/repositories/ITerritorialGroupRepository';
+import { createTerritorialGroupRepository } from '@/core/territorial/repositories/createTerritorialGroupRepository';
+import type { TerritorialGroup, TerritorialGroupWithMembers } from '@/core/territorial/contracts';
+import type { Location } from '@/core/location/types';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import type { ILocationRepository } from '@/core/location/repositories/ILocationRepository';
 import { EntityStatus, LocationType } from '@/shared/types/enums';
@@ -154,7 +159,7 @@ export class TerritorialGroupService {
 
   /**
    * Criar grupo territorial
-   * 
+   *
    * Regras:
    * - Slug único por cidade
    * - Cidade âncora deve existir e ser do tipo 'city'
@@ -162,12 +167,10 @@ export class TerritorialGroupService {
    * - Membros iniciais opcionais (validados)
    */
   async createGroup(input: CreateTerritorialGroupInput): Promise<TerritorialGroup> {
-    // Validar entrada
     if (!input.slug || !input.name || !input.anchor_city_id) {
       throw new Error('Slug, name, and anchor_city_id are required');
     }
 
-    // Validar cidade âncora
     const city = await this.locationRepository.findById(input.anchor_city_id);
     if (!city) {
       throw new Error(`Anchor city ${input.anchor_city_id} not found`);
@@ -176,22 +179,19 @@ export class TerritorialGroupService {
       throw new Error(`Anchor location must be a city, got ${city.type}`);
     }
 
-    // Validar slug único por cidade
     const existing = await this.repository.findBySlugAndCity(input.slug, input.anchor_city_id);
     if (existing) {
       throw new Error(`Group with slug '${input.slug}' already exists in city ${input.anchor_city_id}`);
     }
 
-    // Criar grupo
     const group = await this.repository.create({
       slug: input.slug,
       name: input.name,
       description: input.description,
       anchor_city_id: input.anchor_city_id,
-      status: EntityStatus.INACTIVE, // Sempre inativo inicialmente
+      status: EntityStatus.INACTIVE,
     });
 
-    // Adicionar membros iniciais se fornecidos
     if (input.member_location_ids && input.member_location_ids.length > 0) {
       await this.addMembers(group.id, input.member_location_ids);
     }
@@ -201,7 +201,7 @@ export class TerritorialGroupService {
 
   /**
    * Atualizar grupo territorial
-   * 
+   *
    * Regras:
    * - Se mudar slug, validar unicidade por cidade
    * - Não pode ativar grupo vazio
@@ -216,7 +216,6 @@ export class TerritorialGroupService {
       throw new Error(`Group ${groupId} not found`);
     }
 
-    // Validar slug único se estiver mudando
     if (input.slug && input.slug !== group.slug) {
       const existing = await this.repository.findBySlugAndCity(input.slug, group.anchor_city_id);
       if (existing) {
@@ -224,7 +223,6 @@ export class TerritorialGroupService {
       }
     }
 
-    // Validar ativação de grupo vazio
     if (input.status === EntityStatus.ACTIVE) {
       const members = await this.listAllMembers(groupId);
       if (members.length === 0) {
@@ -232,33 +230,23 @@ export class TerritorialGroupService {
       }
     }
 
-    return await this.repository.update(groupId, input);
+    const updateData: UpdateTerritorialGroupData = input;
+    return await this.repository.update(groupId, updateData);
   }
 
-  /**
-   * Ativar grupo
-   * 
-   * Regra: Grupo deve ter pelo menos 1 membro
-   */
+  /** Ativar grupo; exige pelo menos um membro. */
   async activateGroup(groupId: string): Promise<TerritorialGroup> {
     return await this.updateGroup(groupId, { status: EntityStatus.ACTIVE });
   }
 
-  /**
-   * Desativar grupo
-   */
+  /** Desativar grupo. */
   async deactivateGroup(groupId: string): Promise<TerritorialGroup> {
     return await this.updateGroup(groupId, { status: EntityStatus.INACTIVE });
   }
 
   /**
-   * Adicionar membros ao grupo
-   * 
-   * Regras:
-   * - Membros devem ser districts
-   * - Membros devem pertencer à cidade âncora
-   * - Membros devem estar ativos
-   * - Duplicatas são ignoradas
+   * Adicionar membros ao grupo.
+   * Membros devem ser bairros/districts ativos da cidade âncora.
    */
   async addMembers(groupId: string, locationIds: string[]): Promise<void> {
     if (!groupId) {
@@ -273,22 +261,21 @@ export class TerritorialGroupService {
       throw new Error(`Group ${groupId} not found`);
     }
 
-    // Validar cada membro
     for (const locationId of locationIds) {
       const location = await this.locationRepository.findById(locationId);
-      
+
       if (!location) {
         throw new Error(`Location ${locationId} not found`);
       }
-      
+
       if (!this.isSelectableLocality(location)) {
         throw new Error(`Location ${locationId} must be a neighborhood or district, got ${location.type}`);
       }
-      
+
       if (location.parent_id !== group.anchor_city_id) {
         throw new Error(`Location ${locationId} does not belong to anchor city ${group.anchor_city_id}`);
       }
-      
+
       if (String(location.status) !== EntityStatus.ACTIVE) {
         throw new Error(`Location ${locationId} is not active`);
       }
@@ -297,9 +284,7 @@ export class TerritorialGroupService {
     await this.repository.addMembers(groupId, locationIds);
   }
 
-  /**
-   * Remover membros do grupo
-   */
+  /** Remover membros do grupo. */
   async removeMembers(groupId: string, locationIds: string[]): Promise<void> {
     if (!groupId) {
       throw new Error('Group ID is required');
@@ -317,10 +302,8 @@ export class TerritorialGroupService {
   }
 
   /**
-   * Substituir todos os membros do grupo
-   * 
-   * Operação transacional: remove todos e adiciona novos.
-   * Validações aplicadas aos novos membros.
+   * Substituir todos os membros do grupo.
+   * Valida os novos membros antes da troca.
    */
   async replaceMembers(groupId: string, locationIds: string[]): Promise<void> {
     if (!groupId) {
@@ -332,30 +315,28 @@ export class TerritorialGroupService {
       throw new Error(`Group ${groupId} not found`);
     }
 
-    // Validar novos membros se houver
     if (locationIds.length > 0) {
       for (const locationId of locationIds) {
         const location = await this.locationRepository.findById(locationId);
-        
+
         if (!location) {
           throw new Error(`Location ${locationId} not found`);
         }
-        
+
         if (!this.isSelectableLocality(location)) {
           throw new Error(`Location ${locationId} must be a neighborhood or district, got ${location.type}`);
         }
-        
+
         if (location.parent_id !== group.anchor_city_id) {
           throw new Error(`Location ${locationId} does not belong to anchor city ${group.anchor_city_id}`);
         }
-        
+
         if (String(location.status) !== EntityStatus.ACTIVE) {
           throw new Error(`Location ${locationId} is not active`);
         }
       }
     }
 
-    // Se grupo está ativo e vai ficar vazio, rejeitar
     if (String(group.status) === EntityStatus.ACTIVE && locationIds.length === 0) {
       throw new Error('Cannot remove all members from active group');
     }
@@ -365,4 +346,3 @@ export class TerritorialGroupService {
 }
 
 export const territorialGroupService = new TerritorialGroupService();
-
