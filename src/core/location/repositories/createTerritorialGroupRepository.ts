@@ -1,12 +1,5 @@
 /**
- * createTerritorialGroupRepository
- *
- * Factory que retorna a implementação Supabase.
+ * @deprecated Compatibility bridge.
+ * Use @/core/territorial/repositories/createTerritorialGroupRepository.
  */
-
-import { TerritorialGroupRepositorySupabase } from './TerritorialGroupRepositorySupabase';
-import type { ITerritorialGroupRepository } from './ITerritorialGroupRepository';
-
-export function createTerritorialGroupRepository(): ITerritorialGroupRepository {
-  return new TerritorialGroupRepositorySupabase();
-}
+export { createTerritorialGroupRepository } from '@/core/territorial/repositories/createTerritorialGroupRepository';
