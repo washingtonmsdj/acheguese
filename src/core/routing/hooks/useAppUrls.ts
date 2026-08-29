@@ -25,7 +25,7 @@ import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCi
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
 import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
 import { jobPublicRoutes } from '@/core/work-opportunities/routes/jobPublicRoutes';
-import { LAUNCH_URLS } from '@/config/territory';
+import { LAUNCH_URLS } from '@/core/routing/config/territory';
 import { classifiedUrlService, type ClassifiedUrlContext } from '@/core/classifieds/services';
 
 export interface AppUrls {
