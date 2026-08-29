@@ -1,122 +1,159 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BillingPlanService } from '../services/BillingPlanService';
+import { CatalogService } from '../services/CatalogService';
 
-const basePlanRow = {
-  id: '1',
-  code: 'free',
-  name: 'Free',
-  description: 'Plano gratuito',
-  price_cents: 0,
-  price_display: 'Gratis',
-  currency: 'BRL',
-  billing_period: 'monthly',
-  features: ['Feature 1'],
-  entitlements: { canUseAdvancedMenu: false },
-  is_active: true,
-  is_featured: false,
-  display_order: 1,
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
-};
-
-vi.mock('@/integrations/supabase', () => ({
-  supabase: {
-    from: vi.fn(() => {
-      let currentCode: string | null = null;
-
-      const query = {
-        select: vi.fn(() => query),
-        eq: vi.fn((field: string, value: unknown) => {
-          if (field === 'code' && typeof value === 'string') {
-            currentCode = value;
-          }
-          return query;
-        }),
-        order: vi.fn(() => ({
-          data: [basePlanRow],
-          error: null,
-          limit: vi.fn(() => ({
-            maybeSingle: vi.fn(() => ({ data: null, error: null })),
-            single: vi.fn(() => ({ data: null, error: { code: 'PGRST116' } })),
-          })),
-        })),
-        maybeSingle: vi.fn(() => {
-          if (currentCode === 'invalid') {
-            return { data: null, error: null };
-          }
-
-          if (currentCode === 'pro') {
-            return {
-              data: { ...basePlanRow, id: '2', code: 'pro', name: 'Pro', price_cents: 4990 },
-              error: null,
-            };
-          }
-
-          return { data: basePlanRow, error: null };
-        }),
-        single: vi.fn(() => {
-          if (currentCode === 'invalid') {
-            return { data: null, error: { code: 'PGRST116' } };
-          }
-
-          if (currentCode === 'pro') {
-            return {
-              data: { ...basePlanRow, id: '2', code: 'pro', name: 'Pro', price_cents: 4990 },
-              error: null,
-            };
-          }
-
-          return { data: basePlanRow, error: null };
-        }),
-      };
-
-      return query;
-    }),
+vi.mock('../services/CatalogService', () => ({
+  CatalogService: {
+    getPublishedBasePlans: vi.fn(),
+    getPlanByCode: vi.fn(),
   },
 }));
+
+const freePlan = {
+  id: '1',
+  code: 'base-free',
+  name: 'Plano Free',
+  item_code: 'base-free',
+  item_name: 'Plano Free',
+  item_type: 'base_plan' as const,
+  plan_tier: 'free',
+  entity_family: 'company',
+  vertical: null,
+  pricing_model: 'free' as const,
+  status: 'published',
+  description: 'Plano gratuito',
+  features: ['Feature 1'],
+  display_order: 1,
+  is_featured: false,
+  created_at: '2026-04-21T00:00:00Z',
+  updated_at: '2026-04-21T00:00:00Z',
+  entitlement_policy: {
+    can_use_premium_public_page: false,
+    can_use_short_premium_link: false,
+    can_use_custom_qr_code: false,
+    can_use_advanced_menu: false,
+    can_receive_internal_orders: false,
+    can_use_motoboy_network: false,
+    can_use_promotions: false,
+    can_use_basic_analytics: false,
+    can_use_advanced_analytics: false,
+    max_menu_items: 20,
+    max_promotions: 0,
+    max_images: 5,
+    max_categories: 3,
+    max_orders_per_day: null,
+    additional_entitlements: {
+      canManageBusinessHours: true,
+      canUseCoupons: false,
+      maxCombos: 0,
+    },
+  },
+  pricing_policy: {
+    price_cents: 0,
+    currency: 'BRL',
+    billing_period: 'monthly',
+  },
+};
+
+const proPlan = {
+  ...freePlan,
+  id: '2',
+  code: 'base-pro',
+  name: 'Plano Pro',
+  item_code: 'base-pro',
+  item_name: 'Plano Pro',
+  plan_tier: 'pro',
+  pricing_model: 'subscription' as const,
+  is_featured: true,
+  display_order: 2,
+  entitlement_policy: {
+    ...freePlan.entitlement_policy,
+    can_use_premium_public_page: true,
+    can_use_advanced_menu: true,
+    can_use_promotions: true,
+    can_use_basic_analytics: true,
+    max_menu_items: null,
+    max_promotions: 10,
+    max_images: null,
+    max_categories: null,
+    additional_entitlements: {
+      canManageBusinessHours: true,
+      canUseCoupons: true,
+      maxCombos: 20,
+    },
+  },
+  pricing_policy: {
+    price_cents: 4990,
+    currency: 'BRL',
+    billing_period: 'monthly',
+  },
+};
+
+const getPublishedBasePlans = vi.mocked(CatalogService.getPublishedBasePlans);
+const getPlanByCode = vi.mocked(CatalogService.getPlanByCode);
 
 describe('BillingPlanService', () => {
   beforeEach(() => {
     BillingPlanService.clearCache();
-    vi.restoreAllMocks();
+    vi.clearAllMocks();
+    getPublishedBasePlans.mockResolvedValue([freePlan, proPlan]);
+    getPlanByCode.mockImplementation(async (code: string) => {
+      const normalized = code.startsWith('base-') ? code : `base-${code}`;
+      if (normalized === 'base-free') return freePlan;
+      if (normalized === 'base-pro') return proPlan;
+      return null;
+    });
   });
 
-  it('getActivePlans retorna planos', async () => {
+  it('getActivePlans adapta planos base do catálogo publicado', async () => {
     const plans = await BillingPlanService.getActivePlans();
-    expect(plans.length).toBeGreaterThan(0);
-    expect(plans[0].code).toBe('free');
+
+    expect(getPublishedBasePlans).toHaveBeenCalledTimes(1);
+    expect(plans.map((plan) => plan.code)).toEqual(['free', 'pro']);
+    expect(plans[0].name).toBe('Free');
   });
 
-  it('getPlanByCode retorna plano por codigo', async () => {
-    const plan = await BillingPlanService.getPlanByCode('free');
-    expect(plan?.code).toBe('free');
+  it('getPlanByCode normaliza código público e consulta o catálogo', async () => {
+    const plan = await BillingPlanService.getPlanByCode('PRO');
+
+    expect(getPlanByCode).toHaveBeenCalledWith('pro');
+    expect(plan?.code).toBe('pro');
+    expect(plan?.priceCents).toBe(4990);
   });
 
-  it('getPlanByCode retorna null para codigo invalido', async () => {
+  it('getPlanByCode retorna null para código inexistente', async () => {
     const plan = await BillingPlanService.getPlanByCode('invalid');
+
     expect(plan).toBeNull();
   });
 
-  it('getEntitlements retorna estrutura do plano', async () => {
-    const entitlements = await BillingPlanService.getEntitlements('free');
-    expect(entitlements).toBeTruthy();
-    expect(typeof entitlements?.canUseAdvancedMenu).toBe('boolean');
+  it('getEntitlements combina colunas canônicas e extensões do catálogo', async () => {
+    const entitlements = await BillingPlanService.getEntitlements('pro');
+
+    expect(entitlements?.canUseAdvancedMenu).toBe(true);
+    expect(entitlements?.canUseCoupons).toBe(true);
+    expect(entitlements?.maxCombos).toBe(20);
+    expect(entitlements?.canUseAdvancedCatalog).toBe(true);
   });
 
-  it('requiresPayment retorna true para plano pago', async () => {
-    const requires = await BillingPlanService.requiresPayment('pro');
-    expect(requires).toBe(true);
+  it('requiresPayment deriva pagamento da pricing policy publicada', async () => {
+    await expect(BillingPlanService.requiresPayment('free')).resolves.toBe(false);
+    await expect(BillingPlanService.requiresPayment('pro')).resolves.toBe(true);
   });
 
-  it('getFeaturedPlan retorna null sem explodir quando nao houver destaque', async () => {
+  it('getFeaturedPlan deriva destaque do catálogo publicado', async () => {
     const featured = await BillingPlanService.getFeaturedPlan();
-    expect(featured).toBeNull();
+
+    expect(featured?.code).toBe('pro');
   });
 
-  it('clearCache limpa cache sem quebrar leituras subsequentes', async () => {
+  it('clearCache força nova leitura do catálogo', async () => {
     await BillingPlanService.getActivePlans();
+    await BillingPlanService.getActivePlans();
+    expect(getPublishedBasePlans).toHaveBeenCalledTimes(1);
+
     BillingPlanService.clearCache();
-    const plans = await BillingPlanService.getActivePlans();
-    expect(plans.length).toBeGreaterThan(0);
+    await BillingPlanService.getActivePlans();
+    expect(getPublishedBasePlans).toHaveBeenCalledTimes(2);
   });
 });
