@@ -309,15 +309,6 @@ class AdminRolesServiceClass {
         .insert(payload);
 
       if (error) throw error;
-
-      await this.logRoleHistory({
-        userId: params.userId,
-        role: params.role,
-        action: "granted",
-        grantedBy: params.grantedBy,
-        reason: params.reason,
-      });
-
       return true;
     } catch (error) {
       logger.error("AdminRolesService.grantRole", error as Error, params);
@@ -336,6 +327,7 @@ class AdminRolesServiceClass {
         is_active: false,
         revoked_at: new Date().toISOString(),
         revoked_by: params.revokedBy,
+        reason: params.reason ?? null,
         updated_at: new Date().toISOString(),
       };
 
@@ -346,15 +338,6 @@ class AdminRolesServiceClass {
         .eq("role", params.role);
 
       if (error) throw error;
-
-      await this.logRoleHistory({
-        userId: params.userId,
-        role: params.role,
-        action: "revoked",
-        grantedBy: params.revokedBy,
-        reason: params.reason,
-      });
-
       return true;
     } catch (error) {
       logger.error("AdminRolesService.revokeRole", error as Error, params);
