@@ -461,7 +461,7 @@ Atualizar esta seção somente com marcos relevantes. Não transformar este arqu
 - [x] este arquivo permanente criado na raiz;
 - [x] G0 Repository Census concluído;
 - [x] G1 Architecture Taxonomy concluída;
-- [ ] G2 Physical Reorganization concluída;
+- [x] G2 Physical Reorganization concluída;
 - [ ] G3 Global Boundaries concluído;
 - [ ] G4 Global SSOT concluído;
 - [ ] G5 Database/RLS concluído;
@@ -476,7 +476,20 @@ Atualizar esta seção somente com marcos relevantes. Não transformar este arqu
 - [x] dívida runtime `module → integrations` inventariada em allowlist exata de 8 entradas (`12bdf13`);
 - [x] validator incremental passou a bloquear nova dívida `module → integrations`, impedir absorção no baseline e falhar allowlist stale (`9430f6f`);
 - [ ] validação hosted do SHA `9430f6f` — **BLOCKED por runner/provider**: jobs retornaram `steps: []`, `runner_id: 0` e nenhum runner executou comandos; não inferir PASS nem source failure;
-- [ ] próximo marco: G2 Physical Reorganization em cortes pequenos, preservando comportamento e os guards de G1.
+- [x] próximo marco executado: G2 Physical Reorganization em cortes pequenos, preservando comportamento e os guards de G1.
+
+### 2026-08-28 — G2 Physical Reorganization
+
+- [x] `src/features`, `src/test`, `src/__tests__`, `src/types` e o root global `src/config` aposentados e protegidos contra recriação;
+- [x] bridges globais de configuração reduzidos a zero e owners canônicos consolidados em `app`, `core` e `shared`;
+- [x] root `scripts/` aposentado após migração do tooling operacional para `tools/**`;
+- [x] root `e2e/` aposentado com specs/helpers globais em `tests/e2e/**`;
+- [x] namespaces históricos de Events e Guide retirados dos owners antigos e protegidos por ratchets;
+- [x] `plans/` aposentado: roadmaps ativos migrados para `docs/08-roadmap/**`, planos concluídos para `docs/10-archive/plans/**`, e consumidores dos paths antigos atualizados;
+- [x] `tests/architecture/repository-reorganization-contract.test.ts` protege os roots aposentados, incluindo `plans/`;
+- [x] G2 fechado estruturalmente no SHA `dd2e9cd235cd7a61da2ef85384a76b1fcb1b9836`;
+- [ ] validação hosted do SHA `dd2e9cd235cd7a61da2ef85384a76b1fcb1b9836` — **BLOCKED por runner/provider**: jobs observados retornaram `steps: []`, `runner_id: 0` e nenhum runner executou lint, typecheck, testes ou validators. Isso não é PASS nem falha de source;
+- [ ] próximo marco: G3 Global Boundaries. Não iniciar G4 antes de fechar G3.
 
 ---
 
