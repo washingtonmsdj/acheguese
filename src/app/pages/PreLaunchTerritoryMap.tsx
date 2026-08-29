@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { TERRITORY_CONFIG } from "@/config/territory";
+import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { boundaryService } from "@/core/geospatial";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { LocationStatus, LocationType, type Location } from "@/core/location/types";
