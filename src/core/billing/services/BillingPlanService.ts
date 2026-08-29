@@ -6,7 +6,8 @@
  * DTO used by UI callers without reading or mutating public.billing_plans.
  */
 
-import type { PlanEntitlements as CorePlanEntitlements } from '../types';
+import { PlanTier, type PlanEntitlements as CorePlanEntitlements } from '../types';
+import { getBaselineEntitlements } from '../entitlementBaselines';
 import {
   CatalogService,
   type CatalogEntitlementPolicy,
@@ -33,51 +34,14 @@ export interface BillingPlan {
   updatedAt: Date;
 }
 
-const DEFAULT_PLAN_ENTITLEMENTS: PlanEntitlements = {
-  canUsePremiumPublicPage: false,
-  canUseShortPremiumLink: false,
-  canUseCustomQRCode: false,
-  canUseAdvancedMenu: false,
-  canUseMenuCategories: false,
-  canUseMenuImages: false,
-  canUseMenuVariations: false,
-  canUseMenuAddons: false,
-  canUseMenuCombos: false,
-  canManageAvailability: false,
-  canScheduleItems: false,
-  canReceiveInternalOrders: false,
-  canUseOrdersPanel: false,
-  canManageOrderStatus: false,
-  canCancelOrders: false,
-  canViewOrderHistory: false,
-  canUseMotoboyNetwork: false,
-  canRequestDelivery: false,
-  canTrackDelivery: false,
-  canConfigureDeliveryArea: false,
-  canSetDeliveryFees: false,
-  canManageBusinessHours: false,
-  canSetMinimumOrder: false,
-  canUseOwnDelivery: false,
-  canUsePromotions: false,
-  canUseFeaturedPlacement: false,
-  canUseBanners: false,
-  canUseCoupons: false,
-  canSchedulePromotions: false,
-  canUseBasicAnalytics: false,
-  canUseAdvancedAnalytics: false,
-  canExportReports: false,
-  canViewRealtimeMetrics: false,
-  canViewCustomerInsights: false,
-  maxMenuItems: null,
-  maxPromotions: null,
-  maxImages: null,
-  maxCategories: null,
-  maxCombos: null,
-  maxOrdersPerDay: null,
-};
-
 function publicPlanCode(itemCode: string): string {
   return itemCode.startsWith('base-') ? itemCode.slice('base-'.length) : itemCode;
+}
+
+function toPlanTier(value: string | null | undefined): PlanTier {
+  if (value === PlanTier.DELIVERY) return PlanTier.DELIVERY;
+  if (value === PlanTier.PRO) return PlanTier.PRO;
+  return PlanTier.FREE;
 }
 
 function formatPrice(priceCents: number, currency: string): string {
@@ -95,26 +59,44 @@ function formatPrice(priceCents: number, currency: string): string {
 
 function mergeEntitlements(
   policy: CatalogEntitlementPolicy | undefined,
+  planTier: PlanTier,
 ): PlanEntitlements {
+  const baseline = getBaselineEntitlements(planTier);
   const extras = (policy?.additional_entitlements ?? {}) as Partial<PlanEntitlements>;
 
   const merged: PlanEntitlements = {
-    ...DEFAULT_PLAN_ENTITLEMENTS,
+    ...baseline,
     ...extras,
-    canUsePremiumPublicPage: policy?.can_use_premium_public_page ?? false,
-    canUseShortPremiumLink: policy?.can_use_short_premium_link ?? false,
-    canUseCustomQRCode: policy?.can_use_custom_qr_code ?? false,
-    canUseAdvancedMenu: policy?.can_use_advanced_menu ?? false,
-    canReceiveInternalOrders: policy?.can_receive_internal_orders ?? false,
-    canUseMotoboyNetwork: policy?.can_use_motoboy_network ?? false,
-    canUsePromotions: policy?.can_use_promotions ?? false,
-    canUseBasicAnalytics: policy?.can_use_basic_analytics ?? false,
-    canUseAdvancedAnalytics: policy?.can_use_advanced_analytics ?? false,
-    maxMenuItems: policy?.max_menu_items ?? null,
-    maxPromotions: policy?.max_promotions ?? null,
-    maxImages: policy?.max_images ?? null,
-    maxCategories: policy?.max_categories ?? null,
-    maxOrdersPerDay: policy?.max_orders_per_day ?? null,
+    canUsePremiumPublicPage:
+      policy?.can_use_premium_public_page ?? baseline.canUsePremiumPublicPage,
+    canUseShortPremiumLink:
+      policy?.can_use_short_premium_link ?? baseline.canUseShortPremiumLink,
+    canUseCustomQRCode:
+      policy?.can_use_custom_qr_code ?? baseline.canUseCustomQRCode,
+    canUseAdvancedMenu:
+      policy?.can_use_advanced_menu ?? baseline.canUseAdvancedMenu,
+    canReceiveInternalOrders:
+      policy?.can_receive_internal_orders ?? baseline.canReceiveInternalOrders,
+    canUseMotoboyNetwork:
+      policy?.can_use_motoboy_network ?? baseline.canUseMotoboyNetwork,
+    canUsePromotions:
+      policy?.can_use_promotions ?? baseline.canUsePromotions,
+    canUseBasicAnalytics:
+      policy?.can_use_basic_analytics ?? baseline.canUseBasicAnalytics,
+    canUseAdvancedAnalytics:
+      policy?.can_use_advanced_analytics ?? baseline.canUseAdvancedAnalytics,
+    maxMenuItems:
+      policy?.max_menu_items !== undefined ? policy.max_menu_items : baseline.maxMenuItems,
+    maxPromotions:
+      policy?.max_promotions !== undefined ? policy.max_promotions : baseline.maxPromotions,
+    maxImages:
+      policy?.max_images !== undefined ? policy.max_images : baseline.maxImages,
+    maxCategories:
+      policy?.max_categories !== undefined ? policy.max_categories : baseline.maxCategories,
+    maxOrdersPerDay:
+      policy?.max_orders_per_day !== undefined
+        ? policy.max_orders_per_day
+        : baseline.maxOrdersPerDay,
   };
 
   return {
@@ -133,6 +115,7 @@ function mapCatalogPlan(item: CatalogItem): BillingPlan {
   const pricing = item.pricing_policy;
   const priceCents = pricing?.price_cents ?? 0;
   const currency = pricing?.currency ?? 'BRL';
+  const planTier = toPlanTier(item.plan_tier ?? publicPlanCode(item.item_code));
 
   return {
     id: item.id,
@@ -144,7 +127,7 @@ function mapCatalogPlan(item: CatalogItem): BillingPlan {
     currency,
     billingPeriod: pricing?.billing_period ?? 'monthly',
     features: item.features,
-    entitlements: mergeEntitlements(item.entitlement_policy),
+    entitlements: mergeEntitlements(item.entitlement_policy, planTier),
     isActive: item.status === 'published',
     isFeatured: item.is_featured,
     displayOrder: item.display_order,
