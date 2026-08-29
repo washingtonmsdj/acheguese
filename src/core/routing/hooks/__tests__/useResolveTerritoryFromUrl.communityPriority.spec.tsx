@@ -15,12 +15,12 @@ vi.mock("@/core/location/repositories/createLocationRepository", () => ({
   }),
 }));
 
-vi.mock("@/core/location/repositories/createTerritorialGroupRepository", () => ({
-  createTerritorialGroupRepository: () => ({
-    findBySlugAndCity: findBySlugAndCityMock,
-    findWithMembers: findWithMembersMock,
+vi.mock("@/core/territorial", () => ({
+  territorialGroupService: {
+    getGroupBySlugAndCity: findBySlugAndCityMock,
+    getGroupWithMembers: findWithMembersMock,
     findGroupsContainingLocation: findGroupsContainingLocationMock,
-  }),
+  },
 }));
 
 function Probe() {
