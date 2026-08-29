@@ -1,22 +1,17 @@
 /**
  * Authentication Service Types
  *
- * Tipos TypeScript para o serviço de autenticação
+ * Tipos TypeScript para o serviço de autenticação.
+ * Identidade runtime deriva do contrato canônico de core/session.
  */
 
 import type { TermsAcceptance } from "@/core/legal/termsOfService";
+import type { User as SessionUser } from "@/core/session/types";
 
-export interface AuthUser {
-  id: string;
-  email: string;
-  emailConfirmed: boolean;
-}
-
-export interface AuthSession {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: number;
-}
+export type AuthUser = Pick<
+  SessionUser,
+  "id" | "email" | "emailConfirmed"
+>;
 
 export interface SignUpData {
   email: string;
@@ -43,11 +38,6 @@ export interface SignInData {
 export interface SignInWithUsernameData {
   username: string;
   password: string;
-}
-
-export interface AuthResult {
-  user: AuthUser;
-  session: AuthSession;
 }
 
 /**

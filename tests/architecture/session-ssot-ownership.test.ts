@@ -42,6 +42,21 @@ describe("G4 Auth/session SSOT ownership", () => {
     expect(authIndex).not.toContain("useUser");
   });
 
+  it("derives auth identity from the canonical session user contract", () => {
+    const authTypes = read("src/core/auth/services/types.ts");
+    const authServices = read("src/core/auth/services/index.ts");
+    const authIndex = read("src/core/auth/index.ts");
+
+    expect(authTypes).toContain('import type { User as SessionUser } from "@/core/session/types"');
+    expect(authTypes).toContain("export type AuthUser = Pick<");
+    expect(authTypes).not.toContain("interface AuthSession");
+    expect(authTypes).not.toContain("interface AuthResult");
+    expect(authServices).not.toContain("AuthSession");
+    expect(authServices).not.toContain("AuthResult");
+    expect(authIndex).not.toContain("AuthSession");
+    expect(authIndex).not.toContain("AuthResult");
+  });
+
   it("keeps the session security surface explicit on the canonical barrel", () => {
     const sessionIndex = read("src/core/session/index.ts");
     const servicesIndex = read("src/core/session/services/index.ts");

@@ -9,10 +9,8 @@
 export { AuthService, authService } from "./services";
 export type {
   AuthUser,
-  AuthSession,
   SignUpData,
   SignInData,
-  AuthResult,
 } from "./services";
 export { AuthError } from "./services";
 
