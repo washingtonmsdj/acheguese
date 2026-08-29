@@ -39,7 +39,9 @@ const BACKEND_STORAGE_GATEWAYS = new Map<string, readonly string[]>([
       'const MEDIA_ASSET_BUCKET = "media-assets"',
       ".storage",
       ".upload(",
-      'from("media_assets")',
+      '"reserve_media_asset_upload"',
+      '"activate_media_asset_upload"',
+      '"fail_media_asset_upload"',
     ],
   ],
   [
