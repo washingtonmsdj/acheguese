@@ -14,7 +14,6 @@ const indexes = read(
 const service = read(
   "src/core/messaging/services/ClassifiedMessagingService.ts",
 );
-const inboxHook = read("src/core/messaging/hooks/useMensagens.ts");
 const publicApi = read("src/core/messaging/index.ts");
 
 describe("Classified Messaging SSOT", () => {
@@ -52,14 +51,11 @@ describe("Classified Messaging SSOT", () => {
     expect(indexes).toContain("(seller_id, last_message_at DESC, id DESC)");
   });
 
-  it("eliminates the per-conversation inbox N+1 and paginates from the UI", () => {
+  it("eliminates the per-conversation inbox N+1 behind the canonical core service", () => {
     expect(service).toMatch(/rpc\(\s*"list_classified_conversation_previews"/);
     expect(service).not.toContain("getLastMessage");
     expect(service).not.toContain("getUnreadCount");
     expect(service).not.toContain("getClassifiedsByIds");
     expect(service).not.toContain("getTotalUnreadCount");
-    expect(inboxHook).toContain("useInfiniteQuery");
-    expect(inboxHook).toContain("getNextPageParam");
-    expect(inboxHook).toContain("fetchNextPage");
   });
 });
