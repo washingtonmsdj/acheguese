@@ -3,7 +3,6 @@
  * SSOT v2.0 - Domain services for moderation
  */
 
-export { FederatedModerationQueue } from "./components/FederatedModerationQueue";
 export {
   FEDERATED_MODERATION_DOMAINS,
   FEDERATED_MODERATION_STATES,
