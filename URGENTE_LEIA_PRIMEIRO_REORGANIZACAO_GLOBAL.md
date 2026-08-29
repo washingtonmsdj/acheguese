@@ -268,12 +268,12 @@ Cada corte deve terminar com path antigo vazio ou bridge mínimo explicitamente 
 
 **Objetivo:** tornar a estrutura auto-defensiva.
 
-- [ ] integração somente pelos owners permitidos;
-- [ ] sem imports reversos;
-- [ ] sem cross-module indevido;
-- [ ] sem novo `features`;
-- [ ] sem SSOT paralelo conhecido;
-- [ ] workflows executam todos os validators de arquitetura.
+- [x] integração somente pelos owners permitidos;
+- [x] sem imports reversos;
+- [x] sem cross-module indevido;
+- [x] sem novo `features`;
+- [x] sem SSOT paralelo conhecido;
+- [x] workflows executam todos os validators de arquitetura.
 
 ## G4 — Global SSOT Hardening
 
