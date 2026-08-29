@@ -16,7 +16,7 @@ import type {
   AdminSupabaseClient,
   CityMetadata as AdminCityMetadataRow,
 } from "@/core/admin/types/adminDatabase.types";
-import { TERRITORY_CONFIG } from "@/config/territory";
+import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 
 export interface EmergencyContact {
   name: string;
