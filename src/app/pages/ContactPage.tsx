@@ -2,7 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { ArrowLeft, Building2, Mail, MapPin, MessageSquare, Phone } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
-import { TERRITORY_CONFIG } from "@/config/territory";
+import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { Button } from "@/shared/components/ui/button";
 import { buildMailtoUrl } from "@/shared/utils/contactLinks";
 
