@@ -6,7 +6,7 @@ Regra: nenhuma migration é aplicada, apagada ou renomeada apenas por heurístic
 
 ## 1. Resultado acumulado deste corte
 
-### 31 aliases exatos alinhados às versões remotas
+### 36 aliases exatos alinhados às versões remotas
 
 1. `20260825123021_fix_global_admin_authority_source.sql`
 2. `20260825123134_harden_profile_members_rls.sql`
@@ -39,8 +39,13 @@ Regra: nenhuma migration é aplicada, apagada ou renomeada apenas por heurístic
 29. `20260825232806_require_active_members_in_brokered_profile_auth.sql`
 30. `20260825232956_restrict_business_professional_stats_reads.sql`
 31. `20260825233458_isolate_public_business_catalog.sql`
+32. `20260825233757_remove_anon_private_helper_execute.sql`
+33. `20260825234031_drop_unused_lost_found_contact_pii.sql`
+34. `20260825234410_repair_community_alert_runtime_contract.sql`
+35. `20260825234632_use_active_profile_for_community_alerts.sql`
+36. `20260826002457_drop_confirmed_legacy_gastronomy_and_tourist_backup.sql`
 
-Os renames foram feitos atomicamente com o mesmo blob SQL: novo path usando a versão remota + remoção do path local antigo no mesmo commit. Nenhum SQL foi executado novamente no Supabase.
+Os renames foram feitos atomicamente com o mesmo blob SQL: novo path usando a versão remota + remoção do path local antigo no mesmo commit. Nenhum SQL foi executado novamente no Supabase. Isso inclui migrations que historicamente removeram dados/legados: nesta reconciliação apenas a identidade do arquivo foi alinhada ao histórico remoto já aplicado.
 
 ## 2. Local-only retiradas do conjunto aplicável
 
@@ -74,7 +79,7 @@ Não relaxar o comparador apenas para fazer estes casos passarem. A equivalênci
 
 ## 5. Próximo corte
 
-Continuar a sequência de aliases do bloco de membership/authority e depois classificar os conflitos restantes em:
+Continuar os aliases de 26/08 e, em paralelo, classificar os conflitos restantes em:
 
 - alias exato;
 - local-only superseded/unsafe;
