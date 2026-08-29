@@ -7,7 +7,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { TERRITORY_CONFIG } from "@/config/territory";
+import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { createTerritorialGroupRepository } from "@/core/location/repositories/createTerritorialGroupRepository";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { findSelectableLocalities } from "@/core/location/helpers/territorialResolver";
