@@ -18,10 +18,10 @@ function listRuntimeSourceFiles(directory: string): string[] {
 }
 
 const hardeningMigration = read(
-  "supabase/migrations/20260829192000_harden_moderation_table_authority.sql",
+  "supabase/migrations/20260829192526_harden_moderation_table_authority.sql",
 );
 const adminViewGrantMigration = read(
-  "supabase/migrations/20260829193600_harden_admin_moderation_view_grants.sql",
+  "supabase/migrations/20260829193636_harden_admin_moderation_view_grants.sql",
 );
 const reportDialogBridge = read(
   "src/core/moderation/components/ReportReasonDialog.tsx",
