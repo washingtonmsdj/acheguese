@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase";
+import { AnalyticsService } from "@/core/analytics/AnalyticsService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 import { logger } from "@/shared/utils/logger";
 import { resolveGastronomyBusinessId } from "./resolveGastronomyBusinessId";
@@ -9,10 +10,6 @@ export interface GastronomyQuickMetrics {
   totalReviews: number;
   avgRating: number;
   recentViews: { date: string; count: number }[];
-}
-
-interface ViewRecord {
-  viewed_at: string;
 }
 
 export interface SimilarGastronomyBusiness {
@@ -31,11 +28,9 @@ export async function fetchGastronomyQuickMetrics(
   businessProfileId: string,
 ): Promise<GastronomyQuickMetrics> {
   const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 86_400_000).toISOString();
-
-  const rpcClient = supabase as unknown as {
-    rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
-  };
+  const weekAgoDate = new Date(now.getTime() - 7 * 86_400_000);
+  const weekAgo = weekAgoDate.toISOString();
+  const businessDataId = await resolveGastronomyBusinessId(businessProfileId);
 
   const reviewStatsPromise = ReviewsService.getReviewStats(
     businessProfileId,
@@ -52,19 +47,27 @@ export async function fetchGastronomyQuickMetrics(
     };
   });
 
-  const [summaryRes, reviewStats, viewsLast7Res] = await Promise.all([
-    rpcClient.rpc("get_business_views_summary", {
-      p_business_profile_id: businessProfileId,
-      p_week_start: weekAgo,
-    }),
+  const [totalMetrics, weekMetrics, dailyMetrics, reviewStats] = await Promise.all([
+    AnalyticsService.getMetrics("business", businessDataId),
+    AnalyticsService.getMetrics("business", businessDataId, weekAgo),
+    AnalyticsService.getDailyMetrics(
+      "business",
+      businessDataId,
+      weekAgo.slice(0, 10),
+      now.toISOString().slice(0, 10),
+    ),
     reviewStatsPromise,
-    rpcClient.rpc("get_business_views_last_7_days", {
-      p_business_profile_id: businessProfileId,
-      p_week_start: weekAgo,
-    }),
   ]);
 
-  if (summaryRes.error) logger.error("[gastronomy-runtime] views error", summaryRes.error);
+  if (totalMetrics.error) {
+    logger.error("[gastronomy-runtime] total analytics error", totalMetrics.error);
+  }
+  if (weekMetrics.error) {
+    logger.error("[gastronomy-runtime] weekly analytics error", weekMetrics.error);
+  }
+  if (dailyMetrics.error) {
+    logger.error("[gastronomy-runtime] daily analytics error", dailyMetrics.error);
+  }
 
   const dayMap = new Map<string, number>();
   for (let i = 6; i >= 0; i -= 1) {
@@ -72,23 +75,15 @@ export async function fetchGastronomyQuickMetrics(
     dayMap.set(day, 0);
   }
 
-  const viewsRows = Array.isArray(viewsLast7Res.data) ? (viewsLast7Res.data as ViewRecord[]) : [];
-  viewsRows.forEach((view) => {
-    const day = view.viewed_at?.slice(0, 10);
-    if (day && dayMap.has(day)) {
-      const currentCount = dayMap.get(day) ?? 0;
-      dayMap.set(day, currentCount + 1);
+  for (const metric of dailyMetrics.data ?? []) {
+    if (dayMap.has(metric.date)) {
+      dayMap.set(metric.date, metric.total_views ?? 0);
     }
-  });
-
-  const summaryRows = Array.isArray(summaryRes.data)
-    ? (summaryRes.data as Array<{ total_views?: number; views_this_week?: number }>)
-    : [];
-  const summary = summaryRows[0] ?? {};
+  }
 
   return {
-    totalViews: summary.total_views ?? 0,
-    viewsThisWeek: summary.views_this_week ?? 0,
+    totalViews: totalMetrics.data?.total_views ?? 0,
+    viewsThisWeek: weekMetrics.data?.total_views ?? 0,
     totalReviews: reviewStats.total,
     avgRating: Math.round(reviewStats.average * 10) / 10,
     recentViews: Array.from(dayMap.entries()).map(([date, count]) => ({ date, count })),
@@ -170,7 +165,3 @@ export async function fetchSimilarGastronomyBusinesses(params: {
     return [];
   }
 }
-
-
-
-
