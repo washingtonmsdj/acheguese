@@ -8,6 +8,7 @@ const PHASE1_COMMANDS = [
   ["npm", ["exec", "--", "tsx", "tools/architecture/validate-business-module-boundaries.ts"]],
   ["npm", ["exec", "--", "tsx", "tools/architecture/validate-territory-ssot.ts"]],
   ["npm", ["exec", "--", "tsx", "tools/architecture/validate-public-url-ssot.ts"]],
+  ["npm", ["exec", "--", "tsx", "tools/architecture/validate-analytics-ssot.ts"]],
   [
     "npm",
     [
