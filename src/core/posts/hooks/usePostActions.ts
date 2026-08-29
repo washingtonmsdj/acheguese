@@ -11,7 +11,6 @@ import { PostsFacade, postService } from "@/core/posts/services"; // ✅ SSOT v2
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
 import { PostEngagementService } from "@/core/engagement/services/PostEngagementService";
-import { LAUNCH_URLS } from "@/config/territory";
 import { communityFeedQueryKeys } from "@/core/feed";
 interface FeedLikeablePost {
   id?: string;
