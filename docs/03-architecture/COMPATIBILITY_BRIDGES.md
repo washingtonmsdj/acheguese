@@ -1,31 +1,39 @@
 # Compatibility Bridges Registry
 
-Status: CANONICAL — G2 closure review  
-Baseline reviewed: `22a94afe20f22ca0cb7bcf1758a10b402aa46aaa`  
+Status: CANONICAL — zero live compatibility bridges  
+Baseline reviewed: `67b70d6da3c7cab6a2956eb80d8b15e5bd6fcc1f`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
 
-This file is the current live compatibility-debt ledger for G2. It lists only compatibility paths that still exist on `main` and therefore still require an explicit removal gate.
+This file is the current compatibility-debt ledger for G2. No live compatibility bridge remains on `main` at the reviewed baseline.
 
 The detailed historical retirement ledger that previously lived in this file remains preserved in Git history, including blob `5c1132f07786fc1fb1661eb7b872d49e779db819`. Retired paths must not be reintroduced merely because they are no longer repeated here.
 
 ## Rules
 
-1. Every bridge is legacy → canonical owner only.
-2. A canonical owner must never import a legacy bridge.
-3. No bridge may contain independent business, persistence, security-policy, or release logic.
-4. A bridge may remain during G2 only when a current caller still requires the legacy path.
-5. Removing the final live caller requires removing the bridge from this registry in the same structural cut.
+1. Every compatibility path is legacy → canonical owner only.
+2. A canonical owner must never import a retired compatibility path.
+3. No compatibility path may contain independent business, persistence, security-policy, or release logic.
+4. A compatibility bridge may exist only with a current caller and explicit removal gate.
+5. Retired compatibility roots and files are protected by architecture ratchets and must not be recreated.
 6. Operational tooling is canonical under `tools/**`; the retired `scripts/**` root must not be recreated.
 7. E2E specs/helpers are canonical under `tests/e2e/**`; the retired root `e2e/**` must not be recreated.
-8. Historical module/service/config bridges already retired are protected by their architecture ratchets and must not be recreated.
+8. Global source configuration belongs to its responsible owner (`app`, `core`, or `shared`); the retired `src/config/**` compatibility root must not be recreated.
 
-## Global source/config bridges
+## Global source/config compatibility state
 
-| Legacy path | Canonical owner | Why it still exists | Removal gate |
-| --- | --- | --- | --- |
-| `src/config/territory.ts` | `src/core/routing/config/territory.ts` | current callers still import `@/config/territory` | migrate all current callers directly to `core/routing` |
+No global source/config compatibility bridge remains active. The historical `src/config/**` root is fully retired.
+
+Canonical owners include:
+
+- launch scope: `src/app/config/launchScope.ts`;
+- module registry: `src/app/config/modules.ts`;
+- module slugs: `src/shared/config/moduleSlugs.ts`;
+- territory configuration: `src/core/routing/config/territory.ts`;
+- community launch configuration: `src/core/community/config/communityLaunch.ts`.
+
+`tests/architecture/repository-reorganization-contract.test.ts` ratchets both the absence of `src/config` and the absence of retired imports such as `@/config/territory`.
 
 ## Global E2E compatibility state
 
@@ -67,6 +75,7 @@ No legacy Guide routing compatibility bridge remains active. Public tourist-poin
 
 ## Recent retirements relevant to G2 closure
 
+- `src/config/territory.ts` and the final `src/config/**` compatibility root → retired after all source callers migrated to `src/core/routing/config/territory.ts`; the unused `src/shared/components/landing/LandingFooter.tsx` caller was removed rather than introducing `shared → core`; root absence and legacy-import absence are ratcheted by `tests/architecture/repository-reorganization-contract.test.ts`.
 - `src/config/launchScope.ts` → retired after all runtime and test callers migrated to `src/app/config/launchScope.ts`; bridge absence and legacy-import absence are ratcheted by `tests/architecture/repository-reorganization-contract.test.ts`, and the community security audit now reads the canonical owner directly.
 - `src/config/modules.ts` → retired after its final source caller (`src/core/location/components/TerritoryModeSelector.tsx`) migrated to `src/app/config/modules.ts`; bridge absence and legacy-import absence are ratcheted by `tests/architecture/repository-reorganization-contract.test.ts`.
 - `src/config/moduleSlugs.ts` → retired after all source callers migrated to `src/shared/config/moduleSlugs.ts`; bridge absence and legacy-import absence are ratcheted by `tests/architecture/repository-reorganization-contract.test.ts`.
@@ -80,16 +89,16 @@ No legacy Guide routing compatibility bridge remains active. Public tourist-poin
 - `scripts/lib/**` → removed after consumers migrated to `tools/supabase`, `tools/migrations`, and `tools/architecture`.
 - legacy Events owners `src/features/events/**` and `src/core/verticals/events/**` → removed; current owner is `src/core/community-events` / `src/modules/community-events`.
 
-## G2 closure conditions for remaining bridges
+## G2 closure conditions
 
-G2 may close with the explicitly tracked compatibility debt above only if all of the following hold on the reviewed SHA:
+The compatibility-debt portion of G2 is structurally clear only if all of the following hold on the reviewed SHA:
 
-- `src/features`, `src/test`, and `src/__tests__` are absent;
+- `src/features`, `src/test`, `src/__tests__`, and `src/config` are absent;
 - `scripts/` is absent and operational tooling is canonical in `tools/**`;
 - `e2e/` is absent and E2E specs/helpers are canonical in `tests/e2e/**`;
 - no canonical `tools/**` owner depends on a retired `scripts/**` path;
+- no source file imports retired global compatibility paths;
 - no `src/core/**` implementation depends on `src/modules/**`;
 - module → integration runtime exceptions remain explicitly ratcheted and cannot grow;
 - workflows/build/deploy guards observe canonical `tools/**` paths;
-- every remaining bridge has a current caller and a concrete removal gate;
 - architecture ratchets prevent retired bridges/namespaces from being recreated.
