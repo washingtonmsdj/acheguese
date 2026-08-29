@@ -13,10 +13,11 @@ import {
 import { Label } from "@/shared/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/shared/components/ui/radio-group";
 import { Textarea } from "@/shared/components/ui/textarea";
-import {
-  isReportReason,
-  type ReportReasonOption,
-} from "@/core/moderation/reportReasons";
+
+interface ReportReasonOption<TReason extends string> {
+  id: TReason;
+  label: string;
+}
 
 interface ReportReasonDialogProps<TReason extends string> {
   open: boolean;
@@ -80,7 +81,8 @@ export function ReportReasonDialog<TReason extends string>({
         <RadioGroup
           value={reason}
           onValueChange={(value) => {
-            if (isReportReason(reasonOptions, value)) setReason(value);
+            const selected = reasonOptions.find((option) => option.id === value);
+            if (selected) setReason(selected.id);
           }}
           className="gap-2"
           aria-label="Motivo da denuncia"
