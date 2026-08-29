@@ -69,9 +69,7 @@ export type AnalyticsEventType =
   | "click_directions"
   | "share"
   | "favorite_added"
-  | "favorite_removed"
-  | "structured_vaga_click_search"
-  | "structured_vaga_open_search";
+  | "favorite_removed";
 
 export type AnalyticsEventSource =
   | "web"
