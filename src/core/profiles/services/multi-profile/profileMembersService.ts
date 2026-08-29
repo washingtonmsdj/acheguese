@@ -159,21 +159,21 @@ export class ProfileMembersService {
   }
 
   /**
-   * Resolve a role operacional ativa de um membro.
-   *
-   * Invariante de autoridade: memberships inativas não concedem gestão.
-   * Mantém o runtime alinhado a private.can_manage_profile no banco.
+   * Resolve a role operacional ativa preservando erro de infraestrutura para
+   * consumidores que precisam distinguir "sem membership" de "consulta falhou".
    */
-  static async getActiveRole(
+  static async getActiveRoleResult(
     profileId: string,
     userId?: string,
-  ): Promise<ProfileRole | null> {
+  ): Promise<ServiceResponse<ProfileRole | null>> {
     try {
       let targetUserId = userId;
 
       if (!targetUserId) {
         const currentUser = await SessionService.getCurrentUser();
-        if (!currentUser) return null;
+        if (!currentUser) {
+          return { success: true, data: null };
+        }
         targetUserId = currentUser.id;
       }
 
@@ -185,19 +185,41 @@ export class ProfileMembersService {
         .eq('is_active', true)
         .maybeSingle();
 
-      if (error) {
-        logger.error('Error resolving active profile membership role:', error);
-        return null;
-      }
+      if (error) throw error;
 
       const role = data?.role as ProfileRole | undefined;
-      return role === 'owner' || role === 'admin' || role === 'member'
-        ? role
-        : null;
+      return {
+        success: true,
+        data:
+          role === 'owner' || role === 'admin' || role === 'member'
+            ? role
+            : null,
+      };
     } catch (error: unknown) {
-      logger.error('Error resolving active profile membership role:', error);
+      return {
+        success: false,
+        error: errorMessage(error, 'Failed to resolve active profile membership role'),
+      };
+    }
+  }
+
+  /**
+   * Resolve a role operacional ativa de um membro.
+   *
+   * Invariante de autoridade: memberships inativas não concedem gestão.
+   * Mantém o runtime alinhado a private.can_manage_profile no banco.
+   */
+  static async getActiveRole(
+    profileId: string,
+    userId?: string,
+  ): Promise<ProfileRole | null> {
+    const result = await this.getActiveRoleResult(profileId, userId);
+    if (!result.success) {
+      logger.error('Error resolving active profile membership role:', result.error);
       return null;
     }
+
+    return result.data ?? null;
   }
 
   /**

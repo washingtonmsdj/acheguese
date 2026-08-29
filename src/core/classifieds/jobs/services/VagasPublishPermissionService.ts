@@ -1,4 +1,5 @@
 import { AuthService } from "@/core/auth/services/AuthService";
+import { ProfileMembersService } from "@/core/profiles/services/multi-profile/profileMembersService";
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
@@ -119,23 +120,21 @@ export class VagasPublishPermissionService {
       let isManager = isStructuralOwner;
 
       if (!isManager) {
-        const { data: memberData, error: memberError } = await supabase
-          .from("profile_members")
-          .select("role")
-          .eq("profile_id", activeProfileId)
-          .eq("user_id", userId)
-          .in("role", ["owner", "admin"])
-          .maybeSingle();
+        const memberRoleResult = await ProfileMembersService.getActiveRoleResult(
+          activeProfileId,
+          userId,
+        );
 
-        if (memberError) {
+        if (!memberRoleResult.success) {
           logger.error(
             "[VagasPublishPermissionService] Erro ao validar role de membro",
-            memberError,
+            memberRoleResult.error,
           );
           return this.denied("UNKNOWN", isAdmin);
         }
 
-        isManager = !!memberData;
+        isManager =
+          memberRoleResult.data === "owner" || memberRoleResult.data === "admin";
       }
 
       if (!isAdmin && !isManager) {
