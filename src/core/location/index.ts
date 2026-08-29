@@ -49,11 +49,9 @@ export { LocationErrorCode, LOCATION_PAGINATION } from './types';
 export type { ILocationService } from './services/ILocationService';
 export type { ILocationContextStore } from './services/ILocationContextStore';
 export type { ILocationRepository } from './repositories/ILocationRepository';
-export type { ITerritorialGroupRepository } from './repositories/ITerritorialGroupRepository';
 
 export { LocationRepositorySupabase } from './repositories/LocationRepositorySupabase';
 export { createLocationRepository } from './repositories/createLocationRepository';
-export { createTerritorialGroupRepository } from './repositories/createTerritorialGroupRepository';
 
 export { locationContextStore } from './stores/LocationContextStore';
 export { BaseLocationService } from './services/BaseLocationService';
