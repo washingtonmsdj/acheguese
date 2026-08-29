@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 const ROOT = process.cwd();
 const MIGRATIONS_DIR = join(ROOT, "supabase", "migrations");
-const BASELINE = "20260826033400_restrict_module_rollout_audit_columns.sql";
+const BASELINE = "20260826033134_restrict_module_rollout_audit_columns.sql";
 
 // Live production audit on 2026-08-26 classified these application-owned
 // SECURITY DEFINER endpoints as intentionally anonymous. Extension-owned
