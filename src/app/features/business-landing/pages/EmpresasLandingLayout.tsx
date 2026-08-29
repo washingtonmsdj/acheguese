@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { TERRITORY_CONFIG } from "@/config/territory";
+import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 
 interface EmpresasLandingLayoutProps {
   readonly children: ReactNode;
