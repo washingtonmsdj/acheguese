@@ -1,5 +1,5 @@
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
-import { LAUNCH_URLS } from '@/config/territory';
+import { LAUNCH_URLS } from '@/core/routing/config/territory';
 import { getPublicPostPreview } from '@/core/posts/utils/publicPostContent';
 import type { SearchDocument } from '@/core/search';
 import { formatBrlNoCents } from '@/shared/utils/currency';
