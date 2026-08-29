@@ -28,6 +28,7 @@ import { toBusinessData, mapBusinessDataToBusiness } from "./business.mappers";
 import { generateBusinessUsername } from "./business.helpers";
 import { BusinessUrlService } from "./BusinessUrlService";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { ProfileMembersService } from "@/core/profiles/services/multi-profile/profileMembersService";
 import { normalizeMediaAssetReference } from "@/core/media/references/mediaAssetReference";
 import { EntityContactService } from "@/core/contact";
 import { SessionService } from "@/core/session/services/SessionService";
@@ -64,12 +65,6 @@ type QueryBuilder<T extends object> = PromiseLike<QueryResult<T>> & {
 
 type BusinessMutationsDbClient = {
   from<T extends object>(table: string): QueryBuilder<T>;
-};
-
-type ProfileMemberInsertRow = {
-  profile_id: string;
-  user_id: string;
-  role: string;
 };
 
 type BusinessStatsInsertRow = {
@@ -390,14 +385,14 @@ export async function createBusiness(
       throw new Error("Erro ao criar perfil da empresa");
     }
 
-    const { error: memberError } = await businessMutationsDb.from<ProfileMemberInsertRow>("profile_members").insert({
-      profile_id: profile.id,
-      user_id: user.id,
-      role: "owner",
-    });
+    const memberResult = await ProfileMembersService.addMember(
+      profile.id,
+      user.id,
+      "owner",
+    );
 
-    if (memberError) {
-      throw memberError;
+    if (!memberResult.success) {
+      throw new Error(memberResult.error || "Erro ao criar membership da empresa");
     }
 
     const businessData = toBusinessData({
