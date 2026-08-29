@@ -1,5 +1,5 @@
 import { ChevronRight, Navigation } from 'lucide-react';
-import { LAUNCH_URLS } from '@/config/territory';
+import { LAUNCH_URLS } from '@/core/routing/config/territory';
 import { buildBusinessPublicListingUrl } from '@/core/business/utils/businessPublicUrls';
 import { normalizePublicTerritoryPath } from '@/core/routing/utils/territoryUrls';
 import { NearbyBusinessCard } from '../components/cards';
