@@ -2,10 +2,12 @@
  * MediaService - SSOT para upload e gerenciamento de mídia
  *
  * Responsável por:
- * - Upload de avatares
- * - Upload de imagens de posts
- * - Upload de arquivos de negócios
- * - Gerenciamento de storage do Supabase
+ * - imagens públicas canônicas via broker media-assets;
+ * - primitives de storage privado;
+ * - staging público especializado do Try-On;
+ * - referências estáveis de mídia.
+ *
+ * Buckets públicos legados de Business/Classifieds não são writers runtime.
  */
 
 import { supabase } from "@/integrations/supabase";
@@ -70,11 +72,7 @@ export interface UploadMediaAssetOptions {
 }
 
 interface UploadToBucketOptions {
-  // safety-evidence remains accepted only so the legacy SafetyService method
-  // compiles while it is being retired. uploadToBucket fails closed for it.
-  bucket:
-    | PublicImageUploadBucket
-    | typeof MEDIA_STORAGE_BUCKETS.SAFETY_EVIDENCE;
+  bucket: PublicImageUploadBucket;
   pathPrefix?: string;
   fileName?: string;
   preset?:
@@ -333,8 +331,9 @@ class MediaServiceClass {
   }
 
   /**
-   * Upload de documento de verificação
-   * ✅ SSOT para storage de documentos de verificação
+   * Upload de documento de verificação.
+   * A capacidade existe no owner de mídia, mas hoje não possui caller runtime.
+   * Drift de policy do bucket remoto permanece explicitamente para G5.
    */
   async uploadVerificationDocument(
     profileId: string,
@@ -450,17 +449,14 @@ class MediaServiceClass {
     return data.signedUrl;
   }
 
+  /**
+   * Upload público especializado do Try-On.
+   * Business/Classifieds e demais imagens públicas usam uploadMediaAsset().
+   */
   async uploadToBucket(
     file: File,
     options: UploadToBucketOptions,
   ): Promise<UploadResult> {
-    if (options.bucket === MEDIA_STORAGE_BUCKETS.SAFETY_EVIDENCE) {
-      throw new MediaError(
-        "Bucket privado requer uploadPrivateFile",
-        "PRIVATE_BUCKET_REQUIRES_PRIVATE_API",
-      );
-    }
-
     this.assertImageFileAllowed(file);
 
     const preset = options.preset ?? "site_asset";
