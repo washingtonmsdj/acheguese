@@ -54,4 +54,15 @@ describe("G4 aggregate role-read validity", () => {
     expect(client).toContain('const ROLE_RPC_FUNCTION_NAME = "role-rpc"');
     expect(client).toContain("invokeSupabaseBroker");
   });
+
+  it("keeps role-rpc cross-user authorization on the canonical admin predicate", () => {
+    const edgeFunction = fs.readFileSync(
+      path.join(ROOT, "supabase/functions/role-rpc/index.ts"),
+      "utf8",
+    );
+
+    expect(edgeFunction).toContain('supabaseAdmin.rpc("is_admin"');
+    expect(edgeFunction).toContain("p_user_id: userId");
+    expect(edgeFunction).not.toContain('.from("user_roles")');
+  });
 });
