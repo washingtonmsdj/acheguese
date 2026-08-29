@@ -1,79 +1,74 @@
 # Validacao atual — Modulo de Empresas
 
-**Data do checkpoint:** 2026-08-26  
-**Baseline inicial auditado:** `702012411cba62b019da89d79597e7d903ed6af4`  
-**Status:** HARDENING — NAO MVP CERTIFICADO
+**Data do checkpoint:** 2026-08-29  
+**Checkpoint tecnico:** `6722cf2f8878059022bc5f1f7715e998e1c79bb1`  
+**Status:** G4 SSOT SOURCE CLOSED — NAO MVP CERTIFICADO
 
-Este arquivo substitui a validacao historica de 2026-07-04. Resultados antigos de lint/test/E2E nao devem ser usados como certificacao do HEAD atual.
+Este arquivo registra o estado tecnico atual de Business. Fechar G4 significa que ownership, contratos e boundaries de source apontam para owners canonicos e que o estado remoto conhecido nao contradiz essa autoridade. Isso **nao** certifica atomicidade, banco completo, E2E, deploy ou MVP; essas provas pertencem a G5/G6/G7.
 
-## Pente-fino realizado
-
-### Arquitetura
+## Arquitetura / ownership
 
 - UI/aplicacao permanece em `src/modules/business`.
-- Domain/read-write/integrations pertencem a `src/core/business`.
-- O acesso runtime direto encontrado no modulo geral estava em `public/services/PublicSnapshotRpcService.ts`; ownership foi movido para core e o path antigo virou bridge.
-- `tools/architecture/validate-business-module-boundaries.ts` exige zero acesso runtime direto a `@/integrations/*` e `@supabase/supabase-js` em todo `src/modules/business`.
+- Dominio, persistencia e integracoes pertencem a `src/core/business`.
+- `tools/architecture/validate-business-module-boundaries.ts` exige zero acesso runtime direto a `@/integrations/*` e `@supabase/supabase-js` em `src/modules/business`.
+- `BusinessService.createBusiness()` e a autoridade de criacao geral. `useBusinessCreateMultiProfile` passou a ser apenas compatibility hook de UI e o caminho administrativo ja delegava ao mesmo owner.
+- mutacoes runtime de `business_data` fora de `src/core/business` sao bloqueadas pelo validator. `NetworkService` permanece dentro do mesmo owner de dominio e cuida especificamente do lifecycle de rede/filiais.
+- `AdminService.toggleBusinessStatus()` deixou de escrever `business_data` diretamente e delega ao Business owner.
+- a facade antiga `BusinessService.getStats()` foi retirada depois de confirmar zero callers TypeScript; ela devolvia valores incompletos/fixos e nao era contrato confiavel.
 
-### RLS e autorizacao no banco alvo
+## RLS e autoridade conhecida no banco alvo
 
-RLS esta habilitado nas tabelas centrais verificadas: `business_data`, `profiles`, `profile_members`, `business_gallery`, `business_hours`, `business_services` e `business_stats`.
+A revalidacao remota de 2026-08-29 confirmou RLS nas tabelas centrais verificadas e o mesmo contrato de gestao para os subrecursos:
 
-A constraint real de `profile_members.role` permite somente `owner`, `admin` e `member`. No checkpoint, todas as memberships existentes estavam ativas e com role `owner`.
+- `business_data`: `private.can_operate_business_profile(profile_id)`;
+- `business_products`: `private.can_manage_profile(profile_id)`;
+- `business_services`: `private.can_manage_profile(business_id)`;
+- `business_gallery`: resolve o `profile_id` via `business_data` e usa `private.can_manage_profile`;
+- `business_stats`: `private.can_manage_profile(profile_id)`.
 
-O contrato de gestao foi reconciliado para um unico significado: dono direto de `profiles.user_id` ou membership ativa `owner/admin`. `member` nao possui autoridade de gestao. `private.can_operate_business_profile` permanece apenas como compatibilidade para policies existentes e delega a `private.can_manage_profile`.
+`private.can_operate_business_profile(uuid)` foi revalidada no banco e delega diretamente a `private.can_manage_profile(uuid)`. `can_manage_profile` reconhece o dono direto de `profiles.user_id` ou membership ativa `owner/admin`; `member` nao recebe autoridade de gestao.
 
-As policies de `business_gallery`, `business_products`, `business_services` e `business_stats` foram reconciliadas para a mesma autoridade, com `USING` e `WITH CHECK` explicitos. `BusinessOwnershipService` foi alinhado ao mesmo contrato e agora exige membership ativa, alem de reconhecer o dono direto do profile.
+`business_views` ficou fora desse contrato: a tabela ainda existe e possui policies historicas, mas o runtime de Business nao deve mais depender dela. Sua classificacao/remocao pertence a G5.
 
-`business_views` permanece fora dessa reconciliacao porque o pente-fino provou que nao existe writer runtime atual para a tabela; ela nao deve ser promovida como SSOT de analytics.
+## Analytics
 
-### Billing
+O antigo read model paralelo foi aposentado no runtime:
 
-`src/core/billing/SubscriptionService.ts` declara `user_subscriptions` como SSOT. A tabela `business_subscriptions` ainda existe com registros legados, mas nao possui caller runtime no source atual. Sua policy historica de owner nao deve ser tratada como contrato canonico.
+- `business-analytics.service.ts` nao consulta mais `analytics_events.event_name` nem `business_views`; ele delega a `AnalyticsService.getMetrics()`;
+- `business.admin.ts` passou a obter total/7 dias/30 dias pelo mesmo Analytics SSOT;
+- Gastronomy deixou de chamar `get_business_views_summary` e `get_business_views_last_7_days`; usa `AnalyticsService.getMetrics()` e `getDailyMetrics()`;
+- a dashboard deixou de exibir "agendamentos" como metrica porque esse evento nao existe no contrato canonico atual; a UI mostra apenas metricas sustentadas pelo Analytics SSOT;
+- o validator bloqueia a reintroducao de `business_views`/RPCs `get_business_views_*` no runtime de `src/core/business` e exige delegacao do adapter de Business ao `AnalyticsService`.
 
-### Integridade de dados observada
+## Fluxo de criacao
 
-No banco alvo durante o checkpoint:
+A regra de **quem cria Business** esta consolidada, mas a confiabilidade operacional ainda nao esta certificada.
 
-- `business_data`: 100 registros;
-- `businesses` legado: 3 registros;
-- `business_products`: 0;
-- `business_services`: 0;
-- `business_gallery`: 3;
-- `business_stats`: 0;
-- `business_subscriptions` legado: 5;
-- `business_views`: 0;
-- perfis `profile_type='business'`: 186;
-- perfis business sem `business_data`: 89;
-- desses 89, 80 possuem nome com padrao tecnico e 83 possuem nome/identificador com padrao tecnico de teste/fixture/auditoria;
-- `business_data` sem profile: 0;
-- `business_data` sem `business_stats`: 100.
+O fluxo geral sincroniza, em sequencia, endereco, profile, membership, `business_data`, `business_stats`, horarios e contatos. Uploads de logo/banner ocorrem depois da criacao canonica. Como isso nao esta encapsulado numa unica transacao, falhas intermediarias ainda podem exigir compensacao/retentativa.
 
-Esses numeros nao autorizam remocao automatica. Provenance deve ser comprovada antes de qualquer limpeza destrutiva.
+Isso nao reabre um segundo SSOT: e um blocker de confiabilidade do fluxo e deve ser provado/corrigido antes da certificacao do modulo em G6.
 
-### Fluxo de criacao
+## Legado / dados
 
-O write model geral cria/sincroniza multiplos recursos: endereco, profile, profile_members, business_data, business_stats, horarios e contatos. Essas operacoes nao aparecem encapsuladas em uma unica transacao SQL no client source atual.
+Continuam fora do fechamento G4 e devem ser tratados com provenance em G5:
 
-O self-service de `CriarEmpresaPage` usa `useBusinessCreateMultiProfile`; `BusinessService.createBusiness` permanece utilizado pela superficie administrativa. Eles atendem superficies diferentes, mas ainda precisam compartilhar uma unica regra transacional/compensatoria para evitar divergencia e estado parcial.
+- tabela `businesses` legada;
+- `business_subscriptions` legada, enquanto Billing atual usa `user_subscriptions`;
+- `business_views` e RPCs historicos de views, agora sem dependencia runtime de Business conhecida;
+- possiveis profiles business sem `business_data` e `business_data` sem `business_stats` observados em checkpoints anteriores.
 
-### Analytics e estatisticas
+Contagens historicas nao autorizam exclusao automatica. Antes de qualquer DROP/DELETE, revalidar o ambiente alvo e provar provenance/dependencias.
 
-A Central usa `BusinessManagementService.getBusinessStats`, que le `business_data`/Business atual. A API separada `BusinessService.getStats()` permanece incompleta (`active`/`by_category`) e deve ser reconciliada ou removida antes de ser considerada contrato confiavel.
+## O que ainda bloqueia MVP / modulo READY
 
-O servico `business-analytics.service.ts` ainda possui drift de schema: le `business_views` (sem writer runtime e vazia) e consulta `analytics_events.event_name`, coluna que nao existe no banco atual. O SSOT canonico de analytics e `src/core/analytics/AnalyticsService.ts`, que usa `analytics_events.event_type`, `entity_type` e `entity_id` via RPCs canonicas. Essa duplicacao deve ser eliminada.
-
-## Bloqueadores abertos
-
-- consolidar a regra de criacao entre self-service/admin e garantir atomicidade/compensacao;
-- migrar `business-analytics.service.ts` para o Analytics SSOT e apos prova remover/isolar `business_views`;
-- reconciliar/remover tabelas legadas (`businesses`, `business_subscriptions`) com prova de nao uso/perda;
-- classificar e limpar dados tecnicos por provenance explicita;
-- reconciliar `business_stats` ou remover a dependencia morta;
-- corrigir/remover a API antiga `BusinessService.getStats()`;
-- executar lint/typecheck/test/E2E/security/build no HEAD atual;
-- validar deployment do mesmo SHA.
+- atomicidade ou compensacao/idempotencia comprovada no create/update/delete relevante;
+- drift completo de migrations/schema/RLS/grants e legados fechado em G5;
+- limpeza de dados tecnicos somente com provenance explicita;
+- fluxos reais create -> edit -> pagina publica -> gestao certificados;
+- casos negativos de autorizacao executados no ambiente alvo;
+- lint/typecheck/test/security/E2E/build executados de verdade no mesmo SHA;
+- deployment e smoke do mesmo SHA.
 
 ## Conclusao
 
-O modulo de Empresas possui implementacao ampla e uma base de seguranca relevante, mas **nao esta comprovadamente completo nem sem erros**. A fronteira de integracao e a matriz de autoridade foram endurecidas; os maiores riscos restantes sao atomicidade do fluxo de criacao, analytics duplicado/quebrado, legado de schema/dados e ausencia de certificacao executavel atual.
+**Business pode ser considerado fechado para G4 (SSOT/ownership de source), mas nao esta MVP certificado.** O proximo trabalho global do plano deve avancar para `Territory/location`. Os riscos de atomicidade, legado, dados e runtime permanecem abertos nas fases G5/G6/G7 e nao devem ser reinterpretados como resolvidos por este checkpoint.
