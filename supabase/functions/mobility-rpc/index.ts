@@ -137,16 +137,12 @@ function optionalTimestamp(value: unknown, field: string): string | null {
 }
 
 async function isProjectAdmin(supabaseAdmin: SupabaseClient, userId: string): Promise<boolean> {
-  const { data, error } = await supabaseAdmin
-    .from("user_roles")
-    .select("id")
-    .eq("user_id", userId)
-    .in("role_enum", ["admin", "super_admin"])
-    .is("revoked_at", null)
-    .limit(1);
+  const { data, error } = await supabaseAdmin.rpc("is_admin", {
+    p_user_id: userId,
+  });
 
   if (error) throw error;
-  return Array.isArray(data) && data.length > 0;
+  return data === true;
 }
 
 async function requireUser(

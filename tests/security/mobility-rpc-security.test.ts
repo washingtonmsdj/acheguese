@@ -31,7 +31,9 @@ describe("mobility rpc broker security", () => {
     expect(edgeFunction).toContain('supabaseAdmin.rpc("release_driver_availability_for_ride"');
     expect(edgeFunction).toContain('.from("ride_requests")');
     expect(edgeFunction).toContain('.from("profiles")');
-    expect(edgeFunction).toContain('.from("user_roles")');
+    expect(edgeFunction).toContain('supabaseAdmin.rpc("is_admin"');
+    expect(edgeFunction).toContain("p_user_id: userId");
+    expect(edgeFunction).not.toContain('.from("user_roles")');
     expect(edgeFunction).toContain("requireDispatchStrategy");
     expect(edgeFunction).toContain("handleAcceptRide");
     expect(edgeFunction).toContain("canWriteDispatchAudit");
