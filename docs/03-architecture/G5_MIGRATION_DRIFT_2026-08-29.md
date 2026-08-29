@@ -6,7 +6,7 @@ Regra: nenhuma migration é aplicada, apagada ou renomeada apenas por heurístic
 
 ## 1. Resultado acumulado deste corte
 
-### 36 aliases exatos alinhados às versões remotas
+### 41 aliases exatos alinhados às versões remotas
 
 1. `20260825123021_fix_global_admin_authority_source.sql`
 2. `20260825123134_harden_profile_members_rls.sql`
@@ -44,6 +44,11 @@ Regra: nenhuma migration é aplicada, apagada ou renomeada apenas por heurístic
 34. `20260825234410_repair_community_alert_runtime_contract.sql`
 35. `20260825234632_use_active_profile_for_community_alerts.sql`
 36. `20260826002457_drop_confirmed_legacy_gastronomy_and_tourist_backup.sql`
+37. `20260826003019_replace_public_business_search_with_read_model.sql`
+38. `20260826003840_restrict_emergency_contacts_to_direct_owner.sql`
+39. `20260826004108_restrict_safety_private_reads_to_direct_owner.sql`
+40. `20260826005704_harden_public_catalog_pricing_boundary.sql`
+41. `20260826010528_lock_legacy_delivery_requests_browser_surface.sql`
 
 Os renames foram feitos atomicamente com o mesmo blob SQL: novo path usando a versão remota + remoção do path local antigo no mesmo commit. Nenhum SQL foi executado novamente no Supabase. Isso inclui migrations que historicamente removeram dados/legados: nesta reconciliação apenas a identidade do arquivo foi alinhada ao histórico remoto já aplicado.
 
@@ -79,10 +84,4 @@ Não relaxar o comparador apenas para fazer estes casos passarem. A equivalênci
 
 ## 5. Próximo corte
 
-Continuar os aliases de 26/08 e, em paralelo, classificar os conflitos restantes em:
-
-- alias exato;
-- local-only superseded/unsafe;
-- local-only pendente de decisão;
-- remote-only recuperável;
-- content mismatch com reconstrução canônica necessária.
+Suspender temporariamente renames em massa para classificar os `local-only` remanescentes que não têm supersession óbvia. Em seguida, continuar aliases exatos de 26/08 e tratar `content mismatch` por reconstrução/provenance segura.
