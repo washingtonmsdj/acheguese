@@ -1,206 +1,192 @@
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
-import { fileURLToPath } from "node:url";
+#!/usr/bin/env tsx
 
-type Severity = "error" | "warning";
+import fs from "node:fs";
+import path from "node:path";
 
-interface Violation {
-  file: string;
-  line: number;
-  severity: Severity;
-  rule: string;
-  code: string;
-  suggestion: string;
+const ROOT = process.cwd();
+const SRC_ROOT = path.join(ROOT, "src");
+const CODE_FILE_RE = /\.(ts|tsx|js|jsx)$/;
+
+const PUBLIC_IDENTITY_INTERNAL_IMPORT =
+  "@/core/public-identity/services/PublicIdentityService";
+const PUBLIC_IDENTITY_OWNER_ROOT = "src/core/public-identity/";
+
+const BUSINESS_URL_SERVICE =
+  "src/core/business/services/BusinessUrlService.ts";
+const PROFESSIONAL_URL_SERVICE =
+  "src/core/professional/services/ProfessionalUrlService.ts";
+const PROFILE_IDENTITY_COMMAND =
+  "src/core/profiles/services/profile.identity.commands.ts";
+const PROFILE_PUBLIC_URL =
+  "src/core/profiles/utils/publicProfileUrl.ts";
+const CLASSIFIED_URL_SERVICE =
+  "src/core/classifieds/services/ClassifiedUrlService.ts";
+const PUBLIC_IDENTITY_SERVICE =
+  "src/core/public-identity/services/PublicIdentityService.ts";
+
+function normalize(filePath: string): string {
+  return filePath.replace(/\\/g, "/");
 }
 
-interface Rule {
-  name: string;
-  pattern: RegExp;
-  severity: Severity;
-  suggestion: string;
-  allowedFiles?: RegExp[];
+function isRuntimeCodeFile(filePath: string): boolean {
+  const normalized = normalize(filePath);
+  return (
+    CODE_FILE_RE.test(normalized) &&
+    !normalized.includes("/__tests__/") &&
+    !normalized.includes(".test.") &&
+    !normalized.includes(".spec.")
+  );
 }
 
-const rootDir = join(dirname(fileURLToPath(import.meta.url)), "../..");
-
-const SCAN_DIRS = [
-  "src",
-  "supabase/functions",
-] as const;
-
-const IGNORED_PATHS = [
-  /(^|\/)__tests__(\/|$)/,
-  /(^|\/)__fixtures__(\/|$)/,
-  /\.test\.[tj]sx?$/,
-  /\.spec\.[tj]sx?$/,
-  /\.generated\.ts$/,
-  /(^|\/)types(\/|$)/,
-] as const;
-
-const PUBLIC_BUSINESS_URL_SSOT_FILES = [
-  /src\/core\/business\/utils\/businessPublicUrls\.ts$/,
-  /src\/core\/business\/services\/BusinessUrlService\.ts$/,
-  /src\/core\/verticals\/gastronomy\/services\/GastronomyUrlService\.ts$/,
-  /src\/core\/routing\/utils\/territoryUrls\.ts$/,
-  /src\/app\/routes\//,
-  // Edge Function deploys cannot import frontend aliases; sitemap is the only
-  // approved server-side mirror for public business URL generation.
-  /supabase\/functions\/sitemap\/index\.ts$/,
-] as const;
-
-const PUBLIC_PROFILE_URL_SSOT_FILES = [
-  /src\/core\/profiles\/utils\/publicProfileUrl\.ts$/,
-] as const;
-
-const PREMIUM_URL_SSOT_FILES = [
-  /src\/core\/business\/utils\/businessPublicUrls\.ts$/,
-  /src\/core\/business\/services\/BusinessUrlService\.ts$/,
-  /src\/core\/business\/services\/PremiumBusinessSiteResolver\.ts$/,
-  /src\/app\/routes\//,
-] as const;
-
-const RULES: Rule[] = [
-  {
-    name: "Nao montar rota premium /p manualmente",
-    pattern: /[`'"]\/p\/[^`'"]*\$\{|\+[^;\n]*[`'"]\/p\/|[`'"]\/p\/[`'"][^;\n]*\+/,
-    severity: "error",
-    suggestion: "Use buildBusinessPremiumUrl() ou BusinessUrlService.getShareUrl*().",
-    allowedFiles: PREMIUM_URL_SSOT_FILES,
-  },
-  {
-    name: "Nao montar rota publica de perfil /u manualmente",
-    pattern: /[`'"]\/u\/[^`'"]*\$\{|\+[^;\n]*[`'"]\/u\/|[`'"]\/u\/[`'"][^;\n]*\+/,
-    severity: "error",
-    suggestion: "Use buildPublicProfileUrl().",
-    allowedFiles: PUBLIC_PROFILE_URL_SSOT_FILES,
-  },
-  {
-    name: "Nao usar id como username em buildPublicProfileUrl",
-    pattern:
-      /buildPublicProfileUrl\(\s*(?:profile|suggestion)\.id\s*\)|buildPublicProfileUrl\(\s*[^)]*(?:profileId|userId|authorId|mentionedProfileId|recipientProfileId)[^)]*\)/,
-    severity: "error",
-    suggestion: "Use username/handle publico; se nao houver username, nao gere /u/:username.",
-  },
-  {
-    name: "Nao montar detalhe publico curto de empresa manualmente",
-    pattern:
-      /`\/\$\{[^}]*?(?:alias|communityAlias|communitySlug)[^}]*\}\/\$\{[^}]*?(?:business|slug)[^}]*\}`/,
-    severity: "error",
-    suggestion: "Use buildBusinessPublicUrlFromCommunityAlias() ou BusinessUrlService.",
-    allowedFiles: PUBLIC_BUSINESS_URL_SSOT_FILES,
-  },
-  {
-    name: "Nao montar detalhe publico de empresa manualmente",
-    pattern: /[`'"]\/empresas\/[^`'"]*\$\{|\+[^;\n]*[`'"]\/empresas\/|[`'"]\/empresas\/[`'"][^;\n]*\+/,
-    severity: "error",
-    suggestion: "Use BusinessUrlService/getCanonicalUrlWithResolvedCommunityAlias() ou businessPublicUrls.",
-    allowedFiles: PUBLIC_BUSINESS_URL_SSOT_FILES,
-  },
-  {
-    name: "Nao montar detalhe legado de gastronomia manualmente",
-    pattern: /[`'"]\/gastronomia\/[^`'"]*\$\{|\+[^;\n]*[`'"]\/gastronomia\/|[`'"]\/gastronomia\/[`'"][^;\n]*\+/,
-    severity: "error",
-    suggestion: "Use GastronomyUrlService para listagens ou BusinessUrlService para detalhe publico.",
-    allowedFiles: PUBLIC_BUSINESS_URL_SSOT_FILES,
-  },
-];
-
-function normalizePath(path: string): string {
-  return path.replace(/\\/g, "/");
-}
-
-function shouldIgnoreFile(path: string): boolean {
-  const normalized = normalizePath(relative(rootDir, path));
-  return IGNORED_PATHS.some((pattern) => pattern.test(normalized));
-}
-
-function isAllowedFile(path: string, allowedFiles: readonly RegExp[] | undefined): boolean {
-  if (!allowedFiles) return false;
-  const normalized = normalizePath(relative(rootDir, path));
-  return allowedFiles.some((pattern) => pattern.test(normalized));
-}
-
-function stripCommentContent(line: string): string {
-  const trimmed = line.trim();
-  if (trimmed.startsWith("//") || trimmed.startsWith("*")) return "";
-  return line;
-}
-
-function scanFile(path: string): Violation[] {
-  if (shouldIgnoreFile(path)) return [];
-
-  const content = readFileSync(path, "utf8");
-  const lines = content.split("\n");
-  const violations: Violation[] = [];
-
-  lines.forEach((line, index) => {
-    const scanLine = stripCommentContent(line);
-    if (!scanLine.trim()) return;
-
-    for (const rule of RULES) {
-      if (!rule.pattern.test(scanLine)) continue;
-      if (isAllowedFile(path, rule.allowedFiles)) continue;
-
-      violations.push({
-        file: normalizePath(relative(rootDir, path)),
-        line: index + 1,
-        severity: rule.severity,
-        rule: rule.name,
-        code: scanLine.trim(),
-        suggestion: rule.suggestion,
-      });
-    }
-  });
-
-  return violations;
-}
-
-function scanDirectory(path: string): Violation[] {
-  if (!existsSync(path)) return [];
-
-  const stat = statSync(path);
-  if (stat.isFile()) {
-    return /\.(ts|tsx)$/.test(path) ? scanFile(path) : [];
+function walk(dir: string): string[] {
+  if (!fs.existsSync(dir)) return [];
+  const files: string[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) files.push(...walk(fullPath));
+    else if (entry.isFile() && isRuntimeCodeFile(fullPath)) files.push(fullPath);
   }
+  return files;
+}
 
-  const violations: Violation[] = [];
-  for (const entry of readdirSync(path)) {
-    const childPath = join(path, entry);
-    const childStat = statSync(childPath);
-    if (childStat.isDirectory()) {
-      if (entry === "node_modules" || entry === "dist" || entry.startsWith(".")) continue;
-      violations.push(...scanDirectory(childPath));
-      continue;
+function readRequired(relative: string, violations: string[]): string {
+  const absolute = path.join(ROOT, relative);
+  if (!fs.existsSync(absolute)) {
+    violations.push(`${relative}: required Public URL/slug authority is missing.`);
+    return "";
+  }
+  return fs.readFileSync(absolute, "utf8");
+}
+
+function requireTokens(
+  relative: string,
+  content: string,
+  tokens: readonly string[],
+  violations: string[],
+): void {
+  for (const token of tokens) {
+    if (!content.includes(token)) {
+      violations.push(`${relative}: required SSOT token missing: ${token}`);
+    }
+  }
+}
+
+function main(): void {
+  const violations: string[] = [];
+  const runtimeFiles = walk(SRC_ROOT);
+
+  for (const filePath of runtimeFiles) {
+    const relative = normalize(path.relative(ROOT, filePath));
+    const content = fs.readFileSync(filePath, "utf8");
+
+    if (
+      !relative.startsWith(PUBLIC_IDENTITY_OWNER_ROOT) &&
+      content.includes(PUBLIC_IDENTITY_INTERNAL_IMPORT)
+    ) {
+      violations.push(
+        `${relative}: consumers outside core/public-identity must import the public facade @/core/public-identity so adapter initialization cannot depend on import order.`,
+      );
     }
 
-    if (/\.(ts|tsx)$/.test(entry)) {
-      violations.push(...scanFile(childPath));
+    if (
+      !relative.startsWith(PUBLIC_IDENTITY_OWNER_ROOT) &&
+      /\.from\(\s*["'](?:business_data|professional_data)["']\s*\)[\s\S]{0,1200}?\.ilike\(\s*["']slug["']/.test(content)
+    ) {
+      violations.push(
+        `${relative}: fuzzy slug uniqueness lookup is forbidden outside core/public-identity adapters. Delegate available-identifier generation to PublicIdentityService.generateAvailableIdentifier().`,
+      );
     }
   }
 
-  return violations;
+  const publicIdentity = readRequired(PUBLIC_IDENTITY_SERVICE, violations);
+  requireTokens(
+    PUBLIC_IDENTITY_SERVICE,
+    publicIdentity,
+    [
+      "static async generateAvailableIdentifier",
+      "adapter.identifierExists(baseIdentifier, excludeEntityId)",
+      "await adapter.getExistingSimilar(baseIdentifier)",
+      "adapter.identifierExists(candidate, excludeEntityId)",
+    ],
+    violations,
+  );
+
+  const businessUrl = readRequired(BUSINESS_URL_SERVICE, violations);
+  requireTokens(
+    BUSINESS_URL_SERVICE,
+    businessUrl,
+    [
+      "from '@/core/public-identity'",
+      "PublicIdentityService.generateAvailableIdentifier({",
+      "entityType: 'business'",
+      "buildBusinessPublicUrlFromTerritory(",
+      "buildPublicEntityUrl({",
+    ],
+    violations,
+  );
+
+  const professionalUrl = readRequired(PROFESSIONAL_URL_SERVICE, violations);
+  requireTokens(
+    PROFESSIONAL_URL_SERVICE,
+    professionalUrl,
+    [
+      "from '@/core/public-identity'",
+      "PublicIdentityService.generateAvailableIdentifier({",
+      "entityType: 'professional'",
+      "professionalPublicRoutes.detail({ state, city, slug })",
+    ],
+    violations,
+  );
+
+  const profileIdentity = readRequired(PROFILE_IDENTITY_COMMAND, violations);
+  requireTokens(
+    PROFILE_IDENTITY_COMMAND,
+    profileIdentity,
+    [
+      'from "@/core/public-identity"',
+      'PublicIdentityService.canChangeIdentifier({',
+      'PublicIdentityService.checkAvailability({',
+      'entityType: "profile"',
+    ],
+    violations,
+  );
+
+  const profileUrl = readRequired(PROFILE_PUBLIC_URL, violations);
+  requireTokens(
+    PROFILE_PUBLIC_URL,
+    profileUrl,
+    [
+      "export function buildPublicProfileUrl(username: string)",
+      "return `/u/${username}`;",
+      "case 'business':",
+      "case 'professional':",
+      "return null;",
+    ],
+    violations,
+  );
+
+  const classifiedUrl = readRequired(CLASSIFIED_URL_SERVICE, violations);
+  requireTokens(
+    CLASSIFIED_URL_SERVICE,
+    classifiedUrl,
+    [
+      "normalizeSafePublicId",
+      "static buildShortUrl(publicId: string)",
+      "static async resolveByPublicId(publicId: string)",
+      "return this.buildShortUrl(publicId);",
+    ],
+    violations,
+  );
+
+  if (violations.length > 0) {
+    console.error("Public URL/slug SSOT violations:\n");
+    for (const violation of violations) console.error(`- ${violation}`);
+    process.exit(1);
+  }
+
+  console.log(
+    "Public URL/slug SSOT valid: public-identity owns stable identifier policy and uniqueness; profile, business, professional and classifieds keep explicit domain URL builders with their existing identity semantics.",
+  );
 }
 
-const violations = SCAN_DIRS.flatMap((dir) => scanDirectory(join(rootDir, dir)));
-const errors = violations.filter((violation) => violation.severity === "error");
-
-console.log("Validando SSOT de URLs publicas...");
-console.log(`Arquivos analisados: ${SCAN_DIRS.join(", ")}`);
-console.log(`Violacoes encontradas: ${violations.length}`);
-
-if (violations.length > 0) {
-  console.log("");
-  violations.forEach((violation) => {
-    console.log(`${violation.file}:${violation.line}`);
-    console.log(`  Regra: ${violation.rule}`);
-    console.log(`  Codigo: ${violation.code}`);
-    console.log(`  Correcao: ${violation.suggestion}`);
-    console.log("");
-  });
-}
-
-if (errors.length > 0) {
-  process.exit(1);
-}
-
-console.log("OK: URLs publicas seguem os SSOTs configurados.");
+main();
