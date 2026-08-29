@@ -1,4 +1,4 @@
-import { LAUNCH_URLS } from "@/config/territory";
+import { LAUNCH_URLS } from "@/core/routing/config/territory";
 import { buildCommunityPortalUrl } from "@/core/routing/policies";
 import {
   buildCommunityTerritoryUrl,
