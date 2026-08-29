@@ -12,7 +12,7 @@ const lockMigration = readProjectFile(
   "supabase/migrations/20260826010000_lock_legacy_delivery_requests_browser_surface.sql",
 );
 const helperRpcMigration = readProjectFile(
-  "supabase/migrations/20260826040200_restrict_legacy_delivery_helper_rpcs.sql",
+  "supabase/migrations/20260826035946_restrict_legacy_delivery_helper_rpcs.sql",
 );
 const ssotGuard = readProjectFile(
   "src/modules/mobility/delivery/__tests__/DeliverySSOTGuard.test.ts",
