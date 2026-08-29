@@ -1,11 +1,12 @@
 /**
- * useBusinessSubscription - Hook para gerenciar assinatura de empresa
+ * useBusinessSubscription - Hook de assinatura de empresa.
  *
- * SSOT: Hook central que todos os modulos devem usar.
+ * O hook orquestra cache/UI e delega leitura/gateway ao owner explicito
+ * BusinessSubscriptionService.
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { SubscriptionService } from '../SubscriptionService';
+import { BusinessSubscriptionService } from '../BusinessSubscriptionService';
 import { EntitlementsService } from '../entitlements';
 import { BillingPlanService } from '../services/BillingPlanService';
 import { PlanTier } from '../types';
@@ -21,7 +22,7 @@ export function useBusinessSubscription(businessId: string | undefined) {
     queryFn: async () => {
       if (!businessId) throw new Error('businessId e obrigatorio');
 
-      const subscriptionResult = await SubscriptionService.getByBusinessId(businessId);
+      const subscriptionResult = await BusinessSubscriptionService.getByBusinessId(businessId);
       if (subscriptionResult.error) {
         throw new Error(subscriptionResult.error);
       }
@@ -37,7 +38,7 @@ export function useBusinessSubscription(businessId: string | undefined) {
           entitlements = dynamicEntitlements;
         }
       } catch {
-        // fallback para legado
+        // Baseline local e apenas fallback de disponibilidade; o catalogo e a fonte dinamica.
       }
 
       return {
