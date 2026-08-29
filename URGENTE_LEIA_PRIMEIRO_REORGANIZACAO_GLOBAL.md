@@ -8,8 +8,8 @@
 
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
-**Status:** EM EXECUÇÃO — G4 Global SSOT Hardening  
-**Checkpoint técnico antes desta atualização:** `10d541172bbb23185f0075d64e64cc33fc0a0678`  
+**Status:** EM EXECUÇÃO — G5 Database, RLS e legado  
+**Checkpoint técnico antes desta atualização:** `ee01229c56addf847cd03f4d52cc54d01e32ffd3`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
 **Monorepo:** NÃO atualmente; manter monorepo-ready, sem migrar para workspaces/Turborepo agora
@@ -284,7 +284,7 @@ Cada corte deve terminar com path antigo vazio ou bridge mínimo explicitamente 
 
 **Objetivo:** consolidar primeiro os serviços horizontais usados por vários módulos.
 
-**Status:** EM EXECUÇÃO.
+**Status:** CONCLUÍDO no nível source/authority. Drift exaustivo, legados e certificação same-SHA seguem em G5/G7.
 
 Ordem prioritária:
 
@@ -299,8 +299,8 @@ Ordem prioritária:
 - [x] Billing/subscriptions — `src/core/billing` é o owner horizontal; catálogo publicado é a autoridade de plano/preço/entitlements, `user_subscriptions` é read-only no browser, Checkout/Portal governam mudança comercial e `billing-webhook` materializa estado server-side; legados, semântica completa de snapshot e E2E Stripe permanecem em G5/G6/G7;
 - [x] Messaging/realtime/notifications — `src/core/messaging` mantém agregados Classified e Community Direct explicitamente separados, `src/core/realtime/RealtimeService` é o único owner de channels e `src/core/notifications` governa inbox/preferências/outbox; UI pausada foi retirada do core, writes privilegiados de notifications foram endurecidos e os streams exigidos foram alinhados à publication; UX, carga, legados e E2E ficam em G5/G6/G7;
 - [x] Moderation/trust — `core/moderation` governa taxonomia/projecao federada, cada dominio preserva seu report/status mestre e `core/trust` governa eventos, bans, policies e comandos horizontais; writers/review bypass do browser foram removidos, views admin ficaram read-only, UI horizontal saiu de core e `moderation-trust-boundary.test.ts` congela o desenho; retencao LGPD, drift exaustivo e certificacao permanecem em G5/G7;
-- [ ] Search/discovery — **PRÓXIMO ALVO G4**;
-- [ ] permissions/authorization helpers.
+- [x] Search/discovery — `src/core/search/SearchService` é o único orquestrador textual federado, providers delegam aos owners de domínio e não acessam read models diretamente; `public_business_search` e `public_professional_search` permanecem read models dos domínios Business/Professional e foram endurecidos para SELECT-only; RPCs `search_entities_*` continuam no boundary Maps/Geospatial e não formam um segundo Search SSOT;
+- [x] permissions/authorization helpers — `src/core/authorization/RoleService` governa decisões globais via `role-rpc`, `AdminRolesService` ficou management-only, `get_user_roles` foi reparado para a validade canônica, policies globais convergiram para helpers `private.*`, wrappers públicos viraram bridges one-way e o browser perdeu hard DELETE de `user_roles`; `gastronomy_subscriptions` permanece legado deprecated para provenance em G5.
 
 Para cada SSOT:
 
@@ -316,6 +316,8 @@ Para cada SSOT:
 ## G5 — Database, RLS e legado
 
 **Objetivo:** alinhar código e banco antes de certificar módulos.
+
+**Status:** EM EXECUÇÃO. Primeiro corte: inventário de drift migration ↔ remoto e provenance de legados, sem exclusão por heurística.
 
 - [ ] schema atual vs migrations;
 - [ ] RLS e grants;
@@ -472,8 +474,8 @@ Atualizar esta seção somente com marcos relevantes. Não transformar este arqu
 - [x] G1 Architecture Taxonomy concluída;
 - [x] G2 Physical Reorganization concluída;
 - [x] G3 Global Boundaries concluído;
-- [ ] G4 Global SSOT concluído — **EM EXECUÇÃO**;
-- [ ] G5 Database/RLS concluído;
+- [x] G4 Global SSOT concluído no nível source/authority;
+- [ ] G5 Database/RLS concluído — **EM EXECUÇÃO**;
 - [ ] G6 módulos certificados;
 - [ ] G7 MVP certificado.
 
@@ -500,7 +502,7 @@ Atualizar esta seção somente com marcos relevantes. Não transformar este arqu
 - [ ] validação hosted do SHA `dd2e9cd235cd7a61da2ef85384a76b1fcb1b9836` — **BLOCKED por runner/provider**: jobs observados retornaram `steps: []`, `runner_id: 0` e nenhum runner executou lint, typecheck, testes ou validators. Isso não é PASS nem falha de source;
 - [x] próximo marco executado: G3 Global Boundaries.
 
-### 2026-08-29 — G3 fechado / G4 em execução
+### 2026-08-29 — G3/G4 fechados / G5 iniciado
 
 - [x] G3 Global Boundaries fechado: validators bloqueantes ficaram alcançáveis pelo workflow canônico e os ratchets impedem imports reversos, cross-module indevido, recriação de roots aposentados e novos SSOTs paralelos conhecidos;
 - [x] Auth/session consolidado: `SessionProvider`/`SessionService`/`SessionState` e `useSessionContext` são a superfície canônica; hooks/providers paralelos foram aposentados e protegidos por `validate-session-context.ts`;
@@ -523,10 +525,15 @@ Atualizar esta seção somente com marcos relevantes. Não transformar este arqu
 - [x] Moderation/trust fechado no nível G4: `community_reports` conserva apenas criacao direta pelo owner Community, review/acoes passam por RPCs server-owned, `community_user_moderation_actions` e tabelas sensiveis de Trust nao possuem acesso browser direto conhecido, e a fila federada permanece read-only sem copiar status mestre;
 - [x] autoridade remota de Moderation reconciliada no escopo conhecido: `20260829192000_harden_moderation_table_authority.sql` removeu UPDATE/DELETE direto e policies admin concorrentes de `community_reports` e retirou SELECT direto de `community_user_moderation_actions`; `20260829193600_harden_admin_moderation_view_grants.sql` deixou as views admin com somente SELECT para `authenticated`, preservando filtro `private.is_admin_user(auth.uid())`;
 - [x] fronteira física de Moderation/trust corrigida: fila federada/hook migraram para o modulo Admin, `TrustFeedbackForm` e `ReportReasonDialog` passaram a apresentacao compartilhada sem dependencia de `core`, `core/trust/components` foi aposentado e o path historico do dialog em `core/moderation/components` ficou reduzido a bridge one-way; `tests/architecture/moderation-trust-boundary.test.ts` e `test:moderation:ssot` bloqueiam regressao;
+- [x] Search/discovery fechado no nível G4: `SearchService` permaneceu como orquestrador federado único, providers delegam para services de domínio e não conhecem tabelas/read models; `public_business_search` e `public_professional_search` foram classificados como read models dos respectivos owners e as migrations `20260829201000`/`20260829202000` deixaram `anon`, `authenticated` e `service_role` com somente SELECT; `tests/architecture/search-ssot.test.ts` e `docs/07-modules/SEARCH_SSOT.md` congelam a separação;
+- [x] Authorization/permissions fechado no nível G4: `RoleService`/`role-rpc` governam decisões globais, `AdminRolesService` foi reduzido a gestão/lifecycle, `AdminDataService` usa `RoleService`, e `_shared/adminAuth.ts` deixou de consultar `user_roles` diretamente;
+- [x] autoridade remota de Authorization reparada: `20260829203000` alinhou `get_user_roles` a active + unrevoked + unexpired; `20260829204000` criou `private.has_valid_global_role`, convergiu policies globais e transformou wrappers públicos remanescentes em bridges `private.*`; `20260829204500` retirou hard DELETE de `user_roles` do browser; `tests/architecture/authorization-ssot.test.ts`, os guards de segurança e `docs/07-modules/AUTHORIZATION_SSOT.md` protegem o desenho;
+- [ ] `gastronomy_subscriptions` permanece exceção remota conhecida com policy histórica que consulta `user_roles`; a própria tabela está marcada DEPRECATED/read-only, possui 5 linhas históricas e declara migração para `user_subscriptions`. Não apagar nem reinterpretar sem provenance em G5;
 - [ ] retencao/TTL de audit e reports continua sem politica aprovada e permanece bloqueio de lancamento para G5/G7; o fechamento G4 nao inventa prazo LGPD nem certifica operacao same-SHA;
 - [ ] validação hosted do checkpoint atual — deve ser revalidada ao final de um corte significativo; histórico recente continua **BLOCKED por runner/provider** quando jobs retornam `steps: []` e `runner_id: 0`. Não converter isso em PASS nem em source failure;
 - [ ] limpeza de refs temporárias `tmp-public-url-ssot` e `tmp-public-url-ssot-2` — criadas durante tentativa de Git Data, nunca usadas para merge; o conector atual não expõe delete-ref, portanto devem ser removidas pelo próximo executor com capacidade de apagar refs remotas;
-- [ ] próximo alvo seguro de G4: `Search/discovery`.
+- [x] G4 Global SSOT Hardening fechado no nível source/authority;
+- [ ] próximo alvo seguro: G5 `schema atual vs migrations` + inventário de RLS/grants/RPCs/legados, começando por drift comprovado e provenance antes de qualquer remoção.
 
 ---
 
