@@ -1,6 +1,6 @@
 # Modulo de Empresas
 
-**Status:** HARDENING — NAO MVP CERTIFICADO  
+**Status:** G4 SSOT SOURCE CLOSED — NAO MVP CERTIFICADO  
 **Owner de UI/aplicacao:** `src/modules/business`  
 **Owner de dominio, persistencia e integracoes:** `src/core/business`
 
@@ -24,52 +24,63 @@ Empresas e o bounded context base para perfis comerciais. Gastronomy e Education
 
 Codigo em `src/modules/business` nao deve acessar `@/integrations/*` nem `@supabase/supabase-js` em runtime. Persistencia, RPCs, repositories e integracoes pertencem a `src/core/business` ou a outro owner `core` explicito.
 
-`tools/architecture/validate-business-module-boundaries.ts` protege essa regra para todo o modulo, incluindo Gastronomy e Education. Imports estritamente `type` nao sao tratados como acesso runtime. O mesmo validator exige que o hook de cadastro delegue a criacao para `BusinessService.createBusiness()`, bloqueia recriacao do antigo fluxo profile-first via `MultiProfileService` e impede mutacoes runtime de `business_data` fora de `src/core/business`.
+`tools/architecture/validate-business-module-boundaries.ts` protege essa regra para todo o modulo, incluindo Gastronomy e Education. O mesmo validator:
 
-Os snapshots publicos usam contracts em `src/core/business/types/publicSnapshots.ts` e RPC boundary em `src/core/business/services/PublicSnapshotRpcService.ts`; os antigos paths em `src/modules/business/public` sao bridges de compatibilidade.
+- exige que o cadastro delegue a `BusinessService.createBusiness()`;
+- bloqueia recriacao do antigo fluxo profile-first via `MultiProfileService`;
+- impede mutacoes runtime de `business_data` fora de `src/core/business`;
+- bloqueia a volta de `business_views` e dos RPCs `get_business_views_*` no runtime do owner;
+- exige que o adapter de analytics de Business delegue ao `AnalyticsService`.
 
 ## SSOTs principais
 
 - `src/core/business/services/BusinessService.ts`: facade publica do dominio;
-- `src/core/business/services/business.queries.ts`: read model;
-- `src/core/business/services/business.mutations.ts`: write model;
+- `src/core/business/services/business.queries.ts`: read model geral;
+- `src/core/business/services/business.mutations.ts`: mutations gerais;
+- `src/core/business/services/NetworkService.ts`: lifecycle especializado de rede/filiais dentro do mesmo owner `core/business`;
 - `src/core/business/services/BusinessManagementService.ts`: gestao operacional;
 - `src/core/business/services/BusinessOwnershipService.ts`: ownership/autorizacao de dominio;
 - `src/core/business/services/BusinessUrlService.ts`: URL/slug;
 - `src/core/business/types`: contratos canonicos;
 - `src/core/public-identity`: identidade publica;
+- `src/core/analytics/AnalyticsService.ts`: analytics canonico;
 - `src/core/billing`: billing/assinaturas canonicas (`user_subscriptions`).
 
-## Hardening concluido nesta retomada
+## Hardening concluido em G4
 
-- a criacao de empresa deixou de escrever `profile_members` diretamente e passou pelo owner `ProfileMembersService`;
-- a fachada antiga `BusinessService.getStats()` foi aposentada depois de confirmar zero callers TypeScript; ela devolvia `active: 0` e `by_category: {}` fixos e nao podia representar metricas canonicas;
-- o cadastro principal deixou de criar Profile separadamente via `MultiProfileService`; `useBusinessCreateMultiProfile` agora e apenas um compatibility hook de UI e delega profile + membership + `business_data` a `BusinessService.createBusiness()`;
-- `AdminBusinessService.createBusinessProfile()` ja delegava ao mesmo owner, portanto o source passou a ter uma unica autoridade de criacao de Business;
-- `AdminService.toggleBusinessStatus()` deixou de executar `UPDATE business_data` diretamente e agora delega a mutacao ao `BusinessService`;
-- o validator do modulo impede a volta de `MultiProfileService`/`.createProfile()` no hook de cadastro e bloqueia novos writers runtime de `business_data` fora do owner.
+- membership de criacao passou pelo owner `ProfileMembersService`;
+- `BusinessService.getStats()` incompleto foi aposentado depois de confirmar zero callers TypeScript;
+- `useBusinessCreateMultiProfile` deixou de criar Profile separadamente e passou a delegar a `BusinessService.createBusiness()`;
+- `AdminBusinessService.createBusinessProfile()` ja delegava ao mesmo owner, consolidando uma unica autoridade de criacao geral;
+- `AdminService.toggleBusinessStatus()` deixou de executar `UPDATE business_data` diretamente e passou pelo Business owner;
+- RLS remoto conhecido de `business_data`, produtos, servicos, galeria e stats foi revalidado contra a mesma autoridade `can_manage_profile`/wrapper compativel;
+- `business-analytics.service.ts`, `business.admin.ts` e Gastronomy deixaram de depender de `business_views`/RPCs legados de views e passaram ao Analytics SSOT;
+- a dashboard deixou de exibir agendamentos como metrica porque esse evento nao existe no contrato canonico atual;
+- ratchets impedem regressao dessas decisoes.
 
-## Bloqueadores conhecidos para certificacao MVP
+## O que G4 NAO certifica
 
-1. **Atomicidade de criacao:** a criacao de empresa envolve profile, membership, business_data, stats, endereco, horarios e contatos em operacoes sequenciais. Falha intermediaria pode deixar estado parcial; o fluxo deve convergir para uma operacao transacional/idempotente ou compensacao comprovada. Uploads de logo/banner tambem ocorrem apos a criacao canonica e precisam de compensacao/retentativa definida.
-2. **Autorizacao de subrecursos:** `business_data` usa `private.can_operate_business_profile`, mas policies historicas de produtos/servicos/galeria/stats/views ainda usam predicates diferentes. Roles operacionais precisam de comportamento consistente.
-3. **Legados de dados:** `businesses` e `business_subscriptions` ainda existem no banco; billing atual usa `user_subscriptions` como SSOT. Legados devem ser reconciliados e removidos/isolados sem perda de dados.
-4. **Higiene de dados:** existem perfis business sem `business_data` e registros sem `business_stats`; grande parte tem assinatura de fixture/teste, mas limpeza deve usar provenance explicita, nunca heuristica destrutiva.
-5. **Certificacao executavel:** lint, typecheck, testes, E2E, RLS/grants e deployment do mesmo SHA precisam executar com evidencia atual. Resultados historicos nao certificam o HEAD atual.
+Fechar Business em G4 significa ownership/SSOT de source reconciliado. Ainda permanecem blockers reais para G5/G6/G7:
 
-## Criterio de pronto
+1. **Atomicidade/confiabilidade:** create sincroniza endereco, profile, membership, `business_data`, stats, horarios e contatos em sequencia; uploads de midia ocorrem depois. Falhas intermediarias precisam de compensacao/idempotencia comprovada.
+2. **Legados de banco:** `businesses`, `business_subscriptions`, `business_views` e RPCs historicos precisam de classificacao/provenance antes de qualquer retirada.
+3. **Higiene de dados:** profiles business sem `business_data` e outros residuos observados em checkpoints anteriores nao podem ser removidos por heuristica.
+4. **Certificacao funcional:** create -> edit -> pagina publica -> gestao, autorizacao negativa, E2E, mobile e smoke precisam ser provados.
+5. **Certificacao same-SHA:** lint/typecheck/test/security/build/deploy precisam executar de verdade; falha de runner/provider nao e PASS nem source failure.
+
+## Criterio de MVP READY do modulo
 
 Empresas so pode ser marcado como MVP certificado quando houver, no mesmo SHA:
 
-1. um unico fluxo canonico de create/update/delete, com atomicidade ou compensacao comprovada;
-2. RLS/grants coerentes para owner/admin/manager/moderator e negativos para terceiros;
-3. nenhum acesso runtime direto a infraestrutura em `src/modules/business`;
-4. schemas, RPCs e migrations reconciliados com o banco alvo;
-5. criacao -> edicao -> pagina publica -> gestao funcionando com dados reais;
-6. estados loading/empty/error/auth corretos;
-7. E2E sem fixtures confundidas com dados reais;
-8. higiene/provenance de dados tecnicos comprovada;
+1. atomicidade ou compensacao/idempotencia comprovada para fluxos mutaveis relevantes;
+2. drift de migrations/schema/RLS/grants fechado no ambiente alvo;
+3. nenhum acesso runtime fora dos owners canonicos;
+4. fluxo create -> edit -> pagina publica -> gestao funcionando com dados reais;
+5. estados loading/empty/error/auth corretos;
+6. E2E sem fixtures confundidas com dados reais;
+7. higiene/provenance de dados tecnicos comprovada;
+8. casos negativos de autorizacao executados;
 9. lint/typecheck/test/build/security executados de verdade;
-10. deployment do mesmo SHA comprovado.
+10. deployment e smoke do mesmo SHA comprovados.
 
-O checkpoint tecnico detalhado fica em `VALIDATION.md`; o SSOT global de execucao permanece em `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`.
+O checkpoint tecnico detalhado fica em `VALIDATION.md`; o SSOT global de execucao permanece em `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` e o plano permanente em `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`.
