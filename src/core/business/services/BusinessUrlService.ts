@@ -20,7 +20,7 @@ import { supabase } from '@/integrations/supabase';
 import { APP_MODULE_SLUGS } from '@/shared/config/moduleSlugs';
 import { PublicIdentityService } from '@/core/public-identity/services/PublicIdentityService';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
-import { createTerritorialGroupRepository } from '@/core/location/repositories/createTerritorialGroupRepository';
+import { territorialGroupService } from '@/core/territorial';
 import { CommunityPublicAliasService } from '@/core/routing/services/CommunityPublicAliasService';
 import { buildCommunityAliasUrl } from '@/core/routing/utils/territoryUrls';
 import {
@@ -62,10 +62,6 @@ export interface ResolvedBusinessUrl {
   /** URL interna de gestao: /central/empresas/:id */
   dashboard: string;
 }
-
-type BusinessSlugRow = {
-  slug?: string | null;
-};
 
 // ─── Helpers internos ─────────────────────────────────────────────────────────
 
@@ -193,8 +189,7 @@ export class BusinessUrlService {
       });
       if (locationAlias) return locationAlias;
 
-      const groupRepository = createTerritorialGroupRepository();
-      const containingGroups = await groupRepository.findGroupsContainingLocation(
+      const containingGroups = await territorialGroupService.findGroupsContainingLocation(
         businessLocation.id,
       );
 
@@ -486,42 +481,13 @@ export class BusinessUrlService {
   }
 
   /**
-   * Gera slug único verificando disponibilidade via PublicIdentityService.
-   * Adiciona sufixo numérico se necessário.
+   * Gera slug único pela autoridade transversal de identidade pública.
    */
   static async generateUniqueSlug(name: string): Promise<string> {
-    const slug = this.generateSlug(name);
-
-    // Verifica disponibilidade via PublicIdentityService
-    const availability = await PublicIdentityService.checkAvailability({
-      identifier: slug,
+    return PublicIdentityService.generateAvailableIdentifier({
+      name,
       entityType: 'business',
     });
-
-    // Se disponível, retorna
-    if (availability.status === 'available') {
-      return slug;
-    }
-
-    // Se não disponível, usa sugestão
-    if (availability.suggestion) {
-      return availability.suggestion;
-    }
-
-    // Fallback: adiciona contador manualmente
-    const { data } = await supabase
-      .from('business_data')
-      .select('slug')
-      .ilike('slug', `${slug}%`);
-
-    const existingSlugs = ((data || []) as BusinessSlugRow[])
-      .map((row) => row.slug)
-      .filter((candidate): candidate is string => typeof candidate === 'string' && candidate.length > 0);
-    let counter = 1;
-    while (existingSlugs.includes(`${slug}-${counter}`)) {
-      counter++;
-    }
-    return `${slug}-${counter}`;
   }
 
 }
