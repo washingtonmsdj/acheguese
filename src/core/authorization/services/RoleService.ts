@@ -1,37 +1,25 @@
 /**
  * Role Service
- * 
- * SSOT para operações de roles e autorização baseada em roles.
- * 
- * Alinhado com: supabase/migrations/20260418000000_create_roles_system.sql
- * 
- * REGRAS:
- * - Todas as operações de roles DEVEM passar por este service
- * - Nunca acessar user_roles diretamente de components/pages
- * - Usar brokers/servicos autorizados para helpers privilegiados; nao chamar RPC bloqueado direto do browser
+ *
+ * SSOT de leitura operacional para roles globais da plataforma.
+ *
+ * Autoridade de banco:
+ * - public.user_roles
+ * - predicado canônico: ativo, não revogado e não expirado
+ *
+ * Fronteira de runtime:
+ * - decisões de autorização passam por role-rpc/RoleRpcService;
+ * - gestão administrativa, histórico e mutações pertencem ao domínio admin;
+ * - components/pages não acessam user_roles nem AdminRolesService diretamente.
  */
 import { logger } from '@/shared/utils/logger';
-import { SessionService } from '@/core/session/services/SessionService';
-import { adminRolesService } from '@/core/admin/services/AdminRolesService';
 import { RoleRpcService } from './RoleRpcService';
-import type {
-  AppRole,
-  UserRole,
-  RoleHistory,
-  GrantRoleRequest,
-  RevokeRoleRequest,
-  RoleCheckResult
-} from '../types/roles.types';
-
-// ============================================================================
-// ROLE SERVICE
-// ============================================================================
+import type { AppRole } from '../types/roles.types';
 
 export class RoleService {
   /**
    * Verifica se um usuário possui um role específico.
-   * 
-   * Consulta via Edge Function `role-rpc`; chamada direta ao RPC publico nao e permitida.
+   * Consulta via Edge Function `role-rpc`.
    */
   static async hasRole(userId: string, role: AppRole): Promise<boolean> {
     try {
@@ -44,8 +32,7 @@ export class RoleService {
 
   /**
    * Verifica se um usuário é admin (admin ou super_admin).
-   * 
-   * Consulta via Edge Function `role-rpc`; chamada direta ao RPC publico nao e permitida.
+   * Consulta via Edge Function `role-rpc`.
    */
   static async isAdmin(userId: string): Promise<boolean> {
     try {
@@ -58,8 +45,7 @@ export class RoleService {
 
   /**
    * Verifica se um usuário é super admin.
-   * 
-   * Consulta via Edge Function `role-rpc`; chamada direta ao RPC publico nao e permitida.
+   * Consulta via Edge Function `role-rpc`.
    */
   static async isSuperAdmin(userId: string): Promise<boolean> {
     try {
@@ -71,9 +57,8 @@ export class RoleService {
   }
 
   /**
-   * Retorna todos os roles ativos de um usuário.
-   * 
-   * Consulta via Edge Function `role-rpc`; chamada direta ao RPC publico nao e permitida.
+   * Retorna todos os roles globais atualmente válidos de um usuário.
+   * Consulta via Edge Function `role-rpc`.
    */
   static async getUserRoles(userId: string): Promise<AppRole[]> {
     try {
@@ -83,153 +68,4 @@ export class RoleService {
       return [];
     }
   }
-
-  /**
-   * Retorna os detalhes completos dos roles de um usuário.
-   * 
-   * Inclui metadados, datas, etc.
-   */
-  static async getUserRoleDetails(userId: string): Promise<UserRole[]> {
-    try {
-      const roles = await adminRolesService.getUserRoles(userId);
-      return roles as unknown as UserRole[];
-    } catch (error) {
-      logger.error('Erro ao buscar detalhes de roles:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Concede um role a um usuário.
-   * 
-   * REQUER: super_admin role (verificado via RLS).
-   */
-  static async grantRole(request: GrantRoleRequest): Promise<{
-    success: boolean;
-    error?: string;
-    role?: UserRole;
-  }> {
-    const currentUser = await SessionService.getCurrentUser();
-    if (!currentUser) {
-      return { success: false, error: 'Usuário não autenticado' };
-    }
-
-    const success = await adminRolesService.grantRole({
-      userId: request.user_id,
-      role: request.role,
-      grantedBy: currentUser.id,
-      reason: request.reason,
-    });
-    if (!success) {
-      return { success: false, error: 'Erro ao conceder role' };
-    }
-    return { success: true };
-  }
-
-  /**
-   * Revoga um role de um usuário.
-   * 
-   * REQUER: super_admin role (verificado via RLS).
-   */
-  static async revokeRole(request: RevokeRoleRequest): Promise<{
-    success: boolean;
-    error?: string;
-  }> {
-    const currentUser = await SessionService.getCurrentUser();
-    if (!currentUser) {
-      return { success: false, error: 'Usuário não autenticado' };
-    }
-    const success = await adminRolesService.revokeRole({
-      userId: request.user_id,
-      role: request.role,
-      revokedBy: currentUser.id,
-      reason: request.reason,
-    });
-    return success
-      ? { success: true }
-      : { success: false, error: 'Role não encontrado ou já revogado' };
-  }
-
-  /**
-   * Retorna o histórico de roles de um usuário.
-   * 
-   * Visível para o próprio usuário e admins (via RLS).
-   */
-  static async getRoleHistory(userId: string): Promise<RoleHistory[]> {
-    try {
-      const data = await adminRolesService.getUserRoleHistory(userId);
-      return data as unknown as RoleHistory[];
-    } catch (error) {
-      logger.error('Erro ao buscar histórico de roles:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Verifica múltiplos roles de uma vez.
-   * 
-   * Útil para verificações de UI (ex: mostrar botões admin).
-   */
-  static async checkMultipleRoles(
-    userId: string, 
-    roles: AppRole[]
-  ): Promise<Record<AppRole, boolean>> {
-    const results = new Map<AppRole, boolean>();
-
-    await Promise.all(
-      roles.map(async (role) => {
-        results.set(role, await this.hasRole(userId, role));
-      })
-    );
-
-    return Object.fromEntries(
-      roles.map((role) => [role, results.get(role) ?? false]),
-    ) as Record<AppRole, boolean>;
-  }
-
-  /**
-   * Retorna informações completas sobre um role específico de um usuário.
-   */
-  static async getRoleInfo(
-    userId: string, 
-    role: AppRole
-  ): Promise<RoleCheckResult> {
-    const roles = await this.getUserRoleDetails(userId);
-    const roleInfo = roles.find((r) => r.role === role);
-    if (!roleInfo) {
-      return { hasRole: false };
-    }
-
-    return {
-      hasRole: true,
-      role,
-      grantedAt: roleInfo.granted_at
-    };
-  }
-
-  /**
-   * Lista todos os usuários com um role específico.
-   * 
-   * REQUER: admin role (verificado via RLS).
-   */
-  static async getUsersByRole(role: AppRole): Promise<UserRole[]> {
-    try {
-      const data = await adminRolesService.getUsersByRole(role);
-      return data as unknown as UserRole[];
-    } catch (error) {
-      logger.error('Erro ao buscar usuários por role:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Conta quantos usuários têm um role específico.
-   * 
-   * REQUER: admin role (verificado via RLS).
-   */
-  static async countUsersByRole(role: AppRole): Promise<number> {
-    const users = await this.getUsersByRole(role);
-    return users.length;
-  }
 }
-
