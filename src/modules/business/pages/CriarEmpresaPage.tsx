@@ -12,7 +12,7 @@ import {
   createBusinessStep1Schema,
   createBusinessStep2Schema,
 } from "@/shared/schemas/business/businessSchemas";
-import { PublicIdentityService } from "@/core/public-identity/services/PublicIdentityService";
+import { PublicIdentityService } from "@/core/public-identity";
 import {
   evaluateBusinessSlugSafety,
   isBusinessSlugSafetyBypassAllowed,
