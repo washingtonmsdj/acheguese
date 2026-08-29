@@ -11,7 +11,6 @@ export {
   getStateData,
   getActiveCitiesByState,
   getActiveCities,
-  getTerritorialGroups,
   getPlatformStats,
   getVerifiedBusinesses,
   checkAdminRole,
@@ -19,8 +18,12 @@ export {
   getNationalServices,
   getNationalClassifieds,
   getNationalStats,
-  getActiveTerritoriesWithLanding,
 } from "./landing.queries";
+
+export {
+  getTerritorialGroups,
+  getActiveTerritoriesWithLanding,
+} from "./territorialLanding.queries";
 
 export type {
   ActiveTerritoriesWithLanding,
