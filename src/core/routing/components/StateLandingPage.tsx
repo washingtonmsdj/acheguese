@@ -11,7 +11,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   MapPin, Building2, ChevronRight, Loader2, Map,
 } from 'lucide-react';
-import { TERRITORY_CONFIG } from '@/config/territory';
+import { TERRITORY_CONFIG } from '@/core/routing/config/territory';
 import { getStateData, getActiveCitiesByState } from '@/core/landing/services/LandingService';
 
 interface CityItem {
