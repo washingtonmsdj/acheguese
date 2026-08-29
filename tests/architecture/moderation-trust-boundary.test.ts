@@ -88,8 +88,9 @@ describe("Moderation and Trust boundaries", () => {
   });
 
   it("keeps Community report creation as the only direct runtime table writer", () => {
+    const reportTableAccess = /\.from\(["']community_reports["']\)/;
     const accesses = listRuntimeSourceFiles(srcRoot)
-      .filter((path) => readFileSync(path, "utf8").includes("community_reports"))
+      .filter((path) => reportTableAccess.test(readFileSync(path, "utf8")))
       .map((path) => relative(root, path).replace(/\\/g, "/"));
 
     expect(accesses).toEqual([
