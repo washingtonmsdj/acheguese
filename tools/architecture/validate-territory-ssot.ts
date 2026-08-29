@@ -22,11 +22,10 @@ const RETIRED_LOCATION_GROUP_FILES = [
   "src/core/location/services/TerritorialGroupsReadService.ts",
 ] as const;
 
-// Temporary one-way caller debt. These callers already reach the canonical
-// implementation through a bridge; remove each entry when its import path is
+// Temporary one-way caller debt. This caller already reaches the canonical
+// implementation through a bridge; remove the entry when its import path is
 // changed to @/core/territorial. Stale entries intentionally fail.
 const LEGACY_REPOSITORY_IMPORT_ALLOWLIST = new Set([
-  "src/core/business/services/BusinessUrlService.ts",
   "src/core/routing/hooks/useResolveTerritoryFromUrl.ts",
 ]);
 
