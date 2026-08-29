@@ -1,7 +1,8 @@
 /**
  * Landing Queries - SSOT
- * 
- * Funcoes de leitura para landing pages nacionais e estaduais
+ *
+ * Funcoes de leitura para landing pages nacionais e estaduais.
+ * Leitura de grupos territoriais pertence a territorialLanding.queries.ts.
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
@@ -15,14 +16,12 @@ import type {
   CountryData,
   StateData,
   CityData,
-  TerritorialGroupData,
   PlatformStats,
   VerifiedBusiness,
   NationalBusiness,
   NationalService,
   NationalClassified,
   NationalStats,
-  ActiveTerritoriesWithLanding,
 } from './types';
 import type { Json } from '@/integrations/supabase';
 
@@ -63,16 +62,6 @@ interface LocationRow {
   parent?: { name?: string | null } | null;
 }
 
-interface TerritorialGroupRow {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string | null;
-  anchor_city_id: string;
-  metadata?: Json | null;
-  anchor_city?: { geographic_path?: string | null } | null;
-}
-
 function asRecord(value: Json | null | undefined): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
   return value as Record<string, unknown>;
@@ -100,13 +89,10 @@ async function countPublicServices(): Promise<number> {
   return typeof count === 'number' ? count : 0;
 }
 
-/**
- * Buscar dados de um pais
- */
+/** Buscar dados de um pais. */
 export async function getCountryData(countryCode: string): Promise<CountryData | null> {
   try {
     const countryPath = `/${countryCode}`;
-
     const { data, error } = await supabase
       .from('locations')
       .select('*')
@@ -127,9 +113,7 @@ export async function getCountryData(countryCode: string): Promise<CountryData |
   }
 }
 
-/**
- * Buscar estados ativos de um pais
- */
+/** Buscar estados ativos de um pais. */
 export async function getActiveStates(countryCode: string): Promise<StateData[]> {
   try {
     const { data: stateRows, error } = await supabase
@@ -144,28 +128,28 @@ export async function getActiveStates(countryCode: string): Promise<StateData[]>
       throw error;
     }
 
-    const activeStates = ((stateRows || []) as LocationRow[]).filter(
-      (s) => isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(s.metadata))
+    const activeStates = ((stateRows || []) as LocationRow[]).filter((state) =>
+      isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(state.metadata)),
     );
 
     const statesWithCounts: StateData[] = [];
-    for (const st of activeStates) {
+    for (const state of activeStates) {
       const { count } = await supabase
         .from('locations')
         .select('*', { count: 'exact', head: true })
-        .eq('parent_id', st.id)
+        .eq('parent_id', state.id)
         .eq('type', 'city')
         .eq('status', 'active');
 
       statesWithCounts.push({
-        id: st.id,
-        name: st.name,
-        full_name: st.full_name || st.name,
-        slug: st.slug,
+        id: state.id,
+        name: state.name,
+        full_name: state.full_name || state.name,
+        slug: state.slug,
         type: 'state',
-        geographic_path: st.geographic_path,
-        metadata: asRecord(st.metadata),
-        status: st.status,
+        geographic_path: state.geographic_path,
+        metadata: asRecord(state.metadata),
+        status: state.status,
         city_count: count || 0,
       });
     }
@@ -174,7 +158,6 @@ export async function getActiveStates(countryCode: string): Promise<StateData[]>
       country: countryCode,
       count: statesWithCounts.length,
     });
-
     return statesWithCounts;
   } catch (error) {
     logger.error('landing.queries.getActiveStates', error);
@@ -182,9 +165,7 @@ export async function getActiveStates(countryCode: string): Promise<StateData[]>
   }
 }
 
-/**
- * Buscar estado por slug
- */
+/** Buscar estado por slug. */
 export async function getStateData(countryCode: string, stateSlug: string): Promise<StateData | null> {
   try {
     const statePath = `/${countryCode}/${stateSlug}`;
@@ -218,9 +199,7 @@ export async function getStateData(countryCode: string, stateSlug: string): Prom
   }
 }
 
-/**
- * Buscar cidades ativas de um estado
- */
+/** Buscar cidades ativas de um estado. */
 export async function getActiveCitiesByState(stateId: string): Promise<CityData[]> {
   try {
     const { data: cityRows, error } = await supabase
@@ -236,11 +215,11 @@ export async function getActiveCitiesByState(stateId: string): Promise<CityData[
       return [];
     }
 
-    const activeCities = ((cityRows || []) as LocationRow[]).filter(
-      (city) => isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(city.metadata)),
+    const activeCities = ((cityRows || []) as LocationRow[]).filter((city) =>
+      isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(city.metadata)),
     );
 
-    const withCounts = await Promise.all(
+    return Promise.all(
       activeCities.map(async (city) => {
         const { count } = await supabase
           .from('locations')
@@ -256,23 +235,19 @@ export async function getActiveCitiesByState(stateId: string): Promise<CityData[
           slug: city.slug,
           type: 'city' as const,
           geographic_path: city.geographic_path,
-          parent_id: city.parent_id,
+          parent_id: city.parent_id || '',
           district_count: count || 0,
           metadata: asRecord(city.metadata),
         };
       }),
     );
-
-    return withCounts;
   } catch (error) {
     logger.error('landing.queries.getActiveCitiesByState', error);
     return [];
   }
 }
 
-/**
- * Buscar cidades ativas
- */
+/** Buscar cidades ativas. */
 export async function getActiveCities(): Promise<CityData[]> {
   try {
     const { data, error } = await supabase
@@ -289,19 +264,18 @@ export async function getActiveCities(): Promise<CityData[]> {
 
     const cities = ((data || []) as LocationRow[])
       .filter((city) => isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(city.metadata)))
-      .map((c) => ({
-        id: c.id,
-        name: c.name,
-        full_name: c.full_name || c.name,
-        slug: c.slug,
+      .map((city) => ({
+        id: city.id,
+        name: city.name,
+        full_name: city.full_name || city.name,
+        slug: city.slug,
         type: 'city' as const,
-        geographic_path: c.geographic_path,
-        parent_id: c.parent_id,
-        parent_name: c.parent?.name,
+        geographic_path: city.geographic_path,
+        parent_id: city.parent_id || '',
+        parent_name: city.parent?.name,
       }));
 
     logger.info('landing.queries.getActiveCities', { count: cities.length });
-
     return cities;
   } catch (error) {
     logger.error('landing.queries.getActiveCities', error);
@@ -309,57 +283,9 @@ export async function getActiveCities(): Promise<CityData[]> {
   }
 }
 
-/**
- * Buscar grupos territoriais ativos
- */
-export async function getTerritorialGroups(): Promise<TerritorialGroupData[]> {
-  try {
-    const { data: groups, error: groupError } = await supabase
-      .from('territorial_groups')
-      .select('*, anchor_city:locations!territorial_groups_anchor_city_id_fkey(geographic_path)')
-      .eq('status', 'active');
-
-    if (groupError) {
-      logger.error('landing.queries.getTerritorialGroups', groupError);
-      return [];
-    }
-
-    const { data: members } = await supabase
-      .from('territorial_group_members')
-      .select('group_id, location_id');
-
-    const countMap: Record<string, number> = {};
-    (members || []).forEach((m: { group_id: string }) => {
-      countMap[m.group_id] = (countMap[m.group_id] || 0) + 1;
-    });
-
-    const groupsData = ((groups || []) as TerritorialGroupRow[])
-      .filter((group) => isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(group.metadata)))
-      .map((g) => ({
-        id: g.id,
-        name: g.name,
-        slug: g.slug,
-        description: g.description,
-        anchor_city_id: g.anchor_city_id,
-        anchor_path: g.anchor_city?.geographic_path,
-        member_count: countMap[g.id] || 0,
-      }));
-
-    logger.info('landing.queries.getTerritorialGroups', { count: groupsData.length });
-
-    return groupsData;
-  } catch (error) {
-    logger.error('landing.queries.getTerritorialGroups', error);
-    return [];
-  }
-}
-
-/**
- * Buscar estatisticas da plataforma
- */
+/** Buscar estatisticas da plataforma. */
 export async function getPlatformStats(): Promise<PlatformStats> {
   try {
-
     const { count: citiesCount } = await supabase
       .from('locations')
       .select('*', { count: 'exact', head: true })
@@ -373,7 +299,6 @@ export async function getPlatformStats(): Promise<PlatformStats> {
       .eq('status', 'active');
 
     const businessesCount = await BusinessService.getTotalBusinessesCount();
-
     const servicesCount = await countPublicServices();
 
     const stats = {
@@ -384,44 +309,35 @@ export async function getPlatformStats(): Promise<PlatformStats> {
     };
 
     logger.info('landing.queries.getPlatformStats', stats);
-
     return stats;
   } catch (error) {
     logger.error('landing.queries.getPlatformStats', error);
-    return {
-      cities: 0,
-      districts: 0,
-      businesses: 0,
-      services: 0,
-    };
+    return { cities: 0, districts: 0, businesses: 0, services: 0 };
   }
 }
 
-/**
- * Buscar empresas verificadas
- */
+/** Buscar empresas verificadas. */
 export async function getVerifiedBusinesses(limit: number = 6): Promise<VerifiedBusiness[]> {
   try {
     const businesses = await BusinessService.getBusinesses({});
-
     return businesses
-      .filter((b) => b.is_verified || b.is_premium)
+      .filter((business) => business.is_verified || business.is_premium)
       .sort((a, b) => {
         if (a.is_premium !== b.is_premium) return a.is_premium ? -1 : 1;
         return (b.rating || 0) - (a.rating || 0);
       })
       .slice(0, limit)
-      .map((b) => ({
-        id: b.id,
-        name: b.name,
-        slug: b.slug || '',
-        category: b.category || '',
-        logo_url: b.logo_url || null,
-        is_verified: b.is_verified || false,
-        is_premium: b.is_premium || false,
-        rating: b.rating || 0,
-        city_name: b.business_city || null,
-        geographic_path: b.geographic_path || '',
+      .map((business) => ({
+        id: business.id,
+        name: business.name,
+        slug: business.slug || '',
+        category: business.category || '',
+        logo_url: business.logo_url || undefined,
+        is_verified: business.is_verified || false,
+        is_premium: business.is_premium || false,
+        rating: business.rating || 0,
+        city_name: business.business_city || undefined,
+        geographic_path: business.geographic_path || '',
       }));
   } catch (error) {
     logger.error('landing.queries.getVerifiedBusinesses', error);
@@ -429,13 +345,10 @@ export async function getVerifiedBusinesses(limit: number = 6): Promise<Verified
   }
 }
 
-/**
- * Verificar se usuario tem role de admin
- */
+/** Verificar se usuario tem role de admin. */
 export async function checkAdminRole(userId: string): Promise<boolean> {
   try {
     const isAdmin = await RoleService.isAdmin(userId);
-
     logger.info('landing.queries.checkAdminRole', { userId, isAdmin });
     return isAdmin;
   } catch (error) {
@@ -444,9 +357,7 @@ export async function checkAdminRole(userId: string): Promise<boolean> {
   }
 }
 
-/**
- * Buscar empresas nacionais em destaque
- */
+/** Buscar empresas nacionais em destaque. */
 export async function getNationalBusinesses(limit: number = 6): Promise<NationalBusiness[]> {
   try {
     const { data, error } = await supabase
@@ -473,17 +384,17 @@ export async function getNationalBusinesses(limit: number = 6): Promise<National
       is_verified: boolean | null;
       slug: string | null;
       location?: { geographic_path?: string | null; name?: string | null } | null;
-    }>).map((d) => ({
-      id: d.profile_id,
-      name: d.business_name ?? '',
-      category: d.category ?? '',
-      logo_url: getLogoUrlFromJson(d.metadata),
-      rating: d.rating ?? 0,
-      is_premium: d.is_premium ?? false,
-      is_verified: d.is_verified ?? false,
-      slug: d.slug,
-      geographic_path: d.location?.geographic_path,
-      city_name: d.location?.name,
+    }>).map((business) => ({
+      id: business.profile_id,
+      name: business.business_name ?? '',
+      category: business.category ?? '',
+      logo_url: getLogoUrlFromJson(business.metadata),
+      rating: business.rating ?? 0,
+      is_premium: business.is_premium ?? false,
+      is_verified: business.is_verified ?? false,
+      slug: business.slug,
+      geographic_path: business.location?.geographic_path,
+      city_name: business.location?.name,
     }));
   } catch (error) {
     logger.error('landing.queries.getNationalBusinesses', error);
@@ -491,9 +402,7 @@ export async function getNationalBusinesses(limit: number = 6): Promise<National
   }
 }
 
-/**
- * Buscar servicos nacionais em destaque
- */
+/** Buscar servicos nacionais em destaque. */
 export async function getNationalServices(limit: number = 6): Promise<NationalService[]> {
   try {
     const { data, error } = await landingDb
@@ -529,15 +438,15 @@ export async function getNationalServices(limit: number = 6): Promise<NationalSe
       is_verified: boolean | null;
       price_range: string | null;
       location?: { name?: string | null } | null;
-    }>).map((d) => ({
-      id: d.id,
-      name: d.professional_name ?? '',
-      category: d.service_category ?? '',
-      logo_url: getLogoUrlFromJson(d.metadata),
-      rating: d.rating ?? 0,
-      is_verified: d.is_verified ?? false,
-      price_range: d.price_range ?? 'A combinar',
-      city_name: d.location?.name,
+    }>).map((service) => ({
+      id: service.id,
+      name: service.professional_name ?? '',
+      category: service.service_category ?? '',
+      logo_url: getLogoUrlFromJson(service.metadata),
+      rating: service.rating ?? 0,
+      is_verified: service.is_verified ?? false,
+      price_range: service.price_range ?? 'A combinar',
+      city_name: service.location?.name,
     }));
   } catch (error) {
     logger.error('landing.queries.getNationalServices', error);
@@ -545,9 +454,7 @@ export async function getNationalServices(limit: number = 6): Promise<NationalSe
   }
 }
 
-/**
- * Buscar classificados nacionais em destaque
- */
+/** Buscar classificados nacionais em destaque. */
 export async function getNationalClassifieds(limit: number = 6): Promise<NationalClassified[]> {
   try {
     const { getRecentClassifieds } = await import('@/core/classifieds/services');
@@ -566,18 +473,18 @@ export async function getNationalClassifieds(limit: number = 6): Promise<Nationa
       geographic_path?: string | null;
       category_slug?: string | null;
       subcategory_slug?: string | null;
-    }>).map((d) => ({
-      id: d.id,
-      titulo: d.title ?? d.titulo ?? 'Classificado',
-      category: d.category ?? '',
-      price: d.price ?? 0,
-      photos: d.photos ?? [],
-      created_at: d.created_at ?? '',
-      public_id: d.public_id,
-      slug: d.slug,
-      geographic_path: d.geographic_path,
-      category_slug: d.category_slug,
-      subcategory_slug: d.subcategory_slug,
+    }>).map((classified) => ({
+      id: classified.id,
+      titulo: classified.title ?? classified.titulo ?? 'Classificado',
+      category: classified.category ?? '',
+      price: classified.price ?? 0,
+      photos: classified.photos ?? [],
+      created_at: classified.created_at ?? '',
+      public_id: classified.public_id,
+      slug: classified.slug,
+      geographic_path: classified.geographic_path,
+      category_slug: classified.category_slug,
+      subcategory_slug: classified.subcategory_slug,
     }));
   } catch (error) {
     logger.error('landing.queries.getNationalClassifieds', error);
@@ -585,14 +492,12 @@ export async function getNationalClassifieds(limit: number = 6): Promise<Nationa
   }
 }
 
-/**
- * Buscar estatisticas nacionais
- */
+/** Buscar estatisticas nacionais. */
 export async function getNationalStats(): Promise<NationalStats> {
   try {
     const { getTotalClassifiedsCount } = await import('@/core/classifieds/services');
 
-    const [bizCount, clsCount, cities, districts, svc] = await Promise.allSettled([
+    const [bizCount, clsCount, cities, districts, services] = await Promise.allSettled([
       BusinessService.getTotalBusinessesCount(),
       getTotalClassifiedsCount(),
       landingDb.from<{ id: string }>('locations').select('id', { count: 'exact', head: true }).eq('type', 'city').eq('status', 'active'),
@@ -602,93 +507,16 @@ export async function getNationalStats(): Promise<NationalStats> {
 
     const stats = {
       businesses: bizCount.status === 'fulfilled' ? bizCount.value : 0,
-      services: svc.status === 'fulfilled' ? (svc.value.count ?? 0) : 0,
+      services: services.status === 'fulfilled' ? (services.value.count ?? 0) : 0,
       classifieds: clsCount.status === 'fulfilled' ? clsCount.value : 0,
       cities: cities.status === 'fulfilled' ? (cities.value.count ?? 0) : 0,
       districts: districts.status === 'fulfilled' ? (districts.value.count ?? 0) : 0,
     };
 
     logger.info('landing.queries.getNationalStats', stats);
-
     return stats;
   } catch (error) {
     logger.error('landing.queries.getNationalStats', error);
-    return {
-      businesses: 0,
-      services: 0,
-      classifieds: 0,
-      cities: 0,
-      districts: 0,
-    };
+    return { businesses: 0, services: 0, classifieds: 0, cities: 0, districts: 0 };
   }
 }
-
-/**
- * Buscar territorios ativos com landing habilitada
- */
-export async function getActiveTerritoriesWithLanding(): Promise<ActiveTerritoriesWithLanding> {
-  try {
-    const { data: locs } = await supabase
-      .from('locations')
-      .select('id, name, slug, type, geographic_path, metadata, parent:locations!parent_id(name)')
-      .eq('status', 'active')
-      .in('type', ['city', 'district'])
-      .order('type')
-      .order('name');
-
-    const { data: grps } = await supabase
-      .from('territorial_groups')
-      .select('id, name, slug, description, metadata, anchor_city:locations!territorial_groups_anchor_city_id_fkey(geographic_path)')
-      .eq('status', 'active')
-      .order('name');
-
-    const groups: ActiveTerritoriesWithLanding['groups'] = [];
-    for (const g of ((grps || []) as TerritorialGroupRow[]).filter((group) =>
-      isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(group.metadata)),
-    )) {
-      const { count } = await supabase
-        .from('territorial_group_members')
-        .select('location_id', { count: 'exact', head: true })
-        .eq('group_id', g.id);
-
-      groups.push({
-        id: g.id,
-        name: g.name,
-        slug: g.slug,
-        description: g.description,
-        member_count: count ?? 0,
-        anchor_path: g.anchor_city?.geographic_path?.replace(/^\/br/, ''),
-      });
-    }
-
-    const result = {
-      locations: ((locs || []) as LocationRow[])
-        .filter((location) =>
-          isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(location.metadata)),
-        )
-        .map((l) => ({
-          id: l.id,
-          name: l.name,
-          slug: l.slug,
-          type: l.type,
-          geographic_path: l.geographic_path,
-          parent_name: l.parent?.name,
-        })),
-      groups,
-    };
-
-    logger.info('landing.queries.getActiveTerritoriesWithLanding', {
-      locations: result.locations.length,
-      groups: result.groups.length,
-    });
-
-    return result;
-  } catch (error) {
-    logger.error('landing.queries.getActiveTerritoriesWithLanding', error);
-    return {
-      locations: [],
-      groups: [],
-    };
-  }
-}
-
