@@ -5,7 +5,17 @@ import { spawnSync } from "node:child_process";
 const PHASE1_COMMANDS = [
   ["npm", ["run", "-s", "validate:deps"]],
   ["node", ["tools/architecture/validate-reverse-layer-imports.mjs", "--json"]],
-  ["npm", ["exec", "--", "vitest", "run", "tests/architecture/reverse-layer-imports.test.ts"]],
+  [
+    "npm",
+    [
+      "exec",
+      "--",
+      "vitest",
+      "run",
+      "tests/architecture/reverse-layer-imports.test.ts",
+      "tests/architecture/g3-owner-facades.test.ts",
+    ],
+  ],
   ["npm", ["run", "-s", "validate:architecture:incremental", "--", "--strict", "--json"]],
   ["npm", ["run", "-s", "validate:architecture:governance", "--", "--json"]],
   ["npm", ["run", "-s", "validate:taxonomy"]],
