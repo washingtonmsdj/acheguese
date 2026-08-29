@@ -1,63 +1,82 @@
-import { mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { classifySupabaseCliFailure } from "./supabase-cli-validation-state.mjs";
 import { parseSupabaseQueryRows } from "./supabase-cli-query-json.mjs";
 import { runSupabaseCli } from "./supabase-cli-runner.mjs";
 import {
-  classifyMigrationDrift,
-  parseSupabaseMigrationListOutput,
-} from "../migrations/supabase-migration-list-parser.mjs";
+  findDuplicateLocalVersions,
+  parseLocalMigrationFileName,
+  reconcileMigrationIdentities,
+} from "../migrations/migration-identity-reconciliation.mjs";
 
-interface MigrationDriftRow {
-  local: string | null;
-  remote: string | null;
-  timeUtc: string;
+interface LocalMigration {
+  version: string;
+  name: string;
+  fileName: string;
+  sql: string;
 }
 
-function runSupabaseMigrationList(): string {
-  const result = runSupabaseCli(["migration", "list", "--linked"], {
-    cwd: process.cwd(),
-  });
-
-  const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
-
-  if (result.error) {
-    throw new Error(
-      `LOCAL_FAILURE: falha ao executar Supabase CLI: ${result.error.message}`,
-    );
-  }
-
-  if (result.status !== 0) {
-    const validationState = classifySupabaseCliFailure(output);
-    throw new Error(
-      [
-        `${validationState}: nao foi possivel consultar migrations com \`supabase migration list --linked\`.`,
-        output.trim(),
-      ]
-        .filter(Boolean)
-        .join("\n"),
-    );
-  }
-
-  return output;
+interface RemoteMigration {
+  version: string;
+  name: string;
+  statements: string[];
 }
 
-function readLocalMigrationVersions(): Set<string> {
+function readLocalMigrations(): LocalMigration[] {
   const migrationsDir = join(process.cwd(), "supabase", "migrations");
-  return new Set(
-    readdirSync(migrationsDir)
-      .map((fileName) => fileName.match(/^(\d{14})_.+\.sql$/)?.[1])
-      .filter((version): version is string => Boolean(version)),
-  );
+  return readdirSync(migrationsDir)
+    .map((fileName) => {
+      const parsed = parseLocalMigrationFileName(fileName);
+      if (!parsed) return null;
+      return {
+        ...parsed,
+        sql: readFileSync(join(migrationsDir, fileName), "utf8"),
+      };
+    })
+    .filter((migration): migration is LocalMigration => Boolean(migration))
+    .sort((a, b) =>
+      a.version.localeCompare(b.version) || a.name.localeCompare(b.name),
+    );
 }
 
-function runSupabaseMigrationQuery(): Set<string> {
+function parseStatements(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((statement): statement is string => typeof statement === "string");
+  }
+
+  if (typeof value === "string") {
+    try {
+      const parsed: unknown = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parsed.filter(
+          (statement): statement is string => typeof statement === "string",
+        );
+      }
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+}
+
+function runSupabaseMigrationQuery(): RemoteMigration[] {
   const tempDir = mkdtempSync(join(tmpdir(), "achegue-migration-drift-"));
   const sqlPath = join(tempDir, "remote-migrations.sql");
   writeFileSync(
     sqlPath,
-    "select version::text as version from supabase_migrations.schema_migrations order by version;",
+    [
+      "select version::text as version, name, statements",
+      "from supabase_migrations.schema_migrations",
+      "order by version;",
+    ].join("\n"),
     "utf8",
   );
 
@@ -70,7 +89,7 @@ function runSupabaseMigrationQuery(): Set<string> {
     if (result.error || result.status !== 0) {
       throw new Error(
         [
-          `${classifySupabaseCliFailure(output)}: fallback read-only migration query failed.`,
+          `${classifySupabaseCliFailure(output)}: nao foi possivel consultar o historico detalhado de migrations.`,
           output.trim(),
         ]
           .filter(Boolean)
@@ -79,106 +98,128 @@ function runSupabaseMigrationQuery(): Set<string> {
     }
 
     const rows = parseSupabaseQueryRows(output);
-    const versions = rows
-      .map((row) => (typeof row?.version === "string" ? row.version : ""))
-      .filter((version) => /^\d{14}$/.test(version));
-    if (versions.length === 0) {
+    const migrations = rows
+      .map((row): RemoteMigration | null => {
+        const version = typeof row?.version === "string" ? row.version : "";
+        const name = typeof row?.name === "string" ? row.name : "";
+        if (!/^\d{14}$/.test(version) || !name) return null;
+        return {
+          version,
+          name,
+          statements: parseStatements(row?.statements),
+        };
+      })
+      .filter((migration): migration is RemoteMigration => Boolean(migration));
+
+    if (migrations.length === 0) {
       throw new Error(
-        "REMOTE_VALIDATION_REQUIRED: fallback returned no migration versions.",
+        "REMOTE_VALIDATION_REQUIRED: consulta remota nao retornou migrations validas.",
       );
     }
-    return new Set(versions);
+
+    return migrations;
   } finally {
     rmSync(tempDir, { recursive: true, force: true });
   }
 }
 
-function formatVersions(
-  rows: MigrationDriftRow[],
-  side: "local" | "remote",
-): string {
-  const versions = rows
-    .map((row) => row[side])
-    .filter((version): version is string => Boolean(version));
+function printAliases(aliases: Array<{ local: LocalMigration; remote: RemoteMigration }>) {
+  if (aliases.length === 0) return;
+  console.error(`Aliases de versao comprovados por nome + SQL (${aliases.length}):`);
+  for (const { local, remote } of aliases) {
+    console.error(
+      `- ${local.fileName} -> ${remote.version}_${remote.name}.sql`,
+    );
+  }
+  console.error("");
+}
 
-  return versions.length > 0 ? versions.join(", ") : "nenhuma";
+function printConflicts(conflicts: Array<Record<string, any>>) {
+  if (conflicts.length === 0) return;
+  console.error(`Conflitos de identidade/conteudo (${conflicts.length}):`);
+  for (const conflict of conflicts) {
+    const local = conflict.local as LocalMigration | undefined;
+    const remote = conflict.remote as RemoteMigration | undefined;
+    console.error(
+      `- ${conflict.kind}: local=${local?.fileName ?? "?"} remote=${remote ? `${remote.version}_${remote.name}` : "?"}`,
+    );
+  }
+  console.error("");
 }
 
 function main() {
-  let localOnly: MigrationDriftRow[];
-  let remoteOnly: MigrationDriftRow[];
+  const localMigrations = readLocalMigrations();
+  const duplicateLocalVersions = findDuplicateLocalVersions(localMigrations);
+  const remoteMigrations = runSupabaseMigrationQuery();
+  const reconciliation = reconcileMigrationIdentities(
+    localMigrations,
+    remoteMigrations,
+  ) as {
+    exact: Array<{ local: LocalMigration; remote: RemoteMigration }>;
+    aliases: Array<{ local: LocalMigration; remote: RemoteMigration }>;
+    conflicts: Array<Record<string, any>>;
+    localOnly: LocalMigration[];
+    remoteOnly: RemoteMigration[];
+  };
 
-  try {
-    const output = runSupabaseMigrationList();
-    const rows = parseSupabaseMigrationListOutput(output);
-    ({ localOnly, remoteOnly } = classifyMigrationDrift(rows));
-  } catch (migrationListError) {
-    try {
-      const localVersions = readLocalMigrationVersions();
-      const remoteVersions = runSupabaseMigrationQuery();
-      const versions = new Set([...localVersions, ...remoteVersions]);
-      localOnly = [...versions]
-        .filter(
-          (version) =>
-            localVersions.has(version) && !remoteVersions.has(version),
-        )
-        .map((version) => ({ local: version, remote: null, timeUtc: "" }));
-      remoteOnly = [...versions]
-        .filter(
-          (version) =>
-            remoteVersions.has(version) && !localVersions.has(version),
-        )
-        .map((version) => ({ local: null, remote: version, timeUtc: "" }));
-      console.warn(
-        "WARN: `supabase migration list --linked` indisponivel; drift reconciliado por query read-only do historico remoto.",
-      );
-    } catch (fallbackError) {
-      throw new Error(
-        [
-          migrationListError instanceof Error
-            ? migrationListError.message
-            : String(migrationListError),
-          fallbackError instanceof Error
-            ? fallbackError.message
-            : String(fallbackError),
-        ].join("\n"),
-      );
-    }
-  }
+  const clean =
+    duplicateLocalVersions.length === 0 &&
+    reconciliation.aliases.length === 0 &&
+    reconciliation.conflicts.length === 0 &&
+    reconciliation.localOnly.length === 0 &&
+    reconciliation.remoteOnly.length === 0;
 
-  if (localOnly.length === 0 && remoteOnly.length === 0) {
+  if (clean) {
     console.log(
-      "PASS: historico de migrations local/remoto esta sincronizado.",
+      `PASS: ${reconciliation.exact.length} migrations locais/remotas estao em paridade de versao e nome.`,
     );
     return;
   }
 
   console.error(
-    "LOCAL_FAILURE: drift de migrations Supabase detectado contra o projeto remoto linkado.\n",
+    "LOCAL_FAILURE: drift de identidade de migrations Supabase detectado.\n",
   );
-  console.error(`Remotas ausentes localmente (${remoteOnly.length}):`);
-  console.error(formatVersions(remoteOnly, "remote"));
-  console.error("");
-  console.error(`Locais ausentes no remoto (${localOnly.length}):`);
-  console.error(formatVersions(localOnly, "local"));
-  console.error("");
-  if (remoteOnly.length > 0) {
+
+  if (duplicateLocalVersions.length > 0) {
     console.error(
-      [
-        "Nao execute `supabase db push --linked` enquanto o drift nao for revisado.",
-        "Primeiro recupere ou reconcilie as migrations remotas ausentes localmente,",
-        "depois rode `supabase db push --linked --dry-run` novamente.",
-      ].join(" "),
+      `Versoes locais duplicadas (${duplicateLocalVersions.length}):`,
     );
-  } else {
-    console.error(
-      [
-        "Nao execute release enquanto houver migrations locais pendentes no remoto.",
-        "Revise o plano com `supabase db push --linked --dry-run --include-all`",
-        "e aplique ou reconcilie o lote pelo processo de deploy aprovado.",
-      ].join(" "),
-    );
+    for (const duplicate of duplicateLocalVersions) {
+      console.error(`- ${duplicate.version}: ${duplicate.files.join(", ")}`);
+    }
+    console.error("");
   }
+
+  printAliases(reconciliation.aliases);
+  printConflicts(reconciliation.conflicts);
+
+  if (reconciliation.remoteOnly.length > 0) {
+    console.error(
+      `Remotas sem identidade local reconciliada (${reconciliation.remoteOnly.length}):`,
+    );
+    for (const migration of reconciliation.remoteOnly) {
+      console.error(`- ${migration.version}_${migration.name}`);
+    }
+    console.error("");
+  }
+
+  if (reconciliation.localOnly.length > 0) {
+    console.error(
+      `Locais sem identidade remota reconciliada (${reconciliation.localOnly.length}):`,
+    );
+    for (const migration of reconciliation.localOnly) {
+      console.error(`- ${migration.fileName}`);
+    }
+    console.error("");
+  }
+
+  console.error(
+    [
+      "Nao execute `supabase db push --linked` enquanto este validator falhar.",
+      "Aliases comprovados devem ser reconciliados alinhando o filename local a versao registrada no remoto, sem alterar o SQL.",
+      "Conflitos de conteudo, nomes ambiguos e objetos local/remote-only exigem revisao manual de provenance.",
+    ].join(" "),
+  );
 
   process.exit(1);
 }
