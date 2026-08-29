@@ -6,6 +6,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
+import { ProfileMembersService } from '@/core/profiles/services/multi-profile/profileMembersService';
 import type { BusinessDataRecord } from '../types';
 import { EntityStatus } from '@/shared/types/enums';
 
@@ -246,21 +247,21 @@ export class NetworkService {
       throw new Error(`Falha ao criar brand_hub: ${hubErr?.message}`);
     }
 
-    // 4. Adicionar o usuário como owner do brand_hub
-    const { error: memberErr } = await this.adminDb()
-      .from<{ id?: string }>('profile_members')
-      .insert({
-        profile_id: hubProfile.id,
-        user_id: userId,
-        role: 'owner',
-      });
+    // 4. Adicionar o usuário como owner do brand_hub via owner canônico de membership
+    const memberResult = await ProfileMembersService.addMember(
+      hubProfile.id,
+      userId,
+      'owner',
+    );
 
-    if (memberErr) {
+    if (!memberResult.success) {
       // Rollback: remover hub e perfil criados
       await this.adminDb().from('business_data').delete().eq('id', hub.id);
       
       await profileService.deleteProfile(hubProfile.id);
-      throw new Error(`Falha ao criar vínculo profile_members: ${memberErr.message}`);
+      throw new Error(
+        `Falha ao criar vínculo profile_members: ${memberResult.error ?? 'erro desconhecido'}`,
+      );
     }
 
     // 5. Converter standalone → branch (mantém o profile_id original)
@@ -276,7 +277,7 @@ export class NetworkService {
 
     if (convertErr) {
       // Rollback: remover hub, perfil e vínculo criados
-      await this.adminDb().from('profile_members').delete().eq('profile_id', hubProfile.id);
+      await ProfileMembersService.removeMember(hubProfile.id, userId);
       await this.adminDb().from('business_data').delete().eq('id', hub.id);
       
       await profileService.deleteProfile(hubProfile.id);

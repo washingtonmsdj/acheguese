@@ -12,7 +12,6 @@ const DIRECT_PROFILE_MEMBERS_RE =
 const ALLOWED_DIRECT_PROFILE_MEMBER_OWNERS = [
   "src/core/admin/services/AdminProfileGovernanceLoaders.ts",
   "src/core/admin/services/AdminProfileGovernanceService.ts",
-  "src/core/business/services/NetworkService.ts",
   "src/core/profiles/services/multi-profile/profileMembersService.ts",
 ] as const;
 
@@ -88,6 +87,17 @@ describe("G4 profile membership SSOT", () => {
     expect(vagas).toContain("ProfileMembersService.getActiveRoleResult(");
     expect(vagas).toContain('return this.denied("UNKNOWN", isAdmin)');
     expect(vagas).not.toMatch(DIRECT_PROFILE_MEMBERS_RE);
+  });
+
+  it("keeps network membership writes delegated to the membership owner", () => {
+    const network = fs.readFileSync(
+      path.join(ROOT, "src/core/business/services/NetworkService.ts"),
+      "utf8",
+    );
+
+    expect(network).toContain("ProfileMembersService.addMember(");
+    expect(network).toContain("ProfileMembersService.removeMember(");
+    expect(network).not.toMatch(DIRECT_PROFILE_MEMBERS_RE);
   });
 
   it("tracks every remaining direct profile_members runtime owner explicitly", () => {
