@@ -11,7 +11,7 @@
 import type { ReactNode } from 'react';
 import { ArrowLeft, Bell, Building2, Compass, Heart, Home, MapPin, Search, UserCircle2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LAUNCH_URLS } from '@/config/territory';
+import { LAUNCH_URLS } from '@/core/routing/config/territory';
 
 interface EmpresaDetailLayoutProps {
   readonly children: ReactNode;
