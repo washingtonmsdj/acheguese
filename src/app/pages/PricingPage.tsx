@@ -1,11 +1,6 @@
 /**
- * ══════════════════════════════════════════════════════════════════════════
- * PRICING PAGE
- * ══════════════════════════════════════════════════════════════════════════
- * 
- * Página de planos e preços com integração ao Stripe.
- * 
- * ══════════════════════════════════════════════════════════════════════════
+ * Página pública de planos e preços com integração ao Stripe.
+ * O mesmo catálogo publicado alimenta esta tela e o checkout.
  */
 import { logger } from '@/shared/utils/logger';
 import { useState } from 'react';
@@ -18,6 +13,7 @@ import { useSubscription } from '@/core/billing/hooks/useSubscription';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
+
 export default function PricingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -31,10 +27,7 @@ export default function PricingPage() {
       return;
     }
 
-    if (planCode === 'free') {
-      // Plano free não precisa de checkout
-      return;
-    }
+    if (planCode === 'free') return;
 
     setLoadingPlan(planCode);
     try {
@@ -60,7 +53,6 @@ export default function PricingPage() {
 
   return (
     <div className="container mx-auto px-4 py-16">
-      {/* Header */}
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold mb-4">
           Escolha o plano ideal para você
@@ -70,21 +62,19 @@ export default function PricingPage() {
         </p>
       </div>
 
-      {/* Plans Grid */}
       <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
         {plans?.map((plan) => {
           const isCurrentPlan = currentPlanCode === plan.code;
-          const isFeatured = plan.is_featured;
           const features = Array.isArray(plan.features) ? plan.features : [];
 
           return (
             <Card
               key={plan.code}
               className={`relative ${
-                isFeatured ? 'border-primary shadow-lg scale-105' : ''
+                plan.isFeatured ? 'border-primary shadow-lg scale-105' : ''
               }`}
             >
-              {isFeatured && (
+              {plan.isFeatured && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                   <Badge className="bg-primary text-primary-foreground px-4 py-1">
                     <Sparkles className="h-3 w-3 mr-1" />
@@ -99,13 +89,12 @@ export default function PricingPage() {
               </CardHeader>
 
               <CardContent className="space-y-6">
-                {/* Price */}
                 <div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-bold">
-                      {plan.price_display}
+                      {plan.priceDisplay}
                     </span>
-                    {plan.billing_period === 'monthly' && (
+                    {plan.billingPeriod === 'monthly' && (
                       <span className="text-muted-foreground">/mês</span>
                     )}
                   </div>
@@ -116,7 +105,6 @@ export default function PricingPage() {
                   )}
                 </div>
 
-                {/* Features */}
                 <ul className="space-y-3">
                   {features.map((feature: string, index: number) => (
                     <li key={index} className="flex items-start gap-2">
@@ -129,17 +117,13 @@ export default function PricingPage() {
 
               <CardFooter>
                 {isCurrentPlan ? (
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    disabled
-                  >
+                  <Button variant="outline" className="w-full" disabled>
                     Plano Atual
                   </Button>
                 ) : (
                   <Button
                     className="w-full"
-                    variant={isFeatured ? 'default' : 'outline'}
+                    variant={plan.isFeatured ? 'default' : 'outline'}
                     onClick={() => handleSelectPlan(plan.code)}
                     disabled={loadingPlan === plan.code}
                   >
@@ -161,7 +145,6 @@ export default function PricingPage() {
         })}
       </div>
 
-      {/* FAQ or Additional Info */}
       <div className="mt-16 text-center">
         <p className="text-muted-foreground">
           Todos os planos incluem suporte por email.{' '}
