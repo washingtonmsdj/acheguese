@@ -65,7 +65,7 @@ Toda Authority deve declarar:
 O plano usado para construir a primeira versao da Security Authority fica
 preservado apenas como evidencia historica de implementacao:
 
-- [Security Authority - plano de implementacao](../../plans/SECURITY_AUTHORITY_IMPLEMENTATION_PLAN.md)
+- [Security Authority - plano de implementacao](../../10-archive/plans/SECURITY_AUTHORITY_IMPLEMENTATION_PLAN.md)
 
 Esse plano nao e fonte operacional atual e paths/comandos registrados nele podem
 representar o estado da epoca. Para regras, tooling e comandos vigentes, usar

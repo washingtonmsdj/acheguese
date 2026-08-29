@@ -16,4 +16,4 @@ trabalho sem depender do historico da conversa.
 - [CP-016 - Consolidacao de midia publica no Media Asset](./CP-016_MEDIA_ASSET_CONTINUATION.md)
 
 O plano mestre relacionado permanece em
-[`plans/CORE_PLATFORM_CONSOLIDATION_PLAN.md`](../plans/CORE_PLATFORM_CONSOLIDATION_PLAN.md).
+[`docs/08-roadmap/CORE_PLATFORM_CONSOLIDATION_PLAN.md`](../CORE_PLATFORM_CONSOLIDATION_PLAN.md).

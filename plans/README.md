@@ -1,37 +1,41 @@
-# Planos do Projeto
+# Planos do Projeto — root legado em retirada
 
-Status: transição controlada para `docs/**`
-Data: 2026-08-28
+Status: TRANSITORIO — G2
+Data de reorganizacao: 2026-08-29
 
-Esta pasta é temporária durante a reorganização G2. Planos ativos devem terminar em `docs/08-roadmap/**`; planos concluídos devem terminar em `docs/10-archive/plans/**`. Nenhum plano substitui os SSOTs canônicos do projeto.
+`plans/` nao e mais owner de novos planos. Nao adicionar arquivos aqui.
 
-## Planos ativos — ainda no root temporário
+## Roadmaps ativos canonicos
 
-- [Core Platform Consolidation](./CORE_PLATFORM_CONSOLIDATION_PLAN.md)
-- [Security Authority - plano de implementação](./SECURITY_AUTHORITY_IMPLEMENTATION_PLAN.md)
-- [Community Scale Readiness](./COMMUNITY_SCALE_READINESS_PLAN.md)
+- `docs/08-roadmap/CORE_PLATFORM_CONSOLIDATION_PLAN.md`
+- `docs/08-roadmap/COMMUNITY_SCALE_READINESS_PLAN.md`
 
-Esses três ainda possuem referências operacionais vivas e serão movidos para `docs/08-roadmap/**` somente com atualização atômica de seus consumidores.
+## Historico concluido
 
-## Planos concluídos — arquivados
+Planos de implementacao concluidos pertencem a `docs/10-archive/plans/`.
 
-- [Community Page Concept - implementação](../docs/10-archive/plans/COMMUNITY_PAGE_CONCEPT_IMPLEMENTATION_PLAN.md)
-- [Community Persistent Shell - implementação](../docs/10-archive/plans/COMMUNITY_PERSISTENT_SHELL_IMPLEMENTATION_PLAN.md)
-- [Community Production Hardening](../docs/10-archive/plans/COMMUNITY_PRODUCTION_HARDENING_PLAN.md)
-- [Home real, anúncios, ranking e SSOT](../docs/10-archive/plans/HOME_REAL_PRODUCT_COMPLETION_PLAN.md)
+Nesta reorganizacao foram classificados para archive, entre outros:
 
-## Planos concluídos — aguardando migração coordenada
+- `SECURITY_AUTHORITY_IMPLEMENTATION_PLAN.md`;
+- `COMMUNITY_CONNECTORS_RELIABILITY_PLAN.md`;
+- `COMMUNITY_PAGE_CONCEPT_IMPLEMENTATION_PLAN.md`;
+- `COMMUNITY_PERSISTENT_SHELL_IMPLEMENTATION_PLAN.md`;
+- `COMMUNITY_PRODUCTION_HARDENING_PLAN.md`;
+- `HOME_REAL_PRODUCT_COMPLETION_PLAN.md`.
 
-- [Community First Architecture - plano de arquitetura](./COMMUNITY_FIRST_ARCHITECTURE_PLAN.md) — concluído, mas ainda referenciado por guards/registry; será arquivado no mesmo corte que atualizar esses consumidores.
-- [Community Connectors Reliability](./COMMUNITY_CONNECTORS_RELIABILITY_PLAN.md) — concluído, mas ainda referenciado pelo plano ativo de Security Authority; será arquivado quando esse plano for reconciliado.
+## Passivo ainda presente neste root
 
-## Regras Para Novos Planos
+### `COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`
 
-- Não criar novos arquivos em `plans/**`.
-- Roadmap ativo pertence a `docs/08-roadmap/**`.
-- Histórico concluído pertence a `docs/10-archive/plans/**`.
-- Registrar objetivo, escopo, fora de escopo e definição de pronto.
-- Apontar para docs, tooling, migrations e testes canônicos existentes.
-- Evitar criar fonte paralela de verdade.
-- Separar claramente plano de implementação real.
-- Manter checklist executável para continuidade futura.
+Plano concluido que ainda e referenciado por `tools/architecture/validate-project-taxonomy.ts` e `tools/architecture/architecture-registry.ts`. Deve ser movido para `docs/10-archive/plans/` somente no mesmo corte que migrar esses consumidores tecnicos.
+
+### `CORE_PLATFORM_CONSOLIDATION_PLAN.md`
+
+Ponteiro temporario para o owner canonico em `docs/08-roadmap/CORE_PLATFORM_CONSOLIDATION_PLAN.md`. Permanece apenas enquanto manifests documentais ainda usam literalmente o path antigo.
+
+## Gate para remover `plans/`
+
+1. migrar os consumidores tecnicos de `COMMUNITY_FIRST_ARCHITECTURE_PLAN.md` para o archive;
+2. migrar os consumidores restantes do ponteiro Core Platform para `docs/08-roadmap/`;
+3. apagar os dois paths legados e este README;
+4. adicionar `plans/` ao ratchet de roots aposentados da reorganizacao global.
