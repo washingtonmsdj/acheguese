@@ -2,10 +2,5 @@
   "version": 1,
   "generatedFrom": "G0 repository census",
   "policy": "Temporary runtime module -> integrations exceptions. Entries may only decrease; stale entries are failures.",
-  "entries": [
-    {
-      "file": "src/modules/classifieds/jobs/services/VagasService.ts",
-      "specifier": "@/integrations/supabase"
-    }
-  ]
+  "entries": []
 }
