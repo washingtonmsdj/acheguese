@@ -3,7 +3,7 @@ import {
   type BusinessUrlContext,
 } from "@/core/business/services/BusinessUrlService";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
-import { createTerritorialGroupRepository } from "@/core/location/repositories/createTerritorialGroupRepository";
+import { territorialGroupService } from "@/core/territorial";
 import { resolveCommunityPublicAliasTerritory } from "@/core/routing/services/CommunityPublicAliasTerritoryResolver";
 
 export interface BusinessEntityRouteParams {
@@ -52,7 +52,7 @@ async function businessBelongsToTerritorialGroup(
   const location = await createLocationRepository().findByPath(business.geographic_path);
   if (!location?.id) return false;
 
-  return createTerritorialGroupRepository().hasMember(groupId, location.id);
+  return territorialGroupService.isMemberOfGroup(location.id, groupId);
 }
 
 function businessUsesTerritorialGroupPath(
