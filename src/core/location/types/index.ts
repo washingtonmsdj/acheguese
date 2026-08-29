@@ -1,8 +1,7 @@
 /**
  * Location Module - Public Contracts
- * 
- * SSOT territorial do produto.
- * Etapa 2: Contratos publicos
+ *
+ * Canonical contracts for the geographic hierarchy.
  */
 
 // ============================================
@@ -140,39 +139,18 @@ export interface GetLocationTreeOutput {
 }
 
 // ============================================
-// TERRITORIAL GROUP TYPES
+// TERRITORIAL GROUP COMPATIBILITY TYPES
 // ============================================
+// Groups are owned by core/territorial. These exports remain temporarily so
+// existing consumers of @/core/location/types do not break during G4 cleanup.
 
-export const TERRITORIAL_GROUP_STATUS = {
-  ACTIVE: 'active',
-  INACTIVE: 'inactive',
-} as const;
-
-export type TerritorialGroupStatus =
-  (typeof TERRITORIAL_GROUP_STATUS)[keyof typeof TERRITORIAL_GROUP_STATUS];
-
-export interface TerritorialGroup {
-  id: string;
-  slug: string;
-  name: string;
-  description: string | null;
-  /** Cidade âncora — facilitador operacional, não hierarquia */
-  anchor_city_id: string;
-  status: TerritorialGroupStatus;
-  metadata: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface TerritorialGroupMember {
-  group_id: string;
-  location_id: string;
-  created_at: string;
-}
-
-export interface TerritorialGroupWithMembers extends TerritorialGroup {
-  members: Location[];
-}
+export { TERRITORIAL_GROUP_STATUS } from '@/core/territorial/contracts';
+export type {
+  TerritorialGroupStatus,
+  TerritorialGroup,
+  TerritorialGroupMember,
+  TerritorialGroupWithMembers,
+} from '@/core/territorial/contracts';
 
 // ============================================
 // ACTIVE TERRITORY
