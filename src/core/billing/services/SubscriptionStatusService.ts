@@ -1,4 +1,5 @@
 type SubscriptionShape = {
+  status_v2?: string | null;
   status?: string | null;
   plan_code?: string | null;
   cancel_at_period_end?: boolean | null;
@@ -6,10 +7,10 @@ type SubscriptionShape = {
 
 export class SubscriptionStatusService {
   static getStatus(subscription: SubscriptionShape | null | undefined): string {
-    if (!subscription || typeof subscription.status !== "string") {
-      return "inactive";
-    }
-    return subscription.status;
+    if (!subscription) return "inactive";
+    if (typeof subscription.status_v2 === "string") return subscription.status_v2;
+    if (typeof subscription.status === "string") return subscription.status;
+    return "inactive";
   }
 
   static isActive(status: string): boolean {
@@ -25,7 +26,11 @@ export class SubscriptionStatusService {
   }
 
   static isCanceled(subscription: SubscriptionShape | null | undefined): boolean {
-    return Boolean(subscription && subscription.cancel_at_period_end === true);
+    return Boolean(
+      subscription &&
+        (this.getStatus(subscription) === "canceled" ||
+          subscription.cancel_at_period_end === true),
+    );
   }
 
   static planCode(subscription: SubscriptionShape | null | undefined): string {
@@ -38,4 +43,3 @@ export class SubscriptionStatusService {
     return status;
   }
 }
-
