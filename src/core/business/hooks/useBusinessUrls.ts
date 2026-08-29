@@ -7,7 +7,7 @@
  * publica em /empresas.
  */
 
-import { LAUNCH_URLS } from '@/config/territory';
+import { LAUNCH_URLS } from '@/core/routing/config/territory';
 import { useLocation } from 'react-router-dom';
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
