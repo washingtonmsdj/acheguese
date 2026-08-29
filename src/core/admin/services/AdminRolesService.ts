@@ -1,5 +1,10 @@
 import { supabase } from "@/integrations/supabase";
-import type { Database, Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase";
+import type {
+  Database,
+  Tables,
+  TablesInsert,
+  TablesUpdate,
+} from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
 
@@ -11,15 +16,14 @@ type QueryPayload<TRow> = {
   count?: number | null;
 };
 
-type SingleQueryPayload<TRow> = {
-  data: TRow | null;
-  error: ErrorLike;
-  count?: number | null;
-};
-
 type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
-  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
-  insert(values: Record<string, unknown> | readonly Record<string, unknown>[]): TableClient<TRow>;
+  select(
+    columns?: string,
+    options?: { count?: "exact"; head?: boolean },
+  ): TableClient<TRow>;
+  insert(
+    values: Record<string, unknown> | readonly Record<string, unknown>[],
+  ): TableClient<TRow>;
   update(values: Record<string, unknown>): TableClient<TRow>;
   eq(column: string, value: unknown): TableClient<TRow>;
   or(filters: string): TableClient<TRow>;
@@ -27,7 +31,6 @@ type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
   lte(column: string, value: unknown): TableClient<TRow>;
   order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
   range(from: number, to: number): TableClient<TRow>;
-  maybeSingle(): Promise<SingleQueryPayload<TRow>>;
 };
 
 type AdminRolesDbClient = {
@@ -92,9 +95,7 @@ function isUserSummaryArray(
 function normalizeUserRelation(
   value: UserRoleWithRelationsRow["user"] | UserRoleWithRelationsRow["granter"],
 ): UserSummary | null {
-  if (isUserSummaryArray(value)) {
-    return value[0] ?? null;
-  }
+  if (isUserSummaryArray(value)) return value[0] ?? null;
   return value ?? null;
 }
 
@@ -147,23 +148,14 @@ function toUserRoleInsert(params: {
   };
 }
 
+/**
+ * Administrative owner for role inventory, lifecycle and history.
+ *
+ * It is intentionally NOT an authorization-decision service. Runtime checks
+ * (`hasRole`, `isAdmin`, `getUserRoles`) belong to core/authorization/RoleService
+ * and the role-rpc broker, which apply the canonical validity predicate.
+ */
 class AdminRolesServiceClass {
-  async getUserRoles(userId: string): Promise<UserRole[]> {
-    try {
-      const { data, error } = await db
-        .from<UserRoleRow>("user_roles")
-        .select("*")
-        .eq("user_id", userId)
-        .eq("is_active", true);
-
-      if (error) throw error;
-      return (data ?? []).map(mapUserRole);
-    } catch (error) {
-      logger.error("AdminRolesService.getUserRoles", error as Error, { userId });
-      return [];
-    }
-  }
-
   async getRolesList(): Promise<UserRole[]> {
     try {
       const { data, error } = await db
@@ -179,30 +171,9 @@ class AdminRolesServiceClass {
     }
   }
 
-  async hasRole(userId: string, role: string): Promise<boolean> {
-    try {
-      const { data, error } = await db
-        .from<Pick<UserRoleRow, "id">>("user_roles")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("role", role)
-        .eq("is_active", true)
-        .maybeSingle();
-
-      if (error) throw error;
-      return Boolean(data);
-    } catch (error) {
-      logger.error("AdminRolesService.hasRole", error as Error, { userId, role });
-      return false;
-    }
-  }
-
   async getStats(): Promise<RoleStats> {
     try {
-      const { data, error } = await db
-        .from<UserRoleRow>("user_roles")
-        .select("*");
-
+      const { data, error } = await db.from<UserRoleRow>("user_roles").select("*");
       if (error) throw error;
 
       const roles = data ?? [];
@@ -216,7 +187,9 @@ class AdminRolesServiceClass {
           (role) => Boolean(role.expires_at && new Date(role.expires_at) < now),
         ).length,
         byRole: {},
-        recentGrants: roles.filter((role) => new Date(role.granted_at) > last7Days).length,
+        recentGrants: roles.filter(
+          (role) => new Date(role.granted_at) > last7Days,
+        ).length,
       };
 
       for (const role of roles) {
@@ -230,13 +203,15 @@ class AdminRolesServiceClass {
     }
   }
 
-  async getAllRoles(params: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    role?: string;
-    isActive?: boolean;
-  } = {}) {
+  async getAllRoles(
+    params: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      role?: string;
+      isActive?: boolean;
+    } = {},
+  ) {
     try {
       const { page = 1, limit = 20, search, role, isActive } = params;
 
@@ -257,18 +232,10 @@ class AdminRolesServiceClass {
 
       if (search) {
         const searchFilter = buildSafeOrILikeFilter(["user.email"], search);
-        if (searchFilter) {
-          query = query.or(searchFilter);
-        }
+        if (searchFilter) query = query.or(searchFilter);
       }
-
-      if (role) {
-        query = query.eq("role", role);
-      }
-
-      if (isActive !== undefined) {
-        query = query.eq("is_active", isActive);
-      }
+      if (role) query = query.eq("role", role);
+      if (isActive !== undefined) query = query.eq("is_active", isActive);
 
       const from = (page - 1) * limit;
       const to = from + limit - 1;
@@ -304,10 +271,7 @@ class AdminRolesServiceClass {
   }): Promise<boolean> {
     try {
       const payload = toUserRoleInsert(params);
-      const { error } = await db
-        .from<UserRoleRow>("user_roles")
-        .insert(payload);
-
+      const { error } = await db.from<UserRoleRow>("user_roles").insert(payload);
       if (error) throw error;
       return true;
     } catch (error) {
@@ -356,7 +320,9 @@ class AdminRolesServiceClass {
       if (error) throw error;
       return (data ?? []).map(mapRoleHistory);
     } catch (error) {
-      logger.error("AdminRolesService.getUserRoleHistory", error as Error, { userId });
+      logger.error("AdminRolesService.getUserRoleHistory", error as Error, {
+        userId,
+      });
       return [];
     }
   }
@@ -366,15 +332,17 @@ class AdminRolesServiceClass {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + daysAhead);
 
-      const { data, error } = await db.from<UserRoleWithRelationsRow>("user_roles").select(
-        `
+      const { data, error } = await db
+        .from<UserRoleWithRelationsRow>("user_roles")
+        .select(
+          `
           *,
           user:auth.users!user_id(
             id,
             email
           )
         `,
-      )
+        )
         .eq("is_active", true)
         .not("expires_at", "is", null)
         .lte("expires_at", futureDate.toISOString())
@@ -387,7 +355,9 @@ class AdminRolesServiceClass {
         user: normalizeUserRelation(row.user),
       }));
     } catch (error) {
-      logger.error("AdminRolesService.getExpiringRoles", error as Error, { daysAhead });
+      logger.error("AdminRolesService.getExpiringRoles", error as Error, {
+        daysAhead,
+      });
       return [];
     }
   }
@@ -448,7 +418,6 @@ class AdminRolesServiceClass {
       const { error } = await db
         .from<RoleHistoryRow>("role_history")
         .insert(payload);
-
       if (error) throw error;
     } catch (error) {
       logger.error("AdminRolesService.logRoleHistory", error as Error, params);
@@ -457,15 +426,17 @@ class AdminRolesServiceClass {
 
   async getUsersByRole(role: string) {
     try {
-      const { data, error } = await db.from<UserRoleWithRelationsRow>("user_roles").select(
-        `
+      const { data, error } = await db
+        .from<UserRoleWithRelationsRow>("user_roles")
+        .select(
+          `
           *,
           user:auth.users!user_id(
             id,
             email
           )
         `,
-      )
+        )
         .eq("role", role)
         .eq("is_active", true);
 
