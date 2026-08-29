@@ -1,7 +1,8 @@
 /**
  * Core Auth Module
  *
- * Exports públicos do módulo de autenticação
+ * Exports públicos do módulo de autenticação.
+ * Estado de sessão/perfil pertence a core/session.
  */
 
 // Services
@@ -16,4 +17,4 @@ export type {
 export { AuthError } from "./services";
 
 // Hooks
-export { useAuth, useUser, useSession } from "./hooks";
+export { useAuth } from "./hooks";
