@@ -9,6 +9,8 @@ const INTERACTION_ENUM_MIGRATION =
   "20260818222702_add_business_interaction_analytics_event_type.sql";
 const ANON_SESSION_MIGRATION =
   "20260825201000_require_anonymous_analytics_session.sql";
+const READ_AUTHORITY_MIGRATION =
+  "20260829164446_repair_analytics_business_read_authority.sql";
 const LEGACY_TRACKING_WRAPPER = join(
   ROOT,
   "src",
@@ -93,7 +95,27 @@ describe("SEC-006 analytics authority hardening", () => {
     );
   });
 
-  it("requires anonymous analytics to remain session-bound and rate-limitable", () => {
+  it("repairs Business analytics reads through canonical profile management authority", () => {
+    const migration = migrationsFromBaseline().find(
+      ({ name }) => name === READ_AUTHORITY_MIGRATION,
+    );
+    expect(
+      migration,
+      `${READ_AUTHORITY_MIGRATION} must remain versioned`,
+    ).toBeDefined();
+
+    const sql = migration?.sql ?? "";
+    expect(sql).toContain("private.can_manage_profile(bd.profile_id)");
+    expect(sql).toContain("private.is_admin(auth.uid())");
+    expect(sql).toContain("TO authenticated");
+    expect(sql).toContain("REVOKE SELECT ON TABLE public.analytics_events FROM anon");
+    expect(sql).toContain("REVOKE SELECT ON TABLE public.analytics_daily_metrics FROM anon");
+    expect(sql).toMatch(/REVOKE ALL ON FUNCTION public\.get_analytics_metrics[\s\S]*FROM PUBLIC/i);
+    expect(sql).toMatch(/REVOKE ALL ON FUNCTION public\.get_recent_analytics_events[\s\S]*FROM PUBLIC/i);
+    expect(sql).not.toContain("business_data.profile_id = auth.uid()");
+  });
+
+  it("requires anonymous analytics writes to remain session-bound and rate-limitable", () => {
     const migration = migrationsFromBaseline().find(
       ({ name }) => name === ANON_SESSION_MIGRATION,
     );
