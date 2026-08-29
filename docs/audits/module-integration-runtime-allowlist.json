@@ -12,14 +12,6 @@
       "specifier": "@/integrations/supabase"
     },
     {
-      "file": "src/modules/classifieds/jobs/services/VagaReportService.ts",
-      "specifier": "@/integrations/supabase"
-    },
-    {
-      "file": "src/modules/classifieds/jobs/services/VagasPublishPermissionService.ts",
-      "specifier": "@/integrations/supabase"
-    },
-    {
       "file": "src/modules/classifieds/jobs/services/VagasService.ts",
       "specifier": "@/integrations/supabase"
     }
