@@ -1,11 +1,11 @@
 /**
  * ADMIN AUTH HELPER
- * Valida permissões administrativas para edge functions
+ * Valida permissoes administrativas para Edge Functions.
  *
- * SSOT: Tabela `user_roles` com campo `role_enum` (app_role)
- * Roles admin válidas: 'admin', 'super_admin'
- *
- * @see supabase/migrations/*_migrate_user_roles_to_new_structure.sql
+ * SSOT de decisao: public.get_user_roles(UUID), broker-only/service-role.
+ * A funcao aplica o contrato canonico de validade de role: ativa, nao
+ * revogada e nao expirada. Este adapter apenas autentica o bearer token e
+ * transforma o resultado canonico em AdminAuthResult.
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -45,14 +45,16 @@ export function getSupabaseAdminClient() {
   });
 }
 
+function resolveAdminRole(roles: unknown): AdminRole | null {
+  if (!Array.isArray(roles)) return null;
+  if (roles.includes('super_admin')) return 'super_admin';
+  if (roles.includes('admin')) return 'admin';
+  return null;
+}
+
 /**
  * Valida se o request vem de um admin (admin ou super_admin).
  * Retorna AdminAuthResult em caso de sucesso, Response em caso de falha.
- *
- * Uso:
- *   const auth = await requireAdmin(req);
- *   if (auth instanceof Response) return auth;
- *   const { userId, role } = auth;
  */
 export async function requireAdmin(req: Request): Promise<AdminAuthResult | Response> {
   const auditInfo = getAdminAuditInfo(req);
@@ -88,31 +90,15 @@ export async function requireAdmin(req: Request): Promise<AdminAuthResult | Resp
       return errorResponse('Invalid or expired token', 401);
     }
 
-    // SSOT: verificar roles em user_roles.
-    // A role só é válida enquanto estiver ativa, não revogada e não expirada.
-    const { data: roles, error: rolesError } = await supabase
-      .from('user_roles')
-      .select('role_enum, expires_at')
-      .eq('user_id', user.id)
-      .eq('is_active', true)
-      .is('revoked_at', null);
+    const { data: roles, error: rolesError } = await supabase.rpc('get_user_roles', {
+      _user_id: user.id,
+    });
 
     if (rolesError) {
       return errorResponse('Failed to verify permissions', 500);
     }
 
-    const nowMs = Date.now();
-    const adminRole = roles?.find(
-      (r: { role_enum: string; expires_at: string | null }) => {
-        const isAdminRole = r.role_enum === 'admin' || r.role_enum === 'super_admin';
-        if (!isAdminRole) return false;
-        if (r.expires_at === null) return true;
-
-        const expiresAt = Date.parse(r.expires_at);
-        return Number.isFinite(expiresAt) && expiresAt > nowMs;
-      },
-    );
-
+    const adminRole = resolveAdminRole(roles);
     if (!adminRole) {
       auditLog({
         timestamp: new Date().toISOString(),
@@ -132,14 +118,14 @@ export async function requireAdmin(req: Request): Promise<AdminAuthResult | Resp
       action: 'admin_auth_success',
       resource: req.url,
       status: 'success',
-      details: { role: adminRole.role_enum },
+      details: { role: adminRole },
       ...auditInfo,
     });
 
     return {
       isAdmin: true,
       userId: user.id,
-      role: adminRole.role_enum as AdminRole,
+      role: adminRole,
     };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
@@ -155,9 +141,7 @@ export async function requireAdmin(req: Request): Promise<AdminAuthResult | Resp
   }
 }
 
-/**
- * Variante que exige especificamente super_admin.
- */
+/** Variante que exige especificamente super_admin. */
 export async function requireSuperAdmin(req: Request): Promise<AdminAuthResult | Response> {
   const result = await requireAdmin(req);
   if (result instanceof Response) return result;
