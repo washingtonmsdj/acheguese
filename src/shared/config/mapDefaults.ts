@@ -1,5 +1,3 @@
-import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
-
 type PublicEnv = Partial<Record<string, string>>;
 
 export type SharedBoundingBox = [number, number, number, number];
@@ -20,6 +18,8 @@ function parseNumber(value: string | undefined, fallback: number): number {
 const latitude = parseNumber(publicEnv.VITE_DEFAULT_MAP_LATITUDE, -14.235);
 const longitude = parseNumber(publicEnv.VITE_DEFAULT_MAP_LONGITUDE, -51.9253);
 const boundsDelta = parseNumber(publicEnv.VITE_DEFAULT_MAP_BOUNDS_DELTA, 0.15);
+const launchCityName = publicEnv.VITE_LAUNCH_CITY_NAME?.trim() || "Território inicial";
+const launchState = (publicEnv.VITE_LAUNCH_STATE?.trim() || "").toUpperCase();
 
 export const MAP_TILE_STYLES = {
   streets: {
@@ -73,7 +73,7 @@ export const MAP_DEFAULT_BOUNDS: SharedBoundingBox = [
 export const MAP_DEFAULT_ZOOM = parseNumber(publicEnv.VITE_DEFAULT_MAP_ZOOM, 13);
 
 export const MAP_DEFAULT_LOCATION = {
-  city: publicEnv.VITE_DEFAULT_MAP_CITY ?? TERRITORY_CONFIG.launch.name,
-  region: publicEnv.VITE_DEFAULT_MAP_REGION ?? TERRITORY_CONFIG.launch.state.toUpperCase(),
+  city: publicEnv.VITE_DEFAULT_MAP_CITY ?? launchCityName,
+  region: publicEnv.VITE_DEFAULT_MAP_REGION ?? launchState,
   country: publicEnv.VITE_DEFAULT_MAP_COUNTRY ?? "Brasil",
 } as const;
