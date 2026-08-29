@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -22,6 +22,12 @@ describe("Classified Messaging SSOT", () => {
     expect(publicApi).toContain("classifiedMessagingService");
     expect(publicApi).not.toMatch(/\bmessagingService\b/);
     expect(service).not.toContain("class MessagingService");
+  });
+
+  it("keeps presentation surfaces out of the core messaging owner", () => {
+    for (const directory of ["components", "hooks", "pages"]) {
+      expect(existsSync(resolve(root, `src/core/messaging/${directory}`))).toBe(false);
+    }
   });
 
   it("keeps identity and bounded input enforcement in the server-owned read model", () => {
