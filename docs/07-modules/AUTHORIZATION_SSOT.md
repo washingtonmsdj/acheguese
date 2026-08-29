@@ -42,7 +42,7 @@ Ele nao expoe mais `hasRole()` nem `getUserRoles()` como APIs de decisao.
 roles validos de um usuario.
 
 O browser nao possui DELETE em `user_roles`; hard-delete foi retirado pela
-migration `20260829204500_harden_user_role_lifecycle_grants.sql`. INSERT e
+migration `20260829203227_harden_user_role_lifecycle_grants.sql`. INSERT e
 UPDATE permanecem governados por RLS de super_admin para o lifecycle
 administrativo existente.
 
@@ -96,7 +96,7 @@ regra atual; sincronizacao de bundle/deploy same-SHA pertence a G7.
 
 ## 6. Policies remotas
 
-A migration `20260829204000_consolidate_global_authorization_helpers.sql`
+A migration `20260829203016_consolidate_global_authorization_helpers.sql`
 removeu SQL cru de `user_roles` das policies globais conhecidas e as roteou aos
 helpers privados.
 
@@ -136,9 +136,9 @@ preview.
 - `tests/architecture/authorization-ssot.test.ts`;
 - `tests/security/global-role-read-validity-security.test.ts`;
 - `tests/security/rls-authorization-helpers-security.test.ts`;
-- migration `20260829203000_repair_get_user_roles_validity.sql`;
-- migration `20260829204000_consolidate_global_authorization_helpers.sql`;
-- migration `20260829204500_harden_user_role_lifecycle_grants.sql`;
+- migration `20260829202444_repair_get_user_roles_validity.sql`;
+- migration `20260829203016_consolidate_global_authorization_helpers.sql`;
+- migration `20260829203227_harden_user_role_lifecycle_grants.sql`;
 - verificacao remota em 2026-08-29: `get_user_roles` aplica validade completa;
 - verificacao remota: wrappers `auth_can_access_profile` e
   `group_can_manage_members` delegam a `private.*`;

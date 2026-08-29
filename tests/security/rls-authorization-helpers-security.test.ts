@@ -64,7 +64,7 @@ describe("rls authorization helpers security", () => {
 
   it("keeps public compatibility helpers as one-way private bridges", () => {
     const migration = readProjectFile(
-      "supabase/migrations/20260829204000_consolidate_global_authorization_helpers.sql",
+      "supabase/migrations/20260829203016_consolidate_global_authorization_helpers.sql",
     );
 
     expect(migration).toContain(
@@ -117,7 +117,7 @@ describe("rls authorization helpers security", () => {
 
   it("keeps hard-delete out of the browser role lifecycle", () => {
     const migration = readProjectFile(
-      "supabase/migrations/20260829204500_harden_user_role_lifecycle_grants.sql",
+      "supabase/migrations/20260829203227_harden_user_role_lifecycle_grants.sql",
     );
 
     expect(migration).toContain(

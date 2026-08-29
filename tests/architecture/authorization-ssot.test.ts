@@ -77,13 +77,13 @@ describe("Authorization SSOT", () => {
 
   it("repairs aggregate validity and consolidates RLS helpers", () => {
     const roleRepair = read(
-      "supabase/migrations/20260829203000_repair_get_user_roles_validity.sql",
+      "supabase/migrations/20260829202444_repair_get_user_roles_validity.sql",
     );
     const helperMigration = read(
-      "supabase/migrations/20260829204000_consolidate_global_authorization_helpers.sql",
+      "supabase/migrations/20260829203016_consolidate_global_authorization_helpers.sql",
     );
     const lifecycle = read(
-      "supabase/migrations/20260829204500_harden_user_role_lifecycle_grants.sql",
+      "supabase/migrations/20260829203227_harden_user_role_lifecycle_grants.sql",
     );
 
     for (const predicate of [

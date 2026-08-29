@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
 const REPAIR_MIGRATION =
-  "supabase/migrations/20260829203000_repair_get_user_roles_validity.sql";
+  "supabase/migrations/20260829202444_repair_get_user_roles_validity.sql";
 
 describe("G4 aggregate role-read validity", () => {
   it("keeps get_user_roles aligned with the canonical role validity predicate", () => {
