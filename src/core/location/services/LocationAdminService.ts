@@ -2,7 +2,9 @@
  * LocationAdminService
  *
  * Canonical admin service for locations domain.
- * Owns admin CRUD boundaries for location records.
+ * Owns structural CRUD for location records and non-territorial metadata edits.
+ * Territorial visibility flags are owned by core/territorial and its hardened
+ * Edge Functions; this service must preserve those flags on metadata updates.
  */
 
 import { supabase } from '@/integrations/supabase';
@@ -22,6 +24,7 @@ type QueryPayload<TRow> = {
 type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
   eq(column: string, value: unknown): TableClient<TRow>;
   insert(values: Record<string, unknown> | ReadonlyArray<Record<string, unknown>>): TableClient<TRow>;
+  select(columns?: string): TableClient<TRow>;
   update(values: Record<string, unknown>): TableClient<TRow>;
 };
 
@@ -35,8 +38,31 @@ type LocationUpdate = TablesUpdate<'locations'>;
 
 const locationAdminDb = supabase as unknown as LocationAdminDbClient;
 
+const TERRITORIAL_VISIBILITY_METADATA_KEYS = [
+  'is_selector_active',
+  'is_landing_enabled',
+  'is_navigable',
+] as const;
+
 function toJsonMetadata(metadata: LocationMetadata): Json {
   return metadata as Json;
+}
+
+function preserveTerritorialVisibilityMetadata(
+  currentMetadata: LocationMetadata,
+  requestedMetadata: LocationMetadata,
+): LocationMetadata {
+  const sanitized: LocationMetadata = { ...requestedMetadata };
+
+  for (const key of TERRITORIAL_VISIBILITY_METADATA_KEYS) {
+    if (Object.prototype.hasOwnProperty.call(currentMetadata, key)) {
+      sanitized[key] = currentMetadata[key];
+    } else {
+      delete sanitized[key];
+    }
+  }
+
+  return sanitized;
 }
 
 export type AdminLocationRecord = Location;
@@ -53,6 +79,7 @@ export interface CreateAdminLocationInput {
 
 export class LocationAdminService {
   private static readonly db = locationAdminDb;
+
   static async listLocations(): Promise<AdminLocationRecord[]> {
     const repository = createLocationRepository();
     const locations = await repository.findAll();
@@ -96,21 +123,53 @@ export class LocationAdminService {
     locationId: string,
     updates: Partial<Pick<AdminLocationRecord, 'name' | 'slug' | 'metadata'>>,
   ): Promise<void> {
+    let metadataForUpdate: LocationMetadata | undefined;
+    let expectedMetadata: LocationMetadata | undefined;
+
+    if (updates.metadata !== undefined) {
+      const repository = createLocationRepository();
+      const currentLocation = await repository.findById(locationId);
+
+      if (!currentLocation) {
+        throw new Error(`Location ${locationId} not found`);
+      }
+
+      expectedMetadata = currentLocation.metadata;
+      metadataForUpdate = preserveTerritorialVisibilityMetadata(
+        currentLocation.metadata,
+        updates.metadata,
+      );
+    }
+
     const payload: LocationUpdate = {
       ...(updates.name !== undefined ? { name: updates.name } : {}),
       ...(updates.slug !== undefined ? { slug: updates.slug } : {}),
-      ...(updates.metadata !== undefined ? { metadata: toJsonMetadata(updates.metadata) } : {}),
+      ...(metadataForUpdate !== undefined ? { metadata: toJsonMetadata(metadataForUpdate) } : {}),
     };
 
-    const { error } = await this.db
+    let query = this.db
       .from<LocationRow>('locations')
       .update(payload)
       .eq('id', locationId);
 
+    // Metadata visibility is updated independently by core/territorial. The
+    // optimistic metadata predicate prevents this broad JSONB update from
+    // overwriting a concurrent visibility mutation performed by the Edge Function.
+    if (expectedMetadata !== undefined) {
+      query = query
+        .eq('metadata', toJsonMetadata(expectedMetadata))
+        .select('id');
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
+
+    if (expectedMetadata !== undefined && (!data || data.length === 0)) {
+      throw new Error(
+        `Location ${locationId} metadata changed concurrently; reload before retrying the admin update.`,
+      );
+    }
   }
 }
 
 export const locationAdminService = LocationAdminService;
-
-
