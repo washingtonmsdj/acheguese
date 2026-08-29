@@ -3,7 +3,8 @@
  *
  * Mostra quando um recurso está bloqueado pelo plano atual.
  * O módulo conversa com uma oferta genérica do core billing e não com plan code
- * direto.
+ * direto. Nome/preco do plano vem do owner canonico de billing; nao existe
+ * fallback monetario hardcoded no modulo.
  */
 
 import { useBillingPlan } from '@/core/billing/hooks/useBillingPlans';
@@ -34,7 +35,7 @@ export function UpgradePrompt({
   const { data: planData } = useBillingPlan(offer.planCode);
 
   const planName = planData?.name || offer.label;
-  const planPrice = planData?.priceDisplay || offer.priceFallback;
+  const planPrice = planData?.priceDisplay || 'Preço indisponível';
   const planIcon = offer.icon === 'crown' ? <Crown className="w-5 h-5" /> : <Zap className="w-5 h-5" />;
 
   return (
