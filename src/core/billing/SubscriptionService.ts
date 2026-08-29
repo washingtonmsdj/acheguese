@@ -1,11 +1,15 @@
 /**
- * CORE BILLING SUBSCRIPTION SERVICE
+ * CORE BILLING BUSINESS SUBSCRIPTION READER
  *
- * SSOT: user_subscriptions.
+ * SSOT de persistencia: public.user_subscriptions.
+ * Leitura de assinatura de Business fica aqui. Mudancas comerciais nao escrevem
+ * a tabela pelo browser: upgrade passa pelo Stripe Checkout e downgrade/gestao
+ * passa pelo Stripe Customer Portal; o webhook server-side materializa o estado.
  */
 import { logger } from "@/shared/utils/logger";
+import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
 import { supabase } from "@/integrations/supabase";
-import { BusinessRepository, ProfileRepository } from "@/core/infrastructure/database";
+import { BillingService } from "./services/BillingService";
 import { PlanTier, type BusinessSubscription, type SubscriptionStatus } from "./types";
 import { BILLING_SUBSCRIPTION_STATUS } from "./constants/subscription-status";
 
@@ -16,7 +20,6 @@ export interface ServiceResult<T> {
 
 interface CanonicalBusinessSubscriptionRow {
   id: string;
-  user_id: string;
   business_id: string | null;
   plan_code: string | null;
   status_v2: string | null;
@@ -32,24 +35,16 @@ interface CanonicalBusinessSubscriptionRow {
 
 type QueryError = { message?: string | null };
 
-type QueryArrayResult<T> = {
-  data: T[] | null;
-  error: QueryError | null;
-};
-
 type QuerySingleResult<T> = {
   data: T | null;
   error: QueryError | null;
 };
 
-type QueryBuilder<T extends object> = PromiseLike<QueryArrayResult<T>> & {
+type QueryBuilder<T extends object> = {
   select(columns?: string): QueryBuilder<T>;
   eq(column: string, value: unknown): QueryBuilder<T>;
   order(column: string, options?: { ascending?: boolean }): QueryBuilder<T>;
   limit(value: number): QueryBuilder<T>;
-  insert(values: Record<string, unknown> | Array<Record<string, unknown>>): QueryBuilder<T>;
-  update(values: Record<string, unknown>): QueryBuilder<T>;
-  single(): Promise<QuerySingleResult<T>>;
   maybeSingle(): Promise<QuerySingleResult<T>>;
 };
 
@@ -58,8 +53,6 @@ type BillingDbClient = {
 };
 
 const billingDb = supabase as unknown as BillingDbClient;
-const businessRepository = new BusinessRepository();
-const profileRepository = new ProfileRepository();
 
 function toPlanTier(planCode: string | null | undefined): PlanTier {
   if (planCode === PlanTier.DELIVERY || planCode?.includes("delivery")) {
@@ -74,10 +67,10 @@ function toPlanTier(planCode: string | null | undefined): PlanTier {
 }
 
 function toSubscriptionStatus(status: string | null | undefined): SubscriptionStatus {
-  if (status === BILLING_SUBSCRIPTION_STATUS.CANCELED) return BILLING_SUBSCRIPTION_STATUS.CANCELED;
-  if (status === BILLING_SUBSCRIPTION_STATUS.PAST_DUE) return BILLING_SUBSCRIPTION_STATUS.PAST_DUE;
+  if (status === BILLING_SUBSCRIPTION_STATUS.ACTIVE) return BILLING_SUBSCRIPTION_STATUS.ACTIVE;
   if (status === BILLING_SUBSCRIPTION_STATUS.TRIALING) return BILLING_SUBSCRIPTION_STATUS.TRIALING;
-  return BILLING_SUBSCRIPTION_STATUS.ACTIVE;
+  if (status === BILLING_SUBSCRIPTION_STATUS.PAST_DUE) return BILLING_SUBSCRIPTION_STATUS.PAST_DUE;
+  return BILLING_SUBSCRIPTION_STATUS.CANCELED;
 }
 
 function createDefaultFreeSubscription(businessId: string): BusinessSubscription {
@@ -101,7 +94,10 @@ function createDefaultFreeSubscription(businessId: string): BusinessSubscription
   };
 }
 
-function mapCanonicalRow(row: CanonicalBusinessSubscriptionRow, businessId: string): BusinessSubscription {
+function mapCanonicalRow(
+  row: CanonicalBusinessSubscriptionRow,
+  businessId: string,
+): BusinessSubscription {
   const now = new Date().toISOString();
 
   return {
@@ -120,27 +116,6 @@ function mapCanonicalRow(row: CanonicalBusinessSubscriptionRow, businessId: stri
   };
 }
 
-function toCanonicalStatus(status: SubscriptionStatus | undefined): string {
-  if (!status) return "active";
-  if (status === BILLING_SUBSCRIPTION_STATUS.CANCELED) return "canceled";
-  return status;
-}
-
-async function resolveBusinessOwnerUserId(businessId: string): Promise<string | null> {
-  try {
-    const business = await businessRepository.findById(businessId);
-    if (!business?.profile_id) {
-      return null;
-    }
-
-    const profile = await profileRepository.findById(business.profile_id);
-    return profile?.user_id ?? null;
-  } catch (error) {
-    logger.error("[SubscriptionService] Erro ao resolver dono da empresa:", error);
-    return null;
-  }
-}
-
 async function fetchCanonicalByBusinessId(
   businessId: string,
 ): Promise<CanonicalBusinessSubscriptionRow | null> {
@@ -148,7 +123,6 @@ async function fetchCanonicalByBusinessId(
     .from<CanonicalBusinessSubscriptionRow>("user_subscriptions")
     .select(`
       id,
-      user_id,
       business_id,
       plan_code,
       status_v2,
@@ -178,158 +152,47 @@ export class SubscriptionService {
     try {
       const row = await fetchCanonicalByBusinessId(businessId);
       return {
-        data: row ? mapCanonicalRow(row, businessId) : createDefaultFreeSubscription(businessId),
+        data: row
+          ? mapCanonicalRow(row, businessId)
+          : createDefaultFreeSubscription(businessId),
         error: null,
       };
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro ao buscar assinatura";
+      const message =
+        error instanceof Error ? error.message : "Erro ao buscar assinatura";
       logger.error("[SubscriptionService] Erro ao buscar assinatura:", error);
       return { data: null, error: message };
     }
   }
 
-  static async upsert(
-    subscription: Partial<BusinessSubscription> & { business_id: string },
-  ): Promise<ServiceResult<BusinessSubscription>> {
-    try {
-      const existing = await fetchCanonicalByBusinessId(subscription.business_id);
-      const userId = existing?.user_id ?? (await resolveBusinessOwnerUserId(subscription.business_id));
-
-      if (!userId) {
-        return { data: null, error: "Dono da empresa nao encontrado para criar assinatura" };
-      }
-
-      const planTier = subscription.plan_tier ?? PlanTier.FREE;
-      const status = toCanonicalStatus(subscription.status);
-      const payload = {
-        user_id: userId,
-        business_id: subscription.business_id,
-        plan_code: planTier,
-        plan_type: planTier,
-        status,
-        status_v2: status,
-        active: status === "active" || status === "trialing",
-        subscription_scope: "business",
-        entity_family: "company",
-        current_period_start: subscription.current_period_start ?? new Date().toISOString(),
-        current_period_end: subscription.current_period_end ?? null,
-        cancel_at_period_end: subscription.cancel_at_period_end ?? false,
-        trial_ends_at: subscription.trial_end ?? null,
-        stripe_subscription_id: subscription.stripe_subscription_id ?? null,
-        stripe_customer_id: subscription.stripe_customer_id ?? null,
-        updated_at: new Date().toISOString(),
-      };
-
-      const query = existing
-        ? billingDb.from<CanonicalBusinessSubscriptionRow>("user_subscriptions").update(payload).eq("id", existing.id)
-        : billingDb.from<CanonicalBusinessSubscriptionRow>("user_subscriptions").insert(payload);
-
-      const { data, error } = await query.select().single();
-      if (error) throw error;
-      if (!data) throw new Error("Erro ao salvar assinatura: nenhuma linha retornada");
-
-      return {
-        data: mapCanonicalRow(data, subscription.business_id),
-        error: null,
-      };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro ao salvar assinatura";
-      logger.error("[SubscriptionService] Erro ao salvar assinatura:", error);
-      return { data: null, error: message };
-    }
-  }
-
+  /**
+   * Compatibilidade temporaria para callers antigos.
+   * Nao altera user_subscriptions. Paid tiers abrem Stripe Checkout e o plano
+   * Free usa o Customer Portal para downgrade/cancelamento do contrato atual.
+   */
   static async updatePlan(
     businessId: string,
     newPlanTier: PlanTier,
   ): Promise<ServiceResult<BusinessSubscription>> {
     try {
-      const { data, error } = await billingDb
-        .from<CanonicalBusinessSubscriptionRow>("user_subscriptions")
-        .update({
-          plan_code: newPlanTier,
-          plan_type: newPlanTier,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("business_id", businessId)
-        .eq("subscription_scope", "business")
-        .select()
-        .single();
-
-      if (error) throw error;
-      if (!data) throw new Error("Erro ao atualizar plano: nenhuma linha retornada");
-
-      return { data: mapCanonicalRow(data, businessId), error: null };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro ao atualizar plano";
-      logger.error("[SubscriptionService] Erro ao atualizar plano:", error);
-      return { data: null, error: message };
-    }
-  }
-
-  static async cancel(
-    businessId: string,
-    immediately = false,
-  ): Promise<ServiceResult<BusinessSubscription>> {
-    try {
-      const updates: Record<string, unknown> = {
-        cancel_at_period_end: !immediately,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (immediately) {
-        updates.status = "canceled";
-        updates.status_v2 = "canceled";
-        updates.active = false;
-        updates.plan_code = PlanTier.FREE;
-        updates.plan_type = PlanTier.FREE;
-        updates.current_period_end = new Date().toISOString();
+      if (newPlanTier === PlanTier.FREE) {
+        await BillingService.redirectToPortal(buildPublicAbsoluteUrl("/planos"));
+      } else {
+        await BillingService.redirectToCheckout({
+          planCode: newPlanTier,
+          businessId,
+          subscriptionScope: "business",
+          entityFamily: "company",
+          successUrl: buildPublicAbsoluteUrl("/checkout/success"),
+          cancelUrl: buildPublicAbsoluteUrl("/planos"),
+        });
       }
 
-      const { data, error } = await billingDb
-        .from<CanonicalBusinessSubscriptionRow>("user_subscriptions")
-        .update(updates)
-        .eq("business_id", businessId)
-        .eq("subscription_scope", "business")
-        .select()
-        .single();
-
-      if (error) throw error;
-      if (!data) throw new Error("Erro ao cancelar assinatura: nenhuma linha retornada");
-
-      return { data: mapCanonicalRow(data, businessId), error: null };
+      return { data: null, error: null };
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro ao cancelar assinatura";
-      logger.error("[SubscriptionService] Erro ao cancelar assinatura:", error);
-      return { data: null, error: message };
-    }
-  }
-
-  static async reactivate(
-    businessId: string,
-  ): Promise<ServiceResult<BusinessSubscription>> {
-    try {
-      const { data, error } = await billingDb
-        .from<CanonicalBusinessSubscriptionRow>("user_subscriptions")
-        .update({
-          cancel_at_period_end: false,
-          status: BILLING_SUBSCRIPTION_STATUS.ACTIVE,
-          status_v2: BILLING_SUBSCRIPTION_STATUS.ACTIVE,
-          active: true,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("business_id", businessId)
-        .eq("subscription_scope", "business")
-        .select()
-        .single();
-
-      if (error) throw error;
-      if (!data) throw new Error("Erro ao reativar assinatura: nenhuma linha retornada");
-
-      return { data: mapCanonicalRow(data, businessId), error: null };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Erro ao reativar assinatura";
-      logger.error("[SubscriptionService] Erro ao reativar assinatura:", error);
+      const message =
+        error instanceof Error ? error.message : "Erro ao iniciar alteracao de plano";
+      logger.error("[SubscriptionService] Erro ao iniciar alteracao de plano:", error);
       return { data: null, error: message };
     }
   }
