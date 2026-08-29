@@ -21,8 +21,10 @@ const RETIRED_PATHS = [
 ] as const;
 
 const TS_FILE = /\.(?:ts|tsx)$/;
-const DIRECT_ANALYTICS_TABLE =
-  /\.from(?:<[^>]+>)?\(\s*["']analytics_(?:events|daily_metrics|sessions)["']\s*\)/g;
+const DIRECT_EVENT_TABLE =
+  /\.from(?:<[^>]+>)?\(\s*["']analytics_(?:events|sessions)["']\s*\)/g;
+const DIRECT_DAILY_METRICS =
+  /\.from(?:<[^>]+>)?\(\s*["']analytics_daily_metrics["']\s*\)/g;
 const DIRECT_ANALYTICS_RPC =
   /\.rpc(?:<[^>]+>)?\(\s*["'](?:track_analytics_event|get_analytics_metrics|get_recent_analytics_events)["']/g;
 const LEGACY_WRAPPER_IMPORT = /core\/analytics\/services\/AnalyticsService/;
@@ -57,13 +59,22 @@ function scanSourceFile(file: string): Violation[] {
     });
   }
 
+  const eventTableMatches = [...content.matchAll(DIRECT_EVENT_TABLE)];
+  if (eventTableMatches.length > 0) {
+    violations.push({
+      file: rel,
+      rule: "direct analytics event/session table access",
+      detail: `${eventTableMatches.length} direct table access(es); events must use canonical RPC contracts.`,
+    });
+  }
+
   if (rel !== CANONICAL_SERVICE) {
-    const tableMatches = [...content.matchAll(DIRECT_ANALYTICS_TABLE)];
-    if (tableMatches.length > 0) {
+    const dailyMatches = [...content.matchAll(DIRECT_DAILY_METRICS)];
+    if (dailyMatches.length > 0) {
       violations.push({
         file: rel,
-        rule: "direct platform analytics table access",
-        detail: `${tableMatches.length} direct analytics table access(es); persistence reads belong to ${CANONICAL_SERVICE}.`,
+        rule: "direct analytics daily metrics access",
+        detail: `${dailyMatches.length} direct read(s); daily metrics belong to ${CANONICAL_SERVICE}.`,
       });
     }
 
@@ -118,6 +129,14 @@ function main(): void {
           detail: `Missing required token: ${token}`,
         });
       }
+    }
+
+    if (DIRECT_EVENT_TABLE.test(canonical)) {
+      violations.push({
+        file: CANONICAL_SERVICE,
+        rule: "canonical service bypasses event RPC read boundary",
+        detail: "analytics_events/analytics_sessions must not be read directly from browser source.",
+      });
     }
   }
 

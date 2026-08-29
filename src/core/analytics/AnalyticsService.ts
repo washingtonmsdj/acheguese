@@ -82,45 +82,14 @@ export type AnalyticsEventSource =
   | "social_media"
   | "other";
 
-export interface AnalyticsEvent {
+/** Exact contract returned by public.get_recent_analytics_events. */
+export interface RecentAnalyticsEvent {
   id: string;
-  entity_type: string;
-  entity_id: string;
   event_type: AnalyticsEventType;
   event_source: AnalyticsEventSource;
   user_id: string | null;
   session_id: string | null;
-  ip_address: string | null;
-  user_agent: string | null;
-  referrer: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  city: string | null;
-  state: string | null;
-  country: string | null;
-  metadata: AnalyticsMetadata;
   created_at: string;
-}
-
-/**
- * Exact public contract returned by get_recent_analytics_events on the linked DB.
- * Keep this narrow instead of pretending the RPC returns the full analytics_events row.
- */
-export type RecentAnalyticsEvent = Pick<
-  AnalyticsEvent,
-  "id" | "event_type" | "event_source" | "user_id" | "session_id" | "created_at"
->;
-
-/**
- * Canonical bounded read shape for domain-specific analytics read models.
- * Domains may derive metrics from this slice, but must not query analytics_events directly.
- */
-export interface AnalyticsEventReadSlice {
-  entity_id: string | null;
-  event_type: AnalyticsEventType;
-  event_source: AnalyticsEventSource;
-  created_at: string;
-  metadata: AnalyticsMetadata | null;
 }
 
 export interface AnalyticsMetrics {
@@ -356,40 +325,6 @@ export const AnalyticsService = {
 
       if (error) {
         logger.error("[AnalyticsService] getDailyMetrics error", error);
-        return { data: null, error: error.message ?? "Unknown analytics error" };
-      }
-
-      return { data: data || [], error: null };
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      return { data: null, error: message };
-    }
-  },
-
-  async getEntityEvents(
-    entityType: string,
-    options: {
-      dateFrom?: string;
-      eventSource?: AnalyticsEventSource;
-    } = {},
-  ): Promise<ServiceResult<AnalyticsEventReadSlice[]>> {
-    try {
-      let query = analyticsDb
-        .from<AnalyticsEventReadSlice>("analytics_events")
-        .select("entity_id, event_type, event_source, created_at, metadata")
-        .eq("entity_type", entityType)
-        .order("created_at", { ascending: true });
-
-      if (options.dateFrom) {
-        query = query.gte("created_at", options.dateFrom);
-      }
-      if (options.eventSource) {
-        query = query.eq("event_source", options.eventSource);
-      }
-
-      const { data, error } = await query;
-      if (error) {
-        logger.error("[AnalyticsService] getEntityEvents error", error);
         return { data: null, error: error.message ?? "Unknown analytics error" };
       }
 

@@ -8,9 +8,7 @@ export type {
   ServiceResult,
   AnalyticsEventType,
   AnalyticsEventSource,
-  AnalyticsEvent,
   RecentAnalyticsEvent,
-  AnalyticsEventReadSlice,
   AnalyticsMetrics,
   DailyMetrics,
 } from "./AnalyticsService";
