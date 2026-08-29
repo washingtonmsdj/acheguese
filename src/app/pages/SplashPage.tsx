@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Heart, MapPin, Store, Users, Wrench } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { TERRITORY_CONFIG } from "@/config/territory";
+import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { useCityMetadata } from "@/core/city/hooks/useCityMetadata";
 import { useHomeCommunityHref } from "@/core/routing/hooks/useHomeCommunityHref";
 import { formatMetric } from "@/shared/utils/formatters";
