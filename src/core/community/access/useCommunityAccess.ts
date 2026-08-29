@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/core/auth/hooks/useAuth";
-import { adminRolesService } from "@/core/admin/services/AdminRolesService";
+import { RoleService } from "@/core/authorization/services/RoleService";
 import { residenceService } from "@/core/residence/services/ResidenceService";
 import { useCommunityRollout } from "@/core/community/hooks/useCommunityRollout";
 import { useSessionContext } from "@/core/session";
@@ -114,7 +114,7 @@ export function useCommunityAccess({
 
   const rolesQuery = useQuery({
     queryKey: ["community-access", "roles", user?.id],
-    queryFn: () => adminRolesService.getUserRoles(user!.id),
+    queryFn: () => RoleService.getUserRoles(user!.id),
     enabled: Boolean(user?.id),
     staleTime: 5 * 60 * 1000,
   });
@@ -191,17 +191,11 @@ export function useCommunityAccess({
   });
 
   const isAdmin = useMemo(
-    () =>
-      (rolesQuery.data ?? []).some(
-        (role) => role.role === "admin" && role.is_active,
-      ),
+    () => (rolesQuery.data ?? []).some((role) => role === "admin"),
     [rolesQuery.data],
   );
   const isModerator = useMemo(
-    () =>
-      (rolesQuery.data ?? []).some(
-        (role) => role.role === "moderator" && role.is_active,
-      ),
+    () => (rolesQuery.data ?? []).some((role) => role === "moderator"),
     [rolesQuery.data],
   );
 
