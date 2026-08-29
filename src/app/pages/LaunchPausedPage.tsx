@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, Building2, Home, Map, MapPin, Search, Tag, Users, Wrench } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { LAUNCH_URLS } from "@/config/territory";
+import { LAUNCH_URLS } from "@/core/routing/config/territory";
 
 interface LaunchPausedPageProps {
   moduleName?: string;
