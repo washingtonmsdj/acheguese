@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useCityMetadata } from "@/core/city/hooks/useCityMetadata";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { locationContextStore } from "@/core/location/stores/LocationContextStore";
-import { TERRITORY_CONFIG } from "@/config/territory";
+import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { LocationStatus, LocationType, type Location } from "@/core/location/types";
 
 function slugFromName(name: string): string {
