@@ -20,8 +20,17 @@ function listRuntimeSourceFiles(directory: string): string[] {
 const hardeningMigration = read(
   "supabase/migrations/20260829192000_harden_moderation_table_authority.sql",
 );
+const adminViewGrantMigration = read(
+  "supabase/migrations/20260829193600_harden_admin_moderation_view_grants.sql",
+);
 const reportDialogBridge = read(
   "src/core/moderation/components/ReportReasonDialog.tsx",
+);
+const reportDialogUi = read(
+  "src/shared/components/moderation/ReportReasonDialog.tsx",
+);
+const trustFeedbackUi = read(
+  "src/shared/components/trust/TrustFeedbackForm.tsx",
 );
 const trustBarrel = read("src/core/trust/index.ts");
 
@@ -60,7 +69,7 @@ describe("Moderation and Trust boundaries", () => {
     ).toBe(true);
   });
 
-  it("keeps reusable moderation and trust presentation outside core", () => {
+  it("keeps reusable moderation and trust presentation outside core and domain-neutral", () => {
     expect(
       existsSync(
         resolve(root, "src/shared/components/moderation/ReportReasonDialog.tsx"),
@@ -70,6 +79,7 @@ describe("Moderation and Trust boundaries", () => {
       'export { ReportReasonDialog } from "@/shared/components/moderation/ReportReasonDialog";',
     );
     expect(reportDialogBridge).not.toMatch(/from ["']react["']/);
+    expect(reportDialogUi).not.toContain("@/core/");
 
     expect(
       existsSync(
@@ -82,6 +92,7 @@ describe("Moderation and Trust boundaries", () => {
     expect(
       existsSync(resolve(root, "src/core/trust/components/index.ts")),
     ).toBe(false);
+    expect(trustFeedbackUi).not.toContain("@/core/");
     expect(trustBarrel).toContain(
       'from "@/shared/components/trust/TrustFeedbackForm"',
     );
@@ -139,5 +150,22 @@ describe("Moderation and Trust boundaries", () => {
     expect(hardeningMigration).toContain(
       "DROP POLICY IF EXISTS community_user_moderation_admin_read",
     );
+  });
+
+  it("keeps admin moderation views read-only in the browser", () => {
+    for (const view of [
+      "admin_pending_post_reports",
+      "admin_pending_comment_reports",
+    ]) {
+      expect(adminViewGrantMigration).toContain(
+        `REVOKE ALL ON TABLE public.${view} FROM anon`,
+      );
+      expect(adminViewGrantMigration).toContain(
+        `REVOKE INSERT, UPDATE, DELETE ON TABLE public.${view}`,
+      );
+      expect(adminViewGrantMigration).toContain(
+        `GRANT SELECT ON TABLE public.${view} TO authenticated`,
+      );
+    }
   });
 });
