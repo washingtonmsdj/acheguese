@@ -1,5 +1,5 @@
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
-import { createTerritorialGroupRepository } from "@/core/location/repositories/createTerritorialGroupRepository";
+import { territorialGroupService } from "@/core/territorial";
 import type { ResolvedTerritory } from "@/core/routing/types/territoryResolution";
 import { isTerritoryPubliclyNavigable } from "@/core/routing/utils/territoryVisibility";
 import {
@@ -49,7 +49,7 @@ export async function resolveCommunityPublicAliasTerritory(
   }
 
   if (resolution.territoryType === "territorial_group") {
-    const group = await createTerritorialGroupRepository().findWithMembers(
+    const group = await territorialGroupService.getGroupWithMembers(
       resolution.territoryId,
     );
 
