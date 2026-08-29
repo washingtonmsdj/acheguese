@@ -6,7 +6,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
-import { PublicIdentityService } from '@/core/public-identity/services/PublicIdentityService';
+import { PublicIdentityService } from '@/core/public-identity';
 import { professionalPublicRoutes } from '@/core/professional/routes/professionalPublicRoutes';
 
 export interface ProfessionalUrlContext {
