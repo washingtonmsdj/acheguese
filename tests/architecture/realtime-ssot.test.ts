@@ -8,6 +8,13 @@ const realtimeServicePath = join(
   srcRoot,
   "core/realtime/services/RealtimeService.ts",
 );
+const publicationMigration = readFileSync(
+  join(
+    root,
+    "supabase/migrations/20260829185634_align_messaging_notification_realtime_publication.sql",
+  ),
+  "utf8",
+);
 
 function listSourceFiles(directory: string): string[] {
   return readdirSync(directory).flatMap((entry) => {
@@ -40,5 +47,11 @@ describe("Realtime SSOT", () => {
     expect(registry).toContain('column: "conversation_id"');
     expect(registry).toContain('"community.group-messages"');
     expect(registry).toContain('column: "group_id"');
+  });
+
+  it("publishes every Postgres Changes stream required by messaging and notifications", () => {
+    expect(publicationMigration).toContain("ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications");
+    expect(publicationMigration).toContain("ALTER PUBLICATION supabase_realtime ADD TABLE public.messages");
+    expect(publicationMigration).toContain("pg_publication_tables");
   });
 });
