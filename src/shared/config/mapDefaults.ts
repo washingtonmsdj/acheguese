@@ -1,4 +1,4 @@
-import { TERRITORY_CONFIG } from "@/config/territory";
+import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 
 type PublicEnv = Partial<Record<string, string>>;
 
