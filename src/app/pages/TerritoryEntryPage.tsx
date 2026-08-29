@@ -29,7 +29,7 @@ import {
   TerritorySurface,
 } from "@/app/components/territory-vivo";
 import { SALVADOR_COMMUNITY_LAUNCH_CLUSTER } from "@/core/community/config/communityLaunch";
-import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/config/territory";
+import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import {
   LocationStatus,
