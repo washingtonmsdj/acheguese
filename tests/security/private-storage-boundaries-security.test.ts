@@ -10,7 +10,7 @@ describe('private storage boundaries', () => {
     'supabase/migrations/20260826031800_restrict_documents_storage_policies_to_authenticated.sql',
   );
   const safetyMigration = read(
-    'supabase/migrations/20260826032200_restore_private_safety_evidence_storage_flow.sql',
+    'supabase/migrations/20260829161927_repair_safety_evidence_storage_owner_policies.sql',
   );
   const safetyEvidenceService = read(
     'src/core/safety/services/SafetyEvidenceService.ts',
@@ -33,14 +33,16 @@ describe('private storage boundaries', () => {
     expect(safetyMigration).toContain("WHERE id = 'safety-evidence'");
     expect(safetyMigration).toContain('public = false');
     expect(safetyMigration).toContain('TO authenticated');
-    expect(safetyMigration).toContain('incident.id::text = (storage.foldername(name))[1]');
+    expect(safetyMigration).toContain('(storage.foldername(name))[1] IN (');
+    expect(safetyMigration).toContain('SELECT incident.id::text');
     expect(safetyMigration).toContain('profile.user_id = auth.uid()');
+    expect(safetyMigration).not.toContain('storage.foldername(profile.name)');
     expect(safetyMigration).not.toContain('TO anon');
   });
 
   it('does not persist public URLs for private safety evidence', () => {
     expect(safetyEvidenceService).toContain("const STORAGE_PREFIX = `storage://${BUCKET}/`");
-    expect(safetyEvidenceService).toContain('createSignedUrl(path, ttl)');
+    expect(safetyEvidenceService).toContain('createPrivateSignedUrl');
     expect(safetyEvidenceService).not.toContain('getPublicUrl');
   });
 
