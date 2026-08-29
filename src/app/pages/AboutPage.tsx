@@ -2,7 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { ArrowLeft, Heart, MapPin, Target, Users } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { TERRITORY_CONFIG } from "@/config/territory";
+import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { Button } from "@/shared/components/ui/button";
 
 const PLATFORM_PILLARS = [
