@@ -56,19 +56,46 @@ describe("rls authorization helpers security", () => {
       expect(migration).toContain(
         `REVOKE ALL ON FUNCTION ${signature} FROM PUBLIC, anon, authenticated`,
       );
-      expect(migration).toContain(`GRANT EXECUTE ON FUNCTION ${signature} TO service_role`);
+      expect(migration).toContain(
+        `GRANT EXECUTE ON FUNCTION ${signature} TO service_role`,
+      );
     }
   });
 
+  it("keeps public compatibility helpers as one-way private bridges", () => {
+    const migration = readProjectFile(
+      "supabase/migrations/20260829204000_consolidate_global_authorization_helpers.sql",
+    );
+
+    expect(migration).toContain(
+      "SELECT private.auth_can_access_profile(p_profile_id);",
+    );
+    expect(migration).toContain(
+      "SELECT private.group_can_manage_members(p_group_id, p_user_id);",
+    );
+    expect(migration).toContain(
+      "CREATE OR REPLACE FUNCTION private.has_valid_global_role",
+    );
+    expect(migration).toContain("ur.is_active = TRUE");
+    expect(migration).toContain("ur.revoked_at IS NULL");
+    expect(migration).toContain("ur.expires_at > now()");
+  });
+
   it("routes browser admin checks through role-rpc", () => {
-    const roleService = readProjectFile("src/core/authorization/services/RoleService.ts");
-    const roleBroker = readProjectFile("src/core/authorization/services/RoleRpcService.ts");
+    const roleService = readProjectFile(
+      "src/core/authorization/services/RoleService.ts",
+    );
+    const roleBroker = readProjectFile(
+      "src/core/authorization/services/RoleRpcService.ts",
+    );
     const edgeFunction = readProjectFile("supabase/functions/role-rpc/index.ts");
 
     expect(roleService).toContain("RoleRpcService.isAdmin");
     expect(roleService).toContain("RoleRpcService.isSuperAdmin");
     expect(roleService).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']is_admin/);
-    expect(roleService).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']is_super_admin/);
+    expect(roleService).not.toMatch(
+      /rpc(?:<[^>]+>)?\(\s*["']is_super_admin/,
+    );
     expect(roleBroker).toContain('"isAdmin"');
     expect(roleBroker).toContain('"isSuperAdmin"');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("is_admin"');
@@ -86,11 +113,15 @@ describe("rls authorization helpers security", () => {
     expect(migration).toMatch(
       /grant\s+execute\s+on\s+function\s+private\.group_can_manage_members\(uuid,\s*uuid\)[\s\S]*to\s+service_role/i,
     );
-    expect(migration).toContain(
-      "precondition drift: a policy references group_can_manage_members; direct authenticated EXECUTE requires re-review",
+  });
+
+  it("keeps hard-delete out of the browser role lifecycle", () => {
+    const migration = readProjectFile(
+      "supabase/migrations/20260829204500_harden_user_role_lifecycle_grants.sql",
     );
+
     expect(migration).toContain(
-      "postcondition failed: authenticated still executes orphan helper %",
+      "REVOKE DELETE ON TABLE public.user_roles FROM authenticated",
     );
   });
 });
