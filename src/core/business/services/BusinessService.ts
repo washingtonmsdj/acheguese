@@ -110,7 +110,7 @@ import * as BusinessQueries from "./business.queries";
 import * as BusinessMutations from "./business.mutations";
 import * as BusinessAdmin from "./business.admin";
 import * as BusinessHelpers from "./business.helpers";
-import type { Business, BusinessFilters, BusinessStats } from "../types";
+import type { Business, BusinessFilters } from "../types";
 
 const PUBLIC_BUSINESS_PAGE_SIZE = 100;
 const PUBLIC_BUSINESS_MAX_PAGES = 100;
@@ -241,13 +241,4 @@ export class BusinessService {
   static getCoordinates = BusinessHelpers.getCoordinates;
   static getTerritory = BusinessHelpers.getTerritory;
   static getTerritoryName = BusinessHelpers.getTerritoryName;
-
-  static async getStats(): Promise<BusinessStats> {
-    return {
-      total: await BusinessAdmin.getTotalBusinessesCount(),
-      active: 0,
-      premium: await BusinessAdmin.getPremiumBusinessesCount(),
-      by_category: {},
-    };
-  }
 }
