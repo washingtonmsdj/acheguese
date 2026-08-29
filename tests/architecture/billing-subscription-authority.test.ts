@@ -43,6 +43,9 @@ const webhook = read("supabase/functions/billing-webhook/index.ts");
 const writeAuthorityMigration = read(
   "supabase/migrations/20260829173833_harden_user_subscription_write_authority.sql",
 );
+const serverWriteAuthorityMigration = read(
+  "supabase/migrations/20260829183431_harden_user_subscription_server_write_authority.sql",
+);
 const entitlementBackfillMigration = read(
   "supabase/migrations/20260829175638_backfill_catalog_extra_entitlements.sql",
 );
@@ -59,6 +62,7 @@ const directTableWrite = (table: string) =>
 describe("Billing subscription authority", () => {
   it("keeps billing as the only core subscription namespace", () => {
     expect(existsSync(resolve(root, "src/core/subscription"))).toBe(false);
+    expect(existsSync(resolve(root, "src/core/gastronomy/billing"))).toBe(false);
     expect(
       existsSync(resolve(root, "src/core/billing/services/SubscriptionContractService.ts")),
     ).toBe(false);
@@ -139,7 +143,7 @@ describe("Billing subscription authority", () => {
     expect(entitlementResolver).not.toContain("DEFAULT_FREE_ENTITLEMENTS");
   });
 
-  it("revokes authenticated self-service writes while preserving own reads", () => {
+  it("revokes authenticated self-service and admin browser writes", () => {
     expect(writeAuthorityMigration).toContain(
       'DROP POLICY IF EXISTS "Users manage own subscriptions"',
     );
@@ -149,6 +153,9 @@ describe("Billing subscription authority", () => {
     expect(writeAuthorityMigration).toContain("FOR SELECT");
     expect(writeAuthorityMigration).toContain("TO authenticated");
     expect(writeAuthorityMigration).toContain("user_id = (SELECT auth.uid())");
+    expect(serverWriteAuthorityMigration).toContain(
+      'DROP POLICY IF EXISTS "Admins can manage subscriptions"',
+    );
   });
 
   it("keeps published catalog as the runtime source of plan data", () => {
