@@ -5,7 +5,16 @@
  * Isso garante que a camada territorial continue sendo SSOT.
  */
 
-// Tipos públicos
+// Contratos canônicos de grupos territoriais
+export { TERRITORIAL_GROUP_STATUS } from './contracts';
+export type {
+  TerritorialGroupStatus,
+  TerritorialGroup,
+  TerritorialGroupMember,
+  TerritorialGroupWithMembers,
+} from './contracts';
+
+// Tipos públicos de rollout/disponibilidade
 export type {
   GroupModuleAvailability,
   GroupAvailabilityResult,
