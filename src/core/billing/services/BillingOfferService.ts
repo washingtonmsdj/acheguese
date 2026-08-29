@@ -1,34 +1,31 @@
 /**
  * BillingOfferService
  *
- * Centraliza o mapeamento entre ofertas comerciais e planos reais de billing.
- * O módulo consumidor trabalha com chaves genéricas de oferta, sem hardcode
- * de planCode, nome de plano ou preço.
+ * Centraliza o mapeamento entre ofertas comerciais e os codigos publicos
+ * canonicos usados pelo Billing. Preco e beneficios nunca nascem aqui: a UI
+ * resolve esses dados no catalogo publicado.
  */
 
 export type BillingOfferKey = 'catalog' | 'delivery';
 
 export interface BillingOffer {
   key: BillingOfferKey;
-  planCode: string;
+  planCode: 'pro' | 'delivery';
   label: string;
-  priceFallback: string;
   icon: 'crown' | 'zap';
 }
 
 const OFFERS: Record<BillingOfferKey, BillingOffer> = {
   catalog: {
     key: 'catalog',
-    planCode: 'gastronomy_pro',
+    planCode: 'pro',
     label: 'Pro',
-    priceFallback: 'R$ 49,90/mês',
     icon: 'crown',
   },
   delivery: {
     key: 'delivery',
-    planCode: 'gastronomy_delivery',
+    planCode: 'delivery',
     label: 'Delivery',
-    priceFallback: 'R$ 99,90/mês',
     icon: 'zap',
   },
 };
