@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
-import { createTerritorialGroupRepository } from "@/core/location/repositories/createTerritorialGroupRepository";
+import { territorialGroupService } from "@/core/territorial";
 import { CommunityPublicAliasService } from "@/core/routing/services/CommunityPublicAliasService";
 
 vi.mock("@/integrations/supabase", () => ({
@@ -12,8 +12,10 @@ vi.mock("@/core/location/repositories/createLocationRepository", () => ({
   createLocationRepository: vi.fn(),
 }));
 
-vi.mock("@/core/location/repositories/createTerritorialGroupRepository", () => ({
-  createTerritorialGroupRepository: vi.fn(),
+vi.mock("@/core/territorial", () => ({
+  territorialGroupService: {
+    findGroupsContainingLocation: vi.fn(),
+  },
 }));
 
 vi.mock("@/core/routing/services/CommunityPublicAliasService", () => ({
@@ -40,9 +42,7 @@ describe("BusinessUrlService", () => {
       }),
     } as unknown as ReturnType<typeof createLocationRepository>);
 
-    vi.mocked(createTerritorialGroupRepository).mockReturnValue({
-      findGroupsContainingLocation: vi.fn().mockResolvedValue([]),
-    } as unknown as ReturnType<typeof createTerritorialGroupRepository>);
+    vi.mocked(territorialGroupService.findGroupsContainingLocation).mockResolvedValue([]);
 
     vi.mocked(CommunityPublicAliasService.findPublicUrlForTerritory).mockResolvedValue(
       "/santa-cruz",
@@ -73,11 +73,9 @@ describe("BusinessUrlService", () => {
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce("/complexo-nordeste");
 
-    vi.mocked(createTerritorialGroupRepository).mockReturnValue({
-      findGroupsContainingLocation: vi.fn().mockResolvedValue([
-        { id: "group-complexo", slug: "complexo-nordeste" },
-      ]),
-    } as unknown as ReturnType<typeof createTerritorialGroupRepository>);
+    vi.mocked(territorialGroupService.findGroupsContainingLocation).mockResolvedValue([
+      { id: "group-complexo", slug: "complexo-nordeste" } as never,
+    ]);
 
     await expect(BusinessUrlService.findCommunityPublicBaseUrl(businessContext)).resolves.toBe(
       "/complexo-nordeste",
