@@ -44,7 +44,7 @@ describe("Federated Search ownership", () => {
 
   it("keeps public search read models SELECT-only for callable roles", () => {
     const migration = read(
-      "supabase/migrations/20260829202000_lock_public_search_read_models_to_select.sql",
+      "supabase/migrations/20260829201727_lock_public_search_read_models_to_select.sql",
     );
 
     expect(migration).toContain("public.public_business_search");
