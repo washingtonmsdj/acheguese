@@ -4,7 +4,7 @@ Data de referencia: 2026-07-09
 
 Este documento e o contrato arquitetural vivo para a arquitetura Community
 First do Achegue-se. O plano detalhado de implementacao incremental permanece
-em `plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`.
+preservado em `docs/10-archive/plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`.
 
 ## Decisao Oficial
 
@@ -471,9 +471,9 @@ Mudancas nessa arquitetura devem passar por:
 
 ## Fonte De Continuidade
 
-Plano executavel:
+Plano concluido preservado como historico de implementacao:
 
-- `plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`
+- `docs/10-archive/plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`
 
-Este documento registra a decisao e os invariantes. O plano registra fases,
-checklists, riscos e definicao de pronto.
+Este documento registra a decisao e os invariantes. O plano arquivado registra
+fases, checklists, riscos e definicao de pronto da implementacao concluida.

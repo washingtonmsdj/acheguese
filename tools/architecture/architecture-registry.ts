@@ -345,7 +345,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     sourceRoots: ["src/core/community-experience", "src/core/community/access"],
     docsPaths: [
       "docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
-      "plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md",
+      "docs/10-archive/plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md",
     ],
     ssotPaths: [
       "src/core/community-experience/repositories/CommunityExperienceRepository.ts",

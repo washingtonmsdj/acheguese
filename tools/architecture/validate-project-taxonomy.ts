@@ -10,7 +10,8 @@ const PROJECT_MILESTONE_PATH = "docs/architecture/PROJECT-MILESTONE-1.md";
 const CORE_LAYER_SSOT_PATH = "docs/03-architecture/CORE_LAYER_SSOT.md";
 const COMMUNITY_FIRST_ARCHITECTURE_DOC_PATH =
   "docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md";
-const COMMUNITY_FIRST_PLAN_PATH = "plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md";
+const COMMUNITY_FIRST_PLAN_PATH =
+  "docs/10-archive/plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md";
 const ARCHITECTURE_REGISTRY_PATH = "tools/architecture/architecture-registry.ts";
 const VERTICAL_CONFIG_PATH = "src/core/verticals/config.ts";
 const COMMUNITY_EXPERIENCE_REPOSITORY_PATH =
@@ -130,7 +131,7 @@ const COMMUNITY_FIRST_DOC_MARKERS = [
   "`community_memberships`",
   "`community_entity_links`",
   "`src/core/community-experience`",
-  "`plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`",
+  "`docs/10-archive/plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`",
 ] as const;
 
 const PROJECT_MILESTONE_COMMUNITY_MARKERS = [
