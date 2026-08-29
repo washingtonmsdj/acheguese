@@ -1,7 +1,7 @@
 import { useSessionContext } from "@/core/session";
 import { toast } from "sonner";
 
-import { ReportReasonDialog } from "@/core/moderation/components/ReportReasonDialog";
+import { ReportReasonDialog } from "@/shared/components/moderation/ReportReasonDialog";
 import {
   COMMUNITY_REPORT_REASON_OPTIONS,
   type CommunityReportReason,
