@@ -29,6 +29,13 @@ interface RemoteMigration {
   statements: string[];
 }
 
+interface IdentityConflict {
+  kind: string;
+  local?: LocalMigration;
+  remote?: RemoteMigration;
+  remoteCandidates?: RemoteMigration[];
+}
+
 function readLocalMigrations(): LocalMigration[] {
   const migrationsDir = join(process.cwd(), "supabase", "migrations");
   return readdirSync(migrationsDir)
@@ -134,14 +141,12 @@ function printAliases(aliases: Array<{ local: LocalMigration; remote: RemoteMigr
   console.error("");
 }
 
-function printConflicts(conflicts: Array<Record<string, any>>) {
+function printConflicts(conflicts: IdentityConflict[]) {
   if (conflicts.length === 0) return;
   console.error(`Conflitos de identidade/conteudo (${conflicts.length}):`);
   for (const conflict of conflicts) {
-    const local = conflict.local as LocalMigration | undefined;
-    const remote = conflict.remote as RemoteMigration | undefined;
     console.error(
-      `- ${conflict.kind}: local=${local?.fileName ?? "?"} remote=${remote ? `${remote.version}_${remote.name}` : "?"}`,
+      `- ${conflict.kind}: local=${conflict.local?.fileName ?? "?"} remote=${conflict.remote ? `${conflict.remote.version}_${conflict.remote.name}` : "?"}`,
     );
   }
   console.error("");
@@ -157,7 +162,7 @@ function main() {
   ) as {
     exact: Array<{ local: LocalMigration; remote: RemoteMigration }>;
     aliases: Array<{ local: LocalMigration; remote: RemoteMigration }>;
-    conflicts: Array<Record<string, any>>;
+    conflicts: IdentityConflict[];
     localOnly: LocalMigration[];
     remoteOnly: RemoteMigration[];
   };
