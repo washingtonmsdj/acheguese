@@ -16,12 +16,11 @@ const RETIRED_LOCATION_GROUP_FILES = [
   "src/core/location/services/SelectorTerritoryService.ts",
 ] as const;
 
-// Temporary, monotonic debt. Remove an entry as soon as the caller delegates to
-// @/core/territorial. Stale entries intentionally fail the validator.
+// Temporary, monotonic caller debt. Remove an entry as soon as the caller
+// delegates to @/core/territorial. Stale entries intentionally fail.
 const LEGACY_REPOSITORY_IMPORT_ALLOWLIST = new Set([
   "src/core/business/services/BusinessUrlService.ts",
   "src/core/routing/hooks/useResolveTerritoryFromUrl.ts",
-  "src/core/territorial/services/TerritorialGroupService.ts",
 ]);
 
 const LEGACY_READ_SERVICE_IMPORT_ALLOWLIST = new Set([
@@ -29,13 +28,16 @@ const LEGACY_READ_SERVICE_IMPORT_ALLOWLIST = new Set([
   "src/modules/admin/pages/AdminTerritoryContent.tsx",
 ]);
 
-const LEGACY_LOCATION_GROUP_STORAGE = new Set([
+// These paths are compatibility bridges only. They must point one-way to
+// core/territorial and may not regain Supabase/group implementation.
+const LEGACY_LOCATION_GROUP_BRIDGES = new Set([
   "src/core/location/repositories/ITerritorialGroupRepository.ts",
   "src/core/location/repositories/TerritorialGroupRepositorySupabase.ts",
   "src/core/location/repositories/createTerritorialGroupRepository.ts",
   "src/core/location/services/TerritorialGroupsReadService.ts",
 ]);
 
+const LOCATION_TYPES = "src/core/location/types/index.ts";
 const CODE_FILE_RE = /\.(ts|tsx|js|jsx)$/;
 
 function normalize(filePath: string): string {
@@ -98,10 +100,23 @@ function main(): void {
       }
     }
 
+    if (LEGACY_LOCATION_GROUP_BRIDGES.has(relative)) {
+      if (!content.includes("@/core/territorial")) {
+        violations.push(
+          `${relative}: compatibility bridge must delegate one-way to core/territorial.`,
+        );
+      }
+      if (/\.from\(\s*["']territorial_group(?:s|_members)["']\s*\)/.test(content)) {
+        violations.push(
+          `${relative}: compatibility bridge may not contain territorial-group persistence.`,
+        );
+      }
+      continue;
+    }
+
     if (
       relative.startsWith("src/core/location/") &&
-      /TerritorialGroup/.test(path.basename(relative)) &&
-      !LEGACY_LOCATION_GROUP_STORAGE.has(relative)
+      /TerritorialGroup/.test(path.basename(relative))
     ) {
       violations.push(
         `${relative}: new territorial-group implementation under core/location is forbidden; group ownership belongs to core/territorial.`,
@@ -125,11 +140,25 @@ function main(): void {
     }
   }
 
-  for (const legacyStorage of LEGACY_LOCATION_GROUP_STORAGE) {
-    if (!fs.existsSync(path.join(ROOT, legacyStorage))) {
+  for (const bridge of LEGACY_LOCATION_GROUP_BRIDGES) {
+    if (!fs.existsSync(path.join(ROOT, bridge))) {
       violations.push(
-        `${legacyStorage}: stale legacy storage allowlist entry. Remove it from validate-territory-ssot.ts.`,
+        `${bridge}: stale compatibility-bridge inventory. Remove it from validate-territory-ssot.ts.`,
       );
+    }
+  }
+
+  const locationTypesPath = path.join(ROOT, LOCATION_TYPES);
+  if (fs.existsSync(locationTypesPath)) {
+    const locationTypes = fs.readFileSync(locationTypesPath, "utf8");
+    if (/export\s+interface\s+TerritorialGroup\b/.test(locationTypes)) {
+      violations.push(`${LOCATION_TYPES}: TerritorialGroup must not be declared by core/location.`);
+    }
+    if (/export\s+const\s+TERRITORIAL_GROUP_STATUS\b/.test(locationTypes)) {
+      violations.push(`${LOCATION_TYPES}: territorial group status must be owned by core/territorial.`);
+    }
+    if (!locationTypes.includes("@/core/territorial/contracts")) {
+      violations.push(`${LOCATION_TYPES}: temporary group compatibility types must re-export core/territorial contracts.`);
     }
   }
 
@@ -140,7 +169,7 @@ function main(): void {
   }
 
   console.log(
-    "Territory SSOT valid: core/location owns geographic hierarchy; core/territorial owns territorial groups; legacy group paths are frozen to a monotonic allowlist.",
+    "Territory SSOT valid: core/location owns geographic hierarchy; core/territorial owns territorial groups; legacy group callers and bridges are monotonic and one-way.",
   );
 }
 
