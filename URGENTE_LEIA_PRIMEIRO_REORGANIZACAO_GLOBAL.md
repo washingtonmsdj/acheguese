@@ -8,7 +8,8 @@
 
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
-**Status:** EM EXECUÇÃO  
+**Status:** EM EXECUÇÃO — G4 Global SSOT Hardening  
+**Checkpoint técnico antes desta atualização:** `101c8cb5f1c6a8c4e1c97e77022ac139fa3e1d63`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
 **Monorepo:** NÃO atualmente; manter monorepo-ready, sem migrar para workspaces/Turborepo agora
@@ -252,6 +253,8 @@ Checklist:
 
 **Objetivo:** mover fisicamente cada owner sem mudar comportamento.
 
+**Status:** CONCLUÍDO no nível estrutural. Prova hosted same-SHA continua separada e não deve ser inferida enquanto o runner não executar steps.
+
 Ordem recomendada:
 
 1. namespaces históricos pequenos e isolados;
@@ -268,22 +271,26 @@ Cada corte deve terminar com path antigo vazio ou bridge mínimo explicitamente 
 
 **Objetivo:** tornar a estrutura auto-defensiva.
 
+**Status:** CONCLUÍDO no source/gates. Os workflows alcançam os validators, mas a infraestrutura hosted continua incapaz de executar os jobs no checkpoint conhecido.
+
 - [x] integração somente pelos owners permitidos;
 - [x] sem imports reversos;
 - [x] sem cross-module indevido;
 - [x] sem novo `features`;
 - [x] sem SSOT paralelo conhecido;
-- [x] workflows executam todos os validators de arquitetura.
+- [x] workflows alcançam todos os validators de arquitetura bloqueantes.
 
 ## G4 — Global SSOT Hardening
 
 **Objetivo:** consolidar primeiro os serviços horizontais usados por vários módulos.
 
+**Status:** EM EXECUÇÃO.
+
 Ordem prioritária:
 
-- [ ] Auth/session;
-- [ ] Profiles/memberships/roles;
-- [ ] Business;
+- [x] Auth/session — owner/source consolidado em `src/core/auth` + `src/core/session`; providers/hooks paralelos aposentados e direct auth runtime concentrado nos owners/adapters canônicos;
+- [x] Profiles/memberships/roles — owners de profiles, memberships e roles consolidados em `src/core`; runtime não consulta `user_roles` diretamente fora da autoridade canônica e callers de membership convergem para o owner;
+- [ ] Business — **EM EXECUÇÃO**; owner e boundaries consolidados, mas atomicidade/criação duplicada/autorização de subrecursos e legados ainda impedem fechamento;
 - [ ] Territory/location;
 - [ ] Public URL/slug;
 - [ ] Media/uploads;
@@ -303,6 +310,8 @@ Para cada SSOT:
 - adapters legados one-way;
 - tests de regressão;
 - schema/RLS coerentes quando aplicável.
+
+**Interpretação dos checkboxes de G4:** `[x]` fecha a autoridade arquitetural/source do SSOT e exige que o estado remoto conhecido não contradiga essa autoridade. Reconciliação exaustiva de migrations ↔ schema remoto, cobertura integral de RLS/grants, legados de banco e certificação same-SHA pertencem a G5/G7 e não são implicitamente marcadas como concluídas por G4.
 
 ## G5 — Database, RLS e legado
 
@@ -391,7 +400,7 @@ Este plano nasce com evidências recentes de que a reorganização é necessári
 - `main` opera sem branch protection/ruleset efetivo no checkpoint conhecido;
 - CI hosted e Vercel podem bloquear certificação mesmo quando source está correto.
 
-Esses itens devem ser revalidados, não assumidos eternamente verdadeiros.
+Esses itens descrevem o **baseline inicial** e devem ser revalidados, não assumidos eternamente verdadeiros. O registro de progresso abaixo é a autoridade para saber o que já foi fechado depois do baseline.
 
 ---
 
@@ -442,7 +451,7 @@ Um domínio/serviço transversal só está SSOT quando:
 - existe um owner canônico documentado;
 - existe uma única regra de negócio autoritativa;
 - callers antigos delegam ao owner ou foram removidos;
-- banco/RLS/RPC refletem a mesma autoridade;
+- banco/RLS/RPC conhecidos não contradizem a mesma autoridade; drift exaustivo é fechado em G5;
 - existe regression guard;
 - não há segundo service/write model ativo concorrente conhecido.
 
@@ -462,8 +471,8 @@ Atualizar esta seção somente com marcos relevantes. Não transformar este arqu
 - [x] G0 Repository Census concluído;
 - [x] G1 Architecture Taxonomy concluída;
 - [x] G2 Physical Reorganization concluída;
-- [ ] G3 Global Boundaries concluído;
-- [ ] G4 Global SSOT concluído;
+- [x] G3 Global Boundaries concluído;
+- [ ] G4 Global SSOT concluído — **EM EXECUÇÃO**;
 - [ ] G5 Database/RLS concluído;
 - [ ] G6 módulos certificados;
 - [ ] G7 MVP certificado.
@@ -489,7 +498,18 @@ Atualizar esta seção somente com marcos relevantes. Não transformar este arqu
 - [x] `tests/architecture/repository-reorganization-contract.test.ts` protege os roots aposentados, incluindo `plans/`;
 - [x] G2 fechado estruturalmente no SHA `dd2e9cd235cd7a61da2ef85384a76b1fcb1b9836`;
 - [ ] validação hosted do SHA `dd2e9cd235cd7a61da2ef85384a76b1fcb1b9836` — **BLOCKED por runner/provider**: jobs observados retornaram `steps: []`, `runner_id: 0` e nenhum runner executou lint, typecheck, testes ou validators. Isso não é PASS nem falha de source;
-- [ ] próximo marco: G3 Global Boundaries. Não iniciar G4 antes de fechar G3.
+- [x] próximo marco executado: G3 Global Boundaries.
+
+### 2026-08-29 — G3 fechado / G4 iniciado
+
+- [x] G3 Global Boundaries fechado: validators bloqueantes ficaram alcançáveis pelo workflow canônico e os ratchets impedem imports reversos, cross-module indevido, recriação de roots aposentados e novos SSOTs paralelos conhecidos;
+- [x] Auth/session consolidado: `SessionProvider`/`SessionService`/`SessionState` e `useSessionContext` são a superfície canônica; hooks/providers paralelos foram aposentados e protegidos por `validate-session-context.ts`;
+- [x] Profiles/memberships/roles consolidado no source: decisões runtime e leituras de roles foram roteadas para os owners canônicos; busca no HEAD confirmou zero leitura runtime direta de `user_roles` em `src` fora da autoridade central;
+- [x] metadata remota do Supabase revalidada sem mutation: RLS está habilitado em `profiles`, `profile_members`, `user_roles`, `user_active_profiles` e `business_data`; helpers canônicos de admin/business permanecem com `search_path` explícito e grants intencionais. Isso é evidência de coerência atual, não substitui o drift audit completo de G5;
+- [x] Business entrou no corte ativo: criação de membership passou por `ProfileMembersService` (`6aa7946`), e a fachada incompleta `BusinessService.getStats()` — sem caller TypeScript e com valores fixos falsos — foi aposentada (`880d935`); blockers do módulo foram sincronizados em `101c8cb`;
+- [ ] Business ainda não fecha G4: permanecem atomicidade do create, dois caminhos de criação, autoridade divergente em subrecursos e legados/provenance de dados;
+- [ ] infraestrutura hosted continua sem prova confiável no checkpoint conhecido; jobs anteriores terminaram antes de executar steps. Não converter esse blocker em PASS;
+- [ ] próximo alvo seguro: continuar consolidação de Business no source antes de qualquer mudança destrutiva de banco; G5 cuidará da reconciliação exaustiva remota.
 
 ---
 
