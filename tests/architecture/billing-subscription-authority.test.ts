@@ -32,6 +32,9 @@ function collectRuntimeSources(directory: string): string[] {
 const runtimeSources = collectRuntimeSources("src");
 const businessSubscription = read("src/core/billing/BusinessSubscriptionService.ts");
 const legacyBusinessBridge = read("src/core/billing/SubscriptionService.ts");
+const userSubscription = read("src/core/billing/services/SubscriptionService.ts");
+const subscriptionStatus = read("src/core/billing/services/SubscriptionStatusService.ts");
+const entitlementResolver = read("src/core/billing/services/EntitlementResolver.ts");
 const billingIndex = read("src/core/billing/index.ts");
 const billingPlanService = read("src/core/billing/services/BillingPlanService.ts");
 const billingService = read("src/core/billing/services/BillingService.ts");
@@ -47,10 +50,11 @@ const entitlementBackfillMigration = read(
 const directTableCall = (table: string) =>
   new RegExp(`\\.from(?:<[^;]{0,500}>)?\\(\\s*["']${table}["']\\s*\\)`, "m");
 
-const directSubscriptionWrite = new RegExp(
-  `\\.from(?:<[^;]{0,500}>)?\\(\\s*["']user_subscriptions["']\\s*\\)\\s*\\.(?:insert|update|upsert|delete)\\s*\\(`,
-  "m",
-);
+const directTableWrite = (table: string) =>
+  new RegExp(
+    `\\.from(?:<[^;]{0,500}>)?\\(\\s*["']${table}["']\\s*\\)\\s*\\.(?:insert|update|upsert|delete)\\s*\\(`,
+    "m",
+  );
 
 describe("Billing subscription authority", () => {
   it("keeps billing as the only core subscription namespace", () => {
@@ -58,6 +62,19 @@ describe("Billing subscription authority", () => {
     expect(
       existsSync(resolve(root, "src/core/billing/services/SubscriptionContractService.ts")),
     ).toBe(false);
+  });
+
+  it("retires orphan browser catalog administration surfaces", () => {
+    expect(
+      existsSync(resolve(root, "src/core/billing/services/CatalogAdminService.ts")),
+    ).toBe(false);
+    expect(
+      existsSync(resolve(root, "src/core/billing/services/CatalogVersionService.ts")),
+    ).toBe(false);
+    expect(
+      existsSync(resolve(root, "src/core/billing/services/ImpactAnalysisService.ts")),
+    ).toBe(false);
+    expect(existsSync(resolve(root, "src/core/billing/types/admin.types.ts"))).toBe(false);
   });
 
   it("names business subscription authority explicitly and keeps old path bridge-only", () => {
@@ -72,8 +89,27 @@ describe("Billing subscription authority", () => {
 
   it("keeps browser runtime free of direct user_subscriptions writes", () => {
     const offenders = runtimeSources
-      .filter((path) => directSubscriptionWrite.test(readFileSync(path, "utf8")))
+      .filter((path) => directTableWrite("user_subscriptions").test(readFileSync(path, "utf8")))
       .map((path) => path.slice(root.length + 1));
+
+    expect(offenders).toEqual([]);
+  });
+
+  it("keeps canonical catalog tables read-only in browser runtime", () => {
+    const catalogTables = [
+      "commercial_catalog_version",
+      "catalog_item",
+      "catalog_entitlement_policy",
+      "catalog_eligibility_rule",
+      "catalog_pricing_policy",
+    ];
+
+    const offenders = runtimeSources.flatMap((path) => {
+      const source = readFileSync(path, "utf8");
+      return catalogTables
+        .filter((table) => directTableWrite(table).test(source))
+        .map((table) => `${path.slice(root.length + 1)} -> ${table}`);
+    });
 
     expect(offenders).toEqual([]);
   });
@@ -87,6 +123,20 @@ describe("Billing subscription authority", () => {
     expect(businessSubscription).not.toContain(".insert(");
     expect(businessSubscription).not.toContain(".update(");
     expect(businessSubscription).not.toContain(".delete(");
+  });
+
+  it("scopes user subscription reads and prefers canonical status_v2", () => {
+    expect(userSubscription).toContain(".eq('subscription_scope', 'user')");
+    expect(userSubscription).toContain("status_v2");
+    expect(userSubscription).toContain(".order('updated_at'");
+    expect(subscriptionStatus).toContain("subscription.status_v2");
+  });
+
+  it("uses one entitlement baseline behind published catalog resolution", () => {
+    expect(billingPlanService).toContain("getBaselineEntitlements");
+    expect(entitlementResolver).toContain("BillingPlanService.getPlanByCode");
+    expect(entitlementResolver).toContain("getBaselineEntitlements");
+    expect(entitlementResolver).not.toContain("DEFAULT_FREE_ENTITLEMENTS");
   });
 
   it("revokes authenticated self-service writes while preserving own reads", () => {
