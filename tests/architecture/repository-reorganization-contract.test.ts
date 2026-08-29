@@ -7,7 +7,6 @@ const PERMANENT_PLAN = "URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md";
 const CANONICAL_SOURCE_ROOTS = [
   "app",
   "assets",
-  "config",
   "core",
   "integrations",
   "modules",
@@ -19,6 +18,7 @@ const RETIRED_SOURCE_ROOTS = [
   "src/__tests__",
   "src/types",
   "src/features",
+  "src/config",
 ] as const;
 const RETIRED_SOURCE_FILES = [
   "src/App.css",
@@ -28,6 +28,7 @@ const RETIRED_SOURCE_FILES = [
   "src/config/launchScope.ts",
   "src/config/moduleSlugs.ts",
   "src/config/modules.ts",
+  "src/config/territory.ts",
   "src/app/config/moduleSlugs.ts",
   "src/app/config/territory.ts",
 ] as const;
@@ -45,10 +46,6 @@ const RETIRED_E2E_FILES = [
   "e2e/network-branches.spec.ts",
   "e2e/helpers/auth.ts",
 ] as const;
-
-const CONFIG_BRIDGES = new Map([
-  ["src/config/territory.ts", "@/core/routing/config/territory"],
-] as const);
 
 const CANONICAL_CONFIG_TARGETS = [
   "src/shared/config/security.config.ts",
@@ -110,17 +107,6 @@ function listDirectories(relativePath: string): string[] {
     .sort();
 }
 
-function listFiles(relativePath: string): string[] {
-  const absolutePath = path.join(ROOT, relativePath);
-  if (!fs.existsSync(absolutePath)) return [];
-
-  return fs
-    .readdirSync(absolutePath, { withFileTypes: true })
-    .filter((entry) => entry.isFile())
-    .map((entry) => entry.name)
-    .sort();
-}
-
 function listFilesRecursively(relativePath: string): string[] {
   const absolutePath = path.join(ROOT, relativePath);
   if (!fs.existsSync(absolutePath)) return [];
@@ -175,6 +161,13 @@ describe("global repository reorganization contract", () => {
     for (const relativePath of listFilesRecursively("src")) {
       const content = fs.readFileSync(path.join(ROOT, relativePath), "utf8");
       expect(content, relativePath).not.toContain("@/config/launchScope");
+    }
+  });
+
+  it("does not import the retired territory compatibility path", () => {
+    for (const relativePath of listFilesRecursively("src")) {
+      const content = fs.readFileSync(path.join(ROOT, relativePath), "utf8");
+      expect(content, relativePath).not.toContain("@/config/territory");
     }
   });
 
@@ -256,20 +249,8 @@ describe("global repository reorganization contract", () => {
     }
   });
 
-  it("keeps remaining legacy src/config paths as one-way compatibility bridges", () => {
-    for (const [bridgeFile, canonicalImport] of CONFIG_BRIDGES) {
-      const absolutePath = path.join(ROOT, bridgeFile);
-      expect(fs.existsSync(absolutePath), bridgeFile).toBe(true);
-
-      const content = fs.readFileSync(absolutePath, "utf8");
-      expect(content).toContain("Compatibility bridge");
-      expect(content).toContain(canonicalImport);
-      expect(content.length, `${bridgeFile} must stay bridge-sized`).toBeLessThan(512);
-    }
-  });
-
-  it("freezes src/config to the remaining compatibility bridges only", () => {
-    expect(listFiles("src/config")).toEqual(["territory.ts"]);
+  it("keeps the retired global src/config compatibility root absent", () => {
+    expect(fs.existsSync(path.join(ROOT, "src/config"))).toBe(false);
   });
 
   it("keeps E2E helpers and specs under the canonical tests/e2e owner", () => {
