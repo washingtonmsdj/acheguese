@@ -6,7 +6,7 @@ const repoRoot = resolve(import.meta.dirname, "../..");
 const read = (path: string) => readFileSync(resolve(repoRoot, path), "utf8");
 
 const migration = read(
-  "supabase/migrations/20260826011200_harden_business_claim_identity_rls.sql",
+  "supabase/migrations/20260826011019_harden_business_claim_identity_rls.sql",
 );
 const service = read("src/core/business/services/business.admin.ts");
 
