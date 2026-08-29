@@ -6,7 +6,7 @@ Regra: nenhuma migration é aplicada, apagada ou renomeada apenas por heurístic
 
 ## 1. Resultado acumulado deste corte
 
-### 41 aliases exatos alinhados às versões remotas
+### 50 aliases exatos alinhados às versões remotas
 
 1. `20260825123021_fix_global_admin_authority_source.sql`
 2. `20260825123134_harden_profile_members_rls.sql`
@@ -49,8 +49,19 @@ Regra: nenhuma migration é aplicada, apagada ou renomeada apenas por heurístic
 39. `20260826004108_restrict_safety_private_reads_to_direct_owner.sql`
 40. `20260826005704_harden_public_catalog_pricing_boundary.sql`
 41. `20260826010528_lock_legacy_delivery_requests_browser_surface.sql`
+42. `20260826011019_harden_business_claim_identity_rls.sql`
+43. `20260826011328_remove_territorial_groups_public_true_shadow.sql`
+44. `20260826011459_remove_community_questions_public_true_shadow.sql`
+45. `20260826013012_restrict_coupon_visibility_to_active.sql`
+46. `20260826013701_harden_public_analytics_event_integrity.sql`
+47. `20260826014650_revoke_orphan_authenticated_group_member_helper_execute.sql`
+48. `20260826015916_reconcile_account_deletion_authority_live_drift.sql`
+49. `20260826022951_remove_locations_public_read_shadow.sql`
+50. `20260826031850_restrict_documents_storage_policies_to_authenticated.sql`
 
 Os renames foram feitos atomicamente com o mesmo blob SQL: novo path usando a versão remota + remoção do path local antigo no mesmo commit. Nenhum SQL foi executado novamente no Supabase. Isso inclui migrations que historicamente removeram dados/legados: nesta reconciliação apenas a identidade do arquivo foi alinhada ao histórico remoto já aplicado.
+
+Para os aliases 42–50, a prova foi reforçada comparando o Git blob SHA-1 do arquivo local com um Git blob SHA-1 reconstruído diretamente a partir de `supabase_migrations.schema_migrations.statements[1]`. Em `remove_locations_public_read_shadow`, a única diferença inicial era o newline final local; o arquivo alinhado passou a usar exatamente os 1.213 bytes armazenados no remoto.
 
 ## 2. Local-only retiradas do conjunto aplicável
 
@@ -63,13 +74,14 @@ Os blobs foram preservados em `docs/10-archive/migrations/` e removidos de `supa
 
 ## 3. Content mismatches conhecidos — NÃO renomeados automaticamente
 
-Estes nomes existem no remoto, mas o array de statements remoto foi armazenado com SQL compactado/reformatado e não passa pela equivalência estrita do reconciliador atual. Não tratar como alias sem reconstrução/provenance explícita.
+Estes nomes existem no remoto, mas o conteúdo local não é byte-idêntico ao statement remoto. Não tratar como alias sem reconstrução/provenance explícita.
 
 - local `20260825190000_gate_admin_moderation_views.sql` ↔ remoto `20260825185039_gate_admin_moderation_views`
 - local `20260825224500_add_server_authoritative_operational_pin_rpcs.sql` ↔ remoto `20260825223319_add_server_authoritative_operational_pin_rpcs`
 - local `20260825225000_tighten_operational_verification_legacy_surface.sql` ↔ remoto `20260825223637_tighten_operational_verification_legacy_surface`
 - local `20260825230000_lock_operational_verifications_behind_rpcs.sql` ↔ remoto `20260825223929_lock_operational_verifications_behind_rpcs`
 - local `20260825231500_canonicalize_sensitive_admin_policies.sql` ↔ remoto `20260825224111_canonicalize_sensitive_admin_policies`
+- local `20260826032600_harden_storage_policy_roles_and_update_checks.sql` ↔ remoto `20260826032624_harden_storage_policy_roles_and_update_checks` — mesma intenção aparente, porém blob local `dc386152…` difere do blob remoto reconstruído `767eb940…`; manter `INVESTIGATE` até diff semântico/provenance.
 
 Não relaxar o comparador apenas para fazer estes casos passarem. A equivalência precisa ser demonstrada com parser/fingerprint suficientemente seguro ou pela reconstrução canônica do statement array remoto com provenance.
 
@@ -84,4 +96,4 @@ Não relaxar o comparador apenas para fazer estes casos passarem. A equivalênci
 
 ## 5. Próximo corte
 
-Suspender temporariamente renames em massa para classificar os `local-only` remanescentes que não têm supersession óbvia. Em seguida, continuar aliases exatos de 26/08 e tratar `content mismatch` por reconstrução/provenance segura.
+Continuar a classificação individual dos aliases exatos de 26/08 usando comparação por Git blob SHA-1. O primeiro caso deliberadamente suspenso é `20260826032600_harden_storage_policy_roles_and_update_checks.sql` ↔ remoto `20260826032624`: fazer diff semântico/provenance antes de qualquer rename. Em paralelo, classificar os `local-only` remanescentes sem supersession óbvia; não aplicar migrations por heurística.
