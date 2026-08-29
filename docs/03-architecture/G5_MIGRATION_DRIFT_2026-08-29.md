@@ -6,7 +6,7 @@ Regra: nenhuma migration é aplicada, apagada ou renomeada apenas por heurístic
 
 ## 1. Resultado acumulado deste corte
 
-### 26 aliases exatos alinhados às versões remotas
+### 31 aliases exatos alinhados às versões remotas
 
 1. `20260825123021_fix_global_admin_authority_source.sql`
 2. `20260825123134_harden_profile_members_rls.sql`
@@ -34,6 +34,11 @@ Regra: nenhuma migration é aplicada, apagada ou renomeada apenas por heurístic
 24. `20260825231133_require_active_profile_managers.sql`
 25. `20260825231245_repair_business_profile_identity_rls.sql`
 26. `20260825231519_require_active_business_and_professional_members.sql`
+27. `20260825231618_require_active_members_for_links_reviews_channels.sql`
+28. `20260825231750_require_active_education_and_pizza_members.sql`
+29. `20260825232806_require_active_members_in_brokered_profile_auth.sql`
+30. `20260825232956_restrict_business_professional_stats_reads.sql`
+31. `20260825233458_isolate_public_business_catalog.sql`
 
 Os renames foram feitos atomicamente com o mesmo blob SQL: novo path usando a versão remota + remoção do path local antigo no mesmo commit. Nenhum SQL foi executado novamente no Supabase.
 
