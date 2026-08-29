@@ -3,6 +3,7 @@
  * SSOT v2.0 - Domain services for moderation
  */
 
+export { ReportReasonDialog } from "@/shared/components/moderation/ReportReasonDialog";
 export {
   FEDERATED_MODERATION_DOMAINS,
   FEDERATED_MODERATION_STATES,
@@ -13,7 +14,6 @@ export {
   type FederatedModerationPage,
   type FederatedModerationState,
 } from "./services/FederatedModerationQueueService";
-export { ReportReasonDialog } from "./components/ReportReasonDialog";
 export {
   COMMUNITY_REPORT_REASON_OPTIONS,
   isReportReason,
