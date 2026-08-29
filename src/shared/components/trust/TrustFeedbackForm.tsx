@@ -3,7 +3,6 @@ import { useMutation } from "@tanstack/react-query";
 import { AlertTriangle, ShieldCheck, Star } from "lucide-react";
 import { toast } from "sonner";
 
-import type { TrustActorRole, TrustSeverity } from "@/core/trust/domain";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Label } from "@/shared/components/ui/label";
@@ -19,14 +18,14 @@ import { Textarea } from "@/shared/components/ui/textarea";
 export interface TrustFeedbackTarget {
   id: string;
   label: string;
-  subjectRole: TrustActorRole;
+  subjectRole: string;
   helper?: string;
 }
 
 export interface TrustFeedbackReason {
   value: string;
   label: string;
-  severity: TrustSeverity;
+  severity: string;
 }
 
 export interface TrustFeedbackSubmission {
