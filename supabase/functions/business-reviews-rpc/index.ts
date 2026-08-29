@@ -215,16 +215,29 @@ async function isProjectAdmin(
   supabaseAdmin: SupabaseClient,
   userId: string,
 ): Promise<boolean> {
-  const { data, error } = await supabaseAdmin
-    .from("user_roles")
-    .select("id")
-    .eq("user_id", userId)
-    .in("role_enum", ["admin", "super_admin"])
-    .is("revoked_at", null)
-    .limit(1);
+  const { data, error } = await supabaseAdmin.rpc("is_admin", {
+    p_user_id: userId,
+  });
 
   if (error) throw error;
-  return Array.isArray(data) && data.length > 0;
+  return data === true;
+}
+
+async function canManageProfile(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+  profileId: string,
+): Promise<boolean> {
+  const { data, error } = await supabaseAdmin.rpc(
+    "broker_user_can_manage_profile",
+    {
+      p_profile_id: profileId,
+      p_user_id: userId,
+    },
+  );
+
+  if (error) throw error;
+  return data === true;
 }
 
 async function profileExists(
@@ -531,7 +544,11 @@ async function handleAddBusinessResponse(
     throw new RequestValidationError("Review was not found");
   }
   if (
-    !(await canAccessProfile(supabaseAdmin, auth, existing.reviewed_profile_id))
+    !(await canManageProfile(
+      supabaseAdmin,
+      auth.userId,
+      existing.reviewed_profile_id,
+    ))
   ) {
     throw new RequestAuthorizationError(
       "User cannot respond for this business",

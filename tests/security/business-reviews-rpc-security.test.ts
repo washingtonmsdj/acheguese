@@ -30,16 +30,21 @@ describe("business reviews rpc broker security", () => {
     expect(edgeFunction).toContain(
       'getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY")',
     );
+    expect(edgeFunction).toContain('supabaseAdmin.rpc("is_admin"');
+    expect(edgeFunction).toContain('"broker_user_can_manage_profile"');
+    expect(edgeFunction).not.toContain('.from("user_roles")');
     expect(edgeFunction).toContain('.from("reviews")');
     expect(edgeFunction).toContain('.from("orders")');
     expect(edgeFunction).toContain('.from("profile_members")');
-    expect(edgeFunction).toContain('.from("user_roles")');
     expect(edgeFunction).toContain('.eq("user_id", auth.userId)');
     expect(edgeFunction).toContain('.eq("profile_id", profileId)');
     expect(edgeFunction).toContain('.eq("review_type", "business")');
     expect(edgeFunction).toContain("requestedReviewerProfileId");
     expect(edgeFunction).toContain(
       "canAccessProfile(supabaseAdmin, auth, requestedReviewerProfileId)",
+    );
+    expect(edgeFunction).toContain(
+      "canManageProfile(\n      supabaseAdmin,\n      auth.userId,\n      existing.reviewed_profile_id",
     );
     expect(edgeFunction).toContain(
       "candidateOrder.customer_profile_id !== reviewerProfileId",
@@ -85,7 +90,29 @@ describe("business reviews rpc broker security", () => {
     );
   });
 
-  it("revokes direct browser execution of the backing review RPCs", () => {
+  it("keeps the business-response management decision on the canonical profile authority", () => {
+    const migration = readProjectFile(
+      "supabase/migrations/20260829171858_add_broker_profile_management_authority.sql",
+    );
+
+    expect(migration).toContain(
+      "SELECT private.user_can_manage_profile(p_user_id, p_profile_id)",
+    );
+    expect(migration).toContain(
+      "REVOKE ALL ON FUNCTION public.broker_user_can_manage_profile(uuid, uuid) FROM PUBLIC",
+    );
+    expect(migration).toContain(
+      "REVOKE ALL ON FUNCTION public.broker_user_can_manage_profile(uuid, uuid) FROM anon",
+    );
+    expect(migration).toContain(
+      "REVOKE ALL ON FUNCTION public.broker_user_can_manage_profile(uuid, uuid) FROM authenticated",
+    );
+    expect(migration).toContain(
+      "GRANT EXECUTE ON FUNCTION public.broker_user_can_manage_profile(uuid, uuid) TO service_role",
+    );
+  });
+
+  it("revokes direct browser execution of the dormant legacy review RPCs", () => {
     const migration = readProjectFile(
       "supabase/migrations/20260707210813_route_business_reviews_rpcs_through_edge_function.sql",
     );
