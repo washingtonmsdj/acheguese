@@ -5,6 +5,7 @@ import path from "node:path";
 
 const ROOT = process.cwd();
 const BUSINESS_ROOT = "src/modules/business";
+const BUSINESS_CREATE_HOOK = "src/modules/business/hooks/useBusinessCreateMultiProfile.ts";
 
 const CODE_FILE_RE = /\.(ts|tsx|js|jsx)$/;
 const TYPE_ONLY_IMPORT_RE = /import\s+type\s+[\s\S]*?from\s+["'][^"']+["'];?/g;
@@ -70,6 +71,28 @@ function main(): void {
     }
   }
 
+  const createHookPath = path.join(ROOT, BUSINESS_CREATE_HOOK);
+  if (!fs.existsSync(createHookPath)) {
+    violations.push(`${BUSINESS_CREATE_HOOK}: compatibility create hook is missing.`);
+  } else {
+    const createHook = fs.readFileSync(createHookPath, "utf8");
+    if (!createHook.includes("BusinessService.createBusiness(")) {
+      violations.push(
+        `${BUSINESS_CREATE_HOOK}: business creation must delegate to BusinessService.createBusiness().`,
+      );
+    }
+    if (createHook.includes("MultiProfileService")) {
+      violations.push(
+        `${BUSINESS_CREATE_HOOK}: parallel profile-first business creation via MultiProfileService is retired.`,
+      );
+    }
+    if (/\.createProfile\s*\(/.test(createHook)) {
+      violations.push(
+        `${BUSINESS_CREATE_HOOK}: module-level profile creation is forbidden; BusinessService owns the create orchestration.`,
+      );
+    }
+  }
+
   for (const retiredBridge of RETIRED_PUBLIC_SNAPSHOT_BRIDGES) {
     if (fs.existsSync(path.join(ROOT, retiredBridge))) {
       violations.push(`${retiredBridge}: retired compatibility bridge was recreated.`);
@@ -82,7 +105,9 @@ function main(): void {
     process.exit(1);
   }
 
-  console.log("Business module boundary valid: zero direct runtime integration access; retired public snapshot bridges remain absent.");
+  console.log(
+    "Business module boundary valid: zero direct runtime integration access; BusinessService remains the single create authority; retired public snapshot bridges remain absent.",
+  );
 }
 
 main();
