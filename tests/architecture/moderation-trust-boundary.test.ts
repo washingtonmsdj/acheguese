@@ -109,7 +109,7 @@ describe("Moderation and Trust boundaries", () => {
     ]);
 
     const owner = read("src/core/community/moderation/CommunityReportService.ts");
-    expect(owner).toMatch(/from\(["']community_reports["']\)\.insert\(/);
+    expect(owner).toMatch(/from\(["']community_reports["']\)\s*\.insert\(/);
     expect(owner).not.toMatch(/from\(["']community_reports["']\)[\s\S]{0,120}\.(update|delete)\(/);
   });
 
