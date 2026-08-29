@@ -1,7 +1,7 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
-import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/config/territory";
+import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { territorialGroupService } from "@/core/territorial/services/TerritorialGroupService";
 import { resolveHomeCommunityHref } from "@/core/routing/utils/homeCommunityHref";
