@@ -7,7 +7,7 @@ const read = (path: string) => readFileSync(resolve(root, path), 'utf8');
 
 describe('private storage boundaries', () => {
   const documentsMigration = read(
-    'supabase/migrations/20260826031800_restrict_documents_storage_policies_to_authenticated.sql',
+    'supabase/migrations/20260826031850_restrict_documents_storage_policies_to_authenticated.sql',
   );
   const safetyMigration = read(
     'supabase/migrations/20260829161927_repair_safety_evidence_storage_owner_policies.sql',
