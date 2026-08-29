@@ -1,13 +1,13 @@
 /**
- * AdminAssinaturas - Gestão administrativa de assinaturas
- * 
- * SSOT: Usa adminSubscriptionsService
+ * AdminAssinaturas - observabilidade administrativa de assinaturas.
+ *
+ * Este painel é somente leitura. Mudanças comerciais pertencem ao Stripe
+ * Checkout/Customer Portal e são materializadas pelo billing-webhook.
  */
 
 import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { adminSubscriptionsService } from "@/core/admin";
-import { Button } from "@/shared/components/ui/button";
 import {
   Table,
   TableBody,
@@ -19,17 +19,7 @@ import {
 import { Badge } from "@/shared/components/ui/badge";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
-import {
-  CreditCard,
-  TrendingUp,
-  XCircle,
-  CheckCircle,
-  Clock,
-  DollarSign,
-  ArrowUp,
-  ArrowDown,
-} from "lucide-react";
-import { toast } from "sonner";
+import { CreditCard, TrendingUp, Clock, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 import { formatBrl } from "@/shared/utils/currency";
@@ -39,24 +29,19 @@ import {
   AdminPagination,
   type FilterOption,
 } from "@/core/admin/components";
-import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 
 export default function AdminAssinaturas() {
-  const queryClient = useQueryClient();
-  const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
   const [planFilter, setPlanFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
 
-  // Buscar estatísticas
   const { data: stats, isLoading: loadingStats } = useQuery({
     queryKey: ["admin-subscriptions-stats"],
     queryFn: () => adminSubscriptionsService.getStats(),
   });
 
-  // Buscar assinaturas
   const { data: subscriptionsData, isLoading } = useQuery({
     queryKey: ["admin-subscriptions", page, search, planFilter, statusFilter],
     queryFn: () =>
@@ -64,62 +49,23 @@ export default function AdminAssinaturas() {
         page,
         limit: 20,
         search,
-        planType: planFilter || undefined,
+        planCode: planFilter || undefined,
         status: statusFilter || undefined,
       }),
   });
 
-  // Buscar assinaturas expirando
   const { data: expiringSubscriptions } = useQuery({
     queryKey: ["admin-subscriptions-expiring"],
     queryFn: () => adminSubscriptionsService.getExpiringSubscriptions(7),
     enabled: activeTab === "expiring",
   });
 
-  // Buscar churn rate
   const { data: churnData } = useQuery({
     queryKey: ["admin-subscriptions-churn"],
     queryFn: () => adminSubscriptionsService.getChurnRate(3),
     enabled: activeTab === "analytics",
   });
 
-  // Mutations
-  const cancelMutation = useMutation({
-    mutationFn: (id: string) => adminSubscriptionsService.cancelSubscription(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-subscriptions"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-subscriptions-stats"] });
-      toast.success("Assinatura cancelada com sucesso");
-    },
-    onError: () => {
-      toast.error("Erro ao cancelar assinatura");
-    },
-  });
-
-  const reactivateMutation = useMutation({
-    mutationFn: (id: string) => adminSubscriptionsService.reactivateSubscription(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-subscriptions"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-subscriptions-stats"] });
-      toast.success("Assinatura reativada com sucesso");
-    },
-    onError: () => {
-      toast.error("Erro ao reativar assinatura");
-    },
-  });
-
-  const renewMutation = useMutation({
-    mutationFn: (id: string) => adminSubscriptionsService.renewSubscription(id, 30),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-subscriptions"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-subscriptions-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["admin-subscriptions-expiring"] });
-      toast.success("Assinatura renovada por 30 dias");
-    },
-    onError: () => {
-      toast.error("Erro ao renovar assinatura");
-    },
-  });
   type SubscriptionItem = NonNullable<typeof subscriptionsData>["data"][number];
   type ExpiringSubscriptionItem = NonNullable<typeof expiringSubscriptions>[number];
 
@@ -130,9 +76,8 @@ export default function AdminAssinaturas() {
       placeholder: "Todos os planos",
       options: [
         { label: "Free", value: "free" },
-        { label: "Basic", value: "basic" },
-        { label: "Premium", value: "premium" },
-        { label: "Enterprise", value: "enterprise" },
+        { label: "Pro", value: "pro" },
+        { label: "Delivery", value: "delivery" },
       ],
     },
     {
@@ -141,9 +86,12 @@ export default function AdminAssinaturas() {
       placeholder: "Todos os status",
       options: [
         { label: "Ativa", value: "active" },
-        { label: "Expirada", value: "expired" },
-        { label: "Cancelada", value: "cancelled" },
-        { label: "Pendente", value: "pending" },
+        { label: "Em teste", value: "trialing" },
+        { label: "Pagamento pendente", value: "past_due" },
+        { label: "Incompleta", value: "incomplete" },
+        { label: "Incompleta expirada", value: "incomplete_expired" },
+        { label: "Não paga", value: "unpaid" },
+        { label: "Cancelada", value: "canceled" },
       ],
     },
   ];
@@ -152,14 +100,12 @@ export default function AdminAssinaturas() {
     switch (plan) {
       case "free":
         return <Badge variant="secondary">Free</Badge>;
-      case "basic":
-        return <Badge variant="default">Basic</Badge>;
-      case "premium":
-        return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">Premium</Badge>;
-      case "enterprise":
-        return <Badge variant="destructive">Enterprise</Badge>;
+      case "pro":
+        return <Badge variant="default">Pro</Badge>;
+      case "delivery":
+        return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">Delivery</Badge>;
       default:
-        return <Badge>{plan}</Badge>;
+        return <Badge variant="outline">{plan}</Badge>;
     }
   };
 
@@ -167,44 +113,35 @@ export default function AdminAssinaturas() {
     switch (status) {
       case "active":
         return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">Ativa</Badge>;
-      case "expired":
-        return <Badge variant="destructive">Expirada</Badge>;
-      case "cancelled":
+      case "trialing":
+        return <Badge variant="default">Em teste</Badge>;
+      case "past_due":
+        return <Badge className="bg-amber-100 text-amber-800 border-amber-200">Pagamento pendente</Badge>;
+      case "canceled":
         return <Badge variant="secondary">Cancelada</Badge>;
-      case "pending":
-        return <Badge className="bg-amber-100 text-amber-800 border-amber-200">Pendente</Badge>;
+      case "unpaid":
+        return <Badge variant="destructive">Não paga</Badge>;
+      case "incomplete_expired":
+        return <Badge variant="destructive">Incompleta expirada</Badge>;
+      case "incomplete":
+        return <Badge variant="outline">Incompleta</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
   };
 
-  const handleCancelSubscription = async (subscriptionId: string) => {
-    const confirmed = await confirm({
-      title: "Cancelar assinatura",
-      description: "A assinatura sera cancelada e o acesso pago podera ser interrompido.",
-      confirmLabel: "Cancelar assinatura",
-      variant: "destructive",
-    });
-
-    if (confirmed) {
-      cancelMutation.mutate(subscriptionId);
-    }
-  };
-
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold font-display flex items-center gap-2">
           <CreditCard className="h-8 w-8" />
-          Gestão de Assinaturas
+          Assinaturas
         </h1>
         <p className="text-muted-foreground mt-1">
-          Gerencie assinaturas, planos e receita
+          Observabilidade de contratos. Alterações comerciais são executadas pelo Stripe e materializadas pelo webhook de billing.
         </p>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <AdminStatsCard
           title="Total de Assinaturas"
@@ -224,7 +161,7 @@ export default function AdminAssinaturas() {
         <AdminStatsCard
           title="Receita Total"
           value={`R$ ${(stats?.totalRevenue || 0).toFixed(2)}`}
-          subtitle="Histórico completo"
+          subtitle="Histórico materializado"
           icon={TrendingUp}
           iconColor="text-blue-600"
           loading={loadingStats}
@@ -239,7 +176,6 @@ export default function AdminAssinaturas() {
         />
       </div>
 
-      {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="all" className="flex items-center gap-2">
@@ -256,9 +192,7 @@ export default function AdminAssinaturas() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Todas as Assinaturas Tab */}
         <TabsContent value="all" className="space-y-4">
-          {/* Filtros */}
           <AdminFiltersBar
             searchValue={search}
             onSearchChange={setSearch}
@@ -268,15 +202,16 @@ export default function AdminAssinaturas() {
             onFilterChange={(key, value) => {
               if (key === "plan") setPlanFilter(value);
               if (key === "status") setStatusFilter(value);
+              setPage(1);
             }}
             onClear={() => {
               setSearch("");
               setPlanFilter("");
               setStatusFilter("");
+              setPage(1);
             }}
           />
 
-          {/* Tabela de Assinaturas */}
           <Card>
             <CardContent className="pt-6">
               {isLoading ? (
@@ -290,9 +225,8 @@ export default function AdminAssinaturas() {
                         <TableHead>Plano</TableHead>
                         <TableHead>Valor</TableHead>
                         <TableHead>Início</TableHead>
-                        <TableHead>Expira</TableHead>
+                        <TableHead>Fim do período</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -301,57 +235,22 @@ export default function AdminAssinaturas() {
                           <TableCell className="font-medium">
                             {sub.user?.email || sub.user_id}
                           </TableCell>
-                          <TableCell>{getPlanBadge(sub.plan_type)}</TableCell>
+                          <TableCell>{getPlanBadge(sub.plan_code)}</TableCell>
+                          <TableCell>{formatBrl(sub.amount_cents / 100)}</TableCell>
                           <TableCell>
-                            {formatBrl(sub.amount_cents / 100)}
-                          </TableCell>
-                          <TableCell>
-                            {format(new Date(sub.started_at), "dd/MM/yyyy", {
-                              locale: ptBR,
-                            })}
+                            {format(new Date(sub.started_at), "dd/MM/yyyy", { locale: ptBR })}
                           </TableCell>
                           <TableCell>
                             {sub.expires_at
-                              ? format(new Date(sub.expires_at), "dd/MM/yyyy", {
-                                  locale: ptBR,
-                                })
+                              ? format(new Date(sub.expires_at), "dd/MM/yyyy", { locale: ptBR })
                               : "Sem limite"}
                           </TableCell>
                           <TableCell>{getStatusBadge(sub.status)}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              {sub.status === "active" && (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => handleCancelSubscription(sub.id)}
-                                >
-                                  <XCircle className="h-4 w-4 text-destructive" />
-                                </Button>
-                              )}
-                              {sub.status === "cancelled" && (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => reactivateMutation.mutate(sub.id)}
-                                >
-                                  <CheckCircle className="h-4 w-4 text-green-600" />
-                                </Button>
-                              )}
-                              <Button size="sm" variant="ghost">
-                                <ArrowUp className="h-4 w-4 text-blue-600" />
-                              </Button>
-                              <Button size="sm" variant="ghost">
-                                <ArrowDown className="h-4 w-4 text-orange-600" />
-                              </Button>
-                            </div>
-                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
 
-                  {/* Paginação */}
                   {subscriptionsData && (
                     <AdminPagination
                       currentPage={page}
@@ -367,7 +266,6 @@ export default function AdminAssinaturas() {
           </Card>
         </TabsContent>
 
-        {/* Expirando Tab */}
         <TabsContent value="expiring">
           <Card>
             <CardContent className="pt-6">
@@ -375,66 +273,48 @@ export default function AdminAssinaturas() {
                 <div className="space-y-4">
                   {expiringSubscriptions.map((sub: ExpiringSubscriptionItem) => (
                     <div key={sub.id} className="border rounded-lg p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold">
-                              {sub.user?.email || sub.user_id}
-                            </span>
-                            {getPlanBadge(sub.plan_type)}
+                            <span className="font-semibold">{sub.user?.email || sub.user_id}</span>
+                            {getPlanBadge(sub.plan_code)}
                           </div>
                           <p className="text-sm text-muted-foreground mt-1">
-                            Expira em:{" "}
-                            {format(new Date(sub.expires_at), "dd/MM/yyyy HH:mm", {
-                              locale: ptBR,
-                            })}
+                            Fim do período: {sub.expires_at
+                              ? format(new Date(sub.expires_at), "dd/MM/yyyy HH:mm", { locale: ptBR })
+                              : "não informado"}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             Valor: {formatBrl(sub.amount_cents / 100)}/mês
                           </p>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="default"
-                          onClick={() => renewMutation.mutate(sub.id)}
-                          disabled={renewMutation.isPending}
-                        >
-                          {renewMutation.isPending ? "Renovando..." : "Renovar"}
-                        </Button>
+                        {getStatusBadge(sub.status)}
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  Nenhuma assinatura expirando nos próximos 7 dias
+                  Nenhuma assinatura ativa encerrando o período nos próximos 7 dias
                 </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Analytics Tab */}
         <TabsContent value="analytics">
           <div className="space-y-4">
-            {/* Churn Rate Card */}
             <Card>
               <CardContent className="pt-6">
                 <h3 className="font-semibold mb-4">Taxa de Cancelamento (Churn)</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Churn Rate</p>
-                    <p className="text-2xl font-bold">
-                      {churnData?.churnRate.toFixed(2)}%
-                    </p>
+                    <p className="text-2xl font-bold">{churnData?.churnRate.toFixed(2)}%</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">
-                      Total de Assinaturas
-                    </p>
-                    <p className="text-2xl font-bold">
-                      {churnData?.totalSubscriptions || 0}
-                    </p>
+                    <p className="text-sm text-muted-foreground">Total de Assinaturas</p>
+                    <p className="text-2xl font-bold">{churnData?.totalSubscriptions || 0}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Canceladas</p>
@@ -446,7 +326,6 @@ export default function AdminAssinaturas() {
               </CardContent>
             </Card>
 
-            {/* Distribuição por Plano */}
             <Card>
               <CardContent className="pt-6">
                 <h3 className="font-semibold mb-4">Distribuição por Plano</h3>
@@ -454,9 +333,7 @@ export default function AdminAssinaturas() {
                   {stats?.byPlan &&
                     Object.entries(stats.byPlan).map(([plan, count]) => (
                       <div key={plan} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {getPlanBadge(plan)}
-                        </div>
+                        {getPlanBadge(plan)}
                         <span className="font-semibold">{count as number}</span>
                       </div>
                     ))}
@@ -466,7 +343,6 @@ export default function AdminAssinaturas() {
           </div>
         </TabsContent>
       </Tabs>
-      <ConfirmDialog />
     </div>
   );
 }
