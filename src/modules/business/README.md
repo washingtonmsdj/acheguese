@@ -40,6 +40,11 @@ Os snapshots publicos usam contracts em `src/core/business/types/publicSnapshots
 - `src/core/public-identity`: identidade publica;
 - `src/core/billing`: billing/assinaturas canonicas (`user_subscriptions`).
 
+## Hardening concluido nesta retomada
+
+- a criacao de empresa deixou de escrever `profile_members` diretamente e passou pelo owner `ProfileMembersService`;
+- a fachada antiga `BusinessService.getStats()` foi aposentada depois de confirmar zero callers TypeScript; ela devolvia `active: 0` e `by_category: {}` fixos e nao podia representar metricas canonicas.
+
 ## Bloqueadores conhecidos para certificacao MVP
 
 1. **Atomicidade de criacao:** a criacao de empresa envolve profile, membership, business_data, stats, endereco, horarios e contatos em operacoes sequenciais. Falha intermediaria pode deixar estado parcial; o fluxo deve convergir para uma operacao transacional/idempotente ou compensacao comprovada.
@@ -47,8 +52,7 @@ Os snapshots publicos usam contracts em `src/core/business/types/publicSnapshots
 3. **Autorizacao de subrecursos:** `business_data` usa `private.can_operate_business_profile`, mas policies historicas de produtos/servicos/galeria/stats/views ainda usam predicates diferentes. Roles operacionais precisam de comportamento consistente.
 4. **Legados de dados:** `businesses` e `business_subscriptions` ainda existem no banco; billing atual usa `user_subscriptions` como SSOT. Legados devem ser reconciliados e removidos/isolados sem perda de dados.
 5. **Higiene de dados:** existem perfis business sem `business_data` e registros sem `business_stats`; grande parte tem assinatura de fixture/teste, mas limpeza deve usar provenance explicita, nunca heuristica destrutiva.
-6. **API de estatisticas antiga:** `BusinessService.getStats()` ainda possui campos incompletos e nao deve ser usada como prova de metricas corretas enquanto nao for reconciliada/removida.
-7. **Certificacao executavel:** lint, typecheck, testes, E2E, RLS/grants e deployment do mesmo SHA precisam executar com evidencia atual. Resultados historicos nao certificam o HEAD atual.
+6. **Certificacao executavel:** lint, typecheck, testes, E2E, RLS/grants e deployment do mesmo SHA precisam executar com evidencia atual. Resultados historicos nao certificam o HEAD atual.
 
 ## Criterio de pronto
 
