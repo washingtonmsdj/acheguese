@@ -1,11 +1,7 @@
 import { supabase } from "@/integrations/supabase";
-import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase";
+import type { Tables } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
-import {
-  ADMIN_SUBSCRIPTION_STATUS,
-  type AdminSubscriptionStatus,
-} from "@/core/admin/config/subscription-status";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
@@ -15,16 +11,8 @@ type QueryPayload<TRow> = {
   count?: number | null;
 };
 
-type SingleQueryPayload<TRow> = {
-  data: TRow | null;
-  error: ErrorLike;
-  count?: number | null;
-};
-
 type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
   select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
-  insert(values: Record<string, unknown> | readonly Record<string, unknown>[]): TableClient<TRow>;
-  update(values: Record<string, unknown>): TableClient<TRow>;
   eq(column: string, value: unknown): TableClient<TRow>;
   or(filters: string): TableClient<TRow>;
   order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
@@ -32,7 +20,6 @@ type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
   not(column: string, operator: string, value: unknown): TableClient<TRow>;
   gte(column: string, value: unknown): TableClient<TRow>;
   lte(column: string, value: unknown): TableClient<TRow>;
-  single(): Promise<SingleQueryPayload<TRow>>;
 };
 
 type AdminSubscriptionsDbClient = {
@@ -41,12 +28,7 @@ type AdminSubscriptionsDbClient = {
 
 const db = supabase as unknown as AdminSubscriptionsDbClient;
 
-const PLAN_TYPES = ["free", "basic", "premium", "enterprise"] as const;
-
-type PlanType = (typeof PLAN_TYPES)[number];
 type UserSubscriptionRow = Tables<"user_subscriptions">;
-type UserSubscriptionInsert = TablesInsert<"user_subscriptions">;
-type UserSubscriptionUpdate = TablesUpdate<"user_subscriptions">;
 
 type UserSummary = {
   id: string;
@@ -56,6 +38,15 @@ type UserSummary = {
 type SubscriptionRowWithUser = UserSubscriptionRow & {
   user?: UserSummary | readonly UserSummary[] | null;
 };
+
+export type AdminSubscriptionStatus =
+  | "active"
+  | "trialing"
+  | "past_due"
+  | "incomplete"
+  | "incomplete_expired"
+  | "unpaid"
+  | "canceled";
 
 export interface SubscriptionStats {
   total: number;
@@ -71,13 +62,13 @@ export interface SubscriptionStats {
 export interface Subscription {
   id: string;
   user_id: string;
-  plan_type: PlanType;
+  plan_code: string;
   status: AdminSubscriptionStatus;
   active: boolean;
   amount_cents: number;
   started_at: string;
-  expires_at?: string | null;
-  cancelled_at?: string | null;
+  expires_at: string | null;
+  cancelled_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -86,61 +77,64 @@ interface SubscriptionListItem extends Subscription {
   user: UserSummary | null;
 }
 
+const CANONICAL_STATUSES = new Set<AdminSubscriptionStatus>([
+  "active",
+  "trialing",
+  "past_due",
+  "incomplete",
+  "incomplete_expired",
+  "unpaid",
+  "canceled",
+]);
+
 function incrementCounter(counter: Map<string, number>, key: string, amount: number): void {
   counter.set(key, (counter.get(key) ?? 0) + amount);
 }
 
-function isPlanType(value: string): value is PlanType {
-  return (PLAN_TYPES as readonly string[]).includes(value);
-}
-
-function normalizePlanType(value: string): PlanType {
-  return isPlanType(value) ? value : "free";
-}
-
-function normalizeSubscriptionStatus(value: string): AdminSubscriptionStatus {
-  switch (value) {
-    case ADMIN_SUBSCRIPTION_STATUS.ACTIVE:
-    case ADMIN_SUBSCRIPTION_STATUS.EXPIRED:
-    case ADMIN_SUBSCRIPTION_STATUS.CANCELLED:
-    case ADMIN_SUBSCRIPTION_STATUS.PENDING:
-      return value;
-    default:
-      return ADMIN_SUBSCRIPTION_STATUS.PENDING;
+function normalizeSubscriptionStatus(
+  value: string | null | undefined,
+): AdminSubscriptionStatus {
+  if (value === "cancelled") return "canceled";
+  if (value === "expired") return "incomplete_expired";
+  if (value === "pending") return "incomplete";
+  if (CANONICAL_STATUSES.has(value as AdminSubscriptionStatus)) {
+    return value as AdminSubscriptionStatus;
   }
+  return "incomplete";
 }
 
 function normalizeUserRelation(
   user: SubscriptionRowWithUser["user"],
 ): UserSummary | null {
-  if (isUserSummaryArray(user)) {
+  if (Array.isArray(user)) {
     return user[0] ?? null;
   }
-  return user ?? null;
+  return (user as UserSummary | null | undefined) ?? null;
 }
 
-function isUserSummaryArray(
-  value: SubscriptionRowWithUser["user"],
-): value is readonly UserSummary[] {
-  return Array.isArray(value);
+function subscriptionPlanCode(row: UserSubscriptionRow): string {
+  return row.plan_code ?? row.plan_type ?? "free";
+}
+
+function subscriptionAmountCents(row: UserSubscriptionRow): number {
+  if (typeof row.price_cents === "number") return row.price_cents;
+  if (typeof row.amount_cents === "number") return row.amount_cents;
+  return 0;
 }
 
 function mapSubscription(row: UserSubscriptionRow): Subscription {
+  const status = normalizeSubscriptionStatus(row.status_v2 ?? row.status);
+
   return {
     id: row.id,
     user_id: row.user_id,
-    plan_type: normalizePlanType(row.plan_type),
-    status: normalizeSubscriptionStatus(row.status),
-    active: row.active,
-    amount_cents:
-      typeof row.amount_cents === "number"
-        ? row.amount_cents
-        : typeof row.price_cents === "number"
-          ? row.price_cents
-          : 0,
-    started_at: row.started_at,
-    expires_at: row.expires_at,
-    cancelled_at: row.canceled_at,
+    plan_code: subscriptionPlanCode(row),
+    status,
+    active: status === "active" || status === "trialing",
+    amount_cents: subscriptionAmountCents(row),
+    started_at: row.current_period_start ?? row.started_at ?? row.created_at,
+    expires_at: row.current_period_end ?? row.expires_at ?? null,
+    cancelled_at: row.canceled_at ?? null,
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
@@ -153,27 +147,13 @@ function mapSubscriptionListItem(row: SubscriptionRowWithUser): SubscriptionList
   };
 }
 
-function toUserSubscriptionInsert(data: Partial<Subscription>): Partial<UserSubscriptionInsert> {
-  const payload: Partial<UserSubscriptionInsert> = {};
-
-  if (data.user_id !== undefined) payload.user_id = data.user_id;
-  if (data.plan_type !== undefined) payload.plan_type = data.plan_type;
-  if (data.status !== undefined) payload.status = data.status;
-  if (data.active !== undefined) payload.active = data.active;
-  if (data.amount_cents !== undefined) payload.amount_cents = data.amount_cents;
-  if (data.started_at !== undefined) payload.started_at = data.started_at;
-  if (data.expires_at !== undefined) payload.expires_at = data.expires_at;
-  if (data.cancelled_at !== undefined) payload.canceled_at = data.cancelled_at;
-  if (data.created_at !== undefined) payload.created_at = data.created_at;
-  if (data.updated_at !== undefined) payload.updated_at = data.updated_at;
-
-  return payload;
-}
-
-function toUserSubscriptionUpdate(data: Partial<Subscription>): Partial<UserSubscriptionUpdate> {
-  return toUserSubscriptionInsert(data);
-}
-
+/**
+ * Read model administrativo de billing.
+ *
+ * Não possui autoridade de escrita sobre user_subscriptions. Mudanças comerciais
+ * devem acontecer via Stripe Checkout/Customer Portal e ser materializadas pelo
+ * webhook server-side do core billing.
+ */
 class AdminSubscriptionsServiceClass {
   async getStats(): Promise<SubscriptionStats> {
     try {
@@ -183,25 +163,16 @@ class AdminSubscriptionsServiceClass {
 
       if (error) throw error;
 
-      const subscriptions = data ?? [];
+      const subscriptions = (data ?? []).map(mapSubscription);
       const now = new Date();
       const stats: SubscriptionStats = {
         total: subscriptions.length,
-        active: subscriptions.filter(
-          (subscription) =>
-            subscription.active &&
-            normalizeSubscriptionStatus(subscription.status) ===
-              ADMIN_SUBSCRIPTION_STATUS.ACTIVE,
-        ).length,
+        active: subscriptions.filter((subscription) => subscription.active).length,
         expired: subscriptions.filter(
-          (subscription) =>
-            normalizeSubscriptionStatus(subscription.status) ===
-            ADMIN_SUBSCRIPTION_STATUS.EXPIRED,
+          (subscription) => subscription.status === "incomplete_expired",
         ).length,
         cancelled: subscriptions.filter(
-          (subscription) =>
-            normalizeSubscriptionStatus(subscription.status) ===
-            ADMIN_SUBSCRIPTION_STATUS.CANCELLED,
+          (subscription) => subscription.status === "canceled",
         ).length,
         byPlan: {},
         totalRevenue: 0,
@@ -211,27 +182,23 @@ class AdminSubscriptionsServiceClass {
 
       const byPlanCounter = new Map<string, number>();
       for (const subscription of subscriptions) {
-        incrementCounter(byPlanCounter, normalizePlanType(subscription.plan_type), 1);
+        incrementCounter(byPlanCounter, subscription.plan_code, 1);
 
         const amount = subscription.amount_cents / 100;
         stats.totalRevenue += amount;
-        if (
-          subscription.active &&
-          normalizeSubscriptionStatus(subscription.status) ===
-            ADMIN_SUBSCRIPTION_STATUS.ACTIVE
-        ) {
+        if (subscription.active) {
           stats.monthlyRecurringRevenue += amount;
         }
       }
       stats.byPlan = Object.fromEntries(byPlanCounter.entries());
 
-      const lifetimes = subscriptions
-        .filter((subscription) => Boolean(subscription.started_at))
-        .map((subscription) => {
-          const start = new Date(subscription.started_at);
-          const end = subscription.canceled_at ? new Date(subscription.canceled_at) : now;
-          return (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
-        });
+      const lifetimes = subscriptions.map((subscription) => {
+        const start = new Date(subscription.started_at);
+        const end = subscription.cancelled_at
+          ? new Date(subscription.cancelled_at)
+          : now;
+        return (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+      });
 
       stats.averageLifetime =
         lifetimes.length > 0
@@ -249,11 +216,11 @@ class AdminSubscriptionsServiceClass {
     page?: number;
     limit?: number;
     search?: string;
-    planType?: string;
+    planCode?: string;
     status?: string;
   } = {}) {
     try {
-      const { page = 1, limit = 20, search, planType, status } = params;
+      const { page = 1, limit = 20, search, planCode, status } = params;
 
       let query = db.from<SubscriptionRowWithUser>("user_subscriptions").select(
         `
@@ -268,18 +235,11 @@ class AdminSubscriptionsServiceClass {
 
       if (search) {
         const searchFilter = buildSafeOrILikeFilter(["user.email"], search);
-        if (searchFilter) {
-          query = query.or(searchFilter);
-        }
+        if (searchFilter) query = query.or(searchFilter);
       }
 
-      if (planType) {
-        query = query.eq("plan_type", planType);
-      }
-
-      if (status) {
-        query = query.eq("status", status);
-      }
+      if (planCode) query = query.eq("plan_code", planCode);
+      if (status) query = query.eq("status_v2", status);
 
       const from = (page - 1) * limit;
       const to = from + limit - 1;
@@ -303,137 +263,26 @@ class AdminSubscriptionsServiceClass {
     }
   }
 
-  async createSubscription(data: Partial<Subscription>): Promise<Subscription | null> {
-    try {
-      const payload = toUserSubscriptionInsert(data);
-      const { data: subscription, error } = await db
-        .from<UserSubscriptionRow>("user_subscriptions")
-        .insert(payload)
-        .select("*")
-        .single();
-
-      if (error) throw error;
-      return subscription ? mapSubscription(subscription) : null;
-    } catch (error) {
-      logger.error("AdminSubscriptionsService.createSubscription", error as Error, data);
-      return null;
-    }
-  }
-
-  async updateSubscription(id: string, data: Partial<Subscription>): Promise<boolean> {
-    try {
-      const payload = toUserSubscriptionUpdate(data);
-      if (Object.keys(payload).length === 0) return true;
-
-      const { error } = await db
-        .from<UserSubscriptionRow>("user_subscriptions")
-        .update(payload)
-        .eq("id", id);
-
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      logger.error("AdminSubscriptionsService.updateSubscription", error as Error, { id, data });
-      return false;
-    }
-  }
-
-  async cancelSubscription(subscriptionId: string, _reason?: string): Promise<boolean> {
-    try {
-      const patch: Partial<UserSubscriptionUpdate> = {
-        status: ADMIN_SUBSCRIPTION_STATUS.CANCELLED,
-        active: false,
-        canceled_at: new Date().toISOString(),
-      };
-
-      const { error } = await db
-        .from<UserSubscriptionRow>("user_subscriptions")
-        .update(patch)
-        .eq("id", subscriptionId);
-
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      logger.error("AdminSubscriptionsService.cancelSubscription", error as Error, {
-        subscriptionId,
-      });
-      return false;
-    }
-  }
-
-  async reactivateSubscription(subscriptionId: string): Promise<boolean> {
-    try {
-      const patch: Partial<UserSubscriptionUpdate> = {
-        status: ADMIN_SUBSCRIPTION_STATUS.ACTIVE,
-        active: true,
-        canceled_at: null,
-      };
-
-      const { error } = await db
-        .from<UserSubscriptionRow>("user_subscriptions")
-        .update(patch)
-        .eq("id", subscriptionId);
-
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      logger.error("AdminSubscriptionsService.reactivateSubscription", error as Error, {
-        subscriptionId,
-      });
-      return false;
-    }
-  }
-
-  async renewSubscription(subscriptionId: string, days = 30): Promise<boolean> {
-    try {
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + days);
-
-      const patch: Partial<UserSubscriptionUpdate> = {
-        status: ADMIN_SUBSCRIPTION_STATUS.ACTIVE,
-        active: true,
-        canceled_at: null,
-        expires_at: expiresAt.toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const { error } = await db
-        .from<UserSubscriptionRow>("user_subscriptions")
-        .update(patch)
-        .eq("id", subscriptionId);
-
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      logger.error("AdminSubscriptionsService.renewSubscription", error as Error, {
-        subscriptionId,
-        days,
-      });
-      return false;
-    }
-  }
-
   async getExpiringSubscriptions(daysAhead = 7): Promise<SubscriptionListItem[]> {
     try {
       const now = new Date();
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + daysAhead);
 
-      const { data, error } = await db.from<SubscriptionRowWithUser>("user_subscriptions").select(
-        `
+      const { data, error } = await db
+        .from<SubscriptionRowWithUser>("user_subscriptions")
+        .select(`
           *,
           user:auth.users!user_id(
             id,
             email
           )
-        `,
-      )
-        .eq("active", true)
-        .eq("status", ADMIN_SUBSCRIPTION_STATUS.ACTIVE)
-        .not("expires_at", "is", null)
-        .gte("expires_at", now.toISOString())
-        .lte("expires_at", futureDate.toISOString())
-        .order("expires_at", { ascending: true });
+        `)
+        .eq("status_v2", "active")
+        .not("current_period_end", "is", null)
+        .gte("current_period_end", now.toISOString())
+        .lte("current_period_end", futureDate.toISOString())
+        .order("current_period_end", { ascending: true });
 
       if (error) throw error;
       return (data ?? []).map(mapSubscriptionListItem);
@@ -448,10 +297,13 @@ class AdminSubscriptionsServiceClass {
   async getRevenueByPeriod(startDate: string, endDate: string) {
     try {
       const { data, error } = await db
-        .from<Pick<UserSubscriptionRow, "amount_cents" | "created_at" | "plan_type">>(
-          "user_subscriptions",
-        )
-        .select("amount_cents, created_at, plan_type")
+        .from<
+          Pick<
+            UserSubscriptionRow,
+            "price_cents" | "amount_cents" | "created_at" | "plan_code" | "plan_type"
+          >
+        >("user_subscriptions")
+        .select("price_cents, amount_cents, created_at, plan_code, plan_type")
         .gte("created_at", startDate)
         .lte("created_at", endDate);
 
@@ -465,12 +317,20 @@ class AdminSubscriptionsServiceClass {
       const byPlanCounter = new Map<string, number>();
       const byMonthCounter = new Map<string, number>();
 
-      for (const subscription of data ?? []) {
-        const amount = subscription.amount_cents / 100;
-        revenue.total += amount;
-        incrementCounter(byPlanCounter, normalizePlanType(subscription.plan_type), amount);
+      for (const row of data ?? []) {
+        const amountCents =
+          typeof row.price_cents === "number"
+            ? row.price_cents
+            : typeof row.amount_cents === "number"
+              ? row.amount_cents
+              : 0;
+        const amount = amountCents / 100;
+        const planCode = row.plan_code ?? row.plan_type ?? "free";
 
-        const month = new Date(subscription.created_at).toISOString().slice(0, 7);
+        revenue.total += amount;
+        incrementCounter(byPlanCounter, planCode, amount);
+
+        const month = new Date(row.created_at).toISOString().slice(0, 7);
         incrementCounter(byMonthCounter, month, amount);
       }
 
@@ -492,8 +352,10 @@ class AdminSubscriptionsServiceClass {
       startDate.setMonth(startDate.getMonth() - months);
 
       const { data, error } = await db
-        .from<Pick<UserSubscriptionRow, "status" | "canceled_at">>("user_subscriptions")
-        .select("status, canceled_at")
+        .from<Pick<UserSubscriptionRow, "status_v2" | "status" | "canceled_at">>(
+          "user_subscriptions",
+        )
+        .select("status_v2, status, canceled_at")
         .gte("created_at", startDate.toISOString());
 
       if (error) throw error;
@@ -502,8 +364,8 @@ class AdminSubscriptionsServiceClass {
       const total = subscriptions.length;
       const cancelled = subscriptions.filter(
         (subscription) =>
-          normalizeSubscriptionStatus(subscription.status) ===
-          ADMIN_SUBSCRIPTION_STATUS.CANCELLED,
+          normalizeSubscriptionStatus(subscription.status_v2 ?? subscription.status) ===
+          "canceled",
       ).length;
 
       return {
@@ -514,58 +376,6 @@ class AdminSubscriptionsServiceClass {
     } catch (error) {
       logger.error("AdminSubscriptionsService.getChurnRate", error as Error, { months });
       return { churnRate: 0, totalSubscriptions: 0, cancelledSubscriptions: 0 };
-    }
-  }
-
-  async upgradePlan(subscriptionId: string, newPlan: string, newAmount: number): Promise<boolean> {
-    try {
-      const patch: Partial<UserSubscriptionUpdate> = {
-        plan_type: newPlan,
-        amount_cents: newAmount,
-      };
-
-      const { error } = await db
-        .from<UserSubscriptionRow>("user_subscriptions")
-        .update(patch)
-        .eq("id", subscriptionId);
-
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      logger.error("AdminSubscriptionsService.upgradePlan", error as Error, {
-        subscriptionId,
-        newPlan,
-        newAmount,
-      });
-      return false;
-    }
-  }
-
-  async downgradePlan(
-    subscriptionId: string,
-    newPlan: string,
-    newAmount: number,
-  ): Promise<boolean> {
-    try {
-      const patch: Partial<UserSubscriptionUpdate> = {
-        plan_type: newPlan,
-        amount_cents: newAmount,
-      };
-
-      const { error } = await db
-        .from<UserSubscriptionRow>("user_subscriptions")
-        .update(patch)
-        .eq("id", subscriptionId);
-
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      logger.error("AdminSubscriptionsService.downgradePlan", error as Error, {
-        subscriptionId,
-        newPlan,
-        newAmount,
-      });
-      return false;
     }
   }
 }
