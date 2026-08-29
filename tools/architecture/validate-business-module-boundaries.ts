@@ -7,7 +7,9 @@ const ROOT = process.cwd();
 const SOURCE_ROOT = "src";
 const BUSINESS_ROOT = "src/modules/business";
 const BUSINESS_OWNER_ROOT = "src/core/business/";
+const BUSINESS_CORE_ROOT = "src/core/business";
 const BUSINESS_CREATE_HOOK = "src/modules/business/hooks/useBusinessCreateMultiProfile.ts";
+const BUSINESS_ANALYTICS_SERVICE = "src/core/business/services/business-analytics.service.ts";
 
 const CODE_FILE_RE = /\.(ts|tsx|js|jsx)$/;
 const TYPE_ONLY_IMPORT_RE = /import\s+type\s+[\s\S]*?from\s+["'][^"']+["'];?/g;
@@ -19,6 +21,15 @@ const MUTATION_METHOD_RE = /\.(?:insert|update|upsert|delete)\s*\(/;
 const RETIRED_PUBLIC_SNAPSHOT_BRIDGES = [
   "src/modules/business/public/types/publicSnapshots.ts",
   "src/modules/business/public/services/PublicSnapshotRpcService.ts",
+] as const;
+
+const RETIRED_BUSINESS_ANALYTICS_RUNTIME_MARKERS = [
+  '"business_views"',
+  "'business_views'",
+  '"get_business_views_summary"',
+  "'get_business_views_summary'",
+  '"get_business_views_last_7_days"',
+  "'get_business_views_last_7_days'",
 ] as const;
 
 function normalize(filePath: string): string {
@@ -105,6 +116,35 @@ function main(): void {
     }
   }
 
+  for (const filePath of walk(path.join(ROOT, BUSINESS_CORE_ROOT))) {
+    const relative = normalize(path.relative(ROOT, filePath));
+    const content = fs.readFileSync(filePath, "utf8");
+    for (const marker of RETIRED_BUSINESS_ANALYTICS_RUNTIME_MARKERS) {
+      if (content.includes(marker)) {
+        violations.push(
+          `${relative}: retired Business views analytics dependency ${marker} is forbidden; use AnalyticsService instead.`,
+        );
+      }
+    }
+  }
+
+  const analyticsServicePath = path.join(ROOT, BUSINESS_ANALYTICS_SERVICE);
+  if (!fs.existsSync(analyticsServicePath)) {
+    violations.push(`${BUSINESS_ANALYTICS_SERVICE}: Business analytics adapter is missing.`);
+  } else {
+    const analyticsService = fs.readFileSync(analyticsServicePath, "utf8");
+    if (!analyticsService.includes("AnalyticsService.getMetrics(")) {
+      violations.push(
+        `${BUSINESS_ANALYTICS_SERVICE}: business analytics reads must delegate to AnalyticsService.getMetrics().`,
+      );
+    }
+    if (DIRECT_INTEGRATION_RE.test(withoutTypeOnlyImports(analyticsService))) {
+      violations.push(
+        `${BUSINESS_ANALYTICS_SERVICE}: direct integration access is retired; AnalyticsService owns analytics persistence and RPCs.`,
+      );
+    }
+  }
+
   const createHookPath = path.join(ROOT, BUSINESS_CREATE_HOOK);
   if (!fs.existsSync(createHookPath)) {
     violations.push(`${BUSINESS_CREATE_HOOK}: compatibility create hook is missing.`);
@@ -140,7 +180,7 @@ function main(): void {
   }
 
   console.log(
-    "Business boundary valid: module infrastructure access is isolated, BusinessService remains the single create authority, business_data runtime writes remain owned by src/core/business, and retired public snapshot bridges remain absent.",
+    "Business boundary valid: module infrastructure access is isolated, BusinessService remains the single create authority, business_data runtime writes remain owned by src/core/business, Business analytics delegates to AnalyticsService, legacy business_views runtime dependencies remain retired, and retired public snapshot bridges remain absent.",
   );
 }
 
