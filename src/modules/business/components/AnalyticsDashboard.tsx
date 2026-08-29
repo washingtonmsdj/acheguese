@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Calendar,
   Eye,
   Heart,
   MessageCircle,
@@ -126,13 +125,6 @@ export default function AnalyticsDashboard({
       color: "text-orange-600",
     },
     {
-      label: "Agendamentos",
-      value: data.appointments,
-      previous: data.previous.appointments,
-      icon: Calendar,
-      color: "text-primary",
-    },
-    {
       label: "Favoritos",
       value: data.favorites,
       previous: data.previous.favorites,
@@ -149,7 +141,9 @@ export default function AnalyticsDashboard({
   ];
 
   const whatsappConversion = safeRate(data.whatsappClicks, data.views);
-  const leadConversion = safeRate(data.appointments, data.views);
+  const totalContactInteractions =
+    data.whatsappClicks + data.phoneClicks + data.routeClicks;
+  const contactConversion = safeRate(totalContactInteractions, data.views);
 
   return (
     <div className="space-y-6">
@@ -213,20 +207,20 @@ export default function AnalyticsDashboard({
             </div>
             <div>
               <p className="text-sm font-medium text-blue-700">
-                CONVERSÃO TOTAL
+                CONVERSÃO DE CONTATO
               </p>
               <p className="text-xs text-blue-600">
-                Agendamentos sobre visualizações
+                Interações de contato sobre visualizações
               </p>
             </div>
           </div>
 
           <div className="flex items-end gap-2">
             <span className="text-4xl font-bold text-blue-900">
-              {leadConversion}%
+              {contactConversion}%
             </span>
             <span className="mb-1 text-sm font-medium text-blue-700">
-              {data.appointments} agendamentos
+              {totalContactInteractions} interações
             </span>
           </div>
         </Card>
@@ -247,9 +241,9 @@ export default function AnalyticsDashboard({
               width: safeRate(data.whatsappClicks, data.views),
             },
             {
-              label: "Agendamentos",
-              value: data.appointments,
-              width: safeRate(data.appointments, data.views),
+              label: "Interações de contato",
+              value: totalContactInteractions,
+              width: contactConversion,
             },
           ].map((step) => (
             <div key={step.label} className="text-center">
@@ -266,7 +260,7 @@ export default function AnalyticsDashboard({
         </div>
       </Card>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
         {metrics.map((metric) => {
           const Icon = metric.icon;
           const change = getMetricChange(metric.value, metric.previous);
