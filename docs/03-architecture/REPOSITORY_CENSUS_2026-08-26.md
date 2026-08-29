@@ -5,9 +5,9 @@
 **Missão:** `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`  
 **Status:** G0 CONCLUÍDO — snapshot operacional atualizado durante fechamento de G2  
 **Baseline inicial:** `289066361bf77cb451e9e39ac3f6bfe45a6e9c86`  
-**Snapshot verificado:** `96c9681eb8ff8ea780971f1128f8ebd61bacbca9`
+**Snapshot base do corte final de `plans/`:** `0d42605508cc539bbfee1f30d456cd242601d67d`
 
-Este documento é o inventário operacional da reorganização global. Ele não substitui o plano permanente da raiz. O baseline inicial permanece registrado para rastreabilidade; as classificações abaixo refletem a árvore atual verificada e devem ser revalidadas antes de qualquer write porque a missão opera diretamente na `main`.
+Este documento é o inventário operacional da reorganização global. Ele não substitui o plano permanente da raiz. O baseline inicial permanece registrado para rastreabilidade; as classificações abaixo refletem a árvore reorganizada e devem ser revalidadas antes de qualquer write porque a missão opera diretamente na `main`.
 
 ## Legenda
 
@@ -37,13 +37,13 @@ Este documento é o inventário operacional da reorganização global. Ele não 
 
 | Path | Classificação | Owner alvo / regra |
 |---|---|---|
-| `plans/` | INVESTIGATE/MOVE/RETIRE | plano ativo → `docs/08-roadmap`; histórico → `docs/10-archive` somente após validar links e autoridade |
 | `eslint-rules/` | KEEP provável | tooling de lint; mover somente se callers/config forem atualizados no mesmo corte |
 
 ### Roots já retirados
 
 - `scripts/` — **RETIRED**; tooling operacional é canônico em `tools/**`.
 - `e2e/` — **RETIRED**; owner global é `tests/e2e/**`.
+- `plans/` — **RETIRED**; roadmaps ativos são canônicos em `docs/08-roadmap/**` e planos concluídos/históricos em `docs/10-archive/plans/**`.
 - `handoff/`, `product-qa-screenshots/`, `templates/` — **RETIRED** da raiz; material válido foi movido/arquivado e há regression guards.
 
 Não recriar roots aposentados para conveniência temporária.
@@ -203,7 +203,7 @@ O root `scripts/**` foi completamente aposentado. `package.json`, regressions de
 | global compatibility config | `src/config/*` | owners específicos em `app`, `core`, `shared` | RETIRED |
 | E2E global legado | `e2e/*` | `tests/e2e/*` | RETIRED |
 | tooling legado | `scripts/*` | `tools/*` por responsabilidade | RETIRED |
-| planos históricos/ativos | `plans/*` | `docs/08-roadmap` ou `docs/10-archive` | INVESTIGATE |
+| planos históricos/ativos | `plans/*` | `docs/08-roadmap/**` ou `docs/10-archive/plans/**` | RETIRED |
 
 ---
 
@@ -211,7 +211,7 @@ O root `scripts/**` foi completamente aposentado. `package.json`, regressions de
 
 Não criar validators concorrentes quando já existir owner.
 
-- `tests/architecture/repository-reorganization-contract.test.ts` protege o arquivo permanente, taxonomia de roots, paths de source aposentados, configuração canônica, templates e E2E.
+- `tests/architecture/repository-reorganization-contract.test.ts` protege o arquivo permanente, taxonomia de roots, paths de source aposentados, configuração canônica, templates, E2E e o root `plans/` aposentado.
 - `tests/architecture/compatibility-surface-cleanup.test.ts` protege roots/namespaces de compatibilidade já retirados.
 - tooling canônico de taxonomia e boundaries reside em `tools/architecture/**`.
 - regras específicas de bounded context permanecem em seus tests/validators próprios quando representam contratos distintos.
@@ -229,13 +229,13 @@ Checklist estrutural relevante ao fechamento de G2:
 - [x] `src/features`, `src/test`, `src/__tests__`, `src/types` e `src/config` retirados;
 - [x] `scripts/` retirado e tooling operacional consolidado em `tools/**`;
 - [x] `e2e/` retirado e owner canônico consolidado em `tests/e2e/**`;
+- [x] `plans/` retirado após separar roadmaps ativos de histórico concluído e migrar consumidores dos paths antigos;
 - [x] compatibility bridges globais reduzidos a zero;
 - [x] Events legado retirado dos owners históricos;
 - [x] `core → modules` protegido por boundary;
 - [x] module → integrations protegido por ratchet de G1;
 - [x] itens de sobreposição sem prova continuam INVESTIGATE em vez de sofrer merge por heurística;
-- [ ] `plans/` ainda exige classificação deliberada entre roadmap ativo, referência e archive;
-- [ ] documentação histórica/operacional ainda deve ser sincronizada onde mencionar paths já aposentados;
+- [ ] documentação histórica/operacional ainda deve ser sincronizada onde mencionar paths já aposentados, quando for documento vivo e não mero registro histórico;
 - [ ] certificação same-SHA de testes/typecheck/build ainda é necessária antes de declarar G2 formalmente encerrado.
 
-**Decisão:** G0 permanece concluído como inventário e G1 permanece concluído como taxonomia/boundaries. A remoção física de bridges/roots prevista em G2 está substancialmente concluída no snapshot acima; G2 ainda não deve ser declarado certificado até finalizar a classificação documental pendente e executar a certificação no mesmo SHA alvo.
+**Decisão:** G0 permanece concluído como inventário e G1 permanece concluído como taxonomia/boundaries. A retirada física dos roots e bridges globais previstos no escopo atual de G2 está concluída; G2 ainda não deve ser declarado certificado até executar a certificação exigida no mesmo SHA alvo e resolver qualquer falha real encontrada por esses gates.

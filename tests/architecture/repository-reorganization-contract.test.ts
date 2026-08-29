@@ -37,6 +37,7 @@ const RETIRED_ROOT_ARTIFACTS = [
   "product-qa-screenshots",
   "templates",
   "e2e",
+  "plans",
 ] as const;
 const RETIRED_E2E_FILES = [
   "e2e/helpers/geolocation.ts",
