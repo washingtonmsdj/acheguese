@@ -9,7 +9,7 @@
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
 **Status:** EM EXECUÇÃO — G4 Global SSOT Hardening  
-**Checkpoint técnico antes desta atualização:** `ece1a1595ecd9d4e82d1ed37ca817f5f96d3f7e3`  
+**Checkpoint técnico antes desta atualização:** `c864aaef8fc10574da38d772d1dd5b3c7d053d35`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
 **Monorepo:** NÃO atualmente; manter monorepo-ready, sem migrar para workspaces/Turborepo agora
@@ -297,8 +297,8 @@ Ordem prioritária:
 - [x] Analytics — `src/core/analytics/AnalyticsService.ts` é o owner horizontal único; adapter/UI/read model paralelos foram aposentados, contratos de RPC/enum foram alinhados ao remoto, `validate-analytics-ssot.ts` está no Gate-First e a migration `20260829164446` reparou a autoridade de leitura de métricas de Business;
 - [x] Reviews — `public.reviews` + `src/core/reviews` permanecem o agregado/owner de Profile Reviews; Business usa `BusinessReviewService` + `business-reviews-rpc`, admin foi alinhado a `is_admin`, resposta comercial exige gestão canônica via `private.user_can_manage_profile`, e o remoto está sincronizado na Edge Function v10; cinco RPCs comerciais antigos ficaram classificados como legado dormente service-role-only para provenance em G5;
 - [x] Billing/subscriptions — `src/core/billing` é o owner horizontal; catálogo publicado é a autoridade de plano/preço/entitlements, `user_subscriptions` é read-only no browser, Checkout/Portal governam mudança comercial e `billing-webhook` materializa estado server-side; legados, semântica completa de snapshot e E2E Stripe permanecem em G5/G6/G7;
-- [ ] Messaging/realtime/notifications — **PRÓXIMO ALVO G4**;
-- [ ] Moderation/trust;
+- [x] Messaging/realtime/notifications — `src/core/messaging` mantém agregados Classified e Community Direct explicitamente separados, `src/core/realtime/RealtimeService` é o único owner de channels e `src/core/notifications` governa inbox/preferências/outbox; UI pausada foi retirada do core, writes privilegiados de notifications foram endurecidos e os streams exigidos foram alinhados à publication; UX, carga, legados e E2E ficam em G5/G6/G7;
+- [ ] Moderation/trust — **PRÓXIMO ALVO G4**;
 - [ ] Search/discovery;
 - [ ] permissions/authorization helpers.
 
@@ -515,9 +515,14 @@ Atualizar esta seção somente com marcos relevantes. Não transformar este arqu
 - [x] Billing/subscriptions fechado no nível G4: catálogo publicado (`commercial_catalog_version` + `catalog_item` + policies) passou a ser a autoridade de plano/preço/features/entitlements; `BillingPlanService` virou adapter desse catálogo; `BusinessSubscriptionService` separou explicitamente assinatura de Business do reader de assinatura `user`; writer browser de `user_subscriptions` foi eliminado, painéis admin ficaram read-only, Checkout/Portal governam mudanças comerciais e `billing-webhook` é o materializador server-side;
 - [x] Billing remoto reconciliado no escopo conhecido: `20260829173833` removeu self-service write do usuário, `20260829175638` preservou entitlements extras no catálogo e `20260829183431` removeu a policy administrativa `ALL`; revalidação posterior confirmou somente policies SELECT em `user_subscriptions` para usuários/proprietários/admins;
 - [x] `tests/architecture/billing-subscription-authority.test.ts` protege ausência de writers browser, catálogo read-only no browser, namespaces/serviços paralelos aposentados, escopo/status canônicos e autoridade Stripe/server-side; `src/core/billing/README.md` e `docs/architecture/SSOT_REGISTRY.md` foram sincronizados;
-- [ ] validação hosted do checkpoint atual — deve ser revalidada ao final do próximo corte; histórico recente continua **BLOCKED por runner/provider** quando jobs retornam `steps: []` e `runner_id: 0`. Não converter isso em PASS nem em source failure;
+- [x] Messaging/realtime/notifications fechado no nível G4: `ClassifiedMessagingService` e `CommunityDirectMessagingService` permanecem owners explícitos dos seus agregados, sem `MessagingService` genérico; UI órfã em `src/core/messaging/{components,hooks,pages}` foi aposentada porque as rotas já estavam launch-paused, e `tests/architecture/classified-messaging-ssot.test.ts` impede recriação de UI dentro de core;
+- [x] Realtime reconciliado no remoto conhecido: `RealtimeService` continua sendo o único owner de `.channel()`, e `20260829185634_align_messaging_notification_realtime_publication.sql` adicionou `public.notifications` e `public.messages` à `supabase_realtime`; revalidação confirmou também `community_direct_messages` na mesma publication;
+- [x] Notifications reconciliado no remoto conhecido: `20260829185546_harden_notification_inbox_write_authority.sql` tornou `create_notification` `SECURITY DEFINER` com `search_path=public, pg_temp`, manteve EXECUTE para authenticated/service_role, removeu anon, retirou INSERT/hard DELETE direto do browser e preservou apenas UPDATE das colunas de estado da própria inbox sob RLS;
+- [x] `NotificationPreferencesService` está consolidado sobre RPCs canônicos, `tests/architecture/notification-inbox-authority.test.ts` bloqueia writer browser paralelo e `tests/architecture/realtime-ssot.test.ts` protege publication/transporte; READMEs de Messaging/Notifications e `docs/architecture/SSOT_REGISTRY.md` foram sincronizados;
+- [ ] o manifest secundário `docs/architecture/core-platform-ownership.json` ainda conserva o rótulo histórico CP-001 `status: migration` para `notifications`, mas seu `currentOwner`, `targetOwner` e allowlist já apontam para a autoridade canônica e não registram writer concorrente; normalização documental/exaustiva fica para o sweep de G5 e não reabre a autoridade de source de G4;
+- [ ] validação hosted do checkpoint atual — deve ser revalidada ao final de um corte significativo; histórico recente continua **BLOCKED por runner/provider** quando jobs retornam `steps: []` e `runner_id: 0`. Não converter isso em PASS nem em source failure;
 - [ ] limpeza de refs temporárias `tmp-public-url-ssot` e `tmp-public-url-ssot-2` — criadas durante tentativa de Git Data, nunca usadas para merge; o conector atual não expõe delete-ref, portanto devem ser removidas pelo próximo executor com capacidade de apagar refs remotas;
-- [ ] próximo alvo seguro de G4: `Messaging/realtime/notifications`.
+- [ ] próximo alvo seguro de G4: `Moderation/trust`.
 
 ---
 
