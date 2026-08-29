@@ -12,11 +12,11 @@ const RUNTIME_ROLE_CONSUMERS = [
   "src/core/auth/hooks/useIsAdmin.ts",
   "src/core/community/access/useCommunityAccess.ts",
   "src/core/profiles/services/profile.context.aggregate.ts",
+  "src/core/profiles/services/ProfileService.ts",
 ] as const;
 
 const TEMPORARY_NON_ADMIN_ROLE_BYPASSES = [
   "src/core/landing/services/landing.queries.ts",
-  "src/core/profiles/services/ProfileService.ts",
 ] as const;
 
 function normalize(filePath: string): string {

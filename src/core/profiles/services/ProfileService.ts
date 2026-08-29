@@ -3,7 +3,7 @@ import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { getServicesByProfile } from "@/core/professional/services/professional.queries";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
-import { adminRolesService } from "@/core/admin/services/AdminRolesService";
+import { RoleService } from "@/core/authorization/services/RoleService";
 import {
   publicIdentityService,
   PublicIdentityService,
@@ -416,8 +416,7 @@ export class ProfileService {
   // SSOT: metodos auxiliares para dados complementares de perfil
   async getUserRoles(userId: string): Promise<string[]> {
     try {
-      const roles = await adminRolesService.getUserRoles(userId);
-      return roles.map((r) => r.role);
+      return await RoleService.getUserRoles(userId);
     } catch (error) {
       trackError(new Error("Error fetching user roles"), {
         component: "ProfileService",
