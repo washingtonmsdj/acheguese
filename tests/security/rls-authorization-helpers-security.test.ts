@@ -104,7 +104,7 @@ describe("rls authorization helpers security", () => {
 
   it("removes the orphaned authenticated grant from group_can_manage_members", () => {
     const migration = readProjectFile(
-      "supabase/migrations/20260821003100_revoke_orphan_authenticated_group_member_helper_execute.sql",
+      "supabase/migrations/20260826014650_revoke_orphan_authenticated_group_member_helper_execute.sql",
     );
 
     expect(migration).toMatch(
