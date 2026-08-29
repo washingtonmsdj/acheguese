@@ -48,7 +48,7 @@ beforeEach(() => {
   });
   storageMocks.upload.mockResolvedValue({ error: null });
   storageMocks.getPublicUrl.mockReturnValue({
-    data: { publicUrl: "https://cdn.example.com/unused-public-url.pdf" },
+    data: { publicUrl: "https://cdn.example.com/tryon/input.jpg" },
   });
   storageMocks.remove.mockResolvedValue({ error: null });
   storageMocks.createSignedUrl.mockResolvedValue({
@@ -188,25 +188,36 @@ describe("mediaService upload validation", () => {
     );
   });
 
-  it("fails closed when the legacy public helper targets safety evidence", async () => {
-    const file = new File(["image"], "evidence.png", { type: "image/png" });
+  it("uses the generic public helper only for Try-On staging", async () => {
+    const file = new File(["image"], "garment.png", { type: "image/png" });
 
-    await expect(
-      mediaService.uploadToBucket(file, {
-        bucket: "safety-evidence",
-        pathPrefix: "incident",
-      }),
-    ).rejects.toMatchObject({ code: "PRIVATE_BUCKET_REQUIRES_PRIVATE_API" });
+    const result = await mediaService.uploadToBucket(file, {
+      bucket: "tryon",
+      pathPrefix: "user-1/inputs",
+      fileName: "garment",
+      upsert: false,
+    });
 
-    expect(storageMocks.upload).not.toHaveBeenCalled();
-    expect(storageMocks.getPublicUrl).not.toHaveBeenCalled();
+    expect(storageMocks.from).toHaveBeenCalledWith("tryon");
+    expect(storageMocks.upload).toHaveBeenCalledWith(
+      "user-1/inputs/garment.jpg",
+      expect.objectContaining({ type: "image/jpeg" }),
+      { upsert: false, contentType: "image/jpeg" },
+    );
+    expect(storageMocks.getPublicUrl).toHaveBeenCalledWith(
+      "user-1/inputs/garment.jpg",
+    );
+    expect(result).toEqual({
+      url: "https://cdn.example.com/tryon/input.jpg",
+      path: "user-1/inputs/garment.jpg",
+    });
   });
 
-  it("rejects non-image bucket uploads before storage is called", async () => {
+  it("rejects non-image Try-On uploads before storage is called", async () => {
     const file = new File(["not an image"], "payload.txt", { type: "text/plain" });
 
     await expect(
-      mediaService.uploadToBucket(file, { bucket: "business_images" }),
+      mediaService.uploadToBucket(file, { bucket: "tryon" }),
     ).rejects.toMatchObject({ code: "INVALID_FILE_TYPE" });
 
     expect(storageMocks.upload).not.toHaveBeenCalled();
