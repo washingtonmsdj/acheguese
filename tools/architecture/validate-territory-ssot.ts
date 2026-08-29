@@ -19,17 +19,12 @@ const RETIRED_LOCATION_GROUP_FILES = [
   "src/core/location/services/TerritorialGroupsReadService.ts",
 ] as const;
 
-// Temporary, monotonic caller debt. Remove an entry as soon as the caller
-// delegates to @/core/territorial. Stale entries intentionally fail.
+// Temporary one-way caller debt. These callers already reach the canonical
+// implementation through a bridge; remove each entry when its import path is
+// changed to @/core/territorial. Stale entries intentionally fail.
 const LEGACY_REPOSITORY_IMPORT_ALLOWLIST = new Set([
   "src/core/business/services/BusinessUrlService.ts",
   "src/core/routing/hooks/useResolveTerritoryFromUrl.ts",
-]);
-
-// One known cross-owner read model still queries group tables directly. It is
-// frozen here until landing delegates to core/territorial.
-const GROUP_TABLE_ACCESS_ALLOWLIST = new Set([
-  "src/core/landing/services/landing.queries.ts",
 ]);
 
 // These paths are compatibility bridges only. They must point one-way to
@@ -41,6 +36,8 @@ const LEGACY_LOCATION_GROUP_BRIDGES = new Set([
 ]);
 
 const LOCATION_TYPES = "src/core/location/types/index.ts";
+const LANDING_SERVICE = "src/core/landing/services/LandingService.ts";
+const TERRITORIAL_LANDING_ADAPTER = "src/core/landing/services/territorialLanding.queries.ts";
 const CODE_FILE_RE = /\.(ts|tsx|js|jsx)$/;
 
 function normalize(filePath: string): string {
@@ -71,7 +68,6 @@ function walk(dir: string): string[] {
 function main(): void {
   const violations: string[] = [];
   const seenRepositoryAllowlist = new Set<string>();
-  const seenGroupTableAllowlist = new Set<string>();
 
   for (const retired of RETIRED_LOCATION_GROUP_FILES) {
     if (fs.existsSync(path.join(ROOT, retired))) {
@@ -100,13 +96,9 @@ function main(): void {
     }
 
     if (GROUP_TABLE_ACCESS_RE.test(content) && !relative.startsWith(TERRITORIAL_OWNER_ROOT)) {
-      if (!GROUP_TABLE_ACCESS_ALLOWLIST.has(relative)) {
-        violations.push(
-          `${relative}: direct territorial-group table access is forbidden outside ${TERRITORIAL_OWNER_ROOT}. Delegate to the territorial owner.`,
-        );
-      } else {
-        seenGroupTableAllowlist.add(relative);
-      }
+      violations.push(
+        `${relative}: direct territorial-group table access is forbidden outside ${TERRITORIAL_OWNER_ROOT}. Delegate to the territorial owner.`,
+      );
     }
 
     if (LEGACY_LOCATION_GROUP_BRIDGES.has(relative)) {
@@ -139,12 +131,6 @@ function main(): void {
     }
   }
 
-  for (const allowed of GROUP_TABLE_ACCESS_ALLOWLIST) {
-    if (!seenGroupTableAllowlist.has(allowed)) {
-      violations.push(`${allowed}: stale territorial-group table-access allowlist entry. Remove it from validate-territory-ssot.ts.`);
-    }
-  }
-
   for (const bridge of LEGACY_LOCATION_GROUP_BRIDGES) {
     if (!fs.existsSync(path.join(ROOT, bridge))) {
       violations.push(`${bridge}: stale compatibility-bridge inventory. Remove it from validate-territory-ssot.ts.`);
@@ -165,6 +151,18 @@ function main(): void {
     }
   }
 
+  const landingServicePath = path.join(ROOT, LANDING_SERVICE);
+  const territorialLandingPath = path.join(ROOT, TERRITORIAL_LANDING_ADAPTER);
+  if (!fs.existsSync(territorialLandingPath)) {
+    violations.push(`${TERRITORIAL_LANDING_ADAPTER}: canonical Landing territorial adapter is missing.`);
+  }
+  if (fs.existsSync(landingServicePath)) {
+    const landingService = fs.readFileSync(landingServicePath, "utf8");
+    if (!landingService.includes('./territorialLanding.queries')) {
+      violations.push(`${LANDING_SERVICE}: territorial Landing exports must come from territorialLanding.queries.`);
+    }
+  }
+
   if (violations.length > 0) {
     console.error("Territory SSOT violations:\n");
     for (const violation of violations) console.error(`- ${violation}`);
@@ -172,7 +170,7 @@ function main(): void {
   }
 
   console.log(
-    "Territory SSOT valid: core/location owns geographic hierarchy; core/territorial owns territorial groups; remaining repository bridges and the landing read-model debt are monotonic.",
+    "Territory SSOT valid: core/location owns geographic hierarchy; core/territorial owns territorial groups; zero direct territorial-group table access exists outside the owner; remaining location repository paths are one-way bridges only.",
   );
 }
 
