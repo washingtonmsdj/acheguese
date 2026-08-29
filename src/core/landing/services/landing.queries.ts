@@ -10,7 +10,7 @@ import {
   type TerritoryVisibilityMetadata,
 } from '@/core/routing/utils/territoryVisibility';
 import { BusinessService } from '@/core/business/services/BusinessService';
-import { adminRolesService } from '@/core/admin/services/AdminRolesService';
+import { RoleService } from '@/core/authorization/services/RoleService';
 import type {
   CountryData,
   StateData,
@@ -434,10 +434,7 @@ export async function getVerifiedBusinesses(limit: number = 6): Promise<Verified
  */
 export async function checkAdminRole(userId: string): Promise<boolean> {
   try {
-    const roles = await adminRolesService.getUserRoles(userId);
-    const isAdmin = roles.some(
-      (r) => ['admin', 'super_admin'].includes(r.role) && r.is_active,
-    );
+    const isAdmin = await RoleService.isAdmin(userId);
 
     logger.info('landing.queries.checkAdminRole', { userId, isAdmin });
     return isAdmin;

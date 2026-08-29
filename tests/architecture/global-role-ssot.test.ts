@@ -11,13 +11,12 @@ const ADMIN_ROLE_SERVICE_RE = /AdminRolesService|adminRolesService/;
 const RUNTIME_ROLE_CONSUMERS = [
   "src/core/auth/hooks/useIsAdmin.ts",
   "src/core/community/access/useCommunityAccess.ts",
+  "src/core/landing/services/landing.queries.ts",
   "src/core/profiles/services/profile.context.aggregate.ts",
   "src/core/profiles/services/ProfileService.ts",
 ] as const;
 
-const TEMPORARY_NON_ADMIN_ROLE_BYPASSES = [
-  "src/core/landing/services/landing.queries.ts",
-] as const;
+const TEMPORARY_NON_ADMIN_ROLE_BYPASSES = [] as const;
 
 function normalize(filePath: string): string {
   return filePath.replace(/\\/g, "/");
@@ -65,7 +64,7 @@ describe("G4 global role SSOT", () => {
     },
   );
 
-  it("tracks the remaining non-admin AdminRolesService bypasses exactly", () => {
+  it("keeps AdminRolesService out of non-admin runtime code", () => {
     const bypasses = new Set<string>();
 
     for (const filePath of walk(SRC)) {
