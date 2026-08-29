@@ -14,7 +14,7 @@ import { useCanonicalBusinessFavorite } from "@/modules/business/hooks/useCanoni
 import { useBusinessProducts } from "@/modules/business/hooks/useBusinessProducts";
 import { useBusinessRecommendation } from "@/modules/business/hooks/useBusinessRecommendation";
 import { usePublicBusinessSnapshot } from "@/modules/business/public/hooks";
-import { LAUNCH_URLS } from "@/config/territory";
+import { LAUNCH_URLS } from "@/core/routing/config/territory";
 import { buildGoogleMapsSearchUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 import { getRecordValue } from "@/shared/utils/recordLookup";
