@@ -9,7 +9,7 @@ function readProjectFile(path: string): string {
 }
 
 const migration = readProjectFile(
-  "supabase/migrations/20260825220500_harden_shared_ride_terminal_privacy.sql",
+  "supabase/migrations/20260825222132_harden_shared_ride_terminal_privacy.sql",
 );
 const rideShareService = readProjectFile(
   "src/core/safety/services/SafetyRideShareService.ts",
