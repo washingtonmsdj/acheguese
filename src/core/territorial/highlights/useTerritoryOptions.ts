@@ -8,7 +8,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
-import { createTerritorialGroupRepository } from "@/core/location/repositories/createTerritorialGroupRepository";
+import { territorialGroupService } from "@/core/territorial";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { findSelectableLocalities } from "@/core/location/helpers/territorialResolver";
 import { LocationStatus } from "@/core/location/types";
@@ -33,8 +33,6 @@ export function useTerritoryOptions(anchorCityId?: string) {
   return useQuery({
     queryKey: ["territory-options", anchorCityId ?? "auto"],
     queryFn: async (): Promise<TerritoryOption[]> => {
-      const groupRepo = createTerritorialGroupRepository();
-      const locationRepo = createLocationRepository();
       const resolvedAnchorCityId = await resolveAnchorCityId(anchorCityId);
 
       if (!resolvedAnchorCityId) return [];
@@ -44,7 +42,7 @@ export function useTerritoryOptions(anchorCityId?: string) {
 
       await Promise.all(
         districts.map(async (district) => {
-          const groups = await groupRepo.findGroupsContainingLocation(district.id);
+          const groups = await territorialGroupService.findGroupsContainingLocation(district.id);
           for (const group of groups) {
             if (group.status === LocationStatus.ACTIVE && !groupMap.has(group.id)) {
               groupMap.set(group.id, {
