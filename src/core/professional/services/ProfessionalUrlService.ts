@@ -359,31 +359,9 @@ export class ProfessionalUrlService {
   }
 
   static async generateUniqueSlug(name: string): Promise<string> {
-    const slug = this.generateSlug(name);
-
-    const availability = await PublicIdentityService.checkAvailability({
-      identifier: slug,
+    return PublicIdentityService.generateAvailableIdentifier({
+      name,
       entityType: 'professional',
     });
-
-    if (availability.status === 'available') {
-      return slug;
-    }
-
-    if (availability.suggestion) {
-      return availability.suggestion;
-    }
-
-    const { data } = await supabase
-      .from('professional_data')
-      .select('slug')
-      .ilike('slug', `${slug}%`);
-
-    const existingSlugs: string[] = (data || []).map((d: { slug: string | null }) => d.slug).filter(Boolean);
-    let counter = 1;
-    while (existingSlugs.includes(`${slug}-${counter}`)) {
-      counter++;
-    }
-    return `${slug}-${counter}`;
   }
 }
