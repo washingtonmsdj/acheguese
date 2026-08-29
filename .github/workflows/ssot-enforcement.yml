@@ -6,11 +6,11 @@ on:
     paths:
       - "src/**"
       - "tests/**"
-      - "scripts/**"
       - "tools/**"
       - "docs/**"
       - "README.md"
       - "SECURITY.md"
+      - "URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md"
       - "supabase/**"
       - "eslint.config.js"
       - ".eslintrc*.json"
@@ -22,11 +22,11 @@ on:
     paths:
       - "src/**"
       - "tests/**"
-      - "scripts/**"
       - "tools/**"
       - "docs/**"
       - "README.md"
       - "SECURITY.md"
+      - "URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md"
       - "supabase/**"
       - "eslint.config.js"
       - ".eslintrc*.json"
@@ -59,6 +59,39 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Validate dependency boundaries
+        run: npm run validate:deps
+
+      - name: Validate repository taxonomy
+        run: npm run validate:taxonomy
+
+      - name: Validate Phase 1 architecture guards
+        run: npm run validate:architecture:phase1
+
+      - name: Validate incremental architecture boundaries
+        run: npm run validate:architecture:incremental
+
+      - name: Validate Core Platform ownership
+        run: npm run validate:architecture:core-platform
+
+      - name: Validate architecture governance
+        run: npm run validate:architecture:governance
+
+      - name: Validate delivery architecture boundaries
+        run: npm run validate:architecture:delivery
+
+      - name: Validate communication architecture boundaries
+        run: npm run validate:architecture:communication
+
+      - name: Validate critical architecture file sizes
+        run: npm run validate:architecture:file-sizes
+
+      - name: Validate Maps architecture
+        run: npm run validate:maps
+
+      - name: Validate global SSOT contracts
+        run: npm run validate:ssot
 
       - name: Validate community module boundaries
         run: npm run validate:architecture:community
@@ -190,6 +223,17 @@ jobs:
           echo "✅ Todos os checks de SSOT Enforcement passaram!"
           echo ""
           echo "Verificações realizadas:"
+          echo "  ✅ Global dependency boundaries"
+          echo "  ✅ Repository taxonomy"
+          echo "  ✅ Phase 1 architecture guards"
+          echo "  ✅ Incremental architecture boundaries"
+          echo "  ✅ Core Platform ownership"
+          echo "  ✅ Architecture governance"
+          echo "  ✅ Delivery architecture boundaries"
+          echo "  ✅ Communication architecture boundaries"
+          echo "  ✅ Critical architecture file sizes"
+          echo "  ✅ Maps architecture"
+          echo "  ✅ Global SSOT contracts"
           echo "  ✅ Community module boundaries"
           echo "  ✅ Education migration boundaries"
           echo "  ✅ Gastronomy migration boundaries"
