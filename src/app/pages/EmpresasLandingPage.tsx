@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
 import { CircleUserRound, MapPin, Search, SlidersHorizontal, UserRoundPlus } from "lucide-react";
-import { TERRITORY_CONFIG } from "@/config/territory";
+import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useBusinessList } from "@/modules/business/hooks/useBusinessList";
 import { useCanonicalBusinessFavorites } from "@/modules/business/hooks/useCanonicalBusinessFavorite";
