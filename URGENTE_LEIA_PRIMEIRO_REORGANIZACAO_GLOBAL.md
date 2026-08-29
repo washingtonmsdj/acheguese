@@ -9,7 +9,7 @@
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
 **Status:** EM EXECUÇÃO — G4 Global SSOT Hardening  
-**Checkpoint técnico antes desta atualização:** `44d8d35b056b6d05f5c6f8e535f7fad8bd31d6d0`  
+**Checkpoint técnico antes desta atualização:** `31ca9fb074e54c8c741c38316738e792dcbf1f6d`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
 **Monorepo:** NÃO atualmente; manter monorepo-ready, sem migrar para workspaces/Turborepo agora
@@ -295,7 +295,7 @@ Ordem prioritária:
 - [x] Public URL/slug — `core/public-identity` governa política, disponibilidade e geração de identificadores estáveis; Profile, Business, Professional e Classifieds mantêm builders/resolvers explícitos por domínio, com semântica própria de identidade, e `validate-public-url-ssot.ts` bloqueia imports internos e unicidade concorrente;
 - [x] Media/uploads — imagem pública canônica converge em `core/media` + broker `media-assets`; Safety privado converge em `SafetyEvidenceService`; helper público residual ficou restrito a Try-On, gateways server-side de Storage estão enumerados no validator e a migration remota `20260829161927` reparou as policies do bucket `safety-evidence`;
 - [x] Analytics — `src/core/analytics/AnalyticsService.ts` é o owner horizontal único; adapter/UI/read model paralelos foram aposentados, contratos de RPC/enum foram alinhados ao remoto, `validate-analytics-ssot.ts` está no Gate-First e a migration `20260829164446` reparou a autoridade de leitura de métricas de Business;
-- [ ] Reviews;
+- [x] Reviews — `public.reviews` + `src/core/reviews` permanecem o agregado/owner de Profile Reviews; Business usa `BusinessReviewService` + `business-reviews-rpc`, admin foi alinhado a `is_admin`, resposta comercial exige gestão canônica via `private.user_can_manage_profile`, e o remoto está sincronizado na Edge Function v10; cinco RPCs comerciais antigos ficaram classificados como legado dormente service-role-only para provenance em G5;
 - [ ] Billing/subscriptions;
 - [ ] Messaging/realtime/notifications;
 - [ ] Moderation/trust;
@@ -516,10 +516,11 @@ Atualizar esta seção somente com marcos relevantes. Não transformar este arqu
 - [x] Public URL/slug fechado no source: `PublicIdentityService.generateAvailableIdentifier()` passou a confirmar candidatos por existência exata, Business e Professional removeram fallbacks próprios de `ilike + contador`, consumidores externos passaram a carregar a facade `@/core/public-identity`, e `validate-public-url-ssot.ts` protege identidade e builders públicos por domínio;
 - [x] Media/uploads fechado no nível G4: `MediaService`/`media-assets` governam imagem pública canônica, `SafetyEvidenceService` é o owner do fluxo privado de evidências, `validate-upload-ssot.ts` cobre frontend e Edge Functions, e `20260829161927_repair_safety_evidence_storage_owner_policies.sql` reconciliou o bucket privado remoto; `verification-documents` sem caller runtime permanece dívida explícita de G5;
 - [x] Analytics fechado no nível G4: `src/core/analytics/AnalyticsService.ts` ficou como owner horizontal único; adapter duplicado, UI pausada em `core` e read model paralelo de Work Opportunities foram aposentados; contratos de `get_recent_analytics_events` e `analytics_event_type` foram alinhados ao remoto; `validate-analytics-ssot.ts` entrou no Gate-First; e `20260829164446_repair_analytics_business_read_authority.sql` corrigiu o drift `profiles.id` vs `auth.uid()` e removeu leitura anônima dos read models de Business;
+- [x] Reviews fechado no nível G4: `public.reviews`/`src/core/reviews` continuam o agregado e owner de reviews com alvo Profile; o broker Business deixou de consultar `user_roles` diretamente, resposta comercial passou a exigir `private.user_can_manage_profile` via wrapper service-role-only `20260829171858`, a Edge Function `business-reviews-rpc` foi sincronizada no remoto na versão 10 com `verify_jwt=true` e proteção de conta operacional, e o contrato `docs/07-modules/REVIEWS_SSOT.md` foi revalidado; cinco RPCs comerciais antigos sem caller runtime permanecem explicitamente como legado dormente para provenance/retirada em G5;
 - [ ] Business ainda não fecha G4: permanecem atomicidade/compensação do create, autorização divergente de subrecursos e legados/provenance de dados;
 - [ ] validação hosted do SHA `6ba5b1e176fcf52738a4c47a7e17246a9e98101e` — **BLOCKED por runner/provider**: `SSOT Enforcement` e `Security Check` criaram jobs, porém os jobs observados retornaram `steps: []`; o job SSOT não produziu log baixável. Não converter isso em PASS nem em source failure;
 - [ ] limpeza de refs temporárias `tmp-public-url-ssot` e `tmp-public-url-ssot-2` — criadas durante tentativa de Git Data, nunca usadas para merge; o conector atual não expõe delete-ref, portanto devem ser removidas pelo próximo executor com capacidade de apagar refs remotas;
-- [ ] próximo alvo seguro de G4: `Reviews`; Business permanece aberto e deve ser retomado quando o corte puder preservar atomicidade/autorização com evidência suficiente.
+- [ ] próximo alvo seguro de G4: `Billing/subscriptions`; Business permanece aberto e deve ser retomado quando o corte puder preservar atomicidade/autorização com evidência suficiente.
 
 ---
 
