@@ -55,7 +55,7 @@ Search nao possui tabela universal nem view universal de busca.
 - Search nao referencia `public_business_search` nem
   `public_professional_search` diretamente.
 
-As migrations `20260829201000` e `20260829202000` endureceram a autoridade
+As migrations `20260829201534` e `20260829201727` endureceram a autoridade
 desses read models. `anon`, `authenticated` e `service_role` possuem somente
 `SELECT`; nenhum deles possui INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES ou
 TRIGGER nesses objetos.
@@ -157,8 +157,8 @@ do fechamento; nao existe segunda copia ativa do hook.
 - `src/core/search/services/__tests__/SearchService.spec.ts`;
 - `tests/architecture/search-ssot.test.ts`;
 - `src/app/pages/__tests__/BuscaPage.spec.tsx`;
-- migration `20260829201000_harden_public_search_read_model_grants.sql`;
-- migration `20260829202000_lock_public_search_read_models_to_select.sql`;
+- migration `20260829201534_harden_public_search_read_model_grants.sql`;
+- migration `20260829201727_lock_public_search_read_models_to_select.sql`;
 - revalidacao remota de grants em 2026-08-29: somente SELECT para
   `anon`/`authenticated`/`service_role` nos dois read models;
 - metadata remota: `public_professional_search` com
