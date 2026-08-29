@@ -17,6 +17,7 @@ const PHASE1_COMMANDS = [
       "tests/architecture/g3-owner-facades.test.ts",
       "tests/architecture/business-module-boundary-ratchet.test.ts",
       "tests/architecture/architecture-validator-coverage.test.ts",
+      "tests/architecture/session-ssot-ownership.test.ts",
     ],
   ],
   ["npm", ["run", "-s", "validate:architecture:incremental", "--", "--strict", "--json"]],

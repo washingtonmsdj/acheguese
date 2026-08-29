@@ -1,8 +1,8 @@
 /**
- * SessionService
- * 
- * Serviço para gerenciar sessões de usuários
- * Rastreamento, detecção de anomalias e revogação
+ * SessionSecurityService
+ *
+ * Serviço para segurança e gerenciamento de sessões de usuários.
+ * Supabase Auth permanece a autoridade; tabelas públicas de tracking são legadas.
  */
 
 import { logger } from '@/shared/utils/logger';
@@ -126,7 +126,7 @@ function normalizeAnomalySeverity(value: string): SessionAnomaly["severity"] {
     : "low";
 }
 
-class SessionService {
+export class SessionSecurityService {
   /**
    * Listar sessões ativas do usuário atual.
    *
@@ -137,7 +137,7 @@ class SessionService {
   async getActiveSessions(): Promise<UserSession[]> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         return [];
       }
@@ -150,13 +150,13 @@ class SessionService {
         .order('last_activity_at', { ascending: false });
 
       if (error) {
-        logger.error('SessionService.getActiveSessions', error);
+        logger.error('SessionSecurityService.getActiveSessions', error);
         return [];
       }
 
       return (data || []).map(this.mapSession);
     } catch (error) {
-      logger.error('SessionService.getActiveSessions', error);
+      logger.error('SessionSecurityService.getActiveSessions', error);
       return [];
     }
   }
@@ -168,7 +168,7 @@ class SessionService {
   async getAllSessions(limit: number = 50): Promise<UserSession[]> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         return [];
       }
@@ -181,13 +181,13 @@ class SessionService {
         .limit(limit);
 
       if (error) {
-        logger.error('SessionService.getAllSessions', error);
+        logger.error('SessionSecurityService.getAllSessions', error);
         return [];
       }
 
       return (data || []).map(this.mapSession);
     } catch (error) {
-      logger.error('SessionService.getAllSessions', error);
+      logger.error('SessionSecurityService.getAllSessions', error);
       return [];
     }
   }
@@ -198,7 +198,7 @@ class SessionService {
    * refresh tokens reais do Supabase Auth.
    */
   async revokeSession(sessionId: string, reason?: string): Promise<boolean> {
-    logger.warn('SessionService.revokeSession.unsupported', {
+    logger.warn('SessionSecurityService.revokeSession.unsupported', {
       sessionId,
       reason: reason ?? null,
       authority: 'supabase_auth',
@@ -225,7 +225,7 @@ class SessionService {
       if (result.requiresLocalSignOut) {
         const { error } = await supabase.auth.signOut({ scope: 'local' });
         if (error) {
-          logger.error('SessionService.revokeAllSessions.localSignOut', error, {
+          logger.error('SessionSecurityService.revokeAllSessions.localSignOut', error, {
             scope: result.scope,
           });
           return false;
@@ -234,7 +234,7 @@ class SessionService {
 
       return true;
     } catch (error) {
-      logger.error('SessionService.revokeAllSessions', error);
+      logger.error('SessionSecurityService.revokeAllSessions', error);
       return false;
     }
   }
@@ -245,7 +245,7 @@ class SessionService {
   async getSessionAnomalies(sessionId?: string): Promise<SessionAnomaly[]> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         return [];
       }
@@ -263,13 +263,13 @@ class SessionService {
       const { data, error } = await query.limit(50);
 
       if (error) {
-        logger.error('SessionService.getSessionAnomalies', error);
+        logger.error('SessionSecurityService.getSessionAnomalies', error);
         return [];
       }
 
       return (data || []).map(this.mapAnomaly);
     } catch (error) {
-      logger.error('SessionService.getSessionAnomalies', error);
+      logger.error('SessionSecurityService.getSessionAnomalies', error);
       return [];
     }
   }
@@ -280,7 +280,7 @@ class SessionService {
   async getSessionStats(): Promise<SessionStats> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         return {
           totalSessions: 0,
@@ -314,7 +314,7 @@ class SessionService {
         recentAnomalies: anomalies.length,
       };
     } catch (error) {
-      logger.error('SessionService.getSessionStats', error);
+      logger.error('SessionSecurityService.getSessionStats', error);
       return {
         totalSessions: 0,
         activeSessions: 0,
@@ -337,13 +337,13 @@ class SessionService {
         .eq('id', sessionId);
 
       if (error) {
-        logger.error('SessionService.trustSession', error);
+        logger.error('SessionSecurityService.trustSession', error);
         return false;
       }
 
       return true;
     } catch (error) {
-      logger.error('SessionService.trustSession', error);
+      logger.error('SessionSecurityService.trustSession', error);
       return false;
     }
   }
@@ -354,7 +354,7 @@ class SessionService {
    */
   async updateActivity(sessionToken: string): Promise<boolean> {
     if (!sessionToken) return false;
-    logger.debug('SessionService.updateActivity.skipped', {
+    logger.debug('SessionSecurityService.updateActivity.skipped', {
       authority: 'supabase_auth',
     });
     return false;
@@ -367,7 +367,7 @@ class SessionService {
   async getCurrentSession(): Promise<UserSession | null> {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         return null;
       }
@@ -380,13 +380,13 @@ class SessionService {
         .single();
 
       if (error) {
-        logger.error('SessionService.getCurrentSession', error);
+        logger.error('SessionSecurityService.getCurrentSession', error);
         return null;
       }
 
       return this.mapSession(data);
     } catch (error) {
-      logger.error('SessionService.getCurrentSession', error);
+      logger.error('SessionSecurityService.getCurrentSession', error);
       return null;
     }
   }
@@ -446,4 +446,4 @@ class SessionService {
   }
 }
 
-export const sessionService = new SessionService();
+export const sessionSecurityService = new SessionSecurityService();

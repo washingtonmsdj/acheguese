@@ -19,7 +19,9 @@ describe("session rpc broker security", () => {
     const profileQueries = readProjectFile("src/core/profiles/services/profile.queries.ts");
     const profileService = readProjectFile("src/core/profiles/services/ProfileService.ts");
     const mfaService = readProjectFile("src/core/auth/services/MFAService.ts");
-    const authSessionService = readProjectFile("src/core/auth/services/SessionService.ts");
+    const sessionSecurityService = readProjectFile(
+      "src/core/session/services/SessionSecurityService.ts",
+    );
 
     expect(config).toContain("[functions.session-rpc]");
     expect(config).toMatch(/\[functions\.session-rpc\]\s+verify_jwt = true/);
@@ -47,9 +49,9 @@ describe("session rpc broker security", () => {
     expect(profileQueries).not.toMatch(/callRPC\(\s*["']get_active_profile/);
     expect(profileService).not.toMatch(/callRPC\(\s*["']switch_active_profile/);
     expect(mfaService).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']check_user_mfa_required/);
-    expect(authSessionService).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']revoke_user_session/);
-    expect(authSessionService).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']revoke_all_user_sessions/);
-    expect(authSessionService).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']update_session_activity/);
+    expect(sessionSecurityService).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']revoke_user_session/);
+    expect(sessionSecurityService).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']revoke_all_user_sessions/);
+    expect(sessionSecurityService).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']update_session_activity/);
   });
 
   it("revokes direct browser execution of the underlying SECURITY DEFINER RPCs", () => {

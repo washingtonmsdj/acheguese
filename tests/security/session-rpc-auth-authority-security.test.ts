@@ -10,7 +10,7 @@ const broker = readFileSync(
   "utf8",
 );
 const service = readFileSync(
-  resolve(root, "src/core/auth/services/SessionService.ts"),
+  resolve(root, "src/core/session/services/SessionSecurityService.ts"),
   "utf8",
 );
 const config = readFileSync(resolve(root, "supabase/config.toml"), "utf8");
@@ -41,8 +41,8 @@ describe("session-rpc Supabase Auth authority", () => {
   });
 
   it("keeps individual legacy mutations fail-closed on the client", () => {
-    expect(service).toContain("SessionService.revokeSession.unsupported");
-    expect(service).toContain("SessionService.updateActivity.skipped");
+    expect(service).toContain("SessionSecurityService.revokeSession.unsupported");
+    expect(service).toContain("SessionSecurityService.updateActivity.skipped");
     expect(service).not.toContain("SessionRpcService.revokeSession");
     expect(service).not.toContain("SessionRpcService.updateSessionActivity");
   });
