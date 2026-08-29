@@ -20,7 +20,7 @@ import {
   resolveFallbackCityStatus,
   type CityStatus,
 } from "@/core/city/services/CityService";
-import { TERRITORY_CONFIG } from "@/config/territory";
+import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
 import { getRequiredRecordValue } from "@/shared/utils/recordLookup";
 import {
