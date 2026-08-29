@@ -9,7 +9,7 @@
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
 **Status:** EM EXECUÇÃO — G4 Global SSOT Hardening  
-**Checkpoint técnico antes desta atualização:** `101c8cb5f1c6a8c4e1c97e77022ac139fa3e1d63`  
+**Checkpoint técnico antes desta atualização:** `e5a9c823044b57a0e0d49d4d2ef56f5cfd08fe1c`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
 **Monorepo:** NÃO atualmente; manter monorepo-ready, sem migrar para workspaces/Turborepo agora
@@ -290,7 +290,7 @@ Ordem prioritária:
 
 - [x] Auth/session — owner/source consolidado em `src/core/auth` + `src/core/session`; providers/hooks paralelos aposentados e direct auth runtime concentrado nos owners/adapters canônicos;
 - [x] Profiles/memberships/roles — owners de profiles, memberships e roles consolidados em `src/core`; runtime não consulta `user_roles` diretamente fora da autoridade canônica e callers de membership convergem para o owner;
-- [ ] Business — **EM EXECUÇÃO**; owner e boundaries consolidados, mas atomicidade/criação duplicada/autorização de subrecursos e legados ainda impedem fechamento;
+- [ ] Business — **EM EXECUÇÃO**; owner, single-create authority e writer de `business_data` protegidos por ratchets, mas atomicidade/autorização de subrecursos e legados ainda impedem fechamento;
 - [ ] Territory/location;
 - [ ] Public URL/slug;
 - [ ] Media/uploads;
@@ -506,10 +506,15 @@ Atualizar esta seção somente com marcos relevantes. Não transformar este arqu
 - [x] Auth/session consolidado: `SessionProvider`/`SessionService`/`SessionState` e `useSessionContext` são a superfície canônica; hooks/providers paralelos foram aposentados e protegidos por `validate-session-context.ts`;
 - [x] Profiles/memberships/roles consolidado no source: decisões runtime e leituras de roles foram roteadas para os owners canônicos; busca no HEAD confirmou zero leitura runtime direta de `user_roles` em `src` fora da autoridade central;
 - [x] metadata remota do Supabase revalidada sem mutation: RLS está habilitado em `profiles`, `profile_members`, `user_roles`, `user_active_profiles` e `business_data`; helpers canônicos de admin/business permanecem com `search_path` explícito e grants intencionais. Isso é evidência de coerência atual, não substitui o drift audit completo de G5;
-- [x] Business entrou no corte ativo: criação de membership passou por `ProfileMembersService` (`6aa7946`), e a fachada incompleta `BusinessService.getStats()` — sem caller TypeScript e com valores fixos falsos — foi aposentada (`880d935`); blockers do módulo foram sincronizados em `101c8cb`;
-- [ ] Business ainda não fecha G4: permanecem atomicidade do create, dois caminhos de criação, autoridade divergente em subrecursos e legados/provenance de dados;
-- [ ] infraestrutura hosted continua sem prova confiável no checkpoint conhecido; jobs anteriores terminaram antes de executar steps. Não converter esse blocker em PASS;
-- [ ] próximo alvo seguro: continuar consolidação de Business no source antes de qualquer mudança destrutiva de banco; G5 cuidará da reconciliação exaustiva remota.
+- [x] Business entrou no corte ativo: criação de membership passou por `ProfileMembersService` (`6aa7946`), e a fachada incompleta `BusinessService.getStats()` — sem caller TypeScript e com valores fixos falsos — foi aposentada (`880d935`);
+- [x] criação de Business convergiu para um único owner: `useBusinessCreateMultiProfile` deixou de criar Profile separadamente e passou a delegar a `BusinessService.createBusiness()` (`d8c6eb5`); `AdminBusinessService.createBusinessProfile()` já delegava ao mesmo owner;
+- [x] ratchet de criação instalado em `validate-business-module-boundaries.ts` para impedir retorno do fluxo `MultiProfileService.createProfile()` (`8a838d6`);
+- [x] writer administrativo de `business_data` corrigido: `AdminService.toggleBusinessStatus()` passou a delegar ao Business owner (`9b977fa`);
+- [x] ratchet de writer único adicionado ao validator existente: mutações runtime de `business_data` fora de `src/core/business` agora são regressão arquitetural (`4db9ec3`);
+- [x] README de Business sincronizado com single-create authority e writer ownership (`e5a9c82`);
+- [ ] Business ainda não fecha G4: permanecem atomicidade/compensação do create, autorização divergente de subrecursos e legados/provenance de dados;
+- [ ] infraestrutura hosted continua sem prova confiável: no SHA `8095775`, `SSOT Enforcement` terminou com `steps: []` e `runner_id: 0`; Vercel reportou `build-rate-limit`. Não converter esses blockers em PASS nem em source failure;
+- [ ] próximo alvo seguro: reconciliar a autoridade dos subrecursos de Business e caracterizar a atomicidade/compensação do create; mudanças destrutivas de banco continuam reservadas para G5 com provenance e prova remota.
 
 ---
 
