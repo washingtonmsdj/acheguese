@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase';
 import { buildSafeILikePattern, buildSafeOrILikeFilter } from '@/shared/utils/sqlSanitization';
 import type { Tables } from '@/integrations/supabase';
 import { MobilityService } from '@/core/mobility/services/runtime';
+import { BusinessService } from '@/core/business/services/BusinessService';
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
@@ -246,19 +247,19 @@ export const AdminService = {
     isActive: boolean,
   ): Promise<ServiceResult<boolean>> {
     try {
-      const { error } = await db
-        .from('business_data')
-        .update({ status: isActive ? 'active' : 'inactive' })
-        .eq('id', businessId);
-
-      if (error) {
-        logger.error('[AdminService] toggleBusinessStatus error', error);
-        return { data: null, error: error.message };
+      const business = await BusinessService.getBusinessById(businessId);
+      if (!business) {
+        return { data: null, error: 'Empresa nao encontrada' };
       }
+
+      await BusinessService.updateBusiness(business.profile_id, {
+        status: isActive ? 'active' : 'inactive',
+      });
 
       return { data: true, error: null };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
+      logger.error('[AdminService] toggleBusinessStatus error', err);
       return { data: null, error: msg };
     }
   },
