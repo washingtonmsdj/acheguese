@@ -1,28 +1,21 @@
 /**
  * USE BUSINESS CREATE MULTI-PROFILE
  *
- * Cria o profile business via RPC e, em seguida, sincroniza todo o dominio
- * canonico em business_data pelo BusinessService.
+ * Compatibility hook for the current create page. Business creation itself is
+ * owned exclusively by BusinessService; this hook only adds UI concerns such as
+ * active territory, media uploads, cache invalidation and toasts.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MultiProfileService } from "@/core/profiles/services/multi-profile";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { createBusinessSchema } from "@/shared/schemas/business/businessSchemas";
 import { toast } from "sonner";
 import { locationContextStore } from "@/core/location/stores/LocationContextStore";
 import { mediaService } from "@/core/media/services/MediaService";
-import { PublicIdentityService } from "@/core/public-identity/services/PublicIdentityService";
-import {
-  evaluateBusinessSlugSafety,
-  isBusinessSlugSafetyBypassAllowed,
-} from "@/core/public-identity/domain/businessSlugSafety";
 import type { CreateBusinessInput } from "@/core/business/types";
-import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 
 export interface BusinessCreateResult {
   profile_id: string;
-  handle: string;
   business_data_id: string | null;
 }
 
@@ -46,49 +39,6 @@ interface UseBusinessCreateReturn {
   error: Error | null;
   data: BusinessCreateResult | undefined;
   reset: () => void;
-}
-
-function isLikelyDuplicateHandleError(error: string): boolean {
-  return /duplicate|already exists|unique/i.test(error);
-}
-
-async function createProfileWithHandleFallback(params: {
-  handleBase: string;
-  displayName: string;
-  avatarUrl?: string;
-  bio?: string;
-  extension_data: Record<string, unknown>;
-}): Promise<{ profile_id: string; handle: string }> {
-  const baseHandle = params.handleBase.slice(0, 30);
-  const fallbackHandle = `${baseHandle.slice(0, 24)}-${Date.now().toString().slice(-5)}`;
-
-  const handles = [baseHandle, fallbackHandle].filter(
-    (handle, index, array) => handle && array.indexOf(handle) === index,
-  );
-
-  for (let index = 0; index < handles.length; index += 1) {
-    const handle = handles.at(index);
-    if (!handle) continue;
-    const result = await MultiProfileService.createProfile({
-      profile_type: "business",
-      handle,
-      display_name: params.displayName,
-      avatar_url: params.avatarUrl,
-      bio: params.bio,
-      extension_data: params.extension_data,
-    });
-
-    if (result.success && result.data) {
-      return result.data;
-    }
-
-    const error = result.error || "Falha ao criar perfil business";
-    if (index === handles.length - 1 || !isLikelyDuplicateHandleError(error)) {
-      throw new Error(error);
-    }
-  }
-
-  throw new Error("Falha ao criar perfil business");
 }
 
 export function useBusinessCreateMultiProfile(
@@ -115,62 +65,17 @@ export function useBusinessCreateMultiProfile(
         );
       }
 
-      const normalizedInput = validation.data;
-
-      let finalSlug = normalizedInput.slug;
-      if (finalSlug) {
-        if (!isBusinessSlugSafetyBypassAllowed({ isVerifiedOfficial: normalizedInput.is_verified })) {
-          const slugSafety = evaluateBusinessSlugSafety({
-            businessName: normalizedInput.name,
-            slug: finalSlug,
-          });
-          if (slugSafety.status === "review") {
-            throw new Error(
-              "O link publico esta muito diferente do nome do negocio. Ajuste o link para manter autenticidade.",
-            );
-          }
-        }
-
-        const availability = await PublicIdentityService.checkAvailability({
-          identifier: finalSlug,
-          entityType: "business",
-        });
-
-        if (availability.status !== "available") {
-          throw new Error(
-            availability.message ||
-              `Slug "${finalSlug}" nao esta disponivel.` +
-                (availability.suggestion ? ` Sugestao: ${availability.suggestion}` : ""),
-          );
-        }
-      } else {
-        finalSlug = await BusinessUrlService.generateUniqueSlug(normalizedInput.name);
-      }
-
-      const extension_data = {
-        legal_name: normalizedInput.legal_name ?? normalizedInput.name,
-        cnpj: normalizedInput.cnpj ?? null,
-        company_type: normalizedInput.company_type ?? null,
-        industry: normalizedInput.industry ?? normalizedInput.category,
-        status: normalizedInput.status ?? "active",
-        address_id: normalizedInput.address_id ?? null,
-        location_id: normalizedInput.location_id ?? null,
-      };
-
-      const createdProfile = await createProfileWithHandleFallback({
-        handleBase: finalSlug,
-        displayName: normalizedInput.name,
-        avatarUrl: undefined,
-        bio: normalizedInput.description,
-        extension_data,
-      });
+      // Single creation authority: profile, membership and business_data are
+      // created only by the core Business owner.
+      const createdBusiness = await BusinessService.createBusiness(validation.data);
+      const profileId = createdBusiness.profile_id;
 
       let logoReference: string | undefined;
       let bannerReference: string | undefined;
 
       if (logoFile) {
         const upload = await mediaService.uploadMediaAsset(
-          createdProfile.profile_id,
+          profileId,
           logoFile,
           "business_logo",
         );
@@ -179,27 +84,26 @@ export function useBusinessCreateMultiProfile(
 
       if (bannerFile) {
         const upload = await mediaService.uploadMediaAsset(
-          createdProfile.profile_id,
+          profileId,
           bannerFile,
           "business_banner",
         );
         bannerReference = upload.reference;
       }
 
-      await BusinessService.updateBusiness(createdProfile.profile_id, {
-        ...normalizedInput,
-        slug: finalSlug,
-        ...(logoReference ? { logo_url: logoReference } : {}),
-        ...(bannerReference ? { banner_url: bannerReference } : {}),
-      });
+      if (logoReference || bannerReference) {
+        await BusinessService.updateBusiness(profileId, {
+          ...(logoReference ? { logo_url: logoReference } : {}),
+          ...(bannerReference ? { banner_url: bannerReference } : {}),
+        });
+      }
 
-      const businessDataId = await BusinessService.getBusinessDataIdByProfileId(
-        createdProfile.profile_id,
-      );
+      const businessDataId =
+        createdBusiness.business_data_id ??
+        (await BusinessService.getBusinessDataIdByProfileId(profileId));
 
       return {
-        profile_id: createdProfile.profile_id,
-        handle: createdProfile.handle,
+        profile_id: profileId,
         business_data_id: businessDataId,
       };
     },
