@@ -364,7 +364,7 @@
       "commandOwner": "src/core/posts/services/polls.mutations.ts",
       "coverage": "partial",
       "enforcement": ["domain-rls"],
-      "evidence": ["plans/CORE_PLATFORM_CONSOLIDATION_PLAN.md"],
+      "evidence": ["docs/08-roadmap/CORE_PLATFORM_CONSOLIDATION_PLAN.md"],
       "finding": "Poll vote enforcement requires a dedicated remote behavior probe."
     },
     {

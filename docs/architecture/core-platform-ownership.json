@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "updatedAt": "2026-08-26",
   "architecture": "docs/03-architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md",
-  "plan": "plans/CORE_PLATFORM_CONSOLIDATION_PLAN.md",
+  "plan": "docs/08-roadmap/CORE_PLATFORM_CONSOLIDATION_PLAN.md",
   "sourceRoots": ["src", "api", "supabase/functions"],
   "policy": {
     "defaultMutationOwner": "one-writer-per-table-operation",
