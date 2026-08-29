@@ -9,7 +9,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Map, ChevronRight, Loader2, Globe } from 'lucide-react';
-import { TERRITORY_CONFIG } from '@/config/territory';
+import { TERRITORY_CONFIG } from '@/core/routing/config/territory';
 import { getCountryData, getActiveStates } from '@/core/landing/services/LandingService';
 
 interface StateItem {
