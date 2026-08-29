@@ -1,5 +1,6 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
+import { ProfileMembersService } from '@/core/profiles/services/multi-profile/profileMembersService';
 
 /**
  * BusinessOwnershipService - SSOT de autoridade de gestao de empresas.
@@ -56,21 +57,7 @@ export class BusinessOwnershipService {
         return true;
       }
 
-      const { data: membership, error: membershipError } = await supabase
-        .from('profile_members')
-        .select('role, is_active')
-        .eq('profile_id', ownerProfileId)
-        .eq('user_id', userId)
-        .eq('is_active', true)
-        .in('role', ['owner', 'admin'])
-        .maybeSingle();
-
-      if (membershipError) {
-        logger.error('[BusinessOwnershipService] Error checking active membership:', membershipError);
-        return false;
-      }
-
-      return Boolean(membership?.is_active && ['owner', 'admin'].includes(membership.role));
+      return ProfileMembersService.isManager(ownerProfileId, userId);
     } catch (error) {
       logger.error('[BusinessOwnershipService] Unexpected error checking ownership:', error);
       return false;

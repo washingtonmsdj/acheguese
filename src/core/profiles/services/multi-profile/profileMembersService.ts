@@ -159,15 +159,21 @@ export class ProfileMembersService {
   }
 
   /**
-   * Verificar se usuário é owner/admin de um perfil
+   * Resolve a role operacional ativa de um membro.
+   *
+   * Invariante de autoridade: memberships inativas não concedem gestão.
+   * Mantém o runtime alinhado a private.can_manage_profile no banco.
    */
-  static async isManager(profileId: string, userId?: string): Promise<boolean> {
+  static async getActiveRole(
+    profileId: string,
+    userId?: string,
+  ): Promise<ProfileRole | null> {
     try {
       let targetUserId = userId;
-      
+
       if (!targetUserId) {
         const currentUser = await SessionService.getCurrentUser();
-        if (!currentUser) return false;
+        if (!currentUser) return null;
         targetUserId = currentUser.id;
       }
 
@@ -176,15 +182,37 @@ export class ProfileMembersService {
         .select('role')
         .eq('profile_id', profileId)
         .eq('user_id', targetUserId)
-        .in('role', ['owner', 'admin'])
-        .single();
+        .eq('is_active', true)
+        .maybeSingle();
 
-      if (error) return false;
+      if (error) {
+        logger.error('Error resolving active profile membership role:', error);
+        return null;
+      }
 
-      return !!data;
+      const role = data?.role as ProfileRole | undefined;
+      return role === 'owner' || role === 'admin' || role === 'member'
+        ? role
+        : null;
     } catch (error: unknown) {
-      return false;
+      logger.error('Error resolving active profile membership role:', error);
+      return null;
     }
+  }
+
+  /**
+   * Verificar se usuário é owner ativo de um perfil.
+   */
+  static async isOwner(profileId: string, userId?: string): Promise<boolean> {
+    return (await this.getActiveRole(profileId, userId)) === 'owner';
+  }
+
+  /**
+   * Verificar se usuário é owner/admin ativo de um perfil.
+   */
+  static async isManager(profileId: string, userId?: string): Promise<boolean> {
+    const role = await this.getActiveRole(profileId, userId);
+    return role === 'owner' || role === 'admin';
   }
 }
 

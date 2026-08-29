@@ -1,31 +1,21 @@
-import { supabase } from "@/integrations/supabase";
+import { ProfileMembersService } from "./multi-profile/profileMembersService";
 
+/**
+ * Adapter legado do ProfileService para o SSOT de memberships.
+ * Não acessa `profile_members` diretamente.
+ */
 export async function getProfileMembersQuery(
   profileId: string,
 ): Promise<Array<{ user_id: string; role: string }>> {
-  const { data, error } = await supabase
-    .from("profile_members")
-    .select("user_id, role")
-    .eq("profile_id", profileId);
-
-  if (error) throw error;
-  return data || [];
+  const members = await ProfileMembersService.getProfileMembers(profileId);
+  return members.map(({ user_id, role }) => ({ user_id, role }));
 }
 
 export async function isProfileOwnerQuery(
   profileId: string,
   userId: string,
 ): Promise<boolean> {
-  const { data, error } = await supabase
-    .from("profile_members")
-    .select("id")
-    .eq("profile_id", profileId)
-    .eq("user_id", userId)
-    .eq("role", "owner")
-    .maybeSingle();
-
-  if (error) throw error;
-  return !!data;
+  return ProfileMembersService.isOwner(profileId, userId);
 }
 
 export async function addProfileMemberMutation(input: {
@@ -33,9 +23,13 @@ export async function addProfileMemberMutation(input: {
   userId: string;
   role: "owner" | "admin" | "member";
 }): Promise<void> {
-  const { error } = await supabase
-    .from("profile_members")
-    .insert({ profile_id: input.profileId, user_id: input.userId, role: input.role });
+  const result = await ProfileMembersService.addMember(
+    input.profileId,
+    input.userId,
+    input.role,
+  );
 
-  if (error) throw error;
+  if (!result.success) {
+    throw new Error(result.error || "Failed to add profile member");
+  }
 }
