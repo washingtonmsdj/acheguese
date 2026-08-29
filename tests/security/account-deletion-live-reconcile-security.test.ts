@@ -6,7 +6,7 @@ const root = process.cwd();
 const reconcileMigration = readFileSync(
   join(
     root,
-    'supabase/migrations/20260826020500_reconcile_account_deletion_authority_live_drift.sql',
+    'supabase/migrations/20260826015916_reconcile_account_deletion_authority_live_drift.sql',
   ),
   'utf8',
 );
