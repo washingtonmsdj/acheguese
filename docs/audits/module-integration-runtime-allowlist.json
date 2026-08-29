@@ -22,10 +22,6 @@
     {
       "file": "src/modules/classifieds/jobs/services/VagasService.ts",
       "specifier": "@/integrations/supabase"
-    },
-    {
-      "file": "src/modules/mobility/scripts/validateDispatch.ts",
-      "specifier": "@/integrations/supabase"
     }
   ]
 }
