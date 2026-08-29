@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { PAGINATION } from "@/shared/constants";
 import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
+import { AnalyticsService } from "@/core/analytics/AnalyticsService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 import type { ReviewStats } from "@/core/reviews/types";
 
@@ -184,8 +185,8 @@ export async function getBusinessesCreatedInPeriod(
 }
 
 /**
- * Métricas de negócio (views, reviews)
- * @param startDate - Filtro de data inicial opcional para views
+ * Métricas de negócio (views, reviews) pelo SSOT de Analytics.
+ * @param startDate - Filtro de data inicial opcional para totalViews
  */
 export async function getBusinessMetrics(
   businessId: string,
@@ -202,39 +203,23 @@ export async function getBusinessMetrics(
     const weekAgo = new Date(now.getTime() - 7 * 86400000).toISOString();
     const monthAgo = new Date(now.getTime() - 30 * 86400000).toISOString();
 
-    // Usar ReviewsService para estatísticas de reviews
-    const reviewStats: ReviewStats = await ReviewsService.getReviewStats(
-      businessId,
-      "business",
-    );
-
-    let totalViewsQuery = (supabase as unknown as AdminSupabaseClient)
-      .from("business_views")
-      .select("id", { count: "exact", head: true })
-      .eq("business_id", businessId);
-
-    if (startDate) {
-      totalViewsQuery = totalViewsQuery.gte("viewed_at", startDate);
-    }
-
-    const [viewsRes, weekRes, monthRes] = await Promise.all([
-      totalViewsQuery,
-      (supabase as unknown as AdminSupabaseClient)
-        .from("business_views")
-        .select("id", { count: "exact", head: true })
-        .eq("business_id", businessId)
-        .gte("viewed_at", weekAgo),
-      (supabase as unknown as AdminSupabaseClient)
-        .from("business_views")
-        .select("id", { count: "exact", head: true })
-        .eq("business_id", businessId)
-        .gte("viewed_at", monthAgo),
+    const [reviewStats, totalMetrics, weekMetrics, monthMetrics] = await Promise.all([
+      ReviewsService.getReviewStats(businessId, "business"),
+      AnalyticsService.getMetrics("business", businessId, startDate),
+      AnalyticsService.getMetrics("business", businessId, weekAgo),
+      AnalyticsService.getMetrics("business", businessId, monthAgo),
     ]);
 
+    for (const result of [totalMetrics, weekMetrics, monthMetrics]) {
+      if (result.error) {
+        throw new Error(result.error);
+      }
+    }
+
     return {
-      totalViews: viewsRes.count || 0,
-      weekViews: weekRes.count || 0,
-      monthViews: monthRes.count || 0,
+      totalViews: totalMetrics.data?.total_views ?? 0,
+      weekViews: weekMetrics.data?.total_views ?? 0,
+      monthViews: monthMetrics.data?.total_views ?? 0,
       averageRating: reviewStats.average_rating ?? reviewStats.average ?? 0,
       totalReviews: reviewStats.total_reviews ?? reviewStats.total ?? 0,
     };
