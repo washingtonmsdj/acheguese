@@ -1,10 +1,10 @@
 # Achegue-se — Execução `main`-only e prontidão MVP
 
 **Status:** ATIVO — SSOT OPERACIONAL  
-**Data do checkpoint GitHub:** 2026-08-27  
+**Data do checkpoint GitHub:** 2026-08-28  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**HEAD técnico anterior a esta sincronização:** `9a601de885c2631f6ae5904b7b9eb7b22662dd72`
+**HEAD técnico anterior a esta sincronização:** `07bb101a45a9e24804d790e82ada75fce51af856`
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Owners técnicos específicos continuam sendo fonte de verdade para domínio, segurança e schema.
 
@@ -22,11 +22,12 @@ Este documento consolida ordem de execução, blockers e Definition of Done. Own
 ## Baseline GitHub confirmado
 
 - `main` é a única linha ativa escolhida para esta estabilização.
-- 90 branches foram inventariadas anteriormente: `main` + 89 refs históricas pendentes de classificação segura (#84).
+- **93 branches existem no snapshot atual:** `main` + **92 refs históricas** pendentes de classificação segura (#84). A contagem foi revalidada diretamente: a página 93 existe e a página 94 está vazia com `per_page=1`.
 - `main` permanece sem proteção/ruleset autoritativo no último snapshot confirmado (#28).
-- os workflows SSOT foram corrigidos para reagir a `push` na `main`; `scripts/**` e `eslint.config.js` também passaram a disparar o enforcement quando alterados.
-- a camada GitHub Actions continua apresentando falhas pre-step com `steps=[]`/runner não provisionado; portanto nenhum check desse tipo pode ser tratado como prova verde até executar comandos reais (#17).
-- o último status Vercel inspecionado nesta estabilização falhou por `upgradeToPro=build-rate-limit`; isso é blocker de certificação/deploy, não prova de erro de compilação.
+- os workflows SSOT foram alinhados com `push` na `main`; alterações em tooling canônico sob `tools/**` e nos arquivos de configuração relevantes devem disparar os gates correspondentes.
+- o root legado `scripts/**` está aposentado; workflows/package scripts não devem depender de wrappers recriados nesse caminho.
+- a camada GitHub Actions apresentou nesta estabilização falhas pre-step com `steps=[]`/runner não provisionado; nenhum check desse tipo pode ser tratado como prova verde até executar comandos reais (#17).
+- o status Vercel inspecionado nesta estabilização falhou por `upgradeToPro=build-rate-limit`; isso é blocker de certificação/deploy, não prova de erro de compilação.
 
 ## P0 — SSOT, CI e proteção
 
@@ -36,12 +37,14 @@ Este documento consolida ordem de execução, blockers e Definition of Done. Own
 - [x] taxonomia reconciliada com `src/core/verticals/config.ts` (`gastronomy` + `education`; Events não é vertical empresarial);
 - [x] plano operacional `main`-only centralizado neste arquivo;
 - [x] regressão automatizada para drift de taxonomia;
-- [ ] continuar limpeza de documentos substituídos sem quebrar referências vivas (#51).
+- [x] ledger de compatibility bridges sincronizado com **zero bridges vivos**;
+- [x] censo de repositório sincronizado após retirada de `src/config`, `scripts` e `e2e`;
+- [ ] continuar classificação deliberada de `plans/**` e limpeza de documentos substituídos sem quebrar referências vivas (#51).
 
 ### CI confiável (#17)
 
 - [x] SSOT workflows alinhados com `push -> main`;
-- [x] enforcement passa a observar também `scripts/**` e `eslint.config.js`;
+- [x] enforcement observa tooling/config canônicos em vez de depender do root aposentado `scripts/**`;
 - [ ] restaurar execução real dos jobs hosted;
 - [ ] provar security/lint/typecheck/test/build executando e verdes no mesmo SHA.
 
@@ -62,6 +65,18 @@ Owners: #85 e #68 (LGPD).
 - [ ] manter delete/export LGPD fail-closed até revogação de sessão, purge, scheduler e export completo estarem certificados (#68).
 
 ## P1 — estrutura e organização (#51)
+
+### Compatibility roots / bridges
+
+- [x] `src/features` aposentado;
+- [x] `src/test`, `src/__tests__` e `src/types` aposentados como roots genéricos;
+- [x] `scripts/**` aposentado; tooling operacional canônico em `tools/**`;
+- [x] `e2e/**` aposentado; owner canônico em `tests/e2e/**`;
+- [x] `src/config/**` aposentado depois de migrar todos os callers para owners específicos em `app`, `core` e `shared`;
+- [x] `tests/architecture/repository-reorganization-contract.test.ts` bloqueia recriação de `src/config` e imports legados como `@/config/territory`;
+- [x] `docs/03-architecture/COMPATIBILITY_BRIDGES.md` registra zero compatibility bridges vivos.
+
+A remoção física dos compatibility roots está concluída no nível estrutural. Isso **não** certifica G2 por si só: documentação residual, `plans/**` e certificação same-SHA continuam pendentes.
 
 ### Education — ownership técnico
 
@@ -96,13 +111,13 @@ Owners: #85 e #68 (LGPD).
 - [x] mover a implementação física para `src/modules/community-events` preservando a árvore de código;
 - [x] atualizar a rota territorial para carregar `@/modules/community-events/pages/EventsListPage`;
 - [x] atualizar o deploy validator para inspecionar o owner canônico de Events;
-- [x] remover integralmente `src/features` e retirar a allowlist de migração;
-- [x] adicionar `tests/architecture/events-owner-migration.test.ts` para bloquear recriação do namespace legado, do bridge de engagement e drift de rota/deploy;
-- [x] retirar `src/features/events` do architecture registry.
+- [x] remover integralmente `src/features/events` e retirar a allowlist de migração;
+- [x] aposentar integralmente o namespace histórico `src/core/verticals/events` sem criar segundo owner;
+- [x] adicionar ratchets de arquitetura para bloquear recriação dos owners históricos e drift de rota/deploy;
+- [x] retirar os owners legados do architecture registry.
 
 **Ainda não certificado:**
 
-- [ ] inventariar e reduzir o namespace histórico `src/core/verticals/events` sem criar segundo owner;
 - [ ] provar schema/RLS/grants e fluxos reais do módulo no ambiente alvo;
 - [ ] provar typecheck/test/build/E2E/deploy do mesmo SHA.
 
@@ -111,7 +126,7 @@ Owners: #85 e #68 (LGPD).
 - [x] zero implementações `*.test.*`/`*.spec.*` diretamente em `tests/`; ratchet arquitetural exige a raiz limpa;
 - [x] Mobility integration migrado para `tests/integration/mobility` com imports `@/`;
 - [x] `playwright.mapa.config.ts` morto removido e script Maps apontado ao config canônico;
-- [x] Security Check Maps deixou de referenciar arquivos sintéticos inexistentes e usa os validators canônicos;
+- [x] Security Check Maps deixou de referenciar arquivos sintéticos inexistentes e usa validators canônicos;
 - [x] `tsconfig.typecheck.events-checkin.json` órfão removido;
 - [x] `bun.lock` removido; `package-lock.json` permanece como lockfile do package manager npm declarado;
 - [x] guard de artifacts de raiz impede regressão dessas decisões.
@@ -122,7 +137,7 @@ Arquitetura limpa não equivale a módulo certificado.
 
 - Education continua `launch-paused` apesar do ownership técnico ter sido corrigido.
 - Gastronomy possui implementação real e dívida direta de integração do módulo zerada, mas ainda depende de prova de banco/RLS/E2E/deploy.
-- Events agora possui owner físico canônico, mas não está certificado funcionalmente.
+- Events possui owner físico canônico, mas não está certificado funcionalmente.
 - Mobilidade territorial permanece pausada.
 
 Ordem de certificação:
@@ -138,7 +153,8 @@ Para cada módulo exigir: entrypoint canônico, banco/RPC atual, autorização p
 ## P2 — higiene E2E e branches
 
 - [x] provenance explícita das fixtures `business_data` (`source=e2e`, `source_kind=technical_fixture`) centralizada nos clients operacionais e protegida por regression guard (#83, concluído no nível de código);
-- [ ] classificar as 89 refs históricas e reconstruir na `main` qualquer delta útil antes de removê-las (#84).
+- [ ] classificar as **92 refs históricas** e reconstruir na `main` qualquer delta útil antes de removê-las (#84);
+- [ ] não fazer merge/delete em massa: cada ref histórica precisa de classificação de provenance e utilidade antes da decisão.
 
 ## Definition of Done — MVP
 
@@ -159,17 +175,16 @@ O Achegue-se só pode ser marcado **MVP READY** quando todos os itens abaixo for
 
 - `fa57cac` — persistência de engagement de Events para `core`;
 - `9de277e` — Gastronomy com dívida direta de integração do módulo zerada e ratchet estruturado;
-- `bf2c34b` / `cd17991` — provenance E2E centralizada e cobertura do caminho anon/admin;
-- `91c387c` a `0493b0d` — reorganização dos testes até zero implementações na raiz;
-- `45bf4a7` — workflow Maps alinhado aos gates canônicos;
-- `caea8f6` / `6e14903` / `b47bb39` — remoção de artifacts órfãos e guard de raiz;
 - `0da8e2e` — implementação de Events movida para `src/modules/community-events`, com rota e deploy guard no owner canônico;
 - `3707218` — `src/features` removido e ratchets atualizados;
-- `63a2ab2` — guard de ownership de Events;
-- `2ef08e9` — registry sem o source root aposentado de Events;
-- `c2e323c` — regras arquiteturais sincronizadas com a conclusão da migração;
-- `0bf6e2d` — bridge de engagement de Events aposentado e testes convertidos para bloquear recriação;
-- `84b1921` — seis bridges locais de Education aposentados após zero callers de runtime.
+- `0bf6e2d` — bridge de engagement de Events aposentado;
+- `84b1921` — seis bridges locais de Education aposentados após zero callers de runtime;
+- `0f08720` / `6ab27e3` — `scripts/**` aposentado e ratcheted;
+- `2161167` — root `e2e/**` aposentado;
+- `22a94af` — bridge `src/config/launchScope.ts` aposentado;
+- `67b70d6` — último bridge (`src/config/territory.ts`) removido e `src/config/**` aposentado;
+- `96c9681` — compatibility ledger sincronizado com zero bridges vivos;
+- `07bb101` — repository census atualizado após os cortes de G2.
 
 ## Trackers canônicos
 
