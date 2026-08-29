@@ -55,7 +55,7 @@ alvo; o browser nunca envia reporter ou autor denunciado.
 A criacao da denuncia continua sendo o unico acesso runtime direto a
 `community_reports` no source. Review e decisao administrativa passam por
 `review_community_content_reports` / `private.review_community_content_reports`.
-A migration `20260829192000_harden_moderation_table_authority.sql` removeu do
+A migration `20260829192526_harden_moderation_table_authority.sql` removeu do
 browser o UPDATE/DELETE direto e aposentou as policies administrativas que
 criavam uma segunda autoridade de escrita.
 
@@ -85,7 +85,7 @@ vs apresentacao.
 
 As views `admin_pending_post_reports` e `admin_pending_comment_reports` sao read
 models administrativos. A migration
-`20260829193600_harden_admin_moderation_view_grants.sql` removeu grants DML de
+`20260829193636_harden_admin_moderation_view_grants.sql` removeu grants DML de
 `anon`/`authenticated`; no browser, `authenticated` conserva somente `SELECT`.
 As duas views continuam filtradas por `private.is_admin_user(auth.uid())`.
 
@@ -138,8 +138,8 @@ delete de assinatura nao recria uma referencia durante exclusao do usuario.
 ## 7. Evidencias
 
 - migrations `20260715100000` ate `20260715107000`;
-- migration `20260829192000_harden_moderation_table_authority.sql`;
-- migration `20260829193600_harden_admin_moderation_view_grants.sql`;
+- migration `20260829192526_harden_moderation_table_authority.sql`;
+- migration `20260829193636_harden_admin_moderation_view_grants.sql`;
 - `tools/security/moderation-audit-authz-probe.mjs`;
 - `tools/security/trust-operational-authz-probe.mjs`;
 - `tests/architecture/audit-moderation-ssot.test.ts`;
