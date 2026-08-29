@@ -1,13 +1,9 @@
 /**
- * ══════════════════════════════════════════════════════════════════════════
  * BILLING SERVICE
- * ══════════════════════════════════════════════════════════════════════════
- * 
- * Serviço para gerenciar operações de billing (checkout, portal, etc).
- * 
- * IMPORTANTE: Usa edge functions - NUNCA service_role no frontend.
- * 
- * ══════════════════════════════════════════════════════════════════════════
+ *
+ * Gateway para checkout/portal Stripe e leituras auxiliares de billing.
+ * Planos exibidos no cliente sao adaptados do catalogo publicado pelo
+ * BillingPlanService; billing_plans nao e fonte runtime de oferta/preco.
  */
 
 import { logger } from '@/shared/utils/logger';
@@ -17,6 +13,7 @@ import {
   getAllowedRedirectOriginsFromEnv,
   navigateToSafeRedirect,
 } from '@/shared/utils/safeRedirect';
+import { BillingPlanService } from './BillingPlanService';
 
 export interface CreateCheckoutParams {
   planCode: string;
@@ -55,11 +52,8 @@ const BILLING_REDIRECT_ORIGINS = getAllowedRedirectOriginsFromEnv(
 );
 
 export class BillingService {
-  /**
-   * Cria uma sessão de checkout do Stripe
-   */
   static async createCheckoutSession(
-    params: CreateCheckoutParams
+    params: CreateCheckoutParams,
   ): Promise<CreateCheckoutResponse> {
     const { data, error } = await supabase.functions.invoke('billing-create-checkout', {
       body: params,
@@ -73,9 +67,6 @@ export class BillingService {
     return data;
   }
 
-  /**
-   * Cria uma sessão do Stripe Customer Portal
-   */
   static async createPortalSession(returnUrl: string): Promise<CreatePortalResponse> {
     const { data, error } = await supabase.functions.invoke('billing-create-portal', {
       body: { returnUrl },
@@ -89,9 +80,6 @@ export class BillingService {
     return data;
   }
 
-  /**
-   * Redireciona para o checkout do Stripe
-   */
   static async redirectToCheckout(params: CreateCheckoutParams): Promise<void> {
     const { url } = await this.createCheckoutSession(params);
     const redirected = navigateToSafeRedirect(url, {
@@ -105,9 +93,6 @@ export class BillingService {
     }
   }
 
-  /**
-   * Redireciona para o portal do cliente
-   */
   static async redirectToPortal(returnUrl: string): Promise<void> {
     const { url } = await this.createPortalSession(returnUrl);
     const redirected = navigateToSafeRedirect(url, {
@@ -121,46 +106,14 @@ export class BillingService {
     }
   }
 
-  /**
-   * Obtém todos os planos disponíveis
-   */
   static async getPlans() {
-    const { data, error } = await supabase
-      .from('billing_plans')
-      .select('*')
-      .eq('is_active', true)
-      .order('display_order', { ascending: true });
-
-    if (error) {
-      logger.error('Error fetching plans:', error);
-      throw error;
-    }
-
-    return data;
+    return BillingPlanService.getActivePlans();
   }
 
-  /**
-   * Obtém um plano específico por código
-   */
   static async getPlanByCode(code: string) {
-    const { data, error } = await supabase
-      .from('billing_plans')
-      .select('*')
-      .eq('code', code)
-      .eq('is_active', true)
-      .single();
-
-    if (error) {
-      logger.error('Error fetching plan:', error);
-      throw error;
-    }
-
-    return data;
+    return BillingPlanService.getPlanByCode(code);
   }
 
-  /**
-   * Obtém histórico de transações do usuário
-   */
   static async getUserTransactions(userId: string) {
     const { data, error } = await supabase
       .from('billing_transactions')
@@ -176,4 +129,3 @@ export class BillingService {
     return data;
   }
 }
-
