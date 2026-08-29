@@ -14,9 +14,12 @@ const errorMessage = (error: unknown, fallback: string): string =>
 
 export class ProfileMembersService {
   /**
-   * Listar membros de um perfil (via RLS)
+   * Leitura canônica de membros preservando erro para read models que precisam
+   * distinguir perfil sem membros de falha de infraestrutura.
    */
-  static async getProfileMembers(profileId: string): Promise<ProfileMember[]> {
+  static async getProfileMembersResult(
+    profileId: string,
+  ): Promise<ServiceResponse<ProfileMember[]>> {
     try {
       const { data, error } = await supabase
         .from('profile_members')
@@ -26,10 +29,61 @@ export class ProfileMembersService {
 
       if (error) throw error;
 
-      return (data || []) as ProfileMember[];
+      return {
+        success: true,
+        data: (data || []) as ProfileMember[],
+      };
     } catch (error: unknown) {
-      logger.error('Error fetching profile members:', error);
+      return {
+        success: false,
+        error: errorMessage(error, 'Failed to fetch profile members'),
+      };
+    }
+  }
+
+  /**
+   * Listar membros de um perfil (via RLS)
+   */
+  static async getProfileMembers(profileId: string): Promise<ProfileMember[]> {
+    const result = await this.getProfileMembersResult(profileId);
+    if (!result.success) {
+      logger.error('Error fetching profile members:', result.error);
       return [];
+    }
+
+    return result.data ?? [];
+  }
+
+  /**
+   * Read model batch canônico para contagem de memberships por perfil.
+   */
+  static async getProfileMemberCounts(
+    profileIds: string[],
+  ): Promise<ServiceResponse<Map<string, number>>> {
+    try {
+      const uniqueProfileIds = [...new Set(profileIds.filter(Boolean))];
+      if (uniqueProfileIds.length === 0) {
+        return { success: true, data: new Map() };
+      }
+
+      const { data, error } = await supabase
+        .from('profile_members')
+        .select('profile_id')
+        .in('profile_id', uniqueProfileIds);
+
+      if (error) throw error;
+
+      const counts = new Map<string, number>();
+      for (const row of (data || []) as Array<{ profile_id: string }>) {
+        counts.set(row.profile_id, (counts.get(row.profile_id) ?? 0) + 1);
+      }
+
+      return { success: true, data: counts };
+    } catch (error: unknown) {
+      return {
+        success: false,
+        error: errorMessage(error, 'Failed to count profile members'),
+      };
     }
   }
 

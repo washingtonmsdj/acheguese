@@ -4,6 +4,7 @@ import type { AppRole } from "@/core/authorization/types";
 import { FamilyService, FAMILY_TABLES } from "@/core/family";
 import { getProfessionalLinkedEntitiesByProfileIds } from "@/core/professional/services/professional.linked-entity";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { ProfileMembersService } from "@/core/profiles/services/multi-profile/profileMembersService";
 import { ReviewsService, type ReviewType } from "@/core/reviews";
 import { logger } from "@/shared/utils/logger";
 import { adminNotificationsService } from "./AdminNotificationsService";
@@ -127,17 +128,16 @@ export async function loadProfileMembersCountMap(
 ): Promise<Map<string, number>> {
   if (profileIds.length === 0) return new Map();
 
-  const { data, error } = await supabase
-    .from("profile_members")
-    .select("profile_id")
-    .in("profile_id", profileIds);
-
-  if (error) {
-    logger.error("AdminProfileGovernanceService.loadProfileMembersCountMap", error);
+  const result = await ProfileMembersService.getProfileMemberCounts(profileIds);
+  if (!result.success) {
+    logger.error(
+      "AdminProfileGovernanceService.loadProfileMembersCountMap",
+      result.error,
+    );
     return new Map();
   }
 
-  return createCountMap(data as RawRecord[]);
+  return result.data ?? new Map();
 }
 
 export async function loadEntityMaps(profileIds: string[]): Promise<{

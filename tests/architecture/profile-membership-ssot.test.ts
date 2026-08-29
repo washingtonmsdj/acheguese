@@ -10,7 +10,6 @@ const DIRECT_PROFILE_MEMBERS_RE =
   /\.from(?:<[^>]+>)?\s*\(\s*(["'])profile_members\1\s*\)/g;
 
 const ALLOWED_DIRECT_PROFILE_MEMBER_OWNERS = [
-  "src/core/admin/services/AdminProfileGovernanceLoaders.ts",
   "src/core/admin/services/AdminProfileGovernanceService.ts",
   "src/core/profiles/services/multi-profile/profileMembersService.ts",
 ] as const;
@@ -51,6 +50,8 @@ describe("G4 profile membership SSOT", () => {
 
     expect(service).toContain(".eq('is_active', true)");
     expect(service).toContain("role === 'owner' || role === 'admin'");
+    expect(service).toContain("getProfileMembersResult(");
+    expect(service).toContain("getProfileMemberCounts(");
     expect(migration).toContain("AND pm.is_active = TRUE");
     expect(migration).toContain("AND pm.role IN ('owner', 'admin')");
   });
@@ -98,6 +99,16 @@ describe("G4 profile membership SSOT", () => {
     expect(network).toContain("ProfileMembersService.addMember(");
     expect(network).toContain("ProfileMembersService.removeMember(");
     expect(network).not.toMatch(DIRECT_PROFILE_MEMBERS_RE);
+  });
+
+  it("keeps admin membership counts delegated to the canonical batch read model", () => {
+    const loaders = fs.readFileSync(
+      path.join(ROOT, "src/core/admin/services/AdminProfileGovernanceLoaders.ts"),
+      "utf8",
+    );
+
+    expect(loaders).toContain("ProfileMembersService.getProfileMemberCounts(profileIds)");
+    expect(loaders).not.toMatch(DIRECT_PROFILE_MEMBERS_RE);
   });
 
   it("tracks every remaining direct profile_members runtime owner explicitly", () => {
