@@ -6,7 +6,8 @@
 
 import { logger } from '@/shared/utils/logger';
 import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from '@/app/config/launchScope';
-import type { Location, TerritorialGroupWithMembers } from '@/core/location/types';
+import type { Location } from '@/core/location/types';
+import { territorialGroupService, type TerritorialGroupWithMembers } from '@/core/territorial';
 import {
   MODULE_SLUGS,
   buildGroupBaseUrl,
@@ -15,7 +16,6 @@ import {
 } from '@/core/routing/utils/territoryUrls';
 import { touristPointPublicRoutes } from '@/core/guide/tourist-points/routes/touristPointPublicRoutes';
 import { LocationsReadService } from '@/core/location/services/LocationsReadService';
-import { TerritorialGroupsReadService } from '@/core/location/services/TerritorialGroupsReadService';
 import {
   isTerritoryVisibleInLanding,
   type TerritoryVisibilityMetadata,
@@ -63,19 +63,19 @@ const TERRITORY_SITEMAP_MODULES: readonly TerritorySitemapModule[] = [
 ];
 
 function normalizeBaseUrl(value: string): string {
-  return value.trim().replace(/\/+$/, "");
+  return value.trim().replace(/\/+$/, '');
 }
 
 function resolveSitemapBaseUrl(explicitBaseUrl?: string): string {
   const envBaseUrl =
-    typeof process !== "undefined"
-      ? process.env.VITE_PUBLIC_SITE_URL || ""
-      : "";
+    typeof process !== 'undefined'
+      ? process.env.VITE_PUBLIC_SITE_URL || ''
+      : '';
 
   const resolvedBaseUrl = (explicitBaseUrl || envBaseUrl).trim();
   if (!resolvedBaseUrl) {
     throw new Error(
-      "Sitemap base URL not configured. Define VITE_PUBLIC_SITE_URL.",
+      'Sitemap base URL not configured. Define VITE_PUBLIC_SITE_URL.',
     );
   }
 
@@ -136,7 +136,6 @@ export function generateSitemap(
     { path: '/privacidade', priority: 0.3, changefreq: 'monthly' as const },
   ];
 
-
   staticPages.forEach((page) => {
     urls.push({
       loc: `${normalizedBaseUrl}${page.path}`,
@@ -144,7 +143,6 @@ export function generateSitemap(
       priority: page.priority,
     });
   });
-
 
   locations
     .filter((location) => location.status === 'active')
@@ -200,16 +198,16 @@ export function generateSitemap(
 export async function generateAndSaveSitemap() {
   const locationsRows = (await LocationsReadService.getAll()) as unknown as Location[];
   const locations = locationsRows
-    .filter((location) => location.type === "city" || location.type === "district")
-    .filter((location) => location.status === "active")
+    .filter((location) => location.type === 'city' || location.type === 'district')
+    .filter((location) => location.status === 'active')
     .filter((location) =>
-    isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(location.metadata)),
-  );
+      isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(location.metadata)),
+    );
 
-  const groups = (await TerritorialGroupsReadService.listActiveGroups())
+  const groups = (await territorialGroupService.listAllGroups())
     .filter((group) =>
       isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(group.metadata)),
-    ) as TerritorialGroupWithMembers[];
+    );
 
   const sitemap = generateSitemap(locations, groups, resolveSitemapBaseUrl());
   const outputPath = resolve(process.cwd(), 'public', 'sitemap.xml');
