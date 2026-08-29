@@ -14,10 +14,6 @@ const ALLOWED_DIRECT_AUTH_READS = new Map<string, readonly string[]>([
     ["getSession", "onAuthStateChange"],
   ],
   [
-    "src/core/session/services/SessionSecurityService.ts",
-    ["getSession", "getUser"],
-  ],
-  [
     "src/integrations/supabase/supabase.ts",
     ["getSession"],
   ],
@@ -78,5 +74,17 @@ describe("G4 Auth/session authority", () => {
 
     expect(privacy).toContain("SessionService.getAccessToken()");
     expect(privacy).not.toContain("supabase.auth.getSession(");
+  });
+
+  it("keeps session-security auth reads delegated to SessionService", () => {
+    const sessionSecurity = fs.readFileSync(
+      path.join(ROOT, "src/core/session/services/SessionSecurityService.ts"),
+      "utf8",
+    );
+
+    expect(sessionSecurity).toContain("SessionService.getCurrentUser()");
+    expect(sessionSecurity).toContain("SessionService.getAccessToken()");
+    expect(sessionSecurity).not.toContain("supabase.auth.getUser(");
+    expect(sessionSecurity).not.toContain("supabase.auth.getSession(");
   });
 });

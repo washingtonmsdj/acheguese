@@ -8,6 +8,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { SessionRpcService } from '@/core/session/services/SessionRpcService';
+import { SessionService } from '@/core/session/services/SessionService';
 
 export interface UserSession {
   id: string;
@@ -136,7 +137,7 @@ export class SessionSecurityService {
    */
   async getActiveSessions(): Promise<UserSession[]> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await SessionService.getCurrentUser();
 
       if (!user) {
         return [];
@@ -167,7 +168,7 @@ export class SessionSecurityService {
    */
   async getAllSessions(limit: number = 50): Promise<UserSession[]> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await SessionService.getCurrentUser();
 
       if (!user) {
         return [];
@@ -244,7 +245,7 @@ export class SessionSecurityService {
    */
   async getSessionAnomalies(sessionId?: string): Promise<SessionAnomaly[]> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await SessionService.getCurrentUser();
 
       if (!user) {
         return [];
@@ -279,7 +280,7 @@ export class SessionSecurityService {
    */
   async getSessionStats(): Promise<SessionStats> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await SessionService.getCurrentUser();
 
       if (!user) {
         return {
@@ -366,16 +367,16 @@ export class SessionSecurityService {
    */
   async getCurrentSession(): Promise<UserSession | null> {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = SessionService.getAccessToken();
 
-      if (!session) {
+      if (!accessToken) {
         return null;
       }
 
       const { data, error } = await supabase
         .from('user_sessions')
         .select('*')
-        .eq('session_token', session.access_token)
+        .eq('session_token', accessToken)
         .eq('is_active', true)
         .single();
 
