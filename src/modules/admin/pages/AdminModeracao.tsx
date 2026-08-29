@@ -5,8 +5,8 @@ import {
 } from "@/core/admin/components";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { TrustAdminActionsLog } from "@/modules/admin/components/moderation/TrustAdminActionsLog";
+import { FederatedModerationQueue } from "@/modules/admin/components/moderation/FederatedModerationQueue";
 import { CommunityContentModerationQueue } from "@/core/community/moderation";
-import { FederatedModerationQueue } from "@/core/moderation";
 
 export default function AdminModeracao() {
   const { canModerate, isChecking } = useAdminGuard();
