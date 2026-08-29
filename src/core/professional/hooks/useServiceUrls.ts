@@ -2,7 +2,7 @@ import { useActiveTerritory } from "@/core/location/hooks/useActiveTerritory";
 import { ProfessionalUrlService } from "@/core/professional/services/ProfessionalUrlService";
 import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
 import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
-import { LAUNCH_URLS } from "@/config/territory";
+import { LAUNCH_URLS } from "@/core/routing/config/territory";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
 export interface ServiceDetailUrlInput {
