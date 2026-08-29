@@ -1,6 +1,6 @@
 # MediaAsset SSOT
 
-Status: ativo; dominios de imagem publica canonicos; CP-016 concluido
+Status: ativo; dominios de imagem publica canonicos; CP-016 concluido; G4 global upload ownership fechado em 2026-08-29
 Data: 2026-07-17
 Owner: `src/core/media`, `supabase/functions/media-assets` e lifecycle no banco
 
@@ -168,4 +168,78 @@ Evidencia somente leitura:
 
 Documentos privados, evidencias de seguranca e virtual try-on continuam fora
 deste SSOT e preservam buckets e politicas proprios. `uploadToBucket` nao pode
-ser reutilizado para imagens publicas.
+ser reutilizado para imagens publicas canonicas; a API restante e limitada ao
+staging publico especializado do Try-On.
+
+## 10. G4 global upload ownership — 2026-08-29
+
+O hardening global separa explicitamente quatro classes de Storage. Elas nao sao
+SSOTs concorrentes porque cada uma possui semantica e autoridade distintas:
+
+1. **Imagem publica canonica de dominio** — `MediaService.uploadMediaAsset()` ->
+   Edge Function `media-assets` -> `public.media_assets`/`media_asset_links`.
+2. **Arquivo privado sensivel** — `MediaService.uploadPrivateFile()` e
+   `createPrivateSignedUrl()` sao primitivas de transporte; o dominio continua
+   owner da autorizacao e persistencia. Safety usa exclusivamente
+   `SafetyEvidenceService` e grava referencia `storage://safety-evidence/...`.
+3. **Staging publico especializado** — `uploadToBucket()` aceita somente o tipo
+   `PublicImageUploadBucket`, cujo contrato atual contem apenas `tryon`. Buckets
+   historicos `business_images` e `classified_images` nao podem voltar a ser
+   writers de produto por esse helper.
+4. **Geracao server-side** — `ai-image` e `tryon-generate` podem gravar outputs
+   gerados no servidor em `ai-images`/`tryon`. `media-assets-cleanup` pode remover
+   orfaos. Qualquer nova Edge Function usando Storage deve ser classificada no
+   validator antes de entrar no source.
+
+`tools/architecture/validate-upload-ssot.ts` protege tanto `src` quanto
+`supabase/functions`: direct Storage no frontend fica concentrado no
+`MediaService`; Edge Functions com `.storage` falham por padrao e somente os
+gateways especializados conhecidos possuem allowlist com invariantes proprias.
+
+### Safety evidence
+
+O fluxo duplicado `SafetyService.uploadSafetyEvidence()` foi aposentado.
+`SafetyEvidenceService` e o unico owner de leitura/escrita de
+`public.safety_evidence` e usa o bucket privado `safety-evidence`.
+
+Em 2026-08-29 a auditoria remota encontrou o bucket privado sem policies de
+`storage.objects`, apesar do fluxo browser autenticado ja existir. A migration
+`20260829161927_repair_safety_evidence_storage_owner_policies.sql` foi aplicada
+e versionada no mesmo corte. Ela autoriza somente `authenticated` para:
+
+- `INSERT` de objeto cujo primeiro segmento e um `incident_id` pertencente ao
+  Profile do usuario;
+- `SELECT` do mesmo escopo, necessario para signed URL;
+- `DELETE` do mesmo escopo, necessario para compensacao de upload orfao.
+
+Nao existe policy de `UPDATE`, `anon` ou `public`. A expressao de ownership
+mantem `storage.foldername(name)` fora da subquery de Profiles para evitar
+shadowing por colunas chamadas `name`.
+
+### Verification documents
+
+`MediaService.uploadVerificationDocument()` permanece no source como API privada
+historica, mas a busca global no checkpoint de 2026-08-29 encontrou somente sua
+propria definicao e teste; nao existe caller runtime de produto. Portanto o
+bucket `verification-documents` nao constitui segunda autoridade ativa de G4.
+
+A policy historica desse bucket apresenta uma expressao que deve ser
+reconciliada na auditoria exaustiva de **G5 Database/RLS/legado** antes de o fluxo
+ser reativado. Ate la, nenhum novo caller deve ser introduzido sem reparar e
+provar o contrato remoto primeiro.
+
+### Criterio de fechamento G4
+
+No nivel de autoridade arquitetural/source exigido pelo plano global:
+
+- owner publico canonico: unico;
+- owner privado de Safety: unico;
+- helper publico residual: restrito a Try-On;
+- gateways server-side: enumerados e fail-closed por validator;
+- banco remoto conhecido nao contradiz o fluxo ativo de Safety apos a migration
+  `20260829161927`;
+- drift inativo de `verification-documents` fica explicitamente transferido a
+  G5, sem ser interpretado como fluxo certificado.
+
+A certificacao hosted same-SHA continua separada: falha de runner sem steps nao
+e convertida em PASS de codigo.
