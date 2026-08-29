@@ -1,7 +1,7 @@
 # SSOT Registry — Single Source of Truth
 
 > Mapa completo de todos os SSOTs do projeto.
-> Última atualização: 2026-08-27
+> Última atualização: 2026-08-29
 > Status documental: CANONICO. Este registry permanece como mapa tecnico de SSOTs; o boundary publico do Feed esta congelado em `docs/feed/FEED-FREEZE.md`.
 
 ---
@@ -173,12 +173,21 @@ super_admin → admin → moderator → business_owner → driver → user
 
 ---
 
-### 10. Gastronomy Billing
+### 10. Billing / Subscriptions
 
 | | |
 |---|---|
-| **Arquivo** | `src/core/gastronomy/billing/types.ts` |
-| **Responsabilidade** | Planos, features, limites e cobrança do vertical gastronomia |
+| **Tipos** | `src/core/billing/types.ts` |
+| **Catálogo** | `src/core/billing/services/CatalogService.ts` + `BillingPlanService.ts` |
+| **Assinatura user** | `src/core/billing/services/SubscriptionService.ts` |
+| **Assinatura Business** | `src/core/billing/BusinessSubscriptionService.ts` |
+| **Entitlements** | `src/core/billing/services/EntitlementResolver.ts` + `entitlementBaselines.ts` |
+| **Checkout / Portal** | `src/core/billing/services/BillingService.ts` |
+| **Writer server-side** | `supabase/functions/billing-webhook/index.ts` |
+| **Responsabilidade** | Catálogo comercial horizontal, leitura de contratos, gates e integração Stripe; browser não escreve estado comercial |
+| **Tabelas canônicas** | `user_subscriptions`, `commercial_catalog_version`, `catalog_item`, `catalog_entitlement_policy`, `catalog_eligibility_rule`, `catalog_pricing_policy` |
+
+> `src/core/gastronomy/billing` foi aposentado. `billing_plans`, `subscription_plans`, `business_subscriptions` e `gastronomy_subscriptions` não são SSOT runtime e permanecem como legado para provenance/reconciliação em G5.
 
 ---
 
@@ -390,7 +399,8 @@ Tabelas que **só podem ser acessadas via service SSOT**. Acesso direto em hooks
 | `classifieds` | `ClassifiedService` |
 | `events` | `EventService` |
 | `reviews` | `ReviewsService` |
-| `user_subscriptions` | `SubscriptionService` |
+| `user_subscriptions` | `services/SubscriptionService` + `BusinessSubscriptionService` (read); `billing-webhook` (write) |
+| `commercial_catalog_version`, `catalog_item`, `catalog_*_policy` | `CatalogService` / `BillingPlanService` (read); trusted server/service_role (write) |
 | `gastronomy_establishments` | `GastronomyService` |
 | `menu_categories` | `MenuService` |
 | `menu_items` | `MenuService` |
