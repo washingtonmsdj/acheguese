@@ -1,54 +1,43 @@
 /**
- * CatalogService — SSOT para busca de catálogo comercial
+ * CatalogService — owner do catálogo comercial publicado.
  *
- * REGRAS ARQUITETURAIS:
- *   - Única fonte de verdade para catálogo de planos/addons
- *   - Sempre filtrar por entity_family + vertical
- *   - Retornar apenas itens published
- *   - Incluir políticas de entitlement e pricing
- *   - Identificadores Stripe permanecem server-only
- *
- * FASE: 3 - Services e Contratos
- * REFERÊNCIA: F3_SERVICES_RESTANTES.md
- *
- * @version 1.0.0
+ * Fonte de verdade para oferta, preço e entitlement de contratação:
+ * commercial_catalog_version + catalog_item + catalog_*_policy.
+ * Identificadores Stripe permanecem server-only no checkout.
  */
 
 import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
-
-type QueryError = { message?: string | null };
-
-type QueryArrayResult<T> = {
-  data: T[] | null;
-  error: QueryError | null;
-};
-
-type QuerySingleResult<T> = {
-  data: T | null;
-  error: QueryError | null;
-};
-
-type QueryBuilder<T extends object> = PromiseLike<QueryArrayResult<T>> & {
-  select(columns?: string): QueryBuilder<T>;
-  eq(column: string, value: unknown): QueryBuilder<T>;
-  order(column: string, options?: { ascending?: boolean }): QueryBuilder<T>;
-  maybeSingle(): Promise<QuerySingleResult<T>>;
-};
-
-type CatalogDbClient = {
-  from<T extends object>(table: string): QueryBuilder<T>;
-};
-
-const catalogDb = supabase as unknown as CatalogDbClient;
-
-// ─── Tipos ────────────────────────────────────────────────────────────────────
 
 export interface EligibilityContext {
   user_id: string;
   entity_family: 'company' | 'professional' | 'worker';
   vertical: string;
   actor_type?: string;
+}
+
+export interface CatalogEntitlementPolicy {
+  can_use_premium_public_page: boolean;
+  can_use_short_premium_link: boolean;
+  can_use_custom_qr_code: boolean;
+  can_use_advanced_menu: boolean;
+  can_receive_internal_orders: boolean;
+  can_use_motoboy_network: boolean;
+  can_use_promotions: boolean;
+  can_use_basic_analytics: boolean;
+  can_use_advanced_analytics: boolean;
+  max_menu_items: number | null;
+  max_promotions: number | null;
+  max_images: number | null;
+  max_categories: number | null;
+  max_orders_per_day: number | null;
+  additional_entitlements: Record<string, unknown>;
+}
+
+export interface CatalogPricingPolicy {
+  price_cents: number;
+  currency: string;
+  billing_period: string | null;
 }
 
 export interface CatalogItem {
@@ -59,34 +48,24 @@ export interface CatalogItem {
   item_name: string;
   item_type: 'base_plan' | 'vertical_package' | 'addon';
   plan_tier: string;
-  entity_family: string;
-  vertical: string;
+  entity_family: string | null;
+  vertical: string | null;
   pricing_model: 'free' | 'subscription' | 'transactional' | 'hybrid';
   status: string;
-  
-  // Políticas
-  entitlement_policy?: {
-    can_use_premium_public_page: boolean;
-    can_use_short_premium_link: boolean;
-    can_use_custom_qr_code: boolean;
-    can_use_advanced_menu: boolean;
-    can_receive_internal_orders: boolean;
-    can_use_motoboy_network: boolean;
-    can_use_promotions: boolean;
-    can_use_basic_analytics: boolean;
-    can_use_advanced_analytics: boolean;
-    max_menu_items: number | null;
-    max_promotions: number | null;
-    max_images: number | null;
-    max_categories: number | null;
-  };
-  
-  pricing_policy?: {
-    price_cents: number;
-    currency: string;
-    billing_period: string;
-  };
+  description: string | null;
+  features: string[];
+  display_order: number;
+  is_featured: boolean;
+  created_at: string;
+  updated_at: string;
+  entitlement_policy?: CatalogEntitlementPolicy;
+  pricing_policy?: CatalogPricingPolicy;
 }
+
+type CatalogVersion = {
+  version_code: string;
+  status: string;
+};
 
 type CatalogRow = {
   id: string;
@@ -94,12 +73,21 @@ type CatalogRow = {
   item_name: string;
   item_type: 'base_plan' | 'vertical_package' | 'addon';
   plan_tier: string;
-  entity_family: string;
-  vertical: string;
+  entity_family: string | null;
+  vertical: string | null;
   pricing_model: 'free' | 'subscription' | 'transactional' | 'hybrid';
-  commercial_catalog_version?: { version_code: string; status: string } | Array<{ version_code: string; status: string }> | null;
-  catalog_entitlement_policy?: CatalogItem['entitlement_policy'][];
-  catalog_pricing_policy?: CatalogItem['pricing_policy'][];
+  description: string | null;
+  features: unknown;
+  display_order: number | null;
+  is_featured: boolean | null;
+  created_at: string;
+  updated_at: string;
+  commercial_catalog_version?: CatalogVersion | CatalogVersion[] | null;
+  catalog_entitlement_policy?:
+    | CatalogEntitlementPolicy
+    | CatalogEntitlementPolicy[]
+    | null;
+  catalog_pricing_policy?: CatalogPricingPolicy | CatalogPricingPolicy[] | null;
 };
 
 type CatalogEligibilityRow = Pick<
@@ -115,19 +103,92 @@ export interface EligibleCatalog {
   addons: CatalogItem[];
 }
 
+type QueryError = { message?: string | null };
+type QueryArrayResult<T> = { data: T[] | null; error: QueryError | null };
+type QuerySingleResult<T> = { data: T | null; error: QueryError | null };
+
+type QueryBuilder<T extends object> = PromiseLike<QueryArrayResult<T>> & {
+  select(columns?: string): QueryBuilder<T>;
+  eq(column: string, value: unknown): QueryBuilder<T>;
+  order(column: string, options?: { ascending?: boolean }): QueryBuilder<T>;
+  maybeSingle(): Promise<QuerySingleResult<T>>;
+};
+
+type CatalogDbClient = {
+  from<T extends object>(table: string): QueryBuilder<T>;
+};
+
+const catalogDb = supabase as unknown as CatalogDbClient;
 const EMPTY_CATALOG_VERSION = '0.0.0';
+
+const CATALOG_SELECT = `
+  id,
+  item_code,
+  item_name,
+  item_type,
+  plan_tier,
+  entity_family,
+  vertical,
+  pricing_model,
+  description,
+  features,
+  display_order,
+  is_featured,
+  created_at,
+  updated_at,
+  commercial_catalog_version!inner (
+    version_code,
+    status
+  ),
+  catalog_entitlement_policy (
+    can_use_premium_public_page,
+    can_use_short_premium_link,
+    can_use_custom_qr_code,
+    can_use_advanced_menu,
+    can_receive_internal_orders,
+    can_use_motoboy_network,
+    can_use_promotions,
+    can_use_basic_analytics,
+    can_use_advanced_analytics,
+    max_menu_items,
+    max_promotions,
+    max_images,
+    max_categories,
+    max_orders_per_day,
+    additional_entitlements
+  ),
+  catalog_pricing_policy (
+    price_cents,
+    currency,
+    billing_period
+  )
+`;
+
+function firstRelated<T>(value: T | T[] | null | undefined): T | undefined {
+  return Array.isArray(value) ? value[0] : value ?? undefined;
+}
 
 function getCatalogVersion(
   row?: Pick<CatalogRow, 'commercial_catalog_version'> | null,
-): { version_code: string; status: string } {
-  const version = Array.isArray(row?.commercial_catalog_version)
-    ? row?.commercial_catalog_version[0]
-    : row?.commercial_catalog_version;
-
+): CatalogVersion {
+  const version = firstRelated(row?.commercial_catalog_version);
   return {
     version_code: version?.version_code ?? EMPTY_CATALOG_VERSION,
-    status: version?.status ?? 'published',
+    status: version?.status ?? 'unknown',
   };
+}
+
+function normalizeFeatures(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === 'string');
+}
+
+function normalizePlanCode(planCode: string): string {
+  const normalized = planCode.trim().toLowerCase();
+  if (normalized === 'free' || normalized === 'pro' || normalized === 'delivery') {
+    return `base-${normalized}`;
+  }
+  return normalized;
 }
 
 function emptyCatalog(): EligibleCatalog {
@@ -140,246 +201,153 @@ function emptyCatalog(): EligibleCatalog {
   };
 }
 
-// ─── Service ──────────────────────────────────────────────────────────────────
-
 export class CatalogService {
-  /**
-   * Busca catálogo elegível por contexto comercial.
-   * 
-   * Filtra por:
-   * - entity_family (company, professional, worker)
-   * - vertical (gastronomy, health, etc)
-   * - status = 'published'
-   */
   static async getEligibleCatalog(
-    context: EligibilityContext
+    context: EligibilityContext,
   ): Promise<EligibleCatalog> {
     try {
-      const { data: items, error } = await catalogDb
+      const { data, error } = await catalogDb
         .from<CatalogRow>('catalog_item')
-        .select(`
-          id,
-          item_code,
-          item_name,
-          item_type,
-          plan_tier,
-          entity_family,
-          vertical,
-          pricing_model,
-          commercial_catalog_version!inner (
-            version_code,
-            status
-          ),
-          catalog_entitlement_policy (
-            can_use_premium_public_page,
-            can_use_short_premium_link,
-            can_use_custom_qr_code,
-            can_use_advanced_menu,
-            can_receive_internal_orders,
-            can_use_motoboy_network,
-            can_use_promotions,
-            can_use_basic_analytics,
-            can_use_advanced_analytics,
-            max_menu_items,
-            max_promotions,
-            max_images,
-            max_categories
-          ),
-          catalog_pricing_policy (
-            price_cents,
-            currency,
-            billing_period
-          )
-        `)
+        .select(CATALOG_SELECT)
         .eq('entity_family', context.entity_family)
-        .eq('vertical', context.vertical)
         .eq('commercial_catalog_version.status', 'published')
-        .order('plan_tier', { ascending: true });
-      
+        .order('display_order', { ascending: true });
+
       if (error) {
         logger.error('[CatalogService] Erro ao buscar catálogo:', error);
         return emptyCatalog();
       }
-      
-      // Separar por tipo
-      const typedItems = items || [];
-      const mappedItems = typedItems.map(this.mapCatalogItem);
-      const base_plans = typedItems.filter(i => i.item_type === 'base_plan');
-      const vertical_packages = typedItems.filter(i => i.item_type === 'vertical_package');
-      const addons = typedItems.filter(i => i.item_type === 'addon');
-      
+
+      const mapped = (data ?? [])
+        .map(this.mapCatalogItem)
+        .filter(
+          (item) =>
+            item.item_type === 'base_plan' ||
+            item.vertical === null ||
+            item.vertical === context.vertical,
+        );
+
       return {
-        version: getCatalogVersion(typedItems[0]).version_code,
-        items: mappedItems,
-        base_plans: base_plans.map(this.mapCatalogItem),
-        vertical_packages: vertical_packages.map(this.mapCatalogItem),
-        addons: addons.map(this.mapCatalogItem),
+        version: getCatalogVersion(data?.[0]).version_code,
+        items: mapped,
+        base_plans: mapped.filter((item) => item.item_type === 'base_plan'),
+        vertical_packages: mapped.filter(
+          (item) => item.item_type === 'vertical_package',
+        ),
+        addons: mapped.filter((item) => item.item_type === 'addon'),
       };
-      
     } catch (error) {
       logger.error('[CatalogService] Erro ao buscar catálogo:', error);
       return emptyCatalog();
     }
   }
-  
-  /**
-   * Busca plano específico por código.
-   */
-  static async getPlanByCode(planCode: string): Promise<CatalogItem | null> {
+
+  static async getPublishedBasePlans(): Promise<CatalogItem[]> {
     try {
       const { data, error } = await catalogDb
         .from<CatalogRow>('catalog_item')
-        .select(`
-          id,
-          item_code,
-          item_name,
-          item_type,
-          plan_tier,
-          entity_family,
-          vertical,
-          pricing_model,
-          commercial_catalog_version!inner (
-            version_code,
-            status
-          ),
-          catalog_entitlement_policy (
-            can_use_premium_public_page,
-            can_use_short_premium_link,
-            can_use_custom_qr_code,
-            can_use_advanced_menu,
-            can_receive_internal_orders,
-            can_use_motoboy_network,
-            can_use_promotions,
-            can_use_basic_analytics,
-            can_use_advanced_analytics,
-            max_menu_items,
-            max_promotions,
-            max_images,
-            max_categories
-          ),
-          catalog_pricing_policy (
-            price_cents,
-            currency,
-            billing_period
-          )
-        `)
-        .eq('item_code', planCode)
+        .select(CATALOG_SELECT)
+        .eq('item_type', 'base_plan')
+        .eq('entity_family', 'company')
+        .eq('commercial_catalog_version.status', 'published')
+        .order('display_order', { ascending: true });
+
+      if (error) {
+        logger.error('[CatalogService] Erro ao buscar planos base:', error);
+        throw error;
+      }
+
+      return (data ?? []).map(this.mapCatalogItem);
+    } catch (error) {
+      logger.error('[CatalogService] Erro inesperado ao buscar planos base:', error);
+      throw error;
+    }
+  }
+
+  static async getPlanByCode(planCode: string): Promise<CatalogItem | null> {
+    try {
+      const itemCode = normalizePlanCode(planCode);
+      const { data, error } = await catalogDb
+        .from<CatalogRow>('catalog_item')
+        .select(CATALOG_SELECT)
+        .eq('item_code', itemCode)
         .eq('commercial_catalog_version.status', 'published')
         .maybeSingle();
-      
+
       if (error) {
         logger.error('[CatalogService] Erro ao buscar plano:', error);
         return null;
       }
-      
+
       return data ? this.mapCatalogItem(data) : null;
-      
     } catch (error) {
       logger.error('[CatalogService] Erro ao buscar plano:', error);
       return null;
     }
   }
-  
-  /**
-   * Lista addons disponíveis por vertical.
-   */
+
   static async getAddonsByVertical(vertical: string): Promise<CatalogItem[]> {
     try {
       const { data, error } = await catalogDb
         .from<CatalogRow>('catalog_item')
-        .select(`
-          id,
-          item_code,
-          item_name,
-          item_type,
-          plan_tier,
-          entity_family,
-          vertical,
-          pricing_model,
-          commercial_catalog_version!inner (
-            version_code,
-            status
-          ),
-          catalog_entitlement_policy (
-            can_use_premium_public_page,
-            can_use_short_premium_link,
-            can_use_custom_qr_code,
-            can_use_advanced_menu,
-            can_receive_internal_orders,
-            can_use_motoboy_network,
-            can_use_promotions,
-            can_use_basic_analytics,
-            can_use_advanced_analytics,
-            max_menu_items,
-            max_promotions,
-            max_images,
-            max_categories
-          ),
-          catalog_pricing_policy (
-            price_cents,
-            currency,
-            billing_period
-          )
-        `)
+        .select(CATALOG_SELECT)
         .eq('item_type', 'addon')
         .eq('vertical', vertical)
-        .eq('commercial_catalog_version.status', 'published');
-      
+        .eq('commercial_catalog_version.status', 'published')
+        .order('display_order', { ascending: true });
+
       if (error) {
         logger.error('[CatalogService] Erro ao buscar addons:', error);
         return [];
       }
-      
-      return data?.map(this.mapCatalogItem) || [];
-      
+
+      return (data ?? []).map(this.mapCatalogItem);
     } catch (error) {
       logger.error('[CatalogService] Erro ao buscar addons:', error);
       return [];
     }
   }
-  
-  /**
-   * Valida se usuário pode contratar item específico.
-   */
+
   static async validateEligibility(
     context: EligibilityContext,
-    itemId: string
+    itemId: string,
   ): Promise<{ eligible: boolean; reason?: string }> {
     try {
       const { data: item, error } = await catalogDb
         .from<CatalogEligibilityRow>('catalog_item')
-        .select('entity_family, vertical, commercial_catalog_version!inner (version_code, status)')
+        .select(
+          'entity_family, vertical, commercial_catalog_version!inner (version_code, status)',
+        )
         .eq('id', itemId)
         .eq('commercial_catalog_version.status', 'published')
         .maybeSingle();
-      
+
       if (error || !item) {
         return { eligible: false, reason: 'Item não encontrado' };
       }
-      
+
       if (getCatalogVersion(item).status !== 'published') {
         return { eligible: false, reason: 'Item não está disponível' };
       }
-      
+
       if (item.entity_family !== context.entity_family) {
-        return { eligible: false, reason: 'Item não disponível para seu tipo de conta' };
+        return {
+          eligible: false,
+          reason: 'Item não disponível para seu tipo de conta',
+        };
       }
-      
-      if (item.vertical !== context.vertical) {
+
+      if (item.vertical !== null && item.vertical !== context.vertical) {
         return { eligible: false, reason: 'Item não disponível para sua vertical' };
       }
-      
+
       return { eligible: true };
-      
     } catch (error) {
       logger.error('[CatalogService] Erro ao validar elegibilidade:', error);
       return { eligible: false, reason: 'Erro ao validar elegibilidade' };
     }
   }
-  
-  /**
-   * Mapeia item do banco para DTO.
-   */
+
   private static mapCatalogItem(item: CatalogRow): CatalogItem {
     return {
       id: item.id,
@@ -393,8 +361,14 @@ export class CatalogService {
       vertical: item.vertical,
       pricing_model: item.pricing_model,
       status: getCatalogVersion(item).status,
-      entitlement_policy: item.catalog_entitlement_policy?.[0] || undefined,
-      pricing_policy: item.catalog_pricing_policy?.[0] || undefined,
+      description: item.description,
+      features: normalizeFeatures(item.features),
+      display_order: item.display_order ?? 0,
+      is_featured: item.is_featured ?? false,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+      entitlement_policy: firstRelated(item.catalog_entitlement_policy),
+      pricing_policy: firstRelated(item.catalog_pricing_policy),
     };
   }
 }
