@@ -18,6 +18,7 @@ const PHASE1_COMMANDS = [
       "tests/architecture/business-module-boundary-ratchet.test.ts",
       "tests/architecture/architecture-validator-coverage.test.ts",
       "tests/architecture/session-ssot-ownership.test.ts",
+      "tests/architecture/auth-session-authority.test.ts",
     ],
   ],
   ["npm", ["run", "-s", "validate:architecture:incremental", "--", "--strict", "--json"]],

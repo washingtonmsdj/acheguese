@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase";
+import { SessionService } from "@/core/session/services/SessionService";
 import { buildSupabaseFunctionUrl } from "@/shared/config/publicSupabase";
 import { PrivacyRpcService } from "./PrivacyRpcService";
 
@@ -112,8 +113,7 @@ export class PrivacySettingsService {
   }
 
   static async getAccessToken(): Promise<string> {
-    const { data } = await supabase.auth.getSession();
-    const accessToken = data.session?.access_token;
+    const accessToken = SessionService.getAccessToken();
     if (!accessToken) throw new Error("Sessao nao encontrada");
     return accessToken;
   }
