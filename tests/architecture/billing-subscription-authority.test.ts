@@ -30,7 +30,9 @@ function collectRuntimeSources(directory: string): string[] {
 }
 
 const runtimeSources = collectRuntimeSources("src");
-const businessSubscription = read("src/core/billing/SubscriptionService.ts");
+const businessSubscription = read("src/core/billing/BusinessSubscriptionService.ts");
+const legacyBusinessBridge = read("src/core/billing/SubscriptionService.ts");
+const billingIndex = read("src/core/billing/index.ts");
 const billingPlanService = read("src/core/billing/services/BillingPlanService.ts");
 const billingService = read("src/core/billing/services/BillingService.ts");
 const checkout = read("supabase/functions/billing-create-checkout/index.ts");
@@ -56,6 +58,16 @@ describe("Billing subscription authority", () => {
     expect(
       existsSync(resolve(root, "src/core/billing/services/SubscriptionContractService.ts")),
     ).toBe(false);
+  });
+
+  it("names business subscription authority explicitly and keeps old path bridge-only", () => {
+    expect(businessSubscription).toContain("export class BusinessSubscriptionService");
+    expect(billingIndex).toContain("export * from './BusinessSubscriptionService'");
+    expect(legacyBusinessBridge).toContain(
+      'BusinessSubscriptionService as SubscriptionService',
+    );
+    expect(legacyBusinessBridge).not.toContain("@/integrations/supabase");
+    expect(legacyBusinessBridge).not.toContain("user_subscriptions");
   });
 
   it("keeps browser runtime free of direct user_subscriptions writes", () => {
