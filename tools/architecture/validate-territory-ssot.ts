@@ -9,13 +9,14 @@ const TERRITORIAL_OWNER_ROOT = "src/core/territorial/";
 
 const LEGACY_GROUP_REPOSITORY_IMPORT =
   "@/core/location/repositories/createTerritorialGroupRepository";
-const LEGACY_GROUP_READ_SERVICE_IMPORT =
+const RETIRED_GROUP_READ_SERVICE_IMPORT =
   "@/core/location/services/TerritorialGroupsReadService";
 const GROUP_TABLE_ACCESS_RE = /\.from(?:<[^>]+>)?\(\s*["']territorial_group(?:s|_members)["']\s*\)/;
 
 const RETIRED_LOCATION_GROUP_FILES = [
   "src/core/location/hooks/useTerritorialGroups.ts",
   "src/core/location/services/SelectorTerritoryService.ts",
+  "src/core/location/services/TerritorialGroupsReadService.ts",
 ] as const;
 
 // Temporary, monotonic caller debt. Remove an entry as soon as the caller
@@ -23,10 +24,6 @@ const RETIRED_LOCATION_GROUP_FILES = [
 const LEGACY_REPOSITORY_IMPORT_ALLOWLIST = new Set([
   "src/core/business/services/BusinessUrlService.ts",
   "src/core/routing/hooks/useResolveTerritoryFromUrl.ts",
-]);
-
-const LEGACY_READ_SERVICE_IMPORT_ALLOWLIST = new Set([
-  "src/modules/admin/pages/AdminTerritoryContent.tsx",
 ]);
 
 // One known cross-owner read model still queries group tables directly. It is
@@ -41,7 +38,6 @@ const LEGACY_LOCATION_GROUP_BRIDGES = new Set([
   "src/core/location/repositories/ITerritorialGroupRepository.ts",
   "src/core/location/repositories/TerritorialGroupRepositorySupabase.ts",
   "src/core/location/repositories/createTerritorialGroupRepository.ts",
-  "src/core/location/services/TerritorialGroupsReadService.ts",
 ]);
 
 const LOCATION_TYPES = "src/core/location/types/index.ts";
@@ -75,7 +71,6 @@ function walk(dir: string): string[] {
 function main(): void {
   const violations: string[] = [];
   const seenRepositoryAllowlist = new Set<string>();
-  const seenReadServiceAllowlist = new Set<string>();
   const seenGroupTableAllowlist = new Set<string>();
 
   for (const retired of RETIRED_LOCATION_GROUP_FILES) {
@@ -88,6 +83,12 @@ function main(): void {
     const relative = normalize(path.relative(ROOT, filePath));
     const content = fs.readFileSync(filePath, "utf8");
 
+    if (content.includes(RETIRED_GROUP_READ_SERVICE_IMPORT)) {
+      violations.push(
+        `${relative}: retired TerritorialGroupsReadService import is forbidden. Consume @/core/territorial instead.`,
+      );
+    }
+
     if (content.includes(LEGACY_GROUP_REPOSITORY_IMPORT)) {
       if (!LEGACY_REPOSITORY_IMPORT_ALLOWLIST.has(relative)) {
         violations.push(
@@ -95,16 +96,6 @@ function main(): void {
         );
       } else {
         seenRepositoryAllowlist.add(relative);
-      }
-    }
-
-    if (content.includes(LEGACY_GROUP_READ_SERVICE_IMPORT)) {
-      if (!LEGACY_READ_SERVICE_IMPORT_ALLOWLIST.has(relative)) {
-        violations.push(
-          `${relative}: legacy TerritorialGroupsReadService import is forbidden. Consume @/core/territorial instead.`,
-        );
-      } else {
-        seenReadServiceAllowlist.add(relative);
       }
     }
 
@@ -148,12 +139,6 @@ function main(): void {
     }
   }
 
-  for (const allowed of LEGACY_READ_SERVICE_IMPORT_ALLOWLIST) {
-    if (!seenReadServiceAllowlist.has(allowed)) {
-      violations.push(`${allowed}: stale legacy read-service allowlist entry. Remove it from validate-territory-ssot.ts.`);
-    }
-  }
-
   for (const allowed of GROUP_TABLE_ACCESS_ALLOWLIST) {
     if (!seenGroupTableAllowlist.has(allowed)) {
       violations.push(`${allowed}: stale territorial-group table-access allowlist entry. Remove it from validate-territory-ssot.ts.`);
@@ -187,7 +172,7 @@ function main(): void {
   }
 
   console.log(
-    "Territory SSOT valid: core/location owns geographic hierarchy; core/territorial owns territorial groups; remaining legacy callers and the landing read-model debt are monotonic.",
+    "Territory SSOT valid: core/location owns geographic hierarchy; core/territorial owns territorial groups; remaining repository bridges and the landing read-model debt are monotonic.",
   );
 }
 
