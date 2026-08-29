@@ -7,6 +7,7 @@ const PHASE1_COMMANDS = [
   ["node", ["tools/architecture/validate-reverse-layer-imports.mjs", "--json"]],
   ["npm", ["exec", "--", "tsx", "tools/architecture/validate-business-module-boundaries.ts"]],
   ["npm", ["exec", "--", "tsx", "tools/architecture/validate-territory-ssot.ts"]],
+  ["npm", ["exec", "--", "tsx", "tools/architecture/validate-public-url-ssot.ts"]],
   [
     "npm",
     [
