@@ -22,12 +22,9 @@ const RETIRED_LOCATION_GROUP_FILES = [
   "src/core/location/services/TerritorialGroupsReadService.ts",
 ] as const;
 
-// Temporary one-way caller debt. This caller already reaches the canonical
-// implementation through a bridge; remove the entry when its import path is
-// changed to @/core/territorial. Stale entries intentionally fail.
-const LEGACY_REPOSITORY_IMPORT_ALLOWLIST = new Set([
-  "src/core/routing/hooks/useResolveTerritoryFromUrl.ts",
-]);
+// Runtime callers of the old location-owned group repository are no longer
+// allowed. The physical compatibility files are retired separately below.
+const LEGACY_REPOSITORY_IMPORT_ALLOWLIST = new Set<string>();
 
 // These paths are compatibility bridges only. They must point one-way to
 // core/territorial and may not regain Supabase/group implementation.
