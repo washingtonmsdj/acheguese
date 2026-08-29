@@ -29,10 +29,5 @@ export {
   workOpportunityTrustService,
   WorkOpportunityTrustService,
 } from "./services";
-export {
-  workOpportunityCirculationAnalyticsService,
-  WorkOpportunityCirculationAnalyticsService,
-} from "./services";
 export type { OpportunityOpenSource, OpportunityTelemetryContext } from "./services/WorkOpportunityTelemetryService";
 export type { OpportunityFeedbackAnswer } from "./services/WorkOpportunityTrustService";
-export type { CirculationDashboardSnapshot, DashboardFilters } from "./services/WorkOpportunityCirculationAnalyticsService";

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = process.cwd();
@@ -9,7 +9,7 @@ const INTERACTION_ENUM_MIGRATION =
   "20260818222702_add_business_interaction_analytics_event_type.sql";
 const ANON_SESSION_MIGRATION =
   "20260825201000_require_anonymous_analytics_session.sql";
-const ACTIVE_WRAPPER = join(
+const LEGACY_TRACKING_WRAPPER = join(
   ROOT,
   "src",
   "core",
@@ -62,7 +62,7 @@ describe("SEC-006 analytics authority hardening", () => {
     expect(sql).toMatch(/grant\s+execute\s+on\s+function\s+public\.track_analytics_event[\s\S]*to\s+anon,\s*authenticated,\s*service_role/i);
   });
 
-  it("keeps the active business interaction event aligned with the database enum", () => {
+  it("keeps the database enum compatible without requiring a parallel tracking service", () => {
     const migration = migrationsFromBaseline().find(
       ({ name }) => name === INTERACTION_ENUM_MIGRATION,
     );
@@ -74,15 +74,23 @@ describe("SEC-006 analytics authority hardening", () => {
     expect(migration?.sql).toMatch(
       /alter\s+type\s+public\.analytics_event_type\s+add\s+value\s+if\s+not\s+exists\s+'business_interaction'/i,
     );
+    expect(existsSync(LEGACY_TRACKING_WRAPPER)).toBe(false);
   });
 
-  it("binds active browser tracking calls to the canonical analytics session", () => {
-    const wrapper = readFileSync(ACTIVE_WRAPPER, "utf8");
+  it("routes active browser telemetry through the canonical analytics service", () => {
+    const service = readFileSync(CANONICAL_ANALYTICS_SERVICE, "utf8");
+    expect(service).toContain('analyticsDb.rpc<string>("track_analytics_event"');
+    expect(service).toContain(
+      "const sessionId = input.session_id || this.getSessionId() || null;",
+    );
+    expect(service).toContain("p_session_id: sessionId");
 
-    expect(wrapper).toContain("function currentSessionId()");
-    expect(wrapper).toContain("canonicalAnalyticsService.getSessionId()");
-    expect(wrapper.match(/session_id:\s*currentSessionId\(\)/g)?.length).toBe(3);
-    expect(wrapper).toContain('event_type: "business_interaction"');
+    const opportunityTelemetry = readFileSync(WORK_OPPORTUNITY_TELEMETRY, "utf8");
+    expect(opportunityTelemetry).toContain('from "@/core/analytics"');
+    expect(opportunityTelemetry).toContain("AnalyticsService.trackEvent");
+    expect(opportunityTelemetry).toContain(
+      "session_id: AnalyticsService.getSessionId()",
+    );
   });
 
   it("requires anonymous analytics to remain session-bound and rate-limitable", () => {
@@ -104,17 +112,6 @@ describe("SEC-006 analytics authority hardening", () => {
     );
     expect(sql).toMatch(
       /grant\s+execute\s+on\s+function\s+public\.track_analytics_event[\s\S]*to\s+anon,\s*authenticated,\s*service_role/i,
-    );
-
-    const service = readFileSync(CANONICAL_ANALYTICS_SERVICE, "utf8");
-    expect(service).toContain(
-      "const sessionId = input.session_id || this.getSessionId() || null;",
-    );
-    expect(service).toContain("p_session_id: sessionId");
-
-    const opportunityTelemetry = readFileSync(WORK_OPPORTUNITY_TELEMETRY, "utf8");
-    expect(opportunityTelemetry).toContain(
-      "session_id: AnalyticsService.getSessionId()",
     );
   });
 

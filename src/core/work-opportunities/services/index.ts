@@ -7,7 +7,3 @@ export {
   workOpportunityTrustService,
   WorkOpportunityTrustService,
 } from "./WorkOpportunityTrustService";
-export {
-  workOpportunityCirculationAnalyticsService,
-  WorkOpportunityCirculationAnalyticsService,
-} from "./WorkOpportunityCirculationAnalyticsService";
