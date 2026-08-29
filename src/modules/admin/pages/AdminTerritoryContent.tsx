@@ -7,7 +7,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTerritoryAIContent, type TerritoryAIContent } from '@/core/territorial/hooks/useTerritoryAIContent';
-import { TerritorialGroupsReadService } from '@/core/location/services/TerritorialGroupsReadService';
+import { territorialGroupService } from '@/core/territorial';
 import { Button } from '@/shared/components/ui/button';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { Input } from '@/shared/components/ui/input';
@@ -26,7 +26,7 @@ export default function AdminTerritoryContent() {
   const { content, isLoading, generateWithAI, updateContent } = useTerritoryAIContent(slug);
   const { data: territoryGroups = [], isLoading: isGroupsLoading } = useQuery({
     queryKey: ['admin', 'territory-content', 'active-groups'],
-    queryFn: () => TerritorialGroupsReadService.listActiveGroups(),
+    queryFn: () => territorialGroupService.listAllGroups(),
     staleTime: 5 * 60 * 1000,
   });
 
