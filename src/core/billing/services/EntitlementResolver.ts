@@ -3,8 +3,9 @@ import {
   BillingPlanService,
   type PlanEntitlements,
 } from '@/core/billing/services/BillingPlanService';
+import { getBaselineEntitlements } from '@/core/billing/entitlementBaselines';
+import { PlanTier } from '@/core/billing/types';
 import { logger } from '@/shared/utils/logger';
-import type { GenericBillingEntitlementAliases } from '../types';
 
 type QueryError = { message?: string | null };
 
@@ -22,20 +23,13 @@ type QueryBuilder<T extends object> = PromiseLike<QueryArrayResult<T>> & {
   select(columns?: string): QueryBuilder<T>;
   eq(column: string, value: unknown): QueryBuilder<T>;
   in(column: string, values: readonly unknown[]): QueryBuilder<T>;
+  order(column: string, options?: { ascending?: boolean }): QueryBuilder<T>;
+  limit(value: number): QueryBuilder<T>;
   maybeSingle(): Promise<QuerySingleResult<T>>;
 };
 
 type EntitlementDbClient = {
   from<T extends object>(table: string): QueryBuilder<T>;
-};
-
-type LooseEntitlementPolicy = Partial<PlanEntitlements> & Record<string, unknown>;
-
-type ContractSnapshot = {
-  catalog_item?: {
-    entitlements?: LooseEntitlementPolicy | null;
-  } | null;
-  overrides?: Partial<ResolvedEntitlements> | null;
 };
 
 const entitlementDb = supabase as unknown as EntitlementDbClient;
@@ -46,51 +40,37 @@ export interface EntitlementContext {
   subscription_scope?: 'user' | 'business' | 'profile' | 'worker';
 }
 
-export interface ResolvedEntitlements extends GenericBillingEntitlementAliases {
-  canUsePremiumPublicPage: boolean;
-  canUseShortPremiumLink: boolean;
-  canUseCustomQRCode: boolean;
-  canUseAdvancedMenu: boolean;
-  canUseMenuCategories: boolean;
-  canUseMenuImages: boolean;
-  canUseMenuVariations: boolean;
-  canUseMenuAddons: boolean;
-  canUseMenuCombos: boolean;
-  canManageAvailability: boolean;
-  canScheduleItems: boolean;
-  canReceiveInternalOrders: boolean;
-  canUseOrdersPanel: boolean;
-  canManageOrderStatus: boolean;
-  canCancelOrders: boolean;
-  canViewOrderHistory: boolean;
-  canUseMotoboyNetwork: boolean;
-  canRequestDelivery: boolean;
-  canTrackDelivery: boolean;
-  canConfigureDeliveryArea: boolean;
-  canSetDeliveryFees: boolean;
-  canManageBusinessHours: boolean;
-  canSetMinimumOrder: boolean;
-  canUseOwnDelivery: boolean;
-  canUsePromotions: boolean;
-  canUseFeaturedPlacement: boolean;
-  canUseBanners: boolean;
-  canUseCoupons: boolean;
-  canSchedulePromotions: boolean;
-  canUseBasicAnalytics: boolean;
-  canUseAdvancedAnalytics: boolean;
-  canExportReports: boolean;
-  canViewRealtimeMetrics: boolean;
-  canViewCustomerInsights: boolean;
-  maxMenuItems: number | null;
-  maxPromotions: number | null;
-  maxImages: number | null;
-  maxCategories: number | null;
-  maxCombos: number | null;
-  maxOrdersPerDay: number | null;
+export interface ResolvedEntitlements extends PlanEntitlements {
   planTier: string;
   planName: string;
   isActive: boolean;
 }
+
+type SnapshotPolicy = Partial<PlanEntitlements> & {
+  can_use_premium_public_page?: boolean;
+  can_use_short_premium_link?: boolean;
+  can_use_custom_qr_code?: boolean;
+  can_use_advanced_menu?: boolean;
+  can_receive_internal_orders?: boolean;
+  can_use_motoboy_network?: boolean;
+  can_use_promotions?: boolean;
+  can_use_basic_analytics?: boolean;
+  can_use_advanced_analytics?: boolean;
+  max_menu_items?: number | null;
+  max_promotions?: number | null;
+  max_images?: number | null;
+  max_categories?: number | null;
+  max_orders_per_day?: number | null;
+  additional_entitlements?: Partial<PlanEntitlements> | null;
+};
+
+type ContractSnapshot = {
+  catalog_item?: {
+    entitlements?: Partial<PlanEntitlements> | null;
+    catalog_entitlement_policy?: SnapshotPolicy | SnapshotPolicy[] | null;
+  } | null;
+  overrides?: Partial<ResolvedEntitlements> | null;
+};
 
 interface SubscriptionData {
   id: string;
@@ -100,103 +80,97 @@ interface SubscriptionData {
   contract_snapshot: ContractSnapshot | null;
 }
 
-const DEFAULT_FREE_ENTITLEMENTS: ResolvedEntitlements = {
-  canUsePremiumPublicPage: false,
-  canUseShortPremiumLink: false,
-  canUseCustomQRCode: false,
-  canUsePremiumSite: false,
-  canUseShortLink: false,
-  canUseAdvancedMenu: false,
-  canUseAdvancedCatalog: false,
-  canUseMenuCategories: true,
-  canUseMenuImages: true,
-  canUseMenuVariations: false,
-  canUseMenuAddons: false,
-  canUseMenuCombos: false,
-  canManageAvailability: true,
-  canScheduleItems: false,
-  canReceiveInternalOrders: false,
-  canUseInternalOrders: false,
-  canUseOrdersPanel: false,
-  canManageOrderStatus: false,
-  canCancelOrders: false,
-  canViewOrderHistory: false,
-  canUseMotoboyNetwork: false,
-  canUseDeliveryNetwork: false,
-  canRequestDelivery: false,
-  canUseDeliveryRequests: false,
-  canTrackDelivery: false,
-  canUseDeliveryTracking: false,
-  canConfigureDeliveryArea: false,
-  canSetDeliveryFees: false,
-  canManageBusinessHours: true,
-  canSetMinimumOrder: false,
-  canUseOwnDelivery: false,
-  canUsePromotions: false,
-  canUseFeaturedPlacement: false,
-  canUseBanners: false,
-  canUseCoupons: false,
-  canSchedulePromotions: false,
-  canUseBasicAnalytics: false,
-  canUseAdvancedAnalytics: false,
-  canExportReports: false,
-  canViewRealtimeMetrics: false,
-  canViewCustomerInsights: false,
-  maxMenuItems: 20,
-  maxPromotions: 0,
-  maxImages: 5,
-  maxCategories: 3,
-  maxCombos: 0,
-  maxOrdersPerDay: null,
-  planTier: 'free',
-  planName: 'Free',
-  isActive: false,
-};
-
-function readBooleanPolicy(
-  policy: LooseEntitlementPolicy,
-  camelKey: string,
-  snakeKey?: string,
-): boolean {
-  const camelValue = policy[camelKey];
-  if (typeof camelValue === 'boolean') {
-    return camelValue;
-  }
-
-  if (snakeKey) {
-    const snakeValue = policy[snakeKey];
-    if (typeof snakeValue === 'boolean') {
-      return snakeValue;
-    }
-  }
-
-  return false;
+function toPlanTier(value: string | null | undefined): PlanTier {
+  const normalized = value?.replace(/^base-/, '');
+  if (normalized === PlanTier.DELIVERY) return PlanTier.DELIVERY;
+  if (normalized === PlanTier.PRO) return PlanTier.PRO;
+  return PlanTier.FREE;
 }
 
-function readNullableNumberPolicy(
-  policy: LooseEntitlementPolicy,
-  camelKey: string,
-  snakeKey?: string,
-): number | null {
-  const camelValue = policy[camelKey];
-  if (typeof camelValue === 'number') {
-    return camelValue;
-  }
-  if (camelValue === null) {
-    return null;
+function withAliases(entitlements: PlanEntitlements): PlanEntitlements {
+  return {
+    ...entitlements,
+    canUsePremiumSite: entitlements.canUsePremiumPublicPage,
+    canUseShortLink: entitlements.canUseShortPremiumLink,
+    canUseAdvancedCatalog: entitlements.canUseAdvancedMenu,
+    canUseInternalOrders: entitlements.canReceiveInternalOrders,
+    canUseDeliveryRequests: entitlements.canRequestDelivery,
+    canUseDeliveryTracking: entitlements.canTrackDelivery,
+    canUseDeliveryNetwork: entitlements.canUseMotoboyNetwork,
+  };
+}
+
+function asSnapshotPolicy(
+  value: SnapshotPolicy | SnapshotPolicy[] | null | undefined,
+): SnapshotPolicy | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
+
+function snapshotEntitlements(
+  snapshot: ContractSnapshot | null,
+  tier: PlanTier,
+): PlanEntitlements | null {
+  const direct = snapshot?.catalog_item?.entitlements;
+  if (direct) {
+    return withAliases({ ...getBaselineEntitlements(tier), ...direct });
   }
 
-  if (snakeKey) {
-    const snakeValue = policy[snakeKey];
-    if (typeof snakeValue === 'number') {
-      return snakeValue;
-    }
-    if (snakeValue === null) {
-      return null;
-    }
-  }
+  const policy = asSnapshotPolicy(snapshot?.catalog_item?.catalog_entitlement_policy);
+  if (!policy) return null;
 
-  return null;
+  const baseline = getBaselineEntitlements(tier);
+  const extras = policy.additional_entitlements ?? {};
+  return withAliases({
+    ...baseline,
+    ...extras,
+    canUsePremiumPublicPage:
+      policy.can_use_premium_public_page ?? baseline.canUsePremiumPublicPage,
+    canUseShortPremiumLink:
+      policy.can_use_short_premium_link ?? baseline.canUseShortPremiumLink,
+    canUseCustomQRCode:
+      policy.can_use_custom_qr_code ?? baseline.canUseCustomQRCode,
+    canUseAdvancedMenu:
+      policy.can_use_advanced_menu ?? baseline.canUseAdvancedMenu,
+    canReceiveInternalOrders:
+      policy.can_receive_internal_orders ?? baseline.canReceiveInternalOrders,
+    canUseMotoboyNetwork:
+      policy.can_use_motoboy_network ?? baseline.canUseMotoboyNetwork,
+    canUsePromotions:
+      policy.can_use_promotions ?? baseline.canUsePromotions,
+    canUseBasicAnalytics:
+      policy.can_use_basic_analytics ?? baseline.canUseBasicAnalytics,
+    canUseAdvancedAnalytics:
+      policy.can_use_advanced_analytics ?? baseline.canUseAdvancedAnalytics,
+    maxMenuItems:
+      policy.max_menu_items !== undefined ? policy.max_menu_items : baseline.maxMenuItems,
+    maxPromotions:
+      policy.max_promotions !== undefined ? policy.max_promotions : baseline.maxPromotions,
+    maxImages:
+      policy.max_images !== undefined ? policy.max_images : baseline.maxImages,
+    maxCategories:
+      policy.max_categories !== undefined ? policy.max_categories : baseline.maxCategories,
+    maxOrdersPerDay:
+      policy.max_orders_per_day !== undefined
+        ? policy.max_orders_per_day
+        : baseline.maxOrdersPerDay,
+  });
+}
+
+function buildResolved(
+  entitlements: PlanEntitlements,
+  planTier: string,
+  planName: string,
+  isActive: boolean,
+  overrides?: Partial<ResolvedEntitlements> | null,
+): ResolvedEntitlements {
+  return {
+    ...withAliases(entitlements),
+    ...(overrides ?? {}),
+    planTier,
+    planName,
+    isActive,
+  };
 }
 
 export class EntitlementResolver {
@@ -205,22 +179,54 @@ export class EntitlementResolver {
       const subscription = await this.getActiveSubscription(context);
 
       if (!subscription) {
-        logger.info('[EntitlementResolver] Sem assinatura ativa, usando fallback free');
-        return DEFAULT_FREE_ENTITLEMENTS;
+        return this.resolveFree(false);
       }
 
       if (subscription.status_v2 !== 'active' && subscription.status_v2 !== 'trialing') {
-        logger.warn(
-          `[EntitlementResolver] Assinatura ${subscription.id} nao esta ativa (${subscription.status_v2})`,
-        );
-        return { ...DEFAULT_FREE_ENTITLEMENTS, isActive: false };
+        return this.resolveFree(false);
       }
 
-      return this.resolveFromSubscription(subscription);
+      const tier = toPlanTier(subscription.plan_code);
+      const plan = await BillingPlanService.getPlanByCode(subscription.plan_code);
+      const entitlements =
+        plan?.entitlements ??
+        snapshotEntitlements(subscription.contract_snapshot, tier) ??
+        getBaselineEntitlements(tier);
+
+      return buildResolved(
+        entitlements,
+        plan?.code ?? subscription.plan_code,
+        plan?.name ?? subscription.plan_code,
+        true,
+        subscription.contract_snapshot?.overrides,
+      );
     } catch (error) {
       logger.error('[EntitlementResolver] Erro ao resolver entitlements:', error);
-      return DEFAULT_FREE_ENTITLEMENTS;
+      return this.resolveFree(false);
     }
+  }
+
+  private static async resolveFree(isActive: boolean): Promise<ResolvedEntitlements> {
+    try {
+      const freePlan = await BillingPlanService.getPlanByCode(PlanTier.FREE);
+      if (freePlan) {
+        return buildResolved(
+          freePlan.entitlements,
+          freePlan.code,
+          freePlan.name,
+          isActive,
+        );
+      }
+    } catch (error) {
+      logger.warn('[EntitlementResolver] Catalogo Free indisponivel; usando baseline tecnico', error);
+    }
+
+    return buildResolved(
+      getBaselineEntitlements(PlanTier.FREE),
+      PlanTier.FREE,
+      'Free',
+      isActive,
+    );
   }
 
   private static async getActiveSubscription(
@@ -243,10 +249,15 @@ export class EntitlementResolver {
           .eq('subscription_scope', 'business')
           .eq('business_id', context.business_id);
       } else {
-        query = query.eq('subscription_scope', 'user').eq('user_id', context.user_id);
+        query = query
+          .eq('subscription_scope', 'user')
+          .eq('user_id', context.user_id);
       }
 
-      const { data, error } = await query.maybeSingle();
+      const { data, error } = await query
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
       if (error) {
         logger.error('[EntitlementResolver] Erro ao buscar assinatura:', error);
@@ -260,241 +271,21 @@ export class EntitlementResolver {
     }
   }
 
-  private static async resolveFromSubscription(
-    subscription: SubscriptionData,
-  ): Promise<ResolvedEntitlements> {
-    const resolved = { ...DEFAULT_FREE_ENTITLEMENTS };
-
-    const plan = await BillingPlanService.getPlanByCode(subscription.plan_code);
-    const snapshot = subscription.contract_snapshot;
-    const snapshotEntitlements = snapshot?.catalog_item?.entitlements ?? undefined;
-    const policy: LooseEntitlementPolicy | undefined = plan?.entitlements
-      ? { ...plan.entitlements }
-      : snapshotEntitlements;
-
-    if (policy) {
-      resolved.canUsePremiumPublicPage = readBooleanPolicy(
-        policy,
-        'canUsePremiumPublicPage',
-        'can_use_premium_public_page',
-      );
-      resolved.canUseShortPremiumLink = readBooleanPolicy(
-        policy,
-        'canUseShortPremiumLink',
-        'can_use_short_premium_link',
-      );
-      resolved.canUseCustomQRCode = readBooleanPolicy(
-        policy,
-        'canUseCustomQRCode',
-        'can_use_custom_qr_code',
-      );
-
-      resolved.canUseAdvancedMenu = readBooleanPolicy(
-        policy,
-        'canUseAdvancedMenu',
-        'can_use_advanced_menu',
-      );
-      resolved.canUseMenuCategories = readBooleanPolicy(
-        policy,
-        'canUseMenuCategories',
-        'can_use_advanced_menu',
-      );
-      resolved.canUseMenuImages = readBooleanPolicy(
-        policy,
-        'canUseMenuImages',
-        'can_use_advanced_menu',
-      );
-      resolved.canUseMenuVariations = readBooleanPolicy(
-        policy,
-        'canUseMenuVariations',
-        'can_use_advanced_menu',
-      );
-      resolved.canUseMenuAddons = readBooleanPolicy(
-        policy,
-        'canUseMenuAddons',
-        'can_use_advanced_menu',
-      );
-      resolved.canUseMenuCombos = readBooleanPolicy(
-        policy,
-        'canUseMenuCombos',
-        'can_use_advanced_menu',
-      );
-      resolved.canScheduleItems = readBooleanPolicy(
-        policy,
-        'canScheduleItems',
-        'can_use_advanced_menu',
-      );
-
-      resolved.canReceiveInternalOrders = readBooleanPolicy(
-        policy,
-        'canReceiveInternalOrders',
-        'can_receive_internal_orders',
-      );
-      resolved.canUseOrdersPanel = readBooleanPolicy(
-        policy,
-        'canUseOrdersPanel',
-        'can_receive_internal_orders',
-      );
-      resolved.canManageOrderStatus = readBooleanPolicy(
-        policy,
-        'canManageOrderStatus',
-        'can_receive_internal_orders',
-      );
-      resolved.canCancelOrders = readBooleanPolicy(
-        policy,
-        'canCancelOrders',
-        'can_receive_internal_orders',
-      );
-      resolved.canViewOrderHistory = readBooleanPolicy(
-        policy,
-        'canViewOrderHistory',
-        'can_receive_internal_orders',
-      );
-
-      resolved.canUseMotoboyNetwork = readBooleanPolicy(
-        policy,
-        'canUseMotoboyNetwork',
-        'can_use_motoboy_network',
-      );
-      resolved.canRequestDelivery = readBooleanPolicy(
-        policy,
-        'canRequestDelivery',
-        'can_use_motoboy_network',
-      );
-      resolved.canTrackDelivery = readBooleanPolicy(
-        policy,
-        'canTrackDelivery',
-        'can_use_motoboy_network',
-      );
-      resolved.canConfigureDeliveryArea = readBooleanPolicy(
-        policy,
-        'canConfigureDeliveryArea',
-        'can_use_motoboy_network',
-      );
-      resolved.canSetDeliveryFees = readBooleanPolicy(
-        policy,
-        'canSetDeliveryFees',
-        'can_use_motoboy_network',
-      );
-      resolved.canSetMinimumOrder = readBooleanPolicy(
-        policy,
-        'canSetMinimumOrder',
-        'can_use_motoboy_network',
-      );
-      resolved.canUseOwnDelivery = readBooleanPolicy(
-        policy,
-        'canUseOwnDelivery',
-        'can_use_motoboy_network',
-      );
-
-      resolved.canUsePromotions = readBooleanPolicy(
-        policy,
-        'canUsePromotions',
-        'can_use_promotions',
-      );
-      resolved.canUseFeaturedPlacement = readBooleanPolicy(
-        policy,
-        'canUseFeaturedPlacement',
-        'can_use_promotions',
-      );
-      resolved.canUseCoupons = readBooleanPolicy(
-        policy,
-        'canUseCoupons',
-        'can_use_promotions',
-      );
-      resolved.canSchedulePromotions = readBooleanPolicy(
-        policy,
-        'canSchedulePromotions',
-        'can_use_promotions',
-      );
-
-      resolved.canUseBasicAnalytics = readBooleanPolicy(
-        policy,
-        'canUseBasicAnalytics',
-        'can_use_basic_analytics',
-      );
-      resolved.canUseAdvancedAnalytics = readBooleanPolicy(
-        policy,
-        'canUseAdvancedAnalytics',
-        'can_use_advanced_analytics',
-      );
-      resolved.canExportReports = readBooleanPolicy(
-        policy,
-        'canExportReports',
-        'can_use_advanced_analytics',
-      );
-      resolved.canViewRealtimeMetrics = readBooleanPolicy(
-        policy,
-        'canViewRealtimeMetrics',
-        'can_use_basic_analytics',
-      );
-      resolved.canViewCustomerInsights = readBooleanPolicy(
-        policy,
-        'canViewCustomerInsights',
-        'can_use_advanced_analytics',
-      );
-
-      resolved.maxMenuItems = readNullableNumberPolicy(policy, 'maxMenuItems', 'max_menu_items');
-      resolved.maxPromotions = readNullableNumberPolicy(policy, 'maxPromotions', 'max_promotions');
-      resolved.maxImages = readNullableNumberPolicy(policy, 'maxImages', 'max_images');
-      resolved.maxCategories = readNullableNumberPolicy(policy, 'maxCategories', 'max_categories');
-    }
-
-    if (snapshot?.overrides) {
-      Object.assign(resolved, snapshot.overrides);
-    }
-
-    resolved.planTier = plan?.code || subscription.plan_code || 'free';
-    resolved.planName = plan?.name || 'Free';
-    resolved.isActive =
-      subscription.status_v2 === 'active' || subscription.status_v2 === 'trialing';
-    this.syncGenericAliases(resolved);
-
-    return resolved;
-  }
-
   static async check(
     context: EntitlementContext,
     entitlement: keyof ResolvedEntitlements,
   ): Promise<boolean> {
     const resolved = await this.resolve(context);
-    const value = new Map<
-      keyof ResolvedEntitlements,
-      ResolvedEntitlements[keyof ResolvedEntitlements]
-    >(
-      Object.entries(resolved) as [
-        keyof ResolvedEntitlements,
-        ResolvedEntitlements[keyof ResolvedEntitlements],
-      ][],
-    ).get(entitlement);
+    const value = resolved[entitlement];
 
-    if (typeof value === 'boolean') {
-      return value;
-    }
-
-    if (typeof value === 'number') {
-      return value > 0;
-    }
-
-    if (value === null) {
-      return true;
-    }
-
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value > 0;
+    if (value === null) return true;
     return false;
   }
 
   static async hasShortPremiumLink(context: EntitlementContext): Promise<boolean> {
     return this.check(context, 'canUseShortPremiumLink');
-  }
-
-  private static syncGenericAliases(resolved: ResolvedEntitlements): void {
-    resolved.canUsePremiumSite = resolved.canUsePremiumPublicPage;
-    resolved.canUseShortLink = resolved.canUseShortPremiumLink;
-    resolved.canUseAdvancedCatalog = resolved.canUseAdvancedMenu;
-    resolved.canUseInternalOrders = resolved.canReceiveInternalOrders;
-    resolved.canUseDeliveryRequests = resolved.canRequestDelivery;
-    resolved.canUseDeliveryTracking = resolved.canTrackDelivery;
-    resolved.canUseDeliveryNetwork = resolved.canUseMotoboyNetwork;
   }
 }
 
