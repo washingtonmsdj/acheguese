@@ -1,15 +1,16 @@
 /**
  * Education Subscription Service
  *
- * Integração com core/billing para gerenciar entitlements do módulo Education.
- * Trata upgrade/downgrade sem hardcode de plano.
+ * Adapter do modulo Education sobre a assinatura canonica de core/billing.
+ * Os limites especificos de Education ainda sao policy local do modulo e nao
+ * constituem uma segunda persistencia de assinatura.
  *
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import { logger } from '@/shared/utils/logger';
+import { SubscriptionService } from '@/core/billing';
 import type { BusinessSubscription, PlanTier } from '@/core/billing/types';
-import { SubscriptionService } from '@/core/subscription/services/SubscriptionService';
 
 // ============================================================
 // TIPOS
@@ -34,7 +35,7 @@ export interface EducationSubscriptionStatus {
 }
 
 // ============================================================
-// ENTITLEMENTS POR NÍVEL
+// ENTITLEMENTS POR NIVEL — policy especifica de Education
 // ============================================================
 
 const FREE_ENTITLEMENTS: EducationEntitlements = {
@@ -76,13 +77,16 @@ const PREMIUM_ENTITLEMENTS: EducationEntitlements = {
 
 export const EducationSubscriptionService = {
   /**
-   * Obtém status de assinatura para education
+   * Obtem status de assinatura para Education a partir de core/billing.
    */
   async getSubscriptionStatus(businessId: string): Promise<EducationSubscriptionStatus> {
     try {
-      const subscription = await (SubscriptionService as unknown as {
-        getBusinessSubscription?: (id: string) => Promise<BusinessSubscription | null>;
-      }).getBusinessSubscription?.(businessId);
+      const result = await SubscriptionService.getByBusinessId(businessId);
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      const subscription = result.data;
       if (!subscription) {
         return {
           isActive: false,
@@ -91,6 +95,7 @@ export const EducationSubscriptionService = {
           expiresAt: null,
         };
       }
+
       const planType = this.resolvePlanType(subscription);
       const entitlements = this.getEntitlementsForPlan(planType);
 
@@ -102,7 +107,6 @@ export const EducationSubscriptionService = {
       };
     } catch (error) {
       logger.error('[EducationSubscriptionService] Error fetching status:', error);
-      // Fallback seguro
       return {
         isActive: false,
         planType: 'free',
@@ -113,7 +117,7 @@ export const EducationSubscriptionService = {
   },
 
   /**
-   * Resolve tipo de plano a partir da assinatura
+   * Resolve tipo de plano de apresentacao de Education a partir do tier canonico.
    */
   resolvePlanType(subscription: BusinessSubscription): 'free' | 'basic' | 'premium' {
     const tier = subscription.plan_tier as PlanTier;
@@ -122,9 +126,6 @@ export const EducationSubscriptionService = {
     return 'basic';
   },
 
-  /**
-   * Obtém entitlements para um plano específico
-   */
   getEntitlementsForPlan(
     planType: 'free' | 'basic' | 'premium'
   ): EducationEntitlements {
@@ -139,41 +140,26 @@ export const EducationSubscriptionService = {
     }
   },
 
-  /**
-   * Verifica se pode usar página pública premium
-   */
   async canUsePremiumPublicPage(businessId: string): Promise<boolean> {
     const status = await this.getSubscriptionStatus(businessId);
     return status.isActive && status.entitlements.canUsePremiumPublicPage;
   },
 
-  /**
-   * Verifica se pode usar link curto premium
-   */
   async canUseShortPremiumLink(businessId: string): Promise<boolean> {
     const status = await this.getSubscriptionStatus(businessId);
     return status.isActive && status.entitlements.canUseShortPremiumLink;
   },
 
-  /**
-   * Verifica se pode usar analytics
-   */
   async canUseAnalytics(businessId: string): Promise<boolean> {
     const status = await this.getSubscriptionStatus(businessId);
     return status.isActive && status.entitlements.canUseAnalytics;
   },
 
-  /**
-   * Verifica se pode exportar dados
-   */
   async canExportData(businessId: string): Promise<boolean> {
     const status = await this.getSubscriptionStatus(businessId);
     return status.isActive && status.entitlements.canExportData;
   },
 
-  /**
-   * Verifica limites de uso
-   */
   async checkLimits(
     businessId: string,
     currentUsage: {
@@ -197,7 +183,6 @@ export const EducationSubscriptionService = {
       limits,
     };
   },
-
 };
 
 export default EducationSubscriptionService;
