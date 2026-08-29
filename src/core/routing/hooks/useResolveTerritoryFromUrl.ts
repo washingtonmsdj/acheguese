@@ -9,7 +9,7 @@
  *   /:state/:city/:groupSlug              -> TerritorialGroup
  *   /[modulo]/:state/:city/:district?     -> Location city/district
  *   /[modulo]/:state/:city/:groupSlug     -> TerritorialGroup
- *   /comunidade/:state/:city                -> Location city da comunidade
+ *   /comunidade/:state/:city              -> Location city da comunidade
  *
  * Em /comunidade, o slug pode resolver para grupo territorial quando houver
  * configuração pública da comunidade ou quando o bairro pertencer de forma
@@ -19,7 +19,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
-import { createTerritorialGroupRepository } from '@/core/location/repositories/createTerritorialGroupRepository';
+import { territorialGroupService } from '@/core/territorial';
 import { TerritoryCommunityRouteService } from '@/core/routing/services/TerritoryCommunityRouteService';
 import { resolveCommunityPublicAliasTerritory } from '@/core/routing/services/CommunityPublicAliasTerritoryResolver';
 import { APP_MODULE_SLUGS, isAppModulePath } from '@/shared/config/moduleSlugs';
@@ -217,8 +217,9 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
         }
 
         if (groupSlug) {
-          const groupRepo = createTerritorialGroupRepository();
-          const group = await withTimeout(groupRepo.findBySlugAndCity(groupSlug, cityLocation.id));
+          const group = await withTimeout(
+            territorialGroupService.getGroupBySlugAndCity(groupSlug, cityLocation.id),
+          );
 
           if (!group) {
             if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.NOT_FOUND, resolved: null, error: `Grupo não encontrado: ${groupSlug}` });
@@ -237,7 +238,9 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
             return;
           }
 
-          const withMembers = await withTimeout(groupRepo.findWithMembers(group.id));
+          const withMembers = await withTimeout(
+            territorialGroupService.getGroupWithMembers(group.id),
+          );
           if (!withMembers) {
             if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.NOT_FOUND, resolved: null, error: `Grupo sem membros: ${groupSlug}` });
             return;
@@ -263,8 +266,9 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
           );
           if (communityRoute) {
             if (communityRoute.territory_type === 'territorial_group') {
-              const groupRepo = createTerritorialGroupRepository();
-              const withMembers = await withTimeout(groupRepo.findWithMembers(communityRoute.territory_id));
+              const withMembers = await withTimeout(
+                territorialGroupService.getGroupWithMembers(communityRoute.territory_id),
+              );
               if (withMembers && withMembers.status === 'active' && isTerritoryPubliclyNavigable(withMembers.metadata)) {
                 if (!cancelled) {
                   setResult({
@@ -296,10 +300,13 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
           }
 
           if (isCommunityRoute) {
-            const groupRepo = createTerritorialGroupRepository();
-            const group = await withTimeout(groupRepo.findBySlugAndCity(districtSlug, cityLocation.id));
+            const group = await withTimeout(
+              territorialGroupService.getGroupBySlugAndCity(districtSlug, cityLocation.id),
+            );
             if (group && group.status === 'active' && isTerritoryPubliclyNavigable(group.metadata)) {
-              const withMembers = await withTimeout(groupRepo.findWithMembers(group.id));
+              const withMembers = await withTimeout(
+                territorialGroupService.getGroupWithMembers(group.id),
+              );
               if (withMembers) {
                 if (!cancelled) {
                   setResult({
@@ -320,10 +327,13 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
         if (!districtLocation) {
           // Em rotas de módulo, aceita slug de grupo no padrão público limpo.
           if (!isCommunityRoute) {
-            const groupRepo = createTerritorialGroupRepository();
-            const groupBySlug = await withTimeout(groupRepo.findBySlugAndCity(districtSlug!, cityLocation.id));
+            const groupBySlug = await withTimeout(
+              territorialGroupService.getGroupBySlugAndCity(districtSlug!, cityLocation.id),
+            );
             if (groupBySlug && groupBySlug.status === 'active' && isTerritoryPubliclyNavigable(groupBySlug.metadata)) {
-              const withMembers = await withTimeout(groupRepo.findWithMembers(groupBySlug.id));
+              const withMembers = await withTimeout(
+                territorialGroupService.getGroupWithMembers(groupBySlug.id),
+              );
               if (withMembers) {
                 if (!cancelled) {
                   setResult({
@@ -370,8 +380,9 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
         }
 
         if (isCommunityRoute) {
-          const groupRepo = createTerritorialGroupRepository();
-          const containingGroups = await withTimeout(groupRepo.findGroupsContainingLocation(districtLocation.id));
+          const containingGroups = await withTimeout(
+            territorialGroupService.findGroupsContainingLocation(districtLocation.id),
+          );
           const eligibleGroups = containingGroups.filter(
             (group) =>
               group.status === 'active' &&
@@ -381,7 +392,9 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
 
           // Evita ambiguidade: promove para grupo apenas quando há associação única.
           if (eligibleGroups.length === 1) {
-            const withMembers = await withTimeout(groupRepo.findWithMembers(eligibleGroups[0].id));
+            const withMembers = await withTimeout(
+              territorialGroupService.getGroupWithMembers(eligibleGroups[0].id),
+            );
             if (withMembers && withMembers.status === 'active' && isTerritoryPubliclyNavigable(withMembers.metadata)) {
               if (!cancelled) {
                 setResult({
