@@ -4,14 +4,6 @@
   "policy": "Temporary runtime module -> integrations exceptions. Entries may only decrease; stale entries are failures.",
   "entries": [
     {
-      "file": "src/modules/admin/services/OperationalDiagnosticsService.ts",
-      "specifier": "@/integrations/supabase"
-    },
-    {
-      "file": "src/modules/admin/services/PlanChangeValidator.ts",
-      "specifier": "@/integrations/supabase"
-    },
-    {
       "file": "src/modules/ai/core/client/aiClient.ts",
       "specifier": "@/integrations/supabase"
     },
