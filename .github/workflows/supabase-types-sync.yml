@@ -15,6 +15,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   SUPABASE_CLI_VERSION: "2.115.0"
   SUPABASE_PROJECT_REF: "xhdowzacfujckjelqhtd"
   TYPES_PATH: "src/integrations/supabase/types.generated.ts"
@@ -22,19 +23,30 @@ env:
 jobs:
   sync-types:
     name: Regenerate canonical database types
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - windows
+      - x64
+      - acheguese-heavy-windows
+      - remote-only
     timeout-minutes: 15
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
     steps:
       - name: Assert main-only execution
-        shell: bash
+        shell: powershell
         run: |
-          set -euo pipefail
-          test "$GITHUB_REPOSITORY" = "washingtonmsdj/acheguese"
-          test "$GITHUB_REF" = "refs/heads/main"
-          test -n "${SUPABASE_ACCESS_TOKEN:-}"
+          $ErrorActionPreference = "Stop"
+          if ($env:GITHUB_REPOSITORY -ne "washingtonmsdj/acheguese") {
+            throw "Unexpected repository: $env:GITHUB_REPOSITORY"
+          }
+          if ($env:GITHUB_REF -ne "refs/heads/main") {
+            throw "Only refs/heads/main is authorized. Received $env:GITHUB_REF"
+          }
+          if ([string]::IsNullOrWhiteSpace($env:SUPABASE_ACCESS_TOKEN)) {
+            throw "GitHub Actions secret SUPABASE_ACCESS_TOKEN is missing."
+          }
 
       - name: Checkout exact main SHA
         uses: actions/checkout@v6
@@ -42,37 +54,41 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 1
           persist-credentials: true
+          clean: true
 
       - name: Regenerate types from live Supabase schema
-        shell: bash
+        shell: powershell
         run: |
-          set -euo pipefail
-          tmp="$(mktemp)"
-          npx --yes "supabase@${SUPABASE_CLI_VERSION}" gen types typescript \
-            --project-id "$SUPABASE_PROJECT_REF" > "$tmp"
-          test -s "$tmp"
-          grep -q "export type Database" "$tmp"
-          mv "$tmp" "$TYPES_PATH"
+          $ErrorActionPreference = "Stop"
+          $lines = @(& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" gen types typescript --project-id $env:SUPABASE_PROJECT_REF)
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $text = ($lines -join "`n") + "`n"
+          if ([string]::IsNullOrWhiteSpace($text) -or $text -notmatch "export type Database") {
+            throw "Supabase type generation returned an invalid artifact."
+          }
+          $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+          [System.IO.File]::WriteAllText($env:TYPES_PATH, $text, $utf8NoBom)
 
       - name: Commit only canonical type drift
-        shell: bash
+        shell: powershell
         run: |
-          set -euo pipefail
-          changed="$(git status --porcelain)"
-          if [ -z "$changed" ]; then
-            echo "Canonical Supabase types are already synchronized."
+          $ErrorActionPreference = "Stop"
+          $changes = @(git status --porcelain)
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($changes.Count -eq 0) {
+            Write-Host "Canonical Supabase types are already synchronized."
             exit 0
-          fi
+          }
 
-          unexpected="$(git status --porcelain | awk '{print $2}' | grep -v "^${TYPES_PATH}$" || true)"
-          if [ -n "$unexpected" ]; then
-            echo "Unexpected generated changes detected:"
-            echo "$unexpected"
-            exit 1
-          fi
+          $unexpected = @($changes | Where-Object { $_ -notmatch ([regex]::Escape($env:TYPES_PATH) + '$') })
+          if ($unexpected.Count -ne 0) {
+            throw "Unexpected generated changes detected: $($unexpected -join '; ')"
+          }
 
-          git add "$TYPES_PATH"
+          git add $env:TYPES_PATH
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "chore(g5): sync Supabase generated types"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           git push origin HEAD:main
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
