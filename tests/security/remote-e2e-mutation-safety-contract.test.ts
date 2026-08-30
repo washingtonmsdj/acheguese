@@ -8,6 +8,7 @@ const read = (path: string) => readFileSync(resolve(root, path), 'utf8');
 const operationalEnv = read('tests/helpers/operational-env.ts');
 const authHelper = read('tests/helpers/auth-helper.ts');
 const educationSetup = read('tests/helpers/education-setup.ts');
+const gateSetup = read('tests/helpers/gate6-setup-helpers.ts');
 const gateFixtures = read('tests/fixtures/gate6-fixtures.json');
 const gate5Availability = read('tests/operational/gate5-availability-test.test.ts');
 const pricingRuntime = read('src/core/pricing/__tests__/PricingService.runtime.test.ts');
@@ -71,11 +72,18 @@ describe('Remote E2E mutation safety integration', () => {
     expect(authHelper).toContain("tests/fixtures/gate6-fixtures.json");
     expect(authHelper).toContain("type: 'magiclink'");
     expect(authHelper).toContain('properties.hashed_token');
-    expect(authHelper).toContain("type: 'magiclink'");
     expect(authHelper).toContain('expected private ${expectedType} fixture');
     expect(authHelper).not.toContain('updateUserById');
     expect(authHelper).not.toContain('TestPass123!');
     expect(authHelper).not.toContain('authenticateAsFirstAdminProfile');
+  });
+
+  it('validates Gate driver provenance before the first service-role mutation', () => {
+    const authIndex = gateSetup.indexOf('await authenticateAsProfile(driverProfileId)');
+    const driverDataIndex = gateSetup.indexOf(".from('driver_data')");
+
+    expect(authIndex).toBeGreaterThanOrEqual(0);
+    expect(driverDataIndex).toBeGreaterThan(authIndex);
   });
 
   it('keeps mobility gate actors on the reviewed private technical registry', () => {
