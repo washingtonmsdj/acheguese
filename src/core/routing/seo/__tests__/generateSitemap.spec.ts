@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 
-import { generateSitemap } from "../generateSitemap";
+import {
+  generateSitemap,
+  generateSitemapArtifacts,
+  SITEMAP_URL_CHUNK_SIZE,
+} from "../generateSitemap";
 
 describe("generateSitemap", () => {
   it("gera URLs publicas canonicas sem portal comunitario nem legado /area/", () => {
@@ -74,6 +78,51 @@ describe("generateSitemap", () => {
     expect(sitemap).toMatch(
       /<loc>https:\/\/acheguese\.com\.br\/ba\/salvador<\/loc>\s*<changefreq>daily<\/changefreq>\s*<priority>0\.95<\/priority>/,
     );
+  });
+
+  it("particiona inventarios grandes em sitemap index e chunks limitados", () => {
+    const artifacts = generateSitemapArtifacts(
+      [
+        {
+          status: "active",
+          type: "district",
+          geographic_path: "/br/ba/salvador/pituba",
+        },
+      ] as never,
+      [],
+      "https://acheguese.com.br",
+      5,
+    );
+
+    const [root, ...chunks] = artifacts;
+    expect(root.filename).toBe("sitemap.xml");
+    expect(root.content).toContain("<sitemapindex");
+    expect(chunks.length).toBeGreaterThan(1);
+
+    const childReferences =
+      root.content.match(
+        /<loc>https:\/\/acheguese\.com\.br\/sitemap-\d+\.xml<\/loc>/g,
+      ) ?? [];
+    expect(childReferences).toHaveLength(chunks.length);
+
+    const urls = chunks.flatMap((chunk) => {
+      const chunkUrls = [...chunk.content.matchAll(/<loc>([^<]+)<\/loc>/g)].map(
+        (match) => match[1],
+      );
+      expect(chunk.filename).toMatch(/^sitemap-\d+\.xml$/);
+      expect(chunk.content).toContain("<urlset");
+      expect(chunk.urlCount).toBe(chunkUrls.length);
+      expect(chunkUrls.length).toBeLessThanOrEqual(5);
+      return chunkUrls;
+    });
+
+    expect(new Set(urls).size).toBe(urls.length);
+    expect(urls).toContain("https://acheguese.com.br/ba/salvador/pituba");
+  });
+
+  it("mantem margem abaixo do limite de 50 mil URLs por sitemap", () => {
+    expect(SITEMAP_URL_CHUNK_SIZE).toBeLessThanOrEqual(50_000);
+    expect(SITEMAP_URL_CHUNK_SIZE).toBeGreaterThan(0);
   });
 
   it("mantem artefatos publicos sem URLs legadas de comunidade", () => {

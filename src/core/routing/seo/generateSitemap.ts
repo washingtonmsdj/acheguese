@@ -2,6 +2,7 @@
  * generateSitemap - Gerador de sitemap dinamico
  *
  * Gera sitemap.xml com rotas territoriais canonicas e paginas publicas.
+ * Em producao, particiona automaticamente inventarios acima do limite do protocolo.
  */
 
 import { logger } from '@/shared/utils/logger';
@@ -20,7 +21,7 @@ import {
   isTerritoryVisibleInLanding,
   type TerritoryVisibilityMetadata,
 } from '@/core/routing/utils/territoryVisibility';
-import { writeFile } from 'node:fs/promises';
+import { readdir, unlink, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 interface SitemapUrl {
@@ -30,10 +31,19 @@ interface SitemapUrl {
   priority?: number;
 }
 
+export interface SitemapArtifact {
+  filename: string;
+  content: string;
+  urlCount: number;
+}
+
 interface TerritorySitemapModule {
   surface: LaunchSurfaceKey;
   buildUrl: (territoryPath: string) => string;
 }
+
+const SITEMAP_PROTOCOL_MAX_URLS = 50_000;
+export const SITEMAP_URL_CHUNK_SIZE = 45_000;
 
 const TERRITORY_SITEMAP_MODULES: readonly TerritorySitemapModule[] = [
   {
@@ -123,11 +133,11 @@ function deduplicateSitemapUrls(urls: SitemapUrl[]): SitemapUrl[] {
   });
 }
 
-export function generateSitemap(
+function collectSitemapUrls(
   locations: Location[],
   groups: TerritorialGroupWithMembers[],
   baseUrl: string,
-): string {
+): SitemapUrl[] {
   const normalizedBaseUrl = resolveSitemapBaseUrl(baseUrl);
   const urls: SitemapUrl[] = [
     {
@@ -184,11 +194,14 @@ export function generateSitemap(
       }
     });
 
-  const uniqueUrls = deduplicateSitemapUrls(urls);
-  const xml = [
+  return deduplicateSitemapUrls(urls);
+}
+
+function renderSitemapUrlset(urls: SitemapUrl[]): string {
+  return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    ...uniqueUrls.map((url) =>
+    ...urls.map((url) =>
       [
         '  <url>',
         `    <loc>${url.loc}</loc>`,
@@ -202,8 +215,91 @@ export function generateSitemap(
     ),
     '</urlset>',
   ].join('\n');
+}
 
-  return xml;
+function renderSitemapIndex(baseUrl: string, filenames: string[]): string {
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ...filenames.map((filename) =>
+      [
+        '  <sitemap>',
+        `    <loc>${baseUrl}/${filename}</loc>`,
+        '  </sitemap>',
+      ].join('\n'),
+    ),
+    '</sitemapindex>',
+  ].join('\n');
+}
+
+export function generateSitemap(
+  locations: Location[],
+  groups: TerritorialGroupWithMembers[],
+  baseUrl: string,
+): string {
+  return renderSitemapUrlset(collectSitemapUrls(locations, groups, baseUrl));
+}
+
+export function generateSitemapArtifacts(
+  locations: Location[],
+  groups: TerritorialGroupWithMembers[],
+  baseUrl: string,
+  maxUrlsPerFile = SITEMAP_URL_CHUNK_SIZE,
+): SitemapArtifact[] {
+  if (
+    !Number.isInteger(maxUrlsPerFile) ||
+    maxUrlsPerFile <= 0 ||
+    maxUrlsPerFile > SITEMAP_PROTOCOL_MAX_URLS
+  ) {
+    throw new Error(
+      `maxUrlsPerFile must be an integer between 1 and ${SITEMAP_PROTOCOL_MAX_URLS}.`,
+    );
+  }
+
+  const normalizedBaseUrl = resolveSitemapBaseUrl(baseUrl);
+  const urls = collectSitemapUrls(locations, groups, normalizedBaseUrl);
+
+  if (urls.length <= maxUrlsPerFile) {
+    return [
+      {
+        filename: 'sitemap.xml',
+        content: renderSitemapUrlset(urls),
+        urlCount: urls.length,
+      },
+    ];
+  }
+
+  const chunks: SitemapArtifact[] = [];
+  for (let offset = 0; offset < urls.length; offset += maxUrlsPerFile) {
+    const chunkUrls = urls.slice(offset, offset + maxUrlsPerFile);
+    const filename = `sitemap-${chunks.length + 1}.xml`;
+    chunks.push({
+      filename,
+      content: renderSitemapUrlset(chunkUrls),
+      urlCount: chunkUrls.length,
+    });
+  }
+
+  return [
+    {
+      filename: 'sitemap.xml',
+      content: renderSitemapIndex(
+        normalizedBaseUrl,
+        chunks.map((chunk) => chunk.filename),
+      ),
+      urlCount: 0,
+    },
+    ...chunks,
+  ];
+}
+
+async function removeStaleSitemapChunks(outputDirectory: string): Promise<void> {
+  const entries = await readdir(outputDirectory);
+  await Promise.all(
+    entries
+      .filter((entry) => /^sitemap-\d+\.xml$/.test(entry))
+      .map((entry) => unlink(resolve(outputDirectory, entry))),
+  );
 }
 
 export async function generateAndSaveSitemap() {
@@ -220,12 +316,34 @@ export async function generateAndSaveSitemap() {
       isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(group.metadata)),
     );
 
-  const sitemap = generateSitemap(locations, groups, resolveSitemapBaseUrl());
-  const outputPath = resolve(process.cwd(), 'public', 'sitemap.xml');
-  await writeFile(outputPath, sitemap, 'utf8');
+  const outputDirectory = resolve(process.cwd(), 'public');
+  const artifacts = generateSitemapArtifacts(
+    locations,
+    groups,
+    resolveSitemapBaseUrl(),
+  );
+
+  await removeStaleSitemapChunks(outputDirectory);
+
+  const rootArtifact = artifacts.find((artifact) => artifact.filename === 'sitemap.xml');
+  if (!rootArtifact) {
+    throw new Error('Sitemap root artifact was not generated.');
+  }
+
+  for (const artifact of artifacts) {
+    if (artifact.filename === 'sitemap.xml') continue;
+    await writeFile(resolve(outputDirectory, artifact.filename), artifact.content, 'utf8');
+  }
+  await writeFile(
+    resolve(outputDirectory, rootArtifact.filename),
+    rootArtifact.content,
+    'utf8',
+  );
 
   logger.info('generateAndSaveSitemap.success', {
-    outputPath,
+    outputDirectory,
+    files: artifacts.length,
+    urls: artifacts.reduce((total, artifact) => total + artifact.urlCount, 0),
     locations: locations.length,
     groups: groups.length,
   });
