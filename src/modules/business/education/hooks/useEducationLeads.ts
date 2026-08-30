@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { EducationService } from '../services';
-import type { EducationLead, EducationLeadStatus, SchoolShift } from '../types';
+import type { EducationLead, EducationLeadStatus, SchoolShift } from '@/core/education';
 
 export interface LeadFilters {
   status?: EducationLeadStatus;

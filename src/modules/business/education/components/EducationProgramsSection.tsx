@@ -4,7 +4,7 @@ import { BookOpen, Clock, Users, ChevronRight } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/utils/cn';
 import { formatBrl } from '@/shared/utils/currency';
-import type { EducationProgram } from '../types';
+import type { EducationProgram } from '@/core/education';
 
 export interface EducationProgramsSectionProps {
   programs: EducationProgram[];

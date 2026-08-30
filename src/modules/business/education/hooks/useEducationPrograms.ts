@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { EducationService, educationQueries } from '../services';
-import type { EducationLevel, EducationProgram } from '../types';
+import { EducationService } from '../services';
+import * as educationQueries from '@/core/education/services/education.queries';
+import type { EducationLevel, EducationProgram } from '@/core/education';
 
 export function useEducationPrograms(profileId?: string) {
   const queryClient = useQueryClient();

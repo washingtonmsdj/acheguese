@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { educationQueries } from '../services';
+import * as educationQueries from '@/core/education/services/education.queries';
 export interface EducationListFilters {
   nicheKey?: string;
   state?: string;

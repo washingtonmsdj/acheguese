@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { educationQueries } from '../services';
+import * as educationQueries from '@/core/education/services/education.queries';
 
 export interface EducationDetailRouteInput {
   slug?: string;
