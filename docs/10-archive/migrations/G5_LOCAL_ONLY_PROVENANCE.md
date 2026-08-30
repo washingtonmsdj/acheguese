@@ -2,6 +2,17 @@
 
 Este diretório preserva artefatos SQL que existiam localmente em `supabase/migrations`, mas que **não pertencem ao histórico remoto aplicável**. Eles não podem voltar para `supabase/migrations` sem nova análise de provenance.
 
+## 20260821001800_restrict_vaga_applications_browser_authority.sql
+
+- classificação G5: `LOCAL_ONLY_SUPERSEDED`;
+- presença no histórico remoto por versão ou nome: **não**;
+- estado remoto vivo em 2026-08-30: `public.vaga_applications` possui somente CRUD para `authenticated` (além de owner/service roles) e as quatro policies `vaga_applications_{select,insert,update,delete_admin}` estão `TO authenticated`;
+- provenance da policy: `20260825183353_harden_admin_helper_anon_scope.sql` estreita explicitamente as quatro policies para `authenticated`;
+- provenance de ACL: `20260825230429_remove_browser_ddl_table_privileges.sql` remove `TRUNCATE`, `REFERENCES`, `TRIGGER` e `MAINTAIN` dos browser roles; `20260825230612_revoke_browser_dml_without_rls_authority.sql` remove DML que não tem policy aplicável ao role, eliminando a autoridade anônima enquanto preserva o CRUD autenticado já concedido pela migration canônica `20260526023000_create_vaga_applications.sql`;
+- conclusão: o SQL local de `20260821001800` descreve uma correção que o remoto alcançou posteriormente por migrations canônicas versionadas. Aplicá-lo atrasado apenas para preencher histórico repetiria DDL sem criar autoridade nova;
+- preservação: `docs/10-archive/migrations/20260821001800_restrict_vaga_applications_browser_authority.local-only-superseded.sql`;
+- decisão: remover do diretório de migrations aplicáveis e manter o ratchet apontando às migrations canônicas. **Não aplicar, não reintroduzir e não renomear como alias remoto.**
+
 ## 20260826032200_restore_private_safety_evidence_storage_flow.sql
 
 - classificação G5: `LOCAL_ONLY_SUPERSEDED_UNSAFE`;
