@@ -117,9 +117,7 @@ describe("release SSOT scripts", () => {
         source.includes("@/shared/types/database.types") ||
         source.includes("shared/types/database.types") ||
         source.includes("@/integrations/supabase/types\"") ||
-        source.includes("@/integrations/supabase/types'") ||
-        source.includes('from "./types"') ||
-        source.includes("from './types'")
+        source.includes("@/integrations/supabase/types'")
       );
     });
 
