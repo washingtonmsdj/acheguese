@@ -1,0 +1,44 @@
+name: Dependency Lock Preflight
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "package.json"
+      - "package-lock.json"
+      - "vercel.json"
+      - "tools/release/validate-package-lock-consistency.mjs"
+      - ".github/workflows/dependency-lock-preflight.yml"
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - "package.json"
+      - "package-lock.json"
+      - "vercel.json"
+      - "tools/release/validate-package-lock-consistency.mjs"
+      - ".github/workflows/dependency-lock-preflight.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: dependency-lock-preflight-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  package-lock-consistency:
+    name: Package Manifest Lock Consistency
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Validate package manifest and lockfile before install
+        run: node tools/release/validate-package-lock-consistency.mjs

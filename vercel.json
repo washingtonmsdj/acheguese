@@ -3,7 +3,7 @@
   "buildCommand": "node tools/release/run-vercel-production-build.mjs",
   "outputDirectory": "dist",
   "devCommand": "npm run dev",
-  "installCommand": "npm ci",
+  "installCommand": "node tools/release/validate-package-lock-consistency.mjs && npm ci",
   "framework": "vite",
   "rewrites": [
     {
