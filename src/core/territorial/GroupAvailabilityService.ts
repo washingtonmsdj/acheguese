@@ -15,7 +15,7 @@
  * Nao cria atalho estrutural fora do SSOT.
  */
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
-import { createTerritorialGroupRepository } from '@/core/location/repositories/createTerritorialGroupRepository';
+import { createTerritorialGroupRepository } from '@/core/territorial/repositories/createTerritorialGroupRepository';
 import { createRolloutRepository } from '@/core/rollout/repositories/createRolloutRepository';
 import { RolloutService } from '@/core/rollout/services/RolloutService';
 import { RolloutStatus } from '@/core/rollout/types';
