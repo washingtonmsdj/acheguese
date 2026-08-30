@@ -3,14 +3,13 @@ import type { ComponentType } from "react";
 import {
   BarChart3,
   Calendar,
-  Clock,
   Download,
   Eye,
+  MapPin,
   MessageCircle,
   Phone,
   RefreshCw,
   TrendingUp,
-  Users,
 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -141,19 +140,13 @@ export default function BusinessStats({
       color: "bg-purple-500/10 text-purple-600",
     },
     {
-      label: "Agendamentos",
-      value: data.appointments,
-      previous: data.previous.appointments,
-      icon: Users,
+      label: "Rotas",
+      value: data.routeClicks,
+      previous: data.previous.routeClicks,
+      icon: MapPin,
       color: "bg-orange-500/10 text-orange-600",
     },
   ];
-
-  const maxHourVisits = Math.max(
-    ...data.hourlyViews.map((item) => item.visits),
-    1,
-  );
-  const bestHour = data.hourlyViews[0]?.hour ?? null;
 
   return (
     <div className="space-y-6">
@@ -228,49 +221,28 @@ export default function BusinessStats({
         <Card className="border-2 p-6">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h3 className="font-semibold">Horários de Pico</h3>
+              <h3 className="font-semibold">Ações de intenção</h3>
               <p className="text-sm text-muted-foreground">
-                Visitas por horário no período selecionado
+                Interações que indicam interesse real no período selecionado
               </p>
             </div>
-            <Clock className="h-5 w-5 text-muted-foreground" />
+            <BarChart3 className="h-5 w-5 text-muted-foreground" />
           </div>
 
-          {data.hourlyViews.length > 0 ? (
-            <div className="space-y-3">
-              {data.hourlyViews.map((hour) => (
-                <div key={hour.hour} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium">{hour.hour}</span>
-                    <span>{hour.visits} visitas</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-secondary">
-                    <div
-                      className="h-full rounded-full bg-primary"
-                      style={{
-                        width: `${(hour.visits / maxHourVisits) * 100}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between rounded-lg border p-3 text-sm">
+              <span className="text-muted-foreground">Cliques em rota</span>
+              <span className="font-semibold">{data.routeClicks}</span>
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Ainda não há visitas registradas para montar horários de pico.
-            </p>
-          )}
-
-          {bestHour && (
-            <div className="mt-6 border-t pt-4">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
-                  Melhor horário observado:
-                </span>
-                <span className="font-semibold">{bestHour}</span>
-              </div>
+            <div className="flex items-center justify-between rounded-lg border p-3 text-sm">
+              <span className="text-muted-foreground">Favoritos</span>
+              <span className="font-semibold">{data.favorites}</span>
             </div>
-          )}
+            <div className="flex items-center justify-between rounded-lg border p-3 text-sm">
+              <span className="text-muted-foreground">Compartilhamentos</span>
+              <span className="font-semibold">{data.shares}</span>
+            </div>
+          </div>
         </Card>
 
         <Card className="border-2 border-primary/20 p-6">
