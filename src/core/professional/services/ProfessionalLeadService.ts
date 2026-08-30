@@ -174,14 +174,26 @@ export class ProfessionalLeadService {
       const activeProfile = user
         ? await SessionService.getActiveProfile(user.id)
         : null;
+      const insertPayload = {
+        ...normalized,
+        requester_user_id: user?.id ?? null,
+        requester_profile_id: activeProfile?.id ?? null,
+      };
+
+      if (!user) {
+        const { error } = await professionalLeadDb
+          .from<ProfessionalLeadRecord>("professional_leads")
+          .insert(insertPayload);
+
+        if (error) throw error;
+
+        await this.incrementContactsCount(normalized.professional_id);
+        return { success: true };
+      }
 
       const { data, error } = await professionalLeadDb
         .from<ProfessionalLeadRecord>("professional_leads")
-        .insert({
-          ...normalized,
-          requester_user_id: user?.id ?? null,
-          requester_profile_id: activeProfile?.id ?? null,
-        })
+        .insert(insertPayload)
         .select("*")
         .single();
 
@@ -737,7 +749,6 @@ export class ProfessionalLeadService {
       logger.warn("[ProfessionalLeadService] owner lookup failed:", error);
       return null;
     }
-
     return data ?? null;
   }
 
