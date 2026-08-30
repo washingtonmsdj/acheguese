@@ -6,14 +6,21 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { pricingService } from '../services/PricingService';
-import { authenticateAsFirstAdminProfile, signOut } from '../../../../tests/helpers/auth-helper';
+import {
+  authenticateAsConfiguredAdminProfile,
+  signOut,
+} from '../../../../tests/helpers/auth-helper';
 import { getAdminClient } from '../../../../tests/helpers/supabase-test-client';
 import { getMissingOperationalEnv } from '../../../../tests/helpers/operational-env';
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? '';
 const MISSING_RUNTIME_ENV = getMissingOperationalEnv({ requireServiceRole: true });
+const HAS_EXPLICIT_ADMIN_CREDENTIALS = Boolean(
+  process.env.E2E_ADMIN_EMAIL && process.env.E2E_ADMIN_PASSWORD,
+);
 const HAS_RUNTIME =
   MISSING_RUNTIME_ENV.length === 0 &&
+  HAS_EXPLICIT_ADMIN_CREDENTIALS &&
   SUPABASE_URL.length > 0 &&
   !SUPABASE_URL.includes('placeholder.supabase.co') &&
   !SUPABASE_URL.includes('your-project.supabase.co');
@@ -48,7 +55,7 @@ describe('PricingService - Runtime Validation', () => {
       .eq('is_active', true);
     activeCustomRuleIdsBefore = (activeCustomRules ?? []).map((rule) => rule.id);
 
-    testProfileId = await authenticateAsFirstAdminProfile();
+    testProfileId = await authenticateAsConfiguredAdminProfile();
   });
 
   afterAll(async () => {
@@ -383,6 +390,8 @@ describe('PricingService - Runtime Validation', () => {
         },
         testProfileId,
       );
+
+      expect(ruleId).toBeDefined();
 
       const rule2 = await pricingService.getRule('custom');
       expect(rule2).toBeDefined();
