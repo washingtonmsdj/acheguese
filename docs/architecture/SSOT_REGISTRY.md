@@ -1,7 +1,7 @@
 # SSOT Registry — Single Source of Truth
 
 > Mapa completo de todos os SSOTs do projeto.
-> Última atualização: 2026-08-29
+> Última atualização: 2026-08-30
 > Status documental: CANONICO. Este registry permanece como mapa tecnico de SSOTs; o boundary publico do Feed esta congelado em `docs/feed/FEED-FREEZE.md`.
 
 ---
@@ -337,27 +337,20 @@ SSOTs da camada `src/modules/` — features verticais.
 
 ## Shared / Infrastructure SSOTs
 
-### 24. Database Types (Shared)
+### 24. Supabase Generated Database Types
 
 | | |
 |---|---|
-| **Arquivo** | `src/shared/types/database.types.ts` |
-| **Responsabilidade** | Tipos de banco compartilhados entre módulos |
+| **Arquivo canônico** | `src/integrations/supabase/types.generated.ts` |
+| **Gerador canônico** | `tools/supabase/generate-supabase-types.ts` |
+| **Comando** | `npm run generate:types` |
+| **Responsabilidade** | Única autoridade gerada para o contrato TypeScript do schema Supabase |
+
+> ⛔ **Nunca editar manualmente nem criar snapshot paralelo.** `src/shared/types/database.types.ts` e `src/integrations/supabase/types.ts` foram aposentados no G5. Regenerar somente pelo fluxo canônico apontado acima.
 
 ---
 
-### 25. Supabase Generated Types
-
-| | |
-|---|---|
-| **Arquivo** | `src/integrations/supabase/types.generated.ts` |
-| **Responsabilidade** | Tipos gerados automaticamente a partir do schema Supabase |
-
-> ⛔ **Nunca editar manualmente.** Regenerar com `supabase gen types typescript`.
-
----
-
-### 26. Auth Branded Types
+### 25. Auth Branded Types
 
 | | |
 |---|---|
@@ -366,7 +359,7 @@ SSOTs da camada `src/modules/` — features verticais.
 
 ---
 
-### 27. Notifications
+### 26. Notifications
 
 | | |
 |---|---|
@@ -379,7 +372,7 @@ SSOTs da camada `src/modules/` — features verticais.
 
 ---
 
-### 28. Economic Benchmark Operations (Core Econ)
+### 27. Economic Benchmark Operations (Core Econ)
 
 | | |
 |---|---|
@@ -466,6 +459,6 @@ interface MinhaVaga { titulo: string; ... } // ❌ usar Vaga de vagas.types.ts
 |--------|------------|
 | Core | 15 |
 | Modules | 8 |
-| Shared / Infra | 4 |
+| Shared / Infra | 3 |
 | Operations SSOT | 1 |
-| **Total** | **28** |
+| **Total** | **27** |
