@@ -50,12 +50,12 @@ import { useEducationNicheBilling } from '../niches/hooks/useEducationNicheBilli
 import { EducationUpgradeBanner } from '../niches/components/EducationUpgradeBanner';
 import { getNicheByKey } from '../niches/registry';
 import { EducationUrlService } from '../services/EducationUrlService';
-import type { EducationLevel, EducationProgram } from '../types';
+import type { EducationLevel, EducationProgram } from '@/core/education';
 import {
   getSchoolStageOptions,
   isSchoolNiche,
   SCHOOL_STAGE_OTHER_VALUE,
-} from '../constants/schoolStageOptions';
+} from '@/core/education/constants/schoolStageOptions';
 
 const SHIFTS = [
   { value: 'morning', label: 'Manhã' },
