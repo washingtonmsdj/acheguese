@@ -11,6 +11,9 @@ function read(path: string): string {
 const migration = read(
   "supabase/migrations/20260714118000_harden_sensitive_report_commands.sql",
 );
+const classifiedTableLockMigration = read(
+  "supabase/migrations/20260830073545_lock_classified_reports_to_rpc_authority.sql",
+);
 const classifiedService = read(
   "src/core/classifieds/services/ClassifiedReportService.ts",
 );
@@ -46,6 +49,13 @@ describe("sensitive report server-owned commands", () => {
       );
     }
     expect(migration).not.toContain("CREATE TABLE public.reports");
+
+    expect(classifiedTableLockMigration).toContain(
+      "REVOKE INSERT ON TABLE public.classified_reports FROM anon;",
+    );
+    expect(classifiedTableLockMigration).toContain(
+      'DROP POLICY "Anonymous users can create reports" ON public.classified_reports;',
+    );
   });
 
   it("does not accept reporter or moderator identity in public RPC signatures", () => {
