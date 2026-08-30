@@ -1,12 +1,3 @@
--- Defense in depth for Community moderation queues.
---
--- These views expose moderation-only metadata (report reasons/descriptions,
--- reporter identities and priority scoring). security_invoker=true already
--- preserves base-table RLS, but authenticated non-admin reporters could still
--- query the admin projections for the rows they were allowed to see. Gate the
--- view contract itself on canonical platform-admin authority and remove anon
--- SELECT grants so route/UI guards are never the security boundary.
-
 CREATE OR REPLACE VIEW public.admin_pending_post_reports
 WITH (security_invoker = true)
 AS
@@ -21,10 +12,7 @@ SELECT
   COALESCE(author_profile.pontos, 0) AS author_reputation,
   COALESCE(previous_reports.count, 0)::INTEGER AS author_previous_reports,
   COUNT(r.id)::INTEGER AS reports_count,
-  CASE
-    WHEN BOOL_OR(r.status = 'under_review') THEN 'under_review'
-    ELSE 'pending'
-  END AS status,
+  CASE WHEN BOOL_OR(r.status = 'under_review') THEN 'under_review' ELSE 'pending' END AS status,
   (
     COUNT(r.id)::INTEGER * 5
     + CASE WHEN COALESCE(author_profile.pontos, 0) < 100 THEN 20 ELSE 0 END
@@ -50,17 +38,12 @@ SELECT
         'name_completo', COALESCE(reporter_profile.name, 'Anonimo'),
         'avatar_url', COALESCE(reporter_profile.avatar_url, '')
       )
-    )
-    ORDER BY r.created_at DESC
+    ) ORDER BY r.created_at DESC
   ) AS reports
 FROM public.community_reports r
-JOIN public.posts p
-  ON r.target_type = 'post'
-  AND r.target_id = p.id
-LEFT JOIN public.profiles author_profile
-  ON author_profile.id = p.author_profile_id
-LEFT JOIN public.profiles reporter_profile
-  ON reporter_profile.id = r.reporter_profile_id
+JOIN public.posts p ON r.target_type = 'post' AND r.target_id = p.id
+LEFT JOIN public.profiles author_profile ON author_profile.id = p.author_profile_id
+LEFT JOIN public.profiles reporter_profile ON reporter_profile.id = r.reporter_profile_id
 LEFT JOIN LATERAL (
   SELECT COUNT(*) AS count
   FROM public.community_reports pr
@@ -71,17 +54,8 @@ LEFT JOIN LATERAL (
 WHERE r.status IN ('pending', 'under_review')
   AND p.is_published = true
   AND COALESCE(private.is_admin_user((SELECT auth.uid())), false)
-GROUP BY
-  p.id,
-  p.content,
-  p.type,
-  p.images,
-  p.author_profile_id,
-  p.created_at,
-  author_profile.name,
-  author_profile.avatar_url,
-  author_profile.pontos,
-  previous_reports.count;
+GROUP BY p.id, p.content, p.type, p.images, p.author_profile_id, p.created_at,
+  author_profile.name, author_profile.avatar_url, author_profile.pontos, previous_reports.count;
 
 CREATE OR REPLACE VIEW public.admin_pending_comment_reports
 WITH (security_invoker = true)
@@ -96,10 +70,7 @@ SELECT
   c.post_id,
   COALESCE(p.content, '') AS post_content,
   COUNT(r.id)::INTEGER AS reports_count,
-  CASE
-    WHEN BOOL_OR(r.status = 'under_review') THEN 'under_review'
-    ELSE 'pending'
-  END AS status,
+  CASE WHEN BOOL_OR(r.status = 'under_review') THEN 'under_review' ELSE 'pending' END AS status,
   (
     COUNT(r.id)::INTEGER
     + CASE WHEN BOOL_OR(lower(r.reason) IN ('harassment', 'hate_speech', 'violence', 'abuse')) THEN 3 ELSE 0 END
@@ -123,31 +94,17 @@ SELECT
         'name_completo', COALESCE(reporter_profile.name, 'Anonimo'),
         'avatar_url', COALESCE(reporter_profile.avatar_url, '')
       )
-    )
-    ORDER BY r.created_at DESC
+    ) ORDER BY r.created_at DESC
   ) AS reports
 FROM public.community_reports r
-JOIN public.comments c
-  ON r.target_type = 'comment'
-  AND r.target_id = c.id
-LEFT JOIN public.posts p
-  ON p.id = c.post_id
-LEFT JOIN public.profiles author_profile
-  ON author_profile.id = c.author_profile_id
-LEFT JOIN public.profiles reporter_profile
-  ON reporter_profile.id = r.reporter_profile_id
+JOIN public.comments c ON r.target_type = 'comment' AND r.target_id = c.id
+LEFT JOIN public.posts p ON p.id = c.post_id
+LEFT JOIN public.profiles author_profile ON author_profile.id = c.author_profile_id
+LEFT JOIN public.profiles reporter_profile ON reporter_profile.id = r.reporter_profile_id
 WHERE r.status IN ('pending', 'under_review')
   AND COALESCE(private.is_admin_user((SELECT auth.uid())), false)
-GROUP BY
-  c.id,
-  c.content,
-  c.author_profile_id,
-  c.post_id,
-  c.created_at,
-  p.content,
-  author_profile.name,
-  author_profile.avatar_url,
-  author_profile.pontos;
+GROUP BY c.id, c.content, c.author_profile_id, c.post_id, c.created_at, p.content,
+  author_profile.name, author_profile.avatar_url, author_profile.pontos;
 
 REVOKE SELECT ON public.admin_pending_post_reports FROM anon;
 REVOKE SELECT ON public.admin_pending_comment_reports FROM anon;
