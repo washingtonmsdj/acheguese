@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
-import { PizzaAdminService } from "../PizzaAdminService";
+import { PizzaAdminService } from "@/core/business/niches/pizzaria/PizzaAdminService";
 import { toast } from "sonner";
 import { getRecordValue } from "@/shared/utils/recordLookup";
 import type { PizzaCatalog, PizzaSize, PizzaFlavor, PizzaEdge, PizzaDough, PizzaPriceRuleType } from "../types";
