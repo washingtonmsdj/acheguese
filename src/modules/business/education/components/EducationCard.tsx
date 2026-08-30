@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { MapPin, GraduationCap, Users, Phone, ChevronRight } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/utils/cn';
-import type { EducationProfile } from '../types';
+import type { EducationProfile } from '@/core/education';
 
 export interface EducationCardProps {
   profile: EducationProfile;

@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/utils/cn';
-import type { EducationProfileStatus, EducationLeadStatus } from '../types';
+import type { EducationProfileStatus, EducationLeadStatus } from '@/core/education';
 import { EDUCATION_LEAD_STATUS, EDUCATION_PROFILE_STATUS } from '../constants';
 
 export interface EducationStatusBadgeProps {

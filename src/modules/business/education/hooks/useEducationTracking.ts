@@ -8,8 +8,8 @@
  */
 
 import { useCallback } from 'react';
-import { EducationTrackingService } from '../services/EducationTrackingService';
-import type { EducationNicheKey } from '../types';
+import { EducationTrackingService } from '@/core/education/services/EducationTrackingService';
+import type { EducationNicheKey } from '@/core/education';
 
 export interface UseEducationTrackingOptions {
   educationProfileId: string;

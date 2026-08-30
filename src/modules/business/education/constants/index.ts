@@ -4,7 +4,7 @@
  * Constantes e enums do modulo Education.
  */
 
-import type { EducationLeadStatus, EducationProfileStatus } from '../types';
+import type { EducationLeadStatus, EducationProfileStatus } from '@/core/education';
 
 export const EDUCATION_PROFILE_STATUS: Record<EducationProfileStatus, { label: string; color: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   draft: { label: 'Rascunho', color: 'gray', variant: 'secondary' },

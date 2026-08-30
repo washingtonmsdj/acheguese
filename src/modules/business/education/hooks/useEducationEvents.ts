@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { EducationService } from '../services';
-import type { EducationEvent, SchoolEventType } from '../types';
+import type { EducationEvent, SchoolEventType } from '@/core/education';
 
 export interface EventFilters {
   isPublic?: boolean;

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { EducationService } from '../services';
-import type { EducationLeadStatus } from '../types';
+import type { EducationLeadStatus } from '@/core/education';
 
 export interface PipelineMove {
   leadId: string;
