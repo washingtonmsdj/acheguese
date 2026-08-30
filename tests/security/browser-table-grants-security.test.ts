@@ -167,7 +167,6 @@ describe("browser table grant hardening", () => {
       "pii_access_log",
       "profile_audit_log",
       "function_audit",
-      ...G5_SERVER_OWNED_DML,
     ];
     const regressions: string[] = [];
 
@@ -184,7 +183,7 @@ describe("browser table grant hardening", () => {
     expect(regressions, "service-authoritative tables must not regain browser DML").toEqual([]);
   });
 
-  it("keeps G5 anonymous DML revocations fail-closed", () => {
+  it("keeps G5 inert DML revocations fail-closed from their actual baseline", () => {
     const later = migrationsFromBaseline().filter(
       ({ name }) => name > G5_INERT_DML_HARDENING,
     );
@@ -192,17 +191,27 @@ describe("browser table grant hardening", () => {
 
     for (const { name, sql } of later) {
       for (const table of G5_ANON_DML_REVOKED) {
-        const grant = new RegExp(
+        const anonGrant = new RegExp(
           `grant\\s+(?:all(?:\\s+privileges)?|insert|update|delete)(?:\\s*,[\\s\\w]+)*\\s+on(?:\\s+table)?\\s+public\\.${table}\\s+to\\s+anon\\b`,
           "i",
         );
-        if (grant.test(sql)) regressions.push(`${name}: ${table}`);
+        if (anonGrant.test(sql)) regressions.push(`${name}: anon ${table}`);
+      }
+
+      for (const table of G5_SERVER_OWNED_DML) {
+        const authenticatedGrant = new RegExp(
+          `grant\\s+(?:all(?:\\s+privileges)?|insert|update|delete)(?:\\s*,[\\s\\w]+)*\\s+on(?:\\s+table)?\\s+public\\.${table}\\s+to\\s+authenticated\\b`,
+          "i",
+        );
+        if (authenticatedGrant.test(sql)) {
+          regressions.push(`${name}: authenticated ${table}`);
+        }
       }
     }
 
     expect(
       regressions,
-      "G5-reviewed tables must not regain anonymous DML without a new explicit authority review",
+      "G5-reviewed tables must not regain browser DML without a new explicit authority review",
     ).toEqual([]);
   });
 
