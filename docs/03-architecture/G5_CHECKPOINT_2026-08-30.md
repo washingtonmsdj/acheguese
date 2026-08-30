@@ -1,7 +1,7 @@
 # G5 — Database/RLS reconciliation checkpoint — 2026-08-30
 
 Status: **EM EXECUÇÃO**.  
-HEAD de source observado antes desta atualização: `8aac5c7d8b8eb9e21c914deeff725eb000002cd6`.  
+HEAD de source observado antes desta atualização: `14f912017046e31bf86db831bbbcb818dcc5472d`.  
 Projeto Supabase: `xhdowzacfujckjelqhtd`.
 
 Este documento reconcilia o checklist mestre de G5 com as provas versionadas e o catálogo remoto vivo. Ele existe para impedir repetição de auditorias já fechadas e, ao mesmo tempo, não converter blockers operacionais em PASS.
@@ -21,6 +21,7 @@ Este documento reconcilia o checklist mestre de G5 com as provas versionadas e o
 | source ↔ DB contract drift | **ESTRUTURA CLOSED / SNAPSHOT VIVO BLOCKED** | `types.generated.ts` é a única autoridade, porém o snapshot commitado ainda contém os valores de enum históricos corrompidos; regeneração integral é obrigatória |
 | SSOT Registry database types | **CLOSED** | `docs/architecture/SSOT_REGISTRY.md` reconciliado para uma única autoridade gerada e um único gerador canônico |
 | reparo dos enums de `vagas` | **CLOSED** | banco vivo canônico, dados preservados e migration source↔ledger alinhada |
+| install manifest / lock consistency | **CLOSED EM SOURCE / EXECUÇÃO PENDENTE** | `package.json` foi reconciliado com `package-lock.json` e registry para `browser-image-compression@^2.0.2`; validação remota está bloqueada por plataformas antes do build |
 | definir plano de limpeza sem perda de dados | **CLOSED neste checkpoint** | plano abaixo distingue DROP seguro, retenção/export e blockers operacionais |
 
 **G5 inteiro ainda não está fechado. Não iniciar G6.**
@@ -35,7 +36,9 @@ Commits relevantes:
 - `92081657de98d4eb618585abcb640d84212c0232` — reconcilia o SSOT Registry com `src/integrations/supabase/types.generated.ts` como única autoridade;
 - `994c2e3014b5df323492881f2e1e1e1f664dd870` — consolida os blockers operacionais remanescentes do G5;
 - `bc8f9989cfa28f63f0c7a39a58fc3c53553e189f` — aplica em source o reparo forward-only dos enums malformados de `vagas`;
-- `8aac5c7d8b8eb9e21c914deeff725eb000002cd6` — alinha atomicamente o nome da migration ao timestamp efetivamente registrado pelo ledger remoto, sem mudar o SQL aplicado.
+- `8aac5c7d8b8eb9e21c914deeff725eb000002cd6` — alinha atomicamente o nome da migration ao timestamp efetivamente registrado pelo ledger remoto, sem mudar o SQL aplicado;
+- `8e1db32c128783399c1adcd35dabf05da681d23e` — reconcilia o checkpoint com o reparo de enums e com o blocker amplo de Actions;
+- `14f912017046e31bf86db831bbbcb818dcc5472d` — restaura `browser-image-compression` para a faixa publicada `^2.0.2`, alinhada ao lockfile e ao registry.
 
 O runtime já importava `Database` de `types.generated.ts`; o gerador canônico `tools/supabase/generate-supabase-types.ts` também escreve nesse mesmo destino. O G5 impede o retorno de `src/shared/types/database.types.ts` e `src/integrations/supabase/types.ts` como autoridades paralelas.
 
@@ -87,7 +90,13 @@ Decisão:
 - remover apenas pela Storage API oficial;
 - repetir zero-objects/refs imediatamente antes da remoção e confirmar ausência depois.
 
-A revalidação de capability nesta execução continua sem expor operação oficial equivalente a `emptyBucket`/`deleteBucket` no conector Supabase instalado. Portanto esse item permanece **BLOCKED por capability operacional**, não PASS e não falha de source. Não será criado um segundo mecanismo service-role apenas para contornar esse blocker.
+A enumeração completa do conector Supabase continua sem expor operação oficial equivalente a `emptyBucket`/`deleteBucket`. Também foram inspecionadas as Edge Functions existentes relacionadas a Storage:
+
+- `media-assets` usa service role, mas sua autoridade é estritamente o upload e rollback de objetos do bucket canônico `media-assets`;
+- `media-assets-cleanup` usa service role, mas sua autoridade é estritamente a coleta de objetos órfãos do mesmo bucket `media-assets`, protegida por `CRON_SECRET`;
+- ambas hardcodeiam `MEDIA_ASSET_BUCKET = "media-assets"` e não são executores de lifecycle de buckets.
+
+Portanto `classified-images` permanece **BLOCKED por capability operacional**. Ampliar essas funções de domínio para administrar/deletar buckets apenas para contornar o blocker misturaria responsabilidades e criaria autoridade indevida; esse caminho foi explicitamente descartado.
 
 ## 6. Canonical database types: estrutura fechada, snapshot vivo comprovadamente stale
 
@@ -114,29 +123,38 @@ Assinatura compacta do catálogo vivo usada como evidência auxiliar nesta recon
 
 A capability `generate_typescript_types` executa a geração viva, mas a resposta grande não é disponibilizada como artefato/arquivo transferível de modo que permita substituir com segurança o snapshot integral. Repetir chamadas ou reconstruir o arquivo a partir de saída truncável não transforma isso em uma regeneração confiável. Portanto o blocker permanece **materialização integral do output oficial**.
 
-## 7. CI / gates: blocker ampliado para infraestrutura de Actions
+## 7. CI / gates e build remoto: blockers de plataforma separados do source
 
-No HEAD `8aac5c7d8b8eb9e21c914deeff725eb000002cd6`, três workflows de push concluíram como `failure`:
+No HEAD `14f912017046e31bf86db831bbbcb818dcc5472d`, os três workflows de push voltaram a concluir como `failure`. O run `33316832687` (`SSOT Enforcement`) expôs job concluído com `steps = null` e sem log de execução. O mesmo padrão pré-step já havia sido reproduzido em `Security Check` e `SSOT Territorial Tests` nos HEADs anteriores, inclusive com jobs `ubuntu-latest` e `runner_id = 0`.
 
-- `Security Check` — run `33314960809`;
-- `SSOT Enforcement` — run `33314960659`;
-- `SSOT Territorial Tests` — run `33314960715`.
-
-A inspeção dos jobs mostrou `runner_id = 0`, `steps = []` e nenhuma execução de step. Tentativa de obter log de job retornou ausência de blob/log, coerente com job nunca alocado a runner.
-
-Importante: o problema também atingiu jobs configurados para GitHub-hosted runner (`ubuntu-latest`). Portanto a evidência atual é de indisponibilidade mais ampla de GitHub Actions/conta/alocação, e **não apenas** do runner self-hosted `acheguese-heavy-windows`.
+Portanto a evidência continua sendo de indisponibilidade mais ampla de GitHub Actions/conta/alocação, e **não apenas** do runner self-hosted `acheguese-heavy-windows`.
 
 O `Supabase Types Sync` continua deliberadamente governado pelo runner Windows self-hosted autorizado. Sua migração histórica de `ubuntu-latest` para o runner autorizado não deve ser revertida apenas para obter execução. Porém os failures atuais dos outros workflows mostram que restaurar apenas o runner pesado pode não ser suficiente: a infraestrutura de Actions precisa efetivamente voltar a executar steps.
 
+### Vercel: defeito de manifesto corrigido, nova prova bloqueada por rate limit
+
+A inspeção do deployment Vercel do commit `8aac5c7d...` revelou um erro de source real antes do build:
+
+- `npm ci` falhava com `ETARGET` para `browser-image-compression@^2.2.0`;
+- o registry oficial publica `2.0.2` como versão atual;
+- o `package-lock.json` já exigia `^2.0.2`, enquanto somente `package.json` havia divergido para `^2.2.0`.
+
+O commit `14f912017046e31bf86db831bbbcb818dcc5472d` corrigiu apenas o manifesto para `^2.0.2`, preservando o lockfile já correto.
+
+A Vercel não executou o build pós-correção: o status do novo commit falhou antes de deployment com target `upgradeToPro=build-rate-limit`, e o projeto está em plano Hobby. Portanto:
+
+- o ETARGET anterior foi corrigido em source;
+- ainda não existe prova remota pós-fix de `npm ci`/build;
+- o novo `Vercel = failure` é atualmente **rate limit de plataforma**, não evidência de regressão do commit `14f91201...`.
+
 Consequência:
 
-- não marcar testes como PASS sem execução real;
-- não tratar `failure` pré-step como regressão de source;
+- não marcar testes/build como PASS sem execução real;
+- não tratar `failure` pré-step do Actions como regressão de source;
+- não tratar `build-rate-limit` da Vercel como regressão de source;
 - não reverter source por jobs que nunca executaram;
 - não trocar runners/autorização só para obter badge verde;
-- quando Actions voltar a executar steps, executar o sync canônico de types no HEAD então atual e os gates do G5.
-
-Há também status externo `Vercel = failure` observado no commit. Esse status é separado dos gates G5 e não é usado como evidência de regressão de banco/source sem vínculo causal demonstrado.
+- quando as plataformas voltarem a executar, validar primeiro `npm ci`, depois o sync canônico de types e os gates do G5.
 
 ## 8. Legados SQL: decisão preservada
 
@@ -169,11 +187,12 @@ Não é órfão removível: possui provenance e callers canônicos. Não apagar 
 ## 10. Próximas ações exatas
 
 1. obter um caminho oficial que materialize integralmente a geração viva em `src/integrations/supabase/types.generated.ts`, sem edição manual/parcial;
-2. remover `classified-images` pela Storage API oficial, com preflight/postcheck, usando capability oficial já autorizada — sem SQL direto e sem criar autoridade service-role paralela;
+2. remover `classified-images` pela Storage API oficial, com preflight/postcheck, usando capability oficial já autorizada — sem SQL direto, sem ampliar Edge Functions de domínio e sem criar autoridade service-role paralela;
 3. recuperar execução efetiva do GitHub Actions e obter steps reais dos gates no HEAD então atual;
-4. após a materialização dos types, provar que o snapshot não contém os labels malformados e que o diff source↔DB foi reconciliado;
-5. somente se os três blockers operacionais acima concluírem sem novo blocker, atualizar este checkpoint para **G5 CLOSED**;
-6. apenas depois iniciar G6.
+4. quando a Vercel permitir novo build, confirmar que `npm ci` ultrapassa o antigo ETARGET e registrar o próximo erro real, se houver;
+5. após a materialização dos types, provar que o snapshot não contém os labels malformados e que o diff source↔DB foi reconciliado;
+6. somente se os três blockers operacionais centrais concluírem sem novo blocker, atualizar este checkpoint para **G5 CLOSED**;
+7. apenas depois iniciar G6.
 
 ## 11. Do not repeat
 
@@ -185,12 +204,15 @@ Não é órfão removível: possui provenance e callers canônicos. Não apagar 
 - não apagar `verification-documents` apenas porque está vazio;
 - não contornar `storage.protect_delete()` por SQL;
 - não criar um executor service-role paralelo apenas para apagar `classified-images`;
+- não ampliar `media-assets` ou `media-assets-cleanup` para lifecycle/deleção de bucket só para contornar o blocker;
 - não reintroduzir `src/shared/types/database.types.ts`;
 - não reintroduzir `src/integrations/supabase/types.ts`;
 - não reconstruir manualmente o snapshot canônico a partir de saída de ferramenta truncável;
 - não editar pontualmente `PostgrestVersion` ou os enums do snapshot gerado para simular regeneração;
 - não trocar o runner autorizado do type sync só para driblar indisponibilidade operacional;
 - não assumir que o blocker de Actions é somente o runner pesado: nesta execução até jobs `ubuntu-latest` falharam antes dos steps;
+- não interpretar `Vercel = failure` com `upgradeToPro=build-rate-limit` como regressão de source;
+- não voltar `browser-image-compression` para `^2.2.0`; a faixa publicada e lockada é `^2.0.2`;
 - não reescrever migrations históricas já aplicadas para satisfazer o ratchet futuro;
 - não declarar o sync de types concluído enquanto o snapshot canônico não for regenerado/verificado;
 - não iniciar G6 enquanto houver item G5 BLOCKED/aberto.
