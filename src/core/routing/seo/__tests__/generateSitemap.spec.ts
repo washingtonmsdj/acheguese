@@ -52,6 +52,30 @@ describe("generateSitemap", () => {
     expect(sitemap).not.toContain("/vagas");
   });
 
+  it("deduplica URLs canonicas quando pagina estatica e territorio convergem", () => {
+    const sitemap = generateSitemap(
+      [
+        {
+          status: "active",
+          type: "city",
+          geographic_path: "/br/ba/salvador",
+        },
+      ] as never,
+      [],
+      "https://acheguese.com.br",
+    );
+
+    const salvadorLocations =
+      sitemap.match(
+        /<loc>https:\/\/acheguese\.com\.br\/ba\/salvador<\/loc>/g,
+      ) ?? [];
+
+    expect(salvadorLocations).toHaveLength(1);
+    expect(sitemap).toMatch(
+      /<loc>https:\/\/acheguese\.com\.br\/ba\/salvador<\/loc>\s*<changefreq>daily<\/changefreq>\s*<priority>0\.95<\/priority>/,
+    );
+  });
+
   it("mantem artefatos publicos sem URLs legadas de comunidade", () => {
     const publicArtifacts = [
       readFileSync("public/sitemap.xml", "utf8"),

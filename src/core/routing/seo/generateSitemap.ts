@@ -113,6 +113,16 @@ function generateTerritoryUrls(
   return urls;
 }
 
+function deduplicateSitemapUrls(urls: SitemapUrl[]): SitemapUrl[] {
+  const seenLocations = new Set<string>();
+
+  return urls.filter((url) => {
+    if (seenLocations.has(url.loc)) return false;
+    seenLocations.add(url.loc);
+    return true;
+  });
+}
+
 export function generateSitemap(
   locations: Location[],
   groups: TerritorialGroupWithMembers[],
@@ -174,10 +184,11 @@ export function generateSitemap(
       }
     });
 
+  const uniqueUrls = deduplicateSitemapUrls(urls);
   const xml = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    ...urls.map((url) =>
+    ...uniqueUrls.map((url) =>
       [
         '  <url>',
         `    <loc>${url.loc}</loc>`,
