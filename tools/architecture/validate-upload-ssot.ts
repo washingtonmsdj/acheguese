@@ -72,27 +72,30 @@ const BACKEND_STORAGE_GATEWAYS = new Map<string, readonly string[]>([
   ],
 ]);
 
-// Explicit read-only operational observers. These are not Storage owners: they
-// may inspect a fixed canonical bucket only for health/diagnostic purposes and
-// must remain incapable of mutating objects.
+// Explicit read-only operational observers. These are not Storage object owners:
+// they may inspect fixed bucket metadata for health/diagnostic purposes only and
+// must remain incapable of reading user objects or mutating Storage.
 const BACKEND_STORAGE_READERS = new Map<string, readonly string[]>([
   [
     "supabase/functions/health-check/index.ts",
     [
       "requireAdmin(req)",
-      "supabase.storage",
-      ".from('media-assets')",
-      ".list('', { limit: 1 })",
+      "supabase.storage.getBucket('media-assets')",
+      "canonicalBucketExists",
     ],
   ],
 ]);
 
-const BACKEND_STORAGE_READER_FORBIDDEN_MUTATIONS = [
+const BACKEND_STORAGE_READER_FORBIDDEN_OPERATIONS = [
   ".upload(",
   ".remove(",
   ".update(",
   ".move(",
   ".copy(",
+  ".list(",
+  ".download(",
+  ".createSignedUrl(",
+  ".createSignedUrls(",
   ".createSignedUploadUrl(",
 ] as const;
 
@@ -218,16 +221,16 @@ function validateBackendStorage(files: string[], violations: Violation[]): void 
           rel,
           content,
           token,
-          "Leitor backend de Storage perdeu sua fronteira read-only/admin",
+          "Leitor backend de Storage perdeu sua fronteira metadata-only/admin",
           violations,
         );
       }
-      for (const token of BACKEND_STORAGE_READER_FORBIDDEN_MUTATIONS) {
+      for (const token of BACKEND_STORAGE_READER_FORBIDDEN_OPERATIONS) {
         forbidToken(
           rel,
           content,
           token,
-          "Leitor backend de Storage não pode adquirir capacidade de mutação",
+          "Leitor backend de Storage não pode adquirir acesso a objetos ou capacidade de mutação",
           violations,
         );
       }
@@ -238,7 +241,7 @@ function validateBackendStorage(files: string[], violations: Violation[]): void 
       makeViolation(
         rel,
         "Uso backend de Storage não classificado",
-        "Edge Functions novas devem ser explicitamente classificadas como owner de operação ou leitor read-only no Upload SSOT",
+        "Edge Functions novas devem ser explicitamente classificadas como owner de operação ou leitor metadata-only no Upload SSOT",
         lineFor(content, ".storage"),
       ),
     );
@@ -402,7 +405,7 @@ function main(): void {
 
   if (violations.length === 0) {
     console.log(
-      "✅ Upload SSOT validado: media-assets governa imagens públicas canônicas; private storage passa pelo MediaService; Try-On é o único staging público genérico; gateways backend e observers read-only são explícitos.",
+      "✅ Upload SSOT validado: media-assets governa imagens públicas canônicas; private storage passa pelo MediaService; Try-On é o único staging público genérico; gateways backend e observers metadata-only são explícitos.",
     );
     return;
   }

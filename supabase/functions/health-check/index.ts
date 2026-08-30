@@ -95,28 +95,28 @@ serve(async (req: Request) => {
       healthCheck.status = 'unhealthy';
     }
 
-    // 2. Check Storage using the canonical public media bucket. The health
-    // observer is intentionally read-only and must not depend on dormant legacy
-    // buckets that G5 may retire.
+    // 2. Check Storage through canonical bucket metadata only. The observer is
+    // intentionally read-only: it verifies the Storage API and canonical bucket
+    // existence without enumerating or touching user objects.
     const storageStart = Date.now();
     try {
-      const { data, error } = await supabase.storage
-        .from('media-assets')
-        .list('', { limit: 1 });
+      const { data, error } = await supabase.storage.getBucket('media-assets');
       
       const storageDuration = Date.now() - storageStart;
+      const canonicalBucketExists = data?.id === 'media-assets';
       
       healthCheck.checks.storage = {
-        status: error ? 'unhealthy' : 'healthy',
+        status: error || !canonicalBucketExists ? 'unhealthy' : 'healthy',
         duration_ms: storageDuration,
         error: error?.message,
         details: {
           accessible: !error,
+          canonical_bucket_exists: canonicalBucketExists,
           response_time_category: storageDuration < 200 ? 'excellent' : storageDuration < 1000 ? 'good' : 'slow',
         },
       };
 
-      if (error || storageDuration > 2000) {
+      if (error || !canonicalBucketExists || storageDuration > 2000) {
         healthCheck.status = healthCheck.status === 'unhealthy' ? 'unhealthy' : 'degraded';
       }
     } catch (error) {
