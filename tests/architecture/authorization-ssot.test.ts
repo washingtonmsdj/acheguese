@@ -4,7 +4,10 @@ import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const srcRoot = resolve(root, "src");
+const migrationsRoot = resolve(root, "supabase/migrations");
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
+const roleHistoryBaseline =
+  "20260830061455_lock_role_history_to_trigger_writer.sql";
 
 function listRuntimeSourceFiles(directory: string): string[] {
   return readdirSync(directory).flatMap((entry) => {
@@ -48,6 +51,49 @@ describe("Authorization SSOT", () => {
     expect(adminRoles).toContain("async grantRole(");
     expect(adminRoles).toContain("async revokeRole(");
     expect(adminRoles).toContain("async renewRole(");
+  });
+
+  it("keeps role_history read-only in browser and trigger-written", () => {
+    const adminRoles = read("src/core/admin/services/AdminRolesService.ts");
+    const migration = read(`supabase/migrations/${roleHistoryBaseline}`);
+
+    expect(adminRoles).toContain('.from<RoleHistoryRow>("role_history")');
+    expect(adminRoles).not.toMatch(
+      /\.from(?:<[^>]+>)?\(["']role_history["']\)\s*\.(?:insert|update|upsert|delete)\s*\(/,
+    );
+
+    expect(migration).toContain("log_role_change_trigger");
+    expect(migration).toContain("p.prosecdef");
+    expect(migration).toContain("pg_get_userbyid(p.proowner)='postgres'");
+    expect(migration).toContain("INSERT INTO role_history");
+    expect(migration).toContain(
+      'DROP POLICY IF EXISTS "Sistema pode inserir no histórico" ON public.role_history',
+    );
+    expect(migration).toContain(
+      "GRANT SELECT ON TABLE public.role_history TO authenticated",
+    );
+    expect(migration).toContain(
+      "GRANT ALL PRIVILEGES ON TABLE public.role_history TO service_role",
+    );
+  });
+
+  it("rejects future browser writers on role_history", () => {
+    const offenders = readdirSync(migrationsRoot)
+      .filter((name) => name.endsWith(".sql") && name > roleHistoryBaseline)
+      .sort()
+      .filter((name) => {
+        const sql = readFileSync(join(migrationsRoot, name), "utf8");
+        const tableGrant =
+          /GRANT\s+(?:ALL(?:\s+PRIVILEGES)?|[^;]*\b(?:INSERT|UPDATE|DELETE)\b[^;]*)\s+ON\s+(?:TABLE\s+)?public\.role_history\s+TO\s+[^;]*(?:\bPUBLIC\b|\banon\b|\bauthenticated\b)/i;
+        const insertPolicy =
+          /CREATE\s+POLICY[^;]*ON\s+public\.role_history[^;]*FOR\s+INSERT[^;]*TO\s+[^;]*\bauthenticated\b/i;
+        return tableGrant.test(sql) || insertPolicy.test(sql);
+      });
+
+    expect(
+      offenders,
+      "role_history must remain browser-read-only and trigger/server-written",
+    ).toEqual([]);
   });
 
   it("routes Admin composition reads through RoleService", () => {
