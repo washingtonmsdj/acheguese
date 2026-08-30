@@ -17,8 +17,8 @@ import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { cn } from '@/shared/utils/cn';
 import { useLabels } from '../hooks/useEducationLabels';
-import type { EducationNicheKey, SchoolShift } from '../types';
-import { getSchoolStageOptions, SCHOOL_STAGE_OTHER_VALUE } from '../constants/schoolStageOptions';
+import type { EducationNicheKey, SchoolShift } from '@/core/education';
+import { getSchoolStageOptions, SCHOOL_STAGE_OTHER_VALUE } from '@/core/education/constants/schoolStageOptions';
 
 export interface EducationLeadFormProps {
   educationProfileId: string;

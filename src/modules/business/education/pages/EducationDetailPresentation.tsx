@@ -4,7 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
-import type { EducationProgram } from "../types";
+import type { EducationProgram } from "@/core/education";
 import {
   formatPrice,
   getSections,

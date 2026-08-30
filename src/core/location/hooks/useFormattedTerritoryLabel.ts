@@ -18,7 +18,7 @@
 import { useMemo } from 'react';
 import { useUserTerritory } from './useUserTerritory';
 import { useActiveTerritory } from './useActiveTerritory';
-import { TERRITORY_CONFIG } from '@/config/territory';
+import { TERRITORY_CONFIG } from '@/core/routing/config/territory';
 
 interface FormattedLabel {
   /** Label completo formatado */

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Calendar, Check, ChevronLeft, FileText, MessageCircle, Shield } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { EducationLeadForm, type LeadFormData } from '../components/EducationLeadForm';
-import type { EducationProfile } from '../types';
+import type { EducationProfile } from '@/core/education';
 
 type EducationDetailSidebarProps = {
   handleLeadSubmit: (formData: LeadFormData) => Promise<void>;

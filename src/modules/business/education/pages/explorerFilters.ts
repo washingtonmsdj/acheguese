@@ -1,4 +1,4 @@
-import type { EducationPublicProfile } from '../types';
+import type { EducationPublicProfile } from '@/core/education';
 
 export const SORTERS = [
   { key: 'relevance', label: 'Relevancia' },

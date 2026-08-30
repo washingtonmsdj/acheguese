@@ -4,7 +4,7 @@ import { ArrowRight, User, Mail, Phone, Calendar } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
-import type { EducationLead, EducationLeadStatus } from '../types';
+import type { EducationLead, EducationLeadStatus } from '@/core/education';
 import { EducationStatusBadge } from './EducationStatusBadge';
 
 export interface EducationPipelineViewProps {

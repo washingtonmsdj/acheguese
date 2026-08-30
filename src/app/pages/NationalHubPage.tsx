@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { LAUNCH_CITY_PATH, TERRITORY_CONFIG } from "@/config/territory";
+import { LAUNCH_CITY_PATH, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 
 type CityEntry = {
   uf: string;
