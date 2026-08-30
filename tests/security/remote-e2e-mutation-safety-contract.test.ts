@@ -10,6 +10,7 @@ const educationSetup = read('tests/helpers/education-setup.ts');
 const playwrightConfig = read('playwright.config.ts');
 const slugHistoryValidator = read('tools/supabase/validate-slug-history-final.ts');
 const networkSeeder = read('tools/seeds/seed-e2e-network.ts');
+const e2eUserSeeder = read('tools/seeds/seed-e2e-users.ts');
 
 describe('Remote E2E mutation safety integration', () => {
   it('gates every operational service-role client on the exact client URL', () => {
@@ -68,6 +69,20 @@ describe('Remote E2E mutation safety integration', () => {
     expect(educationSetup).not.toContain('updateUserById');
     expect(educationSetup).not.toContain('TestPass123!');
     expect(educationSetup).not.toContain('getUserById(member.user_id)');
+  });
+
+  it('keeps the canonical E2E user seeder isolated and marker-only', () => {
+    expect(e2eUserSeeder).toContain('getSupabaseConfig');
+    expect(e2eUserSeeder).toContain(
+      'assertApprovedRemoteMutationTarget(config.url)',
+    );
+    expect(e2eUserSeeder).toContain('isManagedFixture(user)');
+    expect(e2eUserSeeder).toContain(
+      'Refusing to reconcile an Auth user without the canonical fixture marker.',
+    );
+    expect(e2eUserSeeder).not.toContain('E2E_ADOPT_USERNAME');
+    expect(e2eUserSeeder).not.toContain('adoptTechnicalUser');
+    expect(e2eUserSeeder).not.toContain('Refusing to adopt a profile');
   });
 
   it('requires an explicit technical business fixture for slug-history mutation', () => {
