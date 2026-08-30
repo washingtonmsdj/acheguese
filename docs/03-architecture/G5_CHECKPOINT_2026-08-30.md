@@ -1,8 +1,7 @@
 # G5 — Database/RLS reconciliation checkpoint — 2026-08-30
 
 Status: **EM EXECUÇÃO**.  
-HEAD de source consolidado antes deste checkpoint: `92081657de98d4eb618585abcb640d84212c0232`.  
-Main observado antes desta revalidação operacional: `994c2e3014b5df323492881f2e1e1e1f664dd870`.  
+HEAD de source observado antes desta atualização: `8aac5c7d8b8eb9e21c914deeff725eb000002cd6`.  
 Projeto Supabase: `xhdowzacfujckjelqhtd`.
 
 Este documento reconcilia o checklist mestre de G5 com as provas versionadas e o catálogo remoto vivo. Ele existe para impedir repetição de auditorias já fechadas e, ao mesmo tempo, não converter blockers operacionais em PASS.
@@ -11,16 +10,17 @@ Este documento reconcilia o checklist mestre de G5 com as provas versionadas e o
 
 | item G5 | estado | prova/decisão |
 | --- | --- | --- |
-| schema atual vs migrations | **CLOSED** | `G5_MIGRATION_DRIFT_CLOSED_2026-08-30.md`: `ALIAS=0`, `CONFLICT=0`, `LOCAL_ONLY=0`, `REMOTE_ONLY=0` no fechamento registrado |
+| schema atual vs migrations | **CLOSED** | `G5_MIGRATION_DRIFT_CLOSED_2026-08-30.md`; o reparo forward-only dos enums de `vagas` foi aplicado e o arquivo fonte foi alinhado ao versionamento real do ledger em `20260830131902_repair_malformed_vaga_enums_g5.sql` |
 | RLS e grants | **CLOSED** para superfície application-owned | `G5_RLS_GRANTS_AUDIT_2026-08-30.md`; resíduos PostGIS continuam extension-owned, não bypass de domínio |
 | funções/RPCs e authority | **CLOSED** | `G5_SECURITY_DEFINER_INVENTORY_2026-08-30.md`: snapshot final application-owned e famílias de maior risco revisadas |
 | tabelas legadas sem caller | **CLOSED para os legados SQL já classificados** | Billing preservado/locked; Delivery e `business_views` vazios retirados com provenance; helpers/RPCs órfãos retirados em cortes próprios |
 | órfãos | **BLOCKED — 1 residual conhecido de Storage** | bucket remoto `classified-images`; revalidado vazio em 2026-08-30, mas a retirada exige Storage API oficial |
 | fixtures/E2E sem provenance | **CLOSED** | `G5_E2E_FIXTURE_PROVENANCE_2026-08-30.md` |
-| indexes/constraints | **CLOSED** | `G5_SCHEMA_INTEGRITY_2026-08-30.md` |
-| migrations idempotentes/fail-closed | **CLOSED EM SOURCE / CI PENDENTE** | `tests/security/migration-fail-closed-ratchet.test.ts` instala cutover futuro após o ledger atual; migrations já aplicadas não são reescritas |
-| source ↔ DB contract drift | **ESTRUTURA CLOSED / SYNC VIVO BLOCKED** | `types.generated.ts` é a única autoridade; snapshots paralelos foram aposentados e ratchetados; a geração viva ainda precisa materializar o snapshot canônico |
+| indexes/constraints | **CLOSED** | `G5_SCHEMA_INTEGRITY_2026-08-30.md`; `idx_vagas_highlight` também foi revalidado após o reparo de enums |
+| migrations idempotentes/fail-closed | **CLOSED EM SOURCE / CI PENDENTE** | `tests/security/migration-fail-closed-ratchet.test.ts` instala cutover futuro após o ledger histórico; migrations já aplicadas não são reescritas |
+| source ↔ DB contract drift | **ESTRUTURA CLOSED / SNAPSHOT VIVO BLOCKED** | `types.generated.ts` é a única autoridade, porém o snapshot commitado ainda contém os valores de enum históricos corrompidos; regeneração integral é obrigatória |
 | SSOT Registry database types | **CLOSED** | `docs/architecture/SSOT_REGISTRY.md` reconciliado para uma única autoridade gerada e um único gerador canônico |
+| reparo dos enums de `vagas` | **CLOSED** | banco vivo canônico, dados preservados e migration source↔ledger alinhada |
 | definir plano de limpeza sem perda de dados | **CLOSED neste checkpoint** | plano abaixo distingue DROP seguro, retenção/export e blockers operacionais |
 
 **G5 inteiro ainda não está fechado. Não iniciar G6.**
@@ -33,15 +33,35 @@ Commits relevantes:
 - `79fc84038904ab83ee8564cc499af501c56fb8fd` — ratchet de authority de database types restrito aos snapshots realmente aposentados;
 - `f6f22177bc395c0967790269453dfac3fa62422f` — ratchet fail-closed para migrations futuras;
 - `92081657de98d4eb618585abcb640d84212c0232` — reconcilia o SSOT Registry com `src/integrations/supabase/types.generated.ts` como única autoridade;
-- `994c2e3014b5df323492881f2e1e1e1f664dd870` — consolida os blockers operacionais remanescentes do G5 antes desta revalidação.
+- `994c2e3014b5df323492881f2e1e1e1f664dd870` — consolida os blockers operacionais remanescentes do G5;
+- `bc8f9989cfa28f63f0c7a39a58fc3c53553e189f` — aplica em source o reparo forward-only dos enums malformados de `vagas`;
+- `8aac5c7d8b8eb9e21c914deeff725eb000002cd6` — alinha atomicamente o nome da migration ao timestamp efetivamente registrado pelo ledger remoto, sem mudar o SQL aplicado.
 
-O runtime já importava `Database` de `types.generated.ts`; o gerador canônico `tools/supabase/generate-supabase-types.ts` também escreve nesse mesmo destino. O G5 agora impede o retorno de `src/shared/types/database.types.ts` e `src/integrations/supabase/types.ts` como autoridades paralelas.
+O runtime já importava `Database` de `types.generated.ts`; o gerador canônico `tools/supabase/generate-supabase-types.ts` também escreve nesse mesmo destino. O G5 impede o retorno de `src/shared/types/database.types.ts` e `src/integrations/supabase/types.ts` como autoridades paralelas.
 
-## 3. Migration fail-closed: cutover instalado
+## 3. Reparo forward-only dos enums de `vagas`: CLOSED
 
-O ledger remoto observado termina em `20260830100944_cleanup_orphan_overload_helpers`.
+A revalidação do catálogo identificou corrupção histórica de labels criada por uma migration já aplicada. Em vez de reescrever histórico, foi criada e aplicada uma migration corretiva forward-only, fail-closed.
 
-O ratchet novo começa em `20260830101000`, deliberadamente depois do ledger existente. A partir desse corte, migrations novas:
+Estado vivo após o reparo:
+
+- `vaga_application_channel`: `internal`, `whatsapp`, `email`, `external_url`, `phone`;
+- `vaga_salary_mode`: `fixed`, `range`, `a_combinar`;
+- `vaga_highlight_type`: `none`, `premium`, `sponsored`, `featured`;
+- zero labels malformados remanescentes;
+- 15/15 linhas de `vagas` preservadas;
+- distribuição de destaque preservada: 11 `none`, 4 `premium`;
+- default de `highlight_type` preservado;
+- `idx_vagas_highlight` existente e válido;
+- nenhuma função/RPC dependia dos tipos corrompidos em sua assinatura.
+
+O ledger remoto registrou a aplicação como `20260830131902_repair_malformed_vaga_enums_g5`. O source foi alinhado para `supabase/migrations/20260830131902_repair_malformed_vaga_enums_g5.sql` sem alterar os bytes do SQL já aplicado. Portanto este defeito não é mais blocker de schema/migration.
+
+## 4. Migration fail-closed: cutover instalado
+
+O cutover do ratchet futuro começa em `20260830101000`. Migrations históricas já aplicadas continuam ledger-owned; o reparo de enums foi realizado por nova migration, não por mutação retroativa.
+
+A partir do corte, migrations novas:
 
 - não podem usar `DROP ... IF EXISTS` destrutivo para esconder pré-requisito ausente;
 - não podem usar `DROP ... CASCADE` destrutivo;
@@ -49,21 +69,16 @@ O ratchet novo começa em `20260830101000`, deliberadamente depois do ledger exi
 - não podem apagar buckets com `DELETE FROM storage.buckets`;
 - em retirada destrutiva, devem usar transação explícita, precondition que falha fechado, `RESTRICT` para relações e postcondition verificável.
 
-Migrations históricas já aplicadas permanecem ledger-owned e não são reescritas apenas para adequação estética retroativa.
+## 5. Storage: residual órfão comprovado e revalidado
 
-## 4. Storage: residual órfão comprovado e revalidado
-
-O bucket remoto `classified-images` foi reconsultado em 2026-08-30 e continua:
+O bucket remoto `classified-images` continua classificado como **REMOTE ORPHAN / EMPTY / NO KNOWN CALLER**:
 
 - existente;
 - público;
 - `object_count = 0`;
 - limite de arquivo `10485760`;
-- MIME types: `image/jpeg`, `image/jpg`, `image/png`, `image/webp`, `image/gif`.
-
-Auditorias anteriores já haviam mostrado zero multipart uploads/parts e zero caller/dependência conhecida.
-
-Classificação: **REMOTE ORPHAN / EMPTY / NO KNOWN CALLER**.
+- MIME types: `image/jpeg`, `image/jpg`, `image/png`, `image/webp`, `image/gif`;
+- auditoria anterior: zero multipart uploads/parts e zero caller/dependência conhecida.
 
 Decisão:
 
@@ -72,9 +87,9 @@ Decisão:
 - remover apenas pela Storage API oficial;
 - repetir zero-objects/refs imediatamente antes da remoção e confirmar ausência depois.
 
-A revalidação de capability de 2026-08-30 confirmou que o conector Supabase instalado não expõe operação oficial equivalente a `emptyBucket`/`deleteBucket`, e a busca de plugins não encontrou executor adicional apropriado. Portanto esse item permanece **BLOCKED por capability operacional**, não PASS e não falha de source. Não será criado um segundo mecanismo service-role apenas para contornar esse blocker.
+A revalidação de capability nesta execução continua sem expor operação oficial equivalente a `emptyBucket`/`deleteBucket` no conector Supabase instalado. Portanto esse item permanece **BLOCKED por capability operacional**, não PASS e não falha de source. Não será criado um segundo mecanismo service-role apenas para contornar esse blocker.
 
-## 5. Canonical database types: estrutura fechada, snapshot vivo ainda pendente
+## 6. Canonical database types: estrutura fechada, snapshot vivo comprovadamente stale
 
 Authority atual:
 
@@ -83,26 +98,47 @@ Authority atual:
 - comando: `npm run generate:types`;
 - workflow: `.github/workflows/supabase-types-sync.yml`.
 
-A geração oficial conectada retornou schema com `PostgrestVersion: "14.5"`; o snapshot canônico comprometido observado antes do sync ainda declarava `14.4`. Logo não é correto declarar o contrato remoto sincronizado antes de uma regeneração materializada e verificável.
+Provas acumuladas:
 
-A capability conectada `generate_typescript_types` consegue executar a geração viva, porém sua resposta não é exposta como arquivo transferível (`file_id`) nem existe capability de export/download para esse resultado. O materializador de arquivos disponível aceita apenas arquivos/referências reais, não uma resposta textual grande de outra ferramenta. Portanto não é seguro reconstruir manualmente ou parcialmente `types.generated.ts` a partir de saída truncável.
+- a última alteração real do snapshot canônico ocorreu em `872668f2276ca9e1e50a6d08034a8734c3773852`, em 2026-08-11;
+- o banco recebeu múltiplas migrations estruturais em 2026-08-30;
+- a geração oficial conectada reporta `PostgrestVersion: "14.5"`, enquanto o snapshot commitado observado ainda reporta `14.4`;
+- após o reparo vivo dos enums de `vagas`, o snapshot commitado em `8aac5c7d...` continua contendo os antigos labels concatenados como valores únicos, enquanto o banco vivo já possui os labels canônicos separados.
 
-Workflow `Supabase Types Sync`, run `33308805361`: revalidado em 2026-08-30 e continua **queued**, sem steps/logs iniciados, apontando para o HEAD antigo que o disparou (`06e452d...`). O histórico do próprio workflow mostra o commit `06e452d786b6b8f055859b0c4e52bc55260e336f` com mensagem `ci(g5): run type sync on authorized runner`; portanto trocar o workflow para outro runner apenas para driblar a fila contrariaria uma decisão explícita do G5. O runner autorizado deve ser recuperado/ativado, e só então o sync deve ser executado contra o HEAD atual.
+Logo o drift é **estrutural e semântico**, não apenas metadata de PostgREST. É proibido corrigir manualmente só a versão ou só os três enums.
 
-## 6. CI / gates
+Assinatura compacta do catálogo vivo usada como evidência auxiliar nesta reconciliação:
 
-Os jobs de GitHub Actions disparados após os cortes de source falharam antes de executar steps. No HEAD `994c2e3014b5df323492881f2e1e1e1f664dd870`, o run `33310303083` do `SSOT Territorial Tests` apresentou job `99255773261` com `steps=[]` e sem log de job disponível. Isso é evidência de indisponibilidade de execução do CI, não evidência de teste funcional vermelho.
+- `public`: 257 relações; MD5 estrutural `41e8a0341a25c6d09a11389a65a3001b`;
+- `private`: 20 relações; MD5 estrutural `3d080ebd47200bf97eac850bf9a00ad8`.
 
-O `Supabase Types Sync` run `33308805361` também permanece queued no runner self-hosted autorizado `acheguese-heavy-windows`, sem início de steps. Não criar dispatch duplicado enquanto a causa de indisponibilidade do runner persistir.
+A capability `generate_typescript_types` executa a geração viva, mas a resposta grande não é disponibilizada como artefato/arquivo transferível de modo que permita substituir com segurança o snapshot integral. Repetir chamadas ou reconstruir o arquivo a partir de saída truncável não transforma isso em uma regeneração confiável. Portanto o blocker permanece **materialização integral do output oficial**.
+
+## 7. CI / gates: blocker ampliado para infraestrutura de Actions
+
+No HEAD `8aac5c7d8b8eb9e21c914deeff725eb000002cd6`, três workflows de push concluíram como `failure`:
+
+- `Security Check` — run `33314960809`;
+- `SSOT Enforcement` — run `33314960659`;
+- `SSOT Territorial Tests` — run `33314960715`.
+
+A inspeção dos jobs mostrou `runner_id = 0`, `steps = []` e nenhuma execução de step. Tentativa de obter log de job retornou ausência de blob/log, coerente com job nunca alocado a runner.
+
+Importante: o problema também atingiu jobs configurados para GitHub-hosted runner (`ubuntu-latest`). Portanto a evidência atual é de indisponibilidade mais ampla de GitHub Actions/conta/alocação, e **não apenas** do runner self-hosted `acheguese-heavy-windows`.
+
+O `Supabase Types Sync` continua deliberadamente governado pelo runner Windows self-hosted autorizado. Sua migração histórica de `ubuntu-latest` para o runner autorizado não deve ser revertida apenas para obter execução. Porém os failures atuais dos outros workflows mostram que restaurar apenas o runner pesado pode não ser suficiente: a infraestrutura de Actions precisa efetivamente voltar a executar steps.
 
 Consequência:
 
 - não marcar testes como PASS sem execução real;
-- não reverter source apenas por um job que não chegou a executar;
-- não trocar o runner autorizado apenas para obter badge verde;
-- assim que o runner autorizado voltar a executar steps, rodar o sync canônico de types sobre o HEAD atual e os gates do G5.
+- não tratar `failure` pré-step como regressão de source;
+- não reverter source por jobs que nunca executaram;
+- não trocar runners/autorização só para obter badge verde;
+- quando Actions voltar a executar steps, executar o sync canônico de types no HEAD então atual e os gates do G5.
 
-## 7. Legados SQL: decisão preservada
+Há também status externo `Vercel = failure` observado no commit. Esse status é separado dos gates G5 e não é usado como evidência de regressão de banco/source sem vínculo causal demonstrado.
+
+## 8. Legados SQL: decisão preservada
 
 ### Billing — RETAIN / LOCKED
 
@@ -120,7 +156,7 @@ O cluster vazio `delivery_requests` / `delivery_status_history` / `delivery_trac
 
 Não é órfão removível: possui provenance e callers canônicos. Não apagar por estar vazio.
 
-## 8. Plano lossless vigente
+## 9. Plano lossless vigente
 
 1. **SQL vazio + sem dependência/caller comprovados:** retirar em migration pequena com preflight, `RESTRICT` quando aplicável e postcondition; nunca `CASCADE` por conveniência.
 2. **Legado com dados:** bloquear browser/writes, preservar linhas, documentar sucessor; DROP somente após snapshot/export e certificação de retenção/dependências.
@@ -130,16 +166,16 @@ Não é órfão removível: possui provenance e callers canônicos. Não apagar 
 6. **Fixtures:** mutações apenas em targets aprovados e identidades marcadas; ausência de runner nunca vira PASS.
 7. **Types/source↔DB:** `types.generated.ts` é a única authority; nenhum snapshot manual paralelo.
 
-## 9. Próximas ações exatas
+## 10. Próximas ações exatas
 
-1. recuperar/ativar o runner self-hosted autorizado `acheguese-heavy-windows` e deixar a fila existente resolver sem duplicar dispatch desnecessário;
-2. após o runner voltar, executar o `Supabase Types Sync` contra o HEAD atual, materializar `src/integrations/supabase/types.generated.ts` e provar que o diff está reconciliado;
-3. remover `classified-images` pela Storage API oficial, com preflight/postcheck, usando uma capability oficial já autorizada — sem SQL direto e sem criar autoridade service-role paralela;
-4. obter execução real dos gates do G5 no HEAD atual;
-5. somente se os três itens de fechamento operacional acima concluírem sem novo blocker, atualizar este checkpoint para **G5 CLOSED**;
+1. obter um caminho oficial que materialize integralmente a geração viva em `src/integrations/supabase/types.generated.ts`, sem edição manual/parcial;
+2. remover `classified-images` pela Storage API oficial, com preflight/postcheck, usando capability oficial já autorizada — sem SQL direto e sem criar autoridade service-role paralela;
+3. recuperar execução efetiva do GitHub Actions e obter steps reais dos gates no HEAD então atual;
+4. após a materialização dos types, provar que o snapshot não contém os labels malformados e que o diff source↔DB foi reconciliado;
+5. somente se os três blockers operacionais acima concluírem sem novo blocker, atualizar este checkpoint para **G5 CLOSED**;
 6. apenas depois iniciar G6.
 
-## 10. Do not repeat
+## 11. Do not repeat
 
 - não refazer o inventário global de SECURITY DEFINER já fechado;
 - não reabrir as relações RLS-without-policy já classificadas;
@@ -152,7 +188,9 @@ Não é órfão removível: possui provenance e callers canônicos. Não apagar 
 - não reintroduzir `src/shared/types/database.types.ts`;
 - não reintroduzir `src/integrations/supabase/types.ts`;
 - não reconstruir manualmente o snapshot canônico a partir de saída de ferramenta truncável;
-- não trocar o runner autorizado do type sync só para driblar a indisponibilidade operacional;
+- não editar pontualmente `PostgrestVersion` ou os enums do snapshot gerado para simular regeneração;
+- não trocar o runner autorizado do type sync só para driblar indisponibilidade operacional;
+- não assumir que o blocker de Actions é somente o runner pesado: nesta execução até jobs `ubuntu-latest` falharam antes dos steps;
 - não reescrever migrations históricas já aplicadas para satisfazer o ratchet futuro;
 - não declarar o sync de types concluído enquanto o snapshot canônico não for regenerado/verificado;
 - não iniciar G6 enquanto houver item G5 BLOCKED/aberto.
