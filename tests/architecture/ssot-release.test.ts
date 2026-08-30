@@ -90,12 +90,17 @@ describe("release SSOT scripts", () => {
   it("keeps one canonical generated database type authority", () => {
     const canonicalTypes = "src/integrations/supabase/types.generated.ts";
     const retiredSharedSnapshot = "src/shared/types/database.types.ts";
+    const retiredIntegrationSnapshot = "src/integrations/supabase/types.ts";
     const generator = "tools/supabase/generate-supabase-types.ts";
 
     expect(existsSync(canonicalTypes), `${canonicalTypes} must remain canonical`).toBe(true);
     expect(
       existsSync(retiredSharedSnapshot),
       `${retiredSharedSnapshot} must not return as a second database authority`,
+    ).toBe(false);
+    expect(
+      existsSync(retiredIntegrationSnapshot),
+      `${retiredIntegrationSnapshot} must not return as a second generated database authority`,
     ).toBe(false);
 
     const generatorSource = readFileSync(generator, "utf8");
@@ -110,7 +115,11 @@ describe("release SSOT scripts", () => {
       const source = readFileSync(file, "utf8");
       return (
         source.includes("@/shared/types/database.types") ||
-        source.includes("shared/types/database.types")
+        source.includes("shared/types/database.types") ||
+        source.includes("@/integrations/supabase/types\"") ||
+        source.includes("@/integrations/supabase/types'") ||
+        source.includes('from "./types"') ||
+        source.includes("from './types'")
       );
     });
 
