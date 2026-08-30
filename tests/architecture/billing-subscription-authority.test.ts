@@ -49,6 +49,11 @@ const serverWriteAuthorityMigration = read(
 const entitlementBackfillMigration = read(
   "supabase/migrations/20260829175638_backfill_catalog_extra_entitlements.sql",
 );
+const transactionAuthorityMigrationName =
+  "20260830061046_harden_billing_transactions_browser_grants.sql";
+const transactionAuthorityMigration = read(
+  `supabase/migrations/${transactionAuthorityMigrationName}`,
+);
 
 const directTableCall = (table: string) =>
   new RegExp(`\\.from(?:<[^;]{0,500}>)?\\(\\s*["']${table}["']\\s*\\)`, "m");
@@ -156,6 +161,39 @@ describe("Billing subscription authority", () => {
     expect(serverWriteAuthorityMigration).toContain(
       'DROP POLICY IF EXISTS "Admins can manage subscriptions"',
     );
+  });
+
+  it("keeps billing transaction history browser-read-only and server-written", () => {
+    expect(billingService).toContain(".from('billing_transactions')");
+    expect(billingService).toContain(".select('*')");
+    expect(billingService).not.toMatch(directTableWrite("billing_transactions"));
+
+    expect(transactionAuthorityMigration).toContain(
+      "REVOKE ALL PRIVILEGES ON TABLE public.billing_transactions",
+    );
+    expect(transactionAuthorityMigration).toContain(
+      "FROM PUBLIC, anon, authenticated",
+    );
+    expect(transactionAuthorityMigration).toContain(
+      "GRANT SELECT ON TABLE public.billing_transactions TO authenticated",
+    );
+    expect(transactionAuthorityMigration).toContain(
+      "GRANT ALL PRIVILEGES ON TABLE public.billing_transactions TO service_role",
+    );
+
+    const laterGrantOffenders = readdirSync(resolve(root, "supabase/migrations"))
+      .filter(
+        (name) =>
+          name.endsWith(".sql") && name > transactionAuthorityMigrationName,
+      )
+      .filter((name) => {
+        const sql = read(`supabase/migrations/${name}`);
+        return /GRANT\s+(?:ALL(?:\s+PRIVILEGES)?|[^;]*\b(?:INSERT|UPDATE|DELETE)\b[^;]*)\s+ON\s+(?:TABLE\s+)?public\.billing_transactions\s+TO\s+[^;]*(?:\bPUBLIC\b|\banon\b|\bauthenticated\b)/i.test(
+          sql,
+        );
+      });
+
+    expect(laterGrantOffenders).toEqual([]);
   });
 
   it("keeps published catalog as the runtime source of plan data", () => {
