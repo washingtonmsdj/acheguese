@@ -22,10 +22,20 @@ export const PUBLIC_IMAGE_UPLOAD_BUCKETS = [
   MEDIA_STORAGE_BUCKETS.TRYON,
 ] as const;
 
+// Browser-side private storage primitives are intentionally limited to active
+// runtime owners. verification-documents remains a reserved private bucket and
+// stable storage:// reference namespace for Profile Verification, but G5
+// removed its dormant browser policies until an explicit brokered upload flow
+// is introduced and certified.
 export const PRIVATE_STORAGE_BUCKETS = [
   MEDIA_STORAGE_BUCKETS.SAFETY_EVIDENCE,
+] as const;
+
+export const RESERVED_PRIVATE_STORAGE_BUCKETS = [
   MEDIA_STORAGE_BUCKETS.VERIFICATION_DOCUMENTS,
 ] as const;
 
 export type PublicImageUploadBucket = (typeof PUBLIC_IMAGE_UPLOAD_BUCKETS)[number];
 export type PrivateStorageBucket = (typeof PRIVATE_STORAGE_BUCKETS)[number];
+export type ReservedPrivateStorageBucket =
+  (typeof RESERVED_PRIVATE_STORAGE_BUCKETS)[number];
