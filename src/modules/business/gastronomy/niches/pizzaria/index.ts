@@ -13,9 +13,9 @@ export type {
   PizzaValidationResult,
 } from "./types";
 
-export type { PizzaMenuItemConfig } from "./PizzaAdminService";
+export type { PizzaMenuItemConfig } from "@/core/business/niches/pizzaria/PizzaAdminService";
 
-export { PizzaAdminService } from "./PizzaAdminService";
+export { PizzaAdminService } from "@/core/business/niches/pizzaria/PizzaAdminService";
 export { PizzaCartItemBuilder } from "./PizzaCartItemBuilder";
 export { PizzaPricingService } from "./PizzaPricingService";
 export { PizzaValidationService } from "./PizzaValidationService";
