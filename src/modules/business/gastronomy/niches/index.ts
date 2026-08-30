@@ -17,9 +17,9 @@ export type {
   NicheFilters,
   NicheValidationResult,
   NicheKey,
-} from './types';
+} from '@/core/business/niches/types';
 
-export { NICHE_KEYS, NICHE_STATUS_PRIORITY } from './types';
+export { NICHE_KEYS, NICHE_STATUS_PRIORITY } from '@/core/business/niches/types';
 
 export {
   GASTRONOMY_NICHE_REGISTRY,

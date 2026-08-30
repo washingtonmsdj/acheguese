@@ -7,8 +7,13 @@
  * @version 1.0.0
  */
 
-import type { GastronomyNicheConfig, NicheFilters, NicheStatus, NicheRegistry } from './types';
-import { NICHE_STATUS_PRIORITY } from './types';
+import type {
+  GastronomyNicheConfig,
+  NicheFilters,
+  NicheStatus,
+  NicheRegistry,
+} from '@/core/business/niches/types';
+import { NICHE_STATUS_PRIORITY } from '@/core/business/niches/types';
 import { getRecordValue } from '@/shared/utils/recordLookup';
 
 // ── Presets ──────────────────────────────────────────────────────────────────
@@ -120,106 +125,79 @@ export function getSelectableNiches(): GastronomyNicheConfig[] {
   const niches = listNiches({ isSelectable: true });
 
   return niches.sort((a, b) => {
-    // Primeiro por status priority
     const statusDiff =
       NICHE_STATUS_PRIORITY[a.supportLevel] - NICHE_STATUS_PRIORITY[b.supportLevel];
     if (statusDiff !== 0) return statusDiff;
-
-    // Depois por displayOrder
     return a.displayOrder - b.displayOrder;
   });
 }
 
-/**
- * Nichos visíveis publicamente (aparecem no site/app).
- */
 export function getPublicNiches(): GastronomyNicheConfig[] {
   return listNiches({ isPublic: true });
 }
 
-/**
- * Nichos disponíveis para admin (incluindo beta).
- */
 export function getAdminNiches(): GastronomyNicheConfig[] {
   return listNiches({
     status: ['full_enabled', 'basic_enabled', 'beta_enabled'],
   });
 }
 
-/**
- * Nichos em beta (para desenvolvimento/teste).
- */
 export function getBetaNiches(): GastronomyNicheConfig[] {
   return listNiches({ status: 'beta_enabled' });
 }
 
-/**
- * Nichos completos (full_enabled).
- */
 export function getFullEnabledNiches(): GastronomyNicheConfig[] {
   return listNiches({ status: 'full_enabled' });
 }
 
-/**
- * Nichos básicos (basic_enabled).
- */
 export function getBasicEnabledNiches(): GastronomyNicheConfig[] {
   return listNiches({ status: 'basic_enabled' });
 }
 
-/**
- * Verifica se um nicho existe.
- */
 export function nicheExists(key: string): boolean {
   return key in GASTRONOMY_NICHE_REGISTRY;
 }
 
-/**
- * Verifica se um nicho tem uma capacidade específica.
- */
 export function hasCapability(nicheKey: string, capability: string): boolean {
   const niche = getNicheByKey(nicheKey);
   if (!niche) return false;
   return niche.enabledCapabilities.includes(capability as never);
 }
 
-/**
- * Verifica se um nicho é complexo (requer funcionalidades específicas).
- */
 export function isComplexNiche(nicheKey: string): boolean {
   const niche = getNicheByKey(nicheKey);
   if (!niche) return false;
   return niche.operationalType === 'complex';
 }
 
-/**
- * Verifica se uma seção de admin deve ser exibida para um nicho.
- */
 export function shouldShowAdminSection(nicheKey: string, section: string): boolean {
   const niche = getNicheByKey(nicheKey);
   if (!niche) return false;
 
-  // Se for nicho básico, apenas seções padrão
   if (niche.operationalType !== 'complex') {
-    const basicSections = ['basic_menu', 'variants', 'addons', 'combos', 'promotions', 'delivery_areas', 'operational_hours', 'order_management', 'analytics'];
+    const basicSections = [
+      'basic_menu',
+      'variants',
+      'addons',
+      'combos',
+      'promotions',
+      'delivery_areas',
+      'operational_hours',
+      'order_management',
+      'analytics',
+    ];
     if (basicSections.includes(section)) return true;
     return false;
   }
 
-  // Nichos complexos: verificar se a seção está habilitada
   return niche.adminSections.includes(section as never);
 }
 
-/**
- * Nicho padrão/fallback quando nenhum está selecionado.
- */
 export const DEFAULT_NICHE_KEY = 'lanches';
 
-/**
- * Obtém config do nicho ou fallback para padrão.
- */
 export function getNicheOrDefault(key?: string | null): GastronomyNicheConfig {
-  const defaultNiche = getRecordValue(GASTRONOMY_NICHE_REGISTRY, DEFAULT_NICHE_KEY) ?? lanchesNicheConfig;
+  const defaultNiche =
+    getRecordValue(GASTRONOMY_NICHE_REGISTRY, DEFAULT_NICHE_KEY) ?? lanchesNicheConfig;
   if (key && nicheExists(key)) {
     return getRecordValue(GASTRONOMY_NICHE_REGISTRY, key) ?? defaultNiche;
   }
