@@ -2,6 +2,7 @@
 
 Status: **EM EXECUÇÃO**.  
 HEAD de source consolidado antes deste checkpoint: `92081657de98d4eb618585abcb640d84212c0232`.  
+Main observado antes desta revalidação operacional: `994c2e3014b5df323492881f2e1e1e1f664dd870`.  
 Projeto Supabase: `xhdowzacfujckjelqhtd`.
 
 Este documento reconcilia o checklist mestre de G5 com as provas versionadas e o catálogo remoto vivo. Ele existe para impedir repetição de auditorias já fechadas e, ao mesmo tempo, não converter blockers operacionais em PASS.
@@ -31,7 +32,8 @@ Commits relevantes:
 - `993aa37c96fb02652076b2fc8d8ec4e40379148b` — remove `src/integrations/supabase/types.ts`, segundo snapshot gerado redundante;
 - `79fc84038904ab83ee8564cc499af501c56fb8fd` — ratchet de authority de database types restrito aos snapshots realmente aposentados;
 - `f6f22177bc395c0967790269453dfac3fa62422f` — ratchet fail-closed para migrations futuras;
-- `92081657de98d4eb618585abcb640d84212c0232` — reconcilia o SSOT Registry com `src/integrations/supabase/types.generated.ts` como única autoridade.
+- `92081657de98d4eb618585abcb640d84212c0232` — reconcilia o SSOT Registry com `src/integrations/supabase/types.generated.ts` como única autoridade;
+- `994c2e3014b5df323492881f2e1e1e1f664dd870` — consolida os blockers operacionais remanescentes do G5 antes desta revalidação.
 
 O runtime já importava `Database` de `types.generated.ts`; o gerador canônico `tools/supabase/generate-supabase-types.ts` também escreve nesse mesmo destino. O G5 agora impede o retorno de `src/shared/types/database.types.ts` e `src/integrations/supabase/types.ts` como autoridades paralelas.
 
@@ -70,7 +72,7 @@ Decisão:
 - remover apenas pela Storage API oficial;
 - repetir zero-objects/refs imediatamente antes da remoção e confirmar ausência depois.
 
-O conector Supabase disponível neste checkpoint não expõe operação oficial de delete de bucket. Portanto esse item permanece **BLOCKED por capability operacional**, não PASS e não falha de source.
+A revalidação de capability de 2026-08-30 confirmou que o conector Supabase instalado não expõe operação oficial equivalente a `emptyBucket`/`deleteBucket`, e a busca de plugins não encontrou executor adicional apropriado. Portanto esse item permanece **BLOCKED por capability operacional**, não PASS e não falha de source. Não será criado um segundo mecanismo service-role apenas para contornar esse blocker.
 
 ## 5. Canonical database types: estrutura fechada, snapshot vivo ainda pendente
 
@@ -83,17 +85,22 @@ Authority atual:
 
 A geração oficial conectada retornou schema com `PostgrestVersion: "14.5"`; o snapshot canônico comprometido observado antes do sync ainda declarava `14.4`. Logo não é correto declarar o contrato remoto sincronizado antes de uma regeneração materializada e verificável.
 
-Workflow `Supabase Types Sync`, run `33308805361`: revalidado em 2026-08-30 e continua **queued** no runner autorizado. O workflow ainda aponta para o HEAD antigo que o disparou (`06e452d...`), portanto não serve como prova de verificação dos commits novos deste checkpoint.
+A capability conectada `generate_typescript_types` consegue executar a geração viva, porém sua resposta não é exposta como arquivo transferível (`file_id`) nem existe capability de export/download para esse resultado. O materializador de arquivos disponível aceita apenas arquivos/referências reais, não uma resposta textual grande de outra ferramenta. Portanto não é seguro reconstruir manualmente ou parcialmente `types.generated.ts` a partir de saída truncável.
+
+Workflow `Supabase Types Sync`, run `33308805361`: revalidado em 2026-08-30 e continua **queued**, sem steps/logs iniciados, apontando para o HEAD antigo que o disparou (`06e452d...`). O histórico do próprio workflow mostra o commit `06e452d786b6b8f055859b0c4e52bc55260e336f` com mensagem `ci(g5): run type sync on authorized runner`; portanto trocar o workflow para outro runner apenas para driblar a fila contrariaria uma decisão explícita do G5. O runner autorizado deve ser recuperado/ativado, e só então o sync deve ser executado contra o HEAD atual.
 
 ## 6. CI / gates
 
-Os jobs de GitHub Actions disparados após os cortes de source falharam antes de executar steps (`runner_id=0` / steps vazios na inspeção registrada). Isso é evidência de indisponibilidade de execução do CI, não evidência de teste funcional vermelho.
+Os jobs de GitHub Actions disparados após os cortes de source falharam antes de executar steps. No HEAD `994c2e3014b5df323492881f2e1e1e1f664dd870`, o run `33310303083` do `SSOT Territorial Tests` apresentou job `99255773261` com `steps=[]` e sem log de job disponível. Isso é evidência de indisponibilidade de execução do CI, não evidência de teste funcional vermelho.
+
+O `Supabase Types Sync` run `33308805361` também permanece queued no runner self-hosted autorizado `acheguese-heavy-windows`, sem início de steps. Não criar dispatch duplicado enquanto a causa de indisponibilidade do runner persistir.
 
 Consequência:
 
 - não marcar testes como PASS sem execução real;
 - não reverter source apenas por um job que não chegou a executar;
-- assim que runner/Actions voltar a executar steps, rodar os gates do G5 e o sync canônico de types sobre o HEAD atual.
+- não trocar o runner autorizado apenas para obter badge verde;
+- assim que o runner autorizado voltar a executar steps, rodar o sync canônico de types sobre o HEAD atual e os gates do G5.
 
 ## 7. Legados SQL: decisão preservada
 
@@ -125,11 +132,12 @@ Não é órfão removível: possui provenance e callers canônicos. Não apagar 
 
 ## 9. Próximas ações exatas
 
-1. materializar a geração viva em `src/integrations/supabase/types.generated.ts` e provar que o diff está reconciliado;
-2. remover `classified-images` pela Storage API oficial, com preflight/postcheck;
-3. obter execução real dos gates do G5 no HEAD atual;
-4. somente se os três itens acima fecharem sem novo blocker, atualizar este checkpoint para **G5 CLOSED**;
-5. apenas depois iniciar G6.
+1. recuperar/ativar o runner self-hosted autorizado `acheguese-heavy-windows` e deixar a fila existente resolver sem duplicar dispatch desnecessário;
+2. após o runner voltar, executar o `Supabase Types Sync` contra o HEAD atual, materializar `src/integrations/supabase/types.generated.ts` e provar que o diff está reconciliado;
+3. remover `classified-images` pela Storage API oficial, com preflight/postcheck, usando uma capability oficial já autorizada — sem SQL direto e sem criar autoridade service-role paralela;
+4. obter execução real dos gates do G5 no HEAD atual;
+5. somente se os três itens de fechamento operacional acima concluírem sem novo blocker, atualizar este checkpoint para **G5 CLOSED**;
+6. apenas depois iniciar G6.
 
 ## 10. Do not repeat
 
@@ -140,8 +148,11 @@ Não é órfão removível: possui provenance e callers canônicos. Não apagar 
 - não dropar legados Billing com dados;
 - não apagar `verification-documents` apenas porque está vazio;
 - não contornar `storage.protect_delete()` por SQL;
+- não criar um executor service-role paralelo apenas para apagar `classified-images`;
 - não reintroduzir `src/shared/types/database.types.ts`;
 - não reintroduzir `src/integrations/supabase/types.ts`;
+- não reconstruir manualmente o snapshot canônico a partir de saída de ferramenta truncável;
+- não trocar o runner autorizado do type sync só para driblar a indisponibilidade operacional;
 - não reescrever migrations históricas já aplicadas para satisfazer o ratchet futuro;
 - não declarar o sync de types concluído enquanto o snapshot canônico não for regenerado/verificado;
 - não iniciar G6 enquanto houver item G5 BLOCKED/aberto.
