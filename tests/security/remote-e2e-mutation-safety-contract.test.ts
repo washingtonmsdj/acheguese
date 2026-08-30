@@ -6,6 +6,7 @@ const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), 'utf8');
 
 const operationalEnv = read('tests/helpers/operational-env.ts');
+const educationSetup = read('tests/helpers/education-setup.ts');
 const playwrightConfig = read('playwright.config.ts');
 const slugHistoryValidator = read('tools/supabase/validate-slug-history-final.ts');
 const networkSeeder = read('tools/seeds/seed-e2e-network.ts');
@@ -22,6 +23,16 @@ describe('Remote E2E mutation safety integration', () => {
       "const SAFE_MUTATION_TARGET_LABEL = 'approved isolated E2E mutation target'",
     );
     expect(operationalEnv).not.toContain("readEnv('SUPABASE_URL')");
+  });
+
+  it('stamps operational auth and business fixtures with technical provenance', () => {
+    expect(operationalEnv).toContain('E2E_AUTH_FIXTURE_PROVENANCE');
+    expect(operationalEnv).toContain("acheguese_fixture: 'operational-e2e'");
+    expect(operationalEnv).toContain("source: 'e2e'");
+    expect(operationalEnv).toContain("source_kind: 'technical_fixture'");
+    expect(operationalEnv).toContain('withE2EAdminCreateUserProvenance');
+    expect(operationalEnv).toContain('withE2ESignUpProvenance');
+    expect(operationalEnv).toContain('withE2EBusinessFixtureProvenance');
   });
 
   it('blocks known mutating Playwright suites before hooks execute on unsafe targets', () => {
@@ -44,6 +55,19 @@ describe('Remote E2E mutation safety integration', () => {
     expect(playwrightConfig).toContain('education[\\\\/].*\\.spec\\.ts');
     expect(playwrightConfig).not.toContain('logout-authenticated\\.spec\\.ts');
     expect(playwrightConfig).not.toContain('territory-home-operational\\.spec\\.ts');
+  });
+
+  it('keeps Education mutations bound to explicit credentials and technical Business provenance', () => {
+    expect(educationSetup).toContain('resolveTechnicalBusiness');
+    expect(educationSetup).toContain(
+      'business_data is not marked source=e2e/source_kind=technical_fixture',
+    );
+    expect(educationSetup).toContain(".eq('user_id', user.id)");
+    expect(educationSetup).toContain(".in('role', ['owner', 'admin'])");
+    expect(educationSetup).toContain('getE2ECredentials()');
+    expect(educationSetup).not.toContain('updateUserById');
+    expect(educationSetup).not.toContain('TestPass123!');
+    expect(educationSetup).not.toContain('getUserById(member.user_id)');
   });
 
   it('requires an explicit technical business fixture for slug-history mutation', () => {
