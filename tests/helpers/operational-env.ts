@@ -11,10 +11,16 @@ type DescribeLike = {
   skip: (name: string, suite: OperationalSuite) => void;
 };
 type OperationalClientKind = 'anon' | 'admin';
-
 type BusinessDataFixturePayload = Record<string, unknown>;
+type JsonRecord = Record<string, unknown>;
 
 export const E2E_BUSINESS_FIXTURE_PROVENANCE = {
+  source: 'e2e',
+  source_kind: 'technical_fixture',
+} as const;
+
+export const E2E_AUTH_FIXTURE_PROVENANCE = {
+  acheguese_fixture: 'operational-e2e',
   source: 'e2e',
   source_kind: 'technical_fixture',
 } as const;
@@ -48,25 +54,68 @@ function readEnv(key: string): string | undefined {
   return process.env[key] || viteEnv?.[key];
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+function isRecord(value: unknown): value is JsonRecord {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function mergeRecord(value: unknown, addition: JsonRecord): JsonRecord {
+  return {
+    ...(isRecord(value) ? value : {}),
+    ...addition,
+  };
 }
 
 export function withE2EBusinessFixtureProvenance<T>(payload: T): T {
   const enrich = (row: unknown): unknown => {
     if (!isRecord(row)) return row;
 
-    const metadata = isRecord(row.metadata) ? row.metadata : {};
     return {
       ...row,
-      metadata: {
-        ...metadata,
-        ...E2E_BUSINESS_FIXTURE_PROVENANCE,
-      },
+      metadata: mergeRecord(row.metadata, E2E_BUSINESS_FIXTURE_PROVENANCE),
     } satisfies BusinessDataFixturePayload;
   };
 
   return (Array.isArray(payload) ? payload.map(enrich) : enrich(payload)) as T;
+}
+
+export function isE2EAuthFixtureUser(user: {
+  app_metadata?: Record<string, unknown>;
+  user_metadata?: Record<string, unknown>;
+}): boolean {
+  const app = user.app_metadata ?? {};
+  const metadata = user.user_metadata ?? {};
+
+  return (
+    (app.acheguese_fixture === E2E_AUTH_FIXTURE_PROVENANCE.acheguese_fixture ||
+      metadata.acheguese_fixture === E2E_AUTH_FIXTURE_PROVENANCE.acheguese_fixture) &&
+    (app.source === E2E_AUTH_FIXTURE_PROVENANCE.source ||
+      metadata.source === E2E_AUTH_FIXTURE_PROVENANCE.source) &&
+    (app.source_kind === E2E_AUTH_FIXTURE_PROVENANCE.source_kind ||
+      metadata.source_kind === E2E_AUTH_FIXTURE_PROVENANCE.source_kind)
+  );
+}
+
+function withE2EAdminCreateUserProvenance(payload: unknown): unknown {
+  if (!isRecord(payload)) return payload;
+
+  return {
+    ...payload,
+    app_metadata: mergeRecord(payload.app_metadata, E2E_AUTH_FIXTURE_PROVENANCE),
+    user_metadata: mergeRecord(payload.user_metadata, E2E_AUTH_FIXTURE_PROVENANCE),
+  };
+}
+
+function withE2ESignUpProvenance(payload: unknown): unknown {
+  if (!isRecord(payload)) return payload;
+
+  const options = isRecord(payload.options) ? payload.options : {};
+  return {
+    ...payload,
+    options: {
+      ...options,
+      data: mergeRecord(options.data, E2E_AUTH_FIXTURE_PROVENANCE),
+    },
+  };
 }
 
 function wrapBusinessDataQueryBuilder<T extends object>(builder: T): T {
@@ -84,6 +133,48 @@ function wrapBusinessDataQueryBuilder<T extends object>(builder: T): T {
       return typeof value === 'function' ? value.bind(target) : value;
     },
   });
+}
+
+function wrapOperationalAuthClient(
+  client: OperationalSupabaseClient,
+): OperationalSupabaseClient {
+  const authProxy = new Proxy(client.auth, {
+    get(target, property, receiver) {
+      if (property === 'admin') {
+        const adminApi = target.admin;
+        return new Proxy(adminApi, {
+          get(adminTarget, adminProperty, adminReceiver) {
+            const adminValue = Reflect.get(adminTarget, adminProperty, adminReceiver);
+            if (adminProperty === 'createUser' && typeof adminValue === 'function') {
+              return (payload: unknown) =>
+                Reflect.apply(adminValue, adminTarget, [
+                  withE2EAdminCreateUserProvenance(payload),
+                ]);
+            }
+            return typeof adminValue === 'function'
+              ? adminValue.bind(adminTarget)
+              : adminValue;
+          },
+        });
+      }
+
+      const value = Reflect.get(target, property, receiver);
+      if (property === 'signUp' && typeof value === 'function') {
+        return (payload: unknown) =>
+          Reflect.apply(value, target, [withE2ESignUpProvenance(payload)]);
+      }
+
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
+
+  return new Proxy(client, {
+    get(target, property, receiver) {
+      if (property === 'auth') return authProxy;
+      const value = Reflect.get(target, property, receiver);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  }) as OperationalSupabaseClient;
 }
 
 function wrapOperationalBusinessDataClient(
@@ -121,12 +212,13 @@ function createOperationalClient(
     },
   });
 
-  const shouldAttachFixtureProvenance =
+  const authWrappedClient = wrapOperationalAuthClient(client);
+  const shouldAttachBusinessFixtureProvenance =
     kind === 'admin' || hasApprovedOperationalMutationTarget(supabaseUrl);
 
-  return shouldAttachFixtureProvenance
-    ? wrapOperationalBusinessDataClient(client)
-    : client;
+  return shouldAttachBusinessFixtureProvenance
+    ? wrapOperationalBusinessDataClient(authWrappedClient)
+    : authWrappedClient;
 }
 
 export function getOperationalEnv(): OperationalEnv {
