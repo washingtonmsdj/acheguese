@@ -8,6 +8,9 @@ const read = (path: string) => readFileSync(join(root, path), "utf8");
 const additive = read(
   "supabase/migrations/20260809184409_create_authoritative_community_interest_registration.sql",
 );
+const legacyVerificationHardening = read(
+  "supabase/migrations/20260830080454_lock_community_interest_legacy_verification_flag_g5.sql",
+);
 const cutoverPath =
   "docs/09-reference/migrations-pending/20260810152014_finalize_community_interest_cutover.sql";
 const cutover = read(cutoverPath);
@@ -62,7 +65,7 @@ describe("Community Interest ADDITIVE compatibility contract", () => {
     expect(additive).toContain("community_interest_admin_delete");
   });
 
-  it("preserves exactly the deployed legacy insert columns", () => {
+  it("preserves exactly the deployed legacy insert columns in the additive baseline", () => {
     expect(grantedLegacyColumns(additive)).toEqual(LEGACY_INSERT_COLUMNS);
     expect(additive).toContain(
       "CREATE POLICY community_interest_legacy_insert",
@@ -70,7 +73,7 @@ describe("Community Interest ADDITIVE compatibility contract", () => {
     expect(additive).toContain("TEMPORARY LEGACY COMPATIBILITY");
   });
 
-  it("keeps server-owned and administrative fields outside the legacy grant", () => {
+  it("keeps server-owned and administrative fields outside the legacy baseline grant", () => {
     const granted = grantedLegacyColumns(additive);
     expect(granted).not.toContain("id");
     expect(granted).not.toContain("user_id");
@@ -81,6 +84,40 @@ describe("Community Interest ADDITIVE compatibility contract", () => {
     expect(granted).not.toContain("created_at");
     expect(granted).not.toContain("updated_at");
     expect(additive).toMatch(/user_id IS NULL[\s\S]*admin_status = 'new'/);
+  });
+
+  it("locks broker-owned Turnstile provenance during the compatibility window", () => {
+    expect(legacyVerificationHardening).toMatch(
+      /revoke\s+insert\s*\(turnstile_verified\)[\s\S]*?from\s+anon,\s*authenticated/i,
+    );
+    expect(legacyVerificationHardening).toContain(
+      "turnstile_verified = false",
+    );
+    expect(legacyVerificationHardening).toContain(
+      "browser can still set turnstile_verified",
+    );
+
+    const later = readdirSync(join(root, "supabase/migrations"))
+      .filter(
+        (name) =>
+          name.endsWith(".sql") &&
+          name >
+            "20260830080454_lock_community_interest_legacy_verification_flag_g5.sql",
+      )
+      .map((name) => ({ name, sql: read(join("supabase/migrations", name)) }));
+
+    const regressions = later
+      .filter(({ sql }) =>
+        /grant\s+insert\s*\([\s\S]*?turnstile_verified[\s\S]*?\)\s+on\s+(?:table\s+)?public\.community_interest_registrations\s+to\s+(?:anon|authenticated)/i.test(
+          sql,
+        ),
+      )
+      .map(({ name }) => name);
+
+    expect(
+      regressions,
+      "browser roles must not regain authority to assert Turnstile verification",
+    ).toEqual([]);
   });
 
   it("does not expose anonymous SELECT, UPDATE or DELETE", () => {
