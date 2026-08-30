@@ -14,7 +14,7 @@ import { useEducationProfile } from '../hooks/useEducationProfile';
 import { useEducationLeads } from '../hooks/useEducationLeads';
 import { useLeadPipeline } from '../hooks/useLeadPipeline';
 import { EducationPipelineView } from '../components/EducationPipelineView';
-import type { EducationLeadStatus } from '../types';
+import type { EducationLeadStatus } from '@/core/education';
 
 export function EducationLeadsPage() {
   const { businessId } = useParams<{ businessId: string }>();

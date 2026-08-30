@@ -23,7 +23,7 @@ import type {
   SchoolBasicResourceKey,
   SchoolEquipmentFeatureKey,
   SchoolFacilityFeatureKey,
-} from "../types";
+} from "@/core/education";
 
 export const NICHE_ICONS: Record<string, LucideIcon> = {
   regular_school: School,

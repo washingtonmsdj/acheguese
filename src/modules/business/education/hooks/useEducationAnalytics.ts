@@ -9,7 +9,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { EducationSubscriptionService } from '../services/education-subscription.service';
-import * as educationQueries from '../services/education.queries';
+import * as educationQueries from '@/core/education/services/education.queries';
 import { logger } from '@/shared/utils/logger';
 
 // ============================================================
