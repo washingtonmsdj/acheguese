@@ -1,28 +1,32 @@
-# G5 — Inventário de `SECURITY DEFINER` e grants — 2026-08-30
+# G5 — `SECURITY DEFINER`, RPCs e authority — 2026-08-30
 
-## Escopo
+## Status
 
-Este corte continua a fase G5 a partir de `G5_RLS_GRANTS_AUDIT_2026-08-30.md` e executa a prioridade de inventariar funções `SECURITY DEFINER` application-owned no schema `public` por role antes de qualquer revogação.
+`funções/RPCs e authority`: **CLOSED** no snapshot auditado em 2026-08-30.
 
-A regra permanece fail-closed e provenance-first: alerta de Advisor não autoriza `REVOKE` por heurística. O objetivo é distinguir gateways intencionais, funções trigger-only e grants excessivos comprovados.
+Este fechamento cobre a superfície application-owned de funções privilegiadas, grants de execução, boundaries internos de autorização e provenance dos principais gateways browser/server. Ele não certifica CI hosted, não substitui testes same-SHA de G7 e não autoriza revogações em objetos pertencentes a extensões.
 
-## Snapshot remoto
+## 1. Snapshot remoto final
 
-Consulta executada em 2026-08-30 contra o projeto Supabase conectado do Achegue-se, excluindo funções pertencentes a extensões por `pg_depend`/`pg_extension`.
+A fotografia foi refeita diretamente no projeto Supabase conectado, excluindo funções extension-owned por `pg_depend` / `pg_extension`.
 
 | métrica | quantidade |
 | --- | ---: |
-| `SECURITY DEFINER` application-owned em `public` | 241 |
+| `SECURITY DEFINER` application-owned em `public` | 239 |
 | executáveis por `anon` | 6 |
 | executáveis por `authenticated` | 68 |
-| executáveis por `service_role` | 235 |
-| `authenticated` sem sinal óbvio de authority/delegação na triagem ampla | 0 |
+| executáveis por `service_role` | 212 |
+| `EXECUTE` efetivo concedido a `PUBLIC` | 0 |
 
-A triagem ampla marcou como sinais de authority/delegação referências a autenticação (`auth.uid()`), checks administrativos, active-profile ownership, delegação para helpers `private.*` ou tratamento explícito de `service_role`. O resultado zero não certifica funcionalmente as 68 funções, mas elimina a hipótese de existir uma classe óbvia de `SECURITY DEFINER` browser-exposed totalmente sem boundary interno.
+### Correção do inventário inicial
 
-## Allowlist anônima
+O primeiro inventário desta mesma data registrou 241 definers application-owned e 235 executáveis por `service_role`. Esses números eram válidos naquele corte intermediário, mas ficaram desatualizados depois das migrations G5 que retiraram helpers órfãos e execução direta de trigger functions.
 
-As seis funções application-owned executáveis por `anon` coincidem com a allowlist já congelada por `tests/security/anonymous-security-definer-allowlist.test.ts`:
+**O snapshot acima (239 / 6 / 68 / 212 / 0) é a fotografia de fechamento deste item.**
+
+## 2. Superfície anônima
+
+As seis funções application-owned executáveis por `anon` permanecem exatamente na allowlist governada por `tests/security/anonymous-security-definer-allowlist.test.ts`:
 
 - `get_community_poll_for_post(uuid)`;
 - `get_professional_trust_reputation(uuid)`;
@@ -31,91 +35,187 @@ As seis funções application-owned executáveis por `anon` coincidem com a allo
 - `profile_public_territory_projection(uuid)`;
 - `track_analytics_event(...)`.
 
-Não foi observada expansão da superfície anônima neste snapshot.
+O ratchet também impede `GRANT EXECUTE ... TO PUBLIC` e novas expansões anônimas fora da allowlist auditada.
 
-## Funções sem grant para `service_role`
+**Classificação: superfície pública deliberada e governada; sem expansão observada.**
 
-A diferença entre 241 application-owned e 235 executáveis por `service_role` foi inspecionada individualmente. São seis funções:
+## 3. Funções sem `service_role`
 
-### `audit_user_subscription_changes()`
+No snapshot final existem 27 definers application-owned sem `EXECUTE` para `service_role`.
 
-- ACL remota: somente owner (`postgres`);
-- tipo: trigger function;
-- `search_path` explícito;
-- provenance em migrations de Billing;
-- não é endpoint RPC para browser.
+### 3.1 Trigger-only — 22 funções
 
-**Classificação: TRIGGER-ONLY / sem necessidade de grant direto para `service_role`.**
+Vinte e duas são trigger functions sem necessidade de RPC direto. Entre elas:
 
-### `cast_community_poll_vote(uuid, uuid, uuid)`
+- `audit_education_lead_status_change()`;
+- `audit_user_subscription_changes()`;
+- `create_professional_lead_created_event()`;
+- `enforce_pizza_menu_item_business_consistency()`;
+- `fn_record_profile_username_history()`;
+- `handle_new_user()`;
+- `initialize_notification_preferences()`;
+- `initialize_user_free_subscription()`;
+- `initialize_user_mfa_status()`;
+- `log_role_change()`;
+- `log_slug_change()`;
+- `record_signup_terms_acceptance()`;
+- `sync_event_review_helpful_count()`;
+- `sync_gastronomy_plan_tier()`;
+- `sync_question_answer_likes_count()`;
+- `sync_question_answers_count()`;
+- `sync_vaga_application_count()`;
+- `trigger_start_dispatch()`;
+- `update_business_favorites_count()`;
+- `update_business_recommendations_count()`;
+- `update_review_helpfulness_counts()`;
+- `validate_profile_link_same_account()`.
 
-- ACL remota: `authenticated`;
-- exige `auth.uid()`;
-- exige ownership do active profile via `private.auth_owns_active_profile(...)`;
-- `SET search_path = ''`;
-- caller/authority congelados em `tests/security/community-poll-authority-security.test.ts`.
+A ausência de grant para `service_role` é least-privilege coerente: essas funções são invocadas pelo mecanismo de trigger, não por caller RPC.
 
-**Classificação: AUTHENTICATED COMMAND / least-privilege intencional.**
+### 3.2 Gateways deliberados — 5 funções
 
-### `create_post_with_poll(jsonb)`
+As cinco restantes são endpoints cuja ACL limitada é intencional:
 
-- ACL remota: `authenticated`;
-- exige `auth.uid()` e valida payload/ownership no command;
-- `SET search_path = ''`;
-- o teste de autoridade exige explicitamente grant somente para `authenticated`.
+- `create_post_with_poll(jsonb)` — command autenticado com payload/ownership governados;
+- `cast_community_poll_vote(uuid, uuid, uuid)` — command autenticado com active-profile ownership;
+- `get_community_poll_for_post(uuid)` — read público de Poll visível;
+- `has_current_active_ban()` — self-read estrito de `auth.uid()`;
+- `list_community_social_audit_events(...)` — reader administrativo autenticado com admin guard.
 
-**Classificação: AUTHENTICATED COMMAND / least-privilege intencional.**
+Conceder `service_role` genericamente a essas funções não resolve nenhum problema provado e aumentaria ACL sem necessidade.
 
-### `get_community_poll_for_post(uuid)`
+## 4. Revisão das 68 funções acessíveis a `authenticated`
 
-- ACL remota: `anon`, `authenticated`;
-- pertence à allowlist anônima governada;
-- limita leitura a Post público visível ou contexto owner/admin;
-- `SET search_path = ''`;
-- o teste de autoridade congela a exposição `anon + authenticated`.
+A triagem ampla foi repetida por sinais de boundary interno: `auth.uid()`, `auth.role()`, active-profile derivation, helpers `private.*`, ownership explícito ou branch `service_role`.
 
-**Classificação: PUBLIC READ GATEWAY / exposição intencional e fail-closed por visibilidade.**
+Somente **quatro** funções autenticadas não possuem esses sinais textuais porque são, por desenho, projeções públicas:
 
-### `has_current_active_ban()`
+- `get_professional_trust_reputation(uuid)`;
+- `get_ride_rating_summary(uuid)`;
+- `get_shared_ride_safety_data(text)`;
+- `profile_public_territory_projection(uuid)`.
 
-- ACL remota: `authenticated`;
-- exige `auth.uid()`;
-- lê apenas o ban ativo do próprio usuário autenticado;
-- `search_path` e `statement_timeout` explícitos;
-- caller ativo em `src/core/trust/services/ActiveBanReader.ts`.
+As quatro já pertencem à allowlist anônima. Portanto, não representam gateways autenticados sem boundary; são reads públicos deliberados.
 
-**Classificação: AUTHENTICATED SELF-READ GATEWAY / least-privilege intencional.**
+Não permaneceu classe conhecida de `SECURITY DEFINER` browser-exposed totalmente sem authority boundary ou contrato público explícito.
 
-### `list_community_social_audit_events(...)`
+## 5. Famílias de maior risco revisadas manualmente
 
-- ACL remota: `authenticated`;
-- exige `auth.uid()` e `private.is_admin_user(auth.uid())`;
-- `search_path` e `statement_timeout` explícitos;
-- authority congelada por `tests/security/admin-definer-authority-security.test.ts` e owner documentado em `AUDIT_MODERATION_SSOT.md`.
+Além da triagem textual, os writers/readers mais sensíveis foram inspecionados por definição remota.
 
-**Classificação: AUTHENTICATED ADMIN GATEWAY / least-privilege intencional.**
+### Notifications
 
-## Decisão
+`create_notification(...)`:
 
-Nenhum grant foi alterado neste corte.
+- para browser, exige autenticação;
+- `p_user_id` precisa ser igual a `auth.uid()`;
+- cross-user fica reservado ao `service_role`;
+- valida payload, prioridade, URL, metadata e dedupe.
 
-A ausência de `service_role` nas seis funções acima não é, por si só, drift: quatro são gateways deliberadamente limitados ao ator browser autenticado/público, uma é trigger-only e uma é leitura administrativa autenticada. Conceder `service_role` genericamente aumentaria ACL sem necessidade provada; revogar `authenticated`/`anon` quebraria contracts explicitamente governados.
+**Sem BOLA cross-user observada.**
 
-Também não há evidência neste inventário que justifique `REVOKE EXECUTE` em massa das 68 funções acessíveis a `authenticated`.
+### Community observability
 
-## Estado G5 após este corte
+`get_community_rpc_operational_metrics(...)` e `get_community_rpc_slo_status(...)`:
 
-- inventário global de `SECURITY DEFINER` por role: **executado neste snapshot**;
-- allowlist `anon`: **sem expansão observada**;
-- exceções sem `service_role`: **classificadas**;
-- revogação em massa: **rejeitada por ausência de evidência**;
-- validação funcional/caller por família: **continua**;
-- `RLS e grants` global: **ainda aberto**;
-- `funções/RPCs e authority` global: **ainda aberto**.
+- apesar do grant para `authenticated`, ambos exigem admin via `private.is_admin_user(auth.uid())` ou contexto `service_role`;
+- leem telemetria global somente após o guard.
 
-## Próximo corte seguro
+**Sem exposição global para usuário autenticado comum.**
 
-1. continuar a provenance das relações `rls_enabled_no_policy` remanescentes e separar ACTIVE/SERVER-OWNED de LEGACY/ORPHAN;
-2. cruzar RPCs restantes com caller atual e owner canônico, priorizando nomes já marcados deprecated/dormant;
-3. consolidar o residual extension-owned (`postgis`/`spatial_ref_sys`) sem alterar diretamente objetos da extensão;
-4. só produzir migration quando houver exposição indevida ou objeto legado comprovado por provenance.
+### Mobility dispatch summary
+
+`get_driver_dispatch_summaries(uuid[])`:
+
+- exige autenticação;
+- limita até 100 IDs;
+- retorna somente capabilities/rating operacional;
+- só retorna drivers online, disponíveis e sem ride ativo;
+- caller está no SSOT de queries/dispatch de Mobility.
+
+**Classificação: authenticated dispatch read model, sem PII sensível retornada.**
+
+### Coverage / Territory writers
+
+`replace_entity_coverage(...)`, `remove_entity_coverage(...)` e `update_entity_coverage_status(...)` delegam a `private.require_coverage_entity_write(...)`.
+
+O helper privado:
+
+- deriva active profile;
+- permite apenas tipos de entidade enumerados;
+- exige ownership por domínio ou autoridade administrativa/service role;
+- não é executável diretamente por browser.
+
+**Sem writer paralelo ou bypass de ownership observado.**
+
+### Profile verification
+
+`request_profile_verification(...)`:
+
+- exige `private.auth_owns_active_profile(p_profile_id)`;
+- impede operar sobre profile de terceiro;
+- restringe referência de documento ao prefixo do próprio profile;
+- audita submit/resubmit.
+
+**Sem spoofing de profile observado.**
+
+### Safety
+
+A família Safety auditada inclui share público, revoke e updates de alert/incident.
+
+- bearer share só retorna ride não terminal enquanto token está ativo e não expirado;
+- revoke exige que o criador pertença ao `auth.uid()` atual;
+- parâmetros `p_actor_profile_id` são cruzados contra `auth.uid()`;
+- transitions administrativas exigem role administrativa onde aplicável.
+
+**O actor declarado nunca substitui a identidade autenticada.**
+
+### Favorites / self-service
+
+`get_current_user_business_favorite_ids`, `is_current_user_business_favorite` e `set_current_user_business_favorite` derivam o usuário exclusivamente de `auth.uid()` e não aceitam identidade de cliente.
+
+**Sem spoofing de owner.**
+
+### Analytics
+
+`track_analytics_event(...)` permanece público por contrato, mas:
+
+- bloqueia `p_user_id` diferente de `auth.uid()` para callers não-service-role;
+- reserva eventos operacionais sensíveis ao `service_role`;
+- exige sessão para tráfego anônimo;
+- aplica rate limit;
+- impede browser de persistir IP, user-agent, referrer e coordenadas como dados privilegiados;
+- protege ownership de sessão existente.
+
+**A exposição anônima continua deliberada e bounded.**
+
+## 6. Ratchets existentes
+
+O fechamento não cria uma segunda autoridade de teste. Ele reutiliza os contratos já versionados:
+
+- `tests/security/anonymous-security-definer-allowlist.test.ts` — allowlist anon + proibição de grant `PUBLIC`;
+- `tests/security/admin-definer-authority-security.test.ts` — nove gateways administrativos precisam manter `private.is_admin_user(auth.uid())`;
+- `tests/security/community-poll-authority-security.test.ts` — ownership, visibilidade e ACL do command/read de Poll;
+- testes de segurança específicos das famílias continuam sendo authority onde já existem.
+
+As migrations G5 posteriores ao inventário inicial também retiraram execução direta desnecessária de trigger functions e helpers órfãos, explicando a redução do snapshot atual.
+
+## 7. Decisão
+
+Nenhum novo `GRANT` ou `REVOKE` foi aplicado neste fechamento.
+
+A auditoria encontrou diferenças de ACL deliberadas, não uma classe residual de privileged RPC sem autorização. Alterar grants apenas para silenciar Advisor criaria risco de regressão e contrariaria a política provenance-first do G5.
+
+`funções/RPCs e authority`: **CLOSED**.
+
+## 8. Fora de escopo deste fechamento
+
+Este item não declara:
+
+- que as 17 relações RLS sem policy estão erradas; elas possuem provenance separada e fail-closed;
+- que objetos extension-owned como PostGIS devem ser alterados;
+- que migration history / schema drift global está encerrado;
+- que CI hosted executou os testes deste HEAD;
+- que G6/G7 podem ser iniciados antes dos demais checkboxes G5.
+
+A certificação same-SHA continua pertencendo a G7.
