@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useSessionContext } from '@/core/session';
 import { logger } from '@/shared/utils/logger';
-import { EventEngagementService } from '../services/EventEngagementService';
+import { EventEngagementService } from '@/core/community-events/services/EventEngagementService';
 
 export function useFavorites() {
   const [favorites, setFavorites] = useState<string[]>([]);

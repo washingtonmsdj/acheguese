@@ -10,7 +10,7 @@ import type { Event } from '../types';
 import {
   EventEngagementService,
   type EventReminderTime,
-} from '../services/EventEngagementService';
+} from '@/core/community-events/services/EventEngagementService';
 
 interface EventRemindersProps {
   event: Event;

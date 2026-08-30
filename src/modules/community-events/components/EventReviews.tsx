@@ -10,7 +10,7 @@ import {
   EVENT_REVIEW_LIMITS,
   validateEventReviewInput,
   type EventReview,
-} from '../services/EventEngagementService';
+} from '@/core/community-events/services/EventEngagementService';
 
 type SubmitReviewInput = Pick<EventReview, 'rating' | 'comment'>;
 
