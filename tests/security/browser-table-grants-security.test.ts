@@ -11,6 +11,8 @@ const NO_POLICY_TABLES_MIGRATION =
   "20260819082244_revoke_browser_grants_from_no_policy_tables.sql";
 const VAGA_APPLICATIONS_HARDENING =
   "20260821001800_restrict_vaga_applications_browser_authority.sql";
+const G5_INERT_DML_HARDENING =
+  "20260830073341_revoke_inert_browser_dml_grants_g5.sql";
 
 const NO_POLICY_TABLES = [
   "analytics_sessions",
@@ -20,6 +22,32 @@ const NO_POLICY_TABLES = [
   "gastronomy_categories",
   "gastronomy_tags",
   "tourist_points_backup",
+] as const;
+
+const G5_ANON_DML_REVOKED = [
+  "ai_image_generations",
+  "billing_audit_log",
+  "catalog_eligibility_rule",
+  "catalog_entitlement_policy",
+  "catalog_item",
+  "commercial_catalog_version",
+  "email_logs",
+  "neighborhood_boundaries",
+  "professional_slug_history",
+  "push_subscriptions",
+  "stripe_webhook_events",
+  "tryon_generations",
+] as const;
+
+const G5_SERVER_OWNED_DML = [
+  "billing_audit_log",
+  "catalog_eligibility_rule",
+  "catalog_entitlement_policy",
+  "catalog_item",
+  "commercial_catalog_version",
+  "email_logs",
+  "professional_slug_history",
+  "stripe_webhook_events",
 ] as const;
 
 function migrationsFromBaseline() {
@@ -44,6 +72,9 @@ describe("browser table grant hardening", () => {
     expect(
       migrations.some(({ name }) => name === VAGA_APPLICATIONS_HARDENING),
     ).toBe(true);
+    expect(
+      migrations.some(({ name }) => name === G5_INERT_DML_HARDENING),
+    ).toBe(true);
 
     const batch1 = migrations.find(({ name }) => name === BATCH1)?.sql ?? "";
     const batch2 = migrations.find(({ name }) => name === BATCH2)?.sql ?? "";
@@ -53,6 +84,8 @@ describe("browser table grant hardening", () => {
       migrations.find(({ name }) => name === NO_POLICY_TABLES_MIGRATION)?.sql ?? "";
     const vagaApplications =
       migrations.find(({ name }) => name === VAGA_APPLICATIONS_HARDENING)?.sql ?? "";
+    const g5InertDml =
+      migrations.find(({ name }) => name === G5_INERT_DML_HARDENING)?.sql ?? "";
 
     expect(batch1).toMatch(/revoke\s+all\s+privileges\s+on\s+table\s+public\.api_cache\s+from\s+anon,\s*authenticated/i);
     expect(batch1).toContain("public.billing_plans");
@@ -107,6 +140,20 @@ describe("browser table grant hardening", () => {
     expect(vagaApplications).toContain(
       "postcondition failed: vaga_applications policies are not authenticated-only",
     );
+
+    for (const table of G5_ANON_DML_REVOKED) {
+      expect(g5InertDml).toMatch(
+        new RegExp(
+          `REVOKE INSERT, UPDATE, DELETE ON TABLE public\\.${table} FROM (?:anon|anon, authenticated);`,
+          "i",
+        ),
+      );
+    }
+    for (const table of G5_SERVER_OWNED_DML) {
+      expect(g5InertDml).toContain(
+        `REVOKE INSERT, UPDATE, DELETE ON TABLE public.${table} FROM anon, authenticated;`,
+      );
+    }
   });
 
   it("does not silently restore browser writes to service-authoritative tables", () => {
@@ -120,6 +167,7 @@ describe("browser table grant hardening", () => {
       "pii_access_log",
       "profile_audit_log",
       "function_audit",
+      ...G5_SERVER_OWNED_DML,
     ];
     const regressions: string[] = [];
 
@@ -134,6 +182,28 @@ describe("browser table grant hardening", () => {
     }
 
     expect(regressions, "service-authoritative tables must not regain browser DML").toEqual([]);
+  });
+
+  it("keeps G5 anonymous DML revocations fail-closed", () => {
+    const later = migrationsFromBaseline().filter(
+      ({ name }) => name > G5_INERT_DML_HARDENING,
+    );
+    const regressions: string[] = [];
+
+    for (const { name, sql } of later) {
+      for (const table of G5_ANON_DML_REVOKED) {
+        const grant = new RegExp(
+          `grant\\s+(?:all(?:\\s+privileges)?|insert|update|delete)(?:\\s*,[\\s\\w]+)*\\s+on(?:\\s+table)?\\s+public\\.${table}\\s+to\\s+anon\\b`,
+          "i",
+        );
+        if (grant.test(sql)) regressions.push(`${name}: ${table}`);
+      }
+    }
+
+    expect(
+      regressions,
+      "G5-reviewed tables must not regain anonymous DML without a new explicit authority review",
+    ).toEqual([]);
   });
 
   it("does not silently restore any browser grant to RLS-without-policy tables", () => {
