@@ -9,7 +9,7 @@
  */
 
 import { createNichePreset } from './base';
-import type { GastronomyNicheConfig } from '../types';
+import type { GastronomyNicheConfig } from '@/core/business/niches/types';
 
 export const acaiNicheConfig: GastronomyNicheConfig = createNichePreset({
   nicheKey: 'acai',

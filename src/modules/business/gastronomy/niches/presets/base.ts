@@ -7,11 +7,12 @@
  * @version 1.0.0
  */
 
-import type { GastronomyNicheConfig, NicheDefaultConfig, NicheValidationRules } from '../types';
+import type {
+  GastronomyNicheConfig,
+  NicheDefaultConfig,
+  NicheValidationRules,
+} from '@/core/business/niches/types';
 
-/**
- * Configuração padrão compartilhada entre todos os nichos
- */
 export const baseDefaultConfig: NicheDefaultConfig = {
   defaultMinimumOrder: 0,
   defaultDeliveryFee: 0,
@@ -21,9 +22,6 @@ export const baseDefaultConfig: NicheDefaultConfig = {
   defaultPaymentMethods: ['cash', 'credit_card', 'debit_card', 'pix'],
 };
 
-/**
- * Regras de validação padrão
- */
 export const baseValidationRules: NicheValidationRules = {
   minPrice: 0.01,
   maxPrice: 10000,
@@ -33,47 +31,19 @@ export const baseValidationRules: NicheValidationRules = {
   requiresPhoto: false,
 };
 
-/**
- * Seções de admin básicas (compartilhadas)
- */
 export const baseAdminSections = [
-  'basic_menu',
-  'variants',
-  'addons',
-  'combos',
-  'promotions',
-  'delivery_areas',
-  'operational_hours',
-  'order_management',
-  'analytics',
+  'basic_menu','variants','addons','combos','promotions','delivery_areas',
+  'operational_hours','order_management','analytics',
 ] as const;
 
-/**
- * Capacidades básicas (compartilhadas)
- */
 export const baseCapabilities = [
-  'basic_menu',
-  'menu_variants',
-  'menu_addons',
-  'menu_combos',
-  'menu_promotions',
-  'delivery',
-  'pickup',
-  'dine_in',
-  'payment_cash',
-  'payment_card',
-  'payment_pix',
-  'order_management',
-  'custom_instructions',
-  'dietary_flags',
-  'photos',
+  'basic_menu','menu_variants','menu_addons','menu_combos','menu_promotions',
+  'delivery','pickup','dine_in','payment_cash','payment_card','payment_pix',
+  'order_management','custom_instructions','dietary_flags','photos',
 ] as const;
 
-/**
- * Cria um preset de nicho com valores base + overrides
- */
 export function createNichePreset(
-  overrides: Partial<GastronomyNicheConfig> & { nicheKey: string; publicLabel: string }
+  overrides: Partial<GastronomyNicheConfig> & { nicheKey: string; publicLabel: string },
 ): GastronomyNicheConfig {
   return {
     description: '',
@@ -90,7 +60,7 @@ export function createNichePreset(
     displayOrder: 100,
     tags: [],
     icon: 'utensils',
-    themeColor: '#f97316', // orange-500
+    themeColor: '#f97316',
     ...overrides,
   };
 }
