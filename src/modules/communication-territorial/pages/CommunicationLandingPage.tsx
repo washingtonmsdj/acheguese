@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
-import { TERRITORY_CONFIG } from "@/config/territory";
+import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { HeroSection } from "../sections/HeroSection";
 import { FeaturedMediaSection } from "../sections/FeaturedMediaSection";
 import { VerifiedChannelsSection } from "../sections/VerifiedChannelsSection";

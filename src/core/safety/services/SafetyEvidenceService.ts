@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase';
+import type { Json } from '@/integrations/supabase/types.generated';
 import { MEDIA_STORAGE_BUCKETS } from '@/core/media/config/storageBuckets';
 import { mediaService } from '@/core/media/services/MediaService';
 import { logger } from '@/shared/utils/logger';
@@ -69,6 +70,10 @@ function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
+function normalizeMetadataForStorage(metadata: Record<string, unknown> | undefined): Json {
+  return JSON.parse(JSON.stringify(metadata ?? {})) as Json;
+}
+
 class SafetyEvidenceService {
   async listIncidentEvidence(incidentId: string): Promise<SafetyEvidence[]> {
     if (!isUuid(incidentId)) return [];
@@ -129,7 +134,7 @@ class SafetyEvidenceService {
           file_size: input.file.size,
           mime_type: input.file.type,
           uploaded_by: uploadedBy,
-          metadata: input.metadata ?? {},
+          metadata: normalizeMetadataForStorage(input.metadata),
         })
         .select(
           'id, incident_id, evidence_type, file_url, file_name, file_size, mime_type, uploaded_by, metadata, created_at',

@@ -127,7 +127,7 @@ export default function SubscriptionManagementPage() {
               <div>
                 <p className="text-2xl font-bold">{planName}</p>
                 <p className="text-sm text-muted-foreground">
-                  {currentPlan?.price_display}/mês
+                  {currentPlan?.priceDisplay}/mês
                 </p>
               </div>
               <Badge variant={isActive ? 'default' : 'secondary'}>
