@@ -18,7 +18,7 @@ import {
   trackLeadConverted,
   trackProfilePublished,
   trackEducationError,
-} from './EducationObservabilityService';
+} from '@/core/education/services/EducationObservabilityService';
 import type {
   EducationProfile,
   EducationProgram,
@@ -35,9 +35,9 @@ import type {
   SchoolAccessibilityFeatureKey,
   SchoolEquipmentFeatureKey,
   SchoolFacilityFeatureKey,
-} from '../types';
-import * as queries from './education.queries';
-import * as mutations from './education.mutations';
+} from '@/core/education';
+import * as queries from '@/core/education/services/education.queries';
+import * as mutations from '@/core/education/services/education.mutations';
 
 // ============================================================
 // TIPOS
