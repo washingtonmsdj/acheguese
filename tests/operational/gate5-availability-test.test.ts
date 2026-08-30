@@ -27,10 +27,10 @@ function describeGate5(name: string, suite: Parameters<typeof describeOperationa
 // TEST SETUP
 // ============================================
 
-// IDs reais dos motoristas de teste (obtidos do setup)
-const TEST_DRIVER_ID = '2357467c-4f5e-4285-bf6b-39628c6a44ad';
+// Profiles privados e tecnicos, alinhados ao registry Gate 6.
+const TEST_DRIVER_ID = 'b2b405cb-bf9c-405b-ad68-759de702dfb0';
 const TEST_DRIVER_2_ID = 'e114b313-3d76-452b-8dca-3bb8079ca59e';
-const TEST_DRIVER_3_ID = 'b2b405cb-bf9c-405b-ad68-759de702dfb0';
+const TEST_DRIVER_3_ID = 'a1f45031-5fee-4f16-85c0-8d73356fc830';
 const TEST_RIDE_ID = '00000000-0000-0000-0000-000000000101';
 const TEST_RIDE_2_ID = '00000000-0000-0000-0000-000000000102';
 
