@@ -6,11 +6,20 @@ const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), 'utf8');
 
 const operationalEnv = read('tests/helpers/operational-env.ts');
+const authHelper = read('tests/helpers/auth-helper.ts');
 const educationSetup = read('tests/helpers/education-setup.ts');
+const gateFixtures = read('tests/fixtures/gate6-fixtures.json');
+const gate5Availability = read('tests/operational/gate5-availability-test.test.ts');
+const pricingRuntime = read('src/core/pricing/__tests__/PricingService.runtime.test.ts');
 const playwrightConfig = read('playwright.config.ts');
 const slugHistoryValidator = read('tools/supabase/validate-slug-history-final.ts');
 const networkSeeder = read('tools/seeds/seed-e2e-network.ts');
 const e2eUserSeeder = read('tools/seeds/seed-e2e-users.ts');
+
+const RETIRED_NON_TECHNICAL_PROFILE_IDS = [
+  '2357467c-4f5e-4285-bf6b-39628c6a44ad',
+  'b374bdab-cd76-43b2-bb3c-eb844d096acb',
+];
 
 describe('Remote E2E mutation safety integration', () => {
   it('gates every operational service-role client on the exact client URL', () => {
@@ -56,6 +65,48 @@ describe('Remote E2E mutation safety integration', () => {
     expect(playwrightConfig).toContain('education[\\\\/].*\\.spec\\.ts');
     expect(playwrightConfig).not.toContain('logout-authenticated\\.spec\\.ts');
     expect(playwrightConfig).not.toContain('territory-home-operational\\.spec\\.ts');
+  });
+
+  it('authenticates registered operational actors without mutating passwords', () => {
+    expect(authHelper).toContain("tests/fixtures/gate6-fixtures.json");
+    expect(authHelper).toContain("type: 'magiclink'");
+    expect(authHelper).toContain('properties.hashed_token');
+    expect(authHelper).toContain("type: 'magiclink'");
+    expect(authHelper).toContain('expected private ${expectedType} fixture');
+    expect(authHelper).not.toContain('updateUserById');
+    expect(authHelper).not.toContain('TestPass123!');
+    expect(authHelper).not.toContain('authenticateAsFirstAdminProfile');
+  });
+
+  it('keeps mobility gate actors on the reviewed private technical registry', () => {
+    for (const retiredProfileId of RETIRED_NON_TECHNICAL_PROFILE_IDS) {
+      expect(gateFixtures).not.toContain(retiredProfileId);
+      expect(gate5Availability).not.toContain(retiredProfileId);
+    }
+
+    for (const technicalDriverId of [
+      'b2b405cb-bf9c-405b-ad68-759de702dfb0',
+      'e114b313-3d76-452b-8dca-3bb8079ca59e',
+      'a1f45031-5fee-4f16-85c0-8d73356fc830',
+    ]) {
+      expect(gateFixtures).toContain(technicalDriverId);
+      expect(gate5Availability).toContain(technicalDriverId);
+    }
+
+    for (const technicalPassengerId of [
+      'd2028c2e-4ed8-4898-bd0a-030a0743c283',
+      '6fb6aa61-7b40-4deb-867a-72688d1bccc1',
+    ]) {
+      expect(gateFixtures).toContain(technicalPassengerId);
+    }
+  });
+
+  it('requires an explicitly configured admin for Pricing runtime', () => {
+    expect(pricingRuntime).toContain('authenticateAsConfiguredAdminProfile');
+    expect(pricingRuntime).toContain('E2E_ADMIN_EMAIL');
+    expect(pricingRuntime).toContain('E2E_ADMIN_PASSWORD');
+    expect(pricingRuntime).not.toContain('authenticateAsFirstAdminProfile');
+    expect(authHelper).toContain('E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD are required');
   });
 
   it('keeps Education mutations bound to explicit credentials and technical Business provenance', () => {
