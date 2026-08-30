@@ -9,8 +9,14 @@ const FUNCTION_AUDIT =
   "20260819081931_harden_function_audit_browser_write_grants.sql";
 const NO_POLICY_TABLES_MIGRATION =
   "20260819082244_revoke_browser_grants_from_no_policy_tables.sql";
-const VAGA_APPLICATIONS_HARDENING =
-  "20260821001800_restrict_vaga_applications_browser_authority.sql";
+const VAGA_APPLICATIONS_CREATE =
+  "20260526023000_create_vaga_applications.sql";
+const VAGA_POLICY_HARDENING =
+  "20260825183353_harden_admin_helper_anon_scope.sql";
+const BROWSER_DDL_HARDENING =
+  "20260825230429_remove_browser_ddl_table_privileges.sql";
+const BROWSER_DML_HARDENING =
+  "20260825230612_revoke_browser_dml_without_rls_authority.sql";
 const G5_INERT_DML_HARDENING =
   "20260830073341_revoke_inert_browser_dml_grants_g5.sql";
 
@@ -50,13 +56,17 @@ const G5_SERVER_OWNED_DML = [
   "stripe_webhook_events",
 ] as const;
 
+function readMigration(name: string): string {
+  return readFileSync(join(MIGRATIONS_DIR, name), "utf8");
+}
+
 function migrationsFromBaseline() {
   return readdirSync(MIGRATIONS_DIR)
     .filter((name) => name.endsWith(".sql") && name >= BATCH1)
     .sort()
     .map((name) => ({
       name,
-      sql: readFileSync(join(MIGRATIONS_DIR, name), "utf8"),
+      sql: readMigration(name),
     }));
 }
 
@@ -70,7 +80,13 @@ describe("browser table grant hardening", () => {
       migrations.some(({ name }) => name === NO_POLICY_TABLES_MIGRATION),
     ).toBe(true);
     expect(
-      migrations.some(({ name }) => name === VAGA_APPLICATIONS_HARDENING),
+      migrations.some(({ name }) => name === VAGA_POLICY_HARDENING),
+    ).toBe(true);
+    expect(
+      migrations.some(({ name }) => name === BROWSER_DDL_HARDENING),
+    ).toBe(true);
+    expect(
+      migrations.some(({ name }) => name === BROWSER_DML_HARDENING),
     ).toBe(true);
     expect(
       migrations.some(({ name }) => name === G5_INERT_DML_HARDENING),
@@ -82,8 +98,13 @@ describe("browser table grant hardening", () => {
       migrations.find(({ name }) => name === FUNCTION_AUDIT)?.sql ?? "";
     const noPolicyTables =
       migrations.find(({ name }) => name === NO_POLICY_TABLES_MIGRATION)?.sql ?? "";
-    const vagaApplications =
-      migrations.find(({ name }) => name === VAGA_APPLICATIONS_HARDENING)?.sql ?? "";
+    const vagaApplicationsCreate = readMigration(VAGA_APPLICATIONS_CREATE);
+    const vagaPolicyHardening =
+      migrations.find(({ name }) => name === VAGA_POLICY_HARDENING)?.sql ?? "";
+    const browserDdlHardening =
+      migrations.find(({ name }) => name === BROWSER_DDL_HARDENING)?.sql ?? "";
+    const browserDmlHardening =
+      migrations.find(({ name }) => name === BROWSER_DML_HARDENING)?.sql ?? "";
     const g5InertDml =
       migrations.find(({ name }) => name === G5_INERT_DML_HARDENING)?.sql ?? "";
 
@@ -115,11 +136,8 @@ describe("browser table grant hardening", () => {
       expect(noPolicyTables).toContain(`'${table}'`);
     }
 
-    expect(vagaApplications).toMatch(
-      /revoke\s+all\s+privileges\s+on\s+table\s+public\.vaga_applications[\s\S]*from\s+public,\s*anon,\s*authenticated/i,
-    );
-    expect(vagaApplications).toMatch(
-      /grant\s+select,\s*insert,\s*update,\s*delete\s+on\s+table\s+public\.vaga_applications[\s\S]*to\s+authenticated/i,
+    expect(vagaApplicationsCreate).toMatch(
+      /grant\s+select,\s*insert,\s*update,\s*delete\s+on\s+public\.vaga_applications\s+to\s+authenticated/i,
     );
     for (const policy of [
       "vaga_applications_select",
@@ -127,18 +145,21 @@ describe("browser table grant hardening", () => {
       "vaga_applications_update",
       "vaga_applications_delete_admin",
     ]) {
-      expect(vagaApplications).toMatch(
+      expect(vagaPolicyHardening).toMatch(
         new RegExp(
-          `alter\\s+policy\\s+"${policy}"[\\s\\S]*?on\\s+public\\.vaga_applications[\\s\\S]*?to\\s+authenticated`,
+          `alter\\s+policy\\s+"?${policy}"?[\\s\\S]*?on\\s+public\\.vaga_applications[\\s\\S]*?to\\s+authenticated`,
           "i",
         ),
       );
     }
-    expect(vagaApplications).toContain(
-      "postcondition failed: anon retains table privileges on vaga_applications",
+    expect(browserDdlHardening).toMatch(
+      /revoke\s+truncate,\s*references,\s*trigger,\s*maintain[\s\S]*on\s+all\s+tables\s+in\s+schema\s+public[\s\S]*from\s+anon,\s*authenticated/i,
     );
-    expect(vagaApplications).toContain(
-      "postcondition failed: vaga_applications policies are not authenticated-only",
+    expect(browserDmlHardening).toContain(
+      "REVOKE %s ON TABLE public.%I FROM %I",
+    );
+    expect(browserDmlHardening).toContain(
+      "browser DML grants without matching RLS authority remain",
     );
 
     for (const table of G5_ANON_DML_REVOKED) {
@@ -250,9 +271,9 @@ describe("browser table grant hardening", () => {
     expect(regressions, "anonymous grants must remain aligned with authenticated-only RLS policies").toEqual([]);
   });
 
-  it("keeps vaga_applications authenticated-only after the hardening migration", () => {
+  it("keeps vaga_applications authenticated-only after the canonical hardening", () => {
     const later = migrationsFromBaseline().filter(
-      ({ name }) => name > VAGA_APPLICATIONS_HARDENING,
+      ({ name }) => name > BROWSER_DML_HARDENING,
     );
     const regressions: string[] = [];
 
