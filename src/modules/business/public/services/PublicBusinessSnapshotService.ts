@@ -1,9 +1,9 @@
 import type {
   PublicBusinessSnapshot,
   PublicSlugRouteParams,
-} from "../types/publicSnapshots";
+} from "@/core/business/types/publicSnapshots";
 import { createTonePizzariaPublicSnapshotFixture } from "../fixtures/tonePizzariaPublicSnapshotFixture";
-import { PublicSnapshotRpcService } from "./PublicSnapshotRpcService";
+import { PublicSnapshotRpcService } from "@/core/business/services/PublicSnapshotRpcService";
 
 export class PublicBusinessSnapshotService {
   static async getByTerritorySlug(

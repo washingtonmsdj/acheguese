@@ -1,8 +1,8 @@
 import type {
   PublicGastronomySnapshot,
   PublicSlugRouteParams,
-} from "../types/publicSnapshots";
-import { PublicSnapshotRpcService } from "./PublicSnapshotRpcService";
+} from "@/core/business/types/publicSnapshots";
+import { PublicSnapshotRpcService } from "@/core/business/services/PublicSnapshotRpcService";
 
 export class PublicGastronomySnapshotService {
   static async getByTerritorySlug(

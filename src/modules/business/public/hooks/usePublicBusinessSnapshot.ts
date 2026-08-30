@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { PublicBusinessSnapshotService } from "../services/PublicBusinessSnapshotService";
-import type { PublicSlugRouteParams } from "../types/publicSnapshots";
+import type { PublicSlugRouteParams } from "@/core/business/types/publicSnapshots";
 
 const FIVE_MINUTES = 5 * 60 * 1000;
 

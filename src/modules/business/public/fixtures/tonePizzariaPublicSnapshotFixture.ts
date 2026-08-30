@@ -9,7 +9,7 @@ import { buildBusinessPublicUrlFromSegments } from "@/core/business/utils/busine
 import type {
   PublicBusinessSnapshot,
   PublicSlugRouteParams,
-} from "../types/publicSnapshots";
+} from "@/core/business/types/publicSnapshots";
 
 const openingHours = {
   segunda: { open: "", close: "", closed: true },

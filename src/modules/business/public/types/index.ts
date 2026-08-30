@@ -2,4 +2,4 @@ export type {
   PublicBusinessSnapshot,
   PublicGastronomySnapshot,
   PublicSlugRouteParams,
-} from "./publicSnapshots";
+} from "@/core/business/types/publicSnapshots";
