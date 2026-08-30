@@ -1,7 +1,7 @@
 # G5 — Database/RLS reconciliation checkpoint — 2026-08-30
 
 Status: **EM EXECUÇÃO**.  
-HEAD de source observado antes desta atualização: `14f912017046e31bf86db831bbbcb818dcc5472d`.  
+HEAD de source observado antes desta atualização: `7aa78bc38be1f1fd8d6a67e6c057de133d5b48cf`.  
 Projeto Supabase: `xhdowzacfujckjelqhtd`.
 
 Este documento reconcilia o checklist mestre de G5 com as provas versionadas e o catálogo remoto vivo. Ele existe para impedir repetição de auditorias já fechadas e, ao mesmo tempo, não converter blockers operacionais em PASS.
@@ -22,6 +22,8 @@ Este documento reconcilia o checklist mestre de G5 com as provas versionadas e o
 | SSOT Registry database types | **CLOSED** | `docs/architecture/SSOT_REGISTRY.md` reconciliado para uma única autoridade gerada e um único gerador canônico |
 | reparo dos enums de `vagas` | **CLOSED** | banco vivo canônico, dados preservados e migration source↔ledger alinhada |
 | install manifest / lock consistency | **CLOSED EM SOURCE / EXECUÇÃO PENDENTE** | `package.json` foi reconciliado com `package-lock.json` e registry para `browser-image-compression@^2.0.2`; validação remota está bloqueada por plataformas antes do build |
+| Storage health authority | **CLOSED EM SOURCE / EXECUÇÃO PENDENTE** | `health-check` deixou de acessar objetos/bucket legado e passou a verificar somente metadata do bucket canônico `media-assets`; reader operacional segue admin-only e sem capacidade de object read/write |
+| sitemap de produção | **DUPLICAÇÃO CLOSED EM SOURCE / EXECUÇÃO PENDENTE** | Salvador canônico vivo entrava como rota estática e territorial; gerador agora deduplica por `loc` preservando a primeira definição e possui teste de regressão |
 | definir plano de limpeza sem perda de dados | **CLOSED neste checkpoint** | plano abaixo distingue DROP seguro, retenção/export e blockers operacionais |
 
 **G5 inteiro ainda não está fechado. Não iniciar G6.**
@@ -38,7 +40,10 @@ Commits relevantes:
 - `bc8f9989cfa28f63f0c7a39a58fc3c53553e189f` — aplica em source o reparo forward-only dos enums malformados de `vagas`;
 - `8aac5c7d8b8eb9e21c914deeff725eb000002cd6` — alinha atomicamente o nome da migration ao timestamp efetivamente registrado pelo ledger remoto, sem mudar o SQL aplicado;
 - `8e1db32c128783399c1adcd35dabf05da681d23e` — reconcilia o checkpoint com o reparo de enums e com o blocker amplo de Actions;
-- `14f912017046e31bf86db831bbbcb818dcc5472d` — restaura `browser-image-compression` para a faixa publicada `^2.0.2`, alinhada ao lockfile e ao registry.
+- `14f912017046e31bf86db831bbbcb818dcc5472d` — restaura `browser-image-compression` para a faixa publicada `^2.0.2`, alinhada ao lockfile e ao registry;
+- `40ca71b35daef01588b719d6f8c86282dff86f1a` — classifica explicitamente o `health-check` como observador read-only de Storage e remove dependência do bucket legado `avatars`;
+- `28e518fcc7e3619a3c7fd894bd25c28cd32c4a4e` — torna o health probe metadata-only em `media-assets` e endurece o Upload SSOT para impedir object read/write no observador;
+- `7aa78bc38be1f1fd8d6a67e6c057de133d5b48cf` — deduplica URLs canônicas do sitemap e adiciona regressão para Salvador estático + territorial.
 
 O runtime já importava `Database` de `types.generated.ts`; o gerador canônico `tools/supabase/generate-supabase-types.ts` também escreve nesse mesmo destino. O G5 impede o retorno de `src/shared/types/database.types.ts` e `src/integrations/supabase/types.ts` como autoridades paralelas.
 
@@ -96,7 +101,9 @@ A enumeração completa do conector Supabase continua sem expor operação ofici
 - `media-assets-cleanup` usa service role, mas sua autoridade é estritamente a coleta de objetos órfãos do mesmo bucket `media-assets`, protegida por `CRON_SECRET`;
 - ambas hardcodeiam `MEDIA_ASSET_BUCKET = "media-assets"` e não são executores de lifecycle de buckets.
 
-Portanto `classified-images` permanece **BLOCKED por capability operacional**. Ampliar essas funções de domínio para administrar/deletar buckets apenas para contornar o blocker misturaria responsabilidades e criaria autoridade indevida; esse caminho foi explicitamente descartado.
+Em nova checagem operacional, a capability Supabase foi enumerada integralmente e continuou sem ação de lifecycle de bucket. A busca de plugin instalável específico para deleção de bucket Supabase não encontrou uma integração adequada. Também foi verificado apenas o **inventário nominal** do Vault: existem `acheguese_cron_secret` e `acheguese_project_url`, mas não existe credencial service-role armazenada ali. Nenhum valor secreto foi lido ou exposto. Portanto não há uma rota legitimamente autenticada para chamar a Storage API a partir do banco sem criar/derivar nova autoridade.
+
+Portanto `classified-images` permanece **BLOCKED por capability operacional**. Ampliar essas funções de domínio para administrar/deletar buckets apenas para contornar o blocker misturaria responsabilidades e criaria autoridade indevida; usar o banco para derivar/forjar credencial privilegiada também foi explicitamente descartado.
 
 ## 6. Canonical database types: estrutura fechada, snapshot vivo comprovadamente stale
 
@@ -121,17 +128,17 @@ Assinatura compacta do catálogo vivo usada como evidência auxiliar nesta recon
 - `public`: 257 relações; MD5 estrutural `41e8a0341a25c6d09a11389a65a3001b`;
 - `private`: 20 relações; MD5 estrutural `3d080ebd47200bf97eac850bf9a00ad8`.
 
-A capability `generate_typescript_types` executa a geração viva, mas a resposta grande não é disponibilizada como artefato/arquivo transferível de modo que permita substituir com segurança o snapshot integral. Repetir chamadas ou reconstruir o arquivo a partir de saída truncável não transforma isso em uma regeneração confiável. Portanto o blocker permanece **materialização integral do output oficial**.
+A capability `generate_typescript_types` executa a geração viva, mas a resposta grande não é disponibilizada como artefato/arquivo transferível de modo que permita substituir com segurança o snapshot integral. A rota foi tentada novamente de forma única nesta continuação e não produziu um artefato integral reutilizável pelo fluxo de escrita. Repetir chamadas ou reconstruir o arquivo a partir de saída truncável não transforma isso em uma regeneração confiável. Portanto o blocker permanece **materialização integral do output oficial**.
 
 ## 7. CI / gates e build remoto: blockers de plataforma separados do source
 
-No HEAD `14f912017046e31bf86db831bbbcb818dcc5472d`, os três workflows de push voltaram a concluir como `failure`. O run `33316832687` (`SSOT Enforcement`) expôs job concluído com `steps = null` e sem log de execução. O mesmo padrão pré-step já havia sido reproduzido em `Security Check` e `SSOT Territorial Tests` nos HEADs anteriores, inclusive com jobs `ubuntu-latest` e `runner_id = 0`.
+No HEAD `7aa78bc38be1f1fd8d6a67e6c057de133d5b48cf`, os três workflows de push voltaram a concluir como `failure`. O run `33318481109` (`Security Check`) expôs quatro jobs (`Validate No Hardcoded Credentials`, `Lint and Type Check`, `Maps Architecture Enforcement` e `Run Tests`) todos concluídos como `failure`, porém todos com `steps = null` e `logs_url = null`. No HEAD anterior `28e518fcc7e3619a3c7fd894bd25c28cd32c4a4e`, o run `33318205105` (`SSOT Enforcement`) já apresentava o mesmo padrão pré-step.
 
-Portanto a evidência continua sendo de indisponibilidade mais ampla de GitHub Actions/conta/alocação, e **não apenas** do runner self-hosted `acheguese-heavy-windows`.
+Portanto a evidência continua sendo de indisponibilidade mais ampla de GitHub Actions/conta/alocação, e **não apenas** do runner self-hosted `acheguese-heavy-windows`. Nenhum desses failures constitui prova de lint, typecheck ou testes executados e falhando.
 
 O `Supabase Types Sync` continua deliberadamente governado pelo runner Windows self-hosted autorizado. Sua migração histórica de `ubuntu-latest` para o runner autorizado não deve ser revertida apenas para obter execução. Porém os failures atuais dos outros workflows mostram que restaurar apenas o runner pesado pode não ser suficiente: a infraestrutura de Actions precisa efetivamente voltar a executar steps.
 
-### Vercel: defeito de manifesto corrigido, nova prova bloqueada por rate limit
+### Vercel: source avançou; prova continua bloqueada por rate limit
 
 A inspeção do deployment Vercel do commit `8aac5c7d...` revelou um erro de source real antes do build:
 
@@ -141,11 +148,17 @@ A inspeção do deployment Vercel do commit `8aac5c7d...` revelou um erro de sou
 
 O commit `14f912017046e31bf86db831bbbcb818dcc5472d` corrigiu apenas o manifesto para `^2.0.2`, preservando o lockfile já correto.
 
-A Vercel não executou o build pós-correção: o status do novo commit falhou antes de deployment com target `upgradeToPro=build-rate-limit`, e o projeto está em plano Hobby. Portanto:
+Depois disso, a auditoria preventiva da cadeia de produção encontrou e corrigiu dois defeitos adicionais de source antes que a Vercel pudesse voltar a executar:
+
+1. **Storage health authority** — `40ca71b3...` classificou o `health-check`; `28e518fc...` refinou o probe para `getBucket('media-assets')`, sem enumerar objetos e sem ownership de conteúdo. O Upload SSOT mantém esse observer admin-only e proíbe aquisição de object read/write.
+2. **Sitemap duplicado** — o banco vivo confirmou Salvador canônico `city/active` em `/br/ba/salvador`, elegível ao landing. O gerador também inseria `/ba/salvador` estaticamente; como o validator rejeita `<loc>` duplicado, `7aa78bc3...` passou a deduplicar por URL final e adicionou teste de regressão, preservando a primeira definição/prioridade.
+
+A Vercel ainda não executou esses SHAs: no HEAD `7aa78bc38be1f1fd8d6a67e6c057de133d5b48cf`, o status `Vercel = failure` aponta diretamente para `upgradeToPro=build-rate-limit`. Portanto:
 
 - o ETARGET anterior foi corrigido em source;
-- ainda não existe prova remota pós-fix de `npm ci`/build;
-- o novo `Vercel = failure` é atualmente **rate limit de plataforma**, não evidência de regressão do commit `14f91201...`.
+- os dois blockers determinísticos seguintes conhecidos foram corrigidos em source;
+- ainda não existe prova remota pós-fix de `npm ci`, Upload SSOT, Core Platform, sitemap ou build;
+- o status Vercel atual é **rate limit de plataforma**, não evidência de regressão do HEAD.
 
 Consequência:
 
@@ -154,7 +167,7 @@ Consequência:
 - não tratar `build-rate-limit` da Vercel como regressão de source;
 - não reverter source por jobs que nunca executaram;
 - não trocar runners/autorização só para obter badge verde;
-- quando as plataformas voltarem a executar, validar primeiro `npm ci`, depois o sync canônico de types e os gates do G5.
+- quando as plataformas voltarem a executar, validar primeiro `npm ci`, depois os gates na ordem de `run-vercel-production-build.mjs`, o sync canônico de types e os demais gates do G5.
 
 ## 8. Legados SQL: decisão preservada
 
@@ -187,9 +200,9 @@ Não é órfão removível: possui provenance e callers canônicos. Não apagar 
 ## 10. Próximas ações exatas
 
 1. obter um caminho oficial que materialize integralmente a geração viva em `src/integrations/supabase/types.generated.ts`, sem edição manual/parcial;
-2. remover `classified-images` pela Storage API oficial, com preflight/postcheck, usando capability oficial já autorizada — sem SQL direto, sem ampliar Edge Functions de domínio e sem criar autoridade service-role paralela;
+2. remover `classified-images` pela Storage API oficial, com preflight/postcheck, usando capability oficial já autorizada — sem SQL direto, sem ampliar Edge Functions de domínio, sem derivar credencial e sem criar autoridade service-role paralela;
 3. recuperar execução efetiva do GitHub Actions e obter steps reais dos gates no HEAD então atual;
-4. quando a Vercel permitir novo build, confirmar que `npm ci` ultrapassa o antigo ETARGET e registrar o próximo erro real, se houver;
+4. quando a Vercel permitir novo build, executar a cadeia real e registrar o primeiro erro efetivamente executado, se houver;
 5. após a materialização dos types, provar que o snapshot não contém os labels malformados e que o diff source↔DB foi reconciliado;
 6. somente se os três blockers operacionais centrais concluírem sem novo blocker, atualizar este checkpoint para **G5 CLOSED**;
 7. apenas depois iniciar G6.
@@ -205,6 +218,7 @@ Não é órfão removível: possui provenance e callers canônicos. Não apagar 
 - não contornar `storage.protect_delete()` por SQL;
 - não criar um executor service-role paralelo apenas para apagar `classified-images`;
 - não ampliar `media-assets` ou `media-assets-cleanup` para lifecycle/deleção de bucket só para contornar o blocker;
+- não derivar/forjar service-role ou usar segredo interno do banco para contornar a ausência de capability oficial de Storage;
 - não reintroduzir `src/shared/types/database.types.ts`;
 - não reintroduzir `src/integrations/supabase/types.ts`;
 - não reconstruir manualmente o snapshot canônico a partir de saída de ferramenta truncável;
