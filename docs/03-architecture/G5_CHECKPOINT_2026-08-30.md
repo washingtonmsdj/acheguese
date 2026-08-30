@@ -1,7 +1,7 @@
 # G5 — Database/RLS reconciliation checkpoint — 2026-08-30
 
 Status: **EM EXECUÇÃO**.  
-HEAD de source observado antes desta atualização: `7aa78bc38be1f1fd8d6a67e6c057de133d5b48cf`.  
+HEAD de source observado antes desta atualização: `819336da1fc588c8330aac4e7e7d4f06bcb5a754`.  
 Projeto Supabase: `xhdowzacfujckjelqhtd`.
 
 Este documento reconcilia o checklist mestre de G5 com as provas versionadas e o catálogo remoto vivo. Ele existe para impedir repetição de auditorias já fechadas e, ao mesmo tempo, não converter blockers operacionais em PASS.
@@ -21,9 +21,10 @@ Este documento reconcilia o checklist mestre de G5 com as provas versionadas e o
 | source ↔ DB contract drift | **ESTRUTURA CLOSED / SNAPSHOT VIVO BLOCKED** | `types.generated.ts` é a única autoridade, porém o snapshot commitado ainda contém os valores de enum históricos corrompidos; regeneração integral é obrigatória |
 | SSOT Registry database types | **CLOSED** | `docs/architecture/SSOT_REGISTRY.md` reconciliado para uma única autoridade gerada e um único gerador canônico |
 | reparo dos enums de `vagas` | **CLOSED** | banco vivo canônico, dados preservados e migration source↔ledger alinhada |
-| install manifest / lock consistency | **CLOSED EM SOURCE / EXECUÇÃO PENDENTE** | `package.json` foi reconciliado com `package-lock.json` e registry para `browser-image-compression@^2.0.2`; validação remota está bloqueada por plataformas antes do build |
-| Storage health authority | **CLOSED EM SOURCE / EXECUÇÃO PENDENTE** | `health-check` deixou de acessar objetos/bucket legado e passou a verificar somente metadata do bucket canônico `media-assets`; reader operacional segue admin-only e sem capacidade de object read/write |
-| sitemap de produção | **DUPLICAÇÃO CLOSED EM SOURCE / EXECUÇÃO PENDENTE** | Salvador canônico vivo entrava como rota estática e territorial; gerador agora deduplica por `loc` preservando a primeira definição e possui teste de regressão |
+| install manifest / lock consistency | **CLOSED EM SOURCE / EXECUÇÃO PENDENTE** | `package.json` foi reconciliado com `package-lock.json` e registry para `browser-image-compression@^2.0.2`; o deployment real posterior ultrapassou a instalação e chegou aos gates de arquitetura |
+| Storage health authority | **CLOSED / HOSTED PASS** | deployment Vercel do source contendo `28e518fc...` executou `validate:upload:ssot` com PASS; `health-check` permanece metadata-only em `media-assets`, admin-only e sem object read/write |
+| Core Platform ownership paths | **CLOSED EM SOURCE / HOSTED RETEST PENDENTE** | deployment real revelou 7 drifts de path/baseline; `819336da...` reconciliou somente os registros stale, sem aceitar baseline global |
+| sitemap de produção | **DUPLICAÇÃO CLOSED EM SOURCE / EXECUÇÃO PENDENTE** | Salvador canônico vivo entrava como rota estática e territorial; gerador agora deduplica por `loc` preservando a primeira definição e possui teste de regressão; build real ainda não alcançou esse gate |
 | definir plano de limpeza sem perda de dados | **CLOSED neste checkpoint** | plano abaixo distingue DROP seguro, retenção/export e blockers operacionais |
 
 **G5 inteiro ainda não está fechado. Não iniciar G6.**
@@ -43,7 +44,8 @@ Commits relevantes:
 - `14f912017046e31bf86db831bbbcb818dcc5472d` — restaura `browser-image-compression` para a faixa publicada `^2.0.2`, alinhada ao lockfile e ao registry;
 - `40ca71b35daef01588b719d6f8c86282dff86f1a` — classifica explicitamente o `health-check` como observador read-only de Storage e remove dependência do bucket legado `avatars`;
 - `28e518fcc7e3619a3c7fd894bd25c28cd32c4a4e` — torna o health probe metadata-only em `media-assets` e endurece o Upload SSOT para impedir object read/write no observador;
-- `7aa78bc38be1f1fd8d6a67e6c057de133d5b48cf` — deduplica URLs canônicas do sitemap e adiciona regressão para Salvador estático + territorial.
+- `7aa78bc38be1f1fd8d6a67e6c057de133d5b48cf` — deduplica URLs canônicas do sitemap e adiciona regressão para Salvador estático + territorial;
+- `819336da1fc588c8330aac4e7e7d4f06bcb5a754` — reconcilia paths de Core Platform após reorganização `modules -> core`, remove callers mortos de `get_business_reviews` e retira a baseline de objeto `health-check -> avatars` já aposentada.
 
 O runtime já importava `Database` de `types.generated.ts`; o gerador canônico `tools/supabase/generate-supabase-types.ts` também escreve nesse mesmo destino. O G5 impede o retorno de `src/shared/types/database.types.ts` e `src/integrations/supabase/types.ts` como autoridades paralelas.
 
@@ -138,9 +140,9 @@ Portanto a evidência continua sendo de indisponibilidade mais ampla de GitHub A
 
 O `Supabase Types Sync` continua deliberadamente governado pelo runner Windows self-hosted autorizado. Sua migração histórica de `ubuntu-latest` para o runner autorizado não deve ser revertida apenas para obter execução. Porém os failures atuais dos outros workflows mostram que restaurar apenas o runner pesado pode não ser suficiente: a infraestrutura de Actions precisa efetivamente voltar a executar steps.
 
-### Vercel: source avançou; prova continua bloqueada por rate limit
+### Vercel: execução real retomada e próximo blocker tratado
 
-A inspeção do deployment Vercel do commit `8aac5c7d...` revelou um erro de source real antes do build:
+A inspeção do deployment Vercel do commit `8aac5c7d...` revelou inicialmente um erro de source antes do build:
 
 - `npm ci` falhava com `ETARGET` para `browser-image-compression@^2.2.0`;
 - o registry oficial publica `2.0.2` como versão atual;
@@ -148,26 +150,43 @@ A inspeção do deployment Vercel do commit `8aac5c7d...` revelou um erro de sou
 
 O commit `14f912017046e31bf86db831bbbcb818dcc5472d` corrigiu apenas o manifesto para `^2.0.2`, preservando o lockfile já correto.
 
-Depois disso, a auditoria preventiva da cadeia de produção encontrou e corrigiu dois defeitos adicionais de source antes que a Vercel pudesse voltar a executar:
+Depois disso, a auditoria preventiva da cadeia de produção encontrou e corrigiu dois defeitos adicionais de source:
 
 1. **Storage health authority** — `40ca71b3...` classificou o `health-check`; `28e518fc...` refinou o probe para `getBucket('media-assets')`, sem enumerar objetos e sem ownership de conteúdo. O Upload SSOT mantém esse observer admin-only e proíbe aquisição de object read/write.
 2. **Sitemap duplicado** — o banco vivo confirmou Salvador canônico `city/active` em `/br/ba/salvador`, elegível ao landing. O gerador também inseria `/ba/salvador` estaticamente; como o validator rejeita `<loc>` duplicado, `7aa78bc3...` passou a deduplicar por URL final e adicionou teste de regressão, preservando a primeira definição/prioridade.
 
-A Vercel ainda não executou esses SHAs: no HEAD `7aa78bc38be1f1fd8d6a67e6c057de133d5b48cf`, o status `Vercel = failure` aponta diretamente para `upgradeToPro=build-rate-limit`. Portanto:
+O commit documental `068297531cd8401a66d3353e3b3cc5001856bcbf`, que contém o mesmo source de `7aa78bc3...`, conseguiu finalmente iniciar um deployment real. Evidência do log:
 
-- o ETARGET anterior foi corrigido em source;
-- os dois blockers determinísticos seguintes conhecidos foram corrigidos em source;
-- ainda não existe prova remota pós-fix de `npm ci`, Upload SSOT, Core Platform, sitemap ou build;
-- o status Vercel atual é **rate limit de plataforma**, não evidência de regressão do HEAD.
+- install/build chegou aos gates de arquitetura, portanto ultrapassou o antigo `npm ci`/ETARGET;
+- `security:validate` e `lint:security` avançaram; o lint reportou warnings conhecidos, com `0 errors`;
+- `validate:upload:ssot` retornou explicitamente **PASS**;
+- `validate:architecture:core-platform` executou e revelou 7 violações de manifesto após reorganização de source.
+
+As 7 violações eram reconcile de authority/path, não regressão funcional:
+
+- dois callers de `get_business_reviews` apontavam para arquivos já removidos e não possuem caller runtime atual;
+- `create_vaga_report` e `moderate_vaga_report` mudaram de `src/modules/classifieds/jobs/...` para `src/core/classifieds/jobs/...`;
+- `OperationalDiagnosticsService` mudou de `src/modules/admin/...` para `src/core/admin/...`;
+- `PizzaAdminService` mudou de `src/modules/business/gastronomy/niches/...` para `src/core/business/niches/...`;
+- o baseline ainda esperava `storage|avatars|read|health-check`, acesso que foi deliberadamente aposentado pelo probe metadata-only.
+
+O commit `819336da1fc588c8330aac4e7e7d4f06bcb5a754` atualizou **somente** esses registros: paths novos comprovados, callers mortos removidos e baseline `avatars` retirado. Não foi usado `--accept-current-baseline` nem regeneração ampla do manifesto.
+
+O SHA `819336da...` não recebeu execução Vercel porque a janela Hobby voltou imediatamente a `build-rate-limit`. Portanto:
+
+- **Upload SSOT está provado hosted PASS** no source atual equivalente;
+- o Core Platform blocker observado foi corrigido em source, mas ainda requer reteste hosted;
+- sitemap e `build:vercel` ainda não foram alcançados por execução real pós-correções;
+- o rate limit continua sendo blocker de prova, não falha de source.
 
 Consequência:
 
-- não marcar testes/build como PASS sem execução real;
+- não marcar Core Platform/sitemap/build como PASS sem execução real;
 - não tratar `failure` pré-step do Actions como regressão de source;
 - não tratar `build-rate-limit` da Vercel como regressão de source;
 - não reverter source por jobs que nunca executaram;
 - não trocar runners/autorização só para obter badge verde;
-- quando as plataformas voltarem a executar, validar primeiro `npm ci`, depois os gates na ordem de `run-vercel-production-build.mjs`, o sync canônico de types e os demais gates do G5.
+- na próxima execução Vercel real, confirmar primeiro `validate:architecture:core-platform`; depois seguir para sitemap e `build:vercel`, registrando somente o primeiro erro efetivamente executado.
 
 ## 8. Legados SQL: decisão preservada
 
@@ -199,10 +218,10 @@ Não é órfão removível: possui provenance e callers canônicos. Não apagar 
 
 ## 10. Próximas ações exatas
 
-1. obter um caminho oficial que materialize integralmente a geração viva em `src/integrations/supabase/types.generated.ts`, sem edição manual/parcial;
-2. remover `classified-images` pela Storage API oficial, com preflight/postcheck, usando capability oficial já autorizada — sem SQL direto, sem ampliar Edge Functions de domínio, sem derivar credencial e sem criar autoridade service-role paralela;
-3. recuperar execução efetiva do GitHub Actions e obter steps reais dos gates no HEAD então atual;
-4. quando a Vercel permitir novo build, executar a cadeia real e registrar o primeiro erro efetivamente executado, se houver;
+1. na próxima execução Vercel real, confirmar `validate:architecture:core-platform` no source que contém `819336da...`, depois avançar por `generate:sitemap`, validator de sitemap e `build:vercel`;
+2. obter um caminho oficial que materialize integralmente a geração viva em `src/integrations/supabase/types.generated.ts`, sem edição manual/parcial;
+3. remover `classified-images` pela Storage API oficial, com preflight/postcheck, usando capability oficial já autorizada — sem SQL direto, sem ampliar Edge Functions de domínio, sem derivar credencial e sem criar autoridade service-role paralela;
+4. recuperar execução efetiva do GitHub Actions e obter steps reais dos gates no HEAD então atual;
 5. após a materialização dos types, provar que o snapshot não contém os labels malformados e que o diff source↔DB foi reconciliado;
 6. somente se os três blockers operacionais centrais concluírem sem novo blocker, atualizar este checkpoint para **G5 CLOSED**;
 7. apenas depois iniciar G6.
@@ -227,6 +246,8 @@ Não é órfão removível: possui provenance e callers canônicos. Não apagar 
 - não assumir que o blocker de Actions é somente o runner pesado: nesta execução até jobs `ubuntu-latest` falharam antes dos steps;
 - não interpretar `Vercel = failure` com `upgradeToPro=build-rate-limit` como regressão de source;
 - não voltar `browser-image-compression` para `^2.2.0`; a faixa publicada e lockada é `^2.0.2`;
+- não restaurar os paths `src/modules/...` que o Core Platform já provou stale;
+- não usar `--accept-current-baseline` para esconder drift de path/authority;
 - não reescrever migrations históricas já aplicadas para satisfazer o ratchet futuro;
 - não declarar o sync de types concluído enquanto o snapshot canônico não for regenerado/verificado;
 - não iniciar G6 enquanto houver item G5 BLOCKED/aberto.
