@@ -9,7 +9,7 @@
  */
 
 import { createNichePreset } from './base';
-import type { GastronomyNicheConfig } from '../types';
+import type { GastronomyNicheConfig } from '@/core/business/niches/types';
 
 export const hamburguerNicheConfig: GastronomyNicheConfig = createNichePreset({
   nicheKey: 'hamburguer',
@@ -20,85 +20,25 @@ export const hamburguerNicheConfig: GastronomyNicheConfig = createNichePreset({
   isSelectable: true,
   isPublic: true,
   isBeta: false,
-
-  enabledCapabilities: [
-    'basic_menu',
-    'menu_variants',      // Tipos de carne: bovina, frango, plant-based
-    'menu_addons',        // Ingredientes extras: bacon, queijo, ovo, molhos
-    'menu_combos',        // Combo burger + batata + bebida
-    'menu_promotions',
-    'delivery',
-    'pickup',
-    'dine_in',
-    'table_reservation',
-    'payment_cash',
-    'payment_card',
-    'payment_pix',
-    'order_management',
-    'custom_instructions', // Importante: "sem cebola", "ponto da carne"
-    'dietary_flags',
-    'photos',
-  ],
-
+  enabledCapabilities: ['basic_menu','menu_variants','menu_addons','menu_combos','menu_promotions','delivery','pickup','dine_in','table_reservation','payment_cash','payment_card','payment_pix','order_management','custom_instructions','dietary_flags','photos'],
   missingCapabilities: [],
-
   defaultConfig: {
     defaultMinimumOrder: 25,
     defaultDeliveryFee: 5,
     defaultDeliveryTimeMin: 25,
     defaultDeliveryTimeMax: 45,
     defaultAcceptsReservations: true,
-    suggestedCategories: [
-      'Burgers Artesanais',
-      'Burgers Tradicionais',
-      'Vegetarianos',
-      'Acompanhamentos',
-      'Bebidas',
-      'Milkshakes',
-    ],
-    suggestedItems: [
-      'Smash Burger',
-      'Cheeseburger',
-      'Bacon Burger',
-      'Veggie Burger',
-      'Batatas Fritas',
-    ],
+    suggestedCategories: ['Burgers Artesanais','Burgers Tradicionais','Vegetarianos','Acompanhamentos','Bebidas','Milkshakes'],
+    suggestedItems: ['Smash Burger','Cheeseburger','Bacon Burger','Veggie Burger','Batatas Fritas'],
     nicheSpecific: {
-      meatPointOptions: ['mal_passado', 'ao_ponto', 'bem_passado'],
-      commonAddons: [
-        'bacon',
-        'queijo_cheddar',
-        'queijo_mussarela',
-        'ovo',
-        'cebola_caramelizada',
-        'molho_especial',
-      ],
+      meatPointOptions: ['mal_passado','ao_ponto','bem_passado'],
+      commonAddons: ['bacon','queijo_cheddar','queijo_mussarela','ovo','cebola_caramelizada','molho_especial'],
     },
   },
-
-  adminSections: [
-    'basic_menu',
-    'variants',
-    'addons',
-    'combos',
-    'promotions',
-    'delivery_areas',
-    'operational_hours',
-    'reservations',
-    'order_management',
-    'analytics',
-  ],
-
-  validationRules: {
-    minPrice: 15,
-    maxPrice: 80,
-    maxVariantsPerItem: 5,    // Vários tipos de carne + tamanhos
-    maxAddonsPerItem: 20,     // Muitos ingredientes extras
-    requiresPhoto: true,        // Fotos importantes para burgers
-  },
-
+  adminSections: ['basic_menu','variants','addons','combos','promotions','delivery_areas','operational_hours','reservations','order_management','analytics'],
+  validationRules: { minPrice: 15, maxPrice: 80, maxVariantsPerItem: 5, maxAddonsPerItem: 20, requiresPhoto: true },
   displayOrder: 5,
-  tags: ['basic', 'fast-food', 'delivery', 'reservations', 'customizable', 'artesanal'],
+  tags: ['basic','fast-food','delivery','reservations','customizable','artesanal'],
   icon: 'beef',
-  themeColor: '#b45309', // amber-700
+  themeColor: '#b45309',
 });

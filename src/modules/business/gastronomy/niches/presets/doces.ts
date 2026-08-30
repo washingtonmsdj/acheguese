@@ -8,7 +8,7 @@
  */
 
 import { createNichePreset } from './base';
-import type { GastronomyNicheConfig } from '../types';
+import type { GastronomyNicheConfig } from '@/core/business/niches/types';
 
 export const docesNicheConfig: GastronomyNicheConfig = createNichePreset({
   nicheKey: 'doces',
@@ -19,72 +19,21 @@ export const docesNicheConfig: GastronomyNicheConfig = createNichePreset({
   isSelectable: true,
   isPublic: true,
   isBeta: false,
-
-  enabledCapabilities: [
-    'basic_menu',
-    'menu_variants',      // Tamanhos: Fatia, Pequeno, Médio, Grande
-    'menu_addons',        // Adicionais: cobertura extra, velas
-    'menu_combos',        // Combo bolo + bebida
-    'menu_promotions',
-    'delivery',
-    'pickup',             // Bolos personalizados geralmente são retirada
-    'dine_in',
-    'table_reservation',
-    'payment_cash',
-    'payment_card',
-    'payment_pix',
-    'order_management',
-    'custom_instructions',
-    'dietary_flags',
-    'photos',
-  ],
-
+  enabledCapabilities: ['basic_menu','menu_variants','menu_addons','menu_combos','menu_promotions','delivery','pickup','dine_in','table_reservation','payment_cash','payment_card','payment_pix','order_management','custom_instructions','dietary_flags','photos'],
   missingCapabilities: [],
-
   defaultConfig: {
     defaultMinimumOrder: 30,
     defaultDeliveryFee: 5,
     defaultDeliveryTimeMin: 30,
     defaultDeliveryTimeMax: 60,
     defaultAcceptsReservations: true,
-    suggestedCategories: [
-      'Bolos',
-      'Tortas',
-      'Docinhos',
-      'Sobremesas',
-      'Bebidas',
-    ],
-    suggestedItems: [
-      'Bolo de Chocolate',
-      'Bolo de Cenoura',
-      'Brigadeiro',
-      'Beijinho',
-      'Torta de Limão',
-    ],
+    suggestedCategories: ['Bolos','Tortas','Docinhos','Sobremesas','Bebidas'],
+    suggestedItems: ['Bolo de Chocolate','Bolo de Cenoura','Brigadeiro','Beijinho','Torta de Limão'],
   },
-
-  adminSections: [
-    'basic_menu',
-    'variants',
-    'addons',
-    'combos',
-    'promotions',
-    'delivery_areas',
-    'operational_hours',
-    'reservations',
-    'order_management',
-    'analytics',
-  ],
-
-  validationRules: {
-    minPrice: 5,
-    maxPrice: 300,
-    maxVariantsPerItem: 5,    // Fatia, Pequeno, Médio, Grande, Festa
-    maxAddonsPerItem: 10,
-  },
-
+  adminSections: ['basic_menu','variants','addons','combos','promotions','delivery_areas','operational_hours','reservations','order_management','analytics'],
+  validationRules: { minPrice: 5, maxPrice: 300, maxVariantsPerItem: 5, maxAddonsPerItem: 10 },
   displayOrder: 40,
-  tags: ['basic', 'dessert', 'delivery', 'pickup', 'party', 'events'],
+  tags: ['basic','dessert','delivery','pickup','party','events'],
   icon: 'cake',
-  themeColor: '#ec4899', // pink-500
+  themeColor: '#ec4899',
 });
