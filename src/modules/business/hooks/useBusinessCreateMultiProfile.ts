@@ -66,8 +66,9 @@ export function useBusinessCreateMultiProfile(
       }
 
       // Single creation authority: profile, membership and business_data are
-      // created only by the core Business owner.
-      const createdBusiness = await BusinessService.createBusiness(validation.data);
+      // created only by the core Business owner. The core mutation performs the
+      // canonical sanitization/validation again before persisting.
+      const createdBusiness = await BusinessService.createBusiness(inputWithLocation);
       const profileId = createdBusiness.profile_id;
 
       let logoReference: string | undefined;
