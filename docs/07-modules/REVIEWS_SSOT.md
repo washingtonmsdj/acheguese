@@ -1,7 +1,7 @@
 # Reviews SSOT
 
 Status: canônico — G4 fechado no nível de autoridade/source
-Última revalidação: 2026-08-29
+Última revalidação: 2026-08-30
 Finding histórico: CP-013
 
 ## 1. Decisão
@@ -98,10 +98,10 @@ expõe apenas o adapter técnico necessário ao broker. `PUBLIC`, `anon` e
 `authenticated` não podem executá-lo; somente `service_role` pode chamá-lo.
 A regra de negócio continua pertencendo a `private.user_can_manage_profile`.
 
-## 5. RPCs comerciais legados
+## 5. RPCs comerciais legados — aposentados em G5
 
-Os RPCs abaixo ainda existem no banco remoto, porém estão sem caller runtime no
-HEAD e com `EXECUTE` restrito a `service_role`:
+G4 havia classificado como legado dormente, sem caller runtime e com `EXECUTE`
+restrito a `service_role`, os RPCs:
 
 - `can_user_review_business`;
 - `create_business_review`;
@@ -109,15 +109,27 @@ HEAD e com `EXECUTE` restrito a `service_role`:
 - `delete_business_review`;
 - `add_business_review_response`.
 
-Eles **não são autoridade ativa**: o Edge Function atual não os chama e executa
-o contrato comercial diretamente sobre `reviews` depois da validação
-server-side. Não serão apagados em G4 somente por nome/heurística. A retirada
-física exige provenance/dependency audit em G5; até lá permanecem classificados
-como legado dormente, inacessível ao browser.
+`get_business_reviews` também não possuía caller runtime; o read path comercial
+ativo usa `ReviewsService`.
 
-O mesmo vale para `get_business_reviews`: não há caller runtime atual no source;
-o read path comercial ativo usa `ReviewsService`. A função histórica não deve
-voltar a ser tratada como read model canônico sem nova decisão arquitetural.
+Em 2026-08-30, G5 executou a provenance/dependency audit exigida antes da
+retirada física:
+
+- busca no HEAD sem caller runtime dos seis nomes;
+- os cinco comandos/eligibility permaneciam `service_role`-only;
+- `get_business_reviews` era um read RPC `SECURITY INVOKER`, porém sem consumer
+  canônico;
+- `pg_depend` não encontrou objetos dependentes;
+- busca nas definições remotas não encontrou função, view ou policy chamando
+  qualquer um dos seis RPCs.
+
+A migration `20260830033012_retire_dormant_business_review_rpcs.sql` removeu as
+seis funções com `DROP FUNCTION IF EXISTS` e **sem `CASCADE`**. A ausência de
+`CASCADE` é intencional: replay deve falhar fechado se uma dependência reaparecer.
+O pós-check remoto retornou zero funções restantes com esses nomes.
+
+`tests/security/retired-business-review-rpcs.test.ts` impede recriação ou novo
+grant para essa superfície sem uma nova decisão arquitetural.
 
 ## 6. Leitura, escala e mídia
 
@@ -135,7 +147,7 @@ Paginação profunda, carga p50/p95/p99 e concorrência são requisitos de
 certificação operacional/staging (G6/G7), não justificativa para criar um
 segundo read model em G4.
 
-## 7. Evidência de G4 — 2026-08-29
+## 7. Evidência G4/G5
 
 Revalidação source + remoto confirmou:
 
@@ -152,12 +164,15 @@ Revalidação source + remoto confirmou:
   `verify_jwt = true`, proteção de conta operacional, `is_admin` canônico e
   gestão de Business delegada ao helper canônico;
 - wrapper `broker_user_can_manage_profile` restrito a `service_role`;
-- nenhum alerta novo do Security Advisor atribuído ao wrapper criado.
+- nenhum alerta novo do Security Advisor atribuído ao wrapper criado;
+- seis RPCs comerciais/read legados removidos em G5 após auditoria de callers e
+  dependências, com pós-check remoto vazio.
 
 Regression guards ativos:
 
 - `tests/architecture/reviews-ssot.test.ts`;
 - `tests/security/business-reviews-rpc-security.test.ts`;
+- `tests/security/retired-business-review-rpcs.test.ts`;
 - comando `npm run test:reviews:ssot`.
 
 A infraestrutura hosted continua sendo uma evidência separada. Enquanto os
@@ -166,9 +181,9 @@ typecheck ou testes deste corte.
 
 ## 8. Dívidas que pertencem a G5/G6/G7
 
-G4 fecha autoridade/source conhecido; não fecha automaticamente:
+G4 fecha autoridade/source conhecido; a retirada dos RPCs comerciais dormentes
+foi concluída em G5, mas isso não fecha automaticamente:
 
-- provenance e retirada dos cinco RPCs comerciais legados dormentes;
 - auditoria exaustiva migration ↔ remoto de toda a história de Reviews;
 - triagem global dos warnings do Security Advisor — inclusive warnings
   genéricos de `SECURITY DEFINER` que precisam ser avaliados pela semântica de
