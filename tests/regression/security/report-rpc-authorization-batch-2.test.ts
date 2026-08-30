@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 const root = process.cwd();
 const migration = readFileSync(
-  resolve(root, 'supabase/migrations/20260820084132_harden_vaga_review_ride_report_rpc_contract.sql'),
+  resolve(root, 'supabase/migrations/20260830091107_canonicalize_report_rpc_authenticated_only_contract_g5.sql'),
   'utf8',
 );
 const sqlSpec = readFileSync(
