@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-08-26",
+  "updatedAt": "2026-08-30",
   "architecture": "docs/03-architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md",
   "plan": "docs/08-roadmap/CORE_PLATFORM_CONSOLIDATION_PLAN.md",
   "sourceRoots": ["src", "api", "supabase/functions"],
@@ -844,18 +844,7 @@
       "status": "canonical",
       "currentOwner": "src/core/reviews-with-business-policy-adapter",
       "targetOwner": "src/core/reviews-with-business-policy-adapter",
-      "allowedCallers": [
-        {
-          "path": "src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts",
-          "maxCalls": 1,
-          "role": "runtime-read-model"
-        },
-        {
-          "path": "src/modules/business/gastronomy/services/review.queries.ts",
-          "maxCalls": 2,
-          "role": "business-read-projection"
-        }
-      ]
+      "allowedCallers": []
     },
     {
       "name": "get_profile_review_stats",
@@ -1033,7 +1022,7 @@
       "targetOwner": "server-owned-vaga-report-command",
       "allowedCallers": [
         {
-          "path": "src/modules/classifieds/jobs/services/VagaReportService.ts",
+          "path": "src/core/classifieds/jobs/services/VagaReportService.ts",
           "maxCalls": 1,
           "role": "domain-adapter"
         }
@@ -1046,7 +1035,7 @@
       "targetOwner": "server-owned-vaga-report-command",
       "allowedCallers": [
         {
-          "path": "src/modules/classifieds/jobs/services/VagaReportService.ts",
+          "path": "src/core/classifieds/jobs/services/VagaReportService.ts",
           "maxCalls": 1,
           "role": "admin-domain-adapter"
         }
@@ -1653,7 +1642,7 @@
       "kind": "dynamic-table",
       "resource": "<dynamic>",
       "access": "read",
-      "path": "src/modules/admin/services/OperationalDiagnosticsService.ts",
+      "path": "src/core/admin/services/OperationalDiagnosticsService.ts",
       "maxCalls": 1,
       "details": ["definition.table"]
     },
@@ -1723,7 +1712,7 @@
       "kind": "dynamic-table",
       "resource": "<dynamic>",
       "access": "write",
-      "path": "src/modules/business/gastronomy/niches/pizzaria/PizzaAdminService.ts",
+      "path": "src/core/business/niches/pizzaria/PizzaAdminService.ts",
       "maxCalls": 3,
       "details": ["table"]
     },
@@ -1739,13 +1728,6 @@
       "resource": "ai-images",
       "access": "write",
       "path": "supabase/functions/ai-image/index.ts",
-      "maxCalls": 1
-    },
-    {
-      "kind": "storage",
-      "resource": "avatars",
-      "access": "read",
-      "path": "supabase/functions/health-check/index.ts",
       "maxCalls": 1
     },
     {
