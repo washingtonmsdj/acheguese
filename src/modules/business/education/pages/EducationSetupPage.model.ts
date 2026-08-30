@@ -6,7 +6,7 @@ import type {
   SchoolEquipmentFeatureKey,
   SchoolFacilityFeatureKey,
   SchoolShift,
-} from '../types';
+} from '@/core/education';
 
 export type EducationSetupFormData = {
   institutionType: string;
