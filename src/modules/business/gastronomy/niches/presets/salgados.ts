@@ -8,7 +8,7 @@
  */
 
 import { createNichePreset } from './base';
-import type { GastronomyNicheConfig } from '../types';
+import type { GastronomyNicheConfig } from '@/core/business/niches/types';
 
 export const salgadosNicheConfig: GastronomyNicheConfig = createNichePreset({
   nicheKey: 'salgados',
@@ -19,69 +19,25 @@ export const salgadosNicheConfig: GastronomyNicheConfig = createNichePreset({
   isSelectable: true,
   isPublic: true,
   isBeta: false,
-
   enabledCapabilities: [
-    'basic_menu',
-    'menu_variants',      // Tamanhos: Mini, Médio, Grande
-    'menu_addons',        // Adicionais: queijo extra, catupiry
-    'menu_combos',        // Combo 10 salgados + suco
-    'menu_promotions',
-    'delivery',
-    'pickup',
-    'dine_in',
-    'payment_cash',
-    'payment_card',
-    'payment_pix',
-    'order_management',
-    'custom_instructions',
-    'dietary_flags',
-    'photos',
+    'basic_menu','menu_variants','menu_addons','menu_combos','menu_promotions',
+    'delivery','pickup','dine_in','payment_cash','payment_card','payment_pix',
+    'order_management','custom_instructions','dietary_flags','photos',
   ],
-
   missingCapabilities: [],
-
   defaultConfig: {
     defaultMinimumOrder: 20,
     defaultDeliveryFee: 4,
     defaultDeliveryTimeMin: 20,
     defaultDeliveryTimeMax: 40,
     defaultAcceptsReservations: false,
-    suggestedCategories: [
-      'Salgados Assados',
-      'Salgados Fritos',
-      'Mini Salgados',
-      'Bebidas',
-    ],
-    suggestedItems: [
-      'Coxinha',
-      'Esfiha',
-      'Kibe',
-      'Risole',
-      'Empada',
-    ],
+    suggestedCategories: ['Salgados Assados','Salgados Fritos','Mini Salgados','Bebidas'],
+    suggestedItems: ['Coxinha','Esfiha','Kibe','Risole','Empada'],
   },
-
-  adminSections: [
-    'basic_menu',
-    'variants',
-    'addons',
-    'combos',
-    'promotions',
-    'delivery_areas',
-    'operational_hours',
-    'order_management',
-    'analytics',
-  ],
-
-  validationRules: {
-    minPrice: 2,
-    maxPrice: 50,
-    maxVariantsPerItem: 3,
-    maxAddonsPerItem: 8,
-  },
-
+  adminSections: ['basic_menu','variants','addons','combos','promotions','delivery_areas','operational_hours','order_management','analytics'],
+  validationRules: { minPrice: 2, maxPrice: 50, maxVariantsPerItem: 3, maxAddonsPerItem: 8 },
   displayOrder: 30,
-  tags: ['basic', 'fast-food', 'delivery', 'events', 'party'],
+  tags: ['basic','fast-food','delivery','events','party'],
   icon: 'croissant',
-  themeColor: '#f59e0b', // amber-500
+  themeColor: '#f59e0b',
 });
