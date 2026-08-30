@@ -12,6 +12,8 @@ export interface LocationRecord {
 
 type LocationWithChildren = LocationRecord & { children?: LocationWithChildren[] };
 
+const COMPLETE_READ_PAGE_SIZE = 1000;
+
 export class LocationsReadService {
   static async getAll(): Promise<LocationRecord[]> {
     const { data, error } = await supabase
@@ -25,6 +27,54 @@ export class LocationsReadService {
     }
 
     return (data as LocationRecord[]) || [];
+  }
+
+  /**
+   * Leitura exaustiva para tarefas offline/build que precisam do catálogo inteiro.
+   *
+   * Não usar em superfícies interativas: o projeto limita respostas PostgREST a
+   * 1000 linhas por requisição e o catálogo territorial é muito maior que isso.
+   * A paginação avança pelo número efetivamente retornado e usa count exato para
+   * continuar correta mesmo se o limite remoto for reduzido no futuro.
+   */
+  static async getAllComplete(): Promise<LocationRecord[]> {
+    const rows: LocationRecord[] = [];
+    let offset = 0;
+    let expectedTotal: number | null = null;
+
+    while (expectedTotal === null || offset < expectedTotal) {
+      const { data, error, count } = await supabase
+        .from("locations")
+        .select("*", { count: "exact" })
+        .order("name")
+        .order("id")
+        .range(offset, offset + COMPLETE_READ_PAGE_SIZE - 1);
+
+      if (error) {
+        logger.error("LocationsReadService.getAllComplete", error, {
+          offset,
+          expectedTotal,
+        });
+        throw error;
+      }
+
+      if (count !== null) expectedTotal = count;
+      const page = (data as LocationRecord[]) || [];
+
+      if (page.length === 0) {
+        if (expectedTotal !== null && offset < expectedTotal) {
+          throw new Error(
+            `LocationsReadService.getAllComplete stopped at ${offset}/${expectedTotal} rows.`,
+          );
+        }
+        break;
+      }
+
+      rows.push(...page);
+      offset += page.length;
+    }
+
+    return rows;
   }
 
   static async getById(id: string): Promise<LocationRecord | null> {
@@ -84,4 +134,3 @@ export class LocationsReadService {
     return tree;
   }
 }
-

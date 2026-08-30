@@ -7,7 +7,7 @@ import {
   SECURITY_DOMAINS,
   SECURITY_HEADERS,
   TURNSTILE_CLIENT_CONFIG,
-} from "../../src/config/security.config";
+} from "../../src/shared/config/security.config";
 import { parseCsp, validateTurnstileCspContract } from "./csp-contract";
 
 const root = process.cwd();

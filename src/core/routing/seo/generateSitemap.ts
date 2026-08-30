@@ -303,7 +303,7 @@ async function removeStaleSitemapChunks(outputDirectory: string): Promise<void> 
 }
 
 export async function generateAndSaveSitemap() {
-  const locationsRows = (await LocationsReadService.getAll()) as unknown as Location[];
+  const locationsRows = (await LocationsReadService.getAllComplete()) as unknown as Location[];
   const locations = locationsRows
     .filter((location) => location.type === 'city' || location.type === 'district')
     .filter((location) => location.status === 'active')
