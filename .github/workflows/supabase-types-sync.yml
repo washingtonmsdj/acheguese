@@ -1,0 +1,78 @@
+name: Supabase Types Sync
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/supabase-types-sync.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: supabase-types-sync-main
+  cancel-in-progress: false
+
+env:
+  SUPABASE_CLI_VERSION: "2.115.0"
+  SUPABASE_PROJECT_REF: "xhdowzacfujckjelqhtd"
+  TYPES_PATH: "src/integrations/supabase/types.generated.ts"
+
+jobs:
+  sync-types:
+    name: Regenerate canonical database types
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+    steps:
+      - name: Assert main-only execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "washingtonmsdj/acheguese"
+          test "$GITHUB_REF" = "refs/heads/main"
+          test -n "${SUPABASE_ACCESS_TOKEN:-}"
+
+      - name: Checkout exact main SHA
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: true
+
+      - name: Regenerate types from live Supabase schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp)"
+          npx --yes "supabase@${SUPABASE_CLI_VERSION}" gen types typescript \
+            --project-id "$SUPABASE_PROJECT_REF" > "$tmp"
+          test -s "$tmp"
+          grep -q "export type Database" "$tmp"
+          mv "$tmp" "$TYPES_PATH"
+
+      - name: Commit only canonical type drift
+        shell: bash
+        run: |
+          set -euo pipefail
+          changed="$(git status --porcelain)"
+          if [ -z "$changed" ]; then
+            echo "Canonical Supabase types are already synchronized."
+            exit 0
+          fi
+
+          unexpected="$(git status --porcelain | awk '{print $2}' | grep -v "^${TYPES_PATH}$" || true)"
+          if [ -n "$unexpected" ]; then
+            echo "Unexpected generated changes detected:"
+            echo "$unexpected"
+            exit 1
+          fi
+
+          git add "$TYPES_PATH"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(g5): sync Supabase generated types"
+          git push origin HEAD:main
