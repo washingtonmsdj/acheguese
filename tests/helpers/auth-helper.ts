@@ -204,14 +204,6 @@ export async function authenticateAsConfiguredAdminProfile(): Promise<string> {
   return profiles[0].id as string;
 }
 
-/**
- * @deprecated Use authenticateAsConfiguredAdminProfile. Mantido apenas ate os
- * consumidores historicos serem migrados no mesmo corte G5.
- */
-export async function authenticateAsFirstAdminProfile(): Promise<string> {
-  return authenticateAsConfiguredAdminProfile();
-}
-
 export async function signOut(): Promise<void> {
   await supabase.auth.signOut();
 }
