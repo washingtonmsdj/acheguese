@@ -5,6 +5,8 @@ import { join } from "node:path";
 const ROOT = process.cwd();
 const MIGRATIONS = join(ROOT, "supabase", "migrations");
 const BASELINE = "20260830055257_lock_application_views_to_read_only.sql";
+const ANON_READ_BASELINE =
+  "20260830060627_lock_operational_monitoring_views_from_anon.sql";
 const LOCKED_VIEWS = [
   "active_user_consents",
   "addresses_public",
@@ -23,10 +25,16 @@ const LOCKED_VIEWS = [
   "user_organizations",
   "user_professional_profiles",
 ] as const;
+const ANON_READ_LOCKED_VIEWS = [
+  "analytics_kpis",
+  "function_audit_stats",
+  "locations_coordinates_status",
+  "pii_access_stats",
+] as const;
 
-function migrationsAfterBaseline() {
+function migrationsAfter(baseline: string) {
   return readdirSync(MIGRATIONS)
-    .filter((name) => name.endsWith(".sql") && name > BASELINE)
+    .filter((name) => name.endsWith(".sql") && name > baseline)
     .sort()
     .map((name) => ({ name, sql: readFileSync(join(MIGRATIONS, name), "utf8") }));
 }
@@ -46,7 +54,7 @@ describe("G5 application view read-only authority", () => {
   it("rejects future browser DML grants on the locked application views", () => {
     const offenders: string[] = [];
 
-    for (const { name, sql } of migrationsAfterBaseline()) {
+    for (const { name, sql } of migrationsAfter(BASELINE)) {
       for (const view of LOCKED_VIEWS) {
         const grantsBrowserDml = new RegExp(
           String.raw`GRANT\s+(?:ALL(?:\s+PRIVILEGES)?|[^;]*\b(?:INSERT|UPDATE|DELETE)\b[^;]*)\s+ON\s+(?:TABLE\s+)?(?:public\.)?${view}\s+TO\s+[^;]*(?:\bPUBLIC\b|\banon\b|\bauthenticated\b)`,
@@ -59,6 +67,40 @@ describe("G5 application view read-only authority", () => {
     expect(
       offenders,
       "application read-model views must not regain browser DML without an explicit architecture decision",
+    ).toEqual([]);
+  });
+
+  it("keeps operational monitoring views anonymous-denied and security-invoker", () => {
+    const sql = readFileSync(join(MIGRATIONS, ANON_READ_BASELINE), "utf8");
+
+    for (const view of ANON_READ_LOCKED_VIEWS) {
+      expect(sql).toContain(`'${view}'`);
+      expect(sql).toContain(
+        `REVOKE SELECT ON TABLE public.${view} FROM PUBLIC, anon;`,
+      );
+      expect(sql).toContain(
+        `GRANT SELECT ON TABLE public.${view} TO authenticated, service_role;`,
+      );
+    }
+    expect(sql).toContain("security_invoker=true");
+  });
+
+  it("rejects future anonymous SELECT grants on operational monitoring views", () => {
+    const offenders: string[] = [];
+
+    for (const { name, sql } of migrationsAfter(ANON_READ_BASELINE)) {
+      for (const view of ANON_READ_LOCKED_VIEWS) {
+        const grantsAnonRead = new RegExp(
+          String.raw`GRANT\s+(?:ALL(?:\s+PRIVILEGES)?|SELECT)\s+ON\s+(?:TABLE\s+)?(?:public\.)?${view}\s+TO\s+[^;]*(?:\bPUBLIC\b|\banon\b)`,
+          "i",
+        );
+        if (grantsAnonRead.test(sql)) offenders.push(`${name}: ${view}`);
+      }
+    }
+
+    expect(
+      offenders,
+      "operational monitoring views must not regain anonymous read authority without an explicit architecture decision",
     ).toEqual([]);
   });
 });
