@@ -16,7 +16,7 @@
 import { RolloutService } from '@/core/rollout/services/RolloutService';
 import { createRolloutRepository } from '@/core/rollout/repositories/createRolloutRepository';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
-import { createTerritorialGroupRepository } from '@/core/location/repositories/createTerritorialGroupRepository';
+import { createTerritorialGroupRepository } from '@/core/territorial/repositories/createTerritorialGroupRepository';
 import { RolloutStatus } from '@/core/rollout/types';
 import type { ModuleKey } from '@/core/rollout/types';
 import type {
