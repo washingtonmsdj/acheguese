@@ -72,6 +72,30 @@ const BACKEND_STORAGE_GATEWAYS = new Map<string, readonly string[]>([
   ],
 ]);
 
+// Explicit read-only operational observers. These are not Storage owners: they
+// may inspect a fixed canonical bucket only for health/diagnostic purposes and
+// must remain incapable of mutating objects.
+const BACKEND_STORAGE_READERS = new Map<string, readonly string[]>([
+  [
+    "supabase/functions/health-check/index.ts",
+    [
+      "requireAdmin(req)",
+      "supabase.storage",
+      ".from('media-assets')",
+      ".list('', { limit: 1 })",
+    ],
+  ],
+]);
+
+const BACKEND_STORAGE_READER_FORBIDDEN_MUTATIONS = [
+  ".upload(",
+  ".remove(",
+  ".update(",
+  ".move(",
+  ".copy(",
+  ".createSignedUploadUrl(",
+] as const;
+
 function normalize(file: string): string {
   return relative(ROOT, file).replace(/\\/g, "/");
 }
@@ -163,45 +187,82 @@ function scanSourceFile(file: string): Violation[] {
 }
 
 function validateBackendStorage(files: string[], violations: Violation[]): void {
-  const seen = new Set<string>();
+  const seenGateways = new Set<string>();
+  const seenReaders = new Set<string>();
 
   for (const file of files) {
     const rel = normalize(file);
     const content = readFileSync(file, "utf8");
     if (!content.includes(".storage")) continue;
 
-    const requiredTokens = BACKEND_STORAGE_GATEWAYS.get(rel);
-    if (!requiredTokens) {
-      violations.push(
-        makeViolation(
+    const gatewayTokens = BACKEND_STORAGE_GATEWAYS.get(rel);
+    if (gatewayTokens) {
+      seenGateways.add(rel);
+      for (const token of gatewayTokens) {
+        requireToken(
           rel,
-          "Gateway backend de Storage não autorizado",
-          "Edge Functions novas devem ser explicitamente classificadas no Upload SSOT",
-          lineFor(content, ".storage"),
-        ),
-      );
+          content,
+          token,
+          "Gateway backend perdeu sua fronteira de operação/ownership",
+          violations,
+        );
+      }
       continue;
     }
 
-    seen.add(rel);
-    for (const token of requiredTokens) {
-      requireToken(
-        rel,
-        content,
-        token,
-        "Gateway backend perdeu sua fronteira de operação/ownership",
-        violations,
-      );
+    const readerTokens = BACKEND_STORAGE_READERS.get(rel);
+    if (readerTokens) {
+      seenReaders.add(rel);
+      for (const token of readerTokens) {
+        requireToken(
+          rel,
+          content,
+          token,
+          "Leitor backend de Storage perdeu sua fronteira read-only/admin",
+          violations,
+        );
+      }
+      for (const token of BACKEND_STORAGE_READER_FORBIDDEN_MUTATIONS) {
+        forbidToken(
+          rel,
+          content,
+          token,
+          "Leitor backend de Storage não pode adquirir capacidade de mutação",
+          violations,
+        );
+      }
+      continue;
     }
+
+    violations.push(
+      makeViolation(
+        rel,
+        "Uso backend de Storage não classificado",
+        "Edge Functions novas devem ser explicitamente classificadas como owner de operação ou leitor read-only no Upload SSOT",
+        lineFor(content, ".storage"),
+      ),
+    );
   }
 
   for (const gateway of BACKEND_STORAGE_GATEWAYS.keys()) {
-    if (!seen.has(gateway)) {
+    if (!seenGateways.has(gateway)) {
       violations.push(
         makeViolation(
           gateway,
           "Allowlist backend stale ou gateway ausente",
           "Remova a entrada se o gateway deixou de usar Storage; não mantenha exceção ociosa",
+        ),
+      );
+    }
+  }
+
+  for (const reader of BACKEND_STORAGE_READERS.keys()) {
+    if (!seenReaders.has(reader)) {
+      violations.push(
+        makeViolation(
+          reader,
+          "Allowlist de leitor Storage stale ou reader ausente",
+          "Remova a entrada se o observer deixou de usar Storage; não mantenha exceção ociosa",
         ),
       );
     }
@@ -341,7 +402,7 @@ function main(): void {
 
   if (violations.length === 0) {
     console.log(
-      "✅ Upload SSOT validado: media-assets governa imagens públicas canônicas; private storage passa pelo MediaService; Try-On é o único staging público genérico; gateways backend são explícitos.",
+      "✅ Upload SSOT validado: media-assets governa imagens públicas canônicas; private storage passa pelo MediaService; Try-On é o único staging público genérico; gateways backend e observers read-only são explícitos.",
     );
     return;
   }

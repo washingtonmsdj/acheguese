@@ -173,7 +173,7 @@ staging publico especializado do Try-On.
 
 ## 10. G4 global upload ownership — 2026-08-29
 
-O hardening global separa explicitamente quatro classes de Storage. Elas nao sao
+O hardening global separa explicitamente cinco classes de Storage. Elas nao sao
 SSOTs concorrentes porque cada uma possui semantica e autoridade distintas:
 
 1. **Imagem publica canonica de dominio** — `MediaService.uploadMediaAsset()` ->
@@ -186,15 +186,19 @@ SSOTs concorrentes porque cada uma possui semantica e autoridade distintas:
    `PublicImageUploadBucket`, cujo contrato atual contem apenas `tryon`. Buckets
    historicos `business_images` e `classified_images` nao podem voltar a ser
    writers de produto por esse helper.
-4. **Geracao server-side** — `ai-image` e `tryon-generate` podem gravar outputs
-   gerados no servidor em `ai-images`/`tryon`. `media-assets-cleanup` pode remover
-   orfaos. Qualquer nova Edge Function usando Storage deve ser classificada no
-   validator antes de entrar no source.
+4. **Geracao/lifecycle server-side** — `ai-image` e `tryon-generate` podem gravar
+   outputs gerados no servidor em `ai-images`/`tryon`; `media-assets-cleanup`
+   pode remover orfaos. Esses gateways sao owners de operacoes concretas.
+5. **Observacao operacional read-only** — `health-check` pode listar no maximo
+   um item do bucket canonico `media-assets`, somente apos `requireAdmin`. Essa
+   classe nao possui ownership de objetos e nao pode adquirir upload, remove,
+   update, move, copy ou signed-upload sem mudar explicitamente o contrato.
 
 `tools/architecture/validate-upload-ssot.ts` protege tanto `src` quanto
 `supabase/functions`: direct Storage no frontend fica concentrado no
-`MediaService`; Edge Functions com `.storage` falham por padrao e somente os
-gateways especializados conhecidos possuem allowlist com invariantes proprias.
+`MediaService`; Edge Functions com `.storage` falham por padrao. Gateways de
+mutacao e observers read-only precisam ser classificados separadamente e cada
+classe possui invariantes fail-closed proprias.
 
 ### Safety evidence
 
@@ -235,7 +239,8 @@ No nivel de autoridade arquitetural/source exigido pelo plano global:
 - owner publico canonico: unico;
 - owner privado de Safety: unico;
 - helper publico residual: restrito a Try-On;
-- gateways server-side: enumerados e fail-closed por validator;
+- gateways server-side de mutacao: enumerados e fail-closed por validator;
+- observers server-side read-only: enumerados, admin-only e sem mutacao;
 - banco remoto conhecido nao contradiz o fluxo ativo de Safety apos a migration
   `20260829161927`;
 - drift inativo de `verification-documents` fica explicitamente transferido a

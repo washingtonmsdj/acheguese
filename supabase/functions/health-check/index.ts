@@ -95,11 +95,13 @@ serve(async (req: Request) => {
       healthCheck.status = 'unhealthy';
     }
 
-    // 2. Check Storage
+    // 2. Check Storage using the canonical public media bucket. The health
+    // observer is intentionally read-only and must not depend on dormant legacy
+    // buckets that G5 may retire.
     const storageStart = Date.now();
     try {
       const { data, error } = await supabase.storage
-        .from('avatars')
+        .from('media-assets')
         .list('', { limit: 1 });
       
       const storageDuration = Date.now() - storageStart;
