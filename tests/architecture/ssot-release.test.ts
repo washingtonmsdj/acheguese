@@ -86,4 +86,34 @@ describe("release SSOT scripts", () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it("keeps one canonical generated database type authority", () => {
+    const canonicalTypes = "src/integrations/supabase/types.generated.ts";
+    const retiredSharedSnapshot = "src/shared/types/database.types.ts";
+    const generator = "tools/supabase/generate-supabase-types.ts";
+
+    expect(existsSync(canonicalTypes), `${canonicalTypes} must remain canonical`).toBe(true);
+    expect(
+      existsSync(retiredSharedSnapshot),
+      `${retiredSharedSnapshot} must not return as a second database authority`,
+    ).toBe(false);
+
+    const generatorSource = readFileSync(generator, "utf8");
+    expect(generatorSource).toContain(
+      'const OUTPUT_PATH = "src/integrations/supabase/types.generated.ts";',
+    );
+
+    const runtimeFiles = collectRuntimeFiles("src").filter(
+      (file) => file !== canonicalTypes,
+    );
+    const offenders = runtimeFiles.filter((file) => {
+      const source = readFileSync(file, "utf8");
+      return (
+        source.includes("@/shared/types/database.types") ||
+        source.includes("shared/types/database.types")
+      );
+    });
+
+    expect(offenders).toEqual([]);
+  });
 });
