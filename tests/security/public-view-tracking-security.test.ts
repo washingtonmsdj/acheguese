@@ -38,6 +38,9 @@ describe("public view tracking security", () => {
     const parameterFixMigration = readProjectFile(
       "supabase/migrations/20260707123630_fix_public_view_counter_rpc_parameters.sql",
     );
+    const businessViewsLockMigration = readProjectFile(
+      "supabase/migrations/20260830073045_lock_dormant_business_views_write_surface.sql",
+    );
     const edgeFunctionAuthPolicy = readProjectJson<{
       noJwtAllowlist: Record<
         string,
@@ -60,6 +63,8 @@ describe("public view tracking security", () => {
     expect(businessMutations).not.toContain("increment_business_views");
     expect(professionalMutations).not.toContain("increment_professional_views");
     expect(vagasService).not.toContain("increment_vaga_view_count");
+    expect(clientService).not.toContain("business_views");
+    expect(businessMutations).not.toContain("business_views");
 
     expect(edgeFunction).toContain("VIEW_COUNTER_RPCS");
     expect(edgeFunction).toContain("publicViewEventSchema");
@@ -122,6 +127,16 @@ describe("public view tracking security", () => {
     );
     expect(parameterFixMigration).not.toContain(
       "WHERE profile_id = professional_id",
+    );
+
+    expect(businessViewsLockMigration).toContain(
+      "REVOKE INSERT ON TABLE public.business_views FROM PUBLIC, anon, authenticated;",
+    );
+    expect(businessViewsLockMigration).toContain(
+      'DROP POLICY "Business views insertable" ON public.business_views;',
+    );
+    expect(businessViewsLockMigration).toContain(
+      "Browser writes are disabled; canonical public view counting is brokered through track-public-view",
     );
 
     expect(
