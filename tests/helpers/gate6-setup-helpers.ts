@@ -33,16 +33,17 @@ interface DriverAvailabilityState {
 }
 
 /**
- * Setup completo de motorista disponível com validação no banco
+ * Setup completo de motorista disponível com validação no banco.
  *
  * Executa:
- * 0. Limpa estado anterior (goOffline se necessário)
- * 1. Autentica como motorista
- * 2. goOnline()
- * 3. setAvailable() com coordenadas
- * 4. VALIDA no banco que está realmente disponível
+ * 0. Valida/autentica o profile contra o registry tecnico antes de qualquer write
+ * 1. Garante capacidades operacionais em driver_data
+ * 2. Limpa estado anterior (goOffline se necessário)
+ * 3. goOnline()
+ * 4. setAvailable() com coordenadas
+ * 5. VALIDA no banco que está realmente disponível
  *
- * Falha imediatamente se qualquer etapa falhar
+ * Falha imediatamente se qualquer etapa falhar.
  */
 export async function setupDriverAvailable(
   driverProfileId: string,
@@ -50,6 +51,10 @@ export async function setupDriverAvailable(
   lng: number
 ): Promise<SetupDriverResult> {
   try {
+    // Fail closed antes da primeira mutacao: authenticateAsProfile valida que o
+    // UUID pertence ao registry Gate e corresponde a um profile driver privado.
+    await authenticateAsProfile(driverProfileId);
+
     const { error: capabilityError } = await getSupabaseAdmin()
       .from('driver_data')
       .upsert({
@@ -69,20 +74,14 @@ export async function setupDriverAvailable(
       };
     }
 
-    // 0. Autenticar e limpar estado anterior
-    await authenticateAsProfile(driverProfileId);
-
-    // Tentar ir offline primeiro (ignora erro se já estiver offline)
+    // Tentar ir offline primeiro (ignora erro se já estiver offline).
     try {
       await DriverAvailabilityService.goOffline(driverProfileId);
-      // Aguardar propagação do estado
       await new Promise(resolve => setTimeout(resolve, 500));
     } catch (error) {
-      // Ignorar erro se já estiver offline
       console.log(`Driver ${driverProfileId} já estava offline ou sem registro`);
     }
 
-    // 1. goOnline()
     const onlineResult = await DriverAvailabilityService.goOnline(driverProfileId);
     if (!onlineResult.success) {
       return {
@@ -92,7 +91,6 @@ export async function setupDriverAvailable(
       };
     }
 
-    // 2. setAvailable() com coordenadas
     const availableResult = await DriverAvailabilityService.setAvailable(
       driverProfileId,
       { lat, lng }
@@ -105,7 +103,6 @@ export async function setupDriverAvailable(
       };
     }
 
-    // 3. VALIDAR no banco que está realmente disponível
     const validation = await validateDriverAvailable(driverProfileId);
     if (!validation.valid) {
       return {
@@ -131,8 +128,8 @@ export async function setupDriverAvailable(
 }
 
 /**
- * Setup de múltiplos motoristas disponíveis
- * Falha se qualquer motorista não ficar disponível
+ * Setup de múltiplos motoristas disponíveis.
+ * Falha se qualquer motorista não ficar disponível.
  */
 export async function setupMultipleDriversAvailable(
   drivers: Array<{ id: string; lat: number; lng: number }>
@@ -144,7 +141,6 @@ export async function setupMultipleDriversAvailable(
     results.push(result);
 
     if (!result.success) {
-      // Falha imediata no primeiro erro
       return {
         success: false,
         results,
@@ -159,22 +155,18 @@ export async function setupMultipleDriversAvailable(
 }
 
 /**
- * Limpa estado de motorista (offline)
- * Útil para testes de expiração (sem motoristas disponíveis)
+ * Limpa estado de motorista (offline).
  */
 export async function cleanupDriver(driverProfileId: string): Promise<void> {
   try {
     await authenticateAsProfile(driverProfileId);
     await DriverAvailabilityService.goOffline(driverProfileId);
   } catch (error) {
-    // Ignorar erros de cleanup
     console.warn(`Cleanup de motorista ${driverProfileId} falhou:`, error);
   }
 }
 
-/**
- * Limpa múltiplos motoristas
- */
+/** Limpa múltiplos motoristas registrados. */
 export async function cleanupMultipleDrivers(driverProfileIds: string[]): Promise<void> {
   await Promise.all(
     driverProfileIds.map(id => cleanupDriver(id))
