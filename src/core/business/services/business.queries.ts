@@ -9,6 +9,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import { LocationHierarchyReadService } from "@/core/location";
 import { applyTerritoryFilter } from "@/core/location/utils";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { EntityContactService } from "@/core/contact";
@@ -397,16 +398,21 @@ export async function getBusinessesList(
       }
     }
 
-    // Hierárquico - resolve descendentes
+    // Hierárquico - resolve descendentes pelo owner canônico de Location.
     let resolvedFilter = filter;
     if (filter?.scope === "location") {
-      const { data: descendantIds, error: rpcError } = await supabase.rpc(
-        "rpc_get_location_descendants_ids",
-        { p_location_id: filter.location_id },
-      );
+      try {
+        const descendantIds =
+          await LocationHierarchyReadService.getDescendantIds(filter.location_id);
 
-      if (!rpcError && descendantIds && descendantIds.length > 0) {
-        resolvedFilter = { scope: "group", location_ids: descendantIds };
+        if (descendantIds.length > 0) {
+          resolvedFilter = { scope: "group", location_ids: descendantIds };
+        }
+      } catch (error) {
+        logger.warn(
+          "[BusinessQueries] Failed to expand territory; using exact location filter",
+          { location_id: filter.location_id, error },
+        );
       }
     }
 
