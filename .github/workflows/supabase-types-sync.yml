@@ -83,10 +83,10 @@ jobs:
           }
 
           function Refresh-MainAndCommitTypes {
-            git fetch --no-tags --depth=1 origin "main:refs/remotes/origin/main"
+            $null = git fetch --no-tags --depth=1 origin "main:refs/remotes/origin/main"
             if ($LASTEXITCODE -ne 0) { throw "Failed to fetch latest origin/main." }
 
-            git checkout -B main refs/remotes/origin/main
+            $null = git checkout -B main refs/remotes/origin/main
             if ($LASTEXITCODE -ne 0) { throw "Failed to checkout latest origin/main." }
 
             $generatedBytes = [System.IO.File]::ReadAllBytes($typesTempPath)
@@ -104,11 +104,11 @@ jobs:
               throw "Unexpected generated changes detected: $($unexpected -join '; ')"
             }
 
-            git add $env:TYPES_PATH
+            $null = git add $env:TYPES_PATH
             if ($LASTEXITCODE -ne 0) { throw "Failed to stage canonical Supabase types." }
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git commit -m "chore(g5): sync Supabase generated types"
+            $null = git config user.name "github-actions[bot]"
+            $null = git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            $null = git commit -m "chore(g5): sync Supabase generated types"
             if ($LASTEXITCODE -ne 0) { throw "Failed to commit canonical Supabase types." }
             return $true
           }
