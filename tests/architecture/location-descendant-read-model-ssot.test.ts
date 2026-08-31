@@ -13,6 +13,7 @@ describe("location descendant read model SSOT", () => {
     const service = read(
       "src/core/location/services/LocationHierarchyReadService.ts",
     );
+    const locationIndex = read("src/core/location/index.ts");
 
     expect(resolver).toContain(
       "LocationHierarchyReadService.getDescendantIds",
@@ -25,5 +26,9 @@ describe("location descendant read model SSOT", () => {
     expect(service).toContain("p_location_id: locationId");
     expect(service).not.toContain('.from("locations")');
     expect(service).not.toContain("count: \"exact\"");
+
+    expect(locationIndex).toContain(
+      "export { LocationHierarchyReadService } from './services/LocationHierarchyReadService';",
+    );
   });
 });
