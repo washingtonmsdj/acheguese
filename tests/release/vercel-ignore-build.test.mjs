@@ -27,7 +27,6 @@ describe("Vercel ignored build step", () => {
       ".kiro/specs/example/design.md",
       "tests/security/example.test.ts",
       "e2e/example.spec.ts",
-      "supabase/migrations/20260831040000_example.sql",
       "URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md",
     ];
 
@@ -37,12 +36,13 @@ describe("Vercel ignored build step", () => {
     expect(shouldSkipVercelBuild(skippable)).toBe(true);
   });
 
-  it("forces a build for runtime, build, Supabase runtime, and critical governance inputs", () => {
+  it("forces a build for runtime, build, migrations, Supabase runtime, and critical governance inputs", () => {
     const buildRequired = [
       "src/main.tsx",
       "api/example.ts",
       "public/manifest.json",
       "tools/release/run-vercel-production-build.mjs",
+      "supabase/migrations/20260831040000_example.sql",
       "supabase/functions/health-check/index.ts",
       "supabase/config.toml",
       "package.json",
@@ -62,6 +62,12 @@ describe("Vercel ignored build step", () => {
       shouldSkipVercelBuild([
         "docs/03-architecture/checkpoint.md",
         "src/main.tsx",
+      ]),
+    ).toBe(false);
+    expect(
+      shouldSkipVercelBuild([
+        "docs/03-architecture/checkpoint.md",
+        "supabase/migrations/20260831040000_example.sql",
       ]),
     ).toBe(false);
     expect(shouldSkipVercelBuild([])).toBe(false);
