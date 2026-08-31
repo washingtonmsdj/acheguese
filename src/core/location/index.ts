@@ -123,6 +123,7 @@ export {
 // ============================================
 // SERVICES
 // ============================================
+export { LocationHierarchyReadService } from './services/LocationHierarchyReadService';
 export { userLocationResolver } from './services/UserLocationResolver';
 export {
   LocationGeocodingService,
