@@ -10,7 +10,10 @@ const CRITICAL_DOC_PREFIXES = [
 ];
 
 function normalizePath(filePath) {
-  return String(filePath ?? "").trim().replaceAll("\\", "/").replace(/^\.\//, "");
+  return String(filePath ?? "")
+    .trim()
+    .replaceAll("\\", "/")
+    .replace(/^\.\//, "");
 }
 
 export function isSkippableVercelPath(filePath) {
@@ -23,7 +26,9 @@ export function isSkippableVercelPath(filePath) {
   if (normalized.startsWith("e2e/")) return true;
 
   if (normalized.startsWith("docs/")) {
-    return !CRITICAL_DOC_PREFIXES.some((prefix) => normalized.startsWith(prefix));
+    return !CRITICAL_DOC_PREFIXES.some((prefix) =>
+      normalized.startsWith(prefix),
+    );
   }
 
   if (!normalized.includes("/") && normalized.toLowerCase().endsWith(".md")) {
@@ -37,12 +42,45 @@ export function shouldSkipVercelBuild(changedPaths) {
   return changedPaths.length > 0 && changedPaths.every(isSkippableVercelPath);
 }
 
+export function previousCommitFetchArgs(sha) {
+  return ["fetch", "--no-tags", "--depth=1", "origin", sha];
+}
+
 function runGit(args) {
   return spawnSync("git", args, {
     cwd: process.cwd(),
     encoding: "utf8",
     shell: false,
   });
+}
+
+function gitCommitAvailable(sha) {
+  const result = runGit(["cat-file", "-e", `${sha}^{commit}`]);
+  return !result.error && result.status === 0;
+}
+
+function ensureGitCommitAvailable(sha) {
+  if (gitCommitAvailable(sha)) {
+    return { available: true, fetched: false, detail: "" };
+  }
+
+  const fetchResult = runGit(previousCommitFetchArgs(sha));
+  if (fetchResult.error || fetchResult.status !== 0) {
+    const detail = String(
+      fetchResult.stderr ?? fetchResult.error?.message ?? "git fetch failed",
+    ).trim();
+    return { available: false, fetched: false, detail };
+  }
+
+  if (!gitCommitAvailable(sha)) {
+    return {
+      available: false,
+      fetched: true,
+      detail: "fetched previous deployment commit but it remains unavailable",
+    };
+  }
+
+  return { available: true, fetched: true, detail: "" };
 }
 
 function continueBuild(reason) {
@@ -52,10 +90,24 @@ function continueBuild(reason) {
 
 function main() {
   const previousSha = String(process.env.VERCEL_GIT_PREVIOUS_SHA ?? "").trim();
-  const currentSha = String(process.env.VERCEL_GIT_COMMIT_SHA ?? "HEAD").trim() || "HEAD";
+  const currentSha =
+    String(process.env.VERCEL_GIT_COMMIT_SHA ?? "HEAD").trim() || "HEAD";
 
   if (!/^[0-9a-f]{40}$/i.test(previousSha)) {
     continueBuild("VERCEL_GIT_PREVIOUS_SHA is unavailable or invalid");
+  }
+
+  const previousCommit = ensureGitCommitAvailable(previousSha);
+  if (!previousCommit.available) {
+    continueBuild(
+      previousCommit.detail
+        ? `previous successful deployment commit unavailable: ${previousCommit.detail}`
+        : "previous successful deployment commit unavailable",
+    );
+  }
+
+  if (previousCommit.fetched) {
+    console.log("[vercel-ignore] fetched previous successful deployment commit");
   }
 
   const diff = runGit([
@@ -68,7 +120,9 @@ function main() {
   ]);
 
   if (diff.error || diff.status !== 0) {
-    const detail = String(diff.stderr ?? diff.error?.message ?? "git diff failed").trim();
+    const detail = String(
+      diff.stderr ?? diff.error?.message ?? "git diff failed",
+    ).trim();
     continueBuild(detail || "git diff failed");
   }
 
@@ -78,7 +132,9 @@ function main() {
     .filter(Boolean);
 
   if (!shouldSkipVercelBuild(changedPaths)) {
-    const buildPaths = changedPaths.filter((path) => !isSkippableVercelPath(path));
+    const buildPaths = changedPaths.filter(
+      (path) => !isSkippableVercelPath(path),
+    );
     continueBuild(
       buildPaths.length > 0
         ? `deploy-relevant changes: ${buildPaths.join(", ")}`
