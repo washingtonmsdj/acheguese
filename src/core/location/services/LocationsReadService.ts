@@ -1,5 +1,6 @@
 import { logger } from "@/shared/utils/logger";
 import { supabase } from "@/integrations/supabase";
+import type { Location } from "@/core/location/types";
 
 export interface LocationRecord {
   id: string;
@@ -10,9 +11,16 @@ export interface LocationRecord {
   created_at: string;
 }
 
+export type PublicRoutingLocationRecord = Pick<
+  Location,
+  "id" | "type" | "status" | "geographic_path" | "metadata"
+>;
+
 type LocationWithChildren = LocationRecord & { children?: LocationWithChildren[] };
 
 const COMPLETE_READ_PAGE_SIZE = 1000;
+const PUBLIC_ROUTING_LOCATION_SELECT =
+  "id,type,status,geographic_path,metadata" as const;
 
 export class LocationsReadService {
   static async getAll(): Promise<LocationRecord[]> {
@@ -65,6 +73,58 @@ export class LocationsReadService {
         if (expectedTotal !== null && offset < expectedTotal) {
           throw new Error(
             `LocationsReadService.getAllComplete stopped at ${offset}/${expectedTotal} rows.`,
+          );
+        }
+        break;
+      }
+
+      rows.push(...page);
+      offset += page.length;
+    }
+
+    return rows;
+  }
+
+  /**
+   * Projeção exaustiva mínima para geração offline de rotas públicas/sitemap.
+   *
+   * Mantém a paginação fail-closed do catálogo completo, mas evita transferir
+   * colunas pesadas e irrelevantes para SEO (por exemplo boundary e atributos
+   * administrativos) em milhares de registros.
+   */
+  static async getAllCompleteForPublicRouting(): Promise<
+    PublicRoutingLocationRecord[]
+  > {
+    const rows: PublicRoutingLocationRecord[] = [];
+    let offset = 0;
+    let expectedTotal: number | null = null;
+
+    while (expectedTotal === null || offset < expectedTotal) {
+      const { data, error, count } = await supabase
+        .from("locations")
+        .select(PUBLIC_ROUTING_LOCATION_SELECT, { count: "exact" })
+        .in("type", ["city", "district"])
+        .eq("status", "active")
+        .order("geographic_path")
+        .order("id")
+        .range(offset, offset + COMPLETE_READ_PAGE_SIZE - 1);
+
+      if (error) {
+        logger.error(
+          "LocationsReadService.getAllCompleteForPublicRouting",
+          error,
+          { offset, expectedTotal },
+        );
+        throw error;
+      }
+
+      if (count !== null) expectedTotal = count;
+      const page = (data as PublicRoutingLocationRecord[]) || [];
+
+      if (page.length === 0) {
+        if (expectedTotal !== null && offset < expectedTotal) {
+          throw new Error(
+            `LocationsReadService.getAllCompleteForPublicRouting stopped at ${offset}/${expectedTotal} rows.`,
           );
         }
         break;
