@@ -60,7 +60,8 @@ apply-*.sh
 .husky
 
 # Git
-.git
+# Do not list .git here: Vercel excludes it from deployment artifacts automatically,
+# while the Ignored Build Step may need repository metadata to compare deployments.
 .gitignore
 
 # Kiro
