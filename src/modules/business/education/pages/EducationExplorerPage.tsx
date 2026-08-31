@@ -76,7 +76,7 @@ import {
   EducationNicheShowcase,
   FeaturedEducationSection,
 } from './explorerMarketingSections';
-import type { EducationPublicProfile } from '../types';
+import type { EducationPublicProfile } from '@/core/education';
 
 // ============================================================================
 // PAGINA PRINCIPAL
