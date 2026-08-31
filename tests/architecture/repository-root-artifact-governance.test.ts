@@ -40,4 +40,15 @@ describe('repository root artifact governance', () => {
     expect(workflow).not.toContain('src/integrations/supabase/types.ts');
     expect(workflow).not.toContain('src/shared/types/database.types.ts');
   });
+
+  it('keeps launch auth defaults fail-closed and password policy hardened', () => {
+    const config = readFileSync('supabase/config.toml', 'utf8');
+
+    expect(config).toContain('enable_anonymous_sign_ins = false');
+    expect(config).toContain('enable_manual_linking = false');
+    expect(config).toContain('minimum_password_length = 12');
+    expect(config).toContain('password_requirements = "lower_upper_letters_digits_symbols"');
+    expect(config).toContain('enable_confirmations = true');
+    expect(config).toContain('secure_password_change = true');
+  });
 });
