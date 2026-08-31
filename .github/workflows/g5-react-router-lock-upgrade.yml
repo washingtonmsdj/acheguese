@@ -1,0 +1,83 @@
+name: G5 React Router Lock Upgrade
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/g5-react-router-lock-upgrade.yml"
+
+concurrency:
+  group: g5-react-router-lock-upgrade-main
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  upgrade-lock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout current main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Align npm version
+        run: npm install --global npm@11.17.0
+
+      - name: Upgrade React Router lock atomically
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm pkg set 'dependencies.react-router-dom=^7.18.1'
+          npm install --package-lock-only --ignore-scripts
+          node tools/release/validate-package-lock-consistency.mjs
+
+      - name: Install regenerated dependency graph
+        run: npm ci --ignore-scripts
+
+      - name: Gate production dependency vulnerabilities
+        run: npm audit --omit=dev --audit-level=moderate
+
+      - name: Validate React Router compatibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run typecheck:app
+          npm run lint
+          npm run build
+
+      - name: Commit regenerated manifest and lock
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet -- package.json package-lock.json; then
+            echo "No dependency changes were generated."
+            exit 0
+          fi
+
+          git add package.json package-lock.json
+          git commit -m "security(g5): upgrade React Router to 7.18.1"
+
+          # Preserve main-only governance if documentation or unrelated files moved
+          # while this job was validating the regenerated lock. Any dependency-file
+          # conflict fails closed instead of force-pushing or rewriting history.
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
