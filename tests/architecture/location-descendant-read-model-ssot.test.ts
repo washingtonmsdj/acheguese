@@ -41,9 +41,7 @@ describe("location descendant read model SSOT", () => {
       expect(consumer).toContain(
         "LocationHierarchyReadService.getDescendantIds",
       );
-      expect(consumer).not.toContain(
-        'supabase.rpc(\n        "rpc_get_location_descendants_ids"',
-      );
+      expect(consumer).not.toContain('"rpc_get_location_descendants_ids"');
     }
   });
 });
