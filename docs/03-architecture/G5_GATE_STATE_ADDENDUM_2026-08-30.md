@@ -35,14 +35,14 @@ O install também reportou `2 moderate severity vulnerabilities` via npm audit s
 
 ### 1.1 Cobertura do HEAD atual
 
-Comparação GitHub entre `c3dbb324...` e o HEAD `34d63dcb10c948209add097bf4a73246957aff8a` neste corte:
+Comparação GitHub entre `c3dbb324...` e o HEAD `34d63dcb10c948209add097bf4a73246957aff8a` no corte de comparação:
 
 - status: `ahead`;
 - `ahead_by: 9`;
 - `behind_by: 0`;
 - merge-base: o próprio `c3dbb324...`.
 
-Os únicos paths alterados depois do hosted PASS são:
+Os únicos paths alterados depois do hosted PASS naquele compare são:
 
 - `.github/workflows/supabase-types-sync.yml`;
 - `.vercelignore`;
@@ -86,18 +86,17 @@ Estado source atual:
 
 Esse ajuste está correto em source/test, mas não será promovido a hosted PASS até aparecer um deployment/ignored-build execution posterior que o exercite.
 
-## 4. Actions + canonical types: workflow endurecido, materialização ainda pendente
+## 4. Actions + canonical types: workflow endurecido; scheduler/runner é o blocker atual
 
-A migration `20260831024311_add_locations_geographic_path_pattern_index_g5.sql` provou que o gatilho automático por migration funciona:
+A migration `20260831024311_add_locations_geographic_path_pattern_index_g5.sql` provou que o gatilho automático por migration funciona. Runs antigos que haviam ficado presos foram posteriormente limpos pelo controle de concorrência:
 
-- `Supabase Types Sync` run `33351562666`;
-- source `23679c033b812c97a208229f52725f39c0bb8f55`;
-- status observado naquele corte: `pending`;
-- jobs: `0` / `[]`.
+- run `33351562666`, source `23679c033b812c97a208229f52725f39c0bb8f55`: `completed / cancelled`;
+- run `33352436687`, source `a00a8a7ed910f6ac752ae450b6f9d92cd1983a2e`: `completed / cancelled`;
+- no segundo run, a consulta posterior de jobs retorna `total_count: 0`, `jobs: []`.
 
-O blocker não era o trigger; era a ausência de alocação/execução do runner Windows self-hosted autorizado.
+Isso confirma que o backlog histórico não continua acumulando indefinidamente após `cancel-in-progress: true`.
 
-### 4.1 Workflow não está mais sujeito ao stale-push simples descrito no checkpoint antigo
+### 4.1 Workflow atual + prova precisa do scheduler
 
 A `main` recebeu endurecimentos forward-only no workflow canônico, incluindo:
 
@@ -125,7 +124,23 @@ E agora também:
 - se `main` avançou, faz checkout de `origin/main` e **regenera** os tipos sobre o HEAD atual antes de commitar;
 - repete fetch/regenerate antes do push se houver corrida adicional.
 
-Portanto, **não** mover o workflow para `ubuntu-latest` e **não** criar segundo executor/segunda autoridade. O desenho atual já trata o backlog/stale-main no próprio lifecycle autorizado.
+O run atual conhecido permite separar definitivamente source de infraestrutura:
+
+- workflow run: `33358103649`;
+- run number: `17`;
+- head: `da35ade063cb23549d5aa80ac4b4707f77cb5246`;
+- run status: `pending`;
+- job: `99384016420` / `Regenerate canonical database types`;
+- job status: `queued`;
+- `steps: []`;
+- `runner_id: 0`;
+- `runner_name: ""`;
+- `runner_group_id: 0`;
+- labels requisitados: exatamente `self-hosted`, `windows`, `x64`, `acheguese-heavy-windows`, `remote-only`.
+
+Essa é prova direta de que o job chegou ao scheduler mas **nenhum runner foi alocado e nenhum step começou**. Não classificar isso como falha do gerador, YAML ou snapshot.
+
+Portanto, **não** mover o workflow para `ubuntu-latest` e **não** criar segundo executor/segunda autoridade. O desenho atual já trata backlog/stale-main; o blocker remanescente é a disponibilidade/alocação do runner autorizado.
 
 ### 4.2 Drift remoto continua real e foi revalidado pelo gerador oficial
 
@@ -144,6 +159,8 @@ Estado correto do gate:
 
 - gerador oficial: **remote truth revalidada**;
 - workflow: **arquitetura/race handling endurecidos**;
+- backlog antigo: **cancelado/saneado**;
+- job atual: **queued sem runner/steps**;
 - snapshot versionado: **ainda stale**;
 - execução/materialização automática pelo runner autorizado: **ainda sem prova de conclusão**.
 
@@ -171,12 +188,13 @@ Gates que não devem mais ser reabertos sem nova evidência:
 - sitemap production hosted proof até `c3dbb324...` — 3 arquivos / 114.302 URLs;
 - application/runtime source atual — sem mudanças pós-`c3dbb324...` no compare observado;
 - location path-prefix index remote proof (`20260831024311`);
-- desenho de concorrência/stale-main do Supabase Types Sync — já endurecido em source mantendo o runner autorizado.
+- desenho de concorrência/stale-main do Supabase Types Sync — já endurecido em source mantendo o runner autorizado;
+- backlog histórico dos runs `33351562666`/`33352436687` — cancelado.
 
 Blockers independentes que continuam abertos:
 
 1. materialização integral de `src/integrations/supabase/types.generated.ts` pelo lifecycle autorizado;
-2. runner GitHub Actions autorizado voltar a alocar/executar steps para provar o Types Sync automático;
+2. runner GitHub Actions autorizado ser alocado para o job atual `99384016420` e executar os steps do Types Sync;
 3. remoção do bucket órfão `classified-images` pela Storage API oficial;
 4. habilitação de Leaked Password Protection quando houver superfície oficial conectada para Auth config;
 5. hosted exercise do ajuste pós-`c3dbb324...` de `.vercelignore`/ignored-build;
@@ -190,6 +208,8 @@ Blockers independentes que continuam abertos:
 - Não exigir novo hosted build do application/runtime apenas por commits de docs/CI/testes quando o compare prova que runtime não mudou.
 - Não chamar ausência de runtime errors de teste de carga.
 - Não interpretar o antigo Vercel rate-limit como estado atual; deployments `READY` posteriores já existem.
+- Não reabrir os runs antigos cancelados como se ainda estivessem pending.
+- Não diagnosticar o run atual como falha de source enquanto `runner_id = 0` e `steps = []`.
 - Não mudar o Supabase Types Sync para runner público só para obter execução.
 - Não remover as proteções `cancel-in-progress`/current-main regeneration do workflow atual.
 - Não tentar fazer push de snapshot manual/parcial para contornar o runner.
