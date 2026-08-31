@@ -27,6 +27,7 @@ const REMOVED_PERMISSIVE_POLICIES = [
   "Addresses viewable by all",
   "Driver data viewable",
   "driver_locations_select_policy",
+  "Drivers manage own location",
   "Public can read online drivers",
   "Anyone can read driver profiles",
   "Event review helpfulness is visible to authenticated users",
