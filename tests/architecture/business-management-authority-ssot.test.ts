@@ -23,7 +23,7 @@ describe("Business management authority SSOT", () => {
 
   it("delegates the compatibility RLS helper to the canonical profile manager authority", () => {
     const migration = read(
-      "supabase/migrations/20260826100000_unify_business_profile_management_authority.sql",
+      "supabase/migrations/20260826095937_unify_business_profile_management_authority.sql",
     );
 
     expect(migration).toContain("SELECT private.can_manage_profile(p_profile_id)");
