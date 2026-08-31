@@ -1,16 +1,18 @@
 /**
- * TESTE DE VIOLAÇÃO 2: Import direto de provider de maps
- * 
- * Este arquivo DEVE falhar no lint com:
+ * TESTE DE VIOLAÇÃO 2: import cross-layer modules → integrations/maps
+ *
+ * Este fixture permanece fora de `src` para não quebrar o lint normal.
+ * O validator o executa via stdin com um filename virtual em `src/modules/`,
+ * porque `maps/no-cross-layer-import` usa a camada do arquivo consumidor como
+ * parte da regra.
+ *
+ * Este arquivo DEVE falhar no lint explícito com:
  * - Exit code 1
- * - Regra: maps/no-direct-provider-import
- * - Mensagem: "❌ MAPS BLINDAGEM: Não importe '...' diretamente..."
- * 
- * NOTA: A regra no-cross-layer-import é específica para arquivos em src/modules/.
- * Este arquivo testa a regra no-direct-provider-import como segunda violação.
+ * - Regra: maps/no-cross-layer-import
+ * - Mensagem de blindagem Maps para modules → integrations/maps
  */
 
-// ❌ VIOLAÇÃO: Import direto de provider de geocoding
+// ❌ VIOLAÇÃO: um consumidor em modules importa provider de integrations/maps.
 import { NominatimGeocodingProvider } from '@/integrations/maps/providers/NominatimGeocodingProvider';
 
 export function testViolation() {
