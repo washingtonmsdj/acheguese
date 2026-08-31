@@ -49,13 +49,15 @@ jobs:
           const fs = require('node:fs');
           const path = 'src/app/components/AppRuntime.tsx';
           const source = fs.readFileSync(path, 'utf8');
-          const before = `                <BrowserRouter
-                            future={{
-                              v7_startTransition: true,
-                              v7_relativeSplatPath: true,
-                            }}
-                          >`;
-          const after = `                <BrowserRouter>`;
+          const before = [
+            '                <BrowserRouter',
+            '                  future={{',
+            '                    v7_startTransition: true,',
+            '                    v7_relativeSplatPath: true,',
+            '                  }}',
+            '                >',
+          ].join('\n');
+          const after = '                <BrowserRouter>';
 
           const occurrences = source.split(before).length - 1;
           if (occurrences !== 1) {
