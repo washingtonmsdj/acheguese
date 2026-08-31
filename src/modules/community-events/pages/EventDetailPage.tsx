@@ -59,7 +59,7 @@ import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 import { eventRuntimeService } from '@/core/community-events';
 import { mapCommunityEventToEvent } from '../utils/eventAdapters';
 import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
-import { EventEngagementService } from '../services/EventEngagementService';
+import { EventEngagementService } from '@/core/community-events/services/EventEngagementService';
 import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
 import { useCommunityUrls } from '@/core/routing/hooks/useCommunityUrls';
 
