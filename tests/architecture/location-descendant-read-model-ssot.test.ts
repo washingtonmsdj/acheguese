@@ -17,6 +17,9 @@ describe("location descendant read model SSOT", () => {
     const businessQueries = read(
       "src/core/business/services/business.queries.ts",
     );
+    const classifiedsQueries = read(
+      "src/core/classifieds/services/classifieds.queries.ts",
+    );
 
     expect(resolver).toContain(
       "LocationHierarchyReadService.getDescendantIds",
@@ -34,11 +37,13 @@ describe("location descendant read model SSOT", () => {
       "export { LocationHierarchyReadService } from './services/LocationHierarchyReadService';",
     );
 
-    expect(businessQueries).toContain(
-      "LocationHierarchyReadService.getDescendantIds",
-    );
-    expect(businessQueries).not.toContain(
-      'supabase.rpc(\n        "rpc_get_location_descendants_ids"',
-    );
+    for (const consumer of [businessQueries, classifiedsQueries]) {
+      expect(consumer).toContain(
+        "LocationHierarchyReadService.getDescendantIds",
+      );
+      expect(consumer).not.toContain(
+        'supabase.rpc(\n        "rpc_get_location_descendants_ids"',
+      );
+    }
   });
 });
