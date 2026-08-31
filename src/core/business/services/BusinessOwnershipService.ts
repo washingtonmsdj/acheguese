@@ -1,12 +1,13 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
+import { profileService } from '@/core/profiles/services/ProfileService';
 import { ProfileMembersService } from '@/core/profiles/services/multi-profile/profileMembersService';
 
 /**
  * BusinessOwnershipService - SSOT de autoridade de gestao de empresas.
  *
  * Contrato canonico:
- * - dono direto do profile (profiles.user_id) pode gerenciar;
+ * - dono direto do profile pode gerenciar via ProfileService;
  * - membership precisa estar ativa;
  * - somente roles owner/admin podem gerenciar;
  * - member nao possui autoridade de gestao.
@@ -42,18 +43,7 @@ export class BusinessOwnershipService {
         return false;
       }
 
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('id', ownerProfileId)
-        .maybeSingle();
-
-      if (profileError) {
-        logger.error('[BusinessOwnershipService] Error checking direct profile owner:', profileError);
-        return false;
-      }
-
-      if (profile?.user_id === userId) {
+      if (await profileService.isProfileOwner(ownerProfileId, userId)) {
         return true;
       }
 
