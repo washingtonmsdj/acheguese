@@ -19,6 +19,7 @@ export interface SafeHttpUrlOptions {
 const publicEnv = ((import.meta as ImportMeta & { env?: PublicEnv }).env ?? {}) as PublicEnv;
 const EXPLICIT_PROTOCOL_REGEX = /^[a-z][a-z\d+.-]*:/i;
 const LEADING_NETWORK_PATH_REGEX = /^[\\/]{2}/;
+const ENCODED_PATH_SEPARATOR_REGEX = /%(?:25)*(?:2f|5c)/i;
 const INTERNAL_PATH_DECODE_PASSES = 2;
 
 function normalizeOrigin(origin: string): string {
@@ -47,7 +48,11 @@ function hasUnsafeInternalPathSyntax(value: string): boolean {
   let pathname = getPathnameCandidate(value);
 
   for (let pass = 0; pass <= INTERNAL_PATH_DECODE_PASSES; pass += 1) {
-    if (pathname.includes('\\') || LEADING_NETWORK_PATH_REGEX.test(pathname)) {
+    if (
+      pathname.includes('\\') ||
+      LEADING_NETWORK_PATH_REGEX.test(pathname) ||
+      ENCODED_PATH_SEPARATOR_REGEX.test(pathname)
+    ) {
       return true;
     }
 
@@ -119,6 +124,13 @@ export function resolveSafeRedirectUrl(
   if (isRelativeUrl(input)) {
     if (!allowRelative) return null;
     return input;
+  }
+
+  if (input.startsWith('/') || input.startsWith('\\')) {
+    logger.warn('[safeRedirect] Caminho relativo inseguro bloqueado', {
+      context: options.context,
+    });
+    return null;
   }
 
   try {
