@@ -23,7 +23,7 @@ import { cn } from '@/shared/utils/cn';
 
 import { getNicheByKey, getPublicNiches } from '../niches/registry';
 import { EducationUrlService } from '../services/EducationUrlService';
-import type { EducationPublicProfile } from '../types';
+import type { EducationPublicProfile } from '@/core/education';
 import {
   INFRASTRUCTURE_FILTERS,
   INSTITUTION_TYPE_FILTERS,
