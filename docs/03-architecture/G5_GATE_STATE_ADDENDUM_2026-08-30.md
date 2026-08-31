@@ -5,11 +5,11 @@ Branch: `main`
 
 Este addendum atualiza somente gates cujo estado mudou depois de `G5_CHECKPOINT_2026-08-30.md`. O checkpoint histórico não deve ser reescrito para apagar a sequência de evidências.
 
-## 1. Hosted build: fronteira avançou de `13e4efb1...` para `c3dbb324...`
+## 1. Hosted build: última fronteira READY continua em `c3dbb324...`
 
 O hosted proof inicial de G5 havia sido estabelecido no deployment Vercel `dpl_8aezRhYV8Bur5tG568miVSrh9EJm`, source `13e4efb162baca392c5363e02bdb743143121439`, production `READY`.
 
-Depois de uma janela de rate-limit, a Vercel voltou a executar builds da `main`. O hosted proof mais recente observado neste corte é:
+Depois de uma janela de rate-limit, a Vercel voltou a executar builds da `main`. O hosted proof completo mais recente observado neste corte é:
 
 - deployment: `dpl_EoErSiJ4MTCR9GNEbCPeYKYsN7on`;
 - source: `c3dbb3249352420c73fa77716bf910a96b82dc56`;
@@ -24,38 +24,35 @@ Os logs provam execução real do pipeline:
 - validação de consistência de `package.json`/`package-lock.json`: PASS;
 - `security:validate`: PASS com aviso esperado de `.env.local` ausente no ambiente hosted;
 - lint de segurança executado;
-- Vite concluiu `built in 32.32s`;
+- Vite concluiu build;
 - sitemap de produção validado: index com 3 arquivos e **114.302 URLs**;
 - `Build Completed in /vercel/output [3m]`;
 - outputs deployados;
 - `Deployment completed`;
 - consulta de runtime `error`/`fatal` no deployment nas últimas 24h: nenhum log encontrado no recorte observado.
 
-O install também reportou `2 moderate severity vulnerabilities` via npm audit summary. Isso **não** falhou o build, mas permanece finding de launch-hardening até a cadeia de dependências ser identificada e reconciliada; não marcar como resolvido apenas porque o deployment ficou `READY`.
+O install também reportou `2 moderate severity vulnerabilities` via npm audit summary. Isso **não** falhou o build, mas permanece finding de launch-hardening até a cadeia exata do audit ser materializada e reconciliada.
 
-### 1.1 Cobertura do HEAD atual
+### 1.1 Cobertura histórica e reabertura controlada do hosted proof
 
-Comparação GitHub entre `c3dbb324...` e o HEAD `34d63dcb10c948209add097bf4a73246957aff8a` no corte de comparação:
+Até o corte `34d63dcb10c948209add097bf4a73246957aff8a`, a comparação contra `c3dbb324...` provava somente mudanças em CI, `.vercelignore`, testes e documentação. Nesse corte não havia alteração posterior de runtime e o application source permanecia coberto pelo hosted PASS de `c3dbb324...`.
 
-- status: `ahead`;
-- `ahead_by: 9`;
-- `behind_by: 0`;
-- merge-base: o próprio `c3dbb324...`.
+Esse estado **mudou** com o hardening de redirect interno executado depois:
 
-Os únicos paths alterados depois do hosted PASS naquele compare são:
+- `401cfa8d1914b8d9d966485c46fb46bc60e0ab41` — hardening inicial de `src/shared/utils/safeRedirect.ts`;
+- `cc5d3f8565c2531be0abd5b54a40ea86af44b86f` — ratchet inicial;
+- `fd153c2eeb1fcb7c150c1035313c244dd3d00ad8` — rejeição de separadores de path codificados recursivamente e bloqueio fail-closed de relative network paths;
+- `9bd0fcafe2b872d93a655d0669c2ebe7667ac253` — ratchet ampliado para codificação repetida.
 
-- `.github/workflows/supabase-types-sync.yml`;
-- `.vercelignore`;
-- documentação G5;
-- ratchets/testes de arquitetura/release.
+Portanto a leitura atual é:
 
-Não houve alteração posterior em `src/`, `api/`, `supabase/migrations/`, `supabase/functions/`, `public/`, `package.json` ou `package-lock.json`.
+- `c3dbb324...` continua sendo o **último hosted build completo READY**;
+- ele continua válido como evidência histórica de todo o runtime existente naquele SHA;
+- o runtime atual **não deve mais ser chamado de totalmente coberto por `c3dbb324...`**, porque `safeRedirect.ts` mudou depois;
+- o status Vercel observado em `9bd0fcaf...` é `failure` apontando para `upgradeToPro=build-rate-limit`, sem deployment novo que execute o source atual;
+- logo, a validação hosted do novo hardening de redirect está pendente por quota do provedor, não por erro de build observado.
 
-Portanto a leitura correta é:
-
-- **application/runtime source atual está coberto pelo hosted build de `c3dbb324...`**;
-- mudanças posteriores de CI/docs/testes não reabrem o hosted proof do runtime;
-- o ajuste posterior de `.vercelignore` para preservar metadata Git no ignored-build step ainda não tem deployment próprio observado e deve permanecer como source/test proof, não como hosted proof.
+Não reexecutar builds repetidamente enquanto a Vercel continuar recusando antes da criação/execução do deployment.
 
 ## 2. Runtime pós-deploy
 
@@ -164,6 +161,28 @@ Estado correto do gate:
 - snapshot versionado: **ainda stale**;
 - execução/materialização automática pelo runner autorizado: **ainda sem prova de conclusão**.
 
+### 4.3 Prova adicional de indisponibilidade global do GitHub Actions
+
+Foi criada uma automação one-shot temporária apenas para regenerar `package.json`/`package-lock.json` do React Router com npm oficial e validar `npm ci`, audit, typecheck, lint e build antes de qualquer push de dependências.
+
+A tentativa foi deliberadamente isolada e removida após a prova:
+
+- helper adicionado em `ed108a5da9755a54d5590237ed582741c7780177`;
+- workflow run `33363262238`;
+- job `99398670833` / `upgrade-lock`;
+- runner solicitado: `ubuntu-latest`;
+- conclusão: `failure` em aproximadamente 3 segundos;
+- `steps: []`;
+- `runner_id: 0`;
+- `runner_name: ""`;
+- nenhum checkout, npm, audit, typecheck, lint ou build executou;
+- helper removido em `29aa70f43b37ffd1e1bd0fc01e6039063c1506c7`;
+- `package.json` e `package-lock.json` permaneceram intactos.
+
+Isso confirma que o problema de execução não está limitado ao runner Windows autorizado do Types Sync. Até um job trivial em `ubuntu-latest` falhou antes de receber runner/steps. Não criar novos one-shots nem reruns enquanto essa condição persistir.
+
+O run territorial disparado após o hardening inicial de redirect (`33363870188`) repetiu o mesmo padrão: Runtime Tests, E2E e Phase Core terminaram como failure sem execução, com `steps: null` e `logs_url: null`.
+
 ## 5. Supabase platform blockers sem superfície de mutação conectada
 
 A superfície conectada atual do Supabase foi reinspecionada e não expõe operação de lifecycle de Storage bucket nem mutation de Auth configuration.
@@ -180,40 +199,105 @@ Por governança:
 - não alterar tabelas internas de Storage/Auth por SQL;
 - não marcar Leaked Password Protection como habilitado sem mutation oficial comprovada.
 
-## 6. Estado G5 após este addendum
+## 6. Dependency security: React Router 6.30.4 confirmado + mitigação de aplicação
+
+O `package-lock.json` atual fixa:
+
+- `react-router-dom`: `6.30.4`;
+- `react-router`: `6.30.4`.
+
+A linha React Router 6.x está fora da política atual de suporte de segurança upstream. Há advisory moderado confirmado para navegação com paths controlados pelo atacante na faixa `>=6.0.0 <7.18.0` (`GHSA-wrjc-x8rr-h8h6` / `CVE-2026-53669`), corrigido em 7.18.0.
+
+Outros advisories recentes foram avaliados separadamente:
+
+- casos de SSR/Data Mode não correspondem ao runtime atual, que usa `BrowserRouter` em Declarative Mode;
+- casos de Framework Mode não correspondem ao runtime atual;
+- casos de RSC não correspondem ao runtime atual, mas houve backport de segurança adicional na linha 7 em `7.18.2`.
+
+A versão v7 publicada mais recente observada neste corte é `7.18.3`. Portanto o alvo de atualização passou a ser **`react-router-dom 7.18.3`**, não `7.18.1`.
+
+### 6.1 Fluxo de redirect auditado
+
+O `ProtectedRoute` preserva a rota atual e envia o usuário para `/login`, incluindo `redirect`/`redirectTo`.
+
+A volta do login já usa a autoridade central `resolveSafeInternalPath(...)` antes de chamar `navigate(...)`. A auditoria focada também não encontrou chamadas diretas `navigate(searchParams.get(...))` nem `navigate(location....)`.
+
+Entretanto, a implementação anterior de `isRelativeUrl()` aceitava qualquer valor iniciado por `/` que não começasse por `//`. Isso permitia que formas como `/\\evil.example` fossem classificadas inicialmente como caminho interno, exatamente a classe de normalização que o advisory upstream endureceu.
+
+Mitigação aplicada em source:
+
+- `401cfa8d...` introduziu validação central de network paths/backslashes e revalidação de same-origin absolute URLs;
+- `fd153c2e...` ampliou para separadores `/` ou `\\` codificados com qualquer quantidade de camadas `%25`, bloqueando a classe `%2F`, `%5C`, `%252F`, `%255C`, etc.;
+- a análise é feita somente sobre o pathname, preservando `%2F/%5C` legítimos em query values;
+- relative candidates inseguros falham fechados antes do `new URL(...)` poder normalizá-los;
+- caracteres de controle também falham fechados em `resolveSafeInternalPath`.
+
+Ratchets:
+
+- `cc5d3f85...` — regressão inicial;
+- `9bd0fcaf...` — cobre `//`, `\\`, `/\\`, backslash no meio do pathname, encoding simples, duplo e repetido, query legítima e caractere de controle.
+
+Uma validação isolada da lógica do guard confirmou que todos os payloads maliciosos do ratchet são classificados como inseguros, enquanto query values codificados permanecem válidos. Isso é evidência auxiliar de source; **não substitui Vitest/CI**, que continua bloqueado antes dos steps.
+
+### 6.2 O que ainda não está resolvido
+
+A mitigação acima reduz a superfície alcançável do advisory no fluxo de redirect, mas **não encerra o finding da dependência**.
+
+Ainda é necessário, quando existir ambiente capaz de executar npm:
+
+1. atualizar `react-router-dom` para `7.18.3`;
+2. regenerar integralmente `package-lock.json` com npm `11.17.0`/Node 24;
+3. validar consistência do manifest/lock;
+4. executar `npm ci`;
+5. executar `npm audit --omit=dev --audit-level=moderate`;
+6. executar typecheck, lint, testes relevantes e build;
+7. obter hosted proof Vercel do runtime resultante.
+
+Não editar manualmente pedaços do lockfile e não inferir que as **duas** vulnerabilidades moderadas mostradas pelo npm no deployment `c3dbb324...` são ambas React Router. O React Router 6.30.4 é um finding independente e confirmado; a cadeia exata das duas entradas do `npm audit` continua pendente até o audit executar e produzir output estruturado.
+
+O gate de produção já foi endurecido em `24c773e5aee98dc82584effcfbd5e7ab30c76798` para executar `npm audit --omit=dev --audit-level=moderate` no executor canônico da Vercel. O commit ainda não obteve execução hosted por causa do rate-limit.
+
+## 7. Estado G5 após este addendum
 
 Gates que não devem mais ser reabertos sem nova evidência:
 
-- Core Platform/runtime hosted proof até `c3dbb324...`;
+- hosted proof histórico do runtime até `c3dbb324...`;
 - sitemap production hosted proof até `c3dbb324...` — 3 arquivos / 114.302 URLs;
-- application/runtime source atual — sem mudanças pós-`c3dbb324...` no compare observado;
 - location path-prefix index remote proof (`20260831024311`);
 - desenho de concorrência/stale-main do Supabase Types Sync — já endurecido em source mantendo o runner autorizado;
-- backlog histórico dos runs `33351562666`/`33352436687` — cancelado.
+- backlog histórico dos runs `33351562666`/`33352436687` — cancelado;
+- identificação do scheduler como blocker do Types Sync — job `99384016420` sem runner/steps;
+- identificação de indisponibilidade também em `ubuntu-latest` — run `33363262238` sem runner/steps;
+- mitigação central de path normalization do advisory React Router — source `fd153c2e...`, ratchet `9bd0fcaf...`.
 
 Blockers independentes que continuam abertos:
 
 1. materialização integral de `src/integrations/supabase/types.generated.ts` pelo lifecycle autorizado;
-2. runner GitHub Actions autorizado ser alocado para o job atual `99384016420` e executar os steps do Types Sync;
+2. runner GitHub Actions autorizado ser alocado e executar os steps do Types Sync;
 3. remoção do bucket órfão `classified-images` pela Storage API oficial;
 4. habilitação de Leaked Password Protection quando houver superfície oficial conectada para Auth config;
-5. hosted exercise do ajuste pós-`c3dbb324...` de `.vercelignore`/ignored-build;
-6. identificar e reconciliar as `2 moderate severity vulnerabilities` reportadas pelo npm audit summary do hosted install.
+5. hosted exercise do ajuste pós-`c3dbb324...` de `.vercelignore`/ignored-build **e do novo hardening de `safeRedirect.ts`**;
+6. materializar e validar o upgrade `react-router-dom 7.18.3` + lockfile integral quando houver ambiente capaz de executar npm;
+7. executar o production moderate audit para identificar a cadeia exata das `2 moderate severity vulnerabilities` do install hosted.
 
 **G5 permanece EM EXECUÇÃO. Não iniciar G6.**
 
-## 7. Do not repeat
+## 8. Do not repeat
 
 - Não voltar a usar `13e4efb1...` como fronteira hosted mais recente; ela foi superada por `c3dbb324...`.
-- Não exigir novo hosted build do application/runtime apenas por commits de docs/CI/testes quando o compare prova que runtime não mudou.
+- Não afirmar que o runtime **atual** está coberto por `c3dbb324...`: `safeRedirect.ts` mudou depois desse deployment.
 - Não chamar ausência de runtime errors de teste de carga.
-- Não interpretar o antigo Vercel rate-limit como estado atual; deployments `READY` posteriores já existem.
+- Não interpretar Vercel `upgradeToPro=build-rate-limit` como falha de source.
 - Não reabrir os runs antigos cancelados como se ainda estivessem pending.
-- Não diagnosticar o run atual como falha de source enquanto `runner_id = 0` e `steps = []`.
+- Não diagnosticar o Types Sync como falha de source enquanto `runner_id = 0` e `steps = []`.
 - Não mudar o Supabase Types Sync para runner público só para obter execução.
+- Não criar novo one-shot de dependências enquanto `ubuntu-latest` também falhar pré-runner.
 - Não remover as proteções `cancel-in-progress`/current-main regeneration do workflow atual.
 - Não tentar fazer push de snapshot manual/parcial para contornar o runner.
 - Não confundir o payload textual integral do gerador conectado com uma materialização segura do arquivo versionado.
 - Não usar SQL para mutar `storage.buckets`, `storage.objects` ou Auth internals.
-- Não ignorar o npm audit summary só porque o build passou; primeiro identificar o dependency chain real.
+- Não editar manualmente trechos de `package-lock.json` para simular um upgrade npm.
+- Não promover a mitigação de `safeRedirect` a “dependência corrigida”; o upgrade para React Router 7.18.3 ainda precisa ser materializado e validado.
+- Não afirmar que as duas moderadas do npm são ambas React Router sem output estruturado do audit.
+- Não repetir CI/Vercel apenas para confirmar novamente blockers de runner/quota sem mudança de infraestrutura.
 - Não iniciar G6 enquanto os blockers independentes acima permanecerem abertos.
