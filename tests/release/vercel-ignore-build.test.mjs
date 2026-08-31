@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   isSkippableVercelPath,
+  previousCommitFetchArgs,
   shouldSkipVercelBuild,
 } from "../../tools/release/vercel-ignore-build.mjs";
 
@@ -71,5 +72,24 @@ describe("Vercel ignored build step", () => {
       ]),
     ).toBe(false);
     expect(shouldSkipVercelBuild([])).toBe(false);
+  });
+
+  it("preserves last-successful-deployment semantics in shallow clones", () => {
+    const previousSha = "a".repeat(40);
+    expect(previousCommitFetchArgs(previousSha)).toEqual([
+      "fetch",
+      "--no-tags",
+      "--depth=1",
+      "origin",
+      previousSha,
+    ]);
+
+    const source = readFileSync(
+      join(ROOT, "tools/release/vercel-ignore-build.mjs"),
+      "utf8",
+    );
+    expect(source).toContain("VERCEL_GIT_PREVIOUS_SHA");
+    expect(source).toContain('runGit(["cat-file", "-e"');
+    expect(source).not.toContain("HEAD^");
   });
 });
