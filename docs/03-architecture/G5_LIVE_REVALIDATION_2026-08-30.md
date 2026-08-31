@@ -67,6 +67,8 @@ Isso reproduz e fortalece a classificação já registrada: o blocker é de aloc
 
 Não alterar testes, scripts ou arquitetura apenas para reagir a esses runs enquanto `steps` permanecer vazio.
 
+Um re-run isolado de `Runtime Tests (Vitest)` no run `33348216775` foi disparado nesta continuação apenas para testar a infraestrutura. O job voltou a encerrar sem qualquer step executado/log útil. Portanto o blocker de Actions continua externo à lógica dos testes.
+
 ## 4. Hosted build
 
 A evidência versionada imediatamente anterior (`G5_HOSTED_TYPECHECK_RECONCILIATION_2026-08-30.md`) já registra que os três últimos erros TypeScript observados em execução hospedada foram corrigidos em source e que o reteste final passou a ser bloqueado por `build-rate-limit` do Vercel.
@@ -93,6 +95,9 @@ Continuam abertos, sem ambiguidade:
 - Não recriar snapshots de tipos paralelos.
 - Não interpretar `steps: []` em Actions como falha de teste.
 - Não interpretar `build-rate-limit` do Vercel como regressão de source.
+- Não criar policies em `account_deletion_requests` apenas para silenciar advisor: a tabela é intencionalmente service-role-only/fail-closed.
+- Não alterar funções PostGIS extension-owned para silenciar warning de `search_path`.
+- Não criar índices em massa para toda FK sem índice líder sem evidência de carga/plano.
 - Não iniciar G6 enquanto os gates acima permanecerem abertos.
 
 ## 7. Correção de governança aplicada nesta continuação
@@ -107,4 +112,55 @@ Correção aplicada diretamente em `main`:
 
 A alteração disparou automaticamente `Supabase Types Sync` run `33348259701`, provando que o novo gatilho está funcional. Na última observação desta execução, o run permanecia `pending` e ainda não possuía job alocado. O histórico do run inicial do mesmo workflow (`33308736174`) também mostra job encerrado sem steps/logs executáveis, coerente com o blocker de runner já documentado.
 
+A prevenção de regressão foi reforçada em source:
+
+- `72b61815c4330a3e1f3a225aae5eb504c3b9e741` — `test(g5): ratchet Supabase type sync triggers`;
+- o teste arquitetural exige os gatilhos de schema/config/gerador, o único `TYPES_PATH` canônico e proíbe snapshots aposentados.
+
 Consequência: a causa de governança que permitia drift silencioso foi corrigida em source; a materialização viva continua dependendo da recuperação da infraestrutura autorizada do runner.
+
+## 8. Auth de lançamento — baseline source endurecido e uso anônimo inexistente
+
+O `supabase/config.toml` canônico já exige:
+
+- `enable_anonymous_sign_ins = false`;
+- `enable_manual_linking = false`;
+- senha mínima de 12 caracteres;
+- maiúsculas, minúsculas, dígitos e símbolos;
+- confirmação de e-mail;
+- troca segura de senha.
+
+A consulta agregada ao `auth.users` remoto retornou 287 usuários e **0 usuários anônimos**. Portanto não existe migração de identidade anônima pendente.
+
+O baseline foi protegido contra regressão em:
+
+- `a006cb6b62d297af7929071e2c63245be405f8b7` — `test(g5): ratchet launch auth hardening`.
+
+O advisor remoto ainda pode sinalizar configuração de Auth gerenciada pela plataforma (por exemplo leaked-password protection ou anonymous-sign-in setting). Esses itens devem ser tratados como configuração remota de Auth, não como migration SQL; a capability conectada desta sessão não expõe mutation de Auth config.
+
+## 9. Advisors e integridade — revalidação sem reabrir gates fechados
+
+### `account_deletion_requests`
+
+O advisor sinalizou `rls_enabled_no_policy`, mas a inspeção do catálogo e da migration canônica confirmou que isso é intencional:
+
+- RLS ligado;
+- zero policies;
+- zero grants para `anon` e `authenticated`;
+- autoridade concedida apenas aos brokers service-role definidos pela migration de reconciliação.
+
+Adicionar policy para silenciar o advisor reduziria a segurança e contrariaria o contrato canônico.
+
+### `search_path` em SECURITY DEFINER
+
+O cruzamento de maior risco foi executado diretamente no catálogo: funções `SECURITY DEFINER`, sem `search_path` fixo e executáveis por `anon/PUBLIC`.
+
+Resultado: apenas as três sobrecargas `public.st_estimatedextent(...)`, todas `supabase_admin`/PostGIS extension-owned. Não foi encontrado residual application-owned nesse cruzamento. Portanto o gate de authority de funções continua fechado para a superfície da aplicação.
+
+### índices
+
+- zero índices `public/private` inválidos, não-ready ou não-live;
+- existem FKs sem índice líder dedicado, inclusive legadas, mas isso não implica automaticamente um defeito: cada índice adicional tem custo de escrita/storage e deve ser justificado por plano/carga;
+- nenhuma criação em massa foi feita a partir de advisor genérico.
+
+A revalidação atual não reabre o item `indexes/constraints` já fechado no checkpoint principal.
