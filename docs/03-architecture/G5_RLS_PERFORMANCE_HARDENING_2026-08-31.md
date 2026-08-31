@@ -2,7 +2,7 @@
 
 Status: **source + banco vivo reconciliados neste corte; G5 continua EM EXECUÇÃO**.
 
-Este checkpoint registra três findings application-owned descobertos por inspeção do catálogo vivo. Ele não reabre os blockers externos já conhecidos de G5.
+Este checkpoint registra findings application-owned descobertos por inspeção do catálogo vivo. Ele não reabre os blockers externos já conhecidos de G5.
 
 ## 1. RLS auth helpers: InitPlan residual fechado
 
@@ -97,11 +97,62 @@ Migration remota/source:
 - source commit: `5d02f03548c9d7cd917a1d029f2887c121a592b8`;
 - ratchet atualizado: `tests/security/rls-sensitive-policy-regression.test.ts`, commit `55b7e6f2315ef9a9d7dafd2dc8751efa8124c9ed`.
 
-## 4. Do not repeat
+## 4. SELECT admin shadows redundantes: lote application-owned fechado
 
-- não recriar `Admins can view all locations` enquanto `Admins can manage locations` continuar cobrindo o mesmo SELECT admin;
+Depois de `locations`, o catálogo vivo confirmou mais seis pares exatos em que uma policy admin `FOR ALL` e outra admin `FOR SELECT` tinham a mesma role, o mesmo modo permissivo e o mesmo predicate `private.is_admin((SELECT auth.uid()))`.
+
+Foram removidas **somente** as policies SELECT redundantes; as policies `ALL` de administração e todas as policies de participantes/owners permaneceram intactas.
+
+Reparos forward-only:
+
+- `ride_requests` — ledger `20260831033007_remove_redundant_ride_requests_admin_select_g5`, source commit `6953a0753ca780c5296b1e4a6e2bc0325f09eeb2`;
+- `orders` — ledger `20260831033245_remove_redundant_orders_admin_select_g5`, source commit `b277e5fb7b560bdc9c540fff035eb21e49420de5`;
+- `classifieds` — ledger `20260831033505_remove_redundant_classifieds_admin_select_g5`, source commit `9d8e85de94b75bd509832144a365c1f74019acd0`;
+- `events` — ledger `20260831033520_remove_redundant_events_admin_select_g5`, source commit `30452b04dfaac61c99c01d2be1c940ea2d390a39`;
+- `community_posts` — ledger `20260831033534_remove_redundant_community_posts_admin_select_g5`, source commit `26e926ade7b735f1ffc456f9d2e363dcebe684d3`;
+- `professional_jobs` — ledger `20260831033547_remove_redundant_professional_jobs_admin_select_g5`, source commit `b7bfa943a5eac581acda4fd903e4b85b96761ecc`.
+
+Prova de custo em reads autenticados não-admin:
+
+- `ride_requests`: 2 avaliações admin antes, 1 depois; execution ~`23.04 ms` → ~`18.57 ms`;
+- `orders`: 2 avaliações admin antes, 1 depois; execution ~`113.61 ms` → ~`76.38 ms`.
+
+Postcondition de catálogo: **0 pares exatos admin `ALL` + admin `SELECT` com o mesmo predicate `private.is_admin(...)`** permanecem nesse conjunto.
+
+Ratchet:
+
+- `tests/security/redundant-admin-select-shadow-ratchet.test.ts`;
+- commit `6b11470b6f75fd6620d7df2c775141102c9631a6`;
+- impede recriação dos shadows removidos em `locations`, `ride_requests`, `orders`, `classifieds`, `events`, `community_posts` e `professional_jobs`.
+
+Shadows não-admin de baixo impacto em tabelas vazias (`work_opportunities`, `profile_links`, `question_answer_likes`) foram deliberadamente deixados sem migration: não há evidência de risco/performance que justifique gerar churn enquanto o Types Sync automático continua bloqueado por infraestrutura.
+
+## 5. Foreign keys sem índice: triagem viva sem mudança
+
+O Supabase Performance Advisor lista várias FKs sem índice de cobertura. O finding foi cruzado com `pg_stat_user_tables`, nulabilidade real das colunas e `pg_stat_statements` antes de qualquer decisão.
+
+Principais candidatos por atividade histórica de tabela:
+
+- `profile_members.invited_by`: 156 rows, **0 valores não-nulos**;
+- `user_roles.revoked_by`: 232 rows, **0 valores não-nulos**;
+- `ride_requests.route_id`: 8 rows, **0 valores não-nulos**;
+- `addresses.verified_by`: 95 rows, **0 valores não-nulos**;
+- `posts.removed_by`: 10 rows, **0 valores não-nulos**;
+- `professional_data.updated_by_user_id`: 5 rows, **0 valores não-nulos**;
+- `media_assets.owner_user_id`: 51 rows, 51 não-nulos / 4 owners distintos.
+
+A inspeção de `pg_stat_statements` não encontrou workload de runtime filtrando por `ride_requests.route_id`, `profile_members.invited_by` ou `user_roles.revoked_by`. Para `media_assets.owner_user_id`, as ocorrências observadas eram export/DDL/policy maintenance; não apareceu query de runtime cujo gargalo justificasse um índice dedicado nesse tamanho atual.
+
+Decisão G5: **não criar índices de FK apenas para silenciar advisor**. Reavaliar quando houver coluna efetivamente populada, crescimento material da tabela ou plano/query real mostrando custo relevante.
+
+Também não serão removidos índices marcados como `unused_index` apenas por advisor; estatísticas podem refletir janela curta/reset e vários índices são parte de constraints, segurança ou caminhos que ainda não tiveram tráfego representativo.
+
+## 6. Do not repeat
+
+- não recriar os SELECT admin shadows cobertos pelo ratchet enquanto a policy `ALL` equivalente continuar sendo a autoridade canônica;
 - não recriar `Drivers manage own location`; write de localização deve continuar driver-only;
 - não substituir `(SELECT auth.uid()/role()/jwt())` por avaliação direta em novas policies;
+- não criar/drop de índices em massa apenas para reduzir contagem de advisors; exigir workload/plano/dados que provem benefício;
 - não reescrever as migrations históricas que originaram os resíduos; os reparos são forward-only;
 - não interpretar failures de GitHub Actions sem steps/logs como regressão dessas migrations;
 - não iniciar G6 enquanto os blockers centrais de G5 permanecerem abertos.
