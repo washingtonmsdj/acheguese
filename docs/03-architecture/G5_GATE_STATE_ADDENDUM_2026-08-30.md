@@ -5,67 +5,86 @@ Branch: `main`
 
 Este addendum atualiza somente gates cujo estado mudou depois de `G5_CHECKPOINT_2026-08-30.md`. O checkpoint histórico não deve ser reescrito para apagar a sequência de evidências.
 
-## 1. Hosted build posterior aos source fixes: PASS até `13e4efb1...`
+## 1. Hosted build: fronteira avançou de `13e4efb1...` para `c3dbb324...`
 
-Deployment Vercel:
+O hosted proof inicial de G5 havia sido estabelecido no deployment Vercel `dpl_8aezRhYV8Bur5tG568miVSrh9EJm`, source `13e4efb162baca392c5363e02bdb743143121439`, production `READY`.
 
-- id: `dpl_8aezRhYV8Bur5tG568miVSrh9EJm`;
-- source: `13e4efb162baca392c5363e02bdb743143121439`;
+Depois de uma janela de rate-limit, a Vercel voltou a executar builds da `main`. O hosted proof mais recente observado neste corte é:
+
+- deployment: `dpl_EoErSiJ4MTCR9GNEbCPeYKYsN7on`;
+- source: `c3dbb3249352420c73fa77716bf910a96b82dc56`;
+- commit: `fix(g5): support shallow Vercel git history`;
 - branch: `main`;
 - target: production;
-- final state observado: `READY`.
+- state final: `READY`.
 
-O build executou realmente, não foi um status sintético:
+Os logs provam execução real do pipeline:
 
-- typecheck/lint gates anteriores foram ultrapassados;
-- Vite concluiu `built in 33.50s`;
-- sitemap final foi validado;
-- outputs foram deployados;
-- deployment concluiu normalmente.
+- clone de `main` no SHA `c3dbb324...`;
+- validação de consistência de `package.json`/`package-lock.json`: PASS;
+- `security:validate`: PASS com aviso esperado de `.env.local` ausente no ambiente hosted;
+- lint de segurança executado;
+- Vite concluiu `built in 32.32s`;
+- sitemap de produção validado: index com 3 arquivos e **114.302 URLs**;
+- `Build Completed in /vercel/output [3m]`;
+- outputs deployados;
+- `Deployment completed`;
+- consulta de runtime `error`/`fatal` no deployment nas últimas 24h: nenhum log encontrado no recorte observado.
 
-### Consequências
+O install também reportou `2 moderate severity vulnerabilities` via npm audit summary. Isso **não** falhou o build, mas permanece finding de launch-hardening até a cadeia de dependências ser identificada e reconciliada; não marcar como resolvido apenas porque o deployment ficou `READY`.
 
-Os estados antigos abaixo ficam superseded pela prova posterior:
+### 1.1 Cobertura do HEAD atual
 
-- `Core Platform ownership paths — CLOSED EM SOURCE / HOSTED RETEST PENDENTE` → **HOSTED PASS até `13e4efb1...`**;
-- `sitemap de produção — EXECUÇÃO PENDENTE` → **HOSTED PASS até `13e4efb1...`**.
+Comparação GitHub entre `c3dbb324...` e o HEAD `34d63dcb10c948209add097bf4a73246957aff8a` neste corte:
 
-O sitemap hospedado validado contém:
+- status: `ahead`;
+- `ahead_by: 9`;
+- `behind_by: 0`;
+- merge-base: o próprio `c3dbb324...`.
 
-- 3 arquivos filhos no index final;
-- 114.302 URLs.
+Os únicos paths alterados depois do hosted PASS são:
 
-O mesmo deployment inclui a correção de Business Ownership que removeu acesso direto a `profiles` do caller de Business e preservou a semântica da authority canônica.
+- `.github/workflows/supabase-types-sync.yml`;
+- `.vercelignore`;
+- documentação G5;
+- ratchets/testes de arquitetura/release.
+
+Não houve alteração posterior em `src/`, `api/`, `supabase/migrations/`, `supabase/functions/`, `public/`, `package.json` ou `package-lock.json`.
+
+Portanto a leitura correta é:
+
+- **application/runtime source atual está coberto pelo hosted build de `c3dbb324...`**;
+- mudanças posteriores de CI/docs/testes não reabrem o hosted proof do runtime;
+- o ajuste posterior de `.vercelignore` para preservar metadata Git no ignored-build step ainda não tem deployment próprio observado e deve permanecer como source/test proof, não como hosted proof.
 
 ## 2. Runtime pós-deploy
 
-A telemetria Vercel consultada após o deployment READY não apresentou runtime errors no recorte disponível das últimas 24 horas.
+A telemetria Vercel do deployment `dpl_EoErSiJ4MTCR9GNEbCPeYKYsN7on` não apresentou logs `error` ou `fatal` no recorte disponível das últimas 24 horas.
 
-Isso é prova operacional positiva do recorte observado, mas **não** deve ser promovido a teste de carga: o volume de tráfego observado era baixo.
+Isso é prova operacional positiva do recorte observado, mas **não** deve ser promovido a teste de carga: ausência de logs não prova volume representativo de tráfego.
 
-## 3. Commits posteriores ao último hosted PASS
+## 3. Vercel ignored-build: correção posterior ao hosted PASS
 
-Depois de `13e4efb1...`, a `main` recebeu novos cortes G5, incluindo:
+O próprio hosted build de `c3dbb324...` expôs a causa do fallback do ignored-build step naquele SHA:
 
-- publicação/ratchet de `LocationHierarchyReadService`;
-- migração remota/source do índice `geographic_path text_pattern_ops`;
-- ratchet do pattern index;
-- otimização do RPC canônico de descendentes;
-- hardening/performance de RLS application-owned;
-- evidências de performance correspondentes.
+- `.vercelignore` ainda removia `.git`;
+- `vercel-ignore-build.mjs` não conseguia consultar o commit anterior;
+- por segurança, o script falhava aberto para executar build real.
 
-Para esses commits posteriores, o status Vercel voltou a responder:
+A `main` recebeu depois:
 
-- `Deployment rate limited — retry in 24 hours`;
-- target apontando para `upgradeToPro=build-rate-limit`.
+- `fa0996fff4210b3999352efa7eacf0db609bf1f4` — `fix(g5): preserve git metadata for Vercel ignore step`;
+- `3adff5819440cfc28057298ad6daa067f49ef8b5` — ratchet do contrato.
 
-Portanto a fronteira correta é:
+Estado source atual:
 
-- hosted PASS comprovado **até `13e4efb1...`**;
-- source + DB proof disponíveis para cortes posteriores;
-- hosted retest posterior ainda pendente por rate-limit.
+- `.vercelignore` **não** contém regra `.git`;
+- o comentário explica que Vercel já exclui metadata Git dos artifacts e que o ignored-build precisa dela antes do build;
+- `vercel-ignore-build.mjs` procura `VERCEL_GIT_PREVIOUS_SHA` e, em shallow clone, tenta `git fetch --no-tags --depth=1 origin <sha>`;
+- se não conseguir provar um change-set seguramente skippable, o script continua fail-open para build real;
+- `.vercelignore`, migrations, runtime, build scripts e governança crítica continuam classificados como build-required pelos ratchets.
 
-Não converter o rate-limit em falha de source.
+Esse ajuste está correto em source/test, mas não será promovido a hosted PASS até aparecer um deployment/ignored-build execution posterior que o exercite.
 
 ## 4. Actions + canonical types: workflow endurecido, materialização ainda pendente
 
@@ -80,11 +99,12 @@ O blocker não era o trigger; era a ausência de alocação/execução do runner
 
 ### 4.1 Workflow não está mais sujeito ao stale-push simples descrito no checkpoint antigo
 
-A `main` recebeu três endurecimentos forward-only no workflow canônico:
+A `main` recebeu endurecimentos forward-only no workflow canônico, incluindo:
 
-- `4a012aed2d0e01789d0a6171084201d5a598bcdb` — `ci(g5): cancel stale Supabase type sync runs`;
-- `b4edef76dc538014f9106cda4b14e99ca68bc32c` — `ci(g5): make Supabase types sync safe against stale runs`;
-- `da35ade063cb23549d5aa80ac4b4707f77cb5246` — `ci(g5): regenerate Supabase types on latest main`.
+- `4a012aed2d0e01789d0a6171084201d5a598bcdb` — cancelamento de stale runs;
+- `b4edef761195b54d3b03a362cdf6e1f0dc959c98` — current-main safety;
+- `da35ade063cb23549d5aa80ac4b4707f77cb5246` — retry boolean determinístico no lifecycle current-main safe;
+- `2be81adc3e43ae5e8f50060081a683e736435feb` — ratchet correspondente.
 
 O workflow atual preserva a autoridade aprovada:
 
@@ -103,7 +123,7 @@ E agora também:
 - usa `cancel-in-progress: true`;
 - verifica se o SHA disparador ainda pertence à história de `origin/main`;
 - se `main` avançou, faz checkout de `origin/main` e **regenera** os tipos sobre o HEAD atual antes de commitar;
-- repete fetch/rebase-regenerate antes do push se houver corrida adicional.
+- repete fetch/regenerate antes do push se houver corrida adicional.
 
 Portanto, **não** mover o workflow para `ubuntu-latest` e **não** criar segundo executor/segunda autoridade. O desenho atual já trata o backlog/stale-main no próprio lifecycle autorizado.
 
@@ -127,13 +147,29 @@ Estado correto do gate:
 - snapshot versionado: **ainda stale**;
 - execução/materialização automática pelo runner autorizado: **ainda sem prova de conclusão**.
 
-## 5. Estado G5 após este addendum
+## 5. Supabase platform blockers sem superfície de mutação conectada
+
+A superfície conectada atual do Supabase foi reinspecionada e não expõe operação de lifecycle de Storage bucket nem mutation de Auth configuration.
+
+O security advisor vivo continua reportando:
+
+- `Leaked Password Protection Disabled`.
+
+O bucket órfão conhecido `classified-images` também continua dependente de lifecycle oficial de Storage.
+
+Por governança:
+
+- não remover bucket com `DELETE FROM storage.buckets`;
+- não alterar tabelas internas de Storage/Auth por SQL;
+- não marcar Leaked Password Protection como habilitado sem mutation oficial comprovada.
+
+## 6. Estado G5 após este addendum
 
 Gates que não devem mais ser reabertos sem nova evidência:
 
-- Core Platform hosted proof até `13e4efb1...`;
-- sitemap production hosted proof até `13e4efb1...`;
-- Business Ownership lint/type/build proof até `13e4efb1...`;
+- Core Platform/runtime hosted proof até `c3dbb324...`;
+- sitemap production hosted proof até `c3dbb324...` — 3 arquivos / 114.302 URLs;
+- application/runtime source atual — sem mudanças pós-`c3dbb324...` no compare observado;
 - location path-prefix index remote proof (`20260831024311`);
 - desenho de concorrência/stale-main do Supabase Types Sync — já endurecido em source mantendo o runner autorizado.
 
@@ -143,17 +179,21 @@ Blockers independentes que continuam abertos:
 2. runner GitHub Actions autorizado voltar a alocar/executar steps para provar o Types Sync automático;
 3. remoção do bucket órfão `classified-images` pela Storage API oficial;
 4. habilitação de Leaked Password Protection quando houver superfície oficial conectada para Auth config;
-5. hosted retest para os commits posteriores a `13e4efb1...` quando o Vercel liberar novos builds.
+5. hosted exercise do ajuste pós-`c3dbb324...` de `.vercelignore`/ignored-build;
+6. identificar e reconciliar as `2 moderate severity vulnerabilities` reportadas pelo npm audit summary do hosted install.
 
 **G5 permanece EM EXECUÇÃO. Não iniciar G6.**
 
-## 6. Do not repeat
+## 7. Do not repeat
 
-- Não marcar Core Platform/sitemap como pendentes até `13e4efb1...`; esse hosted proof já existe.
+- Não voltar a usar `13e4efb1...` como fronteira hosted mais recente; ela foi superada por `c3dbb324...`.
+- Não exigir novo hosted build do application/runtime apenas por commits de docs/CI/testes quando o compare prova que runtime não mudou.
 - Não chamar ausência de runtime errors de teste de carga.
-- Não interpretar Vercel rate-limit como regressão.
+- Não interpretar o antigo Vercel rate-limit como estado atual; deployments `READY` posteriores já existem.
 - Não mudar o Supabase Types Sync para runner público só para obter execução.
-- Não remover as proteções `cancel-in-progress`/latest-main regeneration do workflow atual.
+- Não remover as proteções `cancel-in-progress`/current-main regeneration do workflow atual.
 - Não tentar fazer push de snapshot manual/parcial para contornar o runner.
 - Não confundir o payload textual integral do gerador conectado com uma materialização segura do arquivo versionado.
+- Não usar SQL para mutar `storage.buckets`, `storage.objects` ou Auth internals.
+- Não ignorar o npm audit summary só porque o build passou; primeiro identificar o dependency chain real.
 - Não iniciar G6 enquanto os blockers independentes acima permanecerem abertos.
