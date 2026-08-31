@@ -9,7 +9,7 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
-import { applyTerritoryFilter } from "@/core/location";
+import { applyTerritoryFilter, LocationHierarchyReadService } from "@/core/location";
 import { LocationService } from "@/core/location/services/LocationService";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
@@ -138,11 +138,18 @@ export async function getAllClassifieds(
     let parentCityId: string | null = null;
 
     if (filter?.scope === "location") {
-      //  Busca location + todos descendentes via RPC
-      const { data: descendantIds, error: rpcError } = await supabase.rpc(
-        "rpc_get_location_descendants_ids",
-        { p_location_id: filter.location_id },
-      );
+      let descendantIds: string[] = [];
+
+      //  SSOT - Expansao ID-only pelo owner canonico de Location.
+      try {
+        descendantIds =
+          await LocationHierarchyReadService.getDescendantIds(filter.location_id);
+      } catch (error) {
+        logger.warn(
+          "[ClassifiedsQueries] Failed to expand territory; using exact location filter",
+          { location_id: filter.location_id, error },
+        );
+      }
 
       //  SSOT - Busca informaes da location via LocationService
       try {
@@ -161,7 +168,7 @@ export async function getAllClassifieds(
         );
       }
 
-      if (!rpcError && descendantIds && descendantIds.length > 0) {
+      if (descendantIds.length > 0) {
         //  Converte para scope='group' com array de IDs
         resolvedFilter = {
           scope: "group",
@@ -415,6 +422,7 @@ export async function getRecentClassifieds(limit = 10): Promise<ClassifiedData[]
     logger.error("Error getting recent classifieds", error as Error, {
       service: "ClassifiedsQueries",
       method: "getRecentClassifieds",
+      limit,
     });
     return [];
   }
