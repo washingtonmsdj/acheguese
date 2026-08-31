@@ -1,6 +1,6 @@
 import { logger } from "@/shared/utils/logger";
 import { supabase } from "@/integrations/supabase";
-import type { Location } from "@/core/location/types";
+import type { Database } from "@/integrations/supabase/types.generated";
 
 export interface LocationRecord {
   id: string;
@@ -11,8 +11,10 @@ export interface LocationRecord {
   created_at: string;
 }
 
+type LocationRow = Database["public"]["Tables"]["locations"]["Row"];
+
 export type PublicRoutingLocationRecord = Pick<
-  Location,
+  LocationRow,
   "id" | "type" | "status" | "geographic_path" | "metadata"
 >;
 
