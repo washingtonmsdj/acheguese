@@ -50,7 +50,9 @@ Depois de `13e4efb1...`, a `main` recebeu novos cortes G5, incluindo:
 - publicação/ratchet de `LocationHierarchyReadService`;
 - migração remota/source do índice `geographic_path text_pattern_ops`;
 - ratchet do pattern index;
-- evidência de performance correspondente.
+- otimização do RPC canônico de descendentes;
+- hardening/performance de RLS application-owned;
+- evidências de performance correspondentes.
 
 Para esses commits posteriores, o status Vercel voltou a responder:
 
@@ -65,18 +67,65 @@ Portanto a fronteira correta é:
 
 Não converter o rate-limit em falha de source.
 
-## 4. Actions e canonical types continuam separados
+## 4. Actions + canonical types: workflow endurecido, materialização ainda pendente
 
-A migration `20260831024311_add_locations_geographic_path_pattern_index_g5.sql` disparou corretamente:
+A migration `20260831024311_add_locations_geographic_path_pattern_index_g5.sql` provou que o gatilho automático por migration funciona:
 
 - `Supabase Types Sync` run `33351562666`;
 - source `23679c033b812c97a208229f52725f39c0bb8f55`;
-- status observado: `pending`;
+- status observado naquele corte: `pending`;
 - jobs: `0` / `[]`.
 
-O gatilho automático por migration está provado funcional. O blocker continua sendo a execução do runner Windows self-hosted autorizado.
+O blocker não era o trigger; era a ausência de alocação/execução do runner Windows self-hosted autorizado.
 
-Como o workflow faz checkout do SHA do evento e push posterior para `main`, runs que permanecem pendentes enquanto a `main` avança podem terminar non-fast-forward quando o runner voltar. Isso não autoriza mover o workflow para `ubuntu-latest`, reescrever o executor ou criar uma segunda autoridade. Quando a infraestrutura recuperar, a execução válida precisa partir de um HEAD atual e continuar usando o workflow canônico.
+### 4.1 Workflow não está mais sujeito ao stale-push simples descrito no checkpoint antigo
+
+A `main` recebeu três endurecimentos forward-only no workflow canônico:
+
+- `4a012aed2d0e01789d0a6171084201d5a598bcdb` — `ci(g5): cancel stale Supabase type sync runs`;
+- `b4edef76dc538014f9106cda4b14e99ca68bc32c` — `ci(g5): make Supabase types sync safe against stale runs`;
+- `da35ade063cb23549d5aa80ac4b4707f77cb5246` — `ci(g5): regenerate Supabase types on latest main`.
+
+O workflow atual preserva a autoridade aprovada:
+
+- `self-hosted`;
+- `windows`;
+- `x64`;
+- `acheguese-heavy-windows`;
+- `remote-only`;
+- gerador canônico `tools/supabase/generate-supabase-types.ts`;
+- snapshot único `src/integrations/supabase/types.generated.ts`;
+- branch alvo `main`.
+
+E agora também:
+
+- usa `concurrency.group: supabase-types-sync-main`;
+- usa `cancel-in-progress: true`;
+- verifica se o SHA disparador ainda pertence à história de `origin/main`;
+- se `main` avançou, faz checkout de `origin/main` e **regenera** os tipos sobre o HEAD atual antes de commitar;
+- repete fetch/rebase-regenerate antes do push se houver corrida adicional.
+
+Portanto, **não** mover o workflow para `ubuntu-latest` e **não** criar segundo executor/segunda autoridade. O desenho atual já trata o backlog/stale-main no próprio lifecycle autorizado.
+
+### 4.2 Drift remoto continua real e foi revalidado pelo gerador oficial
+
+Revalidação direta no projeto Supabase `xhdowzacfujckjelqhtd` usando a capability oficial de geração de tipos:
+
+- output remoto atual: `PostgrestVersion: "14.5"`;
+- output remoto contém `public.account_deletion_requests`;
+- snapshot versionado atual ainda declara `PostgrestVersion: "14.4"`;
+- busca no snapshot versionado não encontra `account_deletion_requests`.
+
+Isso prova drift estrutural atual; não é apenas diferença de comentário ou versão textual.
+
+A capability conectada retorna o snapshot completo como payload textual monolítico, mas não como arquivo/materialização transferível para o GitHub. Por governança, **não** será feito patch manual/parcial de campos, versão ou tabelas para simular o output oficial.
+
+Estado correto do gate:
+
+- gerador oficial: **remote truth revalidada**;
+- workflow: **arquitetura/race handling endurecidos**;
+- snapshot versionado: **ainda stale**;
+- execução/materialização automática pelo runner autorizado: **ainda sem prova de conclusão**.
 
 ## 5. Estado G5 após este addendum
 
@@ -85,14 +134,16 @@ Gates que não devem mais ser reabertos sem nova evidência:
 - Core Platform hosted proof até `13e4efb1...`;
 - sitemap production hosted proof até `13e4efb1...`;
 - Business Ownership lint/type/build proof até `13e4efb1...`;
-- location path-prefix index remote proof (`20260831024311`).
+- location path-prefix index remote proof (`20260831024311`);
+- desenho de concorrência/stale-main do Supabase Types Sync — já endurecido em source mantendo o runner autorizado.
 
 Blockers independentes que continuam abertos:
 
 1. materialização integral de `src/integrations/supabase/types.generated.ts` pelo lifecycle autorizado;
-2. remoção do bucket órfão `classified-images` pela Storage API oficial;
-3. GitHub Actions voltar a alocar runners/executar steps;
-4. hosted retest para os commits posteriores a `13e4efb1...` quando o Vercel liberar novos builds.
+2. runner GitHub Actions autorizado voltar a alocar/executar steps para provar o Types Sync automático;
+3. remoção do bucket órfão `classified-images` pela Storage API oficial;
+4. habilitação de Leaked Password Protection quando houver superfície oficial conectada para Auth config;
+5. hosted retest para os commits posteriores a `13e4efb1...` quando o Vercel liberar novos builds.
 
 **G5 permanece EM EXECUÇÃO. Não iniciar G6.**
 
@@ -102,5 +153,7 @@ Blockers independentes que continuam abertos:
 - Não chamar ausência de runtime errors de teste de carga.
 - Não interpretar Vercel rate-limit como regressão.
 - Não mudar o Supabase Types Sync para runner público só para obter execução.
+- Não remover as proteções `cancel-in-progress`/latest-main regeneration do workflow atual.
 - Não tentar fazer push de snapshot manual/parcial para contornar o runner.
+- Não confundir o payload textual integral do gerador conectado com uma materialização segura do arquivo versionado.
 - Não iniciar G6 enquanto os blockers independentes acima permanecerem abertos.
