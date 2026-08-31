@@ -14,12 +14,15 @@ describe('safe internal redirect hardening', () => {
 
   it.each([
     '//evil.example',
+    '\\evil.example',
     '/\\evil.example',
     '/safe\\evil.example',
     '/%5Cevil.example',
     '/%255Cevil.example',
+    '/%25255Cevil.example',
     '/%2Fevil.example',
     '/%252Fevil.example',
+    '/%25252Fevil.example',
   ])('rejects unsafe navigation path %s', (candidate) => {
     expect(resolveSafeInternalPath(candidate, '/fallback')).toBe('/fallback');
     expect(resolveSafeRedirectUrl(candidate)).toBeNull();
