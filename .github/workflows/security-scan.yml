@@ -44,7 +44,11 @@ jobs:
         id: eslint_security
         run: npm run lint:security
 
-      - name: Run npm audit (high and critical gate)
+      - name: Run npm audit (production moderate+ gate)
+        id: npm_audit_production
+        run: npm audit --omit=dev --audit-level=moderate
+
+      - name: Run npm audit (full tree high and critical gate)
         id: npm_audit
         run: npm audit --audit-level=high
 
@@ -111,7 +115,8 @@ jobs:
             echo "| Gate | Outcome |"
             echo "| --- | --- |"
             echo "| ESLint security | ${{ steps.eslint_security.outcome }} |"
-            echo "| npm audit (high/critical) | ${{ steps.npm_audit.outcome }} |"
+            echo "| npm audit (production moderate+) | ${{ steps.npm_audit_production.outcome }} |"
+            echo "| npm audit (full tree high/critical) | ${{ steps.npm_audit.outcome }} |"
             echo "| Semgrep | ${{ steps.semgrep.outcome }} |"
             echo "| Gitleaks | ${{ steps.gitleaks.outcome }} |"
             echo "| XSS patterns | ${{ steps.xss_patterns.outcome }} |"

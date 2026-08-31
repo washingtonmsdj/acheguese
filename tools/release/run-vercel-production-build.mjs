@@ -4,6 +4,7 @@ const steps = [
   ["node", ["--check", "tools/release/supabase-edge-admin-canary-deploy.mjs"]],
   ["npm", ["run", "security:validate"]],
   ["npm", ["run", "lint:security"]],
+  ["npm", ["audit", "--omit=dev", "--audit-level=moderate"]],
   ["npm", ["run", "validate:upload:ssot"]],
   ["npm", ["run", "validate:architecture:core-platform"]],
   ["npm", ["run", "generate:sitemap"]],
