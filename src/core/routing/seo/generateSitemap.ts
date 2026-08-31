@@ -7,7 +7,6 @@
 
 import { logger } from '@/shared/utils/logger';
 import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from '@/app/config/launchScope';
-import type { Location } from '@/core/location/types';
 import { territorialGroupService, type TerritorialGroupWithMembers } from '@/core/territorial';
 import {
   MODULE_SLUGS,
@@ -16,7 +15,10 @@ import {
   geoPathToPublicUrl,
 } from '@/core/routing/utils/territoryUrls';
 import { touristPointPublicRoutes } from '@/core/guide/tourist-points/routes/touristPointPublicRoutes';
-import { LocationsReadService } from '@/core/location/services/LocationsReadService';
+import {
+  LocationsReadService,
+  type PublicRoutingLocationRecord,
+} from '@/core/location/services/LocationsReadService';
 import {
   isTerritoryVisibleInLanding,
   type TerritoryVisibilityMetadata,
@@ -31,10 +33,7 @@ interface SitemapUrl {
   priority?: number;
 }
 
-type SitemapLocation = Pick<
-  Location,
-  'type' | 'status' | 'geographic_path' | 'metadata'
->;
+type SitemapLocation = Omit<PublicRoutingLocationRecord, 'id'>;
 
 export interface SitemapArtifact {
   filename: string;
