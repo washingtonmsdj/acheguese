@@ -1,0 +1,119 @@
+name: G5 React Router Lock Upgrade
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/g5-react-router-lock-upgrade.yml"
+
+concurrency:
+  group: g5-react-router-lock-upgrade-main
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  upgrade-lock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout current main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Align npm version
+        run: npm install --global npm@11.17.0
+
+      - name: Upgrade React Router and v7 runtime atomically
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          npm pkg set 'dependencies.react-router-dom=^7.18.3'
+
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = 'src/app/components/AppRuntime.tsx';
+          const source = fs.readFileSync(path, 'utf8');
+          const before = `                <BrowserRouter
+                            future={{
+                              v7_startTransition: true,
+                              v7_relativeSplatPath: true,
+                            }}
+                          >`;
+          const after = `                <BrowserRouter>`;
+
+          const occurrences = source.split(before).length - 1;
+          if (occurrences !== 1) {
+            throw new Error(`Expected exactly one v6 BrowserRouter future block, found ${occurrences}.`);
+          }
+
+          fs.writeFileSync(path, source.replace(before, after), 'utf8');
+          NODE
+
+          npm install --package-lock-only --ignore-scripts
+          node tools/release/validate-package-lock-consistency.mjs
+
+      - name: Verify generated diff scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t changed < <(git status --porcelain | sed -E 's/^.. //')
+          printf '%s\n' "${changed[@]}"
+
+          for path in "${changed[@]}"; do
+            case "$path" in
+              package.json|package-lock.json|src/app/components/AppRuntime.tsx) ;;
+              *) echo "Unexpected generated change: $path" >&2; exit 1 ;;
+            esac
+          done
+
+          test "${#changed[@]}" -eq 3
+
+      - name: Install regenerated dependency graph
+        run: npm ci
+
+      - name: Gate production dependency vulnerabilities
+        run: npm audit --omit=dev --audit-level=moderate
+
+      - name: Validate React Router v7 readiness ratchet
+        run: npx vitest run tests/security/react-router-v7-readiness-ratchet.test.ts
+
+      - name: Typecheck application
+        run: npm run typecheck:app
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Commit canonical v7 manifest, lock and runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add package.json package-lock.json src/app/components/AppRuntime.tsx
+          git diff --cached --quiet && { echo "No canonical React Router changes were generated."; exit 0; }
+          git commit -m "security(g5): upgrade React Router to 7.18.3"
+
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
