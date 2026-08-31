@@ -49,7 +49,7 @@ import { EducationUpgradeBanner } from '../niches/components/EducationUpgradeBan
 import { EducationCapabilityGuard } from '../niches/components/EducationCapabilityGuard';
 import { getNicheByKey } from '../niches/registry';
 import { EducationUrlService } from '../services/EducationUrlService';
-import type { EducationEvent, SchoolEventType } from '../types';
+import type { EducationEvent, SchoolEventType } from '@/core/education';
 
 const SCHOOL_EVENT_TYPE_LABELS: Record<SchoolEventType, string> = {
   open_house: 'Portas Abertas',
