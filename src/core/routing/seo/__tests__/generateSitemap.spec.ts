@@ -125,6 +125,25 @@ describe("generateSitemap", () => {
     expect(SITEMAP_URL_CHUNK_SIZE).toBeGreaterThan(0);
   });
 
+  it("mantem leitura de build do sitemap na projecao territorial minima", () => {
+    const generator = readFileSync(
+      "src/core/routing/seo/generateSitemap.ts",
+      "utf8",
+    );
+    const locationReader = readFileSync(
+      "src/core/location/services/LocationsReadService.ts",
+      "utf8",
+    );
+
+    expect(generator).toContain("getAllCompleteForPublicRouting()");
+    expect(generator).not.toContain("LocationsReadService.getAllComplete()");
+    expect(locationReader).toContain(
+      '"id,type,status,geographic_path,metadata"',
+    );
+    expect(locationReader).toContain('.in("type", ["city", "district"])');
+    expect(locationReader).toContain('.eq("status", "active")');
+  });
+
   it("mantem artefatos publicos sem URLs legadas de comunidade", () => {
     const publicArtifacts = [
       readFileSync("public/sitemap.xml", "utf8"),
