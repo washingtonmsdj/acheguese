@@ -21,6 +21,15 @@ describe("Vercel ignored build step", () => {
     );
   });
 
+  it("does not explicitly remove git metadata before the ignored build step", () => {
+    const ignoreRules = readFileSync(join(ROOT, ".vercelignore"), "utf8")
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith("#"));
+
+    expect(ignoreRules).not.toContain(".git");
+  });
+
   it("skips only known non-deploy paths", () => {
     const skippable = [
       "docs/03-architecture/G5_LIVE_REVALIDATION_2026-08-30.md",
@@ -49,6 +58,7 @@ describe("Vercel ignored build step", () => {
       "package.json",
       "package-lock.json",
       "vercel.json",
+      ".vercelignore",
       "docs/architecture/core-platform-ownership.json",
       "docs/09-reference/governance/security/EDGE_FUNCTION_AUTH_POLICY.json",
     ];
