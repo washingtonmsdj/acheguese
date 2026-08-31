@@ -31,6 +31,11 @@ interface SitemapUrl {
   priority?: number;
 }
 
+type SitemapLocation = Pick<
+  Location,
+  'type' | 'status' | 'geographic_path' | 'metadata'
+>;
+
 export interface SitemapArtifact {
   filename: string;
   content: string;
@@ -134,7 +139,7 @@ function deduplicateSitemapUrls(urls: SitemapUrl[]): SitemapUrl[] {
 }
 
 function collectSitemapUrls(
-  locations: Location[],
+  locations: SitemapLocation[],
   groups: TerritorialGroupWithMembers[],
   baseUrl: string,
 ): SitemapUrl[] {
@@ -233,7 +238,7 @@ function renderSitemapIndex(baseUrl: string, filenames: string[]): string {
 }
 
 export function generateSitemap(
-  locations: Location[],
+  locations: SitemapLocation[],
   groups: TerritorialGroupWithMembers[],
   baseUrl: string,
 ): string {
@@ -241,7 +246,7 @@ export function generateSitemap(
 }
 
 export function generateSitemapArtifacts(
-  locations: Location[],
+  locations: SitemapLocation[],
   groups: TerritorialGroupWithMembers[],
   baseUrl: string,
   maxUrlsPerFile = SITEMAP_URL_CHUNK_SIZE,
@@ -303,10 +308,7 @@ async function removeStaleSitemapChunks(outputDirectory: string): Promise<void> 
 }
 
 export async function generateAndSaveSitemap() {
-  const locationsRows = (await LocationsReadService.getAllComplete()) as unknown as Location[];
-  const locations = locationsRows
-    .filter((location) => location.type === 'city' || location.type === 'district')
-    .filter((location) => location.status === 'active')
+  const locations = (await LocationsReadService.getAllCompleteForPublicRouting())
     .filter((location) =>
       isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(location.metadata)),
     );
