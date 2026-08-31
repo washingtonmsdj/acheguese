@@ -28,4 +28,16 @@ describe('repository root artifact governance', () => {
     expect(mapsScript).not.toContain('playwright.mapa.config.ts');
     expect(mapsScript).toContain('playwright.config.ts');
   });
+
+  it('keeps canonical Supabase type sync coupled to schema authority changes', () => {
+    const workflow = readFileSync('.github/workflows/supabase-types-sync.yml', 'utf8');
+
+    expect(workflow).toContain('- "supabase/migrations/**"');
+    expect(workflow).toContain('- "supabase/config.toml"');
+    expect(workflow).toContain('- "tools/supabase/generate-supabase-types.ts"');
+    expect(workflow).toContain('TYPES_PATH: "src/integrations/supabase/types.generated.ts"');
+    expect(workflow).toContain('gen types typescript --project-id');
+    expect(workflow).not.toContain('src/integrations/supabase/types.ts');
+    expect(workflow).not.toContain('src/shared/types/database.types.ts');
+  });
 });
