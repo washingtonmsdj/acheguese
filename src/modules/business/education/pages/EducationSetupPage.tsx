@@ -21,7 +21,7 @@ import type {
   SchoolAccessibilityFeatureKey,
   SchoolEquipmentFeatureKey,
   SchoolFacilityFeatureKey,
-} from '../types';
+} from '@/core/education';
 import {
   INITIAL_EDUCATION_SETUP_FORM,
   applyEducationInfrastructurePreset,
