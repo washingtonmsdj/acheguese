@@ -21,7 +21,6 @@ export function isSkippableVercelPath(filePath) {
   if (normalized.startsWith(".kiro/")) return true;
   if (normalized.startsWith("tests/")) return true;
   if (normalized.startsWith("e2e/")) return true;
-  if (normalized.startsWith("supabase/migrations/")) return true;
 
   if (normalized.startsWith("docs/")) {
     return !CRITICAL_DOC_PREFIXES.some((prefix) => normalized.startsWith(prefix));
