@@ -51,7 +51,7 @@ import { SEO } from "@/shared/components/seo/SEO";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { jobPublicRoutes } from "@/core/work-opportunities/routes/jobPublicRoutes";
-import { TERRITORY_CONFIG } from "@/config/territory";
+import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { useToast } from "@/shared/hooks/use-toast";
 
 import { useVagaDetail } from "../hooks/useVagaDetail";
