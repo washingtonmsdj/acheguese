@@ -7,7 +7,7 @@ import { ProfileMembersService } from '@/core/profiles/services/multi-profile/pr
  * BusinessOwnershipService - SSOT de autoridade de gestao de empresas.
  *
  * Contrato canonico:
- * - dono direto do profile pode gerenciar via ProfileService;
+ * - dono direto do profile (profiles.user_id) pode gerenciar, lido via ProfileService;
  * - membership precisa estar ativa;
  * - somente roles owner/admin podem gerenciar;
  * - member nao possui autoridade de gestao.
@@ -43,7 +43,8 @@ export class BusinessOwnershipService {
         return false;
       }
 
-      if (await profileService.isProfileOwner(ownerProfileId, userId)) {
+      const profile = await profileService.getProfileById(ownerProfileId);
+      if (profile?.user_id === userId) {
         return true;
       }
 
