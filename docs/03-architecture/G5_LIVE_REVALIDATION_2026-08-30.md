@@ -94,3 +94,17 @@ Continuam abertos, sem ambiguidade:
 - Não interpretar `steps: []` em Actions como falha de teste.
 - Não interpretar `build-rate-limit` do Vercel como regressão de source.
 - Não iniciar G6 enquanto os gates acima permanecerem abertos.
+
+## 7. Correção de governança aplicada nesta continuação
+
+Foi identificado que o workflow canônico de tipos só reagia a alteração do próprio YAML ou `workflow_dispatch`. Assim, migrations novas podiam avançar o schema remoto sem disparar regeneração do snapshot.
+
+Correção aplicada diretamente em `main`:
+
+- `54f6868577add5a2f6e2637723c8677fc1404da5` — `fix(g5): trigger Supabase type sync on schema changes`;
+- o workflow agora observa `supabase/migrations/**`, `supabase/config.toml` e `tools/supabase/generate-supabase-types.ts`, além do próprio YAML;
+- não foi criado segundo gerador, segundo snapshot ou caminho alternativo de autoridade.
+
+A alteração disparou automaticamente `Supabase Types Sync` run `33348259701`, provando que o novo gatilho está funcional. Na última observação desta execução, o run permanecia `pending` e ainda não possuía job alocado. O histórico do run inicial do mesmo workflow (`33308736174`) também mostra job encerrado sem steps/logs executáveis, coerente com o blocker de runner já documentado.
+
+Consequência: a causa de governança que permitia drift silencioso foi corrigida em source; a materialização viva continua dependendo da recuperação da infraestrutura autorizada do runner.
