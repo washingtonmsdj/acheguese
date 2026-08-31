@@ -37,6 +37,18 @@ describe('repository root artifact governance', () => {
     expect(workflow).toContain('- "tools/supabase/generate-supabase-types.ts"');
     expect(workflow).toContain('TYPES_PATH: "src/integrations/supabase/types.generated.ts"');
     expect(workflow).toContain('gen types typescript --project-id');
+    expect(workflow).toContain('cancel-in-progress: true');
+    expect(workflow).toContain('ref: main');
+    expect(workflow).toContain('RUNNER_TEMP');
+    expect(workflow).toContain(
+      'git fetch --no-tags --depth=1 origin "main:refs/remotes/origin/main"',
+    );
+    expect(workflow).toContain('git checkout -B main refs/remotes/origin/main');
+    expect(workflow).toContain('refreshing once before a final push');
+    expect(workflow).toContain('- acheguese-heavy-windows');
+    expect(workflow).toContain('- remote-only');
+    expect(workflow).not.toContain('ubuntu-latest');
+    expect(workflow).not.toContain('ref: ${{ github.sha }}');
     expect(workflow).not.toContain('src/integrations/supabase/types.ts');
     expect(workflow).not.toContain('src/shared/types/database.types.ts');
   });
