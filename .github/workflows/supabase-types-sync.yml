@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/supabase-types-sync.yml"
+      - "supabase/migrations/**"
+      - "supabase/config.toml"
+      - "tools/supabase/generate-supabase-types.ts"
   workflow_dispatch:
 
 permissions:
