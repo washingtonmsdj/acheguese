@@ -125,6 +125,27 @@ const PUBLIC_BUSINESS_LIST_SELECT = `
   )
 `;
 
+// Business mappers only consume this canonical subset from related address and
+// location rows. Keeping the relationship projection explicit avoids pulling
+// heavy territorial columns such as boundary/metadata into list/detail reads.
+const BUSINESS_CANONICAL_RELATIONS_SELECT = `
+  address:addresses!address_id(
+    street,
+    number,
+    complement,
+    postal_code,
+    latitude,
+    longitude
+  ),
+  location:locations!location_id(
+    name,
+    full_name,
+    geographic_path,
+    canonical_lat,
+    canonical_lng
+  )
+`;
+
 /**
  * Buscar empresas (com filtros)
  * ETAPA 9: Carrega relações canônicas quando disponíveis
@@ -149,13 +170,7 @@ export async function getBusinesses(
 
     let query = supabaseTyped
       .from("business_data")
-      .select(
-        `
-        *,
-        address:addresses!address_id(*),
-        location:locations!location_id(*)
-      `,
-      )
+      .select(`*, ${BUSINESS_CANONICAL_RELATIONS_SELECT}`)
       .eq("status", "active")
       .in("business_role", ["standalone", "branch"]);
 
@@ -601,8 +616,7 @@ export async function getBusinessById(id: string): Promise<Business> {
         `
         *,
         profiles(id, name, avatar_url, bio),
-        address:addresses!address_id(*),
-        location:locations!location_id(*)
+        ${BUSINESS_CANONICAL_RELATIONS_SELECT}
       `,
       )
       .eq("profile_id", id)
