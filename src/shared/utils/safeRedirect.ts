@@ -18,6 +18,8 @@ export interface SafeHttpUrlOptions {
 
 const publicEnv = ((import.meta as ImportMeta & { env?: PublicEnv }).env ?? {}) as PublicEnv;
 const EXPLICIT_PROTOCOL_REGEX = /^[a-z][a-z\d+.-]*:/i;
+const LEADING_NETWORK_PATH_REGEX = /^[\\/]{2}/;
+const INTERNAL_PATH_DECODE_PASSES = 2;
 
 function normalizeOrigin(origin: string): string {
   return origin.trim().replace(/\/+$/, '');
@@ -36,8 +38,35 @@ function parseOriginList(value: string | undefined): string[] {
     .filter(Boolean);
 }
 
+function getPathnameCandidate(value: string): string {
+  const boundary = value.search(/[?#]/);
+  return boundary >= 0 ? value.slice(0, boundary) : value;
+}
+
+function hasUnsafeInternalPathSyntax(value: string): boolean {
+  let pathname = getPathnameCandidate(value);
+
+  for (let pass = 0; pass <= INTERNAL_PATH_DECODE_PASSES; pass += 1) {
+    if (pathname.includes('\\') || LEADING_NETWORK_PATH_REGEX.test(pathname)) {
+      return true;
+    }
+
+    if (pass === INTERNAL_PATH_DECODE_PASSES) break;
+
+    try {
+      const decoded = decodeURIComponent(pathname);
+      if (decoded === pathname) break;
+      pathname = decoded;
+    } catch {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function isRelativeUrl(value: string): boolean {
-  return value.startsWith('/') && !value.startsWith('//');
+  return value.startsWith('/') && !hasUnsafeInternalPathSyntax(value);
 }
 
 function hasControlCharacters(input: string): boolean {
@@ -174,7 +203,13 @@ export function resolveSafeInternalPath(rawUrl: unknown, fallback = '/'): string
   if (typeof rawUrl !== 'string') return fallbackPath;
 
   const input = rawUrl.trim();
-  if (!input || input.length > INPUT_VALIDATION.MAX_URL_LENGTH) return fallbackPath;
+  if (
+    !input ||
+    input.length > INPUT_VALIDATION.MAX_URL_LENGTH ||
+    hasControlCharacters(input)
+  ) {
+    return fallbackPath;
+  }
 
   if (isRelativeUrl(input)) {
     return input;
@@ -186,7 +221,9 @@ export function resolveSafeInternalPath(rawUrl: unknown, fallback = '/'): string
   try {
     const parsed = new URL(input);
     if (parsed.origin !== currentOrigin) return fallbackPath;
-    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+
+    const internalPath = `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    return isRelativeUrl(internalPath) ? internalPath : fallbackPath;
   } catch {
     return fallbackPath;
   }
