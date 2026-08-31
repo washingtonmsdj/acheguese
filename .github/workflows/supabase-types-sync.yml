@@ -51,10 +51,10 @@ jobs:
             throw "GitHub Actions secret SUPABASE_ACCESS_TOKEN is missing."
           }
 
-      - name: Checkout exact main SHA
+      - name: Checkout current main
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.sha }}
+          ref: main
           fetch-depth: 1
           persist-credentials: true
           clean: true
@@ -69,29 +69,59 @@ jobs:
           if ([string]::IsNullOrWhiteSpace($text) -or $text -notmatch "export type Database") {
             throw "Supabase type generation returned an invalid artifact."
           }
+          $typesTempPath = Join-Path $env:RUNNER_TEMP "acheguese-supabase-types.generated.ts"
           $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-          [System.IO.File]::WriteAllText($env:TYPES_PATH, $text, $utf8NoBom)
+          [System.IO.File]::WriteAllText($typesTempPath, $text, $utf8NoBom)
 
-      - name: Commit only canonical type drift
+      - name: Apply generated types to latest main
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
-          $changes = @(git status --porcelain)
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          if ($changes.Count -eq 0) {
-            Write-Host "Canonical Supabase types are already synchronized."
-            exit 0
+          $typesTempPath = Join-Path $env:RUNNER_TEMP "acheguese-supabase-types.generated.ts"
+          if (-not (Test-Path -LiteralPath $typesTempPath)) {
+            throw "Generated Supabase types artifact is missing from RUNNER_TEMP."
           }
 
-          $unexpected = @($changes | Where-Object { $_ -notmatch ([regex]::Escape($env:TYPES_PATH) + '$') })
-          if ($unexpected.Count -ne 0) {
-            throw "Unexpected generated changes detected: $($unexpected -join '; ')"
+          function Refresh-MainAndCommitTypes {
+            git fetch --no-tags --depth=1 origin "main:refs/remotes/origin/main"
+            if ($LASTEXITCODE -ne 0) { throw "Failed to fetch latest origin/main." }
+
+            git checkout -B main refs/remotes/origin/main
+            if ($LASTEXITCODE -ne 0) { throw "Failed to checkout latest origin/main." }
+
+            $generatedBytes = [System.IO.File]::ReadAllBytes($typesTempPath)
+            [System.IO.File]::WriteAllBytes($env:TYPES_PATH, $generatedBytes)
+
+            $changes = @(git status --porcelain)
+            if ($LASTEXITCODE -ne 0) { throw "Failed to inspect generated type drift." }
+            if ($changes.Count -eq 0) {
+              Write-Host "Canonical Supabase types are already synchronized."
+              return $false
+            }
+
+            $unexpected = @($changes | Where-Object { $_ -notmatch ([regex]::Escape($env:TYPES_PATH) + '$') })
+            if ($unexpected.Count -ne 0) {
+              throw "Unexpected generated changes detected: $($unexpected -join '; ')"
+            }
+
+            git add $env:TYPES_PATH
+            if ($LASTEXITCODE -ne 0) { throw "Failed to stage canonical Supabase types." }
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore(g5): sync Supabase generated types"
+            if ($LASTEXITCODE -ne 0) { throw "Failed to commit canonical Supabase types." }
+            return $true
           }
 
-          git add $env:TYPES_PATH
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "chore(g5): sync Supabase generated types"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $hasCommit = Refresh-MainAndCommitTypes
+          if (-not $hasCommit) { exit 0 }
+
+          git push origin HEAD:main
+          if ($LASTEXITCODE -eq 0) { exit 0 }
+
+          Write-Host "main advanced or the first push was rejected; refreshing once before a final push."
+          $hasCommit = Refresh-MainAndCommitTypes
+          if (-not $hasCommit) { exit 0 }
+
           git push origin HEAD:main
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
