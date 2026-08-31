@@ -6,16 +6,16 @@ const repoRoot = resolve(__dirname, "../..");
 const read = (filePath: string) => readFileSync(resolve(repoRoot, filePath), "utf8");
 
 describe("Business management authority SSOT", () => {
-  it("delegates profile ownership and active manager membership to canonical profile authorities", () => {
+  it("preserves direct profile owner and active manager semantics through canonical authorities", () => {
     const service = read("src/core/business/services/BusinessOwnershipService.ts");
     const membershipService = read(
       "src/core/profiles/services/multi-profile/profileMembersService.ts",
     );
 
-    expect(service).toContain("profileService.isProfileOwner(ownerProfileId, userId)");
+    expect(service).toContain("profileService.getProfileById(ownerProfileId)");
+    expect(service).toContain("profile?.user_id === userId");
     expect(service).toContain("ProfileMembersService.isManager(ownerProfileId, userId)");
     expect(service).not.toContain(".from('profiles')");
-    expect(service).not.toContain("profile?.user_id === userId");
 
     expect(membershipService).toContain(".eq('is_active', true)");
     expect(membershipService).toContain("return role === 'owner' || role === 'admin'");
