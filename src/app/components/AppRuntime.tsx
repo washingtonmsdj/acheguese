@@ -83,12 +83,7 @@ export function AppRuntime() {
             <SessionProvider>
               <MultiProfileProvider>
                 <SkipToContent />
-                <BrowserRouter
-                  future={{
-                    v7_startTransition: true,
-                    v7_relativeSplatPath: true,
-                  }}
-                >
+                <BrowserRouter>
                   <Suspense fallback={null}>
                     <AuthHashRedirect />
                     {!PRELAUNCH_LOCKDOWN_ENABLED ? (
