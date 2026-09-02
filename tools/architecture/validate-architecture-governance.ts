@@ -26,6 +26,7 @@ const ROOT = process.cwd();
 const SRC_DIR = path.join(ROOT, "src");
 const CODE_FILE_RE = /\.(ts|tsx|js|jsx)$/;
 const IMPORT_RE = /from\s+["']([^"']+)["']/g;
+const REEXPORT_RE = /export\s+(?:\*|\{[\s\S]*?\})\s+from\s+["']([^"']+)["']/g;
 const SUPABASE_BOUNDARY_RE =
   /(\(\s*supabase\s+as\s+any\s*\)|\bsupabase\s*\.\s*(from|rpc|channel|functions|auth|storage|removeChannel)\s*\(|from\s+['"]@\/integrations\/supabase(?:\/client)?['"])/;
 const NOTIFICATIONS_DOMAIN_BOUNDARY_RE =
@@ -104,28 +105,40 @@ function hasAllowedDbMarker(filePath: string): boolean {
   );
 }
 
-function resolveImport(currentFile: string, specifier: string): string | null {
-  if (!specifier.startsWith(".")) return null;
-  const resolved = path.resolve(path.dirname(currentFile), specifier);
-  const candidates = [
-    resolved,
-    `${resolved}.ts`,
-    `${resolved}.tsx`,
-    `${resolved}.js`,
-    `${resolved}.jsx`,
-    path.join(resolved, "index.ts"),
-    path.join(resolved, "index.tsx"),
-  ];
+function resolveCodeCandidate(unresolved: string): string | null {
+  const candidates = CODE_FILE_RE.test(unresolved)
+    ? [unresolved]
+    : [
+        `${unresolved}.ts`,
+        `${unresolved}.tsx`,
+        `${unresolved}.js`,
+        `${unresolved}.jsx`,
+        path.join(unresolved, "index.ts"),
+        path.join(unresolved, "index.tsx"),
+      ];
+
   for (const candidate of candidates) {
-    if (fs.existsSync(candidate)) {
-      return normalize(candidate);
-    }
+    if (!fs.existsSync(candidate)) continue;
+    if (!fs.statSync(candidate).isFile()) continue;
+    return normalize(candidate);
   }
   return null;
 }
 
+function resolveImport(currentFile: string, specifier: string): string | null {
+  if (specifier.startsWith("@/")) {
+    return resolveCodeCandidate(path.join(ROOT, "src", specifier.slice(2)));
+  }
+  if (!specifier.startsWith(".")) return null;
+  return resolveCodeCandidate(path.resolve(path.dirname(currentFile), specifier));
+}
+
 function extractImports(content: string): string[] {
   return Array.from(content.matchAll(IMPORT_RE)).map((match) => match[1]);
+}
+
+function extractReexports(content: string): string[] {
+  return Array.from(content.matchAll(REEXPORT_RE)).map((match) => match[1]);
 }
 
 function isFacadeFile(content: string): boolean {
@@ -160,6 +173,28 @@ function collectDomainTypeBasenames(): Set<string> {
       (basename) => basename !== "index.ts" && basename !== "types.ts",
     ),
   );
+}
+
+function collectCanonicalFacadeTargets(explicitSsotPaths: Set<string>): Set<string> {
+  const targets = new Set<string>();
+
+  for (const ssotPath of explicitSsotPaths) {
+    const absolutePath = path.join(ROOT, ssotPath);
+    if (!fs.existsSync(absolutePath) || !fs.statSync(absolutePath).isFile()) continue;
+    const content = fs.readFileSync(absolutePath, "utf-8");
+    if (!isFacadeFile(content)) continue;
+
+    for (const specifier of extractReexports(content)) {
+      const resolved = resolveImport(absolutePath, specifier);
+      if (!resolved) continue;
+      const relativeTarget = relativeToRoot(resolved);
+      if (path.basename(relativeTarget) === path.basename(ssotPath)) {
+        targets.add(relativeTarget);
+      }
+    }
+  }
+
+  return targets;
 }
 
 export function collectViolations(): Violation[] {
@@ -285,6 +320,7 @@ export function collectViolations(): Violation[] {
       normalize(filePath),
     ),
   );
+  const canonicalFacadeTargets = collectCanonicalFacadeTargets(explicitSsotPaths);
 
   for (const [serviceBase, groupedFiles] of serviceGroups) {
     if (!canonicalServiceSet.has(serviceBase) || groupedFiles.length <= 1) {
@@ -302,6 +338,9 @@ export function collectViolations(): Violation[] {
         continue;
       }
       if (officialPaths.has(candidate)) {
+        continue;
+      }
+      if (canonicalFacadeTargets.has(candidate)) {
         continue;
       }
 
