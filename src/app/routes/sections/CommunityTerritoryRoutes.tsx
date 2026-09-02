@@ -181,6 +181,14 @@ function renderLaunchScopedElement(
   return <P.LaunchPausedPage moduleName={definition.pausedModuleName ?? "Módulo"} />;
 }
 
+function renderCommunityBusinessDetail(
+  props: Parameters<
+    React.ComponentProps<typeof P.CommunityEntityAliasRoute>["renderBusinessDetail"]
+  >[0],
+): ReactNode {
+  return <P.EmpresaDetailLandingPage {...props} />;
+}
+
 function toRelativeRoutePath(segments: readonly string[]): string {
   return segments.join("/");
 }
@@ -236,11 +244,19 @@ function renderCommunityTerritoryRoutes() {
       {renderCommunityRoutes("scoped", buildCommunityScopedRoutePath)}
       <Route
         path={buildCommunityAliasRoutePath([APP_MODULE_SLUGS.business, TERRITORIAL_PARAMS.slug])}
-        element={<P.CommunityEntityAliasRoute />}
+        element={
+          <P.CommunityEntityAliasRoute
+            renderBusinessDetail={renderCommunityBusinessDetail}
+          />
+        }
       />
       <Route
         path={buildCommunityAliasRoutePath([APP_MODULE_SLUGS.gastronomy, TERRITORIAL_PARAMS.slug])}
-        element={<P.CommunityEntityAliasRoute />}
+        element={
+          <P.CommunityEntityAliasRoute
+            renderBusinessDetail={renderCommunityBusinessDetail}
+          />
+        }
       />
       <Route path={buildCommunityAliasRoutePath()} element={<P.CommunityAliasRoute />}>
         <Route element={<P.CommunityPersistentPortalLayout />}>
