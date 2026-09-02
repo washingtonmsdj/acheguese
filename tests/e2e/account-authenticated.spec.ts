@@ -79,9 +79,25 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
         }
       });
       page.on("pageerror", (error) => pageErrors.push(error.message));
-      page.on("response", (response) => {
-        if (response.status() >= 500) {
-          networkErrors.push(`${response.status()} ${response.url()}`);
+      page.on("response", async (response) => {
+        const status = response.status();
+        const url = response.url();
+
+        if (status >= 500) {
+          networkErrors.push(`${status} ${url}`);
+          return;
+        }
+
+        if (status >= 400 && url.includes("/functions/v1/role-rpc")) {
+          let detail = "";
+          try {
+            detail = (await response.text()).trim().slice(0, 1_000);
+          } catch {
+            // Preserve the status + URL evidence even if the response body is unavailable.
+          }
+          networkErrors.push(
+            detail ? `${status} ${url} :: ${detail}` : `${status} ${url}`,
+          );
         }
       });
       page.on("requestfailed", (request) => {
