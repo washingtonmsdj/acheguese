@@ -2,8 +2,12 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { COMMUNITY_REPORT_REASON_OPTIONS } from "@/core/moderation/reportReasons";
 import { ReportReasonDialog } from "./ReportReasonDialog";
+
+const TEST_REPORT_REASON_OPTIONS = [
+  { id: "spam", label: "Spam ou propaganda abusiva" },
+  { id: "harassment", label: "Assedio ou ataque pessoal" },
+] as const;
 
 describe("ReportReasonDialog", () => {
   it("requires an explicit reason and submits only normalized optional details", async () => {
@@ -16,7 +20,7 @@ describe("ReportReasonDialog", () => {
         open={true}
         onOpenChange={onOpenChange}
         contentLabel="publicacao"
-        reasonOptions={COMMUNITY_REPORT_REASON_OPTIONS}
+        reasonOptions={TEST_REPORT_REASON_OPTIONS}
         onSubmit={onSubmit}
       />,
     );
@@ -52,7 +56,7 @@ describe("ReportReasonDialog", () => {
         open={true}
         onOpenChange={onOpenChange}
         contentLabel="comentario"
-        reasonOptions={COMMUNITY_REPORT_REASON_OPTIONS}
+        reasonOptions={TEST_REPORT_REASON_OPTIONS}
         onSubmit={onSubmit}
       />,
     );
