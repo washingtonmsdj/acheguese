@@ -35,6 +35,8 @@ const CORE_COMMUNITY_BARREL_IMPORT_RE =
   /(?:from\s+["']|import\(\s*["'])@\/core\/community["']/;
 const CORE_COMMUNITY_LEGACY_IMPORT_RE =
   /(?:from\s+["']|import\(\s*["'])@\/core\/community\//;
+const CANONICAL_COMMUNITY_LAUNCH_IMPORT_RE =
+  /(?:from\s+["']|import\(\s*["'])@\/core\/community\/config\/communityLaunch["']/;
 
 function normalize(filePath: string): string {
   return filePath.replace(/\\/g, "/");
@@ -57,6 +59,17 @@ function walk(dir: string): string[] {
   }
 
   return files;
+}
+
+function hasDisallowedCoreCommunityImport(content: string): boolean {
+  if (!CORE_COMMUNITY_LEGACY_IMPORT_RE.test(content)) return false;
+
+  const withoutCanonicalLaunchContract = content.replace(
+    /(?:from\s+["']|import\(\s*["'])@\/core\/community\/config\/communityLaunch["']/g,
+    "",
+  );
+
+  return CORE_COMMUNITY_LEGACY_IMPORT_RE.test(withoutCanonicalLaunchContract);
 }
 
 function validateModuleCompatibleRoot(
@@ -88,7 +101,7 @@ function validateModuleCompatibleRoot(
       );
     }
 
-    if (CORE_COMMUNITY_LEGACY_IMPORT_RE.test(content)) {
+    if (hasDisallowedCoreCommunityImport(content)) {
       violations.push(
         `${relative}: modulo transversal nao deve importar @/core/community/*. Use core/community-* ou outro owner canonico.`,
       );
@@ -151,7 +164,7 @@ function main() {
       const relative = normalize(path.relative(ROOT, filePath));
       const content = fs.readFileSync(filePath, "utf8");
 
-      if (CORE_COMMUNITY_LEGACY_IMPORT_RE.test(content)) {
+      if (hasDisallowedCoreCommunityImport(content)) {
         violations.push(
           `${relative}: import direto de @/core/community/* proibido fora dos dominios de compatibilidade. Use core/community-*, core/social, core/posts, core/profiles ou core/routing.`,
         );
@@ -167,7 +180,7 @@ function main() {
     process.exit(1);
   }
 
-  console.log("Community transversal boundaries valid.");
+  console.log("Community transversal boundaries valid; the documented community launch config remains the only cross-domain core/community contract.");
 }
 
 main();
