@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
@@ -12,8 +12,6 @@ import {
 } from "@/core/routing/services/CommunityBusinessEntityResolver";
 import { PageLoader } from "@/shared/components/loading/PageLoader";
 import { TerritorialNotFound } from "./TerritorialNotFound";
-
-const EmpresaDetailLandingPage = lazy(() => import("@/app/pages/EmpresaDetailLandingPage"));
 
 type EntityAliasState =
   | { status: "loading" }
@@ -29,6 +27,18 @@ type SupportedEntityModule =
   | typeof APP_MODULE_SLUGS.business
   | typeof APP_MODULE_SLUGS.gastronomy;
 
+export interface CommunityEntityAliasBusinessDetailProps {
+  routeParams: BusinessEntityRouteParams;
+  canonicalPathOverride: string;
+  communityAliasOverride: string;
+}
+
+interface CommunityEntityAliasRouteProps {
+  renderBusinessDetail: (
+    props: CommunityEntityAliasBusinessDetailProps,
+  ) => ReactNode;
+}
+
 function getModuleFromPath(pathname: string): SupportedEntityModule | null {
   const moduleSlug = pathname.split("/").filter(Boolean)[2];
   if (moduleSlug === APP_MODULE_SLUGS.business || moduleSlug === APP_MODULE_SLUGS.gastronomy) {
@@ -37,7 +47,9 @@ function getModuleFromPath(pathname: string): SupportedEntityModule | null {
   return null;
 }
 
-export function CommunityEntityAliasRoute() {
+export function CommunityEntityAliasRoute({
+  renderBusinessDetail,
+}: CommunityEntityAliasRouteProps) {
   const location = useLocation();
   const { communitySlug, slug } = useParams<{
     communitySlug?: string;
@@ -130,11 +142,11 @@ export function CommunityEntityAliasRoute() {
         </div>
       </div>
       <Suspense fallback={<PageLoader fullScreen message="Abrindo empresa..." />}>
-        <EmpresaDetailLandingPage
-          routeParams={state.routeParams}
-          canonicalPathOverride={state.publicPath}
-          communityAliasOverride={state.canonicalAlias}
-        />
+        {renderBusinessDetail({
+          routeParams: state.routeParams,
+          canonicalPathOverride: state.publicPath,
+          communityAliasOverride: state.canonicalAlias,
+        })}
       </Suspense>
     </>
   );
