@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import { ProfileSavedEntityService } from "@/core/engagement/services/ProfileSavedEntityService";
+import { EVENT_REVIEW_STATUS } from "@/core/community-events/config/eventOperationalPolicy";
 import { logger } from "@/shared/utils/logger";
 
 export const EVENT_REVIEW_LIMITS = {
@@ -118,7 +119,7 @@ export class EventEngagementService {
         .from("event_reviews" as never)
         .select(EVENT_REVIEW_SELECT)
         .eq("event_id", eventId)
-        .eq("status", "active")
+        .eq("status", EVENT_REVIEW_STATUS.active)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -140,7 +141,7 @@ export class EventEngagementService {
         reviewer_profile_id: input.reviewerProfileId,
         rating: input.rating,
         comment: validation.comment,
-        status: "active",
+        status: EVENT_REVIEW_STATUS.active,
       } as never, { onConflict: "event_id,reviewer_profile_id" })
       .select(EVENT_REVIEW_SELECT)
       .single();
