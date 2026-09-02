@@ -1,6 +1,5 @@
 import { logger } from "@/shared/utils/logger";
-import { supabase } from "@/integrations/supabase";
-import type { Database } from "@/integrations/supabase/types.generated";
+import { supabase, type Database } from "@/integrations/supabase";
 
 export interface LocationRecord {
   id: string;
