@@ -85,7 +85,26 @@ describe("reverse-layer runtime import validator", () => {
     expect(collectReverseLayerViolations(root)).toEqual([]);
   });
 
-  it("blocks modules runtime imports from app", () => {
+  it("allows only the canonical G2 app config owners from lower layers", () => {
+    const root = createRoot();
+    write(
+      root,
+      "src/core/service.ts",
+      [
+        'import { scope } from "@/app/config/launchScope";',
+        'import { modules } from "@/app/config/modules";',
+      ].join("\n"),
+    );
+    write(
+      root,
+      "src/modules/feature/service.ts",
+      'import { scope } from "@/app/config/launchScope";\n',
+    );
+
+    expect(collectReverseLayerViolations(root)).toEqual([]);
+  });
+
+  it("keeps other modules runtime imports from app blocked", () => {
     const root = createRoot();
     write(root, "src/modules/feature/service.ts", 'import { shell } from "@/app/shell";\n');
 
@@ -93,6 +112,7 @@ describe("reverse-layer runtime import validator", () => {
       expect.objectContaining({
         sourceLayer: "modules",
         targetLayer: "app",
+        specifier: "@/app/shell",
       }),
     ]);
   });
