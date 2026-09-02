@@ -188,8 +188,11 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
         contentType: "image/png",
       });
 
-      expect(consoleErrors, consoleErrors.join("\n")).toEqual([]);
+      // Prefer the structured network evidence first so a role-rpc 4xx reports
+      // status + URL + response body instead of being shadowed by Chromium's
+      // generic console "Failed to load resource" message.
       expect(networkErrors, networkErrors.join("\n")).toEqual([]);
+      expect(consoleErrors, consoleErrors.join("\n")).toEqual([]);
 
       await page.goto("/central", { waitUntil: "domcontentloaded" });
       const accountMenu = page.getByRole("button", {
