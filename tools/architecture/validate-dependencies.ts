@@ -53,6 +53,25 @@ const ALLOWED_IMPORT_PATH_EXCEPTIONS: Array<{
       /^@\/core\/coverage\/index$/,
     ],
   },
+  {
+    // G2 definiu estes dois arquivos como owners canonicos de configuracao global em app.
+    // A excecao e nominal: nao liberar @/app/config/** nem outros contratos de app para core.
+    from: 'core',
+    to: 'app',
+    patterns: [
+      /^@\/app\/config\/launchScope$/,
+      /^@\/app\/config\/modules$/,
+    ],
+  },
+  {
+    // Modules podem ler somente o contrato canonico de launch scope definido por G2.
+    // Outros imports modules -> app continuam proibidos.
+    from: 'modules',
+    to: 'app',
+    patterns: [
+      /^@\/app\/config\/launchScope$/,
+    ],
+  },
 ];
 
 const FORBIDDEN_IMPORT_PATHS: Array<{
