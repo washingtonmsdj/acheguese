@@ -31,6 +31,7 @@ import {
   DialogFooter,
 } from '@/shared/components/ui/dialog';
 import { Badge } from '@/shared/components/ui/badge';
+import { COMMUNITY_EVENT_TICKET_DEFAULTS } from '@/core/community-events/config/eventOperationalPolicy';
 import { cn } from '@/shared/utils/cn';
 import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 import { useToast } from '@/shared/hooks/use-toast';
@@ -63,7 +64,7 @@ export function EventTicketManager({
   const [formData, setFormData] = useState<Partial<Ticket>>({
     name: '',
     description: '',
-    price: 0,
+    price: COMMUNITY_EVENT_TICKET_DEFAULTS.initialPrice,
     quantity_available: 0,
     sale_start_date: '',
     sale_end_date: '',
@@ -77,7 +78,7 @@ export function EventTicketManager({
     setFormData({
       name: '',
       description: '',
-      price: 0,
+      price: COMMUNITY_EVENT_TICKET_DEFAULTS.initialPrice,
       quantity_available: 0,
       sale_start_date: '',
       sale_end_date: '',
