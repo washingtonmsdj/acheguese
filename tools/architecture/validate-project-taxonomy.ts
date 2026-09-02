@@ -167,8 +167,6 @@ const APP_LAYOUT_EXTRACTED_ROUTE_COMPONENTS = [
   "<P.TerritorialMapPage />",
 ] as const;
 const COMMUNITY_MODULE_EMPTY_FACADE_PATHS = [
-  "src/core/community-events/index.ts",
-  "src/modules/community-events/index.ts",
   "src/modules/community-feed/index.ts",
   "src/modules/community-feed/pages/ComunidadePage.tsx",
   "src/modules/community-feed/pages/NovoPostPage.tsx",
