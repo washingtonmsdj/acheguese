@@ -2,7 +2,7 @@ import { dirname, join } from "path";
 import dotenv from "dotenv";
 import { defineConfig, devices } from "@playwright/test";
 import { fileURLToPath } from "url";
-import { getRemoteMutationTargetSafety } from "./scripts/lib/remote-mutation-safety";
+import { getRemoteMutationTargetSafety } from "./tools/supabase/remote-mutation-safety.ts";
 
 dotenv.config({ path: ".env.test" });
 dotenv.config({ path: ".env.local", override: true });
