@@ -25,12 +25,15 @@ const RETIRED_LOCATION_GROUP_FILES = [
   "src/core/location/repositories/createTerritorialGroupRepository.ts",
 ] as const;
 
-// Hardened backend gateways are explicit operation owners, not alternate domain
-// implementations. territorial-get-tree is read-only. Visibility mutations may
-// update metadata only and are invoked through TerritorialManagementService.
+// Hardened backend gateways are explicit operations, not alternate domain
+// implementations. Tree and sitemap group access are read-only. Visibility
+// mutations may update metadata only and are invoked through the territorial
+// management authority.
+const SITEMAP_EDGE = "supabase/functions/sitemap/index.ts";
 const TERRITORIAL_BACKEND_GROUP_GATEWAYS = new Set([
   "supabase/functions/territorial-get-tree/index.ts",
   "supabase/functions/territorial-update-group-visibility/index.ts",
+  SITEMAP_EDGE,
 ]);
 const GROUP_VISIBILITY_EDGE =
   "supabase/functions/territorial-update-group-visibility/index.ts";
@@ -185,6 +188,19 @@ function main(): void {
         violations.push(
           `${relative}: backend territorial-group table access is not an authorized gateway.`,
         );
+      }
+    }
+
+    if (relative === SITEMAP_EDGE) {
+      const memberWrites = findTableWrites(content, "territorial_group_members");
+      if (memberWrites.length > 0) {
+        violations.push(`${relative}: sitemap territorial-group gateway must remain read-only.`);
+      }
+      if (content.includes(".from('territorial_groups')") || content.includes('.from("territorial_groups")')) {
+        violations.push(`${relative}: sitemap may resolve group membership only; direct territorial_groups reads are forbidden.`);
+      }
+      if (!content.includes(".select('location_id, group_id')")) {
+        violations.push(`${relative}: sitemap territorial membership projection must remain minimal.`);
       }
     }
 
