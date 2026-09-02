@@ -17,9 +17,11 @@ O estado correto é:
 - RLS continua fail-closed nas tabelas próprias sem policy;
 - `spatial_ref_sys` continua sendo a única tabela `public` sem RLS e permanece provider-owned/PostGIS;
 - o snapshot TypeScript versionado continua em drift contra o gerador oficial live;
-- o workflow canônico de types sync continua aguardando o runner autorizado;
+- o workflow canônico de types sync continua aguardando o runner autorizado **como subblocker de B1**;
 - o bucket órfão `classified-images` continua vazio e sem policy associada, mas sua remoção continua dependendo do lifecycle oficial Supabase Storage;
-- G6 continua **NÃO AUTORIZADO**.
+- **B3 (CI real) permanece FECHADO** pelas provas já registradas no checkpoint principal de 02/09/2026;
+- **B4 permanece FECHADO**;
+- G6 continua **NÃO AUTORIZADO** enquanto B1/B2 estiverem abertos.
 
 Nenhum DDL foi aplicado nesta revalidação.
 
@@ -41,15 +43,19 @@ Regra preservada:
 - não criar segundo gerador;
 - materializar o arquivo inteiro somente pela authority canônica já instalada.
 
-### Workflow atual
+### Workflow atual — subblocker de B1, não reabertura de B3
 
 - workflow: `Supabase Types Sync`;
 - run: `33602288627`;
 - HEAD: `6515bdca8bf8500a429c991fed6f69be53d49c52`;
 - status revalidado: `queued`;
-- conclusion: `null`.
+- conclusion: `null`;
+- job ainda sem runner atribuído (`runner_id = 0`, `runner_name = ""`, `steps = []`);
+- labels requeridas: `self-hosted`, `windows`, `x64`, `acheguese-heavy-windows`, `remote-only`.
 
-O workflow usa deliberadamente o runner self-hosted autorizado (`acheguese-heavy-windows` / `remote-only`). Não trocar para `ubuntu-latest` apenas para contornar indisponibilidade do runner, porque a governança do repositório exige esse boundary.
+O workflow usa deliberadamente o runner self-hosted autorizado. Não trocar para `ubuntu-latest` apenas para contornar indisponibilidade do runner, porque a governança do repositório exige esse boundary.
+
+**Importante:** esse estado queued bloqueia somente a materialização hosted/canônica requerida por **B1**. Ele **não reabre B3**. O checkpoint G5 principal já registra B3 como FECHADO com `SSOT Enforcement` run `33563363215` success, `Edge Functions Business Contract Tests` run `33563363246` success e Vercel success no commit `71ebc76c`.
 
 ## 3. RLS live — snapshot de 2026-09-02
 
@@ -98,14 +104,14 @@ Revalidação read-only de `storage.buckets` + `storage.objects`:
 
 | bucket | public | objetos | classificação |
 |---|---:|---:|---|
-| `classified-images` | true | 0 | **REMOTE ORPHAN** |
+| `classified-images` | true | 0 | **REMOTE ORPHAN / B2** |
 | `classified_images` | true | 0 | identidade histórica/canônica distinta; não remover por confusão de nome |
 
 Também foi revalidado que não existe policy em `storage.objects` cujo `qual` ou `with_check` referencie `classified-images` (hífen).
 
 Busca de source não encontrou `classified-images` como bucket canônico de runtime. Já `classified_images` continua presente no SSOT de buckets e em migrations/ratchets históricos, portanto as identidades não podem ser tratadas como equivalentes.
 
-### Capability blocker
+### Capability blocker B2
 
 O lifecycle correto continua sendo a API oficial do Supabase Storage:
 
@@ -122,7 +128,7 @@ Portanto:
 - **não** executar `DELETE FROM storage.buckets`;
 - **não** criar Edge Function administrativa descartável;
 - **não** ampliar um broker de domínio apenas para apagar o bucket;
-- manter esse item como provider/capability blocker.
+- manter B2 como provider/capability blocker.
 
 ## 5. Schema migrations live
 
@@ -147,28 +153,32 @@ Criar migration para "fazer números parecerem melhores" violaria as invariantes
 
 ## 7. Blockers G5 após esta revalidação
 
-Restam três blockers centrais, todos separados de source business logic:
+Restam **dois** blockers centrais:
 
-1. **Supabase generated types** — materialização integral pelo runner autorizado do snapshot PostgREST 14.5/live;
-2. **Storage orphan** — remoção oficial de `classified-images` via Supabase Storage API + postcheck;
-3. **GitHub Actions / runner** — jobs remotos precisam obter runner e executar steps reais para fornecer hosted proof do mesmo SHA.
+1. **B1 — Supabase generated types**: materialização integral do snapshot live PostgREST 14.5 em `src/integrations/supabase/types.generated.ts` pela authority canônica. O run `33602288627` sem runner atribuído é um subblocker operacional deste item;
+2. **B2 — Storage orphan**: remoção oficial de `classified-images` via Supabase Storage API + postcheck, preservando `classified_images`.
 
-Enquanto qualquer um desses três estiver aberto, G5 permanece **EM EXECUÇÃO** e G6 permanece **BLOQUEADO**.
+Já fechados e **não reabrir**:
+
+- **B3 — CI real: FECHADO**;
+- **B4: FECHADO**.
+
+Enquanto B1 ou B2 estiver aberto, G5 permanece **EM EXECUÇÃO** e G6 permanece **BLOQUEADO**.
 
 ## 8. next_action
 
 1. revalidar `main` antes de qualquer novo write;
-2. se `33602288627` sair de `queued`, revisar o commit gerado e confirmar que `types.generated.ts` foi materializado integralmente a partir do projeto `xhdowzacfujckjelqhtd`;
-3. se surgir capability oficial de Storage, repetir preflight e remover **somente** `classified-images` via lifecycle oficial;
+2. fechar B1 materializando integralmente os tipos oficiais live, sem edição parcial; se `33602288627` sair de `queued`, revisar o commit gerado e confirmar origem `xhdowzacfujckjelqhtd`;
+3. fechar B2 somente quando houver capability oficial de Storage: repetir preflight e remover **somente** `classified-images` via lifecycle oficial;
 4. não criar policy para tabelas fail-closed sem caller/provenance;
-5. quando Actions voltar a executar steps reais, rodar/reconciliar os testes live G5 no mesmo SHA;
-6. somente depois dos três blockers centrais fechados, reconciliar o checkpoint G5 principal e avaliar autorização de G6.
+5. depois de B1 e B2 fechados, reconciliar o checkpoint G5 principal e somente então avaliar autorização de G6.
 
 ## 9. do_not_repeat
 
 - não iniciar G6;
 - não editar `types.generated.ts` parcialmente;
 - não trocar o runner canônico por conveniência;
+- não reabrir B3 por causa do types-sync queued;
 - não apagar bucket Storage via SQL;
 - não confundir `classified-images` com `classified_images`;
 - não criar RLS policy apenas para reduzir contagem de tabelas sem policy;
