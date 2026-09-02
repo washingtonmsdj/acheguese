@@ -1,5 +1,8 @@
 import { Page } from "@playwright/test";
-import { createClient } from "@supabase/supabase-js";
+import {
+  createOperationalAnonClientForPublicConfig,
+  getOperationalEnv,
+} from "../../helpers/operational-env";
 
 // Credenciais de teste — lidas de variáveis de ambiente
 export const TEST_USER = {
@@ -54,12 +57,11 @@ async function resolvePublicSupabaseConfig(page: Page): Promise<{
   url: string;
   publishableKey: string;
 }> {
+  const operationalEnv = getOperationalEnv();
   const configuredUrl =
-    process.env.E2E_SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "";
+    process.env.E2E_SUPABASE_URL ?? operationalEnv.supabaseUrl ?? "";
   const configuredKey =
-    process.env.E2E_SUPABASE_PUBLISHABLE_KEY ??
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
-    "";
+    process.env.E2E_SUPABASE_PUBLISHABLE_KEY ?? operationalEnv.anonKey ?? "";
   if (configuredUrl && configuredKey) {
     return { url: configuredUrl, publishableKey: configuredKey };
   }
@@ -143,12 +145,9 @@ export async function bootstrapFixtureSession(
 ): Promise<void> {
   const { url, publishableKey } = await resolvePublicSupabaseConfig(page);
 
-  const client = createClient(
+  const client = createOperationalAnonClientForPublicConfig(
     url,
     publishableKey,
-    {
-      auth: { persistSession: false, autoRefreshToken: false },
-    },
   );
   const { data, error } = await client.auth.signInWithPassword({
     email,
