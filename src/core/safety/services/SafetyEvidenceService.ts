@@ -1,5 +1,4 @@
-import { supabase } from '@/integrations/supabase';
-import type { Json } from '@/integrations/supabase/types.generated';
+import { supabase, type Json } from '@/integrations/supabase';
 import { MEDIA_STORAGE_BUCKETS } from '@/core/media/config/storageBuckets';
 import { mediaService } from '@/core/media/services/MediaService';
 import { logger } from '@/shared/utils/logger';
