@@ -21,6 +21,7 @@ concurrency:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   VITE_SUPABASE_PROJECT_ID: "xhdowzacfujckjelqhtd"
+  SUPABASE_POOLER_HOST: "aws-0-sa-east-1.pooler.supabase.com"
   TYPES_PATH: "src/integrations/supabase/types.generated.ts"
 
 jobs:
@@ -35,9 +36,10 @@ jobs:
     timeout-minutes: 15
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
 
     steps:
-      - name: Assert main-only execution
+      - name: Assert main-only execution and provider credentials
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
@@ -47,8 +49,14 @@ jobs:
           if ($env:GITHUB_REF -ne "refs/heads/main") {
             throw "Only refs/heads/main is authorized. Received $env:GITHUB_REF"
           }
-          if ([string]::IsNullOrWhiteSpace($env:SUPABASE_ACCESS_TOKEN)) {
-            throw "GitHub Actions secret SUPABASE_ACCESS_TOKEN is missing."
+
+          $hasAccessToken = -not [string]::IsNullOrWhiteSpace($env:SUPABASE_ACCESS_TOKEN)
+          $hasDbPassword = -not [string]::IsNullOrWhiteSpace($env:SUPABASE_DB_PASSWORD)
+          if (-not $hasAccessToken -and -not $hasDbPassword) {
+            throw "Neither SUPABASE_ACCESS_TOKEN nor SUPABASE_DB_PASSWORD is configured."
+          }
+          if ($hasDbPassword) {
+            Write-Output "::add-mask::$($env:SUPABASE_DB_PASSWORD)"
           }
 
       - name: Checkout current main
@@ -76,6 +84,22 @@ jobs:
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
+
+          $hasAccessToken = -not [string]::IsNullOrWhiteSpace($env:SUPABASE_ACCESS_TOKEN)
+          if (-not $hasAccessToken) {
+            if ([string]::IsNullOrWhiteSpace($env:SUPABASE_DB_PASSWORD)) {
+              throw "SUPABASE_DB_PASSWORD is required when SUPABASE_ACCESS_TOKEN is unavailable."
+            }
+
+            $encodedPassword = [System.Uri]::EscapeDataString($env:SUPABASE_DB_PASSWORD)
+            $projectRef = $env:VITE_SUPABASE_PROJECT_ID
+            $poolerHost = $env:SUPABASE_POOLER_HOST
+            $dbUrl = "postgresql://postgres.$projectRef`:$encodedPassword@$poolerHost`:5432/postgres?sslmode=require"
+            Write-Output "::add-mask::$dbUrl"
+            $env:SUPABASE_DB_URL = $dbUrl
+            Write-Host "SUPABASE_ACCESS_TOKEN unavailable; using canonical Supabase DB URL type-generation fallback."
+          }
+
           npm run generate:types
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
