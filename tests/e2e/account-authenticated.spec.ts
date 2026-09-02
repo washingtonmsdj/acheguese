@@ -188,9 +188,9 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
         contentType: "image/png",
       });
 
-      // Prefer the structured network evidence first so a role-rpc 4xx reports
-      // status + URL + response body instead of being shadowed by Chromium's
-      // generic console "Failed to load resource" message.
+      // Keep structured network evidence first: this caught the stale remote
+      // role-rpc UUID validator instead of hiding it behind Chromium's generic
+      // "Failed to load resource" console message.
       expect(networkErrors, networkErrors.join("\n")).toEqual([]);
       expect(consoleErrors, consoleErrors.join("\n")).toEqual([]);
 
