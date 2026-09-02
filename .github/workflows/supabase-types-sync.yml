@@ -19,8 +19,7 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-  SUPABASE_CLI_VERSION: "2.115.0"
-  SUPABASE_PROJECT_REF: "xhdowzacfujckjelqhtd"
+  VITE_SUPABASE_PROJECT_ID: "xhdowzacfujckjelqhtd"
   TYPES_PATH: "src/integrations/supabase/types.generated.ts"
 
 jobs:
@@ -59,19 +58,38 @@ jobs:
           persist-credentials: true
           clean: true
 
+      - name: Setup canonical Node.js toolchain
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked dependencies
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          npm ci
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Regenerate types from live Supabase schema
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
-          $lines = @(& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" gen types typescript --project-id $env:SUPABASE_PROJECT_REF)
+          npm run generate:types
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $text = ($lines -join "`n") + "`n"
-          if ([string]::IsNullOrWhiteSpace($text) -or $text -notmatch "export type Database") {
-            throw "Supabase type generation returned an invalid artifact."
+
+          if (-not (Test-Path -LiteralPath $env:TYPES_PATH)) {
+            throw "Canonical Supabase type generator did not create $env:TYPES_PATH."
           }
+
+          $text = [System.IO.File]::ReadAllText($env:TYPES_PATH)
+          if ([string]::IsNullOrWhiteSpace($text) -or $text -notmatch "export type Database") {
+            throw "Canonical Supabase type generator returned an invalid artifact."
+          }
+
           $typesTempPath = Join-Path $env:RUNNER_TEMP "acheguese-supabase-types.generated.ts"
-          $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-          [System.IO.File]::WriteAllText($typesTempPath, $text, $utf8NoBom)
+          $generatedBytes = [System.IO.File]::ReadAllBytes($env:TYPES_PATH)
+          [System.IO.File]::WriteAllBytes($typesTempPath, $generatedBytes)
 
       - name: Apply generated types to latest main
         shell: powershell
