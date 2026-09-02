@@ -1,5 +1,6 @@
 name: Supabase Types Sync
 
+# G5 bootstrap: workflow-file changes intentionally trigger live type reconciliation.
 on:
   push:
     branches: [main]
