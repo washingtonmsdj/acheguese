@@ -1,6 +1,7 @@
 import { supabase, type Json } from '@/integrations/supabase';
 import { MEDIA_STORAGE_BUCKETS } from '@/core/media/config/storageBuckets';
 import { mediaService } from '@/core/media/services/MediaService';
+import { SAFETY_EVIDENCE_UPLOAD_POLICY } from '@/core/safety/config/evidencePolicy';
 import { logger } from '@/shared/utils/logger';
 import type {
   SafetyEvidence,
@@ -10,20 +11,8 @@ import type {
 } from '../types';
 
 const BUCKET = MEDIA_STORAGE_BUCKETS.SAFETY_EVIDENCE;
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const STORAGE_PREFIX = `storage://${BUCKET}/`;
-
-const ALLOWED_MIME_TYPES: readonly string[] = [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'video/mp4',
-  'video/webm',
-  'audio/mpeg',
-  'audio/wav',
-  'audio/ogg',
-  'application/pdf',
-];
+const ALLOWED_MIME_TYPES: readonly string[] = SAFETY_EVIDENCE_UPLOAD_POLICY.allowedMimeTypes;
 
 const EXTENSION_BY_MIME: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -104,8 +93,14 @@ class SafetyEvidenceService {
         return { success: false, error: 'Identificador de incidente ou perfil inválido' };
       }
 
-      if (input.file.size <= 0 || input.file.size > MAX_FILE_SIZE) {
-        return { success: false, error: 'Arquivo inválido ou maior que 10MB' };
+      if (
+        input.file.size <= 0 ||
+        input.file.size > SAFETY_EVIDENCE_UPLOAD_POLICY.maxFileSizeBytes
+      ) {
+        return {
+          success: false,
+          error: `Arquivo inválido ou maior que ${SAFETY_EVIDENCE_UPLOAD_POLICY.maxFileSizeLabel}`,
+        };
       }
 
       if (!ALLOWED_MIME_TYPES.includes(input.file.type)) {
@@ -118,7 +113,7 @@ class SafetyEvidenceService {
         bucket: BUCKET,
         path,
         upsert: false,
-        maxSizeBytes: MAX_FILE_SIZE,
+        maxSizeBytes: SAFETY_EVIDENCE_UPLOAD_POLICY.maxFileSizeBytes,
         allowedMimeTypes: ALLOWED_MIME_TYPES,
       });
       uploadedPath = upload.path;
