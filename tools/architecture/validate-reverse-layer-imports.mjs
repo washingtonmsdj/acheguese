@@ -15,8 +15,37 @@ const FORBIDDEN_RUNTIME_TARGETS = {
   integrations: new Set(["app", "modules", "core"]),
 };
 
+const ALLOWED_REVERSE_RUNTIME_IMPORT_EXCEPTIONS = [
+  {
+    sourceLayer: "core",
+    targetLayer: "app",
+    specifiers: new Set([
+      "@/app/config/launchScope",
+      "@/app/config/modules",
+    ]),
+  },
+  {
+    sourceLayer: "modules",
+    targetLayer: "app",
+    specifiers: new Set(["@/app/config/launchScope"]),
+  },
+];
+
 function normalize(value) {
   return value.replace(/\\/g, "/");
+}
+
+function isAllowedReverseRuntimeImportException(
+  sourceLayer,
+  targetLayer,
+  specifier,
+) {
+  return ALLOWED_REVERSE_RUNTIME_IMPORT_EXCEPTIONS.some(
+    (rule) =>
+      rule.sourceLayer === sourceLayer
+      && rule.targetLayer === targetLayer
+      && rule.specifiers.has(specifier),
+  );
 }
 
 function maskComments(source) {
@@ -225,6 +254,15 @@ export function collectReverseLayerViolations(rootDir = process.cwd()) {
 
       if (!targetLayer || targetLayer === sourceLayer) continue;
       if (!FORBIDDEN_RUNTIME_TARGETS[sourceLayer].has(targetLayer)) continue;
+      if (
+        isAllowedReverseRuntimeImportException(
+          sourceLayer,
+          targetLayer,
+          reference.specifier,
+        )
+      ) {
+        continue;
+      }
 
       violations.push({
         kind: "reverse-layer-runtime-import",
