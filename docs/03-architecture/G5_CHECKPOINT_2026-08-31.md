@@ -159,3 +159,116 @@ G5 será considerado fechado somente quando coexistirem no mesmo estado canônic
 - gates de CI efetivamente executados, não apenas agendados/falhando pré-step.
 
 Até lá, o estado correto permanece: **G5 EM EXECUÇÃO / G6 BLOQUEADO**.
+
+## 9. Continuação de execução — 2026-09-02
+
+### 9.1 HEAD e correções de source
+
+A execução foi retomada diretamente na `main`. Antes desta atualização documental, o HEAD revalidado era `9596975bea40189b61c5ac73ba134537639946fa`.
+
+A cadeia de correções que levou ao estado verde inclui:
+
+- centralização do cliente Supabase E2E na authority operacional existente;
+- correção de ownership de `business_data` para `core/business`;
+- delegação de Education ao owner territorial;
+- classificação do `sitemap` como gateway backend territorial read-only;
+- remoção da RPC direta de Analytics no `AdminService` em favor de `AnalyticsService`;
+- preservação da autoridade de sessão via `SessionService`;
+- correção do resolver de imports para não tratar diretórios como arquivos;
+- alinhamento de governança de facades canônicas;
+- remoção dos hardcodes detectados pelo ratchet;
+- migração do Playwright e helpers E2E do path aposentado `scripts/lib/remote-mutation-safety` para `tools/supabase/remote-mutation-safety`;
+- fechamento das violações de Community sem abrir exceção genérica: `communityLaunch` permanece o único contrato documentado permitido nessa árvore, e o teste de `PostHeader` consome a facade de `core/posts`;
+- ratchet de migrations alinhado ao cutover canônico `20260830101000`, preservando o engine integral e impedindo apenas retroatividade das três regras explicitamente futuras sobre migrations históricas já aplicadas;
+- remoção da facade temporária e sem caller `src/core/community-experience/config/communityLaunch.ts`.
+
+### 9.2 B3 — GitHub Actions — FECHADO
+
+O blocker de execução real de CI está **FECHADO**.
+
+No SHA `1391ca32b7c6c6633f4b17b82b76874c3f44c717`, houve runners reais, checkout, instalação e steps efetivamente executados:
+
+- SSOT Enforcement run `33600030861`, job `100153295166`: **SUCCESS**;
+  - dependency boundaries: PASS;
+  - taxonomy: PASS;
+  - Phase 1 architecture guards: PASS;
+  - incremental boundaries: PASS;
+  - Core Platform ownership: PASS;
+  - architecture governance: PASS;
+  - delivery: PASS;
+  - communication: PASS;
+  - critical file sizes: PASS;
+  - Maps architecture: PASS;
+  - global SSOT: PASS;
+  - Community boundaries: PASS;
+  - Education boundaries: PASS;
+  - Gastronomy boundaries: PASS;
+  - Billing rules/contracts e checks de subscriptions/planTier: PASS.
+- Security Check run `33600030898`:
+  - `Validate No Hardcoded Credentials`, job `100153296821`: **SUCCESS**;
+  - `Run Tests`, job `100153297055`: **SUCCESS**;
+  - `Lint and Type Check`, job `100153297064`: **SUCCESS**, incluindo ESLint, TypeScript, Upload SSOT, Media SSOT, incremental architecture e Core Platform;
+  - `Maps Architecture Enforcement`, job `100153297097`: **SUCCESS**.
+
+Também houve prova anterior de execução real para Runtime Vitest, Regression Check e E2E territorial fixture-backed. O erro anterior do Playwright ocorria antes de abrir navegador por apontar para o path aposentado; após a migração, o E2E territorial executou e concluiu com sucesso.
+
+Decisão: não tratar mais indisponibilidade histórica do run `33368313132` como blocker atual. A evidência viva substitui esse estado anterior.
+
+### 9.3 B2 — `classified-images` — REVALIDADO / BLOQUEADO SOMENTE PELA AUTHORITY DISPONÍVEL
+
+A revalidação remota de 2026-09-02 confirmou:
+
+- bucket `classified-images`: presente;
+- `public = true`;
+- `object_count = 0`;
+- busca atual no repositório: somente documentação/checkpoints/migrations; nenhum caller runtime identificado.
+
+O conector Supabase disponível foi novamente inspecionado e continua sem operação suportada de lifecycle de Storage equivalente a `emptyBucket`/`deleteBucket`.
+
+Portanto o estado permanece:
+
+`REMOTE ORPHAN / EMPTY / NO RUNTIME CALLER / DELETE BLOCKED BY CONNECTOR CAPABILITY`.
+
+Não executar `DELETE` em `storage.buckets`, não contornar proteção por SQL, não criar Edge Function e não criar authority service-role paralela somente para remover esse residual.
+
+### 9.4 B1 — tipos Supabase — GERADOR OFICIAL ALCANÇÁVEL / MATERIALIZAÇÃO AINDA BLOQUEADA
+
+O gerador oficial do projeto Supabase `xhdowzacfujckjelqhtd` foi invocado novamente nesta continuação e responde com o schema vivo. Entretanto, o transporte disponível nesta sessão não forneceu um artefato integral reutilizável que possa ser persistido atomicamente no GitHub sem reconstrução manual do output.
+
+O workflow oficial `.github/workflows/supabase-types-sync.yml` já possui a authority correta — `npx supabase gen types typescript --project-id xhdowzacfujckjelqhtd` — e grava integralmente `src/integrations/supabase/types.generated.ts`, porém depende de runner self-hosted Windows e ainda não materializou um commit atual de tipos.
+
+A inspeção do arquivo canônico em 2026-09-02 confirma que ele continua com:
+
+`PostgrestVersion: "14.4"`
+
+logo B1 **não pode ser declarado fechado**.
+
+Decisão: não copiar trechos truncados, não reconstruir tipos manualmente, não alterar apenas `PostgrestVersion`, enums ou tabelas pontuais. O blocker agora é de **materialização/transporte do output oficial**, não de desconhecimento do schema remoto.
+
+### 9.5 Estado reconciliado dos blockers
+
+| Blocker | Estado em 2026-09-02 | Próxima authority válida |
+| --- | --- | --- |
+| B1 — tipos oficiais | **ABERTO — materialização bloqueada** | output integral do gerador oficial, preferencialmente pelo workflow `Supabase Types Sync` ou por transporte que preserve o artefato completo |
+| B2 — bucket órfão | **ABERTO — lifecycle Storage indisponível no conector** | Storage API oficial `emptyBucket`/`deleteBucket` |
+| B3 — CI real | **FECHADO** | nenhuma ação adicional; reutilizar as provas acima |
+
+### 9.6 Próxima ação e do-not-repeat atualizado
+
+Próxima ação autorizada de G5:
+
+1. materializar integralmente o output oficial de tipos e validar o diff;
+2. remover `classified-images` somente quando uma authority oficial de Storage lifecycle estiver disponível;
+3. não rerodar a campanha global já verde sem mudança de source que justifique nova prova;
+4. somente com B1+B2 fechados declarar G5 CLOSED e liberar G6.
+
+Não repetir:
+
+- a sequência de correções de Business/Territory/Analytics/Auth/Community já comprovada pelos gates verdes;
+- os 36 testes de Fase 1 apenas para reproduzir prova já obtida;
+- a auditoria global SSOT, que chegou a zero violações;
+- a tentativa de corrigir migrations históricas para satisfazer ratchets posteriores ao cutover;
+- qualquer patch manual de `types.generated.ts`;
+- qualquer deleção SQL de `classified-images`.
+
+Estado final desta continuação: **G5 EM EXECUÇÃO / B3 FECHADO / B1+B2 ABERTOS / G6 BLOQUEADO**.
