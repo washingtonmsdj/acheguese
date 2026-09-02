@@ -221,6 +221,13 @@ function createOperationalClient(
     : authWrappedClient;
 }
 
+export function createOperationalAnonClientForPublicConfig(
+  supabaseUrl: string,
+  publishableKey: string,
+): OperationalSupabaseClient {
+  return createOperationalClient(supabaseUrl, publishableKey, 'anon');
+}
+
 export function getOperationalEnv(): OperationalEnv {
   return {
     anonKey: readEnv('VITE_SUPABASE_PUBLISHABLE_KEY') || readEnv('VITE_SUPABASE_ANON_KEY'),
