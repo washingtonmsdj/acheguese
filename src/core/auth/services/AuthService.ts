@@ -170,7 +170,7 @@ export class AuthService {
   // ── Canonical auth facade used by useAuth hook ──
 
   static async getCurrentUser(): Promise<import("./types").AuthUser | null> {
-    // Delegate to SessionService — the only place allowed to call supabase.auth.getUser()
+    // Delegate every current-user read to the canonical SessionService owner.
     const user = await SessionService.getCurrentUser();
     if (!user) return null;
     return {
@@ -200,7 +200,6 @@ export class AuthService {
           neighborhood: data.neighborhood || undefined,
           state: data.state || undefined,
           street: data.street || undefined,
-          // UUID canônico — vínculo territorial imutável
           neighborhood_id: data.neighborhood_id || undefined,
           terms_accepted: data.termsAcceptance.accepted,
           terms_version: data.termsAcceptance.version,
@@ -218,7 +217,6 @@ export class AuthService {
     });
 
     if (error) {
-      // Log apenas em desenvolvimento
       if (import.meta.env.DEV) {
         logger.error(" Erro no login:", {
           message: error.message,
@@ -230,11 +228,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * LOGIN POR USERNAME
-   * Usa Edge Function publica com rate limit. O lookup privilegiado do e-mail
-   * fica server-side e o browser recebe apenas tokens de sessao autenticada.
-   */
   static async signInWithUsername(
     data: import("./types").SignInWithUsernameData,
   ): Promise<void> {
@@ -275,6 +268,7 @@ export class AuthService {
     if (error) throw error;
     await SessionService.refreshSession();
   }
+
   static async signInWithGoogle(): Promise<void> {
     if (!AuthService.isGoogleAuthEnabled()) {
       throw new Error("Login com Google não está disponível neste ambiente.");
@@ -330,6 +324,7 @@ export class AuthService {
     });
     if (error) throw error;
   }
+
   static async resetPasswordByIdentifier(identifier: string): Promise<void> {
     const parsedIdentifier = parseAuthIdentifier(identifier);
 
@@ -344,6 +339,7 @@ export class AuthService {
 
     throw new Error("Para recuperar senha, informe o e-mail cadastrado.");
   }
+
   static async resendConfirmationEmail(email: string): Promise<void> {
     const { error } = await supabase.auth.resend({
       type: "signup",
@@ -354,15 +350,11 @@ export class AuthService {
     });
     if (error) throw error;
   }
+
   static async updatePassword(newPassword: string): Promise<void> {
     const { error } = await supabase.auth.updateUser({
       password: newPassword,
     });
     if (error) throw error;
   }
-
-  /**
-   *  UPLOAD DE IMAGEM PARA STORAGE
-   * Upload genérico de imagem para um bucket específico
-   */
 }
