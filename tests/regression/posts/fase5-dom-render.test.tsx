@@ -61,7 +61,7 @@ vi.mock('@/core/posts/services', () => ({
   postService: { getPostById: vi.fn() },
 }));
 
-import { PostHeader } from '@/core/community/components/UnifiedPostCard/PostHeader';
+import { PostHeader } from '@/core/posts/components/PostHeader';
 
 const BASE_HEADER_PROPS = {
   authorProfileId: 'profile-1',
