@@ -210,7 +210,6 @@ function resolveRelativeTarget(rootDir, sourceFile, specifier) {
   const candidates = CODE_FILE_RE.test(unresolved)
     ? [unresolved]
     : [
-        unresolved,
         `${unresolved}.ts`,
         `${unresolved}.tsx`,
         `${unresolved}.js`,
@@ -225,6 +224,7 @@ function resolveRelativeTarget(rootDir, sourceFile, specifier) {
 
   for (const candidate of candidates) {
     if (!fs.existsSync(candidate)) continue;
+    if (!fs.statSync(candidate).isFile()) continue;
     const relativePath = normalize(path.relative(rootDir, candidate));
     if (relativePath.startsWith("../") || path.isAbsolute(relativePath)) continue;
     return candidate;
