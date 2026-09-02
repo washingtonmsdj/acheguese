@@ -9,6 +9,7 @@
 
 import { supabase } from '@/integrations/supabase';
 import { CommunityExperienceService } from '@/core/community-experience/services/CommunityExperienceService';
+import { territorialGroupService } from '@/core/territorial';
 import { logger } from '@/shared/utils/logger';
 import { getRecordValue } from '@/shared/utils/recordLookup';
 import type {
@@ -185,17 +186,14 @@ async function resolveEducationTerritoryLocationIds(
       resolvedCommunity?.territory_type === 'territorial_group' &&
       resolvedCommunity.territory_id
     ) {
-      const { data: members, error: membersError } = await supabase
-        .from('territorial_group_members')
-        .select('location_id')
-        .eq('group_id', resolvedCommunity.territory_id);
-
-      if (membersError) {
-        logger.error('[EducationQueries] Error fetching territorial group members:', membersError);
+      try {
+        return await territorialGroupService.resolveGroupToLocationIds(
+          resolvedCommunity.territory_id,
+        );
+      } catch (error) {
+        logger.error('[EducationQueries] Error resolving territorial group members:', error);
         return [];
       }
-
-      return (members ?? []).map((member) => member.location_id);
     }
   }
 
