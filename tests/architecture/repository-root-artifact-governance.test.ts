@@ -31,12 +31,15 @@ describe('repository root artifact governance', () => {
 
   it('keeps canonical Supabase type sync coupled to schema authority changes', () => {
     const workflow = readFileSync('.github/workflows/supabase-types-sync.yml', 'utf8');
+    const generator = readFileSync('tools/supabase/generate-supabase-types.ts', 'utf8');
 
     expect(workflow).toContain('- "supabase/migrations/**"');
     expect(workflow).toContain('- "supabase/config.toml"');
     expect(workflow).toContain('- "tools/supabase/generate-supabase-types.ts"');
     expect(workflow).toContain('TYPES_PATH: "src/integrations/supabase/types.generated.ts"');
-    expect(workflow).toContain('gen types typescript --project-id');
+    expect(workflow).toContain('npm run generate:types');
+    expect(workflow).toContain('SUPABASE_DB_PASSWORD');
+    expect(workflow).toContain('SUPABASE_POOLER_HOST');
     expect(workflow).toContain('cancel-in-progress: true');
     expect(workflow).toContain('ref: main');
     expect(workflow).toContain('RUNNER_TEMP');
@@ -51,6 +54,11 @@ describe('repository root artifact governance', () => {
     expect(workflow).not.toContain('ref: ${{ github.sha }}');
     expect(workflow).not.toContain('src/integrations/supabase/types.ts');
     expect(workflow).not.toContain('src/shared/types/database.types.ts');
+
+    expect(generator).toContain('"--linked"');
+    expect(generator).toContain('"--project-id"');
+    expect(generator).toContain('"--db-url"');
+    expect(generator).toContain('"--schema", "public"');
   });
 
   it('keeps launch auth defaults fail-closed and password policy hardened', () => {
