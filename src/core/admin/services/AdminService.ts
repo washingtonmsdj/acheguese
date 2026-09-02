@@ -17,6 +17,7 @@ import { buildSafeILikePattern, buildSafeOrILikeFilter } from '@/shared/utils/sq
 import type { Tables } from '@/integrations/supabase';
 import { MobilityService } from '@/core/mobility/services/runtime';
 import { BusinessService } from '@/core/business/services/BusinessService';
+import { AnalyticsService } from '@/core/analytics/AnalyticsService';
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
@@ -30,11 +31,6 @@ type SingleQueryPayload<TRow> = {
   data: TRow | null;
   error: ErrorLike;
   count?: number | null;
-};
-
-type RpcPayload<TRow> = {
-  data: TRow[] | null;
-  error: ErrorLike;
 };
 
 type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
@@ -51,7 +47,6 @@ type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
 
 type AdminServiceDbClient = {
   from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
-  rpc<TRow = Record<string, unknown>>(fn: string, args?: Record<string, unknown>): Promise<RpcPayload<TRow>>;
 };
 
 const db = supabase as unknown as AdminServiceDbClient;
@@ -124,7 +119,6 @@ type BusinessDataListRow = Pick<Tables<'business_data'>, 'id' | 'business_name' 
 type UserSubscriptionPlanRow = { plan_code: string | null };
 type OrderTotalRow = { total: number | null; status?: string | null };
 type ProfileLinkIdRow = { id: string };
-type AnalyticsMetricRow = { qr_scans?: number | null; total_views?: number | null };
 
 function isBusinessNameRowArray(
   relation: PlanUsageSubscriptionRow['business_data'],
@@ -353,14 +347,17 @@ export const AdminService = {
             .eq('business_id', sub.business_id)
             .eq('status', 'completed');
 
-          const { data: analytics } = await db.rpc<AnalyticsMetricRow>('get_analytics_metrics', {
-            p_entity_type: 'business',
-            p_entity_id: sub.business_id,
-          });
+          const analyticsResult = await AnalyticsService.getMetrics('business', sub.business_id);
+          if (analyticsResult.error) {
+            logger.warn('[AdminService] listPlanUsage analytics unavailable', {
+              businessId: sub.business_id,
+              error: analyticsResult.error,
+            });
+          }
 
           const totalOrders = orders?.length || 0;
           const totalRevenue = (orders ?? []).reduce((sum, order) => sum + (order.total || 0), 0);
-          const metrics = analytics?.at(0) || {};
+          const metrics = analyticsResult.data;
           const business = normalizeBusinessNameRelation(sub.business_data);
 
           return {
@@ -369,8 +366,8 @@ export const AdminService = {
             plan_tier: sub.plan_code,
             total_orders: totalOrders,
             total_revenue: totalRevenue,
-            total_qr_scans: metrics.qr_scans || 0,
-            total_views: metrics.total_views || 0,
+            total_qr_scans: metrics?.qr_scans ?? 0,
+            total_views: metrics?.total_views ?? 0,
           };
         }),
       );
