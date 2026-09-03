@@ -9,6 +9,9 @@ import {
   validateMigrationFiles,
 } from "./validate-supabase-migrations-engine";
 
+export { validateMigrationFiles };
+export type { MigrationFile };
+
 const ROOT = process.cwd();
 const MIGRATIONS_DIR = path.join(ROOT, "supabase", "migrations");
 const FILENAME_PATTERN = /^(\d+)_(.+)\.sql$/;
