@@ -420,12 +420,18 @@ export async function createBusiness(
       throw error;
     }
 
-    await businessMutationsDb.from<BusinessStatsInsertRow>("business_stats").insert({
-      profile_id: profile.id,
-      views_count: 0,
-      favorites_count: 0,
-      shares_count: 0,
-    });
+    const { error: businessStatsError } = await businessMutationsDb
+      .from<BusinessStatsInsertRow>("business_stats")
+      .insert({
+        profile_id: profile.id,
+        views_count: 0,
+        favorites_count: 0,
+        shares_count: 0,
+      });
+
+    if (businessStatsError) {
+      throw new Error("Erro ao criar estatisticas da empresa");
+    }
 
     if (!business) {
       throw new Error("Erro ao carregar empresa criada");
