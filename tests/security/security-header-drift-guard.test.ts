@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 const ROOT = process.cwd();
 const FRONTEND_SECURITY = readFileSync(
-  join(ROOT, "src/config/security.config.ts"),
+  join(ROOT, "src/shared/config/security.config.ts"),
   "utf8",
 );
 const EDGE_SECURITY = readFileSync(

@@ -51,10 +51,10 @@ describe("business_data grants security", () => {
 
   it("keeps public business discovery on a sanitized read-only projection", () => {
     const privacyBoundary = readProjectFile(
-      "supabase/migrations/20260825254000_isolate_public_business_catalog.sql",
+      "supabase/migrations/20260825233458_isolate_public_business_catalog.sql",
     );
     const readModelBoundary = readProjectFile(
-      "supabase/migrations/20260826003600_replace_public_business_search_with_read_model.sql",
+      "supabase/migrations/20260826003019_replace_public_business_search_with_read_model.sql",
     );
     const facade = readProjectFile("src/core/business/services/BusinessService.ts");
 

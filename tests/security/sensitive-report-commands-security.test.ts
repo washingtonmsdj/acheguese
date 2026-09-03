@@ -18,7 +18,7 @@ const classifiedService = read(
   "src/core/classifieds/services/ClassifiedReportService.ts",
 );
 const vagaService = read(
-  "src/modules/classifieds/jobs/services/VagaReportService.ts",
+  "src/core/classifieds/jobs/services/VagaReportService.ts",
 );
 const reviewService = read(
   "src/core/reviews/services/ReviewEngagementService.ts",
@@ -165,7 +165,7 @@ describe("sensitive report server-owned commands", () => {
     const architecture = read(
       "docs/03-architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md",
     );
-    const plan = read("plans/CORE_PLATFORM_CONSOLIDATION_PLAN.md");
+    const plan = read("docs/08-roadmap/CORE_PLATFORM_CONSOLIDATION_PLAN.md");
     expect(architecture).toContain("CP-014");
     expect(plan).toContain("Trust/Messaging incident commands");
   });
