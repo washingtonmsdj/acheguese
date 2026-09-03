@@ -111,6 +111,7 @@ export function toBusinessData(
     : undefined;
   const result: Partial<BusinessDataRecord> = {};
 
+  setIfDefined(result, "business_name", input.name);
   setIfDefined(result, "legal_name", input.legal_name);
   setIfDefined(result, "cnpj", input.cnpj);
   setIfDefined(result, "company_type", input.company_type);

@@ -23,6 +23,9 @@ const mocks = vi.hoisted(() => ({
   businessDataCurrentEq: vi.fn(),
   businessDataMaybeSingle: vi.fn(),
   businessDataUpdate: vi.fn(),
+  businessDataUpdateEq: vi.fn(),
+  businessDataUpdateSelect: vi.fn(),
+  businessDataUpdateSingle: vi.fn(),
   businessStatsInsert: vi.fn(),
 }));
 
@@ -206,6 +209,8 @@ describe("updateBusiness slug preflight", () => {
     mocks.checkAvailability.mockResolvedValue({ status: "available" });
     mocks.updateAddress.mockResolvedValue({ id: currentBusiness.address_id });
     mocks.updateProfile.mockResolvedValue({ id: "profile-1" });
+    mocks.buildPatch.mockReturnValue([]);
+    mocks.getVisibleForEntity.mockResolvedValue({});
 
     mocks.businessDataCurrentSelect.mockReturnValue({
       eq: mocks.businessDataCurrentEq,
@@ -215,6 +220,27 @@ describe("updateBusiness slug preflight", () => {
     });
     mocks.businessDataMaybeSingle.mockResolvedValue({
       data: currentBusiness,
+      error: null,
+    });
+
+    const businessDataUpdateBuilder = {
+      eq: mocks.businessDataUpdateEq,
+      select: mocks.businessDataUpdateSelect,
+      single: mocks.businessDataUpdateSingle,
+    };
+    mocks.businessDataUpdate.mockReturnValue(businessDataUpdateBuilder);
+    mocks.businessDataUpdateEq.mockReturnValue(businessDataUpdateBuilder);
+    mocks.businessDataUpdateSelect.mockReturnValue(businessDataUpdateBuilder);
+    mocks.businessDataUpdateSingle.mockResolvedValue({
+      data: {
+        id: "business-data-1",
+        profile_id: "profile-1",
+        business_name: "Empresa Renomeada",
+        category: "servicos",
+        slug: "empresa-teste",
+        location_id: currentBusiness.location_id,
+        profiles: { id: "profile-1", name: "Empresa Renomeada" },
+      },
       error: null,
     });
 
@@ -288,5 +314,23 @@ describe("updateBusiness slug preflight", () => {
       excludeEntityId: "profile-1",
     });
     expectNoUpdateWriters();
+  });
+
+  it("sincroniza rename no profile e business_data sem acionar preflight de slug", async () => {
+    const updated = await updateBusiness("profile-1", {
+      name: "Empresa Renomeada",
+    });
+
+    expect(mocks.updateProfile).toHaveBeenCalledWith("profile-1", {
+      name: "Empresa Renomeada",
+    });
+    expect(mocks.businessDataUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        business_name: "Empresa Renomeada",
+      }),
+    );
+    expect(mocks.canChangeIdentifier).not.toHaveBeenCalled();
+    expect(mocks.checkAvailability).not.toHaveBeenCalled();
+    expect(updated.name).toBe("Empresa Renomeada");
   });
 });
