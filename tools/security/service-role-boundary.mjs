@@ -63,7 +63,7 @@ const SERVICE_ROLE_BOUNDARY_MATCHERS = [
   },
   {
     id: 'script-supabase-client-factory',
-    label: 'criacao direta de cliente Supabase em tooling',
+    label: 'criacao direta de cliente Supabase em script/tooling',
     pattern: /\bcreateClient\s*\(/g,
     scanPrefixes: ['scripts/', 'tools/'],
   },
@@ -326,7 +326,7 @@ export function validateServiceRoleBoundaryFiles({ files, policy }) {
         ? `${forbiddenPrefix.prefix} (${forbiddenPrefix.label})`
         : 'fora da policy canonica';
       const reason = isUnclassified
-        ? `${relativePath} contem ${matchGroup.label} em ${location}`
+        ? `${relativePath} contem ${matchGroup.id} (${matchGroup.label}) em ${location}`
         : `${relativePath} esta classificado como ${allowedEntry.kind}, mas nao permite ${matchGroup.id} (${matchGroup.label})`;
 
       issues.push({
