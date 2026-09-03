@@ -1,6 +1,7 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import { adminBusinessService } from "@/core/admin/services";
+import { AnalyticsService } from "@/core/analytics/AnalyticsService";
 import type { SecoesAtivas } from "@/modules/business/types/components";
 import {
   Eye,
@@ -81,7 +82,7 @@ export default function EmpresaDashboardTab({
       const weekAgo = new Date(now.getTime() - 7 * 86400000).toISOString();
       const monthAgo = new Date(now.getTime() - 30 * 86400000).toISOString();
 
-      const [viewsRes, weekRes, monthRes, reviewsRes, favsRes] =
+      const [viewsRes, weekRes, monthRes, reviewsRes, favsRes, dailyViewsRes] =
         await Promise.all([
           adminBusinessService.countBusinessViews(businessId),
           adminBusinessService.countBusinessViews(businessId, weekAgo),
@@ -90,26 +91,24 @@ export default function EmpresaDashboardTab({
           getFavoritersOfProfile(businessId).then(
             (favoriters) => ({ count: favoriters.length }),
           ),
+          AnalyticsService.getDailyMetrics(
+            "business",
+            businessId,
+            weekAgo.slice(0, 10),
+            now.toISOString().slice(0, 10),
+          ),
         ]);
-
-      // Build last 7 days view chart
-      const viewsLast7 = await adminBusinessService.getBusinessViews(
-        businessId,
-        weekAgo,
-      );
 
       const dayMap = new Map<string, number>();
       for (let i = 6; i >= 0; i--) {
         const d = new Date(now.getTime() - i * 86400000);
         dayMap.set(d.toISOString().slice(0, 10), 0);
       }
-      (viewsLast7 || []).forEach((v) => {
-        const day = v.viewed_at?.slice(0, 10);
-        if (day && dayMap.has(day)) {
-          const currentCount = dayMap.get(day) ?? 0;
-          dayMap.set(day, currentCount + 1);
+      for (const metric of dailyViewsRes.data ?? []) {
+        if (dayMap.has(metric.date)) {
+          dayMap.set(metric.date, metric.total_views ?? 0);
         }
-      });
+      }
 
       const reviews = reviewsRes || [];
       const avg =
