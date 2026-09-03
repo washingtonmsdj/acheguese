@@ -250,6 +250,20 @@ class AdminBusinessServiceClass {
   }
 
   /**
+   * Busca visualizações de um negócio
+   * ✅ SSOT: Usa BusinessService.getBusinessMetrics com suporte a startDate
+   */
+  async getBusinessViews(businessId: string, startDate?: string) {
+    try {
+      const metrics = await BusinessService.getBusinessMetrics(businessId, startDate);
+      return Array(metrics.totalViews).fill({ id: null, viewed_at: null });
+    } catch (error) {
+      logger.error("Error in getBusinessViews:", error);
+      return [];
+    }
+  }
+
+  /**
    * Conta visualizações de um negócio
    * ✅ SSOT: Usa BusinessService.getBusinessMetrics com suporte a startDate
    */
