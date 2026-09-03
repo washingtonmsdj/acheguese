@@ -46,12 +46,12 @@ Codigo em `src/modules/business` nao deve acessar `@/integrations/*` nem `@supab
 - `src/core/analytics/AnalyticsService.ts`: analytics canonico;
 - `src/core/billing`: billing/assinaturas canonicas (`user_subscriptions`).
 
-## Hardening concluido em G4
+## Hardening concluido em G4/G6
 
 - membership de criacao passou pelo owner `ProfileMembersService`;
 - `BusinessService.getStats()` incompleto foi aposentado depois de confirmar zero callers TypeScript;
 - `useBusinessCreateMultiProfile` deixou de criar Profile separadamente e passou a delegar a `BusinessService.createBusiness()`;
-- `AdminBusinessService.createBusinessProfile()` ja delegava ao mesmo owner, consolidando uma unica autoridade de criacao geral;
+- o wrapper legado `AdminBusinessService.createBusinessProfile()` foi aposentado apos confirmar zero callers runtime, mantendo `BusinessService.createBusiness()` como autoridade unica de criacao geral;
 - `AdminService.toggleBusinessStatus()` deixou de executar `UPDATE business_data` diretamente e passou pelo Business owner;
 - RLS remoto conhecido de `business_data`, produtos, servicos, galeria e stats foi revalidado contra a mesma autoridade `can_manage_profile`/wrapper compativel;
 - `business-analytics.service.ts`, `business.admin.ts` e Gastronomy deixaram de depender de `business_views`/RPCs legados de views e passaram ao Analytics SSOT;

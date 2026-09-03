@@ -10,8 +10,6 @@ import { logger } from "@/shared/utils/logger";
 import { invokeSupabaseBrokerCommand } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
-import { BUSINESS_STATUS } from "@/core/business/constants/statuses";
-import type { CreateBusinessInput } from "@/core/business/types";
 
 export interface AdminBusinessData {
   id: string;
@@ -293,48 +291,6 @@ class AdminBusinessServiceClass {
     } catch (error) {
       logger.error("Error fetching business reviews:", error);
       return [];
-    }
-  }
-
-  /**
-   * Cria um novo profile de negócio
-   * ✅ SSOT: Usa ProfileService e BusinessService
-   */
-  async createBusinessProfile(
-    profileData: {
-      name: string;
-      bio?: string;
-      avatar_url?: string;
-    },
-    businessData: Record<string, unknown>,
-  ) {
-    try {
-      const business = await BusinessService.createBusiness({
-        ...businessData,
-        name: profileData.name,
-        description: profileData.bio,
-        logo_url: profileData.avatar_url ?? undefined,
-        status: BUSINESS_STATUS.PENDING,
-      } as CreateBusinessInput);
-
-      return { id: business.profile_id };
-    } catch (error) {
-      logger.error("Error in createBusinessProfile:", error);
-      throw error;
-    }
-  }
-
-  /**
-   * Atualiza um business profile
-   * ✅ SSOT: Usa BusinessService
-   */
-  async updateBusinessProfile(profileId: string, businessData: Record<string, unknown>) {
-    try {
-      await BusinessService.updateBusiness(profileId, businessData);
-      return true;
-    } catch (error) {
-      logger.error("Error in updateBusinessProfile:", error);
-      throw error;
     }
   }
 }

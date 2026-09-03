@@ -36,7 +36,6 @@ export { default as AppointmentsPanel } from "./AppointmentsPanel";
 export { default as AppointmentNotifications } from "./AppointmentNotifications";
 export { default as CouponManager } from "./CouponManager";
 export { default as EmpresaDashboardTab } from "./EmpresaDashboardTab";
-export { default as EmpresaEditSheet } from "./EmpresaEditSheet";
 export { default as SecoesAtivasManager } from "./SecoesAtivasManager";
 
 // ============================================
