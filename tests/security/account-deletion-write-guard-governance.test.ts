@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const ROOT = process.cwd();
 const MIGRATIONS_DIR = join(ROOT, "supabase", "migrations");
 const BOUNDARY_MIGRATION =
-  "20260821024000_guard_pending_deletion_dml.sql";
+  "20260826015916_reconcile_account_deletion_authority_live_drift.sql";
 const REFRESH_CALL = "private.ensure_pending_deletion_write_guards()";
 
 describe("pending deletion write-guard migration governance", () => {

@@ -49,7 +49,7 @@ describe("G4 global role SSOT", () => {
     const migration = fs.readFileSync(
       path.join(
         ROOT,
-        "supabase/migrations/20260825123100_fix_global_admin_authority_source.sql",
+        "supabase/migrations/20260825123021_fix_global_admin_authority_source.sql",
       ),
       "utf8",
     );

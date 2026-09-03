@@ -6,7 +6,7 @@ const MIGRATION = join(
   process.cwd(),
   "supabase",
   "migrations",
-  "20260825190000_gate_admin_moderation_views.sql",
+  "20260825185039_gate_admin_moderation_views.sql",
 );
 
 function normalizedMigration(): string {

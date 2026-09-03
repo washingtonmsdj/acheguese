@@ -193,9 +193,8 @@ describe("Trust and Classified Messaging server-owned commands", () => {
     expect(directMessagesHook).not.toMatch(
       /blocked_by|subject_profile_id|actor_profile_id/,
     );
-    expect(read("src/core/messaging/pages/ChatPage.tsx")).not.toContain(
-      "sender_profile_id: user.id",
-    );
+    expect(messagingService).not.toContain("p_sender_profile_id");
+    expect(messagingService).not.toContain("sender_profile_id: user.id");
   });
 
   it("keeps remote catalog and transactional behavior proofs in the repository", () => {

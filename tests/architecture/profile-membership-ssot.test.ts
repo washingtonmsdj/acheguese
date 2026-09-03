@@ -42,7 +42,7 @@ describe("G4 profile membership SSOT", () => {
     const migration = fs.readFileSync(
       path.join(
         ROOT,
-        "supabase/migrations/20260825242500_require_active_profile_managers.sql",
+        "supabase/migrations/20260825231133_require_active_profile_managers.sql",
       ),
       "utf8",
     );

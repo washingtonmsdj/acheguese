@@ -13,7 +13,7 @@ function readProjectFile(path: string): string {
 describe("community alert runtime contract", () => {
   it("keeps the database vocabulary aligned with the current alert domain", () => {
     const migration = readProjectFile(
-      "supabase/migrations/20260825261000_repair_community_alert_runtime_contract.sql",
+      "supabase/migrations/20260825234410_repair_community_alert_runtime_contract.sql",
     );
     const service = readProjectFile(
       "src/core/community/alerts/services/CommunityAlertService.ts",
@@ -48,7 +48,7 @@ describe("community alert runtime contract", () => {
 
   it("publishes through the canonical active-profile resolver", () => {
     const migration = readProjectFile(
-      "supabase/migrations/20260825262000_use_active_profile_for_community_alerts.sql",
+      "supabase/migrations/20260825234632_use_active_profile_for_community_alerts.sql",
     );
     const broker = readProjectFile(
       "src/core/community/services/CommunityRpcService.ts",

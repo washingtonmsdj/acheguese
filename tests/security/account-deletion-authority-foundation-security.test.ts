@@ -1,92 +1,106 @@
-import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
 
-const MIGRATION = join(
-  process.cwd(),
-  'supabase',
-  'migrations',
-  '20260821011000_create_account_deletion_request_authority.sql',
+const ROOT = process.cwd();
+const RETIRED_FOUNDATION = join(
+  ROOT,
+  'supabase/migrations/20260821011000_create_account_deletion_request_authority.sql',
+);
+const CANONICAL_RECONCILE = readFileSync(
+  join(
+    ROOT,
+    'supabase/migrations/20260826015916_reconcile_account_deletion_authority_live_drift.sql',
+  ),
+  'utf8',
+);
+const PROVENANCE = readFileSync(
+  join(ROOT, 'docs/10-archive/migrations/G5_LOCAL_ONLY_PROVENANCE.md'),
+  'utf8',
 );
 
-describe('account deletion authority foundation', () => {
-  it('fails closed on unversioned pre-existing authority state', () => {
-    const sql = readFileSync(MIGRATION, 'utf8');
-
-    expect(sql).toContain("IF to_regclass('public.account_deletion_requests') IS NOT NULL THEN");
-    expect(sql).toContain("'public.request_account_deletion_for_user(uuid,text,boolean)'");
-    expect(sql).toContain('already exists before its authority migration');
-    expect(sql).toContain('CREATE TABLE public.account_deletion_requests');
-    expect(sql).not.toContain('CREATE TABLE IF NOT EXISTS public.account_deletion_requests');
-    expect(sql).not.toContain('CREATE INDEX IF NOT EXISTS account_deletion_requests_due_idx');
+describe('account deletion authority foundation provenance', () => {
+  it('keeps the never-applied historical foundation out of the active migration queue', () => {
+    expect(existsSync(RETIRED_FOUNDATION)).toBe(false);
+    expect(PROVENANCE).toContain(
+      '20260821011000_create_account_deletion_request_authority.sql',
+    );
+    expect(PROVENANCE).toContain(
+      'LOCAL_ONLY_SUPERSEDED_BY_FORWARD_RECONCILIATION',
+    );
+    expect(PROVENANCE).toContain(
+      '20260826015916_reconcile_account_deletion_authority_live_drift.sql',
+    );
+    expect(PROVENANCE).toContain('Não aplicar, não renomear como alias e não reintroduzir');
   });
 
-  it('creates a reversible request state without performing destructive purge', () => {
-    const sql = readFileSync(MIGRATION, 'utf8');
-
-    expect(sql).toContain('CREATE TABLE public.account_deletion_requests');
-    expect(sql).toContain("status IN ('scheduled', 'cancelled', 'processing', 'completed', 'failed')");
-    expect(sql).toContain("v_now + INTERVAL '30 days'");
-    expect(sql).toContain('profile_state_snapshot JSONB');
-    expect(sql).toContain('role_state_snapshot JSONB');
-
-    expect(sql).not.toContain('DELETE FROM auth.users');
-    expect(sql).not.toContain('auth.admin.deleteUser');
-    expect(sql).not.toContain('DROP TABLE');
+  it('preserves a reversible request state and grace period in the canonical authority', () => {
+    expect(CANONICAL_RECONCILE).toContain(
+      "status IN ('scheduled', 'cancelled', 'processing', 'completed', 'failed')",
+    );
+    expect(CANONICAL_RECONCILE).toContain("v_now + INTERVAL '30 days'");
+    expect(CANONICAL_RECONCILE).toContain(
+      'export_requested = export_requested OR COALESCE(p_export_requested, FALSE)',
+    );
+    expect(CANONICAL_RECONCILE).not.toContain('DELETE FROM auth.users');
+    expect(CANONICAL_RECONCILE).not.toContain('DROP TABLE');
   });
 
-  it('replaces the broken cancellation RPC without depending on removed profile soft-delete columns', () => {
-    const sql = readFileSync(MIGRATION, 'utf8');
-
-    expect(sql).toContain('CREATE OR REPLACE FUNCTION public.cancel_account_deletion_for_user');
-    expect(sql).toContain('FROM public.account_deletion_requests');
-    expect(sql).toContain("IF v_request.status = 'cancelled' THEN");
-    expect(sql).toContain("status = 'cancelled'");
-
-    expect(sql).not.toContain('user_deletion_schedule');
-    expect(sql).not.toContain('profiles.deleted_at');
-    expect(sql).not.toMatch(/UPDATE\s+public\.profiles/i);
+  it('keeps cancellation independent from removed profile soft-delete storage', () => {
+    expect(CANONICAL_RECONCILE).toContain(
+      'CREATE OR REPLACE FUNCTION public.cancel_account_deletion_for_user',
+    );
+    expect(CANONICAL_RECONCILE).toContain("status = 'cancelled'");
+    expect(CANONICAL_RECONCILE).not.toContain('user_deletion_schedule');
+    expect(CANONICAL_RECONCILE).not.toContain('profiles.deleted_at');
+    expect(CANONICAL_RECONCILE).not.toMatch(/UPDATE\s+public\.profiles/i);
   });
 
-  it('keeps request and cancel RPCs service-role-only with least table privilege', () => {
-    const sql = readFileSync(MIGRATION, 'utf8');
+  it('keeps account deletion table and RPC authority broker-only', () => {
+    expect(CANONICAL_RECONCILE).toContain(
+      'ALTER TABLE public.account_deletion_requests ENABLE ROW LEVEL SECURITY',
+    );
+    expect(CANONICAL_RECONCILE).toContain(
+      'REVOKE ALL ON TABLE public.account_deletion_requests FROM authenticated',
+    );
+    expect(CANONICAL_RECONCILE).toContain(
+      'GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.account_deletion_requests TO service_role',
+    );
 
-    expect(sql).toContain('ALTER TABLE public.account_deletion_requests ENABLE ROW LEVEL SECURITY');
-    expect(sql).toContain('REVOKE ALL ON TABLE public.account_deletion_requests FROM PUBLIC');
-    expect(sql).toContain('REVOKE ALL ON TABLE public.account_deletion_requests FROM anon');
-    expect(sql).toContain('REVOKE ALL ON TABLE public.account_deletion_requests FROM authenticated');
-    expect(sql).toContain('GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.account_deletion_requests TO service_role');
-    expect(sql).toContain("'REFERENCES', 'TRIGGER', 'MAINTAIN'");
-    expect(sql).toContain("service_role unexpectedly has % on account_deletion_requests");
-
-    expect(sql).toContain('GRANT EXECUTE ON FUNCTION public.request_account_deletion_for_user(UUID, TEXT, BOOLEAN) TO service_role');
-    expect(sql).toContain('GRANT EXECUTE ON FUNCTION public.cancel_account_deletion_for_user(UUID, TEXT) TO service_role');
-    expect(sql).toContain("RAISE EXCEPTION 'browser role can execute request_account_deletion_for_user'");
-    expect(sql).toContain("RAISE EXCEPTION 'browser role can execute cancel_account_deletion_for_user'");
+    for (const signature of [
+      'public.get_account_deletion_status_for_user(UUID)',
+      'public.request_account_deletion_for_user(UUID, TEXT, BOOLEAN)',
+      'public.cancel_account_deletion_for_user(UUID, TEXT)',
+    ]) {
+      expect(CANONICAL_RECONCILE).toContain(
+        `REVOKE ALL ON FUNCTION ${signature} FROM authenticated`,
+      );
+      expect(CANONICAL_RECONCILE).toContain(
+        `GRANT EXECUTE ON FUNCTION ${signature} TO service_role`,
+      );
+    }
   });
 
-  it('asserts RLS, SECURITY DEFINER and fixed runtime config through the catalog', () => {
-    const sql = readFileSync(MIGRATION, 'utf8');
-
-    expect(sql).toContain('AND relrowsecurity');
-    expect(sql).toContain("RAISE EXCEPTION 'RLS is not enabled on account_deletion_requests'");
-    expect(sql).toContain('SELECT prosecdef, proconfig');
-    expect(sql).toContain("'search_path=pg_catalog, public, pg_temp'");
-    expect(sql).toContain("'statement_timeout=5s'");
-    expect(sql).toContain("RAISE EXCEPTION 'deletion request authority function is not SECURITY DEFINER'");
-    expect(sql).toContain("RAISE EXCEPTION 'request_account_deletion_for_user runtime config drifted'");
-    expect(sql).toContain("RAISE EXCEPTION 'cancel_account_deletion_for_user runtime config drifted'");
+  it('keeps pending-deletion writes fail closed across application-owned public tables', () => {
+    expect(CANONICAL_RECONCILE).toContain(
+      'CREATE FUNCTION private.guard_pending_deletion_write()',
+    );
+    expect(CANONICAL_RECONCILE).toContain(
+      "RAISE EXCEPTION 'ACCOUNT_PENDING_DELETION_READ_ONLY'",
+    );
+    expect(CANONICAL_RECONCILE).toContain(
+      'CREATE FUNCTION private.ensure_pending_deletion_write_guards()',
+    );
+    expect(CANONICAL_RECONCILE).toContain(
+      'pending deletion DML guard coverage mismatch: expected %, guarded %',
+    );
   });
 
-  it('makes retries idempotent without extending an existing scheduled grace window', () => {
-    const sql = readFileSync(MIGRATION, 'utf8');
-
-    const scheduledBranch = sql.match(
-      /IF v_request\.status = 'scheduled' THEN([\s\S]*?)ELSIF v_request\.status IN \('cancelled', 'failed'\) THEN/,
-    )?.[1] ?? '';
-
-    expect(scheduledBranch).toContain('export_requested = export_requested OR');
-    expect(scheduledBranch).not.toContain("INTERVAL '30 days'");
-    expect(scheduledBranch).not.toContain('scheduled_purge_at =');
+  it('stays forward-only without overwriting newer authorization helpers', () => {
+    expect(CANONICAL_RECONCILE).toContain('This forward-only migration installs');
+    expect(CANONICAL_RECONCILE).toContain('without redefining those newer helpers');
+    expect(CANONICAL_RECONCILE).not.toMatch(
+      /CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+private\.(?:current_active_profile_id|auth_owns_usable_profile|auth_can_access_profile|can_manage_profile|auth_participates_community_direct_thread)\b/i,
+    );
   });
 });

@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -86,15 +86,15 @@ describe("gastronomy runtime boundaries", () => {
   });
 
   it("keeps gastronomy read queries implemented only in core business", () => {
-    const moduleQueries = read(
+    const retiredModuleQueries = resolve(
+      root,
       "src/modules/business/gastronomy/services/gastronomy.queries.ts",
     );
     const coreQueries = read("src/core/business/services/gastronomy.queries.ts");
 
-    expect(moduleQueries).toContain("@/core/business/services/gastronomy.queries");
-    expect(moduleQueries).not.toContain("supabase.from");
-    expect(moduleQueries).not.toContain("BusinessService.toBusinessReadModel");
+    expect(existsSync(retiredModuleQueries)).toBe(false);
     expect(coreQueries).toContain("fetchActiveGastronomyProfileByBusinessDataId");
+    expect(coreQueries).toContain("BusinessService.toBusinessReadModel");
   });
 });
 
