@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   DEFENSIVE_LOCAL_BOUNDS,
   findHardcodeViolations,
-} from "../../scripts/validate-ssot-hardcodes";
+} from "../../tools/architecture/validate-ssot-hardcodes";
 
 const LIMIT_VIOLATION_TYPE = "Limite operacional hardcoded";
 

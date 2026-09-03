@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../services/PublicSnapshotRpcService", () => ({
+vi.mock("@/core/business/services/PublicSnapshotRpcService", () => ({
   PublicSnapshotRpcService: {
     getGastronomySnapshotBySlug: vi.fn(),
   },
 }));
 
-import { PublicSnapshotRpcService } from "../services/PublicSnapshotRpcService";
+import { PublicSnapshotRpcService } from "@/core/business/services/PublicSnapshotRpcService";
 import { PublicGastronomySnapshotService } from "../services/PublicGastronomySnapshotService";
-import type { PublicGastronomySnapshot } from "../types/publicSnapshots";
+import type { PublicGastronomySnapshot } from "@/core/business/types/publicSnapshots";
 
 describe("PublicGastronomySnapshotService", () => {
   beforeEach(() => {

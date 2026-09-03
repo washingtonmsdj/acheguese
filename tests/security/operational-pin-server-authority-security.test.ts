@@ -6,10 +6,10 @@ const root = resolve(import.meta.dirname, "../..");
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const rpcMigration = read(
-  "supabase/migrations/20260825224500_add_server_authoritative_operational_pin_rpcs.sql",
+  "supabase/migrations/20260825223319_add_server_authoritative_operational_pin_rpcs.sql",
 );
 const lockdownMigration = read(
-  "supabase/migrations/20260825230000_lock_operational_verifications_behind_rpcs.sql",
+  "supabase/migrations/20260825223929_lock_operational_verifications_behind_rpcs.sql",
 );
 const service = read(
   "src/core/mobility/services/OperationalVerificationService.ts",
@@ -23,15 +23,25 @@ describe("Gate 7 operational PIN server authority", () => {
     expect(rpcMigration).toContain("create_operational_pin_verification");
     expect(rpcMigration).toContain("verify_operational_pin");
     expect(rpcMigration).toContain("extensions.gen_random_bytes(4)");
-    expect(rpcMigration).toContain("extensions.gen_salt('bf', 10)");
+    expect(rpcMigration).toContain("extensions.gen_salt('bf',10)");
     expect(rpcMigration).toContain("extensions.crypt(p_pin");
-    expect(rpcMigration).toContain("v_attempts >= 5");
+    expect(rpcMigration).toContain("v_attempts>=5");
     expect(rpcMigration).toContain("p_pin !~ '^[0-9]{4}$'");
   });
 
   it("never exposes verifier material through the status RPC", () => {
-    expect(rpcMigration).toContain("get_operational_verification_status");
-    expect(rpcMigration).toContain("Deliberately omit pin_hash");
+    const statusFunctionStart = rpcMigration.indexOf(
+      "CREATE OR REPLACE FUNCTION public.get_operational_verification_status",
+    );
+    const statusFunctionEnd = rpcMigration.indexOf(
+      "CREATE OR REPLACE FUNCTION public.verify_operational_pin",
+    );
+    expect(statusFunctionStart).toBeGreaterThanOrEqual(0);
+    expect(statusFunctionEnd).toBeGreaterThan(statusFunctionStart);
+    const statusFunction = rpcMigration.slice(statusFunctionStart, statusFunctionEnd);
+
+    expect(statusFunction).not.toContain("v_verification.pin_hash");
+    expect(statusFunction).not.toContain("'pin_hash'");
     expect(service).toContain("get_operational_verification_status");
     expect(service).not.toMatch(/\.from\(['\"]operational_verifications['\"]\)/);
     expect(service).not.toContain("bcrypt.compare");
@@ -58,7 +68,7 @@ describe("Gate 7 operational PIN server authority", () => {
     expect(rpcMigration).toContain(
       "v_actor_profile_id uuid := private.current_active_profile_id()",
     );
-    expect(rpcMigration).toContain("verified_by = v_actor_profile_id");
+    expect(rpcMigration).toContain("verified_by=v_actor_profile_id");
     expect(service).not.toContain("p_verified_by");
   });
 });

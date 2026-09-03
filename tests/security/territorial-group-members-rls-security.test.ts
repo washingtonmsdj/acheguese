@@ -9,10 +9,10 @@ function readProjectFile(path: string): string {
 }
 
 const visibilityMigration = readProjectFile(
-  "supabase/migrations/20260826040500_remove_territorial_group_member_public_shadow.sql",
+  "supabase/migrations/20260826040215_remove_territorial_group_member_public_shadow.sql",
 );
 const adminAuthorityMigration = readProjectFile(
-  "supabase/migrations/20260826041000_consolidate_territorial_group_admin_authority.sql",
+  "supabase/migrations/20260826040419_consolidate_territorial_group_admin_authority.sql",
 );
 const semantics = readProjectFile(
   "src/core/territorial/TERRITORIAL_GROUPS_SEMANTICS.md",

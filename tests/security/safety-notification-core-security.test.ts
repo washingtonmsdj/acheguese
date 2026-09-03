@@ -15,7 +15,7 @@ const contactEmailMigration = readProjectFile(
   "supabase/migrations/20260714117000_normalize_emergency_contact_email.sql",
 );
 const contactPrivacyMigration = readProjectFile(
-  "supabase/migrations/20260826004000_restrict_emergency_contacts_to_direct_owner.sql",
+  "supabase/migrations/20260826003840_restrict_emergency_contacts_to_direct_owner.sql",
 );
 const safetyService = readProjectFile(
   "src/core/safety/services/SafetyService.ts",

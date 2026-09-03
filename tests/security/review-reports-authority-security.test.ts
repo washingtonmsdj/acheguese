@@ -6,7 +6,7 @@ const repoRoot = resolve(import.meta.dirname, "../..");
 const migration = readFileSync(
   resolve(
     repoRoot,
-    "supabase/migrations/20260825223100_remove_review_reports_profile_role_shadow.sql",
+    "supabase/migrations/20260825222533_remove_review_reports_profile_role_shadow.sql",
   ),
   "utf8",
 );

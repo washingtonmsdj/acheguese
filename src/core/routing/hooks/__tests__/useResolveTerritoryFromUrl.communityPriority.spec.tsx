@@ -4,10 +4,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useResolveTerritoryFromUrl } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
-const findByPathMock = vi.fn();
-const findBySlugAndCityMock = vi.fn();
-const findWithMembersMock = vi.fn();
-const findGroupsContainingLocationMock = vi.fn();
+const {
+  findByPathMock,
+  findBySlugAndCityMock,
+  findWithMembersMock,
+  findGroupsContainingLocationMock,
+} = vi.hoisted(() => ({
+  findByPathMock: vi.fn(),
+  findBySlugAndCityMock: vi.fn(),
+  findWithMembersMock: vi.fn(),
+  findGroupsContainingLocationMock: vi.fn(),
+}));
 
 vi.mock("@/core/location/repositories/createLocationRepository", () => ({
   createLocationRepository: () => ({

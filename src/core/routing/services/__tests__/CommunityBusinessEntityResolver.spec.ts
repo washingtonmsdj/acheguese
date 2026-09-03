@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
-import { createTerritorialGroupRepository } from "@/core/location/repositories/createTerritorialGroupRepository";
+import { createTerritorialGroupRepository } from "@/core/territorial/repositories/createTerritorialGroupRepository";
 import { resolveCommunityPublicAliasTerritory } from "../CommunityPublicAliasTerritoryResolver";
 import { resolveBusinessEntityFromCommunityAlias } from "../CommunityBusinessEntityResolver";
 
@@ -16,7 +16,7 @@ vi.mock("@/core/location/repositories/createLocationRepository", () => ({
   createLocationRepository: vi.fn(),
 }));
 
-vi.mock("@/core/location/repositories/createTerritorialGroupRepository", () => ({
+vi.mock("@/core/territorial/repositories/createTerritorialGroupRepository", () => ({
   createTerritorialGroupRepository: vi.fn(),
 }));
 

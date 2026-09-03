@@ -9,7 +9,7 @@ function readProjectFile(path: string): string {
 }
 
 const lockMigration = readProjectFile(
-  "supabase/migrations/20260826010000_lock_legacy_delivery_requests_browser_surface.sql",
+  "supabase/migrations/20260826010528_lock_legacy_delivery_requests_browser_surface.sql",
 );
 const helperRpcMigration = readProjectFile(
   "supabase/migrations/20260826035946_restrict_legacy_delivery_helper_rpcs.sql",

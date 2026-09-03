@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import * as queries from '../education.queries';
+import * as queries from '@/core/education/services/education.queries';
 
 describe('Education Queries Exports', () => {
   it('exports getEducationProfileById', () => {

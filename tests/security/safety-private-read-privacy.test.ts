@@ -6,7 +6,7 @@ const repoRoot = resolve(import.meta.dirname, "../..");
 const migration = readFileSync(
   resolve(
     repoRoot,
-    "supabase/migrations/20260826004400_restrict_safety_private_reads_to_direct_owner.sql",
+    "supabase/migrations/20260826004108_restrict_safety_private_reads_to_direct_owner.sql",
   ),
   "utf8",
 );
