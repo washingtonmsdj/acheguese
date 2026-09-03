@@ -16,8 +16,7 @@ interface UseBusinessEditOptions {
 }
 
 interface UseBusinessEditReturn {
-  updateBusiness: (params: { id: string; data: UpdateBusinessInput }) => void;
-  updateBusinessAsync: (params: {
+  updateBusiness: (params: {
     id: string;
     data: UpdateBusinessInput;
   }) => Promise<Business>;
@@ -71,8 +70,7 @@ export function useBusinessEdit(
   });
 
   return {
-    updateBusiness: mutation.mutate,
-    updateBusinessAsync: mutation.mutateAsync,
+    updateBusiness: mutation.mutateAsync,
     isLoading: mutation.isPending,
     isSuccess: mutation.isSuccess,
     isError: mutation.isError,
