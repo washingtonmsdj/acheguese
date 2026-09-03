@@ -1,19 +1,28 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { CreateBusinessInput } from "@/core/business/types";
+import type { CreateBusinessInput, UpdateBusinessInput } from "@/core/business/types";
 
 const mocks = vi.hoisted(() => ({
   supabaseFrom: vi.fn(),
   getCurrentUser: vi.fn(),
   createProfile: vi.fn(),
+  updateProfile: vi.fn(),
   addMember: vi.fn(),
   checkAvailability: vi.fn(),
+  canChangeIdentifier: vi.fn(),
   generateUniqueSlug: vi.fn(),
+  createAddress: vi.fn(),
+  updateAddress: vi.fn(),
   setBulkHours: vi.fn(),
   patchOwnedChannels: vi.fn(),
+  getVisibleForEntity: vi.fn(),
   buildPatch: vi.fn(),
   businessDataInsert: vi.fn(),
   businessDataSelect: vi.fn(),
   businessDataSingle: vi.fn(),
+  businessDataCurrentSelect: vi.fn(),
+  businessDataCurrentEq: vi.fn(),
+  businessDataMaybeSingle: vi.fn(),
+  businessDataUpdate: vi.fn(),
   businessStatsInsert: vi.fn(),
 }));
 
@@ -30,12 +39,15 @@ vi.mock("@/core/analytics/services/PublicViewTrackingService", () => ({
 vi.mock("@/core/public-identity", () => ({
   PublicIdentityService: {
     checkAvailability: mocks.checkAvailability,
-    canChangeIdentifier: vi.fn(),
+    canChangeIdentifier: mocks.canChangeIdentifier,
   },
 }));
 
 vi.mock("@/core/address/services/AddressService", () => ({
-  AddressService: class {},
+  AddressService: class {
+    createAddress = mocks.createAddress;
+    updateAddress = mocks.updateAddress;
+  },
 }));
 
 vi.mock("@/core/business/BusinessHoursService", () => ({
@@ -53,6 +65,7 @@ vi.mock("@/core/business/services/BusinessUrlService", () => ({
 vi.mock("@/core/profiles/services/ProfileService", () => ({
   profileService: {
     createProfile: mocks.createProfile,
+    updateProfile: mocks.updateProfile,
   },
 }));
 
@@ -65,6 +78,7 @@ vi.mock("@/core/profiles/services/multi-profile/profileMembersService", () => ({
 vi.mock("@/core/contact", () => ({
   EntityContactService: {
     patchOwnedChannels: mocks.patchOwnedChannels,
+    getVisibleForEntity: mocks.getVisibleForEntity,
     buildPatch: mocks.buildPatch,
   },
 }));
@@ -75,7 +89,7 @@ vi.mock("@/core/session/services/SessionService", () => ({
   },
 }));
 
-import { createBusiness } from "../business.mutations";
+import { createBusiness, updateBusiness } from "../business.mutations";
 
 const businessInput: CreateBusinessInput = {
   name: "Empresa Teste",
@@ -153,5 +167,126 @@ describe("createBusiness", () => {
     expect(mocks.setBulkHours).not.toHaveBeenCalled();
     expect(mocks.patchOwnedChannels).not.toHaveBeenCalled();
     expect(mocks.buildPatch).not.toHaveBeenCalled();
+  });
+});
+
+const currentBusiness = {
+  id: "business-data-1",
+  slug: "empresa-teste",
+  metadata: null,
+  address_id: "00000000-0000-0000-0000-000000000002",
+  location_id: "00000000-0000-0000-0000-000000000001",
+  business_name: "Empresa Teste",
+  is_verified: false,
+};
+
+const updateInputBase: UpdateBusinessInput = {
+  name: "Empresa Teste",
+  address_street: "Rua Teste",
+  address_number: "123",
+  postal_code: "01001-000",
+};
+
+function expectNoUpdateWriters(): void {
+  expect(mocks.createAddress).not.toHaveBeenCalled();
+  expect(mocks.updateAddress).not.toHaveBeenCalled();
+  expect(mocks.updateProfile).not.toHaveBeenCalled();
+  expect(mocks.businessDataUpdate).not.toHaveBeenCalled();
+  expect(mocks.setBulkHours).not.toHaveBeenCalled();
+  expect(mocks.patchOwnedChannels).not.toHaveBeenCalled();
+  expect(mocks.getVisibleForEntity).not.toHaveBeenCalled();
+  expect(mocks.buildPatch).not.toHaveBeenCalled();
+}
+
+describe("updateBusiness slug preflight", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mocks.canChangeIdentifier.mockResolvedValue({ canChange: true, daysRemaining: 0 });
+    mocks.checkAvailability.mockResolvedValue({ status: "available" });
+    mocks.updateAddress.mockResolvedValue({ id: currentBusiness.address_id });
+    mocks.updateProfile.mockResolvedValue({ id: "profile-1" });
+
+    mocks.businessDataCurrentSelect.mockReturnValue({
+      eq: mocks.businessDataCurrentEq,
+    });
+    mocks.businessDataCurrentEq.mockReturnValue({
+      maybeSingle: mocks.businessDataMaybeSingle,
+    });
+    mocks.businessDataMaybeSingle.mockResolvedValue({
+      data: currentBusiness,
+      error: null,
+    });
+
+    mocks.supabaseFrom.mockImplementation((table: string) => {
+      if (table === "business_data") {
+        return {
+          select: mocks.businessDataCurrentSelect,
+          update: mocks.businessDataUpdate,
+        };
+      }
+
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("rejeita slug inseguro antes de qualquer mutacao persistente", async () => {
+    await expect(
+      updateBusiness("profile-1", {
+        ...updateInputBase,
+        slug: "restaurante-central",
+      }),
+    ).rejects.toThrow(
+      "Erro ao atualizar empresa: O link publico esta muito diferente do nome do negocio. Ajuste para manter autenticidade.",
+    );
+
+    expect(mocks.canChangeIdentifier).not.toHaveBeenCalled();
+    expect(mocks.checkAvailability).not.toHaveBeenCalled();
+    expectNoUpdateWriters();
+  });
+
+  it("rejeita cooldown de slug antes de qualquer mutacao persistente", async () => {
+    mocks.canChangeIdentifier.mockResolvedValue({ canChange: false, daysRemaining: 4 });
+
+    await expect(
+      updateBusiness("profile-1", {
+        ...updateInputBase,
+        slug: "teste-nova",
+      }),
+    ).rejects.toThrow(
+      "Erro ao atualizar empresa: Nao e possivel alterar o slug da empresa agora. Aguarde 4 dia(s).",
+    );
+
+    expect(mocks.canChangeIdentifier).toHaveBeenCalledWith({
+      entityType: "business",
+      entityId: "profile-1",
+    });
+    expect(mocks.checkAvailability).not.toHaveBeenCalled();
+    expectNoUpdateWriters();
+  });
+
+  it("rejeita slug indisponivel antes de qualquer mutacao persistente", async () => {
+    mocks.checkAvailability.mockResolvedValue({
+      status: "unavailable",
+      message: "Slug indisponivel",
+    });
+
+    await expect(
+      updateBusiness("profile-1", {
+        ...updateInputBase,
+        slug: "teste-nova",
+      }),
+    ).rejects.toThrow("Erro ao atualizar empresa: Slug indisponivel");
+
+    expect(mocks.canChangeIdentifier).toHaveBeenCalledWith({
+      entityType: "business",
+      entityId: "profile-1",
+    });
+    expect(mocks.checkAvailability).toHaveBeenCalledWith({
+      identifier: "teste-nova",
+      entityType: "business",
+      excludeEntityId: "profile-1",
+    });
+    expectNoUpdateWriters();
   });
 });

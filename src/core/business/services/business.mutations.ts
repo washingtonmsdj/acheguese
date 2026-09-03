@@ -477,37 +477,8 @@ export async function updateBusiness(
       throw new Error("Empresa nao encontrada");
     }
 
-    const addressId = await syncAddress(
-      {
-        ...validatedInput,
-        location_id: validatedInput.location_id ?? currentBusiness.location_id ?? undefined,
-      },
-      currentBusiness.address_id,
-    );
-
-    const businessData = toBusinessData({
-      ...validatedInput,
-      ...(addressId ? { address_id: addressId } : {}),
-    });
-
-    const updatePayload: Record<string, unknown> = {
-      ...businessData,
-      updated_at: new Date().toISOString(),
-    };
-
-    if (businessData.metadata !== undefined) {
-      updatePayload.metadata = mergeMetadata(currentBusiness.metadata, businessData.metadata);
-    }
-
-    if (validatedInput.name || validatedInput.description || validatedInput.city) {
-      await profileService.updateProfile(id, {
-        ...(validatedInput.name !== undefined ? { name: validatedInput.name } : {}),
-        ...(validatedInput.description !== undefined ? { bio: validatedInput.description } : {}),
-        ...(validatedInput.city !== undefined ? { city: validatedInput.city } : {}),
-      });
-    }
-
-    if (validatedInput.slug !== undefined && currentBusiness.slug !== validatedInput.slug) {
+    const slugChanged = validatedInput.slug !== undefined && currentBusiness.slug !== validatedInput.slug;
+    if (slugChanged) {
       if (!isBusinessSlugSafetyBypassAllowed({ isVerifiedOfficial: Boolean(currentBusiness.is_verified) })) {
         const slugSafety = evaluateBusinessSlugSafety({
           businessName: validatedInput.name ?? currentBusiness.business_name ?? "",
@@ -544,7 +515,39 @@ export async function updateBusiness(
               (availability.suggestion ? ` Sugestao: ${availability.suggestion}` : ""),
         );
       }
+    }
 
+    const addressId = await syncAddress(
+      {
+        ...validatedInput,
+        location_id: validatedInput.location_id ?? currentBusiness.location_id ?? undefined,
+      },
+      currentBusiness.address_id,
+    );
+
+    const businessData = toBusinessData({
+      ...validatedInput,
+      ...(addressId ? { address_id: addressId } : {}),
+    });
+
+    const updatePayload: Record<string, unknown> = {
+      ...businessData,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (businessData.metadata !== undefined) {
+      updatePayload.metadata = mergeMetadata(currentBusiness.metadata, businessData.metadata);
+    }
+
+    if (validatedInput.name || validatedInput.description || validatedInput.city) {
+      await profileService.updateProfile(id, {
+        ...(validatedInput.name !== undefined ? { name: validatedInput.name } : {}),
+        ...(validatedInput.description !== undefined ? { bio: validatedInput.description } : {}),
+        ...(validatedInput.city !== undefined ? { city: validatedInput.city } : {}),
+      });
+    }
+
+    if (slugChanged) {
       updatePayload.slug = validatedInput.slug;
     }
 
