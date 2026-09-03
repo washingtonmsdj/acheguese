@@ -7,7 +7,7 @@
  * Responsabilidades:
  * - Gestao de empresas
  * - Gestao de perfis
- * - Gestao de planos
+ * - Visao de planos
  * - Auditoria
  * - Relatorios
  */
@@ -35,7 +35,6 @@ type SingleQueryPayload<TRow> = {
 
 type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
   select(columns?: string, options?: { count?: 'exact'; head?: boolean }): TableClient<TRow>;
-  update(values: Record<string, unknown>): TableClient<TRow>;
   eq(column: string, value: unknown): TableClient<TRow>;
   ilike(column: string, value: string): TableClient<TRow>;
   in(column: string, values: readonly unknown[]): TableClient<TRow>;
@@ -373,36 +372,6 @@ export const AdminService = {
       );
 
       return { data: usageData as PlanUsage[], error: null };
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      return { data: null, error: msg };
-    }
-  },
-
-  /**
-   * Atualiza plano de uma empresa.
-   */
-  async updateBusinessPlan(
-    businessId: string,
-    planTier: string,
-  ): Promise<ServiceResult<boolean>> {
-    try {
-      const { error } = await db
-        .from('user_subscriptions')
-        .update({
-          plan_code: planTier,
-          plan_type: planTier,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('business_id', businessId)
-        .eq('subscription_scope', 'business');
-
-      if (error) {
-        logger.error('[AdminService] updateBusinessPlan error', error);
-        return { data: null, error: error.message };
-      }
-
-      return { data: true, error: null };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       return { data: null, error: msg };

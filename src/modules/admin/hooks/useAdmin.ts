@@ -127,33 +127,3 @@ export function useToggleBusinessStatus() {
     },
   });
 }
-
-/**
- * Hook para atualizar plano de empresa
- */
-export function useUpdateBusinessPlan() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      businessId,
-      planTier,
-    }: {
-      businessId: string;
-      planTier: string;
-    }) => {
-      const result = await AdminService.updateBusinessPlan(businessId, planTier);
-      if (result.error) throw new Error(result.error);
-      return result.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.businesses() });
-      queryClient.invalidateQueries({ queryKey: adminKeys.planUsage() });
-      queryClient.invalidateQueries({ queryKey: adminKeys.platformStats() });
-      toast.success('Plano atualizado com sucesso');
-    },
-    onError: (error: Error) => {
-      toast.error(`Erro ao atualizar plano: ${error.message}`);
-    },
-  });
-}

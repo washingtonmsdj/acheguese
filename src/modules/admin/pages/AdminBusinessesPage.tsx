@@ -25,30 +25,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/components/ui/table';
-import { useBusinesses, useToggleBusinessStatus, useUpdateBusinessPlan } from '@/modules/admin/hooks/useAdmin';
-import { PlanChangeValidator, type PlanChangeImpact } from '@/modules/admin/services/PlanChangeValidator';
-import { PlanChangeConfirmationModal } from '@/modules/admin/components/PlanChangeConfirmationModal';
+import { useBusinesses, useToggleBusinessStatus } from '@/modules/admin/hooks/useAdmin';
 import { Search, Building2, DollarSign, ShoppingCart, Bike } from 'lucide-react';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ptBR } from '@/shared/utils/dateLocale';
-import { toast } from 'sonner';
 
 export function AdminBusinessesPage() {
   const [search, setSearch] = useState('');
   const [planFilter, setPlanFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  
-  // Modal de confirmação
-  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-  const [pendingChange, setPendingChange] = useState<{
-    businessId: string;
-    businessName: string;
-    currentPlan: string;
-    newPlan: string;
-  } | null>(null);
-  const [changeImpact, setChangeImpact] = useState<PlanChangeImpact | null>(null);
-  const [isValidating, setIsValidating] = useState(false);
 
   const filters = {
     search: search || undefined,
@@ -58,7 +44,6 @@ export function AdminBusinessesPage() {
 
   const { data: businesses, isLoading } = useBusinesses(filters);
   const toggleStatusMutation = useToggleBusinessStatus();
-  const updatePlanMutation = useUpdateBusinessPlan();
 
   const handleToggleStatus = (businessId: string, currentStatus: boolean) => {
     toggleStatusMutation.mutate({
@@ -67,64 +52,13 @@ export function AdminBusinessesPage() {
     });
   };
 
-  const handlePlanChangeRequest = async (
-    businessId: string,
-    businessName: string,
-    currentPlan: string,
-    newPlan: string
-  ) => {
-    if (currentPlan === newPlan) return;
-    
-    setIsValidating(true);
-    
-    try {
-      // Validar impacto da mudança
-      const impact = await PlanChangeValidator.validateChange(
-        businessId,
-        currentPlan,
-        newPlan
-      );
-      
-      setChangeImpact(impact);
-      setPendingChange({ businessId, businessName, currentPlan, newPlan });
-      setConfirmModalOpen(true);
-      
-    } catch (error) {
-      toast.error('Erro ao validar mudança de plano');
-    } finally {
-      setIsValidating(false);
-    }
-  };
-  
-  const handleConfirmPlanChange = () => {
-    if (!pendingChange) return;
-    
-    updatePlanMutation.mutate(
-      {
-        businessId: pendingChange.businessId,
-        planTier: pendingChange.newPlan,
-      },
-      {
-        onSuccess: () => {
-          toast.success('Plano alterado com sucesso');
-          setConfirmModalOpen(false);
-          setPendingChange(null);
-          setChangeImpact(null);
-        },
-        onError: () => {
-          toast.error('Erro ao alterar plano');
-        },
-      }
-    );
-  };
-
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">Gestão de Empresas</h1>
         <p className="text-muted-foreground">
-          Governança central de plano e status. Edição operacional da empresa permanece no dashboard do negócio.
+          Visão central de planos e governança de status. Alterações comerciais seguem Billing/Stripe.
         </p>
       </div>
 
@@ -217,27 +151,7 @@ export function AdminBusinessesPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Select
-                        value={business.plan_tier}
-                        onValueChange={(value) =>
-                          handlePlanChangeRequest(
-                            business.id,
-                            business.name,
-                            business.plan_tier,
-                            value
-                          )
-                        }
-                        disabled={isValidating}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="free">Free</SelectItem>
-                          <SelectItem value="pro">Pro</SelectItem>
-                          <SelectItem value="delivery">Delivery</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Badge variant="outline">{business.plan_tier}</Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant={business.is_active ? 'default' : 'secondary'}>
@@ -289,20 +203,6 @@ export function AdminBusinessesPage() {
           )}
         </CardContent>
       </Card>
-      
-      {/* Modal de Confirmação */}
-      {pendingChange && (
-        <PlanChangeConfirmationModal
-          open={confirmModalOpen}
-          onOpenChange={setConfirmModalOpen}
-          impact={changeImpact}
-          businessName={pendingChange.businessName}
-          currentPlan={pendingChange.currentPlan}
-          newPlan={pendingChange.newPlan}
-          onConfirm={handleConfirmPlanChange}
-          isLoading={updatePlanMutation.isPending}
-        />
-      )}
     </div>
   );
 }
