@@ -9,7 +9,6 @@ Este diretorio exporta apenas hooks usados pelo runtime atual de Gastronomia. Ho
 - `useGastronomyBusinessSort`: ordenacao e distancia para listas publicas.
 - `useGastronomyDetail`: detalhe publico por slug/territorio.
 - `useGastronomyOpeningStatus`: status operacional do negocio.
-- `useGastronomyFavoritersCount`: contagem publica de favoritos.
 
 ## Cardapio
 
@@ -46,7 +45,7 @@ Este diretorio exporta apenas hooks usados pelo runtime atual de Gastronomia. Ho
 
 ## Social e Confianca
 
-- `useFavorites` exports: favoritos do usuario e da empresa.
+- `useFavorites` exports: owner unico de favoritos do usuario e da empresa; a contagem compartilhada delega ao SSOT BusinessFavoriteStore.
 - `useGastronomyReviews` exports: reviews e respostas da empresa.
 - `useGastronomyActivity`: atividade social relacionada.
 

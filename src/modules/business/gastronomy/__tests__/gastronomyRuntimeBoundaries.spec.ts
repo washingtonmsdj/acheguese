@@ -92,6 +92,23 @@ describe("gastronomy runtime boundaries", () => {
     ).toBe(false);
   });
 
+  it("keeps the retired duplicate favoriters hook out of the runtime API", () => {
+    const hooksBarrel = read("src/modules/business/gastronomy/hooks/index.ts");
+    const hooksReadme = read("src/modules/business/gastronomy/hooks/README.md");
+
+    expect(
+      existsSync(
+        resolve(
+          root,
+          "src/modules/business/gastronomy/hooks/useGastronomyFavoriters.ts",
+        ),
+      ),
+    ).toBe(false);
+    expect(hooksBarrel).not.toContain("useGastronomyFavoriters");
+    expect(hooksReadme).not.toContain("useGastronomyFavoritersCount");
+    expect(hooksReadme).toContain("BusinessFavoriteStore");
+  });
+
   it("keeps gastronomy read queries implemented only in core business", () => {
     const retiredModuleQueries = resolve(
       root,

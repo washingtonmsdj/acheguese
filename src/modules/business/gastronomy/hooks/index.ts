@@ -29,7 +29,6 @@ export { useGastronomyFoodCatalog } from './useGastronomyFoodCatalog';
 export { useGastronomyOpeningStatus } from './useGastronomyOpeningStatus';
 export { useGastronomyBusinessSort } from './useGastronomyBusinessSort';
 export type { BusinessSortKey } from './useGastronomyBusinessSort';
-export { useGastronomyFavoritersCount } from './useGastronomyFavoriters';
 export {
   useUserFavorites,
   useIsFavorited,
