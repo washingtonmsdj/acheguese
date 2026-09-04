@@ -4,7 +4,11 @@ import { businessManagementRoutes } from "@/core/business/utils/businessManageme
 import {
   createOptionalOperationalAdminClient,
   createOptionalOperationalAnonClient,
+  isE2EAuthFixtureUser,
 } from "../helpers/operational-env";
+import {
+  getBusinessLifecycleProductionSafety,
+} from "../../tools/supabase/business-lifecycle-production-safety.mjs";
 
 const EXISTING_LOGIN_EMAIL =
   process.env.TEST_DRIVER_EMAIL || process.env.E2E_USER_EMAIL || null;
@@ -16,8 +20,12 @@ const RECOVERY_TEST_EMAIL =
   process.env.TEST_DRIVER_EMAIL ||
   null;
 
+const productionBusinessLifecycleSafety =
+  getBusinessLifecycleProductionSafety(process.env.VITE_SUPABASE_URL);
+const productionBusinessLifecycle = productionBusinessLifecycleSafety.safe;
 const admin = createOptionalOperationalAdminClient();
 const publicAuthClient = createOptionalOperationalAnonClient();
+let preservedAdminUserId: string | null = null;
 
 interface PersonalProfileRow {
   id: string;
@@ -94,6 +102,51 @@ function isListUsersInfraError(error: unknown): boolean {
   );
 }
 
+async function assertDeletableE2EUser(user: User): Promise<void> {
+  if (preservedAdminUserId && user.id === preservedAdminUserId) {
+    throw new Error("Refusing to delete preserved admin washingtonmsdj.");
+  }
+
+  if (!isE2EAuthFixtureUser(user)) {
+    throw new Error(
+      `Refusing to delete Auth user ${user.id} without canonical E2E provenance.`,
+    );
+  }
+
+  if (!/^e2e-[^@]+@/i.test(user.email ?? "")) {
+    throw new Error(
+      `Refusing to delete Auth user ${user.id} without an e2e-* email.`,
+    );
+  }
+}
+
+async function deleteCreatedE2EUser(userId: string): Promise<void> {
+  if (!admin) return;
+
+  const { data, error: lookupError } = await admin.auth.admin.getUserById(userId);
+  if (lookupError) {
+    if (/user not found/i.test(lookupError.message)) return;
+    throw lookupError;
+  }
+  if (!data.user) return;
+
+  await assertDeletableE2EUser(data.user);
+
+  const { error } = await admin.auth.admin.deleteUser(userId);
+  if (error) throw error;
+
+  const { count, error: profileError } = await admin
+    .from("profiles")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+  if (profileError) throw profileError;
+  if ((count ?? 0) !== 0) {
+    throw new Error(
+      `Cleanup did not cascade all profiles for E2E user ${userId}.`,
+    );
+  }
+}
+
 async function cleanupUserByEmail(email: string): Promise<void> {
   if (!admin) {
     return;
@@ -115,10 +168,7 @@ async function cleanupUserByEmail(email: string): Promise<void> {
     return;
   }
 
-  const { error } = await admin.auth.admin.deleteUser(user.id);
-  if (error) {
-    throw error;
-  }
+  await deleteCreatedE2EUser(user.id);
 }
 
 async function waitForPersonalProfile(
@@ -349,22 +399,52 @@ async function createConfirmedUser(input: {
     );
   }
 
-  const { data, error } = await admin.auth.admin.createUser({
-    email: input.email,
-    password: input.password,
-    email_confirm: true,
-    user_metadata: {
-      name: input.name,
-      display_name: input.name,
-      handle: input.handle,
-    },
-  });
-
-  if (error || !data.user) {
-    throw error ?? new Error("Falha ao criar usuario confirmado para o teste.");
+  let inviteIssued = false;
+  if (productionBusinessLifecycle) {
+    const { error: inviteError } = await admin.rpc("alpha_access_issue_invite", {
+      p_email: input.email,
+      p_expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+      p_max_uses: 1,
+      p_note: "e2e_seed",
+    });
+    if (inviteError) {
+      throw new Error(
+        `Falha ao emitir invite alpha tecnico: ${inviteError.message}`,
+      );
+    }
+    inviteIssued = true;
   }
 
-  return { user: data.user };
+  try {
+    const { data, error } = await admin.auth.admin.createUser({
+      email: input.email,
+      password: input.password,
+      email_confirm: true,
+      user_metadata: {
+        name: input.name,
+        display_name: input.name,
+        handle: input.handle,
+      },
+    });
+
+    if (error || !data.user) {
+      throw error ?? new Error("Falha ao criar usuario confirmado para o teste.");
+    }
+
+    return { user: data.user };
+  } finally {
+    if (inviteIssued) {
+      const { error: cleanupError } = await admin.rpc(
+        "alpha_access_delete_operational_invite",
+        { p_email: input.email },
+      );
+      if (cleanupError) {
+        throw new Error(
+          `Falha ao limpar invite alpha tecnico: ${cleanupError.message}`,
+        );
+      }
+    }
+  }
 }
 
 async function clickFirstEnabledOption(
@@ -720,10 +800,44 @@ test.describe.serial("Auth and business flow", () => {
   let signupEmailInfraAvailable: boolean | null = null;
 
   test.beforeAll(async () => {
-    signupEmailInfraAvailable = await canSendSignupConfirmationEmail();
+    signupEmailInfraAvailable = productionBusinessLifecycle
+      ? null
+      : await canSendSignupConfirmationEmail();
 
     if (!admin) {
       return;
+    }
+
+    if (productionBusinessLifecycle) {
+      const preserveHandle =
+        productionBusinessLifecycleSafety.preserveHandle ?? "washingtonmsdj";
+      const { data: preserveProfile, error: preserveProfileError } = await admin
+        .from("profiles")
+        .select("user_id")
+        .eq("profile_type", "personal")
+        .eq("handle", preserveHandle)
+        .maybeSingle();
+      if (preserveProfileError || !preserveProfile?.user_id) {
+        throw new Error(
+          `Preserved admin ${preserveHandle} was not resolved uniquely.`,
+        );
+      }
+
+      const { data: preserveRoles, error: preserveRolesError } = await admin
+        .from("user_roles")
+        .select("role, role_enum")
+        .eq("user_id", preserveProfile.user_id);
+      if (preserveRolesError) throw preserveRolesError;
+      const isAdmin = (preserveRoles ?? []).some(
+        (row) => row.role === "admin" || row.role_enum === "admin",
+      );
+      if (!isAdmin) {
+        throw new Error(
+          `Preserved identity ${preserveHandle} is not an admin.`,
+        );
+      }
+
+      preservedAdminUserId = preserveProfile.user_id;
     }
 
     try {
@@ -757,7 +871,7 @@ test.describe.serial("Auth and business flow", () => {
         break;
       }
 
-      await admin.auth.admin.deleteUser(userId).catch((error) => {
+      await deleteCreatedE2EUser(userId).catch((error) => {
         if (isListUsersInfraError(error)) {
           return;
         }
@@ -788,6 +902,10 @@ test.describe.serial("Auth and business flow", () => {
   test("cadastro envia para confirmacao e cria identidade pessoal", async ({
     page,
   }) => {
+    test.skip(
+      productionBusinessLifecycle,
+      "Production fixture certification executa somente o lifecycle Business.",
+    );
     const suffix = uniqueSuffix();
     const email = `e2e-signup-${suffix}@example.com`;
     const username = `e2ecad${suffix.slice(-8)}`;
@@ -878,6 +996,10 @@ test.describe.serial("Auth and business flow", () => {
   test("esqueci minha senha envia recuperacao corretamente", async ({
     page,
   }) => {
+    test.skip(
+      productionBusinessLifecycle,
+      "Production fixture certification executa somente o lifecycle Business.",
+    );
     const recoveryIdentifier = confirmedUser?.handle
       ? `@${confirmedUser.handle}`
       : RECOVERY_TEST_EMAIL;

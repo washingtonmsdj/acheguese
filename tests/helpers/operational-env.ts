@@ -4,6 +4,10 @@ import {
   hasApprovedOperationalMutationTarget,
 } from './operational-mutation-safety';
 import { wrapOperationalTechnicalAuthClient } from '../../tools/supabase/operational-alpha-invite.mjs';
+import {
+  getBusinessLifecycleProductionSafety,
+  isBusinessLifecycleProductionCertification,
+} from '../../tools/supabase/business-lifecycle-production-safety.mjs';
 
 export type OperationalSupabaseClient = SupabaseClient<any, 'public', any>;
 type OperationalSuite = () => void;
@@ -214,8 +218,12 @@ function createOperationalClient(
   });
 
   const authWrappedClient = wrapOperationalAuthClient(client);
+  const productionBusinessLifecycle =
+    kind === 'admin' &&
+    isBusinessLifecycleProductionCertification(supabaseUrl);
+
   const alphaReadyClient =
-    kind === 'admin'
+    kind === 'admin' && !productionBusinessLifecycle
       ? wrapOperationalTechnicalAuthClient(authWrappedClient, supabaseUrl)
       : authWrappedClient;
   const shouldAttachBusinessFixtureProvenance =
@@ -305,11 +313,16 @@ export function createOperationalAdminClient(): OperationalSupabaseClient {
 
 export function createOptionalOperationalAdminClient(): OperationalSupabaseClient | null {
   const env = getOperationalEnv();
-  if (
-    !env.supabaseUrl ||
-    !env.serviceRoleKey ||
-    !hasApprovedOperationalMutationTarget(env.supabaseUrl)
-  ) {
+  if (!env.supabaseUrl || !env.serviceRoleKey) {
+    return null;
+  }
+
+  const isolatedTargetApproved =
+    hasApprovedOperationalMutationTarget(env.supabaseUrl);
+  const productionBusinessLifecycle =
+    getBusinessLifecycleProductionSafety(env.supabaseUrl).safe;
+
+  if (!isolatedTargetApproved && !productionBusinessLifecycle) {
     return null;
   }
 

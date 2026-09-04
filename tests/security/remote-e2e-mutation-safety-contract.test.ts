@@ -17,6 +17,10 @@ const slugHistoryValidator = read('tools/supabase/validate-slug-history-final.ts
 const networkSeeder = read('tools/seeds/seed-e2e-network.ts');
 const e2eUserSeeder = read('tools/seeds/seed-e2e-users.ts');
 const businessLifecycleRunner = read('tools/release/run-business-lifecycle-e2e.mjs');
+const businessLifecycleProductionSafety = read(
+  'tools/supabase/business-lifecycle-production-safety.mjs',
+);
+const authBusinessSpec = read('tests/e2e/auth-business.spec.ts');
 const packageJson = read('package.json');
 const operationalAlphaInvite = read('tools/supabase/operational-alpha-invite.mjs');
 const technicalAuthCreators = [
@@ -81,6 +85,9 @@ describe('Remote E2E mutation safety integration', () => {
       'getRemoteMutationTargetSafety(supabaseUrl)',
     );
     expect(businessLifecycleRunner).toContain(
+      'getBusinessLifecycleProductionSafety',
+    );
+    expect(businessLifecycleRunner).toContain(
       "'SUPABASE_SERVICE_ROLE_KEY'",
     );
     expect(businessLifecycleRunner).toContain(
@@ -96,6 +103,40 @@ describe('Remote E2E mutation safety integration', () => {
     );
     expect(businessLifecycleRunner).not.toContain(
       'VITE_SUPABASE_SERVICE_ROLE_KEY',
+    );
+    expect(businessLifecycleProductionSafety).toContain(
+      "E2E_PRODUCTION_FIXTURE_CERTIFICATION",
+    );
+    expect(businessLifecycleProductionSafety).toContain(
+      "E2E_PRODUCTION_FIXTURE_APPROVED",
+    );
+    expect(businessLifecycleProductionSafety).toContain(
+      "E2E_PRODUCTION_PRESERVE_HANDLE",
+    );
+    expect(businessLifecycleProductionSafety).toContain(
+      "const BUSINESS_LIFECYCLE_PRESERVED_HANDLE = 'washingtonmsdj'",
+    );
+    expect(businessLifecycleProductionSafety).toContain(
+      "projectRef !== productionProjectRef",
+    );
+    expect(businessLifecycleProductionSafety).toContain(
+      "'acheguese.com.br'",
+    );
+    expect(authBusinessSpec).toContain(
+      'Refusing to delete preserved admin washingtonmsdj.',
+    );
+    expect(authBusinessSpec).toContain('isE2EAuthFixtureUser(user)');
+    expect(authBusinessSpec).toContain(
+      '/^e2e-[^@]+@/i.test(user.email ?? "")',
+    );
+    expect(authBusinessSpec).toContain(
+      '"alpha_access_issue_invite"',
+    );
+    expect(authBusinessSpec).toContain(
+      '"alpha_access_delete_operational_invite"',
+    );
+    expect(authBusinessSpec).toContain(
+      'Production fixture certification executa somente o lifecycle Business.',
     );
   });
 

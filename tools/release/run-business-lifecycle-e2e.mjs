@@ -8,6 +8,9 @@ import {
 import {
   getRemoteMutationTargetSafety,
 } from '../supabase/remote-mutation-safety.mjs';
+import {
+  getBusinessLifecycleProductionSafety,
+} from '../supabase/business-lifecycle-production-safety.mjs';
 
 const ENV_FILES = ['.env.test', '.env.local'];
 const BUSINESS_LIFECYCLE_TEST =
@@ -57,18 +60,28 @@ const previousBaseUrl = process.env.PLAYWRIGHT_BASE_URL;
 const previousPublicUrl = process.env.VITE_PUBLIC_APP_URL;
 process.env.PLAYWRIGHT_BASE_URL = baseUrl;
 process.env.VITE_PUBLIC_APP_URL = baseUrl;
-const safety = getRemoteMutationTargetSafety(supabaseUrl);
+const isolatedSafety = getRemoteMutationTargetSafety(supabaseUrl);
+const productionSafety = getBusinessLifecycleProductionSafety(
+  supabaseUrl,
+  safetyEnv,
+);
 if (previousBaseUrl === undefined) delete process.env.PLAYWRIGHT_BASE_URL;
 else process.env.PLAYWRIGHT_BASE_URL = previousBaseUrl;
 if (previousPublicUrl === undefined) delete process.env.VITE_PUBLIC_APP_URL;
 else process.env.VITE_PUBLIC_APP_URL = previousPublicUrl;
 
-if (!safety.safe) {
-  throw new Error(`Business lifecycle certification blocked: ${safety.reason}`);
+if (!isolatedSafety.safe && !productionSafety.safe) {
+  throw new Error(
+    `Business lifecycle certification blocked: isolated=${isolatedSafety.reason}; production=${productionSafety.reason}`,
+  );
 }
 
+const targetKind = isolatedSafety.safe
+  ? isolatedSafety.kind
+  : productionSafety.kind;
+
 console.log(
-  `[business-certification] target=${safety.kind} app=${baseUrl} retries=0`,
+  `[business-certification] target=${targetKind} app=${baseUrl} retries=0`,
 );
 
 const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
@@ -93,6 +106,7 @@ const result = spawnSync(
       VITE_SUPABASE_URL: supabaseUrl,
       VITE_SUPABASE_PUBLISHABLE_KEY: publishableKey,
       VITE_SUPABASE_ANON_KEY: publishableKey,
+      PLAYWRIGHT_SKIP_WEBSERVER: '1',
     },
   },
 );

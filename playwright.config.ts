@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { defineConfig, devices } from "@playwright/test";
 import { fileURLToPath } from "url";
 import { getRemoteMutationTargetSafety } from "./tools/supabase/remote-mutation-safety.ts";
+import { getBusinessLifecycleProductionSafety } from "./tools/supabase/business-lifecycle-production-safety.mjs";
 
 dotenv.config({ path: ".env.test" });
 dotenv.config({ path: ".env.local", override: true });
@@ -19,11 +20,15 @@ const skipWebServer = process.env.PLAYWRIGHT_SKIP_WEBSERVER === "1";
 const mutationTargetSafety = getRemoteMutationTargetSafety(
   process.env.VITE_SUPABASE_URL,
 );
+const productionBusinessLifecycleSafety =
+  getBusinessLifecycleProductionSafety(process.env.VITE_SUPABASE_URL);
 const mutatingE2EIgnore = mutationTargetSafety.safe
   ? []
   : [
       /[\\/]admin-pricing\.spec\.ts$/,
-      /[\\/]auth-business\.spec\.ts$/,
+      ...(productionBusinessLifecycleSafety.safe
+        ? []
+        : [/[\\/]auth-business\.spec\.ts$/]),
       /[\\/]business-recommendation-operational\.spec\.ts$/,
       /[\\/]communication-territorial-operational\.spec\.ts$/,
       /[\\/]community-access-gate\.spec\.ts$/,
