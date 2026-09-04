@@ -1,10 +1,10 @@
 # Auditoria de Producao - Gastronomia
 
-Atualizado em 2026-07-04.
+Atualizado em 2026-09-04.
 
 ## Status
 
-O modulo esta fisicamente concentrado em `src/modules/business/gastronomy`, mas ainda nao deve ser considerado perfeito ou livre de legados. O fluxo v1 ficou mais consistente apos ativacao de checkout/pedidos e correcoes de fulfillment, mas ainda existem pendencias de lancamento.
+O modulo esta em pre-certificacao G6. O fluxo v1 de setup, cardapio, checkout, pedido e operacao possui historico operacional forte e nao ha blocker critico/alto conhecido de source, schema ou RLS apos a revalidacao de 2026-09-04. O modulo ainda NAO e `READY`: falta prova operacional/hosted same-SHA conforme o plano raiz.
 
 ## Ja corrigido nesta rodada
 
@@ -123,15 +123,25 @@ O modulo esta fisicamente concentrado em `src/modules/business/gastronomy`, mas 
 - Foi adicionada cobertura mobile autenticada para o dashboard da Gastronomia em 360px dentro do E2E operacional.
 - Foi adicionada cobertura axe E2E para a landing publica mobile de Gastronomia, bloqueando violacoes `serious`/`critical` em `main`; a correcao incluiu labels em controles icon-only, label no select mobile de ordenacao, carrossel de atividade focavel com semantica de lista e contraste suficiente no CTA primario do hero.
 
+## Revalidacao G6 — 2026-09-04
+
+- Historico de migrations local/remoto revalidado pela API canônica do Supabase: **498 migrations remotas = 498 arquivos locais**, com zero versao remota sem arquivo, zero arquivo local sem versao remota e zero divergencia de nome.
+- A antiga pendencia alta de drift historico, registrada em 2026-07-04, esta portanto encerrada. Nao executar `migration repair` ou `db push` para reproduzir o estado antigo.
+- Foi identificado drift de autorizacao nas policies de `gastronomy_profiles`, `menus`, `menu_categories`, `menu_items`, variants, addons, availability, promotions e historico de niche: ainda aceitavam apenas `profiles.user_id = auth.uid()`.
+- A migration `20260904232530_align_gastronomy_profile_management_authority_g6.sql` foi aplicada ao projeto canônico e alinhou as nove policies a `private.can_manage_profile(profile_id)`, a mesma autoridade de Business: dono direto ou membership ativa `owner/admin`.
+- Public read policies e grants por coluna de `gastronomy_profiles` foram preservados; nenhuma permissao ampla nova foi criada.
+- O probe versionado `tests/security/gastronomy-management-authority-remote-probe.sql` passou contra o ambiente canônico em transacao `BEGIN/ROLLBACK`: sem membership, UPDATE=0; com membership `admin` temporaria, o mesmo usuario tecnico administrou profile/menu/category/item; `washingtonmsdj` foi explicitamente excluido.
+- A version da migration registrada remotamente e o filename local estao reconciliados em `20260904232530`.
+
 ## Pendencias antes do lancamento
 
 ### Critico
 
-- Nenhuma pendencia critica conhecida no fluxo v1 de pedido online apos a revalidacao atual. O modulo ainda nao deve ser chamado de perfeito porque ha pendencias altas/medias de limpeza, observabilidade, mobile/axe e drift historico de migrations.
+- Nenhuma pendencia critica conhecida no fluxo v1 de pedido online apos a revalidacao G6 atual. O modulo ainda nao deve ser marcado `READY` ate a prova operacional/hosted same-SHA.
 
 ### Alto
 
-- Limpar o drift de migrations remotas antes do lancamento: a inspecao read-only de 2026-07-04 com `supabase migration list --linked` confirmou que as migrations criticas de Gastronomia/Delivery de julho estao alinhadas (`20260702100000`, `20260703100000`, `20260703113000`, `20260703212954`, `20260703232958`, `20260703233803`, `20260703235508`), mas ainda ha divergencia historica fora do fluxo v1: remoto sem arquivo local em `20260416130000`, `20260416140000`, `20260425030000` e `20260426010000`; local sem historico remoto em `20260412000000` e no bloco `20260521120000` ate `20260609193000`. Impacto: `db push`, `migration repair` ou release global nao devem ser executados automaticamente sem plano de reconciliacao, porque podem marcar/aplicar schema antigo fora da auditoria de Gastronomia.
+- Nenhuma pendencia alta conhecida de schema/RLS/migration no checkpoint de 2026-09-04. O drift historico citado na auditoria de julho foi reconciliado e o contrato de gestao profile/menu foi alinhado a autoridade canônica de Business.
 
 ### Medio
 

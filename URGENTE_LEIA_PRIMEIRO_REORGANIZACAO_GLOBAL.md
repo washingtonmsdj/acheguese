@@ -8,8 +8,8 @@
 
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
-**Status:** EM EXECUÇÃO — G6 Certificação de módulos / Empresas base  
-**Checkpoint técnico atual:** `7d7775456d4ce3105d05e7d7a23d8ca10be32fc4`  
+**Status:** EM EXECUÇÃO — G6 / Empresas base bloqueada por runner; Gastronomia em pré-certificação  
+**Checkpoint técnico atual:** `fdf4908ccbe729edf9e9b5e7643efb25077d046b`  
 **Checkpoint de transição G5 → G6:** `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
@@ -355,8 +355,8 @@ Checklist padrão por módulo:
 
 Ordem inicial sugerida:
 
-- [ ] Empresas base — source/RLS/partial-state preparados; lifecycle same-SHA ainda BLOCKED por runner pré-step;
-- [ ] Gastronomia;
+- [ ] Empresas base — source/RLS/partial-state preparados, Production same-SHA READY/smoke 200; lifecycle autenticado ainda BLOCKED por runner pré-step (#89 reaberto);
+- [ ] Gastronomia — migrations 498/498 reconciliadas, management RLS alinhado a `private.can_manage_profile` e probe owner/admin/non-manager PASS; certificacao same-SHA ainda pendente;
 - [ ] Educação;
 - [ ] Community;
 - [ ] Events;
@@ -479,10 +479,20 @@ Atualizar esta seção somente com marcos relevantes. Não transformar este arqu
   para profile/business/hours/contacts;
 - [x] soft delete classificado como retry convergente `deleted -> is_active=false`;
 - [x] cupons/promocoes reclassificados como **PAUSED / fora do launch scope**, não blocker de Empresas base;
-- [x] Vercel READY em `126da4a`, `0f5ccbef` e `ad08edea`;
+- [x] Vercel READY em `126da4a`, `0f5ccbef`, `ad08edea` e `cc0cf891`; smoke same-SHA em `acheguese.com.br` para `/`, `/empresas` e `/login` retornou HTTP 200;
 - [ ] execução E2E same-SHA de Empresas base — **BLOCKED por infraestrutura GitHub**:
   jobs recentes continuam `steps=null`, inclusive Authenticated Account E2E;
 - [ ] Heavy Pre-Merge Certification + smoke do mesmo SHA antes de marcar Empresas base READY.
+
+### 2026-09-04 — G6 Gastronomia / pre-certificacao source + DB
+
+- [x] antigo drift historico de migrations revalidado como resolvido: 498 migrations remotas = 498 arquivos locais, sem versao/nome divergente;
+- [x] censo RLS identificou nove policies Gastronomy/menu ainda limitadas a dono direto por `profiles.user_id = auth.uid()`;
+- [x] migration `20260904232530_align_gastronomy_profile_management_authority_g6.sql` aplicada ao Supabase canônico e reconciliada no source;
+- [x] oito policies de escrita agora usam `USING` + `WITH CHECK` com `private.can_manage_profile`; historico de niche usa a mesma autoridade para SELECT;
+- [x] probe remoto versionado passou em `BEGIN/ROLLBACK`: non-manager UPDATE=0; membership temporaria `admin` gerencia profile/menu/category/item; `washingtonmsdj` explicitamente preservado;
+- [ ] testes/E2E/build/deploy same-SHA de Gastronomia ainda pendentes; nao marcar o modulo READY;
+- [ ] Empresas base continua BLOCKED apenas pela recorrencia de runner pre-step registrada no issue #89, sem regressao source comprovada.
 
 ### 2026-08-26 — Início
 
