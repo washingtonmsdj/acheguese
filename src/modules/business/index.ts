@@ -50,7 +50,6 @@ export { useBusinessReviews } from "./hooks/useBusinessReviews";
 export { useBusinessServices } from "./hooks/useBusinessServices";
 
 // Pages
-export { default as BusinessStandalonePage } from "./pages/BusinessStandalonePage";
 export { default as CriarEmpresaPage } from "./pages/CriarEmpresaPage";
 export { default as EditarEmpresaPage } from "./pages/EditarEmpresaPage";
 export { default as EmpresaCatalogoPublicoPage } from "./pages/EmpresaCatalogoPublicoPage";
