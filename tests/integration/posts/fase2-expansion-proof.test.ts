@@ -131,14 +131,14 @@ describe('Sprint 2 - Fase 2: Comprovação Objetiva de Expansão Territorial', (
           status: 'active',
         });
 
-      // Deve falhar com constraint ou RLS violation
+      // Deve falhar com constraint ou controle de autoridade (RLS/grant)
       expect(error).toBeDefined();
       if (error?.message?.includes('fetch failed')) {
         // Ambiente offline/sem DNS do Supabase.
         expect(error.message).toContain('fetch failed');
         return;
       }
-      expect(error!.message).toMatch(/locations_type_check|invalid input value.*group|row-level security/i);
+      expect(error!.message).toMatch(/locations_type_check|invalid input value.*group|row-level security|permission denied/i);
 
       console.log('✅ COMPROVADO: type=group não existe na constraint do banco');
       console.log('   Tipos válidos: country, state, city, district');

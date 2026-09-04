@@ -1,15 +1,16 @@
 /**
  * GATE 2: Validacao da Migration
  *
- * Valida que as colunas GPS foram criadas corretamente.
- * Se o ambiente Supabase nao estiver disponivel (DNS/placeholder), a suite nao falha.
+ * Valida que as colunas GPS foram criadas corretamente com a autoridade
+ * autenticada canônica de motorista. Se o ambiente Supabase nao estiver
+ * disponivel (DNS/placeholder), a suite nao falha.
  */
 
-import { it, expect, beforeAll } from 'vitest';
+import { it, expect, beforeAll, afterAll } from 'vitest';
 import {
   createOperationalAnonClient,
   describeOperational,
-  getOperationalEnv,
+  requireOperationalEnv,
 } from '../helpers/operational-env';
 
 function looksLikeUnavailableRuntimeError(error: unknown): boolean {
@@ -22,28 +23,56 @@ function looksLikeUnavailableRuntimeError(error: unknown): boolean {
   );
 }
 
-describeOperational('GATE 2: Validacao da Migration', {}, () => {
+describeOperational('GATE 2: Validacao da Migration', {
+  requireDriverCredentials: true,
+}, () => {
+  let supabase: ReturnType<typeof createOperationalAnonClient> | null = null;
   let runtimeAvailable = false;
 
   beforeAll(async () => {
-    const env = getOperationalEnv();
-    if (env.supabaseUrl?.includes('placeholder.supabase.co') || env.supabaseUrl?.includes('your-project.supabase.co')) {
-      runtimeAvailable = false;
+    const env = requireOperationalEnv({ requireDriverCredentials: true });
+    if (
+      env.supabaseUrl.includes('placeholder.supabase.co') ||
+      env.supabaseUrl.includes('your-project.supabase.co')
+    ) {
       return;
     }
 
-    const supabase = createOperationalAnonClient();
-    const { error } = await supabase.from('driver_locations').select('id').limit(1);
+    supabase = createOperationalAnonClient();
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email: env.driverEmail,
+      password: env.driverPassword,
+    });
 
-    runtimeAvailable = !looksLikeUnavailableRuntimeError(error);
+    if (looksLikeUnavailableRuntimeError(authError)) {
+      return;
+    }
+
+    expect(authError).toBeNull();
+    expect(authData.user).toBeDefined();
+    if (authError || !authData.user) {
+      return;
+    }
+
+    const { error } = await supabase.from('driver_locations').select('id').limit(1);
+    if (looksLikeUnavailableRuntimeError(error)) {
+      return;
+    }
+
+    expect(error).toBeNull();
+    runtimeAvailable = true;
+  });
+
+  afterAll(async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
   });
 
   it('deve ter as colunas GPS criadas em driver_locations', async () => {
-    if (!runtimeAvailable) {
+    if (!runtimeAvailable || !supabase) {
       return;
     }
-
-    const supabase = createOperationalAnonClient();
 
     const { data, error } = await supabase
       .from('driver_locations')
@@ -55,22 +84,11 @@ describeOperational('GATE 2: Validacao da Migration', {}, () => {
   });
 
   it('deve permitir inserir dados com todas as colunas GPS', async () => {
-    if (!runtimeAvailable) {
+    if (!runtimeAvailable || !supabase) {
       return;
     }
 
-    const env = getOperationalEnv();
-    const supabase = createOperationalAnonClient();
-    if (!env.driverEmail || !env.driverPassword) {
-      return;
-    }
-
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: env.driverEmail,
-      password: env.driverPassword,
-    });
-
-    expect(authError).toBeNull();
+    const { data: authData } = await supabase.auth.getUser();
     if (!authData.user) {
       return;
     }
@@ -104,15 +122,12 @@ describeOperational('GATE 2: Validacao da Migration', {}, () => {
       .upsert(testData, { onConflict: 'driver_profile_id' });
 
     expect(error).toBeNull();
-    await supabase.auth.signOut();
   });
 
   it('deve ler dados com mapeamento correto', async () => {
-    if (!runtimeAvailable) {
+    if (!runtimeAvailable || !supabase) {
       return;
     }
-
-    const supabase = createOperationalAnonClient();
 
     const { data, error } = await supabase
       .from('driver_locations')

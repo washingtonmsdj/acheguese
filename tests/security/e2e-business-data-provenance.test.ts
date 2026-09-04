@@ -73,6 +73,6 @@ describe('E2E business_data fixture provenance', () => {
 
     expect(source).toContain("relation === 'business_data'");
     expect(source).toContain("kind === 'admin' || hasApprovedOperationalMutationTarget(supabaseUrl)");
-    expect(source).toContain('wrapOperationalBusinessDataClient(client)');
+    expect(source).toContain('wrapOperationalBusinessDataClient(authWrappedClient)');
   });
 });
