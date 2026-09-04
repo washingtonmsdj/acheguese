@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const MIGRATIONS_DIR = join(process.cwd(), "supabase", "migrations");
-const BASELINE = "20260825172740_remove_legacy_ad_public_select_shadow.sql";
+const BASELINE = "20260825172854_remove_legacy_ad_public_select_shadow.sql";
 
 const SENSITIVE_TABLES = [
   "ad_campaigns",

@@ -575,7 +575,7 @@ describe("gastronomy operational SSOT flow", () => {
       "src/modules/business/gastronomy/hooks/useMenuItems.ts",
     );
     const serviceSource = readProjectFile(
-      "src/modules/business/gastronomy/services/MenuService.ts",
+      "src/core/business/services/MenuService.ts",
     );
 
     const fullFormSource = `${formSource}\n${formModelSource}\n${formFieldsSource}`;

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
-import { createTerritorialGroupRepository } from "@/core/territorial/repositories/createTerritorialGroupRepository";
+import { territorialGroupService } from "@/core/territorial";
 import { resolveCommunityPublicAliasTerritory } from "../CommunityPublicAliasTerritoryResolver";
 import { resolveBusinessEntityFromCommunityAlias } from "../CommunityBusinessEntityResolver";
 
@@ -16,8 +16,10 @@ vi.mock("@/core/location/repositories/createLocationRepository", () => ({
   createLocationRepository: vi.fn(),
 }));
 
-vi.mock("@/core/territorial/repositories/createTerritorialGroupRepository", () => ({
-  createTerritorialGroupRepository: vi.fn(),
+vi.mock("@/core/territorial", () => ({
+  territorialGroupService: {
+    isMemberOfGroup: vi.fn(),
+  },
 }));
 
 vi.mock("../CommunityPublicAliasTerritoryResolver", () => ({
@@ -67,9 +69,7 @@ describe("CommunityBusinessEntityResolver", () => {
       findByPath: vi.fn().mockResolvedValue({ id: "loc-nordeste" }),
     } as unknown as ReturnType<typeof createLocationRepository>);
 
-    vi.mocked(createTerritorialGroupRepository).mockReturnValue({
-      hasMember: vi.fn().mockResolvedValue(true),
-    } as unknown as ReturnType<typeof createTerritorialGroupRepository>);
+    vi.mocked(territorialGroupService.isMemberOfGroup).mockResolvedValue(true);
 
     mockResolvedAlias();
   });
@@ -94,9 +94,9 @@ describe("CommunityBusinessEntityResolver", () => {
       },
     });
 
-    expect(createTerritorialGroupRepository().hasMember).toHaveBeenCalledWith(
-      "group-complexo",
+    expect(territorialGroupService.isMemberOfGroup).toHaveBeenCalledWith(
       "loc-nordeste",
+      "group-complexo",
     );
   });
 
@@ -120,7 +120,7 @@ describe("CommunityBusinessEntityResolver", () => {
       },
     });
 
-    expect(createTerritorialGroupRepository().hasMember).not.toHaveBeenCalled();
+    expect(territorialGroupService.isMemberOfGroup).not.toHaveBeenCalled();
   });
 
   it("bloqueia empresa de outro bairro quando nao pertence ao grupo territorial", async () => {
@@ -132,9 +132,7 @@ describe("CommunityBusinessEntityResolver", () => {
     vi.mocked(createLocationRepository).mockReturnValue({
       findByPath: vi.fn().mockResolvedValue({ id: "loc-pituba" }),
     } as unknown as ReturnType<typeof createLocationRepository>);
-    vi.mocked(createTerritorialGroupRepository).mockReturnValue({
-      hasMember: vi.fn().mockResolvedValue(false),
-    } as unknown as ReturnType<typeof createTerritorialGroupRepository>);
+    vi.mocked(territorialGroupService.isMemberOfGroup).mockResolvedValue(false);
 
     await expect(
       resolveBusinessEntityFromCommunityAlias("complexo", "padaria-x"),
@@ -156,7 +154,7 @@ describe("CommunityBusinessEntityResolver", () => {
       status: "business-not-found",
     });
 
-    expect(createTerritorialGroupRepository).not.toHaveBeenCalled();
+    expect(territorialGroupService.isMemberOfGroup).not.toHaveBeenCalled();
   });
 
   it("usa territorio explicito para alias de bairro", async () => {

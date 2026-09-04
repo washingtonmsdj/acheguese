@@ -8,7 +8,7 @@ const BASELINE = "20260818222234_harden_analytics_event_rpc_authority.sql";
 const INTERACTION_ENUM_MIGRATION =
   "20260818222702_add_business_interaction_analytics_event_type.sql";
 const ANON_SESSION_MIGRATION =
-  "20260825201000_require_anonymous_analytics_session.sql";
+  "20260825201017_require_anonymous_analytics_session.sql";
 const READ_AUTHORITY_MIGRATION =
   "20260829164446_repair_analytics_business_read_authority.sql";
 const LEGACY_TRACKING_WRAPPER = join(

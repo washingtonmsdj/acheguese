@@ -181,7 +181,7 @@ const groupMessageReactionMigration = readFileSync(
   "utf8",
 );
 const canonicalReportDialog = readFileSync(
-  join(root, "src/core/moderation/components/ReportReasonDialog.tsx"),
+  join(root, "src/shared/components/moderation/ReportReasonDialog.tsx"),
   "utf8",
 );
 const postCommentsPanel = readFileSync(

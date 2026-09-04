@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const MIGRATIONS_DIR = join(process.cwd(), "supabase", "migrations");
-const BASELINE = "20260825183300_harden_admin_helper_anon_scope.sql";
+const BASELINE = "20260825183353_harden_admin_helper_anon_scope.sql";
 
 const ADMIN_HELPERS = [
   "private.is_admin(uuid)",

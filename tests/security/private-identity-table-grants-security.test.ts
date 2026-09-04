@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const MIGRATIONS_DIR = join(process.cwd(), "supabase", "migrations");
-const HARDENING = "20260825221000_revoke_anon_identity_graph_select_grants.sql";
+const HARDENING = "20260825215737_revoke_anon_identity_graph_select_grants.sql";
 const PRIVATE_IDENTITY_TABLES = [
   "question_answer_likes",
   "event_review_helpfulness",
