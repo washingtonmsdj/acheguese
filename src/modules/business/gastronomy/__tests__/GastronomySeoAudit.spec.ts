@@ -36,14 +36,22 @@ describe("gastronomy SEO and indexation audit", () => {
     const checkoutSource = readProjectFile(
       "src/modules/business/gastronomy/pages/GastronomyCheckoutPage.tsx",
     );
+    const favoritesSource = readProjectFile(
+      "src/modules/business/gastronomy/pages/MyFavoritesPage.tsx",
+    );
     const ordersSource = readProjectFile(
       "src/modules/business/gastronomy/pages/OrdersPage.tsx",
+    );
+    const centralLayoutSource = readProjectFile(
+      "src/modules/central/components/CentralLayout.tsx",
     );
     const orderDetailsSource = readProjectFile(
       "src/modules/business/gastronomy/pages/OrderDetailsPage.tsx",
     );
 
     expect(checkoutSource).toContain("noindex, nofollow");
+    expect(favoritesSource).toContain("noindex, nofollow");
+    expect(centralLayoutSource).toContain("noindex, nofollow");
     expect(ordersSource).toContain("noindex, nofollow");
     expect(orderDetailsSource).toContain("noindex, nofollow");
   });
