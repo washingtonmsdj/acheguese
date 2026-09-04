@@ -16,6 +16,8 @@ const playwrightConfig = read('playwright.config.ts');
 const slugHistoryValidator = read('tools/supabase/validate-slug-history-final.ts');
 const networkSeeder = read('tools/seeds/seed-e2e-network.ts');
 const e2eUserSeeder = read('tools/seeds/seed-e2e-users.ts');
+const businessLifecycleRunner = read('tools/release/run-business-lifecycle-e2e.mjs');
+const packageJson = read('package.json');
 const operationalAlphaInvite = read('tools/supabase/operational-alpha-invite.mjs');
 const technicalAuthCreators = [
   'tools/seeds/seed-e2e-users.ts',
@@ -69,6 +71,32 @@ describe('Remote E2E mutation safety integration', () => {
     expect(operationalEnv).toContain('withE2EAdminCreateUserProvenance');
     expect(operationalEnv).toContain('withE2ESignUpProvenance');
     expect(operationalEnv).toContain('withE2EBusinessFixtureProvenance');
+  });
+
+  it('keeps Business lifecycle certification isolated, explicit and zero-retry', () => {
+    expect(packageJson).toContain(
+      '"test:e2e:business-lifecycle": "node tools/release/run-business-lifecycle-e2e.mjs"',
+    );
+    expect(businessLifecycleRunner).toContain(
+      'getRemoteMutationTargetSafety(supabaseUrl)',
+    );
+    expect(businessLifecycleRunner).toContain(
+      "'SUPABASE_SERVICE_ROLE_KEY'",
+    );
+    expect(businessLifecycleRunner).toContain(
+      "'VITE_SUPABASE_PUBLISHABLE_KEY'",
+    );
+    expect(businessLifecycleRunner).toContain(
+      "'tests/e2e/auth-business.spec.ts'",
+    );
+    expect(businessLifecycleRunner).toContain("'--retries=0'");
+    expect(businessLifecycleRunner).toContain("'--grep'");
+    expect(businessLifecycleRunner).toContain(
+      'login cria edita publica e gerencia empresa pelo fluxo canonico',
+    );
+    expect(businessLifecycleRunner).not.toContain(
+      'VITE_SUPABASE_SERVICE_ROLE_KEY',
+    );
   });
 
   it('blocks known mutating Playwright suites before hooks execute on unsafe targets', () => {

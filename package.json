@@ -154,7 +154,8 @@
     "security:config:validate": "tsx tools/security/validate-security-config.ts",
     "generate:vercel": "tsx tools/security/generate-vercel-config.ts",
     "lint:security": "eslint src api supabase/functions --config eslint.config.security.mjs --ext .ts,.tsx --no-inline-config",
-    "lint:security:fix": "eslint src api supabase/functions --config eslint.config.security.mjs --ext .ts,.tsx --fix --no-inline-config"
+    "lint:security:fix": "eslint src api supabase/functions --config eslint.config.security.mjs --ext .ts,.tsx --fix --no-inline-config",
+    "test:e2e:business-lifecycle": "node tools/release/run-business-lifecycle-e2e.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
