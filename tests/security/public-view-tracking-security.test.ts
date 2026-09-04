@@ -26,7 +26,7 @@ describe("public view tracking security", () => {
       "src/core/professional/services/professional.mutations.ts",
     );
     const vagasService = readProjectFile(
-      "src/modules/classifieds/jobs/services/VagasService.ts",
+      "src/core/classifieds/jobs/services/VagasService.ts",
     );
     const edgeFunction = readProjectFile(
       "supabase/functions/track-public-view/index.ts",

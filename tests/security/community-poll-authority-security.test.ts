@@ -211,11 +211,14 @@ describe("Community Poll authoritative contract", () => {
     expect(additiveMigration).toMatch(
       /GRANT EXECUTE ON FUNCTION public\.get_community_poll_for_post\(UUID\)[\s\S]*TO anon, authenticated;/,
     );
-    expect(additiveMigration).not.toMatch(
-      /GRANT EXECUTE ON FUNCTION public\.create_post_with_poll\(JSONB\)[\s\S]*TO anon/,
-    );
-    expect(additiveMigration).not.toMatch(
-      /GRANT EXECUTE ON FUNCTION public\.cast_community_poll_vote\(UUID, UUID, UUID\)[\s\S]*TO anon/,
-    );
+    const createGrant = additiveMigration.match(
+      /GRANT EXECUTE ON FUNCTION public\.create_post_with_poll\(JSONB\)\s+TO\s+([^;]+);/i,
+    )?.[1]?.trim();
+    const voteGrant = additiveMigration.match(
+      /GRANT EXECUTE ON FUNCTION public\.cast_community_poll_vote\(UUID, UUID, UUID\)\s+TO\s+([^;]+);/i,
+    )?.[1]?.trim();
+
+    expect(createGrant).toBe("authenticated");
+    expect(voteGrant).toBe("authenticated");
   });
 });

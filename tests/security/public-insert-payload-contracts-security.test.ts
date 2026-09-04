@@ -23,9 +23,10 @@ const educationTrackingService = read(
 const qrCodeService = read("src/core/qr/QrCodeService.ts");
 
 function grantColumns(sql: string, table: string, role: string): string {
+  const escapedRole = role.replace(/[.*+?^$()|[\]\\]/g, "\\$&");
   const match = sql.match(
     new RegExp(
-      `grant\\s+insert\\s*\\(([\\s\\S]*?)\\)\\s+on\\s+table\\s+public\\.${table}\\s+to\\s+${role}\\s*;`,
+      `grant\\s+insert\\s*\\(([^;]*?)\\)\\s+on\\s+(?:table\\s+)?public\\.${table}\\s+to\\s+${escapedRole}\\s*;`,
       "i",
     ),
   );
