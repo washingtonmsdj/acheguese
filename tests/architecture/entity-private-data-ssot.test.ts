@@ -48,7 +48,11 @@ describe("Entity private-data SSOT", () => {
       /export async function (?:createProfessional|updateProfessional|deleteProfessional)\b/,
     );
     expect(adminBusiness).not.toContain("profileService.createProfile");
-    expect(adminBusiness).toContain("BusinessService.createBusiness");
+    expect(adminBusiness).not.toContain("createBusinessProfile(");
+    expect(adminBusiness).not.toMatch(/\.from\(["']business_data["']\)\s*\.insert\s*\(/);
+    expect(read("src/core/business/services/BusinessService.ts")).toContain(
+      "static createBusiness = BusinessMutations.createBusiness",
+    );
     expect(opportunities).not.toContain('select("id, owner_user_id")');
     expect(opportunities).not.toContain('.eq("owner_user_id", user.id)');
     expect(opportunities).toContain("getAccessibleProfileIds");
@@ -59,16 +63,22 @@ describe("Entity private-data SSOT", () => {
     const professional = read(
       "src/core/professional/services/professional.profile-lifecycle.ts",
     );
+    const profileMutations = read(
+      "src/core/profiles/services/profile.mutations.ts",
+    );
     const businessAdmin = read(
       "src/core/admin/services/AdminBusinessService.ts",
     );
 
     for (const lifecycle of [business, professional]) {
       expect(lifecycle).toContain("SessionService.getCurrentUser()");
-      expect(lifecycle).toContain("user_id: user.id");
+      expect(lifecycle).toContain("profileService.createProfile");
       expect(lifecycle).not.toMatch(/create(?:Business|ProfessionalWithProfile)\([\s\S]{0,120}userId:\s*string/);
     }
-    expect(businessAdmin).not.toMatch(/createBusinessProfile\([\s\S]{0,240}userId:\s*string/);
+
+    expect(profileMutations).toContain("SessionService.getCurrentUser()");
+    expect(profileMutations).toContain("buildCreateProfileInsert(user.id, profile)");
+    expect(businessAdmin).not.toContain("createBusinessProfile(");
   });
 
   it("keeps anonymous snapshots contact-free before authenticated hydration", () => {
