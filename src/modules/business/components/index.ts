@@ -51,7 +51,6 @@ export { ContactLink } from "./ContactLink";
 export { NeighborhoodMap } from "@/core/business/components/NeighborhoodMap";
 export { default as QuickActions } from "./QuickActions";
 export { default as ShareBusinessDialog } from "./ShareBusinessDialog";
-export { default as SubscriptionPlans } from "./SubscriptionPlans";
 
 // ============================================
 // SUB-FOLDERS - Componentes em subpastas
