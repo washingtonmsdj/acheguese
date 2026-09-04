@@ -142,6 +142,16 @@ describe("generateSitemap", () => {
     );
     expect(locationReader).toContain('.in("type", ["city", "district"])');
     expect(locationReader).toContain('.eq("status", "active")');
+    expect(locationReader).toContain('.order("geographic_path")');
+    expect(locationReader).toContain('.limit(COMPLETE_READ_PAGE_SIZE)');
+    expect(locationReader).toContain('.gt("geographic_path", cursor)');
+    expect(locationReader).not.toContain(
+      '.select(PUBLIC_ROUTING_LOCATION_SELECT, { count: "exact" })',
+    );
+    expect(locationReader).not.toContain('.order("id")');
+    expect(locationReader).not.toContain(
+      '.range(offset, offset + COMPLETE_READ_PAGE_SIZE - 1)',
+    );
   });
 
   it("mantem artefatos publicos sem URLs legadas de comunidade", () => {

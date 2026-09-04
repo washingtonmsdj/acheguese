@@ -89,50 +89,55 @@ export class LocationsReadService {
   /**
    * Projeção exaustiva mínima para geração offline de rotas públicas/sitemap.
    *
-   * Mantém a paginação fail-closed do catálogo completo, mas evita transferir
-   * colunas pesadas e irrelevantes para SEO (por exemplo boundary e atributos
-   * administrativos) em milhares de registros.
+   * Usa paginação por cursor em geographic_path, que é unique no schema.
+   * Isso evita o COUNT exato e OFFSET progressivo do PostgREST — ambos
+   * desnecessários para um catálogo de build e historicamente próximos do
+   * statement_timeout em produção. A leitura continua correta mesmo se o
+   * provider reduzir o max_rows, porque cada página avança pelo último cursor
+   * retornado e só termina quando a próxima página vier vazia.
    */
   static async getAllCompleteForPublicRouting(): Promise<
     PublicRoutingLocationRecord[]
   > {
     const rows: PublicRoutingLocationRecord[] = [];
-    let offset = 0;
-    let expectedTotal: number | null = null;
+    let cursor: string | null = null;
 
-    while (expectedTotal === null || offset < expectedTotal) {
-      const { data, error, count } = await supabase
+    while (true) {
+      let query = supabase
         .from("locations")
-        .select(PUBLIC_ROUTING_LOCATION_SELECT, { count: "exact" })
+        .select(PUBLIC_ROUTING_LOCATION_SELECT)
         .in("type", ["city", "district"])
         .eq("status", "active")
         .order("geographic_path")
-        .order("id")
-        .range(offset, offset + COMPLETE_READ_PAGE_SIZE - 1);
+        .limit(COMPLETE_READ_PAGE_SIZE);
+
+      if (cursor !== null) {
+        query = query.gt("geographic_path", cursor);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         logger.error(
           "LocationsReadService.getAllCompleteForPublicRouting",
           error,
-          { offset, expectedTotal },
+          { cursor },
         );
         throw error;
       }
 
-      if (count !== null) expectedTotal = count;
       const page = (data as PublicRoutingLocationRecord[]) || [];
+      if (page.length === 0) break;
 
-      if (page.length === 0) {
-        if (expectedTotal !== null && offset < expectedTotal) {
-          throw new Error(
-            `LocationsReadService.getAllCompleteForPublicRouting stopped at ${offset}/${expectedTotal} rows.`,
-          );
-        }
-        break;
+      const nextCursor = page[page.length - 1]?.geographic_path;
+      if (!nextCursor || (cursor !== null && nextCursor <= cursor)) {
+        throw new Error(
+          "LocationsReadService.getAllCompleteForPublicRouting received a non-advancing geographic_path cursor.",
+        );
       }
 
       rows.push(...page);
-      offset += page.length;
+      cursor = nextCursor;
     }
 
     return rows;
