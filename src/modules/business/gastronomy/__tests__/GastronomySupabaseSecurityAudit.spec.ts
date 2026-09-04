@@ -265,4 +265,20 @@ describe("gastronomy supabase security audit", () => {
     expect(migration).not.toContain("REVOKE ");
   });
 
+  it("keeps the Gastronomy management remote probe rollback-only", () => {
+    const probe = readProjectFile(
+      "tests/security/gastronomy-management-authority-remote-probe.sql",
+    );
+
+    expect(probe).toContain("BEGIN;");
+    expect(probe).toContain("ROLLBACK;");
+    expect(probe).toContain("SET LOCAL ROLE authenticated");
+    expect(probe).toContain("private.can_manage_profile(v_profile_id)");
+    expect(probe).toContain("'admin'");
+    expect(probe).toContain("g6_gastronomy_probe_non_member_update_count_");
+    expect(probe).toContain("g6_gastronomy_probe_admin_membership_not_authorized");
+    expect(probe).toContain("'washingtonmsdj'");
+    expect(probe).not.toMatch(/\bCOMMIT\b/i);
+  });
+
 });
