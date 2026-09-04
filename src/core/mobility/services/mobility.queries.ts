@@ -16,7 +16,6 @@ export {
   getOperationalVerificationEntries,
   getRideAvailableSeats,
   getRideBasicInfo,
-  getRideByShareToken,
   getRideStateAuditEntries,
   getRideWithAddresses,
   getUnreadCount,

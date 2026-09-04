@@ -30,7 +30,6 @@ export {
   getAvailableRides,
   getRideWithAddresses,
   getRideBasicInfo,
-  getRideByShareToken,
   getUserRides,
   getRideAvailableSeats,
   //  Drivers
@@ -214,7 +213,6 @@ export class MobilityFacade {
   static getUserRides = MobilityQueries.getUserRides;
   static getRideWithAddresses = MobilityQueries.getRideWithAddresses;
   static getRideBasicInfo = MobilityQueries.getRideBasicInfo;
-  static getRideByShareToken = MobilityQueries.getRideByShareToken;
   static getRideAvailableSeats = MobilityQueries.getRideAvailableSeats;
   //  ===== MUTATIONS =====
   static createRide = MobilityMutations.createRide;

@@ -39,6 +39,14 @@ describe("canonical ride share token model", () => {
       join(process.cwd(), "src", "core", "mobility", "services", "mobility.ride-read-queries.ts"),
       "utf8",
     );
+    const queriesFacade = readFileSync(
+      join(process.cwd(), "src", "core", "mobility", "services", "mobility.queries.ts"),
+      "utf8",
+    );
+    const mobilityFacade = readFileSync(
+      join(process.cwd(), "src", "core", "mobility", "services", "MobilityService.ts"),
+      "utf8",
+    );
     const trackingPage = readFileSync(
       join(process.cwd(), "src", "modules", "mobility", "pages", "TrackRidePage.tsx"),
       "utf8",
@@ -48,6 +56,8 @@ describe("canonical ride share token model", () => {
     expect(adapter).toContain("share_token: null");
     expect(runtime).not.toContain('.eq("share_token", token)');
     expect(readQueries).not.toMatch(/export async function getRideByShareToken/);
+    expect(queriesFacade).not.toContain("getRideByShareToken");
+    expect(mobilityFacade).not.toContain("getRideByShareToken");
     expect(trackingPage).toContain("useSharedRideData");
     expect(trackingPage).not.toContain("getRideByShareToken");
   });
