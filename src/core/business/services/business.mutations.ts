@@ -511,6 +511,9 @@ export async function updateBusiness(
   id: string,
   input: UpdateBusinessInput,
 ): Promise<Business> {
+  let createdAddressId: string | undefined;
+  let businessWriteCompleted = false;
+
   try {
     const validatedInput = sanitizeAndValidateInput(input, true) as UpdateBusinessInput;
 
@@ -568,13 +571,21 @@ export async function updateBusiness(
       }
     }
 
+    const updateAddressInput = {
+      ...validatedInput,
+      location_id: validatedInput.location_id ?? currentBusiness.location_id ?? undefined,
+    };
+    const addressCreatedByFlow =
+      updateAddressInput.address_id === undefined &&
+      !currentBusiness.address_id &&
+      hasStructuredAddress(updateAddressInput);
     const addressId = await syncAddress(
-      {
-        ...validatedInput,
-        location_id: validatedInput.location_id ?? currentBusiness.location_id ?? undefined,
-      },
+      updateAddressInput,
       currentBusiness.address_id,
     );
+    if (addressCreatedByFlow && addressId) {
+      createdAddressId = addressId;
+    }
 
     const businessData = toBusinessData({
       ...validatedInput,
@@ -616,6 +627,7 @@ export async function updateBusiness(
     if (!business) {
       throw new Error("Erro ao carregar empresa atualizada");
     }
+    businessWriteCompleted = true;
 
     if (validatedInput.horario_funcionamento !== undefined) {
       await syncBusinessHoursTable(business.id ?? id, validatedInput.horario_funcionamento);
@@ -631,6 +643,20 @@ export async function updateBusiness(
       : await EntityContactService.getVisibleForEntity("business", currentBusiness.id);
     return { ...mapBusinessDataToBusiness(business), ...contact };
   } catch (error) {
+    if (createdAddressId && !businessWriteCompleted) {
+      try {
+        await new AddressService().deleteAddress(createdAddressId);
+      } catch (rollbackError) {
+        logger.error("[business.mutations] update address compensation incomplete", {
+          addressId: createdAddressId,
+          message:
+            rollbackError instanceof Error
+              ? rollbackError.message
+              : String(rollbackError),
+        });
+      }
+    }
+
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Erro ao atualizar empresa: ${message}`);
   }

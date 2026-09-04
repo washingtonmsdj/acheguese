@@ -96,7 +96,11 @@ vi.mock("@/core/session/services/SessionService", () => ({
   },
 }));
 
-import { createBusiness, updateBusiness } from "../business.mutations";
+import {
+  createBusiness,
+  deleteBusiness,
+  updateBusiness,
+} from "../business.mutations";
 
 const businessInput: CreateBusinessInput = {
   name: "Empresa Teste",
@@ -373,6 +377,67 @@ describe("updateBusiness slug preflight", () => {
     expectNoUpdateWriters();
   });
 
+  it("remove endereco novo se update falha antes de persistir business_data", async () => {
+    mocks.businessDataMaybeSingle.mockResolvedValue({
+      data: {
+        ...currentBusiness,
+        address_id: null,
+      },
+      error: null,
+    });
+    mocks.createAddress.mockResolvedValue({ id: "address-update-1" });
+    mocks.businessDataUpdateSingle.mockResolvedValue({
+      data: null,
+      error: { message: "business update failed" },
+    });
+
+    await expect(updateBusiness("profile-1", updateInputBase)).rejects.toThrow(
+      "Erro ao atualizar empresa: business update failed",
+    );
+
+    expect(mocks.createAddress).toHaveBeenCalled();
+    expect(mocks.deleteAddress).toHaveBeenCalledWith("address-update-1");
+  });
+
+  it("mantem endereco anexado quando etapa idempotente posterior falha", async () => {
+    mocks.businessDataMaybeSingle.mockResolvedValue({
+      data: {
+        ...currentBusiness,
+        address_id: null,
+      },
+      error: null,
+    });
+    mocks.createAddress.mockResolvedValue({ id: "address-update-2" });
+    mocks.businessDataUpdateSingle.mockResolvedValue({
+      data: {
+        id: "business-data-1",
+        profile_id: "profile-1",
+        business_name: "Empresa Teste",
+        category: "servicos",
+        slug: "empresa-teste",
+        location_id: currentBusiness.location_id,
+        address_id: "address-update-2",
+        profiles: { id: "profile-1", name: "Empresa Teste" },
+      },
+      error: null,
+    });
+    mocks.setBulkHours.mockResolvedValue({
+      data: null,
+      error: "hours failed",
+    });
+
+    await expect(
+      updateBusiness("profile-1", {
+        ...updateInputBase,
+        horario_funcionamento: {
+          segunda: { open: "08:00", close: "18:00" },
+        },
+      }),
+    ).rejects.toThrow("Erro ao atualizar empresa: hours failed");
+
+    expect(mocks.deleteAddress).not.toHaveBeenCalled();
+  });
+
   it("sincroniza rename no profile e business_data sem acionar preflight de slug", async () => {
     const updated = await updateBusiness("profile-1", {
       name: "Empresa Renomeada",
@@ -389,5 +454,53 @@ describe("updateBusiness slug preflight", () => {
     expect(mocks.canChangeIdentifier).not.toHaveBeenCalled();
     expect(mocks.checkAvailability).not.toHaveBeenCalled();
     expect(updated.name).toBe("Empresa Renomeada");
+  });
+});
+
+
+describe("deleteBusiness retry convergence", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mocks.businessDataUpdate.mockReturnValue({
+      eq: mocks.businessDataUpdateEq,
+    });
+    mocks.businessDataUpdateEq.mockResolvedValue({
+      data: null,
+      error: null,
+    });
+    mocks.supabaseFrom.mockImplementation((table: string) => {
+      if (table === "business_data") {
+        return { update: mocks.businessDataUpdate };
+      }
+      throw new Error(`Unexpected table: ${table}`);
+    });
+  });
+
+  it("converge ao repetir soft delete quando a desativacao do profile falha", async () => {
+    mocks.updateProfile
+      .mockRejectedValueOnce(new Error("profile deactivate failed"))
+      .mockResolvedValueOnce({ id: "profile-1", is_active: false });
+
+    await expect(deleteBusiness("profile-1")).rejects.toThrow(
+      "Erro ao deletar empresa: profile deactivate failed",
+    );
+    await expect(deleteBusiness("profile-1")).resolves.toBeUndefined();
+
+    expect(mocks.businessDataUpdate).toHaveBeenCalledTimes(2);
+    for (const call of mocks.businessDataUpdate.mock.calls) {
+      expect(call[0]).toEqual(
+        expect.objectContaining({
+          status: "deleted",
+        }),
+      );
+    }
+    expect(mocks.updateProfile).toHaveBeenCalledTimes(2);
+    expect(mocks.updateProfile).toHaveBeenNthCalledWith(1, "profile-1", {
+      is_active: false,
+    });
+    expect(mocks.updateProfile).toHaveBeenNthCalledWith(2, "profile-1", {
+      is_active: false,
+    });
   });
 });
