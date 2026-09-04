@@ -56,8 +56,8 @@ describe("Notification inbox authority", () => {
   });
 
   it("keeps notification preferences behind their canonical RPC owner", () => {
-    expect(preferenceService).toContain(
-      'supabase.rpc("get_current_notification_preferences")',
+    expect(preferenceService).toMatch(
+      /supabase\.rpc\(\s*["']get_current_notification_preferences["']/,
     );
     expect(preferenceService).toContain(
       'supabase.rpc("patch_current_notification_preferences"',

@@ -5,6 +5,27 @@ import {
 } from "../../tools/architecture/validate-core-platform-ownership.mjs";
 
 const EXISTING_PATH = "tools/architecture/core-platform/access-analyzer.mjs";
+const ACCOUNT_EXPORT_PATH = "supabase/functions/user-export-data/index.ts";
+
+function createAccountExportAuthority() {
+  return {
+    schemaVersion: 1,
+    caller: ACCOUNT_EXPORT_PATH,
+    role: "account-export",
+    rationale: "Synthetic account-export authority for isolated validator tests.",
+    controlledTableReaders: ["posts"],
+  };
+}
+
+function withAccountExport(records) {
+  return [
+    ...records,
+    groupedRecord({
+      access: "read",
+      file: ACCOUNT_EXPORT_PATH,
+    }),
+  ];
+}
 
 function createManifest(overrides = {}) {
   return {
@@ -43,8 +64,9 @@ describe("core platform ownership validator", () => {
   it("accepts the declared owner within its call budget", () => {
     const result = validateManifestAgainstRecords(
       createManifest(),
-      [groupedRecord()],
+      withAccountExport([groupedRecord()]),
       process.cwd(),
+      createAccountExportAuthority(),
     );
 
     expect(result.violations).toEqual([]);
@@ -54,13 +76,14 @@ describe("core platform ownership validator", () => {
   it("blocks an undeclared writer", () => {
     const result = validateManifestAgainstRecords(
       createManifest(),
-      [
+      withAccountExport([
         groupedRecord(),
         groupedRecord({
           file: "scripts/legacy-undocumented-writer.mjs",
         }),
-      ],
+      ]),
       process.cwd(),
+      createAccountExportAuthority(),
     );
 
     expect(result.violations.join("\n")).toContain("novo acesso nao autorizado");
@@ -69,8 +92,9 @@ describe("core platform ownership validator", () => {
   it("blocks growth inside an allowlisted file", () => {
     const result = validateManifestAgainstRecords(
       createManifest(),
-      [groupedRecord({ count: 2 })],
+      withAccountExport([groupedRecord({ count: 2 })]),
       process.cwd(),
+      createAccountExportAuthority(),
     );
 
     expect(result.violations.join("\n")).toContain("aumentou de 1 para 2");
@@ -79,8 +103,9 @@ describe("core platform ownership validator", () => {
   it("reports removed legacy access as an improvement", () => {
     const result = validateManifestAgainstRecords(
       createManifest(),
-      [],
+      withAccountExport([]),
       process.cwd(),
+      createAccountExportAuthority(),
     );
 
     expect(result.violations).toEqual([]);
@@ -121,7 +146,12 @@ describe("core platform ownership validator", () => {
       ],
     });
 
-    const result = validateManifestAgainstRecords(manifest, [], process.cwd());
+    const result = validateManifestAgainstRecords(
+      manifest,
+      withAccountExport([]),
+      process.cwd(),
+      createAccountExportAuthority(),
+    );
 
     expect(result.violations.join("\n")).toContain("Caminho declarado nao existe");
   });

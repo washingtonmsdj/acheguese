@@ -38,7 +38,13 @@ function runtimeSourceFiles(directory: string): string[] {
     if (statSync(absolutePath).isDirectory()) {
       return runtimeSourceFiles(relativePath);
     }
-    if (!/\.(ts|tsx)$/.test(entry) || entry === "types.generated.ts") return [];
+    if (
+      !/\.(ts|tsx)$/.test(entry) ||
+      /\.(?:test|spec)\.(?:ts|tsx)$/.test(entry) ||
+      entry === "types.generated.ts"
+    ) {
+      return [];
+    }
     return [relativePath];
   });
 }

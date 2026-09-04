@@ -96,7 +96,7 @@ describe('compatibility surface cleanup', () => {
   });
 
   it('models final grant state without a mutating RPC exception list', () => {
-    const validator = read('tools/migrations/validate-supabase-migrations.ts');
+    const validator = read('tools/migrations/validate-supabase-migrations-engine.ts');
 
     expect(validator).not.toContain('EXPOSED_MUTATING_RPC_ALLOWLIST');
     expect(validator).toContain('revokeExecuteRegex');
