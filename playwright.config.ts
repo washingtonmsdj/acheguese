@@ -19,6 +19,13 @@ const skipWebServer = process.env.PLAYWRIGHT_SKIP_WEBSERVER === "1";
 const mutationTargetSafety = getRemoteMutationTargetSafety(
   process.env.VITE_SUPABASE_URL,
 );
+const authenticatedBusinessLifecycleEnabled =
+  process.env.E2E_BUSINESS_LIFECYCLE_AUTHENTICATED === "true";
+const authenticatedBusinessLifecycleIgnore =
+  authenticatedBusinessLifecycleEnabled
+    ? []
+    : [/[\\/]business-lifecycle-authenticated\.spec\.ts$/];
+
 const mutatingE2EIgnore = mutationTargetSafety.safe
   ? []
   : [
@@ -43,7 +50,11 @@ const EDUCATION_AUTH_FILE = join(
 
 export default defineConfig({
   testDir: "./tests/e2e",
-  testIgnore: [/\.test\.ts$/, ...mutatingE2EIgnore],
+  testIgnore: [
+    /\.test\.ts$/,
+    ...authenticatedBusinessLifecycleIgnore,
+    ...mutatingE2EIgnore,
+  ],
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
