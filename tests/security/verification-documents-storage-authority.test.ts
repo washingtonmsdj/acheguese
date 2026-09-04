@@ -15,7 +15,10 @@ function walkTsFiles(root: string): string[] {
     const stat = statSync(path);
     if (stat.isDirectory()) {
       output.push(...walkTsFiles(path));
-    } else if (/\.(?:ts|tsx)$/.test(entry)) {
+    } else if (
+      /\.(?:ts|tsx)$/.test(entry) &&
+      !/\.(?:test|spec)\.(?:ts|tsx)$/.test(entry)
+    ) {
       output.push(path);
     }
   }
