@@ -31,7 +31,6 @@ export { default as PromoBanner } from "./PromoBanner";
 // MANAGEMENT COMPONENTS - Gestão de negócio
 // ============================================
 
-export { default as AnalyticsDashboard } from "./AnalyticsDashboard";
 export { default as AppointmentsPanel } from "./AppointmentsPanel";
 export { default as AppointmentNotifications } from "./AppointmentNotifications";
 export { default as CouponManager } from "./CouponManager";
