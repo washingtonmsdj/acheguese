@@ -25,8 +25,10 @@ describe("Supabase Edge admin canary deploy guard", () => {
   });
 
   it("deploys source-derived code only from an exact clean Git revision", () => {
-    expect(script).toContain("git', ['rev-parse', 'HEAD']");
-    expect(script).toContain("status', '--porcelain', '--untracked-files=normal'");
+    expect(script).toContain("runGit(['rev-parse', 'HEAD'])");
+    expect(script).toContain(
+      "runGit(['status', '--porcelain', '--untracked-files=normal'])",
+    );
     expect(script).toContain("Worktree sujo; deploy recusado");
     expect(script).toContain("--expected-sha e obrigatorio com --apply");
     expect(script).toContain("branch !== 'main'");
@@ -52,13 +54,13 @@ describe("Supabase Edge admin canary deploy guard", () => {
     expect(script).not.toMatch(/\['functions', 'deploy'[\s\S]*'--prune'/);
   });
 
-  it("requires the reconciled list RPC and hardened shared adminAuth contracts", () => {
+  it("requires the reconciled list RPC and canonical shared adminAuth broker", () => {
     expect(script).toContain("admin_list_user_account_contexts");
     expect(script).toContain("admin-list-users voltou a paginar profiles diretamente");
-    expect(script).toContain(".select('role_enum, expires_at')");
-    expect(script).toContain(".eq('is_active', true)");
-    expect(script).toContain(".is('revoked_at', null)");
-    expect(script).toContain("expiresAt > nowMs");
+    expect(script).toContain("supabase.rpc('get_user_roles'");
+    expect(script).toContain("_user_id: user.id");
+    expect(script).toContain("const adminRole = resolveAdminRole(roles)");
+    expect(script).toContain("adminAuth voltou a consultar user_roles diretamente");
   });
 
   it("requires admin-get-user authentication, bounded input and current role display", () => {

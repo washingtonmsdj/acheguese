@@ -45,7 +45,8 @@ describe("G5 retired legacy Delivery cluster", () => {
       );
     }
 
-    expect(sql).not.toMatch(/\bCASCADE\b/i);
+    const executableSql = sql.replace(/--[^\n]*/g, " ");
+    expect(executableSql).not.toMatch(/\bCASCADE\b/i);
   });
 
   it("rejects future recreation of the retired cluster", () => {

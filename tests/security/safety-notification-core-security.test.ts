@@ -74,10 +74,16 @@ describe("Safety Core Platform security", () => {
     expect(contactPrivacyMigration).toContain(
       "profile.user_id = (SELECT auth.uid())",
     );
-    expect(contactPrivacyMigration).not.toContain(
+    const contactPolicy = contactPrivacyMigration.slice(
+      contactPrivacyMigration.indexOf(
+        "CREATE POLICY emergency_contacts_select_own",
+      ),
+      contactPrivacyMigration.indexOf("DO $verify$"),
+    );
+    expect(contactPolicy).not.toContain(
       "private.auth_can_access_profile(profile_id)",
     );
-    expect(contactPrivacyMigration).not.toContain("profile_members");
+    expect(contactPolicy).not.toContain("profile_members");
     expect(contactPrivacyMigration).toContain(
       "has_table_privilege('anon', 'public.emergency_contacts', 'SELECT')",
     );

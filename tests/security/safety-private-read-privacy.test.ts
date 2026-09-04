@@ -23,9 +23,13 @@ describe("Safety private read privacy", () => {
       expect(migration).toContain(`CREATE POLICY ${policy}`);
     }
 
-    expect(migration).toContain("profile.user_id = (SELECT auth.uid())");
-    expect(migration).not.toContain("private.auth_can_access_profile(");
-    expect(migration).not.toContain("profile_members");
+    const policySql = migration.slice(
+      migration.indexOf("CREATE POLICY emergency_alerts_select_authorized"),
+      migration.indexOf("DO $verify$"),
+    );
+    expect(policySql).toContain("profile.user_id = (SELECT auth.uid())");
+    expect(policySql).not.toContain("private.auth_can_access_profile(");
+    expect(policySql).not.toContain("profile_members");
     expect(migration).toContain("shared-profile Safety SELECT policies remain");
   });
 });

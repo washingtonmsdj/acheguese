@@ -2095,7 +2095,6 @@ describe("Security Authority exception register", () => {
         "SUPABASE_SECURITY_MODEL.md",
       ),
       advisorResidualRegisterPath,
-      join(repoRoot, "plans", "SECURITY_AUTHORITY_IMPLEMENTATION_PLAN.md"),
     ];
 
     const referencedIds = new Set(

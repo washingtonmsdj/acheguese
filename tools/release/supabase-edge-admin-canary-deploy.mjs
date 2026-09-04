@@ -276,15 +276,17 @@ function assertSourceContracts(functionSlug) {
   }
 
   const requiredAdminAuthMarkers = [
-    ".select('role_enum, expires_at')",
-    ".eq('is_active', true)",
-    ".is('revoked_at', null)",
-    'expiresAt > nowMs',
+    "supabase.rpc('get_user_roles'",
+    "_user_id: user.id",
+    "const adminRole = resolveAdminRole(roles)",
   ];
   for (const marker of requiredAdminAuthMarkers) {
     if (!adminAuth.includes(marker)) {
       throw new Error(`adminAuth sem contrato obrigatorio: ${marker}`);
     }
+  }
+  if (/\.from\(["']user_roles["']\)/.test(adminAuth)) {
+    throw new Error('adminAuth voltou a consultar user_roles diretamente');
   }
 }
 
