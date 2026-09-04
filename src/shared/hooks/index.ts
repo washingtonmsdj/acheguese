@@ -1,7 +1,6 @@
 // Barrel exports for shared hooks
 export { useToast, toast } from "./use-toast";
 export { useIsMobile } from "./use-mobile";
-export { useAppointments } from "./useAppointments";
 export {
   useAsyncError,
   useAsyncRetry,

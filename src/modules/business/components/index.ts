@@ -31,8 +31,6 @@ export { default as PromoBanner } from "./PromoBanner";
 // MANAGEMENT COMPONENTS - Gestão de negócio
 // ============================================
 
-export { default as AppointmentsPanel } from "./AppointmentsPanel";
-export { default as AppointmentNotifications } from "./AppointmentNotifications";
 export { default as SecoesAtivasManager } from "./SecoesAtivasManager";
 
 // ============================================
@@ -45,21 +43,13 @@ export { default as BranchNetworkBlock } from "@/core/business/components/Branch
 // UI COMPONENTS - Componentes de interface
 // ============================================
 
-export { default as BookingButton } from "./BookingButton";
 export { ContactLink } from "./ContactLink";
 export { NeighborhoodMap } from "@/core/business/components/NeighborhoodMap";
-export { default as QuickActions } from "./QuickActions";
 export { default as ShareBusinessDialog } from "./ShareBusinessDialog";
 
 // ============================================
 // SUB-FOLDERS - Componentes em subpastas
 // ============================================
-
-// Appointments
-export { AppointmentCard } from "./appointments/AppointmentCard";
-export { AppointmentDetailsModal } from "./appointments/AppointmentDetailsModal";
-export { AppointmentFilters } from "./appointments/AppointmentFilters";
-export { EmptyAppointments } from "./appointments/EmptyAppointments";
 
 // Create
 export { BasicInfoStep as CreateBasicInfoStep } from "./create/BasicInfoStep";
@@ -77,7 +67,6 @@ export { StepProgress } from "./edit/StepProgress";
 export { BusinessSlugSection } from "./identity/BusinessSlugSection";
 
 // Tabs
-export { AgendamentosTab } from "./tabs/AgendamentosTab";
 export { CardapioTab } from "./tabs/CardapioTab";
 export { EstatisticasTab } from "./tabs/EstatisticasTab";
 export { PortfolioTab } from "./tabs/PortfolioTab";

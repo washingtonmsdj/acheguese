@@ -109,16 +109,6 @@ export interface EstatisticasTabProps {
 }
 
 /**
- * Props para BusinessTabs
- */
-export interface BusinessTabsProps {
-  business: BizData;
-  isOwner: boolean;
-  canSeeDashboard: boolean;
-  user: BusinessUser | null;
-}
-
-/**
  * Tipo para ícones de modos de atendimento
  */
 export interface ModoAtendimentoIcon {
