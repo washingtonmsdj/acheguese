@@ -53,12 +53,12 @@ describe("admin-list-users runtime provenance", () => {
     expect(accountListMigration).toContain("lower(COALESCE(account.email, ''))");
   });
 
-  it("combines the recovered entrypoint with hardened admin role validity", () => {
+  it("combines the recovered entrypoint with canonical aggregate role validity", () => {
     expect(edgeFunction).toContain("await requireAdmin(req)");
-    expect(adminAuth).toContain(".select('role_enum, expires_at')");
-    expect(adminAuth).toContain(".eq('is_active', true)");
-    expect(adminAuth).toContain(".is('revoked_at', null)");
-    expect(adminAuth).toContain("expiresAt > nowMs");
+    expect(adminAuth).toContain("supabase.rpc('get_user_roles'");
+    expect(adminAuth).toContain("_user_id: user.id");
+    expect(adminAuth).toContain("const adminRole = resolveAdminRole(roles)");
+    expect(adminAuth).not.toContain(".from('user_roles')");
   });
 
   it("does not expose raw backend errors to clients", () => {

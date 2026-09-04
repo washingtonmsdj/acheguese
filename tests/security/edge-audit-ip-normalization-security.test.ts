@@ -27,8 +27,9 @@ describe("edge audit IP normalization", () => {
     expect(source).toContain("...(ip ? { ip } : {})");
     expect(source).not.toContain("getAuditInfo");
     expect(source).toContain("supabase.auth.getUser(token)");
-    expect(source).toContain(".eq('is_active', true)");
-    expect(source).toContain(".is('revoked_at', null)");
+    expect(source).toContain("supabase.rpc('get_user_roles'");
+    expect(source).toContain("_user_id: user.id");
+    expect(source).not.toContain(".from('user_roles')");
   });
 
   it("uses the nearest-proxy forwarded IP for cleanup audit events", () => {

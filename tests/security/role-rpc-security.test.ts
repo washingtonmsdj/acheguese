@@ -25,7 +25,7 @@ describe("role rpc broker security", () => {
     expect(edgeFunction).toContain('supabaseAdmin.rpc("get_user_roles"');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("is_admin"');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("is_super_admin"');
-    expect(edgeFunction).toContain('.from("user_roles")');
+    expect(edgeFunction).not.toContain('.from("user_roles")');
 
     expect(broker).toContain('const FUNCTION_NAME = "role-rpc"');
     expect(roleService).toContain("RoleRpcService.hasRole");

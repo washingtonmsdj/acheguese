@@ -31,9 +31,9 @@ describe("session rpc broker security", () => {
     expect(edgeFunction).toContain('supabaseAdmin.rpc("get_active_profile"');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("switch_active_profile"');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("check_user_mfa_required"');
-    expect(edgeFunction).toContain('.from("user_sessions")');
-    expect(edgeFunction).toContain('.eq("user_id", userId)');
-    expect(edgeFunction).toContain('.eq("session_token", token)');
+    expect(edgeFunction).not.toContain('.from("user_sessions")');
+    expect(edgeFunction).toContain('const scope = exceptCurrent ? "others" : "global"');
+    expect(edgeFunction).toContain("supabaseAdmin.auth.admin.signOut(token, scope)");
     expect(edgeFunction).toContain("p_user_id: userId");
     expect(edgeFunction).not.toMatch(/p_user_id:\s*params\./);
     expect(edgeFunction).not.toMatch(/p_user_id:\s*rawBody/);

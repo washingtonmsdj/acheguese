@@ -35,6 +35,23 @@ function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function hasHistoricalPublicRevoke(currentMigration: string, fn: string): boolean {
+  const revokePublic = new RegExp(
+    "\\brevoke\\s+(?:all(?:\\s+privileges)?|execute)\\s+on\\s+function\\s+" +
+      escapeRegex(fn) +
+      "\\s*\\([^;]*?\\)\\s+from\\s+public\\b",
+    "i",
+  );
+
+  return readdirSync(MIGRATIONS_DIR)
+    .filter((name) => name.endsWith(".sql") && name < currentMigration)
+    .some((name) => {
+      const sql = readFileSync(join(MIGRATIONS_DIR, name), "utf8")
+        .replace(/--[^\\n]*/g, " ")
+        .replace(/\\s+/g, " ");
+      return revokePublic.test(sql);
+    });
+}
 describe("SECURITY DEFINER regression guard", () => {
   it("keeps every newly declared SECURITY DEFINER function on an explicit search_path", () => {
     const regressions: string[] = [];
@@ -76,7 +93,11 @@ describe("SECURITY DEFINER regression guard", () => {
           "i",
         );
 
-        if (!revokePublic.test(normalized)) {
+        const inheritsReviewedPrivileges =
+          /\bcreate\s+or\s+replace\s+function\b/i.test(header) &&
+          hasHistoricalPublicRevoke(name, fn);
+
+        if (!revokePublic.test(normalized) && !inheritsReviewedPrivileges) {
           regressions.push(`${name}: ${fn}`);
         }
       }

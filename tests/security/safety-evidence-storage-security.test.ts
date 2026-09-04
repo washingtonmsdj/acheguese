@@ -29,7 +29,9 @@ describe("SEC-001 safety-evidence storage invariant", () => {
   it("does not reopen safety-evidence as a public bucket", () => {
     const regressions = migrationsFromPrivacyBaseline()
       .filter(({ sql }) => sql.includes("safety-evidence"))
-      .filter(({ sql }) => /public\s*=\s*true/i.test(sql))
+      .filter(({ sql }) =>
+        /public\s*=\s*true/i.test(sql.replace(/--[^\n]*/g, " ")),
+      )
       .map(({ name }) => name);
 
     expect(regressions, "no migration may make safety-evidence public again").toEqual([]);

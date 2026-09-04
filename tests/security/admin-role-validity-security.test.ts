@@ -15,6 +15,13 @@ const adminAuth = readFileSync(
   resolve(root, "supabase/functions/_shared/adminAuth.ts"),
   "utf8",
 );
+const aggregateRoleMigration = readFileSync(
+  resolve(
+    root,
+    "supabase/migrations/20260829202444_repair_get_user_roles_validity.sql",
+  ),
+  "utf8",
+);
 
 describe("admin role validity contract", () => {
   it("hardens canonical private admin helpers", () => {
@@ -100,17 +107,21 @@ describe("admin role validity contract", () => {
     );
   });
 
-  it("keeps Edge admin authorization aligned with active and unrevoked roles", () => {
-    expect(adminAuth).toContain(".select('role_enum, expires_at')");
-    expect(adminAuth).toContain(".eq('is_active', true)");
-    expect(adminAuth).toContain(".is('revoked_at', null)");
+  it("keeps Edge admin authorization on the canonical aggregate role RPC", () => {
+    expect(adminAuth).toContain("supabase.rpc('get_user_roles'");
+    expect(adminAuth).toContain("_user_id: user.id");
+    expect(adminAuth).toContain("const adminRole = resolveAdminRole(roles)");
+    expect(adminAuth).not.toContain(".from('user_roles')");
   });
 
-  it("rejects expired or malformed Edge admin role expirations", () => {
-    expect(adminAuth).toContain("if (r.expires_at === null) return true");
-    expect(adminAuth).toContain("Date.parse(r.expires_at)");
-    expect(adminAuth).toContain("Number.isFinite(expiresAt)");
-    expect(adminAuth).toContain("expiresAt > nowMs");
+  it("keeps active, unrevoked and unexpired filtering inside get_user_roles", () => {
+    expect(aggregateRoleMigration).toContain("ur.is_active = TRUE");
+    expect(aggregateRoleMigration).toContain("ur.revoked_at IS NULL");
+    expect(aggregateRoleMigration).toContain("ur.expires_at IS NULL");
+    expect(aggregateRoleMigration).toContain("ur.expires_at > now()");
+    expect(aggregateRoleMigration).toContain(
+      "GRANT EXECUTE ON FUNCTION public.get_user_roles(UUID) TO service_role",
+    );
   });
 
   it("keeps admin and super_admin as the only project-admin roles", () => {
@@ -120,8 +131,7 @@ describe("admin role validity contract", () => {
     expect(migration).toContain(
       "ur.role_enum = 'super_admin'::public.app_role",
     );
-    expect(adminAuth).toContain(
-      "r.role_enum === 'admin' || r.role_enum === 'super_admin'",
-    );
+    expect(adminAuth).toContain("roles.includes('super_admin')");
+    expect(adminAuth).toContain("roles.includes('admin')");
   });
 });
