@@ -5,7 +5,7 @@ import {
   trackLeadConverted,
   trackProfilePublished,
   trackEducationError,
-} from '../EducationObservabilityService';
+} from '@/core/education/services/EducationObservabilityService';
 
 // Mock Supabase
 vi.mock('@/integrations/supabase', () => ({

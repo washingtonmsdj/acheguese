@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { EducationTrackingService } from '../EducationTrackingService';
+import { EducationTrackingService } from '@/core/education/services/EducationTrackingService';
 import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
 

@@ -44,7 +44,6 @@ type UserRoleRow = Tables<"user_roles">;
 type UserRoleInsert = TablesInsert<"user_roles">;
 type UserRoleUpdate = TablesUpdate<"user_roles">;
 type RoleHistoryRow = Tables<"role_history">;
-type RoleHistoryInsert = TablesInsert<"role_history">;
 
 type UserSummary = {
   id: string;
@@ -383,44 +382,10 @@ class AdminRolesServiceClass {
 
       if (error) throw error;
 
-      await this.logRoleHistory({
-        userId: params.userId,
-        role: params.role,
-        action: "granted",
-        grantedBy: params.renewedBy,
-        reason: "Role renewed",
-      });
-
       return true;
     } catch (error) {
       logger.error("AdminRolesService.renewRole", error as Error, params);
       return false;
-    }
-  }
-
-  private async logRoleHistory(params: {
-    userId: string;
-    role: string;
-    action: "granted" | "revoked" | "expired";
-    grantedBy?: string;
-    reason?: string;
-  }): Promise<void> {
-    try {
-      const payload: RoleHistoryInsert = {
-        user_id: params.userId,
-        role: normalizeRoleEnum(params.role),
-        action: params.action,
-        performed_by: params.grantedBy ?? null,
-        performed_at: new Date().toISOString(),
-        reason: params.reason ?? null,
-      };
-
-      const { error } = await db
-        .from<RoleHistoryRow>("role_history")
-        .insert(payload);
-      if (error) throw error;
-    } catch (error) {
-      logger.error("AdminRolesService.logRoleHistory", error as Error, params);
     }
   }
 
