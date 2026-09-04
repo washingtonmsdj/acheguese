@@ -15,7 +15,6 @@ export { BusinessAbout } from "./BusinessAbout";
 export { BusinessGallery } from "./BusinessGallery";
 export { BusinessHours } from "./BusinessHours";
 export { BusinessReviews } from "./BusinessReviews";
-export { default as BusinessStats } from "./BusinessStats";
 
 // ============================================
 // FEATURE COMPONENTS - Funcionalidades específicas
@@ -23,9 +22,6 @@ export { default as BusinessStats } from "./BusinessStats";
 
 export { BusinessProducts } from "./BusinessProducts";
 export { BusinessServices } from "./BusinessServices";
-export { default as DigitalMenu } from "./DigitalMenu";
-export { default as PhotoGallery } from "./PhotoGallery";
-export { default as PromoBanner } from "./PromoBanner";
 
 // ============================================
 // MANAGEMENT COMPONENTS - Gestão de negócio
@@ -65,12 +61,3 @@ export { StepProgress } from "./edit/StepProgress";
 
 // Identity
 export { BusinessSlugSection } from "./identity/BusinessSlugSection";
-
-// Tabs
-export { CardapioTab } from "./tabs/CardapioTab";
-export { EstatisticasTab } from "./tabs/EstatisticasTab";
-export { PortfolioTab } from "./tabs/PortfolioTab";
-export { ProdutosTab } from "./tabs/ProdutosTab";
-export { PromocoesTab } from "./tabs/PromocoesTab";
-export { ServicosTab } from "./tabs/ServicosTab";
-export { VisaoGeralTab } from "./tabs/VisaoGeralTab";
