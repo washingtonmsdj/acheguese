@@ -1007,6 +1007,74 @@ test.describe.serial("Auth and business flow", () => {
       expectedName: renamedName,
     });
 
+    const attackerSuffix = uniqueSuffix();
+    const attacker = await createConfirmedUser({
+      email: `e2e-business-attacker-${attackerSuffix}@example.com`,
+      password: "BusinessAttacker@2026!",
+      name: "E2E Business Non Owner",
+      handle: `e2ebizattacker${attackerSuffix}`,
+    });
+    createdUserIds.add(attacker.user.id);
+    await waitForPersonalProfile(attacker.user.id);
+
+    const attackerClient = createOptionalOperationalAnonClient();
+    if (!attackerClient) {
+      throw new Error(
+        "Cliente anonimo operacional indisponivel para a prova negativa Business.",
+      );
+    }
+
+    const attackerSignIn = await attackerClient.auth.signInWithPassword({
+      email: attacker.user.email!,
+      password: "BusinessAttacker@2026!",
+    });
+    expect(attackerSignIn.error).toBeNull();
+    expect(attackerSignIn.data.user?.id).toBe(attacker.user.id);
+
+    const attackerMembership = await admin!
+      .from("profile_members")
+      .select("role")
+      .eq("profile_id", createdBusiness.profile_id)
+      .eq("user_id", attacker.user.id)
+      .maybeSingle();
+    expect(attackerMembership.error).toBeNull();
+    expect(attackerMembership.data).toBeNull();
+
+    const privateReadAttempt = await attackerClient
+      .from("business_data")
+      .select("profile_id, business_name")
+      .eq("profile_id", createdBusiness.profile_id);
+    expect(privateReadAttempt.error).toBeNull();
+    expect(privateReadAttempt.data).toEqual([]);
+
+    const unauthorizedName = `${renamedName} INVASOR`;
+    const updateAttempt = await attackerClient
+      .from("business_data")
+      .update({ business_name: unauthorizedName })
+      .eq("profile_id", createdBusiness.profile_id)
+      .select("profile_id, business_name");
+    expect(
+      Boolean(updateAttempt.error) || (updateAttempt.data?.length ?? 0) === 0,
+    ).toBe(true);
+
+    const deleteAttempt = await attackerClient
+      .from("business_data")
+      .delete()
+      .eq("profile_id", createdBusiness.profile_id)
+      .select("id");
+    expect(deleteAttempt.error).not.toBeNull();
+
+    const protectedBusiness = await admin!
+      .from("business_data")
+      .select("business_name, status")
+      .eq("profile_id", createdBusiness.profile_id)
+      .maybeSingle();
+    expect(protectedBusiness.error).toBeNull();
+    expect(protectedBusiness.data?.business_name).toBe(renamedName);
+    expect(protectedBusiness.data?.status).toBe("active");
+
+    await attackerClient.auth.signOut();
+
     await gotoApp(page, originalPublicUrl);
     await expect(
       page.getByRole("heading", { name: renamedName }).first(),
