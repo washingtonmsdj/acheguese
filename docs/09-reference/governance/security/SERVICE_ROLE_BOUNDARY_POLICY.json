@@ -78,7 +78,9 @@
       "risk": "Medium",
       "label": "E2E specs may mention service_role names in skips or setup docs, but must use tests/helpers/operational-env.ts for runtime access.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["service-role-key-literal"]
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
     },
     {
       "prefix": "tests/helpers/",
@@ -86,7 +88,9 @@
       "risk": "Medium",
       "label": "Test helpers may mention service_role names as operator guidance; runtime access is restricted to tests/helpers/operational-env.ts.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["service-role-key-literal"]
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
     },
     {
       "prefix": "tests/operational/",
@@ -94,7 +98,9 @@
       "risk": "Medium",
       "label": "Operational tests may mention service_role names as setup guidance, but must use tests/helpers/operational-env.ts for runtime access.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["service-role-key-literal"]
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
     },
     {
       "prefix": ".kiro/",
@@ -102,7 +108,9 @@
       "risk": "Low",
       "label": "Historical planning artifacts may reference service_role as text only.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["service-role-key-literal"]
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
     }
   ],
   "allowedPaths": [
@@ -135,7 +143,9 @@
       "risk": "High",
       "label": "Single public barrel allowed to re-export Supabase public types without re-exporting createClient.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["runtime-supabase-package-import"]
+      "allowedPatternIds": [
+        "runtime-supabase-package-import"
+      ]
     },
     {
       "path": "src/integrations/supabase/cookieStorage.ts",
@@ -143,7 +153,9 @@
       "risk": "High",
       "label": "Auth storage adapter may import Supabase storage contracts for the canonical browser client.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["runtime-supabase-package-import"]
+      "allowedPatternIds": [
+        "runtime-supabase-package-import"
+      ]
     },
     {
       "path": "src/shared/config/security.config.ts",
@@ -151,7 +163,9 @@
       "risk": "Low",
       "label": "Runtime security SSOT contains historical audit text; env access remains forbidden.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["service-role-key-literal"]
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
     },
     {
       "path": "tests/helpers/operational-env.ts",
@@ -172,7 +186,9 @@
       "risk": "High",
       "label": "Administrative storage backup script requiring operator-supplied service_role.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["service-role-key-literal"]
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
     },
     {
       "path": "tools/release/economic-benchmark-ssot.mjs",
@@ -180,7 +196,9 @@
       "risk": "High",
       "label": "Operational benchmark script using the canonical Supabase tooling helper.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["service-role-key-literal"]
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
     },
     {
       "path": "tools/seeds/geocode-locations.ts",
@@ -188,7 +206,9 @@
       "risk": "High",
       "label": "Administrative geocoding script requiring operator-supplied service_role.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["service-role-key-literal"]
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
     },
     {
       "path": "tools/supabase/supabase-client.mjs",
@@ -208,7 +228,9 @@
       "risk": "High",
       "label": "Typed facade over tools/supabase/supabase-client.mjs; runtime env access stays in the .mjs helper.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["service-role-key-literal"]
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
     },
     {
       "path": "tools/maintenance/restore-storage.ts",
@@ -216,7 +238,9 @@
       "risk": "High",
       "label": "Administrative storage restore script requiring operator-supplied service_role.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["service-role-key-literal"]
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
     },
     {
       "path": "tools/security/sanitize-secrets.ts",
@@ -235,7 +259,9 @@
       "risk": "High",
       "label": "E2E seed script using operator-supplied service_role outside browser runtime.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["service-role-key-literal"]
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
     },
     {
       "path": "tools/seeds/seed-e2e-users.ts",
@@ -243,7 +269,9 @@
       "risk": "High",
       "label": "E2E user seed script using operator-supplied service_role outside browser runtime.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["service-role-key-literal"]
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
     },
     {
       "path": "tools/seeds/sync-municipal-neighborhoods.ts",
@@ -251,7 +279,9 @@
       "risk": "High",
       "label": "Administrative territorial sync script requiring operator-supplied service_role.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["service-role-key-literal"]
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
     },
     {
       "path": "tools/seeds/sync-national-districts-ibge.ts",
@@ -259,7 +289,9 @@
       "risk": "High",
       "label": "Administrative territorial sync script requiring operator-supplied service_role.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["service-role-key-literal"]
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
     },
     {
       "path": "tools/release/validate-e2e-setup.ts",
@@ -267,7 +299,9 @@
       "risk": "High",
       "label": "E2E readiness tool checks operator-supplied service_role availability.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["service-role-key-literal"]
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
     },
     {
       "path": "tools/supabase/validate-etapa12-remote.ts",
@@ -275,7 +309,9 @@
       "risk": "High",
       "label": "Remote validation tool requiring operator-supplied service_role.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["service-role-key-literal"]
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
     },
     {
       "path": "tools/supabase/validate-gate3-metadata.mjs",
@@ -283,7 +319,9 @@
       "risk": "High",
       "label": "Remote metadata validation tool using the canonical Supabase helper.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["service-role-key-literal"]
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
     },
     {
       "path": "tools/supabase/validate-reconciliation-final.ts",
@@ -291,7 +329,9 @@
       "risk": "High",
       "label": "Remote reconciliation validation tool requiring operator-supplied service_role.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["service-role-key-literal"]
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
     },
     {
       "path": "tools/supabase/validate-slug-history-final.ts",
@@ -299,7 +339,9 @@
       "risk": "High",
       "label": "Remote slug-history validation tool requiring operator-supplied service_role.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["service-role-key-literal"]
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
     },
     {
       "path": "tools/release/verify-deploy-ready.mjs",
@@ -307,7 +349,19 @@
       "risk": "High",
       "label": "Deploy gate may require service_role to be configured in the deployment provider.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": ["service-role-key-literal"]
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
+    },
+    {
+      "path": "tools/release/run-business-lifecycle-e2e.mjs",
+      "kind": "operator-script",
+      "risk": "High",
+      "label": "Guarded Business lifecycle certification runner; service_role remains server-side in the Playwright Node process and is never exposed through VITE_* variables.",
+      "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
+      "allowedPatternIds": [
+        "service-role-key-literal"
+      ]
     }
   ]
 }
