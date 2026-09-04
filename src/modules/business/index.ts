@@ -9,12 +9,6 @@
  */
 
 // Components
-export { BusinessAbout } from "./components/BusinessAbout";
-export { BusinessGallery } from "./components/BusinessGallery";
-export { BusinessHours } from "./components/BusinessHours";
-export { BusinessProducts } from "./components/BusinessProducts";
-export { BusinessReviews } from "./components/BusinessReviews";
-export { BusinessServices } from "./components/BusinessServices";
 export { ContactLink } from "./components/ContactLink";
 
 // Services

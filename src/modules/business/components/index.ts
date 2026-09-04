@@ -8,28 +8,6 @@
  */
 
 // ============================================
-// DETAIL COMPONENTS - Componentes de detalhes
-// ============================================
-
-export { BusinessAbout } from "./BusinessAbout";
-export { BusinessGallery } from "./BusinessGallery";
-export { BusinessHours } from "./BusinessHours";
-export { BusinessReviews } from "./BusinessReviews";
-
-// ============================================
-// FEATURE COMPONENTS - Funcionalidades específicas
-// ============================================
-
-export { BusinessProducts } from "./BusinessProducts";
-export { BusinessServices } from "./BusinessServices";
-
-// ============================================
-// MANAGEMENT COMPONENTS - Gestão de negócio
-// ============================================
-
-export { default as SecoesAtivasManager } from "./SecoesAtivasManager";
-
-// ============================================
 // NETWORK COMPONENTS - Rede de empresas
 // ============================================
 
@@ -41,7 +19,6 @@ export { default as BranchNetworkBlock } from "@/core/business/components/Branch
 
 export { ContactLink } from "./ContactLink";
 export { NeighborhoodMap } from "@/core/business/components/NeighborhoodMap";
-export { default as ShareBusinessDialog } from "./ShareBusinessDialog";
 
 // ============================================
 // SUB-FOLDERS - Componentes em subpastas
