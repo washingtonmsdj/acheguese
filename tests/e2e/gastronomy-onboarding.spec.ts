@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { type User } from "@supabase/supabase-js";
 import { login } from "./helpers/auth";
+import { expectNoSeriousA11yViolations } from "./support/axeAssertions";
 import {
   createOperationalAnonClient,
   createOptionalOperationalAdminClient,
@@ -946,6 +947,7 @@ test.describe("gastronomy onboarding e2e", () => {
     await expect(
       buyerPage.getByRole("heading", { name: /Confirmar pedido/i }),
     ).toBeVisible({ timeout: 30000 });
+    await expectNoSeriousA11yViolations(buyerPage);
     await buyerPage
       .locator("button")
       .filter({ hasText: /^Retirada$/i })
@@ -964,6 +966,7 @@ test.describe("gastronomy onboarding e2e", () => {
       buyerPage.getByRole("heading", { name: /Pedido #/i }),
     ).toBeVisible({ timeout: 30000 });
     await expect(buyerPage.getByText(itemName)).toBeVisible({ timeout: 30000 });
+    await expectNoSeriousA11yViolations(buyerPage);
 
     await gotoApp(
       page,

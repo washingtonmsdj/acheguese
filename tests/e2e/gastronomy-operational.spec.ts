@@ -668,6 +668,7 @@ test.describe("Gastronomia operacional autenticada", () => {
       await expect(
         page.getByRole("button", { name: /novo item/i }),
       ).toBeVisible();
+      await expectNoSeriousA11yViolations(page);
 
       await page.getByRole("button", { name: /novo item/i }).click();
 
@@ -817,6 +818,7 @@ test.describe("Gastronomia operacional autenticada", () => {
     await expect(page.getByRole("heading", { name: /^cliente$/i })).toBeVisible(
       { timeout: 20_000 },
     );
+    await expectNoSeriousA11yViolations(page);
 
     await page.goto(adminOrderUrl!, {
       waitUntil: "domcontentloaded",
@@ -832,6 +834,7 @@ test.describe("Gastronomia operacional autenticada", () => {
     await expect(
       page.getByText(/timeline em tempo real|reconectando timeline/i).first(),
     ).toBeVisible({ timeout: 20_000 });
+    await expectNoSeriousA11yViolations(page);
 
     const actionSequence = [
       {
@@ -953,6 +956,7 @@ test.describe("Gastronomia operacional autenticada", () => {
     await expect(
       page.getByText(/tempo real ativo|reconectando tempo real/i).first(),
     ).toBeVisible({ timeout: 20_000 });
+    await expectNoSeriousA11yViolations(page);
 
     await assertAdministrativeOrderEvidence(orderId);
   });
