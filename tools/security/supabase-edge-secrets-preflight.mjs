@@ -12,18 +12,9 @@ const DEFAULT_TOKEN_ENV_NAMES = [
 const FUNCTION_SECRET_REQUIREMENTS = Object.freeze({
   'get-push-config': Object.freeze([
     'ALLOWED_ORIGINS',
-    'VAPID_PUBLIC_KEY',
   ]),
   'nominatim-proxy': Object.freeze([
     'ALLOWED_ORIGINS',
-    'NOMINATIM_BASE_URL',
-    'NOMINATIM_USER_AGENT',
-    'NOMINATIM_ACCEPT_LANGUAGE',
-    'NOMINATIM_DEFAULT_COUNTRY',
-    'NOMINATIM_DEFAULT_COUNTRY_CODES',
-    'NOMINATIM_DEFAULT_FORMAT',
-    'NOMINATIM_DEFAULT_ADDRESSDETAILS',
-    'NOMINATIM_DEFAULT_LIMIT',
   ]),
   'media-assets-cleanup': Object.freeze([
     'ALLOWED_ORIGINS',

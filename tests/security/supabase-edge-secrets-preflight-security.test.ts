@@ -60,28 +60,33 @@ describe("Supabase Edge secrets preflight", () => {
     expect(source).not.toContain("shell:");
   });
 
-  it("covers every explicit required env used by get-push-config", () => {
+  it("keeps public VAPID configuration optional while requiring origin policy", () => {
     const preflight = readFileSync(PREFLIGHT, "utf8");
     const functionSource = readFileSync(PUSH_CONFIG, "utf8");
     const required = requiredEnvNames(functionSource);
+    const block = preflight.match(
+      /'get-push-config': Object\.freeze\(\[([\s\S]*?)\]\)/,
+    )?.[1] ?? "";
 
-    expect(required).toContain("VAPID_PUBLIC_KEY");
-    for (const name of required) {
-      expect(preflight).toContain(`'${name}'`);
-    }
-    expect(preflight).toContain("'ALLOWED_ORIGINS'");
+    expect(required).toEqual([]);
+    expect(functionSource).toContain("LEGACY_PUBLIC_VAPID_KEY");
+    expect(block).toContain("'ALLOWED_ORIGINS'");
+    expect(block).not.toContain("'VAPID_PUBLIC_KEY'");
   });
 
-  it("covers every explicit required env used by nominatim-proxy", () => {
+  it("keeps Nominatim public protocol overrides optional while requiring origin policy", () => {
     const preflight = readFileSync(PREFLIGHT, "utf8");
     const functionSource = readFileSync(NOMINATIM, "utf8");
     const required = requiredEnvNames(functionSource);
+    const block = preflight.match(
+      /'nominatim-proxy': Object\.freeze\(\[([\s\S]*?)\]\)/,
+    )?.[1] ?? "";
 
-    expect(required.length).toBeGreaterThan(0);
-    for (const name of required) {
-      expect(preflight).toContain(`'${name}'`);
-    }
-    expect(preflight).toContain("'ALLOWED_ORIGINS'");
+    expect(required).toEqual([]);
+    expect(functionSource).toContain("function envOrDefault(");
+    expect(block).toContain("'ALLOWED_ORIGINS'");
+    expect(block).not.toContain("'NOMINATIM_BASE_URL'");
+    expect(block).not.toContain("'NOMINATIM_USER_AGENT'");
   });
 
   it("covers every verify-jwt-disabled cron mutation that requires CRON_SECRET", () => {
