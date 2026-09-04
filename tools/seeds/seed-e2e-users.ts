@@ -19,6 +19,7 @@ import {
   loadSupabaseScriptEnv,
 } from '../supabase/supabase-client';
 import { assertApprovedRemoteMutationTarget } from '../supabase/remote-mutation-safety';
+import { wrapOperationalTechnicalAuthClient } from '../supabase/operational-alpha-invite.mjs';
 
 const E2E_ENV_FILES = ['.env.test', '.env.local'];
 const FIXTURE_KIND = 'account-authenticated-e2e';
@@ -287,11 +288,14 @@ async function manageFixture(): Promise<void> {
   const config = getSupabaseConfig({ envFiles: E2E_ENV_FILES });
   assertApprovedRemoteMutationTarget(config.url);
 
-  const supabase = createServiceRoleClient({
-    url: config.url,
-    serviceRoleKey: config.serviceRoleKey,
-    envFiles: E2E_ENV_FILES,
-  });
+  const supabase = wrapOperationalTechnicalAuthClient(
+    createServiceRoleClient({
+      url: config.url,
+      serviceRoleKey: config.serviceRoleKey,
+      envFiles: E2E_ENV_FILES,
+    }),
+    config.url,
+  );
   const existingUser = await findManagedUser(supabase, email);
 
   if (operation === 'revoke') {

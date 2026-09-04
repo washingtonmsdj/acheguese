@@ -2,8 +2,10 @@ import { randomUUID } from "node:crypto";
 import {
   createAnonClient,
   createServiceRoleClient,
+  getSupabaseConfig,
   loadSupabaseScriptEnv,
 } from "../supabase/supabase-client.mjs";
+import { wrapOperationalTechnicalAuthClient } from "../supabase/operational-alpha-invite.mjs";
 
 const envFiles = [
   ".env.local",
@@ -13,8 +15,12 @@ const envFiles = [
   ".env",
 ];
 loadSupabaseScriptEnv(envFiles);
+const operationalConfig = getSupabaseConfig({ envFiles });
 
-const serviceRole = createServiceRoleClient({ envFiles });
+const serviceRole = wrapOperationalTechnicalAuthClient(
+  createServiceRoleClient({ envFiles }),
+  operationalConfig.url,
+);
 const anonymous = createAnonClient({ envFiles });
 const temporaryUserIds = [];
 const cleanupErrors = [];

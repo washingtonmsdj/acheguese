@@ -3,6 +3,7 @@ import {
   assertApprovedOperationalMutationTarget,
   hasApprovedOperationalMutationTarget,
 } from './operational-mutation-safety';
+import { wrapOperationalTechnicalAuthClient } from '../../tools/supabase/operational-alpha-invite.mjs';
 
 export type OperationalSupabaseClient = SupabaseClient<any, 'public', any>;
 type OperationalSuite = () => void;
@@ -213,12 +214,16 @@ function createOperationalClient(
   });
 
   const authWrappedClient = wrapOperationalAuthClient(client);
+  const alphaReadyClient =
+    kind === 'admin'
+      ? wrapOperationalTechnicalAuthClient(authWrappedClient, supabaseUrl)
+      : authWrappedClient;
   const shouldAttachBusinessFixtureProvenance =
     kind === 'admin' || hasApprovedOperationalMutationTarget(supabaseUrl);
 
   return shouldAttachBusinessFixtureProvenance
-    ? wrapOperationalBusinessDataClient(authWrappedClient)
-    : authWrappedClient;
+    ? wrapOperationalBusinessDataClient(alphaReadyClient)
+    : alphaReadyClient;
 }
 
 export function createOperationalAnonClientForPublicConfig(

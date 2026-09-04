@@ -16,6 +16,16 @@ const playwrightConfig = read('playwright.config.ts');
 const slugHistoryValidator = read('tools/supabase/validate-slug-history-final.ts');
 const networkSeeder = read('tools/seeds/seed-e2e-network.ts');
 const e2eUserSeeder = read('tools/seeds/seed-e2e-users.ts');
+const operationalAlphaInvite = read('tools/supabase/operational-alpha-invite.mjs');
+const technicalAuthCreators = [
+  'tools/seeds/seed-e2e-users.ts',
+  'tools/seeds/seed-e2e-network.ts',
+  'tools/security/community-feed-authz-probe.mjs',
+  'tools/security/community-direct-messaging-authz-probe.mjs',
+  'tools/security/reviews-core-authz-probe.mjs',
+  'tools/security/trust-operational-authz-probe.mjs',
+  'tools/security/moderation-audit-authz-probe.mjs',
+] as const;
 
 const RETIRED_NON_TECHNICAL_PROFILE_IDS = [
   '2357467c-4f5e-4285-bf6b-39628c6a44ad',
@@ -34,6 +44,21 @@ describe('Remote E2E mutation safety integration', () => {
       "const SAFE_MUTATION_TARGET_LABEL = 'approved isolated E2E mutation target'",
     );
     expect(operationalEnv).not.toContain("readEnv('SUPABASE_URL')");
+  });
+
+  it('keeps technical Auth creation behind canonical alpha invites on isolated targets', () => {
+    expect(operationalAlphaInvite).toContain('assertApprovedRemoteMutationTarget(supabaseUrl)');
+    expect(operationalAlphaInvite).toContain("'alpha_access_issue_invite'");
+    expect(operationalAlphaInvite).toContain("'alpha_access_delete_operational_invite'");
+    expect(operationalAlphaInvite).toContain("const OPERATIONAL_ALPHA_INVITE_NOTE = 'e2e_seed'");
+    expect(operationalAlphaInvite).toContain('finally {');
+    expect(operationalAlphaInvite).not.toContain('alpha_access_set_admissions');
+    expect(operationalAlphaInvite).not.toMatch(/from\s*\(\s*['\"](?:private\.)?alpha_access_invites/);
+
+    expect(operationalEnv).toContain('wrapOperationalTechnicalAuthClient');
+    for (const path of technicalAuthCreators) {
+      expect(read(path), path).toContain('wrapOperationalTechnicalAuthClient');
+    }
   });
 
   it('stamps operational auth and business fixtures with technical provenance', () => {
@@ -136,6 +161,7 @@ describe('Remote E2E mutation safety integration', () => {
       'assertApprovedRemoteMutationTarget(config.url)',
     );
     expect(e2eUserSeeder).toContain('isManagedFixture(user)');
+    expect(e2eUserSeeder).toContain('wrapOperationalTechnicalAuthClient');
     expect(e2eUserSeeder).toContain(
       'Refusing to reconcile an Auth user without the canonical fixture marker.',
     );
@@ -162,6 +188,7 @@ describe('Remote E2E mutation safety integration', () => {
     expect(networkSeeder).toContain("assertApprovedRemoteMutationTarget(config.url)");
     expect(networkSeeder).toContain("source: 'e2e'");
     expect(networkSeeder).toContain("source_kind: 'technical_fixture'");
+    expect(networkSeeder).toContain('wrapOperationalTechnicalAuthClient');
     expect(networkSeeder).toContain('isTechnicalAuthFixture(existingUser)');
     expect(networkSeeder).toContain('isTechnicalBusinessFixture(existingStandalone.metadata)');
     expect(networkSeeder).not.toContain('${SEED.USER_EMAIL} / ${SEED.USER_PASSWORD}');

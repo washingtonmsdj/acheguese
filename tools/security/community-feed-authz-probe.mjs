@@ -2,8 +2,10 @@ import { randomUUID } from "node:crypto";
 import {
   createAnonClient,
   createServiceRoleClient,
+  getSupabaseConfig,
   loadSupabaseScriptEnv,
 } from "../supabase/supabase-client.mjs";
+import { wrapOperationalTechnicalAuthClient } from "../supabase/operational-alpha-invite.mjs";
 
 const envFiles = [
   ".env.local",
@@ -13,6 +15,7 @@ const envFiles = [
   ".env",
 ];
 loadSupabaseScriptEnv(envFiles);
+const operationalConfig = getSupabaseConfig({ envFiles });
 
 const credentialCandidates = [
   [process.env.E2E_USER_EMAIL, process.env.E2E_USER_PASSWORD],
@@ -30,7 +33,10 @@ if (credentialCandidates.length === 0) {
 }
 
 const userClient = createAnonClient({ envFiles });
-const admin = createServiceRoleClient({ envFiles });
+const admin = wrapOperationalTechnicalAuthClient(
+  createServiceRoleClient({ envFiles }),
+  operationalConfig.url,
+);
 const outcomes = [];
 let fixturePostId;
 let unexpectedSpoofedPostId;
