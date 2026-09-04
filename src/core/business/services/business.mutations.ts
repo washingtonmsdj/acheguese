@@ -331,12 +331,55 @@ function mergeMetadata(
   return Object.keys(merged).length > 0 ? merged : undefined;
 }
 
+interface BusinessCreateCompensationState {
+  profileId?: string;
+  addressId?: string;
+}
+
+async function compensateFailedBusinessCreate(
+  state: BusinessCreateCompensationState,
+): Promise<void> {
+  const failures: Array<{ resource: "profile" | "address"; message: string }> = [];
+
+  if (state.profileId) {
+    try {
+      await profileService.deleteProfile(state.profileId);
+    } catch (error) {
+      failures.push({
+        resource: "profile",
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  if (state.addressId) {
+    try {
+      await new AddressService().deleteAddress(state.addressId);
+    } catch (error) {
+      failures.push({
+        resource: "address",
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  if (failures.length > 0) {
+    logger.error("[business.mutations] create compensation incomplete", {
+      profileId: state.profileId ?? null,
+      addressId: state.addressId ?? null,
+      failures,
+    });
+  }
+}
+
 /**
  * Criar empresa
  */
 export async function createBusiness(
   input: CreateBusinessInput,
 ): Promise<Business> {
+  const compensation: BusinessCreateCompensationState = {};
+
   try {
     const user = await SessionService.getCurrentUser();
     if (!user) throw new Error("Autenticacao obrigatoria para criar empresa");
@@ -372,7 +415,13 @@ export async function createBusiness(
       slug = await BusinessUrlService.generateUniqueSlug(validatedInput.name);
     }
 
+    const addressCreatedByFlow =
+      validatedInput.address_id === undefined && hasStructuredAddress(validatedInput);
     const addressId = await syncAddress(validatedInput);
+    if (addressCreatedByFlow && addressId) {
+      compensation.addressId = addressId;
+    }
+
     const profile = await profileService.createProfile({
       profile_type: "business",
       name: validatedInput.name,
@@ -384,6 +433,7 @@ export async function createBusiness(
     if (!profile) {
       throw new Error("Erro ao criar perfil da empresa");
     }
+    compensation.profileId = profile.id;
 
     const memberResult = await ProfileMembersService.addMember(
       profile.id,
@@ -448,6 +498,7 @@ export async function createBusiness(
     );
     return { ...mapBusinessDataToBusiness(business), ...contact };
   } catch (error) {
+    await compensateFailedBusinessCreate(compensation);
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Erro ao criar empresa: ${message}`);
   }

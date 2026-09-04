@@ -12,6 +12,8 @@ const mocks = vi.hoisted(() => ({
   generateUniqueSlug: vi.fn(),
   createAddress: vi.fn(),
   updateAddress: vi.fn(),
+  deleteAddress: vi.fn(),
+  deleteProfile: vi.fn(),
   setBulkHours: vi.fn(),
   patchOwnedChannels: vi.fn(),
   getVisibleForEntity: vi.fn(),
@@ -50,6 +52,7 @@ vi.mock("@/core/address/services/AddressService", () => ({
   AddressService: class {
     createAddress = mocks.createAddress;
     updateAddress = mocks.updateAddress;
+    deleteAddress = mocks.deleteAddress;
   },
 }));
 
@@ -69,6 +72,7 @@ vi.mock("@/core/profiles/services/ProfileService", () => ({
   profileService: {
     createProfile: mocks.createProfile,
     updateProfile: mocks.updateProfile,
+    deleteProfile: mocks.deleteProfile,
   },
 }));
 
@@ -116,6 +120,8 @@ describe("createBusiness", () => {
     mocks.getCurrentUser.mockResolvedValue({ id: "user-1" });
     mocks.checkAvailability.mockResolvedValue({ status: "available" });
     mocks.createProfile.mockResolvedValue({ id: "profile-1" });
+    mocks.deleteProfile.mockResolvedValue(undefined);
+    mocks.deleteAddress.mockResolvedValue(undefined);
     mocks.addMember.mockResolvedValue({ success: true });
     mocks.buildPatch.mockReturnValue([]);
 
@@ -170,6 +176,57 @@ describe("createBusiness", () => {
     expect(mocks.setBulkHours).not.toHaveBeenCalled();
     expect(mocks.patchOwnedChannels).not.toHaveBeenCalled();
     expect(mocks.buildPatch).not.toHaveBeenCalled();
+    expect(mocks.deleteProfile).toHaveBeenCalledWith("profile-1");
+    expect(mocks.deleteAddress).not.toHaveBeenCalled();
+  });
+
+  it("remove endereco novo quando a criacao do profile falha", async () => {
+    mocks.createAddress.mockResolvedValue({ id: "address-1" });
+    mocks.createProfile.mockRejectedValue(new Error("profile create failed"));
+
+    await expect(
+      createBusiness({
+        ...businessInput,
+        address_street: "Rua Teste",
+        address_number: "10",
+        postal_code: "40000-000",
+      }),
+    ).rejects.toThrow("Erro ao criar empresa: profile create failed");
+
+    expect(mocks.deleteProfile).not.toHaveBeenCalled();
+    expect(mocks.deleteAddress).toHaveBeenCalledWith("address-1");
+  });
+
+  it("compensa profile antes do endereco quando membership falha", async () => {
+    mocks.createAddress.mockResolvedValue({ id: "address-2" });
+    mocks.addMember.mockResolvedValue({
+      success: false,
+      error: "membership failed",
+    });
+
+    await expect(
+      createBusiness({
+        ...businessInput,
+        address_street: "Rua Teste",
+        address_number: "20",
+        postal_code: "40000-001",
+      }),
+    ).rejects.toThrow("Erro ao criar empresa: membership failed");
+
+    expect(mocks.deleteProfile).toHaveBeenCalledWith("profile-1");
+    expect(mocks.deleteAddress).toHaveBeenCalledWith("address-2");
+    expect(mocks.deleteProfile.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.deleteAddress.mock.invocationCallOrder[0],
+    );
+  });
+
+  it("preserva o erro original quando a compensacao do profile falha", async () => {
+    mocks.deleteProfile.mockRejectedValue(new Error("profile rollback failed"));
+
+    await expect(createBusiness(businessInput)).rejects.toThrow(
+      "Erro ao criar empresa: Erro ao criar estatisticas da empresa",
+    );
+    expect(mocks.deleteProfile).toHaveBeenCalledWith("profile-1");
   });
 });
 
