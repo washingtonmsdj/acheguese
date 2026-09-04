@@ -40,7 +40,6 @@ export { default as SecoesAtivasManager } from "./SecoesAtivasManager";
 // ============================================
 
 export { default as BranchNetworkBlock } from "@/core/business/components/BranchNetworkBlock";
-export { default as NetworkTab } from "./NetworkTab";
 
 // ============================================
 // UI COMPONENTS - Componentes de interface
