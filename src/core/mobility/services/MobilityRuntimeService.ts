@@ -502,21 +502,6 @@ class MobilityServiceInstance {
     }
   }
 
-  async getRideByShareToken(token: string): Promise<RideRequestRecord | null> {
-    try {
-      const { data, error } = await db
-        .from<RideRequestRecord>("ride_requests")
-        .select("*")
-        .eq("share_token", token)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      logger.error("mobilityService.getRideByShareToken", error as Error);
-      return null;
-    }
-  }
 
   async incrementRideViewCount(rideId: string): Promise<void> {
     try {

@@ -130,14 +130,6 @@ export async function getRideBasicInfo(rideId: string): Promise<unknown | null> 
   }
 }
 
-export async function getRideByShareToken(token: string): Promise<unknown | null> {
-  try {
-    return await mobilityService.getRideByShareToken(token);
-  } catch (error) {
-    logger.error("MobilityQueries.getRideByShareToken", error as Error);
-    return null;
-  }
-}
 
 export async function getRideAvailableSeats(rideId: string): Promise<number> {
   try {

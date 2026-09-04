@@ -26,6 +26,32 @@ describe("canonical ride share token model", () => {
     expect(sql).toContain("column_name='share_token'");
   });
 
+  it("keeps runtime reads on the canonical Safety share projection", () => {
+    const adapter = readFileSync(
+      join(process.cwd(), "src", "core", "mobility", "services", "RideCanonicalAdapter.ts"),
+      "utf8",
+    );
+    const runtime = readFileSync(
+      join(process.cwd(), "src", "core", "mobility", "services", "MobilityRuntimeService.ts"),
+      "utf8",
+    );
+    const readQueries = readFileSync(
+      join(process.cwd(), "src", "core", "mobility", "services", "mobility.ride-read-queries.ts"),
+      "utf8",
+    );
+    const trackingPage = readFileSync(
+      join(process.cwd(), "src", "modules", "mobility", "pages", "TrackRidePage.tsx"),
+      "utf8",
+    );
+
+    expect(adapter).not.toContain("ride.share_token");
+    expect(adapter).toContain("share_token: null");
+    expect(runtime).not.toContain('.eq("share_token", token)');
+    expect(readQueries).not.toMatch(/export async function getRideByShareToken/);
+    expect(trackingPage).toContain("useSharedRideData");
+    expect(trackingPage).not.toContain("getRideByShareToken");
+  });
+
   it("does not remove share_view_count or the canonical ride_shares token", () => {
     expect(sql).not.toMatch(/drop\s+column\s+share_view_count/i);
     expect(sql).not.toMatch(/alter\s+table\s+public\.ride_shares\s+drop\s+column/i);

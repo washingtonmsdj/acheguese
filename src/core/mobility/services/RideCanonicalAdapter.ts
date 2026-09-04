@@ -100,9 +100,11 @@ export function toRideRequestContract(ride: RideRequestRecord): RideRequest {
     estimated_price: ride.suggested_price ?? undefined,
     suggested_price: ride.suggested_price ?? undefined,
     final_price: ride.final_price ?? undefined,
-    share_token: ride.share_token ?? null,
+    // Public ride sharing lives in ride_shares and is resolved through SafetyService.
+    // A plain ride_requests row must never synthesize bearer-token state.
+    share_token: null,
     share_expires_at: null,
-    share_is_active: ride.share_token ? true : null,
+    share_is_active: null,
     driver_assigned_at: ride.driver_assigned_at ?? null,
     driver_on_the_way_at: null,
     driver_arrived_at: null,
