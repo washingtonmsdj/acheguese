@@ -9,7 +9,7 @@ This checkpoint is a delta to `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`; i
 - canonical Supabase project: `xhdowzacfujckjelqhtd`;
 - current phase: **G6 — Module Certification / Empresas base**.
 
-The root plan header still carries the historical `G5 EM EXECUÇÃO` wording. Future agents must use this checkpoint together with the closed blocker issues and current `main` instead of reopening G5 work already resolved.
+The root plan header was reconciled on 2026-09-04 to `G6 Certificação de módulos / Empresas base`. This checkpoint remains the detailed transition evidence and must be used with current `main` and the closed blocker issues.
 
 ## G5 closure state
 
@@ -94,6 +94,25 @@ Additional G6 consolidation on 2026-09-04:
 - removed the now-unused `src/modules/business/types/components.ts`;
 - added `tests/architecture/business-legacy-tabs-retired.test.ts`.
 
+### `2c9e45899a5f6d991d1f4e7085fd9a3645975f6f`
+
+`refactor(g6): move demo business fixtures to tests`
+
+- removed the runtime Toné Pizzaria / `tone-cos-loja` exceptions from `BusinessUrlService`, `PublicBusinessSnapshotService` and `EmpresaDetailLandingPage`;
+- removed the three runtime fixture files and obsolete `public/images/mock-tone-pizzaria` assets;
+- migrated the deterministic business used by Playwright to `tests/e2e/support/businessRouteFixtures.ts`, using browser-only request interception;
+- updated community SEO/territorial/mobile E2E callers to the test-only fixture;
+- added `tests/architecture/business-test-fixture-boundary.test.ts`.
+
+### `b3591b819e4292e4953c0a4b2f1708ae5d402a82`
+
+`refactor(g6): retire orphaned business base components`
+
+- caller census proved the old Business base presentation components had no runtime consumers;
+- removed the callerless About/Gallery/Hours/Products/Reviews/Services/sidebar/share/section-manager components and orphaned `useBusinessSidebar`;
+- cleaned both Business public barrels while preserving active hooks, pages, `ContactLink`, company sections and canonical core owners;
+- added `tests/architecture/business-base-orphans-retired.test.ts`.
+
 ## Hosted validation classification
 
 Before the recent allocation degradation, `f92bee10a3133c56d37d34949a750429dfe24f73` had real hosted proof for the important executable gates:
@@ -109,25 +128,27 @@ Before the recent allocation degradation, `f92bee10a3133c56d37d34949a750429dfe24
 
 The aggregate `All Tests Passed` job on that run failed separately even though its authoritative dependencies above were successful.
 
-For the later G6 source commits, GitHub again intermittently returned jobs with `steps = null`, including a single targeted rerun. The same pre-step condition affected all authoritative jobs observed for `73fb8142839fc624ed560a8365dbbda3bfbf369a`. Those results are **INFRASTRUCTURE / PRE-STEP**, not source failures. Do not repeatedly rerun or weaken workflows to obtain a green badge.\n\nVercel remains an independent build signal: `f55be6e5abc26d387e11a4ba6990f1a4ae158a39` reached `READY`. At the latest observation, `db1cc3e6ce2250b55584b8917fff5992ddd18295` was `BUILDING` and `73fb8142839fc624ed560a8365dbbda3bfbf369a` / `d2b48cf7516fc01b4dc5fa5efe43eea6c8371404` were queued behind it. Do not interpret queueing/cancellation caused by superseding Git commits as a source failure.
+For the later G6 source commits, GitHub again intermittently returned jobs with `steps = null`, including the full Security/SSOT/Territorial set observed for `2c9e45899a5f6d991d1f4e7085fd9a3645975f6f`. Those results are **INFRASTRUCTURE / PRE-STEP**, not source failures. Do not repeatedly rerun or weaken workflows to obtain a green badge.
+
+Vercel remains an independent build signal. `db1cc3e6ce2250b55584b8917fff5992ddd18295` and `d2b48cf7516fc01b4dc5fa5efe43eea6c8371404` reached `READY`. At the latest observation used for this checkpoint, `2c9e45899a5f6d991d1f4e7085fd9a3645975f6f` was `BUILDING` and `b3591b819e4292e4953c0a4b2f1708ae5d402a82` was `QUEUED`. Do not interpret queueing/cancellation caused by superseding Git commits as a source failure.
 
 ## Current next action
 
-Continue **G6 Empresas base** from the active routed surfaces and their canonical owners. Priorities:
+Continue **G6 Empresas base** with certification rather than more speculative refactor:
 
-1. inspect remaining core↔module duplicate Business components by caller census before any removal;
-2. replace active placeholders only when a real canonical implementation already exists or when a focused, authority-correct implementation can be proven;
-3. characterize Business create/update/delete partial-state boundaries and add compensation only through proven canonical owners—never ad-hoc destructive writes;
+1. obtain a hosted execution with real steps for the current Business source and classify only actual failing steps;
+2. certify create -> edit -> public page -> management and negative authorization without runtime demo data;
+3. revisit create/update/delete partial state only if a canonical transaction/compensation owner exists; otherwise prefer a separately designed idempotency/retry slice over ad-hoc destructive cleanup;
 4. keep coupons fail-closed until the schema has an approved business identity contract;
-5. obtain hosted same-SHA proof when GitHub allocates real steps again;
-6. only after Empresas base is certified move to the next module in the G6 order.
+5. require same-SHA build/deploy/smoke before Business READY;
+6. only then move to the next module in the G6 order.
 
 ## Do not repeat
 
 - do not reopen G5 B0–B3 without new contradictory evidence;
 - do not manually patch `types.generated.ts`;
 - do not delete Storage buckets through SQL;
-- do not restore module copies of `EmpresaDashboardTab`, `AnalyticsDashboard`, `CouponManager` or `SubscriptionPlans`;\n- do not restore the retired module `NetworkTab` bridge, simulated appointment surface, `BusinessTabs` wrapper or legacy tab stack;\n- do not remove the Toné Pizzaria DEV fixture from runtime piecemeal while E2E/spec callers still depend on its slug—migrate the test dependency in the same coherent cut;
+- do not restore module copies of `EmpresaDashboardTab`, `AnalyticsDashboard`, `CouponManager` or `SubscriptionPlans`;\n- do not restore the retired module `NetworkTab` bridge, simulated appointment surface, `BusinessTabs` wrapper, legacy tab stack or callerless Business base components;\n- do not restore Toné Pizzaria / `tone-cos-loja` or any equivalent demo-business exception inside runtime `src/`; Playwright fixtures belong under `tests/`;
 - do not manufacture coupon ownership by business name or another non-canonical field;
 - do not hardcode Billing plan prices/features inside Business UI;
 - do not interpret `steps = null` jobs as failing lint/typecheck/tests;

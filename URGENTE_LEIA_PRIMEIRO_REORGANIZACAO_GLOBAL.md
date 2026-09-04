@@ -8,8 +8,9 @@
 
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
-**Status:** EM EXECUÇÃO — G5 Database, RLS e legado  
-**Checkpoint técnico antes desta atualização:** `ee01229c56addf847cd03f4d52cc54d01e32ffd3`  
+**Status:** EM EXECUÇÃO — G6 Certificação de módulos / Empresas base  
+**Checkpoint técnico atual:** `b3591b819e4292e4953c0a4b2f1708ae5d402a82`  
+**Checkpoint de transição G5 → G6:** `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
 **Monorepo:** NÃO atualmente; manter monorepo-ready, sem migrar para workspaces/Turborepo agora
