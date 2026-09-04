@@ -142,7 +142,7 @@ export async function bootstrapFixtureSession(
   page: Page,
   email: string,
   password: string,
-): Promise<void> {
+) {
   const { url, publishableKey } = await resolvePublicSupabaseConfig(page);
 
   const client = createOperationalAnonClientForPublicConfig(
@@ -194,6 +194,7 @@ export async function bootstrapFixtureSession(
   }
 
   await page.reload({ waitUntil: "domcontentloaded", timeout: 60_000 });
+  return client;
 }
 
 async function waitForLoginForm(page: Page) {

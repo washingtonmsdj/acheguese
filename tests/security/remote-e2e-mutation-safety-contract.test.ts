@@ -16,12 +16,11 @@ const playwrightConfig = read('playwright.config.ts');
 const slugHistoryValidator = read('tools/supabase/validate-slug-history-final.ts');
 const networkSeeder = read('tools/seeds/seed-e2e-network.ts');
 const e2eUserSeeder = read('tools/seeds/seed-e2e-users.ts');
-const businessLifecycleRunner = read('tools/release/run-business-lifecycle-e2e.mjs');
-const businessLifecycleProductionSafety = read(
-  'tools/supabase/business-lifecycle-production-safety.mjs',
+const authenticatedBusinessLifecycle = read(
+  'tests/e2e/business-lifecycle-authenticated.spec.ts',
 );
-const authBusinessSpec = read('tests/e2e/auth-business.spec.ts');
 const packageJson = read('package.json');
+const ssotWorkflow = read('.github/workflows/ssot-tests.yml');
 const operationalAlphaInvite = read('tools/supabase/operational-alpha-invite.mjs');
 const technicalAuthCreators = [
   'tools/seeds/seed-e2e-users.ts',
@@ -52,6 +51,37 @@ describe('Remote E2E mutation safety integration', () => {
     expect(operationalEnv).not.toContain("readEnv('SUPABASE_URL')");
   });
 
+  it('keeps Production Business lifecycle scoped to the dedicated owner fixture', () => {
+    expect(packageJson).toContain(
+      '"test:e2e:business-lifecycle-authenticated": "playwright test tests/e2e/business-lifecycle-authenticated.spec.ts --project=chromium --reporter=list --retries=0"',
+    );
+    expect(packageJson).toContain(
+      'npm run test:e2e:business-lifecycle-authenticated',
+    );
+    expect(authenticatedBusinessLifecycle).toContain(
+      'const FIXTURE_MARKER = "account-authenticated-e2e"',
+    );
+    expect(authenticatedBusinessLifecycle).toContain(
+      'const BUSINESS_PREFIX = "G6 E2E Empresa Canonica"',
+    );
+    expect(authenticatedBusinessLifecycle).toContain('client.auth.getUser()');
+    expect(authenticatedBusinessLifecycle).toContain(
+      '.update({ status: "deleted" })',
+    );
+    expect(authenticatedBusinessLifecycle).toContain(
+      '.update({ is_active: false })',
+    );
+    expect(authenticatedBusinessLifecycle).not.toContain(
+      'SUPABASE_SERVICE_ROLE_KEY',
+    );
+    expect(authenticatedBusinessLifecycle).not.toContain(
+      'createOptionalOperationalAdminClient',
+    );
+    expect(ssotWorkflow).toContain(
+      'No service-role key is exposed to the browser job.',
+    );
+  });
+
   it('keeps technical Auth creation behind canonical alpha invites on isolated targets', () => {
     expect(operationalAlphaInvite).toContain('assertApprovedRemoteMutationTarget(supabaseUrl)');
     expect(operationalAlphaInvite).toContain("'alpha_access_issue_invite'");
@@ -75,69 +105,6 @@ describe('Remote E2E mutation safety integration', () => {
     expect(operationalEnv).toContain('withE2EAdminCreateUserProvenance');
     expect(operationalEnv).toContain('withE2ESignUpProvenance');
     expect(operationalEnv).toContain('withE2EBusinessFixtureProvenance');
-  });
-
-  it('keeps Business lifecycle certification isolated, explicit and zero-retry', () => {
-    expect(packageJson).toContain(
-      '"test:e2e:business-lifecycle": "node tools/release/run-business-lifecycle-e2e.mjs"',
-    );
-    expect(businessLifecycleRunner).toContain(
-      'getRemoteMutationTargetSafety(supabaseUrl)',
-    );
-    expect(businessLifecycleRunner).toContain(
-      'getBusinessLifecycleProductionSafety',
-    );
-    expect(businessLifecycleRunner).toContain(
-      "'SUPABASE_SERVICE_ROLE_KEY'",
-    );
-    expect(businessLifecycleRunner).toContain(
-      "'VITE_SUPABASE_PUBLISHABLE_KEY'",
-    );
-    expect(businessLifecycleRunner).toContain(
-      "'tests/e2e/auth-business.spec.ts'",
-    );
-    expect(businessLifecycleRunner).toContain("'--retries=0'");
-    expect(businessLifecycleRunner).toContain("'--grep'");
-    expect(businessLifecycleRunner).toContain(
-      'login cria edita publica e gerencia empresa pelo fluxo canonico',
-    );
-    expect(businessLifecycleRunner).not.toContain(
-      'VITE_SUPABASE_SERVICE_ROLE_KEY',
-    );
-    expect(businessLifecycleProductionSafety).toContain(
-      "E2E_PRODUCTION_FIXTURE_CERTIFICATION",
-    );
-    expect(businessLifecycleProductionSafety).toContain(
-      "E2E_PRODUCTION_FIXTURE_APPROVED",
-    );
-    expect(businessLifecycleProductionSafety).toContain(
-      "E2E_PRODUCTION_PRESERVE_HANDLE",
-    );
-    expect(businessLifecycleProductionSafety).toContain(
-      "const BUSINESS_LIFECYCLE_PRESERVED_HANDLE = 'washingtonmsdj'",
-    );
-    expect(businessLifecycleProductionSafety).toContain(
-      "projectRef !== productionProjectRef",
-    );
-    expect(businessLifecycleProductionSafety).toContain(
-      "'acheguese.com.br'",
-    );
-    expect(authBusinessSpec).toContain(
-      'Refusing to delete preserved admin washingtonmsdj.',
-    );
-    expect(authBusinessSpec).toContain('isE2EAuthFixtureUser(user)');
-    expect(authBusinessSpec).toContain(
-      '/^e2e-[^@]+@/i.test(user.email ?? "")',
-    );
-    expect(authBusinessSpec).toContain(
-      '"alpha_access_issue_invite"',
-    );
-    expect(authBusinessSpec).toContain(
-      '"alpha_access_delete_operational_invite"',
-    );
-    expect(authBusinessSpec).toContain(
-      'Production fixture certification executa somente o lifecycle Business.',
-    );
   });
 
   it('blocks known mutating Playwright suites before hooks execute on unsafe targets', () => {

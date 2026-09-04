@@ -181,7 +181,7 @@ jobs:
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
-      - name: Run non-destructive authenticated Account E2E
+      - name: Run authenticated Account and Business lifecycle E2E
         run: npm run test:e2e:account-authenticated
 
       - name: Record authenticated fixture contract
@@ -189,11 +189,12 @@ jobs:
         shell: bash
         run: |
           if [ -n "$E2E_USER_EMAIL" ] && [ -n "$E2E_USER_PASSWORD" ]; then
-            echo "Authenticated Account E2E ran with the dedicated remote fixture." >> "$GITHUB_STEP_SUMMARY"
+            echo "Authenticated Account + Business lifecycle E2E ran with the dedicated remote fixture." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "Authenticated Account E2E was explicitly skipped because fixture credentials are not configured." >> "$GITHUB_STEP_SUMMARY"
           fi
           echo "The suite validates the deployed Production surface against the canonical remote Supabase project." >> "$GITHUB_STEP_SUMMARY"
+          echo "Business lifecycle mutations are limited to the dedicated account-authenticated-e2e fixture and cleaned through owner RLS." >> "$GITHUB_STEP_SUMMARY"
           echo "No service-role key is exposed to the browser job." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload authenticated E2E report (non-gating transport)
