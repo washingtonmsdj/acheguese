@@ -239,7 +239,7 @@ describe("gastronomy supabase security audit", () => {
   });
   it("aligns Gastronomy management policies with canonical profile authority", () => {
     const migration = readProjectFile(
-      "supabase/migrations/20260904232000_align_gastronomy_profile_management_authority_g6.sql",
+      "supabase/migrations/20260904232530_align_gastronomy_profile_management_authority_g6.sql",
     );
 
     for (const policy of [
