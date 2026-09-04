@@ -10,6 +10,7 @@
 
 import { motion } from 'framer-motion';
 import { ImageIcon } from 'lucide-react';
+import { SafeImage } from '@/shared/components/security';
 import type { EmpresaFotosSectionProps } from './types';
 
 export function EmpresaFotosSection({
@@ -36,7 +37,7 @@ export function EmpresaFotosSection({
               key={idx}
               className="relative aspect-square rounded-xl overflow-hidden group cursor-pointer"
             >
-              <img
+              <SafeImage
                 src={url}
                 alt={`${businessName} - Foto ${idx + 1}`}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

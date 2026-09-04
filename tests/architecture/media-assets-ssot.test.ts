@@ -294,7 +294,7 @@ describe("MediaAsset SSOT", () => {
     const migratedReaders = [
       "src/core/community/components/page/CommunityOverviewSurface.tsx",
       "src/core/community/components/CommunityRightSidebar.tsx",
-      "src/modules/business/components/PhotoGallery.tsx",
+      "src/modules/business/company/sections/EmpresaFotosSection.tsx",
       "src/modules/classifieds/components/VendedorCard.tsx",
       "src/modules/classifieds/pages/VendedorPerfilPage.tsx",
     ];
