@@ -137,4 +137,23 @@ describe("business_data grants security", () => {
     expect(facade).not.toContain("static getBusinesses = BusinessQueries.getBusinesses");
     expect(facade).toContain("static getBusinesses = getBusinesses");
   });
+  it("keeps the remote Business authorization probe rollback-only and owner-scoped", () => {
+    const probe = readProjectFile(
+      "tests/security/business-data-authorization-remote-probe.sql",
+    );
+
+    expect(probe).toContain("BEGIN;");
+    expect(probe).toContain("ROLLBACK;");
+    expect(probe).toContain("SET LOCAL ROLE authenticated");
+    expect(probe).toContain("'request.jwt.claim.sub'");
+    expect(probe).toContain("private.can_operate_business_profile(v_profile_id)");
+    expect(probe).toContain("business_authorization_probe_owner_helper_denied");
+    expect(probe).toContain("business_authorization_probe_non_owner_helper_allowed");
+    expect(probe).toContain("business_authorization_probe_non_owner_read_count_");
+    expect(probe).toContain("business_authorization_probe_non_owner_update_count_");
+    expect(probe).toContain("WHEN insufficient_privilege THEN");
+    expect(probe).toContain("'transaction', 'rollback'");
+    expect(probe).not.toMatch(/\bCOMMIT\b/i);
+  });
+
 });
