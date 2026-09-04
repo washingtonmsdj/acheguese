@@ -9,7 +9,7 @@
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
 **Status:** EM EXECUÇÃO — G6 Certificação de módulos / Empresas base  
-**Checkpoint técnico atual:** `b3591b819e4292e4953c0a4b2f1708ae5d402a82`  
+**Checkpoint técnico atual:** `7d7775456d4ce3105d05e7d7a23d8ca10be32fc4`  
 **Checkpoint de transição G5 → G6:** `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
@@ -355,7 +355,7 @@ Checklist padrão por módulo:
 
 Ordem inicial sugerida:
 
-- [ ] Empresas base;
+- [ ] Empresas base — source/RLS/partial-state preparados; lifecycle same-SHA ainda BLOCKED por runner pré-step;
 - [ ] Gastronomia;
 - [ ] Educação;
 - [ ] Community;
@@ -460,9 +460,29 @@ Um domínio/serviço transversal só está SSOT quando:
 
 ---
 
+
+
 ## 11. Registro de progresso
 
 Atualizar esta seção somente com marcos relevantes. Não transformar este arquivo em log de cada commit.
+
+### 2026-09-04 — G6 Empresas base / autorização + lifecycle + partial-state
+
+- [x] autorização negativa Business provada no Supabase canônico por probe `BEGIN/ROLLBACK`:
+  owner visível; não-owner `read=0`, `update=0`, DELETE negado;
+- [x] lifecycle positivo implementado com a fixture Auth dedicada
+  `account-authenticated-e2e`, sem usar `washingtonmsdj` e sem service-role no browser;
+- [x] lifecycle mutante default-deny; somente o runner explícito
+  `test:e2e:business-lifecycle-authenticated` o habilita com `retries=0`;
+- [x] create parcial ganhou compensação via `ProfileService.deleteProfile` + `AddressService.deleteAddress`;
+- [x] update ganhou cleanup de address novo ainda não anexado e estratégia de retry idempotente
+  para profile/business/hours/contacts;
+- [x] soft delete classificado como retry convergente `deleted -> is_active=false`;
+- [x] cupons/promocoes reclassificados como **PAUSED / fora do launch scope**, não blocker de Empresas base;
+- [x] Vercel READY em `126da4a`, `0f5ccbef` e `ad08edea`;
+- [ ] execução E2E same-SHA de Empresas base — **BLOCKED por infraestrutura GitHub**:
+  jobs recentes continuam `steps=null`, inclusive Authenticated Account E2E;
+- [ ] Heavy Pre-Merge Certification + smoke do mesmo SHA antes de marcar Empresas base READY.
 
 ### 2026-08-26 — Início
 
@@ -476,7 +496,7 @@ Atualizar esta seção somente com marcos relevantes. Não transformar este arqu
 - [x] G2 Physical Reorganization concluída;
 - [x] G3 Global Boundaries concluído;
 - [x] G4 Global SSOT concluído no nível source/authority;
-- [ ] G5 Database/RLS concluído — **EM EXECUÇÃO**;
+- [x] G5 Database/RLS concluído — blockers B0–B3 fechados; novos drifts são regressões focadas;
 - [ ] G6 módulos certificados;
 - [ ] G7 MVP certificado.
 

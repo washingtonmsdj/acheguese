@@ -1,7 +1,7 @@
 # Validacao atual — Modulo de Empresas
 
 **Data do checkpoint:** 2026-09-04  
-**Checkpoint tecnico:** `b3591b819e4292e4953c0a4b2f1708ae5d402a82`  
+**Checkpoint tecnico:** `7d7775456d4ce3105d05e7d7a23d8ca10be32fc4`  
 **Status:** G6 EM CERTIFICACAO — NAO MVP CERTIFICADO
 
 Este arquivo registra o estado atual de Business durante G6. O ownership/SSOT de source foi fechado em G4 e os blockers historicos de G5 foram encerrados conforme `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`. O trabalho ativo agora e certificacao funcional e operacional do modulo.
@@ -58,27 +58,73 @@ A antiga excecao runtime `tone-cos-loja`/Toné Pizzaria foi removida de:
 
 Os E2E que precisam de uma empresa deterministica agora instalam `tests/e2e/support/businessRouteFixtures.ts`, que intercepta somente requisicoes do navegador durante Playwright. O build de producao nao recebe esses dados.
 
-## Confiabilidade residual — create/update/delete
+## G6 — autorizacao, lifecycle e confiabilidade de mutacoes
 
-A matriz de estado parcial de #90/#91 continua valida:
+### Autorizacao negativa
 
-### create
+A fronteira RLS de Business foi provada no Supabase canonico com
+`tests/security/business-data-authorization-remote-probe.sql`, versionado em
+`14aa448ddf634a3b55b42479c40f8754d8197621`.
 
-Sequencia: address -> profile -> membership -> business_data -> business_stats -> hours -> contacts.
+O probe executa em `BEGIN ... ROLLBACK` e comprovou:
 
-Falha tardia pode deixar etapas anteriores persistidas. Nao existe atualmente RPC/transacao Business canonica para compensacao total, e nenhum delete compensatorio ad hoc deve ser criado.
+- owner: `private.can_operate_business_profile=true` e linha privada visivel;
+- autenticado nao-owner: helper `false`, `read=0`, `update=0` e DELETE negado;
+- nome/status preservados apos a prova;
+- nenhuma mutacao persistente deixada no ambiente alvo.
 
-### update
+### Lifecycle funcional positivo
 
-Depois do preflight de slug: address -> profile -> business_data -> hours -> contacts.
+O fluxo positivo foi tornado browser-only e usa exclusivamente a fixture Auth dedicada
+`account-authenticated-e2e`; o usuario real `washingtonmsdj` nao participa do teste.
 
-Falha em etapa posterior pode manter mutacoes anteriores. O preflight evita apenas rejeicoes previsiveis antes da primeira escrita; nao transforma o fluxo em transacao.
+Cortes principais:
 
-### soft delete
+- `126da4a920cbb38da03b202b69f8e03b45808647`: cria o lifecycle
+  `create -> edit -> pagina publica -> gestao -> cleanup` pela propria RLS do owner;
+- `0f5ccbef165f73f3142ef69e7f0cc8549990627c`: deixa o spec mutante default-deny
+  e o habilita somente pelo runner canonico
+  `test:e2e:business-lifecycle-authenticated`, com `retries=0`;
+- nenhum service-role e exposto ao browser job;
+- cleanup aceita somente a fixture dedicada e empresas com prefixo tecnico G6.
 
-`business_data.status=deleted` ocorre antes de `profile.is_active=false`. Se a segunda escrita falhar, Business fica soft-deleted enquanto o profile pode permanecer ativo.
+A execucao hosted desse lifecycle ainda nao foi observada porque os jobs GitHub continuam
+encerrando antes do primeiro step (`steps=null`). O Heavy Pre-Merge Certification permanece
+o executor same-SHA canonico quando o runner self-hosted estiver disponivel.
 
-**Decisao:** so implementar compensacao/transacao se aparecer um owner canonico seguro e provavel. Nao criar RPC, delete ou bypass apenas para fechar checklist.
+### Partial state — estrategia aprovada
+
+Nao foi criada segunda autoridade, RPC novo ou transacao artificial.
+
+**Create — compensacao canonica**
+
+`ad08edeaa6056df127996bb310e77ad6113bbbf8` adicionou compensacao usando somente owners
+existentes:
+
+1. se um profile Business ja foi criado, `ProfileService.deleteProfile()` e executado primeiro;
+2. as FKs de `business_data`, membership, stats, horarios, contatos privados e demais
+   subrecursos relevantes do create usam cascata a partir do profile/business;
+3. se o fluxo criou um endereco novo, `AddressService.deleteAddress()` roda depois;
+4. falha de rollback e registrada, mas nunca mascara o erro original.
+
+O remoto confirmou DELETE de profile para o proprio owner, ownership automatico de address
+e cascatas necessarias para esse lifecycle inicial.
+
+**Update — compensacao minima + retry idempotente**
+
+`7d7775456d4ce3105d05e7d7a23d8ca10be32fc4` fecha o unico caso nao-idempotente:
+um endereco novo criado antes de `business_data` e removido se a escrita principal falhar.
+Depois que `business_data` persistiu, o endereco e preservado e o retry converge porque:
+
+- profile/business usam updates deterministas;
+- horarios usam upsert por `business_id,day_of_week`;
+- contatos usam RPC transacional com `ON CONFLICT` por canal.
+
+**Soft delete — retry convergente**
+
+A ordem continua deliberadamente segura: primeiro `business_data.status=deleted`, depois
+`profiles.is_active=false`. Se a segunda escrita falhar, repetir a operacao e idempotente e
+conclui a desativacao sem restaurar publicacao intermediaria.
 
 ## Banco / RLS
 
@@ -91,45 +137,43 @@ O checkpoint de G5 permanece a referencia para schema/RLS/grants/legados. Em par
 
 ## Validacao observada
 
-Ultima prova hosted ampla com steps reais antes da degradacao de alocacao: `f92bee10a3133c56d37d34949a750429dfe24f73`.
+Ultima prova hosted ampla com steps reais antes da degradacao de alocacao:
+`f92bee10a3133c56d37d34949a750429dfe24f73`.
 
-Nesse SHA passaram:
+Nesse SHA passaram lint/typecheck, hardcoded credentials, Maps Architecture, Phase Core Gate,
+Runtime Vitest, E2E fixture-backed, Account E2E autenticado e Regression Check.
 
-- Lint + TypeScript;
-- No Hardcoded Credentials;
-- Maps Architecture;
-- Phase Core Gate;
-- Runtime Vitest;
-- E2E fixture-backed;
-- Account E2E autenticado;
-- Regression Check.
+Nos SHAs G6 atuais, GitHub Actions continua encerrando jobs antes de qualquer step
+(`steps=null`), inclusive Authenticated Account E2E. Isso e blocker de infraestrutura/pre-step,
+nao evidencia falha de source.
 
-Nos SHAs G6 mais recentes, GitHub Actions voltou a encerrar jobs antes de qualquer step (`steps = null`). Isso e falha de infraestrutura/pre-step, nao prova de source failure.
+Vercel fornece validacao independente de source/build:
 
-Vercel fornece sinal de build independente:
+- `126da4a920cbb38da03b202b69f8e03b45808647`: READY;
+- `0f5ccbef165f73f3142ef69e7f0cc8549990627c`: READY;
+- `ad08edeaa6056df127996bb310e77ad6113bbbf8`: READY;
+- `7d7775456d4ce3105d05e7d7a23d8ca10be32fc4`: build iniciado; security validation passou antes do checkpoint documental.
 
-- `db1cc3e6ce2250b55584b8917fff5992ddd18295`: READY;
-- `d2b48cf7516fc01b4dc5fa5efe43eea6c8371404`: READY;
-- no ultimo snapshot deste checkpoint, `2c9e45899a5f6d991d1f4e7085fd9a3645975f6f` estava BUILDING e `b3591b819e4292e4953c0a4b2f1708ae5d402a82` QUEUED.
+Queue/cancel por commits supersedidos nao deve ser classificado como falha de source.\n\n## O que ainda bloqueia Business READY / MVP
 
-Queue/cancel por commits supersedidos nao deve ser classificado como falha de source.
+- executar o lifecycle autenticado `create -> edit -> pagina publica -> gestao -> cleanup`
+  em runner real no mesmo SHA, com `retries=0`;
+- obter lint/typecheck/unit/security/E2E com steps reais no mesmo SHA ou no Heavy Certification
+  explicitamente fixado ao SHA;
+- concluir deploy + smoke do mesmo SHA antes de declarar Business READY.
 
-## O que ainda bloqueia Business READY / MVP
-
-- prova funcional create -> edit -> pagina publica -> gestao com dados reais/fixture tecnica autorizada;
-- casos negativos de autorizacao no ambiente alvo;
-- estrategia aprovada para partial state (transacao, compensacao segura ou idempotencia/retry comprovada) sem segunda autoridade;
-- contrato de business identity para cupons antes de CRUD por empresa;
-- lint/typecheck/test/security/E2E/build com steps reais no mesmo SHA;
-- deploy e smoke do mesmo SHA.
+Cupons/promocoes nao bloqueiam Empresas base: `launchScope.coupons=false`, rotas publicas/admin
+estao pausadas e a aba Business fica escondida. O contrato `business_id` de coupons permanece
+divida **PAUSED** para a futura ativacao dessa feature, sem CRUD por empresa enquanto isso.
 
 ## Proximo passo
 
-1. obter a proxima execucao hosted com steps reais e classificar qualquer falha do HEAD atual;
-2. executar/certificar o fluxo Business ponta a ponta sem mock runtime;
-3. revisar partial-state somente se houver owner transacional/compensatorio canonico ou desenhar retry/idempotencia sem destruicao ad hoc;
-4. manter cupons fail-closed ate contrato de identidade aprovado;
-5. so marcar Business READY quando os criterios de G6/G7 do plano raiz estiverem comprovados.
+1. executar Heavy Pre-Merge Certification fixado ao HEAD G6 quando o runner self-hosted
+   estiver disponivel; o script Account agora inclui o lifecycle Business;
+2. classificar qualquer falha funcional real do lifecycle sem reruns amplos;
+3. executar smoke pos-deploy do mesmo SHA;
+4. marcar Empresas base READY somente depois dessas evidencias;
+5. em seguida iniciar a certificacao do proximo modulo da ordem G6.
 
 ## Do not repeat
 
