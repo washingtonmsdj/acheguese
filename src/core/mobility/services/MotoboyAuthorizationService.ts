@@ -12,12 +12,12 @@
 
 import { supabase } from "@/integrations/supabase";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { ProfileMembersService } from "@/core/profiles/services/multi-profile/profileMembersService";
 import { logger } from "@/shared/utils/logger";
 import { mobilityRolloutService } from "./MobilityRolloutService";
 import { MobilityService, mobilityService } from "./MobilityService.impl";
 import { DriverAvailabilityService } from "./DriverAvailabilityService";
 
-const MODERATOR_ROLES = ["owner", "admin"] as const;
 
 type ErrorLike = { message?: string | null } | null;
 
@@ -30,9 +30,6 @@ type GastronomyProfileRow = {
   business_id: string | null;
 };
 
-type ProfileMemberRow = {
-  profile_id: string;
-};
 
 type UserSubscriptionLookupRow = {
   id?: string;
@@ -65,7 +62,6 @@ type MobilityAuthSelectBuilder<T> = PromiseLike<{
 type MobilityAuthDbClient = {
   from(table: "business_data"): MobilityAuthSelectBuilder<BusinessDataLookupRow>;
   from(table: "gastronomy_profiles"): MobilityAuthSelectBuilder<GastronomyProfileRow>;
-  from(table: "profile_members"): MobilityAuthSelectBuilder<ProfileMemberRow>;
   from(table: "user_subscriptions"): MobilityAuthSelectBuilder<UserSubscriptionLookupRow>;
 };
 
@@ -686,24 +682,13 @@ export class MotoboyAuthorizationService {
         return true;
       }
 
-      const { data: membership, error: membershipError } = await mobilityAuthDb
-        .from("profile_members")
-        .select("profile_id")
-        .eq("user_id", userId)
-        .in("profile_id", profileIds)
-        .in("role", [...MODERATOR_ROLES])
-        .limit(1)
-        .maybeSingle();
-      if (membershipError) {
-        logger.warn("MotoboyAuthorizationService.hasProfileAccess.membership", {
-          userId,
-          profileIds,
-          error: membershipError,
-        });
-        return false;
-      }
+      const managerChecks = await Promise.all(
+        profileIds.map((profileId) =>
+          ProfileMembersService.isManager(profileId, userId),
+        ),
+      );
 
-      return !!membership;
+      return managerChecks.some(Boolean);
     } catch (error) {
       logger.error("MotoboyAuthorizationService.hasProfileAccess", error as Error, {
         userId,

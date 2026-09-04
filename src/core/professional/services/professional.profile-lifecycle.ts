@@ -19,6 +19,7 @@ import {
 import { normalizeMediaAssetReference } from "@/core/media/references/mediaAssetReference";
 import { EntityContactService } from "@/core/contact";
 import { SessionService } from "@/core/session/services/SessionService";
+import { ProfileMembersService } from "@/core/profiles/services/multi-profile/profileMembersService";
 import type {
   Professional,
   CreateProfessionalInput,
@@ -60,9 +61,6 @@ interface ProfessionalProfileLifecycleDbClient {
   from: <TRow = never>(table: string) => QueryBuilder<TRow>;
 }
 
-interface ProfileMemberRow {
-  id?: string;
-}
 
 interface ProfessionalDataIdentityRow {
   id: string;
@@ -312,14 +310,16 @@ export async function createProfessionalWithProfile(
   });
   if (!profile) throw new Error("Erro ao criar perfil do profissional");
 
-  const { error: memberError } = await professionalProfileLifecycleDb
-    .from<ProfileMemberRow>("profile_members")
-    .insert({
-      profile_id: profile.id,
-      user_id: user.id,
-      role: "owner",
-    });
-  if (memberError) throw memberError;
+  const memberResult = await ProfileMembersService.addMember(
+    profile.id,
+    user.id,
+    "owner",
+  );
+  if (!memberResult.success) {
+    throw new Error(
+      memberResult.error || "Erro ao registrar owner do perfil profissional",
+    );
+  }
 
   const professionalData = toProfessionalData({ ...validatedInput, slug }, { mode: "create" });
   const { data: professionalRow, error } = await professionalProfileLifecycleDb
