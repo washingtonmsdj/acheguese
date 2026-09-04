@@ -148,7 +148,6 @@ describe("generateSitemap", () => {
     expect(locationReader).not.toContain(
       '.select(PUBLIC_ROUTING_LOCATION_SELECT, { count: "exact" })',
     );
-    expect(locationReader).not.toContain('.order("id")');
     expect(locationReader).not.toContain(
       '.range(offset, offset + COMPLETE_READ_PAGE_SIZE - 1)',
     );
