@@ -109,6 +109,24 @@ describe("gastronomy runtime boundaries", () => {
     expect(hooksReadme).toContain("BusinessFavoriteStore");
   });
 
+  it("keeps vertical activation status owned only by core verticals", () => {
+    const hooksBarrel = read("src/modules/business/gastronomy/hooks/index.ts");
+    const hooksReadme = read("src/modules/business/gastronomy/hooks/README.md");
+
+    expect(
+      existsSync(
+        resolve(
+          root,
+          "src/modules/business/gastronomy/hooks/useGastronomyStatus.ts",
+        ),
+      ),
+    ).toBe(false);
+    expect(hooksBarrel).not.toContain("useGastronomyStatus");
+    expect(hooksReadme).toContain(
+      "@/core/verticals/gastronomy/hooks/useGastronomyStatus",
+    );
+  });
+
   it("keeps gastronomy read queries implemented only in core business", () => {
     const retiredModuleQueries = resolve(
       root,

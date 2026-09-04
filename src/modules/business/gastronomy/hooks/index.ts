@@ -20,7 +20,6 @@ export { useOrderStats } from './useOrderStats';
 export { useOrderTracking } from './useOrderTracking';
 export { useGastronomyCart } from './useGastronomyCart';
 export { useGastronomyCheckout } from './useGastronomyCheckout';
-export { useGastronomyStatus } from './useGastronomyStatus';
 export { useGastronomySetup } from './useGastronomySetup';
 export { useGastronomyProfile } from './useGastronomyProfile';
 export { useGastronomyDetail } from './useGastronomyDetail';

@@ -29,6 +29,8 @@ Este diretorio exporta apenas hooks usados pelo runtime atual de Gastronomia. Ho
 
 ## Central do Lojista
 
+- O estado de ativacao do vertical pertence a `@/core/verticals/gastronomy/hooks/useGastronomyStatus`; o modulo nao mantem hook paralelo.
+
 - `useGastronomySetup`: criacao/edicao do perfil gastronomico.
 - `useGastronomyProfile`: perfil gastronomico da empresa.
 - `useBusinessHours`: horarios.
