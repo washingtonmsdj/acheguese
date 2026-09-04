@@ -157,6 +157,7 @@ async function waitForBusinessByName(name: string): Promise<{
   profile_id: string;
   business_name: string;
   slug: string | null;
+  location_id: string | null;
 }> {
   if (!admin) {
     throw new Error(
@@ -167,7 +168,7 @@ async function waitForBusinessByName(name: string): Promise<{
   for (let attempt = 0; attempt < 20; attempt += 1) {
     const { data, error } = await admin
       .from("business_data")
-      .select("id, profile_id, business_name, slug")
+      .select("id, profile_id, business_name, slug, location_id")
       .eq("business_name", name)
       .maybeSingle();
 
@@ -217,6 +218,123 @@ async function waitForProfileMember(
   throw new Error(
     `Vinculo em profile_members nao encontrado para ${profileId}.`,
   );
+}
+
+async function waitForBusinessStats(profileId: string): Promise<void> {
+  if (!admin) {
+    throw new Error(
+      "SUPABASE_SERVICE_ROLE_KEY nao configurada para assercao de banco.",
+    );
+  }
+
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const { data, error } = await admin
+      .from("business_stats")
+      .select("profile_id")
+      .eq("profile_id", profileId)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    if (data?.profile_id === profileId) {
+      return;
+    }
+
+    await delay(500);
+  }
+
+  throw new Error(
+    `business_stats nao materializado para o profile ${profileId}.`,
+  );
+}
+
+async function resolveLocationGeographicPath(locationId: string): Promise<string> {
+  if (!admin) {
+    throw new Error(
+      "SUPABASE_SERVICE_ROLE_KEY nao configurada para assercao de banco.",
+    );
+  }
+
+  const { data, error } = await admin
+    .from("locations")
+    .select("geographic_path")
+    .eq("id", locationId)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data?.geographic_path) {
+    throw new Error(
+      `geographic_path nao encontrado para location_id ${locationId}.`,
+    );
+  }
+
+  return data.geographic_path;
+}
+
+async function waitForBusinessRename(input: {
+  profileId: string;
+  expectedName: string;
+}): Promise<void> {
+  if (!admin) {
+    throw new Error(
+      "SUPABASE_SERVICE_ROLE_KEY nao configurada para assercao de banco.",
+    );
+  }
+
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const [businessResult, profileResult] = await Promise.all([
+      admin
+        .from("business_data")
+        .select("business_name")
+        .eq("profile_id", input.profileId)
+        .maybeSingle(),
+      admin
+        .from("profiles")
+        .select("name")
+        .eq("id", input.profileId)
+        .maybeSingle(),
+    ]);
+
+    if (businessResult.error) {
+      throw businessResult.error;
+    }
+    if (profileResult.error) {
+      throw profileResult.error;
+    }
+
+    if (
+      businessResult.data?.business_name === input.expectedName &&
+      profileResult.data?.name === input.expectedName
+    ) {
+      return;
+    }
+
+    await delay(500);
+  }
+
+  throw new Error(
+    `Rename nao convergiu para profiles/business_data: ${input.expectedName}.`,
+  );
+}
+
+function buildBusinessPublicUrl(
+  geographicPath: string,
+  slug: string,
+): string {
+  const parts = geographicPath.replace(/^\/+|\/+$/g, "").split("/");
+  if (parts.length < 4 || parts[0] !== "br") {
+    throw new Error(
+      `geographic_path invalido para empresa E2E: ${geographicPath}`,
+    );
+  }
+
+  const [, state, city, district] = parts;
+  return `/empresas/${state}/${city}/${district}/${slug}`;
 }
 
 async function createConfirmedUser(input: {
@@ -799,47 +917,31 @@ test.describe.serial("Auth and business flow", () => {
     await expect(page.getByText("Erro ao recuperar senha")).toHaveCount(0);
   });
 
-  test("login e cria empresa sem quebrar o fluxo canônico", async ({
+  test("login cria edita publica e gerencia empresa pelo fluxo canonico", async ({
     page,
   }) => {
-    const hasConfirmedRuntimeUser = !!(
-      confirmedUser?.handle && confirmedUser?.password
-    );
-    const hasExistingConfirmedCreds = !!(
-      EXISTING_LOGIN_EMAIL && EXISTING_LOGIN_PASSWORD
-    );
+    test.setTimeout(180_000);
 
     test.skip(
-      !hasConfirmedRuntimeUser && !hasExistingConfirmedCreds,
-      "Nao ha credencial confirmada disponivel para testar login e criacao de empresa.",
+      !admin || !confirmedUser || Boolean(authSetupError),
+      authSetupError
+        ? `Setup admin falhou: ${authSetupError}`
+        : "SUPABASE_SERVICE_ROLE_KEY e usuario E2E confirmado sao obrigatorios para certificar o fluxo Business.",
     );
 
-    const loginIdentifier = hasConfirmedRuntimeUser
-      ? confirmedUser!.email
-      : EXISTING_LOGIN_EMAIL!;
-    const loginPassword = hasConfirmedRuntimeUser
-      ? confirmedUser!.password
-      : EXISTING_LOGIN_PASSWORD!;
+    const runtimeUser = confirmedUser!;
+    const suffix = uniqueSuffix();
+    const originalName = `E2E Empresa Canonica ${suffix}`;
+    const renamedName = `${originalName} Atualizada`;
 
     await gotoApp(page, "/login");
-
-    await page.locator("#login-identifier").fill(loginIdentifier!);
-    await page.locator("#login-password").fill(loginPassword!);
+    await page.locator("#login-identifier").fill(runtimeUser.email);
+    await page.locator("#login-password").fill(runtimeUser.password);
     await page.getByRole("button", { name: "Entrar" }).click();
 
-    const loginSucceeded = await page
-      .waitForURL((url) => !url.pathname.startsWith("/login"), {
-        timeout: 15000,
-      })
-      .then(() => true)
-      .catch(() => false);
-
-    if (!loginSucceeded) {
-      test.skip(
-        true,
-        "Credenciais de login nao autenticaram no ambiente atual.",
-      );
-    }
+    await page.waitForURL((url) => !url.pathname.startsWith("/login"), {
+      timeout: 20_000,
+    });
 
     await gotoApp(
       page,
@@ -848,7 +950,78 @@ test.describe.serial("Auth and business flow", () => {
     await expect(page).toHaveURL(/\/central\/empresas\/nova\/educacao$/);
     await expect(
       page.getByRole("heading", { name: /Cadastrar .* ensino/i }),
-    ).toBeVisible({
+    ).toBeVisible({ timeout: 30_000 });
+
+    await page.locator("#name").fill(originalName);
+    await page
+      .locator("#description")
+      .fill("Empresa E2E criada pelo formulario canonico para certificacao G6.");
+
+    await clickBusinessContinue(page);
+    await expect(
+      page.getByRole("heading", { name: "Território, contato e operação" }),
+    ).toBeVisible({ timeout: 20_000 });
+
+    await page.locator("#phone").fill("(71) 99999-9999");
+    await fillBusinessTerritory(page);
+    await clickBusinessContinue(page);
+
+    await expect(
+      page.getByText("Mídia, canais públicos e operação complementar"),
+    ).toBeVisible({ timeout: 20_000 });
+
+    await clickBusinessCreate(page);
+
+    const createdBusiness = await waitForBusinessByName(originalName);
+    expect(createdBusiness.profile_id).toBeTruthy();
+    expect(createdBusiness.slug).toBeTruthy();
+    expect(createdBusiness.location_id).toBeTruthy();
+
+    const membership = await waitForProfileMember(
+      createdBusiness.profile_id,
+      runtimeUser.user.id,
+    );
+    expect(membership.role).toBe("owner");
+    await waitForBusinessStats(createdBusiness.profile_id);
+
+    const geographicPath = await resolveLocationGeographicPath(
+      createdBusiness.location_id!,
+    );
+    const originalPublicUrl = buildBusinessPublicUrl(
+      geographicPath,
+      createdBusiness.slug!,
+    );
+
+    await gotoApp(page, `/edit-business/${createdBusiness.profile_id}`);
+    await expect(
+      page.getByRole("heading", { name: "Editar Empresa" }),
+    ).toBeVisible({ timeout: 30_000 });
+
+    await page.locator("#name").fill(renamedName);
+    await page.getByRole("button", { name: "Continuar" }).click();
+    await page.getByRole("button", { name: "Continuar" }).click();
+    await page.getByRole("button", { name: "Salvar alterações" }).click();
+
+    await waitForBusinessRename({
+      profileId: createdBusiness.profile_id,
+      expectedName: renamedName,
+    });
+
+    await gotoApp(page, originalPublicUrl);
+    await expect(
+      page.getByRole("heading", { name: renamedName }).first(),
+    ).toBeVisible({ timeout: 30_000 });
+
+    await gotoApp(
+      page,
+      businessManagementRoutes.overview(createdBusiness.profile_id),
+    );
+    await expect(page).toHaveURL(
+      new RegExp(
+        `/central/empresas/${createdBusiness.profile_id}(?:/|$)`,
+      ),
+    );
+    await expect(page.getByText(renamedName).first()).toBeVisible({
       timeout: 30_000,
     });
   });
