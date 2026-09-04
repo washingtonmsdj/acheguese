@@ -237,4 +237,32 @@ describe("gastronomy supabase security audit", () => {
     expect(migration).not.toContain("delivery_requests");
     expect(migration).not.toContain("dr.id IS NULL");
   });
+  it("aligns Gastronomy management policies with canonical profile authority", () => {
+    const migration = readProjectFile(
+      "supabase/migrations/20260904232000_align_gastronomy_profile_management_authority_g6.sql",
+    );
+
+    for (const policy of [
+      "Owners manage own gastronomy profile",
+      "Owners manage own menus",
+      "Owners manage own categories",
+      "Owners manage own items",
+      "Owners manage own variants",
+      "Owners manage own addons",
+      "Owners manage own availability",
+      "Owners manage own promotions",
+      "Owners view own upgrade history",
+    ]) {
+      expect(migration).toContain(`ALTER POLICY "${policy}"`);
+    }
+
+    expect(migration.match(/private\.can_manage_profile\(bd\.profile_id\)/g)).toHaveLength(17);
+    expect(migration.match(/WITH CHECK \(/g)).toHaveLength(8);
+    expect(migration).not.toContain("p.user_id = auth.uid()");
+    expect(migration).not.toContain("profiles p");
+    expect(migration).not.toContain("DROP POLICY");
+    expect(migration).not.toContain("GRANT ");
+    expect(migration).not.toContain("REVOKE ");
+  });
+
 });
