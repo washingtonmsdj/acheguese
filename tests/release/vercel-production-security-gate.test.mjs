@@ -16,6 +16,21 @@ describe("production dependency audit gate", () => {
     );
   });
 
+  it("retries only transient npm audit provider failures without weakening the gate", () => {
+    const source = readFileSync(
+      join(ROOT, "tools/release/run-vercel-production-build.mjs"),
+      "utf8",
+    );
+
+    expect(source).toContain("const AUDIT_MAX_ATTEMPTS = 3");
+    expect(source).toContain("TRANSIENT_AUDIT_PATTERNS");
+    expect(source).toContain("isAuditStep(command, args)");
+    expect(source).toContain("attempt === AUDIT_MAX_ATTEMPTS");
+    expect(source).not.toContain("--audit=false");
+    expect(source).not.toContain("audit-level=low");
+    expect(source).not.toMatch(/npm audit[^\n]*\|\|\s*true/);
+  });
+
   it("keeps the full-tree high/critical gate while reporting production moderate+ separately", () => {
     const workflow = readFileSync(
       join(ROOT, ".github/workflows/security-scan.yml"),
