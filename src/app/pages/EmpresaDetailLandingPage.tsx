@@ -30,7 +30,6 @@ import {
   EmpresaResumoSection,
 } from "@/modules/business/company/sections";
 import { AddressCard, CompanyInfoCard } from "@/modules/business/company/components/info";
-import { resolveTonePizzariaVisualFixture } from "@/modules/business/company/fixtures/tonePizzariaVisualFixture";
 import { EmpresaDetailLayout } from "@/modules/business/company/pages/EmpresaDetailLayout";
 import { getYearsActive } from "@/modules/business/company/utils";
 import GastronomyDetailPage from "@/modules/business/gastronomy/pages/GastronomyDetailPage";
@@ -382,16 +381,11 @@ export default function EmpresaDetailLandingPage(
     );
   }
 
-  const visualFixture = resolveTonePizzariaVisualFixture(
-    { state, city, district, slug },
-    snapshot,
-    snapshotBusiness,
-  );
-  const business = visualFixture?.business ?? snapshotBusiness;
-  const institutional = visualFixture?.institutional ?? snapshot.institutional;
-  const products = visualFixture?.products ?? normalizedProducts;
-  const displayNearbyBusinesses = visualFixture?.nearbyBusinesses ?? nearbyBusinesses;
-  const openStatus = visualFixture?.openStatus ?? resolvedOpenStatus;
+  const business = snapshotBusiness;
+  const institutional = snapshot.institutional;
+  const products = normalizedProducts;
+  const displayNearbyBusinesses = nearbyBusinesses;
+  const openStatus = resolvedOpenStatus;
 
   const yearsActive = getYearsActive(business.created_at);
   const handleRoute = () => {

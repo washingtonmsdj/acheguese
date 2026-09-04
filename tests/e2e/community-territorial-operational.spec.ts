@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { expectPausedLaunchSurface, expectRouteReady, openPublicRoute } from './support/publicRouteAssertions';
+import { E2E_BUSINESS, installBusinessRouteFixtures } from './support/businessRouteFixtures';
 
 test.describe('community territorial routes', () => {
   test.setTimeout(240_000);
@@ -69,12 +70,13 @@ test.describe('community territorial routes', () => {
   });
 
   test('community-scoped business route keeps community context and public escape', async ({ page }) => {
-    await openPublicRoute(page, '/comunidade/complexo-do-nordeste-de-amaralina/empresas/tone-cos-loja', {
+    await installBusinessRouteFixtures(page);
+    await openPublicRoute(page, E2E_BUSINESS.communityPath, {
       waitUntil: 'domcontentloaded',
       dismissConsent: true,
     });
     await expectRouteReady(page, {
-      expectedUrlPart: '/comunidade/complexo-do-nordeste-de-amaralina/empresas/tone-cos-loja',
+      expectedUrlPart: E2E_BUSINESS.communityPath,
       readyPattern: /Tone|Empresa|Comercio|Comércio|Ver no site publico/i,
     });
 

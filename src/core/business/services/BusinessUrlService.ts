@@ -32,12 +32,6 @@ import {
   buildBusinessPremiumUrl,
   buildBusinessPublicUrlFromTerritory,
 } from '@/core/business/utils/businessPublicUrls';
-import {
-  buildTonePizzariaFixtureGeographicPath,
-  isTonePizzariaRouteFixture,
-  TONE_PIZZARIA_ROUTE_FIXTURE_ID,
-  TONE_PIZZARIA_ROUTE_FIXTURE_SLUG,
-} from '@/core/business/fixtures/tonePizzariaRouteFixture';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -246,15 +240,6 @@ export class BusinessUrlService {
    */
   static async resolveBySlug(slug: string): Promise<BusinessUrlContext | null> {
     try {
-      if (isTonePizzariaRouteFixture({ slug })) {
-        return {
-          id: TONE_PIZZARIA_ROUTE_FIXTURE_ID,
-          slug: TONE_PIZZARIA_ROUTE_FIXTURE_SLUG,
-          is_premium: false,
-          geographic_path: buildTonePizzariaFixtureGeographicPath({ slug }),
-        };
-      }
-
       const { data, error } = await supabase
         .from('business_data')
         .select(`
@@ -352,15 +337,6 @@ export class BusinessUrlService {
    */
   static async resolveById(id: string): Promise<BusinessUrlContext | null> {
     try {
-      if (import.meta.env.DEV && id === TONE_PIZZARIA_ROUTE_FIXTURE_ID) {
-        return {
-          id: TONE_PIZZARIA_ROUTE_FIXTURE_ID,
-          slug: TONE_PIZZARIA_ROUTE_FIXTURE_SLUG,
-          is_premium: false,
-          geographic_path: buildTonePizzariaFixtureGeographicPath({}),
-        };
-      }
-
       const { data, error } = await supabase
         .from('business_data')
         .select(`
@@ -403,20 +379,6 @@ export class BusinessUrlService {
     slug: string,
   ): Promise<BusinessUrlContext | null> {
     try {
-      if (isTonePizzariaRouteFixture({ slug })) {
-        return {
-          id: TONE_PIZZARIA_ROUTE_FIXTURE_ID,
-          slug: TONE_PIZZARIA_ROUTE_FIXTURE_SLUG,
-          is_premium: false,
-          geographic_path: buildTonePizzariaFixtureGeographicPath({
-            state: uf,
-            city: cidade,
-            district: bairro,
-            slug,
-          }),
-        };
-      }
-
       const expectedPathPrefix = `/br/${uf}/${cidade}/${bairro}`;
 
       const { data, error } = await supabase

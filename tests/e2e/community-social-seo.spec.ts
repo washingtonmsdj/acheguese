@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { expectRouteReady, openPublicRoute, readCanonical, readRobots } from './support/publicRouteAssertions';
+import { E2E_BUSINESS, installBusinessRouteFixtures } from './support/businessRouteFixtures';
 
 test.describe('community social SEO policy', () => {
   test.setTimeout(180_000);
@@ -33,16 +34,17 @@ test.describe('community social SEO policy', () => {
   });
 
   test('community-scoped business detail keeps public canonical and noindex', async ({ page }) => {
+    await installBusinessRouteFixtures(page);
     await openPublicRoute(
       page,
-      '/comunidade/complexo-do-nordeste-de-amaralina/empresas/tone-cos-loja',
+      E2E_BUSINESS.communityPath,
       {
         waitUntil: 'domcontentloaded',
         dismissConsent: true,
       },
     );
     await expectRouteReady(page, {
-      expectedUrlPart: '/comunidade/complexo-do-nordeste-de-amaralina/empresas/tone-cos-loja',
+      expectedUrlPart: E2E_BUSINESS.communityPath,
       readyPattern: /Tone|Empresa|Comercio|Comércio|Ver no site publico/i,
     });
 

@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { expectNoSeriousA11yViolations } from "./support/axeAssertions";
 import { expectMobilePublicSurface } from "./support/publicRouteAssertions";
+import { E2E_BUSINESS, installBusinessRouteFixtures } from "./support/businessRouteFixtures";
 
 const MOBILE_PUBLIC_ROUTES = [
   {
@@ -34,8 +35,8 @@ const MOBILE_PUBLIC_ROUTES = [
       /Serviços|Servicos|Complexo do Nordeste de Amaralina|Profissional/i,
   },
   {
-    path: "/empresas/ba/salvador/complexo-do-nordeste-de-amaralina/tone-cos-loja",
-    readyPattern: /Tone|Empresa|Comercio|Comércio|Detalhes/i,
+    path: E2E_BUSINESS.publicPath,
+    readyPattern: /Oficina Horizonte E2E|Empresa|Comercio|Comércio|Detalhes/i,
   },
   {
     path: "/comunidade/ba/salvador/feed",
@@ -153,6 +154,9 @@ test.describe("Mobile core public layout", () => {
 
   for (const route of MOBILE_PUBLIC_ROUTES) {
     test(`${route.path} em 360px`, async ({ page }) => {
+      if (route.path === E2E_BUSINESS.publicPath) {
+        await installBusinessRouteFixtures(page);
+      }
       await expectMobilePublicSurface(page, {
         path: route.path,
         expectedUrlPart: route.path,
