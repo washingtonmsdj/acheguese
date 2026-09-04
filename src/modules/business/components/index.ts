@@ -33,7 +33,6 @@ export { default as PromoBanner } from "./PromoBanner";
 
 export { default as AppointmentsPanel } from "./AppointmentsPanel";
 export { default as AppointmentNotifications } from "./AppointmentNotifications";
-export { default as CouponManager } from "./CouponManager";
 export { default as SecoesAtivasManager } from "./SecoesAtivasManager";
 
 // ============================================
