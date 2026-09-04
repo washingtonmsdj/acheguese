@@ -83,6 +83,13 @@ describe("gastronomy runtime boundaries", () => {
     expect(facade).not.toContain("class GastronomyService");
     expect(facade).not.toContain("export default");
     expect(serviceBarrel).toContain("MenuService");
+    expect(serviceBarrel).not.toContain("isGastronomyBusinessOpen");
+    expect(facade).not.toContain("helpers:");
+    expect(
+      existsSync(
+        resolve(root, "src/modules/business/gastronomy/services/gastronomy.helpers.ts"),
+      ),
+    ).toBe(false);
   });
 
   it("keeps gastronomy read queries implemented only in core business", () => {
