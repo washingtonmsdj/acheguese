@@ -65,6 +65,35 @@ Additional G6 consolidation on 2026-09-04:
 - the component consumes `useBillingPlans`, so price/features/featured state remain owned by Billing rather than Business UI constants;
 - removed the module duplicate and added `tests/architecture/business-subscription-plans-owner.test.ts`.
 
+### `db1cc3e6ce2250b55584b8917fff5992ddd18295`
+
+`refactor(g6): retire business network bridge`
+
+- removed the unused `src/modules/business/components/NetworkTab.tsx` compatibility bridge;
+- the active dashboard already imports `NetworkTab` from the canonical `@/core/business` barrel;
+- removed the legacy module-barrel export;
+- added `tests/architecture/business-network-owner.test.ts` to prevent recreation of the bridge.
+
+### `73fb8142839fc624ed560a8365dbbda3bfbf369a`
+
+`refactor(g6): retire simulated appointment surface`
+
+- removed the orphaned `BusinessTabs -> QuickActions -> BookingButton` chain;
+- removed the orphaned appointment-management chain and `src/shared/hooks/useAppointments.ts`;
+- retired the fake submit path that used `setTimeout` and reported successful scheduling without persistence;
+- removed related public barrel exports;
+- added `tests/architecture/business-appointments-surface.test.ts`.
+
+### `d2b48cf7516fc01b4dc5fa5efe43eea6c8371404`
+
+`refactor(g6): retire orphaned business tab stack`
+
+- removed the seven legacy Business tab wrappers after caller census showed no runtime owner;
+- removed their exclusive dead children `DigitalMenu`, `BusinessStats`, `PhotoGallery` and `PromoBanner`;
+- removed inert add/edit/delete CTAs that had no command authority;
+- removed the now-unused `src/modules/business/types/components.ts`;
+- added `tests/architecture/business-legacy-tabs-retired.test.ts`.
+
 ## Hosted validation classification
 
 Before the recent allocation degradation, `f92bee10a3133c56d37d34949a750429dfe24f73` had real hosted proof for the important executable gates:
@@ -80,7 +109,7 @@ Before the recent allocation degradation, `f92bee10a3133c56d37d34949a750429dfe24
 
 The aggregate `All Tests Passed` job on that run failed separately even though its authoritative dependencies above were successful.
 
-For the later G6 source commits, GitHub again intermittently returned jobs with `steps = null`, including a single targeted rerun. Those results are **INFRASTRUCTURE / PRE-STEP**, not source failures. Do not repeatedly rerun or weaken workflows to obtain a green badge. The new G6 commits require the next naturally allocated hosted execution for same-SHA proof.
+For the later G6 source commits, GitHub again intermittently returned jobs with `steps = null`, including a single targeted rerun. The same pre-step condition affected all authoritative jobs observed for `73fb8142839fc624ed560a8365dbbda3bfbf369a`. Those results are **INFRASTRUCTURE / PRE-STEP**, not source failures. Do not repeatedly rerun or weaken workflows to obtain a green badge.\n\nVercel remains an independent build signal: `f55be6e5abc26d387e11a4ba6990f1a4ae158a39` reached `READY`. At the latest observation, `db1cc3e6ce2250b55584b8917fff5992ddd18295` was `BUILDING` and `73fb8142839fc624ed560a8365dbbda3bfbf369a` / `d2b48cf7516fc01b4dc5fa5efe43eea6c8371404` were queued behind it. Do not interpret queueing/cancellation caused by superseding Git commits as a source failure.
 
 ## Current next action
 
@@ -98,7 +127,7 @@ Continue **G6 Empresas base** from the active routed surfaces and their canonica
 - do not reopen G5 B0–B3 without new contradictory evidence;
 - do not manually patch `types.generated.ts`;
 - do not delete Storage buckets through SQL;
-- do not restore module copies of `EmpresaDashboardTab`, `AnalyticsDashboard`, `CouponManager` or `SubscriptionPlans`;
+- do not restore module copies of `EmpresaDashboardTab`, `AnalyticsDashboard`, `CouponManager` or `SubscriptionPlans`;\n- do not restore the retired module `NetworkTab` bridge, simulated appointment surface, `BusinessTabs` wrapper or legacy tab stack;\n- do not remove the Toné Pizzaria DEV fixture from runtime piecemeal while E2E/spec callers still depend on its slug—migrate the test dependency in the same coherent cut;
 - do not manufacture coupon ownership by business name or another non-canonical field;
 - do not hardcode Billing plan prices/features inside Business UI;
 - do not interpret `steps = null` jobs as failing lint/typecheck/tests;
