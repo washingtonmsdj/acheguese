@@ -35,7 +35,6 @@ export { default as AnalyticsDashboard } from "./AnalyticsDashboard";
 export { default as AppointmentsPanel } from "./AppointmentsPanel";
 export { default as AppointmentNotifications } from "./AppointmentNotifications";
 export { default as CouponManager } from "./CouponManager";
-export { default as EmpresaDashboardTab } from "./EmpresaDashboardTab";
 export { default as SecoesAtivasManager } from "./SecoesAtivasManager";
 
 // ============================================
@@ -84,7 +83,6 @@ export { BusinessSlugSection } from "./identity/BusinessSlugSection";
 // Tabs
 export { AgendamentosTab } from "./tabs/AgendamentosTab";
 export { CardapioTab } from "./tabs/CardapioTab";
-export { DashboardTab } from "./tabs/DashboardTab";
 export { EstatisticasTab } from "./tabs/EstatisticasTab";
 export { PortfolioTab } from "./tabs/PortfolioTab";
 export { ProdutosTab } from "./tabs/ProdutosTab";

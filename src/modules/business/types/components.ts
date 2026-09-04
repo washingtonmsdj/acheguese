@@ -109,13 +109,6 @@ export interface EstatisticasTabProps {
 }
 
 /**
- * Props para DashboardTab
- */
-export interface DashboardTabProps {
-  business: BizData;
-}
-
-/**
  * Props para BusinessTabs
  */
 export interface BusinessTabsProps {
