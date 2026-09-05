@@ -17,8 +17,8 @@ describe("community access wiring", () => {
       "src/core/community/pages/GruposPage.tsx",
       "src/core/community/pages/RecomendacoesPage.tsx",
       "src/core/community/pages/NovaRecomendacaoPage.tsx",
-      "src/core/community/pages/AchadosPerdidosPage.tsx",
-      "src/core/community/pages/NovoAchadoPerdidoPage.tsx",
+      "src/core/community-lost-found/pages/AchadosPerdidosPage.tsx",
+      "src/core/community-lost-found/pages/NovoAchadoPerdidoPage.tsx",
       "src/core/community/pages/GrupoDetailPage.tsx",
     ];
 

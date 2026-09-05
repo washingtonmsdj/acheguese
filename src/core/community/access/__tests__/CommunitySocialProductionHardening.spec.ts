@@ -256,15 +256,15 @@ const lostFoundService = readFileSync(
   "utf8",
 );
 const lostFoundListPage = readFileSync(
-  join(root, "src/core/community/pages/AchadosPerdidosPage.tsx"),
+  join(root, "src/core/community-lost-found/pages/AchadosPerdidosPage.tsx"),
   "utf8",
 );
 const lostFoundCreatePage = readFileSync(
-  join(root, "src/core/community/pages/NovoAchadoPerdidoPage.tsx"),
+  join(root, "src/core/community-lost-found/pages/NovoAchadoPerdidoPage.tsx"),
   "utf8",
 );
 const lostFoundDetailPage = readFileSync(
-  join(root, "src/core/community/pages/AchadoPerdidoDetailPage.tsx"),
+  join(root, "src/core/community-lost-found/pages/AchadoPerdidoDetailPage.tsx"),
   "utf8",
 );
 const alertService = readFileSync(
