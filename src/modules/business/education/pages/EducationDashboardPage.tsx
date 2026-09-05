@@ -115,7 +115,7 @@ export function EducationDashboardPage() {
       <EducationAdminReadError
         title="Nao foi possivel carregar a gestao de Educacao"
         error={error}
-        onRetry={() => refetch()}
+        onRetry={() => void refetch()}
       />
     );
   }

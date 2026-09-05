@@ -12,6 +12,7 @@ import { useToast } from '@/shared/hooks/use-toast';
 import { useEducationProfile } from '../hooks/useEducationProfile';
 import { EducationService } from '../services/EducationService';
 import { EducationUrlService } from '../services/EducationUrlService';
+import { EducationAdminReadError } from '../components/EducationAdminReadError';
 import type {
   EducationLevel,
   SchoolShift,
@@ -203,7 +204,7 @@ export function EducationSetupPage() {
       <EducationAdminReadError
         title="Nao foi possivel carregar a configuracao de Educacao"
         error={error}
-        onRetry={() => refetch()}
+        onRetry={() => void refetch()}
       />
     );
   }

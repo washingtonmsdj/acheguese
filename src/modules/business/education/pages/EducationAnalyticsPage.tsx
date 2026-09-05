@@ -121,7 +121,7 @@ export function EducationAnalyticsPage() {
       <EducationAdminReadError
         title="Nao foi possivel carregar o perfil de Educacao"
         error={profileError}
-        onRetry={() => refetchProfile()}
+        onRetry={() => void refetchProfile()}
       />
     );
   }
