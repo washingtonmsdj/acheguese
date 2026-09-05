@@ -52,6 +52,25 @@ describe("Education module hardening ratchet", () => {
     expect(contracts).toContain("export type EducationAnalyticsEventType");
   });
 
+  it("keeps the remote Education authorization probe rollback-only and admin-safe", () => {
+    const probe = read(
+      "tests/security/education-management-authority-remote-probe.sql",
+    );
+
+    expect(probe).toContain("BEGIN;");
+    expect(probe).toContain("ROLLBACK;");
+    expect(probe).toContain("SET LOCAL ROLE authenticated");
+    expect(probe).toContain("private.can_operate_business_profile");
+    expect(probe).toContain("g6_education_probe_non_owner_helper_allowed");
+    expect(probe).toContain("g6_education_probe_admin_membership_not_authorized");
+    expect(probe).toContain("education_leads");
+    expect(probe).toContain("education_events");
+    expect(probe).toContain("education_lead_events");
+    expect(probe).toContain("washingtonmsdj");
+    expect(probe).toContain("'transaction', 'rollback'");
+    expect(probe).not.toMatch(/\bCOMMIT\b/i);
+  });
+
   it("retires all Education core bridges and blocks their recreation", () => {
     const validator = read("tools/architecture/validate-education-module-boundaries.ts");
 
