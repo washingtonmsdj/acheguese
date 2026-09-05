@@ -14,7 +14,7 @@ import {
 import type {
   CommunityQuestion,
   QuestionCursor,
-} from "@/core/community/qa-types";
+} from "@/core/community-recommendations/qa-types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { TerritoryFilter } from "@/core/location";
 

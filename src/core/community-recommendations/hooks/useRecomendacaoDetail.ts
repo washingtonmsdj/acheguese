@@ -14,7 +14,7 @@ import type {
   CommunityQuestion,
   CommunityAnswer,
   MentionResult,
-} from "@/core/community/qa-types";
+} from "@/core/community-recommendations/qa-types";
 
 export type Question = CommunityQuestion;
 export type Answer = CommunityAnswer;

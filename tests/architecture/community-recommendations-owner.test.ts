@@ -11,6 +11,8 @@ describe("G6 Community recommendations ownership", () => {
       "src/core/community-recommendations/hooks/useRecomendacoes.ts",
       "src/core/community-recommendations/hooks/useNovaRecomendacao.ts",
       "src/core/community-recommendations/hooks/useRecomendacaoDetail.ts",
+      "src/core/community-recommendations/qa-types.ts",
+      "src/core/community-recommendations/components/QuestionsList.tsx",
     ]) {
       expect(existsSync(join(ROOT, relativePath))).toBe(true);
     }
@@ -20,6 +22,8 @@ describe("G6 Community recommendations ownership", () => {
       "src/core/community/hooks/useRecomendacoes.ts",
       "src/core/community/hooks/useNovaRecomendacao.ts",
       "src/core/community/hooks/useRecomendacaoDetail.ts",
+      "src/core/community/qa-types.ts",
+      "src/core/community/components/QuestionsList.tsx",
     ]) {
       expect(existsSync(join(ROOT, relativePath))).toBe(false);
     }
@@ -47,6 +51,9 @@ describe("G6 Community recommendations ownership", () => {
     );
     expect(detailPage).toContain(
       "@/core/community-recommendations/hooks/useRecomendacaoDetail",
+    );
+    expect(listPage).toContain(
+      "@/core/community-recommendations/components/QuestionsList",
     );
   });
 });

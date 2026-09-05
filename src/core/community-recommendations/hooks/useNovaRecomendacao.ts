@@ -13,7 +13,7 @@ import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { logger } from "@/shared/utils/logger";
 import { CommunityQAService } from "@/core/community-recommendations/services/CommunityQAService";
-import type { CreateQuestionInput } from "@/core/community/qa-types";
+import type { CreateQuestionInput } from "@/core/community-recommendations/qa-types";
 
 export interface NovaRecomendacaoData {
   titulo: string;

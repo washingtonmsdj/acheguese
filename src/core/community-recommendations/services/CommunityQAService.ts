@@ -21,7 +21,7 @@ import type {
   CreateQuestionInput,
   QuestionFilters,
   MentionResult,
-} from "@/core/community/qa-types";
+} from "@/core/community-recommendations/qa-types";
 
 interface QuestionLocationRow {
   id: string;

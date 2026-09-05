@@ -67,24 +67,24 @@ function findMigration(matchers: RegExp[]): { filePath: string; content: string 
 }
 
 describe('Fase 0 - Correcoes imediatas', () => {
-  it('CommunityQAService importa de @/core/community/qa-types', () => {
+  it('CommunityQAService importa de @/core/community-recommendations/qa-types', () => {
     const content = read('src/core/community-recommendations/services/CommunityQAService.ts');
     expect(content).toMatch(/@\/core\/community\/qa-types/);
     expect(content).not.toMatch(/services\/community-qa\/types/);
   });
 
   it('qa-types.ts tem location_id em CommunityQuestion', () => {
-    const content = read('src/core/community/qa-types.ts');
+    const content = read('src/core/community-recommendations/qa-types.ts');
     expect(content).toMatch(/location_id\??: string/);
   });
 
   it('qa-types.ts tem location_id em CreateQuestionInput (obrigatorio)', () => {
-    const content = read('src/core/community/qa-types.ts');
+    const content = read('src/core/community-recommendations/qa-types.ts');
     expect(content).toMatch(/location_id: string/);
   });
 
   it('qa-types.ts tem location_id e location_ids em QuestionFilters', () => {
-    const content = read('src/core/community/qa-types.ts');
+    const content = read('src/core/community-recommendations/qa-types.ts');
     expect(content).toMatch(/location_id\??: string/);
     expect(content).toMatch(/location_ids\??: string\[\]/);
   });
@@ -169,14 +169,14 @@ describe('Fase 2 - Q&A territorial', () => {
   });
 
   it('useNovaRecomendacao usa homeDistrict.id como location_id', () => {
-    const content = read('src/core/community/hooks/useNovaRecomendacao.ts');
+    const content = read('src/core/community-recommendations/hooks/useNovaRecomendacao.ts');
     expect(content).toMatch(/useUserTerritory/);
     expect(content).toMatch(/homeDistrict.*id|homeDistrict\.id/);
     expect(content).toMatch(/location_id.*locationId|locationId.*location_id/);
   });
 
   it('useNovaRecomendacao bloqueia criacao sem territorio', () => {
-    const content = read('src/core/community/hooks/useNovaRecomendacao.ts');
+    const content = read('src/core/community-recommendations/hooks/useNovaRecomendacao.ts');
     expect(content).toMatch(/!locationId|Configure seu bairro/);
   });
 
@@ -225,7 +225,7 @@ describe('Fase 2 - Q&A territorial', () => {
   });
 
   it('qa-types.ts referencia community_questions no cabecalho', () => {
-    const content = read('src/core/community/qa-types.ts');
+    const content = read('src/core/community-recommendations/qa-types.ts');
     expect(content).not.toMatch(/community_posts.*type='question'/);
     expect(content).toMatch(/community_questions/);
   });
