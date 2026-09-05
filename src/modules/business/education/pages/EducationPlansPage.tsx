@@ -1,177 +1,101 @@
 /**
  * EducationPlansPage
  *
- * Pagina de planos e billing da instituicao.
- * Rota: /central/empresas/:businessId/educacao/planos
+ * Planos e billing da instituicao.
+ *
+ * O catalogo publicado de core/billing e a unica autoridade para nome, preco,
+ * features e entitlements de plano. Limites operacionais de Education
+ * pertencem ao registry do nicho e sao mostrados nas telas de operacao.
  */
 
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
-  BookOpen,
-  Calendar,
   Check,
   CreditCard,
   Download,
   Globe,
-  HardDrive,
   Lock,
   TrendingUp,
-  Users,
-  X,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/shared/components/ui/card';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useToast } from '@/shared/hooks/use-toast';
 import { logger } from '@/shared/utils/logger';
-import { getRecordValue } from '@/shared/utils/recordLookup';
 import { BillingService } from '@/core/billing';
 import { useBillingPlans } from '@/core/billing/hooks/useBillingPlans';
 import { useEducationSubscription } from '../hooks/useEducationSubscription';
 import { EducationUrlService } from '../services/EducationUrlService';
 
-type EducationPlanTemplate = {
-  billingCode: string;
-  name: string;
-  description: string;
-  popular?: boolean;
-  features: {
-    maxPrograms: number;
-    maxLeadsPerMonth: number;
-    maxEvents: number;
-    storageMB: number;
-    canUsePremiumPublicPage: boolean;
-    canUseShortPremiumLink: boolean;
-    canUseAnalytics: boolean;
-    canExportData: boolean;
-  };
-};
-
-const EDUCATION_PLAN_TEMPLATES: EducationPlanTemplate[] = [
+const ENTITLEMENT_LABELS = [
   {
-    billingCode: 'free',
-    name: 'Gratuito',
-    description: 'Para começar',
-    features: {
-      maxPrograms: 5,
-      maxLeadsPerMonth: 50,
-      maxEvents: 3,
-      storageMB: 50,
-      canUsePremiumPublicPage: false,
-      canUseShortPremiumLink: false,
-      canUseAnalytics: false,
-      canExportData: false,
-    },
+    key: 'canUsePremiumPublicPage',
+    label: 'Pagina premium',
+    icon: Globe,
   },
   {
-    billingCode: 'pro',
-    name: 'Básico',
-    description: 'Para instituições em crescimento',
-    features: {
-      maxPrograms: 20,
-      maxLeadsPerMonth: 500,
-      maxEvents: 10,
-      storageMB: 100,
-      canUsePremiumPublicPage: true,
-      canUseShortPremiumLink: false,
-      canUseAnalytics: true,
-      canExportData: false,
-    },
+    key: 'canUseShortPremiumLink',
+    label: 'Link curto',
+    icon: Lock,
   },
   {
-    billingCode: 'delivery',
-    name: 'Premium',
-    description: 'Para instituições profissionais',
-    popular: true,
-    features: {
-      maxPrograms: 50,
-      maxLeadsPerMonth: 2000,
-      maxEvents: 50,
-      storageMB: 500,
-      canUsePremiumPublicPage: true,
-      canUseShortPremiumLink: true,
-      canUseAnalytics: true,
-      canExportData: true,
-    },
+    key: 'canUseBasicAnalytics',
+    label: 'Analytics',
+    icon: TrendingUp,
   },
   {
-    billingCode: 'enterprise',
-    name: 'Empresarial',
-    description: 'Para redes de instituições',
-    features: {
-      maxPrograms: 999,
-      maxLeadsPerMonth: 9999,
-      maxEvents: 999,
-      storageMB: 2000,
-      canUsePremiumPublicPage: true,
-      canUseShortPremiumLink: true,
-      canUseAnalytics: true,
-      canExportData: true,
-    },
+    key: 'canExportReports',
+    label: 'Exportacao',
+    icon: Download,
   },
-];
-
-const FEATURE_LABELS: Record<string, { label: string; icon: typeof Check }> = {
-  maxPrograms: { label: 'Programas', icon: BookOpen },
-  maxLeadsPerMonth: { label: 'Leads/mês', icon: Users },
-  maxEvents: { label: 'Eventos', icon: Calendar },
-  storageMB: { label: 'Armazenamento', icon: HardDrive },
-  canUsePremiumPublicPage: { label: 'Página Premium', icon: Globe },
-  canUseShortPremiumLink: { label: 'Link Curto', icon: Lock },
-  canUseAnalytics: { label: 'Analytics', icon: TrendingUp },
-  canExportData: { label: 'Exportar Dados', icon: Download },
-};
-
-function formatFeatureValue(key: string, value: boolean | number) {
-  if (typeof value === 'boolean') {
-    return value ? <Check className="h-5 w-5 text-green-500" /> : <X className="h-5 w-5 text-gray-300" />;
-  }
-
-  if (key === 'storageMB') {
-    return value >= 1000 ? `${(value / 1000).toFixed(0)}GB` : `${value}MB`;
-  }
-
-  if (value === 999 || value === 9999) {
-    return 'Ilimitado';
-  }
-
-  return value.toLocaleString('pt-BR');
-}
+] as const;
 
 export function EducationPlansPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { status, entitlements, planType, isLoading } = useEducationSubscription({
-    businessId: businessId!,
-    enabled: Boolean(businessId),
-  });
-  const { data: billingPlans = [], isLoading: billingPlansLoading } = useBillingPlans();
+  const { status, entitlements, planType, isLoading } =
+    useEducationSubscription({
+      businessId: businessId!,
+      enabled: Boolean(businessId),
+    });
+  const {
+    data: billingPlans = [],
+    isLoading: billingPlansLoading,
+  } = useBillingPlans();
 
-  const planCards = EDUCATION_PLAN_TEMPLATES.map((template) => {
-    const billingPlan = billingPlans.find((plan) => plan.code === template.billingCode);
-    return {
-      ...template,
-      name: billingPlan?.name ?? template.name,
-      description: billingPlan?.description ?? template.description,
-      priceDisplay: billingPlan?.priceDisplay ?? 'Consultar',
-      billingPeriod: billingPlan?.billingPeriod ?? 'month',
-      popular: billingPlan?.isFeatured ?? template.popular,
-    };
-  });
+  const currentPlanCode =
+    planType === 'free'
+      ? 'free'
+      : planType === 'premium'
+        ? 'delivery'
+        : 'pro';
 
-  const currentPlanCode = planType === 'free' ? 'free' : planType === 'premium' ? 'delivery' : 'pro';
-  const dashboardUrl = businessId ? EducationUrlService.buildAdminDashboardUrl(businessId) : null;
-  const plansUrl = businessId ? EducationUrlService.buildAdminPlansUrl(businessId) : null;
+  const currentPlan =
+    billingPlans.find((plan) => plan.code === currentPlanCode) ??
+    billingPlans[0] ??
+    null;
+  const dashboardUrl = businessId
+    ? EducationUrlService.buildAdminDashboardUrl(businessId)
+    : null;
+  const plansUrl = businessId
+    ? EducationUrlService.buildAdminPlansUrl(businessId)
+    : null;
 
-  const handleUpgrade = async (planId: string) => {
+  const handleUpgrade = async (planCode: string) => {
     if (!plansUrl) {
       toast({
-        title: 'Instituição indisponível',
-        description: 'Não foi possível identificar a instituição para iniciar o checkout.',
+        title: 'Instituicao indisponivel',
+        description:
+          'Nao foi possivel identificar a instituicao para iniciar o checkout.',
         variant: 'destructive',
       });
       return;
@@ -180,11 +104,11 @@ export function EducationPlansPage() {
     try {
       toast({
         title: 'Redirecionando...',
-        description: 'Você será redirecionado para a página de checkout.',
+        description: 'Voce sera redirecionado para a pagina de checkout.',
       });
 
       await BillingService.redirectToCheckout({
-        planCode: planId,
+        planCode,
         successUrl: `${window.location.origin}${plansUrl}?upgrade=success`,
         cancelUrl: window.location.href,
       });
@@ -192,7 +116,7 @@ export function EducationPlansPage() {
       logger.error('[EducationPlansPage] Erro ao iniciar checkout', error);
       toast({
         title: 'Erro ao iniciar checkout',
-        description: 'Não foi possível abrir o checkout. Tente novamente.',
+        description: 'Nao foi possivel abrir o checkout. Tente novamente.',
         variant: 'destructive',
       });
     }
@@ -202,16 +126,14 @@ export function EducationPlansPage() {
     return (
       <div className="container mx-auto p-6">
         <Skeleton className="mb-6 h-8 w-1/3" />
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-          {[1, 2, 3, 4].map((index) => (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {[1, 2, 3].map((index) => (
             <Skeleton key={index} className="h-96 rounded-xl" />
           ))}
         </div>
       </div>
     );
   }
-
-  const currentPlan = planCards.find((plan) => plan.billingCode === currentPlanCode) || planCards[0];
 
   return (
     <div className="container mx-auto p-6">
@@ -224,7 +146,9 @@ export function EducationPlansPage() {
           variant="ghost"
           size="sm"
           className="mb-4"
-          onClick={() => (dashboardUrl ? navigate(dashboardUrl) : navigate(-1))}
+          onClick={() =>
+            dashboardUrl ? navigate(dashboardUrl) : navigate(-1)
+          }
         >
           <ArrowLeft className="mr-1 h-4 w-4" />
           Voltar
@@ -235,9 +159,11 @@ export function EducationPlansPage() {
             <CreditCard className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Planos e Assinatura</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Planos e Assinatura
+            </h1>
             <p className="text-sm text-gray-500">
-              Gerencie sua assinatura e recursos do módulo Education
+              Oferta e permissoes vindas do catalogo canonico de Billing
             </p>
           </div>
         </div>
@@ -253,134 +179,168 @@ export function EducationPlansPage() {
                   {status?.isActive ? 'Ativo' : 'Inativo'}
                 </Badge>
               </div>
-              <p className="text-2xl font-bold text-blue-600">{currentPlan.name}</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {currentPlan?.name ?? 'Plano atual'}
+              </p>
               <p className="text-sm text-gray-500">
                 {status?.expiresAt
                   ? `Renova em: ${new Date(status.expiresAt).toLocaleDateString('pt-BR')}`
-                  : 'Sem data de expiração'}
+                  : 'Sem data de expiracao'}
               </p>
             </div>
 
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => navigate('/settings/subscription')}>
-                Gerenciar Assinatura
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/settings/subscription')}
+            >
+              Gerenciar Assinatura
+            </Button>
           </div>
 
           {entitlements && (
-            <div className="mt-6 grid grid-cols-2 gap-4 border-t border-blue-100 pt-6 md:grid-cols-4">
-              <div>
-                <p className="text-sm text-gray-500">Programas</p>
-                <p className="text-lg font-semibold">
-                  {entitlements.maxPrograms === 999 ? 'Ilimitado' : entitlements.maxPrograms}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Leads/mês</p>
-                <p className="text-lg font-semibold">
-                  {entitlements.maxLeadsPerMonth === 9999
-                    ? 'Ilimitado'
-                    : entitlements.maxLeadsPerMonth}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Eventos</p>
-                <p className="text-lg font-semibold">
-                  {entitlements.maxEvents === 999 ? 'Ilimitado' : entitlements.maxEvents}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Armazenamento</p>
-                <p className="text-lg font-semibold">
-                  {entitlements.storageMB >= 1000
-                    ? `${(entitlements.storageMB / 1000).toFixed(0)}GB`
-                    : `${entitlements.storageMB}MB`}
-                </p>
-              </div>
+            <div className="mt-6 grid grid-cols-2 gap-3 border-t border-blue-100 pt-6 md:grid-cols-4">
+              <Badge variant={entitlements.canUsePremiumPublicPage ? 'default' : 'outline'}>
+                Pagina premium
+              </Badge>
+              <Badge variant={entitlements.canUseShortPremiumLink ? 'default' : 'outline'}>
+                Link curto
+              </Badge>
+              <Badge variant={entitlements.canUseAnalytics ? 'default' : 'outline'}>
+                Analytics
+              </Badge>
+              <Badge variant={entitlements.canExportData ? 'default' : 'outline'}>
+                Exportacao
+              </Badge>
             </div>
           )}
         </CardContent>
       </Card>
 
-      <h2 className="mb-4 text-lg font-semibold">Escolha seu Plano</h2>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {planCards.map((plan, index) => (
-          <motion.div
-            key={plan.billingCode}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
-            <Card
-              className={`flex h-full flex-col ${
-                currentPlanCode === plan.billingCode ? 'border-blue-500 ring-2 ring-blue-500/20' : ''
-              } ${plan.popular ? 'border-blue-300' : ''}`}
-            >
-              {plan.popular && (
-                <div className="bg-blue-500 px-2 py-1 text-center text-xs font-medium text-white">
-                  Mais Popular
-                </div>
-              )}
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg">{plan.name}</CardTitle>
-                <p className="text-sm text-gray-500">{plan.description}</p>
-                <div className="mt-2">
-                  <span className="text-3xl font-bold">{plan.priceDisplay}</span>
-                  {plan.priceDisplay !== 'Grátis' && (
-                    <span className="text-gray-500">/mês</span>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="flex flex-1 flex-col">
-                <ul className="mb-6 flex-1 space-y-2">
-                  {Object.entries(plan.features).map(([key, value]) => {
-                    const feature = getRecordValue(FEATURE_LABELS, key);
-                    if (!feature) return null;
-
-                    const Icon = feature.icon;
-
-                    return (
-                      <li key={key} className="flex items-center gap-2 text-sm">
-                        <Icon className="h-4 w-4 text-gray-400" />
-                        <span className="flex-1">{feature.label}</span>
-                        <span className="font-medium">{formatFeatureValue(key, value)}</span>
-                      </li>
-                    );
-                  })}
-                </ul>
-                <Button
-                  variant={currentPlanCode === plan.billingCode ? 'secondary' : 'default'}
-                  className="w-full"
-                  disabled={currentPlanCode === plan.billingCode}
-                  onClick={() => handleUpgrade(plan.billingCode)}
-                >
-                  {currentPlanCode === plan.billingCode ? 'Plano Atual' : 'Escolher Plano'}
-                </Button>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
+      <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+        Limites de programas, leads e eventos pertencem ao nicho Education
+        selecionado e sao exibidos nas telas operacionais. Eles nao sao
+        redefinidos por esta pagina de Billing.
       </div>
 
+      <h2 className="mb-4 text-lg font-semibold">Escolha seu Plano</h2>
+      {billingPlans.length === 0 ? (
+        <Card>
+          <CardContent className="p-6 text-sm text-gray-600">
+            Nenhum plano publicado esta disponivel no catalogo no momento.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {billingPlans.map((plan, index) => (
+            <motion.div
+              key={plan.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <Card
+                className={`flex h-full flex-col ${
+                  currentPlanCode === plan.code
+                    ? 'border-blue-500 ring-2 ring-blue-500/20'
+                    : ''
+                } ${plan.isFeatured ? 'border-blue-300' : ''}`}
+              >
+                {plan.isFeatured && (
+                  <div className="bg-blue-500 px-2 py-1 text-center text-xs font-medium text-white">
+                    Mais Popular
+                  </div>
+                )}
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg">{plan.name}</CardTitle>
+                  {plan.description && (
+                    <p className="text-sm text-gray-500">
+                      {plan.description}
+                    </p>
+                  )}
+                  <div className="mt-2">
+                    <span className="text-3xl font-bold">
+                      {plan.priceDisplay}
+                    </span>
+                    {plan.priceCents > 0 && (
+                      <span className="text-gray-500">/mes</span>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent className="flex flex-1 flex-col">
+                  <ul className="mb-4 flex-1 space-y-2">
+                    {plan.features.map((feature) => (
+                      <li
+                        key={feature}
+                        className="flex items-start gap-2 text-sm"
+                      >
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="mb-5 space-y-2 border-t pt-4">
+                    {ENTITLEMENT_LABELS.map(({ key, label, icon: Icon }) => (
+                      <div
+                        key={key}
+                        className="flex items-center justify-between gap-2 text-xs text-gray-600"
+                      >
+                        <span className="flex items-center gap-2">
+                          <Icon className="h-4 w-4" />
+                          {label}
+                        </span>
+                        {plan.entitlements[key] ? (
+                          <Check className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <span>—</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <Button
+                    variant={
+                      currentPlanCode === plan.code
+                        ? 'secondary'
+                        : 'default'
+                    }
+                    className="w-full"
+                    disabled={currentPlanCode === plan.code}
+                    onClick={() => handleUpgrade(plan.code)}
+                  >
+                    {currentPlanCode === plan.code
+                      ? 'Plano Atual'
+                      : 'Escolher Plano'}
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
       <div className="mt-12">
-        <h2 className="mb-4 text-lg font-semibold">Dúvidas frequentes</h2>
+        <h2 className="mb-4 text-lg font-semibold">Duvidas frequentes</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Card>
             <CardContent className="p-4">
-              <h3 className="mb-2 font-medium">Posso mudar de plano a qualquer momento?</h3>
+              <h3 className="mb-2 font-medium">
+                Posso mudar de plano a qualquer momento?
+              </h3>
               <p className="text-sm text-gray-600">
-                Sim, você pode fazer upgrade ou downgrade do seu plano a qualquer momento.
-                As alterações serão aplicadas no próximo ciclo de faturamento.
+                O checkout e o ciclo da assinatura sao gerenciados pelo Billing
+                canonico. Condicoes efetivas sao as publicadas no catalogo.
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <h3 className="mb-2 font-medium">O que acontece se eu exceder os limites?</h3>
+              <h3 className="mb-2 font-medium">
+                Onde vejo os limites de operacao?
+              </h3>
               <p className="text-sm text-gray-600">
-                Você será notificado quando estiver próximo dos limites. Para continuar
-                usando sem restrições, faça upgrade para um plano superior.
+                Programas, leads e eventos usam os limites do nicho Education
+                ativo. As telas de cada recurso exibem o limite correspondente.
               </p>
             </CardContent>
           </Card>

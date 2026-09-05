@@ -72,6 +72,37 @@ describe("Education module hardening ratchet", () => {
     expect(centralRoutes).toContain('import * as P from "../centralLazyImports"');
   });
 
+  it("keeps Education billing offer and operational limits on separate SSOTs", () => {
+    const subscription = read(
+      "src/modules/business/education/services/education-subscription.service.ts",
+    );
+    const subscriptionHook = read(
+      "src/modules/business/education/hooks/useEducationSubscription.ts",
+    );
+    const nicheRegistry = read(
+      "src/modules/business/education/niches/registry.ts",
+    );
+    const plansPage = read(
+      "src/modules/business/education/pages/EducationPlansPage.tsx",
+    );
+
+    expect(subscription).toContain("BillingPlanService.getEntitlements");
+    expect(subscription).toContain("EntitlementsService.getAll");
+    expect(subscription).not.toContain("maxPrograms");
+    expect(subscription).not.toContain("maxLeadsPerMonth");
+    expect(subscription).not.toContain("maxEvents");
+    expect(subscriptionHook).not.toContain("calculateLimits");
+
+    expect(nicheRegistry).toContain("maxPrograms");
+    expect(nicheRegistry).toContain("maxLeadsPerMonth");
+    expect(nicheRegistry).toContain("maxEvents");
+
+    expect(plansPage).toContain("useBillingPlans");
+    expect(plansPage).toContain("plan.features.map");
+    expect(plansPage).not.toContain("EDUCATION_PLAN_TEMPLATES");
+    expect(plansPage).not.toMatch(/maxPrograms:\s*\d+/);
+  });
+
   it("keeps Education domain contracts owned by core", () => {
     const contracts = read("src/core/education/contracts.ts");
 

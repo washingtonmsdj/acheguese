@@ -85,14 +85,6 @@ export function useEducationNicheBilling(options: UseEducationNicheBillingOption
   // Calcula limites operacionais
   const limits = useMemo((): OperationalLimitsCheck | null => {
     if (!context || !nicheData.config) return null;
-    
-    // Usa calculateLimits do subscription se disponível
-    const subscriptionLimits = subscriptionData.calculateLimits({
-      programCount: 0, // Será preenchido externamente
-      leadsThisMonth: 0,
-      eventCount: 0,
-    });
-    
     // Combina com limites do nicho
     const niche = nicheData.config;
     

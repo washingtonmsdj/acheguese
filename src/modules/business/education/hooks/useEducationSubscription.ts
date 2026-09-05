@@ -9,7 +9,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { EducationSubscriptionService } from '../services/education-subscription.service';
-import type { EducationEntitlements, EducationSubscriptionStatus } from '../services/education-subscription.service';
+import type { EducationSubscriptionStatus } from '../services/education-subscription.service';
 
 // ============================================================
 // TIPOS
@@ -18,29 +18,6 @@ import type { EducationEntitlements, EducationSubscriptionStatus } from '../serv
 export interface UseEducationSubscriptionOptions {
   businessId: string;
   enabled?: boolean;
-}
-
-export interface SubscriptionLimits {
-  programs: {
-    current: number;
-    max: number;
-    canCreate: boolean;
-  };
-  leads: {
-    current: number;
-    max: number;
-    canReceive: boolean;
-  };
-  events: {
-    current: number;
-    max: number;
-    canCreate: boolean;
-  };
-  storage: {
-    used: number;
-    max: number;
-    percentage: number;
-  };
 }
 
 // ============================================================
@@ -92,52 +69,6 @@ export function useEducationSubscription(options: UseEducationSubscriptionOption
     isFree: status?.planType === 'free',
   };
 
-  // Calcula limites atuais (se os dados de uso forem fornecidos)
-  const calculateLimits = (
-    currentUsage: {
-      programCount: number;
-      leadsThisMonth: number;
-      eventCount: number;
-      storageUsedMB?: number;
-    }
-  ): SubscriptionLimits => {
-    const entitlements = status?.entitlements;
-    
-    if (!entitlements) {
-      return {
-        programs: { current: 0, max: 0, canCreate: false },
-        leads: { current: 0, max: 0, canReceive: false },
-        events: { current: 0, max: 0, canCreate: false },
-        storage: { used: 0, max: 0, percentage: 0 },
-      };
-    }
-
-    return {
-      programs: {
-        current: currentUsage.programCount,
-        max: entitlements.maxPrograms,
-        canCreate: currentUsage.programCount < entitlements.maxPrograms,
-      },
-      leads: {
-        current: currentUsage.leadsThisMonth,
-        max: entitlements.maxLeadsPerMonth,
-        canReceive: currentUsage.leadsThisMonth < entitlements.maxLeadsPerMonth,
-      },
-      events: {
-        current: currentUsage.eventCount,
-        max: entitlements.maxEvents,
-        canCreate: currentUsage.eventCount < entitlements.maxEvents,
-      },
-      storage: {
-        used: currentUsage.storageUsedMB ?? 0,
-        max: entitlements.storageMB,
-        percentage: Math.min(
-          100,
-          Math.round(((currentUsage.storageUsedMB ?? 0) / entitlements.storageMB) * 100)
-        ),
-      },
-    };
-  };
 
   return {
     // Status
@@ -154,9 +85,8 @@ export function useEducationSubscription(options: UseEducationSubscriptionOption
     
     // Permissões calculadas
     permissions,
-    
+
     // Helpers
-    calculateLimits,
     refresh: refreshMutation.mutate,
     isRefreshing: refreshMutation.isPending,
   };
