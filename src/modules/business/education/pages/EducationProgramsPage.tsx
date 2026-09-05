@@ -76,7 +76,10 @@ export function EducationProgramsPage() {
   const { toast } = useToast();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const { data: profile, isLoading: isProfileLoading } = useEducationProfile(businessId);
-  const { programs, isLoading, create, update, remove } = useEducationPrograms(profile?.id);
+  const { programs, isLoading, create, update, remove } = useEducationPrograms(
+    profile?.id,
+    { includeInactive: true },
+  );
   const dashboardUrl = businessId ? EducationUrlService.buildAdminDashboardUrl(businessId) : null;
 
   // Integração nicho + billing

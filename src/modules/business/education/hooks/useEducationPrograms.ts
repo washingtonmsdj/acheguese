@@ -3,14 +3,25 @@ import { EducationService } from '../services';
 import * as educationQueries from '@/core/education/services/education.queries';
 import type { EducationLevel, EducationProgram } from '@/core/education';
 
-export function useEducationPrograms(profileId?: string) {
+export interface EducationProgramQueryOptions {
+  includeInactive?: boolean;
+}
+
+export function useEducationPrograms(
+  profileId?: string,
+  options: EducationProgramQueryOptions = {},
+) {
   const queryClient = useQueryClient();
+  const { includeInactive = false } = options;
+  const isActiveFilter = includeInactive ? undefined : true;
 
   const query = useQuery({
-    queryKey: ['education', 'programs', profileId],
+    queryKey: ['education', 'programs', profileId, isActiveFilter],
     queryFn: async () => {
       if (!profileId) return [];
-      return educationQueries.listEducationPrograms(profileId, { isActive: true });
+      return educationQueries.listEducationPrograms(profileId, {
+        isActive: isActiveFilter,
+      });
     },
     enabled: Boolean(profileId),
   });
