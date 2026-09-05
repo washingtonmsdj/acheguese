@@ -123,7 +123,7 @@ vi.mock("@/core/moderation", () => ({
   ReportReasonDialog: () => null,
 }));
 
-vi.mock("@/core/community/components/CommentsModal", () => ({
+vi.mock("@/core/community-feed/components/CommentsModal", () => ({
   CommentsModal: () => null,
 }));
 
