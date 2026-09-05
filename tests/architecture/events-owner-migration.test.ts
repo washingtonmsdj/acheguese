@@ -12,6 +12,8 @@ describe("community Events canonical owner", () => {
     expect(exists("src/features/events")).toBe(false);
     expect(exists("src/core/verticals/events")).toBe(false);
     expect(exists("src/shared/components/eventos")).toBe(false);
+    expect(exists("src/modules/community-events/components/EventTicketManager.tsx")).toBe(false);
+    expect(exists("src/modules/community-events/components/EventsGlobalSidebar.tsx")).toBe(false);
   });
 
   it("keeps Events implementation under community-events", () => {
