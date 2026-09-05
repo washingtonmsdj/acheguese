@@ -225,4 +225,26 @@ describe("G6 Community feed page ownership", () => {
     ).toBe(false);
   });
 
+
+  it("owns Feed post/comment moderation hook in core/community-feed", () => {
+    const page = read("src/core/community-feed/hooks/useComunidadePage.ts");
+    const panel = read(
+      "src/core/community-feed/components/comments/PostCommentsPanel.tsx",
+    );
+    const hook = read("src/core/community-feed/hooks/useModeration.ts");
+
+    expect(page).toContain(
+      "@/core/community-feed/hooks/useModeration",
+    );
+    expect(panel).toContain(
+      "@/core/community-feed/hooks/useModeration",
+    );
+    expect(hook).toContain('targetType: "post"');
+    expect(hook).toContain('targetType: "comment"');
+    expect(hook).toContain("@/core/community/moderation");
+    expect(
+      existsSync(resolve(ROOT, "src/core/community/hooks/useModeration.ts")),
+    ).toBe(false);
+  });
+
 });

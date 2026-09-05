@@ -32,7 +32,7 @@ vi.mock("@/core/posts/hooks", () => ({
   }),
 }));
 
-vi.mock("@/core/community/hooks/useModeration", () => ({
+vi.mock("@/core/community-feed/hooks/useModeration", () => ({
   useModeration: () => ({ reportPostAsync: vi.fn() }),
 }));
 

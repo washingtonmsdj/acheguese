@@ -8,7 +8,7 @@ import {
   useComments,
   type CommunityComment,
 } from "@/core/community-feed/hooks/comments/useComments";
-import { useModeration } from "@/core/community/hooks/useModeration";
+import { useModeration } from "@/core/community-feed/hooks/useModeration";
 import { useSessionContext } from "@/core/session";
 import {
   COMMUNITY_REPORT_REASON_OPTIONS,

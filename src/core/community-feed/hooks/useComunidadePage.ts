@@ -12,7 +12,7 @@ import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useCommunityFilters } from "@/core/community-feed/hooks/useFeedFilters";
 import { usePostActions } from "@/core/posts/hooks";
-import { useModeration } from "@/core/community/hooks/useModeration";
+import { useModeration } from "@/core/community-feed/hooks/useModeration";
 import { useSessionContext } from "@/core/session";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { usePostById } from "@/core/community-feed/hooks/usePostById";
