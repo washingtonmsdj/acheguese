@@ -21,7 +21,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 import {
   SPACING,
-} from "../styles/communityDesignSystem";
+} from "@/core/community/components/styles/communityDesignSystem";
 import { PostHeader } from "./PostHeader";
 import { PostBadges } from "./PostBadges";
 import { PostContent } from "./PostContent";

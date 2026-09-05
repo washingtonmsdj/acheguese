@@ -1,5 +1,5 @@
 import React from "react";
-import { UnifiedPostCard } from "@/core/community/components/UnifiedPostCard";
+import { UnifiedPostCard } from "@/core/community-feed/components/UnifiedPostCard";
 import { DirectMessageModal } from "@/core/community/components/DirectMessageModal";
 import { useUnifiedFeed } from "@/core/community-feed/hooks/useUnifiedFeed";
 import { useMessageModal } from "@/core/community-feed/hooks/useMessageModal";

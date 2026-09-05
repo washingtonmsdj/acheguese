@@ -58,10 +58,10 @@ describe("community post and feed security contracts", () => {
   it("keeps feed pages bounded and skips offscreen card rendering work", () => {
     const queries = read("src/core/posts/services/posts.feed.queries.ts");
     const feed = read(
-      "src/core/community/components/feed/UnifiedFeedWithMessages.tsx",
+      "src/core/community-feed/components/UnifiedFeedWithMessages.tsx",
     );
     const postContent = read(
-      "src/core/community/components/UnifiedPostCard/PostContent.tsx",
+      "src/core/community-feed/components/UnifiedPostCard/PostContent.tsx",
     );
 
     expect(queries).toContain("Math.min(50");

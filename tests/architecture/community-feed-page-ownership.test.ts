@@ -348,4 +348,22 @@ describe("G6 Community feed page ownership", () => {
     }
   });
 
+
+  it("owns UnifiedPostCard only in community-feed", () => {
+    const feed = read(
+      "src/core/community-feed/components/UnifiedFeedWithMessages.tsx",
+    );
+    const card = read(
+      "src/core/community-feed/components/UnifiedPostCard/index.tsx",
+    );
+
+    expect(feed).toContain(
+      "@/core/community-feed/components/UnifiedPostCard",
+    );
+    expect(card).toContain("export const UnifiedPostCard");
+    expect(
+      existsSync(resolve(ROOT, "src/core/community/components/UnifiedPostCard")),
+    ).toBe(false);
+  });
+
 });

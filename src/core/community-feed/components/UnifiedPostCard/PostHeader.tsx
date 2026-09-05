@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
 import { MapPin, Clock, Shield, MoreHorizontal, Flag } from "lucide-react";
-import { INLINE_STYLES } from "../styles/communityDesignSystem";
+import { INLINE_STYLES } from "@/core/community/components/styles/communityDesignSystem";
 interface PostHeaderProps {
   authorProfileId: string;
   authorName: string;
