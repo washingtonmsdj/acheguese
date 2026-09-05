@@ -74,7 +74,7 @@ vi.mock("@/core/community-feed/components/page/LocationScopeCards", () => ({
   LocationScopeCards: () => null,
 }));
 
-vi.mock("@/core/community/components/page/CommunityOverviewSurface", () => ({
+vi.mock("@/core/community-feed/components/CommunityOverviewSurface", () => ({
   CommunityOverviewSurface: ({
     mode,
     children,

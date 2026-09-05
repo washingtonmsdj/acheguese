@@ -34,7 +34,7 @@ describe("G6 Community groups ownership", () => {
       "utf8",
     );
     const overview = readFileSync(
-      join(ROOT, "src/core/community/components/page/CommunityOverviewSurface.tsx"),
+      join(ROOT, "src/core/community-feed/components/CommunityOverviewSurface.tsx"),
       "utf8",
     );
     const coreBarrel = readFileSync(

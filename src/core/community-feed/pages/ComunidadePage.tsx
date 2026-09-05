@@ -36,7 +36,7 @@ import {
 import { CommunityFeed } from "@/core/community-feed/components/CommunityFeed";
 import { LocationScopeCards } from "@/core/community-feed/components/page/LocationScopeCards";
 import { CommunityModals } from "@/core/community-feed/components/page/CommunityModals";
-import { CommunityOverviewSurface } from "@/core/community/components/page/CommunityOverviewSurface";
+import { CommunityOverviewSurface } from "@/core/community-feed/components/CommunityOverviewSurface";
 import {
   isCommunityOverviewView,
   isCommunitySocialView,
