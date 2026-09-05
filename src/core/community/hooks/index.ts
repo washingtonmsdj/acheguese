@@ -17,8 +17,6 @@ export { useUnifiedFeed } from "./feed/useUnifiedFeed";
 
 // Composer hooks
 export { useCreatePost } from "./composer/useCreatePost";
-export { usePostForm } from "./composer/usePostForm";
-export { useUnifiedComposer } from "./composer/useUnifiedComposer";
 export { useCreatePostForm } from "@/core/community-feed/hooks/useCreatePostForm";
 
 // Post interaction hooks
