@@ -247,4 +247,23 @@ describe("G6 Community feed page ownership", () => {
     ).toBe(false);
   });
 
+
+  it("owns the post-context direct-message adapter in core/community-feed", () => {
+    const feed = read(
+      "src/core/community-feed/components/UnifiedFeedWithMessages.tsx",
+    );
+    const hook = read("src/core/community-feed/hooks/useMessageModal.ts");
+
+    expect(feed).toContain(
+      "@/core/community-feed/hooks/useMessageModal",
+    );
+    expect(hook).toContain(
+      "@/core/community/hooks/useDirectMessages",
+    );
+    expect(hook).toContain("UnifiedPost");
+    expect(
+      existsSync(resolve(ROOT, "src/core/community/hooks/useMessageModal.ts")),
+    ).toBe(false);
+  });
+
 });
