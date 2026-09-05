@@ -868,42 +868,7 @@ export async function getLeadPipelineMetrics(
       : 0;
 
   return { conversionRate, avgDaysToFirstContact };
-}> {
-  if (!isValidUuid(profileId)) return { rate: 0, avgDays: 0 };
-  const { data, error } = await supabase
-    .from('education_leads')
-    .select('status, first_contact_at, created_at')
-    .eq('education_profile_id', profileId);
 
-  if (error) {
-    logger.error('[EducationQueries] Error calculating conversion rate:', error);
-    return { rate: 0, avgDays: 0 };
-  }
-
-  const total = (data ?? []).length;
-  const enrolled = (data ?? []).filter((l) => l.status === 'enrolled').length;
-  const rate = total > 0 ? Math.round((enrolled / total) * 100) : 0;
-
-  // Calculate average days to conversion (contacted -> enrolled)
-  let totalDays = 0;
-  let convertedCount = 0;
-
-  (data ?? []).forEach((lead) => {
-    if (lead.status === 'enrolled' && lead.first_contact_at && lead.created_at) {
-      const createdAt = new Date(lead.created_at);
-      const contactedAt = new Date(lead.first_contact_at);
-      const days = Math.round((contactedAt.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
-      if (days >= 0) {
-        totalDays += days;
-        convertedCount++;
-      }
-    }
-  });
-
-  const avgDays = convertedCount > 0 ? Math.round(totalDays / convertedCount) : 0;
-
-  return { rate, avgDays };
-}
 
 // ============================================================
 // TERRITORIAL QUERIES
