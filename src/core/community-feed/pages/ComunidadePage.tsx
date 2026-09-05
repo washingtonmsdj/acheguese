@@ -32,7 +32,7 @@ import {
 import {
   useComunidadePage,
   type CreatePostModalData,
-} from "@/core/community/hooks/page/useComunidadePage";
+} from "@/core/community-feed/hooks/useComunidadePage";
 import { CommunityFeed } from "@/core/community-feed/components/CommunityFeed";
 import { LocationScopeCards } from "@/core/community/components/page/LocationScopeCards";
 import { CommunityFloatingButtons } from "@/core/community/components/page/CommunityFloatingButtons";
@@ -42,7 +42,7 @@ import {
   isCommunityOverviewView,
   isCommunitySocialView,
   type CommunityOverviewView,
-} from "@/core/community/components/page/communityOverviewNavigation";
+} from "@/core/community-feed/navigation";
 import { CreatePostModal } from "@/core/community-feed/components/CreatePostModal";
 import { VerificationBanner } from "@/core/verification";
 import { COMMUNITY_PAGE_COPY } from "@/core/community/utils/communityCopy";

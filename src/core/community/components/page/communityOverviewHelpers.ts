@@ -23,7 +23,7 @@ import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritory
 import type { TerritorialCommunityProfile } from "@/core/community-experience/types";
 import { getRecordValue } from "@/shared/utils/recordLookup";
 
-import type { CommunityOverviewView } from "./communityOverviewNavigation";
+import type { CommunityOverviewView } from "@/core/community-feed/navigation";
 
 export const COMMUNITY_HERO_IMAGES: Record<string, string> = {
   barra: bairroOndina,

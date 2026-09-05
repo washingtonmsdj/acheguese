@@ -10,7 +10,7 @@ import type {
   ModalCommentData,
   ModalReportData,
   ModalState,
-} from "@/core/community/hooks/page/useComunidadePage";
+} from "@/core/community-feed/hooks/useComunidadePage";
 import {
   COMMUNITY_REPORT_REASON_OPTIONS,
   ReportReasonDialog,

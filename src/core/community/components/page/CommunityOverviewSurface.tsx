@@ -88,7 +88,7 @@ import {
   isCommunitySocialView,
   type CommunityOverviewSection,
   type CommunityOverviewView,
-} from "./communityOverviewNavigation";
+} from "@/core/community-feed/navigation";
 import { getPublicPostPreview } from "@/core/posts/utils/publicPostContent";
 import { sharePost } from "@/core/posts/utils/postShare";
 import { eventRuntimeService, type PublicEvent } from "@/core/community-events";

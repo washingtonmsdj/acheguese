@@ -30,4 +30,4 @@ export { useComments } from "./useComments";
 export { useCommunityModals } from "./modals/useCommunityModals";
 
 // Page hooks
-export { useComunidadePage } from "./page/useComunidadePage";
+export { useComunidadePage } from "@/core/community-feed/hooks/useComunidadePage";

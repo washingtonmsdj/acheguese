@@ -62,7 +62,7 @@ vi.mock("@/core/community-experience/access", () => ({
   useCommunityAccess: mocks.useCommunityAccess,
 }));
 
-vi.mock("@/core/community/hooks/page/useComunidadePage", () => ({
+vi.mock("@/core/community-feed/hooks/useComunidadePage", () => ({
   useComunidadePage: mocks.useComunidadePage,
 }));
 
