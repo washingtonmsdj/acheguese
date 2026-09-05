@@ -47,7 +47,7 @@ import {
   X,
 } from "lucide-react";
 import { useSessionContext } from "@/core/session";
-import { useCreatePostForm } from "../../hooks/composer/useCreatePostForm";
+import { useCreatePostForm } from "@/core/community-feed/hooks/useCreatePostForm";
 import { postService } from "@/core/posts/services";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";

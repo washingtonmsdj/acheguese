@@ -139,11 +139,11 @@ const notificationHook = readFileSync(
   "utf8",
 );
 const createPostModal = readFileSync(
-  join(root, "src/core/community/components/composer/CreatePostModal.tsx"),
+  join(root, "src/core/community-feed/components/CreatePostModal.tsx"),
   "utf8",
 );
 const createPostForm = readFileSync(
-  join(root, "src/core/community/hooks/composer/useCreatePostForm.ts"),
+  join(root, "src/core/community-feed/hooks/useCreatePostForm.ts"),
   "utf8",
 );
 const postRuntime = readFileSync(

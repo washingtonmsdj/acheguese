@@ -19,7 +19,7 @@ const cutoverMigration = readFileSync(
   "utf8",
 );
 const composer = readFileSync(
-  resolve(root, "src/core/community/components/composer/CreatePostModal.tsx"),
+  resolve(root, "src/core/community-feed/components/CreatePostModal.tsx"),
   "utf8",
 );
 const pollMutations = readFileSync(

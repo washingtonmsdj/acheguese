@@ -43,7 +43,7 @@ import {
   isCommunitySocialView,
   type CommunityOverviewView,
 } from "@/core/community/components/page/communityOverviewNavigation";
-import { CreatePostModal } from "@/core/community/components/composer/CreatePostModal";
+import { CreatePostModal } from "@/core/community-feed/components/CreatePostModal";
 import { VerificationBanner } from "@/core/verification";
 import { COMMUNITY_PAGE_COPY } from "@/core/community/utils/communityCopy";
 import { resolveCommunityFeedTerritoryFilter } from "@/core/community/utils/resolveCommunityFeedTerritoryFilter";

@@ -12,7 +12,7 @@ function source(relativePath: string): string {
 describe("community Poll runtime characterization", () => {
   it("creates a Poll post through one authoritative command", () => {
     const composer = source(
-      "src/core/community/components/composer/CreatePostModal.tsx",
+      "src/core/community-feed/components/CreatePostModal.tsx",
     );
 
     expect(composer).toContain("createPollPostWithImages");

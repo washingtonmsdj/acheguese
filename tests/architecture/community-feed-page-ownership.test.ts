@@ -19,4 +19,34 @@ describe("G6 Community feed page ownership", () => {
     expect(existsSync(resolve(ROOT, "src/core/community-feed/pages/NovoPostPage.spec.tsx"))).toBe(true);
     expect(existsSync(resolve(ROOT, "src/core/community/pages/NovoPostPage.spec.tsx"))).toBe(false);
   });
+
+  it("owns the post composer implementation in core/community-feed", () => {
+    const modal = read(
+      "src/core/community-feed/components/CreatePostModal.tsx",
+    );
+    const formHook = read(
+      "src/core/community-feed/hooks/useCreatePostForm.ts",
+    );
+    const communityPage = read(
+      "src/core/community-feed/pages/ComunidadePage.tsx",
+    );
+
+    expect(modal).toContain(
+      "@/core/community-feed/hooks/useCreatePostForm",
+    );
+    expect(formHook).toContain("export function useCreatePostForm");
+    expect(communityPage).toContain(
+      "@/core/community-feed/components/CreatePostModal",
+    );
+
+    for (const legacyPath of [
+      "src/core/community/components/composer/CreatePostModal.tsx",
+      "src/core/community/components/composer/CreatePostModal.permissions.ts",
+      "src/core/community/components/composer/CreatePostModal.spec.ts",
+      "src/core/community/hooks/composer/useCreatePostForm.ts",
+      "src/core/community-feed/components/CreatePostModal.ts",
+    ]) {
+      expect(existsSync(resolve(ROOT, legacyPath))).toBe(false);
+    }
+  });
 });
