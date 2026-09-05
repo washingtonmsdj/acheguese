@@ -167,4 +167,11 @@ describe("G6 Community feed page ownership", () => {
     ).toBe(false);
   });
 
+
+  it("does not recreate the orphaned generic usePost hook", () => {
+    expect(
+      existsSync(resolve(ROOT, "src/core/community/hooks/usePost.ts")),
+    ).toBe(false);
+  });
+
 });
