@@ -18,7 +18,7 @@ import {
 } from "@/core/moderation";
 
 const CommentsModal = lazy(() =>
-  import("@/core/community/components/CommentsModal").then((module) => ({
+  import("@/core/community-feed/components/CommentsModal").then((module) => ({
     default: module.CommentsModal,
   })),
 );
