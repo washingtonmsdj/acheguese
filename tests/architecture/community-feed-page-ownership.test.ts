@@ -252,9 +252,15 @@ describe("G6 Community feed page ownership", () => {
       "@/core/community-feed/hooks/useMessageModal",
     );
     expect(hook).toContain(
-      "@/core/community/hooks/useDirectMessages",
+      "@/core/messaging/hooks/useCommunityDirectMessages",
     );
     expect(hook).toContain("UnifiedPost");
+    expect(
+      existsSync(resolve(ROOT, "src/core/community/hooks/useDirectMessages.ts")),
+    ).toBe(false);
+    expect(
+      existsSync(resolve(ROOT, "src/core/community/components/DirectMessageModal.tsx")),
+    ).toBe(false);
     expect(
       existsSync(resolve(ROOT, "src/core/community/hooks/useMessageModal.ts")),
     ).toBe(false);

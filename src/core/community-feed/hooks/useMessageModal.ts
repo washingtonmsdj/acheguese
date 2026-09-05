@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { profileService } from "@/core/profiles/services/ProfileService"; // SSOT
-import { useDirectMessages } from "@/core/community/hooks/useDirectMessages";
+import { useCommunityDirectMessages } from "@/core/messaging/hooks/useCommunityDirectMessages";
 import type { UnifiedPost } from "@/shared/types/posts";
 import type { DirectMessageRecipientView } from "@/core/profiles/views/DirectMessageRecipientView";
 import { logger } from "@/shared/utils/logger";
 
 type ConversationPostContext = Parameters<
-  ReturnType<typeof useDirectMessages>["createOrGetConversation"]
+  ReturnType<typeof useCommunityDirectMessages>["createOrGetConversation"]
 >[0];
 
 function resolveConversationPostType(
@@ -37,7 +37,7 @@ export function useMessageModal(
     isLoadingOlder,
     reportConversation,
     messages,
-  } = useDirectMessages(communityId);
+  } = useCommunityDirectMessages(communityId);
 
   const handleOpen = async (
     postId: string,

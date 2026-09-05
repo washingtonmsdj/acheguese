@@ -25,7 +25,7 @@ const classifiedCommentService = read(
   "src/core/classifieds/services/ClassifiedCommentService.ts",
 );
 const directMessagesHook = read(
-  "src/core/community/hooks/useDirectMessages.ts",
+  "src/core/messaging/hooks/useCommunityDirectMessages.ts",
 );
 
 function publicFunctionParameters(name: string): string {

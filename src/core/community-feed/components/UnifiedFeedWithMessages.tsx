@@ -1,6 +1,6 @@
 import React from "react";
 import { UnifiedPostCard } from "@/core/community-feed/components/UnifiedPostCard";
-import { DirectMessageModal } from "@/core/community/components/DirectMessageModal";
+import { DirectMessageModal } from "@/core/community-feed/components/DirectMessageModal";
 import { useUnifiedFeed } from "@/core/community-feed/hooks/useUnifiedFeed";
 import { useMessageModal } from "@/core/community-feed/hooks/useMessageModal";
 import type { UnifiedPost } from "@/shared/types/posts";

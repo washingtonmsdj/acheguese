@@ -14,8 +14,8 @@ const commands = read(
 const service = read(
   "src/core/messaging/services/CommunityDirectMessagingService.ts",
 );
-const hook = read("src/core/community/hooks/useDirectMessages.ts");
-const modal = read("src/core/community/components/DirectMessageModal.tsx");
+const hook = read("src/core/messaging/hooks/useCommunityDirectMessages.ts");
+const modal = read("src/core/community-feed/components/DirectMessageModal.tsx");
 const registry = read("src/core/realtime/config/realtimeRegistry.ts");
 
 describe("Community Direct Messaging SSOT", () => {

@@ -22,7 +22,8 @@ chat universal que escolha o dominio em runtime.
 | Adapter publico       | `src/core/messaging/services/CommunityDirectMessagingService.ts`       |
 | Contratos estruturais | `src/core/messaging/contracts.ts`                                      |
 | Estado e comandos     | RPCs `*_community_direct_*` server-owned                               |
-| UI comunitaria        | `src/core/community/hooks/useDirectMessages.ts`                        |
+| Hook de mensageria    | `src/core/messaging/hooks/useCommunityDirectMessages.ts`                |
+| UI iniciada pelo Feed  | `src/core/community-feed/components/DirectMessageModal.tsx`             |
 | Realtime              | `src/core/realtime/services/RealtimeService.ts`                        |
 | Enforcement           | RLS, grants e funcoes das migrations `20260715092000`/`20260715093000` |
 

@@ -16,7 +16,7 @@ interface PostContext {
   type: "civic_report" | "achado" | "recomendacao" | "alerta";
 }
 
-export function useDirectMessages(communityId?: string) {
+export function useCommunityDirectMessages(communityId?: string) {
   const { activeProfile } = useSessionContext();
   const profileId = activeProfile?.id;
   const [conversations, setConversations] = useState<

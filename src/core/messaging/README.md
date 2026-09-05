@@ -69,3 +69,8 @@ Este fechamento arquitetural nao certifica ainda:
 - same-SHA lint/typecheck/test/build/deploy/smoke.
 
 Essas provas continuam em G5/G6/G7.
+
+## Community Direct Messaging React boundary
+
+- `hooks/useCommunityDirectMessages.ts` owns the React state adapter for the Community Direct Messaging aggregate.
+- Feed-specific presentation remains in `src/core/community-feed`; persistence and commands remain in `CommunityDirectMessagingService`.
