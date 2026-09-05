@@ -606,3 +606,15 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 4. preserve compatibilidade por bridge one-way quando necessário;
 5. faça a mudança em pequeno corte verificável;
 6. instale/atualize o guard para que a dívida não volte.
+
+## Checkpoint 2026-09-05 — G6 Community ownership + CI/deploy limits
+
+- Source checkpoint antes deste registro: `faa94da7b72ad358d21da52ee90b6194bc50c669`.
+- Feed/composer: corrigidos os callers quebrados pelo move de `CreatePostModal` e `useCreatePostForm` para `core/community-feed`; o mock residual de `ComunidadePage.publicDeepLink.spec.tsx` também foi alinhado.
+- Community Issues: `src/core/community-issues` passou a ser o owner explícito da implementação (service, hooks, components, schema e types); `src/core/community/issues` ficou sem implementação e não deve ser recriado.
+- Callers runtime/admin, testes ativos e `tools/architecture/architecture-registry.ts` foram alinhados ao owner `core/community-issues`.
+- Supabase canônico: `community_issues`, `community_issue_supports` e `community_issue_reports` estão com RLS ativo. Os RPCs públicos de criação/mutação/support são `SECURITY INVOKER` e delegam à autoridade privada. Reports preservam `INSERT` column-scoped somente em `issue_id`/`reason`, com `profile_id` server-owned e validação por RLS/trigger.
+- `get_community_poll_for_post(uuid)` continua sendo exceção SECURITY DEFINER conhecida/allowlisted; não alterar sem novo desenho, pois a exceção atual é intencional e fail-closed.
+- GitHub Actions: quota de minutos hospedados esgotada; não rerodar/disparar workflows até liberação. Falhas instantâneas desse período são blocker de infraestrutura, não verdict de source.
+- Vercel: o deploy do SHA `5324766588ff3be7ee8a500c3c7af13d887ae408` falhou por 3 imports antigos no typecheck e foi corrigido em `03a2fb29e09053019bb101be82d65d4ccaac977c`; deployments posteriores estão bloqueados por `Deployment rate limited — retry in 24 hours`, portanto ainda não existe prova same-SHA do HEAD atual.
+- Next action source-only: continuar o caller census do namespace genérico `src/core/community` por responsabilidade real, sem moves/deletes em massa. Quando o limite do Vercel liberar, executar uma única certificação same-SHA do HEAD então vigente. Não consumir GitHub Actions enquanto a quota hospedada estiver indisponível.
