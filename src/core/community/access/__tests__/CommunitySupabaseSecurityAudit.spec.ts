@@ -262,8 +262,8 @@ describe("community supabase security audit", () => {
     const territorialLanding = readProjectFile(
       "src/core/routing/components/TerritorialLandingPage.tsx",
     );
-    const communitySidebar = readProjectFile(
-      "src/core/community/components/CommunityRightSidebar.tsx",
+    const communityOverview = readProjectFile(
+      "src/core/community-feed/components/CommunityOverviewSurface.tsx",
     );
     const communityPage = readProjectFile(
       "src/core/community-feed/pages/ComunidadePage.tsx",
@@ -286,8 +286,8 @@ describe("community supabase security audit", () => {
     expect(territorialLanding).toContain("useLandingFeatured(filter, {");
     expect(territorialLanding).toContain("gastronomy.length > 0");
     expect(territorialLanding).not.toContain(".filter(b => ['restaurante'");
-    expect(communitySidebar).toContain("getCommunityFeaturedBusinesses");
-    expect(communitySidebar).not.toContain("BusinessService.getBusinessesList");
+    expect(communityOverview).toContain("getCommunityFeaturedBusinesses");
+    expect(communityOverview).not.toContain("BusinessService.getBusinessesList");
     expect(communityPage).toContain("linkedCommunityId");
     expect(communityPage).toContain("communityId={linkedCommunityId}");
   });

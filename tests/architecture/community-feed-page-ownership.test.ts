@@ -295,4 +295,18 @@ describe("G6 Community feed page ownership", () => {
     expect(composer).toContain("export function CreatePostModal");
   });
 
+
+  it("does not recreate the orphaned CommunityRightSidebar", () => {
+    expect(
+      existsSync(
+        resolve(ROOT, "src/core/community/components/CommunityRightSidebar.tsx"),
+      ),
+    ).toBe(false);
+
+    const overview = read(
+      "src/core/community-feed/components/CommunityOverviewSurface.tsx",
+    );
+    expect(overview).toContain("getCommunityFeaturedBusinesses");
+  });
+
 });
