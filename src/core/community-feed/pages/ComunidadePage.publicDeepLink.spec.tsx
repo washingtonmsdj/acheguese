@@ -127,7 +127,7 @@ vi.mock("@/core/community/components/CommentsModal", () => ({
   CommentsModal: () => null,
 }));
 
-vi.mock("@/core/community/components/modals/PostDetailModal", () => ({
+vi.mock("@/core/community-feed/components/PostDetailModal", () => ({
   PostDetailModal: ({
     post,
     onClose,

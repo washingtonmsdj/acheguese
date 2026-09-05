@@ -8,19 +8,19 @@ import {
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import type { Poll } from "@/shared/types/poll";
 
-import { usePostInteractions } from "../../hooks/posts/usePostInteractions";
-import { PollCard } from "../PollCard";
-import { PostBadge, type PostType } from "../PostBadge";
-import { PostContent } from "../PostContent";
-import { PostHeader } from "../PostHeader";
-import { PostMetrics } from "../PostMetrics";
-import { PostTags } from "../PostTags";
-import { PostCommentsPanel } from "../comments/PostCommentsPanel";
+import { usePostInteractions } from "@/core/community/hooks/posts/usePostInteractions";
+import { PollCard } from "@/core/community/components/PollCard";
+import { PostBadge, type PostType } from "@/core/community/components/PostBadge";
+import { PostContent } from "@/core/community/components/PostContent";
+import { PostHeader } from "@/core/community/components/PostHeader";
+import { PostMetrics } from "@/core/community/components/PostMetrics";
+import { PostTags } from "@/core/community/components/PostTags";
+import { PostCommentsPanel } from "@/core/community/components/comments/PostCommentsPanel";
 import {
   getCardBackground,
   INLINE_STYLES,
   SPACING,
-} from "../styles/communityDesignSystem";
+} from "@/core/community/components/styles/communityDesignSystem";
 
 interface PostDetailModalProps {
   isOpen: boolean;

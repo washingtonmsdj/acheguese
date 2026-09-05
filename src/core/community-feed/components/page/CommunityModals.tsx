@@ -23,7 +23,7 @@ const CommentsModal = lazy(() =>
   })),
 );
 const PostDetailModal = lazy(() =>
-  import("@/core/community/components/modals/PostDetailModal").then(
+  import("@/core/community-feed/components/PostDetailModal").then(
     (module) => ({
       default: module.PostDetailModal,
     }),
