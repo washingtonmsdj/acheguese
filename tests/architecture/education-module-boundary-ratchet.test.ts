@@ -28,7 +28,7 @@ describe("Education module hardening ratchet", () => {
     );
   });
 
-  it("keeps observability and tracking persistence owned by core", () => {
+  it("keeps funnel persistence exclusive to EducationTrackingService", () => {
     const observability = read(
       "src/core/education/services/EducationObservabilityService.ts",
     );
@@ -36,9 +36,11 @@ describe("Education module hardening ratchet", () => {
       "src/core/education/services/EducationTrackingService.ts",
     );
 
-    expect(observability).toContain("@/integrations/supabase");
+    expect(observability).not.toContain("@/integrations/supabase");
+    expect(observability).not.toContain("education_analytics_events");
     expect(tracking).toContain("@/integrations/supabase");
     expect(tracking).toContain("@/core/education/contracts");
+    expect(tracking).toContain(".from('education_analytics_events')");
     expect(tracking).not.toContain("@/modules/business/education");
   });
 

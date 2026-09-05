@@ -33,7 +33,6 @@ export {
 export type {
   EducationEventPayload,
   EducationEventType,
-  EducationMetrics,
 } from "@/core/education/services/EducationObservabilityService";
 export { EducationTrackingService } from "@/core/education/services/EducationTrackingService";
 export type { TrackEventOptions } from "@/core/education/services/EducationTrackingService";
