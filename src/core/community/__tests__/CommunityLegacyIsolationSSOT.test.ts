@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 function filesUnder(dir: string): string[] {
@@ -30,5 +30,13 @@ describe("community legacy isolation", () => {
     );
 
     expect(offenders).toEqual([]);
+  });
+  it("does not recreate callerless generic Community residues", () => {
+    expect(existsSync("src/core/community/types.ts")).toBe(false);
+    expect(
+      existsSync("src/core/community/components/styles/accessibilityAAA.ts"),
+    ).toBe(false);
+    const publicApi = readFileSync("src/core/community/index.ts", "utf8");
+    expect(publicApi).not.toContain('export * from "./components"');
   });
 });

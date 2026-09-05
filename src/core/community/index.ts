@@ -5,5 +5,4 @@
  */
 
 export * from "./audit";
-export * from "./components";
 export * from "./moderation";
