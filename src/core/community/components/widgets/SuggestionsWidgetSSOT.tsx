@@ -4,7 +4,7 @@ import { Lightbulb, Users, Calendar, TrendingUp } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
-import { useFavoriteGroups } from "../../hooks/useFavoriteGroups";
+import { useFavoriteGroups } from "@/core/community-groups/hooks/useFavoriteGroups";
 import { useTrendingTopics } from "../../hooks/useTrendingTopics";
 import { useAppUrls } from "@/core/routing/hooks";
 import { buildPublicProfileUrl } from "@/core/profiles/utils/publicProfileUrl";

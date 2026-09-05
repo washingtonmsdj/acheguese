@@ -300,11 +300,11 @@ const adminIssueService = readFileSync(
   "utf8",
 );
 const groupsService = readFileSync(
-  join(root, "src/core/community/services/CommunityGroupsService.ts"),
+  join(root, "src/core/community-groups/services/CommunityGroupsService.ts"),
   "utf8",
 );
 const favoriteGroupsHook = readFileSync(
-  join(root, "src/core/community/hooks/useFavoriteGroups.ts"),
+  join(root, "src/core/community-groups/hooks/useFavoriteGroups.ts"),
   "utf8",
 );
 const moderationQueueService = readFileSync(

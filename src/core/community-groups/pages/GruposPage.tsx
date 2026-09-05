@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useGrupos, type GroupSort } from "@/core/community/hooks/useGrupos";
+import { useGrupos, type GroupSort } from "@/core/community-groups/hooks/useGrupos";
 import { useHomeCommunityHref } from "@/core/routing/hooks/useHomeCommunityHref";
 import { Hash, Loader2, Lock, MessageSquare, Sparkles, Users } from "lucide-react";
 import { CommunityPortalGate, useCommunityAccess } from "@/core/community-experience/access";

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CommunityService } from "@/core/community/services/CommunityService";
+import { CommunityGroupsService } from "@/core/community-groups/services/CommunityGroupsService";
 import type { TerritoryFilter } from "@/core/location";
 import { useSessionContext } from "@/core/session";
 import { SocialGroupInteractionsService } from "@/core/social/services/SocialGroupInteractionsService";
@@ -89,7 +89,7 @@ export function useGrupos(options: UseGruposOptions = {}) {
         return { items: [], totalCount: 0, hasMore: false, nextOffset: null };
       }
 
-      return CommunityService.getGroupsPage({
+      return CommunityGroupsService.getGroupsPage({
         search: debouncedSearch || undefined,
         territoryFilter,
         offset: pageParam as number,
@@ -134,7 +134,7 @@ export function useGrupos(options: UseGruposOptions = {}) {
 
     setCreating(true);
     try {
-      const result = await CommunityService.createGroup({
+      const result = await CommunityGroupsService.createGroup({
         ...newGroup,
         location_id: locationId,
         rules: newGroup.rules

@@ -4,7 +4,7 @@ import bairroPituba from "@/assets/bairro-pituba.jpg";
 import personaComerciante from "@/assets/persona-comerciante.jpg";
 import personaMorador from "@/assets/persona-morador.jpg";
 import personaPrestador from "@/assets/persona-prestador.jpg";
-import type { GroupRow } from "@/core/community/services/CommunityGroupsService";
+import type { GroupRow } from "@/core/community-groups/services/CommunityGroupsService";
 import type {
   FeaturedBusiness,
   FeaturedClassified,

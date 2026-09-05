@@ -59,7 +59,7 @@ import { ImageGallery } from "@/core/community/components/ImageGallery";
 import {
   CommunityGroupsService,
   type GroupRow,
-} from "@/core/community/services/CommunityGroupsService";
+} from "@/core/community-groups/services/CommunityGroupsService";
 import {
   COMMUNITY_FEED_SORT_FILTERS,
   type CommunityFeedSortType,

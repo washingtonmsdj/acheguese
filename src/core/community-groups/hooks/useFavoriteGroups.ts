@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { FavoriteGroup } from "@/shared/types/community";
 import { useSessionContext } from "@/core/session";
-import { CommunityService } from "@/core/community/services/CommunityService";
+import { CommunityGroupsService } from "@/core/community-groups/services/CommunityGroupsService";
 
 interface CommunityGroupListItem {
   id: string;
@@ -21,7 +21,7 @@ export function useFavoriteGroups() {
     queryFn: async (): Promise<FavoriteGroup[]> => {
       if (!activeProfile?.userId) return [];
 
-      const page = await CommunityService.getGroupsPage({
+      const page = await CommunityGroupsService.getGroupsPage({
         limit: 50,
         onlyMemberGroups: true,
         sortBy: "populares",

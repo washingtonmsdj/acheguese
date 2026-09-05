@@ -459,7 +459,7 @@ export default tseslint.config(
   // CommunityGroupsService é owner de leitura/escrita de groups extraído do CommunityService.
   {
     files: [
-      "src/core/community/services/CommunityGroupsService.ts",
+      "src/core/community-groups/services/CommunityGroupsService.ts",
       "src/core/community/services/CommunityGamificationService.ts",
     ],
     rules: { "ssot/no-direct-community-access": "off" },

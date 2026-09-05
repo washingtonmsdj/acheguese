@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avat
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { useAppUrls } from "@/core/routing/hooks";
-import { useFavoriteGroups } from "../../hooks/useFavoriteGroups";
+import { useFavoriteGroups } from "@/core/community-groups/hooks/useFavoriteGroups";
 import { WidgetSkeleton } from "./WidgetSkeleton";
 
 /**

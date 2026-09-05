@@ -8,8 +8,8 @@ alternativa de dados.
 - `feed/`: leitura territorial por `core/posts`; `core/feed` fornece somente o
   namespace de cache da composicao.
 - `composer/`: criacao de conteudo com autoria do perfil ativo e `location_id`.
-- `useGrupos` e `useFavoriteGroups`: descoberta e participacao em grupos por
-  `CommunityGroupsService` e `SocialGroupInteractionsService`.
+- Groups saiu deste namespace: `useGrupos` e `useFavoriteGroups` pertencem a
+  `src/core/community-groups/hooks`, com persistencia em `CommunityGroupsService`.
 - `useComments`, `useCommentActions` e hooks de post: interacoes sobre os
   services canonicos de posts e comentarios.
 
