@@ -17,6 +17,12 @@ const RETIRED_EDUCATION_BRIDGES = [
   "src/modules/business/education/hooks/useEducationLimits.ts",
 ] as const;
 
+const RETIRED_EDUCATION_PRESENTATION_COMPONENTS = [
+  "src/modules/business/education/components/EducationCard.tsx",
+  "src/modules/business/education/components/EducationProgramsSection.tsx",
+  "src/modules/business/education/components/EducationContactSidebar.tsx",
+] as const;
+
 describe("Education module hardening ratchet", () => {
   it("does not advertise Education as production-ready while public routes are paused", () => {
     const readme = read("src/modules/business/education/README.md");
@@ -227,6 +233,20 @@ describe("Education module hardening ratchet", () => {
     expect(probe).toContain("washingtonmsdj");
     expect(probe).toContain("'transaction', 'rollback'");
     expect(probe).not.toMatch(/\bCOMMIT\b/i);
+  });
+
+  it("keeps callerless Education presentation duplicates retired", () => {
+    const componentsBarrel = read(
+      "src/modules/business/education/components/index.ts",
+    );
+
+    for (const path of RETIRED_EDUCATION_PRESENTATION_COMPONENTS) {
+      expect(exists(path), path).toBe(false);
+    }
+
+    expect(componentsBarrel).not.toContain("EducationCard");
+    expect(componentsBarrel).not.toContain("EducationProgramsSection");
+    expect(componentsBarrel).not.toContain("EducationContactSidebar");
   });
 
   it("retires all Education core bridges and blocks their recreation", () => {

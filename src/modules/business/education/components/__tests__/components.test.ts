@@ -5,10 +5,7 @@ import { getRecordValue } from '@/shared/utils/recordLookup';
 describe('Education Components Exports', () => {
   it('exports all components', () => {
     // React components can be functions or objects (forwardRef/memo)
-    expect(components.EducationCard).toBeDefined();
-    expect(components.EducationProgramsSection).toBeDefined();
     expect(components.EducationLeadForm).toBeDefined();
-    expect(components.EducationContactSidebar).toBeDefined();
     expect(components.EducationStatusBadge).toBeDefined();
     expect(components.EducationPipelineView).toBeDefined();
     expect(components.EducationAnalyticsOverviewCard).toBeDefined();
@@ -18,10 +15,7 @@ describe('Education Components Exports', () => {
   it('all exports are valid React components', () => {
     // Components should be truthy and either function or object
     const componentExports = [
-      'EducationCard',
-      'EducationProgramsSection',
       'EducationLeadForm',
-      'EducationContactSidebar',
       'EducationStatusBadge',
       'EducationPipelineView',
       'EducationAnalyticsOverviewCard',
