@@ -113,6 +113,35 @@ function validatePhone(phone: string): boolean {
   return /^(\+?\d{10,15}|\(\d{2}\)\s?\d{4,5}-?\d{4})$/.test(phone);
 }
 
+async function createDraftEducationProfile(
+  businessId: string,
+): Promise<{ data: EducationProfile | null; error: Error | null }> {
+  return mutations.createEducationProfile({
+    business_id: businessId,
+    institution_type: 'school',
+    niche_key: 'regular_school',
+    support_level: 'basic_enabled',
+    summary: null,
+    whatsapp_number: null,
+    status: 'draft',
+    published_at: null,
+    school_type: null,
+    school_network: null,
+    school_inep_code: null,
+    school_source_url: null,
+    school_source_updated_at: null,
+    education_levels: null,
+    shifts: null,
+    age_range_min: null,
+    age_range_max: null,
+    enrollment_open: false,
+    school_basic_resources: null,
+    school_accessibility_features: null,
+    school_equipment_features: null,
+    school_facility_features: null,
+  });
+}
+
 // ============================================================
 // SERVICE
 // ============================================================
@@ -126,38 +155,12 @@ export const EducationService = {
    * Obtem ou cria perfil de educacao para um business
    */
   async getOrCreateProfile(businessId: string): Promise<EducationProfile | null> {
-    // Tenta obter existente
     const profile = await queries.getEducationProfileByBusinessId(businessId);
     if (profile) {
       return profile;
     }
 
-    // Cria novo perfil em draft
-    const { data, error } = await mutations.createEducationProfile({
-      business_id: businessId,
-      institution_type: 'school',
-      niche_key: 'regular_school',
-      support_level: 'basic_enabled',
-      summary: null,
-      whatsapp_number: null,
-      status: 'draft',
-      published_at: null,
-      school_type: null,
-      school_network: null,
-      school_inep_code: null,
-      school_source_url: null,
-      school_source_updated_at: null,
-      education_levels: null,
-      shifts: null,
-      age_range_min: null,
-      age_range_max: null,
-      enrollment_open: false,
-      school_basic_resources: null,
-      school_accessibility_features: null,
-      school_equipment_features: null,
-      school_facility_features: null,
-    });
-
+    const { data, error } = await createDraftEducationProfile(businessId);
     if (error) {
       logger.error('[EducationService] Error creating profile:', error);
       return null;
@@ -170,9 +173,18 @@ export const EducationService = {
    * Salva configuracao inicial de educacao (create/update profile)
    */
   async saveSetupProfile(payload: EducationSetupPayload): Promise<EducationProfile | null> {
-    const profile = await this.getOrCreateProfile(payload.businessId);
+    let profile = await queries.getEducationProfileByBusinessId(payload.businessId);
+    let createdDuringSetup = false;
+
     if (!profile) {
-      return null;
+      const created = await createDraftEducationProfile(payload.businessId);
+      if (created.error || !created.data) {
+        logger.error('[EducationService] Error creating setup profile:', created.error);
+        return null;
+      }
+
+      profile = created.data;
+      createdDuringSetup = true;
     }
 
     const { data, error } = await mutations.updateEducationProfile(profile.id, {
@@ -199,6 +211,17 @@ export const EducationService = {
 
     if (error) {
       logger.error('[EducationService] Error saving setup profile:', error);
+
+      if (createdDuringSetup) {
+        const rollback = await mutations.deleteEducationProfile(profile.id);
+        if (rollback.error) {
+          logger.error(
+            '[EducationService] Error rolling back failed setup profile:',
+            rollback.error,
+          );
+        }
+      }
+
       return null;
     }
 

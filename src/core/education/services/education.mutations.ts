@@ -145,6 +145,29 @@ export async function createEducationProfile(
 }
 
 /**
+ * Remove perfil de educacao.
+ *
+ * Usado como compensacao canonica quando o setup acabou de criar um draft e
+ * a configuracao seguinte falhou. As dependencias de Education usam FK
+ * ON DELETE CASCADE a partir de education_profiles.
+ */
+export async function deleteEducationProfile(
+  id: string,
+): Promise<MutationResult<null>> {
+  const { error } = await supabase
+    .from('education_profiles')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    logger.error('[EducationMutations] Error deleting profile:', error);
+    return { data: null, error: new Error(error.message) };
+  }
+
+  return { data: null, error: null };
+}
+
+/**
  * Atualiza perfil de educacao
  */
 export async function updateEducationProfile(
