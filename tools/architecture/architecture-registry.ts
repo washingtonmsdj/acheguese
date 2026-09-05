@@ -355,7 +355,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/core/community-experience/services/CommunityMembershipService.ts",
       "src/core/community-experience/services/CommunityEntityLinkService.ts",
       "src/core/community-experience/types.ts",
-      "src/core/community/access/CommunityAccessPolicy.ts",
+      "src/core/community-experience/access/CommunityAccessPolicy.ts",
     ],
     routePrefixes: [
       "/comunidade/:communitySlug",

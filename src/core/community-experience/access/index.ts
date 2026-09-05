@@ -1,19 +1,20 @@
 export {
-  CommunityPortalGate,
-  type CommunityPortalGateProps,
-} from "@/core/community/access";
-export {
-  useCommunityAccess,
-  type UseCommunityAccessInput,
-  type UseCommunityAccessResult,
-} from "@/core/community/access";
-export {
+  POLL_VOTE_TERRITORY_POLICY,
   resolveCommunityAccess,
   type CommunityAccessDecision,
   type CommunityAccessInput,
   type CommunityAccessLevel,
   type CommunityAccessMembership,
+  type CommunityAction,
   type CommunityAccessResidence,
   type CommunityAccessTarget,
-  type CommunityAction,
-} from "@/core/community/access";
+} from "./CommunityAccessPolicy";
+export {
+  useCommunityAccess,
+  type UseCommunityAccessInput,
+  type UseCommunityAccessResult,
+} from "./useCommunityAccess";
+export {
+  CommunityPortalGate,
+  type CommunityPortalGateProps,
+} from "./CommunityPortalGate";

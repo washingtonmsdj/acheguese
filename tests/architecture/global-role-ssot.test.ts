@@ -13,7 +13,7 @@ const DIRECT_USER_ROLES_RE =
 
 const RUNTIME_ROLE_CONSUMERS = [
   "src/core/auth/hooks/useIsAdmin.ts",
-  "src/core/community/access/useCommunityAccess.ts",
+  "src/core/community-experience/access/useCommunityAccess.ts",
   "src/core/landing/services/landing.queries.ts",
   "src/core/profiles/services/profile.context.aggregate.ts",
   "src/core/profiles/services/ProfileService.ts",

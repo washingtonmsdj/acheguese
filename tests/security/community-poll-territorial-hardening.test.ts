@@ -12,7 +12,7 @@ const migration = readFileSync(
   "utf8",
 );
 const policy = readFileSync(
-  resolve(root, "src/core/community/access/CommunityAccessPolicy.ts"),
+  resolve(root, "src/core/community-experience/access/CommunityAccessPolicy.ts"),
   "utf8",
 );
 
