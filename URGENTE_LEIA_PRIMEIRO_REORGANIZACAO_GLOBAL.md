@@ -8,8 +8,8 @@
 
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
-**Status:** EM EXECUÇÃO — G6 / Empresas base, Gastronomia e Educação aguardam provas finais; Community é o próximo sweep ativo  
-**Checkpoint técnico atual:** `575a0da8ab0a00b868e890cfad88ff39f132c828`  
+**Status:** EM EXECUÇÃO — G6 / Empresas base, Gastronomia e Educação aguardam provas finais; Community está em sweep ativo de ownership  
+**Checkpoint técnico atual:** `031ea3b4af8519aaf37ff386f5dc9a16edc336fe`  
 **Checkpoint de transição G5 → G6:** `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
@@ -465,6 +465,18 @@ Um domínio/serviço transversal só está SSOT quando:
 ## 11. Registro de progresso
 
 Atualizar esta seção somente com marcos relevantes. Não transformar este arquivo em log de cada commit.
+
+### 2026-09-05 — G6 Community / ownership sweep ativo
+
+- [x] Feed, Groups, Recommendations, Lost & Found, access policy e route-territory deixaram de depender dos bridges genéricos históricos; os owners explícitos permanecem em `core/community-feed`, `core/community-groups`, `core/community-recommendations`, `core/community-lost-found` e `core/community-experience`;
+- [x] Events consolidado em `5824840546555f0bf360d74aac89e612382a53e4`: a rota ativa continua em `modules/community-events`, `useEventTerritoryFilter` usa `useModuleTerritoryFilter` com escopo preservado, e as pages/hook genéricos antigos foram aposentados;
+- [x] Groups consolidado em `1989bdc20aec39a0438201cf71fe25d3e913d7cb` + `c1fcf55ffebfc557fb7c1d67e156ea787a322879`: service, listagem, favoritos, detalhe, chat e moderação usam `core/community-groups`; a facade genérica `CommunityService` foi removida;
+- [x] Recommendations/Q&A consolidado em `487788ecac6a66228887bfee85596b2e30f4c1bd` + `031ea3b4af8519aaf37ff386f5dc9a16edc336fe`: service, hooks, tipos Q&A e `QuestionsList` pertencem a `core/community-recommendations`;
+- [x] `src/core/community/pages` chegou a zero implementação e não deve ser recriado;
+- [x] Vercel READY comprovado em `1989bdc20aec39a0438201cf71fe25d3e913d7cb`, cobrindo o primeiro corte completo de Groups;
+- [ ] `c1fcf55f` / `031ea3b4` ainda aguardam build/deploy hosted do próprio SHA; jobs GitHub observados continuam falhando antes dos steps (`steps=null`), portanto não inferir source failure nem PASS;
+- [ ] continuar caller census do namespace genérico `src/core/community` por responsabilidade real (feed/composer/comments, messaging, sponsored ads, civic reports etc.); **não fazer move/delete em massa por nome**;
+- [ ] Community continua **NÃO READY** até lint/typecheck/security/test/build/smoke same-SHA e certificação funcional exigida por G6.
 
 ### 2026-09-05 — G6 Educação / source pre-certification
 
