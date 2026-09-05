@@ -27,14 +27,14 @@ interface EducationAnalyticsConversionCardProps {
     lost: number;
   };
   conversionRate: number;
-  avgDaysToConversion: number;
+  avgDaysToFirstContact: number;
   isLoading?: boolean;
 }
 
 export function EducationAnalyticsConversionCard({
   pipeline,
   conversionRate,
-  avgDaysToConversion,
+  avgDaysToFirstContact,
   isLoading = false,
 }: EducationAnalyticsConversionCardProps) {
   const stages: PipelineStage[] = [
@@ -78,7 +78,7 @@ export function EducationAnalyticsConversionCard({
               {conversionRate}% conversão
             </span>
             <span className="text-gray-500">
-              {avgDaysToConversion} dias médios
+              {avgDaysToFirstContact} dias ate o 1º contato
             </span>
           </div>
         </div>

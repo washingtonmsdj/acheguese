@@ -127,6 +127,12 @@ describe("Education module hardening ratchet", () => {
     );
     expect(analyticsHook).not.toContain("period?: '7d'");
     expect(analyticsHook).not.toContain("period = '30d'");
+    expect(analyticsHook).toContain("throw error;");
+    expect(analyticsHook).toContain("getLeadPipelineMetrics");
+    expect(analyticsHook).not.toContain("getProfileViewMetrics");
+    expect(analyticsHook).not.toContain("getConversionFunnel");
+    expect(analyticsHook).not.toContain("guardianVsStudentRatio");
+    expect(analyticsHook).not.toContain("avgDaysToConversion");
     expect(page).toContain("canExportAnalytics = canExport && nicheAllowsExport");
     expect(page).toContain("buildEducationAnalyticsCsv(data)");
     expect(page).toContain("onClick={handleExport}");
@@ -135,6 +141,25 @@ describe("Education module hardening ratchet", () => {
     expect(exportService).toContain("buildEducationAnalyticsCsv");
     expect(exportService).toContain("formulaSafe");
     expect(exportService).not.toContain("@/integrations/");
+    expect(exportService).not.toContain("totalAttendees");
+    expect(exportService).not.toContain("avgViews");
+    expect(exportService).not.toContain("avgInquiries");
+
+    const conversionCard = read(
+      "src/modules/business/education/components/analytics/EducationAnalyticsConversionCard.tsx",
+    );
+    expect(conversionCard).toContain("avgDaysToFirstContact");
+    expect(conversionCard).toContain("dias ate o 1º contato");
+    expect(conversionCard).not.toContain("avgDaysToConversion");
+
+    const queries = read(
+      "src/core/education/services/education.queries.ts",
+    );
+    expect(queries).toContain("analyticsQueryError");
+    expect(queries).not.toContain("getProfileViewMetrics");
+    expect(queries).not.toContain("getConversionFunnel");
+    expect(queries).not.toContain("getProgramViewMetrics");
+    expect(queries).not.toContain("getEventMetrics");
   });
 
   it("keeps Education domain contracts owned by core", () => {

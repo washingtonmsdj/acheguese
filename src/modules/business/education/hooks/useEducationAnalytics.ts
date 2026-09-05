@@ -25,21 +25,6 @@ export interface UseEducationAnalyticsOptions {
 }
 
 // ============================================================
-// HELPER FUNCTIONS
-// ============================================================
-
-function calculateInterestLevel(count: number): 'high' | 'medium' | 'low' {
-  if (count >= 50) return 'high';
-  if (count >= 20) return 'medium';
-  return 'low';
-}
-
-function calculateVacancyRate(total: number, filled: number): number {
-  if (total === 0) return 0;
-  return Math.round((filled / total) * 100);
-}
-
-// ============================================================
 // HOOK
 // ============================================================
 
@@ -63,25 +48,16 @@ export function useEducationAnalytics(options: UseEducationAnalyticsOptions) {
       }
 
       try {
-        // Fetch real analytics data including tracking metrics
         const [
           leadStatusCounts,
-          { rate: conversionRate, avgDays: avgDaysToConversion },
+          leadPipelineMetrics,
           programMetrics,
           eventCounts,
-          profileViewMetrics,
-          funnelMetrics,
-          programViewMetrics,
-          eventViewMetrics,
         ] = await Promise.all([
           educationQueries.countLeadsByStatus(profileId),
-          educationQueries.getLeadConversionRate(profileId),
+          educationQueries.getLeadPipelineMetrics(profileId),
           educationQueries.getProgramEnrollmentMetrics(profileId),
           educationQueries.countEventsByType(profileId),
-          educationQueries.getProfileViewMetrics(profileId),
-          educationQueries.getConversionFunnel(profileId),
-          educationQueries.getProgramViewMetrics(profileId),
-          educationQueries.getEventMetrics(profileId),
         ]);
 
         const baseData: EducationAnalyticsData = {
@@ -93,26 +69,27 @@ export function useEducationAnalytics(options: UseEducationAnalyticsOptions) {
             proposalSent: leadStatusCounts.proposal_sent,
             enrolled: leadStatusCounts.enrolled,
             lost: leadStatusCounts.lost,
-            conversionRate,
-            avgDaysToConversion,
+            conversionRate: leadPipelineMetrics.conversionRate,
+            avgDaysToFirstContact:
+              leadPipelineMetrics.avgDaysToFirstContact,
           },
           programs: {
             total: programMetrics.total,
             active: programMetrics.active,
-            avgViews: Math.round(profileViewMetrics.totalViews / (programMetrics.total || 1)),
-            avgInquiries: funnelMetrics.leadsSubmitted > 0
-              ? Math.round(profileViewMetrics.totalViews / funnelMetrics.leadsSubmitted)
-              : 0,
-            avgEnrollmentRate: programMetrics.totalVacancies > 0
-              ? Math.round((programMetrics.filledVacancies / programMetrics.totalVacancies) * 100)
-              : 0,
+            avgEnrollmentRate:
+              programMetrics.totalVacancies > 0
+                ? Math.round(
+                    (programMetrics.filledVacancies /
+                      programMetrics.totalVacancies) *
+                      100,
+                  )
+                : 0,
             totalVacancies: programMetrics.totalVacancies,
             filledVacancies: programMetrics.filledVacancies,
           },
           events: {
             total: eventCounts.total,
             upcoming: eventCounts.upcoming,
-            totalAttendees: funnelMetrics.leadsVisited,
             schoolToursCount: eventCounts.schoolToursCount,
             openHouseCount: eventCounts.openHouseCount,
             enrollmentFairCount: eventCounts.enrollmentFairCount,
@@ -144,20 +121,8 @@ export function useEducationAnalytics(options: UseEducationAnalyticsOptions) {
             ...baseData,
             leads: {
               ...baseData.leads,
-              byGrade: byGrade.map((g) => ({
-                ...g,
-                vacancyRate: calculateVacancyRate(
-                  byGrade.reduce((sum, x) => sum + x.enrollmentCount, 0) || 1,
-                  g.enrollmentCount,
-                ),
-              })),
-              byShift: byShift.map((s) => ({
-                ...s,
-                interestLevel: calculateInterestLevel(s.leadCount),
-              })),
-              guardianVsStudentRatio: leadStatusCounts.total > 0
-                ? Math.round((leadStatusCounts.contacted / leadStatusCounts.total) * 100)
-                : 0, // Ratio aproximado: leads contactados vs total (indica envolvimento do responsável)
+              byGrade,
+              byShift,
             },
             programs: {
               ...baseData.programs,
@@ -173,8 +138,6 @@ export function useEducationAnalytics(options: UseEducationAnalyticsOptions) {
             },
             schoolMetrics: {
               enrollmentWindowOpen: profile?.enrollment_open ?? false,
-              totalGradesOffered: byGrade.length,
-              totalShiftsOffered: byShift.length,
               mostRequestedGrade,
               mostRequestedShift,
             },
@@ -184,7 +147,7 @@ export function useEducationAnalytics(options: UseEducationAnalyticsOptions) {
         return baseData;
       } catch (error) {
         logger.error('[useEducationAnalytics] Error fetching analytics:', error);
-        return null;
+        throw error;
       }
     },
     enabled: enabled && Boolean(businessId) && Boolean(profileId),

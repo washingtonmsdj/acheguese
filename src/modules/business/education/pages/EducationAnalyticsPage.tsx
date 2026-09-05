@@ -12,7 +12,7 @@
  */
 
 import { useParams } from 'react-router-dom';
-import { BarChart3, Download } from 'lucide-react';
+import { AlertCircle, BarChart3, Download, RefreshCw } from 'lucide-react';
 import { useEducationAnalytics } from '../hooks';
 import {
   EducationAnalyticsOverviewCard,
@@ -62,6 +62,9 @@ export function EducationAnalyticsPage() {
   const {
     data,
     isLoading: isAnalyticsLoading,
+    isError: isAnalyticsError,
+    error: analyticsError,
+    refetch: refetchAnalytics,
     canAccessAnalytics,
     canExport,
   } = useEducationAnalytics({
@@ -105,6 +108,32 @@ export function EducationAnalyticsPage() {
       <div className="container mx-auto max-w-6xl p-6">
         <Skeleton className="mb-6 h-8 w-48" />
         <Skeleton className="h-64 w-full rounded-xl" />
+      </div>
+    );
+  }
+
+  if (isAnalyticsError) {
+    return (
+      <div className="container mx-auto max-w-4xl p-6">
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6">
+          <div className="mb-3 flex items-center gap-2 text-destructive">
+            <AlertCircle className="h-5 w-5" />
+            <h1 className="font-semibold">Nao foi possivel carregar o Analytics</h1>
+          </div>
+          <p className="mb-4 text-sm text-muted-foreground">
+            {analyticsError instanceof Error
+              ? analyticsError.message
+              : 'A leitura das metricas falhou. Nenhum zero artificial foi exibido.'}
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => void refetchAnalytics()}
+            className="gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Tentar novamente
+          </Button>
+        </div>
       </div>
     );
   }
@@ -193,7 +222,7 @@ export function EducationAnalyticsPage() {
             lost: data?.leads.lost ?? 0,
           }}
           conversionRate={data?.leads.conversionRate ?? 0}
-          avgDaysToConversion={data?.leads.avgDaysToConversion ?? 0}
+          avgDaysToFirstContact={data?.leads.avgDaysToFirstContact ?? 0}
           isLoading={isAnalyticsLoading}
         />
       </div>

@@ -260,14 +260,12 @@ export interface EducationGradeMetrics {
   grade: string;
   leadCount: number;
   enrollmentCount: number;
-  vacancyRate: number;
 }
 
 export interface EducationShiftMetrics {
   shift: string;
   leadCount: number;
   enrollmentCount: number;
-  interestLevel: 'high' | 'medium' | 'low';
 }
 
 export interface EducationAnalyticsData {
@@ -280,16 +278,13 @@ export interface EducationAnalyticsData {
     enrolled: number;
     lost: number;
     conversionRate: number;
-    avgDaysToConversion: number;
+    avgDaysToFirstContact: number;
     byGrade?: EducationGradeMetrics[];
     byShift?: EducationShiftMetrics[];
-    guardianVsStudentRatio?: number;
   };
   programs: {
     total: number;
     active: number;
-    avgViews: number;
-    avgInquiries: number;
     avgEnrollmentRate?: number;
     totalVacancies?: number;
     filledVacancies?: number;
@@ -297,15 +292,12 @@ export interface EducationAnalyticsData {
   events: {
     total: number;
     upcoming: number;
-    totalAttendees: number;
     schoolToursCount?: number;
     openHouseCount?: number;
     enrollmentFairCount?: number;
   };
   schoolMetrics?: {
     enrollmentWindowOpen: boolean;
-    totalGradesOffered: number;
-    totalShiftsOffered: number;
     mostRequestedGrade: string | null;
     mostRequestedShift: string | null;
   };

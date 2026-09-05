@@ -12,13 +12,12 @@ const fixture: EducationAnalyticsData = {
     enrolled: 2,
     lost: 1,
     conversionRate: 20,
-    avgDaysToConversion: 4,
+    avgDaysToFirstContact: 4,
     byGrade: [
       {
         grade: '=1+1',
         leadCount: 4,
         enrollmentCount: 1,
-        vacancyRate: 25,
       },
     ],
     byShift: [
@@ -26,16 +25,12 @@ const fixture: EducationAnalyticsData = {
         shift: 'morning',
         leadCount: 5,
         enrollmentCount: 2,
-        interestLevel: 'medium',
       },
     ],
-    guardianVsStudentRatio: 60,
   },
   programs: {
     total: 3,
     active: 2,
-    avgViews: 12,
-    avgInquiries: 6,
     avgEnrollmentRate: 50,
     totalVacancies: 20,
     filledVacancies: 10,
@@ -43,15 +38,12 @@ const fixture: EducationAnalyticsData = {
   events: {
     total: 2,
     upcoming: 1,
-    totalAttendees: 8,
     schoolToursCount: 1,
     openHouseCount: 1,
     enrollmentFairCount: 0,
   },
   schoolMetrics: {
     enrollmentWindowOpen: true,
-    totalGradesOffered: 4,
-    totalShiftsOffered: 2,
     mostRequestedGrade: '6 ano',
     mostRequestedShift: 'morning',
   },
@@ -64,7 +56,8 @@ describe('buildEducationAnalyticsCsv', () => {
     expect(csv).toContain('"leads","total","","10"');
     expect(csv).toContain('"programas","ativos","","2"');
     expect(csv).toContain('"eventos","proximos","","1"');
-    expect(csv).toContain('"escola","series_oferecidas","","4"');
+    expect(csv).toContain('"leads","media_dias_ate_primeiro_contato","","4"');
+    expect(csv).toContain('"escola","serie_mais_procurada","","6 ano"');
   });
 
   it('neutralizes spreadsheet formulas in text dimensions', () => {

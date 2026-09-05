@@ -30,37 +30,27 @@ export function buildEducationAnalyticsCsv(
     row('leads', 'matriculados', data.leads.enrolled),
     row('leads', 'perdidos', data.leads.lost),
     row('leads', 'taxa_conversao_pct', data.leads.conversionRate),
-    row('leads', 'media_dias_conversao', data.leads.avgDaysToConversion),
+    row(
+      'leads',
+      'media_dias_ate_primeiro_contato',
+      data.leads.avgDaysToFirstContact,
+    ),
     row('programas', 'total', data.programs.total),
     row('programas', 'ativos', data.programs.active),
-    row('programas', 'media_visualizacoes', data.programs.avgViews),
-    row('programas', 'media_interesses', data.programs.avgInquiries),
     row('programas', 'taxa_ocupacao_media_pct', data.programs.avgEnrollmentRate),
     row('programas', 'vagas_totais', data.programs.totalVacancies),
     row('programas', 'vagas_preenchidas', data.programs.filledVacancies),
     row('eventos', 'total', data.events.total),
     row('eventos', 'proximos', data.events.upcoming),
-    row('eventos', 'participantes', data.events.totalAttendees),
     row('eventos', 'visitas_escolares', data.events.schoolToursCount),
     row('eventos', 'portas_abertas', data.events.openHouseCount),
     row('eventos', 'feiras_matricula', data.events.enrollmentFairCount),
   ];
 
-  if (data.leads.guardianVsStudentRatio != null) {
-    rows.push(
-      row(
-        'leads',
-        'responsavel_vs_aluno_pct',
-        data.leads.guardianVsStudentRatio,
-      ),
-    );
-  }
-
   for (const grade of data.leads.byGrade ?? []) {
     rows.push(
       row('serie', 'leads', grade.leadCount, grade.grade),
       row('serie', 'matriculas', grade.enrollmentCount, grade.grade),
-      row('serie', 'ocupacao_pct', grade.vacancyRate, grade.grade),
     );
   }
 
@@ -68,7 +58,6 @@ export function buildEducationAnalyticsCsv(
     rows.push(
       row('turno', 'leads', shift.leadCount, shift.shift),
       row('turno', 'matriculas', shift.enrollmentCount, shift.shift),
-      row('turno', 'nivel_interesse', shift.interestLevel, shift.shift),
     );
   }
 
@@ -78,16 +67,6 @@ export function buildEducationAnalyticsCsv(
         'escola',
         'janela_matricula_aberta',
         data.schoolMetrics.enrollmentWindowOpen,
-      ),
-      row(
-        'escola',
-        'series_oferecidas',
-        data.schoolMetrics.totalGradesOffered,
-      ),
-      row(
-        'escola',
-        'turnos_oferecidos',
-        data.schoolMetrics.totalShiftsOffered,
       ),
       row(
         'escola',

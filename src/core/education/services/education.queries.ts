@@ -598,21 +598,32 @@ export interface EventTypeCounts {
   enrollmentFairCount: number;
 }
 
+function requireAnalyticsProfileId(profileId: string): void {
+  if (!isValidUuid(profileId)) {
+    throw new Error('Education analytics requires a valid profile ID');
+  }
+}
+
+function analyticsQueryError(operation: string, error: { message: string }): never {
+  logger.error(`[EducationQueries] ${operation}:`, error);
+  throw new Error(error.message);
+}
+
 /**
  * Conta leads por status para analytics
  */
-export async function countLeadsByStatus(profileId: string): Promise<LeadStatusCounts> {
-  if (!isValidUuid(profileId)) {
-    return { total: 0, new: 0, contacted: 0, visit_scheduled: 0, proposal_sent: 0, enrolled: 0, lost: 0 };
-  }
+export async function countLeadsByStatus(
+  profileId: string,
+): Promise<LeadStatusCounts> {
+  requireAnalyticsProfileId(profileId);
+
   const { data, error } = await supabase
     .from('education_leads')
     .select('status')
     .eq('education_profile_id', profileId);
 
   if (error) {
-    logger.error('[EducationQueries] Error counting leads by status:', error);
-    return { total: 0, new: 0, contacted: 0, visit_scheduled: 0, proposal_sent: 0, enrolled: 0, lost: 0 };
+    analyticsQueryError('Error counting leads by status', error);
   }
 
   const counts: LeadStatusCounts = {
@@ -630,7 +641,7 @@ export async function countLeadsByStatus(profileId: string): Promise<LeadStatusC
     if (status in counts) {
       incrementLeadStatusCount(counts, status);
     }
-    counts.total++;
+    counts.total += 1;
   });
 
   return counts;
@@ -639,8 +650,11 @@ export async function countLeadsByStatus(profileId: string): Promise<LeadStatusC
 /**
  * Calcula metricas de leads por serie (desired_grade)
  */
-export async function getLeadsByGradeMetrics(profileId: string): Promise<GradeLeadMetrics[]> {
-  if (!isValidUuid(profileId)) return [];
+export async function getLeadsByGradeMetrics(
+  profileId: string,
+): Promise<GradeLeadMetrics[]> {
+  requireAnalyticsProfileId(profileId);
+
   const { data, error } = await supabase
     .from('education_leads')
     .select('desired_grade, status')
@@ -648,18 +662,23 @@ export async function getLeadsByGradeMetrics(profileId: string): Promise<GradeLe
     .not('desired_grade', 'is', null);
 
   if (error) {
-    logger.error('[EducationQueries] Error fetching leads by grade:', error);
-    return [];
+    analyticsQueryError('Error fetching leads by grade', error);
   }
 
-  const gradeMap = new Map<string, { leadCount: number; enrollmentCount: number }>();
+  const gradeMap = new Map<
+    string,
+    { leadCount: number; enrollmentCount: number }
+  >();
 
   (data ?? []).forEach((lead) => {
     const grade = lead.desired_grade ?? 'Nao informada';
-    const current = gradeMap.get(grade) ?? { leadCount: 0, enrollmentCount: 0 };
-    current.leadCount++;
+    const current = gradeMap.get(grade) ?? {
+      leadCount: 0,
+      enrollmentCount: 0,
+    };
+    current.leadCount += 1;
     if (lead.status === 'enrolled') {
-      current.enrollmentCount++;
+      current.enrollmentCount += 1;
     }
     gradeMap.set(grade, current);
   });
@@ -676,8 +695,11 @@ export async function getLeadsByGradeMetrics(profileId: string): Promise<GradeLe
 /**
  * Calcula metricas de leads por turno (desired_shift)
  */
-export async function getLeadsByShiftMetrics(profileId: string): Promise<ShiftLeadMetrics[]> {
-  if (!isValidUuid(profileId)) return [];
+export async function getLeadsByShiftMetrics(
+  profileId: string,
+): Promise<ShiftLeadMetrics[]> {
+  requireAnalyticsProfileId(profileId);
+
   const { data, error } = await supabase
     .from('education_leads')
     .select('desired_shift, status')
@@ -685,18 +707,23 @@ export async function getLeadsByShiftMetrics(profileId: string): Promise<ShiftLe
     .not('desired_shift', 'is', null);
 
   if (error) {
-    logger.error('[EducationQueries] Error fetching leads by shift:', error);
-    return [];
+    analyticsQueryError('Error fetching leads by shift', error);
   }
 
-  const shiftMap = new Map<string, { leadCount: number; enrollmentCount: number }>();
+  const shiftMap = new Map<
+    string,
+    { leadCount: number; enrollmentCount: number }
+  >();
 
   (data ?? []).forEach((lead) => {
     const shift = lead.desired_shift ?? 'Nao informado';
-    const current = shiftMap.get(shift) ?? { leadCount: 0, enrollmentCount: 0 };
-    current.leadCount++;
+    const current = shiftMap.get(shift) ?? {
+      leadCount: 0,
+      enrollmentCount: 0,
+    };
+    current.leadCount += 1;
     if (lead.status === 'enrolled') {
-      current.enrollmentCount++;
+      current.enrollmentCount += 1;
     }
     shiftMap.set(shift, current);
   });
@@ -721,18 +748,18 @@ export async function getLeadsByShiftMetrics(profileId: string): Promise<ShiftLe
 /**
  * Calcula metricas de matricula nos programas (using max_capacity e current_enrollment)
  */
-export async function getProgramEnrollmentMetrics(profileId: string): Promise<ProgramEnrollmentMetrics> {
-  if (!isValidUuid(profileId)) {
-    return { total: 0, active: 0, totalVacancies: 0, filledVacancies: 0 };
-  }
+export async function getProgramEnrollmentMetrics(
+  profileId: string,
+): Promise<ProgramEnrollmentMetrics> {
+  requireAnalyticsProfileId(profileId);
+
   const { data, error } = await supabase
     .from('education_programs')
     .select('is_active, max_capacity, current_enrollment')
     .eq('education_profile_id', profileId);
 
   if (error) {
-    logger.error('[EducationQueries] Error fetching program enrollment metrics:', error);
-    return { total: 0, active: 0, totalVacancies: 0, filledVacancies: 0 };
+    analyticsQueryError('Error fetching program enrollment metrics', error);
   }
 
   let total = 0;
@@ -741,10 +768,8 @@ export async function getProgramEnrollmentMetrics(profileId: string): Promise<Pr
   let filledVacancies = 0;
 
   (data ?? []).forEach((program) => {
-    total++;
-    if (program.is_active) {
-      active++;
-    }
+    total += 1;
+    if (program.is_active) active += 1;
     if (program.max_capacity !== null) {
       totalVacancies += program.max_capacity;
     }
@@ -759,18 +784,18 @@ export async function getProgramEnrollmentMetrics(profileId: string): Promise<Pr
 /**
  * Conta eventos por tipo (school_event_type)
  */
-export async function countEventsByType(profileId: string): Promise<EventTypeCounts> {
-  if (!isValidUuid(profileId)) {
-    return { total: 0, upcoming: 0, schoolToursCount: 0, openHouseCount: 0, enrollmentFairCount: 0 };
-  }
+export async function countEventsByType(
+  profileId: string,
+): Promise<EventTypeCounts> {
+  requireAnalyticsProfileId(profileId);
+
   const { data, error } = await supabase
     .from('education_events')
     .select('school_event_type, starts_at')
     .eq('education_profile_id', profileId);
 
   if (error) {
-    logger.error('[EducationQueries] Error counting events by type:', error);
-    return { total: 0, upcoming: 0, schoolToursCount: 0, openHouseCount: 0, enrollmentFairCount: 0 };
+    analyticsQueryError('Error counting events by type', error);
   }
 
   const now = new Date().toISOString();
@@ -781,26 +806,69 @@ export async function countEventsByType(profileId: string): Promise<EventTypeCou
   let enrollmentFairCount = 0;
 
   (data ?? []).forEach((event) => {
-    total++;
-    if (event.starts_at > now) {
-      upcoming++;
-    }
+    total += 1;
+    if (event.starts_at > now) upcoming += 1;
     if (event.school_event_type === 'school_tour') {
-      schoolToursCount++;
+      schoolToursCount += 1;
     } else if (event.school_event_type === 'open_house') {
-      openHouseCount++;
+      openHouseCount += 1;
     } else if (event.school_event_type === 'enrollment_fair') {
-      enrollmentFairCount++;
+      enrollmentFairCount += 1;
     }
   });
 
-  return { total, upcoming, schoolToursCount, openHouseCount, enrollmentFairCount };
+  return {
+    total,
+    upcoming,
+    schoolToursCount,
+    openHouseCount,
+    enrollmentFairCount,
+  };
 }
 
 /**
  * Calcula taxa de conversao de leads
  */
-export async function getLeadConversionRate(profileId: string): Promise<{ rate: number; avgDays: number }> {
+export async function getLeadPipelineMetrics(
+  profileId: string,
+): Promise<{ conversionRate: number; avgDaysToFirstContact: number }> {
+  requireAnalyticsProfileId(profileId);
+
+  const { data, error } = await supabase
+    .from('education_leads')
+    .select('status, first_contact_at, created_at')
+    .eq('education_profile_id', profileId);
+
+  if (error) {
+    analyticsQueryError('Error calculating lead pipeline metrics', error);
+  }
+
+  const leads = data ?? [];
+  const enrolled = leads.filter((lead) => lead.status === 'enrolled').length;
+  const conversionRate =
+    leads.length > 0 ? Math.round((enrolled / leads.length) * 100) : 0;
+
+  const firstContactDays = leads.flatMap((lead) => {
+    if (!lead.first_contact_at || !lead.created_at) return [];
+
+    const createdAt = new Date(lead.created_at).getTime();
+    const firstContactAt = new Date(lead.first_contact_at).getTime();
+    const elapsedMs = firstContactAt - createdAt;
+    if (!Number.isFinite(elapsedMs) || elapsedMs < 0) return [];
+
+    return [elapsedMs / (1000 * 60 * 60 * 24)];
+  });
+
+  const avgDaysToFirstContact =
+    firstContactDays.length > 0
+      ? Math.round(
+          firstContactDays.reduce((sum, days) => sum + days, 0) /
+            firstContactDays.length,
+        )
+      : 0;
+
+  return { conversionRate, avgDaysToFirstContact };
+}> {
   if (!isValidUuid(profileId)) return { rate: 0, avgDays: 0 };
   const { data, error } = await supabase
     .from('education_leads')
@@ -920,211 +988,3 @@ export async function getEducationProfileByTerritory(
 // ============================================================
 // ANALYTICS QUERIES - Real Tracking Data
 // ============================================================
-
-export interface ProfileViewMetrics {
-  totalViews: number;
-  uniqueSessions: number;
-  viewsLast7Days: number;
-  viewsLast30Days: number;
-}
-
-export interface ConversionFunnelMetrics {
-  profileViews: number;
-  whatsappClicks: number;
-  ctaClicks: number;
-  leadsSubmitted: number;
-  leadsContacted: number;
-  leadsVisited: number;
-  leadsEnrolled: number;
-  leadsLost: number;
-}
-
-export interface ProgramViewMetrics {
-  programId: string;
-  programName: string;
-  viewCount: number;
-  leadCount: number;
-  conversionRate: number;
-}
-
-export interface EventMetrics {
-  eventId: string;
-  eventTitle: string;
-  viewCount: number;
-  interestCount: number;
-}
-
-/**
- * Conta visualizacoes de perfil
- */
-export async function getProfileViewMetrics(profileId: string): Promise<ProfileViewMetrics> {
-  if (!isValidUuid(profileId)) {
-    return { totalViews: 0, uniqueSessions: 0, viewsLast7Days: 0, viewsLast30Days: 0 };
-  }
-  const now = new Date();
-  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
-
-  const { data, error } = await supabase
-    .from('education_analytics_events')
-    .select('session_id, created_at')
-    .eq('education_profile_id', profileId)
-    .eq('event_type', 'profile_view');
-
-  if (error) {
-    logger.error('[EducationQueries] Error fetching profile views:', error);
-    return { totalViews: 0, uniqueSessions: 0, viewsLast7Days: 0, viewsLast30Days: 0 };
-  }
-
-  const events = data ?? [];
-  const sessions = new Set(events.map((e) => e.session_id));
-
-  return {
-    totalViews: events.length,
-    uniqueSessions: sessions.size,
-    viewsLast7Days: events.filter((e) => e.created_at >= sevenDaysAgo).length,
-    viewsLast30Days: events.filter((e) => e.created_at >= thirtyDaysAgo).length,
-  };
-}
-
-/**
- * Calcula funil de conversao
- */
-export async function getConversionFunnel(profileId: string): Promise<ConversionFunnelMetrics> {
-  if (!isValidUuid(profileId)) {
-    return {
-      profileViews: 0, whatsappClicks: 0, ctaClicks: 0, leadsSubmitted: 0,
-      leadsContacted: 0, leadsVisited: 0, leadsEnrolled: 0, leadsLost: 0,
-    };
-  }
-  const { data, error } = await supabase
-    .from('education_analytics_events')
-    .select('event_type, lead_id')
-    .eq('education_profile_id', profileId)
-    .in('event_type', [
-      'profile_view', 'whatsapp_click', 'enrollment_cta_click',
-      'lead_submitted'
-    ]);
-
-  if (error) {
-    logger.error('[EducationQueries] Error fetching funnel:', error);
-    return {
-      profileViews: 0, whatsappClicks: 0, ctaClicks: 0, leadsSubmitted: 0,
-      leadsContacted: 0, leadsVisited: 0, leadsEnrolled: 0, leadsLost: 0,
-    };
-  }
-
-  const events = data ?? [];
-  const submittedLeadIds = events
-    .filter((e) => e.event_type === 'lead_submitted' && e.lead_id)
-    .map((e) => e.lead_id);
-
-  // Busca status dos leads enviados
-  const { data: leadData } = await supabase
-    .from('education_leads')
-    .select('status')
-    .in('id', submittedLeadIds)
-    .eq('education_profile_id', profileId);
-
-  const leads = leadData ?? [];
-
-  return {
-    profileViews: events.filter((e) => e.event_type === 'profile_view').length,
-    whatsappClicks: events.filter((e) => e.event_type === 'whatsapp_click').length,
-    ctaClicks: events.filter((e) => e.event_type === 'enrollment_cta_click').length,
-    leadsSubmitted: submittedLeadIds.length,
-    leadsContacted: leads.filter((l) => ['contacted', 'visit_scheduled', 'proposal_sent', 'enrolled'].includes(l.status)).length,
-    leadsVisited: leads.filter((l) => ['visit_scheduled', 'proposal_sent', 'enrolled'].includes(l.status)).length,
-    leadsEnrolled: leads.filter((l) => l.status === 'enrolled').length,
-    leadsLost: leads.filter((l) => l.status === 'lost').length,
-  };
-}
-
-/**
- * Calcula views e conversao por programa
- */
-export async function getProgramViewMetrics(profileId: string): Promise<ProgramViewMetrics[]> {
-  if (!isValidUuid(profileId)) return [];
-  const { data: programs, error: progError } = await supabase
-    .from('education_programs')
-    .select('id, name')
-    .eq('education_profile_id', profileId);
-
-  if (progError || !programs) {
-    logger.error('[EducationQueries] Error fetching programs:', progError);
-    return [];
-  }
-
-  const { data: views, error: viewError } = await supabase
-    .from('education_analytics_events')
-    .select('program_id')
-    .eq('education_profile_id', profileId)
-    .eq('event_type', 'program_view')
-    .not('program_id', 'is', null);
-
-  const { data: leads, error: leadError } = await supabase
-    .from('education_leads')
-    .select('desired_grade, status')
-    .eq('education_profile_id', profileId)
-    .not('desired_grade', 'is', null);
-
-  if (viewError || leadError) {
-    logger.error('[EducationQueries] Error fetching program metrics:', viewError || leadError);
-    return [];
-  }
-
-  return programs.map((program) => {
-    const viewCount = (views ?? []).filter((v) => v.program_id === program.id).length;
-    // Mapeia desired_grade com program.name (aproximacao)
-    const leadCount = (leads ?? []).filter((l) =>
-      l.desired_grade?.toLowerCase().includes(program.name.toLowerCase())
-    ).length;
-
-    return {
-      programId: program.id,
-      programName: program.name,
-      viewCount,
-      leadCount,
-      conversionRate: viewCount > 0 ? Math.round((leadCount / viewCount) * 100) : 0,
-    };
-  });
-}
-
-/**
- * Calcula views e interesse por evento
- */
-export async function getEventMetrics(profileId: string): Promise<EventMetrics[]> {
-  if (!isValidUuid(profileId)) return [];
-  const { data: events, error: eventError } = await supabase
-    .from('education_events')
-    .select('id, title')
-    .eq('education_profile_id', profileId);
-
-  if (eventError || !events) {
-    logger.error('[EducationQueries] Error fetching events:', eventError);
-    return [];
-  }
-
-  const { data: analytics, error: analError } = await supabase
-    .from('education_analytics_events')
-    .select('education_event_id, event_type')
-    .eq('education_profile_id', profileId)
-    .in('event_type', ['event_view', 'event_interest'])
-    .not('education_event_id', 'is', null);
-
-  if (analError) {
-    logger.error('[EducationQueries] Error fetching event analytics:', analError);
-    return [];
-  }
-
-  return events.map((event) => ({
-    eventId: event.id,
-    eventTitle: event.title,
-    viewCount: (analytics ?? []).filter(
-      (a) => a.education_event_id === event.id && a.event_type === 'event_view'
-    ).length,
-    interestCount: (analytics ?? []).filter(
-      (a) => a.education_event_id === event.id && a.event_type === 'event_interest'
-    ).length,
-  }));
-}
