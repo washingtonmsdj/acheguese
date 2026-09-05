@@ -84,7 +84,7 @@ describe("public territorial surface audit", () => {
 
   it("keeps events and community surfaces anchored to module territory at the page boundary", () => {
     const eventsSource = readProjectFile("src/core/community/pages/EventosPage.tsx");
-    const communitySource = readProjectFile("src/core/community/pages/ComunidadePage.tsx");
+    const communitySource = readProjectFile("src/core/community-feed/pages/ComunidadePage.tsx");
 
     expect(eventsSource).toContain("useModuleTerritoryFilter(");
     expect(eventsSource).toContain("routeResolved: resolved");

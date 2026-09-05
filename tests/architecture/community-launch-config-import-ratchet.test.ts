@@ -37,7 +37,7 @@ describe("communityLaunch legacy config import ratchet", () => {
     expect(callers).toEqual([]);
 
     const comunidadePage = readFileSync(
-      resolve(root, "src/core/community/pages/ComunidadePage.tsx"),
+      resolve(root, "src/core/community-feed/pages/ComunidadePage.tsx"),
       "utf8",
     );
     expect(comunidadePage).toContain(canonicalImport);

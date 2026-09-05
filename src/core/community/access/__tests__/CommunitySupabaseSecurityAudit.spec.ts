@@ -266,7 +266,7 @@ describe("community supabase security audit", () => {
       "src/core/community/components/CommunityRightSidebar.tsx",
     );
     const communityPage = readProjectFile(
-      "src/core/community/pages/ComunidadePage.tsx",
+      "src/core/community-feed/pages/ComunidadePage.tsx",
     );
 
     expect(landingFeatured).toContain("CommunityEntityLinkService");

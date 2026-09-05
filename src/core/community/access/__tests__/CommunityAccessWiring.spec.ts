@@ -13,7 +13,7 @@ function readProjectFile(path: string): string {
 describe("community access wiring", () => {
   it("keeps resident-only community pages behind the central access policy", () => {
     const pages = [
-      "src/core/community/pages/ComunidadePage.tsx",
+      "src/core/community-feed/pages/ComunidadePage.tsx",
       "src/core/community-groups/pages/GruposPage.tsx",
       "src/core/community-recommendations/pages/RecomendacoesPage.tsx",
       "src/core/community-recommendations/pages/NovaRecomendacaoPage.tsx",
@@ -32,7 +32,7 @@ describe("community access wiring", () => {
   });
 
   it("passes central permission flags into community feed actions and modals", () => {
-    const pageSource = readProjectFile("src/core/community/pages/ComunidadePage.tsx");
+    const pageSource = readProjectFile("src/core/community-feed/pages/ComunidadePage.tsx");
 
     expect(pageSource).toContain("canReact={communityAccess.can.react}");
     expect(pageSource).toContain("canComment={communityAccess.can.comment}");
