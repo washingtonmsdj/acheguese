@@ -20,7 +20,6 @@ import type { EducationAnalyticsData } from '@/core/education';
 export interface UseEducationAnalyticsOptions {
   businessId: string;
   profileId?: string;
-  period?: '7d' | '30d' | '90d' | '1y';
   enabled?: boolean;
   nicheKey?: string | null; // Para gerar métricas específicas do nicho
 }
@@ -45,10 +44,10 @@ function calculateVacancyRate(total: number, filled: number): number {
 // ============================================================
 
 export function useEducationAnalytics(options: UseEducationAnalyticsOptions) {
-  const { businessId, profileId, period = '30d', enabled = true, nicheKey } = options;
+  const { businessId, profileId, enabled = true, nicheKey } = options;
 
   const analyticsQuery = useQuery({
-    queryKey: ['education', 'analytics', businessId, profileId, period, nicheKey],
+    queryKey: ['education', 'analytics', businessId, profileId, nicheKey],
     queryFn: async (): Promise<EducationAnalyticsData | null> => {
       // Verifica entitlement
       const canAccess = await EducationSubscriptionService.canUseAnalytics(businessId);
@@ -117,10 +116,6 @@ export function useEducationAnalytics(options: UseEducationAnalyticsOptions) {
             schoolToursCount: eventCounts.schoolToursCount,
             openHouseCount: eventCounts.openHouseCount,
             enrollmentFairCount: eventCounts.enrollmentFairCount,
-          },
-          period: {
-            start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-            end: new Date().toISOString(),
           },
         };
 

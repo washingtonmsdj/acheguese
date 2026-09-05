@@ -302,10 +302,6 @@ export interface EducationAnalyticsData {
     openHouseCount?: number;
     enrollmentFairCount?: number;
   };
-  period: {
-    start: string;
-    end: string;
-  };
   schoolMetrics?: {
     enrollmentWindowOpen: boolean;
     totalGradesOffered: number;

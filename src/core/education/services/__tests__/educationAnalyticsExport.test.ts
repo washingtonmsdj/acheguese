@@ -48,10 +48,6 @@ const fixture: EducationAnalyticsData = {
     openHouseCount: 1,
     enrollmentFairCount: 0,
   },
-  period: {
-    start: '2026-08-01T00:00:00.000Z',
-    end: '2026-08-31T23:59:59.999Z',
-  },
   schoolMetrics: {
     enrollmentWindowOpen: true,
     totalGradesOffered: 4,

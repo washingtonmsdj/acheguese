@@ -22,8 +22,6 @@ export function buildEducationAnalyticsCsv(
 ): string {
   const rows = [
     ['secao', 'metrica', 'dimensao', 'valor'].map(escapeCsvCell).join(','),
-    row('periodo', 'inicio', data.period.start),
-    row('periodo', 'fim', data.period.end),
     row('leads', 'total', data.leads.total),
     row('leads', 'novos', data.leads.new),
     row('leads', 'contatados', data.leads.contacted),
