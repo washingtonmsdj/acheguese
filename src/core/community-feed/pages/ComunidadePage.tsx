@@ -209,7 +209,7 @@ export default function ComunidadePage({
     handleCloseModal,
     deletePostDialogOpen,
     isDeletingPost,
-  } = useComunidadePage();
+  } = useComunidadePage(territoryFilter);
   const createPostModalData: CreatePostModalData | null =
     modalState.type === "create" &&
     modalState.data &&

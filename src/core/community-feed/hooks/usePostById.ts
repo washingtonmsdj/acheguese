@@ -1,4 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import { isTerritoryFilterReady, territoryFilterKey } from "@/core/location/hooks/useTerritoryFilter";
+import type { TerritoryFilter } from "@/core/location/types";
 
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { postService } from "@/core/posts/services";
@@ -26,15 +28,19 @@ interface CommunityPostInteractions {
   hasConfirmed: boolean;
 }
 
-export function usePostById(postId: string | null) {
+export function usePostById(
+  postId: string | null,
+  territoryFilter: TerritoryFilter,
+) {
   return useQuery({
-    queryKey: ["community-post", postId],
+    queryKey: ["community-post", territoryFilterKey(territoryFilter), postId],
     queryFn: async () => {
-      if (!postId) return null;
+      if (!postId || !isTerritoryFilterReady(territoryFilter)) return null;
 
       const activeProfile = await profileService.getActiveProfile();
-      const post = (await postService.getPostById(
+      const post = (await postService.getPublicPostById(
         postId,
+        territoryFilter,
       )) as CommunityPostRecord | null;
 
       if (!post) return null;
@@ -92,6 +98,6 @@ export function usePostById(postId: string | null) {
 
       return communityPost;
     },
-    enabled: !!postId,
+    enabled: Boolean(postId) && isTerritoryFilterReady(territoryFilter),
   });
 }

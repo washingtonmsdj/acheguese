@@ -117,6 +117,55 @@ export async function getPostById(postId: string): Promise<Post | null> {
   }
 }
 
+/**
+ * Busca um post publico por ID dentro do territorio resolvido.
+ * Falha fechado sem territorio e aplica visibilidade antes de retornar dados.
+ */
+export async function getPublicPostById(
+  postId: string,
+  territoryFilter: TerritoryFilter,
+): Promise<Post | null> {
+  if (territoryFilter.scope === "none") return null;
+
+  try {
+    let query = postsQueryDb
+      .from<Post>("posts")
+      .select(
+        `
+          *,
+          author_profile:profiles!author_profile_id(id, name, display_name, avatar_url, verified)
+        `,
+      )
+      .eq("id", postId)
+      .eq("is_published", true)
+      .eq("is_hidden", false)
+      .eq("is_removed", false);
+
+    query = applyTerritoryFilter(
+      query,
+      territoryFilter,
+    ) as QueryBuilder<Post>;
+
+    const { data: post, error } = await query.single();
+    if (error) {
+      if (error.code === "PGRST116") return null;
+      throw new PostError(error.message, error.code);
+    }
+
+    return post as Post;
+  } catch (error) {
+    if (error instanceof PostError) throw error;
+
+    logger.error("[posts.queries] Error fetching public post by ID:", error);
+    trackError(error as Error, {
+      component: "posts.queries",
+      action: "getPublicPostById",
+      metadata: { postId },
+    });
+    throw new PostError("Erro ao buscar post publico", "FETCH_ERROR");
+  }
+}
+
 export async function searchPublicPosts(
   query: string,
   options: {

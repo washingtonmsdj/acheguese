@@ -8,6 +8,7 @@ import { PAGINATION } from "@/shared/constants";
 import { POST_LIMITS } from "@/shared/constants/socialContent";
 import { mediaService } from "@/core/media/services/MediaService";
 import { LocationType } from "@/shared/types/enums";
+import type { TerritoryFilter } from "@/core/location/types";
 import type {
   Post,
   FeedParams,
@@ -117,6 +118,16 @@ export class PostService {
    */
   async getPostById(postId: string): Promise<Post | null> {
     return queries.getPostById(postId);
+  }
+
+  /**
+   * Busca detalhe publico apenas dentro do territorio resolvido.
+   */
+  async getPublicPostById(
+    postId: string,
+    territoryFilter: TerritoryFilter,
+  ): Promise<Post | null> {
+    return queries.getPublicPostById(postId, territoryFilter);
   }
 
   /**

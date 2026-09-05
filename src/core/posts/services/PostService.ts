@@ -10,6 +10,7 @@
 // ============================================================
 export {
   getPostById,
+  getPublicPostById,
   getFeed,
   searchPublicPosts,
   getPostsByProfile,

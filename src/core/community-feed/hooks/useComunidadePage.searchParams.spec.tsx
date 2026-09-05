@@ -9,6 +9,11 @@ const mocks = vi.hoisted(() => ({
   usePostById: vi.fn(),
 }));
 
+const TEST_TERRITORY_FILTER = {
+  scope: "location" as const,
+  location_id: "location-1",
+};
+
 vi.mock("@/core/community-feed/hooks/useFeedFilters", () => ({
   useCommunityFilters: () => ({
     setTagFilter: vi.fn(),
@@ -73,16 +78,19 @@ describe("useComunidadePage post query parameter", () => {
   });
 
   it("reads an existing post deep-link and requests its detail", () => {
-    const { result } = renderHook(() => useComunidadePage(), {
+    const { result } = renderHook(() => useComunidadePage(TEST_TERRITORY_FILTER), {
       wrapper: createWrapper("/comunidade/pituba/feed?post=post-123"),
     });
 
     expect(result.current.postId).toBe("post-123");
-    expect(mocks.usePostById).toHaveBeenCalledWith("post-123");
+    expect(mocks.usePostById).toHaveBeenCalledWith(
+      "post-123",
+      TEST_TERRITORY_FILTER,
+    );
   });
 
   it("adds and removes only post while preserving unrelated query state", async () => {
-    const { result } = renderHook(() => useComunidadePage(), {
+    const { result } = renderHook(() => useComunidadePage(TEST_TERRITORY_FILTER), {
       wrapper: createWrapper("/comunidade/pituba/feed?view=popular&tab=geral"),
     });
 

@@ -23,6 +23,7 @@ import { logger } from "@/shared/utils/logger";
 import type { PostType } from "@/core/posts/types/Post";
 import type { UnifiedPost } from "@/shared/types/posts";
 import type { CommunityReportReason } from "@/core/moderation";
+import type { TerritoryFilter } from "@/core/location/types";
 
 export interface ModalCommentData {
   postId: string;
@@ -133,7 +134,7 @@ function toCommunityActorProfile(input: unknown): CommunityActorProfile | null {
   };
 }
 
-export function useComunidadePage() {
+export function useComunidadePage(territoryFilter: TerritoryFilter) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [modalState, setModalState] = useState<ModalState>({
     type: null,
@@ -154,7 +155,10 @@ export function useComunidadePage() {
   const communityLocation = useCommunityLocation();
 
   const postId = searchParams.get("post");
-  const { data: postData, isLoading: isLoadingPost } = usePostById(postId);
+  const { data: postData, isLoading: isLoadingPost } = usePostById(
+    postId,
+    territoryFilter,
+  );
   const openPostDetail = useCallback(
     (nextPostId: string) => {
       setSearchParams((previous) => {

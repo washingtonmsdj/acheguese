@@ -17,6 +17,7 @@ export { PostsFacade } from "./PostService";
 // ============================================================
 export {
   getPostById,
+  getPublicPostById,
   getFeed,
   searchPublicPosts,
   getPostsByProfile,
