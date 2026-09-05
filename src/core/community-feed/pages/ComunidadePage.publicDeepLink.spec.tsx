@@ -93,7 +93,7 @@ vi.mock("@/core/community/components/page/CommunityOverviewSurface", () => ({
   ),
 }));
 
-vi.mock("@/core/community/components/composer/CreatePostModal", () => ({
+vi.mock("@/core/community-feed/components/CreatePostModal", () => ({
   CreatePostModal: () => null,
 }));
 
