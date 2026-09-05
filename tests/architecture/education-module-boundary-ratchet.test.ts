@@ -111,6 +111,28 @@ describe("Education module hardening ratchet", () => {
     expect(nicheBillingHook).not.toContain("Limites base (sem uso)");
   });
 
+  it("keeps public Education lead capture truthful and actionable", () => {
+    const form = read(
+      "src/modules/business/education/components/EducationLeadForm.tsx",
+    );
+    const sidebar = read(
+      "src/modules/business/education/pages/EducationDetailSidebar.tsx",
+    );
+
+    expect(form).toContain("onSubmit: (data: LeadFormData) => Promise<void> | void");
+    expect(form).toContain('id="education-lead-form"');
+    expect(form).toContain('role="alert"');
+    expect(form).not.toContain("onLeadCreated");
+    expect(form).not.toContain("educationProfileId");
+    expect(form).not.toContain("onSubmit?.");
+
+    expect(sidebar).toContain("focusLeadForm");
+    expect(sidebar).toContain("Solicitar visita");
+    expect(sidebar).toContain("Solicitar informacoes");
+    expect(sidebar).not.toContain("Agendar visita");
+    expect(sidebar).not.toContain("Solicitar orçamento");
+  });
+
   it("keeps Education analytics on the real profile and real export contract", () => {
     const page = read(
       "src/modules/business/education/pages/EducationAnalyticsPage.tsx",

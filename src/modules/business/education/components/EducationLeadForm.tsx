@@ -9,6 +9,7 @@ import {
   Check,
   GraduationCap,
   Clock,
+  AlertCircle,
   LifeBuoy,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
@@ -21,10 +22,8 @@ import type { EducationNicheKey, SchoolShift } from '@/core/education';
 import { getSchoolStageOptions, SCHOOL_STAGE_OTHER_VALUE } from '@/core/education/constants/schoolStageOptions';
 
 export interface EducationLeadFormProps {
-  educationProfileId: string;
   nicheKey?: string | null;
-  onSubmit?: (data: LeadFormData) => void;
-  onLeadCreated?: (leadId: string, data: LeadFormData) => void;
+  onSubmit: (data: LeadFormData) => Promise<void> | void;
   className?: string;
 }
 export interface LeadFormData {
@@ -49,12 +48,10 @@ const SHIFT_OPTIONS: { value: SchoolShift; label: string }[] = [
 ];
 
 export function EducationLeadForm({
-  educationProfileId,
   nicheKey,
   onSubmit,
   className,
 }: EducationLeadFormProps) {
-  void educationProfileId;
   const labels = useLabels((nicheKey ?? undefined) as EducationNicheKey | undefined);
   const isSchoolContext = nicheKey === 'regular_school' || nicheKey === 'daycare';
   const stageOptions = getSchoolStageOptions((nicheKey ?? undefined) as EducationNicheKey | undefined);
@@ -74,6 +71,7 @@ export function EducationLeadForm({
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [desiredStageOption, setDesiredStageOption] = useState('');
 
   const handleChange = (
@@ -95,12 +93,15 @@ export function EducationLeadForm({
     e.preventDefault();
     if (!formData.fullName || !formData.email || !formData.phone) return;
 
+    setSubmissionError(null);
     setIsLoading(true);
     try {
-      await onSubmit?.(formData);
+      await onSubmit(formData);
       setIsSubmitted(true);
     } catch {
-      // handled by parent
+      setSubmissionError(
+        'Nao foi possivel registrar seu interesse. Revise os dados e tente novamente.',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -124,6 +125,7 @@ export function EducationLeadForm({
 
   return (
     <motion.form
+      id="education-lead-form"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       onSubmit={handleSubmit}
@@ -325,6 +327,17 @@ export function EducationLeadForm({
           />
         </div>
       </div>
+
+      {submissionError && (
+        <div
+          role="alert"
+          aria-live="polite"
+          className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{submissionError}</span>
+        </div>
+      )}
 
       <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
         {isLoading ? (

@@ -21,6 +21,16 @@ export function EducationDetailSidebar({
   trackWhatsAppClick,
   whatsappHref,
 }: EducationDetailSidebarProps) {
+  const focusLeadForm = (trackingLabel: string) => {
+    trackEnrollmentCTAClick(trackingLabel);
+    const form = document.getElementById('education-lead-form');
+    form?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const nameInput = document.getElementById('fullName');
+    if (nameInput instanceof HTMLElement) {
+      nameInput.focus({ preventScroll: true });
+    }
+  };
+
   return (
     <aside className="lg:sticky lg:top-24 lg:h-fit">
       <div className="space-y-4">
@@ -46,25 +56,24 @@ export function EducationDetailSidebar({
             <Button
               variant="outline"
               className="w-full rounded-full"
-              onClick={() => trackEnrollmentCTAClick('Agendar visita')}
+              onClick={() => focusLeadForm('Solicitar visita')}
             >
               <Calendar className="mr-2 h-4 w-4" />
-              Agendar visita
+              Solicitar visita
             </Button>
             <Button
               variant="outline"
               className="w-full rounded-full"
-              onClick={() => trackEnrollmentCTAClick('Solicitar orçamento')}
+              onClick={() => focusLeadForm('Solicitar informacoes')}
             >
               <FileText className="mr-2 h-4 w-4" />
-              Solicitar orçamento
+              Solicitar informacoes
             </Button>
           </div>
         </div>
 
         <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
           <EducationLeadForm
-            educationProfileId={profile.id}
             nicheKey={profile.niche_key}
             onSubmit={handleLeadSubmit}
           />
