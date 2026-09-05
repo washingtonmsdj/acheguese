@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Globe2, Lock, MapPin, PencilLine, Users } from "lucide-react";
 
 import type { MapMarker, TerritoryPolygon } from "@/core/maps";
-import { NeighborhoodTerritoryArt } from "@/core/community-feed/components/NeighborhoodTerritoryArt";
+import { NeighborhoodTerritoryArt } from "@/core/maps/components/NeighborhoodTerritoryArt";
 
 type NeighborhoodTerritoryHeroProps = {
   territoryName: string;

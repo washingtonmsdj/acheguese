@@ -328,4 +328,24 @@ describe("G6 Community feed page ownership", () => {
     ).toBe(false);
   });
 
+
+  it("does not use Community/Feed as a facade for territorial map art", () => {
+    const mapArt = read(
+      "src/core/maps/components/NeighborhoodTerritoryArt.tsx",
+    );
+    const city = read("src/app/pages/CidadeLandingPage.tsx");
+
+    expect(mapArt).toContain("TerritoryPolygon");
+    expect(mapArt).toContain("MapMarker");
+    expect(city).toContain(
+      "@/core/maps/components/NeighborhoodTerritoryArt",
+    );
+    for (const retiredPath of [
+      "src/core/community/components/public/NeighborhoodTerritoryArt.tsx",
+      "src/core/community-feed/components/NeighborhoodTerritoryArt.ts",
+    ]) {
+      expect(existsSync(resolve(ROOT, retiredPath))).toBe(false);
+    }
+  });
+
 });

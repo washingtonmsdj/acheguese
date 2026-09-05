@@ -39,7 +39,7 @@ import { useTerritoryPolygon, type TerritoryPolygon } from '../hooks/useTerritor
 import { useQuery } from '@tanstack/react-query';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { APP_MODULE_SLUGS, buildAppModulePath } from '@/shared/config/moduleSlugs';
-import { NeighborhoodTerritoryArt } from '@/core/community/components/public/NeighborhoodTerritoryArt';
+import { NeighborhoodTerritoryArt } from '@/core/maps/components/NeighborhoodTerritoryArt';
 import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 import { boundaryService } from '@/core/geospatial';
 import { spatialSearchService } from '@/core/geospatial/services/SpatialSearchService';

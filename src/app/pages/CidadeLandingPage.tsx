@@ -143,7 +143,7 @@ import {
   type PopulationMetric,
 } from "./CidadeLanding.neighborhood-panels";
 import { NeighborhoodTerritoryHero } from "./CidadeLanding.neighborhood-hero";
-import { NeighborhoodTerritoryArt } from "@/core/community-feed/components/NeighborhoodTerritoryArt";
+import { NeighborhoodTerritoryArt } from "@/core/maps/components/NeighborhoodTerritoryArt";
 import "./CidadeLandingPage.css";
 
 const CommunityCreatePostModal = lazy(() =>
