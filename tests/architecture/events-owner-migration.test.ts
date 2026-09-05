@@ -11,6 +11,7 @@ describe("community Events canonical owner", () => {
     expect(exists("src/features")).toBe(false);
     expect(exists("src/features/events")).toBe(false);
     expect(exists("src/core/verticals/events")).toBe(false);
+    expect(exists("src/shared/components/eventos")).toBe(false);
   });
 
   it("keeps Events implementation under community-events", () => {
