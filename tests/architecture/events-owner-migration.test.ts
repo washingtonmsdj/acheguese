@@ -75,7 +75,7 @@ describe("community Events canonical owner", () => {
     const mutationService = read(
       "src/core/community-events/services/EventMutationService.ts",
     );
-    const migration = read("supabase/migrations/20260905144500_revoke_direct_event_participant_mutations_g6.sql");
+    const migration = read("supabase/migrations/20260905150847_revoke_direct_event_participant_mutations_g6.sql");
 
     expect(mutationService).toContain('invokeEventRpc<EventJoinResult>("joinEvent"');
     expect(mutationService).toContain('invokeEventRpc<EventLeaveResult>("leaveEvent"');
