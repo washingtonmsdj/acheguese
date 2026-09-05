@@ -30,7 +30,7 @@ import {
   subscribeNewPost,
 } from "@/core/community-feed/state/newPostHighlight";
 import { CommunityComposerEntry } from "./CommunityComposerEntry";
-import { PostCardSkeleton } from "@/core/community/components/PostCardSkeleton";
+import { PostCardSkeleton } from "@/core/community-feed/components/PostCardSkeleton";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { MessageCirclePlus } from "lucide-react";
 

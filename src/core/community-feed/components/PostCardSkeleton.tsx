@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/shared/components/ui/card";
 import {
   getCardClasses,
   getCardBackground,
-} from "./styles/communityDesignSystem";
+} from "@/core/community/components/styles/communityDesignSystem";
 /**
  * Skeleton loader para PostCard
  * Mostra um placeholder animado enquanto os posts carregam

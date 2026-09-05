@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Clock, FileText, TrendingUp } from "lucide-react";
-import { PostCard, PostCardSkeleton } from "@/core/posts/components";
+import { PostCardSkeleton } from "@/core/community-feed/components/PostCardSkeleton";
+import { ProfilePostCard } from "./ProfilePostCard";
 import type { CommunityPost } from "@/core/posts/types";
 import { usePostActions } from "@/core/posts/hooks";
 import { InfiniteScrollTrigger } from "@/shared/components/ui";
@@ -148,7 +149,7 @@ export function UserPostsGrid({
         <>
           <div className="space-y-4">
             {posts.map((post) => (
-              <PostCard
+              <ProfilePostCard
                 key={post.id}
                 post={toCommunityPost(post)}
                 currentUserId={currentProfileId}
