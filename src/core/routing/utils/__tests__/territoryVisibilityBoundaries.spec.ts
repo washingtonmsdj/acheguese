@@ -10,7 +10,6 @@ const forbiddenDirectUsages = [
   "src/core/routing/components/StateLandingPage.tsx",
   "src/core/landing/hooks/useNationalFeatured.ts",
   "src/core/landing/services/LandingService.ts",
-  "src/core/community/components/CommunityRolloutGate.tsx",
 ];
 
 describe("territory visibility boundaries", () => {

@@ -26,4 +26,19 @@ describe("G6 Community access ownership", () => {
     expect(canonical).not.toContain("@/core/community/access");
     expect(existsSync(resolve(ROOT, "src/core/community/access/index.ts"))).toBe(false);
   });
+
+  it("does not recreate the retired CommunityRolloutGate", () => {
+    expect(
+      existsSync(
+        resolve(ROOT, "src/core/community/components/CommunityRolloutGate.tsx"),
+      ),
+    ).toBe(false);
+
+    const canonical = read(
+      "src/core/community-experience/access/CommunityPortalGate.tsx",
+    );
+    expect(canonical).toContain("useCommunityAccess");
+    expect(canonical).toContain('case "rollout_blocked"');
+  });
+
 });
