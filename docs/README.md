@@ -99,6 +99,7 @@ Alguns caminhos antigos ainda existem fora das pastas numeradas por compatibilid
 
 - Bounded contexts de código: [`../src/modules/README.md`](../src/modules/README.md)
 - Contratos transversais e de módulo em [`07-modules/`](./07-modules/)
+- [Posts/Feed SSOT atual](./07-modules/POSTS_FEED_SSOT.md) — `core/posts` é o owner; `core/community-feed` compõe a experiência territorial.
 - Verticais empresariais oficiais são declaradas **somente** em [`src/core/verticals/config.ts`](../src/core/verticals/config.ts). No estado atual: `gastronomy` e `education`.
 
 ### Roadmap / execução

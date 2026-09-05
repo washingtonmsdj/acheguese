@@ -47,9 +47,9 @@ Status do dominio Feed: FROZEN. Documento oficial: `docs/feed/FEED-FREEZE.md`.
 | Feed do bairro (timeline unificada)         | ✅     | `CommunityFeed`                                 | Home → resumo de Community → Community territorial                  |
 | Publicar post (composer + rascunho AES-GCM) | ✅     | `NovoPostPage` / `CreatePostModal`              | CTA contextual somente com `create_post` permitido                  |
 | Rascunho local offline criptografado        | ✅     | `core/community-feed/drafts/postDraft*`         | reabertura do composer no mesmo dispositivo                         |
-| Detalhe do post (modal)                     | ✅     | `PostDetailModal` via `FeedService.getDetail()` | tap no card do feed · URL territorial com `?post=<id>`              |
-| Comentários (thread + composer humanizado)  | ✅     | `PostCommentsPanel`                             | dentro do post                                                      |
-| Compartilhar post (SSOT Feed)               | ✅     | `useShareFeedItem` / `FeedService.shareItem()`  | ícone dentro do card/detalhe; gera URL territorial com `?post=<id>` |
+| Detalhe do post (modal)                     | ✅     | `PostDetailModal` + `postService.getPublicPostById()` | tap no card do feed · URL territorial com `?post=<id>`         |
+| Comentários (thread + composer humanizado)  | ✅     | `core/community-feed/components/comments`      | dentro do post                                                      |
+| Compartilhar post                           | ✅     | `core/posts/utils/postShare` + `postService.recordPostShare()` | ícone no card/detalhe; preserva rota Community quando presente |
 | Reações / social engagement                 | ✅     | inline no card                                  | tap direto                                                          |
 | Aba Comunicação territorial                 | ✅     | `TerritorialCommunityCommunicationPage`         | tabs do bairro                                                      |
 | Alertas comunitários                        | ✅     | `/alertas`                                      | menu comunidade                                                     |

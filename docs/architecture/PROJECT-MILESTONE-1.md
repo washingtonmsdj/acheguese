@@ -60,17 +60,18 @@ Os demais dominios possuem SSOTs tecnicos, documentos de modulo ou contratos par
 | Dependencias | Depende de banco/Supabase, dados oficiais territoriais e pipeline de boundaries. E dependencia obrigatoria para todos os dominios publicos. |
 | Proxima Sprint | Boundary/data readiness de Salvador e enforcement operacional do modelo `TERRITORY-DATA-QUALITY-V2`, sem alterar a arquitetura congelada. |
 
-### 3.2 Feed
+### 3.2 Feed / Posts
 
 | Campo | Estado |
 | --- | --- |
-| Governanca | Formalizada em `FEED-GOVERNANCE.md`. Feed e o boundary publico de timeline, detalhe, criacao, comentarios, compartilhamento, denuncias, reacoes e superficies sociais relacionadas. |
-| SSOT | `FeedService`, `FeedRepository`, `FeedContext`, `FeedTarget`, `feedQueryKeys`, `useFeedContext`, `useFeedTimeline`, `useFeedItemDetail`, `useCreateFeedItem` e adapters autorizados. `PostService` e colaborador interno, nao porta publica. |
-| Roadmap | Estado operacional pos-Freeze formalizado em `FEED-FREEZE.md` e `FEED-FREEZE-CHANGELOG.md`. `FEED-ROADMAP.md` e `FEED-EXECUTION-PLAN.md` permanecem apenas como evidencia historica das sprints executadas. |
-| Milestone | `FEED-MILESTONE-1.md`, `FEED-MILESTONE-1-HARDENING.md`, `FEED-FREEZE-AUDIT-2.md` e `FEED-FREEZE.md` concluidos. |
-| Freeze | STATUS: FROZEN. O dominio Feed esta oficialmente congelado; evolucoes futuras devem preservar GOVERNANCE, SSOT, boundaries e contratos publicos ou passar por ADR/DECISION especifica. |
-| Dependencias | Territory, Community AccessPolicy, Rollout, Posts, Comments, Engagement, Mobility para `ride_share`, Search de posts e Notifications futuras. |
-| Proxima Sprint | Nenhuma sprint funcional obrigatoria para Freeze. Proximas alteracoes devem seguir os criterios de `FEED-FREEZE.md`. |
+| Governanca | As invariantes do antigo Freeze continuam válidas: experiência pública territorial, sem fallback global silencioso e com falha fechada quando o território não está pronto. |
+| SSOT atual | `src/core/posts` é o owner de Post e `postService` é a facade runtime. `src/core/community-feed` compõe timeline/detalhe/UI; `src/core/feed` conserva apenas query keys de composição. |
+| Detalhe público | `postService.getPublicPostById(postId, TerritoryFilter)` aplica `is_published=true`, `is_hidden=false`, `is_removed=false` e o filtro territorial antes de retornar a linha. |
+| Comentários | Persistência em `src/core/comments`; UI/hook específicos da experiência estão em `src/core/community-feed/components/comments` e `hooks/comments`. |
+| Engagement/share | Likes/saves usam seus owners de engagement; Web Share/clipboard e `post_share_events` pertencem aos contratos atuais de `core/posts`/Social Engagement. |
+| Histórico | `FEED-FREEZE.md` e relatórios P0/P1 registram a arquitetura anterior e as invariantes que motivaram o hardening; referências a `FeedService`/`FeedRepository` removidos não são paths atuais. |
+| Dependencias | Territory, Community AccessPolicy, Posts, Comments, Engagement, Search e demais owners explicitamente compostos pela superfície Community. |
+| Proxima Sprint | Continuar G6 por caller/owner census e preservar as invariantes territoriais no desenho executável vigente. |
 
 ### 3.3 Community
 

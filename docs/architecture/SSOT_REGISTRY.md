@@ -2,7 +2,7 @@
 
 > Mapa completo de todos os SSOTs do projeto.
 > Última atualização: 2026-08-30
-> Status documental: CANONICO. Este registry permanece como mapa tecnico de SSOTs; o boundary publico do Feed esta congelado em `docs/feed/FEED-FREEZE.md`.
+> Status documental: CANONICO. Este registry segue o contrato executável atual; `docs/feed/FEED-FREEZE.md` preserva invariantes históricas do Freeze, mas nomes/paths removidos daquele snapshot não reabrem autoridade.
 
 ---
 
@@ -90,24 +90,25 @@ SSOTs da camada `src/core/` — domínios fundamentais do sistema.
 |---|---|
 | **Arquivo** | `src/core/posts/types.ts` |
 | **Service** | `src/core/posts/services/PostService.ts` |
-| **Responsabilidade** | Registro atomico de posts e enquetes. Para experiencia publica de Feed, usar o boundary congelado em `FeedService`. |
+| **Responsabilidade** | Owner canônico de Post: CRUD, leitura territorial, detalhe público fail-closed, paginação, polls e share events. A experiência Community Feed compõe esse owner com `TerritoryFilter`. |
 | **Tipos principais** | `Post`, `CommunityPost`, `Poll`, `PollOption`, `CreatePostData`, `FeedParams` |
 | **Tabela** | `posts` |
 
 ---
 
-### 4A. Feed Public Boundary (FROZEN)
+### 4A. Community Feed composition
 
 | | |
 |---|---|
-| **Governanca** | `docs/feed/FEED-GOVERNANCE.md` |
-| **Freeze** | `docs/feed/FEED-FREEZE.md` |
-| **Service** | `src/core/feed/services/FeedService.ts` |
-| **Repository** | `src/core/feed/repositories/FeedRepository.ts` |
-| **Contratos principais** | `FeedContext`, `FeedTarget`, `FeedQueryKeys`, `CanonicalFeedUrl` |
-| **Responsabilidade** | Porta publica congelada para timeline, detalhe, criacao, edicao, exclusao, comentarios, reacoes, saves, share, reports, poll vote, URL canonica, Search de posts e leitura social de `ride_share`. |
+| **Contrato atual** | `docs/07-modules/POSTS_FEED_SSOT.md` |
+| **UI/aplicação** | `src/core/community-feed` |
+| **Post owner** | `src/core/posts` / `postService` |
+| **Comment owner** | `src/core/comments` |
+| **Engagement owner** | `src/core/engagement` + owners específicos |
+| **Cache composition** | `src/core/feed/queryKeys.ts` |
+| **Responsabilidade** | Compor a experiência territorial sem recriar CRUD/SSOT paralelo; timeline usa `postService.getFeed()`, detalhe público usa `postService.getPublicPostById(..., TerritoryFilter)`. |
 
-> Feed STATUS: FROZEN. UI, hooks publicos e modulos satelites nao devem usar `PostService`, `CommentService` ou `PostEngagementService` como porta publica de Feed. Esses servicos permanecem colaboradores internos quando consumidos pelo `FeedRepository`.
+> O antigo `FeedService`/`FeedRepository` foi removido na consolidação CP-008 após zero consumidores. As invariantes de território, visibilidade e falha fechada continuam obrigatórias, mas são aplicadas pelos owners atuais. `docs/feed/FEED-FREEZE.md` é evidência histórica dessas invariantes, não um motivo para restaurar paths removidos.
 
 ---
 

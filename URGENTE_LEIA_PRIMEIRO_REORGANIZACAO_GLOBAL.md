@@ -635,3 +635,14 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 - Vercel permanece bloqueado por deployment rate limit; o ultimo deploy real continua no SHA `5324766588ff3be7ee8a500c3c7af13d887ae408`. Nao existe prova hosted same-SHA dos cortes acima.
 - GitHub Actions permanece sem minutos hospedados. Nao rerodar workflows.
 - NEXT_ACTION: nenhum novo corte estrutural amplo. Assim que o Vercel liberar, executar uma unica certificacao production same-SHA do HEAD vigente. Se o build falhar, corrigir somente o erro concreto; se passar, retomar o caller census G6.
+
+
+## Checkpoint 2026-09-05 — G6 Community sem dependência de Vercel
+
+- [x] Comments materializados no owner explícito `core/community-feed`: UI de comentários e hooks específicos saíram do namespace genérico; `core/comments` continua owner de persistência. Corte: `a1ac0065c3411cb80c43a976051cc4849fbdaf77`.
+- [x] filtros duplicados consolidados: `useCommunityFiltersAAA` foi aposentado e a semântica runtime ativa ficou em `core/community-feed/hooks/useFeedFilters.ts`, preservando `community_filters_v2` e default de bairro. Corte: `99826f2d123cc9f9c7de75879f313897a7cb83f7`.
+- [x] detalhe de Post movido para o owner de experiência Community Feed e endurecido sem recriar o antigo FeedService: `core/posts` ganhou `getPublicPostById(postId, TerritoryFilter)`, com visibilidade pública + filtro territorial antes do retorno. Cortes: `c3ed15132963dd94306858a4478e701529c59b32` e `e85c144dcda7c7540693b0456880b71b7fdcc415`.
+- [x] `src/core/community/hooks/usePost.ts` aposentado após caller census zero. Corte: `99cf9176b73dbe088ba71fd80af85029ab36a5da`.
+- [x] G5 revalidado sem mutação: 12 tabelas públicas com RLS e zero policies permanecem intencionalmente fail-closed, sem grants CRUD para `anon` ou `authenticated`; não criar policies artificiais para silenciar advisor.
+- [x] precedência documental corrigida: source executável + Core Platform CP-008 vencem snapshots antigos. `FeedService`/`FeedRepository` removidos não devem ser recriados; o owner atual de Post é `core/posts`, com composição em `core/community-feed`.
+- [ ] hosted build/typecheck same-SHA continua prova futura separada; G6 pode continuar por source, Supabase, ownership, segurança e regressions estáticos sem depender de Vercel/GitHub Actions.

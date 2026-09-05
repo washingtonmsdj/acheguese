@@ -1,14 +1,10 @@
 # Posts e Feed SSOT
 
-> AVISO DE SUBSTITUICAO DOCUMENTAL
->
-> Status: SUBSTITUIDO.
-> Documento canonico atual: `docs/feed/FEED-FREEZE.md`.
-> Este arquivo fica preservado apenas como historico e nao deve ser usado como fonte normativa para a superficie publica do Feed.
+Status: CANONICO ATUAL
+Atualizado: 2026-09-05
+Finding de origem: CP-008
 
-Status: vigente
-Data: 2026-07-17
-Finding encerrado: CP-008
+> `docs/feed/FEED-FREEZE.md` preserva as invariantes e o desenho histórico que precederam a consolidação CP-008. Os nomes `FeedService`, `FeedRepository` e hooks removidos naquele snapshot não são autoridade executável atual e não devem ser restaurados para satisfazer documentação antiga.
 
 ## Decisao
 
@@ -34,7 +30,9 @@ tipos antecipadamente produziria uma abstracao sem consumidor.
   transicao;
 - posts tecnicos de seed nao entram na resposta publica;
 - `is_published`, `is_hidden` e `is_removed` sao aplicados na consulta como
-  defesa em profundidade e tambem pela RLS.
+  defesa em profundidade e tambem pela RLS;
+- detalhe público usa `getPublicPostById(postId, TerritoryFilter)`, falha fechado
+  para `scope: "none"` e aplica o mesmo `TerritoryFilter` antes de retornar a linha.
 - `images` persiste somente `MediaAssetRef` do preset `post_image`; leitura
   resolve a URL no read model e nunca consulta o campo legado `image_url`.
 

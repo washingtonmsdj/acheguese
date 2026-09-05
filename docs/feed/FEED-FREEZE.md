@@ -2,7 +2,9 @@
 
 Data: 2026-07-28
 
-Status: FROZEN
+Status: SNAPSHOT HISTORICO DO FREEZE
+
+> Nota de implementação 2026-09-05: as invariantes deste documento continuam relevantes (território explícito, visibilidade pública e falha fechada), mas a implementação `FeedService`/`FeedRepository` descrita abaixo foi posteriormente consolidada e removida por CP-008. O contrato executável atual está em `src/core/posts`, `src/core/community-feed`, owners de Comments/Engagement e `docs/07-modules/POSTS_FEED_SSOT.md`. Não recriar paths removidos para satisfazer este snapshot.
 
 Decisao oficial: o dominio Feed entra oficialmente em Freeze.
 
