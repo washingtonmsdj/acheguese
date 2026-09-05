@@ -660,3 +660,13 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 - [x] caller census source-only de `src/core/community` fechado: o restante possui responsabilidade explicita (Alerts, Audit, Moderation, Location/Rollout, tests e design token compartilhado com caller real). Nao mover por nome.
 - [ ] Community permanece NAO READY ate a prova hosted same-SHA exigida pelo checklist G6; esta ausencia nao bloqueia o proximo sweep source-only.
 - [ ] NEXT_ACTION sem dependencia de Vercel: iniciar G6 source-only de Events pela mesma ordem — ownership/callers -> contracts/schema -> RLS/authz -> services/hooks/UI -> residuos/legados -> ratchets; nao executar GitHub Actions enquanto a quota hosted estiver indisponivel.
+
+### 2026-09-05 — G6 Events source-only
+
+- [x] owner confirmado: `src/core/community-events` governa contratos/servicos e `src/modules/community-events` governa UI; namespaces historicos `src/features/events` e `src/core/verticals/events` permanecem aposentados.
+- [x] terceira UI paralela `src/shared/components/eventos` removida apos caller census zero. Corte: `fde68086fefbdb5b98d99d9028c5561a8bf03919`.
+- [x] participation authority endurecida: join/leave/check-in usam `event-rpc` + RPCs atomicas `service_role`-only; `authenticated` perdeu INSERT/UPDATE/DELETE direto em `public.event_participants`, preservando SELECT sob RLS.
+- [x] migration remota/source reconciliada em `20260905150847_revoke_direct_event_participant_mutations_g6.sql`; remoto verificado com `auth_select=true` e `auth_insert/auth_update/auth_delete=false`. Cortes: `7d1ee4787738d5f8826fca281563092061332cf8` + provenance `6801cf532a3287f0a6aef6cba8701ddb575aa174`.
+- [x] `EventTicketManager` e `EventsGlobalSidebar` aposentados apos caller census zero; demais componentes amostrados possuem caller real. Corte: `585ea0813b0134d45e6ecd2c698a5bc0b57b9585`.
+- [ ] Events permanece NAO READY: hosted same-SHA/E2E/build continuam provas futuras separadas.
+- [ ] NEXT_ACTION Events: auditar `event_favorites`, `event_reminders`, `event_reviews` e `event_review_helpfulness` por caller, grants/RLS e identidade de Profile; corrigir somente bypass/drift comprovado.
