@@ -134,4 +134,23 @@ describe("G6 Community feed page ownership", () => {
     }
   });
 
+
+  it("uses one Community Feed filter owner", () => {
+    const page = read("src/core/community-feed/hooks/useComunidadePage.ts");
+    const filters = read("src/core/community-feed/hooks/useFeedFilters.ts");
+    const communityHooks = read("src/core/community/hooks/index.ts");
+
+    expect(page).toContain(
+      'from "@/core/community-feed/hooks/useFeedFilters"',
+    );
+    expect(page).toContain("useCommunityFilters()");
+    expect(filters).toContain('const STORAGE_KEY = "community_filters_v2"');
+    expect(filters).toContain('locationScope: "neighborhood"');
+    expect(filters).toContain("export function useCommunityFilters()");
+    expect(communityHooks).not.toContain("useFeedFilters");
+    expect(
+      existsSync(resolve(ROOT, "src/core/community/hooks/useCommunityFiltersAAA.ts")),
+    ).toBe(false);
+  });
+
 });

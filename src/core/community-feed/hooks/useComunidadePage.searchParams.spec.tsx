@@ -9,8 +9,8 @@ const mocks = vi.hoisted(() => ({
   usePostById: vi.fn(),
 }));
 
-vi.mock("@/core/community/hooks/useCommunityFiltersAAA", () => ({
-  useCommunityFiltersAAA: () => ({
+vi.mock("@/core/community-feed/hooks/useFeedFilters", () => ({
+  useCommunityFilters: () => ({
     setTagFilter: vi.fn(),
     immediateFilters: { locationScope: "neighborhood" },
     setLocationScope: vi.fn(),

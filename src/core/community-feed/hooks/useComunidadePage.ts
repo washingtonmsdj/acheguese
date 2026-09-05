@@ -10,7 +10,7 @@
 import { useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { useCommunityFiltersAAA } from "@/core/community/hooks/useCommunityFiltersAAA";
+import { useCommunityFilters } from "@/core/community-feed/hooks/useFeedFilters";
 import { usePostActions } from "@/core/posts/hooks";
 import { useModeration } from "@/core/community/hooks/useModeration";
 import { useSessionContext } from "@/core/session";
@@ -142,7 +142,7 @@ export function useComunidadePage() {
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
 
   const { setTagFilter, immediateFilters, setLocationScope } =
-    useCommunityFiltersAAA();
+    useCommunityFilters();
   const { likePost, savePost, sharePost, deletePost, isDeleting } =
     usePostActions();
   const { reportPostAsync } = useModeration();
