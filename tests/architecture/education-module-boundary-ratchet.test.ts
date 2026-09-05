@@ -58,7 +58,7 @@ describe("Education module hardening ratchet", () => {
       'export const EducationDetailPage = createLaunchPausedRoute("Educacao")',
     );
 
-    for (const privatePage of [
+    const privatePages = [
       "EducationDashboardPage",
       "EducationSetupPage",
       "EducationLeadsPage",
@@ -66,12 +66,30 @@ describe("Education module hardening ratchet", () => {
       "EducationProgramsPage",
       "EducationAnalyticsPage",
       "EducationPlansPage",
-    ]) {
+    ] as const;
+
+    for (const privatePage of privatePages) {
       expect(lazyImports).not.toContain(`export const ${privatePage}`);
-      expect(centralLazyImports).toContain(`export const ${privatePage}`);
+      expect(centralLazyImports).toContain(`export const ${privatePage} = lazy`);
+      expect(centralLazyImports).not.toContain(
+        `${privatePage} = createLaunchPausedRoute`,
+      );
     }
 
     expect(centralRoutes).toContain('import * as P from "../centralLazyImports"');
+    expect(centralRoutes).not.toMatch(
+      /path="educacao[^"]*"[^\n]*launchElement\("education"/,
+    );
+
+    const dashboardShell = read(
+      "src/modules/business/dashboard/pages/BusinessDashboardShellPage.tsx",
+    );
+    expect(dashboardShell).toContain(
+      'isEligibleForVertical(\n    business.category,\n    "education",\n  )',
+    );
+    expect(dashboardShell).not.toContain(
+      'isLaunchSurfaceEnabled("education") && isEligibleForVertical',
+    );
   });
 
   it("keeps Education billing offer and operational limits on separate SSOTs", () => {

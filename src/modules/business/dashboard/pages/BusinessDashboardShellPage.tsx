@@ -88,8 +88,10 @@ export default function BusinessDashboardShellPage() {
   }
 
   const isGastronomyEligible = isEligibleForVertical(business.category, "gastronomy");
-  const isEducationEligible =
-    isLaunchSurfaceEnabled("education") && isEligibleForVertical(business.category, "education");
+  const isEducationEligible = isEligibleForVertical(
+    business.category,
+    "education",
+  );
   const isGastronomyActive = gastronomyStatus === "active";
 
   const premiumUrl =

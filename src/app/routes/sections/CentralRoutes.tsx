@@ -43,13 +43,13 @@ export function CentralRoutes() {
                 <Route path="analytics" element={launchElement("publicAnalytics", "Analytics", <P.AnalyticsPage />)} />
                 <Route path="promocoes" element={launchElement("coupons", "Promocoes", <P.GastronomyPromotionsPage />)} />
               </Route>
-              <Route path="educacao" element={launchElement("education", "Educação", <P.EducationDashboardPage />)} />
-              <Route path="educacao/setup" element={launchElement("education", "Educação", <P.EducationSetupPage />)} />
-              <Route path="educacao/programas" element={launchElement("education", "Educação", <P.EducationProgramsPage />)} />
-              <Route path="educacao/leads" element={launchElement("education", "Educação", <P.EducationLeadsPage />)} />
-              <Route path="educacao/eventos" element={launchElement("education", "Educação", <P.EducationEventsPage />)} />
-              <Route path="educacao/analytics" element={launchElement("education", "Educação", <P.EducationAnalyticsPage />)} />
-              <Route path="educacao/planos" element={launchElement("education", "Educação", <P.EducationPlansPage />)} />
+              <Route path="educacao" element={<P.EducationDashboardPage />} />
+              <Route path="educacao/setup" element={<P.EducationSetupPage />} />
+              <Route path="educacao/programas" element={<P.EducationProgramsPage />} />
+              <Route path="educacao/leads" element={<P.EducationLeadsPage />} />
+              <Route path="educacao/eventos" element={<P.EducationEventsPage />} />
+              <Route path="educacao/analytics" element={<P.EducationAnalyticsPage />} />
+              <Route path="educacao/planos" element={<P.EducationPlansPage />} />
               <Route path="planos" element={<P.BusinessPlansPage />} />
               <Route path="anuncios" element={<P.BusinessAdsPage />} />
               <Route path="link-premium" element={<P.BusinessPremiumSitePage />} />

@@ -57,13 +57,27 @@ export const DeliveryManagementPage = createLaunchPausedRoute("Entregas");
 export const AnalyticsPage = createLaunchPausedRoute("Analytics");
 export const GastronomyPromotionsPage = createLaunchPausedRoute("Promocoes");
 
-export const EducationDashboardPage = createLaunchPausedRoute("Educacao");
-export const EducationSetupPage = createLaunchPausedRoute("Educacao");
-export const EducationLeadsPage = createLaunchPausedRoute("Educacao");
-export const EducationEventsPage = createLaunchPausedRoute("Educacao");
-export const EducationProgramsPage = createLaunchPausedRoute("Educacao");
-export const EducationAnalyticsPage = createLaunchPausedRoute("Educacao");
-export const EducationPlansPage = createLaunchPausedRoute("Educacao");
+export const EducationDashboardPage = lazy(() =>
+  import("@/modules/business/education/pages/EducationDashboardPage"),
+);
+export const EducationSetupPage = lazy(() =>
+  import("@/modules/business/education/pages/EducationSetupPage"),
+);
+export const EducationLeadsPage = lazy(() =>
+  import("@/modules/business/education/pages/EducationLeadsPage"),
+);
+export const EducationEventsPage = lazy(() =>
+  import("@/modules/business/education/pages/EducationEventsPage"),
+);
+export const EducationProgramsPage = lazy(() =>
+  import("@/modules/business/education/pages/EducationProgramsPage"),
+);
+export const EducationAnalyticsPage = lazy(() =>
+  import("@/modules/business/education/pages/EducationAnalyticsPage"),
+);
+export const EducationPlansPage = lazy(() =>
+  import("@/modules/business/education/pages/EducationPlansPage"),
+);
 
 export const CommunicationAgentDashboard = createLaunchPausedRoute("Comunicacao");
 
