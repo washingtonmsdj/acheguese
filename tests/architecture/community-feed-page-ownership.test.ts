@@ -208,4 +208,21 @@ describe("G6 Community feed page ownership", () => {
     }
   });
 
+
+  it("keeps Community territory resolution in routing without a Community facade", () => {
+    const shell = read(
+      "src/core/routing/components/CommunityTerritorialShell.tsx",
+    );
+
+    expect(shell).toContain(
+      "@/core/routing/hooks/useResolveTerritoryFromUrl",
+    );
+    expect(shell).not.toContain("useCommunityScopeResolver");
+    expect(
+      existsSync(
+        resolve(ROOT, "src/core/community/hooks/useCommunityScopeResolver.ts"),
+      ),
+    ).toBe(false);
+  });
+
 });

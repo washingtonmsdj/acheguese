@@ -17,10 +17,10 @@ const shellState = vi.hoisted(() => ({
   resolved: null as ResolvedTerritory,
 }));
 
-vi.mock("@/core/community/hooks/useCommunityScopeResolver", () => ({
-  useCommunityScopeResolver: () => ({
-    resolvedScope: null,
-    isLoading: false,
+vi.mock("@/core/routing/hooks/useResolveTerritoryFromUrl", () => ({
+  useResolveTerritoryFromUrl: () => ({
+    status: shellState.resolved ? "resolved_location" : "not_found",
+    error: null,
     resolved: shellState.resolved,
   }),
 }));

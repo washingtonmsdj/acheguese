@@ -3,7 +3,7 @@ import { Outlet, useLocation, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { AlertTriangle } from "lucide-react";
 import { PageLoader } from "@/shared/components/loading/PageLoader";
-import { useCommunityScopeResolver } from "@/core/community/hooks/useCommunityScopeResolver";
+import { useResolveTerritoryFromUrl } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { useGroupAvailability } from "@/core/territorial/hooks/useGroupAvailability";
 import type { GroupModuleAvailability } from "@/core/territorial/types";
 import { ModuleKey } from "@/core/rollout/types";
@@ -118,7 +118,8 @@ function UnavailableModuleBanner() {
 
 export function CommunityTerritorialShell() {
   const location = useLocation();
-  const { resolved, isLoading: scopeLoading } = useCommunityScopeResolver();
+  const { resolved, status: territoryStatus } = useResolveTerritoryFromUrl();
+  const scopeLoading = territoryStatus === "idle" || territoryStatus === "loading";
   const params = useParams<{
     state?: string;
     city?: string;
