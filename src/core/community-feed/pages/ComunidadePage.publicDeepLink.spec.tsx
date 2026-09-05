@@ -66,7 +66,7 @@ vi.mock("@/core/community/hooks/page/useComunidadePage", () => ({
   useComunidadePage: mocks.useComunidadePage,
 }));
 
-vi.mock("@/core/community/components/feed/CommunityFeed", () => ({
+vi.mock("@/core/community-feed/components/CommunityFeed", () => ({
   CommunityFeed: () => <div data-testid="member-feed" />,
 }));
 

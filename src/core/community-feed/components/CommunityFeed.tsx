@@ -29,12 +29,12 @@ import {
   consumePendingNewPost,
   subscribeNewPost,
 } from "@/core/community-feed/state/newPostHighlight";
-import { CommunityComposerEntry } from "../composer/CommunityComposerEntry";
-import { PostCardSkeleton } from "../PostCardSkeleton";
+import { CommunityComposerEntry } from "./CommunityComposerEntry";
+import { PostCardSkeleton } from "@/core/community/components/PostCardSkeleton";
 import { EmptyState } from "@/shared/components/EmptyState";
 import { MessageCirclePlus } from "lucide-react";
 
-import { SPACING } from "../styles/communityDesignSystem";
+import { SPACING } from "@/core/community/components/styles/communityDesignSystem";
 import { getRecordValue } from "@/shared/utils/recordLookup";
 
 const SORT_ICONS: Record<CommunityFeedSortType, React.ElementType> = {

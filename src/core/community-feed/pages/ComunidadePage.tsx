@@ -33,7 +33,7 @@ import {
   useComunidadePage,
   type CreatePostModalData,
 } from "@/core/community/hooks/page/useComunidadePage";
-import { CommunityFeed } from "@/core/community/components/feed/CommunityFeed";
+import { CommunityFeed } from "@/core/community-feed/components/CommunityFeed";
 import { LocationScopeCards } from "@/core/community/components/page/LocationScopeCards";
 import { CommunityFloatingButtons } from "@/core/community/components/page/CommunityFloatingButtons";
 import { CommunityModals } from "@/core/community/components/page/CommunityModals";
