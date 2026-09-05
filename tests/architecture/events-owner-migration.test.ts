@@ -71,4 +71,18 @@ describe("community Events canonical owner", () => {
       exists("src/modules/community-events/services/EventEngagementService.ts"),
     ).toBe(false);
   });
+  it("keeps event participation mutations server-owned", () => {
+    const mutationService = read(
+      "src/core/community-events/services/EventMutationService.ts",
+    );
+    const migration = read("supabase/migrations/20260905144500_revoke_direct_event_participant_mutations_g6.sql");
+
+    expect(mutationService).toContain('invokeEventRpc<EventJoinResult>("joinEvent"');
+    expect(mutationService).toContain('invokeEventRpc<EventLeaveResult>("leaveEvent"');
+    expect(mutationService).toContain('invokeEventRpc<EventCheckInResult>("checkInEvent"');
+    expect(mutationService).not.toMatch(/\.from\("event_participants"\)[\s\S]{0,240}\.(?:insert|update|delete)\(/);
+    expect(migration).toContain("REVOKE INSERT, UPDATE, DELETE");
+    expect(migration).toContain("ON TABLE public.event_participants");
+    expect(migration).toContain("FROM authenticated");
+  });
 });
