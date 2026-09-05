@@ -65,7 +65,7 @@ import {
 } from "@/core/routing/utils/territoryUrls";
 import { SALVADOR_COMMUNITY_LAUNCH_GROUP_SLUG } from "@/core/community/config/communityLaunch";
 
-const GruposPage = lazy(() => import("./GruposPage"));
+const GruposPage = lazy(() => import("@/core/community-groups/pages/GruposPage"));
 
 interface ComunidadePageProps {
   resolved?: ResolvedTerritory;
