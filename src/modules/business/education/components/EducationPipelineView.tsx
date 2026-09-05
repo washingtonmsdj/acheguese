@@ -10,6 +10,7 @@ import { EducationStatusBadge } from './EducationStatusBadge';
 export interface EducationPipelineViewProps {
   leads: EducationLead[];
   onMoveLead?: (leadId: string, toStatus: EducationLeadStatus) => void;
+  statusCounts?: Partial<Record<EducationLeadStatus, number>>;
   className?: string;
 }
 
@@ -25,6 +26,7 @@ const PIPELINE_STAGES: { status: EducationLeadStatus; label: string; color: stri
 export const EducationPipelineView = memo(function EducationPipelineView({
   leads,
   onMoveLead,
+  statusCounts,
   className,
 }: EducationPipelineViewProps) {
   const leadsByStage = (status: EducationLeadStatus) =>
@@ -46,7 +48,7 @@ export const EducationPipelineView = memo(function EducationPipelineView({
               <div className="flex items-center gap-2">
                 <h4 className="font-semibold text-sm">{stage.label}</h4>
                 <Badge variant="secondary" className="text-xs">
-                  {stageLeads.length}
+                  {statusCounts?.[stage.status] ?? stageLeads.length}
                 </Badge>
               </div>
               {index < PIPELINE_STAGES.length - 1 && (

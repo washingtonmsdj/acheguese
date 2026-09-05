@@ -483,22 +483,19 @@ export const EducationService = {
     total: number;
     byStatus: Record<string, number>;
   }> {
-    const { leads, totalCount } = await queries.listEducationLeads(profileId);
+    const counts = await queries.countLeadsByStatus(profileId);
 
-    const byStatus: Record<string, number> = {
-      new: 0,
-      contacted: 0,
-      visit_scheduled: 0,
-      proposal_sent: 0,
-      enrolled: 0,
-      lost: 0,
+    return {
+      total: counts.total,
+      byStatus: {
+        new: counts.new,
+        contacted: counts.contacted,
+        visit_scheduled: counts.visit_scheduled,
+        proposal_sent: counts.proposal_sent,
+        enrolled: counts.enrolled,
+        lost: counts.lost,
+      },
     };
-
-    leads.forEach((lead) => {
-      byStatus[lead.status] = (byStatus[lead.status] ?? 0) + 1;
-    });
-
-    return { total: totalCount, byStatus };
   },
 
   async listLeads(

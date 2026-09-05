@@ -5,9 +5,10 @@
  * Rota: /central/empresas/:businessId/educacao/leads
  */
 
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Users, Plus } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useEducationProfile } from '../hooks/useEducationProfile';
@@ -20,9 +21,16 @@ export function EducationLeadsPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const { data: profile, isLoading: isProfileLoading } = useEducationProfile(businessId);
   const profileId = profile?.id;
+  const [page, setPage] = useState(1);
+  const pageSize = 25;
 
-  const { leads, isLoading: isLeadsLoading } = useEducationLeads(profileId);
-  const { moveLead, isMoving } = useLeadPipeline(profileId);
+  const {
+    leads,
+    totalCount,
+    isLoading: isLeadsLoading,
+  } = useEducationLeads(profileId, { page, pageSize });
+  const { summary, moveLead } = useLeadPipeline(profileId);
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   const handleMoveLead = async (leadId: string, toStatus: EducationLeadStatus) => {
     await moveLead({ leadId, toStatus });
@@ -49,10 +57,6 @@ export function EducationLeadsPage() {
             </p>
           </div>
         </div>
-        <Button className="gap-2">
-          <Plus className="w-4 h-4" />
-          Novo Lead
-        </Button>
       </motion.div>
 
       {/* Pipeline */}
@@ -63,10 +67,47 @@ export function EducationLeadsPage() {
           ))}
         </div>
       ) : (
-        <EducationPipelineView
-          leads={leads}
-          onMoveLead={handleMoveLead}
-        />
+        <>
+          <EducationPipelineView
+            leads={leads}
+            onMoveLead={handleMoveLead}
+            statusCounts={summary?.byStatus}
+          />
+
+          {totalCount > pageSize && (
+            <div className="mt-8 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-muted-foreground">
+                Exibindo {leads.length} leads nesta pagina de {totalCount} no total.
+                As contagens por etapa consideram todo o pipeline.
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage((current) => Math.max(1, current - 1))}
+                >
+                  Anterior
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Pagina {page} de {totalPages}
+                </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages}
+                  onClick={() =>
+                    setPage((current) => Math.min(totalPages, current + 1))
+                  }
+                >
+                  Proxima
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
