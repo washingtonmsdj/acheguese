@@ -8,7 +8,7 @@
 // Geographic Foundation hooks
 export { useCommunityLocation } from './useCommunityLocation';
 export { useCommunityRollout } from './useCommunityRollout';
-export { useCommunityUrls } from './useCommunityUrls';
+export { useCommunityUrls } from "@/core/routing/hooks/useCommunityUrls";
 
 // Feed hooks
 export { useCommunityFeedSimple as useCommunityFeed } from "./feed/useCommunityFeed";

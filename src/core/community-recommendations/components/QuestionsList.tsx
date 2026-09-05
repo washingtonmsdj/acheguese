@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { CircleHelp, Loader2 } from "lucide-react";
 
-import { useCommunityUrls } from "@/core/community/hooks/useCommunityUrls";
+import { useCommunityUrls } from "@/core/routing/hooks/useCommunityUrls";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 
