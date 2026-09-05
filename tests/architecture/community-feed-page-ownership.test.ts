@@ -309,4 +309,23 @@ describe("G6 Community feed page ownership", () => {
     expect(overview).toContain("getCommunityFeaturedBusinesses");
   });
 
+
+  it("owns the Community overview image gallery in community-feed", () => {
+    const overview = read(
+      "src/core/community-feed/components/CommunityOverviewSurface.tsx",
+    );
+    const gallery = read(
+      "src/core/community-feed/components/ImageGallery.tsx",
+    );
+
+    expect(overview).toContain(
+      "@/core/community-feed/components/ImageGallery",
+    );
+    expect(gallery).toContain("SafeImage");
+    expect(gallery).not.toContain("<img");
+    expect(
+      existsSync(resolve(ROOT, "src/core/community/components/ImageGallery.tsx")),
+    ).toBe(false);
+  });
+
 });

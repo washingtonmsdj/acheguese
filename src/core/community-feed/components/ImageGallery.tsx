@@ -13,6 +13,7 @@ import {
 import { cn } from "@/shared/utils/cn";
 import { logger } from "@/shared/utils/logger";
 import { resolveMediaAssetSources } from "@/core/media";
+import { SafeImage } from "@/shared/components/security/SafeImage";
 /**
  * Galeria de imagens profissional com lightbox
  *
@@ -124,7 +125,7 @@ export function ImageGallery({
             }}
             onClick={() => openLightbox(index)}
           >
-            <img
+            <SafeImage
               src={image}
               alt={`Imagem ${index + 1}`}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
@@ -216,7 +217,7 @@ export function ImageGallery({
 
           {/* Imagem principal */}
           <div className="w-full h-full flex items-center justify-center overflow-auto p-16">
-            <img
+            <SafeImage
               src={images.at(currentIndex) ?? images[0]}
               alt={`Imagem ${currentIndex + 1}`}
               className="max-w-full max-h-full object-contain transition-transform duration-300"
@@ -271,7 +272,7 @@ export function ImageGallery({
                         : "border-transparent opacity-60 hover:opacity-100",
                     )}
                   >
-                    <img
+                    <SafeImage
                       src={image}
                       alt={`Thumbnail ${index + 1}`}
                       className="w-full h-full object-cover"

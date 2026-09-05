@@ -293,6 +293,7 @@ describe("MediaAsset SSOT", () => {
   it("renders migrated business and classified media through SafeImage", () => {
     const migratedReaders = [
       "src/core/community-feed/components/CommunityOverviewSurface.tsx",
+      "src/core/community-feed/components/ImageGallery.tsx",
       "src/modules/business/company/sections/EmpresaFotosSection.tsx",
       "src/modules/classifieds/components/VendedorCard.tsx",
       "src/modules/classifieds/pages/VendedorPerfilPage.tsx",
