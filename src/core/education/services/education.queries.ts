@@ -868,7 +868,7 @@ export async function getLeadPipelineMetrics(
       : 0;
 
   return { conversionRate, avgDaysToFirstContact };
-
+}
 
 // ============================================================
 // TERRITORIAL QUERIES
