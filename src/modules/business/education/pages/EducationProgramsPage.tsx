@@ -50,6 +50,7 @@ import { useEducationNicheBilling } from '../niches/hooks/useEducationNicheBilli
 import { EducationUpgradeBanner } from '../niches/components/EducationUpgradeBanner';
 import { getNicheByKey } from '../niches/registry';
 import { EducationUrlService } from '../services/EducationUrlService';
+import { EducationAdminReadError } from '../components/EducationAdminReadError';
 import type { EducationLevel, EducationProgram } from '@/core/education';
 import {
   getSchoolStageOptions,
@@ -75,8 +76,23 @@ export function EducationProgramsPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
-  const { data: profile, isLoading: isProfileLoading } = useEducationProfile(businessId);
-  const { programs, isLoading, create, update, remove } = useEducationPrograms(
+  const {
+    data: profile,
+    isLoading: isProfileLoading,
+    isError: isProfileError,
+    error: profileError,
+    refetch: refetchProfile,
+  } = useEducationProfile(businessId);
+  const {
+    programs,
+    isLoading,
+    isError: isProgramsError,
+    error: programsError,
+    refetch: refetchPrograms,
+    create,
+    update,
+    remove,
+  } = useEducationPrograms(
     profile?.id,
     { includeInactive: true },
   );
@@ -304,6 +320,18 @@ export function EducationProgramsPage() {
           ))}
         </div>
       </div>
+    );
+  }
+
+  if (isProfileError || isProgramsError) {
+    return (
+      <EducationAdminReadError
+        title="Nao foi possivel carregar os programas"
+        error={profileError ?? programsError}
+        onRetry={async () => {
+          await Promise.all([refetchProfile(), refetchPrograms()]);
+        }}
+      />
     );
   }
 

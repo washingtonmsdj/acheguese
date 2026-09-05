@@ -39,6 +39,9 @@ export function useLeadPipeline(profileId?: string) {
   return {
     summary: summaryQuery.data,
     isLoading: summaryQuery.isLoading,
+    isError: summaryQuery.isError,
+    error: summaryQuery.error,
+    refetch: summaryQuery.refetch,
     moveLead: moveMutation.mutateAsync,
     isMoving: moveMutation.isPending,
   };

@@ -28,6 +28,11 @@ function isValidUuid(value?: string | null): value is string {
   return Boolean(value && UUID_REGEX.test(value));
 }
 
+function educationQueryError(operation: string, error: { message: string }): never {
+  logger.error(`[EducationQueries] ${operation}:`, error);
+  throw new Error(error.message);
+}
+
 // ============================================================
 // TIPOS INTERNOS
 // ============================================================
@@ -252,8 +257,7 @@ export async function getEducationProfileById(
     .maybeSingle();
 
   if (error) {
-    logger.error('[EducationQueries] Error fetching profile by id:', error);
-    return null;
+    educationQueryError('Error fetching profile by id', error);
   }
 
   return data as EducationProfile | null;
@@ -272,8 +276,7 @@ export async function getEducationProfileByBusinessId(
     .maybeSingle();
 
   if (error) {
-    logger.error('[EducationQueries] Error fetching profile by business_id:', error);
-    return null;
+    educationQueryError('Error fetching profile by business_id', error);
   }
 
   return data as EducationProfile | null;
@@ -363,8 +366,7 @@ export async function listEducationPrograms(
     .order('display_order', { ascending: true });
 
   if (error) {
-    logger.error('[EducationQueries] Error listing programs:', error);
-    return [];
+    educationQueryError('Error listing programs', error);
   }
 
   return (data ?? []) as EducationProgram[];
@@ -383,8 +385,7 @@ export async function getEducationProgramById(
     .maybeSingle();
 
   if (error) {
-    logger.error('[EducationQueries] Error fetching program by id:', error);
-    return null;
+    educationQueryError('Error fetching program by id', error);
   }
 
   return data as EducationProgram | null;
@@ -424,8 +425,7 @@ export async function listEducationLeads(
     .range((page - 1) * pageSize, page * pageSize - 1);
 
   if (error) {
-    logger.error('[EducationQueries] Error listing leads:', error);
-    return { leads: [], totalCount: 0 };
+    educationQueryError('Error listing leads', error);
   }
 
   return {
@@ -447,8 +447,7 @@ export async function getEducationLeadById(
     .maybeSingle();
 
   if (error) {
-    logger.error('[EducationQueries] Error fetching lead by id:', error);
-    return null;
+    educationQueryError('Error fetching lead by id', error);
   }
 
   return data as EducationLead | null;
@@ -467,8 +466,7 @@ export async function listLeadEvents(
     .order('created_at', { ascending: false });
 
   if (error) {
-    logger.error('[EducationQueries] Error listing lead events:', error);
-    return [];
+    educationQueryError('Error listing lead events', error);
   }
 
   return (data ?? []) as EducationLeadEvent[];
@@ -505,8 +503,7 @@ export async function listEducationEvents(
     .order('starts_at', { ascending: true });
 
   if (error) {
-    logger.error('[EducationQueries] Error listing events:', error);
-    return [];
+    educationQueryError('Error listing events', error);
   }
 
   return (data ?? []) as EducationEvent[];
@@ -525,8 +522,7 @@ export async function getEducationEventById(
     .maybeSingle();
 
   if (error) {
-    logger.error('[EducationQueries] Error fetching event by id:', error);
-    return null;
+    educationQueryError('Error fetching event by id', error);
   }
 
   return data as EducationEvent | null;

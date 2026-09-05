@@ -15,11 +15,18 @@ import { useEducationProfile } from '../hooks/useEducationProfile';
 import { useEducationLeads } from '../hooks/useEducationLeads';
 import { useLeadPipeline } from '../hooks/useLeadPipeline';
 import { EducationPipelineView } from '../components/EducationPipelineView';
+import { EducationAdminReadError } from '../components/EducationAdminReadError';
 import type { EducationLeadStatus } from '@/core/education';
 
 export function EducationLeadsPage() {
   const { businessId } = useParams<{ businessId: string }>();
-  const { data: profile, isLoading: isProfileLoading } = useEducationProfile(businessId);
+  const {
+    data: profile,
+    isLoading: isProfileLoading,
+    isError: isProfileError,
+    error: profileError,
+    refetch: refetchProfile,
+  } = useEducationProfile(businessId);
   const profileId = profile?.id;
   const [page, setPage] = useState(1);
   const pageSize = 25;
@@ -28,8 +35,17 @@ export function EducationLeadsPage() {
     leads,
     totalCount,
     isLoading: isLeadsLoading,
+    isError: isLeadsError,
+    error: leadsError,
+    refetch: refetchLeads,
   } = useEducationLeads(profileId, { page, pageSize });
-  const { summary, moveLead } = useLeadPipeline(profileId);
+  const {
+    summary,
+    moveLead,
+    isError: isPipelineError,
+    error: pipelineError,
+    refetch: refetchPipeline,
+  } = useLeadPipeline(profileId);
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   const handleMoveLead = async (leadId: string, toStatus: EducationLeadStatus) => {
@@ -37,6 +53,22 @@ export function EducationLeadsPage() {
   };
 
   const isLoading = isProfileLoading || isLeadsLoading;
+
+  if (isProfileError || isLeadsError || isPipelineError) {
+    return (
+      <EducationAdminReadError
+        title="Nao foi possivel carregar os leads"
+        error={profileError ?? leadsError ?? pipelineError}
+        onRetry={async () => {
+          await Promise.all([
+            refetchProfile(),
+            refetchLeads(),
+            refetchPipeline(),
+          ]);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="container mx-auto p-6">

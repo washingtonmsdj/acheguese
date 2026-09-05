@@ -78,6 +78,9 @@ export function useEducationEvents(profileId?: string, filters: EventFilters = {
   return {
     events: query.data ?? [],
     isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    refetch: query.refetch,
     create: createMutation.mutateAsync,
     update: updateMutation.mutateAsync,
     remove: deleteMutation.mutateAsync,

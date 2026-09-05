@@ -49,7 +49,13 @@ export function EducationSetupPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { data: profile, isLoading, refetch } = useEducationProfile(businessId);
+  const {
+    data: profile,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useEducationProfile(businessId);
   const dashboardUrl = businessId ? EducationUrlService.buildAdminDashboardUrl(businessId) : null;
 
   const [formData, setFormData] = useState<EducationSetupFormData>(
@@ -190,6 +196,16 @@ export function EducationSetupPage() {
 
   if (isLoading) {
     return <EducationSetupSkeleton />;
+  }
+
+  if (isError) {
+    return (
+      <EducationAdminReadError
+        title="Nao foi possivel carregar a configuracao de Educacao"
+        error={error}
+        onRetry={() => refetch()}
+      />
+    );
   }
 
   return (

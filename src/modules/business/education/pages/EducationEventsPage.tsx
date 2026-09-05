@@ -54,6 +54,7 @@ import {
   fromEventIsoToLocalInput,
   fromLocalInputToEventIso,
 } from '../utils/educationEventDateTime';
+import { EducationAdminReadError } from '../components/EducationAdminReadError';
 
 const SCHOOL_EVENT_TYPE_LABELS: Record<SchoolEventType, string> = {
   open_house: 'Portas Abertas',
@@ -82,8 +83,23 @@ export function EducationEventsPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
-  const { data: profile, isLoading: isProfileLoading } = useEducationProfile(businessId);
-  const { events, isLoading, create, update, remove } = useEducationEvents(profile?.id);
+  const {
+    data: profile,
+    isLoading: isProfileLoading,
+    isError: isProfileError,
+    error: profileError,
+    refetch: refetchProfile,
+  } = useEducationProfile(businessId);
+  const {
+    events,
+    isLoading,
+    isError: isEventsError,
+    error: eventsError,
+    refetch: refetchEvents,
+    create,
+    update,
+    remove,
+  } = useEducationEvents(profile?.id);
   const dashboardUrl = businessId ? EducationUrlService.buildAdminDashboardUrl(businessId) : null;
 
   // Integração nicho + billing
@@ -259,6 +275,18 @@ export function EducationEventsPage() {
           ))}
         </div>
       </div>
+    );
+  }
+
+  if (isProfileError || isEventsError) {
+    return (
+      <EducationAdminReadError
+        title="Nao foi possivel carregar os eventos"
+        error={profileError ?? eventsError}
+        onRetry={async () => {
+          await Promise.all([refetchProfile(), refetchEvents()]);
+        }}
+      />
     );
   }
 

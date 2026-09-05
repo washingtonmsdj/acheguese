@@ -25,6 +25,7 @@ import { useEducationNicheBilling } from '../niches/hooks/useEducationNicheBilli
 import { EducationUpgradeBanner } from '../niches/components/EducationUpgradeBanner';
 import { useEducationProfile } from '../hooks/useEducationProfile';
 import { buildEducationAnalyticsCsv } from '@/core/education/services/educationAnalyticsExport';
+import { EducationAdminReadError } from '../components/EducationAdminReadError';
 import type { UpgradeReason } from '../niches/components/EducationUpgradeBanner';
 
 function toUpgradeReason(reason: string): UpgradeReason {
@@ -57,6 +58,9 @@ export function EducationAnalyticsPage() {
   const {
     data: profile,
     isLoading: isProfileLoading,
+    isError: isProfileError,
+    error: profileError,
+    refetch: refetchProfile,
   } = useEducationProfile(businessId);
 
   const {
@@ -109,6 +113,16 @@ export function EducationAnalyticsPage() {
         <Skeleton className="mb-6 h-8 w-48" />
         <Skeleton className="h-64 w-full rounded-xl" />
       </div>
+    );
+  }
+
+  if (isProfileError) {
+    return (
+      <EducationAdminReadError
+        title="Nao foi possivel carregar o perfil de Educacao"
+        error={profileError}
+        onRetry={() => refetchProfile()}
+      />
     );
   }
 

@@ -85,6 +85,9 @@ export function useEducationLeads(profileId?: string, filters: LeadFilters = {})
     leads: query.data?.leads ?? [],
     totalCount: query.data?.totalCount ?? 0,
     isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    refetch: query.refetch,
     create: createMutation.mutateAsync,
     update: updateMutation.mutateAsync,
   };

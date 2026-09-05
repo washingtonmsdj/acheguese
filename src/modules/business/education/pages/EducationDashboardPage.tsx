@@ -24,10 +24,17 @@ import { useEducationProfile } from '../hooks/useEducationProfile';
 import { useEducationNiche } from '../niches/hooks/useEducationNiche';
 import { getNicheByKey } from '../niches/registry';
 import { EducationUrlService } from '../services/EducationUrlService';
+import { EducationAdminReadError } from '../components/EducationAdminReadError';
 
 export function EducationDashboardPage() {
   const { businessId } = useParams<{ businessId: string }>();
-  const { data: profile, isLoading } = useEducationProfile(businessId);
+  const {
+    data: profile,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useEducationProfile(businessId);
   const nicheData = useEducationNiche(profile?.niche_key);
   const nicheInfo = profile?.niche_key ? getNicheByKey(profile.niche_key) : null;
   const adminUrls = businessId
@@ -100,6 +107,16 @@ export function EducationDashboardPage() {
           ))}
         </div>
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <EducationAdminReadError
+        title="Nao foi possivel carregar a gestao de Educacao"
+        error={error}
+        onRetry={() => refetch()}
+      />
     );
   }
 
