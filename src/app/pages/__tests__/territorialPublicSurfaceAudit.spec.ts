@@ -83,14 +83,24 @@ describe("public territorial surface audit", () => {
   });
 
   it("keeps events and community surfaces anchored to module territory at the page boundary", () => {
-    const eventsSource = readProjectFile("src/core/community/pages/EventosPage.tsx");
-    const communitySource = readProjectFile("src/core/community-feed/pages/ComunidadePage.tsx");
+    const eventsSource = readProjectFile(
+      "src/modules/community-events/pages/EventsListPage.tsx",
+    );
+    const eventTerritorySource = readProjectFile(
+      "src/modules/community-events/hooks/useEventTerritoryFilter.ts",
+    );
+    const communitySource = readProjectFile(
+      "src/core/community-feed/pages/ComunidadePage.tsx",
+    );
 
-    expect(eventsSource).toContain("useModuleTerritoryFilter(");
-    expect(eventsSource).toContain("routeResolved: resolved");
-    expect(eventsSource).toContain("activeMemberIds");
-    expect(eventsSource).toContain("const territoryFilter = moduleTerritory.territoryFilter");
-    expect(eventsSource).not.toContain("useTerritoryFilter(");
+    expect(eventsSource).toContain(
+      "useEventTerritoryFilter(resolved, activeMemberIds)",
+    );
+    expect(eventTerritorySource).toContain("useModuleTerritoryFilter({");
+    expect(eventTerritorySource).toContain("routeResolved: resolved");
+    expect(eventTerritorySource).toContain("activeMemberIds");
+    expect(eventTerritorySource).toContain("includeDescendants: false");
+    expect(eventTerritorySource).not.toContain("useTerritoryFilter(");
 
     expect(communitySource).toContain("useModuleTerritoryFilter(");
     expect(communitySource).toContain("routeResolved: resolved");
