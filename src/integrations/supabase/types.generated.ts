@@ -6792,56 +6792,6 @@ export type Database = {
           },
         ]
       }
-      event_favorites: {
-        Row: {
-          created_at: string
-          event_id: string
-          id: string
-          profile_id: string
-        }
-        Insert: {
-          created_at?: string
-          event_id: string
-          id?: string
-          profile_id: string
-        }
-        Update: {
-          created_at?: string
-          event_id?: string
-          id?: string
-          profile_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "event_favorites_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "event_favorites_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "personal_social_profiles"
-            referencedColumns: ["profile_id"]
-          },
-          {
-            foreignKeyName: "event_favorites_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "event_favorites_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       event_participants: {
         Row: {
           checked_in_at: string | null

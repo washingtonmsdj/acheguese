@@ -87,4 +87,16 @@ describe("community Events canonical owner", () => {
     expect(migration).toContain("ON TABLE public.event_participants");
     expect(migration).toContain("FROM authenticated");
   });
+  it("retires the unused event_favorites table after saved-entity migration", () => {
+    const engagement = read(
+      "src/core/community-events/services/EventEngagementService.ts",
+    );
+    const generatedTypes = read("src/integrations/supabase/types.generated.ts");
+    const migration = read("supabase/migrations/20260905151306_drop_unused_event_favorites_g6.sql");
+
+    expect(engagement).toContain("ProfileSavedEntityService");
+    expect(engagement).not.toContain("event_favorites");
+    expect(generatedTypes).not.toContain("event_favorites: {");
+    expect(migration).toContain("DROP TABLE public.event_favorites RESTRICT");
+  });
 });
