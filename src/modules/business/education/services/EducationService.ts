@@ -656,18 +656,21 @@ export const EducationService = {
 
   /** Verifica se transição de status é válida */
   canMoveLeadToStatus(from: EducationLeadStatus, to: EducationLeadStatus): boolean {
-    const pipeline: EducationLeadStatus[] = ['new', 'contacted', 'visit_scheduled', 'proposal_sent', 'enrolled'];
+    if (from === to) return true;
+    if (from === 'enrolled' || from === 'lost') return false;
+    if (to === 'lost') return true;
+
+    const pipeline: EducationLeadStatus[] = [
+      'new',
+      'contacted',
+      'visit_scheduled',
+      'proposal_sent',
+      'enrolled',
+    ];
     const fromIndex = pipeline.indexOf(from);
     const toIndex = pipeline.indexOf(to);
 
-    // Sempre pode mover para lost
-    if (to === 'lost') return true;
-
-    // Não pode voltar no pipeline
-    if (toIndex <= fromIndex) return false;
-
-    // Só pode avançar um passo por vez
-    return toIndex === fromIndex + 1;
+    return fromIndex >= 0 && toIndex === fromIndex + 1;
   },
 
   /** Retorna próximos passos possíveis no pipeline */

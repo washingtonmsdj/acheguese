@@ -90,13 +90,18 @@ export const EducationPipelineView = memo(function EducationPipelineView({
                         )}
                       </div>
 
-                      {onMoveLead && index < PIPELINE_STAGES.length - 1 && (
+                      {onMoveLead &&
+                        lead.status !== 'enrolled' &&
+                        lead.status !== 'lost' && (
                         <Button
                           variant="ghost"
                           size="sm"
                           className="flex-shrink-0 h-7 px-2 text-xs"
                           onClick={() =>
-                            onMoveLead(lead.id, PIPELINE_STAGES[index + 1].status)
+                            onMoveLead(
+                              lead.id,
+                              PIPELINE_STAGES[index + 1].status,
+                            )
                           }
                         >
                           Avançar

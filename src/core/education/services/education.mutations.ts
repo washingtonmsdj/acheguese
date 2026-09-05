@@ -380,6 +380,27 @@ export async function createEducationLead(
   return { data: data as EducationLead, error: null };
 }
 
+const EDUCATION_LEAD_PIPELINE: EducationLeadStatus[] = [
+  'new',
+  'contacted',
+  'visit_scheduled',
+  'proposal_sent',
+  'enrolled',
+];
+
+function isAllowedLeadTransition(
+  from: EducationLeadStatus,
+  to: EducationLeadStatus,
+): boolean {
+  if (from === to) return true;
+  if (from === 'enrolled' || from === 'lost') return false;
+  if (to === 'lost') return true;
+
+  const fromIndex = EDUCATION_LEAD_PIPELINE.indexOf(from);
+  const toIndex = EDUCATION_LEAD_PIPELINE.indexOf(to);
+  return fromIndex >= 0 && toIndex === fromIndex + 1;
+}
+
 /**
  * Atualiza lead (incluindo mudanca de status)
  */
@@ -419,6 +440,29 @@ export async function moveLeadToStatus(
     ownerUserId?: string | null;
   } = {},
 ): Promise<MutationResult<EducationLead>> {
+  const { data: currentLead, error: currentLeadError } = await supabase
+    .from('education_leads')
+    .select('status')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (currentLeadError || !currentLead?.status) {
+    return {
+      data: null,
+      error: new Error(currentLeadError?.message ?? 'Lead nao encontrado'),
+    };
+  }
+
+  const currentStatus = currentLead.status as EducationLeadStatus;
+  if (!isAllowedLeadTransition(currentStatus, newStatus)) {
+    return {
+      data: null,
+      error: new Error(
+        `Transicao de lead invalida: ${currentStatus} -> ${newStatus}`,
+      ),
+    };
+  }
+
   const updatePayload: Partial<EducationLead> = { status: newStatus };
 
   if (options.lostReason && newStatus === 'lost') {
