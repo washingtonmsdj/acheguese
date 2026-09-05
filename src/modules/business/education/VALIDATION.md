@@ -1,195 +1,225 @@
 # Validação atual — Módulo Educação
 
-**Data do checkpoint:** 2026-09-04  
-**Checkpoint técnico:** `de2f7e0da061b65a5e210e25a5e11edaff45cf4d`  
-**Status:** G6 EM PRÉ-CERTIFICAÇÃO — NÃO MVP CERTIFICADO
+**Data do checkpoint:** 2026-09-05  
+**Checkpoint técnico:** `575a0da8ab0a00b868e890cfad88ff39f132c828`  
+**Status:** G6 PRÉ-CERTIFICAÇÃO DE SOURCE CONCLUÍDA — PUBLIC CANARY / HOSTED SAME-SHA BLOCKED
 
-Este arquivo substitui o checklist histórico de 2026-04-28 que declarava
-“APROVADO PARA PRODUÇÃO / 98/100”. Aquela declaração não representa a
-Definition of Done atual do repositório e não deve ser usada como evidência de
-release.
+Este arquivo substitui os relatórios históricos que declaravam Educação pronta
+para produção antes da Definition of Done atual. O módulo **não está READY** e
+as rotas públicas continuam `launch-paused`.
 
-O owner de UI/aplicação permanece em `src/modules/business/education`. O owner
-técnico de contratos, persistência, tracking e observabilidade pertence a
-`src/core/education`.
+## 1. Ownership canônico
 
-## 1. Arquitetura / ownership
-
-Estado comprovado:
-
-- `src/core/education/contracts.ts` mantém os contratos canônicos do domínio;
-- `src/core/education/services/education.queries.ts` é o read model canônico;
-- `src/core/education/services/education.mutations.ts` é o write model canônico;
-- `EducationTrackingService` é o único writer de
+- UI/aplicação: `src/modules/business/education`;
+- contratos/read/write model: `src/core/education`;
+- `EducationTrackingService`: único writer de
   `public.education_analytics_events`;
-- `EducationObservabilityService` é observabilidade técnica e não persiste no
-  funil de analytics do domínio;
-- `tools/architecture/validate-education-module-boundaries.ts` impede acesso
-  runtime direto a integrations a partir do módulo e bloqueia recriação dos
-  bridges aposentados;
-- `tests/architecture/education-module-boundary-ratchet.test.ts` congela essas
-  fronteiras.
+- `EducationObservabilityService`: observabilidade técnica sem persistência no
+  funil de analytics;
+- rotas privadas: `centralLazyImports` / `CentralRoutes`;
+- rotas públicas: permanecem protegidas por
+  `createLaunchPausedRoute("Educacao")`.
 
-As rotas públicas de Educação continuam `launch-paused`. Não remover a pausa
-por existência de páginas ou testes históricos.
+`tools/architecture/validate-education-module-boundaries.ts` e
+`tests/architecture/education-module-boundary-ratchet.test.ts` congelam essas
+fronteiras.
 
-## 2. Drift de observabilidade fechado
+## 2. Banco / RLS / autorização
 
-A revalidação G6 encontrou incompatibilidade real entre source e banco:
+O projeto Supabase canônico mantém RLS habilitado em:
 
-- `education_analytics_events` aceita somente os sete eventos do funil:
-  `profile_view`, `program_view`, `event_view`, `whatsapp_click`,
-  `enrollment_cta_click`, `lead_submitted` e `event_interest`;
-- o antigo `EducationObservabilityService` tentava inserir eventos técnicos
-  como `education_profile_published`, `education_lead_created`,
-  `education_lead_save_failed` e `education_api_timeout`;
-- esses INSERTs eram rejeitados pela constraint do banco e o serviço apenas
-  registrava a falha em log;
-- métricas `avgPageLoadTime`/`apiErrorRate`, `trackPerformance`,
-  `trackUserJourney` e `getMetrics` não possuíam caller runtime.
+- `education_profiles`;
+- `education_programs`;
+- `education_leads`;
+- `education_lead_events`;
+- `education_events`;
+- `education_analytics_events`.
 
-O corte
-`31377a685c518454a50e844ee4d29f7c87b0e905`
-(`fix(g6): separate education observability from funnel tracking`) corrigiu a
-fronteira sem migration:
+A gestão privada converge para
+`private.can_operate_business_profile(...)`. O probe versionado
+`tests/security/education-management-authority-remote-probe.sql`
+(`de2f7e0da061...`) foi executado em `BEGIN ... ROLLBACK` e comprovou:
 
-- `EducationTrackingService` continua gravando o funil canônico;
-- `EducationObservabilityService` não importa Supabase e usa logger/gtag/Sentry
-  quando disponíveis;
-- APIs técnicas sem caller runtime foram aposentadas;
-- o ratchet agora exige que apenas Tracking acesse
-  `education_analytics_events`.
+- owner direto autorizado;
+- autenticado não-owner sem leitura/update;
+- membership ativa `admin` autorizada;
+- profile/program/lead/event/lead-event protegidos pela mesma autoridade;
+- `washingtonmsdj` explicitamente excluído da fixture;
+- nenhuma mutação persistente após a prova.
 
-Esse SHA chegou a `READY` na Vercel.
+## 3. Analytics / tracking
 
-## 3. Banco e RLS — revalidação viva
+A store `education_analytics_events` aceita somente o funil canônico:
 
-No projeto Supabase canônico:
+- `profile_view`;
+- `program_view`;
+- `event_view`;
+- `whatsapp_click`;
+- `enrollment_cta_click`;
+- `lead_submitted`;
+- `event_interest`.
 
-- `education_profiles`: RLS habilitado;
-- `education_programs`: RLS habilitado;
-- `education_leads`: RLS habilitado;
-- `education_lead_events`: RLS habilitado;
-- `education_events`: RLS habilitado;
-- `education_analytics_events`: RLS habilitado.
+Cortes G6:
 
-As policies privadas de profile/program/lead/lead-event/event usam a autoridade
-Business canônica `private.can_operate_business_profile(...)`, direta ou por
-join ao `education_profile`.
+- `31377a685c51`: separa observabilidade técnica do funil;
+- `750f2dd7f69a`: restaura analytics real;
+- `6ad10de1b1a1`: aposenta facades duplicados de limites;
+- `82a283998d42`: remove período fake;
+- `74d08aa08580` / `8aeaa55b8bef` / `0f1ef66487dd`: convergem
+  analytics para erro real em vez de zero sintético e fecham a query canônica;
+- `1c10aae1515`: contagens do pipeline passam a usar o conjunto real completo.
 
-As leituras públicas ficam limitadas ao contrato publicado:
+## 4. Billing / limites
 
-- profile: apenas `status = published`;
-- programas: vinculados a profile publicado;
-- eventos: `is_public = true` e profile publicado.
+- Billing comercial usa o catálogo canônico de `core/billing`;
+- limites operacionais pertencem ao registry de nichos Education;
+- `EducationSubscriptionService` não mantém preço/limite paralelo;
+- FREE continua fail-closed para capabilities pagas como eventos públicos e
+  analytics avançado;
+- o lifecycle autenticado valida os limites FREE na UI.
 
-## 4. Analytics de domínio
+## 5. Lifecycle autenticado
 
-`education_analytics_events` permanece uma store específica de Education,
-separada do SSOT horizontal `public.analytics_events`.
+`ae0c06d0c63c` adicionou
+`tests/e2e/education-lifecycle-authenticated.spec.ts` e o runner
+`test:e2e:education-lifecycle-authenticated`, com `retries=0`.
 
-O browser possui somente INSERT por coluna para:
+A suite usa exclusivamente a fixture Auth dedicada
+`account-authenticated-e2e`; não usa service-role no browser e não usa
+`washingtonmsdj`.
 
-- `education_profile_id`;
-- `business_id`;
-- `niche_key`;
-- `event_type`;
-- `program_id`;
-- `education_event_id`;
-- `lead_id`;
-- `source_page`;
-- `session_id`;
-- `metadata`.
+O fluxo implementado prova por UI + sessão autenticada:
 
-Esse allowlist coincide com o payload de `EducationTrackingService`. Não
-restaurar INSERT amplo de tabela e não expandir a constraint para acomodar
-eventos técnicos aposentados.
+1. criar Business Education;
+2. entrar em `/educacao/setup`;
+3. configurar escola / nicho regular-school;
+4. persistir profile Education draft;
+5. criar programa;
+6. desativar e reativar programa;
+7. abrir gestão de leads sem CTA fake de criação privada;
+8. validar bloqueio de eventos no FREE;
+9. validar Analytics/upgrade sem zero artificial;
+10. limpar fixtures técnicas com prefixo `G6 E2E Education`.
 
-## 5. Prova remota de autorização
+O job `Authenticated Account + Business + Education E2E` já está ligado ao
+workflow canônico, mas os runs do HEAD atual continuam encerrando com
+`steps=null`. Portanto a suite existe e está gateada, mas **a execução hosted
+same-SHA ainda não foi observada**.
 
-O probe versionado
-`tests/security/education-management-authority-remote-probe.sql`, commit
-`de2f7e0da061b65a5e210e25a5e11edaff45cf4d`, foi executado contra o Supabase
-canônico e retornou `status=pass`.
+## 6. Confiabilidade de mutações
 
-A prova é inteiramente `BEGIN ... ROLLBACK` e cria o fixture temporário dentro
-da própria transação. Ela não usa os 16 perfis Education existentes e exclui
-explicitamente `washingtonmsdj`.
+Cortes G6 recentes:
 
-Resultado comprovado:
+- `aad71766bc38`: setup Education ganhou compensação quando uma etapa posterior
+  falha;
+- `8d08bedeab53`: transições do pipeline de leads passaram a respeitar a
+  máquina de estados canônica;
+- `1c10aae1515`: contagens por etapa deixam de usar apenas a página atual;
+- `331371cebe81`: eventos preservam horário local ao converter
+  `datetime-local <-> ISO`;
+- `7fc267768fbc`: gestão privada deixou de depender do launch público.
 
-- owner direto do Profile Business temporário:
-  `can_operate_business_profile=true`;
-- owner lê e atualiza profile Education draft e programa;
-- autenticado não-owner:
-  helper `false`, leitura privada `0`, update `0`;
-- após membership temporária `admin`, o mesmo usuário passa a administrar:
-  profile, programa, lead, evento e lead-event;
-- lead/event/lead-event temporários são inseridos via RLS;
-- toda a prova é revertida por `ROLLBACK`.
+## 7. Caller census / legado
 
-## 6. Inventário de dados observado
+`8846d95d1956` aposentou componentes de apresentação sem caller runtime:
 
-No checkpoint da auditoria remota:
+- `EducationCard`;
+- `EducationProgramsSection`;
+- `EducationContactSidebar`.
 
-- 16 `education_profiles`;
-- 16 publicados;
-- 82 `education_programs`;
-- 0 `education_leads`;
-- 0 `education_events`.
+Explorer/Detail atuais usam seus próprios owners de apresentação e os arquivos
+acima não fazem mais parte da API pública do módulo. O ratchet impede
+recriação.
 
-A ausência de leads/eventos persistidos foi tratada no probe com fixtures
-transacionais; não foi usada como justificativa para fabricar dados permanentes.
+## 8. Truthfulness de leitura privada
 
-## 7. Estado de testes / provider
+`575a0da8ab0a` fechou um gap adicional:
 
-GitHub Actions permanece instável no ambiente hosted: nos SHAs recentes os jobs
-de Security, SSOT Enforcement e SSOT Territorial terminaram antes do primeiro
-step (`steps=null`). Isso é blocker de infraestrutura, não PASS nem source
-failure.
+- erros Supabase de profile/program/lead/lead-event/event privado não são mais
+  convertidos em `null/[]/0`;
+- o read model canônico lança erro;
+- hooks de Programs/Leads/Pipeline/Events expõem
+  `isError/error/refetch`;
+- Dashboard, Setup, Programs, Leads, Events e Analytics exibem
+  `EducationAdminReadError` com retry;
+- empty state agora significa consulta bem-sucedida sem dados, não falha de
+  backend mascarada.
 
-Evidência independente de build:
+`tests/architecture/education-private-read-truthfulness.test.ts` protege esse
+contrato.
 
-- `31377a685c518454a50e844ee4d29f7c87b0e905`: Vercel `READY`;
-- o probe de `de2f7e0...` passou diretamente no Supabase canônico;
-- o deploy de `de2f7e0...` deve ser classificado pelo provider antes de usar
-  esse SHA como prova same-SHA completa.
+## 9. Estado de provider / build
 
-## 8. Pendências antes de Education READY
+Evidências independentes já obtidas em Vercel:
 
-### Crítico / alto
+- `31377a685c51`: READY;
+- `3b23725a3a8f`: READY;
+- `5e1a26c46f9`: READY;
+- `750f2dd7f69a`: READY;
+- `6ad10de1b1a1`: READY;
+- `82a283998d42`: READY;
+- `0f1ef66487dd`: READY;
+- `331371cebe81`: READY.
 
-- nenhuma falha crítica/alta de RLS identificada no primeiro sweep G6;
-- ainda falta executar os gates hosted com steps reais no mesmo SHA;
-- ainda falta certificar E2E público e operacional atual sem aceitar
-  `launch-paused` como sucesso.
+Os commits posteriores de lifecycle/caller-census/read-truthfulness ainda
+precisam de build/deploy same-SHA observado.
 
-### Médio
+GitHub Actions no HEAD `575a0da8...` permanece em falha de infraestrutura:
+Security, SSOT e Territorial retornaram `steps=null`. Isso não é PASS nem
+falha de source.
 
-- revalidar pages/hooks/services por caller census e retirar APIs sem consumidor;
-- revalidar UX de setup/programas/leads/eventos contra o escopo MVP;
-- executar cobertura mobile e acessibilidade nas superfícies que realmente
-  entrarem no lançamento;
-- reconciliar qualquer teste E2E antigo que seja debug-only ou aceite fallback
-  como PASS.
+## 10. O que ainda bloqueia Education READY
 
-### Launch decision
+### BLOCKED — public canary
 
-Educação continua `launch-paused`. Só pode ser despausada após:
+A rota pública real ainda está `launch-paused`. Não existe override test-only
+canônico para montar Explorer/Detail reais em Production sem expor a feature.
 
-1. fluxo público territorial real;
-2. setup mínimo autenticado;
-3. programa mínimo operacional;
-4. autorização positiva/negativa comprovada;
-5. lint/typecheck/unit/security/E2E com steps reais;
-6. deploy + smoke do mesmo SHA.
+Não despausar apenas para “ver se funciona”. A próxima ativação pública deve
+ser um canary controlado ou uma decisão explícita de launch seguida de:
 
-## 9. Do not repeat
+- Explorer territorial;
+- Detail territorial;
+- programas públicos;
+- lead capture real;
+- tracking público;
+- SEO/canonical/noindex conforme escopo;
+- mobile/acessibilidade.
 
-- não usar documentos arquivados como prova de produção atual;
-- não restaurar bridges `modules -> core` aposentados;
+### BLOCKED — hosted same-SHA
+
+Ainda falta no mesmo SHA:
+
+- lint;
+- typecheck;
+- unit/integration/security;
+- lifecycle autenticado;
+- build/deploy;
+- smoke.
+
+O código não deve ser marcado READY por inferência a partir de SHAs anteriores.
+
+## 11. Próximo passo
+
+Enquanto os runners hosted permanecem indisponíveis e o public launch continua
+pausado:
+
+1. manter Educação `PAUSED/BLOCKED`, sem reabrir source já fechado;
+2. observar o próximo build Vercel do HEAD e corrigir apenas erro concreto;
+3. executar o lifecycle autenticado assim que o runner receber steps reais;
+4. preparar canary/decisão de launch público antes de remover
+   `launch-paused`;
+5. avançar G6 para **Community** em paralelo, registrando Educação como blocker
+   externo de certificação final.
+
+## 12. Do not repeat
+
+- não usar documentos arquivados como prova atual;
+- não restaurar bridges Education aposentados;
+- não restaurar componentes sem caller runtime;
+- não transformar erro privado em empty state;
 - não escrever observabilidade técnica em `education_analytics_events`;
-- não expandir a enum/constraint do funil apenas para acomodar código sem caller;
-- não tocar em `washingtonmsdj` durante probes/fixtures;
+- não expandir constraints do funil para acomodar código sem caller;
+- não tocar em `washingtonmsdj` durante fixtures/probes;
 - não converter `steps=null` em PASS;
-- não retirar `launch-paused` antes da certificação G6.
+- não retirar `launch-paused` apenas para executar E2E.

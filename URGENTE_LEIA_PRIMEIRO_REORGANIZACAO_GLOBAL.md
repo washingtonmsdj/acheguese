@@ -8,8 +8,8 @@
 
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
-**Status:** EM EXECUÇÃO — G6 / Empresas base e Gastronomia aguardam prova hosted; Educação em pré-certificação  
-**Checkpoint técnico atual:** `de2f7e0da061b65a5e210e25a5e11edaff45cf4d`  
+**Status:** EM EXECUÇÃO — G6 / Empresas base, Gastronomia e Educação aguardam provas finais; Community é o próximo sweep ativo  
+**Checkpoint técnico atual:** `575a0da8ab0a00b868e890cfad88ff39f132c828`  
 **Checkpoint de transição G5 → G6:** `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
@@ -357,7 +357,7 @@ Ordem inicial sugerida:
 
 - [ ] Empresas base — source/RLS/partial-state preparados, Production same-SHA READY/smoke 200; lifecycle autenticado ainda BLOCKED por runner pré-step (#89 reaberto);
 - [ ] Gastronomia — migrations reconciliadas, management RLS alinhado a `private.can_manage_profile`, probe owner/admin/non-manager PASS e source cleanup compilado em Vercel; certificacao hosted same-SHA ainda pendente;
-- [ ] Educação — pre-certificacao iniciada: ownership core/module confirmado, observabilidade separada do funil em `31377a68`, RLS management probe `de2f7e0d` PASS com `washingtonmsdj` excluido; public/operational E2E e same-SHA ainda pendentes;
+- [ ] Educação — source pre-certification concluída até `575a0da8`: ownership/RLS/probe fechados, lifecycle autenticado browser-only ligado ao gate, compensação/lead pipeline/event datetime corrigidos, callerless UI aposentada e reads privados fail-closed; permanece BLOCKED por public canary + hosted same-SHA;
 - [ ] Community;
 - [ ] Events;
 - [ ] Messaging;
@@ -465,6 +465,20 @@ Um domínio/serviço transversal só está SSOT quando:
 ## 11. Registro de progresso
 
 Atualizar esta seção somente com marcos relevantes. Não transformar este arquivo em log de cada commit.
+
+### 2026-09-05 — G6 Educação / source pre-certification
+
+- [x] lifecycle autenticado Education implementado em `ae0c06d0`, usando somente a fixture
+  `account-authenticated-e2e`, sem service-role no browser e sem tocar em `washingtonmsdj`;
+- [x] gestão privada desacoplada do public launch em `7fc26776`; `launch-paused` público permanece fail-closed;
+- [x] setup com compensação, pipeline de leads, contagens reais e horário local de eventos corrigidos;
+- [x] analytics/billing/limites convergidos para contratos reais, sem período/zero artificial;
+- [x] componentes Education sem caller runtime aposentados em `8846d95d`;
+- [x] reads privados passaram a falhar fechado com retry explícito em `575a0da8`;
+- [x] authorization probe `de2f7e0d` PASS em `BEGIN/ROLLBACK`, excluindo explicitamente `washingtonmsdj`;
+- [ ] public Explorer/Detail continuam BLOCKED por `launch-paused`; não remover a pausa apenas para testar;
+- [ ] lifecycle hosted + lint/typecheck/security/build/smoke same-SHA continuam BLOCKED porque os jobs atuais retornam `steps=null`;
+- [x] próximo sweep G6 liberado: Community pode avançar em paralelo sem declarar Educação READY.
 
 ### 2026-09-04 — G6 Empresas base / autorização + lifecycle + partial-state
 
