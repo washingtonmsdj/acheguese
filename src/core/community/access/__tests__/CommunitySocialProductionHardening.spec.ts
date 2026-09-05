@@ -248,7 +248,7 @@ const realtimeRegistry = readFileSync(
   "utf8",
 );
 const groupQueries = readFileSync(
-  join(root, "src/core/community/hooks/useGroupQueries.ts"),
+  join(root, "src/core/community-groups/hooks/useGroupQueries.ts"),
   "utf8",
 );
 const lostFoundService = readFileSync(

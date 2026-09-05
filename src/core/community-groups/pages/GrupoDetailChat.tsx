@@ -37,7 +37,7 @@ import {
   useSendGroupMessage,
   useToggleGroupMessageLike,
   useUpdateGroupMessage,
-} from "@/core/community/hooks/useGroupQueries";
+} from "@/core/community-groups/hooks/useGroupQueries";
 import { getInitials } from "./GrupoDetailShared";
 import type { GroupMessageItem } from "./GrupoDetailShared";
 import {

@@ -10,6 +10,8 @@ describe("G6 Community groups ownership", () => {
       "src/core/community-groups/services/CommunityGroupsService.ts",
       "src/core/community-groups/hooks/useGrupos.ts",
       "src/core/community-groups/hooks/useFavoriteGroups.ts",
+      "src/core/community-groups/hooks/useGroups.ts",
+      "src/core/community-groups/hooks/useGroupQueries.ts",
     ]) {
       expect(existsSync(join(ROOT, relativePath))).toBe(true);
     }
@@ -19,6 +21,8 @@ describe("G6 Community groups ownership", () => {
       "src/core/community/services/CommunityService.ts",
       "src/core/community/hooks/useGrupos.ts",
       "src/core/community/hooks/useFavoriteGroups.ts",
+      "src/core/community/hooks/useGroups.ts",
+      "src/core/community/hooks/useGroupQueries.ts",
     ]) {
       expect(existsSync(join(ROOT, relativePath))).toBe(false);
     }
@@ -42,6 +46,12 @@ describe("G6 Community groups ownership", () => {
     expect(overview).toContain(
       "@/core/community-groups/services/CommunityGroupsService",
     );
+    const detailPage = readFileSync(
+      join(ROOT, "src/core/community-groups/pages/GrupoDetailPage.tsx"),
+      "utf8",
+    );
+    expect(detailPage).toContain("@/core/community-groups/hooks/useGroups");
+    expect(detailPage).toContain("@/core/community-groups/hooks/useGroupQueries");
     expect(coreBarrel).not.toContain("CommunityService");
     expect(coreBarrel).not.toContain('./access');
   });

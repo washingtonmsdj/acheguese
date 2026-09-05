@@ -5,8 +5,8 @@ import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useAppUrls } from "@/core/routing/hooks"; // SSOT URLs
 import { useSessionContext } from "@/core/session";
 import { CommunityPortalGate, useCommunityAccess } from "@/core/community-experience/access";
-import { useGroupDetail } from "@/core/community/hooks/useGroups";
-import { useJoinGroup, useLeaveGroup, useUpdateGroupMemberRole } from "@/core/community/hooks/useGroupQueries";
+import { useGroupDetail } from "@/core/community-groups/hooks/useGroups";
+import { useJoinGroup, useLeaveGroup, useUpdateGroupMemberRole } from "@/core/community-groups/hooks/useGroupQueries";
 import { useTerritorialContext } from "@/core/routing/components/TerritorialLayout";
 import { Button } from "@/shared/components/ui/button";
 import { ArrowLeft, Copy, Info, Loader2, Lock, MessageCircle, UserMinus, UserPlus, Users } from "lucide-react";

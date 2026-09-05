@@ -20,7 +20,7 @@ import {
 import {
   useGroupMessageReports,
   useUpdateGroupMessageReportStatus,
-} from "@/core/community/hooks/useGroupQueries";
+} from "@/core/community-groups/hooks/useGroupQueries";
 import type { GroupMessageReportStatus } from "@/core/community/types/groupReports";
 import { useState } from "react";
 import { getRequiredRecordValue } from "@/shared/utils/recordLookup";
