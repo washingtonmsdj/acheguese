@@ -57,7 +57,7 @@ vi.mock("@/core/residence/services/ResidenceService", () => ({
   },
 }));
 
-vi.mock("@/core/community/access", () => ({
+vi.mock("@/core/community-experience/access", () => ({
   CommunityPortalGate: () => <div data-testid="community-portal-gate" />,
   useCommunityAccess: mocks.useCommunityAccess,
 }));
