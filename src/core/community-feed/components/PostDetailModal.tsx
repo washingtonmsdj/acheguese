@@ -15,7 +15,7 @@ import { PostContent } from "@/core/community/components/PostContent";
 import { PostHeader } from "@/core/community/components/PostHeader";
 import { PostMetrics } from "@/core/community/components/PostMetrics";
 import { PostTags } from "@/core/community/components/PostTags";
-import { PostCommentsPanel } from "@/core/community/components/comments/PostCommentsPanel";
+import { PostCommentsPanel } from "@/core/community-feed/components/comments/PostCommentsPanel";
 import {
   getCardBackground,
   INLINE_STYLES,

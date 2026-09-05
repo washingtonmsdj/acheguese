@@ -79,4 +79,59 @@ describe("G6 Community feed page ownership", () => {
       expect(existsSync(resolve(ROOT, retiredPath))).toBe(false);
     }
   });
+
+  it("owns post comments UI and feed-scoped hooks in core/community-feed", () => {
+    const panel = read(
+      "src/core/community-feed/components/comments/PostCommentsPanel.tsx",
+    );
+    const commentsModal = read(
+      "src/core/community-feed/components/CommentsModal.tsx",
+    );
+    const postDetailModal = read(
+      "src/core/community-feed/components/PostDetailModal.tsx",
+    );
+    const communityHooks = read("src/core/community/hooks/index.ts");
+
+    expect(panel).toContain(
+      "@/core/community-feed/hooks/comments/useComments",
+    );
+    expect(panel).toContain(
+      "@/core/community-feed/hooks/comments/useCommentActions",
+    );
+    expect(panel).toContain(
+      "@/core/community-feed/hooks/comments/useCommentInteractions",
+    );
+    expect(commentsModal).toContain(
+      "@/core/community-feed/components/comments/PostCommentsPanel",
+    );
+    expect(postDetailModal).toContain(
+      "@/core/community-feed/components/comments/PostCommentsPanel",
+    );
+    expect(communityHooks).not.toContain('export { useComments }');
+
+    for (const canonicalPath of [
+      "src/core/community-feed/components/comments/CommentItem.tsx",
+      "src/core/community-feed/components/comments/CommentsList.tsx",
+      "src/core/community-feed/components/comments/CommentsModalComposer.tsx",
+      "src/core/community-feed/components/comments/PostCommentsPanel.tsx",
+      "src/core/community-feed/hooks/comments/useComments.ts",
+      "src/core/community-feed/hooks/comments/useCommentActions.ts",
+      "src/core/community-feed/hooks/comments/useCommentInteractions.ts",
+    ]) {
+      expect(existsSync(resolve(ROOT, canonicalPath))).toBe(true);
+    }
+
+    for (const legacyPath of [
+      "src/core/community/components/comments/CommentItem.tsx",
+      "src/core/community/components/comments/CommentsList.tsx",
+      "src/core/community/components/comments/CommentsModalComposer.tsx",
+      "src/core/community/components/comments/PostCommentsPanel.tsx",
+      "src/core/community/hooks/useComments.ts",
+      "src/core/community/hooks/useCommentActions.ts",
+      "src/core/community/hooks/useCommentInteractions.ts",
+    ]) {
+      expect(existsSync(resolve(ROOT, legacyPath))).toBe(false);
+    }
+  });
+
 });

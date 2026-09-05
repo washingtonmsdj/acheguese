@@ -9,7 +9,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { COMMENT_LIMITS } from "@/shared/constants/socialContent";
 import { getInitials } from "@/shared/utils/formatters";
-import { INLINE_STYLES } from "../styles/communityDesignSystem";
+import { INLINE_STYLES } from "@/core/community/components/styles/communityDesignSystem";
 
 interface CommentsModalComposerProps {
   value: string;

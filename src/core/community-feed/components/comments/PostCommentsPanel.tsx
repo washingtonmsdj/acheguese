@@ -2,12 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 import { Send } from "lucide-react";
 import { toast } from "sonner";
 
-import { useCommentActions } from "@/core/community/hooks/useCommentActions";
-import { useCommentInteractions } from "@/core/community/hooks/useCommentInteractions";
+import { useCommentActions } from "@/core/community-feed/hooks/comments/useCommentActions";
+import { useCommentInteractions } from "@/core/community-feed/hooks/comments/useCommentInteractions";
 import {
   useComments,
   type CommunityComment,
-} from "@/core/community/hooks/useComments";
+} from "@/core/community-feed/hooks/comments/useComments";
 import { useModeration } from "@/core/community/hooks/useModeration";
 import { useSessionContext } from "@/core/session";
 import {

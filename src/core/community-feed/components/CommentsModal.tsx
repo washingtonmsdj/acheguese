@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 
-import { PostCommentsPanel } from "@/core/community/components/comments/PostCommentsPanel";
+import { PostCommentsPanel } from "@/core/community-feed/components/comments/PostCommentsPanel";
 
 interface CommentsModalProps {
   open: boolean;

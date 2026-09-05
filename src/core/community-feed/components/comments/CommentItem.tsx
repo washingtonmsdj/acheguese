@@ -19,7 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
-import { INLINE_STYLES } from "../styles/communityDesignSystem";
+import { INLINE_STYLES } from "@/core/community/components/styles/communityDesignSystem";
 import { getInitials, getRelativeTime } from "@/shared/utils/formatters";
 
 interface CommentItemProps {

@@ -3,7 +3,7 @@ import { AnimatePresence } from "framer-motion";
 import { Send } from "lucide-react";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { CommentItem } from "./CommentItem";
-import { INLINE_STYLES } from "../styles/communityDesignSystem";
+import { INLINE_STYLES } from "@/core/community/components/styles/communityDesignSystem";
 
 interface Comment {
   id: string;

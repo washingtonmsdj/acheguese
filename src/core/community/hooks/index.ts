@@ -23,8 +23,5 @@ export { useCreatePostForm } from "@/core/community-feed/hooks/useCreatePostForm
 export { usePostInteractions } from "./posts/usePostInteractions";
 export { usePostCard } from "./posts/usePostCard";
 
-// Comment hooks
-export { useComments } from "./useComments";
-
 // Page hooks
 export { useComunidadePage } from "@/core/community-feed/hooks/useComunidadePage";
