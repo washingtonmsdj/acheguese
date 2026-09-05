@@ -19,7 +19,7 @@ describe("community Poll runtime characterization", () => {
   });
 
   it("casts a vote with one server mutation and no client counter writer", () => {
-    const voteHook = source("src/core/community/hooks/usePollVote.ts");
+    const voteHook = source("src/core/community-feed/hooks/usePollVote.ts");
 
     expect(voteHook.match(/PostsFacade\.polls\.votePoll/g)).toHaveLength(1);
     expect(voteHook).not.toContain("updatePollVoteCounts");

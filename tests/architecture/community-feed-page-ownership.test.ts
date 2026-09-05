@@ -174,4 +174,38 @@ describe("G6 Community feed page ownership", () => {
     ).toBe(false);
   });
 
+
+  it("owns Poll UI and vote hook in core/community-feed", () => {
+    const pollCard = read("src/core/community-feed/components/PollCard.tsx");
+    const postDetail = read(
+      "src/core/community-feed/components/PostDetailModal.tsx",
+    );
+
+    expect(pollCard).toContain(
+      '@/core/community-feed/hooks/usePollVote',
+    );
+    expect(postDetail).toContain(
+      '@/core/community-feed/components/PollCard',
+    );
+
+    for (const canonicalPath of [
+      "src/core/community-feed/components/PollCard.tsx",
+      "src/core/community-feed/hooks/usePollVote.ts",
+    ]) {
+      expect(existsSync(resolve(ROOT, canonicalPath))).toBe(true);
+    }
+
+    for (const retiredPath of [
+      "src/core/community/components/PollCard.tsx",
+      "src/core/community/hooks/usePollVote.ts",
+      "src/core/community/components/detail-modal/CommentInput.tsx",
+      "src/core/community/components/detail-modal/CommentsList.tsx",
+      "src/core/community/components/detail-modal/DetailModalContent.tsx",
+      "src/core/community/components/detail-modal/DetailModalHeader.tsx",
+      "src/core/community/components/detail-modal/DetailModalMetrics.tsx",
+    ]) {
+      expect(existsSync(resolve(ROOT, retiredPath))).toBe(false);
+    }
+  });
+
 });
