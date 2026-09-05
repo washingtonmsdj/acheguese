@@ -9,7 +9,7 @@ import {
 import { Plus, MessageCircle, AlertTriangle, Construction } from "lucide-react";
 import { CreatePostModal } from "@/core/community-feed/components/CreatePostModal";
 import { CreateAlertModal } from "@/core/community/alerts";
-import { CreateIssueModal } from "@/core/community/issues";
+import { CreateIssueModal } from "@/core/community-issues";
 
 interface UnifiedComposerProps {
   locationId?: string;

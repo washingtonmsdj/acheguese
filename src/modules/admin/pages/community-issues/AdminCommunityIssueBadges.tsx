@@ -4,7 +4,7 @@ import {
   ISSUE_PRIORITY_LABELS,
   type IssuePriority,
   type IssueStatus,
-} from "@/core/community/issues";
+} from "@/core/community-issues";
 import type { LucideIcon } from "lucide-react";
 import { getRecordValue } from "@/shared/utils/recordLookup";
 

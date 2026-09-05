@@ -465,9 +465,9 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
   {
     id: "community-issues",
     label: "community-issues",
-    sourceRoots: ["src/core/community/issues", "src/modules/community-issues"],
+    sourceRoots: ["src/core/community-issues", "src/modules/community-issues"],
     docsPaths: ["src/modules/community-issues/README.md"],
-    ssotPaths: ["src/core/community/issues/services/CommunityIssueService.ts"],
+    ssotPaths: ["src/core/community-issues/services/CommunityIssueService.ts"],
     routePrefixes: [
       "/:communitySlug/problemas",
       "/comunidade/:state/:city/problemas",
@@ -481,7 +481,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "Boa cobertura administrativa para issues. O modulo transversal agora e separado de alertas e feed.",
     docsSummary: "Inicial. README local documenta boundary e dependencia em location_id.",
     ssotSummary:
-      "Issues comunitarias consomem core/community/issues e nao devem importar outros modulos.",
+      "Issues comunitarias usam core/community-issues como owner explicito e nao devem importar outros modulos.",
   },
   {
     id: "community-groups",

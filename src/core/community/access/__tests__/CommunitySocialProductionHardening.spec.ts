@@ -292,7 +292,7 @@ const qaListHook = readFileSync(
   "utf8",
 );
 const issueService = readFileSync(
-  join(root, "src/core/community/issues/services/CommunityIssueService.ts"),
+  join(root, "src/core/community-issues/services/CommunityIssueService.ts"),
   "utf8",
 );
 const adminIssueService = readFileSync(

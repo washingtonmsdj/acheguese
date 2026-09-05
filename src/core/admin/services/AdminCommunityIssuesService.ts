@@ -1,12 +1,12 @@
 import { supabase } from "@/integrations/supabase";
 import type { Json, Tables } from "@/integrations/supabase";
-import { communityIssueService } from "@/core/community/issues/services/CommunityIssueService";
+import { communityIssueService } from "@/core/community-issues/services/CommunityIssueService";
 import type {
   IssueCategory,
   IssuePriority,
   IssueReportReason,
   IssueStatus,
-} from "@/core/community/issues/domain/types";
+} from "@/core/community-issues/domain/types";
 import { logger } from "@/shared/utils/logger";
 import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
 

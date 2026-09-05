@@ -35,8 +35,8 @@ import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
   ISSUE_STATUS_LABELS,
-} from "@/core/community/issues";
-import type { IssueCategory, IssueStatus, IssuePriority } from "@/core/community/issues";
+} from "@/core/community-issues";
+import type { IssueCategory, IssueStatus, IssuePriority } from "@/core/community-issues";
 import { AdminCommunityIssuesAnalytics } from "./community-issues/AdminCommunityIssuesAnalytics";
 import { AdminCommunityIssuesFilters } from "./community-issues/AdminCommunityIssuesFilters";
 import { AdminCommunityIssuesReviewList } from "./community-issues/AdminCommunityIssuesReviewList";

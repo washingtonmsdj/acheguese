@@ -15,7 +15,7 @@ import {
 import {
   ISSUE_CATEGORY_LABELS,
   type IssueCategory,
-} from "@/core/community/issues";
+} from "@/core/community-issues";
 import { getPriorityBadge, getStatusBadge } from "./AdminCommunityIssueBadges";
 import type { IssueAdminItem } from "./AdminCommunityIssues.types";
 
