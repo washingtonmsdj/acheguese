@@ -5,7 +5,7 @@ import { useUnifiedFeed } from "@/core/community-feed/hooks/useUnifiedFeed";
 import { useMessageModal } from "@/core/community-feed/hooks/useMessageModal";
 import type { UnifiedPost } from "@/shared/types/posts";
 import type { TerritorialFeedChannel } from "@/core/community-feed/hooks/territorialFeedEngine";
-import { COMMUNITY_FEED_COPY } from "@/core/community/utils/communityCopy";
+import { COMMUNITY_FEED_COPY } from "@/core/community-feed/utils/communityCopy";
 
 interface UnifiedFeedWithMessagesProps {
   posts?: UnifiedPost[];

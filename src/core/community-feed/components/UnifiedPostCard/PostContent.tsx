@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { Badge } from "@/shared/components/ui/badge";
 import { MapPin, Clock3 } from "lucide-react";
-import { COMMUNITY_POST_CARD_COPY } from "@/core/community/utils/communityCopy";
+import { COMMUNITY_POST_CARD_COPY } from "@/core/community-feed/utils/communityCopy";
 import {
   CIVIC_PROBLEM_TYPES,
   type CivicProblemType,

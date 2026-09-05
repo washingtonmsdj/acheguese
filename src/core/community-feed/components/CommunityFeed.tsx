@@ -16,9 +16,9 @@ import {
   COMMUNITY_FEED_HEADER_FILTERS,
   COMMUNITY_FEED_SORT_FILTERS,
   type CommunityFeedSortType,
-} from "@/core/community/utils/communityFeedTab";
+} from "@/core/community-feed/utils/communityFeedTab";
 import { isLaunchCommunityPostEnabled } from "@/app/config/launchScope";
-import { COMMUNITY_FEED_COPY } from "@/core/community/utils/communityCopy";
+import { COMMUNITY_FEED_COPY } from "@/core/community-feed/utils/communityCopy";
 import type { CommunityAction } from "@/core/community-experience/access";
 import { Alert, AlertDescription } from "@/shared/components/ui/alert";
 import { InfiniteScrollTrigger } from "@/shared/components/ui";

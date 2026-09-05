@@ -27,7 +27,7 @@ import { PostBadges } from "./PostBadges";
 import { PostContent } from "./PostContent";
 import { AlertConfirmation } from "./AlertConfirmation";
 import { PostActions } from "./PostActions";
-import { COMMUNITY_POST_CARD_COPY } from "@/core/community/utils/communityCopy";
+import { COMMUNITY_POST_CARD_COPY } from "@/core/community-feed/utils/communityCopy";
 import { logger } from "@/shared/utils/logger";
 
 import { UnifiedPost } from "@/shared/types/posts";

@@ -110,7 +110,7 @@ vi.mock("@/core/community-experience/types", () => ({
   isPersistedCommunityId: () => false,
 }));
 
-vi.mock("@/core/community/utils/resolveCommunityFeedTerritoryFilter", () => ({
+vi.mock("@/core/community-feed/utils/resolveCommunityFeedTerritoryFilter", () => ({
   resolveCommunityFeedTerritoryFilter: ({
     baseFilter,
   }: {

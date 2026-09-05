@@ -5,7 +5,7 @@ import {
   COMMUNITY_FEED_SORT_FILTERS,
   resolveCommunityFeedChannelFromTab,
   resolveCommunityFeedQueryTabFromChannel,
-} from "@/core/community/utils/communityFeedTab";
+} from "@/core/community-feed/utils/communityFeedTab";
 
 describe("communityFeedTab SSOT", () => {
   it("maps active public tabs and redirects paused tabs to para_voce", () => {

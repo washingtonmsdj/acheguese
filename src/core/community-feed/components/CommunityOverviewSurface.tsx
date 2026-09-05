@@ -63,7 +63,7 @@ import {
 import {
   COMMUNITY_FEED_SORT_FILTERS,
   type CommunityFeedSortType,
-} from "@/core/community/utils/communityFeedTab";
+} from "@/core/community-feed/utils/communityFeedTab";
 import {
   LandingFeaturedService,
   type FeaturedBusiness,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { TerritoryFilter } from "@/core/location";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
-import { resolveCommunityFeedTerritoryFilter } from "@/core/community/utils/resolveCommunityFeedTerritoryFilter";
+import { resolveCommunityFeedTerritoryFilter } from "@/core/community-feed/utils/resolveCommunityFeedTerritoryFilter";
 
 const CITY_RESOLVED: ResolvedTerritory = {
   kind: "location",

@@ -4,7 +4,7 @@ import {
   COMMUNITY_LOCATION_SCOPE_COPY,
   COMMUNITY_PAGE_COPY,
   COMMUNITY_POST_CARD_COPY,
-} from "@/core/community/utils/communityCopy";
+} from "@/core/community-feed/utils/communityCopy";
 
 describe("communityCopy SSOT", () => {
   it("keeps critical feed labels stable", () => {

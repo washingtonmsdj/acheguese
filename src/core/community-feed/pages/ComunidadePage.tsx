@@ -28,7 +28,7 @@ import {
   resolveCommunityFeedChannelFromTab,
   resolveCommunityFeedQueryTabFromChannel,
   type CommunityDiscoveryTab,
-} from "@/core/community/utils/communityFeedTab";
+} from "@/core/community-feed/utils/communityFeedTab";
 import {
   useComunidadePage,
   type CreatePostModalData,
@@ -44,8 +44,8 @@ import {
 } from "@/core/community-feed/navigation";
 import { CreatePostModal } from "@/core/community-feed/components/CreatePostModal";
 import { VerificationBanner } from "@/core/verification";
-import { COMMUNITY_PAGE_COPY } from "@/core/community/utils/communityCopy";
-import { resolveCommunityFeedTerritoryFilter } from "@/core/community/utils/resolveCommunityFeedTerritoryFilter";
+import { COMMUNITY_PAGE_COPY } from "@/core/community-feed/utils/communityCopy";
+import { resolveCommunityFeedTerritoryFilter } from "@/core/community-feed/utils/resolveCommunityFeedTerritoryFilter";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { TerritoryFilter } from "@/core/location";
 import type { TerritorialFeedChannel } from "@/core/community-feed/hooks/territorialFeedEngine";

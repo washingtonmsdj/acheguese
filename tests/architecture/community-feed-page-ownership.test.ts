@@ -366,4 +366,29 @@ describe("G6 Community feed page ownership", () => {
     ).toBe(false);
   });
 
+
+  it("owns Community Feed utilities in core/community-feed", () => {
+    for (const canonicalPath of [
+      "src/core/community-feed/utils/communityFeedTab.ts",
+      "src/core/community-feed/utils/communityCopy.ts",
+      "src/core/community-feed/utils/resolveCommunityFeedTerritoryFilter.ts",
+      "src/core/community-feed/utils/__tests__/communityFeedTab.spec.ts",
+      "src/core/community-feed/utils/__tests__/communityCopy.spec.ts",
+      "src/core/community-feed/utils/__tests__/resolveCommunityFeedTerritoryFilter.spec.ts",
+    ]) {
+      expect(existsSync(resolve(ROOT, canonicalPath))).toBe(true);
+    }
+
+    for (const legacyPath of [
+      "src/core/community/utils/communityFeedTab.ts",
+      "src/core/community/utils/communityCopy.ts",
+      "src/core/community/utils/resolveCommunityFeedTerritoryFilter.ts",
+      "src/core/community/utils/__tests__/communityFeedTab.spec.ts",
+      "src/core/community/utils/__tests__/communityCopy.spec.ts",
+      "src/core/community/utils/__tests__/resolveCommunityFeedTerritoryFilter.spec.ts",
+    ]) {
+      expect(existsSync(resolve(ROOT, legacyPath))).toBe(false);
+    }
+  });
+
 });

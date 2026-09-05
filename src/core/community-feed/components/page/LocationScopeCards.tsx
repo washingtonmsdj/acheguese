@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { motion } from "framer-motion";
 import { Building2, MapPin, Home } from "lucide-react";
-import { COMMUNITY_LOCATION_SCOPE_COPY } from "@/core/community/utils/communityCopy";
+import { COMMUNITY_LOCATION_SCOPE_COPY } from "@/core/community-feed/utils/communityCopy";
 import { cn } from "@/shared/utils/cn";
 
 interface LocationScopeCardProps {
