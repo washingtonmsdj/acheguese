@@ -283,4 +283,16 @@ describe("G6 Community feed page ownership", () => {
     expect(composer).toContain("apagado deste dispositivo");
   });
 
+
+  it("does not recreate the obsolete Community PostForm", () => {
+    expect(
+      existsSync(resolve(ROOT, "src/core/community/components/PostForm.tsx")),
+    ).toBe(false);
+
+    const composer = read(
+      "src/core/community-feed/components/CreatePostModal.tsx",
+    );
+    expect(composer).toContain("export function CreatePostModal");
+  });
+
 });
