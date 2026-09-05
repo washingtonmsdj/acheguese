@@ -26,7 +26,7 @@ describe("community Poll runtime characterization", () => {
   });
 
   it("loads Poll state only once in the Post detail path", () => {
-    const detailHook = source("src/core/community/hooks/usePostById.ts");
+    const detailHook = source("src/core/community-feed/hooks/usePostById.ts");
     const interactions = source(
       "src/core/posts/services/posts.user.queries.ts",
     );

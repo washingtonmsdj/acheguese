@@ -39,7 +39,7 @@ vi.mock("@/core/profiles/contexts/multi-profile-runtime-context", () => ({
   useMultiProfileContext: () => ({ effectiveProfile: null }),
 }));
 
-vi.mock("@/core/community/hooks/usePostById", () => ({
+vi.mock("@/core/community-feed/hooks/usePostById", () => ({
   usePostById: mocks.usePostById,
 }));
 

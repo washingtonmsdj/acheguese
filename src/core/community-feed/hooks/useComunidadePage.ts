@@ -15,7 +15,7 @@ import { usePostActions } from "@/core/posts/hooks";
 import { useModeration } from "@/core/community/hooks/useModeration";
 import { useSessionContext } from "@/core/session";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
-import { usePostById } from "@/core/community/hooks/usePostById";
+import { usePostById } from "@/core/community-feed/hooks/usePostById";
 import { useCommunityLocation } from "@/core/community/hooks/useCommunityLocation";
 import { postService } from "@/core/posts/services";
 import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";

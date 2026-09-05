@@ -153,4 +153,18 @@ describe("G6 Community feed page ownership", () => {
     ).toBe(false);
   });
 
+
+  it("owns Community post detail hook in core/community-feed", () => {
+    const page = read("src/core/community-feed/hooks/useComunidadePage.ts");
+    expect(page).toContain(
+      'from "@/core/community-feed/hooks/usePostById"',
+    );
+    expect(
+      existsSync(resolve(ROOT, "src/core/community-feed/hooks/usePostById.ts")),
+    ).toBe(true);
+    expect(
+      existsSync(resolve(ROOT, "src/core/community/hooks/usePostById.ts")),
+    ).toBe(false);
+  });
+
 });
