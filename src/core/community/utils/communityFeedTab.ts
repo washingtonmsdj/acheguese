@@ -1,5 +1,5 @@
 import { isLaunchCommunityFeedChannelEnabled } from "@/app/config/launchScope";
-import type { TerritorialFeedChannel } from "@/core/community/hooks/feed/territorialFeedEngine";
+import type { TerritorialFeedChannel } from "@/core/community-feed/hooks/territorialFeedEngine";
 
 export type CommunityMainTab = "feed" | "grupos";
 export type CommunityFeedSortType = "recent" | "popular" | "most_commented";

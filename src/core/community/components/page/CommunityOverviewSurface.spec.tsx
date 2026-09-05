@@ -8,7 +8,7 @@ vi.mock("@tanstack/react-query", () => ({
   useQuery: () => ({ data: undefined, isLoading: false }),
 }));
 
-vi.mock("@/core/community/hooks/feed/useCommunityFeed", () => ({
+vi.mock("@/core/community-feed/hooks/useCommunityFeed", () => ({
   useCommunityFeedSimple: () => ({
     posts: [],
     isLoading: false,

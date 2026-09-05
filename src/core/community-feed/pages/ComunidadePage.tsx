@@ -49,7 +49,7 @@ import { COMMUNITY_PAGE_COPY } from "@/core/community/utils/communityCopy";
 import { resolveCommunityFeedTerritoryFilter } from "@/core/community/utils/resolveCommunityFeedTerritoryFilter";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { TerritoryFilter } from "@/core/location";
-import type { TerritorialFeedChannel } from "@/core/community/hooks/feed/territorialFeedEngine";
+import type { TerritorialFeedChannel } from "@/core/community-feed/hooks/territorialFeedEngine";
 import { withQueryParams } from "@/core/landing/utils/landingPresentation";
 import { usePersistedCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
 import { isPersistedCommunityId } from "@/core/community-experience/types";

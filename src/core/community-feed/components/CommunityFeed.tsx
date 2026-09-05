@@ -8,9 +8,9 @@ import {
 } from "lucide-react";
 import { usePostActions } from "@/core/posts/hooks";
 import { useSessionContext } from "@/core/session";
-import { useCommunityFeedSimple } from "@/core/community/hooks/feed/useCommunityFeed";
-import type { LocationScope } from "@/core/community/hooks/feed/useFeedFilters";
-import type { TerritorialFeedChannel } from "@/core/community/hooks/feed/territorialFeedEngine";
+import { useCommunityFeedSimple } from "@/core/community-feed/hooks/useCommunityFeed";
+import type { LocationScope } from "@/core/community-feed/hooks/useFeedFilters";
+import type { TerritorialFeedChannel } from "@/core/community-feed/hooks/territorialFeedEngine";
 import type { TerritoryFilter } from "@/core/location";
 import {
   COMMUNITY_FEED_HEADER_FILTERS,

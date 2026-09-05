@@ -11,9 +11,9 @@ export { useCommunityRollout } from './useCommunityRollout';
 export { useCommunityUrls } from "@/core/routing/hooks/useCommunityUrls";
 
 // Feed hooks
-export { useCommunityFeedSimple as useCommunityFeed } from "./feed/useCommunityFeed";
-export { useCommunityFilters as useFeedFilters } from "./feed/useFeedFilters";
-export { useUnifiedFeed } from "./feed/useUnifiedFeed";
+export { useCommunityFeedSimple as useCommunityFeed } from "@/core/community-feed/hooks/useCommunityFeed";
+export { useCommunityFilters as useFeedFilters } from "@/core/community-feed/hooks/useFeedFilters";
+export { useUnifiedFeed } from "@/core/community-feed/hooks/useUnifiedFeed";
 
 // Composer hooks
 export { useCreatePost } from "./composer/useCreatePost";

@@ -3,7 +3,7 @@ import { LocationFilter } from "./LocationFilter";
 import { SortSelector } from "./SortSelector";
 import { CreatePostButton } from "./CreatePostButton";
 import { QuickActionButtons } from "./QuickActionButtons";
-import { useCommunityFilters } from "@/core/community/hooks/feed/useFeedFilters";
+import { useCommunityFilters } from "@/core/community-feed/hooks/useFeedFilters";
 /**
  * Cabeçalho da página Comunidade
  *

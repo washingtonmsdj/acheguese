@@ -1,10 +1,10 @@
 import React from "react";
 import { UnifiedPostCard } from "@/core/community/components/UnifiedPostCard";
 import { DirectMessageModal } from "@/core/community/components/DirectMessageModal";
-import { useUnifiedFeed } from "@/core/community/hooks/feed/useUnifiedFeed";
+import { useUnifiedFeed } from "@/core/community-feed/hooks/useUnifiedFeed";
 import { useMessageModal } from "@/core/community/hooks/useMessageModal";
 import type { UnifiedPost } from "@/shared/types/posts";
-import type { TerritorialFeedChannel } from "@/core/community/hooks/feed/territorialFeedEngine";
+import type { TerritorialFeedChannel } from "@/core/community-feed/hooks/territorialFeedEngine";
 import { COMMUNITY_FEED_COPY } from "@/core/community/utils/communityCopy";
 
 interface UnifiedFeedWithMessagesProps {

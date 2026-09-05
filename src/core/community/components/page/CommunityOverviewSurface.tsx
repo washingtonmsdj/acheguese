@@ -53,7 +53,7 @@ import {
 import { useAdDelivery, SponsoredAdCard } from "@/core/business/promotions";
 import { useBusinessUrls } from "@/core/business/hooks/useBusinessUrls";
 import { ClassifiedUrlService } from "@/core/classifieds/services/ClassifiedUrlService";
-import { useCommunityFeedSimple } from "@/core/community/hooks/feed/useCommunityFeed";
+import { useCommunityFeedSimple } from "@/core/community-feed/hooks/useCommunityFeed";
 import { CommunityComposerEntry } from "@/core/community-feed/components/CommunityComposerEntry";
 import { ImageGallery } from "@/core/community/components/ImageGallery";
 import {
