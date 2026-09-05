@@ -44,6 +44,34 @@ describe("Education module hardening ratchet", () => {
     expect(tracking).not.toContain("@/modules/business/education");
   });
 
+  it("keeps private Education routes owned by centralLazyImports only", () => {
+    const lazyImports = read("src/app/routes/lazyImports.ts");
+    const centralLazyImports = read("src/app/routes/centralLazyImports.ts");
+    const centralRoutes = read("src/app/routes/sections/CentralRoutes.tsx");
+
+    expect(lazyImports).toContain(
+      'export const EducationExplorerPage = createLaunchPausedRoute("Educacao")',
+    );
+    expect(lazyImports).toContain(
+      'export const EducationDetailPage = createLaunchPausedRoute("Educacao")',
+    );
+
+    for (const privatePage of [
+      "EducationDashboardPage",
+      "EducationSetupPage",
+      "EducationLeadsPage",
+      "EducationEventsPage",
+      "EducationProgramsPage",
+      "EducationAnalyticsPage",
+      "EducationPlansPage",
+    ]) {
+      expect(lazyImports).not.toContain(`export const ${privatePage}`);
+      expect(centralLazyImports).toContain(`export const ${privatePage}`);
+    }
+
+    expect(centralRoutes).toContain('import * as P from "../centralLazyImports"');
+  });
+
   it("keeps Education domain contracts owned by core", () => {
     const contracts = read("src/core/education/contracts.ts");
 

@@ -327,13 +327,6 @@ export const GastronomyPromotionsPage = createLaunchPausedRoute("Promocoes");
 // ============================================================
 export const EducationExplorerPage = createLaunchPausedRoute("Educacao");
 export const EducationDetailPage = createLaunchPausedRoute("Educacao");
-export const EducationDashboardPage = createLaunchPausedRoute("Educacao");
-export const EducationSetupPage = createLaunchPausedRoute("Educacao");
-export const EducationLeadsPage = createLaunchPausedRoute("Educacao");
-export const EducationEventsPage = createLaunchPausedRoute("Educacao");
-export const EducationProgramsPage = createLaunchPausedRoute("Educacao");
-export const EducationAnalyticsPage = createLaunchPausedRoute("Educacao");
-export const EducationPlansPage = createLaunchPausedRoute("Educacao");
 
 // ============================================================
 // SERVICOS E PROFISSIONAIS
