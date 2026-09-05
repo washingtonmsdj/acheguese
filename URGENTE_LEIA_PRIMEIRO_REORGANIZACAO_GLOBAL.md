@@ -8,8 +8,8 @@
 
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
-**Status:** EM EXECUÇÃO — G6 / Empresas base bloqueada por runner; Gastronomia em pré-certificação  
-**Checkpoint técnico atual:** `fdf4908ccbe729edf9e9b5e7643efb25077d046b`  
+**Status:** EM EXECUÇÃO — G6 / Empresas base e Gastronomia aguardam prova hosted; Educação em pré-certificação  
+**Checkpoint técnico atual:** `de2f7e0da061b65a5e210e25a5e11edaff45cf4d`  
 **Checkpoint de transição G5 → G6:** `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
@@ -356,8 +356,8 @@ Checklist padrão por módulo:
 Ordem inicial sugerida:
 
 - [ ] Empresas base — source/RLS/partial-state preparados, Production same-SHA READY/smoke 200; lifecycle autenticado ainda BLOCKED por runner pré-step (#89 reaberto);
-- [ ] Gastronomia — migrations 498/498 reconciliadas, management RLS alinhado a `private.can_manage_profile` e probe owner/admin/non-manager PASS; certificacao same-SHA ainda pendente;
-- [ ] Educação;
+- [ ] Gastronomia — migrations reconciliadas, management RLS alinhado a `private.can_manage_profile`, probe owner/admin/non-manager PASS e source cleanup compilado em Vercel; certificacao hosted same-SHA ainda pendente;
+- [ ] Educação — pre-certificacao iniciada: ownership core/module confirmado, observabilidade separada do funil em `31377a68`, RLS management probe `de2f7e0d` PASS com `washingtonmsdj` excluido; public/operational E2E e same-SHA ainda pendentes;
 - [ ] Community;
 - [ ] Events;
 - [ ] Messaging;
