@@ -90,8 +90,6 @@ describe("G6 Community feed page ownership", () => {
     const postDetailModal = read(
       "src/core/community-feed/components/PostDetailModal.tsx",
     );
-    const communityHooks = read("src/core/community/hooks/index.ts");
-
     expect(panel).toContain(
       "@/core/community-feed/hooks/comments/useComments",
     );
@@ -107,7 +105,6 @@ describe("G6 Community feed page ownership", () => {
     expect(postDetailModal).toContain(
       "@/core/community-feed/components/comments/PostCommentsPanel",
     );
-    expect(communityHooks).not.toContain('export { useComments }');
 
     for (const canonicalPath of [
       "src/core/community-feed/components/comments/CommentItem.tsx",
@@ -138,8 +135,6 @@ describe("G6 Community feed page ownership", () => {
   it("uses one Community Feed filter owner", () => {
     const page = read("src/core/community-feed/hooks/useComunidadePage.ts");
     const filters = read("src/core/community-feed/hooks/useFeedFilters.ts");
-    const communityHooks = read("src/core/community/hooks/index.ts");
-
     expect(page).toContain(
       'from "@/core/community-feed/hooks/useFeedFilters"',
     );
@@ -147,7 +142,6 @@ describe("G6 Community feed page ownership", () => {
     expect(filters).toContain('const STORAGE_KEY = "community_filters_v2"');
     expect(filters).toContain('locationScope: "neighborhood"');
     expect(filters).toContain("export function useCommunityFilters()");
-    expect(communityHooks).not.toContain("useFeedFilters");
     expect(
       existsSync(resolve(ROOT, "src/core/community/hooks/useCommunityFiltersAAA.ts")),
     ).toBe(false);
@@ -263,6 +257,13 @@ describe("G6 Community feed page ownership", () => {
     expect(hook).toContain("UnifiedPost");
     expect(
       existsSync(resolve(ROOT, "src/core/community/hooks/useMessageModal.ts")),
+    ).toBe(false);
+  });
+
+
+  it("does not recreate the generic Community hooks barrel", () => {
+    expect(
+      existsSync(resolve(ROOT, "src/core/community/hooks/index.ts")),
     ).toBe(false);
   });
 
