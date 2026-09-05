@@ -15,8 +15,8 @@ describe("community access wiring", () => {
     const pages = [
       "src/core/community/pages/ComunidadePage.tsx",
       "src/core/community-groups/pages/GruposPage.tsx",
-      "src/core/community/pages/RecomendacoesPage.tsx",
-      "src/core/community/pages/NovaRecomendacaoPage.tsx",
+      "src/core/community-recommendations/pages/RecomendacoesPage.tsx",
+      "src/core/community-recommendations/pages/NovaRecomendacaoPage.tsx",
       "src/core/community-lost-found/pages/AchadosPerdidosPage.tsx",
       "src/core/community-lost-found/pages/NovoAchadoPerdidoPage.tsx",
       "src/core/community/pages/GrupoDetailPage.tsx",
