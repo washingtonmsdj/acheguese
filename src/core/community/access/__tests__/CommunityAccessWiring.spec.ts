@@ -19,7 +19,7 @@ describe("community access wiring", () => {
       "src/core/community-recommendations/pages/NovaRecomendacaoPage.tsx",
       "src/core/community-lost-found/pages/AchadosPerdidosPage.tsx",
       "src/core/community-lost-found/pages/NovoAchadoPerdidoPage.tsx",
-      "src/core/community/pages/GrupoDetailPage.tsx",
+      "src/core/community-groups/pages/GrupoDetailPage.tsx",
     ];
 
     for (const page of pages) {
