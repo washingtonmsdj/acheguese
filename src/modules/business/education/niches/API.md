@@ -85,39 +85,6 @@ function MyComponent({ nicheKey, businessId }: { nicheKey: string; businessId: s
 }
 ```
 
-### useEducationLimits
-
-Hook para validação de limites operacionais.
-
-```typescript
-import { useEducationLimits } from '@/modules/business/education/hooks/useEducationLimits';
-
-function MyComponent({ nicheKey, usage }: { nicheKey: string; usage: UsageData }) {
-  const {
-    canCreateProgram,
-    canCreateEvent,
-    canReceiveLead,
-    programUsage,         // { current, max, percentage, status }
-    eventUsage,
-    leadUsage,
-    hasAnyLimitReached,   // boolean
-    nearLimitResources,   // ('programs' | 'events' | 'leads')[]
-  } = useEducationLimits({
-    nicheKey,
-    usage: {
-      programCount: 5,
-      eventCount: 2,
-      leadsThisMonth: 50,
-    },
-  });
-  
-  if (!canCreateProgram.allowed) {
-    // Limite de programas atingido
-    console.log(canCreateProgram.error?.message);
-  }
-}
-```
-
 ## Services
 
 ### EducationNicheConfigService
@@ -175,31 +142,6 @@ const limits = EducationNicheBillingIntegration.getOperationalLimits(context, {
 
 // Validar ação específica
 const validation = EducationNicheBillingIntegration.validateAction(context, 'view_analytics');
-```
-
-### EducationLimitValidationService
-
-Serviço para validação de limites operacionais.
-
-```typescript
-import { EducationLimitValidationService } from '@/modules/business/education/services/EducationLimitValidationService';
-
-// Validar se pode criar programa
-const result = EducationLimitValidationService.validateCanCreateProgram('regular_school', 5);
-// result: { allowed: boolean, error?: { code, message, current, max, resource } }
-
-// Validar se pode criar evento
-const eventResult = EducationLimitValidationService.validateCanCreateEvent('regular_school', 2);
-
-// Validar se pode receber lead
-const leadResult = EducationLimitValidationService.validateCanReceiveLead('regular_school', 50);
-
-// Validar todos os limites de uma vez
-const allLimits = EducationLimitValidationService.validateAllLimits('regular_school', {
-  programCount: 5,
-  eventCount: 2,
-  leadsThisMonth: 50,
-});
 ```
 
 ## Components
@@ -435,7 +377,7 @@ if (!canCreate.allowed) {
    ↓
 3. EducationNicheBillingIntegration (service)
    ↓
-4. Registry + EntitlementsService (SSOT)
+4. Registry + Billing entitlement authority (SSOT)
    ↓
 5. Capability final = nicho AND plano
 ```
@@ -445,7 +387,7 @@ if (!canCreate.allowed) {
 A única fonte de verdade para:
 - **Capabilities**: `registry.ts` - `enabledCapabilities` por nicho
 - **Limites**: `registry.ts` - `entitlements` por nicho
-- **Planos**: `EducationNicheBillingIntegration.ts` - regras por tier
-- **Validação**: `EducationLimitValidationService.ts`
+- **Planos/entitlements**: `EducationSubscriptionService` + `core/billing`
+- **Validação operacional**: `EducationNicheBillingIntegration.ts` consumindo o registry
 
-Nunca duplique essas informações em componentes ou páginas.
+Nunca duplique essas informações em componentes, páginas, hooks paralelos ou services de limite concorrentes.

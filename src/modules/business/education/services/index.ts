@@ -7,4 +7,3 @@
 export { EducationService } from './EducationService';
 export { EducationUrlService } from './EducationUrlService';
 export { EducationSubscriptionService } from './education-subscription.service';
-export { EducationLimitValidationService } from './EducationLimitValidationService';

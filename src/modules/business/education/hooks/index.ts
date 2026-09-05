@@ -19,9 +19,6 @@ export { useEducationEvents } from './useEducationEvents';
 export { useEducationAnalytics } from './useEducationAnalytics';
 export { useEducationSubscription } from './useEducationSubscription';
 
-// Limit validation hook
-export { useEducationLimits } from './useEducationLimits';
-
 // Niche labels hook
 export { useEducationLabels, useLabels } from './useEducationLabels';
 

@@ -13,6 +13,8 @@ const RETIRED_EDUCATION_BRIDGES = [
   "src/modules/business/education/constants/schoolStageOptions.ts",
   "src/modules/business/education/services/EducationTrackingService.ts",
   "src/modules/business/education/services/EducationObservabilityService.ts",
+  "src/modules/business/education/services/EducationLimitValidationService.ts",
+  "src/modules/business/education/hooks/useEducationLimits.ts",
 ] as const;
 
 describe("Education module hardening ratchet", () => {
@@ -85,6 +87,9 @@ describe("Education module hardening ratchet", () => {
     const plansPage = read(
       "src/modules/business/education/pages/EducationPlansPage.tsx",
     );
+    const nicheBillingHook = read(
+      "src/modules/business/education/niches/hooks/useEducationNicheBilling.ts",
+    );
 
     expect(subscription).toContain("BillingPlanService.getEntitlements");
     expect(subscription).toContain("EntitlementsService.getAll");
@@ -101,6 +106,9 @@ describe("Education module hardening ratchet", () => {
     expect(plansPage).toContain("plan.features.map");
     expect(plansPage).not.toContain("EDUCATION_PLAN_TEMPLATES");
     expect(plansPage).not.toMatch(/maxPrograms:\s*\d+/);
+
+    expect(nicheBillingHook).not.toMatch(/current:\s*0/);
+    expect(nicheBillingHook).not.toContain("Limites base (sem uso)");
   });
 
   it("keeps Education analytics on the real profile and real export contract", () => {

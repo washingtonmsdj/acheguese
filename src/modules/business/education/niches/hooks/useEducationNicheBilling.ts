@@ -82,34 +82,6 @@ export function useEducationNicheBilling(options: UseEducationNicheBillingOption
     };
   }, [nicheKey, subscriptionData.planType, businessId]);
   
-  // Calcula limites operacionais
-  const limits = useMemo((): OperationalLimitsCheck | null => {
-    if (!context || !nicheData.config) return null;
-    // Combina com limites do nicho
-    const niche = nicheData.config;
-    
-    return {
-      programs: {
-        current: 0,
-        max: niche.entitlements.maxPrograms,
-        canCreate: false, // Calculado via checkCanCreateProgram
-        upgradeRequired: false,
-      },
-      events: {
-        current: 0,
-        max: niche.entitlements.maxEvents,
-        canCreate: false,
-        upgradeRequired: false,
-      },
-      leads: {
-        current: 0,
-        max: niche.entitlements.maxLeadsPerMonth,
-        canReceive: false,
-        upgradeRequired: false,
-      },
-    };
-  }, [context, nicheData.config, subscriptionData]);
-  
   // Helpers de capability
   const can = useMemo(() => {
     return (capability: EducationNicheCapability): CapabilityCheck => {
@@ -225,9 +197,6 @@ export function useEducationNicheBilling(options: UseEducationNicheBillingOption
     
     // Validação
     validateAction,
-    
-    // Limites base (sem uso)
-    limits,
   };
 }
 
