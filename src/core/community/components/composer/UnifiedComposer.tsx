@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
 import { Plus, MessageCircle, AlertTriangle, Construction } from "lucide-react";
-import { CreatePostModal } from "./CreatePostModal";
+import { CreatePostModal } from "@/core/community-feed/components/CreatePostModal";
 import { CreateAlertModal } from "@/core/community/alerts";
 import { CreateIssueModal } from "@/core/community/issues";
 
