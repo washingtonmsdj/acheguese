@@ -65,19 +65,11 @@ import {
   hasMeaningfulDraft,
   loadPostDraft,
   savePostDraft,
-  writePostDraftSnapshot,
   type PostDraftPayload,
   type PostDraftSnapshot,
-} from "@/core/community/utils/postDraft";
-import {
-  deleteRemoteDraft,
-  fetchRemoteDraft,
-  flushPendingSync,
-  hasPendingSync,
-  upsertRemoteDraft,
-} from "@/core/community/services/postDraftSync";
-import { emitNewPost } from "@/core/community/state/newPostHighlight";
-import { Check as CloudCheck, CloudOff, Loader2, TriangleAlert } from "lucide-react";
+} from "@/core/community-feed/drafts/postDraft";
+import { emitNewPost } from "@/core/community-feed/state/newPostHighlight";
+import { Check, Loader2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -444,12 +436,11 @@ export function CreatePostModal({
   const [hasStoredDraft, setHasStoredDraft] = React.useState(false);
   const [confirmDiscardOpen, setConfirmDiscardOpen] = React.useState(false);
   const [saveStatus, setSaveStatus] = React.useState<
-    "idle" | "saving" | "synced" | "offline" | "error"
+    "idle" | "saving" | "saved" | "error"
   >("idle");
   const [pendingDraftForRestore, setPendingDraftForRestore] =
     React.useState<PostDraftSnapshot | null>(null);
   const autosaveTimerRef = React.useRef<number | null>(null);
-  const remoteSyncTimerRef = React.useRef<number | null>(null);
   const suppressAutosaveRef = React.useRef(true);
   const [intentPickerExpanded, setIntentPickerExpanded] = React.useState(false);
   const intentPickerId = React.useId();
@@ -561,35 +552,20 @@ export function CreatePostModal({
     setPendingDraftForRestore(null);
     setSaveStatus("idle");
 
-    // Detecta rascunho (local + remoto) e oferece "Continuar rascunho".
+    // Detecta rascunho local criptografado e oferece "Continuar rascunho".
     if (!editPostId && profile?.id) {
       const profileId = profile.id;
       void (async () => {
         const local = await loadPostDraft(profileId);
-        let candidate: PostDraftSnapshot | null =
+        const candidate: PostDraftSnapshot | null =
           local && hasMeaningfulDraft(local) ? local : null;
         if (candidate) {
           setHasStoredDraft(true);
           setLastSavedAt(candidate.updatedAt ?? candidate.savedAt ?? null);
           setPendingDraftForRestore(candidate);
-        }
-        const remote = await fetchRemoteDraft(profileId);
-        if (remote && hasMeaningfulDraft(remote.snapshot)) {
-          const localTs = candidate?.updatedAt ?? candidate?.savedAt ?? 0;
-          // Conflict resolution: mais recente vence.
-          if (remote.updatedAt > localTs) {
-            await writePostDraftSnapshot(profileId, remote.snapshot);
-            candidate = remote.snapshot;
-            setHasStoredDraft(true);
-            setLastSavedAt(remote.updatedAt);
-            setPendingDraftForRestore(remote.snapshot);
-          }
+          setSaveStatus("saved");
         }
       })();
-      // Flush de qualquer rascunho pendente que ficou offline.
-      if (hasPendingSync(profileId) && typeof navigator !== "undefined" && navigator.onLine !== false) {
-        void flushPendingSync(profileId);
-      }
     }
     // Libera autosave após o próximo tick, quando os estados já settlaram.
     const t = window.setTimeout(() => {
@@ -641,7 +617,7 @@ export function CreatePostModal({
     ],
   );
 
-  // Autosave: local (debounce 400ms) + remoto (debounce 1500ms).
+  // Autosave local criptografado (debounce 400ms).
   React.useEffect(() => {
     if (!open || editPostId) return;
     if (!profile?.id) return;
@@ -650,8 +626,6 @@ export function CreatePostModal({
 
     const profileId = profile.id;
     if (autosaveTimerRef.current) window.clearTimeout(autosaveTimerRef.current);
-    if (remoteSyncTimerRef.current)
-      window.clearTimeout(remoteSyncTimerRef.current);
 
     setSaveStatus("saving");
 
@@ -660,63 +634,18 @@ export function CreatePostModal({
         if (snapshot) {
           setLastSavedAt(snapshot.updatedAt);
           setHasStoredDraft(true);
+          setSaveStatus("saved");
+        } else {
+          setSaveStatus("error");
         }
       });
     }, 400);
 
-    remoteSyncTimerRef.current = window.setTimeout(async () => {
-      const snapshot: PostDraftSnapshot = {
-        ...currentDraftPayload,
-        updatedAt: Date.now(),
-      };
-      const result = await upsertRemoteDraft(profileId, snapshot);
-      if (result.status === "ok") {
-        setSaveStatus("synced");
-      } else if (result.status === "offline") {
-        setSaveStatus("offline");
-      } else if (result.status === "conflict") {
-        // Rascunho remoto mais novo: reconciliar sem sobrescrever.
-        writePostDraftSnapshot(profileId, result.remote.snapshot);
-        setLastSavedAt(result.remote.updatedAt);
-        setSaveStatus("synced");
-        toast.info(
-          "Encontramos um rascunho mais recente em outro dispositivo. Recarregue para ver.",
-        );
-      } else {
-        setSaveStatus("error");
-      }
-    }, 1500);
-
     return () => {
       if (autosaveTimerRef.current)
         window.clearTimeout(autosaveTimerRef.current);
-      if (remoteSyncTimerRef.current)
-        window.clearTimeout(remoteSyncTimerRef.current);
     };
   }, [open, editPostId, profile?.id, currentDraftPayload]);
-
-  // Reenvia rascunhos pendentes assim que o navegador voltar a ficar online.
-  React.useEffect(() => {
-    if (!open || editPostId || !profile?.id) return;
-    if (typeof window === "undefined") return;
-    const profileId = profile.id;
-    const handleOnline = () => {
-      setSaveStatus((prev) => (prev === "offline" ? "saving" : prev));
-      void flushPendingSync(profileId).then((res) => {
-        if (!res) return;
-        if (res.status === "ok") setSaveStatus("synced");
-        else if (res.status === "offline") setSaveStatus("offline");
-        else if (res.status === "error") setSaveStatus("error");
-      });
-    };
-    const handleOffline = () => setSaveStatus("offline");
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, [open, editPostId, profile?.id]);
 
   const displayName = profile?.displayName ?? "Usuário";
   const avatarUrl = profile?.avatarUrl;
@@ -1014,7 +943,6 @@ export function CreatePostModal({
 
       if (!editPostId && profile?.id) {
         clearPostDraft(profile.id);
-        void deleteRemoteDraft(profile.id);
         setLastSavedAt(null);
         setHasStoredDraft(false);
         suppressAutosaveRef.current = true;
@@ -1042,12 +970,15 @@ export function CreatePostModal({
     setSavingDraft(true);
     try {
       const snapshot = await savePostDraft(profile.id, currentDraftPayload);
-      if (snapshot) {
-        setLastSavedAt(snapshot.updatedAt);
-        setHasStoredDraft(true);
-        void upsertRemoteDraft(profile.id, snapshot);
+      if (!snapshot) {
+        setSaveStatus("error");
+        toast.error("Não foi possível salvar o rascunho neste dispositivo.");
+        return;
       }
-      toast.success("Rascunho salvo. Você pode voltar depois para publicar.");
+      setLastSavedAt(snapshot.updatedAt);
+      setHasStoredDraft(true);
+      setSaveStatus("saved");
+      toast.success("Rascunho salvo neste dispositivo.");
       handleClose();
     } finally {
       setSavingDraft(false);
@@ -1074,7 +1005,6 @@ export function CreatePostModal({
     if (!profile?.id) return;
     suppressAutosaveRef.current = true;
     clearPostDraft(profile.id);
-    void deleteRemoteDraft(profile.id);
     resetComposerFields();
     setLastSavedAt(null);
     setHasStoredDraft(false);
@@ -1090,7 +1020,7 @@ export function CreatePostModal({
     suppressAutosaveRef.current = true;
     applyDraftSnapshot(pendingDraftForRestore);
     setPendingDraftForRestore(null);
-    setSaveStatus("synced");
+    setSaveStatus("saved");
     window.setTimeout(() => {
       suppressAutosaveRef.current = false;
     }, 300);
@@ -1117,27 +1047,21 @@ export function CreatePostModal({
       case "saving":
         return {
           icon: <Loader2 className="h-3 w-3 animate-spin" />,
-          label: "Salvando…",
+          label: "Salvando neste dispositivo…",
           className: "text-muted-foreground",
         };
-      case "synced":
+      case "saved":
         return {
-          icon: <CloudCheck className="h-3 w-3" />,
+          icon: <Check className="h-3 w-3" />,
           label: formattedSavedAt
-            ? `Sincronizado às ${formattedSavedAt}`
-            : "Sincronizado",
+            ? `Salvo neste dispositivo às ${formattedSavedAt}`
+            : "Salvo neste dispositivo",
           className: "text-emerald-600 dark:text-emerald-400",
-        };
-      case "offline":
-        return {
-          icon: <CloudOff className="h-3 w-3" />,
-          label: "Offline — vamos sincronizar depois",
-          className: "text-amber-600 dark:text-amber-400",
         };
       case "error":
         return {
-          icon: <TriangleAlert className="h-3 w-3" />,
-          label: "Erro ao sincronizar",
+          icon: <Check className="h-3 w-3" />,
+          label: "Não foi possível salvar o rascunho local",
           className: "text-destructive",
         };
       default:

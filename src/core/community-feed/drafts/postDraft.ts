@@ -8,8 +8,8 @@
  * localStorage (ver `postDraftCrypto.ts`). Snapshots antigos em texto puro
  * são migrados automaticamente na primeira leitura.
  *
- * O timestamp `updatedAt` é usado para reconciliar com o rascunho remoto
- * (ver `postDraftSync.ts`). `savedAt` é mantido para compat retroativa.
+ * O timestamp `updatedAt` registra a última gravação local. `savedAt` é
+ * mantido apenas para compatibilidade com snapshots locais antigos.
  */
 
 import {

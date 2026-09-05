@@ -28,7 +28,7 @@ import { UnifiedFeedWithMessages } from "./UnifiedFeedWithMessages";
 import {
   consumePendingNewPost,
   subscribeNewPost,
-} from "@/core/community/state/newPostHighlight";
+} from "@/core/community-feed/state/newPostHighlight";
 import { CommunityComposerEntry } from "../composer/CommunityComposerEntry";
 import { PostCardSkeleton } from "../PostCardSkeleton";
 import { EmptyState } from "@/shared/components/EmptyState";
