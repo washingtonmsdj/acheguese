@@ -41,9 +41,8 @@ Para cada arquivo desta pasta, siga o [AI Agent Rules](../governance/security/AI
 
 | Ordem | Arquivo                                                  | Descrição                                                                                                                                                 | Risco     |
 | ----- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
-| 1     | `20260720130000_create_community_post_drafts.sql`        | Migration pendente mantida neste inventário; revisar isoladamente antes de promover.                                                                      | A revisar |
-| 2     | `20260810152013_finalize_community_poll_cutover.sql`     | CUTOVER Poll deliberadamente fora da fila ativa; promover com timestamp novo somente apos preflight e janela de observacao.                               | Alto      |
-| 3     | `20260810152014_finalize_community_interest_cutover.sql` | CUTOVER Community Interest fora da fila ativa; exige Edge, Turnstile, origins, frontend broker e smoke test comprovados antes de remover o writer legacy. | Alto      |
+| 1     | `20260810152013_finalize_community_poll_cutover.sql`     | CUTOVER Poll deliberadamente fora da fila ativa; promover com timestamp novo somente apos preflight e janela de observacao.                               | Alto      |
+| 2     | `20260810152014_finalize_community_interest_cutover.sql` | CUTOVER Community Interest fora da fila ativa; exige Edge, Turnstile, origins, frontend broker e smoke test comprovados antes de remover o writer legacy. | Alto      |
 
 ## Depois de aplicar
 

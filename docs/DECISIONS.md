@@ -38,7 +38,7 @@
 
 ## D-009 — Rascunhos de post são criptografados
 
-**Decisão:** rascunhos em `localStorage` usam AES-GCM com chave não-extraível em IndexedDB (`postDraftCrypto.ts`). Sync remoto com resolução last-write-wins.
+**Decisão:** rascunhos de post são locais ao dispositivo e criptografados com AES-GCM, usando chave não-extraível persistida em IndexedDB (`core/community-feed/drafts/postDraftCrypto.ts`). O contrato atual não possui sincronização remota de rascunhos nem tabela `community_post_drafts`; uma futura sincronização entre dispositivos exigirá nova decisão arquitetural e authority própria.
 
 ## D-010 — Autenticação segue SSOT + Zod
 
