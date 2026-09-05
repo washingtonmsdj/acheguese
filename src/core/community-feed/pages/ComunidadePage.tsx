@@ -34,9 +34,8 @@ import {
   type CreatePostModalData,
 } from "@/core/community-feed/hooks/useComunidadePage";
 import { CommunityFeed } from "@/core/community-feed/components/CommunityFeed";
-import { LocationScopeCards } from "@/core/community/components/page/LocationScopeCards";
-import { CommunityFloatingButtons } from "@/core/community/components/page/CommunityFloatingButtons";
-import { CommunityModals } from "@/core/community/components/page/CommunityModals";
+import { LocationScopeCards } from "@/core/community-feed/components/page/LocationScopeCards";
+import { CommunityModals } from "@/core/community-feed/components/page/CommunityModals";
 import { CommunityOverviewSurface } from "@/core/community/components/page/CommunityOverviewSurface";
 import {
   isCommunityOverviewView,
@@ -54,7 +53,7 @@ import { withQueryParams } from "@/core/landing/utils/landingPresentation";
 import { usePersistedCommunityProfile } from "@/core/community-experience/hooks/useCommunityProfile";
 import { isPersistedCommunityId } from "@/core/community-experience/types";
 import { resolveCommunitySurfaceState } from "@/core/community-experience/policies/CommunitySurfacePolicy";
-import { CommunityAvailabilityState } from "@/core/community/components/page/CommunityAvailabilityState";
+import { CommunityAvailabilityState } from "@/core/community-feed/components/page/CommunityAvailabilityState";
 import { TerritoryTopbar } from "@/shared/components/territory-vivo/TerritoryTopbar";
 import { useUnifiedNotifications } from "@/core/notifications/useUnifiedNotifications";
 import { useTerritorialContextOptional } from "@/core/routing/components/TerritorialLayout";
@@ -670,8 +669,6 @@ export default function ComunidadePage({
             ) : null}
           </CommunityOverviewSurface>
         </div>
-
-        <CommunityFloatingButtons />
 
         {/* Modal de Criar Post */}
         <CreatePostModal

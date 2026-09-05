@@ -70,12 +70,8 @@ vi.mock("@/core/community-feed/components/CommunityFeed", () => ({
   CommunityFeed: () => <div data-testid="member-feed" />,
 }));
 
-vi.mock("@/core/community/components/page/LocationScopeCards", () => ({
+vi.mock("@/core/community-feed/components/page/LocationScopeCards", () => ({
   LocationScopeCards: () => null,
-}));
-
-vi.mock("@/core/community/components/page/CommunityFloatingButtons", () => ({
-  CommunityFloatingButtons: () => null,
 }));
 
 vi.mock("@/core/community/components/page/CommunityOverviewSurface", () => ({
