@@ -49,4 +49,34 @@ describe("G6 Community feed page ownership", () => {
       expect(existsSync(resolve(ROOT, legacyPath))).toBe(false);
     }
   });
+
+  it("owns comments modal only in core/community-feed", () => {
+    const commentsModal = read(
+      "src/core/community-feed/components/CommentsModal.tsx",
+    );
+    const communityModals = read(
+      "src/core/community-feed/components/page/CommunityModals.tsx",
+    );
+
+    expect(commentsModal).toContain("export function CommentsModal");
+    expect(communityModals).toContain(
+      "@/core/community-feed/components/CommentsModal",
+    );
+    expect(
+      existsSync(resolve(ROOT, "src/core/community/components/CommentsModal.tsx")),
+    ).toBe(false);
+  });
+
+  it("does not recreate the orphaned legacy sidebar island", () => {
+    for (const retiredPath of [
+      "src/core/community/components/CommunityRightSidebar.lazy.tsx",
+      "src/core/community/components/WidgetErrorBoundary.tsx",
+      "src/core/community/components/widgets/TrendingWidget.tsx",
+      "src/core/community/components/widgets/SponsoredWidget.tsx",
+      "src/core/community/components/widgets/WidgetSkeleton.tsx",
+      "src/core/community/hooks/useTrendingTopics.ts",
+    ]) {
+      expect(existsSync(resolve(ROOT, retiredPath))).toBe(false);
+    }
+  });
 });
