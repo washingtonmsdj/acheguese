@@ -24,8 +24,6 @@ export { useCreatePostForm } from "@/core/community-feed/hooks/useCreatePostForm
 // Post interaction hooks
 export { usePostInteractions } from "./posts/usePostInteractions";
 export { usePostCard } from "./posts/usePostCard";
-export { useDeletePost } from "./posts/useDeletePost";
-export { useUpdatePost } from "./posts/useUpdatePost";
 
 // Comment hooks
 export { useComments } from "./useComments";
