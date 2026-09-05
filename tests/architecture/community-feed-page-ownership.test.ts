@@ -391,4 +391,28 @@ describe("G6 Community feed page ownership", () => {
     }
   });
 
+
+  it("owns Post detail presentation and image gallery in community-feed", () => {
+    const detail = read("src/core/community-feed/components/PostDetailModal.tsx");
+    const content = read("src/core/community-feed/components/PostContent.tsx");
+    const gallery = read("src/core/community-feed/components/ImageGallery.tsx");
+
+    for (const component of ["PostBadge", "PostContent", "PostHeader", "PostMetrics", "PostTags"]) {
+      expect(detail).toContain(`@/core/community-feed/components/${component}`);
+      expect(
+        existsSync(resolve(ROOT, `src/core/community-feed/components/${component}.tsx`)),
+      ).toBe(true);
+      expect(
+        existsSync(resolve(ROOT, `src/core/community/components/${component}.tsx`)),
+      ).toBe(false);
+    }
+
+    expect(content).toContain('from "./ImageGallery"');
+    expect(gallery).toContain("SafeImage");
+    expect(gallery).not.toContain("<img");
+    expect(
+      existsSync(resolve(ROOT, "src/core/community/components/ImageGallery.tsx")),
+    ).toBe(false);
+  });
+
 });

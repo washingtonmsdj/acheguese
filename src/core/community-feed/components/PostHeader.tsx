@@ -5,7 +5,7 @@ import {
   AvatarImage,
 } from "@/shared/components/ui/avatar";
 import { MapPin, MoreVertical, Trash2, Flag, Edit } from "lucide-react";
-import { INLINE_STYLES } from "./styles/communityDesignSystem";
+import { INLINE_STYLES } from "@/core/community/components/styles/communityDesignSystem";
 import { VerifiedResidentBadge } from "@/shared/components/badges";
 import {
   DropdownMenu,

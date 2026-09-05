@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { cn } from "@/shared/utils/cn";
-import { INLINE_STYLES, TYPOGRAPHY } from "./styles/communityDesignSystem";
+import { INLINE_STYLES, TYPOGRAPHY } from "@/core/community/components/styles/communityDesignSystem";
 import { ImageGallery } from "./ImageGallery";
 import { normalizePublicPostContent } from "@/core/posts/utils/publicPostContent";
 

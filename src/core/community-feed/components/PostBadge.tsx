@@ -6,7 +6,7 @@ import {
   Search,
   ThumbsUp,
 } from "lucide-react";
-import { INLINE_STYLES } from "./styles/communityDesignSystem";
+import { INLINE_STYLES } from "@/core/community/components/styles/communityDesignSystem";
 
 /**
  * Badge visual para tipo de post.

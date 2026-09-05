@@ -2,7 +2,7 @@ import React, { memo } from "react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Hash } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
-import { INLINE_STYLES } from "./styles/communityDesignSystem";
+import { INLINE_STYLES } from "@/core/community/components/styles/communityDesignSystem";
 /**
  * Lista de hashtags do post
  *

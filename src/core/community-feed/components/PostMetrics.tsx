@@ -8,7 +8,7 @@ import {
   Flag,
   Send,
 } from "lucide-react";
-import { INLINE_STYLES } from "./styles/communityDesignSystem";
+import { INLINE_STYLES } from "@/core/community/components/styles/communityDesignSystem";
 /**
  * Métricas do post (curtidas, comentários, compartilhamentos, confirmações)
  * Agora são clicáveis e funcionam como botões de ação

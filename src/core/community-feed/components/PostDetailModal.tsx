@@ -10,11 +10,11 @@ import type { Poll } from "@/shared/types/poll";
 
 import { usePostInteractions } from "@/core/posts/hooks/usePostInteractions";
 import { PollCard } from "@/core/community-feed/components/PollCard";
-import { PostBadge, type PostType } from "@/core/community/components/PostBadge";
-import { PostContent } from "@/core/community/components/PostContent";
-import { PostHeader } from "@/core/community/components/PostHeader";
-import { PostMetrics } from "@/core/community/components/PostMetrics";
-import { PostTags } from "@/core/community/components/PostTags";
+import { PostBadge, type PostType } from "@/core/community-feed/components/PostBadge";
+import { PostContent } from "@/core/community-feed/components/PostContent";
+import { PostHeader } from "@/core/community-feed/components/PostHeader";
+import { PostMetrics } from "@/core/community-feed/components/PostMetrics";
+import { PostTags } from "@/core/community-feed/components/PostTags";
 import { PostCommentsPanel } from "@/core/community-feed/components/comments/PostCommentsPanel";
 import {
   getCardBackground,
