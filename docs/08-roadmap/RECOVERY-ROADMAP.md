@@ -9,7 +9,7 @@ Objetivo: deixar gates essenciais verdes e remover problemas visiveis de baixo r
 Escopo permitido:
 
 - Corrigir `src/core/admin/services/AdminCommunityInterestService.ts` para remover o erro `session-context/no-ambiguous-identifiers`.
-- Corrigir `src/core/community/services/postDraftSync.ts` para usar o boundary oficial de sessao em vez de `supabase.auth.getUser()` direto.
+- [x] Remover `src/core/community/services/postDraftSync.ts`: o Supabase canonico nao possui `community_post_drafts`; o composer preserva apenas draft local criptografado no owner `core/community-feed`.
 - Mover o insert/verificacao Supabase de `src/core/routing/components/CommunityInterestPage.tsx` para service/repository oficial.
 - Remover o `eslint-disable` inutil desse fluxo.
 - Corrigir strings user-facing com encoding quebrado em `src/modules/business/gastronomy/hooks/useGastronomyCheckout.ts`.

@@ -621,3 +621,17 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 - Civic Reports: `CivicReportService` e `useCivicReports` foram removidos após census provar ausência de caller runtime; o Supabase canônico também não possui `public.civic_reports` nem `public.civic_report_comments`, confirmando que o código era residual de schema inexistente. Commit source: `51aa43358dac400ed1ba2ac904c08b262947189b`.
 - Alerts: não mover `src/core/community/alerts` por conveniência de nome. O registry atual o reconhece como owner canônico territorial em conjunto com `src/core/alerts`; criar `core/community-alerts` agora duplicaria autoridade.
 - Next action: PAUSAR novos cortes estruturais amplos enquanto GitHub Actions e Vercel estiverem bloqueados. Continuar apenas census/read-only e correções de source obviamente prováveis. Quando o Vercel liberar, executar uma única certificação same-SHA do HEAD então vigente; não consumir GitHub Actions enquanto a quota hospedada estiver indisponível.
+
+## Checkpoint 2026-09-05 — G6 source-only após rate limits
+
+- HEAD source antes deste registro: `1e6f84329f71caa19b39b6ac5e6b03f67e636d0f`.
+- `15440eee5071add5c14435d027160eb85acbb824`: rascunhos do composer ficaram locais + criptografados; `postDraftSync` foi removido porque `public.community_post_drafts` nao existe no Supabase canonico. `postDraft`, `postDraftCrypto` e `newPostHighlight` foram movidos para `core/community-feed`; `useNovoPost` foi aposentado.
+- `60985995316172ae4d571fb5ba4492fa0a8cdd09`: facade `core/community/hooks/useCommunityUrls.ts` aposentada; caller direto e barrel agora usam `core/routing/hooks/useCommunityUrls`.
+- `06f74303c736baf93c6897f81072410d7e8c921b`: `usePollForm` e `useCommunityKeyboard` removidos apos caller census zero.
+- `1e6f84329f71caa19b39b6ac5e6b03f67e636d0f`: `useCommunityTerritory`, `usePopularTags`, `useDeletePost` e `useUpdatePost` removidos apos caller census zero; `usePostCard` foi preservado porque regressao estatica ainda o exige.
+- `CommunityLocationService` e `CommunityRolloutService` foram auditados e preservados: ambos adicionam regra real do dominio sobre `core/location`/`core/rollout`, portanto nao sao facades mortas.
+- Supabase `ACTIVE_HEALTHY`: auditoria confirmou 9 SECURITY DEFINER executaveis por anon, sendo 6 application-owned ja cobertos por allowlist + 3 PostGIS. `track_analytics_event` foi rechecado e permanece intencional: bloqueia spoofing de user_id, exige session para anon, aplica rate limit, restringe eventos operacionais ao service_role e ignora IP/UA/referrer enviados pelo browser.
+- Advisors de RLS sem policy incluem tabelas deny-all/private e nao devem ser 'corrigidos' mecanicamente. `public.spatial_ref_sys` e extensions publicas tambem exigem tratamento de provenance/extension, nao mudanca cega.
+- Vercel permanece bloqueado por deployment rate limit; o ultimo deploy real continua no SHA `5324766588ff3be7ee8a500c3c7af13d887ae408`. Nao existe prova hosted same-SHA dos cortes acima.
+- GitHub Actions permanece sem minutos hospedados. Nao rerodar workflows.
+- NEXT_ACTION: nenhum novo corte estrutural amplo. Assim que o Vercel liberar, executar uma unica certificacao production same-SHA do HEAD vigente. Se o build falhar, corrigir somente o erro concreto; se passar, retomar o caller census G6.

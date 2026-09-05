@@ -54,9 +54,9 @@ Problemas confirmados:
 
 | Modulo/area | Estado | Observacoes |
 | --- | --- | --- |
-| Cadastro/Login/Sessao | Parcialmente estavel | Providers e SessionContext existem, mas lint acusa uso direto de `supabase.auth.getUser()` em `src/core/community/services/postDraftSync.ts`. |
+| Cadastro/Login/Sessao | Parcialmente estavel | Providers e SessionContext existem. O antigo `postDraftSync.ts` foi removido; rascunhos do composer agora sao locais e criptografados, sem dependencia de auth direta ou de tabela remota inexistente. |
 | Perfil | Estavel com divida estrutural | Ha separacao entre `core/profiles` e `modules/profile`; exige cuidado antes de consolidar duplicidades. |
-| Feed/Comunidade | Funcionalmente estruturado | `core/community` e modulos community-* existem, mas ha split transicional e um ponto de sync com violacao de session boundary. |
+| Feed/Comunidade | Funcionalmente estruturado | O composer e seus rascunhos estao em `core/community-feed`; o sync remoto de drafts foi retirado porque `community_post_drafts` nao existe no Supabase canonico. O restante de `core/community` segue em decomposicao incremental por caller census. |
 | Comentarios/Curtidas | Sem erro estatico especifico nesta rodada | Validacao foi estatica; fluxo manual ainda precisa entrar no roteiro de demo. |
 | Empresas/Gastronomia | Grande e maduro, mas heterogeneo | Area com muitos hooks/services/componentes; ha string de erro quebrada por encoding em checkout. |
 | Busca | Rotas `/busca` e `/buscar` aparecem como aliases/entradas proximas | Requer validacao de UX para evitar fluxo duplicado ou confuso. |
