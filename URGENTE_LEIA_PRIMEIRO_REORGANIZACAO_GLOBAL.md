@@ -9,7 +9,7 @@
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
 **Status:** EM EXECUÇÃO — G6 / Empresas base, Gastronomia e Educação aguardam provas finais; Community está em sweep ativo de ownership  
-**Checkpoint técnico atual:** `031ea3b4af8519aaf37ff386f5dc9a16edc336fe`  
+**Checkpoint técnico atual:** `94e804c0013e8a8fd54a488beb96f0d6b4d45bb7`  
 **Checkpoint de transição G5 → G6:** `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
@@ -646,3 +646,10 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 - [x] G5 revalidado sem mutação: 12 tabelas públicas com RLS e zero policies permanecem intencionalmente fail-closed, sem grants CRUD para `anon` ou `authenticated`; não criar policies artificiais para silenciar advisor.
 - [x] precedência documental corrigida: source executável + Core Platform CP-008 vencem snapshots antigos. `FeedService`/`FeedRepository` removidos não devem ser recriados; o owner atual de Post é `core/posts`, com composição em `core/community-feed`.
 - [ ] hosted build/typecheck same-SHA continua prova futura separada; G6 pode continuar por source, Supabase, ownership, segurança e regressions estáticos sem depender de Vercel/GitHub Actions.
+- [x] comentarios, filtros, Poll, detalhe, moderacao de Post/Comment e adapter de mensagem iniciada por Post foram consolidados nos owners explicitos; facades genericas de Community foram retiradas.
+- [x] `useCommunityScopeResolver` foi aposentado; o shell territorial usa `useResolveTerritoryFromUrl` diretamente.
+- [x] o barrel `src/core/community/hooks/index.ts` foi removido para impedir reexports entre owners.
+- [x] `useCreatePost`, `usePostCard` e `PostForm` foram aposentados apos caller census zero; testes passaram a bloquear recriacao em vez de exigir arquivo morto.
+- [x] `usePostInteractions` foi movido para `src/core/posts/hooks`, pois atende Feed, Profile e card compartilhado.
+- [x] D-009 e o composer foram alinhados ao contrato real de rascunho local criptografado; a migration pendente que criaria `community_post_drafts` foi retirada sem alterar o Supabase.
+- [x] cortes desta etapa: `9b0cdabad7a6570f2879f7e48fee611cdda1adf0`, `1f3360facc29c314cf43b1f7a3e70302b8b907b8`, `c6c79d3f15b35f3f0aad5b81e6e2cc6d4134ccc6`, `3cef596b40fcbb9696c4985ae84a66c0b9dcfb37`, `687452f4f163380be9897327a0ea71fcf392d9fb`, `31bdae212272a0a808c492e5603679e81341f3d0`, `af595b1a1cb0a290b8fcf0edb802fc71d5608e32` e `94e804c0013e8a8fd54a488beb96f0d6b4d45bb7`.

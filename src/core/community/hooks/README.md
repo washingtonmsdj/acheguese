@@ -1,27 +1,30 @@
 # Community Hooks
 
-Os hooks desta pasta compoem a experiencia comunitaria e nao sao uma camada
-alternativa de dados.
+Esta pasta contem apenas hooks que ainda pertencem ao dominio Community e que
+possuem comportamento proprio. Ela nao e barrel nem facade para hooks de outros
+owners.
 
 ## Contratos mantidos
 
-- `feed/`: leitura territorial por `core/posts`; `core/feed` fornece somente o
-  namespace de cache da composicao.
-- `composer/`: criacao de conteudo com autoria do perfil ativo e `location_id`.
-- Groups saiu deste namespace: `useGrupos` e `useFavoriteGroups` pertencem a
-  `src/core/community-groups/hooks`, com persistencia em `CommunityGroupsService`.
-- `useComments`, `useCommentActions` e hooks de post: interacoes sobre os
-  services canonicos de posts e comentarios.
+- `useCommunityLocation.ts`: adapta o SSOT de Location para o contexto da
+  Community.
+- `useCommunityRollout.ts`: aplica o rollout especifico do modulo Community.
+- `useDirectMessages.ts`: adapter de UI do contrato de Community Direct
+  Messaging; persistencia e authority permanecem em `core/messaging`.
+
+Feed, composer, comentarios, Poll, moderacao de Post/Comment e adapters de
+mensagem iniciada por Post pertencem a `src/core/community-feed`. Interacoes
+transversais de Post pertencem a `src/core/posts/hooks`.
 
 ## Regras
 
+- Nao criar `index.ts` generico nesta pasta para reexportar owners externos.
 - Hooks nao acessam Supabase diretamente quando existe service de dominio.
-- A autoria vem do perfil ativo; `user.id` nao substitui `profile.id` em
-  conteudo social.
-- Paginas de grupos e filas de conteudo usam paginacao limitada. Nao adicione
-  leituras sem limite ou contagens paralelas ao runtime.
-- Gamificacao, badges e ranking individual nao sao contratos publicados. Nao
-  crie hooks de pontos no cliente sem schema, RLS e operacao server-side.
+- Identidade social usa o Profile ativo; `user.id` nao substitui `profile.id`.
+- Nao recriar hooks aposentados apenas para satisfazer testes ou paths
+  historicos; atualize o caller/teste para o owner canonico.
+- Alteracoes de Direct Messaging devem preservar o contrato de
+  `docs/07-modules/COMMUNITY_DIRECT_MESSAGING_SSOT.md`.
 
-Valide alteracoes com `npm run typecheck:app` e os testes de hardening de
-`src/core/community/access/__tests__/`.
+A certificacao hosted e uma prova separada. O ownership desta pasta e protegido
+por testes arquiteturais e caller census.

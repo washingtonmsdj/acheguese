@@ -1,20 +1,31 @@
 # Community Components
 
-Esta pasta contem componentes de composicao da experiencia comunitaria. A
-pagina territorial e composta por `page/CommunityOverviewSurface.tsx`; os
-modulos especializados continuam com seus owners em `core/community-*`.
+Esta pasta contem somente componentes que ainda pertencem a experiencia
+Community compartilhada. Superficies especificas do Feed vivem em
+`src/core/community-feed`; persistencia de Posts vive em `src/core/posts` e
+persistencia de comentarios em `src/core/comments`.
+
+## Fronteiras atuais
+
+- `CommunityRolloutGate` usa os contratos de Location/Rollout da Community.
+- `DirectMessageModal` pertence a experiencia de Community Direct Messaging,
+  com authority em `core/messaging`.
+- Componentes visuais de Post ainda compartilhados por mais de uma superficie
+  permanecem aqui enquanto tiverem callers reais; nao mover por nome.
+- `CommunityOverviewSurface`, composer, Poll e UI de comentarios pertencem a
+  `src/core/community-feed`.
 
 ## Diretrizes
 
-- Feed e composer usam contratos de `core/posts`; comentarios e interacoes
-  usam seus owners. `core/feed` fornece somente chaves de cache da composicao.
-- Componentes nao simulam pontuacao, badges, rankings ou perfis comunitarios.
-  Essas entidades nao possuem contrato remoto publicado.
-- Acoes de moderacao nao fazem `update` direto em posts/comentarios. A fila
-  administrativa chama a RPC atomica de revisao.
-- Acessibilidade, estados de erro e limites de exibicao pertencem ao
-  componente; autorizacao e integridade pertencem ao service/RLS/RPC.
+- Componentes nao criam segundo caminho de persistencia ou autorizacao.
+- Acoes de Post usam owners de `core/posts`/`core/engagement`; comentarios
+  usam `core/comments`; reports usam a authority comunitaria de moderacao.
+- Nao preservar componente sem caller apenas porque um teste estatico espera o
+  arquivo. O teste deve ratchetar o owner vigente.
+- Acessibilidade e estado visual pertencem ao componente; integridade,
+  identidade e autorizacao pertencem ao service/RLS/RPC apropriado.
 
-Antes de incluir uma nova superficie, confirme o owner do dominio em
-`docs/COMMUNITY_TRANSVERSAL_ARCHITECTURE.md` e evite criar um segundo caminho
-de dados para a mesma entidade.
+Antes de criar ou mover uma superficie, consulte
+`docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`,
+`docs/03-architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md` e o registry de
+ownership vigente.
