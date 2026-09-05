@@ -50,6 +50,10 @@ import { EducationCapabilityGuard } from '../niches/components/EducationCapabili
 import { getNicheByKey } from '../niches/registry';
 import { EducationUrlService } from '../services/EducationUrlService';
 import type { EducationEvent, SchoolEventType } from '@/core/education';
+import {
+  fromEventIsoToLocalInput,
+  fromLocalInputToEventIso,
+} from '../utils/educationEventDateTime';
 
 const SCHOOL_EVENT_TYPE_LABELS: Record<SchoolEventType, string> = {
   open_house: 'Portas Abertas',
@@ -139,8 +143,10 @@ export function EducationEventsPage() {
       await create({
         title: formData.title,
         description: formData.description,
-        startsAt: formData.startsAt,
-        endsAt: formData.endsAt || undefined,
+        startsAt: fromLocalInputToEventIso(formData.startsAt),
+        endsAt: formData.endsAt
+          ? fromLocalInputToEventIso(formData.endsAt)
+          : undefined,
         location: formData.location,
         isPublic: formData.isPublic,
         schoolEventType: formData.schoolEventType || undefined,
@@ -162,8 +168,10 @@ export function EducationEventsPage() {
         payload: {
           title: formData.title,
           description: formData.description,
-          starts_at: formData.startsAt,
-          ends_at: formData.endsAt || null,
+          starts_at: fromLocalInputToEventIso(formData.startsAt),
+          ends_at: formData.endsAt
+            ? fromLocalInputToEventIso(formData.endsAt)
+            : null,
           location: formData.location,
           is_public: formData.isPublic,
           school_event_type: formData.schoolEventType || null,
@@ -199,8 +207,8 @@ export function EducationEventsPage() {
     setFormData({
       title: event.title,
       description: event.description || '',
-      startsAt: event.starts_at.slice(0, 16), // Format for datetime-local
-      endsAt: event.ends_at ? event.ends_at.slice(0, 16) : '',
+      startsAt: fromEventIsoToLocalInput(event.starts_at),
+      endsAt: event.ends_at ? fromEventIsoToLocalInput(event.ends_at) : '',
       location: event.location || '',
       isPublic: event.is_public,
       schoolEventType: event.school_event_type || '',
@@ -380,7 +388,7 @@ export function EducationEventsPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {events
+          {[...events]
             .sort((a, b) => new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime())
             .map((event, index) => (
             <motion.div
