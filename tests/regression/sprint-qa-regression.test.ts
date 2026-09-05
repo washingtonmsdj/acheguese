@@ -68,7 +68,7 @@ function findMigration(matchers: RegExp[]): { filePath: string; content: string 
 
 describe('Fase 0 - Correcoes imediatas', () => {
   it('CommunityQAService importa de @/core/community/qa-types', () => {
-    const content = read('src/core/community/services/CommunityQAService.ts');
+    const content = read('src/core/community-recommendations/services/CommunityQAService.ts');
     expect(content).toMatch(/@\/core\/community\/qa-types/);
     expect(content).not.toMatch(/services\/community-qa\/types/);
   });
@@ -147,23 +147,23 @@ describe('Fase 1 - Polls migradas para posts.id', () => {
 
 describe('Fase 2 - Q&A territorial', () => {
   it('CommunityQAService.createQuestion valida location_id obrigatorio', () => {
-    const content = read('src/core/community/services/CommunityQAService.ts');
+    const content = read('src/core/community-recommendations/services/CommunityQAService.ts');
     expect(content).toMatch(/location_id.*obrigatorio|LOCATION_REQUIRED|!input\.location_id/);
   });
 
   it('CommunityQAService.createQuestion insere location_id no banco', () => {
-    const content = read('src/core/community/services/CommunityQAService.ts');
+    const content = read('src/core/community-recommendations/services/CommunityQAService.ts');
     expect(content).toMatch(/location_id: input\.location_id/);
   });
 
   it('CommunityQAService.getQuestions aplica filtro territorial', () => {
-    const content = read('src/core/community/services/CommunityQAService.ts');
+    const content = read('src/core/community-recommendations/services/CommunityQAService.ts');
     expect(content).toMatch(/location_id.*filters|filters.*location_id/);
     expect(content).toMatch(/location_ids.*filters|filters.*location_ids/);
   });
 
   it('CommunityQAService.getQuestionById retorna location_id e location', () => {
-    const content = read('src/core/community/services/CommunityQAService.ts');
+    const content = read('src/core/community-recommendations/services/CommunityQAService.ts');
     expect(content).toMatch(/location_id: data\.location_id/);
     expect(content).toMatch(/location:locations/);
   });
@@ -219,7 +219,7 @@ describe('Fase 2 - Q&A territorial', () => {
   });
 
   it('CommunityQAService usa community_questions (nao community_posts)', () => {
-    const content = read('src/core/community/services/CommunityQAService.ts');
+    const content = read('src/core/community-recommendations/services/CommunityQAService.ts');
     expect(content).not.toMatch(/\.from\("community_posts"\)/);
     expect(content).toMatch(/\.from\("community_questions"\)/);
   });

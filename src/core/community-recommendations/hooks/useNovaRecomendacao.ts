@@ -12,7 +12,7 @@ import { useSessionContext } from "@/core/session";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 import { logger } from "@/shared/utils/logger";
-import { CommunityQAService } from "@/core/community/services/CommunityQAService";
+import { CommunityQAService } from "@/core/community-recommendations/services/CommunityQAService";
 import type { CreateQuestionInput } from "@/core/community/qa-types";
 
 export interface NovaRecomendacaoData {

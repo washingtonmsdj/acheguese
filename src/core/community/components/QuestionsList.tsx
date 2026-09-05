@@ -7,7 +7,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 
 import { QuestionCard } from "@/shared/components/recomendacoes/QuestionCard";
-import type { QuestionItem } from "@/core/community/hooks/useRecomendacoes";
+import type { QuestionItem } from "@/core/community-recommendations/hooks/useRecomendacoes";
 
 interface QuestionsListProps {
   questions: QuestionItem[];

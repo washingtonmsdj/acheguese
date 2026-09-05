@@ -8,7 +8,7 @@ import { useAppUrls } from "@/core/routing/hooks"; // ✅ SSOT URLs
 import { useBusinessNavigation } from "@/core/business";
 import { ProfessionalUrlService } from "@/core/professional/services/ProfessionalUrlService";
 import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
-import { useRecomendacaoDetail } from "@/core/community/hooks/useRecomendacaoDetail";
+import { useRecomendacaoDetail } from "@/core/community-recommendations/hooks/useRecomendacaoDetail";
 import { QuestionCard } from "@/shared/components/recomendacoes/QuestionCard";
 import { AnswersList } from "@/shared/components/recomendacoes/AnswersList";
 import { AnswerForm } from "@/shared/components/recomendacoes/AnswerForm";

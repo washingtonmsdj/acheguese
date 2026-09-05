@@ -45,7 +45,7 @@ function findMigration(matchers: RegExp[]): { filePath: string; content: string 
   return matched;
 }
 
-const QA_SERVICE = 'src/core/community/services/CommunityQAService.ts';
+const QA_SERVICE = 'src/core/community-recommendations/services/CommunityQAService.ts';
 
 describe('CommunityQAService - zero dependencia de comments', () => {
   it('nao importa commentService', () => {

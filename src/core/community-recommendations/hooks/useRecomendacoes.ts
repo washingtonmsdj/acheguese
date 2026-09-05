@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/shared/config/reactQuery.config";
 import { useInfiniteScroll } from "@/shared/hooks/useInfiniteScroll";
-import { CommunityQAService } from "@/core/community/services/CommunityQAService";
+import { CommunityQAService } from "@/core/community-recommendations/services/CommunityQAService";
 import {
   territoryFilterKey,
   useTerritoryFilter,

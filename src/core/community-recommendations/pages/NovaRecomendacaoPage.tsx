@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Loader2 } from "lucide-react";
-import { useNovaRecomendacao } from "@/core/community/hooks/useNovaRecomendacao";
+import { useNovaRecomendacao } from "@/core/community-recommendations/hooks/useNovaRecomendacao";
 import { CommunityPortalGate, useCommunityAccess } from "@/core/community-experience/access";
 import type { TerritorialLayoutContext } from "@/core/routing/components/TerritorialLayout";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";

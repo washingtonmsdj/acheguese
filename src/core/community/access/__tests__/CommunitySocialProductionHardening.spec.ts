@@ -276,7 +276,7 @@ const adminAlertService = readFileSync(
   "utf8",
 );
 const qaService = readFileSync(
-  join(root, "src/core/community/services/CommunityQAService.ts"),
+  join(root, "src/core/community-recommendations/services/CommunityQAService.ts"),
   "utf8",
 );
 const qaCreateHook = readFileSync(

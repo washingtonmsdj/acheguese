@@ -9,7 +9,7 @@ import { useToast } from "@/shared/hooks/use-toast";
 import { useSessionContext } from "@/core/session";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { logger } from "@/shared/utils/logger";
-import { CommunityQAService } from "@/core/community/services/CommunityQAService";
+import { CommunityQAService } from "@/core/community-recommendations/services/CommunityQAService";
 import type {
   CommunityQuestion,
   CommunityAnswer,

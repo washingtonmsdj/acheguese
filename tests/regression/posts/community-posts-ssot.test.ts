@@ -11,7 +11,7 @@ describe("posts vs community_posts SSOT", () => {
     const functionalRuntimeFiles = [
       "src/core/profiles/services/profile.queries.ts",
       "supabase/functions/user-delete-account/index.ts",
-      "src/core/community/services/CommunityQAService.ts",
+      "src/core/community-recommendations/services/CommunityQAService.ts",
     ];
 
     for (const file of functionalRuntimeFiles) {

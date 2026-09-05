@@ -5,7 +5,7 @@ import { Loader2, Plus, Search } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { useAppUrls } from "@/core/routing/hooks";
-import { useRecomendacoes } from "@/core/community/hooks/useRecomendacoes";
+import { useRecomendacoes } from "@/core/community-recommendations/hooks/useRecomendacoes";
 import { CategoryFilters } from "@/shared/components/recomendacoes/CategoryFilters";
 import { QuestionsList } from "@/core/community/components/QuestionsList";
 import { CommunityPortalGate, useCommunityAccess } from "@/core/community-experience/access";

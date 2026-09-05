@@ -30,7 +30,7 @@ describe("community content rpc broker security", () => {
       "src/core/community/issues/services/CommunityIssueService.ts",
     );
     const qaService = readProjectFile(
-      "src/core/community/services/CommunityQAService.ts",
+      "src/core/community-recommendations/services/CommunityQAService.ts",
     );
 
     expect(config).toContain("[functions.community-rpc]");
