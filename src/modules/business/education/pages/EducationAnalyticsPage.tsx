@@ -1,22 +1,30 @@
 /**
  * EducationAnalyticsPage
- * 
+ *
  * Pagina de analytics da instituicao.
  * Rota: /central/empresas/:businessId/educacao/analytics
- * 
- * Regra: capability final = nicho permite AND plano permite
- * - analytics_basic: disponível se o nicho + plano permitirem
- * - analytics_advanced/export: requer capability + plano pago
+ *
+ * Regra:
+ * - leitura de analytics usa o profile Education real;
+ * - analytics basico exige nicho + entitlement canonico;
+ * - exportacao exige allowsExport do nicho + canExportReports do Billing;
+ * - CSV e derivado apenas do read model carregado, sem segunda fonte.
  */
 
 import { useParams } from 'react-router-dom';
-import { BarChart3, Lock } from 'lucide-react';
+import { BarChart3, Download } from 'lucide-react';
 import { useEducationAnalytics } from '../hooks';
-import { EducationAnalyticsOverviewCard, EducationAnalyticsConversionCard } from '../components';
+import {
+  EducationAnalyticsOverviewCard,
+  EducationAnalyticsConversionCard,
+} from '../components';
 import { Button } from '@/shared/components/ui/button';
+import { Skeleton } from '@/shared/components/ui/skeleton';
+import { useToast } from '@/shared/hooks/use-toast';
 import { useEducationNicheBilling } from '../niches/hooks/useEducationNicheBilling';
 import { EducationUpgradeBanner } from '../niches/components/EducationUpgradeBanner';
 import { useEducationProfile } from '../hooks/useEducationProfile';
+import { buildEducationAnalyticsCsv } from '@/core/education/services/educationAnalyticsExport';
 import type { UpgradeReason } from '../niches/components/EducationUpgradeBanner';
 
 function toUpgradeReason(reason: string): UpgradeReason {
@@ -24,40 +32,99 @@ function toUpgradeReason(reason: string): UpgradeReason {
   return 'feature_unavailable';
 }
 
+function downloadCsv(content: string, businessId: string) {
+  const stamp = new Date().toISOString().slice(0, 10);
+  const blob = new Blob([`\uFEFF${content}`], {
+    type: 'text/csv;charset=utf-8',
+  });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+
+  try {
+    anchor.href = url;
+    anchor.download = `educacao-analytics-${businessId}-${stamp}.csv`;
+    document.body.appendChild(anchor);
+    anchor.click();
+  } finally {
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }
+}
+
 export function EducationAnalyticsPage() {
   const { businessId } = useParams<{ businessId: string }>();
-  
-  const { data: profile } = useEducationProfile(businessId);
-  
-  const { data, isLoading, canAccessAnalytics } = useEducationAnalytics({
-    businessId: businessId!,
-    enabled: Boolean(businessId),
+  const { toast } = useToast();
+  const {
+    data: profile,
+    isLoading: isProfileLoading,
+  } = useEducationProfile(businessId);
+
+  const {
+    data,
+    isLoading: isAnalyticsLoading,
+    canAccessAnalytics,
+    canExport,
+  } = useEducationAnalytics({
+    businessId: businessId || '',
+    profileId: profile?.id,
+    nicheKey: profile?.niche_key,
+    enabled: Boolean(businessId && profile?.id),
   });
-  
-  // Verificação de nicho + billing
+
   const nicheBilling = useEducationNicheBilling({
     nicheKey: profile?.niche_key,
     businessId: businessId || '',
+    enabled: Boolean(businessId && profile?.id),
   });
-  
-  // Verifica se analytics básico está liberado (nicho + plano)
-  const canViewAnalytics = nicheBilling.can('analytics_basic');
-  // Verifica se analytics avançado/exportação está liberado
-  const canAdvancedAnalytics = nicheBilling.can('analytics_advanced');
 
-  // Se não tiver analytics básico, mostra bloqueio
+  const canViewAnalytics = nicheBilling.can('analytics_basic');
+  const nicheAllowsExport =
+    nicheBilling.niche.config?.entitlements.allowsExport ?? false;
+  const canExportAnalytics = canExport && nicheAllowsExport;
+
+  const handleExport = () => {
+    if (!businessId || !data || !canExportAnalytics) {
+      toast({
+        title: 'Exportacao indisponivel',
+        description:
+          'Os dados ou a permissao de exportacao ainda nao estao disponiveis.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    downloadCsv(buildEducationAnalyticsCsv(data), businessId);
+    toast({
+      title: 'Relatorio exportado',
+      description: 'O CSV foi gerado com as metricas carregadas desta instituicao.',
+    });
+  };
+
+  if (isProfileLoading || nicheBilling.isLoading) {
+    return (
+      <div className="container mx-auto max-w-6xl p-6">
+        <Skeleton className="mb-6 h-8 w-48" />
+        <Skeleton className="h-64 w-full rounded-xl" />
+      </div>
+    );
+  }
+
   if (!canAccessAnalytics || !canViewAnalytics.allowed) {
     return (
-      <div className="container mx-auto p-6 max-w-4xl">
-        <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <BarChart3 className="w-6 h-6" />
+      <div className="container mx-auto max-w-4xl p-6">
+        <h1 className="mb-6 flex items-center gap-2 text-2xl font-bold">
+          <BarChart3 className="h-6 w-6" />
           Analytics
         </h1>
-        
+
         <EducationUpgradeBanner
           nicheKey={profile?.niche_key}
           businessId={businessId || ''}
-          reason={!canViewAnalytics.allowed ? toUpgradeReason(canViewAnalytics.reason) : 'plan_denied'}
+          reason={
+            !canViewAnalytics.allowed
+              ? toUpgradeReason(canViewAnalytics.reason)
+              : 'plan_denied'
+          }
           feature="analytics_basic"
           variant="card"
         />
@@ -66,29 +133,35 @@ export function EducationAnalyticsPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <BarChart3 className="w-6 h-6" />
+    <div className="container mx-auto max-w-6xl p-6">
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="flex items-center gap-2 text-2xl font-bold">
+          <BarChart3 className="h-6 w-6" />
           Analytics
         </h1>
-        {/* Botão de exportação só aparece se analytics_advanced estiver liberado */}
-        {canAdvancedAnalytics.allowed ? (
-          <Button variant="outline" size="sm">
-            Exportar Relatório
+
+        {canExportAnalytics ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExport}
+            disabled={!data || isAnalyticsLoading}
+            className="gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Exportar Relatorio
           </Button>
         ) : (
           <EducationUpgradeBanner
             nicheKey={profile?.niche_key}
             businessId={businessId || ''}
-            reason={toUpgradeReason(canAdvancedAnalytics.reason)}
+            reason={nicheAllowsExport ? 'plan_denied' : 'niche_denied'}
             feature="analytics_advanced"
             variant="inline"
           />
         )}
       </div>
 
-      {/* Overview Cards - sempre visíveis com analytics básico */}
       <div className="mb-6">
         <EducationAnalyticsOverviewCard
           leads={{
@@ -105,12 +178,11 @@ export function EducationAnalyticsPage() {
             total: data?.events.total ?? 0,
             upcoming: data?.events.upcoming ?? 0,
           }}
-          isLoading={isLoading}
+          isLoading={isAnalyticsLoading}
         />
       </div>
 
-      {/* Conversion Pipeline */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <EducationAnalyticsConversionCard
           pipeline={{
             new: data?.leads.new ?? 0,
@@ -122,7 +194,7 @@ export function EducationAnalyticsPage() {
           }}
           conversionRate={data?.leads.conversionRate ?? 0}
           avgDaysToConversion={data?.leads.avgDaysToConversion ?? 0}
-          isLoading={isLoading}
+          isLoading={isAnalyticsLoading}
         />
       </div>
     </div>

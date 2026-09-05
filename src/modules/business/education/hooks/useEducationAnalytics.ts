@@ -11,75 +11,11 @@ import { useQuery } from '@tanstack/react-query';
 import { EducationSubscriptionService } from '../services/education-subscription.service';
 import * as educationQueries from '@/core/education/services/education.queries';
 import { logger } from '@/shared/utils/logger';
+import type { EducationAnalyticsData } from '@/core/education';
 
 // ============================================================
 // TIPOS
 // ============================================================
-
-// Métricas por série (para escolas regulares)
-export interface GradeMetrics {
-  grade: string; // Ex: "1º ano", "6º ano"
-  leadCount: number;
-  enrollmentCount: number;
-  vacancyRate: number; // % de vagas preenchidas
-}
-
-// Métricas por turno (para escolas regulares)
-export interface ShiftMetrics {
-  shift: string; // Ex: "morning", "afternoon"
-  leadCount: number;
-  enrollmentCount: number;
-  interestLevel: 'high' | 'medium' | 'low';
-}
-
-export interface EducationAnalyticsData {
-  leads: {
-    total: number;
-    new: number;
-    contacted: number;
-    visitScheduled: number;
-    proposalSent: number;
-    enrolled: number;
-    lost: number;
-    conversionRate: number;
-    avgDaysToConversion: number;
-    // Campos específicos para escola regular
-    byGrade?: GradeMetrics[]; // Leads por série
-    byShift?: ShiftMetrics[]; // Leads por turno
-    guardianVsStudentRatio?: number; // % leads onde responsável ≠ aluno
-  };
-  programs: {
-    total: number;
-    active: number;
-    avgViews: number;
-    avgInquiries: number;
-    // Campos específicos para escola regular
-    avgEnrollmentRate?: number; // Taxa média de ocupação das turmas
-    totalVacancies?: number; // Total de vagas disponíveis
-    filledVacancies?: number; // Vagas já preenchidas
-  };
-  events: {
-    total: number;
-    upcoming: number;
-    totalAttendees: number;
-    // Campos específicos para escola regular
-    schoolToursCount?: number; // Visitas escolares agendadas
-    openHouseCount?: number; // Eventos de portas abertas
-    enrollmentFairCount?: number; // Feiras de matrícula
-  };
-  period: {
-    start: string;
-    end: string;
-  };
-  // Métricas exclusivas para escola regular
-  schoolMetrics?: {
-    enrollmentWindowOpen: boolean;
-    totalGradesOffered: number;
-    totalShiftsOffered: number;
-    mostRequestedGrade: string | null;
-    mostRequestedShift: string | null;
-  };
-}
 
 export interface UseEducationAnalyticsOptions {
   businessId: string;

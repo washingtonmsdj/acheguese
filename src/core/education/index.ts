@@ -1,7 +1,10 @@
 export type { EducationProfileStatus } from "@/core/education/types";
 export type {
+  EducationAnalyticsData,
   EducationAnalyticsEvent,
   EducationAnalyticsEventType,
+  EducationGradeMetrics,
+  EducationShiftMetrics,
   EducationEvent,
   EducationLead,
   EducationLeadEvent,

@@ -103,6 +103,26 @@ describe("Education module hardening ratchet", () => {
     expect(plansPage).not.toMatch(/maxPrograms:\s*\d+/);
   });
 
+  it("keeps Education analytics on the real profile and real export contract", () => {
+    const page = read(
+      "src/modules/business/education/pages/EducationAnalyticsPage.tsx",
+    );
+    const exportService = read(
+      "src/core/education/services/educationAnalyticsExport.ts",
+    );
+
+    expect(page).toContain("profileId: profile?.id");
+    expect(page).toContain("nicheKey: profile?.niche_key");
+    expect(page).toContain("canExportAnalytics = canExport && nicheAllowsExport");
+    expect(page).toContain("buildEducationAnalyticsCsv(data)");
+    expect(page).toContain("onClick={handleExport}");
+    expect(page).not.toMatch(/<Button[^>]*>\s*Exportar Relat[oó]rio\s*<\/Button>/);
+
+    expect(exportService).toContain("buildEducationAnalyticsCsv");
+    expect(exportService).toContain("formulaSafe");
+    expect(exportService).not.toContain("@/integrations/");
+  });
+
   it("keeps Education domain contracts owned by core", () => {
     const contracts = read("src/core/education/contracts.ts");
 

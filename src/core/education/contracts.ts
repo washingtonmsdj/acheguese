@@ -256,6 +256,65 @@ export type EducationAnalyticsEventType =
   | 'lead_submitted'
   | 'event_interest';
 
+export interface EducationGradeMetrics {
+  grade: string;
+  leadCount: number;
+  enrollmentCount: number;
+  vacancyRate: number;
+}
+
+export interface EducationShiftMetrics {
+  shift: string;
+  leadCount: number;
+  enrollmentCount: number;
+  interestLevel: 'high' | 'medium' | 'low';
+}
+
+export interface EducationAnalyticsData {
+  leads: {
+    total: number;
+    new: number;
+    contacted: number;
+    visitScheduled: number;
+    proposalSent: number;
+    enrolled: number;
+    lost: number;
+    conversionRate: number;
+    avgDaysToConversion: number;
+    byGrade?: EducationGradeMetrics[];
+    byShift?: EducationShiftMetrics[];
+    guardianVsStudentRatio?: number;
+  };
+  programs: {
+    total: number;
+    active: number;
+    avgViews: number;
+    avgInquiries: number;
+    avgEnrollmentRate?: number;
+    totalVacancies?: number;
+    filledVacancies?: number;
+  };
+  events: {
+    total: number;
+    upcoming: number;
+    totalAttendees: number;
+    schoolToursCount?: number;
+    openHouseCount?: number;
+    enrollmentFairCount?: number;
+  };
+  period: {
+    start: string;
+    end: string;
+  };
+  schoolMetrics?: {
+    enrollmentWindowOpen: boolean;
+    totalGradesOffered: number;
+    totalShiftsOffered: number;
+    mostRequestedGrade: string | null;
+    mostRequestedShift: string | null;
+  };
+}
+
 export interface EducationAnalyticsEvent {
   id: string;
   education_profile_id: string;
