@@ -10,9 +10,6 @@ export { useCommunityLocation } from './useCommunityLocation';
 export { useCommunityRollout } from './useCommunityRollout';
 export { useCommunityUrls } from './useCommunityUrls';
 
-// Ads - delegates to modules/ads
-export { useSponsoredAds } from './useSponsoredAds';
-
 // Feed hooks
 export { useCommunityFeedSimple as useCommunityFeed } from "./feed/useCommunityFeed";
 export { useCommunityFilters as useFeedFilters } from "./feed/useFeedFilters";

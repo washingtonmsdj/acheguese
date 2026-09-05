@@ -1,10 +1,11 @@
 import React from "react";
 import { memo } from "react";
-import { useSponsoredAds } from "../../hooks/useSponsoredAds";
+import { useAdDelivery } from "@/core/business/promotions";
 import { WidgetSkeleton } from "./WidgetSkeleton";
 import { SafeImage, SafeLink } from "@/shared/components/security";
+
 export const SponsoredWidget = memo(() => {
-  const { data: ad, isLoading } = useSponsoredAds();
+  const { campaign: ad, isLoading } = useAdDelivery("sidebar_widget");
 
   if (isLoading) {
     return <WidgetSkeleton hasHeader={false} itemCount={1} />;
@@ -26,10 +27,10 @@ export const SponsoredWidget = memo(() => {
         <span className="text-[0.55rem] text-gray-400">Ad</span>
       </div>
 
-      <SafeLink href={ad.link} className="block group">
+      <SafeLink href={ad.cta_url ?? ""} className="block group">
         <div className="aspect-video bg-gradient-to-br from-purple-500 to-pink-500 rounded-md mb-1.5 overflow-hidden">
           <SafeImage
-            src={ad.imageUrl}
+            src={ad.image_url ?? ""}
             alt={ad.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
@@ -38,7 +39,7 @@ export const SponsoredWidget = memo(() => {
           {ad.title}
         </h4>
         <p className="text-[0.55rem] text-gray-400 line-clamp-2">
-          {ad.description}
+          {ad.description ?? ""}
         </p>
       </SafeLink>
 

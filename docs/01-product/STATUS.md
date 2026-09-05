@@ -626,8 +626,9 @@ id)`, incluindo compatibilidade temporaria com cursores antigos de timestamp
 - Anuncios patrocinados foram concentrados em `core/business/promotions`.
   `AdRepositorySupabase` foi alinhado ao schema gerado atual de
   `ad_campaigns` (`advertiser_name`, `description`, `cta_label`, `priority`,
-  `starts_at`, `ends_at`) e `SponsoredAdsRuntimeService` passou a delegar para
-  `useAdDelivery`, removendo a consulta direta duplicada ao Supabase. A Home
+  `starts_at`, `ends_at`). O `SponsoredWidget` consome `useAdDelivery`
+  diretamente; os adapters `SponsoredAdsRuntimeService`/`useSponsoredAds` foram
+  removidos por nao possuirem autoridade nem comportamento proprio. A Home
   prioriza campanha elegivel antes de destaques organicos e aceita `imageUrl`
   externo com link seguro.
 - Hardening complementar de anuncios em 2026-07-09:
