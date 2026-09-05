@@ -26,8 +26,5 @@ export { usePostCard } from "./posts/usePostCard";
 // Comment hooks
 export { useComments } from "./useComments";
 
-// Modal hooks
-export { useCommunityModals } from "./modals/useCommunityModals";
-
 // Page hooks
 export { useComunidadePage } from "@/core/community-feed/hooks/useComunidadePage";

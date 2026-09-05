@@ -7,7 +7,7 @@
  *   está numa rota `/comunidade/...` (usa `window.location.pathname`).
  * - Fora de uma rota de comunidade, cai no feed global (`LAUNCH_URLS.community`).
  * - O parâmetro canônico é `?post=<id>` (consumido por `useComunidadePage`
- *   e `useCommunityModals` para abrir o `PostDetailModal`).
+ *   para abrir o `PostDetailModal`).
  */
 
 import { LAUNCH_URLS } from "@/core/routing/config/territory";
