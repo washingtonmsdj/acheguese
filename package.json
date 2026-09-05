@@ -92,7 +92,7 @@
     "test:e2e:mobility-operational": "playwright test tests/e2e/mobility-operational.spec.ts --project=chromium --reporter=list",
     "test:e2e:mobile-core-layout": "playwright test tests/e2e/mobile-core-layout.spec.ts --project=chromium --reporter=list",
     "test:e2e:mobile-auth-dashboards": "playwright test tests/e2e/mobile-auth-dashboards.spec.ts --project=chromium --reporter=list",
-    "test:e2e:account-authenticated": "playwright test tests/e2e/account-authenticated.spec.ts --project=chromium --reporter=list && npm run test:e2e:business-lifecycle-authenticated",
+    "test:e2e:account-authenticated": "playwright test tests/e2e/account-authenticated.spec.ts --project=chromium --reporter=list && npm run test:e2e:business-lifecycle-authenticated && npm run test:e2e:education-lifecycle-authenticated",
     "test:e2e:mobile": "playwright test tests/e2e/mobile-core-layout.spec.ts tests/e2e/mobile-auth-dashboards.spec.ts --project=chromium --reporter=list",
     "test:e2e:operations": "playwright test tests/e2e/gastronomy-operational.spec.ts tests/e2e/mobility-operational.spec.ts tests/e2e/professional-operational.spec.ts tests/e2e/professional-leads-operational.spec.ts tests/e2e/central/central-validation.spec.ts --project=chromium --reporter=list",
     "validate:operations:phase": "npm run typecheck && npm run lint && npm run test:e2e:operations",
@@ -155,7 +155,8 @@
     "generate:vercel": "tsx tools/security/generate-vercel-config.ts",
     "lint:security": "eslint src api supabase/functions --config eslint.config.security.mjs --ext .ts,.tsx --no-inline-config",
     "lint:security:fix": "eslint src api supabase/functions --config eslint.config.security.mjs --ext .ts,.tsx --fix --no-inline-config",
-    "test:e2e:business-lifecycle-authenticated": "node tools/release/run-business-lifecycle-authenticated.mjs"
+    "test:e2e:business-lifecycle-authenticated": "node tools/release/run-business-lifecycle-authenticated.mjs",
+    "test:e2e:education-lifecycle-authenticated": "node tools/release/run-education-lifecycle-authenticated.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
