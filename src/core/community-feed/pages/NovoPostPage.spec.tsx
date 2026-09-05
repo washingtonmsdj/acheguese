@@ -7,7 +7,7 @@ import {
   LocationType,
   type Location,
 } from "@/core/location/types";
-import type { UseCommunityAccessResult } from "@/core/community/access";
+import type { UseCommunityAccessResult } from "@/core/community-experience/access";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import NovoPostPage from "./NovoPostPage";
 
@@ -32,9 +32,16 @@ vi.mock("@/core/location/hooks/useActiveTerritory", () => ({
   useActiveTerritory: () => ({ activeLocation: mocks.activeLocation }),
 }));
 
-vi.mock("@/core/community/access/useCommunityAccess", () => ({
-  useCommunityAccess: mocks.useCommunityAccess,
-}));
+vi.mock("@/core/community-experience/access", async () => {
+  const actual = await vi.importActual<
+    typeof import("@/core/community-experience/access")
+  >("@/core/community-experience/access");
+
+  return {
+    ...actual,
+    useCommunityAccess: mocks.useCommunityAccess,
+  };
+});
 
 vi.mock("@/core/routing/hooks", () => ({
   useAppUrls: () => ({
@@ -47,7 +54,7 @@ vi.mock("@/core/routing/hooks", () => ({
   }),
 }));
 
-vi.mock("@/core/community/components/composer/CreatePostModal", () => ({
+vi.mock("@/core/community-feed/components/CreatePostModal", () => ({
   CreatePostModal: ({
     canCreatePost,
     resolvedTerritory,

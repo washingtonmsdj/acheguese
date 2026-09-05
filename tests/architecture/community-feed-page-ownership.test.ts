@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -28,5 +28,18 @@ describe("G6 Community feed page ownership", () => {
     expect(lazyImports).toContain(
       'import("@/core/community-feed/pages/NovoPostPage")',
     );
+    expect(
+      existsSync(
+        resolve(
+          ROOT,
+          "src/core/community-feed/pages/NovoPostPage.spec.tsx",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      existsSync(
+        resolve(ROOT, "src/core/community/pages/NovoPostPage.spec.tsx"),
+      ),
+    ).toBe(false);
   });
 });
