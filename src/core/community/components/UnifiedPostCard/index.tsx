@@ -7,7 +7,7 @@ import {
   CardFooter,
   CardHeader,
 } from "@/shared/components/ui/card";
-import { usePostInteractions } from "../../hooks/posts/usePostInteractions";
+import { usePostInteractions } from "@/core/posts/hooks/usePostInteractions";
 import {
   POST_TYPE_CONFIG,
   type PostType,

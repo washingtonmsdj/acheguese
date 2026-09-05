@@ -13,7 +13,7 @@ import { PostBadge } from "@/core/community/components/PostBadge";
 import { PostContent } from "@/core/community/components/PostContent";
 import { PostTags } from "@/core/community/components/PostTags";
 import { PostMetrics } from "@/core/community/components/PostMetrics";
-import { usePostInteractions } from "@/core/community/hooks/posts/usePostInteractions";
+import { usePostInteractions } from "@/core/posts/hooks/usePostInteractions";
 import {
   getCardClasses,
   getCardBackground,

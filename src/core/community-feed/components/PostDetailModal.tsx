@@ -8,7 +8,7 @@ import {
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import type { Poll } from "@/shared/types/poll";
 
-import { usePostInteractions } from "@/core/community/hooks/posts/usePostInteractions";
+import { usePostInteractions } from "@/core/posts/hooks/usePostInteractions";
 import { PollCard } from "@/core/community-feed/components/PollCard";
 import { PostBadge, type PostType } from "@/core/community/components/PostBadge";
 import { PostContent } from "@/core/community/components/PostContent";

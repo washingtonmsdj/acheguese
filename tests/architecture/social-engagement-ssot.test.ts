@@ -102,10 +102,13 @@ describe("Social engagement ownership", () => {
   it("preserves and restores feed cache during optimistic mutations", () => {
     const actions = read("src/core/posts/hooks/usePostActions.ts");
     const localInteractions = read(
-      "src/core/community/hooks/posts/usePostInteractions.ts",
+      "src/core/posts/hooks/usePostInteractions.ts",
     );
 
     expect(actions).toContain("const previousFeeds = queryClient.getQueriesData");
+    expect(
+      existsSync(resolve(root, "src/core/community/hooks/posts/usePostInteractions.ts")),
+    ).toBe(false);
     expect(actions).toContain("context?.previousFeeds.forEach");
     expect(actions).toContain("queryClient.setQueryData(queryKey, data)");
     expect(localInteractions).toContain("const previousState = { ...state }");
