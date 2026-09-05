@@ -1762,8 +1762,7 @@ export function CreatePostModal({
           <AlertDialogHeader>
             <AlertDialogTitle>Descartar rascunho?</AlertDialogTitle>
             <AlertDialogDescription>
-              O conteúdo salvo será apagado deste dispositivo e dos outros
-              dispositivos sincronizados. Esta ação não pode ser desfeita.
+              O conteúdo salvo será apagado deste dispositivo. Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -43,10 +43,6 @@ function listSourceFiles(rootDir: string): string[] {
   return results;
 }
 
-function findFilesByName(rootDir: string, fileName: string): string[] {
-  return listSourceFiles(rootDir).filter((file) => path.basename(file) === fileName);
-}
-
 function grepFiles(pattern: RegExp, roots: string[]): string[] {
   const matches: string[] = [];
   for (const root of roots) {
@@ -153,16 +149,14 @@ describe('Regressão: Cleanup Pós-Sprint 2', () => {
     expect(content).not.toMatch(/street:\s*post\./);
   });
 
-  // ── usePostCard sem fallback legado ──────────────────────────────────────
+  // ── Facades de UI aposentados ────────────────────────────────────────────
 
-  it('usePostCard não usa city/neighborhood/street como fallback de localização', () => {
-    // Buscar o arquivo usePostCard em qualquer subpasta
-    const files = findFilesByName('src', 'usePostCard.ts');
-    expect(files.length).toBeGreaterThan(0);
-    const content = readSrc(files[0]);
-    expect(content).not.toMatch(/\|\|\s*city/);
-    expect(content).not.toMatch(/\|\|\s*neighborhood/);
-    expect(content).not.toMatch(/\|\|\s*street/);
+  it('não recria o hook órfão usePostCard em Community', () => {
+    expect(
+      fs.existsSync(
+        path.resolve('src/core/community/hooks/posts/usePostCard.ts'),
+      ),
+    ).toBe(false);
   });
 
   // ── createPost com location_id obrigatório ────────────────────────────────
@@ -172,11 +166,19 @@ describe('Regressão: Cleanup Pós-Sprint 2', () => {
     expect(content).toMatch(/location_id.*obrigatório|LOCATION_REQUIRED/);
   });
 
-  it('useCreatePost usa location_id do activeProfile', () => {
-    const files = findFilesByName('src', 'useCreatePost.ts');
-    expect(files.length).toBeGreaterThan(0);
-    const content = readSrc(files[0]);
-    expect(content).toMatch(/location_id.*activeProfile|activeProfile.*location/i);
+  it('não recria o hook legado useCreatePost com fallback de perfil', () => {
+    expect(
+      fs.existsSync(
+        path.resolve('src/core/community/hooks/composer/useCreatePost.ts'),
+      ),
+    ).toBe(false);
+
+    const composer = readSrc(
+      'src/core/community-feed/components/CreatePostModal.tsx',
+    );
+    expect(composer).toContain('from "@/core/posts/services"');
+    expect(composer).not.toContain('PostsFacade.mutations.createPost');
+    expect(composer).not.toContain('activeProfile.locationId');
   });
 
 });

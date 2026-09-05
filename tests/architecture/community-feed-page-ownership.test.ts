@@ -267,4 +267,20 @@ describe("G6 Community feed page ownership", () => {
     ).toBe(false);
   });
 
+
+  it("does not recreate retired Community post UI hooks", () => {
+    for (const retiredPath of [
+      "src/core/community/hooks/composer/useCreatePost.ts",
+      "src/core/community/hooks/posts/usePostCard.ts",
+    ]) {
+      expect(existsSync(resolve(ROOT, retiredPath))).toBe(false);
+    }
+
+    const composer = read(
+      "src/core/community-feed/components/CreatePostModal.tsx",
+    );
+    expect(composer).not.toContain("outros dispositivos sincronizados");
+    expect(composer).toContain("apagado deste dispositivo");
+  });
+
 });
