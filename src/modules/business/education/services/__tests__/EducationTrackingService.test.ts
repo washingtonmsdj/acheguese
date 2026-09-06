@@ -130,7 +130,7 @@ describe('EducationTrackingService', () => {
       const payload = mockInsert.mock.calls[0][0];
       expect(payload).toMatchObject({
         education_profile_id: '11111111-1111-4111-8111-111111111111',
-        business_id: '22222222-2222-4222-8222-222222222222',
+        business_data_id: '22222222-2222-4222-8222-222222222222',
         niche_key: 'regular_school',
         event_type: 'profile_view',
       });
