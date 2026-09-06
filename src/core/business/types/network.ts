@@ -21,7 +21,6 @@ export interface ConvertToNetworkPanelProps {
  */
 export interface BrandHubPanelProps {
   brandHubId: string;
-  profileId: string;
   toast: (options: { title: string; description?: string; variant?: 'default' | 'destructive' }) => void;
 }
 
@@ -41,7 +40,6 @@ export interface CreateBranchDialogProps {
   open: boolean;
   onClose: () => void;
   brandHubId: string;
-  profileId: string;
   toast: (options: { title: string; description?: string; variant?: 'default' | 'destructive' }) => void;
   onCreated: () => void;
 }
