@@ -19,7 +19,7 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-
 
 export interface TrackEventOptions {
   educationProfileId: string;
-  businessId?: string;
+  businessDataId?: string;
   nicheKey: EducationNicheKey;
   eventType: EducationAnalyticsEventType;
   programId?: string;
@@ -55,7 +55,7 @@ export const EducationTrackingService = {
         .from('education_analytics_events')
         .insert({
           education_profile_id: options.educationProfileId,
-          business_id: options.businessId ?? null,
+          business_data_id: options.businessDataId ?? null,
           niche_key: options.nicheKey,
           event_type: options.eventType,
           program_id: options.programId ?? null,
@@ -78,51 +78,51 @@ export const EducationTrackingService = {
   async trackProfileView(
     educationProfileId: string,
     nicheKey: EducationNicheKey,
-    businessId?: string,
+    businessDataId?: string,
   ): Promise<void> {
-    await this.trackEvent({ educationProfileId, businessId, nicheKey, eventType: 'profile_view' });
+    await this.trackEvent({ educationProfileId, businessDataId, nicheKey, eventType: 'profile_view' });
   },
 
   async trackProgramView(
     educationProfileId: string,
     nicheKey: EducationNicheKey,
     programId: string,
-    businessId?: string,
+    businessDataId?: string,
   ): Promise<void> {
-    await this.trackEvent({ educationProfileId, businessId, nicheKey, eventType: 'program_view', programId });
+    await this.trackEvent({ educationProfileId, businessDataId, nicheKey, eventType: 'program_view', programId });
   },
 
   async trackEventView(
     educationProfileId: string,
     nicheKey: EducationNicheKey,
     educationEventId: string,
-    businessId?: string,
+    businessDataId?: string,
   ): Promise<void> {
-    await this.trackEvent({ educationProfileId, businessId, nicheKey, eventType: 'event_view', educationEventId });
+    await this.trackEvent({ educationProfileId, businessDataId, nicheKey, eventType: 'event_view', educationEventId });
   },
 
   async trackWhatsAppClick(
     educationProfileId: string,
     nicheKey: EducationNicheKey,
-    businessId?: string,
+    businessDataId?: string,
   ): Promise<void> {
-    await this.trackEvent({ educationProfileId, businessId, nicheKey, eventType: 'whatsapp_click' });
+    await this.trackEvent({ educationProfileId, businessDataId, nicheKey, eventType: 'whatsapp_click' });
   },
 
   async trackEnrollmentCTAClick(
     educationProfileId: string,
     nicheKey: EducationNicheKey,
-    businessId?: string,
+    businessDataId?: string,
     metadata?: { ctaLabel?: string },
   ): Promise<void> {
-    await this.trackEvent({ educationProfileId, businessId, nicheKey, eventType: 'enrollment_cta_click', metadata });
+    await this.trackEvent({ educationProfileId, businessDataId, nicheKey, eventType: 'enrollment_cta_click', metadata });
   },
 
   async trackLeadSubmitted(
     educationProfileId: string,
     nicheKey: EducationNicheKey,
     leadId: string,
-    businessId?: string,
+    businessDataId?: string,
     metadata?: {
       hasGuardian?: boolean;
       hasStudent?: boolean;
@@ -130,16 +130,16 @@ export const EducationTrackingService = {
       desiredShift?: string;
     },
   ): Promise<void> {
-    await this.trackEvent({ educationProfileId, businessId, nicheKey, eventType: 'lead_submitted', leadId, metadata });
+    await this.trackEvent({ educationProfileId, businessDataId, nicheKey, eventType: 'lead_submitted', leadId, metadata });
   },
 
   async trackEventInterest(
     educationProfileId: string,
     nicheKey: EducationNicheKey,
     educationEventId: string,
-    businessId?: string,
+    businessDataId?: string,
     metadata?: { eventType?: string },
   ): Promise<void> {
-    await this.trackEvent({ educationProfileId, businessId, nicheKey, eventType: 'event_interest', educationEventId, metadata });
+    await this.trackEvent({ educationProfileId, businessDataId, nicheKey, eventType: 'event_interest', educationEventId, metadata });
   },
 };
