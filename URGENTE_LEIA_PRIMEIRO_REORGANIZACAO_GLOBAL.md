@@ -8,8 +8,8 @@
 
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
-**Status:** EM EXECUÇÃO — G6 / Empresas fechou identidade Profile ID vs business_data.id, Billing operacional brokerado para Gestor e mutação financeira owner-only; Educação preserva Profile ID internamente e traduz para Business Billing na fronteira; provas hosted same-SHA seguem bloqueadas por runner pre-step  
-**Checkpoint técnico atual:** `7669b7ae1125b9eac93363ab1c3beab103889e17`  
+**Status:** EM EXECUÇÃO — G6 / Empresas-Educação fechou identidade Profile ID vs business_data.id, Billing delegado e claim institucional individual com transferência canônica; cobertura pública completa de Salvador e autoridade herdada de Prefeitura/Secretaria seguem abertas; provas hosted same-SHA continuam bloqueadas por runner pre-step  
+**Checkpoint técnico atual:** `4a7ad4d95cac1692c477540dfdadeb4beff74b5d`  
 **Checkpoint de transição G5 → G6:** `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
@@ -480,6 +480,27 @@ Um domínio/serviço transversal só está SSOT quando:
 
 Atualizar esta seção somente com marcos relevantes. Não transformar este arquivo em log de cada commit.
 
+### 2026-09-06 — G6 Educação / claim institucional individual e ownership canônico
+
+- [x] `BusinessClaimService` deixou de confiar em `userId` de prop/caller; o requerente é derivado da sessão canônica por `SessionService.getCurrentUser()`.
+- [x] escola pública claimable ganhou CTA real **Solicitar administração institucional**, exigindo referência pública verificável por URL e avisando para não enviar documentos pessoais/dados de alunos.
+- [x] o bucket dormente `verification-documents` **não foi reativado**. Evidência v1 é uma referência pública estruturada `official_source_url`, destinada a revisão humana; não concede autoridade automaticamente.
+- [x] fila Admin identifica escola pública, exibe a evidência e exige justificativa de revisão >=10 caracteres antes da aprovação; `admin-business-rpc` continua a única superfície client-side de resolução.
+- [x] migration `20260906123911_harden_public_education_claim_evidence_g6.sql` foi aplicada e depois versionada exatamente como ocorreu. O probe detectou shadowing SQL na primeira policy; o histórico foi preservado e **não** reescrito retroativamente.
+- [x] migration `20260906124554_fix_business_claim_canonical_transfer_g6.sql` eliminou a segunda implementação de ownership em Claims. `private.profile_transfer_ownership_core` virou a única mutação estrutural: transferência normal usa `keep_previous_owner_as_manager=true`; claim de diretório curado usa `false`.
+- [x] a condição histórica `owner/admin ativo => already_managed` foi corrigida: depois do owner membership espelho ela tornava todo cadastro claimable impossível de reivindicar. O owner estrutural placeholder não bloqueia o claim; Gestor adicional ativo continua bloqueando.
+- [x] migration `20260906124739_route_business_claim_requestability_through_helper_g6.sql` retirou cross-table RLS frágil da policy. `private.business_claim_is_requestable(business_data.id, documents)` é bounded/SECURITY DEFINER e retorna somente boolean; escola pública exige `business_claim_has_official_evidence`.
+- [x] ACL remoto: `profile_transfer_ownership_core`, facade `profile_transfer_ownership` e `admin_resolve_business_claim` têm `anon=false`, `authenticated=false`, `service_role=true`. Helpers booleanos de policy são authenticated apenas como predicados bounded.
+- [x] probe runtime em `BEGIN/ROLLBACK`: sem evidência -> RLS blocked; com URL oficial -> created; review curto -> blocked; aprovação completa -> **canonical_transfer_ok** com novo `profiles.user_id`, novo owner ativo, custodiante técnico anterior `admin/inactive`, custody `claimed` e claim `aprovada`.
+- [x] runtime administrativo do probe foi corrigido para espelhar o Edge real: `service_role` sem `sub` e ator explícito em `p_actor_user_id`; o guard `profile_structural_identity_is_immutable` permaneceu intacto.
+- [x] transferência normal também provada com rollback: novo owner `owner/active`, proprietário anterior `admin/active`.
+- [x] cleanup: 0 claims de prova persistidos; escola pública usada no probe voltou ao owner placeholder original `owner/active`.
+- [x] ratchet `tests/security/business-claim-authority-g6.test.ts` atualizado para ler as migrations atuais, exigir ownership core único, evidence/requestability bounded e UI/Admin institucional.
+- [x] Security Advisor pós-corte não adicionou finding específico de Claims/ownership. Débitos globais históricos permanecem G5/G7 e não foram mascarados.
+- [ ] **Autoridade de mantenedora/rede/Secretaria permanece pendente**: o fechamento acima é de **uma escola por claim revisado**. Prefeitura/Secretaria/grupo escolar ainda precisa de Organization Scope explícito, herdado e revogável para administrar múltiplas unidades sem memberships repetidas.
+- [ ] cobertura pública municipal completa de Salvador continua pendente como ingestão/dados; o território canônico já suporta cidade/bairro, mas as 15 escolas atuais continuam piloto e não equivalem ao universo municipal.
+- [ ] hosted lint/typecheck/Vitest/E2E/build/deploy/smoke same-SHA continuam provas futuras separadas enquanto o runner morre antes dos steps.
+
 ### 2026-09-06 — G6 Empresas / identidade de extensoes + Billing delegado
 
 - [x] fronteira de identidade explicitada: `profiles.id` continua sendo rota/ownership/autoridade; `business_data.id` passa a ser a unica identidade valida para extensoes Business como Billing, Gastronomia, coverage, menu, horarios, delivery areas e source operacional de pedidos;
@@ -767,7 +788,7 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 - [x] Educação ganhou CTA **Denunciar este perfil** com fraude, impersonação, informação enganosa, conteúdo prejudicial, privacidade/segurança de aluno ou menor, duplicidade, fechado/local incorreto, violação de política e outro. Casos entram na fila federada de moderação no domínio `business_profile`.
 - [x] tipos Supabase regenerados após ACL/moderação; ratchets `profile-delegated-management-g6.test.ts` e `business-profile-report-authority-g6.test.ts` bloqueiam regressão de owner/manager e report authority.
 - [x] **Sugerir correção factual**: fluxo separado de denúncia implementado com `business_profile_corrections`, CTA público, fila Admin `Qualidade de Dados`, dedupe/rate limit e autoaplicação somente para mapeamentos determinísticos. Aplicações seguras alteram o SSOT e gravam provenance `community_correction/verified` na mesma transação; campos estruturados continuam em revisão manual. Migrations `20260906091527`, `20260906095634` e `20260906104918`.
-- [ ] **Mantenedora/rede/Secretaria**: a fundação estrutural de Business Network agora é transacional e owner-only (`brand_hub`/`branch` via `business-network-rpc`), sem reutilizar Profile nem inferir ACL por `parent_business_id`; ainda falta o contrato explícito de autoridade institucional herdada/revogável para Prefeitura/Secretaria/grupo escolar administrar unidades preexistentes sem repetir membership escola por escola.
+- [ ] **Mantenedora/rede/Secretaria**: claim institucional **individual** de escola pública já está fechado e transfere ownership real após evidência + revisão; ainda falta o contrato explícito de autoridade institucional herdada/revogável para Prefeitura/Secretaria/grupo escolar administrar múltiplas unidades preexistentes sem repetir membership escola por escola. A fundação de Business Network continua estrutural e não deve ser usada como ACL por `parent_business_id`.
 - [ ] **Permissões granulares** somente quando houver casos reais: evoluir Membro para capability sets como Atendimento/Matrículas, Conteúdo/Programas, Avaliações, Analytics somente leitura e Eventos. Não multiplicar roles rígidas antes de existir enforcement por capability.
 - [ ] **Convite pendente por email**: hoje o convite por email exige conta Achegue-se já existente. Evoluir para convite com token/expiração/aceite e trilha de auditoria, sem criar usuário fantasma.
 - [ ] **Fila detalhada de denúncia de Business**: a triagem federada já recebe `business_profile`, mas falta a tela de caso para visualizar evidência permitida e executar `moderate_business_profile_report` com resolução/nota administrativa.
