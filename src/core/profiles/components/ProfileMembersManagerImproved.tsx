@@ -30,7 +30,7 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
   const { toast } = useToast();
   const { user } = useAuth();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
-  const { members, loading, inviteMemberByEmail, removeMember, updateRole } = useProfileMembers(profileId);
+  const { members, loading, error, inviteMemberByEmail, removeMember, updateRole, refetch } = useProfileMembers(profileId);
   const canManageAccess = Boolean(
     user && members.some((member) => member.user_id === user.id && member.role === 'owner'),
   );
@@ -145,6 +145,32 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
 
   if (loading) {
     return <div className="text-center py-4">Carregando membros...</div>;
+  }
+
+  if (error) {
+    return (
+      <div
+        role="alert"
+        className="space-y-3 rounded-lg border border-destructive/40 bg-destructive/5 p-4"
+      >
+        <div>
+          <p className="font-medium text-destructive">
+            Não foi possível carregar pessoas e acessos
+          </p>
+          <p className="text-sm text-muted-foreground">
+            A lista não será tratada como vazia enquanto a leitura estiver indisponível.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => void refetch()}
+        >
+          Tentar novamente
+        </Button>
+      </div>
+    );
   }
 
   return (
