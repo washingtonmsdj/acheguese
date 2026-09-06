@@ -11,12 +11,12 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Clock, CheckCircle, XCircle, Package, Truck, UtensilsCrossed } from 'lucide-react';
 
 interface OperationalStatusCardProps {
-  businessId: string;
+  businessDataId: string;
 }
 
-export function OperationalStatusCard({ businessId }: OperationalStatusCardProps) {
-  const { isOpen, nextOpening, isLoading: statusLoading } = useBusinessStatus(businessId);
-  const { config, isLoading: configLoading } = useOperationConfig(businessId);
+export function OperationalStatusCard({ businessDataId }: OperationalStatusCardProps) {
+  const { isOpen, nextOpening, isLoading: statusLoading } = useBusinessStatus(businessDataId);
+  const { config, isLoading: configLoading } = useOperationConfig(businessDataId);
 
   if (statusLoading || configLoading) {
     return (
