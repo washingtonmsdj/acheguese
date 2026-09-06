@@ -1208,8 +1208,15 @@ export type Database = {
             foreignKeyName: "business_claims_business_id_fkey"
             columns: ["business_id"]
             isOneToOne: false
-            referencedRelation: "businesses"
+            referencedRelation: "business_data"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_claims_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
           },
         ]
       }
@@ -6488,6 +6495,7 @@ export type Database = {
           class_name: string | null
           created_at: string
           current_enrollment: number | null
+          curriculum_topics: string[] | null
           description: string | null
           display_order: number
           education_level: string | null
@@ -6509,6 +6517,7 @@ export type Database = {
           class_name?: string | null
           created_at?: string
           current_enrollment?: number | null
+          curriculum_topics?: string[] | null
           description?: string | null
           display_order?: number
           education_level?: string | null
@@ -6530,6 +6539,7 @@ export type Database = {
           class_name?: string | null
           created_at?: string
           current_enrollment?: number | null
+          curriculum_topics?: string[] | null
           description?: string | null
           display_order?: number
           education_level?: string | null
@@ -11903,6 +11913,7 @@ export type Database = {
           facebook: string | null
           id: string
           instagram: string | null
+          is_claimable: boolean
           is_premium: boolean
           is_verified: boolean
           latitude: number | null
@@ -11930,6 +11941,7 @@ export type Database = {
           facebook?: string | null
           id: string
           instagram?: string | null
+          is_claimable?: boolean
           is_premium?: boolean
           is_verified?: boolean
           latitude?: number | null
@@ -11957,6 +11969,7 @@ export type Database = {
           facebook?: string | null
           id?: string
           instagram?: string | null
+          is_claimable?: boolean
           is_premium?: boolean
           is_verified?: boolean
           latitude?: number | null
@@ -17398,6 +17411,15 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_resolve_business_claim: {
+        Args: {
+          p_actor_user_id: string
+          p_claim_id: string
+          p_decision: string
+          p_review_notes?: string
+        }
+        Returns: Json
+      }
       admin_update_ad_campaign_state: {
         Args: { p_campaign_id: string; p_payload?: Json }
         Returns: Json
@@ -19478,6 +19500,14 @@ export type Database = {
         Returns: undefined
       }
       mark_current_user_notifications_as_read: { Args: never; Returns: number }
+      mark_event_review_helpful: {
+        Args: {
+          p_actor_user_id: string
+          p_profile_id: string
+          p_review_id: string
+        }
+        Returns: Json
+      }
       mark_media_assets_deleted: {
         Args: { p_asset_ids: string[] }
         Returns: number
