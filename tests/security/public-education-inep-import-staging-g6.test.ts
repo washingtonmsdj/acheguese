@@ -27,6 +27,9 @@ describe("G6 public Education INEP import staging", () => {
   const rawRecordHashBinding = read(
     "supabase/migrations/20260906174652_bind_inep_raw_record_sha256_g6.sql",
   );
+  const completenessBinding = read(
+    "supabase/migrations/20260906175025_require_complete_inep_staging_batch_g6.sql",
+  );
 
   it("promotes non-null INEP codes to the canonical natural key", () => {
     expect(migration).toContain(
@@ -149,6 +152,23 @@ describe("G6 public Education INEP import staging", () => {
     ]) {
       expect(sourceBinding).toContain(errorCode);
     }
+  });
+
+  it("does not validate a truncated staging batch", () => {
+    expect(completenessBinding).toContain(
+      "education_public_import_batches_target_row_count_chk",
+    );
+    expect(completenessBinding).toContain(
+      "manifest#>>'{counts,target_municipality_rows}'",
+    );
+    expect(completenessBinding).toContain("v_expected_rows integer");
+    expect(completenessBinding).toContain(
+      "education_import_batch_row_count_mismatch",
+    );
+    expect(completenessBinding).toContain("v_total <> v_expected_rows");
+    expect(completenessBinding).not.toContain(
+      "INSERT INTO public.education_profiles",
+    );
   });
 
   it("recomputes canonical raw-record SHA-256 inside Postgres", () => {
