@@ -53,7 +53,8 @@ export interface QrCodeWidgetProps {
   entityId: string;
   canonicalUrl: string;
   ownerProfileId: string;
-  businessId?: string; // Para buscar entitlements
+  /** business_data.id usado somente para resolver Billing/entitlements. */
+  businessDataId?: string;
   shortUrl?: string;
   styleVariant?: QrStyleVariant;
   destinationVariant?: QrDestinationVariant;
@@ -71,7 +72,7 @@ export function QrCodeWidget({
   entityId,
   canonicalUrl,
   ownerProfileId,
-  businessId,
+  businessDataId,
   shortUrl,
   styleVariant = QrStyleVariant.BASIC,
   destinationVariant = QrDestinationVariant.CANONICAL,
@@ -83,10 +84,10 @@ export function QrCodeWidget({
   const [qrImageUrl, setQrImageUrl] = useState<string | null>(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   
-  // Buscar entitlements sempre (hook não pode ser condicional)
-  // Se businessId não fornecido, passa string vazia e ignora resultado
-  const subscriptionResult = useBusinessSubscription(businessId || '');
-  const { entitlements, planTier, isLoading: isLoadingSubscription } = businessId 
+  // Buscar entitlements sempre (hook não pode ser condicional).
+  // Se businessDataId não for fornecido, o resultado e ignorado.
+  const subscriptionResult = useBusinessSubscription(businessDataId || '');
+  const { entitlements, planTier, isLoading: isLoadingSubscription } = businessDataId
     ? subscriptionResult
     : { entitlements: null, planTier: PlanTier.FREE, isLoading: false };
   
