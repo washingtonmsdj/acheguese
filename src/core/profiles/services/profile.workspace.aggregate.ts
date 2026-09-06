@@ -4,6 +4,7 @@ import { getFavoriteStats } from "@/core/favorites/services/favorites.queries";
 import { getServicesByProfile } from "@/core/professional/services/professional.queries";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { getEligibleVerticals } from "@/core/verticals/config";
+import { EntitlementResolver } from "@/core/billing/services/EntitlementResolver";
 import type {
   ProfileContext,
   ProfilePrivateWorkspace,
@@ -190,26 +191,32 @@ export async function getPrivateWorkspaceAggregate(
     const businessModules = await Promise.all(
       businesses.map(async (business) => {
         const [
-          { SubscriptionService, EntitlementsService, PlanTier },
           { QrCodeService },
           { QrEntityType },
         ] = await Promise.all([
-          import("@/core/billing"),
           import("@/core/qr"),
           import("@/core/qr/types"),
         ]);
 
-        const [subscriptionResult, gastronomyResult, qrCodeResult] = await Promise.all([
-          SubscriptionService.getByBusinessId(business.business_data_id),
-          getGastronomyProfileByBusinessId(business.business_data_id),
-          QrCodeService.getByEntity(QrEntityType.BUSINESS, business.id),
-        ]);
+        const [resolvedEntitlements, gastronomyResult, qrCodeResult] =
+          await Promise.all([
+            EntitlementResolver.resolve({
+              user_id: deps.userId,
+              business_id: business.business_data_id,
+              subscription_scope: "business",
+            }),
+            getGastronomyProfileByBusinessId(business.business_data_id),
+            QrCodeService.getByEntity(QrEntityType.BUSINESS, business.id),
+          ]);
 
-        const subscription = subscriptionResult.data;
+        const subscription = {
+          status: resolvedEntitlements.subscriptionStatus,
+          current_period_end: resolvedEntitlements.currentPeriodEnd,
+        };
         const gastronomyProfile = gastronomyResult;
         const qrCode = qrCodeResult.data;
-        const planTier = subscription?.plan_tier ?? PlanTier.FREE;
-        const entitlements = EntitlementsService.getAll(planTier);
+        const planTier = resolvedEntitlements.planTier;
+        const entitlements = resolvedEntitlements;
         const gastronomyEligible = Boolean(
           business.category && getEligibleVerticals(business.category as never).length > 0,
         );
