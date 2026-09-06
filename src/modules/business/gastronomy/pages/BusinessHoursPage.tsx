@@ -10,7 +10,7 @@
  */
 
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useBusinessDashboardContext } from '@/modules/business/dashboard/businessDashboardContext';
 import { BusinessHoursForm } from '../components/hours/BusinessHoursForm';
 import { ExceptionsManager } from '../components/hours/ExceptionsManager';
 import { OperationConfigForm } from '../components/hours/OperationConfigForm';
@@ -19,10 +19,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/components/ui
 import { Clock } from 'lucide-react';
 
 export default function BusinessHoursPage() {
-  const { businessId } = useParams<{ businessId: string }>();
+  const { businessDataId } = useBusinessDashboardContext();
   const [activeTab, setActiveTab] = useState('hours');
 
-  if (!businessId) {
+  if (!businessDataId) {
     return (
       <div className="container max-w-4xl py-8">
         <p className="text-center text-destructive">ID do negócio não encontrado</p>
@@ -43,7 +43,7 @@ export default function BusinessHoursPage() {
             Configure horários de funcionamento e modos de operação
           </p>
         </div>
-        <BusinessStatusBadge businessId={businessId} />
+        <BusinessStatusBadge businessId={businessDataId} />
       </div>
 
       {/* Tabs */}
@@ -55,15 +55,15 @@ export default function BusinessHoursPage() {
         </TabsList>
 
         <TabsContent value="hours" className="mt-6">
-          <BusinessHoursForm businessId={businessId} />
+          <BusinessHoursForm businessId={businessDataId} />
         </TabsContent>
 
         <TabsContent value="exceptions" className="mt-6">
-          <ExceptionsManager businessId={businessId} />
+          <ExceptionsManager businessId={businessDataId} />
         </TabsContent>
 
         <TabsContent value="config" className="mt-6">
-          <OperationConfigForm businessId={businessId} />
+          <OperationConfigForm businessId={businessDataId} />
         </TabsContent>
       </Tabs>
     </div>
