@@ -5,6 +5,7 @@ import {
 } from '@/core/billing/services/BillingPlanService';
 import { getBaselineEntitlements } from '@/core/billing/entitlementBaselines';
 import { PlanTier } from '@/core/billing/types';
+import { BillingEntitlementsRpcService } from '@/core/billing/services/BillingEntitlementsRpcService';
 import { logger } from '@/shared/utils/logger';
 
 type QueryError = { message?: string | null };
@@ -233,7 +234,18 @@ export class EntitlementResolver {
     context: EntitlementContext,
   ): Promise<SubscriptionData | null> {
     try {
-      let query = entitlementDb
+      if (context.subscription_scope === 'business') {
+        if (!context.business_id) return null;
+
+        const snapshot =
+          await BillingEntitlementsRpcService.getBusinessSubscriptionSnapshot(
+            context.business_id,
+          );
+
+        return snapshot;
+      }
+
+      const { data, error } = await entitlementDb
         .from<SubscriptionData>('user_subscriptions')
         .select(`
           id,
@@ -242,19 +254,9 @@ export class EntitlementResolver {
           subscription_scope,
           contract_snapshot
         `)
-        .in('status_v2', ['active', 'trialing']);
-
-      if (context.subscription_scope === 'business' && context.business_id) {
-        query = query
-          .eq('subscription_scope', 'business')
-          .eq('business_id', context.business_id);
-      } else {
-        query = query
-          .eq('subscription_scope', 'user')
-          .eq('user_id', context.user_id);
-      }
-
-      const { data, error } = await query
+        .in('status_v2', ['active', 'trialing'])
+        .eq('subscription_scope', 'user')
+        .eq('user_id', context.user_id)
         .order('updated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
