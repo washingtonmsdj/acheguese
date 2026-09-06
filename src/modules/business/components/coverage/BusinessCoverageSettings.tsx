@@ -16,19 +16,19 @@ import {
 import { businessCoverageService } from '../../services';
 
 interface BusinessCoverageSettingsProps {
-  businessId: string;
+  businessDataId: string;
   locationId: string | null;
   className?: string;
 }
 
 export function BusinessCoverageSettings({
-  businessId,
+  businessDataId,
   locationId,
   className,
 }: BusinessCoverageSettingsProps) {
   const queryClient = useQueryClient();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
-  const { coverageAreas, isLoading, isError } = useBusinessCoverage(businessId);
+  const { coverageAreas, isLoading, isError } = useBusinessCoverage(businessDataId);
   const [radiusKm, setRadiusKm] = useState(10);
 
   const currentRadius = useMemo(
@@ -63,7 +63,7 @@ export function BusinessCoverageSettings({
           is_primary: false,
         }));
 
-      return businessCoverageService.setBusinessCoverage(businessId, [
+      return businessCoverageService.setBusinessCoverage(businessDataId, [
         ...retained,
         {
           coverage_type: CoverageType.RADIUS,
@@ -82,7 +82,7 @@ export function BusinessCoverageSettings({
 
   const removeMutation = useMutation({
     mutationFn: (coverageId: string) =>
-      businessCoverageService.removeBusinessCoverage(businessId, coverageId),
+      businessCoverageService.removeBusinessCoverage(businessDataId, coverageId),
     onSuccess: async () => {
       await refreshCoverage();
       toast.success('Area de cobertura removida.');
