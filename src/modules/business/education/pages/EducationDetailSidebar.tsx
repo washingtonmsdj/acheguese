@@ -1,12 +1,17 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Building2, Calendar, Check, ChevronLeft, FileText, MessageCircle, Shield } from 'lucide-react';
+import { Building2, Calendar, Check, ChevronLeft, FileText, Flag, MessageCircle, Shield } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { EducationLeadForm, type LeadFormData } from '../components/EducationLeadForm';
 import type { EducationPublicProfile } from '@/core/education';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { useToast } from '@/shared/hooks/use-toast';
 import { BusinessClaimService } from '@/core/business/services/BusinessClaimService';
+import {
+  BusinessProfileReportService,
+  type BusinessProfileReportReason,
+} from '@/core/business/services/BusinessProfileReportService';
+import { ReportReasonDialog } from '@/core/moderation';
 
 type EducationDetailSidebarProps = {
   handleLeadSubmit: (formData: LeadFormData) => Promise<void>;
@@ -31,6 +36,7 @@ export function EducationDetailSidebar({
   const location = useLocation();
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimSubmitted, setClaimSubmitted] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const isPublicInstitution = profile.school_type === 'public';
   const isUnclaimedDirectoryProfile = profile.is_claimable;
@@ -68,6 +74,43 @@ export function EducationDetailSidebar({
       });
     } finally {
       setIsClaiming(false);
+    }
+  };
+
+  const openReport = () => {
+    if (!user) {
+      navigate('/login', { state: { redirectTo: location.pathname } });
+      return;
+    }
+    setReportOpen(true);
+  };
+
+  const submitReport = async (
+    reason: BusinessProfileReportReason,
+    description?: string,
+  ) => {
+    if (!profile.business_data_id) {
+      throw new Error('Perfil empresarial nao localizado.');
+    }
+
+    try {
+      await BusinessProfileReportService.report({
+        businessId: profile.business_data_id,
+        reason,
+        description,
+      });
+      toast({
+        title: 'Denuncia enviada',
+        description: 'A equipe de moderacao recebera o caso para triagem.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Nao foi possivel enviar a denuncia',
+        description:
+          error instanceof Error ? error.message : 'Tente novamente mais tarde.',
+        variant: 'destructive',
+      });
+      throw error;
     }
   };
 
@@ -215,6 +258,18 @@ export function EducationDetailSidebar({
           </ul>
         </div>
 
+        {profile.business_data_id ? (
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full justify-center gap-2 text-muted-foreground"
+            onClick={openReport}
+          >
+            <Flag className="h-4 w-4" />
+            Denunciar este perfil
+          </Button>
+        ) : null}
+
         <Link
           to={showcaseHref}
           className="block rounded-3xl border border-dashed border-border bg-card/40 p-4 text-center text-sm text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
@@ -222,6 +277,25 @@ export function EducationDetailSidebar({
           <ChevronLeft className="mr-1 inline h-4 w-4" /> Voltar para vitrine
         </Link>
       </div>
+
+      <ReportReasonDialog<BusinessProfileReportReason>
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        contentLabel="este perfil"
+        reasonOptions={[
+          { id: 'fraud', label: 'Fraude ou instituicao inexistente' },
+          { id: 'impersonation', label: 'Finge ser outra instituicao' },
+          { id: 'misleading', label: 'Informacao enganosa ou potencialmente fraudulenta' },
+          { id: 'harmful', label: 'Conteudo ofensivo ou prejudicial' },
+          { id: 'privacy_or_safety', label: 'Privacidade ou seguranca de aluno/menor' },
+          { id: 'duplicate', label: 'Perfil duplicado' },
+          { id: 'closed_or_not_here', label: 'Fechou ou nao funciona neste local' },
+          { id: 'policy_violation', label: 'Outra violacao de politica' },
+          { id: 'other', label: 'Outro motivo' },
+        ]}
+        onSubmit={submitReport}
+        maxDetailsLength={1000}
+      />
     </aside>
   );
 }
