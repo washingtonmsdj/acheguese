@@ -51,9 +51,11 @@ export function StickyTabs({
 export function ProgramCard({
   program,
   onClick,
+  showPrice = true,
 }: {
   program: EducationProgram;
   onClick?: () => void;
+  showPrice?: boolean;
 }) {
   const hasKnownSlots = program.available_slots !== null;
   const isSchoolProgram = Boolean(program.grade || program.class_name);
@@ -154,7 +156,7 @@ export function ProgramCard({
       </dl>
 
       <div className="mt-auto flex items-end justify-between pt-4">
-        {program.price_from ? (
+        {showPrice && program.price_from ? (
           <div>
             <div className="text-[11px] text-muted-foreground">A partir de</div>
             <div className="text-base font-bold text-foreground">
