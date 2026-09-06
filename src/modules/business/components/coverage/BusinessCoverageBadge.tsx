@@ -4,18 +4,18 @@ import { cn } from '@/shared/utils/cn';
 import { useBusinessCoverage } from '../../hooks/useBusinessCoverage';
 
 interface BusinessCoverageBadgeProps {
-  businessId: string;
+  businessDataId: string;
   showOnlyIfCovered?: boolean;
   className?: string;
 }
 
 export function BusinessCoverageBadge({
-  businessId,
+  businessDataId,
   showOnlyIfCovered = false,
   className,
 }: BusinessCoverageBadgeProps) {
   const { coverageDetails, hasCoverage, isLoading, isError } =
-    useBusinessCoverage(businessId);
+    useBusinessCoverage(businessDataId);
 
   if (isLoading) {
     return (
