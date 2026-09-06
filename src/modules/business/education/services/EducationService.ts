@@ -58,7 +58,7 @@ export interface EducationSetupPayload {
   shifts?: SchoolShift[];
   ageRangeMin?: number;
   ageRangeMax?: number;
-  enrollmentOpen?: boolean;
+  enrollmentOpen?: boolean | null;
   schoolBasicResources?: SchoolBasicResourceKey[];
   schoolAccessibilityFeatures?: SchoolAccessibilityFeatureKey[];
   schoolEquipmentFeatures?: SchoolEquipmentFeatureKey[];
@@ -113,6 +113,10 @@ function validatePhone(phone: string): boolean {
   return /^(\+?\d{10,15}|\(\d{2}\)\s?\d{4,5}-?\d{4})$/.test(phone);
 }
 
+function nullIfEmpty<T>(values: T[] | undefined): T[] | null {
+  return values && values.length > 0 ? values : null;
+}
+
 async function createDraftEducationProfile(
   businessId: string,
 ): Promise<{ data: EducationProfile | null; error: Error | null }> {
@@ -134,7 +138,7 @@ async function createDraftEducationProfile(
     shifts: null,
     age_range_min: null,
     age_range_max: null,
-    enrollment_open: false,
+    enrollment_open: null,
     school_basic_resources: null,
     school_accessibility_features: null,
     school_equipment_features: null,
@@ -197,15 +201,15 @@ export const EducationService = {
       school_inep_code: payload.schoolInepCode ?? null,
       school_source_url: payload.schoolSourceUrl ?? null,
       school_source_updated_at: payload.schoolSourceUrl ? new Date().toISOString() : null,
-      education_levels: payload.educationLevels ?? null,
-      shifts: payload.shifts ?? null,
+      education_levels: nullIfEmpty(payload.educationLevels),
+      shifts: nullIfEmpty(payload.shifts),
       age_range_min: payload.ageRangeMin ?? null,
       age_range_max: payload.ageRangeMax ?? null,
-      enrollment_open: payload.enrollmentOpen ?? false,
-      school_basic_resources: payload.schoolBasicResources ?? null,
-      school_accessibility_features: payload.schoolAccessibilityFeatures ?? null,
-      school_equipment_features: payload.schoolEquipmentFeatures ?? null,
-      school_facility_features: payload.schoolFacilityFeatures ?? null,
+      enrollment_open: payload.enrollmentOpen ?? null,
+      school_basic_resources: nullIfEmpty(payload.schoolBasicResources),
+      school_accessibility_features: nullIfEmpty(payload.schoolAccessibilityFeatures),
+      school_equipment_features: nullIfEmpty(payload.schoolEquipmentFeatures),
+      school_facility_features: nullIfEmpty(payload.schoolFacilityFeatures),
       support_level: 'basic_enabled',
     });
 
