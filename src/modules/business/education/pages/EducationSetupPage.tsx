@@ -81,7 +81,7 @@ export function EducationSetupPage() {
       shifts: profile.shifts ?? [],
       ageRangeMin: profile.age_range_min?.toString() ?? '',
       ageRangeMax: profile.age_range_max?.toString() ?? '',
-      enrollmentOpen: profile.enrollment_open ?? false,
+      enrollmentOpen: profile.enrollment_open ?? null,
       schoolBasicResources: profile.school_basic_resources ?? [],
       schoolAccessibilityFeatures: profile.school_accessibility_features ?? [],
       schoolEquipmentFeatures: profile.school_equipment_features ?? [],
