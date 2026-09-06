@@ -211,6 +211,20 @@ Destino gradual do atual `scripts/` por responsabilidade. A migração deve pres
 
 ---
 
+## 5A. Política de preservação funcional e dados do MVP
+
+Esta política é **obrigatória** durante G5/G6/G7 e prevalece sobre cleanup por conveniência:
+
+1. **Funcionalidade de produto não é removida só porque está quebrada ou incompleta.** Like, comentários, posts, eventos, mensageria, reviews, mapas, busca, favoritos, check-in e demais capacidades previstas no produto devem ter a causa raiz corrigida, mantendo um único owner/SSOT. Remoção só é aceitável quando o item é legado, duplicação, facade sem comportamento, mock/fixture indevida ou superfície comprovadamente fora do produto.
+2. **Não mascarar defeito como cleanup.** Se existe UI/contrato legítimo e a persistência/RPC/RLS está ausente ou divergente, investigar e corrigir source ↔ banco ↔ autoridade ↔ UI. Não apagar o recurso para fazer teste/build passar.
+3. **Dados fictícios pessoais/comerciais podem ser limpos com provenance.** Usuários de teste, perfis fictícios, empresas/lojas fictícias, anúncios, posts, pedidos, eventos artificiais e fixtures persistidas podem ser removidos quando comprovadamente não reais e sem dependência necessária. Preservar a conta/perfil administrativo real do projeto.
+4. **Dados públicos reais não devem ser apagados por estarem desatualizados.** Bairros, cidades, escolas, colégios, hospitais, unidades públicas, órgãos e demais entidades de interesse público devem ser corrigidos/atualizados a partir de fonte oficial ou claramente confiável, com provenance quando aplicável. Se a veracidade não puder ser confirmada, marcar para revisão/fail-closed em vez de inventar informação.
+5. **Eventos e conteúdo temporal fictício não devem poluir o MVP.** Fixtures vencidas podem ser limpas; a funcionalidade de Events deve continuar operacional e impedir que registros vencidos apareçam como futuros/ativos.
+6. **Nenhuma limpeza de dados por nome/heurística apenas.** Antes de DELETE/DROP: identificar owner, callers, FKs, uso real, origem/provenance e se o registro é público-real ou fictício. Preferir RESTRICT para remoções estruturais e validar o remoto após a mudança.
+7. **Perfeição do módulo = comportamento real, não volume de features.** Não adicionar novas funcionalidades enquanto houver falha conhecida no contrato atual; fechar arquitetura, dados, segurança, estados de UI, responsividade e fluxos existentes primeiro.
+
+---
+
 ## 6. Fases de execução
 
 ## G0 — Repository Census
