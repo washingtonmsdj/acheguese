@@ -352,6 +352,36 @@ async function requireAccessibleProfile(
   }
 }
 
+async function canManageProfile(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+  profileId: string,
+): Promise<boolean> {
+  const { data, error } = await supabaseAdmin.rpc(
+    "broker_user_can_manage_profile",
+    {
+      p_user_id: userId,
+      p_profile_id: profileId,
+    },
+  );
+
+  if (error) throw error;
+  return data === true;
+}
+
+async function requireManagedMerchantProfile(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  profileId: string,
+): Promise<void> {
+  if (auth.isProjectAdmin) return;
+  if (!await canManageProfile(supabaseAdmin, auth.userId, profileId)) {
+    throw new RequestAuthorizationError(
+      "Merchant profile requires owner or manager access",
+    );
+  }
+}
+
 async function getOrder(
   supabaseAdmin: SupabaseClient,
   orderId: string,
@@ -380,6 +410,7 @@ async function requireOrderActor(
     return "customer";
   }
   if (permissions.allowMerchant && order.merchant_profile_id === actorProfileId) {
+    await requireManagedMerchantProfile(supabaseAdmin, auth, actorProfileId);
     return "merchant";
   }
   if (permissions.allowCourier && order.courier_profile_id === actorProfileId) {
@@ -399,11 +430,16 @@ async function requireCreateOrderActor(
 ): Promise<void> {
   await requireAccessibleProfile(supabaseAdmin, auth, actorProfileId);
 
-  if (
-    actorProfileId === customerProfileId ||
-    actorProfileId === merchantProfileId ||
-    auth.isProjectAdmin
-  ) {
+  if (actorProfileId === customerProfileId) {
+    return;
+  }
+
+  if (actorProfileId === merchantProfileId) {
+    await requireManagedMerchantProfile(supabaseAdmin, auth, actorProfileId);
+    return;
+  }
+
+  if (auth.isProjectAdmin) {
     return;
   }
 
