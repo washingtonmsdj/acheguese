@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useBusinessDashboardContext } from '@/modules/business/dashboard/businessDashboardContext';
 import { useDeliveryAreas } from '../hooks';
 import { DeliveryAreaCard } from '../components/delivery/DeliveryAreaCard';
 import { DeliveryAreaForm } from '../components/delivery/DeliveryAreaForm';
@@ -18,7 +18,7 @@ import { MapPin, Plus } from 'lucide-react';
 import type { DeliveryArea } from '@/core/business/services/GastronomyDeliveryAreaService';
 
 export default function DeliveryAreaPage() {
-  const { businessId } = useParams<{ businessId: string }>();
+  const { businessDataId } = useBusinessDashboardContext();
   const {
     areas,
     isLoading,
@@ -27,14 +27,14 @@ export default function DeliveryAreaPage() {
     deleteArea,
     isCreating,
     isUpdating,
-  } = useDeliveryAreas(businessId!);
+  } = useDeliveryAreas(businessDataId);
 
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [editingArea, setEditingArea] = useState<DeliveryArea | null>(null);
   const [managingNeighborhoods, setManagingNeighborhoods] = useState<DeliveryArea | null>(null);
   const [areaToDelete, setAreaToDelete] = useState<string | null>(null);
 
-  if (!businessId) {
+  if (!businessDataId) {
     return (
       <div className="container max-w-6xl py-8">
         <p className="text-center text-destructive">ID do negócio não encontrado</p>
@@ -119,7 +119,7 @@ export default function DeliveryAreaPage() {
       </div>
 
       {/* Resumo */}
-      <DeliverySummaryWidget businessId={businessId} />
+      <DeliverySummaryWidget businessId={businessDataId} />
 
       {/* Lista de Áreas */}
       {isLoading ? (
