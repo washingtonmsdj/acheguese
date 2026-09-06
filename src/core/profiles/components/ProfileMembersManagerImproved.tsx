@@ -37,9 +37,11 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
   
   const [showAdd, setShowAdd] = useState(false);
   const [addingMember, setAddingMember] = useState(false);
+  const defaultInviteRole: ProfileRole =
+    profileType === 'business' ? 'admin' : 'member';
   const [newMember, setNewMember] = useState({
     email: '',
-    role: 'member' as ProfileRole,
+    role: defaultInviteRole,
   });
 
   const handleInviteMember = async () => {
@@ -66,12 +68,12 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
       }
 
       toast({
-        title: 'Membro adicionado',
-        description: result.data?.message || 'O membro foi adicionado com sucesso.',
+        title: 'Acesso concedido',
+        description: result.data?.message || 'A pessoa foi adicionada com sucesso.',
       });
       
       setShowAdd(false);
-      setNewMember({ email: '', role: 'member' });
+      setNewMember({ email: '', role: defaultInviteRole });
     } catch (error: unknown) {
       toast({
         title: 'Erro ao adicionar membro',
@@ -165,7 +167,7 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
       <div className="grid gap-2 rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground sm:grid-cols-3">
         <div><strong className="text-foreground">Proprietario</strong><br />Controle total, pessoas/acesso e transferencia.</div>
         <div><strong className="text-foreground">Gestor</strong><br />Opera o dia a dia, mas nao gerencia acessos.</div>
-        <div><strong className="text-foreground">Membro</strong><br />Acesso limitado conforme as capacidades do produto.</div>
+        <div><strong className="text-foreground">Membro</strong><br />Vinculo limitado; nao administra a Central da empresa hoje.</div>
       </div>
 
       {!canManageAccess ? (
@@ -203,7 +205,9 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="member">Membro</SelectItem>
+                {profileType !== 'business' ? (
+                  <SelectItem value="member">Membro</SelectItem>
+                ) : null}
                 <SelectItem value="admin">Gestor</SelectItem>
               </SelectContent>
             </Select>
@@ -242,8 +246,11 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
               {getRoleIcon(member.role)}
               
               <div className="flex-1">
-                <p className="font-medium">{member.user_id}</p>
+                <p className="font-medium">
+                  {member.display_name || member.email || 'Pessoa da equipe'}
+                </p>
                 <p className="text-sm text-muted-foreground">
+                  {member.email ? <span>{member.email} · </span> : null}
                   Entrou em {new Date(member.joined_at).toLocaleDateString('pt-BR')}
                 </p>
               </div>
@@ -260,7 +267,9 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="member">Membro</SelectItem>
+                      {profileType !== 'business' ? (
+                        <SelectItem value="member">Membro</SelectItem>
+                      ) : null}
                       <SelectItem value="admin">Gestor</SelectItem>
                     </SelectContent>
                   </Select>
