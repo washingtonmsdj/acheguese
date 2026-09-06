@@ -81,6 +81,21 @@ describe("public Education INEP staging CLI", () => {
     ).toBe(true);
   });
 
+  it("keeps plan output coupled to explicit database staging", () => {
+    const source = readFileSync(
+      resolve(
+        process.cwd(),
+        "tools/data-quality/stage-public-education-inep-import.mjs",
+      ),
+      "utf8",
+    );
+
+    expect(source).toContain("--plan-output requires --commit-staging");
+    expect(source).toContain(
+      "validate_public_education_import_batch returned invalid result",
+    );
+  });
+
   it("proves Supabase project refs from direct and pooler URLs", () => {
     expect(
       extractSupabaseProjectRefFromDatabaseUrl(
@@ -97,6 +112,12 @@ describe("public Education INEP staging CLI", () => {
     expect(
       extractSupabaseProjectRefFromDatabaseUrl(
         "postgresql://postgres:secret@example.com:5432/postgres",
+      ),
+    ).toBeNull();
+
+    expect(
+      extractSupabaseProjectRefFromDatabaseUrl(
+        "postgresql://postgres.xhdowzacfujckjelqhtd:secret@example.com:6543/postgres",
       ),
     ).toBeNull();
   });
