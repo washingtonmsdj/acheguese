@@ -165,6 +165,13 @@ export const ADMIN_NAV_SECTIONS: readonly AdminNavSection[] = [
         section: "moderacao",
       },
       {
+        id: "qualidade-dados",
+        to: "/admin/qualidade-dados",
+        icon: Database,
+        label: "Qualidade de Dados",
+        section: "moderacao",
+      },
+      {
         id: "classificados-denuncias",
         to: "/admin/classificados/denuncias",
         icon: Flag,
