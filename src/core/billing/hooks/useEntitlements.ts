@@ -19,6 +19,7 @@ import {
   type EntitlementContext, 
   type ResolvedEntitlements 
 } from '../services/EntitlementResolver';
+import type { PlanEntitlements } from '../services/BillingPlanService';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -35,7 +36,7 @@ export interface UseEntitlementsResult {
   error: Error | null;
   
   // Helpers
-  can: (entitlement: keyof ResolvedEntitlements) => boolean;
+  can: (entitlement: keyof PlanEntitlements) => boolean;
   hasShortLink: boolean;
   hasShortPremiumLink: boolean;
   isPremium: boolean;
@@ -80,11 +81,9 @@ export function useEntitlements(
   });
   
   // Helper: verificar entitlement específico
-  const can = (entitlement: keyof ResolvedEntitlements): boolean => {
+  const can = (entitlement: keyof PlanEntitlements): boolean => {
     if (!entitlements) return false;
-    const value = new Map<keyof ResolvedEntitlements, ResolvedEntitlements[keyof ResolvedEntitlements]>(
-      Object.entries(entitlements) as [keyof ResolvedEntitlements, ResolvedEntitlements[keyof ResolvedEntitlements]][],
-    ).get(entitlement);
+    const value = entitlements[entitlement];
     
     // Booleano
     if (typeof value === 'boolean') {
