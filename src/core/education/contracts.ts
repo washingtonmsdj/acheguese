@@ -173,6 +173,7 @@ export interface EducationProgram {
   max_capacity?: number | null;
   current_enrollment?: number | null;
   schedule?: string | null; // Ex: "Seg-Sex 07:30-12:00"
+  curriculum_topics?: string[] | null; // Disciplinas, modulos ou conteudos
 }
 
 export interface EducationLead {
