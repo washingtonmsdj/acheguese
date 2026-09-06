@@ -22,7 +22,7 @@ import {
   EDUCATION_LEVEL_OPTIONS,
   EQUIPMENT_OPTIONS,
   FACILITY_OPTIONS,
-  INSTITUTION_TYPES,
+  getInstitutionTypeForNiche,
   SCHOOL_NETWORKS,
   SCHOOL_TYPES,
   SHIFT_OPTIONS,
@@ -62,32 +62,15 @@ export function EducationInstitutionSection({
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <Label htmlFor="institutionType">Tipo</Label>
-          <Select
-            value={formData.institutionType}
-            onValueChange={(value) => onPatch({ institutionType: value })}
-          >
-            <SelectTrigger
-              id="institutionType"
-              data-testid="education-institution-type-trigger"
-            >
-              <SelectValue placeholder="Selecione o tipo de instituicao" />
-            </SelectTrigger>
-            <SelectContent>
-              {INSTITUTION_TYPES.map((type) => (
-                <SelectItem key={type.value} value={type.value}>
-                  {type.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label htmlFor="nicheKey">Nicho</Label>
+          <Label htmlFor="nicheKey">Tipo de instituicao educacional</Label>
           <Select
             value={formData.nicheKey}
-            onValueChange={(value) => onPatch({ nicheKey: value })}
+            onValueChange={(value) =>
+              onPatch({
+                nicheKey: value,
+                institutionType: getInstitutionTypeForNiche(value),
+              })
+            }
           >
             <SelectTrigger id="nicheKey" data-testid="education-niche-trigger">
               <SelectValue placeholder="Selecione o nicho" />
@@ -101,7 +84,7 @@ export function EducationInstitutionSection({
             </SelectContent>
           </Select>
           <p className="text-xs text-gray-500 mt-1">
-            O nicho define as funcionalidades disponiveis para sua instituicao.
+            Esta escolha define as capacidades do modulo; o tipo tecnico e derivado automaticamente.
           </p>
         </div>
 
