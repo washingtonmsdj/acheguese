@@ -116,7 +116,7 @@ function mapCanonicalRow(
   };
 }
 
-async function fetchCanonicalByBusinessId(
+async function fetchCanonicalByBusinessDataId(
   businessDataId: string,
 ): Promise<CanonicalBusinessSubscriptionRow | null> {
   const { data, error } = await billingDb
@@ -150,7 +150,7 @@ export class BusinessSubscriptionService {
     businessDataId: string,
   ): Promise<ServiceResult<BusinessSubscription>> {
     try {
-      const row = await fetchCanonicalByBusinessId(businessDataId);
+      const row = await fetchCanonicalByBusinessDataId(businessDataId);
       return {
         data: row
           ? mapCanonicalRow(row, businessDataId)
@@ -180,7 +180,7 @@ export class BusinessSubscriptionService {
       } else {
         await BillingService.redirectToCheckout({
           planCode: newPlanTier,
-          businessDataId,
+          businessId: businessDataId,
           subscriptionScope: "business",
           entityFamily: "company",
           successUrl: buildPublicAbsoluteUrl("/checkout/success"),
