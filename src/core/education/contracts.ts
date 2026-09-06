@@ -147,7 +147,9 @@ export interface EducationPublicRoute {
 }
 
 export interface EducationPublicProfile extends EducationProfile {
+  business_data_id: string | null;
   business_name: string | null;
+  is_claimable: boolean;
   public_route: EducationPublicRoute | null;
 }
 
