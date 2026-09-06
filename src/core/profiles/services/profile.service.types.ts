@@ -5,6 +5,9 @@ export type UserSubscriptionLike = {
   expires_at?: string | null;
 } | null;
 export type BusinessRow = {
+  /** business_data.id: identidade canonica das extensoes da empresa. */
+  id: string;
+  /** profiles.id: identidade de rota/autoridade multi-profile. */
   profile_id: string;
   business_name: string;
   metadata?: { logo_url?: string | null } | null;
