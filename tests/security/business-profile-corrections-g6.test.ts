@@ -29,8 +29,8 @@ describe("G6 business profile factual corrections", () => {
     );
 
     expect(migration).toContain("business_profile_correction_requires_manual_application");
-    expect(migration).toContain("SET business_name = v_value");
-    expect(migration).toContain("SET school_inep_code = v_value");
+    expect(migration).toContain("set business_name = v_value");
+    expect(migration).toContain("set school_inep_code = v_value");
     expect(migration).toContain("set enrollment_open = v_enrollment");
     expect(migration).toContain("private.record_business_profile_fact_provenance");
     expect(migration).toContain("'community_correction'");
