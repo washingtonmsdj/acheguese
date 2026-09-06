@@ -10,6 +10,7 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
+import { useOptionalBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, CheckCircle2, UtensilsCrossed } from "lucide-react";
 import { z } from "zod";
@@ -79,12 +80,17 @@ const PRICE_RANGE_LABELS: Record<PriceRange, string> = {
 
 export default function GastronomySetupPage({
   businessId: propBusinessId,
-}: { businessId?: string } = {}) {
+  businessDataId: propBusinessDataId,
+}: { businessId?: string; businessDataId?: string } = {}) {
   const params = useParams<{ businessId: string }>();
-  const businessId = propBusinessId ?? params.businessId;
+  const dashboardContext = useOptionalBusinessDashboardContext();
+  const businessId =
+    propBusinessId ?? dashboardContext?.businessId ?? params.businessId;
+  const businessDataId =
+    propBusinessDataId ?? dashboardContext?.businessDataId;
   const navigate = useNavigate();
   const { profile, businessCategory, isLoading, isNew, isSubmitting, save } =
-    useGastronomySetup(businessId!);
+    useGastronomySetup(businessDataId || "");
 
   const suggestedCuisine = businessCategory
     ? getCuisineSuggestionFromCategory(businessCategory)
@@ -169,7 +175,7 @@ export default function GastronomySetupPage({
         : {};
 
     const saved = await save({
-      business_id: businessId!,
+      business_id: businessDataId!,
       cuisine_type: values.cuisine_type,
       price_range: values.price_range,
       delivery_enabled: values.delivery_enabled,
@@ -192,6 +198,19 @@ export default function GastronomySetupPage({
       navigate(businessManagementRoutes.gastronomia(businessId!));
     }
   };
+
+  if (!businessId || !businessDataId) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <div
+          role="alert"
+          className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
+        >
+          Os dados canônicos da empresa não foram carregados. A configuração de Gastronomia foi bloqueada para evitar gravar no negócio incorreto.
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
