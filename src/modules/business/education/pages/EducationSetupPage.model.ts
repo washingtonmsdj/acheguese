@@ -19,7 +19,7 @@ export type EducationSetupFormData = {
   shifts: SchoolShift[];
   ageRangeMin: string;
   ageRangeMax: string;
-  enrollmentOpen: boolean;
+  enrollmentOpen: boolean | null;
   schoolBasicResources: SchoolBasicResourceKey[];
   schoolAccessibilityFeatures: SchoolAccessibilityFeatureKey[];
   schoolEquipmentFeatures: SchoolEquipmentFeatureKey[];
@@ -52,7 +52,7 @@ export const INITIAL_EDUCATION_SETUP_FORM: EducationSetupFormData = {
   shifts: [],
   ageRangeMin: '',
   ageRangeMax: '',
-  enrollmentOpen: false,
+  enrollmentOpen: null,
   schoolBasicResources: [],
   schoolAccessibilityFeatures: [],
   schoolEquipmentFeatures: [],
