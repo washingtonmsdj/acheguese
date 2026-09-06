@@ -200,8 +200,8 @@ export async function getPrivateWorkspaceAggregate(
         ]);
 
         const [subscriptionResult, gastronomyResult, qrCodeResult] = await Promise.all([
-          SubscriptionService.getByBusinessId(business.id),
-          getGastronomyProfileByBusinessId(business.id),
+          SubscriptionService.getByBusinessId(business.business_data_id),
+          getGastronomyProfileByBusinessId(business.business_data_id),
           QrCodeService.getByEntity(QrEntityType.BUSINESS, business.id),
         ]);
 
