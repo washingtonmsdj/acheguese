@@ -220,8 +220,8 @@ export async function listPublishedEducationProfiles(
     {
       p_state: state,
       p_city: city,
-      p_district: district ?? null,
-      p_query: query?.trim() || null,
+      p_district: district || undefined,
+      p_query: query?.trim() || undefined,
       p_niches: niches,
       p_school_networks: schoolNetworks,
       p_institution_types: institutionTypes,
