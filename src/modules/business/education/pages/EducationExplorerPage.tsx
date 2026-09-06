@@ -100,24 +100,45 @@ export function EducationExplorerPage() {
   const [comparing, setComparing] = useState<string[]>([]);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
+  const groupLocationIds = useMemo(() => {
+    if (resolved?.kind !== 'group') return [];
+
+    return resolved.group.members
+      .filter((member) => String(member.status) === 'active')
+      .map((member) => member.id);
+  }, [resolved]);
+
   const routeDistrict = useMemo(() => {
-    if (district) return district;
+    if (resolved?.kind === 'group') return null;
     if (
       resolved?.kind === 'location' &&
       (resolved.location.type === LocationType.NEIGHBORHOOD ||
         resolved.location.type === LocationType.DISTRICT)
     ) {
-      return resolved.location.slug ?? groupSlugOrDistrict ?? null;
+      return resolved.location.slug ?? district ?? groupSlugOrDistrict ?? null;
     }
     return null;
   }, [district, groupSlugOrDistrict, resolved]);
 
+  const hasRouteTerritorySegment = Boolean(district || groupSlugOrDistrict);
+  const hasUsableGroupScope =
+    resolved?.kind !== 'group' || groupLocationIds.length > 0;
+  const educationScopeReady =
+    (!hasRouteTerritorySegment || resolved !== null) && hasUsableGroupScope;
+  const districtLocked = Boolean(routeDistrict);
+
+  const scopeIdentity =
+    resolved?.kind === 'group'
+      ? `group:${resolved.group.id}`
+      : resolved?.kind === 'location'
+        ? `location:${resolved.location.id}`
+        : `city:${effectiveState}:${effectiveCity}`;
+
   useEffect(() => {
-    setFilters((prev) => ({
-      ...prev,
-      district: routeDistrict,
-    }));
-  }, [routeDistrict]);
+    setFilters((prev) =>
+      prev.district === null ? prev : { ...prev, district: null },
+    );
+  }, [scopeIdentity]);
 
   const {
     data,
@@ -131,6 +152,8 @@ export function EducationExplorerPage() {
     state: effectiveState,
     city: effectiveCity,
     district: routeDistrict ?? filters.district ?? undefined,
+    locationIds: groupLocationIds,
+    enabled: educationScopeReady,
     query: filters.query,
     niches: filters.niches,
     schoolNetworks: filters.schoolNetworks,
@@ -142,6 +165,8 @@ export function EducationExplorerPage() {
   const { data: districtFacets = [] } = useEducationDistricts(
     effectiveState,
     effectiveCity,
+    groupLocationIds,
+    educationScopeReady,
   );
 
   const sourceProfiles: EducationPublicProfile[] = useMemo(
@@ -170,8 +195,7 @@ export function EducationExplorerPage() {
     );
   };
 
-  const clearFilters = () =>
-    setFilters({ ...INITIAL_FILTERS, district: routeDistrict });
+  const clearFilters = () => setFilters(INITIAL_FILTERS);
 
   const featured = useMemo(() => {
     return sourceProfiles.filter((profile) => profile.public_route).slice(0, 6);
@@ -274,6 +298,7 @@ export function EducationExplorerPage() {
                         setFilters={setFilters}
                         niches={niches}
                         districts={districts}
+                        districtLocked={districtLocked}
                         nicheIcons={NICHE_ICONS}
                         resultsCount={totalCount}
                         onClear={clearFilters}
@@ -364,6 +389,7 @@ export function EducationExplorerPage() {
         setFilters={setFilters}
         niches={niches}
         districts={districts}
+        districtLocked={districtLocked}
         nicheIcons={NICHE_ICONS}
         view={view}
         setView={setView}
@@ -380,7 +406,7 @@ export function EducationExplorerPage() {
                 <Building2 className="h-4 w-4 text-muted-foreground" />
                 <strong className="text-foreground">{totalCount}</strong>
                 <span className="text-muted-foreground">
-                  {filtered.length === 1 ? 'instituição' : 'instituições'}
+                  {totalCount === 1 ? 'instituição' : 'instituições'}
                 </span>
               </div>
             </div>
