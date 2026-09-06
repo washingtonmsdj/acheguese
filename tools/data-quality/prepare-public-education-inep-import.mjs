@@ -12,7 +12,9 @@ import { createInflateRaw } from 'node:zlib';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
-export const PARSER_VERSION = 'inep-censo-school-adapter/4';
+export const PARSER_VERSION = 'inep-censo-school-adapter/5';
+export const RAW_RECORD_HASH_CONTRACT =
+  'acheguese.inep-raw-record-sha256/1';
 
 export const REQUIRED_COLUMNS = Object.freeze([
   'NU_ANO_CENSO',
@@ -586,9 +588,42 @@ function firstPresent(record, aliases) {
   return null;
 }
 
-function sha256Json(record) {
+export function canonicalRawRecordPayload(record) {
+  if (
+    record === null ||
+    typeof record !== 'object' ||
+    Array.isArray(record)
+  ) {
+    throw new Error('raw Censo record must be an object');
+  }
+
+  const entries = Object.entries(record);
+  for (const [key, value] of entries) {
+    if (typeof value !== 'string') {
+      throw new Error(
+        `raw Censo record value for ${key} must be a string`,
+      );
+    }
+  }
+
+  entries.sort(([left], [right]) =>
+    Buffer.compare(
+      Buffer.from(left, 'utf8'),
+      Buffer.from(right, 'utf8'),
+    ),
+  );
+
+  return entries
+    .map(
+      ([key, value]) =>
+        `${Buffer.byteLength(key, 'utf8')}:${key}:${Buffer.byteLength(value, 'utf8')}:${value}`,
+    )
+    .join('\n');
+}
+
+export function sha256RawRecord(record) {
   return createHash('sha256')
-    .update(JSON.stringify(record), 'utf8')
+    .update(canonicalRawRecordPayload(record), 'utf8')
     .digest('hex');
 }
 
@@ -651,7 +686,7 @@ export function normalizeCensoSchoolRecord(
       rawRecord,
       OPTIONAL_COLUMN_ALIASES.longitude,
     ),
-    source_record_sha256: sha256Json(rawRecord),
+    source_record_sha256: sha256RawRecord(rawRecord),
     raw_record: rawRecord,
   };
 }
@@ -834,6 +869,7 @@ export async function preparePublicEducationInepImport(options) {
       archive_sha256: archiveSha256,
       archive_entry: archiveBinding.archiveEntryName,
       archive_entry_sha256: archiveBinding.archiveEntrySha256,
+      record_hash_contract: RAW_RECORD_HASH_CONTRACT,
       source_year: options.sourceYear,
       landing_page_updated_at: options.sourcePageUpdatedAt,
       extracted_file: basename(options.csvPath),
