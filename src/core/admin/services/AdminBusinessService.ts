@@ -232,8 +232,9 @@ class AdminBusinessServiceClass {
   async updateClaimStatus(
     claimId: string,
     status: "aprovada" | "rejeitada",
+    reviewNotes?: string,
   ): Promise<boolean> {
-    return BusinessService.updateBusinessClaimStatus(claimId, status);
+    return BusinessService.updateBusinessClaimStatus(claimId, status, reviewNotes);
   }
 
   /**
