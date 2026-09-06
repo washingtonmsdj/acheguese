@@ -57,7 +57,11 @@ export async function getBusinessClaims(filter?: string): Promise<unknown[]> {
  */
 export async function getBusinessClaimDetails(
   businessId: string,
-): Promise<{ profile_id: string; profiles: { name: string } } | null> {
+): Promise<{
+  profile_id: string;
+  profiles: { name: string };
+  school_type: string | null;
+} | null> {
   try {
     const { data, error } = await (supabase as unknown as AdminSupabaseClient)
       .from("business_data")
@@ -66,7 +70,28 @@ export async function getBusinessClaimDetails(
       .single();
 
     if (error) throw error;
-    return data;
+
+    const educationResult = await (
+      supabase as unknown as AdminSupabaseClient
+    )
+      .from("education_profiles")
+      .select("school_type")
+      .eq("business_id", data.profile_id)
+      .maybeSingle();
+
+    if (educationResult.error) {
+      logger.warn(
+        "Failed to resolve Education claim metadata:",
+        educationResult.error,
+      );
+    }
+
+    return {
+      ...data,
+      school_type:
+        (educationResult.data as { school_type?: string | null } | null)
+          ?.school_type ?? null,
+    };
   } catch (error) {
     logger.error("Error fetching business claim details:", error);
     return null;
