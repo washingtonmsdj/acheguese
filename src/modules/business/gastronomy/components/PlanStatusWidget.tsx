@@ -8,18 +8,22 @@ import { Link } from 'react-router-dom';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 interface PlanStatusWidgetProps {
+  /** Profile ID usado somente para a rota de planos. */
   businessId: string;
+  /** business_data.id usado pelo contrato de Billing. */
+  businessDataId: string;
   currentMenuItems?: number;
   currentImages?: number;
 }
 
 export function PlanStatusWidget({
   businessId,
+  businessDataId,
   currentMenuItems = 0,
   currentImages = 0,
 }: PlanStatusWidgetProps) {
   const { entitlements, isLoading } = useEntitlements({
-    business_id: businessId,
+    business_id: businessDataId,
     subscription_scope: 'business',
   });
   if (isLoading) {
