@@ -11,7 +11,7 @@ import { basename, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
-export const PARSER_VERSION = 'inep-censo-school-adapter/2';
+export const PARSER_VERSION = 'inep-censo-school-adapter/3';
 
 export const REQUIRED_COLUMNS = Object.freeze([
   'NU_ANO_CENSO',
@@ -43,7 +43,7 @@ function usage() {
     '    --csv <extracted-censo-school.csv>',
     '    --output <salvador-normalized.jsonl>',
     '    --manifest <manifest.json>',
-    '    --source-archive-sha256 <64-hex>',
+    '    --source-archive <downloaded-official.zip>',
     '    --source-archive-url <https://download.inep.gov.br/...zip>',
     '    [--source-page-updated-at <ISO timestamp>]',
     '    [--source-year 2025]',
@@ -77,7 +77,7 @@ function parseArgs(argv) {
     'csv',
     'output',
     'manifest',
-    'source-archive-sha256',
+    'source-archive',
     'source-archive-url',
   ];
 
@@ -97,9 +97,9 @@ function parseArgs(argv) {
     throw new Error('municipality IBGE code must contain exactly 7 digits');
   }
 
-  const archiveSha256 = String(args.get('source-archive-sha256')).toLowerCase();
-  if (!/^[0-9a-f]{64}$/.test(archiveSha256)) {
-    throw new Error('source archive SHA-256 must contain exactly 64 hex characters');
+  const archivePath = resolve(String(args.get('source-archive')));
+  if (!/\.zip$/i.test(archivePath)) {
+    throw new Error('source archive path must point to a .zip file');
   }
 
   const archiveUrl = String(args.get('source-archive-url'));
@@ -135,11 +135,45 @@ function parseArgs(argv) {
     manifestPath: resolve(String(args.get('manifest'))),
     sourceYear,
     municipalityIbge,
-    archiveSha256,
+    archivePath,
     archiveUrl,
     sourcePageUpdatedAt,
     encoding,
   };
+}
+
+export async function sha256File(filePath) {
+  const hash = createHash('sha256');
+  const input = createReadStream(filePath);
+
+  for await (const chunk of input) {
+    hash.update(chunk);
+  }
+
+  return hash.digest('hex');
+}
+
+export async function assertZipSignature(filePath) {
+  const handle = await fs.open(filePath, 'r');
+
+  try {
+    const signature = Buffer.alloc(4);
+    const { bytesRead } = await handle.read(signature, 0, 4, 0);
+
+    if (bytesRead < 4 || signature[0] !== 0x50 || signature[1] !== 0x4b) {
+      throw new Error('source archive does not have a ZIP signature');
+    }
+
+    const marker = `${signature[2].toString(16).padStart(2, '0')}${signature[3]
+      .toString(16)
+      .padStart(2, '0')}`;
+
+    if (!new Set(['0304', '0506', '0708']).has(marker)) {
+      throw new Error('source archive has an unsupported ZIP signature');
+    }
+  } finally {
+    await handle.close();
+  }
 }
 
 function quotesBalanced(value) {
@@ -372,7 +406,16 @@ async function writeJsonLine(stream, value) {
 }
 
 export async function preparePublicEducationInepImport(options) {
-  await fs.access(options.csvPath);
+  await Promise.all([
+    fs.access(options.csvPath),
+    fs.access(options.archivePath),
+  ]);
+  await assertZipSignature(options.archivePath);
+
+  const [archiveSha256, extractedFileSha256] = await Promise.all([
+    sha256File(options.archivePath),
+    sha256File(options.csvPath),
+  ]);
 
   const output = createWriteStream(options.outputPath, {
     encoding: 'utf8',
@@ -487,10 +530,12 @@ export async function preparePublicEducationInepImport(options) {
       landing_url:
         'https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-escolar',
       archive_url: options.archiveUrl,
-      archive_sha256: options.archiveSha256,
+      archive_file: basename(options.archivePath),
+      archive_sha256: archiveSha256,
       source_year: options.sourceYear,
       landing_page_updated_at: options.sourcePageUpdatedAt,
       extracted_file: basename(options.csvPath),
+      extracted_file_sha256: extractedFileSha256,
       file_role: 'school_table',
       encoding: options.encoding,
       delimiter: delimiterLabel(delimiter),
@@ -548,6 +593,8 @@ async function main() {
       parser_version: PARSER_VERSION,
       output: options.outputPath,
       manifest: options.manifestPath,
+      archive_sha256: manifest.source.archive_sha256,
+      extracted_file_sha256: manifest.source.extracted_file_sha256,
       counts: manifest.counts,
     })}\n`,
   );
