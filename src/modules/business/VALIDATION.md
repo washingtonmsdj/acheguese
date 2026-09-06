@@ -1,7 +1,7 @@
 # Validacao atual — Modulo de Empresas
 
 **Data do checkpoint:** 2026-09-06  
-**Checkpoint tecnico:** `d4db71f080b8a719b56ed60e60f95030db6bfb31`  
+**Checkpoint tecnico:** `6ff82c8ef3baa3ef9829ad7a664a16c0d30460d9`  
 **Status:** G6 EM CERTIFICACAO — NAO MVP CERTIFICADO
 
 Este arquivo registra o estado atual de Business durante G6. O ownership/SSOT de source foi fechado em G4 e os blockers historicos de G5 foram encerrados conforme `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`. O trabalho ativo agora e certificacao funcional e operacional do modulo.
@@ -461,6 +461,46 @@ Pos-condicao aplicada:
 
 Ratchet:
 `tests/security/public-education-inep-import-staging-g6.test.ts`.
+
+
+### Planner read-only antes da materializacao
+
+Migration `20260906163350_add_public_education_import_planner_g6.sql` adicionou
+`private.plan_public_education_import_batch` como `STABLE SECURITY INVOKER`, privado e
+executavel somente por `service_role`.
+
+O planner nao grava nada. Para batch ja `validated`, ele produz uma decisao explicita por
+linha:
+
+- `insert_candidate`: INEP publico novo;
+- `existing_no_change`: registro existente sem diferenca relevante no payload considerado;
+- `existing_review_required`: registro existente com diferenca de nome/rede ou payload de
+  endereco;
+- `excluded`: linha privada/inativa ja excluida pelo quality gate.
+
+A protecao contra overwrite automatico considera como fatos protegidos:
+
+- provenance curada `official_publication`, `institution_declared`,
+  `community_correction` ou `admin_review`;
+- qualquer provenance nao superseded observada/atualizada a partir do ano seguinte ao
+  `source_year` do Censo.
+
+Probe transacional:
+
+- escola estadual existente com nome/endereco divergente + official address 2026 ->
+  `existing_review_required`;
+- novo INEP publico -> `insert_candidate`;
+- escola privada -> `excluded`;
+- planner -> `security_definer=false`, sem INSERT/DELETE, anon/authenticated EXECUTE=false,
+  service_role=true;
+- apos rollback: catalogo continua 15 e staging persistente continua vazia.
+
+Ratchet:
+`tests/security/public-education-inep-import-planner-g6.test.ts`.
+
+O script direcionado
+`npm run test:education:inep-import` cobre adapter + staging/source binding + planner quando
+o runner voltar a executar steps.
 
 ### Gate restante
 
