@@ -1,7 +1,7 @@
 # Validacao atual — Modulo de Empresas
 
 **Data do checkpoint:** 2026-09-06  
-**Checkpoint tecnico:** `05c7481754e667216d7a6f6ce0436dbc5af483c4`  
+**Checkpoint tecnico:** `03457878002ed9f04017e96e162fc7abdb666cbc`  
 **Status:** G6 EM CERTIFICACAO — NAO MVP CERTIFICADO
 
 Este arquivo registra o estado atual de Business durante G6. O ownership/SSOT de source foi fechado em G4 e os blockers historicos de G5 foram encerrados conforme `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`. O trabalho ativo agora e certificacao funcional e operacional do modulo.
@@ -391,7 +391,7 @@ inspecionado.
 
 O adaptador
 `tools/data-quality/prepare-public-education-inep-import.mjs` esta em
-`inep-censo-school-adapter/4` e e deliberadamente offline em relacao ao Supabase:
+`inep-censo-school-adapter/5` e e deliberadamente offline em relacao ao Supabase:
 
 - streaming, sem carregar o Censo inteiro em memoria;
 - exige o header escolar com `NU_ANO_CENSO`, `CO_ENTIDADE`, `NO_ENTIDADE`,
@@ -476,6 +476,31 @@ Probe em `BEGIN/ROLLBACK`:
 
 O staging permanece, apos todos os probes deste lote, em **0 batches / 0 rows** e o
 catalogo em **15 Education profiles / 15 INEP unicos**.
+
+
+Migration Git/remoto
+`20260906174652_bind_inep_raw_record_sha256_g6.sql` fechou a integridade do
+`source_record_sha256` por linha.
+
+O parser `/5` deixou de usar `JSON.stringify(raw_record)` como entrada do hash. O
+contrato `acheguese.inep-raw-record-sha256/1` usa pares chave/valor ordenados por bytes
+UTF-8, com comprimento em bytes prefixado. O banco reproduz exatamente o mesmo payload
+com `private.education_inep_raw_record_sha256(jsonb)` + `extensions.digest`.
+
+Provas:
+
+- Node e PostgreSQL produziram o mesmo SHA-256
+  `c9b1bc9dd92e69f88de13aae92d8635776aeae8424505424b142e7915c6f79aa`
+  para o mesmo registro com acento;
+- manifest sem `source.record_hash_contract` -> bloqueado;
+- linha com hash correto -> `valid`;
+- mesma estrutura com hash adulterado -> `invalid:raw_record_sha256_mismatch`;
+- raw com valor nao-string -> `raw_record_non_string_value`;
+- batch com linha adulterada -> `rejected`;
+- catalogo publico permaneceu em **15** e todos os probes foram rollback.
+
+O helper de hash e `IMMUTABLE SECURITY INVOKER`; `anon/authenticated` nao possuem
+EXECUTE e `service_role` possui. O Security Advisor nao adicionou finding especifico.
 
 ACL apos a migration permaneceu inalterada: create/stage/validate somente
 `service_role`; planner read-only `SECURITY INVOKER` somente `service_role`.
