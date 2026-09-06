@@ -11,12 +11,15 @@ import {
   User,
   MessageSquare,
   Shield,
+  ExternalLink,
+  FileCheck2,
 } from "lucide-react";
 import { adminBusinessService } from "@/core/admin";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Card } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { Textarea } from "@/shared/components/ui/textarea";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { profileService } from "@/core/profiles/services/ProfileService";
 
@@ -28,6 +31,8 @@ interface Claim {
   status: string;
   created_at: string;
   resolved_at: string | null;
+  documents?: unknown;
+  school_type?: string | null;
   user_name?: string;
   business_name?: string;
 }
@@ -40,7 +45,39 @@ type BusinessClaimRecord = {
   status: string;
   created_at: string;
   resolved_at: string | null;
+  documents?: unknown;
 };
+
+function getOfficialEvidenceUrls(documents: unknown): string[] {
+  if (!Array.isArray(documents)) return [];
+
+  return documents.flatMap((document) => {
+    if (
+      !document ||
+      typeof document !== "object" ||
+      !("kind" in document) ||
+      !("url" in document)
+    ) {
+      return [];
+    }
+
+    const kind = (document as { kind?: unknown }).kind;
+    const url = (document as { url?: unknown }).url;
+    if (kind !== "official_source_url" || typeof url !== "string") {
+      return [];
+    }
+
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+        return [];
+      }
+      return [parsed.toString()];
+    } catch {
+      return [];
+    }
+  });
+}
 
 export default function AdminReivindicacoes() {
   const { canModerate, isChecking } = useAdminGuard();
@@ -50,6 +87,7 @@ export default function AdminReivindicacoes() {
     "pendente" | "aprovada" | "rejeitada" | "todos"
   >("pendente");
   const [processing, setProcessing] = useState<string | null>(null);
+  const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
 
   const fetchClaims = async () => {
     setLoading(true);
@@ -76,6 +114,7 @@ export default function AdminReivindicacoes() {
           business_name:
             (Array.isArray(biz?.profiles) ? biz.profiles?.[0] : biz?.profiles)
               ?.name || "Removida",
+          school_type: biz?.school_type ?? null,
         };
       }),
     );
@@ -109,11 +148,33 @@ export default function AdminReivindicacoes() {
     claimId: string,
     action: "aprovada" | "rejeitada",
   ) => {
-    setProcessing(claimId);
-    const claim = claims.find((c) => c.id === claimId);
+    const claim = claims.find((item) => item.id === claimId);
     if (!claim) return;
 
-    const ok = await adminBusinessService.updateClaimStatus(claimId, action);
+    const notes = reviewNotes[claimId]?.trim() || "";
+    const evidenceUrls = getOfficialEvidenceUrls(claim.documents);
+
+    if (action === "aprovada" && claim.school_type === "public") {
+      if (evidenceUrls.length === 0) {
+        toast.error(
+          "Escola pública exige uma referência oficial antes da aprovação.",
+        );
+        return;
+      }
+      if (notes.length < 10) {
+        toast.error(
+          "Registre uma justificativa de revisão com pelo menos 10 caracteres.",
+        );
+        return;
+      }
+    }
+
+    setProcessing(claimId);
+    const ok = await adminBusinessService.updateClaimStatus(
+      claimId,
+      action,
+      notes || undefined,
+    );
     if (!ok) {
       toast.error("Erro ao atualizar reivindicação");
       setProcessing(null);
@@ -125,6 +186,11 @@ export default function AdminReivindicacoes() {
         ? "Reivindicação aprovada!"
         : "Reivindicação rejeitada.",
     );
+    setReviewNotes((current) => {
+      const next = { ...current };
+      delete next[claimId];
+      return next;
+    });
     setProcessing(null);
     fetchClaims();
   };
@@ -211,6 +277,9 @@ export default function AdminReivindicacoes() {
                       {claim.business_name}
                     </span>
                     {statusBadge(claim.status)}
+                    {claim.school_type === "public" ? (
+                      <Badge variant="outline">Escola pública</Badge>
+                    ) : null}
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <User className="h-3 w-3" />
@@ -223,6 +292,29 @@ export default function AdminReivindicacoes() {
                 </div>
               </div>
 
+              {getOfficialEvidenceUrls(claim.documents).length > 0 && (
+                <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
+                  <div className="flex items-center gap-2 text-xs font-medium">
+                    <FileCheck2 className="h-3.5 w-3.5 text-emerald-600" />
+                    Evidência institucional informada
+                  </div>
+                  <div className="mt-2 space-y-1">
+                    {getOfficialEvidenceUrls(claim.documents).map((url) => (
+                      <a
+                        key={url}
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-1 break-all text-xs text-primary hover:underline"
+                      >
+                        <ExternalLink className="h-3 w-3 shrink-0" />
+                        {url}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {claim.mensagem && (
                 <div className="flex items-start gap-2 bg-muted/50 rounded-lg p-3">
                   <MessageSquare className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
@@ -233,11 +325,39 @@ export default function AdminReivindicacoes() {
               )}
 
               {claim.status === "pendente" && (
-                <div className="flex gap-2">
+                <div className="space-y-2">
+                  <Textarea
+                    value={reviewNotes[claim.id] ?? ""}
+                    onChange={(event) =>
+                      setReviewNotes((current) => ({
+                        ...current,
+                        [claim.id]: event.target.value,
+                      }))
+                    }
+                    maxLength={500}
+                    placeholder={
+                      claim.school_type === "public"
+                        ? "Justificativa da revisão institucional (obrigatória para aprovar)"
+                        : "Notas da revisão (opcional)"
+                    }
+                    className="min-h-20 text-xs"
+                  />
+                  {claim.school_type === "public" ? (
+                    <p className="text-[11px] text-muted-foreground">
+                      A aprovação transfere a autoridade real do perfil. Confirme a
+                      fonte oficial e registre como a titularidade foi verificada.
+                    </p>
+                  ) : null}
+                  <div className="flex gap-2">
                   <Button
                     size="sm"
                     className="flex-1 gap-1"
-                    disabled={processing === claim.id}
+                    disabled={
+                      processing === claim.id ||
+                      (claim.school_type === "public" &&
+                        (getOfficialEvidenceUrls(claim.documents).length === 0 ||
+                          (reviewNotes[claim.id]?.trim().length ?? 0) < 10))
+                    }
                     onClick={() => handleAction(claim.id, "aprovada")}
                   >
                     <CheckCircle className="h-4 w-4" /> Aprovar
@@ -251,6 +371,7 @@ export default function AdminReivindicacoes() {
                   >
                     <XCircle className="h-4 w-4" /> Rejeitar
                   </Button>
+                  </div>
                 </div>
               )}
             </Card>
