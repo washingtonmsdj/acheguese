@@ -130,4 +130,32 @@ describe("community Events canonical owner", () => {
     expect(reviews).not.toContain(">Reportar<");
   });
 
+
+  it("protects server-owned event state from organizer REST tampering", () => {
+    const migration = read(
+      "supabase/migrations/20260906061022_guard_event_server_owned_state_g6.sql",
+    );
+    const eventTypes = read("src/core/community-events/types.ts");
+    const adminService = read("src/core/admin/services/AdminEventsService.ts");
+
+    expect(migration).toContain("event_current_participants_server_owned");
+    expect(migration).toContain("event_organizer_server_owned");
+    expect(migration).toContain("event_status_server_owned");
+    expect(migration).toContain(
+      "CHECK (current_participants >= 0)",
+    );
+    expect(migration).toContain(
+      "current_participants <= max_participants",
+    );
+    expect(eventTypes).toContain(
+      "export type UpdateEventInput = Partial<CreateEventInput>",
+    );
+    expect(eventTypes).not.toMatch(
+      /interface CreateEventInput[\s\S]*?current_participants:/,
+    );
+    expect(adminService).toContain("current_participants,");
+    expect(adminService).toContain('update({ status: "cancelled" })');
+    expect(adminService).toContain('update({ status: "completed" })');
+  });
+
 });
