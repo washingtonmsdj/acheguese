@@ -1,7 +1,7 @@
 # Validacao atual — Modulo de Empresas
 
 **Data do checkpoint:** 2026-09-06  
-**Checkpoint tecnico:** `7669b7ae1125b9eac93363ab1c3beab103889e17`  
+**Checkpoint tecnico:** `4a7ad4d95cac1692c477540dfdadeb4beff74b5d`  
 **Status:** G6 EM CERTIFICACAO — NAO MVP CERTIFICADO
 
 Este arquivo registra o estado atual de Business durante G6. O ownership/SSOT de source foi fechado em G4 e os blockers historicos de G5 foram encerrados conforme `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`. O trabalho ativo agora e certificacao funcional e operacional do modulo.
@@ -250,6 +250,127 @@ alterado Auth para contornar essa ausencia de sessao no conector atual.
 
 Inspecao programatica do source atual: **19/19 invariantes PASS**. Isso e evidencia dirigida
 de contrato, nao substitui lint/typecheck/Vitest hosted do mesmo SHA.
+
+
+## G6 — autoridade institucional publica e Claims — 2026-09-06
+
+O fluxo de reivindicacao institucional de Business/Education foi reconciliado sem criar
+um segundo ACL nem um segundo mecanismo de transferencia de ownership.
+
+### Entrada publica
+
+- `BusinessClaimService` deixou de aceitar `userId` vindo da UI e deriva o requerente
+  da sessao canonica via `SessionService.getCurrentUser()`;
+- perfis publicos de escola publica com `is_claimable=true` agora exibem
+  **Solicitar administracao institucional**;
+- a solicitacao exige uma referencia publica verificavel por URL
+  (`official_source_url`), com no maximo 5 referencias e somente `http/https`;
+- nenhum bucket de documento sensivel foi reativado. O bucket historico
+  `verification-documents` permanece dormente/fail-closed conforme o SSOT de Media;
+- a UI avisa explicitamente para nao enviar documentos pessoais nem dados de alunos.
+
+### Revisao administrativa
+
+A fila Admin agora:
+
+- identifica claims de escola publica;
+- mostra as URLs de evidencia informadas;
+- exige justificativa de revisao com pelo menos 10 caracteres antes de aprovar;
+- envia `reviewNotes` ao broker `admin-business-rpc`, que continua sendo a unica
+  superficie client-side de resolucao administrativa.
+
+A UI nao e a autoridade de seguranca. O banco revalida a mesma regra.
+
+### Banco / RLS / ownership
+
+Tres migrations remotas e versionadas fecham o contrato:
+
+- `20260906123911_harden_public_education_claim_evidence_g6.sql` introduziu o
+  contrato de evidencia oficial. Durante o probe, foi detectado que a primeira versao
+  da policy possuia shadowing SQL em uma referencia nao qualificada; a migration foi
+  preservada historicamente como aplicada, sem rewrite retroativo;
+- `20260906124554_fix_business_claim_canonical_transfer_g6.sql` extraiu
+  `private.profile_transfer_ownership_core` como unica mutacao estrutural de ownership.
+  A facade normal `profile_transfer_ownership` chama o core com
+  `keep_previous_owner_as_manager=true`; Claims de diretorio curado chamam o mesmo
+  core com `false`, desativando o custodiante tecnico anterior sem apagar a trilha;
+- `20260906124739_route_business_claim_requestability_through_helper_g6.sql`
+  moveu a decisao RLS para o helper bounded
+  `private.business_claim_is_requestable(business_data_id, documents)`, evitando
+  cross-table RLS fragil e exigindo evidencia valida para Education publica.
+
+ACL remoto revalidado:
+
+- `profile_transfer_ownership_core`: anon=false, authenticated=false,
+  service_role=true;
+- `profile_transfer_ownership`: anon=false, authenticated=false,
+  service_role=true;
+- `admin_resolve_business_claim`: anon=false, authenticated=false,
+  service_role=true;
+- os dois helpers booleanos de request/evidence sao executaveis por
+  `authenticated` apenas como predicados bounded de RLS e nao retornam dados privados.
+
+A condicao antiga `owner/admin ativo => already_managed` foi corrigida. Depois da
+invariante de membership owner espelho, ela tornava todo cadastro claimable com owner
+placeholder impossivel de reivindicar. Agora:
+
+- o owner estrutural placeholder e permitido enquanto o Business continua em
+  custody claimable;
+- qualquer Gestor `admin` adicional ativo continua bloqueando a tomada;
+- a aprovacao muda `profiles.user_id` pela autoridade canonica;
+- o novo owner ganha membership `owner` ativa;
+- o custodiante tecnico anterior vira `admin` **inativo** no claim de diretorio;
+- `business_data.metadata` passa a `custody_status='claimed'` e registra
+  `claimed_user_id` + `previous_custodian_user_id`.
+
+### Provas runtime com ROLLBACK
+
+Target tecnico da prova: **Escola Municipal Sao Pedro Nolasco**; requerente e Admin foram
+identidades E2E, nunca o usuario real como requerente.
+
+Probe do fluxo institucional:
+
+1. claim publica sem evidencia -> **RLS blocked**;
+2. claim com `official_source_url` -> **created**;
+3. runtime administrativo reproduzido como `service_role` sem `sub`,
+   igual ao cliente `supabaseAdmin` -> **PASS**;
+4. aprovacao com review curto -> **public_education_claim_requires_review_notes**;
+5. aprovacao completa -> **canonical_transfer_ok**:
+   novo `profiles.user_id`, novo owner ativo, placeholder anterior `admin/inactive`,
+   custody `claimed` e claim `aprovada`.
+
+A transferencia normal tambem foi provada separadamente com rollback:
+
+- novo owner -> `owner/active`;
+- proprietario anterior -> `admin/active`.
+
+Pos-probe:
+
+- **0 claims de prova persistidas**;
+- escola publica original voltou ao owner placeholder e membership `owner/active`;
+- nenhum dado de producao foi transferido permanentemente.
+
+### Ratchet / limite de evidencia
+
+`tests/security/business-claim-authority-g6.test.ts` agora protege:
+
+- FK de Claim para `business_data.id`;
+- ownership estrutural por um unico core;
+- facade normal mantendo ex-owner como Gestor;
+- Claim institucional desativando custodiante tecnico;
+- requestability RLS por helper bounded;
+- evidencia oficial em Education;
+- sessao canonica no ClaimService;
+- revisao humana obrigatoria no Admin;
+- broker admin como unica resolucao client-side.
+
+Inspecoes dirigidas do source/migrations fecharam **7/7** invariantes finais deste corte.
+O Security Advisor nao adicionou finding especifico de Claims/ownership; debitos globais
+historicos continuam fora deste corte.
+
+Isso **nao substitui** lint/typecheck/Vitest/E2E/build/deploy same-SHA. Tambem nao resolve
+a autoridade herdada/revogavel de Prefeitura/Secretaria sobre multiplas escolas: o fluxo
+fechado aqui e de **uma instituicao individual por claim revisado**.
 
 ## Banco / RLS
 
