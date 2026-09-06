@@ -1,5 +1,12 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { createHash } from "node:crypto";
+import {
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
@@ -12,6 +19,7 @@ import {
 import {
   extractSupabaseProjectRefFromDatabaseUrl,
   parseStageArgs,
+  runPublicEducationInepStager,
   validateInepImportManifest,
   validateNormalizedInepRow,
 } from "../../tools/data-quality/stage-public-education-inep-import.mjs";
@@ -215,6 +223,96 @@ describe("public Education INEP staging CLI", () => {
         },
       }),
     ).toThrow(/normalized output row count mismatch/);
+  });
+
+  it("dry-runs the exact normalized JSONL artifact and rejects a swapped file", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "acheguese-inep-stager-"));
+    try {
+      const jsonlPath = join(dir, "salvador.jsonl");
+      const manifestPath = join(dir, "manifest.json");
+      const raw1 = {
+        NU_ANO_CENSO: "2025",
+        CO_ENTIDADE: "29412277",
+        NO_ENTIDADE: "Escola Municipal 1",
+        TP_SITUACAO_FUNCIONAMENTO: "1",
+        CO_UF: "29",
+        CO_MUNICIPIO: "2927408",
+        TP_DEPENDENCIA: "3",
+      };
+      const raw2 = {
+        ...raw1,
+        CO_ENTIDADE: "29412278",
+        NO_ENTIDADE: "Escola Municipal 2",
+      };
+      const rows = [
+        {
+          source_row_number: 2,
+          inep_code: "29412277",
+          school_name: "Escola Municipal 1",
+          uf_ibge_code: "29",
+          municipality_ibge_code: "2927408",
+          administrative_dependency_code: "3",
+          operation_status_code: "1",
+          source_record_sha256: sha256RawRecord(raw1),
+          raw_record: raw1,
+        },
+        {
+          source_row_number: 3,
+          inep_code: "29412278",
+          school_name: "Escola Municipal 2",
+          uf_ibge_code: "29",
+          municipality_ibge_code: "2927408",
+          administrative_dependency_code: "3",
+          operation_status_code: "1",
+          source_record_sha256: sha256RawRecord(raw2),
+          raw_record: raw2,
+        },
+      ];
+      const jsonl = rows.map((row) => JSON.stringify(row)).join("\n") + "\n";
+      writeFileSync(jsonlPath, jsonl, "utf8");
+
+      const manifest = manifestFixture();
+      manifest.normalized_output.sha256 = createHash("sha256")
+        .update(jsonl, "utf8")
+        .digest("hex");
+      writeFileSync(
+        manifestPath,
+        JSON.stringify(manifest, null, 2) + "\n",
+        "utf8",
+      );
+
+      await expect(
+        runPublicEducationInepStager({
+          manifestPath,
+          jsonlPath,
+          planOutputPath: null,
+          commitStaging: false,
+        }),
+      ).resolves.toMatchObject({
+        ok: true,
+        mode: "dry-run",
+        rows: 2,
+        writes_database: false,
+        materializes_records: false,
+      });
+
+      writeFileSync(
+        jsonlPath,
+        jsonl.replace("Escola Municipal 2", "Arquivo trocado"),
+        "utf8",
+      );
+
+      await expect(
+        runPublicEducationInepStager({
+          manifestPath,
+          jsonlPath,
+          planOutputPath: null,
+          commitStaging: false,
+        }),
+      ).rejects.toThrow();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it("contains no canonical Profile/Business/Education materialization", () => {
