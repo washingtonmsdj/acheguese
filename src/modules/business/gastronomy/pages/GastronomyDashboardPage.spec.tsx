@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import GastronomyDashboardPage from './GastronomyDashboardPage';
 import { useEntitlements } from '@/core/billing/hooks/useEntitlements';
 import { useQuery } from '@tanstack/react-query';
+import { useBusinessDashboardContext } from '@/modules/business/dashboard/businessDashboardContext';
 
 vi.mock('@/core/billing/hooks/useEntitlements', () => ({
   useEntitlements: vi.fn(),
@@ -11,6 +12,10 @@ vi.mock('@/core/billing/hooks/useEntitlements', () => ({
 
 vi.mock('@tanstack/react-query', () => ({
   useQuery: vi.fn(),
+}));
+
+vi.mock('@/modules/business/dashboard/businessDashboardContext', () => ({
+  useBusinessDashboardContext: vi.fn(),
 }));
 
 vi.mock('../components', () => ({
@@ -25,9 +30,14 @@ vi.mock('../components', () => ({
 
 const mockedUseEntitlements = vi.mocked(useEntitlements);
 const mockedUseQuery = vi.mocked(useQuery);
+const mockedUseBusinessDashboardContext = vi.mocked(useBusinessDashboardContext);
 
 describe('GastronomyDashboardPage', () => {
   beforeEach(() => {
+    mockedUseBusinessDashboardContext.mockReturnValue({
+      businessId: 'profile-empresa-1',
+      businessDataId: 'business-data-1',
+    } as never);
     mockedUseQuery.mockReturnValue({
       data: {
         currentMenuItems: 12,
@@ -68,6 +78,8 @@ describe('GastronomyDashboardPage', () => {
       isActive: true,
     });
 
+    expect(mockedUseEntitlements).not.toHaveBeenCalled();
+
     render(
       <MemoryRouter initialEntries={['/perfil/empresas/empresa-1/gastronomia']}>
         <Routes>
@@ -79,6 +91,15 @@ describe('GastronomyDashboardPage', () => {
       </MemoryRouter>,
     );
 
+    expect(mockedUseEntitlements).toHaveBeenCalledWith({
+      business_id: 'business-data-1',
+      subscription_scope: 'business',
+    });
+    expect(mockedUseQuery).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryKey: ['gastronomy', 'dashboard-usage', 'business-data-1'],
+      }),
+    );
     expect(screen.getByText('Dashboard Gastronomia')).toBeInTheDocument();
     expect(screen.getByText('Cardápio')).toBeInTheDocument();
     expect(screen.getByTestId('quick-actions-card')).toBeInTheDocument();
