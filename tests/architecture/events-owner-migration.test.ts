@@ -183,4 +183,19 @@ describe("community Events canonical owner", () => {
   });
 
 
+
+  it("keeps the Events map backed by the canonical Events bounds reader", () => {
+    const map = read("src/core/maps/pages/MapaPageV4.tsx");
+    const eventsMap = read(
+      "src/modules/community-events/pages/EventsMapPage.tsx",
+    );
+
+    expect(map).toContain("makeEventsFetcher");
+    expect(map).toContain("eventsReadService.getByBounds");
+    expect(map).toContain("eventPublicRoutes.detail(event.id)");
+    expect(map).toContain("events: makeEventsFetcher");
+    expect(eventsMap).toContain("initialLayers={['events']}");
+  });
+
+
 });

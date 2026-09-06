@@ -112,9 +112,10 @@ export default function EventsMapPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="absolute inset-0"
           >
-            <MapaPageV4 
+            <MapaPageV4
               resolved={territorialContext?.resolved}
               activeMemberIds={territorialContext?.activeMemberIds}
+              initialLayers={['events']}
             />
           </motion.div>
         </section>

@@ -27,6 +27,8 @@ import {
   isMapRuntimeLayerEnabled,
 } from '../config/runtimeConfig';
 import { BusinessService } from '@/core/business/services/BusinessService';
+import { eventsReadService } from '@/core/community-events';
+import { eventPublicRoutes } from '@/core/community-events/routes/eventPublicRoutes';
 import { mapClassifiedsLayerRuntimeService } from '@/core/maps/services/MapClassifiedsLayerRuntimeService';
 import { mapGastronomyLayerRuntimeService } from '@/core/maps/services/MapGastronomyLayerRuntimeService';
 import { mapServicesLayerRuntimeService } from '@/core/maps/services/MapServicesLayerRuntimeService';
@@ -59,6 +61,8 @@ interface MapaPageV4Props {
   activeMemberIds?: string[];
   /** Standalone owns its page chrome; embedded reuses the persistent community shell. */
   presentation?: 'standalone' | 'embedded';
+  /** Camadas inicialmente focadas. O usuario ainda pode habilitar outras no controle do mapa. */
+  initialLayers?: readonly MapLayerKey[];
 }
 
 // ─── Tile style — SSOT: DEFAULT_TILE_STYLE do MapProvider ────────────────────
@@ -508,19 +512,54 @@ function makeClassifiedsFetcher(territoryFilter: TerritoryFilter) {
   };
 }
 
+
+function makeEventsFetcher(territoryFilter: TerritoryFilter | undefined) {
+  return async (bounds: BoundingBox): Promise<MapMarker[]> => {
+    try {
+      const events = await eventsReadService.getByBounds(bounds, {
+        territoryFilter,
+        limit: 200,
+      });
+
+      return mapEntityProjection.projectEntities(
+        events.map((event) => ({
+          id: event.id,
+          name: event.title,
+          description: event.description,
+          url: eventPublicRoutes.detail(event.id),
+          latitude: event.latitude,
+          longitude: event.longitude,
+          status: EntityStatus.ACTIVE,
+          category: event.category,
+          start_date: event.date,
+          end_date: event.end_date,
+          coordinate_source: event.coordinate_source,
+          current_participants: event.current_participants,
+          map_layer_key: 'events',
+        })),
+        'event',
+        { includeMetadata: true, calculateScore: true },
+      );
+    } catch {
+      return [];
+    }
+  };
+}
+
 // ─── Componente ───────────────────────────────────────────────────────────────
 
 export default function MapaPageV4({
   resolved,
   activeMemberIds = [],
   presentation = 'standalone',
+  initialLayers = [],
 }: MapaPageV4Props) {
   const adapterRef = useRef<MapLibreAdapterHandle>(null);
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
   const [currentBounds, setCurrentBounds] = useState<BoundingBox>(INITIAL_BOUNDS);
   const [currentZoom, setCurrentZoom] = useState<number>(INITIAL_ZOOM);
-  const [visibleLayers, setVisibleLayers] = useState<Partial<Record<MapLayerKey, boolean>>>(
-    createInitialVisibleLayers,
+  const [visibleLayers, setVisibleLayers] = useState<Partial<Record<MapLayerKey, boolean>>>(() =>
+    createFocusedVisibleLayers(initialLayers),
   );
   const location = useLocation();
   const navigate = useNavigate();
@@ -638,6 +677,7 @@ export default function MapaPageV4({
   const gastronomyLayerVisible = isMapRuntimeLayerEnabled('gastronomy') && visibleLayers.gastronomy !== false;
   const servicesLayerVisible = isMapRuntimeLayerEnabled('services') && visibleLayers.services !== false;
   const classifiedsLayerVisible = isMapRuntimeLayerEnabled('classifieds') && visibleLayers.classifieds !== false;
+  const eventsLayerVisible = isMapRuntimeLayerEnabled('events') && visibleLayers.events !== false;
 
   const touristBounds = React.useMemo(
     () => ({
@@ -672,9 +712,10 @@ export default function MapaPageV4({
       ...(gastronomyLayerVisible ? { gastronomy: makeGastronomyFetcher(runtimeTerritoryFilter) } : {}),
       ...(servicesLayerVisible ? { services: makeServicesFetcher(runtimeTerritoryFilter) } : {}),
       ...(classifiedsLayerVisible ? { classifieds: makeClassifiedsFetcher(runtimeTerritoryFilter) } : {}),
+      ...(eventsLayerVisible ? { events: makeEventsFetcher(runtimeTerritoryFilter) } : {}),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [filterKey, businessesLayerVisible, gastronomyLayerVisible, servicesLayerVisible, classifiedsLayerVisible],
+    [filterKey, businessesLayerVisible, gastronomyLayerVisible, servicesLayerVisible, classifiedsLayerVisible, eventsLayerVisible],
   );
 
   const { layerData, loadingLayers, fetchByBounds, clearLayer } = useMapViewportFetch({
@@ -695,9 +736,14 @@ export default function MapaPageV4({
   }, [clearLayer]);
 
   useEffect(() => {
-    if (requestedLayers.length === 0) return;
-    setVisibleLayers(createFocusedVisibleLayers(requestedLayers));
-  }, [requestedLayers, requestedLayersKey]);
+    if (requestedLayers.length > 0) {
+      setVisibleLayers(createFocusedVisibleLayers(requestedLayers));
+      return;
+    }
+    if (initialLayers.length > 0) {
+      setVisibleLayers(createFocusedVisibleLayers(initialLayers));
+    }
+  }, [initialLayers, requestedLayers, requestedLayersKey]);
 
   // Fetch inicial com bounds configurados.
   // Quando os polígonos do território chegarem, o MapLibreAdapter centraliza
