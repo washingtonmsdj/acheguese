@@ -29,6 +29,7 @@ import {
   getInstitutionTypeForNiche,
   hasEducationLevels,
   isSchoolProfileNiche,
+  normalizeSchoolNetworkForType,
   type EducationInfrastructurePreset,
   type EducationSetupArrayField,
   type EducationSetupFormData,
@@ -130,17 +131,28 @@ export function EducationSetupPage() {
       return;
     }
 
+    const supportsSchoolIdentity = isSchoolProfileNiche(formData.nicheKey);
+    const supportsEducationLevels = hasEducationLevels(formData.nicheKey);
+    const normalizedNetwork = normalizeSchoolNetworkForType(
+      formData.schoolType,
+      formData.schoolNetwork,
+    );
+
     setIsSaving(true);
     try {
       const result = await EducationService.saveSetupProfile({
         businessId,
         institutionType: getInstitutionTypeForNiche(formData.nicheKey),
         nicheKey: formData.nicheKey,
-        schoolType: (formData.schoolType || undefined) as SchoolType | undefined,
-        schoolNetwork: (formData.schoolNetwork || undefined) as SchoolNetwork | undefined,
-        schoolInepCode: formData.schoolInepCode || undefined,
-        schoolSourceUrl: formData.schoolSourceUrl || undefined,
-        educationLevels: formData.educationLevels,
+        schoolType: supportsSchoolIdentity
+          ? ((formData.schoolType || undefined) as SchoolType | undefined)
+          : undefined,
+        schoolNetwork: supportsSchoolIdentity
+          ? ((normalizedNetwork || undefined) as SchoolNetwork | undefined)
+          : undefined,
+        schoolInepCode: supportsSchoolIdentity ? formData.schoolInepCode || undefined : undefined,
+        schoolSourceUrl: supportsSchoolIdentity ? formData.schoolSourceUrl || undefined : undefined,
+        educationLevels: supportsEducationLevels ? formData.educationLevels : undefined,
         shifts: formData.shifts,
         ageRangeMin: formData.ageRangeMin ? Number(formData.ageRangeMin) : undefined,
         ageRangeMax: formData.ageRangeMax ? Number(formData.ageRangeMax) : undefined,
