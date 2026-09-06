@@ -1,7 +1,7 @@
 # Validacao atual — Modulo de Empresas
 
 **Data do checkpoint:** 2026-09-06  
-**Checkpoint tecnico:** `cd61376d46a391832444ca052f0d83a6e09b0e13`  
+**Checkpoint tecnico:** `2ab7ada54f5141eb75f3ce10a3125c6c62ee412f`  
 **Status:** G6 EM CERTIFICACAO — NAO MVP CERTIFICADO
 
 Este arquivo registra o estado atual de Business durante G6. O ownership/SSOT de source foi fechado em G4 e os blockers historicos de G5 foram encerrados conforme `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`. O trabalho ativo agora e certificacao funcional e operacional do modulo.
@@ -441,6 +441,26 @@ Probe remoto em `BEGIN/ROLLBACK`:
 - manifest legado sem binding -> bloqueado pelo constraint;
 - manifest com entry/hash coerentes -> batch criado;
 - rollback -> **0 batches / 0 staging rows** persistidos.
+
+
+Migration Git/remoto
+`20260906170324_bind_public_education_optional_fields_to_raw_g6.sql`
+estendeu o mesmo source binding aos campos opcionais do JSONL: endereco, numero,
+complemento, bairro, CEP e coordenadas. O validator respeita os aliases do adapter
+(`DS_ENDERECO/NO_ENDERECO`, `NU_LATITUDE/LATITUDE`,
+`NU_LONGITUDE/LONGITUDE`) e normaliza CEP/decimal da mesma forma que o staging.
+
+Probe transacional adicional:
+
+- linha integra -> `valid`;
+- mesma fonte com `address_street` adulterado fora do `raw_record` ->
+  `invalid:raw_address_street_mismatch`;
+- batch -> `rejected`;
+- `education_profiles` permaneceu **15 -> 15**;
+- rollback -> **0 batches / 0 staging rows**.
+
+Assim, uma futura materializacao nao podera confiar em endereco/geo normalizado que tenha
+sido alterado depois do adapter sem que o quality gate detecte a divergencia.
 
 ACL apos a migration permaneceu inalterada: create/stage/validate somente
 `service_role`; planner read-only `SECURITY INVOKER` somente `service_role`.
