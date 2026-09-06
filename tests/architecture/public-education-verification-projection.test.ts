@@ -8,7 +8,7 @@ const read = (path: string) => readFileSync(resolve(ROOT, path), "utf8");
 describe("public Education verification projection", () => {
   it("repairs historical seeded verification without deleting provenance", () => {
     const repair = read(
-      "supabase/migrations/20260906083000_repair_public_education_verification_projection_g6.sql",
+      "supabase/migrations/20260906073332_repair_public_education_verification_projection_g6.sql",
     );
 
     expect(repair).toContain("public_education_seed");
