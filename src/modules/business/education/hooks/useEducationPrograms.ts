@@ -42,6 +42,7 @@ export function useEducationPrograms(
       maxCapacity?: number;
       currentEnrollment?: number;
       schedule?: string;
+      curriculumTopics?: string[];
     }) => {
       if (!profileId) throw new Error('Profile ID required');
       const created = await EducationService.createProgram(profileId, payload);
