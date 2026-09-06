@@ -74,20 +74,16 @@ export function getSections(labels: { programPlural: string; eventPlural: string
 
 export const FALLBACK_FAQ = [
   {
-    q: "Como agendar uma visita?",
-    a: "Voce pode solicitar uma visita pelo formulario de interesse ou diretamente pelo WhatsApp, conforme disponibilidade da instituicao.",
+    q: "Como confirmar matricula, vagas ou horarios?",
+    a: "Informacoes operacionais podem mudar ao longo do ano. Confirme pelos canais oficiais da rede ou da instituicao. O Achegue-se so sinaliza disponibilidade quando houver dado cadastrado para isso.",
   },
   {
-    q: "Quais documentos sao necessarios para matricula?",
-    a: "Os documentos variam por programa. Em geral, sao solicitados RG/Certidao, comprovante de residencia, historico escolar (quando aplicavel) e dados dos responsaveis.",
+    q: "Se uma infraestrutura nao aparece, significa que a unidade nao possui?",
+    a: "Nao. A ausencia de um item significa apenas que ele ainda nao foi confirmado por uma fonte confiavel para este perfil.",
   },
   {
-    q: "Como funciona a aula experimental?",
-    a: "Quando disponivel para o programa, a aula experimental permite vivenciar uma aula completa antes de decidir pela matricula. Solicite via formulario.",
-  },
-  {
-    q: "Existe periodo de adaptacao?",
-    a: "Sim. Em programas infantis e creche, oferecemos periodo de adaptacao gradual com acompanhamento da equipe pedagogica.",
+    q: "Como saber a origem dos dados?",
+    a: "Quando disponivel, o perfil mostra identificadores publicos, rede de ensino e a data da fonte usada. Informacoes sensiveis a prazo devem ser reconfirmadas no canal oficial.",
   },
 ];
 
