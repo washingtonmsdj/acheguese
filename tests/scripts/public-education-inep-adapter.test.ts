@@ -302,7 +302,7 @@ describe("public Education INEP adapter", () => {
       encoding: "utf8",
     });
 
-    expect(PARSER_VERSION).toBe("inep-censo-school-adapter/5");
+    expect(PARSER_VERSION).toBe("inep-censo-school-adapter/6");
     expect(manifest).toMatchObject({
       contract: "acheguese.public-education-inep-normalized/1",
       parser_version: PARSER_VERSION,
@@ -319,6 +319,13 @@ describe("public Education INEP adapter", () => {
       target: {
         municipality_ibge_code: "2927408",
         uf_ibge_code: "29",
+      },
+      normalized_output: {
+        contract: "acheguese.public-education-inep-jsonl/1",
+        file: "salvador.jsonl",
+        sha256: expect.stringMatching(/^[0-9a-f]{64}$/),
+        rows: 3,
+        raw_record_hash_contract: "acheguese.inep-raw-record-sha256/1",
       },
       counts: {
         source_rows: 4,
@@ -361,6 +368,11 @@ describe("public Education INEP adapter", () => {
 
     expect(JSON.parse(readFileSync(manifestPath, "utf8"))).toMatchObject({
       parser_version: PARSER_VERSION,
+      normalized_output: {
+        file: "salvador.jsonl",
+        sha256: manifest.normalized_output.sha256,
+        rows: 3,
+      },
       counts: {
         public_active_rows: 1,
       },
