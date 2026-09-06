@@ -219,6 +219,12 @@ verify_jwt = true
 [functions.profile-rpc]
 verify_jwt = true
 
+[functions.business-network-rpc]
+verify_jwt = true
+
+[functions.education-lead-rpc]
+verify_jwt = true
+
 [functions.register-community-interest]
 verify_jwt = false
 
