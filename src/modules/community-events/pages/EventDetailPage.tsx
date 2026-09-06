@@ -85,7 +85,7 @@ export default function EventDetailPage() {
     queryKey: ['event-detail-ssot', eventId],
     queryFn: async () => {
       if (!eventId) return null;
-      const row = await eventRuntimeService.getEventById(eventId);
+      const row = await eventRuntimeService.getPublicEventById(eventId);
       return row ? mapCommunityEventToEvent(row) : null;
     },
   });

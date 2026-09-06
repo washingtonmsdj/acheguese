@@ -272,34 +272,50 @@ export function EventCalendar({ events, onEventClick }: EventCalendarProps) {
         </div>
       </div>
 
-      {/* Weekday headers */}
-      <div className="mb-2 grid grid-cols-7 gap-1 sm:gap-2">
-        {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
-          <div
-            key={day}
-            className="text-center text-xs font-semibold text-muted-foreground sm:text-sm"
-          >
-            {day}
+      {events.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-muted/20 px-6 py-12 text-center">
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+            <CalendarIcon className="h-7 w-7 text-primary" />
           </div>
-        ))}
-      </div>
-
-      {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-1 sm:gap-2">
-        {renderCalendarDays()}
-      </div>
-
-      {/* Legend */}
-      <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-full ring-2 ring-primary" />
-          <span>Hoje</span>
+          <h4 className="text-base font-semibold text-foreground">
+            Nenhum evento publicado neste período
+          </h4>
+          <p className="mt-2 max-w-md text-sm text-muted-foreground">
+            A agenda aparecerá aqui assim que houver eventos públicos ativos para o território.
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded bg-primary/10" />
-          <span>Com eventos</span>
-        </div>
-      </div>
+      ) : (
+        <>
+          {/* Weekday headers */}
+          <div className="mb-2 grid grid-cols-7 gap-1 sm:gap-2">
+            {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
+              <div
+                key={day}
+                className="text-center text-xs font-semibold text-muted-foreground sm:text-sm"
+              >
+                {day}
+              </div>
+            ))}
+          </div>
+
+          {/* Calendar grid */}
+          <div className="grid grid-cols-7 gap-1 sm:gap-2">
+            {renderCalendarDays()}
+          </div>
+
+          {/* Legend */}
+          <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded-full ring-2 ring-primary" />
+              <span>Hoje</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-3 rounded bg-primary/10" />
+              <span>Com eventos</span>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

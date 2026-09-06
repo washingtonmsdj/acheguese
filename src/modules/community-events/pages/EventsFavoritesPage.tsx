@@ -32,7 +32,9 @@ export default function EventsFavoritesPage() {
     queryKey: ['events-favorites', favorites],
     enabled: favorites.length > 0,
     queryFn: async () => {
-      const rows = await Promise.all(favorites.map((eventId) => eventRuntimeService.getEventById(eventId)));
+      const rows = await Promise.all(
+        favorites.map((eventId) => eventRuntimeService.getPublicEventById(eventId)),
+      );
       return rows.filter(Boolean).map((event) => mapCommunityEventToEvent(event!));
     },
   });

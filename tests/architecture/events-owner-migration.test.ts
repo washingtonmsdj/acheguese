@@ -198,4 +198,31 @@ describe("community Events canonical owner", () => {
   });
 
 
+
+  it("keeps public event detail and favorites freshness-aware", () => {
+    const readService = read(
+      "src/core/community-events/services/EventReadService.ts",
+    );
+    const runtime = read(
+      "src/core/community-events/services/EventRuntimeService.ts",
+    );
+    const detail = read(
+      "src/modules/community-events/pages/EventDetailPage.tsx",
+    );
+    const favorites = read(
+      "src/modules/community-events/pages/EventsFavoritesPage.tsx",
+    );
+    const calendar = read(
+      "src/modules/community-events/components/EventCalendar.tsx",
+    );
+
+    expect(readService).toContain("getPublicEventById");
+    expect(readService).toContain("isEventCurrentOrFuture(event)");
+    expect(runtime).toContain("getPublicEventById");
+    expect(detail).toContain("getPublicEventById(eventId)");
+    expect(favorites).toContain("getPublicEventById(eventId)");
+    expect(calendar).toContain("Nenhum evento publicado neste período");
+  });
+
+
 });

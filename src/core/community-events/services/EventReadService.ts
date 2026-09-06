@@ -9,6 +9,7 @@ import {
 import { EVENT_PAGE_SIZE } from "@/core/community-events/config/eventReadConfig";
 import {
   PUBLIC_ACTIVE_EVENT_STATUSES,
+  isEventCurrentOrFuture,
   isPublicActiveEventStatus,
 } from "@/core/community-events/eventFreshness";
 import type {
@@ -152,6 +153,11 @@ export class EventReadService {
       logger.error("EventReadService.getEventById", error);
       return null;
     }
+  }
+
+  async getPublicEventById(id: string): Promise<PublicEvent | null> {
+    const event = await this.getEventById(id);
+    return event && isEventCurrentOrFuture(event) ? event : null;
   }
 
   async getEvents(filters: EventFilters = {}): Promise<PublicEvent[]> {

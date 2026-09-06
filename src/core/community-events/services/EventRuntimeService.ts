@@ -33,6 +33,10 @@ export class EventRuntimeService {
     return eventsReadService.getEventById(id);
   }
 
+  async getPublicEventById(id: string): Promise<Event | null> {
+    return eventsReadService.getPublicEventById(id);
+  }
+
   async getEvents(filters?: GetEventsFilters): Promise<Event[]> {
     return eventsReadService.getEvents(filters);
   }
@@ -125,6 +129,7 @@ export const eventRuntimeService = new EventRuntimeService();
 export class EventsService {
   static getEvents = eventRuntimeService.getEvents.bind(eventRuntimeService);
   static getEventById = eventRuntimeService.getEventById.bind(eventRuntimeService);
+  static getPublicEventById = eventRuntimeService.getPublicEventById.bind(eventRuntimeService);
   static createEvent = eventRuntimeService.createEvent.bind(eventRuntimeService);
   static updateEvent = eventRuntimeService.updateEvent.bind(eventRuntimeService);
   static deleteEvent = eventRuntimeService.deleteEvent.bind(eventRuntimeService);
