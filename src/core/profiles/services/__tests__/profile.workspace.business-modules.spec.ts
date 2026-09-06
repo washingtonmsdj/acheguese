@@ -17,7 +17,8 @@ const entitlementDefaults = {
 };
 
 const business = {
-  id: "biz-1",
+  id: "profile-biz-1",
+  business_data_id: "business-data-1",
   name: "Cafe Central",
   category: "restaurante",
   is_premium: true,
@@ -42,10 +43,12 @@ describe("buildBusinessModuleSnapshot", () => {
       getShareUrl,
     });
 
+    expect(snapshot.businessId).toBe("profile-biz-1");
+    expect(snapshot.businessDataId).toBe("business-data-1");
     expect(snapshot.publicUrl).toBe("/rio-vermelho/cafe-central");
     expect(snapshot.shareUrl).toBe("/rio-vermelho/cafe-central");
     expect(getCanonicalUrl).toHaveBeenCalledWith({
-      id: "biz-1",
+      id: "profile-biz-1",
       slug: "cafe-central",
       is_premium: true,
       geographic_path: "/br/ba/salvador/rio-vermelho",
