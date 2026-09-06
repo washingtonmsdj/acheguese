@@ -13,7 +13,10 @@
  */
 
 export interface ProfileAssociatedBusiness {
+  /** profiles.id: identidade usada por rotas e autoridade multi-profile. */
   id: string;
+  /** business_data.id: identidade usada por extensoes da empresa. */
+  business_data_id: string;
   name?: string;
   logo?: string;
   category?: string;
@@ -79,7 +82,10 @@ export interface ProfileBusinessQrSnapshot {
  * Aggregated business module snapshot for owner-facing profile UI.
  */
 export interface ProfileBusinessModuleSnapshot {
+  /** profiles.id usado por rotas/gestao. */
   businessId: string;
+  /** business_data.id usado por Billing/Gastronomia/Coverage. */
+  businessDataId: string;
   name: string;
   category?: string;
   neighborhood?: string;
