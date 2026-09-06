@@ -145,17 +145,20 @@ function resolveEducationInfrastructurePreset(
   }
 }
 
-export const INSTITUTION_TYPES = [
-  { value: 'school', label: 'Escola' },
-  { value: 'daycare', label: 'Creche/Bercario' },
-  { value: 'language_school', label: 'Escola de Idiomas' },
-  { value: 'prep_course', label: 'Curso Pre-vestibular' },
-  { value: 'technical_school', label: 'Escola Tecnica' },
-  { value: 'tutoring_center', label: 'Centro de Reforco' },
-  { value: 'music_school', label: 'Escola de Musica' },
-  { value: 'sports_school', label: 'Escola de Esportes' },
-  { value: 'other', label: 'Outro' },
-];
+const INSTITUTION_TYPE_BY_NICHE: Record<EducationNicheKey, string> = {
+  regular_school: 'school',
+  daycare: 'daycare',
+  language_school: 'language_school',
+  prep_course: 'prep_course',
+  technical_school: 'technical_school',
+  tutoring_center: 'tutoring_center',
+  music_school: 'music_school',
+  sports_school: 'sports_school',
+};
+
+export function getInstitutionTypeForNiche(nicheKey: string): string {
+  return INSTITUTION_TYPE_BY_NICHE[nicheKey as EducationNicheKey] ?? '';
+}
 
 const SCHOOL_PROFILE_NICHES: EducationNicheKey[] = ['regular_school', 'daycare', 'technical_school'];
 const EDUCATION_LEVEL_NICHES: EducationNicheKey[] = ['regular_school', 'daycare', 'technical_school'];
