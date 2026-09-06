@@ -192,19 +192,25 @@ export function EducationDetailSidebar({
           <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
             <li className="flex items-start gap-2">
               <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" />
-              {isPublicInstitution ? 'Registro público catalogado' : 'Perfil institucional publicado'}
+              {isUnclaimedDirectoryProfile
+                ? 'Cadastro de diretório ainda não reivindicado'
+                : isPublicInstitution
+                  ? 'Cadastro institucional administrado'
+                  : 'Perfil institucional administrado'}
             </li>
             <li className="flex items-start gap-2">
               <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" />
-              {isPublicInstitution
+              {isUnclaimedDirectoryProfile || isPublicInstitution
                 ? 'Dados exibidos somente quando cadastrados ou sustentados por fonte'
                 : 'Comunicação disponível conforme canais cadastrados'}
             </li>
             <li className="flex items-start gap-2">
               <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" />
-              {isPublicInstitution
-                ? 'Formulários com dados de alunos ficam desabilitados por padrão'
-                : 'Dados do perfil rastreáveis no sistema'}
+              {isUnclaimedDirectoryProfile
+                ? 'Controle liberado somente após revisão de titularidade'
+                : isPublicInstitution
+                  ? 'Formulários com dados de alunos permanecem desabilitados por padrão'
+                  : 'Dados do perfil rastreáveis no sistema'}
             </li>
           </ul>
         </div>
