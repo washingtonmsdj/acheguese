@@ -104,6 +104,26 @@ export function ProgramCard({
         </p>
       )}
 
+      {program.curriculum_topics && program.curriculum_topics.length > 0 && (
+        <div className="mt-3">
+          <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Disciplinas / conteúdos
+          </div>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {program.curriculum_topics.slice(0, 8).map((topic) => (
+              <Badge key={topic} variant="outline" className="text-[11px]">
+                {topic}
+              </Badge>
+            ))}
+            {program.curriculum_topics.length > 8 && (
+              <Badge variant="secondary" className="text-[11px]">
+                +{program.curriculum_topics.length - 8}
+              </Badge>
+            )}
+          </div>
+        </div>
+      )}
+
       <dl className="mt-4 grid grid-cols-2 gap-2 text-xs">
         {program.age_group && (
           <div className="rounded-lg bg-muted/60 px-3 py-2">
