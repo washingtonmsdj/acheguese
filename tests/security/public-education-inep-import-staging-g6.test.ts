@@ -30,6 +30,9 @@ describe("G6 public Education INEP import staging", () => {
   const completenessBinding = read(
     "supabase/migrations/20260906175025_require_complete_inep_staging_batch_g6.sql",
   );
+  const normalizedOutputBinding = read(
+    "supabase/migrations/20260906180209_bind_inep_normalized_output_artifact_g6.sql",
+  );
 
   it("promotes non-null INEP codes to the canonical natural key", () => {
     expect(migration).toContain(
@@ -152,6 +155,30 @@ describe("G6 public Education INEP import staging", () => {
     ]) {
       expect(sourceBinding).toContain(errorCode);
     }
+  });
+
+  it("binds each batch to the exact normalized JSONL artifact contract", () => {
+    expect(normalizedOutputBinding).toContain(
+      "education_public_import_batches_normalized_output_chk",
+    );
+    expect(normalizedOutputBinding).toContain(
+      "acheguese.public-education-inep-jsonl/1",
+    );
+    expect(normalizedOutputBinding).toContain(
+      "manifest#>>'{normalized_output,sha256}'",
+    );
+    expect(normalizedOutputBinding).toContain(
+      "manifest#>>'{normalized_output,file}'",
+    );
+    expect(normalizedOutputBinding).toContain(
+      "manifest#>>'{normalized_output,rows}'",
+    );
+    expect(normalizedOutputBinding).toContain(
+      "manifest#>>'{counts,target_municipality_rows}'",
+    );
+    expect(normalizedOutputBinding).not.toContain(
+      "INSERT INTO public.education_profiles",
+    );
   });
 
   it("does not validate a truncated staging batch", () => {
