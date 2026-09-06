@@ -185,6 +185,25 @@ export const SCHOOL_NETWORKS = [
   { value: 'private', label: 'Privada' },
 ];
 
+export function getSchoolNetworkOptions(schoolType: string) {
+  if (schoolType === 'public') {
+    return SCHOOL_NETWORKS.filter((network) => network.value !== 'private');
+  }
+  if (schoolType === 'private') {
+    return SCHOOL_NETWORKS.filter((network) => network.value === 'private');
+  }
+  return SCHOOL_NETWORKS;
+}
+
+export function normalizeSchoolNetworkForType(
+  schoolType: string,
+  schoolNetwork: string,
+): string {
+  if (schoolType === 'private') return 'private';
+  if (schoolType === 'public' && schoolNetwork === 'private') return '';
+  return schoolNetwork;
+}
+
 export const EDUCATION_LEVEL_OPTIONS: { key: EducationLevel; label: string }[] = [
   { key: 'early_childhood', label: 'Educação Infantil' },
   { key: 'elementary_1', label: 'Ensino Fundamental - Anos Iniciais' },
