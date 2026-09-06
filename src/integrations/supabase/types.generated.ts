@@ -17491,6 +17491,35 @@ export type Database = {
         Args: { p_profile_id: string; p_user_id: string }
         Returns: boolean
       }
+      business_network_rpc_convert_to_network: {
+        Args: {
+          p_actor_user_id: string
+          p_brand_name: string
+          p_standalone_profile_id: string
+          p_unit_name: string
+        }
+        Returns: Json
+      }
+      business_network_rpc_create_branch: {
+        Args: {
+          p_actor_user_id: string
+          p_brand_hub_id: string
+          p_business_name: string
+          p_is_headquarters: boolean
+          p_location_id: string
+          p_slug: string
+          p_unit_name: string
+        }
+        Returns: Json
+      }
+      business_network_rpc_set_headquarters: {
+        Args: {
+          p_actor_user_id: string
+          p_branch_id: string
+          p_brand_hub_id: string
+        }
+        Returns: Json
+      }
       calculate_distance_meters: {
         Args: { p_lat1: number; p_lat2: number; p_lng1: number; p_lng2: number }
         Returns: number
