@@ -9,7 +9,7 @@
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
 **Status:** EM EXECUÇÃO — G6 / Empresas-Educação fechou identidade Profile ID vs business_data.id, Billing delegado e claim institucional individual com transferência canônica; cobertura pública completa de Salvador e autoridade herdada de Prefeitura/Secretaria seguem abertas; provas hosted same-SHA continuam bloqueadas por runner pre-step  
-**Checkpoint técnico atual:** `2ab7ada54f5141eb75f3ce10a3125c6c62ee412f`  
+**Checkpoint técnico atual:** `05c7481754e667216d7a6f6ce0436dbc5af483c4`  
 **Checkpoint de transição G5 → G6:** `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
@@ -813,6 +813,8 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 - [x] probe adicional do archive binding em `BEGIN/ROLLBACK`: manifest legado sem binding -> bloqueado pelo constraint; manifest com entry/hashes coerentes -> criado; rollback -> **0 batches / 0 staging rows**;
 - [x] migration Git/remoto `20260906170324_bind_public_education_optional_fields_to_raw_g6.sql` estende o binding de `raw_record` para endereço, número, complemento, bairro, CEP, latitude e longitude, preservando os aliases/normalizações do adapter; JSONL adulterado nesses campos não pode chegar como candidato válido;
 - [x] probe do optional binding: linha íntegra -> `valid`; endereço normalizado adulterado com raw intacto -> `invalid:raw_address_street_mismatch`; batch `rejected`; catálogo público **15 -> 15**; rollback -> 0 staging;
+- [x] migration Git/remoto `20260906170644_bind_inep_landing_updated_at_manifest_g6.sql` elimina dupla verdade do timestamp da fonte: `source_page_updated_at` da coluna deve ser igual a `source.landing_page_updated_at` do manifest (ou ambos nulos);
+- [x] probe do timestamp: valor divergente -> bloqueado pelo constraint; valor idêntico -> batch criado; rollback -> **0 batches / 0 staging rows**;
 - [x] pós-condição persistente: **0 batches**, **0 rows de staging**, **15 education_profiles**, **15 INEP únicos**, **0 materializers**; Advisor com 0 finding específico;
 - [x] ratchets `tests/scripts/public-education-inep-adapter.test.ts` e `tests/security/public-education-inep-import-staging-g6.test.ts` protegem parser, provenance, ACL, idempotência e ausência de segunda autoridade;
 - [ ] **próximo passo obrigatório:** obter/inspecionar o ZIP oficial, provar o header real de `Tabela_Escola_2025.csv`, executar o adapter sobre o artefato oficial e criar o primeiro batch real de Salvador. O link oficial está publicado pelo Inep e marcado como atualizado em julho/2026, porém `download.inep.gov.br` respondeu 502 no browser e falhou por resolução no runtime deste checkpoint; **não usar espelho como substituto**;
