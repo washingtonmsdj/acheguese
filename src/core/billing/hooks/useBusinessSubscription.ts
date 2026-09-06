@@ -11,18 +11,18 @@ import { EntitlementsService } from '../entitlements';
 import { BillingPlanService } from '../services/BillingPlanService';
 import { PlanTier } from '../types';
 
-export function useBusinessSubscription(businessId: string | undefined) {
+export function useBusinessSubscription(businessDataId: string | undefined) {
   const {
     data: result,
     isLoading,
     error,
     refetch,
   } = useQuery({
-    queryKey: ['business-subscription', businessId],
+    queryKey: ['business-subscription', businessDataId],
     queryFn: async () => {
-      if (!businessId) throw new Error('businessId e obrigatorio');
+      if (!businessDataId) throw new Error('business_data.id e obrigatorio');
 
-      const subscriptionResult = await BusinessSubscriptionService.getByBusinessId(businessId);
+      const subscriptionResult = await BusinessSubscriptionService.getByBusinessId(businessDataId);
       if (subscriptionResult.error) {
         throw new Error(subscriptionResult.error);
       }
@@ -47,7 +47,7 @@ export function useBusinessSubscription(businessId: string | undefined) {
         entitlements,
       };
     },
-    enabled: !!businessId,
+    enabled: !!businessDataId,
     staleTime: 1000 * 60 * 5,
   });
 
