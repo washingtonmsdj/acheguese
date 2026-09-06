@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { useProfileMembers } from '../hooks/useProfileMembers';
 import { useAuth } from '@/core/auth/hooks/useAuth';
+import { MultiProfileService } from '../services/multi-profile';
 import type { ProfileRole } from '../services/multi-profile/types';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -37,6 +38,7 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
   
   const [showAdd, setShowAdd] = useState(false);
   const [addingMember, setAddingMember] = useState(false);
+  const [transferringOwnerId, setTransferringOwnerId] = useState<string | null>(null);
   const defaultInviteRole: ProfileRole =
     profileType === 'business' ? 'admin' : 'member';
   const [newMember, setNewMember] = useState({
@@ -124,6 +126,49 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
         description: result.error || 'Não foi possível atualizar a role.',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleTransferOwnership = async (
+    userId: string,
+    memberName: string,
+  ) => {
+    const confirmed = await confirm({
+      title: 'Transferir propriedade',
+      description:
+        `${memberName} passará a ser o Proprietário deste perfil. Você continuará como Gestor e deixará de controlar pessoas e acessos.`,
+      confirmLabel: 'Transferir propriedade',
+      variant: 'destructive',
+    });
+    if (!confirmed) return;
+
+    setTransferringOwnerId(userId);
+    try {
+      const result = await MultiProfileService.transferOwnership(profileId, userId);
+
+      if (!result.success) {
+        toast({
+          title: 'Erro ao transferir propriedade',
+          description: result.error || 'Não foi possível transferir a propriedade.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      await refetch();
+      toast({
+        title: 'Propriedade transferida',
+        description:
+          'A pessoa agora é Proprietário deste perfil e seu acesso passou a Gestor.',
+      });
+    } catch (error: unknown) {
+      toast({
+        title: 'Erro ao transferir propriedade',
+        description: getErrorMessage(error, 'Tente novamente.'),
+        variant: 'destructive',
+      });
+    } finally {
+      setTransferringOwnerId(null);
     }
   };
 
@@ -301,8 +346,31 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
                   </Select>
 
                   <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={transferringOwnerId !== null}
+                    onClick={() =>
+                      handleTransferOwnership(
+                        member.user_id,
+                        member.display_name || member.email || 'Esta pessoa',
+                      )
+                    }
+                  >
+                    {transferringOwnerId === member.user_id ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Transferindo...
+                      </>
+                    ) : (
+                      'Transferir propriedade'
+                    )}
+                  </Button>
+
+                  <Button
                     variant="ghost"
                     size="sm"
+                    disabled={transferringOwnerId !== null}
                     onClick={() => handleRemove(member.user_id)}
                     aria-label="Remover acesso"
                   >
