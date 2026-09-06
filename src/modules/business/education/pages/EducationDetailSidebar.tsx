@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Building2, Calendar, Check, ChevronLeft, FileText, Flag, MessageCircle, PencilLine, Shield } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
+import { Input } from '@/shared/components/ui/input';
 import { EducationLeadForm, type LeadFormData } from '../components/EducationLeadForm';
 import type { EducationPublicProfile } from '@/core/education';
 import { useAuth } from '@/core/auth/hooks/useAuth';
@@ -39,6 +40,7 @@ export function EducationDetailSidebar({
   const [claimSubmitted, setClaimSubmitted] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [correctionOpen, setCorrectionOpen] = useState(false);
+  const [institutionalEvidenceUrl, setInstitutionalEvidenceUrl] = useState('');
 
   const isPublicInstitution = profile.school_type === 'public';
   const isUnclaimedDirectoryProfile = profile.is_claimable;
@@ -47,8 +49,12 @@ export function EducationDetailSidebar({
     isUnclaimedDirectoryProfile &&
     !isPublicInstitution &&
     Boolean(profile.business_data_id);
+  const canRequestInstitutionalClaim =
+    isUnclaimedDirectoryProfile &&
+    isPublicInstitution &&
+    Boolean(profile.business_data_id);
 
-  const requestClaim = async () => {
+  const requestClaim = async (officialEvidenceUrl?: string) => {
     if (!profile.business_data_id) return;
 
     if (!user) {
@@ -60,8 +66,12 @@ export function EducationDetailSidebar({
     try {
       const result = await BusinessClaimService.requestClaim({
         businessId: profile.business_data_id,
-        userId: user.id,
-        message: 'Solicitacao iniciada a partir do perfil publico de Educacao.',
+        message: isPublicInstitution
+          ? 'Solicitacao de administracao institucional iniciada a partir do perfil publico de Educacao.'
+          : 'Solicitacao iniciada a partir do perfil publico de Educacao.',
+        officialEvidenceUrls: officialEvidenceUrl
+          ? [officialEvidenceUrl]
+          : undefined,
       });
       setClaimSubmitted(true);
       toast({
@@ -225,16 +235,53 @@ export function EducationDetailSidebar({
           </div>
         )}
 
-        {isUnclaimedDirectoryProfile && isPublicInstitution && (
+        {canRequestInstitutionalClaim && (
           <div className="rounded-3xl border border-border bg-muted/30 p-5">
             <div className="flex items-center gap-2 text-sm font-semibold">
               <Shield className="h-4 w-4 text-primary" />
               Administracao institucional
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              Este cadastro publico ainda nao foi reivindicado por uma conta institucional.
-              A transferencia exige comprovacao documental e revisao administrativa.
+              Este cadastro publico ainda nao possui uma conta institucional responsavel.
+              A solicitacao nao libera acesso automaticamente: a equipe valida a
+              comprovacao antes de transferir a autoridade do perfil.
             </p>
+            <div className="mt-3 space-y-2">
+              <Input
+                type="url"
+                value={institutionalEvidenceUrl}
+                onChange={(event) =>
+                  setInstitutionalEvidenceUrl(event.target.value)
+                }
+                maxLength={1200}
+                placeholder="https://fonte-oficial.gov.br/..."
+                aria-label="Fonte oficial para comprovar autoridade institucional"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Informe uma fonte publica verificavel, como site oficial da escola,
+                Secretaria de Educacao, rede responsavel ou Diario Oficial. Nao envie
+                documentos pessoais ou dados de alunos por este campo.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full rounded-full"
+                disabled={
+                  isClaiming ||
+                  claimSubmitted ||
+                  institutionalEvidenceUrl.trim().length === 0
+                }
+                onClick={() =>
+                  void requestClaim(institutionalEvidenceUrl.trim())
+                }
+              >
+                {claimSubmitted
+                  ? 'Solicitacao institucional pendente'
+                  : isClaiming
+                    ? 'Enviando...'
+                    : 'Solicitar administracao institucional'}
+              </Button>
+            </div>
           </div>
         )}
 
