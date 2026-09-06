@@ -48,6 +48,30 @@ function validateCustomStageText(value: string): boolean {
   return value.length >= 3 && value.length <= 120 && value !== SCHOOL_STAGE_OTHER_VALUE;
 }
 
+function normalizeCurriculumTopics(
+  topics: string[] | null | undefined,
+): string[] | null | undefined {
+  if (topics === undefined) return undefined;
+  if (topics === null) return null;
+
+  const normalized = Array.from(
+    new Set(
+      topics
+        .map((topic) => topic.trim().replace(/\s+/g, ' '))
+        .filter(Boolean),
+    ),
+  );
+
+  if (normalized.length > 50) {
+    throw new Error('Curriculo excede o limite de 50 disciplinas/conteudos');
+  }
+  if (normalized.some((topic) => topic.length > 80)) {
+    throw new Error('Cada disciplina/conteudo deve ter no maximo 80 caracteres');
+  }
+
+  return normalized.length > 0 ? normalized : null;
+}
+
 function isOfficialStageLabel(
   value: string,
   nicheKey: EducationNicheKey | null | undefined,
@@ -253,6 +277,8 @@ export async function createEducationProgram(
     payload.grade = stageGrade ?? stageName;
   }
 
+  payload.curriculum_topics = normalizeCurriculumTopics(payload.curriculum_topics) ?? null;
+
   const { data, error } = await supabase
     .from('education_programs')
     .insert(payload)
@@ -303,6 +329,10 @@ export async function updateEducationProgram(
       payload.name = updatedName ?? candidate;
       payload.grade = updatedGrade ?? candidate;
     }
+  }
+
+  if (payload.curriculum_topics !== undefined) {
+    payload.curriculum_topics = normalizeCurriculumTopics(payload.curriculum_topics) ?? null;
   }
 
   const { data, error } = await supabase
