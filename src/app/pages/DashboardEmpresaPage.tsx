@@ -50,8 +50,9 @@ export default function DashboardEmpresaPage() {
   const { permissions, loading: accessLoading } = useDashboardAccess(profileId);
   const { activeTab, setActiveTab } = useDashboardTabs();
   const { business, isLoading: dataLoading } = useBusiness(profileId || "");
+  const businessDataId = business?.business_data_id;
   const { planTier, refetch: refetchSubscription } =
-    useBusinessSubscription(business?.id);
+    useBusinessSubscription(businessDataId);
 
   const dashboardBusiness: BusinessData | null = business
     ? { id: business.id, name: business.name, logo: business.logo_url || "", category: business.category, slug: business.slug || "" }
@@ -59,7 +60,10 @@ export default function DashboardEmpresaPage() {
 
   // Vertical gastronomia
   const isGastronomyEligible = business ? isEligibleForVertical(business.category, 'gastronomy') : false;
-  const { status: gastronomyStatus } = useGastronomyStatus(business?.id ?? '', isGastronomyEligible);
+  const { status: gastronomyStatus } = useGastronomyStatus(
+    businessDataId ?? '',
+    isGastronomyEligible,
+  );
   const extraTabs = isGastronomyEligible ? [GASTRONOMY_TAB] : [];
 
   useEffect(() => {
@@ -105,9 +109,9 @@ export default function DashboardEmpresaPage() {
   };
 
   const handlePlanSelect = async (planId: PlanTier) => {
-    if (!business?.id) return;
+    if (!businessDataId) return;
 
-    const result = await SubscriptionService.updatePlan(business.id, planId);
+    const result = await SubscriptionService.updatePlan(businessDataId, planId);
     if (result.error) {
       toast.error("Erro ao atualizar plano");
       return;
@@ -180,7 +184,7 @@ export default function DashboardEmpresaPage() {
               <QrCodeWidget
                 entityType={QrEntityType.BUSINESS}
                 entityId={business.id}
-                businessId={business.id}
+                businessDataId={businessDataId}
                 canonicalUrl={businessCanonicalUrl}
                 ownerProfileId={business.profile_id || profileId || ''}
                 title="QR Code da Empresa"
@@ -222,7 +226,10 @@ export default function DashboardEmpresaPage() {
 
         {isGastronomyEligible && (
           <TabPanel value="gastronomia">
-            <GastronomySetupPage businessId={business.id} />
+            <GastronomySetupPage
+              businessId={business.id}
+              businessDataId={businessDataId}
+            />
           </TabPanel>
         )}
       </DashboardTabs>
