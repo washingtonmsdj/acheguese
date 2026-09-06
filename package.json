@@ -109,7 +109,7 @@
     "prepare": "husky",
     "verify:deploy": "node tools/release/verify-deploy-ready.mjs",
     "test": "vitest --run",
-    "test:education:inep-import": "vitest --run --environment=node --pool=vmThreads --maxWorkers=1 tests/scripts/public-education-inep-adapter.test.ts tests/security/public-education-inep-import-staging-g6.test.ts tests/security/public-education-inep-import-planner-g6.test.ts",
+    "test:education:inep-import": "vitest --run --environment=node --pool=vmThreads --maxWorkers=1 tests/scripts/public-education-inep-adapter.test.ts tests/scripts/public-education-inep-stager.test.ts tests/security/public-education-inep-import-staging-g6.test.ts tests/security/public-education-inep-import-planner-g6.test.ts",
     "test:watch": "vitest",
     "test:community-interest:security": "vitest --run --pool=forks --maxWorkers=1 tests/security/community-interest-registration-security.test.ts tests/security/community-interest-compatibility-window.test.ts tests/scripts/community-interest-preflight.test.ts",
     "community-interest:preflight": "node tools/supabase/community-interest-preflight.mjs",
@@ -157,7 +157,8 @@
     "lint:security": "eslint src api supabase/functions --config eslint.config.security.mjs --ext .ts,.tsx --no-inline-config",
     "lint:security:fix": "eslint src api supabase/functions --config eslint.config.security.mjs --ext .ts,.tsx --fix --no-inline-config",
     "test:e2e:business-lifecycle-authenticated": "node tools/release/run-business-lifecycle-authenticated.mjs",
-    "test:e2e:education-lifecycle-authenticated": "node tools/release/run-education-lifecycle-authenticated.mjs"
+    "test:e2e:education-lifecycle-authenticated": "node tools/release/run-education-lifecycle-authenticated.mjs",
+    "stage:education:inep-import": "node tools/data-quality/stage-public-education-inep-import.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -283,4 +284,4 @@
       "prettier --write"
     ]
   }
-}
+}\n
