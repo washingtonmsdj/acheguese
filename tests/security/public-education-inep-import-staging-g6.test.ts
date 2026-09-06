@@ -12,6 +12,9 @@ describe("G6 public Education INEP import staging", () => {
   const hardening = read(
     "supabase/migrations/20260906162157_harden_public_education_import_identity_g6.sql",
   );
+  const sourceBinding = read(
+    "supabase/migrations/20260906162828_bind_public_education_staging_source_contract_g6.sql",
+  );
 
   it("promotes non-null INEP codes to the canonical natural key", () => {
     expect(migration).toContain(
@@ -100,6 +103,42 @@ describe("G6 public Education INEP import staging", () => {
     );
   });
 
+  it("binds the staged batch to the adapter manifest and raw Censo record", () => {
+    expect(sourceBinding).toContain(
+      "acheguese.public-education-inep-normalized/1",
+    );
+    expect(sourceBinding).toContain(
+      "education_import_manifest_contract_mismatch",
+    );
+    expect(sourceBinding).toContain(
+      "v_manifest#>>'{source,archive_sha256}'",
+    );
+    expect(sourceBinding).toContain(
+      "v_manifest#>>'{source,extracted_file}'",
+    );
+    expect(sourceBinding).toContain(
+      "v_manifest#>>'{source,file_role}'",
+    );
+    expect(sourceBinding).toContain(
+      "v_manifest#>>'{target,municipality_ibge_code}'",
+    );
+    expect(sourceBinding).toContain(
+      "v_manifest#>>'{safety,header_contract_verified}'",
+    );
+
+    for (const errorCode of [
+      "raw_census_year_mismatch",
+      "raw_inep_mismatch",
+      "raw_school_name_mismatch",
+      "raw_uf_mismatch",
+      "raw_municipality_mismatch",
+      "raw_dependency_mismatch",
+      "raw_operation_status_mismatch",
+    ]) {
+      expect(sourceBinding).toContain(errorCode);
+    }
+  });
+
   it("does not introduce a second Profile/Business materialization authority", () => {
     expect(migration).not.toContain(
       "INSERT INTO public.education_profiles",
@@ -116,6 +155,12 @@ describe("G6 public Education INEP import staging", () => {
     expect(hardening).not.toContain("INSERT INTO public.business_data");
     expect(hardening).not.toContain("INSERT INTO public.profiles");
     expect(hardening).not.toMatch(
+      /CREATE OR REPLACE FUNCTION private\.[^(]*material/i,
+    );
+    expect(sourceBinding).not.toContain("INSERT INTO public.education_profiles");
+    expect(sourceBinding).not.toContain("INSERT INTO public.business_data");
+    expect(sourceBinding).not.toContain("INSERT INTO public.profiles");
+    expect(sourceBinding).not.toMatch(
       /CREATE OR REPLACE FUNCTION private\.[^(]*material/i,
     );
     expect(migration).toContain(
