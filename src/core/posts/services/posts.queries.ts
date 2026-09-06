@@ -605,28 +605,8 @@ export async function getPostBasicInfo(
  * Busca apenas o author_profile_id de um post
  */
 export async function getPostAuthorId(postId: string): Promise<string | null> {
-  try {
-    const { data: post, error } = await postsQueryDb
-      .from<Pick<PostBasicInfoRow, "author_profile_id">>("posts")
-      .select("author_profile_id")
-      .eq("id", postId)
-      .single();
-
-    if (error) {
-      if (error.code === "PGRST116") return null;
-      throw new PostError(error.message, error.code);
-    }
-
-    return (
-      (post as Pick<PostBasicInfoRow, "author_profile_id"> | null)
-        ?.author_profile_id || null
-    );
-  } catch (error) {
-    if (error instanceof PostError) throw error;
-
-    logger.error("[posts.queries] Error fetching post author:", error);
-    return null;
-  }
+  const post = await getPostBasicInfo(postId);
+  return post?.author_profile_id ?? null;
 }
 
 // ============================================================================
