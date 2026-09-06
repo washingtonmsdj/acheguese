@@ -13,11 +13,14 @@ import { Link } from 'react-router-dom';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 interface MenuSummaryCardProps {
+  /** Profile ID usado para navegacao administrativa. */
   businessId: string;
+  /** business_data.id usado para resolver o menu persistido. */
+  businessDataId: string;
 }
 
-export function MenuSummaryCard({ businessId }: MenuSummaryCardProps) {
-  const { menuId, isLoading: menuIdLoading } = useGastronomyMenuId(businessId);
+export function MenuSummaryCard({ businessId, businessDataId }: MenuSummaryCardProps) {
+  const { menuId, isLoading: menuIdLoading } = useGastronomyMenuId(businessDataId);
   const { categories, isLoading: categoriesLoading } = useMenuCategories(menuId ?? '');
   const { items, isLoading: itemsLoading } = useMenuItems(menuId ?? '');
 
