@@ -20,6 +20,9 @@ const professionalLeadService = read(
 const educationTrackingService = read(
   "src/core/education/services/EducationTrackingService.ts",
 );
+const educationAnalyticsIdentityRepair = read(
+  "supabase/migrations/20260906094513_disambiguate_education_analytics_business_id_g6.sql",
+);
 const qrCodeService = read("src/core/qr/QrCodeService.ts");
 
 function grantColumns(sql: string, table: string, role: string): string {
@@ -111,23 +114,27 @@ describe("G5 public insert payload contracts", () => {
     expect(educationTrackingService).toContain(
       ".from('education_analytics_events')",
     );
-    expect(payloadHardening).toContain(
-      "ep.niche_key = education_analytics_events.niche_key",
+    expect(educationTrackingService).toContain("business_data_id");
+    expect(educationAnalyticsIdentityRepair).toContain(
+      "ep.niche_key::text = education_analytics_events.niche_key::text",
     );
-    expect(payloadHardening).toContain(
-      "education_analytics_events.business_id = ep.business_id",
+    expect(educationAnalyticsIdentityRepair).toContain(
+      "bd.id = education_analytics_events.business_data_id",
     );
-    expect(payloadHardening).toContain(
+    expect(educationAnalyticsIdentityRepair).toContain(
+      "bd.profile_id = ep.business_id",
+    );
+    expect(educationAnalyticsIdentityRepair).toContain(
       "p.education_profile_id = education_analytics_events.education_profile_id",
     );
-    expect(payloadHardening).toContain(
+    expect(educationAnalyticsIdentityRepair).toContain(
       "e.education_profile_id = education_analytics_events.education_profile_id",
     );
-    expect(payloadHardening).toContain(
+    expect(educationAnalyticsIdentityRepair).toContain(
       "l.education_profile_id = education_analytics_events.education_profile_id",
     );
-    expect(payloadHardening).toContain(
-      "octet_length(coalesce(metadata, '{}'::jsonb)::text) <= 8192",
+    expect(educationAnalyticsIdentityRepair).toContain(
+      "octet_length(COALESCE(metadata, '{}'::jsonb)::text) <= 8192",
     );
   });
 
