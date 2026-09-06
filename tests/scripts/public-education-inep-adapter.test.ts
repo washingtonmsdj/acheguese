@@ -14,7 +14,10 @@ const modulePath =
 
 type AdapterModule = {
   PARSER_VERSION: string;
+  RAW_RECORD_HASH_CONTRACT: string;
   REQUIRED_COLUMNS: readonly string[];
+  canonicalRawRecordPayload: (record: Record<string, string>) => string;
+  sha256RawRecord: (record: Record<string, string>) => string;
   detectDelimiter: (header: string) => {
     delimiter: string;
     headers: string[];
@@ -146,6 +149,35 @@ describe("public Education INEP adapter", () => {
     ).toThrow(/Censo school header mismatch/);
   });
 
+  it("hashes raw Censo records with an order-independent UTF-8 canonical payload", async () => {
+    const {
+      RAW_RECORD_HASH_CONTRACT,
+      canonicalRawRecordPayload,
+      sha256RawRecord,
+    } = await loadModule();
+
+    const first = {
+      Z: "A;B",
+      A: "Café",
+    };
+    const reordered = {
+      A: "Café",
+      Z: "A;B",
+    };
+
+    expect(RAW_RECORD_HASH_CONTRACT).toBe(
+      "acheguese.inep-raw-record-sha256/1",
+    );
+    expect(canonicalRawRecordPayload(first)).toBe(
+      "1:A:5:Café\n1:Z:3:A;B",
+    );
+    expect(sha256RawRecord(first)).toBe(sha256RawRecord(reordered));
+    expect(sha256RawRecord(first)).toMatch(/^[0-9a-f]{64}$/);
+    expect(sha256RawRecord({ ...first, Z: "A;C" })).not.toBe(
+      sha256RawRecord(first),
+    );
+  });
+
   it("parses delimiters and escaped quotes without corrupting source text", async () => {
     const { parseDelimitedRecord } = await loadModule();
 
@@ -270,7 +302,7 @@ describe("public Education INEP adapter", () => {
       encoding: "utf8",
     });
 
-    expect(PARSER_VERSION).toBe("inep-censo-school-adapter/4");
+    expect(PARSER_VERSION).toBe("inep-censo-school-adapter/5");
     expect(manifest).toMatchObject({
       contract: "acheguese.public-education-inep-normalized/1",
       parser_version: PARSER_VERSION,
@@ -278,6 +310,7 @@ describe("public Education INEP adapter", () => {
         archive_sha256: expect.stringMatching(/^[0-9a-f]{64}$/),
         archive_entry: "DADOS/Tabela_Escola_2025.csv",
         archive_entry_sha256: expect.stringMatching(/^[0-9a-f]{64}$/),
+        record_hash_contract: "acheguese.inep-raw-record-sha256/1",
         extracted_file_sha256: expect.stringMatching(/^[0-9a-f]{64}$/),
         source_year: 2025,
         landing_page_updated_at: "2026-07-31T14:52:00.000Z",
