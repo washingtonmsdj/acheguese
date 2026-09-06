@@ -9,7 +9,7 @@
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
 **Status:** EM EXECUÇÃO — G6 / Empresas-Educação fechou identidade Profile ID vs business_data.id, Billing delegado e claim institucional individual com transferência canônica; cobertura pública completa de Salvador e autoridade herdada de Prefeitura/Secretaria seguem abertas; provas hosted same-SHA continuam bloqueadas por runner pre-step  
-**Checkpoint técnico atual:** `4b90fa64ff22cd12513982815df6415ab33f0dba`  
+**Checkpoint técnico atual:** `d4db71f080b8a719b56ed60e60f95030db6bfb31`  
 **Checkpoint de transição G5 → G6:** `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
@@ -767,8 +767,8 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 - [x] perfis públicos não reivindicados não capturam mais dados de responsável/aluno nem prometem comunicação direta com a escola; CTA/lead permanece para instituições não públicas conforme contrato existente. Corte `c2f08730c6855246098f15443c9a30eddb78589d`.
 - [x] leitura pública de Educação deixou de atravessar diretamente `business_data`, que é privado para browser, e passou a usar `public_business_search`, read model sanitizado e autorizado para navegação pública. Corte `3e61dfca03abf335bbd49563771d211b3f8570b4`.
 - [x] vocabulário canônico de infraestrutura expandido com `parking` e `accessible_parking`, incluindo banco, contratos, setup, apresentação e filtro. Piscina já existia. Nenhum perfil foi preenchido sem fonte. Migration Git/remoto `20260906080244_expand_education_parking_facilities_g6.sql`; corte `af68930f4cb36b541f28db0c0414766924adeeb6`.
-- [ ] cobertura municipal de Educação: implementar ingestão idempotente por INEP para todas as escolas públicas ativas de Salvador (municipal, estadual e federal), usando Censo Escolar 2025 atualizado em julho/2026 como baseline nacional e fontes jurisdicionais 2026 como overlay de frescor. Não importar escolas privadas nesta expansão automática sem decisão explícita de produto.
-- [ ] quality gate obrigatório para a carga municipal: INEP único, município/UF canônicos, rede/esfera, status ativo, fonte + data de checagem, endereço/CEP/geo somente quando sustentados, e nenhuma conversão de ausência de dado em false.
+- [ ] cobertura municipal de Educação: a **fundação idempotente por INEP está fechada**, mas a carga real ainda não foi executada. Próximo gate é obter/inspecionar o ZIP oficial 2025, processar `Tabela_Escola_2025.csv` e revisar o primeiro batch real de Salvador antes de qualquer materialização. Escolas privadas continuam fora da expansão automática.
+- [x] quality gate de staging implementado: INEP não nulo é UNIQUE; município/UF, dependência, situação, CEP/geo e conflitos canônicos são validados; private/inativa é excluída; manifest/arquivo/parser/sha/cidade e `raw_record` ficam vinculados fail-closed. Isso ainda precisa ser provado sobre o ZIP oficial real antes da carga municipal.
 - [x] provenance reutilizável por seção/fato criado no owner Business/Data Quality: `business_profile_fact_provenance` registra campo, valor JSON, fonte, data de observação, estado de verificação e vínculo opcional com correção. Migration `20260906104918_add_business_fact_provenance_g6.sql`; índice complementar `20260906105102_index_business_fact_provenance_verifier_g6.sql`. `school_source_url` ficou explicitamente como pointer legado/profile-level, não evidência de todos os campos.
 - [ ] substituir as referências secundárias remanescentes das escolas piloto por fontes oficiais quando houver endpoint/documento estável; hoje a maior parte do seed ainda não tem URL governamental como fonte primária.
 - [x] Explorer público evoluído para read model server-side paginado/filtrado antes do LIMIT, com `total_count`, busca/rede/tipo/infra/vagas no servidor, facetas de bairro e `fetchNextPage` real. Migrations `20260906130025` e `20260906133701`; grupo territorial reutiliza `useResolveTerritoryFromUrl` e envia somente membros ativos via `p_location_ids`, sem criar segunda autoridade territorial.
@@ -790,8 +790,28 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 - [x] rota fixa de bairro não exibe mais filtro Bairro removível que não poderia remover o escopo da URL;
 - [x] tipos Supabase regenerados e ratchet `tests/architecture/public-education-territorial-read-model-g6.test.ts` criado;
 - [x] pós-condição remota: somente as assinaturas novas existem, ambas `security_definer=false`, `anon_execute=true`, `authenticated_execute=true`; Advisor sem finding novo específico;
-- [ ] **próximo passo de dados**: implementar fundação de ingestão idempotente por INEP para cobertura pública municipal de Salvador. Não inserir massa nova até existir fonte oficial versionada/checável e quality gate de provenance;
-- [ ] cobertura municipal continua 15 escolas piloto; fechamento do read model não deve ser confundido com cobertura concluída.
+- [x] fundação de ingestão idempotente por INEP concluída em staging privada, com natural key, manifest/sha/parser, raw binding e quality gate. Não houve carga municipal nem materialização;
+- [ ] cobertura municipal continua **15 escolas piloto**; próximo gate é o primeiro batch extraído do ZIP oficial 2025, não uma carga inventada/derivada de fonte secundária.
+
+
+#### 2026-09-06 — G6 Educação / fundação de ingestão INEP municipal
+
+- [x] página oficial do Inep confirmada como autoridade do **Censo Escolar 2025**, atualizado em julho/2026; o host do ZIP oficial não ficou acessível neste ambiente, portanto o artefato real ainda não foi declarado inspecionado;
+- [x] referência pública secundária de 2025 confirmou a presença de `Tabela_Escola_2025.csv` e os campos de identidade usados pelo contrato; serve somente como validação de layout, nunca como fonte substituta;
+- [x] `tools/data-quality/prepare-public-education-inep-import.mjs` criado e endurecido em `inep-censo-school-adapter/2`: streaming, sem Supabase, preserva `raw_record`, gera SHA-256 por registro, manifest de provenance e filtra Salvador por IBGE;
+- [x] o adaptador exige `NU_ANO_CENSO`, `CO_ENTIDADE`, `NO_ENTIDADE`, `TP_SITUACAO_FUNCIONAMENTO`, `CO_UF`, `CO_MUNICIPIO` e `TP_DEPENDENCIA`, suporta aliases de endereço/CEP/latitude/longitude e falha fechado se o header não corresponder;
+- [x] contagens do manifest separam dependência pública/privada e funcionamento ativo/inativo; ausência de dado não vira false;
+- [x] migration `20260906135247_add_public_education_inep_import_staging_g6.sql`: INEP não nulo virou chave natural UNIQUE parcial; batches/rows vivem em `private`; nenhuma função de materialização foi criada;
+- [x] staging classifica `insert/update/excluded/invalid`; dependência 4 (privada) e situação diferente de 1 são excluídas da expansão pública automática;
+- [x] migration `20260906162157_harden_public_education_import_identity_g6.sql`: identidade idempotente inclui SHA do ZIP + arquivo extraído + cidade + parser; parser corrigido pode reprocessar o mesmo arquivo sem colidir com batch anterior;
+- [x] as três funções privadas de staging mantêm `SECURITY DEFINER` apenas pela necessidade interna, `search_path=''`, EXECUTE negado a anon/authenticated e concedido somente a service_role;
+- [x] migration `20260906162828_bind_public_education_staging_source_contract_g6.sql`: manifest deve bater com contrato/parser/URL/SHA/ano/arquivo/cidade e flags de segurança; `raw_record` deve bater com ano/INEP/nome/UF/município/dependência/situação normalizados;
+- [x] prova transacional do source binding: manifest válido passa; manifest adulterado é bloqueado; INEP raw divergente rejeita o batch; catálogo público permanece inalterado;
+- [x] pós-condição persistente: **0 batches**, **0 rows de staging**, **15 education_profiles**, **15 INEP únicos**, **0 materializers**; Advisor com 0 finding específico;
+- [x] ratchets `tests/scripts/public-education-inep-adapter.test.ts` e `tests/security/public-education-inep-import-staging-g6.test.ts` protegem parser, provenance, ACL, idempotência e ausência de segunda autoridade;
+- [ ] **próximo passo obrigatório:** obter/inspecionar o ZIP oficial, provar o header real de `Tabela_Escola_2025.csv`, executar o adapter sobre o artefato oficial e criar o primeiro batch real de Salvador;
+- [ ] depois do batch real, comparar cada candidata com as 15 escolas piloto e overlays oficiais 2026. Censo 2025 é baseline e **não pode sobrescrever automaticamente fato oficial mais fresco**;
+- [ ] somente após essa arbitragem desenhar a materialização, reutilizando a autoridade canônica Profile/Business + `business_profile_fact_provenance`; não criar importador que grave diretamente um segundo agregado.
 
 #### 2026-09-06 — G6 Educação / gestão delegada, confiança e benchmark de diretórios
 
