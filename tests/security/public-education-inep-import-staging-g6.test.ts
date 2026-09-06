@@ -24,6 +24,9 @@ describe("G6 public Education INEP import staging", () => {
   const landingTimestampBinding = read(
     "supabase/migrations/20260906170644_bind_inep_landing_updated_at_manifest_g6.sql",
   );
+  const rawRecordHashBinding = read(
+    "supabase/migrations/20260906174652_bind_inep_raw_record_sha256_g6.sql",
+  );
 
   it("promotes non-null INEP codes to the canonical natural key", () => {
     expect(migration).toContain(
@@ -146,6 +149,33 @@ describe("G6 public Education INEP import staging", () => {
     ]) {
       expect(sourceBinding).toContain(errorCode);
     }
+  });
+
+  it("recomputes canonical raw-record SHA-256 inside Postgres", () => {
+    expect(rawRecordHashBinding).toContain(
+      "CREATE OR REPLACE FUNCTION private.education_inep_raw_record_sha256",
+    );
+    expect(rawRecordHashBinding).toContain("extensions.digest");
+    expect(rawRecordHashBinding).toContain("ORDER BY item.key COLLATE \"C\"");
+    expect(rawRecordHashBinding).toContain(
+      "education_public_import_batches_record_hash_contract_chk",
+    );
+    expect(rawRecordHashBinding).toContain(
+      "acheguese.inep-raw-record-sha256/1",
+    );
+
+    for (const errorCode of [
+      "missing_or_invalid_source_record_sha256",
+      "raw_record_non_string_value",
+      "raw_record_sha256_mismatch",
+    ]) {
+      expect(rawRecordHashBinding).toContain(errorCode);
+    }
+
+    expect(rawRecordHashBinding).not.toContain(
+      "INSERT INTO public.education_profiles",
+    );
+    expect(rawRecordHashBinding).not.toContain("INSERT INTO public.business_data");
   });
 
   it("keeps landing-page provenance identical between batch columns and manifest", () => {
