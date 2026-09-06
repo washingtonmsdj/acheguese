@@ -19552,7 +19552,7 @@ export type Database = {
         }[]
       }
       list_public_education_districts: {
-        Args: { p_city: string; p_state: string }
+        Args: { p_city: string; p_location_ids?: string[]; p_state: string }
         Returns: {
           district_slug: string
           geographic_path: string
@@ -19565,6 +19565,7 @@ export type Database = {
           p_district?: string
           p_infrastructure?: string[]
           p_institution_types?: string[]
+          p_location_ids?: string[]
           p_niches?: string[]
           p_only_available?: boolean
           p_page?: number
