@@ -23,7 +23,8 @@ import {
   EQUIPMENT_OPTIONS,
   FACILITY_OPTIONS,
   getInstitutionTypeForNiche,
-  SCHOOL_NETWORKS,
+  getSchoolNetworkOptions,
+  normalizeSchoolNetworkForType,
   SCHOOL_TYPES,
   SHIFT_OPTIONS,
   type EducationInfrastructurePreset,
@@ -137,7 +138,15 @@ export function EducationDataSection({
                 <Label htmlFor="schoolType">Tipo escolar</Label>
                 <Select
                   value={formData.schoolType}
-                  onValueChange={(value) => onPatch({ schoolType: value })}
+                  onValueChange={(value) =>
+                    onPatch({
+                      schoolType: value,
+                      schoolNetwork: normalizeSchoolNetworkForType(
+                        value,
+                        formData.schoolNetwork,
+                      ),
+                    })
+                  }
                 >
                   <SelectTrigger
                     id="schoolType"
@@ -168,7 +177,7 @@ export function EducationDataSection({
                     <SelectValue placeholder="Municipal, estadual..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {SCHOOL_NETWORKS.map((network) => (
+                    {getSchoolNetworkOptions(formData.schoolType).map((network) => (
                       <SelectItem key={network.value} value={network.value}>
                         {network.label}
                       </SelectItem>
@@ -307,23 +316,23 @@ export function EducationDataSection({
         <Separator />
 
         <div className="space-y-5">
-              <EducationOptionCheckboxGroup
+          <EducationOptionCheckboxGroup
                 title="Recursos basicos"
                 options={BASIC_RESOURCE_OPTIONS}
                 selected={formData.schoolBasicResources}
                 onToggle={(key) => onToggleArrayField('schoolBasicResources', key)}
-              />
+          />
 
-              <EducationOptionCheckboxGroup
+          <EducationOptionCheckboxGroup
                 title="Acessibilidade"
                 options={ACCESSIBILITY_OPTIONS}
                 selected={formData.schoolAccessibilityFeatures}
                 onToggle={(key) =>
                   onToggleArrayField('schoolAccessibilityFeatures', key)
                 }
-              />
+          />
 
-              <EducationOptionCheckboxGroup
+          <EducationOptionCheckboxGroup
                 title="Equipamentos"
                 options={EQUIPMENT_OPTIONS}
                 selected={formData.schoolEquipmentFeatures}
