@@ -51,8 +51,6 @@ export function ActiveEducationFilterChips({
     filters.schoolNetworks.length > 0 ||
     filters.institutionTypes.length > 0 ||
     filters.infrastructure.length > 0 ||
-    filters.modalities.length > 0 ||
-    filters.audiences.length > 0 ||
     filters.district ||
     filters.onlyAvailable;
 
@@ -124,22 +122,6 @@ export function ActiveEducationFilterChips({
           </button>
         </Badge>
       ))}
-      {filters.modalities.map((m) => (
-        <Badge key={m} variant="secondary" className="gap-1 capitalize">
-          {m}
-          <button
-            onClick={() =>
-              setFilters((prev) => ({
-                ...prev,
-                modalities: prev.modalities.filter((v) => v !== m),
-              }))
-            }
-            aria-label="Remover filtro"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </Badge>
-      ))}
       {filters.district && (
         <Badge variant="secondary" className="gap-1 capitalize">
           {filters.district.replace(/-/g, ' ')}
@@ -200,7 +182,9 @@ export function EducationNicheShowcase({
         {niches.map((n) => {
           const Icon = nicheIcons[n.nicheKey] ?? GraduationCap;
           const gradient = nicheAccent[n.nicheKey] ?? 'from-primary to-primary/70';
-          const count = sourceProfiles.filter((p) => p.niche_key === n.nicheKey).length;
+          const hasLoadedProfile = sourceProfiles.some(
+            (profile) => profile.niche_key === n.nicheKey,
+          );
           return (
             <button
               key={n.nicheKey}
@@ -225,9 +209,7 @@ export function EducationNicheShowcase({
               </div>
               <div className="mt-3 text-sm font-semibold">{n.displayName}</div>
               <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-                <span>
-                  {count} {count === 1 ? 'opção' : 'opções'}
-                </span>
+                <span>{hasLoadedProfile ? 'Ver opções' : 'Explorar categoria'}</span>
                 {n.isBeta && (
                   <Badge variant="outline" className="text-[10px]">
                     Beta
