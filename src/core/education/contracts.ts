@@ -23,7 +23,7 @@ export type EducationLevel =
   | 'early_childhood'
   | 'elementary_1'
   | 'elementary_2'
-  | 'middle_school'
+  | 'youth_adult_education'
   | 'high_school'
   | 'technical';
 
@@ -120,7 +120,7 @@ export interface EducationProfile {
   created_at: string;
   updated_at: string;
 
-  // Campos especificos para escolas regulares (regular_school)
+  // Identidade/regulacao escolar (quando aplicavel ao tipo de instituicao)
   school_type?: SchoolType | null;
   school_network?: SchoolNetwork | null;
   school_inep_code?: string | null;
@@ -131,6 +131,7 @@ export interface EducationProfile {
   age_range_min?: number | null;
   age_range_max?: number | null;
   enrollment_open?: boolean | null;
+  // Infraestrutura da unidade educacional (publica ou privada; qualquer nicho fisico)
   school_basic_resources?: SchoolBasicResourceKey[] | null;
   school_accessibility_features?: SchoolAccessibilityFeatureKey[] | null;
   school_equipment_features?: SchoolEquipmentFeatureKey[] | null;
