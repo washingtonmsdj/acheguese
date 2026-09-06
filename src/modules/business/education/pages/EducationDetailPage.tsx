@@ -144,7 +144,7 @@ export function EducationDetailPage() {
     useEducationTracking({
       educationProfileId: profile?.id ?? '',
       nicheKey: profile?.niche_key ?? 'regular_school',
-      businessId: profile?.business_id,
+      businessDataId: profile?.business_data_id ?? undefined,
     });
   const { create: createLead } = useEducationLeads(profile?.id ?? undefined);
 
