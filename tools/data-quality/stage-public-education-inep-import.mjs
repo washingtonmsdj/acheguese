@@ -305,23 +305,15 @@ function loadEnv() {
 }
 
 function linkedProjectRef() {
-  const config = requireTextFile(LINKED_CONFIG);
+  if (!existsSync(LINKED_CONFIG)) {
+    throw new Error(`required file not found: ${LINKED_CONFIG}`);
+  }
+  const config = readFileSync(LINKED_CONFIG, 'utf8');
   const match = config.match(/^project_id\s*=\s*["']([^"']+)["']/m);
   if (!match?.[1]) {
     throw new Error('linked Supabase project_id is missing');
   }
   return match[1].trim();
-}
-
-function requireTextFile(path) {
-  if (!existsSync(path)) {
-    throw new Error(`required file not found: ${path}`);
-  }
-  return requireTextFileUnsafe(path);
-}
-
-function requireTextFileUnsafe(path) {
-  return readFileSync(path, 'utf8');
 }
 
 export function extractSupabaseProjectRefFromDatabaseUrl(connectionString) {
@@ -573,22 +565,31 @@ async function persistStaging({
 
     await client.query('commit');
 
+    let planOutputWritten = false;
+    let planOutputError = null;
+
     if (planOutputPath && planRows.length > 0) {
-      await fs.writeFile(
-        planOutputPath,
-        `${JSON.stringify(
-          {
-            contract: 'acheguese.public-education-inep-plan/1',
-            batch_id: batch.batch_id,
-            generated_at: new Date().toISOString(),
-            summary: summarizePlan(planRows),
-            rows: planRows,
-          },
-          null,
-          2,
-        )}\n`,
-        { encoding: 'utf8', flag: 'wx' },
-      );
+      try {
+        await fs.writeFile(
+          planOutputPath,
+          `${JSON.stringify(
+            {
+              contract: 'acheguese.public-education-inep-plan/1',
+              batch_id: batch.batch_id,
+              generated_at: new Date().toISOString(),
+              summary: summarizePlan(planRows),
+              rows: planRows,
+            },
+            null,
+            2,
+          )}\n`,
+          { encoding: 'utf8', flag: 'wx' },
+        );
+        planOutputWritten = true;
+      } catch (error) {
+        planOutputError =
+          error instanceof Error ? error.message : String(error);
+      }
     }
 
     return {
@@ -598,6 +599,8 @@ async function persistStaging({
       validation,
       planSummary: summarizePlan(planRows),
       invalidRows,
+      planOutputWritten,
+      planOutputError,
     };
   } catch (error) {
     await client.query('rollback').catch(() => {});
@@ -623,6 +626,15 @@ export async function runPublicEducationInepStager(options) {
     options.jsonlPath,
     manifestSummary,
   );
+
+  if (
+    options.planOutputPath &&
+    existsSync(options.planOutputPath)
+  ) {
+    throw new Error(
+      `plan output already exists: ${options.planOutputPath}`,
+    );
+  }
 
   if (!options.commitStaging) {
     return {
