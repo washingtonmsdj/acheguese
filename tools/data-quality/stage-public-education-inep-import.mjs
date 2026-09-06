@@ -329,6 +329,13 @@ export function extractSupabaseProjectRefFromDatabaseUrl(connectionString) {
     .match(/^db\.([a-z0-9-]+)\.supabase\.co$/)?.[1];
   if (direct) return direct;
 
+  const hostname = url.hostname.toLowerCase();
+  const isSupabasePooler =
+    hostname === 'pooler.supabase.com' ||
+    hostname.endsWith('.pooler.supabase.com');
+
+  if (!isSupabasePooler) return null;
+
   const username = decodeURIComponent(url.username || '');
   return username.match(/^postgres\.([a-z0-9-]+)$/i)?.[1]?.toLowerCase() ?? null;
 }
@@ -540,7 +547,16 @@ async function persistStaging({
       );
       validation = result.rows[0]?.result ?? null;
 
-      if (validation?.status === 'rejected') {
+      if (
+        !validation ||
+        !['validated', 'rejected'].includes(validation.status)
+      ) {
+        throw new Error(
+          'validate_public_education_import_batch returned invalid result',
+        );
+      }
+
+      if (validation.status === 'rejected') {
         const invalid = await client.query(
           `select source_row_number, inep_code, validation_errors
              from private.education_public_import_rows
@@ -627,7 +643,12 @@ export async function runPublicEducationInepStager(options) {
     manifestSummary,
   );
 
+  if (!options.commitStaging && options.planOutputPath) {
+    throw new Error('--plan-output requires --commit-staging');
+  }
+
   if (
+    options.commitStaging &&
     options.planOutputPath &&
     existsSync(options.planOutputPath)
   ) {
