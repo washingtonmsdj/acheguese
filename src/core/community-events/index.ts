@@ -19,7 +19,6 @@ export {
 export { EventLinkEligibilityService } from "@/core/community-events/services/EventLinkEligibilityService";
 export {
   EventEngagementService,
-  EVENT_REMINDER_TIMES,
   EVENT_REVIEW_LIMITS,
   validateEventReviewInput,
 } from "@/core/community-events/services/EventEngagementService";
@@ -30,7 +29,6 @@ export type {
 } from "@/core/community-events/services/EventRuntimeService";
 
 export type {
-  EventReminderTime,
   EventReview,
   SubmitEventReviewInput,
 } from "@/core/community-events/services/EventEngagementService";

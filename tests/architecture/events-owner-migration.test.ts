@@ -14,6 +14,7 @@ describe("community Events canonical owner", () => {
     expect(exists("src/shared/components/eventos")).toBe(false);
     expect(exists("src/modules/community-events/components/EventTicketManager.tsx")).toBe(false);
     expect(exists("src/modules/community-events/components/EventsGlobalSidebar.tsx")).toBe(false);
+    expect(exists("src/modules/community-events/components/EventReminders.tsx")).toBe(false);
   });
 
   it("keeps Events implementation under community-events", () => {
@@ -99,4 +100,21 @@ describe("community Events canonical owner", () => {
     expect(generatedTypes).not.toContain("event_favorites: {");
     expect(migration).toContain("DROP TABLE public.event_favorites RESTRICT");
   });
+
+  it("does not advertise persistent event reminders without a delivery authority", () => {
+    const engagement = read(
+      "src/core/community-events/services/EventEngagementService.ts",
+    );
+    const detail = read("src/modules/community-events/pages/EventDetailPage.tsx");
+    const publicApi = read("src/core/community-events/index.ts");
+
+    expect(engagement).not.toContain("event_reminders");
+    expect(engagement).not.toContain("EVENT_REMINDER_TIMES");
+    expect(engagement).not.toContain("getReminderTimes");
+    expect(engagement).not.toContain("saveReminderTimes");
+    expect(detail).not.toContain("EventReminders");
+    expect(publicApi).not.toContain("EventReminderTime");
+    expect(publicApi).not.toContain("EVENT_REMINDER_TIMES");
+  });
+
 });

@@ -46,7 +46,6 @@ import { EventGallery } from '../components/EventGallery';
 import { EventFAQ } from '../components/EventFAQ';
 import { EventShareModal } from '../components/EventShareModal';
 import { EventRelated } from '../components/EventRelated';
-import { EventReminders } from '../components/EventReminders';
 import { EventReviews } from '../components/EventReviews';
 import { EventCheckin } from '../components/EventCheckin';
 import { Button } from '@/shared/components/ui/button';
@@ -419,13 +418,10 @@ export default function EventDetailPage() {
             />
           )}
 
-          {/* Reminders Section */}
+          {/* Check-in Section */}
           <section className="py-12">
             <div className="mx-auto max-w-4xl px-4 sm:px-6">
-              <div className="grid gap-6 sm:grid-cols-2">
-                <EventReminders event={event} />
-                <EventCheckin event={event} />
-              </div>
+              <EventCheckin event={event} />
             </div>
           </section>
 

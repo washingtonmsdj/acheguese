@@ -11,9 +11,6 @@ export const EVENT_REVIEW_LIMITS = {
   maxCommentLength: 600,
 } as const;
 
-export const EVENT_REMINDER_TIMES = ["1hour", "1day", "1week"] as const;
-
-export type EventReminderTime = (typeof EVENT_REMINDER_TIMES)[number];
 
 export interface EventReview {
   id: string;
@@ -92,11 +89,6 @@ export function validateEventReviewInput(input: Pick<SubmitEventReviewInput, "ra
   return { valid: true, comment };
 }
 
-function normalizeReminderTimes(values: readonly EventReminderTime[]): EventReminderTime[] {
-  const allowed = new Set<EventReminderTime>(EVENT_REMINDER_TIMES);
-  return [...new Set(values.filter((value): value is EventReminderTime => allowed.has(value)))];
-}
-
 function mapReview(row: EventReviewRow): EventReview {
   const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
   return {
@@ -157,67 +149,6 @@ export class EventEngagementService {
 
   static async markReviewHelpful(reviewId: string, profileId: string): Promise<void> {
     await eventMutationService.markReviewHelpful(reviewId, profileId);
-  }
-
-  static async getReminderTimes(eventId: string, profileId: string): Promise<EventReminderTime[]> {
-    try {
-      const { data, error } = await supabase
-        .from("event_reminders" as never)
-        .select("reminder_time")
-        .eq("event_id", eventId)
-        .eq("profile_id", profileId);
-
-      if (error) throw error;
-      const values = ((data ?? []) as unknown as Array<{ reminder_time?: string }>).map((row) => row.reminder_time);
-      return normalizeReminderTimes(values as EventReminderTime[]);
-    } catch (error) {
-      logger.error("EventEngagementService.getReminderTimes", error);
-      return [];
-    }
-  }
-
-  static async saveReminderTimes(
-    eventId: string,
-    profileId: string,
-    nextTimes: readonly EventReminderTime[],
-  ): Promise<EventReminderTime[]> {
-    const normalized = normalizeReminderTimes(nextTimes);
-    const current = await EventEngagementService.getReminderTimes(eventId, profileId);
-    const currentSet = new Set(current);
-    const nextSet = new Set(normalized);
-    const removed = current.filter((value) => !nextSet.has(value));
-    const added = normalized.filter((value) => !currentSet.has(value));
-
-    if (removed.length > 0) {
-      const { error } = await supabase
-        .from("event_reminders" as never)
-        .delete()
-        .eq("event_id", eventId)
-        .eq("profile_id", profileId)
-        .in("reminder_time", removed);
-
-      if (error) {
-        logger.error("EventEngagementService.removeReminderTimes", error);
-        throw new Error("Nao foi possivel remover lembretes.");
-      }
-    }
-
-    if (added.length > 0) {
-      const { error } = await supabase
-        .from("event_reminders" as never)
-        .insert(added.map((reminderTime) => ({
-          event_id: eventId,
-          profile_id: profileId,
-          reminder_time: reminderTime,
-        })) as never);
-
-      if (error) {
-        logger.error("EventEngagementService.addReminderTimes", error);
-        throw new Error("Nao foi possivel salvar lembretes.");
-      }
-    }
-
-    return normalized;
   }
 
   static async getFavoriteEventIds(): Promise<string[]> {
