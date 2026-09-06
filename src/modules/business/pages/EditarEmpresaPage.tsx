@@ -448,10 +448,19 @@ export default function EditarEmpresaPage() {
 
               {/* Area de cobertura */}
               <div className="mt-6">
-                <BusinessCoverageSettings
-                  businessId={business.id}
-                  locationId={business.location_id}
-                />
+                {business.business_data_id ? (
+                  <BusinessCoverageSettings
+                    businessDataId={business.business_data_id}
+                    locationId={business.location_id}
+                  />
+                ) : (
+                  <div
+                    role="alert"
+                    className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
+                  >
+                    A cobertura não pode ser alterada porque os dados canônicos da empresa não foram carregados.
+                  </div>
+                )}
               </div>
             </>
           )}
