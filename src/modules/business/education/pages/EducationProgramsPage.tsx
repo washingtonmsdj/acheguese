@@ -71,6 +71,17 @@ const MODALITIES = [
   { value: 'hybrid', label: 'Híbrido' },
 ];
 
+function parseCurriculumTopics(value: string): string[] {
+  return Array.from(
+    new Set(
+      value
+        .split(',')
+        .map((topic) => topic.trim().replace(/\s+/g, ' '))
+        .filter(Boolean),
+    ),
+  );
+}
+
 export function EducationProgramsPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
@@ -129,6 +140,7 @@ export function EducationProgramsPage() {
     isActive: true,
     gradeOption: '',
     customGrade: '',
+    curriculumTopics: '',
   });
 
   const isSchoolContext = isSchoolNiche(profile?.niche_key);
@@ -198,6 +210,7 @@ export function EducationProgramsPage() {
         priceFrom: formData.priceFrom,
         grade: stage.grade,
         educationLevel: stage.educationLevel,
+        curriculumTopics: parseCurriculumTopics(formData.curriculumTopics),
       });
       toast({ title: 'Programa criado', description: 'O programa foi criado com sucesso.' });
       setIsDialogOpen(false);
@@ -232,6 +245,7 @@ export function EducationProgramsPage() {
           modality: formData.modality || null,
           available_slots: formData.availableSlots || null,
           price_from: formData.priceFrom || null,
+          curriculum_topics: parseCurriculumTopics(formData.curriculumTopics),
           is_active: formData.isActive,
         } as Partial<EducationProgram>,
       });
@@ -273,6 +287,7 @@ export function EducationProgramsPage() {
       isActive: program.is_active,
       gradeOption: '',
       customGrade: '',
+      curriculumTopics: (program.curriculum_topics ?? []).join(', '),
     });
 
     if (isSchoolNiche(profile?.niche_key)) {
@@ -301,6 +316,7 @@ export function EducationProgramsPage() {
       isActive: true,
       gradeOption: '',
       customGrade: '',
+      curriculumTopics: '',
     });
   };
 
@@ -494,6 +510,20 @@ export function EducationProgramsPage() {
                       </Badge>
                     )}
                   </div>
+                  {program.curriculum_topics && program.curriculum_topics.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {program.curriculum_topics.slice(0, 6).map((topic) => (
+                        <Badge key={topic} variant="secondary" className="text-xs">
+                          {topic}
+                        </Badge>
+                      ))}
+                      {program.curriculum_topics.length > 6 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{program.curriculum_topics.length - 6}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
                   {program.available_slots !== null && (
                     <p className="text-sm text-gray-500 mt-2">
                       {program.available_slots} vagas disponíveis
@@ -636,6 +666,20 @@ export function EducationProgramsPage() {
                   onChange={(e) => setFormData({ ...formData, availableSlots: parseInt(e.target.value) || 0 })}
                 />
               </div>
+            </div>
+
+            <div>
+              <Label htmlFor="curriculumTopics">Disciplinas / conteúdos</Label>
+              <Textarea
+                id="curriculumTopics"
+                value={formData.curriculumTopics}
+                onChange={(e) => setFormData({ ...formData, curriculumTopics: e.target.value })}
+                placeholder="Ex: Português, Matemática, Ciências"
+                rows={2}
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Separe por vírgulas. Em cursos, use módulos ou conteúdos principais.
+              </p>
             </div>
 
             <div>
