@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import { useProfileMembers } from '../hooks/useProfileMembers';
+import { useAuth } from '@/core/auth/hooks/useAuth';
 import type { ProfileRole } from '../services/multi-profile/types';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -27,8 +28,12 @@ function getErrorMessage(error: unknown, fallback: string): string {
 
 export function ProfileMembersManagerImproved({ profileId, profileType }: ProfileMembersManagerProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const { members, loading, inviteMemberByEmail, removeMember, updateRole } = useProfileMembers(profileId);
+  const canManageAccess = Boolean(
+    user && members.some((member) => member.user_id === user.id && member.role === 'owner'),
+  );
   
   const [showAdd, setShowAdd] = useState(false);
   const [addingMember, setAddingMember] = useState(false);
@@ -131,7 +136,7 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
   const getRoleLabel = (role: ProfileRole) => {
     switch (role) {
       case 'owner': return 'Proprietário';
-      case 'admin': return 'Administrador';
+      case 'admin': return 'Gestor';
       case 'member': return 'Membro';
     }
   };
@@ -144,19 +149,33 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold">Membros do Perfil</h3>
+          <h3 className="text-lg font-semibold">Pessoas e acesso</h3>
           <p className="text-sm text-muted-foreground">
-            Gerencie quem tem acesso a este perfil {profileType}
+            Proprietario, gestores e membros deste perfil {profileType}.
           </p>
         </div>
-        <Button onClick={() => setShowAdd(!showAdd)} size="sm">
-          <Plus className="w-4 h-4 mr-2" />
-          Adicionar Membro
-        </Button>
+        {canManageAccess ? (
+          <Button onClick={() => setShowAdd(!showAdd)} size="sm">
+            <Plus className="w-4 h-4 mr-2" />
+            Adicionar pessoa
+          </Button>
+        ) : null}
       </div>
 
+      <div className="grid gap-2 rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground sm:grid-cols-3">
+        <div><strong className="text-foreground">Proprietario</strong><br />Controle total, pessoas/acesso e transferencia.</div>
+        <div><strong className="text-foreground">Gestor</strong><br />Opera o dia a dia, mas nao gerencia acessos.</div>
+        <div><strong className="text-foreground">Membro</strong><br />Acesso limitado conforme as capacidades do produto.</div>
+      </div>
+
+      {!canManageAccess ? (
+        <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+          Somente o proprietario pode convidar, remover ou alterar o acesso de outras pessoas.
+        </p>
+      ) : null}
+
       {/* Formulário de Adição */}
-      {showAdd && (
+      {canManageAccess && showAdd && (
         <div className="bg-muted p-4 rounded-lg space-y-4">
           <div>
             <Label htmlFor="email">Email do Usuário</Label>
@@ -174,7 +193,7 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
           </div>
 
           <div>
-            <Label htmlFor="role">Role</Label>
+            <Label htmlFor="role">Nivel de acesso</Label>
             <Select
               value={newMember.role}
               onValueChange={(value) => setNewMember({ ...newMember, role: value as ProfileRole })}
@@ -185,8 +204,7 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="member">Membro</SelectItem>
-                <SelectItem value="admin">Administrador</SelectItem>
-                <SelectItem value="owner">Proprietário</SelectItem>
+                <SelectItem value="admin">Gestor</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -230,28 +248,36 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
                 </p>
               </div>
 
-              <Select
-                value={member.role}
-                onValueChange={(value) => handleUpdateRole(member.user_id, value as ProfileRole)}
-              >
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="member">Membro</SelectItem>
-                  <SelectItem value="admin">Administrador</SelectItem>
-                  <SelectItem value="owner">Proprietário</SelectItem>
-                </SelectContent>
-              </Select>
+              {canManageAccess && member.role !== 'owner' ? (
+                <>
+                  <Select
+                    value={member.role}
+                    onValueChange={(value) =>
+                      handleUpdateRole(member.user_id, value as ProfileRole)
+                    }
+                  >
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="member">Membro</SelectItem>
+                      <SelectItem value="admin">Gestor</SelectItem>
+                    </SelectContent>
+                  </Select>
 
-              {member.role !== 'owner' && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleRemove(member.user_id)}
-                >
-                  <Trash2 className="w-4 h-4 text-destructive" />
-                </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemove(member.user_id)}
+                    aria-label="Remover acesso"
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </>
+              ) : (
+                <span className="min-w-24 rounded-md border px-3 py-2 text-center text-sm">
+                  {getRoleLabel(member.role)}
+                </span>
               )}
             </div>
           ))}
