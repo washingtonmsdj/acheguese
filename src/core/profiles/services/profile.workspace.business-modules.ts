@@ -110,7 +110,7 @@ export async function buildBusinessModuleSnapshot(params: {
     publicUrl,
     shareUrl,
     dashboardUrl,
-    editUrl: `/edit-business/${business.id}`,
+    editUrl: businessManagementRoutes.edit(business.id),
     subscription: {
       planTier,
       status: subscription?.status ?? "active",
