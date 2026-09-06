@@ -74,7 +74,7 @@ export async function getBusinessClaimDetails(
     const { data, error } = await (supabase as unknown as AdminSupabaseClient)
       .from("business_data")
       .select("profile_id, profiles(name)")
-      .eq("profile_id", businessId)
+      .eq("id", businessId)
       .single();
 
     if (error) throw error;
