@@ -114,16 +114,14 @@ function parseArgs(argv) {
   }
 
   const sourcePageUpdatedAtRaw = args.get('source-page-updated-at') ?? null;
-  const sourcePageUpdatedAt =
-    sourcePageUpdatedAtRaw === null
-      ? null
-      : new Date(sourcePageUpdatedAtRaw).toISOString();
+  let sourcePageUpdatedAt = null;
 
-  if (
-    sourcePageUpdatedAtRaw !== null &&
-    Number.isNaN(Date.parse(sourcePageUpdatedAtRaw))
-  ) {
-    throw new Error('source page updated-at must be a valid ISO timestamp');
+  if (sourcePageUpdatedAtRaw !== null) {
+    const sourcePageUpdatedAtMs = Date.parse(sourcePageUpdatedAtRaw);
+    if (Number.isNaN(sourcePageUpdatedAtMs)) {
+      throw new Error('source page updated-at must be a valid ISO timestamp');
+    }
+    sourcePageUpdatedAt = new Date(sourcePageUpdatedAtMs).toISOString();
   }
 
   const encoding = args.get('encoding') ?? 'utf8';
@@ -493,6 +491,7 @@ export async function preparePublicEducationInepImport(options) {
       source_year: options.sourceYear,
       landing_page_updated_at: options.sourcePageUpdatedAt,
       extracted_file: basename(options.csvPath),
+      file_role: 'school_table',
       encoding: options.encoding,
       delimiter: delimiterLabel(delimiter),
     },
@@ -522,6 +521,7 @@ export async function preparePublicEducationInepImport(options) {
       active_operation_status_code: '1',
       staging_quality_gate_required: true,
       official_archive_host_required: true,
+      header_contract_verified: true,
     },
   };
 
