@@ -4,33 +4,33 @@ import { useBusinessLocation } from './useBusinessLocation';
 
 export const businessCoverageQueryKeys = {
   all: ['business', 'coverage'] as const,
-  areas: (businessId: string) =>
-    [...businessCoverageQueryKeys.all, 'areas', businessId] as const,
-  decision: (businessId: string, locationId: string | null) =>
-    [...businessCoverageQueryKeys.all, 'decision', businessId, locationId] as const,
+  areas: (businessDataId: string) =>
+    [...businessCoverageQueryKeys.all, 'areas', businessDataId] as const,
+  decision: (businessDataId: string, locationId: string | null) =>
+    [...businessCoverageQueryKeys.all, 'decision', businessDataId, locationId] as const,
 };
 
 /**
  * Read model for business coverage. It performs one areas query and one
  * location decision query, both backed by the canonical coverage service.
  */
-export function useBusinessCoverage(businessId?: string) {
+export function useBusinessCoverage(businessDataId?: string) {
   const { activeLocationId } = useBusinessLocation();
 
   const areasQuery = useQuery({
-    queryKey: businessCoverageQueryKeys.areas(businessId ?? 'missing'),
-    queryFn: () => businessCoverageService.getBusinessCoverage(businessId!),
-    enabled: Boolean(businessId),
+    queryKey: businessCoverageQueryKeys.areas(businessDataId ?? 'missing'),
+    queryFn: () => businessCoverageService.getBusinessCoverage(businessDataId!),
+    enabled: Boolean(businessDataId),
     staleTime: 5 * 60 * 1000,
   });
 
   const decisionQuery = useQuery({
     queryKey: businessCoverageQueryKeys.decision(
-      businessId ?? 'missing',
+      businessDataId ?? 'missing',
       activeLocationId,
     ),
-    queryFn: () => businessCoverageService.getCoverageDetails(businessId!),
-    enabled: Boolean(businessId && activeLocationId),
+    queryFn: () => businessCoverageService.getCoverageDetails(businessDataId!),
+    enabled: Boolean(businessDataId && activeLocationId),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -59,8 +59,8 @@ export function useBusinessCoverage(businessId?: string) {
     checkCoverage: decisionQuery.refetch,
     loadServiceAreas: areasQuery.refetch,
     validateForOrder: () =>
-      businessId
-        ? businessCoverageService.validateForOrder(businessId)
+      businessDataId
+        ? businessCoverageService.validateForOrder(businessDataId)
         : Promise.resolve({ valid: false, reason: 'Business nao especificado' }),
     coverageType:
       coverageDetails?.coverage?.coverage_type === 'city'
