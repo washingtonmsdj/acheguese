@@ -45,6 +45,8 @@ export interface ResolvedEntitlements extends PlanEntitlements {
   planTier: string;
   planName: string;
   isActive: boolean;
+  subscriptionStatus: string;
+  currentPeriodEnd: string | null;
 }
 
 type SnapshotPolicy = Partial<PlanEntitlements> & {
@@ -78,6 +80,7 @@ interface SubscriptionData {
   plan_code: string;
   status_v2: string;
   subscription_scope: string;
+  current_period_end: string | null;
   contract_snapshot: ContractSnapshot | null;
 }
 
@@ -163,6 +166,8 @@ function buildResolved(
   planTier: string,
   planName: string,
   isActive: boolean,
+  subscriptionStatus: string,
+  currentPeriodEnd: string | null,
   overrides?: Partial<ResolvedEntitlements> | null,
 ): ResolvedEntitlements {
   return {
@@ -171,6 +176,8 @@ function buildResolved(
     planTier,
     planName,
     isActive,
+    subscriptionStatus,
+    currentPeriodEnd,
   };
 }
 
@@ -199,6 +206,8 @@ export class EntitlementResolver {
         plan?.code ?? subscription.plan_code,
         plan?.name ?? subscription.plan_code,
         true,
+        subscription.status_v2,
+        subscription.current_period_end,
         subscription.contract_snapshot?.overrides,
       );
     } catch (error) {
@@ -216,6 +225,8 @@ export class EntitlementResolver {
           freePlan.code,
           freePlan.name,
           isActive,
+          isActive ? 'active' : 'inactive',
+          null,
         );
       }
     } catch (error) {
@@ -227,6 +238,8 @@ export class EntitlementResolver {
       PlanTier.FREE,
       'Free',
       isActive,
+      isActive ? 'active' : 'inactive',
+      null,
     );
   }
 
@@ -249,6 +262,7 @@ export class EntitlementResolver {
           plan_code: snapshot.plan_code,
           status_v2: snapshot.status_v2,
           subscription_scope: snapshot.subscription_scope,
+          current_period_end: snapshot.current_period_end,
           contract_snapshot:
             snapshot.contract_snapshot as ContractSnapshot | null,
         };
@@ -261,6 +275,7 @@ export class EntitlementResolver {
           plan_code,
           status_v2,
           subscription_scope,
+          current_period_end,
           contract_snapshot
         `)
         .in('status_v2', ['active', 'trialing'])
