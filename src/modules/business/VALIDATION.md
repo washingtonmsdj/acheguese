@@ -1,7 +1,7 @@
 # Validacao atual — Modulo de Empresas
 
 **Data do checkpoint:** 2026-09-06  
-**Checkpoint tecnico:** `89429a4bc8d973b5c97c383773367b98c7837791`  
+**Checkpoint tecnico:** `08434b2b90f91414b6ba5777428085b92e9e5c8d`  
 **Status:** G6 EM CERTIFICACAO — NAO MVP CERTIFICADO
 
 Este arquivo registra o estado atual de Business durante G6. O ownership/SSOT de source foi fechado em G4 e os blockers historicos de G5 foram encerrados conforme `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`. O trabalho ativo agora e certificacao funcional e operacional do modulo.
@@ -391,7 +391,7 @@ inspecionado.
 
 O adaptador
 `tools/data-quality/prepare-public-education-inep-import.mjs` esta em
-`inep-censo-school-adapter/5` e e deliberadamente offline em relacao ao Supabase:
+`inep-censo-school-adapter/6` e e deliberadamente offline em relacao ao Supabase:
 
 - streaming, sem carregar o Censo inteiro em memoria;
 - exige o header escolar com `NU_ANO_CENSO`, `CO_ENTIDADE`, `NO_ENTIDADE`,
@@ -482,7 +482,7 @@ Migration Git/remoto
 `20260906174652_bind_inep_raw_record_sha256_g6.sql` fechou a integridade do
 `source_record_sha256` por linha.
 
-O parser `/5` deixou de usar `JSON.stringify(raw_record)` como entrada do hash. O
+O contrato de hash introduzido no parser `/5` e preservado no `/6` deixou de usar `JSON.stringify(raw_record)` como entrada do hash. O
 contrato `acheguese.inep-raw-record-sha256/1` usa pares chave/valor ordenados por bytes
 UTF-8, com comprimento em bytes prefixado. O banco reproduz exatamente o mesmo payload
 com `private.education_inep_raw_record_sha256(jsonb)` + `extensions.digest`.
@@ -552,6 +552,37 @@ aprovação em `false` por padrão. Ratchet:
 **O CLI ainda não foi executado com dados oficiais.** Sem o ZIP oficial acessível, nenhuma
 execução `--commit-staging` foi feita e o estado persistente segue em **0 batches /
 0 staging rows / 15 Education profiles / 15 INEP únicos**.
+
+
+### Binding do artefato JSONL normalizado
+
+O adapter foi elevado para `inep-censo-school-adapter/6` e passou a gravar
+`normalized_output` no manifest:
+
+- contrato `acheguese.public-education-inep-jsonl/1`;
+- basename exato do JSONL;
+- SHA-256 do arquivo JSONL final;
+- número de linhas;
+- contrato de hash dos `raw_record`.
+
+O stager revalida basename + SHA-256 + contagem **antes de abrir conexão com o banco**.
+Assim, trocar o JSONL entre a etapa de preparação e staging falha fechado mesmo que o
+arquivo continue sintaticamente válido.
+
+Migration Git/remoto
+`20260906180209_bind_inep_normalized_output_artifact_g6.sql` exige o mesmo bloco no
+batch: contrato, SHA-256, basename bounded, `rows = counts.target_municipality_rows` e
+`raw_record_hash_contract` canônico.
+
+Probe remoto em `BEGIN/ROLLBACK`:
+
+- manifest sem `normalized_output` -> bloqueado;
+- manifest com contrato/nome/SHA/rows coerentes -> batch criado;
+- rollback -> **0 batches / 0 staging rows**.
+
+O ratchet do stager agora também monta arquivos reais em diretório temporário: dry-run do
+JSONL correto resolve sem banco; conteúdo trocado é recusado. Isso continua sendo source
+de teste versionado, não execução hosted observada.
 
 ### Staging privada e natural key
 
