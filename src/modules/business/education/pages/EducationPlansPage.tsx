@@ -34,6 +34,7 @@ import { BillingService } from '@/core/billing';
 import { useBillingPlans } from '@/core/billing/hooks/useBillingPlans';
 import { useEducationSubscription } from '../hooks/useEducationSubscription';
 import { EducationUrlService } from '../services/EducationUrlService';
+import { useOptionalBusinessDashboardContext } from '@/modules/business/dashboard/businessDashboardContext';
 
 const ENTITLEMENT_LABELS = [
   {
@@ -60,6 +61,8 @@ const ENTITLEMENT_LABELS = [
 
 export function EducationPlansPage() {
   const { businessId } = useParams<{ businessId: string }>();
+  const dashboardContext = useOptionalBusinessDashboardContext();
+  const businessDataId = dashboardContext?.businessDataId;
   const navigate = useNavigate();
   const { toast } = useToast();
   const { status, entitlements, planType, isLoading } =
@@ -91,7 +94,7 @@ export function EducationPlansPage() {
     : null;
 
   const handleUpgrade = async (planCode: string) => {
-    if (!plansUrl) {
+    if (!plansUrl || !businessDataId) {
       toast({
         title: 'Instituicao indisponivel',
         description:
@@ -109,6 +112,9 @@ export function EducationPlansPage() {
 
       await BillingService.redirectToCheckout({
         planCode,
+        businessId: businessDataId,
+        subscriptionScope: 'business',
+        entityFamily: 'company',
         successUrl: `${window.location.origin}${plansUrl}?upgrade=success`,
         cancelUrl: window.location.href,
       });
