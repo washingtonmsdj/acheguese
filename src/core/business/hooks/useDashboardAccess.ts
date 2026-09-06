@@ -59,20 +59,24 @@ export function useDashboardAccess(profileId: string | undefined) {
         return;
       }
 
-      let hasAccess = false;
+      let role: "owner" | "admin" | null = null;
       for (let attempt = 0; attempt < 2; attempt += 1) {
-        hasAccess = await BusinessOwnershipService.isOwner(businessDataId, user.id);
-        if (hasAccess) break;
+        role = await BusinessOwnershipService.resolveManagementRole(
+          businessDataId,
+          user.id,
+        );
+        if (role) break;
         if (attempt === 0) {
           await delay(ACCESS_RETRY_DELAY_MS);
         }
       }
 
+      const hasAccess = role !== null;
       setPermissions({
         isMember: hasAccess,
         isAdmin: hasAccess,
         hasAccess,
-        role: hasAccess ? "owner" : undefined,
+        role: role ?? undefined,
       });
       setCheckedProfileId(profileId);
     } catch (err: unknown) {
