@@ -9,7 +9,7 @@
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
 **Status:** EM EXECUÇÃO — G6 / Empresas-Educação fechou identidade Profile ID vs business_data.id, Billing delegado e claim institucional individual com transferência canônica; cobertura pública completa de Salvador e autoridade herdada de Prefeitura/Secretaria seguem abertas; provas hosted same-SHA continuam bloqueadas por runner pre-step  
-**Checkpoint técnico atual:** `d4db71f080b8a719b56ed60e60f95030db6bfb31`  
+**Checkpoint técnico atual:** `6ff82c8ef3baa3ef9829ad7a664a16c0d30460d9`  
 **Checkpoint de transição G5 → G6:** `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
@@ -811,7 +811,11 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 - [x] ratchets `tests/scripts/public-education-inep-adapter.test.ts` e `tests/security/public-education-inep-import-staging-g6.test.ts` protegem parser, provenance, ACL, idempotência e ausência de segunda autoridade;
 - [ ] **próximo passo obrigatório:** obter/inspecionar o ZIP oficial, provar o header real de `Tabela_Escola_2025.csv`, executar o adapter sobre o artefato oficial e criar o primeiro batch real de Salvador;
 - [ ] depois do batch real, comparar cada candidata com as 15 escolas piloto e overlays oficiais 2026. Censo 2025 é baseline e **não pode sobrescrever automaticamente fato oficial mais fresco**;
-- [ ] somente após essa arbitragem desenhar a materialização, reutilizando a autoridade canônica Profile/Business + `business_profile_fact_provenance`; não criar importador que grave diretamente um segundo agregado.
+- [x] planner read-only `private.plan_public_education_import_batch` criado em `20260906163350`: batch validado vira `insert_candidate`, `existing_no_change`, `existing_review_required` ou `excluded`; não existe escrita;
+- [x] planner protege provenance curada e fatos observados/atualizados após o ano-base do Censo. Probe com o Colégio Carlos Sant'Anna preservou o endereço oficial 2026 como blocker de overwrite e exigiu revisão;
+- [x] planner é `STABLE SECURITY INVOKER`, `search_path=''`, anon/authenticated sem EXECUTE, service_role com EXECUTE; Advisor sem finding específico;
+- [x] teste direcionado `npm run test:education:inep-import` agregado para adapter + staging/source binding + planner;
+- [ ] somente após o **batch oficial real + revisão do planner** desenhar a materialização, reutilizando a autoridade canônica Profile/Business + `business_profile_fact_provenance`; não criar importador que grave diretamente um segundo agregado.
 
 #### 2026-09-06 — G6 Educação / gestão delegada, confiança e benchmark de diretórios
 
