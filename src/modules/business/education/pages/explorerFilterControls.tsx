@@ -30,6 +30,7 @@ export const INFRASTRUCTURE_FILTERS = [
   { key: 'laboratory', label: 'Laboratório' },
   { key: 'sports_court', label: 'Quadra' },
   { key: 'pool', label: 'Piscina' },
+  { key: 'parking', label: 'Estacionamento' },
   { key: 'accessibility', label: 'Acessibilidade' },
   { key: 'internet', label: 'Internet' },
 ] as const;

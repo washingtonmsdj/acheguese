@@ -144,6 +144,8 @@ export const FACILITY_LABELS: Record<SchoolFacilityFeatureKey, string> = {
   open_courtyard: "Patio descoberto",
   playground: "Parque infantil",
   pool: "Piscina",
+  parking: "Estacionamento/garagem",
+  accessible_parking: "Vaga de estacionamento acessível",
   sports_court: "Quadra de esportes",
   covered_sports_court: "Quadra coberta",
   open_sports_court: "Quadra descoberta",

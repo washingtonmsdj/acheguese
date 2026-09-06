@@ -90,6 +90,7 @@ export function profileHasInfrastructure(profile: EducationPublicProfile, key: s
   if (key === 'laboratory') return facilities.includes('science_lab') || facilities.includes('computer_lab');
   if (key === 'sports_court') return facilities.includes('sports_court') || facilities.includes('covered_sports_court') || facilities.includes('open_sports_court');
   if (key === 'pool') return facilities.includes('pool');
+  if (key === 'parking') return facilities.includes('parking') || facilities.includes('accessible_parking');
   if (key === 'accessibility') return access.length > 0;
   if (key === 'internet') return equipment.includes('internet');
   return false;

@@ -243,6 +243,8 @@ export const FACILITY_OPTIONS: { key: SchoolFacilityFeatureKey; label: string }[
   { key: 'kitchen', label: 'Cozinha' },
   { key: 'cafeteria', label: 'Refeitorio' },
   { key: 'pool', label: 'Piscina' },
+  { key: 'parking', label: 'Estacionamento/garagem' },
+  { key: 'accessible_parking', label: 'Vaga de estacionamento acessível' },
   { key: 'playground', label: 'Parque infantil' },
   { key: 'sports_court', label: 'Quadra de esportes' },
   { key: 'covered_sports_court', label: 'Quadra coberta' },

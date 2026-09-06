@@ -83,6 +83,8 @@ export type SchoolFacilityFeatureKey =
   | 'open_courtyard'
   | 'playground'
   | 'pool'
+  | 'parking'
+  | 'accessible_parking'
   | 'sports_court'
   | 'covered_sports_court'
   | 'open_sports_court'
