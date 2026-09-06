@@ -9,6 +9,9 @@ describe("G6 public Education INEP import staging", () => {
   const migration = read(
     "supabase/migrations/20260906135247_add_public_education_inep_import_staging_g6.sql",
   );
+  const hardening = read(
+    "supabase/migrations/20260906162157_harden_public_education_import_identity_g6.sql",
+  );
 
   it("promotes non-null INEP codes to the canonical natural key", () => {
     expect(migration).toContain(
@@ -60,7 +63,7 @@ describe("G6 public Education INEP import staging", () => {
     expect(migration).toContain("'incomplete_coordinates'");
   });
 
-  it("exposes staging commands only to service_role", () => {
+  it("exposes staging commands only to service_role and hardens definer search_path", () => {
     for (const fn of [
       "create_public_education_import_batch",
       "stage_public_education_import_rows",
@@ -69,11 +72,31 @@ describe("G6 public Education INEP import staging", () => {
       expect(migration).toContain(
         `REVOKE ALL ON FUNCTION private.${fn}`,
       );
+      expect(hardening).toContain(
+        `CREATE OR REPLACE FUNCTION private.${fn}`,
+      );
     }
 
     expect(migration).toContain("TO service_role;");
-    expect(migration).toContain(
-      "COALESCE(auth.role(), '') <> 'service_role'",
+    expect(hardening.match(/SET search_path = ''/g)).toHaveLength(3);
+    expect(hardening).not.toContain("auth.role()");
+  });
+
+  it("allows corrected parsers to reprocess the same immutable archive", () => {
+    expect(hardening).toContain(
+      "education_public_import_batches_source_identity_key",
+    );
+    expect(hardening).toMatch(
+      /UNIQUE \([\s\S]*source_archive_sha256,[\s\S]*source_file_name,[\s\S]*target_city_id,[\s\S]*parser_version[\s\S]*\)/,
+    );
+    expect(hardening).toMatch(
+      /ON CONFLICT \([\s\S]*source_archive_sha256,[\s\S]*source_file_name,[\s\S]*target_city_id,[\s\S]*parser_version[\s\S]*\) DO NOTHING/,
+    );
+    expect(hardening).toContain(
+      "AND source_file_name = trim(p_source_file_name)",
+    );
+    expect(hardening).toContain(
+      "AND parser_version = trim(p_parser_version)",
     );
   });
 
@@ -87,6 +110,12 @@ describe("G6 public Education INEP import staging", () => {
       "private.profile_create_profile_with_extension(",
     );
     expect(migration).not.toMatch(
+      /CREATE OR REPLACE FUNCTION private\.[^(]*material/i,
+    );
+    expect(hardening).not.toContain("INSERT INTO public.education_profiles");
+    expect(hardening).not.toContain("INSERT INTO public.business_data");
+    expect(hardening).not.toContain("INSERT INTO public.profiles");
+    expect(hardening).not.toMatch(
       /CREATE OR REPLACE FUNCTION private\.[^(]*material/i,
     );
     expect(migration).toContain(
