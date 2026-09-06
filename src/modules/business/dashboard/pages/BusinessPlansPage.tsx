@@ -1,15 +1,36 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { CheckCircle2, Lock } from "lucide-react";
+import { CheckCircle2, Loader2, Lock } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { useBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
+import {
+  BusinessSubscriptionService,
+  PlanTier,
+} from "@/core/billing";
+import { useBillingPlans } from "@/core/billing/hooks/useBillingPlans";
 import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
+function resolveBusinessPlanTier(planCode: string): PlanTier | null {
+  if (planCode === PlanTier.FREE) return PlanTier.FREE;
+  if (planCode === PlanTier.PRO) return PlanTier.PRO;
+  if (planCode === PlanTier.DELIVERY) return PlanTier.DELIVERY;
+  return null;
+}
+
 export default function BusinessPlansPage() {
-  const { businessId, planTier, entitlements, isGastronomyActive } =
-    useBusinessDashboardContext();
+  const {
+    businessId,
+    businessDataId,
+    planTier,
+    entitlements,
+    isGastronomyActive,
+  } = useBusinessDashboardContext();
+  const { data: billingPlans = [], isLoading: loadingPlans } = useBillingPlans();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const showCoupons = isLaunchSurfaceEnabled("coupons");
   const showMobility = isLaunchSurfaceEnabled("mobility");
   const showAnalytics = isLaunchSurfaceEnabled("publicAnalytics");
@@ -36,6 +57,30 @@ export default function BusinessPlansPage() {
       : []),
   ] as const;
 
+  const handleSelectPlan = async (planCode: string) => {
+    const targetTier = resolveBusinessPlanTier(planCode);
+    if (!targetTier) {
+      toast.error("Este plano ainda nao esta disponivel para assinatura Business.");
+      return;
+    }
+    if (targetTier === planTier) return;
+
+    setLoadingPlan(planCode);
+    try {
+      const result = await BusinessSubscriptionService.updatePlan(
+        businessDataId,
+        targetTier,
+      );
+      if (result.error) {
+        toast.error("Nao foi possivel iniciar a alteracao do plano.");
+      }
+    } catch {
+      toast.error("Nao foi possivel iniciar a alteracao do plano.");
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <Card>
@@ -49,9 +94,83 @@ export default function BusinessPlansPage() {
           <Badge variant="secondary" className="uppercase">
             {planTier}
           </Badge>
-          <Link to="/planos">
-            <Button size="sm">Upgrade ou downgrade</Button>
-          </Link>
+          <span className="text-sm text-muted-foreground">
+            As alteracoes abaixo usam a assinatura desta empresa, nao o plano pessoal da conta.
+          </span>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Planos disponiveis para a empresa</CardTitle>
+          <CardDescription>
+            Upgrade pago segue para o checkout Business. Retorno ao Free e gestao do contrato
+            atual usam o portal de cobranca.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loadingPlans ? (
+            <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Carregando planos...
+            </div>
+          ) : billingPlans.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Nenhum plano Business publicado esta disponivel no momento.
+            </p>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-3">
+              {billingPlans.map((plan) => {
+                const targetTier = resolveBusinessPlanTier(plan.code);
+                const isCurrent = targetTier === planTier;
+                const isSupported = targetTier !== null;
+
+                return (
+                  <div key={plan.id} className="flex flex-col rounded-lg border p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-semibold">{plan.name}</p>
+                      {isCurrent ? <Badge variant="outline">Atual</Badge> : null}
+                    </div>
+                    <p className="mt-1 text-lg font-bold">{plan.priceDisplay}</p>
+                    {plan.description ? (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {plan.description}
+                      </p>
+                    ) : null}
+                    <ul className="mt-3 flex-1 space-y-1 text-xs text-muted-foreground">
+                      {plan.features.slice(0, 5).map((feature) => (
+                        <li key={feature}>• {feature}</li>
+                      ))}
+                    </ul>
+                    <Button
+                      type="button"
+                      className="mt-4"
+                      variant={isCurrent ? "outline" : "default"}
+                      disabled={
+                        isCurrent ||
+                        !isSupported ||
+                        loadingPlan !== null
+                      }
+                      onClick={() => void handleSelectPlan(plan.code)}
+                    >
+                      {loadingPlan === plan.code ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Abrindo...
+                        </>
+                      ) : isCurrent ? (
+                        "Plano atual"
+                      ) : isSupported ? (
+                        targetTier === PlanTier.FREE ? "Gerenciar / Free" : "Escolher plano"
+                      ) : (
+                        "Indisponivel"
+                      )}
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
 
