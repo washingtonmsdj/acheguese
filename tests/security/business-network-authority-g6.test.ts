@@ -35,6 +35,22 @@ describe("G6 transactional Business network authority", () => {
     expect(migration).toContain("hierarchy never implies inherited Profile management authority");
   });
 
+  it("pins the network broker to JWT verification and service-role governance", () => {
+    const config = read("supabase/config.toml");
+    const policy = read(
+      "docs/09-reference/governance/security/EDGE_FUNCTION_AUTH_POLICY.json",
+    );
+
+    expect(config).toContain("[functions.business-network-rpc]");
+    expect(
+      config.slice(config.indexOf("[functions.business-network-rpc]"))
+        .split("\n\n")[0],
+    ).toContain("verify_jwt = true");
+    expect(policy).toContain('"business-network-rpc"');
+    expect(policy).toContain('"authenticated-broker"');
+    expect(policy).toContain("requireOperationalAccount");
+  });
+
   it("makes Profile plus Business hierarchy changes in one database transaction", () => {
     const migration = read(
       "supabase/migrations/20260906101326_add_transactional_business_network_commands_g6.sql",
