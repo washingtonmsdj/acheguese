@@ -21,6 +21,9 @@ describe("G6 public Education INEP import staging", () => {
   const optionalRawBinding = read(
     "supabase/migrations/20260906170324_bind_public_education_optional_fields_to_raw_g6.sql",
   );
+  const landingTimestampBinding = read(
+    "supabase/migrations/20260906170644_bind_inep_landing_updated_at_manifest_g6.sql",
+  );
 
   it("promotes non-null INEP codes to the canonical natural key", () => {
     expect(migration).toContain(
@@ -143,6 +146,20 @@ describe("G6 public Education INEP import staging", () => {
     ]) {
       expect(sourceBinding).toContain(errorCode);
     }
+  });
+
+  it("keeps landing-page provenance identical between batch columns and manifest", () => {
+    expect(landingTimestampBinding).toContain(
+      "education_public_import_batches_landing_updated_at_chk",
+    );
+    expect(landingTimestampBinding).toContain("source_page_updated_at");
+    expect(landingTimestampBinding).toContain(
+      "manifest#>>'{source,landing_page_updated_at}'",
+    );
+    expect(landingTimestampBinding).toContain("::timestamptz = source_page_updated_at");
+    expect(landingTimestampBinding).not.toContain(
+      "INSERT INTO public.education_profiles",
+    );
   });
 
   it("binds optional location payloads back to the retained raw source", () => {
