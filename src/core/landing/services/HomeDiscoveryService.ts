@@ -88,7 +88,7 @@ export interface HomeCommunityActivity {
   text: string;
   time: string;
   comments: number;
-  avatarKey: "morador" | "comerciante" | "prestador" | "emprego";
+  avatarKey?: "morador" | "comerciante" | "prestador" | "emprego";
   imageKey?: HomeImageKey;
   verified?: boolean;
 }
@@ -124,123 +124,6 @@ const COMMUNITY_ACTIVE_LABEL = "Comunidade ativa";
 const COMMUNITY_TREND_LABEL = "Ativa";
 
 const locationService = new LocationService(createLocationRepository());
-
-const launchCommunityFallbacks: HomeCommunityCard[] = [
-  {
-    id: "launch-community-pituba",
-    name: "Pituba",
-    href: buildCommunityAliasUrl("pituba"),
-    imageKey: "bairroPituba",
-    membersLabel: COMMUNITY_ACTIVE_LABEL,
-    deltaLabel: COMMUNITY_TREND_LABEL,
-    badge: "Em alta",
-    avatarCount: 23,
-  },
-  {
-    id: "launch-community-barra",
-    name: "Barra",
-    href: buildCommunityAliasUrl("barra"),
-    imageKey: "bairroOndina",
-    membersLabel: COMMUNITY_ACTIVE_LABEL,
-    deltaLabel: COMMUNITY_TREND_LABEL,
-    avatarCount: 18,
-  },
-  {
-    id: "launch-community-itapua",
-    name: "Itapuã",
-    href: buildCommunityAliasUrl("itapua"),
-    imageKey: "bairroStiep",
-    membersLabel: COMMUNITY_ACTIVE_LABEL,
-    deltaLabel: COMMUNITY_TREND_LABEL,
-    avatarCount: 15,
-  },
-  {
-    id: "launch-community-rio-vermelho",
-    name: "Rio Vermelho",
-    href: buildCommunityAliasUrl("rio-vermelho"),
-    imageKey: "bairroRioVermelho",
-    membersLabel: COMMUNITY_ACTIVE_LABEL,
-    deltaLabel: COMMUNITY_TREND_LABEL,
-    avatarCount: 9,
-  },
-  {
-    id: "launch-community-horto-florestal",
-    name: "Horto Florestal",
-    href: buildCommunityAliasUrl("horto-florestal"),
-    imageKey: "neighborhoodFeatured",
-    membersLabel: COMMUNITY_ACTIVE_LABEL,
-    deltaLabel: COMMUNITY_TREND_LABEL,
-    avatarCount: 12,
-  },
-  {
-    id: "launch-community-imbui",
-    name: "Imbuí",
-    href: buildCommunityAliasUrl("imbui"),
-    imageKey: "bairroChapada",
-    membersLabel: COMMUNITY_ACTIVE_LABEL,
-    deltaLabel: COMMUNITY_TREND_LABEL,
-    avatarCount: 10,
-  },
-  {
-    id: "launch-community-graca",
-    name: "Graça",
-    href: buildCommunityAliasUrl("graca"),
-    imageKey: "complexoCultura",
-    membersLabel: COMMUNITY_ACTIVE_LABEL,
-    deltaLabel: COMMUNITY_TREND_LABEL,
-    avatarCount: 13,
-  },
-  {
-    id: "launch-community-caminho-das-arvores",
-    name: "Caminho das Árvores",
-    href: buildCommunityAliasUrl("caminho-das-arvores"),
-    imageKey: "complexoComercio",
-    membersLabel: COMMUNITY_ACTIVE_LABEL,
-    deltaLabel: COMMUNITY_TREND_LABEL,
-    avatarCount: 16,
-  },
-  {
-    id: "launch-community-stella-maris",
-    name: "Stella Maris",
-    href: buildCommunityAliasUrl("stella-maris"),
-    imageKey: "bairroSantaCruz",
-    membersLabel: COMMUNITY_ACTIVE_LABEL,
-    deltaLabel: COMMUNITY_TREND_LABEL,
-    avatarCount: 8,
-  },
-];
-
-const launchActivities: HomeCommunityActivity[] = [
-  {
-    id: "launch-activity-question-pituba",
-    author: "Juliana Santos",
-    community: "Pituba",
-    text: "Alguém sabe de um bom restaurante japonês por aqui?",
-    time: "2h",
-    comments: 24,
-    avatarKey: "morador",
-  },
-  {
-    id: "launch-activity-official-cleanup",
-    author: "Prefeitura de Salvador",
-    community: "Avisos oficiais",
-    text: "Mutirão de limpeza neste sábado na orla da Pituba. Participe!",
-    time: "4h",
-    comments: 18,
-    avatarKey: "emprego",
-    verified: true,
-  },
-  {
-    id: "launch-activity-classified-bike",
-    author: "Marcos Lima",
-    community: "Barra",
-    text: "Vendo bicicleta semi nova, usada poucas vezes.",
-    time: "6h",
-    comments: 9,
-    avatarKey: "comerciante",
-    imageKey: "bairroRioVermelho",
-  },
-];
 
 const communityImageBySlug: Partial<Record<string, HomeImageKey>> = {
   barra: "bairroOndina",
@@ -311,49 +194,8 @@ function formatCompactCount(value: number, fallback: string): string {
   return String(value);
 }
 
-function formatMembersLabel(value: number | null | undefined, fallback: string): string {
-  if (!Number.isFinite(value ?? NaN) || !value || value <= 0) return fallback;
-  return `${formatCompactCount(value, fallback)} membros`;
-}
-
 function cleanCommunityName(name: string): string {
   return name.replace(/^Achegue-se\s+/i, "").trim() || name;
-}
-
-function mergeWithLaunchFallbacks<T extends { id: string }>(
-  dynamicItems: T[],
-  fallbackItems: T[],
-  limit: number,
-): T[] {
-  const seen = new Set(dynamicItems.map((item) => item.id));
-  return [
-    ...dynamicItems,
-    ...fallbackItems.filter((item) => !seen.has(item.id)),
-  ].slice(0, limit);
-}
-
-function mergeCommunityCards(
-  dynamicItems: HomeCommunityCard[],
-  fallbackItems: HomeCommunityCard[],
-  limit: number,
-): HomeCommunityCard[] {
-  const seen = new Set(
-    dynamicItems.map((item) => `${item.href}|${item.name.toLowerCase()}`),
-  );
-
-  return [
-    ...dynamicItems,
-    ...fallbackItems.filter(
-      (item) => !seen.has(`${item.href}|${item.name.toLowerCase()}`),
-    ),
-  ].slice(0, limit);
-}
-
-function communityFallbackBySlug(slug: string): HomeCommunityCard | undefined {
-  return launchCommunityFallbacks.find((community) => {
-    const hrefSlug = community.href.split("/").filter(Boolean).at(0);
-    return hrefSlug === slug || community.id.endsWith(slug);
-  });
 }
 
 function selectBalancedActivityDocuments(
@@ -390,32 +232,22 @@ function settledValue<T>(result: PromiseSettledResult<T>, fallback: T): T {
 
 function territoryCommunityToCard(
   row: CommunitySearchResult,
-  index: number,
 ): HomeCommunityCard {
-  const fallback = communityFallbackBySlug(row.slug);
-
   return {
     id: row.id,
     name: cleanCommunityName(row.name),
     href: buildCommunityAliasUrl(row.slug),
-    imageKey: communityImageBySlug[row.slug] ?? fallback?.imageKey ?? "neighborhoodFeatured",
-    membersLabel: fallback?.membersLabel ?? formatMembersLabel(null, "Comunidade ativa"),
-    deltaLabel: fallback?.deltaLabel ?? COMMUNITY_TREND_LABEL,
-    badge: row.is_featured || index === 0 ? (fallback?.badge ?? "Em alta") : fallback?.badge,
-    avatarCount: fallback?.avatarCount ?? Math.max(6, 18 - index * 2),
+    imageKey: communityImageBySlug[row.slug] ?? "neighborhoodFeatured",
+    membersLabel: COMMUNITY_ACTIVE_LABEL,
+    deltaLabel: COMMUNITY_TREND_LABEL,
+    badge: row.is_featured ? "Destaque" : undefined,
+    avatarCount: 0,
   };
 }
 
 function topPostToCommunityActivity(
   post: Awaited<ReturnType<typeof postService.getTopPosts>>[number],
-  index: number,
 ): HomeCommunityActivity {
-  const avatarKeys: HomeCommunityActivity["avatarKey"][] = [
-    "morador",
-    "comerciante",
-    "prestador",
-  ];
-
   return {
     id: `post-${post.id}`,
     author: post.author_name || "Morador",
@@ -423,7 +255,6 @@ function topPostToCommunityActivity(
     text: post.content,
     time: "7d",
     comments: post.engagement,
-    avatarKey: avatarKeys[index % avatarKeys.length],
   };
 }
 
@@ -502,29 +333,23 @@ function buildCommunityActivities(
   topPosts: Awaited<ReturnType<typeof postService.getTopPosts>>,
   limit: number,
 ): HomeCommunityActivity[] {
-  return mergeWithLaunchFallbacks(
-    topPosts.map(topPostToCommunityActivity),
-    launchActivities,
-    limit,
-  );
+  return topPosts.map(topPostToCommunityActivity).slice(0, limit);
 }
 
 function buildFallbackDiscovery(
-  options: HomeDiscoveryOptions = {},
+  _options: HomeDiscoveryOptions = {},
 ): HomeDiscoveryResult {
-  const communityLimit = options.communityLimit ?? DEFAULT_COMMUNITY_LIMIT;
-
   return {
     activityDocuments: [],
-    communityActivities: launchActivities,
-    communityRanking: launchCommunityFallbacks.slice(0, communityLimit),
-    featuredCommunities: launchCommunityFallbacks.slice(0, Math.min(4, communityLimit)),
+    communityActivities: [],
+    communityRanking: [],
+    featuredCommunities: [],
     stats: buildStats(
       { businesses: 0, services: 0, classifieds: 0 },
       0,
       [],
     ),
-    suggestedCommunities: launchCommunityFallbacks.slice(4, 4 + communityLimit),
+    suggestedCommunities: [],
     sponsoredItems: [],
     trustDocuments: [],
   };
@@ -755,11 +580,10 @@ export class HomeDiscoveryService {
       services: 0,
       classifieds: 0,
     });
-    const communityCards = mergeCommunityCards(
-      settledValue(communityCardsResult, []),
-      launchCommunityFallbacks,
-      communityLimit + 4,
-    );
+    const communityCards = settledValue(
+      communityCardsResult,
+      [],
+    ).slice(0, communityLimit + 4);
     const rankedCommunities =
       await HomeCommunityRankingService.rankCommunityCards(
         communityCards,

@@ -315,10 +315,8 @@ describe("HomeDiscoveryService", () => {
     expect(result.featuredCommunities.map((community) => community.name)).toEqual([
       "Pituba",
       "Barra",
-      "Itapuã",
-      "Rio Vermelho",
     ]);
-    expect(result.communityRanking).toHaveLength(5);
+    expect(result.communityRanking).toHaveLength(2);
     expect(
       result.featuredCommunities.every(
         (community) => community.membersLabel === "Comunidade ativa",
@@ -326,7 +324,9 @@ describe("HomeDiscoveryService", () => {
     ).toBe(true);
     expect(
       result.communityRanking.every(
-        (community) => community.deltaLabel === "Ativa",
+        (community) =>
+          community.deltaLabel === "Ativa" &&
+          community.avatarCount === 0,
       ),
     ).toBe(true);
     expect(result.sponsoredItems).toEqual([]);
@@ -534,4 +534,18 @@ describe("HomeDiscoveryService", () => {
       "Apartamento mobiliado",
     ]);
   });
+
+  it("keeps fallback discovery truthful when no canonical data is available", () => {
+    const result = HomeDiscoveryService.getFallbackHomeDiscovery();
+
+    expect(result.activityDocuments).toEqual([]);
+    expect(result.communityActivities).toEqual([]);
+    expect(result.communityRanking).toEqual([]);
+    expect(result.featuredCommunities).toEqual([]);
+    expect(result.suggestedCommunities).toEqual([]);
+    expect(result.sponsoredItems).toEqual([]);
+    expect(result.trustDocuments).toEqual([]);
+  });
+
+
 });

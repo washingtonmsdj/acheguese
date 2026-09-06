@@ -170,53 +170,6 @@ const quickChips: Chip[] = [
   { label: "+ Mais", href: searchHref, icon: MoreHorizontal },
 ];
 
-const fallbackHighlights: HighlightCard[] = [
-  {
-    label: "Evento hoje",
-    title: "Samba na Praça",
-    meta: "19h - Praça da Pituba",
-    detail: "Música",
-    href: LAUNCH_URLS.events,
-    image: complexoMusica,
-    tone: "blue",
-    icon: Calendar,
-    surface: "events",
-  },
-  {
-    label: "Promoção",
-    title: "Rodízio de Pizza",
-    meta: "Dom Salvador",
-    detail: "até 30% OFF",
-    href: LAUNCH_URLS.gastronomy,
-    image: gastronomyHero,
-    tone: "green",
-    icon: UtensilsCrossed,
-    surface: "coupons",
-  },
-  {
-    label: "Nova empresa",
-    title: "Academia Strong",
-    meta: "Pituba",
-    detail: "Aberto agora",
-    href: LAUNCH_URLS.business,
-    image: empresasHero,
-    tone: "blue",
-    icon: Building2,
-    surface: "business",
-  },
-  {
-    label: "Aviso",
-    title: "Interdição na Rua dos Navegantes",
-    meta: "Hoje, das 8h às 17h",
-    detail: "Trânsito",
-    href: buildCommunityAliasUrl("rio-vermelho", "feed"),
-    image: heroImg,
-    tone: "red",
-    icon: Bell,
-    surface: "communityAlerts",
-  },
-];
-
 function formatNotificationBadgeCount(count: number): string {
   return count > 99 ? "99+" : String(count);
 }
@@ -389,11 +342,10 @@ function SearchPanel() {
 }
 
 function AvatarStack({ count }: { count: number }) {
+  if (count <= 0) return null;
+
   return (
     <span className="home-avatar-stack" aria-label={`${count} membros recentes`}>
-      {avatarImages.map((avatar, index) => (
-        <img key={avatar} src={avatar} alt="" style={{ zIndex: avatarImages.length - index }} />
-      ))}
       <span>+{count}</span>
     </span>
   );
@@ -435,7 +387,7 @@ function resolveDocumentLabel(document: SearchDocument): Pick<HighlightCard, "la
     case "classified":
       return { label: "Classificado", tone: "pink", icon: Tag };
     case "event":
-      return { label: "Evento hoje", tone: "blue", icon: Calendar };
+      return { label: "Evento", tone: "blue", icon: Calendar };
     case "community":
     case "post":
       return { label: "Comunidade", tone: "green", icon: Users };
@@ -466,11 +418,7 @@ function toHighlightCards(documents: SearchDocument[], communityHref: string): H
       image: getFallbackImageForDocument(document, index),
     };
   });
-  const enabledFallbacks = fallbackHighlights.filter(
-    (card) => !card.surface || isLaunchSurfaceEnabled(card.surface),
-  );
-
-  return [...dynamicCards, ...enabledFallbacks].slice(0, 4);
+  return dynamicCards;
 }
 
 function HappeningCard({ card }: { card: HighlightCard }) {
@@ -950,8 +898,8 @@ function TodayInNeighborhood({
     <section className="home1-today" aria-labelledby="home1-today-title">
       <div className="home1-section-heading">
         <div>
-          <h2 id="home1-today-title">Hoje no bairro</h2>
-          <p>O que está acontecendo agora perto de você.</p>
+          <h2 id="home1-today-title">Novidades do bairro</h2>
+          <p>Atividade pública recente e agenda válida perto de você.</p>
         </div>
       </div>
       {isLoading && items.length === 0 ? (
@@ -963,6 +911,15 @@ function TodayInNeighborhood({
               <span className="home-skel home-skel-line" style={{ width: "45%" }} />
             </div>
           ))}
+        </div>
+      ) : items.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-5 py-8 text-center">
+          <p className="text-sm font-semibold text-foreground">
+            Nenhuma novidade pública disponível agora
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Explore o bairro pelos módulos abaixo ou volte mais tarde.
+          </p>
         </div>
       ) : (
         <div className="home1-today-grid">
@@ -1041,7 +998,7 @@ function buildFeedItems(
     href: LAUNCH_URLS.community,
     image: a.imageKey ? homeImagesByKey[a.imageKey] : undefined,
     author: a.author,
-    avatar: homeAvatarsByKey[a.avatarKey],
+    avatar: a.avatarKey ? homeAvatarsByKey[a.avatarKey] : undefined,
   }));
   const cards: FeedItem[] = highlights.slice(0, 3).map((h, idx) => ({
     id: `hl-${idx}-${h.title}`,
@@ -1100,6 +1057,15 @@ function DestaquesTimeline({ items, isLoading }: { items: FeedItem[]; isLoading?
               <span className="home-skel home-skel-line" style={{ width: "90%" }} />
             </div>
           ))}
+        </div>
+      ) : items.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-5 py-8 text-center">
+          <p className="text-sm font-semibold text-foreground">
+            Ainda não há destaques públicos neste território
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            A Home será preenchida somente por conteúdo real dos módulos.
+          </p>
         </div>
       ) : (
         <div className="home1-feed-list">
