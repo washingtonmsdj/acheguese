@@ -46,7 +46,7 @@ import {
 } from "@/core/landing/utils/landingPresentation";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { useHomeCommunityHref } from "@/core/routing/hooks/useHomeCommunityHref";
-import { buildCommunityAliasUrl, buildCommunityScopedUrl } from "@/core/routing/utils/territoryUrls";
+import { buildCommunityScopedUrl } from "@/core/routing/utils/territoryUrls";
 import { PublicHeaderMobileMenu } from "@/core/navigation/PublicHeaderMobileMenu";
 import {
   buildPublicHeaderNavigation,
