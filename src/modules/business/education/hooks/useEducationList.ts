@@ -14,6 +14,8 @@ export interface EducationListFilters {
   state?: string;
   city?: string;
   district?: string;
+  locationIds?: string[];
+  enabled?: boolean;
 }
 
 export function useEducationList(filters: EducationListFilters = {}) {
@@ -28,6 +30,8 @@ export function useEducationList(filters: EducationListFilters = {}) {
     state,
     city,
     district,
+    locationIds = [],
+    enabled = true,
   } = filters;
   const [debouncedQuery, setDebouncedQuery] = useState(query.trim());
 
@@ -46,6 +50,7 @@ export function useEducationList(filters: EducationListFilters = {}) {
       state,
       city,
       district,
+      locationIds,
       debouncedQuery,
       niches,
       schoolNetworks,
@@ -68,21 +73,31 @@ export function useEducationList(filters: EducationListFilters = {}) {
         state,
         city,
         district,
+        locationIds,
       });
     },
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
-    enabled: Boolean(state && city),
+    enabled: enabled && Boolean(state && city),
     staleTime: 60_000,
   });
 }
 
-export function useEducationDistricts(state?: string, city?: string) {
+export function useEducationDistricts(
+  state?: string,
+  city?: string,
+  locationIds: string[] = [],
+  enabled = true,
+) {
   return useQuery({
-    queryKey: ['education', 'public-districts', state, city],
+    queryKey: ['education', 'public-districts', state, city, locationIds],
     queryFn: () =>
-      educationQueries.listPublishedEducationDistricts(state, city),
-    enabled: Boolean(state && city),
+      educationQueries.listPublishedEducationDistricts(
+        state,
+        city,
+        locationIds,
+      ),
+    enabled: enabled && Boolean(state && city),
     staleTime: 5 * 60_000,
   });
 }
