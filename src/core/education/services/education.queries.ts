@@ -55,6 +55,7 @@ interface BusinessRouteRow {
   profile_id: string;
   business_name: string | null;
   slug: string | null;
+  is_claimable: boolean;
   location: { geographic_path?: string | null } | null;
 }
 
@@ -104,7 +105,7 @@ async function enrichEducationProfilesWithPublicRoutes(
   if (!knownRoutes) {
     const result = await supabase
       .from('public_business_search')
-      .select('id, profile_id, business_name, slug, location:locations!location_id(geographic_path)')
+      .select('id, profile_id, business_name, slug, is_claimable, location:locations!location_id(geographic_path)')
       .in('profile_id', profileIds)
       .eq('status', 'active')
       .in('business_role', ['standalone', 'branch']);
@@ -113,7 +114,9 @@ async function enrichEducationProfilesWithPublicRoutes(
       logger.error('[EducationQueries] Error fetching public routes:', result.error);
       return profiles.map((profile) => ({
         ...profile,
+        business_data_id: null,
         business_name: null,
+        is_claimable: false,
         public_route: null,
       }));
     }
@@ -132,7 +135,9 @@ async function enrichEducationProfilesWithPublicRoutes(
     const business = routeByProfileId.get(profile.business_id);
     return {
       ...profile,
+      business_data_id: business?.id ?? null,
       business_name: business?.business_name ?? null,
+      is_claimable: business?.is_claimable ?? false,
       public_route: parseEducationPublicRoute(
         business?.location?.geographic_path,
         business?.slug,
@@ -226,7 +231,7 @@ async function listEducationBusinessRoutesByTerritory(
 
   const { data, error } = await supabase
     .from('public_business_search')
-    .select('id, profile_id, business_name, slug, location:locations!location_id(geographic_path)')
+    .select('id, profile_id, business_name, slug, is_claimable, location:locations!location_id(geographic_path)')
     .in('location_id', locationIds)
     .eq('status', 'active')
     .in('business_role', ['standalone', 'branch'])
