@@ -11,6 +11,7 @@ import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types
 import { AnalyticsService } from "@/core/analytics/AnalyticsService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 import type { ReviewStats } from "@/core/reviews/types";
+import { invokeSupabaseBrokerCommand } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 
 const businessAdminDb = supabase as unknown as AdminSupabaseClient;
 
@@ -23,17 +24,6 @@ interface QueryArrayResult<TRow> {
   error: QueryError | null;
   count?: number | null;
 }
-
-interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
-  update: (values: unknown) => QueryBuilder<TRow>;
-  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
-}
-
-interface BusinessAdminLooseDbClient {
-  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
-}
-
-const businessAdminLooseDb = supabase as unknown as BusinessAdminLooseDbClient;
 
 export interface CouponRecord {
   id: string;
@@ -241,17 +231,19 @@ export async function getBusinessMetrics(
 export async function updateBusinessClaimStatus(
   claimId: string,
   status: "aprovada" | "rejeitada",
+  reviewNotes?: string,
 ): Promise<boolean> {
   try {
-    const { error } = await businessAdminLooseDb
-      .from<{ id: string }>("business_claims")
-      .update({ status, resolved_at: new Date().toISOString() })
-      .eq("id", claimId);
-
-    if (error) {
-      logger.error("Error updating claim status:", error);
-      return false;
-    }
+    await invokeSupabaseBrokerCommand({
+      action: "resolveClaim",
+      functionName: "admin-business-rpc",
+      params: {
+        claimId,
+        decision: status === "aprovada" ? "approve" : "reject",
+        reviewNotes: reviewNotes?.trim() || null,
+      },
+      serviceName: "BusinessAdmin",
+    });
     return true;
   } catch (error) {
     logger.error("Error in updateBusinessClaimStatus:", error);
