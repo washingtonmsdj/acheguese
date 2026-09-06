@@ -13,242 +13,550 @@
   "sections": [
     {
       "section": "account",
-      "sources": ["auth.users"],
+      "sources": [
+        "auth.users"
+      ],
       "scope": "authenticated-user",
-      "include": ["id", "email", "phone", "email_confirmed_at", "phone_confirmed_at", "created_at", "updated_at", "last_sign_in_at", "user_metadata"],
-      "exclude": ["app_metadata", "encrypted_password", "confirmation_token", "recovery_token", "reauthentication_token"],
+      "include": [
+        "id",
+        "email",
+        "phone",
+        "email_confirmed_at",
+        "phone_confirmed_at",
+        "created_at",
+        "updated_at",
+        "last_sign_in_at",
+        "user_metadata"
+      ],
+      "exclude": [
+        "app_metadata",
+        "encrypted_password",
+        "confirmation_token",
+        "recovery_token",
+        "reauthentication_token"
+      ],
       "notes": "Provider/internal authorization metadata is not part of the portable subject payload."
     },
     {
       "section": "auth_identities",
-      "sources": ["auth.users.identities"],
+      "sources": [
+        "auth.users.identities"
+      ],
       "scope": "authenticated-user",
-      "include": ["provider", "created_at", "updated_at", "last_sign_in_at"],
-      "exclude": ["identity_data", "provider_token", "provider_refresh_token"],
+      "include": [
+        "provider",
+        "created_at",
+        "updated_at",
+        "last_sign_in_at"
+      ],
+      "exclude": [
+        "identity_data",
+        "provider_token",
+        "provider_refresh_token"
+      ],
       "notes": "Do not export raw provider payloads or credentials."
     },
     {
       "section": "auth_factors",
-      "sources": ["auth.users.factors"],
+      "sources": [
+        "auth.users.factors"
+      ],
       "scope": "authenticated-user",
-      "include": ["status", "friendly_name", "factor_type", "created_at", "updated_at"],
-      "exclude": ["secret", "challenge", "factor_id"],
+      "include": [
+        "status",
+        "friendly_name",
+        "factor_type",
+        "created_at",
+        "updated_at"
+      ],
+      "exclude": [
+        "secret",
+        "challenge",
+        "factor_id"
+      ],
       "notes": "Export enrollment state, never factor secrets."
     },
     {
       "section": "profiles",
-      "sources": ["public.profiles", "public.personal_social_profiles"],
+      "sources": [
+        "public.profiles",
+        "public.personal_social_profiles"
+      ],
       "scope": "rows-owned-by-user-id",
       "includePolicy": "explicit-profile-fields",
-      "exclude": ["internal-only metadata not explicitly allowlisted"],
+      "exclude": [
+        "internal-only metadata not explicitly allowlisted"
+      ],
       "notes": "Include the subject's own profile identity, contact, visibility and reputation fields with explicit selects."
     },
     {
       "section": "profile_memberships",
-      "sources": ["public.profile_members", "public.user_active_profiles"],
+      "sources": [
+        "public.profile_members",
+        "public.user_active_profiles"
+      ],
       "scope": "rows-where-user_id-is-subject",
-      "include": ["profile_id", "role", "joined_at", "is_active", "created_at", "updated_at"],
-      "exclude": ["invited_by"],
+      "include": [
+        "profile_id",
+        "role",
+        "joined_at",
+        "is_active",
+        "created_at",
+        "updated_at"
+      ],
+      "exclude": [
+        "invited_by"
+      ],
       "notes": "Do not expose another user's inviter identifier."
     },
     {
       "section": "roles",
-      "sources": ["public.user_roles"],
+      "sources": [
+        "public.user_roles"
+      ],
       "scope": "rows-where-user_id-is-subject",
-      "include": ["role_enum", "is_active", "granted_at", "expires_at", "revoked_at", "reason", "created_at", "updated_at"],
-      "exclude": ["granted_by", "revoked_by", "metadata"],
+      "include": [
+        "role_enum",
+        "is_active",
+        "granted_at",
+        "expires_at",
+        "revoked_at",
+        "reason",
+        "created_at",
+        "updated_at"
+      ],
+      "exclude": [
+        "granted_by",
+        "revoked_by",
+        "metadata"
+      ],
       "notes": "Administrative actor identifiers and internal metadata are redacted."
     },
     {
       "section": "residences",
-      "sources": ["public.user_residences", "public.addresses"],
+      "sources": [
+        "public.user_residences",
+        "public.addresses"
+      ],
       "scope": "residences-for-subject-and-their-address-ids",
       "includePolicy": "address-and-verification-fields",
-      "exclude": ["addresses.verified_by", "addresses.metadata"],
+      "exclude": [
+        "addresses.verified_by",
+        "addresses.metadata"
+      ],
       "notes": "Address rows must be reached through the subject's residence relation or owner_user_id."
     },
     {
       "section": "privacy_preferences",
-      "sources": ["public.user_consents", "public.notification_preferences", "public.user_mfa_status"],
+      "sources": [
+        "public.user_consents",
+        "public.notification_preferences",
+        "public.user_mfa_status"
+      ],
       "scope": "rows-where-user_id-is-subject",
       "includePolicy": "subject-visible-state",
-      "exclude": ["user_consents.ip_address", "user_consents.user_agent", "user_consents.granted_by", "user_consents.revoked_by", "user_mfa_status.exemption_granted_by"],
+      "exclude": [
+        "user_consents.ip_address",
+        "user_consents.user_agent",
+        "user_consents.granted_by",
+        "user_consents.revoked_by",
+        "user_mfa_status.exemption_granted_by"
+      ],
       "notes": "Consent/MFA state is included; operational actor identifiers are not."
     },
     {
       "section": "business_profiles",
-      "sources": ["public.businesses", "public.business_data", "public.business_products", "public.business_stats"],
+      "sources": [
+        "public.business_data",
+        "public.business_products",
+        "public.business_stats"
+      ],
       "scope": "rows-linked-to-profile-ids-owned-by-subject",
       "includePolicy": "explicit-business-fields",
-      "exclude": ["internal metadata unless explicitly allowlisted"],
-      "notes": "Ownership is profile-based; never use legacy businesses.owner_id."
+      "exclude": [
+        "internal metadata unless explicitly allowlisted"
+      ],
+      "notes": "Ownership and export are profile-based on canonical business_data; legacy businesses table is retired."
     },
     {
       "section": "professional_profiles",
-      "sources": ["public.professional_data", "public.professional_stats"],
+      "sources": [
+        "public.professional_data",
+        "public.professional_stats"
+      ],
       "scope": "rows-linked-to-profile-ids-owned-by-subject-or-owner_user_id",
       "includePolicy": "explicit-professional-fields",
-      "exclude": ["updated_by_user_id", "metadata"],
+      "exclude": [
+        "updated_by_user_id",
+        "metadata"
+      ],
       "notes": "Do not use legacy professional_data.user_id."
     },
     {
       "section": "driver_profiles",
-      "sources": ["public.driver_data", "public.driver_profiles", "public.driver_availability", "public.driver_routes"],
+      "sources": [
+        "public.driver_data",
+        "public.driver_profiles",
+        "public.driver_availability",
+        "public.driver_routes"
+      ],
       "scope": "rows-linked-to-profile-ids-owned-by-subject",
       "includePolicy": "explicit-driver-subject-fields",
-      "exclude": ["live location precision not needed for portability", "moderation internals"],
+      "exclude": [
+        "live location precision not needed for portability",
+        "moderation internals"
+      ],
       "notes": "Current driver authority is profile-based."
     },
     {
       "section": "authored_content",
-      "sources": ["public.posts", "public.comments", "public.community_posts", "public.community_questions", "public.question_answers", "public.classifieds", "public.events", "public.vagas", "public.work_opportunities", "public.communication_publications"],
+      "sources": [
+        "public.posts",
+        "public.comments",
+        "public.community_posts",
+        "public.community_questions",
+        "public.question_answers",
+        "public.classifieds",
+        "public.events",
+        "public.vagas",
+        "public.work_opportunities",
+        "public.communication_publications"
+      ],
       "scope": "rows-authored-or-owned-by-subject-profile-ids",
       "includePolicy": "content-and-public-status-fields",
-      "exclude": ["removed_by", "reviewer identifiers", "internal moderation notes"],
+      "exclude": [
+        "removed_by",
+        "reviewer identifiers",
+        "internal moderation notes"
+      ],
       "notes": "Export the subject's authored rows, not content authored by other participants."
     },
     {
       "section": "messages_sent",
-      "sources": ["public.messages", "public.community_direct_messages", "public.group_messages_new"],
+      "sources": [
+        "public.messages",
+        "public.community_direct_messages",
+        "public.group_messages_new"
+      ],
       "scope": "rows-where-sender-profile-id-is-owned-by-subject",
       "includePolicy": "message-body-and-subject-message-metadata",
-      "exclude": ["other participants' messages", "removed_by_profile_id", "moderation-only metadata"],
+      "exclude": [
+        "other participants' messages",
+        "removed_by_profile_id",
+        "moderation-only metadata"
+      ],
       "notes": "Never export an entire conversation/thread through a service-role join."
     },
     {
       "section": "community_membership_and_actions",
-      "sources": ["public.community_memberships", "public.group_members_new", "public.community_poll_votes", "public.community_issue_supports"],
+      "sources": [
+        "public.community_memberships",
+        "public.group_members_new",
+        "public.community_poll_votes",
+        "public.community_issue_supports"
+      ],
       "scope": "rows-linked-to-subject-user-or-profile-ids",
       "includePolicy": "subject-membership-and-action-fields",
-      "exclude": ["invited_by_profile_id", "approved_by_profile_id", "metadata"],
+      "exclude": [
+        "invited_by_profile_id",
+        "approved_by_profile_id",
+        "metadata"
+      ],
       "notes": "Include the subject's membership/action state only."
     },
     {
       "section": "favorites_and_saved_items",
-      "sources": ["public.profile_favorites", "public.classified_favorites", "public.professional_favorites", "public.event_favorites", "public.tourist_point_saved_items", "public.vaga_saved_items", "public.user_favorite_businesses"],
+      "sources": [
+        "public.classified_favorites",
+        "public.professional_favorites",
+        "public.tourist_point_saved_items",
+        "public.vaga_saved_items",
+        "public.user_favorite_businesses"
+      ],
       "scope": "rows-linked-to-subject-user-or-profile-ids",
       "includePolicy": "subject-action-fields",
       "exclude": [],
-      "notes": "Saved/favorite relations are subject-generated personal data."
+      "notes": "Only active canonical save/favorite aggregates are exported."
     },
     {
       "section": "mobility",
-      "sources": ["public.ride_requests", "public.route_reservations"],
+      "sources": [
+        "public.ride_requests",
+        "public.route_reservations"
+      ],
       "scope": "rows-where-subject-owned-profile-is-passenger-or-driver",
       "includePolicy": "trip-status-route-time-price-fields",
-      "exclude": ["counterparty profile ids", "recipient_name", "recipient_phone", "proof_of_delivery", "failed_delivery_metadata"],
+      "exclude": [
+        "counterparty profile ids",
+        "recipient_name",
+        "recipient_phone",
+        "proof_of_delivery",
+        "failed_delivery_metadata"
+      ],
       "notes": "Shared ride/delivery records require third-party redaction."
     },
     {
       "section": "orders",
-      "sources": ["public.orders"],
+      "sources": [
+        "public.orders"
+      ],
       "scope": "rows-where-subject-owned-profile-is-customer-merchant-or-courier",
       "includePolicy": "transaction-status-amount-time-fields",
-      "exclude": ["counterparty profile ids", "proof_of_delivery", "source_metadata", "external_payment_reference"],
+      "exclude": [
+        "counterparty profile ids",
+        "proof_of_delivery",
+        "source_metadata",
+        "external_payment_reference"
+      ],
       "notes": "Do not leak counterpart identifiers or provider references."
     },
     {
       "section": "billing",
-      "sources": ["public.user_subscriptions", "public.billing_transactions"],
+      "sources": [
+        "public.user_subscriptions",
+        "public.billing_transactions"
+      ],
       "scope": "rows-where-user_id-is-subject",
       "includePolicy": "plan-status-amount-currency-period-and-created-fields",
-      "exclude": ["stripe_customer_id", "stripe_subscription_id", "stripe_invoice_id", "stripe_payment_intent_id", "metadata", "contract_snapshot"],
+      "exclude": [
+        "stripe_customer_id",
+        "stripe_subscription_id",
+        "stripe_invoice_id",
+        "stripe_payment_intent_id",
+        "metadata",
+        "contract_snapshot"
+      ],
       "notes": "Provider identifiers and internal billing snapshots are excluded."
     },
     {
       "section": "notifications",
-      "sources": ["public.notifications", "public.email_logs"],
+      "sources": [
+        "public.notifications",
+        "public.email_logs"
+      ],
       "scope": "rows-where-user_id-is-subject",
       "includePolicy": "message-status-and-time-fields",
-      "exclude": ["provider_id", "error_message", "metadata"],
+      "exclude": [
+        "provider_id",
+        "error_message",
+        "metadata"
+      ],
       "notes": "Include subject-facing notification history, not provider diagnostics."
     },
     {
       "section": "reports_submitted",
-      "sources": ["public.community_reports", "public.community_direct_message_reports", "public.review_reports", "public.ride_reports", "public.vaga_reports", "public.group_message_reports"],
+      "sources": [
+        "public.community_reports",
+        "public.community_direct_message_reports",
+        "public.review_reports",
+        "public.ride_reports",
+        "public.vaga_reports",
+        "public.group_message_reports"
+      ],
       "scope": "rows-where-reporter-profile-id-is-owned-by-subject",
       "includePolicy": "submitted-reason-description-evidence-status-and-time",
-      "exclude": ["reviewed_by", "reviewed_by_profile_id", "admin_notes", "moderator_notes", "resolution_notes", "moderation_history", "reported_profile_id"],
+      "exclude": [
+        "reviewed_by",
+        "reviewed_by_profile_id",
+        "admin_notes",
+        "moderator_notes",
+        "resolution_notes",
+        "moderation_history",
+        "reported_profile_id"
+      ],
       "notes": "Subject submissions are exportable; moderation workflow and third-party identifiers are not."
     },
     {
       "section": "ai_activity",
-      "sources": ["public.ai_image_generations", "public.tryon_generations", "public.ai_usage_log", "public.ai_moderation_log"],
+      "sources": [
+        "public.ai_image_generations",
+        "public.tryon_generations",
+        "public.ai_usage_log",
+        "public.ai_moderation_log"
+      ],
       "scope": "rows-where-user_id-is-subject",
       "includePolicy": "subject-input-output-status-and-time-fields",
-      "exclude": ["request_id", "cost_estimate", "internal metadata", "internal moderation reasoning beyond subject-facing reason"],
+      "exclude": [
+        "request_id",
+        "cost_estimate",
+        "internal metadata",
+        "internal moderation reasoning beyond subject-facing reason"
+      ],
       "notes": "User prompts/results are personal data; provider/ops internals are excluded."
     },
     {
       "section": "analytics",
-      "sources": ["public.analytics_events", "public.analytics_sessions"],
+      "sources": [
+        "public.analytics_events",
+        "public.analytics_sessions"
+      ],
       "scope": "rows-where-user_id-is-subject",
       "includePolicy": "event-session-time-device-and-location-subject-fields",
-      "exclude": ["raw metadata", "properties not explicitly allowlisted"],
+      "exclude": [
+        "raw metadata",
+        "properties not explicitly allowlisted"
+      ],
       "notes": "Do not pass arbitrary analytics metadata through to the export."
     },
     {
       "section": "pii_access_summary",
-      "sources": ["public.pii_access_log"],
+      "sources": [
+        "public.pii_access_log"
+      ],
       "scope": "rows-where-subject_user_id-is-subject",
-      "include": ["table_name", "field_name", "operation", "access_reason", "access_reason_category", "accessed_at", "source", "retention_until"],
-      "exclude": ["accessed_by", "approved_by", "ip_address", "user_agent", "session_id", "data_masked_sample"],
+      "include": [
+        "table_name",
+        "field_name",
+        "operation",
+        "access_reason",
+        "access_reason_category",
+        "accessed_at",
+        "source",
+        "retention_until"
+      ],
+      "exclude": [
+        "accessed_by",
+        "approved_by",
+        "ip_address",
+        "user_agent",
+        "session_id",
+        "data_masked_sample"
+      ],
       "notes": "Provide a subject-facing access summary without exposing staff/security identifiers."
     },
     {
       "section": "media_assets",
-      "sources": ["public.media_assets"],
+      "sources": [
+        "public.media_assets"
+      ],
       "scope": "rows-where-owner_user_id-is-subject-or-owner_profile_id-is-owned-by-subject",
-      "include": ["id", "preset", "mime_type", "byte_size", "width", "height", "state", "attached_at", "deleted_at", "created_at", "updated_at"],
-      "exclude": ["storage_reference", "object_path", "sha256"],
+      "include": [
+        "id",
+        "preset",
+        "mime_type",
+        "byte_size",
+        "width",
+        "height",
+        "state",
+        "attached_at",
+        "deleted_at",
+        "created_at",
+        "updated_at"
+      ],
+      "exclude": [
+        "storage_reference",
+        "object_path",
+        "sha256"
+      ],
       "notes": "Storage internals are not part of the portable payload."
     },
     {
       "section": "verification",
-      "sources": ["public.verification"],
+      "sources": [
+        "public.verification"
+      ],
       "scope": "rows-linked-to-subject-owned-profile-ids",
-      "include": ["verification_type", "submitted_at", "reviewed_at", "status", "review_reason", "created_at", "updated_at"],
-      "exclude": ["reviewed_by", "document_url", "notes"],
+      "include": [
+        "verification_type",
+        "submitted_at",
+        "reviewed_at",
+        "status",
+        "review_reason",
+        "created_at",
+        "updated_at"
+      ],
+      "exclude": [
+        "reviewed_by",
+        "document_url",
+        "notes"
+      ],
       "notes": "Document binaries require a separate controlled export path; never expose raw storage URLs."
     },
     {
       "section": "security_state_summary",
-      "sources": ["public.banned_users", "public.session_anomalies", "public.profile_audit_log"],
+      "sources": [
+        "public.banned_users",
+        "public.session_anomalies",
+        "public.profile_audit_log"
+      ],
       "scope": "subject-only-summary",
       "includePolicy": "status-reason-action-severity-and-time-only",
-      "exclude": ["banned_by", "resolved_by", "performed_by", "details", "metadata"],
+      "exclude": [
+        "banned_by",
+        "resolved_by",
+        "performed_by",
+        "details",
+        "metadata"
+      ],
       "notes": "Security decisions affecting the subject can be summarized without exposing detection internals."
     },
     {
       "section": "emergency_contacts",
-      "sources": ["public.emergency_contacts"],
+      "sources": [
+        "public.emergency_contacts"
+      ],
       "scope": "rows-linked-to-subject-owned-profile-ids",
-      "include": ["relationship", "is_primary", "is_active", "created_at", "updated_at"],
-      "exclude": ["name", "phone", "email", "metadata"],
+      "include": [
+        "relationship",
+        "is_primary",
+        "is_active",
+        "created_at",
+        "updated_at"
+      ],
+      "exclude": [
+        "name",
+        "phone",
+        "email",
+        "metadata"
+      ],
       "notes": "Contact details belong to third parties and are redacted from the subject portability payload."
     },
     {
       "section": "push_credentials",
-      "sources": ["public.push_subscriptions"],
+      "sources": [
+        "public.push_subscriptions"
+      ],
       "scope": "rows-where-user_id-is-subject",
-      "include": ["device_name", "user_agent", "is_active", "created_at", "last_used_at"],
-      "exclude": ["endpoint", "p256dh", "auth"],
+      "include": [
+        "device_name",
+        "user_agent",
+        "is_active",
+        "created_at",
+        "last_used_at"
+      ],
+      "exclude": [
+        "endpoint",
+        "p256dh",
+        "auth"
+      ],
       "notes": "Push credentials are secrets and must never be exported."
     },
     {
       "section": "internal_logs",
-      "sources": ["public.application_logs", "public.function_audit", "public.billing_audit_log", "private.*_audit_log", "private.*_rate_limits"],
+      "sources": [
+        "public.application_logs",
+        "public.function_audit",
+        "public.billing_audit_log",
+        "private.*_audit_log",
+        "private.*_rate_limits"
+      ],
       "scope": "excluded",
       "include": [],
-      "exclude": ["all"],
+      "exclude": [
+        "all"
+      ],
       "notes": "Operational/security logs are not bulk-exported. Subject-relevant facts must be surfaced through dedicated summarized sections."
     },
     {
       "section": "legacy_session_tracker",
-      "sources": ["public.user_sessions"],
+      "sources": [
+        "public.user_sessions"
+      ],
       "scope": "excluded",
       "include": [],
-      "exclude": ["all"],
+      "exclude": [
+        "all"
+      ],
       "notes": "This table is not the Supabase Auth session authority and contains sensitive token/device/network fields."
     }
   ]
