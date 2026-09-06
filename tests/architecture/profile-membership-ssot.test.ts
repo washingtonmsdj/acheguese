@@ -55,6 +55,30 @@ describe("G4 profile membership SSOT", () => {
     expect(migration).toContain("AND pm.role IN ('owner', 'admin')");
   });
 
+  it("does not collapse people/access read failures into an empty roster", () => {
+    const hook = fs.readFileSync(
+      path.join(ROOT, "src/core/profiles/hooks/useProfileMembers.ts"),
+      "utf8",
+    );
+    const ui = fs.readFileSync(
+      path.join(
+        ROOT,
+        "src/core/profiles/components/ProfileMembersManagerImproved.tsx",
+      ),
+      "utf8",
+    );
+
+    expect(hook).toContain(
+      "ProfileMembersService.getProfileMembersResult(profileId)",
+    );
+    expect(hook).toContain(
+      "setError(result.error || 'Failed to load members')",
+    );
+    expect(ui).toContain("Não foi possível carregar pessoas e acessos");
+    expect(ui).toContain("A lista não será tratada como vazia");
+    expect(ui).toContain("refetch");
+  });
+
   it("keeps the legacy ProfileService membership helper one-way", () => {
     const adapter = fs.readFileSync(
       path.join(ROOT, "src/core/profiles/services/profile.membership.queries.ts"),
