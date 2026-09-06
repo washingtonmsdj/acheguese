@@ -100,9 +100,20 @@ export function EducationDetailPage() {
   const { programs } = useEducationPrograms(profile?.id);
   const { events } = useEducationEvents(profile?.id, { isPublic: true, upcoming: true });
   const highlights: string[] = [];
+  const schoolNetworkLabel =
+    profile?.school_network === 'municipal'
+      ? 'Municipal'
+      : profile?.school_network === 'state'
+        ? 'Estadual'
+        : profile?.school_network === 'federal'
+          ? 'Federal'
+          : profile?.school_network === 'private'
+            ? 'Privada'
+            : null;
   const stats = [
-    profile?.school_network ? { label: 'Rede', value: profile.school_network } : null,
-    profile?.enrollment_open ? { label: 'Matrículas', value: 'Abertas' } : null,
+    schoolNetworkLabel ? { label: 'Rede', value: schoolNetworkLabel } : null,
+    profile?.school_inep_code ? { label: 'INEP', value: profile.school_inep_code } : null,
+    profile?.enrollment_open === true ? { label: 'Matrículas', value: 'Abertas' } : null,
     (profile?.education_levels ?? []).length > 0
       ? { label: 'Etapas', value: String(profile?.education_levels?.length ?? 0) }
       : null,
@@ -287,10 +298,10 @@ export function EducationDetailPage() {
                     <MapPin className="mr-1 h-3 w-3" />
                     <span className="capitalize">{districtLabel}, {cityLabel}</span>
                   </Badge>
-                  {profile.status === 'published' && (
-                    <Badge className="border-emerald-300/40 bg-emerald-500/30 text-white backdrop-blur-sm">
-                      <Check className="mr-1 h-3 w-3" />
-                      Verificado
+                  {profile.school_type === 'public' && profile.school_inep_code && (
+                    <Badge className="border-white/30 bg-white/15 text-white backdrop-blur-sm">
+                      <Shield className="mr-1 h-3 w-3" />
+                      Cadastro público · INEP {profile.school_inep_code}
                     </Badge>
                   )}
                   {profile.enrollment_open === true && (
@@ -312,10 +323,10 @@ export function EducationDetailPage() {
                 )}
 
                 <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-white/90">
-                  {profile.published_at && (
+                  {profile.school_source_updated_at && (
                     <span className="inline-flex items-center gap-1">
-                      <Calendar className="h-4 w-4" /> Desde{' '}
-                      {new Date(profile.published_at).getFullYear()}
+                      <Calendar className="h-4 w-4" />
+                      Fonte revisada em {formatDate(profile.school_source_updated_at)}
                     </span>
                   )}
                 </div>
@@ -387,7 +398,7 @@ export function EducationDetailPage() {
               <div className="rounded-3xl border border-border bg-card p-6">
                 <p className="text-base leading-relaxed text-muted-foreground">
                   {sanitizePublicEducationText(profile.summary) ||
-                    `${institutionName} é uma instituição educacional em ${cityLabel}, focada em entregar uma experiência de aprendizagem de alta qualidade.`}
+                    `Perfil de ${institutionName} em ${districtLabel}, ${cityLabel}. O Achegue-se exibe somente informações cadastradas ou sustentadas por fontes identificadas.`}
                 </p>
                 {highlights.length > 0 && (
                   <>
@@ -412,10 +423,7 @@ export function EducationDetailPage() {
               </div>
             </section>
 
-            {(basicResources.length > 0 ||
-              accessibilityFeatures.length > 0 ||
-              equipmentFeatures.length > 0 ||
-              facilityFeatures.length > 0) && (
+            {profile.niche_key === 'regular_school' && (
               <section id="infrastructure" className="scroll-mt-24">
                 <header className="mb-4 flex items-center gap-2">
                   <Building2 className="h-5 w-5 text-primary" />
@@ -482,6 +490,15 @@ export function EducationDetailPage() {
                       </ul>
                     </div>
                   )}
+                  {basicResources.length === 0 &&
+                    accessibilityFeatures.length === 0 &&
+                    equipmentFeatures.length === 0 &&
+                    facilityFeatures.length === 0 && (
+                      <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+                        Infraestrutura ainda não confirmada por fonte confiável. A ausência de um
+                        item nesta página não significa que a unidade não o possua.
+                      </div>
+                    )}
                 </div>
               </section>
             )}
@@ -523,26 +540,38 @@ export function EducationDetailPage() {
                 <Globe className="h-5 w-5 text-primary" />
                 <h2 className="text-2xl font-bold">Modalidades</h2>
               </header>
-              <div className="grid gap-4 md:grid-cols-3">
-                <ModalityCard
-                  icon={Building2}
-                  title="Presencial"
-                  description="Aulas na unidade com infraestrutura completa, equipe e ambiente preparado."
-                  highlight={modalitiesPresent.has('presencial')}
-                />
-                <ModalityCard
-                  icon={PlayCircle}
-                  title="Online"
-                  description="Aulas ao vivo ou conteúdo digital com acompanhamento periódico."
-                  highlight={modalitiesPresent.has('online')}
-                />
-                <ModalityCard
-                  icon={Sparkles}
-                  title="Híbrido"
-                  description="Combinação de encontros presenciais e atividades remotas."
-                  highlight={modalitiesPresent.has('hibrido')}
-                />
-              </div>
+              {modalitiesPresent.size === 0 ? (
+                <div className="rounded-2xl border border-dashed border-border bg-card/40 p-5 text-sm text-muted-foreground">
+                  Modalidades ainda não informadas por fonte confiável.
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-3">
+                  {modalitiesPresent.has('presencial') && (
+                    <ModalityCard
+                      icon={Building2}
+                      title="Presencial"
+                      description="Modalidade presencial cadastrada para esta instituição."
+                      highlight
+                    />
+                  )}
+                  {modalitiesPresent.has('online') && (
+                    <ModalityCard
+                      icon={PlayCircle}
+                      title="Online"
+                      description="Modalidade online cadastrada para esta instituição."
+                      highlight
+                    />
+                  )}
+                  {modalitiesPresent.has('hibrido') && (
+                    <ModalityCard
+                      icon={Sparkles}
+                      title="Híbrido"
+                      description="Modalidade híbrida cadastrada para esta instituição."
+                      highlight
+                    />
+                  )}
+                </div>
+              )}
             </section>
 
             {/* TEAM */}
