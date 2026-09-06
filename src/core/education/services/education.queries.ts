@@ -8,8 +8,7 @@
  */
 
 import { supabase } from '@/integrations/supabase';
-import { CommunityExperienceService } from '@/core/community-experience/services/CommunityExperienceService';
-import { territorialGroupService } from '@/core/territorial';
+import type { Database } from '@/integrations/supabase/types.generated';
 import { logger } from '@/shared/utils/logger';
 import { getRecordValue } from '@/shared/utils/recordLookup';
 import type {
@@ -50,199 +49,64 @@ export interface PaginatedEducationProfiles {
   totalCount: number;
 }
 
-interface BusinessRouteRow {
-  id: string;
-  profile_id: string;
-  business_name: string | null;
-  slug: string | null;
-  is_claimable: boolean;
-  location: { geographic_path?: string | null } | null;
+type PublicEducationSearchRow =
+  Database['public']['Functions']['list_public_education_profiles']['Returns'][number];
+
+type PublicEducationDistrictRow =
+  Database['public']['Functions']['list_public_education_districts']['Returns'][number];
+
+function toStringArray(value: unknown): string[] | null {
+  if (!Array.isArray(value)) return null;
+  return value.filter((item): item is string => typeof item === 'string');
 }
 
-interface EducationTerritoryFilter {
-  state?: string;
-  city?: string;
-  district?: string;
-}
-
-interface LocationRouteRow {
-  id: string;
-  geographic_path: string | null;
-}
-
-function parseEducationPublicRoute(
-  geographicPath?: string | null,
-  slug?: string | null,
-): EducationPublicRoute | null {
-  if (!geographicPath || !slug) return null;
-
-  const parts = geographicPath.split('/').filter(Boolean);
-  const [country, state, city, district] = parts;
-
-  if (country !== 'br' || !state || !city || !district) {
-    return null;
-  }
-
+function mapPublicEducationSearchRow(
+  row: PublicEducationSearchRow,
+): EducationPublicProfile {
   return {
-    state,
-    city,
-    district,
-    slug,
-    geographic_path: geographicPath,
+    id: row.id,
+    business_id: row.business_id,
+    business_data_id: row.business_data_id,
+    business_name: row.business_name,
+    is_claimable: row.is_claimable,
+    institution_type: row.institution_type,
+    niche_key: row.niche_key as EducationProfile['niche_key'],
+    support_level: row.support_level,
+    summary: row.summary,
+    whatsapp_number: row.whatsapp_number,
+    status: row.status as EducationProfile['status'],
+    published_at: row.published_at,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    school_type: row.school_type as EducationProfile['school_type'],
+    school_network: row.school_network as EducationProfile['school_network'],
+    school_inep_code: row.school_inep_code,
+    school_source_url: row.school_source_url,
+    school_source_updated_at: row.school_source_updated_at,
+    education_levels: toStringArray(
+      row.education_levels,
+    ) as EducationProfile['education_levels'],
+    shifts: toStringArray(row.shifts) as EducationProfile['shifts'],
+    age_range_min: row.age_range_min,
+    age_range_max: row.age_range_max,
+    enrollment_open: row.enrollment_open,
+    school_basic_resources: toStringArray(
+      row.school_basic_resources,
+    ) as EducationProfile['school_basic_resources'],
+    school_accessibility_features: toStringArray(
+      row.school_accessibility_features,
+    ) as EducationProfile['school_accessibility_features'],
+    school_equipment_features: toStringArray(
+      row.school_equipment_features,
+    ) as EducationProfile['school_equipment_features'],
+    school_facility_features: toStringArray(
+      row.school_facility_features,
+    ) as EducationProfile['school_facility_features'],
+    public_route: parseEducationPublicRoute(
+      row.geographic_path,
+      row.slug,
+    ),
   };
-}
-
-async function enrichEducationProfilesWithPublicRoutes(
-  profiles: EducationProfile[],
-  routeRows?: BusinessRouteRow[],
-): Promise<EducationPublicProfile[]> {
-  if (profiles.length === 0) return [];
-
-  const profileIds = Array.from(new Set(profiles.map((profile) => profile.business_id)));
-  const knownRoutes = routeRows?.filter((row) => profileIds.includes(row.profile_id));
-  const data = knownRoutes ?? [];
-
-  if (!knownRoutes) {
-    const result = await supabase
-      .from('public_business_search')
-      .select('id, profile_id, business_name, slug, is_claimable, location:locations!location_id(geographic_path)')
-      .in('profile_id', profileIds)
-      .eq('status', 'active')
-      .in('business_role', ['standalone', 'branch']);
-
-    if (result.error) {
-      logger.error('[EducationQueries] Error fetching public routes:', result.error);
-      return profiles.map((profile) => ({
-        ...profile,
-        business_data_id: null,
-        business_name: null,
-        is_claimable: false,
-        public_route: null,
-      }));
-    }
-
-    data.push(...((result.data ?? []) as unknown as BusinessRouteRow[]));
-  }
-
-  const routeByProfileId = new Map<string, BusinessRouteRow>();
-  ((data ?? []) as unknown as BusinessRouteRow[]).forEach((row) => {
-    if (!routeByProfileId.has(row.profile_id)) {
-      routeByProfileId.set(row.profile_id, row);
-    }
-  });
-
-  return profiles.map((profile) => {
-    const business = routeByProfileId.get(profile.business_id);
-    return {
-      ...profile,
-      business_data_id: business?.id ?? null,
-      business_name: business?.business_name ?? null,
-      is_claimable: business?.is_claimable ?? false,
-      public_route: parseEducationPublicRoute(
-        business?.location?.geographic_path,
-        business?.slug,
-      ),
-    };
-  });
-}
-
-async function resolveEducationTerritoryLocationIds(
-  territory: EducationTerritoryFilter,
-): Promise<string[]> {
-  const { state, city, district } = territory;
-  if (!state || !city) return [];
-
-  const cityPath = `/br/${state}/${city}`;
-
-  if (!district) {
-    const { data, error } = await supabase
-      .from('locations')
-      .select('id, geographic_path')
-      .or(`geographic_path.eq.${cityPath},geographic_path.like.${cityPath}/%`);
-
-    if (error) {
-      logger.error('[EducationQueries] Error fetching city education locations:', error);
-      return [];
-    }
-
-    return ((data ?? []) as LocationRouteRow[]).map((location) => location.id);
-  }
-
-  const { data: cityLocation, error: cityError } = await supabase
-    .from('locations')
-    .select('id')
-    .eq('geographic_path', cityPath)
-    .maybeSingle();
-
-  if (cityError) {
-    logger.error('[EducationQueries] Error fetching city location:', cityError);
-    return [];
-  }
-
-  if (cityLocation?.id) {
-    const resolvedCommunity = await CommunityExperienceService.findCommunityByCityAndSlug(
-      cityLocation.id,
-      district,
-    );
-    const isLocationCommunity =
-      resolvedCommunity?.territory_type === 'neighborhood' ||
-      resolvedCommunity?.territory_type === 'district';
-
-    if (resolvedCommunity?.territory_id && isLocationCommunity) {
-      return [resolvedCommunity.territory_id];
-    }
-
-    if (
-      resolvedCommunity?.territory_type === 'territorial_group' &&
-      resolvedCommunity.territory_id
-    ) {
-      try {
-        return await territorialGroupService.resolveGroupToLocationIds(
-          resolvedCommunity.territory_id,
-        );
-      } catch (error) {
-        logger.error('[EducationQueries] Error resolving territorial group members:', error);
-        return [];
-      }
-    }
-  }
-
-  const { data, error } = await supabase
-    .from('locations')
-    .select('id')
-    .eq('geographic_path', `${cityPath}/${district}`);
-
-  if (error) {
-    logger.error('[EducationQueries] Error fetching district education location:', error);
-    return [];
-  }
-
-  return (data ?? []).map((location) => location.id);
-}
-
-async function listEducationBusinessRoutesByTerritory(
-  territory: EducationTerritoryFilter,
-): Promise<BusinessRouteRow[]> {
-  const { state, city, district } = territory;
-  if (!state || !city) return [];
-
-  const locationIds = await resolveEducationTerritoryLocationIds({ state, city, district });
-  if (locationIds.length === 0) return [];
-
-  const { data, error } = await supabase
-    .from('public_business_search')
-    .select('id, profile_id, business_name, slug, is_claimable, location:locations!location_id(geographic_path)')
-    .in('location_id', locationIds)
-    .eq('status', 'active')
-    .in('business_role', ['standalone', 'branch'])
-    .eq('category', 'educacao');
-
-  if (error) {
-    logger.error('[EducationQueries] Error fetching education business routes:', error);
-    return [];
-  }
-
-  return (data ?? []) as unknown as BusinessRouteRow[];
 }
 
 // ============================================================
@@ -288,61 +152,109 @@ export async function getEducationProfileByBusinessId(
 }
 
 /**
- * Lista perfis publicados com paginacao
+ * Lista publica paginada e filtrada no servidor.
+ *
+ * O RPC aplica territorio, busca, filtros e sort antes de paginar. Isso evita
+ * o antigo fluxo client-side de carregar IDs de locations/businesses e filtrar
+ * apenas as paginas ja recebidas.
  */
 export async function listPublishedEducationProfiles(
   options: {
     page?: number;
     pageSize?: number;
-    nicheKey?: string;
+    query?: string;
+    niches?: string[];
+    schoolNetworks?: string[];
+    institutionTypes?: string[];
+    infrastructure?: string[];
+    onlyAvailable?: boolean;
+    sort?: 'relevance' | 'name_asc' | 'newest';
     state?: string;
     city?: string;
     district?: string;
   } = {},
 ): Promise<PaginatedEducationProfiles> {
-  const { page = 1, pageSize = 20, nicheKey, state, city, district } = options;
-  const hasTerritoryFilter = Boolean(state && city);
-  const routeRows = hasTerritoryFilter
-    ? await listEducationBusinessRoutesByTerritory({ state, city, district })
-    : undefined;
+  const {
+    page = 1,
+    pageSize = 20,
+    query,
+    niches = [],
+    schoolNetworks = [],
+    institutionTypes = [],
+    infrastructure = [],
+    onlyAvailable = false,
+    sort = 'relevance',
+    state,
+    city,
+    district,
+  } = options;
 
-  if (hasTerritoryFilter && (!routeRows || routeRows.length === 0)) {
+  if (!state || !city) {
     return { profiles: [], nextPage: null, totalCount: 0 };
   }
 
-  let query = supabase
-    .from('education_profiles')
-    .select('*', { count: 'exact' })
-    .eq('status', 'published');
-
-  if (nicheKey) {
-    query = query.eq('niche_key', nicheKey);
-  }
-
-  if (routeRows) {
-    query = query.in('business_id', routeRows.map((row) => row.profile_id));
-  }
-
-  const { data, error, count } = await query
-    .order('published_at', { ascending: false })
-    .range((page - 1) * pageSize, page * pageSize - 1);
+  const { data, error } = await supabase.rpc(
+    'list_public_education_profiles',
+    {
+      p_state: state,
+      p_city: city,
+      p_district: district ?? null,
+      p_query: query?.trim() || null,
+      p_niches: niches,
+      p_school_networks: schoolNetworks,
+      p_institution_types: institutionTypes,
+      p_infrastructure: infrastructure,
+      p_only_available: onlyAvailable,
+      p_sort: sort,
+      p_page: page,
+      p_page_size: pageSize,
+    },
+  );
 
   if (error) {
-    logger.error('[EducationQueries] Error listing published profiles:', error);
-    return { profiles: [], nextPage: null, totalCount: 0 };
+    educationQueryError('Error listing published profiles', error);
   }
 
-  const totalCount = count ?? 0;
+  const rows = (data ?? []) as PublicEducationSearchRow[];
+  const totalCount = Number(rows[0]?.total_count ?? 0);
   const hasMore = page * pageSize < totalCount;
 
   return {
-    profiles: await enrichEducationProfilesWithPublicRoutes(
-      (data ?? []) as EducationProfile[],
-      routeRows,
-    ),
+    profiles: rows.map(mapPublicEducationSearchRow),
     nextPage: hasMore ? page + 1 : null,
     totalCount,
   };
+}
+
+export interface EducationDistrictFacet {
+  district: string;
+  geographicPath: string;
+  profileCount: number;
+}
+
+export async function listPublishedEducationDistricts(
+  state?: string,
+  city?: string,
+): Promise<EducationDistrictFacet[]> {
+  if (!state || !city) return [];
+
+  const { data, error } = await supabase.rpc(
+    'list_public_education_districts',
+    {
+      p_state: state,
+      p_city: city,
+    },
+  );
+
+  if (error) {
+    educationQueryError('Error listing Education districts', error);
+  }
+
+  return ((data ?? []) as PublicEducationDistrictRow[]).map((row) => ({
+    district: row.district_slug,
+    geographicPath: row.geographic_path,
+    profileCount: Number(row.profile_count ?? 0),
+  }));
 }
 
 // ============================================================
