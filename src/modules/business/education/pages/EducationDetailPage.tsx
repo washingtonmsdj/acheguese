@@ -536,6 +536,7 @@ export function EducationDetailPage() {
                     <ProgramCard
                       key={p.id}
                       program={p}
+                      showPrice={profile.school_type !== 'public'}
                       onClick={() => trackProgramView(p.id)}
                     />
                   ))}
