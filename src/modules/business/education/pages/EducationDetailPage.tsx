@@ -146,7 +146,7 @@ export function EducationDetailPage() {
       nicheKey: profile?.niche_key ?? 'regular_school',
       businessDataId: profile?.business_data_id ?? undefined,
     });
-  const { create: createLead } = useEducationLeads(profile?.id ?? undefined);
+  const { createPublic: createLead } = useEducationLeads(profile?.id ?? undefined);
 
   const handleLeadSubmit = async (formData: LeadFormData) => {
     if (!profile?.id) return;
