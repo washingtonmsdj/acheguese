@@ -73,14 +73,14 @@ function toSubscriptionStatus(status: string | null | undefined): SubscriptionSt
   return BILLING_SUBSCRIPTION_STATUS.CANCELED;
 }
 
-function createDefaultFreeSubscription(businessId: string): BusinessSubscription {
+function createDefaultFreeSubscription(businessDataId: string): BusinessSubscription {
   const now = new Date().toISOString();
   const futureDate = new Date();
   futureDate.setFullYear(futureDate.getFullYear() + 100);
 
   return {
-    id: `temp-free-${businessId}`,
-    business_id: businessId,
+    id: `temp-free-${businessDataId}`,
+    business_id: businessDataId,
     plan_tier: PlanTier.FREE,
     status: BILLING_SUBSCRIPTION_STATUS.ACTIVE,
     current_period_start: now,
@@ -96,13 +96,13 @@ function createDefaultFreeSubscription(businessId: string): BusinessSubscription
 
 function mapCanonicalRow(
   row: CanonicalBusinessSubscriptionRow,
-  businessId: string,
+  businessDataId: string,
 ): BusinessSubscription {
   const now = new Date().toISOString();
 
   return {
     id: row.id,
-    business_id: row.business_id ?? businessId,
+    business_id: row.business_id ?? businessDataId,
     plan_tier: toPlanTier(row.plan_code),
     status: toSubscriptionStatus(row.status_v2),
     current_period_start: row.current_period_start ?? row.created_at ?? now,
@@ -117,7 +117,7 @@ function mapCanonicalRow(
 }
 
 async function fetchCanonicalByBusinessId(
-  businessId: string,
+  businessDataId: string,
 ): Promise<CanonicalBusinessSubscriptionRow | null> {
   const { data, error } = await billingDb
     .from<CanonicalBusinessSubscriptionRow>("user_subscriptions")
@@ -135,7 +135,7 @@ async function fetchCanonicalByBusinessId(
       created_at,
       updated_at
     `)
-    .eq("business_id", businessId)
+    .eq("business_id", businessDataId)
     .eq("subscription_scope", "business")
     .order("created_at", { ascending: false })
     .limit(1)
@@ -147,14 +147,14 @@ async function fetchCanonicalByBusinessId(
 
 export class BusinessSubscriptionService {
   static async getByBusinessId(
-    businessId: string,
+    businessDataId: string,
   ): Promise<ServiceResult<BusinessSubscription>> {
     try {
-      const row = await fetchCanonicalByBusinessId(businessId);
+      const row = await fetchCanonicalByBusinessId(businessDataId);
       return {
         data: row
-          ? mapCanonicalRow(row, businessId)
-          : createDefaultFreeSubscription(businessId),
+          ? mapCanonicalRow(row, businessDataId)
+          : createDefaultFreeSubscription(businessDataId),
         error: null,
       };
     } catch (error) {
@@ -171,7 +171,7 @@ export class BusinessSubscriptionService {
    * Free usa o Customer Portal para downgrade/cancelamento do contrato atual.
    */
   static async updatePlan(
-    businessId: string,
+    businessDataId: string,
     newPlanTier: PlanTier,
   ): Promise<ServiceResult<BusinessSubscription>> {
     try {
@@ -180,7 +180,7 @@ export class BusinessSubscriptionService {
       } else {
         await BillingService.redirectToCheckout({
           planCode: newPlanTier,
-          businessId,
+          businessDataId,
           subscriptionScope: "business",
           entityFamily: "company",
           successUrl: buildPublicAbsoluteUrl("/checkout/success"),
