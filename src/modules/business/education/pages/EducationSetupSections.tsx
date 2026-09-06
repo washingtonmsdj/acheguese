@@ -2,7 +2,6 @@ import { FileText, Phone, School } from 'lucide-react';
 
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
-import { Checkbox } from '@/shared/components/ui/checkbox';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import {
@@ -263,16 +262,32 @@ export function EducationDataSection({
                 placeholder="Ex: 17"
               />
             </div>
-            <div className="flex items-end">
-              <label className="flex items-center gap-2 rounded-md border px-3 py-2">
-                <Checkbox
-                  checked={formData.enrollmentOpen}
-                  onCheckedChange={(checked) =>
-                    onPatch({ enrollmentOpen: Boolean(checked) })
-                  }
-                />
-                <span className="text-sm">Matricula aberta</span>
-              </label>
+            <div>
+              <Label htmlFor="enrollmentStatus">Situacao de matricula</Label>
+              <Select
+                value={
+                  formData.enrollmentOpen === true
+                    ? 'open'
+                    : formData.enrollmentOpen === false
+                      ? 'closed'
+                      : 'unknown'
+                }
+                onValueChange={(value) =>
+                  onPatch({
+                    enrollmentOpen:
+                      value === 'open' ? true : value === 'closed' ? false : null,
+                  })
+                }
+              >
+                <SelectTrigger id="enrollmentStatus">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unknown">Nao informado</SelectItem>
+                  <SelectItem value="open">Matriculas abertas</SelectItem>
+                  <SelectItem value="closed">Matriculas fechadas</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
