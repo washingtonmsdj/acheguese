@@ -434,8 +434,7 @@ export function EducationDetailPage() {
               </div>
             </section>
 
-            {profile.niche_key === 'regular_school' && (
-              <section id="infrastructure" className="scroll-mt-24">
+            <section id="infrastructure" className="scroll-mt-24">
                 <header className="mb-4 flex items-center gap-2">
                   <Building2 className="h-5 w-5 text-primary" />
                   <h2 className="text-2xl font-bold">Infraestrutura</h2>
@@ -512,7 +511,6 @@ export function EducationDetailPage() {
                     )}
                 </div>
               </section>
-            )}
 
             {/* PROGRAMS */}
             <section id="programs" className="scroll-mt-24">
