@@ -9,7 +9,7 @@
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
 **Status:** EM EXECUÇÃO — G6 / Empresas-Educação fechou identidade Profile ID vs business_data.id, Billing delegado e claim institucional individual com transferência canônica; cobertura pública completa de Salvador e autoridade herdada de Prefeitura/Secretaria seguem abertas; provas hosted same-SHA continuam bloqueadas por runner pre-step  
-**Checkpoint técnico atual:** `03457878002ed9f04017e96e162fc7abdb666cbc`  
+**Checkpoint técnico atual:** `89429a4bc8d973b5c97c383773367b98c7837791`  
 **Checkpoint de transição G5 → G6:** `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
@@ -821,6 +821,13 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 - [x] ACL do helper: `SECURITY INVOKER`, `anon=false`, `authenticated=false`, `service_role=true`; Advisor sem finding específico;
 - [x] pós-condição persistente: **0 batches**, **0 rows de staging**, **15 education_profiles**, **15 INEP únicos**, **0 materializers**; Advisor com 0 finding específico;
 - [x] ratchets `tests/scripts/public-education-inep-adapter.test.ts` e `tests/security/public-education-inep-import-staging-g6.test.ts` protegem parser, provenance, ACL, idempotência e ausência de segunda autoridade;
+- [x] migration Git/remoto `20260906175025_require_complete_inep_staging_batch_g6.sql`: validator exige `staged_rows = manifest.counts.target_municipality_rows`; lote parcial não pode virar `validated`;
+- [x] probe de completude: esperado 2, staged 1 -> `education_import_batch_row_count_mismatch` e batch preservado em `staging:1`; depois da 2ª linha -> `validated:2`; catálogo público permaneceu 15; rollback -> 0 staging;
+- [x] CLI `tools/data-quality/stage-public-education-inep-import.mjs` criado para transporte **somente ao staging privado**: dry-run offline por padrão, commit exige `--commit-staging` + `PUBLIC_EDUCATION_INEP_IMPORT_APPROVED=true` + `SUPABASE_DB_URL` provando project ref/host Supabase ligados ao repo;
+- [x] CLI usa PostgreSQL direto + `SET LOCAL ROLE service_role`; não expõe `private` via PostgREST, revalida manifest/JSONL/hashes, envia chunks bounded, rehash antes do commit, chama somente create/stage/validate/plan e não materializa Profile/Business/Education;
+- [x] guard do CLI endurecido: username `postgres.<ref>` em host arbitrário não prova alvo; pooler precisa terminar em `.pooler.supabase.com`; validator com resposta inesperada aborta; `--plan-output` exige commit; falha de escrita do report pós-commit vira estado explícito, não falso rollback;
+- [x] `.env.example`, `.env.local.example` e `.env.remote.example` mantêm `PUBLIC_EDUCATION_INEP_IMPORT_APPROVED="false"` por padrão; ratchet `tests/scripts/public-education-inep-stager.test.ts` adicionado e agregado a `npm run test:education:inep-import`;
+- [x] **nenhum commit-staging real executado**: sem ZIP oficial acessível, remoto continua **0 batches / 0 staging rows / 15 education_profiles / 15 INEP únicos**;
 - [ ] **próximo passo obrigatório:** obter/inspecionar o ZIP oficial, provar o header real de `Tabela_Escola_2025.csv`, executar o adapter sobre o artefato oficial e criar o primeiro batch real de Salvador. O link oficial está publicado pelo Inep e marcado como atualizado em julho/2026, porém `download.inep.gov.br` respondeu 502 no browser e falhou por resolução no runtime deste checkpoint; **não usar espelho como substituto**;
 - [ ] depois do batch real, comparar cada candidata com as 15 escolas piloto e overlays oficiais 2026. Censo 2025 é baseline e **não pode sobrescrever automaticamente fato oficial mais fresco**;
 - [x] planner read-only `private.plan_public_education_import_batch` criado em `20260906163350`: batch validado vira `insert_candidate`, `existing_no_change`, `existing_review_required` ou `excluded`; não existe escrita;
