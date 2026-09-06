@@ -913,7 +913,7 @@ export async function getEducationProfileByTerritory(
   // Busca business ativo no territorio com o slug informado
   const { data: business, error: businessError } = await supabase
     .from('public_business_search')
-    .select('profile_id, business_name, slug')
+    .select('id, profile_id, business_name, slug, is_claimable')
     .eq('slug', slug)
     .eq('location_id', locationData.id)
     .eq('status', 'active')
@@ -946,7 +946,9 @@ export async function getEducationProfileByTerritory(
 
   return {
     ...(data as EducationProfile),
+    business_data_id: business.id,
     business_name: business.business_name ?? null,
+    is_claimable: business.is_claimable ?? false,
     public_route: parseEducationPublicRoute(geographicPath, business.slug),
   };
 }
