@@ -136,7 +136,7 @@ export function useBusinessUrls(routeResolved?: ResolvedTerritory | null): Busin
     },
     share: (ctx: BusinessUrlContext) => BusinessUrlService.getShareUrl(ctx),
     create: businessManagementRoutes.create(),
-    edit: (businessId: string) => `/edit-business/${businessId}`,
+    edit: (businessId: string) => businessManagementRoutes.edit(businessId),
     dashboard: (businessId: string) => businessManagementRoutes.overview(businessId),
   };
 }
