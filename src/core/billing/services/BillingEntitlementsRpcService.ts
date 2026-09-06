@@ -24,6 +24,7 @@ export interface BusinessSubscriptionEntitlementSnapshot {
   plan_code: string;
   status_v2: string;
   subscription_scope: "business";
+  current_period_end: string | null;
   contract_snapshot: Record<string, unknown> | null;
 }
 
