@@ -31,6 +31,7 @@ import {
   Building2,
   X,
   ScanSearch,
+  Loader2,
 } from 'lucide-react';
 
 import { Button } from '@/shared/components/ui/button';
@@ -45,11 +46,10 @@ import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
 import { APP_MODULE_SLUGS } from '@/shared/config/moduleSlugs';
 import { buildModuleTerritoryUrlFromSegments } from '@/core/routing/utils/territoryUrls';
 
-import { useEducationList } from '../hooks/useEducationList';
+import { useEducationDistricts, useEducationList } from '../hooks/useEducationList';
 import { EducationUrlService } from '../services/EducationUrlService';
 import { getPublicNiches, getNicheByKey } from '../niches/registry';
 import {
-  filterEnrichedProfiles,
   INITIAL_FILTERS,
   sanitizePublicEducationText,
   type FilterState,
@@ -95,61 +95,74 @@ export function EducationExplorerPage() {
   const niches = useMemo(() => getPublicNiches(), []);
   const { resolved } = useResolveTerritoryFromUrl();
 
-  const { data, isLoading, isError, refetch } = useEducationList({
-    state: effectiveState,
-    city: effectiveCity,
-    district,
-  });
-  const sourceProfiles: EducationPublicProfile[] = useMemo(
-    () => data?.pages.flatMap((p) => p.profiles ?? []) ?? [],
-    [data]
-  );
-  const hasRealData = sourceProfiles.length > 0;
-
   const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS);
   const [view, setView] = useState<ViewMode>('grid');
   const [comparing, setComparing] = useState<string[]>([]);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
-  // Pre-selecionar bairro pela URL se vier definido
-  useEffect(() => {
-    if (district) {
-      setFilters((prev) => ({ ...prev, district }));
-      return;
-    }
-
+  const routeDistrict = useMemo(() => {
+    if (district) return district;
     if (
       resolved?.kind === 'location' &&
-      (resolved.location.type === LocationType.NEIGHBORHOOD || resolved.location.type === LocationType.DISTRICT)
+      (resolved.location.type === LocationType.NEIGHBORHOOD ||
+        resolved.location.type === LocationType.DISTRICT)
     ) {
-      const districtSlug = resolved.location.slug ?? groupSlugOrDistrict;
-      if (districtSlug) {
-        setFilters((prev) => ({ ...prev, district: districtSlug }));
-      }
-      return;
+      return resolved.location.slug ?? groupSlugOrDistrict ?? null;
     }
-
-    // URL de grupo territorial: não aplicar filtro de bairro fixo
-    setFilters((prev) => ({ ...prev, district: null }));
+    return null;
   }, [district, groupSlugOrDistrict, resolved]);
 
-  const districts = useMemo(() => {
-    return Array.from(
-      new Set(
-        sourceProfiles
-          .map((profile) => profile.public_route?.district)
-          .filter((value): value is string => Boolean(value)),
-      ),
-    ).sort();
-  }, [sourceProfiles]);
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      district: routeDistrict,
+    }));
+  }, [routeDistrict]);
 
-  const enriched: EnrichedEducationProfile[] = useMemo(() => {
-    return sourceProfiles.map((profile) => ({ profile }));
-  }, [sourceProfiles]);
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useEducationList({
+    state: effectiveState,
+    city: effectiveCity,
+    district: routeDistrict ?? filters.district ?? undefined,
+    query: filters.query,
+    niches: filters.niches,
+    schoolNetworks: filters.schoolNetworks,
+    institutionTypes: filters.institutionTypes,
+    infrastructure: filters.infrastructure,
+    onlyAvailable: filters.onlyAvailable,
+    sort: filters.sort,
+  });
+  const { data: districtFacets = [] } = useEducationDistricts(
+    effectiveState,
+    effectiveCity,
+  );
 
-  const filtered = useMemo(() => {
-    return filterEnrichedProfiles(enriched, filters);
-  }, [enriched, filters]);
+  const sourceProfiles: EducationPublicProfile[] = useMemo(
+    () => data?.pages.flatMap((page) => page.profiles ?? []) ?? [],
+    [data],
+  );
+  const totalCount = data?.pages[0]?.totalCount ?? 0;
+  const hasRealData = sourceProfiles.length > 0;
+
+  const districts = useMemo(
+    () =>
+      routeDistrict
+        ? [routeDistrict]
+        : districtFacets.map((facet) => facet.district),
+    [districtFacets, routeDistrict],
+  );
+
+  const filtered: EnrichedEducationProfile[] = useMemo(
+    () => sourceProfiles.map((profile) => ({ profile })),
+    [sourceProfiles],
+  );
 
   const toggleCompare = (id: string) => {
     setComparing((prev) =>
@@ -157,7 +170,8 @@ export function EducationExplorerPage() {
     );
   };
 
-  const clearFilters = () => setFilters(INITIAL_FILTERS);
+  const clearFilters = () =>
+    setFilters({ ...INITIAL_FILTERS, district: routeDistrict });
 
   const featured = useMemo(() => {
     return sourceProfiles.filter((profile) => profile.public_route).slice(0, 6);
@@ -224,8 +238,8 @@ export function EducationExplorerPage() {
                 </span>
               </h1>
               <p className="mt-4 max-w-xl text-balance text-base text-muted-foreground md:text-lg">
-                Compare instituições, filtre por modalidade, bairro e preço e fale
-                diretamente por WhatsApp ou agende uma visita.
+                Compare instituições e filtre por rede, tipo, bairro, infraestrutura e
+                disponibilidade usando os dados publicados na vitrine.
               </p>
 
               {/* Search command bar */}
@@ -261,7 +275,7 @@ export function EducationExplorerPage() {
                         niches={niches}
                         districts={districts}
                         nicheIcons={NICHE_ICONS}
-                        resultsCount={filtered.length}
+                        resultsCount={totalCount}
                         onClear={clearFilters}
                       />
                     </div>
@@ -353,7 +367,7 @@ export function EducationExplorerPage() {
         nicheIcons={NICHE_ICONS}
         view={view}
         setView={setView}
-        resultsCount={filtered.length}
+        resultsCount={totalCount}
         onClear={clearFilters}
       />
 
@@ -364,7 +378,7 @@ export function EducationExplorerPage() {
             <div className="mb-5 flex flex-wrap items-center gap-3">
               <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm">
                 <Building2 className="h-4 w-4 text-muted-foreground" />
-                <strong className="text-foreground">{filtered.length}</strong>
+                <strong className="text-foreground">{totalCount}</strong>
                 <span className="text-muted-foreground">
                   {filtered.length === 1 ? 'instituição' : 'instituições'}
                 </span>
@@ -439,6 +453,27 @@ export function EducationExplorerPage() {
                     sanitizeSummary={sanitizePublicEducationText}
                   />
                 ))}
+              </div>
+            )}
+
+            {hasNextPage && (
+              <div className="mt-8 flex justify-center">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="min-w-48 rounded-full"
+                  disabled={isFetchingNextPage}
+                  onClick={() => void fetchNextPage()}
+                >
+                  {isFetchingNextPage ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Carregando...
+                    </>
+                  ) : (
+                    `Carregar mais (${sourceProfiles.length} de ${totalCount})`
+                  )}
+                </Button>
               </div>
             )}
 
