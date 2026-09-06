@@ -53,9 +53,9 @@ interface DeliveryBusinessCardProps {
 function DeliveryBusinessCard({ item, navigate }: DeliveryBusinessCardProps) {
   const showMobility = isLaunchSurfaceEnabled("mobility");
   const { entitlements, isLoading } = useEntitlements({
-    business_id: item.businessId,
+    business_id: item.businessDataId,
     subscription_scope: "business",
-    enabled: Boolean(item.businessId),
+    enabled: Boolean(item.businessDataId),
   });
 
   const canUseMotoboyNetwork =
