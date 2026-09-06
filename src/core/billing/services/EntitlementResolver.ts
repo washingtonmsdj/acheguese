@@ -242,7 +242,16 @@ export class EntitlementResolver {
             context.business_id,
           );
 
-        return snapshot;
+        if (!snapshot) return null;
+
+        return {
+          id: `broker-business-${context.business_id}`,
+          plan_code: snapshot.plan_code,
+          status_v2: snapshot.status_v2,
+          subscription_scope: snapshot.subscription_scope,
+          contract_snapshot:
+            snapshot.contract_snapshot as ContractSnapshot | null,
+        };
       }
 
       const { data, error } = await entitlementDb
