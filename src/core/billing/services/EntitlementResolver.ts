@@ -299,7 +299,7 @@ export class EntitlementResolver {
 
   static async check(
     context: EntitlementContext,
-    entitlement: keyof ResolvedEntitlements,
+    entitlement: keyof PlanEntitlements,
   ): Promise<boolean> {
     const resolved = await this.resolve(context);
     const value = resolved[entitlement];
