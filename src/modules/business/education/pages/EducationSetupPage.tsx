@@ -26,6 +26,7 @@ import type {
 import {
   INITIAL_EDUCATION_SETUP_FORM,
   applyEducationInfrastructurePreset,
+  getInstitutionTypeForNiche,
   hasEducationLevels,
   isSchoolProfileNiche,
   type EducationInfrastructurePreset,
@@ -68,7 +69,8 @@ export function EducationSetupPage() {
   useEffect(() => {
     if (!profile) return;
     setFormData({
-      institutionType: profile.institution_type ?? '',
+      institutionType:
+        getInstitutionTypeForNiche(profile.niche_key) || profile.institution_type || '',
       nicheKey: profile.niche_key ?? '',
       schoolType: profile.school_type ?? '',
       schoolNetwork: profile.school_network ?? '',
@@ -119,10 +121,10 @@ export function EducationSetupPage() {
 
   const saveSetup = async () => {
     if (!businessId) return;
-    if (!formData.institutionType || !formData.nicheKey) {
+    if (!formData.nicheKey) {
       toast({
-        title: 'Campos obrigatorios',
-        description: 'Selecione o tipo de instituicao e o nicho.',
+        title: 'Campo obrigatorio',
+        description: 'Selecione o tipo de instituicao educacional.',
         variant: 'destructive',
       });
       return;
@@ -132,7 +134,7 @@ export function EducationSetupPage() {
     try {
       const result = await EducationService.saveSetupProfile({
         businessId,
-        institutionType: formData.institutionType,
+        institutionType: getInstitutionTypeForNiche(formData.nicheKey),
         nicheKey: formData.nicheKey,
         schoolType: (formData.schoolType || undefined) as SchoolType | undefined,
         schoolNetwork: (formData.schoolNetwork || undefined) as SchoolNetwork | undefined,
