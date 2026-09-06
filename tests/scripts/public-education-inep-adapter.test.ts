@@ -34,7 +34,7 @@ type AdapterModule = {
     manifestPath: string;
     sourceYear: number;
     municipalityIbge: string;
-    archiveSha256: string;
+    archivePath: string;
     archiveUrl: string;
     sourcePageUpdatedAt: string | null;
     encoding: string;
@@ -51,6 +51,62 @@ function makeTempDir() {
   const dir = mkdtempSync(join(tmpdir(), "acheguese-inep-adapter-"));
   tempDirs.push(dir);
   return dir;
+}
+
+
+function writeStoredZip(
+  zipPath: string,
+  entryName: string,
+  content: string,
+) {
+  const name = Buffer.from(entryName, "utf8");
+  const data = Buffer.from(content, "utf8");
+
+  const local = Buffer.alloc(30);
+  local.writeUInt32LE(0x04034b50, 0);
+  local.writeUInt16LE(20, 4);
+  local.writeUInt16LE(0x0800, 6);
+  local.writeUInt16LE(0, 8);
+  local.writeUInt32LE(0, 14);
+  local.writeUInt32LE(data.length, 18);
+  local.writeUInt32LE(data.length, 22);
+  local.writeUInt16LE(name.length, 26);
+  local.writeUInt16LE(0, 28);
+
+  const central = Buffer.alloc(46);
+  central.writeUInt32LE(0x02014b50, 0);
+  central.writeUInt16LE(20, 4);
+  central.writeUInt16LE(20, 6);
+  central.writeUInt16LE(0x0800, 8);
+  central.writeUInt16LE(0, 10);
+  central.writeUInt32LE(0, 16);
+  central.writeUInt32LE(data.length, 20);
+  central.writeUInt32LE(data.length, 24);
+  central.writeUInt16LE(name.length, 28);
+  central.writeUInt16LE(0, 30);
+  central.writeUInt16LE(0, 32);
+  central.writeUInt16LE(0, 34);
+  central.writeUInt16LE(0, 36);
+  central.writeUInt32LE(0, 38);
+  central.writeUInt32LE(0, 42);
+
+  const centralOffset = local.length + name.length + data.length;
+  const centralSize = central.length + name.length;
+
+  const eocd = Buffer.alloc(22);
+  eocd.writeUInt32LE(0x06054b50, 0);
+  eocd.writeUInt16LE(0, 4);
+  eocd.writeUInt16LE(0, 6);
+  eocd.writeUInt16LE(1, 8);
+  eocd.writeUInt16LE(1, 10);
+  eocd.writeUInt32LE(centralSize, 12);
+  eocd.writeUInt32LE(centralOffset, 16);
+  eocd.writeUInt16LE(0, 20);
+
+  writeFileSync(
+    zipPath,
+    Buffer.concat([local, name, data, central, name, eocd]),
+  );
 }
 
 afterEach(() => {
@@ -168,7 +224,7 @@ describe("public Education INEP adapter", () => {
     const { PARSER_VERSION, preparePublicEducationInepImport } =
       await loadModule();
     const dir = makeTempDir();
-    const csvPath = join(dir, "escolas.csv");
+    const csvPath = join(dir, "Tabela_Escola_2025.csv");
     const outputPath = join(dir, "salvador.jsonl");
     const manifestPath = join(dir, "manifest.json");
 
@@ -186,16 +242,19 @@ describe("public Education INEP adapter", () => {
       "CO_CEP",
     ].join(";");
 
-    writeFileSync(
-      csvPath,
-      [
-        header,
-        '2025;29412277;"Escola; Municipal";1;29;2927408;3;Rua A;10;Santa Cruz;41900123',
-        "2025;29999991;Escola Privada;1;29;2927408;4;Rua B;20;Pituba;41830000",
-        "2025;29999992;Escola Estadual Paralisada;2;29;2927408;2;Rua C;30;Centro;40000000",
-        "2025;26999999;Escola Recife;1;26;2611606;3;Rua D;40;Centro;50000000",
-      ].join("\n"),
-      "utf8",
+    const csvContent = [
+      header,
+      '2025;29412277;"Escola; Municipal";1;29;2927408;3;Rua A;10;Santa Cruz;41900123',
+      "2025;29999991;Escola Privada;1;29;2927408;4;Rua B;20;Pituba;41830000",
+      "2025;29999992;Escola Estadual Paralisada;2;29;2927408;2;Rua C;30;Centro;40000000",
+      "2025;26999999;Escola Recife;1;26;2611606;3;Rua D;40;Centro;50000000",
+    ].join("\n");
+    writeFileSync(csvPath, csvContent, "utf8");
+    const archivePath = join(dir, "microdados_censo_escolar_2025_.zip");
+    writeStoredZip(
+      archivePath,
+      "DADOS/Tabela_Escola_2025.csv",
+      csvContent,
     );
 
     const manifest = await preparePublicEducationInepImport({
@@ -204,19 +263,22 @@ describe("public Education INEP adapter", () => {
       manifestPath,
       sourceYear: 2025,
       municipalityIbge: "2927408",
-      archiveSha256: "a".repeat(64),
+      archivePath,
       archiveUrl:
         "https://download.inep.gov.br/dados_abertos/microdados_censo_escolar_2025_.zip",
       sourcePageUpdatedAt: "2026-07-31T14:52:00.000Z",
       encoding: "utf8",
     });
 
-    expect(PARSER_VERSION).toBe("inep-censo-school-adapter/2");
+    expect(PARSER_VERSION).toBe("inep-censo-school-adapter/4");
     expect(manifest).toMatchObject({
       contract: "acheguese.public-education-inep-normalized/1",
       parser_version: PARSER_VERSION,
       source: {
-        archive_sha256: "a".repeat(64),
+        archive_sha256: expect.stringMatching(/^[0-9a-f]{64}$/),
+        archive_entry: "DADOS/Tabela_Escola_2025.csv",
+        archive_entry_sha256: expect.stringMatching(/^[0-9a-f]{64}$/),
+        extracted_file_sha256: expect.stringMatching(/^[0-9a-f]{64}$/),
         source_year: 2025,
         landing_page_updated_at: "2026-07-31T14:52:00.000Z",
         file_role: "school_table",
@@ -247,6 +309,7 @@ describe("public Education INEP adapter", () => {
         publishes_records: false,
         staging_quality_gate_required: true,
         official_archive_host_required: true,
+        archive_binding_verified: true,
         header_contract_verified: true,
       },
     });
@@ -274,7 +337,7 @@ describe("public Education INEP adapter", () => {
   it("removes normalized output if the manifest cannot be committed", async () => {
     const { preparePublicEducationInepImport } = await loadModule();
     const dir = makeTempDir();
-    const csvPath = join(dir, "escolas.csv");
+    const csvPath = join(dir, "Tabela_Escola_2025.csv");
     const outputPath = join(dir, "salvador.jsonl");
     const manifestPath = join(dir, "manifest.json");
 
@@ -286,6 +349,12 @@ describe("public Education INEP adapter", () => {
       ].join("\n"),
       "utf8",
     );
+    const archivePath = join(dir, "microdados_censo_escolar_2025_.zip");
+    writeStoredZip(
+      archivePath,
+      "DADOS/Tabela_Escola_2025.csv",
+      readFileSync(csvPath, "utf8"),
+    );
     writeFileSync(manifestPath, '{"do_not_overwrite":true}\n', "utf8");
 
     await expect(
@@ -295,7 +364,7 @@ describe("public Education INEP adapter", () => {
         manifestPath,
         sourceYear: 2025,
         municipalityIbge: "2927408",
-        archiveSha256: "b".repeat(64),
+        archivePath,
         archiveUrl:
           "https://download.inep.gov.br/dados_abertos/microdados_censo_escolar_2025_.zip",
         sourcePageUpdatedAt: null,
@@ -307,6 +376,47 @@ describe("public Education INEP adapter", () => {
     expect(readFileSync(manifestPath, "utf8")).toContain(
       '"do_not_overwrite":true',
     );
+  });
+
+  it("rejects a CSV that is not the file contained in the supplied ZIP", async () => {
+    const { preparePublicEducationInepImport } = await loadModule();
+    const dir = makeTempDir();
+    const csvPath = join(dir, "Tabela_Escola_2025.csv");
+    const outputPath = join(dir, "salvador.jsonl");
+    const manifestPath = join(dir, "manifest.json");
+    const archivePath = join(dir, "microdados_censo_escolar_2025_.zip");
+    const original = [
+      "NU_ANO_CENSO;CO_ENTIDADE;NO_ENTIDADE;TP_SITUACAO_FUNCIONAMENTO;CO_UF;CO_MUNICIPIO;TP_DEPENDENCIA",
+      "2025;29412277;Escola Municipal;1;29;2927408;3",
+    ].join("\n");
+
+    writeStoredZip(
+      archivePath,
+      "DADOS/Tabela_Escola_2025.csv",
+      original,
+    );
+    writeFileSync(
+      csvPath,
+      original.replace("Escola Municipal", "CSV adulterado"),
+      "utf8",
+    );
+
+    await expect(
+      preparePublicEducationInepImport({
+        csvPath,
+        outputPath,
+        manifestPath,
+        sourceYear: 2025,
+        municipalityIbge: "2927408",
+        archivePath,
+        archiveUrl:
+          "https://download.inep.gov.br/dados_abertos/microdados_censo_escolar_2025_.zip",
+        sourcePageUpdatedAt: null,
+        encoding: "utf8",
+      }),
+    ).rejects.toThrow(/does not match archive entry/);
+
+    expect(() => readFileSync(outputPath, "utf8")).toThrow();
   });
 
   it("contains no Supabase client or canonical publish mutation", async () => {
