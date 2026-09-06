@@ -1,12 +1,16 @@
-import { Link } from 'react-router-dom';
-import { Calendar, Check, ChevronLeft, FileText, MessageCircle, Shield } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Building2, Calendar, Check, ChevronLeft, FileText, MessageCircle, Shield } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { EducationLeadForm, type LeadFormData } from '../components/EducationLeadForm';
-import type { EducationProfile } from '@/core/education';
+import type { EducationPublicProfile } from '@/core/education';
+import { useAuth } from '@/core/auth/hooks/useAuth';
+import { useToast } from '@/shared/hooks/use-toast';
+import { BusinessClaimService } from '@/core/business/services/BusinessClaimService';
 
 type EducationDetailSidebarProps = {
   handleLeadSubmit: (formData: LeadFormData) => Promise<void>;
-  profile: EducationProfile;
+  profile: EducationPublicProfile;
   showcaseHref: string;
   trackEnrollmentCTAClick: (label: string) => void;
   trackWhatsAppClick: () => void;
@@ -21,7 +25,51 @@ export function EducationDetailSidebar({
   trackWhatsAppClick,
   whatsappHref,
 }: EducationDetailSidebarProps) {
-  const isPublicDirectoryProfile = profile.school_type === 'public';
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isClaiming, setIsClaiming] = useState(false);
+  const [claimSubmitted, setClaimSubmitted] = useState(false);
+
+  const isPublicInstitution = profile.school_type === 'public';
+  const isUnclaimedDirectoryProfile = profile.is_claimable;
+  const canCaptureInstitutionLeads = !isUnclaimedDirectoryProfile && !isPublicInstitution;
+  const canRequestSelfServiceClaim =
+    isUnclaimedDirectoryProfile &&
+    !isPublicInstitution &&
+    Boolean(profile.business_data_id);
+
+  const requestClaim = async () => {
+    if (!profile.business_data_id) return;
+
+    if (!user) {
+      navigate('/login', { state: { redirectTo: location.pathname } });
+      return;
+    }
+
+    setIsClaiming(true);
+    try {
+      const result = await BusinessClaimService.requestClaim({
+        businessId: profile.business_data_id,
+        userId: user.id,
+        message: 'Solicitacao iniciada a partir do perfil publico de Educacao.',
+      });
+      setClaimSubmitted(true);
+      toast({
+        title: result.created ? 'Reivindicacao enviada' : 'Reivindicacao ja pendente',
+        description: 'A equipe revisara a titularidade antes de liberar o controle do perfil.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Nao foi possivel reivindicar',
+        description: error instanceof Error ? error.message : 'Tente novamente mais tarde.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsClaiming(false);
+    }
+  };
 
   const focusLeadForm = (trackingLabel: string) => {
     trackEnrollmentCTAClick(trackingLabel);
@@ -36,18 +84,18 @@ export function EducationDetailSidebar({
   return (
     <aside className="lg:sticky lg:top-24 lg:h-fit">
       <div className="space-y-4">
-        {isPublicDirectoryProfile ? (
+        {!canCaptureInstitutionLeads ? (
           <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Contato e matrícula
             </h3>
             <p className="mt-3 text-sm text-muted-foreground">
-              Este é um perfil público de diretório. Para matrícula, visita ou informações
-              operacionais, use os canais oficiais da rede ou da unidade.
+              Este é um perfil de diretório. Para matrícula, visita ou informações operacionais,
+              confirme pelos canais oficiais da instituição ou da rede responsável.
             </p>
             <p className="mt-3 text-xs text-muted-foreground">
-              O Achegue-se não coleta dados de responsável ou aluno em nome de uma escola pública
-              enquanto o perfil não possuir uma autoridade oficial de atendimento habilitada.
+              O Achegue-se não coleta dados de responsável ou aluno em nome de uma instituição
+              enquanto o perfil não possui uma autoridade de atendimento habilitada.
             </p>
           </div>
         ) : (
@@ -99,6 +147,44 @@ export function EducationDetailSidebar({
           </>
         )}
 
+        {canRequestSelfServiceClaim && (
+          <div className="rounded-3xl border border-primary/20 bg-primary/5 p-5 shadow-sm">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <Building2 className="h-4 w-4 text-primary" />
+              Esta instituicao e sua?
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Solicite a titularidade. O controle so e liberado depois da revisao da reivindicacao.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-3 w-full rounded-full"
+              disabled={isClaiming || claimSubmitted}
+              onClick={() => void requestClaim()}
+            >
+              {claimSubmitted
+                ? 'Reivindicacao pendente'
+                : isClaiming
+                  ? 'Enviando...'
+                  : 'Reivindicar este perfil'}
+            </Button>
+          </div>
+        )}
+
+        {isUnclaimedDirectoryProfile && isPublicInstitution && (
+          <div className="rounded-3xl border border-border bg-muted/30 p-5">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <Shield className="h-4 w-4 text-primary" />
+              Administracao institucional
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Este cadastro publico ainda nao foi reivindicado por uma conta institucional.
+              A transferencia exige comprovacao documental e revisao administrativa.
+            </p>
+          </div>
+        )}
+
         <div className="rounded-3xl border border-border bg-gradient-to-br from-muted/40 to-card p-5">
           <div className="flex items-center gap-2 text-sm font-semibold">
             <Shield className="h-4 w-4 text-emerald-500" /> Sobre este perfil
@@ -106,17 +192,17 @@ export function EducationDetailSidebar({
           <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
             <li className="flex items-start gap-2">
               <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" />
-              {isPublicDirectoryProfile ? 'Registro público catalogado' : 'Perfil institucional publicado'}
+              {isPublicInstitution ? 'Registro público catalogado' : 'Perfil institucional publicado'}
             </li>
             <li className="flex items-start gap-2">
               <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" />
-              {isPublicDirectoryProfile
+              {isPublicInstitution
                 ? 'Dados exibidos somente quando cadastrados ou sustentados por fonte'
                 : 'Comunicação disponível conforme canais cadastrados'}
             </li>
             <li className="flex items-start gap-2">
               <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" />
-              {isPublicDirectoryProfile
+              {isPublicInstitution
                 ? 'Formulários com dados de alunos ficam desabilitados por padrão'
                 : 'Dados do perfil rastreáveis no sistema'}
             </li>
