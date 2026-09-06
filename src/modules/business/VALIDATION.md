@@ -1,7 +1,7 @@
 # Validacao atual — Modulo de Empresas
 
 **Data do checkpoint:** 2026-09-06  
-**Checkpoint tecnico:** `03457878002ed9f04017e96e162fc7abdb666cbc`  
+**Checkpoint tecnico:** `89429a4bc8d973b5c97c383773367b98c7837791`  
 **Status:** G6 EM CERTIFICACAO — NAO MVP CERTIFICADO
 
 Este arquivo registra o estado atual de Business durante G6. O ownership/SSOT de source foi fechado em G4 e os blockers historicos de G5 foram encerrados conforme `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`. O trabalho ativo agora e certificacao funcional e operacional do modulo.
@@ -510,6 +510,48 @@ O ZIP oficial 2025 continua **nao inspecionado neste ambiente**: a pagina do Ine
 o link oficial atualizado em julho/2026, mas `download.inep.gov.br` retornou 502 no
 browser e falha de resolucao no runtime. Nenhum espelho foi aceito como substituto e
 nenhum batch real foi criado.
+
+### Completude do lote e transporte privado
+
+Migration Git/remoto
+`20260906175025_require_complete_inep_staging_batch_g6.sql` fechou carga
+parcial/truncada:
+
+- `manifest.counts.target_municipality_rows` deve ser inteiro positivo bounded;
+- o validator lê esse total como `v_expected_rows`;
+- se `staged_rows <> target_municipality_rows`, falha com
+  `education_import_batch_row_count_mismatch` antes de classificar qualquer candidata.
+
+Probe em `BEGIN/ROLLBACK`: manifest esperava 2 linhas; com 1 linha o validator bloqueou
+e o batch permaneceu `staging:1`; após a segunda linha o mesmo batch ficou
+`validated:2`. O catálogo público permaneceu em 15.
+
+Também foi criado
+`tools/data-quality/stage-public-education-inep-import.mjs`, transporte operacional
+para **staging privado somente**:
+
+- default = dry-run offline, sem banco;
+- `--commit-staging` é opt-in explícito;
+- exige `PUBLIC_EDUCATION_INEP_IMPORT_APPROVED=true`;
+- exige `SUPABASE_DB_URL` cujo project ref e hostname Supabase provem o mesmo projeto de
+  `supabase/config.toml`;
+- usa conexão PostgreSQL server-side e `SET LOCAL ROLE service_role`; o schema
+  `private` não foi exposto ao PostgREST;
+- revalida manifest, quantidade de linhas e SHA-256 de cada `raw_record` antes da conexão;
+- faz staging em chunks bounded, rehash do JSONL antes do commit, validator e planner;
+- resposta inesperada do validator aborta a transação;
+- batch `staging` idempotente preexistente exige revisão manual em vez de resume cego;
+- `--plan-output` só existe junto com commit de staging;
+- não contém materializer nem INSERT em `profiles`, `business_data` ou
+  `education_profiles`.
+
+Os templates `.env.example`, `.env.local.example` e `.env.remote.example` deixam a
+aprovação em `false` por padrão. Ratchet:
+`tests/scripts/public-education-inep-stager.test.ts`.
+
+**O CLI ainda não foi executado com dados oficiais.** Sem o ZIP oficial acessível, nenhuma
+execução `--commit-staging` foi feita e o estado persistente segue em **0 batches /
+0 staging rows / 15 Education profiles / 15 INEP únicos**.
 
 ### Staging privada e natural key
 
