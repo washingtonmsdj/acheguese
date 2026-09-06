@@ -115,6 +115,32 @@ describe("Business extension identity boundary (G6)", () => {
     );
   });
 
+
+  it("adapts Education profile identity before crossing into Business Billing", () => {
+    const educationSubscription = read(
+      "src/modules/business/education/services/education-subscription.service.ts",
+    );
+    const educationPlans = read(
+      "src/modules/business/education/pages/EducationPlansPage.tsx",
+    );
+
+    expect(educationSubscription).toContain(
+      "BusinessService.getBusinessDataIdByProfileId(businessProfileId)",
+    );
+    expect(educationSubscription).toContain(
+      "SubscriptionService.getByBusinessId(businessDataId)",
+    );
+    expect(educationSubscription).not.toContain(
+      "SubscriptionService.getByBusinessId(businessProfileId)",
+    );
+    expect(educationPlans).toContain(
+      "const businessDataId = dashboardContext?.businessDataId",
+    );
+    expect(educationPlans).toContain("businessId: businessDataId");
+    expect(educationPlans).toContain("subscriptionScope: 'business'");
+    expect(educationPlans).toContain("entityFamily: 'company'");
+  });
+
   it("names Billing and QR entitlement identity explicitly", () => {
     const billingHook = read(
       "src/core/billing/hooks/useBusinessSubscription.ts",
