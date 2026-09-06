@@ -1,20 +1,13 @@
 import { eventsReadService } from "@/core/community-events/services/EventReadService";
-import type { PublicEventStatus } from "@/core/community-events/types";
+import { isEventCurrentOrFuture } from "@/core/community-events/eventFreshness";
 import { logger } from "@/shared/utils/logger";
-
-const COMMUNITY_LINK_ELIGIBLE_EVENT_STATUSES = new Set<PublicEventStatus>([
-  "upcoming",
-  "ongoing",
-]);
 
 export class EventLinkEligibilityService {
   static async isCommunityLinkEligible(eventId: string): Promise<boolean> {
     try {
       const event = await eventsReadService.getEventById(eventId);
 
-      return Boolean(
-        event && COMMUNITY_LINK_ELIGIBLE_EVENT_STATUSES.has(event.status),
-      );
+      return Boolean(event && isEventCurrentOrFuture(event));
     } catch (error) {
       logger.warn("Event community link eligibility check failed", {
         eventId,

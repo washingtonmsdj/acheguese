@@ -7,6 +7,10 @@ import {
   type EventRowWithLegacyCity,
 } from "@/core/community-events/mappers";
 import { EVENT_PAGE_SIZE } from "@/core/community-events/config/eventReadConfig";
+import {
+  PUBLIC_ACTIVE_EVENT_STATUSES,
+  isPublicActiveEventStatus,
+} from "@/core/community-events/eventFreshness";
 import type {
   EventBoundsOptions,
   EventFilters,
@@ -56,14 +60,77 @@ function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
-function applyFilters<TRow>(query: EventQuery<TRow>, filters: EventFilters = {}): EventQuery<TRow> {
+function resolveActiveStatuses(
+  filters: EventFilters,
+): readonly PublicEventStatus[] | null {
+  if (filters.status) {
+    return isPublicActiveEventStatus(filters.status) ? [filters.status] : null;
+  }
+
+  if (filters.statuses?.length) {
+    return filters.statuses.every(isPublicActiveEventStatus)
+      ? [...new Set(filters.statuses)]
+      : null;
+  }
+
+  return filters.upcoming ? PUBLIC_ACTIVE_EVENT_STATUSES : null;
+}
+
+function applyActiveStatusFreshness<TRow>(
+  query: EventQuery<TRow>,
+  statuses: readonly PublicEventStatus[],
+  now = new Date(),
+): EventQuery<TRow> {
+  const nowIso = now.toISOString();
+  const ongoingFloorIso = new Date(
+    now.getTime() - 24 * 60 * 60 * 1000,
+  ).toISOString();
+  const clauses: string[] = [];
+
+  if (statuses.includes("upcoming")) {
+    clauses.push(`and(status.eq.upcoming,date.gte.${nowIso})`);
+  }
+
+  if (statuses.includes("ongoing")) {
+    clauses.push(
+      `and(status.eq.ongoing,date.lte.${nowIso},end_date.gte.${nowIso})`,
+      `and(status.eq.ongoing,date.lte.${nowIso},end_date.is.null,date.gte.${ongoingFloorIso})`,
+    );
+  }
+
+  return clauses.length > 0 ? query.or(clauses.join(",")) : query;
+}
+
+function applyFilters<TRow>(
+  query: EventQuery<TRow>,
+  filters: EventFilters = {},
+): EventQuery<TRow> {
   let scopedQuery = query;
 
-  if (filters.category) scopedQuery = scopedQuery.eq("category", filters.category);
-  if (filters.status) scopedQuery = scopedQuery.eq("status", filters.status);
-  if (filters.statuses?.length) scopedQuery = scopedQuery.in("status", [...filters.statuses]);
-  if (filters.upcoming) scopedQuery = scopedQuery.gte("date", new Date().toISOString());
-  if (filters.territoryFilter) scopedQuery = applyTerritoryFilter(scopedQuery, filters.territoryFilter);
+  if (filters.category) {
+    scopedQuery = scopedQuery.eq("category", filters.category);
+  }
+  if (filters.status) {
+    scopedQuery = scopedQuery.eq("status", filters.status);
+  }
+  if (filters.statuses?.length) {
+    scopedQuery = scopedQuery.in("status", [...filters.statuses]);
+  }
+  if (filters.upcoming && !filters.status && !filters.statuses?.length) {
+    scopedQuery = scopedQuery.in("status", [...PUBLIC_ACTIVE_EVENT_STATUSES]);
+  }
+
+  const activeStatuses = resolveActiveStatuses(filters);
+  if (activeStatuses) {
+    scopedQuery = applyActiveStatusFreshness(scopedQuery, activeStatuses);
+  }
+
+  if (filters.territoryFilter) {
+    scopedQuery = applyTerritoryFilter(
+      scopedQuery,
+      filters.territoryFilter,
+    );
+  }
 
   return scopedQuery;
 }
@@ -173,12 +240,14 @@ export class EventReadService {
         .gte("latitude", south)
         .lte("latitude", north)
         .gte("longitude", west)
-        .lte("longitude", east)
-        .in("status", [...effectiveStatuses])
+        .lte("longitude", east);
+
+      query = applyFilters(query, {
+        statuses: effectiveStatuses,
+        territoryFilter,
+      })
         .order("date", { ascending: true })
         .limit(limit);
-
-      if (territoryFilter) query = applyTerritoryFilter(query, territoryFilter);
 
       const { data, error } = await query;
       if (error) throw error;

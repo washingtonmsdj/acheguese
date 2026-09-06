@@ -158,4 +158,29 @@ describe("community Events canonical owner", () => {
     expect(adminService).toContain('update({ status: "completed" })');
   });
 
+
+  it("keeps active-event freshness inside the Events owner", () => {
+    const freshness = read("src/core/community-events/eventFreshness.ts");
+    const readService = read(
+      "src/core/community-events/services/EventReadService.ts",
+    );
+    const linkEligibility = read(
+      "src/core/community-events/services/EventLinkEligibilityService.ts",
+    );
+    const homeFreshness = read(
+      "src/core/landing/utils/territoryHomeFreshness.ts",
+    );
+
+    expect(freshness).toContain("isEventCurrentOrFuture");
+    expect(readService).toContain("applyActiveStatusFreshness");
+    expect(readService).toContain("status.eq.upcoming");
+    expect(readService).toContain("status.eq.ongoing");
+    expect(readService).toContain("end_date.gte");
+    expect(linkEligibility).toContain("isEventCurrentOrFuture(event)");
+    expect(homeFreshness).toContain(
+      '@/core/community-events/eventFreshness',
+    );
+  });
+
+
 });

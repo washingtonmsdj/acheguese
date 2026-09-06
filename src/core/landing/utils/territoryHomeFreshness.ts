@@ -1,6 +1,7 @@
 import type { Post } from "@/core/posts/types";
 import { hasTechnicalSeedMarker } from "@/core/posts/utils/publicPostContent";
 import type { PublicEvent } from "@/core/community-events";
+import { isEventCurrentOrFuture } from "@/core/community-events/eventFreshness";
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -75,19 +76,11 @@ export function hasTechnicalSeedLabel(value: string | null | undefined): boolean
   return tokens.some((token) => technicalTokens.has(token));
 }
 
-export function isCurrentOrFutureEvent(event: PublicEvent, now: number): boolean {
-  const startsAt = toTimestamp(event.date);
-  if (startsAt === null || event.status === "cancelled" || event.status === "completed") {
-    return false;
-  }
-
-  if (startsAt >= now) return true;
-
-  const endsAt = toTimestamp(event.end_date);
-  if (endsAt !== null) return endsAt >= now;
-
-  // Um status "ongoing" sem data final não é aceito indefinidamente.
-  return event.status === "ongoing" && startsAt >= now - DAY_MS;
+export function isCurrentOrFutureEvent(
+  event: PublicEvent,
+  now: number,
+): boolean {
+  return isEventCurrentOrFuture(event, now);
 }
 
 export function selectValidEvents(
