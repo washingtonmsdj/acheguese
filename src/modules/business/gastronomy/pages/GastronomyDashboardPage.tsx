@@ -10,7 +10,7 @@
  * SSOT: Usa useBusinessSubscription do core/billing
  */
 
-import { useParams, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useEntitlements } from '@/core/billing/hooks/useEntitlements';
 import {
@@ -24,6 +24,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { Button } from '@/shared/components/ui/button';
 import { getMenuUsageStats } from '@/modules/business/gastronomy/services';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
+import { useBusinessDashboardContext } from '@/modules/business/dashboard/businessDashboardContext';
 import {
   UtensilsCrossed,
   QrCode,
@@ -34,15 +35,15 @@ import {
 } from 'lucide-react';
 
 export default function GastronomyDashboardPage() {
-  const { businessId } = useParams<{ businessId: string }>();
+  const { businessId, businessDataId } = useBusinessDashboardContext();
   const { can, isLoading } = useEntitlements({
-    business_id: businessId,
+    business_id: businessDataId,
     subscription_scope: 'business',
   });
   const { data: usageStats } = useQuery({
-    queryKey: ['gastronomy', 'dashboard-usage', businessId],
-    enabled: !!businessId,
-    queryFn: async () => getMenuUsageStats(businessId!),
+    queryKey: ['gastronomy', 'dashboard-usage', businessDataId],
+    enabled: !!businessDataId,
+    queryFn: async () => getMenuUsageStats(businessDataId),
   });
   if (isLoading) {
     return (
@@ -64,17 +65,18 @@ export default function GastronomyDashboardPage() {
 
       {/* Widget de Status do Plano */}
       <PlanStatusWidget
-        businessId={businessId!}
+        businessId={businessId}
+        businessDataId={businessDataId}
         currentMenuItems={usageStats?.currentMenuItems ?? 0}
         currentImages={usageStats?.currentImages ?? 0}
       />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <OperationalStatusCard businessId={businessId!} />
-        <MenuSummaryCard businessId={businessId!} />
+        <OperationalStatusCard businessDataId={businessDataId} />
+        <MenuSummaryCard businessId={businessId} businessDataId={businessDataId} />
       </div>
 
-      <QuickActionsCard businessId={businessId!} />
+      <QuickActionsCard businessId={businessId} />
 
       {/* Grid de Recursos */}
       <div className="grid md:grid-cols-2 gap-6">
@@ -96,7 +98,7 @@ export default function GastronomyDashboardPage() {
                   <span className="text-muted-foreground">Itens disponiveis</span>
                   <span className="font-medium">{usageStats?.currentMenuItems ?? 0}</span>
                 </div>
-                <Link to={businessManagementRoutes.gastronomyCardapio(businessId!)}>
+                <Link to={businessManagementRoutes.gastronomyCardapio(businessId)}>
                   <Button className="w-full">
                     Gerenciar Cardápio
                   </Button>
@@ -104,7 +106,7 @@ export default function GastronomyDashboardPage() {
               </>
             ) : (
               <UpgradePromptInline
-                businessId={businessId!}
+                businessId={businessId}
                 feature="Cardápio Avançado"
                 offerKey="catalog"
               />
@@ -128,7 +130,7 @@ export default function GastronomyDashboardPage() {
               <span className="text-muted-foreground">Scans totais</span>
               <span className="font-medium">Não rastreado</span>
             </div>
-            <Link to={businessManagementRoutes.linkPremium(businessId!)}>
+            <Link to={businessManagementRoutes.linkPremium(businessId)}>
               <Button className="w-full" variant="outline">
                 Ver QR Code
               </Button>
@@ -158,7 +160,7 @@ export default function GastronomyDashboardPage() {
               <span className="text-muted-foreground">Status</span>
               <span className="font-medium">Resumo acima</span>
             </div>
-            <Link to={businessManagementRoutes.gastronomyHorarios(businessId!)}>
+            <Link to={businessManagementRoutes.gastronomyHorarios(businessId)}>
               <Button className="w-full" variant="outline">
                 Configurar Horários
               </Button>
@@ -184,7 +186,7 @@ export default function GastronomyDashboardPage() {
                   <span className="text-muted-foreground">Bairros atendidos</span>
                   <span className="font-medium">Resumo acima</span>
                 </div>
-                <Link to={businessManagementRoutes.gastronomyAreaEntrega(businessId!)}>
+                <Link to={businessManagementRoutes.gastronomyAreaEntrega(businessId)}>
                   <Button className="w-full" variant="outline">
                     Configurar Área
                   </Button>
@@ -192,7 +194,7 @@ export default function GastronomyDashboardPage() {
               </>
             ) : (
               <UpgradePromptInline
-                businessId={businessId!}
+                businessId={businessId}
                 feature="Área de Entrega"
                 offerKey="delivery"
               />
@@ -213,7 +215,7 @@ export default function GastronomyDashboardPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Link to={businessManagementRoutes.gastronomySetup(businessId!)}>
+          <Link to={businessManagementRoutes.gastronomySetup(businessId)}>
             <Button variant="outline">
               Editar Perfil Gastronômico
             </Button>
