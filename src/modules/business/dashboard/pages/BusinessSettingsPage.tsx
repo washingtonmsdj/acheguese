@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { SettingsTab } from "@/core/business/components/SettingsTab";
+import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { ProfileMembersManagerImproved } from "@/core/profiles/components/ProfileMembersManagerImproved";
 import { useBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
@@ -13,7 +14,7 @@ export default function BusinessSettingsPage() {
     <div className="space-y-5">
       <SettingsTab
         businessId={businessId}
-        onEditBusiness={() => navigate(`/edit-business/${businessId}`)}
+        onEditBusiness={() => navigate(businessManagementRoutes.edit(businessId))}
       />
 
       <Card>
