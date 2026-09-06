@@ -1,7 +1,7 @@
 # Validacao atual — Modulo de Empresas
 
 **Data do checkpoint:** 2026-09-06  
-**Checkpoint tecnico:** `ff4fb0d9322a54d26bae3b5ea3e2ddf6a5460bda`  
+**Checkpoint tecnico:** `7669b7ae1125b9eac93363ab1c3beab103889e17`  
 **Status:** G6 EM CERTIFICACAO — NAO MVP CERTIFICADO
 
 Este arquivo registra o estado atual de Business durante G6. O ownership/SSOT de source foi fechado em G4 e os blockers historicos de G5 foram encerrados conforme `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`. O trabalho ativo agora e certificacao funcional e operacional do modulo.
@@ -153,6 +153,103 @@ sem estarem operacionalmente completas:
   backfill ou transformacao de dado existente;
 - `tests/security/business-coverage-delegated-management-g6.test.ts` protege a identidade
   `business_data.id` e a autoridade delegada no mesmo ratchet.
+
+
+## G6 — identidade Business, Billing e Gestor — 2026-09-06
+
+O sweep de extensoes da empresa fechou uma ambiguidade transversal que afetava Billing,
+Gastronomia, Education e o workspace privado:
+
+- `profiles.id` permanece a identidade de rota, ownership e autoridade multi-profile;
+- `business_data.id` e a identidade canonica das extensoes Business: Billing,
+  Gastronomia, coverage, menus, horarios, delivery areas e source operacional de pedidos;
+- o dashboard Business e seus children agora carregam explicitamente os dois IDs;
+- o workspace privado preserva os dois IDs no read model, sem descartar
+  `business_data.id`.
+
+### Billing operacional vs financeiro
+
+A leitura operacional de plano/entitlements de Business deixou de depender de SELECT
+browser em `user_subscriptions`, cuja RLS e corretamente owner-only.
+
+- `EntitlementResolver` usa `BillingEntitlementsRpcService.getBusinessSubscriptionSnapshot`
+  quando `subscription_scope='business'`;
+- user-scope continua lendo a assinatura do proprio usuario pelo contrato existente;
+- o broker retorna apenas snapshot sanitizado: plan code, status, periodo operacional e
+  contract snapshot necessario aos entitlements;
+- `useBusinessSubscription` passou a ser read model operacional e nao projeta detalhes
+  financeiros privados;
+- `useEntitlements.can()` e `EntitlementResolver.check()` continuam tipados somente
+  por `PlanEntitlements`, portanto metadados como `subscriptionStatus` nao viram
+  capabilities por acidente;
+- o workspace privado agora usa o mesmo `EntitlementResolver`; Gestor nao cai mais
+  artificialmente para Free por causa da RLS financeira.
+
+### Proprietario vs Gestor
+
+`BusinessOwnershipService` agora preserva a role real:
+
+- Proprietario estrutural: `owner`;
+- Gestor delegado ativo: `admin`;
+- Membro comum: sem autoridade de gestao.
+
+O metodo historico `isOwner()` permanece bridge semantica de "pode gerenciar" para nao
+quebrar callers, mas `resolveManagementRole()` e `isDirectOwner()` tornam a distincao
+explicita.
+
+Billing mutante permanece deliberadamente owner-only:
+
+- a pagina **Planos da empresa** nao redireciona mais para `/planos` user-scope;
+- checkout Business usa `business_data.id`, `subscriptionScope='business'` e
+  `entityFamily='company'`;
+- Gestor pode ver o plano e os recursos, mas nao alterar assinatura;
+- Education preserva `education_profiles.business_id = profiles.id`, traduzindo para
+  `business_data.id` apenas ao cruzar a fronteira de Billing.
+
+### Broker remoto e prova de autorizacao
+
+`billing-entitlements-rpc` foi publicado no Supabase canonico como **v9 ACTIVE** com
+`verify_jwt=true`.
+
+O source remoto revalidado contem:
+
+- action `getBusinessSubscriptionSnapshot`;
+- `requireOperationalAccount`;
+- validacao UUID do `businessDataId`;
+- autorizacao por `broker_user_can_manage_profile`;
+- retorno sanitizado de `current_period_end`.
+
+O helper `public.broker_user_can_manage_profile` continua executavel somente por
+`postgres` e `service_role`; `anon` e `authenticated` nao possuem EXECUTE direto.
+
+Probe runtime com fixtures tecnicas temporarias no perfil
+`E2E Education Business RPC`:
+
+- owner -> `private.user_can_manage_profile=true` e broker `true`;
+- Gestor/admin -> `true` / `true`;
+- Membro -> `false` / `false`;
+- cleanup final: **0 memberships de fixture restantes**.
+
+No momento da prova, `user_subscriptions` possuia **0 assinaturas business-scope**; portanto
+nao foi fabricada assinatura paga apenas para validar UI. A prova HTTP com JWT descartavel
+permanece pertencendo ao runner autenticado existente; nao foi criado endpoint de debug nem
+alterado Auth para contornar essa ausencia de sessao no conector atual.
+
+### Ratchet
+
+`tests/architecture/business-extension-identity-g6.test.ts` protege agora:
+
+- Profile ID vs `business_data.id`;
+- workspace privado brokerado;
+- Gastronomia por data ID e rotas por Profile ID;
+- broker Business + metadata operacional;
+- owner vs Gestor;
+- mutacao financeira owner-only;
+- adapter Education -> Business Billing;
+- identidade de Billing no QR.
+
+Inspecao programatica do source atual: **19/19 invariantes PASS**. Isso e evidencia dirigida
+de contrato, nao substitui lint/typecheck/Vitest hosted do mesmo SHA.
 
 ## Banco / RLS
 
