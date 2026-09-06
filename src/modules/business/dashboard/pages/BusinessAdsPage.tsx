@@ -223,7 +223,7 @@ export default function BusinessAdsPage() {
         <Card className="border-amber-300">
           <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
             <span>Esta empresa precisa de um territorio principal para solicitar anuncio.</span>
-            <Link to={businessManagementRoutes.dados(businessId)}>
+            <Link to={businessManagementRoutes.edit(businessId)}>
               <Button variant="outline" size="sm">
                 Editar dados
               </Button>
