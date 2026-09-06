@@ -41,6 +41,22 @@ describe("G6 public Education lead intake", () => {
     expect(edge).toContain("enforceDailySubjectLimit");
   });
 
+  it("pins the lead broker to JWT verification and service-role governance", () => {
+    const config = read("supabase/config.toml");
+    const policy = read(
+      "docs/09-reference/governance/security/EDGE_FUNCTION_AUTH_POLICY.json",
+    );
+
+    expect(config).toContain("[functions.education-lead-rpc]");
+    expect(
+      config.slice(config.indexOf("[functions.education-lead-rpc]"))
+        .split("\n\n")[0],
+    ).toContain("verify_jwt = true");
+    expect(policy).toContain('"education-lead-rpc"');
+    expect(policy).toContain('"public-registration-broker"');
+    expect(policy).toContain("requireLeadEligibleProfile");
+  });
+
   it("does not log submitted PII in the broker audit payload", () => {
     const edge = read("supabase/functions/education-lead-rpc/index.ts");
     const auditSection = edge.slice(edge.indexOf('action: "education_public_lead_created"'));
