@@ -26,9 +26,11 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 const ACTIONS = {
   setVerification: true,
   setPremium: true,
+  resolveClaim: true,
 } as const;
 
 type AdminBusinessAction = keyof typeof ACTIONS;
+type AdminBusinessFlagAction = Exclude<AdminBusinessAction, "resolveClaim">;
 
 interface RequestBody {
   action?: string;
@@ -97,7 +99,7 @@ async function updateBusinessByPublicId(
 }
 
 function normalizeUpdate(
-  action: AdminBusinessAction,
+  action: AdminBusinessFlagAction,
   params: Record<string, unknown>,
 ): { businessId: string; updates: Record<string, unknown> } {
   const businessId = cleanUuid(params.businessId, "businessId");
@@ -148,13 +150,59 @@ serve(async (req: Request) => {
       : {};
 
   try {
-    const normalized = normalizeUpdate(safeAction, params);
     const supabaseAdmin = createClient(
       getRequiredEnv("SUPABASE_URL"),
       getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY"),
       { auth: { autoRefreshToken: false, persistSession: false } },
     );
 
+    if (safeAction === "resolveClaim") {
+      const claimId = cleanUuid(params.claimId, "claimId");
+      const decision = params.decision;
+      if (decision !== "approve" && decision !== "reject") {
+        throw new RequestValidationError("Invalid decision");
+      }
+      const reviewNotes =
+        typeof params.reviewNotes === "string"
+          ? params.reviewNotes.trim().slice(0, 500) || null
+          : null;
+
+      const { data, error } = await supabaseAdmin.rpc(
+        "admin_resolve_business_claim",
+        {
+          p_actor_user_id: auth.userId,
+          p_claim_id: claimId,
+          p_decision: decision,
+          p_review_notes: reviewNotes,
+        },
+      );
+      if (error) {
+        const knownReason = [
+          "business_claim_not_found",
+          "business_claim_already_resolved",
+          "business_profile_not_claimable",
+          "business_profile_already_managed",
+          "public_education_claim_requires_documents",
+          "public_education_claim_requires_review_notes",
+        ].find((reason) => error.message.includes(reason));
+        if (knownReason) throw new RequestValidationError(knownReason);
+        throw error;
+      }
+
+      auditLog({
+        timestamp: new Date().toISOString(),
+        userId: auth.userId,
+        action: "admin_business_resolveClaim",
+        resource: "admin-business-rpc",
+        status: "success",
+        details: { action: safeAction, claimId, decision },
+        ...getAuditInfo(req),
+      });
+
+      return jsonResponse({ data }, 200, ALLOWED_METHODS, req);
+    }
+
+    const normalized = normalizeUpdate(safeAction, params);
     const data = await updateBusinessByPublicId(
       supabaseAdmin,
       normalized.businessId,
