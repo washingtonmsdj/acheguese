@@ -138,7 +138,7 @@ async function handleGetBusinessSubscriptionSnapshot(
 
   const { data: subscription, error: subscriptionError } = await supabaseAdmin
     .from("user_subscriptions")
-    .select("plan_code, status_v2, subscription_scope, contract_snapshot")
+    .select("plan_code, status_v2, subscription_scope, current_period_end, contract_snapshot")
     .eq("business_id", rawBusinessDataId)
     .eq("subscription_scope", "business")
     .in("status_v2", ["active", "trialing"])
@@ -154,6 +154,7 @@ async function handleGetBusinessSubscriptionSnapshot(
           plan_code: subscription.plan_code,
           status_v2: subscription.status_v2,
           subscription_scope: "business",
+          current_period_end: subscription.current_period_end ?? null,
           contract_snapshot: subscription.contract_snapshot ?? null,
         }
       : null,
