@@ -25,42 +25,42 @@ export class BusinessCoverageService {
     );
   }
 
-  async checkCoverageInActiveLocation(businessId: string): Promise<boolean> {
-    const result = await this.getCoverageDetails(businessId);
+  async checkCoverageInActiveLocation(businessDataId: string): Promise<boolean> {
+    const result = await this.getCoverageDetails(businessDataId);
     return result?.covers ?? false;
   }
 
-  async getCoverageDetails(businessId: string): Promise<DoesCoverOutput | null> {
+  async getCoverageDetails(businessDataId: string): Promise<DoesCoverOutput | null> {
     const locationId = businessLocationService.getActiveLocationId();
     if (!locationId) return null;
 
     return this.coverageService.doesCover({
       entity_type: 'business',
-      entity_id: businessId,
+      entity_id: businessDataId,
       location_id: locationId,
     });
   }
 
-  async getBusinessCoverage(businessId: string): Promise<GetCoverageOutput> {
+  async getBusinessCoverage(businessDataId: string): Promise<GetCoverageOutput> {
     return this.coverageService.getCoverage({
       entity_type: 'business',
-      entity_id: businessId,
+      entity_id: businessDataId,
       status: CoverageStatus.ACTIVE,
     });
   }
 
-  async getBusinessServiceAreas(businessId: string): Promise<ServiceArea[]> {
-    const result = await this.getBusinessCoverage(businessId);
+  async getBusinessServiceAreas(businessDataId: string): Promise<ServiceArea[]> {
+    const result = await this.getBusinessCoverage(businessDataId);
     return result.coverages.map(({ coverage }) => coverage);
   }
 
   async setBusinessCoverage(
-    businessId: string,
+    businessDataId: string,
     coverages: CoverageDefinition[],
   ): Promise<ServiceArea[]> {
     const result = await this.coverageService.setCoverage({
       entity_type: 'business',
-      entity_id: businessId,
+      entity_id: businessDataId,
       coverages,
     });
 
@@ -68,44 +68,44 @@ export class BusinessCoverageService {
   }
 
   async removeBusinessCoverage(
-    businessId: string,
+    businessDataId: string,
     coverageId?: string,
   ): Promise<number> {
     const result = await this.coverageService.removeCoverage({
       entity_type: 'business',
-      entity_id: businessId,
+      entity_id: businessDataId,
       coverage_id: coverageId,
     });
 
     return result.removed_count;
   }
 
-  async hasAnyCoverage(businessId: string): Promise<boolean> {
-    const areas = await this.getBusinessServiceAreas(businessId);
+  async hasAnyCoverage(businessDataId: string): Promise<boolean> {
+    const areas = await this.getBusinessServiceAreas(businessDataId);
     return areas.length > 0;
   }
 
-  async filterBusinessesByCoverage(businessIds: string[]): Promise<string[]> {
-    if (!businessLocationService.hasActiveLocation() || businessIds.length === 0) {
+  async filterBusinessesByCoverage(businessDataIds: string[]): Promise<string[]> {
+    if (!businessLocationService.hasActiveLocation() || businessDataIds.length === 0) {
       return [];
     }
 
     const checks = await Promise.all(
-      businessIds.map(async (businessId) => ({
-        businessId,
-        covers: await this.checkCoverageInActiveLocation(businessId),
+      businessDataIds.map(async (businessDataId) => ({
+        businessDataId,
+        covers: await this.checkCoverageInActiveLocation(businessDataId),
       })),
     );
 
-    return checks.filter(({ covers }) => covers).map(({ businessId }) => businessId);
+    return checks.filter(({ covers }) => covers).map(({ businessDataId }) => businessDataId);
   }
 
-  async getCoverageMessage(businessId: string): Promise<string> {
+  async getCoverageMessage(businessDataId: string): Promise<string> {
     if (!businessLocationService.hasActiveLocation()) {
       return 'Selecione uma localizacao para verificar cobertura';
     }
 
-    const result = await this.getCoverageDetails(businessId);
+    const result = await this.getCoverageDetails(businessDataId);
     if (result?.covers) {
       return result.coverage?.coverage_type === 'city'
         ? 'Atende nesta regiao (cobertura herdada)'
@@ -116,7 +116,7 @@ export class BusinessCoverageService {
   }
 
   async validateForOrder(
-    businessId: string,
+    businessDataId: string,
   ): Promise<{ valid: boolean; reason?: string }> {
     if (!businessLocationService.hasActiveLocation()) {
       return {
@@ -125,7 +125,7 @@ export class BusinessCoverageService {
       };
     }
 
-    if (!(await this.checkCoverageInActiveLocation(businessId))) {
+    if (!(await this.checkCoverageInActiveLocation(businessDataId))) {
       return {
         valid: false,
         reason: 'Este negocio nao atende na sua regiao',
