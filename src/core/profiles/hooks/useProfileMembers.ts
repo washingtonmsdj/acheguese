@@ -20,6 +20,7 @@ export function useProfileMembers(profileId: string | null) {
   const loadMembers = useCallback(async () => {
     if (!profileId) {
       setMembers([]);
+      setError(null);
       return;
     }
 
@@ -27,10 +28,18 @@ export function useProfileMembers(profileId: string | null) {
     setError(null);
 
     try {
-      const data = await ProfileMembersService.getProfileMembers(profileId);
-      setMembers(data);
+      const result = await ProfileMembersService.getProfileMembersResult(profileId);
+
+      if (!result.success) {
+        setMembers([]);
+        setError(result.error || 'Failed to load members');
+        return;
+      }
+
+      setMembers(result.data ?? []);
     } catch (error: unknown) {
       logger.error('Error loading profile members:', error);
+      setMembers([]);
       setError(getErrorMessage(error, 'Failed to load members'));
     } finally {
       setLoading(false);
