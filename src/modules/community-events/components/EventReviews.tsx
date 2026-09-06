@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCircle, Flag, Star, ThumbsUp, User } from 'lucide-react';
+import { CheckCircle, Star, ThumbsUp, User } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { Badge } from '@/shared/components/ui/badge';
@@ -386,19 +386,19 @@ export function EventReviews({
                       variant="ghost"
                       size="sm"
                       onClick={() => handleMarkHelpful(review.id)}
-                      disabled={helpfulPendingId === review.id}
+                      disabled={
+                        helpfulPendingId === review.id ||
+                        reviewerProfileId === review.reviewerProfileId
+                      }
+                      title={
+                        reviewerProfileId === review.reviewerProfileId
+                          ? 'Sua propria avaliacao nao pode receber seu voto de utilidade'
+                          : undefined
+                      }
                       className="gap-1 text-xs"
                     >
                       <ThumbsUp className="h-3 w-3" />
                       Util ({review.helpful})
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="gap-1 text-xs text-muted-foreground"
-                    >
-                      <Flag className="h-3 w-3" />
-                      Reportar
                     </Button>
                   </div>
                 </motion.div>

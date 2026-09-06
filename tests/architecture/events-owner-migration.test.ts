@@ -117,4 +117,17 @@ describe("community Events canonical owner", () => {
     expect(publicApi).not.toContain("EVENT_REMINDER_TIMES");
   });
 
+
+  it("aligns event review UI with the hardened helpfulness authority", () => {
+    const reviews = read(
+      "src/modules/community-events/components/EventReviews.tsx",
+    );
+
+    expect(reviews).toContain(
+      "reviewerProfileId === review.reviewerProfileId",
+    );
+    expect(reviews).not.toContain("<Flag");
+    expect(reviews).not.toContain(">Reportar<");
+  });
+
 });
