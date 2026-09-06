@@ -3,6 +3,7 @@
  */
 
 import { useParams, useNavigate } from 'react-router-dom';
+import { useOptionalBusinessDashboardContext } from '@/modules/business/dashboard/businessDashboardContext';
 import { Helmet } from 'react-helmet-async';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from '@/shared/utils/dateLocale';
@@ -112,6 +113,7 @@ function resolveTimelineTitle(event: OrderWithItems['status_history'][number]): 
 
 export default function OrderDetailsPage() {
   const { businessId, orderId } = useParams<{ businessId: string; orderId: string }>();
+  const dashboardContext = useOptionalBusinessDashboardContext();
   const navigate = useNavigate();
   const { order, isLoading, isRealtimeConnected } = useOrderDetails(orderId!);
   const proof = order?.proof_of_delivery;
@@ -147,9 +149,10 @@ export default function OrderDetailsPage() {
   }
 
   const isBusinessRoute = Boolean(businessId);
-  const effectiveBusinessId = businessId ?? order.business_id;
-  const backTarget = isBusinessRoute
-    ? businessManagementRoutes.gastronomyPedidos(effectiveBusinessId)
+  const routeBusinessId = dashboardContext?.businessId ?? businessId;
+  const businessDataId = dashboardContext?.businessDataId ?? order.business_id;
+  const backTarget = isBusinessRoute && routeBusinessId
+    ? businessManagementRoutes.gastronomyPedidos(routeBusinessId)
     : GastronomyUrlService.getHomeUrl();
 
   return (
@@ -201,7 +204,7 @@ export default function OrderDetailsPage() {
 
         {isBusinessRoute && (
           <>
-            <OrderOperationsPanel order={order} businessId={effectiveBusinessId} />
+            <OrderOperationsPanel order={order} businessId={businessDataId} />
             <OrderTrustFeedbackPanel order={order} />
           </>
         )}
