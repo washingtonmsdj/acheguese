@@ -45,7 +45,6 @@ type ExportTable =
   | "user_consents"
   | "notification_preferences"
   | "user_mfa_status"
-  | "businesses"
   | "business_data"
   | "business_products"
   | "business_stats"
@@ -72,10 +71,8 @@ type ExportTable =
   | "group_members_new"
   | "community_poll_votes"
   | "community_issue_supports"
-  | "profile_favorites"
   | "classified_favorites"
   | "professional_favorites"
-  | "event_favorites"
   | "tourist_point_saved_items"
   | "vaga_saved_items"
   | "user_favorite_businesses"
@@ -163,7 +160,6 @@ function selectExportTable(
     case "user_consents": return supabaseAdmin.from("user_consents").select(columns);
     case "notification_preferences": return supabaseAdmin.from("notification_preferences").select(columns);
     case "user_mfa_status": return supabaseAdmin.from("user_mfa_status").select(columns);
-    case "businesses": return supabaseAdmin.from("businesses").select(columns);
     case "business_data": return supabaseAdmin.from("business_data").select(columns);
     case "business_products": return supabaseAdmin.from("business_products").select(columns);
     case "business_stats": return supabaseAdmin.from("business_stats").select(columns);
@@ -190,10 +186,8 @@ function selectExportTable(
     case "group_members_new": return supabaseAdmin.from("group_members_new").select(columns);
     case "community_poll_votes": return supabaseAdmin.from("community_poll_votes").select(columns);
     case "community_issue_supports": return supabaseAdmin.from("community_issue_supports").select(columns);
-    case "profile_favorites": return supabaseAdmin.from("profile_favorites").select(columns);
     case "classified_favorites": return supabaseAdmin.from("classified_favorites").select(columns);
     case "professional_favorites": return supabaseAdmin.from("professional_favorites").select(columns);
-    case "event_favorites": return supabaseAdmin.from("event_favorites").select(columns);
     case "tourist_point_saved_items": return supabaseAdmin.from("tourist_point_saved_items").select(columns);
     case "vaga_saved_items": return supabaseAdmin.from("vaga_saved_items").select(columns);
     case "user_favorite_businesses": return supabaseAdmin.from("user_favorite_businesses").select(columns);
@@ -603,14 +597,6 @@ async function collectExport(
     "created_at",
   );
 
-  const businesses = await requireProfileRows(
-    "businesses",
-    supabaseAdmin,
-    "businesses",
-    "id,profile_id,slug,name,description,category,subcategoria,phone,whatsapp,email,website,instagram,facebook,location_id,address,neighborhood,cep,latitude,longitude,status,is_premium,is_verified,rating,total_reviews,total_products,created_at,updated_at",
-    "profile_id",
-    profileIds,
-  );
   const businessData = await requireProfileRows(
     "business_data",
     supabaseAdmin,
@@ -848,13 +834,6 @@ async function collectExport(
     profileIds,
   );
 
-  const profileFavorites = await requireUserRows(
-    "profile_favorites",
-    supabaseAdmin,
-    "profile_favorites",
-    "id,profile_id,created_at",
-    userId,
-  );
   const classifiedFavorites = await requireProfileRows(
     "classified_favorites",
     supabaseAdmin,
@@ -868,14 +847,6 @@ async function collectExport(
     supabaseAdmin,
     "professional_favorites",
     "id,professional_id,profile_id,created_at",
-    "profile_id",
-    profileIds,
-  );
-  const eventFavorites = await requireProfileRows(
-    "event_favorites",
-    supabaseAdmin,
-    "event_favorites",
-    "id,event_id,profile_id,created_at",
     "profile_id",
     profileIds,
   );
@@ -1172,7 +1143,6 @@ async function collectExport(
       mfa_status: mfaStatus,
     },
     business_profiles: {
-      businesses,
       business_data: businessData,
       products: businessProducts,
       stats: businessStats,
@@ -1211,10 +1181,8 @@ async function collectExport(
       issue_supports: issueSupports,
     },
     favorites_and_saved_items: {
-      profiles: profileFavorites,
       classifieds: classifiedFavorites,
       professionals: professionalFavorites,
-      events: eventFavorites,
       tourist_points: touristSaved,
       vagas: vagaSaved,
       businesses: favoriteBusinesses,
