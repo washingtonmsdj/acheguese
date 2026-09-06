@@ -148,6 +148,10 @@ export interface ProfileMember {
   role: ProfileRole;
   invited_by?: string;
   joined_at: string;
+  is_active?: boolean;
+  updated_at?: string;
+  email?: string | null;
+  display_name?: string | null;
 }
 
 // Profile link
