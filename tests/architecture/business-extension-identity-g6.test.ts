@@ -140,6 +140,7 @@ describe("Business extension identity boundary (G6)", () => {
       "export function useBusinessSubscription(\n  businessDataId: string | undefined",
     );
     expect(billingHook).toContain("EntitlementResolver.resolve({");
+    expect(billingHook).toContain("type PlanEntitlements");
     expect(billingHook).toContain("business_id: businessDataId");
     expect(billingHook).toContain("subscription_scope: 'business'");
 
@@ -151,6 +152,12 @@ describe("Business extension identity boundary (G6)", () => {
     );
     expect(resolver).toContain(
       ".eq('subscription_scope', 'user')",
+    );
+    expect(resolver).toContain(
+      "entitlement: keyof PlanEntitlements",
+    );
+    expect(resolver).toContain(
+      "currentPeriodEnd: string | null",
     );
 
     expect(brokerClient).toContain(
