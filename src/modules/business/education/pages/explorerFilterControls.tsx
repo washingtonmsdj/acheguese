@@ -68,6 +68,7 @@ interface SharedFilterProps {
   setFilters: React.Dispatch<React.SetStateAction<FilterState>>;
   niches: NicheOption[];
   districts: string[];
+  districtLocked?: boolean;
   nicheIcons: Record<string, React.ElementType>;
 }
 
@@ -81,6 +82,7 @@ export function FilterPanel({
   setFilters,
   niches,
   districts,
+  districtLocked = false,
   resultsCount,
   onClear,
   nicheIcons,
@@ -142,7 +144,7 @@ export function FilterPanel({
           })}
         </div>
       </div>
-      {districts.length > 0 && (
+      {!districtLocked && districts.length > 0 && (
         <>
           <Separator />
           <div>
@@ -216,14 +218,14 @@ function FilterPill({ active, onClear, icon: Icon, label, count, children }: { a
   );
 }
 
-export function FilterBar({ filters, setFilters, niches, districts, view, setView, resultsCount, onClear, nicheIcons }: FilterBarProps) {
+export function FilterBar({ filters, setFilters, niches, districts, districtLocked = false, view, setView, resultsCount, onClear, nicheIcons }: FilterBarProps) {
   const toggle = (key: ArrayFilterKey, value: string) => {
     setFilters((prev) => toggleFilterArray(prev, key, value));
   };
 
   const availableActive = filters.onlyAvailable;
   const advancedCount = availableActive ? 1 : 0;
-  const totalActive = filters.niches.length + filters.schoolNetworks.length + filters.institutionTypes.length + filters.infrastructure.length + (filters.district ? 1 : 0) + advancedCount + (filters.query ? 1 : 0);
+  const totalActive = filters.niches.length + filters.schoolNetworks.length + filters.institutionTypes.length + filters.infrastructure.length + (!districtLocked && filters.district ? 1 : 0) + advancedCount + (filters.query ? 1 : 0);
 
   return (
     <section className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-md">
@@ -234,13 +236,15 @@ export function FilterBar({ filters, setFilters, niches, districts, view, setVie
             <Input value={filters.query} onChange={(e) => setFilters((prev) => ({ ...prev, query: e.target.value }))} placeholder="Buscar curso, escola, professor..." className="h-10 rounded-xl pl-9 pr-9" />
             {filters.query && <button type="button" onClick={() => setFilters((prev) => ({ ...prev, query: '' }))} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="Limpar busca"><X className="h-3.5 w-3.5" /></button>}
           </div>
-          <FilterPill icon={MapPin} label="Bairro" active={Boolean(filters.district)} count={filters.district ? 1 : 0} onClear={() => setFilters((prev) => ({ ...prev, district: null }))}>
+          {!districtLocked && (
+            <FilterPill icon={MapPin} label="Bairro" active={Boolean(filters.district)} count={filters.district ? 1 : 0} onClear={() => setFilters((prev) => ({ ...prev, district: null }))}>
             <div className="space-y-1">
               <div className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Bairros disponíveis</div>
               <CheckOption active={!filters.district} label="Todos os bairros" onClick={() => setFilters((prev) => ({ ...prev, district: null }))} />
               <div className="max-h-64 overflow-y-auto">{districts.map((d) => <CheckOption key={d} active={filters.district === d} label={d.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} onClick={() => setFilters((prev) => ({ ...prev, district: prev.district === d ? null : d }))} />)}</div>
             </div>
-          </FilterPill>
+            </FilterPill>
+          )}
           <FilterPill icon={Building2} label="Rede" active={filters.schoolNetworks.length > 0} count={filters.schoolNetworks.length} onClear={() => setFilters((prev) => ({ ...prev, schoolNetworks: [] }))}>
             <div className="space-y-1"><div className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Rede administrativa</div>{SCHOOL_NETWORK_FILTERS.map((network) => <CheckOption key={network.key} active={filters.schoolNetworks.includes(network.key)} label={network.label} description={network.key === 'municipal' ? 'Unidades da prefeitura' : network.key === 'state' ? 'Unidades do estado' : network.key === 'federal' ? 'Unidades federais' : 'Instituições privadas'} onClick={() => toggle('schoolNetworks', network.key)} />)}</div>
           </FilterPill>
