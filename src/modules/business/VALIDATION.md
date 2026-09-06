@@ -1,7 +1,7 @@
 # Validacao atual — Modulo de Empresas
 
 **Data do checkpoint:** 2026-09-06  
-**Checkpoint tecnico:** `2ab7ada54f5141eb75f3ce10a3125c6c62ee412f`  
+**Checkpoint tecnico:** `05c7481754e667216d7a6f6ce0436dbc5af483c4`  
 **Status:** G6 EM CERTIFICACAO — NAO MVP CERTIFICADO
 
 Este arquivo registra o estado atual de Business durante G6. O ownership/SSOT de source foi fechado em G4 e os blockers historicos de G5 foram encerrados conforme `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`. O trabalho ativo agora e certificacao funcional e operacional do modulo.
@@ -461,6 +461,21 @@ Probe transacional adicional:
 
 Assim, uma futura materializacao nao podera confiar em endereco/geo normalizado que tenha
 sido alterado depois do adapter sem que o quality gate detecte a divergencia.
+
+
+Migration Git/remoto
+`20260906170644_bind_inep_landing_updated_at_manifest_g6.sql` eliminou outra
+dupla verdade de provenance: `source_page_updated_at` na coluna do batch deve ser
+exatamente igual a `source.landing_page_updated_at` no manifest (ou ambos nulos).
+
+Probe em `BEGIN/ROLLBACK`:
+
+- coluna 31/07/2026 vs manifest 01/08/2026 -> bloqueado pelo constraint;
+- coluna e manifest com o mesmo instante -> batch criado;
+- rollback -> nenhum batch persistido.
+
+O staging permanece, apos todos os probes deste lote, em **0 batches / 0 rows** e o
+catalogo em **15 Education profiles / 15 INEP unicos**.
 
 ACL apos a migration permaneceu inalterada: create/stage/validate somente
 `service_role`; planner read-only `SECURITY INVOKER` somente `service_role`.
