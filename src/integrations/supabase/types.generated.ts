@@ -1752,6 +1752,105 @@ export type Database = {
           },
         ]
       }
+      business_profile_reports: {
+        Row: {
+          admin_notes: string | null
+          business_id: string
+          created_at: string
+          description: string | null
+          id: string
+          reason: string
+          reporter_profile_id: string
+          reviewed_at: string | null
+          reviewed_by_profile_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          business_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          reason: string
+          reporter_profile_id: string
+          reviewed_at?: string | null
+          reviewed_by_profile_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          business_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          reason?: string
+          reporter_profile_id?: string
+          reviewed_at?: string | null
+          reviewed_by_profile_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_profile_reports_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_data"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_profile_reports_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "business_profile_reports_reporter_profile_id_fkey"
+            columns: ["reporter_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "business_profile_reports_reporter_profile_id_fkey"
+            columns: ["reporter_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_profile_reports_reporter_profile_id_fkey"
+            columns: ["reporter_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_profile_reports_reviewed_by_profile_id_fkey"
+            columns: ["reviewed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "business_profile_reports_reviewed_by_profile_id_fkey"
+            columns: ["reviewed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_profile_reports_reviewed_by_profile_id_fkey"
+            columns: ["reviewed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_services: {
         Row: {
           business_id: string
@@ -11583,6 +11682,7 @@ export type Database = {
           joined_at: string
           profile_id: string
           role: string
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -11592,6 +11692,7 @@ export type Database = {
           joined_at?: string
           profile_id: string
           role?: string
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -11601,6 +11702,7 @@ export type Database = {
           joined_at?: string
           profile_id?: string
           role?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -17693,6 +17795,32 @@ export type Database = {
         }
         Returns: string
       }
+      create_business_profile_report: {
+        Args: {
+          p_business_id: string
+          p_description?: string
+          p_reason: string
+        }
+        Returns: {
+          admin_notes: string | null
+          business_id: string
+          created_at: string
+          description: string | null
+          id: string
+          reason: string
+          reporter_profile_id: string
+          reviewed_at: string | null
+          reviewed_by_profile_id: string | null
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "business_profile_reports"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_classified_conversation: {
         Args: { p_classified_id: string }
         Returns: {
@@ -19367,6 +19495,20 @@ export type Database = {
           object_path: string
         }[]
       }
+      list_profile_access_members: {
+        Args: { p_profile_id: string }
+        Returns: {
+          display_name: string
+          email: string
+          id: string
+          is_active: boolean
+          joined_at: string
+          profile_id: string
+          role: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       list_trust_admin_actions_admin: {
         Args: {
           p_before_created_at?: string
@@ -19527,6 +19669,28 @@ export type Database = {
           p_success: boolean
         }
         Returns: undefined
+      }
+      moderate_business_profile_report: {
+        Args: { p_admin_notes?: string; p_report_id: string; p_status: string }
+        Returns: {
+          admin_notes: string | null
+          business_id: string
+          created_at: string
+          description: string | null
+          id: string
+          reason: string
+          reporter_profile_id: string
+          reviewed_at: string | null
+          reviewed_by_profile_id: string | null
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "business_profile_reports"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       moderate_classified_conversation: {
         Args: { p_action: string; p_conversation_id: string; p_reason?: string }
