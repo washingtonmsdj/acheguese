@@ -304,10 +304,12 @@ export function EmpresaHeroSection({
                         {ageChipLabel}
                       </span>
                     ) : null}
-                    <BusinessCoverageBadge
-                      businessId={business.id}
-                      className="hidden w-full sm:ml-auto sm:block sm:w-auto"
-                    />
+                    {business.business_data_id ? (
+                      <BusinessCoverageBadge
+                        businessDataId={business.business_data_id}
+                        className="hidden w-full sm:ml-auto sm:block sm:w-auto"
+                      />
+                    ) : null}
                   </div>
                 </div>
 
