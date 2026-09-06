@@ -1,0 +1,3 @@
+create index idx_business_profile_fact_provenance_verified_by_profile
+  on public.business_profile_fact_provenance(verified_by_profile_id)
+  where verified_by_profile_id is not null;
