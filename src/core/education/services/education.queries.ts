@@ -879,7 +879,7 @@ export interface TerritorialProfileParams {
 
 /**
  * Busca perfil de educacao por rota territorial
- * Resolve location -> business_data -> education_profiles
+ * Resolve location -> public_business_search -> education_profiles
  */
 export async function getEducationProfileByTerritory(
   params: TerritorialProfileParams,
