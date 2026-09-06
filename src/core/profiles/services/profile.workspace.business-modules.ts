@@ -3,7 +3,10 @@ import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import type { ProfileBusinessModuleSnapshot } from "./types";
 
 type BusinessWorkspaceInput = {
+  /** profiles.id usado por rotas e autoridade. */
   id: string;
+  /** business_data.id usado por extensoes. */
+  business_data_id: string;
   name?: string;
   category?: string | null;
   neighborhood?: string;
@@ -101,6 +104,7 @@ export async function buildBusinessModuleSnapshot(params: {
 
   return {
     businessId: business.id,
+    businessDataId: business.business_data_id,
     name: business.name || "Empresa",
     category: business.category,
     neighborhood: business.neighborhood,
