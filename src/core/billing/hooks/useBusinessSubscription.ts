@@ -1,72 +1,67 @@
 /**
- * useBusinessSubscription - Hook de assinatura de empresa.
+ * useBusinessSubscription - leitura operacional da assinatura de empresa.
  *
- * O hook orquestra cache/UI e delega leitura/gateway ao owner explicito
- * BusinessSubscriptionService.
+ * A tabela financeira user_subscriptions permanece owner-only. Este hook resolve
+ * plano/entitlements pelo EntitlementResolver, que usa o broker server-side para
+ * escopo Business e portanto pode ser consumido por Proprietario ou Gestor.
  */
-
 import { useQuery } from '@tanstack/react-query';
-import { BusinessSubscriptionService } from '../BusinessSubscriptionService';
+import { useAuth } from '@/core/auth/hooks/useAuth';
+import { EntitlementResolver } from '../services/EntitlementResolver';
 import { EntitlementsService } from '../entitlements';
-import { BillingPlanService } from '../services/BillingPlanService';
 import { PlanTier } from '../types';
 
-export function useBusinessSubscription(businessDataId: string | undefined) {
+function toPlanTier(value: string | null | undefined): PlanTier {
+  const normalized = value?.replace(/^base-/, '');
+  if (normalized === PlanTier.DELIVERY) return PlanTier.DELIVERY;
+  if (normalized === PlanTier.PRO) return PlanTier.PRO;
+  return PlanTier.FREE;
+}
+
+export function useBusinessSubscription(
+  businessDataId: string | undefined,
+) {
+  const { user } = useAuth();
   const {
     data: result,
     isLoading,
     error,
     refetch,
   } = useQuery({
-    queryKey: ['business-subscription', businessDataId],
+    queryKey: ['business-subscription-operational', businessDataId, user?.id],
     queryFn: async () => {
-      if (!businessDataId) throw new Error('business_data.id e obrigatorio');
-
-      const subscriptionResult = await BusinessSubscriptionService.getByBusinessId(businessDataId);
-      if (subscriptionResult.error) {
-        throw new Error(subscriptionResult.error);
+      if (!businessDataId) {
+        throw new Error('business_data.id e obrigatorio');
+      }
+      if (!user?.id) {
+        throw new Error('Usuario autenticado e obrigatorio');
       }
 
-      const subscription = subscriptionResult.data;
-      const planTier = subscription?.plan_tier || PlanTier.FREE;
-
-      let entitlements = EntitlementsService.getAll(planTier);
-
-      try {
-        const dynamicEntitlements = await BillingPlanService.getEntitlements(planTier);
-        if (dynamicEntitlements) {
-          entitlements = dynamicEntitlements;
-        }
-      } catch {
-        // Baseline local e apenas fallback de disponibilidade; o catalogo e a fonte dinamica.
-      }
+      const resolved = await EntitlementResolver.resolve({
+        user_id: user.id,
+        business_id: businessDataId,
+        subscription_scope: 'business',
+      });
+      const planTier = toPlanTier(resolved.planTier);
 
       return {
-        subscription: subscription || null,
         planTier,
-        entitlements,
+        entitlements: resolved,
+        isActive: resolved.isActive,
       };
     },
-    enabled: !!businessDataId,
+    enabled: Boolean(businessDataId && user?.id),
     staleTime: 1000 * 60 * 5,
   });
 
-  const subscription = result?.subscription || null;
-  const planTier = result?.planTier || PlanTier.FREE;
-  const entitlements = result?.entitlements || EntitlementsService.getAll(PlanTier.FREE);
-
-  const isActive = subscription?.status === 'active';
-  const isCanceled = subscription?.status === 'canceled';
-  const isPastDue = subscription?.status === 'past_due';
-  const isTrialing = subscription?.status === 'trialing';
-  const willCancelAtPeriodEnd = subscription?.cancel_at_period_end || false;
-
-  const isFree = planTier === PlanTier.FREE;
-  const isPro = planTier === PlanTier.PRO;
-  const isDelivery = planTier === PlanTier.DELIVERY;
+  const planTier = result?.planTier ?? PlanTier.FREE;
+  const entitlements =
+    result?.entitlements ?? EntitlementsService.getAll(PlanTier.FREE);
+  const isActive = result?.isActive ?? false;
 
   return {
-    subscription,
+    // Detalhes financeiros nao sao projetados por este hook operacional.
+    subscription: null,
     planTier,
     entitlements,
 
@@ -74,13 +69,13 @@ export function useBusinessSubscription(businessDataId: string | undefined) {
     error: error instanceof Error ? error.message : null,
 
     isActive,
-    isCanceled,
-    isPastDue,
-    isTrialing,
-    willCancelAtPeriodEnd,
-    isFree,
-    isPro,
-    isDelivery,
+    isCanceled: false,
+    isPastDue: false,
+    isTrialing: false,
+    willCancelAtPeriodEnd: false,
+    isFree: planTier === PlanTier.FREE,
+    isPro: planTier === PlanTier.PRO,
+    isDelivery: planTier === PlanTier.DELIVERY,
 
     refetch,
   };
