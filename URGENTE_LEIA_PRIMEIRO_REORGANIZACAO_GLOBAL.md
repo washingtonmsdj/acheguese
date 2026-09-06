@@ -9,7 +9,7 @@
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
 **Status:** EM EXECUÇÃO — G6 / Empresas-Educação fechou identidade Profile ID vs business_data.id, Billing delegado e claim institucional individual com transferência canônica; cobertura pública completa de Salvador e autoridade herdada de Prefeitura/Secretaria seguem abertas; provas hosted same-SHA continuam bloqueadas por runner pre-step  
-**Checkpoint técnico atual:** `4a7ad4d95cac1692c477540dfdadeb4beff74b5d`  
+**Checkpoint técnico atual:** `4b90fa64ff22cd12513982815df6415ab33f0dba`  
 **Checkpoint de transição G5 → G6:** `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
@@ -771,9 +771,27 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 - [ ] quality gate obrigatório para a carga municipal: INEP único, município/UF canônicos, rede/esfera, status ativo, fonte + data de checagem, endereço/CEP/geo somente quando sustentados, e nenhuma conversão de ausência de dado em false.
 - [x] provenance reutilizável por seção/fato criado no owner Business/Data Quality: `business_profile_fact_provenance` registra campo, valor JSON, fonte, data de observação, estado de verificação e vínculo opcional com correção. Migration `20260906104918_add_business_fact_provenance_g6.sql`; índice complementar `20260906105102_index_business_fact_provenance_verifier_g6.sql`. `school_source_url` ficou explicitamente como pointer legado/profile-level, não evidência de todos os campos.
 - [ ] substituir as referências secundárias remanescentes das escolas piloto por fontes oficiais quando houver endpoint/documento estável; hoje a maior parte do seed ainda não tem URL governamental como fonte primária.
-- [ ] para escala, evoluir o explorer para um read model público de Educação paginado/indexado por território, rede, INEP e infraestrutura, evitando carregar rotas amplas no cliente e depois resolver grandes listas de IDs.
+- [x] Explorer público evoluído para read model server-side paginado/filtrado antes do LIMIT, com `total_count`, busca/rede/tipo/infra/vagas no servidor, facetas de bairro e `fetchNextPage` real. Migrations `20260906130025` e `20260906133701`; grupo territorial reutiliza `useResolveTerritoryFromUrl` e envia somente membros ativos via `p_location_ids`, sem criar segunda autoridade territorial.
 - [ ] Saúde: não existe hoje catálogo nominal equivalente no banco. Próxima fundação deve usar CNES como identificador natural e baseline nacional, com SMS/SES como overlays operacionais, mantendo a mesma separação entre cobertura pública municipal e território de lançamento.
 - [x] ratchet `tests/architecture/public-education-directory-truthfulness.test.ts` cobre publicação != verificação, unknown != false, lead guard público, read model sanitizado e estacionamento canônico. Corte `b529e934a869210e9271e5eef29f42b76ef9e049`.
+
+
+#### 2026-09-06 — G6 Educação / read model escalável + grupo territorial
+
+- [x] o Explorer deixou de filtrar apenas as páginas já carregadas. `list_public_education_profiles` aplica território, busca, niche, rede, tipo, infraestrutura, vagas e sort no servidor antes de paginar, retornando `total_count` exato;
+- [x] `list_public_education_districts` passou a fornecer facetas de bairros independentes da página carregada;
+- [x] ambos os RPCs são `STABLE SECURITY INVOKER`, bounded, com `statement_timeout='3s'` e grants explícitos para `anon/authenticated`; nenhuma elevação de RLS foi criada;
+- [x] probe `anon`: Salvador 15 total, municipal 13, estadual 2, busca Sao Pedro 1, facetas 2/15;
+- [x] o hook público agora usa debounce e `fetchNextPage`; a UI ganhou **Carregar mais** e usa count server-side;
+- [x] `filterEnrichedProfiles` e filtros internos dormentes foram removidos; SQL é a única autoridade do conjunto de resultados;
+- [x] bug de grupo territorial corrigido: o param `:district` também pode representar grupo nas rotas de módulo, mas o Explorer tratava o slug cru como bairro. Agora reutiliza `resolved.group.members` ativos do resolver territorial e envia seus IDs ao read model;
+- [x] migration `20260906133701_scope_public_education_search_to_resolved_locations_g6.sql` adiciona `p_location_ids` aos dois RPCs, sempre mantendo `state/city` como envelope obrigatório; IDs fora da cidade não ampliam o escopo;
+- [x] probe do **Complexo do Nordeste de Amaralina**: 4 membros ativos; grupo 15/15; Nordeste de Amaralina 4/4; cidade errada com os mesmos UUIDs 0; facetas 2 bairros/15 escolas;
+- [x] rota fixa de bairro não exibe mais filtro Bairro removível que não poderia remover o escopo da URL;
+- [x] tipos Supabase regenerados e ratchet `tests/architecture/public-education-territorial-read-model-g6.test.ts` criado;
+- [x] pós-condição remota: somente as assinaturas novas existem, ambas `security_definer=false`, `anon_execute=true`, `authenticated_execute=true`; Advisor sem finding novo específico;
+- [ ] **próximo passo de dados**: implementar fundação de ingestão idempotente por INEP para cobertura pública municipal de Salvador. Não inserir massa nova até existir fonte oficial versionada/checável e quality gate de provenance;
+- [ ] cobertura municipal continua 15 escolas piloto; fechamento do read model não deve ser confundido com cobertura concluída.
 
 #### 2026-09-06 — G6 Educação / gestão delegada, confiança e benchmark de diretórios
 
