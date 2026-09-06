@@ -12,9 +12,11 @@ import { createInflateRaw } from 'node:zlib';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
-export const PARSER_VERSION = 'inep-censo-school-adapter/5';
+export const PARSER_VERSION = 'inep-censo-school-adapter/6';
 export const RAW_RECORD_HASH_CONTRACT =
   'acheguese.inep-raw-record-sha256/1';
+export const NORMALIZED_OUTPUT_CONTRACT =
+  'acheguese.public-education-inep-jsonl/1';
 
 export const REQUIRED_COLUMNS = Object.freeze([
   'NU_ANO_CENSO',
@@ -856,6 +858,7 @@ export async function preparePublicEducationInepImport(options) {
       aliases.find((alias) => headers.includes(alias)) ?? null,
     ]),
   );
+  const normalizedOutputSha256 = await sha256File(options.outputPath);
 
   const manifest = {
     contract: 'acheguese.public-education-inep-normalized/1',
@@ -897,6 +900,13 @@ export async function preparePublicEducationInepImport(options) {
       active_operation_rows: activeOperationRows,
       public_active_rows: publicActiveRows,
     },
+    normalized_output: {
+      contract: NORMALIZED_OUTPUT_CONTRACT,
+      file: basename(options.outputPath),
+      sha256: normalizedOutputSha256,
+      rows: targetRows,
+      raw_record_hash_contract: RAW_RECORD_HASH_CONTRACT,
+    },
     safety: {
       calls_supabase: false,
       publishes_records: false,
@@ -934,6 +944,7 @@ async function main() {
       manifest: options.manifestPath,
       archive_sha256: manifest.source.archive_sha256,
       extracted_file_sha256: manifest.source.extracted_file_sha256,
+      normalized_output_sha256: manifest.normalized_output.sha256,
       counts: manifest.counts,
     })}\n`,
   );
