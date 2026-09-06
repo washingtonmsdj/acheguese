@@ -6,24 +6,12 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { PAGINATION } from "@/shared/constants";
 import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
 import { AnalyticsService } from "@/core/analytics/AnalyticsService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 import type { ReviewStats } from "@/core/reviews/types";
 import { invokeSupabaseBrokerCommand } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 
-const businessAdminDb = supabase as unknown as AdminSupabaseClient;
-
-interface QueryError {
-  message?: string | null;
-}
-
-interface QueryArrayResult<TRow> {
-  data: TRow[] | null;
-  error: QueryError | null;
-  count?: number | null;
-}
 
 export interface CouponRecord {
   id: string;
