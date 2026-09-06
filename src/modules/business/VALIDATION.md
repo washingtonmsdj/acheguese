@@ -1,7 +1,7 @@
 # Validacao atual — Modulo de Empresas
 
 **Data do checkpoint:** 2026-09-06  
-**Checkpoint tecnico:** `4a7ad4d95cac1692c477540dfdadeb4beff74b5d`  
+**Checkpoint tecnico:** `4b90fa64ff22cd12513982815df6415ab33f0dba`  
 **Status:** G6 EM CERTIFICACAO — NAO MVP CERTIFICADO
 
 Este arquivo registra o estado atual de Business durante G6. O ownership/SSOT de source foi fechado em G4 e os blockers historicos de G5 foram encerrados conforme `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`. O trabalho ativo agora e certificacao funcional e operacional do modulo.
@@ -281,7 +281,102 @@ A fila Admin agora:
 
 A UI nao e a autoridade de seguranca. O banco revalida a mesma regra.
 
-### Banco / RLS / ownership
+#
+## G6 — Explorer Education server-side + grupo territorial — 2026-09-06
+
+O Explorer publico de Education deixou de depender de filtragem client-side sobre paginas
+parciais e passou a ter um read model publico paginado/filtrado antes do LIMIT.
+
+### Read model publico
+
+Migration `20260906130025_add_public_education_search_read_model_g6.sql` criou:
+
+- `public.list_public_education_profiles`;
+- `public.list_public_education_districts`.
+
+Ambos sao `STABLE SECURITY INVOKER`, com `statement_timeout='3s'`, validacao bounded de
+territorio/filtros/paginacao e EXECUTE apenas para `anon/authenticated` depois de revoke
+explicito de PUBLIC.
+
+O contrato aplica antes da paginacao:
+
+- cidade/bairro;
+- busca textual;
+- niche;
+- rede escolar;
+- tipo de unidade;
+- infraestrutura confirmada;
+- `enrollment_open=true`;
+- ordenacao;
+- `total_count` exato do conjunto filtrado.
+
+Probe real sob role `anon`:
+
+- pagina 1: 5 linhas, `total_count=15`;
+- municipal: 13/13;
+- estadual: 2/2;
+- busca `sao pedro`: 1/1, Escola Municipal Sao Pedro Nolasco;
+- facetas de Salvador: 2 bairros com instituicoes, somando as 15 escolas piloto.
+
+O frontend foi alinhado ao mesmo SSOT:
+
+- `education.queries.ts` chama os RPCs tipados;
+- `useEducationList` envia filtros ao servidor com debounce;
+- `EducationExplorerPage` usa `totalCount` server-side;
+- `fetchNextPage` ganhou CTA real **Carregar mais**;
+- `filterEnrichedProfiles` e estados de filtro dormentes foram removidos;
+- contagens de categoria deixaram de afirmar totais baseados apenas em paginas carregadas.
+
+### Grupo territorial
+
+O routing ja distinguia bairro de grupo por `useResolveTerritoryFromUrl`, mas o Explorer
+retornava cedo o param `:district`. Como o mesmo segmento aceita slug de grupo em rotas de
+modulo, `complexo-do-nordeste-de-amaralina` seria enviado ao read model como se fosse
+`/br/ba/salvador/complexo-do-nordeste-de-amaralina`.
+
+Migration `20260906133701_scope_public_education_search_to_resolved_locations_g6.sql`
+corrigiu o contrato sem duplicar a autoridade territorial:
+
+- os dois RPCs recebem `p_location_ids uuid[]` opcional;
+- a cidade continua sendo o envelope obrigatorio;
+- `location_ids` apenas restringe o conjunto dentro da cidade;
+- maximo de 250 IDs e NULL rejeitado;
+- as assinaturas antigas foram removidas, sem overload legado.
+
+O Explorer agora reutiliza o grupo **ja resolvido** pelo routing:
+
+- `resolved.group.members`;
+- apenas membros com `status='active'`;
+- grupo nao e convertido em district;
+- query fica fail-closed enquanto o escopo de rota nao estiver resolvido;
+- facetas de bairro recebem o mesmo `location_ids`;
+- rota fixa de bairro esconde o filtro removivel de Bairro, evitando estado visual falso.
+
+Grupo real usado no probe: **Complexo do Nordeste de Amaralina**:
+
+- 4 membros ativos: Chapada do Rio Vermelho, Nordeste de Amaralina, Santa Cruz e
+  Vale das Pedrinhas;
+- grupo completo: 15/15 escolas piloto;
+- somente Nordeste de Amaralina: 4/4;
+- mesmos UUIDs com cidade `sp/sao-paulo`: 0;
+- facetas dentro do grupo: 2 bairros que hoje possuem escolas, total 15.
+
+Pos-condicao remota:
+
+- existe apenas a assinatura nova de cada RPC;
+- ambos `security_definer=false`;
+- `anon_execute=true`;
+- `authenticated_execute=true`;
+- Security Advisor nao adicionou finding especifico desses RPCs.
+
+Ratchet:
+`tests/architecture/public-education-territorial-read-model-g6.test.ts`.
+
+Isso fecha o **read model escalavel e a semantica bairro/grupo**. Nao fecha a cobertura
+municipal: o banco continua com 15 escolas piloto. O proximo trabalho de dados deve ser
+ingestao idempotente por INEP com baseline oficial e provenance por fato.
+
+## Banco / RLS / ownership
 
 Tres migrations remotas e versionadas fecham o contrato:
 
