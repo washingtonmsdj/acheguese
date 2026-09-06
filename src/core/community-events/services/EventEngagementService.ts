@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase";
 import { ProfileSavedEntityService } from "@/core/engagement/services/ProfileSavedEntityService";
 import { EVENT_REVIEW_STATUS } from "@/core/community-events/config/eventOperationalPolicy";
+import { eventMutationService } from "@/core/community-events/services/EventMutationService";
 import { logger } from "@/shared/utils/logger";
 
 export const EVENT_REVIEW_LIMITS = {
@@ -155,17 +156,7 @@ export class EventEngagementService {
   }
 
   static async markReviewHelpful(reviewId: string, profileId: string): Promise<void> {
-    const { error } = await supabase
-      .from("event_review_helpfulness" as never)
-      .upsert({
-        review_id: reviewId,
-        profile_id: profileId,
-      } as never, { onConflict: "review_id,profile_id", ignoreDuplicates: true });
-
-    if (error) {
-      logger.error("EventEngagementService.markReviewHelpful", error);
-      throw new Error("Nao foi possivel registrar utilidade.");
-    }
+    await eventMutationService.markReviewHelpful(reviewId, profileId);
   }
 
   static async getReminderTimes(eventId: string, profileId: string): Promise<EventReminderTime[]> {

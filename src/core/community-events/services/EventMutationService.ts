@@ -13,7 +13,12 @@ import type {
   UpdateEventInput,
 } from "@/core/community-events/types";
 
-type EventRpcAction = "joinEvent" | "leaveEvent" | "checkInEvent" | "checkInEventByCode";
+type EventRpcAction =
+  | "joinEvent"
+  | "leaveEvent"
+  | "checkInEvent"
+  | "checkInEventByCode"
+  | "markReviewHelpful";
 
 interface EventJoinResult {
   joined: boolean;
@@ -34,6 +39,11 @@ interface EventCheckInResult {
   participantId: string;
   profileId: string;
   checkedInAt: string;
+}
+
+interface EventReviewHelpfulResult {
+  marked: boolean;
+  alreadyMarked: boolean;
 }
 
 const EVENT_RPC_FUNCTION_NAME = "event-rpc";
@@ -200,6 +210,18 @@ export class EventMutationService {
     } catch (error: unknown) {
       logger.error("EventMutationService.checkInEventByCode", error);
       throw new Error(`Erro ao validar check-in por codigo: ${getErrorMessage(error)}`);
+    }
+  }
+
+  async markReviewHelpful(reviewId: string, profileId: string): Promise<void> {
+    try {
+      await invokeEventRpc<EventReviewHelpfulResult>("markReviewHelpful", {
+        reviewId,
+        profileId,
+      });
+    } catch (error: unknown) {
+      logger.error("EventMutationService.markReviewHelpful", error);
+      throw new Error(`Erro ao registrar utilidade: ${getErrorMessage(error)}`);
     }
   }
 

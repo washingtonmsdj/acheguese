@@ -1,7 +1,7 @@
 /**
  * Edge Function: event-rpc
  *
- * Authenticated broker for atomic event participation and check-in mutations.
+ * Authenticated broker for server-owned event mutations.
  * Browser clients never execute the backing SECURITY DEFINER RPCs directly.
  */
 
@@ -27,6 +27,7 @@ const ACTIONS = {
   leaveEvent: true,
   checkInEvent: true,
   checkInEventByCode: true,
+  markReviewHelpful: true,
 } as const;
 
 type EventRpcAction = keyof typeof ACTIONS;
@@ -173,6 +174,24 @@ async function handleCheckInEventByCode(
   return data ?? { error: "internal_error" };
 }
 
+async function handleMarkReviewHelpful(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const reviewId = requireUuid(params.reviewId ?? params.review_id, "reviewId");
+  const profileId = requireUuid(params.profileId ?? params.profile_id, "profileId");
+
+  const { data, error } = await supabaseAdmin.rpc("mark_event_review_helpful", {
+    p_review_id: reviewId,
+    p_profile_id: profileId,
+    p_actor_user_id: auth.userId,
+  });
+
+  if (error) throw error;
+  return data ?? { marked: false, alreadyMarked: false };
+}
+
 async function dispatchAction(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
@@ -188,6 +207,8 @@ async function dispatchAction(
       return handleCheckInEvent(supabaseAdmin, auth, params);
     case "checkInEventByCode":
       return handleCheckInEventByCode(supabaseAdmin, auth, params);
+    case "markReviewHelpful":
+      return handleMarkReviewHelpful(supabaseAdmin, auth, params);
   }
 }
 

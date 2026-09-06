@@ -78,6 +78,9 @@ describe("community content rpc broker security", () => {
     expect(eventEdgeFunction).toContain(
       'supabaseAdmin.rpc("check_in_event_participation_by_code"',
     );
+    expect(eventEdgeFunction).toContain(
+      'supabaseAdmin.rpc("mark_event_review_helpful"',
+    );
     expect(eventEdgeFunction).toContain("p_actor_user_id: auth.userId");
     expect(eventEdgeFunction).toContain(
       "p_is_project_admin: auth.isProjectAdmin",
@@ -97,6 +100,7 @@ describe("community content rpc broker security", () => {
     expect(eventService).toContain('"leaveEvent"');
     expect(eventService).toContain('"checkInEvent"');
     expect(eventService).toContain('"checkInEventByCode"');
+    expect(eventService).toContain('"markReviewHelpful"');
     expect(eventService).not.toContain("CommunityRpcService");
 
     expect(alertService).not.toMatch(
@@ -225,4 +229,41 @@ describe("community content rpc broker security", () => {
     expect(migration).toContain("not_authorized_for_event_profile");
     expect(migration).toContain("not_authorized_for_event_checkin");
   });
+
+  it("hardens event review helpfulness while preserving deployed-client compatibility", () => {
+    const migration = readProjectFile(
+      "supabase/migrations/20260906060340_harden_event_review_helpfulness_g6.sql",
+    );
+    const engagement = readProjectFile(
+      "src/core/community-events/services/EventEngagementService.ts",
+    );
+    const eventService = readProjectFile(
+      "src/core/community-events/services/EventMutationService.ts",
+    );
+
+    expect(migration).toContain("event_review_self_helpful_not_allowed");
+    expect(migration).toContain("er.reviewer_profile_id <> event_review_helpfulness.profile_id");
+    expect(migration).toContain(
+      "REVOKE UPDATE, DELETE\n  ON TABLE public.event_review_helpfulness",
+    );
+    expect(migration).toContain(
+      "GRANT SELECT, INSERT\n  ON TABLE public.event_review_helpfulness",
+    );
+    expect(migration).toContain(
+      "REVOKE ALL ON FUNCTION public.mark_event_review_helpful(uuid, uuid, uuid)",
+    );
+    expect(migration).toContain("FROM PUBLIC, anon, authenticated");
+    expect(migration).toContain(
+      "GRANT EXECUTE ON FUNCTION public.mark_event_review_helpful(uuid, uuid, uuid)",
+    );
+    expect(migration).toContain("TO service_role");
+    expect(migration).not.toContain("auth.role()");
+
+    expect(engagement).toContain(
+      "eventMutationService.markReviewHelpful(reviewId, profileId)",
+    );
+    expect(engagement).not.toContain('.from("event_review_helpfulness"');
+    expect(eventService).toContain('"markReviewHelpful"');
+  });
+
 });
