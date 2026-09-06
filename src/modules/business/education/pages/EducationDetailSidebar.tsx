@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Building2, Calendar, Check, ChevronLeft, FileText, Flag, MessageCircle, Shield } from 'lucide-react';
+import { Building2, Calendar, Check, ChevronLeft, FileText, Flag, MessageCircle, PencilLine, Shield } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { EducationLeadForm, type LeadFormData } from '../components/EducationLeadForm';
 import type { EducationPublicProfile } from '@/core/education';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { useToast } from '@/shared/hooks/use-toast';
 import { BusinessClaimService } from '@/core/business/services/BusinessClaimService';
+import { BusinessProfileCorrectionDialog } from '@/core/business/components/BusinessProfileCorrectionDialog';
 import {
   BusinessProfileReportService,
   type BusinessProfileReportReason,
@@ -37,6 +38,7 @@ export function EducationDetailSidebar({
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimSubmitted, setClaimSubmitted] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [correctionOpen, setCorrectionOpen] = useState(false);
 
   const isPublicInstitution = profile.school_type === 'public';
   const isUnclaimedDirectoryProfile = profile.is_claimable;
@@ -83,6 +85,14 @@ export function EducationDetailSidebar({
       return;
     }
     setReportOpen(true);
+  };
+
+  const openCorrection = () => {
+    if (!user) {
+      navigate('/login', { state: { redirectTo: location.pathname } });
+      return;
+    }
+    setCorrectionOpen(true);
   };
 
   const submitReport = async (
@@ -259,15 +269,26 @@ export function EducationDetailSidebar({
         </div>
 
         {profile.business_data_id ? (
-          <Button
-            type="button"
-            variant="ghost"
-            className="w-full justify-center gap-2 text-muted-foreground"
-            onClick={openReport}
-          >
-            <Flag className="h-4 w-4" />
-            Denunciar este perfil
-          </Button>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full justify-center gap-2 text-muted-foreground"
+              onClick={openCorrection}
+            >
+              <PencilLine className="h-4 w-4" />
+              Sugerir correcao
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full justify-center gap-2 text-muted-foreground"
+              onClick={openReport}
+            >
+              <Flag className="h-4 w-4" />
+              Denunciar este perfil
+            </Button>
+          </div>
         ) : null}
 
         <Link
@@ -277,6 +298,14 @@ export function EducationDetailSidebar({
           <ChevronLeft className="mr-1 inline h-4 w-4" /> Voltar para vitrine
         </Link>
       </div>
+
+      {profile.business_data_id ? (
+        <BusinessProfileCorrectionDialog
+          businessId={profile.business_data_id}
+          open={correctionOpen}
+          onOpenChange={setCorrectionOpen}
+        />
+      ) : null}
 
       <ReportReasonDialog<BusinessProfileReportReason>
         open={reportOpen}
