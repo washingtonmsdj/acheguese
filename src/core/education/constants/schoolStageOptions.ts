@@ -23,14 +23,14 @@ const REGULAR_STAGE_OPTIONS: SchoolStageOption[] = [
   {
     value: 'eja-fund-iniciais',
     label: 'EJA - Ensino Fundamental (anos iniciais)',
-    educationLevel: 'middle_school',
+    educationLevel: 'youth_adult_education',
   },
   {
     value: 'eja-fund-finais',
     label: 'EJA - Ensino Fundamental (anos finais)',
-    educationLevel: 'middle_school',
+    educationLevel: 'youth_adult_education',
   },
-  { value: 'eja-ensino-medio', label: 'EJA - Ensino Medio', educationLevel: 'middle_school' },
+  { value: 'eja-ensino-medio', label: 'EJA - Ensino Medio', educationLevel: 'youth_adult_education' },
   { value: '1-serie-medio', label: '1ª serie do Ensino Medio', educationLevel: 'high_school' },
   { value: '2-serie-medio', label: '2ª serie do Ensino Medio', educationLevel: 'high_school' },
   { value: '3-serie-medio', label: '3ª serie do Ensino Medio', educationLevel: 'high_school' },
