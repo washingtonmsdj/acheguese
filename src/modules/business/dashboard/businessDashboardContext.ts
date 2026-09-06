@@ -20,3 +20,7 @@ export function useBusinessDashboardContext() {
   return useOutletContext<BusinessDashboardContextValue>();
 }
 
+export function useOptionalBusinessDashboardContext() {
+  return useOutletContext<BusinessDashboardContextValue | null>();
+}
+
