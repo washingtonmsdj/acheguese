@@ -1,7 +1,7 @@
 # Validacao atual — Modulo de Empresas
 
-**Data do checkpoint:** 2026-09-04  
-**Checkpoint tecnico:** `7d7775456d4ce3105d05e7d7a23d8ca10be32fc4`  
+**Data do checkpoint:** 2026-09-06  
+**Checkpoint tecnico:** `ff4fb0d9322a54d26bae3b5ea3e2ddf6a5460bda`  
 **Status:** G6 EM CERTIFICACAO — NAO MVP CERTIFICADO
 
 Este arquivo registra o estado atual de Business durante G6. O ownership/SSOT de source foi fechado em G4 e os blockers historicos de G5 foram encerrados conforme `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`. O trabalho ativo agora e certificacao funcional e operacional do modulo.
@@ -126,6 +126,34 @@ A ordem continua deliberadamente segura: primeiro `business_data.status=deleted`
 `profiles.is_active=false`. Se a segunda escrita falhar, repetir a operacao e idempotente e
 conclui a desativacao sem restaurar publicacao intermediaria.
 
+## G6 — gestao delegada, superfícies reais e cobertura
+
+Cortes adicionais de 2026-09-06 fecharam lacunas de produto que ainda pareciam prontas
+sem estarem operacionalmente completas:
+
+- Pessoas e acesso agora preserva falha de leitura e mostra retry, em vez de converter erro
+  de autorizacao/rede em "Nenhum membro adicionado";
+- transferencia estrutural de propriedade, ja existente no backend canonico, passou a ter
+  caminho de produto para o Proprietario, sem UUID manual e sem segunda autoridade;
+- Link premium deixou de ter CTAs cenograficos: preview abre o mini-site, QR usa
+  `QrImageGenerator` canonico e copiar link usa o clipboard central;
+- CTAs de "Editar dados" em Dados/Anuncios/Configuracoes convergem para
+  `businessManagementRoutes.edit()`; Anuncios nao envia mais o usuario para uma tela
+  somente leitura quando o territorio principal precisa ser corrigido;
+- o contrato de coverage foi desambiguado de ponta a ponta: `Business.id` continua sendo
+  o Profile ID para navegacao/gestao e `Business.business_data_id` e o unico
+  `service_areas.entity_id` valido para `entity_type='business'`;
+- editor e pagina publica usam `business_data.id` para coverage e falham de forma segura
+  quando esse identificador canonico nao estiver carregado;
+- Supabase remoto e source estao alinhados em
+  `20260906112658_allow_delegated_business_coverage_g6.sql`: mutacao de coverage exige
+  o perfil Business correspondente ativo e reutiliza `private.can_manage_profile`,
+  permitindo Proprietario ou Gestor ativo sem liberar Membro comum;
+- o banco tinha 0 linhas de coverage Business no momento da correcao, portanto nao houve
+  backfill ou transformacao de dado existente;
+- `tests/security/business-coverage-delegated-management-g6.test.ts` protege a identidade
+  `business_data.id` e a autoridade delegada no mesmo ratchet.
+
 ## Banco / RLS
 
 O checkpoint de G5 permanece a referencia para schema/RLS/grants/legados. Em particular:
@@ -144,8 +172,10 @@ Nesse SHA passaram lint/typecheck, hardcoded credentials, Maps Architecture, Pha
 Runtime Vitest, E2E fixture-backed, Account E2E autenticado e Regression Check.
 
 Nos SHAs G6 atuais, GitHub Actions continua encerrando jobs antes de qualquer step
-(`steps=null`), inclusive Authenticated Account E2E. Isso e blocker de infraestrutura/pre-step,
-nao evidencia falha de source.
+(`steps=null`), inclusive no checkpoint `ff4fb0d9322a54d26bae3b5ea3e2ddf6a5460bda`.
+Lint/typecheck, Runtime Vitest, Phase Core Gate, E2E fixture-backed e Account E2E falharam
+sem `steps`, portanto continuam como blocker de infraestrutura/pre-step e nao como evidencia
+de falha de source.
 
 Vercel fornece validacao independente de source/build:
 
