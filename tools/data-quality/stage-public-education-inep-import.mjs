@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import { createHash } from 'node:crypto';
 import { createReadStream, existsSync, promises as fs, readFileSync } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { basename, dirname, resolve } from 'node:path';
