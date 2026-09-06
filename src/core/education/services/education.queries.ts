@@ -194,6 +194,7 @@ export async function listPublishedEducationProfiles(
     state?: string;
     city?: string;
     district?: string;
+    locationIds?: string[];
   } = {},
 ): Promise<PaginatedEducationProfiles> {
   const {
@@ -209,6 +210,7 @@ export async function listPublishedEducationProfiles(
     state,
     city,
     district,
+    locationIds = [],
   } = options;
 
   if (!state || !city) {
@@ -230,6 +232,7 @@ export async function listPublishedEducationProfiles(
       p_sort: sort,
       p_page: page,
       p_page_size: pageSize,
+      p_location_ids: locationIds.length > 0 ? locationIds : undefined,
     },
   );
 
@@ -257,6 +260,7 @@ export interface EducationDistrictFacet {
 export async function listPublishedEducationDistricts(
   state?: string,
   city?: string,
+  locationIds: string[] = [],
 ): Promise<EducationDistrictFacet[]> {
   if (!state || !city) return [];
 
@@ -265,6 +269,7 @@ export async function listPublishedEducationDistricts(
     {
       p_state: state,
       p_city: city,
+      p_location_ids: locationIds.length > 0 ? locationIds : undefined,
     },
   );
 
