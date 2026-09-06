@@ -1,14 +1,20 @@
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Button } from "@/shared/components/ui/button";
+import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { useBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 
 export default function BusinessDetailsPage() {
-  const { business } = useBusinessDashboardContext();
+  const { businessId, business } = useBusinessDashboardContext();
 
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between gap-3">
           <CardTitle>Dados da empresa</CardTitle>
+          <Link to={businessManagementRoutes.edit(businessId)}>
+            <Button size="sm">Editar dados</Button>
+          </Link>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <Field label="Nome" value={business.name} />
