@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
+  NORMALIZED_OUTPUT_CONTRACT,
   PARSER_VERSION,
   RAW_RECORD_HASH_CONTRACT,
   sha256RawRecord,
@@ -47,6 +48,13 @@ function manifestFixture() {
       private_dependency_rows: 0,
       active_operation_rows: 2,
       public_active_rows: 2,
+    },
+    normalized_output: {
+      contract: NORMALIZED_OUTPUT_CONTRACT,
+      file: "salvador.jsonl",
+      sha256: "c".repeat(64),
+      rows: 2,
+      raw_record_hash_contract: RAW_RECORD_HASH_CONTRACT,
     },
     safety: {
       calls_supabase: false,
@@ -128,6 +136,9 @@ describe("public Education INEP staging CLI", () => {
 
     expect(summary.targetRows).toBe(2);
     expect(summary.municipalityIbge).toBe("2927408");
+    expect(summary.normalizedOutput.contract).toBe(
+      "acheguese.public-education-inep-jsonl/1",
+    );
 
     expect(() =>
       validateInepImportManifest({
@@ -180,6 +191,30 @@ describe("public Education INEP staging CLI", () => {
         summary,
       ),
     ).toThrow(/does not match raw_record/);
+  });
+
+  it("requires the manifest to bind the normalized JSONL artifact", () => {
+    const manifest = manifestFixture();
+
+    expect(() =>
+      validateInepImportManifest({
+        ...manifest,
+        normalized_output: {
+          ...manifest.normalized_output,
+          contract: "legacy-jsonl-contract",
+        },
+      }),
+    ).toThrow(/normalized output contract mismatch/);
+
+    expect(() =>
+      validateInepImportManifest({
+        ...manifest,
+        normalized_output: {
+          ...manifest.normalized_output,
+          rows: 3,
+        },
+      }),
+    ).toThrow(/normalized output row count mismatch/);
   });
 
   it("contains no canonical Profile/Business/Education materialization", () => {
