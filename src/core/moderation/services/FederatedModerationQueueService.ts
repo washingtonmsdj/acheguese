@@ -12,6 +12,7 @@ export const FEDERATED_MODERATION_DOMAINS = [
   "community_direct",
   "community_alert",
   "community_issue",
+  "business_profile",
 ] as const;
 
 export const FEDERATED_MODERATION_STATES = [
