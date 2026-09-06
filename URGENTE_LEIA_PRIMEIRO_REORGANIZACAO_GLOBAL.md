@@ -9,7 +9,7 @@
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
 **Status:** EM EXECUÇÃO — G6 / Empresas-Educação fechou identidade Profile ID vs business_data.id, Billing delegado e claim institucional individual com transferência canônica; cobertura pública completa de Salvador e autoridade herdada de Prefeitura/Secretaria seguem abertas; provas hosted same-SHA continuam bloqueadas por runner pre-step  
-**Checkpoint técnico atual:** `05c7481754e667216d7a6f6ce0436dbc5af483c4`  
+**Checkpoint técnico atual:** `03457878002ed9f04017e96e162fc7abdb666cbc`  
 **Checkpoint de transição G5 → G6:** `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
@@ -798,7 +798,7 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 
 - [x] página oficial do Inep confirmada como autoridade do **Censo Escolar 2025**, atualizado em julho/2026; o host do ZIP oficial não ficou acessível neste ambiente, portanto o artefato real ainda não foi declarado inspecionado;
 - [x] referência pública secundária de 2025 confirmou a presença de `Tabela_Escola_2025.csv` e os campos de identidade usados pelo contrato; serve somente como validação de layout, nunca como fonte substituta;
-- [x] `tools/data-quality/prepare-public-education-inep-import.mjs` criado e endurecido em `inep-censo-school-adapter/4`: streaming, sem Supabase, preserva `raw_record`, gera SHA-256 por registro, manifest de provenance e filtra Salvador por IBGE;
+- [x] `tools/data-quality/prepare-public-education-inep-import.mjs` criado e endurecido em `inep-censo-school-adapter/5`: streaming, sem Supabase, preserva `raw_record`, gera SHA-256 por registro, manifest de provenance e filtra Salvador por IBGE;
 - [x] provenance do artefato endurecida: o adapter agora abre o diretório central do ZIP com APIs nativas do Node, localiza unicamente a entrada pelo basename, calcula SHA-256 do conteúdo **descompactado dentro do ZIP** e exige igualdade com o CSV fornecido; STORE/DEFLATE suportados, ZIP criptografado/multi-disk/ZIP64/compressão desconhecida falham fechado;
 - [x] manifest v1 ganhou `source.archive_entry`, `archive_entry_sha256`, `extracted_file_sha256` e `safety.archive_binding_verified=true`; isso fecha o vetor `ZIP oficial + CSV arbitrário` sem adicionar dependência ou writer;
 - [x] o adaptador exige `NU_ANO_CENSO`, `CO_ENTIDADE`, `NO_ENTIDADE`, `TP_SITUACAO_FUNCIONAMENTO`, `CO_UF`, `CO_MUNICIPIO` e `TP_DEPENDENCIA`, suporta aliases de endereço/CEP/latitude/longitude e falha fechado se o header não corresponder;
@@ -815,6 +815,10 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 - [x] probe do optional binding: linha íntegra -> `valid`; endereço normalizado adulterado com raw intacto -> `invalid:raw_address_street_mismatch`; batch `rejected`; catálogo público **15 -> 15**; rollback -> 0 staging;
 - [x] migration Git/remoto `20260906170644_bind_inep_landing_updated_at_manifest_g6.sql` elimina dupla verdade do timestamp da fonte: `source_page_updated_at` da coluna deve ser igual a `source.landing_page_updated_at` do manifest (ou ambos nulos);
 - [x] probe do timestamp: valor divergente -> bloqueado pelo constraint; valor idêntico -> batch criado; rollback -> **0 batches / 0 staging rows**;
+- [x] parser elevado para `inep-censo-school-adapter/5`; `source_record_sha256` deixou de depender da ordem de propriedades do JSON e passou ao contrato canônico `acheguese.inep-raw-record-sha256/1` com ordenação por bytes UTF-8 + comprimentos prefixados;
+- [x] migration Git/remoto `20260906174652_bind_inep_raw_record_sha256_g6.sql`: helper privado `education_inep_raw_record_sha256` recomputa o SHA com `extensions.digest`; batch sem `record_hash_contract` é bloqueado; hash ausente/inválido, raw com valor não-string ou hash divergente tornam a linha inválida;
+- [x] prova cruzada Node/Postgres: mesmo raw com acento -> `c9b1bc9dd92e69f88de13aae92d8635776aeae8424505424b142e7915c6f79aa`; linha correta -> `valid`; hash adulterado -> `invalid:raw_record_sha256_mismatch`; batch -> `rejected`; catálogo continua 15; rollback -> 0 staging;
+- [x] ACL do helper: `SECURITY INVOKER`, `anon=false`, `authenticated=false`, `service_role=true`; Advisor sem finding específico;
 - [x] pós-condição persistente: **0 batches**, **0 rows de staging**, **15 education_profiles**, **15 INEP únicos**, **0 materializers**; Advisor com 0 finding específico;
 - [x] ratchets `tests/scripts/public-education-inep-adapter.test.ts` e `tests/security/public-education-inep-import-staging-g6.test.ts` protegem parser, provenance, ACL, idempotência e ausência de segunda autoridade;
 - [ ] **próximo passo obrigatório:** obter/inspecionar o ZIP oficial, provar o header real de `Tabela_Escola_2025.csv`, executar o adapter sobre o artefato oficial e criar o primeiro batch real de Salvador. O link oficial está publicado pelo Inep e marcado como atualizado em julho/2026, porém `download.inep.gov.br` respondeu 502 no browser e falhou por resolução no runtime deste checkpoint; **não usar espelho como substituto**;
@@ -823,7 +827,7 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 - [x] planner protege provenance curada e fatos observados/atualizados após o ano-base do Censo. Probe com o Colégio Carlos Sant'Anna preservou o endereço oficial 2026 como blocker de overwrite e exigiu revisão;
 - [x] planner é `STABLE SECURITY INVOKER`, `search_path=''`, anon/authenticated sem EXECUTE, service_role com EXECUTE; Advisor sem finding específico;
 - [x] teste direcionado `npm run test:education:inep-import` agregado para adapter + staging/source binding + planner;
-- [x] ratchet do adapter atualizado para parser /4 e ZIP sintético real, incluindo caso negativo CSV adulterado; **não classificar como Vitest executado** enquanto o runner hosted continuar morrendo antes dos steps;
+- [x] ratchet do adapter atualizado para parser /5 e ZIP sintético real, incluindo caso negativo CSV adulterado; **não classificar como Vitest executado** enquanto o runner hosted continuar morrendo antes dos steps;
 - [ ] somente após o **batch oficial real + revisão do planner** desenhar a materialização, reutilizando a autoridade canônica Profile/Business + `business_profile_fact_provenance`; não criar importador que grave diretamente um segundo agregado.
 
 #### 2026-09-06 — G6 Educação / gestão delegada, confiança e benchmark de diretórios
