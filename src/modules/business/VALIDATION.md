@@ -1,7 +1,7 @@
 # Validacao atual — Modulo de Empresas
 
 **Data do checkpoint:** 2026-09-06  
-**Checkpoint tecnico:** `4b90fa64ff22cd12513982815df6415ab33f0dba`  
+**Checkpoint tecnico:** `d4db71f080b8a719b56ed60e60f95030db6bfb31`  
 **Status:** G6 EM CERTIFICACAO — NAO MVP CERTIFICADO
 
 Este arquivo registra o estado atual de Business durante G6. O ownership/SSOT de source foi fechado em G4 e os blockers historicos de G5 foram encerrados conforme `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`. O trabalho ativo agora e certificacao funcional e operacional do modulo.
@@ -375,6 +375,104 @@ Ratchet:
 Isso fecha o **read model escalavel e a semantica bairro/grupo**. Nao fecha a cobertura
 municipal: o banco continua com 15 escolas piloto. O proximo trabalho de dados deve ser
 ingestao idempotente por INEP com baseline oficial e provenance por fato.
+
+
+## G6 — fundacao de ingestao municipal Education / INEP — 2026-09-06
+
+A fundacao de ingestao para ampliar o diretorio publico de Salvador foi criada sem transformar
+o importador em uma segunda autoridade de Profile/Business.
+
+### Fonte e adaptador
+
+A pagina oficial do Inep confirma o pacote **Microdados do Censo Escolar da Educacao Basica
+2025**, atualizado em julho/2026. O host do ZIP oficial permaneceu indisponivel para este
+ambiente durante este checkpoint; portanto o artefato binario real ainda nao foi tratado como
+inspecionado.
+
+O adaptador
+`tools/data-quality/prepare-public-education-inep-import.mjs` esta em
+`inep-censo-school-adapter/2` e e deliberadamente offline em relacao ao Supabase:
+
+- streaming, sem carregar o Censo inteiro em memoria;
+- exige o header escolar com `NU_ANO_CENSO`, `CO_ENTIDADE`, `NO_ENTIDADE`,
+  `TP_SITUACAO_FUNCIONAMENTO`, `CO_UF`, `CO_MUNICIPIO` e `TP_DEPENDENCIA`;
+- filtra somente pelo municipio IBGE alvo, preservando o registro bruto;
+- gera SHA-256 por registro e manifest de provenance;
+- registra arquivo como `file_role=school_table`;
+- separa contagens publicas/privadas e ativas/inativas sem descartar linhas antes do
+  quality gate;
+- nao possui cliente Supabase, credencial ou comando de publicacao.
+
+Uma referencia publica secundaria do ecossistema 2025 confirma que o ZIP usa
+`Tabela_Escola_2025.csv` e que os aliases de identidade/municipio/dependencia/situacao
+esperados pelo adaptador sao usados por pipelines reais. Isso e somente validacao de layout;
+a fonte oficial continua sendo a autoridade.
+
+Ratchet:
+`tests/scripts/public-education-inep-adapter.test.ts`.
+
+### Staging privada e natural key
+
+Migration `20260906135247_add_public_education_inep_import_staging_g6.sql`:
+
+- promove `education_profiles.school_inep_code` nao nulo a UNIQUE parcial;
+- cria `private.education_public_import_batches`;
+- cria `private.education_public_import_rows`;
+- preserva `raw_record`;
+- aceita somente staging/validacao por `service_role`;
+- classifica linha validada como `insert`, `update`, `excluded` ou `invalid`;
+- exclui da expansao automatica dependencia privada e escola fora de funcionamento;
+- valida INEP, municipio/UF, CEP, coordenadas e conflitos com o SSOT existente;
+- nao cria materializer nem grava Profile/Business/Education.
+
+Migration `20260906162157_harden_public_education_import_identity_g6.sql` tornou a
+idempotencia dependente de:
+
+`source_family + source_year + archive_sha256 + source_file_name + target_city_id + parser_version`.
+
+Assim o mesmo arquivo com o mesmo parser converge para o mesmo batch, mas um parser corrigido
+ou outro arquivo do mesmo ZIP pode ser processado em batch novo. As tres funcoes privadas
+`SECURITY DEFINER` usam `search_path=''`; `anon/authenticated` nao possuem EXECUTE e
+`service_role` possui.
+
+Migration `20260906162828_bind_public_education_staging_source_contract_g6.sql` fecha a
+cadeia de provenance antes de qualquer materializacao:
+
+- manifest deve bater com contrato, parser, URL oficial, SHA, ano, arquivo, municipio/UF e
+  flags de seguranca;
+- `raw_record` deve bater com os campos normalizados de ano, INEP, nome, UF, municipio,
+  dependencia e situacao;
+- manifest adulterado falha fechado;
+- divergencia raw -> normalizado torna o batch `rejected`.
+
+Probe transacional anterior a aplicacao: 4/4 invariantes PASS, incluindo manifest adulterado
+bloqueado e INEP raw divergente rejeitado.
+
+Pos-condicao aplicada:
+
+- batches persistidos: **0**;
+- rows de staging persistidas: **0**;
+- Education profiles: **15**;
+- profiles com INEP: **15**;
+- INEP distintos: **15**;
+- materializers de Education import: **0**;
+- ACL das tres funcoes: anon=false, authenticated=false, service_role=true;
+- Security Advisor: 0 findings especificos deste pipeline.
+
+Ratchet:
+`tests/security/public-education-inep-import-staging-g6.test.ts`.
+
+### Gate restante
+
+A fundacao esta pronta, mas **cobertura municipal ainda nao foi importada**. O proximo gate e
+obter e inspecionar o ZIP oficial 2025, provar o header real de
+`Tabela_Escola_2025.csv`, executar o adaptador sobre o artefato oficial, criar o primeiro
+batch real e revisar as diferencas contra as 15 escolas piloto.
+
+A futura materializacao tambem deve arbitrar frescor por fato: dados do Censo 2025 nao podem
+sobrescrever cegamente overlays oficiais de 2026 ja verificados. Quando for aberta, ela deve
+reutilizar a autoridade canonica de Profile/Business e
+`business_profile_fact_provenance`, nunca um segundo mecanismo de criacao.
 
 ## Banco / RLS / ownership
 
