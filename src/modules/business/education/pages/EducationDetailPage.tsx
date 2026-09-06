@@ -110,8 +110,19 @@ export function EducationDetailPage() {
           : profile?.school_network === 'private'
             ? 'Privada'
             : null;
+  const schoolManagementLabel =
+    profile?.school_network === 'municipal'
+      ? 'Prefeitura'
+      : profile?.school_network === 'state'
+        ? 'Governo estadual'
+        : profile?.school_network === 'federal'
+          ? 'Governo federal'
+          : profile?.school_network === 'private'
+            ? 'Privada'
+            : null;
   const stats = [
     schoolNetworkLabel ? { label: 'Rede', value: schoolNetworkLabel } : null,
+    schoolManagementLabel ? { label: 'Gestão', value: schoolManagementLabel } : null,
     profile?.school_inep_code ? { label: 'INEP', value: profile.school_inep_code } : null,
     profile?.enrollment_open === true ? { label: 'Matrículas', value: 'Abertas' } : null,
     (profile?.education_levels ?? []).length > 0
