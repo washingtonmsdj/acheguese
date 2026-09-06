@@ -5,7 +5,8 @@
  */
 
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useBusinessDashboardContext } from '@/modules/business/dashboard/businessDashboardContext';
 import { useBusinessSubscription } from '@/core/billing';
 import { useMenuCategories, useMenuItems, useGastronomyMenuId, useGastronomyProfile } from '@/modules/business/gastronomy/hooks';
 import { CategoryList, CategoryForm, ItemCard, ItemForm } from '../components/menu';
@@ -29,13 +30,14 @@ import type { MenuCategory, MenuItem } from '@/core/business/services/MenuServic
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
 export default function MenuManagementPage() {
-  const { businessId } = useParams<{ businessId: string }>();
+  const { businessId, businessDataId } = useBusinessDashboardContext();
   const navigate = useNavigate();
-  const { entitlements, isLoading: loadingSubscription } = useBusinessSubscription(businessId!);
+  const { entitlements, isLoading: loadingSubscription } =
+    useBusinessSubscription(businessDataId);
   const { user } = useSessionContext();
 
-  const { menuId, isLoading: loadingMenuId } = useGastronomyMenuId(businessId);
-  const { data: gastronomyProfile } = useGastronomyProfile(businessId);
+  const { menuId, isLoading: loadingMenuId } = useGastronomyMenuId(businessDataId);
+  const { data: gastronomyProfile } = useGastronomyProfile(businessDataId);
 
   const [categoryFormOpen, setCategoryFormOpen] = useState(false);
   const [itemFormOpen, setItemFormOpen] = useState(false);
@@ -354,9 +356,9 @@ export default function MenuManagementPage() {
           </TabsContent>
         )}
 
-        {isPizzaria && businessId && user && (
+        {isPizzaria && businessDataId && user && (
           <TabsContent value="pizzaria">
-            <PizzaAdminPanel businessId={businessId} userId={user.id} />
+            <PizzaAdminPanel businessId={businessDataId} userId={user.id} />
           </TabsContent>
         )}
       </Tabs>
