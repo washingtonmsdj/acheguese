@@ -23,8 +23,11 @@ import {
 
 const ALLOWED_METHODS = "POST, OPTIONS";
 const SAFE_KEY_REGEX = /^[A-Za-z0-9_.:-]{1,120}$/;
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const ACTIONS = {
   getActiveSubscription: true,
+  getBusinessSubscriptionSnapshot: true,
   hasPlan: true,
   hasFeature: true,
   getEntitlementLimit: true,
@@ -47,6 +50,13 @@ class RequestValidationError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "RequestValidationError";
+  }
+}
+
+class RequestAuthorizationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "RequestAuthorizationError";
   }
 }
 
@@ -87,6 +97,67 @@ async function handleGetActiveSubscription(supabaseAdmin: SupabaseClient, userId
 
   const subscription = Array.isArray(data) ? data[0] ?? null : data ?? null;
   return { subscription };
+}
+
+async function handleGetBusinessSubscriptionSnapshot(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+  params: Record<string, unknown>,
+) {
+  const rawBusinessDataId = params.businessDataId ?? params.business_data_id;
+  if (
+    typeof rawBusinessDataId !== "string" ||
+    !UUID_REGEX.test(rawBusinessDataId)
+  ) {
+    throw new RequestValidationError("Invalid businessDataId");
+  }
+
+  const { data: business, error: businessError } = await supabaseAdmin
+    .from("business_data")
+    .select("id, profile_id")
+    .eq("id", rawBusinessDataId)
+    .maybeSingle();
+
+  if (businessError) throw businessError;
+  if (!business?.profile_id) {
+    throw new RequestAuthorizationError("Business not found or access denied");
+  }
+
+  const { data: canManage, error: accessError } = await supabaseAdmin.rpc(
+    "broker_user_can_manage_profile",
+    {
+      p_user_id: userId,
+      p_profile_id: business.profile_id,
+    },
+  );
+
+  if (accessError) throw accessError;
+  if (canManage !== true) {
+    throw new RequestAuthorizationError("Business not found or access denied");
+  }
+
+  const { data: subscription, error: subscriptionError } = await supabaseAdmin
+    .from("user_subscriptions")
+    .select("plan_code, status_v2, subscription_scope, contract_snapshot")
+    .eq("business_id", rawBusinessDataId)
+    .eq("subscription_scope", "business")
+    .in("status_v2", ["active", "trialing"])
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (subscriptionError) throw subscriptionError;
+
+  return {
+    subscription: subscription
+      ? {
+          plan_code: subscription.plan_code,
+          status_v2: subscription.status_v2,
+          subscription_scope: "business",
+          contract_snapshot: subscription.contract_snapshot ?? null,
+        }
+      : null,
+  };
 }
 
 async function handleHasPlan(
@@ -143,6 +214,12 @@ async function dispatchAction(
   switch (action) {
     case "getActiveSubscription":
       return handleGetActiveSubscription(supabaseAdmin, userId);
+    case "getBusinessSubscriptionSnapshot":
+      return handleGetBusinessSubscriptionSnapshot(
+        supabaseAdmin,
+        userId,
+        params,
+      );
     case "hasPlan":
       return handleHasPlan(supabaseAdmin, userId, params);
     case "hasFeature":
@@ -213,6 +290,9 @@ serve(async (req: Request) => {
   } catch (error: unknown) {
     if (error instanceof RequestValidationError) {
       return jsonResponse({ error: error.message }, 400, ALLOWED_METHODS, req);
+    }
+    if (error instanceof RequestAuthorizationError) {
+      return jsonResponse({ error: error.message }, 403, ALLOWED_METHODS, req);
     }
 
     console.error("[billing-entitlements-rpc]", error);
