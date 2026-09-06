@@ -67,6 +67,7 @@ export function mapBusinessRecords(
 ): ProfileAssociatedBusiness[] {
   return records.map((business) => ({
     id: business.profile_id,
+    business_data_id: business.id,
     name: business.business_name,
     logo: business.metadata?.logo_url || business.logo || "",
     category: business.category,
