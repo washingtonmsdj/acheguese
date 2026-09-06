@@ -1752,6 +1752,111 @@ export type Database = {
           },
         ]
       }
+      business_profile_corrections: {
+        Row: {
+          admin_notes: string | null
+          business_id: string
+          created_at: string
+          explanation: string | null
+          field_code: string
+          id: string
+          proposed_value: string
+          reporter_profile_id: string
+          reviewed_at: string | null
+          reviewed_by_profile_id: string | null
+          source_url: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          business_id: string
+          created_at?: string
+          explanation?: string | null
+          field_code: string
+          id?: string
+          proposed_value: string
+          reporter_profile_id: string
+          reviewed_at?: string | null
+          reviewed_by_profile_id?: string | null
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          business_id?: string
+          created_at?: string
+          explanation?: string | null
+          field_code?: string
+          id?: string
+          proposed_value?: string
+          reporter_profile_id?: string
+          reviewed_at?: string | null
+          reviewed_by_profile_id?: string | null
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_profile_corrections_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_data"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_profile_corrections_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "business_profile_corrections_reporter_profile_id_fkey"
+            columns: ["reporter_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "business_profile_corrections_reporter_profile_id_fkey"
+            columns: ["reporter_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_profile_corrections_reporter_profile_id_fkey"
+            columns: ["reporter_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_profile_corrections_reviewed_by_profile_id_fkey"
+            columns: ["reviewed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "business_profile_corrections_reviewed_by_profile_id_fkey"
+            columns: ["reviewed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_profile_corrections_reviewed_by_profile_id_fkey"
+            columns: ["reviewed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_profile_reports: {
         Row: {
           admin_notes: string | null
@@ -2029,157 +2134,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "user_companies"
             referencedColumns: ["company_id"]
-          },
-        ]
-      }
-      businesses: {
-        Row: {
-          aceita_cartao: boolean | null
-          aceita_pix: boolean | null
-          address: string | null
-          banner_url: string | null
-          category: string
-          cep: string | null
-          created_at: string
-          description: string | null
-          email: string | null
-          especialidades: string[] | null
-          facebook: string | null
-          facilidades: string[] | null
-          formas_pagamento: string[] | null
-          fotos: string[] | null
-          horario_funcionamento: Json | null
-          id: string
-          instagram: string | null
-          is_premium: boolean | null
-          is_verified: boolean | null
-          latitude: number | null
-          location_id: string | null
-          logo_url: string | null
-          longitude: number | null
-          modos_atendimento: string[] | null
-          name: string
-          neighborhood: string | null
-          phone: string | null
-          point: unknown
-          profile_id: string
-          rating: number | null
-          slug: string | null
-          status: string
-          subcategoria: string | null
-          tem_delivery: boolean | null
-          total_products: number | null
-          total_reviews: number | null
-          updated_at: string
-          verificado: boolean | null
-          website: string | null
-          whatsapp: string | null
-        }
-        Insert: {
-          aceita_cartao?: boolean | null
-          aceita_pix?: boolean | null
-          address?: string | null
-          banner_url?: string | null
-          category: string
-          cep?: string | null
-          created_at?: string
-          description?: string | null
-          email?: string | null
-          especialidades?: string[] | null
-          facebook?: string | null
-          facilidades?: string[] | null
-          formas_pagamento?: string[] | null
-          fotos?: string[] | null
-          horario_funcionamento?: Json | null
-          id?: string
-          instagram?: string | null
-          is_premium?: boolean | null
-          is_verified?: boolean | null
-          latitude?: number | null
-          location_id?: string | null
-          logo_url?: string | null
-          longitude?: number | null
-          modos_atendimento?: string[] | null
-          name: string
-          neighborhood?: string | null
-          phone?: string | null
-          point?: unknown
-          profile_id: string
-          rating?: number | null
-          slug?: string | null
-          status?: string
-          subcategoria?: string | null
-          tem_delivery?: boolean | null
-          total_products?: number | null
-          total_reviews?: number | null
-          updated_at?: string
-          verificado?: boolean | null
-          website?: string | null
-          whatsapp?: string | null
-        }
-        Update: {
-          aceita_cartao?: boolean | null
-          aceita_pix?: boolean | null
-          address?: string | null
-          banner_url?: string | null
-          category?: string
-          cep?: string | null
-          created_at?: string
-          description?: string | null
-          email?: string | null
-          especialidades?: string[] | null
-          facebook?: string | null
-          facilidades?: string[] | null
-          formas_pagamento?: string[] | null
-          fotos?: string[] | null
-          horario_funcionamento?: Json | null
-          id?: string
-          instagram?: string | null
-          is_premium?: boolean | null
-          is_verified?: boolean | null
-          latitude?: number | null
-          location_id?: string | null
-          logo_url?: string | null
-          longitude?: number | null
-          modos_atendimento?: string[] | null
-          name?: string
-          neighborhood?: string | null
-          phone?: string | null
-          point?: unknown
-          profile_id?: string
-          rating?: number | null
-          slug?: string | null
-          status?: string
-          subcategoria?: string | null
-          tem_delivery?: boolean | null
-          total_products?: number | null
-          total_reviews?: number | null
-          updated_at?: string
-          verificado?: boolean | null
-          website?: string | null
-          whatsapp?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "businesses_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "personal_social_profiles"
-            referencedColumns: ["profile_id"]
-          },
-          {
-            foreignKeyName: "businesses_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "businesses_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
           },
         ]
       }
@@ -6227,7 +6181,7 @@ export type Database = {
       }
       education_analytics_events: {
         Row: {
-          business_id: string | null
+          business_data_id: string | null
           created_at: string
           education_event_id: string | null
           education_profile_id: string
@@ -6241,7 +6195,7 @@ export type Database = {
           source_page: string | null
         }
         Insert: {
-          business_id?: string | null
+          business_data_id?: string | null
           created_at?: string
           education_event_id?: string | null
           education_profile_id: string
@@ -6255,7 +6209,7 @@ export type Database = {
           source_page?: string | null
         }
         Update: {
-          business_id?: string | null
+          business_data_id?: string | null
           created_at?: string
           education_event_id?: string | null
           education_profile_id?: string
@@ -6270,15 +6224,15 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "education_analytics_events_business_id_fkey"
-            columns: ["business_id"]
+            foreignKeyName: "education_analytics_events_business_data_id_fkey"
+            columns: ["business_data_id"]
             isOneToOne: false
             referencedRelation: "business_data"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "education_analytics_events_business_id_fkey"
-            columns: ["business_id"]
+            foreignKeyName: "education_analytics_events_business_data_id_fkey"
+            columns: ["business_data_id"]
             isOneToOne: false
             referencedRelation: "user_companies"
             referencedColumns: ["company_id"]
@@ -11488,113 +11442,6 @@ export type Database = {
           {
             foreignKeyName: "profile_audit_log_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profile_favorites: {
-        Row: {
-          created_at: string
-          id: string
-          profile_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          profile_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          profile_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profile_favorites_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "personal_social_profiles"
-            referencedColumns: ["profile_id"]
-          },
-          {
-            foreignKeyName: "profile_favorites_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profile_favorites_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profile_favorites_new: {
-        Row: {
-          created_at: string
-          favorited_profile_id: string
-          favoriting_profile_id: string
-          id: string
-        }
-        Insert: {
-          created_at?: string
-          favorited_profile_id: string
-          favoriting_profile_id: string
-          id?: string
-        }
-        Update: {
-          created_at?: string
-          favorited_profile_id?: string
-          favoriting_profile_id?: string
-          id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profile_favorites_new_favorited_profile_id_fkey"
-            columns: ["favorited_profile_id"]
-            isOneToOne: false
-            referencedRelation: "personal_social_profiles"
-            referencedColumns: ["profile_id"]
-          },
-          {
-            foreignKeyName: "profile_favorites_new_favorited_profile_id_fkey"
-            columns: ["favorited_profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profile_favorites_new_favorited_profile_id_fkey"
-            columns: ["favorited_profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profile_favorites_new_favoriting_profile_id_fkey"
-            columns: ["favoriting_profile_id"]
-            isOneToOne: false
-            referencedRelation: "personal_social_profiles"
-            referencedColumns: ["profile_id"]
-          },
-          {
-            foreignKeyName: "profile_favorites_new_favoriting_profile_id_fkey"
-            columns: ["favoriting_profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "profile_favorites_new_favoriting_profile_id_fkey"
-            columns: ["favoriting_profile_id"]
             isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
@@ -17549,6 +17396,30 @@ export type Database = {
         Args: { p_enabled: boolean }
         Returns: Json
       }
+      apply_business_profile_correction: {
+        Args: { p_correction_id: string }
+        Returns: {
+          admin_notes: string | null
+          business_id: string
+          created_at: string
+          explanation: string | null
+          field_code: string
+          id: string
+          proposed_value: string
+          reporter_profile_id: string
+          reviewed_at: string | null
+          reviewed_by_profile_id: string | null
+          source_url: string | null
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "business_profile_corrections"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       apply_community_user_moderation_action: {
         Args: {
           p_action: string
@@ -17794,6 +17665,36 @@ export type Database = {
           p_valid_until?: string
         }
         Returns: string
+      }
+      create_business_profile_correction: {
+        Args: {
+          p_business_id: string
+          p_explanation?: string
+          p_field_code: string
+          p_proposed_value: string
+          p_source_url?: string
+        }
+        Returns: {
+          admin_notes: string | null
+          business_id: string
+          created_at: string
+          explanation: string | null
+          field_code: string
+          id: string
+          proposed_value: string
+          reporter_profile_id: string
+          reviewed_at: string | null
+          reviewed_by_profile_id: string | null
+          source_url: string | null
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "business_profile_corrections"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       create_business_profile_report: {
         Args: {
@@ -19330,6 +19231,21 @@ export type Database = {
         }
         Returns: Json
       }
+      list_business_profile_correction_queue: {
+        Args: { p_limit?: number; p_status?: string }
+        Returns: {
+          business_id: string
+          business_name: string
+          created_at: string
+          explanation: string
+          field_code: string
+          id: string
+          profile_id: string
+          proposed_value: string
+          source_url: string
+          status: string
+        }[]
+      }
       list_classified_conversation_previews: {
         Args: {
           p_cursor_id?: string
@@ -20238,6 +20154,34 @@ export type Database = {
       reserve_route: {
         Args: { p_route_id: string; p_seats?: number }
         Returns: string
+      }
+      resolve_business_profile_correction: {
+        Args: {
+          p_admin_notes?: string
+          p_correction_id: string
+          p_status: string
+        }
+        Returns: {
+          admin_notes: string | null
+          business_id: string
+          created_at: string
+          explanation: string | null
+          field_code: string
+          id: string
+          proposed_value: string
+          reporter_profile_id: string
+          reviewed_at: string | null
+          reviewed_by_profile_id: string | null
+          source_url: string | null
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "business_profile_corrections"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       resolve_delivery_order_actor_role: {
         Args: {
