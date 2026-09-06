@@ -312,7 +312,7 @@ export interface EducationAnalyticsData {
 export interface EducationAnalyticsEvent {
   id: string;
   education_profile_id: string;
-  business_id?: string | null;
+  business_data_id?: string | null;
   niche_key: EducationNicheKey;
   event_type: EducationAnalyticsEventType;
   program_id?: string | null;
@@ -326,7 +326,7 @@ export interface EducationAnalyticsEvent {
 
 export interface TrackEventPayload {
   educationProfileId: string;
-  businessId?: string;
+  businessDataId?: string;
   nicheKey: EducationNicheKey;
   eventType: EducationAnalyticsEventType;
   programId?: string;
