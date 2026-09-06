@@ -20,6 +20,7 @@ import {
   type PlanEntitlements,
 } from '@/core/billing';
 import { BillingPlanService } from '@/core/billing/services/BillingPlanService';
+import { BusinessService } from '@/core/business/services/BusinessService';
 
 export interface EducationEntitlements {
   canUsePremiumPublicPage: boolean;
@@ -57,10 +58,16 @@ async function resolveCanonicalEntitlements(
 
 export const EducationSubscriptionService = {
   async getSubscriptionStatus(
-    businessId: string,
+    businessProfileId: string,
   ): Promise<EducationSubscriptionStatus> {
     try {
-      const result = await SubscriptionService.getByBusinessId(businessId);
+      const businessDataId =
+        await BusinessService.getBusinessDataIdByProfileId(businessProfileId);
+      if (!businessDataId) {
+        throw new Error('business_data.id indisponivel para o perfil Education');
+      }
+
+      const result = await SubscriptionService.getByBusinessId(businessDataId);
       if (result.error || !result.data) {
         throw new Error(result.error ?? 'Assinatura Business indisponivel');
       }
@@ -102,23 +109,23 @@ export const EducationSubscriptionService = {
     return 'basic';
   },
 
-  async canUsePremiumPublicPage(businessId: string): Promise<boolean> {
-    const status = await this.getSubscriptionStatus(businessId);
+  async canUsePremiumPublicPage(businessProfileId: string): Promise<boolean> {
+    const status = await this.getSubscriptionStatus(businessProfileId);
     return status.isActive && status.entitlements.canUsePremiumPublicPage;
   },
 
-  async canUseShortPremiumLink(businessId: string): Promise<boolean> {
-    const status = await this.getSubscriptionStatus(businessId);
+  async canUseShortPremiumLink(businessProfileId: string): Promise<boolean> {
+    const status = await this.getSubscriptionStatus(businessProfileId);
     return status.isActive && status.entitlements.canUseShortPremiumLink;
   },
 
-  async canUseAnalytics(businessId: string): Promise<boolean> {
-    const status = await this.getSubscriptionStatus(businessId);
+  async canUseAnalytics(businessProfileId: string): Promise<boolean> {
+    const status = await this.getSubscriptionStatus(businessProfileId);
     return status.isActive && status.entitlements.canUseAnalytics;
   },
 
-  async canExportData(businessId: string): Promise<boolean> {
-    const status = await this.getSubscriptionStatus(businessId);
+  async canExportData(businessProfileId: string): Promise<boolean> {
+    const status = await this.getSubscriptionStatus(businessProfileId);
     return status.isActive && status.entitlements.canExportData;
   },
 };
