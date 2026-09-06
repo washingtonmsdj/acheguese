@@ -52,7 +52,6 @@ export default function NetworkTab({
     return (
       <BrandHubPanel
         brandHubId={businessId}
-        profileId={profileId}
         toast={toast}
       />
     );
@@ -164,7 +163,7 @@ function ConvertToNetworkPanel({ profileId, businessId, locationId, toast }: Con
 
 // ─── Painel: brand_hub — gerenciar filiais ────────────────────────────────────
 
-function BrandHubPanel({ brandHubId, profileId, toast }: BrandHubPanelProps) {
+function BrandHubPanel({ brandHubId, toast }: BrandHubPanelProps) {
   const [branches, setBranches] = useState<BranchSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
@@ -265,7 +264,6 @@ function BrandHubPanel({ brandHubId, profileId, toast }: BrandHubPanelProps) {
         open={openCreate}
         onClose={() => setOpenCreate(false)}
         brandHubId={brandHubId}
-        profileId={profileId}
         toast={toast}
         onCreated={load}
       />
@@ -321,7 +319,7 @@ function BranchPanel({ branchId, parentBusinessId, toast }: BranchPanelProps) {
 
 // ─── Dialog: criar filial ─────────────────────────────────────────────────────
 
-function CreateBranchDialog({ open, onClose, brandHubId, profileId, toast, onCreated }: CreateBranchDialogProps) {
+function CreateBranchDialog({ open, onClose, brandHubId, toast, onCreated }: CreateBranchDialogProps) {
   const [form, setForm] = useState({
     businessName: '',
     unitName: '',
@@ -387,7 +385,6 @@ function CreateBranchDialog({ open, onClose, brandHubId, profileId, toast, onCre
     try {
       await NetworkService.createBranch({
         brandHubId,
-        profileId,
         businessName: form.businessName,
         unitName: form.unitName,
         slug: form.slug,
