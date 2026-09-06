@@ -116,6 +116,21 @@ describe("Business extension identity boundary (G6)", () => {
   });
 
 
+
+  it("does not route company plan changes through the user-scope pricing page", () => {
+    const businessPlans = read(
+      "src/modules/business/dashboard/pages/BusinessPlansPage.tsx",
+    );
+
+    expect(businessPlans).toContain(
+      "BusinessSubscriptionService.updatePlan(\n        businessDataId",
+    );
+    expect(businessPlans).toContain(
+      "As alteracoes abaixo usam a assinatura desta empresa",
+    );
+    expect(businessPlans).not.toContain('<Link to="/planos">');
+  });
+
   it("adapts Education profile identity before crossing into Business Billing", () => {
     const educationSubscription = read(
       "src/modules/business/education/services/education-subscription.service.ts",
