@@ -131,8 +131,10 @@ type ModuleTile = {
 const cityPath = LAUNCH_CITY_PATH;
 const searchHref = LAUNCH_URLS.search;
 const homeDiscoveryFallback = HomeDiscoveryService.getFallbackHomeDiscovery();
-const avatarImages = [personaMorador, personaComerciante, personaPrestador, personaEmprego];
-const homeAvatarsByKey: Record<HomeCommunityActivity["avatarKey"], string> = {
+const homeAvatarsByKey: Record<
+  NonNullable<HomeCommunityActivity["avatarKey"]>,
+  string
+> = {
   comerciante: personaComerciante,
   emprego: personaEmprego,
   morador: personaMorador,
