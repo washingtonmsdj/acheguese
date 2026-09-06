@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { EducationService } from '../services';
+import { PublicEducationLeadService } from '@/core/education/services/PublicEducationLeadService';
 import type { EducationLead, EducationLeadStatus, SchoolShift } from '@/core/education';
 
 export interface LeadFilters {
@@ -64,6 +65,30 @@ export function useEducationLeads(profileId?: string, filters: LeadFilters = {})
     },
   });
 
+  const createPublicMutation = useMutation({
+    mutationFn: async (payload: {
+      fullName: string;
+      email: string;
+      phone: string;
+      childName?: string;
+      childAge?: number;
+      interestNote?: string;
+      guardianName?: string;
+      studentName?: string;
+      studentAge?: number;
+      desiredGrade?: string;
+      desiredShift?: SchoolShift;
+    }) => {
+      if (!hasValidProfileId || !profileId) {
+        throw new Error('Valid profile ID required');
+      }
+      return PublicEducationLeadService.create({
+        educationProfileId: profileId,
+        ...payload,
+      });
+    },
+  });
+
   const updateMutation = useMutation({
     mutationFn: async ({
       leadId,
@@ -89,6 +114,7 @@ export function useEducationLeads(profileId?: string, filters: LeadFilters = {})
     error: query.error,
     refetch: query.refetch,
     create: createMutation.mutateAsync,
+    createPublic: createPublicMutation.mutateAsync,
     update: updateMutation.mutateAsync,
   };
 }
