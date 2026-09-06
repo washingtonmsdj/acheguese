@@ -219,6 +219,7 @@ describe("public Education INEP adapter", () => {
         archive_sha256: "a".repeat(64),
         source_year: 2025,
         landing_page_updated_at: "2026-07-31T14:52:00.000Z",
+        file_role: "school_table",
       },
       target: {
         municipality_ibge_code: "2927408",
@@ -246,6 +247,7 @@ describe("public Education INEP adapter", () => {
         publishes_records: false,
         staging_quality_gate_required: true,
         official_archive_host_required: true,
+        header_contract_verified: true,
       },
     });
 
