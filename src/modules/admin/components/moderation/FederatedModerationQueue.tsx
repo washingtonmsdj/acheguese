@@ -27,6 +27,7 @@ const DOMAIN_LABELS: Record<FederatedModerationDomain, string> = {
   community_direct: "Mensagens diretas",
   community_alert: "Alertas comunitarios",
   community_issue: "Problemas comunitarios",
+  business_profile: "Perfis de empresas",
 };
 
 const DOMAIN_ROUTES: Partial<Record<FederatedModerationDomain, string>> = {
