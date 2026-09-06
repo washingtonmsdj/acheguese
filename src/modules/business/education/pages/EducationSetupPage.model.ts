@@ -154,11 +154,10 @@ export const INSTITUTION_TYPES = [
   { value: 'tutoring_center', label: 'Centro de Reforco' },
   { value: 'music_school', label: 'Escola de Musica' },
   { value: 'sports_school', label: 'Escola de Esportes' },
-  { value: 'university', label: 'Universidade' },
   { value: 'other', label: 'Outro' },
 ];
 
-const SCHOOL_PROFILE_NICHES: EducationNicheKey[] = ['regular_school', 'daycare'];
+const SCHOOL_PROFILE_NICHES: EducationNicheKey[] = ['regular_school', 'daycare', 'technical_school'];
 const EDUCATION_LEVEL_NICHES: EducationNicheKey[] = ['regular_school', 'daycare', 'technical_school'];
 
 export function isSchoolProfileNiche(nicheKey: string): nicheKey is EducationNicheKey {
@@ -187,7 +186,7 @@ export const EDUCATION_LEVEL_OPTIONS: { key: EducationLevel; label: string }[] =
   { key: 'early_childhood', label: 'Educação Infantil' },
   { key: 'elementary_1', label: 'Ensino Fundamental - Anos Iniciais' },
   { key: 'elementary_2', label: 'Ensino Fundamental - Anos Finais' },
-  { key: 'middle_school', label: 'EJA' },
+  { key: 'youth_adult_education', label: 'EJA - Educacao de Jovens e Adultos' },
   { key: 'high_school', label: 'Ensino Médio' },
   { key: 'technical', label: 'Técnico' },
 ];
