@@ -57,7 +57,16 @@ describe("Business extension identity boundary (G6)", () => {
     expect(mapper).toContain("id: business.profile_id");
     expect(mapper).toContain("business_data_id: business.id");
     expect(aggregate).toContain(
-      "SubscriptionService.getByBusinessId(business.business_data_id)",
+      "EntitlementResolver.resolve({",
+    );
+    expect(aggregate).toContain(
+      "business_id: business.business_data_id",
+    );
+    expect(aggregate).toContain(
+      'subscription_scope: "business"',
+    );
+    expect(aggregate).toContain(
+      "current_period_end: resolvedEntitlements.currentPeriodEnd",
     );
     expect(aggregate).toContain(
       "getGastronomyProfileByBusinessId(business.business_data_id)",
@@ -150,6 +159,9 @@ describe("Business extension identity boundary (G6)", () => {
     expect(brokerClient).toContain(
       "getBusinessSubscriptionSnapshot(\n    businessDataId: string",
     );
+    expect(brokerClient).toContain(
+      "current_period_end: string | null",
+    );
 
     expect(brokerEdge).toContain(
       "getBusinessSubscriptionSnapshot: true",
@@ -162,6 +174,9 @@ describe("Business extension identity boundary (G6)", () => {
     );
     expect(brokerEdge).toContain(
       "throw new RequestAuthorizationError",
+    );
+    expect(brokerEdge).toContain(
+      "current_period_end: subscription.current_period_end ?? null",
     );
   });
 
