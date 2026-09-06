@@ -11,7 +11,7 @@ import { basename, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
-export const PARSER_VERSION = 'inep-censo-school-adapter/1';
+export const PARSER_VERSION = 'inep-censo-school-adapter/2';
 
 export const REQUIRED_COLUMNS = Object.freeze([
   'NU_ANO_CENSO',
@@ -44,6 +44,8 @@ function usage() {
     '    --output <salvador-normalized.jsonl>',
     '    --manifest <manifest.json>',
     '    --source-archive-sha256 <64-hex>',
+    '    --source-archive-url <https://download.inep.gov.br/...zip>',
+    '    [--source-page-updated-at <ISO timestamp>]',
     '    [--source-year 2025]',
     '    [--municipality-ibge 2927408]',
     '    [--encoding utf8|latin1]',
@@ -76,6 +78,7 @@ function parseArgs(argv) {
     'output',
     'manifest',
     'source-archive-sha256',
+    'source-archive-url',
   ];
 
   for (const key of required) {
@@ -99,6 +102,30 @@ function parseArgs(argv) {
     throw new Error('source archive SHA-256 must contain exactly 64 hex characters');
   }
 
+  const archiveUrl = String(args.get('source-archive-url'));
+  if (
+    !/^https:\/\/download\.inep\.gov\.br\/.+\.zip(?:[?#].*)?$/i.test(
+      archiveUrl,
+    )
+  ) {
+    throw new Error(
+      'source archive URL must be an official download.inep.gov.br ZIP',
+    );
+  }
+
+  const sourcePageUpdatedAtRaw = args.get('source-page-updated-at') ?? null;
+  const sourcePageUpdatedAt =
+    sourcePageUpdatedAtRaw === null
+      ? null
+      : new Date(sourcePageUpdatedAtRaw).toISOString();
+
+  if (
+    sourcePageUpdatedAtRaw !== null &&
+    Number.isNaN(Date.parse(sourcePageUpdatedAtRaw))
+  ) {
+    throw new Error('source page updated-at must be a valid ISO timestamp');
+  }
+
   const encoding = args.get('encoding') ?? 'utf8';
   if (!SUPPORTED_ENCODINGS.has(encoding)) {
     throw new Error('encoding must be utf8 or latin1');
@@ -111,6 +138,8 @@ function parseArgs(argv) {
     sourceYear,
     municipalityIbge,
     archiveSha256,
+    archiveUrl,
+    sourcePageUpdatedAt,
     encoding,
   };
 }
@@ -357,6 +386,10 @@ export async function preparePublicEducationInepImport(options) {
   let sourceRows = 0;
   let targetRows = 0;
   let replacementCharacterRows = 0;
+  let publicDependencyRows = 0;
+  let privateRows = 0;
+  let activeOperationRows = 0;
+  let publicActiveRows = 0;
 
   const dependencyCounts = Object.create(null);
   const operationStatusCounts = Object.create(null);
@@ -410,6 +443,14 @@ export async function preparePublicEducationInepImport(options) {
       operationStatusCounts[operationStatus] =
         (operationStatusCounts[operationStatus] ?? 0) + 1;
 
+      const isPublicDependency = ['1', '2', '3'].includes(dependency);
+      const isActive = operationStatus === '1';
+
+      if (isPublicDependency) publicDependencyRows += 1;
+      if (dependency === '4') privateRows += 1;
+      if (isActive) activeOperationRows += 1;
+      if (isPublicDependency && isActive) publicActiveRows += 1;
+
       await writeJsonLine(output, normalized);
     }
   } catch (error) {
@@ -440,11 +481,6 @@ export async function preparePublicEducationInepImport(options) {
     ]),
   );
 
-  const publicActiveCandidates =
-    (dependencyCounts['1'] ?? 0) +
-    (dependencyCounts['2'] ?? 0) +
-    (dependencyCounts['3'] ?? 0);
-
   const manifest = {
     contract: 'acheguese.public-education-inep-normalized/1',
     parser_version: PARSER_VERSION,
@@ -452,10 +488,10 @@ export async function preparePublicEducationInepImport(options) {
     source: {
       landing_url:
         'https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-escolar',
-      archive_url:
-        'https://download.inep.gov.br/dados_abertos/microdados_censo_escolar_2025_.zip',
+      archive_url: options.archiveUrl,
       archive_sha256: options.archiveSha256,
       source_year: options.sourceYear,
+      landing_page_updated_at: options.sourcePageUpdatedAt,
       extracted_file: basename(options.csvPath),
       encoding: options.encoding,
       delimiter: delimiterLabel(delimiter),
@@ -474,8 +510,10 @@ export async function preparePublicEducationInepImport(options) {
       target_municipality_rows: targetRows,
       dependency_codes: dependencyCounts,
       operation_status_codes: operationStatusCounts,
-      public_dependency_rows:
-        publicActiveCandidates - (dependencyCounts['4'] ?? 0),
+      public_dependency_rows: publicDependencyRows,
+      private_dependency_rows: privateRows,
+      active_operation_rows: activeOperationRows,
+      public_active_rows: publicActiveRows,
     },
     safety: {
       calls_supabase: false,
@@ -483,14 +521,20 @@ export async function preparePublicEducationInepImport(options) {
       private_dependency_code: '4',
       active_operation_status_code: '1',
       staging_quality_gate_required: true,
+      official_archive_host_required: true,
     },
   };
 
-  await fs.writeFile(
-    options.manifestPath,
-    `${JSON.stringify(manifest, null, 2)}\n`,
-    { encoding: 'utf8', flag: 'wx' },
-  );
+  try {
+    await fs.writeFile(
+      options.manifestPath,
+      `${JSON.stringify(manifest, null, 2)}\n`,
+      { encoding: 'utf8', flag: 'wx' },
+    );
+  } catch (error) {
+    await fs.rm(options.outputPath, { force: true });
+    throw error;
+  }
 
   return manifest;
 }
