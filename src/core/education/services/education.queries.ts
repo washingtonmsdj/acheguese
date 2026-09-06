@@ -103,7 +103,7 @@ async function enrichEducationProfilesWithPublicRoutes(
 
   if (!knownRoutes) {
     const result = await supabase
-      .from('business_data')
+      .from('public_business_search')
       .select('id, profile_id, business_name, slug, location:locations!location_id(geographic_path)')
       .in('profile_id', profileIds)
       .eq('status', 'active')
@@ -225,7 +225,7 @@ async function listEducationBusinessRoutesByTerritory(
   if (locationIds.length === 0) return [];
 
   const { data, error } = await supabase
-    .from('business_data')
+    .from('public_business_search')
     .select('id, profile_id, business_name, slug, location:locations!location_id(geographic_path)')
     .in('location_id', locationIds)
     .eq('status', 'active')
@@ -907,7 +907,7 @@ export async function getEducationProfileByTerritory(
 
   // Busca business ativo no territorio com o slug informado
   const { data: business, error: businessError } = await supabase
-    .from('business_data')
+    .from('public_business_search')
     .select('profile_id, business_name, slug')
     .eq('slug', slug)
     .eq('location_id', locationData.id)
