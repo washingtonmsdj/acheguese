@@ -10,6 +10,7 @@ import dotenv from 'dotenv';
 import pg from 'pg';
 
 import {
+  NORMALIZED_OUTPUT_CONTRACT,
   PARSER_VERSION,
   RAW_RECORD_HASH_CONTRACT,
   sha256File,
@@ -108,6 +109,10 @@ export function validateInepImportManifest(input) {
   const source = assertObject(manifest.source, 'manifest.source');
   const target = assertObject(manifest.target, 'manifest.target');
   const counts = assertObject(manifest.counts, 'manifest.counts');
+  const normalizedOutput = assertObject(
+    manifest.normalized_output,
+    'manifest.normalized_output',
+  );
   const safety = assertObject(manifest.safety, 'manifest.safety');
 
   if (manifest.contract !== 'acheguese.public-education-inep-normalized/1') {
@@ -184,6 +189,33 @@ export function validateInepImportManifest(input) {
     throw new Error('manifest source_rows is smaller than target_municipality_rows');
   }
 
+  if (normalizedOutput.contract !== NORMALIZED_OUTPUT_CONTRACT) {
+    throw new Error('manifest normalized output contract mismatch');
+  }
+  if (
+    normalizedOutput.raw_record_hash_contract !==
+    RAW_RECORD_HASH_CONTRACT
+  ) {
+    throw new Error('manifest normalized output raw-record hash contract mismatch');
+  }
+  assertSha256(
+    normalizedOutput.sha256,
+    'manifest.normalized_output.sha256',
+  );
+  if (
+    !Number.isInteger(Number(normalizedOutput.rows)) ||
+    Number(normalizedOutput.rows) !== targetRows
+  ) {
+    throw new Error('manifest normalized output row count mismatch');
+  }
+  if (
+    !String(normalizedOutput.file ?? '').trim() ||
+    basename(String(normalizedOutput.file)) !==
+      String(normalizedOutput.file)
+  ) {
+    throw new Error('manifest normalized output file must be a basename');
+  }
+
   for (const flag of [
     'staging_quality_gate_required',
     'official_archive_host_required',
@@ -203,6 +235,7 @@ export function validateInepImportManifest(input) {
     source,
     target,
     counts,
+    normalizedOutput,
     targetRows,
     municipalityIbge,
     sourceYear,
@@ -643,6 +676,22 @@ export async function runPublicEducationInepStager(options) {
     manifestSummary,
   );
 
+  if (
+    basename(options.jsonlPath) !== manifestSummary.normalizedOutput.file
+  ) {
+    throw new Error(
+      'JSONL basename does not match manifest normalized output file',
+    );
+  }
+  if (
+    local.jsonlSha256 !==
+    String(manifestSummary.normalizedOutput.sha256).toLowerCase()
+  ) {
+    throw new Error(
+      'JSONL SHA-256 does not match manifest normalized output artifact',
+    );
+  }
+
   if (!options.commitStaging && options.planOutputPath) {
     throw new Error('--plan-output requires --commit-staging');
   }
@@ -663,6 +712,7 @@ export async function runPublicEducationInepStager(options) {
       mode: 'dry-run',
       parser_version: PARSER_VERSION,
       record_hash_contract: RAW_RECORD_HASH_CONTRACT,
+      normalized_output_contract: NORMALIZED_OUTPUT_CONTRACT,
       target_municipality_ibge_code: manifestSummary.municipalityIbge,
       rows: local.rowCount,
       jsonl_sha256: local.jsonlSha256,
@@ -683,6 +733,7 @@ export async function runPublicEducationInepStager(options) {
     mode: 'commit-staging',
     parser_version: PARSER_VERSION,
     record_hash_contract: RAW_RECORD_HASH_CONTRACT,
+    normalized_output_contract: NORMALIZED_OUTPUT_CONTRACT,
     target_municipality_ibge_code: manifestSummary.municipalityIbge,
     rows: local.rowCount,
     jsonl_sha256: local.jsonlSha256,
