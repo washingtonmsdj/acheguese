@@ -169,7 +169,7 @@ export class NetworkService {
    * 2. Converte o standalone em branch (com parent = brand_hub)
    * 3. Marca como headquarters
    *
-   * Tudo em sequência com validação. Não usa transação (PostgREST não suporta).
+   * A mutação é atômica no PostgreSQL e usa o Profile Plane canônico.
    */
   static async convertToNetwork(
     standaloneProfileId: string,
@@ -248,7 +248,7 @@ export class NetworkService {
         .select('id, profile_id, business_name, slug, category, status')
         .eq('profile_id', profileId)
         .eq('business_role', 'brand_hub')
-        .eq('status', EntityStatus.ACTIVE);
+        .eq('status', 'active');
 
       if (error) throw error;
 
