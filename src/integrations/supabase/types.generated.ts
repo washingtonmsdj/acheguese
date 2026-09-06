@@ -19551,6 +19551,63 @@ export type Database = {
           user_id: string
         }[]
       }
+      list_public_education_districts: {
+        Args: { p_city: string; p_state: string }
+        Returns: {
+          district_slug: string
+          geographic_path: string
+          profile_count: number
+        }[]
+      }
+      list_public_education_profiles: {
+        Args: {
+          p_city: string
+          p_district?: string
+          p_infrastructure?: string[]
+          p_institution_types?: string[]
+          p_niches?: string[]
+          p_only_available?: boolean
+          p_page?: number
+          p_page_size?: number
+          p_query?: string
+          p_school_networks?: string[]
+          p_sort?: string
+          p_state: string
+        }
+        Returns: {
+          age_range_max: number
+          age_range_min: number
+          business_data_id: string
+          business_id: string
+          business_name: string
+          created_at: string
+          education_levels: string[]
+          enrollment_open: boolean
+          geographic_path: string
+          id: string
+          institution_type: string
+          is_claimable: boolean
+          niche_key: string
+          published_at: string
+          school_accessibility_features: Json
+          school_basic_resources: Json
+          school_equipment_features: Json
+          school_facility_features: Json
+          school_inep_code: string
+          school_network: string
+          school_source_updated_at: string
+          school_source_url: string
+          school_type: string
+          shifts: string[]
+          slug: string
+          status: string
+          summary: string
+          support_level: string
+          total_count: number
+          updated_at: string
+          whatsapp_number: string
+        }[]
+      }
       list_trust_admin_actions_admin: {
         Args: {
           p_before_created_at?: string
