@@ -54,10 +54,14 @@ export default function BusinessDashboardShellPage() {
   }, [setModuleContext]);
 
   const { business, isLoading: loadingBusiness } = useBusiness(businessId || "");
+  const businessDataId = business?.business_data_id;
+  const isGastronomyEligible = business
+    ? isEligibleForVertical(business.category, "gastronomy")
+    : false;
   const { planTier, entitlements, isLoading: loadingSubscription } =
-    useBusinessSubscription(businessId);
+    useBusinessSubscription(businessDataId);
   const { status: gastronomyStatus, isLoading: loadingGastronomy } =
-    useGastronomyStatus(businessId || "", true);
+    useGastronomyStatus(businessDataId || "", isGastronomyEligible);
 
   const publicUrlContext = useMemo(() => {
     if (!business?.id || !business.slug || !business.geographic_path) return null;
@@ -87,7 +91,17 @@ export default function BusinessDashboardShellPage() {
     return null;
   }
 
-  const isGastronomyEligible = isEligibleForVertical(business.category, "gastronomy");
+  if (!businessDataId) {
+    return (
+      <div className="container mx-auto max-w-7xl px-4 py-6">
+        <Card>
+          <CardContent className="p-5 text-sm text-destructive">
+            Os dados canônicos desta empresa não foram carregados. A gestão de extensões foi bloqueada para evitar operar com um identificador incorreto.
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
   const isEducationEligible = isEligibleForVertical(
     business.category,
     "education",
@@ -134,6 +148,7 @@ export default function BusinessDashboardShellPage() {
 
   const outletContext: BusinessDashboardContextValue = {
     businessId,
+    businessDataId,
     business,
     planTier,
     entitlements,
