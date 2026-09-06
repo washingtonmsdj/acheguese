@@ -14,6 +14,8 @@ import { ProfileMembersService } from '@/core/profiles/services/multi-profile/pr
  *
  * Esse contrato deve permanecer alinhado a private.can_manage_profile no banco.
  */
+export type BusinessManagementRole = 'owner' | 'admin';
+
 export class BusinessOwnershipService {
   static async resolveOwnerProfileId(businessId: string): Promise<string | null> {
     try {
@@ -35,29 +37,62 @@ export class BusinessOwnershipService {
     }
   }
 
-  static async isOwner(businessId: string, userId: string): Promise<boolean> {
+  /**
+   * Resolve a autoridade operacional real do ator.
+   *
+   * - owner: somente o proprietario estrutural de profiles.user_id;
+   * - admin: Gestor ativo em profile_members;
+   * - null: sem autoridade de gestao.
+   */
+  static async resolveManagementRole(
+    businessId: string,
+    userId: string,
+  ): Promise<BusinessManagementRole | null> {
     try {
       const ownerProfileId = await this.resolveOwnerProfileId(businessId);
       if (!ownerProfileId) {
         logger.warn('[BusinessOwnershipService] No owner profile found for business:', businessId);
-        return false;
+        return null;
       }
 
       const profile = await profileService.getProfileById(ownerProfileId);
       if (profile?.user_id === userId) {
-        return true;
+        return 'owner';
       }
 
-      return ProfileMembersService.isManager(ownerProfileId, userId);
+      const activeRole = await ProfileMembersService.getActiveRole(
+        ownerProfileId,
+        userId,
+      );
+
+      return activeRole === 'admin' ? 'admin' : null;
     } catch (error) {
-      logger.error('[BusinessOwnershipService] Unexpected error checking ownership:', error);
-      return false;
+      logger.error(
+        '[BusinessOwnershipService] Unexpected error resolving management role:',
+        error,
+      );
+      return null;
     }
   }
 
+  /**
+   * Compatibilidade historica: este metodo responde "pode gerenciar",
+   * portanto inclui Proprietario e Gestor.
+   */
+  static async isOwner(businessId: string, userId: string): Promise<boolean> {
+    return (await this.resolveManagementRole(businessId, userId)) !== null;
+  }
+
+  static async isDirectOwner(
+    businessId: string,
+    userId: string,
+  ): Promise<boolean> {
+    return (await this.resolveManagementRole(businessId, userId)) === 'owner';
+  }
+
   static async requireOwnership(businessId: string, userId: string): Promise<void> {
-    const isOwner = await this.isOwner(businessId, userId);
-    if (!isOwner) {
+    const canManage = await this.isOwner(businessId, userId);
+    if (!canManage) {
       throw new Error('Você não tem permissão para realizar esta ação neste negócio');
     }
   }
