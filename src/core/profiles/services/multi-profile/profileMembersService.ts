@@ -21,11 +21,10 @@ export class ProfileMembersService {
     profileId: string,
   ): Promise<ServiceResponse<ProfileMember[]>> {
     try {
-      const { data, error } = await supabase
-        .from('profile_members')
-        .select('*')
-        .eq('profile_id', profileId)
-        .order('joined_at', { ascending: true });
+      const { data, error } = await supabase.rpc(
+        'list_profile_access_members',
+        { p_profile_id: profileId },
+      );
 
       if (error) throw error;
 
