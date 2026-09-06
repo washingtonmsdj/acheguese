@@ -35,6 +35,7 @@ import { useBillingPlans } from '@/core/billing/hooks/useBillingPlans';
 import { useEducationSubscription } from '../hooks/useEducationSubscription';
 import { EducationUrlService } from '../services/EducationUrlService';
 import { useOptionalBusinessDashboardContext } from '@/modules/business/dashboard/businessDashboardContext';
+import { useDashboardAccess } from '@/core/business/hooks/useDashboardAccess';
 
 const ENTITLEMENT_LABELS = [
   {
@@ -65,6 +66,11 @@ export function EducationPlansPage() {
   const businessDataId = dashboardContext?.businessDataId;
   const navigate = useNavigate();
   const { toast } = useToast();
+  const {
+    permissions,
+    loading: loadingAccess,
+  } = useDashboardAccess(businessId);
+  const canManageBilling = permissions.role === 'owner';
   const { status, entitlements, planType, isLoading } =
     useEducationSubscription({
       businessId: businessId!,
@@ -94,6 +100,16 @@ export function EducationPlansPage() {
     : null;
 
   const handleUpgrade = async (planCode: string) => {
+    if (!canManageBilling) {
+      toast({
+        title: 'Acao restrita ao Proprietario',
+        description:
+          'Gestores podem acompanhar os recursos do plano, mas somente o Proprietario pode alterar a assinatura.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (!plansUrl || !businessDataId) {
       toast({
         title: 'Instituicao indisponivel',
@@ -184,6 +200,9 @@ export function EducationPlansPage() {
                 <Badge variant={status?.isActive ? 'default' : 'secondary'}>
                   {status?.isActive ? 'Ativo' : 'Inativo'}
                 </Badge>
+                {!loadingAccess && !canManageBilling ? (
+                  <Badge variant="outline">Gestor: assinatura somente leitura</Badge>
+                ) : null}
               </div>
               <p className="text-2xl font-bold text-blue-600">
                 {currentPlan?.name ?? 'Plano atual'}
@@ -198,6 +217,7 @@ export function EducationPlansPage() {
             <Button
               variant="outline"
               onClick={() => navigate('/settings/subscription')}
+              disabled={loadingAccess || !canManageBilling}
             >
               Gerenciar Assinatura
             </Button>
@@ -311,7 +331,11 @@ export function EducationPlansPage() {
                         : 'default'
                     }
                     className="w-full"
-                    disabled={currentPlanCode === plan.code}
+                    disabled={
+                      currentPlanCode === plan.code ||
+                      loadingAccess ||
+                      !canManageBilling
+                    }
                     onClick={() => handleUpgrade(plan.code)}
                   >
                     {currentPlanCode === plan.code
