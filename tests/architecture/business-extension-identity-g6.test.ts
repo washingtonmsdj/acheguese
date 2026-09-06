@@ -93,9 +93,7 @@ describe("Business extension identity boundary (G6)", () => {
       "const { businessId, businessDataId } = useBusinessDashboardContext()",
     );
     expect(gastronomyDashboard).toContain("business_id: businessDataId");
-    expect(gastronomyDashboard).toContain(
-      "getMenuUsageStats(businessDataId)",
-    );
+    expect(gastronomyDashboard).toContain("getMenuUsageStats(businessDataId)");
     expect(menu).toContain("useBusinessSubscription(businessDataId)");
     expect(menu).toContain("useGastronomyMenuId(businessDataId)");
     expect(menu).toContain("useGastronomyProfile(businessDataId)");
@@ -115,28 +113,124 @@ describe("Business extension identity boundary (G6)", () => {
     );
   });
 
+  it("brokers operational Business entitlements for owner or delegated manager", () => {
+    const billingHook = read(
+      "src/core/billing/hooks/useBusinessSubscription.ts",
+    );
+    const resolver = read(
+      "src/core/billing/services/EntitlementResolver.ts",
+    );
+    const brokerClient = read(
+      "src/core/billing/services/BillingEntitlementsRpcService.ts",
+    );
+    const brokerEdge = read(
+      "supabase/functions/billing-entitlements-rpc/index.ts",
+    );
 
+    expect(billingHook).toContain(
+      "export function useBusinessSubscription(\n  businessDataId: string | undefined",
+    );
+    expect(billingHook).toContain("EntitlementResolver.resolve({");
+    expect(billingHook).toContain("business_id: businessDataId");
+    expect(billingHook).toContain("subscription_scope: 'business'");
 
-  it("does not route company plan changes through the user-scope pricing page", () => {
+    expect(resolver).toContain(
+      "BillingEntitlementsRpcService.getBusinessSubscriptionSnapshot",
+    );
+    expect(resolver).toContain(
+      "context.subscription_scope === 'business'",
+    );
+    expect(resolver).toContain(
+      ".eq('subscription_scope', 'user')",
+    );
+
+    expect(brokerClient).toContain(
+      '"getBusinessSubscriptionSnapshot"',
+    );
+    expect(brokerClient).toContain(
+      "getBusinessSubscriptionSnapshot(\n    businessDataId: string",
+    );
+
+    expect(brokerEdge).toContain(
+      "getBusinessSubscriptionSnapshot: true",
+    );
+    expect(brokerEdge).toContain(
+      '"broker_user_can_manage_profile"',
+    );
+    expect(brokerEdge).toContain(
+      "requireOperationalAccount(",
+    );
+    expect(brokerEdge).toContain(
+      "throw new RequestAuthorizationError",
+    );
+  });
+
+  it("distinguishes structural owner from delegated manager in dashboard authority", () => {
+    const ownership = read(
+      "src/core/business/services/BusinessOwnershipService.ts",
+    );
+    const dashboardAccess = read(
+      "src/core/business/hooks/useDashboardAccess.ts",
+    );
+
+    expect(ownership).toContain(
+      "export type BusinessManagementRole = 'owner' | 'admin'",
+    );
+    expect(ownership).toContain(
+      "static async resolveManagementRole",
+    );
+    expect(ownership).toContain("return 'owner'");
+    expect(ownership).toContain("activeRole === 'admin' ? 'admin' : null");
+    expect(ownership).toContain("static async isDirectOwner");
+
+    expect(dashboardAccess).toContain(
+      "BusinessOwnershipService.resolveManagementRole",
+    );
+    expect(dashboardAccess).toContain(
+      'let role: "owner" | "admin" | null = null',
+    );
+    expect(dashboardAccess).toContain("role: role ?? undefined");
+  });
+
+  it("keeps company billing mutations owner-only and out of user pricing scope", () => {
     const businessPlans = read(
       "src/modules/business/dashboard/pages/BusinessPlansPage.tsx",
     );
+    const educationPlans = read(
+      "src/modules/business/education/pages/EducationPlansPage.tsx",
+    );
+    const billingService = read(
+      "src/core/billing/BusinessSubscriptionService.ts",
+    );
 
+    expect(businessPlans).toContain(
+      'const canManageBilling = permissions.role === "owner"',
+    );
     expect(businessPlans).toContain(
       "BusinessSubscriptionService.updatePlan(\n        businessDataId",
     );
     expect(businessPlans).toContain(
-      "As alteracoes abaixo usam a assinatura desta empresa",
+      "Somente o Proprietario pode alterar a assinatura",
     );
     expect(businessPlans).not.toContain('<Link to="/planos">');
+
+    expect(educationPlans).toContain(
+      "const canManageBilling = permissions.role === 'owner'",
+    );
+    expect(educationPlans).toContain("businessId: businessDataId");
+    expect(educationPlans).toContain("subscriptionScope: 'business'");
+    expect(educationPlans).toContain("entityFamily: 'company'");
+    expect(educationPlans).toContain(
+      "Gestores podem acompanhar os recursos do plano",
+    );
+
+    expect(billingService).toContain("fetchCanonicalByBusinessDataId");
+    expect(billingService).toContain("businessId: businessDataId");
   });
 
   it("adapts Education profile identity before crossing into Business Billing", () => {
     const educationSubscription = read(
       "src/modules/business/education/services/education-subscription.service.ts",
-    );
-    const educationPlans = read(
-      "src/modules/business/education/pages/EducationPlansPage.tsx",
     );
 
     expect(educationSubscription).toContain(
@@ -148,38 +242,11 @@ describe("Business extension identity boundary (G6)", () => {
     expect(educationSubscription).not.toContain(
       "SubscriptionService.getByBusinessId(businessProfileId)",
     );
-    expect(educationPlans).toContain(
-      "const businessDataId = dashboardContext?.businessDataId",
-    );
-    expect(educationPlans).toContain("businessId: businessDataId");
-    expect(educationPlans).toContain("subscriptionScope: 'business'");
-    expect(educationPlans).toContain("entityFamily: 'company'");
   });
 
-  it("names Billing and QR entitlement identity explicitly", () => {
-    const billingHook = read(
-      "src/core/billing/hooks/useBusinessSubscription.ts",
-    );
-    const billingService = read(
-      "src/core/billing/BusinessSubscriptionService.ts",
-    );
+  it("names QR entitlement identity explicitly", () => {
     const qrWidget = read("src/core/qr/components/QrCodeWidget.tsx");
 
-    expect(billingHook).toContain(
-      "useBusinessSubscription(businessDataId: string | undefined)",
-    );
-    expect(billingHook).toContain(
-      "BusinessSubscriptionService.getByBusinessId(businessDataId)",
-    );
-    expect(billingService).toContain(
-      "fetchCanonicalByBusinessDataId",
-    );
-    expect(billingService).toContain(
-      "businessId: businessDataId",
-    );
-    expect(billingService).not.toContain(
-      "getByBusinessId(\n    businessId: string",
-    );
     expect(qrWidget).toContain("businessDataId?: string");
     expect(qrWidget).toContain(
       "useBusinessSubscription(businessDataId || '')",
