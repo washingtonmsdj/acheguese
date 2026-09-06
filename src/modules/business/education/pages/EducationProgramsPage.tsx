@@ -144,6 +144,7 @@ export function EducationProgramsPage() {
   });
 
   const isSchoolContext = isSchoolNiche(profile?.niche_key);
+  const isPublicSchool = profile?.school_type === 'public';
   const schoolStageOptions = getSchoolStageOptions(profile?.niche_key);
 
   const resolveStagePayload = () => {
@@ -207,7 +208,7 @@ export function EducationProgramsPage() {
         shift: formData.shift,
         modality: formData.modality,
         availableSlots: formData.availableSlots,
-        priceFrom: formData.priceFrom,
+        priceFrom: isPublicSchool ? undefined : formData.priceFrom,
         grade: stage.grade,
         educationLevel: stage.educationLevel,
         curriculumTopics: parseCurriculumTopics(formData.curriculumTopics),
@@ -244,7 +245,7 @@ export function EducationProgramsPage() {
           shift: formData.shift || null,
           modality: formData.modality || null,
           available_slots: formData.availableSlots || null,
-          price_from: formData.priceFrom || null,
+          price_from: isPublicSchool ? null : formData.priceFrom || null,
           curriculum_topics: parseCurriculumTopics(formData.curriculumTopics),
           is_active: formData.isActive,
         } as Partial<EducationProgram>,
@@ -283,7 +284,7 @@ export function EducationProgramsPage() {
       shift: program.shift || '',
       modality: program.modality || '',
       availableSlots: program.available_slots || 0,
-      priceFrom: program.price_from || 0,
+      priceFrom: isPublicSchool ? 0 : program.price_from || 0,
       isActive: program.is_active,
       gradeOption: '',
       customGrade: '',
@@ -503,7 +504,7 @@ export function EducationProgramsPage() {
                         {SHIFTS.find(s => s.value === program.shift)?.label || program.shift}
                       </Badge>
                     )}
-                    {program.price_from && (
+                    {!isPublicSchool && program.price_from && (
                       <Badge variant="outline" className="gap-1">
                         <DollarSign className="w-3 h-3" />
                         A partir de {formatBrl(program.price_from)}
@@ -682,16 +683,21 @@ export function EducationProgramsPage() {
               </p>
             </div>
 
-            <div>
-              <Label htmlFor="priceFrom">Preço a partir de (R$)</Label>
-              <Input
-                id="priceFrom"
-                type="number"
-                step="0.01"
-                value={formData.priceFrom}
-                onChange={(e) => setFormData({ ...formData, priceFrom: parseFloat(e.target.value) || 0 })}
-              />
-            </div>
+            {!isPublicSchool && (
+              <div>
+                <Label htmlFor="priceFrom">Preço a partir de (R$)</Label>
+                <Input
+                  id="priceFrom"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.priceFrom}
+                  onChange={(e) =>
+                    setFormData({ ...formData, priceFrom: parseFloat(e.target.value) || 0 })
+                  }
+                />
+              </div>
+            )}
 
             {editingProgram && (
               <div className="flex items-center gap-2">
