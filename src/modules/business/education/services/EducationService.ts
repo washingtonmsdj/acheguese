@@ -334,6 +334,7 @@ export const EducationService = {
       maxCapacity?: number;
       currentEnrollment?: number;
       schedule?: string;
+      curriculumTopics?: string[];
     },
   ): Promise<EducationProgram | null> {
     if (!payload.name || payload.name.length < 3) {
@@ -358,6 +359,7 @@ export const EducationService = {
       max_capacity: payload.maxCapacity ?? null,
       current_enrollment: payload.currentEnrollment ?? null,
       schedule: payload.schedule ?? null,
+      curriculum_topics: payload.curriculumTopics ?? null,
     });
 
     if (error) {
