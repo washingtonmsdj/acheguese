@@ -100,7 +100,7 @@ export function useLandingFeatured(
     services: services.data ?? [],
     gastronomy: gastronomy.data ?? [],
     classifieds: classifieds.data ?? [],
-    stats: stats.data ?? { businesses: 0, services: 0, classifieds: 0 },
+    stats: stats.data ?? { businesses: 0, services: 0, classifieds: 0, schools: null },
     loading: {
       businesses: businesses.isLoading,
       services: services.isLoading,

@@ -526,7 +526,7 @@ export function TerritorialLandingPage() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-foreground truncate">
-                {statsLoading ? '—' : territoryStats?.schools ?? '—'}
+                {isLoading ? '—' : stats.schools ?? '—'}
               </p>
               <p className="text-[10px] text-muted-foreground truncate">Escolas</p>
             </div>
@@ -539,7 +539,7 @@ export function TerritorialLandingPage() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-foreground truncate">
-                {statsLoading ? '—' : territoryStats?.schools ?? '—'}
+                {'—'}
               </p>
               <p className="text-[10px] text-muted-foreground truncate">Linhas</p>
             </div>

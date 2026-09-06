@@ -87,6 +87,11 @@ export interface TerritoryStats {
   businesses: number;
   services: number;
   classifieds: number;
+  schools: number | null;
+}
+
+interface EducationBusinessRouteRow {
+  profile_id: string;
 }
 
 interface FeaturedBusinessRow {
@@ -673,43 +678,108 @@ export class LandingFeaturedService {
     }
   }
 
+  private static async getPublishedSchoolCount(
+    filter: TerritoryFilter,
+  ): Promise<number | null> {
+    try {
+      let businessQuery = landingDb
+        .from<EducationBusinessRouteRow>("business_data")
+        .select("profile_id")
+        .eq("status", "active")
+        .eq("category", "educacao")
+        .not("location_id", "is", null)
+        .limit(1000);
+
+      businessQuery = applyTerritoryFilter(businessQuery, filter);
+
+      const { data: educationBusinesses, error: businessError } =
+        await businessQuery;
+      if (businessError) {
+        logger.warn(
+          "LandingFeaturedService.getPublishedSchoolCount.businesses",
+          businessError.message,
+        );
+        return null;
+      }
+
+      const profileIds = Array.from(
+        new Set((educationBusinesses ?? []).map((row) => row.profile_id)),
+      );
+      if (profileIds.length === 0) return 0;
+
+      // A public landing must never silently truncate a count.
+      if (profileIds.length >= 1000) {
+        logger.warn(
+          "LandingFeaturedService.getPublishedSchoolCount",
+          "education business candidate limit reached; school count withheld",
+        );
+        return null;
+      }
+
+      const { count, error } = await landingDb
+        .from<{ id: string }>("education_profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "published")
+        .eq("institution_type", "school")
+        .in("business_id", profileIds);
+
+      if (error) {
+        logger.warn(
+          "LandingFeaturedService.getPublishedSchoolCount.profiles",
+          error.message,
+        );
+        return null;
+      }
+
+      return count ?? 0;
+    } catch (err) {
+      logger.warn(
+        "LandingFeaturedService.getPublishedSchoolCount unexpected",
+        getErrorMessage(err),
+      );
+      return null;
+    }
+  }
+
   static async getTerritoryStats(
     filter: TerritoryFilter,
   ): Promise<TerritoryStats> {
     if (filter.scope === "none") {
-      return { businesses: 0, services: 0, classifieds: 0 };
+      return { businesses: 0, services: 0, classifieds: 0, schools: null };
     }
 
-    const [businessRes, serviceRes, classifiedRes] = await Promise.allSettled([
-      (() => {
-        let query = landingDb
-          .from<{ id: string }>("business_data")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "active")
-          .not("location_id", "is", null);
-        query = applyTerritoryFilter(query, filter);
-        return query;
-      })(),
-      (() => {
-        let query = landingDb
-          .from<{ id: string }>("professional_data")
-          .select("id", { count: "exact", head: true })
-          .eq("is_accepting_clients", true)
-          .eq("visibility", "public_listed")
-          .not("location_id", "is", null);
-        query = applyTerritoryFilter(query, filter);
-        return query;
-      })(),
-      (() => {
-        // eslint-disable-next-line ssot/no-direct-classified-access
-        let query = landingDb
-          .from<{ id: string }>("classifieds")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "active");
-        query = applyTerritoryFilter(query, filter);
-        return query;
-      })(),
-    ]);
+    const [businessRes, serviceRes, classifiedRes, schoolRes] =
+      await Promise.allSettled([
+        (() => {
+          let query = landingDb
+            .from<{ id: string }>("business_data")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "active")
+            .not("location_id", "is", null);
+          query = applyTerritoryFilter(query, filter);
+          return query;
+        })(),
+        (() => {
+          let query = landingDb
+            .from<{ id: string }>("professional_data")
+            .select("id", { count: "exact", head: true })
+            .eq("is_accepting_clients", true)
+            .eq("visibility", "public_listed")
+            .not("location_id", "is", null);
+          query = applyTerritoryFilter(query, filter);
+          return query;
+        })(),
+        (() => {
+          // eslint-disable-next-line ssot/no-direct-classified-access
+          let query = landingDb
+            .from<{ id: string }>("classifieds")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "active");
+          query = applyTerritoryFilter(query, filter);
+          return query;
+        })(),
+        this.getPublishedSchoolCount(filter),
+      ]);
 
     return {
       businesses:
@@ -720,6 +790,8 @@ export class LandingFeaturedService {
         classifiedRes.status === "fulfilled"
           ? (classifiedRes.value.count ?? 0)
           : 0,
+      schools:
+        schoolRes.status === "fulfilled" ? schoolRes.value : null,
     };
   }
 }
