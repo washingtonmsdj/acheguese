@@ -23,9 +23,12 @@ describe("G6 delegated profile management authority", () => {
     expect(ui).toContain("Somente o proprietario pode convidar");
   });
 
-  it("transfers structural ownership through profiles.user_id", () => {
+  it("transfers structural ownership through profiles.user_id and exposes the canonical product path", () => {
     const migration = read(
       "supabase/migrations/20260906085824_harden_profile_delegated_management_g6.sql",
+    );
+    const ui = read(
+      "src/core/profiles/components/ProfileMembersManagerImproved.tsx",
     );
 
     expect(migration).toContain("UPDATE public.profiles");
@@ -33,6 +36,9 @@ describe("G6 delegated profile management authority", () => {
     expect(migration).toContain("p_actor_user_id, 'admin'");
     expect(migration).toContain("p_new_owner_user_id, 'owner'");
     expect(migration).toContain("'claimed_user_id', p_new_owner_user_id");
+    expect(ui).toContain("MultiProfileService.transferOwnership(profileId, userId)");
+    expect(ui).toContain("Transferir propriedade");
+    expect(ui).toContain("Você continuará como Gestor");
   });
 
   it("prevents normal membership CRUD from creating another structural owner", () => {
