@@ -40,7 +40,7 @@ export function labelFromOptions(options: readonly { key: string; label: string 
 }
 
 type NicheOption = { nicheKey: string; displayName: string; isBeta?: boolean };
-type ArrayFilterKey = 'niches' | 'schoolNetworks' | 'institutionTypes' | 'infrastructure' | 'modalities' | 'audiences';
+type ArrayFilterKey = 'niches' | 'schoolNetworks' | 'institutionTypes' | 'infrastructure';
 
 function toggleValue(values: readonly string[], value: string): string[] {
   return values.includes(value)
@@ -58,10 +58,6 @@ function toggleFilterArray(filters: FilterState, key: ArrayFilterKey, value: str
       return { ...filters, institutionTypes: toggleValue(filters.institutionTypes, value) };
     case 'infrastructure':
       return { ...filters, infrastructure: toggleValue(filters.infrastructure, value) };
-    case 'modalities':
-      return { ...filters, modalities: toggleValue(filters.modalities, value) };
-    case 'audiences':
-      return { ...filters, audiences: toggleValue(filters.audiences, value) };
   }
 
   return filters;
