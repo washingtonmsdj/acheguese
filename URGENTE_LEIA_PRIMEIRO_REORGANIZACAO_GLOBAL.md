@@ -702,3 +702,15 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 - [x] avatars editoriais deixaram de ser apresentados como autores reais quando Post não fornece avatar; mapa tipado ajustado em `3a89da2583efe4528a79aa2eccca9f1255c6c506` e import residual removido em `c674877709ed81b145786e65e0f3d667c0798f3f`.
 - [x] bairros/cidades não foram removidos. Mapeamento visual por slug pode continuar como apresentação, mas sinais de atividade/participação só vêm de Community/Post/read models reais.
 - [ ] NEXT_ACTION sem Vercel: auditar dados públicos reais persistidos/seedados, iniciando por Educação/escolas do Complexo e depois saúde/hospitais se houver dataset nominal. Confirmar cada entidade pública contra fonte oficial/confiável atual; corrigir nome, endereço, vínculo e provenance em vez de apagar.
+
+
+### 2026-09-06 — G6 Educação / veracidade de dados públicos
+
+- [x] dataset público de Educação do primeiro cluster auditado no Supabase: 15 perfis de escola publicados distribuídos pelos 4 territórios do Complexo; as entidades foram preservadas e a auditoria de provenance continua por fonte oficial.
+- [x] coordenadas artificiais de escola removidas fail-closed: 8 registros que usavam `location_center_fallback` deixaram de expor lat/lng; 7 coordenadas realmente geocodificadas foram preservadas. Migration source/remoto: `20260906072000_remove_unverified_education_fallback_coordinates_g6.sql`; corte `4f69a0112a53805cdd27ae0fa9abe6a0e07d2200`. Pós-probe remoto: 7 geocoded com coordenadas, 8 unverified sem coordenadas, 0 fallback artificial remanescente.
+- [x] landing territorial deixou de estimar escolas por `population / 2000`. `LandingFeaturedService` agora conta somente `education_profiles` publicados com `institution_type = school` dentro do `TerritoryFilter`; o Complexo retorna 15 no banco canônico. Corte: `71967d0135b2cc469a9cd36bef6aba2fef603fb2`.
+- [x] bug de UI corrigido: o card `Linhas` não reutiliza mais a contagem de escolas como se fosse quantidade de linhas de ônibus. Sem agregado canônico de transporte, o valor permanece indisponível em vez de inventado.
+- [x] ratchet `tests/architecture/territorial-public-stats-truthfulness.test.ts` impede retorno da estimativa de escolas e do reaproveitamento de `schools` em `Linhas`.
+- [ ] provenance oficial das 15 escolas ainda precisa ser concluída entidade a entidade; onde houver fonte governamental atual e estável, substituir referência de terceiros sem inventar URL.
+- [ ] após Educação, auditar datasets nominais de Saúde/hospitais/unidades públicas pelo mesmo protocolo: existência -> fonte oficial -> endereço/vínculo -> coordenada -> provenance -> UI.
+- [ ] hosted same-SHA continua evidência futura separada e não bloqueia este sweep source/Supabase.
