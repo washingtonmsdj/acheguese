@@ -8,8 +8,8 @@
 
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
-**Status:** EM EXECUÇÃO — G6 / Educação fechou correções factuais, lead público, provenance por fato e mutações estruturais de rede em source+Supabase; cobertura municipal, autoridade institucional herdada e provas hosted same-SHA seguem abertas; Community permanece em sweep ativo  
-**Checkpoint técnico atual:** `a691246bd0d7919f2a15f8ce0a2caa2ac087edf7`  
+**Status:** EM EXECUÇÃO — G6 / Educação mantém cobertura municipal e autoridade institucional como próximos blocos; Empresas recebeu novo sweep de gestão delegada, rotas/CTAs reais e coverage canônico em source+Supabase; provas hosted same-SHA seguem bloqueadas por runner pre-step  
+**Checkpoint técnico atual:** `ef3779ed5f8891e89d503958a256e6f0cb0ca2c3`  
 **Checkpoint de transição G5 → G6:** `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
@@ -778,3 +778,18 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 - [ ] authority institucional herdada/revogável para mantenedoras/Secretarias continua pendente; não implementar por inferência de árvore `brand_hub/branch`;
 - [ ] hosted lint/typecheck/security/test/build/smoke same-SHA continua prova futura separada enquanto a infraestrutura de runner não executar os steps.
 
+
+
+#### 2026-09-06 — G6 Empresas / gestão delegada, ações reais e coverage canônico
+
+- [x] tela `Pessoas e acesso` deixou de transformar erro de leitura em equipe vazia. O hook preserva o erro, a UI fica fail-closed e oferece retry; ratchet arquitetural impede retorno do falso estado `Nenhum membro adicionado`.
+- [x] transferência de propriedade existente no backend ganhou caminho real de produto: somente Proprietário pode escolher pessoa já vinculada, confirmar e chamar `MultiProfileService.transferOwnership`; o antigo owner continua como Gestor conforme comando canônico. Nenhum segundo ACL foi criado.
+- [x] `Link premium` deixou de ter botões cenográficos: preview abre o mini-site, QR gera PNG pelo `QrImageGenerator` central e copiar link usa o clipboard canônico, sempre sob entitlement já existente.
+- [x] fluxo `Editar dados` foi reconciliado: `businessManagementRoutes.edit()` passou a ser a SSOT da rota; Dados, Anúncios e Configurações apontam para o editor real. O blocker de território em Anúncios não redireciona mais para uma tela somente leitura.
+- [x] bug estrutural de coverage corrigido: `Business.id` representa o `profiles.id`, enquanto `service_areas(entity_type='business').entity_id` exige `business_data.id`. Service/hook/componentes agora nomeiam explicitamente `businessDataId`; editor e página pública usam `business.business_data_id` e não `business.id`.
+- [x] autorização de coverage foi alinhada à gestão delegada sem criar helper paralelo. Migration Git/remoto `20260906112658_allow_delegated_business_coverage_g6.sql` mantém o perfil Business correspondente ativo e exige `private.can_manage_profile(business.profile_id)`, aceitando Proprietário/Gestor e negando Membro comum.
+- [x] pós-probe remoto confirmou a definição nova de `private.require_coverage_entity_write`; havia 0 `service_areas` de Business, portanto nenhuma transformação/backfill de dado foi necessária.
+- [x] ratchet `tests/security/business-coverage-delegated-management-g6.test.ts` protege simultaneamente identidade `business_data.id` e autoridade delegada.
+- [x] blocker arquitetural independente que impedia builds foi corrigido sem elevar baseline: `getPostAuthorId()` passou a reutilizar `getPostBasicInfo()`, reduzindo a leitura direta de `posts` de 16 para o limite existente 15.
+- [ ] hosted same-SHA continua sem prova: no checkpoint `ff4fb0d9322a54d26bae3b5ea3e2ddf6a5460bda`, lint/typecheck, Vitest, Phase Core Gate e E2Es encerraram com `steps=null`; não classificar isso como regressão de source.
+- [ ] Business READY continua condicionado a runner real + lint/typecheck/unit/security/E2E + deploy/smoke do mesmo SHA. Não reexecutar cegamente enquanto os jobs continuarem morrendo antes do primeiro step.
