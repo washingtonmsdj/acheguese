@@ -133,7 +133,12 @@ describe("Business extension identity boundary (G6)", () => {
     expect(billingService).toContain(
       "fetchCanonicalByBusinessDataId",
     );
-    expect(billingService).not.toContain("businessId");
+    expect(billingService).toContain(
+      "businessId: businessDataId",
+    );
+    expect(billingService).not.toContain(
+      "getByBusinessId(\n    businessId: string",
+    );
     expect(qrWidget).toContain("businessDataId?: string");
     expect(qrWidget).toContain(
       "useBusinessSubscription(businessDataId || '')",
