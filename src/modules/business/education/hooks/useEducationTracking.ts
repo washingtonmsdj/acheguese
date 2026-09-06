@@ -14,19 +14,19 @@ import type { EducationNicheKey } from '@/core/education';
 export interface UseEducationTrackingOptions {
   educationProfileId: string;
   nicheKey: EducationNicheKey;
-  businessId?: string;
+  businessDataId?: string;
 }
 
 export function useEducationTracking(options: UseEducationTrackingOptions) {
-  const { educationProfileId, nicheKey, businessId } = options;
+  const { educationProfileId, nicheKey, businessDataId } = options;
 
   const trackProfileView = useCallback(() => {
     EducationTrackingService.trackProfileView(
       educationProfileId,
       nicheKey,
-      businessId,
+      businessDataId,
     );
-  }, [educationProfileId, nicheKey, businessId]);
+  }, [educationProfileId, nicheKey, businessDataId]);
 
   const trackProgramView = useCallback(
     (programId: string) => {
@@ -34,10 +34,10 @@ export function useEducationTracking(options: UseEducationTrackingOptions) {
         educationProfileId,
         nicheKey,
         programId,
-        businessId,
+        businessDataId,
       );
     },
-    [educationProfileId, nicheKey, businessId],
+    [educationProfileId, nicheKey, businessDataId],
   );
 
   const trackEventView = useCallback(
@@ -46,30 +46,30 @@ export function useEducationTracking(options: UseEducationTrackingOptions) {
         educationProfileId,
         nicheKey,
         eventId,
-        businessId,
+        businessDataId,
       );
     },
-    [educationProfileId, nicheKey, businessId],
+    [educationProfileId, nicheKey, businessDataId],
   );
 
   const trackWhatsAppClick = useCallback(() => {
     EducationTrackingService.trackWhatsAppClick(
       educationProfileId,
       nicheKey,
-      businessId,
+      businessDataId,
     );
-  }, [educationProfileId, nicheKey, businessId]);
+  }, [educationProfileId, nicheKey, businessDataId]);
 
   const trackEnrollmentCTAClick = useCallback(
     (ctaLabel?: string) => {
       EducationTrackingService.trackEnrollmentCTAClick(
         educationProfileId,
         nicheKey,
-        businessId,
+        businessDataId,
         ctaLabel ? { ctaLabel } : undefined,
       );
     },
-    [educationProfileId, nicheKey, businessId],
+    [educationProfileId, nicheKey, businessDataId],
   );
 
   const trackLeadSubmitted = useCallback(
@@ -86,11 +86,11 @@ export function useEducationTracking(options: UseEducationTrackingOptions) {
         educationProfileId,
         nicheKey,
         leadId,
-        businessId,
+        businessDataId,
         metadata,
       );
     },
-    [educationProfileId, nicheKey, businessId],
+    [educationProfileId, nicheKey, businessDataId],
   );
 
   const trackEventInterest = useCallback(
@@ -99,11 +99,11 @@ export function useEducationTracking(options: UseEducationTrackingOptions) {
         educationProfileId,
         nicheKey,
         eventId,
-        businessId,
+        businessDataId,
         eventType ? { eventType } : undefined,
       );
     },
-    [educationProfileId, nicheKey, businessId],
+    [educationProfileId, nicheKey, businessDataId],
   );
 
   return {
