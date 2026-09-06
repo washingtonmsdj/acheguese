@@ -285,13 +285,13 @@ export function EducationDataSection({
           </div>
         </div>
 
-        {isSchoolProfile && (
-          <>
-            <Separator />
+        <Separator />
 
-            <div className="space-y-2">
-              <h4 className="text-sm font-semibold">Presets rapidos</h4>
-              <div className="flex flex-wrap gap-2">
+        <div className="space-y-2">
+          <h4 className="text-sm font-semibold">Presets rapidos</h4>
+          <div className="flex flex-wrap gap-2">
+            {isSchoolProfile && (
+              <>
                 <Button
                   type="button"
                   variant="outline"
@@ -308,20 +308,22 @@ export function EducationDataSection({
                 >
                   Escola basica
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onApplyPreset('accessible')}
-                >
-                  Escola acessivel
-                </Button>
-              </div>
-            </div>
+              </>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onApplyPreset('accessible')}
+            >
+              Acessibilidade
+            </Button>
+          </div>
+        </div>
 
-            <Separator />
+        <Separator />
 
-            <div className="space-y-5">
+        <div className="space-y-5">
               <EducationOptionCheckboxGroup
                 title="Recursos basicos"
                 options={BASIC_RESOURCE_OPTIONS}
@@ -347,17 +349,15 @@ export function EducationDataSection({
                 }
               />
 
-              <EducationOptionCheckboxGroup
-                title="Instalacoes"
-                options={FACILITY_OPTIONS}
-                selected={formData.schoolFacilityFeatures}
-                onToggle={(key) =>
-                  onToggleArrayField('schoolFacilityFeatures', key)
-                }
-              />
-            </div>
-          </>
-        )}
+          <EducationOptionCheckboxGroup
+            title="Instalacoes"
+            options={FACILITY_OPTIONS}
+            selected={formData.schoolFacilityFeatures}
+            onToggle={(key) =>
+              onToggleArrayField('schoolFacilityFeatures', key)
+            }
+          />
+        </div>
       </CardContent>
     </Card>
   );
