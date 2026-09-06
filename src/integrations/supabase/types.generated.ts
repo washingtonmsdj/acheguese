@@ -1857,6 +1857,103 @@ export type Database = {
           },
         ]
       }
+      business_profile_fact_provenance: {
+        Row: {
+          business_id: string
+          correction_id: string | null
+          created_at: string
+          evidence_note: string | null
+          field_code: string
+          id: string
+          observed_at: string
+          source_kind: string
+          source_updated_at: string | null
+          source_url: string | null
+          updated_at: string
+          value_jsonb: Json
+          verification_state: string
+          verified_at: string | null
+          verified_by_profile_id: string | null
+        }
+        Insert: {
+          business_id: string
+          correction_id?: string | null
+          created_at?: string
+          evidence_note?: string | null
+          field_code: string
+          id?: string
+          observed_at: string
+          source_kind: string
+          source_updated_at?: string | null
+          source_url?: string | null
+          updated_at?: string
+          value_jsonb: Json
+          verification_state?: string
+          verified_at?: string | null
+          verified_by_profile_id?: string | null
+        }
+        Update: {
+          business_id?: string
+          correction_id?: string | null
+          created_at?: string
+          evidence_note?: string | null
+          field_code?: string
+          id?: string
+          observed_at?: string
+          source_kind?: string
+          source_updated_at?: string | null
+          source_url?: string | null
+          updated_at?: string
+          value_jsonb?: Json
+          verification_state?: string
+          verified_at?: string | null
+          verified_by_profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_profile_fact_provenance_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_data"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_profile_fact_provenance_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "business_profile_fact_provenance_correction_id_fkey"
+            columns: ["correction_id"]
+            isOneToOne: false
+            referencedRelation: "business_profile_corrections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_profile_fact_provenance_verified_by_profile_id_fkey"
+            columns: ["verified_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "business_profile_fact_provenance_verified_by_profile_id_fkey"
+            columns: ["verified_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_profile_fact_provenance_verified_by_profile_id_fkey"
+            columns: ["verified_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_profile_reports: {
         Row: {
           admin_notes: string | null
