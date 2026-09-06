@@ -8,8 +8,8 @@
 
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
-**Status:** EM EXECUÇÃO — G6 / Educação mantém cobertura municipal e autoridade institucional como próximos blocos; Empresas recebeu novo sweep de gestão delegada, rotas/CTAs reais e coverage canônico em source+Supabase; provas hosted same-SHA seguem bloqueadas por runner pre-step  
-**Checkpoint técnico atual:** `ef3779ed5f8891e89d503958a256e6f0cb0ca2c3`  
+**Status:** EM EXECUÇÃO — G6 / Empresas fechou identidade Profile ID vs business_data.id, Billing operacional brokerado para Gestor e mutação financeira owner-only; Educação preserva Profile ID internamente e traduz para Business Billing na fronteira; provas hosted same-SHA seguem bloqueadas por runner pre-step  
+**Checkpoint técnico atual:** `7669b7ae1125b9eac93363ab1c3beab103889e17`  
 **Checkpoint de transição G5 → G6:** `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
@@ -479,6 +479,23 @@ Um domínio/serviço transversal só está SSOT quando:
 ## 11. Registro de progresso
 
 Atualizar esta seção somente com marcos relevantes. Não transformar este arquivo em log de cada commit.
+
+### 2026-09-06 — G6 Empresas / identidade de extensoes + Billing delegado
+
+- [x] fronteira de identidade explicitada: `profiles.id` continua sendo rota/ownership/autoridade; `business_data.id` passa a ser a unica identidade valida para extensoes Business como Billing, Gastronomia, coverage, menu, horarios, delivery areas e source operacional de pedidos;
+- [x] dashboard Business, Gastronomia e workspace privado carregam ambos os IDs; rotas continuam por Profile ID e persistencia de extensoes usa `business_data.id`;
+- [x] `BusinessOwnershipService.resolveManagementRole()` distingue `owner` estrutural de Gestor `admin`; o bridge historico `isOwner()` continua significando "pode gerenciar" apenas para compatibilidade;
+- [x] leitura operacional de assinatura Business saiu do SELECT browser em `user_subscriptions` e passou por `billing-entitlements-rpc`; a tabela financeira continua owner-only por RLS;
+- [x] `billing-entitlements-rpc` remoto atualizado para **v9 ACTIVE**, `verify_jwt=true`, com `requireOperationalAccount`, UUID fail-closed, `broker_user_can_manage_profile` e snapshot sanitizado de plano/status/periodo/contract;
+- [x] helper server-only revalidado: EXECUTE somente `postgres`/`service_role`; probe temporario provou owner=true, Gestor=true, Membro=false e cleanup=0;
+- [x] `useBusinessSubscription`, `EntitlementResolver` e workspace privado usam o read model brokerado; Gestor nao deve mais aparecer como Free apenas por nao poder ler detalhes financeiros;
+- [x] guards de capability permanecem restritos a `PlanEntitlements`, impedindo metadata operacional de virar entitlement por tipagem;
+- [x] pagina **Planos da empresa** deixou de enviar para `/planos` user-scope; checkout Business usa `business_data.id` e alteracao de assinatura e explicitamente somente do Proprietario;
+- [x] Education permanece keyed por Profile ID no dominio, mas resolve `business_data.id` antes de ler/alterar Billing; Gestor de instituicao ve recursos, mas nao altera cobranca;
+- [x] ratchet `tests/architecture/business-extension-identity-g6.test.ts` atualizado; inspeção dirigida do source atual passou **19/19** invariantes;
+- [x] `src/modules/business/VALIDATION.md` sincronizado com a prova e com o limite de evidencia;
+- [ ] HTTP E2E do broker com JWT de fixture continua pertencendo ao runner autenticado; nao criar endpoint de debug, nao reescrever Auth e nao usar `washingtonmsdj` para fabricar essa prova;
+- [ ] lint/typecheck/Vitest/E2E/deploy/smoke same-SHA continuam necessarios antes de Empresas READY; GitHub hosted observado segue encerrando jobs pre-step.
 
 ### 2026-09-05 — G6 Community / ownership sweep ativo
 
