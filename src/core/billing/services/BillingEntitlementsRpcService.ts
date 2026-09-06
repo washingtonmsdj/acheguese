@@ -2,6 +2,7 @@ import { invokeNullableSupabaseBroker } from "@/core/infrastructure/edge-functio
 
 export type BillingEntitlementsRpcAction =
   | "getActiveSubscription"
+  | "getBusinessSubscriptionSnapshot"
   | "hasPlan"
   | "hasFeature"
   | "getEntitlementLimit";
@@ -17,6 +18,17 @@ export interface BillingActiveSubscription {
 
 interface ActiveSubscriptionBrokerData {
   subscription: BillingActiveSubscription | null;
+}
+
+export interface BusinessSubscriptionEntitlementSnapshot {
+  plan_code: string;
+  status_v2: string;
+  subscription_scope: "business";
+  contract_snapshot: Record<string, unknown> | null;
+}
+
+interface BusinessSubscriptionSnapshotBrokerData {
+  subscription: BusinessSubscriptionEntitlementSnapshot | null;
 }
 
 interface HasPlanBrokerData {
@@ -49,6 +61,16 @@ export class BillingEntitlementsRpcService {
 
   static async getActiveSubscription(): Promise<BillingActiveSubscription | null> {
     const result = await this.invoke<ActiveSubscriptionBrokerData>("getActiveSubscription");
+    return result?.subscription ?? null;
+  }
+
+  static async getBusinessSubscriptionSnapshot(
+    businessDataId: string,
+  ): Promise<BusinessSubscriptionEntitlementSnapshot | null> {
+    const result = await this.invoke<BusinessSubscriptionSnapshotBrokerData>(
+      "getBusinessSubscriptionSnapshot",
+      { businessDataId },
+    );
     return result?.subscription ?? null;
   }
 
