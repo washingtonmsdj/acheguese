@@ -3,7 +3,8 @@
  */
 
 import { useMemo, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useBusinessDashboardContext } from '@/modules/business/dashboard/businessDashboardContext';
 import { Helmet } from 'react-helmet-async';
 import { Package, RefreshCw, Search, Users } from 'lucide-react';
 import { formatDistanceToNowStrict } from 'date-fns';
@@ -29,14 +30,14 @@ import {
 import { formatBrl } from '../utils/currency';
 
 export default function OrdersPage() {
-  const { businessId } = useParams<{ businessId: string }>();
+  const { businessId, businessDataId } = useBusinessDashboardContext();
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<'all' | 'pending_payment' | 'paid'>('all');
   const [customerQuery, setCustomerQuery] = useState('');
 
   const { orders, isLoading, refetch, isRealtimeConnected, lastRealtimeEventAt } = useOrders(
-    businessId!,
+    businessDataId,
     statusFilter !== 'all' ? { status: statusFilter } : undefined,
   );
 
@@ -102,7 +103,7 @@ export default function OrdersPage() {
     navigate(businessManagementRoutes.gastronomyPedidoDetalhe(businessId!, order.id));
   };
 
-  if (!businessId) {
+  if (!businessId || !businessDataId) {
     return (
       <div className="container max-w-6xl py-8">
         <p className="text-center text-destructive">ID do negócio não encontrado</p>
@@ -152,7 +153,7 @@ export default function OrdersPage() {
           </Button>
         </div>
 
-        <OrderStatsWidget businessId={businessId} />
+        <OrderStatsWidget businessId={businessDataId} />
 
         <Card>
           <CardHeader className="pb-3">
