@@ -59,6 +59,7 @@ export async function getUserBusinessesByProfilesQuery(
     .from<BusinessQueryRow>("business_data")
     .select(
       `
+      id,
       profile_id,
       business_name,
       category,
@@ -86,6 +87,7 @@ export async function getUserBusinessesQuery(profileId: string): Promise<Busines
     .from<BusinessQueryRow>("business_data")
     .select(
       `
+      id,
       profile_id,
       business_name,
       category,
@@ -152,6 +154,7 @@ export async function getCurrentUserFavoriteBusinessesQuery(): Promise<BusinessR
     .from<BusinessQueryRow>("business_data")
     .select(
       `
+      id,
       profile_id,
       business_name,
       category,
