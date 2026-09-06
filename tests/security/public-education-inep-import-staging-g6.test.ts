@@ -18,6 +18,9 @@ describe("G6 public Education INEP import staging", () => {
   const archiveBinding = read(
     "supabase/migrations/20260906165010_require_inep_archive_entry_binding_g6.sql",
   );
+  const optionalRawBinding = read(
+    "supabase/migrations/20260906170324_bind_public_education_optional_fields_to_raw_g6.sql",
+  );
 
   it("promotes non-null INEP codes to the canonical natural key", () => {
     expect(migration).toContain(
@@ -142,6 +145,31 @@ describe("G6 public Education INEP import staging", () => {
     }
   });
 
+  it("binds optional location payloads back to the retained raw source", () => {
+    for (const errorCode of [
+      "raw_address_street_mismatch",
+      "raw_address_number_mismatch",
+      "raw_address_complement_mismatch",
+      "raw_neighborhood_mismatch",
+      "raw_postal_code_mismatch",
+      "raw_latitude_mismatch",
+      "raw_longitude_mismatch",
+    ]) {
+      expect(optionalRawBinding).toContain(errorCode);
+    }
+
+    expect(optionalRawBinding).toContain("r.raw_record ? 'DS_ENDERECO'");
+    expect(optionalRawBinding).toContain("r.raw_record ? 'NO_ENDERECO'");
+    expect(optionalRawBinding).toContain("r.raw_record ? 'NU_LATITUDE'");
+    expect(optionalRawBinding).toContain("r.raw_record ? 'LATITUDE'");
+    expect(optionalRawBinding).toContain("r.raw_record ? 'NU_LONGITUDE'");
+    expect(optionalRawBinding).toContain("r.raw_record ? 'LONGITUDE'");
+    expect(optionalRawBinding).not.toContain(
+      "INSERT INTO public.education_profiles",
+    );
+    expect(optionalRawBinding).not.toContain("INSERT INTO public.business_data");
+  });
+
   it("requires cryptographic ZIP-to-CSV binding before a batch can exist", () => {
     expect(archiveBinding).toContain(
       "education_public_import_batches_archive_binding_chk",
@@ -191,6 +219,9 @@ describe("G6 public Education INEP import staging", () => {
     expect(archiveBinding).not.toContain("INSERT INTO public.business_data");
     expect(archiveBinding).not.toContain("INSERT INTO public.profiles");
     expect(archiveBinding).not.toContain(
+      "private.profile_create_profile_with_extension(",
+    );
+    expect(optionalRawBinding).not.toContain(
       "private.profile_create_profile_with_extension(",
     );
     expect(migration).toContain(
