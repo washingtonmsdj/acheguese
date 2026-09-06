@@ -13,6 +13,7 @@ import {
 } from "@/core/billing";
 import { useBillingPlans } from "@/core/billing/hooks/useBillingPlans";
 import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
+import { useDashboardAccess } from "@/core/business/hooks/useDashboardAccess";
 
 function resolveBusinessPlanTier(planCode: string): PlanTier | null {
   if (planCode === PlanTier.FREE) return PlanTier.FREE;
@@ -25,11 +26,17 @@ export default function BusinessPlansPage() {
   const {
     businessId,
     businessDataId,
+    business,
     planTier,
     entitlements,
     isGastronomyActive,
   } = useBusinessDashboardContext();
   const { data: billingPlans = [], isLoading: loadingPlans } = useBillingPlans();
+  const {
+    permissions,
+    loading: loadingAccess,
+  } = useDashboardAccess(business.profile_id);
+  const canManageBilling = permissions.role === "owner";
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const showCoupons = isLaunchSurfaceEnabled("coupons");
   const showMobility = isLaunchSurfaceEnabled("mobility");
@@ -58,6 +65,11 @@ export default function BusinessPlansPage() {
   ] as const;
 
   const handleSelectPlan = async (planCode: string) => {
+    if (!canManageBilling) {
+      toast.error("Somente o Proprietario pode alterar a assinatura da empresa.");
+      return;
+    }
+
     const targetTier = resolveBusinessPlanTier(planCode);
     if (!targetTier) {
       toast.error("Este plano ainda nao esta disponivel para assinatura Business.");
@@ -97,6 +109,11 @@ export default function BusinessPlansPage() {
           <span className="text-sm text-muted-foreground">
             As alteracoes abaixo usam a assinatura desta empresa, nao o plano pessoal da conta.
           </span>
+          {!loadingAccess && !canManageBilling ? (
+            <Badge variant="outline">
+              Somente o Proprietario pode alterar a assinatura
+            </Badge>
+          ) : null}
         </CardContent>
       </Card>
 
@@ -149,7 +166,9 @@ export default function BusinessPlansPage() {
                       disabled={
                         isCurrent ||
                         !isSupported ||
-                        loadingPlan !== null
+                        loadingPlan !== null ||
+                        loadingAccess ||
+                        !canManageBilling
                       }
                       onClick={() => void handleSelectPlan(plan.code)}
                     >
