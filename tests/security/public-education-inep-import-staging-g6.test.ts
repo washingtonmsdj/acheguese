@@ -15,6 +15,9 @@ describe("G6 public Education INEP import staging", () => {
   const sourceBinding = read(
     "supabase/migrations/20260906162828_bind_public_education_staging_source_contract_g6.sql",
   );
+  const archiveBinding = read(
+    "supabase/migrations/20260906165010_require_inep_archive_entry_binding_g6.sql",
+  );
 
   it("promotes non-null INEP codes to the canonical natural key", () => {
     expect(migration).toContain(
@@ -139,6 +142,27 @@ describe("G6 public Education INEP import staging", () => {
     }
   });
 
+  it("requires cryptographic ZIP-to-CSV binding before a batch can exist", () => {
+    expect(archiveBinding).toContain(
+      "education_public_import_batches_archive_binding_chk",
+    );
+    expect(archiveBinding).toContain(
+      "manifest#>>'{safety,archive_binding_verified}' = 'true'",
+    );
+    expect(archiveBinding).toContain(
+      "manifest#>>'{source,archive_entry_sha256}'",
+    );
+    expect(archiveBinding).toContain(
+      "manifest#>>'{source,extracted_file_sha256}'",
+    );
+    expect(archiveBinding).toMatch(
+      /lower\(manifest#>>'\{source,archive_entry_sha256\}'\)[\s\S]*=[\s\S]*lower\(manifest#>>'\{source,extracted_file_sha256\}'\)/,
+    );
+    expect(archiveBinding).toContain(
+      "= source_file_name",
+    );
+  });
+
   it("does not introduce a second Profile/Business materialization authority", () => {
     expect(migration).not.toContain(
       "INSERT INTO public.education_profiles",
@@ -162,6 +186,12 @@ describe("G6 public Education INEP import staging", () => {
     expect(sourceBinding).not.toContain("INSERT INTO public.profiles");
     expect(sourceBinding).not.toMatch(
       /CREATE OR REPLACE FUNCTION private\.[^(]*material/i,
+    );
+    expect(archiveBinding).not.toContain("INSERT INTO public.education_profiles");
+    expect(archiveBinding).not.toContain("INSERT INTO public.business_data");
+    expect(archiveBinding).not.toContain("INSERT INTO public.profiles");
+    expect(archiveBinding).not.toContain(
+      "private.profile_create_profile_with_extension(",
     );
     expect(migration).toContain(
       "No materialization authority is defined here.",
