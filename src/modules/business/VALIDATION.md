@@ -1,7 +1,7 @@
 # Validacao atual — Modulo de Empresas
 
 **Data do checkpoint:** 2026-09-06  
-**Checkpoint tecnico:** `6ff82c8ef3baa3ef9829ad7a664a16c0d30460d9`  
+**Checkpoint tecnico:** `cd61376d46a391832444ca052f0d83a6e09b0e13`  
 **Status:** G6 EM CERTIFICACAO — NAO MVP CERTIFICADO
 
 Este arquivo registra o estado atual de Business durante G6. O ownership/SSOT de source foi fechado em G4 e os blockers historicos de G5 foram encerrados conforme `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`. O trabalho ativo agora e certificacao funcional e operacional do modulo.
@@ -391,13 +391,19 @@ inspecionado.
 
 O adaptador
 `tools/data-quality/prepare-public-education-inep-import.mjs` esta em
-`inep-censo-school-adapter/2` e e deliberadamente offline em relacao ao Supabase:
+`inep-censo-school-adapter/4` e e deliberadamente offline em relacao ao Supabase:
 
 - streaming, sem carregar o Censo inteiro em memoria;
 - exige o header escolar com `NU_ANO_CENSO`, `CO_ENTIDADE`, `NO_ENTIDADE`,
   `TP_SITUACAO_FUNCIONAMENTO`, `CO_UF`, `CO_MUNICIPIO` e `TP_DEPENDENCIA`;
 - filtra somente pelo municipio IBGE alvo, preservando o registro bruto;
 - gera SHA-256 por registro e manifest de provenance;
+- calcula o SHA-256 do ZIP e do CSV localmente e agora prova criptograficamente que o
+  CSV fornecido e exatamente a entrada de mesmo basename contida no ZIP declarado;
+- o parser ZIP e dependency-free: aceita STORE/DEFLATE, recusa ZIP criptografado,
+  multi-disk, ZIP64 e compressao desconhecida em vez de degradar silenciosamente;
+- o manifest registra `archive_entry`, `archive_entry_sha256`,
+  `extracted_file_sha256` e `archive_binding_verified=true`;
 - registra arquivo como `file_role=school_table`;
 - separa contagens publicas/privadas e ativas/inativas sem descartar linhas antes do
   quality gate;
@@ -410,6 +416,40 @@ a fonte oficial continua sendo a autoridade.
 
 Ratchet:
 `tests/scripts/public-education-inep-adapter.test.ts`.
+
+O teste foi atualizado para usar um ZIP sintético real e também cobre o caso negativo
+`ZIP valido + CSV adulterado`. Este checkpoint **nao afirma execucao hosted do Vitest**:
+o runner same-SHA continua indisponivel antes dos steps; a evidencia deste corte e
+source inspection + probe transacional remoto.
+
+### Binding criptografico ZIP -> CSV
+
+Migration Git/remoto
+`20260906165010_require_inep_archive_entry_binding_g6.sql` adiciona um CHECK
+diretamente em `private.education_public_import_batches`. Um batch so pode existir se:
+
+- `safety.archive_binding_verified=true`;
+- `archive_entry_sha256` e `extracted_file_sha256` forem SHA-256 validos;
+- os dois hashes forem iguais;
+- o basename de `archive_entry` for exatamente `source_file_name`.
+
+Isso impede provenance falsa do tipo **ZIP oficial + CSV externo/arbitrario**, mesmo se
+uma futura rotina interna tentar contornar o adapter.
+
+Probe remoto em `BEGIN/ROLLBACK`:
+
+- manifest legado sem binding -> bloqueado pelo constraint;
+- manifest com entry/hash coerentes -> batch criado;
+- rollback -> **0 batches / 0 staging rows** persistidos.
+
+ACL apos a migration permaneceu inalterada: create/stage/validate somente
+`service_role`; planner read-only `SECURITY INVOKER` somente `service_role`.
+O Security Advisor nao adicionou finding especifico do pipeline INEP.
+
+O ZIP oficial 2025 continua **nao inspecionado neste ambiente**: a pagina do Inep publica
+o link oficial atualizado em julho/2026, mas `download.inep.gov.br` retornou 502 no
+browser e falha de resolucao no runtime. Nenhum espelho foi aceito como substituto e
+nenhum batch real foi criado.
 
 ### Staging privada e natural key
 
