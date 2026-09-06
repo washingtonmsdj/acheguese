@@ -49,6 +49,28 @@ export interface PaginatedEducationProfiles {
   totalCount: number;
 }
 
+function parseEducationPublicRoute(
+  geographicPath?: string | null,
+  slug?: string | null,
+): EducationPublicRoute | null {
+  if (!geographicPath || !slug) return null;
+
+  const parts = geographicPath.split('/').filter(Boolean);
+  const [country, state, city, district] = parts;
+
+  if (country !== 'br' || !state || !city || !district) {
+    return null;
+  }
+
+  return {
+    state,
+    city,
+    district,
+    slug,
+    geographic_path: geographicPath,
+  };
+}
+
 type PublicEducationSearchRow =
   Database['public']['Functions']['list_public_education_profiles']['Returns'][number];
 
