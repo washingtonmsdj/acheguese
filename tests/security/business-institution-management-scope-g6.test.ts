@@ -124,6 +124,35 @@ describe("G6 Business institutional management scope", () => {
     expect(businessesPage).toContain("<AdminInstitutionScopes />");
   });
 
+  it("keeps deletion of the Education identity structural-owner-only", () => {
+    const deleteBoundary = read(
+      "supabase/migrations/20260907011809_restrict_education_profile_delete_to_structural_owner_g6.sql",
+    );
+
+    expect(deleteBoundary).toContain(
+      "DROP POLICY IF EXISTS education_profiles_owner_all",
+    );
+    expect(deleteBoundary).toContain(
+      "CREATE POLICY education_profiles_manager_update",
+    );
+    expect(deleteBoundary).toContain(
+      "private.can_operate_business_profile(business_id)",
+    );
+    expect(deleteBoundary).toContain(
+      "CREATE POLICY education_profiles_structural_owner_delete",
+    );
+    expect(deleteBoundary).toContain(
+      "p.user_id = (SELECT auth.uid())",
+    );
+
+    const deletePolicy =
+      deleteBoundary.split(
+        "CREATE POLICY education_profiles_structural_owner_delete",
+      )[1] ?? "";
+    expect(deletePolicy).not.toContain("can_manage_profile");
+    expect(deletePolicy).not.toContain("can_operate_business_profile");
+  });
+
   it("does not weaken structural ownership or people/access mutations", () => {
     const transfer = read(
       "supabase/migrations/20260906124554_fix_business_claim_canonical_transfer_g6.sql",
