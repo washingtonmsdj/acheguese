@@ -99,12 +99,8 @@ const ESLINT_PLUGINS = [
   { name: "admin-ssot", tables: ["user_roles"], service: "AdminService" },
   {
     name: "favorites-ssot",
-    tables: [
-      "profile_favorites_new",
-      "user_favorite_businesses",
-      "post_favorites",
-    ],
-    service: "core/favorites owners",
+    tables: ["user_favorite_businesses"],
+    service: "BusinessFavoriteStore; saved entities stay domain-owned",
   },
   {
     name: "location-ssot",
