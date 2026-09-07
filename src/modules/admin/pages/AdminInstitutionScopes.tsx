@@ -39,18 +39,31 @@ import { Textarea } from "@/shared/components/ui/textarea";
 
 type AuthorityKind = GrantBusinessInstitutionScopeInput["authorityKind"];
 
-const AUTHORITY_KIND_LABELS: Record<AuthorityKind, string> = {
-  maintainer: "Mantenedora",
-  municipal_secretariat: "Secretaria municipal",
-  state_secretariat: "Secretaria estadual",
-  federal_authority: "Autoridade federal",
-  education_network: "Rede de educação",
-  public_agency: "Órgão público",
-};
+const AUTHORITY_KINDS: AuthorityKind[] = [
+  "maintainer",
+  "municipal_secretariat",
+  "state_secretariat",
+  "federal_authority",
+  "education_network",
+  "public_agency",
+];
 
-const AUTHORITY_KINDS = Object.keys(
-  AUTHORITY_KIND_LABELS,
-) as AuthorityKind[];
+function authorityKindLabel(kind: AuthorityKind): string {
+  switch (kind) {
+    case "maintainer":
+      return "Mantenedora";
+    case "municipal_secretariat":
+      return "Secretaria municipal";
+    case "state_secretariat":
+      return "Secretaria estadual";
+    case "federal_authority":
+      return "Autoridade federal";
+    case "education_network":
+      return "Rede de educação";
+    case "public_agency":
+      return "Órgão público";
+  }
+}
 
 function isHttpUrl(value: string): boolean {
   try {
@@ -89,8 +102,8 @@ export default function AdminInstitutionScopes() {
   const [evidenceUrl, setEvidenceUrl] = useState("");
   const [grantReason, setGrantReason] = useState("");
   const [revocationReasons, setRevocationReasons] = useState<
-    Record<string, string>
-  >({});
+    Map<string, string>
+  >(() => new Map());
 
   const loadModel = useCallback(async () => {
     setLoading(true);
@@ -167,7 +180,7 @@ export default function AdminInstitutionScopes() {
   };
 
   const handleRevoke = async (scopeId: string) => {
-    const reason = revocationReasons[scopeId]?.trim() ?? "";
+    const reason = revocationReasons.get(scopeId)?.trim() ?? "";
     if (reason.length < 10) {
       toast.error("Informe um motivo de revogação com pelo menos 10 caracteres.");
       return;
@@ -187,8 +200,8 @@ export default function AdminInstitutionScopes() {
 
     toast.success("Autoridade institucional revogada.");
     setRevocationReasons((current) => {
-      const next = { ...current };
-      delete next[scopeId];
+      const next = new Map(current);
+      next.delete(scopeId);
       return next;
     });
     await loadModel();
@@ -303,7 +316,7 @@ export default function AdminInstitutionScopes() {
                   <SelectContent>
                     {AUTHORITY_KINDS.map((kind) => (
                       <SelectItem key={kind} value={kind}>
-                        {AUTHORITY_KIND_LABELS[kind]}
+                        {authorityKindLabel(kind)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -394,7 +407,7 @@ export default function AdminInstitutionScopes() {
                           <span className="text-muted-foreground">→</span>
                           <span>{scope.target_name}</span>
                           <Badge variant="outline">
-                            {AUTHORITY_KIND_LABELS[scope.authority_kind]}
+                            {authorityKindLabel(scope.authority_kind)}
                           </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">
@@ -419,12 +432,13 @@ export default function AdminInstitutionScopes() {
 
                     <div className="flex flex-col gap-2 sm:flex-row">
                       <Input
-                        value={revocationReasons[scope.scope_id] ?? ""}
+                        value={revocationReasons.get(scope.scope_id) ?? ""}
                         onChange={(event) =>
-                          setRevocationReasons((current) => ({
-                            ...current,
-                            [scope.scope_id]: event.target.value,
-                          }))
+                          setRevocationReasons((current) => {
+                            const next = new Map(current);
+                            next.set(scope.scope_id, event.target.value);
+                            return next;
+                          })
                         }
                         maxLength={1000}
                         placeholder="Motivo da revogação (mín. 10 caracteres)"
@@ -433,8 +447,9 @@ export default function AdminInstitutionScopes() {
                         variant="destructive"
                         disabled={
                           processing ||
-                          (revocationReasons[scope.scope_id]?.trim().length ??
-                            0) < 10
+                          (revocationReasons
+                            .get(scope.scope_id)
+                            ?.trim().length ?? 0) < 10
                         }
                         onClick={() => void handleRevoke(scope.scope_id)}
                       >
