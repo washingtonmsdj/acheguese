@@ -38,7 +38,6 @@ Codigo em `src/modules/business` nao deve acessar `@/integrations/*` nem `@supab
 - `src/core/business/services/business.queries.ts`: read model geral;
 - `src/core/business/services/business.mutations.ts`: mutations gerais;
 - `src/core/business/services/NetworkService.ts`: lifecycle especializado de rede/filiais dentro do mesmo owner `core/business`;
-- `src/core/business/services/BusinessManagementService.ts`: gestao operacional;
 - `src/core/business/services/BusinessOwnershipService.ts`: ownership/autorizacao de dominio;
 - `src/core/business/services/BusinessUrlService.ts`: URL/slug;
 - `src/core/business/types`: contratos canonicos;
