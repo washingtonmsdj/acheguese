@@ -92,6 +92,22 @@ describe("business_data grants security", () => {
     );
   });
 
+  it("keeps tax_id readable but out of authenticated profile-extension writes", () => {
+    const extension = readProjectFile(
+      "src/core/business/services/business.profile-extension.ts",
+    );
+
+    expect(extension).toContain('"tax_id"');
+    expect(extension).toContain(
+      '"profile_id" | "created_at" | "updated_at" | "tax_id"',
+    );
+    expect(extension).toContain("delete mutableUpdates.tax_id");
+    expect(extension).toContain(
+      ".update(mutableUpdates as BusinessProfileExtensionUpdate)",
+    );
+    expect(extension).not.toContain(".update(updates)");
+  });
+
   it("keeps public business discovery on a sanitized read-only projection", () => {
     const privacyBoundary = readProjectFile(
       "supabase/migrations/20260825233458_isolate_public_business_catalog.sql",
