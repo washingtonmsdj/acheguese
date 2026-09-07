@@ -118,12 +118,14 @@ export default function EmpresaDetailLandingPage(
     let cancelled = false;
 
     const loadOperationConfig = async () => {
-      if (!snapshotBusiness?.id) {
+      if (!institutionalBusinessDataId) {
         setOperationConfig(null);
         return;
       }
 
-      const { data, error } = await BusinessHoursService.getOperationConfig(snapshotBusiness.id);
+      const { data, error } = await BusinessHoursService.getOperationConfig(
+        institutionalBusinessDataId,
+      );
       if (cancelled) return;
 
       if (error) {
@@ -139,7 +141,7 @@ export default function EmpresaDetailLandingPage(
     return () => {
       cancelled = true;
     };
-  }, [snapshotBusiness?.id]);
+  }, [institutionalBusinessDataId]);
 
   const resolvedOpenStatus = useMemo(() => {
     const base = snapshot?.institutional.openStatus ?? { open: null, todayHours: null };
