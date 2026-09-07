@@ -73,17 +73,17 @@ export type Profile = Partial<MultiProfileRecord> & {
 // Business extension
 export interface BusinessData {
   profile_id: string;
-  legal_name: string;
-  cnpj?: string;
-  tax_id?: string;
-  company_type?: 'mei' | 'ltda' | 'sa' | 'eireli' | 'other';
-  industry?: string;
-  employee_count?: '1-10' | '11-50' | '51-200' | '201-500' | '500+';
-  founded_year?: number;
-  business_address?: string;
-  business_city?: string;
-  business_state?: string;
-  business_zip?: string;
+  legal_name: string | null;
+  cnpj?: string | null;
+  tax_id?: string | null;
+  company_type?: 'mei' | 'ltda' | 'sa' | 'eireli' | 'other' | null;
+  industry?: string | null;
+  employee_count?: '1-10' | '11-50' | '51-200' | '201-500' | '500+' | null;
+  founded_year?: number | null;
+  business_address?: string | null;
+  business_city?: string | null;
+  business_state?: string | null;
+  business_zip?: string | null;
   business_hours?: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
