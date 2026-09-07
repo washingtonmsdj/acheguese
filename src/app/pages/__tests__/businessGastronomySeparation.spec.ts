@@ -66,6 +66,12 @@ describe('business and gastronomy public page separation', () => {
     expect(pageSource).toContain('useCanonicalBusinessFavorite(');
     expect(pageSource).toContain('institutionalBusinessDataId,');
     expect(pageSource).toContain('useBusinessRecommendation(institutionalBusinessDataId)');
+    expect(pageSource).toContain(
+      'BusinessHoursService.getOperationConfig(\n        institutionalBusinessDataId,',
+    );
+    expect(pageSource).not.toContain(
+      'BusinessHoursService.getOperationConfig(snapshotBusiness.id)',
+    );
     expect(pageSource).toContain('recommendLoading={recommendLoading}');
     expect(pageSource).toContain('const robotsContent = props.communityAliasOverride');
     expect(pageSource).toContain('? "noindex, follow"');
