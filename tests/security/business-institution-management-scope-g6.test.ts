@@ -83,6 +83,47 @@ describe("G6 Business institutional management scope", () => {
     );
   });
 
+  it("keeps the admin UI on the canonical Business/Admin facade chain", () => {
+    const readModelMigration = read(
+      "supabase/migrations/20260907010116_add_business_institution_scope_admin_model_g6.sql",
+    );
+    const edge = read("supabase/functions/admin-business-rpc/index.ts");
+    const businessFacade = read("src/core/business/services/BusinessService.ts");
+    const adminService = read("src/core/admin/services/AdminBusinessService.ts");
+    const ui = read("src/modules/admin/pages/AdminInstitutionScopes.tsx");
+    const businessesPage = read("src/modules/admin/pages/AdminBusinessesPage.tsx");
+
+    expect(readModelMigration).toContain(
+      "CREATE OR REPLACE FUNCTION public.admin_get_business_institution_scope_model",
+    );
+    expect(readModelMigration).toContain(
+      "FROM PUBLIC, anon, authenticated;",
+    );
+    expect(readModelMigration).toContain("TO service_role;");
+    expect(readModelMigration).toContain(
+      "FROM private.profile_institution_management_scopes scope",
+    );
+
+    expect(edge).toContain("getInstitutionScopeAdminModel: true");
+    expect(edge).toContain("admin_get_business_institution_scope_model");
+    expect(edge).toContain("p_actor_user_id: auth.userId");
+
+    expect(businessFacade).toContain(
+      "getBusinessInstitutionScopeAdminModel",
+    );
+    expect(adminService).toContain("getInstitutionScopeAdminModel");
+    expect(adminService).toContain(
+      "BusinessService.getBusinessInstitutionScopeAdminModel()",
+    );
+
+    expect(ui).toContain("adminBusinessService.getInstitutionScopeAdminModel()");
+    expect(ui).toContain("adminBusinessService.grantInstitutionScope");
+    expect(ui).toContain("adminBusinessService.revokeInstitutionScope");
+    expect(ui).not.toContain("supabase.from(");
+    expect(ui).not.toContain(".rpc(");
+    expect(businessesPage).toContain("<AdminInstitutionScopes />");
+  });
+
   it("does not weaken structural ownership or people/access mutations", () => {
     const transfer = read(
       "supabase/migrations/20260906124554_fix_business_claim_canonical_transfer_g6.sql",
