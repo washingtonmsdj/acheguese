@@ -24,16 +24,6 @@ export interface BranchSummary {
   status: string;
 }
 
-export interface BrandHubSummary {
-  id: string;
-  profile_id: string;
-  business_name: string;
-  slug: string;
-  category: string | null;
-  status: string;
-  branch_count: number;
-}
-
 export interface ConvertToNetworkResult {
   brand_hub_id: string;
   first_branch_id: string;
@@ -49,15 +39,6 @@ type BranchRow = {
   is_headquarters: boolean | null;
   status: string;
   location?: { name?: string | null } | null;
-};
-
-type BrandHubRow = {
-  id: string;
-  profile_id: string;
-  business_name: string;
-  slug: string;
-  category: string | null;
-  status: string;
 };
 
 interface QueryError {
@@ -100,26 +81,6 @@ export class NetworkService {
     return networkDb;
   }
 
-
-  /**
-   * Busca um brand_hub pelo profile_id.
-   */
-  static async getBrandHub(profileId: string): Promise<BusinessDataRecord | null> {
-    try {
-      const { data, error } = await this.readDb()
-        .from('business_data')
-        .select('*')
-        .eq('profile_id', profileId)
-        .eq('business_role', 'brand_hub')
-        .maybeSingle();
-
-      if (error) throw error;
-      return data as BusinessDataRecord | null;
-    } catch (err) {
-      logger.error('[NetworkService] getBrandHub error:', err);
-      return null;
-    }
-  }
 
   /**
    * Lista todas as filiais de uma marca (brand_hub).
@@ -218,60 +179,6 @@ export class NetworkService {
     await BusinessNetworkRpcService.setHeadquarters(brandHubId, branchId);
   }
 
-  /**
-   * Busca o brand_hub pai de uma branch.
-   */
-  static async getParentBrandHub(parentBusinessId: string): Promise<BusinessDataRecord | null> {
-    try {
-      const { data, error } = await this.readDb()
-        .from<BusinessDataRecord>('business_data')
-        .select('*')
-        .eq('id', parentBusinessId)
-        .eq('business_role', 'brand_hub')
-        .maybeSingle();
 
-      if (error) throw error;
-      return data;
-    } catch (err) {
-      logger.error('[NetworkService] getParentBrandHub error:', err);
-      return null;
-    }
-  }
-
-  /**
-   * Lista todas as marcas (brand_hubs) de um profile.
-   */
-  static async getProfileBrandHubs(profileId: string): Promise<BrandHubSummary[]> {
-    try {
-      const { data, error } = await this.readDb()
-        .from<BrandHubRow>('business_data')
-        .select('id, profile_id, business_name, slug, category, status')
-        .eq('profile_id', profileId)
-        .eq('business_role', 'brand_hub')
-        .eq('status', 'active');
-
-      if (error) throw error;
-
-      const hubs = data || [];
-
-      // Contar filiais para cada hub
-      const withCounts = await Promise.all(
-        ((hubs || []) as BrandHubRow[]).map(async (hub) => {
-          const { count } = await this.readDb()
-            .from<{ id: string }>('business_data')
-            .select('id', { count: 'exact', head: true })
-            .eq('parent_business_id', hub.id)
-            .eq('business_role', 'branch');
-
-          return { ...hub, branch_count: count ?? 0 };
-        }),
-      );
-
-      return withCounts;
-    } catch (err) {
-      logger.error('[NetworkService] getProfileBrandHubs error:', err);
-      return [];
-    }
-  }
 }
 
