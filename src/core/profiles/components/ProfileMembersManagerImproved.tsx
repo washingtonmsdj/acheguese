@@ -23,6 +23,8 @@ interface ProfileMembersManagerProps {
   profileType: 'business' | 'professional';
 }
 
+type EditableProfileRole = Exclude<ProfileRole, 'owner'>;
+
 function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
@@ -39,9 +41,12 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
   const [showAdd, setShowAdd] = useState(false);
   const [addingMember, setAddingMember] = useState(false);
   const [transferringOwnerId, setTransferringOwnerId] = useState<string | null>(null);
-  const defaultInviteRole: ProfileRole =
+  const defaultInviteRole: EditableProfileRole =
     profileType === 'business' ? 'admin' : 'member';
-  const [newMember, setNewMember] = useState({
+  const [newMember, setNewMember] = useState<{
+    email: string;
+    role: EditableProfileRole;
+  }>({
     email: '',
     role: defaultInviteRole,
   });
@@ -112,7 +117,10 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
     }
   };
 
-  const handleUpdateRole = async (userId: string, newRole: ProfileRole) => {
+  const handleUpdateRole = async (
+    userId: string,
+    newRole: EditableProfileRole,
+  ) => {
     const result = await updateRole(userId, newRole);
 
     if (result.success) {
@@ -269,7 +277,7 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
             <Label htmlFor="role">Nivel de acesso</Label>
             <Select
               value={newMember.role}
-              onValueChange={(value) => setNewMember({ ...newMember, role: value as ProfileRole })}
+              onValueChange={(value) => setNewMember({ ...newMember, role: value as EditableProfileRole })}
               disabled={addingMember}
             >
               <SelectTrigger id="role">
@@ -331,7 +339,7 @@ export function ProfileMembersManagerImproved({ profileId, profileType }: Profil
                   <Select
                     value={member.role}
                     onValueChange={(value) =>
-                      handleUpdateRole(member.user_id, value as ProfileRole)
+                      handleUpdateRole(member.user_id, value as EditableProfileRole)
                     }
                   >
                     <SelectTrigger className="w-40">
