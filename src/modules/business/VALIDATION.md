@@ -687,6 +687,45 @@ sobrescrever cegamente overlays oficiais de 2026 ja verificados. Quando for aber
 reutilizar a autoridade canonica de Profile/Business e
 `business_profile_fact_provenance`, nunca um segundo mecanismo de criacao.
 
+## Hardening pos-Organization Scope e prova hosted G6
+
+O corte seguinte fechou regressões que apareceram somente quando o build hosted voltou
+a executar steps reais:
+
+- `20260907011809_restrict_education_profile_delete_to_structural_owner_g6.sql`
+  separa gestão cotidiana de destruição: gestores delegados/institucionais mantêm
+  SELECT/INSERT/UPDATE de `education_profiles`, mas DELETE da identidade Education fica
+  restrito ao owner estrutural do Profile;
+- `20260907012241_remove_browser_delete_from_education_analytics_g6.sql` removeu a
+  policy criada historicamente para limpeza de teste e revogou DELETE de
+  `education_analytics_events` para `authenticated`; lifecycle técnico permanece
+  service-role;
+- a prova transacional com rollback confirmou que gestor institucional não apaga
+  `education_profiles` e owner estrutural continua capaz; nenhum scope de teste persistiu;
+- `profile_favorites_new` não é mais lido, escrito, exportado ou anunciado como SSOT
+  depois de ter sido aposentado vazio no G6;
+- fallbacks territoriais preservam `schools: null` quando a contagem não está disponível,
+  em vez de fabricar zero;
+- o editor de membros mantém `owner` fora das roles mutáveis `admin/member`;
+- `ProfilePostCard` usa os componentes canônicos de `core/community-feed`;
+- `business.admin.ts` voltou ao schema Supabase gerado e resolve Profile via
+  `profileService`, sem `AdminSupabaseClient` manual e sem acesso direto a
+  `profiles`.
+
+Prova hosted exata:
+
+- SHA `86c76fc8d48550fbbed783a359c32f6cdf6a435d`;
+- Vercel production deployment `dpl_hiwHtFVW4vsE31GAbGRZAVv3z4DZ`: **READY**;
+- passaram `security:validate`, `lint:security` sem errors, Upload SSOT, Core Platform
+  ownership, sitemap, CSP, Turnstile, `typecheck:app`, lint normal e Vite production build;
+- o artifact foi efetivamente deployed e recebeu aliases de produção;
+- warnings históricos do security lint e o advisory low de
+  `postcss-selector-parser` continuam dívida separada e não foram mascarados.
+
+Esta prova hosted fecha source/typecheck/lint/build/deploy para esse SHA, mas **não**
+substitui o lifecycle Business autenticado `create -> edit -> public -> management -> cleanup`
+nem a bateria heavy same-SHA bloqueada pela infraestrutura de runners.
+
 ## Banco / RLS / ownership
 
 Tres migrations remotas e versionadas fecham o contrato:
