@@ -44,6 +44,15 @@ describe("Business management authority SSOT", () => {
     expect(queries).toContain('.from("business_gallery")');
   });
 
+  it("keeps Business slug reads on the generated Supabase schema", () => {
+    const slugs = read("src/core/business/services/business.slug-queries.ts");
+
+    expect(slugs).toContain('.from("business_data")');
+    expect(slugs).not.toContain("BusinessSlugQueriesDbClient");
+    expect(slugs).not.toContain("SlugRow");
+    expect(slugs).not.toContain("supabase as unknown as");
+  });
+
   it("delegates the compatibility RLS helper to the canonical profile manager authority", () => {
     const migration = read(
       "supabase/migrations/20260826095937_unify_business_profile_management_authority.sql",
