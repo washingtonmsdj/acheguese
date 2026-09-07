@@ -8,11 +8,14 @@ import {
   CardHeader,
 } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
-import { PostHeader } from "@/core/community/components/PostHeader";
-import { PostBadge } from "@/core/community/components/PostBadge";
-import { PostContent } from "@/core/community/components/PostContent";
-import { PostTags } from "@/core/community/components/PostTags";
-import { PostMetrics } from "@/core/community/components/PostMetrics";
+import { PostHeader } from "@/core/community-feed/components/PostHeader";
+import {
+  PostBadge,
+  type PostType,
+} from "@/core/community-feed/components/PostBadge";
+import { PostContent } from "@/core/community-feed/components/PostContent";
+import { PostTags } from "@/core/community-feed/components/PostTags";
+import { PostMetrics } from "@/core/community-feed/components/PostMetrics";
 import { usePostInteractions } from "@/core/posts/hooks/usePostInteractions";
 import {
   getCardClasses,
@@ -21,7 +24,6 @@ import {
 } from "@/core/community/components/styles/communityDesignSystem";
 
 import type { CommunityPost } from "@/core/posts/types";
-import type { PostType } from "../PostBadge";
 
 interface PostCardProps {
   post: CommunityPost;
