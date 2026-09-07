@@ -724,16 +724,16 @@ export async function createProduct(
     const { data, error } = await businessMutationsDb.from<ProductInsertRow>("business_products")
       .insert({
         profile_id: businessId,
-        name: productData.nome,
-        description: productData.descricao || null,
-        price: productData.preco || null,
-        promotional_price: productData.preco_promocional || null,
-        image_url: productData.imagem || null,
-        category: productData.categoria || null,
-        stock: productData.estoque || 0,
-        active: productData.ativo ?? true,
-        featured: productData.destaque ?? false,
-        promotion: productData.promocao ?? false,
+        nome: productData.nome,
+        descricao: productData.descricao || null,
+        preco: productData.preco,
+        preco_promocional: productData.preco_promocional ?? null,
+        imagem: productData.imagem || null,
+        categoria: productData.categoria || null,
+        estoque: productData.estoque ?? 0,
+        ativo: productData.ativo ?? true,
+        destaque: productData.destaque ?? false,
+        promocao: productData.promocao ?? false,
       })
       .select()
       .single();
