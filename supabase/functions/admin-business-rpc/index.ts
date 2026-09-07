@@ -27,10 +27,25 @@ const ACTIONS = {
   setVerification: true,
   setPremium: true,
   resolveClaim: true,
+  grantInstitutionScope: true,
+  revokeInstitutionScope: true,
+} as const;
+
+const INSTITUTION_AUTHORITY_KINDS = {
+  maintainer: true,
+  municipal_secretariat: true,
+  state_secretariat: true,
+  federal_authority: true,
+  education_network: true,
+  public_agency: true,
 } as const;
 
 type AdminBusinessAction = keyof typeof ACTIONS;
-type AdminBusinessFlagAction = Exclude<AdminBusinessAction, "resolveClaim">;
+type AdminBusinessFlagAction = Exclude<
+  AdminBusinessAction,
+  "resolveClaim" | "grantInstitutionScope" | "revokeInstitutionScope"
+>;
+type InstitutionAuthorityKind = keyof typeof INSTITUTION_AUTHORITY_KINDS;
 
 interface RequestBody {
   action?: string;
@@ -60,6 +75,52 @@ function cleanBoolean(value: unknown, field: string): boolean {
     throw new RequestValidationError(`Invalid ${field}`);
   }
   return value;
+}
+
+function cleanText(
+  value: unknown,
+  field: string,
+  minLength: number,
+  maxLength: number,
+): string {
+  if (typeof value !== "string") {
+    throw new RequestValidationError(`Invalid ${field}`);
+  }
+  const normalized = value.trim();
+  if (
+    normalized.length < minLength ||
+    normalized.length > maxLength
+  ) {
+    throw new RequestValidationError(`Invalid ${field}`);
+  }
+  return normalized;
+}
+
+function cleanHttpUrl(value: unknown, field: string): string {
+  const normalized = cleanText(value, field, 8, 2_048);
+  try {
+    const url = new URL(normalized);
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      throw new Error("unsupported_protocol");
+    }
+    return url.toString();
+  } catch {
+    throw new RequestValidationError(`Invalid ${field}`);
+  }
+}
+
+function cleanAuthorityKind(value: unknown): InstitutionAuthorityKind {
+  if (
+    typeof value !== "string" ||
+    !(value in INSTITUTION_AUTHORITY_KINDS)
+  ) {
+    throw new RequestValidationError("Invalid authorityKind");
+  }
+  return value as InstitutionAuthorityKind;
+}
+
+function knownRpcReason(errorMessage: string, reasons: readonly string[]): string | null {
+  return reasons.find((reason) => errorMessage.includes(reason)) ?? null;
 }
 
 async function updateBusinessByPublicId(
@@ -196,6 +257,103 @@ serve(async (req: Request) => {
         resource: "admin-business-rpc",
         status: "success",
         details: { action: safeAction, claimId, decision },
+        ...getAuditInfo(req),
+      });
+
+      return jsonResponse({ data }, 200, ALLOWED_METHODS, req);
+    }
+
+    if (safeAction === "grantInstitutionScope") {
+      const authorityProfileId = cleanUuid(
+        params.authorityProfileId,
+        "authorityProfileId",
+      );
+      const targetProfileId = cleanUuid(
+        params.targetProfileId,
+        "targetProfileId",
+      );
+      const authorityKind = cleanAuthorityKind(params.authorityKind);
+      const evidenceUrl = cleanHttpUrl(params.evidenceUrl, "evidenceUrl");
+      const grantReason = cleanText(params.grantReason, "grantReason", 10, 1_000);
+
+      const { data, error } = await supabaseAdmin.rpc(
+        "admin_grant_business_institution_scope",
+        {
+          p_actor_user_id: auth.userId,
+          p_authority_profile_id: authorityProfileId,
+          p_target_profile_id: targetProfileId,
+          p_authority_kind: authorityKind,
+          p_evidence_url: evidenceUrl,
+          p_grant_reason: grantReason,
+        },
+      );
+      if (error) {
+        const reason = knownRpcReason(error.message, [
+          "institution_scope_admin_required",
+          "institution_scope_invalid_profiles",
+          "institution_scope_invalid_authority_kind",
+          "institution_scope_official_evidence_required",
+          "institution_scope_grant_reason_required",
+          "institution_scope_authority_business_profile_required",
+          "institution_scope_public_school_required",
+          "institution_scope_network_mismatch",
+        ]);
+        if (reason) throw new RequestValidationError(reason);
+        throw error;
+      }
+
+      auditLog({
+        timestamp: new Date().toISOString(),
+        userId: auth.userId,
+        action: "admin_business_grantInstitutionScope",
+        resource: "admin-business-rpc",
+        status: "success",
+        details: {
+          action: safeAction,
+          authorityProfileId,
+          targetProfileId,
+          authorityKind,
+        },
+        ...getAuditInfo(req),
+      });
+
+      return jsonResponse({ data }, 200, ALLOWED_METHODS, req);
+    }
+
+    if (safeAction === "revokeInstitutionScope") {
+      const scopeId = cleanUuid(params.scopeId, "scopeId");
+      const revocationReason = cleanText(
+        params.revocationReason,
+        "revocationReason",
+        10,
+        1_000,
+      );
+
+      const { data, error } = await supabaseAdmin.rpc(
+        "admin_revoke_business_institution_scope",
+        {
+          p_actor_user_id: auth.userId,
+          p_scope_id: scopeId,
+          p_revocation_reason: revocationReason,
+        },
+      );
+      if (error) {
+        const reason = knownRpcReason(error.message, [
+          "institution_scope_admin_required",
+          "institution_scope_revocation_reason_required",
+          "institution_scope_not_active",
+        ]);
+        if (reason) throw new RequestValidationError(reason);
+        throw error;
+      }
+
+      auditLog({
+        timestamp: new Date().toISOString(),
+        userId: auth.userId,
+        action: "admin_business_revokeInstitutionScope",
+        resource: "admin-business-rpc",
+        status: "success",
+        details: { action: safeAction, scopeId },
         ...getAuditInfo(req),
       });
 
