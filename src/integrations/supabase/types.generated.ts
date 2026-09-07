@@ -17368,6 +17368,21 @@ export type Database = {
         Args: { payload?: Json; request_id: string }
         Returns: Json
       }
+      admin_get_business_institution_scope_model: {
+        Args: { p_actor_user_id: string }
+        Returns: Json
+      }
+      admin_grant_business_institution_scope: {
+        Args: {
+          p_actor_user_id: string
+          p_authority_kind: string
+          p_authority_profile_id: string
+          p_evidence_url: string
+          p_grant_reason: string
+          p_target_profile_id: string
+        }
+        Returns: string
+      }
       admin_list_user_account_contexts: {
         Args: { p_page?: number; p_page_size?: number; p_search?: string }
         Returns: {
@@ -17465,6 +17480,14 @@ export type Database = {
           p_review_notes?: string
         }
         Returns: Json
+      }
+      admin_revoke_business_institution_scope: {
+        Args: {
+          p_actor_user_id: string
+          p_revocation_reason: string
+          p_scope_id: string
+        }
+        Returns: boolean
       }
       admin_update_ad_campaign_state: {
         Args: { p_campaign_id: string; p_payload?: Json }
