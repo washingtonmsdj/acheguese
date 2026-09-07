@@ -11,6 +11,12 @@ import { invokeSupabaseBrokerCommand } from "@/core/infrastructure/edge-function
 import { BusinessService } from "@/core/business/services/BusinessService";
 import type {
   GrantBusinessInstitutionScopeInput,
+  BusinessInstitutionScopeAdminModel,
+} from "@/core/business/services/BusinessService";
+
+export type {
+  GrantBusinessInstitutionScopeInput,
+  BusinessInstitutionScopeAdminModel,
 } from "@/core/business/services/BusinessService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 
@@ -238,6 +244,16 @@ class AdminBusinessServiceClass {
     reviewNotes?: string,
   ): Promise<boolean> {
     return BusinessService.updateBusinessClaimStatus(claimId, status, reviewNotes);
+  }
+
+  /**
+   * Carrega o read model admin-only de autoridades, escolas e scopes.
+   * ✅ SSOT: BusinessService -> admin-business-rpc -> RPC server-owned
+   */
+  async getInstitutionScopeAdminModel(): Promise<
+    BusinessInstitutionScopeAdminModel | null
+  > {
+    return BusinessService.getBusinessInstitutionScopeAdminModel();
   }
 
   /**
