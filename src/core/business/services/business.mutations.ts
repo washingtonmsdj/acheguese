@@ -206,8 +206,6 @@ function sanitizeAndValidateInput(
     logo_url: normalizeMediaAssetReference(input.logo_url, "business_logo"),
     banner_url: normalizeMediaAssetReference(input.banner_url, "business_banner"),
     status: input.status,
-    is_verified: input.is_verified,
-    is_premium: input.is_premium,
   };
 
   const schema = isUpdate ? updateBusinessSchema : createBusinessSchema;
@@ -383,7 +381,7 @@ export async function createBusiness(
     const validatedInput = sanitizeAndValidateInput(input, false) as CreateBusinessInput;
     let slug = validatedInput.slug;
     if (slug) {
-      if (!isBusinessSlugSafetyBypassAllowed({ isVerifiedOfficial: validatedInput.is_verified })) {
+      if (!isBusinessSlugSafetyBypassAllowed({ isVerifiedOfficial: false })) {
         const slugSafety = evaluateBusinessSlugSafety({
           businessName: validatedInput.name,
           slug,
@@ -454,9 +452,6 @@ export async function createBusiness(
         business_name: validatedInput.name,
         ...businessData,
         status: validatedInput.status ?? "active",
-        rating: 0,
-        total_reviews: 0,
-        total_products: 0,
         slug,
       })
       .select(BUSINESS_SELECT)
