@@ -66,21 +66,29 @@ export async function getBusinessClaimDetails(
   school_type: string | null;
 } | null> {
   try {
-    const { data, error } = await (supabase as unknown as AdminSupabaseClient)
+    const { data: business, error: businessError } = await supabase
       .from("business_data")
-      .select("profile_id, profiles(name)")
+      .select("profile_id")
       .eq("id", businessId)
-      .single();
-
-    if (error) throw error;
-
-    const educationResult = await (
-      supabase as unknown as AdminSupabaseClient
-    )
-      .from("education_profiles")
-      .select("school_type")
-      .eq("business_id", data.profile_id)
       .maybeSingle();
+
+    if (businessError) throw businessError;
+    if (!business) return null;
+
+    const [profileResult, educationResult] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("name")
+        .eq("id", business.profile_id)
+        .maybeSingle(),
+      supabase
+        .from("education_profiles")
+        .select("school_type")
+        .eq("business_id", business.profile_id)
+        .maybeSingle(),
+    ]);
+
+    if (profileResult.error) throw profileResult.error;
 
     if (educationResult.error) {
       logger.warn(
@@ -90,10 +98,9 @@ export async function getBusinessClaimDetails(
     }
 
     return {
-      ...data,
-      school_type:
-        (educationResult.data as { school_type?: string | null } | null)
-          ?.school_type ?? null,
+      profile_id: business.profile_id,
+      profiles: { name: profileResult.data?.name ?? "Removida" },
+      school_type: educationResult.data?.school_type ?? null,
     };
   } catch (error) {
     logger.error("Error fetching business claim details:", error);
