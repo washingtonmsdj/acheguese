@@ -12,7 +12,14 @@ import { createInflateRaw } from 'node:zlib';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
-export const PARSER_VERSION = 'inep-censo-school-adapter/6';
+export const PARSER_VERSION = 'inep-censo-school-adapter/7';
+export const OFFICIAL_INEP_CENSO_ESCOLAR_LANDING_URL =
+  'https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-escolar';
+export const OFFICIAL_CENSO_ESCOLAR_2025_ARCHIVE_URL =
+  'https://download.inep.gov.br/dados_abertos/microdados_censo_escolar_2025_.zip';
+export const OFFICIAL_CENSO_ESCOLAR_ARCHIVE_URLS = Object.freeze({
+  2025: OFFICIAL_CENSO_ESCOLAR_2025_ARCHIVE_URL,
+});
 export const RAW_RECORD_HASH_CONTRACT =
   'acheguese.inep-raw-record-sha256/1';
 export const NORMALIZED_OUTPUT_CONTRACT =
@@ -107,16 +114,8 @@ function parseArgs(argv) {
     throw new Error('source archive path must point to a .zip file');
   }
 
-  const archiveUrl = String(args.get('source-archive-url'));
-  if (
-    !/^https:\/\/download\.inep\.gov\.br\/.+\.zip(?:[?#].*)?$/i.test(
-      archiveUrl,
-    )
-  ) {
-    throw new Error(
-      'source archive URL must be an official download.inep.gov.br ZIP',
-    );
-  }
+  const archiveUrl = String(args.get('source-archive-url')).trim();
+  assertOfficialInepArchiveUrl(sourceYear, archiveUrl);
 
   const sourcePageUpdatedAtRaw = args.get('source-page-updated-at') ?? null;
   let sourcePageUpdatedAt = null;
@@ -144,6 +143,42 @@ function parseArgs(argv) {
     archiveUrl,
     sourcePageUpdatedAt,
     encoding,
+  };
+}
+
+export function assertOfficialInepArchiveUrl(sourceYear, archiveUrl) {
+  const rawUrl = String(archiveUrl ?? '').trim();
+  let parsed;
+
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    throw new Error('source archive URL must be a valid HTTPS URL');
+  }
+
+  if (
+    parsed.protocol !== 'https:' ||
+    parsed.hostname !== 'download.inep.gov.br' ||
+    parsed.username !== '' ||
+    parsed.password !== '' ||
+    !parsed.pathname.toLowerCase().endsWith('.zip')
+  ) {
+    throw new Error(
+      'source archive URL must be an official download.inep.gov.br ZIP',
+    );
+  }
+
+  const expectedUrl = OFFICIAL_CENSO_ESCOLAR_ARCHIVE_URLS[sourceYear];
+  if (expectedUrl && rawUrl !== expectedUrl) {
+    throw new Error(
+      `source archive URL does not match the pinned official Censo Escolar ${sourceYear} artifact`,
+    );
+  }
+
+  return {
+    archiveUrl: rawUrl,
+    identityPinned: Boolean(expectedUrl),
+    expectedUrl: expectedUrl ?? null,
   };
 }
 
@@ -739,6 +774,11 @@ async function writeJsonLine(stream, value) {
 }
 
 export async function preparePublicEducationInepImport(options) {
+  const archiveIdentity = assertOfficialInepArchiveUrl(
+    options.sourceYear,
+    options.archiveUrl,
+  );
+
   await Promise.all([
     fs.access(options.csvPath),
     fs.access(options.archivePath),
@@ -865,9 +905,8 @@ export async function preparePublicEducationInepImport(options) {
     parser_version: PARSER_VERSION,
     generated_at: new Date().toISOString(),
     source: {
-      landing_url:
-        'https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-escolar',
-      archive_url: options.archiveUrl,
+      landing_url: OFFICIAL_INEP_CENSO_ESCOLAR_LANDING_URL,
+      archive_url: archiveIdentity.archiveUrl,
       archive_file: basename(options.archivePath),
       archive_sha256: archiveSha256,
       archive_entry: archiveBinding.archiveEntryName,
@@ -914,6 +953,7 @@ export async function preparePublicEducationInepImport(options) {
       active_operation_status_code: '1',
       staging_quality_gate_required: true,
       official_archive_host_required: true,
+      official_archive_identity_verified: archiveIdentity.identityPinned,
       archive_binding_verified: true,
       header_contract_verified: true,
     },
