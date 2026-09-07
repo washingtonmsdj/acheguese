@@ -294,7 +294,7 @@ export default function CriarEmpresaPage() {
     if (
       slugManualMode &&
       parsed.slug &&
-      !isBusinessSlugSafetyBypassAllowed({ isVerifiedOfficial: parsed.is_verified })
+      !isBusinessSlugSafetyBypassAllowed({ isVerifiedOfficial: false })
     ) {
       const slugSafety = evaluateBusinessSlugSafety({
         businessName: parsed.name,
