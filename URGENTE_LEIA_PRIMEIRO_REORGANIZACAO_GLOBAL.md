@@ -8,8 +8,8 @@
 
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
-**Status:** EM EXECUÇÃO — G6 / Empresas-Educação fechou identidade Profile ID vs business_data.id, Billing delegado, claim institucional individual, autoridade institucional herdada/revogável e hardening destrutivo; o SHA `86c76fc8d48550fbbed783a359c32f6cdf6a435d` obteve typecheck/lint/build/deploy hosted READY no Vercel; cobertura pública completa de Salvador segue aberta porque o ZIP oficial do INEP continua inacessível neste runtime; lifecycle autenticado e heavy same-SHA continuam bloqueados pela infraestrutura de runner  
-**Checkpoint técnico atual:** `86c76fc8d48550fbbed783a359c32f6cdf6a435d`  
+**Status:** EM EXECUÇÃO — G6 / Empresas-Educação fechou identidade Profile ID vs business_data.id, Billing delegado, claim institucional individual, autoridade institucional herdada/revogável, hardening destrutivo e identidade exata do artefato INEP 2025; o SHA `86c76fc8d48550fbbed783a359c32f6cdf6a435d` permanece a última baseline hosted READY no Vercel; cobertura pública completa de Salvador segue aberta porque o ZIP oficial continua inacessível por DNS neste runtime; commits posteriores estão sem nova prova hosted porque o Vercel entrou em build-rate-limit e GitHub Actions continua sem runner  
+**Checkpoint técnico atual:** `49ac2f789a725f8fafb09a6912d5e16baf8b57cc`  
 **Checkpoint de transição G5 → G6:** `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
@@ -796,9 +796,9 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 
 #### 2026-09-06 — G6 Educação / fundação de ingestão INEP municipal
 
-- [x] página oficial do Inep confirmada como autoridade do **Censo Escolar 2025**, atualizado em julho/2026; o host do ZIP oficial não ficou acessível neste ambiente, portanto o artefato real ainda não foi declarado inspecionado;
+- [x] página oficial do Inep confirmada como autoridade do **Censo Escolar 2025**, atualizado em julho/2026; o URL oficial exato foi identificado como `https://download.inep.gov.br/dados_abertos/microdados_censo_escolar_2025_.zip`; o host continua sem resolução DNS neste runtime, portanto o artefato real ainda não foi declarado inspecionado;
 - [x] referência pública secundária de 2025 confirmou a presença de `Tabela_Escola_2025.csv` e os campos de identidade usados pelo contrato; serve somente como validação de layout, nunca como fonte substituta;
-- [x] `tools/data-quality/prepare-public-education-inep-import.mjs` criado e atualmente em `inep-censo-school-adapter/6`: streaming, sem Supabase, preserva `raw_record`, gera SHA-256 por registro, manifest de provenance e filtra Salvador por IBGE;
+- [x] `tools/data-quality/prepare-public-education-inep-import.mjs` criado e atualmente em `inep-censo-school-adapter/7`: streaming, sem Supabase, preserva `raw_record`, gera SHA-256 por registro, manifest de provenance, filtra Salvador por IBGE e exige para 2025 o URL oficial exato pinado;
 - [x] provenance do artefato endurecida: o adapter agora abre o diretório central do ZIP com APIs nativas do Node, localiza unicamente a entrada pelo basename, calcula SHA-256 do conteúdo **descompactado dentro do ZIP** e exige igualdade com o CSV fornecido; STORE/DEFLATE suportados, ZIP criptografado/multi-disk/ZIP64/compressão desconhecida falham fechado;
 - [x] manifest v1 ganhou `source.archive_entry`, `archive_entry_sha256`, `extracted_file_sha256` e `safety.archive_binding_verified=true`; isso fecha o vetor `ZIP oficial + CSV arbitrário` sem adicionar dependência ou writer;
 - [x] o adaptador exige `NU_ANO_CENSO`, `CO_ENTIDADE`, `NO_ENTIDADE`, `TP_SITUACAO_FUNCIONAMENTO`, `CO_UF`, `CO_MUNICIPIO` e `TP_DEPENDENCIA`, suporta aliases de endereço/CEP/latitude/longitude e falha fechado se o header não corresponder;
@@ -809,7 +809,9 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 - [x] as três funções privadas de staging mantêm `SECURITY DEFINER` apenas pela necessidade interna, `search_path=''`, EXECUTE negado a anon/authenticated e concedido somente a service_role;
 - [x] migration `20260906162828_bind_public_education_staging_source_contract_g6.sql`: manifest deve bater com contrato/parser/URL/SHA/ano/arquivo/cidade e flags de segurança; `raw_record` deve bater com ano/INEP/nome/UF/município/dependência/situação normalizados;
 - [x] migration Git/remoto `20260906165010_require_inep_archive_entry_binding_g6.sql` adiciona CHECK na própria tabela de batches: binding verificado obrigatório, hashes ZIP-entry/CSV válidos e iguais, basename da entry igual ao `source_file_name`; mesmo uma futura escrita interna não pode registrar batch sem essa prova;
+- [x] migration Git/remoto `20260907020136_pin_public_education_inep_2025_artifact_g6.sql`: batch 2025 só pode persistir com `https://download.inep.gov.br/dados_abertos/microdados_censo_escolar_2025_.zip` e `safety.official_archive_identity_verified=true`; a função rejeita outro ZIP oficial com `education_import_unpinned_archive_url`;
 - [x] prova transacional do source binding: manifest válido passa; manifest adulterado é bloqueado; INEP raw divergente rejeita o batch; catálogo público permanece inalterado;
+- [x] probe de identidade do artefato 2025 em `BEGIN/ROLLBACK`: ZIP 2024 no mesmo host oficial -> rejeitado; URL 2025 exato -> aceito; tentativa de alterar batch para URL errado -> barrada pelo CHECK; pós-probe **0 batches / 0 staging rows**;
 - [x] probe adicional do archive binding em `BEGIN/ROLLBACK`: manifest legado sem binding -> bloqueado pelo constraint; manifest com entry/hashes coerentes -> criado; rollback -> **0 batches / 0 staging rows**;
 - [x] migration Git/remoto `20260906170324_bind_public_education_optional_fields_to_raw_g6.sql` estende o binding de `raw_record` para endereço, número, complemento, bairro, CEP, latitude e longitude, preservando os aliases/normalizações do adapter; JSONL adulterado nesses campos não pode chegar como candidato válido;
 - [x] probe do optional binding: linha íntegra -> `valid`; endereço normalizado adulterado com raw intacto -> `invalid:raw_address_street_mismatch`; batch `rejected`; catálogo público **15 -> 15**; rollback -> 0 staging;
