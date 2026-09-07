@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Building2,
   ExternalLink,
@@ -92,7 +92,7 @@ export default function AdminInstitutionScopes() {
     Record<string, string>
   >({});
 
-  const loadModel = async () => {
+  const loadModel = useCallback(async () => {
     setLoading(true);
     const next = await adminBusinessService.getInstitutionScopeAdminModel();
     setModel(next);
@@ -101,11 +101,11 @@ export default function AdminInstitutionScopes() {
     if (!next) {
       toast.error("Não foi possível carregar as autoridades institucionais.");
     }
-  };
+  }, []);
 
   useEffect(() => {
     void loadModel();
-  }, []);
+  }, [loadModel]);
 
   const activeScopes = useMemo(
     () => model?.scopes.filter((scope) => scope.is_active) ?? [],
