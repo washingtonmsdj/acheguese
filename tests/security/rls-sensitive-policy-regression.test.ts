@@ -14,7 +14,6 @@ const SENSITIVE_TABLES = [
   "driver_locations",
   "driver_profiles",
   "event_review_helpfulness",
-  "profile_favorites_new",
   "profile_members",
   "question_answer_likes",
   "user_follows",
