@@ -920,9 +920,39 @@ Vercel fornece validacao independente de source/build:
 - `126da4a920cbb38da03b202b69f8e03b45808647`: READY;
 - `0f5ccbef165f73f3142ef69e7f0cc8549990627c`: READY;
 - `ad08edeaa6056df127996bb310e77ad6113bbbf8`: READY;
-- `7d7775456d4ce3105d05e7d7a23d8ca10be32fc4`: build iniciado; security validation passou antes do checkpoint documental.
+- `7d7775456d4ce3105d05e7d7a23d8ca10be32fc4`: build anterior iniciado durante a campanha;
+- `86c76fc8d48550fbbed783a359c32f6cdf6a435d`: **READY** em production no Vercel, com security validation, security lint sem errors, Upload SSOT, Core Platform ownership, sitemap, CSP, Turnstile, `typecheck:app`, lint normal e Vite build concluídos.
 
-Queue/cancel por commits supersedidos nao deve ser classificado como falha de source.\n\n## O que ainda bloqueia Business READY / MVP
+Queue/cancel por commits supersedidos nao deve ser classificado como falha de source.\n\n## Prova remota do lifecycle de persistência autenticada
+
+Sem substituir o Playwright, o backend vivo foi exercitado em `BEGIN/ROLLBACK`
+com a mesma classe de conta fixture usada pelo E2E remoto.
+
+Sob role `authenticated` e JWT da fixture técnica, o caminho canônico de persistência
+passou na ordem:
+
+1. INSERT do Profile Business;
+2. INSERT da membership `owner`;
+3. INSERT de `business_data` com território canônico de Salvador;
+4. INSERT de `business_stats`;
+5. UPDATE do Profile;
+6. UPDATE da Empresa;
+7. soft-delete de `business_data.status`;
+8. desativação de `profiles.is_active`.
+
+Um JWT com UUID sem qualquer vínculo tentou alterar o mesmo Profile e a mesma Empresa e
+afetou **0 linhas** em ambos os casos. O rollback final confirmou **0 resíduos** em
+`profiles`, `profile_members`, `business_data` e `business_stats`.
+
+Um probe anterior sem `location_id` também confirmou que a autorização chegava ao
+constraint de domínio `check_standalone_has_location`; a prova final reutilizou a cidade
+canônica de Salvador em vez de enfraquecer o constraint.
+
+Isso elimina RLS/persistência como blocker conhecido do lifecycle. Ainda faltam a prova de
+**UI + sessão + roteamento + página pública** pelo Playwright autenticado e a certificação
+same-SHA; portanto Business continua sem declaração READY.
+
+## O que ainda bloqueia Business READY / MVP
 
 - executar o lifecycle autenticado `create -> edit -> pagina publica -> gestao -> cleanup`
   em runner real no mesmo SHA, com `retries=0`;
