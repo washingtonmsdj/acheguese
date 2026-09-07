@@ -8,8 +8,8 @@
 
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
-**Status:** EM EXECUÇÃO — G6 / Empresas-Educação fechou identidade Profile ID vs business_data.id, Billing delegado, claim institucional individual e autoridade institucional herdada/revogável de Prefeitura/Secretaria; cobertura pública completa de Salvador segue aberta porque o ZIP oficial do INEP continua inacessível neste runtime; provas hosted same-SHA continuam bloqueadas por runner pre-step  
-**Checkpoint técnico atual:** `a6bc31ef9c5b254740edf7f95185e6ec73ae9f47`  
+**Status:** EM EXECUÇÃO — G6 / Empresas-Educação fechou identidade Profile ID vs business_data.id, Billing delegado, claim institucional individual, autoridade institucional herdada/revogável e hardening destrutivo; o SHA `86c76fc8d48550fbbed783a359c32f6cdf6a435d` obteve typecheck/lint/build/deploy hosted READY no Vercel; cobertura pública completa de Salvador segue aberta porque o ZIP oficial do INEP continua inacessível neste runtime; lifecycle autenticado e heavy same-SHA continuam bloqueados pela infraestrutura de runner  
+**Checkpoint técnico atual:** `86c76fc8d48550fbbed783a359c32f6cdf6a435d`  
 **Checkpoint de transição G5 → G6:** `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
