@@ -37,7 +37,6 @@ export {
 export {
   createBusiness,
   updateBusiness,
-  updateActiveSections,
   deleteBusiness,
   createProduct,
   incrementViews,
@@ -229,7 +228,6 @@ export class BusinessService {
   // ===== MUTATIONS =====
   static createBusiness = BusinessMutations.createBusiness;
   static updateBusiness = BusinessMutations.updateBusiness;
-  static updateActiveSections = BusinessMutations.updateActiveSections;
   static deleteBusiness = BusinessMutations.deleteBusiness;
   static createProduct = BusinessMutations.createProduct;
   static incrementViews = BusinessMutations.incrementViews;
