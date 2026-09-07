@@ -10,7 +10,10 @@ import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types
 import { AnalyticsService } from "@/core/analytics/AnalyticsService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 import type { ReviewStats } from "@/core/reviews/types";
-import { invokeSupabaseBrokerCommand } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
+import {
+  invokeSupabaseBroker,
+  invokeSupabaseBrokerCommand,
+} from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 
 
 export interface CouponRecord {
@@ -260,6 +263,69 @@ export async function updateBusinessClaimStatus(
     return true;
   } catch (error) {
     logger.error("Error in updateBusinessClaimStatus:", error);
+    return false;
+  }
+}
+
+export type InstitutionAuthorityKind =
+  | "maintainer"
+  | "municipal_secretariat"
+  | "state_secretariat"
+  | "federal_authority"
+  | "education_network"
+  | "public_agency";
+
+export interface GrantBusinessInstitutionScopeInput {
+  authorityProfileId: string;
+  targetProfileId: string;
+  authorityKind: InstitutionAuthorityKind;
+  evidenceUrl: string;
+  grantReason: string;
+}
+
+/**
+ * Concede gestao institucional herdada sobre uma escola publica.
+ *
+ * A autorizacao real permanece no banco e no admin-business-rpc. Esta funcao
+ * nao grava memberships nas escolas e nao transfere ownership estrutural.
+ */
+export async function grantBusinessInstitutionScope(
+  input: GrantBusinessInstitutionScopeInput,
+): Promise<string | null> {
+  try {
+    return await invokeSupabaseBroker<string, "grantInstitutionScope">({
+      action: "grantInstitutionScope",
+      functionName: "admin-business-rpc",
+      params: input,
+      serviceName: "BusinessAdmin",
+      noDataMessage: "Institution scope broker returned no scope id",
+    });
+  } catch (error) {
+    logger.error("Error granting business institution scope:", error);
+    return null;
+  }
+}
+
+/**
+ * Revoga imediatamente uma gestao institucional herdada.
+ */
+export async function revokeBusinessInstitutionScope(
+  scopeId: string,
+  revocationReason: string,
+): Promise<boolean> {
+  try {
+    await invokeSupabaseBrokerCommand({
+      action: "revokeInstitutionScope",
+      functionName: "admin-business-rpc",
+      params: {
+        scopeId,
+        revocationReason: revocationReason.trim(),
+      },
+      serviceName: "BusinessAdmin",
+    });
+    return true;
+  } catch (error) {
+    logger.error("Error revoking business institution scope:", error);
     return false;
   }
 }
