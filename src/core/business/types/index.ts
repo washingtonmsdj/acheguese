@@ -73,9 +73,6 @@ export interface BusinessInput {
   logo_url?: string;
   banner_url?: string;
   status?: "active" | "inactive" | "pending" | "suspended";
-  /** Campos administrativos — apenas super_admin/admin */
-  is_verified?: boolean;
-  is_premium?: boolean;
 }
 
 export type CreateBusinessInput = BusinessInput;
