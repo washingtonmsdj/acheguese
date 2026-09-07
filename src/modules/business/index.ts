@@ -13,12 +13,6 @@ export { ContactLink } from "./components/ContactLink";
 
 // Services
 export { BusinessService } from "./services/BusinessService";
-export {
-  businessManagementService,
-  type BusinessSection,
-  type BusinessSectionConfig,
-  type BusinessEditData,
-} from "@/core/business/services/BusinessManagementService";
 
 // Hooks
 export { useBusiness } from "@/core/business/hooks/useBusiness";
@@ -34,15 +28,6 @@ export { useBusinessFormSteps } from "./hooks/useBusinessFormSteps";
 export { useBusinessGallery } from "./hooks/useBusinessGallery";
 export { useBusinessImageUpload } from "./hooks/useBusinessImageUpload";
 export { useBusinessList } from "./hooks/useBusinessList";
-export {
-  useBusinessSections,
-  useUpdateBusinessSections,
-  useBusinessInfo,
-  useUpdateBusinessInfo,
-  useBusinessStats,
-  useUpdateBusinessStatus,
-  useUploadBusinessImage,
-} from "./hooks/useBusinessManagement";
 export { useBusinessMetrics } from "./hooks/useBusinessMetrics";
 export { useBusinessNavigation } from "./hooks/useBusinessNavigation";
 export { useBusinessProducts } from "./hooks/useBusinessProducts";
