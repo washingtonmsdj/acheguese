@@ -774,9 +774,47 @@ Inspecoes dirigidas do source/migrations fecharam **7/7** invariantes finais des
 O Security Advisor nao adicionou finding especifico de Claims/ownership; debitos globais
 historicos continuam fora deste corte.
 
-Isso **nao substitui** lint/typecheck/Vitest/E2E/build/deploy same-SHA. Tambem nao resolve
-a autoridade herdada/revogavel de Prefeitura/Secretaria sobre multiplas escolas: o fluxo
-fechado aqui e de **uma instituicao individual por claim revisado**.
+Isso **nao substitui** lint/typecheck/Vitest/E2E/build/deploy same-SHA. O corte
+de Claim continua sendo de **uma instituicao individual por claim revisado**; a autoridade
+herdada/revogavel de Prefeitura/Secretaria foi fechada no checkpoint institucional seguinte.
+
+## Autoridade institucional herdada / revogavel
+
+O G6 agora possui Organization Scope explicito sem reutilizar `groups`, sem usar
+`parent_business_id` como ACL e sem repetir `profile_members` em cada escola:
+
+- `20260907005404_add_business_institution_management_scope_g6.sql` criou
+  `private.profile_institution_management_scopes`;
+- a Prefeitura/Secretaria/mantenedora continua sendo um **Profile** canonico e seus
+  gestores continuam em `profile_members` uma unica vez;
+- `private.user_can_manage_profile` herda somente um nivel de gestao por scope ativo,
+  chamando `private.user_can_manage_profile_direct` no Profile autoridade;
+- a heranca nao altera `profiles.user_id`; transferencia estrutural e mutacoes de
+  pessoas/acessos continuam owner-only;
+- grant/revoke exigem admin real, evidencia HTTP(S), justificativa e compatibilidade
+  municipal/estadual/federal com a rede da escola; os RPCs sao service-role-only;
+- `20260907010116_add_business_institution_scope_admin_model_g6.sql` fornece read model
+  admin-only de autoridades, escolas publicas e historico sem expor a tabela private;
+- `admin-business-rpc` v10 esta ACTIVE com `verify_jwt=true` e concentra read/grant/revoke;
+- `BusinessService -> AdminBusinessService -> AdminInstitutionScopes` preserva a cadeia
+  de facade; a UI nao chama Data API/RPC diretamente;
+- `tests/security/business-institution-management-scope-g6.test.ts` impede regressao
+  para membership duplicada, hierarquia empresarial como permissao ou bypass do broker.
+
+Provas remotas deste corte:
+
+- transacao com rollback: owner/admin da autoridade herdou gestao; member comum nao;
+  admin inativo perdeu gestao; revoke cortou o acesso; owner estrutural da escola nao mudou;
+- pos-migration: `anon/authenticated=false` para grant/revoke/read model,
+  `service_role=true`;
+- read model vivo: **82** candidatos de autoridade, **15** escolas publicas e **0**
+  scopes persistidos; nenhum scope real foi inventado sem evidencia institucional;
+- Edge Function remota v10: ACTIVE, bundle confirma `requireAdmin` e os tres comandos
+  institucionais.
+
+O smoke HTTP anonimo externo nao saiu deste runtime por falha de DNS para
+`*.supabase.co`; isso nao foi classificado como falha da Edge. O deploy foi aceito e
+ativado pelo proprio Supabase.
 
 ## Banco / RLS
 
