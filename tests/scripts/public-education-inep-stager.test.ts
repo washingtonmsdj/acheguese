@@ -69,6 +69,7 @@ function manifestFixture() {
       publishes_records: false,
       staging_quality_gate_required: true,
       official_archive_host_required: true,
+      official_archive_identity_verified: true,
       archive_binding_verified: true,
       header_contract_verified: true,
     },
@@ -167,6 +168,21 @@ describe("public Education INEP staging CLI", () => {
         },
       }),
     ).toThrow(/positive integer/);
+  });
+
+  it("rejects a different official-host ZIP for the 2025 batch", () => {
+    const manifest = manifestFixture();
+
+    expect(() =>
+      validateInepImportManifest({
+        ...manifest,
+        source: {
+          ...manifest.source,
+          archive_url:
+            "https://download.inep.gov.br/dados_abertos/microdados_censo_escolar_2024.zip",
+        },
+      }),
+    ).toThrow(/does not match the pinned official Censo Escolar 2025 artifact/);
   });
 
   it("recomputes every JSONL row hash before any database connection", () => {
