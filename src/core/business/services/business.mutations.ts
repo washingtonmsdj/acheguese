@@ -654,31 +654,6 @@ export async function updateBusiness(
 }
 
 /**
- * Atualizar secoes ativas
- */
-export async function updateActiveSections(
-  businessId: string,
-  sections: {
-    services: boolean;
-    products: boolean;
-    cardapio: boolean;
-    portfolio: boolean;
-    promocoes: boolean;
-  },
-): Promise<void> {
-  const { error } = await businessMutationsDb.from<BusinessDataWithProfiles>("business_data")
-    .update({
-      secoes_ativas: sections,
-      updated_at: new Date().toISOString(),
-    })
-    .or(`id.eq.${businessId},profile_id.eq.${businessId}`);
-
-  if (error) {
-    throw new Error(`Erro ao atualizar secoes ativas: ${(error as { message?: string }).message}`);
-  }
-}
-
-/**
  * Soft delete empresa
  */
 export async function deleteBusiness(id: string): Promise<void> {
