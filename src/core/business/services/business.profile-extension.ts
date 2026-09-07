@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase";
 
 export interface BusinessProfileExtensionRecord {
   profile_id: string;
-  legal_name: string;
+  legal_name: string | null;
   cnpj?: string | null;
   tax_id?: string | null;
   company_type?: "mei" | "ltda" | "sa" | "eireli" | "other" | null;
