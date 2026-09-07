@@ -2,47 +2,13 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { PAGINATION } from "@/shared/constants";
 
-interface QueryError {
-  message?: string | null;
-}
-
-interface QueryArrayResult<TRow> {
-  data: TRow[] | null;
-  error: QueryError | null;
-}
-
-interface QuerySingleResult<TRow> {
-  data: TRow | null;
-  error: QueryError | null;
-}
-
-interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
-  select: (columns?: string) => QueryBuilder<TRow>;
-  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
-  ilike: (column: string, pattern: string) => QueryBuilder<TRow>;
-  limit: (value: number) => QueryBuilder<TRow>;
-  neq: (column: string, value: unknown) => QueryBuilder<TRow>;
-  maybeSingle: () => Promise<QuerySingleResult<TRow>>;
-}
-
-interface BusinessSlugQueriesDbClient {
-  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
-}
-
-interface SlugRow {
-  id?: string;
-  slug?: string | null;
-}
-
-const businessSlugQueriesDb = supabase as unknown as BusinessSlugQueriesDbClient;
-
 export async function checkSlugExists(
   slug: string,
   excludeId?: string,
 ): Promise<boolean> {
   try {
-    let query = businessSlugQueriesDb
-      .from<SlugRow>("business_data")
+    let query = supabase
+      .from("business_data")
       .select("id")
       .eq("slug", slug)
       .limit(1);
@@ -70,8 +36,8 @@ export async function getSimilarSlugs(
   limit = PAGINATION.DEFAULT_LIMIT,
 ): Promise<string[]> {
   try {
-    const { data, error } = await businessSlugQueriesDb
-      .from<SlugRow>("business_data")
+    const { data, error } = await supabase
+      .from("business_data")
       .select("slug")
       .ilike("slug", `${slug}%`)
       .limit(limit);
