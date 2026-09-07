@@ -12,6 +12,7 @@ import {
   NORMALIZED_OUTPUT_CONTRACT,
   PARSER_VERSION,
   RAW_RECORD_HASH_CONTRACT,
+  assertOfficialInepArchiveUrl,
   sha256File,
   sha256RawRecord,
 } from './prepare-public-education-inep-import.mjs';
@@ -131,11 +132,6 @@ export function validateInepImportManifest(input) {
     /^https:\/\/www\.gov\.br\/inep\//i,
     'manifest.source.landing_url',
   );
-  assertOfficialUrl(
-    source.archive_url,
-    /^https:\/\/download\.inep\.gov\.br\/.+\.zip(?:[?#].*)?$/i,
-    'manifest.source.archive_url',
-  );
   assertSha256(source.archive_sha256, 'manifest.source.archive_sha256');
   assertSha256(
     source.archive_entry_sha256,
@@ -168,6 +164,15 @@ export function validateInepImportManifest(input) {
   const sourceYear = Number(source.source_year);
   if (!Number.isInteger(sourceYear) || sourceYear < 2007 || sourceYear > 2100) {
     throw new Error('manifest source.source_year is invalid');
+  }
+  const archiveIdentity = assertOfficialInepArchiveUrl(
+    sourceYear,
+    source.archive_url,
+  );
+  if (!archiveIdentity.identityPinned) {
+    throw new Error(
+      `manifest source archive identity is not pinned for Censo Escolar ${sourceYear}`,
+    );
   }
 
   const municipalityIbge = String(target.municipality_ibge_code ?? '');
@@ -218,6 +223,7 @@ export function validateInepImportManifest(input) {
   for (const flag of [
     'staging_quality_gate_required',
     'official_archive_host_required',
+    'official_archive_identity_verified',
     'archive_binding_verified',
     'header_contract_verified',
   ]) {
