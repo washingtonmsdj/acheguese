@@ -73,6 +73,12 @@ describe("gastronomy onboarding hardening", () => {
     expect(menuService).toContain(
       "return { data: null, error: 'Selecione uma categoria para este item.' };",
     );
+    expect(menuService).toContain(
+      ".order('display_order', { ascending: true })",
+    );
+    expect(menuService).toContain(".limit(1)");
+    expect(menuService).toContain(".maybeSingle()");
+    expect(menuService).toContain("category_id: string;");
     expect(menuPage).toContain("await createItemAsync(normalizedValues);");
     expect(menuPage).toContain(
       "await updateItemAsync({ itemId: selectedItem.id, ...normalizedValues });",
