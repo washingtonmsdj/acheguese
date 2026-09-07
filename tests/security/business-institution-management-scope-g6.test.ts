@@ -61,6 +61,28 @@ describe("G6 Business institutional management scope", () => {
     expect(migration).toContain("TO service_role;");
   });
 
+  it("routes institutional grant and revoke through the existing authenticated admin broker", () => {
+    const edge = read("supabase/functions/admin-business-rpc/index.ts");
+    const admin = read("src/core/business/services/business.admin.ts");
+
+    expect(edge).toContain("grantInstitutionScope: true");
+    expect(edge).toContain("revokeInstitutionScope: true");
+    expect(edge).toContain("const auth = await requireAdmin(req)");
+    expect(edge).toContain("admin_grant_business_institution_scope");
+    expect(edge).toContain("admin_revoke_business_institution_scope");
+    expect(edge).toContain("p_actor_user_id: auth.userId");
+    expect(edge).toContain("cleanHttpUrl(params.evidenceUrl");
+    expect(edge).toContain("cleanText(params.grantReason");
+    expect(edge).toContain("cleanText(\n        params.revocationReason");
+
+    expect(admin).toContain('action: "grantInstitutionScope"');
+    expect(admin).toContain('action: "revokeInstitutionScope"');
+    expect(admin).toContain('functionName: "admin-business-rpc"');
+    expect(admin).not.toContain(
+      '.from("profile_institution_management_scopes")',
+    );
+  });
+
   it("does not weaken structural ownership or people/access mutations", () => {
     const transfer = read(
       "supabase/migrations/20260906124554_fix_business_claim_canonical_transfer_g6.sql",
