@@ -345,7 +345,7 @@ function buildFallbackDiscovery(
     communityRanking: [],
     featuredCommunities: [],
     stats: buildStats(
-      { businesses: 0, services: 0, classifieds: 0 },
+      { businesses: 0, services: 0, classifieds: 0, schools: null },
       0,
       [],
     ),
@@ -579,6 +579,7 @@ export class HomeDiscoveryService {
       businesses: 0,
       services: 0,
       classifieds: 0,
+      schools: null,
     });
     const communityCards = settledValue(
       communityCardsResult,
