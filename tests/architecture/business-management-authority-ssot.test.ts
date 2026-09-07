@@ -21,6 +21,19 @@ describe("Business management authority SSOT", () => {
     expect(membershipService).toContain("return role === 'owner' || role === 'admin'");
   });
 
+  it("keeps Business admin reads on generated schema and Profile authority", () => {
+    const admin = read("src/core/business/services/business.admin.ts");
+
+    expect(admin).toContain(
+      'import { profileService } from "@/core/profiles/services/ProfileService";',
+    );
+    expect(admin).toContain(
+      "profileService.getProfileById(business.profile_id)",
+    );
+    expect(admin).not.toContain("AdminSupabaseClient");
+    expect(admin).not.toContain('.from("profiles")');
+  });
+
   it("delegates the compatibility RLS helper to the canonical profile manager authority", () => {
     const migration = read(
       "supabase/migrations/20260826095937_unify_business_profile_management_authority.sql",
