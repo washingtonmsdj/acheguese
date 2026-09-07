@@ -54,6 +54,7 @@ export {
   getActiveCoupons,
   getCouponById,
   updateBusinessClaimStatus,
+  getBusinessInstitutionScopeAdminModel,
   grantBusinessInstitutionScope,
   revokeBusinessInstitutionScope,
 } from "./business.admin";
@@ -61,6 +62,10 @@ export {
 export type {
   InstitutionAuthorityKind,
   GrantBusinessInstitutionScopeInput,
+  BusinessInstitutionAuthorityOption,
+  BusinessInstitutionSchoolOption,
+  BusinessInstitutionScopeRecord,
+  BusinessInstitutionScopeAdminModel,
 } from "./business.admin";
 
 // Re-exports de helpers
@@ -240,6 +245,8 @@ export class BusinessService {
   static getActiveCoupons = BusinessAdmin.getActiveCoupons;
   static getCouponById = BusinessAdmin.getCouponById;
   static updateBusinessClaimStatus = BusinessAdmin.updateBusinessClaimStatus;
+  static getBusinessInstitutionScopeAdminModel =
+    BusinessAdmin.getBusinessInstitutionScopeAdminModel;
   static grantBusinessInstitutionScope =
     BusinessAdmin.grantBusinessInstitutionScope;
   static revokeBusinessInstitutionScope =
