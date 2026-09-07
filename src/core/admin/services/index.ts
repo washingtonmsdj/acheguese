@@ -9,7 +9,11 @@ export type {
   AdminMobilityOperationalSnapshot,
 } from "./AdminMobilityService";
 export { adminBusinessService } from "./AdminBusinessService";
-export type { AdminBusinessData } from "./AdminBusinessService";
+export type {
+  AdminBusinessData,
+  GrantBusinessInstitutionScopeInput,
+  BusinessInstitutionScopeAdminModel,
+} from "./AdminBusinessService";
 export { adminCommunityService } from "./AdminCommunityService";
 export { adminStatsService } from "./AdminStatsService";
 export type { 
