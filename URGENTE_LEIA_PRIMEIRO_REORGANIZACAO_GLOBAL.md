@@ -8,7 +8,7 @@
 
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
-**Status:** EM EXECUÇÃO — G6 / Empresas-Educação fechou identidade Profile ID vs business_data.id, Billing delegado, claim institucional individual, autoridade institucional herdada/revogável, hardening destrutivo e identidade exata do artefato INEP 2025; o SHA `86c76fc8d48550fbbed783a359c32f6cdf6a435d` permanece a última baseline hosted READY no Vercel; cobertura pública completa de Salvador segue aberta porque o ZIP oficial continua inacessível por DNS neste runtime; commits posteriores estão sem nova prova hosted porque o Vercel entrou em build-rate-limit e GitHub Actions continua sem runner  
+**Status:** EM EXECUÇÃO — G6 / Empresas-Educação fechou identidade Profile ID vs business_data.id, Billing delegado, claim institucional individual, autoridade institucional herdada/revogável, hardening destrutivo e identidade exata do artefato INEP 2025; persistência autenticada Profile → membership → Empresa → stats → edit → cleanup foi provada no Supabase vivo com outsider negado e rollback limpo; o SHA `86c76fc8d48550fbbed783a359c32f6cdf6a435d` permanece a última baseline hosted READY no Vercel; cobertura pública completa de Salvador segue aberta por DNS e o lifecycle de UI/sessão continua bloqueado por runner/rate-limit  
 **Checkpoint técnico atual:** `49ac2f789a725f8fafb09a6912d5e16baf8b57cc`  
 **Checkpoint de transição G5 → G6:** `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`  
 **Projeto:** Achegue-se  
@@ -792,6 +792,7 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 - [x] pós-condição remota: somente as assinaturas novas existem, ambas `security_definer=false`, `anon_execute=true`, `authenticated_execute=true`; Advisor sem finding novo específico;
 - [x] fundação de ingestão idempotente por INEP concluída em staging privada, com natural key, manifest/sha/parser, raw binding e quality gate. Não houve carga municipal nem materialização;
 - [ ] cobertura municipal continua **15 escolas piloto**; próximo gate é o primeiro batch extraído do ZIP oficial 2025, não uma carga inventada/derivada de fonte secundária.
+- [x] lifecycle de persistência Business provado diretamente sob role `authenticated`: Profile, owner membership, `business_data`, `business_stats`, edição e soft-delete passaram; outsider sem vínculo alterou 0 linhas; `BEGIN/ROLLBACK` terminou com 0 resíduos. Isso não substitui o Playwright de UI/sessão/página pública.
 
 
 #### 2026-09-06 — G6 Educação / fundação de ingestão INEP municipal
