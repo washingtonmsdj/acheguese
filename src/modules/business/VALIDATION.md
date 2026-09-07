@@ -923,7 +923,46 @@ Vercel fornece validacao independente de source/build:
 - `7d7775456d4ce3105d05e7d7a23d8ca10be32fc4`: build anterior iniciado durante a campanha;
 - `86c76fc8d48550fbbed783a359c32f6cdf6a435d`: **READY** em production no Vercel, com security validation, security lint sem errors, Upload SSOT, Core Platform ownership, sitemap, CSP, Turnstile, `typecheck:app`, lint normal e Vite build concluídos.
 
-Queue/cancel por commits supersedidos nao deve ser classificado como falha de source.\n\n## Prova remota do lifecycle de persistência autenticada
+Queue/cancel por commits supersedidos nao deve ser classificado como falha de source.\n\n## Correcoes funcionais pos-baseline hosted
+
+A auditoria direta do owner Empresa encontrou regressões reais que o build hospedado anterior
+nao detectava porque parte dos writers ainda estava protegida por tipos manuais permissivos:
+
+- **Produtos:** `createProduct()` escrevia colunas inglesas inexistentes
+  (`name/description/price/active/...`) enquanto o schema vivo usa
+  `nome/descricao/preco/ativo/...`. O writer foi corrigido para as colunas canonicas e
+  passou a usar o cliente Supabase gerado/tipado. Probe remoto confirmou owner inserindo
+  produto com **preco 0 preservado**, outsider bloqueado por RLS e rollback com 0 residuos.
+  Ratchet: `tests/architecture/business-product-persistence-g6.test.ts`.
+- **Campos server-owned no create:** `createBusiness()` ainda enviava
+  `rating`, `total_reviews` e `total_products`, embora `authenticated` nao possua
+  INSERT nesses campos. A falha foi reproduzida no banco e o payload foi corrigido para
+  usar os defaults server-owned. `is_verified/is_premium` tambem sairam dos schemas e
+  tipos de input comuns; verificacao/premium continuam exclusivos do `admin-business-rpc`.
+  Ratchet: `tests/security/business-data-grants-security.test.ts`.
+- **Contato pos-criacao:** o RPC vivo
+  `public.contact_rpc_patch_owned_channels` quebrava no primeiro upsert com
+  `column reference "channel_type" is ambiguous`, pois `channel_type` tambem e output
+  de `RETURNS TABLE`. Migration Git/remoto
+  `20260907033641_fix_contact_rpc_channel_type_ambiguity_g6.sql` substituiu o conflict
+  target ambiguo por `INSERT ... ON CONFLICT DO NOTHING` + UPDATE qualificado, mantendo
+  a API e o storage privado. Provas antes/depois da migration confirmaram insert + update,
+  `profiles.id` rejeitado como identidade Business, active-membership preservado,
+  `anon/authenticated` sem EXECUTE, `service_role` com EXECUTE e rollback limpo.
+  `contact-rpc` remoto continua **ACTIVE v7 / verify_jwt=true**. Security Advisor nao
+  adicionou finding especifico deste corte.
+- **Horarios/operacao:** RLS e FKs vivos confirmam que
+  `business_hours`, exceptions e `business_operation_config` referenciam
+  **`business_data.id`**. Os fluxos de gestao Gastronomia ja propagavam `businessDataId`,
+  mas a pagina publica de Empresa consultava operation config com
+  `institutional.business.id` (= Profile ID). Ela agora usa
+  `snapshot.identity.businessId` (= Business Data ID), protegida por
+  `businessGastronomySeparation.spec.ts`.
+
+Esses cortes reduzem significativamente o risco do lifecycle autenticado antes do proximo
+runner. Ainda nao substituem typecheck/Vitest/Playwright/build same-SHA dos commits atuais.
+
+## Prova remota do lifecycle de persistência autenticada
 
 Sem substituir o Playwright, o backend vivo foi exercitado em `BEGIN/ROLLBACK`
 com a mesma classe de conta fixture usada pelo E2E remoto.
