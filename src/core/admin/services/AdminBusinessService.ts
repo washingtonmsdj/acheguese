@@ -9,6 +9,9 @@
 import { logger } from "@/shared/utils/logger";
 import { invokeSupabaseBrokerCommand } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 import { BusinessService } from "@/core/business/services/BusinessService";
+import type {
+  GrantBusinessInstitutionScopeInput,
+} from "@/core/business/services/BusinessService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 
 export interface AdminBusinessData {
@@ -235,6 +238,30 @@ class AdminBusinessServiceClass {
     reviewNotes?: string,
   ): Promise<boolean> {
     return BusinessService.updateBusinessClaimStatus(claimId, status, reviewNotes);
+  }
+
+  /**
+   * Concede uma autoridade institucional herdada sobre escola pública.
+   * ✅ SSOT: BusinessService -> admin-business-rpc -> RPC server-owned
+   */
+  async grantInstitutionScope(
+    input: GrantBusinessInstitutionScopeInput,
+  ): Promise<string | null> {
+    return BusinessService.grantBusinessInstitutionScope(input);
+  }
+
+  /**
+   * Revoga uma autoridade institucional herdada.
+   * ✅ SSOT: BusinessService -> admin-business-rpc -> RPC server-owned
+   */
+  async revokeInstitutionScope(
+    scopeId: string,
+    revocationReason: string,
+  ): Promise<boolean> {
+    return BusinessService.revokeBusinessInstitutionScope(
+      scopeId,
+      revocationReason,
+    );
   }
 
   /**
