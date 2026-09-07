@@ -8,8 +8,8 @@
 
 **Criado em:** 2026-08-26  
 **Estratégia:** `main` only, commits pequenos, sem force push, sem branch nova para esta missão  
-**Status:** EM EXECUÇÃO — G6 / Empresas-Educação fechou identidade Profile ID vs business_data.id, Billing delegado, claim institucional individual, autoridade institucional herdada/revogável, hardening destrutivo e identidade exata do artefato INEP 2025; persistência autenticada Profile → membership → Empresa → stats → edit → cleanup foi provada no Supabase vivo com outsider negado e rollback limpo; o SHA `86c76fc8d48550fbbed783a359c32f6cdf6a435d` permanece a última baseline hosted READY no Vercel; cobertura pública completa de Salvador segue aberta por DNS e o lifecycle de UI/sessão continua bloqueado por runner/rate-limit  
-**Checkpoint técnico atual:** `49ac2f789a725f8fafb09a6912d5e16baf8b57cc`  
+**Status:** EM EXECUÇÃO — G6 / Empresas-Educação fechou identidade Profile ID vs business_data.id, Billing delegado, claim institucional individual, autoridade institucional herdada/revogável, hardening destrutivo e identidade exata do artefato INEP 2025; persistência autenticada Profile → membership → Empresa → stats → edit → cleanup foi provada no Supabase vivo com outsider negado e rollback limpo; a auditoria pós-baseline corrigiu writers de produto, campos server-owned no cadastro, o contact-rpc e o operation config público; o SHA `86c76fc8d48550fbbed783a359c32f6cdf6a435d` permanece a última baseline hosted READY no Vercel; cobertura pública completa de Salvador segue aberta por DNS e o lifecycle de UI/sessão continua bloqueado por runner/rate-limit  
+**Checkpoint técnico atual:** `4df29927f5063d5439b2217107d58f017aae8ae6`  
 **Checkpoint de transição G5 → G6:** `docs/03-architecture/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md`  
 **Projeto:** Achegue-se  
 **Arquitetura atual:** single-repo / modular monolith Vite + React + TypeScript + Supabase  
@@ -793,6 +793,10 @@ Se o repositório parecer confuso, se houver dúvida sobre onde um arquivo deve 
 - [x] fundação de ingestão idempotente por INEP concluída em staging privada, com natural key, manifest/sha/parser, raw binding e quality gate. Não houve carga municipal nem materialização;
 - [ ] cobertura municipal continua **15 escolas piloto**; próximo gate é o primeiro batch extraído do ZIP oficial 2025, não uma carga inventada/derivada de fonte secundária.
 - [x] lifecycle de persistência Business provado diretamente sob role `authenticated`: Profile, owner membership, `business_data`, `business_stats`, edição e soft-delete passaram; outsider sem vínculo alterou 0 linhas; `BEGIN/ROLLBACK` terminou com 0 resíduos. Isso não substitui o Playwright de UI/sessão/página pública.
+- [x] writer de produtos corrigido: `createProduct()` usava colunas inglesas inexistentes em `business_products`; agora grava `nome/descricao/preco/preco_promocional/imagem/categoria/estoque/ativo/destaque/promocao` via schema Supabase gerado. Probe remoto preservou preco `0`, bloqueou outsider por RLS e deixou 0 residuos.
+- [x] cadastro Business deixou de enviar `rating/total_reviews/total_products` server-owned, que o banco corretamente nega a `authenticated`; `is_verified/is_premium` sairam dos inputs comuns e continuam exclusivos do broker admin.
+- [x] `contact-rpc` corrigido no Git/remoto pela migration `20260907033641_fix_contact_rpc_channel_type_ambiguity_g6.sql`: o antigo `ON CONFLICT (..., channel_type)` colidia com o output PL/pgSQL `channel_type`; insert/update de contato voltou a funcionar sem ampliar ACL. Edge remota `contact-rpc` segue ACTIVE v7 / `verify_jwt=true`; anon/authenticated continuam sem EXECUTE direto e service_role continua autorizado.
+- [x] identidade dos subrecursos revalidada: horarios, excecoes, operation config e contatos usam `business_data.id`. Fluxos de gestão Gastronomia ja estavam corretos; a pagina publica de Empresa foi corrigida para usar `snapshot.identity.businessId` no operation config, em vez de `institutional.business.id` (= Profile ID).
 
 
 #### 2026-09-06 — G6 Educação / fundação de ingestão INEP municipal
