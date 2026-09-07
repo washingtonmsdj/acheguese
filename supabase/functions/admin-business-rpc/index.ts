@@ -29,6 +29,7 @@ const ACTIONS = {
   resolveClaim: true,
   grantInstitutionScope: true,
   revokeInstitutionScope: true,
+  getInstitutionScopeAdminModel: true,
 } as const;
 
 const INSTITUTION_AUTHORITY_KINDS = {
@@ -43,7 +44,10 @@ const INSTITUTION_AUTHORITY_KINDS = {
 type AdminBusinessAction = keyof typeof ACTIONS;
 type AdminBusinessFlagAction = Exclude<
   AdminBusinessAction,
-  "resolveClaim" | "grantInstitutionScope" | "revokeInstitutionScope"
+  | "resolveClaim"
+  | "grantInstitutionScope"
+  | "revokeInstitutionScope"
+  | "getInstitutionScopeAdminModel"
 >;
 type InstitutionAuthorityKind = keyof typeof INSTITUTION_AUTHORITY_KINDS;
 
@@ -257,6 +261,32 @@ serve(async (req: Request) => {
         resource: "admin-business-rpc",
         status: "success",
         details: { action: safeAction, claimId, decision },
+        ...getAuditInfo(req),
+      });
+
+      return jsonResponse({ data }, 200, ALLOWED_METHODS, req);
+    }
+
+    if (safeAction === "getInstitutionScopeAdminModel") {
+      const { data, error } = await supabaseAdmin.rpc(
+        "admin_get_business_institution_scope_model",
+        { p_actor_user_id: auth.userId },
+      );
+      if (error) {
+        const reason = knownRpcReason(error.message, [
+          "institution_scope_admin_required",
+        ]);
+        if (reason) throw new RequestValidationError(reason);
+        throw error;
+      }
+
+      auditLog({
+        timestamp: new Date().toISOString(),
+        userId: auth.userId,
+        action: "admin_business_getInstitutionScopeAdminModel",
+        resource: "admin-business-rpc",
+        status: "success",
+        details: { action: safeAction },
         ...getAuditInfo(req),
       });
 
