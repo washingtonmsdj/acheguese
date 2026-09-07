@@ -7,8 +7,10 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
-import type { BusinessDataRecord } from '../types';
-import { BusinessNetworkRpcService } from './BusinessNetworkRpcService';
+import {
+  BusinessNetworkRpcService,
+  type CreateBranchCommandResult,
+} from './BusinessNetworkRpcService';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -144,28 +146,15 @@ export class NetworkService {
     });
   }
 
-  static async createBranch(params: {
+  static createBranch(params: {
     brandHubId: string;
     businessName: string;
     unitName: string;
     slug: string;
     locationId: string;
     isHeadquarters?: boolean;
-  }): Promise<BusinessDataRecord> {
-    const result = await BusinessNetworkRpcService.createBranch(params);
-    const { data, error } = await this.readDb()
-      .from<BusinessDataRecord>('business_data')
-      .select('*')
-      .eq('id', result.branch_id)
-      .maybeSingle();
-
-    if (error || !data) {
-      throw new Error(
-        `Filial criada, mas a leitura do registro falhou: ${error?.message ?? 'dados não retornados'}`,
-      );
-    }
-
-    return data;
+  }): Promise<CreateBranchCommandResult> {
+    return BusinessNetworkRpcService.createBranch(params);
   }
 
   /**
