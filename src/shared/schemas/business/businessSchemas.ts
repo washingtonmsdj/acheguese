@@ -213,9 +213,6 @@ const baseBusinessObjectSchema = z.object({
 
     status: z.enum(["active", "inactive", "pending", "suspended"]).optional(),
 
-    /** Campos administrativos — apenas super_admin/admin */
-    is_verified: z.boolean().optional(),
-    is_premium: z.boolean().optional(),
   });
 
 function applyBusinessRules<T extends z.AnyZodObject>(
