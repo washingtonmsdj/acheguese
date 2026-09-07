@@ -9,6 +9,9 @@ describe("Business and Professional private-data boundary", () => {
   const migration = read(
     "supabase/migrations/20260718170000_consolidate_entity_contact_channels.sql",
   );
+  const contactUpsertFix = read(
+    "supabase/migrations/20260907033641_fix_contact_rpc_channel_type_ambiguity_g6.sql",
+  );
 
   it("keeps contact channels in one private FK-backed store", () => {
     expect(migration).toContain("CREATE TABLE IF NOT EXISTS private.entity_contact_channels");
@@ -37,6 +40,35 @@ describe("Business and Professional private-data boundary", () => {
       "GRANT EXECUTE ON FUNCTION public.professional_credentials_rpc_patch_owned(UUID, UUID, JSONB)",
     );
     expect(migration).toContain("TO service_role");
+  });
+
+  it("keeps contact upserts free of PL/pgSQL output-column ambiguity", () => {
+    expect(contactUpsertFix).toContain(
+      "CREATE OR REPLACE FUNCTION public.contact_rpc_patch_owned_channels",
+    );
+    expect(contactUpsertFix).toContain("ON CONFLICT DO NOTHING");
+    expect(contactUpsertFix).toContain(
+      "UPDATE private.entity_contact_channels AS channels",
+    );
+    expect(contactUpsertFix).toContain(
+      "channels.business_id = p_entity_id",
+    );
+    expect(contactUpsertFix).toContain(
+      "channels.professional_id = p_entity_id",
+    );
+    expect(contactUpsertFix).not.toContain(
+      "ON CONFLICT (business_id, channel_type)",
+    );
+    expect(contactUpsertFix).not.toContain(
+      "ON CONFLICT (professional_id, channel_type)",
+    );
+    expect(contactUpsertFix).toContain(
+      "member.is_active = true AND member.role IN ('owner', 'admin')",
+    );
+    expect(contactUpsertFix).toContain(
+      "REVOKE ALL ON FUNCTION public.contact_rpc_patch_owned_channels",
+    );
+    expect(contactUpsertFix).toContain("TO service_role");
   });
 
   it("binds privileged RPC actors to authenticated brokers", () => {
