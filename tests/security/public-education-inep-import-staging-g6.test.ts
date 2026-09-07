@@ -33,6 +33,9 @@ describe("G6 public Education INEP import staging", () => {
   const normalizedOutputBinding = read(
     "supabase/migrations/20260906180209_bind_inep_normalized_output_artifact_g6.sql",
   );
+  const archiveIdentityBinding = read(
+    "supabase/migrations/20260907020136_pin_public_education_inep_2025_artifact_g6.sql",
+  );
 
   it("promotes non-null INEP codes to the canonical natural key", () => {
     expect(migration).toContain(
@@ -283,6 +286,28 @@ describe("G6 public Education INEP import staging", () => {
     expect(archiveBinding).toContain(
       "= source_file_name",
     );
+  });
+
+  it("pins the exact official Censo Escolar 2025 archive in persisted staging", () => {
+    expect(archiveIdentityBinding).toContain(
+      "education_public_import_batches_2025_archive_identity_chk",
+    );
+    expect(archiveIdentityBinding).toContain(
+      "https://download.inep.gov.br/dados_abertos/microdados_censo_escolar_2025_.zip",
+    );
+    expect(archiveIdentityBinding).toContain(
+      "manifest#>>'{safety,official_archive_identity_verified}' = 'true'",
+    );
+    expect(archiveIdentityBinding).toContain(
+      "education_import_unpinned_archive_url",
+    );
+    expect(archiveIdentityBinding).not.toContain(
+      "INSERT INTO public.education_profiles",
+    );
+    expect(archiveIdentityBinding).not.toContain(
+      "INSERT INTO public.business_data",
+    );
+    expect(archiveIdentityBinding).not.toContain("INSERT INTO public.profiles");
   });
 
   it("does not introduce a second Profile/Business materialization authority", () => {
