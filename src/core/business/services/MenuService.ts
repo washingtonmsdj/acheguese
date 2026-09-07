@@ -62,7 +62,7 @@ export interface MenuCategory {
 export interface MenuItem {
   id: string;
   menu_id: string;
-  category_id: string | null;
+  category_id: string;
   name: string;
   description: string | null;
   price: number;
@@ -414,6 +414,7 @@ async function resolveFallbackCategoryId(menuId: string): Promise<string | null>
     .select('id')
     .eq('menu_id', menuId)
     .order('display_order', { ascending: true })
+    .limit(1)
     .maybeSingle();
 
   const row = asRecord(data);
