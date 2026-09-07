@@ -13,9 +13,6 @@ import { LocationHierarchyReadService } from "@/core/location";
 import { applyTerritoryFilter } from "@/core/location/utils";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { EntityContactService } from "@/core/contact";
-import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
-
-const supabaseTyped = supabase as unknown as AdminSupabaseClient;
 import { sanitizeForILike } from "@/shared/utils/sqlSanitization";
 import {
   isValidBusinessId,
@@ -156,7 +153,7 @@ export async function getBusinesses(
 ): Promise<Business[]> {
   try {
     // Check if table exists first
-    const { error: checkError } = await supabaseTyped
+    const { error: checkError } = await supabase
       .from("business_data")
       .select("profile_id")
       .limit(1);
@@ -169,7 +166,7 @@ export async function getBusinesses(
       return [];
     }
 
-    let query = supabaseTyped
+    let query = supabase
       .from("business_data")
       .select(`*, ${BUSINESS_CANONICAL_RELATIONS_SELECT}`)
       .eq("status", "active")
@@ -356,7 +353,7 @@ export async function getBusinessesList(
 
   try {
     // FASE 1 IA: Usar view pública segura
-    const checkResult = await supabaseTyped
+    const checkResult = await supabase
       .from("public_business_search")
       .select("profile_id")
       .limit(1);
@@ -369,7 +366,7 @@ export async function getBusinessesList(
       return { businesses: [], nextPage: undefined };
     }
 
-    let query = supabaseTyped
+    let query = supabase
       .from("public_business_search")
       .select(PUBLIC_BUSINESS_LIST_SELECT)
       .in("business_role", ["standalone", "branch"])
@@ -533,7 +530,7 @@ export async function getRecentBusinesses(
 ): Promise<Array<{ id: string; name: string; created_at: string }>> {
   try {
     const safeLimit = Math.max(1, Math.min(limit, 50));
-    const { data, error } = await supabaseTyped
+    const { data, error } = await supabase
       .from("business_data")
       .select("profile_id, business_name, created_at")
       .eq("status", "active")
@@ -576,7 +573,7 @@ export async function getBusinessProfile(id: string): Promise<{
   is_premium: boolean;
 } | null> {
   try {
-    const { data, error } = await supabaseTyped
+    const { data, error } = await supabase
       .from("business_data")
       .select("slug, category, metadata, is_premium")
       .eq("profile_id", id)
@@ -616,7 +613,7 @@ export async function getBusinessById(id: string): Promise<Business> {
   }
 
   try {
-    const { data, error } = await supabaseTyped
+    const { data, error } = await supabase
       .from("business_data")
       .select(
         `
@@ -658,7 +655,7 @@ export async function getBusinessDataIdByProfileId(
   }
 
   try {
-    const { data, error } = await supabaseTyped
+    const { data, error } = await supabase
       .from("business_data")
       .select("id, business_role, updated_at")
       .eq("profile_id", profileId)
@@ -731,7 +728,7 @@ export async function getBusinessBySlug(slug: string): Promise<{
   }
 
   try {
-    const { data, error } = await supabaseTyped
+    const { data, error } = await supabase
       .from("business_data")
       .select("id, profile_id, slug, business_name, is_premium")
       .eq("slug", slug)
@@ -790,7 +787,7 @@ export async function getBusinessesByIds(ids: string[]): Promise<
   if (ids.length === 0) return [];
 
   try {
-    const { data, error } = await supabaseTyped
+    const { data, error } = await supabase
       .from("public_business_search")
       .select(
         `
@@ -868,7 +865,7 @@ export async function searchBusinessesByName(
     const sanitizedQuery = sanitizeForILike(sanitized);
     if (!sanitizedQuery) return [];
 
-    const { data, error } = await supabaseTyped
+    const { data, error } = await supabase
       .from("business_data")
       .select("profile_id, business_name, category")
       .eq("status", "active")
@@ -994,7 +991,7 @@ export async function getSimilarBusinesses(
   limit = 5,
 ): Promise<Partial<Business>[]> {
   try {
-    const { data, error } = await supabaseTyped
+    const { data, error } = await supabase
       .from("business_data")
       .select(
         `
@@ -1046,7 +1043,7 @@ export async function getSimilarBusinesses(
  */
 export async function getGallery(businessId: string): Promise<string[]> {
   try {
-    const { data, error } = await supabaseTyped
+    const { data, error } = await supabase
       .from("business_gallery")
       .select("image_url")
       .eq("business_id", businessId)
@@ -1070,7 +1067,7 @@ export async function getGallery(businessId: string): Promise<string[]> {
       return [];
     }
 
-    const { data: fallbackData, error: fallbackError } = await supabaseTyped
+    const { data: fallbackData, error: fallbackError } = await supabase
       .from("business_gallery")
       .select("image_url")
       .eq("business_id", businessDataId)
