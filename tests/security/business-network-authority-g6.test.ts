@@ -22,6 +22,20 @@ describe("G6 transactional Business network authority", () => {
     expect(network).toContain("BusinessNetworkRpcService.setHeadquarters");
   });
 
+  it("does not turn successful network commands into read-after-write failures", () => {
+    const network = read("src/core/business/services/NetworkService.ts");
+
+    expect(network).toContain(
+      "return BusinessNetworkRpcService.createBranch(params);",
+    );
+    expect(network).not.toContain(
+      "Filial criada, mas a leitura do registro falhou",
+    );
+    expect(network).not.toContain("getBrandHub(");
+    expect(network).not.toContain("getParentBrandHub(");
+    expect(network).not.toContain("getProfileBrandHubs(");
+  });
+
   it("keeps network structure owner-only and does not invent inherited authority", () => {
     const migration = read(
       "supabase/migrations/20260906101326_add_transactional_business_network_commands_g6.sql",
