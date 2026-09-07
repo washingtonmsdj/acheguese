@@ -49,6 +49,49 @@ describe("business_data grants security", () => {
     expect(adminFunction).toContain("SUPABASE_SERVICE_ROLE_KEY");
   });
 
+  it("keeps server-owned Business fields out of normal create/update inputs", () => {
+    const mutations = readProjectFile(
+      "src/core/business/services/business.mutations.ts",
+    );
+    const mapper = readProjectFile(
+      "src/core/business/services/business.mappers.ts",
+    );
+    const schemas = readProjectFile(
+      "src/shared/schemas/business/businessSchemas.ts",
+    );
+    const inputTypes = readProjectFile("src/core/business/types/index.ts");
+
+    const createStart = mutations.indexOf(
+      "export async function createBusiness",
+    );
+    const updateStart = mutations.indexOf(
+      "export async function updateBusiness",
+      createStart,
+    );
+    const createBlock = mutations.slice(createStart, updateStart);
+
+    expect(createBlock).not.toContain("rating: 0");
+    expect(createBlock).not.toContain("total_reviews: 0");
+    expect(createBlock).not.toContain("total_products: 0");
+    expect(createBlock).not.toContain("validatedInput.is_verified");
+    expect(createBlock).not.toContain("validatedInput.is_premium");
+
+    expect(schemas).not.toContain("is_verified: z.boolean().optional()");
+    expect(schemas).not.toContain("is_premium: z.boolean().optional()");
+    expect(inputTypes).not.toMatch(
+      /export interface BusinessInput[\s\S]*?is_verified\?: boolean;/,
+    );
+    expect(inputTypes).not.toMatch(
+      /export interface BusinessInput[\s\S]*?is_premium\?: boolean;/,
+    );
+    expect(mapper).not.toContain(
+      'setIfDefined(result, "is_verified", input.is_verified)',
+    );
+    expect(mapper).not.toContain(
+      'setIfDefined(result, "is_premium", input.is_premium)',
+    );
+  });
+
   it("keeps public business discovery on a sanitized read-only projection", () => {
     const privacyBoundary = readProjectFile(
       "supabase/migrations/20260825233458_isolate_public_business_catalog.sql",
