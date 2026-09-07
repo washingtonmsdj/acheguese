@@ -14,7 +14,16 @@ const modulePath =
 
 type AdapterModule = {
   PARSER_VERSION: string;
+  OFFICIAL_CENSO_ESCOLAR_2025_ARCHIVE_URL: string;
   RAW_RECORD_HASH_CONTRACT: string;
+  assertOfficialInepArchiveUrl: (
+    sourceYear: number,
+    archiveUrl: string,
+  ) => {
+    archiveUrl: string;
+    identityPinned: boolean;
+    expectedUrl: string | null;
+  };
   REQUIRED_COLUMNS: readonly string[];
   canonicalRawRecordPayload: (record: Record<string, string>) => string;
   sha256RawRecord: (record: Record<string, string>) => string;
@@ -252,6 +261,42 @@ describe("public Education INEP adapter", () => {
     ).toThrow(/does not match source year 2025/);
   });
 
+  it("pins the official Censo Escolar 2025 archive identity", async () => {
+    const {
+      OFFICIAL_CENSO_ESCOLAR_2025_ARCHIVE_URL,
+      assertOfficialInepArchiveUrl,
+    } = await loadModule();
+
+    expect(OFFICIAL_CENSO_ESCOLAR_2025_ARCHIVE_URL).toBe(
+      "https://download.inep.gov.br/dados_abertos/microdados_censo_escolar_2025_.zip",
+    );
+
+    expect(
+      assertOfficialInepArchiveUrl(
+        2025,
+        OFFICIAL_CENSO_ESCOLAR_2025_ARCHIVE_URL,
+      ),
+    ).toEqual({
+      archiveUrl: OFFICIAL_CENSO_ESCOLAR_2025_ARCHIVE_URL,
+      identityPinned: true,
+      expectedUrl: OFFICIAL_CENSO_ESCOLAR_2025_ARCHIVE_URL,
+    });
+
+    expect(() =>
+      assertOfficialInepArchiveUrl(
+        2025,
+        "https://download.inep.gov.br/dados_abertos/microdados_censo_escolar_2024.zip",
+      ),
+    ).toThrow(/does not match the pinned official Censo Escolar 2025 artifact/);
+
+    expect(() =>
+      assertOfficialInepArchiveUrl(
+        2025,
+        "https://example.com/microdados_censo_escolar_2025_.zip",
+      ),
+    ).toThrow(/official download\.inep\.gov\.br ZIP/);
+  });
+
   it("builds a reproducible Salvador manifest without pretending private or inactive rows are public-active", async () => {
     const { PARSER_VERSION, preparePublicEducationInepImport } =
       await loadModule();
@@ -302,7 +347,7 @@ describe("public Education INEP adapter", () => {
       encoding: "utf8",
     });
 
-    expect(PARSER_VERSION).toBe("inep-censo-school-adapter/6");
+    expect(PARSER_VERSION).toBe("inep-censo-school-adapter/7");
     expect(manifest).toMatchObject({
       contract: "acheguese.public-education-inep-normalized/1",
       parser_version: PARSER_VERSION,
@@ -349,6 +394,7 @@ describe("public Education INEP adapter", () => {
         publishes_records: false,
         staging_quality_gate_required: true,
         official_archive_host_required: true,
+        official_archive_identity_verified: true,
         archive_binding_verified: true,
         header_contract_verified: true,
       },
