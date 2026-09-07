@@ -19,7 +19,10 @@ export interface BusinessProfileExtensionRecord {
 }
 
 export type BusinessProfileExtensionUpdate = Partial<
-  Omit<BusinessProfileExtensionRecord, "profile_id" | "created_at" | "updated_at">
+  Omit<
+    BusinessProfileExtensionRecord,
+    "profile_id" | "created_at" | "updated_at" | "tax_id"
+  >
 >;
 
 type QueryError = { message?: string | null };
@@ -80,9 +83,15 @@ export async function updateBusinessProfileExtension(
   profileId: string,
   updates: BusinessProfileExtensionUpdate,
 ): Promise<BusinessProfileExtensionRecord> {
+  // tax_id is intentionally server-owned/read-only for authenticated users.
+  // Compatibility callers may still pass a broader BusinessData object through
+  // a cast, so strip it at runtime in addition to excluding it from the type.
+  const mutableUpdates = { ...updates } as Record<string, unknown>;
+  delete mutableUpdates.tax_id;
+
   const { data, error } = await db
     .from<BusinessProfileExtensionRecord>("business_data")
-    .update(updates)
+    .update(mutableUpdates as BusinessProfileExtensionUpdate)
     .eq("profile_id", profileId)
     .select(BUSINESS_PROFILE_EXTENSION_SELECT)
     .single();
