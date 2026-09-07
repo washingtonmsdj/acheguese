@@ -82,7 +82,6 @@ import {
 } from "./profile.mutations";
 import {
   getCurrentUserFavoriteBusinessesQuery,
-  getUserFavoritesCountQuery,
   getUserBusinessesByProfilesQuery,
   getUserBusinessesQuery,
   searchProfilesByNameQuery,
@@ -461,9 +460,6 @@ export class ProfileService {
     userId: string,
   ): Promise<string | null> {
     return resolveProfileIdByUserId(userId);
-  }
-  async getUserFavoritesCount(userId: string): Promise<number> {
-    return getUserFavoritesCountQuery(userId);
   }
   async getUserBusinessesByProfiles(
     profileIds: string[],
