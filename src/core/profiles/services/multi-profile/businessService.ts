@@ -19,8 +19,7 @@ const errorMessage = (error: unknown, fallback: string): string =>
 function toMultiProfileBusinessData(
   value: Awaited<ReturnType<typeof getBusinessProfileExtension>>,
 ): BusinessData | null {
-  if (!value) return null;
-  return value as BusinessData;
+  return value;
 }
 
 export class BusinessService {
