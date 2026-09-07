@@ -390,8 +390,8 @@ ambiente durante este checkpoint; portanto o artefato binario real ainda nao foi
 inspecionado.
 
 O adaptador
-`tools/data-quality/prepare-public-education-inep-import.mjs` esta em
-`inep-censo-school-adapter/6` e e deliberadamente offline em relacao ao Supabase:
+`tools/data-quality/prepare-public-education-inep-import.mjs` esta atualmente em
+`inep-censo-school-adapter/7` e e deliberadamente offline em relacao ao Supabase:
 
 - streaming, sem carregar o Censo inteiro em memoria;
 - exige o header escolar com `NU_ANO_CENSO`, `CO_ENTIDADE`, `NO_ENTIDADE`,
@@ -674,6 +674,43 @@ Ratchet:
 O script direcionado
 `npm run test:education:inep-import` cobre adapter + staging/source binding + planner quando
 o runner voltar a executar steps.
+
+### Identidade oficial do artefato 2025
+
+O checkpoint de 2026-09-06/07 removeu a ultima ambiguidade de provenance antes da
+carga real. A pagina oficial do Inep aponta o Censo Escolar 2025 para o artefato:
+
+`https://download.inep.gov.br/dados_abertos/microdados_censo_escolar_2025_.zip`
+
+O adapter foi elevado para `inep-censo-school-adapter/7` e agora:
+
+- exporta a identidade oficial 2025 como constante canônica;
+- exige o URL exato para `sourceYear=2025`, e não apenas um ZIP qualquer no host
+  `download.inep.gov.br`;
+- aplica a validação tanto no CLI quanto em
+  `preparePublicEducationInepImport()`, fechando bypass programático;
+- grava `safety.official_archive_identity_verified=true` somente quando a identidade
+  do ano está explicitamente pinada;
+- o stager recalcula a identidade e exige a flag antes de qualquer conexão ao banco.
+
+A migration Git/remoto
+`20260907020136_pin_public_education_inep_2025_artifact_g6.sql` aplica a mesma
+regra no staging privado:
+
+- `education_public_import_batches_2025_archive_identity_chk` impede que um batch
+  2025 persista com outro URL ou sem a flag de identidade;
+- `private.create_public_education_import_batch` falha cedo com
+  `education_import_unpinned_archive_url` para outro ZIP, mesmo no host oficial;
+- probe transacional antes da migration e probe contra a função persistida provaram:
+  ZIP 2024 no host oficial -> rejeitado; URL oficial 2025 -> aceito; tentativa de
+  alterar o batch para URL errado -> barrada pelo CHECK; rollback -> **0 batches /
+  0 staging rows**;
+- Security Advisor não adicionou finding específico desta mudança.
+
+O binário oficial **ainda não foi inspecionado neste runtime**. O URL foi resolvido pela
+página oficial, mas o acesso ao host continua bloqueado aqui por DNS
+(`curl: (6) Could not resolve host: download.inep.gov.br`). Nenhum mirror ou dataset
+de terceiro foi usado como substituto.
 
 ### Gate restante
 
