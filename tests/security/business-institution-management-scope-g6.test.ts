@@ -153,6 +153,25 @@ describe("G6 Business institutional management scope", () => {
     expect(deletePolicy).not.toContain("can_operate_business_profile");
   });
 
+  it("keeps Education analytics history immutable from browser managers", () => {
+    const analyticsBoundary = read(
+      "supabase/migrations/20260907012241_remove_browser_delete_from_education_analytics_g6.sql",
+    );
+
+    expect(analyticsBoundary).toContain(
+      'DROP POLICY IF EXISTS "allow_owner_delete_analytics"',
+    );
+    expect(analyticsBoundary).toContain(
+      "REVOKE DELETE ON TABLE public.education_analytics_events",
+    );
+    expect(analyticsBoundary).toContain("FROM authenticated;");
+    expect(analyticsBoundary).not.toContain(
+      "GRANT DELETE ON TABLE public.education_analytics_events TO authenticated",
+    );
+    expect(analyticsBoundary).not.toContain("can_manage_profile");
+    expect(analyticsBoundary).not.toContain("can_operate_business_profile");
+  });
+
   it("does not weaken structural ownership or people/access mutations", () => {
     const transfer = read(
       "supabase/migrations/20260906124554_fix_business_claim_canonical_transfer_g6.sql",
