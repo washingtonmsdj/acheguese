@@ -84,10 +84,6 @@ type BusinessCurrentRow = {
   is_verified?: boolean | null;
 };
 
-type ProductInsertRow = {
-  id: string;
-};
-
 const businessMutationsDb = supabase as unknown as BusinessMutationsDbClient;
 
 const BUSINESS_SELECT = `
@@ -721,7 +717,8 @@ export async function createProduct(
   }
 
   try {
-    const { data, error } = await businessMutationsDb.from<ProductInsertRow>("business_products")
+    const { data, error } = await supabase
+      .from("business_products")
       .insert({
         profile_id: businessId,
         nome: productData.nome,
