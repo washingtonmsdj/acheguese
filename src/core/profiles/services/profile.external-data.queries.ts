@@ -2,7 +2,6 @@ import { supabase } from "@/integrations/supabase";
 import { getCurrentUserBusinessFavorites } from "@/core/favorites/services/favorites.queries";
 import type { ProfileRow as Profile } from "./types";
 import type { BusinessRow } from "./profile.service.types";
-import { resolveOwnedProfileIds } from "./profile.queries";
 
 interface QueryError {
   message?: string | null;
@@ -127,23 +126,6 @@ export async function searchProfilesByNameQuery(
   }
 
   return data ?? [];
-}
-
-export async function getUserFavoritesCountQuery(userId: string): Promise<number> {
-  try {
-    const profileIds = await resolveOwnedProfileIds(userId);
-    if (profileIds.length === 0) return 0;
-
-    const { count, error } = await profileExternalDataDb
-      .from<{ id: string }>("profile_favorites_new")
-      .select("*", { count: "exact", head: true })
-      .in("favoriting_profile_id", profileIds);
-
-    if (error) return 0;
-    return count || 0;
-  } catch {
-    return 0;
-  }
 }
 
 export async function getCurrentUserFavoriteBusinessesQuery(): Promise<BusinessRow[]> {
