@@ -6,7 +6,7 @@
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import type { AdminSupabaseClient } from "@/core/admin/types/adminDatabase.types";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import { AnalyticsService } from "@/core/analytics/AnalyticsService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 import type { ReviewStats } from "@/core/reviews/types";
@@ -21,7 +21,7 @@ export interface CouponRecord {
   codigo: string;
   titulo: string;
   description: string | null;
-  tipo: string;
+  tipo: string | null;
   desconto: string;
   validade: string | null;
   max_usos: number | null;
@@ -37,7 +37,7 @@ export interface CouponRecord {
  */
 export async function getBusinessClaims(filter?: string): Promise<unknown[]> {
   try {
-    let query = (supabase as unknown as AdminSupabaseClient)
+    let query = supabase
       .from("business_claims")
       .select("*")
       .order("created_at", { ascending: false });
@@ -75,20 +75,14 @@ export async function getBusinessClaimDetails(
     if (businessError) throw businessError;
     if (!business) return null;
 
-    const [profileResult, educationResult] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("name")
-        .eq("id", business.profile_id)
-        .maybeSingle(),
+    const [profile, educationResult] = await Promise.all([
+      profileService.getProfileById(business.profile_id),
       supabase
         .from("education_profiles")
         .select("school_type")
         .eq("business_id", business.profile_id)
         .maybeSingle(),
     ]);
-
-    if (profileResult.error) throw profileResult.error;
 
     if (educationResult.error) {
       logger.warn(
@@ -99,7 +93,7 @@ export async function getBusinessClaimDetails(
 
     return {
       profile_id: business.profile_id,
-      profiles: { name: profileResult.data?.name ?? "Removida" },
+      profiles: { name: profile?.name ?? "Removida" },
       school_type: educationResult.data?.school_type ?? null,
     };
   } catch (error) {
@@ -171,7 +165,7 @@ export async function getBusinessesCreatedInPeriod(
   endDate: Date,
 ): Promise<number> {
   try {
-    const { count, error } = await (supabase as unknown as AdminSupabaseClient)
+    const { count, error } = await supabase
       .from("business_data")
       .select("*", { count: "exact", head: true })
       .gte("created_at", startDate.toISOString())
@@ -400,7 +394,7 @@ export async function revokeBusinessInstitutionScope(
  */
 export async function getActiveCoupons(): Promise<CouponRecord[]> {
   try {
-    const { data, error } = await (supabase as unknown as AdminSupabaseClient)
+    const { data, error } = await supabase
       .from("coupons")
       .select("*")
       .eq("is_active", true)
@@ -410,7 +404,7 @@ export async function getActiveCoupons(): Promise<CouponRecord[]> {
       logger.error("Error fetching coupons:", error);
       return [];
     }
-    return (data ?? []) as CouponRecord[];
+    return data ?? [];
   } catch (error) {
     logger.error("Error in getActiveCoupons:", error);
     return [];
@@ -422,7 +416,7 @@ export async function getActiveCoupons(): Promise<CouponRecord[]> {
  */
 export async function getCouponById(id: string): Promise<CouponRecord | null> {
   try {
-    const { data, error } = await (supabase as unknown as AdminSupabaseClient)
+    const { data, error } = await supabase
       .from("coupons")
       .select("*")
       .eq("id", id)
@@ -432,7 +426,7 @@ export async function getCouponById(id: string): Promise<CouponRecord | null> {
       logger.error("Error fetching coupon:", error);
       return null;
     }
-    return data as CouponRecord;
+    return data;
   } catch (error) {
     logger.error("Error in getCouponById:", error);
     return null;
