@@ -36,13 +36,6 @@ export type BizData = Omit<Business, "address"> & {
   aberto?: boolean;
   schedule_fechamento?: string;
   whatsapp?: string;
-  secoes_ativas?: {
-    services?: boolean;
-    products?: boolean;
-    cardapio?: boolean;
-    portfolio?: boolean;
-    promocoes?: boolean;
-  };
   total_avaliacoes?: number;
   ano_fundacao?: number | null;
   verified?: boolean;
