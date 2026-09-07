@@ -283,6 +283,64 @@ export interface GrantBusinessInstitutionScopeInput {
   grantReason: string;
 }
 
+export interface BusinessInstitutionAuthorityOption {
+  profile_id: string;
+  name: string;
+}
+
+export interface BusinessInstitutionSchoolOption {
+  profile_id: string;
+  name: string;
+  school_network: string | null;
+  inep_code: string | null;
+}
+
+export interface BusinessInstitutionScopeRecord {
+  scope_id: string;
+  authority_profile_id: string;
+  authority_name: string;
+  target_profile_id: string;
+  target_name: string;
+  authority_kind: InstitutionAuthorityKind;
+  school_network: string | null;
+  inep_code: string | null;
+  evidence_url: string;
+  grant_reason: string;
+  granted_at: string;
+  revoked_at: string | null;
+  revocation_reason: string | null;
+  is_active: boolean;
+}
+
+export interface BusinessInstitutionScopeAdminModel {
+  authorities: BusinessInstitutionAuthorityOption[];
+  schools: BusinessInstitutionSchoolOption[];
+  scopes: BusinessInstitutionScopeRecord[];
+}
+
+/**
+ * Le o modelo administrativo de autoridade institucional sem expor a tabela
+ * private ao browser.
+ */
+export async function getBusinessInstitutionScopeAdminModel(): Promise<
+  BusinessInstitutionScopeAdminModel | null
+> {
+  try {
+    return await invokeSupabaseBroker<
+      BusinessInstitutionScopeAdminModel,
+      "getInstitutionScopeAdminModel"
+    >({
+      action: "getInstitutionScopeAdminModel",
+      functionName: "admin-business-rpc",
+      serviceName: "BusinessAdmin",
+      noDataMessage: "Institution scope broker returned no admin model",
+    });
+  } catch (error) {
+    logger.error("Error loading business institution scope admin model:", error);
+    return null;
+  }
+}
+
 /**
  * Concede gestao institucional herdada sobre uma escola publica.
  *
