@@ -30,6 +30,7 @@ import { Search, Building2, DollarSign, ShoppingCart, Bike } from 'lucide-react'
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ptBR } from '@/shared/utils/dateLocale';
+import AdminInstitutionScopes from './AdminInstitutionScopes';
 
 export function AdminBusinessesPage() {
   const [search, setSearch] = useState('');
@@ -107,6 +108,8 @@ export function AdminBusinessesPage() {
           </div>
         </CardContent>
       </Card>
+
+      <AdminInstitutionScopes />
 
       {/* Tabela */}
       <Card>
