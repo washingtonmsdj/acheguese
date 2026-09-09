@@ -5,10 +5,16 @@ import type {
   RideStateAuditInput,
 } from "./MobilityAuditService";
 import type { DispatchStrategy } from "../types/dispatch.types";
+import type {
+  FailedDeliveryMetadata,
+  ResolutionStatus,
+} from "../types/FailedDeliveryMetadata";
 
 type MobilityRpcAction =
   | "acceptRide"
   | "transitionRideState"
+  | "transitionDeliveryState"
+  | "updateFailedDeliveryResolution"
   | "logRideStateChange"
   | "logDispatchAttempt"
   | "updateLatestDispatchAttempt"
@@ -64,6 +70,58 @@ export class MobilityRpcService {
       toState: input.toState,
       actorProfileId: input.actorProfileId,
       reason: input.reason ?? "",
+    });
+  }
+
+  static async transitionDeliveryState(input: {
+    rideId: string;
+    expectedFromState: string;
+    command: "confirm_pickup" | "confirm_delivery" | "fail_delivery";
+    actorProfileId: string;
+    reason?: string;
+    proofOfDelivery?: {
+      photo_url?: string;
+      code?: string;
+      observation?: string;
+    };
+    finalPrice?: number;
+    failedDeliveryMetadata?: FailedDeliveryMetadata;
+  }): Promise<{
+    updated: boolean;
+    ride_id: string;
+    from_state: string;
+    to_state: string;
+  }> {
+    return this.invoke("transitionDeliveryState", {
+      rideId: input.rideId,
+      expectedFromState: input.expectedFromState,
+      command: input.command,
+      actorProfileId: input.actorProfileId,
+      reason: input.reason ?? "",
+      proofOfDelivery: input.proofOfDelivery ?? null,
+      finalPrice: input.finalPrice ?? null,
+      failedDeliveryMetadata: input.failedDeliveryMetadata ?? null,
+    });
+  }
+
+  static async updateFailedDeliveryResolution(input: {
+    rideId: string;
+    resolutionUpdate: {
+      next_ride_id?: string;
+      handoff_driver_profile_id?: string;
+      manual_resolution_owner_profile_id?: string;
+      resolution_status?: ResolutionStatus;
+      resolved_at?: string;
+      resolution_action_notes?: string;
+    };
+  }): Promise<{
+    updated: boolean;
+    ride_id: string;
+    resolution_status?: string | null;
+  }> {
+    return this.invoke("updateFailedDeliveryResolution", {
+      rideId: input.rideId,
+      resolutionUpdate: input.resolutionUpdate,
     });
   }
 
