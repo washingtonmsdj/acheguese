@@ -4,7 +4,7 @@
 
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { MotoboyAuthorizationService } from "../services/MotoboyAuthorizationService";
-import type { FailedDeliveryMetadata, ResolutionStatus } from "../types/FailedDeliveryMetadata";
+import type { FailedDeliveryMetadata, FailedDeliveryResolutionUpdate } from "../types/FailedDeliveryMetadata";
 import { VALID_FAILURE_REASONS, VALID_ITEM_DESTINATIONS, VALID_ITEM_HOLDERS } from "../types/FailedDeliveryMetadata";
 import type { CreateRideInput, TransitionResult } from "./RideOperationalTypes";
 
@@ -83,17 +83,14 @@ export function validateFailedDeliverySnapshot(metadata: FailedDeliveryMetadata)
 }
 
 export function validateFailedDeliveryResolution(
-  resolutionUpdate: {
-    resolution_status?: ResolutionStatus;
-    resolved_at?: string;
-    manual_resolution_owner_profile_id?: string;
-  },
+  resolutionUpdate: FailedDeliveryResolutionUpdate,
 ): void {
-  if (resolutionUpdate.resolution_status === "resolved" && !resolutionUpdate.resolved_at) {
-    throw new Error("resolved_at obrigatorio quando resolution_status = resolved");
-  }
-
-  if (resolutionUpdate.resolution_status === "escalated" && !resolutionUpdate.manual_resolution_owner_profile_id) {
-    throw new Error("manual_resolution_owner_profile_id obrigatorio quando resolution_status = escalated");
+  if (
+    resolutionUpdate.resolution_status === "escalated" &&
+    !resolutionUpdate.manual_resolution_owner_profile_id
+  ) {
+    throw new Error(
+      "manual_resolution_owner_profile_id obrigatorio quando resolution_status = escalated",
+    );
   }
 }
