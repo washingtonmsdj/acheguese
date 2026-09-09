@@ -11,8 +11,17 @@ const rpcMigration = read(
 const lockdownMigration = read(
   "supabase/migrations/20260825223929_lock_operational_verifications_behind_rpcs.sql",
 );
+const hardeningMigration = read(
+  "supabase/migrations/20260909145145_harden_operational_pin_protocol_g7.sql",
+);
+const preserveMigration = read(
+  "supabase/migrations/20260909145813_preserve_requester_pin_on_driver_requirement_g7.sql",
+);
 const service = read(
   "src/core/mobility/services/OperationalVerificationService.ts",
+);
+const requesterPinCard = read(
+  "src/modules/mobility/components/passenger/OperationalPinCard.tsx",
 );
 const rideReads = read(
   "src/core/mobility/services/mobility.ride-read-queries.ts",
@@ -62,6 +71,53 @@ describe("Gate 7 operational PIN server authority", () => {
       expect(lockdownMigration).toContain(`DROP POLICY IF EXISTS \"${policy}\"`);
     }
     expect(lockdownMigration).toContain("Gate 7 RPC authority missing");
+  });
+
+  it("keeps PIN requirement and issuance server-owned", () => {
+    expect(hardeningMigration).toContain("requires_pin_for_rides");
+    expect(hardeningMigration).toContain("requires_pin_for_deliveries");
+    expect(hardeningMigration).toContain("refresh_operational_pin_for_requester");
+    expect(hardeningMigration).toContain("ride_requester_profile_required");
+    expect(hardeningMigration).toContain(
+      "assigned_driver_required_for_pin_verification",
+    );
+    expect(hardeningMigration).toContain(
+      "REVOKE EXECUTE ON FUNCTION public.create_operational_pin_verification",
+    );
+    expect(hardeningMigration).toContain(
+      "CREATE OR REPLACE FUNCTION public.mobility_accept_ride_atomic",
+    );
+
+    expect(service).toContain("refresh_operational_pin_for_requester");
+    expect(service).not.toContain("create_operational_pin_verification");
+    expect(service).not.toContain("resolveRidePINRequirement");
+    expect(service).not.toContain("resolveDeliveryPINRequirement");
+    expect(service).not.toContain("REQUIRE_PIN_FOR_ALL_RIDES");
+    expect(service).not.toContain("REQUIRE_PIN_FOR_ALL_DELIVERIES");
+  });
+
+  it("prevents requester self-verification and preserves legitimate pending PINs", () => {
+    expect(hardeningMigration).toContain(
+      "v_actor_profile_id IS DISTINCT FROM v_ride.driver_profile_id",
+    );
+    expect(hardeningMigration).toContain(
+      "assigned_driver_required_for_pin_verification",
+    );
+    expect(preserveMigration).toContain(
+      "operational_verifications.status = 'pending'",
+    );
+    expect(preserveMigration).toContain(
+      "operational_verifications.required_by IN ('passenger','sender','admin','operation')",
+    );
+  });
+
+  it("exposes a requester-facing PIN UX without persisting plaintext", () => {
+    expect(requesterPinCard).toContain("refreshRequesterPIN");
+    expect(requesterPinCard).toContain(
+      "Informe o código somente ao motorista ou motoboy",
+    );
+    expect(requesterPinCard).not.toContain("localStorage");
+    expect(requesterPinCard).not.toContain("sessionStorage");
   });
 
   it("derives verified_by from the active session instead of caller input", () => {
