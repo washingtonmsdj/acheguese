@@ -567,7 +567,7 @@ export default function PassageiroPage() {
           onSubmit={async (data) => {
             const ride = await createRide(data) as { id?: string } | null;
             if (ride?.id) {
-              navigate(`/mobilidade/buscando/${ride.id}`);
+              navigate(mobilityUrls.passageiro.buscando(ride.id));
             }
           }}
         />
