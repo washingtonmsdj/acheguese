@@ -318,3 +318,36 @@ O Achegue-se só pode ser marcado **MVP READY** quando todos os itens abaixo for
 - #50 — certificação funcional dos módulos;
 - #83 — provenance E2E (concluído no nível de código);
 - #84 — branches históricas.
+
+### Checkpoint G7 — autoridade de motorista e ofertas fechada no servidor (2026-09-09)
+
+Estado validado no código e no schema canônico antes da correção:
+- `driver_data` ainda tinha `INSERT/UPDATE/DELETE` direto para `authenticated` por policies `ALL`; como a tabela mistura cadastro (CNH/veículo) e autoridade operacional, o dono da linha podia tentar alterar verificação, assinatura, rating/estatísticas e capacidades;
+- o cadastro de motorista já passava pelo `profile-rpc`, mas flags operacionais de extensão ainda podiam chegar do payload do cliente;
+- `ride_offers` ainda mantinha `UPDATE` autenticado legado, apesar de a aceitação de corrida já ser atômica via `mobility-rpc -> accept_ride_atomic`.
+
+Correção aplicada:
+- browser não possui mais mutação direta de `driver_data`; mantém somente leitura autorizada por RLS;
+- bootstrap comum usa `ensure_owned_driver_data` e nasce sem autoridade operacional;
+- bootstrap administrativo foi preservado por `ensure_admin_driver_data`, exigindo admin real no banco e limitado ao próprio perfil driver;
+- edição própria usa `update_owned_driver_data`, com whitelist fechada; `is_verified`, assinatura, documentos/background, `can_do_*`, rating e estatísticas ficam fora do payload self-service;
+- alteração efetiva de CNH ou veículo invalida automaticamente a verificação e retorna o background para `pending`;
+- `profile-rpc` sanitiza cadastro de driver, força documentação não verificada/background pendente e aceita exatamente um modo operacional inicial (motorista ou motoboy);
+- `ride_offers` perdeu o `UPDATE` autenticado e a policy antiga de resposta; a tabela e a funcionalidade permanecem, com aceitação pela autoridade atômica existente;
+- serviços de frontend/runtime foram apontados aos comandos canônicos, sem tabela paralela e sem camada de compatibilidade.
+
+Prova remota no Supabase canônico:
+- migration `harden_mobility_driver_authority_g7` aplicada com sucesso;
+- `driver_data`: `SELECT authenticated=true`; `INSERT/UPDATE/DELETE authenticated=false`;
+- `ride_offers UPDATE authenticated=false`;
+- `ensure_owned_driver_data`, `ensure_admin_driver_data` e `update_owned_driver_data`: `authenticated EXECUTE=true`, `anon EXECUTE=false`;
+- funções novas são `SECURITY DEFINER` com `search_path` fixo e `statement_timeout=5s`;
+- `profile-rpc` remoto atualizado para v13 `ACTIVE`, `verify_jwt=true`;
+- ratchet de fonte: `MobilityDriverAuthority.test.ts`;
+- **Mobilidade continua não certificada para lançamento**; não alterar `PUBLIC_LAUNCH_SURFACES.mobility=false`.
+
+Próximo gate obrigatório:
+1. fechar autoridade de `driver_availability` e `driver_locations`, preservando presença/GPS legítimos sem permitir que o browser fabrique `active_ride_id`, modo ativo ou estado busy;
+2. auditar RPCs `SECURITY DEFINER` autenticadas ligadas a dispatch/trust e provar escopo por participante/território;
+3. executar E2E real de motorista + motoboy + passageiro e somente depois considerar rollout público.
+
