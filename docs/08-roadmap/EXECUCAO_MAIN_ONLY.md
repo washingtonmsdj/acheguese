@@ -70,6 +70,8 @@ A auditoria/correção do primeiro módulo da ordem de certificação avançou d
 - [x] helpers/facades genéricos de `UPDATE ride_requests` e creators diretos legados foram removidos;
 - [x] criação de corrida e entrega passou pelo broker `mobility-rpc`; o browser não escolhe `status`, motorista, preço final, timestamps operacionais ou prova de entrega;
 - [x] criação de entrega revalida no backend Profile solicitante, rollout efetivo, `motoboy_enabled`, associação de Empresa/Gastronomia/Serviço e entitlement aplicável;
+- [x] origem gastronômica é vinculada server-side: `sourceId=orders.id`, `authorizationSourceId=restaurante`; o pedido deve ter `merchant_profile_id` igual ao Profile da empresa autorizada, `source_type=gastronomy`, `source_id=business_data.id`, não estar terminal e não possuir outra entrega ativa;
+- [x] probe remoto do vínculo gastronômico: 75 pedidos, 0 sem `business_data`, 0 divergências `merchant_profile_id ↔ business.profile_id` e 0 rides gastronômicas ativas no snapshot validado;
 - [x] migrations de criação atômica `20260909140626_add_atomic_mobility_creation_commands_g6.sql` e revogação de INSERT `20260909141356_revoke_browser_ride_request_insert_g6.sql` estão aplicadas no Supabase canônico e versionadas em Git;
 - [x] migrations `20260909135451_revoke_browser_ride_request_update_g6.sql` e `20260909131721_revoke_browser_ride_request_delete_g6.sql` mantêm UPDATE/DELETE do browser fechados;
 - [x] `MobilityRideRequestWriteAuthority.test.ts` ratcheta ausência de INSERT/UPDATE direto no runtime e exige os commands/migrations server-owned;
@@ -86,8 +88,8 @@ Projeto Supabase canônico: `xhdowzacfujckjelqhtd`.
 - `ride_state_audit authenticated INSERT = false`;
 - `mobility_create_ride_atomic`: `anon_execute=false`, `authenticated_execute=false`, `service_role_execute=true`;
 - `mobility_create_delivery_atomic`: `anon_execute=false`, `authenticated_execute=false`, `service_role_execute=true`;
-- `mobility-rpc` remoto: **v15 ACTIVE**, `verify_jwt=true`, SHA do bundle `eb2e96161dda8ae52c5d64fbf09df5652d88d27d091117b2e9848a3ee2fc09bb`;
-- baseline técnico da `main` antes desta atualização documental: `f91bbf0ef1c452be559ab1ad2d836b268144a8ed`;
+- `mobility-rpc` remoto: **v16 ACTIVE**, `verify_jwt=true`, SHA do bundle `369b00523065d17e84b6bf6f2a57d588758435b9419be1a324c22cae41526594`;
+- baseline técnico da `main` antes desta atualização documental: `9fb40b1368d2832ae0d328c354f050a827e82b92`;
 - `PUBLIC_LAUNCH_SURFACES.mobility` permanece **false**.
 
 ### O que isto NÃO certifica
