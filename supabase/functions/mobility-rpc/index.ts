@@ -56,6 +56,7 @@ const ACTIONS = {
   cancelPendingOffers: true,
   updateDriverAvailability: true,
   updateDriverLocation: true,
+  listDriverOffers: true,
   reconcileStaleDriverAvailability: true,
   releaseDriverAvailabilityForRide: true,
 } as const;
@@ -1604,6 +1605,65 @@ async function handleUpdateDriverLocation(
   return data ?? { success: false, reason: "empty_response" };
 }
 
+async function handleListDriverOffers(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const driverProfileId = requireUuid(
+    params.driverProfileId ?? params.driver_profile_id,
+    "driverProfileId",
+  );
+  if (!await profileBelongsToUser(supabaseAdmin, driverProfileId, auth.userId)) {
+    throw new RequestAuthorizationError(
+      "User cannot list offers for this driver profile",
+    );
+  }
+
+  const strategy = requireDispatchStrategy(params.strategy);
+  const limit = optionalInteger(params.limit, "limit", 1, 50) ?? 10;
+  const minPrice = optionalBoundedNumber(params.minPrice, "minPrice", 0, 1_000_000);
+  const maxPrice = optionalBoundedNumber(params.maxPrice, "maxPrice", 0, 1_000_000);
+  if (minPrice !== null && maxPrice !== null && minPrice > maxPrice) {
+    throw new RequestValidationError("minPrice cannot exceed maxPrice");
+  }
+
+  const packageSizes = Array.isArray(params.packageSizes)
+    ? params.packageSizes.map((value) =>
+        requireTrimmedString(value, "packageSize", 64)
+      )
+    : null;
+  if (packageSizes && packageSizes.length > 20) {
+    throw new RequestValidationError("Too many package sizes");
+  }
+
+  const sortByRaw = params.sortBy ?? "created_at";
+  const sortBy = requireStatus(sortByRaw, "sortBy");
+  if (!["created_at", "suggested_price", "departure_time"].includes(sortBy)) {
+    throw new RequestValidationError("Invalid offer sort");
+  }
+  const ascending =
+    params.ascending === undefined ? false : params.ascending === true;
+
+  const { data, error } = await supabaseAdmin.rpc(
+    "mobility_list_driver_offers",
+    {
+      p_actor_user_id: auth.userId,
+      p_driver_profile_id: driverProfileId,
+      p_strategy: strategy,
+      p_limit: limit,
+      p_min_price: minPrice,
+      p_max_price: maxPrice,
+      p_package_sizes: packageSizes,
+      p_sort_by: sortBy,
+      p_ascending: ascending,
+    },
+  );
+
+  if (error) throw error;
+  return data ?? { offers: [] };
+}
+
 async function handleReconcileStaleDriverAvailability(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
@@ -1713,6 +1773,8 @@ async function dispatchAction(
       return handleUpdateDriverAvailability(supabaseAdmin, auth, params);
     case "updateDriverLocation":
       return handleUpdateDriverLocation(supabaseAdmin, auth, params);
+    case "listDriverOffers":
+      return handleListDriverOffers(supabaseAdmin, auth, params);
     case "reconcileStaleDriverAvailability":
       return handleReconcileStaleDriverAvailability(supabaseAdmin, auth, params);
     case "releaseDriverAvailabilityForRide":
