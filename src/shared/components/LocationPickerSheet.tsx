@@ -4,7 +4,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from "maplibre-gl";
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/shared/components/ui/sheet';
 import { Button } from '@/shared/components/ui/button';

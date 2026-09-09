@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useRef } from 'react';
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from "maplibre-gl";
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { DEFAULT_TILE_STYLE } from '@/shared/config/mapDefaults';
 import { createMapPopupContent } from './mapPopupContent';

@@ -1,8 +1,13 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
+import { setWorkerUrl } from "maplibre-gl";
+import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import App from "./App.tsx";
 import "./index.css";
 import { deferFrame, deferIdle, deferLoad } from "./shared/utils/deferredInit.ts";
+
+// MapLibre v6 is ESM-only; Vite serves its worker as a dedicated asset.
+setWorkerUrl(maplibreWorkerUrl);
 
 // In local development, remove any previously registered SW/caches that can
 // intercept Vite assets and break HMR/WebSocket.

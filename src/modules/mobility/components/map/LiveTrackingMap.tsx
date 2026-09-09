@@ -4,7 +4,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { useEffect, useRef, useState } from 'react';
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from "maplibre-gl";
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useDriverLocation } from '@/modules/mobility/hooks/useDriverLocation';
 import { routingService } from '@/core/routing';

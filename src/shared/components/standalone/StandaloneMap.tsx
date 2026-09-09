@@ -11,7 +11,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from "maplibre-gl";
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { MapPin, Navigation, Loader2, Map as MapIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';

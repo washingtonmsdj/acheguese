@@ -211,7 +211,7 @@
     "input-otp": "^1.4.2",
     "lodash-es": "^4.17.23",
     "lucide-react": "^0.462.0",
-    "maplibre-gl": "^5.21.1",
+    "maplibre-gl": "6.4.1",
     "next-themes": "^0.3.0",
     "node-fetch": "^3.3.2",
     "pg": "^8.20.0",

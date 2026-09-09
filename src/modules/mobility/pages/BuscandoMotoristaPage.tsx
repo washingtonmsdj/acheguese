@@ -10,7 +10,7 @@ import { logger } from '@/shared/utils/logger';
 import { useEffect, useRef, memo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { motion } from "framer-motion";
 import { ArrowLeft, Navigation, X, Car } from "lucide-react";

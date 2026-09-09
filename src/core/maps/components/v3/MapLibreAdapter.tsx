@@ -15,7 +15,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import React, { useEffect, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from "maplibre-gl";
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useViewportBridge } from './useViewportBridge';
 import { getMarkerConfig } from '../../config/markerConfig';

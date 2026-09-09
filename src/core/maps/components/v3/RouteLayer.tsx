@@ -7,7 +7,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { useEffect, useRef, useState } from 'react';
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from "maplibre-gl";
 import { routingService } from '@/core/routing';
 import type { RouteRequest, TransportProfile } from '@/core/routing/types';
 import type { Coordinates } from '@/core/maps/types';
