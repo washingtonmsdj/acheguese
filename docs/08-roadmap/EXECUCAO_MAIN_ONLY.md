@@ -37,6 +37,19 @@ Estado técnico anterior a este checkpoint documental: `d3490f45630f3d02117d4abe
 
 **Próximo gate:** revisar as autorizações genéricas restantes do broker por ação concreta, começando por resolução de entrega falha e liberação de disponibilidade. Preservar somente atores com necessidade operacional real; não criar nova authority paralela.
 
+## Checkpoint 2026-09-09 — Dependências de produção G17: blocker de audit corrigido
+
+- [x] causa real do último build Vercel inspecionado: `npm audit --omit=dev --audit-level=moderate` bloqueou o deploy por vulnerabilidade crítica em `maplibre-gl <= 6.4.0`;
+- [x] `maplibre-gl` migrado de 5.21.1 para **6.4.1**, primeira release corrigida, com lockfile alinhado;
+- [x] migração v6 aplicada de forma estrutural: imports ESM por namespace, worker Vite dedicado via `?worker&url` + `setWorkerUrl`, sem default import antigo;
+- [x] resolução de imagens ausentes migrada de `styleimagemissing -> addImage` para `setMissingStyleImageResolver`, exigido pela API v6;
+- [x] cópias de produção de `postcss-selector-parser` sob Tailwind/PostCSS Nested atualizadas de 6.1.2 para **6.1.4**; o 6.0.10 restante é dependência exata de tooling de desenvolvimento e fica fora do audit `--omit=dev`;
+- [x] ratchets adicionados em `tests/security/maplibre-runtime-security.test.ts` e `tests/release/vercel-production-security-gate.test.mjs`;
+- [ ] **certificação de build ainda não pode ser marcada verde**: o status Vercel do SHA atual respondeu `Deployment rate limited — retry in 24 hours` no plano Hobby. Isso é blocker externo de execução, não prova de compilação aprovada;
+- [ ] repetir o gate de produção no mesmo SHA (ou descendente sem mudanças funcionais relevantes) quando o provider liberar novos builds.
+
+**Regra:** não contornar o audit, não reduzir `audit-level`, não usar `npm audit fix --force` e não interpretar rate-limit do provider como aprovação de build.
+
 ## Regra máxima — projeto primeiro, documentação depois
 
 Esta regra é obrigatória para qualquer IA/agente que continuar o Achegue-se:
