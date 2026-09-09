@@ -13,6 +13,7 @@ import type {
 type MobilityRpcAction =
   | "acceptRide"
   | "adminRedispatch"
+  | "confirmPassengerCompletion"
   | "transitionRideState"
   | "transitionDeliveryState"
   | "updateFailedDeliveryResolution"
@@ -176,6 +177,15 @@ export class MobilityRpcService {
       rideId,
       reason,
     });
+  }
+
+  static async confirmPassengerCompletion(rideId: string): Promise<{
+    success: boolean;
+    reason?: string;
+    ride_id?: string;
+    passenger_confirmed_at?: string;
+  }> {
+    return this.invoke("confirmPassengerCompletion", { rideId });
   }
 
   static async updateLatestDispatchAttempt(
