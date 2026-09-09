@@ -24,6 +24,7 @@ interface QueryBuilder<TRow> {
   in(column: string, values: readonly unknown[]): QueryBuilder<TRow>;
   not(column: string, operator: string, value: unknown): QueryBuilder<TRow>;
   order(column: string, options?: { ascending?: boolean }): QueryBuilder<TRow>;
+  limit(count: number): QueryBuilder<TRow>;
   maybeSingle(): QueryResult<TRow | null>;
   single(): QueryResult<TRow>;
   then<

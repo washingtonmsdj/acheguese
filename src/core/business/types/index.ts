@@ -154,24 +154,24 @@ export interface BusinessDataWithProfiles extends BusinessDataRecord {
     avatar_url?: string;
     bio?: string;
   };
-  // FK joins canonicos
+  // Canonical joins may use a lean projection; identity columns are not always selected.
   address?: {
-    id: string;
-    location_id: string;
+    id?: string;
+    location_id?: string;
     postal_code: string | null;
     street: string | null;
     number: string | null;
     complement: string | null;
-    address_type: string;
+    address_type?: string;
     latitude: number | null;
     longitude: number | null;
   } | null;
   location?: {
-    id: string;
+    id?: string;
     name: string;
     full_name: string;
-    type: string;
-    slug: string;
+    type?: string;
+    slug?: string;
     geographic_path?: string | null;
     canonical_lat?: number | null;
     canonical_lng?: number | null;

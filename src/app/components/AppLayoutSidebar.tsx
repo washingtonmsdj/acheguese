@@ -17,7 +17,7 @@ import { AppTopbar } from "./navigation/AppTopbar";
 import { BottomNav } from "@/core/navigation/BottomNav";
 import { TerritoryAdaptiveNavigation } from "./territory-vivo";
 import { TerritoryMismatchBanner } from "@/core/location/components/TerritoryMismatchBanner";
-import { scheduleIdleRouteWarmup } from "@/app/routes/prefetch";
+import { prefetchRouteByHref, scheduleIdleRouteWarmup } from "@/app/routes/prefetch";
 import { isReservedSlug } from "@/core/routing/reservedSlugs";
 import {
   MODULE_SLUGS,
