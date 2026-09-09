@@ -7,6 +7,5 @@
 export { RideService, rideService } from './RideService.impl';
 export type {
   RideRequest,
-  CreateRideData,
 } from './RideService.impl';
 
