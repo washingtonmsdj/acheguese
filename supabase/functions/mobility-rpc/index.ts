@@ -36,6 +36,7 @@ const DISPATCH_STRATEGIES = new Set(["exclusive_offer", "open_board", "reservati
 const ACTIONS = {
   acceptRide: true,
   adminRedispatch: true,
+  confirmPassengerCompletion: true,
   transitionRideState: true,
   transitionDeliveryState: true,
   updateFailedDeliveryResolution: true,
@@ -452,6 +453,46 @@ async function requireDispatchWriteAccess(
   return ride;
 }
 
+async function handleConfirmPassengerCompletion(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const rideId = requireUuid(params.rideId ?? params.ride_id, "rideId");
+  const ride = await getRide(supabaseAdmin, rideId);
+
+  if (ride.status !== "completed") {
+    throw new RequestValidationError(
+      "Ride must be completed before passenger confirmation",
+    );
+  }
+
+  if (
+    !ride.passenger_profile_id ||
+    !await profileBelongsToUser(
+      supabaseAdmin,
+      ride.passenger_profile_id,
+      auth.userId,
+    )
+  ) {
+    throw new RequestAuthorizationError(
+      "Only the ride passenger can confirm completion",
+    );
+  }
+
+  const { data, error } = await supabaseAdmin.rpc(
+    "mobility_confirm_passenger_completion_atomic",
+    { p_ride_id: rideId },
+  );
+
+  if (error) throw error;
+  return data ?? {
+    success: false,
+    reason: "empty_response",
+    ride_id: rideId,
+  };
+}
+
 async function handleTransitionRideState(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
@@ -849,6 +890,8 @@ async function dispatchAction(
       return handleAcceptRide(supabaseAdmin, auth, params);
     case "adminRedispatch":
       return handleAdminRedispatch(supabaseAdmin, auth, params);
+    case "confirmPassengerCompletion":
+      return handleConfirmPassengerCompletion(supabaseAdmin, auth, params);
     case "transitionRideState":
       return handleTransitionRideState(supabaseAdmin, auth, params);
     case "transitionDeliveryState":
