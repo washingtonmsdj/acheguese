@@ -374,6 +374,7 @@ function validateOwnerContracts(violations: Violation[]): void {
       "mediaService.removePrivateFiles",
       "mediaService.createPrivateSignedUrl",
       "const STORAGE_PREFIX = `storage://${BUCKET}/`;",
+      "supabase.rpc('register_safety_evidence'",
     ]) {
       requireToken(
         SAFETY_EVIDENCE_SERVICE,
@@ -388,6 +389,13 @@ function validateOwnerContracts(violations: Violation[]): void {
       content,
       "getPublicUrl",
       "Evidência privada não pode produzir URL pública",
+      violations,
+    );
+    forbidToken(
+      SAFETY_EVIDENCE_SERVICE,
+      content,
+      ".from('safety_evidence').insert",
+      "Registro de evidência não pode voltar a confiar em INSERT direto do browser",
       violations,
     );
   }
