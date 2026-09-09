@@ -44,18 +44,15 @@ describe("Mobility availability authority", () => {
 
     expect(rpcService).toContain('"updateDriverAvailability"');
     expect(rpcService).toContain('"reconcileStaleDriverAvailability"');
-    expect(rpcService).toMatch(
-      /releaseDriverAvailabilityForRide\(\s*rideId: string/,
+    const terminalTransition = readProjectFile(
+      "supabase/migrations/20260909190551_atomize_terminal_dispatch_driver_release_g19.sql",
     );
-    expect(rpcService).not.toMatch(
-      /releaseDriverAvailabilityForRide\(\s*driverProfileId:/,
-    );
-    expect(broker).toMatch(
-      /handleReleaseDriverAvailability[\s\S]*?const driverProfileId = ride\.driver_profile_id/,
-    );
-    expect(broker).not.toMatch(
-      /handleReleaseDriverAvailability[\s\S]*?params\.driverProfileId/,
-    );
+    expect(rpcService).not.toContain("releaseDriverAvailabilityForRide");
+    expect(broker).not.toContain("handleReleaseDriverAvailability");
+    expect(broker).not.toContain("canAccessRideAsParticipantOrAdmin");
+    expect(terminalTransition).toContain("UPDATE public.driver_availability availability");
+    expect(terminalTransition).toContain("availability.active_ride_id = p_ride_id");
+    expect(terminalTransition).toContain("is_available = availability.is_online");
 
     expect(availabilityService).toContain(
       "MobilityRpcService.updateDriverAvailability",
@@ -64,6 +61,7 @@ describe("Mobility availability authority", () => {
       "MobilityRpcService.reconcileStaleDriverAvailability",
     );
     expect(availabilityService).not.toContain("static async setBusy");
+    expect(availabilityService).not.toContain("static async releaseBusy");
     expect(availabilityService).not.toMatch(
       /from\(['"]driver_availability['"]\)[\s\S]{0,160}\.(?:update|upsert|insert)\(/,
     );
