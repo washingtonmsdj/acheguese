@@ -2,7 +2,7 @@ import { logger } from "@/shared/utils/logger";
 import { RIDE_STATE, type RideState } from "./RideStateMachine";
 import { getRideById } from "../services/mobility.queries";
 import { MobilityRpcService } from "../services/MobilityRpcService";
-import type { FailedDeliveryMetadata, ResolutionStatus } from "../types/FailedDeliveryMetadata";
+import type { FailedDeliveryMetadata, FailedDeliveryResolutionUpdate } from "../types/FailedDeliveryMetadata";
 import { OperationalVerificationService } from "../services/OperationalVerificationService";
 import type {
   CreateDeliveryInput,
@@ -267,14 +267,7 @@ export async function failDeliveryOperation(
 
 export async function updateFailedDeliveryResolutionOperation(
   rideId: string,
-  resolutionUpdate: {
-    next_ride_id?: string;
-    handoff_driver_profile_id?: string;
-    manual_resolution_owner_profile_id?: string;
-    resolution_status?: ResolutionStatus;
-    resolved_at?: string;
-    resolution_action_notes?: string;
-  },
+  resolutionUpdate: FailedDeliveryResolutionUpdate,
 ): Promise<TransitionResult> {
   try {
     const ride = (await getRideById(rideId)) as {
