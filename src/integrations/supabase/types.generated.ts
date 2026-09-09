@@ -20363,6 +20363,10 @@ export type Database = {
         }
         Returns: string
       }
+      refresh_operational_pin_for_requester: {
+        Args: { p_ride_id: string }
+        Returns: Json
+      }
       register_stripe_webhook_event: {
         Args: {
           p_event_data: Json
