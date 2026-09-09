@@ -707,6 +707,45 @@ Próximo gate obrigatório:
 2. impedir spoof de owner, `is_primary`/lifecycle ou múltiplos primários se o banco ainda aceitar estado inválido;
 3. manter Safety funcional e `PUBLIC_LAUNCH_SURFACES.mobility=false`.
 
+### Checkpoint G25 — contatos de emergência server-owned (2026-09-09)
+
+Problema real reproduzido:
+- `emergency_contacts` ainda concedia `INSERT/UPDATE` direto a `authenticated`;
+- RLS protegia ownership, mas o browser podia escrever campos fora do contrato do produto;
+- probe reversível confirmou criação com `is_active=false`, `created_at=2001-01-01` e metadata arbitrária;
+- a regra de “um contato primário” dependia somente de trigger, sem garantia concorrente por índice.
+
+Correção de raiz:
+- migration `20260909200953_server_own_emergency_contacts_g25.sql` aplicada e versionada;
+- `create_emergency_contact` aceita somente os campos de criação expostos pelo domínio, exige Profile ativo pertencente ao usuário e deriva lifecycle/metadata/timestamps;
+- `patch_emergency_contact` possui allowlist estrita: `name,email,phone,relationship,is_primary,is_active`;
+- `profile_id`, `metadata`, `created_at` e demais campos de provenance não podem ser alterados pelo browser;
+- desativar um contato força `is_primary=false`;
+- índice parcial único `emergency_contacts_one_active_primary_per_profile` garante no banco no máximo um contato `is_primary=true AND is_active=true` por Profile, inclusive sob concorrência;
+- `INSERT/UPDATE authenticated` foram revogados e policies antigas removidas;
+- `SafetyEmergencyContactsService` passou a usar exclusivamente `create_emergency_contact` e `patch_emergency_contact`.
+
+Prova pós-correção:
+- INSERT e UPDATE direto falharam sob `SET LOCAL ROLE authenticated`;
+- criação por command nasceu ativa, metadata vazia e timestamps server-owned;
+- e-mail foi normalizado server-side;
+- criar um segundo contato primário despromoveu o anterior e o banco manteve exatamente um primário ativo;
+- patch com `created_at/metadata` foi bloqueado;
+- patch legítimo preservou `created_at`;
+- desativação removeu corretamente o estado primário;
+- fixtures revertidas com `ROLLBACK`.
+
+Governança:
+- ratchet `tests/security/emergency-contacts-authority.test.ts`;
+- warnings de `create_emergency_contact` e `patch_emergency_contact` classificados em `SUPABASE_ADVISOR_RESIDUALS.json`.
+
+**Estado:** G25 fechado no banco, service e governança sem remover contatos de emergência.
+
+Próximo gate obrigatório:
+1. auditar envio a contatos externos e `emergency_delivery_log`: autenticação da Edge Function, ownership do alerta/contato e writes do log;
+2. impedir disparo arbitrário para contatos de outros usuários ou fabricação de delivery status/target;
+3. manter `PUBLIC_LAUNCH_SURFACES.mobility=false`.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:
