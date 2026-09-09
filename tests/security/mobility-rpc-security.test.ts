@@ -120,7 +120,7 @@ describe("mobility rpc broker security", () => {
     expect(atomicDispatch).toContain("INSERT INTO public.ride_dispatch_audit");
 
     const terminalTransition = readProjectFile(
-      "supabase/migrations/20260909190551_atomize_terminal_dispatch_driver_release_g19.sql",
+      "supabase/migrations/20260909191423_fix_terminal_driver_release_availability_g19.sql",
     );
     expect(terminalTransition).toContain("UPDATE public.ride_offers offer");
     expect(terminalTransition).toContain("UPDATE public.ride_dispatch_audit dispatch");
