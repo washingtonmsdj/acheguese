@@ -1,7 +1,25 @@
 /**
- * Service area management service.
+ * ServiceAreasService
+ *
+ * Adapter entre Profile e o Coverage SSOT.
+ *
+ * Persistência canônica:
+ * - public.service_areas
+ * - entity_type + entity_id
+ * - location_id
+ * - comandos server-owned do módulo Coverage
+ *
+ * Este módulo não cria um segundo modelo de cobertura.
  */
 
+import {
+  CoverageStatus,
+  CoverageType,
+  createCoverageRepository,
+  type EntityType,
+  type ServiceArea as CoverageArea,
+} from "@/core/coverage";
+import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { supabase } from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
@@ -9,12 +27,18 @@ import { logger } from "@/shared/utils/logger";
 export interface ServiceArea {
   id: string;
   profile_id: string;
-  city: string;
-  neighborhoods: string[] | null;
-  radius_km: number;
-  center_lat: number | null;
-  center_lng: number | null;
+  entity_type: EntityType;
+  entity_id: string;
+  coverage_type: CoverageType;
+  location_id: string;
+  location_name: string;
+  location_full_name: string;
+  location_type: string | null;
+  city_name: string;
+  locality_name: string;
+  radius_km: number | null;
   is_primary: boolean;
+  status: CoverageStatus;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -22,21 +46,17 @@ export interface ServiceArea {
 
 export interface CreateServiceAreaData {
   profile_id: string;
-  city: string;
-  neighborhoods?: string[];
-  radius_km: number;
-  center_lat?: number;
-  center_lng?: number;
+  coverage_type: CoverageType;
+  location_id: string;
+  radius_km?: number | null;
   is_primary?: boolean;
   is_active?: boolean;
 }
 
 export interface UpdateServiceAreaData {
-  city?: string;
-  neighborhoods?: string[];
-  radius_km?: number;
-  center_lat?: number;
-  center_lng?: number;
+  coverage_type?: CoverageType;
+  location_id?: string;
+  radius_km?: number | null;
   is_primary?: boolean;
   is_active?: boolean;
 }
@@ -46,43 +66,131 @@ interface QueryResult<T> {
   error: { message: string; code?: string } | null;
 }
 
-interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
-  select: (columns?: string) => QueryBuilder<TRow>;
-  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
-  update: (values: unknown) => QueryBuilder<TRow>;
-  delete: () => QueryBuilder<TRow>;
-  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
-  order: (column: string, options?: { ascending?: boolean }) => QueryBuilder<TRow>;
-  limit: (value: number) => QueryBuilder<TRow>;
-  single: () => Promise<QueryResult<TRow>>;
-  maybeSingle: () => Promise<QueryResult<TRow>>;
+interface QueryBuilder<TRow> {
+  select(columns?: string): QueryBuilder<TRow>;
+  eq(column: string, value: unknown): QueryBuilder<TRow>;
+  maybeSingle(): Promise<QueryResult<TRow>>;
 }
 
-interface ServiceAreasDbClient {
-  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+interface ProfileEntityDbClient {
+  from<TRow = Record<string, unknown>>(table: string): QueryBuilder<TRow>;
 }
 
-type ServiceAreaRow = ServiceArea;
-type ServiceAreaInsert = CreateServiceAreaData;
-type ServiceAreaUpdate = UpdateServiceAreaData;
+interface CoverageEntity {
+  entityType: EntityType;
+  entityId: string;
+}
 
-const serviceAreasDb = supabase as unknown as ServiceAreasDbClient;
+const profileEntityDb = supabase as unknown as ProfileEntityDbClient;
+const coverageRepository = createCoverageRepository();
+const locationRepository = createLocationRepository();
+
+async function findSingleIdByProfile(
+  table: "business_data" | "professional_data" | "driver_data",
+  profileId: string,
+): Promise<string | null> {
+  const { data, error } = await profileEntityDb
+    .from<{ id: string }>(table)
+    .select("id")
+    .eq("profile_id", profileId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return data?.id ?? null;
+}
+
+async function resolveCoverageEntity(profileId: string): Promise<CoverageEntity> {
+  const { data: profile, error } = await profileEntityDb
+    .from<{ id: string; profile_type: string }>("profiles")
+    .select("id, profile_type")
+    .eq("id", profileId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!profile) throw new Error("Perfil não encontrado");
+
+  let entityType: EntityType;
+  let entityId: string | null;
+
+  switch (profile.profile_type) {
+    case "business":
+      entityType = "business";
+      entityId = await findSingleIdByProfile("business_data", profileId);
+      break;
+    case "professional":
+      entityType = "service_provider";
+      entityId = await findSingleIdByProfile("professional_data", profileId);
+      break;
+    case "driver":
+      entityType = "mobility_driver";
+      entityId = await findSingleIdByProfile("driver_data", profileId);
+      break;
+    default:
+      throw new Error("Este tipo de perfil não possui área de atuação");
+  }
+
+  if (!entityId) {
+    throw new Error("Entidade de cobertura não encontrada para o perfil");
+  }
+
+  return { entityType, entityId };
+}
+
+async function mapCoverageArea(
+  profileId: string,
+  area: CoverageArea,
+): Promise<ServiceArea> {
+  const [location, ancestors] = await Promise.all([
+    locationRepository.findById(area.location_id),
+    locationRepository.findAncestors(area.location_id, true),
+  ]);
+
+  const city =
+    location?.type === "city"
+      ? location
+      : ancestors.find((candidate) => candidate.type === "city");
+  const locality =
+    location && (location.type === "neighborhood" || location.type === "district")
+      ? location
+      : null;
+
+  return {
+    id: area.id,
+    profile_id: profileId,
+    entity_type: area.entity_type,
+    entity_id: area.entity_id,
+    coverage_type: area.coverage_type,
+    location_id: area.location_id,
+    location_name: location?.name ?? "Localização",
+    location_full_name: location?.full_name ?? location?.name ?? "Localização",
+    location_type: location?.type ?? null,
+    city_name: city?.name ?? location?.name ?? "",
+    locality_name: locality?.name ?? "",
+    radius_km: area.radius_km,
+    is_primary: area.is_primary,
+    status: area.status,
+    is_active: area.status === CoverageStatus.ACTIVE,
+    created_at: area.created_at,
+    updated_at: area.updated_at,
+  };
+}
+
+function statusFromActive(isActive: boolean | undefined): CoverageStatus {
+  return isActive === false ? CoverageStatus.INACTIVE : CoverageStatus.ACTIVE;
+}
 
 class ServiceAreasService {
   async getServiceAreas(profileId: string): Promise<ServiceArea[]> {
     try {
-      const { data, error } = await serviceAreasDb
-        .from<ServiceAreaRow>("service_areas")
-        .select("*")
-        .eq("profile_id", profileId)
-        .order("is_primary", { ascending: false });
+      const entity = await resolveCoverageEntity(profileId);
+      const areas = await coverageRepository.findByEntity(
+        entity.entityType,
+        entity.entityId,
+      );
 
-      if (error) {
-        logger.error("Error fetching service areas:", error);
-        throw new Error("Failed to fetch service areas");
-      }
-
-      return data || [];
+      return Promise.all(
+        areas.map((area) => mapCoverageArea(profileId, area)),
+      );
     } catch (error) {
       trackError(error, {
         component: "ServiceAreasService",
@@ -95,73 +203,98 @@ class ServiceAreasService {
 
   async createServiceArea(data: CreateServiceAreaData): Promise<ServiceArea> {
     try {
-      const createPayload: ServiceAreaInsert = data;
-      const { data: serviceArea, error } = await serviceAreasDb
-        .from<ServiceAreaRow>("service_areas")
-        .insert([createPayload])
-        .select()
-        .single();
+      const entity = await resolveCoverageEntity(data.profile_id);
+      const area = await coverageRepository.upsertByEntity(
+        entity.entityType,
+        entity.entityId,
+        {
+          coverage_type: data.coverage_type,
+          location_id: data.location_id,
+          radius_km:
+            data.coverage_type === CoverageType.RADIUS
+              ? data.radius_km ?? null
+              : null,
+          is_primary: data.is_primary ?? false,
+          status: statusFromActive(data.is_active),
+        },
+      );
 
-      if (error || !serviceArea) {
-        logger.error("Error creating service area:", error);
-        throw new Error("Failed to create service area");
-      }
-
-      return serviceArea;
+      return mapCoverageArea(data.profile_id, area);
     } catch (error) {
       trackError(error, {
         component: "ServiceAreasService",
         action: "createServiceArea",
+        metadata: { profileId: data.profile_id },
       });
       throw error;
     }
   }
 
   async updateServiceArea(
+    profileId: string,
     id: string,
     data: UpdateServiceAreaData,
   ): Promise<ServiceArea> {
     try {
-      const updatePayload: ServiceAreaUpdate = data;
-      const { data: serviceArea, error } = await serviceAreasDb
-        .from<ServiceAreaRow>("service_areas")
-        .update(updatePayload)
-        .eq("id", id)
-        .select()
-        .single();
+      const entity = await resolveCoverageEntity(profileId);
+      const current = await coverageRepository.findById(id);
 
-      if (error || !serviceArea) {
-        logger.error("Error updating service area:", error);
-        throw new Error("Failed to update service area");
+      if (
+        !current ||
+        current.entity_type !== entity.entityType ||
+        current.entity_id !== entity.entityId
+      ) {
+        throw new Error("Área de atuação não pertence a este perfil");
       }
 
-      return serviceArea;
+      const coverageType = data.coverage_type ?? current.coverage_type;
+      const area = await coverageRepository.upsertByEntity(
+        entity.entityType,
+        entity.entityId,
+        {
+          id,
+          coverage_type: coverageType,
+          location_id: data.location_id ?? current.location_id,
+          radius_km:
+            coverageType === CoverageType.RADIUS
+              ? data.radius_km ?? current.radius_km
+              : null,
+          is_primary: data.is_primary ?? current.is_primary,
+          status:
+            data.is_active === undefined
+              ? current.status
+              : statusFromActive(data.is_active),
+        },
+      );
+
+      return mapCoverageArea(profileId, area);
     } catch (error) {
       trackError(error, {
         component: "ServiceAreasService",
         action: "updateServiceArea",
-        metadata: { id },
+        metadata: { profileId, id },
       });
       throw error;
     }
   }
 
-  async deleteServiceArea(id: string): Promise<void> {
+  async deleteServiceArea(profileId: string, id: string): Promise<void> {
     try {
-      const { error } = await serviceAreasDb
-        .from<ServiceAreaRow>("service_areas")
-        .delete()
-        .eq("id", id);
+      const entity = await resolveCoverageEntity(profileId);
+      const removed = await coverageRepository.deleteByEntity(
+        entity.entityType,
+        entity.entityId,
+        id,
+      );
 
-      if (error) {
-        logger.error("Error deleting service area:", error);
-        throw new Error("Failed to delete service area");
+      if (removed !== 1) {
+        throw new Error("Área de atuação não encontrada");
       }
     } catch (error) {
       trackError(error, {
         component: "ServiceAreasService",
         action: "deleteServiceArea",
-        metadata: { id },
+        metadata: { profileId, id },
       });
       throw error;
     }
@@ -170,54 +303,24 @@ class ServiceAreasService {
   async setPrimaryServiceArea(
     profileId: string,
     serviceAreaId: string,
-  ): Promise<void> {
-    try {
-      await serviceAreasDb
-        .from<ServiceAreaRow>("service_areas")
-        .update({ is_primary: false })
-        .eq("profile_id", profileId);
-
-      const { error } = await serviceAreasDb
-        .from<ServiceAreaRow>("service_areas")
-        .update({ is_primary: true })
-        .eq("id", serviceAreaId);
-
-      if (error) {
-        logger.error("Error setting primary service area:", error);
-        throw new Error("Failed to set primary service area");
-      }
-    } catch (error) {
-      trackError(error, {
-        component: "ServiceAreasService",
-        action: "setPrimaryServiceArea",
-        metadata: { profileId, serviceAreaId },
-      });
-      throw error;
-    }
+  ): Promise<ServiceArea> {
+    return this.updateServiceArea(profileId, serviceAreaId, {
+      is_primary: true,
+    });
   }
 
   async getPrimaryServiceArea(profileId: string): Promise<ServiceArea | null> {
     try {
-      const { data, error } = await serviceAreasDb
-        .from<ServiceAreaRow>("service_areas")
-        .select("*")
-        .eq("profile_id", profileId)
-        .eq("is_active", true)
-        .order("is_primary", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const entity = await resolveCoverageEntity(profileId);
+      const area = await coverageRepository.findPrimaryByEntity(
+        entity.entityType,
+        entity.entityId,
+      );
 
-      if (error) {
-        logger.error("Error fetching primary service area:", error);
-        throw new Error("Failed to fetch primary service area");
-      }
-
-      return data ?? null;
+      return area ? await mapCoverageArea(profileId, area) : null;
     } catch (error) {
-      trackError(error, {
-        component: "ServiceAreasService",
-        action: "getPrimaryServiceArea",
-        metadata: { profileId },
+      logger.error("ServiceAreasService.getPrimaryServiceArea", error as Error, {
+        profileId,
       });
       return null;
     }
