@@ -143,7 +143,11 @@ describe("Safety Core Platform security", () => {
       /interface EmailRequest\s*{\s*contactId: string;\s*alertId: string;\s*}/,
     );
     expect(emergencyEmailFunction).toContain(
-      ".select('id, profile_id, alert_type, description, latitude, longitude, created_at')",
+      ".select('id, profile_id, alert_type, status, description, latitude, longitude, created_at')",
+    );
+    expect(emergencyEmailFunction).toContain("alert.status !== 'active'");
+    expect(emergencyEmailFunction).toContain(
+      "reason: 'alert_not_active'",
     );
     expect(emergencyEmailFunction).toContain(
       "contact.profile_id !== alert.profile_id",
