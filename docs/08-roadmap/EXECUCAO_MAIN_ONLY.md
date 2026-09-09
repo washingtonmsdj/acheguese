@@ -597,6 +597,39 @@ Próximo gate obrigatório:
 2. provar que passageiro/motorista/terceiro não conseguem contornar ownership, attempts, TTL ou status;
 3. manter `PUBLIC_LAUNCH_SURFACES.mobility=false`.
 
+### Checkpoint G22 — PIN operacional server-authoritative (2026-09-09)
+
+Auditoria real:
+- `operational_verifications` não concede qualquer SELECT/INSERT/UPDATE/DELETE ao browser; tabela permanece service-role-only;
+- `refresh_operational_pin_for_requester`, `verify_operational_pin` e `get_operational_verification_status` são `SECURITY DEFINER` com autorização interna;
+- requester é o único ator que pode emitir/rotacionar o PIN; assigned driver é o único ator que pode verificá-lo;
+- `verified_by` é derivado de `private.current_active_profile_id()`, nunca do payload;
+- status RPC não retorna `pin_hash` nem PIN em texto;
+- attempts, `last_attempt_at`, expiry e terminal-state guard são server-owned;
+- o TTL existente de 24h não abre uso pós-lifecycle: verificação é recusada quando a corrida está terminal.
+
+Prova transacional `BEGIN/ROLLBACK`:
+- requester emitiu PIN de 4 dígitos;
+- requester foi bloqueado ao tentar se auto-verificar;
+- terceiro sem vínculo foi bloqueado ao tentar renovar;
+- motorista atribuído errou uma vez e o contador persistiu exatamente 1 tentativa;
+- PIN correto verificou com `verified_by` igual ao perfil driver e attempts=2;
+- depois de a corrida ficar `completed`, nova verificação foi recusada;
+- a projeção de status não revelou material de verificação;
+- nenhum dado de fixture permaneceu.
+
+Decisão:
+- não reduzir TTL nem criar broker adicional sem requisito funcional: o protocolo atual já é bounded pelo lifecycle da corrida e possui autoridade interna;
+- warnings das três RPCs foram classificados em `SUPABASE_ADVISOR_RESIDUALS.json`;
+- ratchet `operational-pin-server-authority-security.test.ts` agora protege lifecycle, ownership e attempts.
+
+**Estado:** G22 fechado sem regressão funcional.
+
+Próximo gate obrigatório:
+1. auditar mutações Safety de incidente/emergência por ator: `update_safety_incident_status` e `update_safety_emergency_alert_status`;
+2. provar que actor_profile_id não permite spoof cross-user/admin;
+3. manter `PUBLIC_LAUNCH_SURFACES.mobility=false`.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:
