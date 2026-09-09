@@ -2,11 +2,13 @@ import { invokeSupabaseBroker } from "@/core/infrastructure/edge-functions/edgeF
 import type {
   RideDispatchAttemptInput,
   RideDispatchAttemptUpdateInput,
+  RideStateAuditInput,
 } from "./MobilityAuditService";
 import type { DispatchStrategy } from "../types/dispatch.types";
 
 type MobilityRpcAction =
   | "acceptRide"
+  | "logRideStateChange"
   | "logDispatchAttempt"
   | "updateLatestDispatchAttempt"
   | "cancelPendingOffers"
@@ -40,6 +42,16 @@ export class MobilityRpcService {
       noDataMessage: "Mobility broker returned no data",
       params,
       serviceName: SERVICE_NAME,
+    });
+  }
+
+  static async logRideStateChange(input: RideStateAuditInput): Promise<void> {
+    await this.invoke<{ logged: boolean }>("logRideStateChange", {
+      rideId: input.rideId,
+      fromState: input.fromState,
+      toState: input.toState,
+      actorProfileId: input.changedBy,
+      reason: input.reason ?? "",
     });
   }
 
