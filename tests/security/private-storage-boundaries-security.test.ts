@@ -12,6 +12,9 @@ describe('private storage boundaries', () => {
   const safetyMigration = read(
     'supabase/migrations/20260829161927_repair_safety_evidence_storage_owner_policies.sql',
   );
+  const safetyRegistration = read(
+    'supabase/migrations/20260909200353_bind_safety_evidence_to_storage_g24.sql',
+  );
   const safetyEvidenceService = read(
     'src/core/safety/services/SafetyEvidenceService.ts',
   );
@@ -61,6 +64,35 @@ describe('private storage boundaries', () => {
       expect(safetyEvidenceService).toContain(`'${mime}'`);
       expect(safetyMigration).toContain(`'${mime}'`);
     }
+  });
+
+  it('binds evidence metadata to an existing private Storage object', () => {
+    expect(safetyRegistration).toContain(
+      'CREATE OR REPLACE FUNCTION public.register_safety_evidence',
+    );
+    expect(safetyRegistration).toContain('FROM storage.objects object');
+    expect(safetyRegistration).toContain(
+      'v_object.owner_id IS DISTINCT FROM auth.uid()::text',
+    );
+    expect(safetyRegistration).toContain(
+      "v_size := (v_object.metadata ->> 'size')::bigint",
+    );
+    expect(safetyRegistration).toContain(
+      "v_mime := NULLIF(v_object.metadata ->> 'mimetype', '')",
+    );
+    expect(safetyRegistration).toContain(
+      'REVOKE INSERT ON TABLE public.safety_evidence FROM authenticated',
+    );
+    expect(safetyRegistration).toContain(
+      'CREATE UNIQUE INDEX IF NOT EXISTS safety_evidence_file_url_unique',
+    );
+    expect(safetyRegistration).toContain(
+      "NOT EXISTS (\n      SELECT 1\n      FROM public.safety_evidence evidence",
+    );
+    expect(safetyEvidenceService).toContain("supabase.rpc('register_safety_evidence'");
+    expect(safetyEvidenceService).not.toMatch(
+      /from\(['"]safety_evidence['"]\)[\s\S]{0,200}\.insert\(/,
+    );
   });
 
   it('routes the canonical evidence hook through the private evidence service', () => {
