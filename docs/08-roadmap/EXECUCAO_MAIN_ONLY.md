@@ -842,6 +842,36 @@ Próximo gate obrigatório:
 2. congelar a rodada estrutural se o inventário estiver limpo;
 3. avançar para certificação same-SHA: source/runtime, testes estáticos disponíveis, build/E2E e responsividade antes de abrir `PUBLIC_LAUNCH_SURFACES.mobility`.
 
+### Checkpoint G30 — Delivery broker-owned até a tabela (2026-09-09)
+
+Reconciliação:
+- o runtime atual já usa `OrderDeliverySSOTService -> DeliveryRpcService -> delivery-rpc`;
+- `delivery-rpc` remoto observado ACTIVE v8 com `verify_jwt=true`;
+- backing RPCs `delivery_report_occurrence` e `delivery_resolve_occurrence` estão `service_role=true`, `authenticated=false`, `anon=false`;
+- a arquitetura e o validador já proíbiam writes diretos em `orders`, `order_items`, `order_timeline_events` e `delivery_occurrences`;
+- apesar disso, grants/policies históricos ainda concediam DML a `authenticated`: `orders` INSERT/UPDATE/DELETE, `order_items` INSERT e `delivery_occurrences` INSERT/UPDATE.
+
+Correção de raiz:
+- migration `20260909205630_close_delivery_direct_table_writes_g30.sql` aplicada e versionada;
+- `INSERT/UPDATE/DELETE authenticated` revogados de `orders`, `order_items` e `delivery_occurrences`;
+- policies antigas `orders_insert`, `orders_update`, `order_items_insert`, `delivery_occurrences_insert` e `delivery_occurrences_update` removidas;
+- policy admin `FOR ALL` de orders foi substituída por SELECT-only, preservando observabilidade administrativa sem reabrir mutação;
+- leitura de participantes em orders/items/timeline/occurrences permanece;
+- service_role e backing RPCs continuam owners das mutações;
+- nenhuma mudança foi feita em payload/lifecycle do delivery-rpc.
+
+Governança:
+- `tests/security/delivery-rpc-security.test.ts` agora ratcheta também os grants/policies de tabela;
+- `validate-delivery-architecture-boundaries.ts` continua proibindo retorno de DML direto no runtime.
+
+**Estado:** G30 fechado. O contrato broker-owned agora vale também nos grants reais do banco, não apenas no código e nas funções.
+
+Próximo gate obrigatório:
+1. congelar novas refatorações estruturais de autoridade se o inventário core Mobility/Delivery estiver limpo;
+2. obter SHA atual da `main` e reconciliar fontes remotas críticas (`mobility-rpc`, `delivery-rpc`, migrations);
+3. executar o máximo possível da certificação same-SHA sem depender de GitHub Actions: ratchets, validações, build/deploy e smoke/E2E disponíveis;
+4. manter `PUBLIC_LAUNCH_SURFACES.mobility=false` até a certificação final.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:
