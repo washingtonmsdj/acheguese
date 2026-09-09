@@ -77,6 +77,7 @@ export interface RideRequest {
   distance_km?: number;
   rating?: number | null;
   passenger_confirmed?: boolean | null;
+  passenger_confirmed_at?: string | null;
   driver_rating?: number | { rating?: number; comment?: string } | null;
   driver_profile?: { name?: string | null } | null;
   driver?: {
