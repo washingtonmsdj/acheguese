@@ -33,7 +33,6 @@ export function PassengerRideChatButton({
         open={chatOpen}
         onOpenChange={setChatOpen}
         rideId={ride.id}
-        userId={activeProfile.id}
         otherUserName={ride.driver.name || "Motorista"}
         isDriver={false}
       />
