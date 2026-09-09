@@ -327,61 +327,6 @@ export class MobilityService {
     return data || null;
   }
 
-  static async updateRide(rideId: string, updates: Record<string, unknown>): Promise<unknown> {
-    const { data, error } = await db
-      .from("ride_requests")
-      .update(updates)
-      .eq("id", rideId)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  }
-
-  static async updateRideWithGuards(
-    rideId: string,
-    updates: Record<string, unknown>,
-    guards: {
-      statusEq?: string;
-      driverProfileIdEq?: string;
-    } = {},
-  ): Promise<boolean> {
-    let query = db
-      .from("ride_requests")
-      .update(updates)
-      .eq("id", rideId);
-
-    if (guards.statusEq) {
-      query = query.eq("status", guards.statusEq);
-    }
-
-    if (guards.driverProfileIdEq) {
-      query = query.eq("driver_profile_id", guards.driverProfileIdEq);
-    }
-
-    const { data, error } = await query.select("id").maybeSingle();
-    if (error) throw error;
-    return !!data;
-  }
-
-  static async updateRideIfStatusIn(
-    rideId: string,
-    updates: Record<string, unknown>,
-    allowedStatuses: string[],
-  ): Promise<boolean> {
-    const { data, error } = await db
-      .from("ride_requests")
-      .update(updates)
-      .eq("id", rideId)
-      .in("status", allowedStatuses)
-      .select("id")
-      .maybeSingle();
-
-    if (error) throw error;
-    return !!data;
-  }
-
   static async getRideDispatchData(rideId: string): Promise<unknown | null> {
     const { data, error } = await db
       .from("ride_requests")
