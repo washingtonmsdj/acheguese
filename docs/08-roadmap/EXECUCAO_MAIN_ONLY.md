@@ -475,3 +475,29 @@ Próximo gate obrigatório:
 4. executar same-SHA test/typecheck/build/E2E quando runner hosted estiver disponível;
 5. manter `PUBLIC_LAUNCH_SURFACES.mobility=false`.
 
+### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
+
+Auditoria real:
+- `ride_ratings` já estava corretamente server-owned para mutação: `authenticated SELECT=true`, `INSERT/UPDATE/DELETE=false`;
+- única policy de tabela permite leitura ao rater, rated ou admin;
+- `trust_events` e `trust_admin_actions` já estavam sem qualquer grant de tabela para `authenticated`/anon;
+- `submit_ride_rating` e `submit_ride_trust_feedback` já validam perfil ativo, participantes/contrapartes, estado final da corrida, bounds e rate-limit; nenhuma segunda autoridade de escrita foi criada;
+- o ponto residual era `get_ride_rating_summary(uuid)`: RPC anon intencional que retornava agregado para qualquer UUID, inclusive perfil privado.
+
+Correção aplicada e provada:
+- migration `scope_ride_rating_public_summary_g13` aplicada no Supabase canônico;
+- `get_ride_rating_summary` continua sendo projeção agregada pública, mas agora usa `search_path=''` e `statement_timeout=3s`;
+- anônimo só recebe histórico real de perfil ativo e público;
+- perfil privado continua visível ao próprio usuário, admin ou contraparte com corrida `completed/delivered`;
+- terceiro não relacionado recebe resumo neutro `average_rating=0,total_ratings=0`, sem revelar histórico do perfil privado;
+- `anon` e `authenticated` mantêm EXECUTE na projeção porque a reputação pública é intencional;
+- probe transacional confirmou quatro casos: anônimo+privado oculto, anônimo+público visível, dono/contraparte visível, terceiro autenticado oculto;
+- ratchet: `tests/security/ride-rating-trust-authority.test.ts`;
+- nenhuma mudança de DML em `ride_ratings`/Trust foi necessária porque o baseline real já estava correto.
+
+Próximo gate obrigatório:
+1. auditar tabelas de chat da corrida e confirmar que mensagens/mark-read não possuem bypass direto de escrita;
+2. auditar revogação/expiração de shares e lifecycle de safety sem duplicar comandos já autorizados;
+3. continuar same-SHA tests/E2E quando runner hosted estiver disponível;
+4. manter `PUBLIC_LAUNCH_SURFACES.mobility=false`.
+
