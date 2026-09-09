@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { RIDE_STATUS } from "../constants";
+import { MobilityDispatchConfigService } from "./MobilityDispatchConfigService";
 export {  getMobilityConversations,
   getOperationalVerificationEntries,
   getRideAvailableSeats,
@@ -68,61 +69,16 @@ const supabaseClient = supabase as unknown as MobilityQueriesDbClient;
 export interface RideDispatchContextRow {
   ride_mode: string | null;
   source_type: string | null;
-  is_scheduled: boolean | null;
+  is_scheduled: boolean;
   scheduled_for: string | null;
   status: string | null;
 }
 
-export interface ExclusiveOfferRideRow {
-  id: string;
-  origin: string;
-  destination: string;
-  origin_lat: number | null;
-  origin_lng: number | null;
-  destination_lat: number | null;
-  destination_lng: number | null;
-  suggested_price: number;
-  payment_method: string;
-  created_at: string;
-  driver_assigned_at: string | null;
+interface RideDispatchContextDbRow {
   ride_mode: string | null;
-  passenger_profile_id: string | null;
-}
-
-export interface OpenBoardRideRow {
-  id: string;
-  origin: string;
-  destination: string;
-  origin_lat: number | null;
-  origin_lng: number | null;
-  destination_lat: number | null;
-  destination_lng: number | null;
-  suggested_price: number;
-  payment_method: string;
-  created_at: string;
-  ride_mode: string | null;
-  package_size: string | null;
-  package_description: string | null;
   source_type: string | null;
-  source_id: string | null;
-  passenger_profile_id: string | null;
-}
-
-export interface ReservationOfferRideRow {
-  id: string;
-  origin: string;
-  destination: string;
-  origin_lat: number | null;
-  origin_lng: number | null;
-  destination_lat: number | null;
-  destination_lng: number | null;
-  suggested_price: number;
-  payment_method: string;
-  created_at: string;
-  scheduled_for: string;
-  passenger_profile_id: string | null;
-  driver_profile_id: string | null;
-  status: string;
+  departure_time: string | null;
+  status: string | null;
 }
 
 export interface MotoboyRuntimeDatabaseChecks {
@@ -291,138 +247,29 @@ export async function getRideDispatchContextById(
   rideId: string,
 ): Promise<RideDispatchContextRow | null> {
   const { data, error } = await supabaseClient
-    .from<RideDispatchContextRow>("ride_requests")
-    .select("ride_mode, source_type, is_scheduled, scheduled_for, status")
+    .from<RideDispatchContextDbRow>("ride_requests")
+    .select("ride_mode, source_type, departure_time, status")
     .eq("id", rideId)
     .maybeSingle();
 
   if (error) throw error;
-  return data ?? null;
-}
+  if (!data) return null;
 
-export async function getExclusiveOfferRideForDriver(
-  driverProfileId: string,
-): Promise<ExclusiveOfferRideRow | null> {
-  const { data, error } = await supabaseClient
-    .from<ExclusiveOfferRideRow>("ride_requests")
-    .select(
-      [
-        "id",
-        "origin",
-        "destination",
-        "origin_lat",
-        "origin_lng",
-        "destination_lat",
-        "destination_lng",
-        "suggested_price",
-        "payment_method",
-        "created_at",
-        "driver_assigned_at",
-        "ride_mode",
-        "passenger_profile_id",
-      ].join(", "),
-    )
-    .eq("driver_profile_id", driverProfileId)
-    .eq("status", RIDE_STATUS.DRIVER_ASSIGNED)
-    .is("driver_accepted_at", null)
-    .maybeSingle();
+  const scheduledFor = data.departure_time;
+  const minAdvanceHours =
+    MobilityDispatchConfigService.getGlobalConfig().reservationBoard.minAdvanceHours;
+  const isScheduled =
+    Boolean(scheduledFor) &&
+    new Date(scheduledFor as string).getTime() >=
+      Date.now() + minAdvanceHours * 60 * 60 * 1000;
 
-  if (error) throw error;
-  return data ?? null;
-}
-
-export async function getOpenBoardOfferRides(params: {
-  minPrice?: number;
-  maxPrice?: number;
-  packageSizes?: string[];
-  sortBy?: "created_at" | "suggested_price";
-  ascending?: boolean;
-  limit?: number;
-}): Promise<OpenBoardRideRow[]> {
-  const {
-    minPrice,
-    maxPrice,
-    packageSizes,
-    sortBy = "created_at",
-    ascending = false,
-    limit = 10,
-  } = params;
-
-  let query = supabaseClient
-    .from<OpenBoardRideRow>("ride_requests")
-    .select(
-      [
-        "id",
-        "origin",
-        "destination",
-        "origin_lat",
-        "origin_lng",
-        "destination_lat",
-        "destination_lng",
-        "suggested_price",
-        "payment_method",
-        "created_at",
-        "ride_mode",
-        "package_size",
-        "package_description",
-        "source_type",
-        "source_id",
-        "passenger_profile_id",
-      ].join(", "),
-    )
-    .in("status", [RIDE_STATUS.PENDING, RIDE_STATUS.REQUESTED, RIDE_STATUS.SEARCHING_DRIVER])
-    .is("driver_profile_id", null)
-    .eq("ride_mode", "motoboy");
-
-  if (minPrice !== undefined) {
-    query = query.gte("suggested_price", minPrice);
-  }
-  if (maxPrice !== undefined) {
-    query = query.lte("suggested_price", maxPrice);
-  }
-  if (packageSizes && packageSizes.length > 0) {
-    query = query.in("package_size", packageSizes);
-  }
-
-  const { data, error } = await query
-    .order(sortBy, { ascending })
-    .limit(limit);
-
-  if (error) throw error;
-  return data ?? [];
-}
-
-export async function getReservationOfferRides(
-  limit: number = 10,
-): Promise<ReservationOfferRideRow[]> {
-  const { data, error } = await supabaseClient
-    .from<ReservationOfferRideRow>("ride_requests")
-    .select(
-      [
-        "id",
-        "origin",
-        "destination",
-        "origin_lat",
-        "origin_lng",
-        "destination_lat",
-        "destination_lng",
-        "suggested_price",
-        "payment_method",
-        "created_at",
-        "scheduled_for",
-        "passenger_profile_id",
-        "driver_profile_id",
-        "status",
-      ].join(", "),
-    )
-    .eq("is_scheduled", true)
-    .gte("scheduled_for", new Date().toISOString())
-    .in("status", [RIDE_STATUS.PENDING, RIDE_STATUS.REQUESTED])
-    .order("scheduled_for", { ascending: true })
-    .limit(limit);
-
-  if (error) throw error;
-  return data ?? [];
+  return {
+    ride_mode: data.ride_mode,
+    source_type: data.source_type,
+    is_scheduled: isScheduled,
+    scheduled_for: isScheduled ? scheduledFor : null,
+    status: data.status,
+  };
 }
 
 /**
@@ -431,48 +278,6 @@ export async function getReservationOfferRides(
  * Driver dashboards should use MobilityOfferService because it applies
  * dispatch strategy, eligibility and scoring.
  */
-export async function getAvailableRides(limit: number = 10): Promise<unknown[]> {
-  try {
-    const { data, error } = await supabaseClient
-      .from("ride_requests")
-      .select(`
-        * ,
-        pickup_address:addresses!pickup_address_id(street, latitude, longitude),
-        dropoff_address:addresses!dropoff_address_id(street, latitude, longitude)
-      `)
-      .in("status", [RIDE_STATUS.PENDING, RIDE_STATUS.REQUESTED, RIDE_STATUS.SEARCHING_DRIVER])
-      .is("driver_profile_id", null)
-      .order("created_at", { ascending: false })
-      .limit(limit);
-
-    if (error) throw error;
-    return (data || []).map((r: unknown) => {
-      const typed = r as {
-        origin?: string;
-        destination?: string;
-        origin_lat?: number;
-        origin_lng?: number;
-        destination_lat?: number;
-        destination_lng?: number;
-        pickup_address?: { street?: string; latitude?: number; longitude?: number };
-        dropoff_address?: { street?: string; latitude?: number; longitude?: number };
-      };
-      return {
-        ...typed,
-        origin: typed.origin || typed.pickup_address?.street || "Origem nao informada",
-        destination: typed.destination || typed.dropoff_address?.street || "Destino nao informado",
-        origin_lat: typed.origin_lat || typed.pickup_address?.latitude,
-        origin_lng: typed.origin_lng || typed.pickup_address?.longitude,
-        destination_lat: typed.destination_lat || typed.dropoff_address?.latitude,
-        destination_lng: typed.destination_lng || typed.dropoff_address?.longitude,
-      };
-    });
-  } catch (error) {
-    logger.error("MobilityQueries.getAvailableRides", error as Error);
-    return [];
-  }
-}
-
 /**
  *  Buscar corridas do usurio (passageiro ou motorista)
  */
