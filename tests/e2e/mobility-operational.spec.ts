@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { loginAsUser } from "./helpers/auth";
+import { isLaunchSurfaceEnabled } from "../../src/app/config/launchScope";
 
 test.setTimeout(90_000);
 
@@ -50,29 +51,10 @@ async function recoverFromGlobalErrorBoundary(page: Page) {
   await expect(boundaryHeading).toHaveCount(0, { timeout: 15_000 });
 }
 
-async function isMobilityLaunchPaused(page: Page): Promise<boolean> {
-  const text = await getNormalizedBodyText(page);
-  return text.includes("mobilidade") && text.includes("separado para ajustes");
-}
-
-async function expectMobilityLaunchPaused(page: Page) {
-  const text = await getNormalizedBodyText(page);
-
-  expect(text).toContain("mobilidade");
-  expect(text.includes("ajustes") || text.includes("mvp")).toBe(true);
-}
-
 async function resolveMobilitySurfaceState(
   page: Page,
-): Promise<"paused" | "operational" | "onboarding" | ""> {
+): Promise<"operational" | "onboarding" | ""> {
   const text = await getNormalizedBodyText(page);
-
-  if (
-    text.includes("mobilidade") &&
-    (text.includes("ajustes") || text.includes("mvp"))
-  ) {
-    return "paused";
-  }
 
   if (
     text.includes("entregas em andamento") ||
@@ -96,6 +78,11 @@ async function resolveMobilitySurfaceState(
 }
 
 test.describe("Mobility operational authenticated flow", () => {
+  test.skip(
+    !isLaunchSurfaceEnabled("mobility"),
+    "Mobility remains launch-paused; operational certification requires the surface enabled.",
+  );
+
   test("motorista acessa corridas da central com fluxo estavel", async ({
     page,
   }) => {
@@ -126,14 +113,6 @@ test.describe("Mobility operational authenticated flow", () => {
       .poll(() => resolveMobilitySurfaceState(page), { timeout: 60_000 })
       .not.toBe("");
     const driverSurfaceState = await resolveMobilitySurfaceState(page);
-
-    if (
-      driverSurfaceState === "paused" ||
-      (await isMobilityLaunchPaused(page))
-    ) {
-      await expectMobilityLaunchPaused(page);
-      return;
-    }
 
     await expect(
       page
@@ -171,14 +150,6 @@ test.describe("Mobility operational authenticated flow", () => {
       .poll(() => resolveMobilitySurfaceState(page), { timeout: 60_000 })
       .not.toBe("");
     const motoboySurfaceState = await resolveMobilitySurfaceState(page);
-
-    if (
-      motoboySurfaceState === "paused" ||
-      (await isMobilityLaunchPaused(page))
-    ) {
-      await expectMobilityLaunchPaused(page);
-      return;
-    }
 
     if (motoboySurfaceState === "operational") {
       await expect(
