@@ -41,6 +41,10 @@ describe("Mobility ride chat server authority", () => {
     expect(migration).toContain(
       "CREATE OR REPLACE FUNCTION public.send_ride_chat_message",
     );
+    expect(migration).toContain("v_actor_profile_id := private.current_active_profile_id()");
+    expect(migration).toContain("ride_chat_participant_required");
+    expect(migration).toContain("ride_chat_not_writable_in_current_state");
+    expect(migration).toContain("FOR SHARE");
     expect(migration).toContain(
       "CREATE OR REPLACE FUNCTION public.mark_ride_chat_messages_read",
     );
