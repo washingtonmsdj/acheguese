@@ -36,79 +36,38 @@ type MobilityRideReadDbClient = {
 
 const mobilityRideReadDb = supabase as unknown as MobilityRideReadDbClient;
 
-type MobilityConversationRow = {
+export interface MobilityConversationSummary {
   id: string;
-  ride_id: string | null;
-  passenger_profile_id: string | null;
-  driver_profile_id: string | null;
+  ride_id: string;
+  passenger_profile_id: string;
+  driver_profile_id: string;
+  ride_status: string;
+  ride_mode: string;
+  origin: string | null;
+  destination: string | null;
+  final_price: number | null;
+  suggested_price: number | null;
   created_at: string;
   updated_at: string;
-};
-
-type MobilityMessagePreviewRow = {
-  message: string | null;
-};
+  last_message: string | null;
+  last_message_at: string | null;
+  unread_count: number;
+}
 
 type RideStateAuditRow = Record<string, unknown>;
 type OperationalVerificationRow = Record<string, unknown>;
 
-export async function getMobilityConversations(profileId: string): Promise<unknown[]> {
+export async function getMobilityConversations(): Promise<MobilityConversationSummary[]> {
   try {
-    const { data, error } = await mobilityRideReadDb
-      .from<MobilityConversationRow>("mobility_conversations")
-      .select(
-        [
-          "id",
-          "ride_id",
-          "passenger_profile_id",
-          "driver_profile_id",
-          "created_at",
-          "updated_at",
-        ].join(", "),
-      )
-      .or(`passenger_profile_id.eq.${profileId},driver_profile_id.eq.${profileId}`)
-      .order("updated_at", { ascending: false });
+    const { data, error } = await mobilityRideReadDb.rpc<MobilityConversationSummary[]>(
+      "list_ride_chat_summaries",
+    );
 
     if (error) throw error;
     return data ?? [];
   } catch (error) {
-    logger.error("MobilityQueries.getMobilityConversations", { profileId, error });
+    logger.error("MobilityQueries.getMobilityConversations", { error });
     return [];
-  }
-}
-
-export async function getLastMessage(conversationId: string): Promise<unknown | null> {
-  try {
-    const { data, error } = await mobilityRideReadDb
-      .from<MobilityMessagePreviewRow>("mobility_messages")
-      .select("message")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    logger.error("MobilityQueries.getLastMessage", { conversationId, error });
-    return null;
-  }
-}
-
-export async function getUnreadCount(conversationId: string, profileId: string): Promise<number> {
-  try {
-    const { count, error } = await mobilityRideReadDb
-      .from<{ id: string }>("mobility_messages")
-      .select("*", { count: "exact", head: true })
-      .eq("conversation_id", conversationId)
-      .eq("read", false)
-      .neq("sender_profile_id", profileId);
-
-    if (error) throw error;
-    return count ?? 0;
-  } catch (error) {
-    logger.error("MobilityQueries.getUnreadCount", { conversationId, profileId, error });
-    return 0;
   }
 }
 
