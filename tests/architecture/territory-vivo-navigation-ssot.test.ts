@@ -63,3 +63,22 @@ describe("Território Vivo navigation SSOT", () => {
     );
     expect(layout).not.toContain('./BottomNav');
   });
+
+
+  it("keeps TerritoryTopbar under shared owner without app facade", () => {
+    expect(
+      fs.existsSync(
+        path.join(
+          ROOT,
+          "src/app/components/territory-vivo/TerritoryTopbar.tsx",
+        ),
+      ),
+    ).toBe(false);
+
+    const barrel = read(
+      "src/app/components/territory-vivo/index.ts",
+    );
+    expect(barrel).toContain(
+      '@/shared/components/territory-vivo/TerritoryTopbar',
+    );
+  });

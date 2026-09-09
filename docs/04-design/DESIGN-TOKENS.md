@@ -20,8 +20,8 @@ sem criar um segundo tema independente.
 | Facade tipada                  | `src/styles/theme.ts`                                        | `THEME`, `INLINE_STYLES`, `TAILWIND_CLASSES`.                   |
 | Categorias semânticas          | `src/shared/design-system/contentCategories.ts`              | `getCategoryTokens(type)` — SSOT de cor por tipo de conteúdo.   |
 | Empty state SSOT               | `src/shared/components/EmptyState.tsx`                       | Estado vazio contextual em todas as telas.                      |
-| Primitives territoriais        | `src/app/components/territory-vivo/`                         | Superfície, busca, estado, topbar, mapa e navegação adaptativa. |
-| Header territorial atual       | `src/app/components/territory-vivo/TerritoryTopbar.tsx`      | Contexto e troca de território na Home/Explorar.                |
+| Primitives territoriais        | `src/app/components/territory-vivo/` + `src/shared/components/territory-vivo/` | Superfície, busca, estado e navegação em app; topbar reutilizável em shared. |
+| Header territorial atual       | `src/shared/components/territory-vivo/TerritoryTopbar.tsx`      | Contexto e troca de território na Home/Explorar.                |
 | Header social legado           | `src/core/community/components/feed/TerritoryFeedHeader.tsx` | Cabeçalho do Feed até sua migração visual posterior.            |
 
 > Regra: NENHUM componente usa `#hex`, `rgb()`, ou classes arbitrárias
