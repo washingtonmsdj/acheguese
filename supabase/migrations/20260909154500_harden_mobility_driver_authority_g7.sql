@@ -235,7 +235,7 @@ BEGIN
   THEN
     IF (p_updates->>'vehicle_year')::integer < 1900
        OR (p_updates->>'vehicle_year')::integer >
-          pg_catalog.extract(year FROM pg_catalog.current_date)::integer + 1
+          EXTRACT(YEAR FROM CURRENT_DATE)::integer + 1
     THEN
       RAISE EXCEPTION 'Invalid vehicle_year' USING ERRCODE = '22023';
     END IF;
