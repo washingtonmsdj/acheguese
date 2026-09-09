@@ -33,6 +33,14 @@ const FINAL_RIDE_STATUSES = new Set([
 ]);
 const CANCELLATION_STATUSES = new Set(["cancelled_by_passenger", "cancelled_by_driver"]);
 const DISPATCH_STRATEGIES = new Set(["exclusive_offer", "open_board", "reservation_board"]);
+const DRIVER_AVAILABILITY_ACTIONS = new Set([
+  "go_online",
+  "go_offline",
+  "set_available",
+  "pause_available",
+  "heartbeat",
+]);
+const DRIVER_RIDE_MODES = new Set(["ride", "motoboy"]);
 const ACTIONS = {
   createRide: true,
   createDelivery: true,
@@ -46,6 +54,8 @@ const ACTIONS = {
   logDispatchAttempt: true,
   updateLatestDispatchAttempt: true,
   cancelPendingOffers: true,
+  updateDriverAvailability: true,
+  reconcileStaleDriverAvailability: true,
   releaseDriverAvailabilityForRide: true,
 } as const;
 
@@ -120,6 +130,23 @@ function requireStatus(value: unknown, field: string): string {
   const status = optionalStatus(value, field);
   if (!status) throw new RequestValidationError(`Invalid ${field}`);
   return status;
+}
+
+function requireDriverAvailabilityAction(value: unknown): string {
+  const action = requireStatus(value, "availabilityAction");
+  if (!DRIVER_AVAILABILITY_ACTIONS.has(action)) {
+    throw new RequestValidationError("Invalid availabilityAction");
+  }
+  return action;
+}
+
+function optionalDriverRideMode(value: unknown): string | null {
+  if (value === undefined || value === null || value === "") return null;
+  const mode = requireStatus(value, "rideMode");
+  if (!DRIVER_RIDE_MODES.has(mode)) {
+    throw new RequestValidationError("Invalid rideMode");
+  }
+  return mode;
 }
 
 function optionalAuditReason(value: unknown): string {
@@ -1487,6 +1514,95 @@ async function handleCancelPendingOffers(
   return { cancelledCount: typeof data === "number" ? data : 0 };
 }
 
+async function handleUpdateDriverAvailability(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const driverProfileId = requireUuid(
+    params.driverProfileId ?? params.driver_profile_id,
+    "driverProfileId",
+  );
+  if (!await profileBelongsToUser(supabaseAdmin, driverProfileId, auth.userId)) {
+    throw new RequestAuthorizationError(
+      "User cannot change availability for this driver profile",
+    );
+  }
+
+  const availabilityAction = requireDriverAvailabilityAction(
+    params.availabilityAction ?? params.availability_action,
+  );
+  const rideMode = optionalDriverRideMode(params.rideMode ?? params.ride_mode);
+  const lat = optionalBoundedNumber(params.lat, "lat", -90, 90);
+  const lng = optionalBoundedNumber(params.lng, "lng", -180, 180);
+
+  if (availabilityAction === "set_available" && (lat === null || lng === null)) {
+    throw new RequestValidationError(
+      "Valid coordinates are required to become available",
+    );
+  }
+
+  const { data, error } = await supabaseAdmin.rpc(
+    "mobility_update_driver_availability",
+    {
+      p_actor_user_id: auth.userId,
+      p_profile_id: driverProfileId,
+      p_action: availabilityAction,
+      p_lat: lat,
+      p_lng: lng,
+      p_ride_mode: rideMode,
+    },
+  );
+
+  if (error) throw error;
+  return data ?? { success: false, reason: "empty_response" };
+}
+
+async function handleReconcileStaleDriverAvailability(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  if (!auth.isProjectAdmin) {
+    throw new RequestAuthorizationError(
+      "Admin authority is required to reconcile stale drivers",
+    );
+  }
+
+  const thresholdMinutes =
+    optionalInteger(params.thresholdMinutes ?? params.threshold_minutes, "thresholdMinutes", 1, 1440)
+    ?? 5;
+
+  const { data, error } = await supabaseAdmin.rpc(
+    "mobility_reconcile_stale_driver_availability",
+    { p_threshold_minutes: thresholdMinutes },
+  );
+
+  if (error) throw error;
+
+  const result =
+    data && typeof data === "object"
+      ? data as Record<string, unknown>
+      : {};
+
+  if (typeof result.staleBusy === "number" && result.staleBusy > 0) {
+    auditLog({
+      timestamp: new Date().toISOString(),
+      userId: auth.userId,
+      action: "mobility_stale_busy_detected",
+      resource: "driver_availability",
+      status: "failure",
+      details: {
+        staleBusy: result.staleBusy,
+        thresholdMinutes,
+        requires_manual_review: true,
+      },
+    });
+  }
+
+  return result;
+}
+
 async function handleReleaseDriverAvailability(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
@@ -1547,6 +1663,10 @@ async function dispatchAction(
       return handleUpdateLatestDispatchAttempt(supabaseAdmin, auth, params);
     case "cancelPendingOffers":
       return handleCancelPendingOffers(supabaseAdmin, auth, params);
+    case "updateDriverAvailability":
+      return handleUpdateDriverAvailability(supabaseAdmin, auth, params);
+    case "reconcileStaleDriverAvailability":
+      return handleReconcileStaleDriverAvailability(supabaseAdmin, auth, params);
     case "releaseDriverAvailabilityForRide":
       return handleReleaseDriverAvailability(supabaseAdmin, auth, params);
   }
