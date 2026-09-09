@@ -36,34 +36,30 @@ interface DriverProfileRatingRow {
   rating?: number | null;
 }
 
+interface DriverCapabilityRow {
+  can_do_delivery?: boolean | null;
+  can_do_rides?: boolean | null;
+  is_verified?: boolean | null;
+  subscription_active?: boolean | null;
+}
+
 interface DriverAvailabilityRow {
   profile_id: string;
   current_lat: number | null;
   current_lng: number | null;
   profiles?: DriverProfileRatingRow | DriverProfileRatingRow[] | null;
+  driver_data?: DriverCapabilityRow | DriverCapabilityRow[] | null;
 }
 
 interface ActiveRideDriverRow {
   driver_profile_id: string | null;
 }
 
-interface DispatchAttemptPayload {
-  rideId: string;
-  driverProfileId: string;
-  attemptNumber: number;
-  offeredAt: string;
-  timeoutAt: string;
-  status: 'pending' | 'accepted' | 'timeout';
-  respondedAt?: string;
-}
-
-interface DispatchAttemptUpdate {
-  status: 'accepted' | 'timeout';
-  respondedAt: string;
-}
-
-interface DispatchAttemptAuditRow {
-  id: string;
+interface AtomicDispatchResult {
+  success?: boolean;
+  reason?: string;
+  status?: string;
+  driver_profile_id?: string | null;
 }
 
 function getDriverRating(profileData: DriverAvailabilityRow['profiles']): number {
@@ -187,21 +183,25 @@ serve(async (req: Request) => {
 
       console.log(`[AutoDispatch] Attempt ${attemptNumber}: offering to ${driver.profileId}`);
 
-      // Registrar tentativa
-      await logDispatchAttempt(supabase, {
+      const timeoutAt = new Date(
+        Date.now() + CONFIG.OFFER_TIMEOUT_SECONDS * 1000,
+      ).toISOString();
+
+      // Assignment + dispatch audit + state audit pertencem ao mesmo command
+      // server-side. Se outro dispatch reservar o motorista primeiro, este
+      // candidato falha fechado e o loop tenta o próximo.
+      const assignment = await offerDriverAtomic(
+        supabase,
         rideId,
-        driverProfileId: driver.profileId,
+        driver.profileId,
         attemptNumber,
-        offeredAt: new Date().toISOString(),
-        timeoutAt: new Date(Date.now() + CONFIG.OFFER_TIMEOUT_SECONDS * 1000).toISOString(),
-        status: 'pending',
-      });
+        timeoutAt,
+      );
 
-      // Atribuir motorista
-      const assigned = await assignDriver(supabase, rideId, driver.profileId);
-
-      if (!assigned) {
-        console.log(`[AutoDispatch] Failed to assign driver ${driver.profileId}`);
+      if (!assignment.success) {
+        console.log(
+          `[AutoDispatch] Failed to atomically assign driver ${driver.profileId}: ${assignment.reason ?? 'unknown'}`,
+        );
         continue;
       }
 
@@ -214,12 +214,8 @@ serve(async (req: Request) => {
       );
 
       if (accepted) {
-        // Sucesso!
-        await updateDispatchAttempt(supabase, rideId, driver.profileId, {
-          status: 'accepted',
-          respondedAt: new Date().toISOString(),
-        });
-
+        // O accept_ride_atomic já fecha offer + availability + estado + audit
+        // na mesma transação.
         console.log(`[AutoDispatch] Driver ${driver.profileId} accepted`);
 
         return dispatchJson(
@@ -233,23 +229,26 @@ serve(async (req: Request) => {
         );
       }
 
-      // Timeout - tentar próximo
-      await updateDispatchAttempt(supabase, rideId, driver.profileId, {
-        status: 'timeout',
-        respondedAt: new Date().toISOString(),
-      });
+      // Timeout: somente libera a oferta se ela ainda pertencer a este
+      // motorista e continuar em driver_assigned. Nunca sobrescreve um aceite
+      // ou cancelamento concorrente.
+      const timeoutResult = await timeoutDriverOfferAtomic(
+        supabase,
+        rideId,
+        driver.profileId,
+      );
+
+      if (!timeoutResult.success) {
+        console.log(
+          `[AutoDispatch] Offer changed before timeout release: ${timeoutResult.reason ?? 'state_changed'}`,
+        );
+        return dispatchJson(req, {
+          success: false,
+          reason: timeoutResult.reason ?? 'state_changed',
+        });
+      }
 
       console.log(`[AutoDispatch] Driver ${driver.profileId} timeout, trying next`);
-
-      // Voltar para searching_driver
-      await supabase
-        .from('ride_requests')
-        .update({
-          status: 'searching_driver',
-          driver_profile_id: null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', rideId);
     }
 
     // Nenhum motorista aceitou
@@ -290,14 +289,24 @@ async function findEligibleDrivers(
       current_lat,
       current_lng,
       profiles!inner(rating),
-      driver_data!inner(can_do_delivery)
+      driver_data!inner(
+        can_do_delivery,
+        can_do_rides,
+        is_verified,
+        subscription_active
+      )
     `)
     .eq('is_online', true)
-    .eq('is_available', true);
+    .eq('is_available', true)
+    .eq('driver_data.is_verified', true)
+    .eq('driver_data.subscription_active', true);
   
-  // Filtrar por tipo de corrida
+  // Pré-filtro para evitar candidatos inviáveis. A autorização definitiva
+  // continua no command atômico, sob lock.
   if (rideMode === 'motoboy') {
     query = query.eq('driver_data.can_do_delivery', true);
+  } else {
+    query = query.eq('driver_data.can_do_rides', true);
   }
 
   const { data: drivers, error } = await query;
@@ -314,7 +323,19 @@ async function findEligibleDrivers(
     .from('ride_requests')
     .select('driver_profile_id')
     .in('driver_profile_id', profileIds)
-    .in('status', ['driver_accepted', 'driver_arriving', 'passenger_boarded', 'in_progress']);
+    .in('status', [
+      'driver_assigned',
+      'driver_accepted',
+      'driver_arriving',
+      'driver_on_the_way',
+      'driver_arrived',
+      'passenger_on_board',
+      'passenger_boarded',
+      'in_progress',
+      'pickup_confirmed',
+      'in_delivery',
+      'delivered',
+    ]);
 
   const activeRideRows = (activeRides ?? []) as ActiveRideDriverRow[];
   const busyDrivers = new Set(
@@ -346,37 +367,49 @@ async function findEligibleDrivers(
   return eligible;
 }
 
-async function assignDriver(
+async function offerDriverAtomic(
   supabase: SupabaseClient,
   rideId: string,
-  driverProfileId: string
-): Promise<boolean> {
-  const { error } = await supabase
-    .from('ride_requests')
-    .update({
-      driver_profile_id: driverProfileId,
-      status: 'driver_assigned',
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', rideId)
-    .eq('status', 'searching_driver');
-
-  if (error) {
-    console.error('[AutoDispatch] Error assigning driver:', error);
-    return false;
-  }
-
-  // Registrar auditoria de estado
-  await supabase.from('ride_state_audit').insert({
-    ride_id: rideId,
-    from_state: 'searching_driver',
-    to_state: 'driver_assigned',
-    changed_by: 'system',
-    reason: 'Driver assigned by auto-dispatch',
-    created_at: new Date().toISOString(),
+  driverProfileId: string,
+  attemptNumber: number,
+  timeoutAt: string,
+): Promise<AtomicDispatchResult> {
+  const { data, error } = await supabase.rpc('mobility_offer_driver_atomic', {
+    p_ride_id: rideId,
+    p_driver_profile_id: driverProfileId,
+    p_attempt_number: attemptNumber,
+    p_timeout_at: timeoutAt,
+    p_reason: 'Driver assigned by auto-dispatch',
   });
 
-  return true;
+  if (error) {
+    console.error('[AutoDispatch] Atomic driver assignment failed:', error);
+    return { success: false, reason: 'command_error' };
+  }
+
+  return (data ?? { success: false, reason: 'empty_response' }) as AtomicDispatchResult;
+}
+
+async function timeoutDriverOfferAtomic(
+  supabase: SupabaseClient,
+  rideId: string,
+  driverProfileId: string,
+): Promise<AtomicDispatchResult> {
+  const { data, error } = await supabase.rpc(
+    'mobility_timeout_driver_offer_atomic',
+    {
+      p_ride_id: rideId,
+      p_driver_profile_id: driverProfileId,
+      p_reason: 'Driver offer timed out in auto-dispatch',
+    },
+  );
+
+  if (error) {
+    console.error('[AutoDispatch] Atomic timeout release failed:', error);
+    return { success: false, reason: 'command_error' };
+  }
+
+  return (data ?? { success: false, reason: 'empty_response' }) as AtomicDispatchResult;
 }
 
 async function waitForAcceptance(
@@ -403,72 +436,32 @@ async function waitForAcceptance(
       return false;
     }
 
-    // Aguardar 1 segundo antes de verificar novamente
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
 
   return false;
 }
 
-async function expireRide(supabase: SupabaseClient, rideId: string, reason: string): Promise<void> {
-  await supabase
-    .from('ride_requests')
-    .update({
-      status: 'expired',
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', rideId)
-    .in('status', ['searching_driver', 'driver_assigned']);
-
-  await supabase.from('ride_state_audit').insert({
-    ride_id: rideId,
-    from_state: 'searching_driver',
-    to_state: 'expired',
-    changed_by: 'system',
-    reason,
-    created_at: new Date().toISOString(),
-  });
-
-  console.log(`[AutoDispatch] Ride expired: ${reason}`);
-}
-
-async function logDispatchAttempt(
-  supabase: SupabaseClient,
-  attempt: DispatchAttemptPayload,
-): Promise<void> {
-  await supabase.from('ride_dispatch_audit').insert({
-    ride_id: attempt.rideId,
-    driver_profile_id: attempt.driverProfileId,
-    attempt_number: attempt.attemptNumber,
-    offered_at: attempt.offeredAt,
-    timeout_at: attempt.timeoutAt,
-    status: attempt.status,
-    created_at: new Date().toISOString(),
-  });
-}
-
-async function updateDispatchAttempt(
+async function expireRide(
   supabase: SupabaseClient,
   rideId: string,
-  driverProfileId: string,
-  updates: DispatchAttemptUpdate
-): Promise<void> {
-  const { data: attempts } = await supabase
-    .from('ride_dispatch_audit')
-    .select('id')
-    .eq('ride_id', rideId)
-    .eq('driver_profile_id', driverProfileId)
-    .order('created_at', { ascending: false })
-    .limit(1);
+  reason: string,
+): Promise<AtomicDispatchResult> {
+  const { data, error } = await supabase.rpc('mobility_expire_dispatch_atomic', {
+    p_ride_id: rideId,
+    p_reason: reason,
+  });
 
-  const attemptRows = (attempts ?? []) as DispatchAttemptAuditRow[];
-
-  if (attemptRows.length > 0) {
-    await supabase
-      .from('ride_dispatch_audit')
-      .update(updates)
-      .eq('id', attemptRows[0].id);
+  if (error) {
+    console.error('[AutoDispatch] Atomic dispatch expiration failed:', error);
+    return { success: false, reason: 'command_error' };
   }
+
+  const result = (data ?? { success: false, reason: 'empty_response' }) as AtomicDispatchResult;
+  if (result.success) {
+    console.log(`[AutoDispatch] Ride expired: ${reason}`);
+  }
+  return result;
 }
 
 function calculateDistance(
