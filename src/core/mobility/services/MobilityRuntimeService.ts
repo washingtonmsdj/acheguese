@@ -11,6 +11,7 @@ import { logger } from "@/shared/utils/logger";
 import type { RideRequest } from "../types/types";
 import { RIDE_STATUS } from "../constants";
 import { toRideRequestContract } from "./RideCanonicalAdapter";
+import { sanitizeDriverSelfServiceUpdate } from "./driverDataSelfService";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
@@ -180,26 +181,14 @@ class MobilityServiceInstance {
 
       if (existing) return existing;
 
-      const { data: driverData, error: driverError } = await db
-        .from<DriverDataRecord>("driver_data")
-        .insert({
-          profile_id: driverProfile.id,
-          is_online: false,
-          is_verified: true,
-          subscription_active: true,
-          rating: 5.0,
-          total_rides: 0,
-          total_rides_completed: 0,
-          total_rides_cancelled: 0,
-          acceptance_rate: 100.0,
-          cancellation_rate: 0.0,
-        })
-        .select("*")
-        .single();
+      const { data: driverData, error: driverError } = await db.rpc<DriverDataRecord>(
+        "ensure_admin_driver_data",
+        { p_profile_id: driverProfile.id },
+      );
 
       if (driverError) throw driverError;
 
-      logger.info("mobilityService.createAdminDriverProfile - created", {
+      logger.info("mobilityService.createAdminDriverProfile - ensured", {
         userId,
         profileId: driverProfile.id,
       });
@@ -239,12 +228,20 @@ class MobilityServiceInstance {
         throw new Error("Driver profile not found");
       }
 
-      const { data, error } = await db
-        .from<DriverDataRecord>("driver_data")
-        .update(updates)
-        .eq("profile_id", driverProfileId)
-        .select("*")
-        .single();
+      const safeUpdates = sanitizeDriverSelfServiceUpdate(
+        updates as Record<string, unknown>,
+      );
+      if (Object.keys(safeUpdates).length === 0) {
+        return this.getDriverData(driverProfileId);
+      }
+
+      const { data, error } = await db.rpc<DriverDataRecord>(
+        "update_owned_driver_data",
+        {
+          p_profile_id: driverProfileId,
+          p_updates: safeUpdates,
+        },
+      );
 
       if (error) throw error;
       return data;
