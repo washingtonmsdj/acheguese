@@ -6,6 +6,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import type { DriverData, ServiceResponse } from './types';
+import { sanitizeDriverSelfServiceUpdate } from '@/core/mobility/services/driverDataSelfService';
 
 const errorMessage = (error: unknown, fallback: string): string =>
   error instanceof Error ? error.message : fallback;
@@ -33,6 +34,10 @@ interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
 
 interface DriverDbClient {
   from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+  rpc: <TRow = unknown>(
+    fn: string,
+    params?: Record<string, unknown>,
+  ) => Promise<QuerySingleResult<TRow>>;
 }
 
 const driverDb = supabase as unknown as DriverDbClient;
@@ -66,12 +71,25 @@ export class DriverService {
     updates: Partial<Omit<DriverData, 'profile_id' | 'created_at' | 'updated_at'>>
   ): Promise<ServiceResponse<DriverData>> {
     try {
-      const { data, error } = await driverDb
-        .from<DriverData>('driver_data')
-        .update(updates)
-        .eq('profile_id', profileId)
-        .select()
-        .single();
+      const safeUpdates = sanitizeDriverSelfServiceUpdate(
+        updates as Record<string, unknown>,
+      );
+
+      if (Object.keys(safeUpdates).length === 0) {
+        const current = await this.getDriverData(profileId);
+        if (!current) {
+          return { success: false, error: 'Driver data not found' };
+        }
+        return { success: true, data: current };
+      }
+
+      const { data, error } = await driverDb.rpc<DriverData>(
+        'update_owned_driver_data',
+        {
+          p_profile_id: profileId,
+          p_updates: safeUpdates,
+        },
+      );
 
       if (error) throw error;
 
