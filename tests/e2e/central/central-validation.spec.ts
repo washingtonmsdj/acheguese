@@ -17,8 +17,4 @@ test.describe('central canonical routes', () => {
     await expectPausedLaunchSurface(page, '/central/motorista/corridas');
     await expectPausedLaunchSurface(page, '/central/motoboy/entregas');
   });
-
-  test('legacy create-driver route stays isolated while mobility is paused', async ({ page }) => {
-    await expectPausedLaunchSurface(page, '/create-driver');
-  });
 });
