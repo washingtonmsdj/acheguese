@@ -120,6 +120,34 @@ export class CoverageRepositorySupabase implements ICoverageRepository {
     return { entity_ids, total_count: count ?? 0 };
   }
 
+  async upsertByEntity(
+    entity_type: EntityType,
+    entity_id: string,
+    coverage: {
+      id?: string;
+      coverage_type: ServiceArea['coverage_type'];
+      location_id: string;
+      radius_km: number | null;
+      is_primary: boolean;
+      status: CoverageStatus;
+    },
+  ): Promise<ServiceArea> {
+    const { data, error } = await supabase.rpc('upsert_entity_coverage', {
+      p_entity_type: entity_type,
+      p_entity_id: entity_id,
+      p_coverage_id: coverage.id ?? null,
+      p_coverage_type: coverage.coverage_type,
+      p_location_id: coverage.location_id,
+      p_radius_km: coverage.radius_km,
+      p_is_primary: coverage.is_primary,
+      p_status: coverage.status,
+    });
+
+    if (error) throw new CoverageError(CoverageErrorCode.DATABASE_ERROR, error.message);
+    if (!data) throw new CoverageError(CoverageErrorCode.DATABASE_ERROR, 'Empty coverage mutation result');
+    return rowToServiceArea(data as Record<string, unknown>);
+  }
+
   async deleteByEntity(
     entity_type: EntityType,
     entity_id: string,
