@@ -544,6 +544,30 @@ Próximo gate obrigatório:
 4. executar same-SHA test/typecheck/build/E2E quando runner hosted estiver disponível;
 5. manter `PUBLIC_LAUNCH_SURFACES.mobility=false`.
 
+### Checkpoint G20 — lifecycle de Safety Ride Share e provenance reconciliada (2026-09-09)
+
+Auditoria e reconciliação:
+- o Supabase já havia aplicado G12 nas versões reais `20260909170152`, `20260909170347` e `20260909170647`, enquanto a `main` guardava o mesmo conteúdo com timestamps posteriores `19:00/19:10/19:20`;
+- os três arquivos foram renomeados atomicamente no Git para refletir exatamente o migration history remoto, sem reaplicar SQL;
+- o lifecycle terminal de shares já possuía owner canônico: `private.revoke_terminal_ride_shares()` + `trg_revoke_terminal_ride_shares` em `ride_requests`;
+- um primeiro corte G20 duplicou temporariamente esse fechamento dentro do transition command; o probe transacional revelou o owner existente porque o resultado terminal foi `revoked`, não `expired`.
+
+Correção final:
+- criação de share agora lê a corrida com `FOR SHARE`, serializando criação contra transição terminal;
+- `revoke_safety_ride_share` foi endurecida com `search_path=''`, timeout de 3s e semântica idempotente: share inexistente/inativo retorna `false`, não escreve e não duplica audit;
+- o trigger privado preexistente permanece como **único owner** da revogação automática no lifecycle terminal;
+- migration `20260909192625_restore_canonical_ride_share_terminal_trigger_g20.sql` removeu do transition command a atualização duplicada de `ride_shares`, preservando intactos os owners G19 de offers, dispatch e driver availability;
+- probe real `BEGIN/ROLLBACK` comprovou: token server-owned nasce ativo; transição terminal revoga o share; bearer token deixa de resolver imediatamente; primeira revogação explícita retorna `true`, segunda retorna `false`; exatamente um audit `share_revoked`;
+- ratchet `tests/security/safety-ride-share-authority.test.ts` protege serialização, idempotência e single-owner;
+- warning de `create_safety_ride_share` foi classificado em `SUPABASE_ADVISOR_RESIDUALS.json`; a leitura anônima `get_shared_ride_safety_data` continua allowlisted por design como capability bearer-token.
+
+**Estado:** G12/G20 fechados e reconciliados entre Git e Supabase. Nenhum bypass de INSERT browser em `ride_shares` foi reintroduzido.
+
+Próximo gate obrigatório:
+1. auditar chat de corrida por grants/RLS/funções reais: `ensure_ride_chat`, `send_ride_chat_message` e `mark_ride_chat_messages_read`;
+2. preservar chat funcional, corrigindo bypass/authority na raiz se existir, sem remover a feature;
+3. manter `PUBLIC_LAUNCH_SURFACES.mobility=false` até same-SHA tests/build/E2E.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:
