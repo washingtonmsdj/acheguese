@@ -24,13 +24,6 @@ const ALLOWED_METHODS = "POST, OPTIONS";
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SAFE_STATUS_REGEX = /^[a-z0-9_:-]{1,64}$/i;
 const MAX_AUDIT_REASON_LENGTH = 1000;
-const FINAL_RIDE_STATUSES = new Set([
-  "completed",
-  "cancelled_by_passenger",
-  "cancelled_by_driver",
-  "expired",
-  "failed",
-]);
 const DISPATCH_STRATEGIES = new Set(["exclusive_offer", "open_board", "reservation_board"]);
 const DRIVER_AVAILABILITY_ACTIONS = new Set([
   "go_online",
@@ -54,7 +47,6 @@ const ACTIONS = {
   listDriverOffers: true,
   findAvailableDriversForRide: true,
   reconcileStaleDriverAvailability: true,
-  releaseDriverAvailabilityForRide: true,
 } as const;
 
 type MobilityRpcAction = keyof typeof ACTIONS;
@@ -308,24 +300,6 @@ async function profileBelongsToUser(
 
   if (error) throw error;
   return Boolean(data);
-}
-
-async function canAccessRideAsParticipantOrAdmin(
-  supabaseAdmin: SupabaseClient,
-  auth: UserAuthResult,
-  ride: RideRow,
-): Promise<boolean> {
-  if (auth.isProjectAdmin) return true;
-
-  if (await profileBelongsToUser(supabaseAdmin, ride.passenger_profile_id, auth.userId)) {
-    return true;
-  }
-
-  if (await profileBelongsToUser(supabaseAdmin, ride.driver_profile_id, auth.userId)) {
-    return true;
-  }
-
-  return false;
 }
 
 async function requireRideTransitionActor(
@@ -1552,36 +1526,6 @@ async function handleReconcileStaleDriverAvailability(
   return result;
 }
 
-async function handleReleaseDriverAvailability(
-  supabaseAdmin: SupabaseClient,
-  auth: UserAuthResult,
-  params: Record<string, unknown>,
-) {
-  const rideId = requireUuid(params.rideId ?? params.ride_id, "rideId");
-  const ride = await getRide(supabaseAdmin, rideId);
-  const driverProfileId = ride.driver_profile_id;
-
-  if (!driverProfileId) {
-    throw new RequestValidationError("Ride has no assigned driver to release");
-  }
-
-  if (!FINAL_RIDE_STATUSES.has(ride.status)) {
-    throw new RequestValidationError("Ride must be final before releasing driver availability");
-  }
-
-  if (!await canAccessRideAsParticipantOrAdmin(supabaseAdmin, auth, ride)) {
-    throw new RequestAuthorizationError("User cannot release this driver availability");
-  }
-
-  const { data, error } = await supabaseAdmin.rpc("release_driver_availability_for_ride", {
-    p_driver_profile_id: driverProfileId,
-    p_ride_id: rideId,
-  });
-
-  if (error) throw error;
-  return { released: data === true };
-}
-
 async function dispatchAction(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
@@ -1615,8 +1559,6 @@ async function dispatchAction(
       return handleFindAvailableDriversForRide(supabaseAdmin, auth, params);
     case "reconcileStaleDriverAvailability":
       return handleReconcileStaleDriverAvailability(supabaseAdmin, auth, params);
-    case "releaseDriverAvailabilityForRide":
-      return handleReleaseDriverAvailability(supabaseAdmin, auth, params);
   }
 }
 
