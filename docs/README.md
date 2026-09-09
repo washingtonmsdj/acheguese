@@ -10,6 +10,8 @@ Domínios de produto: **Comunidade** (feed, posts, alertas, achados/perdidos, gr
 
 ## Autoridade e precedência
 
+> O arquivo `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md` é somente um **ponteiro de compatibilidade da raiz**. Ele não supera este índice nem o roadmap ativo.
+
 Quando houver conflito, aplicar esta ordem:
 
 1. contrato executável/versionado (`src/`, migrations, manifests e validators);

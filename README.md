@@ -67,6 +67,9 @@ Documentos em `docs/10-archive/` são históricos e **nunca** substituem uma fon
 A raiz mantém somente os documentos de entrada e governança transversal:
 
 - `README.md`;
-- `SECURITY.md`.
+- `SECURITY.md`;
+- `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md` **temporariamente como ponteiro de compatibilidade**, sem autoridade própria.
+
+Novos planos/status/checkpoints pertencem a `docs/`. O ponteiro URGENTE deve ser removido quando os callers ativos forem migrados.
 
 Planos, arquitetura, status e histórico pertencem a `docs/` e devem estar referenciados pelo índice canônico.

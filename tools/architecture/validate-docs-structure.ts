@@ -3,7 +3,7 @@
  * Validate documentation placement in repository root.
  *
  * Policy (docs/DECISIONS.md D-013):
- * - Allow only README.md, SECURITY.md and the permanent global reorganization plan in root.
+ * - Allow only README.md, SECURITY.md and the temporary compatibility pointer in root.
  * - All other markdown files must live under docs/ or module folders.
  */
 

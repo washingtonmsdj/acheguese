@@ -19,6 +19,22 @@ Este documento consolida ordem de execução, blockers e Definition of Done. Own
 7. placeholder, `paused`, fallback vazio ou retorno antecipado não contam como módulo funcional;
 8. mudanças destrutivas de dados/LGPD exigem validação específica do ambiente alvo.
 
+
+## Relação com `teste-acheguese`
+
+A partir de 2026-09-09:
+
+- `washingtonmsdj/teste-acheguese` funciona como **laboratório pequeno de território/UX/release**;
+- `washingtonmsdj/acheguese` continua sendo o **produto principal consolidado**;
+- não existe dual-write de features nem sincronização cega entre repositórios;
+- contratos maduros do teste podem ser absorvidos aqui somente quando compatíveis com os owners/SSOTs deste repositório;
+- código Next.js do teste **não** deve ser copiado mecanicamente para o app Vite/React;
+- padrões aproveitáveis incluem: registry único de navegação, rollout fail-closed, território como contexto, estados vazios honestos, source/deploy provenance e visual Território Vivo;
+- módulos já existentes aqui (Community, Empresas, Gastronomia, Educação etc.) não são removidos apenas porque ainda não existem no teste;
+- ao absorver uma ideia do teste, preferir consolidar owner existente e remover duplicação/legado no principal.
+
+Essa política substitui a antiga ideia de escolher um repositório e abandonar o outro.
+
 ## Baseline GitHub confirmado
 
 - `main` é a única linha ativa escolhida para esta estabilização.
