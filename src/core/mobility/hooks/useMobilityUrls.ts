@@ -34,12 +34,13 @@ export interface MobilityUrls {
   passageiro: {
     home: string;
     corridas: string;
+    buscando: (rideId: string) => string;
   };
 }
 
 export function useMobilityUrls(): MobilityUrls {
   return {
-    home: mobilityRoutes.passageiro.home,
+    home: mobilityRoutes.public.home,
     passenger: mobilityRoutes.passageiro.home,
     driver: mobilityRoutes.motorista.home,
     driverProfile: mobilityRoutes.motorista.home,
@@ -49,6 +50,7 @@ export function useMobilityUrls(): MobilityUrls {
     passageiro: {
       home: mobilityRoutes.passageiro.home,
       corridas: mobilityRoutes.passageiro.corridas,
+      buscando: mobilityRoutes.passageiro.buscando,
     },
   };
 }
