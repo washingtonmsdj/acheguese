@@ -770,6 +770,45 @@ Próximo gate obrigatório:
 2. corrigir somente DML que ainda permita alterar autoridade/lifecycle/provenance;
 3. manter `PUBLIC_LAUNCH_SURFACES.mobility=false`.
 
+### Checkpoint G28 — moderação de motorista append-only (2026-09-09)
+
+Reconciliação runtime > docs:
+- `driver_moderation_events` é declarado desde a migration original como trilha **imutável**, mas o banco real ainda concedia INSERT/UPDATE/DELETE a `authenticated` via policy admin `FOR ALL`;
+- o runtime `DriverModerationEventsService.createEvent` ainda fazia INSERT direto e aceitava `adminProfileId` vindo do browser;
+- a referência documental antiga a `20260718163000` como hardening dessa trilha estava incorreta: a migration real desse timestamp é `harden_profile_verification_transitions` e não altera `driver_moderation_events`;
+- tabela possuía 0 eventos persistidos no momento da correção, então não houve transformação de histórico existente.
+
+Correção de raiz:
+- migration `20260909204327_lock_driver_moderation_history_g28.sql` aplicada e versionada;
+- novo command `append_driver_moderation_event` exige role admin/super_admin válida e deriva `admin_profile_id` de um Profile ativo **pertencente** ao usuário autenticado;
+- `created_at` é server-owned;
+- action, reason e metadata possuem validação bounded;
+- `INSERT/UPDATE/DELETE authenticated` foram revogados da tabela;
+- policy admin `FOR ALL` foi removida e substituída por SELECT-only;
+- motorista mantém SELECT do próprio histórico;
+- `DriverModerationEventsService` passou a usar apenas a RPC de append;
+- `adminProfileId` foi removido do contrato do service, do runtime admin e do hook do painel;
+- adapter tipado estreito evita editar manualmente `types.generated.ts` antes da próxima sincronização canônica.
+
+Prova transacional `BEGIN/ROLLBACK`:
+- admin real ativo conseguiu append;
+- `admin_profile_id` retornado pertenceu ao usuário admin autenticado e o timestamp foi produzido pelo servidor;
+- INSERT, UPDATE e DELETE direto falharam sob role SQL `authenticated`;
+- motorista não-admin conseguiu ler o próprio evento;
+- motorista não-admin foi bloqueado ao tentar append;
+- após ROLLBACK, `driver_moderation_events` voltou ao count original 0.
+
+Governança:
+- ratchet `tests/security/driver-moderation-authority.test.ts`;
+- warning esperado de `append_driver_moderation_event` classificado em `SUPABASE_ADVISOR_RESIDUALS.json`.
+
+**Estado:** G28 fechado; a trilha de moderação agora corresponde ao contrato imutável declarado pelo próprio projeto.
+
+Próximo gate obrigatório:
+1. auditar `driver_routes`, a última exceção com DML `authenticated` no inventário operacional Mobility;
+2. manter CRUD somente se ownership, lifecycle, payload e callers reais justificarem escrita browser-side;
+3. se estiver correto, não criar broker redundante e avançar para same-SHA/runtime/E2E.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:
