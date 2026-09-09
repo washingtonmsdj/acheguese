@@ -16,6 +16,20 @@ import { COVERAGE_PAGINATION } from '../types/index';
 
 const TABLE = 'service_areas';
 
+type CoveragePointRpcResult<T> = {
+  data: T | null;
+  error: { message: string; code?: string } | null;
+};
+
+type CoveragePointRpcClient = {
+  rpc<T = unknown>(
+    functionName: 'upsert_entity_coverage',
+    args: Record<string, unknown>,
+  ): Promise<CoveragePointRpcResult<T>>;
+};
+
+const coveragePointRpc = supabase as unknown as CoveragePointRpcClient;
+
 function rowToServiceArea(row: Record<string, unknown>): ServiceArea {
   return {
     id: row.id as string,
@@ -132,7 +146,7 @@ export class CoverageRepositorySupabase implements ICoverageRepository {
       status: CoverageStatus;
     },
   ): Promise<ServiceArea> {
-    const { data, error } = await supabase.rpc('upsert_entity_coverage', {
+    const { data, error } = await coveragePointRpc.rpc<Record<string, unknown>>('upsert_entity_coverage', {
       p_entity_type: entity_type,
       p_entity_id: entity_id,
       p_coverage_id: coverage.id ?? null,
@@ -145,7 +159,7 @@ export class CoverageRepositorySupabase implements ICoverageRepository {
 
     if (error) throw new CoverageError(CoverageErrorCode.DATABASE_ERROR, error.message);
     if (!data) throw new CoverageError(CoverageErrorCode.DATABASE_ERROR, 'Empty coverage mutation result');
-    return rowToServiceArea(data as Record<string, unknown>);
+    return rowToServiceArea(data);
   }
 
   async deleteByEntity(
