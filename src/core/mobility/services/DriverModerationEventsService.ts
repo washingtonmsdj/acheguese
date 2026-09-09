@@ -5,6 +5,17 @@ import type { Json } from "@/shared/types/mobility.generated";
 
 const MISSING_TABLE_ERROR_CODES = new Set(["42P01", "PGRST116", "PGRST205"]);
 
+type RpcError = { message?: string | null; code?: string | null } | null;
+type RpcResult<T> = { data: T | null; error: RpcError };
+type DriverModerationRpcClient = {
+  rpc<T = unknown>(
+    functionName: string,
+    args: Record<string, unknown>,
+  ): Promise<RpcResult<T>>;
+};
+
+const driverModerationRpc = supabase as unknown as DriverModerationRpcClient;
+
 export type DriverModerationAction =
   | "approved"
   | "rejected"
@@ -81,14 +92,19 @@ async function hydrateAdminNames(
 
 export class DriverModerationEventsService {
   static async createEvent(input: CreateDriverModerationEventInput): Promise<void> {
-    const { error } = await supabase.rpc("append_driver_moderation_event", {
-      p_driver_profile_id: input.driverProfileId,
-      p_action: input.action,
-      p_reason: input.reason ?? null,
-      p_metadata: (input.metadata ?? {}) as Json,
-    });
+    const { error } = await driverModerationRpc.rpc(
+      "append_driver_moderation_event",
+      {
+        p_driver_profile_id: input.driverProfileId,
+        p_action: input.action,
+        p_reason: input.reason ?? null,
+        p_metadata: (input.metadata ?? {}) as Json,
+      },
+    );
 
-    if (error) throw error;
+    if (error) {
+      throw new Error(error.message || "Failed to append driver moderation event");
+    }
   }
 
   static async listLatestDecisionsByDriverProfiles(
