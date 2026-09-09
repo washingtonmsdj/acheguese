@@ -50,6 +50,22 @@ export interface ICoverageRepository {
   ): Promise<{ entity_ids: string[]; total_count: number }>;
 
   /**
+   * Cria ou atualiza uma cobertura individual com autoridade server-owned.
+   */
+  upsertByEntity(
+    entity_type: EntityType,
+    entity_id: string,
+    coverage: {
+      id?: string;
+      coverage_type: ServiceArea['coverage_type'];
+      location_id: string;
+      radius_km: number | null;
+      is_primary: boolean;
+      status: CoverageStatus;
+    },
+  ): Promise<ServiceArea>;
+
+  /**
    * Remove coberturas de uma entidade
    */
   deleteByEntity(
