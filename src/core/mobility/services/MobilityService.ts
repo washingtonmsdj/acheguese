@@ -51,9 +51,6 @@ export {
   //  Rides
   incrementRideViewCount,
   decrementRideSeats,
-  //  Driver areas
-  deleteDriverNeighborhood,
-  deleteDriverServiceArea,
   //  Driver management
   createAdminDriverProfile,
   updateDriverOnlineStatus,
@@ -199,8 +196,6 @@ export class MobilityFacade {
   //  ===== MUTATIONS =====
   static incrementRideViewCount = MobilityMutations.incrementRideViewCount;
   static decrementRideSeats = MobilityMutations.decrementRideSeats;
-  static deleteDriverNeighborhood = MobilityMutations.deleteDriverNeighborhood;
-  static deleteDriverServiceArea = MobilityMutations.deleteDriverServiceArea;
   static createAdminDriverProfile = MobilityMutations.createAdminDriverProfile;
   static updateDriverOnlineStatus = MobilityMutations.updateDriverOnlineStatus;
   static updateDriverData = MobilityMutations.updateDriverData;
