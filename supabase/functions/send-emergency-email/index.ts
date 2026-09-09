@@ -58,6 +58,7 @@ interface AlertRecord {
   id: string;
   profile_id: string | null;
   alert_type: string;
+  status: string;
   description: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -155,7 +156,7 @@ serve(async (req: Request) => {
 
     const { data: alertData, error: alertError } = await supabase
       .from('emergency_alerts')
-      .select('id, profile_id, alert_type, description, latitude, longitude, created_at')
+      .select('id, profile_id, alert_type, status, description, latitude, longitude, created_at')
       .eq('id', emailRequest.alertId)
       .maybeSingle();
 
@@ -178,6 +179,23 @@ serve(async (req: Request) => {
         ...auditInfo,
       });
       return respond({ error: 'Forbidden' }, 403);
+    }
+
+    if (alert.status !== 'active') {
+      auditLog({
+        timestamp: new Date().toISOString(),
+        userId,
+        action: 'emergency_email_blocked',
+        resource: 'emergency_alerts',
+        status: 'failure',
+        details: {
+          reason: 'alert_not_active',
+          alertId: emailRequest.alertId,
+          alertStatus: alert.status,
+        },
+        ...auditInfo,
+      });
+      return respond({ error: 'Emergency alert is no longer active' }, 409);
     }
 
     const { data: contactData, error: contactError } = await supabase
