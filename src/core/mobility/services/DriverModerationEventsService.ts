@@ -26,7 +26,6 @@ export interface DriverModerationEvent {
 
 export interface CreateDriverModerationEventInput {
   driverProfileId: string;
-  adminProfileId?: string | null;
   action: DriverModerationAction;
   reason?: string;
   metadata?: Record<string, unknown>;
@@ -82,15 +81,12 @@ async function hydrateAdminNames(
 
 export class DriverModerationEventsService {
   static async createEvent(input: CreateDriverModerationEventInput): Promise<void> {
-    const payload = {
-      driver_profile_id: input.driverProfileId,
-      admin_profile_id: input.adminProfileId ?? null,
-      action: input.action,
-      reason: input.reason ?? null,
-      metadata: (input.metadata ?? {}) as Json,
-    };
-
-    const { error } = await supabase.from("driver_moderation_events").insert(payload);
+    const { error } = await supabase.rpc("append_driver_moderation_event", {
+      p_driver_profile_id: input.driverProfileId,
+      p_action: input.action,
+      p_reason: input.reason ?? null,
+      p_metadata: (input.metadata ?? {}) as Json,
+    });
 
     if (error) throw error;
   }
