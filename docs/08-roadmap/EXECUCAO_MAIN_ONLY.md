@@ -8,6 +8,22 @@
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
+## Checkpoint 2026-09-09 — Mobilidade: remoção de bridges mortos e reconciliação runtime
+
+Estado técnico anterior a este checkpoint documental: `d3490f45630f3d02117d4abe65d4473da70ca2fa`.
+
+- [x] removido `src/modules/mobility/components/driver/DriverSettingsLayout.tsx`: re-export sem callers; o owner real permanece em `src/core/mobility/components/driver/DriverSettingsLayout.tsx`;
+- [x] removido `src/modules/mobility/components/driver/ServiceAreaSettings.tsx`: wrapper sem callers; a capacidade permanece no `ServiceAreasManager` canônico;
+- [x] ratchet `tests/security/mobility-driver-coverage-authority.test.ts` agora impede retorno desses bridges e do hook `useDriverServiceArea`;
+- [x] runtime Supabase canônico reconfirmado `ACTIVE_HEALTHY`;
+- [x] `mobility-rpc` remoto está em **v20 ACTIVE**, `verify_jwt=true`, e o source remoto é byte-a-byte igual ao arquivo versionado na `main`;
+- [x] `ride_requests`: `authenticated` possui apenas `SELECT`; `INSERT/UPDATE/DELETE` continuam exclusivos de `service_role`;
+- [x] `service_areas`: `anon/authenticated` possuem apenas `SELECT`; writes continuam exclusivos de `service_role`;
+- [x] não existe coverage persistida em `service_areas` no snapshot atual; logo, a limpeza acima não removeu dados ou capacidade operacional;
+- [x] existe rollout de Mobilidade ativo no banco para um território, mas o rollout público global continua launch-paused e **não deve ser habilitado** sem certificação completa.
+
+**Próximo gate:** continuar a certificação de Mobilidade pela autoridade real: validar os casos positivos/negativos do broker v20 e dos commands de disponibilidade/dispatch, depois E2E operacional e smoke responsivo no mesmo SHA. Não reintroduzir wrappers em `src/modules`, writers diretos no browser ou tabelas paralelas para acelerar o gate.
+
 ## Regra máxima — projeto primeiro, documentação depois
 
 Esta regra é obrigatória para qualquer IA/agente que continuar o Achegue-se:
