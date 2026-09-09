@@ -151,8 +151,15 @@ function slaMinutes(createdAt: string): number {
 }
 
 function slaBadge(minutes: number, status: string) {
-  const isActive = !["completed", "failed_delivery", "cancelled_by_passenger", "cancelled_by_driver"].includes(status);
-  if (!isActive) return null;
+  const isTracked = [
+    "searching_driver",
+    "driver_assigned",
+    "driver_accepted",
+    "driver_arriving",
+    "pickup_confirmed",
+    "in_delivery",
+  ].includes(status);
+  if (!isTracked) return null;
   if (minutes > 30) return <Badge variant="destructive" className="text-xs">{minutes}min</Badge>;
   if (minutes > 15) return <Badge variant="secondary" className="text-xs">{minutes}min</Badge>;
   return <Badge variant="outline" className="text-xs">{minutes}min</Badge>;
@@ -274,16 +281,15 @@ export default function AdminMotoboyOperations() {
     setIsCancelling(true);
 
     try {
-      const usedStateMachine = await AdminMotoboyOperationsService.cancelOperational(
+      await AdminMotoboyOperationsService.cancelOperational(
         selectedDeliveryId,
         cancelReason || "Cancelamento operacional pelo admin",
       );
 
-      if (usedStateMachine) {
-        toast({ title: "Entrega cancelada", description: "Cancelamento operacional registrado." });
-      } else {
-        toast({ title: "Entrega cancelada (override)", description: "Status forçado pelo admin." });
-      }
+      toast({
+        title: "Entrega encerrada",
+        description: "Intervenção registrada com auditoria operacional.",
+      });
       await refresh(true);
     } catch (error) {
       logger.error("AdminMotoboyOperations.handleCancelConfirm", error as Error);
@@ -413,6 +419,7 @@ export default function AdminMotoboyOperations() {
               <SelectItem value="driver_accepted">Motoboy a caminho</SelectItem>
               <SelectItem value="pickup_confirmed">Coleta confirmada</SelectItem>
               <SelectItem value="in_delivery">Em entrega</SelectItem>
+              <SelectItem value="delivered">Entregue</SelectItem>
               <SelectItem value="completed">Concluída</SelectItem>
               <SelectItem value="failed_delivery">Falha na entrega</SelectItem>
               <SelectItem value="cancelled_by_passenger">Cancelada (solicitante)</SelectItem>
@@ -468,8 +475,10 @@ export default function AdminMotoboyOperations() {
             <TableBody>
               {filteredDeliveries.map((delivery) => {
                 const sla = slaMinutes(delivery.created_at);
-                const isActive = !["completed", "failed_delivery", "cancelled_by_passenger", "cancelled_by_driver"].includes(delivery.status);
-                const canRedispatch = ["driver_assigned", "driver_accepted"].includes(delivery.status);
+                const canCancel =
+                  AdminMotoboyOperationsService.canCancelOperational(delivery.status);
+                const canRedispatch =
+                  AdminMotoboyOperationsService.canRedispatch(delivery.status);
 
                 return (
                   <TableRow key={delivery.id}>
@@ -494,7 +503,7 @@ export default function AdminMotoboyOperations() {
                     <TableCell>{slaBadge(sla, delivery.status) ?? <span className="text-xs text-muted-foreground">{sla}min</span>}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        {isActive && (
+                        {canCancel && (
                           <Button
                             size="sm"
                             variant="destructive"
@@ -512,7 +521,7 @@ export default function AdminMotoboyOperations() {
                             Reencaminhar
                           </Button>
                         )}
-                        {!isActive && !canRedispatch && (
+                        {!canCancel && !canRedispatch && (
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </div>
