@@ -12,6 +12,7 @@
 import { it, expect, beforeAll, afterAll } from 'vitest';
 import { type SupabaseClient } from '@supabase/supabase-js';
 import { TrackingService } from '../../src/core/tracking/services/TrackingService';
+import { MobilityRpcService } from '@/core/mobility/services/MobilityRpcService';
 import {
   createOperationalAnonClient,
   describeOperational,
@@ -54,6 +55,7 @@ describeOperational('GATE 2 - Validação Operacional Real', {
       .from('profiles')
       .select('id')
       .eq('user_id', authUserId)
+      .eq('profile_type', 'driver')
       .order('created_at', { ascending: true })
       .limit(1)
       .maybeSingle();
@@ -67,18 +69,30 @@ describeOperational('GATE 2 - Validação Operacional Real', {
 
     // Criar TrackingService com cliente autenticado
     trackingService = new TrackingService(supabase);
+
+    const online = await MobilityRpcService.updateDriverAvailability(
+      {
+        driverProfileId,
+        availabilityAction: 'go_online',
+      },
+      supabase,
+    );
+    if (online.success !== true) {
+      throw new Error(online.error || online.reason || 'Motorista real não ficou online');
+    }
   });
 
   afterAll(async () => {
-    // Limpar dados de teste
     if (driverProfileId) {
-      await supabase
-        .from('driver_locations')
-        .delete()
-        .eq('driver_profile_id', driverProfileId);
+      await MobilityRpcService.updateDriverAvailability(
+        {
+          driverProfileId,
+          availabilityAction: 'go_offline',
+        },
+        supabase,
+      ).catch(() => undefined);
     }
 
-    // Deslogar
     await supabase.auth.signOut();
   });
 
