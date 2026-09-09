@@ -31,6 +31,27 @@ describe("production dependency audit gate", () => {
     expect(source).not.toMatch(/npm audit[^\n]*\|\|\s*true/);
   });
 
+  it("keeps known production dependency blockers on patched versions", () => {
+    const packageJson = JSON.parse(
+      readFileSync(join(ROOT, "package.json"), "utf8"),
+    );
+    const packageLock = JSON.parse(
+      readFileSync(join(ROOT, "package-lock.json"), "utf8"),
+    );
+
+    expect(packageJson.dependencies?.["maplibre-gl"]).toBe("6.4.1");
+    expect(
+      packageLock.packages?.["node_modules/maplibre-gl"]?.version,
+    ).toBe("6.4.1");
+
+    for (const packagePath of [
+      "node_modules/postcss-nested/node_modules/postcss-selector-parser",
+      "node_modules/tailwindcss/node_modules/postcss-selector-parser",
+    ]) {
+      expect(packageLock.packages?.[packagePath]?.version).toBe("6.1.4");
+    }
+  });
+
   it("keeps the full-tree high/critical gate while reporting production moderate+ separately", () => {
     const workflow = readFileSync(
       join(ROOT, ".github/workflows/security-scan.yml"),
