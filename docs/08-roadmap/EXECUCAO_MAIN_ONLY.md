@@ -1,12 +1,29 @@
 # Achegue-se — Execução `main`-only e prontidão MVP
 
 **Status:** ATIVO — SSOT OPERACIONAL  
-**Data do checkpoint GitHub:** 2026-08-28  
+**Data do checkpoint GitHub:** 2026-09-09  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**HEAD técnico anterior a esta sincronização:** `07bb101a45a9e24804d790e82ada75fce51af856`
+**HEAD técnico de código anterior a este checkpoint documental:** `19ed7269da9647f9c9c79314d25114698f95b480`
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Owners técnicos específicos continuam sendo fonte de verdade para domínio, segurança e schema.
+
+## Checkpoint 2026-09-09 — Mobilidade / Central: SSOT e prova operacional
+
+A retomada do primeiro módulo da ordem de certificação fechou regressões estruturais antes de qualquer tentativa de habilitar o rollout:
+
+- [x] rota legada `/create-driver` removida novamente do roteador ativo;
+- [x] teste anti-regressão de onboarding corrigido para inspecionar o owner real `src/app/routes/sections/AppLayoutRoutes.tsx`, em vez do agregador antigo;
+- [x] E2Es de launch-scope/Central deixaram de preservar `/create-driver` como comportamento válido;
+- [x] `src/core/mobility/routes/mobilityRoutes.ts` ampliado para ser SSOT também das rotas públicas, histórico, emergência e tracking;
+- [x] `AppLayoutRoutes.tsx` passou a consumir os paths canônicos de Mobilidade em vez de duplicar strings;
+- [x] `useMobilityUrls().home` corrigido de `/mobilidade/passageiro` para a home real `/mobilidade`, evitando navegação de volta para a própria tela;
+- [x] tracking do passageiro, retorno da busca, ação SOS e sincronização de contexto de perfil passaram a reutilizar o SSOT de rotas;
+- [x] `tests/e2e/mobility-operational.spec.ts` não aceita mais `LaunchPausedPage` como prova operacional; com `mobility: false`, o teste é explicitamente `skip`, e quando habilitado exige estado operacional/onboarding real.
+
+**Estado de certificação:** Mobilidade continua **launch-paused e NÃO certificada**. Este checkpoint melhora a confiabilidade da prova; não autoriza alterar `PUBLIC_LAUNCH_SURFACES.mobility` para `true`.
+
+**Próximo gate obrigatório:** reconciliar schema/migrations do ambiente alvo e comprovar RLS/grants/autorização positiva e negativa para motorista, motoboy, passageiro, corridas, entregas, chat e operações sensíveis. Só depois executar E2E operacional real, smoke responsivo e prova de deploy do mesmo SHA.
 
 ## Regras de execução
 
