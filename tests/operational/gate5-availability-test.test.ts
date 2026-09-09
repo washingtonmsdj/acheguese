@@ -233,10 +233,7 @@ describeGate5('Gate 5 - Suite 1: Transições de Estado', () => {
     await markDriverBusyFixture(TEST_RIDE_ID, 'ride', TEST_DRIVER_ID);
     await markRideFinalForRelease(TEST_RIDE_ID);
     
-    const result = await DriverAvailabilityService.releaseBusy(
-      TEST_DRIVER_ID,
-      TEST_RIDE_ID
-    );
+    const result = await DriverAvailabilityService.releaseBusy(TEST_RIDE_ID);
     expect(result.success).toBe(true);
 
     const status = await DriverAvailabilityService.getStatus(TEST_DRIVER_ID);
@@ -576,10 +573,7 @@ describeGate5('Gate 5 - Suite 5: Validação de Corrida Correta', () => {
     await markDriverBusyFixture(TEST_RIDE_ID, 'ride', TEST_DRIVER_ID);
     await markRideFinalForRelease(TEST_RIDE_ID);
 
-    const result = await DriverAvailabilityService.releaseBusy(
-      TEST_DRIVER_ID,
-      TEST_RIDE_ID
-    );
+    const result = await DriverAvailabilityService.releaseBusy(TEST_RIDE_ID);
 
     expect(result.success).toBe(true);
 
@@ -593,7 +587,7 @@ describeGate5('Gate 5 - Suite 5: Validação de Corrida Correta', () => {
     await DriverAvailabilityService.setAvailable(TEST_DRIVER_ID, TEST_LOCATION);
     await markDriverBusyFixture(TEST_RIDE_ID, 'ride', TEST_DRIVER_ID);
     await markRideFinalForRelease(TEST_RIDE_ID);
-    await DriverAvailabilityService.releaseBusy(TEST_DRIVER_ID, TEST_RIDE_ID);
+    await DriverAvailabilityService.releaseBusy(TEST_RIDE_ID);
 
     const status = await DriverAvailabilityService.getStatus(TEST_DRIVER_ID);
     expect(status!.activeRideId).toBeUndefined();
@@ -608,7 +602,7 @@ describeGate5('Gate 5 - Suite 5: Validação de Corrida Correta', () => {
     // Corrida 1
     await markDriverBusyFixture(TEST_RIDE_ID, 'ride', TEST_DRIVER_ID);
     await markRideFinalForRelease(TEST_RIDE_ID);
-    await DriverAvailabilityService.releaseBusy(TEST_DRIVER_ID, TEST_RIDE_ID);
+    await DriverAvailabilityService.releaseBusy(TEST_RIDE_ID);
 
     // Corrida 2
     await markDriverBusyFixture(TEST_RIDE_2_ID, 'ride', TEST_DRIVER_ID);
@@ -677,7 +671,7 @@ describeGate5('Gate 5 - Suite 7: Motoboy Mode', () => {
     await markDriverBusyFixture(TEST_RIDE_ID, 'motoboy', TEST_DRIVER_ID);
     await markRideFinalForRelease(TEST_RIDE_ID);
 
-    await DriverAvailabilityService.releaseBusy(TEST_DRIVER_ID, TEST_RIDE_ID);
+    await DriverAvailabilityService.releaseBusy(TEST_RIDE_ID);
 
     const status = await DriverAvailabilityService.getStatus(TEST_DRIVER_ID);
     expect(status!.activeRideMode).toBeUndefined();
