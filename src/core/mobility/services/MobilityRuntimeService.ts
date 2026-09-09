@@ -137,37 +137,6 @@ class MobilityServiceInstance {
 
   // -- Driver --------------------------------------------------------------
 
-  async getAvailableRides(): Promise<unknown[]> {
-    try {
-      const { data, error } = await db
-        .from<RideWithAddressRow>("ride_requests")
-        .select(`
-          *,
-          pickup_address:addresses!pickup_address_id(street, latitude, longitude),
-          dropoff_address:addresses!dropoff_address_id(street, latitude, longitude)
-        `)
-        .in("status", [RIDE_STATUS.PENDING, RIDE_STATUS.REQUESTED, RIDE_STATUS.SEARCHING_DRIVER])
-        .is("driver_profile_id", null)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      const rows = data || [];
-      return rows.map((ride) => ({
-        ...ride,
-        origin: ride.origin || ride.pickup_address?.street || "Origem nao informada",
-        destination: ride.destination || ride.dropoff_address?.street || "Destino nao informado",
-        origin_lat: ride.origin_lat || ride.pickup_address?.latitude,
-        origin_lng: ride.origin_lng || ride.pickup_address?.longitude,
-        destination_lat: ride.destination_lat || ride.dropoff_address?.latitude,
-        destination_lng: ride.destination_lng || ride.dropoff_address?.longitude,
-      }));
-    } catch (error) {
-      logger.error("mobilityService.getAvailableRides", error as Error);
-      return [];
-    }
-  }
-
   async createAdminDriverProfile(userId: string): Promise<DriverDataRecord | null> {
     try {
       const driverProfile = await profileService.ensureDriverProfileForUser(userId);
