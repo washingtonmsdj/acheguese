@@ -23,7 +23,6 @@ import type {
   CreateDeliveryInput,
   CreateRideInput,
   ProviderErrorShape,
-  RidePostTransitionSnapshot,
   TransitionResult,
 } from "./RideOperationalTypes";
 import {
@@ -39,7 +38,6 @@ import {
   updateFailedDeliveryResolutionOperation,
   type DeliveryTransitionCommand,
 } from "./RideDeliveryOperationalActions";
-import { handleRidePostTransition } from "./RideOperationalPostTransition";
 export type { CreateDeliveryInput, CreateRideInput } from "./RideOperationalTypes";
 // ============================================
 // RIDE OPERATIONAL SERVICE
@@ -254,9 +252,6 @@ export class RideOperationalService {
         actorProfileId: actor,
         reason,
       });
-
-      // Acoes ps-transicao
-      await handleRidePostTransition(rideId, toState, ride);
 
       return {
         success: true,
@@ -509,12 +504,6 @@ export class RideOperationalService {
         driverProfileId,
         'Ride completed successfully'
       );
-
-      // GATE 5: Liberar motorista com validacao de corrida correta
-      if (result.success) {
-        const { DriverAvailabilityService } = await import('@/core/mobility/services/DriverAvailabilityService');
-        await DriverAvailabilityService.releaseBusy(rideId);
-      }
 
       return result;
     } catch (error) {
