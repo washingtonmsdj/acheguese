@@ -10,7 +10,7 @@ import type {
 } from "../core/RideOperationalTypes";
 import type {
   FailedDeliveryMetadata,
-  ResolutionStatus,
+  FailedDeliveryResolutionUpdate,
 } from "../types/FailedDeliveryMetadata";
 
 type MobilityRpcAction =
@@ -250,14 +250,7 @@ export class MobilityRpcService {
 
   static async updateFailedDeliveryResolution(input: {
     rideId: string;
-    resolutionUpdate: {
-      next_ride_id?: string;
-      handoff_driver_profile_id?: string;
-      manual_resolution_owner_profile_id?: string;
-      resolution_status?: ResolutionStatus;
-      resolved_at?: string;
-      resolution_action_notes?: string;
-    };
+    resolutionUpdate: FailedDeliveryResolutionUpdate;
   }): Promise<{
     updated: boolean;
     ride_id: string;
