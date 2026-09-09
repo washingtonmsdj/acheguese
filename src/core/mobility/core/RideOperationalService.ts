@@ -254,6 +254,20 @@ export class RideOperationalService {
       // Validar transicao
       RideStateMachine.assertCanTransition(fromState, toState);
 
+      if (deliveryCommand) {
+        const expectedDeliveryState = {
+          confirm_pickup: RIDE_STATE.PICKUP_CONFIRMED,
+          confirm_delivery: RIDE_STATE.DELIVERED,
+          fail_delivery: RIDE_STATE.FAILED_DELIVERY,
+        }[deliveryCommand.type];
+
+        if (expectedDeliveryState !== toState) {
+          throw new Error(
+            `Delivery command ${deliveryCommand.type} does not match target state ${toState}`,
+          );
+        }
+      }
+
       // Executar transicao e auditoria de forma atomica no backend.
       // Estados que carregam metadata de entrega usam um command dedicado,
       // impedindo que o browser grave estado e prova/falha em etapas separadas.
@@ -287,6 +301,11 @@ export class RideOperationalService {
 
       if (!transition.updated) {
         throw new Error('Ride state transition was not applied');
+      }
+      if (transition.to_state !== toState) {
+        throw new Error(
+          `Ride transition returned unexpected state: ${transition.to_state}`,
+        );
       }
 
       await OrderDeliveryLinkService.syncRideStatusToOrder({
