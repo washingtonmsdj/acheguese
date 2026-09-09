@@ -15,7 +15,7 @@ export async function handleRidePostTransition(
   try {
     if (RideStateMachine.isFinalState(newState) && ride.driver_profile_id) {
       const { DriverAvailabilityService } = await import("@/core/mobility/services/DriverAvailabilityService");
-      await DriverAvailabilityService.releaseBusy(ride.driver_profile_id, rideId);
+      await DriverAvailabilityService.releaseBusy(rideId);
     }
   } catch (error) {
     logger.error("RideOperationalService.handlePostTransition", error as Error, { rideId, newState });
