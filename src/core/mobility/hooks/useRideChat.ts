@@ -1,99 +1,133 @@
 /**
- * useRideChat - Hook para gerenciar chat de corridas
+ * useRideChat - canonical ride chat runtime.
  *
- * ✅ SSOT: Database → ChatService → Hook → Component
+ * SSOT: ride_chats/ride_chat_messages -> ChatService -> hook -> UI.
+ * Writes are server-owned and sender identity is derived from the active Profile.
  */
-import { logger } from '@/shared/utils/logger';
-import { useState, useEffect, useCallback } from "react";
-import { ChatService, type ChatMessage, type RideChat } from "@/core/mobility/services/ChatService";
+import { useCallback, useEffect, useState } from "react";
+import { logger } from "@/shared/utils/logger";
+import {
+  ChatService,
+  type ChatMessage,
+  type RideChat,
+} from "@/core/mobility/services/ChatService";
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error && error.message) return error.message;
   return fallback;
 }
 
+function mergeMessages(
+  current: ChatMessage[],
+  incoming: ChatMessage | ChatMessage[],
+): ChatMessage[] {
+  const byId = new Map(current.map((message) => [message.id, message]));
+  for (const message of Array.isArray(incoming) ? incoming : [incoming]) {
+    byId.set(message.id, message);
+  }
+
+  return Array.from(byId.values()).sort((left, right) => {
+    const byTime =
+      new Date(left.created_at).getTime() - new Date(right.created_at).getTime();
+    return byTime !== 0 ? byTime : left.id.localeCompare(right.id);
+  });
+}
+
 interface UseRideChatOptions {
   rideId: string;
-  userId: string;
   enabled?: boolean;
 }
 
-export function useRideChat({ rideId, userId, enabled = true }: UseRideChatOptions) {
+export function useRideChat({
+  rideId,
+  enabled = true,
+}: UseRideChatOptions) {
   const [chat, setChat] = useState<RideChat | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Carregar chat e mensagens
   useEffect(() => {
-    if (!enabled || !rideId) return;
+    if (!enabled || !rideId) {
+      setChat(null);
+      setMessages([]);
+      setLoading(false);
+      return;
+    }
 
-    const loadChat = async () => {
+    let active = true;
+    let subscription: { unsubscribe: () => void } | null = null;
+
+    void (async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // Buscar chat da corrida
-        const chatData = await ChatService.getChatByRideId(rideId);
+        const existingChat = await ChatService.getChatByRideId(rideId);
+        const chatData = existingChat ?? (await ChatService.createChat(rideId));
+        if (!active) return;
 
-        if (chatData) {
-          setChat(chatData);
+        setChat(chatData);
 
-          // Buscar mensagens
-          const messagesData = await ChatService.getMessages(chatData.id);
-          setMessages(messagesData || []);
-        }
+        subscription = ChatService.subscribeToMessages(chatData.id, (message) => {
+          if (!active) return;
+          setMessages((current) => mergeMessages(current, message));
+        });
+
+        const initialMessages = await ChatService.getMessages(chatData.id);
+        if (!active) return;
+        setMessages((current) => mergeMessages(current, initialMessages));
       } catch (err: unknown) {
-        logger.error("Erro ao carregar chat:", err);
+        if (!active) return;
+        logger.error("useRideChat.load", err);
         setError(getErrorMessage(err, "Erro ao carregar chat"));
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
-    };
+    })();
 
-    loadChat();
+    return () => {
+      active = false;
+      subscription?.unsubscribe();
+    };
   }, [rideId, enabled]);
 
-  // Enviar mensagem
   const sendMessage = useCallback(
     async (message: string) => {
-      if (!chat || !message.trim()) return;
+      const normalized = message.trim();
+      if (!rideId || !normalized) return;
 
       try {
         setSending(true);
         setError(null);
 
         const data = await ChatService.sendMessage({
-          chat_id: chat.id,
-          sender_profile_id: userId,
-          message: message.trim(),
-          is_system_message: false,
+          ride_id: rideId,
+          message: normalized,
         });
 
-        // Adicionar mensagem localmente
-        setMessages((prev) => [...prev, data]);
+        setMessages((current) => mergeMessages(current, data));
       } catch (err: unknown) {
-        logger.error("Erro ao enviar mensagem:", err);
+        logger.error("useRideChat.sendMessage", err);
         setError(getErrorMessage(err, "Erro ao enviar mensagem"));
         throw err;
       } finally {
         setSending(false);
       }
     },
-    [chat, userId]
+    [rideId],
   );
 
-  // Marcar mensagens como lidas
   const markAsRead = useCallback(async () => {
-    if (!chat) return;
+    if (!rideId) return;
 
     try {
-      await ChatService.markMessagesAsRead(chat.id, userId);
+      await ChatService.markMessagesAsRead(rideId);
     } catch (err) {
-      logger.error("Erro ao marcar como lido:", err);
+      logger.error("useRideChat.markAsRead", err);
     }
-  }, [chat, userId]);
+  }, [rideId]);
 
   return {
     chat,
