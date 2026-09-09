@@ -27,6 +27,8 @@ type MobilityRpcAction =
   | "logDispatchAttempt"
   | "updateLatestDispatchAttempt"
   | "cancelPendingOffers"
+  | "updateDriverAvailability"
+  | "reconcileStaleDriverAvailability"
   | "releaseDriverAvailabilityForRide";
 
 interface CancelPendingOffersBrokerData {
@@ -35,6 +37,19 @@ interface CancelPendingOffersBrokerData {
 
 interface ReleaseDriverAvailabilityBrokerData {
   released: boolean;
+}
+
+export interface DriverAvailabilityBrokerData {
+  success?: boolean;
+  reason?: string;
+  error?: string;
+  availability?: Record<string, unknown>;
+}
+
+export interface StaleDriverAvailabilityBrokerData {
+  markedOffline?: number;
+  staleBusy?: number;
+  cutoff?: string;
 }
 
 export interface AcceptRideAtomicBrokerData {
@@ -271,6 +286,36 @@ export class MobilityRpcService {
       rideId,
     });
     return result.cancelledCount;
+  }
+
+  static async updateDriverAvailability(input: {
+    driverProfileId: string;
+    availabilityAction:
+      | "go_online"
+      | "go_offline"
+      | "set_available"
+      | "pause_available"
+      | "heartbeat";
+    rideMode?: "ride" | "motoboy";
+    lat?: number;
+    lng?: number;
+  }): Promise<DriverAvailabilityBrokerData> {
+    return this.invoke<DriverAvailabilityBrokerData>("updateDriverAvailability", {
+      driverProfileId: input.driverProfileId,
+      availabilityAction: input.availabilityAction,
+      rideMode: input.rideMode,
+      lat: input.lat,
+      lng: input.lng,
+    });
+  }
+
+  static async reconcileStaleDriverAvailability(
+    thresholdMinutes: number,
+  ): Promise<StaleDriverAvailabilityBrokerData> {
+    return this.invoke<StaleDriverAvailabilityBrokerData>(
+      "reconcileStaleDriverAvailability",
+      { thresholdMinutes },
+    );
   }
 
   static async releaseDriverAvailabilityForRide(
