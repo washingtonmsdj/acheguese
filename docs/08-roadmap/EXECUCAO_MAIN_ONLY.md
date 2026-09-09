@@ -1071,6 +1071,41 @@ Próximos gates:
 5. após frontend same-SHA LIVE, executar G35B: revogar DML browser de `professional_data/professional_stats` e remover policy de escrita direta;
 6. abrir G36 para convergir a stack antiga de `ProfileService` que ainda usa DML direto em `profiles`.
 
+### Checkpoint G35A3 — Professional broker reconciliado no runtime (2026-09-09)
+
+Provas same-source/runtime:
+- migration `server_own_professional_data_mutations_g35` aplicada no Supabase canônico;
+- `profile-rpc` redeployado a partir do commit G35A e agora está **v14 ACTIVE**, `verify_jwt=true`;
+- entrypoint remoto + `_shared/accountOperational.ts` + `_shared/security.ts` estão **byte-a-byte iguais** ao Git do commit `d3543bc9d29cab8bf358a70c6cb66336b46d1f14`;
+- novos targets `profile_rpc_create_professional`, `profile_rpc_update_professional_data` e `profile_rpc_deactivate_professional` são `SECURITY DEFINER`, com EXECUTE `anon=false`, `authenticated=false`, `service_role=true`;
+- triggers de slug policy e criação idempotente de `professional_stats` estão ativos.
+
+Achado e correção de integridade:
+- a reconciliação revelou 5 linhas de `professional_data` para apenas 4 Profiles;
+- a duplicata era um seed explícito ligado ao mesmo Profile de uma extensão antiga canônica;
+- o registro canônico correspondia ao nome do Profile e possuía credential; o seed carregava somente um canal de contato;
+- migration `enforce_unique_professional_profile_extension_g35` foi escrita sem UUID hardcoded, escolhe canônico por identidade/credential/idade, falha fechado diante de referências operacionais ou conflito de contato, move contato seguro, remove duplicata e cria `UNIQUE(profile_id)`;
+- pós-migration: **professional_data=4**, **Profiles distintos=4**, **professional_stats=4**, **missing_stats=0**, **duplicate groups=0**;
+- constraint `professional_data_profile_id_key UNIQUE(profile_id)` está ativa;
+- contato e credential do Profile reconciliado permaneceram presentes.
+
+Probe transacional real, com rollback:
+- owner update: PASS;
+- cross-owner update: rejeitado;
+- tentativa de limpar `location_id`: rejeitada fail-closed;
+- create Professional: PASS;
+- criação automática do `professional_data`: PASS;
+- criação automática de stats: PASS;
+- deactivate Professional: PASS;
+- rollback final: nenhuma entidade de probe persistida.
+
+**Estado G35A:** broker/server authority nova está implementada e reconciliada. O único ponto propositalmente ainda aberto é o cutover dos grants antigos de tabela, bloqueado pelo frontend production desatualizado.
+
+Próximo:
+1. não revogar grants de `professional_data/professional_stats` até o frontend novo estar LIVE;
+2. quando houver deploy web same-SHA comprovado, executar G35B removendo a policy/table DML browser;
+3. seguir G36: convergir a stack principal de `ProfileService/profile.mutations.ts`, que ainda faz DML direto em `profiles`, com o `ProfileRpcService` já canônico no multi-profile.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:
