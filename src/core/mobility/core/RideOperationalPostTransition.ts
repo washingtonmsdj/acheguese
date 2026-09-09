@@ -3,7 +3,6 @@
  */
 
 import { logger } from "@/shared/utils/logger";
-import { mobilityAuditService } from "../services/MobilityAuditService";
 import { RideStateMachine, type RideState } from "./RideStateMachine";
 import type { RidePostTransitionSnapshot } from "./RideOperationalTypes";
 
@@ -22,26 +21,3 @@ export async function handleRidePostTransition(
   }
 }
 
-export async function logRideStateChange(
-  rideId: string,
-  fromState: RideState | null,
-  toState: RideState,
-  actor: string,
-  reason?: string,
-): Promise<void> {
-  try {
-    await mobilityAuditService.logRideStateChange({
-      rideId,
-      fromState,
-      toState,
-      changedBy: actor,
-      reason: reason || "",
-    });
-
-    if (fromState) {
-      RideStateMachine.logTransition(rideId, fromState, toState, actor, reason);
-    }
-  } catch (error) {
-    logger.error("RideOperationalService.logStateChange", error as Error, { rideId });
-  }
-}
