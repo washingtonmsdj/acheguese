@@ -51,6 +51,40 @@ describe("delivery rpc broker security", () => {
     expect(ssotService).not.toMatch(/\.rpc(?:<[^>]+>)?\(\s*["']delivery_/);
   });
 
+  it("keeps backing delivery tables read-only to browser roles", () => {
+    const migration = readProjectFile(
+      "supabase/migrations/20260909205630_close_delivery_direct_table_writes_g30.sql",
+    );
+    const architectureGuard = readProjectFile(
+      "tools/architecture/validate-delivery-architecture-boundaries.ts",
+    );
+
+    for (const table of [
+      "public.orders",
+      "public.order_items",
+      "public.delivery_occurrences",
+    ]) {
+      expect(migration).toContain("REVOKE INSERT, UPDATE, DELETE");
+      expect(migration).toContain(`ON TABLE ${table}`);
+    }
+
+    for (const policy of [
+      "orders_insert",
+      "orders_update",
+      "order_items_insert",
+      "delivery_occurrences_insert",
+      "delivery_occurrences_update",
+    ]) {
+      expect(migration).toContain(`DROP POLICY IF EXISTS ${policy}`);
+    }
+
+    expect(migration).toContain(
+      'CREATE POLICY "Admins can view orders"',
+    );
+    expect(architectureGuard).toContain("delivery_occurrences");
+    expect(architectureGuard).toContain("order_timeline_events");
+  });
+
   it("revokes direct browser execution of backing delivery RPCs", () => {
     const migration = readProjectFile(
       "supabase/migrations/20260707222343_route_delivery_order_rpcs_through_edge_function.sql",
