@@ -54,32 +54,58 @@ A retomada do primeiro módulo da ordem de certificação fechou regressões est
 
 **Próximo gate obrigatório:** reconciliar schema/migrations do ambiente alvo e comprovar RLS/grants/autorização positiva e negativa para motorista, motoboy, passageiro, corridas, entregas, chat e operações sensíveis. Só depois executar E2E operacional real, smoke responsivo e prova de deploy do mesmo SHA.
 
-## Checkpoint 2026-09-09 — Mobilidade: autoridade de escrita e atomicidade
+## Checkpoint 2026-09-09 — Mobilidade: autoridade de escrita server-owned
 
-A auditoria do ambiente Supabase canônico `xhdowzacfujckjelqhtd` encontrou e fechou duas falhas concretas antes do rollout:
+A auditoria/correção do primeiro módulo da ordem de certificação avançou do hardening parcial para um contrato de escrita server-owned no agregado `ride_requests`.
 
-- [x] `ride_state_audit` deixou de aceitar INSERT direto de `anon/authenticated`; a policy `participants_insert_ride_audit`, que permitia `changed_by = 'system'` sem vínculo suficiente ao participante, foi removida;
-- [x] `MobilityAuditService` e `AdminMotoboyOperationsService` não escrevem mais diretamente em `ride_state_audit`;
-- [x] `mobility-rpc` passou a derivar/validar o ator do JWT, exigir participante/admin e conferir o estado vivo antes de registrar audit;
-- [x] migration remota/source `20260909120304_route_ride_state_audit_through_mobility_rpc_g6.sql` reconciliada; prova remota: `anon_insert=false`, `authenticated_insert=false`, policy legada ausente;
-- [x] criado `mobility_transition_ride_state_atomic`, service-role-only, com `FOR UPDATE`, matriz canônica de estados, separação ride/motoboy, timestamps e `ride_state_audit` na mesma transação;
-- [x] migration remota/source `20260909120726_add_atomic_mobility_ride_transition_command_g6.sql` reconciliada; prova remota: `anon_execute=false`, `authenticated_execute=false`, `service_role_execute=true`;
-- [x] `RideOperationalService.transitionTo` deixou de fazer `UPDATE ride_requests` + audit em duas etapas e passou pelo comando atômico;
-- [x] broker exige papel coerente com a transição, mantém `driver_assigned`, `driver_accepted` e `expired` reservados a dispatch/comandos dedicados e revalida PIN server-side para `passenger_boarded`;
-- [x] `mobility-rpc` remoto alinhado ao source e ativo na versão **11**, `verify_jwt=true`;
-- [x] ratchets `MobilityAuditBrokerAuthority.test.ts` e `MobilityAtomicTransitionAuthority.test.ts` bloqueiam regressão estrutural desse desenho.
+### Fechado neste checkpoint
 
-**Importante:** este checkpoint fecha a escrita de audit pelo browser e a atomicidade das transições operacionais canônicas. Ele **não** torna `ride_requests` totalmente server-owned ainda.
+- [x] `ride_state_audit` é append-only/backend-owned; `anon/authenticated` não possuem INSERT direto;
+- [x] transições de corrida usam `mobility_transition_ride_state_atomic`, com lock `FOR UPDATE`, matriz de estados, timestamps e audit na mesma transação;
+- [x] metadata/transições de entrega usam commands atômicos dedicados; confirmação de coleta, entrega e falha não dependem de UPDATE genérico do browser;
+- [x] dispatch/aceite/expiração foram movidos para commands server-side, incluindo expiração de 15 minutos e liberação do motorista;
+- [x] redispatch administrativo usa command específico e a Central Motoboy deriva elegibilidade de ação da state machine;
+- [x] confirmação de conclusão pelo passageiro passou a usar `passenger_confirmed_at` canônico, command idempotente e ator derivado do JWT;
+- [x] `AutoDispatchService` browser duplicado e `RideRepository` legado foram removidos;
+- [x] helpers/facades genéricos de `UPDATE ride_requests` e creators diretos legados foram removidos;
+- [x] criação de corrida e entrega passou pelo broker `mobility-rpc`; o browser não escolhe `status`, motorista, preço final, timestamps operacionais ou prova de entrega;
+- [x] criação de entrega revalida no backend Profile solicitante, rollout efetivo, `motoboy_enabled`, associação de Empresa/Gastronomia/Serviço e entitlement aplicável;
+- [x] migrations de criação atômica `20260909140626_add_atomic_mobility_creation_commands_g6.sql` e revogação de INSERT `20260909141356_revoke_browser_ride_request_insert_g6.sql` estão aplicadas no Supabase canônico e versionadas em Git;
+- [x] migrations `20260909135451_revoke_browser_ride_request_update_g6.sql` e `20260909131721_revoke_browser_ride_request_delete_g6.sql` mantêm UPDATE/DELETE do browser fechados;
+- [x] `MobilityRideRequestWriteAuthority.test.ts` ratcheta ausência de INSERT/UPDATE direto no runtime e exige os commands/migrations server-owned;
+- [x] types Supabase foram regenerados a partir do schema remoto após os novos RPCs.
 
-**Writers residuais antes de revogar UPDATE de `authenticated`:**
+### Prova remota atual
 
-1. metadata de entrega em `RideDeliveryOperationalActions.ts` ainda usa `updateRideMutation`;
-2. caminhos de dispatch em `RideDispatchService.ts` ainda usam `updateRideWithGuards`;
-3. `AutoDispatchService.ts` ainda usa `updateRideIfStatusIn`;
-4. operações admin de cancelamento/redispatch ainda precisam de commands próprios e semântica explícita;
-5. criação da corrida continua INSERT browser/RLS e deve ser auditada separadamente antes de decidir se também vira command server-side.
+Projeto Supabase canônico: `xhdowzacfujckjelqhtd`.
 
-**Próximo gate obrigatório:** migrar esses writers para commands específicos, provar autorização positiva/negativa, então revogar `UPDATE ride_requests` do browser. Só depois executar o E2E operacional real, smoke responsivo e prova de deploy do mesmo SHA.
+- `ride_requests`: `anon INSERT/UPDATE/DELETE = false`;
+- `ride_requests`: `authenticated INSERT/UPDATE/DELETE = false`;
+- `ride_requests`: `service_role INSERT/UPDATE/DELETE = true`;
+- policies restantes: `Admins can manage ride requests:ALL` e `Ride participants view:SELECT`;
+- `ride_state_audit authenticated INSERT = false`;
+- `mobility_create_ride_atomic`: `anon_execute=false`, `authenticated_execute=false`, `service_role_execute=true`;
+- `mobility_create_delivery_atomic`: `anon_execute=false`, `authenticated_execute=false`, `service_role_execute=true`;
+- `mobility-rpc` remoto: **v15 ACTIVE**, `verify_jwt=true`, SHA do bundle `eb2e96161dda8ae52c5d64fbf09df5652d88d27d091117b2e9848a3ee2fc09bb`;
+- baseline técnico da `main` antes desta atualização documental: `f91bbf0ef1c452be559ab1ad2d836b268144a8ed`;
+- `PUBLIC_LAUNCH_SURFACES.mobility` permanece **false**.
+
+### O que isto NÃO certifica
+
+Este fechamento prova a autoridade estrutural de escrita de `ride_requests`; ele **não** certifica ainda o módulo Mobilidade para lançamento.
+
+Continuam obrigatórios antes de `mobility:true`:
+
+1. executar casos positivos e negativos reais de autorização para passageiro, motorista, motoboy, Empresa/Gastronomia/Serviço e admin;
+2. provar criação → busca → dispatch → aceite → deslocamento → conclusão/cancelamento no runtime real;
+3. provar entrega → coleta → rota → PIN/prova → conclusão/falha/redispatch;
+4. validar chat/tracking/realtime e ausência de vazamento entre participantes;
+5. executar smoke responsivo das superfícies passageiro, motorista, motoboy e Central;
+6. executar typecheck/test/build/E2E reais no **mesmo SHA** quando a infraestrutura de execução estiver disponível;
+7. provar deploy do mesmo SHA no ambiente alvo;
+8. somente depois considerar `PUBLIC_LAUNCH_SURFACES.mobility = true`.
+
+**Próximo gate obrigatório:** autorização positiva/negativa + E2E operacional + smoke responsivo. Não reabrir DML direto de `ride_requests` como atalho para testes.
 
 ## Regras de execução
 
