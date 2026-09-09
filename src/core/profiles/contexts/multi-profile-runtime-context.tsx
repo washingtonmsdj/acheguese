@@ -12,6 +12,7 @@ import { MultiProfileRuntimeService } from '../services/multi-profile/runtimePro
 import { SessionService } from '@/core/session/services/SessionService';
 import { SessionState } from '@/core/session/state/SessionState';
 import { ACTIVE_PROFILE_STORAGE_KEY } from '../constants/activeProfileStorage';
+import { mobilityRoutes } from '@/core/mobility/routes/mobilityRoutes';
 import type { Profile, ProfileType } from '../services/multi-profile/types';
 import {
   MultiProfileContext,
@@ -28,9 +29,9 @@ const MODULE_ROUTES: Record<string, ProfileType> = {
   '/empresas': 'business',  // rotas territoriais de empresas
   '/servicos/cadastrar': 'professional',
   '/servicos': 'professional',  // rotas territoriais de serviços
-  '/mobilidade/motorista': 'driver',
-  '/central/motorista': 'driver',
-  '/central/motoboy': 'driver',
+  [mobilityRoutes.public.motorista]: 'driver',
+  [mobilityRoutes.motorista.home]: 'driver',
+  [mobilityRoutes.motoboy.home]: 'driver',
   '/central/empresas': 'business',
   '/central/profissional': 'professional',
 };
