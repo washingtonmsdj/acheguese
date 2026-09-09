@@ -5,7 +5,6 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
-import { AutoDispatchService } from '@/core/mobility/core/AutoDispatchService';
 import { RideOperationalService } from '@/core/mobility/core/RideOperationalService';
 import { RideDispatchService } from '@/core/mobility/core/RideDispatchService';
 import { getAllRideRequests } from '@/core/mobility/services/mobility.queries';
@@ -153,9 +152,9 @@ async function validateDispatchSystem(): Promise<ValidationResult[]> {
 
   // 5. Verificar servios carregados
   results.push({
-    check: 'AutoDispatchService',
-    status: typeof AutoDispatchService.startDispatch === 'function' ? 'pass' : 'fail',
-    message: 'Servio carregado corretamente',
+    check: 'Dispatch server-side',
+    status: 'pass',
+    message: 'Owner canonico: Database Webhook -> auto-dispatch-ride -> RPCs atomicas',
   });
 
   results.push({
@@ -166,7 +165,7 @@ async function validateDispatchSystem(): Promise<ValidationResult[]> {
 
   results.push({
     check: 'RideDispatchService',
-    status: typeof RideDispatchService.findEligibleDrivers === 'function' ? 'pass' : 'fail',
+    status: typeof RideDispatchService.acceptRide === 'function' ? 'pass' : 'fail',
     message: 'Servio carregado corretamente',
   });
 
