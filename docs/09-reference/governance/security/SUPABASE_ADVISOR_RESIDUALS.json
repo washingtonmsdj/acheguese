@@ -417,6 +417,21 @@
       "cacheKey": "authenticated_security_definer_function_executable_public_mark_ride_chat_messages_read_p_ride_id uuid",
       "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
       "summary": "Participant-only ride chat read-state command deriving the active Profile and updating only messages from the counterparty."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_get_operational_verification_status_p_ride_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant/admin-only sanitized operational verification read; verifier hash/plaintext PIN are never returned."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_refresh_operational_pin_for_requester_p_ride_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Requester-only operational PIN issuer for active rides with bounded refresh cadence; plaintext is returned once and never persisted."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_verify_operational_pin_p_ride_id uuid, p_pin text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Assigned-driver-only PIN verification command with server-owned attempts, expiry, terminal-state guard and session-derived verified_by."
     }
   ]
 }
