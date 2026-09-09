@@ -36,6 +36,8 @@ const DISPATCH_STRATEGIES = new Set(["exclusive_offer", "open_board", "reservati
 const ACTIONS = {
   acceptRide: true,
   transitionRideState: true,
+  transitionDeliveryState: true,
+  updateFailedDeliveryResolution: true,
   logRideStateChange: true,
   logDispatchAttempt: true,
   updateLatestDispatchAttempt: true,
@@ -152,6 +154,26 @@ function optionalTimestamp(value: unknown, field: string): string | null {
   return requireTimestamp(value, field);
 }
 
+function requireObject(value: unknown, field: string): Record<string, unknown> {
+  if (
+    value === null ||
+    typeof value !== "object" ||
+    Array.isArray(value)
+  ) {
+    throw new RequestValidationError(`Invalid ${field}`);
+  }
+  return value as Record<string, unknown>;
+}
+
+function optionalFiniteNumber(value: unknown, field: string): number | null {
+  if (value === undefined || value === null || value === "") return null;
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new RequestValidationError(`Invalid ${field}`);
+  }
+  return value;
+}
+
+
 async function isProjectAdmin(supabaseAdmin: SupabaseClient, userId: string): Promise<boolean> {
   const { data, error } = await supabaseAdmin.rpc("is_admin", {
     p_user_id: userId,
@@ -252,7 +274,14 @@ async function requireRideTransitionActor(
   toState: string,
   requestedActor: unknown,
 ): Promise<string> {
-  if (toState === "driver_assigned" || toState === "driver_accepted" || toState === "expired") {
+  if (
+    toState === "driver_assigned" ||
+    toState === "driver_accepted" ||
+    toState === "expired" ||
+    toState === "pickup_confirmed" ||
+    toState === "delivered" ||
+    toState === "failed_delivery"
+  ) {
     throw new RequestAuthorizationError("Transition is reserved for dispatch or a dedicated command");
   }
 
@@ -326,6 +355,61 @@ async function requireBoardingVerification(
     throw new RequestAuthorizationError("PIN verification is required before boarding");
   }
 }
+
+async function requireDeliveryTransitionActor(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  ride: RideRow,
+  requestedActor: unknown,
+): Promise<string> {
+  if (auth.isProjectAdmin) {
+    return `admin:${auth.userId}`;
+  }
+
+  if (
+    !ride.driver_profile_id ||
+    !await profileBelongsToUser(
+      supabaseAdmin,
+      ride.driver_profile_id,
+      auth.userId,
+    )
+  ) {
+    throw new RequestAuthorizationError(
+      "Only the assigned driver can perform this delivery command",
+    );
+  }
+
+  if (
+    requestedActor !== undefined &&
+    requestedActor !== null &&
+    requestedActor !== ride.driver_profile_id
+  ) {
+    throw new RequestAuthorizationError(
+      "Actor profile does not match the assigned driver",
+    );
+  }
+
+  return ride.driver_profile_id;
+}
+
+async function requireDeliveryVerification(
+  supabaseAdmin: SupabaseClient,
+  rideId: string,
+): Promise<void> {
+  const { data, error } = await supabaseAdmin
+    .from("operational_verifications")
+    .select("is_required, status")
+    .eq("ride_id", rideId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (data?.is_required === true && data.status !== "verified") {
+    throw new RequestAuthorizationError(
+      "PIN verification is required before delivery confirmation",
+    );
+  }
+}
+
 
 async function resolveAuditActor(
   supabaseAdmin: SupabaseClient,
@@ -417,6 +501,121 @@ async function handleTransitionRideState(
     from_state: expectedFromState,
     to_state: toState,
   };
+}
+
+async function handleTransitionDeliveryState(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const rideId = requireUuid(params.rideId ?? params.ride_id, "rideId");
+  const expectedFromState = requireStatus(
+    params.expectedFromState ?? params.expected_from_state,
+    "expectedFromState",
+  );
+  const command = requireStatus(params.command, "command");
+  const reason = optionalAuditReason(params.reason);
+  const ride = await getRide(supabaseAdmin, rideId);
+
+  if (ride.ride_mode !== "motoboy") {
+    throw new RequestValidationError("Delivery command requires motoboy ride");
+  }
+
+  if (ride.status !== expectedFromState) {
+    throw new RequestValidationError("Ride state changed during delivery command");
+  }
+
+  const allowedCommands = new Set([
+    "confirm_pickup",
+    "confirm_delivery",
+    "fail_delivery",
+  ]);
+  if (!allowedCommands.has(command)) {
+    throw new RequestValidationError("Invalid delivery command");
+  }
+
+  const changedBy = await requireDeliveryTransitionActor(
+    supabaseAdmin,
+    auth,
+    ride,
+    params.actorProfileId ?? params.actor_profile_id ?? params.actor,
+  );
+
+  let proofOfDelivery: Record<string, unknown> | null = null;
+  let failedDeliveryMetadata: Record<string, unknown> | null = null;
+  let finalPrice: number | null = null;
+
+  if (command === "confirm_delivery") {
+    await requireDeliveryVerification(supabaseAdmin, rideId);
+    proofOfDelivery = requireObject(
+      params.proofOfDelivery ?? params.proof_of_delivery,
+      "proofOfDelivery",
+    );
+    finalPrice = optionalFiniteNumber(
+      params.finalPrice ?? params.final_price,
+      "finalPrice",
+    );
+  } else if (command === "fail_delivery") {
+    failedDeliveryMetadata = requireObject(
+      params.failedDeliveryMetadata ?? params.failed_delivery_metadata,
+      "failedDeliveryMetadata",
+    );
+  }
+
+  const { data, error } = await supabaseAdmin.rpc(
+    "mobility_transition_delivery_state_atomic",
+    {
+      p_ride_id: rideId,
+      p_expected_from_state: expectedFromState,
+      p_command: command,
+      p_changed_by: changedBy,
+      p_reason: reason || null,
+      p_proof_of_delivery: proofOfDelivery,
+      p_final_price: finalPrice,
+      p_failed_delivery_metadata: failedDeliveryMetadata,
+    },
+  );
+
+  if (error) throw error;
+  return data ?? {
+    updated: false,
+    ride_id: rideId,
+    from_state: expectedFromState,
+  };
+}
+
+async function handleUpdateFailedDeliveryResolution(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const rideId = requireUuid(params.rideId ?? params.ride_id, "rideId");
+  const resolutionUpdate = requireObject(
+    params.resolutionUpdate ?? params.resolution_update,
+    "resolutionUpdate",
+  );
+  const ride = await getRide(supabaseAdmin, rideId);
+
+  if (ride.ride_mode !== "motoboy" || ride.status !== "failed_delivery") {
+    throw new RequestValidationError("Ride is not a failed motoboy delivery");
+  }
+
+  if (!await canAccessRideAsParticipantOrAdmin(supabaseAdmin, auth, ride)) {
+    throw new RequestAuthorizationError(
+      "User cannot update failed delivery resolution for this ride",
+    );
+  }
+
+  const { data, error } = await supabaseAdmin.rpc(
+    "mobility_update_failed_delivery_resolution_atomic",
+    {
+      p_ride_id: rideId,
+      p_resolution_update: resolutionUpdate,
+    },
+  );
+
+  if (error) throw error;
+  return data ?? { updated: false, ride_id: rideId };
 }
 
 async function handleLogRideStateChange(
@@ -617,6 +816,10 @@ async function dispatchAction(
       return handleAcceptRide(supabaseAdmin, auth, params);
     case "transitionRideState":
       return handleTransitionRideState(supabaseAdmin, auth, params);
+    case "transitionDeliveryState":
+      return handleTransitionDeliveryState(supabaseAdmin, auth, params);
+    case "updateFailedDeliveryResolution":
+      return handleUpdateFailedDeliveryResolution(supabaseAdmin, auth, params);
     case "logRideStateChange":
       return handleLogRideStateChange(supabaseAdmin, auth, params);
     case "logDispatchAttempt":
