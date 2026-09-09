@@ -1,4 +1,7 @@
 import { supabase } from "@/integrations/supabase";
+import type { SupabaseClient } from "@/integrations/supabase";
+
+export type SupabaseBrokerClient = Pick<SupabaseClient, "functions">;
 import { logger } from "@/shared/utils/logger";
 
 export interface SupabaseBrokerResponse<T> {
@@ -8,6 +11,7 @@ export interface SupabaseBrokerResponse<T> {
 
 interface InvokeSupabaseBrokerInput<TAction extends string> {
   action: TAction;
+  client?: SupabaseBrokerClient;
   functionName: string;
   noDataMessage?: string;
   params?: object;
@@ -26,7 +30,8 @@ async function invokeRawSupabaseBroker<T, TAction extends string>({
   params = {},
   serviceName,
 }: InvokeSupabaseBrokerInput<TAction>): Promise<SupabaseBrokerResponse<T> | null> {
-  const { data, error } = await supabase.functions.invoke<SupabaseBrokerResponse<T>>(
+  const brokerClient = arguments[0].client ?? supabase;
+  const { data, error } = await brokerClient.functions.invoke<SupabaseBrokerResponse<T>>(
     functionName,
     { body: { action, params } },
   );
