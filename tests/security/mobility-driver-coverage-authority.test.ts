@@ -94,13 +94,17 @@ describe("Mobility driver coverage authority", () => {
     expect(mobilityMutations).not.toContain("driver_accepted_neighborhoods");
     expect(mobilityMutations).not.toContain("deleteDriverServiceArea");
 
-    expect(
-      fs.existsSync(
-        path.resolve(
-          process.cwd(),
-          "src/modules/mobility/hooks/useDriverServiceArea.ts",
-        ),
-      ),
-    ).toBe(false);
+    const retiredMobilityCoverageBridges = [
+      "src/modules/mobility/hooks/useDriverServiceArea.ts",
+      "src/modules/mobility/components/driver/ServiceAreaSettings.tsx",
+      "src/modules/mobility/components/driver/DriverSettingsLayout.tsx",
+    ];
+
+    for (const retiredPath of retiredMobilityCoverageBridges) {
+      expect(
+        fs.existsSync(path.resolve(process.cwd(), retiredPath)),
+        `retired mobility coverage bridge must stay removed: ${retiredPath}`,
+      ).toBe(false);
+    }
   });
 });
