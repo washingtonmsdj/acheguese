@@ -1,4 +1,3 @@
-import { SAFETY_RIDE_SHARE_STATUS } from "@/core/safety/constants/status";
 import { supabase } from "@/integrations/supabase";
 import type { Database } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
