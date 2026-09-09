@@ -317,7 +317,6 @@ async function canAccessRideAsParticipantOrAdmin(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
   ride: RideRow,
-  explicitDriverProfileId?: string | null,
 ): Promise<boolean> {
   if (auth.isProjectAdmin) return true;
 
@@ -329,7 +328,7 @@ async function canAccessRideAsParticipantOrAdmin(
     return true;
   }
 
-  return profileBelongsToUser(supabaseAdmin, explicitDriverProfileId ?? null, auth.userId);
+  return false;
 }
 
 async function requireRideTransitionActor(
@@ -1655,17 +1654,18 @@ async function handleReleaseDriverAvailability(
   params: Record<string, unknown>,
 ) {
   const rideId = requireUuid(params.rideId ?? params.ride_id, "rideId");
-  const driverProfileId = requireUuid(
-    params.driverProfileId ?? params.driver_profile_id,
-    "driverProfileId",
-  );
   const ride = await getRide(supabaseAdmin, rideId);
+  const driverProfileId = ride.driver_profile_id;
+
+  if (!driverProfileId) {
+    throw new RequestValidationError("Ride has no assigned driver to release");
+  }
 
   if (!FINAL_RIDE_STATUSES.has(ride.status)) {
     throw new RequestValidationError("Ride must be final before releasing driver availability");
   }
 
-  if (!await canAccessRideAsParticipantOrAdmin(supabaseAdmin, auth, ride, driverProfileId)) {
+  if (!await canAccessRideAsParticipantOrAdmin(supabaseAdmin, auth, ride)) {
     throw new RequestAuthorizationError("User cannot release this driver availability");
   }
 
