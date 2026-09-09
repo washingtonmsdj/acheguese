@@ -53,7 +53,6 @@ export {
 //  ============================================================
 export {
   //  Rides
-  createRide,
   incrementRideViewCount,
   decrementRideSeats,
   //  Driver areas
@@ -131,7 +130,6 @@ export {
   RideService,
   rideService,
   type RideRequest,
-  type CreateRideData,
 } from "./RideService.impl";
 
 //  ============================================================
@@ -206,7 +204,6 @@ export class MobilityFacade {
   static getRideBasicInfo = MobilityQueries.getRideBasicInfo;
   static getRideAvailableSeats = MobilityQueries.getRideAvailableSeats;
   //  ===== MUTATIONS =====
-  static createRide = MobilityMutations.createRide;
   static incrementRideViewCount = MobilityMutations.incrementRideViewCount;
   static decrementRideSeats = MobilityMutations.decrementRideSeats;
   static deleteDriverNeighborhood = MobilityMutations.deleteDriverNeighborhood;
