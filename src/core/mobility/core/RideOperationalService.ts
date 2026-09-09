@@ -14,7 +14,7 @@ import { RIDE_STATE, RideStateMachine, type RideState } from "./RideStateMachine
 import { RideDispatchService } from "./RideDispatchService";
 import { getRideById } from "../services/mobility.queries";
 import { MobilityRpcService } from "../services/MobilityRpcService";
-import type { FailedDeliveryMetadata, ResolutionStatus } from "../types/FailedDeliveryMetadata";
+import type { FailedDeliveryMetadata, FailedDeliveryResolutionUpdate } from "../types/FailedDeliveryMetadata";
 import { OperationalVerificationService } from "../services/OperationalVerificationService";
 import { mobilityRolloutService } from "../services/MobilityRolloutService";
 import { mobilityAuditService } from "../services/MobilityAuditService";
@@ -709,14 +709,7 @@ export class RideOperationalService {
    */
   static async updateFailedDeliveryResolution(
     rideId: string,
-    resolutionUpdate: {
-      next_ride_id?: string;
-      handoff_driver_profile_id?: string;
-      manual_resolution_owner_profile_id?: string;
-      resolution_status?: ResolutionStatus;
-      resolved_at?: string;
-      resolution_action_notes?: string;
-    }
+    resolutionUpdate: FailedDeliveryResolutionUpdate
   ): Promise<TransitionResult> {
     return updateFailedDeliveryResolutionOperation(rideId, resolutionUpdate);
   }
