@@ -99,33 +99,8 @@ export class RideOperationalService {
       const ride = { id: creation.ride_id };
       logger.info('RideOperationalService.createRide - success', { rideId: ride.id });
 
-      // GATE 7 FASE 2.5: Resolver se PIN  exigido e criar verificacao automaticamente
-      const pinRequirement = await OperationalVerificationService.resolveRidePINRequirement({
-        passengerId: input.passengerProfileId,
-        driverProfileId: undefined, // Motorista ainda no atribuido
-      });
-
-      if (pinRequirement.isRequired && pinRequirement.requiredBy) {
-        const verificationResult = await OperationalVerificationService.createVerification({
-          rideId: ride.id,
-          verificationType: 'pin',
-          isRequired: true,
-          requiredBy: pinRequirement.requiredBy,
-        });
-
-        if (verificationResult.success) {
-          logger.info('RideOperationalService.createRide - PIN verification created', {
-            rideId: ride.id,
-            requiredBy: pinRequirement.requiredBy,
-            reason: pinRequirement.reason,
-          });
-        } else {
-          logger.error('RideOperationalService.createRide - Failed to create PIN verification',
-            new Error(verificationResult.error || 'Unknown error'),
-            { rideId: ride.id }
-          );
-        }
-      }
+      // A exigencia de PIN nasce atomicamente no backend junto com a corrida.
+      // O browser nao decide required_by/is_required e nao cria verificacao separada.
 
       // Transicionar para searching_driver
       // IMPORTANTE: Database Webhook dispara edge function auto-dispatch-ride automaticamente
@@ -201,7 +176,6 @@ export class RideOperationalService {
             const verifyResult = await OperationalVerificationService.verifyPIN({
               rideId,
               pin,
-              verifiedBy: actor,
             });
 
             if (!verifyResult.success || !verifyResult.data?.verified) {
