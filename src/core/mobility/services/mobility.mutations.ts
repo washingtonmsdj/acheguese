@@ -75,50 +75,6 @@ export async function decrementRideSeats(rideId: string): Promise<void> {
 }
 
 /**
- * Remover bairro aceito pelo motorista
- */
-export async function deleteDriverNeighborhood(id: string): Promise<{ success: boolean; error?: unknown }> {
-  try {
-    const { error } = await mobilityDb
-      .from("driver_accepted_neighborhoods")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      logger.error("MobilityMutations.deleteDriverNeighborhood", { id, error });
-      return { success: false, error };
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("MobilityMutations.deleteDriverNeighborhood", { id, error });
-    return { success: false, error };
-  }
-}
-
-/**
- * Remover área de serviço do motorista
- */
-export async function deleteDriverServiceArea(
-  table: string,
-  id: string,
-): Promise<{ success: boolean; error?: unknown }> {
-  try {
-    const { error } = await mobilityDb.from(table).delete().eq("id", id);
-
-    if (error) {
-      logger.error("MobilityMutations.deleteDriverServiceArea", { table, id, error });
-      return { success: false, error };
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("MobilityMutations.deleteDriverServiceArea", { table, id, error });
-    return { success: false, error };
-  }
-}
-
-/**
  * Criar perfil de motorista via admin
  */
 export async function createAdminDriverProfile(userId: string): Promise<unknown | null> {
