@@ -1,11 +1,9 @@
 /**
- * RIDE DISPATCH SERVICE - Atribuicao e Aceite de Corridas
+ * RIDE DISPATCH SERVICE - Aceite de Corridas
  *
- * Gerencia:
- * - Busca de motorista elegivel
- * - Atribuicao de oferta
- * - Aceite com lock/garantia de unicidade
- * - Expiracao da solicitacao
+ * O auto-dispatch/assignment pertence ao backend server-side
+ * (Database Webhook -> auto-dispatch-ride -> RPCs atomicas).
+ * Este service de browser mantem somente o aceite autenticado do motorista.
  */
 
 import { logger } from "@/shared/utils/logger";
@@ -15,30 +13,7 @@ import {
   getDriverOfferCapabilities,
   getRideById,
 } from "../services/mobility.queries";
-import { updateRideWithGuards } from "../services/mobility.mutations";
-import { DriverAvailabilityService } from "../services/DriverAvailabilityService";
 import { MobilityRpcService } from "../services/MobilityRpcService";
-import { mobilityAuditService } from "../services/MobilityAuditService";
-
-const CONFIG = {
-  REQUEST_EXPIRATION_MINUTES: 15,
-  MAX_SEARCH_RADIUS_KM: 10,
-};
-
-interface DriverEligibility {
-  profileId: string;
-  distance: number;
-  isAvailable: boolean;
-  hasActiveRide: boolean;
-  rating: number;
-}
-
-interface DispatchResult {
-  success: boolean;
-  rideId?: string;
-  driverProfileId?: string;
-  error?: string;
-}
 
 interface AcceptResult {
   success: boolean;
@@ -51,13 +26,6 @@ interface AcceptResult {
     | "driver_not_eligible"
     | "expired"
     | "unknown";
-}
-
-interface ProviderErrorShape {
-  code?: string;
-  message?: string;
-  details?: string;
-  hint?: string;
 }
 
 function mapAtomicAcceptReason(reason?: string): AcceptResult["reason"] {
@@ -73,6 +41,8 @@ function mapAtomicAcceptReason(reason?: string): AcceptResult["reason"] {
     case "not_eligible":
     case "invalid_ride_mode":
       return "driver_not_eligible";
+    case "expired":
+      return "expired";
     default:
       return "unknown";
   }
@@ -80,139 +50,12 @@ function mapAtomicAcceptReason(reason?: string): AcceptResult["reason"] {
 
 export class RideDispatchService {
   /**
-   * Busca motoristas elegiveis para uma corrida.
-   * DriverAvailabilityService continua sendo o SSOT de descoberta; a autoridade
-   * final de atribuicao/aceite e revalidada no command server-side.
-   */
-  static async findEligibleDrivers(
-    rideId: string,
-    originLat: number,
-    originLng: number,
-    maxRadius: number = CONFIG.MAX_SEARCH_RADIUS_KM,
-    rideMode: "ride" | "motoboy" = "ride",
-    pickupLocationId?: string | null,
-  ): Promise<DriverEligibility[]> {
-    try {
-      const availableDrivers = await DriverAvailabilityService.findAvailableDrivers(
-        originLat,
-        originLng,
-        maxRadius,
-        rideMode,
-        pickupLocationId,
-      );
-
-      return availableDrivers.map((driver) => ({
-        profileId: driver.profileId,
-        distance: driver.distance,
-        isAvailable: true,
-        hasActiveRide: false,
-        rating: driver.rating,
-      }));
-    } catch (error) {
-      logger.error("RideDispatchService.findEligibleDrivers", error as Error, { rideId });
-      return [];
-    }
-  }
-
-  /**
-   * Atribui corrida a um motorista.
-   *
-   * Este caminho ainda existe para o AutoDispatchService browser legado e sera
-   * migrado para o command atomico de oferta antes da revogacao global de
-   * UPDATE em ride_requests. Nao remover enquanto houver caller vivo.
-   */
-  static async assignDriver(
-    rideId: string,
-    driverProfileId: string,
-    currentState: RideState,
-  ): Promise<DispatchResult> {
-    try {
-      if (!RideStateMachine.canTransition(currentState, RIDE_STATE.DRIVER_ASSIGNED)) {
-        return {
-          success: false,
-          error: `Cannot assign driver from state: ${currentState}`,
-        };
-      }
-
-      logger.info("RideDispatchService.assignDriver - checking availability", {
-        rideId,
-        driverProfileId,
-      });
-
-      const availability = await DriverAvailabilityService.getStatus(driverProfileId);
-      const availError = null;
-      const providerError =
-        availError && typeof availError === "object"
-          ? (availError as ProviderErrorShape)
-          : undefined;
-
-      if (providerError) {
-        logger.warn("RideDispatchService.assignDriver - provider error", {
-          rideId,
-          driverProfileId,
-          errorCode: providerError.code,
-          errorMessage: providerError.message,
-        });
-      }
-
-      if (!availability?.isOnline || !availability?.isAvailable) {
-        return { success: false, error: "Driver not available" };
-      }
-
-      const activeRide = await getActiveRideByDriverProfile(driverProfileId, [
-        RIDE_STATE.DRIVER_ASSIGNED,
-        RIDE_STATE.DRIVER_ACCEPTED,
-        RIDE_STATE.DRIVER_ARRIVING,
-        RIDE_STATE.PASSENGER_BOARDED,
-        RIDE_STATE.IN_PROGRESS,
-        RIDE_STATE.PICKUP_CONFIRMED,
-        RIDE_STATE.IN_DELIVERY,
-        RIDE_STATE.DELIVERED,
-      ]);
-
-      if (activeRide) {
-        return { success: false, error: "Driver already has active ride" };
-      }
-
-      const assigned = await updateRideWithGuards(
-        rideId,
-        {
-          driver_profile_id: driverProfileId,
-          status: RIDE_STATE.DRIVER_ASSIGNED,
-          updated_at: new Date().toISOString(),
-        },
-        { statusEq: currentState },
-      );
-
-      if (!assigned) {
-        return { success: false, error: "Ride state changed during assignment" };
-      }
-
-      await this.logStateChange(
-        rideId,
-        currentState,
-        RIDE_STATE.DRIVER_ASSIGNED,
-        "system",
-        "Driver assigned by dispatch",
-      );
-
-      return { success: true, rideId, driverProfileId };
-    } catch (error) {
-      logger.error("RideDispatchService.assignDriver", error as Error, {
-        rideId,
-        driverProfileId,
-      });
-      return { success: false, error: (error as Error).message };
-    }
-  }
-
-  /**
    * Motorista aceita corrida.
    *
-   * Prechecks client-side melhoram UX, mas nao concedem autoridade. O commit da
-   * operacao pertence a accept_ride_atomic, invocado exclusivamente pelo broker
-   * autenticado mobility-rpc. Estado, disponibilidade e auditoria sao fechados
-   * na mesma transacao server-side.
+   * Os prechecks abaixo existem somente para feedback rapido de UX.
+   * A autoridade final pertence ao broker mobility-rpc, que chama
+   * mobility_accept_ride_atomic. O backend revalida estado, elegibilidade,
+   * disponibilidade, concorrencia e expiracao antes de efetivar o aceite.
    */
   static async acceptRide(
     rideId: string,
@@ -222,7 +65,6 @@ export class RideDispatchService {
       const ride = (await getRideById(rideId)) as {
         status?: string;
         driver_profile_id?: string | null;
-        created_at?: string;
         ride_mode?: string | null;
       } | null;
 
@@ -231,13 +73,6 @@ export class RideDispatchService {
       }
 
       const currentState = ride.status as RideState;
-      const createdAt = new Date(ride.created_at || new Date().toISOString());
-      const minutesElapsed = (Date.now() - createdAt.getTime()) / 60_000;
-
-      if (minutesElapsed > CONFIG.REQUEST_EXPIRATION_MINUTES) {
-        await this.expireRide(rideId, currentState);
-        return { success: false, error: "Ride expired", reason: "expired" };
-      }
 
       if (!RideStateMachine.canDriverAccept(currentState)) {
         return {
@@ -264,6 +99,7 @@ export class RideDispatchService {
           reason: "driver_not_eligible",
         };
       }
+
       if (
         capabilities.is_suspended ||
         capabilities.is_verified !== true ||
@@ -326,55 +162,6 @@ export class RideDispatchService {
         error: (error as Error).message,
         reason: "unknown",
       };
-    }
-  }
-
-  /** Expira corrida por timeout. Ainda migrara para command dedicado. */
-  static async expireRide(rideId: string, currentState: RideState): Promise<void> {
-    try {
-      if (!RideStateMachine.canTransition(currentState, RIDE_STATE.EXPIRED)) return;
-
-      const expired = await updateRideWithGuards(
-        rideId,
-        {
-          status: RIDE_STATE.EXPIRED,
-          updated_at: new Date().toISOString(),
-        },
-        { statusEq: currentState },
-      );
-
-      if (!expired) return;
-
-      await this.logStateChange(
-        rideId,
-        currentState,
-        RIDE_STATE.EXPIRED,
-        "system",
-        "Ride expired - no driver accepted",
-      );
-    } catch (error) {
-      logger.error("RideDispatchService.expireRide", error as Error, { rideId });
-    }
-  }
-
-  private static async logStateChange(
-    rideId: string,
-    fromState: RideState,
-    toState: RideState,
-    actor: string,
-    reason: string,
-  ): Promise<void> {
-    try {
-      await mobilityAuditService.logRideStateChange({
-        rideId,
-        fromState,
-        toState,
-        changedBy: actor,
-        reason,
-      });
-      RideStateMachine.logTransition(rideId, fromState, toState, actor, reason);
-    } catch (error) {
-      logger.error("RideDispatchService.logStateChange", error as Error, { rideId });
     }
   }
 }
