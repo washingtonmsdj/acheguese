@@ -62,7 +62,6 @@ function LegacyProfileEditRedirect() {
 
 const TERRITORIAL_PARAMS = TERRITORIAL_ROUTE_PARAMS;
 const TERRITORIAL_STATIC = TERRITORIAL_ROUTE_STATIC_SEGMENTS;
-const LEGACY_DRIVER_CREATE_ROUTE = "/create-driver";
 const EVENT_ROUTES = {
   home: buildAppModulePath(APP_MODULE_SLUGS.events),
   favorites: buildAppModulePath(
@@ -231,11 +230,6 @@ const DIRECT_PAUSED_ROUTES: DirectPausedRoute[] = [
     moduleName: "Mobilidade",
   },
   { path: "/track/:token", surface: "mobility", moduleName: "Mobilidade" },
-  {
-    path: LEGACY_DRIVER_CREATE_ROUTE,
-    surface: "mobility",
-    moduleName: "Mobilidade",
-  },
   { path: "/ranking", surface: "gamification", moduleName: "Ranking" },
   { path: "/gamificacao", surface: "gamification", moduleName: "Gamificacao" },
   { path: "/alertas", surface: "communityAlerts", moduleName: "Alertas" },
@@ -402,14 +396,6 @@ export function AppLayoutRoutes() {
       <Route
         path="/cadastro/confirmacao"
         element={<P.CadastroConfirmacaoPage />}
-      />
-      <Route
-        path={LEGACY_DRIVER_CREATE_ROUTE}
-        element={launchElement(
-          "mobility",
-          "Mobilidade",
-          <Navigate to="/central/motorista/cadastro" replace />,
-        )}
       />
       <Route path="/sobre" element={<P.AboutPage />} />
       <Route path="/contato" element={<P.ContactPage />} />
