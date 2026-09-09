@@ -293,27 +293,7 @@ class MobilityServiceInstance {
     }
   }
 
-  // -- Ride actions (delegam para RideService) ----------------------------
-
-  async acceptRide(rideId: string, driverProfileId: string): Promise<void> {
-    const { rideService } = await import("./RideService");
-    await rideService.acceptRide(rideId, driverProfileId);
-  }
-
-  async startRide(rideId: string): Promise<void> {
-    const { rideService } = await import("./RideService");
-    await rideService.startRide(rideId);
-  }
-
-  async completeRide(rideId: string): Promise<void> {
-    const { rideService } = await import("./RideService");
-    await rideService.completeRide(rideId, 0, 0, 0);
-  }
-
-  async cancelRide(rideId: string): Promise<void> {
-    const { rideService } = await import("./RideService");
-    await rideService.cancelRide(rideId);
-  }
+  // Ride lifecycle mutations are owned by RideOperationalService/mobility-rpc.
 
   async checkSuspensionExpiry(profileId: string): Promise<void> {
     try {
@@ -423,26 +403,6 @@ class MobilityServiceInstance {
       logger.error("mobilityService.getRideById", error as Error);
       return null;
     }
-  }
-
-  async confirmRideCompletionByPassenger(
-    rideId: string,
-    passengerProfileId: string,
-  ): Promise<void> {
-    const now = new Date().toISOString();
-    const { data, error } = await db
-      .from<{ id: string }>("ride_requests")
-      .update({
-        passenger_confirmed_at: now,
-        updated_at: now,
-      })
-      .eq("id", rideId)
-      .eq("passenger_profile_id", passengerProfileId)
-      .select("id")
-      .maybeSingle();
-
-    if (error) throw error;
-    if (!data) throw new Error("Ride not found or passenger not authorized");
   }
 
   async getRideWithAddresses(rideId: string): Promise<RideWithAddressesRow | null> {
