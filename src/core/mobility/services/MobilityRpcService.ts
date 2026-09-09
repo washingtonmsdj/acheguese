@@ -32,6 +32,7 @@ type MobilityRpcAction =
   | "cancelPendingOffers"
   | "updateDriverAvailability"
   | "updateDriverLocation"
+  | "listDriverOffers"
   | "reconcileStaleDriverAvailability"
   | "releaseDriverAvailabilityForRide";
 
@@ -55,6 +56,35 @@ export interface DriverLocationBrokerData {
   reason?: string;
   error?: string;
   location?: Record<string, unknown>;
+}
+
+export interface DriverOfferBrokerRow {
+  id: string;
+  origin: string;
+  destination: string;
+  origin_lat: number | null;
+  origin_lng: number | null;
+  destination_lat: number | null;
+  destination_lng: number | null;
+  suggested_price: number;
+  payment_method: string;
+  created_at: string;
+  driver_assigned_at: string | null;
+  scheduled_for: string | null;
+  ride_mode: string | null;
+  passenger_profile_id: string | null;
+  driver_profile_id: string | null;
+  package_size: string | null;
+  package_description: string | null;
+  source_type: string | null;
+  source_id: string | null;
+  status: string;
+  risk_level: string | null;
+  dispatch_policy: string | null;
+}
+
+export interface DriverOffersBrokerData {
+  offers: DriverOfferBrokerRow[];
 }
 
 export interface StaleDriverAvailabilityBrokerData {
@@ -354,6 +384,28 @@ export class MobilityRpcService {
       },
       client,
     );
+  }
+
+  static async listDriverOffers(input: {
+    driverProfileId: string;
+    strategy: DispatchStrategy;
+    limit?: number;
+    minPrice?: number;
+    maxPrice?: number;
+    packageSizes?: string[];
+    sortBy?: "created_at" | "suggested_price" | "departure_time";
+    ascending?: boolean;
+  }): Promise<DriverOffersBrokerData> {
+    return this.invoke<DriverOffersBrokerData>("listDriverOffers", {
+      driverProfileId: input.driverProfileId,
+      strategy: input.strategy,
+      limit: input.limit,
+      minPrice: input.minPrice,
+      maxPrice: input.maxPrice,
+      packageSizes: input.packageSizes,
+      sortBy: input.sortBy,
+      ascending: input.ascending,
+    });
   }
 
   static async reconcileStaleDriverAvailability(
