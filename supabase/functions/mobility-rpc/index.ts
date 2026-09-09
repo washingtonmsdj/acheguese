@@ -34,6 +34,8 @@ const FINAL_RIDE_STATUSES = new Set([
 const CANCELLATION_STATUSES = new Set(["cancelled_by_passenger", "cancelled_by_driver"]);
 const DISPATCH_STRATEGIES = new Set(["exclusive_offer", "open_board", "reservation_board"]);
 const ACTIONS = {
+  createRide: true,
+  createDelivery: true,
   acceptRide: true,
   adminRedispatch: true,
   confirmPassengerCompletion: true,
@@ -173,6 +175,61 @@ function optionalFiniteNumber(value: unknown, field: string): number | null {
     throw new RequestValidationError(`Invalid ${field}`);
   }
   return value;
+}
+
+function optionalTrimmedString(
+  value: unknown,
+  field: string,
+  maxLength: number,
+): string | null {
+  if (value === undefined || value === null || value === "") return null;
+  if (typeof value !== "string") {
+    throw new RequestValidationError(`Invalid ${field}`);
+  }
+  const normalized = value.trim();
+  if (!normalized) return null;
+  if (normalized.length > maxLength) {
+    throw new RequestValidationError(`${field} is too long`);
+  }
+  return normalized;
+}
+
+function requireTrimmedString(
+  value: unknown,
+  field: string,
+  maxLength: number,
+): string {
+  const normalized = optionalTrimmedString(value, field, maxLength);
+  if (!normalized) throw new RequestValidationError(`Invalid ${field}`);
+  return normalized;
+}
+
+function optionalBoundedNumber(
+  value: unknown,
+  field: string,
+  min: number,
+  max: number,
+): number | null {
+  const parsed = optionalFiniteNumber(value, field);
+  if (parsed === null) return null;
+  if (parsed < min || parsed > max) {
+    throw new RequestValidationError(`Invalid ${field}`);
+  }
+  return parsed;
+}
+
+function optionalInteger(
+  value: unknown,
+  field: string,
+  min: number,
+  max: number,
+): number | null {
+  const parsed = optionalFiniteNumber(value, field);
+  if (parsed === null) return null;
+  if (!Number.isInteger(parsed) || parsed < min || parsed > max) {
+    throw new RequestValidationError(`Invalid ${field}`);
+  }
+  return parsed;
 }
 
 async function isProjectAdmin(supabaseAdmin: SupabaseClient, userId: string): Promise<boolean> {
@@ -451,6 +508,508 @@ async function requireDispatchWriteAccess(
     throw new RequestAuthorizationError("User cannot write dispatch audit for this ride");
   }
   return ride;
+}
+
+
+async function requireRequestingProfile(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  profileId: string,
+): Promise<void> {
+  const { data, error } = await supabaseAdmin
+    .from("profiles")
+    .select("id, user_id, is_active, is_suspended, suspended, suspended_until")
+    .eq("id", profileId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data || data.user_id !== auth.userId) {
+    throw new RequestAuthorizationError("Passenger profile does not belong to the authenticated user");
+  }
+  if (data.is_active === false) {
+    throw new RequestAuthorizationError("Passenger profile is inactive");
+  }
+
+  const suspended =
+    data.is_suspended === true ||
+    data.suspended === true;
+  const suspendedUntil =
+    typeof data.suspended_until === "string"
+      ? new Date(data.suspended_until)
+      : null;
+  if (
+    suspended &&
+    (!suspendedUntil ||
+      Number.isNaN(suspendedUntil.getTime()) ||
+      suspendedUntil.getTime() > Date.now())
+  ) {
+    throw new RequestAuthorizationError("Passenger profile is suspended");
+  }
+}
+
+async function requireEffectiveMobilityRollout(
+  supabaseAdmin: SupabaseClient,
+  locationId: string,
+  requireMotoboy: boolean,
+): Promise<void> {
+  let currentLocationId: string | null = locationId;
+
+  for (let depth = 0; depth < 16 && currentLocationId; depth += 1) {
+    const { data: location, error: locationError } = await supabaseAdmin
+      .from("locations")
+      .select("id, parent_id, status")
+      .eq("id", currentLocationId)
+      .maybeSingle();
+
+    if (locationError) throw locationError;
+    if (!location) {
+      throw new RequestValidationError("Pickup location was not found");
+    }
+
+    if (depth === 0 && location.status !== "active") {
+      throw new RequestAuthorizationError("Mobility is unavailable in an inactive location");
+    }
+
+    if (location.status === "active") {
+      const { data: rollout, error: rolloutError } = await supabaseAdmin
+        .from("module_rollouts")
+        .select("status, config")
+        .eq("module_key", "mobility")
+        .eq("location_id", currentLocationId)
+        .maybeSingle();
+
+      if (rolloutError) throw rolloutError;
+      if (rollout) {
+        if (rollout.status !== "active") {
+          throw new RequestAuthorizationError("Mobility rollout is disabled for this location");
+        }
+
+        if (
+          requireMotoboy &&
+          rollout.config &&
+          typeof rollout.config === "object" &&
+          !Array.isArray(rollout.config) &&
+          (rollout.config as Record<string, unknown>).motoboy_enabled === false
+        ) {
+          throw new RequestAuthorizationError("Motoboy mode is disabled for this location");
+        }
+        return;
+      }
+    }
+
+    currentLocationId =
+      typeof location.parent_id === "string" ? location.parent_id : null;
+  }
+
+  throw new RequestAuthorizationError("Mobility rollout is not active for this location");
+}
+
+async function resolveManagedBusinessForDelivery(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  sourceType: "business" | "gastronomy",
+  authoritySourceId: string,
+): Promise<{ businessId: string; profileId: string }> {
+  let business: { id: string; profile_id: string | null } | null = null;
+
+  const { data: byId, error: byIdError } = await supabaseAdmin
+    .from("business_data")
+    .select("id, profile_id")
+    .eq("id", authoritySourceId)
+    .maybeSingle();
+  if (byIdError) throw byIdError;
+  business = byId;
+
+  if (!business) {
+    const { data: byProfile, error: byProfileError } = await supabaseAdmin
+      .from("business_data")
+      .select("id, profile_id")
+      .eq("profile_id", authoritySourceId)
+      .maybeSingle();
+    if (byProfileError) throw byProfileError;
+    business = byProfile;
+  }
+
+  if (!business) {
+    const { data: gastronomy, error: gastronomyError } = await supabaseAdmin
+      .from("gastronomy_profiles")
+      .select("business_id")
+      .eq("id", authoritySourceId)
+      .maybeSingle();
+    if (gastronomyError) throw gastronomyError;
+
+    if (gastronomy?.business_id) {
+      const { data: byGastronomyBusiness, error: businessError } =
+        await supabaseAdmin
+          .from("business_data")
+          .select("id, profile_id")
+          .eq("id", gastronomy.business_id)
+          .maybeSingle();
+      if (businessError) throw businessError;
+      business = byGastronomyBusiness;
+    }
+  }
+
+  if (!business?.id || !business.profile_id) {
+    throw new RequestAuthorizationError("Business authority source was not found");
+  }
+
+  if (sourceType === "gastronomy") {
+    const { data: gastronomy, error: gastronomyError } = await supabaseAdmin
+      .from("gastronomy_profiles")
+      .select("id")
+      .eq("business_id", business.id)
+      .maybeSingle();
+    if (gastronomyError) throw gastronomyError;
+    if (!gastronomy) {
+      throw new RequestAuthorizationError("Source is not an active gastronomy business");
+    }
+  }
+
+  const { data: canManage, error: managementError } = await supabaseAdmin.rpc(
+    "broker_user_can_manage_profile",
+    {
+      p_user_id: auth.userId,
+      p_profile_id: business.profile_id,
+    },
+  );
+  if (managementError) throw managementError;
+  if (canManage !== true) {
+    throw new RequestAuthorizationError("User cannot manage this business");
+  }
+
+  return { businessId: business.id, profileId: business.profile_id };
+}
+
+function resolveBusinessDeliveryEntitlements(
+  planCode: string,
+  catalogItem: Record<string, unknown> | null,
+  contractSnapshot: Record<string, unknown> | null,
+): { canUseMotoboyNetwork: boolean; canRequestDelivery: boolean } {
+  const normalizedPlan = planCode.replace(/^base-/, "").toLowerCase();
+  const planTier =
+    typeof catalogItem?.plan_tier === "string"
+      ? catalogItem.plan_tier
+      : normalizedPlan;
+  const baselineDelivery = planTier === "delivery";
+
+  const rawPolicy = catalogItem?.catalog_entitlement_policy;
+  const policy =
+    Array.isArray(rawPolicy)
+      ? (rawPolicy[0] as Record<string, unknown> | undefined)
+      : rawPolicy && typeof rawPolicy === "object"
+        ? (rawPolicy as Record<string, unknown>)
+        : undefined;
+  const extras =
+    policy?.additional_entitlements &&
+    typeof policy.additional_entitlements === "object" &&
+    !Array.isArray(policy.additional_entitlements)
+      ? policy.additional_entitlements as Record<string, unknown>
+      : {};
+
+  let canUseMotoboyNetwork =
+    typeof policy?.can_use_motoboy_network === "boolean"
+      ? policy.can_use_motoboy_network
+      : typeof extras.canUseMotoboyNetwork === "boolean"
+        ? extras.canUseMotoboyNetwork
+        : baselineDelivery;
+  let canRequestDelivery =
+    typeof extras.canRequestDelivery === "boolean"
+      ? extras.canRequestDelivery
+      : baselineDelivery;
+
+  const snapshotCatalog =
+    contractSnapshot?.catalog_item &&
+    typeof contractSnapshot.catalog_item === "object" &&
+    !Array.isArray(contractSnapshot.catalog_item)
+      ? contractSnapshot.catalog_item as Record<string, unknown>
+      : null;
+
+  if (!catalogItem && snapshotCatalog) {
+    const direct =
+      snapshotCatalog.entitlements &&
+      typeof snapshotCatalog.entitlements === "object" &&
+      !Array.isArray(snapshotCatalog.entitlements)
+        ? snapshotCatalog.entitlements as Record<string, unknown>
+        : null;
+    if (direct) {
+      if (typeof direct.canUseMotoboyNetwork === "boolean") {
+        canUseMotoboyNetwork = direct.canUseMotoboyNetwork;
+      }
+      if (typeof direct.canRequestDelivery === "boolean") {
+        canRequestDelivery = direct.canRequestDelivery;
+      }
+    }
+  }
+
+  const overrides =
+    contractSnapshot?.overrides &&
+    typeof contractSnapshot.overrides === "object" &&
+    !Array.isArray(contractSnapshot.overrides)
+      ? contractSnapshot.overrides as Record<string, unknown>
+      : null;
+  if (overrides) {
+    if (typeof overrides.canUseMotoboyNetwork === "boolean") {
+      canUseMotoboyNetwork = overrides.canUseMotoboyNetwork;
+    }
+    if (typeof overrides.canRequestDelivery === "boolean") {
+      canRequestDelivery = overrides.canRequestDelivery;
+    }
+  }
+
+  return { canUseMotoboyNetwork, canRequestDelivery };
+}
+
+async function requireBusinessDeliveryEntitlement(
+  supabaseAdmin: SupabaseClient,
+  businessId: string,
+  required: "canUseMotoboyNetwork" | "canRequestDelivery",
+): Promise<void> {
+  const { data: subscription, error: subscriptionError } = await supabaseAdmin
+    .from("user_subscriptions")
+    .select("plan_code, status_v2, contract_snapshot")
+    .eq("business_id", businessId)
+    .eq("subscription_scope", "business")
+    .in("status_v2", ["active", "trialing"])
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (subscriptionError) throw subscriptionError;
+  if (!subscription?.plan_code) {
+    throw new RequestAuthorizationError("Business has no active delivery entitlement");
+  }
+
+  const normalizedPlan = subscription.plan_code.replace(/^base-/, "").toLowerCase();
+  const itemCode = `base-${normalizedPlan}`;
+  const { data: catalogItem, error: catalogError } = await supabaseAdmin
+    .from("catalog_item")
+    .select(
+      "plan_tier, catalog_entitlement_policy(can_use_motoboy_network, additional_entitlements), commercial_catalog_version!inner(status)",
+    )
+    .eq("item_code", itemCode)
+    .eq("commercial_catalog_version.status", "published")
+    .maybeSingle();
+
+  if (catalogError) throw catalogError;
+
+  const snapshot =
+    subscription.contract_snapshot &&
+    typeof subscription.contract_snapshot === "object" &&
+    !Array.isArray(subscription.contract_snapshot)
+      ? subscription.contract_snapshot as Record<string, unknown>
+      : null;
+  const entitlements = resolveBusinessDeliveryEntitlements(
+    subscription.plan_code,
+    catalogItem as Record<string, unknown> | null,
+    snapshot,
+  );
+
+  if (entitlements[required] !== true) {
+    throw new RequestAuthorizationError("Business plan does not allow this delivery operation");
+  }
+}
+
+async function requireDeliveryCreationAuthority(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  sourceType: "passenger" | "business" | "gastronomy" | "service",
+  authoritySourceId: string | null,
+  passengerProfileId: string,
+): Promise<void> {
+  await requireRequestingProfile(supabaseAdmin, auth, passengerProfileId);
+
+  if (sourceType === "passenger") return;
+  if (!authoritySourceId) {
+    throw new RequestValidationError("authorizationSourceId is required for this source type");
+  }
+
+  if (sourceType === "service") {
+    if (!await profileBelongsToUser(supabaseAdmin, authoritySourceId, auth.userId)) {
+      throw new RequestAuthorizationError("User is not associated with this service profile");
+    }
+    return;
+  }
+
+  const business = await resolveManagedBusinessForDelivery(
+    supabaseAdmin,
+    auth,
+    sourceType,
+    authoritySourceId,
+  );
+  await requireBusinessDeliveryEntitlement(
+    supabaseAdmin,
+    business.businessId,
+    sourceType === "business"
+      ? "canUseMotoboyNetwork"
+      : "canRequestDelivery",
+  );
+}
+
+function rideCreationRpcParams(params: Record<string, unknown>) {
+  const suggestedPrice = optionalBoundedNumber(
+    params.suggestedPrice ?? params.suggested_price,
+    "suggestedPrice",
+    5,
+    1_000_000,
+  );
+  return {
+    p_passenger_profile_id: requireUuid(
+      params.passengerProfileId ?? params.passenger_profile_id,
+      "passengerProfileId",
+    ),
+    p_pickup_address_id: requireUuid(
+      params.pickupAddressId ?? params.pickup_address_id,
+      "pickupAddressId",
+    ),
+    p_dropoff_address_id: requireUuid(
+      params.dropoffAddressId ?? params.dropoff_address_id,
+      "dropoffAddressId",
+    ),
+    p_pickup_location_id: requireUuid(
+      params.pickupLocationId ?? params.pickup_location_id,
+      "pickupLocationId",
+    ),
+    p_dropoff_location_id: requireUuid(
+      params.dropoffLocationId ?? params.dropoff_location_id,
+      "dropoffLocationId",
+    ),
+    p_origin: optionalTrimmedString(params.origin, "origin", 500),
+    p_destination: optionalTrimmedString(params.destination, "destination", 500),
+    p_origin_lat: optionalBoundedNumber(params.originLat ?? params.origin_lat, "originLat", -90, 90),
+    p_origin_lng: optionalBoundedNumber(params.originLng ?? params.origin_lng, "originLng", -180, 180),
+    p_destination_lat: optionalBoundedNumber(
+      params.destinationLat ?? params.destination_lat,
+      "destinationLat",
+      -90,
+      90,
+    ),
+    p_destination_lng: optionalBoundedNumber(
+      params.destinationLng ?? params.destination_lng,
+      "destinationLng",
+      -180,
+      180,
+    ),
+    p_suggested_price: suggestedPrice,
+    p_available_seats:
+      optionalInteger(params.availableSeats ?? params.available_seats, "availableSeats", 1, 8) ?? 1,
+    p_observation: optionalTrimmedString(params.observation, "observation", 1000),
+    p_payment_method: optionalTrimmedString(
+      params.paymentMethod ?? params.payment_method,
+      "paymentMethod",
+      80,
+    ),
+    p_departure_time: optionalTimestamp(
+      params.departureTime ?? params.departure_time,
+      "departureTime",
+    ),
+  };
+}
+
+async function handleCreateRide(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const rpcParams = rideCreationRpcParams(params);
+  await requireRequestingProfile(
+    supabaseAdmin,
+    auth,
+    rpcParams.p_passenger_profile_id,
+  );
+  await requireEffectiveMobilityRollout(
+    supabaseAdmin,
+    rpcParams.p_pickup_location_id,
+    false,
+  );
+
+  const { data, error } = await supabaseAdmin.rpc(
+    "mobility_create_ride_atomic",
+    rpcParams,
+  );
+  if (error) throw error;
+  return data ?? { success: false, reason: "empty_response" };
+}
+
+async function handleCreateDelivery(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const base = rideCreationRpcParams(params);
+  const sourceType = requireStatus(
+    params.sourceType ?? params.source_type,
+    "sourceType",
+  );
+  if (!["passenger", "business", "gastronomy", "service"].includes(sourceType)) {
+    throw new RequestValidationError("Invalid sourceType");
+  }
+
+  const sourceId = optionalUuid(params.sourceId ?? params.source_id, "sourceId");
+  const authoritySourceId = optionalUuid(
+    params.authorizationSourceId ?? params.authorization_source_id ?? sourceId,
+    "authorizationSourceId",
+  );
+
+  await requireEffectiveMobilityRollout(
+    supabaseAdmin,
+    base.p_pickup_location_id,
+    true,
+  );
+  await requireDeliveryCreationAuthority(
+    supabaseAdmin,
+    auth,
+    sourceType as "passenger" | "business" | "gastronomy" | "service",
+    authoritySourceId,
+    base.p_passenger_profile_id,
+  );
+
+  const { data, error } = await supabaseAdmin.rpc(
+    "mobility_create_delivery_atomic",
+    {
+      p_passenger_profile_id: base.p_passenger_profile_id,
+      p_pickup_address_id: base.p_pickup_address_id,
+      p_dropoff_address_id: base.p_dropoff_address_id,
+      p_pickup_location_id: base.p_pickup_location_id,
+      p_dropoff_location_id: base.p_dropoff_location_id,
+      p_source_type: sourceType,
+      p_source_id: sourceId,
+      p_recipient_name: requireTrimmedString(
+        params.recipientName ?? params.recipient_name,
+        "recipientName",
+        200,
+      ),
+      p_recipient_phone: optionalTrimmedString(
+        params.recipientPhone ?? params.recipient_phone,
+        "recipientPhone",
+        80,
+      ),
+      p_delivery_notes: optionalTrimmedString(
+        params.deliveryNotes ?? params.delivery_notes,
+        "deliveryNotes",
+        1000,
+      ),
+      p_package_description: optionalTrimmedString(
+        params.packageDescription ?? params.package_description,
+        "packageDescription",
+        1000,
+      ),
+      p_package_size:
+        optionalStatus(params.packageSize ?? params.package_size, "packageSize") ?? "small",
+      p_origin: base.p_origin,
+      p_destination: base.p_destination,
+      p_origin_lat: base.p_origin_lat,
+      p_origin_lng: base.p_origin_lng,
+      p_destination_lat: base.p_destination_lat,
+      p_destination_lng: base.p_destination_lng,
+      p_suggested_price: base.p_suggested_price,
+      p_observation: base.p_observation,
+      p_payment_method: base.p_payment_method,
+      p_departure_time: base.p_departure_time,
+    },
+  );
+  if (error) throw error;
+  return data ?? { success: false, reason: "empty_response" };
 }
 
 async function handleConfirmPassengerCompletion(
@@ -886,6 +1445,10 @@ async function dispatchAction(
   params: Record<string, unknown>,
 ) {
   switch (action) {
+    case "createRide":
+      return handleCreateRide(supabaseAdmin, auth, params);
+    case "createDelivery":
+      return handleCreateDelivery(supabaseAdmin, auth, params);
     case "acceptRide":
       return handleAcceptRide(supabaseAdmin, auth, params);
     case "adminRedispatch":
