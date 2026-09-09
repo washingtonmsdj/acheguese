@@ -79,6 +79,9 @@ describe("Mobility driver coverage authority", () => {
       "ProfessionalService.getProfessionalDataIdByProfileId(profileId)",
     );
     expect(service).toContain("getDriverDataIdByProfileId(profileId)");
+    expect(service).toContain("coverageRepository.replaceByEntity(");
+    expect(service).toContain("coverage_type: CoverageType.DISTRICT");
+    expect(service).toContain("status: CoverageStatus.ACTIVE");
     expect(service).not.toContain("findSingleIdByProfile");
     expect(service).not.toContain("ProfileEntityDbClient");
     expect(service).not.toMatch(/\.from(?:<[^>]+>)?\(\s*table\s*\)/);

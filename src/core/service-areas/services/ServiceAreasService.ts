@@ -169,6 +169,38 @@ class ServiceAreasService {
     }
   }
 
+  async replaceServiceAreas(
+    profileId: string,
+    locationIds: string[],
+  ): Promise<ServiceArea[]> {
+    try {
+      const entity = await resolveCoverageEntity(profileId);
+      const uniqueLocationIds = [...new Set(locationIds.filter(Boolean))];
+      const areas = await coverageRepository.replaceByEntity(
+        entity.entityType,
+        entity.entityId,
+        uniqueLocationIds.map((locationId, index) => ({
+          coverage_type: CoverageType.DISTRICT,
+          location_id: locationId,
+          radius_km: null,
+          is_primary: index === 0,
+          status: CoverageStatus.ACTIVE,
+        })),
+      );
+
+      return Promise.all(
+        areas.map((area) => mapCoverageArea(profileId, area)),
+      );
+    } catch (error) {
+      trackError(error, {
+        component: "ServiceAreasService",
+        action: "replaceServiceAreas",
+        metadata: { profileId, locationCount: locationIds.length },
+      });
+      throw error;
+    }
+  }
+
   async createServiceArea(data: CreateServiceAreaData): Promise<ServiceArea> {
     try {
       const entity = await resolveCoverageEntity(data.profile_id);

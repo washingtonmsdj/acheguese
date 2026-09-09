@@ -945,6 +945,27 @@ Motivo arquitetural:
 
 **Certificação:** a correção fecha a violação estática conhecida por construção. Build/CI completo ainda precisa rodar no mesmo SHA quando runner/Vercel voltarem a executar; não marcar como PASS antes disso.
 
+### Checkpoint G34A — sincronização bulk canônica de Service Areas (2026-09-09)
+
+Preparação para remover a autoridade duplicada de cobertura em `professional_data`:
+- [x] `ServiceAreasService.replaceServiceAreas(profileId, locationIds)` resolve Profile → entidade canônica;
+- [x] deduplica `Location IDs` e chama uma única vez `coverageRepository.replaceByEntity`;
+- [x] bairros/distritos são persistidos como `CoverageType.DISTRICT`, com primeiro item primário e status ACTIVE;
+- [x] a operação usa o comando bulk server-owned `replace_entity_coverage`; não existe loop browser de insert/delete;
+- [x] ratchet exige o caminho bulk canônico.
+
+Evidência remota antes da migração:
+- `professional_data`: 5 linhas;
+- `service_areas` legado JSONB não vazio: 0;
+- `service_radius_km` legado não nulo: 0;
+- `public.service_areas`: 0 linhas.
+Logo não há conteúdo a converter; o trabalho é eliminar a autoridade duplicada do código sem perda de dados.
+
+Próximo corte:
+1. cadastro/edição devem selecionar e persistir `locations.id` via `replaceServiceAreas`;
+2. remover leitura/escrita de `professional_data.service_areas/service_radius_km` do runtime atual;
+3. somente após deploy web do código novo, dropar as colunas legadas no banco para não quebrar o frontend production ainda antigo.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:
