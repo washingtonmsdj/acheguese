@@ -89,6 +89,12 @@ export class ProfessionalService {
    * BUSCAR SERVICOS POR PERFIL
    * SSOT: metodo para buscar todos os servicos de um perfil especifico.
    */
+  static async getProfessionalDataIdByProfileId(
+    profileId: string,
+  ): Promise<string | null> {
+    return professionalQueries.getProfessionalDataIdByProfileId(profileId);
+  }
+
   static async getServicesByProfile(profileId: string): Promise<Professional[]> {
     return professionalQueries.getServicesByProfile(profileId);
   }

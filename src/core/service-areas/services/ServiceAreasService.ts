@@ -20,7 +20,10 @@ import {
   type ServiceArea as CoverageArea,
 } from "@/core/coverage";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
-import { supabase } from "@/integrations/supabase";
+import { getBusinessDataIdByProfileId } from "@/core/business/services/BusinessService";
+import { ProfessionalService } from "@/core/professional/services/ProfessionalService";
+import { getDriverDataIdByProfileId } from "@/core/mobility/services/MobilityService";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
 
@@ -61,52 +64,16 @@ export interface UpdateServiceAreaData {
   is_active?: boolean;
 }
 
-interface QueryResult<T> {
-  data: T | null;
-  error: { message: string; code?: string } | null;
-}
-
-interface QueryBuilder<TRow> {
-  select(columns?: string): QueryBuilder<TRow>;
-  eq(column: string, value: unknown): QueryBuilder<TRow>;
-  maybeSingle(): Promise<QueryResult<TRow>>;
-}
-
-interface ProfileEntityDbClient {
-  from<TRow = Record<string, unknown>>(table: string): QueryBuilder<TRow>;
-}
-
 interface CoverageEntity {
   entityType: EntityType;
   entityId: string;
 }
 
-const profileEntityDb = supabase as unknown as ProfileEntityDbClient;
 const coverageRepository = createCoverageRepository();
 const locationRepository = createLocationRepository();
 
-async function findSingleIdByProfile(
-  table: "business_data" | "professional_data" | "driver_data",
-  profileId: string,
-): Promise<string | null> {
-  const { data, error } = await profileEntityDb
-    .from<{ id: string }>(table)
-    .select("id")
-    .eq("profile_id", profileId)
-    .maybeSingle();
-
-  if (error) throw new Error(error.message);
-  return data?.id ?? null;
-}
-
 async function resolveCoverageEntity(profileId: string): Promise<CoverageEntity> {
-  const { data: profile, error } = await profileEntityDb
-    .from<{ id: string; profile_type: string }>("profiles")
-    .select("id, profile_type")
-    .eq("id", profileId)
-    .maybeSingle();
-
-  if (error) throw new Error(error.message);
+  const profile = await profileService.getProfileById(profileId);
   if (!profile) throw new Error("Perfil não encontrado");
 
   let entityType: EntityType;
@@ -115,15 +82,16 @@ async function resolveCoverageEntity(profileId: string): Promise<CoverageEntity>
   switch (profile.profile_type) {
     case "business":
       entityType = "business";
-      entityId = await findSingleIdByProfile("business_data", profileId);
+      entityId = await getBusinessDataIdByProfileId(profileId);
       break;
     case "professional":
       entityType = "service_provider";
-      entityId = await findSingleIdByProfile("professional_data", profileId);
+      entityId =
+        await ProfessionalService.getProfessionalDataIdByProfileId(profileId);
       break;
     case "driver":
       entityType = "mobility_driver";
-      entityId = await findSingleIdByProfile("driver_data", profileId);
+      entityId = await getDriverDataIdByProfileId(profileId);
       break;
     default:
       throw new Error("Este tipo de perfil não possui área de atuação");

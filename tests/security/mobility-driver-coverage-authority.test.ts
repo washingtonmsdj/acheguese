@@ -73,9 +73,15 @@ describe("Mobility driver coverage authority", () => {
     expect(repository).toContain("'update_entity_coverage_status'");
 
     expect(service).toContain('entityType = "mobility_driver"');
+    expect(service).toContain("profileService.getProfileById(profileId)");
+    expect(service).toContain("getBusinessDataIdByProfileId(profileId)");
     expect(service).toContain(
-      'findSingleIdByProfile("driver_data", profileId)',
+      "ProfessionalService.getProfessionalDataIdByProfileId(profileId)",
     );
+    expect(service).toContain("getDriverDataIdByProfileId(profileId)");
+    expect(service).not.toContain("findSingleIdByProfile");
+    expect(service).not.toContain("ProfileEntityDbClient");
+    expect(service).not.toMatch(/\.from(?:<[^>]+>)?\(\s*table\s*\)/);
     expect(service).not.toContain("driver_accepted_neighborhoods");
     expect(service).not.toMatch(
       /\.from(?:<[^>]+>)?\(["']service_areas["']\)[\s\S]{0,200}\.(?:insert|update|upsert|delete)\(/,

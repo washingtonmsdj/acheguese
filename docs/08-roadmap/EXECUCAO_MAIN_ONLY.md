@@ -922,6 +922,29 @@ Próximo gate:
 4. provar deploy web no mesmo SHA;
 5. só então discutir abertura da Mobilidade.
 
+### Checkpoint G33 — remover acesso dinâmico de ServiceAreasService (2026-09-09)
+
+Falha real encontrada no último build Vercel que chegou a executar o gate de arquitetura:
+- `incremental-baseline: novo acesso nao autorizado: dynamic-table|<dynamic>|read|src/core/service-areas/services/ServiceAreasService.ts`;
+- a causa era `findSingleIdByProfile(table, profileId)`, um mini-cliente Supabase genérico que escolhia `business_data`, `professional_data` ou `driver_data` por nome de tabela;
+- **não** foi adicionada exceção ao baseline.
+
+Correção de raiz:
+- [x] `ServiceAreasService` deixou de importar/usar Supabase diretamente para resolver identidade;
+- [x] `profiles` passa pelo `profileService.getProfileById`;
+- [x] empresa usa `getBusinessDataIdByProfileId` do owner canônico de Business;
+- [x] Professional ganhou `getProfessionalDataIdByProfileId` dentro de `professional.queries.ts`, exposto pela fachada canônica;
+- [x] Mobility ganhou `getDriverDataIdByProfileId` dentro de `mobility.queries.ts`, exposto pela fachada canônica;
+- [x] removidos `ProfileEntityDbClient`, `QueryBuilder` local e `findSingleIdByProfile` de Service Areas;
+- [x] ratchet de coverage agora exige os owners canônicos e proíbe a volta de `.from(table)` no serviço.
+
+Motivo arquitetural:
+- Coverage continua sendo o único owner da persistência de `service_areas`;
+- Service Areas apenas orquestra identidade → entidade de cobertura;
+- cada tabela de identidade permanece lida pelo próprio domínio, sem novo repositório paralelo e sem acesso dinâmico não rastreável.
+
+**Certificação:** a correção fecha a violação estática conhecida por construção. Build/CI completo ainda precisa rodar no mesmo SHA quando runner/Vercel voltarem a executar; não marcar como PASS antes disso.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:

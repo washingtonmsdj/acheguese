@@ -6,6 +6,7 @@ export {
   getProfessionals,
   getProfessionalsList,
   getProfessionalById,
+  getProfessionalDataIdByProfileId,
   getServicesByProfile,
   getStats,
   getTotalProfessionalsCount,

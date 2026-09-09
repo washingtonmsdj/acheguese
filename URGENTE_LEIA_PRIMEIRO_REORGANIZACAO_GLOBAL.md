@@ -19,16 +19,18 @@ Leia nesta ordem:
 
 > Resumo de handoff; a autoridade detalhada continua em `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`.
 
-- foco atual: **certificação same-SHA de Mobilidade/Delivery**, não nova refatoração estrutural;
-- G31 aposentou validadores operator/service_role obsoletos que furavam o contrato server-owned;
-- G32 reconciliou runtime real: `mobility-rpc v24` e `delivery-rpc v8` estão byte-a-byte iguais ao Git; drift antigo do `auto-dispatch-ride v24` foi corrigido e o runtime agora está em **v25 ACTIVE**, também byte-a-byte igual ao Git;
-- `auto-dispatch-ride` usa apenas commands atômicos para offer/timeout/expire; o ratchet agora proíbe retorno de DML direto nos agregados/audits;
-- grants reais confirmados: browser sem DML nos agregados críticos de Mobility/Delivery; RPCs atômicos críticos service-role-only;
-- invariantes remotos: 0 offers abertas, 0 dispatch pendente e 0 motorista preso em corrida terminal;
+- foco atual: **certificação same-SHA de Mobilidade/Delivery e fechamento dos gates reais de arquitetura**;
+- G31 aposentou validadores operator/service_role obsoletos;
+- G32 reconciliou `mobility-rpc v24`, `delivery-rpc v8` e corrigiu o drift do `auto-dispatch-ride` para **v25 ACTIVE**, byte-a-byte igual ao Git;
+- G33 corrige a falha real do último build executado: `ServiceAreasService` não usa mais `from(table)` dinâmico; resolução de identidade passa pelos owners canônicos de Profile, Business, Professional e Mobility;
+- **não** adicionar `ServiceAreasService` ao incremental baseline para esconder a violação;
 - Supabase canônico: `xhdowzacfujckjelqhtd`;
+- invariantes remotos de mobilidade continuam: 0 offers abertas, 0 dispatch pendente e 0 motorista preso em corrida terminal;
+- Vercel atual está bloqueando novos builds por limite do provider e GitHub jobs recentes nem iniciam steps; portanto build/E2E same-SHA continuam pendentes de execução real;
+- último deploy Vercel production READY localizado: `86c76fc8d48550fbbed783a359c32f6cdf6a435d`, muito atrás da `main`;
 - Mobilidade continua **launch-paused**: `PUBLIC_LAUNCH_SURFACES.mobility=false`;
-- próximo gate: ratchets/validators → build same-SHA → E2E positivo/negativo + smoke responsivo → deploy web same-SHA;
-- não restaurar DML direto, operator scripts obsoletos, wrappers concorrentes ou authorities paralelas para acelerar a certificação.
+- próximo gate: reexecutar arquitetura/security → build same-SHA → E2E positivo/negativo + smoke responsivo → deploy web same-SHA;
+- não restaurar DML direto, operator scripts obsoletos, wrappers concorrentes, dynamic-table novo ou authorities paralelas.
 
 ## Regra para novas IAs/agentes
 

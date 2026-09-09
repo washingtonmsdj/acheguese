@@ -304,6 +304,31 @@ export async function getUserRides(userId: string): Promise<unknown[]> {
 /**
  *  Buscar dados do motorista por ID de perfil
  */
+export async function getDriverDataIdByProfileId(
+  profileId: string,
+): Promise<string | null> {
+  try {
+    const { data, error } = await supabaseClient
+      .from<{ id: string }>("driver_data")
+      .select("id")
+      .eq("profile_id", profileId)
+      .maybeSingle();
+
+    if (error) {
+      logger.error("MobilityQueries.getDriverDataIdByProfileId", error);
+      return null;
+    }
+
+    return data?.id ?? null;
+  } catch (error) {
+    logger.error(
+      "MobilityQueries.getDriverDataIdByProfileId - unexpected error",
+      error,
+    );
+    return null;
+  }
+}
+
 export async function getDriverData(profileId: string): Promise<unknown | null> {
   try {
     const { data, error } = await supabaseClient

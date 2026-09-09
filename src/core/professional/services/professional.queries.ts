@@ -390,6 +390,34 @@ export async function getProfessionalById(id: string): Promise<Professional> {
   }
 }
 
+export async function getProfessionalDataIdByProfileId(
+  profileId: string,
+): Promise<string | null> {
+  try {
+    const { data, error } = await professionalQueriesDb
+      .from<ProfessionalIdRow>("professional_data")
+      .select("id")
+      .eq("profile_id", profileId)
+      .maybeSingle();
+
+    if (error) {
+      logger.error(
+        "[professional.queries] Error fetching professional_data id by profile_id:",
+        error,
+      );
+      return null;
+    }
+
+    return data?.id ?? null;
+  } catch (error) {
+    logger.error(
+      "[professional.queries] Error in getProfessionalDataIdByProfileId:",
+      error,
+    );
+    return null;
+  }
+}
+
 export async function getServicesByProfile(profileId: string): Promise<Professional[]> {
   try {
     const { data, error } = await professionalQueriesDb
