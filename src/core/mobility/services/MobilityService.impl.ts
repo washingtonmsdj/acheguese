@@ -250,17 +250,6 @@ export class MobilityService {
     }
   }
 
-  static async createRide(data: Record<string, unknown>): Promise<unknown> {
-    const { data: ride, error } = await db
-      .from("ride_requests")
-      .insert(data)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return ride;
-  }
-
   static async getAllRideRequests(): Promise<unknown[]> {
     const { data, error } = await db
       .from("ride_requests")
