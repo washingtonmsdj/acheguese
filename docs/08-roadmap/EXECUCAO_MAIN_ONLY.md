@@ -50,6 +50,33 @@ Estado técnico anterior a este checkpoint documental: `d3490f45630f3d02117d4abe
 
 **Regra:** não contornar o audit, não reduzir `audit-level`, não usar `npm audit fix --force` e não interpretar rate-limit do provider como aprovação de build.
 
+## Checkpoint 2026-09-09 — Mobilidade G18/G19: fechamento terminal atômico
+
+Problemas confirmados no código/runtime:
+- `logRideStateChange` ainda permitia ao participante gerar entradas genéricas em `ride_state_audit`, embora os commands atômicos já fossem os owners reais das transições;
+- `cancelPendingOffers` executava uma segunda escrita depois do cancelamento da corrida, permitindo estado terminal com oferta ainda aberta se a chamada seguinte falhasse;
+- `releaseDriverAvailabilityForRide` / `DriverAvailabilityService.releaseBusy` também eram uma segunda escrita pós-transição, permitindo corrida final com motorista preso em `busy`;
+- o primeiro desenho G19A revelou no probe transacional uma violação real de `check_available_requirements`: motorista online sem coordenadas não pode ser marcado `is_available=true`.
+
+Correção de raiz aplicada:
+- [x] audit genérico de estado removido do browser, broker, facade e pós-transição; o PIN mantém auditoria própria server-owned em `operational_verifications`;
+- [x] `MobilityAuditService` e `RideOperationalPostTransition` removidos fisicamente após zero callers;
+- [x] migration remota/versionada `20260909185003_atomize_terminal_ride_offer_invalidation_g18.sql`: estado terminal invalida `ride_offers pending/sent` na mesma transação;
+- [x] `cancel_pending_ride_offers(uuid)` removida após prova de zero dependentes;
+- [x] migration `20260909190551_atomize_terminal_dispatch_driver_release_g19.sql`: o transition command passou a fechar dispatch pendente e liberar ownership `busy` na mesma transação;
+- [x] migration corretiva `20260909191423_fix_terminal_driver_release_availability_g19.sql`: auto-retorno para `available` exige motorista online + latitude/longitude + `last_location_update` nos últimos 5 minutos; sem GPS recente, busy é limpo e o motorista permanece `online_warming_up`;
+- [x] probe real com `BEGIN/ROLLBACK` comprovou: sem GPS a transição final conclui e não publica disponibilidade; com GPS recente volta disponível; uma corrida diferente não limpa o `active_ride_id` atual; offer, dispatch e audit fecham de forma consistente;
+- [x] `mobility-rpc` remoto atualizado para **v24 ACTIVE**, `verify_jwt=true`, com source do entrypoint byte-a-byte igual à `main`;
+- [x] broker v24 não contém `logRideStateChange`, `cancelPendingOffers`, `releaseDriverAvailabilityForRide` nem `canAccessRideAsParticipantOrAdmin`;
+- [x] migration `20260909191733_retire_terminal_driver_release_helper_g19.sql` removeu `release_driver_availability_for_ride(uuid,uuid)` depois do cutover do Edge e de prova de zero dependentes/referências;
+- [x] snapshot pós-cutover: **0** corridas finais com offers abertas, **0** dispatch `pending` e **0** motoristas busy ligados a corrida final;
+- [x] Gate 5 operacional agora verifica o próprio transition command, inclusive isolamento por `active_ride_id` e fluxo motoboy `delivered -> completed`;
+- [x] advisors pós-DDL não registraram finding novo específico de G18/G19; `ride_state_audit` continua RLS sem policy como superfície server-owned/fail-closed.
+
+**Estado:** G18/G19 fechados no banco e no Edge. Mobilidade permanece `PUBLIC_LAUNCH_SURFACES.mobility=false`: isto corrige autoridade/atomicidade, mas não substitui a certificação E2E/same-SHA/deploy.
+
+**Próximo gate:** continuar a auditoria por operação concreta das funções `SECURITY DEFINER` ainda executáveis por `authenticated`, priorizando safety share, lifecycle/trust e leitura/escrita de dados de corrida. Não recriar helpers genéricos para facilitar o browser.
+
 ## Regra máxima — projeto primeiro, documentação depois
 
 Esta regra é obrigatória para qualquer IA/agente que continuar o Achegue-se:
