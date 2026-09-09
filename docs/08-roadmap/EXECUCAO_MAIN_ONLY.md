@@ -351,3 +351,50 @@ Próximo gate obrigatório:
 2. auditar RPCs `SECURITY DEFINER` autenticadas ligadas a dispatch/trust e provar escopo por participante/território;
 3. executar E2E real de motorista + motoboy + passageiro e somente depois considerar rollout público.
 
+### Checkpoint G8 — disponibilidade de motorista server-owned (2026-09-09)
+
+Problemas confirmados:
+- `driver_availability` ainda concedia `INSERT/UPDATE/DELETE` a `authenticated` por policy `ALL`, embora contenha `active_ride_id`, `busy_since` e `active_ride_mode`;
+- o aceite atômico já marcava o motorista como busy, mas `MobilityOfferService` tentava executar um segundo `setBusy()` no browser e ignorava a falha;
+- “pausar disponibilidade” atualizava somente o espelho em `driver_data`, deixando o estado canônico de dispatch potencialmente disponível.
+
+Correção aplicada e provada:
+- migration `harden_driver_availability_authority_g8` aplicada no Supabase canônico;
+- `driver_availability`: `SELECT authenticated=true`; `INSERT/UPDATE/DELETE authenticated=false`;
+- `mobility_update_driver_availability` e `mobility_reconcile_stale_driver_availability` são `SECURITY DEFINER`, com `search_path`/timeout fixos e `EXECUTE` somente para `service_role`;
+- browser expressa apenas intenção de presença via `mobility-rpc`; `active_ride_id`, `busy_since` e `active_ride_mode` permanecem propriedade do aceite/release atômico;
+- `MobilityOfferService` não chama mais `setBusy()` depois de `acceptRideAtomic`;
+- pausa de disponibilidade agora altera primeiro o estado canônico de dispatch;
+- reconciliação stale é operação administrativa/server-side e nunca auto-libera motorista busy;
+- `mobility-rpc` remoto atualizado para v17 `ACTIVE`, `verify_jwt=true`;
+- ratchet: `MobilityAvailabilityAuthority.test.ts`;
+- Gate 5 operacional foi atualizado para representar estado busy por fixture administrativa/server-owned, não por API pública `setBusy()`.
+
+### Checkpoint G9 — GPS do motorista brokered e read-only no browser (2026-09-09)
+
+Problemas confirmados:
+- `driver_locations` ainda concedia CRUD completo a `authenticated`;
+- `TrackingService.updatePosition()` fazia `...metadata` depois de `lat/lng`, permitindo sobrescrever campos do payload genérico;
+- tracking/presença aceitavam cliente Supabase injetado, mas o broker estático usava apenas o cliente global, quebrando isolamento de sessão em testes/contextos injetados;
+- presença de tracking ainda consultava/escrevia o espelho `driver_data.is_online` em vez do estado canônico `driver_availability`.
+
+Correção aplicada e provada:
+- migration `broker_driver_location_writes_g9` aplicada no Supabase canônico;
+- `driver_locations`: `SELECT authenticated=true`; `INSERT/UPDATE/DELETE authenticated=false`; `anon SELECT=false`;
+- única policy restante é `driver_locations_authorized_read`, preservando leitura do próprio motorista/admin e passageiro em corrida elegível;
+- `mobility_update_driver_location` é `SECURITY DEFINER`, `EXECUTE service_role=true`, `authenticated/anon=false`, com validação de ownership e bounds GPS;
+- cada atualização de GPS sincroniza também `driver_availability.current_lat/current_lng/last_location_update/last_seen_at`, evitando snapshot de dispatch divergente;
+- `TrackingService` envia GPS de motorista por `MobilityRpcService.updateDriverLocation`; o payload de driver não aceita `metadata`;
+- `invokeSupabaseBroker` aceita opcionalmente o cliente autenticado da camada chamadora; default global foi preservado para callers existentes;
+- `TrackingService.getPresence/updatePresence/heartbeat/reconnect` usam `driver_availability` + broker, não `driver_data.is_online`;
+- testes Gate 2/Gate 4 foram ajustados para perfil `driver`, broker autenticado e sem cleanup/upsert browser direto em `driver_locations`;
+- `mobility-rpc` remoto atualizado para v18 `ACTIVE`, `verify_jwt=true`;
+- ratchet: `MobilityDriverLocationAuthority.test.ts`.
+
+Próximo gate obrigatório:
+1. auditar RPCs `SECURITY DEFINER` de Mobilidade/Trust que continuam executáveis por `authenticated` ou `anon`, começando por dados de corrida, safety share, ratings e mutações de lifecycle;
+2. provar casos negativos de acesso cruzado entre passageiro/motorista/terceiro;
+3. executar typecheck/test/build reais no mesmo SHA quando a infraestrutura hosted estiver disponível;
+4. executar E2E real motorista + motoboy + passageiro;
+5. manter `PUBLIC_LAUNCH_SURFACES.mobility=false` até todos os gates acima passarem.
+
