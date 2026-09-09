@@ -1259,6 +1259,12 @@ async function handleUpdateFailedDeliveryResolution(
   auth: UserAuthResult,
   params: Record<string, unknown>,
 ) {
+  if (!auth.isProjectAdmin) {
+    throw new RequestAuthorizationError(
+      "Admin authority is required to resolve failed deliveries",
+    );
+  }
+
   const rideId = requireUuid(params.rideId ?? params.ride_id, "rideId");
   const resolutionUpdate = requireObject(
     params.resolutionUpdate ?? params.resolution_update,
@@ -1268,12 +1274,6 @@ async function handleUpdateFailedDeliveryResolution(
 
   if (ride.ride_mode !== "motoboy" || ride.status !== "failed_delivery") {
     throw new RequestValidationError("Ride is not a failed motoboy delivery");
-  }
-
-  if (!await canAccessRideAsParticipantOrAdmin(supabaseAdmin, auth, ride)) {
-    throw new RequestAuthorizationError(
-      "User cannot update failed delivery resolution for this ride",
-    );
   }
 
   const { data, error } = await supabaseAdmin.rpc(
