@@ -25,8 +25,6 @@ describe("mobility rpc broker security", () => {
     expect(edgeFunction).toContain("function requireUser(");
     expect(edgeFunction).toContain('getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY")');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("accept_ride_atomic"');
-    expect(edgeFunction).toContain('supabaseAdmin.rpc("log_ride_dispatch_attempt"');
-    expect(edgeFunction).toContain('supabaseAdmin.rpc("update_latest_ride_dispatch_attempt"');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("cancel_pending_ride_offers"');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("release_driver_availability_for_ride"');
     expect(edgeFunction).toContain('.from("ride_requests")');
@@ -36,7 +34,12 @@ describe("mobility rpc broker security", () => {
     expect(edgeFunction).not.toContain('.from("user_roles")');
     expect(edgeFunction).toContain("requireDispatchStrategy");
     expect(edgeFunction).toContain("handleAcceptRide");
-    expect(edgeFunction).toContain("canWriteDispatchAudit");
+    expect(edgeFunction).not.toContain("canWriteDispatchAudit");
+    expect(edgeFunction).not.toContain("requireDispatchWriteAccess");
+    expect(edgeFunction).not.toContain("logDispatchAttempt");
+    expect(edgeFunction).not.toContain("updateLatestDispatchAttempt");
+    expect(edgeFunction).not.toContain("log_ride_dispatch_attempt");
+    expect(edgeFunction).not.toContain("update_latest_ride_dispatch_attempt");
     expect(edgeFunction).toContain("canAccessRideAsParticipantOrAdmin");
     expect(edgeFunction).not.toMatch(/p_user_id:\s*params\./);
     expect(edgeFunction).not.toMatch(/p_user_id:\s*rawBody/);
@@ -87,5 +90,37 @@ describe("mobility rpc broker security", () => {
     expect(acceptMigration).toContain("dd.is_verified = true");
     expect(acceptMigration).toContain("dd.is_online = true");
     expect(acceptMigration).toContain("dd.is_available = true");
+  });
+
+  it("retires dispatch audit RPCs superseded by atomic server-owned commands", () => {
+    const retirement = readProjectFile(
+      "supabase/migrations/20260909180639_retire_legacy_mobility_dispatch_audit_rpcs_g15.sql",
+    );
+    const edgeFunction = readProjectFile("supabase/functions/mobility-rpc/index.ts");
+    const rpcService = readProjectFile("src/core/mobility/services/MobilityRpcService.ts");
+    const auditService = readProjectFile("src/core/mobility/services/MobilityAuditService.ts");
+    const autoDispatch = readProjectFile("supabase/functions/auto-dispatch-ride/index.ts");
+    const atomicDispatch = readProjectFile(
+      "supabase/migrations/20260909125837_harden_atomic_mobility_dispatch_authority_g6.sql",
+    );
+
+    for (const name of [
+      "log_ride_dispatch_attempt",
+      "update_latest_ride_dispatch_attempt",
+      "can_write_ride_dispatch_audit",
+    ]) {
+      expect(retirement).toContain(`DROP FUNCTION IF EXISTS public.${name}`);
+    }
+
+    for (const source of [edgeFunction, rpcService, auditService]) {
+      expect(source).not.toContain("logDispatchAttempt");
+      expect(source).not.toContain("updateLatestDispatchAttempt");
+      expect(source).not.toContain("log_ride_dispatch_attempt");
+      expect(source).not.toContain("update_latest_ride_dispatch_attempt");
+    }
+
+    expect(autoDispatch).toContain("mobility_offer_driver_atomic");
+    expect(autoDispatch).toContain("mobility_timeout_driver_offer_atomic");
+    expect(atomicDispatch).toContain("INSERT INTO public.ride_dispatch_audit");
   });
 });
