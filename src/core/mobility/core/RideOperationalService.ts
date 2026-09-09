@@ -16,8 +16,8 @@ import { getRideById } from "../services/mobility.queries";
 import {
   createRide,
   updateRide as updateRideMutation,
-  updateRideWithGuards,
 } from "../services/mobility.mutations";
+import { MobilityRpcService } from "../services/MobilityRpcService";
 import type { FailedDeliveryMetadata, ResolutionStatus } from "../types/FailedDeliveryMetadata";
 import { OperationalVerificationService } from "../services/OperationalVerificationService";
 import { mobilityRolloutService } from "../services/MobilityRolloutService";
@@ -255,37 +255,18 @@ export class RideOperationalService {
       // Validar transicao
       RideStateMachine.assertCanTransition(fromState, toState);
 
-      // Executar transicao
-      const updates: Record<string, unknown> = {
-        status: toState,
-        updated_at: new Date().toISOString(),
-      };
-
-      // Adicionar timestamps especificos apenas se a coluna existir
-      // Nota: Algumas colunas podem no existir dependendo da migrao
-      if (toState === RIDE_STATE.PASSENGER_BOARDED) {
-        updates.passenger_boarded_at = new Date().toISOString();
-      } else if (toState === RIDE_STATE.IN_PROGRESS) {
-        updates.started_at = new Date().toISOString();
-      } else if (toState === RIDE_STATE.COMPLETED) {
-        updates.completed_at = new Date().toISOString();
-      } else if (toState === RIDE_STATE.CANCELLED_BY_PASSENGER ||
-                 toState === RIDE_STATE.CANCELLED_BY_DRIVER) {
-        updates.cancelled_at = new Date().toISOString();
-      }
-
-      const updated = await updateRideWithGuards(
+      // Executar transicao e auditoria de forma atomica no backend.
+      const transition = await MobilityRpcService.transitionRideState({
         rideId,
-        updates as Record<string, unknown>,
-        { statusEq: fromState },
-      );
+        expectedFromState: fromState,
+        toState,
+        actorProfileId: actor,
+        reason,
+      });
 
-      if (!updated) {
-        throw new Error('Ride state changed during transition');
+      if (!transition.updated) {
+        throw new Error('Ride state transition was not applied');
       }
-
-      // Registrar auditoria
-      await logRideStateChange(rideId, fromState, toState, actor, reason);
 
       await OrderDeliveryLinkService.syncRideStatusToOrder({
         rideId,
