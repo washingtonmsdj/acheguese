@@ -11,7 +11,7 @@ export interface ProfessionalEditForm {
   category: string;
   subcategory: string;
   description: string;
-  serviceAreas: string[];
+  serviceAreaLocationIds: string[];
   phone: string;
   whatsapp: string;
   email: string;
@@ -30,7 +30,7 @@ export const createInitialProfessionalEditForm = (): ProfessionalEditForm => ({
   category: "",
   subcategory: "",
   description: "",
-  serviceAreas: [],
+  serviceAreaLocationIds: [],
   phone: "",
   whatsapp: "",
   email: "",
@@ -53,12 +53,13 @@ function getAvailableHoursSchedule(
 
 export const mapProfessionalToEditForm = (
   professional: Professional,
+  serviceAreaLocationIds: string[] = [],
 ): ProfessionalEditForm => ({
   name: professional.name || "",
   category: professional.category || "",
   subcategory: professional.subcategory || "",
   description: professional.description || "",
-  serviceAreas: professional.service_areas || [],
+  serviceAreaLocationIds,
   phone: professional.phone || "",
   whatsapp: professional.whatsapp || "",
   email: professional.email || "",
@@ -107,7 +108,6 @@ export const buildProfessionalUpdateInput = ({
   phone: form.phone.trim() || undefined,
   whatsapp: form.whatsapp.trim() || undefined,
   email: form.email.trim() || undefined,
-  service_areas: form.serviceAreas,
   available_hours: form.availableHours ? { schedule: form.availableHours } : undefined,
   price_range: form.priceRange.trim() || undefined,
   experience_years: form.experienceYears

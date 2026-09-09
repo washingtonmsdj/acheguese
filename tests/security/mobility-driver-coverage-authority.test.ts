@@ -94,6 +94,18 @@ describe("Mobility driver coverage authority", () => {
     expect(createPage).not.toContain("neighborhood: form.serviceArea");
     expect(createModel).toContain("serviceAreaLocationIds: string[]");
     expect(createModel).not.toContain("serviceAreas: string[]");
+    const editPage = readProjectFile(
+      "src/modules/professionals/services/pages/EditarServicoPage.tsx",
+    );
+    const editModel = readProjectFile(
+      "src/modules/professionals/services/pages/EditarServicoPage.model.ts",
+    );
+    expect(editPage).toContain("useServiceAreas(professional?.profile_id");
+    expect(editPage).toContain("serviceAreasService.replaceServiceAreas(");
+    expect(editPage).toContain("form.serviceAreaLocationIds");
+    expect(editModel).toContain("serviceAreaLocationIds: string[]");
+    expect(editModel).not.toContain("professional.service_areas");
+    expect(editModel).not.toContain("service_areas: form.");
     expect(service).not.toContain("findSingleIdByProfile");
     expect(service).not.toContain("ProfileEntityDbClient");
     expect(service).not.toMatch(/\.from(?:<[^>]+>)?\(\s*table\s*\)/);

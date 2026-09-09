@@ -14,6 +14,7 @@ import { useProfessionalById } from "@/modules/professionals/services/hooks/useP
 import { useProfessionalEdit } from "@/modules/professionals/services/hooks/useProfessionalEdit";
 import { useServiceUrls } from "@/modules/professionals/services/hooks/useServiceUrls";
 import { useServiceAreaOptions } from "@/modules/professionals/services/hooks/useServiceAreaOptions";
+import { serviceAreasService, useServiceAreas } from "@/core/service-areas";
 import {
   buildProfessionalUpdateInput,
   createInitialProfessionalEditForm,
@@ -87,19 +88,11 @@ export default function EditarServicoPage() {
     isLoading: loadingServiceAreaOptions,
   } = useServiceAreaOptions(professional?.location_id ?? null);
 
-  const { updateProfessional } = useProfessionalEdit({
-    onSuccess: () => {
-      toast({ title: "Perfil profissional atualizado com sucesso!" });
-      setHasChanges(false);
-    },
-    onError: (error) => {
-      toast({
-        title: "Erro ao atualizar",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+  const canonicalCoverageQuery = useServiceAreas(professional?.profile_id ?? "");
+  const canonicalServiceAreas = canonicalCoverageQuery.data ?? [];
+  const coverageInitializedProfileRef = React.useRef<string | null>(null);
+
+  const { updateProfessional } = useProfessionalEdit();
 
   const identityEntityId = professional?.professional_data_id ?? "";
   const { logAttempt, logSuccess, logError } = useIdentitySaveLogger({
@@ -110,16 +103,24 @@ export default function EditarServicoPage() {
   });
 
   useEffect(() => {
-    if (!professional) return;
+    if (!professional || !canonicalCoverageQuery.isFetched) return;
+    if (coverageInitializedProfileRef.current === professional.profile_id) return;
 
-    setForm(mapProfessionalToEditForm(professional));
+    setForm(
+      mapProfessionalToEditForm(
+        professional,
+        canonicalServiceAreas.map((area) => area.location_id),
+      ),
+    );
     setPhotoPreview(professional.logo_url || null);
     setPortfolioPreviews(professional.portfolio_images || []);
 
     const savedSlug = professional.slug || "";
     setSlug(savedSlug);
     setOriginalSlug(savedSlug);
-  }, [professional]);
+    setHasChanges(false);
+    coverageInitializedProfileRef.current = professional.profile_id;
+  }, [canonicalCoverageQuery.isFetched, canonicalServiceAreas, professional]);
 
   const updateField = (
     key: keyof ProfessionalEditForm,
@@ -129,10 +130,13 @@ export default function EditarServicoPage() {
     setHasChanges(true);
   };
 
-  const toggleBairro = (bairro: string) => {
+  const toggleBairro = (locationId: string) => {
     setForm((prev) => ({
       ...prev,
-      serviceAreas: toggleServiceAreaSelection(prev.serviceAreas, bairro),
+      serviceAreaLocationIds: toggleServiceAreaSelection(
+        prev.serviceAreaLocationIds,
+        locationId,
+      ),
     }));
     setHasChanges(true);
   };
@@ -253,6 +257,7 @@ export default function EditarServicoPage() {
       logAttempt(originalSlug, slug);
     }
 
+    let professionalUpdated = false;
     setSaving(true);
     try {
       let logoUrl: string | undefined;
@@ -288,17 +293,44 @@ export default function EditarServicoPage() {
       });
 
       await updateProfessional(id, updateData);
+      professionalUpdated = true;
 
       if (hasSlugChange) {
         logSuccess(originalSlug, slug);
+        setOriginalSlug(slug);
       }
 
       setPhotoFile(null);
       setPortfolioFiles([]);
+
+      await serviceAreasService.replaceServiceAreas(
+        professional.profile_id,
+        form.serviceAreaLocationIds,
+      );
+
+      await canonicalCoverageQuery.refetch();
+      setHasChanges(false);
+      toast({ title: "Perfil profissional atualizado com sucesso!" });
     } catch (err: unknown) {
-      if (hasSlugChange) {
-        const details = getErrorDetails(err);
+      const details = getErrorDetails(err);
+
+      if (!professionalUpdated && hasSlugChange) {
         logError(originalSlug, slug, details.message, details.code);
+      }
+
+      if (professionalUpdated) {
+        toast({
+          title: "Dados salvos; cobertura pendente",
+          description:
+            "Os dados do perfil foram atualizados, mas os bairros não foram salvos. Tente salvar novamente para concluir a cobertura.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro ao atualizar",
+          description: details.message,
+          variant: "destructive",
+        });
       }
     } finally {
       setSaving(false);
@@ -312,7 +344,10 @@ export default function EditarServicoPage() {
       onSave: doSave,
     });
 
-  if (loadingProfessional) {
+  if (
+    loadingProfessional ||
+    (professional && !canonicalCoverageQuery.isFetched)
+  ) {
     return <EditarServicoLoadingState />;
   }
 
@@ -350,7 +385,10 @@ export default function EditarServicoPage() {
           <EditarServicoDetailsTab
             form={form}
             serviceAreaOptions={serviceAreaOptions}
-            loadingServiceAreaOptions={loadingServiceAreaOptions}
+            canonicalServiceAreas={canonicalServiceAreas}
+            loadingServiceAreaOptions={
+              loadingServiceAreaOptions || canonicalCoverageQuery.isFetching
+            }
             onFieldChange={updateField}
             onToggleServiceArea={toggleBairro}
           />

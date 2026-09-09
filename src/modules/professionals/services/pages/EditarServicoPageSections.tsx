@@ -27,6 +27,7 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import { IdentityChangeConfirmDialog } from "@/core/public-identity/components/IdentityChangeConfirmDialog";
 import { ProfessionalSlugSection } from "@/modules/professionals/services/components/identity/ProfessionalSlugSection";
 import { SERVICE_FORM_CATEGORY_OPTIONS } from "@/modules/professionals/services/domain/professionalCategories";
+import type { ServiceArea as CanonicalServiceArea } from "@/core/service-areas";
 import type { ServiceAreaOption } from "@/modules/professionals/services/hooks/useServiceAreaOptions";
 import type { ProfessionalEditForm, ProfessionalEditTab } from "./EditarServicoPage.model";
 
@@ -273,19 +274,27 @@ export function EditarServicoInfoTab({
 export function EditarServicoDetailsTab({
   form,
   serviceAreaOptions,
+  canonicalServiceAreas,
   loadingServiceAreaOptions,
   onFieldChange,
   onToggleServiceArea,
 }: {
   form: ProfessionalEditForm;
   serviceAreaOptions: ServiceAreaOption[];
+  canonicalServiceAreas: CanonicalServiceArea[];
   loadingServiceAreaOptions: boolean;
   onFieldChange: UpdateField;
-  onToggleServiceArea: (area: string) => void;
+  onToggleServiceArea: (locationId: string) => void;
 }) {
   const displayOptions = [
-    ...serviceAreaOptions.map((area) => area.name),
-    ...form.serviceAreas.filter((area) => !serviceAreaOptions.some((option) => option.name === area)),
+    ...serviceAreaOptions.map((area) => ({ id: area.id, name: area.name })),
+    ...canonicalServiceAreas
+      .filter(
+        (area) =>
+          form.serviceAreaLocationIds.includes(area.location_id) &&
+          !serviceAreaOptions.some((option) => option.id === area.location_id),
+      )
+      .map((area) => ({ id: area.location_id, name: area.location_name })),
   ];
 
   return (
@@ -370,24 +379,24 @@ export function EditarServicoDetailsTab({
             )}
 
             {!loadingServiceAreaOptions && displayOptions.map((area) => {
-              const selected = form.serviceAreas.includes(area);
+              const selected = form.serviceAreaLocationIds.includes(area.id);
 
               return (
                 <Badge
-                  key={area}
+                  key={area.id}
                   variant={selected ? "default" : "outline"}
                   className={`cursor-pointer transition-all ${
                     selected ? "bg-primary text-primary-foreground" : "hover:bg-secondary"
                   }`}
-                  onClick={() => onToggleServiceArea(area)}
+                  onClick={() => onToggleServiceArea(area.id)}
                 >
-                  {area}
+                  {area.name}
                 </Badge>
               );
             })}
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            {form.serviceAreas.length} bairro(s) selecionado(s)
+            {form.serviceAreaLocationIds.length} bairro(s) selecionado(s)
           </p>
         </CardContent>
       </Card>

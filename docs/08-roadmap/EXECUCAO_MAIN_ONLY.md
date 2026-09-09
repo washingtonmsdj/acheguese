@@ -980,6 +980,27 @@ Ainda pendente neste eixo:
 - edição e read-model profissional ainda precisam deixar de usar o JSONB legado;
 - colunas físicas só podem ser dropadas após o frontend novo estar efetivamente publicado.
 
+### Checkpoint G34C — edição profissional usa somente Coverage SSOT (2026-09-09)
+
+- [x] edição carrega a cobertura por `useServiceAreas(profile_id)`, que resolve o Profile para a entidade canônica;
+- [x] estado do formulário usa somente `serviceAreaLocationIds: string[]`; não inicializa mais por `professional.service_areas`;
+- [x] bairros existentes são exibidos por labels derivados do Coverage/Location canônico, inclusive se não estiverem na lista corrente de opções;
+- [x] `buildProfessionalUpdateInput` não escreve mais `professional_data.service_areas`;
+- [x] após atualizar os dados do profissional, a cobertura é substituída pelo comando bulk canônico `replaceServiceAreas`;
+- [x] sucesso só é exibido depois de dados + coverage concluírem;
+- [x] se os dados salvarem e coverage falhar, a UI informa **dados salvos; cobertura pendente**, mantém alterações pendentes e evita reupload de mídia ou reprocessamento do slug;
+- [x] ratchet proíbe retorno de `professional.service_areas` e `service_areas: form...` no fluxo de edição.
+
+Limite consciente:
+- atualização de Professional e Coverage ainda são dois comandos distintos; não foi simulada atomicidade inexistente;
+- unir ambos em um aggregate command só deve ser feito se o domínio exigir transação cross-aggregate, não como gambiarra para esconder falha parcial.
+
+Próximo corte:
+1. remover os campos legados do read-model, schema e lifecycle de Professional;
+2. migrar telas/projeções que ainda exibem `professional.service_areas/service_radius_km`;
+3. ajustar export LGPD para exportar Coverage canônico em vez desses campos;
+4. manter o DROP físico das colunas bloqueado até o frontend novo estar publicado.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:
