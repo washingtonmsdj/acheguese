@@ -1,4 +1,3 @@
-import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { MobilityRpcService } from "./MobilityRpcService";
 
@@ -24,36 +23,10 @@ export interface RideDispatchAttemptUpdateInput {
   respondedAt?: string;
 }
 
-type ErrorLike = { message?: string | null } | null;
-
-type MobilityAuditDbClient = {
-  from(table: "ride_state_audit"): {
-    insert(values: {
-      ride_id: string;
-      from_state: string;
-      to_state: string;
-      changed_by: string;
-      reason: string;
-      created_at: string;
-    }): Promise<{ error: ErrorLike }>;
-  };
-};
-
-const mobilityAuditDb = supabase as unknown as MobilityAuditDbClient;
-
 export class MobilityAuditService {
   async logRideStateChange(input: RideStateAuditInput): Promise<void> {
     try {
-      const { error } = await mobilityAuditDb.from("ride_state_audit").insert({
-        ride_id: input.rideId,
-        from_state: input.fromState ?? "none",
-        to_state: input.toState,
-        changed_by: input.changedBy,
-        reason: input.reason ?? "",
-        created_at: new Date().toISOString(),
-      });
-
-      if (error) throw error;
+      await MobilityRpcService.logRideStateChange(input);
     } catch (error) {
       logger.error("MobilityAuditService.logRideStateChange", error as Error, input);
     }
