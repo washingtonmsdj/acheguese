@@ -1,11 +1,12 @@
-import { mobilityService } from "@/core/mobility/services/MobilityService.impl";
+import { MobilityRpcService } from "@/core/mobility/services/MobilityRpcService";
 
 export class RidePassengerService {
-  static async confirmRideCompletion(
-    rideId: string,
-    passengerProfileId: string,
-  ): Promise<void> {
-    await mobilityService.confirmRideCompletionByPassenger(rideId, passengerProfileId);
+  static async confirmRideCompletion(rideId: string): Promise<void> {
+    const result = await MobilityRpcService.confirmPassengerCompletion(rideId);
+    if (result.success !== true) {
+      throw new Error(
+        `Passenger completion confirmation was not applied${result.reason ? `: ${result.reason}` : ""}`,
+      );
+    }
   }
 }
-
