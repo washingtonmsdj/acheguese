@@ -26,11 +26,12 @@ function hasBrokerData<T>(
 
 async function invokeRawSupabaseBroker<T, TAction extends string>({
   action,
+  client,
   functionName,
   params = {},
   serviceName,
 }: InvokeSupabaseBrokerInput<TAction>): Promise<SupabaseBrokerResponse<T> | null> {
-  const brokerClient = arguments[0].client ?? supabase;
+  const brokerClient = client ?? supabase;
   const { data, error } = await brokerClient.functions.invoke<SupabaseBrokerResponse<T>>(
     functionName,
     { body: { action, params } },
