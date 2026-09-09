@@ -22,11 +22,6 @@ const PREFETCHERS: Array<{
   surface?: LaunchSurfaceKey;
 }> = [
   {
-    test: (path) => path === "/",
-    load: () => import("@/app/pages/PublicCityLandingPage"),
-    surface: "home",
-  },
-  {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.business),
     load: () => import("@/app/pages/EmpresasLandingPage"),
     surface: "business",

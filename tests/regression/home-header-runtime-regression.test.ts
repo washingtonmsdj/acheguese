@@ -6,15 +6,22 @@ function readProjectFile(path: string): string {
   return readFileSync(resolve(path), "utf8");
 }
 
-describe("Home header runtime state", () => {
-  it("keeps notifications and profile display tied to canonical runtime data", () => {
-    const source = readProjectFile("src/app/pages/PublicCityLandingPage.tsx");
+describe("Territory Home runtime state", () => {
+  it("keeps session and notification state on the canonical Territory Home", () => {
+    const home = readProjectFile(
+      "src/app/pages/TerritoryHomePage.tsx",
+    );
+    const topbar = readProjectFile(
+      "src/shared/components/territory-vivo/TerritoryTopbar.tsx",
+    );
 
-    expect(source).toContain("useSessionContext");
-    expect(source).toContain("useUnifiedNotifications");
-    expect(source).toContain("sessionActions.unreadCount > 0");
-    expect(source).toContain("activeProfile?.avatarUrl");
-    expect(source).not.toContain("<span>3</span>");
-    expect(source).not.toContain('<img src={personaMorador} alt="" />');
+    expect(home).toContain("useSessionContext");
+    expect(home).toContain("useUnifiedNotifications");
+    expect(home).toContain("activeProfile?.displayName");
+    expect(home).toContain("unreadCount={unreadCount}");
+    expect(home).toContain("<TerritoryTopbar");
+
+    expect(topbar).toContain("unreadCount");
+    expect(topbar).not.toContain("<span>3</span>");
   });
 });

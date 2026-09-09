@@ -30,7 +30,6 @@ const suspiciousMojibakeTokens = [
 const publicSurfaceFiles = [
   "src/app/components/Breadcrumbs.tsx",
   "src/app/pages/TerritoryHomePage.tsx",
-  "src/app/pages/PublicCityLandingPage.tsx",
   "src/app/pages/CidadeLandingPage.tsx",
   "src/app/pages/EmpresasLandingPage.tsx",
   "src/modules/professionals/services/pages/ServicosLandingPage.tsx",
