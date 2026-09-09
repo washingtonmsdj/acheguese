@@ -34,7 +34,7 @@ const actions = [
     icon: AlertTriangle,
     label: "SOS",
     desc: "Contatos",
-    route: "/mobilidade/contatos-emergencia",
+    route: mobilityRoutes.public.emergencyContacts,
     color: "text-red-400",
     bg: "bg-red-500/10",
   },
