@@ -120,6 +120,17 @@ describe("Gate 7 operational PIN server authority", () => {
     expect(requesterPinCard).not.toContain("sessionStorage");
   });
 
+  it("bounds issuance and verification to active ride lifecycle", () => {
+    expect(hardeningMigration).toContain("ride_not_active_for_pin_refresh");
+    expect(hardeningMigration).toContain("ride_not_active_for_pin_verification");
+    expect(hardeningMigration).toContain("pin_refresh_too_frequent");
+    expect(hardeningMigration).toContain("verification_attempts = v_attempts");
+    expect(hardeningMigration).toContain("last_attempt_at = v_now");
+    expect(hardeningMigration).toContain("v_attempts_remaining = GREATEST(0, 5 - v_attempts)");
+    expect(hardeningMigration).toContain("v_actor_profile_id IS DISTINCT FROM v_ride.passenger_profile_id");
+    expect(hardeningMigration).toContain("v_actor_profile_id IS DISTINCT FROM v_ride.driver_profile_id");
+  });
+
   it("derives verified_by from the active session instead of caller input", () => {
     expect(rpcMigration).toContain(
       "v_actor_profile_id uuid := private.current_active_profile_id()",
