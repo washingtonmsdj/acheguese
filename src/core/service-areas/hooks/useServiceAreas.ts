@@ -1,7 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   serviceAreasService,
-  type ServiceArea,
   type CreateServiceAreaData,
   type UpdateServiceAreaData,
 } from "../services/ServiceAreasService";
@@ -37,11 +36,18 @@ export function useUpdateServiceArea() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateServiceAreaData }) =>
-      serviceAreasService.updateServiceArea(id, data),
-    onSuccess: (serviceArea) => {
+    mutationFn: ({
+      profileId,
+      id,
+      data,
+    }: {
+      profileId: string;
+      id: string;
+      data: UpdateServiceAreaData;
+    }) => serviceAreasService.updateServiceArea(profileId, id, data),
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["service-areas", serviceArea.profile_id],
+        queryKey: ["service-areas", variables.profileId],
       });
       toast.success("Área de atendimento atualizada com sucesso");
     },
@@ -55,9 +61,17 @@ export function useDeleteServiceArea() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => serviceAreasService.deleteServiceArea(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["service-areas"] });
+    mutationFn: ({
+      profileId,
+      id,
+    }: {
+      profileId: string;
+      id: string;
+    }) => serviceAreasService.deleteServiceArea(profileId, id),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["service-areas", variables.profileId],
+      });
       toast.success("Área de atendimento removida com sucesso");
     },
     onError: (error: Error) => {
