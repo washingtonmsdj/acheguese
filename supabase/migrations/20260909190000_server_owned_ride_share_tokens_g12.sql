@@ -175,8 +175,8 @@ AS $function$
   SELECT
     ride.id,
     ride.status,
-    pg_catalog.coalesce(ride.origin, ''),
-    pg_catalog.coalesce(ride.destination, ''),
+    COALESCE(ride.origin, ''),
+    COALESCE(ride.destination, ''),
     driver_profile.name,
     driver.vehicle_model,
     driver.vehicle_plate,
