@@ -18,6 +18,7 @@ import { Button } from "@/shared/components/ui/button";
 import { toast } from "sonner";
 import { useMobilidade } from "@/modules/mobility/hooks/useMobilidade";
 import { mobilityService } from "@/core/mobility/services/MobilityService";
+import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 import { DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
 import { RIDE_STATUS, MOBILITY_QUERY_KEYS, TIMEOUTS } from "@/core/mobility/constants";
 import { BUSCANDO_MOTORISTA_PAGE_LABELS } from "@/core/mobility/constants/buscandoMotoristaPageLabels";
@@ -320,7 +321,7 @@ export default function BuscandoMotoristaPage() {
       successStatuses.includes(rideStatus)
     ) {
       toast.success(BUSCANDO_MOTORISTA_PAGE_LABELS.TOAST_DRIVER_FOUND);
-      navigate("/mobilidade/passageiro", { replace: true });
+      navigate(mobilityRoutes.passageiro.home, { replace: true });
     }
 
     const terminalStatuses: string[] = [
@@ -334,7 +335,7 @@ export default function BuscandoMotoristaPage() {
     if (
       terminalStatuses.includes(rideStatus)
     ) {
-      navigate("/mobilidade/passageiro", { replace: true });
+      navigate(mobilityRoutes.passageiro.home, { replace: true });
     }
   }, [navigate, rideStatus]);
 
@@ -342,7 +343,7 @@ export default function BuscandoMotoristaPage() {
     if (!rideId) return false;
     const ok = await cancelRide(rideId);
     if (ok) {
-      navigate("/mobilidade/passageiro", { replace: true });
+      navigate(mobilityRoutes.passageiro.home, { replace: true });
     }
     return ok;
   };
@@ -376,7 +377,7 @@ export default function BuscandoMotoristaPage() {
       {/* ── Botão voltar (flutuante, sempre visível) ── */}
       <div className="absolute top-4 left-4 z-30 safe-top">
         <button
-          onClick={() => navigate("/mobilidade/passageiro", { replace: true })}
+          onClick={() => navigate(mobilityRoutes.passageiro.home, { replace: true })}
           className="w-10 h-10 rounded-full bg-card/90 backdrop-blur-sm border border-border flex items-center justify-center shadow-lg active:scale-95 transition-transform"
           aria-label={BUSCANDO_MOTORISTA_PAGE_LABELS.ARIA_BACK_BUTTON}
         >
