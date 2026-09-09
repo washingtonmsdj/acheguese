@@ -402,6 +402,21 @@
       "cacheKey": "authenticated_security_definer_function_executable_public_cast_community_poll_vote_p_poll_id uuid, p_option_id uuid, p_profile_id uuid",
       "exceptionId": "EXC-2026-08-12-POLL-VOTE-AUTH-SECURITY-DEFINER",
       "summary": "Authenticated Poll vote command with explicit territorial engagement membership policy and negative spoof tests."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_ensure_ride_chat_p_ride_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Ride chat bootstrap command deriving the active Profile server-side and requiring ride participation before creating the singleton chat."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_send_ride_chat_message_p_ride_id uuid, p_message text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-only ride chat message command with server-derived sender identity, bounded message length and lifecycle write-state validation."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_mark_ride_chat_messages_read_p_ride_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-only ride chat read-state command deriving the active Profile and updating only messages from the counterparty."
     }
   ]
 }
