@@ -13,7 +13,6 @@ import { logger } from "@/shared/utils/logger";
 import { RIDE_STATE, RideStateMachine, type RideState } from "./RideStateMachine";
 import { RideDispatchService } from "./RideDispatchService";
 import { getRideById } from "../services/mobility.queries";
-import { createRide } from "../services/mobility.mutations";
 import { MobilityRpcService } from "../services/MobilityRpcService";
 import type { FailedDeliveryMetadata, ResolutionStatus } from "../types/FailedDeliveryMetadata";
 import { OperationalVerificationService } from "../services/OperationalVerificationService";
@@ -90,27 +89,15 @@ export class RideOperationalService {
         };
       }
 
-      const ride = await createRide({
-          passenger_profile_id: input.passengerProfileId,
-          // Campos canonicos NAOT NULL
-          pickup_address_id: input.pickupAddressId,
-          dropoff_address_id: input.dropoffAddressId,
-          pickup_location_id: input.pickupLocationId,
-          dropoff_location_id: input.dropoffLocationId,
-          // Status inicial
-          status: initialState,
-          // Campos opcionais
-          suggested_price: input.suggestedPrice,
-          available_seats: input.availableSeats ?? 1,
-          updated_at: new Date().toISOString(),
-        }) as { id: string };
+      const creation = await MobilityRpcService.createRide(input);
+      if (creation.success !== true || !creation.ride_id) {
+        throw new Error(
+          `Ride creation was not applied${creation.reason ? `: ${creation.reason}` : ""}`,
+        );
+      }
 
-
-
+      const ride = { id: creation.ride_id };
       logger.info('RideOperationalService.createRide - success', { rideId: ride.id });
-
-      // Registrar auditoria
-      await logRideStateChange(ride.id, null, initialState, input.passengerProfileId, 'Ride created');
 
       // GATE 7 FASE 2.5: Resolver se PIN  exigido e criar verificacao automaticamente
       const pinRequirement = await OperationalVerificationService.resolveRidePINRequirement({
