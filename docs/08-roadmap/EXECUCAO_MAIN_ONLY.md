@@ -809,6 +809,39 @@ Próximo gate obrigatório:
 2. manter CRUD somente se ownership, lifecycle, payload e callers reais justificarem escrita browser-side;
 3. se estiver correto, não criar broker redundante e avançar para same-SHA/runtime/E2E.
 
+### Checkpoint G29 — agregado de rotas fail-closed sem remover a feature (2026-09-09)
+
+Auditoria do runtime:
+- `driver_routes`, `route_reservations` e `route_trips` formam a base histórica da capability de rotas/caronas;
+- não existe writer runtime atual em `src` para `driver_routes` ou `route_reservations`; o único consumer explícito localizado fora de migrations/types é leitura server-side no export LGPD;
+- as três tabelas estavam vazias no banco real;
+- `route_trips` já era read-only para `authenticated`, porém `driver_routes` e `route_reservations` ainda concediam INSERT/UPDATE/DELETE com policies antigas `FOR ALL`.
+
+Bypass reproduzido em `BEGIN/ROLLBACK`:
+- motorista autenticado criou uma rota própria já em `status='completed'` e com `created_at=2001-01-01`;
+- outro usuário autenticado criou reserva nessa rota diretamente em `status='confirmed'`, também com timestamp fabricado;
+- ownership RLS não impedia spoof de lifecycle/provenance;
+- transação foi revertida e as tabelas voltaram ao count 0.
+
+Correção de raiz:
+- migration `20260909205121_fail_close_dormant_route_writes_g29.sql` aplicada e versionada;
+- `INSERT/UPDATE/DELETE authenticated` revogados de `driver_routes` e `route_reservations`;
+- policies antigas de gerenciamento `FOR ALL` foram removidas;
+- leitura histórica do motorista foi preservada por policy SELECT-only `Drivers view own routes`;
+- `Reservation participants view`, `Active routes viewable` e `route_trips_participant_read` permanecem;
+- nenhuma tabela, FK, tipo, export LGPD ou capability de domínio foi removida;
+- o agregado fica preparado para futura implementação correta via commands de lifecycle, em vez de reabrir DML genérico.
+
+Governança:
+- ratchet `tests/security/mobility-route-aggregate-authority.test.ts` preserva schema/leitura e proíbe retorno de DML direto no frontend.
+
+**Estado:** G29 fechado. A capability de rotas foi preservada, mas a superfície de escrita latente ficou fail-closed.
+
+Próximo gate obrigatório:
+1. refazer o inventário de DML operacional Mobility e confirmar zero writers genéricos fora dos commands/brokers intencionais;
+2. congelar a rodada estrutural se o inventário estiver limpo;
+3. avançar para certificação same-SHA: source/runtime, testes estáticos disponíveis, build/E2E e responsividade antes de abrir `PUBLIC_LAUNCH_SURFACES.mobility`.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:
