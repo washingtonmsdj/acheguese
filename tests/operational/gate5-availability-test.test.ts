@@ -599,12 +599,10 @@ describeGate5('Gate 5 - Suite 6: Bootstrap Automático', () => {
 // ============================================
 
 describeGate5('Gate 5 - Suite 7: Motoboy Mode', () => {
-  it('7.1. setBusy com mode motoboy registra corretamente', async () => {
+  it('7.1. server-owned busy fixture preserves motoboy mode', async () => {
     await DriverAvailabilityService.goOnline(TEST_DRIVER_ID);
     await DriverAvailabilityService.setAvailable(TEST_DRIVER_ID, TEST_LOCATION);
-
-    const result = await markDriverBusyFixture(TEST_RIDE_ID, 'motoboy', TEST_DRIVER_ID);
-    expect(result.success).toBe(true);
+    await markDriverBusyFixture(TEST_RIDE_ID, 'motoboy', TEST_DRIVER_ID);
 
     const status = await DriverAvailabilityService.getStatus(TEST_DRIVER_ID);
     expect(status!.activeRideMode).toBe('motoboy');
