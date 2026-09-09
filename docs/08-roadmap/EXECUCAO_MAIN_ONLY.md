@@ -746,6 +746,30 @@ Próximo gate obrigatório:
 2. impedir disparo arbitrário para contatos de outros usuários ou fabricação de delivery status/target;
 3. manter `PUBLIC_LAUNCH_SURFACES.mobility=false`.
 
+### Checkpoint G26 — broker de e-mail de emergência lifecycle-bound (2026-09-09)
+
+Auditoria real:
+- `send-emergency-email` remoto v31 estava ACTIVE, `verify_jwt=true`, e o source remoto era byte-equivalente à `main` após normalização de EOL;
+- o broker já aceitava somente `alertId/contactId`, autenticava o usuário, carregava Profiles/alert/contact no backend e exigia alerta pertencente ao usuário + contato ligado ao mesmo Profile e ativo;
+- `emergency_delivery_log` está completamente fechado ao browser: somente `service_role` possui DML e não existem policies públicas;
+- rate-limit persistente usa o próprio delivery log server-owned;
+- o gap restante era lifecycle: o broker não selecionava `alert.status`, permitindo reenvio de e-mail para alerta já `resolved`/`false_alarm` em janelas futuras.
+
+Correção aplicada:
+- `AlertRecord` e a query canônica passaram a carregar `status`;
+- o broker agora bloqueia qualquer alerta diferente de `active`, audita `reason=alert_not_active` e retorna 409 antes de consultar/enviar para o provider;
+- nenhuma alteração em recipient derivation, Resend secret, rate limit ou delivery-log ownership;
+- função redeployada como `send-emergency-email` **v32 ACTIVE**, mantendo `verify_jwt=true`;
+- source remoto v32 confirmado exatamente igual à `main`;
+- ratchet `safety-notification-core-security.test.ts` protege seleção do status e o guard `alert.status !== 'active'`.
+
+**Estado:** G26 fechado. Alertas encerrados não podem voltar a disparar e-mail externo.
+
+Próximo gate obrigatório:
+1. inventariar writers autenticados restantes em tabelas Safety após G23–G26;
+2. corrigir somente DML que ainda permita alterar autoridade/lifecycle/provenance;
+3. manter `PUBLIC_LAUNCH_SURFACES.mobility=false`.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:
