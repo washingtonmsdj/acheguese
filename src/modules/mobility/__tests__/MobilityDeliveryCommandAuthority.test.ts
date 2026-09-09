@@ -47,6 +47,15 @@ describe("Mobility delivery command authority", () => {
 
     expect(broker).toContain("handleTransitionDeliveryState");
     expect(broker).toContain("handleUpdateFailedDeliveryResolution");
+    expect(broker).toContain(
+      "Admin authority is required to resolve failed deliveries",
+    );
+    expect(broker).toMatch(
+      /handleUpdateFailedDeliveryResolution[\s\S]*?if \(!auth\.isProjectAdmin\)/,
+    );
+    expect(broker).not.toMatch(
+      /handleUpdateFailedDeliveryResolution[\s\S]*?canAccessRideAsParticipantOrAdmin/,
+    );
     expect(broker).toContain("requireDeliveryTransitionActor");
     expect(broker).toContain("requireDeliveryVerification");
     expect(broker).toContain(
