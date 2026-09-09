@@ -29,12 +29,6 @@ export {
 //  MUTATIONS - Operaes de Escrita (SSOT)
 //  ============================================================
 export {
-  createRide,
-  updateRide,
-  acceptRide,
-  startRide,
-  completeRide,
-  cancelRide,
   updateDriverData,
   updateDriverOnlineStatus,
   deleteDriverNeighborhood,
