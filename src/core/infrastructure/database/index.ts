@@ -39,7 +39,6 @@ export { BaseRepository } from './repositories/BaseRepository';
 
 // Repositories Concretos
 export { ProfileRepository, type Profile } from './repositories/ProfileRepository';
-export { RideRepository, type Ride, type RideStatus } from './repositories/RideRepository';
 export { DriverRepository, type Driver } from './repositories/DriverRepository';
 export { BusinessRepository, type Business, type BusinessStatus, type BusinessCategory } from './repositories/BusinessRepository';
 export { ClassifiedRepository, type Classified, type ClassifiedStatus, type ClassifiedCondition, type ClassifiedReach } from './repositories/ClassifiedRepository';
