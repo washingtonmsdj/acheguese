@@ -314,27 +314,25 @@ export class DriverAvailabilityService {
    * Limpa: active_ride_id, busy_since, active_ride_mode
    */
   static async releaseBusy(
-    driverProfileId: string,
     rideId: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
       const released = await MobilityRpcService.releaseDriverAvailabilityForRide(
-        driverProfileId,
         rideId,
       );
 
       if (released !== true) {
         return {
           success: false,
-          error: 'Driver was not busy with the specified ride or was already released',
+          error: 'Assigned driver was not busy with the specified ride or was already released',
         };
       }
 
-      logger.info('DriverAvailabilityService.releaseBusy', { driverProfileId, rideId });
+      logger.info('DriverAvailabilityService.releaseBusy', { rideId });
 
       return { success: true };
     } catch (error) {
-      logger.error('DriverAvailabilityService.releaseBusy', error as Error, { driverProfileId, rideId });
+      logger.error('DriverAvailabilityService.releaseBusy', error as Error, { rideId });
       return { success: false, error: (error as Error).message };
     }
   }
