@@ -28,7 +28,7 @@ describe("Território Vivo navigation SSOT", () => {
     expect(registry).toContain("isTerritoryNavigationModeActive");
   });
 
-  it("keeps adaptive and legacy mobile renderers as consumers, not authorities", () => {
+  it("keeps adaptive and core mobile renderers as consumers, not authorities", () => {
     const adaptive = read(
       "src/app/components/territory-vivo/TerritoryAdaptiveNavigation.tsx",
     );
@@ -43,3 +43,23 @@ describe("Território Vivo navigation SSOT", () => {
     }
   });
 });
+
+
+  it("does not recreate the retired app BottomNav wrapper", () => {
+    expect(
+      fs.existsSync(
+        path.join(
+          ROOT,
+          "src/app/components/BottomNav.tsx",
+        ),
+      ),
+    ).toBe(false);
+
+    const layout = read(
+      "src/app/components/AppLayoutSidebar.tsx",
+    );
+    expect(layout).toContain(
+      '@/core/navigation/BottomNav',
+    );
+    expect(layout).not.toContain('./BottomNav');
+  });

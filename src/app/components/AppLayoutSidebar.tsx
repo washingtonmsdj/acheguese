@@ -14,7 +14,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { SidebarProvider } from "@/shared/components/ui/sidebar";
 import { AppSidebar } from "./navigation/AppSidebar";
 import { AppTopbar } from "./navigation/AppTopbar";
-import { BottomNav } from "./BottomNav";
+import { BottomNav } from "@/core/navigation/BottomNav";
 import { TerritoryAdaptiveNavigation } from "./territory-vivo";
 import { TerritoryMismatchBanner } from "@/core/location/components/TerritoryMismatchBanner";
 import { scheduleIdleRouteWarmup } from "@/app/routes/prefetch";
@@ -156,7 +156,7 @@ export function AppLayoutSidebar() {
             </div>
           </main>
         </div>
-        {!hideMobileBottomNav ? <BottomNav /> : null}
+        {!hideMobileBottomNav ? <BottomNav prefetchRoute={prefetchRouteByHref} /> : null}
       </>
     );
   }
@@ -180,7 +180,7 @@ export function AppLayoutSidebar() {
           </main>
         </div>
       </div>
-      {!hideMobileBottomNav ? <BottomNav /> : null}
+      {!hideMobileBottomNav ? <BottomNav prefetchRoute={prefetchRouteByHref} /> : null}
     </SidebarProvider>
   );
 }
