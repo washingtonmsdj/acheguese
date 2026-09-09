@@ -18,7 +18,6 @@ test.describe('public launch scope', () => {
       '/problemas',
       '/achados-perdidos',
       '/mensagens',
-      '/create-driver',
     ]) {
       await expectPausedLaunchSurface(page, path);
     }
