@@ -630,6 +630,44 @@ Próximo gate obrigatório:
 2. provar que actor_profile_id não permite spoof cross-user/admin;
 3. manter `PUBLIC_LAUNCH_SURFACES.mobility=false`.
 
+### Checkpoint G23 — criação Safety server-owned e lifecycle fechado (2026-09-09)
+
+Problema real reproduzido:
+- `emergency_alerts` e `safety_incidents` ainda concediam `INSERT` direto a `authenticated`;
+- as policies validavam ownership/participação, porém o payload podia escolher campos de lifecycle;
+- probe reversível confirmou que um usuário autenticado conseguia inserir alerta já `resolved` com `resolved_at` e incidente já `resolved`, contornando os mutators canônicos de status.
+
+Correção de raiz:
+- migration `20260909195501_server_own_safety_creation_lifecycle_g23.sql` aplicada e versionada;
+- novos commands `create_safety_emergency_alert` e `create_safety_incident` derivam o perfil ativo server-side, validam payload/participação e fixam estado inicial;
+- alerta nasce obrigatoriamente `active`, com `resolved_at=NULL`; incidente nasce obrigatoriamente `reported`, com `resolved_at=NULL`;
+- timestamps iniciais são server-owned;
+- `INSERT authenticated` foi revogado das duas tabelas e as policies antigas de INSERT foram removidas;
+- `SafetyService` não executa mais INSERT direto e usa exclusivamente os dois commands;
+- triggers existentes de audit e notification permanecem os únicos produtores desses efeitos, sem duplicação;
+- os mutators existentes continuam preservados: owner do alerta só pode `false_alarm`; transitions administrativas continuam admin-only; `p_actor_profile_id` precisa pertencer ao usuário autenticado.
+
+Prova pós-correção:
+- grants reais: `authenticated INSERT=false` nas duas tabelas e EXECUTE=true apenas nos commands;
+- probe correto com `SET LOCAL ROLE authenticated` comprovou que INSERT direto falha;
+- criação por command produz exatamente `active/reported`, sem `resolved_at`;
+- spoof de outro Profile foi bloqueado tanto na criação quanto no mutator;
+- exatamente um audit de criação foi produzido pelos triggers canônicos;
+- usuário comum não conseguiu resolver incidente administrativo;
+- todas as fixtures foram revertidas com `ROLLBACK`.
+
+Governança:
+- ratchet novo: `tests/security/safety-lifecycle-authority.test.ts`;
+- warnings dos novos SECURITY DEFINER foram classificados em `SUPABASE_ADVISOR_RESIDUALS.json`.
+
+**Estado:** G23 fechado no banco e no runtime sem remover Safety.
+
+Próximo gate obrigatório:
+1. auditar `safety_evidence`, pois a tabela ainda possui INSERT autenticado e representa material sensível;
+2. provar vínculo real entre uploader, incidente e objeto de Storage, evitando registro fabricado de URL/path/tamanho/MIME;
+3. preservar upload de evidência, corrigindo a autoridade na raiz caso exista bypass;
+4. manter `PUBLIC_LAUNCH_SURFACES.mobility=false`.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:
