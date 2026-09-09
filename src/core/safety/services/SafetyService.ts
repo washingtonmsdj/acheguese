@@ -21,7 +21,6 @@ import { supabase } from '@/integrations/supabase';
 import { trackError } from '@/shared/utils/errorTracking';
 import { SafetyEmergencyContactsService } from './SafetyEmergencyContactsService';
 import { SafetyRideShareService } from './SafetyRideShareService';
-import { SAFETY_ALERT_STATUS } from '@/core/safety/constants/status';
 import type {
   EmergencyAlert,
   CreateEmergencyAlertInput,
@@ -88,7 +87,6 @@ interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
     options?: { ascending?: boolean },
   ) => QueryBuilder<TRow>;
   maybeSingle: () => Promise<QueryResult<TRow>>;
-  single: () => Promise<QueryResult<TRow>>;
 }
 
 interface SafetyDbClient {
