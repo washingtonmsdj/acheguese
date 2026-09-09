@@ -116,6 +116,8 @@ export function toRideRequestContract(ride: RideRequestRecord): RideRequest {
     accepted_at: ride.driver_accepted_at ?? null,
     started_at: ride.started_at ?? null,
     completed_at: ride.completed_at ?? null,
+    passenger_confirmed: ride.passenger_confirmed_at != null,
+    passenger_confirmed_at: ride.passenger_confirmed_at ?? null,
     cancelled_at: ride.cancelled_at ?? null,
     created_at: ride.created_at,
     updated_at: ride.updated_at,
