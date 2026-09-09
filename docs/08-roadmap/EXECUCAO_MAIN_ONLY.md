@@ -668,6 +668,45 @@ Próximo gate obrigatório:
 3. preservar upload de evidência, corrigindo a autoridade na raiz caso exista bypass;
 4. manter `PUBLIC_LAUNCH_SURFACES.mobility=false`.
 
+### Checkpoint G24 — evidência Safety vinculada ao Storage real (2026-09-09)
+
+Problema real reproduzido:
+- `safety_evidence` ainda concedia `INSERT` direto a `authenticated`;
+- a policy validava reporter/incident ownership, mas `file_url`, `file_size`, `mime_type` e metadados eram declarações do cliente;
+- probe reversível criou um registro `storage://safety-evidence/<incident>/forged.pdf` quando o bucket possuía **0 objetos**, provando que uma “evidência” podia existir sem arquivo.
+
+Correção de raiz:
+- migration `20260909200353_bind_safety_evidence_to_storage_g24.sql` aplicada e versionada;
+- novo command `register_safety_evidence` exige Profile ativo igual ao reporter do incidente;
+- o command exige objeto real em `storage.objects`, bucket `safety-evidence`, path dentro do incident e `owner_id = auth.uid()`;
+- `file_url` é construído server-side; `file_size` e `mime_type` vêm de `storage.objects.metadata`; `uploaded_by` vem do Profile ativo;
+- provenance `storage_object_id/storage_created_at` é escrita pelo servidor e sobrescreve tentativa de spoof no metadata do cliente;
+- índice único em `file_url` impede registrar o mesmo objeto duas vezes;
+- `INSERT authenticated` em `public.safety_evidence` foi revogado e a policy antiga removida;
+- policy de DELETE do bucket permite apagar upload órfão para compensação, mas bloqueia objeto já referenciado por `safety_evidence`;
+- `SafetyEvidenceService` mantém upload privado pelo `MediaService`, porém o registro passou a usar `register_safety_evidence`.
+
+Prova pós-correção:
+- registro de path sem objeto real foi bloqueado;
+- INSERT direto foi bloqueado sob `SET LOCAL ROLE authenticated`;
+- objeto fixture real gerou referência/tamanho/MIME/uploader a partir do Storage, ignorando spoof de provenance;
+- exatamente um audit `evidence_uploaded` foi produzido pelo trigger canônico;
+- tentativa de registrar o mesmo objeto duas vezes foi bloqueada pelo índice único;
+- catálogo confirmou a cláusula `NOT EXISTS` da policy de DELETE para objetos registrados;
+- tentativa de DELETE SQL não foi usada como prova porque o próprio Supabase possui `storage.protect_delete()` e exige Storage API; o teste transacional foi revertido sem deixar fixture.
+
+Governança:
+- `tests/security/private-storage-boundaries-security.test.ts` protege o vínculo Storage→DB;
+- `validate-upload-ssot.ts` agora exige `register_safety_evidence` e proíbe retorno a INSERT direto;
+- warning do novo command foi classificado em `SUPABASE_ADVISOR_RESIDUALS.json`.
+
+**Estado:** G24 fechado sem tornar o bucket público e sem remover upload de evidência.
+
+Próximo gate obrigatório:
+1. auditar `emergency_contacts` e seus writers reais;
+2. impedir spoof de owner, `is_primary`/lifecycle ou múltiplos primários se o banco ainda aceitar estado inválido;
+3. manter Safety funcional e `PUBLIC_LAUNCH_SURFACES.mobility=false`.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:
