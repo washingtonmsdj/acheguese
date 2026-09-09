@@ -15,10 +15,6 @@ describe("mobility operational notifications ssot", () => {
     const source = readProjectFile(
       "supabase/migrations/20260714115000_migrate_mobility_admin_notifications.sql",
     );
-    const postTransitionSource = readProjectFile(
-      "src/core/mobility/core/RideOperationalPostTransition.ts",
-    );
-
     expect(source).toContain("private.enqueue_ride_transition_notifications");
     expect(source).toContain("'transactional'");
     expect(source).toContain("'audience', 'passenger'");
@@ -27,8 +23,12 @@ describe("mobility operational notifications ssot", () => {
     expect(source).toContain("ride_canceled_by_driver");
     expect(source).toContain("ride_canceled_by_passenger");
     expect(source).toContain("'/mobilidade/buscando/' || NEW.id::TEXT");
-    expect(postTransitionSource).not.toContain(
+    const operationalService = readProjectFile(
+      "src/core/mobility/core/RideOperationalService.ts",
+    );
+    expect(operationalService).not.toContain(
       "NotificationService.createNotification",
     );
+    expect(operationalService).not.toContain("RideOperationalPostTransition");
   });
 });
