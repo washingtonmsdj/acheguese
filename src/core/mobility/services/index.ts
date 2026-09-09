@@ -27,8 +27,6 @@ export {
 export {
   updateDriverData,
   updateDriverOnlineStatus,
-  deleteDriverNeighborhood,
-  deleteDriverServiceArea,
 } from "@/core/mobility/services/mobility.mutations";
 
 //  ============================================================
