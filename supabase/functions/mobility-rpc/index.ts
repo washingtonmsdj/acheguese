@@ -51,8 +51,6 @@ const ACTIONS = {
   transitionDeliveryState: true,
   updateFailedDeliveryResolution: true,
   logRideStateChange: true,
-  logDispatchAttempt: true,
-  updateLatestDispatchAttempt: true,
   cancelPendingOffers: true,
   updateDriverAvailability: true,
   updateDriverLocation: true,
@@ -114,12 +112,6 @@ function optionalUuid(value: unknown, field: string): string | null {
   return requireUuid(value, field);
 }
 
-function requireAttemptNumber(value: unknown): number {
-  if (typeof value !== "number" || !Number.isInteger(value) || value < 1 || value > 1000) {
-    throw new RequestValidationError("Invalid attemptNumber");
-  }
-  return value;
-}
 
 function optionalStatus(value: unknown, field: string): string | null {
   if (value === undefined || value === null || value === "") return null;
@@ -321,21 +313,6 @@ async function profileBelongsToUser(
   return Boolean(data);
 }
 
-async function canWriteDispatchAudit(
-  supabaseAdmin: SupabaseClient,
-  auth: UserAuthResult,
-  ride: RideRow,
-  driverProfileId: string,
-): Promise<boolean> {
-  if (auth.isProjectAdmin) return true;
-
-  if (await profileBelongsToUser(supabaseAdmin, ride.passenger_profile_id, auth.userId)) {
-    return true;
-  }
-
-  return profileBelongsToUser(supabaseAdmin, driverProfileId, auth.userId);
-}
-
 async function canAccessRideAsParticipantOrAdmin(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
@@ -526,20 +503,6 @@ async function resolveAuditActor(
 
   throw new RequestAuthorizationError("User cannot write audit events for this ride");
 }
-
-async function requireDispatchWriteAccess(
-  supabaseAdmin: SupabaseClient,
-  auth: UserAuthResult,
-  rideId: string,
-  driverProfileId: string,
-): Promise<RideRow> {
-  const ride = await getRide(supabaseAdmin, rideId);
-  if (!await canWriteDispatchAudit(supabaseAdmin, auth, ride, driverProfileId)) {
-    throw new RequestAuthorizationError("User cannot write dispatch audit for this ride");
-  }
-  return ride;
-}
-
 
 async function requireRequestingProfile(
   supabaseAdmin: SupabaseClient,
@@ -1430,69 +1393,6 @@ async function handleAdminRedispatch(
   return data ?? { success: false, reason: "empty_response", ride_id: rideId };
 }
 
-async function handleLogDispatchAttempt(
-  supabaseAdmin: SupabaseClient,
-  auth: UserAuthResult,
-  params: Record<string, unknown>,
-) {
-  const rideId = requireUuid(params.rideId ?? params.ride_id, "rideId");
-  const driverProfileId = requireUuid(
-    params.driverProfileId ?? params.driver_profile_id,
-    "driverProfileId",
-  );
-  const attemptNumber = requireAttemptNumber(params.attemptNumber ?? params.attempt_number);
-  const offeredAt = requireTimestamp(params.offeredAt ?? params.offered_at, "offeredAt");
-  const timeoutAt = requireTimestamp(params.timeoutAt ?? params.timeout_at, "timeoutAt");
-  const status = requireStatus(params.status, "status");
-
-  await requireDispatchWriteAccess(supabaseAdmin, auth, rideId, driverProfileId);
-
-  const { error } = await supabaseAdmin.rpc("log_ride_dispatch_attempt", {
-    p_ride_id: rideId,
-    p_driver_profile_id: driverProfileId,
-    p_attempt_number: attemptNumber,
-    p_offered_at: offeredAt,
-    p_timeout_at: timeoutAt,
-    p_status: status,
-  });
-
-  if (error) throw error;
-  return { logged: true };
-}
-
-async function handleUpdateLatestDispatchAttempt(
-  supabaseAdmin: SupabaseClient,
-  auth: UserAuthResult,
-  params: Record<string, unknown>,
-) {
-  const rideId = requireUuid(params.rideId ?? params.ride_id, "rideId");
-  const driverProfileId = requireUuid(
-    params.driverProfileId ?? params.driver_profile_id,
-    "driverProfileId",
-  );
-  const status = optionalStatus(params.status, "status");
-  const respondedAt = optionalTimestamp(
-    params.respondedAt ?? params.responded_at,
-    "respondedAt",
-  );
-
-  if (!status && !respondedAt) {
-    throw new RequestValidationError("No update fields provided");
-  }
-
-  await requireDispatchWriteAccess(supabaseAdmin, auth, rideId, driverProfileId);
-
-  const { error } = await supabaseAdmin.rpc("update_latest_ride_dispatch_attempt", {
-    p_ride_id: rideId,
-    p_driver_profile_id: driverProfileId,
-    p_status: status,
-    p_responded_at: respondedAt,
-  });
-
-  if (error) throw error;
-  return { updated: true };
-}
-
 async function handleCancelPendingOffers(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
@@ -1803,10 +1703,6 @@ async function dispatchAction(
       return handleUpdateFailedDeliveryResolution(supabaseAdmin, auth, params);
     case "logRideStateChange":
       return handleLogRideStateChange(supabaseAdmin, auth, params);
-    case "logDispatchAttempt":
-      return handleLogDispatchAttempt(supabaseAdmin, auth, params);
-    case "updateLatestDispatchAttempt":
-      return handleUpdateLatestDispatchAttempt(supabaseAdmin, auth, params);
     case "cancelPendingOffers":
       return handleCancelPendingOffers(supabaseAdmin, auth, params);
     case "updateDriverAvailability":
