@@ -15,6 +15,21 @@ Leia nesta ordem:
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — execução operacional atual;
 4. `SECURITY.md` — segurança e gates de release.
 
+## Checkpoint operacional curto — 2026-09-09
+
+> Resumo de handoff; a autoridade detalhada continua em `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`.
+
+- foco atual: **certificação da Mobilidade / Central motorista-motoboy**;
+- `ride_requests` está server-owned para mutação: browser sem `INSERT/UPDATE/DELETE`;
+- criação, transições, dispatch, entrega, confirmação do passageiro e redispatch usam broker/RPCs específicas;
+- Supabase canônico: `xhdowzacfujckjelqhtd`;
+- `mobility-rpc`: **v15 ACTIVE**, `verify_jwt=true`;
+- migrations finais deste corte: `20260909140626_add_atomic_mobility_creation_commands_g6.sql` e `20260909141356_revoke_browser_ride_request_insert_g6.sql`;
+- baseline técnico antes da atualização documental: `f91bbf0ef1c452be559ab1ad2d836b268144a8ed`;
+- Mobilidade continua **launch-paused**: `PUBLIC_LAUNCH_SURFACES.mobility=false`;
+- próximo gate: autorização positiva/negativa real → E2E operacional → smoke responsivo → typecheck/test/build no mesmo SHA → deploy same-SHA; **não habilitar Mobilidade antes dessas provas**;
+- não restaurar creators/writers diretos de `ride_requests` para contornar testes ou acelerar fluxo.
+
 ## Regra para novas IAs/agentes
 
 - **inspecionar o projeto real antes das docs**: código da `main`, rotas, owners, serviços, schema/migrations, testes, deploy/runtime e comportamento observado são a evidência primária;
