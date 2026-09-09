@@ -10,16 +10,12 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { RIDE_STATUS } from "../constants";
-export {
-  getLastMessage,
-  getMobilityConversations,
+export {  getMobilityConversations,
   getOperationalVerificationEntries,
   getRideAvailableSeats,
   getRideBasicInfo,
   getRideStateAuditEntries,
-  getRideWithAddresses,
-  getUnreadCount,
-} from "./mobility.ride-read-queries";
+  getRideWithAddresses,} from "./mobility.ride-read-queries";
 export {
   getCompletedRidePaymentsByDriver,
   getDriverCompleteProfile,
