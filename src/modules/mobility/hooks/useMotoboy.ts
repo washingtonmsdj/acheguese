@@ -5,7 +5,8 @@
  * Não contém lógica própria — delega 100% para useDelivery.
  *
  * Uso:
- *   // Em módulo de gastronomia
+ *   // Em módulo de gastronomia:
+ *   // sourceId e sempre orders.id; authorizationSourceId identifica o restaurante.
  *   const motoboy = useMotoboy({ sourceType: 'gastronomy', sourceId: orderId });
  *   await motoboy.requestDelivery({ ...data, authorizationSourceId: restaurantId });
  *
