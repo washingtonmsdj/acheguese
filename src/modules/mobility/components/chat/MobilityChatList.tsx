@@ -27,12 +27,8 @@ import { RIDE_STATUS, USER_ROLE } from "@/shared/types/constants";
 import { FILTER_TYPES } from "@/core/mobility/constants";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
-import {
-  getMobilityConversations,
-  getRideBasicInfo,
-  getLastMessage,
-  getUnreadCount,
-} from "@/core/mobility/services/mobility.queries";
+import { getMobilityConversations } from "@/core/mobility/services/mobility.queries";
+import type { MobilityConversationSummary } from "@/core/mobility/services/mobility.ride-read-queries";
 
 interface RideChatPreview {
   id: string;
@@ -82,7 +78,7 @@ export function MobilityChatList({ role }: MobilityChatListProps) {
   const [filter, setFilter] = useState<"all" | "active" | "completed">(FILTER_TYPES.ALL);
   const [loading, setLoading] = useState(true);
   const [conversations, setConversations] = useState<RideChatPreview[]>([]);
-  const [selectedChat, setSelectedChat] = useState<string | null>(null);
+  const [selectedRideId, setSelectedRideId] = useState<string | null>(null);
 
   // Buscar conversas reais do banco
   useEffect(() => {
@@ -92,67 +88,44 @@ export function MobilityChatList({ role }: MobilityChatListProps) {
       try {
         setLoading(true);
 
-        // ✅ SSOT - Buscar conversas via MobilityService
-        const conversations = (await getMobilityConversations(activeProfile.id)) as Array<{
-          id: string;
-          ride_id: string;
-          passenger_profile_id: string;
-          driver_profile_id: string;
-          updated_at: string;
-        }>;
+        const summaries = (await getMobilityConversations()) as MobilityConversationSummary[];
 
-        if (!conversations || conversations.length === 0) {
+        if (summaries.length === 0) {
           setConversations(EMPTY_CHATS);
-          setLoading(false);
           return;
         }
 
-        // Filtrar por role
-        const filteredConversations = conversations.filter(conv => 
-          role === USER_ROLE.DRIVER 
-            ? conv.driver_profile_id === activeProfile.id
-            : conv.passenger_profile_id === activeProfile.id
+        const roleScoped = summaries.filter((conversation) =>
+          role === USER_ROLE.DRIVER
+            ? conversation.driver_profile_id === activeProfile.id
+            : conversation.passenger_profile_id === activeProfile.id,
         );
 
-        // Buscar informações das viagens e perfis
         const mapped: RideChatPreview[] = await Promise.all(
-          filteredConversations.map(async (conv) => {
-            // ✅ SSOT - Buscar viagem via MobilityService
-            const ride = (await getRideBasicInfo(conv.ride_id)) as {
-              origin?: string | null;
-              destination?: string | null;
-              status?: string | null;
-              final_price?: number | null;
-              suggested_price?: number | null;
-            } | null;
-
-            // ✅ SSOT - Buscar perfil do outro usuário via ProfileService
+          roleScoped.map(async (conversation) => {
             const otherUserId =
               role === USER_ROLE.DRIVER
-                ? conv.passenger_profile_id
-                : conv.driver_profile_id;
+                ? conversation.passenger_profile_id
+                : conversation.driver_profile_id;
             const profile = await profileService.getProfileById(otherUserId);
 
-            // ✅ SSOT - Buscar última mensagem via MobilityService
-            const lastMsg = (await getLastMessage(conv.id)) as { message?: string | null } | null;
-
-            // ✅ SSOT - Contar não lidas via MobilityService
-            const unreadCount = await getUnreadCount(conv.id, activeProfile.id);
-
             return {
-              id: conv.id,
-              ride_id: conv.ride_id,
+              id: conversation.id,
+              ride_id: conversation.ride_id,
               other_user_id: otherUserId,
               other_user_name: profile?.name || "Usuário",
               other_user_avatar: profile?.avatar_url || "",
-              ride_origin: ride?.origin || "Origem",
-              ride_destination: ride?.destination || "Destino",
-              ride_type: "viagem" as const,
-              ride_status: ride?.status || RIDE_STATUS.PENDING,
-              last_message: lastMsg?.message || "Sem mensagens",
-              last_message_at: conv.updated_at,
-              unread_count: unreadCount,
-              ride_price: ride?.final_price || ride?.suggested_price || 0,
+              ride_origin: conversation.origin || "Origem",
+              ride_destination: conversation.destination || "Destino",
+              ride_type:
+                conversation.ride_mode === "motoboy" ? "entrega" : "viagem",
+              ride_status: conversation.ride_status || RIDE_STATUS.PENDING,
+              last_message: conversation.last_message || "Sem mensagens",
+              last_message_at:
+                conversation.last_message_at || conversation.updated_at,
+              unread_count: Number(conversation.unread_count) || 0,
+              ride_price:
+                conversation.final_price || conversation.suggested_price || 0,
             };
           }),
         );
@@ -191,42 +164,42 @@ export function MobilityChatList({ role }: MobilityChatListProps) {
   const totalUnread = conversations.reduce((sum, c) => sum + c.unread_count, 0);
 
   const handleOpenChat = (chat: RideChatPreview) => {
-    setSelectedChat(chat.id);
+    setSelectedRideId(chat.ride_id);
   };
 
   return (
     <div className="space-y-4">
       {/* Se há conversa selecionada, mostrar ChatWindow */}
-      {selectedChat && (
+      {selectedRideId && (
         <div className="fixed inset-0 z-50 bg-[#12181B] md:relative md:inset-auto md:rounded-2xl md:border md:border-white/10 md:overflow-hidden">
           <ChatWindow
-            conversationId={selectedChat}
+            rideId={selectedRideId}
             otherUserName={
-              conversations.find((c) => c.id === selectedChat)
+              conversations.find((c) => c.ride_id === selectedRideId)
                 ?.other_user_name || "Usuário"
             }
             otherUserAvatar={
-              conversations.find((c) => c.id === selectedChat)
+              conversations.find((c) => c.ride_id === selectedRideId)
                 ?.other_user_avatar
             }
             rideInfo={{
               origin:
-                conversations.find((c) => c.id === selectedChat)?.ride_origin ||
+                conversations.find((c) => c.ride_id === selectedRideId)?.ride_origin ||
                 "",
               destination:
-                conversations.find((c) => c.id === selectedChat)
+                conversations.find((c) => c.ride_id === selectedRideId)
                   ?.ride_destination || "",
               status:
-                conversations.find((c) => c.id === selectedChat)?.ride_status ||
+                conversations.find((c) => c.ride_id === selectedRideId)?.ride_status ||
                 "",
             }}
-            onBack={() => setSelectedChat(null)}
+            onBack={() => setSelectedRideId(null)}
           />
         </div>
       )}
 
       {/* Lista de conversas (ocultar quando chat aberto no mobile) */}
-      <div className={cn(selectedChat && "hidden md:block")}>
+      <div className={cn(selectedRideId && "hidden md:block")}>
         {/* Header with unread badge */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
