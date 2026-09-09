@@ -432,6 +432,16 @@
       "cacheKey": "authenticated_security_definer_function_executable_public_verify_operational_pin_p_ride_id uuid, p_pin text",
       "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
       "summary": "Assigned-driver-only PIN verification command with server-owned attempts, expiry, terminal-state guard and session-derived verified_by."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_create_safety_emergency_alert_p_profile_id uuid, p_ride_id uuid, p_alert_type text, p_description text, p_latitude double precision, p_longitude double precision, p_accuracy double precision, p_metadata jsonb",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Active-Profile-bound Safety emergency creation command with server-owned initial status/timestamps, bounded payload and canonical audit/notification triggers."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_create_safety_incident_p_reported_by uuid, p_ride_id uuid, p_incident_type text, p_severity text, p_description text, p_latitude double precision, p_longitude double precision",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Active-Profile-bound Safety incident creation command with server-owned reported state/timestamps, ride-participant validation and canonical audit/notification triggers."
     }
   ]
 }
