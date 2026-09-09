@@ -84,17 +84,43 @@ async function cleanupTestData() {
     .in('id', [TEST_RIDE_ID, TEST_RIDE_2_ID]);
 }
 
-async function markRideFinalForRelease(rideId: string, driverProfileId = TEST_DRIVER_ID) {
-  const { error } = await supabaseAdmin
+async function transitionRideFinalAndRelease(
+  rideId: string,
+  driverProfileId = TEST_DRIVER_ID,
+  options: {
+    fromState?: 'in_progress' | 'delivered';
+    rideMode?: 'ride' | 'motoboy';
+  } = {},
+) {
+  const fromState = options.fromState ?? 'in_progress';
+  const rideMode = options.rideMode ?? 'ride';
+  const now = new Date().toISOString();
+
+  const { error: prepareError } = await supabaseAdmin
     .from('ride_requests')
     .update({
-      status: 'completed',
+      status: fromState,
       driver_profile_id: driverProfileId,
-      updated_at: new Date().toISOString(),
+      ride_mode: rideMode,
+      updated_at: now,
     })
     .eq('id', rideId);
 
+  if (prepareError) throw prepareError;
+
+  const { data, error } = await supabaseAdmin.rpc(
+    'mobility_transition_ride_state_atomic',
+    {
+      p_ride_id: rideId,
+      p_expected_from_state: fromState,
+      p_to_state: 'completed',
+      p_changed_by: driverProfileId,
+      p_reason: 'Gate 5 terminal aggregate verification',
+    },
+  );
+
   if (error) throw error;
+  return data;
 }
 
 async function markDriverBusyFixture(
@@ -231,10 +257,7 @@ describeGate5('Gate 5 - Suite 1: Transições de Estado', () => {
     await DriverAvailabilityService.goOnline(TEST_DRIVER_ID);
     await DriverAvailabilityService.setAvailable(TEST_DRIVER_ID, TEST_LOCATION);
     await markDriverBusyFixture(TEST_RIDE_ID, 'ride', TEST_DRIVER_ID);
-    await markRideFinalForRelease(TEST_RIDE_ID);
-    
-    const result = await DriverAvailabilityService.releaseBusy(TEST_RIDE_ID);
-    expect(result.success).toBe(true);
+    await transitionRideFinalAndRelease(TEST_RIDE_ID);
 
     const status = await DriverAvailabilityService.getStatus(TEST_DRIVER_ID);
     expect(status!.status).toBe('online_available');
@@ -268,24 +291,15 @@ describeGate5('Gate 5 - Suite 1: Transições de Estado', () => {
     expect(status!.activeRideId).toBeUndefined();
   });
 
-  it('1.7. Bloquear releaseBusy com rideId errado', async () => {
+  it('1.7. transição terminal de outra corrida não libera o busy atual', async () => {
     await DriverAvailabilityService.goOnline(TEST_DRIVER_ID);
     await DriverAvailabilityService.setAvailable(TEST_DRIVER_ID, TEST_LOCATION);
     await markDriverBusyFixture(TEST_RIDE_ID, 'ride', TEST_DRIVER_ID);
-    await Promise.all([
-      markRideFinalForRelease(TEST_RIDE_ID),
-      markRideFinalForRelease(TEST_RIDE_2_ID),
-    ]);
-    
-    const result = await DriverAvailabilityService.releaseBusy(
-      TEST_DRIVER_ID,
-      TEST_RIDE_2_ID // rideId errado
-    );
-    expect(result.success).toBe(false);
-    expect(result.error).toContain('specified ride');
 
-    // Verificar que active_ride_id foi preservado
+    await transitionRideFinalAndRelease(TEST_RIDE_2_ID, TEST_DRIVER_ID);
+
     const status = await DriverAvailabilityService.getStatus(TEST_DRIVER_ID);
+    expect(status!.status).toBe('busy');
     expect(status!.activeRideId).toBe(TEST_RIDE_ID);
   });
 
@@ -567,50 +581,46 @@ describeGate5('Gate 5 - Suite 4: Tracking Integration', () => {
 // ============================================
 
 describeGate5('Gate 5 - Suite 5: Validação de Corrida Correta', () => {
-  it('5.1. releaseBusy com rideId correto deve suceder', async () => {
+  it('5.1. transição terminal libera somente o motorista busy da própria corrida', async () => {
     await DriverAvailabilityService.goOnline(TEST_DRIVER_ID);
     await DriverAvailabilityService.setAvailable(TEST_DRIVER_ID, TEST_LOCATION);
     await markDriverBusyFixture(TEST_RIDE_ID, 'ride', TEST_DRIVER_ID);
-    await markRideFinalForRelease(TEST_RIDE_ID);
 
-    const result = await DriverAvailabilityService.releaseBusy(TEST_RIDE_ID);
-
-    expect(result.success).toBe(true);
-
-    const status = await DriverAvailabilityService.getStatus(TEST_DRIVER_ID);
-    expect(status!.activeRideId).toBeUndefined();
-    expect(status!.isAvailable).toBe(true);
-  });
-
-  it('5.2. active_ride_id não fica preso após release', async () => {
-    await DriverAvailabilityService.goOnline(TEST_DRIVER_ID);
-    await DriverAvailabilityService.setAvailable(TEST_DRIVER_ID, TEST_LOCATION);
-    await markDriverBusyFixture(TEST_RIDE_ID, 'ride', TEST_DRIVER_ID);
-    await markRideFinalForRelease(TEST_RIDE_ID);
-    await DriverAvailabilityService.releaseBusy(TEST_RIDE_ID);
+    await transitionRideFinalAndRelease(TEST_RIDE_ID);
 
     const status = await DriverAvailabilityService.getStatus(TEST_DRIVER_ID);
     expect(status!.activeRideId).toBeUndefined();
     expect(status!.busySince).toBeUndefined();
     expect(status!.activeRideMode).toBeUndefined();
+    expect(status!.isAvailable).toBe(true);
   });
 
-  it('5.3. Múltiplas corridas sequenciais não deixam active_ride_id preso', async () => {
+  it('5.2. outra corrida terminal não limpa active_ride_id diferente', async () => {
+    await DriverAvailabilityService.goOnline(TEST_DRIVER_ID);
+    await DriverAvailabilityService.setAvailable(TEST_DRIVER_ID, TEST_LOCATION);
+    await markDriverBusyFixture(TEST_RIDE_ID, 'ride', TEST_DRIVER_ID);
+
+    await transitionRideFinalAndRelease(TEST_RIDE_2_ID, TEST_DRIVER_ID);
+
+    const status = await DriverAvailabilityService.getStatus(TEST_DRIVER_ID);
+    expect(status!.activeRideId).toBe(TEST_RIDE_ID);
+    expect(status!.isAvailable).toBe(false);
+  });
+
+  it('5.3. corridas sequenciais não deixam active_ride_id preso', async () => {
     await DriverAvailabilityService.goOnline(TEST_DRIVER_ID);
     await DriverAvailabilityService.setAvailable(TEST_DRIVER_ID, TEST_LOCATION);
 
-    // Corrida 1
     await markDriverBusyFixture(TEST_RIDE_ID, 'ride', TEST_DRIVER_ID);
-    await markRideFinalForRelease(TEST_RIDE_ID);
-    await DriverAvailabilityService.releaseBusy(TEST_RIDE_ID);
+    await transitionRideFinalAndRelease(TEST_RIDE_ID);
 
-    // Corrida 2
     await markDriverBusyFixture(TEST_RIDE_2_ID, 'ride', TEST_DRIVER_ID);
-    await markRideFinalForRelease(TEST_RIDE_2_ID);
-    await DriverAvailabilityService.releaseBusy(TEST_DRIVER_ID, TEST_RIDE_2_ID);
+    await transitionRideFinalAndRelease(TEST_RIDE_2_ID);
 
     const status = await DriverAvailabilityService.getStatus(TEST_DRIVER_ID);
     expect(status!.activeRideId).toBeUndefined();
+    expect(status!.busySince).toBeUndefined();
+    expect(status!.activeRideMode).toBeUndefined();
     expect(status!.isAvailable).toBe(true);
   });
 });
@@ -665,15 +675,19 @@ describeGate5('Gate 5 - Suite 7: Motoboy Mode', () => {
     expect(status!.activeRideMode).toBe('motoboy');
   });
 
-  it('7.2. releaseBusy limpa active_ride_mode', async () => {
+  it('7.2. transição terminal limpa active_ride_mode do motoboy', async () => {
     await DriverAvailabilityService.goOnline(TEST_DRIVER_ID);
     await DriverAvailabilityService.setAvailable(TEST_DRIVER_ID, TEST_LOCATION);
     await markDriverBusyFixture(TEST_RIDE_ID, 'motoboy', TEST_DRIVER_ID);
-    await markRideFinalForRelease(TEST_RIDE_ID);
 
-    await DriverAvailabilityService.releaseBusy(TEST_RIDE_ID);
+    await transitionRideFinalAndRelease(TEST_RIDE_ID, TEST_DRIVER_ID, {
+      fromState: 'delivered',
+      rideMode: 'motoboy',
+    });
 
     const status = await DriverAvailabilityService.getStatus(TEST_DRIVER_ID);
     expect(status!.activeRideMode).toBeUndefined();
+    expect(status!.activeRideId).toBeUndefined();
+    expect(status!.isAvailable).toBe(true);
   });
 });
