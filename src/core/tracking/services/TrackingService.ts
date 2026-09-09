@@ -155,18 +155,40 @@ export class TrackingService {
     metadata?: Record<string, unknown>
   ): Promise<void> {
     try {
+      if (entityType === 'driver') {
+        const { MobilityRpcService } = await import(
+          '@/core/mobility/services/MobilityRpcService'
+        );
+        const result = await MobilityRpcService.updateDriverLocation({
+          driverProfileId: entityId,
+          lat: position.latitude,
+          lng: position.longitude,
+          accuracy: position.accuracy ?? undefined,
+          heading: position.heading ?? undefined,
+          speed: position.speed ?? undefined,
+          altitude: position.altitude ?? undefined,
+        });
+
+        if (result.success !== true) {
+          throw new Error(
+            result.error || result.reason || 'Driver location update was rejected',
+          );
+        }
+        return;
+      }
+
       const tableName = this.getTableName(entityType);
       const idField = this.getIdField(entityType);
 
-      // GATE 2: Mapeamento explícito para schema do banco
+      // Non-driver tracking still uses the existing entity-specific storage.
       const updateData = {
         [idField]: entityId,
-        lat: position.latitude,           // APP latitude → BANCO lat
-        lng: position.longitude,          // APP longitude → BANCO lng
-        accuracy: position.accuracy,      // GATE 2: Nova coluna
-        heading: position.heading,        // GATE 2: Nova coluna
-        speed: position.speed,            // GATE 2: Nova coluna
-        altitude: position.altitude,      // GATE 2: Nova coluna
+        lat: position.latitude,
+        lng: position.longitude,
+        accuracy: position.accuracy,
+        heading: position.heading,
+        speed: position.speed,
+        altitude: position.altitude,
         updated_at: new Date().toISOString(),
         ...metadata,
       };
@@ -176,18 +198,6 @@ export class TrackingService {
         .upsert(updateData, { onConflict: idField });
 
       if (error) throw error;
-
-      // GATE 5: Atualizar last_seen_at para motoristas
-      if (entityType === 'driver') {
-        void import('@/core/mobility/services/runtime')
-          .then(({ DriverAvailabilityService }) => DriverAvailabilityService.markLastSeen(entityId))
-          .catch((error) => {
-            logger.warn('[TrackingService] Failed to update driver last_seen_at after position update', {
-              entityId,
-              error,
-            });
-          });
-      }
     } catch (error) {
       logger.error('[TrackingService] Error updating position:', error);
       
