@@ -17,7 +17,6 @@ import { MobilityRpcService } from "../services/MobilityRpcService";
 import type { FailedDeliveryMetadata, FailedDeliveryResolutionUpdate } from "../types/FailedDeliveryMetadata";
 import { OperationalVerificationService } from "../services/OperationalVerificationService";
 import { mobilityRolloutService } from "../services/MobilityRolloutService";
-import { mobilityAuditService } from "../services/MobilityAuditService";
 import { OrderDeliveryLinkService } from "@/core/mobility/delivery/services/OrderDeliveryLinkService";
 import type {
   CancelInput,
@@ -40,10 +39,7 @@ import {
   updateFailedDeliveryResolutionOperation,
   type DeliveryTransitionCommand,
 } from "./RideDeliveryOperationalActions";
-import {
-  handleRidePostTransition,
-  logRideStateChange,
-} from "./RideOperationalPostTransition";
+import { handleRidePostTransition } from "./RideOperationalPostTransition";
 export type { CreateDeliveryInput, CreateRideInput } from "./RideOperationalTypes";
 // ============================================
 // RIDE OPERATIONAL SERVICE
@@ -179,29 +175,12 @@ export class RideOperationalService {
             });
 
             if (!verifyResult.success || !verifyResult.data?.verified) {
-              // Registrar tentativa falha na auditoria
-              await logRideStateChange(
-                rideId,
-                fromState,
-                fromState, // No transiciona
-                actor,
-                `PIN verification failed: ${verifyResult.error || 'Invalid PIN'}`
-              );
-
+              // verify_operational_pin persiste contador, ultimo attempt e status.
               return {
                 success: false,
                 error: verifyResult.data?.message || verifyResult.error || 'Invalid PIN',
               };
             }
-
-            // PIN valido, registrar na auditoria
-            await logRideStateChange(
-              rideId,
-              fromState,
-              fromState, // Ainda no transicionou
-              actor,
-              'PIN verified successfully'
-            );
           } else {
             // PIN exigido mas no fornecido
             return {
@@ -472,11 +451,7 @@ export class RideOperationalService {
         input.reason || 'Cancelled'
       );
 
-      // GATE 3: Notificar dispatch para parar busca/ofertas
-      if (result.success) {
-        await this.stopDispatchForRide(input.rideId);
-      }
-
+      // O command atomico de transicao invalida ofertas pendentes no mesmo commit.
       return result;
     } catch (error) {
       logger.error('RideOperationalService.cancelRide', error as Error, input);
@@ -484,21 +459,6 @@ export class RideOperationalService {
         success: false,
         error: (error as Error).message,
       };
-    }
-  }
-
-  /**
-   * Para dispatch ativo para uma corrida cancelada
-   * GATE 3: Previne que corrida cancelada continue no dispatch
-   */
-  private static async stopDispatchForRide(rideId: string): Promise<void> {
-    try {
-      // Invalidar ofertas pendentes
-      await mobilityAuditService.cancelPendingOffers(rideId);
-
-      logger.info('RideOperationalService.stopDispatchForRide - offers cancelled', { rideId });
-    } catch (error) {
-      logger.error('RideOperationalService.stopDispatchForRide', error as Error, { rideId });
     }
   }
 
