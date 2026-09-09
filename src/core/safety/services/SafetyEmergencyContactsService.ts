@@ -11,8 +11,6 @@ import type {
 } from "../types";
 
 type EmergencyContactRow = Database["public"]["Tables"]["emergency_contacts"]["Row"];
-type EmergencyContactInsert = Database["public"]["Tables"]["emergency_contacts"]["Insert"];
-type EmergencyContactUpdate = Database["public"]["Tables"]["emergency_contacts"]["Update"];
 
 interface QueryResult<T> {
   data: T | null;
@@ -21,52 +19,36 @@ interface QueryResult<T> {
 
 interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
   select: (columns?: string) => QueryBuilder<TRow>;
-  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
-  update: (values: unknown) => QueryBuilder<TRow>;
   eq: (column: string, value: unknown) => QueryBuilder<TRow>;
   order: (
     column: string,
     options?: { ascending?: boolean },
   ) => QueryBuilder<TRow>;
-  single: () => Promise<QueryResult<TRow>>;
 }
 
 interface SafetyDbClient {
   from: <TRow = never>(table: string) => QueryBuilder<TRow>;
+  rpc: <TRow = never>(
+    functionName: string,
+    args: Record<string, unknown>,
+  ) => Promise<QueryResult<TRow>>;
 }
 
 const safetyDb = supabase as unknown as SafetyDbClient;
 
-function buildEmergencyContactInsert(
-  input: CreateEmergencyContactInput,
-): EmergencyContactInsert {
-  return {
-    profile_id: input.profileId,
-    name: input.name,
-    email: input.email.trim().toLowerCase(),
-    phone: input.phone?.trim() || null,
-    relationship: input.relationship,
-    is_primary: input.isPrimary || false,
-    is_active: true,
-    created_at: new Date().toISOString(),
-  };
-}
-
-function buildEmergencyContactUpdate(
+function buildEmergencyContactPatch(
   updates: UpdateEmergencyContactInput,
-): EmergencyContactUpdate {
-  const updateData: EmergencyContactUpdate = {
-    updated_at: new Date().toISOString(),
-  };
+): Record<string, unknown> {
+  const patch: Record<string, unknown> = {};
 
-  if (updates.name !== undefined) updateData.name = updates.name;
-  if (updates.email !== undefined) updateData.email = updates.email.trim().toLowerCase();
-  if (updates.phone !== undefined) updateData.phone = updates.phone.trim() || null;
-  if (updates.relationship !== undefined) updateData.relationship = updates.relationship;
-  if (updates.isPrimary !== undefined) updateData.is_primary = updates.isPrimary;
-  if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
+  if (updates.name !== undefined) patch.name = updates.name;
+  if (updates.email !== undefined) patch.email = updates.email;
+  if (updates.phone !== undefined) patch.phone = updates.phone;
+  if (updates.relationship !== undefined) patch.relationship = updates.relationship;
+  if (updates.isPrimary !== undefined) patch.is_primary = updates.isPrimary;
+  if (updates.isActive !== undefined) patch.is_active = updates.isActive;
 
-  return updateData;
+  return patch;
 }
 
 function mapToEmergencyContact(data: EmergencyContactRow): EmergencyContact {
@@ -93,11 +75,17 @@ export class SafetyEmergencyContactsService {
     input: CreateEmergencyContactInput,
   ): Promise<SafetyResult<EmergencyContact>> {
     try {
-      const { data, error } = await safetyDb
-        .from<EmergencyContactRow>("emergency_contacts")
-        .insert(buildEmergencyContactInsert(input))
-        .select()
-        .single();
+      const { data, error } = await safetyDb.rpc<EmergencyContactRow>(
+        "create_emergency_contact",
+        {
+          p_profile_id: input.profileId,
+          p_name: input.name,
+          p_email: input.email,
+          p_phone: input.phone ?? null,
+          p_relationship: input.relationship ?? null,
+          p_is_primary: input.isPrimary ?? false,
+        },
+      );
 
       if (error || !data) throw error ?? new Error("Failed to create emergency contact");
       return { success: true, data: mapToEmergencyContact(data) };
@@ -133,12 +121,14 @@ export class SafetyEmergencyContactsService {
     updates: UpdateEmergencyContactInput,
   ): Promise<SafetyResult<EmergencyContact>> {
     try {
-      const { data, error } = await safetyDb
-        .from<EmergencyContactRow>("emergency_contacts")
-        .update(buildEmergencyContactUpdate(updates))
-        .eq("id", contactId)
-        .select()
-        .single();
+      const patch = buildEmergencyContactPatch(updates);
+      const { data, error } = await safetyDb.rpc<EmergencyContactRow>(
+        "patch_emergency_contact",
+        {
+          p_contact_id: contactId,
+          p_updates: patch,
+        },
+      );
 
       if (error || !data) throw error ?? new Error("Failed to update emergency contact");
       return { success: true, data: mapToEmergencyContact(data) };
@@ -153,10 +143,13 @@ export class SafetyEmergencyContactsService {
 
   static async deleteEmergencyContact(contactId: string): Promise<SafetyResult<void>> {
     try {
-      const { error } = await safetyDb
-        .from<EmergencyContactRow>("emergency_contacts")
-        .update({ is_active: false, updated_at: new Date().toISOString() })
-        .eq("id", contactId);
+      const { error } = await safetyDb.rpc<EmergencyContactRow>(
+        "patch_emergency_contact",
+        {
+          p_contact_id: contactId,
+          p_updates: { is_active: false },
+        },
+      );
 
       if (error) throw error;
       return { success: true };
