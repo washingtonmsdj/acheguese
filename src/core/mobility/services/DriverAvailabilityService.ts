@@ -181,10 +181,7 @@ export class DriverAvailabilityService {
     driverProfileId: string
   ): Promise<void> {
     try {
-      await MobilityService.ensureDriverDataRow(driverProfileId, {
-        canDoDelivery: true,
-        canDoRides: true,
-      });
+      await MobilityService.ensureDriverDataRow(driverProfileId);
     } catch (error) {
       if (this.isMissingColumnError(error)) {
         await MobilityService.ensureDriverDataRow(driverProfileId);
