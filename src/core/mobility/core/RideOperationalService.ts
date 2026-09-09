@@ -13,10 +13,7 @@ import { logger } from "@/shared/utils/logger";
 import { RIDE_STATE, RideStateMachine, type RideState } from "./RideStateMachine";
 import { RideDispatchService } from "./RideDispatchService";
 import { getRideById } from "../services/mobility.queries";
-import {
-  createRide,
-  updateRide as updateRideMutation,
-} from "../services/mobility.mutations";
+import { createRide } from "../services/mobility.mutations";
 import { MobilityRpcService } from "../services/MobilityRpcService";
 import type { FailedDeliveryMetadata, ResolutionStatus } from "../types/FailedDeliveryMetadata";
 import { OperationalVerificationService } from "../services/OperationalVerificationService";
@@ -42,6 +39,7 @@ import {
   failDeliveryOperation,
   startDeliveryOperation,
   updateFailedDeliveryResolutionOperation,
+  type DeliveryTransitionCommand,
 } from "./RideDeliveryOperationalActions";
 import {
   handleRidePostTransition,
@@ -166,7 +164,8 @@ export class RideOperationalService {
     toState: RideState,
     actor: string,
     reason?: string,
-    pin?: string // GATE 7: PIN opcional para validacao
+    pin?: string, // GATE 7: PIN opcional para validacao
+    deliveryCommand?: DeliveryTransitionCommand,
   ): Promise<TransitionResult> {
     try {
       // DIAGNAOSTICO GATE 7: Log antes do .single()
@@ -256,13 +255,35 @@ export class RideOperationalService {
       RideStateMachine.assertCanTransition(fromState, toState);
 
       // Executar transicao e auditoria de forma atomica no backend.
-      const transition = await MobilityRpcService.transitionRideState({
-        rideId,
-        expectedFromState: fromState,
-        toState,
-        actorProfileId: actor,
-        reason,
-      });
+      // Estados que carregam metadata de entrega usam um command dedicado,
+      // impedindo que o browser grave estado e prova/falha em etapas separadas.
+      const transition = deliveryCommand
+        ? await MobilityRpcService.transitionDeliveryState({
+            rideId,
+            expectedFromState: fromState,
+            command: deliveryCommand.type,
+            actorProfileId: actor,
+            reason,
+            proofOfDelivery:
+              deliveryCommand.type === "confirm_delivery"
+                ? deliveryCommand.proof
+                : undefined,
+            finalPrice:
+              deliveryCommand.type === "confirm_delivery"
+                ? deliveryCommand.finalPrice
+                : undefined,
+            failedDeliveryMetadata:
+              deliveryCommand.type === "fail_delivery"
+                ? deliveryCommand.metadata
+                : undefined,
+          })
+        : await MobilityRpcService.transitionRideState({
+            rideId,
+            expectedFromState: fromState,
+            toState,
+            actorProfileId: actor,
+            reason,
+          });
 
       if (!transition.updated) {
         throw new Error('Ride state transition was not applied');
@@ -617,8 +638,15 @@ export class RideOperationalService {
     return confirmPickupOperation(
       rideId,
       driverProfileId,
-      (nextRideId, toState, actorProfileId, reason) =>
-        this.transitionTo(nextRideId, toState, actorProfileId, reason),
+      (nextRideId, toState, actorProfileId, reason, deliveryCommand) =>
+        this.transitionTo(
+          nextRideId,
+          toState,
+          actorProfileId,
+          reason,
+          undefined,
+          deliveryCommand,
+        ),
     );
   }
 
@@ -632,8 +660,15 @@ export class RideOperationalService {
     return startDeliveryOperation(
       rideId,
       driverProfileId,
-      (nextRideId, toState, actorProfileId, reason) =>
-        this.transitionTo(nextRideId, toState, actorProfileId, reason),
+      (nextRideId, toState, actorProfileId, reason, deliveryCommand) =>
+        this.transitionTo(
+          nextRideId,
+          toState,
+          actorProfileId,
+          reason,
+          undefined,
+          deliveryCommand,
+        ),
     );
   }
 
@@ -658,8 +693,15 @@ export class RideOperationalService {
       proof,
       finalPrice,
       pin,
-      (nextRideId, toState, actorProfileId, reason) =>
-        this.transitionTo(nextRideId, toState, actorProfileId, reason),
+      (nextRideId, toState, actorProfileId, reason, deliveryCommand) =>
+        this.transitionTo(
+          nextRideId,
+          toState,
+          actorProfileId,
+          reason,
+          undefined,
+          deliveryCommand,
+        ),
     );
   }
 
