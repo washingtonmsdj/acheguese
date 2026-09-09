@@ -20,6 +20,15 @@ describe("Safety ride-share authority", () => {
     const existingTokenAuthority = readProjectFile(
       "supabase/migrations/20260819085526_server_generate_ride_share_tokens.sql",
     );
+    const terminalPrivacy = readProjectFile(
+      "supabase/migrations/20260825222132_harden_shared_ride_terminal_privacy.sql",
+    );
+    const lifecycleHardening = readProjectFile(
+      "supabase/migrations/20260909192350_harden_ride_share_terminal_lifecycle_g20.sql",
+    );
+    const lifecycleOwnerRestoration = readProjectFile(
+      "supabase/migrations/20260909192625_restore_canonical_ride_share_terminal_trigger_g20.sql",
+    );
     const service = readProjectFile(
       "src/core/safety/services/SafetyRideShareService.ts",
     );
@@ -71,5 +80,20 @@ describe("Safety ride-share authority", () => {
     expect(service).not.toContain("secureRandomString");
     expect(service).not.toContain('.from<RideShareRow>("ride_shares")');
     expect(service).not.toContain(".insert(");
+
+    expect(lifecycleHardening).toContain("FOR SHARE");
+    expect(lifecycleHardening).toContain("IF v_share.status <> 'active' THEN");
+    expect(lifecycleHardening).toContain("SET statement_timeout TO '3s'");
+    expect(terminalPrivacy).toContain("trg_revoke_terminal_ride_shares");
+    expect(terminalPrivacy).toContain("SET status = 'revoked'");
+    expect(lifecycleOwnerRestoration).not.toContain(
+      "UPDATE public.ride_shares share",
+    );
+    expect(lifecycleOwnerRestoration).toContain(
+      "UPDATE public.ride_dispatch_audit dispatch",
+    );
+    expect(lifecycleOwnerRestoration).toContain(
+      "UPDATE public.driver_availability availability",
+    );
   });
 });
