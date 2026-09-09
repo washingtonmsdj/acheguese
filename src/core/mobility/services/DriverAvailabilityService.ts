@@ -17,7 +17,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase as supabaseClient } from '@/integrations/supabase';
-import { getDriverDataByProfileIds, getDriverOfferCapabilities } from './mobility.queries';
+import { getDriverOfferCapabilities } from './mobility.queries';
 import { MobilityService } from './MobilityService.impl';
 import { MobilityRpcService } from './MobilityRpcService';
 
@@ -452,186 +452,37 @@ export class DriverAvailabilityService {
    * - coordenadas válidas
    * - se motoboy, can_do_delivery = true
    */
-  static async findAvailableDrivers(
-    lat: number,
-    lng: number,
-    radiusKm: number,
-    rideMode?: 'ride' | 'motoboy',
-    locationId?: string | null
+  static async findAvailableDriversForRide(
+    rideId: string,
+    radiusKm: number = 15,
+    limit: number = 25,
   ): Promise<AvailableDriver[]> {
     try {
-      // GATE 5: SSOT - busca centralizada de motoristas disponíveis
-      // Buscar driver_availability primeiro (não há FK direto com driver_data)
-      const { data: drivers, error } = await supabase
-        .from('driver_availability')
-        .select('profile_id, current_lat, current_lng, last_seen_at')
-        .eq('is_online', true)
-        .eq('is_available', true)
-        .is('active_ride_id', null) // GATE 5: Garantir sem corrida ativa
-        .not('current_lat', 'is', null)
-        .not('current_lng', 'is', null);
-
-      if (error) throw error;
-      if (!drivers || drivers.length === 0) return [];
-
-      // Buscar driver_data separadamente via SSOT
-      const profileIds = drivers.map(d => d.profile_id);
-      const profileLocationMap = new Map<string, string | null>();
-      const locationMetaMap = new Map<string, { id: string; type: string; parent_id: string | null }>();
-      let rideOperationalCityId: string | null = null;
-
-      if (locationId) {
-        const { data: profileRows, error: profileError } = await supabase
-          .from('public_profiles')
-          .select('id, location_id')
-          .in('id', profileIds);
-
-        if (profileError) throw profileError;
-
-        for (const row of profileRows ?? []) {
-          profileLocationMap.set(row.id, row.location_id);
-        }
-
-        const locationIdsToLoad = new Set<string>([locationId]);
-        for (const value of profileLocationMap.values()) {
-          if (value) {
-            locationIdsToLoad.add(value);
-          }
-        }
-
-        const { data: locationRows, error: locationError } = await supabase
-          .from('locations')
-          .select('id, type, parent_id')
-          .in('id', Array.from(locationIdsToLoad));
-
-        if (locationError) throw locationError;
-
-        for (const row of locationRows ?? []) {
-          locationMetaMap.set(row.id, {
-            id: row.id,
-            type: row.type,
-            parent_id: row.parent_id,
-          });
-        }
-
-        const resolveOperationalCityId = (id: string | null | undefined): string | null => {
-          if (!id) return null;
-          const meta = locationMetaMap.get(id);
-          if (!meta) return id;
-
-          if (meta.type === 'city') return meta.id;
-          if (meta.type === 'district' && meta.parent_id) return meta.parent_id;
-          return meta.id;
-        };
-
-        rideOperationalCityId = resolveOperationalCityId(locationId);
-      }
-
-      const driverData = await getDriverDataByProfileIds(profileIds) as Array<{
-        profile_id: string;
-        rating?: number | null;
-        can_do_delivery?: boolean | null;
-        can_do_rides?: boolean | null;
-        is_verified?: boolean | null;
-        is_suspended?: boolean | null;
-        subscription_active?: boolean | null;
-      }>;
-
-      // Criar mapa de driver_data por profile_id
-      const dataMap = new Map(driverData?.map(d => [d.profile_id, d]) || []);
-
-      // Calcular distância e filtrar por raio e capacidade
-      const available: AvailableDriver[] = [];
-
-      for (const d of drivers) {
-        const data = dataMap.get(d.profile_id);
-        if (!data) continue; // Ignorar motoristas sem driver_data
-        if (data.is_suspended) continue;
-        if (data.is_verified !== true) continue;
-        if (data.subscription_active !== true) continue;
-
-        // Escopo territorial canônico: dispatch só pode atribuir motorista do mesmo location_id da solicitação
-        if (locationId) {
-          const driverLocationId = profileLocationMap.get(d.profile_id);
-          if (!driverLocationId) continue;
-
-          const driverMeta = locationMetaMap.get(driverLocationId);
-          const driverOperationalCityId =
-            driverMeta?.type === 'city'
-              ? driverMeta.id
-              : driverMeta?.type === 'district' && driverMeta.parent_id
-                ? driverMeta.parent_id
-                : driverLocationId;
-
-          const sameOperationalTerritory =
-            !!rideOperationalCityId &&
-            !!driverOperationalCityId &&
-            rideOperationalCityId === driverOperationalCityId;
-
-          if (!sameOperationalTerritory) continue;
-        }
-
-        // Filtrar por capacidade de entrega quando for motoboy
-        if (rideMode === 'motoboy' && !data.can_do_delivery) continue;
-        // Filtrar por capacidade de corrida quando for ride
-        if (rideMode === 'ride' && data.can_do_rides === false) continue;
-
-        const distance = this.calculateDistance(
-          lat,
-          lng,
-          d.current_lat,
-          d.current_lng
-        );
-
-        if (distance <= radiusKm) {
-          available.push({
-            profileId: d.profile_id,
-            distance,
-            rating: data.rating || 0,
-            currentLocation: { lat: d.current_lat, lng: d.current_lng },
-            lastSeenAt: d.last_seen_at,
-          });
-        }
-      }
-
-      // Ordenar por distância
-      available.sort((a, b) => a.distance - b.distance);
-
-      return available;
-    } catch (error) {
-      const errorDetails = this.getErrorDetails(error);
-      logger.error('DriverAvailabilityService.findAvailableDrivers detailed error', {
-        error: error,
-        ...errorDetails,
+      const result = await MobilityRpcService.findAvailableDriversForRide({
+        rideId,
+        radiusKm,
+        limit,
       });
-      logger.error('DriverAvailabilityService.findAvailableDrivers', error as Error);
+
+      return (result.drivers ?? []).map((driver) => ({
+        profileId: driver.profile_id,
+        distance: Number(driver.distance_km),
+        rating: Number(driver.rating ?? 0),
+        currentLocation: {
+          lat: Number(driver.current_lat),
+          lng: Number(driver.current_lng),
+        },
+        lastSeenAt: driver.last_seen_at,
+      }));
+    } catch (error) {
+      logger.error(
+        'DriverAvailabilityService.findAvailableDriversForRide',
+        error as Error,
+        { rideId, radiusKm, limit },
+      );
       return [];
     }
   }
 
-  /**
-   * Calcula distância Haversine (fallback)
-   */
-  private static calculateDistance(
-    lat1: number,
-    lng1: number,
-    lat2: number,
-    lng2: number
-  ): number {
-    const R = 6371; // Raio da Terra em km
-    const dLat = this.toRad(lat2 - lat1);
-    const dLng = this.toRad(lng2 - lng1);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(this.toRad(lat1)) *
-        Math.cos(this.toRad(lat2)) *
-        Math.sin(dLng / 2) *
-        Math.sin(dLng / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
 
-  private static toRad(degrees: number): number {
-    return (degrees * Math.PI) / 180;
-  }
 }
