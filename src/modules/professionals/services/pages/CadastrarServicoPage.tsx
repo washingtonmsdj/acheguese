@@ -29,6 +29,7 @@ import {
   type Step,
 } from "./CadastrarServicoPage.model";
 import { useServiceAreaOptions } from "@/modules/professionals/services/hooks/useServiceAreaOptions";
+import { serviceAreasService } from "@/core/service-areas";
 import type { ProfessionalCategory } from "@/core/professional/types";
 
 function getErrorMessage(error: unknown): string {
@@ -57,17 +58,9 @@ export default function CadastrarServicoPage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
 
-  const { createProfessional, isLoading: loading } = useProfessionalProfileCreate({
-    onSuccess: (result) => {
-      // ✅ Professional não usa /u/:username
-      // Redirecionar para página de sucesso ou listagem de serviços
-      toast({
-        title: "Serviço cadastrado com sucesso!",
-        description: "Seu perfil profissional está ativo.",
-      });
-      navigate('/servicos');
-    },
-  });
+  const { createProfessionalAsync, isLoading: loading } =
+    useProfessionalProfileCreate();
+  const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] =
     useState<ProfessionalServiceFormState>(INITIAL_SERVICE_FORM);
@@ -139,7 +132,7 @@ export default function CadastrarServicoPage() {
       case "details":
         if (serviceAreaOptions.length === 0)
           return "Defina uma cidade ou bairro com áreas cadastradas antes de avançar";
-        if (form.serviceAreas.length === 0)
+        if (form.serviceAreaLocationIds.length === 0)
           return "Selecione pelo menos um bairro";
         return null;
       case "contact":
@@ -210,8 +203,10 @@ export default function CadastrarServicoPage() {
     try {
       const certsArray = parseCertifications(form.certifications);
 
-      // Criar perfil professional via MultiProfileService
-      createProfessional({
+      setSubmitting(true);
+
+      // Criar identidade profissional; coverage e persistida no SSOT logo apos.
+      const result = await createProfessionalAsync({
         name: form.name.trim(),
         slug: slug.trim() || undefined,
         category: form.category as ProfessionalCategory,
@@ -219,7 +214,6 @@ export default function CadastrarServicoPage() {
         description: form.description.trim(),
         phone: form.phone.trim() || undefined,
         whatsapp: form.whatsapp.trim() || undefined,
-        service_areas: form.serviceAreas,
         available_hours: form.availableHours
           ? { schedule: form.availableHours }
           : undefined,
@@ -234,8 +228,30 @@ export default function CadastrarServicoPage() {
         logoFile: photoFile,
         location_id: servicesLocationService.getActiveLocationId() ?? undefined,
         city: servicesLocationService.getActiveLocationName() ?? "",
-        neighborhood: form.serviceAreas[0] || "",
       });
+
+      try {
+        await serviceAreasService.replaceServiceAreas(
+          result.profile_id,
+          form.serviceAreaLocationIds,
+        );
+      } catch (coverageError) {
+        logger.error("Professional created without canonical coverage:", coverageError);
+        toast({
+          title: "Serviço criado; cobertura pendente",
+          description:
+            "O perfil foi criado, mas não foi possível salvar os bairros. Abra a edição do serviço para concluir a cobertura.",
+          variant: "destructive",
+        });
+        navigate("/servicos");
+        return;
+      }
+
+      toast({
+        title: "Serviço cadastrado com sucesso!",
+        description: result.mediaWarning ?? "Seu perfil profissional está ativo.",
+      });
+      navigate("/servicos");
     } catch (err: unknown) {
       logger.error("Error creating professional:", err);
       toast({
@@ -243,6 +259,8 @@ export default function CadastrarServicoPage() {
         description: getErrorMessage(err),
         variant: "destructive",
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -286,13 +304,17 @@ export default function CadastrarServicoPage() {
           )}
 
           {step === "review" && (
-            <CadastrarServicoReview form={form} photoPreview={photoPreview} />
+            <CadastrarServicoReview
+              form={form}
+              photoPreview={photoPreview}
+              serviceAreaOptions={serviceAreaOptions}
+            />
           )}
         </div>
 
         <CadastrarServicoNavigation
           step={step}
-          loading={loading}
+          loading={loading || submitting}
           onBack={handleBack}
           onNext={handleNext}
           onSubmit={handleSubmit}

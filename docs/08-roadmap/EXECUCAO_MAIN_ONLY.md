@@ -966,6 +966,20 @@ Próximo corte:
 2. remover leitura/escrita de `professional_data.service_areas/service_radius_km` do runtime atual;
 3. somente após deploy web do código novo, dropar as colunas legadas no banco para não quebrar o frontend production ainda antigo.
 
+### Checkpoint G34B — cadastro profissional escreve apenas Coverage SSOT (2026-09-09)
+
+- [x] formulário de cadastro deixou de guardar nomes como autoridade; seleção agora usa `locations.id` em `serviceAreaLocationIds`;
+- [x] UI continua exibindo nomes derivados de `ServiceAreaOption`, sem persistir label textual;
+- [x] payload de `ProfessionalService.createProfessional` não envia mais `service_areas` nem deriva `neighborhood` da seleção;
+- [x] após criação, `ServiceAreasService.replaceServiceAreas(profile_id, locationIds)` grava o conjunto no comando bulk canônico;
+- [x] submit fica bloqueado durante criação + coverage para impedir dupla submissão;
+- [x] se a criação já concluiu e coverage falhar, o fluxo não repete a criação silenciosamente: informa cobertura pendente e encerra o wizard;
+- [x] ratchet impede regressão de `service_areas: form...` no cadastro.
+
+Ainda pendente neste eixo:
+- edição e read-model profissional ainda precisam deixar de usar o JSONB legado;
+- colunas físicas só podem ser dropadas após o frontend novo estar efetivamente publicado.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:

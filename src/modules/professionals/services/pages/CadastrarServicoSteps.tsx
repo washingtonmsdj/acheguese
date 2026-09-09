@@ -182,7 +182,7 @@ type CadastrarServicoDetailsStepProps = {
   serviceAreaCityName: string | null;
   isLoadingServiceAreaOptions: boolean;
   serviceAreaOptionsUnavailable: boolean;
-  onToggleArea: (areaName: string) => void;
+  onToggleArea: (locationId: string) => void;
   onUpdateField: UpdateField;
 };
 
@@ -237,8 +237,8 @@ export function CadastrarServicoDetailsStep({
                     className="flex min-h-11 items-center gap-3 rounded-xl border border-transparent px-2 text-sm transition-colors hover:border-primary/20 hover:bg-primary/5"
                   >
                     <Checkbox
-                      checked={form.serviceAreas.includes(area.name)}
-                      onCheckedChange={() => onToggleArea(area.name)}
+                      checked={form.serviceAreaLocationIds.includes(area.id)}
+                      onCheckedChange={() => onToggleArea(area.id)}
                     />
                     <span className="leading-5">{area.name}</span>
                   </label>
@@ -246,14 +246,16 @@ export function CadastrarServicoDetailsStep({
               : null}
           </div>
 
-          {form.serviceAreas.length > 0 ? (
+          {form.serviceAreaLocationIds.length > 0 ? (
             <div className="flex flex-wrap gap-2">
-              {form.serviceAreas.map((areaName) => (
-                <Badge key={areaName} variant="secondary" className="gap-1 text-xs">
-                  <MapPin className="h-3 w-3" />
-                  {areaName}
-                </Badge>
-              ))}
+              {serviceAreaOptions
+                .filter((area) => form.serviceAreaLocationIds.includes(area.id))
+                .map((area) => (
+                  <Badge key={area.id} variant="secondary" className="gap-1 text-xs">
+                    <MapPin className="h-3 w-3" />
+                    {area.name}
+                  </Badge>
+                ))}
             </div>
           ) : null}
         </CardContent>

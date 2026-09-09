@@ -82,6 +82,18 @@ describe("Mobility driver coverage authority", () => {
     expect(service).toContain("coverageRepository.replaceByEntity(");
     expect(service).toContain("coverage_type: CoverageType.DISTRICT");
     expect(service).toContain("status: CoverageStatus.ACTIVE");
+    const createPage = readProjectFile(
+      "src/modules/professionals/services/pages/CadastrarServicoPage.tsx",
+    );
+    const createModel = readProjectFile(
+      "src/modules/professionals/services/pages/CadastrarServicoPage.model.ts",
+    );
+    expect(createPage).toContain("serviceAreasService.replaceServiceAreas(");
+    expect(createPage).toContain("form.serviceAreaLocationIds");
+    expect(createPage).not.toContain("service_areas: form.");
+    expect(createPage).not.toContain("neighborhood: form.serviceArea");
+    expect(createModel).toContain("serviceAreaLocationIds: string[]");
+    expect(createModel).not.toContain("serviceAreas: string[]");
     expect(service).not.toContain("findSingleIdByProfile");
     expect(service).not.toContain("ProfileEntityDbClient");
     expect(service).not.toMatch(/\.from(?:<[^>]+>)?\(\s*table\s*\)/);

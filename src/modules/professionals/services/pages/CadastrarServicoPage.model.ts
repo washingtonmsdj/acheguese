@@ -9,7 +9,7 @@ export type ProfessionalServiceFormState = {
   category: string;
   subcategory: string;
   description: string;
-  serviceAreas: string[];
+  serviceAreaLocationIds: string[];
   phone: string;
   whatsapp: string;
   availableHours: string;
@@ -37,7 +37,7 @@ export const INITIAL_SERVICE_FORM: ProfessionalServiceFormState = {
   category: "",
   subcategory: "",
   description: "",
-  serviceAreas: [],
+  serviceAreaLocationIds: [],
   phone: "",
   whatsapp: "",
   availableHours: "",

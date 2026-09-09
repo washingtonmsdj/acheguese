@@ -5,16 +5,19 @@ import {
   getServiceCategoryIcon,
   getServiceCategoryLabel,
 } from "@/modules/professionals/services/domain/professionalCategories";
+import type { ServiceAreaOption } from "@/modules/professionals/services/hooks/useServiceAreaOptions";
 import type { ProfessionalServiceFormState } from "./CadastrarServicoPage.model";
 
 type CadastrarServicoReviewProps = {
   form: ProfessionalServiceFormState;
   photoPreview: string | null;
+  serviceAreaOptions: ServiceAreaOption[];
 };
 
 export function CadastrarServicoReview({
   form,
   photoPreview,
+  serviceAreaOptions,
 }: CadastrarServicoReviewProps) {
   const CategoryIcon = getServiceCategoryIcon(form.category);
   const categoryLabel = getServiceCategoryLabel(form.category) || form.category;
@@ -94,15 +97,17 @@ export function CadastrarServicoReview({
             ) : null}
           </div>
 
-          {form.serviceAreas.length > 0 ? (
+          {form.serviceAreaLocationIds.length > 0 ? (
             <div className="space-y-2">
               <p className="text-xs text-muted-foreground">Bairros atendidos</p>
               <div className="flex flex-wrap gap-2">
-                {form.serviceAreas.map((area) => (
-                  <Badge key={area} variant="secondary" className="text-xs">
-                    {area}
-                  </Badge>
-                ))}
+                {serviceAreaOptions
+                  .filter((area) => form.serviceAreaLocationIds.includes(area.id))
+                  .map((area) => (
+                    <Badge key={area.id} variant="secondary" className="text-xs">
+                      {area.name}
+                    </Badge>
+                  ))}
               </div>
             </div>
           ) : null}
