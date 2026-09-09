@@ -1,6 +1,6 @@
 {
   "schemaVersion": "supabase-advisor-residuals/v1",
-  "updatedAt": "2026-08-12",
+  "updatedAt": "2026-09-09",
   "sourceCommand": "supabase db advisors --linked --type security --fail-on none --output json",
   "residuals": [
     {
@@ -302,6 +302,11 @@
       "cacheKey": "authenticated_security_definer_function_executable_public_review_trust_events_admin_p_event_ids uuid[], p_status public.trust_event_status, p_resolution_notes text",
       "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
       "summary": "Admin-only bounded Trust review command."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_create_safety_ride_share_p_ride_id uuid, p_created_by uuid, p_expires_in_hours integer",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Safety share creation command bound to authenticated owned active Profile, ride participation, active ride state and bounded expiration; bearer token remains server-generated."
     },
     {
       "cacheKey": "authenticated_security_definer_function_executable_public_revoke_safety_ride_share_p_share_id uuid",
