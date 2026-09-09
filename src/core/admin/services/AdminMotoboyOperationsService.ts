@@ -39,6 +39,17 @@ function resolveAdminCancellationTarget(currentState: RideState): RideState | nu
 }
 
 export class AdminMotoboyOperationsService {
+  static canCancelOperational(status: string): boolean {
+    return resolveAdminCancellationTarget(status as RideState) !== null;
+  }
+
+  static canRedispatch(status: string): boolean {
+    return (
+      status === RIDE_STATE.DRIVER_ASSIGNED ||
+      status === RIDE_STATE.DRIVER_ACCEPTED
+    );
+  }
+
   static async listDeliveries(filters: {
     status?: string;
     sourceType?: string;
@@ -61,7 +72,7 @@ export class AdminMotoboyOperationsService {
    * realmente permitidas e a mutacao passa pelo mesmo owner atomico das
    * operacoes normais, incluindo auditoria e efeitos pos-transicao.
    */
-  static async cancelOperational(rideId: string, reason: string): Promise<boolean> {
+  static async cancelOperational(rideId: string, reason: string): Promise<void> {
     const ride = (await getRideById(rideId)) as { status?: string } | null;
     if (!ride?.status) {
       throw new Error("Entrega nao encontrada");
@@ -79,14 +90,13 @@ export class AdminMotoboyOperationsService {
       rideId,
       targetState,
       "system",
-      `Admin override: ${reason || "Cancelamento operacional"}`,
+      `Intervencao administrativa: ${reason || "Cancelamento operacional"}`,
     );
 
     if (!result.success) {
       throw new Error(result.error || "Cancelamento operacional nao aplicado");
     }
 
-    return true;
   }
 
   /**
