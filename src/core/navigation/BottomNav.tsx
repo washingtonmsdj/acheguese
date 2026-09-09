@@ -6,37 +6,21 @@
  * atividade e identidade.
  */
 
-import {
-  Bell,
-  Compass,
-  Sun,
-  UserRound,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+
 import { Link, useLocation as useRouterLocation } from "react-router-dom";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 import { useSessionContext } from "@/core/session";
-import { parsePublicTerritoryPath } from "@/core/routing/utils/publicTerritoryPath";
-import { buildCommunityTerritoryUrl } from "@/core/routing/utils/territoryUrls";
+import {
+  buildTerritoryNavigationModes,
+  isTerritoryNavigationModeActive,
+} from "@/core/navigation/territoryNavigationModes";
 import { cn } from "@/shared/utils/cn";
 
 interface BottomNavProps {
   prefetchRoute?: (href: string) => void;
 }
 
-interface PrimaryTab {
-  path: string;
-  label: string;
-  icon: LucideIcon;
-  exact?: boolean;
-}
-
 const noopPrefetch = () => undefined;
-
-function normalizedPath(value: string): string {
-  return value.replace(/\/+$/, "") || "/";
-}
 
 export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
   const { pathname } = useRouterLocation();
@@ -45,45 +29,11 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
 
   if (pathname === "/") return null;
 
-  const cityBase = `/${active.state}/${active.city}`;
-  const parsedTerritory = parsePublicTerritoryPath(pathname);
-  const territoryBase =
-    parsedTerritory.state && parsedTerritory.city
-      ? `/${parsedTerritory.state}/${parsedTerritory.city}${parsedTerritory.territorySlug ? `/${parsedTerritory.territorySlug}` : ""}`
-      : cityBase;
-  const territoryModule = (module: string) => `/${module}${territoryBase}`;
-  const communityHref = buildCommunityTerritoryUrl(territoryBase);
-
-  const mainTabs: PrimaryTab[] = [
-    { path: territoryBase, label: "Hoje", icon: Sun, exact: true },
-    { path: territoryModule("busca"), label: "Explorar", icon: Compass },
-    { path: communityHref, label: "Community", icon: Users },
-    {
-      path: user ? "/notificacoes" : "/login",
-      label: "Atividade",
-      icon: Bell,
-    },
-    {
-      path: user ? "/conta" : "/login",
-      label: user ? "Conta" : "Entrar",
-      icon: UserRound,
-    },
-  ];
-
-  const isActive = (tab: PrimaryTab): boolean => {
-    const current = normalizedPath(pathname);
-    const target = normalizedPath(tab.path);
-    if (tab.exact) return current === target;
-    if (tab.label === "Atividade") {
-      return (
-        current === "/notificacoes" || current.startsWith("/notificacoes/")
-      );
-    }
-    if (tab.label === "Entrar") {
-      return current === "/login" || current.startsWith("/login/");
-    }
-    return current === target || current.startsWith(`${target}/`);
-  };
+  const mainTabs = buildTerritoryNavigationModes({
+    pathname,
+    fallback: active,
+    authenticated: Boolean(user),
+  });
 
   return (
     <nav
@@ -93,15 +43,18 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
       <div className="mx-auto flex h-16 max-w-lg items-stretch px-1">
         {mainTabs.map((tab) => {
           const Icon = tab.icon;
-          const activeTab = isActive(tab);
+          const activeTab = isTerritoryNavigationModeActive(
+            pathname,
+            tab,
+          );
           return (
             <Link
-              key={`${tab.label}:${tab.path}`}
-              to={tab.path}
-              onClick={() => prefetchRoute(tab.path)}
-              onMouseEnter={() => prefetchRoute(tab.path)}
-              onFocus={() => prefetchRoute(tab.path)}
-              onTouchStart={() => prefetchRoute(tab.path)}
+              key={`${tab.label}:${tab.href}`}
+              to={tab.href}
+              onClick={() => prefetchRoute(tab.href)}
+              onMouseEnter={() => prefetchRoute(tab.href)}
+              onFocus={() => prefetchRoute(tab.href)}
+              onTouchStart={() => prefetchRoute(tab.href)}
               className={cn(
                 "relative mx-0.5 flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 py-1.5 transition-colors",
                 activeTab

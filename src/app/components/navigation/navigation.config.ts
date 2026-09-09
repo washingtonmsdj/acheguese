@@ -2,8 +2,10 @@
  * Navigation Configuration - SSOT
  *
  * Single Source of Truth para todos os itens de navegacao da aplicacao.
- * Usado pelo AppSidebar. A navegacao mobile publica canonica vive em
- * src/core/navigation/BottomNav.tsx porque depende do contexto territorial.
+ * Usado pelo AppSidebar legado nas rotas ainda não migradas.
+ * Os cinco modos do Território Vivo vivem em
+ * src/core/navigation/territoryNavigationModes.ts e são consumidos por
+ * TerritoryAdaptiveNavigation + BottomNav.
  */
 
 import {

@@ -1,100 +1,27 @@
-import {
-  Bell,
-  Compass,
-  MapPin,
-  Sun,
-  UserRound,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { MapPin } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 import { useSessionContext } from "@/core/session";
-import { parsePublicTerritoryPath } from "@/core/routing/utils/publicTerritoryPath";
-import { buildCommunityTerritoryUrl } from "@/core/routing/utils/territoryUrls";
+import {
+  buildTerritoryNavigationModes,
+  isTerritoryNavigationModeActive,
+  resolveTerritoryNavigationBase,
+} from "@/core/navigation/territoryNavigationModes";
 import { cn } from "@/shared/utils/cn";
-
-interface PrimaryMode {
-  href: string;
-  label: string;
-  description: string;
-  icon: LucideIcon;
-  exact?: boolean;
-}
-
-function normalizePath(value: string): string {
-  return value.replace(/\/+$/, "") || "/";
-}
-
-function resolveTerritoryNavigationBase(
-  pathname: string,
-  fallback: { state: string; city: string },
-): string {
-  const parsed = parsePublicTerritoryPath(pathname);
-  if (!parsed.state || !parsed.city) {
-    return `/${fallback.state}/${fallback.city}`;
-  }
-
-  return `/${parsed.state}/${parsed.city}${parsed.territorySlug ? `/${parsed.territorySlug}` : ""}`;
-}
-
-function isModeActive(pathname: string, mode: PrimaryMode): boolean {
-  const current = normalizePath(pathname);
-  const target = normalizePath(mode.href);
-
-  if (mode.exact) return current === target;
-  if (mode.label === "Atividade") {
-    return current === "/notificacoes" || current.startsWith("/notificacoes/");
-  }
-  if (mode.label === "Community") {
-    return current === "/comunidade" || current.startsWith("/comunidade/");
-  }
-  if (mode.label === "Entrar") {
-    return current === "/login" || current.startsWith("/login/");
-  }
-  return current === target || current.startsWith(`${target}/`);
-}
 
 export function TerritoryAdaptiveNavigation() {
   const { pathname } = useLocation();
   const { active } = usePublicBrowsingCity();
   const { user } = useSessionContext();
-  const territoryBase = resolveTerritoryNavigationBase(pathname, active);
-  const territoryModule = (module: string) => `/${module}${territoryBase}`;
-
-  const modes: PrimaryMode[] = [
-    {
-      href: territoryBase,
-      label: "Hoje",
-      description: "O que importa agora",
-      icon: Sun,
-      exact: true,
-    },
-    {
-      href: territoryModule("busca"),
-      label: "Explorar",
-      description: "Buscar, filtrar e mapear",
-      icon: Compass,
-    },
-    {
-      href: buildCommunityTerritoryUrl(territoryBase),
-      label: "Community",
-      description: "Participação no território",
-      icon: Users,
-    },
-    {
-      href: user ? "/notificacoes" : "/login",
-      label: "Atividade",
-      description: "Avisos e atualizações",
-      icon: Bell,
-    },
-    {
-      href: user ? "/conta" : "/login",
-      label: user ? "Conta" : "Entrar",
-      description: user ? "Perfil e preferências" : "Acesse seu perfil",
-      icon: UserRound,
-    },
-  ];
+  const territoryBase = resolveTerritoryNavigationBase(
+    pathname,
+    active,
+  );
+  const modes = buildTerritoryNavigationModes({
+    pathname,
+    fallback: active,
+    authenticated: Boolean(user),
+  });
 
   return (
     <>
@@ -106,7 +33,10 @@ export function TerritoryAdaptiveNavigation() {
         <div className="mx-auto flex h-16 max-w-lg items-stretch px-1">
           {modes.map((mode) => {
             const Icon = mode.icon;
-            const activeMode = isModeActive(pathname, mode);
+            const activeMode = isTerritoryNavigationModeActive(
+              pathname,
+              mode,
+            );
             return (
               <Link
                 key={`${mode.label}:${mode.href}`}
@@ -150,7 +80,10 @@ export function TerritoryAdaptiveNavigation() {
         <div className="mt-6 flex flex-1 flex-col gap-2">
           {modes.map((mode) => {
             const Icon = mode.icon;
-            const activeMode = isModeActive(pathname, mode);
+            const activeMode = isTerritoryNavigationModeActive(
+              pathname,
+              mode,
+            );
             return (
               <Link
                 key={`${mode.label}:${mode.href}`}
@@ -212,7 +145,10 @@ export function TerritoryAdaptiveNavigation() {
         <div className="mt-5 flex flex-1 flex-col gap-1.5">
           {modes.map((mode) => {
             const Icon = mode.icon;
-            const activeMode = isModeActive(pathname, mode);
+            const activeMode = isTerritoryNavigationModeActive(
+              pathname,
+              mode,
+            );
             return (
               <Link
                 key={`${mode.label}:${mode.href}`}
