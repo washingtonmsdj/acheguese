@@ -81,7 +81,6 @@ interface QueryResult<T> {
 
 interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
   select: (columns?: string) => QueryBuilder<TRow>;
-  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
   update: (values: unknown) => QueryBuilder<TRow>;
   eq: (column: string, value: unknown) => QueryBuilder<TRow>;
   order: (
@@ -139,24 +138,19 @@ export class SafetyService {
     input: CreateEmergencyAlertInput
   ): Promise<SafetyResult<EmergencyAlert>> {
     try {
-      const alertData = {
-        profile_id: input.profileId,
-        ride_id: input.rideId,
-        alert_type: input.alertType,
-        status: SAFETY_ALERT_STATUS.ACTIVE as EmergencyAlertStatus,
-        latitude: input.location?.latitude,
-        longitude: input.location?.longitude,
-        accuracy: input.location?.accuracy,
-        metadata: input.metadata || {},
-        description: input.description,
-        created_at: new Date().toISOString(),
-      };
-
-      const { data, error } = await safetyDb
-        .from<EmergencyAlertRow>('emergency_alerts')
-        .insert(alertData)
-        .select()
-        .single();
+      const { data, error } = await safetyDb.rpc<EmergencyAlertRow>(
+        'create_safety_emergency_alert',
+        {
+          p_profile_id: input.profileId,
+          p_ride_id: input.rideId ?? null,
+          p_alert_type: input.alertType,
+          p_description: input.description ?? null,
+          p_latitude: input.location?.latitude ?? null,
+          p_longitude: input.location?.longitude ?? null,
+          p_accuracy: input.location?.accuracy ?? null,
+          p_metadata: input.metadata ?? {},
+        },
+      );
 
       if (error) throw error;
 
@@ -285,23 +279,18 @@ export class SafetyService {
     input: CreateSafetyIncidentInput
   ): Promise<SafetyResult<SafetyIncident>> {
     try {
-      const incidentData = {
-        ride_id: input.rideId,
-        reported_by: input.reportedBy,
-        incident_type: input.incidentType,
-        severity: input.severity,
-        status: 'reported',
-        description: input.description,
-        latitude: input.location?.latitude,
-        longitude: input.location?.longitude,
-        created_at: new Date().toISOString(),
-      };
-
-      const { data, error } = await safetyDb
-        .from<SafetyIncidentRow>('safety_incidents')
-        .insert(incidentData)
-        .select()
-        .single();
+      const { data, error } = await safetyDb.rpc<SafetyIncidentRow>(
+        'create_safety_incident',
+        {
+          p_reported_by: input.reportedBy,
+          p_ride_id: input.rideId ?? null,
+          p_incident_type: input.incidentType,
+          p_severity: input.severity,
+          p_description: input.description,
+          p_latitude: input.location?.latitude ?? null,
+          p_longitude: input.location?.longitude ?? null,
+        },
+      );
 
       if (error) throw error;
 
