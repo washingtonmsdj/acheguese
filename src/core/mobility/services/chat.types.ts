@@ -31,10 +31,8 @@ export interface ChatMessage {
  * Input para enviar mensagem
  */
 export interface SendMessageInput {
-  chat_id: string;
-  sender_profile_id: string;
+  ride_id: string;
   message: string;
-  is_system_message?: boolean;
 }
 
 export type Conversation = RideChat;
