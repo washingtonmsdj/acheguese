@@ -16,7 +16,7 @@ describe("Mobility ride audit authority", () => {
     );
     const broker = readProjectFile("supabase/functions/mobility-rpc/index.ts");
     const transition = readProjectFile(
-      "supabase/migrations/20260909190551_atomize_terminal_dispatch_driver_release_g19.sql",
+      "supabase/migrations/20260909191423_fix_terminal_driver_release_availability_g19.sql",
     );
     const pinProtocol = readProjectFile(
       "supabase/migrations/20260909145145_harden_operational_pin_protocol_g7.sql",
