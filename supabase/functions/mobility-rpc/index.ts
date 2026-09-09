@@ -35,6 +35,7 @@ const CANCELLATION_STATUSES = new Set(["cancelled_by_passenger", "cancelled_by_d
 const DISPATCH_STRATEGIES = new Set(["exclusive_offer", "open_board", "reservation_board"]);
 const ACTIONS = {
   acceptRide: true,
+  transitionRideState: true,
   logRideStateChange: true,
   logDispatchAttempt: true,
   updateLatestDispatchAttempt: true,
@@ -61,6 +62,7 @@ interface RideRow {
   passenger_profile_id: string | null;
   driver_profile_id: string | null;
   status: string;
+  ride_mode: string;
 }
 
 class RequestValidationError extends Error {
@@ -182,7 +184,7 @@ async function requireUser(
 async function getRide(supabaseAdmin: SupabaseClient, rideId: string): Promise<RideRow> {
   const { data, error } = await supabaseAdmin
     .from("ride_requests")
-    .select("id, passenger_profile_id, driver_profile_id, status")
+    .select("id, passenger_profile_id, driver_profile_id, status, ride_mode")
     .eq("id", rideId)
     .maybeSingle();
 
@@ -243,6 +245,88 @@ async function canAccessRideAsParticipantOrAdmin(
   return profileBelongsToUser(supabaseAdmin, explicitDriverProfileId ?? null, auth.userId);
 }
 
+async function requireRideTransitionActor(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  ride: RideRow,
+  toState: string,
+  requestedActor: unknown,
+): Promise<string> {
+  if (auth.isProjectAdmin) {
+    return `admin:${auth.userId}`;
+  }
+
+  const passengerOwned = await profileBelongsToUser(
+    supabaseAdmin,
+    ride.passenger_profile_id,
+    auth.userId,
+  );
+  const driverOwned = await profileBelongsToUser(
+    supabaseAdmin,
+    ride.driver_profile_id,
+    auth.userId,
+  );
+
+  if (toState === "driver_assigned" || toState === "driver_accepted" || toState === "expired") {
+    throw new RequestAuthorizationError("Transition is reserved for dispatch or a dedicated command");
+  }
+
+  if (toState === "searching_driver" || toState === "cancelled_by_passenger") {
+    if (!passengerOwned) {
+      throw new RequestAuthorizationError("Only the ride passenger can perform this transition");
+    }
+    return ride.passenger_profile_id as string;
+  }
+
+  const driverStates = new Set([
+    "driver_arriving",
+    "passenger_boarded",
+    "in_progress",
+    "pickup_confirmed",
+    "in_delivery",
+    "delivered",
+    "failed_delivery",
+    "completed",
+    "failed",
+    "cancelled_by_driver",
+  ]);
+
+  if (driverStates.has(toState)) {
+    if (!driverOwned || !ride.driver_profile_id) {
+      throw new RequestAuthorizationError("Only the assigned driver can perform this transition");
+    }
+
+    if (
+      requestedActor !== undefined &&
+      requestedActor !== null &&
+      requestedActor !== "system" &&
+      requestedActor !== ride.driver_profile_id
+    ) {
+      throw new RequestAuthorizationError("Actor profile does not match the assigned driver");
+    }
+
+    return ride.driver_profile_id;
+  }
+
+  throw new RequestAuthorizationError("Transition is not exposed to browser clients");
+}
+
+async function requireBoardingVerification(
+  supabaseAdmin: SupabaseClient,
+  rideId: string,
+): Promise<void> {
+  const { data, error } = await supabaseAdmin
+    .from("operational_verifications")
+    .select("is_required, status")
+    .eq("ride_id", rideId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (data?.is_required === true && data.status !== "verified") {
+    throw new RequestAuthorizationError("PIN verification is required before boarding");
+  }
+}
+
 async function resolveAuditActor(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
@@ -283,6 +367,56 @@ async function requireDispatchWriteAccess(
     throw new RequestAuthorizationError("User cannot write dispatch audit for this ride");
   }
   return ride;
+}
+
+async function handleTransitionRideState(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const rideId = requireUuid(params.rideId ?? params.ride_id, "rideId");
+  const expectedFromState = requireStatus(
+    params.expectedFromState ?? params.expected_from_state,
+    "expectedFromState",
+  );
+  const toState = requireStatus(params.toState ?? params.to_state, "toState");
+  const reason = optionalAuditReason(params.reason);
+  const ride = await getRide(supabaseAdmin, rideId);
+
+  if (ride.status !== expectedFromState) {
+    throw new RequestValidationError("Ride state changed during transition");
+  }
+
+  if (toState === "passenger_boarded") {
+    await requireBoardingVerification(supabaseAdmin, rideId);
+  }
+
+  const changedBy = await requireRideTransitionActor(
+    supabaseAdmin,
+    auth,
+    ride,
+    toState,
+    params.actorProfileId ?? params.actor_profile_id ?? params.actor,
+  );
+
+  const { data, error } = await supabaseAdmin.rpc(
+    "mobility_transition_ride_state_atomic",
+    {
+      p_ride_id: rideId,
+      p_expected_from_state: expectedFromState,
+      p_to_state: toState,
+      p_changed_by: changedBy,
+      p_reason: reason || null,
+    },
+  );
+
+  if (error) throw error;
+  return data ?? {
+    updated: false,
+    ride_id: rideId,
+    from_state: expectedFromState,
+    to_state: toState,
+  };
 }
 
 async function handleLogRideStateChange(
@@ -481,6 +615,8 @@ async function dispatchAction(
   switch (action) {
     case "acceptRide":
       return handleAcceptRide(supabaseAdmin, auth, params);
+    case "transitionRideState":
+      return handleTransitionRideState(supabaseAdmin, auth, params);
     case "logRideStateChange":
       return handleLogRideStateChange(supabaseAdmin, auth, params);
     case "logDispatchAttempt":
