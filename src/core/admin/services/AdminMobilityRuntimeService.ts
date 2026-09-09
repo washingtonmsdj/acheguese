@@ -44,7 +44,6 @@ export class AdminMobilityRuntimeService {
 
   async createDriverModerationEvent(input: {
     driverProfileId: string;
-    adminProfileId?: string | null;
     action: DriverModerationAction;
     reason?: string;
     metadata?: Record<string, unknown>;
