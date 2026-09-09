@@ -58,6 +58,13 @@ describe("Mobility availability authority", () => {
       "availability.last_location_update >= v_now - interval '5 minutes'",
     );
 
+    const releaseRetirement = readProjectFile(
+      "supabase/migrations/20260909191733_retire_terminal_driver_release_helper_g19.sql",
+    );
+    expect(releaseRetirement).toContain(
+      "DROP FUNCTION public.release_driver_availability_for_ride(uuid, uuid)",
+    );
+
     expect(availabilityService).toContain(
       "MobilityRpcService.updateDriverAvailability",
     );
