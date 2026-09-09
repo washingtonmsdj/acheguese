@@ -5,6 +5,7 @@ import {
   type RideState,
 } from "@/core/mobility/core/RideStateMachine";
 import { getRideById } from "@/core/mobility/services/mobility.queries";
+import { MobilityRpcService } from "@/core/mobility/services/MobilityRpcService";
 import { MobilityService } from "@/core/mobility/services/runtime";
 
 export interface AdminMotoboyDelivery {
@@ -89,15 +90,20 @@ export class AdminMotoboyOperationsService {
   }
 
   /**
-   * Redispatch ainda possui writer direto e sera migrado para o command
-   * atomico de dispatch. Mantido funcional ate o cutover para nao amputar a
-   * capacidade administrativa existente.
+   * Reencaminha uma entrega pelo command admin atomico. A autoridade e
+   * revalidada no broker; o banco libera o motorista, encerra ofertas pendentes,
+   * restaura searching_driver e grava audit na mesma transacao.
    */
   static async redispatch(rideId: string): Promise<void> {
-    await MobilityService.updateRide(rideId, {
-      status: RIDE_STATE.SEARCHING_DRIVER,
-      driver_profile_id: null,
-      updated_at: new Date().toISOString(),
-    });
+    const result = await MobilityRpcService.adminRedispatch(
+      rideId,
+      "Reencaminhamento manual pelo admin",
+    );
+
+    if (result.success !== true) {
+      throw new Error(
+        `Redispatch nao aplicado${result.reason ? `: ${result.reason}` : ""}`,
+      );
+    }
   }
 }
