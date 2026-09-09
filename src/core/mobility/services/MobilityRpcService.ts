@@ -12,6 +12,7 @@ import type {
 
 type MobilityRpcAction =
   | "acceptRide"
+  | "adminRedispatch"
   | "transitionRideState"
   | "transitionDeliveryState"
   | "updateFailedDeliveryResolution"
@@ -33,6 +34,15 @@ export interface AcceptRideAtomicBrokerData {
   success?: boolean;
   reason?: string;
   error?: string;
+}
+
+export interface AdminRedispatchBrokerData {
+  success?: boolean;
+  reason?: string;
+  ride_id?: string;
+  from_state?: string;
+  to_state?: string;
+  driver_profile_id?: string;
 }
 
 const FUNCTION_NAME = "mobility-rpc";
@@ -155,6 +165,16 @@ export class MobilityRpcService {
       rideId,
       driverProfileId,
       strategy,
+    });
+  }
+
+  static async adminRedispatch(
+    rideId: string,
+    reason: string,
+  ): Promise<AdminRedispatchBrokerData> {
+    return this.invoke<AdminRedispatchBrokerData>("adminRedispatch", {
+      rideId,
+      reason,
     });
   }
 
