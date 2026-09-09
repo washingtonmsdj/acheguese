@@ -12,6 +12,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { type SupabaseClient } from '@supabase/supabase-js';
 import { TrackingService } from '@/core/tracking/services/TrackingService';
+import { MobilityRpcService } from '@/core/mobility/services/MobilityRpcService';
 import {
   createOperationalAnonClient,
   describeOperational,
@@ -43,6 +44,7 @@ describeOperational('GATE 2: Pipeline de Publicação de Localização', {
       .from('profiles')
       .select('id')
       .eq('user_id', authData.user.id)
+      .eq('profile_type', 'driver')
       .order('created_at', { ascending: true })
       .limit(1)
       .maybeSingle();
@@ -54,12 +56,29 @@ describeOperational('GATE 2: Pipeline de Publicação de Localização', {
     testDriverId = profile.id;
     testPassengerId = profile.id;
     trackingService = new TrackingService(supabase);
+
+    const online = await MobilityRpcService.updateDriverAvailability(
+      {
+        driverProfileId: testDriverId,
+        availabilityAction: 'go_online',
+      },
+      supabase,
+    );
+    if (online.success !== true) {
+      throw new Error(online.error || online.reason || 'Motorista E2E não ficou online');
+    }
   });
 
   afterAll(async () => {
-    // Limpar dados de teste
+    trackingService?.unsubscribeAll();
     if (testDriverId) {
-      await supabase.from('driver_locations').delete().eq('driver_profile_id', testDriverId);
+      await MobilityRpcService.updateDriverAvailability(
+        {
+          driverProfileId: testDriverId,
+          availabilityAction: 'go_offline',
+        },
+        supabase,
+      ).catch(() => undefined);
     }
     await supabase.auth.signOut();
   });
@@ -124,18 +143,19 @@ describeOperational('GATE 2: Pipeline de Publicação de Localização', {
 
   describe('2. LEITURA COM MAPEAMENTO CORRETO', () => {
     it('deve ler localização e converter lat/lng para latitude/longitude', async () => {
-      // Arrange - Inserir diretamente no banco
-      await supabase
-        .from('driver_locations')
-        .upsert({
-          driver_profile_id: testDriverId,
-          lat: -12.985,
-          lng: -38.485,
+      // Arrange - publicar pelo mesmo caminho autenticado do produto
+      await trackingService.updatePosition(
+        testDriverId,
+        {
+          latitude: -12.985,
+          longitude: -38.485,
           accuracy: 20.0,
           heading: 180.0,
           speed: 40.0,
           altitude: 75.0,
-        }, { onConflict: 'driver_profile_id' });
+        },
+        'driver',
+      );
 
       // Act
       const position = await trackingService.getCurrentPosition(testDriverId, 'driver');
@@ -265,17 +285,14 @@ describeOperational('GATE 2: Pipeline de Publicação de Localização', {
 
     it('deve lidar com dados GPS parciais', async () => {
       // Arrange - Apenas lat/lng, sem dados GPS extras
-      await supabase
-        .from('driver_locations')
-        .upsert({
-          driver_profile_id: testDriverId,
-          lat: -13.000,
-          lng: -38.500,
-          accuracy: null,
-          heading: null,
-          speed: null,
-          altitude: null,
-        }, { onConflict: 'driver_profile_id' });
+      await trackingService.updatePosition(
+        testDriverId,
+        {
+          latitude: -13.000,
+          longitude: -38.500,
+        },
+        'driver',
+      );
 
       // Act
       const position = await trackingService.getCurrentPosition(testDriverId, 'driver');
