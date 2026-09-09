@@ -10,6 +10,7 @@ import { RideCardHeader } from "./ride-card/RideCardHeader";
 import { RideRoute } from "./ride-card/RideRoute";
 import { RideInfo } from "./ride-card/RideInfo";
 import { DriverInfo } from "./ride-card/DriverInfo";
+import { OperationalPinCard } from "./OperationalPinCard";
 
 interface ActiveRideCardProps {
   ride: RideRequest;
@@ -99,6 +100,8 @@ export function ActiveRideCard({
         paymentMethod={ride.payment_method}
         observation={ride.observation}
       />
+
+      <OperationalPinCard rideId={ride.id} rideStatus={ride.status} />
 
       {showDriverInfo && ride.driver && (
         <DriverInfo
