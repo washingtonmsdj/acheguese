@@ -57,6 +57,7 @@ const ACTIONS = {
   updateDriverAvailability: true,
   updateDriverLocation: true,
   listDriverOffers: true,
+  findAvailableDriversForRide: true,
   reconcileStaleDriverAvailability: true,
   releaseDriverAvailabilityForRide: true,
 } as const;
@@ -1664,6 +1665,45 @@ async function handleListDriverOffers(
   return data ?? { offers: [] };
 }
 
+async function handleFindAvailableDriversForRide(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const rideId = requireUuid(params.rideId ?? params.ride_id, "rideId");
+  const radiusKm =
+    optionalBoundedNumber(params.radiusKm ?? params.radius_km, "radiusKm", 0.1, 100)
+    ?? 15;
+  const limit = optionalInteger(params.limit, "limit", 1, 100) ?? 25;
+
+  const ride = await getRide(supabaseAdmin, rideId);
+  if (
+    !auth.isProjectAdmin &&
+    !await profileBelongsToUser(
+      supabaseAdmin,
+      ride.passenger_profile_id,
+      auth.userId,
+    )
+  ) {
+    throw new RequestAuthorizationError(
+      "Only the ride requester or admin can discover drivers",
+    );
+  }
+
+  const { data, error } = await supabaseAdmin.rpc(
+    "mobility_find_available_drivers_for_ride",
+    {
+      p_actor_user_id: auth.userId,
+      p_ride_id: rideId,
+      p_radius_km: radiusKm,
+      p_limit: limit,
+    },
+  );
+
+  if (error) throw error;
+  return data ?? { drivers: [] };
+}
+
 async function handleReconcileStaleDriverAvailability(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
@@ -1775,6 +1815,8 @@ async function dispatchAction(
       return handleUpdateDriverLocation(supabaseAdmin, auth, params);
     case "listDriverOffers":
       return handleListDriverOffers(supabaseAdmin, auth, params);
+    case "findAvailableDriversForRide":
+      return handleFindAvailableDriversForRide(supabaseAdmin, auth, params);
     case "reconcileStaleDriverAvailability":
       return handleReconcileStaleDriverAvailability(supabaseAdmin, auth, params);
     case "releaseDriverAvailabilityForRide":
