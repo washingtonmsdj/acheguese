@@ -448,3 +448,30 @@ Próximo gate obrigatório:
 4. executar E2E passageiro + motorista + motoboy;
 5. manter `PUBLIC_LAUNCH_SURFACES.mobility=false` até certificação funcional completa.
 
+### Checkpoint G12 — compartilhamento público de corrida com token server-owned (2026-09-09)
+
+Auditoria real:
+- a policy histórica de `ride_shares` já vinculava `created_by` ao `auth.uid()` e exigia participante da corrida;
+- desde 2026-08-19 já existia `private.assign_ride_share_token()` + `trg_assign_ride_share_token`, substituindo qualquer token vindo do cliente por 16 bytes criptográficos codificados em hex;
+- portanto o `secureRandomString(32)` Base62 do frontend era redundante, não a autoridade real do token;
+- a criação ainda possuía `INSERT authenticated=true`, deixando o browser escolher lifecycle fields embora o token fosse sobrescrito pelo trigger.
+
+Correção aplicada e provada:
+- `ride_shares INSERT authenticated=false`; policy `ride_shares_insert_own` removida;
+- novo `create_safety_ride_share(ride_id, created_by, expires_in_hours)` é o único comando de criação acessível a `authenticated`;
+- comando exige perfil ativo pertencente ao usuário, participante da corrida e corrida em estado ativo; validade fica entre 1 e 168 horas, com padrão existente de 24h;
+- o trigger privado pré-existente continua como **único** gerador de bearer token; nenhuma segunda geração foi mantida;
+- o trigger `trg_audit_ride_share_insert` continua como **único** produtor de `share_created`; a função não duplica audit;
+- `get_shared_ride_safety_data` continua anon por design, mas agora usa contrato exato `^[0-9a-f]{32}$`, `search_path=''` e `statement_timeout=3s`;
+- frontend removeu geração/insert direto e usa `create_safety_ride_share`;
+- probes transacionais `BEGIN/ROLLBACK` provaram: participante válido cria token e leitura pública resolve; exatamente um audit é produzido; terceiro não cria; corrida terminal não cria;
+- ratchet: `tests/security/safety-ride-share-authority.test.ts`;
+- advisors de segurança foram executados após o DDL; o warning de `get_shared_ride_safety_data` permanece **intencional e allowlisted**, pois esse endpoint é uma capability pública por bearer token.
+
+Próximo gate obrigatório:
+1. auditar `ride_ratings` e feedback/trust por grants/RLS reais, verificando se o browser ainda consegue escrever direto e contornar `submit_ride_rating`/`submit_ride_trust_feedback`;
+2. manter projeções públicas de reputação somente quando forem agregadas e intencionalmente públicas;
+3. validar chat de corrida e safety mutators por bypass de tabela, não duplicar brokers se a autorização interna já for suficiente;
+4. executar same-SHA test/typecheck/build/E2E quando runner hosted estiver disponível;
+5. manter `PUBLIC_LAUNCH_SURFACES.mobility=false`.
+
