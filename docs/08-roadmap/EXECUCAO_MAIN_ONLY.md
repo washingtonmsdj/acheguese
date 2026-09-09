@@ -568,6 +568,35 @@ Próximo gate obrigatório:
 2. preservar chat funcional, corrigindo bypass/authority na raiz se existir, sem remover a feature;
 3. manter `PUBLIC_LAUNCH_SURFACES.mobility=false` até same-SHA tests/build/E2E.
 
+### Checkpoint G21 — chat de corrida server-owned e participante-bound (2026-09-09)
+
+Auditoria real:
+- `ride_chats` e `ride_chat_messages` concedem ao browser somente `SELECT`; `INSERT/UPDATE/DELETE` permanecem service-role-only;
+- as únicas policies de leitura são participantes da corrida via `private.current_active_profile_id()`;
+- `ensure_ride_chat`, `send_ride_chat_message` e `mark_ride_chat_messages_read` são `SECURITY DEFINER` com `search_path=''` e timeout de 3s;
+- sender não vem do payload: é sempre derivado do perfil ativo server-side;
+- envio é permitido somente a passageiro/motorista da corrida com motorista já atribuído e em estados operacionais não terminais.
+
+Prova transacional `BEGIN/ROLLBACK`:
+- passageiro criou o singleton chat e enviou mensagem com sender correto;
+- motorista respondeu com sender derivado corretamente e marcou somente a mensagem da contraparte como lida;
+- terceiro sem vínculo foi bloqueado;
+- após a corrida ficar terminal, nova mensagem foi recusada;
+- o browser não possui privilégio direto de INSERT/UPDATE nas tabelas de chat;
+- nenhuma fixture permaneceu no banco.
+
+Decisão:
+- não criar broker redundante: as RPCs existentes já são comandos autenticados e internamente autorizados;
+- warnings dessas três `SECURITY DEFINER` foram classificados em `SUPABASE_ADVISOR_RESIDUALS.json`;
+- ratchet `tests/security/mobility-ride-chat-server-authority.test.ts` protege participante, sender server-owned, lifecycle e ausência de DML direto.
+
+**Estado:** G21 fechado sem remover funcionalidade e sem criar camada paralela.
+
+Próximo gate obrigatório:
+1. auditar PIN operacional: `verify_operational_pin`, `refresh_operational_pin_for_requester` e `get_operational_verification_status`;
+2. provar que passageiro/motorista/terceiro não conseguem contornar ownership, attempts, TTL ou status;
+3. manter `PUBLIC_LAUNCH_SURFACES.mobility=false`.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:
