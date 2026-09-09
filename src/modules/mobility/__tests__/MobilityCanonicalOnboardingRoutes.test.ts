@@ -12,12 +12,14 @@ function readProjectFile(path: string): string {
 
 describe("mobility canonical onboarding routes", () => {
   it("does not expose legacy /create-driver route in app runtime", () => {
-    const routesSource = readProjectFile("src/app/routes/AppRoutes.tsx");
+    const routesSource = readProjectFile(
+      "src/app/routes/sections/AppLayoutRoutes.tsx",
+    );
     const contextSource = readProjectFile(
       "src/core/profiles/contexts/multi-profile-runtime-context.tsx",
     );
 
-    expect(routesSource).not.toContain('path="/create-driver"');
+    expect(routesSource).not.toContain("/create-driver");
     expect(contextSource).not.toContain("'/create-driver'");
   });
 
