@@ -16,7 +16,7 @@ describe("Mobility ride audit authority", () => {
     );
     const broker = readProjectFile("supabase/functions/mobility-rpc/index.ts");
     const transition = readProjectFile(
-      "supabase/migrations/20260909185003_atomize_terminal_ride_offer_invalidation_g18.sql",
+      "supabase/migrations/20260909190551_atomize_terminal_dispatch_driver_release_g19.sql",
     );
     const pinProtocol = readProjectFile(
       "supabase/migrations/20260909145145_harden_operational_pin_protocol_g7.sql",
@@ -36,10 +36,9 @@ describe("Mobility ride audit authority", () => {
 
     expect(transition).toContain("UPDATE public.ride_offers offer");
     expect(transition).toContain("offer.status IN ('pending', 'sent')");
+    expect(transition).toContain("UPDATE public.ride_dispatch_audit dispatch");
+    expect(transition).toContain("UPDATE public.driver_availability availability");
     expect(transition).toContain("INSERT INTO public.ride_state_audit");
-    expect(transition).toContain(
-      "DROP FUNCTION IF EXISTS public.cancel_pending_ride_offers(uuid)",
-    );
 
     expect(pinProtocol).toContain("verification_attempts = v_attempts");
     expect(pinProtocol).toContain("last_attempt_at = v_now");
