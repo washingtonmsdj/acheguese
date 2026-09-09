@@ -2,7 +2,6 @@ import {
   invokeSupabaseBroker,
   type SupabaseBrokerClient,
 } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
-import type { RideStateAuditInput } from "./MobilityAuditService";
 import type { DispatchStrategy } from "../types/dispatch.types";
 import type {
   CreateDeliveryInput,
@@ -22,18 +21,12 @@ type MobilityRpcAction =
   | "transitionRideState"
   | "transitionDeliveryState"
   | "updateFailedDeliveryResolution"
-  | "logRideStateChange"
-  | "cancelPendingOffers"
   | "updateDriverAvailability"
   | "updateDriverLocation"
   | "listDriverOffers"
   | "findAvailableDriversForRide"
   | "reconcileStaleDriverAvailability"
   | "releaseDriverAvailabilityForRide";
-
-interface CancelPendingOffersBrokerData {
-  cancelledCount: number;
-}
 
 interface ReleaseDriverAvailabilityBrokerData {
   released: boolean;
@@ -262,15 +255,6 @@ export class MobilityRpcService {
     });
   }
 
-  static async logRideStateChange(input: RideStateAuditInput): Promise<void> {
-    await this.invoke<{ logged: boolean }>("logRideStateChange", {
-      rideId: input.rideId,
-      fromState: input.fromState,
-      toState: input.toState,
-      actorProfileId: input.changedBy,
-      reason: input.reason ?? "",
-    });
-  }
 
   static async acceptRideAtomic(
     rideId: string,
@@ -303,12 +287,6 @@ export class MobilityRpcService {
     return this.invoke("confirmPassengerCompletion", { rideId });
   }
 
-  static async cancelPendingOffers(rideId: string): Promise<number> {
-    const result = await this.invoke<CancelPendingOffersBrokerData>("cancelPendingOffers", {
-      rideId,
-    });
-    return result.cancelledCount;
-  }
 
   static async updateDriverAvailability(
     input: {
