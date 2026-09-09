@@ -62,8 +62,6 @@ export interface ProfessionalDataRecord {
   experience_years: number | null;
   education: string | null;
   price_range: string | null;
-  service_areas: string[] | null;
-  service_radius_km: number | null;
   available_hours: Record<string, unknown> | null;
   availability_notes?: string | null;
   portfolio_items?: Array<{
@@ -185,8 +183,6 @@ export interface Professional {
   experience_years?: number;
   education?: string;
   price_range?: string;
-  service_areas: string[];
-  service_radius_km?: number;
   available_hours?: Record<string, unknown>;
 
   // Media
@@ -253,8 +249,6 @@ export interface CreateProfessionalInput {
   experience_years?: number;
   education?: string;
   price_range?: string;
-  service_areas?: string[];
-  service_radius_km?: number;
   available_hours?: Record<string, unknown>;
 
   // Media

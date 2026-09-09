@@ -106,6 +106,39 @@ describe("Mobility driver coverage authority", () => {
     expect(editModel).toContain("serviceAreaLocationIds: string[]");
     expect(editModel).not.toContain("professional.service_areas");
     expect(editModel).not.toContain("service_areas: form.");
+    const professionalTypes = readProjectFile("src/core/professional/types.ts");
+    const professionalMapper = readProjectFile(
+      "src/core/professional/services/professional.mappers.ts",
+    );
+    const professionalQueries = readProjectFile(
+      "src/core/professional/services/professional.queries.ts",
+    );
+    const professionalLifecycle = readProjectFile(
+      "src/core/professional/services/professional.profile-lifecycle.ts",
+    );
+    const professionalSchema = readProjectFile(
+      "src/shared/schemas/professional/professionalSchemas.ts",
+    );
+    const professionalDetail = readProjectFile(
+      "src/modules/professionals/services/hooks/useProfessionalDetail.ts",
+    );
+    const centralProfessional = readProjectFile(
+      "src/modules/central/pages/CentralProfissionalPageSections.tsx",
+    );
+    expect(professionalTypes).not.toContain("service_radius_km");
+    expect(professionalTypes).not.toMatch(/\bservice_areas\??:/);
+    expect(professionalMapper).not.toContain("row.service_areas");
+    expect(professionalMapper).not.toContain("row.service_radius_km");
+    expect(professionalQueries).not.toMatch(/^\s*service_areas,?$/m);
+    expect(professionalQueries).not.toMatch(/^\s*service_radius_km,?$/m);
+    expect(professionalLifecycle).not.toContain("input.service_areas");
+    expect(professionalLifecycle).not.toContain("input.service_radius_km");
+    expect(professionalSchema).not.toMatch(/\bservice_areas\s*:/);
+    expect(professionalSchema).not.toMatch(/\bservice_radius_km\s*:/);
+    expect(professionalDetail).toContain('useServiceAreas(professional?.profile_id');
+    expect(centralProfessional).toContain("useServiceAreas(service.profile_id)");
+    expect(centralProfessional).not.toContain("service.service_radius_km");
+    expect(centralProfessional).not.toContain("service.service_areas");
     expect(service).not.toContain("findSingleIdByProfile");
     expect(service).not.toContain("ProfileEntityDbClient");
     expect(service).not.toMatch(/\.from(?:<[^>]+>)?\(\s*table\s*\)/);

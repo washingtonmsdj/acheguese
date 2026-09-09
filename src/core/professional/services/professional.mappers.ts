@@ -144,8 +144,6 @@ export function mapProfessionalRow(row: ProfessionalRow): Professional {
     experience_years: row.experience_years ?? undefined,
     education: optionalString(row.education),
     price_range: optionalString(row.price_range),
-    service_areas: asStringArray(row.service_areas),
-    service_radius_km: row.service_radius_km ?? undefined,
     available_hours: asRecord(row.available_hours),
     logo_url: optionalString(metadata.logo_url),
     banner_url: optionalString(metadata.banner_url),

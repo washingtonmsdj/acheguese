@@ -179,8 +179,6 @@ const PROFESSIONAL_READ_SELECT = `
   experience_years,
   education,
   price_range,
-  service_areas,
-  service_radius_km,
   available_hours,
   availability_notes,
   portfolio_items,

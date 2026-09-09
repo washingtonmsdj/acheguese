@@ -131,12 +131,6 @@ const experienceYearsSchema = z
   .max(50, "Anos de experiência deve ser no máximo 50")
   .optional();
 
-const serviceRadiusSchema = z
-  .number()
-  .min(0, "Raio de atendimento não pode ser negativo")
-  .max(500, "Raio de atendimento deve ser no máximo 500km")
-  .optional();
-
 // ============================================================================
 // BASE PROFESSIONAL SCHEMA
 // ============================================================================
@@ -176,8 +170,6 @@ const baseProfessionalSchema = z.object({
   experience_years: experienceYearsSchema,
   education: z.string().max(1000).trim().optional(),
   price_range: z.string().max(50).trim().optional(),
-  service_areas: arrayStringSchema,
-  service_radius_km: serviceRadiusSchema,
   available_hours: z.record(z.any()).optional(),
   availability_notes: z.string().max(500).trim().optional(),
 

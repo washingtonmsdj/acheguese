@@ -35,6 +35,7 @@ import {
   resolveProfessionalPublicUrl,
 } from "./CentralProfissionalPage.model";
 import { centralRoutes } from "@/modules/central/routes/centralRoutes";
+import { useServiceAreas } from "@/core/service-areas";
 
 type QuoteDraft = {
   amount: string;
@@ -297,27 +298,33 @@ export function CentralProfessionalOperationPanel({
 }
 
 function PrimaryServiceOperationalData({ service }: { service: Professional }) {
+  const coverageQuery = useServiceAreas(service.profile_id);
+  const coverages = coverageQuery.data ?? [];
+  const radiusCoverage = coverages.find((area) => area.coverage_type === "radius");
+
   return (
     <div className="rounded-xl border bg-muted/20 p-4">
       <h3 className="text-sm font-semibold">Dados operacionais do perfil</h3>
       <p className="mt-1 text-xs text-muted-foreground">
-        Campos reais de `professional_data` usados na operação (sem placeholders).
+        Cobertura canônica de `service_areas` e disponibilidade do perfil.
       </p>
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
         <div className="rounded-lg border bg-background p-3">
           <p className="text-xs text-muted-foreground">Raio de atendimento</p>
           <p className="font-semibold">
-            {typeof service.service_radius_km === "number"
-              ? `${service.service_radius_km} km`
-              : "Não informado"}
+            {radiusCoverage?.radius_km != null
+              ? `${radiusCoverage.radius_km} km`
+              : "Não se aplica"}
           </p>
         </div>
         <div className="rounded-lg border bg-background p-3 sm:col-span-2">
           <p className="text-xs text-muted-foreground">Áreas de atendimento</p>
           <p className="font-semibold">
-            {service.service_areas?.length
-              ? service.service_areas.join(", ")
-              : "Não informado"}
+            {coverageQuery.isLoading
+              ? "Carregando..."
+              : coverages.length
+                ? coverages.map((area) => area.location_name).join(", ")
+                : "Não informado"}
           </p>
         </div>
         <div className="rounded-lg border bg-background p-3 sm:col-span-3">

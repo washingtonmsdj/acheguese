@@ -4,6 +4,7 @@
 
 import { useProfessionalById } from "@/modules/professionals/services/hooks/useProfessionalById";
 import { useSessionContext } from "@/core/session";
+import { useServiceAreas } from "@/core/service-areas";
 import { profileService } from "@/core/profiles/services";
 import { useQuery } from "@tanstack/react-query";
 import { mapProfessionalToDetailView } from "@/modules/professionals/services/domain/professionalViewModels";
@@ -19,6 +20,8 @@ export function useProfessionalDetail(id?: string) {
     enabled: !!id,
   });
 
+  const coverageQuery = useServiceAreas(professional?.profile_id ?? "");
+
   // Check ownership via ProfileService
   const { data: isOwner = false } = useQuery({
     queryKey: ["professional-owner", id, user?.id],
@@ -31,14 +34,20 @@ export function useProfessionalDetail(id?: string) {
   });
 
   const mappedProfessional: ProfessionalData | null = professional
-    ? mapProfessionalToDetailView(professional)
+    ? mapProfessionalToDetailView(
+        professional,
+        (coverageQuery.data ?? []).map((area) => area.location_name),
+      )
     : null;
 
   return {
     professional: mappedProfessional,
-    loading,
+    loading: loading || Boolean(professional && !coverageQuery.isFetched),
     notFound: error?.message?.includes("não encontrado") || false,
     isOwner,
-    refetch,
+    refetch: () => {
+      refetch();
+      void coverageQuery.refetch();
+    },
   };
 }

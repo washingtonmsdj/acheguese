@@ -88,7 +88,10 @@ export function mapProfessionalToItem(professional: Professional): ProfessionalI
   };
 }
 
-export function mapProfessionalToDetailView(professional: Professional): ProfessionalDetailView {
+export function mapProfessionalToDetailView(
+  professional: Professional,
+  coverageLabels: string[] = [],
+): ProfessionalDetailView {
   const availableHours = professional.available_hours;
   const schedule =
     availableHours && typeof availableHours.schedule === "string"
@@ -116,7 +119,7 @@ export function mapProfessionalToDetailView(professional: Professional): Profess
     city: professional.city || "",
     state: professional.state || "",
     address: professional.address || "",
-    neighborhoods_atendidos: professional.service_areas,
+    neighborhoods_atendidos: coverageLabels,
     schedule_atendimento: schedule,
     experience_years: professional.experience_years ?? null,
     education: professional.education || "",

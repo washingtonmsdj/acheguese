@@ -11,6 +11,7 @@ const TEST_EMAIL = operationalEnv.driverEmail || "";
 const TEST_PASSWORD = operationalEnv.driverPassword || "";
 
 let PROFESSIONAL_DATA_ID: string | null = null;
+let PROFESSIONAL_COVERAGE_LABEL: string | null = null;
 
 interface LeadFixture {
   leadId: string;
@@ -38,13 +39,14 @@ async function ensureProfessionalData(): Promise<string | null> {
   const { client, userId } = session;
   const location = await client
     .from("locations")
-    .select("id, geographic_path")
+    .select("id, name, geographic_path")
     .eq("type", "district")
     .ilike("geographic_path", "%/salvador/%")
     .order("geographic_path", { ascending: true })
     .limit(1)
     .maybeSingle();
   const locationId = location.data?.id ?? null;
+  PROFESSIONAL_COVERAGE_LABEL = location.data?.name ?? null;
   if (!locationId) {
     await client.auth.signOut();
     return null;
@@ -134,8 +136,6 @@ async function ensureProfessionalData(): Promise<string | null> {
         service_category: "manutencao",
         service_subcategory: "eletricista",
         description: "Profissional para fluxo E2E.",
-        service_radius_km: 7,
-        service_areas: ["Nordeste de Amaralina", "Santa Cruz"],
         available_hours: {
           segunda: "08:00-18:00",
           terca: "08:00-18:00",
@@ -156,14 +156,28 @@ async function ensureProfessionalData(): Promise<string | null> {
         status: "active",
         location_id: locationId,
         profession: "Eletricista",
-        service_radius_km: 7,
-        service_areas: ["Nordeste de Amaralina", "Santa Cruz"],
         available_hours: {
           segunda: "08:00-18:00",
           terca: "08:00-18:00",
         },
       })
       .eq("id", professionalDataId);
+  }
+
+  if (professionalDataId) {
+    const coverage = await client.rpc("replace_entity_coverage", {
+      p_entity_type: "service_provider",
+      p_entity_id: professionalDataId,
+      p_coverages: [
+        {
+          coverage_type: "district",
+          location_id: locationId,
+          radius_km: null,
+          is_primary: true,
+        },
+      ],
+    });
+    if (coverage.error) throw coverage.error;
   }
 
   await client.auth.signOut();
@@ -430,10 +444,18 @@ test.describe("professional leads authenticated flow", () => {
         .toMatch(/raio de atendimento/i);
       await expect
         .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
-        .toMatch(/(7 km|nao informado)/i);
-      await expect
-        .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
-        .toMatch(/nordeste de amaralina/i);
+        .toMatch(/(nao se aplica|km)/i);
+      if (PROFESSIONAL_COVERAGE_LABEL) {
+        await expect
+          .poll(
+            async () =>
+              comparableText(await bodyText(page)).includes(
+                comparableText(PROFESSIONAL_COVERAGE_LABEL ?? ""),
+              ),
+            { timeout: 60_000 },
+          )
+          .toBe(true);
+      }
       await expect
         .poll(async () => comparableText(await bodyText(page)), { timeout: 60_000 })
         .toMatch(/(segunda: 08:00-18:00|nao informado)/i);

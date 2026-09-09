@@ -121,9 +121,6 @@ function sanitizeAndValidateInput(
     certifications: sanitizeArray(
       Array.isArray(input.certifications) ? input.certifications.join(",") : "",
     ),
-    service_areas: sanitizeArray(
-      Array.isArray(input.service_areas) ? input.service_areas.join(",") : "",
-    ),
     languages: sanitizeArray(
       Array.isArray(input.languages) ? input.languages.join(",") : "",
     ),
@@ -160,9 +157,7 @@ function sanitizeAndValidateInput(
     if ("banner_url" in input) sanitizedUpdate.banner_url = sanitizedBase.banner_url;
     if ("portfolio_images" in input) sanitizedUpdate.portfolio_images = sanitizedBase.portfolio_images;
     if ("certifications" in input) sanitizedUpdate.certifications = sanitizedBase.certifications;
-    if ("service_areas" in input) sanitizedUpdate.service_areas = sanitizedBase.service_areas;
     if ("languages" in input) sanitizedUpdate.languages = sanitizedBase.languages;
-    if ("service_radius_km" in input) sanitizedUpdate.service_radius_km = sanitizedBase.service_radius_km;
     if ("available_hours" in input) sanitizedUpdate.available_hours = sanitizedBase.available_hours;
     if ("location_id" in input) sanitizedUpdate.location_id = sanitizedBase.location_id;
     if ("address_id" in input) sanitizedUpdate.address_id = sanitizedBase.address_id;
@@ -208,8 +203,6 @@ function toProfessionalData(
   if (input.experience_years !== undefined) result.experience_years = input.experience_years;
   if (input.education !== undefined) result.education = input.education;
   if (input.price_range !== undefined) result.price_range = input.price_range;
-  if (input.service_areas !== undefined) result.service_areas = input.service_areas;
-  if (input.service_radius_km !== undefined) result.service_radius_km = input.service_radius_km;
   if (input.available_hours !== undefined) result.available_hours = input.available_hours;
   if (input.availability_notes !== undefined) result.availability_notes = input.availability_notes;
   if (input.location_id !== undefined) result.location_id = input.location_id;

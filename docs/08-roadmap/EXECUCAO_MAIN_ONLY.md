@@ -1001,6 +1001,23 @@ Próximo corte:
 3. ajustar export LGPD para exportar Coverage canônico em vez desses campos;
 4. manter o DROP físico das colunas bloqueado até o frontend novo estar publicado.
 
+### Checkpoint G34D1 — remover coverage legado do runtime Professional (2026-09-09)
+
+- [x] `ProfessionalDataRecord`, `Professional` e inputs create/update deixaram de expor `service_areas/service_radius_km`;
+- [x] mapper e `PROFESSIONAL_READ_SELECT` não leem mais as duas colunas;
+- [x] schema e lifecycle não validam, sanitizam nem escrevem esses campos;
+- [x] página pública preserva “bairros atendidos”, agora combinando Professional com `useServiceAreas(profile_id)`;
+- [x] Central Profissional exibe Coverage canônico e raio somente quando existir coverage `radius`;
+- [x] fixture E2E deixou de fabricar JSONB legado e passa a chamar `replace_entity_coverage` com `locations.id`;
+- [x] ratchet bloqueia retorno das duas propriedades ao runtime Professional.
+
+As colunas físicas continuam temporariamente no banco por compatibilidade com o frontend production antigo. Elas não são mais autoridade no código novo.
+
+Próximo corte:
+1. mover export LGPD para Coverage canônico e retirar as duas colunas do payload Professional;
+2. reconciliar/deployar `user-export-data` no Supabase;
+3. manter DROP físico bloqueado até deploy web same-SHA do frontend novo.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:
