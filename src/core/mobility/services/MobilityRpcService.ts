@@ -2,11 +2,7 @@ import {
   invokeSupabaseBroker,
   type SupabaseBrokerClient,
 } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
-import type {
-  RideDispatchAttemptInput,
-  RideDispatchAttemptUpdateInput,
-  RideStateAuditInput,
-} from "./MobilityAuditService";
+import type { RideStateAuditInput } from "./MobilityAuditService";
 import type { DispatchStrategy } from "../types/dispatch.types";
 import type {
   CreateDeliveryInput,
@@ -27,8 +23,6 @@ type MobilityRpcAction =
   | "transitionDeliveryState"
   | "updateFailedDeliveryResolution"
   | "logRideStateChange"
-  | "logDispatchAttempt"
-  | "updateLatestDispatchAttempt"
   | "cancelPendingOffers"
   | "updateDriverAvailability"
   | "updateDriverLocation"
@@ -285,17 +279,6 @@ export class MobilityRpcService {
     });
   }
 
-  static async logDispatchAttempt(input: RideDispatchAttemptInput): Promise<void> {
-    await this.invoke<{ logged: boolean }>("logDispatchAttempt", {
-      rideId: input.rideId,
-      driverProfileId: input.driverProfileId,
-      attemptNumber: input.attemptNumber,
-      offeredAt: input.offeredAt,
-      timeoutAt: input.timeoutAt,
-      status: input.status,
-    });
-  }
-
   static async acceptRideAtomic(
     rideId: string,
     driverProfileId: string,
@@ -325,19 +308,6 @@ export class MobilityRpcService {
     passenger_confirmed_at?: string;
   }> {
     return this.invoke("confirmPassengerCompletion", { rideId });
-  }
-
-  static async updateLatestDispatchAttempt(
-    rideId: string,
-    driverProfileId: string,
-    updates: RideDispatchAttemptUpdateInput,
-  ): Promise<void> {
-    await this.invoke<{ updated: boolean }>("updateLatestDispatchAttempt", {
-      rideId,
-      driverProfileId,
-      status: updates.status,
-      respondedAt: updates.respondedAt,
-    });
   }
 
   static async cancelPendingOffers(rideId: string): Promise<number> {
