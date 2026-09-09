@@ -148,7 +148,6 @@ export type { Conversation } from "./ChatService";
 
 export { MobilityLocationService } from "./MobilityLocationService";
 export { MobilityRolloutService } from "./MobilityRolloutService";
-export { MobilityAuditService } from "./MobilityAuditService";
 
 //  ============================================================
 //  RE-EXPORTS DE VALIDATORS E ADAPTERS
