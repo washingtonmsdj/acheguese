@@ -14,7 +14,6 @@ describe("mobility rpc broker security", () => {
     const config = readProjectFile("supabase/config.toml");
     const broker = readProjectFile("src/core/mobility/services/MobilityRpcService.ts");
     const offerService = readProjectFile("src/core/mobility/services/MobilityOfferService.ts");
-    const auditService = readProjectFile("src/core/mobility/services/MobilityAuditService.ts");
     const availabilityService = readProjectFile(
       "src/core/mobility/services/DriverAvailabilityService.ts",
     );
@@ -25,7 +24,7 @@ describe("mobility rpc broker security", () => {
     expect(edgeFunction).toContain("function requireUser(");
     expect(edgeFunction).toContain('getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY")');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("accept_ride_atomic"');
-    expect(edgeFunction).toContain('supabaseAdmin.rpc("cancel_pending_ride_offers"');
+    expect(edgeFunction).not.toContain('supabaseAdmin.rpc("cancel_pending_ride_offers"');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("release_driver_availability_for_ride"');
     expect(edgeFunction).toContain('.from("ride_requests")');
     expect(edgeFunction).toContain('.from("profiles")');
@@ -47,11 +46,10 @@ describe("mobility rpc broker security", () => {
     expect(broker).toContain('const FUNCTION_NAME = "mobility-rpc"');
     expect(broker).toContain('"acceptRide"');
 
-    for (const source of [offerService, auditService, availabilityService]) {
+    for (const source of [offerService, availabilityService]) {
       expect(source).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']accept_ride_atomic/);
       expect(source).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']log_ride_dispatch_attempt/);
       expect(source).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']update_latest_ride_dispatch_attempt/);
-      expect(source).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']cancel_pending_ride_offers/);
       expect(source).not.toMatch(/rpc(?:<[^>]+>)?\(\s*["']release_driver_availability_for_ride/);
     }
   });
@@ -67,7 +65,6 @@ describe("mobility rpc broker security", () => {
     for (const signature of [
       "public.log_ride_dispatch_attempt(uuid, uuid, integer, timestamptz, timestamptz, text)",
       "public.update_latest_ride_dispatch_attempt(uuid, uuid, text, timestamptz)",
-      "public.cancel_pending_ride_offers(uuid)",
       "public.release_driver_availability_for_ride(uuid, uuid)",
     ]) {
       expect(migration).toContain(`REVOKE ALL ON FUNCTION ${signature}`);
@@ -98,7 +95,6 @@ describe("mobility rpc broker security", () => {
     );
     const edgeFunction = readProjectFile("supabase/functions/mobility-rpc/index.ts");
     const rpcService = readProjectFile("src/core/mobility/services/MobilityRpcService.ts");
-    const auditService = readProjectFile("src/core/mobility/services/MobilityAuditService.ts");
     const autoDispatch = readProjectFile("supabase/functions/auto-dispatch-ride/index.ts");
     const atomicDispatch = readProjectFile(
       "supabase/migrations/20260909125837_harden_atomic_mobility_dispatch_authority_g6.sql",
@@ -112,7 +108,7 @@ describe("mobility rpc broker security", () => {
       expect(retirement).toContain(`DROP FUNCTION IF EXISTS public.${name}`);
     }
 
-    for (const source of [edgeFunction, rpcService, auditService]) {
+    for (const source of [edgeFunction, rpcService]) {
       expect(source).not.toContain("logDispatchAttempt");
       expect(source).not.toContain("updateLatestDispatchAttempt");
       expect(source).not.toContain("log_ride_dispatch_attempt");
@@ -122,5 +118,13 @@ describe("mobility rpc broker security", () => {
     expect(autoDispatch).toContain("mobility_offer_driver_atomic");
     expect(autoDispatch).toContain("mobility_timeout_driver_offer_atomic");
     expect(atomicDispatch).toContain("INSERT INTO public.ride_dispatch_audit");
+
+    const terminalTransition = readProjectFile(
+      "supabase/migrations/20260909185003_atomize_terminal_ride_offer_invalidation_g18.sql",
+    );
+    expect(terminalTransition).toContain("UPDATE public.ride_offers offer");
+    expect(terminalTransition).toContain(
+      "DROP FUNCTION IF EXISTS public.cancel_pending_ride_offers(uuid)",
+    );
   });
 });
