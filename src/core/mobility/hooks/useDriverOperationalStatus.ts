@@ -146,12 +146,18 @@ export function useDriverOperationalStatus({
     setIsUpdatingStatus(true);
     try {
       if (isAvailable) {
+        const pauseResult = await DriverAvailabilityService.pauseAvailable(driverProfileId);
+        if (!pauseResult.success) {
+          throw new Error(
+            pauseResult.error || "Nao foi possivel pausar a disponibilidade",
+          );
+        }
+
         await persistSnapshot({
           is_available: false,
           last_location_update: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
-        await DriverAvailabilityService.markLastSeen(driverProfileId);
         setGpsError(null);
         toast.success("Disponibilidade pausada");
         return;
