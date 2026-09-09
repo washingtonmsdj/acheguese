@@ -48,6 +48,7 @@ Regras:
 - cada tabela mutável possui owner de escrita único. Read models adicionais devem ser declarados e não criam writer paralelo.
 - `ride_requests` é o agregado canônico de corrida/entrega e é **server-owned para toda mutação**: browser não possui `INSERT`, `UPDATE` ou `DELETE` direto; criação, transições, dispatch, comandos de entrega e intervenções administrativas passam por broker autenticado + RPCs service-role-only específicas.
 - `ride_state_audit` é append-only/backend-owned; o browser não grava eventos de auditoria diretamente e o ator deve ser derivado/revalidado pelo backend.
+- entrega com origem `gastronomy` usa contrato `sourceId=orders.id` + `authorizationSourceId` da empresa/restaurante; o backend deve comprovar que o pedido pertence ao `merchant_profile_id` da empresa autorizada antes de criar o ride e deve impedir duas entregas ativas para o mesmo pedido.
 - tipos canônicos não são duplicados entre `shared`, `core` e `modules`.
 - `index.ts` vazio (`export {};`) não é facade válida.
 
