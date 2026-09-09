@@ -17,8 +17,13 @@ Leia nesta ordem:
 
 ## Regra para novas IAs/agentes
 
+- **inspecionar o projeto real antes das docs**: código da `main`, rotas, owners, serviços, schema/migrations, testes, deploy/runtime e comportamento observado são a evidência primária;
+- documentação pode estar desatualizada ou obsoleta e **nunca autoriza sozinha remover feature implementada**;
+- feature coerente com o produto que esteja quebrada, incompleta ou `launch-paused` deve ser investigada e corrigida na causa raiz, não apagada para simplificar;
+- `launchScope=false` é gate de lançamento, não marca de legado;
+- remover somente legado real, duplicação, compatibility bridge ou owner substituído, depois de preservar/migrar a capacidade funcional válida e comprovar callers/impacto;
 - não usar conteúdo histórico deste arquivo para decidir arquitetura;
-- não recriar `src/features`, `src/config`, `scripts` ou outros roots aposentados;
+- não recriar `src/features`, `src/config`, `scripts` ou outros roots já comprovadamente aposentados; se houver dúvida se algo é realmente legado, auditar o projeto antes de remover;
 - trabalhar diretamente na `main`, sem force-push;
 - revalidar o HEAD antes de cada write;
 - preferir owner/SSOT canônico em `src/core`, `src/modules`, `src/app`, `src/integrations` e `src/shared`;
