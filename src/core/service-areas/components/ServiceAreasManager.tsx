@@ -1,42 +1,54 @@
 import { useState } from "react";
-import { Plus, Trash2, MapPin, Edit2, Star } from "lucide-react";
+import { Edit2, MapPin, Plus, Star, Trash2 } from "lucide-react";
+import { CoverageType } from "@/core/coverage";
+import { TerritorialSelector } from "@/core/location/components/TerritorialSelector";
+import { useSessionContext } from "@/core/session";
+import {
+  useCreateServiceArea,
+  useDeleteServiceArea,
+  useServiceAreas,
+  useSetPrimaryServiceArea,
+  useUpdateServiceArea,
+  type ServiceArea,
+} from "@/core/service-areas";
+import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card } from "@/shared/components/ui/card";
-import { Input } from "@/shared/components/ui/input";
-import { Label } from "@/shared/components/ui/label";
-import { Badge } from "@/shared/components/ui/badge";
-import { Switch } from "@/shared/components/ui/switch";
-import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/shared/components/ui/dialog";
-import { useSessionContext } from "@/core/session";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
 import {
-  useServiceAreas,
-  useCreateServiceArea,
-  useUpdateServiceArea,
-  useDeleteServiceArea,
-  useSetPrimaryServiceArea,
-  type ServiceArea,
-  type CreateServiceAreaData,
-  type UpdateServiceAreaData,
-} from "@/core/service-areas";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
+import { Switch } from "@/shared/components/ui/switch";
+import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 import { logger } from "@/shared/utils/logger";
 
 interface ServiceAreasManagerProps {
   profileId?: string;
 }
 
+const COVERAGE_LABEL: Record<CoverageType, string> = {
+  [CoverageType.CITY]: "Cidade",
+  [CoverageType.DISTRICT]: "Bairro/distrito",
+  [CoverageType.RADIUS]: "Raio",
+};
+
 export function ServiceAreasManager({ profileId }: ServiceAreasManagerProps) {
   const { activeProfile } = useSessionContext();
   const targetProfileId = profileId || activeProfile?.id;
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
 
-  // Hooks do service
   const { data: areas = [], isLoading: loading } = useServiceAreas(
     targetProfileId || "",
   );
@@ -47,83 +59,122 @@ export function ServiceAreasManager({ profileId }: ServiceAreasManagerProps) {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingArea, setEditingArea] = useState<ServiceArea | null>(null);
-
-  // Form state
-  const [city, setCity] = useState("");
-  const [neighborhoods, setNeighborhoods] = useState("");
+  const [selectorRevision, setSelectorRevision] = useState(0);
+  const [coverageType, setCoverageType] = useState<CoverageType>(
+    CoverageType.CITY,
+  );
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(
+    null,
+  );
+  const [selectedLocationLabel, setSelectedLocationLabel] = useState("");
   const [radiusKm, setRadiusKm] = useState("5");
   const [isPrimary, setIsPrimary] = useState(false);
   const [isActive, setIsActive] = useState(true);
 
+  function resetSelector() {
+    setSelectorRevision((current) => current + 1);
+  }
+
   function openCreateDialog() {
     setEditingArea(null);
-    setCity("");
-    setNeighborhoods("");
+    setCoverageType(CoverageType.CITY);
+    setSelectedLocationId(null);
+    setSelectedLocationLabel("");
     setRadiusKm("5");
-    setIsPrimary(areas.length === 0); // Primeira área é primária
+    setIsPrimary(areas.length === 0);
     setIsActive(true);
+    resetSelector();
     setDialogOpen(true);
   }
 
   function openEditDialog(area: ServiceArea) {
     setEditingArea(area);
-    setCity(area.city);
-    setNeighborhoods(area.neighborhoods?.join(", ") || "");
-    setRadiusKm(area.radius_km.toString());
+    setCoverageType(area.coverage_type);
+    setSelectedLocationId(area.location_id);
+    setSelectedLocationLabel(area.location_full_name);
+    setRadiusKm(String(area.radius_km ?? 5));
     setIsPrimary(area.is_primary);
     setIsActive(area.is_active);
+    resetSelector();
     setDialogOpen(true);
   }
 
+  function handleCoverageTypeChange(value: string) {
+    setCoverageType(value as CoverageType);
+    if (!editingArea) {
+      setSelectedLocationId(null);
+      setSelectedLocationLabel("");
+    }
+    resetSelector();
+  }
+
   async function handleSave() {
-    if (!targetProfileId || !city) {
+    if (!targetProfileId || !selectedLocationId) return;
+
+    const parsedRadius =
+      coverageType === CoverageType.RADIUS ? Number(radiusKm) : null;
+
+    if (
+      coverageType === CoverageType.RADIUS &&
+      (!Number.isFinite(parsedRadius) || parsedRadius! < 1 || parsedRadius! > 100)
+    ) {
       return;
     }
 
     try {
-      const neighborhoodsArray = neighborhoods
-        .split(",")
-        .map((n) => n.trim())
-        .filter((n) => n.length > 0);
-
       const areaData = {
-        profile_id: targetProfileId,
-        city,
-        neighborhoods:
-          neighborhoodsArray.length > 0 ? neighborhoodsArray : undefined,
-        radius_km: parseFloat(radiusKm),
+        coverage_type: coverageType,
+        location_id: selectedLocationId,
+        radius_km: parsedRadius,
         is_primary: isPrimary,
         is_active: isActive,
       };
 
       if (editingArea) {
         await updateAreaMutation.mutateAsync({
+          profileId: targetProfileId,
           id: editingArea.id,
           data: areaData,
         });
       } else {
-        await createAreaMutation.mutateAsync(areaData as CreateServiceAreaData);
+        await createAreaMutation.mutateAsync({
+          profile_id: targetProfileId,
+          ...areaData,
+        });
       }
 
       setDialogOpen(false);
     } catch (error) {
-      logger.error("Error saving service area:", error);
+      logger.error("ServiceAreasManager.handleSave", error as Error, {
+        profileId: targetProfileId,
+        locationId: selectedLocationId,
+        coverageType,
+      });
     }
   }
 
   async function handleDelete(areaId: string) {
+    if (!targetProfileId) return;
+
     const confirmed = await confirm({
-      title: "Remover area de atuacao",
-      description: "Esta area sera removida do perfil e deixara de aparecer na cobertura de atendimento.",
+      title: "Remover área de atuação",
+      description:
+        "Esta área deixará de participar da cobertura territorial do perfil.",
       confirmLabel: "Remover",
       variant: "destructive",
     });
     if (!confirmed) return;
 
     try {
-      await deleteAreaMutation.mutateAsync(areaId);
+      await deleteAreaMutation.mutateAsync({
+        profileId: targetProfileId,
+        id: areaId,
+      });
     } catch (error) {
-      logger.error("Error deleting service area:", error);
+      logger.error("ServiceAreasManager.handleDelete", error as Error, {
+        profileId: targetProfileId,
+        areaId,
+      });
     }
   }
 
@@ -136,18 +187,27 @@ export function ServiceAreasManager({ profileId }: ServiceAreasManagerProps) {
         serviceAreaId: areaId,
       });
     } catch (error) {
-      logger.error("Error setting primary area:", error);
+      logger.error("ServiceAreasManager.handleSetPrimary", error as Error, {
+        profileId: targetProfileId,
+        areaId,
+      });
     }
   }
 
   async function handleToggleActive(areaId: string, currentActive: boolean) {
+    if (!targetProfileId) return;
+
     try {
       await updateAreaMutation.mutateAsync({
+        profileId: targetProfileId,
         id: areaId,
         data: { is_active: !currentActive },
       });
     } catch (error) {
-      logger.error("Error toggling area:", error);
+      logger.error("ServiceAreasManager.handleToggleActive", error as Error, {
+        profileId: targetProfileId,
+        areaId,
+      });
     }
   }
 
@@ -162,48 +222,53 @@ export function ServiceAreasManager({ profileId }: ServiceAreasManagerProps) {
   if (loading) {
     return (
       <Card className="p-6">
-        <p className="text-sm text-muted-foreground">Carregando...</p>
+        <p className="text-sm text-muted-foreground">
+          Carregando áreas de atuação...
+        </p>
       </Card>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h3 className="text-lg font-semibold">Áreas de Atuação</h3>
+          <h3 className="text-lg font-semibold">Áreas de atuação</h3>
           <p className="text-sm text-muted-foreground">
-            Gerencie onde você atende
+            Defina cidades, bairros ou raios onde você aceita atendimento.
           </p>
         </div>
         <Button onClick={openCreateDialog} size="sm">
-          <Plus className="h-4 w-4 mr-2" />
-          Adicionar Área
+          <Plus className="mr-2 h-4 w-4" />
+          Adicionar área
         </Button>
       </div>
 
       {areas.length === 0 ? (
         <Card className="p-6 text-center">
-          <MapPin className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground mb-4">
-            Nenhuma área de atuação cadastrada
+          <MapPin className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+          <p className="mb-4 text-sm text-muted-foreground">
+            Nenhuma área de atuação cadastrada.
           </p>
           <Button onClick={openCreateDialog} variant="outline" size="sm">
-            Adicionar Primeira Área
+            Adicionar primeira área
           </Button>
         </Card>
       ) : (
         <div className="grid gap-4">
           {areas.map((area) => (
             <Card key={area.id} className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
                     <MapPin className="h-4 w-4 text-primary" />
-                    <h4 className="font-semibold">{area.city}</h4>
+                    <h4 className="font-semibold">{area.location_full_name}</h4>
+                    <Badge variant="outline" className="text-xs">
+                      {COVERAGE_LABEL[area.coverage_type]}
+                    </Badge>
                     {area.is_primary && (
                       <Badge variant="default" className="text-xs">
-                        <Star className="h-3 w-3 mr-1" />
+                        <Star className="mr-1 h-3 w-3" />
                         Primária
                       </Badge>
                     )}
@@ -214,15 +279,22 @@ export function ServiceAreasManager({ profileId }: ServiceAreasManagerProps) {
                     )}
                   </div>
 
-                  {area.neighborhoods && area.neighborhoods.length > 0 && (
-                    <p className="text-sm text-muted-foreground mb-1">
-                      Bairros: {area.neighborhoods.join(", ")}
+                  {area.coverage_type === CoverageType.RADIUS &&
+                    area.radius_km != null && (
+                      <p className="text-sm text-muted-foreground">
+                        Raio de {area.radius_km} km a partir desta localização.
+                      </p>
+                    )}
+                  {area.coverage_type === CoverageType.CITY && (
+                    <p className="text-sm text-muted-foreground">
+                      Abrange a cidade selecionada.
                     </p>
                   )}
-
-                  <p className="text-sm text-muted-foreground">
-                    Raio: {area.radius_km} km
-                  </p>
+                  {area.coverage_type === CoverageType.DISTRICT && (
+                    <p className="text-sm text-muted-foreground">
+                      Abrange o bairro ou distrito selecionado.
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -231,6 +303,7 @@ export function ServiceAreasManager({ profileId }: ServiceAreasManagerProps) {
                     onCheckedChange={() =>
                       handleToggleActive(area.id, area.is_active)
                     }
+                    aria-label="Ativar ou desativar área"
                   />
 
                   {!area.is_primary && (
@@ -248,6 +321,7 @@ export function ServiceAreasManager({ profileId }: ServiceAreasManagerProps) {
                     variant="ghost"
                     size="sm"
                     onClick={() => openEditDialog(area)}
+                    title="Editar área"
                   >
                     <Edit2 className="h-4 w-4" />
                   </Button>
@@ -256,6 +330,7 @@ export function ServiceAreasManager({ profileId }: ServiceAreasManagerProps) {
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDelete(area.id)}
+                    title="Remover área"
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -270,47 +345,83 @@ export function ServiceAreasManager({ profileId }: ServiceAreasManagerProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingArea ? "Editar" : "Adicionar"} Área de Atuação
+              {editingArea ? "Editar" : "Adicionar"} área de atuação
             </DialogTitle>
-            <DialogDescription>Configure onde você atende</DialogDescription>
+            <DialogDescription>
+              Use territórios oficiais do sistema. Não são salvos nomes livres.
+            </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div>
-              <Label>Cidade *</Label>
-              <Input
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="Ex: cidade atendida"
-              />
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="coverage-type">Tipo de cobertura</Label>
+              <Select
+                value={coverageType}
+                onValueChange={handleCoverageTypeChange}
+              >
+                <SelectTrigger id="coverage-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={CoverageType.CITY}>
+                    Cidade inteira
+                  </SelectItem>
+                  <SelectItem value={CoverageType.DISTRICT}>
+                    Bairro ou distrito
+                  </SelectItem>
+                  <SelectItem value={CoverageType.RADIUS}>
+                    Raio a partir de um território
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <div>
-              <Label>Bairros (opcional)</Label>
-              <Input
-                value={neighborhoods}
-                onChange={(e) => setNeighborhoods(e.target.value)}
-                placeholder="Ex: Centro, Zona Norte, bairros atendidos"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Separe por vírgula. Deixe vazio para atender toda a cidade.
+            <TerritorialSelector
+              key={`${selectorRevision}-${coverageType}`}
+              initialLocationId={editingArea?.location_id}
+              cityOnly={coverageType === CoverageType.CITY}
+              allowCityOnly={coverageType === CoverageType.RADIUS}
+              progressiveReveal
+              onLocationChange={(locationId, locationData) => {
+                setSelectedLocationId(locationId);
+                setSelectedLocationLabel(
+                  locationData
+                    ? [locationData.neighborhoodName, locationData.cityName]
+                        .filter(
+                          (value, index, values) =>
+                            value && values.indexOf(value) === index,
+                        )
+                        .join(" · ")
+                    : "",
+                );
+              }}
+            />
+
+            {selectedLocationLabel && (
+              <p className="text-xs text-muted-foreground">
+                Selecionado: {selectedLocationLabel}
               </p>
-            </div>
+            )}
 
-            <div>
-              <Label>Raio de Atendimento (km) *</Label>
-              <Input
-                type="number"
-                min="1"
-                max="100"
-                step="0.5"
-                value={radiusKm}
-                onChange={(e) => setRadiusKm(e.target.value)}
-              />
-            </div>
+            {coverageType === CoverageType.RADIUS && (
+              <div className="space-y-2">
+                <Label htmlFor="coverage-radius">
+                  Raio de atendimento (km)
+                </Label>
+                <Input
+                  id="coverage-radius"
+                  type="number"
+                  min="1"
+                  max="100"
+                  step="0.5"
+                  value={radiusKm}
+                  onChange={(event) => setRadiusKm(event.target.value)}
+                />
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
-              <Label>Área Primária</Label>
+              <Label>Área primária</Label>
               <Switch checked={isPrimary} onCheckedChange={setIsPrimary} />
             </div>
 
@@ -319,11 +430,20 @@ export function ServiceAreasManager({ profileId }: ServiceAreasManagerProps) {
               <Switch checked={isActive} onCheckedChange={setIsActive} />
             </div>
 
-            <div className="flex gap-2 justify-end">
+            <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleSave}>Salvar</Button>
+              <Button
+                onClick={handleSave}
+                disabled={
+                  !selectedLocationId ||
+                  createAreaMutation.isPending ||
+                  updateAreaMutation.isPending
+                }
+              >
+                {editingArea ? "Salvar alterações" : "Adicionar área"}
+              </Button>
             </div>
           </div>
         </DialogContent>
