@@ -442,6 +442,11 @@
       "cacheKey": "authenticated_security_definer_function_executable_public_create_safety_incident_p_reported_by uuid, p_ride_id uuid, p_incident_type text, p_severity text, p_description text, p_latitude double precision, p_longitude double precision",
       "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
       "summary": "Active-Profile-bound Safety incident creation command with server-owned reported state/timestamps, ride-participant validation and canonical audit/notification triggers."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_register_safety_evidence_p_incident_id uuid, p_evidence_type text, p_object_path text, p_file_name text, p_metadata jsonb",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Incident-reporter-only Safety evidence registration bound to an existing private Storage object owned by the authenticated user; reference, byte size, MIME and uploader are server-derived."
     }
   ]
 }
