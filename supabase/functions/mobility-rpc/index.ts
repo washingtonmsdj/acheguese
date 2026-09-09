@@ -816,10 +816,10 @@ async function requireDeliveryCreationAuthority(
   sourceType: "passenger" | "business" | "gastronomy" | "service",
   authoritySourceId: string | null,
   passengerProfileId: string,
-): Promise<void> {
+): Promise<{ businessId: string; profileId: string } | null> {
   await requireRequestingProfile(supabaseAdmin, auth, passengerProfileId);
 
-  if (sourceType === "passenger") return;
+  if (sourceType === "passenger") return null;
   if (!authoritySourceId) {
     throw new RequestValidationError("authorizationSourceId is required for this source type");
   }
@@ -828,7 +828,7 @@ async function requireDeliveryCreationAuthority(
     if (!await profileBelongsToUser(supabaseAdmin, authoritySourceId, auth.userId)) {
       throw new RequestAuthorizationError("User is not associated with this service profile");
     }
-    return;
+    return null;
   }
 
   const business = await resolveManagedBusinessForDelivery(
@@ -844,6 +844,76 @@ async function requireDeliveryCreationAuthority(
       ? "canUseMotoboyNetwork"
       : "canRequestDelivery",
   );
+  return business;
+}
+
+async function requireGastronomyOrderSourceBinding(
+  supabaseAdmin: SupabaseClient,
+  sourceId: string | null,
+  business: { businessId: string; profileId: string } | null,
+): Promise<void> {
+  if (!sourceId) {
+    throw new RequestValidationError(
+      "Gastronomy delivery requires sourceId=order.id",
+    );
+  }
+  if (!business) {
+    throw new RequestAuthorizationError(
+      "Gastronomy business authority was not resolved",
+    );
+  }
+
+  const { data: order, error: orderError } = await supabaseAdmin
+    .from("orders")
+    .select("id, merchant_profile_id, source_type, source_id, logistics_status")
+    .eq("id", sourceId)
+    .maybeSingle();
+
+  if (orderError) throw orderError;
+  if (!order) {
+    throw new RequestValidationError("Gastronomy source order was not found");
+  }
+
+  if (
+    order.merchant_profile_id !== business.profileId ||
+    order.source_type !== "gastronomy" ||
+    order.source_id !== business.businessId
+  ) {
+    throw new RequestAuthorizationError(
+      "Gastronomy order does not belong to the authorized business",
+    );
+  }
+
+  if (["delivered", "canceled", "failed"].includes(order.logistics_status)) {
+    throw new RequestValidationError(
+      "Gastronomy order is already in a terminal logistics state",
+    );
+  }
+
+  const { data: existingRide, error: existingRideError } = await supabaseAdmin
+    .from("ride_requests")
+    .select("id")
+    .eq("source_type", "gastronomy")
+    .eq("source_id", sourceId)
+    .in("status", [
+      "requested",
+      "searching_driver",
+      "driver_assigned",
+      "driver_accepted",
+      "driver_arriving",
+      "pickup_confirmed",
+      "in_delivery",
+      "delivered",
+    ])
+    .limit(1)
+    .maybeSingle();
+
+  if (existingRideError) throw existingRideError;
+  if (existingRide) {
+    throw new RequestValidationError(
+      "Gastronomy order already has an active delivery ride",
+    );
+  }
 }
 
 function rideCreationRpcParams(params: Record<string, unknown>) {
@@ -956,13 +1026,21 @@ async function handleCreateDelivery(
     base.p_pickup_location_id,
     true,
   );
-  await requireDeliveryCreationAuthority(
+  const businessAuthority = await requireDeliveryCreationAuthority(
     supabaseAdmin,
     auth,
     sourceType as "passenger" | "business" | "gastronomy" | "service",
     authoritySourceId,
     base.p_passenger_profile_id,
   );
+
+  if (sourceType === "gastronomy") {
+    await requireGastronomyOrderSourceBinding(
+      supabaseAdmin,
+      sourceId,
+      businessAuthority,
+    );
+  }
 
   const { data, error } = await supabaseAdmin.rpc(
     "mobility_create_delivery_atomic",
