@@ -65,19 +65,21 @@ BEGIN
       USING ERRCODE = '42501';
   END IF;
 
-  IF v_ride.status <> ALL (ARRAY[
-    'pending',
-    'requested',
-    'searching_driver',
-    'driver_assigned',
-    'driver_accepted',
-    'driver_arriving',
-    'passenger_boarded',
-    'in_progress',
-    'pickup_confirmed',
-    'in_delivery',
-    'accepted'
-  ]::text[]) THEN
+  IF NOT (
+    v_ride.status = ANY (ARRAY[
+      'pending',
+      'requested',
+      'searching_driver',
+      'driver_assigned',
+      'driver_accepted',
+      'driver_arriving',
+      'passenger_boarded',
+      'in_progress',
+      'pickup_confirmed',
+      'in_delivery',
+      'accepted'
+    ]::text[])
+  ) THEN
     RAISE EXCEPTION 'active_ride_required'
       USING ERRCODE = '42501';
   END IF;
