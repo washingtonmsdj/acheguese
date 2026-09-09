@@ -76,10 +76,8 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
     reason?: string;
     metadata?: Record<string, unknown>;
   }) => {
-    const adminProfile = await profileService.getActiveProfile();
     await adminMobilityRuntimeService.createDriverModerationEvent({
       driverProfileId: params.driverProfileId,
-      adminProfileId: adminProfile?.id ?? null,
       action: params.action,
       reason: params.reason,
       metadata: params.metadata,
