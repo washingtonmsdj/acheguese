@@ -132,7 +132,6 @@ export {
   rideService,
   type RideRequest,
   type CreateRideData,
-  type UpdateRideData,
 } from "./RideService.impl";
 
 //  ============================================================
