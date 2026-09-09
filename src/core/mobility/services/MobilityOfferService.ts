@@ -560,13 +560,7 @@ export class MobilityOfferService {
         };
       }
 
-      // Marcar motorista como busy
-      await DriverAvailabilityService.setBusy(
-        driverProfileId,
-        rideId,
-        strategy === 'open_board' ? 'motoboy' : 'ride'
-      );
-
+      // acceptRideAtomic already owns driver_availability and marks the driver busy.
       logger.info('Offer accepted successfully', { rideId, driverProfileId, strategy });
 
       return {
