@@ -18,7 +18,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { RideOperationalService } from '@/core/mobility/core/RideOperationalService';
 import { RideDispatchService } from '@/core/mobility/core/RideDispatchService';
-import { OperationalVerificationService } from '@/modules/mobility/services/OperationalVerificationService';
+import { OperationalVerificationService } from '@/core/mobility/services/OperationalVerificationService';
 import { RIDE_STATUS } from '@/core/mobility/constants';
 import { authenticateAsProfile, signOut } from '../helpers/auth-helper';
 import { 
@@ -450,21 +450,14 @@ describeOperational('Gate 7 - PIN Verification: Entrega', {
       .single();
     
     expect(verification).toBeTruthy();
-    expect(verification.pin_hash).toBeTruthy();
+    expect(verification.pin_hash).toBeNull();
     
-    // PIN de teste conhecido: 1234
-    // Hash bcrypt do PIN 1234 com 10 rounds
-    const testPIN = '1234';
-    const bcrypt = await import('bcryptjs');
-    const testHash = await bcrypt.hash(testPIN, 10);
+    const pinResult = await OperationalVerificationService.refreshRequesterPIN(rideId);
+    expect(pinResult.success).toBe(true);
+    expect(pinResult.data?.pin).toMatch(/^\\d{4}$/);
+    const testPIN = pinResult.data!.pin;
     
-    // Atualizar hash no banco para usar PIN conhecido
-    await supabaseAdmin
-      .from('operational_verifications')
-      .update({ pin_hash: testHash })
-      .eq('ride_id', rideId);
-    
-    console.log('✅ PIN de teste configurado: 1234');
+    console.log('✅ PIN emitido pelo fluxo oficial para o remetente');
     
     // ============================================
     // ETAPA 3: Fluxo completo até in_delivery
@@ -599,20 +592,14 @@ describeOperational('Gate 7 - PIN Verification: Entrega', {
       .single();
     
     expect(verification).toBeTruthy();
-    expect(verification.pin_hash).toBeTruthy();
+    expect(verification.pin_hash).toBeNull();
     
-    // PIN de teste conhecido: 1234
-    const testPIN = '1234';
-    const bcrypt = await import('bcryptjs');
-    const testHash = await bcrypt.hash(testPIN, 10);
+    const pinResult = await OperationalVerificationService.refreshRequesterPIN(rideId);
+    expect(pinResult.success).toBe(true);
+    expect(pinResult.data?.pin).toMatch(/^\\d{4}$/);
+    const testPIN = pinResult.data!.pin;
     
-    // Atualizar hash no banco para usar PIN conhecido
-    await supabaseAdmin
-      .from('operational_verifications')
-      .update({ pin_hash: testHash })
-      .eq('ride_id', rideId);
-    
-    console.log('✅ PIN de teste configurado: 1234');
+    console.log('✅ PIN emitido pelo fluxo oficial para o remetente');
     
     // ============================================
     // ETAPA 3: Fluxo completo até in_delivery
