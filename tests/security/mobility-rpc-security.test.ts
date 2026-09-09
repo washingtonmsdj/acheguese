@@ -25,7 +25,7 @@ describe("mobility rpc broker security", () => {
     expect(edgeFunction).toContain('getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY")');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("accept_ride_atomic"');
     expect(edgeFunction).not.toContain('supabaseAdmin.rpc("cancel_pending_ride_offers"');
-    expect(edgeFunction).toContain('supabaseAdmin.rpc("release_driver_availability_for_ride"');
+    expect(edgeFunction).not.toContain('supabaseAdmin.rpc("release_driver_availability_for_ride"');
     expect(edgeFunction).toContain('.from("ride_requests")');
     expect(edgeFunction).toContain('.from("profiles")');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("is_admin"');
@@ -39,7 +39,7 @@ describe("mobility rpc broker security", () => {
     expect(edgeFunction).not.toContain("updateLatestDispatchAttempt");
     expect(edgeFunction).not.toContain("log_ride_dispatch_attempt");
     expect(edgeFunction).not.toContain("update_latest_ride_dispatch_attempt");
-    expect(edgeFunction).toContain("canAccessRideAsParticipantOrAdmin");
+    expect(edgeFunction).not.toContain("canAccessRideAsParticipantOrAdmin");
     expect(edgeFunction).not.toMatch(/p_user_id:\s*params\./);
     expect(edgeFunction).not.toMatch(/p_user_id:\s*rawBody/);
 
@@ -120,11 +120,10 @@ describe("mobility rpc broker security", () => {
     expect(atomicDispatch).toContain("INSERT INTO public.ride_dispatch_audit");
 
     const terminalTransition = readProjectFile(
-      "supabase/migrations/20260909185003_atomize_terminal_ride_offer_invalidation_g18.sql",
+      "supabase/migrations/20260909190551_atomize_terminal_dispatch_driver_release_g19.sql",
     );
     expect(terminalTransition).toContain("UPDATE public.ride_offers offer");
-    expect(terminalTransition).toContain(
-      "DROP FUNCTION IF EXISTS public.cancel_pending_ride_offers(uuid)",
-    );
+    expect(terminalTransition).toContain("UPDATE public.ride_dispatch_audit dispatch");
+    expect(terminalTransition).toContain("UPDATE public.driver_availability availability");
   });
 });
