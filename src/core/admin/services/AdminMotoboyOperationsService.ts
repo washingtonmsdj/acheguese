@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase";
+import { mobilityAuditService } from "@/core/mobility/services/MobilityAuditService";
 import { MobilityService } from "@/core/mobility/services/runtime";
 
 export interface AdminMotoboyDelivery {
@@ -70,13 +70,12 @@ export class AdminMotoboyOperationsService {
     changedBy: string;
     reason: string;
   }): Promise<void> {
-    await supabase.from("ride_state_audit").insert({
-      ride_id: input.rideId,
-      from_state: input.fromState ?? "none",
-      to_state: input.toState,
-      changed_by: input.changedBy,
+    await mobilityAuditService.logRideStateChange({
+      rideId: input.rideId,
+      fromState: input.fromState,
+      toState: input.toState,
+      changedBy: input.changedBy,
       reason: input.reason,
-      created_at: new Date().toISOString(),
     });
   }
 }
