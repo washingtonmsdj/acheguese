@@ -18,7 +18,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 
 interface ChatWindowProps {
-  conversationId: string;
+  rideId: string;
   otherUserName: string;
   otherUserAvatar?: string;
   rideInfo?: {
@@ -32,7 +32,7 @@ interface ChatWindowProps {
 }
 
 export function ChatWindow({
-  conversationId,
+  rideId,
   otherUserName,
   otherUserAvatar,
   rideInfo,
@@ -41,8 +41,8 @@ export function ChatWindow({
   onViewLocation,
 }: ChatWindowProps) {
   const { activeProfile } = useSessionContext();
-  const { messages, loading, sending, sendMessage, markAsRead, markAllAsRead } =
-    useMobilidadeChat(conversationId);
+  const { messages, loading, sending, sendMessage, markAllAsRead } =
+    useMobilidadeChat(rideId);
 
   const [inputText, setInputText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -241,10 +241,7 @@ export function ChatWindow({
                             addSuffix: true,
                             locale: ptBR,
                           })}
-                          {(() => {
-                            const messageMeta = message as unknown as { read?: boolean };
-                            return isOwn && messageMeta.read ? " • Lida" : null;
-                          })()}
+                          {isOwn && message.read_at ? " • Lida" : null}
                         </span>
                       )}
                     </div>
