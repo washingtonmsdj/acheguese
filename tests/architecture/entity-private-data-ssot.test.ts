@@ -10,8 +10,11 @@ describe("Entity private-data SSOT", () => {
     const mutations = read("src/core/business/services/business.mutations.ts");
     const queries = read("src/core/business/services/business.queries.ts");
     const mapper = read("src/core/business/services/business.mappers.ts");
+    const profileRpc = read("supabase/functions/profile-rpc/index.ts");
 
-    expect(mutations).toContain("EntityContactService.patchOwnedChannels");
+    expect(mutations).toContain("EntityContactService.buildPatch");
+    expect(mutations).not.toContain("EntityContactService.patchOwnedChannels");
+    expect(profileRpc).toContain("contact_rpc_patch_owned_channels");
     expect(queries).toContain("EntityContactService.getVisibleForEntity");
     expect(mapper).not.toMatch(/profile\?\.(?:phone|whatsapp|email)/);
     expect(mapper).not.toMatch(/metadata\.(?:phone|whatsapp|email)/);
@@ -70,11 +73,15 @@ describe("Entity private-data SSOT", () => {
       "src/core/admin/services/AdminBusinessService.ts",
     );
 
-    for (const lifecycle of [business, professional]) {
-      expect(lifecycle).toContain("SessionService.getCurrentUser()");
-      expect(lifecycle).toContain("profileService.createProfile");
-      expect(lifecycle).not.toMatch(/create(?:Business|ProfessionalWithProfile)\([\s\S]{0,120}userId:\s*string/);
-    }
+    expect(business).toContain("SessionService.getCurrentUser()");
+    expect(business).toContain("ProfileRpcService.createBusiness");
+    expect(business).not.toContain("profileService.createProfile");
+    expect(business).not.toMatch(/createBusiness\([\s\S]{0,120}userId:\s*string/);
+
+    expect(professional).toContain("SessionService.getCurrentUser()");
+    expect(professional).toContain("ProfileRpcService.createProfessional");
+    expect(professional).not.toContain("profileService.createProfile");
+    expect(professional).not.toMatch(/createProfessionalWithProfile\([\s\S]{0,120}userId:\s*string/);
 
     expect(profileMutations).toContain("SessionService.getCurrentUser()");
     expect(profileMutations).toContain("buildCreateProfileInsert(user.id, profile)");

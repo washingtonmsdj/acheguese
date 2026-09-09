@@ -1168,6 +1168,55 @@ Advisor:
 
 Próximo: G36B deve migrar a criação Business fragmentada (`profiles + business_data + membership + stats + hours/contact`) para uma transação broker-owned existente, sem criar novo broker concorrente.
 
+### Checkpoint G36B — Business lifecycle broker-owned (2026-09-09)
+
+Auditoria de raiz:
+- `public.business_data`: 97 linhas / 97 Profiles distintos / 0 duplicatas por `profile_id`;
+- `public.business_stats`: **0 linhas**, portanto 97 Businesses sem o agregado de stats esperado pelo runtime;
+- `public.business_hours`: 0 linhas;
+- `business_data` já está fail-closed para DML de `authenticated`, enquanto o `business.mutations.ts` ainda tentava INSERT/UPDATE direto: create/update/delete gerais estavam estruturalmente incompatíveis com o banco atual;
+- `business_stats` e `business_hours` ainda mantêm grants de DML autenticado por compatibilidade com callers antigos;
+- `addresses` continua sendo agregado separado com RLS `owner_user_id = auth.uid()`; o create Business antigo criava Address sem `owner_user_id`, incompatível com essa policy;
+- slugs Business: 90 preenchidos, 7 vazios, 0 uppercase, 0 grupos duplicados normalizados; a unicidade correta é territorial/brand-hub, portanto **não** adicionar UNIQUE global em slug;
+- `BusinessIdentityPolicy.cooldownDays=0`; formato/reserved names continuam obrigatórios, mas não inventar cooldown de Business;
+- rede/filiais já têm owner especializado `NetworkService -> business-network-rpc`; lifecycle geral não pode editar `business_role/parent_business_id/is_headquarters/unit_name`.
+
+Desenho G36B:
+- [x] reutilizar o **`profile-rpc` existente**, sem criar `business-rpc` concorrente;
+- [x] novo create geral é uma transação server-owned de Profile + membership + `business_data` + stats + hours + contact;
+- [x] Address permanece agregado separado; broker valida ownership/território do `address_id`; Address novo recebe `owner_user_id` e só é compensado se ainda não tiver sido anexado;
+- [x] `business_data(profile_id)` ganha unicidade explícita;
+- [x] trigger idempotente `business_data_ensure_stats` cria stats também para filiais criadas por outros comandos internos;
+- [x] migration faz backfill dos 97 stats faltantes quando aplicada;
+- [x] patch Business usa allowlist fechada; verificação/premium/counters/estrutura de rede não são self-service;
+- [x] metadata Business deixa de ser escape genérico e aceita somente os campos owner-editable realmente usados pelo mapper/UI;
+- [x] horários são substituídos dentro da mesma transação e os JSON shadows permanecem sincronizados por compatibilidade;
+- [x] contato é gravado pelo `contact_rpc_patch_owned_channels` canônico dentro da transação;
+- [x] `BusinessService.create/update/delete` deixam de executar DML direto em `business_data/business_stats/business_hours`;
+- [x] o create genérico de Profile rejeita `profile_type=business`; create geral passa por `BusinessService.createBusiness`, e branches continuam em `NetworkService`.
+
+Provas pré-aplicação, todas com `BEGIN/ROLLBACK`:
+- migration completa compilou/executou sem erro;
+- create criou Profile + membership + Business + stats + hours + contact juntos;
+- cross-owner foi bloqueado;
+- escrita self-service de `is_verified` foi bloqueada;
+- mudança estrutural `business_role` foi bloqueada;
+- Address pertencente a outro ator foi bloqueado;
+- update sincronizou nome do Profile, dados Business, hours e contact;
+- create com slug reservado `admin` foi rejeitado sem deixar linha parcial;
+- soft-delete alterou Profile e Business juntos;
+- metadata arbitrário e metadata boolean inválido foram bloqueados.
+
+**Estado:** source e probes G36B estão prontos para commit; nada deste checkpoint foi persistido no Supabase ainda.
+
+Próximo imediato:
+1. commit do source/migration/ratchets;
+2. aplicar a migration exatamente desse SHA;
+3. redeployar `profile-rpc` exatamente desse SHA;
+4. provar 97/97 stats, UNIQUE(profile_id), grants service-role-only dos novos RPCs e source equality;
+5. repetir probe transacional sobre o runtime persistido;
+6. então abrir G36C para admin/driver/ride writers restantes.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:

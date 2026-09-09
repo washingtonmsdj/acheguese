@@ -25,6 +25,9 @@ const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const ACTIONS = {
   createProfile: true,
+  createBusiness: true,
+  updateBusiness: true,
+  deactivateBusiness: true,
   createProfessional: true,
   updateProfessionalData: true,
   deactivateProfessional: true,
@@ -155,6 +158,291 @@ function optionalExtensionData(value: unknown): Record<string, unknown> | null {
   delete sanitized.p_actor_user_id;
   delete sanitized.user_id;
   return sanitized;
+}
+
+const BUSINESS_PATCH_KEYS = new Set([
+  "business_name",
+  "legal_name",
+  "cnpj",
+  "company_type",
+  "industry",
+  "employee_count",
+  "founded_year",
+  "description",
+  "category",
+  "subcategory",
+  "website",
+  "instagram",
+  "facebook",
+  "payment_methods",
+  "specialties",
+  "facilities",
+  "status",
+  "slug",
+  "metadata",
+  "location_id",
+  "address_id",
+  "business_address",
+  "business_city",
+  "business_state",
+  "business_zip",
+  "can_post_vagas",
+]);
+
+function sanitizeBusinessPatch(
+  value: unknown,
+  options: { requireCreateFields?: boolean } = {},
+): Record<string, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new RequestValidationError("Invalid business patch");
+  }
+
+  const input = { ...(value as Record<string, unknown>) };
+  for (const key of Object.keys(input)) {
+    if (!BUSINESS_PATCH_KEYS.has(key)) {
+      throw new RequestValidationError(`Unsupported business field: ${key}`);
+    }
+  }
+
+  if (options.requireCreateFields) {
+    input.business_name = requireString(input.business_name, "business_name", 100);
+    input.description = requireString(input.description, "description", 1000);
+    input.category = requireString(input.category, "category", 100);
+    input.slug = requireString(input.slug, "slug", 60);
+    input.location_id = requireUuid(input.location_id, "location_id");
+  } else if ("business_name" in input) {
+    input.business_name = requireString(input.business_name, "business_name", 100);
+  }
+
+  for (const [key, maxLength] of [
+    ["legal_name", 150],
+    ["cnpj", 32],
+    ["industry", 100],
+    ["description", 1000],
+    ["category", 100],
+    ["subcategory", 80],
+    ["website", 2048],
+    ["instagram", 120],
+    ["facebook", 200],
+    ["business_address", 240],
+    ["business_city", 100],
+    ["business_state", 100],
+    ["business_zip", 16],
+  ] as const) {
+    if (key in input) {
+      input[key] = optionalString(input[key], key, maxLength);
+    }
+  }
+
+  if ("slug" in input) {
+    const slug = requireString(input.slug, "slug", 60).toLowerCase();
+    if (
+      slug.length < 3 ||
+      !/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(slug) ||
+      slug.includes("--")
+    ) {
+      throw new RequestValidationError("Invalid slug");
+    }
+    input.slug = slug;
+  }
+
+  for (const key of ["location_id", "address_id"] as const) {
+    if (key in input) {
+      input[key] = optionalUuid(input[key], key);
+    }
+  }
+
+  if (
+    "founded_year" in input &&
+    input.founded_year !== null &&
+    (
+      typeof input.founded_year !== "number" ||
+      !Number.isInteger(input.founded_year) ||
+      input.founded_year < 1800 ||
+      input.founded_year > new Date().getUTCFullYear()
+    )
+  ) {
+    throw new RequestValidationError("Invalid founded_year");
+  }
+
+  if (
+    "company_type" in input &&
+    input.company_type !== null &&
+    !["mei", "ltda", "sa", "eireli", "other"].includes(String(input.company_type))
+  ) {
+    throw new RequestValidationError("Invalid company_type");
+  }
+
+  if (
+    "employee_count" in input &&
+    input.employee_count !== null &&
+    !["1-10", "11-50", "51-200", "201-500", "500+"].includes(
+      String(input.employee_count),
+    )
+  ) {
+    throw new RequestValidationError("Invalid employee_count");
+  }
+
+  if (
+    "status" in input &&
+    input.status !== null &&
+    !["active", "inactive", "pending"].includes(String(input.status))
+  ) {
+    throw new RequestValidationError("Invalid owner business status");
+  }
+
+  if (
+    "can_post_vagas" in input &&
+    input.can_post_vagas !== null &&
+    typeof input.can_post_vagas !== "boolean"
+  ) {
+    throw new RequestValidationError("Invalid can_post_vagas");
+  }
+
+  for (const key of ["payment_methods", "specialties", "facilities"] as const) {
+    if (!(key in input) || input[key] === null) continue;
+    if (!Array.isArray(input[key]) || (input[key] as unknown[]).length > 100) {
+      throw new RequestValidationError(`Invalid ${key}`);
+    }
+    input[key] = (input[key] as unknown[]).map((item) =>
+      requireString(item, key, 160),
+    );
+  }
+
+  if ("metadata" in input && input.metadata !== null) {
+    if (
+      typeof input.metadata !== "object" ||
+      Array.isArray(input.metadata)
+    ) {
+      throw new RequestValidationError("Invalid metadata");
+    }
+    const metadata = { ...(input.metadata as Record<string, unknown>) };
+    const allowedMetadata = new Set([
+      "logo_url",
+      "banner_url",
+      "modos_atendimento",
+      "tem_delivery",
+      "aceita_cartao",
+      "aceita_pix",
+      "neighborhood",
+      "cep",
+      "city",
+      "state",
+    ]);
+    for (const key of Object.keys(metadata)) {
+      if (!allowedMetadata.has(key)) {
+        throw new RequestValidationError(
+          `Unsupported business metadata field: ${key}`,
+        );
+      }
+    }
+    for (const key of ["tem_delivery", "aceita_cartao", "aceita_pix"]) {
+      if (
+        key in metadata &&
+        metadata[key] !== null &&
+        typeof metadata[key] !== "boolean"
+      ) {
+        throw new RequestValidationError(`Invalid metadata.${key}`);
+      }
+    }
+    if (
+      "modos_atendimento" in metadata &&
+      metadata.modos_atendimento !== null &&
+      (
+        !Array.isArray(metadata.modos_atendimento) ||
+        metadata.modos_atendimento.length > 20
+      )
+    ) {
+      throw new RequestValidationError("Invalid metadata.modos_atendimento");
+    }
+    input.metadata = metadata;
+  }
+
+  return input;
+}
+
+function sanitizeContactChannels(value: unknown): Array<Record<string, unknown>> | null {
+  if (value === undefined || value === null) return null;
+  if (!Array.isArray(value) || value.length > 3) {
+    throw new RequestValidationError("Invalid contact channels");
+  }
+
+  const seen = new Set<string>();
+  return value.map((raw) => {
+    if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+      throw new RequestValidationError("Invalid contact channel");
+    }
+    const channel = raw as Record<string, unknown>;
+    const channelType = requireString(channel.channelType, "channelType", 16);
+    if (!["phone", "whatsapp", "email"].includes(channelType) || seen.has(channelType)) {
+      throw new RequestValidationError("Invalid or duplicate contact channel");
+    }
+    seen.add(channelType);
+
+    const channelValue = optionalString(channel.value, "value", 254);
+    const visibility =
+      channel.visibility === undefined || channel.visibility === null
+        ? "authenticated"
+        : requireString(channel.visibility, "visibility", 32);
+    if (!["private", "authenticated"].includes(visibility)) {
+      throw new RequestValidationError("Invalid contact visibility");
+    }
+
+    return {
+      channelType,
+      value: channelValue,
+      visibility,
+    };
+  });
+}
+
+function sanitizeBusinessHours(value: unknown): Array<Record<string, unknown>> | null {
+  if (value === undefined || value === null) return null;
+  if (!Array.isArray(value) || value.length > 7) {
+    throw new RequestValidationError("Invalid business hours");
+  }
+
+  const seen = new Set<number>();
+  return value.map((raw) => {
+    if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+      throw new RequestValidationError("Invalid business hours row");
+    }
+    const row = raw as Record<string, unknown>;
+    const day = row.day_of_week;
+    if (
+      typeof day !== "number" ||
+      !Number.isInteger(day) ||
+      day < 0 ||
+      day > 6 ||
+      seen.has(day)
+    ) {
+      throw new RequestValidationError("Invalid or duplicate business hours day");
+    }
+    seen.add(day);
+
+    const opensAt = requireString(row.opens_at, "opens_at", 5);
+    const closesAt = requireString(row.closes_at, "closes_at", 5);
+    if (
+      !/^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/.test(opensAt) ||
+      !/^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/.test(closesAt)
+    ) {
+      throw new RequestValidationError("Invalid business hour");
+    }
+    if (
+      row.is_closed !== undefined &&
+      row.is_closed !== null &&
+      typeof row.is_closed !== "boolean"
+    ) {
+      throw new RequestValidationError("Invalid is_closed");
+    }
+
+    return {
+      day_of_week: day,
+      opens_at: opensAt,
+      closes_at: closesAt,
+      is_closed: row.is_closed === true,
+    };
+  });
 }
 
 const OWNED_PROFILE_PATCH_KEYS = new Set([
@@ -492,6 +780,12 @@ async function handleCreateProfile(
   const displayName = requireString(params.displayName ?? params.p_display_name, "displayName", 160);
   const avatarUrl = optionalString(params.avatarUrl ?? params.p_avatar_url, "avatarUrl", 2048);
   const bio = optionalString(params.bio ?? params.p_bio, "bio", 4000);
+  if (profileType === "business") {
+    throw new RequestValidationError(
+      "Business profiles must use the createBusiness action",
+    );
+  }
+
   const rawExtensionData = optionalExtensionData(params.extensionData ?? params.p_extension_data);
   const extensionData =
     profileType === "driver"
@@ -510,6 +804,69 @@ async function handleCreateProfile(
 
   if (error) throw error;
   return data ?? { success: false, error: "Profile RPC returned no data" };
+}
+
+async function handleCreateBusiness(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const businessPatch = sanitizeBusinessPatch(params.businessPatch, {
+    requireCreateFields: true,
+  });
+  const contactChannels = sanitizeContactChannels(params.contactChannels);
+  const businessHours = sanitizeBusinessHours(params.businessHours);
+
+  const { data, error } = await supabaseAdmin.rpc("profile_rpc_create_business", {
+    p_actor_user_id: auth.userId,
+    p_business_patch: businessPatch,
+    p_contact_channels: contactChannels,
+    p_business_hours: businessHours,
+  });
+
+  if (error) throw error;
+  return data ?? { success: false, error: "Business create RPC returned no data" };
+}
+
+async function handleUpdateBusiness(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const profileId = requireUuid(params.profileId, "profileId");
+  const businessPatch = sanitizeBusinessPatch(params.businessPatch ?? {});
+  const contactChannels = sanitizeContactChannels(params.contactChannels);
+  const businessHours = sanitizeBusinessHours(params.businessHours);
+
+  const { data, error } = await supabaseAdmin.rpc("profile_rpc_update_business", {
+    p_actor_user_id: auth.userId,
+    p_profile_id: profileId,
+    p_business_patch: businessPatch,
+    p_contact_channels: contactChannels,
+    p_business_hours: businessHours,
+  });
+
+  if (error) throw error;
+  return data ?? { success: false, error: "Business update RPC returned no data" };
+}
+
+async function handleDeactivateBusiness(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const profileId = requireUuid(params.profileId, "profileId");
+
+  const { data, error } = await supabaseAdmin.rpc(
+    "profile_rpc_deactivate_business",
+    {
+      p_actor_user_id: auth.userId,
+      p_profile_id: profileId,
+    },
+  );
+
+  if (error) throw error;
+  return data ?? { success: false, error: "Business deactivate RPC returned no data" };
 }
 
 async function handleCreateProfessional(
@@ -737,6 +1094,12 @@ async function dispatchAction(
   switch (action) {
     case "createProfile":
       return handleCreateProfile(supabaseAdmin, auth, params);
+    case "createBusiness":
+      return handleCreateBusiness(supabaseAdmin, auth, params);
+    case "updateBusiness":
+      return handleUpdateBusiness(supabaseAdmin, auth, params);
+    case "deactivateBusiness":
+      return handleDeactivateBusiness(supabaseAdmin, auth, params);
     case "createProfessional":
       return handleCreateProfessional(supabaseAdmin, auth, params);
     case "updateProfessionalData":

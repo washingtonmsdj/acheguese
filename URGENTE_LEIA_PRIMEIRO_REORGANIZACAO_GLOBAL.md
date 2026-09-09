@@ -33,14 +33,15 @@ Leia nesta ordem:
 - G36A está reconciliado: `profile-rpc v15 ACTIVE` é byte-a-byte igual ao Git; Profile self-service update/delete/switch estão broker-owned, username tem enforcement/auditoria server-side e o probe transacional completo PASS com rollback;
 - grants browser antigos de `professional_data/professional_stats` e `profiles` ficam temporariamente apenas por compatibilidade com o frontend production desatualizado e devem ser revogados somente após deploy novo comprovado;
 - G36A2: os novos RPCs Profile são service-role-only e não aparecem no Advisor como SECURITY DEFINER executável por anon/authenticated;
+- G36B auditou o Business real: 97 `business_data`, 0 duplicatas e **0 `business_stats`**; create/update/delete gerais ainda tentavam DML browser numa tabela já fail-closed;
+- G36B está staged/provado com rollback: lifecycle geral passa pelo `profile-rpc`, stats terão backfill+trigger idempotente, Address novo recebe `owner_user_id`, metadata é allowlisted e NetworkService preserva autoridade exclusiva sobre rede/filiais;
 - **não** adicionar `ServiceAreasService` ao incremental baseline para esconder a violação;
 - Supabase canônico: `xhdowzacfujckjelqhtd`;
 - invariantes remotos de mobilidade continuam: 0 offers abertas, 0 dispatch pendente e 0 motorista preso em corrida terminal;
 - Vercel atual está bloqueando novos builds por limite do provider e GitHub jobs recentes nem iniciam steps; portanto build/E2E same-SHA continuam pendentes de execução real;
 - último deploy Vercel production READY localizado: `86c76fc8d48550fbbed783a359c32f6cdf6a435d`, muito atrás da `main`;
 - Mobilidade continua **launch-paused**: `PUBLIC_LAUNCH_SURFACES.mobility=false`;
-- próximo eixo imediato: G36B converter o create Business fragmentado em transação broker-owned; depois G36C (admin/driver/ride writers) e só então o cutover final de grants;
-- descoberta estrutural pendente: `ProfileService` principal ainda possui DML direto em `profiles`, enquanto multi-profile já usa broker; tratar em G36, sem criar uma terceira stack;
+- próximo gate imediato: commitar/aplicar/reconciliar G36B no Supabase e `profile-rpc`; depois G36C (admin/driver/ride writers) e só então o cutover final de grants;
 - não restaurar DML direto, operator scripts obsoletos, wrappers concorrentes, dynamic-table novo ou authorities paralelas.
 
 ## Regra para novas IAs/agentes

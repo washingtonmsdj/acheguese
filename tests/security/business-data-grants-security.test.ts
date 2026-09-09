@@ -215,4 +215,39 @@ describe("business_data grants security", () => {
     expect(probe).not.toMatch(/\bCOMMIT\b/i);
   });
 
+
+  it("keeps Business lifecycle writes behind the authenticated profile broker", () => {
+    const mutation = readProjectFile(
+      "src/core/business/services/business.mutations.ts",
+    );
+    const edge = readProjectFile("supabase/functions/profile-rpc/index.ts");
+    const migration = readProjectFile(
+      "supabase/migrations/20260909234000_broker_owned_business_lifecycle_g36.sql",
+    );
+
+    expect(mutation).toContain("ProfileRpcService.createBusiness");
+    expect(mutation).toContain("ProfileRpcService.updateBusiness");
+    expect(mutation).toContain("ProfileRpcService.deactivateBusiness");
+    expect(mutation).toContain("owner_user_id: actorUserId");
+    expect(mutation).not.toContain('from<BusinessDataWithProfiles>("business_data")');
+    expect(mutation).not.toContain('from<BusinessStatsInsertRow>("business_stats")');
+
+    expect(edge).toContain('supabaseAdmin.rpc("profile_rpc_create_business"');
+    expect(edge).toContain('supabaseAdmin.rpc("profile_rpc_update_business"');
+    expect(edge).toContain('"profile_rpc_deactivate_business"');
+
+    expect(migration).toContain(
+      "REVOKE ALL ON FUNCTION public.profile_rpc_create_business",
+    );
+    expect(migration).toContain(
+      "REVOKE ALL ON FUNCTION public.profile_rpc_update_business",
+    );
+    expect(migration).toContain(
+      "REVOKE ALL ON FUNCTION public.profile_rpc_deactivate_business",
+    );
+    expect(migration).toContain("FROM PUBLIC, anon, authenticated");
+    expect(migration).toContain("TO service_role");
+    expect(migration).toContain("business_data_ensure_stats");
+  });
+
 });

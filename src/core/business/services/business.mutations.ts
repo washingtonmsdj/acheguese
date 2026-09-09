@@ -1,9 +1,11 @@
 /**
- * BUSINESS MUTATIONS - Operacoes de escrita
+ * BUSINESS MUTATIONS - lifecycle owner de empresas.
  *
- * Responsabilidade unica: criar, atualizar e deletar dados.
+ * Escritas do agregado Business passam pelo profile-rpc. Address permanece um
+ * agregado separado, protegido por owner_user_id/RLS. NetworkService continua
+ * sendo a única autoridade para brand hubs e filiais.
  */
-import { logger } from '@/shared/utils/logger';
+import { logger } from "@/shared/utils/logger";
 import { supabase } from "@/integrations/supabase";
 import { PublicViewTrackingService } from "@/core/analytics/services/PublicViewTrackingService";
 import { PublicIdentityService } from "@/core/public-identity";
@@ -12,7 +14,6 @@ import {
   isBusinessSlugSafetyBypassAllowed,
 } from "@/core/public-identity/domain/businessSlugSafety";
 import { AddressService } from "@/core/address/services/AddressService";
-import { BusinessHoursService } from "@/core/business/BusinessHoursService";
 import {
   createBusinessSchema,
   updateBusinessSchema,
@@ -24,101 +25,54 @@ import {
   sanitizePhone,
 } from "@/shared/utils/sanitization";
 import { isValidBusinessId } from "./validators";
-import { toBusinessData, mapBusinessDataToBusiness } from "./business.mappers";
-import { generateBusinessUsername } from "./business.helpers";
+import { toBusinessData } from "./business.mappers";
 import { BusinessUrlService } from "./BusinessUrlService";
-import { profileService } from "@/core/profiles/services/ProfileService";
-import { ProfileMembersService } from "@/core/profiles/services/multi-profile/profileMembersService";
+import { getBusinessById } from "./business.queries";
 import { normalizeMediaAssetReference } from "@/core/media/references/mediaAssetReference";
 import { EntityContactService } from "@/core/contact";
 import { SessionService } from "@/core/session/services/SessionService";
+import { ProfileRpcService } from "@/core/profiles/services/ProfileRpcService";
 import type {
   Business,
-  BusinessDataWithProfiles,
   CreateBusinessInput,
   CreateProductInput,
   Product,
   UpdateBusinessInput,
 } from "../types";
 
-type QueryError = { message?: string | null };
+interface BusinessBrokerResult {
+  success: boolean;
+  data?: {
+    profile_id: string;
+    business_data_id: string;
+    slug?: string | null;
+    status?: string | null;
+  };
+  error?: string;
+}
 
-type QueryResult<T> = {
-  data: T | T[] | null;
-  error: QueryError | null;
-};
-
-type QuerySingleResult<T> = {
-  data: T | null;
-  error: QueryError | null;
-};
-
-type QueryBuilder<T extends object> = PromiseLike<QueryResult<T>> & {
-  insert(values: Record<string, unknown> | Array<Record<string, unknown>>): QueryBuilder<T>;
-  update(values: Record<string, unknown>): QueryBuilder<T>;
-  select(columns?: string): QueryBuilder<T>;
-  eq(column: string, value: unknown): QueryBuilder<T>;
-  or(filters: string): QueryBuilder<T>;
-  single(): Promise<QuerySingleResult<T>>;
-  maybeSingle(): Promise<QuerySingleResult<T>>;
-};
-
-type BusinessMutationsDbClient = {
-  from<T extends object>(table: string): QueryBuilder<T>;
-};
-
-type BusinessStatsInsertRow = {
-  profile_id: string;
-  views_count: number;
-  favorites_count: number;
-  shares_count: number;
-};
-
-type BusinessCurrentRow = {
-  id: string;
-  slug?: string | null;
-  metadata?: Record<string, unknown> | null;
-  address_id?: string | null;
-  location_id?: string | null;
-  business_name?: string | null;
-  is_verified?: boolean | null;
-};
-
-const businessMutationsDb = supabase as unknown as BusinessMutationsDbClient;
-
-const BUSINESS_SELECT = `
-  *,
-  profiles(id, name, avatar_url),
-  address:addresses!address_id(*),
-  location:locations!location_id(*)
-`;
+const STRUCTURAL_FIELDS = [
+  "business_role",
+  "parent_business_id",
+  "is_headquarters",
+  "unit_name",
+] as const;
 
 function getDayIndex(day: string): number | undefined {
   switch (day) {
-    case "domingo":
-      return 0;
-    case "segunda":
-      return 1;
-    case "terca":
-      return 2;
-    case "quarta":
-      return 3;
-    case "quinta":
-      return 4;
-    case "sexta":
-      return 5;
-    case "sabado":
-      return 6;
-    default:
-      return undefined;
+    case "domingo": return 0;
+    case "segunda": return 1;
+    case "terca": return 2;
+    case "quarta": return 3;
+    case "quinta": return 4;
+    case "sexta": return 5;
+    case "sabado": return 6;
+    default: return undefined;
   }
 }
 
 function sanitizeOptionalText(value: unknown): string | undefined {
-  if (typeof value !== "string") {
-    return undefined;
-  }
-
+  if (typeof value !== "string") return undefined;
   const sanitized = sanitizeString(value);
   return sanitized || undefined;
 }
@@ -136,15 +90,10 @@ function sanitizeOptionalPhoneValue(value: unknown): string | undefined {
 }
 
 function sanitizeOptionalStringArray(value: unknown): string[] | undefined {
-  if (!Array.isArray(value)) {
-    return undefined;
-  }
-
-  const sanitized = value
+  if (!Array.isArray(value)) return undefined;
+  return value
     .map((item) => sanitizeString(typeof item === "string" ? item : ""))
     .filter(Boolean);
-
-  return sanitized;
 }
 
 function sanitizeAndValidateInput(
@@ -210,33 +159,66 @@ function sanitizeAndValidateInput(
 
   const schema = isUpdate ? updateBusinessSchema : createBusinessSchema;
   const validation = schema.safeParse(sanitized);
-
   if (!validation.success) {
     const errors = validation.error.errors
       .map((error) => `${error.path.join(".")}: ${error.message}`)
       .join(", ");
     throw new Error(`Dados invalidos: ${errors}`);
   }
-
   return validation.data;
 }
 
-function hasStructuredAddress(input: CreateBusinessInput | UpdateBusinessInput): boolean {
+function hasStructuredAddress(
+  input: CreateBusinessInput | UpdateBusinessInput,
+): boolean {
   return Boolean(
-    input.address_street || input.address_number || input.address_complement || input.postal_code,
+    input.address_street ||
+      input.address_number ||
+      input.address_complement ||
+      input.postal_code,
   );
+}
+
+function assertGeneralLifecycleStructure(
+  input: CreateBusinessInput | UpdateBusinessInput,
+  isUpdate: boolean,
+): void {
+  if (isUpdate) {
+    const structuralField = STRUCTURAL_FIELDS.find((field) =>
+      Object.prototype.hasOwnProperty.call(input, field),
+    );
+    if (structuralField) {
+      throw new Error(
+        `Campo estrutural ${structuralField} pertence ao NetworkService`,
+      );
+    }
+    return;
+  }
+
+  if (input.business_role !== undefined && input.business_role !== "standalone") {
+    throw new Error("Brand hubs e filiais devem ser criados pelo NetworkService");
+  }
+
+  if (
+    input.parent_business_id != null ||
+    input.is_headquarters === true ||
+    input.unit_name !== undefined
+  ) {
+    throw new Error("Estrutura de rede deve ser criada pelo NetworkService");
+  }
 }
 
 async function syncAddress(
   input: CreateBusinessInput | UpdateBusinessInput,
+  actorUserId: string,
   existingAddressId?: string | null,
-): Promise<string | undefined> {
+): Promise<{ addressId?: string; created: boolean }> {
   if (input.address_id !== undefined) {
-    return input.address_id ?? undefined;
+    return { addressId: input.address_id ?? undefined, created: false };
   }
 
   if (!hasStructuredAddress(input)) {
-    return existingAddressId ?? undefined;
+    return { addressId: existingAddressId ?? undefined, created: false };
   }
 
   if (!input.location_id) {
@@ -256,11 +238,14 @@ async function syncAddress(
 
   if (existingAddressId) {
     const address = await addressService.updateAddress(existingAddressId, payload);
-    return address.id;
+    return { addressId: address.id, created: false };
   }
 
-  const address = await addressService.createAddress(payload);
-  return address.id;
+  const address = await addressService.createAddress({
+    ...payload,
+    owner_user_id: actorUserId,
+  });
+  return { addressId: address.id, created: true };
 }
 
 function toBusinessHoursRows(hours: unknown): Array<{
@@ -269,18 +254,14 @@ function toBusinessHoursRows(hours: unknown): Array<{
   closes_at: string;
   is_closed: boolean;
 }> {
-  if (!hours || typeof hours !== "object") {
-    return [];
-  }
+  if (!hours || typeof hours !== "object") return [];
 
-  return Object.entries(hours as Record<string, { open?: string; close?: string; closed?: boolean }>)
+  return Object.entries(
+    hours as Record<string, { open?: string; close?: string; closed?: boolean }>,
+  )
     .map(([day, value]) => {
-      const dayKey = day.toLowerCase();
-      const dayOfWeek = getDayIndex(dayKey);
-      if (dayOfWeek === undefined) {
-        return null;
-      }
-
+      const dayOfWeek = getDayIndex(day.toLowerCase());
+      if (dayOfWeek === undefined) return null;
       return {
         day_of_week: dayOfWeek,
         opens_at: value.closed ? "00:00" : value.open || "00:00",
@@ -288,97 +269,89 @@ function toBusinessHoursRows(hours: unknown): Array<{
         is_closed: Boolean(value.closed),
       };
     })
-    .filter((value): value is {
-      day_of_week: number;
-      opens_at: string;
-      closes_at: string;
-      is_closed: boolean;
-    } => Boolean(value));
+    .filter(
+      (
+        value,
+      ): value is {
+        day_of_week: number;
+        opens_at: string;
+        closes_at: string;
+        is_closed: boolean;
+      } => Boolean(value),
+    );
 }
 
-async function syncBusinessHoursTable(businessId: string, hours: unknown): Promise<void> {
-  const rows = toBusinessHoursRows(hours);
-  if (rows.length === 0) {
-    return;
+function buildBusinessBrokerPatch(
+  input: CreateBusinessInput | UpdateBusinessInput,
+  addressId?: string,
+  slug?: string,
+  create = false,
+): Record<string, unknown> {
+  const mapped = toBusinessData({
+    ...input,
+    ...(addressId !== undefined ? { address_id: addressId } : {}),
+    ...(slug !== undefined ? { slug } : {}),
+  });
+
+  const patch = { ...mapped } as Record<string, unknown>;
+  delete patch.opening_hours;
+  delete patch.business_hours;
+  delete patch.business_role;
+  delete patch.parent_business_id;
+  delete patch.is_headquarters;
+  delete patch.unit_name;
+
+  if (create) {
+    patch.business_name = input.name;
+    patch.slug = slug;
+    patch.status = input.status ?? "active";
   }
 
-  const result = await BusinessHoursService.setBulkHours(businessId, rows);
-  if (result.error) {
-    throw new Error(result.error);
-  }
+  return Object.fromEntries(
+    Object.entries(patch).filter(([, value]) => value !== undefined),
+  );
 }
 
-function mergeMetadata(
-  currentMetadata: unknown,
-  nextMetadata: unknown,
-): Record<string, unknown> | undefined {
-  const current =
-    currentMetadata && typeof currentMetadata === "object"
-      ? (currentMetadata as Record<string, unknown>)
-      : {};
-  const next =
-    nextMetadata && typeof nextMetadata === "object"
-      ? (nextMetadata as Record<string, unknown>)
-      : {};
-
-  const merged = { ...current, ...next };
-  return Object.keys(merged).length > 0 ? merged : undefined;
+function buildContactChannels(
+  input: CreateBusinessInput | UpdateBusinessInput,
+): Array<Record<string, unknown>> {
+  return EntityContactService.buildPatch(input).map((channel) => ({
+    channelType: channel.channelType,
+    value: channel.value,
+    visibility: channel.visibility,
+  }));
 }
 
-interface BusinessCreateCompensationState {
-  profileId?: string;
-  addressId?: string;
-}
-
-async function compensateFailedBusinessCreate(
-  state: BusinessCreateCompensationState,
-): Promise<void> {
-  const failures: Array<{ resource: "profile" | "address"; message: string }> = [];
-
-  if (state.profileId) {
-    try {
-      await profileService.deleteProfile(state.profileId);
-    } catch (error) {
-      failures.push({
-        resource: "profile",
-        message: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
-
-  if (state.addressId) {
-    try {
-      await new AddressService().deleteAddress(state.addressId);
-    } catch (error) {
-      failures.push({
-        resource: "address",
-        message: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
-
-  if (failures.length > 0) {
-    logger.error("[business.mutations] create compensation incomplete", {
-      profileId: state.profileId ?? null,
-      addressId: state.addressId ?? null,
-      failures,
+async function cleanupUnattachedAddress(addressId?: string): Promise<void> {
+  if (!addressId) return;
+  try {
+    await new AddressService().deleteAddress(addressId);
+  } catch (error) {
+    logger.error("[business.mutations] address compensation incomplete", {
+      addressId,
+      message: error instanceof Error ? error.message : String(error),
     });
   }
 }
 
-/**
- * Criar empresa
- */
 export async function createBusiness(
   input: CreateBusinessInput,
 ): Promise<Business> {
-  const compensation: BusinessCreateCompensationState = {};
+  let createdAddressId: string | undefined;
+  let businessWriteCompleted = false;
 
   try {
     const user = await SessionService.getCurrentUser();
-    if (!user) throw new Error("Autenticacao obrigatoria para criar empresa");
+    if (!user) {
+      throw new Error("Autenticacao obrigatoria para criar empresa");
+    }
 
-    const validatedInput = sanitizeAndValidateInput(input, false) as CreateBusinessInput;
+    assertGeneralLifecycleStructure(input, false);
+    const validatedInput = sanitizeAndValidateInput(
+      input,
+      false,
+    ) as CreateBusinessInput;
+
     let slug = validatedInput.slug;
     if (slug) {
       if (!isBusinessSlugSafetyBypassAllowed({ isVerifiedOfficial: false })) {
@@ -397,107 +370,54 @@ export async function createBusiness(
         identifier: slug,
         entityType: "business",
       });
-
       if (availability.status !== "available") {
         throw new Error(
           availability.message ||
             `Slug "${slug}" nao esta disponivel.` +
-              (availability.suggestion ? ` Sugestao: ${availability.suggestion}` : ""),
+              (availability.suggestion
+                ? ` Sugestao: ${availability.suggestion}`
+                : ""),
         );
       }
     } else {
       slug = await BusinessUrlService.generateUniqueSlug(validatedInput.name);
     }
 
-    const addressCreatedByFlow =
-      validatedInput.address_id === undefined && hasStructuredAddress(validatedInput);
-    const addressId = await syncAddress(validatedInput);
-    if (addressCreatedByFlow && addressId) {
-      compensation.addressId = addressId;
-    }
+    const address = await syncAddress(validatedInput, user.id);
+    if (address.created) createdAddressId = address.addressId;
 
-    const profile = await profileService.createProfile({
-      profile_type: "business",
-      name: validatedInput.name,
-      username: generateBusinessUsername(validatedInput.name),
-      city: validatedInput.city || validatedInput.neighborhood || "Nao informado",
-      bio: validatedInput.description,
-    });
-
-    if (!profile) {
-      throw new Error("Erro ao criar perfil da empresa");
-    }
-    compensation.profileId = profile.id;
-
-    const memberResult = await ProfileMembersService.addMember(
-      profile.id,
-      user.id,
-      "owner",
-    );
-
-    if (!memberResult.success) {
-      throw new Error(memberResult.error || "Erro ao criar membership da empresa");
-    }
-
-    const businessData = toBusinessData({
-      ...validatedInput,
-      address_id: addressId,
+    const businessPatch = buildBusinessBrokerPatch(
+      validatedInput,
+      address.addressId,
       slug,
-    });
-
-    const { data: business, error } = await businessMutationsDb
-      .from<BusinessDataWithProfiles>("business_data")
-      .insert({
-        profile_id: profile.id,
-        business_name: validatedInput.name,
-        ...businessData,
-        status: validatedInput.status ?? "active",
-        slug,
-      })
-      .select(BUSINESS_SELECT)
-      .single();
-
-    if (error) {
-      throw error;
-    }
-
-    const { error: businessStatsError } = await businessMutationsDb
-      .from<BusinessStatsInsertRow>("business_stats")
-      .insert({
-        profile_id: profile.id,
-        views_count: 0,
-        favorites_count: 0,
-        shares_count: 0,
-      });
-
-    if (businessStatsError) {
-      throw new Error("Erro ao criar estatisticas da empresa");
-    }
-
-    if (!business) {
-      throw new Error("Erro ao carregar empresa criada");
-    }
-
-    if (validatedInput.horario_funcionamento) {
-      await syncBusinessHoursTable(business.id ?? profile.id, validatedInput.horario_funcionamento);
-    }
-
-    const contact = await EntityContactService.patchOwnedChannels(
-      "business",
-      business.id ?? profile.id,
-      EntityContactService.buildPatch(validatedInput),
+      true,
     );
-    return { ...mapBusinessDataToBusiness(business), ...contact };
+    const contactChannels = buildContactChannels(validatedInput);
+    const businessHours =
+      validatedInput.horario_funcionamento !== undefined
+        ? toBusinessHoursRows(validatedInput.horario_funcionamento)
+        : null;
+
+    const result = await ProfileRpcService.createBusiness<BusinessBrokerResult>({
+      businessPatch,
+      contactChannels,
+      businessHours,
+    });
+    if (!result.success || !result.data?.profile_id) {
+      throw new Error(result.error || "Broker nao retornou a empresa criada");
+    }
+
+    businessWriteCompleted = true;
+    return await getBusinessById(result.data.profile_id);
   } catch (error) {
-    await compensateFailedBusinessCreate(compensation);
+    if (createdAddressId && !businessWriteCompleted) {
+      await cleanupUnattachedAddress(createdAddressId);
+    }
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Erro ao criar empresa: ${message}`);
   }
 }
 
-/**
- * Atualizar empresa
- */
 export async function updateBusiness(
   id: string,
   input: UpdateBusinessInput,
@@ -506,27 +426,30 @@ export async function updateBusiness(
   let businessWriteCompleted = false;
 
   try {
-    const validatedInput = sanitizeAndValidateInput(input, true) as UpdateBusinessInput;
-
-    const { data: currentBusiness, error: currentError } = await businessMutationsDb
-      .from<BusinessCurrentRow>("business_data")
-      .select("id, slug, metadata, address_id, location_id, business_name, is_verified")
-      .eq("profile_id", id)
-      .maybeSingle();
-
-    if (currentError) {
-      throw currentError;
+    const user = await SessionService.getCurrentUser();
+    if (!user) {
+      throw new Error("Autenticacao obrigatoria para atualizar empresa");
     }
 
-    if (!currentBusiness) {
-      throw new Error("Empresa nao encontrada");
-    }
+    assertGeneralLifecycleStructure(input, true);
+    const validatedInput = sanitizeAndValidateInput(
+      input,
+      true,
+    ) as UpdateBusinessInput;
 
-    const slugChanged = validatedInput.slug !== undefined && currentBusiness.slug !== validatedInput.slug;
+    const currentBusiness = await getBusinessById(id);
+    const slugChanged =
+      validatedInput.slug !== undefined &&
+      currentBusiness.slug !== validatedInput.slug;
+
     if (slugChanged) {
-      if (!isBusinessSlugSafetyBypassAllowed({ isVerifiedOfficial: Boolean(currentBusiness.is_verified) })) {
+      if (
+        !isBusinessSlugSafetyBypassAllowed({
+          isVerifiedOfficial: Boolean(currentBusiness.is_verified),
+        })
+      ) {
         const slugSafety = evaluateBusinessSlugSafety({
-          businessName: validatedInput.name ?? currentBusiness.business_name ?? "",
+          businessName: validatedInput.name ?? currentBusiness.name,
           slug: validatedInput.slug,
         });
         if (slugSafety.status === "review") {
@@ -540,7 +463,6 @@ export async function updateBusiness(
         entityType: "business",
         entityId: id,
       });
-
       if (!cooldown.canChange) {
         throw new Error(
           `Nao e possivel alterar o slug da empresa agora. Aguarde ${cooldown.daysRemaining || 0} dia(s).`,
@@ -552,132 +474,89 @@ export async function updateBusiness(
         entityType: "business",
         excludeEntityId: id,
       });
-
       if (availability.status !== "available") {
         throw new Error(
           availability.message ||
             `Slug "${validatedInput.slug}" nao esta disponivel.` +
-              (availability.suggestion ? ` Sugestao: ${availability.suggestion}` : ""),
+              (availability.suggestion
+                ? ` Sugestao: ${availability.suggestion}`
+                : ""),
         );
       }
     }
 
-    const updateAddressInput = {
+    const updateAddressInput: UpdateBusinessInput = {
       ...validatedInput,
-      location_id: validatedInput.location_id ?? currentBusiness.location_id ?? undefined,
+      location_id:
+        validatedInput.location_id ??
+        currentBusiness.location_id ??
+        undefined,
     };
-    const addressCreatedByFlow =
-      updateAddressInput.address_id === undefined &&
-      !currentBusiness.address_id &&
-      hasStructuredAddress(updateAddressInput);
-    const addressId = await syncAddress(
+    const address = await syncAddress(
       updateAddressInput,
+      user.id,
       currentBusiness.address_id,
     );
-    if (addressCreatedByFlow && addressId) {
-      createdAddressId = addressId;
+    if (address.created) createdAddressId = address.addressId;
+
+    const addressTouched =
+      validatedInput.address_id !== undefined ||
+      hasStructuredAddress(validatedInput);
+    const businessPatch = buildBusinessBrokerPatch(
+      validatedInput,
+      addressTouched ? address.addressId : undefined,
+      slugChanged ? validatedInput.slug : undefined,
+      false,
+    );
+    if (
+      validatedInput.location_id !== undefined &&
+      businessPatch.location_id === undefined
+    ) {
+      businessPatch.location_id = validatedInput.location_id;
     }
 
-    const businessData = toBusinessData({
-      ...validatedInput,
-      ...(addressId ? { address_id: addressId } : {}),
-    });
+    const contactPatch = buildContactChannels(validatedInput);
+    const businessHours =
+      validatedInput.horario_funcionamento !== undefined
+        ? toBusinessHoursRows(validatedInput.horario_funcionamento)
+        : null;
 
-    const updatePayload: Record<string, unknown> = {
-      ...businessData,
-      updated_at: new Date().toISOString(),
-    };
-
-    if (businessData.metadata !== undefined) {
-      updatePayload.metadata = mergeMetadata(currentBusiness.metadata, businessData.metadata);
+    const result = await ProfileRpcService.updateBusiness<BusinessBrokerResult>(
+      id,
+      {
+        businessPatch,
+        contactChannels: contactPatch.length > 0 ? contactPatch : null,
+        businessHours,
+      },
+    );
+    if (!result.success) {
+      throw new Error(result.error || "Broker rejeitou atualizacao da empresa");
     }
 
-    if (validatedInput.name || validatedInput.description || validatedInput.city) {
-      await profileService.updateProfile(id, {
-        ...(validatedInput.name !== undefined ? { name: validatedInput.name } : {}),
-        ...(validatedInput.description !== undefined ? { bio: validatedInput.description } : {}),
-        ...(validatedInput.city !== undefined ? { city: validatedInput.city } : {}),
-      });
-    }
-
-    if (slugChanged) {
-      updatePayload.slug = validatedInput.slug;
-    }
-
-    const { data: business, error } = await businessMutationsDb
-      .from<BusinessDataWithProfiles>("business_data")
-      .update(updatePayload)
-      .eq("profile_id", id)
-      .select(BUSINESS_SELECT)
-      .single();
-
-    if (error) {
-      throw error;
-    }
-
-    if (!business) {
-      throw new Error("Erro ao carregar empresa atualizada");
-    }
     businessWriteCompleted = true;
-
-    if (validatedInput.horario_funcionamento !== undefined) {
-      await syncBusinessHoursTable(business.id ?? id, validatedInput.horario_funcionamento);
-    }
-
-    const contactPatch = EntityContactService.buildPatch(validatedInput);
-    const contact = contactPatch.length > 0
-      ? await EntityContactService.patchOwnedChannels(
-          "business",
-          currentBusiness.id,
-          contactPatch,
-        )
-      : await EntityContactService.getVisibleForEntity("business", currentBusiness.id);
-    return { ...mapBusinessDataToBusiness(business), ...contact };
+    return await getBusinessById(id);
   } catch (error) {
     if (createdAddressId && !businessWriteCompleted) {
-      try {
-        await new AddressService().deleteAddress(createdAddressId);
-      } catch (rollbackError) {
-        logger.error("[business.mutations] update address compensation incomplete", {
-          addressId: createdAddressId,
-          message:
-            rollbackError instanceof Error
-              ? rollbackError.message
-              : String(rollbackError),
-        });
-      }
+      await cleanupUnattachedAddress(createdAddressId);
     }
-
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Erro ao atualizar empresa: ${message}`);
   }
 }
 
-/**
- * Soft delete empresa
- */
 export async function deleteBusiness(id: string): Promise<void> {
   try {
-    const { error } = await businessMutationsDb.from<BusinessDataWithProfiles>("business_data")
-      .update({
-        status: "deleted",
-        updated_at: new Date().toISOString(),
-      })
-      .eq("profile_id", id);
-
-    if (error) throw error;
-    await profileService.updateProfile(id, {
-      is_active: false,
-    });
+    const result =
+      await ProfileRpcService.deactivateBusiness<BusinessBrokerResult>(id);
+    if (!result.success) {
+      throw new Error(result.error || "Broker rejeitou exclusao da empresa");
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Erro ao deletar empresa: ${message}`);
   }
 }
 
-/**
- * Criar produto
- */
 export async function createProduct(
   businessId: string,
   productData: CreateProductInput,
@@ -706,9 +585,7 @@ export async function createProduct(
       .single();
 
     if (error) throw error;
-    if (!data) {
-      throw new Error("Erro ao carregar produto criado");
-    }
+    if (!data) throw new Error("Erro ao carregar produto criado");
 
     return {
       id: data.id,
@@ -731,9 +608,6 @@ export async function createProduct(
   }
 }
 
-/**
- * Incrementar visualizacoes
- */
 export async function incrementViews(businessId: string): Promise<void> {
   try {
     await PublicViewTrackingService.track("business", businessId);

@@ -27,7 +27,11 @@ describe("profile rpc broker security", () => {
     expect(edgeFunction).toContain("[89ab][0-9a-f]{3}-[0-9a-f]{12}");
     expect(edgeFunction).toContain('getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY")');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("profile_rpc_create_profile_with_extension"');
-    expect(edgeFunction).toContain('supabaseAdmin.rpc("profile_rpc_create_professional"');
+    expect(edgeFunction).toContain('supabaseAdmin.rpc("profile_rpc_create_business"');
+    expect(edgeFunction).toContain('supabaseAdmin.rpc("profile_rpc_update_business"');
+    expect(edgeFunction).toContain('"profile_rpc_deactivate_business"');
+    expect(edgeFunction).toContain("Business profiles must use the createBusiness action");
+        expect(edgeFunction).toContain('supabaseAdmin.rpc("profile_rpc_create_professional"');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("profile_rpc_update_professional_data"');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("profile_rpc_deactivate_professional"');
     expect(edgeFunction).toContain("sanitizeProfessionalPatch");
@@ -40,7 +44,10 @@ describe("profile rpc broker security", () => {
     expect(edgeFunction).not.toMatch(/p_actor_user_id:\s*params\./);
 
     expect(broker).toContain('const FUNCTION_NAME = "profile-rpc"');
-    expect(broker).toContain('this.invoke<TResult>("createProfessional"');
+    expect(broker).toContain('this.invoke<TResult>("createBusiness"');
+    expect(broker).toContain('this.invoke<TResult>("updateBusiness"');
+    expect(broker).toContain('this.invoke<TResult>("deactivateBusiness"');
+        expect(broker).toContain('this.invoke<TResult>("createProfessional"');
     expect(broker).toContain('this.invoke<TResult>("updateProfessionalData"');
     expect(broker).toContain('this.invoke<TResult>("deactivateProfessional"');
     expect(profileService).toContain("ProfileRpcService.createProfile");
@@ -255,6 +262,80 @@ describe("profile rpc broker security", () => {
     expect(migration).not.toContain(
       "REVOKE INSERT, UPDATE, DELETE ON TABLE public.profiles",
     );
+  });
+
+
+  it("server-owns the general Business lifecycle without duplicating Network authority", () => {
+    const migration = readProjectFile(
+      "supabase/migrations/20260909234000_broker_owned_business_lifecycle_g36.sql",
+    );
+    const edge = readProjectFile("supabase/functions/profile-rpc/index.ts");
+    const broker = readProjectFile("src/core/profiles/services/ProfileRpcService.ts");
+    const business = readProjectFile("src/core/business/services/business.mutations.ts");
+    const multiProfile = readProjectFile(
+      "src/core/profiles/services/multi-profile/profileService.ts",
+    );
+    const profileMutations = readProjectFile(
+      "src/core/profiles/services/profile.mutations.ts",
+    );
+
+    for (const signature of [
+      "public.profile_rpc_create_business",
+      "public.profile_rpc_update_business",
+      "public.profile_rpc_deactivate_business",
+    ]) {
+      expect(migration).toContain(signature);
+    }
+
+    expect(migration).toContain("business_data_profile_id_uidx");
+    expect(migration).toContain("business_data_profile_id_key");
+    expect(migration).toContain("business_data_ensure_stats");
+    expect(migration).toContain("ON CONFLICT (profile_id) DO UPDATE");
+    expect(migration).toContain("private.business_slug_is_reserved");
+    expect(migration).toContain("Reserved business slug");
+    expect(migration).toContain("Address is not owned by actor");
+    expect(migration).toContain("Address territory mismatch");
+    expect(migration).toContain("Unsupported business field:");
+    expect(migration).toContain("public.contact_rpc_patch_owned_channels");
+    expect(migration).toContain("DELETE FROM public.business_hours");
+    expect(migration).toContain("private.profile_patch_owned");
+    expect(migration).toContain("Compatibility window");
+
+    expect(edge).toContain('"createBusiness"');
+    expect(edge).toContain('"updateBusiness"');
+    expect(edge).toContain('"deactivateBusiness"');
+    expect(edge).toContain("sanitizeBusinessPatch");
+    expect(edge).toContain("sanitizeContactChannels");
+    expect(edge).toContain("sanitizeBusinessHours");
+    expect(edge).toContain("Business profiles must use the createBusiness action");
+
+    expect(broker).toContain('this.invoke<TResult>("createBusiness"');
+    expect(broker).toContain('this.invoke<TResult>("updateBusiness"');
+    expect(broker).toContain('this.invoke<TResult>("deactivateBusiness"');
+
+    expect(business).toContain("ProfileRpcService.createBusiness");
+    expect(business).toContain("ProfileRpcService.updateBusiness");
+    expect(business).toContain("ProfileRpcService.deactivateBusiness");
+    expect(business).toContain("owner_user_id: actorUserId");
+    expect(business).toContain("pertence ao NetworkService");
+    expect(business).not.toContain("BusinessHoursService");
+    expect(business).not.toContain("ProfileMembersService");
+    expect(business).not.toContain("profileService.createProfile");
+    expect(business).not.toContain("profileService.updateProfile");
+    expect(business).not.toContain("profileService.deleteProfile");
+    expect(business).not.toContain("EntityContactService.patchOwnedChannels");
+    expect(business).not.toMatch(
+      /\.from(?:<[^>]+>)?\(\s*["']business_data["']\s*\)[\s\S]{0,260}\.(?:insert|update|delete)\(/,
+    );
+    expect(business).not.toMatch(
+      /\.from(?:<[^>]+>)?\(\s*["']business_stats["']\s*\)[\s\S]{0,260}\.(?:insert|update|delete)\(/,
+    );
+
+    for (const source of [multiProfile, profileMutations]) {
+      expect(source).toContain(
+        "Use BusinessService.createBusiness para criar empresas",
+      );
+    }
   });
 
 });

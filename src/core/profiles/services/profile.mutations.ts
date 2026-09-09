@@ -110,6 +110,10 @@ function getCreateProfileWhatsapp(profile: CreateProfilePayload): string | undef
  * Cria um novo profile
  */
 export async function createProfile(profile: CreateProfilePayload): Promise<Profile> {
+  if (profile.profile_type === "business") {
+    throw new Error("Use BusinessService.createBusiness para criar empresas");
+  }
+
   const user = await SessionService.getCurrentUser();
 
   if (!user) {
@@ -154,6 +158,10 @@ export async function createProfile(profile: CreateProfilePayload): Promise<Prof
 export async function createProfileWithIdentityValidation(
   profile: CreateProfilePayload,
 ): Promise<Profile> {
+  if (profile.profile_type === "business") {
+    throw new Error("Use BusinessService.createBusiness para criar empresas");
+  }
+
   const user = await SessionService.getCurrentUser();
   if (!user) throw new Error("Not authenticated");
 
