@@ -660,15 +660,8 @@ export class RideOperationalService {
     return startDeliveryOperation(
       rideId,
       driverProfileId,
-      (nextRideId, toState, actorProfileId, reason, deliveryCommand) =>
-        this.transitionTo(
-          nextRideId,
-          toState,
-          actorProfileId,
-          reason,
-          undefined,
-          deliveryCommand,
-        ),
+      (nextRideId, toState, actorProfileId, reason) =>
+        this.transitionTo(nextRideId, toState, actorProfileId, reason),
     );
   }
 
@@ -718,8 +711,15 @@ export class RideOperationalService {
       rideId,
       driverProfileId,
       metadata,
-      (nextRideId, toState, actorProfileId, reason) =>
-        this.transitionTo(nextRideId, toState, actorProfileId, reason),
+      (nextRideId, toState, actorProfileId, reason, deliveryCommand) =>
+        this.transitionTo(
+          nextRideId,
+          toState,
+          actorProfileId,
+          reason,
+          undefined,
+          deliveryCommand,
+        ),
     );
   }
 
