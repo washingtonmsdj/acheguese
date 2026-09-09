@@ -7,27 +7,42 @@ function readProjectFile(relativePath: string): string {
 }
 
 describe("Mobility ride audit authority", () => {
-  it("keeps browser audit writes behind mobility-rpc", () => {
-    const auditService = readProjectFile(
-      "src/core/mobility/services/MobilityAuditService.ts",
-    );
-    const adminService = readProjectFile(
-      "src/core/admin/services/AdminMotoboyOperationsService.ts",
+  it("keeps ride-state audit and terminal offer invalidation inside atomic commands", () => {
+    const operationalService = readProjectFile(
+      "src/core/mobility/core/RideOperationalService.ts",
     );
     const rpcService = readProjectFile(
       "src/core/mobility/services/MobilityRpcService.ts",
     );
     const broker = readProjectFile("supabase/functions/mobility-rpc/index.ts");
+    const transition = readProjectFile(
+      "supabase/migrations/20260909185003_atomize_terminal_ride_offer_invalidation_g18.sql",
+    );
+    const pinProtocol = readProjectFile(
+      "supabase/migrations/20260909145145_harden_operational_pin_protocol_g7.sql",
+    );
 
-    expect(auditService).toContain("MobilityRpcService.logRideStateChange");
-    expect(auditService).not.toContain('.from("ride_state_audit")');
-    expect(adminService).not.toContain('.from("ride_state_audit")');
+    expect(operationalService).not.toContain("MobilityAuditService");
+    expect(operationalService).not.toContain("mobilityAuditService");
+    expect(operationalService).not.toContain("stopDispatchForRide");
+    expect(operationalService).not.toContain("logRideStateChange");
 
-    expect(rpcService).toContain('"logRideStateChange"');
-    expect(broker).toContain("logRideStateChange: true");
-    expect(broker).toContain("handleLogRideStateChange");
-    expect(broker).toContain("canAccessRideAsParticipantOrAdmin");
-    expect(broker).toContain("ride.status !== toState");
-    expect(broker).toContain('supabaseAdmin.from("ride_state_audit").insert');
+    expect(rpcService).not.toContain('"logRideStateChange"');
+    expect(rpcService).not.toContain('"cancelPendingOffers"');
+    expect(broker).not.toContain("handleLogRideStateChange");
+    expect(broker).not.toContain("handleCancelPendingOffers");
+    expect(broker).not.toContain('supabaseAdmin.from("ride_state_audit").insert');
+    expect(broker).not.toContain('"cancel_pending_ride_offers"');
+
+    expect(transition).toContain("UPDATE public.ride_offers offer");
+    expect(transition).toContain("offer.status IN ('pending', 'sent')");
+    expect(transition).toContain("INSERT INTO public.ride_state_audit");
+    expect(transition).toContain(
+      "DROP FUNCTION IF EXISTS public.cancel_pending_ride_offers(uuid)",
+    );
+
+    expect(pinProtocol).toContain("verification_attempts = v_attempts");
+    expect(pinProtocol).toContain("last_attempt_at = v_now");
+    expect(pinProtocol).toContain("verified_by = v_actor_profile_id");
   });
 });
