@@ -77,7 +77,7 @@ export class AdminMotoboyOperationsService {
     const result = await RideOperationalService.transitionTo(
       rideId,
       targetState,
-      "admin-override",
+      "system",
       `Admin override: ${reason || "Cancelamento operacional"}`,
     );
 
