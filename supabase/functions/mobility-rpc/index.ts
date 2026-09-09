@@ -55,6 +55,7 @@ const ACTIONS = {
   updateLatestDispatchAttempt: true,
   cancelPendingOffers: true,
   updateDriverAvailability: true,
+  updateDriverLocation: true,
   reconcileStaleDriverAvailability: true,
   releaseDriverAvailabilityForRide: true,
 } as const;
@@ -1558,6 +1559,51 @@ async function handleUpdateDriverAvailability(
   return data ?? { success: false, reason: "empty_response" };
 }
 
+async function handleUpdateDriverLocation(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const driverProfileId = requireUuid(
+    params.driverProfileId ?? params.driver_profile_id,
+    "driverProfileId",
+  );
+
+  if (!await profileBelongsToUser(supabaseAdmin, driverProfileId, auth.userId)) {
+    throw new RequestAuthorizationError(
+      "User cannot publish location for this driver profile",
+    );
+  }
+
+  const lat = optionalBoundedNumber(params.lat, "lat", -90, 90);
+  const lng = optionalBoundedNumber(params.lng, "lng", -180, 180);
+  if (lat === null || lng === null) {
+    throw new RequestValidationError("Valid driver coordinates are required");
+  }
+
+  const accuracy = optionalBoundedNumber(params.accuracy, "accuracy", 0, 100000);
+  const heading = optionalBoundedNumber(params.heading, "heading", 0, 360);
+  const speed = optionalBoundedNumber(params.speed, "speed", 0, 1000);
+  const altitude = optionalBoundedNumber(params.altitude, "altitude", -1000, 20000);
+
+  const { data, error } = await supabaseAdmin.rpc(
+    "mobility_update_driver_location",
+    {
+      p_actor_user_id: auth.userId,
+      p_driver_profile_id: driverProfileId,
+      p_lat: lat,
+      p_lng: lng,
+      p_accuracy: accuracy,
+      p_heading: heading,
+      p_speed: speed,
+      p_altitude: altitude,
+    },
+  );
+
+  if (error) throw error;
+  return data ?? { success: false, reason: "empty_response" };
+}
+
 async function handleReconcileStaleDriverAvailability(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
@@ -1665,6 +1711,8 @@ async function dispatchAction(
       return handleCancelPendingOffers(supabaseAdmin, auth, params);
     case "updateDriverAvailability":
       return handleUpdateDriverAvailability(supabaseAdmin, auth, params);
+    case "updateDriverLocation":
+      return handleUpdateDriverLocation(supabaseAdmin, auth, params);
     case "reconcileStaleDriverAvailability":
       return handleReconcileStaleDriverAvailability(supabaseAdmin, auth, params);
     case "releaseDriverAvailabilityForRide":
