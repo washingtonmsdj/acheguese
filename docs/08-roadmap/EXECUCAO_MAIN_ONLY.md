@@ -895,6 +895,33 @@ Próximo gate obrigatório:
 3. executar build + E2E/smoke responsivo quando o runner/provider estiver disponível;
 4. manter `PUBLIC_LAUNCH_SURFACES.mobility=false` até a certificação same-SHA final.
 
+### Checkpoint G32 — reconciliação same-SHA do dispatch runtime (2026-09-09)
+
+Reconciliação no Supabase canônico `xhdowzacfujckjelqhtd` contra a `main`:
+- baseline Git do início da prova: `84ad26a2bfbc3db43b76ded62d58c60bcca8114f`;
+- projeto remoto observado `ACTIVE_HEALTHY`;
+- `mobility-rpc` **v24 ACTIVE**, `verify_jwt=true`: entrypoint + `_shared/accountOperational.ts` + `_shared/security.ts` byte-a-byte iguais ao Git;
+- `delivery-rpc` **v8 ACTIVE**, `verify_jwt=true`: entrypoint + mesmos shared files byte-a-byte iguais ao Git;
+- foi encontrado drift real em `auto-dispatch-ride v24`: o runtime remoto ainda executava o desenho antigo com DML direto em `ride_requests`, `ride_state_audit` e `ride_dispatch_audit`, enquanto o Git já usava os commands atômicos;
+- a causa raiz foi corrigida no runtime, sem criar fluxo paralelo: `auto-dispatch-ride` foi redeployado a partir do source canônico do Git e passou a **v25 ACTIVE**;
+- `auto-dispatch-ride v25`, `_shared/security.ts` e `_shared/validation.ts` foram re-lidos do runtime e estão byte-a-byte iguais ao Git;
+- `verify_jwt=false` foi preservado intencionalmente no auto-dispatch porque ele é job backend autenticado por `CRON_SECRET`, não endpoint de usuário;
+- migrations remotas estão presentes até `20260909205630_close_delivery_direct_table_writes_g30`; as 12 migrations finais G18→G30 também existem fisicamente na `main`;
+- grants reais confirmam `authenticated` sem `INSERT/UPDATE/DELETE` em `ride_requests`, availability/location, offers, routes/reservations, ride chat/share, orders/items/timeline/occurrences; commands críticos de Mobility/Delivery permanecem executáveis diretamente apenas por `service_role`;
+- invariantes pós-cutover: **0** offers `pending/sent` em corrida terminal, **0** dispatch `pending` em corrida terminal e **0** `driver_availability.active_ride_id` apontando para corrida terminal;
+- ratchet de `mobility-rpc-security.test.ts` reforçado para exigir os commands atômicos e proibir retorno de UPDATE direto de `ride_requests` ou INSERT/UPDATE direto dos audits no auto-dispatch.
+
+**Estado:** source Git, brokers remotos, auto-dispatch e grants principais estão reconciliados neste checkpoint. A regressão real encontrada no runtime foi corrigida na raiz, não mascarada.
+
+**Não certificado ainda:** isto não equivale a build/E2E/smoke/deploy web same-SHA. `PUBLIC_LAUNCH_SURFACES.mobility=false` permanece obrigatório até essas provas.
+
+Próximo gate:
+1. executar ratchets/validators estáticos do SHA deste checkpoint;
+2. validar build de produção no mesmo SHA;
+3. executar E2E operacional positivo/negativo + smoke responsivo;
+4. provar deploy web no mesmo SHA;
+5. só então discutir abertura da Mobilidade.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:

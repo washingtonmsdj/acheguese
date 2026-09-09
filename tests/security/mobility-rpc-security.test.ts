@@ -117,6 +117,16 @@ describe("mobility rpc broker security", () => {
 
     expect(autoDispatch).toContain("mobility_offer_driver_atomic");
     expect(autoDispatch).toContain("mobility_timeout_driver_offer_atomic");
+    expect(autoDispatch).toContain("mobility_expire_dispatch_atomic");
+    expect(autoDispatch).not.toMatch(
+      /\.from\(\s*["']ride_requests["']\s*\)\s*\.update\(/s,
+    );
+    expect(autoDispatch).not.toMatch(
+      /\.from\(\s*["']ride_state_audit["']\s*\)\s*\.insert\(/s,
+    );
+    expect(autoDispatch).not.toMatch(
+      /\.from\(\s*["']ride_dispatch_audit["']\s*\)\s*\.(?:insert|update)\(/s,
+    );
     expect(atomicDispatch).toContain("INSERT INTO public.ride_dispatch_audit");
 
     const terminalTransition = readProjectFile(
