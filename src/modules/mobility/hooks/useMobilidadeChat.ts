@@ -2,28 +2,26 @@ import { useCallback } from "react";
 import { useSessionContext } from "@/core/session";
 import { useRideChat } from "./useRideChat";
 
-export function useMobilidadeChat(conversationId?: string) {
+export function useMobilidadeChat(rideId?: string) {
   const { activeProfile } = useSessionContext();
-  const rideId = conversationId ?? "";
-  const userId = activeProfile?.id ?? "";
+  const resolvedRideId = rideId ?? "";
 
   const chat = useRideChat({
-    rideId,
-    userId,
-    enabled: Boolean(rideId && userId),
+    rideId: resolvedRideId,
+    enabled: Boolean(resolvedRideId && activeProfile?.id),
   });
 
   const markAllAsRead = useCallback(async () => {
     await chat.markAsRead();
-  }, [chat]);
+  }, [chat.markAsRead]);
 
   return {
     messages: chat.messages,
     loading: chat.loading,
     sending: chat.sending,
+    error: chat.error,
     sendMessage: chat.sendMessage,
     markAsRead: chat.markAsRead,
     markAllAsRead,
   };
 }
-
