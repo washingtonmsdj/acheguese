@@ -134,4 +134,21 @@ describe("profile rpc broker security", () => {
       "REVOKE INSERT, UPDATE, DELETE ON TABLE public.professional_stats",
     );
   });
+
+  it("enforces exactly one professional extension per Profile", () => {
+    const migration = readProjectFile(
+      "supabase/migrations/20260909215500_enforce_unique_professional_profile_extension_g35.sql",
+    );
+
+    expect(migration).toContain("tmp_professional_dedupe");
+    expect(migration).toContain("professional_duplicate_has_operational_references");
+    expect(migration).toContain("professional_duplicate_contact_conflict");
+    expect(migration).toContain("UPDATE private.entity_contact_channels");
+    expect(migration).toContain("DELETE FROM public.professional_data");
+    expect(migration).toContain("professional_data_profile_id_uidx");
+    expect(migration).toContain("professional_data_profile_id_key");
+    expect(migration).toContain("UNIQUE USING INDEX");
+    expect(migration).not.toContain("9299019a-0af0-4892-8226-7d1e3d9f0c36");
+    expect(migration).not.toContain("d4fcd570-ba34-4624-ba90-4190767c6784");
+  });
 });
