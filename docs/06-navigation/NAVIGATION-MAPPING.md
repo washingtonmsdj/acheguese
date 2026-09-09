@@ -37,18 +37,21 @@ Legenda de situação:
 
 ---
 
-## 2. TerritoryExplorerPage
+## 2. Explorar território
 
-| Item             | Valor                                                                                                                                                                                                                        |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Nome antigo      | `PublicCityLandingPage` / `CidadeLandingPage`                                                                                                                                                                                |
-| Novo nome        | `TerritoryExplorerPage`                                                                                                                                                                                                      |
-| Responsabilidade | Explorar território amplo (cidade/região): bairros, mapa, busca, destaques da cidade.                                                                                                                                        |
-| Rotas            | `/:uf/:city` (quando a cidade tiver subdivisões e não for tratada como Home direta)                                                                                                                                          |
-| Arquivo canônico | `src/app/pages/TerritoryExplorerPage.tsx` (alias → `PublicCityLandingPage`)                                                                                                                                                  |
-| Dependências     | `useResolveTerritoryFromUrl`, `useActiveTerritory`, seções do `CidadeLanding.*`                                                                                                                                              |
-| Situação         | **Legado ativo** — o lazy import de `PublicCityLandingPage` já aponta para `TerritoryHomePage` na sprint anterior; o comportamento de "explorador de cidade" ainda vive em `CidadeLandingPage` dentro do portal comunitário. |
-| Remoção prevista | `PublicCityLandingPage.tsx` e arquivos `CidadeLanding.*` após dedicar uma página real ao explorador.                                                                                                                         |
+O alias `TerritoryExplorerPage` e a implementação `PublicCityLandingPage`
+foram aposentados em 2026-09-09 após prova de zero caller de rota.
+
+Owners atuais:
+
+- Home de cidade/bairro/grupo: `TerritoryHomePage`;
+- entrada/troca: `TerritoryEntryPage`;
+- descoberta/busca: `BuscaPage`;
+- mapa: `MapaPageV4`;
+- `CidadeLandingPage` permanece somente como compatibilidade do portal
+  Community enquanto módulos embutidos ainda dependem dessa moldura.
+
+Não recriar uma segunda Home/Explorer monolítica.
 
 ---
 
@@ -110,10 +113,15 @@ Legenda de situação:
 
 ## Páginas legadas a remover após migração completa
 
-Nenhuma remoção nesta sprint. Candidatos futuros:
+Removidos em 2026-09-09:
 
-- `src/app/pages/PublicCityLandingPage.tsx` — quando `TerritoryExplorerPage` tiver implementação própria e nenhum import restar.
-- `src/app/pages/CidadeLandingPage.tsx` + `CidadeLanding.*` — quando as seções `feed/grupos/business/...` migrarem para páginas dedicadas de módulo.
+- `src/app/pages/PublicCityLandingPage.tsx`;
+- `src/app/pages/PublicCityLandingPage.css`;
+- `src/app/pages/TerritoryExplorerPage.tsx`.
+
+Ainda candidato futuro:
+
+- `src/app/pages/CidadeLandingPage.tsx` + `CidadeLanding.*` — somente quando as seções `feed/grupos/business/...` migrarem para páginas dedicadas de módulo.
 - `src/app/pages/LaunchPausedPage.tsx` — quando `createLaunchPausedRoute` migrar para `TerritoryUnavailablePage`.
 
 ## Regras da migração

@@ -18,11 +18,11 @@ Consolidação do domínio **Territory**. Nesta etapa **não há renomeação de
 | Nome atual | Nome canônico | Status | Motivo | Dependências | Plano de migração |
 |------------|---------------|--------|--------|--------------|-------------------|
 | `TerritoryEntryPage.tsx` | `TerritoryEntryPage` | ✅ Canônico | Entrada e resolução territorial pública. | `RootRouteEntry`, rota `/`. | Manter como implementação única. |
-| `TerritoryExplorerPage.tsx` | `TerritoryExplorerPage` | ✅ Canônico | Exploração ampla de um território (city-scope). | `lazyImports`. | Manter. |
+| `TerritoryExplorerPage.tsx` | — | ✅ Removido | Alias sem caller de rota; descoberta pertence a Busca/Mapa e Home a `TerritoryHomePage`. | — | Não recriar. |
 | `TerritoryHomePage.tsx` | `TerritoryHomePage` | ✅ Canônico | Home oficial de qualquer território. | `TerritorialModulePages`. | Manter. |
 | `TerritoryFeedPage.tsx` | `TerritoryFeedPage` | ✅ Canônico | Timeline completa do território. | `lazyImports`. | Manter. |
 | `TerritoryUnavailablePage.tsx` | `TerritoryUnavailablePage` | ✅ Canônico | Território sem suporte. | rotas. | Manter. |
-| `PublicCityLandingPage.tsx` (+ `.css`) | `TerritoryExplorerPage` | 🟦 Alias temporário | Implementação real do explorer. | `TerritoryExplorerPage.tsx`. | Consolidar em `TerritoryExplorerPage` na Sprint DOMAIN.2. |
+| `PublicCityLandingPage.tsx` (+ `.css`) | — | ✅ Removido | Segunda Home sem caller runtime; removida em 2026-09-09. | — | Não recriar. |
 | `CidadeLandingPage.tsx` (+ `.css`, `*.sections.tsx`, `*.neighborhood-*.tsx`, `*.constants.ts`, `*.utils.ts`) | `TerritoryExplorerPage` (sections) | 🟨 Legado | Versão pré-Territory da landing de cidade. | Rotas legadas `/cidade/*`. | Mover partes reutilizáveis para `territory/sections/`; deprecar. |
 | `LaunchPausedPage.tsx` | `TerritoryUnavailablePage` | 🟦 Alias temporário | Implementação real do unavailable. | `TerritoryUnavailablePage.tsx`. | Consolidar em `TerritoryUnavailablePage`. |
 | `ComunidadePage.tsx` (em `core/community/pages`) | `TerritoryFeedPage` | 🟦 Alias temporário | Implementação real do feed territorial. | `TerritoryFeedPage.tsx`. | Consolidar em `TerritoryFeedPage`. |
@@ -94,6 +94,6 @@ A partir desta sprint, novos módulos, componentes e tipos **não podem** introd
 
 1. **DOMAIN.2** — Introduzir re-exports `Territory = Location`, `TerritoryType = LocationType` em `core/location/index.ts`.
 2. **DOMAIN.3** — Fundir `core/territorial` em `core/location` sob o namespace `territory/`.
-3. **DOMAIN.4** — Renomear arquivos alias (`AchegueSeHomePage`, `PublicCityLandingPage`, `LaunchPausedPage`, `ComunidadePage`) removendo os aliases.
+3. **DOMAIN.4** — Continuar removendo aliases restantes (`AchegueSeHomePage`, `LaunchPausedPage`, `ComunidadePage`); `PublicCityLandingPage` já foi aposentada.
 4. **DOMAIN.5** — Redirecionar rotas legadas (`/cidade/*`, `/launch-paused`).
 5. **DOMAIN.6** — Deprecar `core/city`, `core/landing`, `core/community-*` movendo para subpastas canônicas.

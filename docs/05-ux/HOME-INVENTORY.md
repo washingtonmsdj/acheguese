@@ -105,7 +105,7 @@ Legenda: **Pronto** = rota + página em produção · **Parcial** = rota existe 
 | Detalhe de post | Sim | `/p/:slug/*` | `PostPage` + modal | Pronto | Não (é destino, não bloco). | Home → card → PostPage. |
 | Publicar post | Sim | `/novo-post` | `NovoPostPage` | Pronto (rascunhos + Turnstile) | **Sim** como CTA/FAB, não bloco. | Bottom nav + FAB. |
 | Comentários / reações | Sim | dentro do post | `PostCommentsPanel` | Pronto | Não. | PostPage. |
-| Cidade / Explorer | Sim | `/comunidade/:uf/:city` | `TerritoryExplorerPage` | Pronto | Não (é o nível acima). | Header → trocar território. |
+| Cidade / descoberta | Sim | `/:uf/:city`, Busca e Mapa territoriais | `TerritoryHomePage` + `BuscaPage` + `MapaPageV4` | Pronto por owner | Home é o contexto; Busca/Mapa aprofundam. | Header → trocar território / Explorar. |
 | Entrada territorial | Sim | `/`, `/?trocar=territorio` | `TerritoryEntryPage` | Pronto | Não (é resolução anterior à Home). | Troca territorial. |
 | Waitlist bairro em breve | Sim | `/interesse` | `CommunityInterestPage` | Pronto | Só se território ativo for `coming_soon`. | Rota dedicada. |
 

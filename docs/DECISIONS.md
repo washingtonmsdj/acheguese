@@ -18,7 +18,7 @@
 
 ## D-004 — Nomenclatura canônica de telas
 
-`TerritoryEntryPage · TerritoryExplorerPage · TerritoryHomePage · TerritoryFeedPage · PostPage · TerritoryUnavailablePage`. A entrada foi consolidada sem alias na Fase 4.3; aliases dos demais domínios seguem suas migrações próprias. **Ref.:** `06-navigation/NAVIGATION-MAPPING.md`.
+`TerritoryEntryPage · TerritoryHomePage · BuscaPage · TerritoryFeedPage · PostPage · TerritoryUnavailablePage`. O alias `TerritoryExplorerPage` foi aposentado em 2026-09-09; descoberta ampla pertence a Busca/Mapa, não a uma segunda Home. **Ref.:** `06-navigation/NAVIGATION-MAPPING.md`.
 
 ## D-005 — Vozes editoriais unificadas (Home = Feed = Post)
 
