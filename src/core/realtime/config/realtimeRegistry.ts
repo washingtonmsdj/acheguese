@@ -213,6 +213,20 @@ export const REALTIME_TOPIC_REGISTRY = {
       },
     ],
   },
+  "mobility.ride-chat-messages": {
+    bindings: [
+      {
+        id: "insert",
+        table: "ride_chat_messages",
+        event: "INSERT",
+        filter: {
+          column: "chat_id",
+          valueKey: "chatId",
+          validator: "uuid",
+        },
+      },
+    ],
+  },
   "notifications.user": {
     bindings: [
       {
