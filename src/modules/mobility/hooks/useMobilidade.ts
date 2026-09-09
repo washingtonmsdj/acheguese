@@ -560,18 +560,7 @@ export function useMobilidade() {
           return { success: false };
         }
 
-        const passengerProfile =
-          (await profileService.getProfileByType(user.id, "personal")) ||
-          (await profileService.getActiveProfile(user.id));
-
-        if (!passengerProfile?.id) {
-          toast.error("Perfil nao encontrado");
-          return { success: false };
-        }
-        await RidePassengerService.confirmRideCompletion(
-          rideId,
-          passengerProfile.id,
-        );
+        await RidePassengerService.confirmRideCompletion(rideId);
 
         queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides(user.id) });
         toast.success("Corrida confirmada!");
