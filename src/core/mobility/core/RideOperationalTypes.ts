@@ -59,8 +59,3 @@ export interface ProviderErrorShape {
   hint?: string;
 }
 
-export interface RidePostTransitionSnapshot {
-  passenger_profile_id?: string | null;
-  driver_profile_id?: string | null;
-  ride_mode?: string | null;
-}
