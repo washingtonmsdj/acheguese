@@ -28,6 +28,7 @@ type MobilityRpcAction =
   | "updateLatestDispatchAttempt"
   | "cancelPendingOffers"
   | "updateDriverAvailability"
+  | "updateDriverLocation"
   | "reconcileStaleDriverAvailability"
   | "releaseDriverAvailabilityForRide";
 
@@ -44,6 +45,13 @@ export interface DriverAvailabilityBrokerData {
   reason?: string;
   error?: string;
   availability?: Record<string, unknown>;
+}
+
+export interface DriverLocationBrokerData {
+  success?: boolean;
+  reason?: string;
+  error?: string;
+  location?: Record<string, unknown>;
 }
 
 export interface StaleDriverAvailabilityBrokerData {
@@ -306,6 +314,26 @@ export class MobilityRpcService {
       rideMode: input.rideMode,
       lat: input.lat,
       lng: input.lng,
+    });
+  }
+
+  static async updateDriverLocation(input: {
+    driverProfileId: string;
+    lat: number;
+    lng: number;
+    accuracy?: number;
+    heading?: number;
+    speed?: number;
+    altitude?: number;
+  }): Promise<DriverLocationBrokerData> {
+    return this.invoke<DriverLocationBrokerData>("updateDriverLocation", {
+      driverProfileId: input.driverProfileId,
+      lat: input.lat,
+      lng: input.lng,
+      accuracy: input.accuracy,
+      heading: input.heading,
+      speed: input.speed,
+      altitude: input.altitude,
     });
   }
 
