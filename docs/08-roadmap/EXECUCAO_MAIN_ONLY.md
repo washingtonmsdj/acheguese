@@ -501,3 +501,34 @@ Próximo gate obrigatório:
 3. continuar same-SHA tests/E2E quando runner hosted estiver disponível;
 4. manter `PUBLIC_LAUNCH_SURFACES.mobility=false`.
 
+### Checkpoint G14 — cobertura territorial canônica de motorista (2026-09-09)
+
+Problemas confirmados no runtime/código:
+- `driver_accepted_neighborhoods` ainda era referenciada por mutations antigas, mas a tabela **não existe** no banco canônico;
+- o hook `useDriverServiceArea` estava sem consumidores reais;
+- `ServiceAreaSettings` já apontava para `ServiceAreasManager`, porém o próprio `ServiceAreasService` ainda usava o schema antigo (`profile_id`, `city`, `neighborhoods`, `is_active`) e tentava `INSERT/UPDATE/DELETE` direto;
+- o SSOT real já existia desde `consolidate_coverage_commands`: `public.service_areas` com `entity_type/entity_id/location_id/status` e writes por RPC;
+- para `entity_type='mobility_driver'`, o `entity_id` correto é `driver_data.id`, e não `profiles.id`;
+- `service_areas` remoto estava vazio, então não havia dados legados a migrar.
+
+Correção aplicada e provada:
+- novo comando `upsert_entity_coverage` complementa `replace_entity_coverage`, `remove_entity_coverage` e `update_entity_coverage_status` sem criar nova tabela ou authority paralela;
+- point mutation usa `private.require_coverage_entity_write`, advisory lock, bounds de raio/status e single-primary;
+- trigger privado `trg_validate_service_area_location_semantics` aplica o invariante cross-table no SSOT: `city` exige Location city; `district` exige district/neighborhood; `radius` aceita city/district/neighborhood; Location precisa estar ativa;
+- browser mantém `service_areas SELECT=true` e `INSERT/UPDATE/DELETE=false`; `upsert_entity_coverage`: anon=false, authenticated=true, service_role=true;
+- `ServiceAreasService` foi refeito como adapter Profile -> Coverage e resolve business/professional/driver para o `entity_type/entity_id` real;
+- `CoverageRepositorySupabase` ganhou `upsertByEntity` e todas as mutations continuam por RPC server-owned;
+- formulário de área de atuação deixou de aceitar cidade/bairros em texto livre e passou a usar `TerritorialSelector` + `location_id` oficial, com modos cidade, bairro/distrito e raio;
+- `useProfileLocation` passou a ler os labels derivados do Coverage canônico;
+- removidos `deleteDriverNeighborhood`, `deleteDriverServiceArea` e o hook morto `useDriverServiceArea`; a feature foi preservada pelo `ServiceAreasManager` canônico;
+- `DriverSettingsLayout` agora expõe a seção Áreas de atuação nas rotas de configuração existentes;
+- probe transacional real validou create/update, raio, status, troca atômica de primária, rejection de taxonomia inválida e bloqueio de outro usuário; rollback final deixou `service_areas=0`;
+- ratchet: `tests/security/mobility-driver-coverage-authority.test.ts`;
+- advisors de segurança após DDL não reportaram finding novo referente a `service_areas`.
+
+Próximo gate obrigatório:
+1. validar build/typecheck do SHA G14 e corrigir qualquer drift de tipos/UI antes de avançar;
+2. auditar preferências exibidas em `DriverSettingsPanel`, pois hoje parte dos switches pode ser somente estado local/toast e não configuração persistente;
+3. separar preferência de UI de capability operacional server-owned — especialmente aceitar entregas/corridas, que não pode ser alterado apenas no client;
+4. manter `PUBLIC_LAUNCH_SURFACES.mobility=false` até os E2E finais.
+
