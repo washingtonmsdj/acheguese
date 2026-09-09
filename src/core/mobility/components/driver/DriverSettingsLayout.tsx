@@ -1,10 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { Bell, Settings2, ShieldCheck } from "lucide-react";
+import { Bell, MapPin, Settings2, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { DriverNotifications } from "@/core/mobility/components/driver/DriverNotifications";
 import { DriverSettingsPanel } from "@/core/mobility/components/driver/DriverSettingsPanel";
+import { ServiceAreasManager } from "@/core/service-areas";
 import { useDriverProfileIdentity } from "@/core/mobility/hooks/useDriverProfileIdentity";
 import { getMobilityServicePath } from "@/core/mobility/routes/mobilityNavigation";
 
@@ -93,6 +94,27 @@ export function DriverSettingsLayout({ service }: DriverSettingsLayoutProps) {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="border-border">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <MapPin className="h-4 w-4 text-primary" />
+            Areas de atuacao
+          </CardTitle>
+          <CardDescription>
+            Territorios oficiais onde o perfil de {profileLabel} aceita atendimento.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {identity.driverProfileId ? (
+            <ServiceAreasManager profileId={identity.driverProfileId} />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Crie e vincule o perfil operacional antes de configurar a cobertura.
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       <Card className="border-border">
         <CardHeader>
