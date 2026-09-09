@@ -25,7 +25,7 @@ const DISPATCH_GLOBAL_CONFIG: DispatchGlobalConfig = {
     maxRetryAttempts: 5,             // Máximo 5 motoristas
     searchRadiusKm: 10,              // Raio de 10km
     requiresVerification: true,      // Motorista verificado obrigatório
-    requiresSubscription: false,     // Assinatura NÃO obrigatória (modelo freemium)
+    requiresSubscription: true,      // Autoridade operacional exige assinatura ativa (modelo freemium)
   },
   
   // Open Board (Entrega/motoboy)
@@ -35,7 +35,7 @@ const DISPATCH_GLOBAL_CONFIG: DispatchGlobalConfig = {
     offerExpirationMinutes: 30,      // Ofertas expiram em 30min
     searchRadiusKm: 15,              // Raio maior para entregas
     requiresVerification: true,      // Motorista verificado obrigatório
-    requiresSubscription: false,     // Assinatura NÃO obrigatória
+    requiresSubscription: true,      // Autoridade operacional exige assinatura ativa
   },
   
   // Reservation Board (Corridas agendadas)
@@ -44,7 +44,7 @@ const DISPATCH_GLOBAL_CONFIG: DispatchGlobalConfig = {
     minAdvanceHours: 2,              // Mínimo 2h de antecedência
     maxAdvanceDays: 7,               // Máximo 7 dias de antecedência
     requiresVerification: true,      // Motorista verificado obrigatório
-    requiresSubscription: false,     // Assinatura NÃO obrigatória
+    requiresSubscription: true,      // Autoridade operacional exige assinatura ativa
   },
   
   // Scoring (para ordenação de motoristas)
