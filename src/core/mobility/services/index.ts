@@ -39,8 +39,6 @@ export {
   mobilityRolloutService,
 } from "@/core/mobility/services/MobilityRolloutService";
 
-export { mobilityAuditService } from "@/core/mobility/services/MobilityAuditService";
-
 export { DriverModerationEventsService } from "@/core/mobility/services/DriverModerationEventsService";
 export type { DriverModerationAction } from "@/core/mobility/services/DriverModerationEventsService";
 
