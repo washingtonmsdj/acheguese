@@ -1,4 +1,10 @@
-import { mobilityAuditService } from "@/core/mobility/services/MobilityAuditService";
+import { RideOperationalService } from "@/core/mobility/core/RideOperationalService";
+import {
+  RIDE_STATE,
+  RideStateMachine,
+  type RideState,
+} from "@/core/mobility/core/RideStateMachine";
+import { getRideById } from "@/core/mobility/services/mobility.queries";
 import { MobilityService } from "@/core/mobility/services/runtime";
 
 export interface AdminMotoboyDelivery {
@@ -17,6 +23,20 @@ export interface AdminMotoboyDelivery {
   failed_delivery_reason: string | null;
 }
 
+const ADMIN_CANCELLATION_TARGETS: readonly RideState[] = [
+  RIDE_STATE.CANCELLED_BY_PASSENGER,
+  RIDE_STATE.CANCELLED_BY_DRIVER,
+  RIDE_STATE.FAILED,
+];
+
+function resolveAdminCancellationTarget(currentState: RideState): RideState | null {
+  return (
+    ADMIN_CANCELLATION_TARGETS.find((targetState) =>
+      RideStateMachine.canTransition(currentState, targetState),
+    ) ?? null
+  );
+}
+
 export class AdminMotoboyOperationsService {
   static async listDeliveries(filters: {
     status?: string;
@@ -26,57 +46,58 @@ export class AdminMotoboyOperationsService {
     return (data as AdminMotoboyDelivery[]) || [];
   }
 
-  static async listStatsRows(): Promise<Array<{ status: string; created_at: string; driver_profile_id: string | null }>> {
+  static async listStatsRows(): Promise<
+    Array<{ status: string; created_at: string; driver_profile_id: string | null }>
+  > {
     return MobilityService.listMotoboyStatsRows();
   }
 
+  /**
+   * Intervencao administrativa preservando o motor operacional.
+   *
+   * O admin nao falsifica mais toda intervencao como
+   * `cancelled_by_passenger`. O estado de destino e derivado das transicoes
+   * realmente permitidas e a mutacao passa pelo mesmo owner atomico das
+   * operacoes normais, incluindo auditoria e efeitos pos-transicao.
+   */
   static async cancelOperational(rideId: string, reason: string): Promise<boolean> {
-    await MobilityService.updateRide(rideId, {
-        status: "cancelled_by_passenger",
-        updated_at: new Date().toISOString(),
-    });
+    const ride = (await getRideById(rideId)) as { status?: string } | null;
+    if (!ride?.status) {
+      throw new Error("Entrega nao encontrada");
+    }
 
-    await this.logRideStateChange({
+    const currentState = ride.status as RideState;
+    const targetState = resolveAdminCancellationTarget(currentState);
+    if (!targetState) {
+      throw new Error(
+        `Entrega nao pode ser encerrada por cancelamento operacional no estado ${currentState}`,
+      );
+    }
+
+    const result = await RideOperationalService.transitionTo(
       rideId,
-      fromState: null,
-      toState: "cancelled_by_passenger",
-      changedBy: "admin-override",
-      reason: `Admin override: ${reason || "Cancelamento operacional"}`,
-    });
+      targetState,
+      "admin-override",
+      `Admin override: ${reason || "Cancelamento operacional"}`,
+    );
+
+    if (!result.success) {
+      throw new Error(result.error || "Cancelamento operacional nao aplicado");
+    }
 
     return true;
   }
 
+  /**
+   * Redispatch ainda possui writer direto e sera migrado para o command
+   * atomico de dispatch. Mantido funcional ate o cutover para nao amputar a
+   * capacidade administrativa existente.
+   */
   static async redispatch(rideId: string): Promise<void> {
     await MobilityService.updateRide(rideId, {
-      status: "searching_driver",
+      status: RIDE_STATE.SEARCHING_DRIVER,
       driver_profile_id: null,
       updated_at: new Date().toISOString(),
     });
-
-    await this.logRideStateChange({
-      rideId,
-      fromState: null,
-      toState: "searching_driver",
-      changedBy: "admin-redispatch",
-      reason: "Reencaminhamento manual pelo admin",
-    });
-  }
-
-  private static async logRideStateChange(input: {
-    rideId: string;
-    fromState: string | null;
-    toState: string;
-    changedBy: string;
-    reason: string;
-  }): Promise<void> {
-    await mobilityAuditService.logRideStateChange({
-      rideId: input.rideId,
-      fromState: input.fromState,
-      toState: input.toState,
-      changedBy: input.changedBy,
-      reason: input.reason,
-    });
   }
 }
-
