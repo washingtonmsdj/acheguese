@@ -24,6 +24,19 @@ Estado técnico anterior a este checkpoint documental: `d3490f45630f3d02117d4abe
 
 **Próximo gate:** continuar a certificação de Mobilidade pela autoridade real: validar os casos positivos/negativos do broker v20 e dos commands de disponibilidade/dispatch, depois E2E operacional e smoke responsivo no mesmo SHA. Não reintroduzir wrappers em `src/modules`, writers diretos no browser ou tabelas paralelas para acelerar o gate.
 
+## Checkpoint 2026-09-09 — Mobilidade G15: dispatch audit somente atômico
+
+- [x] ações browser/broker obsoletas `logDispatchAttempt` e `updateLatestDispatchAttempt` removidas de `mobility-rpc`, `MobilityRpcService` e `MobilityAuditService`;
+- [x] helpers genéricos `canWriteDispatchAudit` e `requireDispatchWriteAccess` removidos do broker;
+- [x] migration canônica `20260909180639_retire_legacy_mobility_dispatch_audit_rpcs_g15.sql` aplicada no Supabase e versionada em Git;
+- [x] `can_write_ride_dispatch_audit`, `log_ride_dispatch_attempt` e `update_latest_ride_dispatch_attempt` removidas do banco após prova de zero dependentes;
+- [x] `ride_dispatch_audit` continua preservado e é escrito pelos commands server-owned atômicos de dispatch;
+- [x] `mobility-rpc` remoto: **v21 ACTIVE**, `verify_jwt=true`, source remoto idêntico ao arquivo da `main`;
+- [x] advisors de segurança não reportam os helpers aposentados;
+- [x] ratchet de segurança atualizado para impedir retorno do caminho pré-atômico.
+
+**Próximo gate:** revisar as autorizações genéricas restantes do broker por ação concreta, começando por resolução de entrega falha e liberação de disponibilidade. Preservar somente atores com necessidade operacional real; não criar nova authority paralela.
+
 ## Regra máxima — projeto primeiro, documentação depois
 
 Esta regra é obrigatória para qualquer IA/agente que continuar o Achegue-se:
