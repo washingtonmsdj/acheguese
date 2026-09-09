@@ -7,7 +7,6 @@ import type { ReportSeverity, ReportType } from "@/core/mobility/services/RideRe
 import { toast } from "sonner";
 import { getUserRides, getRideById, getPassengerRating } from "@/core/mobility/services/mobility.queries";
 import type { RideRequest } from "@/core/mobility/types/types";
-import { acceptRide, startRide, completeRide, cancelRide } from "@/core/mobility/services/mobility.mutations";
 import { RideOperationalService } from "@/core/mobility/core/RideOperationalService";
 import { RideDispatchService } from "@/core/mobility/core/RideDispatchService";
 import { logger } from "@/shared/utils/logger";
