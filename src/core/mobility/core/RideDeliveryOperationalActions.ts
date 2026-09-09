@@ -102,34 +102,8 @@ export async function createDeliveryOperation(
     const ride = { id: creation.ride_id };
     logger.info("RideOperationalService.createDelivery - success", { rideId: ride.id });
 
-    await OperationalVerificationService.resolveDeliveryPINRequirement({
-      senderProfileId: input.passengerProfileId,
-      operationId: input.sourceId,
-    }).then(async (pinRequirement) => {
-      if (!pinRequirement.isRequired || !pinRequirement.requiredBy) return;
-
-      const verificationResult = await OperationalVerificationService.createVerification({
-        rideId: ride.id,
-        verificationType: "pin",
-        isRequired: true,
-        requiredBy: pinRequirement.requiredBy,
-      });
-
-      if (verificationResult.success) {
-        logger.info("RideOperationalService.createDelivery - PIN verification created", {
-          rideId: ride.id,
-          requiredBy: pinRequirement.requiredBy,
-          reason: pinRequirement.reason,
-        });
-        return;
-      }
-
-      logger.error(
-        "RideOperationalService.createDelivery - Failed to create PIN verification",
-        new Error(verificationResult.error || "Unknown error"),
-        { rideId: ride.id },
-      );
-    });
+    // A exigencia de PIN e criada de forma atomica no backend com a entrega.
+    // Nenhuma segunda escrita browser-side pode falhar aberta.
 
     await transitionTo(ride.id, RIDE_STATE.SEARCHING_DRIVER, "system");
     return { success: true, rideId: ride.id, newState: RIDE_STATE.SEARCHING_DRIVER };
@@ -224,7 +198,6 @@ export async function confirmDeliveryOperation(
       const verifyResult = await OperationalVerificationService.verifyPIN({
         rideId,
         pin,
-        verifiedBy: driverProfileId,
       });
 
       if (!verifyResult.success || !verifyResult.data?.verified) {
