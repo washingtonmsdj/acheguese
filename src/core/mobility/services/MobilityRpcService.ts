@@ -6,11 +6,17 @@ import type {
 } from "./MobilityAuditService";
 import type { DispatchStrategy } from "../types/dispatch.types";
 import type {
+  CreateDeliveryInput,
+  CreateRideInput,
+} from "../core/RideOperationalTypes";
+import type {
   FailedDeliveryMetadata,
   ResolutionStatus,
 } from "../types/FailedDeliveryMetadata";
 
 type MobilityRpcAction =
+  | "createRide"
+  | "createDelivery"
   | "acceptRide"
   | "adminRedispatch"
   | "confirmPassengerCompletion"
@@ -50,6 +56,65 @@ const FUNCTION_NAME = "mobility-rpc";
 const SERVICE_NAME = "MobilityRpcService";
 
 export class MobilityRpcService {
+  static async createRide(input: CreateRideInput): Promise<{
+    success: boolean;
+    ride_id?: string;
+    status?: string;
+    reason?: string;
+  }> {
+    return this.invoke("createRide", {
+      passengerProfileId: input.passengerProfileId,
+      pickupAddressId: input.pickupAddressId,
+      dropoffAddressId: input.dropoffAddressId,
+      pickupLocationId: input.pickupLocationId,
+      dropoffLocationId: input.dropoffLocationId,
+      origin: input.origin ?? null,
+      destination: input.destination ?? null,
+      originLat: input.originLat,
+      originLng: input.originLng,
+      destinationLat: input.destinationLat,
+      destinationLng: input.destinationLng,
+      suggestedPrice: input.suggestedPrice ?? null,
+      availableSeats: input.availableSeats ?? 1,
+      observation: input.observation ?? null,
+      paymentMethod: input.paymentMethod ?? null,
+      departureTime: input.departureTime ?? null,
+    });
+  }
+
+  static async createDelivery(input: CreateDeliveryInput): Promise<{
+    success: boolean;
+    ride_id?: string;
+    status?: string;
+    reason?: string;
+  }> {
+    return this.invoke("createDelivery", {
+      passengerProfileId: input.passengerProfileId,
+      pickupAddressId: input.pickupAddressId,
+      dropoffAddressId: input.dropoffAddressId,
+      pickupLocationId: input.pickupLocationId,
+      dropoffLocationId: input.dropoffLocationId,
+      origin: input.origin ?? null,
+      destination: input.destination ?? null,
+      originLat: input.originLat,
+      originLng: input.originLng,
+      destinationLat: input.destinationLat,
+      destinationLng: input.destinationLng,
+      suggestedPrice: input.suggestedPrice ?? null,
+      observation: input.observation ?? null,
+      paymentMethod: input.paymentMethod ?? null,
+      departureTime: input.departureTime ?? null,
+      sourceType: input.sourceType,
+      sourceId: input.sourceId ?? null,
+      authorizationSourceId: input.authorizationSourceId ?? input.sourceId ?? null,
+      recipientName: input.recipientName,
+      recipientPhone: input.recipientPhone ?? null,
+      deliveryNotes: input.deliveryNotes ?? null,
+      packageDescription: input.packageDescription ?? null,
+      packageSize: input.packageSize ?? "small",
+    });
+  }
+
   private static async invoke<T>(
     action: MobilityRpcAction,
     params: Record<string, unknown> = {},
