@@ -57,8 +57,6 @@ const db = supabase as unknown as MobilityImplDbClient;
 type DriverDataRecord = Tables<"driver_data">;
 type RideRequestRecord = Tables<"ride_requests">;
 type DriverCompleteProfileRecord = Tables<"driver_complete_profile">;
-type MobilityConversationRecord = Record<string, unknown>;
-type MobilityMessageRecord = Record<string, unknown>;
 
 // --- Static read/admin API ---------------------------------------------------
 
@@ -539,75 +537,7 @@ export class MobilityService {
     }
   }
 
-  /**
-   * Busca conversas de mobilidade do perfil
-   * Usado em: MobilityChatList
-   */
-  static async getMobilityConversations(profileId: string): Promise<MobilityConversationRecord[]> {
-    try {
-      const { data, error } = await db
-        .from("mobility_conversations")
-        .select(`
-          id,
-          ride_id,
-          passenger_profile_id,
-          driver_profile_id,
-          created_at,
-          updated_at
-        `)
-        .or(`passenger_profile_id.eq.${profileId},driver_profile_id.eq.${profileId}`)
-        .order("updated_at", { ascending: false });
 
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      logger.error("MobilityService.getMobilityConversations", { profileId, error });
-      return [];
-    }
-  }
-
-  /**
-   * Busca última mensagem de uma conversa
-   * Usado em: MobilityChatList
-   */
-  static async getLastMessage(conversationId: string): Promise<Pick<MobilityMessageRecord, "message"> | null> {
-    try {
-      const { data, error } = await db
-        .from<Pick<MobilityMessageRecord, "message">>("mobility_messages")
-        .select("message")
-        .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      logger.error("MobilityService.getLastMessage", { conversationId, error });
-      return null;
-    }
-  }
-
-  /**
-   * Conta mensagens não lidas de uma conversa
-   * Usado em: MobilityChatList
-   */
-  static async getUnreadCount(conversationId: string, profileId: string): Promise<number> {
-    try {
-      const { count, error } = await db
-        .from("mobility_messages")
-        .select("*", { count: "exact", head: true })
-        .eq("conversation_id", conversationId)
-        .eq("read", false)
-        .neq("sender_profile_id", profileId);
-
-      if (error) throw error;
-      return count || 0;
-    } catch (error) {
-      logger.error("MobilityService.getUnreadCount", { conversationId, profileId, error });
-      return 0;
-    }
-  }
 }
 
 // --- Instance (escrita / runtime) --------------------------------------------
