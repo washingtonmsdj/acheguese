@@ -8,6 +8,5 @@ export { RideService, rideService } from './RideService.impl';
 export type {
   RideRequest,
   CreateRideData,
-  UpdateRideData,
 } from './RideService.impl';
 
