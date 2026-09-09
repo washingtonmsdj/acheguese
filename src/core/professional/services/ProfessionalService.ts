@@ -86,8 +86,7 @@ export const ProfessionalFacade = {
 export class ProfessionalService {
 
   /**
-   * BUSCAR SERVICOS POR PERFIL
-   * SSOT: metodo para buscar todos os servicos de um perfil especifico.
+   * Resolver professional_data.id pelo profile_id via owner canonico.
    */
   static async getProfessionalDataIdByProfileId(
     profileId: string,
@@ -95,6 +94,10 @@ export class ProfessionalService {
     return professionalQueries.getProfessionalDataIdByProfileId(profileId);
   }
 
+  /**
+   * BUSCAR SERVICOS POR PERFIL
+   * SSOT: metodo para buscar todos os servicos de um perfil especifico.
+   */
   static async getServicesByProfile(profileId: string): Promise<Professional[]> {
     return professionalQueries.getServicesByProfile(profileId);
   }
