@@ -28,6 +28,7 @@ export const mobilityRoutes = {
   passageiro: {
     home: "/mobilidade/passageiro",
     corridas: "/mobilidade/passageiro/corridas",
+    buscandoPattern: "/mobilidade/buscando/:rideId",
     buscando: (rideId: string) => `/mobilidade/buscando/${rideId}`,
   },
 } as const;
