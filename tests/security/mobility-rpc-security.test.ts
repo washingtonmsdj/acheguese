@@ -125,5 +125,12 @@ describe("mobility rpc broker security", () => {
     expect(terminalTransition).toContain("UPDATE public.ride_offers offer");
     expect(terminalTransition).toContain("UPDATE public.ride_dispatch_audit dispatch");
     expect(terminalTransition).toContain("UPDATE public.driver_availability availability");
+
+    const releaseRetirement = readProjectFile(
+      "supabase/migrations/20260909191733_retire_terminal_driver_release_helper_g19.sql",
+    );
+    expect(releaseRetirement).toContain(
+      "DROP FUNCTION public.release_driver_availability_for_ride(uuid, uuid)",
+    );
   });
 });
