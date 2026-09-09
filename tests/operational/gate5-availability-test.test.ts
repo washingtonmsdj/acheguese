@@ -31,10 +31,15 @@ function describeGate5(name: string, suite: Parameters<typeof describeOperationa
 const TEST_DRIVER_ID = 'b2b405cb-bf9c-405b-ad68-759de702dfb0';
 const TEST_DRIVER_2_ID = 'e114b313-3d76-452b-8dca-3bb8079ca59e';
 const TEST_DRIVER_3_ID = 'a1f45031-5fee-4f16-85c0-8d73356fc830';
+const TEST_PASSENGER_ID = '6fb6aa61-7b40-4deb-867a-72688d1bccc1';
+const TEST_OTHER_PASSENGER_ID = 'd2028c2e-4ed8-4898-bd0a-030a0743c283';
+const ORIGINAL_TEST_RIDE_PASSENGER_ID = '2357467c-4f5e-4285-bf6b-39628c6a44ad';
+const TEST_PICKUP_LOCATION_ID = '54261f4a-03ba-47f8-8733-c031163e7535';
 const TEST_RIDE_ID = '00000000-0000-0000-0000-000000000101';
 const TEST_RIDE_2_ID = '00000000-0000-0000-0000-000000000102';
 
-const TEST_LOCATION = { lat: -23.5505, lng: -46.6333 }; // São Paulo
+const TEST_LOCATION = { lat: -23.5505, lng: -46.6333 };
+const DISPATCH_LOCATION = { lat: -12.9500, lng: -38.4700 }; // Salvador
 
 async function setupTestProfiles() {
   // Perfis existem no ambiente remoto; este setup garante capacidades operacionais
@@ -69,7 +74,11 @@ async function cleanupTestData() {
     .from('ride_requests')
     .update({
       status: 'pending',
+      passenger_profile_id: ORIGINAL_TEST_RIDE_PASSENGER_ID,
       driver_profile_id: null,
+      origin_lat: null,
+      origin_lng: null,
+      ride_mode: 'ride',
       updated_at: new Date().toISOString(),
     })
     .in('id', [TEST_RIDE_ID, TEST_RIDE_2_ID]);
@@ -107,6 +116,53 @@ async function markDriverBusyFixture(
       current_lng: TEST_LOCATION.lng,
       last_location_update: now,
       last_seen_at: now,
+      updated_at: now,
+    }, { onConflict: 'profile_id' });
+
+  if (error) throw error;
+}
+
+async function prepareDriverDiscoveryRide() {
+  const { error } = await supabaseAdmin
+    .from('ride_requests')
+    .update({
+      status: 'pending',
+      passenger_profile_id: TEST_PASSENGER_ID,
+      driver_profile_id: null,
+      pickup_location_id: TEST_PICKUP_LOCATION_ID,
+      origin_lat: DISPATCH_LOCATION.lat,
+      origin_lng: DISPATCH_LOCATION.lng,
+      ride_mode: 'ride',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', TEST_RIDE_ID);
+
+  if (error) throw error;
+}
+
+async function markDriverAvailableFixture(
+  driverProfileId: string,
+  options: {
+    location?: { lat: number; lng: number };
+    lastSeenAt?: string;
+  } = {},
+) {
+  const now = new Date().toISOString();
+  const location = options.location ?? DISPATCH_LOCATION;
+  const lastSeenAt = options.lastSeenAt ?? now;
+  const { error } = await supabaseAdmin
+    .from('driver_availability')
+    .upsert({
+      profile_id: driverProfileId,
+      is_online: true,
+      is_available: true,
+      active_ride_id: null,
+      busy_since: null,
+      active_ride_mode: null,
+      current_lat: location.lat,
+      current_lng: location.lng,
+      last_location_update: lastSeenAt,
+      last_seen_at: lastSeenAt,
       updated_at: now,
     }, { onConflict: 'profile_id' });
 
@@ -252,102 +308,109 @@ describeGate5('Gate 5 - Suite 1: Transições de Estado', () => {
 // ============================================
 
 describeGate5('Gate 5 - Suite 2: Integração com Dispatch', () => {
-  it('2.1. findAvailableDrivers retorna apenas disponíveis', async () => {
-    // Driver 1: available
-    await DriverAvailabilityService.goOnline(TEST_DRIVER_ID);
-    await DriverAvailabilityService.setAvailable(TEST_DRIVER_ID, TEST_LOCATION);
+  it('2.1. descoberta por rideId retorna somente motorista elegível do município', async () => {
+    await prepareDriverDiscoveryRide();
+    await markDriverAvailableFixture(TEST_DRIVER_2_ID);
 
-    // Drivers externos ao ator autenticado entram por fixture administrativa.
-    const { error: fixtureError } = await supabaseAdmin.from('driver_availability').upsert([
-      {
+    // Driver A fica online e próximo, mas não possui território canônico.
+    await markDriverAvailableFixture(TEST_DRIVER_ID);
+
+    await authenticateAsProfile(TEST_PASSENGER_ID);
+
+    const available = await DriverAvailabilityService.findAvailableDriversForRide(
+      TEST_RIDE_ID,
+      10,
+    );
+
+    expect(available.map((driver) => driver.profileId)).toEqual([TEST_DRIVER_2_ID]);
+  });
+
+  it('2.2. terceiro sem vínculo com a corrida não descobre motoristas', async () => {
+    await prepareDriverDiscoveryRide();
+    await markDriverAvailableFixture(TEST_DRIVER_2_ID);
+    await authenticateAsProfile(TEST_OTHER_PASSENGER_ID);
+
+    const available = await DriverAvailabilityService.findAvailableDriversForRide(
+      TEST_RIDE_ID,
+      10,
+    );
+
+    expect(available).toEqual([]);
+  });
+
+  it('2.3. descoberta ignora motorista offline', async () => {
+    await prepareDriverDiscoveryRide();
+
+    const now = new Date().toISOString();
+    const { error } = await supabaseAdmin
+      .from('driver_availability')
+      .upsert({
         profile_id: TEST_DRIVER_2_ID,
-        is_online: true,
-        is_available: false,
-        active_ride_id: TEST_RIDE_ID,
-        busy_since: new Date().toISOString(),
-        active_ride_mode: 'ride',
-        current_lat: TEST_LOCATION.lat,
-        current_lng: TEST_LOCATION.lng,
-        last_seen_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        profile_id: TEST_DRIVER_3_ID,
         is_online: false,
         is_available: false,
         active_ride_id: null,
-        busy_since: null,
-        active_ride_mode: null,
-        current_lat: TEST_LOCATION.lat,
-        current_lng: TEST_LOCATION.lng,
-        last_seen_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    ], { onConflict: 'profile_id' });
-    if (fixtureError) throw fixtureError;
+        current_lat: DISPATCH_LOCATION.lat,
+        current_lng: DISPATCH_LOCATION.lng,
+        last_location_update: now,
+        last_seen_at: now,
+        updated_at: now,
+      }, { onConflict: 'profile_id' });
+    if (error) throw error;
 
-    const available = await DriverAvailabilityService.findAvailableDrivers(
-      TEST_LOCATION.lat,
-      TEST_LOCATION.lng,
-      10 // 10km radius
+    await authenticateAsProfile(TEST_PASSENGER_ID);
+
+    const available = await DriverAvailabilityService.findAvailableDriversForRide(
+      TEST_RIDE_ID,
+      10,
     );
 
-    expect(available.length).toBe(1);
-    expect(available[0].profileId).toBe(TEST_DRIVER_ID);
+    expect(available.find((driver) => driver.profileId === TEST_DRIVER_2_ID))
+      .toBeUndefined();
   });
 
-  it('2.2. findAvailableDrivers ignora offline', async () => {
-    await DriverAvailabilityService.goOnline(TEST_DRIVER_ID);
-    await DriverAvailabilityService.goOffline(TEST_DRIVER_ID);
+  it('2.4. descoberta ignora motorista busy', async () => {
+    await prepareDriverDiscoveryRide();
+    await markDriverBusyFixture(TEST_RIDE_2_ID, 'ride', TEST_DRIVER_2_ID);
+    await authenticateAsProfile(TEST_PASSENGER_ID);
 
-    const available = await DriverAvailabilityService.findAvailableDrivers(
-      TEST_LOCATION.lat,
-      TEST_LOCATION.lng,
-      10
+    const available = await DriverAvailabilityService.findAvailableDriversForRide(
+      TEST_RIDE_ID,
+      10,
     );
 
-    expect(available.find(d => d.profileId === TEST_DRIVER_ID)).toBeUndefined();
+    expect(available.find((driver) => driver.profileId === TEST_DRIVER_2_ID))
+      .toBeUndefined();
   });
 
-  it('2.3. findAvailableDrivers ignora busy', async () => {
-    await DriverAvailabilityService.goOnline(TEST_DRIVER_ID);
-    await DriverAvailabilityService.setAvailable(TEST_DRIVER_ID, TEST_LOCATION);
-    await markDriverBusyFixture(TEST_RIDE_ID, 'ride', TEST_DRIVER_ID);
+  it('2.5. descoberta ignora heartbeat stale', async () => {
+    await prepareDriverDiscoveryRide();
+    const staleAt = new Date(Date.now() - 6 * 60 * 1000).toISOString();
+    await markDriverAvailableFixture(TEST_DRIVER_2_ID, { lastSeenAt: staleAt });
+    await authenticateAsProfile(TEST_PASSENGER_ID);
 
-    const available = await DriverAvailabilityService.findAvailableDrivers(
-      TEST_LOCATION.lat,
-      TEST_LOCATION.lng,
-      10
+    const available = await DriverAvailabilityService.findAvailableDriversForRide(
+      TEST_RIDE_ID,
+      10,
     );
 
-    expect(available.find(d => d.profileId === TEST_DRIVER_ID)).toBeUndefined();
+    expect(available.find((driver) => driver.profileId === TEST_DRIVER_2_ID))
+      .toBeUndefined();
   });
 
-  it('2.4. findAvailableDrivers ignora sem coordenadas', async () => {
-    await DriverAvailabilityService.goOnline(TEST_DRIVER_ID);
-    // Não chamar setAvailable (sem coordenadas)
+  it('2.6. descoberta respeita raio da corrida', async () => {
+    await prepareDriverDiscoveryRide();
+    await markDriverAvailableFixture(TEST_DRIVER_2_ID, {
+      location: { lat: -13.5000, lng: -39.0000 },
+    });
+    await authenticateAsProfile(TEST_PASSENGER_ID);
 
-    const available = await DriverAvailabilityService.findAvailableDrivers(
-      TEST_LOCATION.lat,
-      TEST_LOCATION.lng,
-      10
+    const available = await DriverAvailabilityService.findAvailableDriversForRide(
+      TEST_RIDE_ID,
+      10,
     );
 
-    expect(available.find(d => d.profileId === TEST_DRIVER_ID)).toBeUndefined();
-  });
-
-  it('2.5. findAvailableDrivers ignora active_ride_id não nulo', async () => {
-    await DriverAvailabilityService.goOnline(TEST_DRIVER_ID);
-    await DriverAvailabilityService.setAvailable(TEST_DRIVER_ID, TEST_LOCATION);
-    await markDriverBusyFixture(TEST_RIDE_ID, 'ride', TEST_DRIVER_ID);
-
-    const available = await DriverAvailabilityService.findAvailableDrivers(
-      TEST_LOCATION.lat,
-      TEST_LOCATION.lng,
-      10
-    );
-
-    expect(available.find(d => d.profileId === TEST_DRIVER_ID)).toBeUndefined();
+    expect(available.find((driver) => driver.profileId === TEST_DRIVER_2_ID))
+      .toBeUndefined();
   });
 });
 
