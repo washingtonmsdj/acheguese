@@ -55,12 +55,6 @@ type DriverAvailabilityRpcClient = {
   }>;
 };
 
-type ApplicationLogInsertRow = {
-  level: "warn" | "error" | "fatal";
-  message: string;
-  context: Record<string, unknown>;
-};
-
 const driverAvailabilityDb = supabase as unknown as DriverAvailabilityRpcClient;
 
 // ============================================
@@ -134,45 +128,6 @@ export class DriverAvailabilityService {
     };
   }
 
-  private static isMissingColumnError(error: unknown): boolean {
-    if (!error || typeof error !== 'object') return false;
-    const typed = error as { code?: string; message?: string };
-    return typed.code === '42703' || typed.message?.toLowerCase().includes('column') === true;
-  }
-
-  private static isDuplicateKeyError(error: unknown): boolean {
-    if (!error || typeof error !== 'object') return false;
-    const typed = error as { code?: string; message?: string };
-    return typed.code === '23505' || typed.message?.toLowerCase().includes('duplicate key') === true;
-  }
-
-  private static async recordOperationalIncident(
-    level: 'warn' | 'error' | 'fatal',
-    message: string,
-    context: Record<string, unknown>,
-  ): Promise<void> {
-    try {
-      const { error } = await driverAvailabilityDb
-        .from<ApplicationLogInsertRow>('application_logs')
-        .insert({
-          level,
-          message,
-          context: {
-            scope: 'mobility.driver_availability',
-            requires_manual_review: true,
-            ...context,
-          },
-        });
-
-      if (error) throw error;
-    } catch (error) {
-      logger.error('DriverAvailabilityService.recordOperationalIncident', error as Error, {
-        message,
-        context,
-      });
-    }
-  }
-
   /**
    * Garante bootstrap mínimo de driver_data para que o motorista possa
    * participar de dispatch (ride/motoboy) sem depender de migração manual.
@@ -180,16 +135,7 @@ export class DriverAvailabilityService {
   private static async ensureDriverDataRow(
     driverProfileId: string
   ): Promise<void> {
-    try {
-      await MobilityService.ensureDriverDataRow(driverProfileId);
-    } catch (error) {
-      if (this.isMissingColumnError(error)) {
-        await MobilityService.ensureDriverDataRow(driverProfileId);
-        return;
-      }
-      if (this.isDuplicateKeyError(error)) return;
-      throw error;
-    }
+    await MobilityService.ensureDriverDataRow(driverProfileId);
   }
 
   private static async getOperationalBlockReason(
@@ -223,7 +169,6 @@ export class DriverAvailabilityService {
     rideMode?: 'ride' | 'motoboy'
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      // Bootstrap de capacidades operacionais (SSOT)
       await this.ensureDriverDataRow(driverProfileId);
 
       const blockReason = await this.getOperationalBlockReason(driverProfileId, rideMode);
@@ -231,36 +176,22 @@ export class DriverAvailabilityService {
         return { success: false, error: blockReason };
       }
 
-      // GATE 5: Bootstrap - upsert para criar se não existir
-      const { error } = await supabase
-        .from('driver_availability')
-        .upsert({
-          profile_id: driverProfileId,
-          is_online: true,
-          is_available: false,
-          active_ride_id: null,
-          busy_since: null,
-          active_ride_mode: null,
-          last_seen_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'profile_id',
-        });
+      const result = await MobilityRpcService.updateDriverAvailability({
+        driverProfileId,
+        availabilityAction: 'go_online',
+        rideMode,
+      });
 
-      if (error) throw error;
+      if (result.success !== true) {
+        return {
+          success: false,
+          error: result.error || result.reason || 'Could not set driver online',
+        };
+      }
 
-      logger.info('DriverAvailabilityService.goOnline', { driverProfileId });
-
+      logger.info('DriverAvailabilityService.goOnline', { driverProfileId, rideMode });
       return { success: true };
     } catch (error) {
-      const errorDetails = this.getErrorDetails(error);
-      // Log detalhado do erro
-      logger.error('DriverAvailabilityService.goOnline detailed error', {
-        driverProfileId,
-        error: error,
-        ...errorDetails,
-      });
-      
       logger.error('DriverAvailabilityService.goOnline', error as Error, { driverProfileId });
       return { success: false, error: (error as Error).message };
     }
@@ -276,33 +207,19 @@ export class DriverAvailabilityService {
     driverProfileId: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      // GATE 5: Transação atômica - só succeed se active_ride_id IS NULL
-      const { data, error } = await supabase
-        .from('driver_availability')
-        .update({
-          is_online: false,
-          is_available: false,
-          active_ride_id: null,
-          busy_since: null,
-          active_ride_mode: null,
-          last_seen_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('profile_id', driverProfileId)
-        .is('active_ride_id', null) // Condição atômica
-        .select();
+      const result = await MobilityRpcService.updateDriverAvailability({
+        driverProfileId,
+        availabilityAction: 'go_offline',
+      });
 
-      if (error) throw error;
-
-      if (!data || data.length === 0) {
+      if (result.success !== true) {
         return {
           success: false,
-          error: 'Cannot go offline with active ride',
+          error: result.error || result.reason || 'Could not set driver offline',
         };
       }
 
       logger.info('DriverAvailabilityService.goOffline', { driverProfileId });
-
       return { success: true };
     } catch (error) {
       logger.error('DriverAvailabilityService.goOffline', error as Error, { driverProfileId });
@@ -322,7 +239,15 @@ export class DriverAvailabilityService {
     rideMode?: 'ride' | 'motoboy'
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      if (!location || !location.lat || !location.lng) {
+      if (
+        !location
+        || !Number.isFinite(location.lat)
+        || !Number.isFinite(location.lng)
+        || location.lat < -90
+        || location.lat > 90
+        || location.lng < -180
+        || location.lng > 180
+      ) {
         return {
           success: false,
           error: 'Location is required to become available',
@@ -334,34 +259,22 @@ export class DriverAvailabilityService {
         return { success: false, error: blockReason };
       }
 
-      // GATE 5: Transação atômica - só succeed se is_online = true AND is_available = false AND active_ride_id IS NULL
-      const { data, error } = await supabase
-        .from('driver_availability')
-        .update({
-          is_available: true,
-          current_lat: location.lat,
-          current_lng: location.lng,
-          last_location_update: new Date().toISOString(),
-          last_seen_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('profile_id', driverProfileId)
-        .eq('is_online', true) // Condição atômica
-        .eq('is_available', false) // Condição atômica
-        .is('active_ride_id', null) // Condição atômica
-        .select();
+      const result = await MobilityRpcService.updateDriverAvailability({
+        driverProfileId,
+        availabilityAction: 'set_available',
+        rideMode,
+        lat: location.lat,
+        lng: location.lng,
+      });
 
-      if (error) throw error;
-
-      if (!data || data.length === 0) {
+      if (result.success !== true) {
         return {
           success: false,
-          error: 'Driver must be online and not busy to become available',
+          error: result.error || result.reason || 'Could not set driver available',
         };
       }
 
-      logger.info('DriverAvailabilityService.setAvailable', { driverProfileId });
-
+      logger.info('DriverAvailabilityService.setAvailable', { driverProfileId, rideMode });
       return { success: true };
     } catch (error) {
       logger.error('DriverAvailabilityService.setAvailable', error as Error, { driverProfileId });
@@ -369,65 +282,26 @@ export class DriverAvailabilityService {
     }
   }
 
-  /**
-   * Motorista fica ocupado (corrida aceita)
-   * Transição: online_available ? busy
-   * 
-   * Exige: is_available = true
-   * Registra: active_ride_id, busy_since, active_ride_mode
-   */
-  static async setBusy(
+  static async pauseAvailable(
     driverProfileId: string,
-    rideId: string,
-    rideMode: 'ride' | 'motoboy'
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const blockReason = await this.getOperationalBlockReason(driverProfileId, rideMode);
-      if (blockReason) {
-        return { success: false, error: blockReason };
-      }
+      const result = await MobilityRpcService.updateDriverAvailability({
+        driverProfileId,
+        availabilityAction: 'pause_available',
+      });
 
-      // GATE 5: Transação atômica - só succeed se is_online = true AND is_available = true AND active_ride_id IS NULL
-      const { data, error } = await supabase
-        .from('driver_availability')
-        .update({
-          is_available: false,
-          active_ride_id: rideId,
-          busy_since: new Date().toISOString(),
-          active_ride_mode: rideMode,
-          last_seen_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('profile_id', driverProfileId)
-        .eq('is_online', true) // Condição atômica
-        .eq('is_available', true) // Condição atômica
-        .is('active_ride_id', null) // Condição atômica
-        .select();
-
-      if (error) throw error;
-
-      if (!data || data.length === 0) {
+      if (result.success !== true) {
         return {
           success: false,
-          error: 'Driver must be online and available to become busy',
+          error: result.error || result.reason || 'Could not pause driver availability',
         };
       }
 
-      logger.info('DriverAvailabilityService.setBusy', { driverProfileId, rideId, rideMode });
-
+      logger.info('DriverAvailabilityService.pauseAvailable', { driverProfileId });
       return { success: true };
     } catch (error) {
-      const errorDetails = this.getErrorDetails(error);
-      // Log detalhado do erro
-      logger.error('DriverAvailabilityService.setBusy detailed error', {
-        driverProfileId,
-        rideId,
-        rideMode,
-        error: error,
-        ...errorDetails,
-      });
-      
-      logger.error('DriverAvailabilityService.setBusy', error as Error, { driverProfileId, rideId });
+      logger.error('DriverAvailabilityService.pauseAvailable', error as Error, { driverProfileId });
       return { success: false, error: (error as Error).message };
     }
   }
@@ -521,12 +395,17 @@ export class DriverAvailabilityService {
     driverProfileId: string
   ): Promise<void> {
     try {
-      await supabase
-        .from('driver_availability')
-        .update({
-          last_seen_at: new Date().toISOString(),
-        })
-        .eq('profile_id', driverProfileId);
+      const result = await MobilityRpcService.updateDriverAvailability({
+        driverProfileId,
+        availabilityAction: 'heartbeat',
+      });
+
+      if (result.success !== true) {
+        logger.warn('DriverAvailabilityService.markLastSeen rejected', {
+          driverProfileId,
+          reason: result.error || result.reason,
+        });
+      }
     } catch (error) {
       logger.error('DriverAvailabilityService.markLastSeen', error as Error, { driverProfileId });
     }
@@ -542,106 +421,21 @@ export class DriverAvailabilityService {
     staleThresholdMinutes: number = AVAILABILITY_CONFIG.STALE_THRESHOLD_MINUTES
   ): Promise<StaleDriversResult> {
     try {
-      const now = Date.now();
-      const threshold = new Date(now - staleThresholdMinutes * 60 * 1000);
-
-      logger.debug('DriverAvailabilityService.markStaleDrivers debug', {
-        now: new Date(now).toISOString(),
-        threshold: threshold.toISOString(),
+      const result = await MobilityRpcService.reconcileStaleDriverAvailability(
         staleThresholdMinutes,
-      });
-
-      // Buscar motoristas stale
-      const { data: staleDrivers, error } = await supabase
-        .from('driver_availability')
-        .select('profile_id, is_available, active_ride_id, last_seen_at, is_online')
-        .eq('is_online', true)
-        .not('last_seen_at', 'is', null) // GATE 5: Garantir que last_seen_at não é NULL
-        .lt('last_seen_at', threshold.toISOString());
-
-      logger.debug('DriverAvailabilityService.markStaleDrivers query result', {
-        found: staleDrivers?.length || 0,
-        error: error?.message,
-        drivers: staleDrivers?.map(d => ({
-          profile_id: d.profile_id,
-          is_available: d.is_available,
-          active_ride_id: d.active_ride_id,
-          last_seen_at: d.last_seen_at,
-        })),
-      });
-
-      if (error) throw error;
-      if (!staleDrivers || staleDrivers.length === 0) {
-        return { markedOffline: 0, staleBusy: 0 };
-      }
-
-      let markedOffline = 0;
-      let staleBusy = 0;
-
-      for (const driver of staleDrivers) {
-        if (driver.is_available) {
-          // DISPONÍVEL: marcar offline
-          const { data } = await supabase
-            .from('driver_availability')
-            .update({
-              is_online: false,
-              is_available: false,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('profile_id', driver.profile_id)
-            .eq('is_available', true) // Condição atômica
-            .select();
-
-          if (data && data.length > 0) {
-            markedOffline++;
-            logger.debug('Driver marked offline by stale availability check', {
-              profileId: driver.profile_id,
-              lastSeen: driver.last_seen_at,
-            });
-            logger.warn('Driver marked offline due to stale', {
-              profileId: driver.profile_id,
-              lastSeen: driver.last_seen_at,
-            });
-          }
-        } else if (driver.active_ride_id) {
-          // BUSY: apenas registrar problema
-          staleBusy++;
-          logger.debug('Driver stale but busy', {
-            profileId: driver.profile_id,
-            rideId: driver.active_ride_id,
-            lastSeen: driver.last_seen_at,
-          });
-          logger.error('Driver is stale but has active ride', {
-            profileId: driver.profile_id,
-            rideId: driver.active_ride_id,
-            lastSeen: driver.last_seen_at,
-          });
-          await this.recordOperationalIncident(
-            'error',
-            'Driver stale with active ride requires manual operations review',
-            {
-              profileId: driver.profile_id,
-              rideId: driver.active_ride_id,
-              lastSeen: driver.last_seen_at,
-            },
-          );
-        }
-      }
-
-      logger.debug('DriverAvailabilityService.markStaleDrivers result', {
-        markedOffline,
-        staleBusy,
-      });
+      );
+      const markedOffline =
+        typeof result.markedOffline === 'number' ? result.markedOffline : 0;
+      const staleBusy =
+        typeof result.staleBusy === 'number' ? result.staleBusy : 0;
 
       logger.info('DriverAvailabilityService.markStaleDrivers', {
         markedOffline,
         staleBusy,
-        threshold: threshold.toISOString(),
+        staleThresholdMinutes,
       });
-
       return { markedOffline, staleBusy };
     } catch (error) {
-      logger.error('DriverAvailabilityService.markStaleDrivers error', error);
       logger.error('DriverAvailabilityService.markStaleDrivers', error as Error);
       return { markedOffline: 0, staleBusy: 0 };
     }
