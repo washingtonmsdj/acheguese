@@ -118,24 +118,17 @@ class SafetyEvidenceService {
       });
       uploadedPath = upload.path;
 
-      const { data, error } = await supabase
-        .from('safety_evidence')
-        .insert({
-          incident_id: input.incidentId,
-          evidence_type: input.evidenceType,
-          file_url: upload.reference,
-          file_name: input.file.name,
-          file_size: input.file.size,
-          mime_type: input.file.type,
-          uploaded_by: uploadedBy,
-          metadata: normalizeMetadataForStorage(input.metadata),
-        })
-        .select(
-          'id, incident_id, evidence_type, file_url, file_name, file_size, mime_type, uploaded_by, metadata, created_at',
-        )
-        .single();
+      const { data, error } = await supabase.rpc('register_safety_evidence', {
+        p_incident_id: input.incidentId,
+        p_evidence_type: input.evidenceType,
+        p_object_path: upload.path,
+        p_file_name: input.file.name,
+        p_metadata: normalizeMetadataForStorage(input.metadata),
+      });
 
-      if (error) throw error;
+      if (error || !data) {
+        throw error ?? new Error('Failed to register safety evidence');
+      }
 
       return { success: true, data: mapRow(data as SafetyEvidenceRow) };
     } catch (error) {
