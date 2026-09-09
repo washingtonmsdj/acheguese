@@ -30,15 +30,16 @@ Leia nesta ordem:
 - G34D2 migra o export LGPD para `public.service_areas`; `user-export-data` continua não implantada e uncertified, portanto não deve ser deployada antes do preflight;
 - G35A está reconciliado no runtime: `profile-rpc v14 ACTIVE` é byte-a-byte igual ao Git; novos RPCs Professional são service-role-only; probe create/update/deactivate PASS com rollback;
 - G35A2 reparou uma duplicata real de `professional_data` e agora vale `UNIQUE(profile_id)`; estado remoto: 4 Professionals / 4 Profiles / 4 stats / 0 duplicatas;
-- G36A prepara Profile self-service broker-owned: `OwnedProfileUpdatePayload` restrito, update/privacy/delete/switch sem DML direto, username com enforcement server-side, Mobilidade limpa suspensão expirada por comando específico e Admin usa `verified/verified_at` canônicos;
-- grants browser antigos de `professional_data/professional_stats` ficam temporariamente apenas por compatibilidade com o frontend production desatualizado e devem ser revogados no G35B após deploy novo comprovado;
+- G36A está reconciliado: `profile-rpc v15 ACTIVE` é byte-a-byte igual ao Git; Profile self-service update/delete/switch estão broker-owned, username tem enforcement/auditoria server-side e o probe transacional completo PASS com rollback;
+- grants browser antigos de `professional_data/professional_stats` e `profiles` ficam temporariamente apenas por compatibilidade com o frontend production desatualizado e devem ser revogados somente após deploy novo comprovado;
+- G36A2: os novos RPCs Profile são service-role-only e não aparecem no Advisor como SECURITY DEFINER executável por anon/authenticated;
 - **não** adicionar `ServiceAreasService` ao incremental baseline para esconder a violação;
 - Supabase canônico: `xhdowzacfujckjelqhtd`;
 - invariantes remotos de mobilidade continuam: 0 offers abertas, 0 dispatch pendente e 0 motorista preso em corrida terminal;
 - Vercel atual está bloqueando novos builds por limite do provider e GitHub jobs recentes nem iniciam steps; portanto build/E2E same-SHA continuam pendentes de execução real;
 - último deploy Vercel production READY localizado: `86c76fc8d48550fbbed783a359c32f6cdf6a435d`, muito atrás da `main`;
 - Mobilidade continua **launch-paused**: `PUBLIC_LAUNCH_SURFACES.mobility=false`;
-- próximo gate: aplicar/reconciliar G36A no Supabase e `profile-rpc`; depois G36B (create Business atômico) e G36C (admin/driver/ride writers), antes do cutover final dos grants de `profiles`;
+- próximo eixo imediato: G36B converter o create Business fragmentado em transação broker-owned; depois G36C (admin/driver/ride writers) e só então o cutover final de grants;
 - descoberta estrutural pendente: `ProfileService` principal ainda possui DML direto em `profiles`, enquanto multi-profile já usa broker; tratar em G36, sem criar uma terceira stack;
 - não restaurar DML direto, operator scripts obsoletos, wrappers concorrentes, dynamic-table novo ou authorities paralelas.
 

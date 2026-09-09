@@ -1139,6 +1139,35 @@ Próximo imediato:
 3. provar EXECUTE service-role-only, source equality e probes transacionais de owner/cross-owner/server-field/username/expiry;
 4. então abrir G36B para criação Business atômica via broker existente.
 
+### Checkpoint G36A2 — Profile self-service reconciliado no runtime (2026-09-09)
+
+Provas executadas no Supabase canônico:
+- migration `broker_owned_profile_self_service_g36` aplicada com sucesso;
+- `profile-rpc` atualizado para **v15 ACTIVE**, `verify_jwt=true`;
+- entrypoint remoto, `_shared/accountOperational.ts` e `_shared/security.ts` estão byte-a-byte iguais ao commit `8c12a2e7bdcda5f46e020a8cea9eb371abd0edeb`;
+- `profile_rpc_update_owned_profile` e `profile_rpc_clear_expired_suspension` são `SECURITY DEFINER` e têm EXECUTE direto `anon=false`, `authenticated=false`, `service_role=true`;
+- os triggers existentes de campos server-owned, histórico de username e avatar continuam ativos;
+- grants de INSERT/UPDATE/DELETE de `authenticated` em `profiles` permanecem **intencionalmente** durante a janela de compatibilidade do frontend production antigo.
+
+Probe transacional real, seguido de `ROLLBACK`:
+- owner update de campo permitido: PASS;
+- ator sem ownership: rejeitado;
+- tentativa de escrever `verified` pelo patch self-service: rejeitada;
+- username reservado: rejeitado;
+- username válido e único: PASS;
+- histórico da troca pelo broker classificou o ator como `user_requested`: PASS;
+- suspensão ainda futura: comando de expiry não alterou o estado;
+- suspensão já expirada: comando limpou o estado;
+- rollback confirmado: username/bio/suspensão originais preservados e zero histórico de probe persistido.
+
+Advisor:
+- nenhum dos dois novos RPCs G36 aparece nas categorias de SECURITY DEFINER executável por `anon/authenticated`;
+- o Advisor continua reportando dívidas preexistentes do projeto (RLS/policies, extensões em `public`, SECURITY DEFINER antigos e proteção de senha vazada). Não transformar essa lista em remoção em massa: auditar por authority/contrato.
+
+**G36A runtime: PASS.**
+
+Próximo: G36B deve migrar a criação Business fragmentada (`profiles + business_data + membership + stats + hours/contact`) para uma transação broker-owned existente, sem criar novo broker concorrente.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:
