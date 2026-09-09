@@ -12689,6 +12689,94 @@ export type Database = {
           },
         ]
       }
+      ride_chat_messages: {
+        Row: {
+          chat_id: string
+          created_at: string
+          id: string
+          is_system_message: boolean
+          message: string
+          read_at: string | null
+          sender_profile_id: string
+        }
+        Insert: {
+          chat_id: string
+          created_at?: string
+          id?: string
+          is_system_message?: boolean
+          message: string
+          read_at?: string | null
+          sender_profile_id: string
+        }
+        Update: {
+          chat_id?: string
+          created_at?: string
+          id?: string
+          is_system_message?: boolean
+          message?: string
+          read_at?: string | null
+          sender_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ride_chat_messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "ride_chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ride_chat_messages_sender_profile_id_fkey"
+            columns: ["sender_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "ride_chat_messages_sender_profile_id_fkey"
+            columns: ["sender_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ride_chat_messages_sender_profile_id_fkey"
+            columns: ["sender_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ride_chats: {
+        Row: {
+          created_at: string
+          id: string
+          ride_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ride_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ride_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ride_chats_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: true
+            referencedRelation: "ride_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ride_dispatch_audit: {
         Row: {
           attempt_number: number
@@ -18663,6 +18751,7 @@ export type Database = {
       }
       enable_strict_coordinate_validation: { Args: never; Returns: string }
       enablelongtransactions: { Args: never; Returns: string }
+      ensure_ride_chat: { Args: { p_ride_id: string }; Returns: Json }
       equals: { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
       expire_stale_work_opportunities: {
         Args: { p_now?: string }
@@ -19635,6 +19724,26 @@ export type Database = {
           whatsapp_number: string
         }[]
       }
+      list_ride_chat_summaries: {
+        Args: never
+        Returns: {
+          created_at: string
+          destination: string
+          driver_profile_id: string
+          final_price: number
+          id: string
+          last_message: string
+          last_message_at: string
+          origin: string
+          passenger_profile_id: string
+          ride_id: string
+          ride_mode: string
+          ride_status: string
+          suggested_price: number
+          unread_count: number
+          updated_at: string
+        }[]
+      }
       list_trust_admin_actions_admin: {
         Args: {
           p_before_created_at?: string
@@ -19787,6 +19896,10 @@ export type Database = {
       mark_notification_as_read: {
         Args: { p_notification_id: string }
         Returns: undefined
+      }
+      mark_ride_chat_messages_read: {
+        Args: { p_ride_id: string }
+        Returns: number
       }
       mark_webhook_processed: {
         Args: {
@@ -20704,6 +20817,10 @@ export type Database = {
           sender_profile_id: string
           thread_id: string
         }[]
+      }
+      send_ride_chat_message: {
+        Args: { p_message: string; p_ride_id: string }
+        Returns: Json
       }
       set_cache: {
         Args: {
