@@ -6,7 +6,36 @@
 **Linha ativa:** `main`  
 **HEAD técnico de código anterior a este checkpoint documental:** `9c48494514fcf04d8f756b0a0a9a5deb4770c267`
 
-Este documento consolida ordem de execução, blockers e Definition of Done. Owners técnicos específicos continuam sendo fonte de verdade para domínio, segurança e schema.
+Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
+
+## Regra máxima — projeto primeiro, documentação depois
+
+Esta regra é obrigatória para qualquer IA/agente que continuar o Achegue-se:
+
+1. **não decidir remoção, adiamento, escopo ou arquitetura apenas lendo docs**; antes de qualquer decisão estrutural, inspecionar o código e o estado real do projeto;
+2. docs podem estar desatualizadas, incompletas ou obsoletas; quando houver conflito, **o projeto implementado + evidência de runtime + direção explícita do produto prevalecem**, e a documentação deve ser corrigida para refletir a realidade;
+3. uma feature, módulo, fluxo ou integração **não pode ser removido simplesmente porque está quebrado, incompleto, pausado ou com teste falhando**;
+4. se a feature faz sentido no produto, já possui implementação relevante e continua coerente com a visão do Achegue-se, a ação padrão é **investigar → corrigir causa raiz → consolidar owner/SSOT → testar → certificar**;
+5. `launch-paused`, feature flag `false`, fallback ou indisponibilidade temporária são **gates de segurança/release**, não marcações de código descartável;
+6. não usar "MVP" como justificativa para amputar capacidades já construídas e coerentes; o MVP deve organizar e estabilizar o que é necessário, não destruir trabalho válido;
+7. remoção é permitida para **legado real**, duplicação, compatibility bridge, owner substituído ou implementação comprovadamente sem função no produto — e somente depois de migrar callers/estado necessários e provar que o caminho canônico preserva a capacidade;
+8. quando uma implementação antiga e uma nova concorrem, **preservar a capacidade funcional**, escolher/consolidar o owner correto e então retirar apenas a duplicação/legado;
+9. nunca "corrigir" o sistema apagando uma feature só para fazer build/test passar;
+10. depois de cada decisão relevante, atualizar este arquivo para que a documentação passe a refletir o projeto — nunca o contrário.
+
+### Evidência mínima antes de classificar algo como legado
+
+Antes de remover qualquer feature, módulo, rota, serviço, tabela, RPC ou integração, comprovar no mínimo:
+
+- callers/imports e rotas reais;
+- owner canônico atual e possível duplicação;
+- uso em serviços/hooks/pages/Edge Functions;
+- dependências de schema/migrations/RLS quando houver;
+- testes/contratos associados;
+- impacto no fluxo de usuário e na visão do produto;
+- existência de substituto funcional equivalente quando aplicável.
+
+**Ausência em documentação não é evidência de legado. Falha de runtime não é evidência de legado. `launchScope=false` não é evidência de legado.**
 
 ## Checkpoint 2026-09-09 — Mobilidade / Central: SSOT e prova operacional
 
@@ -57,11 +86,14 @@ A auditoria do ambiente Supabase canônico `xhdowzacfujckjelqhtd` encontrou e fe
 1. trabalhar somente na `main` durante a estabilização atual;
 2. não criar branch nova para correções deste programa;
 3. revalidar o HEAD antes de cada write e nunca usar force update;
-4. owner/SSOT deve ser inequívoco e cada migração deve possuir ratchet/gate proporcional ao risco;
-5. commit não equivale a runtime, teste ou deploy validado;
-6. não reduzir segurança, CI ou cobertura para obter verde;
-7. placeholder, `paused`, fallback vazio ou retorno antecipado não contam como módulo funcional;
-8. mudanças destrutivas de dados/LGPD exigem validação específica do ambiente alvo.
+4. **inspecionar primeiro o projeto real; docs são registro auxiliar e devem ser corrigidas quando divergirem do código/runtime**;
+5. owner/SSOT deve ser inequívoco e cada migração deve possuir ratchet/gate proporcional ao risco;
+6. commit não equivale a runtime, teste ou deploy validado;
+7. não reduzir segurança, CI ou cobertura para obter verde;
+8. placeholder, `paused`, fallback vazio ou retorno antecipado não contam como módulo funcional, **mas também não autorizam remover a feature**;
+9. feature válida quebrada deve entrar em correção de causa raiz; não postergar indefinidamente nem substituir por remoção cosmética;
+10. remover somente legado/duplicação/owner obsoleto depois de preservar ou migrar a capacidade funcional válida;
+11. mudanças destrutivas de dados/LGPD exigem validação específica do ambiente alvo.
 
 
 ## Relação com `teste-acheguese`
@@ -75,7 +107,9 @@ A partir de 2026-09-09:
 - código Next.js do teste **não** deve ser copiado mecanicamente para o app Vite/React;
 - padrões aproveitáveis incluem: registry único de navegação, rollout fail-closed, território como contexto, estados vazios honestos, source/deploy provenance e visual Território Vivo;
 - módulos já existentes aqui (Community, Empresas, Gastronomia, Educação etc.) não são removidos apenas porque ainda não existem no teste;
-- ao absorver uma ideia do teste, preferir consolidar owner existente e remover duplicação/legado no principal.
+- a existência real desses módulos deve ser aferida pelo código, rotas, serviços, schema e runtime da `main`, não pela cobertura documental;
+- se um módulo existente estiver quebrado ou incompleto, corrigir e certificar; não usar o laboratório ou uma doc antiga como justificativa para apagá-lo;
+- ao absorver uma ideia do teste, preferir consolidar owner existente e remover **somente** duplicação/legado no principal, preservando a capacidade já implementada.
 
 Essa política substitui a antiga ideia de escolher um repositório e abandonar o outro.
 
