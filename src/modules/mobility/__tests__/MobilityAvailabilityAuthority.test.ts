@@ -45,14 +45,18 @@ describe("Mobility availability authority", () => {
     expect(rpcService).toContain('"updateDriverAvailability"');
     expect(rpcService).toContain('"reconcileStaleDriverAvailability"');
     const terminalTransition = readProjectFile(
-      "supabase/migrations/20260909190551_atomize_terminal_dispatch_driver_release_g19.sql",
+      "supabase/migrations/20260909191423_fix_terminal_driver_release_availability_g19.sql",
     );
     expect(rpcService).not.toContain("releaseDriverAvailabilityForRide");
     expect(broker).not.toContain("handleReleaseDriverAvailability");
     expect(broker).not.toContain("canAccessRideAsParticipantOrAdmin");
     expect(terminalTransition).toContain("UPDATE public.driver_availability availability");
     expect(terminalTransition).toContain("availability.active_ride_id = p_ride_id");
-    expect(terminalTransition).toContain("is_available = availability.is_online");
+    expect(terminalTransition).toContain("availability.current_lat IS NOT NULL");
+    expect(terminalTransition).toContain("availability.current_lng IS NOT NULL");
+    expect(terminalTransition).toContain(
+      "availability.last_location_update >= v_now - interval '5 minutes'",
+    );
 
     expect(availabilityService).toContain(
       "MobilityRpcService.updateDriverAvailability",
