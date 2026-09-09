@@ -63,10 +63,12 @@ export function MiniMap({
 
     mapRef.current = map;
 
-    // Evita flood de warnings de sprite/icones faltando no estilo vetorial.
-    map.on('styleimagemissing', (event: { id: string }) => {
-      if (!map.hasImage(event.id)) {
-        map.addImage(event.id, {
+    // MapLibre v6 exige resolver dedicado para imagens ausentes. O evento
+    // styleimagemissing agora e apenas observacional e nao pode mais resolver
+    // a requisicao atual via addImage().
+    map.setMissingStyleImageResolver((id: string) => {
+      if (!map.hasImage(id)) {
+        map.addImage(id, {
           width: 1,
           height: 1,
           data: new Uint8Array(4),
