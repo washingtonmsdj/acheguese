@@ -35,6 +35,7 @@ const CANCELLATION_STATUSES = new Set(["cancelled_by_passenger", "cancelled_by_d
 const DISPATCH_STRATEGIES = new Set(["exclusive_offer", "open_board", "reservation_board"]);
 const ACTIONS = {
   acceptRide: true,
+  adminRedispatch: true,
   transitionRideState: true,
   transitionDeliveryState: true,
   updateFailedDeliveryResolution: true,
@@ -172,7 +173,6 @@ function optionalFiniteNumber(value: unknown, field: string): number | null {
   }
   return value;
 }
-
 
 async function isProjectAdmin(supabaseAdmin: SupabaseClient, userId: string): Promise<boolean> {
   const { data, error } = await supabaseAdmin.rpc("is_admin", {
@@ -409,7 +409,6 @@ async function requireDeliveryVerification(
     );
   }
 }
-
 
 async function resolveAuditActor(
   supabaseAdmin: SupabaseClient,
@@ -689,6 +688,40 @@ async function handleAcceptRide(
   return data ?? { success: false, reason: "error", error: "Empty accept ride response" };
 }
 
+async function handleAdminRedispatch(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  if (!auth.isProjectAdmin) {
+    throw new RequestAuthorizationError("Admin authority is required for redispatch");
+  }
+
+  const rideId = requireUuid(params.rideId ?? params.ride_id, "rideId");
+  const reason = optionalAuditReason(params.reason);
+  const ride = await getRide(supabaseAdmin, rideId);
+
+  if (ride.ride_mode !== "motoboy") {
+    throw new RequestValidationError("Admin redispatch requires motoboy ride");
+  }
+
+  if (ride.status !== "driver_assigned" && ride.status !== "driver_accepted") {
+    throw new RequestValidationError("Ride is not eligible for admin redispatch");
+  }
+
+  const { data, error } = await supabaseAdmin.rpc(
+    "mobility_admin_redispatch_atomic",
+    {
+      p_ride_id: rideId,
+      p_changed_by: `admin:${auth.userId}`,
+      p_reason: reason || "Admin redispatch",
+    },
+  );
+
+  if (error) throw error;
+  return data ?? { success: false, reason: "empty_response", ride_id: rideId };
+}
+
 async function handleLogDispatchAttempt(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
@@ -814,6 +847,8 @@ async function dispatchAction(
   switch (action) {
     case "acceptRide":
       return handleAcceptRide(supabaseAdmin, auth, params);
+    case "adminRedispatch":
+      return handleAdminRedispatch(supabaseAdmin, auth, params);
     case "transitionRideState":
       return handleTransitionRideState(supabaseAdmin, auth, params);
     case "transitionDeliveryState":
