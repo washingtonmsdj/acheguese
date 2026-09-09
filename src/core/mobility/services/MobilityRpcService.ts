@@ -412,12 +412,11 @@ export class MobilityRpcService {
   }
 
   static async releaseDriverAvailabilityForRide(
-    driverProfileId: string,
     rideId: string,
   ): Promise<boolean> {
     const result = await this.invoke<ReleaseDriverAvailabilityBrokerData>(
       "releaseDriverAvailabilityForRide",
-      { driverProfileId, rideId },
+      { rideId },
     );
     return result.released === true;
   }
