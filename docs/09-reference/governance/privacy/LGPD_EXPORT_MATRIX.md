@@ -43,7 +43,7 @@ Exportar apenas estado do próprio usuário: identificador, email, telefone, con
 
 ### Negócios, profissionais e motoristas
 
-O modelo atual é profile-based. A exportação não pode usar os contratos legados `businesses.owner_id`, `professional_data.user_id`, `driver_profiles.user_id` como fonte de ownership genérica. A seleção deve partir dos `profile.id` pertencentes ao titular e dos campos `owner_user_id` onde existirem explicitamente.
+O modelo atual é profile-based. A exportação não pode usar os contratos legados `businesses.owner_id`, `professional_data.user_id`, `driver_profiles.user_id` como fonte de ownership genérica. A seleção deve partir dos `profile.id` pertencentes ao titular e dos campos `owner_user_id` onde existirem explicitamente. Para profissionais, cobertura territorial deve vir exclusivamente de `public.service_areas` ligada por `entity_type='service_provider'` e `entity_id=professional_data.id`; os campos `professional_data.service_areas` e `service_radius_km` são legado e não entram no novo payload.
 
 ### Conteúdo
 

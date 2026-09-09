@@ -1018,6 +1018,26 @@ Próximo corte:
 2. reconciliar/deployar `user-export-data` no Supabase;
 3. manter DROP físico bloqueado até deploy web same-SHA do frontend novo.
 
+### Checkpoint G34D2 — export LGPD usa Coverage canônico (2026-09-09)
+
+- [x] `user-export-data` não seleciona mais `professional_data.service_areas/service_radius_km`;
+- [x] export coleta os `professional_data.id` pertencentes ao titular e lê `public.service_areas` somente com `entity_type='service_provider'` e `entity_id IN (...)`;
+- [x] payload `professional_profiles` agora separa `profiles`, `coverage` e `stats`;
+- [x] `service_areas` foi adicionada explicitamente à authority read-only do account export;
+- [x] matriz LGPD JSON/MD documenta Coverage como fonte canônica e proíbe os dois campos legados no novo payload;
+- [x] testes estáticos ratcheteiam a source table, filtro de ownership e ausência do trecho legado.
+
+Estado de rollout:
+- o projeto Supabase canônico não possui `user-export-data` implantada neste momento;
+- `LGPD_EXPORT_MATRIX_IMPLEMENTATION_COMPLETE=false` permanece intencional;
+- portanto **nenhum deploy foi criado** neste checkpoint. Implantar a função agora violaria o preflight/rollout ainda não certificado.
+
+Próximo gate deste eixo:
+1. executar a suíte LGPD/security quando houver runner;
+2. validar o handler em ambiente não-prod;
+3. só depois promover o marker de implementação e considerar deploy;
+4. DROP físico das colunas Professional continua dependente do frontend novo publicado.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:

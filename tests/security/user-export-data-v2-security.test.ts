@@ -156,6 +156,16 @@ describe("user-export-data v2", () => {
     expect(source).not.toContain("conversation_participants");
   });
 
+  it("exports professional coverage only from canonical service_areas", () => {
+    expect(source).toContain('case "service_areas":');
+    expect(source).toContain('.from("service_areas")');
+    expect(source).toContain('"professional_coverage"');
+    expect(source).toContain('.eq("entity_type", "service_provider")');
+    expect(source).toContain('.in("entity_id", professionalDataIds)');
+    expect(source).toContain('coverage: professionalCoverage');
+    expect(source).not.toContain("price_range,service_areas,service_radius_km,available_hours");
+  });
+
   it("covers community actions, saved items and authored work/communication", () => {
     for (const table of [
       "community_memberships",

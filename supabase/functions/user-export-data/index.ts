@@ -50,6 +50,7 @@ type ExportTable =
   | "business_stats"
   | "professional_data"
   | "professional_stats"
+  | "service_areas"
   | "driver_data"
   | "driver_profiles"
   | "driver_availability"
@@ -165,6 +166,7 @@ function selectExportTable(
     case "business_stats": return supabaseAdmin.from("business_stats").select(columns);
     case "professional_data": return supabaseAdmin.from("professional_data").select(columns);
     case "professional_stats": return supabaseAdmin.from("professional_stats").select(columns);
+    case "service_areas": return supabaseAdmin.from("service_areas").select(columns);
     case "driver_data": return supabaseAdmin.from("driver_data").select(columns);
     case "driver_profiles": return supabaseAdmin.from("driver_profiles").select(columns);
     case "driver_availability": return supabaseAdmin.from("driver_availability").select(columns);
@@ -626,7 +628,7 @@ async function collectExport(
     "professional_profiles:profile",
     supabaseAdmin,
     "professional_data",
-    "id,profile_id,professional_name,service_category,service_subcategory,description,certifications,experience_years,education,price_range,service_areas,service_radius_km,available_hours,is_accepting_clients,is_verified,verified_at,rating,location_id,created_at,updated_at,profession,specialties,years_experience,services_offered,service_area,hourly_rate,accepts_remote,address_id,slug,price_type,visibility,availability_notes,portfolio_items,owner_user_id",
+    "id,profile_id,professional_name,service_category,service_subcategory,description,certifications,experience_years,education,price_range,available_hours,is_accepting_clients,is_verified,verified_at,rating,location_id,created_at,updated_at,profession,specialties,years_experience,services_offered,service_area,hourly_rate,accepts_remote,address_id,slug,price_type,visibility,availability_notes,portfolio_items,owner_user_id",
     "profile_id",
     profileIds,
   );
@@ -634,7 +636,7 @@ async function collectExport(
     "professional_profiles:owner",
     supabaseAdmin,
     "professional_data",
-    "id,profile_id,professional_name,service_category,service_subcategory,description,certifications,experience_years,education,price_range,service_areas,service_radius_km,available_hours,is_accepting_clients,is_verified,verified_at,rating,location_id,created_at,updated_at,profession,specialties,years_experience,services_offered,service_area,hourly_rate,accepts_remote,address_id,slug,price_type,visibility,availability_notes,portfolio_items,owner_user_id",
+    "id,profile_id,professional_name,service_category,service_subcategory,description,certifications,experience_years,education,price_range,available_hours,is_accepting_clients,is_verified,verified_at,rating,location_id,created_at,updated_at,profession,specialties,years_experience,services_offered,service_area,hourly_rate,accepts_remote,address_id,slug,price_type,visibility,availability_notes,portfolio_items,owner_user_id",
     userId,
     "owner_user_id",
   );
@@ -642,6 +644,23 @@ async function collectExport(
     "professional_profiles",
     [...professionalByProfile, ...professionalByUser],
   );
+
+  const professionalDataIds = pickStringArray(
+    professionalData.map((row) => row.id),
+  );
+  const professionalCoverage = professionalDataIds.length === 0
+    ? []
+    : await requireTableRows(
+      "professional_coverage",
+      supabaseAdmin,
+      "service_areas",
+      "id,entity_type,entity_id,coverage_type,location_id,radius_km,is_primary,status,created_at,updated_at",
+      (query) =>
+        query
+          .eq("entity_type", "service_provider")
+          .in("entity_id", professionalDataIds),
+      "id",
+    );
   const professionalStats = await requireProfileRows(
     "professional_stats",
     supabaseAdmin,
@@ -1149,6 +1168,7 @@ async function collectExport(
     },
     professional_profiles: {
       profiles: professionalData,
+      coverage: professionalCoverage,
       stats: professionalStats,
     },
     driver_profiles: {

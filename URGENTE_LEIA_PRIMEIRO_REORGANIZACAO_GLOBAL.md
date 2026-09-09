@@ -27,6 +27,7 @@ Leia nesta ordem:
 - G34B migra o cadastro profissional: bairros agora são `locations.id` e são gravados somente via Coverage SSOT; novos cadastros não alimentam mais `professional_data.service_areas`;
 - G34C migra a edição profissional para o mesmo contrato: cobertura carrega e salva por `public.service_areas`; o formulário não lê nem escreve mais o JSONB legado;
 - G34D1 remove `service_areas/service_radius_km` dos tipos, queries, mapper, schema e lifecycle Professional; página pública, Central e E2E preservam a feature usando Coverage canônico;
+- G34D2 migra o export LGPD para `public.service_areas`; `user-export-data` continua não implantada e uncertified, portanto não deve ser deployada antes do preflight;
 - **não** adicionar `ServiceAreasService` ao incremental baseline para esconder a violação;
 - Supabase canônico: `xhdowzacfujckjelqhtd`;
 - invariantes remotos de mobilidade continuam: 0 offers abertas, 0 dispatch pendente e 0 motorista preso em corrida terminal;

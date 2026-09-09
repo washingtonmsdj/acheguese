@@ -32,6 +32,7 @@ const EXPECTED_CONTROLLED_READERS = [
   "notification_preferences",
   "review_reports",
   "ride_reports",
+  "service_areas",
   "user_favorite_businesses",
   "vaga_reports",
 ];

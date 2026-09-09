@@ -182,15 +182,16 @@
       "section": "professional_profiles",
       "sources": [
         "public.professional_data",
-        "public.professional_stats"
+        "public.professional_stats",
+        "public.service_areas"
       ],
-      "scope": "rows-linked-to-profile-ids-owned-by-subject-or-owner_user_id",
+      "scope": "professional rows linked to subject-owned profiles plus service_provider coverage linked by professional_data.id",
       "includePolicy": "explicit-professional-fields",
       "exclude": [
         "updated_by_user_id",
         "metadata"
       ],
-      "notes": "Do not use legacy professional_data.user_id."
+      "notes": "Professional identity remains profile-based; coverage is exported only from canonical public.service_areas for owned professional_data ids. Legacy professional_data.service_areas/service_radius_km are not part of the payload."
     },
     {
       "section": "driver_profiles",
