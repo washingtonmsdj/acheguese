@@ -152,6 +152,41 @@ function optionalExtensionData(value: unknown): Record<string, unknown> | null {
   return sanitized;
 }
 
+function sanitizeDriverExtensionData(
+  extensionData: Record<string, unknown> | null,
+): Record<string, unknown> | null {
+  if (!extensionData) return null;
+
+  const canDoDelivery = extensionData.can_do_delivery === true;
+  const canDoRides = extensionData.can_do_rides === true;
+  if (canDoDelivery === canDoRides) {
+    throw new RequestValidationError(
+      "Driver registration must select exactly one initial operational mode",
+    );
+  }
+
+  const sanitized = { ...extensionData };
+  delete sanitized.is_verified;
+  delete sanitized.subscription_active;
+  delete sanitized.rating;
+  delete sanitized.total_rides;
+  delete sanitized.total_rides_completed;
+  delete sanitized.total_rides_cancelled;
+  delete sanitized.acceptance_rate;
+  delete sanitized.cancellation_rate;
+
+  return {
+    ...sanitized,
+    documents_verified: false,
+    documents_verified_at: null,
+    background_check_status: "pending",
+    background_check_date: null,
+    is_available: false,
+    can_do_delivery: canDoDelivery,
+    can_do_rides: canDoRides,
+  };
+}
+
 function requireInviteRole(value: unknown): ProfileMemberRole {
   if (value === undefined || value === null || value === "") return "member";
   if (value !== "member" && value !== "admin") {
@@ -187,7 +222,11 @@ async function handleCreateProfile(
   const displayName = requireString(params.displayName ?? params.p_display_name, "displayName", 160);
   const avatarUrl = optionalString(params.avatarUrl ?? params.p_avatar_url, "avatarUrl", 2048);
   const bio = optionalString(params.bio ?? params.p_bio, "bio", 4000);
-  const extensionData = optionalExtensionData(params.extensionData ?? params.p_extension_data);
+  const rawExtensionData = optionalExtensionData(params.extensionData ?? params.p_extension_data);
+  const extensionData =
+    profileType === "driver"
+      ? sanitizeDriverExtensionData(rawExtensionData)
+      : rawExtensionData;
 
   const { data, error } = await supabaseAdmin.rpc("profile_rpc_create_profile_with_extension", {
     p_actor_user_id: auth.userId,
