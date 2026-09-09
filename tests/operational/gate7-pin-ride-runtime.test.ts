@@ -16,7 +16,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { RideOperationalService } from '@/core/mobility/core/RideOperationalService';
 import { RideDispatchService } from '@/core/mobility/core/RideDispatchService';
-import { OperationalVerificationService } from '@/modules/mobility/services/OperationalVerificationService';
+import { OperationalVerificationService } from '@/core/mobility/services/OperationalVerificationService';
 import { RIDE_STATUS } from '@/core/mobility/constants';
 import { authenticateAsProfile, signOut } from '../helpers/auth-helper';
 import { 
@@ -289,10 +289,7 @@ describeOperational('Gate 7 - PIN Verification: Corrida', {
     expect(verification.is_required).toBe(true);
     expect(verification.required_by).toBe('passenger');
     expect(verification.status).toBe('pending');
-    expect(verification.pin_hash).toBeDefined();
-    
-    // Obter PIN gerado (apenas para teste - em produção não seria exposto)
-    const generatedPIN = verification.pin_hash; // Não temos acesso ao PIN em texto puro
+    expect(verification.pin_hash).toBeNull();
     
     console.log('✅ Verificação criada automaticamente pelo fluxo oficial');
     
@@ -422,17 +419,12 @@ describeOperational('Gate 7 - PIN Verification: Corrida', {
     expect(verification.is_required).toBe(true);
     expect(verification.required_by).toBe('passenger');
     
-    // Para teste, vamos gerar um PIN conhecido e atualizar o hash
-    const testPIN = '1234';
-    const bcrypt = require('bcryptjs');
-    const pinHash = await bcrypt.hash(testPIN, 10);
+    const pinResult = await OperationalVerificationService.refreshRequesterPIN(rideId);
+    expect(pinResult.success).toBe(true);
+    expect(pinResult.data?.pin).toMatch(/^\\d{4}$/);
+    const testPIN = pinResult.data!.pin;
     
-    await supabaseAdmin
-      .from('operational_verifications')
-      .update({ pin_hash: pinHash })
-      .eq('id', verification.id);
-    
-    console.log('✅ PIN de teste configurado:', testPIN);
+    console.log('✅ PIN emitido pelo fluxo oficial para o solicitante');
     
     // ============================================
     // ETAPA 4: Aguardar auto-dispatch e aceitar
