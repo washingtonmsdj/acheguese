@@ -12,6 +12,7 @@
 import { it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { type SupabaseClient } from '@supabase/supabase-js';
 import { TrackingService } from '@/core/tracking/services/TrackingService';
+import { MobilityRpcService } from '@/core/mobility/services/MobilityRpcService';
 import { ReconnectionManager } from '@/core/tracking/services/ReconnectionManager';
 import {
   createOperationalAnonClient,
@@ -46,7 +47,9 @@ describeOperational('GATE 4: Reconexão e Recuperação', {
       .from('profiles')
       .select('id')
       .eq('user_id', authData.user.id)
-      .single();
+      .eq('profile_type', 'driver')
+      .limit(1)
+      .maybeSingle();
 
     if (profileError || !profileData) {
       throw new Error('Profile não encontrado');
@@ -56,10 +59,30 @@ describeOperational('GATE 4: Reconexão e Recuperação', {
 
     // Criar TrackingService com cliente autenticado
     trackingService = new TrackingService(supabase);
+
+    const online = await MobilityRpcService.updateDriverAvailability(
+      {
+        driverProfileId,
+        availabilityAction: 'go_online',
+      },
+      supabase,
+    );
+    if (online.success !== true) {
+      throw new Error(online.error || online.reason || 'Motorista de reconexão não ficou online');
+    }
   });
 
   afterAll(async () => {
     trackingService?.unsubscribeAll();
+    if (driverProfileId) {
+      await MobilityRpcService.updateDriverAvailability(
+        {
+          driverProfileId,
+          availabilityAction: 'go_offline',
+        },
+        supabase,
+      ).catch(() => undefined);
+    }
     await supabase?.auth.signOut();
   });
 
