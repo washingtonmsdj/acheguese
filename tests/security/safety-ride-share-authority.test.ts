@@ -14,6 +14,9 @@ describe("Safety ride-share authority", () => {
     const authorityFollowUp = readProjectFile(
       "supabase/migrations/20260909191000_dedupe_ride_share_token_authority_g12.sql",
     );
+    const auditFollowUp = readProjectFile(
+      "supabase/migrations/20260909192000_use_canonical_ride_share_audit_g12.sql",
+    );
     const existingTokenAuthority = readProjectFile(
       "supabase/migrations/20260819085526_server_generate_ride_share_tokens.sql",
     );
@@ -39,6 +42,12 @@ describe("Safety ride-share authority", () => {
     );
     expect(authorityFollowUp).not.toContain(
       "extensions.gen_random_bytes(16)",
+    );
+    expect(auditFollowUp).toContain(
+      "canonical ride-share audit trigger missing",
+    );
+    expect(auditFollowUp).not.toContain(
+      "INSERT INTO public.safety_audit_log",
     );
     expect(migration).toContain(
       "profile.user_id = v_actor_user_id",
