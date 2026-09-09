@@ -46,6 +46,8 @@ Regras:
 - páginas/componentes não acessam Supabase diretamente; acesso fica em services/repositories, migrations, scripts e Edge Functions conforme o boundary aplicável.
 - páginas e hooks orquestram estado/fetch/render; regra de negócio pertence ao owner de domínio.
 - cada tabela mutável possui owner de escrita único. Read models adicionais devem ser declarados e não criam writer paralelo.
+- `ride_requests` é o agregado canônico de corrida/entrega e é **server-owned para toda mutação**: browser não possui `INSERT`, `UPDATE` ou `DELETE` direto; criação, transições, dispatch, comandos de entrega e intervenções administrativas passam por broker autenticado + RPCs service-role-only específicas.
+- `ride_state_audit` é append-only/backend-owned; o browser não grava eventos de auditoria diretamente e o ator deve ser derivado/revalidado pelo backend.
 - tipos canônicos não são duplicados entre `shared`, `core` e `modules`.
 - `index.ts` vazio (`export {};`) não é facade válida.
 
