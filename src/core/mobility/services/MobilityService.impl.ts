@@ -50,6 +50,10 @@ type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
 
 type MobilityImplDbClient = {
   from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
+  rpc<T>(fn: string, params?: Record<string, unknown>): Promise<{
+    data: T | null;
+    error: ErrorLike;
+  }>;
 };
 
 const db = supabase as unknown as MobilityImplDbClient;
@@ -150,24 +154,12 @@ export class MobilityService {
     return count || 0;
   }
 
-  static async ensureDriverDataRow(
-    profileId: string,
-    defaults?: { canDoDelivery?: boolean; canDoRides?: boolean },
-  ): Promise<void> {
-    const { data: existing, error: readError } = await db
-      .from("driver_data")
-      .select("profile_id")
-      .eq("profile_id", profileId)
-      .maybeSingle();
-    if (readError) throw readError;
-    if (existing) return;
-
-    const payload: Record<string, unknown> = { profile_id: profileId };
-    if (defaults?.canDoDelivery !== undefined) payload.can_do_delivery = defaults.canDoDelivery;
-    if (defaults?.canDoRides !== undefined) payload.can_do_rides = defaults.canDoRides;
-
-    const { error } = await db.from("driver_data").insert(payload);
-    if (error && error.code !== "23505") throw error;
+  static async ensureDriverDataRow(profileId: string): Promise<void> {
+    const { error } = await db.rpc<Record<string, unknown>>(
+      "ensure_owned_driver_data",
+      { p_profile_id: profileId },
+    );
+    if (error) throw error;
   }
 
   static async getDriverRideSessions(driverProfileId: string, limit = 300): Promise<Array<{ started_at: string | null; completed_at: string | null }>> {
