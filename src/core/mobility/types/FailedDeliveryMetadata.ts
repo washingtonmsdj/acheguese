@@ -39,6 +39,21 @@ export type ResolutionStatus =
   | 'resolved'       // Resolvido
   | 'escalated';     // Escalado para suporte
 
+
+/**
+ * Campos aceitos no comando administrativo de resolução posterior.
+ *
+ * `resolved_at` não faz parte do input: o banco carimba o instante real quando
+ * `resolution_status` muda para `resolved`.
+ */
+export interface FailedDeliveryResolutionUpdate {
+  next_ride_id?: string;
+  handoff_driver_profile_id?: string;
+  manual_resolution_owner_profile_id?: string;
+  resolution_status?: ResolutionStatus;
+  resolution_action_notes?: string;
+}
+
 // ============================================
 // INTERFACE PRINCIPAL
 // ============================================
