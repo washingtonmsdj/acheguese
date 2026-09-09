@@ -307,37 +307,6 @@ export class DriverAvailabilityService {
   }
 
   /**
-   * Motorista fica disponível (corrida encerrada)
-   * Transição: busy ? online_available
-   * 
-   * Exige: active_ride_id = rideId (validação de corrida correta)
-   * Limpa: active_ride_id, busy_since, active_ride_mode
-   */
-  static async releaseBusy(
-    rideId: string
-  ): Promise<{ success: boolean; error?: string }> {
-    try {
-      const released = await MobilityRpcService.releaseDriverAvailabilityForRide(
-        rideId,
-      );
-
-      if (released !== true) {
-        return {
-          success: false,
-          error: 'Assigned driver was not busy with the specified ride or was already released',
-        };
-      }
-
-      logger.info('DriverAvailabilityService.releaseBusy', { rideId });
-
-      return { success: true };
-    } catch (error) {
-      logger.error('DriverAvailabilityService.releaseBusy', error as Error, { rideId });
-      return { success: false, error: (error as Error).message };
-    }
-  }
-
-  /**
    * Busca status atual
    */
   static async getStatus(
