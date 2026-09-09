@@ -11,12 +11,33 @@ describe("Safety ride-share authority", () => {
     const migration = readProjectFile(
       "supabase/migrations/20260909190000_server_owned_ride_share_tokens_g12.sql",
     );
+    const authorityFollowUp = readProjectFile(
+      "supabase/migrations/20260909191000_dedupe_ride_share_token_authority_g12.sql",
+    );
+    const existingTokenAuthority = readProjectFile(
+      "supabase/migrations/20260819085526_server_generate_ride_share_tokens.sql",
+    );
     const service = readProjectFile(
       "src/core/safety/services/SafetyRideShareService.ts",
     );
 
     expect(migration).toContain("public.create_safety_ride_share");
-    expect(migration).toContain(
+    expect(existingTokenAuthority).toContain(
+      "private.assign_ride_share_token",
+    );
+    expect(existingTokenAuthority).toContain(
+      "extensions.gen_random_bytes(16)",
+    );
+    expect(existingTokenAuthority).toContain(
+      "trg_assign_ride_share_token",
+    );
+    expect(authorityFollowUp).toContain(
+      "canonical ride-share token trigger missing",
+    );
+    expect(authorityFollowUp).toContain(
+      "INSERT INTO public.ride_shares",
+    );
+    expect(authorityFollowUp).not.toContain(
       "extensions.gen_random_bytes(16)",
     );
     expect(migration).toContain(
