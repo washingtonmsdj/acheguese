@@ -1,4 +1,7 @@
-import { invokeSupabaseBroker } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
+import {
+  invokeSupabaseBroker,
+  type SupabaseBrokerClient,
+} from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 import type {
   RideDispatchAttemptInput,
   RideDispatchAttemptUpdateInput,
@@ -141,9 +144,11 @@ export class MobilityRpcService {
   private static async invoke<T>(
     action: MobilityRpcAction,
     params: Record<string, unknown> = {},
+    client?: SupabaseBrokerClient,
   ): Promise<T> {
     return invokeSupabaseBroker<T, MobilityRpcAction>({
       action,
+      client,
       functionName: FUNCTION_NAME,
       noDataMessage: "Mobility broker returned no data",
       params,
@@ -296,45 +301,59 @@ export class MobilityRpcService {
     return result.cancelledCount;
   }
 
-  static async updateDriverAvailability(input: {
-    driverProfileId: string;
-    availabilityAction:
-      | "go_online"
-      | "go_offline"
-      | "set_available"
-      | "pause_available"
-      | "heartbeat";
-    rideMode?: "ride" | "motoboy";
-    lat?: number;
-    lng?: number;
-  }): Promise<DriverAvailabilityBrokerData> {
-    return this.invoke<DriverAvailabilityBrokerData>("updateDriverAvailability", {
-      driverProfileId: input.driverProfileId,
-      availabilityAction: input.availabilityAction,
-      rideMode: input.rideMode,
-      lat: input.lat,
-      lng: input.lng,
-    });
+  static async updateDriverAvailability(
+    input: {
+      driverProfileId: string;
+      availabilityAction:
+        | "go_online"
+        | "go_offline"
+        | "set_available"
+        | "pause_available"
+        | "heartbeat";
+      rideMode?: "ride" | "motoboy";
+      lat?: number;
+      lng?: number;
+    },
+    client?: SupabaseBrokerClient,
+  ): Promise<DriverAvailabilityBrokerData> {
+    return this.invoke<DriverAvailabilityBrokerData>(
+      "updateDriverAvailability",
+      {
+        driverProfileId: input.driverProfileId,
+        availabilityAction: input.availabilityAction,
+        rideMode: input.rideMode,
+        lat: input.lat,
+        lng: input.lng,
+      },
+      client,
+    );
   }
 
-  static async updateDriverLocation(input: {
-    driverProfileId: string;
-    lat: number;
-    lng: number;
-    accuracy?: number;
-    heading?: number;
-    speed?: number;
-    altitude?: number;
-  }): Promise<DriverLocationBrokerData> {
-    return this.invoke<DriverLocationBrokerData>("updateDriverLocation", {
-      driverProfileId: input.driverProfileId,
-      lat: input.lat,
-      lng: input.lng,
-      accuracy: input.accuracy,
-      heading: input.heading,
-      speed: input.speed,
-      altitude: input.altitude,
-    });
+  static async updateDriverLocation(
+    input: {
+      driverProfileId: string;
+      lat: number;
+      lng: number;
+      accuracy?: number;
+      heading?: number;
+      speed?: number;
+      altitude?: number;
+    },
+    client?: SupabaseBrokerClient,
+  ): Promise<DriverLocationBrokerData> {
+    return this.invoke<DriverLocationBrokerData>(
+      "updateDriverLocation",
+      {
+        driverProfileId: input.driverProfileId,
+        lat: input.lat,
+        lng: input.lng,
+        accuracy: input.accuracy,
+        heading: input.heading,
+        speed: input.speed,
+        altitude: input.altitude,
+      },
+      client,
+    );
   }
 
   static async reconcileStaleDriverAvailability(
