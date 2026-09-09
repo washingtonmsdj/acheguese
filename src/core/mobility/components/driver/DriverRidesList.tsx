@@ -515,7 +515,6 @@ export function DriverRidesList({
           open={chatOpen}
           onOpenChange={setChatOpen}
           rideId={selectedRide.id}
-          userId={activeProfile.id}
           otherUserName={(selectedRide.passenger?.name as string | undefined) || "Passageiro"}
           isDriver={true}
         />
