@@ -44,5 +44,16 @@ describe("MapLibre production security runtime", () => {
         /import\s+maplibregl\s+from\s+["']maplibre-gl["']/,
       );
     }
+
+    for (const sourcePath of [
+      "src/shared/components/maps/MiniMap.tsx",
+      "src/core/maps/components/v3/MapLibreAdapter.tsx",
+    ]) {
+      const source = readProjectFile(sourcePath);
+      expect(source).toContain("setMissingStyleImageResolver");
+      expect(source).not.toMatch(
+        /\.on\(\s*["']styleimagemissing["'][\s\S]{0,240}addImage\(/,
+      );
+    }
   });
 });
