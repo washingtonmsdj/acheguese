@@ -553,7 +553,7 @@ export class RideOperationalService {
       // GATE 5: Liberar motorista com validacao de corrida correta
       if (result.success) {
         const { DriverAvailabilityService } = await import('@/core/mobility/services/DriverAvailabilityService');
-        await DriverAvailabilityService.releaseBusy(driverProfileId, rideId);
+        await DriverAvailabilityService.releaseBusy(rideId);
       }
 
       return result;
