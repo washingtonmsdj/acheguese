@@ -15,7 +15,6 @@ export {
   getDriverCompleteProfile,
   getPassengerRating,
   getMobilityConversations,  getRideWithAddresses,
-  getAvailableRides,
   getDriverData,
   getDriverStatsDetailed,
   getDriverDataByProfileIds,
