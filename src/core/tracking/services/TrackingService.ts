@@ -159,15 +159,18 @@ export class TrackingService {
         const { MobilityRpcService } = await import(
           '@/core/mobility/services/MobilityRpcService'
         );
-        const result = await MobilityRpcService.updateDriverLocation({
-          driverProfileId: entityId,
-          lat: position.latitude,
-          lng: position.longitude,
-          accuracy: position.accuracy ?? undefined,
-          heading: position.heading ?? undefined,
-          speed: position.speed ?? undefined,
-          altitude: position.altitude ?? undefined,
-        });
+        const result = await MobilityRpcService.updateDriverLocation(
+          {
+            driverProfileId: entityId,
+            lat: position.latitude,
+            lng: position.longitude,
+            accuracy: position.accuracy ?? undefined,
+            heading: position.heading ?? undefined,
+            speed: position.speed ?? undefined,
+            altitude: position.altitude ?? undefined,
+          },
+          this.supabaseClient,
+        );
 
         if (result.success !== true) {
           throw new Error(
@@ -284,22 +287,18 @@ export class TrackingService {
   ): Promise<PresenceStatus> {
     try {
       if (entityType === 'driver') {
-        const { DriverAvailabilityService } = await import(
-          '@/core/mobility/services/runtime'
-        );
-        const availability = await DriverAvailabilityService.getStatus(entityId);
-        if (!availability) return 'unknown';
+        const { data, error } = await this.supabaseClient
+          .from('driver_availability')
+          .select('is_online, is_available, active_ride_id')
+          .eq('profile_id', entityId)
+          .maybeSingle();
 
-        switch (availability.status) {
-          case 'busy':
-            return 'busy';
-          case 'online_available':
-            return 'online';
-          case 'online_warming_up':
-            return 'away';
-          case 'offline':
-            return 'offline';
-        }
+        if (error) throw error;
+        if (!data) return 'unknown';
+        if (!data.is_online) return 'offline';
+        if (data.active_ride_id) return 'busy';
+        if (data.is_available) return 'online';
+        return 'away';
       }
 
       return 'unknown';
@@ -319,28 +318,32 @@ export class TrackingService {
   ): Promise<void> {
     try {
       if (entityType === 'driver') {
-        const { DriverAvailabilityService } = await import(
-          '@/core/mobility/services/runtime'
+        if (status === 'unknown') {
+          return;
+        }
+
+        const { MobilityRpcService } = await import(
+          '@/core/mobility/services/MobilityRpcService'
+        );
+        const availabilityAction =
+          status === 'offline'
+            ? 'go_offline'
+            : status === 'away'
+              ? 'pause_available'
+              : 'heartbeat';
+
+        const result = await MobilityRpcService.updateDriverAvailability(
+          {
+            driverProfileId: entityId,
+            availabilityAction,
+          },
+          this.supabaseClient,
         );
 
-        if (status === 'offline') {
-          const result = await DriverAvailabilityService.goOffline(entityId);
-          if (!result.success) {
-            throw new Error(result.error || 'Driver could not go offline');
-          }
-          return;
-        }
-
-        if (status === 'away') {
-          const result = await DriverAvailabilityService.pauseAvailable(entityId);
-          if (!result.success) {
-            throw new Error(result.error || 'Driver availability could not be paused');
-          }
-          return;
-        }
-
-        if (status === 'online' || status === 'busy') {
-          await DriverAvailabilityService.markLastSeen(entityId);
+        if (result.success !== true) {
+          throw new Error(
+            result.error || result.reason || 'Driver presence update was rejected',
+          );
         }
       }
     } catch (error) {
@@ -381,10 +384,21 @@ export class TrackingService {
         && !payload.position
         && !payload.status
       ) {
-        const { DriverAvailabilityService } = await import(
-          '@/core/mobility/services/runtime'
+        const { MobilityRpcService } = await import(
+          '@/core/mobility/services/MobilityRpcService'
         );
-        await DriverAvailabilityService.markLastSeen(payload.entityId);
+        const result = await MobilityRpcService.updateDriverAvailability(
+          {
+            driverProfileId: payload.entityId,
+            availabilityAction: 'heartbeat',
+          },
+          this.supabaseClient,
+        );
+        if (result.success !== true) {
+          throw new Error(
+            result.error || result.reason || 'Driver heartbeat was rejected',
+          );
+        }
       }
 
       logger.debug('[TrackingService] Heartbeat sent:', payload.entityId);
@@ -582,10 +596,23 @@ export class TrackingService {
         });
       }
 
-      // GATE 5: Atualizar last_seen_at para motoristas
       if (entityType === 'driver') {
-        const { DriverAvailabilityService } = await import('@/core/mobility/services/runtime');
-        await DriverAvailabilityService.markLastSeen(entityId);
+        const { MobilityRpcService } = await import(
+          '@/core/mobility/services/MobilityRpcService'
+        );
+        const result = await MobilityRpcService.updateDriverAvailability(
+          {
+            driverProfileId: entityId,
+            availabilityAction: 'heartbeat',
+          },
+          this.supabaseClient,
+        );
+        if (result.success !== true) {
+          logger.warn('[TrackingService] Reconnection heartbeat was rejected', {
+            entityId,
+            reason: result.error || result.reason,
+          });
+        }
       }
 
       return position;
