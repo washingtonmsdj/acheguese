@@ -9,13 +9,13 @@ function readProjectFile(relativePath: string): string {
 describe("Safety ride-share authority", () => {
   it("keeps bearer tokens server-owned and creation participant-bound", () => {
     const migration = readProjectFile(
-      "supabase/migrations/20260909190000_server_owned_ride_share_tokens_g12.sql",
+      "supabase/migrations/20260909170152_server_owned_ride_share_tokens_g12.sql",
     );
     const authorityFollowUp = readProjectFile(
-      "supabase/migrations/20260909191000_dedupe_ride_share_token_authority_g12.sql",
+      "supabase/migrations/20260909170347_dedupe_ride_share_token_authority_g12.sql",
     );
     const auditFollowUp = readProjectFile(
-      "supabase/migrations/20260909192000_use_canonical_ride_share_audit_g12.sql",
+      "supabase/migrations/20260909170647_use_canonical_ride_share_audit_g12.sql",
     );
     const existingTokenAuthority = readProjectFile(
       "supabase/migrations/20260819085526_server_generate_ride_share_tokens.sql",
