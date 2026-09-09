@@ -1,17 +1,8 @@
 import { supabase } from "@/integrations/supabase";
 import type {
   TrustActorRole,
-  TrustDispatchPolicy,
   TrustPolicyDecision,
-  TrustRiskLevel,
 } from "../domain";
-
-export interface RideCounterpartyTrustDecision {
-  rideId: string;
-  subjectProfileId: string;
-  riskLevel: TrustRiskLevel;
-  dispatchPolicy: TrustDispatchPolicy;
-}
 
 function asPolicyDecision(value: unknown): TrustPolicyDecision {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -50,28 +41,4 @@ export class TrustPolicyReadService {
     };
   }
 
-  static async getRideCounterpartyDecisions(
-    rideIds: string[],
-  ): Promise<Map<string, RideCounterpartyTrustDecision>> {
-    const uniqueRideIds = [...new Set(rideIds)].slice(0, 50);
-    if (uniqueRideIds.length === 0) return new Map();
-
-    const { data, error } = await supabase.rpc(
-      "get_ride_offer_trust_decisions",
-      { p_ride_ids: uniqueRideIds },
-    );
-
-    if (error) throw error;
-
-    const decisions = new Map<string, RideCounterpartyTrustDecision>();
-    for (const row of data ?? []) {
-      decisions.set(row.ride_id, {
-        rideId: row.ride_id,
-        subjectProfileId: row.subject_profile_id,
-        riskLevel: row.risk_level as TrustRiskLevel,
-        dispatchPolicy: row.dispatch_policy as TrustDispatchPolicy,
-      });
-    }
-    return decisions;
-  }
 }
