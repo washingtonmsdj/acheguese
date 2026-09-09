@@ -23,6 +23,7 @@ import {
 const ALLOWED_METHODS = "POST, OPTIONS";
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SAFE_STATUS_REGEX = /^[a-z0-9_:-]{1,64}$/i;
+const MAX_AUDIT_REASON_LENGTH = 1000;
 const FINAL_RIDE_STATUSES = new Set([
   "completed",
   "cancelled_by_passenger",
@@ -34,6 +35,7 @@ const CANCELLATION_STATUSES = new Set(["cancelled_by_passenger", "cancelled_by_d
 const DISPATCH_STRATEGIES = new Set(["exclusive_offer", "open_board", "reservation_board"]);
 const ACTIONS = {
   acceptRide: true,
+  logRideStateChange: true,
   logDispatchAttempt: true,
   updateLatestDispatchAttempt: true,
   cancelPendingOffers: true,
@@ -110,6 +112,18 @@ function requireStatus(value: unknown, field: string): string {
   const status = optionalStatus(value, field);
   if (!status) throw new RequestValidationError(`Invalid ${field}`);
   return status;
+}
+
+function optionalAuditReason(value: unknown): string {
+  if (value === undefined || value === null) return "";
+  if (typeof value !== "string") {
+    throw new RequestValidationError("Invalid reason");
+  }
+  const normalized = value.trim();
+  if (normalized.length > MAX_AUDIT_REASON_LENGTH) {
+    throw new RequestValidationError("Audit reason is too long");
+  }
+  return normalized;
 }
 
 function requireDispatchStrategy(value: unknown): string {
@@ -229,6 +243,35 @@ async function canAccessRideAsParticipantOrAdmin(
   return profileBelongsToUser(supabaseAdmin, explicitDriverProfileId ?? null, auth.userId);
 }
 
+async function resolveAuditActor(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  ride: RideRow,
+  requestedActor: unknown,
+): Promise<string> {
+  if (auth.isProjectAdmin) {
+    return `admin:${auth.userId}`;
+  }
+
+  if (
+    typeof requestedActor === "string" &&
+    UUID_REGEX.test(requestedActor) &&
+    await profileBelongsToUser(supabaseAdmin, requestedActor, auth.userId)
+  ) {
+    return requestedActor;
+  }
+
+  if (await profileBelongsToUser(supabaseAdmin, ride.passenger_profile_id, auth.userId)) {
+    return ride.passenger_profile_id as string;
+  }
+
+  if (await profileBelongsToUser(supabaseAdmin, ride.driver_profile_id, auth.userId)) {
+    return ride.driver_profile_id as string;
+  }
+
+  throw new RequestAuthorizationError("User cannot write audit events for this ride");
+}
+
 async function requireDispatchWriteAccess(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
@@ -240,6 +283,46 @@ async function requireDispatchWriteAccess(
     throw new RequestAuthorizationError("User cannot write dispatch audit for this ride");
   }
   return ride;
+}
+
+async function handleLogRideStateChange(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const rideId = requireUuid(params.rideId ?? params.ride_id, "rideId");
+  const toState = requireStatus(params.toState ?? params.to_state, "toState");
+  const fromState =
+    optionalStatus(params.fromState ?? params.from_state, "fromState") ?? "none";
+  const reason = optionalAuditReason(params.reason);
+  const ride = await getRide(supabaseAdmin, rideId);
+
+  if (!await canAccessRideAsParticipantOrAdmin(supabaseAdmin, auth, ride)) {
+    throw new RequestAuthorizationError("User cannot write audit events for this ride");
+  }
+
+  if (ride.status !== toState) {
+    throw new RequestValidationError("Ride state does not match audit target");
+  }
+
+  const changedBy = await resolveAuditActor(
+    supabaseAdmin,
+    auth,
+    ride,
+    params.actorProfileId ?? params.actor_profile_id ?? params.changedBy ?? params.changed_by,
+  );
+
+  const { error } = await supabaseAdmin.from("ride_state_audit").insert({
+    ride_id: rideId,
+    from_state: fromState,
+    to_state: toState,
+    changed_by: changedBy,
+    reason,
+    created_at: new Date().toISOString(),
+  });
+
+  if (error) throw error;
+  return { logged: true };
 }
 
 async function handleAcceptRide(
@@ -398,6 +481,8 @@ async function dispatchAction(
   switch (action) {
     case "acceptRide":
       return handleAcceptRide(supabaseAdmin, auth, params);
+    case "logRideStateChange":
+      return handleLogRideStateChange(supabaseAdmin, auth, params);
     case "logDispatchAttempt":
       return handleLogDispatchAttempt(supabaseAdmin, auth, params);
     case "updateLatestDispatchAttempt":
