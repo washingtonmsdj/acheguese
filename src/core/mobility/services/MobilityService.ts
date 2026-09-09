@@ -54,14 +54,6 @@ export {
 export {
   //  Rides
   createRide,
-  updateRide,
-  updateRideWithGuards,
-  updateRideIfStatusIn,
-  acceptRide,
-  startRide,
-  completeRide,
-  confirmRide,
-  cancelRide,
   incrementRideViewCount,
   decrementRideSeats,
   //  Driver areas
@@ -216,14 +208,6 @@ export class MobilityFacade {
   static getRideAvailableSeats = MobilityQueries.getRideAvailableSeats;
   //  ===== MUTATIONS =====
   static createRide = MobilityMutations.createRide;
-  static updateRide = MobilityMutations.updateRide;
-  static updateRideWithGuards = MobilityMutations.updateRideWithGuards;
-  static updateRideIfStatusIn = MobilityMutations.updateRideIfStatusIn;
-  static acceptRide = MobilityMutations.acceptRide;
-  static startRide = MobilityMutations.startRide;
-  static completeRide = MobilityMutations.completeRide;
-  static confirmRide = MobilityMutations.confirmRide;
-  static cancelRide = MobilityMutations.cancelRide;
   static incrementRideViewCount = MobilityMutations.incrementRideViewCount;
   static decrementRideSeats = MobilityMutations.decrementRideSeats;
   static deleteDriverNeighborhood = MobilityMutations.deleteDriverNeighborhood;
