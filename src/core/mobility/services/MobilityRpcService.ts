@@ -8,6 +8,7 @@ import type { DispatchStrategy } from "../types/dispatch.types";
 
 type MobilityRpcAction =
   | "acceptRide"
+  | "transitionRideState"
   | "logRideStateChange"
   | "logDispatchAttempt"
   | "updateLatestDispatchAttempt"
@@ -42,6 +43,27 @@ export class MobilityRpcService {
       noDataMessage: "Mobility broker returned no data",
       params,
       serviceName: SERVICE_NAME,
+    });
+  }
+
+  static async transitionRideState(input: {
+    rideId: string;
+    expectedFromState: string;
+    toState: string;
+    actorProfileId: string;
+    reason?: string;
+  }): Promise<{
+    updated: boolean;
+    ride_id: string;
+    from_state: string;
+    to_state: string;
+  }> {
+    return this.invoke("transitionRideState", {
+      rideId: input.rideId,
+      expectedFromState: input.expectedFromState,
+      toState: input.toState,
+      actorProfileId: input.actorProfileId,
+      reason: input.reason ?? "",
     });
   }
 
