@@ -22,10 +22,11 @@ Leia nesta ordem:
 - foco atual: **certificação da Mobilidade / Central motorista-motoboy**;
 - `ride_requests` está server-owned para mutação: browser sem `INSERT/UPDATE/DELETE`;
 - criação, transições, dispatch, entrega, confirmação do passageiro e redispatch usam broker/RPCs específicas;
+- Gastronomia: `sourceId=orders.id` é validado contra `merchant_profile_id`, `source_type/source_id` do pedido e a empresa autorizada; duplicação de entrega ativa é bloqueada;
 - Supabase canônico: `xhdowzacfujckjelqhtd`;
-- `mobility-rpc`: **v15 ACTIVE**, `verify_jwt=true`;
+- `mobility-rpc`: **v16 ACTIVE**, `verify_jwt=true`;
 - migrations finais deste corte: `20260909140626_add_atomic_mobility_creation_commands_g6.sql` e `20260909141356_revoke_browser_ride_request_insert_g6.sql`;
-- baseline técnico antes da atualização documental: `f91bbf0ef1c452be559ab1ad2d836b268144a8ed`;
+- baseline técnico antes da atualização documental: `9fb40b1368d2832ae0d328c354f050a827e82b92`;
 - Mobilidade continua **launch-paused**: `PUBLIC_LAUNCH_SURFACES.mobility=false`;
 - próximo gate: autorização positiva/negativa real → E2E operacional → smoke responsivo → typecheck/test/build no mesmo SHA → deploy same-SHA; **não habilitar Mobilidade antes dessas provas**;
 - não restaurar creators/writers diretos de `ride_requests` para contornar testes ou acelerar fluxo.
