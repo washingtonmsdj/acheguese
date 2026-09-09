@@ -43,10 +43,7 @@ export {
   getMobilityStats,
   getPassengerRating,
   //  Chat
-  getMobilityConversations,
-  getLastMessage,
-  getUnreadCount,
-} from "./mobility.queries";
+  getMobilityConversations,} from "./mobility.queries";
 
 //  ============================================================
 //  RE-EXPORTS DAS NOVAS MUTATIONS
@@ -196,8 +193,6 @@ export class MobilityFacade {
   static getDriverCompleteProfile = MobilityQueries.getDriverCompleteProfile;
   static getPassengerRating = MobilityQueries.getPassengerRating;
   static getMobilityConversations = MobilityQueries.getMobilityConversations;
-  static getLastMessage = MobilityQueries.getLastMessage;
-  static getUnreadCount = MobilityQueries.getUnreadCount;
   static getAvailableRides = MobilityQueries.getAvailableRides;
   static getUserRides = MobilityQueries.getUserRides;
   static getRideWithAddresses = MobilityQueries.getRideWithAddresses;
