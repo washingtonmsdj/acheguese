@@ -111,6 +111,11 @@ BEGIN
     JOIN public.driver_availability availability
       ON availability.profile_id = profile.id
     WHERE profile.profile_type = 'driver'
+      AND profile.user_id <> (
+        SELECT passenger.user_id
+        FROM public.profiles passenger
+        WHERE passenger.id = v_ride.passenger_profile_id
+      )
       AND profile.is_active = true
       AND NOT (
         (COALESCE(profile.is_suspended, false) OR COALESCE(profile.suspended, false))
