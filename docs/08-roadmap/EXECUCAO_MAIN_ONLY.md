@@ -1217,6 +1217,44 @@ Próximo imediato:
 5. repetir probe transacional sobre o runtime persistido;
 6. então abrir G36C para admin/driver/ride writers restantes.
 
+### Checkpoint G36B2 — Business reconciliado no runtime (2026-09-09)
+
+Aplicação/reconciliação do commit `bae5977d54b26b2a8fe9e4a1a7b97d89498e2888`:
+- migration `broker_owned_business_lifecycle_g36`: aplicada com sucesso no Supabase canônico;
+- `profile-rpc`: **v16 ACTIVE**, `verify_jwt=true`;
+- entrypoint remoto + `_shared/accountOperational.ts` + `_shared/security.ts`: byte-a-byte iguais ao SHA;
+- estado Business após backfill: **97 business_data / 97 business_stats / 0 stats faltantes / 0 business_id incorretos / 0 duplicatas por profile_id**;
+- constraint `business_data_profile_id_key UNIQUE(profile_id)`: ativa;
+- trigger `business_data_ensure_stats`: ativo;
+- `profile_rpc_create_business`, `profile_rpc_update_business` e `profile_rpc_deactivate_business`: EXECUTE direto `anon=false`, `authenticated=false`, `service_role=true`;
+- `business_data` permanece sem DML para browser; `business_stats/business_hours` conservam grants autenticados temporariamente por compatibilidade com callers ainda não migrados.
+
+Probe transacional sobre o runtime persistido, seguido de `ROLLBACK`:
+- create completo Profile + membership + Business + stats + hours + contact: PASS;
+- cross-owner: bloqueado;
+- server-owned `is_verified`: bloqueado;
+- campo estrutural `business_role`: bloqueado;
+- metadata arbitrário e tipo inválido: bloqueados;
+- Address de outro owner: bloqueado;
+- update de nome/contact/hours sincronizado: PASS;
+- create com reserved slug: bloqueado sem resíduo;
+- soft-delete Profile + Business: PASS;
+- rollback confirmado: 97/97 preservados e 0 linhas Profile/Business/contact do probe persistidas.
+
+Advisor:
+- nenhum dos três novos RPCs Business aparece como SECURITY DEFINER executável por `anon/authenticated`;
+- findings globais antigos permanecem e devem ser auditados por authority, não corrigidos em massa.
+
+CI/deploy:
+- Vercel do SHA falhou por `Deployment rate limited — retry in 24 hours`;
+- jobs GitHub marcados como failure não executaram nenhum step (`steps=[]`) e não produziram job logs;
+- portanto **não há evidência de falha de teste do código**, mas build/typecheck/Vitest do SHA continuam não certificados por runner real.
+
+**G36B runtime: PASS.**
+**G36B build/typecheck: PENDENTE DE RUNNER REAL.**
+
+Próximo: G36C deve retirar os writers restantes de Admin/Driver/Ride da stack genérica de Profile, mantendo cada mutação no owner de domínio e sem revogar grants de compatibilidade antes do frontend same-SHA LIVE.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:
