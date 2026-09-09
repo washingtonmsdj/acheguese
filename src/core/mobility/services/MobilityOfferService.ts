@@ -443,7 +443,13 @@ export class MobilityOfferService {
       const offers: ReservationOffer[] = [];
 
       for (const ride of rides) {
-        if (!ride.origin_lat || !ride.origin_lng || !ride.destination_lat || !ride.destination_lng) {
+        if (
+          !ride.scheduled_for ||
+          !ride.origin_lat ||
+          !ride.origin_lng ||
+          !ride.destination_lat ||
+          !ride.destination_lng
+        ) {
           continue;
         }
 
