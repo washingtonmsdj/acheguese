@@ -175,11 +175,7 @@ export async function checkSuspensionExpiry(profileId: string): Promise<void> {
 
     const suspendedUntil = new Date(profile.suspended_until);
     if (suspendedUntil < new Date()) {
-      await profileService.updateProfile(profileId, {
-        is_suspended: false,
-        suspended: false,
-        suspended_until: null,
-      });
+      await profileService.clearExpiredSuspension(profileId);
 
       logger.info("MobilityMutations.checkSuspensionExpiry - suspension lifted", { profileId });
     }

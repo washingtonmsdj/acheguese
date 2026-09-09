@@ -97,6 +97,7 @@ export {
 export { profileService, ProfileService } from "./services/ProfileService";
 export type {
   CreateProfilePayload,
+  OwnedProfileUpdatePayload,
   UpdateProfilePayload,
   AdminProfileListItem,
   AdminFilters,

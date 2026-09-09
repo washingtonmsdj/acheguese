@@ -48,6 +48,7 @@ export type {
   ProfileRow,
   ProfileType,
   CreateProfilePayload,
+  OwnedProfileUpdatePayload,
   UpdateProfilePayload,
   ProfileContext,
   ProfileStatus,

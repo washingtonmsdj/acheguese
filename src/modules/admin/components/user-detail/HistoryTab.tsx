@@ -21,7 +21,7 @@ interface HistoryTabProps {
   user: {
     created_at?: string | null;
     verified_at?: string | null;
-    is_verified_resident?: boolean | null;
+    verified?: boolean | null;
   } | null;
 }
 
@@ -51,7 +51,7 @@ export function HistoryTab({ suspensionHistory, user }: HistoryTabProps) {
             icon: Shield,
             color: "text-green-400",
             title: "Conta verificada",
-            description: "Usuário foi verificado como morador",
+            description: "Perfil aprovado pela verificação administrativa",
             timestamp: user.verified_at,
           },
         ]
@@ -93,7 +93,7 @@ export function HistoryTab({ suspensionHistory, user }: HistoryTabProps) {
             <div className="p-3 bg-[#0A0F14] rounded-lg">
               <p className="text-xs text-gray-400">Verificações</p>
               <p className="text-lg font-bold text-green-400">
-                {user?.is_verified_resident ? 1 : 0}
+                {user?.verified ? 1 : 0}
               </p>
             </div>
           </div>

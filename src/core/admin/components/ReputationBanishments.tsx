@@ -84,7 +84,7 @@ export function ReputationBanishments() {
   async function removeSuspension(userId: string) {
     try {
       // ✅ MIGRADO - Usa ProfileService para remover suspensão
-      await profileService.unsuspendUser(userId);
+      await AdminUserService.unsuspendProfile(userId);
 
       toast.success("Suspensão removida");
       loadData();

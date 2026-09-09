@@ -1106,6 +1106,39 @@ Próximo:
 2. quando houver deploy web same-SHA comprovado, executar G35B removendo a policy/table DML browser;
 3. seguir G36: convergir a stack principal de `ProfileService/profile.mutations.ts`, que ainda faz DML direto em `profiles`, com o `ProfileRpcService` já canônico no multi-profile.
 
+### Checkpoint G36A — Profile self-service broker-owned (2026-09-09)
+
+Auditoria de raiz:
+- a stack principal `ProfileService/profile.mutations.ts` ainda atualizava `public.profiles` diretamente no browser;
+- a stack multi-profile já usava `profile-rpc` para create/handle/delete, mas ainda fazia UPDATE base via `updateLooseRows('profiles', ...)`;
+- `UpdateProfilePayload` misturava dados self-service com suspensão, verificação, ride state e outros campos administrativos;
+- o banco mantém `username` e `handle` como identidades distintas; `profile_rpc_update_profile_handle` altera somente `handle`;
+- a UI Admin ainda tentava escrever `is_verified_resident`, coluna que **não existe** no schema remoto atual. O estado canônico de verificação do Profile é `verified/verified_at`.
+
+Correção G36A preparada:
+- [x] novo `OwnedProfileUpdatePayload` contém apenas campos editáveis pelo owner/manager; suspensão, verificação, ride state, metadata arbitrária e reputação não fazem parte do contrato;
+- [x] `ProfileService.updateProfile` e o adapter multi-profile enviam updates por `ProfileRpcService.updateOwnedProfile`;
+- [x] username é separado do patch de dados e validado tanto no cliente quanto no servidor; o servidor exige Profile pessoal, formato, reserved names, unicidade e cooldown;
+- [x] histórico de username preserva ator real do broker via contexto transacional e continua classificando mudança do owner/manager como `user_requested`;
+- [x] `updateProfile/updatePrivacySettings/deleteProfile/switchActiveProfile` do barrel permanecem funcionais, mas update/delete/switch passam pelos brokers canônicos;
+- [x] auto-clear de suspensão expirada em Mobilidade usa comando específico `clearExpiredSuspension`, que só pode limpar estado já expirado;
+- [x] componentes Admin deixam de usar `ProfileService.updateProfile` para moderação; writes administrativos ficam explicitamente em `AdminUserService` até o G36C;
+- [x] Admin deixa de expor a flag fantasma `is_verified_resident` e passa a consumir `verified/verified_at`;
+- [x] migration cria `profile_rpc_update_owned_profile` e `profile_rpc_clear_expired_suspension` como targets service-role-only;
+- [x] ratchet cobre broker, tipos, separação Admin/Mobility e compatibilidade de grants.
+
+Compatibilidade/cutover:
+- G36A **não revoga** ainda INSERT/UPDATE/DELETE de `authenticated` em `public.profiles`, pois o frontend production publicado continua atrasado;
+- criação direta de Profile usada pelo create Business permanece para o G36B, que deve converter o agregado Business de forma atômica;
+- writes administrativos e resíduos driver/ride em `profile.mutations.ts` ficam para G36C, em seus respectivos owners;
+- somente depois de frontend same-SHA LIVE e G36B/G36C concluídos deve existir migration de revogação dos grants browser em `profiles`.
+
+Próximo imediato:
+1. aplicar migration G36A no Supabase canônico;
+2. redeployar `profile-rpc` com source exato do commit;
+3. provar EXECUTE service-role-only, source equality e probes transacionais de owner/cross-owner/server-field/username/expiry;
+4. então abrir G36B para criação Business atômica via broker existente.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:

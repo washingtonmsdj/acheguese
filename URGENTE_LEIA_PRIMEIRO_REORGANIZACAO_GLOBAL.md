@@ -30,6 +30,7 @@ Leia nesta ordem:
 - G34D2 migra o export LGPD para `public.service_areas`; `user-export-data` continua não implantada e uncertified, portanto não deve ser deployada antes do preflight;
 - G35A está reconciliado no runtime: `profile-rpc v14 ACTIVE` é byte-a-byte igual ao Git; novos RPCs Professional são service-role-only; probe create/update/deactivate PASS com rollback;
 - G35A2 reparou uma duplicata real de `professional_data` e agora vale `UNIQUE(profile_id)`; estado remoto: 4 Professionals / 4 Profiles / 4 stats / 0 duplicatas;
+- G36A prepara Profile self-service broker-owned: `OwnedProfileUpdatePayload` restrito, update/privacy/delete/switch sem DML direto, username com enforcement server-side, Mobilidade limpa suspensão expirada por comando específico e Admin usa `verified/verified_at` canônicos;
 - grants browser antigos de `professional_data/professional_stats` ficam temporariamente apenas por compatibilidade com o frontend production desatualizado e devem ser revogados no G35B após deploy novo comprovado;
 - **não** adicionar `ServiceAreasService` ao incremental baseline para esconder a violação;
 - Supabase canônico: `xhdowzacfujckjelqhtd`;
@@ -37,7 +38,7 @@ Leia nesta ordem:
 - Vercel atual está bloqueando novos builds por limite do provider e GitHub jobs recentes nem iniciam steps; portanto build/E2E same-SHA continuam pendentes de execução real;
 - último deploy Vercel production READY localizado: `86c76fc8d48550fbbed783a359c32f6cdf6a435d`, muito atrás da `main`;
 - Mobilidade continua **launch-paused**: `PUBLIC_LAUNCH_SURFACES.mobility=false`;
-- próximo eixo estrutural: G36 convergir `ProfileService/profile.mutations.ts` para o `ProfileRpcService`; depois retomar build/E2E/smoke/deploy same-SHA e executar o cutover G35B quando o frontend novo estiver LIVE;
+- próximo gate: aplicar/reconciliar G36A no Supabase e `profile-rpc`; depois G36B (create Business atômico) e G36C (admin/driver/ride writers), antes do cutover final dos grants de `profiles`;
 - descoberta estrutural pendente: `ProfileService` principal ainda possui DML direto em `profiles`, enquanto multi-profile já usa broker; tratar em G36, sem criar uma terceira stack;
 - não restaurar DML direto, operator scripts obsoletos, wrappers concorrentes, dynamic-table novo ou authorities paralelas.
 

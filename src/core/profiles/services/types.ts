@@ -126,24 +126,39 @@ export interface CreateProfilePayload {
   public_location_visibility?: "hidden" | "city_only" | "district";
 }
 
-export interface UpdateProfilePayload {
+export interface OwnedProfileUpdatePayload {
   name?: string;
   display_name?: string;
   username?: string;
   bio?: string;
+  short_bio?: string;
   avatar_url?: string;
-  cover_url?: string;
   city?: string;
   neighborhood?: string;
   street?: string;
+  state?: string;
+  location?: string;
+  location_id?: string;
+  main_territory_location_id?: string;
+  public_location_visibility?: "hidden" | "city_only" | "district";
   is_active?: boolean;
+  contact_email?: string;
+  phone?: string;
+  website?: string;
+  is_public?: boolean;
+  show_contact_email?: boolean;
+  show_phone?: boolean;
+  show_linked_profiles?: boolean;
+  show_business_links?: boolean;
+  show_professional_links?: boolean;
+  share_activity_default?: boolean;
+}
+
+export interface UpdateProfilePayload extends OwnedProfileUpdatePayload {
+  cover_url?: string;
   metadata?: Record<string, unknown>;
   telefone?: string;
   whatsapp?: string;
-  phone?: string;
-  state?: string;
-  location_id?: string;
-  main_territory_location_id?: string;
   suspended?: boolean;
   suspended_at?: string | null;
   suspended_until?: string | null;

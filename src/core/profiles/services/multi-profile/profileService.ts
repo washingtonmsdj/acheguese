@@ -10,10 +10,7 @@
  * - Anon usa apenas views públicas
  */
 import { logger } from '@/shared/utils/logger';
-import {
-  selectLooseRows,
-  updateLooseRows,
-} from '@/integrations/supabase';
+import { selectLooseRows } from '@/integrations/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
 import { SessionState } from '@/core/session/state/SessionState';
 import { ProfileRpcService } from '../ProfileRpcService';
@@ -68,7 +65,6 @@ export class MultiProfileService {
       street: profile.street ?? '',
       state: profile.state ?? '',
       public_location_visibility: profile.public_location_visibility ?? 'city_only',
-      community_reputation_score: profile.community_reputation_score ?? 0,
       is_public: profile.is_public,
       show_contact_email: profile.show_contact_email,
       show_phone: profile.show_phone,
@@ -312,17 +308,23 @@ export class MultiProfileService {
   }
 
   /**
-   * Atualizar perfil (via RLS)
+   * Atualizar dados base editáveis do perfil pelo broker canônico.
+   * Alteração de handle continua no comando de identidade dedicado.
    */
   static async updateProfile(profileId: string, updates: UpdateProfileInput): Promise<ServiceResponse<Profile>> {
     try {
-      const { error } = await updateLooseRows(
-        'profiles',
-        updates as Record<string, unknown>,
-        [{ column: 'id', value: profileId }],
-      );
+      const { handle, ...patch } = updates;
+      if (handle !== undefined) {
+        throw new Error('Use updateHandle para alterar o identificador público');
+      }
 
-      if (error) throw error;
+      const result = await ProfileRpcService.updateOwnedProfile<
+        ServiceResponse<{ profile_id: string; username?: string | null }>
+      >(profileId, patch as Record<string, unknown>);
+
+      if (!result.success) {
+        throw new Error(result.error || 'Profile broker rejected update');
+      }
 
       const refreshed = await this.getProfileById(profileId);
       if (!refreshed) {

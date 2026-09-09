@@ -28,6 +28,8 @@ const ACTIONS = {
   createProfessional: true,
   updateProfessionalData: true,
   deactivateProfessional: true,
+  updateOwnedProfile: true,
+  clearExpiredSuspension: true,
   updateHandle: true,
   deleteProfile: true,
   transferOwnership: true,
@@ -153,6 +155,118 @@ function optionalExtensionData(value: unknown): Record<string, unknown> | null {
   delete sanitized.p_actor_user_id;
   delete sanitized.user_id;
   return sanitized;
+}
+
+const OWNED_PROFILE_PATCH_KEYS = new Set([
+  "name",
+  "display_name",
+  "bio",
+  "short_bio",
+  "avatar_url",
+  "city",
+  "neighborhood",
+  "street",
+  "state",
+  "location_id",
+  "main_territory_location_id",
+  "public_location_visibility",
+  "is_active",
+  "contact_email",
+  "phone",
+  "website",
+  "location",
+  "is_public",
+  "show_contact_email",
+  "show_phone",
+  "show_linked_profiles",
+  "show_business_links",
+  "show_professional_links",
+  "share_activity_default",
+]);
+
+function sanitizeOwnedProfilePatch(value: unknown): Record<string, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new RequestValidationError("Invalid profile patch");
+  }
+
+  const input = { ...(value as Record<string, unknown>) };
+  for (const key of Object.keys(input)) {
+    if (!OWNED_PROFILE_PATCH_KEYS.has(key)) {
+      throw new RequestValidationError(`Unsupported profile field: ${key}`);
+    }
+  }
+
+  if ("name" in input) {
+    input.name = requireString(input.name, "name", 160);
+  }
+
+  for (const [key, maxLength] of [
+    ["display_name", 160],
+    ["bio", 4000],
+    ["short_bio", 280],
+    ["avatar_url", 2048],
+    ["city", 160],
+    ["neighborhood", 160],
+    ["street", 300],
+    ["state", 160],
+    ["location", 160],
+    ["phone", 64],
+    ["website", 2048],
+  ] as const) {
+    if (key in input) {
+      input[key] = optionalString(input[key], key, maxLength);
+    }
+  }
+
+  if ("contact_email" in input) {
+    const email = optionalString(input.contact_email, "contact_email", 254);
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new RequestValidationError("Invalid contact_email");
+    }
+    input.contact_email = email;
+  }
+
+  for (const key of ["location_id", "main_territory_location_id"] as const) {
+    if (key in input) {
+      input[key] = optionalUuid(input[key], key);
+    }
+  }
+
+  for (const key of [
+    "is_active",
+    "is_public",
+    "show_contact_email",
+    "show_phone",
+    "show_linked_profiles",
+    "show_business_links",
+    "show_professional_links",
+    "share_activity_default",
+  ] as const) {
+    if (key in input && input[key] !== null && typeof input[key] !== "boolean") {
+      throw new RequestValidationError(`Invalid ${key}`);
+    }
+  }
+
+  if (
+    "public_location_visibility" in input &&
+    input.public_location_visibility !== null &&
+    !["hidden", "city_only", "district"].includes(
+      String(input.public_location_visibility),
+    )
+  ) {
+    throw new RequestValidationError("Invalid public_location_visibility");
+  }
+
+  return input;
+}
+
+function optionalUsername(value: unknown): string | null {
+  if (value === undefined || value === null || value === "") return null;
+  const username = requireString(value, "username", 30).toLowerCase();
+  if (!/^[a-z][a-z0-9_]{2,29}$/.test(username)) {
+    throw new RequestValidationError("Invalid username");
+  }
+  return username;
 }
 
 const PROFESSIONAL_PATCH_KEYS = new Set([
@@ -461,6 +575,45 @@ async function handleDeactivateProfessional(
   return data ?? { success: false, error: "Professional deactivate RPC returned no data" };
 }
 
+async function handleUpdateOwnedProfile(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const profileId = requireUuid(params.profileId, "profileId");
+  const patch = sanitizeOwnedProfilePatch(params.patch ?? {});
+  const newUsername = optionalUsername(params.newUsername);
+
+  const { data, error } = await supabaseAdmin.rpc("profile_rpc_update_owned_profile", {
+    p_actor_user_id: auth.userId,
+    p_profile_id: profileId,
+    p_patch: patch,
+    p_new_username: newUsername,
+  });
+
+  if (error) throw error;
+  return data ?? { success: false, error: "Profile update RPC returned no data" };
+}
+
+async function handleClearExpiredSuspension(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const profileId = requireUuid(params.profileId, "profileId");
+
+  const { data, error } = await supabaseAdmin.rpc(
+    "profile_rpc_clear_expired_suspension",
+    {
+      p_actor_user_id: auth.userId,
+      p_profile_id: profileId,
+    },
+  );
+
+  if (error) throw error;
+  return data ?? { success: false, error: "Suspension clear RPC returned no data" };
+}
+
 async function handleUpdateHandle(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
@@ -590,6 +743,10 @@ async function dispatchAction(
       return handleUpdateProfessionalData(supabaseAdmin, auth, params);
     case "deactivateProfessional":
       return handleDeactivateProfessional(supabaseAdmin, auth, params);
+    case "updateOwnedProfile":
+      return handleUpdateOwnedProfile(supabaseAdmin, auth, params);
+    case "clearExpiredSuspension":
+      return handleClearExpiredSuspension(supabaseAdmin, auth, params);
     case "updateHandle":
       return handleUpdateHandle(supabaseAdmin, auth, params);
     case "deleteProfile":

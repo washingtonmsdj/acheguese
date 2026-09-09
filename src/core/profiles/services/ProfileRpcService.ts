@@ -5,6 +5,8 @@ type ProfileRpcAction =
   | "createProfessional"
   | "updateProfessionalData"
   | "deactivateProfessional"
+  | "updateOwnedProfile"
+  | "clearExpiredSuspension"
   | "updateHandle"
   | "deleteProfile"
   | "transferOwnership"
@@ -79,6 +81,22 @@ export class ProfileRpcService {
 
   static async deactivateProfessional<TResult>(profileId: string): Promise<TResult> {
     return this.invoke<TResult>("deactivateProfessional", { profileId });
+  }
+
+  static async updateOwnedProfile<TResult>(
+    profileId: string,
+    patch: Record<string, unknown>,
+    newUsername?: string | null,
+  ): Promise<TResult> {
+    return this.invoke<TResult>("updateOwnedProfile", {
+      profileId,
+      patch,
+      newUsername: newUsername ?? null,
+    });
+  }
+
+  static async clearExpiredSuspension<TResult>(profileId: string): Promise<TResult> {
+    return this.invoke<TResult>("clearExpiredSuspension", { profileId });
   }
 
   static async updateHandle<TResult>(profileId: string, newHandle: string): Promise<TResult> {

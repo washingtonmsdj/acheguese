@@ -28,7 +28,7 @@ import type {
   ProfileRow as Profile,
   ProfileSummary,
   ProfileSummaryExtended,
-  UpdateProfilePayload,
+  OwnedProfileUpdatePayload,
 } from "./types";
 import type { ProfileVerificationStatus } from "@/core/profiles/constants/verificationStatus";
 import type {
@@ -71,13 +71,8 @@ import { getProfileStatsAggregate } from "./profile.stats.aggregate";
 import {
   clearActiveRideId as clearActiveRideIdMutation,
   createProfileWithIdentityValidation,
-  deleteProfile as deleteProfileMutation,
   ensureActiveDriverProfileForUser,
   setActiveRideId as setActiveRideIdMutation,
-  suspendUser as suspendUserMutation,
-  updateAlertBanStatus as updateAlertBanStatusMutation,
-  updatePrivacySettingsDirect,
-  updateProfileDirect,
   uploadAvatar as uploadAvatarMutation,
 } from "./profile.mutations";
 import {
@@ -224,35 +219,78 @@ export class ProfileService {
   }
   async updateProfile(
     profileId: string,
-    updates: UpdateProfilePayload,
+    updates: OwnedProfileUpdatePayload,
   ): Promise<Profile> {
     return updateProfileCommand({
       profileId,
       updates,
       getProfileById: (id) => this.getAccessibleProfileById(id),
-      updateProfileDirect: (id, payload) => updateProfileDirect(id, payload),
+      updateOwnedProfile: (id, payload, newUsername) =>
+        this.updateOwnedProfile(id, payload, newUsername),
     });
   }
-  private async _updateProfileDirect(
+
+  private async updateOwnedProfile(
     profileId: string,
-    updates: UpdateProfilePayload,
+    updates: OwnedProfileUpdatePayload,
+    newUsername?: string | null,
   ): Promise<Profile> {
-    return updateProfileDirect(profileId, updates);
+    const result = await ProfileRpcService.updateOwnedProfile<{
+      success: boolean;
+      data?: { profile_id: string; username?: string | null };
+      error?: string;
+    }>(
+      profileId,
+      updates as Record<string, unknown>,
+      newUsername,
+    );
+
+    if (!result.success) {
+      throw new Error(result.error || "Profile update rejected");
+    }
+
+    const refreshed = await this.getAccessibleProfileById(profileId);
+    if (!refreshed) {
+      throw new Error("Updated profile could not be reloaded");
+    }
+    return refreshed;
   }
   async updatePrivacySettings(
     profileId: string,
     settings: ProfilePrivacySettingsInput,
   ): Promise<Profile> {
-    return updatePrivacySettingsDirect(profileId, settings);
-  }
-  async updateAlertBanStatus(
-    profileId: string,
-    alertBanned: boolean,
-  ): Promise<Profile> {
-    return updateAlertBanStatusMutation(profileId, alertBanned);
+    const unsupported = [
+      settings.show_location !== undefined ? "show_location" : null,
+      settings.allow_messages !== undefined ? "allow_messages" : null,
+      settings.show_activity !== undefined ? "show_activity" : null,
+    ].filter((field): field is string => Boolean(field));
+
+    if (unsupported.length > 0) {
+      throw new Error(`Unsupported privacy settings: ${unsupported.join(", ")}`);
+    }
+
+    return this.updateOwnedProfile(profileId, {
+      ...(settings.is_public !== undefined ? { is_public: settings.is_public } : {}),
+      ...(settings.show_email !== undefined
+        ? { show_contact_email: settings.show_email }
+        : {}),
+      ...(settings.show_phone !== undefined ? { show_phone: settings.show_phone } : {}),
+      ...(settings.show_businesses !== undefined
+        ? { show_business_links: settings.show_businesses }
+        : {}),
+      ...(settings.share_activity_default !== undefined
+        ? { share_activity_default: settings.share_activity_default }
+        : {}),
+    } as OwnedProfileUpdatePayload);
   }
   async deleteProfile(profileId: string): Promise<void> {
-    await deleteProfileMutation(profileId);
+    const result = await ProfileRpcService.deleteProfile<{
+      success: boolean;
+      error?: string;
+    }>(profileId);
+    if (!result.success) {
+      throw new Error(result.error || "Profile delete rejected");
+    }
   }
   async getPrivateWorkspace(userId: string): Promise<ProfilePrivateWorkspace> {
     return getPrivateWorkspaceAggregate({
@@ -384,20 +422,18 @@ export class ProfileService {
   async getVisibleContact(profileId: string): Promise<VisibleProfileContact | null> {
     return ProfileRpcService.getVisibleContact(profileId);
   }
-  async unsuspendUser(userId: string): Promise<void> {
-    await this.updateProfile(userId, {
-      is_suspended: false,
-      suspended: false,
-      suspended_until: null,
-      suspension_reason: undefined,
-    });
-  }
-  async suspendUser(
-    userId: string,
-    duration: string,
-    reason: string,
-  ): Promise<void> {
-    await suspendUserMutation(userId, duration, reason);
+  async clearExpiredSuspension(profileId: string): Promise<boolean> {
+    const result = await ProfileRpcService.clearExpiredSuspension<{
+      success: boolean;
+      data?: { profile_id: string; cleared: boolean };
+      error?: string;
+    }>(profileId);
+
+    if (!result.success) {
+      throw new Error(result.error || "Suspension clear rejected");
+    }
+
+    return result.data?.cleared ?? false;
   }
   async getSuspendedUsers(limit = 100): Promise<
     Array<{

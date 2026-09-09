@@ -151,4 +151,110 @@ describe("profile rpc broker security", () => {
     expect(migration).not.toContain("9299019a-0af0-4892-8226-7d1e3d9f0c36");
     expect(migration).not.toContain("d4fcd570-ba34-4624-ba90-4190767c6784");
   });
+  it("brokers owner profile edits and separates admin/mobility authorities", () => {
+    const migration = readProjectFile(
+      "supabase/migrations/20260909222500_broker_owned_profile_self_service_g36.sql",
+    );
+    const edge = readProjectFile("supabase/functions/profile-rpc/index.ts");
+    const broker = readProjectFile("src/core/profiles/services/ProfileRpcService.ts");
+    const profileService = readProjectFile("src/core/profiles/services/ProfileService.ts");
+    const identityCommand = readProjectFile(
+      "src/core/profiles/services/profile.identity.commands.ts",
+    );
+    const profileMutations = readProjectFile(
+      "src/core/profiles/services/profile.mutations.ts",
+    );
+    const multiProfile = readProjectFile(
+      "src/core/profiles/services/multi-profile/profileService.ts",
+    );
+    const profileTypes = readProjectFile("src/core/profiles/services/types.ts");
+    const adminActions = readProjectFile(
+      "src/modules/admin/components/user-detail/UserActionsCard.tsx",
+    );
+    const adminSuspend = readProjectFile(
+      "src/modules/admin/components/user-detail/SuspendUserDialog.tsx",
+    );
+    const adminDetail = readProjectFile(
+      "src/modules/admin/hooks/useAdminUserDetail.ts",
+    );
+    const mobilityMutation = readProjectFile(
+      "src/core/mobility/services/mobility.mutations.ts",
+    );
+    const mobilityRuntime = readProjectFile(
+      "src/core/mobility/services/MobilityRuntimeService.ts",
+    );
+
+    expect(edge).toContain('"updateOwnedProfile"');
+    expect(edge).toContain('"clearExpiredSuspension"');
+    expect(edge).toContain("sanitizeOwnedProfilePatch");
+    expect(edge).toContain('supabaseAdmin.rpc("profile_rpc_update_owned_profile"');
+    expect(edge).toContain('"profile_rpc_clear_expired_suspension"');
+    expect(broker).toContain('this.invoke<TResult>("updateOwnedProfile"');
+    expect(broker).toContain('this.invoke<TResult>("clearExpiredSuspension"');
+
+    expect(profileService).toContain("ProfileRpcService.updateOwnedProfile");
+    expect(profileService).toContain("ProfileRpcService.clearExpiredSuspension");
+    expect(profileService).not.toContain("updateProfileDirect");
+    expect(profileService).not.toContain("updatePrivacySettingsDirect");
+    expect(profileService).not.toContain("suspendUserMutation");
+    expect(identityCommand).toContain("updateOwnedProfile");
+    expect(identityCommand).not.toContain("updateProfileDirect");
+
+    expect(profileMutations).toContain("ProfileRpcService.updateOwnedProfile");
+    expect(profileMutations).toContain("ProfileRpcService.deleteProfile");
+    expect(profileMutations).toContain("SessionRpcService.switchActiveProfile");
+    expect(profileMutations).not.toContain("export async function updateProfileDirect");
+    expect(profileMutations).not.toContain("export async function suspendUser");
+
+    expect(multiProfile).toContain("ProfileRpcService.updateOwnedProfile");
+    expect(multiProfile).not.toContain("updateLooseRows");
+
+    const ownedType = profileTypes.match(
+      /export interface OwnedProfileUpdatePayload \{[\s\S]*?\n\}/,
+    )?.[0] ?? "";
+    expect(ownedType).toContain("username?: string");
+    expect(ownedType).toContain("share_activity_default?: boolean");
+    for (const forbidden of [
+      "suspended",
+      "suspension_reason",
+      "is_verified",
+      "verified?:",
+      "active_ride_id",
+      "metadata",
+      "community_reputation_score",
+    ]) {
+      expect(ownedType).not.toContain(forbidden);
+    }
+
+    expect(adminActions).toContain("AdminUserService.verifyUser");
+    expect(adminActions).toContain("AdminUserService.unsuspendProfile");
+    expect(adminActions).not.toContain("profileService.updateProfile");
+    expect(adminSuspend).toContain("AdminUserService.suspendProfile");
+    expect(adminSuspend).not.toContain("profileService.updateProfile");
+    expect(adminDetail).toContain("verified: profileData.verified");
+    expect(adminDetail).not.toContain("profileData.is_verified_resident");
+
+    for (const source of [mobilityMutation, mobilityRuntime]) {
+      expect(source).toContain("profileService.clearExpiredSuspension(profileId)");
+      expect(source).not.toMatch(
+        /profileService\.updateProfile\(profileId,[\s\S]{0,180}suspended/,
+      );
+    }
+
+    expect(migration).toContain("private.profile_patch_owned");
+    expect(migration).toContain("profile_rpc_update_owned_profile");
+    expect(migration).toContain("profile_rpc_clear_expired_suspension");
+    expect(migration).toContain("Unsupported profile field:");
+    expect(migration).toContain("Username changes are personal-profile only");
+    expect(migration).toContain("Username cooldown active");
+    expect(migration).toContain("app.profile_actor_user_id");
+    expect(migration).toContain("user_requested");
+    expect(migration).toContain("suspended_until <= now()");
+    expect(migration).toContain("Compatibility window");
+
+    expect(migration).not.toContain(
+      "REVOKE INSERT, UPDATE, DELETE ON TABLE public.profiles",
+    );
+  });
+
 });

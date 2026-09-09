@@ -35,7 +35,8 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
-import { profileService } from "@/core/profiles/services/ProfileService"; // ✅ MIGRADO - Usa ProfileService
+import { profileService } from "@/core/profiles/services/ProfileService";
+import { AdminUserService } from "@/core/admin/services/AdminUserService"; // ✅ MIGRADO - Usa ProfileService
 import type { ProfileContext } from "@/core/profiles/views/ProfileContext"; // ✅ MIGRADO - views/ProfileContext
 import { adminMobilityService } from "@/core/admin"; // ✅ MIGRADO - Usa AdminMobilityService do core
 
@@ -123,7 +124,7 @@ export function DriverCancellationMetrics() {
   async function removeSuspension(driverProfileId: string) {
     try {
       // ✅ MIGRADO - Usa ProfileService para remover suspensão
-      await profileService.unsuspendUser(driverProfileId);
+      await AdminUserService.unsuspendProfile(driverProfileId);
 
       toast.success("Suspensão removida com sucesso");
       loadDriversData();

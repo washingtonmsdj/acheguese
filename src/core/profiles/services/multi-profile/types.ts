@@ -54,7 +54,6 @@ export interface MultiProfileRecord {
   show_business_links: boolean;
   show_professional_links: boolean;
   short_bio?: string | null;
-  community_reputation_score?: number;
   reputation_score: number;
   trust_score: number;
   created_at: string;

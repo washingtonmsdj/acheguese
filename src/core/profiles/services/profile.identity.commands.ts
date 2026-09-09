@@ -1,16 +1,21 @@
 import { PublicIdentityService } from "@/core/public-identity";
-import type { ProfileRow as Profile, UpdateProfilePayload } from "./types";
+import type { OwnedProfileUpdatePayload, ProfileRow as Profile } from "./types";
 
 export async function updateProfileCommand(params: {
   profileId: string;
-  updates: UpdateProfilePayload;
+  updates: OwnedProfileUpdatePayload;
   getProfileById: (profileId: string) => Promise<Profile | null>;
-  updateProfileDirect: (profileId: string, updates: UpdateProfilePayload) => Promise<Profile>;
+  updateOwnedProfile: (
+    profileId: string,
+    updates: OwnedProfileUpdatePayload,
+    newUsername?: string | null,
+  ) => Promise<Profile>;
 }): Promise<Profile> {
-  const { profileId, updates, getProfileById, updateProfileDirect } = params;
+  const { profileId, updates, getProfileById, updateOwnedProfile } = params;
+  const { username, ...profilePatch } = updates;
 
-  if (!updates.username) {
-    return updateProfileDirect(profileId, updates);
+  if (!username) {
+    return updateOwnedProfile(profileId, profilePatch);
   }
 
   const currentProfile = await getProfileById(profileId);
@@ -18,11 +23,11 @@ export async function updateProfileCommand(params: {
     throw new Error("Profile not found");
   }
 
-  if (currentProfile.username === updates.username) {
-    return updateProfileDirect(profileId, updates);
+  if (currentProfile.username === username) {
+    return updateOwnedProfile(profileId, profilePatch);
   }
 
-  const validation = PublicIdentityService.validateFormat(updates.username, "profile");
+  const validation = PublicIdentityService.validateFormat(username, "profile");
   if (!validation.valid) {
     throw new Error(`Invalid username: ${validation.error}`);
   }
@@ -37,7 +42,7 @@ export async function updateProfileCommand(params: {
   }
 
   const availability = await PublicIdentityService.checkAvailability({
-    identifier: updates.username,
+    identifier: username,
     entityType: "profile",
     excludeEntityId: profileId,
   });
@@ -45,5 +50,5 @@ export async function updateProfileCommand(params: {
     throw new Error("Username already in use");
   }
 
-  return updateProfileDirect(profileId, updates);
+  return updateOwnedProfile(profileId, profilePatch, username);
 }

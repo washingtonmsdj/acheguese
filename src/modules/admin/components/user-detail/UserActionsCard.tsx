@@ -20,7 +20,7 @@ import {
 import { SuspendUserDialog } from "./SuspendUserDialog";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
-import { profileService } from "@/core/profiles/services/ProfileService";
+import { AdminUserService } from "@/core/admin/services/AdminUserService";
 import { buildPublicProfileUrl } from "@/core/profiles/utils/publicProfileUrl";
 import { buildMailtoUrl, buildWhatsAppUrl, openContactUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl, openSafeUrlInNewTab } from "@/shared/utils/safeRedirect";
@@ -32,7 +32,7 @@ interface UserActionsCardProps {
     username?: string | null;
     email?: string | null;
     phone?: string | null;
-    is_verified_resident?: boolean | null;
+    verified?: boolean | null;
     suspended?: boolean | null;
     suspended_until?: string | null;
   };
@@ -46,9 +46,7 @@ export function UserActionsCard({ user, onUpdate }: UserActionsCardProps) {
   const handleVerify = async () => {
     setLoading(true);
     try {
-      await profileService.updateProfile(user.id, {
-        is_verified_resident: true,
-      });
+      await AdminUserService.verifyUser(user.id);
 
       logger.info("Usuário verificado", { userId: user.id });
       toast.success(`${user.name} foi verificado!`);
@@ -64,10 +62,7 @@ export function UserActionsCard({ user, onUpdate }: UserActionsCardProps) {
   const handleUnsuspend = async () => {
     setLoading(true);
     try {
-      await profileService.updateProfile(user.id, {
-        suspended: false,
-        suspended_until: null,
-      });
+      await AdminUserService.unsuspendProfile(user.id);
 
       logger.info("Suspensão removida", { userId: user.id });
       toast.success("Suspensão removida com sucesso!");
@@ -113,7 +108,7 @@ export function UserActionsCard({ user, onUpdate }: UserActionsCardProps) {
         </CardHeader>
         <CardContent className="space-y-2">
           {/* Verificação */}
-          {!user.is_verified_resident && (
+          {!user.verified && (
             <Button
               size="sm"
               className="w-full bg-green-600 hover:bg-green-700"
@@ -121,7 +116,7 @@ export function UserActionsCard({ user, onUpdate }: UserActionsCardProps) {
               disabled={loading}
             >
               <Shield className="h-4 w-4 mr-2" />
-              Verificar Morador
+              Verificar perfil
             </Button>
           )}
 

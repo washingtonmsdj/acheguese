@@ -8,6 +8,7 @@
 
 import { useEffect, useState } from "react";
 import { useToast } from "@/shared/hooks/use-toast";
+import { AdminUserService } from "@/core/admin/services/AdminUserService";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
 import type { DriverRequest, FilterStatus, SuspensionHistoryEntry } from "../sections/types";
@@ -288,10 +289,12 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
     setProcessing(true);
     try {
       const suspensionReason = reason || "Suspenso pelo administrador";
-      await profileService.suspendUser(
+      const suspendedUntil = new Date();
+      suspendedUntil.setDate(suspendedUntil.getDate() + 30);
+      await AdminUserService.suspendProfile(
         driver.profile_id,
-        "30 days",
         suspensionReason,
+        suspendedUntil,
       );
 
       await adminMobilityRuntimeService.updateDriverOnlineStatus(driver.profile_id, false).catch((err) =>
@@ -324,7 +327,7 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
   const handleReactivate = async (driver: DriverRequest) => {
     setProcessing(true);
     try {
-      await profileService.unsuspendUser(driver.profile_id);
+      await AdminUserService.unsuspendProfile(driver.profile_id);
       await appendModerationEvent({
         driverProfileId: driver.profile_id,
         action: "reactivated",

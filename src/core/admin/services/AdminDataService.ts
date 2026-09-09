@@ -12,6 +12,7 @@ import { profileService } from "@/core/profiles/services/ProfileService";
 import type { UpdateProfilePayload } from "@/core/profiles/services/types";
 import { logger } from "@/shared/utils/logger";
 import { adminRolesService } from "./AdminRolesService";
+import { AdminUserService } from "./AdminUserService";
 
 export class AdminDataService {
   /** Buscar detalhes completos de um usuario (admin only). */
@@ -47,7 +48,8 @@ export class AdminDataService {
         throw new Error("User profile not found");
       }
 
-      return await profileService.updateProfile(profile.id, updates);
+      await AdminUserService.updateProfile(profile.id, updates);
+      return profileService.getAccessibleProfileById(profile.id);
     } catch (error: unknown) {
       logger.error("Error updating user data:", error);
       throw new Error(

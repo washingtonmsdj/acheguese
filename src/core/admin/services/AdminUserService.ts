@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { adminRolesService } from "./AdminRolesService";
 import { VerificationAdminService } from "@/core/verification";
+import type { UpdateProfilePayload } from "@/core/profiles/services/types";
 
 export interface AdminUser {
   /** ID do auth.users */
@@ -100,6 +101,55 @@ export class AdminUserService {
   }
 
   /**
+   * Compatibilidade administrativa de atualização por profile_id.
+   * G36C moverá este write para broker admin antes de revogar grants da tabela.
+   */
+  static async updateProfile(
+    profileId: string,
+    updates: UpdateProfilePayload,
+  ): Promise<void> {
+    const { error } = await supabase
+      .from("profiles")
+      .update(updates)
+      .eq("id", profileId);
+
+    if (error) throw error;
+  }
+
+  static async suspendProfile(
+    profileId: string,
+    reason: string,
+    suspendedUntil?: Date,
+  ): Promise<void> {
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        is_suspended: true,
+        suspended: true,
+        suspension_reason: reason,
+        suspended_at: new Date().toISOString(),
+        suspended_until: suspendedUntil?.toISOString() ?? null,
+      })
+      .eq("id", profileId);
+
+    if (error) throw error;
+  }
+
+  static async unsuspendProfile(profileId: string): Promise<void> {
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        is_suspended: false,
+        suspended: false,
+        suspension_reason: null,
+        suspended_until: null,
+      })
+      .eq("id", profileId);
+
+    if (error) throw error;
+  }
+
+  /**
    * Suspende todos os perfis de um usuário.
    * ✅ Usa supabase normal com RLS (admin tem permissão)
    */
@@ -112,6 +162,7 @@ export class AdminUserService {
       .from("profiles")
       .update({
         is_suspended: true,
+        suspended: true,
         suspension_reason: reason,
         suspended_at: new Date().toISOString(),
         suspended_until: suspendedUntil?.toISOString() ?? null,
@@ -130,6 +181,7 @@ export class AdminUserService {
       .from("profiles")
       .update({
         is_suspended: false,
+        suspended: false,
         suspension_reason: null,
         suspended_until: null,
       })

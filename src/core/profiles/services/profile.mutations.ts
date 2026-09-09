@@ -10,18 +10,19 @@ import { trackError } from "@/shared/utils/errorTracking";
 import { SessionService } from "@/core/session/services/SessionService";
 import { mediaService } from "@/core/media/services/MediaService";
 import { PublicIdentityService } from "@/core/public-identity";
+import { ProfileRpcService } from "./ProfileRpcService";
+import { SessionRpcService } from "@/core/session/services/SessionRpcService";
 import type {
   CreateProfilePayload,
   ProfilePrivacySettingsInput,
   ProfileRow as Profile,
-  UpdateProfilePayload,
+  OwnedProfileUpdatePayload,
 } from "./types";
 import {
   getActiveProfile,
   getProfileByType,
   isUsernameAvailable,
 } from "./profile.queries";
-import { calculateSuspensionEnd } from "./profile.service.rules";
 import {
   buildCreateProfileInsert,
   validateCreateProfileInput,
@@ -193,181 +194,85 @@ export async function createProfileWithIdentityValidation(
 // ✏️ UPDATE
 // ============================================================================
 
+interface ProfileBrokerMutationResult {
+  success: boolean;
+  data?: { profile_id: string; username?: string | null };
+  error?: string;
+}
+
+async function reloadAccessibleProfile(profileId: string): Promise<Profile> {
+  const profiles = await ProfileRpcService.getAccessibleProfiles<Profile[]>({
+    profileIds: [profileId],
+  });
+  const profile = profiles[0];
+  if (!profile) {
+    throw new Error("Updated profile could not be reloaded");
+  }
+  return profile;
+}
+
 /**
- * Atualiza um profile existente
+ * Compatibilidade do módulo: atualização self-service passa pelo profile-rpc.
+ * Username é enviado separadamente para o enforcement de identidade no servidor.
  */
 export async function updateProfile(
   profileId: string,
-  updates: UpdateProfilePayload,
+  updates: OwnedProfileUpdatePayload,
 ): Promise<Profile> {
-  // Se estiver mudando username, validar disponibilidade
-  if (updates.username) {
-    const available = await isUsernameAvailable(updates.username, profileId);
-    if (!available) {
-      throw new Error(`Username "${updates.username}" is not available`);
-    }
+  const { username, ...patch } = updates;
+  const result = await ProfileRpcService.updateOwnedProfile<ProfileBrokerMutationResult>(
+    profileId,
+    patch as Record<string, unknown>,
+    username ?? null,
+  );
+
+  if (!result.success) {
+    throw new Error(result.error || "Profile update rejected");
   }
 
-  const { data, error } = await supabase
-    .from(TABLE)
-    .update({
-      name: updates.name,
-      username: updates.username,
-      avatar_url: updates.avatar_url,
-      bio: updates.bio,
-      whatsapp: updates.whatsapp,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", profileId)
-    .select(PROFILE_MUTATION_RETURN_COLUMNS)
-    .single();
-
-  if (error) {
-    trackError(error, {
-      component: "profile.mutations",
-      action: "updateProfile",
-      metadata: { profileId, updates },
-    });
-    throw new Error(`Failed to update profile: ${error.message}`);
-  }
-
-  return data as unknown as Profile;
+  return reloadAccessibleProfile(profileId);
 }
 
-export async function updateProfileDirect(
-  profileId: string,
-  updates: UpdateProfilePayload,
-): Promise<Profile> {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .update(updates)
-    .eq("id", profileId)
-    .select(PROFILE_MUTATION_RETURN_COLUMNS)
-    .single();
-
-  if (error) {
-    trackError(new Error("Error updating profile"), {
-      component: "profile.mutations",
-      action: "updateProfileDirect",
-      metadata: { profileId, error },
-    });
-    throw error;
-  }
-
-  return data as unknown as Profile;
-}
-
-export async function updatePrivacySettingsDirect(
-  profileId: string,
-  settings: ProfilePrivacySettingsInput,
-): Promise<Profile> {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .update(settings)
-    .eq("id", profileId)
-    .select(PROFILE_MUTATION_RETURN_COLUMNS)
-    .single();
-
-  if (error) {
-    trackError(new Error("Error updating privacy settings"), {
-      component: "profile.mutations",
-      action: "updatePrivacySettingsDirect",
-      metadata: { profileId, error },
-    });
-    throw error;
-  }
-
-  return data as unknown as Profile;
-}
-
-export async function updateAlertBanStatus(
-  profileId: string,
-  alertBanned: boolean,
-): Promise<Profile> {
-  const { data, error } = await profileMutationsDb
-    .from<Profile>(TABLE)
-    .update({ alert_banned: alertBanned })
-    .eq("id", profileId)
-    .select(PROFILE_MUTATION_RETURN_COLUMNS)
-    .single();
-
-  if (error) {
-    trackError(new Error("Error updating alert ban status"), {
-      component: "profile.mutations",
-      action: "updateAlertBanStatus",
-      metadata: { profileId, alertBanned, error },
-    });
-    throw error;
-  }
-
-  return data as unknown as Profile;
-}
-
-/**
- * Atualiza configurações de privacidade do profile
- */
 export async function updatePrivacySettings(
   profileId: string,
   settings: ProfilePrivacySettingsInput,
 ): Promise<Profile> {
-  const { data, error } = await supabase
-    .from(TABLE)
-    .update({
-      privacy_settings: settings,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", profileId)
-    .select(PROFILE_MUTATION_RETURN_COLUMNS)
-    .single();
+  const unsupported = [
+    settings.show_location !== undefined ? "show_location" : null,
+    settings.allow_messages !== undefined ? "allow_messages" : null,
+    settings.show_activity !== undefined ? "show_activity" : null,
+  ].filter((field): field is string => Boolean(field));
 
-  if (error) {
-    trackError(error, {
-      component: "profile.mutations",
-      action: "updatePrivacySettings",
-      metadata: { profileId, settings },
-    });
-    throw new Error(`Failed to update privacy settings: ${error.message}`);
+  if (unsupported.length > 0) {
+    throw new Error(`Unsupported privacy settings: ${unsupported.join(", ")}`);
   }
 
-  return data as unknown as Profile;
+  return updateProfile(profileId, {
+    ...(settings.is_public !== undefined ? { is_public: settings.is_public } : {}),
+    ...(settings.show_email !== undefined
+      ? { show_contact_email: settings.show_email }
+      : {}),
+    ...(settings.show_phone !== undefined ? { show_phone: settings.show_phone } : {}),
+    ...(settings.show_businesses !== undefined
+      ? { show_business_links: settings.show_businesses }
+      : {}),
+    ...(settings.share_activity_default !== undefined
+      ? { share_activity_default: settings.share_activity_default }
+      : {}),
+  });
 }
 
 /**
- * Alterna o profile ativo do usuário
+ * Alterna o profile ativo pelo session-rpc canônico.
  */
 export async function switchActiveProfile(
   userId: string,
   profileId: string,
 ): Promise<void> {
-  // Primeiro, desativa todos os profiles do usuário
-  const { error: deactivateError } = await supabase
-    .from(TABLE)
-    .update({ is_active: false })
-    .eq("user_id", userId);
-
-  if (deactivateError) {
-    trackError(deactivateError, {
-      component: "profile.mutations",
-      action: "switchActiveProfile",
-      metadata: { userId, profileId, step: "deactivate" },
-    });
-    throw new Error(`Failed to deactivate current profile: ${deactivateError.message}`);
-  }
-
-  // Ativa o profile selecionado
-  const { error: activateError } = await supabase
-    .from(TABLE)
-    .update({ is_active: true })
-    .eq("id", profileId)
-    .eq("user_id", userId);
-
-  if (activateError) {
-    trackError(activateError, {
-      component: "profile.mutations",
-      action: "switchActiveProfile",
-      metadata: { userId, profileId, step: "activate" },
-    });
-    throw new Error(`Failed to activate profile: ${activateError.message}`);
+  void userId;
+  const switched = await SessionRpcService.switchActiveProfile(profileId);
+  if (!switched) {
+    throw new Error("Failed to switch active profile");
   }
 }
 
@@ -376,21 +281,16 @@ export async function switchActiveProfile(
 // ============================================================================
 
 /**
- * Deleta um profile
+ * Deleta um profile pelo broker privilegiado canônico.
  */
 export async function deleteProfile(profileId: string): Promise<void> {
-  const { error } = await supabase
-    .from(TABLE)
-    .delete()
-    .eq("id", profileId);
+  const result = await ProfileRpcService.deleteProfile<{
+    success: boolean;
+    error?: string;
+  }>(profileId);
 
-  if (error) {
-    trackError(error, {
-      component: "profile.mutations",
-      action: "deleteProfile",
-      metadata: { profileId },
-    });
-    throw new Error(`Failed to delete profile: ${error.message}`);
+  if (!result.success) {
+    throw new Error(result.error || "Profile delete rejected");
   }
 }
 
@@ -554,33 +454,4 @@ export async function checkUsernameAvailability(
   excludeProfileId?: string,
 ): Promise<boolean> {
   return isUsernameAvailable(username, excludeProfileId);
-}
-
-export async function suspendUser(
-  userId: string,
-  duration: string,
-  reason: string,
-): Promise<void> {
-  try {
-    const suspendedUntil = calculateSuspensionEnd(duration);
-    const { error } = await supabase
-      .from(TABLE)
-      .update({
-        is_suspended: true,
-        suspended: true,
-        suspended_at: new Date().toISOString(),
-        suspended_until: suspendedUntil,
-        suspension_reason: reason,
-      })
-      .eq("id", userId);
-
-    if (error) throw error;
-  } catch (error) {
-    trackError(new Error("Error suspending user"), {
-      component: "profile.mutations",
-      action: "suspendUser",
-      metadata: { userId, duration, reason, error },
-    });
-    throw error;
-  }
 }

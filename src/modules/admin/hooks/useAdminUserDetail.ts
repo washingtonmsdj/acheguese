@@ -25,7 +25,7 @@ export interface AdminUserDetail {
   city: string;
   avatar_url: string;
   bio: string;
-  is_verified_resident: boolean;
+  verified: boolean;
   verified_at: string | null;
   suspended: boolean;
   suspended_until: string | null;
@@ -158,8 +158,8 @@ export function useAdminUserDetail(
         city: profileData.city,
         avatar_url: profileData.avatar_url || "",
         bio: profileData.bio || "",
-        is_verified_resident: profileData.is_verified_resident || false,
-        verified_at: null,
+        verified: profileData.verified || false,
+        verified_at: profileData.verified_at || null,
         suspended: profileData.is_suspended || false,
         suspended_until: profileData.suspended_until || null,
         reputation: profileData.reputation || 0,

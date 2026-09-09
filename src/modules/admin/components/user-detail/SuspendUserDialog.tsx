@@ -14,7 +14,7 @@ import {
 } from "@/shared/components/ui/dialog";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
-import { profileService } from "@/core/profiles/services/ProfileService";
+import { AdminUserService } from "@/core/admin/services/AdminUserService";
 
 interface SuspendUserDialogProps {
   open: boolean;
@@ -60,10 +60,11 @@ export function SuspendUserDialog({
         suspendedUntil.getDate() + (selectedDuration?.days || 7),
       );
 
-      await profileService.updateProfile(userId, {
-        suspended: true,
-        suspended_until: suspendedUntil.toISOString(),
-      });
+      await AdminUserService.suspendProfile(
+        userId,
+        reason.trim(),
+        suspendedUntil,
+      );
 
       logger.info("Usuário suspenso", {
         userId,
