@@ -284,11 +284,22 @@ export class TrackingService {
   ): Promise<PresenceStatus> {
     try {
       if (entityType === 'driver') {
-        const { mobilityService } = await import('@/core/mobility/services/runtime');
-        const stats = await mobilityService.getDriverVerificationStatus(entityId);
-        if (!stats) return 'unknown';
-        if (!stats.is_online) return 'offline';
-        return 'online';
+        const { DriverAvailabilityService } = await import(
+          '@/core/mobility/services/runtime'
+        );
+        const availability = await DriverAvailabilityService.getStatus(entityId);
+        if (!availability) return 'unknown';
+
+        switch (availability.status) {
+          case 'busy':
+            return 'busy';
+          case 'online_available':
+            return 'online';
+          case 'online_warming_up':
+            return 'away';
+          case 'offline':
+            return 'offline';
+        }
       }
 
       return 'unknown';
@@ -308,8 +319,29 @@ export class TrackingService {
   ): Promise<void> {
     try {
       if (entityType === 'driver') {
-        const { mobilityService } = await import('@/core/mobility/services/runtime');
-        await mobilityService.updateDriverOnlineStatus(entityId, status === 'online' || status === 'busy');
+        const { DriverAvailabilityService } = await import(
+          '@/core/mobility/services/runtime'
+        );
+
+        if (status === 'offline') {
+          const result = await DriverAvailabilityService.goOffline(entityId);
+          if (!result.success) {
+            throw new Error(result.error || 'Driver could not go offline');
+          }
+          return;
+        }
+
+        if (status === 'away') {
+          const result = await DriverAvailabilityService.pauseAvailable(entityId);
+          if (!result.success) {
+            throw new Error(result.error || 'Driver availability could not be paused');
+          }
+          return;
+        }
+
+        if (status === 'online' || status === 'busy') {
+          await DriverAvailabilityService.markLastSeen(entityId);
+        }
       }
     } catch (error) {
       logger.error('[TrackingService] Error updating presence:', error);
@@ -342,9 +374,16 @@ export class TrackingService {
         await this.updatePresence(payload.entityId, payload.status, payload.entityType);
       }
 
-      // GATE 5: Atualizar last_seen_at para motoristas
-      if (payload.entityType === 'driver') {
-        const { DriverAvailabilityService } = await import('@/core/mobility/services/runtime');
+      // Driver position/presence commands already refresh last_seen_at.
+      // A heartbeat with neither payload still refreshes the canonical presence row.
+      if (
+        payload.entityType === 'driver'
+        && !payload.position
+        && !payload.status
+      ) {
+        const { DriverAvailabilityService } = await import(
+          '@/core/mobility/services/runtime'
+        );
         await DriverAvailabilityService.markLastSeen(payload.entityId);
       }
 
