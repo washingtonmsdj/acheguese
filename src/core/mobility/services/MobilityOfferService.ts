@@ -13,15 +13,12 @@ import { profileService } from '@/core/profiles/services/ProfileService';
 import { TRUST_ACTOR_ROLES, TrustPolicyReadService } from '@/core/trust';
 import { MobilityDispatchConfigService } from './MobilityDispatchConfigService';
 import { DriverAvailabilityService } from './DriverAvailabilityService';
-import { MobilityRpcService } from './MobilityRpcService';
 import {
-  getDriverOfferCapabilities,
-  getExclusiveOfferRideForDriver,
-  getOpenBoardOfferRides,
-  getReservationOfferRides,
-} from './mobility.queries';
+  MobilityRpcService,
+  type DriverOfferBrokerRow,
+} from './MobilityRpcService';
+import { getDriverOfferCapabilities } from './mobility.queries';
 import type {
-  RideCounterpartyTrustDecision,
   TrustDispatchPolicy,
   TrustPolicyDecision,
   TrustRiskLevel,
@@ -89,15 +86,16 @@ export class MobilityOfferService {
     };
   }
 
-  private static toTrustDecision(
-    decision: RideCounterpartyTrustDecision | undefined,
+  private static toOfferTrustDecision(
+    ride: DriverOfferBrokerRow,
   ): TrustDecisionView | null {
-    return decision
-      ? {
-          risk_level: decision.riskLevel,
-          dispatch_policy: decision.dispatchPolicy,
-        }
-      : null;
+    if (!ride.risk_level || !ride.dispatch_policy) {
+      return null;
+    }
+    return {
+      risk_level: ride.risk_level as TrustRiskLevel,
+      dispatch_policy: ride.dispatch_policy as TrustDispatchPolicy,
+    };
   }
 
   private static getPassengerTrustOfferMetadata(decision: TrustDecisionView | null): {
@@ -128,7 +126,12 @@ export class MobilityOfferService {
     driverProfileId: string
   ): Promise<ExclusiveOffer | null> {
     try {
-      const ride = await getExclusiveOfferRideForDriver(driverProfileId);
+      const offerData = await MobilityRpcService.listDriverOffers({
+        driverProfileId,
+        strategy: 'exclusive_offer',
+        limit: 1,
+      });
+      const ride = offerData.offers[0];
       if (!ride) return null;
 
       const trustGate = await TrustPolicyReadService.canCurrentReceiveOperationalCall(
@@ -166,11 +169,7 @@ export class MobilityOfferService {
       const passengerTrustLevelValue = passengerMeta?.passenger_trust_level;
       const passengerTrustLevel =
         typeof passengerTrustLevelValue === 'string' ? passengerTrustLevelValue : undefined;
-      const counterpartyDecisions =
-        await TrustPolicyReadService.getRideCounterpartyDecisions([ride.id]);
-      const passengerTrustDecision = this.toTrustDecision(
-        counterpartyDecisions.get(ride.id),
-      );
+      const passengerTrustDecision = this.toOfferTrustDecision(ride);
       const passengerTrustMetadata =
         this.getPassengerTrustOfferMetadata(passengerTrustDecision);
 
@@ -268,7 +267,9 @@ export class MobilityOfferService {
       const sortBy = sort?.sortBy ?? 'created_at';
       const sortOrder = sort?.order ?? 'desc';
       const sortColumn = sortBy === 'price' ? 'suggested_price' : 'created_at';
-      const rides = await getOpenBoardOfferRides({
+      const offerData = await MobilityRpcService.listDriverOffers({
+        driverProfileId,
+        strategy: 'open_board',
         minPrice: filters?.minPrice,
         maxPrice: filters?.maxPrice,
         packageSizes: filters?.packageSize,
@@ -276,12 +277,8 @@ export class MobilityOfferService {
         ascending: sortOrder === 'asc',
         limit,
       });
+      const rides = offerData.offers;
       if (rides.length === 0) return [];
-
-      const customerTrustDecisions =
-        await TrustPolicyReadService.getRideCounterpartyDecisions(
-          rides.map((ride) => ride.id),
-        );
       const customerProfiles = await profileService.getProfilesByIds(
         rides
           .map((ride) => ride.passenger_profile_id)
@@ -333,9 +330,7 @@ export class MobilityOfferService {
         const customerRatingValue = customerRecord?.rating;
         const customerRating =
           typeof customerRatingValue === 'number' ? customerRatingValue : undefined;
-        const customerTrustDecision = this.toTrustDecision(
-          customerTrustDecisions.get(ride.id),
-        );
+        const customerTrustDecision = this.toOfferTrustDecision(ride);
         const customerTrustMetadata =
           this.getCustomerTrustOfferMetadata(customerTrustDecision);
 
@@ -426,13 +421,15 @@ export class MobilityOfferService {
       }
       const trustMetadata = this.getTrustOfferMetadata(trustGate.decision);
 
-      const rides = await getReservationOfferRides(limit);
+      const offerData = await MobilityRpcService.listDriverOffers({
+        driverProfileId,
+        strategy: 'reservation_board',
+        sortBy: 'departure_time',
+        ascending: true,
+        limit,
+      });
+      const rides = offerData.offers;
       if (rides.length === 0) return [];
-
-      const passengerTrustDecisions =
-        await TrustPolicyReadService.getRideCounterpartyDecisions(
-          rides.map((ride) => ride.id),
-        );
       const passengerProfiles = await profileService.getProfilesByIds(
         rides
           .map((ride) => ride.passenger_profile_id)
@@ -471,9 +468,7 @@ export class MobilityOfferService {
         const passengerRatingValue = passengerRecord?.passenger_rating;
         const passengerRating =
           typeof passengerRatingValue === 'number' ? passengerRatingValue : undefined;
-        const passengerTrustDecision = this.toTrustDecision(
-          passengerTrustDecisions.get(ride.id),
-        );
+        const passengerTrustDecision = this.toOfferTrustDecision(ride);
         const passengerTrustMetadata =
           this.getPassengerTrustOfferMetadata(passengerTrustDecision);
 
