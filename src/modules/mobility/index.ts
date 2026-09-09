@@ -81,7 +81,6 @@ export { default as TrackRidePage } from "./pages/TrackRidePage";
 // Types
 export type {
   RideRequest,
-  CreateRideData,
 } from "@/core/mobility/services/RideService";
 
 export type {
