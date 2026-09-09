@@ -678,7 +678,7 @@ async function handleAcceptRide(
     throw new RequestAuthorizationError("User cannot accept rides with this driver profile");
   }
 
-  const { data, error } = await supabaseAdmin.rpc("accept_ride_atomic", {
+  const { data, error } = await supabaseAdmin.rpc("mobility_accept_ride_atomic", {
     p_ride_id: rideId,
     p_driver_profile_id: driverProfileId,
     p_strategy: strategy,
