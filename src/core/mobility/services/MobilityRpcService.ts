@@ -26,11 +26,7 @@ type MobilityRpcAction =
   | "listDriverOffers"
   | "findAvailableDriversForRide"
   | "reconcileStaleDriverAvailability"
-  | "releaseDriverAvailabilityForRide";
-
-interface ReleaseDriverAvailabilityBrokerData {
-  released: boolean;
-}
+;
 
 export interface DriverAvailabilityBrokerData {
   success?: boolean;
@@ -389,13 +385,4 @@ export class MobilityRpcService {
     );
   }
 
-  static async releaseDriverAvailabilityForRide(
-    rideId: string,
-  ): Promise<boolean> {
-    const result = await this.invoke<ReleaseDriverAvailabilityBrokerData>(
-      "releaseDriverAvailabilityForRide",
-      { rideId },
-    );
-    return result.released === true;
-  }
 }
