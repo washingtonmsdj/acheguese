@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useRideChat } from "@/core/mobility/hooks/useRideChat";
+import { useSessionContext } from "@/core/session";
 import { MessageCircle, Send, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { format } from "date-fns";
@@ -21,7 +22,6 @@ interface RideChatDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   rideId: string;
-  userId: string;
   otherUserName: string;
   isDriver: boolean;
 }
@@ -30,17 +30,16 @@ export function RideChatDialog({
   open,
   onOpenChange,
   rideId,
-  userId,
   otherUserName,
   isDriver,
 }: RideChatDialogProps) {
+  const { activeProfile } = useSessionContext();
   const [messageInput, setMessageInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const { chat, messages, loading, sending, error, sendMessage, markAsRead } =
     useRideChat({
       rideId,
-      userId,
-      enabled: open,
+      enabled: open && Boolean(activeProfile?.id),
     });
 
   // Auto-scroll para última mensagem
@@ -148,7 +147,7 @@ export function RideChatDialog({
           ) : (
             <div className="space-y-3">
               {messages.map((message) => {
-                const isOwnMessage = message.sender_profile_id === userId;
+                const isOwnMessage = message.sender_profile_id === activeProfile?.id;
                 const isSystemMessage = message.is_system_message;
 
                 if (isSystemMessage) {
