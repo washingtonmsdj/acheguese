@@ -64,22 +64,17 @@ export interface OperationalVerification {
 }
 
 /**
- * Parâmetros para criar verificação
- */
-export interface CreateVerificationParams {
-  rideId: string;
-  verificationType: VerificationType;
-  isRequired: boolean;
-  requiredBy: VerificationRequiredBy;
-}
-
-/**
  * Parâmetros para validar PIN
  */
 export interface VerifyPINParams {
   rideId: string;
   pin: string; // 4 dígitos
-  verifiedBy: string; // profile_id do ator
+}
+
+export interface RequesterPinResult {
+  verificationId: string;
+  pin: string;
+  expiresAt: string;
 }
 
 /**
@@ -91,15 +86,6 @@ export interface CheckPINRequiredParams {
   driverProfileId?: string;
   senderProfileId?: string;
   operationId?: string;
-}
-
-/**
- * Resultado da criação de verificação
- */
-export interface CreateVerificationResult {
-  verificationId: string;
-  pin?: string; // PIN em texto puro (apenas na criação, nunca retornado depois)
-  expiresAt?: string; // ISO 8601
 }
 
 /**
@@ -146,6 +132,7 @@ export const VERIFICATION_ERRORS = {
   MAX_ATTEMPTS_REACHED: 'Maximum verification attempts reached',
   VERIFICATION_NOT_FOUND: 'Verification not found',
   VERIFICATION_ALREADY_VERIFIED: 'Verification already completed',
+  PIN_NOT_GENERATED: 'PIN ainda não foi gerado pelo solicitante',
 } as const;
 
 /**
