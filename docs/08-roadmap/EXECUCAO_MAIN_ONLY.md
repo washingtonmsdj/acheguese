@@ -398,3 +398,53 @@ Próximo gate obrigatório:
 4. executar E2E real motorista + motoboy + passageiro;
 5. manter `PUBLIC_LAUNCH_SURFACES.mobility=false` até todos os gates acima passarem.
 
+### Checkpoint G10 — descoberta de ofertas territorial e server-owned (2026-09-09)
+
+Problemas confirmados:
+- Open Board/Reservation tentavam ler corridas não atribuídas diretamente de `ride_requests`, mas a RLS canônica da tabela permite somente participantes/admin; o fluxo comum portanto podia retornar vazio apesar de existir oferta elegível;
+- `get_ride_offer_trust_decisions` aceitava IDs de corridas não atribuídas com escopo mais amplo do que a superfície real de oferta;
+- `get_driver_dispatch_summaries` aceitava IDs arbitrários de motoristas online;
+- código de Reservation Board consultava `is_scheduled`/`scheduled_for`, colunas inexistentes no schema remoto; `departure_time` já era o timestamp canônico;
+- frontend dizia `requiresSubscription=false`, enquanto a autoridade de aceite/disponibilidade server-side exige assinatura ativa.
+
+Correção aplicada e provada:
+- migration `broker_driver_offer_read_model_g10` aplicada no Supabase canônico;
+- novo `mobility_list_driver_offers` é `SECURITY DEFINER`, com `search_path`/timeout fixos e `EXECUTE` somente para `service_role`;
+- read model exige ownership do perfil driver, perfil ativo/não suspenso, verificação, assinatura ativa, online/disponível, sem corrida ativa e capacidade compatível com `ride_mode`;
+- oferta só é retornada quando `pickup_location_id` resolve para o mesmo município operacional do motorista;
+- trust do passageiro/cliente é projetado no mesmo read model autorizado;
+- `get_ride_offer_trust_decisions(uuid[])` e `get_driver_dispatch_summaries(uuid[])`: `authenticated EXECUTE=false`, preservados apenas para uso interno/server-side;
+- Open Board, Reservation Board e Exclusive Offer do `MobilityOfferService` usam `MobilityRpcService.listDriverOffers`;
+- caminhos antigos `getOpenBoardOfferRides`, `getReservationOfferRides`, `getExclusiveOfferRideForDriver` e `getAvailableRides` foram aposentados;
+- agendamento deriva de `ride_requests.departure_time`; não foram criadas colunas duplicadas `is_scheduled/scheduled_for`;
+- configuração de dispatch foi alinhada para `requiresSubscription=true` nas três estratégias;
+- `mobility-rpc` remoto atualizado para v19 `ACTIVE`, `verify_jwt=true`;
+- ratchet: `MobilityDriverOfferAuthority.test.ts`.
+
+### Checkpoint G11 — descoberta de motoristas vinculada à corrida (2026-09-09)
+
+Problema confirmado:
+- `findAvailableDrivers(lat,lng,radius)` aceitava coordenadas arbitrárias sem uma corrida/ator que permitisse comprovar autorização e território;
+- o helper dependia da projeção ampla `get_driver_dispatch_summaries`, que foi corretamente fechada em G10;
+- fixtures antigas “provavam dispatch” sem autoria de corrida, território do motorista ou coordenadas canônicas da solicitação.
+
+Correção aplicada e provada:
+- migration `broker_available_driver_discovery_g11` aplicada no Supabase canônico;
+- `mobility_find_available_drivers_for_ride` exige corrida concreta em estado elegível, solicitante dono da corrida ou admin, `pickup_location_id` e coordenadas da origem;
+- candidatos são filtrados por mesmo município operacional, `ride_mode`, verificação, assinatura, perfil ativo/não suspenso, online/disponível, sem corrida ativa, GPS presente, heartbeat de no máximo 5 minutos, raio e trust não bloqueado;
+- perfis driver pertencentes ao mesmo `user_id` do passageiro são explicitamente excluídos, impedindo auto-dispatch entre perfis do mesmo usuário;
+- função é `SECURITY DEFINER`, com `search_path`/timeout fixos; `anon=false`, `authenticated=false`, `service_role=true`;
+- `DriverAvailabilityService.findAvailableDrivers(lat,lng,...)` foi substituído por `findAvailableDriversForRide(rideId,...)`;
+- `mobility-rpc` remoto atualizado para v20 `ACTIVE`, `verify_jwt=true`;
+- Gate 5 foi refeito para usar fixtures técnicas versionadas: passageiro autorizado, motorista elegível no mesmo município, terceiro bloqueado, offline, busy, heartbeat stale e fora do raio;
+- probes transacionais `BEGIN/ROLLBACK` no banco real confirmaram: candidato elegível aparece; terceiro sem vínculo recebe bloqueio; motorista do próprio usuário passageiro não aparece; nenhuma mutação de fixture ficou persistida;
+- ratchet: `MobilityDriverDiscoveryAuthority.test.ts`;
+- advisors de segurança executados após DDL; não surgiu finding novo específico das funções G10/G11.
+
+Próximo gate obrigatório:
+1. classificar as funções `SECURITY DEFINER` restantes de Mobilidade/Trust por intenção real: projeção pública por design, comando autenticado com autorização interna ou API ampla indevida;
+2. priorizar safety/share, avaliações/trust e comandos administrativos, fechando somente superfícies que realmente ampliem autoridade;
+3. executar os testes reais Gate 2/Gate 4/Gate 5 no mesmo SHA quando o runner hosted estiver disponível;
+4. executar E2E passageiro + motorista + motoboy;
+5. manter `PUBLIC_LAUNCH_SURFACES.mobility=false` até certificação funcional completa.
+
