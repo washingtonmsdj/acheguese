@@ -68,8 +68,9 @@ export function useProfileLocation() {
 
           if (serviceArea) {
             setLocation({
-              neighborhood: serviceArea.neighborhoods?.[0] || "",
-              city: serviceArea.city,
+              neighborhood:
+                serviceArea.locality_name || serviceArea.location_name,
+              city: serviceArea.city_name || serviceArea.location_name,
               isPrimary: serviceArea.is_primary,
             });
           } else {
