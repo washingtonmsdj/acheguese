@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { DriverAvailabilityService } from "@/core/mobility/services/DriverAvailabilityService";
+import { sanitizeDriverSelfServiceUpdate } from "./driverDataSelfService";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
@@ -133,26 +134,14 @@ export async function createAdminDriverProfile(userId: string): Promise<unknown 
 
     if (existing) return existing;
 
-    const { data: driverData, error: driverError } = await mobilityDb
-      .from("driver_data")
-      .insert({
-        profile_id: driverProfile.id,
-        is_online: false,
-        is_verified: true,
-        subscription_active: true,
-        rating: 5.0,
-        total_rides: 0,
-        total_rides_completed: 0,
-        total_rides_cancelled: 0,
-        acceptance_rate: 100.0,
-        cancellation_rate: 0.0,
-      })
-      .select("*")
-      .single();
+    const { data: driverData, error: driverError } = await mobilityDb.rpc<Record<string, unknown>>(
+      "ensure_admin_driver_data",
+      { p_profile_id: driverProfile.id },
+    );
 
     if (driverError) throw driverError;
 
-    logger.info("MobilityMutations.createAdminDriverProfile - created", { userId, profileId: driverProfile.id });
+    logger.info("MobilityMutations.createAdminDriverProfile - ensured", { userId, profileId: driverProfile.id });
     return driverData;
   } catch (error) {
     logger.error("MobilityMutations.createAdminDriverProfile", error as Error);
@@ -192,12 +181,24 @@ export async function updateDriverData(
       driverProfileId = driverProfile.id;
     }
 
-    const { data, error } = await mobilityDb
-      .from("driver_data")
-      .update(updates)
-      .eq("profile_id", driverProfileId)
-      .select("*")
-      .single();
+    const safeUpdates = sanitizeDriverSelfServiceUpdate(updates);
+    if (Object.keys(safeUpdates).length === 0) {
+      const { data, error } = await mobilityDb
+        .from("driver_data")
+        .select("*")
+        .eq("profile_id", driverProfileId)
+        .single();
+      if (error) throw error;
+      return data;
+    }
+
+    const { data, error } = await mobilityDb.rpc<Record<string, unknown>>(
+      "update_owned_driver_data",
+      {
+        p_profile_id: driverProfileId,
+        p_updates: safeUpdates,
+      },
+    );
 
     if (error) throw error;
     return data;
