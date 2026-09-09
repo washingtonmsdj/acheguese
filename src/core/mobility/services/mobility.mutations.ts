@@ -52,20 +52,6 @@ const mobilityDb = supabase as unknown as MobilityMutationsDbClient;
 
 
 /**
- * Criar nova corrida
- */
-export async function createRide(data: Record<string, unknown>): Promise<unknown> {
-  const { data: ride, error } = await mobilityDb
-    .from("ride_requests")
-    .insert(data)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return ride;
-}
-
-/**
  * Incrementar contador de visualizações
  */
 export async function incrementRideViewCount(rideId: string): Promise<void> {
