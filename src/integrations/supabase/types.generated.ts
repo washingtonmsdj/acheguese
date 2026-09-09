@@ -19812,6 +19812,54 @@ export type Database = {
         Args: { p_ride_id: string }
         Returns: Json
       }
+      mobility_create_delivery_atomic: {
+        Args: {
+          p_delivery_notes?: string
+          p_departure_time?: string
+          p_destination?: string
+          p_destination_lat?: number
+          p_destination_lng?: number
+          p_dropoff_address_id: string
+          p_dropoff_location_id: string
+          p_observation?: string
+          p_origin?: string
+          p_origin_lat?: number
+          p_origin_lng?: number
+          p_package_description?: string
+          p_package_size?: string
+          p_passenger_profile_id: string
+          p_payment_method?: string
+          p_pickup_address_id: string
+          p_pickup_location_id: string
+          p_recipient_name: string
+          p_recipient_phone?: string
+          p_source_id: string
+          p_source_type: string
+          p_suggested_price?: number
+        }
+        Returns: Json
+      }
+      mobility_create_ride_atomic: {
+        Args: {
+          p_available_seats?: number
+          p_departure_time?: string
+          p_destination?: string
+          p_destination_lat?: number
+          p_destination_lng?: number
+          p_dropoff_address_id: string
+          p_dropoff_location_id: string
+          p_observation?: string
+          p_origin?: string
+          p_origin_lat?: number
+          p_origin_lng?: number
+          p_passenger_profile_id: string
+          p_payment_method?: string
+          p_pickup_address_id: string
+          p_pickup_location_id: string
+          p_suggested_price?: number
+        }
+        Returns: Json
+      }
       mobility_expire_dispatch_atomic: {
         Args: { p_reason: string; p_ride_id: string }
         Returns: Json
