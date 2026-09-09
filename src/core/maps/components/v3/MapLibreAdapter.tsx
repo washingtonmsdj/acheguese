@@ -301,12 +301,12 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
         onLoad?.();
       });
 
-      // Suprimir avisos de sprite do estilo liberty (OSM tem ícones não bundlados).
-      // Registrar uma imagem transparente 1x1 para qualquer ícone ausente evita
-      // o flood de warnings no console sem trocar de estilo.
-      map.on('styleimagemissing', (e: { id: string }) => {
-        if (!map.hasImage(e.id)) {
-          map.addImage(e.id, { width: 1, height: 1, data: new Uint8Array(4) });
+      // MapLibre v6 exige resolver dedicado para imagens ausentes. O evento
+      // styleimagemissing permanece apenas para observacao de imagens que o
+      // resolver nao conseguiu fornecer.
+      map.setMissingStyleImageResolver((id: string) => {
+        if (!map.hasImage(id)) {
+          map.addImage(id, { width: 1, height: 1, data: new Uint8Array(4) });
         }
       });
 
