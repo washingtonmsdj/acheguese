@@ -483,51 +483,6 @@ export class MobilityService {
 
 
 
-  /**
-   * Remove bairro aceito pelo motorista
-   * Usado em: ServiceAreaSettings
-   */
-  static async deleteDriverNeighborhood(id: string): Promise<{ success: boolean; error?: unknown }> {
-    try {
-      const { error } = await db
-        .from('driver_accepted_neighborhoods')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        logger.error("MobilityService.deleteDriverNeighborhood", { id, error });
-        return { success: false, error };
-      }
-
-      return { success: true };
-    } catch (error) {
-      logger.error("MobilityService.deleteDriverNeighborhood", { id, error });
-      return { success: false, error };
-    }
-  }
-
-  /**
-   * Remove área de serviço do motorista (genérico)
-   * Usado em: ServiceAreaSettings
-   */
-  static async deleteDriverServiceArea(table: string, id: string): Promise<{ success: boolean; error?: unknown }> {
-    try {
-      const { error } = await db
-        .from(table)
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        logger.error("MobilityService.deleteDriverServiceArea", { table, id, error });
-        return { success: false, error };
-      }
-
-      return { success: true };
-    } catch (error) {
-      logger.error("MobilityService.deleteDriverServiceArea", { table, id, error });
-      return { success: false, error };
-    }
-  }
 
 
 }
