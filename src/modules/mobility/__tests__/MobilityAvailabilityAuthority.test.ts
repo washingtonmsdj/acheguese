@@ -44,6 +44,18 @@ describe("Mobility availability authority", () => {
 
     expect(rpcService).toContain('"updateDriverAvailability"');
     expect(rpcService).toContain('"reconcileStaleDriverAvailability"');
+    expect(rpcService).toMatch(
+      /releaseDriverAvailabilityForRide\(\s*rideId: string/,
+    );
+    expect(rpcService).not.toMatch(
+      /releaseDriverAvailabilityForRide\(\s*driverProfileId:/,
+    );
+    expect(broker).toMatch(
+      /handleReleaseDriverAvailability[\s\S]*?const driverProfileId = ride\.driver_profile_id/,
+    );
+    expect(broker).not.toMatch(
+      /handleReleaseDriverAvailability[\s\S]*?params\.driverProfileId/,
+    );
 
     expect(availabilityService).toContain(
       "MobilityRpcService.updateDriverAvailability",
