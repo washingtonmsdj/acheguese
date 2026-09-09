@@ -252,6 +252,10 @@ async function requireRideTransitionActor(
   toState: string,
   requestedActor: unknown,
 ): Promise<string> {
+  if (toState === "driver_assigned" || toState === "driver_accepted" || toState === "expired") {
+    throw new RequestAuthorizationError("Transition is reserved for dispatch or a dedicated command");
+  }
+
   if (auth.isProjectAdmin) {
     return `admin:${auth.userId}`;
   }
@@ -266,10 +270,6 @@ async function requireRideTransitionActor(
     ride.driver_profile_id,
     auth.userId,
   );
-
-  if (toState === "driver_assigned" || toState === "driver_accepted" || toState === "expired") {
-    throw new RequestAuthorizationError("Transition is reserved for dispatch or a dedicated command");
-  }
 
   if (toState === "searching_driver" || toState === "cancelled_by_passenger") {
     if (!passengerOwned) {
