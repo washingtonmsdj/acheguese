@@ -16,6 +16,7 @@ import { TerritorialIndexPage } from "@/core/routing/components/TerritorialIndex
 import { TerritorialLayout } from "@/core/routing/components/TerritorialLayout";
 import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
 import { LAUNCH_CITY_PATH } from "@/core/routing/config/territory";
+import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 import {
   isLaunchSurfaceEnabled,
   type LaunchSurfaceKey,
@@ -193,43 +194,43 @@ const DIRECT_PAUSED_ROUTES: DirectPausedRoute[] = [
   { path: "/cupons", surface: "coupons", moduleName: "Cupons" },
   { path: "/cupons/:id", surface: "coupons", moduleName: "Cupons" },
   { path: "/analytics", surface: "publicAnalytics", moduleName: "Analytics" },
-  { path: "/mobilidade", surface: "mobility", moduleName: "Mobilidade" },
+  { path: mobilityRoutes.public.home, surface: "mobility", moduleName: "Mobilidade" },
   {
-    path: "/mobilidade/passageiro",
+    path: mobilityRoutes.passageiro.home,
     surface: "mobility",
     moduleName: "Mobilidade",
   },
   {
-    path: "/mobilidade/buscando/:rideId",
+    path: mobilityRoutes.passageiro.buscandoPattern,
     surface: "mobility",
     moduleName: "Mobilidade",
   },
   {
-    path: "/mobilidade/motorista",
+    path: mobilityRoutes.public.motorista,
     surface: "mobility",
     moduleName: "Mobilidade",
   },
   {
-    path: "/mobilidade/motoboy",
+    path: mobilityRoutes.public.motoboy,
     surface: "mobility",
     moduleName: "Mobilidade",
   },
   {
-    path: "/mobilidade/motorista/perfil",
+    path: mobilityRoutes.public.motoristaProfile,
     surface: "mobility",
     moduleName: "Mobilidade",
   },
   {
-    path: "/mobilidade/historico",
+    path: mobilityRoutes.public.history,
     surface: "mobility",
     moduleName: "Mobilidade",
   },
   {
-    path: "/mobilidade/contatos-emergencia",
+    path: mobilityRoutes.public.emergencyContacts,
     surface: "mobility",
     moduleName: "Mobilidade",
   },
-  { path: "/track/:token", surface: "mobility", moduleName: "Mobilidade" },
+  { path: mobilityRoutes.public.trackPattern, surface: "mobility", moduleName: "Mobilidade" },
   { path: "/ranking", surface: "gamification", moduleName: "Ranking" },
   { path: "/gamificacao", surface: "gamification", moduleName: "Gamificacao" },
   { path: "/alertas", surface: "communityAlerts", moduleName: "Alertas" },
@@ -690,7 +691,7 @@ export function AppLayoutRoutes() {
           element={launchElement("gamification", "Ranking", <P.RankingPage />)}
         />
         <Route
-          path="/track/:token"
+          path={mobilityRoutes.public.trackPattern}
           element={launchElement("mobility", "Mobilidade", <P.TrackRidePage />)}
         />
         <Route
@@ -756,7 +757,7 @@ export function AppLayoutRoutes() {
         <Route path="/servicos" element={<P.ServicosLandingPage />} />
         <Route path="/classificados" element={<P.ClassificadosPage />} />
         <Route
-          path="/mobilidade/passageiro"
+          path={mobilityRoutes.passageiro.home}
           element={launchElement(
             "mobility",
             "Mobilidade",
@@ -764,7 +765,7 @@ export function AppLayoutRoutes() {
           )}
         />
         <Route
-          path="/mobilidade/buscando/:rideId"
+          path={mobilityRoutes.passageiro.buscandoPattern}
           element={launchElement(
             "mobility",
             "Mobilidade",
@@ -772,15 +773,15 @@ export function AppLayoutRoutes() {
           )}
         />
         <Route
-          path="/mobilidade/motorista"
+          path={mobilityRoutes.public.motorista}
           element={launchElement("mobility", "Mobilidade", <P.MotoristaPage />)}
         />
         <Route
-          path="/mobilidade/motoboy"
+          path={mobilityRoutes.public.motoboy}
           element={launchElement("mobility", "Mobilidade", <P.MotoboyPage />)}
         />
         <Route
-          path="/mobilidade/motorista/perfil"
+          path={mobilityRoutes.public.motoristaProfile}
           element={launchElement(
             "mobility",
             "Mobilidade",
@@ -788,11 +789,11 @@ export function AppLayoutRoutes() {
           )}
         />
         <Route
-          path="/mobilidade/historico"
+          path={mobilityRoutes.public.history}
           element={launchElement("mobility", "Mobilidade", <P.HistoricoPage />)}
         />
         <Route
-          path="/mobilidade/contatos-emergencia"
+          path={mobilityRoutes.public.emergencyContacts}
           element={launchElement(
             "mobility",
             "Mobilidade",
@@ -800,7 +801,7 @@ export function AppLayoutRoutes() {
           )}
         />
         <Route
-          path="/mobilidade"
+          path={mobilityRoutes.public.home}
           element={launchElement(
             "mobility",
             "Mobilidade",
