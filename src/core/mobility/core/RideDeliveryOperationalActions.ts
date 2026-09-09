@@ -1,7 +1,8 @@
 import { logger } from "@/shared/utils/logger";
 import { RIDE_STATE, type RideState } from "./RideStateMachine";
 import { getRideById } from "../services/mobility.queries";
-import { createRide, updateRide as updateRideMutation } from "../services/mobility.mutations";
+import { createRide } from "../services/mobility.mutations";
+import { MobilityRpcService } from "../services/MobilityRpcService";
 import type { FailedDeliveryMetadata, ResolutionStatus } from "../types/FailedDeliveryMetadata";
 import { OperationalVerificationService } from "../services/OperationalVerificationService";
 import { MotoboyAuthorizationService } from "../services/MotoboyAuthorizationService";
@@ -18,11 +19,25 @@ import {
 } from "./RideOperationalGuards";
 import { logRideStateChange } from "./RideOperationalPostTransition";
 
+export type DeliveryTransitionCommand =
+  | { type: "confirm_pickup" }
+  | {
+      type: "confirm_delivery";
+      proof: {
+        photo_url?: string;
+        code?: string;
+        observation?: string;
+      };
+      finalPrice?: number;
+    }
+  | { type: "fail_delivery"; metadata: FailedDeliveryMetadata };
+
 type TransitionFn = (
   rideId: string,
   toState: RideState,
   actorProfileId: string,
   reason?: string,
+  deliveryCommand?: DeliveryTransitionCommand,
 ) => Promise<TransitionResult>;
 
 type RideDriverAssignment = {
@@ -180,8 +195,13 @@ export async function confirmPickupOperation(
     const operatorBlock = await ensureMotoboyCanOperate(driverProfileId, rideId);
     if (operatorBlock) return operatorBlock;
 
-    await updateRideMutation(rideId, { pickup_confirmed_at: new Date().toISOString() });
-    return await transitionTo(rideId, RIDE_STATE.PICKUP_CONFIRMED, driverProfileId, "Pickup confirmed");
+    return await transitionTo(
+      rideId,
+      RIDE_STATE.PICKUP_CONFIRMED,
+      driverProfileId,
+      "Pickup confirmed",
+      { type: "confirm_pickup" },
+    );
   } catch (error) {
     logger.error("RideOperationalService.confirmPickup", error as Error, { rideId });
     return { success: false, error: (error as Error).message };
@@ -254,14 +274,17 @@ export async function confirmDeliveryOperation(
       }
     }
 
-    const updates: Record<string, unknown> = {
-      delivered_at: new Date().toISOString(),
-      proof_of_delivery: { ...proof, signed_at: new Date().toISOString() },
-    };
-    if (finalPrice !== undefined) updates.final_price = finalPrice;
-
-    await updateRideMutation(rideId, updates);
-    const deliveredResult = await transitionTo(rideId, RIDE_STATE.DELIVERED, driverProfileId, "Delivered");
+    const deliveredResult = await transitionTo(
+      rideId,
+      RIDE_STATE.DELIVERED,
+      driverProfileId,
+      "Delivered",
+      {
+        type: "confirm_delivery",
+        proof,
+        finalPrice,
+      },
+    );
     if (!deliveredResult.success) return deliveredResult;
 
     return await transitionTo(rideId, RIDE_STATE.COMPLETED, driverProfileId, "Delivery completed");
@@ -292,17 +315,15 @@ export async function failDeliveryOperation(
     validateFailedDeliverySnapshot(metadata);
     if (!metadata.resolution_status) metadata.resolution_status = "pending";
 
-    await updateRideMutation(rideId, {
-      failed_delivery_at: new Date().toISOString(),
-      failed_delivery_reason: metadata.failure_reason,
-      failed_delivery_metadata: metadata,
-    });
-
     return await transitionTo(
       rideId,
       RIDE_STATE.FAILED_DELIVERY,
       driverProfileId,
       metadata.failure_reason,
+      {
+        type: "fail_delivery",
+        metadata,
+      },
     );
   } catch (error) {
     logger.error("RideOperationalService.failDelivery", error as Error, { rideId });
@@ -336,12 +357,10 @@ export async function updateFailedDeliveryResolutionOperation(
 
     validateFailedDeliveryResolution(resolutionUpdate);
 
-    const updatedMetadata = {
-      ...ride.failed_delivery_metadata,
-      ...resolutionUpdate,
-    };
-
-    await updateRideMutation(rideId, { failed_delivery_metadata: updatedMetadata });
+    await MobilityRpcService.updateFailedDeliveryResolution({
+      rideId,
+      resolutionUpdate,
+    });
     logger.info("RideOperationalService.updateFailedDeliveryResolution - success", {
       rideId,
       resolution_status: resolutionUpdate.resolution_status,
