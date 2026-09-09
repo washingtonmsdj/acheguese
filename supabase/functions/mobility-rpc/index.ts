@@ -31,7 +31,6 @@ const FINAL_RIDE_STATUSES = new Set([
   "expired",
   "failed",
 ]);
-const CANCELLATION_STATUSES = new Set(["cancelled_by_passenger", "cancelled_by_driver"]);
 const DISPATCH_STRATEGIES = new Set(["exclusive_offer", "open_board", "reservation_board"]);
 const DRIVER_AVAILABILITY_ACTIONS = new Set([
   "go_online",
@@ -50,8 +49,6 @@ const ACTIONS = {
   transitionRideState: true,
   transitionDeliveryState: true,
   updateFailedDeliveryResolution: true,
-  logRideStateChange: true,
-  cancelPendingOffers: true,
   updateDriverAvailability: true,
   updateDriverLocation: true,
   listDriverOffers: true,
@@ -472,35 +469,6 @@ async function requireDeliveryVerification(
       "PIN verification is required before delivery confirmation",
     );
   }
-}
-
-async function resolveAuditActor(
-  supabaseAdmin: SupabaseClient,
-  auth: UserAuthResult,
-  ride: RideRow,
-  requestedActor: unknown,
-): Promise<string> {
-  if (auth.isProjectAdmin) {
-    return `admin:${auth.userId}`;
-  }
-
-  if (
-    typeof requestedActor === "string" &&
-    UUID_REGEX.test(requestedActor) &&
-    await profileBelongsToUser(supabaseAdmin, requestedActor, auth.userId)
-  ) {
-    return requestedActor;
-  }
-
-  if (await profileBelongsToUser(supabaseAdmin, ride.passenger_profile_id, auth.userId)) {
-    return ride.passenger_profile_id as string;
-  }
-
-  if (await profileBelongsToUser(supabaseAdmin, ride.driver_profile_id, auth.userId)) {
-    return ride.driver_profile_id as string;
-  }
-
-  throw new RequestAuthorizationError("User cannot write audit events for this ride");
 }
 
 async function requireRequestingProfile(
@@ -1287,46 +1255,6 @@ async function handleUpdateFailedDeliveryResolution(
   return data ?? { updated: false, ride_id: rideId };
 }
 
-async function handleLogRideStateChange(
-  supabaseAdmin: SupabaseClient,
-  auth: UserAuthResult,
-  params: Record<string, unknown>,
-) {
-  const rideId = requireUuid(params.rideId ?? params.ride_id, "rideId");
-  const toState = requireStatus(params.toState ?? params.to_state, "toState");
-  const fromState =
-    optionalStatus(params.fromState ?? params.from_state, "fromState") ?? "none";
-  const reason = optionalAuditReason(params.reason);
-  const ride = await getRide(supabaseAdmin, rideId);
-
-  if (!await canAccessRideAsParticipantOrAdmin(supabaseAdmin, auth, ride)) {
-    throw new RequestAuthorizationError("User cannot write audit events for this ride");
-  }
-
-  if (ride.status !== toState) {
-    throw new RequestValidationError("Ride state does not match audit target");
-  }
-
-  const changedBy = await resolveAuditActor(
-    supabaseAdmin,
-    auth,
-    ride,
-    params.actorProfileId ?? params.actor_profile_id ?? params.changedBy ?? params.changed_by,
-  );
-
-  const { error } = await supabaseAdmin.from("ride_state_audit").insert({
-    ride_id: rideId,
-    from_state: fromState,
-    to_state: toState,
-    changed_by: changedBy,
-    reason,
-    created_at: new Date().toISOString(),
-  });
-
-  if (error) throw error;
-  return { logged: true };
-}
-
 async function handleAcceptRide(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
@@ -1390,30 +1318,6 @@ async function handleAdminRedispatch(
 
   if (error) throw error;
   return data ?? { success: false, reason: "empty_response", ride_id: rideId };
-}
-
-async function handleCancelPendingOffers(
-  supabaseAdmin: SupabaseClient,
-  auth: UserAuthResult,
-  params: Record<string, unknown>,
-) {
-  const rideId = requireUuid(params.rideId ?? params.ride_id, "rideId");
-  const ride = await getRide(supabaseAdmin, rideId);
-
-  if (!CANCELLATION_STATUSES.has(ride.status)) {
-    throw new RequestValidationError("Ride must be cancelled before cancelling pending offers");
-  }
-
-  if (!await canAccessRideAsParticipantOrAdmin(supabaseAdmin, auth, ride)) {
-    throw new RequestAuthorizationError("User cannot cancel offers for this ride");
-  }
-
-  const { data, error } = await supabaseAdmin.rpc("cancel_pending_ride_offers", {
-    p_ride_id: rideId,
-  });
-
-  if (error) throw error;
-  return { cancelledCount: typeof data === "number" ? data : 0 };
 }
 
 async function handleUpdateDriverAvailability(
@@ -1701,10 +1605,6 @@ async function dispatchAction(
       return handleTransitionDeliveryState(supabaseAdmin, auth, params);
     case "updateFailedDeliveryResolution":
       return handleUpdateFailedDeliveryResolution(supabaseAdmin, auth, params);
-    case "logRideStateChange":
-      return handleLogRideStateChange(supabaseAdmin, auth, params);
-    case "cancelPendingOffers":
-      return handleCancelPendingOffers(supabaseAdmin, auth, params);
     case "updateDriverAvailability":
       return handleUpdateDriverAvailability(supabaseAdmin, auth, params);
     case "updateDriverLocation":
