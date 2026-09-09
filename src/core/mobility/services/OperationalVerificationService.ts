@@ -7,14 +7,12 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
-import { profileService } from '@/core/profiles/services/ProfileService';
 import type {
   OperationalVerification,
-  CreateVerificationParams,
-  CreateVerificationResult,
   VerifyPINParams,
   VerifyPINResult,
   VerificationStatusSummary,
+  RequesterPinResult,
 } from '../types/OperationalVerification';
 import {
   PIN_CONFIG as CONFIG,
@@ -39,7 +37,7 @@ type OperationalVerificationRpcClient = {
 
 const verificationRpc = supabase as unknown as OperationalVerificationRpcClient;
 
-type CreateVerificationRpcResult = {
+type RefreshPinRpcResult = {
   verification_id?: unknown;
   pin?: unknown;
   expires_at?: unknown;
@@ -79,6 +77,8 @@ function verificationErrorForCode(code: string): string {
       return ERRORS.PIN_EXPIRED;
     case 'max_attempts_reached':
       return ERRORS.MAX_ATTEMPTS_REACHED;
+    case 'pin_not_generated':
+      return ERRORS.PIN_NOT_GENERATED;
     case 'invalid_pin':
       return ERRORS.INVALID_PIN;
     default:
@@ -88,43 +88,41 @@ function verificationErrorForCode(code: string): string {
 
 export class OperationalVerificationService {
   /**
-   * Creates a verification through the canonical database command.
-   * Plaintext PIN is returned once by the RPC and is never persisted as plaintext.
+   * Issues or rotates the active ride PIN for the authenticated requester.
+   * The plaintext code is returned once and is never persisted.
    */
-  static async createVerification(
-    params: CreateVerificationParams,
-  ): Promise<ServiceResult<CreateVerificationResult>> {
+  static async refreshRequesterPIN(
+    rideId: string,
+  ): Promise<ServiceResult<RequesterPinResult>> {
     try {
-      const { rideId, verificationType, isRequired, requiredBy } = params;
-      const { data, error } = await verificationRpc.rpc<CreateVerificationRpcResult>(
-        'create_operational_pin_verification',
-        {
-          p_ride_id: rideId,
-          p_is_required: isRequired,
-          p_required_by: requiredBy,
-          p_verification_type: verificationType,
-        },
+      const { data, error } = await verificationRpc.rpc<RefreshPinRpcResult>(
+        'refresh_operational_pin_for_requester',
+        { p_ride_id: rideId },
       );
 
-      if (error) throw new Error(error.message || 'Failed to create verification');
-      if (!data || typeof data.verification_id !== 'string') {
-        throw new Error('Invalid operational verification creation response');
+      if (error) throw new Error(error.message || 'Failed to issue operational PIN');
+      if (
+        !data ||
+        typeof data.verification_id !== 'string' ||
+        typeof data.pin !== 'string' ||
+        typeof data.expires_at !== 'string'
+      ) {
+        throw new Error('Invalid operational PIN issue response');
       }
 
       return {
         success: true,
         data: {
           verificationId: data.verification_id,
-          pin: typeof data.pin === 'string' ? data.pin : undefined,
-          expiresAt:
-            typeof data.expires_at === 'string' ? data.expires_at : undefined,
+          pin: data.pin,
+          expiresAt: data.expires_at,
         },
       };
     } catch (error) {
-      logger.error('Error creating verification:', error);
+      logger.error('Error issuing requester PIN:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to create verification',
+        error: error instanceof Error ? error.message : 'Failed to issue operational PIN',
       };
     }
   }
@@ -243,117 +241,9 @@ export class OperationalVerificationService {
   }
 
   /**
-   * GATE 7 FASE 2.5: Resolve se PIN é exigido para uma CORRIDA.
-   * Precedência: admin global > passageiro > motorista.
+   * PIN requirement is server-owned. The browser only consumes the sanitized
+   * status and may ask the requester-only issuer for a new code.
    */
-  static async resolveRidePINRequirement(params: {
-    passengerId: string;
-    driverProfileId?: string;
-  }): Promise<{
-    isRequired: boolean;
-    requiredBy: 'admin' | 'passenger' | 'driver' | null;
-    reason: string;
-  }> {
-    try {
-      const adminRequires = process.env.REQUIRE_PIN_FOR_ALL_RIDES === 'true';
-      if (adminRequires) {
-        return {
-          isRequired: true,
-          requiredBy: 'admin',
-          reason: 'Admin global requires PIN for all rides',
-        };
-      }
-
-      const passenger = await profileService.getProfileById(params.passengerId) as {
-        requires_pin_for_rides?: boolean | null;
-      } | null;
-
-      if (passenger?.requires_pin_for_rides === true) {
-        return {
-          isRequired: true,
-          requiredBy: 'passenger',
-          reason: 'Passenger requires PIN verification',
-        };
-      }
-
-      if (params.driverProfileId) {
-        const driver = await profileService.getProfileById(params.driverProfileId) as {
-          requires_pin_for_rides?: boolean | null;
-        } | null;
-
-        if (driver?.requires_pin_for_rides === true) {
-          return {
-            isRequired: true,
-            requiredBy: 'driver',
-            reason: 'Driver requires PIN verification',
-          };
-        }
-      }
-
-      return {
-        isRequired: false,
-        requiredBy: null,
-        reason: 'PIN not required',
-      };
-    } catch (error) {
-      logger.error('Error resolving ride PIN requirement:', error);
-      return {
-        isRequired: false,
-        requiredBy: null,
-        reason: 'Error checking PIN requirement',
-      };
-    }
-  }
-
-  /**
-   * GATE 7 FASE 2.5: Resolve se PIN é exigido para uma ENTREGA.
-   * Precedência: admin global > operação/remetente/empresa.
-   */
-  static async resolveDeliveryPINRequirement(params: {
-    senderProfileId: string;
-    operationId?: string;
-  }): Promise<{
-    isRequired: boolean;
-    requiredBy: 'admin' | 'sender' | 'operation' | null;
-    reason: string;
-  }> {
-    try {
-      const adminRequires = process.env.REQUIRE_PIN_FOR_ALL_DELIVERIES === 'true';
-      if (adminRequires) {
-        return {
-          isRequired: true,
-          requiredBy: 'admin',
-          reason: 'Admin global requires PIN for all deliveries',
-        };
-      }
-
-      const sender = await profileService.getProfileById(params.senderProfileId) as {
-        requires_pin_for_deliveries?: boolean | null;
-      } | null;
-
-      if (sender?.requires_pin_for_deliveries === true) {
-        return {
-          isRequired: true,
-          requiredBy: 'sender',
-          reason: 'Sender requires PIN verification',
-        };
-      }
-
-      return {
-        isRequired: false,
-        requiredBy: null,
-        reason: 'PIN not required',
-      };
-    } catch (error) {
-      logger.error('Error resolving delivery PIN requirement:', error);
-      return {
-        isRequired: false,
-        requiredBy: null,
-        reason: 'Error checking PIN requirement',
-      };
-    }
-  }
-
   static isValidPINFormat(pin: string): boolean {
     return /^\d{4}$/.test(pin);
   }
