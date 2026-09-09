@@ -76,8 +76,15 @@ export interface FailedDeliveryMetadata {
   /** Fotos de evidência - OPCIONAL */
   photos?: string[];
   
-  /** Número da tentativa - OPCIONAL */
+  /** Número ordinal da tentativa atual - OPCIONAL */
   attempt_number?: number;
+
+  /**
+   * Total de tentativas de entrega realizadas - OPCIONAL.
+   * Mantido separado de attempt_number porque o runtime operacional já persiste
+   * esse contador como evidência acumulada.
+   */
+  attempted_delivery_count?: number;
   
   // ============================================
   // RESOLUÇÃO POSTERIOR (Preenchido depois)
