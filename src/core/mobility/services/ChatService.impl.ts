@@ -7,6 +7,7 @@
 import * as chatMutations from "./chat.mutations";
 import * as chatQueries from "./chat.queries";
 import type { ChatMessage, RideChat, SendMessageInput } from "./chat.types";
+import { realtimeService, type RealtimeSubscription } from "@/core/realtime";
 
 export type { ChatMessage, RideChat, SendMessageInput } from "./chat.types";
 
@@ -23,14 +24,21 @@ export class ChatService {
     return chatMutations.sendMessage(input);
   }
 
-  static async markMessagesAsRead(
-    chatId: string,
-    userId: string,
-  ): Promise<void> {
-    await chatMutations.markMessagesAsRead(chatId, userId);
+  static async markMessagesAsRead(rideId: string): Promise<void> {
+    await chatMutations.markMessagesAsRead(rideId);
   }
 
   static async createChat(rideId: string): Promise<RideChat> {
     return chatMutations.createChat(rideId);
+  }
+
+  static subscribeToMessages(
+    chatId: string,
+    onMessage: (message: ChatMessage) => void,
+  ): RealtimeSubscription {
+    return realtimeService.subscribe("mobility.ride-chat-messages", {
+      filterValues: { chatId },
+      onEvent: ({ row }) => onMessage(row as unknown as ChatMessage),
+    });
   }
 }
