@@ -15,6 +15,16 @@ export const mobilityRoutes = {
     ganhos: "/central/motoboy/ganhos",
     configuracoes: "/central/motoboy/configuracoes",
   },
+  public: {
+    home: "/mobilidade",
+    motorista: "/mobilidade/motorista",
+    motoboy: "/mobilidade/motoboy",
+    motoristaProfile: "/mobilidade/motorista/perfil",
+    history: "/mobilidade/historico",
+    emergencyContacts: "/mobilidade/contatos-emergencia",
+    trackPattern: "/track/:token",
+    track: (token: string) => `/track/${token}`,
+  },
   passageiro: {
     home: "/mobilidade/passageiro",
     corridas: "/mobilidade/passageiro/corridas",
