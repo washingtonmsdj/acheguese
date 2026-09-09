@@ -28,13 +28,15 @@ Leia nesta ordem:
 - G34C migra a edição profissional para o mesmo contrato: cobertura carrega e salva por `public.service_areas`; o formulário não lê nem escreve mais o JSONB legado;
 - G34D1 remove `service_areas/service_radius_km` dos tipos, queries, mapper, schema e lifecycle Professional; página pública, Central e E2E preservam a feature usando Coverage canônico;
 - G34D2 migra o export LGPD para `public.service_areas`; `user-export-data` continua não implantada e uncertified, portanto não deve ser deployada antes do preflight;
+- G35A fecha os writers de Professional no código novo pelo `profile-rpc` existente, com patch allowlisted, stats automáticos e política de slug no servidor; grants browser antigos ficam temporariamente apenas por compatibilidade com o frontend production desatualizado;
 - **não** adicionar `ServiceAreasService` ao incremental baseline para esconder a violação;
 - Supabase canônico: `xhdowzacfujckjelqhtd`;
 - invariantes remotos de mobilidade continuam: 0 offers abertas, 0 dispatch pendente e 0 motorista preso em corrida terminal;
 - Vercel atual está bloqueando novos builds por limite do provider e GitHub jobs recentes nem iniciam steps; portanto build/E2E same-SHA continuam pendentes de execução real;
 - último deploy Vercel production READY localizado: `86c76fc8d48550fbbed783a359c32f6cdf6a435d`, muito atrás da `main`;
 - Mobilidade continua **launch-paused**: `PUBLIC_LAUNCH_SURFACES.mobility=false`;
-- próximo gate: reexecutar arquitetura/security → build same-SHA → E2E positivo/negativo + smoke responsivo → deploy web same-SHA;
+- próximo gate imediato: aplicar/reconciliar G35A no Supabase → validar `profile-rpc` same-source → depois retomar arquitetura/security → build/E2E/smoke/deploy web same-SHA;
+- descoberta estrutural pendente: `ProfileService` principal ainda possui DML direto em `profiles`, enquanto multi-profile já usa broker; tratar em G36, sem criar uma terceira stack;
 - não restaurar DML direto, operator scripts obsoletos, wrappers concorrentes, dynamic-table novo ou authorities paralelas.
 
 ## Regra para novas IAs/agentes

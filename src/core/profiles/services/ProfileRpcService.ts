@@ -2,6 +2,9 @@ import { invokeSupabaseBroker } from "@/core/infrastructure/edge-functions/edgeF
 
 type ProfileRpcAction =
   | "createProfile"
+  | "createProfessional"
+  | "updateProfessionalData"
+  | "deactivateProfessional"
   | "updateHandle"
   | "deleteProfile"
   | "transferOwnership"
@@ -54,6 +57,28 @@ export class ProfileRpcService {
     extensionData?: Record<string, unknown> | null;
   }): Promise<TResult> {
     return this.invoke<TResult>("createProfile", params);
+  }
+
+  static async createProfessional<TResult>(params: {
+    handle: string;
+    displayName: string;
+    avatarUrl?: string | null;
+    bio?: string | null;
+    extensionData: Record<string, unknown>;
+    professionalPatch: Record<string, unknown>;
+  }): Promise<TResult> {
+    return this.invoke<TResult>("createProfessional", params);
+  }
+
+  static async updateProfessionalData<TResult>(
+    profileId: string,
+    patch: Record<string, unknown>,
+  ): Promise<TResult> {
+    return this.invoke<TResult>("updateProfessionalData", { profileId, patch });
+  }
+
+  static async deactivateProfessional<TResult>(profileId: string): Promise<TResult> {
+    return this.invoke<TResult>("deactivateProfessional", { profileId });
   }
 
   static async updateHandle<TResult>(profileId: string, newHandle: string): Promise<TResult> {

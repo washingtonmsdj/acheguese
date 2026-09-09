@@ -1,6 +1,4 @@
-import { supabase } from "@/integrations/supabase";
 import { PublicIdentityService } from "@/core/public-identity";
-import { profileService } from "@/core/profiles/services/ProfileService";
 import {
   evaluateProfessionalSlugSafety,
   isProfessionalSlugSafetyBypassAllowed,
@@ -19,7 +17,7 @@ import {
 import { normalizeMediaAssetReference } from "@/core/media/references/mediaAssetReference";
 import { EntityContactService } from "@/core/contact";
 import { SessionService } from "@/core/session/services/SessionService";
-import { ProfileMembersService } from "@/core/profiles/services/multi-profile/profileMembersService";
+import { ProfileRpcService } from "@/core/profiles/services/ProfileRpcService";
 import type {
   Professional,
   CreateProfessionalInput,
@@ -30,63 +28,16 @@ import type {
 import {
   generateUniqueProfessionalSlug,
   getProfessionalById,
+  getProfessionalDataIdByProfileId,
+  getProfessionalMutationSnapshot,
   validateAvailableProfessionalSlug,
 } from "./professional.queries";
 
-interface QueryError {
-  message?: string | null;
+interface BrokerCommandResult<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
 }
-
-interface QueryArrayResult<TRow> {
-  data: TRow[] | null;
-  error: QueryError | null;
-}
-
-interface QuerySingleResult<TRow> {
-  data: TRow | null;
-  error: QueryError | null;
-}
-
-interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
-  select: (columns?: string) => QueryBuilder<TRow>;
-  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
-  update: (values: unknown) => QueryBuilder<TRow>;
-  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
-  or: (filters: string) => QueryBuilder<TRow>;
-  maybeSingle: () => Promise<QuerySingleResult<TRow>>;
-  single: () => Promise<QuerySingleResult<TRow>>;
-}
-
-interface ProfessionalProfileLifecycleDbClient {
-  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
-}
-
-
-interface ProfessionalDataIdentityRow {
-  id: string;
-  profile_id: string;
-}
-
-interface ProfessionalDataLifecycleRow extends ProfessionalDataIdentityRow {
-  slug?: string | null;
-  metadata?: ProfessionalMetadata | null;
-  professional_name?: string | null;
-  is_verified?: boolean | null;
-}
-
-interface ProfessionalStatsInsertRow {
-  profile_id: string;
-  views_count: number;
-  contacts_count: number;
-  favorites_count: number;
-  shares_count: number;
-  jobs_completed: number;
-  response_rate: number;
-  average_response_time: number;
-}
-
-const professionalProfileLifecycleDb =
-  supabase as unknown as ProfessionalProfileLifecycleDbClient;
 
 function sanitizeAndValidateInput(
   input: CreateProfessionalInput | UpdateProfessionalInput,
@@ -256,17 +207,6 @@ function toProfessionalData(
   return result;
 }
 
-function generateProfessionalUsername(name: string): string {
-  return (
-    name
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "")
-      .substring(0, 20) + "_pro"
-  );
-}
-
 export async function createProfessionalWithProfile(
   input: CreateProfessionalInput,
 ): Promise<Professional> {
@@ -294,59 +234,59 @@ export async function createProfessionalWithProfile(
     throw new Error("location_id e obrigatorio para cadastrar profissional.");
   }
 
-  const profile = await profileService.createProfile({
-    profile_type: "professional",
-    name: validatedInput.name,
-    username: generateProfessionalUsername(validatedInput.name),
-    city: validatedInput.city || "Nao informado",
-    bio: validatedInput.description,
+  const handle = await PublicIdentityService.generateAvailableIdentifier({
+    name: `${validatedInput.name}-pro`,
+    entityType: "profile",
   });
-  if (!profile) throw new Error("Erro ao criar perfil do profissional");
-
-  const memberResult = await ProfileMembersService.addMember(
-    profile.id,
-    user.id,
-    "owner",
+  const professionalPatch = toProfessionalData(
+    { ...validatedInput, slug },
+    { mode: "create" },
   );
-  if (!memberResult.success) {
-    throw new Error(
-      memberResult.error || "Erro ao registrar owner do perfil profissional",
-    );
+  const metadata = {
+    ...(professionalPatch.metadata ?? {}),
+    category: validatedInput.category,
+    price_range: validatedInput.price_range ?? null,
+    available_hours: validatedInput.available_hours ?? null,
+  };
+
+  const created = await ProfileRpcService.createProfessional<
+    BrokerCommandResult<{ profile_id: string; handle: string }>
+  >({
+    handle,
+    displayName: validatedInput.name,
+    avatarUrl: null,
+    bio: validatedInput.description,
+    extensionData: {
+      slug,
+      profession: validatedInput.subcategory ?? validatedInput.category,
+      location_id: validatedInput.location_id,
+      address_id: validatedInput.address_id ?? null,
+      certifications: validatedInput.certifications ?? [],
+      years_experience: validatedInput.experience_years ?? null,
+      education: validatedInput.education ?? null,
+      phone: validatedInput.phone ?? null,
+      whatsapp: validatedInput.whatsapp ?? null,
+      email: validatedInput.email ?? null,
+      metadata,
+    },
+    professionalPatch: {
+      ...professionalPatch,
+      metadata,
+    },
+  });
+
+  if (!created.success || !created.data?.profile_id) {
+    throw new Error(created.error || "Erro ao criar perfil profissional");
   }
 
-  const professionalData = toProfessionalData({ ...validatedInput, slug }, { mode: "create" });
-  const { data: professionalRow, error } = await professionalProfileLifecycleDb
-    .from<ProfessionalDataIdentityRow>("professional_data")
-    .insert({
-      profile_id: profile.id,
-      ...professionalData,
-      rating: 0,
-    })
-    .select("id")
-    .single();
-
-  if (error) throw error;
-
-  await EntityContactService.patchOwnedChannels(
-    "professional",
-    professionalRow.id,
-    EntityContactService.buildPatch(validatedInput),
+  const professionalId = await getProfessionalDataIdByProfileId(
+    created.data.profile_id,
   );
+  if (!professionalId) {
+    throw new Error("Perfil profissional criado sem professional_data canônico");
+  }
 
-  await professionalProfileLifecycleDb
-    .from<ProfessionalStatsInsertRow>("professional_stats")
-    .insert({
-      profile_id: profile.id,
-      views_count: 0,
-      contacts_count: 0,
-      favorites_count: 0,
-      shares_count: 0,
-      jobs_completed: 0,
-      response_rate: 0,
-      average_response_time: 0,
-    });
-
-  return getProfessionalById(professionalRow.id);
+  return getProfessionalById(professionalId);
 }
 
 export async function updateProfessionalWithProfile(
@@ -354,34 +294,21 @@ export async function updateProfessionalWithProfile(
   input: UpdateProfessionalInput,
 ): Promise<Professional> {
   const validatedInput = sanitizeAndValidateInput(input, true) as UpdateProfessionalInput;
-  const { data: currentProfessional, error: currentError } =
-    await professionalProfileLifecycleDb
-      .from<ProfessionalDataLifecycleRow>("professional_data")
-    .select("id, profile_id, slug, metadata, professional_name, is_verified")
-    .or(`profile_id.eq.${id},id.eq.${id}`)
-    .maybeSingle();
+  const currentProfessional = await getProfessionalMutationSnapshot(id);
 
-  if (currentError) throw currentError;
-  if (!currentProfessional) throw new Error("Profissional nao encontrado");
+  if (!currentProfessional) {
+    throw new Error("Profissional nao encontrado");
+  }
 
   const professionalData = toProfessionalData(validatedInput, {
     mode: "update",
     currentMetadata: currentProfessional.metadata as ProfessionalMetadata,
   });
-  const updatePayload: Partial<ProfessionalDataRecord> & { updated_at: string } = {
-    ...professionalData,
-    updated_at: new Date().toISOString(),
-  };
-  delete updatePayload.slug;
 
-  if (validatedInput.name) {
-    await profileService.updateProfile(currentProfessional.profile_id, {
-      name: validatedInput.name,
-      bio: validatedInput.description,
-    });
-  }
-
-  if (validatedInput.slug !== undefined && validatedInput.slug !== currentProfessional.slug) {
+  if (
+    validatedInput.slug !== undefined &&
+    validatedInput.slug !== currentProfessional.slug
+  ) {
     if (
       !isProfessionalSlugSafetyBypassAllowed({
         isVerifiedProfessional: Boolean(currentProfessional.is_verified),
@@ -421,14 +348,15 @@ export async function updateProfessionalWithProfile(
             (availability.suggestion ? ` Sugestao: ${availability.suggestion}` : ""),
       );
     }
-    updatePayload.slug = validatedInput.slug;
   }
 
-  const { error } = await professionalProfileLifecycleDb
-    .from<ProfessionalDataRecord>("professional_data")
-    .update(updatePayload)
-    .eq("profile_id", currentProfessional.profile_id);
-  if (error) throw error;
+  const updated = await ProfileRpcService.updateProfessionalData<
+    BrokerCommandResult<{ profile_id: string; professional_id: string }>
+  >(currentProfessional.profile_id, { ...professionalData });
+
+  if (!updated.success) {
+    throw new Error(updated.error || "Erro ao atualizar profissional");
+  }
 
   const contactPatch = EntityContactService.buildPatch(validatedInput);
   if (contactPatch.length > 0) {
@@ -443,28 +371,16 @@ export async function updateProfessionalWithProfile(
 }
 
 export async function deleteProfessionalWithProfile(id: string): Promise<void> {
-  const { data: professional, error: resolveError } =
-    await professionalProfileLifecycleDb
-      .from<ProfessionalDataIdentityRow>("professional_data")
-    .select("id, profile_id")
-    .or(`profile_id.eq.${id},id.eq.${id}`)
-    .maybeSingle();
+  const professional = await getProfessionalMutationSnapshot(id);
+  if (!professional) {
+    throw new Error("Profissional nao encontrado");
+  }
 
-  if (resolveError) throw resolveError;
-  if (!professional) throw new Error("Profissional nao encontrado");
+  const result = await ProfileRpcService.deactivateProfessional<
+    BrokerCommandResult<{ profile_id: string }>
+  >(professional.profile_id);
 
-  const { error } = await professionalProfileLifecycleDb
-    .from<ProfessionalDataRecord>("professional_data")
-    .update({
-      is_accepting_clients: false,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", professional.id);
-  if (error) throw error;
-
-  try {
-    await profileService.updateProfile(professional.profile_id, { is_active: false });
-  } catch {
-    // Best effort: profile may no longer exist.
+  if (!result.success) {
+    throw new Error(result.error || "Erro ao desativar profissional");
   }
 }

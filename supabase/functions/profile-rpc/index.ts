@@ -25,6 +25,9 @@ const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const ACTIONS = {
   createProfile: true,
+  createProfessional: true,
+  updateProfessionalData: true,
+  deactivateProfessional: true,
   updateHandle: true,
   deleteProfile: true,
   transferOwnership: true,
@@ -152,6 +155,159 @@ function optionalExtensionData(value: unknown): Record<string, unknown> | null {
   return sanitized;
 }
 
+const PROFESSIONAL_PATCH_KEYS = new Set([
+  "slug",
+  "professional_name",
+  "service_category",
+  "service_subcategory",
+  "description",
+  "certifications",
+  "experience_years",
+  "education",
+  "price_range",
+  "available_hours",
+  "is_accepting_clients",
+  "address_id",
+  "location_id",
+  "metadata",
+  "visibility",
+  "availability_notes",
+  "portfolio_items",
+  "profession",
+  "specialties",
+  "years_experience",
+  "services_offered",
+  "service_area",
+  "hourly_rate",
+  "accepts_remote",
+]);
+
+function sanitizeProfessionalPatch(value: unknown): Record<string, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new RequestValidationError("Invalid professionalPatch");
+  }
+
+  const input = { ...(value as Record<string, unknown>) };
+  for (const key of Object.keys(input)) {
+    if (!PROFESSIONAL_PATCH_KEYS.has(key)) {
+      throw new RequestValidationError(`Unsupported professional field: ${key}`);
+    }
+  }
+
+  for (const key of [
+    "professional_name",
+    "service_category",
+    "service_subcategory",
+    "description",
+    "education",
+    "price_range",
+    "availability_notes",
+    "profession",
+    "slug",
+  ]) {
+    const fieldValue = input[key];
+    if (fieldValue !== undefined && fieldValue !== null && typeof fieldValue !== "string") {
+      throw new RequestValidationError(`Invalid ${key}`);
+    }
+  }
+
+  if ("professional_name" in input) {
+    input.professional_name = requireString(
+      input.professional_name,
+      "professional_name",
+      160,
+    );
+  }
+
+  if ("service_category" in input) {
+    input.service_category = requireString(
+      input.service_category,
+      "service_category",
+      100,
+    );
+  }
+
+  if ("location_id" in input && (input.location_id === null || input.location_id === "")) {
+    throw new RequestValidationError("location_id cannot be cleared");
+  }
+
+    if (typeof input.slug === "string") {
+    const slug = input.slug.trim().toLowerCase();
+    if (
+      slug.length < 2 ||
+      slug.length > 100 ||
+      !/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(slug)
+    ) {
+      throw new RequestValidationError("Invalid slug");
+    }
+    input.slug = slug;
+  }
+
+  for (const key of ["address_id", "location_id"]) {
+    if (key in input) {
+      input[key] = optionalUuid(input[key], key);
+    }
+  }
+
+  for (const key of ["is_accepting_clients", "accepts_remote"]) {
+    if (
+      key in input &&
+      input[key] !== null &&
+      typeof input[key] !== "boolean"
+    ) {
+      throw new RequestValidationError(`Invalid ${key}`);
+    }
+  }
+
+  for (const key of ["experience_years", "years_experience", "hourly_rate"]) {
+    if (
+      key in input &&
+      input[key] !== null &&
+      (typeof input[key] !== "number" || !Number.isFinite(input[key] as number))
+    ) {
+      throw new RequestValidationError(`Invalid ${key}`);
+    }
+  }
+
+  for (const key of ["certifications", "specialties", "services_offered", "service_area"]) {
+    if (
+      key in input &&
+      input[key] !== null &&
+      (!Array.isArray(input[key]) || (input[key] as unknown[]).length > 100)
+    ) {
+      throw new RequestValidationError(`Invalid ${key}`);
+    }
+  }
+
+  if (
+    "portfolio_items" in input &&
+    input.portfolio_items !== null &&
+    (!Array.isArray(input.portfolio_items) || input.portfolio_items.length > 50)
+  ) {
+    throw new RequestValidationError("Invalid portfolio_items");
+  }
+
+  for (const key of ["metadata", "available_hours"]) {
+    if (
+      key in input &&
+      input[key] !== null &&
+      (typeof input[key] !== "object" || Array.isArray(input[key]))
+    ) {
+      throw new RequestValidationError(`Invalid ${key}`);
+    }
+  }
+
+  if (
+    "visibility" in input &&
+    input.visibility !== null &&
+    !["public_listed", "public_unlisted", "private"].includes(String(input.visibility))
+  ) {
+    throw new RequestValidationError("Invalid visibility");
+  }
+
+  return input;
+}
+
 function sanitizeDriverExtensionData(
   extensionData: Record<string, unknown> | null,
 ): Record<string, unknown> | null {
@@ -240,6 +396,69 @@ async function handleCreateProfile(
 
   if (error) throw error;
   return data ?? { success: false, error: "Profile RPC returned no data" };
+}
+
+async function handleCreateProfessional(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const handle = requireString(params.handle, "handle", 100);
+  const displayName = requireString(params.displayName, "displayName", 160);
+  const avatarUrl = optionalString(params.avatarUrl, "avatarUrl", 2048);
+  const bio = optionalString(params.bio, "bio", 4000);
+  const extensionData = optionalExtensionData(params.extensionData);
+  if (!extensionData) {
+    throw new RequestValidationError("extensionData is required");
+  }
+  const professionalPatch = sanitizeProfessionalPatch(params.professionalPatch ?? {});
+
+  const { data, error } = await supabaseAdmin.rpc("profile_rpc_create_professional", {
+    p_actor_user_id: auth.userId,
+    p_handle: handle,
+    p_display_name: displayName,
+    p_avatar_url: avatarUrl,
+    p_bio: bio,
+    p_extension_data: extensionData,
+    p_professional_patch: professionalPatch,
+  });
+
+  if (error) throw error;
+  return data ?? { success: false, error: "Professional create RPC returned no data" };
+}
+
+async function handleUpdateProfessionalData(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const profileId = requireUuid(params.profileId, "profileId");
+  const patch = sanitizeProfessionalPatch(params.patch);
+
+  const { data, error } = await supabaseAdmin.rpc("profile_rpc_update_professional_data", {
+    p_actor_user_id: auth.userId,
+    p_profile_id: profileId,
+    p_patch: patch,
+  });
+
+  if (error) throw error;
+  return data ?? { success: false, error: "Professional update RPC returned no data" };
+}
+
+async function handleDeactivateProfessional(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const profileId = requireUuid(params.profileId, "profileId");
+
+  const { data, error } = await supabaseAdmin.rpc("profile_rpc_deactivate_professional", {
+    p_actor_user_id: auth.userId,
+    p_profile_id: profileId,
+  });
+
+  if (error) throw error;
+  return data ?? { success: false, error: "Professional deactivate RPC returned no data" };
 }
 
 async function handleUpdateHandle(
@@ -365,6 +584,12 @@ async function dispatchAction(
   switch (action) {
     case "createProfile":
       return handleCreateProfile(supabaseAdmin, auth, params);
+    case "createProfessional":
+      return handleCreateProfessional(supabaseAdmin, auth, params);
+    case "updateProfessionalData":
+      return handleUpdateProfessionalData(supabaseAdmin, auth, params);
+    case "deactivateProfessional":
+      return handleDeactivateProfessional(supabaseAdmin, auth, params);
     case "updateHandle":
       return handleUpdateHandle(supabaseAdmin, auth, params);
     case "deleteProfile":

@@ -157,6 +157,15 @@ interface ProfessionalIdRow {
   id: string;
 }
 
+export interface ProfessionalMutationSnapshot {
+  id: string;
+  profile_id: string;
+  slug: string | null;
+  metadata: Record<string, unknown> | null;
+  professional_name: string | null;
+  is_verified: boolean;
+}
+
 interface ProfessionalSlugHistoryRow {
   id: string;
   old_slug: string;
@@ -386,6 +395,22 @@ export async function getProfessionalById(id: string): Promise<Professional> {
     });
     throw error;
   }
+}
+
+export async function getProfessionalMutationSnapshot(
+  idOrProfileId: string,
+): Promise<ProfessionalMutationSnapshot | null> {
+  const { data, error } = await professionalQueriesDb
+    .from<ProfessionalMutationSnapshot>("professional_data")
+    .select("id, profile_id, slug, metadata, professional_name, is_verified")
+    .or(`id.eq.${idOrProfileId},profile_id.eq.${idOrProfileId}`)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message ?? "Erro ao carregar snapshot profissional");
+  }
+
+  return data ?? null;
 }
 
 export async function getProfessionalDataIdByProfileId(

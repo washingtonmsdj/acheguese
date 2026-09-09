@@ -4,6 +4,7 @@
  * credentials are read and written only through the authenticated broker.
  */
 import { ProfessionalCredentialsService } from "@/core/professional/services/ProfessionalCredentialsService";
+import { ProfileRpcService } from "@/core/profiles/services/ProfileRpcService";
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { ProfessionalData, ServiceResponse } from "./types";
@@ -77,20 +78,23 @@ export class ProfessionalService {
       } = updates;
       const hasPublicUpdates = Object.keys(publicUpdates).length > 0;
 
-      const query = hasPublicUpdates
-        ? supabase
-            .from("professional_data")
-            .update(publicUpdates)
-            .eq("profile_id", profileId)
-            .select(PROFESSIONAL_EXTENSION_SELECT)
-            .single()
-        : supabase
-            .from("professional_data")
-            .select(PROFESSIONAL_EXTENSION_SELECT)
-            .eq("profile_id", profileId)
-            .single();
+      if (hasPublicUpdates) {
+        const brokerResult = await ProfileRpcService.updateProfessionalData<
+          ServiceResponse<{ profile_id: string; professional_id: string }>
+        >(profileId, publicUpdates as Record<string, unknown>);
 
-      const { data, error } = await query;
+        if (!brokerResult.success) {
+          throw new Error(
+            brokerResult.error || "Failed to update professional data",
+          );
+        }
+      }
+
+      const { data, error } = await supabase
+        .from("professional_data")
+        .select(PROFESSIONAL_EXTENSION_SELECT)
+        .eq("profile_id", profileId)
+        .single();
       if (error) throw error;
 
       const credentialsPatch: {

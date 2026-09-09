@@ -1038,6 +1038,39 @@ Próximo gate deste eixo:
 3. só depois promover o marker de implementação e considerar deploy;
 4. DROP físico das colunas Professional continua dependente do frontend novo publicado.
 
+### Checkpoint G35A — preparar authority broker-owned de Professional (2026-09-09)
+
+Auditoria real do banco e callers:
+- `authenticated` ainda possui `INSERT/UPDATE/DELETE` em `professional_data` e a policy `Active professional managers modify professional data` continua `FOR ALL`;
+- `professional_stats` também mantém DML browser;
+- existem dois writers vivos de produto em `professional_data`: `professional.profile-lifecycle.ts` e o adapter multi-profile;
+- `profile-rpc v13 ACTIVE` já é o broker autenticado de mutações privilegiadas de Profile, então **não** foi criado um novo `professional-rpc`;
+- foi confirmada dívida maior: `ProfileService` principal ainda cria/atualiza `profiles` por DML direto enquanto a stack multi-profile já usa `ProfileRpcService`. Isso fica como próximo eixo de convergência, não como justificativa para manter writer duplicado de Professional.
+
+Correção preparada:
+- [x] `profile-rpc` ganhou ações `createProfessional`, `updateProfessionalData` e `deactivateProfessional`;
+- [x] lifecycle principal cria/atualiza/desativa Professional pelo `ProfileRpcService`; não faz mais DML de `professional_data`;
+- [x] adapter multi-profile também deixa de fazer UPDATE direto;
+- [x] criação Professional será atômica no Postgres: `profiles + professional_data + membership + contato + professional patch` usam o broker existente numa única transação;
+- [x] `professional_stats` passa a nascer por trigger idempotente e recebe backfill de linhas faltantes;
+- [x] patch Professional no banco é allowlist fechada e não aceita `is_verified`, rating, ownership ou outros campos de autoridade;
+- [x] slug recebe enforcement server-side de formato, reserved names, índice único existente e cooldown de 30 dias;
+- [x] broker + SQL rejeitam limpar `location_id` e rejeitam nome/categoria obrigatórios vazios;
+- [x] testes ratcheteiam ausência de DML direto e presença dos novos targets service-role.
+
+Compatibilidade deliberada:
+- **G35A é estágio aditivo.** A migration ainda **não revoga** DML de `authenticated` nas tabelas, porque o deploy web production atual está muito atrás da `main`;
+- revogar agora quebraria o frontend publicado antigo. A revogação deve ser um cutover separado após o novo SHA web estar comprovadamente LIVE;
+- isso não transforma os grants antigos em arquitetura aprovada: eles são compatibilidade temporária explicitamente bloqueada para remoção no cutover.
+
+Próximos gates:
+1. aplicar a migration G35A no Supabase canônico;
+2. redeployar `profile-rpc` a partir do source exato do commit;
+3. comparar remote/source byte-a-byte e auditar grants dos novos RPCs;
+4. provar invariantes de stats e slug;
+5. após frontend same-SHA LIVE, executar G35B: revogar DML browser de `professional_data/professional_stats` e remover policy de escrita direta;
+6. abrir G36 para convergir a stack antiga de `ProfileService` que ainda usa DML direto em `profiles`.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:
