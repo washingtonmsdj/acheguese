@@ -124,7 +124,7 @@ describe("notification outbox security", () => {
       "src/core/trust/services/OperationalTrustCommandService.ts",
     );
     const rideSource = readProjectFile(
-      "src/core/mobility/core/RideOperationalPostTransition.ts",
+      "src/core/mobility/core/RideOperationalService.ts",
     );
     const orderSource = readProjectFile(
       "src/core/mobility/delivery/services/OrderDeliverySSOTService.ts",
