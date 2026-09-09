@@ -2,7 +2,6 @@ import { SAFETY_RIDE_SHARE_STATUS } from "@/core/safety/constants/status";
 import { supabase } from "@/integrations/supabase";
 import type { Database } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { secureRandomString } from "@/shared/utils/secureRandom";
 import type {
   CreateRideShareInput,
   RideShare,
@@ -11,29 +10,13 @@ import type {
 } from "../types";
 
 type RideShareRow = Database["public"]["Tables"]["ride_shares"]["Row"];
-type RideShareInsert = Database["public"]["Tables"]["ride_shares"]["Insert"];
 
 interface QueryResult<T> {
   data: T | null;
   error: { message: string; code?: string } | null;
 }
 
-interface QueryBuilder<TRow> extends PromiseLike<QueryResult<TRow[]>> {
-  select: (columns?: string) => QueryBuilder<TRow>;
-  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
-  update: (values: unknown) => QueryBuilder<TRow>;
-  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
-  order: (
-    column: string,
-    options?: { ascending?: boolean },
-  ) => QueryBuilder<TRow>;
-  limit: (value: number) => QueryBuilder<TRow>;
-  maybeSingle: () => Promise<QueryResult<TRow>>;
-  single: () => Promise<QueryResult<TRow>>;
-}
-
 interface SafetyRideShareDbClient {
-  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
   rpc: <TRow = never>(
     functionName: string,
     args: Record<string, unknown>,
@@ -78,30 +61,31 @@ export class SafetyRideShareService {
 
   async createRideShare(input: CreateRideShareInput): Promise<SafetyResult<RideShare>> {
     try {
-      const token = this.generateShareToken();
-      const expirationHours = input.expiresInHours || this.deps.getShareExpirationHours();
-      const expiresAt = new Date(Date.now() + expirationHours * 60 * 60 * 1000).toISOString();
+      const expirationHours =
+        input.expiresInHours ?? this.deps.getShareExpirationHours();
 
-      const insertPayload: RideShareInsert = {
-        ride_id: input.rideId,
-        share_token: token,
-        status: SAFETY_RIDE_SHARE_STATUS.ACTIVE,
-        created_by: input.createdBy,
-        expires_at: expiresAt,
-        created_at: new Date().toISOString(),
-      };
+      if (
+        !Number.isInteger(expirationHours)
+        || expirationHours < 1
+        || expirationHours > 168
+      ) {
+        throw new Error("A validade do compartilhamento deve ficar entre 1 e 168 horas.");
+      }
 
-      const { data, error } = await safetyRideShareDb
-        .from<RideShareRow>("ride_shares")
-        .insert(insertPayload)
-        .select()
-        .single();
+      const { data, error } = await safetyRideShareDb.rpc<RideShareRow>(
+        "create_safety_ride_share",
+        {
+          p_ride_id: input.rideId,
+          p_created_by: input.createdBy,
+          p_expires_in_hours: expirationHours,
+        },
+      );
 
-      if (error || !data) throw error ?? new Error("Failed to create ride share");
+      if (error || !data) {
+        throw error ?? new Error("Failed to create ride share");
+      }
 
-      const rideShare = toRideShare(data);
-
-      return { success: true, data: rideShare };
+      return { success: true, data: toRideShare(data) };
     } catch (error) {
       logger.error("[SafetyRideShareService] Error creating ride share:", error);
       return {
@@ -168,7 +152,4 @@ export class SafetyRideShareService {
     }
   }
 
-  private generateShareToken(): string {
-    return secureRandomString(32);
-  }
 }
