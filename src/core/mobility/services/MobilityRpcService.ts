@@ -33,6 +33,7 @@ type MobilityRpcAction =
   | "updateDriverAvailability"
   | "updateDriverLocation"
   | "listDriverOffers"
+  | "findAvailableDriversForRide"
   | "reconcileStaleDriverAvailability"
   | "releaseDriverAvailabilityForRide";
 
@@ -85,6 +86,21 @@ export interface DriverOfferBrokerRow {
 
 export interface DriverOffersBrokerData {
   offers: DriverOfferBrokerRow[];
+}
+
+export interface AvailableDriverBrokerRow {
+  profile_id: string;
+  distance_km: number;
+  rating: number | null;
+  current_lat: number;
+  current_lng: number;
+  last_seen_at: string;
+  risk_level: string | null;
+  dispatch_policy: string | null;
+}
+
+export interface AvailableDriversBrokerData {
+  drivers: AvailableDriverBrokerRow[];
 }
 
 export interface StaleDriverAvailabilityBrokerData {
@@ -406,6 +422,21 @@ export class MobilityRpcService {
       sortBy: input.sortBy,
       ascending: input.ascending,
     });
+  }
+
+  static async findAvailableDriversForRide(input: {
+    rideId: string;
+    radiusKm?: number;
+    limit?: number;
+  }): Promise<AvailableDriversBrokerData> {
+    return this.invoke<AvailableDriversBrokerData>(
+      "findAvailableDriversForRide",
+      {
+        rideId: input.rideId,
+        radiusKm: input.radiusKm,
+        limit: input.limit,
+      },
+    );
   }
 
   static async reconcileStaleDriverAvailability(
