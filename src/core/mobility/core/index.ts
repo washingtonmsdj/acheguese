@@ -9,4 +9,3 @@ export type { RideState } from './RideStateMachine';
 
 export { RideOperationalService } from './RideOperationalService';
 export { RideDispatchService } from './RideDispatchService';
-export { AutoDispatchService } from './AutoDispatchService';
