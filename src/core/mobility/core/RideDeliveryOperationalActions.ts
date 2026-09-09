@@ -1,11 +1,9 @@
 import { logger } from "@/shared/utils/logger";
 import { RIDE_STATE, type RideState } from "./RideStateMachine";
 import { getRideById } from "../services/mobility.queries";
-import { createRide } from "../services/mobility.mutations";
 import { MobilityRpcService } from "../services/MobilityRpcService";
 import type { FailedDeliveryMetadata, ResolutionStatus } from "../types/FailedDeliveryMetadata";
 import { OperationalVerificationService } from "../services/OperationalVerificationService";
-import { MotoboyAuthorizationService } from "../services/MotoboyAuthorizationService";
 import type {
   CreateDeliveryInput,
   TransitionResult,
@@ -17,7 +15,6 @@ import {
   validateFailedDeliveryResolution,
   validateFailedDeliverySnapshot,
 } from "./RideOperationalGuards";
-import { logRideStateChange } from "./RideOperationalPostTransition";
 
 export type DeliveryTransitionCommand =
   | { type: "confirm_pickup" }
@@ -80,28 +77,6 @@ export async function createDeliveryOperation(
       };
     }
 
-    const authorizationSourceId = input.authorizationSourceId ?? input.sourceId;
-    const authResult = await MotoboyAuthorizationService.canRequestDelivery({
-      sourceType: input.sourceType,
-      sourceId: authorizationSourceId,
-      locationId: input.pickupLocationId,
-      userId: input.requestingUserId,
-    });
-
-    if (!authResult.allowed) {
-      logger.warn("RideOperationalService.createDelivery - authorization denied", {
-        sourceType: input.sourceType,
-        sourceId: input.sourceId,
-        authorizationSourceId,
-        code: authResult.code,
-        reason: authResult.reason,
-      });
-      return {
-        success: false,
-        error: authResult.reason || "No autorizado a solicitar entrega.",
-      };
-    }
-
     const requesterBlock = await ensureProfileCanRequest(input.passengerProfileId);
     if (requesterBlock) return requesterBlock;
 
@@ -117,29 +92,15 @@ export async function createDeliveryOperation(
       return { success: false, error: "Preo minimo  R$ 5,00." };
     }
 
-    const ride = (await createRide({
-      passenger_profile_id: input.passengerProfileId,
-      pickup_address_id: input.pickupAddressId,
-      dropoff_address_id: input.dropoffAddressId,
-      pickup_location_id: input.pickupLocationId,
-      dropoff_location_id: input.dropoffLocationId,
-      status: RIDE_STATE.REQUESTED,
-      ride_mode: "motoboy",
-      source_type: input.sourceType,
-      source_id: input.sourceId || null,
-      recipient_name: input.recipientName,
-      recipient_phone: input.recipientPhone || null,
-      delivery_notes: input.deliveryNotes || null,
-      package_description: input.packageDescription || null,
-      package_size: input.packageSize || "small",
-      suggested_price: input.suggestedPrice,
-      observation: input.observation || null,
-      payment_method: input.paymentMethod || null,
-      updated_at: new Date().toISOString(),
-    })) as { id: string };
+    const creation = await MobilityRpcService.createDelivery(input);
+    if (creation.success !== true || !creation.ride_id) {
+      throw new Error(
+        `Delivery creation was not applied${creation.reason ? `: ${creation.reason}` : ""}`,
+      );
+    }
 
+    const ride = { id: creation.ride_id };
     logger.info("RideOperationalService.createDelivery - success", { rideId: ride.id });
-    await logRideStateChange(ride.id, null, RIDE_STATE.REQUESTED, input.passengerProfileId, "Delivery created");
 
     await OperationalVerificationService.resolveDeliveryPINRequirement({
       senderProfileId: input.passengerProfileId,
