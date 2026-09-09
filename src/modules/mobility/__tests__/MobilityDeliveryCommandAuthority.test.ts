@@ -11,6 +11,9 @@ describe("Mobility delivery command authority", () => {
     const migration = readProjectFile(
       "supabase/migrations/20260909124319_add_atomic_mobility_delivery_commands_g6.sql",
     );
+    const resolutionHardening = readProjectFile(
+      "supabase/migrations/20260909181245_harden_failed_delivery_resolution_authority_g16.sql",
+    );
     const deliveryActions = readProjectFile(
       "src/core/mobility/core/RideDeliveryOperationalActions.ts",
     );
@@ -24,6 +27,9 @@ describe("Mobility delivery command authority", () => {
     const failedDeliveryType = readProjectFile(
       "src/core/mobility/types/FailedDeliveryMetadata.ts",
     );
+    const operationalGuards = readProjectFile(
+      "src/core/mobility/core/RideOperationalGuards.ts",
+    );
 
     expect(migration).toContain("mobility_transition_delivery_state_atomic");
     expect(migration).toContain(
@@ -33,6 +39,31 @@ describe("Mobility delivery command authority", () => {
     expect(migration).toContain("INSERT INTO public.ride_state_audit");
     expect(migration).toContain("TO service_role");
     expect(migration).toContain("FROM PUBLIC, anon, authenticated");
+
+    expect(resolutionHardening).toContain(
+      "resolved delivery resolution cannot be reopened",
+    );
+    expect(resolutionHardening).toContain(
+      "next ride is not a compatible redelivery",
+    );
+    expect(resolutionHardening).toContain(
+      "driver.can_do_delivery IS TRUE",
+    );
+    expect(resolutionHardening).toContain(
+      "driver.is_verified IS TRUE",
+    );
+    expect(resolutionHardening).toContain(
+      "driver.subscription_active IS TRUE",
+    );
+    expect(resolutionHardening).toContain(
+      "resolution owner must belong to an active admin profile",
+    );
+    expect(resolutionHardening).toContain(
+      "public.is_admin(profile.user_id)",
+    );
+    expect(resolutionHardening).toContain(
+      "handoff_driver_profile_id is required to resolve a handoff",
+    );
 
     expect(deliveryActions).not.toContain("updateRideMutation(");
     expect(deliveryActions).toContain('type: "confirm_pickup"');
@@ -77,5 +108,24 @@ describe("Mobility delivery command authority", () => {
     );
 
     expect(failedDeliveryType).toContain("attempted_delivery_count?: number");
+    expect(failedDeliveryType).toContain(
+      "export interface FailedDeliveryResolutionUpdate",
+    );
+
+    const resolutionInputStart = failedDeliveryType.indexOf(
+      "export interface FailedDeliveryResolutionUpdate",
+    );
+    const resolutionInputEnd = failedDeliveryType.indexOf(
+      "\n}",
+      resolutionInputStart,
+    );
+    const resolutionInput = failedDeliveryType.slice(
+      resolutionInputStart,
+      resolutionInputEnd,
+    );
+    expect(resolutionInput).not.toContain("resolved_at");
+    expect(operationalGuards).not.toContain(
+      "resolved_at obrigatorio quando resolution_status = resolved",
+    );
   });
 });
