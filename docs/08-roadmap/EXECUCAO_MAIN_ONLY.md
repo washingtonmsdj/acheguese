@@ -872,6 +872,29 @@ Próximo gate obrigatório:
 3. executar o máximo possível da certificação same-SHA sem depender de GitHub Actions: ratchets, validações, build/deploy e smoke/E2E disponíveis;
 4. manter `PUBLIC_LAUNCH_SURFACES.mobility=false` até a certificação final.
 
+### Checkpoint G31 — aposentadoria de validadores operacionais obsoletos (2026-09-09)
+
+Inventário de código/callers:
+- `tools/supabase/validate-gate3-metadata.mjs`, `validate-reconciliation-final.ts` e `validate-constraints-final.ts` eram validadores históricos com `service_role` e DML bruto sobre agregados hoje server-owned;
+- nenhum dos três é rota, package script, workflow, Edge Function ou owner funcional vivo;
+- `auto-dispatch-ride` foi preservado: é backend vivo, coberto por policy/testes e usa os commands atômicos canônicos;
+- testes operacionais que usam admin para fixture/cleanup permanecem separados do runtime de produto e continuam protegidos pelo boundary de ambiente isolado.
+
+Correção de raiz:
+- [x] removidos os três validadores obsoletos em vez de adaptá-los para continuar furando a autoridade nova;
+- [x] allowlist de `GUARDED_MUTATING_OPERATIONAL_ENTRYPOINTS` limpa para não legitimar entrypoints aposentados;
+- [x] `SERVICE_ROLE_BOUNDARY_POLICY.json` deixou de autorizar os dois operator scripts removidos que ainda constavam na policy;
+- [x] `remote-e2e-mutation-safety.test.ts` ganhou ratchet explícito de ausência dos três paths e das allowlists antigas;
+- [x] nenhuma tabela, migration, RPC, Edge Function ou fluxo de usuário foi removido/modificado neste corte.
+
+**Estado:** inventário de tooling operacional reconciliado com a autoridade server-owned atual. Não há motivo para manter scripts de diagnóstico que só funcionam violando o contrato que deveriam validar.
+
+Próximo gate obrigatório:
+1. reconciliar o SHA atual da `main` com as fontes remotas críticas (`mobility-rpc`, `delivery-rpc` e migrations aplicadas);
+2. executar os ratchets/validators estáticos disponíveis no mesmo SHA;
+3. executar build + E2E/smoke responsivo quando o runner/provider estiver disponível;
+4. manter `PUBLIC_LAUNCH_SURFACES.mobility=false` até a certificação same-SHA final.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:

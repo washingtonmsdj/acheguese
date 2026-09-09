@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   getRemoteMutationTargetSafety,
@@ -136,9 +136,7 @@ describe('regression: remote E2E mutation safety', () => {
       'seed-e2e-users',
       'seed-e2e-network',
       'validate-slug-history-final',
-      'validate-reconciliation-final',
       'validate-e2e-setup',
-      'validate-gate3-metadata',
       'community-feed-authz-probe',
       'community-direct-messaging-authz-probe',
       'reviews-core-authz-probe',
@@ -147,5 +145,16 @@ describe('regression: remote E2E mutation safety', () => {
     ]) {
       expect(supabaseClient).toContain(`'${entrypoint}'`);
     }
+
+    for (const retiredPath of [
+      'tools/supabase/validate-gate3-metadata.mjs',
+      'tools/supabase/validate-reconciliation-final.ts',
+      'tools/supabase/validate-constraints-final.ts',
+    ]) {
+      expect(existsSync(resolve(root, retiredPath))).toBe(false);
+    }
+
+    expect(supabaseClient).not.toContain("'validate-gate3-metadata'");
+    expect(supabaseClient).not.toContain("'validate-reconciliation-final'");
   });
 });

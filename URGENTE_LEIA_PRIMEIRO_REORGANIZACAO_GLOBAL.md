@@ -19,17 +19,14 @@ Leia nesta ordem:
 
 > Resumo de handoff; a autoridade detalhada continua em `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`.
 
-- foco atual: **certificação da Mobilidade / Central motorista-motoboy**;
-- `ride_requests` está server-owned para mutação: browser sem `INSERT/UPDATE/DELETE`;
-- criação, transições, dispatch, entrega, confirmação do passageiro e redispatch usam broker/RPCs específicas;
-- Gastronomia: `sourceId=orders.id` é validado contra `merchant_profile_id`, `source_type/source_id` do pedido e a empresa autorizada; duplicação de entrega ativa é bloqueada;
+- foco atual: **certificação same-SHA de Mobilidade/Delivery**, não nova refatoração estrutural;
+- `ride_requests`, `orders`, `order_items` e `delivery_occurrences` estão reconciliados para mutação server-owned no código/migrations documentados;
+- `auto-dispatch-ride` permanece owner backend vivo; validadores históricos que faziam DML bruto com `service_role` foram aposentados no G31;
+- último runtime documentado antes da reconciliação same-SHA: `mobility-rpc` v24 ACTIVE e `delivery-rpc` v8 ACTIVE; revalidar contra o SHA atual antes de usar estes números como prova;
 - Supabase canônico: `xhdowzacfujckjelqhtd`;
-- `mobility-rpc`: **v16 ACTIVE**, `verify_jwt=true`;
-- migrations finais deste corte: `20260909140626_add_atomic_mobility_creation_commands_g6.sql` e `20260909141356_revoke_browser_ride_request_insert_g6.sql`;
-- baseline técnico antes da atualização documental: `9fb40b1368d2832ae0d328c354f050a827e82b92`;
 - Mobilidade continua **launch-paused**: `PUBLIC_LAUNCH_SURFACES.mobility=false`;
-- próximo gate: autorização positiva/negativa real → E2E operacional → smoke responsivo → typecheck/test/build no mesmo SHA → deploy same-SHA; **não habilitar Mobilidade antes dessas provas**;
-- não restaurar creators/writers diretos de `ride_requests` para contornar testes ou acelerar fluxo.
+- próximo gate: reconciliar source/runtime/migrations → ratchets/validators → build → E2E/smoke responsivo → deploy same-SHA;
+- não restaurar DML direto, operator scripts obsoletos, wrappers concorrentes ou authorities paralelas para acelerar a certificação.
 
 ## Regra para novas IAs/agentes
 
