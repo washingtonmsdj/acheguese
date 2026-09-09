@@ -9,10 +9,7 @@ import {
   getRidesByDriverProfile,
   getActiveRide,
 } from './mobility.queries';
-import {
-  createRide,
-  updateRide,
-} from './mobility.mutations';
+import { createRide } from './mobility.mutations';
 import { TRUST_ACTOR_ROLES, TrustPolicyReadService } from '@/core/trust';
 import { RIDE_STATUS } from '../constants';
 import type { RideRequest } from '../types/types';
@@ -22,19 +19,6 @@ export interface CreateRideData {
   pickup_location: string;
   dropoff_location: string;
   [key: string]: unknown;
-}
-
-export interface UpdateRideData {
-  status?: string;
-  driver_profile_id?: string;
-  [key: string]: unknown;
-}
-
-interface CompleteRideData extends UpdateRideData {
-  status: 'completed';
-  actual_fare: number;
-  distance_km: number;
-  duration_minutes: number;
 }
 
 export class RideService {
@@ -63,40 +47,6 @@ export class RideService {
   async getActiveRide(userId: string): Promise<RideRequest | null> {
     const ride = await getActiveRide(userId);
     return (ride as RideRequest | null) ?? null;
-  }
-
-  async updateRide(id: string, data: UpdateRideData): Promise<RideRequest> {
-    const ride = await updateRide(id, data as Record<string, unknown>);
-    return ride as RideRequest;
-  }
-
-  async acceptRide(rideId: string, driverProfileId: string): Promise<RideRequest> {
-    const trustGate = await TrustPolicyReadService.canCurrentReceiveOperationalCall(
-      TRUST_ACTOR_ROLES.DRIVER,
-    );
-    if (!trustGate.allowed) {
-      throw new Error(trustGate.reason || "Motorista bloqueado para novos chamados ate revisao admin.");
-    }
-
-    return this.updateRide(rideId, { driver_profile_id: driverProfileId, status: 'accepted' });
-  }
-
-  async startRide(rideId: string): Promise<RideRequest> {
-    return this.updateRide(rideId, { status: 'in_progress' });
-  }
-
-  async completeRide(rideId: string, actualFare: number, distanceKm: number, durationMinutes: number): Promise<RideRequest> {
-    const completeData: CompleteRideData = {
-      status: 'completed',
-      actual_fare: actualFare,
-      distance_km: distanceKm,
-      duration_minutes: durationMinutes,
-    };
-    return this.updateRide(rideId, completeData);
-  }
-
-  async cancelRide(rideId: string): Promise<RideRequest> {
-    return this.updateRide(rideId, { status: 'cancelled' });
   }
 
   async shareRide(rideId: string, _shareData: { message?: string; contacts?: string[] }): Promise<void> {
