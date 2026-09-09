@@ -9,7 +9,6 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
-import { RIDE_STATUS } from "../constants";
 import { DriverAvailabilityService } from "@/core/mobility/services/DriverAvailabilityService";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
@@ -64,125 +63,6 @@ export async function createRide(data: Record<string, unknown>): Promise<unknown
 
   if (error) throw error;
   return ride;
-}
-
-/**
- * Atualizar corrida
- */
-export async function updateRide(rideId: string, updates: Record<string, unknown>): Promise<unknown> {
-  const { data, error } = await mobilityDb
-    .from("ride_requests")
-    .update(updates)
-    .eq("id", rideId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-/**
- * Atualizar corrida com guards (validações de estado)
- */
-export async function updateRideWithGuards(
-  rideId: string,
-  updates: Record<string, unknown>,
-  guards: {
-    statusEq?: string;
-    driverProfileIdEq?: string;
-  } = {},
-): Promise<boolean> {
-  let query = mobilityDb
-    .from("ride_requests")
-    .update(updates)
-    .eq("id", rideId);
-
-  if (guards.statusEq) {
-    query = query.eq("status", guards.statusEq);
-  }
-
-  if (guards.driverProfileIdEq) {
-    query = query.eq("driver_profile_id", guards.driverProfileIdEq);
-  }
-
-  const { data, error } = await query.select("id").maybeSingle();
-  if (error) throw error;
-  return !!data;
-}
-
-/**
- * Atualizar corrida apenas se status permitido
- */
-export async function updateRideIfStatusIn(
-  rideId: string,
-  updates: Record<string, unknown>,
-  allowedStatuses: string[],
-): Promise<boolean> {
-  const { data, error } = await mobilityDb
-    .from("ride_requests")
-    .update(updates)
-    .eq("id", rideId)
-    .in("status", allowedStatuses)
-    .select("id")
-    .maybeSingle();
-
-  if (error) throw error;
-  return !!data;
-}
-
-/**
- * Aceitar corrida
- */
-export async function acceptRide(rideId: string, driverProfileId: string): Promise<void> {
-  await updateRide(rideId, {
-    driver_profile_id: driverProfileId,
-    status: RIDE_STATUS.DRIVER_ACCEPTED,
-  });
-}
-
-/**
- * Iniciar corrida
- */
-export async function startRide(rideId: string): Promise<void> {
-  await updateRide(rideId, { status: RIDE_STATUS.IN_PROGRESS });
-}
-
-/**
- * Completar corrida
- */
-export async function completeRide(
-  rideId: string,
-  actualFare?: number,
-  distanceKm?: number,
-  durationMinutes?: number,
-): Promise<void> {
-  const updates: Record<string, unknown> = {
-    status: RIDE_STATUS.COMPLETED,
-  };
-  if (actualFare !== undefined) updates.actual_fare = actualFare;
-  if (distanceKm !== undefined) updates.distance_km = distanceKm;
-  if (durationMinutes !== undefined) updates.duration_minutes = durationMinutes;
-
-  await updateRide(rideId, updates);
-}
-
-/**
- * Confirmar corrida (passageiro)
- */
-export async function confirmRide(rideId: string): Promise<void> {
-  await updateRide(rideId, { status: RIDE_STATUS.DRIVER_ARRIVED });
-}
-
-/**
- * Cancelar corrida
- */
-export async function cancelRide(rideId: string, reason?: string): Promise<void> {
-  const trimmedReason = reason?.trim();
-  await updateRide(rideId, {
-    status: RIDE_STATUS.CANCELLED,
-    cancellation_reason: trimmedReason || null,
-    cancelled_at: new Date().toISOString(),
-  });
 }
 
 /**
