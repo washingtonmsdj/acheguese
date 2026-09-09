@@ -13050,6 +13050,7 @@ export type Database = {
           package_description: string | null
           package_size: string | null
           passenger_boarded_at: string | null
+          passenger_confirmed_at: string | null
           passenger_profile_id: string
           payment_method: string | null
           pickup_address_id: string
@@ -13096,6 +13097,7 @@ export type Database = {
           package_description?: string | null
           package_size?: string | null
           passenger_boarded_at?: string | null
+          passenger_confirmed_at?: string | null
           passenger_profile_id: string
           payment_method?: string | null
           pickup_address_id: string
@@ -13142,6 +13144,7 @@ export type Database = {
           package_description?: string | null
           package_size?: string | null
           passenger_boarded_at?: string | null
+          passenger_confirmed_at?: string | null
           passenger_profile_id?: string
           payment_method?: string | null
           pickup_address_id?: string
@@ -19792,6 +19795,71 @@ export type Database = {
           p_success: boolean
         }
         Returns: undefined
+      }
+      mobility_accept_ride_atomic: {
+        Args: {
+          p_driver_profile_id: string
+          p_ride_id: string
+          p_strategy: string
+        }
+        Returns: Json
+      }
+      mobility_admin_redispatch_atomic: {
+        Args: { p_changed_by: string; p_reason?: string; p_ride_id: string }
+        Returns: Json
+      }
+      mobility_confirm_passenger_completion_atomic: {
+        Args: { p_ride_id: string }
+        Returns: Json
+      }
+      mobility_expire_dispatch_atomic: {
+        Args: { p_reason: string; p_ride_id: string }
+        Returns: Json
+      }
+      mobility_offer_driver_atomic: {
+        Args: {
+          p_attempt_number: number
+          p_driver_profile_id: string
+          p_reason?: string
+          p_ride_id: string
+          p_timeout_at: string
+        }
+        Returns: Json
+      }
+      mobility_timeout_driver_offer_atomic: {
+        Args: {
+          p_driver_profile_id: string
+          p_reason?: string
+          p_ride_id: string
+        }
+        Returns: Json
+      }
+      mobility_transition_delivery_state_atomic: {
+        Args: {
+          p_changed_by: string
+          p_command: string
+          p_expected_from_state: string
+          p_failed_delivery_metadata?: Json
+          p_final_price?: number
+          p_proof_of_delivery?: Json
+          p_reason?: string
+          p_ride_id: string
+        }
+        Returns: Json
+      }
+      mobility_transition_ride_state_atomic: {
+        Args: {
+          p_changed_by: string
+          p_expected_from_state: string
+          p_reason?: string
+          p_ride_id: string
+          p_to_state: string
+        }
+        Returns: Json
+      }
+      mobility_update_failed_delivery_resolution_atomic: {
+        Args: { p_resolution_update: Json; p_ride_id: string }
+        Returns: Json
       }
       moderate_business_profile_report: {
         Args: { p_admin_notes?: string; p_report_id: string; p_status: string }
