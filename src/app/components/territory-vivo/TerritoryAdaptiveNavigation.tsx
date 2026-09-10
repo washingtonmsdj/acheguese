@@ -135,7 +135,7 @@ export function TerritoryAdaptiveNavigation() {
                     "flex h-8 w-10 items-center justify-center rounded-full",
                     item.emphasized
                       ? "-mt-4 h-12 w-12 bg-territory-sun text-territory-ink shadow-territory-highlight"
-                      : activeMode && "bg-territory-brand/12",
+                      : activeMode && "bg-[hsl(var(--territory-brand)/0.12)]",
                   )}
                 >
                   <Icon className="h-5 w-5" aria-hidden="true" />
@@ -172,7 +172,7 @@ export function TerritoryAdaptiveNavigation() {
                 to={item.href}
                 className={cn(
                   "flex min-h-[3.25rem] flex-col items-center justify-center gap-1 rounded-territory text-territory-muted transition-colors hover:bg-territory-raised hover:text-territory-ink",
-                  activeMode && "bg-territory-brand/12 text-territory-brand",
+                  activeMode && "bg-[hsl(var(--territory-brand)/0.12)] text-territory-brand",
                 )}
                 aria-label={item.label}
                 aria-current={activeMode ? "page" : undefined}
@@ -204,7 +204,7 @@ export function TerritoryAdaptiveNavigation() {
                 to={item.href}
                 className={cn(
                   "group flex min-h-12 items-center gap-3 rounded-xl px-3 text-territory-muted transition-colors hover:bg-territory-raised hover:text-territory-ink",
-                  activeMode && "bg-territory-brand/12 text-territory-brand",
+                  activeMode && "bg-[hsl(var(--territory-brand)/0.12)] text-territory-brand",
                 )}
                 aria-current={activeMode ? "page" : undefined}
               >
