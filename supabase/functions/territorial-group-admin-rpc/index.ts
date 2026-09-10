@@ -31,6 +31,7 @@ const ACTIONS = {
 
 type Action = keyof typeof ACTIONS;
 type Params = Record<string, unknown>;
+type GroupStatus = 'active' | 'inactive';
 
 interface RequestBody {
   action?: string;
@@ -42,6 +43,10 @@ class RequestValidationError extends Error {
     super(message);
     this.name = 'RequestValidationError';
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function requireText(
@@ -97,7 +102,7 @@ function cleanSlug(value: unknown): string {
   return slug;
 }
 
-function cleanStatus(value: unknown): 'active' | 'inactive' {
+function cleanStatus(value: unknown): GroupStatus {
   if (value !== 'active' && value !== 'inactive') {
     throw new RequestValidationError('Invalid status');
   }
@@ -126,6 +131,76 @@ function knownRpcError(errorMessage: string): {
     if (errorMessage.includes(reason)) return { status, error: reason };
   }
   return null;
+}
+
+function sameMemberSet(value: unknown, expected: string[]): boolean {
+  if (!Array.isArray(value) || !value.every((item) => typeof item === 'string')) {
+    return false;
+  }
+
+  const returned = value as string[];
+  const uniqueReturned = [...new Set(returned)];
+  if (uniqueReturned.length !== returned.length || returned.length !== expected.length) {
+    return false;
+  }
+
+  const actualSorted = [...uniqueReturned].sort();
+  const expectedSorted = [...expected].sort();
+  return actualSorted.every((id, index) => id === expectedSorted[index]);
+}
+
+function requireSaveGroupAck(
+  value: unknown,
+  expected: {
+    groupId: string | null;
+    slug: string;
+    name: string;
+    description: string | null;
+    anchorCityId: string;
+    memberLocationIds: string[];
+  },
+): Record<string, unknown> {
+  if (!isRecord(value) || !isRecord(value.group)) {
+    throw new Error('Territorial group save returned an invalid acknowledgement');
+  }
+
+  const group = value.group;
+  const returnedId = group.id;
+  const expectedCreated = expected.groupId === null;
+  const description = group.description ?? null;
+
+  if (
+    !isValidUUID(returnedId) ||
+    (expected.groupId !== null && returnedId !== expected.groupId) ||
+    group.slug !== expected.slug ||
+    group.name !== expected.name ||
+    description !== expected.description ||
+    group.anchor_city_id !== expected.anchorCityId ||
+    value.created !== expectedCreated ||
+    value.memberCount !== expected.memberLocationIds.length ||
+    !sameMemberSet(value.memberIds, expected.memberLocationIds) ||
+    (expectedCreated && group.status !== 'inactive')
+  ) {
+    throw new Error('Territorial group save acknowledgement mismatch');
+  }
+
+  return value;
+}
+
+function requireStatusAck(
+  value: unknown,
+  groupId: string,
+  status: GroupStatus,
+): Record<string, unknown> {
+  if (!isRecord(value) || !isRecord(value.group)) {
+    throw new Error('Territorial group status returned an invalid acknowledgement');
+  }
+
+  if (value.group.id !== groupId || value.group.status !== status) {
+    throw new Error('Territorial group status acknowledgement mismatch');
+  }
+
+  return value;
 }
 
 serve(async (req: Request) => {
@@ -169,7 +244,7 @@ serve(async (req: Request) => {
       { auth: { autoRefreshToken: false, persistSession: false } },
     );
 
-    let data: unknown;
+    let data: Record<string, unknown>;
 
     if (safeAction === 'saveGroup') {
       const groupId = optionalGroupId(params.groupId);
@@ -193,7 +268,15 @@ serve(async (req: Request) => {
         if (known) return jsonResponse({ error: known.error }, known.status, ALLOWED_METHODS, req);
         throw result.error;
       }
-      data = result.data;
+
+      data = requireSaveGroupAck(result.data, {
+        groupId,
+        slug,
+        name,
+        description,
+        anchorCityId,
+        memberLocationIds,
+      });
     } else {
       const groupId = requireUuid(params.groupId, 'groupId');
       const status = cleanStatus(params.status);
@@ -207,11 +290,8 @@ serve(async (req: Request) => {
         if (known) return jsonResponse({ error: known.error }, known.status, ALLOWED_METHODS, req);
         throw result.error;
       }
-      data = result.data;
-    }
 
-    if (!data || typeof data !== 'object' || Array.isArray(data)) {
-      throw new Error('Territorial group command returned an invalid acknowledgement');
+      data = requireStatusAck(result.data, groupId, status);
     }
 
     auditLog({
