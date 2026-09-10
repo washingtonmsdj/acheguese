@@ -132,6 +132,9 @@ verify_jwt = true
 [functions.admin-professional-rpc]
 verify_jwt = true
 
+[functions.admin-role-rpc]
+verify_jwt = true
+
 [functions.admin-site-settings-rpc]
 verify_jwt = true
 
