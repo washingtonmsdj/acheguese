@@ -493,6 +493,16 @@
         "require(?:Admin|SuperAdmin)\\s*\\("
       ]
     },
+    "territorial-group-admin-rpc": {
+      "kind": "admin-broker",
+      "risk": "Critical",
+      "label": "admin transactional territorial group lifecycle broker",
+      "requiredPatterns": [
+        "require(?:Admin|SuperAdmin)\\s*\\(",
+        "territorial_admin_save_group",
+        "territorial_admin_set_group_status"
+      ]
+    },
     "territorial-update-group-visibility": {
       "kind": "admin-broker",
       "risk": "Critical",
