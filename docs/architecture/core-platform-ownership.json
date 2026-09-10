@@ -124,7 +124,7 @@
         {"path": "src/core/safety/services/SafetyService.ts", "maxCalls": 2, "role": "canonical"},
         {"path": "supabase/functions/send-emergency-email/index.ts", "maxCalls": 1, "role": "trusted-delivery"}
       ],
-      "allowedWriters": [{"path": "src/core/safety/services/SafetyService.ts", "maxCalls": 1, "role": "canonical"}]
+      "allowedWriters": []
     },
     {
       "name": "emergency_contacts",
@@ -135,7 +135,7 @@
         {"path": "src/core/safety/services/SafetyEmergencyContactsService.ts", "maxCalls": 1, "role": "canonical"},
         {"path": "supabase/functions/send-emergency-email/index.ts", "maxCalls": 1, "role": "trusted-delivery"}
       ],
-      "allowedWriters": [{"path": "src/core/safety/services/SafetyEmergencyContactsService.ts", "maxCalls": 3, "role": "canonical"}]
+      "allowedWriters": []
     },
     {
       "name": "emergency_delivery_log",
@@ -151,7 +151,7 @@
       "currentOwner": "src/core/safety/services/SafetyService.ts",
       "targetOwner": "src/core/safety/services/SafetyService.ts",
       "allowedReaders": [{"path": "src/core/safety/services/SafetyService.ts", "maxCalls": 2, "role": "canonical"}],
-      "allowedWriters": [{"path": "src/core/safety/services/SafetyService.ts", "maxCalls": 1, "role": "canonical"}]
+      "allowedWriters": []
     },
     {
       "name": "safety_evidence",
@@ -159,7 +159,7 @@
       "currentOwner": "src/core/safety/services/SafetyEvidenceService.ts",
       "targetOwner": "src/core/safety/services/SafetyEvidenceService.ts",
       "allowedReaders": [{"path": "src/core/safety/services/SafetyEvidenceService.ts", "maxCalls": 1, "role": "canonical-private-evidence-read-model"}],
-      "allowedWriters": [{"path": "src/core/safety/services/SafetyEvidenceService.ts", "maxCalls": 1, "role": "canonical-private-evidence-command"}]
+      "allowedWriters": []
     },
     {
       "name": "ride_shares",
@@ -167,7 +167,7 @@
       "currentOwner": "src/core/safety/services/SafetyRideShareService.ts",
       "targetOwner": "src/core/safety/services/SafetyRideShareService.ts",
       "allowedReaders": [],
-      "allowedWriters": [{"path": "src/core/safety/services/SafetyRideShareService.ts", "maxCalls": 1, "role": "canonical"}]
+      "allowedWriters": []
     },
     {
       "name": "safety_audit_log",
@@ -357,9 +357,7 @@
       "status": "canonical",
       "currentOwner": "src/core/coverage/repositories/CoverageRepositorySupabase.ts",
       "targetOwner": "src/core/coverage/repositories/CoverageRepositorySupabase.ts",
-      "allowedReaders": [
-        {"path": "src/core/coverage/repositories/CoverageRepositorySupabase.ts", "maxCalls": 4, "role": "canonical-read-owner"}
-      ],
+      "allowedReaders": [],
       "allowedWriters": []
     },
     {
@@ -388,8 +386,8 @@
     {"name":"mark_current_user_notifications_as_read","status":"canonical","currentOwner":"src/core/notifications/services/NotificationService.ts","targetOwner":"src/core/notifications/services/NotificationService.ts","allowedCallers":[{"path":"src/core/notifications/services/NotificationService.ts","maxCalls":1,"role":"canonical"}]},
     {"name":"update_safety_emergency_alert_status","status":"canonical","currentOwner":"src/core/safety/services/SafetyService.ts","targetOwner":"src/core/safety/services/SafetyService.ts","allowedCallers":[{"path":"src/core/safety/services/SafetyService.ts","maxCalls":1,"role":"canonical-command"}]},
     {"name":"update_safety_incident_status","status":"canonical","currentOwner":"src/core/safety/services/SafetyService.ts","targetOwner":"src/core/safety/services/SafetyService.ts","allowedCallers":[{"path":"src/core/safety/services/SafetyService.ts","maxCalls":1,"role":"canonical-command"}]},
-    {"name":"revoke_safety_ride_share","status":"canonical","currentOwner":"src/core/safety/services/SafetyRideShareService.ts","targetOwner":"src/core/safety/services/SafetyRideShareService.ts","allowedCallers":[{"path":"src/core/safety/services/SafetyRideShareService.ts","maxCalls":1,"role":"canonical-command"}]},
-    {"name":"get_shared_ride_safety_data","status":"canonical","currentOwner":"src/core/safety/services/SafetyRideShareService.ts","targetOwner":"src/core/safety/services/SafetyRideShareService.ts","allowedCallers":[{"path":"src/core/safety/services/SafetyRideShareService.ts","maxCalls":1,"role":"public-token-read-model"}]},
+    {"name":"revoke_safety_ride_share","status":"canonical","currentOwner":"src/core/safety/services/SafetyRideShareService.ts","targetOwner":"src/core/safety/services/SafetyRideShareService.ts","allowedCallers":[]},
+    {"name":"get_shared_ride_safety_data","status":"canonical","currentOwner":"src/core/safety/services/SafetyRideShareService.ts","targetOwner":"src/core/safety/services/SafetyRideShareService.ts","allowedCallers":[]},
     {"name":"get_current_user_business_favorites","status":"canonical","currentOwner":"src/core/favorites/services/BusinessFavoriteStore.ts","targetOwner":"src/core/favorites/services/BusinessFavoriteStore.ts","allowedCallers":[{"path":"src/core/favorites/services/BusinessFavoriteStore.ts","maxCalls":1,"role":"canonical-read-owner"}]},
     {"name":"get_current_user_business_favorite_ids","status":"canonical","currentOwner":"src/core/favorites/services/BusinessFavoriteStore.ts","targetOwner":"src/core/favorites/services/BusinessFavoriteStore.ts","allowedCallers":[{"path":"src/core/favorites/services/BusinessFavoriteStore.ts","maxCalls":1,"role":"bounded-batch-read-owner"}]},
     {"name":"is_current_user_business_favorite","status":"canonical","currentOwner":"src/core/favorites/services/BusinessFavoriteStore.ts","targetOwner":"src/core/favorites/services/BusinessFavoriteStore.ts","allowedCallers":[{"path":"src/core/favorites/services/BusinessFavoriteStore.ts","maxCalls":1,"role":"canonical-read-owner"}]},
@@ -447,7 +445,7 @@
     {"name":"submit_ride_rating","status":"canonical","currentOwner":"src/core/mobility/services/RideRatingService.ts","targetOwner":"server-owned-ride-rating-command","allowedCallers":[{"path":"src/core/mobility/services/RideRatingService.ts","maxCalls":1,"role":"canonical-command-owner"}]},
     {"name":"get_ride_rating_summary","status":"canonical","currentOwner":"src/core/mobility/services/RideRatingService.ts","targetOwner":"server-owned-ride-rating-read-model","allowedCallers":[{"path":"src/core/mobility/services/RideRatingService.ts","maxCalls":1,"role":"public-aggregate-read"}]},
     {"name":"get_current_trust_policy_decision","status":"canonical","currentOwner":"src/core/trust/services/TrustPolicyReadService.ts","targetOwner":"server-owned-trust-policy-read-model","allowedCallers":[{"path":"src/core/trust/services/TrustPolicyReadService.ts","maxCalls":1,"role":"current-profile-policy-read"}]},
-    {"name":"get_ride_offer_trust_decisions","status":"canonical","currentOwner":"src/core/trust/services/TrustPolicyReadService.ts","targetOwner":"server-owned-trust-policy-read-model","allowedCallers":[{"path":"src/core/trust/services/TrustPolicyReadService.ts","maxCalls":1,"role":"bounded-offer-policy-batch-read"}]},
+    {"name":"get_ride_offer_trust_decisions","status":"canonical","currentOwner":"src/core/trust/services/TrustPolicyReadService.ts","targetOwner":"server-owned-trust-policy-read-model","allowedCallers":[]},
     {"name":"list_trust_events_admin","status":"canonical","currentOwner":"src/core/trust/services/TrustAdminService.ts","targetOwner":"server-owned-trust-admin-read-model","allowedCallers":[{"path":"src/core/trust/services/TrustAdminService.ts","maxCalls":1,"role":"bounded-admin-read"}]},
     {"name":"review_trust_events_admin","status":"canonical","currentOwner":"src/core/trust/services/TrustAdminService.ts","targetOwner":"server-owned-trust-admin-command","allowedCallers":[{"path":"src/core/trust/services/TrustAdminService.ts","maxCalls":1,"role":"bounded-admin-command"}]},
     {"name":"apply_trust_admin_actions","status":"canonical","currentOwner":"src/core/trust/services/TrustAdminService.ts","targetOwner":"server-owned-trust-admin-command","allowedCallers":[{"path":"src/core/trust/services/TrustAdminService.ts","maxCalls":1,"role":"atomic-admin-command"}]},
@@ -466,8 +464,6 @@
     {"kind":"dynamic-table","resource":"<dynamic>","access":"write","path":"src/core/engagement/services/ProfileSavedEntityService.ts","maxCalls":3,"details":["config.tableName as never"]},
     {"kind":"dynamic-table","resource":"<dynamic>","access":"write","path":"src/core/family/services/FamilyService.ts","maxCalls":11,"details":["FAMILY_TABLES.alerts","FAMILY_TABLES.connections","FAMILY_TABLES.geofences","FAMILY_TABLES.locationSharingSettings","FAMILY_TABLES.locations"]},
     {"kind":"dynamic-table","resource":"<dynamic>","access":"write","path":"src/core/infrastructure/database/query-builders/QueryBuilder.ts","maxCalls":4,"details":["table"]},
-    {"kind":"dynamic-table","resource":"<dynamic>","access":"write","path":"src/core/mobility/services/mobility.mutations.ts","maxCalls":1,"details":["table"]},
-    {"kind":"dynamic-table","resource":"<dynamic>","access":"write","path":"src/core/mobility/services/MobilityService.impl.ts","maxCalls":1,"details":["table"]},
     {"kind":"dynamic-table","resource":"<dynamic>","access":"write","path":"src/core/tracking/services/TrackingService.ts","maxCalls":1,"details":["tableName"]},
     {"kind":"dynamic-table","resource":"<dynamic>","access":"write","path":"src/integrations/supabase/services/supabaseHelpers.ts","maxCalls":6,"details":["tableName as never"]},
     {"kind":"dynamic-table","resource":"<dynamic>","access":"write","path":"src/core/business/niches/pizzaria/PizzaAdminService.ts","maxCalls":3,"details":["table"]},
