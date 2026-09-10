@@ -15,7 +15,6 @@ import {
   Plus,
   Search,
   Settings,
-  Store,
   UserRound,
   Users,
   Utensils,
@@ -34,7 +33,7 @@ type BusinessNavItem = {
 };
 
 const businessNavItems: BusinessNavItem[] = [
-  { label: "Visão geral", icon: Store },
+  { label: "Visão geral", icon: Home },
   { label: "Perfil público", icon: UserRound },
   { label: "Cardápio", icon: Utensils },
   { label: "Conversas", icon: MessageCircle },
@@ -273,9 +272,12 @@ function ConceptBottomNavigation() {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 flex h-16 border-t border-territory-border bg-territory-surface px-1 pb-[env(safe-area-inset-bottom)] md:hidden" aria-label="Navegação principal mobile">
       {globalNavItems.map(({ label, icon: Icon }) => (
-        <Link key={label} to={getGlobalNavHref(label)} className="flex min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[0.625rem] font-medium text-territory-muted focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand">
-          <Icon className="h-5 w-5" strokeWidth={label === "Conta" ? 2.2 : 1.8} aria-hidden="true" />
-          <span>{label}</span>
+        <Link key={label} to={getGlobalNavHref(label)} className={cn("relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[0.625rem] font-medium focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand", label === "Conta" ? "text-territory-brand" : "text-territory-muted")}>
+          <span className="relative">
+            <Icon className="h-5 w-5" strokeWidth={label === "Conta" ? 2.2 : 1.8} aria-hidden="true" />
+            {label === "Conversas" ? <span className="absolute -right-2 -top-2 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-territory-error px-1 text-[0.5625rem] font-bold leading-none text-white">12</span> : null}
+          </span>
+          <span className={label === "Conta" ? "font-semibold" : undefined}>{label}</span>
         </Link>
       ))}
     </nav>
