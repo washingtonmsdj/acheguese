@@ -1,4 +1,7 @@
-import { supabase } from '@/integrations/supabase';
+import {
+  readSupabaseFunctionHttpErrorBody,
+  supabase,
+} from '@/integrations/supabase';
 import { mediaService } from '@/core/media/services/MediaService';
 import { realtimeService } from '@/core/realtime';
 import type { Database } from '@/integrations/supabase';
@@ -29,6 +32,31 @@ function rowToGeneration(r: Row): TryOnGeneration {
     created_at: r.created_at,
     updated_at: r.updated_at,
   };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function publicEnqueueError(value: unknown): string {
+  if (!isRecord(value) || typeof value.error !== 'string') {
+    return 'Não foi possível iniciar a geração agora.';
+  }
+
+  switch (value.error) {
+    case 'unauthorized':
+      return 'Sua sessão expirou. Entre novamente para continuar.';
+    case 'generationId required':
+      return 'A geração informada é inválida.';
+    case 'not found':
+      return 'Esta geração não foi encontrada.';
+    case 'forbidden':
+      return 'Você não tem acesso a esta geração.';
+    case 'Rate limit exceeded':
+      return 'Muitas gerações foram solicitadas em pouco tempo. Tente novamente mais tarde.';
+    default:
+      return 'Não foi possível iniciar a geração agora.';
+  }
 }
 
 class TryOnService {
@@ -95,12 +123,25 @@ class TryOnService {
     if (error) throw error;
   }
 
-  /** Dispara a edge function de forma assincrona (UI nao trava). */
+  /** Inicia processamento assíncrono no broker e exige ACK correlacionado. */
   async enqueueGeneration(generationId: string): Promise<void> {
-    const { error } = await supabase.functions.invoke('tryon-generate', {
+    const { data, error } = await supabase.functions.invoke('tryon-generate', {
       body: { generationId },
     });
-    if (error) throw error;
+
+    if (error) {
+      const payload = await readSupabaseFunctionHttpErrorBody(error);
+      throw new Error(publicEnqueueError(payload));
+    }
+
+    if (
+      !isRecord(data) ||
+      data.ok !== true ||
+      data.generationId !== generationId ||
+      data.provider !== 'replicate'
+    ) {
+      throw new Error('Resposta inválida ao iniciar a geração.');
+    }
   }
 
   /** Realtime: recebe atualizacoes de status. */
