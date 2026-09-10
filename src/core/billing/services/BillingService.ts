@@ -54,6 +54,10 @@ const BILLING_REDIRECT_ORIGINS = getAllowedRedirectOriginsFromEnv(
   ],
 );
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
 }
@@ -79,18 +83,17 @@ export class BillingService {
       throw await billingFunctionError(error, 'Failed to create checkout session');
     }
 
-    if (
-      !data ||
-      !isNonEmptyString(Reflect.get(data, 'sessionId')) ||
-      !isNonEmptyString(Reflect.get(data, 'url'))
-    ) {
+    if (!isRecord(data)) {
       throw new Error('Invalid checkout response');
     }
 
-    return {
-      sessionId: Reflect.get(data, 'sessionId'),
-      url: Reflect.get(data, 'url'),
-    };
+    const sessionId = data.sessionId;
+    const url = data.url;
+    if (!isNonEmptyString(sessionId) || !isNonEmptyString(url)) {
+      throw new Error('Invalid checkout response');
+    }
+
+    return { sessionId, url };
   }
 
   static async createPortalSession(returnUrl: string): Promise<CreatePortalResponse> {
@@ -103,11 +106,11 @@ export class BillingService {
       throw await billingFunctionError(error, 'Failed to create portal session');
     }
 
-    if (!data || !isNonEmptyString(Reflect.get(data, 'url'))) {
+    if (!isRecord(data) || !isNonEmptyString(data.url)) {
       throw new Error('Invalid billing portal response');
     }
 
-    return { url: Reflect.get(data, 'url') };
+    return { url: data.url };
   }
 
   static async redirectToCheckout(params: CreateCheckoutParams): Promise<void> {
