@@ -11,11 +11,12 @@ Leia nesta ordem:
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — execução operacional atual;
-4. `docs/08-roadmap/checkpoints/2026-09-10-g41-edge-client-contracts.md` — checkpoint G41: contratos Edge, IA, Push, LGPD e consolidação de authorities;
-5. `docs/08-roadmap/checkpoints/2026-09-10-g40-edge-error-contract.md` — checkpoint G40, fechamento do creator legado, contrato HTTP de Edge e fixture E2E isolada;
-6. `docs/08-roadmap/checkpoints/2026-09-10-g39-professional-lead-intake.md` — checkpoint G39 e gate de cutover Professional;
-7. `docs/08-roadmap/checkpoints/2026-09-10-g38-professional-authority.md` — checkpoint anterior G38;
-8. `SECURITY.md` — segurança e gates de release.
+4. `docs/08-roadmap/checkpoints/2026-09-10-g42-runtime-authority-contracts.md` — checkpoint G42: MFA/AAL2 server-side, contratos runtime fail-closed, Try-On e contenção de branches concorrentes;
+5. `docs/08-roadmap/checkpoints/2026-09-10-g41-edge-client-contracts.md` — checkpoint G41: contratos Edge, IA, Push, LGPD e consolidação de authorities;
+6. `docs/08-roadmap/checkpoints/2026-09-10-g40-edge-error-contract.md` — checkpoint G40, fechamento do creator legado, contrato HTTP de Edge e fixture E2E isolada;
+7. `docs/08-roadmap/checkpoints/2026-09-10-g39-professional-lead-intake.md` — checkpoint G39 e gate de cutover Professional;
+8. `docs/08-roadmap/checkpoints/2026-09-10-g38-professional-authority.md` — checkpoint anterior G38;
+9. `SECURITY.md` — segurança e gates de release.
 
 ## Checkpoint operacional curto — 2026-09-10
 
@@ -45,9 +46,16 @@ Leia nesta ordem:
 - G41: `OpenAIProvider`/`ai-intent-parse` foram aposentados porque o endpoint não existe; `IntentParser` usa agora `EdgeAIProvider -> aiClient.text -> ai-text`, com structured output e fallback determinístico;
 - G41: Push foi reduzido à authority real de self-service: `send-push-bulk`/`sendToUsers` inexistentes foram removidos, `sendToUser` é primitive privada do autoteste e só há sucesso quando `successCount >= 1`;
 - G41: o `AdminService` duplicado em `src/core/profiles/services/multi-profile/adminService.ts` foi removido após prova de zero callers runtime; o teste G36 agora exige um único owner de moderação em `core/admin`;
-- G41: resta uma referência stale ao arquivo `multi-profile/adminService.ts` em `eslint.config.js`; não cria authority runtime, mas deve sair no próximo ratchet de allowances/configuração;
+- G42: `MFAService.checkMFARequired()` não transforma mais falha do broker em `required:false`; policy MFA desconhecida para sessão autenticada permanece fail-closed;
+- G42: recovery codes locais sem autoridade real foram removidos; status MFA visível é derivado de fatores verificados do Supabase Auth;
+- G42: `_shared/mfaPolicy.ts` centraliza a decisão server-side e `_shared/adminAuth.ts` exige MFA real para `admin`/`super_admin`; o JWT atual precisa apresentar AAL2 para operações administrativas;
+- G42: enquanto o DDL de fechamento não puder ser provado no remoto, `admin_mfa_enforcement`, `is_exempt` e `grace_period_expires_at` não podem afrouxar autorização; o tracker é cache, não authority;
+- G42: o DDL de fechamento permanece somente em `docs/09-reference/migrations-pending/20260910203000_harden_mfa_authority_g42.sql`; **não mover/aplicar** sem preflight remoto e confirmação das policies/grants reais;
+- G42: `tryon-generate` não expõe mais erro interno/provider em resposta 500 nem em `error_message`; transições `processing`, progresso e `completed` verificam persistência antes de continuar;
+- G42: permanece aberto o fechamento transacional da cascata territorial para descendentes; não implementar loop de writes no Edge porque isso criaria mutação parcial sem transação;
+- G42: `module/mobilidade` e `codex/identidade-visual-achegue-se` são zonas de trabalho paralelo reservadas; `codex/nova-home-comunidade` e demais `codex/*`/`agent/*` existentes não devem ser apagadas/fundidas automaticamente;
+- G42: o GitHub Actions observado continua criando jobs que falham antes de executar steps (`steps=[]`, sem log útil); isso é gate de execução indisponível e **não** certificação verde nem prova de regressão;
 - ainda faltam os smokes públicos anônimo e autenticado do G39 pelo broker + Turnstile e a certificação real de security/architecture/typecheck/build antes do cutover;
-- no HEAD G41 examinado, workflows `SSOT Territorial Tests` e `Security Check` criaram jobs, mas a API devolveu `steps: null`/sem logs executados para Runtime Tests, Phase Core Gate, Lint/Type Check e outros; esse `failure` não é prova de regressão nem de aprovação do código;
 - builds atuais da `main` continuam sujeitos ao **build-rate-limit da Vercel** (`Deployment rate limited — retry in 24 hours`), blocker externo de execução e não prova de compilação aprovada ou reprovada;
 - **não revogar ainda** os grants temporários de `professional_data/profiles` nem executar o cutover de leads/stats enquanto o frontend novo não estiver comprovadamente LIVE no mesmo SHA/descendente certificado;
 - `codex/identidade-visual-achegue-se` deve receber `main` por merge sem force-push, preservando seus deltas visuais próprios; nunca substituir a branch visual por uma árvore antiga para “sincronizar” arquitetura;
@@ -61,6 +69,7 @@ Leia nesta ordem:
 - feature coerente com o produto que esteja quebrada, incompleta ou `launch-paused` deve ser corrigida na causa raiz, não apagada para simplificar;
 - remover somente legado real, duplicação, compatibility bridge ou owner substituído, depois de preservar/migrar a capacidade funcional válida e comprovar callers/impacto;
 - trabalhar diretamente na `main`, sem force-push, revalidando o HEAD antes de cada write;
+- tratar `module/mobilidade` e `codex/identidade-visual-achegue-se` como branches reservadas enquanto houver trabalho paralelo ativo; não cherry-pickar, resetar, substituir árvore ou force-pushar essas linhas automaticamente;
 - preferir owner/SSOT canônico em `src/core`, `src/modules`, `src/app`, `src/integrations` e `src/shared`;
 - atualizar `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` quando um checkpoint operacional mudar e usar checkpoints incrementais em `docs/08-roadmap/checkpoints/` somente quando necessário para evitar reescrita insegura do SSOT durante execução concorrente;
 - usar `teste-acheguese` apenas como laboratório/prova de UX territorial quando aplicável; o produto consolidado continua neste repositório.
