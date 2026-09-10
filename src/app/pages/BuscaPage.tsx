@@ -365,6 +365,32 @@ export default function BuscaPage() {
     return [...businessMarkers, ...professionalMarkers];
   }, [displayResults]);
 
+  const featuredMapResult = useMemo(() => {
+    const professional = displayResults.professionals[0];
+    if (professional) {
+      return {
+        title: professional.name,
+        subtitle: professional.neighborhood ?? professional.city ?? territoryName,
+        href: professional.target_url || professionalPublicRoutes.home(),
+        imageUrl: professional.logo_url,
+        actionLabel: "Ver profissional",
+      };
+    }
+
+    const business = displayResults.businesses[0];
+    if (business) {
+      return {
+        title: business.name,
+        subtitle: business.neighborhood ?? territoryName,
+        href: moduleUrls.business,
+        imageUrl: business.logo_url,
+        actionLabel: "Ver negócio",
+      };
+    }
+
+    return undefined;
+  }, [displayResults, moduleUrls.business, territoryName]);
+
   const collections = useMemo(() => {
     const items: Array<{
       label: string;
@@ -633,6 +659,7 @@ export default function BuscaPage() {
                 territoryName={territoryName}
                 title="Resultados no mapa"
                 markers={resultMarkers}
+                featuredResult={featuredMapResult}
                 showNavigationControls
                 mapHeightClassName="h-[31rem]"
               />
