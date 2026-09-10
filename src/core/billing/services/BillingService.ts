@@ -7,7 +7,10 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import {
+  resolveSupabaseFunctionErrorMessage,
+  supabase,
+} from '@/integrations/supabase';
 import { SECURITY_DOMAINS } from '@/shared/config/security.config';
 import {
   getAllowedRedirectOriginsFromEnv,
@@ -51,6 +54,18 @@ const BILLING_REDIRECT_ORIGINS = getAllowedRedirectOriginsFromEnv(
   ],
 );
 
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+async function billingFunctionError(
+  error: unknown,
+  fallback: string,
+): Promise<Error> {
+  const message = await resolveSupabaseFunctionErrorMessage(error);
+  return new Error(message ?? fallback);
+}
+
 export class BillingService {
   static async createCheckoutSession(
     params: CreateCheckoutParams,
@@ -61,10 +76,21 @@ export class BillingService {
 
     if (error) {
       logger.error('Error creating checkout session:', error);
-      throw new Error(error.message || 'Failed to create checkout session');
+      throw await billingFunctionError(error, 'Failed to create checkout session');
     }
 
-    return data;
+    if (
+      !data ||
+      !isNonEmptyString(Reflect.get(data, 'sessionId')) ||
+      !isNonEmptyString(Reflect.get(data, 'url'))
+    ) {
+      throw new Error('Invalid checkout response');
+    }
+
+    return {
+      sessionId: Reflect.get(data, 'sessionId'),
+      url: Reflect.get(data, 'url'),
+    };
   }
 
   static async createPortalSession(returnUrl: string): Promise<CreatePortalResponse> {
@@ -74,10 +100,14 @@ export class BillingService {
 
     if (error) {
       logger.error('Error creating portal session:', error);
-      throw new Error(error.message || 'Failed to create portal session');
+      throw await billingFunctionError(error, 'Failed to create portal session');
     }
 
-    return data;
+    if (!data || !isNonEmptyString(Reflect.get(data, 'url'))) {
+      throw new Error('Invalid billing portal response');
+    }
+
+    return { url: Reflect.get(data, 'url') };
   }
 
   static async redirectToCheckout(params: CreateCheckoutParams): Promise<void> {
