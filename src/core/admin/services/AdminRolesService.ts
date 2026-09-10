@@ -1,10 +1,6 @@
+import { invokeSupabaseBroker } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 import { supabase } from "@/integrations/supabase";
-import type {
-  Database,
-  Tables,
-  TablesInsert,
-  TablesUpdate,
-} from "@/integrations/supabase";
+import type { Database, Tables } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
 
@@ -21,10 +17,6 @@ type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
     columns?: string,
     options?: { count?: "exact"; head?: boolean },
   ): TableClient<TRow>;
-  insert(
-    values: Record<string, unknown> | readonly Record<string, unknown>[],
-  ): TableClient<TRow>;
-  update(values: Record<string, unknown>): TableClient<TRow>;
   eq(column: string, value: unknown): TableClient<TRow>;
   or(filters: string): TableClient<TRow>;
   not(column: string, operator: string, value: unknown): TableClient<TRow>;
@@ -41,8 +33,6 @@ const db = supabase as unknown as AdminRolesDbClient;
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 type UserRoleRow = Tables<"user_roles">;
-type UserRoleInsert = TablesInsert<"user_roles">;
-type UserRoleUpdate = TablesUpdate<"user_roles">;
 type RoleHistoryRow = Tables<"role_history">;
 
 type UserSummary = {
@@ -53,6 +43,16 @@ type UserSummary = {
 type UserRoleWithRelationsRow = UserRoleRow & {
   user?: UserSummary | readonly UserSummary[] | null;
   granter?: UserSummary | readonly UserSummary[] | null;
+};
+
+type AdminRoleMutationAction = "grantRole" | "revokeRole" | "renewRole";
+
+type AdminRoleMutationAck = {
+  action: AdminRoleMutationAction;
+  userId: string;
+  role: string;
+  roleRecordId: string;
+  expiresAt?: string | null;
 };
 
 export interface UserRole {
@@ -98,10 +98,6 @@ function normalizeUserRelation(
   return value ?? null;
 }
 
-function normalizeRoleEnum(role: string): AppRole {
-  return role as AppRole;
-}
-
 function mapUserRole(row: UserRoleRow): UserRole {
   return {
     id: row.id,
@@ -128,31 +124,41 @@ function mapRoleHistory(row: RoleHistoryRow): RoleHistory {
   };
 }
 
-function toUserRoleInsert(params: {
-  userId: string;
-  role: string;
-  grantedBy: string;
-  expiresAt?: string;
-  reason?: string;
-}): UserRoleInsert {
-  return {
-    user_id: params.userId,
-    role: params.role,
-    role_enum: normalizeRoleEnum(params.role),
-    granted_by: params.grantedBy,
-    granted_at: new Date().toISOString(),
-    expires_at: params.expiresAt ?? null,
-    is_active: true,
-    reason: params.reason ?? null,
-  };
+async function mutateRole(
+  action: AdminRoleMutationAction,
+  params: Record<string, unknown>,
+): Promise<AdminRoleMutationAck> {
+  const result = await invokeSupabaseBroker<
+    AdminRoleMutationAck,
+    AdminRoleMutationAction
+  >({
+    action,
+    functionName: "admin-role-rpc",
+    noDataMessage: "Admin role broker returned no data",
+    params,
+    serviceName: "AdminRolesService",
+  });
+
+  if (
+    result.action !== action ||
+    result.userId !== params.userId ||
+    result.role !== params.role ||
+    typeof result.roleRecordId !== "string" ||
+    !result.roleRecordId
+  ) {
+    throw new Error("Invalid admin role mutation acknowledgement");
+  }
+
+  return result;
 }
 
 /**
  * Administrative owner for role inventory, lifecycle and history.
  *
- * It is intentionally NOT an authorization-decision service. Runtime checks
- * (`hasRole`, `isAdmin`, `getUserRoles`) belong to core/authorization/RoleService
- * and the role-rpc broker, which apply the canonical validity predicate.
+ * Reads remain subject to the table's administrative RLS. Every mutation is
+ * routed through `admin-role-rpc`, where the administrative actor is derived
+ * from the JWT and `requireSuperAdmin` enforces the shared MFA/AAL2 policy.
+ * Browser input never supplies `granted_by`/`revoked_by` authority.
  */
 class AdminRolesServiceClass {
   async getRolesList(): Promise<UserRole[]> {
@@ -264,17 +270,22 @@ class AdminRolesServiceClass {
   async grantRole(params: {
     userId: string;
     role: string;
-    grantedBy: string;
     expiresAt?: string;
     reason?: string;
   }): Promise<boolean> {
     try {
-      const payload = toUserRoleInsert(params);
-      const { error } = await db.from<UserRoleRow>("user_roles").insert(payload);
-      if (error) throw error;
+      await mutateRole("grantRole", {
+        userId: params.userId,
+        role: params.role,
+        expiresAt: params.expiresAt ?? null,
+        reason: params.reason ?? null,
+      });
       return true;
     } catch (error) {
-      logger.error("AdminRolesService.grantRole", error as Error, params);
+      logger.error("AdminRolesService.grantRole", error as Error, {
+        userId: params.userId,
+        role: params.role,
+      });
       return false;
     }
   }
@@ -282,28 +293,20 @@ class AdminRolesServiceClass {
   async revokeRole(params: {
     userId: string;
     role: string;
-    revokedBy: string;
     reason?: string;
   }): Promise<boolean> {
     try {
-      const patch: Partial<UserRoleUpdate> = {
-        is_active: false,
-        revoked_at: new Date().toISOString(),
-        revoked_by: params.revokedBy,
+      await mutateRole("revokeRole", {
+        userId: params.userId,
+        role: params.role,
         reason: params.reason ?? null,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { error } = await db
-        .from<UserRoleRow>("user_roles")
-        .update(patch)
-        .eq("user_id", params.userId)
-        .eq("role", params.role);
-
-      if (error) throw error;
+      });
       return true;
     } catch (error) {
-      logger.error("AdminRolesService.revokeRole", error as Error, params);
+      logger.error("AdminRolesService.revokeRole", error as Error, {
+        userId: params.userId,
+        role: params.role,
+      });
       return false;
     }
   }
@@ -365,26 +368,22 @@ class AdminRolesServiceClass {
     userId: string;
     role: string;
     newExpiresAt: string;
-    renewedBy: string;
   }): Promise<boolean> {
     try {
-      const patch: Partial<UserRoleUpdate> = {
-        expires_at: params.newExpiresAt,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { error } = await db
-        .from<UserRoleRow>("user_roles")
-        .update(patch)
-        .eq("user_id", params.userId)
-        .eq("role", params.role)
-        .eq("is_active", true);
-
-      if (error) throw error;
-
+      const result = await mutateRole("renewRole", {
+        userId: params.userId,
+        role: params.role,
+        newExpiresAt: params.newExpiresAt,
+      });
+      if (result.expiresAt !== new Date(params.newExpiresAt).toISOString()) {
+        throw new Error("Invalid role renewal expiry acknowledgement");
+      }
       return true;
     } catch (error) {
-      logger.error("AdminRolesService.renewRole", error as Error, params);
+      logger.error("AdminRolesService.renewRole", error as Error, {
+        userId: params.userId,
+        role: params.role,
+      });
       return false;
     }
   }
