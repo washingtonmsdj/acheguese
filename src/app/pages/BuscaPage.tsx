@@ -478,7 +478,7 @@ export default function BuscaPage() {
             <h1 className="font-heading text-[2rem] font-bold leading-[1.08] tracking-[-0.04em] text-territory-ink sm:text-4xl">
               Explorar
             </h1>
-            <p className="mt-2 text-[0.9375rem] leading-6 text-territory-muted sm:text-base">
+            <p className="mt-2 hidden text-[0.9375rem] leading-6 text-territory-muted sm:block sm:text-base">
               Encontre o que você precisa na comunidade.
             </p>
           </div>
