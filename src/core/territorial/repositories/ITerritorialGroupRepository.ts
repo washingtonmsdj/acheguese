@@ -25,7 +25,10 @@ export interface ITerritorialGroupRepository {
   listMembers(groupId: string): Promise<Location[]>;
   hasMember(groupId: string, locationId: string): Promise<boolean>;
   findGroupsContainingLocation(locationId: string): Promise<TerritorialGroup[]>;
+  /** Public/product inventory: active groups only. */
   listAll(): Promise<TerritorialGroupWithMembers[]>;
+  /** Administrative inventory: includes active and inactive groups under admin RLS. */
+  listAllForAdmin(): Promise<TerritorialGroupWithMembers[]>;
   create(data: CreateTerritorialGroupData): Promise<TerritorialGroup>;
   update(groupId: string, data: UpdateTerritorialGroupData): Promise<TerritorialGroup>;
   addMembers(groupId: string, locationIds: string[]): Promise<void>;
