@@ -20,10 +20,10 @@ describe("account deletion browser broker boundary", () => {
     expect(privacyRpcService).toContain('"getDeletionStatus"');
     expect(privacyRpcService).toContain('"requestAccountDeletion"');
     expect(privacyRpcService).toContain(
-      "this.invoke<AccountDeletionStatusBrokerData | null>(\"getDeletionStatus\")",
+      'this.invoke<unknown>("getDeletionStatus")',
     );
     expect(privacyRpcService).toContain(
-      "this.invoke<RequestAccountDeletionBrokerData>",
+      'this.invoke<unknown>("requestAccountDeletion"',
     );
   });
 
@@ -37,15 +37,37 @@ describe("account deletion browser broker boundary", () => {
     expect(broker).toContain("return null;");
   });
 
-  it("allows only a broker data payload to represent a genuine no-request state", () => {
+  it("allows only an explicit broker data null to represent no deletion request", () => {
     expect(broker).toContain(
       'Object.prototype.hasOwnProperty.call(response, "data")',
     );
+    expect(privacyRpcService).toContain("if (result === null) return null;");
+    expect(privacyRpcService).toContain("return parseDeletionStatus(result);");
+  });
+
+  it("validates the deletion status identity, enum, dates and counters at runtime", () => {
+    expect(privacyRpcService).toContain("UUID_PATTERN.test(value.requestId)");
+    expect(privacyRpcService).toContain("DELETION_STATUSES.has(");
+    expect(privacyRpcService).toContain("isIsoTimestamp(value.requestedAt)");
+    expect(privacyRpcService).toContain("isIsoTimestamp(value.scheduledPurgeAt)");
+    expect(privacyRpcService).toContain("isNonNegativeInteger(value.daysRemaining)");
+    expect(privacyRpcService).toContain('typeof value.exportRequested !== "boolean"');
+  });
+
+  it("requires the request receipt to be internally coherent", () => {
     expect(privacyRpcService).toContain(
-      "The broker returns `{ data: null }` when there is no deletion request.",
+      "value.daysUntilPurge !== base.daysRemaining",
     );
     expect(privacyRpcService).toContain(
-      "Transport/broker failures must remain failures so route guards can fail closed.",
+      "value.recoveryPossibleUntil !== base.scheduledPurgeAt",
     );
+    expect(privacyRpcService).toContain(
+      "Privacy broker returned invalid deletion request",
+    );
+  });
+
+  it("requires explicit receipts for consent and cancellation", () => {
+    expect(privacyRpcService).toContain("UUID_PATTERN.test(result.consentId)");
+    expect(privacyRpcService).toContain('typeof result.cancelled !== "boolean"');
   });
 });
