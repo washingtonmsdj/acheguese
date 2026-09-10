@@ -74,10 +74,20 @@ export async function invokeSupabaseBroker<T, TAction extends string>(
   return response.data;
 }
 
+/**
+ * Invokes a mutation-style broker and requires an explicit, non-null `data`
+ * acknowledgement. A bare HTTP 2xx is not proof that a server-side command
+ * actually produced the authoritative mutation receipt expected by callers.
+ */
 export async function invokeSupabaseBrokerCommand<TAction extends string>(
   input: InvokeSupabaseBrokerInput<TAction>,
 ): Promise<void> {
-  await invokeRawSupabaseBroker<unknown, TAction>(input);
+  const response = await invokeRawSupabaseBroker<unknown, TAction>(input);
+  if (!hasBrokerData(response) || response.data === null || response.data === undefined) {
+    throw new Error(
+      input.noDataMessage ?? `${input.serviceName} broker returned no command acknowledgement`,
+    );
+  }
 }
 
 export async function invokeNullableSupabaseBroker<T, TAction extends string>(
