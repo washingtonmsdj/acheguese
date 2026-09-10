@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { OpenAIProvider } from "../providers/OpenAIProvider";
+import { EdgeAIProvider } from "../providers/EdgeAIProvider";
 
 function listReactFiles(dir: string): string[] {
   const entries = readdirSync(dir);
@@ -23,21 +23,31 @@ function listReactFiles(dir: string): string[] {
 }
 
 describe("AI security boundaries", () => {
-  it("componentes React nao importam OpenAIProvider", () => {
+  it("componentes React nao importam providers de infraestrutura de IA", () => {
     const reactFiles = listReactFiles("src");
     const offenders = reactFiles.filter((file) => {
       const content = readFileSync(file, "utf8");
-      return content.includes("OpenAIProvider");
+      return content.includes("EdgeAIProvider") || content.includes("OpenAIProvider");
     });
 
     expect(offenders).toEqual([]);
   });
 
-  it("OpenAIProvider chama somente Supabase Edge Function", async () => {
-    const source = readFileSync("src/core/ai/providers/OpenAIProvider.ts", "utf8");
-    expect(source.includes("functions.invoke(\"ai-intent-parse\"")).toBe(true);
-    expect(source.includes("sk-")).toBe(false);
-    expect(source.includes("OPENAI_API_KEY")).toBe(false);
-    expect(OpenAIProvider).toBeTypeOf("function");
+  it("IntentParser usa o broker de IA canônico, sem Edge fantasma", () => {
+    const parser = readFileSync("src/core/ai/intent/IntentParser.ts", "utf8");
+    const provider = readFileSync("src/core/ai/providers/EdgeAIProvider.ts", "utf8");
+
+    expect(parser).toContain("new EdgeAIProvider()");
+    expect(provider).toContain("aiClient.text");
+    expect(provider).toContain('feature: "search.intent"');
+    expect(provider).not.toContain("supabase.functions.invoke");
+    expect(provider).not.toContain("ai-intent-parse");
+    expect(provider).not.toContain("sk-");
+    expect(provider).not.toContain("OPENAI_API_KEY");
+    expect(EdgeAIProvider).toBeTypeOf("function");
+  });
+
+  it("mantem aposentado o provider que apontava para ai-intent-parse inexistente", () => {
+    expect(existsSync("src/core/ai/providers/OpenAIProvider.ts")).toBe(false);
   });
 });
