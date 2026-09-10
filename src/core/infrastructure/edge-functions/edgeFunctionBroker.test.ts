@@ -7,12 +7,17 @@ import {
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 
+const { readHttpErrorBody } = vi.hoisted(() => ({
+  readHttpErrorBody: vi.fn(),
+}));
+
 vi.mock("@/integrations/supabase", () => ({
   supabase: {
     functions: {
       invoke: vi.fn(),
     },
   },
+  readSupabaseFunctionHttpErrorBody: readHttpErrorBody,
 }));
 
 vi.mock("@/shared/utils/logger", () => ({
@@ -28,6 +33,8 @@ describe("edgeFunctionBroker", () => {
   beforeEach(() => {
     invokeMock.mockReset();
     warnMock.mockReset();
+    readHttpErrorBody.mockReset();
+    readHttpErrorBody.mockResolvedValue(null);
   });
 
   it("invokes a broker function with action and params", async () => {
@@ -49,10 +56,50 @@ describe("edgeFunctionBroker", () => {
     });
   });
 
-  it("throws and logs transport errors", async () => {
+  it("preserves structured Edge HTTP errors instead of replacing them with the SDK message", async () => {
+    const httpError = { message: "Edge Function returned a non-2xx status code" };
     invokeMock.mockResolvedValue({
       data: null,
-      error: { message: "network failed" },
+      error: httpError,
+    });
+    readHttpErrorBody.mockResolvedValue({ error: "not_allowed" });
+
+    await expect(
+      invokeSupabaseBroker<unknown, "probe">({
+        action: "probe",
+        functionName: "probe-rpc",
+        serviceName: "ProbeService",
+      }),
+    ).rejects.toThrow("not_allowed");
+
+    expect(readHttpErrorBody).toHaveBeenCalledWith(httpError);
+    expect(warnMock).toHaveBeenCalledWith("[ProbeService] broker invocation failed", {
+      action: "probe",
+      message: "not_allowed",
+    });
+  });
+
+  it("accepts a structured message when the Edge body does not expose error", async () => {
+    invokeMock.mockResolvedValue({
+      data: null,
+      error: { message: "Edge Function returned a non-2xx status code" },
+    });
+    readHttpErrorBody.mockResolvedValue({ message: "profile unavailable" });
+
+    await expect(
+      invokeSupabaseBroker<unknown, "probe">({
+        action: "probe",
+        functionName: "probe-rpc",
+        serviceName: "ProbeService",
+      }),
+    ).rejects.toThrow("profile unavailable");
+  });
+
+  it("falls back to the SDK message for transport errors", async () => {
+    const transportError = { message: "network failed" };
+    invokeMock.mockResolvedValue({
+      data: null,
+      error: transportError,
     });
 
     await expect(
@@ -63,13 +110,14 @@ describe("edgeFunctionBroker", () => {
       }),
     ).rejects.toThrow("network failed");
 
+    expect(readHttpErrorBody).toHaveBeenCalledWith(transportError);
     expect(warnMock).toHaveBeenCalledWith("[ProbeService] broker invocation failed", {
       action: "probe",
       message: "network failed",
     });
   });
 
-  it("throws and logs broker rejections", async () => {
+  it("throws and logs broker rejections returned with a successful HTTP response", async () => {
     invokeMock.mockResolvedValue({
       data: { error: "not allowed" },
       error: null,
