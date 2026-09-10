@@ -2,10 +2,9 @@
  * ADMIN AUTH HELPER
  * Valida permissoes administrativas para Edge Functions.
  *
- * SSOT de decisao: public.get_user_roles(UUID), broker-only/service-role.
- * A funcao aplica o contrato canonico de validade de role: ativa, nao
- * revogada e nao expirada. Este adapter apenas autentica o bearer token e
- * transforma o resultado canonico em AdminAuthResult.
+ * SSOT de role: public.get_user_roles(UUID), broker-only/service-role.
+ * SSOT de MFA: evaluateUserMfaPolicy(), baseado em configuracao server-side,
+ * fatores verificados do Supabase Auth e AAL do JWT atual.
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -15,6 +14,7 @@ import {
   getTrustedClientIp,
   errorResponse,
 } from './security.ts';
+import { evaluateUserMfaPolicy } from './mfaPolicy.ts';
 
 export type AdminRole = 'admin' | 'super_admin';
 
@@ -53,8 +53,8 @@ function resolveAdminRole(roles: unknown): AdminRole | null {
 }
 
 /**
- * Valida se o request vem de um admin (admin ou super_admin).
- * Retorna AdminAuthResult em caso de sucesso, Response em caso de falha.
+ * Valida se o request vem de admin/super_admin e, quando a politica de MFA se
+ * aplica, exige enrollment concluido + AAL2 no JWT atual.
  */
 export async function requireAdmin(req: Request): Promise<AdminAuthResult | Response> {
   const auditInfo = getAdminAuditInfo(req);
@@ -112,13 +112,40 @@ export async function requireAdmin(req: Request): Promise<AdminAuthResult | Resp
       return errorResponse('Forbidden: Admin access required', 403);
     }
 
+    const mfaPolicy = await evaluateUserMfaPolicy(supabase, user.id, token);
+    if (mfaPolicy.required) {
+      auditLog({
+        timestamp: new Date().toISOString(),
+        userId: user.id,
+        action: 'admin_auth_failed',
+        resource: req.url,
+        status: 'failure',
+        details: {
+          reason: mfaPolicy.reason,
+          role: adminRole,
+          currentLevel: mfaPolicy.currentLevel,
+          hasVerifiedFactor: mfaPolicy.hasVerifiedFactor,
+        },
+        ...auditInfo,
+      });
+
+      if (mfaPolicy.reason === 'enrollment_required') {
+        return errorResponse('MFA enrollment required', 403);
+      }
+      return errorResponse('MFA verification required', 403);
+    }
+
     auditLog({
       timestamp: new Date().toISOString(),
       userId: user.id,
       action: 'admin_auth_success',
       resource: req.url,
       status: 'success',
-      details: { role: adminRole },
+      details: {
+        role: adminRole,
+        mfaPolicy: mfaPolicy.reason,
+        currentLevel: mfaPolicy.currentLevel,
+      },
       ...auditInfo,
     });
 
