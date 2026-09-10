@@ -1,4 +1,4 @@
-import { callRPC, supabase, type Json } from '@/integrations/supabase';
+import { supabase as generatedSupabase, type Json } from '@/integrations/supabase';
 import { MEDIA_STORAGE_BUCKETS } from '@/core/media/config/storageBuckets';
 import { mediaService } from '@/core/media/services/MediaService';
 import { SAFETY_EVIDENCE_UPLOAD_POLICY } from '@/core/safety/config/evidencePolicy';
@@ -39,6 +39,25 @@ type SafetyEvidenceRow = {
   created_at: string;
 };
 
+type RegisterSafetyEvidenceArgs = {
+  p_incident_id: string;
+  p_evidence_type: SafetyEvidenceType;
+  p_object_path: string;
+  p_file_name: string;
+  p_metadata: Json;
+};
+
+type SafetyEvidenceRpcClient = {
+  rpc(
+    functionName: 'register_safety_evidence',
+    args: RegisterSafetyEvidenceArgs,
+  ): Promise<{ data: SafetyEvidenceRow | null; error: unknown }>;
+};
+
+// The deployed command predates the current generated Database artifact. Keep the
+// narrow schema bridge local to this owner instead of weakening the generated client.
+const supabase = generatedSupabase as unknown as SafetyEvidenceRpcClient;
+
 function mapRow(row: SafetyEvidenceRow): SafetyEvidence {
   return {
     id: row.id,
@@ -66,7 +85,7 @@ class SafetyEvidenceService {
   async listIncidentEvidence(incidentId: string): Promise<SafetyEvidence[]> {
     if (!isUuid(incidentId)) return [];
 
-    const { data, error } = await supabase
+    const { data, error } = await generatedSupabase
       .from('safety_evidence')
       .select(
         'id, incident_id, evidence_type, file_url, file_name, file_size, mime_type, uploaded_by, metadata, created_at',
@@ -118,10 +137,7 @@ class SafetyEvidenceService {
       });
       uploadedPath = upload.path;
 
-      const { data, error } = await callRPC<
-        SafetyEvidenceRow,
-        'register_safety_evidence'
-      >('register_safety_evidence', {
+      const { data, error } = await supabase.rpc('register_safety_evidence', {
         p_incident_id: input.incidentId,
         p_evidence_type: input.evidenceType,
         p_object_path: upload.path,
