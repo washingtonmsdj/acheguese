@@ -54,13 +54,20 @@ describe("Supabase Edge admin canary deploy guard", () => {
     expect(script).not.toMatch(/\['functions', 'deploy'[\s\S]*'--prune'/);
   });
 
-  it("requires the reconciled list RPC and canonical shared adminAuth broker", () => {
+  it("requires canonical admin role and MFA/AAL2 authority", () => {
     expect(script).toContain("admin_list_user_account_contexts");
     expect(script).toContain("admin-list-users voltou a paginar profiles diretamente");
     expect(script).toContain("supabase.rpc('get_user_roles'");
     expect(script).toContain("_user_id: user.id");
     expect(script).toContain("const adminRole = resolveAdminRole(roles)");
     expect(script).toContain("adminAuth voltou a consultar user_roles diretamente");
+    expect(script).toContain(
+      "const mfaPolicy = await evaluateUserMfaPolicy(supabase, user.id, token)",
+    );
+    expect(script).toContain("if (mfaPolicy.required)");
+    expect(script).toContain("supabaseAdmin.auth.admin.mfa.listFactors({");
+    expect(script).toContain("getAuthenticatorAssuranceLevel(token)");
+    expect(script).toContain('currentLevel !== "aal2"');
   });
 
   it("requires admin-get-user authentication, bounded input and current role display", () => {
@@ -86,11 +93,12 @@ describe("Supabase Edge admin canary deploy guard", () => {
     expect(script).toContain("SUPABASE_ACCESS_TOKEN: accessToken");
   });
 
-  it("hashes the exact source bundles before any apply", () => {
+  it("hashes the exact source bundles including the transitive MFA policy before apply", () => {
     for (const path of [
       "supabase/functions/admin-list-users/index.ts",
       "supabase/functions/admin-get-user/index.ts",
       "supabase/functions/_shared/adminAuth.ts",
+      "supabase/functions/_shared/mfaPolicy.ts",
       "supabase/functions/_shared/security.ts",
       "supabase/functions/_shared/validation.ts",
     ]) {
