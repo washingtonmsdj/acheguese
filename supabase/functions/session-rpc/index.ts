@@ -139,8 +139,8 @@ async function reconcileMfaTrackerFromAuth(
   const trackerUpdate = {
     mfa_enabled: mfaEnabled,
     mfa_method: mfaEnabled ? mfaMethod : null,
-    // Supabase Auth currently does not provide recovery codes. Historical
-    // generated client codes were never an Auth recovery authority.
+    // O Achegue-se não habilita recovery codes do Auth neste fluxo. Os códigos
+    // locais históricos nunca foram uma autoridade de recuperação válida.
     backup_codes_generated: false,
     backup_codes_count: 0,
     updated_at: new Date().toISOString(),
