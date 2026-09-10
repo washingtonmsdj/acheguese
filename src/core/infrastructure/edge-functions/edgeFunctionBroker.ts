@@ -1,8 +1,11 @@
-import { supabase } from "@/integrations/supabase";
-import type { SupabaseClient } from "@/integrations/supabase";
+import {
+  readSupabaseFunctionHttpErrorBody,
+  supabase,
+  type SupabaseClient,
+} from "@/integrations/supabase";
+import { logger } from "@/shared/utils/logger";
 
 export type SupabaseBrokerClient = Pick<SupabaseClient, "functions">;
-import { logger } from "@/shared/utils/logger";
 
 export interface SupabaseBrokerResponse<T> {
   data?: T;
@@ -24,6 +27,17 @@ function hasBrokerData<T>(
   return Boolean(response) && Object.prototype.hasOwnProperty.call(response, "data");
 }
 
+function errorMessageFromPayload(payload: unknown): string | null {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
+
+  for (const key of ["error", "message"] as const) {
+    const value = Reflect.get(payload, key);
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+
+  return null;
+}
+
 async function invokeRawSupabaseBroker<T, TAction extends string>({
   action,
   client,
@@ -38,11 +52,13 @@ async function invokeRawSupabaseBroker<T, TAction extends string>({
   );
 
   if (error) {
+    const errorPayload = await readSupabaseFunctionHttpErrorBody(error);
+    const message = errorMessageFromPayload(errorPayload) ?? error.message;
     logger.warn(`[${serviceName}] broker invocation failed`, {
       action,
-      message: error.message,
+      message,
     });
-    throw new Error(error.message);
+    throw new Error(message);
   }
 
   if (data?.error) {
