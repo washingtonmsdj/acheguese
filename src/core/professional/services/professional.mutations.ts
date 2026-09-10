@@ -8,7 +8,10 @@
  * @version 2.1.0 - Admin availability brokered
  */
 
-import { supabase } from "@/integrations/supabase";
+import {
+  resolveSupabaseFunctionErrorMessage,
+  supabase,
+} from "@/integrations/supabase";
 import { PublicViewTrackingService } from "@/core/analytics/services/PublicViewTrackingService";
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
@@ -79,6 +82,10 @@ type CreateProfessionalJobInputLike = CreateProfessionalJobInput & {
 type AdminAvailabilityStatus = Extract<ProfessionalStatus, "active" | "inactive">;
 
 const professionalMutationsDb = supabase as unknown as ProfessionalMutationsDbClient;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
 function mapProfessionalJobRow(row: ProfessionalJobRow): ProfessionalJob {
   return {
@@ -171,19 +178,39 @@ export async function updateProfessionalStatus(
   status: AdminAvailabilityStatus,
 ): Promise<void> {
   try {
+    const isAcceptingClients = status === "active";
     const { data, error } = await supabase.functions.invoke("admin-professional-rpc", {
       body: {
         action: "setAvailability",
         params: {
           professionalId: id,
-          isAcceptingClients: status === "active",
+          isAcceptingClients,
         },
       },
     });
 
-    if (error) throw error;
-    if (!data?.data?.id) {
-      throw new Error(data?.error || "Falha ao atualizar disponibilidade do profissional");
+    if (error) {
+      const brokerMessage =
+        (await resolveSupabaseFunctionErrorMessage(error)) ??
+        error.message ??
+        "Falha ao atualizar disponibilidade do profissional";
+      throw new Error(brokerMessage);
+    }
+
+    if (!isRecord(data)) {
+      throw new Error("Resposta invalida ao atualizar disponibilidade do profissional");
+    }
+    if (typeof data.error === "string") {
+      throw new Error(data.error);
+    }
+
+    const updated = isRecord(data.data) ? data.data : null;
+    if (
+      !updated ||
+      updated.id !== id ||
+      updated.is_accepting_clients !== isAcceptingClients
+    ) {
+      throw new Error("Resposta invalida ao atualizar disponibilidade do profissional");
     }
 
     logger.info("[professional.mutations] Professional availability updated:", {
