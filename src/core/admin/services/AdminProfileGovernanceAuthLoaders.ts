@@ -1,5 +1,8 @@
 import { profileService } from '@/core/profiles/services/ProfileService';
-import { supabase } from '@/integrations/supabase';
+import {
+  resolveSupabaseFunctionErrorMessage,
+  supabase,
+} from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
 
 import type {
@@ -8,13 +11,15 @@ import type {
 } from './AdminProfileGovernanceTypes';
 
 interface AdminAuthSummaryBrokerResponse {
-  summary?: {
-    email?: string | null;
-    phone?: string | null;
-    emailConfirmed?: boolean;
-    createdAt?: string | null;
-    lastSignInAt?: string | null;
-  } | null;
+  summary?: unknown;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function nullableString(value: unknown): string | null {
+  return typeof value === 'string' ? value : null;
 }
 
 export async function loadAuthSummary(userId: string): Promise<AdminProfileIdentityAuthSummary | null> {
@@ -27,24 +32,34 @@ export async function loadAuthSummary(userId: string): Promise<AdminProfileIdent
     );
 
     if (error) {
-      logger.error('AdminProfileGovernanceService.loadAuthSummary', error);
+      const message =
+        (await resolveSupabaseFunctionErrorMessage(error)) ??
+        'Failed to load auth summary';
+      logger.error('AdminProfileGovernanceService.loadAuthSummary', { message });
       return null;
     }
 
     const summary = data?.summary;
-    if (!summary) {
+    if (!isRecord(summary)) {
+      if (summary !== null && summary !== undefined) {
+        logger.error('AdminProfileGovernanceService.loadAuthSummary', {
+          message: 'Invalid auth summary response',
+        });
+      }
       return null;
     }
 
     return {
-      email: summary.email ?? null,
-      phone: summary.phone ?? null,
+      email: nullableString(summary.email),
+      phone: nullableString(summary.phone),
       emailConfirmed: summary.emailConfirmed === true,
-      createdAt: summary.createdAt ?? null,
-      lastSignInAt: summary.lastSignInAt ?? null,
+      createdAt: nullableString(summary.createdAt),
+      lastSignInAt: nullableString(summary.lastSignInAt),
     };
   } catch (error) {
-    logger.error('AdminProfileGovernanceService.loadAuthSummary', error);
+    logger.error('AdminProfileGovernanceService.loadAuthSummary', {
+      message: error instanceof Error ? error.message : 'Unknown auth summary failure',
+    });
     return null;
   }
 }
@@ -65,7 +80,9 @@ export async function loadEffectiveContext(
       verified: context.verified,
     };
   } catch (error) {
-    logger.error('AdminProfileGovernanceService.loadEffectiveContext', error);
+    logger.error('AdminProfileGovernanceService.loadEffectiveContext', {
+      message: error instanceof Error ? error.message : 'Unknown profile context failure',
+    });
     return null;
   }
 }
