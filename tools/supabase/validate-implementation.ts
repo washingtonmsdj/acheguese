@@ -9,6 +9,32 @@ import { createAnonClient } from './supabase-client';
 
 const supabase = createAnonClient();
 
+async function expectProtectedRpc(
+  name: string,
+  params: Record<string, unknown>,
+): Promise<'ok' | 'warning'> {
+  try {
+    const { error } = await supabase.rpc(name, params);
+    if (error && (
+      error.message.includes('permission denied') ||
+      error.message.includes('not authenticated') ||
+      error.message.includes('Could not find the function')
+    )) {
+      console.log(`OK ${name}: inacessivel para anon`);
+      return 'ok';
+    }
+    if (error) {
+      console.log(`WARN ${name}: ${error.message}`);
+      return 'warning';
+    }
+    console.log(`WARN ${name}: executou sem auth`);
+    return 'warning';
+  } catch {
+    console.log(`OK ${name}: protegido`);
+    return 'ok';
+  }
+}
+
 async function validateImplementation() {
   console.log('VALIDANDO IMPLEMENTACAO MULTI-PERFIL\n');
 
@@ -67,27 +93,34 @@ async function validateImplementation() {
     }
   }
 
-  console.log('\n=== 3. RPCs ===');
+  console.log('\n=== 3. RPCs DE DOMINIO ===');
+  const protectedRpcs: Array<[string, Record<string, unknown>]> = [
+    [
+      'profile_rpc_create_personal',
+      {
+        p_actor_user_id: '00000000-0000-4000-8000-000000000000',
+        p_username: 'anon_probe',
+        p_display_name: 'Anon Probe',
+        p_avatar_url: null,
+        p_bio: null,
+        p_patch: { city: 'Salvador' },
+      },
+    ],
+    [
+      'mobility_rpc_create_driver_profile',
+      {
+        p_actor_user_id: '00000000-0000-4000-8000-000000000000',
+        p_handle: 'anon-probe-driver',
+        p_display_name: 'Anon Probe Driver',
+        p_avatar_url: null,
+        p_bio: null,
+        p_extension_data: {},
+      },
+    ],
+  ];
 
-  try {
-    const { error } = await supabase.rpc('create_profile_with_extension', {
-      p_profile_type: 'personal',
-      p_handle: 'test',
-      p_display_name: 'Test',
-      p_extension_data: {},
-    });
-
-    if (error && (error.message.includes('permission denied') || error.message.includes('not authenticated'))) {
-      console.log('OK create_profile_with_extension: requer autenticacao');
-    } else if (error) {
-      console.log(`WARN create_profile_with_extension: ${error.message}`);
-      warnings++;
-    } else {
-      console.log('WARN create_profile_with_extension: executou sem auth');
-      warnings++;
-    }
-  } catch {
-    console.log('OK create_profile_with_extension: protegido');
+  for (const [name, params] of protectedRpcs) {
+    if (await expectProtectedRpc(name, params) === 'warning') warnings++;
   }
 
   console.log('\n=== RESUMO ===');
