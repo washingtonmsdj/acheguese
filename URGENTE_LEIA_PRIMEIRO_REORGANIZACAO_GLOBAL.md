@@ -11,12 +11,13 @@ Leia nesta ordem:
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — execução operacional atual;
-4. `docs/08-roadmap/checkpoints/2026-09-10-g42-runtime-authority-contracts.md` — checkpoint G42: MFA/AAL2 server-side, contratos runtime fail-closed, Try-On e contenção de branches concorrentes;
-5. `docs/08-roadmap/checkpoints/2026-09-10-g41-edge-client-contracts.md` — checkpoint G41: contratos Edge, IA, Push, LGPD e consolidação de authorities;
-6. `docs/08-roadmap/checkpoints/2026-09-10-g40-edge-error-contract.md` — checkpoint G40, fechamento do creator legado, contrato HTTP de Edge e fixture E2E isolada;
-7. `docs/08-roadmap/checkpoints/2026-09-10-g39-professional-lead-intake.md` — checkpoint G39 e gate de cutover Professional;
-8. `docs/08-roadmap/checkpoints/2026-09-10-g38-professional-authority.md` — checkpoint anterior G38;
-9. `SECURITY.md` — segurança e gates de release.
+4. `docs/08-roadmap/checkpoints/2026-09-10-g43-territorial-admin-authority.md` — checkpoint G43: cascata territorial transacional, lifecycle atômico de grupos e gates de cutover remoto;
+5. `docs/08-roadmap/checkpoints/2026-09-10-g42-runtime-authority-contracts.md` — checkpoint G42: MFA/AAL2 server-side, contratos runtime fail-closed, Try-On e contenção de branches concorrentes;
+6. `docs/08-roadmap/checkpoints/2026-09-10-g41-edge-client-contracts.md` — checkpoint G41: contratos Edge, IA, Push, LGPD e consolidação de authorities;
+7. `docs/08-roadmap/checkpoints/2026-09-10-g40-edge-error-contract.md` — checkpoint G40, fechamento do creator legado, contrato HTTP de Edge e fixture E2E isolada;
+8. `docs/08-roadmap/checkpoints/2026-09-10-g39-professional-lead-intake.md` — checkpoint G39 e gate de cutover Professional;
+9. `docs/08-roadmap/checkpoints/2026-09-10-g38-professional-authority.md` — checkpoint anterior G38;
+10. `SECURITY.md` — segurança e gates de release.
 
 ## Checkpoint operacional curto — 2026-09-10
 
@@ -52,7 +53,12 @@ Leia nesta ordem:
 - G42: enquanto o DDL de fechamento não puder ser provado no remoto, `admin_mfa_enforcement`, `is_exempt` e `grace_period_expires_at` não podem afrouxar autorização; o tracker é cache, não authority;
 - G42: o DDL de fechamento permanece somente em `docs/09-reference/migrations-pending/20260910203000_harden_mfa_authority_g42.sql`; **não mover/aplicar** sem preflight remoto e confirmação das policies/grants reais;
 - G42: `tryon-generate` não expõe mais erro interno/provider em resposta 500 nem em `error_message`; transições `processing`, progresso e `completed` verificam persistência antes de continuar;
-- G42: permanece aberto o fechamento transacional da cascata territorial para descendentes; não implementar loop de writes no Edge porque isso criaria mutação parcial sem transação;
+- G42: a cascata de Location está **SOURCE-READY/RUNTIME-PENDING** em `20260910214500_transactional_location_visibility_cascade_g42.sql`: uma transação, prefixo indexado `geographic_path`, ACL `service_role`-only e sem loop Edge; não aplicar/deployar enquanto o preflight remoto continuar em timeout;
+- G43: lifecycle administrativo de grupos está preparado com `territorial_admin_save_group` + `territorial_admin_set_group_status` e `territorial-group-admin-rpc` AAL2; criação/edição + conjunto completo de membros ficam na mesma transação, com locks contra TOCTOU/interleaving;
+- G43: grupos inativos voltaram a aparecer no inventário Admin sem ampliar leitura pública; edição agora usa `anchor_city_id` real e bloqueia mudança da cidade âncora existente;
+- G43: a phase 2 que revoga `INSERT/UPDATE/DELETE` browser em `territorial_groups`/`territorial_group_members` está somente em `migrations-pending` e **não pode ser aplicada** antes de phase 1 + Edge ACTIVE + smoke AAL2 + frontend migrado/certificado;
+- G43: catálogo remoto respondeu, mas `territorial-get-tree`, `territorial-update-group-visibility`, `territorial-update-location-visibility` e `territorial-group-admin-rpc` continuam ausentes; o Postgres continua encerrando `execute_sql` por `connection timeout`;
+- G42/G43: novos commands territoriais usam `SECURITY INVOKER` + ACL explícito; não reintroduzir `auth.role()` como authority interna quando a execução já é `service_role`-only e a autorização de usuário pertence ao gateway;
 - G42: `module/mobilidade` e `codex/identidade-visual-achegue-se` são zonas de trabalho paralelo reservadas; `codex/nova-home-comunidade` e demais `codex/*`/`agent/*` existentes não devem ser apagadas/fundidas automaticamente;
 - G42: o GitHub Actions observado continua criando jobs que falham antes de executar steps (`steps=[]`, sem log útil); isso é gate de execução indisponível e **não** certificação verde nem prova de regressão;
 - ainda faltam os smokes públicos anônimo e autenticado do G39 pelo broker + Turnstile e a certificação real de security/architecture/typecheck/build antes do cutover;
