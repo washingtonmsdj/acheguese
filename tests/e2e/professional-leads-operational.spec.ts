@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { loginAsUser } from "./helpers/auth";
 import {
   createOperationalAnonClient,
+  createOptionalOperationalAdminClient,
   getOperationalEnv,
   hasOperationalAnonEnv,
 } from "../helpers/operational-env";
@@ -188,6 +189,11 @@ async function createLeadFixture(professionalDataId: string): Promise<LeadFixtur
   const session = await signInTestUser();
   if (!session) return null;
   const { client, userId } = session;
+  const fixtureAdmin = createOptionalOperationalAdminClient();
+  if (!fixtureAdmin) {
+    await client.auth.signOut();
+    return null;
+  }
 
   const personalProfile = await client
     .from("profiles")
@@ -216,7 +222,7 @@ async function createLeadFixture(professionalDataId: string): Promise<LeadFixtur
   }
 
   const token = Date.now().toString().slice(-6);
-  const leadInsert = await client
+  const leadInsert = await fixtureAdmin
     .from("professional_leads")
     .insert({
       professional_id: professionalDataId,
