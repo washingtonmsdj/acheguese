@@ -49,10 +49,6 @@ interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
   select: (columns?: string) => QueryBuilder<TRow>;
   insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
   update: (values: unknown) => QueryBuilder<TRow>;
-  upsert: (
-    values: unknown | unknown[],
-    options?: { onConflict?: string },
-  ) => QueryBuilder<TRow>;
   eq: (column: string, value: unknown) => QueryBuilder<TRow>;
   order: (column: string, options?: { ascending?: boolean }) => QueryBuilder<TRow>;
   maybeSingle: () => Promise<QuerySingleResult<TRow>>;
@@ -91,10 +87,6 @@ interface ProfessionalLeadEventInsert {
   event_type: string;
   actor_user_id: string | null;
   payload: Record<string, unknown>;
-}
-
-interface ProfessionalStatsContactsRow {
-  contacts_count: number | null;
 }
 
 const professionalLeadDb = supabase as unknown as ProfessionalLeadDbClient;
@@ -186,8 +178,6 @@ export class ProfessionalLeadService {
           .insert(insertPayload);
 
         if (error) throw error;
-
-        await this.incrementContactsCount(normalized.professional_id);
         return { success: true };
       }
 
@@ -198,8 +188,6 @@ export class ProfessionalLeadService {
         .single();
 
       if (error) throw error;
-
-      await this.incrementContactsCount(data.professional_id);
 
       return { success: true, data };
     } catch (error) {
@@ -736,22 +724,6 @@ export class ProfessionalLeadService {
     }
   }
 
-  private static async getProfessionalOwner(
-    professionalId: string,
-  ): Promise<ProfessionalOwnerRecord | null> {
-    const { data, error } = await professionalLeadDb
-      .from<ProfessionalOwnerRecord>("professional_data")
-      .select("id, profile_id, professional_name, service_category, profiles!inner(user_id)")
-      .eq("id", professionalId)
-      .maybeSingle();
-
-    if (error) {
-      logger.warn("[ProfessionalLeadService] owner lookup failed:", error);
-      return null;
-    }
-    return data ?? null;
-  }
-
   private static async getLeadWithOwner(
     leadId: string,
   ): Promise<ServiceResult<ProfessionalLeadWithOwner>> {
@@ -784,37 +756,4 @@ export class ProfessionalLeadService {
       };
     }
   }
-
-  private static async incrementContactsCount(professionalId: string): Promise<void> {
-    const owner = await this.getProfessionalOwner(professionalId);
-    if (!owner?.profile_id) return;
-
-    const { data: current, error: currentError } = await professionalLeadDb
-      .from<ProfessionalStatsContactsRow>("professional_stats")
-      .select("contacts_count")
-      .eq("profile_id", owner.profile_id)
-      .maybeSingle();
-
-    if (currentError) {
-      logger.warn("[ProfessionalLeadService] contacts counter read failed:", currentError);
-      return;
-    }
-
-    const contactsCount = Number(current?.contacts_count ?? 0) + 1;
-    const { error } = await professionalLeadDb
-      .from<ProfessionalStatsContactsRow>("professional_stats")
-      .upsert(
-        {
-          profile_id: owner.profile_id,
-          contacts_count: contactsCount,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "profile_id" },
-      );
-
-    if (error) {
-      logger.warn("[ProfessionalLeadService] contacts counter update failed:", error);
-    }
-  }
-
 }
