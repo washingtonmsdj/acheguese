@@ -97,8 +97,10 @@ describe("G39 Professional lead browser boundary", () => {
     expect(edge).toContain("invalid_or_expired_token");
   });
 
-  it("keeps the legacy creator unreachable from the current public dialog", () => {
-    expect(oldLeadService).toContain("static async createLead(");
+  it("keeps the retired browser creator from returning", () => {
+    expect(oldLeadService).not.toContain("static async createLead(");
+    expect(oldLeadService).not.toContain("normalizeLeadInput");
+    expect(oldLeadService).not.toContain("CreateProfessionalLeadInput");
     expect(dialog).not.toContain("ProfessionalLeadService");
   });
 });
