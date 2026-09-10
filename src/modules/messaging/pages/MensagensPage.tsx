@@ -14,6 +14,7 @@ import {
   UserRound,
   Users,
   X,
+  Utensils,
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 
@@ -261,11 +262,11 @@ function DesktopHeader({
   );
 }
 
-function MobileHeader({ account }: { account: InboxProfile }) {
+function MobileHeader({ account, territoryName, contextLabel, territoryHref }: { account: InboxProfile; territoryName: string; contextLabel: string; territoryHref: string }) {
   return (
     <header className="bg-territory-brand px-5 pb-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] text-white lg:hidden">
       <div className="flex items-center justify-between gap-3">
-        <Link to="/" aria-label="Achegue-se — início" className="font-heading text-[1.45rem] font-bold tracking-[-0.06em] text-white">
+        <Link to={territoryHref} aria-label="Achegue-se — início" className="font-heading text-[1.45rem] font-bold tracking-[-0.06em] text-white">
           achegue-se<span className="text-territory-sun">.</span>
         </Link>
         <div className="flex items-center gap-2">
@@ -277,6 +278,14 @@ function MobileHeader({ account }: { account: InboxProfile }) {
           </Link>
         </div>
       </div>
+      <Link to="/?trocar=territorio" className="mt-3 flex items-center gap-2 rounded-xl py-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun">
+        <MapPin className="h-5 w-5 shrink-0 text-territory-sun" strokeWidth={2.1} aria-hidden="true" />
+        <span className="min-w-0 flex-1 leading-tight">
+          <span className="block truncate text-sm font-semibold">{territoryName}</span>
+          <span className="block text-xs text-white/75">{contextLabel}</span>
+        </span>
+        <ChevronDown className="h-4 w-4 shrink-0" aria-hidden="true" />
+      </Link>
     </header>
   );
 }
@@ -456,7 +465,7 @@ function ConversationDetail({
       </div>
       <div className="flex min-h-0 flex-1 flex-col px-7 py-5">
         <div className="flex min-h-12 items-center gap-3 rounded-xl bg-[hsl(var(--territory-success)/0.1)] px-4">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-territory-surface text-territory-brand" aria-hidden="true">🍴</span>
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-territory-surface text-territory-brand" aria-hidden="true"><Utensils className="h-4 w-4" strokeWidth={2} /></span>
           <span className="min-w-0 flex-1 truncate text-sm font-semibold text-territory-ink">Sobre: almoço caseiro</span>
           <button type="button" className="inline-flex items-center gap-1 text-sm font-semibold text-territory-brand hover:underline">Ver anúncio <ChevronRight className="h-4 w-4" aria-hidden="true" /></button>
         </div>
@@ -619,7 +628,7 @@ export default function MensagensPage() {
   return (
     <div className="min-h-[100dvh] bg-territory-canvas text-territory-ink">
       <div className="lg:hidden">
-        <MobileHeader account={inboxProfiles.find((profile) => profile.key === "personal") ?? selectedProfile} />
+        <MobileHeader account={inboxProfiles.find((profile) => profile.key === "personal") ?? selectedProfile} territoryName={territoryName} contextLabel={contextLabel} territoryHref={territoryHref} />
         <main className="min-h-[calc(100dvh-4.75rem)] pb-[5.25rem]">{mobileList}</main>
         <MobileBottomNavigation territoryHref={territoryHref} />
       </div>
