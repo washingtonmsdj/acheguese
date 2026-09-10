@@ -8,7 +8,10 @@
 
 // Cliente principal
 export { supabase } from "./supabase";
-export { readSupabaseFunctionHttpErrorBody } from "./functionErrors";
+export {
+  readSupabaseFunctionHttpErrorBody,
+  resolveSupabaseFunctionErrorMessage,
+} from "./functionErrors";
 
 // Tipos publicos do supabase-js usados pelos services.
 export type {
