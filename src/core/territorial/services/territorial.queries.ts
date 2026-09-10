@@ -4,7 +4,10 @@
  * Funções de leitura para gestão territorial
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import {
+  resolveSupabaseFunctionErrorMessage,
+  supabase,
+} from '@/integrations/supabase';
 import type { TerritoryNode, TerritoryTreeData } from './types';
 
 interface TerritoryTreeBrokerResponse {
@@ -26,8 +29,10 @@ export async function fetchTerritoryTree(): Promise<TerritoryTreeData> {
     );
 
     if (error) {
-      logger.error('territorial.queries.fetchTerritoryTree', error);
-      throw new Error(`Erro ao buscar árvore territorial: ${error.message}`);
+      const message =
+        (await resolveSupabaseFunctionErrorMessage(error)) ??
+        'Falha ao consultar a árvore territorial';
+      throw new Error(`Erro ao buscar árvore territorial: ${message}`);
     }
 
     if (!data || !Array.isArray(data.locations) || !Array.isArray(data.groups)) {
