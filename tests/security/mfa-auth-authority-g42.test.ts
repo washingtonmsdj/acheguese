@@ -43,13 +43,25 @@ describe("MFA Auth authority G42", () => {
 
   it("centralizes role, verified-factor and current-AAL policy on the server", () => {
     expect(mfaPolicy).toContain('supabaseAdmin.rpc(\n    "get_user_roles"');
-    expect(mfaPolicy).toContain('.from("admin_mfa_enforcement")');
+    expect(mfaPolicy).toContain('roles.includes("super_admin")');
+    expect(mfaPolicy).toContain('roles.includes("admin")');
     expect(mfaPolicy).toContain("supabaseAdmin.auth.admin.mfa.listFactors({");
     expect(mfaPolicy).toContain('factor.status === "verified"');
     expect(mfaPolicy).toContain("getAuthenticatorAssuranceLevel(token)");
     expect(mfaPolicy).toContain('reason: "enrollment_required"');
     expect(mfaPolicy).toContain('reason: "verification_required"');
     expect(mfaPolicy).toContain('currentLevel !== "aal2"');
+  });
+
+  it("does not allow mutable compatibility tables to weaken admin MFA", () => {
+    expect(mfaPolicy).not.toContain('.from("admin_mfa_enforcement")');
+    expect(mfaPolicy).not.toContain("is_exempt");
+    expect(mfaPolicy).not.toContain("grace_period_expires_at");
+    expect(mfaPolicy).not.toContain('reason: "exempt"');
+    expect(mfaPolicy).not.toContain('reason: "grace_period"');
+    expect(mfaPolicy).toContain(
+      "Grace periods and exemptions are intentionally not authorization inputs",
+    );
   });
 
   it("uses the same MFA policy for UI state and every shared admin authorization", () => {
