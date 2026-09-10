@@ -11,10 +11,16 @@
 --   * setting is_selector_active=false additionally hides every descendant;
 --   * setting is_selector_active=true does NOT force descendants back on;
 --   * landing/navigation changes do not cascade.
+--
+-- Scale contract: G5 already proved the canonical descendant set for normal
+-- locations through the indexed geographic_path prefix. Do not regress this
+-- mutation to a recursive row-by-row traversal.
 
 BEGIN;
 
 DO $preflight$
+DECLARE
+  v_pattern_index_ready BOOLEAN;
 BEGIN
   IF to_regclass('public.locations') IS NULL THEN
     RAISE EXCEPTION 'preflight: public.locations missing';
@@ -24,10 +30,10 @@ BEGIN
     SELECT 1
     FROM pg_attribute
     WHERE attrelid = 'public.locations'::regclass
-      AND attname = 'parent_id'
+      AND attname = 'geographic_path'
       AND NOT attisdropped
   ) THEN
-    RAISE EXCEPTION 'preflight: public.locations.parent_id missing';
+    RAISE EXCEPTION 'preflight: public.locations.geographic_path missing';
   END IF;
 
   IF NOT EXISTS (
@@ -38,6 +44,19 @@ BEGIN
       AND NOT attisdropped
   ) THEN
     RAISE EXCEPTION 'preflight: public.locations.metadata missing';
+  END IF;
+
+  SELECT i.indisvalid AND i.indisready
+  INTO v_pattern_index_ready
+  FROM pg_index AS i
+  WHERE i.indexrelid = to_regclass('public.idx_locations_geographic_path_pattern');
+
+  IF COALESCE(v_pattern_index_ready, FALSE) IS NOT TRUE THEN
+    RAISE EXCEPTION 'preflight: indexed geographic_path prefix contract missing';
+  END IF;
+
+  IF to_regprocedure('public.rpc_get_location_descendants_ids(uuid)') IS NULL THEN
+    RAISE EXCEPTION 'preflight: canonical descendant resolver missing';
   END IF;
 
   IF NOT has_table_privilege('service_role', 'public.locations', 'SELECT')
@@ -61,8 +80,10 @@ SET search_path = ''
 AS $function$
 DECLARE
   v_now TIMESTAMPTZ := clock_timestamp();
+  v_path TEXT;
   v_affected_count INTEGER := 0;
   v_location JSONB;
+  v_cascade BOOLEAN := p_flag = 'is_selector_active' AND p_value IS FALSE;
 BEGIN
   IF auth.role() IS DISTINCT FROM 'service_role' THEN
     RAISE EXCEPTION 'service_role_required' USING ERRCODE = '42501';
@@ -89,32 +110,21 @@ BEGIN
   END IF;
 
   -- Administrative visibility changes are rare and correctness is more
-  -- important than write concurrency here. This lock prevents a concurrent
-  -- hierarchy writer from attaching a new descendant while the recursive scope
-  -- is being materialized and updated.
+  -- important than write concurrency here. Lock the hierarchy against
+  -- concurrent structural writes so a new descendant cannot be attached while
+  -- the indexed prefix scope is being mutated.
   LOCK TABLE public.locations IN SHARE ROW EXCLUSIVE MODE;
 
-  PERFORM 1
-  FROM public.locations
-  WHERE id = p_location_id;
+  SELECT location.geographic_path
+  INTO v_path
+  FROM public.locations AS location
+  WHERE location.id = p_location_id;
 
-  IF NOT FOUND THEN
+  IF v_path IS NULL THEN
     RAISE EXCEPTION 'location_not_found' USING ERRCODE = 'P0002';
   END IF;
 
-  WITH RECURSIVE mutation_scope(id) AS (
-    SELECT p_location_id
-
-    UNION
-
-    SELECT child.id
-    FROM public.locations AS child
-    INNER JOIN mutation_scope AS parent
-      ON child.parent_id = parent.id
-    WHERE p_flag = 'is_selector_active'
-      AND p_value IS FALSE
-  ),
-  updated AS (
+  WITH updated AS (
     UPDATE public.locations AS target
     SET
       metadata = COALESCE(target.metadata, '{}'::JSONB)
@@ -124,7 +134,12 @@ BEGIN
           'updated_at', v_now
         ),
       updated_at = v_now
-    WHERE target.id IN (SELECT id FROM mutation_scope)
+    WHERE
+      target.id = p_location_id
+      OR (
+        v_cascade
+        AND target.geographic_path LIKE v_path || '/%'
+      )
     RETURNING
       target.id,
       target.parent_id,
@@ -158,7 +173,7 @@ BEGIN
   RETURN jsonb_build_object(
     'location', v_location,
     'affectedCount', v_affected_count,
-    'cascaded', p_flag = 'is_selector_active' AND p_value IS FALSE
+    'cascaded', v_cascade
   );
 END;
 $function$;
@@ -192,8 +207,8 @@ BEGIN
     'public.territorial_update_location_visibility(uuid,text,boolean,uuid)'::regprocedure
   ) INTO v_definition;
 
-  IF position('WITH RECURSIVE mutation_scope' in v_definition) = 0 THEN
-    RAISE EXCEPTION 'postcondition: recursive mutation scope missing';
+  IF position('target.geographic_path LIKE v_path || ''/%''' in v_definition) = 0 THEN
+    RAISE EXCEPTION 'postcondition: indexed descendant prefix scope missing';
   END IF;
 
   IF position('LOCK TABLE public.locations IN SHARE ROW EXCLUSIVE MODE' in v_definition) = 0 THEN
