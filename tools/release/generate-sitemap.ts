@@ -28,6 +28,13 @@ function configureSitemapBaseUrl(): void {
   }
 }
 
+function allowTransientSourceFallback(): boolean {
+  return (
+    process.env.VERCEL === "1" ||
+    process.env.SITEMAP_ALLOW_TRANSIENT_SOURCE_FALLBACK === "1"
+  );
+}
+
 async function main() {
   configureSitemapBaseUrl();
 
@@ -35,7 +42,9 @@ async function main() {
     import("@/core/routing/seo/generateSitemap"),
     import("@/shared/utils/logger"),
   ]);
-  await generateAndSaveSitemap();
+  await generateAndSaveSitemap({
+    allowTransientSourceFallback: allowTransientSourceFallback(),
+  });
 
   logger.info("scripts.generate-sitemap.success");
 }

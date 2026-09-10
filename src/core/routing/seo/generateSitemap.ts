@@ -41,6 +41,21 @@ export interface SitemapArtifact {
   urlCount: number;
 }
 
+export interface GenerateAndSaveSitemapOptions {
+  /**
+   * Release-only resilience. A transient upstream/network failure may publish
+   * the deterministic static sitemap instead of blocking the frontend build.
+   * Schema/auth/application errors remain fatal.
+   */
+  allowTransientSourceFallback?: boolean;
+}
+
+interface SitemapInventory {
+  locations: SitemapLocation[];
+  groups: TerritorialGroupWithMembers[];
+  source: 'remote' | 'static-fallback';
+}
+
 interface TerritorySitemapModule {
   surface: LaunchSurfaceKey;
   buildUrl: (territoryPath: string) => string;
@@ -101,6 +116,66 @@ function asTerritoryVisibilityMetadata(
 ): TerritoryVisibilityMetadata | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   return value as TerritoryVisibilityMetadata;
+}
+
+function errorText(error: unknown): string {
+  if (error instanceof Error) return `${error.name}: ${error.message}`;
+  if (typeof error === 'string') return error;
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as { message?: unknown }).message ?? '');
+  }
+  return String(error ?? '');
+}
+
+export function isTransientSitemapSourceError(error: unknown): boolean {
+  const message = errorText(error).toLowerCase();
+  return (
+    /\b(?:408|429|502|503|504|520|521|522|523|524)\b/.test(message) ||
+    /\b(?:econnreset|econnrefused|etimedout|enotfound|eai_again)\b/.test(message) ||
+    message.includes('connection timed out') ||
+    message.includes('connection timeout') ||
+    message.includes('fetch failed') ||
+    message.includes('network error') ||
+    message.includes('network request failed')
+  );
+}
+
+async function loadSitemapInventory(
+  options: GenerateAndSaveSitemapOptions,
+): Promise<SitemapInventory> {
+  try {
+    const [locations, groups] = await Promise.all([
+      LocationsReadService.getAllCompleteForPublicRouting(),
+      territorialGroupService.listAllGroups(),
+    ]);
+
+    return {
+      locations: locations.filter((location) =>
+        isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(location.metadata)),
+      ),
+      groups: groups.filter((group) =>
+        isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(group.metadata)),
+      ),
+      source: 'remote',
+    };
+  } catch (error: unknown) {
+    if (
+      !options.allowTransientSourceFallback ||
+      !isTransientSitemapSourceError(error)
+    ) {
+      throw error;
+    }
+
+    logger.warn('generateAndSaveSitemap.transient-source-fallback', {
+      reason: errorText(error).slice(0, 240),
+    });
+
+    return {
+      locations: [],
+      groups: [],
+      source: 'static-fallback',
+    };
+  }
 }
 
 function generateTerritoryUrls(
@@ -306,21 +381,14 @@ async function removeStaleSitemapChunks(outputDirectory: string): Promise<void> 
   );
 }
 
-export async function generateAndSaveSitemap() {
-  const locations = (await LocationsReadService.getAllCompleteForPublicRouting())
-    .filter((location) =>
-      isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(location.metadata)),
-    );
-
-  const groups = (await territorialGroupService.listAllGroups())
-    .filter((group) =>
-      isTerritoryVisibleInLanding(asTerritoryVisibilityMetadata(group.metadata)),
-    );
-
+export async function generateAndSaveSitemap(
+  options: GenerateAndSaveSitemapOptions = {},
+) {
+  const inventory = await loadSitemapInventory(options);
   const outputDirectory = resolve(process.cwd(), 'public');
   const artifacts = generateSitemapArtifacts(
-    locations,
-    groups,
+    inventory.locations,
+    inventory.groups,
     resolveSitemapBaseUrl(),
   );
 
@@ -345,7 +413,8 @@ export async function generateAndSaveSitemap() {
     outputDirectory,
     files: artifacts.length,
     urls: artifacts.reduce((total, artifact) => total + artifact.urlCount, 0),
-    locations: locations.length,
-    groups: groups.length,
+    locations: inventory.locations.length,
+    groups: inventory.groups.length,
+    source: inventory.source,
   });
 }

@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import {
   generateSitemap,
   generateSitemapArtifacts,
+  isTransientSitemapSourceError,
   SITEMAP_URL_CHUNK_SIZE,
 } from "../generateSitemap";
 
@@ -125,9 +126,28 @@ describe("generateSitemap", () => {
     expect(SITEMAP_URL_CHUNK_SIZE).toBeGreaterThan(0);
   });
 
+  it("classifica somente falhas transitorias de rede/upstream como fallback permitido", () => {
+    expect(
+      isTransientSitemapSourceError(
+        new Error("supabase.co | 522: Connection timed out"),
+      ),
+    ).toBe(true);
+    expect(isTransientSitemapSourceError(new Error("fetch failed"))).toBe(true);
+    expect(isTransientSitemapSourceError({ message: "HTTP 503 upstream" })).toBe(true);
+
+    expect(
+      isTransientSitemapSourceError(new Error("column geographic_path does not exist")),
+    ).toBe(false);
+    expect(isTransientSitemapSourceError(new Error("Invalid API key"))).toBe(false);
+  });
+
   it("mantem leitura de build do sitemap na projecao territorial minima", () => {
     const generator = readFileSync(
       "src/core/routing/seo/generateSitemap.ts",
+      "utf8",
+    );
+    const releaseScript = readFileSync(
+      "tools/release/generate-sitemap.ts",
       "utf8",
     );
     const locationReader = readFileSync(
@@ -137,6 +157,10 @@ describe("generateSitemap", () => {
 
     expect(generator).toContain("getAllCompleteForPublicRouting()");
     expect(generator).not.toContain("LocationsReadService.getAllComplete()");
+    expect(generator).toContain("allowTransientSourceFallback");
+    expect(generator).toContain("static-fallback");
+    expect(releaseScript).toContain('process.env.VERCEL === "1"');
+    expect(releaseScript).toContain("SITEMAP_ALLOW_TRANSIENT_SOURCE_FALLBACK");
     expect(locationReader).toContain(
       '"id,type,status,geographic_path,metadata"',
     );
