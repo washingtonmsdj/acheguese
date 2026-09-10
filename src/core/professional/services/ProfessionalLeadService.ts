@@ -3,13 +3,8 @@ import { ProfessionalNotificationBrokerService } from "@/core/notifications/serv
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 import { SessionService } from "@/core/session/services/SessionService";
 import { logger } from "@/shared/utils/logger";
-import {
-  sanitizeEmail,
-  sanitizePhone,
-  sanitizeString,
-} from "@/shared/utils/sanitization";
+import { sanitizeString } from "@/shared/utils/sanitization";
 import type {
-  CreateProfessionalLeadInput,
   CreateProfessionalLeadQuoteInput,
   ProfessionalLeadDetails,
   ProfessionalLeadMessageRecord,
@@ -106,50 +101,6 @@ function firstProfileUserId(profiles: ProfessionalOwnerRecord["profiles"]): stri
   return profiles.user_id ?? null;
 }
 
-function normalizeLeadInput(input: CreateProfessionalLeadInput) {
-  const requesterName = sanitizeString(input.requesterName).slice(0, 150);
-  const serviceNeeded = sanitizeString(input.serviceNeeded).slice(0, 160);
-  const description = sanitizeString(input.description).slice(0, 1000);
-  const requesterPhone = sanitizePhone(input.requesterPhone);
-  const requesterEmail = sanitizeEmail(input.requesterEmail);
-
-  if (!input.professionalId) {
-    throw new Error("Profissional invalido");
-  }
-
-  if (!requesterName || requesterName.length < 2) {
-    throw new Error("Informe seu nome");
-  }
-
-  if (!serviceNeeded || serviceNeeded.length < 3) {
-    throw new Error("Informe o servico desejado");
-  }
-
-  if (!description || description.length < 10) {
-    throw new Error("Descreva melhor o que precisa");
-  }
-
-  if (!requesterPhone && !requesterEmail) {
-    throw new Error("Informe telefone ou email para retorno");
-  }
-
-  return {
-    professional_id: input.professionalId,
-    requester_name: requesterName,
-    requester_phone: requesterPhone ?? null,
-    requester_email: requesterEmail ?? null,
-    service_needed: serviceNeeded,
-    description,
-    preferred_date: input.preferredDate || null,
-    preferred_time_window: sanitizeString(input.preferredTimeWindow).slice(0, 80) || null,
-    neighborhood: sanitizeString(input.neighborhood).slice(0, 120) || null,
-    location_id: input.locationId || null,
-    source_channel: sanitizeString(input.sourceChannel || "public_profile").slice(0, 50),
-    priority: input.priority || "normal",
-    metadata: input.metadata || {},
-  };
-}
-
 function getJoinedProfessional(
   lead: ProfessionalLeadWithOwner,
 ): ProfessionalOwnerRecord | null {
@@ -157,48 +108,6 @@ function getJoinedProfessional(
 }
 
 export class ProfessionalLeadService {
-  static async createLead(
-    input: CreateProfessionalLeadInput,
-  ): Promise<ServiceResult<ProfessionalLeadRecord>> {
-    try {
-      const normalized = normalizeLeadInput(input);
-      const user = await SessionService.getCurrentUser();
-      const activeProfile = user
-        ? await SessionService.getActiveProfile(user.id)
-        : null;
-      const insertPayload = {
-        ...normalized,
-        requester_user_id: user?.id ?? null,
-        requester_profile_id: activeProfile?.id ?? null,
-      };
-
-      if (!user) {
-        const { error } = await professionalLeadDb
-          .from<ProfessionalLeadRecord>("professional_leads")
-          .insert(insertPayload);
-
-        if (error) throw error;
-        return { success: true };
-      }
-
-      const { data, error } = await professionalLeadDb
-        .from<ProfessionalLeadRecord>("professional_leads")
-        .insert(insertPayload)
-        .select("*")
-        .single();
-
-      if (error) throw error;
-
-      return { success: true, data };
-    } catch (error) {
-      logger.error("[ProfessionalLeadService] createLead failed:", error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Erro ao solicitar orcamento",
-      };
-    }
-  }
-
   static async listLeadsForProfessional(
     professionalId: string,
     status?: ProfessionalLeadStatus,
