@@ -100,6 +100,9 @@ describe("Vercel ignored build step", () => {
     );
     expect(source).toContain("VERCEL_GIT_PREVIOUS_SHA");
     expect(source).toContain('runGit(["cat-file", "-e"');
+    expect(source).toContain('runGit(["remote", "get-url", name])');
+    expect(source).toContain('gitRemoteAvailable("origin")');
+    expect(source).toContain("origin remote is unavailable in this checkout");
     expect(source).not.toContain("HEAD^");
   });
 });
