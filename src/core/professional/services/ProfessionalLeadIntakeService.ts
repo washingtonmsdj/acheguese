@@ -28,17 +28,54 @@ export interface ProfessionalLeadIntakeResult {
   error?: string;
 }
 
+type BrokerSuccessStatus = "created" | "already_submitted";
+type BrokerFailureStatus =
+  | "turnstile_failed"
+  | "invalid_payload"
+  | "professional_unavailable"
+  | "verification_unavailable"
+  | "configuration_unavailable"
+  | "database_failed";
+
 type BrokerPayload =
   | {
-      status: "created" | "already_submitted";
+      status: BrokerSuccessStatus;
       lead?: { id?: unknown };
     }
-  | { status: "turnstile_failed" }
+  | { status: BrokerFailureStatus }
   | { error?: unknown };
 
 function leadIdFromPayload(payload: BrokerPayload | null): string | null {
   if (!payload || !("lead" in payload) || !payload.lead) return null;
   return typeof payload.lead.id === "string" ? payload.lead.id : null;
+}
+
+function brokerFailureMessage(status: BrokerFailureStatus): string {
+  switch (status) {
+    case "turnstile_failed":
+      return "A verificação anti-spam expirou ou foi rejeitada. Confirme novamente.";
+    case "invalid_payload":
+      return "Revise os dados do pedido antes de enviar novamente.";
+    case "professional_unavailable":
+      return "Este profissional não está recebendo novos pedidos no momento.";
+    case "verification_unavailable":
+      return "A verificação anti-spam está temporariamente indisponível. Tente novamente em instantes.";
+    case "configuration_unavailable":
+      return "O envio de pedidos está temporariamente indisponível. Tente novamente mais tarde.";
+    case "database_failed":
+      return "Não foi possível registrar o pedido agora. Tente novamente em instantes.";
+  }
+}
+
+function isBrokerFailureStatus(value: unknown): value is BrokerFailureStatus {
+  return (
+    value === "turnstile_failed" ||
+    value === "invalid_payload" ||
+    value === "professional_unavailable" ||
+    value === "verification_unavailable" ||
+    value === "configuration_unavailable" ||
+    value === "database_failed"
+  );
 }
 
 export class ProfessionalLeadIntakeService {
@@ -73,14 +110,18 @@ export class ProfessionalLeadIntakeService {
       };
     }
 
-    if (data?.status === "turnstile_failed") {
+    if (data && "status" in data && isBrokerFailureStatus(data.status)) {
       return {
         success: false,
-        error: "A verificação anti-spam expirou ou foi rejeitada. Confirme novamente.",
+        error: brokerFailureMessage(data.status),
       };
     }
 
-    if (data?.status !== "created" && data?.status !== "already_submitted") {
+    if (
+      !data ||
+      !("status" in data) ||
+      (data.status !== "created" && data.status !== "already_submitted")
+    ) {
       return {
         success: false,
         error: "Não foi possível registrar o pedido.",
