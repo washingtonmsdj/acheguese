@@ -38,6 +38,19 @@ describe("G43 territorial group admin authority", () => {
     expect(broker).toContain("territorial_admin_set_group_status");
   });
 
+  it("rejects uncorrelated 2xx acknowledgements from both G43 commands", () => {
+    expect(broker).toContain("function requireSaveGroupAck(");
+    expect(broker).toContain("function requireStatusAck(");
+    expect(broker).toContain("group.anchor_city_id !== expected.anchorCityId");
+    expect(broker).toContain("value.memberCount !== expected.memberLocationIds.length");
+    expect(broker).toContain("!sameMemberSet(value.memberIds, expected.memberLocationIds)");
+    expect(broker).toContain("value.created !== expectedCreated");
+    expect(broker).toContain("expectedCreated && group.status !== 'inactive'");
+    expect(broker).toContain("value.group.id !== groupId || value.group.status !== status");
+    expect(broker).toContain("Territorial group save acknowledgement mismatch");
+    expect(broker).toContain("Territorial group status acknowledgement mismatch");
+  });
+
   it("keeps group + complete membership replacement inside one SQL transaction", () => {
     expect(phaseOne).toContain(
       "CREATE OR REPLACE FUNCTION public.territorial_admin_save_group(",
