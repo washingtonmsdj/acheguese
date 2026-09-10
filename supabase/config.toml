@@ -261,6 +261,9 @@ verify_jwt = true
 [functions.territorial-get-tree]
 verify_jwt = true
 
+[functions.territorial-group-admin-rpc]
+verify_jwt = true
+
 [functions.territorial-update-group-visibility]
 verify_jwt = true
 
