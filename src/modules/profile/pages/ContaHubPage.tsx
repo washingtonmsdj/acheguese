@@ -288,16 +288,16 @@ function ConceptManagedProfileCard({
           <span className="mt-1 inline-flex max-w-full truncate rounded-full bg-[hsl(var(--territory-info)/0.14)] px-2.5 py-1 text-xs font-semibold text-territory-brand">{profile.categoryLabel}</span>
           <p className="mt-1 text-sm text-territory-muted">{profile.contextLabel}</p>
           {profile.status ? <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-territory-success"><span className="h-2 w-2 rounded-full bg-territory-success" aria-hidden="true" />Publicado</p> : null}
-          {profile.pending ? <p className="mt-1 flex items-start gap-1.5 text-sm font-medium text-territory-warm"><CircleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />{profile.pending}</p> : null}
+          {profile.pending ? <p className="mt-1 flex items-start gap-1.5 text-sm font-medium text-territory-warm"><CircleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><span className="sm:hidden">Defina a região de atendimento</span><span className="hidden sm:inline">{profile.pending}</span></p> : null}
         </div>
       </div>
       <button type="button" onClick={onToggleFavorite} aria-pressed={favorite} aria-label={favorite ? `Remover ${profile.name} dos favoritos` : `Favoritar ${profile.name}`} className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full text-territory-sun hover:bg-[hsl(var(--territory-sun)/0.14)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:static md:order-1 md:shrink-0">
         <Star className="h-6 w-6" fill={favorite ? "currentColor" : "none"} strokeWidth={favorite ? 2 : 1.6} aria-hidden="true" />
       </button>
-      <div className={cn("relative mt-4 grid gap-2 md:order-2 md:mt-0 md:flex md:shrink-0", isPersonal ? "grid-cols-2 md:w-[20rem]" : "grid-cols-1 md:max-w-[25rem]")}>
-        <button type="button" onClick={onPrimary} className="min-h-10 rounded-xl border border-territory-brand px-4 text-sm font-semibold text-territory-ink transition-colors hover:bg-[hsl(var(--territory-brand)/0.08)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:min-h-11 md:min-w-[8.8rem]">{profile.primaryAction}</button>
-        {profile.secondaryAction ? <button type="button" onClick={onSecondary} className={cn("min-h-10 rounded-xl border border-territory-border bg-territory-raised px-4 text-sm font-medium text-territory-ink hover:border-territory-brand/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:min-h-11", profile.category !== "personal" && "hidden md:block")}>{profile.secondaryAction}</button> : null}
-        {profile.messageAction ? <button type="button" onClick={onMessages} className="relative min-h-10 rounded-xl border border-territory-border bg-territory-raised px-4 text-sm font-medium text-territory-ink hover:border-territory-brand/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:min-h-11">{profile.messageAction}{profile.conversationCount ? <span className="ml-2 inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-territory-sun px-1.5 text-xs font-bold text-territory-ink">{profile.conversationCount}</span> : null}</button> : null}
+      <div className={cn("relative mt-1 grid gap-2 md:order-2 md:mt-0 md:flex md:shrink-0", isPersonal ? "grid-cols-2 md:w-[20rem]" : "grid-cols-1 md:max-w-[25rem]")}>
+        <button type="button" onClick={onPrimary} className="min-h-9 rounded-xl border border-territory-brand px-4 text-sm font-semibold text-territory-ink transition-colors hover:bg-[hsl(var(--territory-brand)/0.08)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:min-h-11 md:min-w-[8.8rem]">{profile.primaryAction}</button>
+        {profile.secondaryAction ? <button type="button" onClick={onSecondary} className={cn("min-h-9 rounded-xl border border-territory-border bg-territory-raised px-4 text-sm font-medium text-territory-ink hover:border-territory-brand/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:min-h-11", profile.category !== "personal" && "hidden md:block")}>{profile.secondaryAction}</button> : null}
+        {profile.messageAction ? <button type="button" onClick={onMessages} className="relative min-h-9 rounded-xl border border-territory-border bg-territory-raised px-4 text-sm font-medium text-territory-ink hover:border-territory-brand/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:min-h-11">{profile.messageAction}{profile.conversationCount ? <span className="ml-2 inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-territory-sun px-1.5 text-xs font-bold text-territory-ink">{profile.conversationCount}</span> : null}</button> : null}
       </div>
     </article>
   );
@@ -339,35 +339,35 @@ function AccountConceptPreviewPage() {
     <div className="min-h-[100dvh] bg-territory-canvas text-territory-ink">
       <ConceptAccountSidebar />
       <ConceptAccountHeader />
-      <main className="mx-auto w-full max-w-[68rem] px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pt-6 lg:px-6 lg:pb-8 lg:pt-6 xl:px-8">
+      <main className="mx-auto w-full max-w-[68rem] px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:pt-6 lg:px-6 lg:pb-8 lg:pt-6 xl:px-8">
         <div className="lg:hidden">
           <button type="button" onClick={() => navigate(-1)} className="flex min-h-10 items-center gap-2 text-sm font-medium text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             Minha conta
           </button>
         </div>
-        <div className="mt-4 flex flex-col gap-4 sm:mt-5 lg:mt-0 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
+        <div className="mt-3 flex flex-col gap-4 sm:mt-5 lg:mt-0 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
           <div>
             <h1 className="font-heading text-[1.75rem] font-bold tracking-[-0.045em] text-territory-ink sm:text-3xl">Meus perfis</h1>
             <p className="mt-1 hidden text-base text-territory-muted lg:block">Gerencie sua presença e os espaços que você administra.</p>
           </div>
-          <button type="button" onClick={() => navigate("/conta/editar")} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-territory-sun px-5 text-sm font-bold text-territory-ink shadow-territory-subtle hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand lg:w-auto">
+          <button type="button" onClick={() => navigate("/conta/editar")} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-territory-sun px-5 text-sm font-bold text-territory-ink shadow-territory-subtle hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand lg:min-h-11 lg:w-auto">
             <Plus className="h-5 w-5" aria-hidden="true" />
             Adicionar perfil
           </button>
         </div>
-        <div className="mt-4 flex flex-col gap-3 lg:mt-6">
+        <div className="mt-3 flex flex-col gap-2 lg:mt-6 lg:gap-3">
           <label className="relative block">
             <span className="sr-only">Buscar perfil pelo nome</span>
             <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-territory-muted" aria-hidden="true" />
-            <input value={search} onChange={(event) => setSearch(event.target.value)} type="search" placeholder="Buscar perfil pelo nome" className="h-11 w-full rounded-xl border border-territory-border bg-territory-surface pl-11 pr-4 text-sm text-territory-ink outline-none placeholder:text-territory-muted focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/20" />
+            <input value={search} onChange={(event) => setSearch(event.target.value)} type="search" placeholder="Buscar perfil pelo nome" className="h-10 w-full rounded-xl border border-territory-border bg-territory-surface pl-11 pr-4 text-sm text-territory-ink outline-none placeholder:text-territory-muted focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/20 lg:h-11" />
           </label>
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-nowrap items-center gap-1.5 overflow-x-auto scrollbar-hide" role="tablist" aria-label="Filtrar perfis">
               {(["all", "personal", "business", "professional"] as ConceptProfileFilter[]).map((option) => {
                 const label = option === "all" ? "Todos" : option === "personal" ? "Pessoal" : option === "business" ? "Negócios" : "Profissionais";
                 const selected = filter === option;
-                return <button key={option} type="button" role="tab" aria-selected={selected} onClick={() => setFilter(option)} className={cn("min-h-10 shrink-0 whitespace-nowrap rounded-xl px-3 text-[0.8125rem] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand lg:px-4 lg:text-sm", selected ? "bg-territory-brand font-semibold text-white" : "bg-territory-raised text-territory-ink hover:bg-territory-border")}>{label}</button>;
+                return <button key={option} type="button" role="tab" aria-selected={selected} onClick={() => setFilter(option)} className={cn("min-h-9 shrink-0 whitespace-nowrap rounded-xl px-3 text-[0.8125rem] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand lg:min-h-10 lg:px-4 lg:text-sm", selected ? "bg-territory-brand font-semibold text-white" : "bg-territory-raised text-territory-ink hover:bg-territory-border")}>{label}</button>;
               })}
             </div>
             <button type="button" onClick={openMessages} className="flex w-fit items-center gap-2 text-left text-sm text-territory-muted hover:text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand lg:shrink-0">
@@ -376,7 +376,7 @@ function AccountConceptPreviewPage() {
             </button>
           </div>
         </div>
-        <section className="mt-4 space-y-3 lg:mt-5" aria-live="polite">
+        <section className="mt-1 space-y-2 lg:mt-5 lg:space-y-3" aria-live="polite">
           {filteredProfiles.map((profile) => (
             <ConceptManagedProfileCard
               key={profile.id}
