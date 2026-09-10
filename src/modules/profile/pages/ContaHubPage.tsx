@@ -362,18 +362,19 @@ function AccountConceptPreviewPage() {
             <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-territory-muted" aria-hidden="true" />
             <input value={search} onChange={(event) => setSearch(event.target.value)} type="search" placeholder="Buscar perfil pelo nome" className="h-11 w-full rounded-xl border border-territory-border bg-territory-surface pl-11 pr-4 text-sm text-territory-ink outline-none placeholder:text-territory-muted focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/20" />
           </label>
-          <div className="flex flex-nowrap items-center gap-1.5 overflow-x-auto scrollbar-hide" role="tablist" aria-label="Filtrar perfis">
-            {(["all", "personal", "business", "professional"] as ConceptProfileFilter[]).map((option) => {
-              const label = option === "all" ? "Todos" : option === "personal" ? "Pessoal" : option === "business" ? "Negócios" : "Profissionais";
-              const selected = filter === option;
-              return <button key={option} type="button" role="tab" aria-selected={selected} onClick={() => setFilter(option)} className={cn("min-h-10 shrink-0 whitespace-nowrap rounded-xl px-3 text-[0.8125rem] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand lg:px-4 lg:text-sm", selected ? "bg-territory-brand font-semibold text-white" : "bg-territory-raised text-territory-ink hover:bg-territory-border")}>{label}</button>;
-            })}
-            <button type="button" onClick={() => setFilter("all")} className="ml-auto hidden min-h-10 items-center gap-2 rounded-xl border border-territory-border px-3 text-sm font-semibold text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand lg:inline-flex"><SlidersHorizontal className="h-4 w-4" aria-hidden="true" />Filtros</button>
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-nowrap items-center gap-1.5 overflow-x-auto scrollbar-hide" role="tablist" aria-label="Filtrar perfis">
+              {(["all", "personal", "business", "professional"] as ConceptProfileFilter[]).map((option) => {
+                const label = option === "all" ? "Todos" : option === "personal" ? "Pessoal" : option === "business" ? "Negócios" : "Profissionais";
+                const selected = filter === option;
+                return <button key={option} type="button" role="tab" aria-selected={selected} onClick={() => setFilter(option)} className={cn("min-h-10 shrink-0 whitespace-nowrap rounded-xl px-3 text-[0.8125rem] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand lg:px-4 lg:text-sm", selected ? "bg-territory-brand font-semibold text-white" : "bg-territory-raised text-territory-ink hover:bg-territory-border")}>{label}</button>;
+              })}
+            </div>
+            <button type="button" onClick={openMessages} className="flex w-fit items-center gap-2 text-left text-sm text-territory-muted hover:text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand lg:shrink-0">
+              <Star className="h-5 w-5 shrink-0 text-territory-sun" fill="currentColor" aria-hidden="true" />
+              Favoritos aparecem em Conversas.
+            </button>
           </div>
-          <button type="button" onClick={openMessages} className="flex w-fit items-center gap-2 text-left text-sm text-territory-muted hover:text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
-            <Star className="h-5 w-5 shrink-0 text-territory-sun" fill="currentColor" aria-hidden="true" />
-            Favoritos aparecem em Conversas.
-          </button>
         </div>
         <section className="mt-4 space-y-3 lg:mt-5" aria-live="polite">
           {filteredProfiles.map((profile) => (
