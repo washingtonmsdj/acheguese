@@ -1,7 +1,8 @@
 /**
  * AdminRoles - Gestão de roles e permissões
- * 
- * SSOT: Usa adminRolesService
+ *
+ * SSOT: Usa adminRolesService. O ator administrativo é sempre derivado pelo
+ * backend a partir do JWT; a UI nunca fornece granted_by/revoked_by.
  */
 
 import React, { useState } from "react";
@@ -50,13 +51,10 @@ import {
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
-import { useSessionContext } from "@/core/session";
 
 type RoleMutationInput = {
   userId: string;
   role: string;
-  revokedBy?: string;
-  renewedBy?: string;
   reason?: string;
   newExpiresAt?: string;
 };
@@ -74,7 +72,6 @@ type RoleDataItem = {
 
 export default function AdminRoles() {
   const queryClient = useQueryClient();
-  const { user, activeProfile } = useSessionContext();
   const [activeTab, setActiveTab] = useState("roles");
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("");
@@ -84,13 +81,11 @@ export default function AdminRoles() {
   const [roleToRenew, setRoleToRenew] = useState<RoleDataItem | null>(null);
   const [renewDays, setRenewDays] = useState("30");
 
-  // Buscar estatísticas
   const { data: stats } = useQuery({
     queryKey: ["admin-roles-stats"],
     queryFn: () => adminRolesService.getStats(),
   });
 
-  // Buscar roles
   const { data: rolesData, isLoading } = useQuery({
     queryKey: ["admin-roles", page, search, roleFilter],
     queryFn: () =>
@@ -102,17 +97,15 @@ export default function AdminRoles() {
       }),
   });
 
-  // Buscar roles expirando
   const { data: expiringRoles } = useQuery({
     queryKey: ["admin-roles-expiring"],
     queryFn: () => adminRolesService.getExpiringRoles(7),
     enabled: activeTab === "expiring",
   });
 
-  // Mutations
   const revokeMutation = useMutation({
-    mutationFn: ({ userId, role, revokedBy, reason }: RoleMutationInput) =>
-      adminRolesService.revokeRole({ userId, role, revokedBy, reason }),
+    mutationFn: ({ userId, role, reason }: RoleMutationInput) =>
+      adminRolesService.revokeRole({ userId, role, reason }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-roles"] });
       queryClient.invalidateQueries({ queryKey: ["admin-roles-stats"] });
@@ -126,8 +119,8 @@ export default function AdminRoles() {
   });
 
   const renewMutation = useMutation({
-    mutationFn: ({ userId, role, newExpiresAt, renewedBy }: RoleMutationInput) =>
-      adminRolesService.renewRole({ userId, role, newExpiresAt, renewedBy }),
+    mutationFn: ({ userId, role, newExpiresAt }: RoleMutationInput) =>
+      adminRolesService.renewRole({ userId, role, newExpiresAt: newExpiresAt ?? "" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-roles"] });
       queryClient.invalidateQueries({ queryKey: ["admin-roles-expiring"] });
@@ -140,15 +133,12 @@ export default function AdminRoles() {
     },
   });
 
-  const actingUserId = user?.id ?? activeProfile?.id ?? "system";
-
   const handleConfirmRevoke = () => {
     if (!roleToRevoke) return;
 
     revokeMutation.mutate({
       userId: roleToRevoke.user_id,
       role: roleToRevoke.role,
-      revokedBy: actingUserId,
       reason: revokeReason.trim() || undefined,
     });
   };
@@ -168,7 +158,6 @@ export default function AdminRoles() {
       userId: roleToRenew.user_id,
       role: roleToRenew.role,
       newExpiresAt: newDate.toISOString(),
-      renewedBy: actingUserId,
     });
   };
 
@@ -177,7 +166,7 @@ export default function AdminRoles() {
       case "admin":
         return <Badge variant="destructive">Admin</Badge>;
       case "moderator":
-      return <Badge variant="outline">Moderador</Badge>;
+        return <Badge variant="outline">Moderador</Badge>;
       case "user":
         return <Badge variant="secondary">Usuário</Badge>;
       default:
@@ -187,7 +176,6 @@ export default function AdminRoles() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold font-display flex items-center gap-2">
           <Shield className="h-8 w-8" />
@@ -198,7 +186,6 @@ export default function AdminRoles() {
         </p>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
@@ -263,7 +250,6 @@ export default function AdminRoles() {
         </Card>
       </div>
 
-      {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="roles" className="flex items-center gap-2">
@@ -274,7 +260,7 @@ export default function AdminRoles() {
             <Clock className="h-4 w-4" />
             Expirando
             {stats?.expiredRoles ? (
-                    <Badge variant="outline" className="ml-1">
+              <Badge variant="outline" className="ml-1">
                 {stats.expiredRoles}
               </Badge>
             ) : null}
@@ -285,9 +271,7 @@ export default function AdminRoles() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Todos os Roles Tab */}
         <TabsContent value="roles" className="space-y-4">
-          {/* Filtros */}
           <Card>
             <CardContent className="pt-6">
               <div className="flex flex-col md:flex-row gap-4">
@@ -331,7 +315,6 @@ export default function AdminRoles() {
             </CardContent>
           </Card>
 
-          {/* Tabela de Roles */}
           <Card>
             <CardContent className="pt-6">
               {isLoading ? (
@@ -374,7 +357,7 @@ export default function AdminRoles() {
                           </TableCell>
                           <TableCell>
                             {roleData.is_active ? (
-                        <Badge variant="secondary">Ativo</Badge>
+                              <Badge variant="secondary">Ativo</Badge>
                             ) : (
                               <Badge variant="secondary">Inativo</Badge>
                             )}
@@ -397,7 +380,6 @@ export default function AdminRoles() {
                     </TableBody>
                   </Table>
 
-                  {/* Paginação */}
                   {rolesData && rolesData.totalPages > 1 && (
                     <div className="flex items-center justify-between mt-4">
                       <p className="text-sm text-muted-foreground">
@@ -429,7 +411,6 @@ export default function AdminRoles() {
           </Card>
         </TabsContent>
 
-        {/* Expirando Tab */}
         <TabsContent value="expiring">
           <Card>
             <CardContent className="pt-6">
@@ -476,7 +457,6 @@ export default function AdminRoles() {
           </Card>
         </TabsContent>
 
-        {/* Analytics Tab */}
         <TabsContent value="analytics">
           <div className="grid gap-4 md:grid-cols-3">
             <Card>
@@ -522,6 +502,7 @@ export default function AdminRoles() {
           </div>
         </TabsContent>
       </Tabs>
+
       <Dialog
         open={!!roleToRevoke}
         onOpenChange={(open) => {
