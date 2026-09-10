@@ -1,12 +1,16 @@
 /**
  * Push Service
- * 
- * Handles push notification subscriptions and sending.
- * Uses Firebase Cloud Messaging (FCM) for delivery.
+ *
+ * Handles browser push subscription lifecycle and self-test delivery.
+ * Delivery authority stays in Supabase Edge Functions.
  */
 
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import {
+  resolveSupabaseFunctionErrorMessage,
+  supabase,
+} from '@/integrations/supabase';
+
 export interface PushSubscription {
   endpoint: string;
   keys: {
@@ -44,27 +48,38 @@ export interface StoredPushSubscription {
   last_used_at: string | null;
 }
 
+type OperationResult = { success: boolean; error?: string };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+async function edgeErrorMessage(error: unknown, fallback: string): Promise<string> {
+  return (await resolveSupabaseFunctionErrorMessage(error)) ?? fallback;
+}
+
+function isSuccessfulCommand(data: unknown): boolean {
+  return isRecord(data) && data.success === true;
+}
+
 export class PushService {
-  /**
-   * Check if push notifications are supported
-   */
+  /** Check if push notifications are supported. */
   static isSupported(): boolean {
-    // Push/SW is production-only to avoid development runtime interference.
     if (import.meta.env.DEV) return false;
     return 'serviceWorker' in navigator && 'PushManager' in window;
   }
 
-  /**
-   * Check if user has granted permission
-   */
+  /** Check if user has granted permission. */
   static async hasPermission(): Promise<boolean> {
     if (!this.isSupported()) return false;
     return Notification.permission === 'granted';
   }
 
-  /**
-   * Request permission for push notifications
-   */
+  /** Request permission for push notifications. */
   static async requestPermission(): Promise<boolean> {
     if (!this.isSupported()) {
       throw new Error('Push notifications are not supported in this browser');
@@ -74,37 +89,42 @@ export class PushService {
     return permission === 'granted';
   }
 
-  /**
-   * Subscribe to push notifications
-   */
-  static async subscribe(userId: string): Promise<{ success: boolean; error?: string }> {
+  /** Subscribe the current user/device to push notifications. */
+  static async subscribe(userId: string): Promise<OperationResult> {
     try {
-      // Check support
       if (!this.isSupported()) {
         return { success: false, error: 'Push notifications not supported' };
       }
 
-      // Request permission
       const hasPermission = await this.requestPermission();
       if (!hasPermission) {
         return { success: false, error: 'Permission denied' };
       }
 
-      // Register service worker
       const registration = await navigator.serviceWorker.register('/sw.js');
       await navigator.serviceWorker.ready;
 
-      // Get VAPID public key from edge function
       const { data: configData, error: configError } = await supabase.functions.invoke(
-        'get-push-config'
+        'get-push-config',
       );
 
-      if (configError || !configData?.vapidPublicKey) {
-        logger.error('Error getting push config:', configError);
-        return { success: false, error: 'Failed to get push configuration' };
+      if (configError) {
+        const message = await edgeErrorMessage(
+          configError,
+          'Failed to get push configuration',
+        );
+        logger.error('Error getting push config:', { message });
+        return { success: false, error: message };
       }
 
-      // Subscribe to push
+      if (
+        !isRecord(configData) ||
+        typeof configData.vapidPublicKey !== 'string' ||
+        !configData.vapidPublicKey.trim()
+      ) {
+        return { success: false, error: 'Invalid push configuration response' };
+      }
+
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: this.urlBase64ToUint8Array(
@@ -112,41 +132,44 @@ export class PushService {
         ) as unknown as BufferSource,
       });
 
-      // Convert to JSON
       const subscriptionJson = subscription.toJSON();
+      const endpoint = subscriptionJson.endpoint;
+      const p256dh = subscriptionJson.keys?.p256dh;
+      const auth = subscriptionJson.keys?.auth;
+      if (!endpoint || !p256dh || !auth) {
+        return { success: false, error: 'Invalid browser push subscription' };
+      }
 
-      // Store subscription in database via edge function
       const { data, error } = await supabase.functions.invoke('subscribe-push', {
         body: {
           userId,
-          subscription: {
-            endpoint: subscriptionJson.endpoint!,
-            p256dh: subscriptionJson.keys!.p256dh!,
-            auth: subscriptionJson.keys!.auth!,
-          },
+          subscription: { endpoint, p256dh, auth },
           userAgent: navigator.userAgent,
           deviceName: this.getDeviceName(),
         },
       });
 
       if (error) {
-        logger.error('Error storing push subscription:', error);
-        return { success: false, error: error.message };
+        const message = await edgeErrorMessage(error, 'Failed to store push subscription');
+        logger.error('Error storing push subscription:', { message });
+        return { success: false, error: message };
+      }
+
+      if (!isSuccessfulCommand(data)) {
+        return { success: false, error: 'Invalid push subscription response' };
       }
 
       return { success: true };
     } catch (error) {
-      logger.error('Exception subscribing to push:', error);
-      return { success: false, error: String(error) };
+      const message = errorMessage(error);
+      logger.error('Exception subscribing to push:', { message });
+      return { success: false, error: message };
     }
   }
 
-  /**
-   * Unsubscribe from push notifications
-   */
-  static async unsubscribe(subscriptionId: string): Promise<{ success: boolean; error?: string }> {
+  /** Unsubscribe the current browser/device. */
+  static async unsubscribe(subscriptionId: string): Promise<OperationResult> {
     try {
-      // Unsubscribe from browser
       if (this.isSupported()) {
         const registration = await navigator.serviceWorker.getRegistration();
         if (registration) {
@@ -157,26 +180,29 @@ export class PushService {
         }
       }
 
-      // Remove from database via edge function
-      const { error } = await supabase.functions.invoke('unsubscribe-push', {
+      const { data, error } = await supabase.functions.invoke('unsubscribe-push', {
         body: { subscriptionId },
       });
 
       if (error) {
-        logger.error('Error removing push subscription:', error);
-        return { success: false, error: error.message };
+        const message = await edgeErrorMessage(error, 'Failed to remove push subscription');
+        logger.error('Error removing push subscription:', { message });
+        return { success: false, error: message };
+      }
+
+      if (!isSuccessfulCommand(data)) {
+        return { success: false, error: 'Invalid push unsubscribe response' };
       }
 
       return { success: true };
     } catch (error) {
-      logger.error('Exception unsubscribing from push:', error);
-      return { success: false, error: String(error) };
+      const message = errorMessage(error);
+      logger.error('Exception unsubscribing from push:', { message });
+      return { success: false, error: message };
     }
   }
 
-  /**
-   * Get user's push subscriptions
-   */
+  /** Get active push subscriptions for the current user. */
   static async getSubscriptions(userId: string): Promise<StoredPushSubscription[]> {
     const { data, error } = await supabase
       .from('push_subscriptions')
@@ -194,65 +220,51 @@ export class PushService {
   }
 
   /**
-   * Send push notification to user
+   * Self-delivery primitive used only by the test notification flow.
+   * The Edge function rejects attempts to send to another user.
    */
-  static async sendToUser(
+  private static async sendToUser(
     userId: string,
-    notification: PushNotificationPayload
-  ): Promise<{ success: boolean; error?: string }> {
+    notification: PushNotificationPayload,
+  ): Promise<OperationResult> {
     try {
       const { data, error } = await supabase.functions.invoke('send-push', {
-        body: {
-          userId,
-          notification,
-        },
+        body: { userId, notification },
       });
 
       if (error) {
-        logger.error('Error sending push notification:', error);
-        return { success: false, error: error.message };
+        const message = await edgeErrorMessage(error, 'Failed to send push notification');
+        logger.error('Error sending push notification:', { message });
+        return { success: false, error: message };
+      }
+
+      if (!isRecord(data) || data.success !== true) {
+        return { success: false, error: 'Invalid push delivery response' };
+      }
+
+      const successCount = data.successCount;
+      if (typeof successCount !== 'number' || !Number.isSafeInteger(successCount) || successCount < 1) {
+        const errors = Array.isArray(data.errors)
+          ? data.errors.filter((entry): entry is string => typeof entry === 'string')
+          : [];
+        return {
+          success: false,
+          error: errors[0] ?? 'Push provider did not deliver the notification',
+        };
       }
 
       return { success: true };
     } catch (error) {
-      logger.error('Exception sending push notification:', error);
-      return { success: false, error: String(error) };
+      const message = errorMessage(error);
+      logger.error('Exception sending push notification:', { message });
+      return { success: false, error: message };
     }
   }
 
-  /**
-   * Send push notification to multiple users
-   */
-  static async sendToUsers(
-    userIds: string[],
-    notification: PushNotificationPayload
-  ): Promise<{ success: boolean; error?: string }> {
-    try {
-      const { data, error } = await supabase.functions.invoke('send-push-bulk', {
-        body: {
-          userIds,
-          notification,
-        },
-      });
-
-      if (error) {
-        logger.error('Error sending bulk push notifications:', error);
-        return { success: false, error: error.message };
-      }
-
-      return { success: true };
-    } catch (error) {
-      logger.error('Exception sending bulk push notifications:', error);
-      return { success: false, error: String(error) };
-    }
-  }
-
-  /**
-   * Test push notification (sends to current user)
-   */
-  static async sendTestNotification(userId: string): Promise<{ success: boolean; error?: string }> {
+  /** Test push notification for the current user. */
+  static async sendTestNotification(userId: string): Promise<OperationResult> {
     return this.sendToUser(userId, {
-      title: 'Notificação de Teste ',
+      title: 'Notificação de Teste',
       body: 'Se você está vendo isso, as notificações push estão funcionando!',
       icon: '/icon-192x192.png',
       badge: '/badge-72x72.png',
@@ -264,13 +276,6 @@ export class PushService {
     });
   }
 
-  // ============================================================================
-  // HELPER METHODS
-  // ============================================================================
-
-  /**
-   * Convert VAPID key from base64 to Uint8Array
-   */
   private static urlBase64ToUint8Array(base64String: string): Uint8Array {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -279,13 +284,9 @@ export class PushService {
     return Uint8Array.from(rawData, (char) => char.charCodeAt(0));
   }
 
-  /**
-   * Get device name from user agent
-   */
   private static getDeviceName(): string {
     const ua = navigator.userAgent;
 
-    // Mobile devices
     if (/iPhone/.test(ua)) return 'iPhone';
     if (/iPad/.test(ua)) return 'iPad';
     if (/Android/.test(ua)) {
@@ -293,7 +294,6 @@ export class PushService {
       return match ? match[1] : 'Android Device';
     }
 
-    // Desktop browsers
     if (/Chrome/.test(ua)) return 'Chrome';
     if (/Firefox/.test(ua)) return 'Firefox';
     if (/Safari/.test(ua)) return 'Safari';
@@ -302,4 +302,3 @@ export class PushService {
     return 'Unknown Device';
   }
 }
-
