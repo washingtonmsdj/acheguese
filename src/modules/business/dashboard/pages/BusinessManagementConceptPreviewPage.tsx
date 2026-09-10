@@ -109,10 +109,10 @@ function ConceptGlobalNavigation() {
   );
 }
 
-function ConceptBusinessNavigation({ onSelect }: { onSelect: (label: string) => void }) {
+function ConceptBusinessNavigation({ onSelect, onBack }: { onSelect: (label: string) => void; onBack: () => void }) {
   return (
     <aside className="hidden w-56 shrink-0 border-r border-territory-border bg-territory-surface px-3 py-5 lg:block" aria-label="Navegação do negócio">
-      <button type="button" onClick={() => onSelect("Meus perfis")} className="mb-5 flex items-center gap-2 px-3 text-sm text-territory-ink hover:text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
+      <button type="button" onClick={onBack} className="mb-5 flex items-center gap-2 px-3 text-sm text-territory-ink hover:text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         Meus perfis
       </button>
@@ -136,7 +136,7 @@ function ConceptBusinessNavigation({ onSelect }: { onSelect: (label: string) => 
   );
 }
 
-function ConceptMobileBusinessIdentity({ onBack }: { onBack: () => void }) {
+function ConceptMobileBusinessIdentity({ onBack, onViewPage }: { onBack: () => void; onViewPage: () => void }) {
   return (
     <>
       <button type="button" onClick={onBack} className="flex min-h-10 items-center gap-2 text-sm text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
@@ -149,9 +149,8 @@ function ConceptMobileBusinessIdentity({ onBack }: { onBack: () => void }) {
           <h1 className="truncate font-heading text-lg font-bold tracking-[-0.025em] text-territory-ink">Sabores da Ana</h1>
           <p className="text-sm text-territory-muted">Gestão do negócio</p>
         </div>
-        <button type="button" className="min-h-10 shrink-0 rounded-xl border border-territory-brand px-3 text-xs font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
+        <button type="button" onClick={onViewPage} className="min-h-10 shrink-0 rounded-xl border border-territory-brand px-3 text-xs font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
           Ver página
-          <ExternalLink className="ml-1 inline h-3.5 w-3.5" aria-hidden="true" />
         </button>
       </div>
     </>
@@ -169,13 +168,14 @@ function ConceptSectionTitle({ title, onClick }: { title: string; onClick?: () =
 
 function ConceptNotice({ onClick }: { onClick: () => void }) {
   return (
-    <section className="flex items-start gap-3 rounded-xl border border-territory-sun/50 bg-[hsl(var(--territory-sun)/0.2)] p-3.5 sm:p-4">
+    <section className="flex items-start gap-3 rounded-xl border border-territory-sun/50 bg-[hsl(var(--territory-sun)/0.2)] p-3.5 sm:p-4 md:items-center">
       <Clock3 className="mt-0.5 h-7 w-7 shrink-0 text-territory-warm" aria-hidden="true" />
       <div className="min-w-0 flex-1">
         <h2 className="text-sm font-bold text-territory-ink">Confira seus horários de atendimento</h2>
         <p className="mt-0.5 text-xs leading-5 text-territory-muted">Mantenha os horários atualizados para quem visita sua página.</p>
-        <button type="button" onClick={onClick} className="mt-1 text-sm font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">Editar horários <span aria-hidden="true">→</span></button>
+        <button type="button" onClick={onClick} className="mt-1 text-sm font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:hidden">Editar horários <span aria-hidden="true">→</span></button>
       </div>
+      <button type="button" onClick={onClick} className="hidden min-h-10 shrink-0 rounded-xl bg-territory-sun px-4 text-sm font-bold text-territory-ink hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:inline-flex md:items-center">Editar horários</button>
     </section>
   );
 }
@@ -217,8 +217,8 @@ function ConceptMenuCard({ onOpen }: { onOpen: () => void }) {
     <section className="rounded-xl border border-territory-border bg-territory-surface p-3.5 sm:p-4">
       <ConceptSectionTitle title="Cardápio" onClick={onOpen} />
       <div className="mt-3 space-y-2">
-        {items.map((item) => (
-          <div key={item.name} className="flex items-center gap-3 rounded-xl border border-territory-border/80 p-2">
+        {items.map((item, index) => (
+          <div key={item.name} className={cn("flex items-center gap-3 rounded-xl border border-territory-border/80 p-2", index > 0 && "hidden md:flex")}>
             <img src={item.image} alt="" className="h-14 w-16 rounded-lg object-cover" />
             <div className="min-w-0">
               <p className="truncate text-sm font-bold text-territory-ink">{item.name}</p>
@@ -315,11 +315,11 @@ export default function BusinessManagementConceptPreviewPage() {
       <ConceptBusinessHeader />
       <div className="flex min-h-[calc(100vh-4rem)]">
         <ConceptGlobalNavigation />
-        <ConceptBusinessNavigation onSelect={selectArea} />
+        <ConceptBusinessNavigation onSelect={selectArea} onBack={() => navigate("/conta?concept-mock=1")} />
         <main className="min-w-0 flex-1 px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pt-6 lg:px-7 lg:pb-8 lg:pt-6 xl:px-8">
           <div className="mx-auto w-full max-w-[50rem] lg:max-w-[58rem]">
             <div className="md:hidden">
-              <ConceptMobileBusinessIdentity onBack={() => navigate("/conta?concept-mock=1")} />
+              <ConceptMobileBusinessIdentity onBack={() => navigate("/conta?concept-mock=1")} onViewPage={() => navigate(territoryHref)} />
               <div className="relative mt-5">
                 <button type="button" aria-expanded={overviewMenuOpen} onClick={() => setOverviewMenuOpen((value) => !value)} className="flex min-h-11 w-full items-center justify-between rounded-xl border border-territory-border bg-territory-surface px-4 text-sm font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
                   {selectedArea}
@@ -336,7 +336,7 @@ export default function BusinessManagementConceptPreviewPage() {
               </div>
               <div className="flex items-center gap-3">
                 <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-[hsl(var(--territory-success)/0.14)] px-3 text-xs font-semibold text-territory-success"><Check className="h-4 w-4" aria-hidden="true" />Publicado</span>
-                <button type="button" className="min-h-10 rounded-xl border border-territory-brand px-4 text-sm font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">Ver página pública <ExternalLink className="ml-1 inline h-4 w-4" aria-hidden="true" /></button>
+                <button type="button" onClick={() => navigate(territoryHref)} className="min-h-10 rounded-xl border border-territory-brand px-4 text-sm font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">Ver página pública <ExternalLink className="ml-1 inline h-4 w-4" aria-hidden="true" /></button>
               </div>
             </div>
 
