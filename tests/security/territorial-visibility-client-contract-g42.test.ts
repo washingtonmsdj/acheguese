@@ -37,7 +37,7 @@ describe("G42 territorial visibility client contract", () => {
     );
   });
 
-  it("routes location visibility through one transactional recursive RPC", () => {
+  it("routes location visibility through one indexed transactional RPC", () => {
     expect(locationEdge).toContain("'territorial_update_location_visibility'");
     expect(locationEdge).toContain("p_location_id: locationId");
     expect(locationEdge).toContain("p_actor_user_id: userId");
@@ -50,7 +50,16 @@ describe("G42 territorial visibility client contract", () => {
     expect(pendingLocationCascade).toContain(
       "CREATE OR REPLACE FUNCTION public.territorial_update_location_visibility(",
     );
-    expect(pendingLocationCascade).toContain("WITH RECURSIVE mutation_scope");
+    expect(pendingLocationCascade).toContain(
+      "idx_locations_geographic_path_pattern",
+    );
+    expect(pendingLocationCascade).toContain(
+      "rpc_get_location_descendants_ids(uuid)",
+    );
+    expect(pendingLocationCascade).toContain(
+      "target.geographic_path LIKE v_path || '/%'",
+    );
+    expect(pendingLocationCascade).not.toContain("WITH RECURSIVE mutation_scope");
     expect(pendingLocationCascade).toContain(
       "LOCK TABLE public.locations IN SHARE ROW EXCLUSIVE MODE",
     );
