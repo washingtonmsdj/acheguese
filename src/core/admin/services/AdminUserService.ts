@@ -8,7 +8,10 @@
  * ✅ SEGURO: Usa edge functions ao invés de supabaseAdmin
  */
 
-import { supabase } from "@/integrations/supabase";
+import {
+  resolveSupabaseFunctionErrorMessage,
+  supabase,
+} from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { adminRolesService } from "./AdminRolesService";
 import { VerificationAdminService } from "@/core/verification";
@@ -52,6 +55,42 @@ export interface AdminUserListResult {
   pageSize: number;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
+}
+
+function parseUserListResponse(value: unknown): AdminUserListResult {
+  if (!isRecord(value)) {
+    throw new Error("Invalid admin user list response");
+  }
+
+  const { users, total, page, pageSize } = value;
+  if (
+    !Array.isArray(users) ||
+    !isNonNegativeInteger(total) ||
+    !isNonNegativeInteger(page) ||
+    !isNonNegativeInteger(pageSize)
+  ) {
+    throw new Error("Invalid admin user list response");
+  }
+
+  return {
+    users: users as AdminUser[],
+    total,
+    page,
+    pageSize,
+  };
+}
+
+async function edgeError(error: unknown, fallback: string): Promise<Error> {
+  const message = await resolveSupabaseFunctionErrorMessage(error);
+  return new Error(message ?? fallback);
+}
+
 export class AdminUserService {
   /**
    * Lista usuários únicos (agrupados por user_id) com seus perfis.
@@ -67,8 +106,10 @@ export class AdminUserService {
         body: { page, pageSize, search },
       });
 
-      if (error) throw error;
-      return data as AdminUserListResult;
+      if (error) {
+        throw await edgeError(error, "Failed to list admin users");
+      }
+      return parseUserListResponse(data);
     } catch (error: unknown) {
       logger.error("AdminUserService.listUsers error:", error);
       throw error;
@@ -85,8 +126,13 @@ export class AdminUserService {
         body: { userId },
       });
 
-      if (error) throw error;
-      return data?.user as AdminUser | null;
+      if (error) {
+        throw await edgeError(error, "Failed to load admin user");
+      }
+      if (!isRecord(data) || !isRecord(data.user)) {
+        throw new Error("Invalid admin user response");
+      }
+      return data.user as unknown as AdminUser;
     } catch (error: unknown) {
       logger.error("AdminUserService.getUserById error:", error);
       return null;
@@ -116,9 +162,14 @@ export class AdminUserService {
       },
     );
 
-    if (error) throw error;
-    if (!data?.success) {
-      throw new Error(data?.error || "Falha ao atualizar suspensão");
+    if (error) {
+      throw await edgeError(error, "Falha ao atualizar suspensão");
+    }
+    if (!isRecord(data) || data.success !== true) {
+      const message = isRecord(data) && typeof data.error === "string"
+        ? data.error
+        : "Falha ao atualizar suspensão";
+      throw new Error(message);
     }
   }
 
