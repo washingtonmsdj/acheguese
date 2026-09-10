@@ -11,10 +11,11 @@ Leia nesta ordem:
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — execução operacional atual;
-4. `docs/08-roadmap/checkpoints/2026-09-10-g40-edge-error-contract.md` — checkpoint incremental G40, fechamento do creator legado, contrato HTTP de Edge e fixture E2E isolada;
-5. `docs/08-roadmap/checkpoints/2026-09-10-g39-professional-lead-intake.md` — checkpoint G39 e gate de cutover Professional;
-6. `docs/08-roadmap/checkpoints/2026-09-10-g38-professional-authority.md` — checkpoint anterior G38;
-7. `SECURITY.md` — segurança e gates de release.
+4. `docs/08-roadmap/checkpoints/2026-09-10-g41-edge-client-contracts.md` — checkpoint G41: contratos Edge, IA, Push, LGPD e consolidação de authorities;
+5. `docs/08-roadmap/checkpoints/2026-09-10-g40-edge-error-contract.md` — checkpoint G40, fechamento do creator legado, contrato HTTP de Edge e fixture E2E isolada;
+6. `docs/08-roadmap/checkpoints/2026-09-10-g39-professional-lead-intake.md` — checkpoint G39 e gate de cutover Professional;
+7. `docs/08-roadmap/checkpoints/2026-09-10-g38-professional-authority.md` — checkpoint anterior G38;
+8. `SECURITY.md` — segurança e gates de release.
 
 ## Checkpoint operacional curto — 2026-09-10
 
@@ -37,12 +38,16 @@ Leia nesta ordem:
 - G39: o SQL destrutivo está somente em `docs/09-reference/migrations-pending/20260910133000_finalize_professional_lead_intake_g39.sql`; **não mover/aplicar** até frontend novo LIVE + smoke anônimo/autenticado + zero caller LIVE do criador direto;
 - G39: `3e68743b` ratcheta o staging e exige que a futura revogação de `INSERT` em `professional_leads` e DML em `professional_stats` ocorra no mesmo cutover transacional;
 - G40: `86d92e03` removeu fisicamente `ProfessionalLeadService.createLead` depois da prova de zero callers runtime; `71d3c42b` impede por teste que o creator e seus helpers mortos retornem;
-- G40: o tratamento de erro de Edge foi corrigido na causa raiz: `src/integrations/supabase/functionErrors.ts` lê o body de `FunctionsHttpError`; `ProfessionalLeadIntakeService` e o broker genérico preservam agora erros estruturados 4xx/5xx sem importar `@supabase/supabase-js` em `core`;
-- G40: há cobertura nova para created/deduplicated/Turnstile/HTTP failures/fail-closed e para o adapter Supabase com `FunctionsHttpError` real;
-- G40: `55b25cd0` migrou a criação da fixture técnica de `professional_leads` para `createOptionalOperationalAdminClient()`, que só opera com `service_role` em target E2E aprovado; mensagens, propostas, aceite, atendimento e review continuam no cliente autenticado;
-- G40: `878e06d2` ratcheta essa separação e impede retorno de `client.from("professional_leads").insert(...)` no E2E operacional; a fixture não é mais blocker para a futura revogação do browser `INSERT`;
-- ainda faltam os smokes públicos anônimo e autenticado pelo broker + Turnstile e a certificação real de security/architecture/typecheck/build antes do cutover;
-- os workflows acionados no novo baseline encerraram antes de qualquer step e sem logs úteis; portanto não há sinal válido de typecheck/teste/arquitetura neste executor. Não interpretar esse `failure` instantâneo como regressão de código;
+- G40: `src/integrations/supabase/functionErrors.ts` centraliza leitura de `FunctionsHttpError`; intake Professional e broker genérico preservam erros estruturados 4xx/5xx sem importar `@supabase/supabase-js` em `core`;
+- G40: `55b25cd0` migrou a fixture técnica de `professional_leads` para `createOptionalOperationalAdminClient()` em target E2E aprovado; `878e06d2` ratcheta essa separação;
+- G41: Billing, Territorial, Verificação/Admin, Educação, cadastro de interesse, Safety e LGPD foram alinhados ao contrato canônico de erro Edge e passaram a rejeitar payloads de sucesso incompletos nos pontos críticos;
+- G41: `PrivacyService` deixou de reportar `sizeBytes=0` e contagem incorreta de seções: os valores agora são derivados do payload real de `user-export-data`; a flag `LGPD_EXPORT_MATRIX_IMPLEMENTATION_COMPLETE=false` permanece intocada;
+- G41: `OpenAIProvider`/`ai-intent-parse` foram aposentados porque o endpoint não existe; `IntentParser` usa agora `EdgeAIProvider -> aiClient.text -> ai-text`, com structured output e fallback determinístico;
+- G41: Push foi reduzido à authority real de self-service: `send-push-bulk`/`sendToUsers` inexistentes foram removidos, `sendToUser` é primitive privada do autoteste e só há sucesso quando `successCount >= 1`;
+- G41: o `AdminService` duplicado em `src/core/profiles/services/multi-profile/adminService.ts` foi removido após prova de zero callers runtime; o teste G36 agora exige um único owner de moderação em `core/admin`;
+- G41: resta uma referência stale ao arquivo `multi-profile/adminService.ts` em `eslint.config.js`; não cria authority runtime, mas deve sair no próximo ratchet de allowances/configuração;
+- ainda faltam os smokes públicos anônimo e autenticado do G39 pelo broker + Turnstile e a certificação real de security/architecture/typecheck/build antes do cutover;
+- no HEAD G41 examinado, workflows `SSOT Territorial Tests` e `Security Check` criaram jobs, mas a API devolveu `steps: null`/sem logs executados para Runtime Tests, Phase Core Gate, Lint/Type Check e outros; esse `failure` não é prova de regressão nem de aprovação do código;
 - builds atuais da `main` continuam sujeitos ao **build-rate-limit da Vercel** (`Deployment rate limited — retry in 24 hours`), blocker externo de execução e não prova de compilação aprovada ou reprovada;
 - **não revogar ainda** os grants temporários de `professional_data/profiles` nem executar o cutover de leads/stats enquanto o frontend novo não estiver comprovadamente LIVE no mesmo SHA/descendente certificado;
 - `codex/identidade-visual-achegue-se` deve receber `main` por merge sem force-push, preservando seus deltas visuais próprios; nunca substituir a branch visual por uma árvore antiga para “sincronizar” arquitetura;
