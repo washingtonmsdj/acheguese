@@ -96,7 +96,7 @@ function ConceptBusinessHeader() {
 
 function ConceptGlobalNavigation() {
   return (
-    <aside className="hidden w-44 shrink-0 border-r border-territory-border bg-territory-surface px-3 py-5 md:block xl:w-48" aria-label="Navegação principal">
+    <aside className="hidden w-40 shrink-0 border-r border-territory-border bg-territory-surface px-3 py-5 md:block" aria-label="Navegação principal">
       <nav className="space-y-1">
         {globalNavItems.map(({ label, icon: Icon }) => (
           <Link key={label} to={getGlobalNavHref(label)} className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
@@ -168,12 +168,12 @@ function ConceptSectionTitle({ title, onClick }: { title: string; onClick?: () =
 
 function ConceptNotice({ onClick }: { onClick: () => void }) {
   return (
-    <section className="flex items-start gap-3 rounded-xl border border-territory-sun/50 bg-[hsl(var(--territory-sun)/0.2)] p-3.5 sm:p-4 md:items-center">
+    <section className="flex items-start gap-3 rounded-xl border border-territory-sun/50 bg-[hsl(var(--territory-sun)/0.2)] p-3 sm:p-4 md:items-center md:p-2.5">
       <Clock3 className="mt-0.5 h-7 w-7 shrink-0 text-territory-warm" aria-hidden="true" />
       <div className="min-w-0 flex-1">
         <h2 className="text-sm font-bold text-territory-ink">Confira seus horários de atendimento</h2>
-        <p className="mt-0.5 text-xs leading-5 text-territory-muted">Mantenha os horários atualizados para quem visita sua página.</p>
-        <button type="button" onClick={onClick} className="mt-1 text-sm font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:hidden">Editar horários <span aria-hidden="true">→</span></button>
+        <p className="mt-0.5 text-xs leading-[1.125rem] text-territory-muted md:leading-5">Mantenha os horários atualizados para quem visita sua página.</p>
+        <button type="button" onClick={onClick} className="mt-1 h-5 min-h-0 p-0 text-sm font-semibold leading-5 text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:hidden">Editar horários <span aria-hidden="true">→</span></button>
       </div>
       <button type="button" onClick={onClick} className="hidden min-h-10 shrink-0 rounded-xl bg-territory-sun px-4 text-sm font-bold text-territory-ink hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:inline-flex md:items-center">Editar horários</button>
     </section>
@@ -182,11 +182,11 @@ function ConceptNotice({ onClick }: { onClick: () => void }) {
 
 function ConceptConversationCard({ onOpen }: { onOpen: () => void }) {
   return (
-    <section className="rounded-xl border border-territory-border bg-territory-surface p-3.5 sm:p-4">
+    <section className="rounded-xl border border-territory-border bg-territory-surface p-3.5 sm:p-4 md:p-3.5">
       <ConceptSectionTitle title="Atendimento" onClick={onOpen} />
       <p className="mt-0.5 text-sm text-territory-muted">12 não lidas</p>
-      <div className="mt-3 space-y-2">
-        <div className="flex items-center gap-3 rounded-xl border border-territory-border/80 p-2.5">
+      <div className="mt-3 space-y-2 md:mt-2">
+        <div className="flex items-center gap-3 rounded-xl border border-territory-border/80 p-2.5 md:p-2">
           <img src={ownerImage} alt="Mariana Costa" className="h-11 w-11 rounded-full object-cover" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-bold text-territory-ink">Mariana Costa</p>
@@ -194,7 +194,7 @@ function ConceptConversationCard({ onOpen }: { onOpen: () => void }) {
           </div>
           <span className="self-start text-xs text-territory-muted">10:24</span>
         </div>
-        <div className="hidden items-center gap-3 rounded-xl border border-territory-border/80 p-2.5 md:flex">
+        <div className="hidden items-center gap-3 rounded-xl border border-territory-border/80 p-2.5 md:flex md:p-2">
           <img src={ownerImage} alt="Lucas Almeida" className="h-11 w-11 rounded-full object-cover" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-bold text-territory-ink">Lucas Almeida</p>
@@ -203,7 +203,7 @@ function ConceptConversationCard({ onOpen }: { onOpen: () => void }) {
           <span className="self-start text-xs text-territory-muted">Ontem</span>
         </div>
       </div>
-      <button type="button" onClick={onOpen} className="mt-3 min-h-10 w-full rounded-xl bg-territory-brand px-4 text-sm font-bold text-white hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">Abrir conversas</button>
+      <button type="button" onClick={onOpen} className="mt-3 min-h-10 w-full rounded-xl bg-territory-brand px-4 text-sm font-bold text-white hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:mt-2 md:min-h-9">Abrir conversas</button>
     </section>
   );
 }
@@ -214,9 +214,9 @@ function ConceptMenuCard({ onOpen }: { onOpen: () => void }) {
     { name: "Opção vegetariana", image: secondFoodImage },
   ];
   return (
-    <section className="rounded-xl border border-territory-border bg-territory-surface p-3.5 sm:p-4">
+    <section className="rounded-xl border border-territory-border bg-territory-surface p-3.5 sm:p-4 md:p-3">
       <ConceptSectionTitle title="Cardápio" onClick={onOpen} />
-      <div className="mt-3 space-y-2">
+      <div className="mt-2 space-y-2">
         {items.map((item, index) => (
           <div key={item.name} className={cn("flex items-center gap-3 rounded-xl border border-territory-border/80 p-2", index > 0 && "hidden md:flex")}>
             <img src={item.image} alt="" className="h-14 w-16 rounded-lg object-cover" />
@@ -227,7 +227,7 @@ function ConceptMenuCard({ onOpen }: { onOpen: () => void }) {
           </div>
         ))}
       </div>
-      <button type="button" onClick={onOpen} className="mt-3 min-h-10 w-full rounded-xl border border-territory-brand px-4 text-sm font-semibold text-territory-ink hover:bg-[hsl(var(--territory-brand)/0.08)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">Gerenciar cardápio</button>
+      <button type="button" onClick={onOpen} className="mt-2 min-h-9 w-full rounded-xl border border-territory-brand px-4 text-sm font-semibold text-territory-ink hover:bg-[hsl(var(--territory-brand)/0.08)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">Gerenciar cardápio</button>
     </section>
   );
 }
@@ -311,13 +311,13 @@ export default function BusinessManagementConceptPreviewPage() {
   const openPublications = () => selectArea("Publicações e ofertas");
 
   return (
-    <div className="min-h-screen bg-territory-canvas text-territory-ink">
+    <div className="min-h-screen bg-territory-canvas text-territory-ink max-md:h-[100dvh] max-md:overflow-y-auto max-md:scrollbar-hide md:h-screen md:overflow-hidden">
       <ConceptBusinessHeader />
-      <div className="flex min-h-[calc(100vh-4rem)]">
+      <div className="flex min-h-[calc(100vh-4rem)] md:h-[calc(100vh-4rem)] md:min-h-0">
         <ConceptGlobalNavigation />
         <ConceptBusinessNavigation onSelect={selectArea} onBack={() => navigate("/conta?concept-mock=1")} />
-        <main className="min-w-0 flex-1 px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pt-6 lg:px-7 lg:pb-8 lg:pt-6 xl:px-8">
-          <div className="mx-auto w-full max-w-[50rem] lg:max-w-[58rem]">
+        <main className="min-w-0 flex-1 px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pt-6 lg:px-6 lg:pb-8 lg:pt-4 xl:px-6 md:overflow-y-auto">
+          <div className="w-full">
             <div className="md:hidden">
               <ConceptMobileBusinessIdentity onBack={() => navigate("/conta?concept-mock=1")} onViewPage={() => navigate(territoryHref)} />
               <div className="relative mt-5">
@@ -331,8 +331,8 @@ export default function BusinessManagementConceptPreviewPage() {
 
             <div className="hidden items-start justify-between gap-4 md:flex">
               <div>
-                <h1 className="font-heading text-3xl font-bold tracking-[-0.045em] text-territory-ink">Visão geral</h1>
-                <p className="mt-1 text-base text-territory-muted">Sabores da Ana <span className="mx-1">•</span> Santa Cruz, Salvador</p>
+                <h1 className="font-heading text-[2rem] font-bold leading-10 tracking-[-0.045em] text-territory-ink">Visão geral</h1>
+                <p className="mt-0.5 text-[0.9375rem] leading-5 text-territory-muted">Sabores da Ana <span className="mx-1">•</span> Santa Cruz, Salvador</p>
               </div>
               <div className="flex items-center gap-3">
                 <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-[hsl(var(--territory-success)/0.14)] px-3 text-xs font-semibold text-territory-success"><Check className="h-4 w-4" aria-hidden="true" />Publicado</span>
@@ -340,13 +340,13 @@ export default function BusinessManagementConceptPreviewPage() {
               </div>
             </div>
 
-            <div className="mt-4 lg:mt-5"><ConceptNotice onClick={() => selectArea("Configurações")} /></div>
-            <div className="mt-4 grid gap-4 lg:mt-5 lg:grid-cols-2">
+            <div className="mt-4 lg:mt-4"><ConceptNotice onClick={() => selectArea("Configurações")} /></div>
+            <div className="mt-4 grid gap-4 lg:mt-3.5 lg:grid-cols-2 lg:gap-3.5">
               <ConceptConversationCard onOpen={openMessages} />
               <ConceptMenuCard onOpen={openMenu} />
             </div>
-            <div className="mt-4 lg:mt-5"><ConceptPublicationCard onOpen={openPublications} /></div>
-            <div className="mt-4 lg:mt-5"><ConceptInfoLinks onOpen={selectArea} /></div>
+            <div className="mt-4 lg:mt-3.5"><ConceptPublicationCard onOpen={openPublications} /></div>
+            <div className="mt-4 lg:mt-3.5"><ConceptInfoLinks onOpen={selectArea} /></div>
           </div>
         </main>
       </div>
