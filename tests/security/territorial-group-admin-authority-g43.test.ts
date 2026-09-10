@@ -32,8 +32,9 @@ describe("G43 territorial group admin authority", () => {
       /\[functions\.territorial-group-admin-rpc\][\s\S]*?verify_jwt\s*=\s*true/,
     );
     expect(broker).toContain("const auth = await requireAdmin(req);");
-    expect(broker).toContain("p_actor_user_id: auth.userId");
-    expect(broker).not.toContain("p_actor_user_id: params");
+    expect(broker).toContain("userId: auth.userId");
+    expect(broker).not.toContain("p_actor_user_id");
+    expect(phaseOne).not.toContain("p_actor_user_id");
     expect(broker).toContain("territorial_admin_save_group");
     expect(broker).toContain("territorial_admin_set_group_status");
   });
@@ -97,6 +98,10 @@ describe("G43 territorial group admin authority", () => {
     expect(phaseTwo).toContain("DO NOT PROMOTE");
     expect(phaseTwo).toContain("territorial-group-admin-rpc is ACTIVE");
     expect(phaseTwo).toContain("authenticated admin AAL2 smoke");
+    expect(phaseTwo).toContain(
+      "territorial_admin_save_group(uuid,text,text,text,uuid,uuid[])"
+    );
+    expect(phaseTwo).toContain("territorial_admin_set_group_status(uuid,text)");
     expect(phaseTwo).toContain(
       "REVOKE INSERT, UPDATE, DELETE\n  ON TABLE public.territorial_groups",
     );
