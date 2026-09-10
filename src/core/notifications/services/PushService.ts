@@ -50,6 +50,9 @@ export interface StoredPushSubscription {
 
 type OperationResult = { success: boolean; error?: string };
 
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
@@ -125,18 +128,29 @@ export class PushService {
         return { success: false, error: 'Invalid push configuration response' };
       }
 
-      const subscription = await registration.pushManager.subscribe({
+      const browserSubscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: this.urlBase64ToUint8Array(
           configData.vapidPublicKey,
         ) as unknown as BufferSource,
       });
 
-      const subscriptionJson = subscription.toJSON();
+      const rollbackBrowserSubscription = async () => {
+        try {
+          await browserSubscription.unsubscribe();
+        } catch (rollbackError) {
+          logger.warn('Failed to roll back browser push subscription:', {
+            message: errorMessage(rollbackError),
+          });
+        }
+      };
+
+      const subscriptionJson = browserSubscription.toJSON();
       const endpoint = subscriptionJson.endpoint;
       const p256dh = subscriptionJson.keys?.p256dh;
       const auth = subscriptionJson.keys?.auth;
       if (!endpoint || !p256dh || !auth) {
+        await rollbackBrowserSubscription();
         return { success: false, error: 'Invalid browser push subscription' };
       }
 
@@ -150,12 +164,19 @@ export class PushService {
       });
 
       if (error) {
+        await rollbackBrowserSubscription();
         const message = await edgeErrorMessage(error, 'Failed to store push subscription');
         logger.error('Error storing push subscription:', { message });
         return { success: false, error: message };
       }
 
-      if (!isSuccessfulCommand(data)) {
+      if (
+        !isRecord(data) ||
+        data.success !== true ||
+        typeof data.subscriptionId !== 'string' ||
+        !UUID_PATTERN.test(data.subscriptionId)
+      ) {
+        await rollbackBrowserSubscription();
         return { success: false, error: 'Invalid push subscription response' };
       }
 
@@ -167,19 +188,13 @@ export class PushService {
     }
   }
 
-  /** Unsubscribe the current browser/device. */
+  /**
+   * Disable delivery server-side first, then remove the local browser
+   * subscription as best effort. This avoids leaving a server-active endpoint
+   * when the Edge mutation fails.
+   */
   static async unsubscribe(subscriptionId: string): Promise<OperationResult> {
     try {
-      if (this.isSupported()) {
-        const registration = await navigator.serviceWorker.getRegistration();
-        if (registration) {
-          const subscription = await registration.pushManager.getSubscription();
-          if (subscription) {
-            await subscription.unsubscribe();
-          }
-        }
-      }
-
       const { data, error } = await supabase.functions.invoke('unsubscribe-push', {
         body: { subscriptionId },
       });
@@ -192,6 +207,22 @@ export class PushService {
 
       if (!isSuccessfulCommand(data)) {
         return { success: false, error: 'Invalid push unsubscribe response' };
+      }
+
+      if (this.isSupported()) {
+        try {
+          const registration = await navigator.serviceWorker.getRegistration();
+          if (registration) {
+            const browserSubscription = await registration.pushManager.getSubscription();
+            if (browserSubscription) {
+              await browserSubscription.unsubscribe();
+            }
+          }
+        } catch (browserError) {
+          logger.warn('Server disabled push but browser cleanup failed:', {
+            message: errorMessage(browserError),
+          });
+        }
       }
 
       return { success: true };
@@ -213,7 +244,7 @@ export class PushService {
 
     if (error) {
       logger.error('Error fetching push subscriptions:', error);
-      return [];
+      throw error;
     }
 
     return data || [];
