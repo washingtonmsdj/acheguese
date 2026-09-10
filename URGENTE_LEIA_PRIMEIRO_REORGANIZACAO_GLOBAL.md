@@ -11,9 +11,10 @@ Leia nesta ordem:
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — execução operacional atual;
-4. `docs/08-roadmap/checkpoints/2026-09-10-g39-professional-lead-intake.md` — checkpoint incremental G39 e gate de cutover Professional;
-5. `docs/08-roadmap/checkpoints/2026-09-10-g38-professional-authority.md` — checkpoint anterior G38;
-6. `SECURITY.md` — segurança e gates de release.
+4. `docs/08-roadmap/checkpoints/2026-09-10-g40-edge-error-contract.md` — checkpoint incremental G40, fechamento do creator legado e contrato HTTP de Edge;
+5. `docs/08-roadmap/checkpoints/2026-09-10-g39-professional-lead-intake.md` — checkpoint G39 e gate de cutover Professional;
+6. `docs/08-roadmap/checkpoints/2026-09-10-g38-professional-authority.md` — checkpoint anterior G38;
+7. `SECURITY.md` — segurança e gates de release.
 
 ## Checkpoint operacional curto — 2026-09-10
 
@@ -35,7 +36,11 @@ Leia nesta ordem:
 - G39: `create-professional-lead` está **v2 ACTIVE**, `verify_jwt=false`, como broker público governado; o endpoint é aditivo e a produção antiga não depende dele;
 - G39: o SQL destrutivo está somente em `docs/09-reference/migrations-pending/20260910133000_finalize_professional_lead_intake_g39.sql`; **não mover/aplicar** até frontend novo LIVE + smoke anônimo/autenticado + zero caller LIVE do criador direto;
 - G39: `3e68743b` ratcheta o staging e exige que a futura revogação de `INSERT` em `professional_leads` e DML em `professional_stats` ocorra no mesmo cutover transacional;
-- busca de código confirmou zero caller runtime atual de `ProfessionalLeadService.createLead`; os hits restantes são documentação/testes. A remoção física do método legado deve ser isolada, sem misturar reescrita grande do serviço com release;
+- G40: `86d92e03` removeu fisicamente `ProfessionalLeadService.createLead` depois da prova de zero callers runtime; `71d3c42b` impede por teste que o creator e seus helpers mortos retornem;
+- G40: o tratamento de erro de Edge foi corrigido na causa raiz: `src/integrations/supabase/functionErrors.ts` lê o body de `FunctionsHttpError`; `ProfessionalLeadIntakeService` e o broker genérico preservam agora erros estruturados 4xx/5xx sem importar `@supabase/supabase-js` em `core`;
+- G40: há cobertura nova para created/deduplicated/Turnstile/HTTP failures/fail-closed e para o adapter Supabase com `FunctionsHttpError` real;
+- G40: `tests/e2e/professional-leads-operational.spec.ts` ainda possui **fixture técnica** com `INSERT` autenticado direto em `professional_leads`; isso não é caller runtime, mas deve migrar para `service_role` em target E2E isolado antes do cutover — nunca manter/reabrir grant browser por causa do teste;
+- os workflows acionados no novo baseline encerraram antes de qualquer step e sem logs úteis; portanto não há sinal válido de typecheck/teste/arquitetura neste executor. Não interpretar esse `failure` instantâneo como regressão de código;
 - builds atuais da `main` continuam sujeitos ao **build-rate-limit da Vercel** (`Deployment rate limited — retry in 24 hours`), blocker externo de execução e não prova de compilação aprovada ou reprovada;
 - **não revogar ainda** os grants temporários de `professional_data/profiles` nem executar o cutover de leads/stats enquanto o frontend novo não estiver comprovadamente LIVE no mesmo SHA/descendente certificado;
 - `codex/identidade-visual-achegue-se` deve receber `main` por merge sem force-push, preservando seus deltas visuais próprios; nunca substituir a branch visual por uma árvore antiga para “sincronizar” arquitetura;
