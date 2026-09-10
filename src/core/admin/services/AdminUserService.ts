@@ -217,9 +217,7 @@ export class AdminUserService {
     });
   }
 
-  /**
-   * Verifica o perfil principal de um usuário.
-   */
+  /** Verifica o perfil principal de um usuário. */
   static async verifyUser(profileId: string): Promise<void> {
     await VerificationAdminService.verifyProfile(
       profileId,
@@ -228,30 +226,21 @@ export class AdminUserService {
   }
 
   /**
-   * Concede ou revoga role de admin.
-   * ✅ SSOT: Delega para AdminRolesService
+   * Concede ou revoga role global. O ator nunca é recebido da UI: o
+   * `admin-role-rpc` deriva o super_admin autenticado do JWT e exige AAL2.
    */
   static async setRole(
     userId: string,
     role: string,
     grant: boolean,
-    grantedBy: string,
   ): Promise<void> {
     if (grant) {
-      const success = await adminRolesService.grantRole({
-        userId,
-        role,
-        grantedBy,
-      });
+      const success = await adminRolesService.grantRole({ userId, role });
       if (!success) {
         throw new Error(`Failed to grant role ${role} to user ${userId}`);
       }
     } else {
-      const success = await adminRolesService.revokeRole({
-        userId,
-        role,
-        revokedBy: grantedBy,
-      });
+      const success = await adminRolesService.revokeRole({ userId, role });
       if (!success) {
         throw new Error(`Failed to revoke role ${role} from user ${userId}`);
       }
