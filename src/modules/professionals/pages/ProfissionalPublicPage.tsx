@@ -98,7 +98,7 @@ function ShareProfileButton() {
     <button
       type="button"
       onClick={handleShare}
-      className="inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-territory-ink transition-colors hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+      className="inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-type-label font-semibold text-territory-ink transition-colors hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
       aria-label="Compartilhar perfil"
     >
       <Share2 className="h-4 w-4" aria-hidden="true" />
@@ -113,7 +113,7 @@ function ProfileActions({ saved, onToggleSaved }: { saved: boolean; onToggleSave
       <button
         type="button"
         onClick={onToggleSaved}
-        className="inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-territory-ink transition-colors hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+        className="inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-type-label font-semibold text-territory-ink transition-colors hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
         aria-pressed={saved}
         aria-label={saved ? "Remover perfil dos salvos" : "Salvar perfil"}
       >
@@ -141,7 +141,7 @@ function ProfileTabs() {
           key={tab.label}
           type="button"
           className={cn(
-            "relative min-h-10 shrink-0 px-3 text-sm font-medium text-territory-muted transition-colors first:pl-0 last:pr-0 hover:text-territory-ink after:absolute after:inset-x-3 after:bottom-[-1px] after:h-0.5 after:bg-transparent first:after:left-0 last:after:right-0 sm:px-4 sm:after:inset-x-4 md:min-h-12",
+            "relative min-h-10 shrink-0 px-3 text-type-label font-medium text-territory-muted transition-colors first:pl-0 last:pr-0 hover:text-territory-ink after:absolute after:inset-x-3 after:bottom-[-1px] after:h-0.5 after:bg-transparent first:after:left-0 last:after:right-0 sm:px-4 sm:after:inset-x-4 md:min-h-12",
             tab.active && "font-bold text-territory-ink after:bg-territory-brand",
           )}
           aria-current={tab.active ? "page" : undefined}
@@ -166,35 +166,40 @@ function ProfileHero({
   const category = profile.service_category ?? profile.service_subcategory ?? "Serviços profissionais";
 
   return (
-    <section className="mt-3 md:mt-5" aria-labelledby="professional-profile-title">
-      <div className="flex items-start gap-3 sm:gap-4">
-        <Avatar className="h-24 w-24 shrink-0 border border-territory-border bg-territory-raised sm:h-24 sm:w-24 md:h-28 md:w-28">
+    <section className="mt-0 md:mt-2" aria-labelledby="professional-profile-title">
+      <div className="flex items-start gap-5 md:gap-4">
+        <Avatar className="h-[5.5rem] w-[5.5rem] shrink-0 border border-territory-border bg-territory-raised md:h-[7.5rem] md:w-[7.5rem]">
           <AvatarImage src={profile.avatar_url ?? profile.logo_url ?? undefined} alt="" />
           <AvatarFallback className="bg-territory-raised text-xl font-bold text-territory-brand sm:text-2xl">
             {getInitials(profileName)}
           </AvatarFallback>
         </Avatar>
-        <div className="min-w-0 pt-1 md:pt-2">
+        <div className="min-w-0 flex-1 pt-0.5 md:pt-0.5">
           <h1
             id="professional-profile-title"
-            className="font-heading text-[1.5rem] font-bold leading-[1.05] tracking-[-0.045em] text-territory-ink sm:text-[1.75rem] md:text-[1.75rem]"
+            className="font-heading text-type-profile font-bold tracking-[-0.045em] text-territory-ink sm:text-type-profile-desktop md:text-type-profile-desktop"
           >
             {profileName}
           </h1>
-          <p className="mt-1 text-sm font-bold text-territory-brand sm:text-base">{category}</p>
+          <p className="mt-1 text-type-label font-bold leading-4 text-territory-brand sm:text-type-body md:leading-4">{category}</p>
           {locationLabel ? (
-            <p className="mt-1 flex items-center gap-1 text-sm text-territory-ink sm:text-base">
+            <p className="mt-1 flex items-center gap-1 text-type-label leading-4 text-territory-ink sm:text-type-body md:leading-4">
               <MapPin className="h-4 w-4 shrink-0 text-territory-brand" aria-hidden="true" />
               <span className="truncate">{locationLabel}</span>
             </p>
           ) : null}
-          <p className="mt-1 text-xs leading-5 text-territory-muted sm:text-sm">
+          <p className="mt-1 truncate whitespace-nowrap text-type-micro tracking-[-0.03em] text-territory-muted sm:text-type-label sm:leading-4">
             Atendimento no {territoryName}
           </p>
+          {profile.description ? (
+            <p className="mt-1 hidden max-w-3xl text-sm leading-5 text-territory-ink md:block">
+              {profile.description}
+            </p>
+          ) : null}
         </div>
       </div>
       {profile.description ? (
-        <p className="mt-3 max-w-3xl text-sm leading-5 text-territory-ink sm:text-base sm:leading-7">
+        <p className="mt-5 max-w-3xl text-type-label text-territory-ink sm:mt-2 sm:text-type-body sm:leading-7 md:hidden">
           {profile.description}
         </p>
       ) : null}
@@ -219,7 +224,7 @@ function ConversationButton({
       onClick={onOpen}
       disabled={!profile.is_accepting_clients}
       className={cn(
-        "inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-territory-sun px-4 text-sm font-bold text-territory-ink shadow-territory-highlight transition-colors hover:bg-territory-sun/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand disabled:cursor-not-allowed disabled:opacity-55 md:min-h-11",
+        "inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-territory-sun px-4 text-type-label font-bold text-territory-ink shadow-territory-highlight transition-colors hover:bg-territory-sun/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand disabled:cursor-not-allowed disabled:opacity-55 md:min-h-11",
         className,
       )}
     >
@@ -232,25 +237,25 @@ function ConversationButton({
 function ServicesSection({ services }: { services: ProfileServiceItem[] }) {
   return (
     <section aria-labelledby="professional-services-title">
-      <h2 id="professional-services-title" className="font-heading text-xl font-bold tracking-[-0.025em] text-territory-ink">
+      <h2 id="professional-services-title" className="font-heading text-type-section font-bold tracking-[-0.025em] text-territory-ink">
         Como posso ajudar
       </h2>
       <div className="mt-3 border-t border-territory-border">
         {services.map((service) => {
           const Icon = service.icon;
           return (
-              <div key={service.title} className="flex min-h-[3.25rem] items-center gap-3 border-b border-territory-border py-1.5 sm:gap-4 md:min-h-14 md:py-2">
+              <div key={service.title} className="flex min-h-[3.125rem] items-center gap-3 border-b border-territory-border py-1 sm:gap-4 md:min-h-14 md:py-1">
               <Icon className="h-7 w-7 shrink-0 text-territory-ink" strokeWidth={1.8} aria-hidden="true" />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-territory-ink sm:text-base">{service.title}</p>
-                <p className="mt-0.5 text-sm text-territory-muted">{service.description}</p>
+                <p className="text-type-label font-bold text-territory-ink sm:text-type-body">{service.title}</p>
+                <p className="mt-0.5 text-type-label text-territory-muted">{service.description}</p>
               </div>
               <ChevronRight className="h-5 w-5 shrink-0 text-territory-muted" aria-hidden="true" />
             </div>
           );
         })}
       </div>
-      <p className="mt-2 text-xs leading-5 text-territory-muted sm:text-sm">
+      <p className="mt-2 text-type-caption text-territory-muted sm:text-type-label">
         Valores e condições combinados na conversa.
       </p>
     </section>
@@ -263,22 +268,22 @@ function PortfolioSection({ portfolio }: { portfolio: string[] }) {
   return (
     <section aria-labelledby="professional-portfolio-title">
       <div className="flex items-center justify-between gap-3">
-        <h2 id="professional-portfolio-title" className="font-heading text-xl font-bold leading-6 tracking-[-0.025em] text-territory-ink">
+        <h2 id="professional-portfolio-title" className="font-heading text-type-section font-bold tracking-[-0.025em] text-territory-ink">
           Trabalhos realizados
         </h2>
-        <button type="button" className="inline-flex min-h-6 items-center gap-1 text-sm font-bold text-territory-brand hover:text-territory-brand-strong md:min-h-10">
+        <button type="button" className="inline-flex min-h-6 items-center gap-1 text-type-label font-bold text-territory-brand hover:text-territory-brand-strong md:min-h-10">
           <span className="hidden sm:inline">Ver todas as fotos</span>
           <span className="sm:hidden">Ver fotos</span>
           <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
-      <div className="mt-0 grid grid-cols-2 gap-2 sm:mt-3 sm:grid-cols-3 sm:gap-3">
+      <div className="mt-2 grid grid-cols-2 gap-2 sm:mt-2 sm:grid-cols-3 sm:gap-2">
         {portfolio.map((image, index) => (
           <img
             key={`${image}-${index}`}
             src={image}
             alt={`Trabalho realizado ${index + 1}`}
-            className={cn("aspect-[1.2] w-full rounded-lg object-cover", index === 2 && "hidden sm:block")}
+            className={cn("aspect-[1.2] w-full rounded-lg object-cover sm:aspect-[1.15]", index === 2 && "hidden sm:block")}
           />
         ))}
       </div>
@@ -289,14 +294,14 @@ function PortfolioSection({ portfolio }: { portfolio: string[] }) {
 function RecommendationsSection() {
   return (
     <section aria-labelledby="professional-recommendations-title">
-      <h2 id="professional-recommendations-title" className="font-heading text-xl font-bold tracking-[-0.025em] text-territory-ink">
+      <h2 id="professional-recommendations-title" className="font-heading text-type-section font-bold tracking-[-0.025em] text-territory-ink">
         Recomendações
       </h2>
       <div className="mt-3 flex items-start gap-3 border-t border-territory-border pt-4">
         <MessageCircle className="mt-0.5 h-7 w-7 shrink-0 text-territory-ink" strokeWidth={1.8} aria-hidden="true" />
         <div>
-          <p className="text-sm font-bold text-territory-ink sm:text-base">Ainda não há recomendações.</p>
-          <p className="mt-1 text-sm leading-6 text-territory-muted">
+          <p className="text-type-label font-bold text-territory-ink sm:text-type-body">Ainda não há recomendações.</p>
+          <p className="mt-1 text-type-label text-territory-muted">
             As recomendações aparecerão aqui quando forem publicadas.
           </p>
         </div>
@@ -316,35 +321,35 @@ function ConversationAside({
 }) {
   return (
     <aside className="hidden md:block xl:sticky xl:top-24" aria-label="Contato e região de atendimento">
-      <TerritorySurface className="p-4 sm:p-5">
-        <h2 className="font-heading text-xl font-bold tracking-[-0.025em] text-territory-ink">Vamos conversar?</h2>
-        <p className="mt-2 text-sm leading-6 text-territory-ink">
+      <TerritorySurface className="min-h-[32rem] p-4">
+        <h2 className="font-heading text-type-section font-bold tracking-[-0.025em] text-territory-ink">Vamos conversar?</h2>
+        <p className="mt-2 text-type-label text-territory-ink">
           Explique o que precisa e combine o atendimento diretamente com {profile.professional_name.split(" ")[0]}.
         </p>
-        <ConversationButton profile={profile} onOpen={onOpen} className="mt-3 w-full" />
-        <p className="mt-2 text-xs leading-5 text-territory-muted">Valores e condições combinados na conversa.</p>
+        <ConversationButton profile={profile} onOpen={onOpen} className="mt-2 w-full" />
+        <p className="mt-1 text-type-caption text-territory-muted">Valores e condições combinados na conversa.</p>
 
-        <div className="mt-5 border-t border-territory-border pt-5">
+        <div className="mt-4 border-t border-territory-border pt-4">
           <div className="flex items-center gap-2">
             <MapPin className="h-5 w-5 text-territory-ink" aria-hidden="true" />
-            <h3 className="text-base font-bold text-territory-ink">Região de atendimento</h3>
+            <h3 className="text-type-body font-bold text-territory-ink">Região de atendimento</h3>
           </div>
-          <ul className="mt-2 list-inside list-disc space-y-1 text-sm leading-5 text-territory-ink">
+          <ul className="mt-2 list-inside list-disc space-y-1 text-type-label text-territory-ink">
             {coverage.map((item) => <li key={item}>{item}</li>)}
           </ul>
         </div>
 
-        <div className="mt-5 border-t border-territory-border pt-5">
+        <div className="mt-4 border-t border-territory-border pt-4">
           <div className="flex items-start gap-2">
             <Info className="mt-0.5 h-5 w-5 shrink-0 text-territory-ink" aria-hidden="true" />
             <div>
-              <h3 className="text-base font-bold text-territory-ink">Antes de combinar</h3>
-              <p className="mt-2 text-sm leading-6 text-territory-muted">Alinhe o serviço, o valor e a forma de pagamento.</p>
+              <h3 className="text-type-body font-bold text-territory-ink">Antes de combinar</h3>
+              <p className="mt-2 text-type-label text-territory-muted">Alinhe o serviço, o valor e a forma de pagamento.</p>
             </div>
           </div>
         </div>
 
-        <button type="button" className="mt-5 flex min-h-11 w-full items-center justify-center gap-2 border-t border-territory-border pt-4 text-xs font-semibold text-territory-muted hover:text-territory-brand">
+        <button type="button" className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 border-t border-territory-border pt-3 text-type-caption font-semibold text-territory-muted hover:text-territory-brand">
           <Flag className="h-4 w-4" aria-hidden="true" />
           Denunciar perfil
         </button>
@@ -360,7 +365,7 @@ function MobileCoverageSection({ coverage }: { coverage: string[] }) {
     <section className="md:hidden" aria-labelledby="professional-mobile-coverage-title">
       <h2
         id="professional-mobile-coverage-title"
-        className="font-heading text-xl font-bold tracking-[-0.025em] text-territory-ink"
+        className="font-heading text-type-section font-bold tracking-[-0.025em] text-territory-ink"
       >
         Onde atende
       </h2>
@@ -442,27 +447,29 @@ export default function ProfissionalPublicPage() {
 
   return (
     <div className="min-h-[100dvh] bg-territory-canvas pb-24 text-territory-ink md:pb-8">
-      <TerritoryTopbar territoryName={profileTerritoryName} contextLabel={profileContextLabel} isAuthenticated={Boolean(user)} unreadCount={unreadCount} searchHref={searchHref} searchLabel="Buscar serviços e negócios" showMobileSearch={false} flushDesktop />
+      <TerritoryTopbar territoryName={profileTerritoryName} contextLabel={profileContextLabel} isAuthenticated={Boolean(user)} unreadCount={unreadCount} searchHref={searchHref} searchLabel="Buscar serviços e negócios" showMobileSearch={false} flushDesktop compactMobile />
 
-      <main className="w-full max-w-[60rem] px-4 pb-8 pt-2 sm:px-6 md:pt-5 lg:px-6">
-        <div className="hidden items-center gap-2 text-xs text-territory-muted md:flex"><Link to={searchHref} className="hover:text-territory-brand">Explorar</Link><span aria-hidden="true">/</span><Link to={buildModuleTerritoryUrl(MODULE_SLUGS.services, searchTerritoryBase)} className="hover:text-territory-brand">Serviços</Link><span aria-hidden="true">/</span><span className="truncate">{profile.professional_name}</span></div>
+      <main className="w-full max-w-[60rem] px-4 pb-8 pt-1 sm:px-6 md:pt-3 lg:px-6">
+        <div className="hidden items-center gap-2 text-type-caption text-territory-muted md:flex"><Link to={searchHref} className="hover:text-territory-brand">Explorar</Link><span aria-hidden="true">/</span><Link to={buildModuleTerritoryUrl(MODULE_SLUGS.services, searchTerritoryBase)} className="hover:text-territory-brand">Serviços</Link><span aria-hidden="true">/</span><span className="truncate">{profile.professional_name}</span></div>
 
-        <div className="mt-3 flex items-center justify-between gap-3 md:mt-2"><Link to={searchHref} className="inline-flex min-h-10 items-center gap-2 rounded-lg px-1 text-sm font-semibold text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><ArrowLeft className="h-4 w-4" aria-hidden="true" />Voltar à busca</Link><ProfileActions saved={saved} onToggleSaved={() => setSaved((value) => !value)} /></div>
+        <div className="mt-0 flex items-center justify-between gap-3 md:mt-0"><Link to={searchHref} className="inline-flex min-h-10 items-center gap-2 rounded-lg px-1 text-type-label font-semibold text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><ArrowLeft className="h-4 w-4" aria-hidden="true" />Voltar à busca</Link><ProfileActions saved={saved} onToggleSaved={() => setSaved((value) => !value)} /></div>
 
         <ProfileHero profile={profile} territoryName={profileTerritoryName} locationLabel={profileLocationLabel} />
-        <div className="mt-3 md:hidden">
+        <div className="mt-1 md:hidden">
           <ConversationButton profile={profile} onOpen={() => setLeadDialogOpen(true)} className="w-full" />
-          <p className="mt-1 text-center text-xs leading-5 text-territory-muted">Conte o que precisa e combine os detalhes.</p>
+          <p className="mt-1 text-center text-type-caption text-territory-muted">Conte o que precisa e combine os detalhes.</p>
         </div>
-        <ProfileTabs />
+        <div className="mt-5 md:mt-0">
+          <ProfileTabs />
+        </div>
 
         <div className="mt-4 grid gap-5 md:gap-8 xl:grid-cols-[minmax(0,540px)_20rem] xl:items-start xl:gap-9">
-          <div className="min-w-0 space-y-3 md:space-y-8"><ServicesSection services={services} /><PortfolioSection portfolio={portfolio} /><MobileCoverageSection coverage={coverage} /><RecommendationsSection /></div>
+          <div className="min-w-0 space-y-5 md:space-y-4"><ServicesSection services={services} /><PortfolioSection portfolio={portfolio} /><MobileCoverageSection coverage={coverage} /><RecommendationsSection /></div>
           <ConversationAside profile={profile} coverage={coverage} onOpen={() => setLeadDialogOpen(true)} />
         </div>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-territory-border bg-territory-surface/96 px-4 py-2 backdrop-blur-xl safe-area-bottom md:hidden"><div className="mx-auto flex max-w-lg items-center gap-3"><span className="inline-flex min-w-0 flex-1 items-center gap-2 text-xs font-semibold text-territory-ink"><MessageCircle className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" /><span className="truncate">Fale sobre seu serviço</span></span><ConversationButton profile={profile} onOpen={() => setLeadDialogOpen(true)} label="Conversar" className="shrink-0 px-5" /></div></div>
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-territory-border bg-territory-surface/96 px-4 py-2 backdrop-blur-xl safe-area-bottom md:hidden"><div className="mx-auto flex max-w-lg items-center gap-3"><span className="inline-flex min-w-0 flex-1 items-center gap-2 text-type-caption font-semibold text-territory-ink"><MessageCircle className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" /><span className="truncate">Fale sobre seu serviço</span></span><ConversationButton profile={profile} onOpen={() => setLeadDialogOpen(true)} label="Conversar" className="w-[7.75rem] shrink-0 px-3" /></div></div>
 
       <ProfessionalLeadRequestDialog open={leadDialogOpen} onOpenChange={setLeadDialogOpen} professionalId={profile.id} professionalName={profile.professional_name} defaultService={profile.service_subcategory ?? profile.service_category} sourceChannel="public_profile" />
     </div>

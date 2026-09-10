@@ -23,6 +23,8 @@ interface TerritoryTopbarProps {
   showMobileSearch?: boolean;
   /** Align the desktop bar with the full territory shell instead of a centered content column. */
   flushDesktop?: boolean;
+  /** Match compact mobile concepts that place the territory row directly below the brand row. */
+  compactMobile?: boolean;
   messagesHref?: string;
   profileLabel?: string | null;
   profileAvatarUrl?: string | null;
@@ -37,6 +39,7 @@ export function TerritoryTopbar({
   searchLabel = "Buscar neste território",
   showMobileSearch = true,
   flushDesktop = false,
+  compactMobile = false,
   messagesHref = "/mensagens",
   profileLabel,
   profileAvatarUrl,
@@ -108,7 +111,8 @@ export function TerritoryTopbar({
     >
       <div
         className={cn(
-          "grid min-h-16 grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 px-5 py-2 sm:px-6 lg:flex lg:h-16 lg:gap-6 lg:py-0",
+          "grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 px-5 py-2 sm:px-6 lg:flex lg:h-16 lg:gap-6 lg:py-0",
+          compactMobile ? "min-h-0 gap-y-0 px-4 py-0" : "min-h-16",
           flushDesktop ? "mx-0 max-w-none lg:px-6" : "mx-auto max-w-[76rem] lg:px-8",
         )}
       >
