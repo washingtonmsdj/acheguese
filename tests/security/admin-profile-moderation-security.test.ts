@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -9,11 +9,11 @@ function read(path: string): string {
 }
 
 describe("admin profile moderation authority", () => {
-  it("routes suspend and unsuspend through the authenticated admin broker", () => {
+  it("routes suspend and unsuspend only through the authenticated admin owner", () => {
     const edge = read("supabase/functions/admin-suspend-profile/index.ts");
     const service = read("src/core/admin/services/AdminUserService.ts");
-    const multiProfileAdmin = read(
-      "src/core/profiles/services/multi-profile/adminService.ts",
+    const multiProfileIndex = read(
+      "src/core/profiles/services/multi-profile/index.ts",
     );
 
     expect(edge).toContain("requireAdmin(req)");
@@ -31,9 +31,16 @@ describe("admin profile moderation authority", () => {
       /\.from\(\s*["']profiles["']\s*\)[\s\S]{0,220}\.update\(/,
     );
 
-    expect(multiProfileAdmin).toContain('"admin-suspend-profile"');
-    expect(multiProfileAdmin).toContain('target_kind: "profile"');
-    expect(multiProfileAdmin).not.toContain("buildSupabaseFunctionUrl");
+    expect(
+      existsSync(
+        resolve(
+          repoRoot,
+          "src/core/profiles/services/multi-profile/adminService.ts",
+        ),
+      ),
+    ).toBe(false);
+    expect(multiProfileIndex).not.toContain("./adminService");
+    expect(multiProfileIndex).not.toContain("export { AdminService }");
   });
 
   it("revalidates admin authority and audits every affected profile in Postgres", () => {
