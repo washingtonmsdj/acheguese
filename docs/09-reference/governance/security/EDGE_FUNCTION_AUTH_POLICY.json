@@ -221,6 +221,14 @@
         "require(?:Admin|SuperAdmin)\\s*\\("
       ]
     },
+    "admin-role-rpc": {
+      "kind": "admin-broker",
+      "risk": "Critical",
+      "label": "super admin global role lifecycle broker",
+      "requiredPatterns": [
+        "requireSuperAdmin\\s*\\("
+      ]
+    },
     "admin-site-settings-rpc": {
       "kind": "admin-broker",
       "risk": "Critical",
