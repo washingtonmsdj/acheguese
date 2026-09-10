@@ -387,7 +387,7 @@ function AccountConceptPreviewPage() {
                 if (next.has(profile.id)) next.delete(profile.id); else next.add(profile.id);
                 return next;
               })}
-              onPrimary={profile.category === "business" && profile.name === "Sabores da Ana" ? () => navigate("/central") : editProfile}
+              onPrimary={profile.category === "business" && profile.name === "Sabores da Ana" ? () => navigate("/central?concept-mock=1") : editProfile}
               onSecondary={profile.category === "personal" ? () => navigate("/u/ana-oliveira") : editProfile}
               onMessages={openMessages}
             />
