@@ -19,6 +19,7 @@ interface TerritoryTopbarProps {
   canCreatePost?: boolean;
   searchHref?: string;
   searchLabel?: string;
+  showMobileSearch?: boolean;
   messagesHref?: string;
   profileLabel?: string | null;
   profileAvatarUrl?: string | null;
@@ -31,6 +32,7 @@ export function TerritoryTopbar({
   unreadCount = 0,
   searchHref,
   searchLabel = "Buscar neste território",
+  showMobileSearch = true,
   messagesHref = "/mensagens",
   profileLabel,
   profileAvatarUrl,
@@ -189,11 +191,13 @@ export function TerritoryTopbar({
           )}
         </div>
       </div>
-      <div className="mx-auto flex max-w-[76rem] items-center gap-3 px-5 pb-3 sm:px-6 lg:hidden">
-        <div className="min-w-0 flex-1">
-          {renderSearchForm("territory-home-search", `${searchLabel} no celular`)}
+      {showMobileSearch ? (
+        <div className="mx-auto flex max-w-[76rem] items-center gap-3 px-5 pb-3 sm:px-6 lg:hidden">
+          <div className="min-w-0 flex-1">
+            {renderSearchForm("territory-home-search", `${searchLabel} no celular`)}
+          </div>
         </div>
-      </div>
+      ) : null}
     </header>
   );
 }

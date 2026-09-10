@@ -24,7 +24,8 @@ export const BUSCA_CONCEPT_MOCK: {
     {
       id: "concept-search-joao",
       name: "João · Serviços elétricos",
-      target_url: "/servicos/profissional/concept-search-joao",
+      target_url:
+        "/servicos/ba/salvador/profissional/joao-santos?concept-mock=1",
       logo_url: providerImage,
       category: "Eletricista",
       neighborhood: "Santa Cruz",

@@ -62,12 +62,17 @@ export function AppLayoutSidebar() {
   const isAccountRoute = pathSegments[0] === "conta";
   const isPublicPersonalProfileRoute =
     pathSegments[0] === "u" && pathSegments.length === 2;
+  const isProfessionalPublicRoute =
+    pathSegments[0] === MODULE_SLUGS.services &&
+    pathSegments[3] === "profissional" &&
+    pathSegments.length >= 5;
   const usesTerritoryVivoShell =
     isBarePublicTerritorialRoute ||
     isTerritoryVivoExploreRoute ||
     isCommunityPublicLandingRoute ||
     isAccountRoute ||
-    isPublicPersonalProfileRoute;
+    isPublicPersonalProfileRoute ||
+    isProfessionalPublicRoute;
 
   // Ocultar sidebar na home e na página de perfil (que tem sua própria sidebar)
   const hideGlobalSidebar =
@@ -118,7 +123,9 @@ export function AppLayoutSidebar() {
             <Outlet />
           </div>
         </div>
-        <TerritoryAdaptiveNavigation />
+        <TerritoryAdaptiveNavigation
+          hideMobile={isProfessionalPublicRoute}
+        />
       </>
     );
   }

@@ -24,7 +24,11 @@ import {
   MODULE_SLUGS,
 } from "@/core/routing/utils/territoryUrls";
 
-export function TerritoryAdaptiveNavigation() {
+export function TerritoryAdaptiveNavigation({
+  hideMobile = false,
+}: {
+  hideMobile?: boolean;
+}) {
   const { pathname } = useLocation();
   const { active } = usePublicBrowsingCity();
   const { user } = useSessionContext();
@@ -102,7 +106,10 @@ export function TerritoryAdaptiveNavigation() {
   return (
     <>
       <nav
-        className="fixed inset-x-0 bottom-0 z-[100] border-t border-territory-border bg-territory-surface/96 backdrop-blur-xl safe-area-bottom md:hidden"
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-[100] border-t border-territory-border bg-territory-surface/96 backdrop-blur-xl safe-area-bottom md:hidden",
+          hideMobile && "hidden",
+        )}
         aria-label="Navegação principal mobile"
         data-territory-navigation="mobile"
       >
