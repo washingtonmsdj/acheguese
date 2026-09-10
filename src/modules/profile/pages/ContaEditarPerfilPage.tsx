@@ -43,8 +43,6 @@ import type {
   DriverData,
 } from "@/core/profiles/services/multi-profile/types";
 
-// Helpers
-
 function Field({
   id,
   label,
@@ -100,8 +98,6 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
     </p>
   );
 }
-
-// Business section
 
 function BusinessSection({
   data,
@@ -208,8 +204,6 @@ function BusinessSection({
   );
 }
 
-// Professional section
-
 function ProfessionalSection({
   data,
   onChange,
@@ -222,7 +216,6 @@ function ProfessionalSection({
     value: ProfessionalData[K],
   ) => onChange({ [key]: value } as Partial<ProfessionalData>);
 
-  // Arrays como texto separado por virgula
   const arrToStr = (arr?: string[]) => arr?.join(", ") ?? "";
   const strToArr = (s: string) =>
     s
@@ -305,18 +298,13 @@ function ProfessionalSection({
         />
       </Field>
 
-      <Field
-        id="service_area"
-        label="Áreas de atendimento"
-        hint="Separe por vírgula"
-      >
-        <Input
-          id="service_area"
-          value={arrToStr(data.service_area)}
-          onChange={(e) => set("service_area", strToArr(e.target.value))}
-          placeholder="Ex: Centro, Zona Norte, bairros atendidos"
-        />
-      </Field>
+      <div className="rounded-2xl border border-border bg-muted/30 p-3">
+        <p className="text-sm font-medium">Cobertura territorial</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Bairros e áreas de atendimento são gerenciados pela cobertura canônica
+          do perfil profissional, não por texto livre neste editor de identidade.
+        </p>
+      </div>
 
       <Field id="availability_notes" label="Disponibilidade">
         <Textarea
@@ -406,7 +394,6 @@ function ProfessionalSection({
     </div>
   );
 }
-// Driver section
 
 function DriverSection({
   data,
@@ -532,16 +519,16 @@ function DriverSection({
         />
       </Field>
 
-      <ToggleRow
-        label="Disponível para corridas"
-        checked={data.is_available ?? false}
-        onChange={(v) => set("is_available", v)}
-      />
+      <div className="rounded-2xl border border-border bg-muted/30 p-3">
+        <p className="text-sm font-medium">Disponibilidade operacional</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Online, disponível e localização ao vivo são controlados pela área de
+          trabalho do motorista e pelo broker de Mobilidade, não por este editor.
+        </p>
+      </div>
     </div>
   );
 }
-
-// Main component
 
 export default function ContaEditarPerfilPage() {
   const navigate = useNavigate();
@@ -570,7 +557,6 @@ export default function ContaEditarPerfilPage() {
   } = useProfileEditor(profileId);
   const profileType = profile?.profile_type ?? null;
 
-  // Hook de logs - sempre chamado, independente do tipo de perfil
   const { logAttempt, logSuccess, logError } = useIdentitySaveLogger({
     entityType: "profile",
     entityId: profileId || "",
@@ -578,7 +564,6 @@ export default function ContaEditarPerfilPage() {
     page: "ContaEditarPerfilPage",
   });
 
-  // Função doSave definida antes do hook que a usa
   const doSave = async () => {
     if (!profile) return;
     if (!baseForm.display_name?.trim()) {
@@ -617,8 +602,6 @@ export default function ContaEditarPerfilPage() {
     }
   };
 
-  // Hook de confirmação - sempre chamado, independente do tipo de perfil
-  // A condição entra no render, não na chamada do hook
   const { triggerSave: handleSave, confirmProps: usernameConfirmProps } =
     useProfileUsernameSaveGuard({
       username,
@@ -626,9 +609,6 @@ export default function ContaEditarPerfilPage() {
       onSave: doSave,
     });
 
-  // Early returns: somente apos todos os hooks e effects
-
-  // Acesso negado
   if (state === "denied") {
     return (
       <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-4">
@@ -685,11 +665,9 @@ export default function ContaEditarPerfilPage() {
     );
   }
 
-  // HELPERS E RENDER - DEPOIS DOS EARLY RETURNS
   return (
     <div className="territory-vivo min-h-[100dvh] bg-territory-canvas text-territory-ink">
       <div className="mx-auto max-w-[1180px] px-3 pb-24 pt-3 sm:px-6 sm:pb-10 sm:pt-5 lg:px-8">
-        {/* Header */}
         <div className="sticky top-0 z-20 -mx-3 mb-4 border-b border-territory-border bg-territory-canvas/95 px-3 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
@@ -745,18 +723,17 @@ export default function ContaEditarPerfilPage() {
                 <p>Contato exibido</p>
                 <p>Visibilidade</p>
                 {editableUsername !== null && <p>URL pública</p>}
-                {profileType !== "personal" && <p>Dados operacionais</p>}
+                {profileType !== "personal" && <p>Dados cadastrais</p>}
               </div>
               <Separator />
               <div className="rounded-2xl bg-muted/50 p-3 text-xs leading-5 text-muted-foreground">
-                Endereço residencial e entrega ficam em Configurações
-                operacionais, não neste formulário.
+                Endereço residencial, cobertura e estado operacional ficam nos
+                módulos responsáveis, não neste editor de identidade.
               </div>
             </div>
           </aside>
 
           <main className="space-y-4 sm:space-y-5">
-            {/* Campos base */}
             <section className="rounded-territory-highlight border border-territory-border bg-territory-surface p-4 sm:p-6">
               <div className="space-y-4">
                 <SectionTitle>Informações básicas</SectionTitle>
@@ -952,7 +929,6 @@ export default function ContaEditarPerfilPage() {
               </div>
             </section>
 
-            {/* Username - apenas para perfil pessoal */}
             {editableUsername !== null && (
               <section className="rounded-territory-highlight border border-territory-border bg-territory-surface p-4 sm:p-6">
                 <ProfileUsernameSection
@@ -965,7 +941,6 @@ export default function ContaEditarPerfilPage() {
               </section>
             )}
 
-            {/* Extensão por tipo */}
             {extLoading ? (
               <div className="flex items-center gap-2 rounded-territory-highlight border border-territory-border bg-territory-surface p-5 text-sm text-territory-muted">
                 <Loader2 className="h-4 w-4 animate-spin" />

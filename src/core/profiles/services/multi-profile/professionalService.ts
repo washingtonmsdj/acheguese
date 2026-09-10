@@ -2,6 +2,7 @@
  * Professional profile extension adapter.
  * Public professional fields stay in professional_data; registration
  * credentials are read and written only through the authenticated broker.
+ * Territorial coverage belongs exclusively to ServiceAreasService.
  */
 import { ProfessionalCredentialsService } from "@/core/professional/services/ProfessionalCredentialsService";
 import { ProfileRpcService } from "@/core/profiles/services/ProfileRpcService";
@@ -20,7 +21,6 @@ const PROFESSIONAL_EXTENSION_SELECT = `
   education,
   certifications,
   services_offered,
-  service_area,
   availability_notes,
   portfolio_items,
   visibility,

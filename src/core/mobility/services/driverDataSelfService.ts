@@ -1,16 +1,12 @@
 /**
  * Self-service driver_data mutation boundary.
  *
- * Security is enforced in Postgres by update_owned_driver_data(). This helper
- * keeps browser payloads narrow so profile editors never attempt to send
- * server-owned verification, subscription, capability, rating or stats fields.
+ * driver_data owns registration/vehicle attributes. Operational presence,
+ * availability and live location belong exclusively to driver_availability via
+ * DriverAvailabilityService / mobility-rpc.
  */
 
 const DRIVER_SELF_SERVICE_FIELDS = new Set([
-  "is_online",
-  "is_available",
-  "last_location_update",
-  "current_location",
   "license_number",
   "license_category",
   "license_expiry",

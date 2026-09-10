@@ -88,7 +88,8 @@ export interface BusinessData {
   updated_at: string;
 }
 
-// Professional extension
+// Professional extension. Cobertura territorial nao pertence a este shape:
+// o SSOT e public.service_areas, acessado por ServiceAreasService.
 export interface ProfessionalData {
   profile_id: string;
   profession: string;
@@ -101,7 +102,6 @@ export interface ProfessionalData {
   education?: string;
   certifications?: string[];
   services_offered?: string[];
-  service_area?: string[];
   availability_notes?: string;
   portfolio_items?: Array<{
     url: string;
@@ -116,7 +116,8 @@ export interface ProfessionalData {
   updated_at: string;
 }
 
-// Driver extension
+// Driver extension. Operational online/availability/location state is read-only
+// here; mutations belong to DriverAvailabilityService / driver_availability.
 export interface DriverData {
   profile_id: string;
   license_number: string;

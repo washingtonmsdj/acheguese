@@ -1,7 +1,7 @@
 /**
  * DRIVER SERVICE - FASE 3
- * Service layer para operações de perfis driver
- * Fonte: ARQUITETURA_MULTI_PERFIL_DEFINITIVA.md v3.0
+ * Service layer para atributos cadastrais de perfis driver.
+ * Estado online/disponivel/localizacao pertence a DriverAvailabilityService.
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
@@ -43,9 +43,7 @@ interface DriverDbClient {
 const driverDb = supabase as unknown as DriverDbClient;
 
 export class DriverService {
-  /**
-   * Buscar driver data (via RLS)
-   */
+  /** Buscar dados cadastrais/estado de leitura do driver via RLS. */
   static async getDriverData(profileId: string): Promise<DriverData | null> {
     try {
       const { data, error } = await driverDb
@@ -64,7 +62,9 @@ export class DriverService {
   }
 
   /**
-   * Atualizar driver data (via RLS)
+   * Atualiza somente atributos cadastrais self-service (CNH/veiculo).
+   * Presenca, disponibilidade e GPS sao rejeitados pelo sanitizer e devem usar
+   * DriverAvailabilityService / mobility-rpc.
    */
   static async updateDriverData(
     profileId: string,
@@ -104,25 +104,4 @@ export class DriverService {
       };
     }
   }
-
-  /**
-   * Atualizar disponibilidade do motorista
-   */
-  static async updateAvailability(profileId: string, isAvailable: boolean): Promise<ServiceResponse<DriverData>> {
-    return this.updateDriverData(profileId, {
-      is_available: isAvailable,
-      last_location_update: new Date().toISOString(),
-    });
-  }
-
-  /**
-   * Atualizar localização do motorista
-   */
-  static async updateLocation(profileId: string, location: { lat: number; lng: number }): Promise<ServiceResponse<DriverData>> {
-    return this.updateDriverData(profileId, {
-      current_location: { lat: location.lat, lng: location.lng },
-      last_location_update: new Date().toISOString(),
-    });
-  }
 }
-
