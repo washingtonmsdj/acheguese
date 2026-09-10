@@ -139,6 +139,29 @@ function outputUrl(output: unknown): string | null {
   return null;
 }
 
+function publicTryOnFailureMessage(error: unknown): string {
+  const internal = error instanceof Error ? error.message : String(error);
+
+  if (internal.includes("suporta apenas roupas")) {
+    return "Este tipo de item ainda não é compatível com o provador virtual.";
+  }
+  if (internal.includes("Rate limit")) {
+    return "O provador está recebendo muitas solicitações. Tente novamente em instantes.";
+  }
+  if (internal.includes("demorou mais que o limite")) {
+    return "A geração demorou mais que o esperado. Tente novamente.";
+  }
+  if (
+    internal.includes("imagem do produto") ||
+    internal.includes("Imagem do produto") ||
+    internal.includes("imagem gerada")
+  ) {
+    return "Não foi possível processar a imagem do produto.";
+  }
+
+  return "Não foi possível gerar a imagem. Tente novamente.";
+}
+
 async function replicateRequest(path: string, init?: RequestInit): Promise<unknown> {
   const token = Deno.env.get("REPLICATE_API_TOKEN")?.trim();
   if (!token) throw new Error("REPLICATE_API_TOKEN nao esta configurado no backend.");
@@ -352,7 +375,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    await admin
+    const { error: processingError } = await admin
       .from("tryon_generations")
       .update({
         status: "processing",
@@ -361,6 +384,7 @@ Deno.serve(async (req) => {
         generated_urls: [],
       })
       .eq("id", generationId);
+    if (processingError) throw processingError;
 
     const work = (async () => {
       try {
@@ -388,26 +412,36 @@ Deno.serve(async (req) => {
           const url = admin.storage.from("tryon").getPublicUrl(path).data.publicUrl;
           generatedUrls.push(url);
 
-          await admin
+          const { error: progressError } = await admin
             .from("tryon_generations")
             .update({ generated_urls: generatedUrls })
             .eq("id", generationId);
+          if (progressError) throw progressError;
         }
 
-        await admin
+        const { error: completedError } = await admin
           .from("tryon_generations")
-          .update({ status: "completed", provider: "replicate", generated_urls: generatedUrls })
+          .update({
+            status: "completed",
+            provider: "replicate",
+            generated_urls: generatedUrls,
+          })
           .eq("id", generationId);
+        if (completedError) throw completedError;
       } catch (err) {
         console.error("tryon-generate worker error", err);
-        await admin
+        const { error: failureStateError } = await admin
           .from("tryon_generations")
           .update({
             status: "failed",
             provider: "replicate",
-            error_message: err instanceof Error ? err.message : String(err),
+            error_message: publicTryOnFailureMessage(err),
           })
           .eq("id", generationId);
+
+        if (failureStateError) {
+          console.error("tryon-generate failed-state persistence error", failureStateError);
+        }
       }
     })();
 
@@ -421,7 +455,7 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("tryon-generate fatal", err);
-    return new Response(JSON.stringify({ error: err instanceof Error ? err.message : "unknown" }), {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...headers, "Content-Type": "application/json" },
     });
