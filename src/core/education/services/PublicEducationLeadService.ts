@@ -25,6 +25,9 @@ export interface PublicEducationLeadResult {
   created: boolean;
 }
 
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 function publicLeadError(message: string): string {
   const normalized = message.toLowerCase();
 
@@ -46,6 +49,10 @@ function publicLeadError(message: string): string {
   return "Nao foi possivel registrar seu interesse.";
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 export const PublicEducationLeadService = {
   async create(input: PublicEducationLeadInput): Promise<PublicEducationLeadResult> {
     const { data, error } = await supabase.functions.invoke("education-lead-rpc", {
@@ -61,20 +68,31 @@ export const PublicEducationLeadService = {
       throw new Error(publicLeadError(brokerMessage));
     }
 
-    const response = data as
-      | { leadId?: unknown; created?: unknown; error?: unknown }
-      | null;
-
-    if (typeof response?.error === "string") {
-      throw new Error(publicLeadError(response.error));
+    if (!isRecord(data)) {
+      throw new Error("Nao foi possivel registrar seu interesse.");
     }
-    if (typeof response?.leadId !== "string") {
+
+    if (typeof data.error === "string") {
+      throw new Error(publicLeadError(data.error));
+    }
+
+    if (
+      typeof data.leadId !== "string" ||
+      !UUID_PATTERN.test(data.leadId) ||
+      typeof data.created !== "boolean" ||
+      data.educationProfileId !== input.educationProfileId ||
+      typeof data.businessDataId !== "string" ||
+      !UUID_PATTERN.test(data.businessDataId)
+    ) {
+      logger.warn("[PublicEducationLeadService] invalid broker response contract", {
+        educationProfileId: input.educationProfileId,
+      });
       throw new Error("Nao foi possivel registrar seu interesse.");
     }
 
     return {
-      id: response.leadId,
-      created: response.created === true,
+      id: data.leadId,
+      created: data.created,
     };
   },
 };
