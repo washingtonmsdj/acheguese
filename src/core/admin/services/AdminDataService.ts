@@ -2,7 +2,8 @@
  * AdminDataService - SSOT para operacoes administrativas de dados
  *
  * Encapsula composicao administrativa. Decisoes operacionais de roles passam
- * pelo owner `core/authorization`; mutacoes de role continuam em AdminRolesService.
+ * pelo owner `core/authorization`; mutacoes de role passam pelo broker
+ * `admin-role-rpc` via AdminRolesService.
  *
  * @version 1.0.0
  */
@@ -48,18 +49,10 @@ export class AdminDataService {
     }
   }
 
-  /** Atualizar role de usuario (admin only) via owner de gestao administrativa. */
-  static async updateUserRole(
-    userId: string,
-    role: string,
-    grantedBy: string = "system",
-  ) {
+  /** Atualizar role via broker; ator administrativo e derivado do JWT. */
+  static async updateUserRole(userId: string, role: string) {
     try {
-      const success = await adminRolesService.grantRole({
-        userId,
-        role,
-        grantedBy,
-      });
+      const success = await adminRolesService.grantRole({ userId, role });
       if (!success) {
         throw new Error("Failed to grant role");
       }
