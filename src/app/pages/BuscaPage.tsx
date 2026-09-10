@@ -446,9 +446,9 @@ export default function BuscaPage() {
         searchLabel="O que você procura por aqui?"
       />
 
-      <main className="mx-auto w-full max-w-[76rem] px-4 pb-24 pt-6 sm:px-6 sm:pt-8 lg:px-8 lg:pb-10">
-        <header className="flex items-start justify-between gap-4">
-          <div>
+      <main className="mx-auto w-full max-w-[76rem] px-5 pb-24 pt-6 sm:px-6 sm:pt-8 lg:px-8 lg:pb-10">
+        <header className="relative">
+          <div className="pr-0 md:pr-0">
             <h1 className="font-heading text-[2rem] font-bold leading-[1.08] tracking-[-0.04em] text-territory-ink sm:text-4xl">
               Explorar
             </h1>
@@ -459,7 +459,7 @@ export default function BuscaPage() {
           <button
             type="button"
             onClick={toggleFilterMenu}
-            className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-territory-border bg-territory-surface px-3 text-sm font-semibold text-territory-ink hover:border-territory-brand/45 md:hidden"
+            className="absolute right-0 top-0 inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-territory-border bg-territory-surface px-3 text-sm font-semibold text-territory-ink hover:border-territory-brand/45 md:hidden"
           >
             <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
             Filtros
@@ -484,7 +484,7 @@ export default function BuscaPage() {
                   type="button"
                   onClick={() => handleFilterChange(filter.id)}
                   className={cn(
-                    "relative min-h-12 shrink-0 whitespace-nowrap px-0.5 text-sm font-medium text-territory-muted transition-colors after:absolute after:inset-x-0 after:bottom-[-1px] after:h-0.5 after:rounded-full after:bg-transparent hover:text-territory-ink",
+                    "relative min-h-10 shrink-0 whitespace-nowrap px-0.5 text-sm font-medium text-territory-muted transition-colors after:absolute after:inset-x-0 after:bottom-[-1px] after:h-0.5 after:rounded-full after:bg-transparent hover:text-territory-ink",
                     activeFilter === filter.id &&
                       "font-bold text-territory-brand after:bg-territory-brand",
                   )}
@@ -496,14 +496,14 @@ export default function BuscaPage() {
             )}
             <Link
               to={moduleUrls.education}
-              className="relative hidden min-h-12 shrink-0 items-center whitespace-nowrap px-0.5 text-sm font-medium text-territory-muted transition-colors hover:text-territory-ink md:inline-flex"
+              className="relative hidden min-h-10 shrink-0 items-center whitespace-nowrap px-0.5 text-sm font-medium text-territory-muted transition-colors hover:text-territory-ink md:inline-flex"
             >
               Educação
             </Link>
           </div>
         </nav>
 
-        <div className="relative mt-4 flex flex-wrap items-center gap-2">
+        <div className="relative mt-3 flex flex-wrap items-center gap-2 md:mt-4">
           <button
             type="button"
             onClick={toggleFilterMenu}
@@ -575,7 +575,7 @@ export default function BuscaPage() {
           ) : null}
         </div>
 
-        <div className="mt-5 grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(22rem,0.82fr)] xl:items-start xl:gap-8">
+        <div className="mt-4 grid gap-8 sm:mt-5 xl:grid-cols-[minmax(0,1fr)_minmax(22rem,0.82fr)] xl:items-start xl:gap-8">
           <section className="min-w-0">
             {!query ? (
               <ExploreStart
@@ -897,7 +897,7 @@ function ResultsView({
         </p>
       </header>
 
-      <div className="mt-4 flex items-center gap-2 md:hidden">
+      <div className="mt-2 flex items-center gap-2 sm:mt-4 md:hidden">
         <label className="relative min-w-0 flex-1">
           <span className="sr-only">Ordenar resultados</span>
           <select
@@ -932,7 +932,7 @@ function ResultsView({
         </Link>
       </div>
 
-      <div className="mt-4 space-y-3">
+      <div className="mt-3 space-y-2 sm:mt-4 sm:space-y-3">
         {professionals.map((professional) => (
           <ProfessionalResultCard
             key={professional.id}
@@ -1023,38 +1023,38 @@ function BusinessResultCard({
         <img
           src={business.logo_url}
           alt=""
-          className="h-20 w-20 shrink-0 rounded-xl object-cover"
+          className="h-[4.5rem] w-[4.5rem] shrink-0 rounded-xl object-cover sm:h-20 sm:w-20"
         />
       ) : (
-        <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-territory-raised text-territory-brand">
+        <span className="flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center rounded-xl bg-territory-raised text-territory-brand sm:h-20 sm:w-20">
           <Store className="h-5 w-5" aria-hidden="true" />
         </span>
       )}
       <span className="min-w-0 flex-1 pr-7">
-        <span className="block truncate text-base font-bold text-territory-ink group-hover:text-territory-brand">
+        <span className="block truncate text-[0.9375rem] font-bold text-territory-ink group-hover:text-territory-brand sm:text-base">
           {business.name}
         </span>
-        <span className="mt-1 flex items-center gap-1 text-sm text-territory-muted">
+        <span className="mt-0.5 flex items-center gap-1 text-xs text-territory-muted sm:mt-1 sm:text-sm">
           <span className="truncate">{business.category}</span>
           {business.neighborhood ? (
             <>
               <span>·</span>
-              <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+              <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
               <span className="truncate">{business.neighborhood}</span>
             </>
           ) : null}
         </span>
-        <span className="mt-2 block line-clamp-2 text-sm leading-5 text-territory-ink/80">
+        <span className="mt-1 block line-clamp-2 text-xs leading-4 text-territory-ink/80 sm:mt-2 sm:text-sm sm:leading-5">
           {business.description || "Informações e serviços disponíveis por perto."}
         </span>
-        <span className="mt-3 flex items-center justify-between gap-3 text-xs font-semibold text-territory-muted">
+        <span className="mt-2 flex items-center justify-between gap-2 text-xs font-semibold text-territory-muted sm:mt-3 sm:gap-3">
           <span className="inline-flex min-w-0 items-center gap-1.5 truncate">
-            <Home className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <Home className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
             Atende no território
           </span>
           <span className="inline-flex shrink-0 items-center gap-1 text-territory-brand">
             Ver negócio
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
           </span>
         </span>
       </span>
@@ -1078,7 +1078,7 @@ function ProfessionalResultCard({
       onClick={onClick}
       className="group relative flex w-full items-start gap-3 rounded-xl border border-territory-border bg-territory-surface p-3 text-left shadow-[0_1px_0_hsl(var(--territory-border)/0.25)] transition-colors hover:border-territory-brand/55 hover:bg-territory-raised sm:gap-4 sm:p-4"
     >
-      <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl">
+      <div className="h-[4.5rem] w-[4.5rem] shrink-0 overflow-hidden rounded-xl sm:h-20 sm:w-20">
         <BusinessLogo
           name={professional.name}
           logoUrl={professional.logo_url}
@@ -1087,32 +1087,32 @@ function ProfessionalResultCard({
         />
       </div>
       <span className="min-w-0 flex-1 pr-7">
-        <span className="block truncate text-base font-bold text-territory-ink group-hover:text-territory-brand">
+        <span className="block truncate text-[0.9375rem] font-bold text-territory-ink group-hover:text-territory-brand sm:text-base">
           {professional.name}
         </span>
-        <span className="mt-1 flex items-center gap-1 text-sm text-territory-muted">
+        <span className="mt-0.5 flex items-center gap-1 text-xs text-territory-muted sm:mt-1 sm:text-sm">
           <span className="truncate">{professional.category}</span>
           {professional.neighborhood || professional.city ? (
             <>
               <span>·</span>
-              <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+              <MapPin className="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
               <span className="truncate">
                 {professional.neighborhood ?? professional.city}
               </span>
             </>
           ) : null}
         </span>
-        <span className="mt-2 block line-clamp-2 text-sm leading-5 text-territory-ink/80">
+        <span className="mt-1 block line-clamp-2 text-xs leading-4 text-territory-ink/80 sm:mt-2 sm:text-sm sm:leading-5">
           {professional.description || "Soluções e atendimento para a vizinhança."}
         </span>
-        <span className="mt-3 flex items-center justify-between gap-3 text-xs font-semibold text-territory-muted">
+        <span className="mt-2 flex items-center justify-between gap-2 text-xs font-semibold text-territory-muted sm:mt-3 sm:gap-3">
           <span className="inline-flex min-w-0 items-center gap-1.5 truncate">
-            <Home className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <Home className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
             Atende no território
           </span>
           <span className="inline-flex shrink-0 items-center gap-1 text-territory-brand">
             Ver profissional
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
           </span>
         </span>
       </span>
