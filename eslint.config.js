@@ -240,12 +240,6 @@ export default tseslint.config(
     rules: { "no-restricted-imports": "off" },
   },
 
-  // AdminSetupPage: bootstrap one-shot com supabaseAdmin (service_role key)
-  {
-    files: ["src/modules/admin/pages/AdminSetupPage.tsx"],
-    rules: { "no-restricted-imports": "off" },
-  },
-
   // ─── BLINDAGEM DE LEGADO ──────────────────────────────────────────────────
 
   // Bloqueia caminhos legados removidos
@@ -290,10 +284,9 @@ export default tseslint.config(
     },
   },
 
-  // adminService e profileMembersService: usam auth.getSession() para token
+  // profileMembersService usa auth.getSession() para token no boundary canônico.
   {
     files: [
-      "src/core/profiles/services/multi-profile/adminService.ts",
       "src/core/profiles/services/multi-profile/profileMembersService.ts",
     ],
     rules: {
@@ -464,7 +457,7 @@ export default tseslint.config(
     ],
     rules: { "ssot/no-direct-community-access": "off" },
   },
-  // AdminUserService usa supabaseAdmin (service_role) para auth.admin.* — admin context legítimo.
+  // AdminUserService e os serviços Admin listados são owners canônicos de persistência administrativa.
   {
     files: [
       "src/core/admin/services/AdminUserService.ts",
