@@ -69,7 +69,7 @@ export function TerritorySectionHeading({
         ) : null}
         <h2
           id={id}
-          className="font-heading text-xl font-semibold leading-tight tracking-[-0.02em] text-territory-ink sm:text-2xl"
+          className="font-heading text-xl font-bold leading-tight tracking-[-0.02em] text-territory-ink sm:text-2xl"
         >
           {title}
         </h2>

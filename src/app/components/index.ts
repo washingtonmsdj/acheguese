@@ -5,7 +5,7 @@
  */
 
 // Navigation Components
-export { BottomNav } from "./BottomNav";
+export { BottomNav } from "@/core/navigation/BottomNav";
 export { Breadcrumbs } from "./Breadcrumbs";
 export { NavLink } from "./NavLink";
 export { UserProfileDropdown } from "./UserProfileDropdown";

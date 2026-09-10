@@ -210,13 +210,13 @@ export async function getBusinesses(
 
     // SSOT - Filtro territorial usando utilitário compartilhado
     if (filters.territoryFilter) {
-      query = applyTerritoryFilter(
+      applyTerritoryFilter(
         query as unknown as {
           eq: (field: string, value: string) => unknown;
           in: (field: string, values: string[]) => unknown;
         },
         filters.territoryFilter,
-      ) as typeof query;
+      );
     }
 
     // Ordenação
@@ -414,13 +414,13 @@ export async function getBusinessesList(
     }
 
     if (resolvedFilter) {
-      query = applyTerritoryFilter(
+      applyTerritoryFilter(
         query as unknown as {
           eq: (field: string, value: string) => unknown;
           in: (field: string, values: string[]) => unknown;
         },
         resolvedFilter,
-      ) as typeof query;
+      );
     }
 
     query = (

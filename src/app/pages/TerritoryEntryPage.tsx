@@ -9,26 +9,17 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
-  BriefcaseBusiness,
-  Building2,
   Check,
-  Info,
   Loader2,
   LocateFixed,
   MapPin,
   Search,
-  Store,
-  Users,
-  Wrench,
   X,
 } from "lucide-react";
 
 import TerritoryEntryMap from "@/app/components/territory-vivo/TerritoryEntryMap";
-import {
-  TerritorySectionHeading,
-  TerritorySurface,
-} from "@/app/components/territory-vivo";
-import { SALVADOR_COMMUNITY_LAUNCH_CLUSTER } from "@/core/community/config/communityLaunch";
+import communityThumbnail from "@/assets/hero-complexo-nordeste.jpg";
+import { TerritorySurface } from "@/app/components/territory-vivo";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import {
@@ -36,29 +27,12 @@ import {
   LocationType,
   type Location,
 } from "@/core/location/types";
-import {
-  lastTerritoryStore,
-  type LastTerritory,
-} from "@/core/routing/stores/LastTerritoryStore";
+import { lastTerritoryStore } from "@/core/routing/stores/LastTerritoryStore";
 import { geoPathToPublicUrl } from "@/core/routing/utils/territoryUrls";
 import { isTerritoryPubliclyNavigable } from "@/core/routing/utils/territoryVisibility";
 import { normalizeTerritoryText } from "@/shared/utils/slugify";
 
-const OFFICIAL_LOGO_SRC = "/images/logo-icon.png";
 const PUBLIC_SALVADOR_PATH = "/ba/salvador";
-
-const FEATURED_TERRITORIES = [
-  { label: "Pituba", path: "/ba/salvador/pituba" },
-  { label: "Barra", path: "/ba/salvador/barra" },
-  { label: "Rio Vermelho", path: "/ba/salvador/rio-vermelho" },
-] as const;
-
-const PRODUCT_VALUE = [
-  { label: "Serviços", icon: Wrench },
-  { label: "Comércio", icon: Store },
-  { label: "Oportunidades", icon: BriefcaseBusiness },
-  { label: "Informação local", icon: Info },
-] as const;
 
 interface ReverseGeocodeAddress {
   city?: string;
@@ -96,10 +70,6 @@ interface NominatimSearchItem {
   lon: string;
   address?: ReverseGeocodeAddress;
   display_name?: string;
-}
-
-interface TerritoryEntryPageProps {
-  recentTerritory?: LastTerritory | null;
 }
 
 const BR_STATE_TO_UF: Record<string, string> = {
@@ -390,9 +360,7 @@ function geolocationErrorMessage(error: unknown): string {
   return "Não foi possível usar sua localização agora. Busque uma cidade ou bairro para continuar.";
 }
 
-export default function TerritoryEntryPage({
-  recentTerritory = null,
-}: TerritoryEntryPageProps) {
+export default function TerritoryEntryPage() {
   const navigate = useNavigate();
   const [launchCity, setLaunchCity] = useState<Location | null>(null);
   const [isMapLoading, setIsMapLoading] = useState(true);
@@ -601,35 +569,42 @@ export default function TerritoryEntryPage({
   };
 
   return (
-    <div className="territory-vivo min-h-[100dvh] overflow-x-hidden">
-      <header className="mx-auto flex h-16 w-full max-w-[90rem] items-center justify-between px-4 sm:h-[4.5rem] sm:px-6 lg:px-10">
+    <div className="territory-vivo territory-entry-page min-h-[100dvh] overflow-x-hidden">
+      <header className="territory-entry-header mx-auto flex h-16 w-full max-w-[110rem] items-center justify-between px-4 sm:h-[4.5rem] sm:px-6 lg:px-10">
         <Link
           to="/?trocar=territorio"
           className="flex items-center gap-2.5"
           aria-label="Achegue-se"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-territory-border bg-territory-surface shadow-territory-highlight">
-            <img
-              src={OFFICIAL_LOGO_SRC}
-              alt=""
-              className="h-6 w-6 object-contain"
-            />
+          <span
+            aria-hidden="true"
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-territory-brand text-xl font-bold leading-none text-[hsl(var(--territory-canvas))] shadow-territory-highlight"
+          >
+            a
           </span>
-          <span className="font-heading text-xl font-bold tracking-[-0.03em] text-territory-ink">
-            Achegue-<span className="text-territory-brand">se</span>
+          <span className="font-heading text-xl font-bold tracking-[-0.03em] text-territory-brand">
+            achegue-se
           </span>
         </Link>
-        <Link
-          to="/login"
-          className="inline-flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-territory-ink transition-colors hover:bg-territory-surface"
-        >
-          Entrar
-        </Link>
+        <nav className="flex items-center gap-1 sm:gap-2" aria-label="Navegação pública">
+          <Link
+            to="/sobre"
+            className="hidden min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-territory-ink transition-colors hover:bg-territory-raised sm:inline-flex"
+          >
+            O projeto
+          </Link>
+          <Link
+            to="/login"
+            className="inline-flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-territory-ink transition-colors hover:bg-territory-raised"
+          >
+            Entrar
+          </Link>
+        </nav>
       </header>
 
       <main
         data-testid="territory-entry-layout"
-        className="mx-auto grid w-full max-w-[90rem] gap-5 px-4 pb-8 sm:px-6 sm:pb-10 md:grid-cols-[minmax(0,1.08fr)_minmax(22rem,0.92fr)] md:items-stretch md:gap-6 lg:px-10 xl:grid-cols-[minmax(0,1.22fr)_minmax(26rem,0.78fr)] xl:gap-8"
+        className="territory-entry-main mx-auto grid w-full max-w-[110rem] gap-5 pb-8 sm:pb-10 md:items-stretch"
       >
         <TerritoryEntryMap
           city={launchCity}
@@ -638,53 +613,26 @@ export default function TerritoryEntryPage({
         />
 
         <section
-          className="flex min-w-0 flex-col justify-center md:py-2"
+          className="territory-entry-panel flex min-w-0 flex-col justify-center"
           aria-labelledby="territory-entry-title"
         >
+          <div className="territory-entry-panel-handle" aria-hidden="true" />
           <div className="mb-4 md:mb-5">
-            <p className="mb-2 text-[0.6875rem] font-bold uppercase tracking-[0.16em] text-territory-brand">
-              Seu território, sua rotina
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-territory-muted-strong">
+              Seu próximo encontro é perto
             </p>
             <h1
               id="territory-entry-title"
-              className="max-w-xl font-heading text-[2rem] font-semibold leading-[1.02] tracking-[-0.045em] text-territory-ink min-[380px]:text-[2.25rem] md:text-[2.5rem] xl:text-[3rem]"
+              className="max-w-xl font-heading text-[1.5rem] font-bold leading-[1.1] tracking-[-0.045em] text-territory-ink md:text-[1.75rem]"
             >
-              Encontre o que importa perto de você.
+              Por onde vamos começar?
             </h1>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-territory-muted sm:text-base sm:leading-7">
-              Serviços, comércio, oportunidades e informação local em Salvador —
-              na cidade inteira ou no seu bairro.
+            <p className="mt-3 max-w-xl text-sm leading-6 text-territory-muted md:text-base md:leading-7">
+              Encontre pessoas e possibilidades no seu lugar.
             </p>
           </div>
 
-          <TerritorySurface
-            tone="raised"
-            className="relative z-20 p-3.5 sm:p-4"
-          >
-            <button
-              type="button"
-              onClick={() => void handleUseLocation()}
-              disabled={isLocating}
-              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-territory bg-territory-brand px-4 text-sm font-semibold text-[hsl(var(--territory-canvas))] shadow-territory-highlight transition-colors hover:bg-territory-brand-strong disabled:cursor-wait disabled:opacity-70"
-            >
-              {isLocating ? (
-                <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-              ) : (
-                <LocateFixed className="h-5 w-5" aria-hidden="true" />
-              )}
-              {isLocating
-                ? "Identificando seu território…"
-                : "Usar minha localização"}
-            </button>
-
-            <div className="my-3 flex items-center gap-3" aria-hidden="true">
-              <span className="h-px flex-1 bg-territory-border" />
-              <span className="text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-territory-muted">
-                ou busque
-              </span>
-              <span className="h-px flex-1 bg-territory-border" />
-            </div>
-
+          <div className="relative z-20">
             <form onSubmit={handleSubmit} role="search" className="relative">
               <label htmlFor="territory-entry-search" className="sr-only">
                 Buscar cidade ou bairro
@@ -706,17 +654,17 @@ export default function TerritoryEntryPage({
                 onKeyDown={(event) =>
                   event.key === "Escape" && setShowSuggestions(false)
                 }
-                placeholder="Cidade ou bairro"
+                placeholder="Busque cidade ou bairro"
                 autoComplete="off"
                 role="combobox"
                 aria-expanded={showSuggestions}
                 aria-controls="territory-entry-suggestions"
-                className="h-14 w-full rounded-territory border border-territory-border bg-territory-raised pl-12 pr-14 text-base text-territory-ink outline-none transition placeholder:text-territory-muted/75 hover:border-territory-brand/30 focus:border-territory-brand/60"
+                className="h-12 w-full rounded-xl border border-territory-brand/70 bg-territory-surface pl-11 pr-14 text-base text-territory-ink outline-none transition placeholder:text-territory-muted/75 hover:border-territory-brand focus:border-territory-brand focus:ring-2 focus:ring-territory-focus/20"
               />
               <button
                 type="submit"
                 disabled={!canSubmit || isOpening}
-                className="absolute right-1.5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-xl bg-territory-brand text-[hsl(var(--territory-canvas))] transition-colors hover:bg-territory-brand-strong disabled:bg-territory-border disabled:text-territory-muted"
+                className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg bg-territory-brand text-[hsl(var(--territory-canvas))] transition-colors hover:bg-territory-brand-strong disabled:bg-territory-border disabled:text-territory-muted"
                 aria-label="Confirmar território"
               >
                 {isOpening ? (
@@ -780,13 +728,61 @@ export default function TerritoryEntryPage({
 
             <button
               type="button"
-              onClick={() => openTerritory(PUBLIC_SALVADOR_PATH, "Salvador")}
-              className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-territory border border-territory-brand/30 bg-territory-brand/8 px-4 text-sm font-semibold text-territory-brand transition-colors hover:bg-territory-brand/14"
+              onClick={() => void handleUseLocation()}
+              disabled={isLocating}
+              className="mt-3 flex min-h-12 w-full items-center justify-between gap-3 rounded-xl px-1 text-left text-sm font-semibold text-territory-ink transition-colors hover:bg-territory-raised disabled:cursor-wait disabled:opacity-70"
             >
-              <Building2 className="h-4 w-4" aria-hidden="true" />
-              Explorar Salvador inteira
+              <span className="flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-territory-brand text-territory-brand">
+                  {isLocating ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <LocateFixed className="h-4 w-4" aria-hidden="true" />
+                  )}
+                </span>
+                {isLocating
+                  ? "Identificando seu território…"
+                  : "Usar minha localização"}
+              </span>
+              <ArrowRight className="h-4 w-4 text-territory-brand" aria-hidden="true" />
             </button>
-          </TerritorySurface>
+
+            <div className="my-3 h-px bg-territory-border" aria-hidden="true" />
+
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-territory-muted-strong">
+              Comece por aqui
+            </p>
+            <Link
+              to={LAUNCH_URLS.community}
+              className="mt-3 flex min-w-0 items-center gap-3 rounded-xl px-1 py-1 text-left transition-colors hover:bg-territory-raised"
+            >
+              <img
+                src={communityThumbnail}
+                alt=""
+                className="h-14 w-14 shrink-0 rounded-xl object-cover"
+              />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-heading text-base font-bold text-territory-ink">
+                  Complexo do Nordeste de Amaralina
+                </span>
+                <span className="mt-0.5 block text-sm text-territory-muted">
+                  Salvador, Bahia
+                </span>
+              </span>
+              <ArrowRight className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
+            </Link>
+
+            <Link
+              to={LAUNCH_URLS.community}
+              className="mt-2 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-territory-sun px-4 text-sm font-bold text-territory-ink transition-colors hover:bg-territory-sun/90"
+            >
+              Explorar esta comunidade
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+            <p className="mt-3 text-center text-sm text-territory-muted">
+              Sem cadastro para explorar.
+            </p>
+          </div>
 
           {resolvedLocation ? (
             <TerritorySurface
@@ -846,113 +842,8 @@ export default function TerritoryEntryPage({
             </div>
           ) : null}
 
-          {recentTerritory ? (
-            <button
-              type="button"
-              onClick={() =>
-                openTerritory(recentTerritory.baseUrl, recentTerritory.name)
-              }
-              className="mt-3 flex min-h-12 w-full items-center justify-between rounded-territory border border-territory-border bg-territory-surface px-4 text-left shadow-territory-highlight"
-            >
-              <span>
-                <span className="block text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-territory-muted">
-                  Seu último território
-                </span>
-                <span className="mt-0.5 block text-sm font-semibold text-territory-ink">
-                  {recentTerritory.name}
-                </span>
-              </span>
-              <ArrowRight
-                className="h-4 w-4 text-territory-brand"
-                aria-hidden="true"
-              />
-            </button>
-          ) : null}
-
-          <div className="mt-4">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-semibold text-territory-muted">
-                Bairros para explorar
-              </p>
-              <span className="text-[0.6875rem] text-territory-muted">
-                sem cadastro
-              </span>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {FEATURED_TERRITORIES.map((territory) => (
-                <button
-                  key={territory.path}
-                  type="button"
-                  onClick={() => openTerritory(territory.path, territory.label)}
-                  className="min-h-10 rounded-xl border border-territory-border bg-territory-surface px-3 text-xs font-semibold text-territory-ink transition-colors hover:border-territory-brand/40 hover:text-territory-brand"
-                >
-                  {territory.label}
-                </button>
-              ))}
-            </div>
-          </div>
         </section>
 
-        <section
-          className="grid gap-4 md:col-span-2 md:grid-cols-[minmax(0,1fr)_minmax(20rem,0.72fr)] md:gap-6"
-          aria-label="O que encontrar no Achegue-se"
-        >
-          <TerritorySurface tone="inset" className="p-5 sm:p-6">
-            <TerritorySectionHeading
-              eyebrow="Depois da escolha"
-              title="Um ponto de partida para a vida local"
-              description="A seleção abre conteúdo público do território. Conta só é necessária quando você quiser participar."
-            />
-            <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {PRODUCT_VALUE.map(({ label, icon: Icon }) => (
-                <li
-                  key={label}
-                  className="flex min-h-[4.75rem] flex-col justify-between rounded-territory border border-territory-border bg-territory-surface p-3"
-                >
-                  <Icon
-                    className="h-5 w-5 text-territory-brand"
-                    aria-hidden="true"
-                  />
-                  <span className="mt-3 text-xs font-semibold text-territory-ink">
-                    {label}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </TerritorySurface>
-
-          <TerritorySurface tone="highlight" className="p-5 sm:p-6">
-            <div className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-territory bg-territory-brand/12 text-territory-brand">
-                <Users className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <div>
-                <p className="text-[0.6875rem] font-bold uppercase tracking-[0.16em] text-territory-brand">
-                  Community em expansão
-                </p>
-                <h2 className="mt-1 font-heading text-lg font-semibold text-territory-ink">
-                  Complexo do Nordeste de Amaralina
-                </h2>
-              </div>
-            </div>
-            <p className="mt-3 text-sm leading-6 text-territory-muted">
-              Salvador inteira já pode ser explorada. A camada de participação
-              comunitária tem rollout próprio e começa por estes territórios:
-            </p>
-            <p className="mt-3 text-xs font-semibold leading-5 text-territory-ink">
-              {SALVADOR_COMMUNITY_LAUNCH_CLUSTER.map(
-                (territory) => territory.name,
-              ).join(" · ")}
-            </p>
-            <Link
-              to={LAUNCH_URLS.community}
-              className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-territory-brand/30 px-4 text-sm font-semibold text-territory-brand hover:bg-territory-brand/10"
-            >
-              Conhecer a Community{" "}
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          </TerritorySurface>
-        </section>
       </main>
     </div>
   );

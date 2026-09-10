@@ -39,7 +39,7 @@ function ResolvedTerritoryRoot() {
   const isExplicitTerritoryChange = searchParams.get("trocar") === "territorio";
 
   if (isExplicitTerritoryChange) {
-    return <TerritoryEntryPage recentTerritory={lastTerritory} />;
+    return <TerritoryEntryPage />;
   }
 
   const target =

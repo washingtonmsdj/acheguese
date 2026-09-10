@@ -17,7 +17,7 @@ import { AppTopbar } from "./navigation/AppTopbar";
 import { BottomNav } from "@/core/navigation/BottomNav";
 import { TerritoryAdaptiveNavigation } from "./territory-vivo";
 import { TerritoryMismatchBanner } from "@/core/location/components/TerritoryMismatchBanner";
-import { scheduleIdleRouteWarmup } from "@/app/routes/prefetch";
+import { prefetchRouteByHref, scheduleIdleRouteWarmup } from "@/app/routes/prefetch";
 import { isReservedSlug } from "@/core/routing/reservedSlugs";
 import {
   MODULE_SLUGS,
@@ -108,10 +108,10 @@ export function AppLayoutSidebar() {
   if (usesTerritoryVivoShell) {
     return (
       <>
-        <div className="territory-vivo w-full md:pl-[4.5rem] xl:pl-56">
+        <div className="territory-vivo w-full md:pl-[4.5rem] xl:pl-44">
           <div
             id="main-content"
-            className="territory-vivo-safe-bottom min-h-[100dvh] min-w-0"
+            className="territory-vivo-safe-bottom min-h-[100dvh] min-w-0 max-md:h-[100dvh] max-md:overflow-y-auto max-md:scrollbar-hide"
             tabIndex={-1}
           >
             <TerritoryMismatchBanner />

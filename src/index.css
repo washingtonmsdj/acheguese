@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@300..700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -6,6 +6,22 @@
 
 @layer base {
   :root {
+    /* Achegue-se visual identity — the only source of truth for brand tokens. */
+    --brand-petroleum: 178 55% 16%; /* #123E3D */
+    --brand-solar: 46 87% 62%; /* #F3CB4C */
+    --brand-surface: 72 20% 97.5%; /* #FAFBF7 */
+    --brand-text: 172 26% 17%; /* #203534 */
+    --brand-text-secondary: 154 15% 42%; /* #61736C; AAA for large text */
+    --brand-text-secondary-strong: 155 14% 34%; /* stronger compact copy */
+    --semantic-error: 4 71% 42%;
+    --semantic-success: 157 67% 31%;
+    --semantic-warning: 39 100% 26%;
+    --semantic-info: 208 73% 34%;
+    --semantic-focus: 179 74% 32%;
+    --semantic-selection: 47 88% 82%;
+    --semantic-disabled: 155 8% 62%;
+    --semantic-disabled-foreground: 155 8% 38%;
+
     --background: 200 20% 9%;
     --foreground: 0 0% 98%;
     --card: 202 15% 14%;
@@ -73,19 +89,27 @@
     --sidebar-ring: 171 77% 56%;
 
     /* Territorio Vivo — foundation shared by territorial product surfaces. */
-    --territory-canvas: 164 44% 5%;
-    --territory-surface: 164 33% 9%;
-    --territory-surface-raised: 164 26% 12%;
-    --territory-ink: 140 30% 96%;
-    --territory-muted: 158 13% 70%;
-    --territory-brand: 166 60% 54%;
-    --territory-brand-strong: 164 64% 66%;
-    --territory-warm: 16 82% 67%;
-    --territory-sun: 42 82% 65%;
-    --territory-border: 164 24% 21%;
-    --territory-focus: 166 70% 58%;
+    --territory-canvas: var(--brand-surface);
+    --territory-surface: 0 0% 100%;
+    --territory-surface-raised: 80 20% 98%;
+    --territory-ink: var(--brand-text);
+    --territory-muted: var(--brand-text-secondary);
+    --territory-muted-strong: var(--brand-text-secondary-strong);
+    --territory-brand: var(--brand-petroleum);
+    --territory-brand-strong: 178 55% 12%;
+    --territory-warm: var(--semantic-warning);
+    --territory-sun: var(--brand-solar);
+    --territory-border: 150 12% 84%;
+    --territory-focus: var(--semantic-focus);
+    --territory-error: var(--semantic-error);
+    --territory-success: var(--semantic-success);
+    --territory-warning: var(--semantic-warning);
+    --territory-info: var(--semantic-info);
+    --territory-selection: var(--semantic-selection);
+    --territory-disabled: var(--semantic-disabled);
+    --territory-disabled-foreground: var(--semantic-disabled-foreground);
     --territory-on-image: 0 0% 100%;
-    --territory-image-overlay: 164 50% 4%;
+    --territory-image-overlay: 178 55% 12%;
 
     /* ==========================================================
      * Semantic content category tokens (SSOT visual do Achegue-se)
@@ -126,54 +150,62 @@
   }
 
   .light {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 5%;
+    --background: var(--brand-surface);
+    --foreground: var(--brand-text);
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 5%;
+    --card-foreground: var(--brand-text);
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 5%;
-    --primary: 171 77% 40%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
-    --accent: 188 78% 40%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
+    --popover-foreground: var(--brand-text);
+    --primary: var(--brand-petroleum);
+    --primary-foreground: var(--brand-surface);
+    --secondary: 150 12% 92%;
+    --secondary-foreground: var(--brand-text);
+    --muted: 80 20% 95%;
+    --muted-foreground: var(--brand-text-secondary-strong);
+    --accent: var(--brand-solar);
+    --accent-foreground: var(--brand-text);
+    --destructive: var(--semantic-error);
     --destructive-foreground: 0 0% 100%;
-    --success: 160 84% 36%;
+    --success: var(--semantic-success);
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 9%;
-    --info: 217 91% 60%;
+    --warning: var(--semantic-warning);
+    --warning-foreground: var(--brand-text);
+    --info: var(--semantic-info);
     --info-foreground: 0 0% 100%;
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 171 77% 40%;
+    --border: var(--territory-border);
+    --input: var(--territory-border);
+    --ring: var(--semantic-focus);
     --radius: 0.75rem;
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 0 0% 9%;
-    --sidebar-primary: 171 77% 40%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 96%;
-    --sidebar-accent-foreground: 0 0% 9%;
-    --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 171 77% 40%;
+    --sidebar-primary: var(--brand-petroleum);
+    --sidebar-primary-foreground: var(--brand-surface);
+    --sidebar-accent: 150 12% 92%;
+    --sidebar-accent-foreground: var(--brand-text);
+    --sidebar-border: var(--territory-border);
+    --sidebar-ring: var(--semantic-focus);
 
-    --territory-canvas: 132 17% 94%;
+    --territory-canvas: var(--brand-surface);
     --territory-surface: 0 0% 100%;
-    --territory-surface-raised: 138 18% 97%;
-    --territory-ink: 162 27% 11%;
-    --territory-muted: 158 9% 41%;
-    --territory-brand: 168 78% 27%;
-    --territory-brand-strong: 168 81% 22%;
-    --territory-warm: 16 61% 49%;
-    --territory-sun: 43 85% 32%;
-    --territory-border: 140 18% 86%;
-    --territory-focus: 168 78% 32%;
+    --territory-surface-raised: 80 20% 98%;
+    --territory-ink: var(--brand-text);
+    --territory-muted: var(--brand-text-secondary);
+    --territory-muted-strong: var(--brand-text-secondary-strong);
+    --territory-brand: var(--brand-petroleum);
+    --territory-brand-strong: 178 55% 12%;
+    --territory-warm: var(--semantic-warning);
+    --territory-sun: var(--brand-solar);
+    --territory-border: 150 12% 84%;
+    --territory-focus: var(--semantic-focus);
+    --territory-error: var(--semantic-error);
+    --territory-success: var(--semantic-success);
+    --territory-warning: var(--semantic-warning);
+    --territory-info: var(--semantic-info);
+    --territory-selection: var(--semantic-selection);
+    --territory-disabled: var(--semantic-disabled);
+    --territory-disabled-foreground: var(--semantic-disabled-foreground);
     --territory-on-image: 0 0% 100%;
-    --territory-image-overlay: 164 50% 4%;
+    --territory-image-overlay: 178 55% 12%;
 
     /* Semantic content category tokens - light mode */
     --category-alert: 0 72% 48%;
@@ -219,7 +251,7 @@
   }
   body {
     @apply bg-background text-foreground font-sans;
-    font-family: "DM Sans", sans-serif;
+    font-family: "Plus Jakarta Sans", sans-serif;
     overflow-x: hidden;
     max-width: 100vw;
   }
@@ -229,7 +261,7 @@
   h4,
   h5,
   h6 {
-    font-family: "Space Grotesk", sans-serif;
+    font-family: "Plus Jakarta Sans", sans-serif;
   }
 }
 
@@ -597,6 +629,163 @@
     ),
     hsl(var(--territory-canvas));
   color: hsl(var(--territory-ink));
+}
+
+/* Public entry surface: map-led, light, and intentionally calm around the
+ * territory choice. It composes the same Territory tokens used by the rest of
+ * the product instead of introducing page-local colors. */
+.territory-entry-page {
+  height: 100dvh;
+  overflow: hidden;
+  background: hsl(var(--territory-canvas));
+}
+
+.territory-entry-page ::selection {
+  background: hsl(var(--territory-selection));
+  color: hsl(var(--territory-ink));
+}
+
+.territory-entry-header {
+  position: relative;
+  z-index: 20;
+  border-bottom: 1px solid hsl(var(--territory-border));
+  background: hsl(var(--territory-surface) / 0.96);
+  backdrop-filter: blur(14px);
+}
+
+.territory-entry-map {
+  box-shadow: 0 18px 44px -34px hsl(var(--territory-brand) / 0.55);
+}
+
+.territory-entry-map .maplibregl-ctrl-bottom-right {
+  right: 1rem;
+  bottom: 1rem;
+}
+
+.territory-entry-map .maplibregl-ctrl-group {
+  overflow: hidden;
+  border: 1px solid hsl(var(--territory-border));
+  border-radius: 1rem;
+  background: hsl(var(--territory-surface) / 0.96);
+  box-shadow: 0 12px 28px -18px hsl(var(--territory-brand) / 0.45);
+  backdrop-filter: blur(12px);
+}
+
+.territory-entry-map .maplibregl-ctrl-group button {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.territory-entry-panel {
+  position: relative;
+  z-index: 10;
+  scrollbar-width: none;
+}
+
+.territory-entry-panel::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .territory-entry-header {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .territory-entry-main {
+    position: relative;
+    height: calc(100dvh - 4rem);
+    min-height: 0;
+    gap: 0;
+    overflow: hidden;
+    padding-inline: 0;
+  }
+
+  .territory-entry-map {
+    position: absolute;
+    inset: 0 0 auto;
+    height: min(47%, 22rem);
+    min-height: 17.5rem;
+    border-inline: 0;
+    border-top: 0;
+    border-radius: 0 0 1.5rem 1.5rem;
+    box-shadow: none;
+  }
+
+  .territory-entry-panel {
+    position: absolute;
+    inset: auto 1.5rem 0;
+    max-height: calc(100% - 8.75rem);
+    margin: 0;
+    border: 1px solid hsl(var(--territory-border));
+    border-radius: 1.5rem;
+    background: hsl(var(--territory-surface));
+    overflow-y: auto;
+    padding: 1rem 1.25rem 1.25rem;
+    box-shadow: 0 20px 48px -34px hsl(var(--territory-brand) / 0.5);
+  }
+
+  .territory-entry-map .maplibregl-ctrl-bottom-right {
+    right: 1rem;
+    bottom: 4rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .territory-entry-main {
+    min-height: calc(100dvh - 4.5rem);
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding-inline: 0;
+    padding-bottom: 0;
+  }
+
+  .territory-entry-map {
+    grid-row: 1;
+    grid-column: 1;
+    height: calc(100dvh - 4.5rem);
+    min-height: 38rem;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .territory-entry-panel {
+    grid-row: 1;
+    grid-column: 1;
+    align-self: start;
+    justify-self: start;
+    width: min(27rem, calc(100% - 4rem));
+    margin: 4.75rem 0 0 2rem;
+    border: 1px solid hsl(var(--territory-border));
+    border-radius: 1.5rem;
+    background: hsl(var(--territory-surface) / 0.97);
+    padding: 1.75rem;
+    box-shadow: 0 26px 64px -34px hsl(var(--territory-brand) / 0.42);
+    backdrop-filter: blur(12px);
+  }
+
+}
+
+@media (min-width: 1280px) {
+  .territory-entry-panel {
+    margin-left: 3rem;
+    padding: 2rem;
+  }
+}
+
+.territory-entry-panel-handle {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .territory-entry-panel-handle {
+    display: block;
+    width: 3rem;
+    height: 0.25rem;
+    margin: 0 auto 1rem;
+    border-radius: 999px;
+    background: hsl(var(--territory-border));
+  }
 }
 
 .territory-vivo :focus-visible {

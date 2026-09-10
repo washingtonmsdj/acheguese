@@ -3,9 +3,9 @@ import { useState, useEffect, useCallback } from "react";
 type Theme = "dark" | "light";
 
 function getInitialTheme(): Theme {
-  if (typeof window === "undefined") return "dark";
+  if (typeof window === "undefined") return "light";
   const stored = localStorage.getItem("acheguese-theme") as Theme | null;
-  return stored === "light" ? "light" : "dark";
+  return stored === "dark" ? "dark" : "light";
 }
 
 export function useTheme() {
@@ -13,11 +13,8 @@ export function useTheme() {
 
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === "light") {
-      root.classList.add("light");
-    } else {
-      root.classList.remove("light");
-    }
+    root.classList.toggle("light", theme === "light");
+    root.classList.toggle("dark", theme === "dark");
     localStorage.setItem("acheguese-theme", theme);
   }, [theme]);
 

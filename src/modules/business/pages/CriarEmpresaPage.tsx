@@ -465,7 +465,7 @@ export default function CriarEmpresaPage() {
                 onSlugChange={handleSlugChange}
                 category={selectedCategory}
                 businessName={form.watch("name") || ""}
-                isVerifiedOfficial={Boolean(form.watch("is_verified"))}
+                isVerifiedOfficial={false}
                 stateName={locationData?.stateName || fallbackTerritory?.state}
                 cityName={locationData?.cityName || fallbackTerritory?.city}
                 districtName={locationData?.neighborhoodName || fallbackTerritory?.district}
