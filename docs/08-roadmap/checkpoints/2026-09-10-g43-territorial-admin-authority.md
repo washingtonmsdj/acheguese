@@ -2,7 +2,7 @@
 
 Data: 2026-09-10
 
-Implementation head consolidado antes deste checkpoint documental:
+Implementation head consolidado antes da abertura deste checkpoint documental:
 `41157b18f3d5e230fa5242385af0c35fe8a89ce9`.
 
 ## Objetivo
@@ -30,7 +30,7 @@ O source preparado agora concentra a operação em
 - `EXECUTE` revogado de `PUBLIC`, `anon` e `authenticated`;
 - `EXECUTE` concedido somente a `service_role`;
 - Edge autenticada continua responsável por `requireAdmin` + MFA/AAL2 e injeta
-  o ator derivado do JWT;
+  o ator derivado do JWT porque a própria operação G42 persiste esse ator;
 - `is_selector_active=false` atualiza raiz + todos os descendentes;
 - reativação da raiz não força descendentes a `true`;
 - landing/navigation não fazem cascata;
@@ -67,7 +67,7 @@ sem caminho normal de reativação.
 
 ## Correções de source aplicadas
 
-### Inventário administrativo separado
+### Inventário administrativo separado e em lote
 
 A leitura agora distingue explicitamente:
 
@@ -77,6 +77,10 @@ A leitura agora distingue explicitamente:
 
 A correção preserva o contrato público e devolve ao Admin a capacidade de
 reativar um grupo inativo.
+
+O repository também deixou de executar `1 + N` consultas para montar o
+inventário. Grupos são buscados uma vez e todas as memberships correspondentes
+são carregadas em lote por `group_id`, depois agrupadas em memória.
 
 ### Formulário de edição
 
@@ -123,6 +127,12 @@ fase de compatibilidade ainda coexiste com o writer histórico.
 Os dois commands são `SECURITY INVOKER`, executáveis apenas por `service_role`.
 Nenhum deles usa `auth.role()` como autoridade.
 
+O primeiro staging carregava um `p_actor_user_id` sem efeito material dentro dos
+commands. Isso foi removido no follow-up: um processo que já possui
+`service_role` poderia forjar esse UUID e ele não adicionava autorização nem
+auditoria real. A identidade confiável permanece exclusivamente no gateway
+`requireAdmin`, onde `auth.userId` alimenta o audit.
+
 ### Broker AAL2
 
 Foi preparado:
@@ -135,10 +145,15 @@ O broker:
 - usa `requireAdmin`, portanto herda MFA/AAL2 canônico;
 - aceita somente `saveGroup` e `setStatus`;
 - valida UUIDs, slug, limites e payload;
-- deriva `p_actor_user_id` de `auth.userId`, nunca do browser;
+- registra o ator confiável pelo `auth.userId` resolvido pelo gateway;
+- não envia `actor_user_id` cosmético aos commands SQL;
 - mapeia erros conhecidos sem expor stack/infra;
-- exige ACK estruturado antes de retornar sucesso;
+- exige ACK correlacionado antes de retornar sucesso;
 - está classificado como `Critical` na policy de Edge Functions.
+
+O ACK de `saveGroup` precisa corresponder a ID, slug, nome, descrição, cidade,
+conjunto de membros, contagem e estado de criação. O ACK de `setStatus` precisa
+corresponder ao mesmo ID e status solicitados. HTTP 2xx incompatível é falha.
 
 **O broker não foi implantado.** Ele depende da phase 1 no mesmo ambiente.
 
@@ -175,8 +190,11 @@ Os testes fixam no source:
 - cascade indexada transacional;
 - ACL `service_role`-only dos commands novos;
 - ausência de `auth.role()` nos novos boundaries;
+- ausência de `p_actor_user_id` decorativo nos commands G43;
 - locks de concorrência G43;
+- ACK correlacionado no broker;
 - separação entre inventário público e administrativo;
+- leitura de memberships em lote, sem N+1;
 - `anchor_city_id` real e imutabilidade da cidade âncora na UI;
 - phase 2 obrigatoriamente separada/gated.
 
