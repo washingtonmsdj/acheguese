@@ -112,13 +112,78 @@ async function handleSwitchActiveProfile(
   return { ok: data === true };
 }
 
+/**
+ * Reconciles the historical policy tracker against Supabase Auth before the
+ * policy RPC reads it. `user_mfa_status.mfa_enabled` is therefore a cache of
+ * Auth state, never an authority supplied by the browser.
+ */
+async function reconcileMfaTrackerFromAuth(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+): Promise<boolean> {
+  const { data: factorData, error: factorError } =
+    await supabaseAdmin.auth.admin.mfa.listFactors({ userId });
+
+  if (factorError) throw factorError;
+  if (!factorData || !Array.isArray(factorData.factors)) {
+    throw new Error("Auth MFA factor authority returned an invalid response");
+  }
+
+  const verifiedFactor = factorData.factors.find(
+    (factor: { status?: unknown }) => factor?.status === "verified",
+  ) as { factor_type?: unknown; status?: unknown } | undefined;
+  const mfaEnabled = Boolean(verifiedFactor);
+  const factorType = verifiedFactor?.factor_type;
+  const mfaMethod =
+    factorType === "totp" ? "totp" : factorType === "phone" ? "sms" : null;
+  const trackerUpdate = {
+    mfa_enabled: mfaEnabled,
+    mfa_method: mfaEnabled ? mfaMethod : null,
+    // Supabase Auth currently does not provide recovery codes. Historical
+    // generated client codes were never an Auth recovery authority.
+    backup_codes_generated: false,
+    backup_codes_count: 0,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data: existing, error: readError } = await supabaseAdmin
+    .from("user_mfa_status")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (readError) throw readError;
+
+  if (existing?.id) {
+    const { error: updateError } = await supabaseAdmin
+      .from("user_mfa_status")
+      .update(trackerUpdate)
+      .eq("user_id", userId);
+    if (updateError) throw updateError;
+  } else {
+    const { error: insertError } = await supabaseAdmin
+      .from("user_mfa_status")
+      .insert({ user_id: userId, ...trackerUpdate });
+    if (insertError) throw insertError;
+  }
+
+  return mfaEnabled;
+}
+
 async function handleCheckMfaRequired(supabaseAdmin: SupabaseClient, userId: string) {
+  // Synchronize the policy cache from the real Auth factor store immediately
+  // before evaluating the database policy. A forged/stale browser flag cannot
+  // suppress an MFA requirement.
+  await reconcileMfaTrackerFromAuth(supabaseAdmin, userId);
+
   const { data, error } = await supabaseAdmin.rpc("check_user_mfa_required", {
     p_user_id: userId,
   });
 
   if (error) throw error;
-  return { required: data === true };
+  if (typeof data !== "boolean") {
+    throw new Error("MFA requirement authority returned an invalid response");
+  }
+  return { required: data };
 }
 
 function normalizeReason(value: unknown, fallback: string): string {
