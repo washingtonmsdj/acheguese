@@ -2,7 +2,10 @@
  * AI Platform - Cliente unico para invocar edge functions de IA.
  * Centraliza tratamento de erros e mensagens amigaveis.
  */
-import { supabase } from "@/integrations/supabase";
+import {
+  readSupabaseFunctionHttpErrorBody,
+  supabase,
+} from "@/integrations/supabase";
 import type {
   AiError,
   AiImageRequest,
@@ -26,14 +29,8 @@ function toAiError(raw: unknown): AiError {
 async function invoke<TReq, TRes>(name: string, body: TReq): Promise<TRes> {
   const { data, error } = await supabase.functions.invoke<TRes & { error?: string }>(name, { body });
   if (error) {
-    let payload: unknown = error;
-    try {
-      const ctx = (error as unknown as { context?: { body?: string } })?.context;
-      if (ctx?.body) payload = JSON.parse(ctx.body);
-    } catch {
-      // ignore
-    }
-    throw toAiError(payload);
+    const payload = await readSupabaseFunctionHttpErrorBody(error);
+    throw toAiError(payload ?? error);
   }
   if (!data) throw toAiError({ message: "Resposta vazia da IA." });
   return data as TRes;
