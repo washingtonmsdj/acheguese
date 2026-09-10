@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { ShieldCheck } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,9 +12,16 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
+import { TurnstileWidget } from "@/shared/components/security/TurnstileWidget";
 import { useToast } from "@/shared/hooks/use-toast";
-import { ProfessionalLeadService } from "@/core/professional/services";
+import {
+  ProfessionalLeadIntakeService,
+  type ProfessionalLeadSourceChannel,
+} from "@/core/professional/services";
 import { useSessionContext } from "@/core/session";
+import { PROFESSIONAL_LEAD_INTAKE_CLIENT_CONTRACT } from "@/core/professional/contracts/ProfessionalLeadIntakeContract";
+
+const TURNSTILE_SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "").trim();
 
 interface ProfessionalLeadRequestDialogProps {
   open: boolean;
@@ -21,7 +29,7 @@ interface ProfessionalLeadRequestDialogProps {
   professionalId: string;
   professionalName: string;
   defaultService?: string | null;
-  sourceChannel?: "public_profile" | "service_profile" | "central" | string;
+  sourceChannel?: ProfessionalLeadSourceChannel;
 }
 
 export function ProfessionalLeadRequestDialog({
@@ -36,6 +44,11 @@ export function ProfessionalLeadRequestDialog({
   const navigate = useNavigate();
   const { user } = useSessionContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [honeypot, setHoneypot] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileError, setTurnstileError] = useState<string | null>(null);
+  const [turnstileGeneration, setTurnstileGeneration] = useState(0);
+  const mountedAtRef = useRef(Date.now());
   const [formData, setFormData] = useState({
     requesterName: "",
     requesterPhone: "",
@@ -46,6 +59,18 @@ export function ProfessionalLeadRequestDialog({
     preferredTimeWindow: "",
     neighborhood: "",
   });
+
+  const turnstileConfigured = TURNSTILE_SITE_KEY.length > 0;
+  const turnstileSatisfied = turnstileConfigured && Boolean(turnstileToken);
+
+  useEffect(() => {
+    if (!open) return;
+    mountedAtRef.current = Date.now();
+    setHoneypot("");
+    setTurnstileToken(null);
+    setTurnstileError(null);
+    setTurnstileGeneration((current) => current + 1);
+  }, [open]);
 
   const resetForm = () => {
     setFormData({
@@ -58,13 +83,55 @@ export function ProfessionalLeadRequestDialog({
       preferredTimeWindow: "",
       neighborhood: "",
     });
+    setHoneypot("");
+  };
+
+  const resetTurnstile = () => {
+    setTurnstileToken(null);
+    setTurnstileGeneration((current) => current + 1);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setIsSubmitting(true);
+    if (isSubmitting) return;
 
-    const result = await ProfessionalLeadService.createLead({
+    if (
+      Date.now() - mountedAtRef.current <
+      PROFESSIONAL_LEAD_INTAKE_CLIENT_CONTRACT.minimumFillMs
+    ) {
+      toast({
+        title: "Aguarde um instante",
+        description: "Confira os dados do pedido antes de enviar.",
+      });
+      return;
+    }
+
+    if (!formData.requesterPhone.trim() && !formData.requesterEmail.trim()) {
+      toast({
+        title: "Informe um contato",
+        description: "Adicione telefone/WhatsApp ou email para o profissional responder.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (
+      PROFESSIONAL_LEAD_INTAKE_CLIENT_CONTRACT.turnstileRequired &&
+      !turnstileConfigured
+    ) {
+      setTurnstileError(
+        "Solicitação temporariamente indisponível: proteção anti-spam não configurada.",
+      );
+      return;
+    }
+
+    if (!turnstileToken) {
+      setTurnstileError("Confirme a verificação anti-spam antes de enviar.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    const result = await ProfessionalLeadIntakeService.createLead({
       professionalId,
       requesterName: formData.requesterName,
       requesterPhone: formData.requesterPhone || undefined,
@@ -75,11 +142,14 @@ export function ProfessionalLeadRequestDialog({
       preferredTimeWindow: formData.preferredTimeWindow || undefined,
       neighborhood: formData.neighborhood || undefined,
       sourceChannel,
+      honeypot,
+      turnstileToken,
     });
-
     setIsSubmitting(false);
 
     if (!result.success) {
+      resetTurnstile();
+      setTurnstileError(result.error ?? "Falha na verificação anti-spam.");
       toast({
         title: "Não foi possível enviar",
         description: result.error,
@@ -89,12 +159,15 @@ export function ProfessionalLeadRequestDialog({
     }
 
     toast({
-      title: "Pedido enviado",
-      description: user
-        ? `${professionalName} recebeu sua solicitação. Você pode acompanhar o status.`
-        : `${professionalName} recebeu sua solicitação de orçamento.`,
+      title: result.deduplicated ? "Pedido já recebido" : "Pedido enviado",
+      description: result.deduplicated
+        ? `${professionalName} já recebeu esta solicitação recentemente.`
+        : user
+          ? `${professionalName} recebeu sua solicitação. Você pode acompanhar o status.`
+          : `${professionalName} recebeu sua solicitação de orçamento.`,
     });
     resetForm();
+    resetTurnstile();
     onOpenChange(false);
 
     if (user && result.data?.id) {
@@ -104,7 +177,7 @@ export function ProfessionalLeadRequestDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Solicitar orçamento</DialogTitle>
           <DialogDescription>
@@ -128,6 +201,8 @@ export function ProfessionalLeadRequestDialog({
                 }
                 required
                 minLength={2}
+                maxLength={150}
+                autoComplete="name"
                 placeholder="Nome completo"
               />
             </div>
@@ -136,6 +211,7 @@ export function ProfessionalLeadRequestDialog({
               <Label htmlFor="lead-phone">Telefone ou WhatsApp</Label>
               <Input
                 id="lead-phone"
+                type="tel"
                 value={formData.requesterPhone}
                 onChange={(event) =>
                   setFormData((current) => ({
@@ -143,6 +219,8 @@ export function ProfessionalLeadRequestDialog({
                     requesterPhone: event.target.value,
                   }))
                 }
+                maxLength={40}
+                autoComplete="tel"
                 placeholder="(00) 00000-0000"
               />
             </div>
@@ -161,6 +239,8 @@ export function ProfessionalLeadRequestDialog({
                     requesterEmail: event.target.value,
                   }))
                 }
+                maxLength={254}
+                autoComplete="email"
                 placeholder="seu@email.com"
               />
             </div>
@@ -178,6 +258,7 @@ export function ProfessionalLeadRequestDialog({
                 }
                 required
                 minLength={3}
+                maxLength={160}
                 placeholder="Ex: instalação elétrica"
               />
             </div>
@@ -196,6 +277,7 @@ export function ProfessionalLeadRequestDialog({
               }
               required
               minLength={10}
+              maxLength={1000}
               rows={4}
               placeholder="Inclua contexto, urgência, medidas, fotos que pretende enviar ou qualquer detalhe importante."
             />
@@ -228,6 +310,7 @@ export function ProfessionalLeadRequestDialog({
                     preferredTimeWindow: event.target.value,
                   }))
                 }
+                maxLength={80}
                 placeholder="Manhã, tarde, noite"
               />
             </div>
@@ -243,6 +326,7 @@ export function ProfessionalLeadRequestDialog({
                     neighborhood: event.target.value,
                   }))
                 }
+                maxLength={120}
                 placeholder="Bairro do atendimento"
               />
             </div>
@@ -253,6 +337,61 @@ export function ProfessionalLeadRequestDialog({
             central, com histórico e status para acompanhamento.
           </p>
 
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              left: "-10000px",
+              width: 1,
+              height: 1,
+              overflow: "hidden",
+            }}
+          >
+            <label htmlFor="lead-company-website">Não preencha este campo</label>
+            <input
+              id="lead-company-website"
+              name="company_website"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              value={honeypot}
+              onChange={(event) => setHoneypot(event.target.value)}
+            />
+          </div>
+
+          {turnstileConfigured ? (
+            <div className="space-y-1.5">
+              <TurnstileWidget
+                key={turnstileGeneration}
+                siteKey={TURNSTILE_SITE_KEY}
+                action={PROFESSIONAL_LEAD_INTAKE_CLIENT_CONTRACT.turnstileAction}
+                onVerify={(token) => {
+                  setTurnstileToken(token);
+                  setTurnstileError(null);
+                }}
+                onExpire={() => setTurnstileToken(null)}
+                onError={() => {
+                  setTurnstileToken(null);
+                  setTurnstileError(
+                    "Não foi possível carregar a verificação. Recarregue a página.",
+                  );
+                }}
+              />
+              {turnstileError ? (
+                <p className="text-xs text-destructive">{turnstileError}</p>
+              ) : (
+                <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <ShieldCheck className="h-3 w-3" aria-hidden />
+                  Verificação anti-spam protegida por Cloudflare.
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs text-destructive">
+              Solicitação temporariamente indisponível: proteção anti-spam não configurada.
+            </p>
+          )}
+
           <div className="flex justify-end gap-2 pt-2">
             <Button
               type="button"
@@ -262,7 +401,10 @@ export function ProfessionalLeadRequestDialog({
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              disabled={isSubmitting || !turnstileSatisfied}
+            >
               {isSubmitting ? "Enviando..." : "Enviar pedido"}
             </Button>
           </div>

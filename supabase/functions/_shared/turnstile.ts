@@ -1,5 +1,4 @@
 const TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
-const EXPECTED_ACTION = "community-interest";
 const VERIFY_TIMEOUT_MS = 5_000;
 
 interface TurnstileProviderResponse {
@@ -59,10 +58,16 @@ function isTurnstileProviderResponse(value: unknown): value is TurnstileProvider
 export async function verifyTurnstileToken(options: {
   token: string;
   secret: string;
+  expectedAction: string;
   allowedHostnames: ReadonlySet<string>;
   remoteIp: string | null;
   fetchImpl?: FetchImplementation;
 }): Promise<TurnstileVerificationResult> {
+  const expectedAction = options.expectedAction.trim();
+  if (!expectedAction || expectedAction.length > 64) {
+    return { ok: false, reason: "rejected" };
+  }
+
   const form = new URLSearchParams({
     secret: options.secret,
     response: options.token,
@@ -82,7 +87,7 @@ export async function verifyTurnstileToken(options: {
       return { ok: false, reason: "unavailable" };
     }
     if (!payload.success) return { ok: false, reason: "rejected" };
-    if (payload.action !== EXPECTED_ACTION) return { ok: false, reason: "rejected" };
+    if (payload.action !== expectedAction) return { ok: false, reason: "rejected" };
     if (!payload.hostname || !options.allowedHostnames.has(payload.hostname.toLowerCase())) {
       return { ok: false, reason: "rejected" };
     }

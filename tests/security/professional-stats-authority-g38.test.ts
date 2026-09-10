@@ -6,12 +6,14 @@ function read(path: string): string {
   return readFileSync(resolve(process.cwd(), path), "utf8");
 }
 
-describe("Professional stats authority G38", () => {
-  it("increments contact stats atomically from the authoritative lead insert", () => {
-    const migration = read(
-      "supabase/migrations/20260910133000_server_own_professional_stats_contacts_g38.sql",
-    );
+const pendingCutoverPath =
+  "docs/09-reference/migrations-pending/20260910133000_finalize_professional_lead_intake_g39.sql";
 
+describe("Professional stats authority G38", () => {
+  it("keeps the contact-counter trigger staged until G39 is live", () => {
+    const migration = read(pendingCutoverPath);
+
+    expect(migration).toContain("PENDING CUTOVER");
     expect(migration).toContain(
       "private.increment_professional_contacts_from_lead",
     );
@@ -23,17 +25,21 @@ describe("Professional stats authority G38", () => {
     );
   });
 
-  it("retires browser DML while preserving the existing read authority", () => {
-    const migration = read(
-      "supabase/migrations/20260910133000_server_own_professional_stats_contacts_g38.sql",
-    );
+  it("retires browser lead/stats DML atomically at the future cutover", () => {
+    const migration = read(pendingCutoverPath);
 
+    expect(migration).toContain(
+      "REVOKE INSERT ON TABLE public.professional_leads",
+    );
     expect(migration).toContain(
       "REVOKE INSERT, UPDATE, DELETE ON TABLE public.professional_stats",
     );
     expect(migration).toContain(
       'DROP POLICY IF EXISTS "Owners manage own professional stats"',
     );
+    expect(migration).toContain("professional_leads_public_insert");
+    expect(migration).toContain("professional_leads_authenticated_insert");
+    expect(migration).toContain("has_column_privilege");
     expect(migration).not.toContain("REVOKE SELECT");
   });
 

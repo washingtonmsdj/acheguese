@@ -21,6 +21,7 @@ import {
 const ALLOWED_METHODS = "POST, OPTIONS";
 const MAX_BODY_BYTES = 8_192;
 const MAX_REQUESTS_PER_MINUTE = 5;
+const TURNSTILE_ACTION = "community-interest";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -63,6 +64,7 @@ Deno.serve(async (req) => {
           return await verifyTurnstileToken({
             token,
             secret,
+            expectedAction: TURNSTILE_ACTION,
             allowedHostnames,
             remoteIp,
           });

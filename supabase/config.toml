@@ -186,6 +186,9 @@ verify_jwt = true
 [functions.contact-rpc]
 verify_jwt = true
 
+[functions.create-professional-lead]
+verify_jwt = false
+
 [functions.delivery-rpc]
 verify_jwt = true
 

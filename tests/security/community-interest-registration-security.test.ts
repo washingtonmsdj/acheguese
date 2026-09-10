@@ -291,6 +291,7 @@ describe("Turnstile authoritative verification", () => {
   const baseOptions = {
     token: "token",
     secret: "secret",
+    expectedAction: "community-interest",
     allowedHostnames: new Set(["achegue.se"]),
     remoteIp: "203.0.113.10",
   };
