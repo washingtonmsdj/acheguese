@@ -5,8 +5,6 @@ type SupabaseClient = ReturnType<typeof createClient<any, any, any>>;
 
 export type MfaPolicyReason =
   | "not_enforced"
-  | "exempt"
-  | "grace_period"
   | "enrollment_required"
   | "verification_required"
   | "satisfied";
@@ -22,8 +20,6 @@ export interface UserMfaPolicyState {
 
 interface MfaTrackerRow {
   id: string;
-  is_exempt: boolean | null;
-  grace_period_expires_at: string | null;
 }
 
 interface VerifiedFactor {
@@ -48,35 +44,22 @@ function factorMethod(factor: VerifiedFactor | undefined): string | null {
   return null;
 }
 
-function isFutureIsoTimestamp(value: string | null): boolean {
-  if (!value) return false;
-  const time = Date.parse(value);
-  return Number.isFinite(time) && time > Date.now();
-}
-
-async function loadEnforcement(
+async function loadAdminRole(
   supabaseAdmin: SupabaseClient,
   userId: string,
-): Promise<boolean> {
+): Promise<"admin" | "super_admin" | null> {
   const { data: roles, error: rolesError } = await supabaseAdmin.rpc(
     "get_user_roles",
     { _user_id: userId },
   );
   if (rolesError) throw rolesError;
-  if (!Array.isArray(roles) || roles.length === 0) return false;
+  if (!Array.isArray(roles)) {
+    throw new Error("Role authority returned an invalid response");
+  }
 
-  const roleNames = roles.filter((role): role is string => typeof role === "string");
-  if (roleNames.length === 0) return false;
-
-  const { data: enforcement, error: enforcementError } = await supabaseAdmin
-    .from("admin_mfa_enforcement")
-    .select("role_enum")
-    .in("role_enum", roleNames)
-    .eq("mfa_required", true)
-    .limit(1);
-  if (enforcementError) throw enforcementError;
-
-  return Array.isArray(enforcement) && enforcement.length > 0;
+  if (roles.includes("super_admin")) return "super_admin";
+  if (roles.includes("admin")) return "admin";
+  return null;
 }
 
 async function loadTracker(
@@ -85,7 +68,7 @@ async function loadTracker(
 ): Promise<MfaTrackerRow | null> {
   const { data, error } = await supabaseAdmin
     .from("user_mfa_status")
-    .select("id,is_exempt,grace_period_expires_at")
+    .select("id")
     .eq("user_id", userId)
     .maybeSingle();
   if (error) throw error;
@@ -133,8 +116,6 @@ async function reconcileTracker(
     return;
   }
 
-  // Ausência inesperada do tracker não concede um novo grace period. O trigger
-  // de role é quem cria esse prazo; aqui registramos somente o estado do Auth.
   const { error } = await supabaseAdmin
     .from("user_mfa_status")
     .insert({ user_id: userId, ...update });
@@ -157,23 +138,25 @@ async function loadCurrentAal(
 }
 
 /**
- * Canonical server-side MFA policy decision for privileged accounts.
+ * Canonical server-side MFA decision for privileged accounts.
  *
- * Security properties:
- * - enforcement is derived from server-owned roles/configuration;
- * - exemptions/grace are read server-side;
- * - enrollment is derived from verified Supabase Auth factors;
- * - configured MFA requires AAL2 on the current JWT, not merely an enrolled
- *   factor on some other session;
- * - a missing tracker never creates a fresh grace period.
+ * Until the pending G42 DDL removes browser DML from `user_mfa_status` and
+ * `admin_mfa_enforcement`, neither table is allowed to weaken authorization.
+ * Admin/super_admin enforcement is therefore derived solely from the canonical
+ * server-owned role read; enrollment comes from verified Auth factors and the
+ * current request must carry AAL2. The tracker is written only as a cache.
+ *
+ * Grace periods and exemptions are intentionally not authorization inputs in
+ * this compatibility window. Reintroducing either requires a server-owned,
+ * remotely verified source after the pending DDL is promoted.
  */
 export async function evaluateUserMfaPolicy(
   supabaseAdmin: SupabaseClient,
   userId: string,
   token: string,
 ): Promise<UserMfaPolicyState> {
-  const enforced = await loadEnforcement(supabaseAdmin, userId);
-  if (!enforced) {
+  const adminRole = await loadAdminRole(supabaseAdmin, userId);
+  if (!adminRole) {
     return {
       enforced: false,
       required: false,
@@ -184,41 +167,20 @@ export async function evaluateUserMfaPolicy(
     };
   }
 
-  const tracker = await loadTracker(supabaseAdmin, userId);
-  if (tracker?.is_exempt === true) {
-    return {
-      enforced: true,
-      required: false,
-      reason: "exempt",
-      hasVerifiedFactor: false,
-      currentLevel: null,
-      gracePeriodExpiresAt: tracker.grace_period_expires_at ?? null,
-    };
-  }
-
-  const verifiedFactors = await loadVerifiedFactors(supabaseAdmin, userId);
+  const [tracker, verifiedFactors] = await Promise.all([
+    loadTracker(supabaseAdmin, userId),
+    loadVerifiedFactors(supabaseAdmin, userId),
+  ]);
   await reconcileTracker(supabaseAdmin, userId, tracker, verifiedFactors);
 
   if (verifiedFactors.length === 0) {
-    const gracePeriodExpiresAt = tracker?.grace_period_expires_at ?? null;
-    if (isFutureIsoTimestamp(gracePeriodExpiresAt)) {
-      return {
-        enforced: true,
-        required: false,
-        reason: "grace_period",
-        hasVerifiedFactor: false,
-        currentLevel: "aal1",
-        gracePeriodExpiresAt,
-      };
-    }
-
     return {
       enforced: true,
       required: true,
       reason: "enrollment_required",
       hasVerifiedFactor: false,
       currentLevel: "aal1",
-      gracePeriodExpiresAt,
+      gracePeriodExpiresAt: null,
     };
   }
 
@@ -230,7 +192,7 @@ export async function evaluateUserMfaPolicy(
       reason: "verification_required",
       hasVerifiedFactor: true,
       currentLevel,
-      gracePeriodExpiresAt: tracker?.grace_period_expires_at ?? null,
+      gracePeriodExpiresAt: null,
     };
   }
 
@@ -240,6 +202,6 @@ export async function evaluateUserMfaPolicy(
     reason: "satisfied",
     hasVerifiedFactor: true,
     currentLevel,
-    gracePeriodExpiresAt: tracker?.grace_period_expires_at ?? null,
+    gracePeriodExpiresAt: null,
   };
 }
