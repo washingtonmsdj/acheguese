@@ -1,4 +1,7 @@
-import { supabase } from "@/integrations/supabase";
+import {
+  resolveSupabaseFunctionErrorMessage,
+  supabase,
+} from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import type { SchoolShift } from "@/core/education";
 
@@ -23,19 +26,21 @@ export interface PublicEducationLeadResult {
 }
 
 function publicLeadError(message: string): string {
-  if (message.includes("public_institution_lead_intake_disabled")) {
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes("public_institution_lead_intake_disabled")) {
     return "Esta instituicao usa somente os canais oficiais para matricula e atendimento.";
   }
-  if (message.includes("institution_lead_authority_not_enabled")) {
+  if (normalized.includes("institution_lead_authority_not_enabled")) {
     return "O atendimento deste perfil ainda nao esta habilitado.";
   }
-  if (message.includes("daily_limit") || message.includes("rate")) {
+  if (normalized.includes("daily_limit") || normalized.includes("rate")) {
     return "Muitas solicitacoes foram enviadas. Tente novamente mais tarde.";
   }
-  if (message.includes("not_available")) {
+  if (normalized.includes("not_available")) {
     return "Este perfil nao esta disponivel para receber solicitacoes.";
   }
-  if (message.includes("invalid_")) {
+  if (normalized.includes("invalid_")) {
     return "Revise os dados informados e tente novamente.";
   }
   return "Nao foi possivel registrar seu interesse.";
@@ -48,8 +53,12 @@ export const PublicEducationLeadService = {
     });
 
     if (error) {
-      logger.warn("[PublicEducationLeadService] broker failed:", error);
-      throw new Error(publicLeadError(error.message));
+      const brokerMessage =
+        (await resolveSupabaseFunctionErrorMessage(error)) ?? error.message ?? "";
+      logger.warn("[PublicEducationLeadService] broker failed:", {
+        message: brokerMessage,
+      });
+      throw new Error(publicLeadError(brokerMessage));
     }
 
     const response = data as
