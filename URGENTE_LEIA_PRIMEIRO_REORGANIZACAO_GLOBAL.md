@@ -2,9 +2,7 @@
 
 > **STATUS: SUBSTITUÍDO COMO AUTORIDADE.**
 >
-> Este arquivo permanece temporariamente na raiz **somente para não quebrar referências históricas, workflows e agentes antigos**.
->
-> Ele **não é mais o SSOT operacional** e não deve receber novos checkpoints extensos.
+> Este arquivo existe temporariamente apenas para não quebrar referências históricas, workflows e agentes antigos. Ele **não é o SSOT operacional** e deve permanecer curto.
 
 ## Autoridades vivas
 
@@ -17,78 +15,35 @@ Leia nesta ordem:
 
 ## Checkpoint operacional curto — 2026-09-10
 
-> Resumo de handoff; a autoridade detalhada continua em `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`.
-
-- nova Home + identidade visual foram integradas à `main` em `ab8e9327`; a sincronização responsiva posterior entrou em `7f1abe79` sem regressão estrutural;
-- identidade visual ativa: Plus Jakarta Sans, petróleo `#123E3D`, solar `#F3CB4C`, superfície `#FAFBF7`, texto principal `#203534`;
-- o build pós-merge revelou 10 erros TypeScript preexistentes; foram corrigidos pela consolidação dos owners canônicos de Admin, Location/ServiceAreas, Mobility e Safety, sem restaurar bridges ou writers antigos;
-- `9a90aaed` aposentou os contratos mortos de `AdminDataService.updateUserData` / `AdminUserService.updateProfile` e o reexport local obsoleto de `ServiceArea`;
-- `cce689c7` alinhou `admin-create-user` ao lifecycle canônico de Auth/Profile: não cria mais um segundo Profile por INSERT direto e o rollback fica ancorado em `auth.users` + cascades;
-- `f6e6fd1` corrigiu o `vercel-ignore`: checkout sem remote `origin` deixa de produzir erro fatal; quando o commit anterior está disponível o diff real é calculado, e sem prova suficiente o comportamento continua fail-open para build normal;
-- deploy production `dpl_8DWo9NXMwyXaMGkKwkoV4h4Ldho1` de `f6e6fd1` está **READY** e atende `acheguese.com.br`, `www.acheguese.com.br` e `acheguese.vercel.app`;
-- sitemap resiliente foi provado novamente: Supabase/Cloudflare 522 não derruba o release; o gerador produz fallback estático validado com 7 URLs;
-- `profile-rpc` foi reconciliado no runtime em **v19 ACTIVE**, `verify_jwt=true`: o source remoto agora rejeita `service_area`, `service_areas` e `service_radius_km` em Professional/extensionData e mantém Coverage exclusivamente em `public.service_areas`;
-- geração oficial de tipos Supabase continua bloqueada intermitentemente por 522 do provider; `register_safety_evidence` permanece com boundary local estreito, sem `any`, sem editar manualmente `types.generated.ts` e com o RPC explícito para o ratchet de Storage/Safety;
-- o último build production READY confirmou **11 allowances stale** no manifesto de Core Platform: 5 writers Safety, 1 reader `service_areas`, 3 callers RPC e 2 dynamic writers de Mobilidade já removidos do código; reduzir esses allowances no manifesto, nunca restaurar acessos para satisfazer baseline;
-- o novo Search/Explorar da identidade visual foi corrigido em `5bead48b` para projetar pins por `mapEntityProjection` em vez de montar `MapMarker` manualmente;
-- Search/Explorar foi integrado à `main` por merge real de dois pais em **`be2d464b`**, preservando o hardening funcional da `main`; `main` e `codex/identidade-visual-achegue-se` foram sincronizadas nesse checkpoint;
-- o preview imediatamente anterior da Search (`b39d1481`) está READY; novos builds de `5bead48b`/merge estão bloqueados pelo **build-rate-limit da Vercel**, portanto não confundir limite externo com falha de compilação;
+- Home + identidade visual estão integradas à `main`; identidade ativa: Plus Jakarta Sans, petróleo `#123E3D`, solar `#F3CB4C`, superfície `#FAFBF7`, texto principal `#203534`;
+- `7f1abe79` sincronizou a Home responsiva sem regressão estrutural;
+- os 10 erros TypeScript revelados pelo build pós-merge foram corrigidos pela consolidação dos owners canônicos de Admin, Location/ServiceAreas, Mobility e Safety, sem restaurar bridges ou writers antigos;
+- `9a90aaed` aposentou contratos mortos de Admin/Profile e o reexport local obsoleto de `ServiceArea`;
+- `cce689c7` alinhou `admin-create-user` ao lifecycle canônico de Auth/Profile; auditoria posterior confirmou que a função **não tem caller ativo no frontend/Admin atual**, portanto ela não deve ser implantada apenas por existir no Git;
+- `f6e6fd1` corrigiu o `vercel-ignore`; sem prova suficiente de diff ele executa build normal, e checkout sem remote `origin` não gera falso erro fatal;
+- deployment production `dpl_8DWo9NXMwyXaMGkKwkoV4h4Ldho1` de `f6e6fd1` está **READY** e atende `acheguese.com.br`, `www.acheguese.com.br` e `acheguese.vercel.app`;
+- sitemap resiliente foi provado em produção: Supabase/Cloudflare 522 cai no fallback estático validado com 7 URLs sem derrubar o release;
+- `profile-rpc` foi reconciliado no runtime em **v19 ACTIVE**, `verify_jwt=true`; `service_area`, `service_areas` e `service_radius_km` são rejeitados em Professional/extensionData e Coverage permanece em `public.service_areas`;
+- a geração oficial de tipos Supabase continua intermitentemente bloqueada por 522; não editar `types.generated.ts` manualmente nem substituir o boundary estreito de `register_safety_evidence` por `any`;
+- `5bead48b` corrigiu o novo Search/Explorar para projetar pins via `mapEntityProjection`; `be2d464b` integrou a Search por merge real de dois pais, preservando o hardening funcional da `main`;
+- `fc912273` reduziu exatamente os **11 allowances stale** detectados pelo último build READY: 5 writers Safety, 1 reader `service_areas`, 3 callers RPC e 2 dynamic writers de Mobilidade; nenhuma nova permissão foi adicionada;
+- `main` e `codex/identidade-visual-achegue-se` foram sincronizadas após esse checkpoint;
+- o preview imediatamente anterior da Search (`b39d1481`) está READY; builds posteriores estão sujeitos ao **build-rate-limit da Vercel**, o que é blocker externo de execução e não prova de falha de compilação;
 - Mobilidade continua **launch-paused**: `PUBLIC_LAUNCH_SURFACES.mobility=false`;
-- não restaurar DML direto, operator scripts obsoletos, wrappers concorrentes, dynamic-table novo ou authorities paralelas.
-
-## Checkpoint operacional curto — 2026-09-09
-
-> Resumo de handoff; a autoridade detalhada continua em `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`.
-
-- foco atual: **certificação same-SHA de Mobilidade/Delivery e fechamento dos gates reais de arquitetura**;
-- G31 aposentou validadores operator/service_role obsoletos;
-- G32 reconciliou `mobility-rpc v24`, `delivery-rpc v8` e corrigiu o drift do `auto-dispatch-ride` para **v25 ACTIVE**, byte-a-byte igual ao Git;
-- G33 corrige a falha real do último build executado: `ServiceAreasService` não usa mais `from(table)` dinâmico; resolução de identidade passa pelos owners canônicos de Profile, Business, Professional e Mobility;
-- G34A adiciona sincronização bulk canônica de coverage por `Location IDs`; dados remotos confirmam 0 valores nos campos legados `professional_data.service_areas/service_radius_km`, portanto a migração pode eliminar a duplicidade sem perda de dados;
-- G34B migra o cadastro profissional: bairros agora são `locations.id` e são gravados somente via Coverage SSOT; novos cadastros não alimentam mais `professional_data.service_areas`;
-- G34C migra a edição profissional para o mesmo contrato: cobertura carrega e salva por `public.service_areas`; o formulário não lê nem escreve mais o JSONB legado;
-- G34D1 remove `service_areas/service_radius_km` dos tipos, queries, mapper, schema e lifecycle Professional; página pública, Central e E2E preservam a feature usando Coverage canônico;
-- G34D2 migra o export LGPD para `public.service_areas`; `user-export-data` continua não implantada e uncertified, portanto não deve ser deployada antes do preflight;
-- G35A está reconciliado no runtime: `profile-rpc v14 ACTIVE` é byte-a-byte igual ao Git; novos RPCs Professional são service-role-only; probe create/update/deactivate PASS com rollback;
-- G35A2 reparou uma duplicata real de `professional_data` e agora vale `UNIQUE(profile_id)`; estado remoto: 4 Professionals / 4 Profiles / 4 stats / 0 duplicatas;
-- G36A está reconciliado: `profile-rpc v15 ACTIVE` é byte-a-byte igual ao Git; Profile self-service update/delete/switch estão broker-owned, username tem enforcement/auditoria server-side e o probe transacional completo PASS com rollback;
-- grants browser antigos de `professional_data/professional_stats` e `profiles` ficam temporariamente apenas por compatibilidade com o frontend production desatualizado e devem ser revogados somente após deploy novo comprovado;
-- G36A2: os novos RPCs Profile são service-role-only e não aparecem no Advisor como SECURITY DEFINER executável por anon/authenticated;
-- G36B auditou o Business real: 97 `business_data`, 0 duplicatas e **0 `business_stats`**; create/update/delete gerais ainda tentavam DML browser numa tabela já fail-closed;
-- G36B2: backfill+trigger de stats, UNIQUE(profile_id), metadata allowlisted, Address ownership e separação NetworkService foram provados; probe runtime completo PASS com rollback;
-- G36B está reconciliado no runtime: `profile-rpc v16 ACTIVE` é byte-a-byte igual ao Git; Business está 97/97 em `business_data/business_stats`, sem stats faltantes/duplicatas, e create/update/delete gerais são broker-owned;
-- **não** adicionar `ServiceAreasService` ao incremental baseline para esconder a violação;
-- Supabase canônico: `xhdowzacfujckjelqhtd`;
-- invariantes remotos de mobilidade continuam: 0 offers abertas, 0 dispatch pendente e 0 motorista preso em corrida terminal;
-- Vercel atual está bloqueando novos builds por limite do provider e GitHub jobs recentes nem iniciam steps; portanto build/E2E same-SHA continuam pendentes de execução real;
-- último deploy Vercel production READY localizado: `86c76fc8d48550fbbed783a359c32f6cdf6a435d`, muito atrás da `main`;
-- Mobilidade continua **launch-paused**: `PUBLIC_LAUNCH_SURFACES.mobility=false`;
-- G36C1 remove os writers mortos de `profiles.active_ride_id`; estado de corrida permanece exclusivamente em `driver_availability.active_ride_id`; campo físico de Profile só poderá ser dropado após cutover do frontend antigo;
-- G36C2 está reconciliado: `admin-suspend-profile v1 ACTIVE` é byte-a-byte igual ao Git; suspend/unsuspend de Profile e usuário inteiro passam por RPC service-role-only com revalidação Admin e audit; `suspend_profile` legado está pronto para remoção;
-- próximo gate imediato: aplicar o contract que remove `suspend_profile`; depois G36C3 eliminar os inserts diretos restantes de Profile/Driver e só então fechar grants compatíveis quando o frontend same-SHA estiver LIVE;
+- próximo gate estrutural: provar se os grants browser temporários de `profiles`, `professional_data` e `professional_stats` ainda têm caller real no frontend LIVE; revogar somente após prova de zero dependência;
 - não restaurar DML direto, operator scripts obsoletos, wrappers concorrentes, dynamic-table novo ou authorities paralelas.
 
 ## Regra para novas IAs/agentes
 
-- **inspecionar o projeto real antes das docs**: código da `main`, rotas, owners, serviços, schema/migrations, testes, deploy/runtime e comportamento observado são a evidência primária;
-- documentação pode estar desatualizada ou obsoleta e **nunca autoriza sozinha remover feature implementada**;
-- feature coerente com o produto que esteja quebrada, incompleta ou `launch-paused` deve ser investigada e corrigida na causa raiz, não apagada para simplificar;
-- `launchScope=false` é gate de lançamento, não marca de legado;
+- inspecionar primeiro o projeto real: código da `main`, rotas, owners, serviços, schema/migrations, testes, deploy/runtime e comportamento observado;
+- documentação pode estar desatualizada e nunca autoriza sozinha remover feature implementada;
+- feature coerente com o produto que esteja quebrada, incompleta ou `launch-paused` deve ser corrigida na causa raiz, não apagada para simplificar;
 - remover somente legado real, duplicação, compatibility bridge ou owner substituído, depois de preservar/migrar a capacidade funcional válida e comprovar callers/impacto;
-- não usar conteúdo histórico deste arquivo para decidir arquitetura;
-- não recriar `src/features`, `src/config`, `scripts` ou outros roots já comprovadamente aposentados; se houver dúvida se algo é realmente legado, auditar o projeto antes de remover;
-- trabalhar diretamente na `main`, sem force-push;
-- revalidar o HEAD antes de cada write;
+- trabalhar diretamente na `main`, sem force-push, revalidando o HEAD antes de cada write;
 - preferir owner/SSOT canônico em `src/core`, `src/modules`, `src/app`, `src/integrations` e `src/shared`;
 - atualizar `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` quando um checkpoint operacional mudar;
 - usar `teste-acheguese` apenas como laboratório/prova de UX territorial quando aplicável; o produto consolidado continua neste repositório.
 
 ## Política de migração deste ponteiro
 
-Este arquivo só poderá ser removido depois que:
-
-- referências ativas forem migradas para os documentos canônicos;
-- validators e workflows deixarem de depender do path;
-- referências históricas restantes estiverem apenas em `docs/10-archive/`.
-
-Até lá, manter este conteúdo curto e sem segunda autoridade.
+Este arquivo só poderá ser removido depois que referências ativas forem migradas para os documentos canônicos e referências históricas restantes estiverem apenas em `docs/10-archive/`.

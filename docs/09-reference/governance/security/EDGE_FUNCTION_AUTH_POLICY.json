@@ -186,6 +186,14 @@
         "require(?:Admin|SuperAdmin)\\s*\\("
       ]
     },
+    "admin-professional-rpc": {
+      "kind": "admin-broker",
+      "risk": "Critical",
+      "label": "admin Professional availability broker",
+      "requiredPatterns": [
+        "require(?:Admin|SuperAdmin)\\s*\\("
+      ]
+    },
     "admin-site-settings-rpc": {
       "kind": "admin-broker",
       "risk": "Critical",
