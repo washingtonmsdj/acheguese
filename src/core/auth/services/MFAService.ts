@@ -1,8 +1,9 @@
 /**
  * MFAService
- * 
- * Serviço para gerenciar autenticação de dois fatores (MFA)
- * Suporta TOTP (Time-based One-Time Password)
+ *
+ * Serviço para gerenciar autenticação multifator (MFA).
+ * Supabase Auth é a autoridade dos fatores TOTP; `user_mfa_status` mantém
+ * somente metadata/política auxiliar e nunca substitui um fator verificado.
  */
 
 import { logger } from '@/shared/utils/logger';
@@ -15,6 +16,7 @@ export interface MFAStatus {
   mfaMethod: 'totp' | 'sms' | 'email' | null;
   enrolledAt: string | null;
   lastVerifiedAt: string | null;
+  /** Compatibilidade de leitura. Recovery codes não são suportados pelo Auth. */
   backupCodesGenerated: boolean;
   backupCodesCount: number;
   gracePeriodExpiresAt: string | null;
@@ -23,9 +25,10 @@ export interface MFAStatus {
 }
 
 export interface MFAEnrollmentData {
+  /** ID autoritativo do fator criado pelo Supabase Auth. */
+  factorId: string;
   qrCode: string;
   secret: string;
-  backupCodes: string[];
 }
 
 export interface MFARequirement {
@@ -36,37 +39,44 @@ export interface MFARequirement {
 
 class MFAService {
   /**
-   * Verificar se MFA é obrigatório para o usuário atual
+   * Verificar se MFA é obrigatório para o usuário atual.
+   *
+   * Para uma sessão autenticada, falha de `session-rpc` não pode ser convertida
+   * em `required: false`: isso seria um bypass fail-open da política de MFA.
    */
   async checkMFARequired(): Promise<MFARequirement> {
     try {
       const user = await SessionService.getCurrentUser();
-      
+
       if (!user) {
         return { required: false, gracePeriodExpiresAt: null, daysRemaining: null };
       }
 
       const required = await SessionRpcService.checkMfaRequired();
       if (required === null) {
-        logger.error('MFAService.checkMFARequired', new Error('session-rpc returned no MFA requirement'));
-        return { required: false, gracePeriodExpiresAt: null, daysRemaining: null };
+        throw new Error('session-rpc returned no MFA requirement');
       }
 
-      // Buscar informações do período de graça
-      const { data: statusData } = await supabase
+      // Grace period é metadata de UX. A decisão `required` vem do broker.
+      const { data: statusData, error: statusError } = await supabase
         .from('user_mfa_status')
         .select('grace_period_expires_at')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
+
+      if (statusError) {
+        logger.warn('MFAService.checkMFARequired.gracePeriod', statusError);
+      }
 
       const gracePeriodExpiresAt = statusData?.grace_period_expires_at || null;
-      let daysRemaining = null;
+      let daysRemaining: number | null = null;
 
       if (gracePeriodExpiresAt) {
         const expiresAt = new Date(gracePeriodExpiresAt);
-        const now = new Date();
-        const diffTime = expiresAt.getTime() - now.getTime();
-        daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (!Number.isNaN(expiresAt.getTime())) {
+          const diffTime = expiresAt.getTime() - Date.now();
+          daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
       }
 
       return {
@@ -76,17 +86,21 @@ class MFAService {
       };
     } catch (error) {
       logger.error('MFAService.checkMFARequired', error);
-      return { required: false, gracePeriodExpiresAt: null, daysRemaining: null };
+      throw error;
     }
   }
 
   /**
-   * Buscar status de MFA do usuário atual
+   * Buscar status auxiliar de MFA do usuário atual.
+   *
+   * Os campos históricos de backup codes são neutralizados porque Supabase Auth
+   * não fornece recovery codes. Exibi-los como válidos criaria uma capacidade
+   * de recuperação que não existe.
    */
   async getMFAStatus(): Promise<MFAStatus | null> {
     try {
       const user = await SessionService.getCurrentUser();
-      
+
       if (!user) {
         return null;
       }
@@ -99,7 +113,7 @@ class MFAService {
       let data = initialData;
 
       if (error) {
-        // Se não existe registro, criar um
+        // Se não existe registro, criar apenas a linha auxiliar do próprio usuário.
         if (error.code === 'PGRST116') {
           const { data: newData, error: insertError } = await supabase
             .from('user_mfa_status')
@@ -119,15 +133,17 @@ class MFAService {
         }
       }
 
+      if (!data) return null;
+
       return {
-        mfaEnabled: data.mfa_enabled,
+        mfaEnabled: data.mfa_enabled === true,
         mfaMethod: (data.mfa_method as 'totp' | 'sms' | 'email' | null),
         enrolledAt: data.enrolled_at,
         lastVerifiedAt: data.last_verified_at,
-        backupCodesGenerated: data.backup_codes_generated,
-        backupCodesCount: data.backup_codes_count,
+        backupCodesGenerated: false,
+        backupCodesCount: 0,
         gracePeriodExpiresAt: data.grace_period_expires_at,
-        isExempt: data.is_exempt,
+        isExempt: data.is_exempt === true,
         exemptionReason: data.exemption_reason,
       };
     } catch (error) {
@@ -137,7 +153,8 @@ class MFAService {
   }
 
   /**
-   * Iniciar enrollment de MFA (TOTP)
+   * Iniciar enrollment de MFA (TOTP).
+   * O `factorId` retornado pelo Auth deve ser usado para challenge/verify.
    */
   async enrollMFA(): Promise<MFAEnrollmentData | null> {
     try {
@@ -150,13 +167,14 @@ class MFAService {
         throw error;
       }
 
-      // Gerar códigos de backup (simulado - Supabase não fornece isso diretamente)
-      const backupCodes = this.generateBackupCodes(10);
+      if (!data?.id || !data.totp?.qr_code || !data.totp?.secret) {
+        throw new Error('Supabase Auth returned an invalid MFA enrollment');
+      }
 
       return {
+        factorId: data.id,
         qrCode: data.totp.qr_code,
         secret: data.totp.secret,
-        backupCodes,
       };
     } catch (error) {
       logger.error('MFAService.enrollMFA', error);
@@ -165,7 +183,9 @@ class MFAService {
   }
 
   /**
-   * Verificar código TOTP e completar enrollment
+   * Verificar código TOTP e completar enrollment.
+   * Supabase Auth é a autoridade; falha no tracker auxiliar não desfaz um fator
+   * que o Auth já verificou, mas é registrada para reconciliação.
    */
   async verifyAndEnableMFA(factorId: string, code: string): Promise<boolean> {
     try {
@@ -173,8 +193,8 @@ class MFAService {
         factorId,
       });
 
-      if (error) {
-        logger.error('MFAService.verifyAndEnableMFA - challenge', error);
+      if (error || !data?.id) {
+        logger.error('MFAService.verifyAndEnableMFA - challenge', error ?? new Error('Missing challenge id'));
         return false;
       }
 
@@ -189,21 +209,25 @@ class MFAService {
         return false;
       }
 
-      // Atualizar status no banco
       const user = await SessionService.getCurrentUser();
-      
+
       if (user) {
-        await supabase
+        const now = new Date().toISOString();
+        const { error: statusError } = await supabase
           .from('user_mfa_status')
           .upsert({
             user_id: user.id,
             mfa_enabled: true,
             mfa_method: 'totp',
-            enrolled_at: new Date().toISOString(),
-            last_verified_at: new Date().toISOString(),
-            backup_codes_generated: true,
-            backup_codes_count: 10,
+            enrolled_at: now,
+            last_verified_at: now,
+            backup_codes_generated: false,
+            backup_codes_count: 0,
           });
+
+        if (statusError) {
+          logger.error('MFAService.verifyAndEnableMFA - status sync', statusError);
+        }
       }
 
       return true;
@@ -214,7 +238,7 @@ class MFAService {
   }
 
   /**
-   * Desabilitar MFA
+   * Desabilitar MFA.
    */
   async disableMFA(factorId: string): Promise<boolean> {
     try {
@@ -227,19 +251,24 @@ class MFAService {
         return false;
       }
 
-      // Atualizar status no banco
       const user = await SessionService.getCurrentUser();
-      
+
       if (user) {
-        await supabase
+        const { error: statusError } = await supabase
           .from('user_mfa_status')
           .update({
             mfa_enabled: false,
             mfa_method: null,
             enrolled_at: null,
             last_verified_at: null,
+            backup_codes_generated: false,
+            backup_codes_count: 0,
           })
           .eq('user_id', user.id);
+
+        if (statusError) {
+          logger.error('MFAService.disableMFA - status sync', statusError);
+        }
       }
 
       return true;
@@ -250,7 +279,7 @@ class MFAService {
   }
 
   /**
-   * Listar fatores MFA do usuário
+   * Listar fatores MFA TOTP do usuário no Supabase Auth.
    */
   async listMFAFactors() {
     try {
@@ -269,33 +298,7 @@ class MFAService {
   }
 
   /**
-   * Gera códigos de backup criptograficamente seguros.
-   *
-   * Usa `crypto.getRandomValues()` (Web Crypto API) em vez de `Math.random()`,
-   * que não é criptograficamente seguro e não deve ser usado para segredos.
-   *
-   * Formato: 8 caracteres alfanuméricos maiúsculos (ex: "A3F9K2M7")
-   * Entropia: ~41 bits por código (36^8), suficiente para backup codes de MFA.
-   */
-  private generateBackupCodes(count: number): string[] {
-    const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sem 0/O e 1/I para evitar confusão visual
-    const CODE_LENGTH = 8;
-    const codes: string[] = [];
-
-    for (let i = 0; i < count; i++) {
-      const randomBytes = new Uint8Array(CODE_LENGTH);
-      crypto.getRandomValues(randomBytes);
-      const code = Array.from(randomBytes)
-        .map((byte) => ALPHABET[byte % ALPHABET.length])
-        .join('');
-      codes.push(code);
-    }
-
-    return codes;
-  }
-
-  /**
-   * Verificar código MFA durante login
+   * Verificar código MFA durante login.
    */
   async verifyMFACode(factorId: string, code: string): Promise<boolean> {
     try {
@@ -303,8 +306,8 @@ class MFAService {
         factorId,
       });
 
-      if (error) {
-        logger.error('MFAService.verifyMFACode - challenge', error);
+      if (error || !data?.id) {
+        logger.error('MFAService.verifyMFACode - challenge', error ?? new Error('Missing challenge id'));
         return false;
       }
 
@@ -319,16 +322,19 @@ class MFAService {
         return false;
       }
 
-      // Atualizar last_verified_at
       const user = await SessionService.getCurrentUser();
-      
+
       if (user) {
-        await supabase
+        const { error: statusError } = await supabase
           .from('user_mfa_status')
           .update({
             last_verified_at: new Date().toISOString(),
           })
           .eq('user_id', user.id);
+
+        if (statusError) {
+          logger.error('MFAService.verifyMFACode - status sync', statusError);
+        }
       }
 
       return true;
