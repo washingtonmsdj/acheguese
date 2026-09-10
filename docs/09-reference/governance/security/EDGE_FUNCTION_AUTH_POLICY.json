@@ -41,6 +41,21 @@
         "getSupabaseAdminClient\\s*\\("
       ]
     },
+    "create-professional-lead": {
+      "kind": "public-registration-broker",
+      "label": "public authoritative Professional lead intake broker",
+      "requiredPatterns": [
+        "requireHttpMethod\\s*\\(",
+        "rateLimitMiddleware\\s*\\(",
+        "readJsonBody<unknown>\\s*\\(",
+        "getRequiredEnv\\s*\\(\\s*[\"']TURNSTILE_SECRET_KEY[\"']\\s*\\)",
+        "verifyTurnstileToken\\s*\\(",
+        "executeProfessionalLeadIntake\\s*\\(",
+        "getSupabaseAdminClient\\s*\\(",
+        "get_active_profile",
+        "professional_leads"
+      ]
+    },
     "auto-dispatch-ride": {
       "kind": "cron-secret",
       "label": "cron ride dispatch worker",
@@ -120,6 +135,18 @@
         "verifyTurnstileToken\\s*\\(",
         "getSupabaseAdminClient\\s*\\(",
         "community_interest_registrations"
+      ]
+    },
+    "create-professional-lead": {
+      "kind": "public-registration-broker",
+      "risk": "Critical",
+      "label": "public authoritative Professional lead service_role broker",
+      "requiredPatterns": [
+        "rateLimitMiddleware\\s*\\(",
+        "verifyTurnstileToken\\s*\\(",
+        "getSupabaseAdminClient\\s*\\(",
+        "get_active_profile",
+        "professional_leads"
       ]
     },
     "admin-business-rpc": {

@@ -36,4 +36,10 @@ export {
 
 export { ProfessionalService, ProfessionalFacade } from "./ProfessionalService";
 export { ProfessionalLeadService, type ServiceResult } from "./ProfessionalLeadService";
+export {
+  ProfessionalLeadIntakeService,
+  type CreateProfessionalLeadSubmission,
+  type ProfessionalLeadIntakeResult,
+  type ProfessionalLeadSourceChannel,
+} from "./ProfessionalLeadIntakeService";
 export { ProfessionalLinkEligibilityService } from "./ProfessionalLinkEligibilityService";

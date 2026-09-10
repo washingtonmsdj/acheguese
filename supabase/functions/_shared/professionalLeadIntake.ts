@@ -2,7 +2,6 @@ import type { TurnstileVerificationResult } from "./turnstile.ts";
 
 const REQUEST_KEYS = new Set([
   "professionalId",
-  "requesterProfileId",
   "requesterName",
   "requesterPhone",
   "requesterEmail",
@@ -44,7 +43,6 @@ export interface ProfessionalLeadIntakeRow {
 
 interface ParsedProfessionalLeadRequest {
   professionalId: string;
-  requesterProfileId: string | null;
   requesterName: string;
   requesterPhone: string | null;
   requesterEmail: string | null;
@@ -64,7 +62,6 @@ export type ProfessionalLeadIntakeOutcome<TLead> =
   | { status: "turnstile_failed" }
   | { status: "invalid_payload" }
   | { status: "professional_unavailable" }
-  | { status: "requester_profile_invalid" }
   | { status: "verification_unavailable" }
   | { status: "configuration_unavailable" }
   | { status: "database_failed" };
@@ -108,7 +105,6 @@ function parseRequest(payload: unknown): ParsedProfessionalLeadRequest | null {
   if (Object.keys(payload).length !== REQUEST_KEYS.size) return null;
 
   const professionalId = requiredString(payload, "professionalId", 36, 36);
-  const requesterProfileId = optionalString(payload, "requesterProfileId", 36);
   const requesterName = requiredString(payload, "requesterName", 2, 150);
   const requesterPhone = optionalString(payload, "requesterPhone", 40);
   const requesterEmailRaw = optionalString(payload, "requesterEmail", 254);
@@ -124,7 +120,6 @@ function parseRequest(payload: unknown): ParsedProfessionalLeadRequest | null {
   const turnstileToken = optionalString(payload, "turnstileToken", 2_048);
 
   if (!professionalId || !UUID_PATTERN.test(professionalId)) return null;
-  if (requesterProfileId === undefined || (requesterProfileId && !UUID_PATTERN.test(requesterProfileId))) return null;
   if (!requesterName || !serviceNeeded || !description || !sourceChannel) return null;
   if (!SOURCE_CHANNELS.has(sourceChannel)) return null;
   if (requesterPhone === undefined || requesterEmail === undefined) return null;
@@ -139,7 +134,6 @@ function parseRequest(payload: unknown): ParsedProfessionalLeadRequest | null {
 
   return {
     professionalId,
-    requesterProfileId,
     requesterName,
     requesterPhone,
     requesterEmail,
@@ -158,9 +152,11 @@ export async function executeProfessionalLeadIntake<TLead>(
   payload: unknown,
   dependencies: {
     requesterUserId: string | null;
-    verifyTurnstile(token: string): Promise<TurnstileVerificationResult | { ok: false; reason: "configuration" }>;
+    requesterProfileId: string | null;
+    verifyTurnstile(token: string): Promise<
+      TurnstileVerificationResult | { ok: false; reason: "configuration" }
+    >;
     isProfessionalAvailable(professionalId: string): Promise<boolean>;
-    validateRequesterProfile(profileId: string, userId: string): Promise<boolean>;
     findRecentDuplicate(input: {
       professionalId: string;
       requesterUserId: string | null;
@@ -168,7 +164,10 @@ export async function executeProfessionalLeadIntake<TLead>(
       requesterPhone: string | null;
       serviceNeeded: string;
     }): Promise<TLead | null>;
-    insertLead(row: ProfessionalLeadIntakeRow): Promise<{ data: TLead | null; error: { code?: string | null } | null }>;
+    insertLead(row: ProfessionalLeadIntakeRow): Promise<{
+      data: TLead | null;
+      error: { code?: string | null } | null;
+    }>;
   },
 ): Promise<ProfessionalLeadIntakeOutcome<TLead>> {
   if (hasPopulatedHoneypot(payload)) return { status: "turnstile_failed" };
@@ -188,16 +187,6 @@ export async function executeProfessionalLeadIntake<TLead>(
     return { status: "professional_unavailable" };
   }
 
-  let requesterProfileId: string | null = null;
-  if (dependencies.requesterUserId && parsed.requesterProfileId) {
-    const validProfile = await dependencies.validateRequesterProfile(
-      parsed.requesterProfileId,
-      dependencies.requesterUserId,
-    );
-    if (!validProfile) return { status: "requester_profile_invalid" };
-    requesterProfileId = parsed.requesterProfileId;
-  }
-
   const duplicate = await dependencies.findRecentDuplicate({
     professionalId: parsed.professionalId,
     requesterUserId: dependencies.requesterUserId,
@@ -210,7 +199,7 @@ export async function executeProfessionalLeadIntake<TLead>(
   const result = await dependencies.insertLead({
     professional_id: parsed.professionalId,
     requester_user_id: dependencies.requesterUserId,
-    requester_profile_id: requesterProfileId,
+    requester_profile_id: dependencies.requesterProfileId,
     requester_name: parsed.requesterName,
     requester_phone: parsed.requesterPhone,
     requester_email: parsed.requesterEmail,

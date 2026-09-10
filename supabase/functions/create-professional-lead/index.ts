@@ -1,6 +1,6 @@
 // Public Professional lead intake broker.
 // Deploy contract: verify_jwt = false because anonymous visitors can request quotes.
-// All persisted lifecycle/identity fields are derived or validated server-side.
+// Authenticated identity is resolved from the bearer token and active Profile on the server.
 
 import { getSupabaseAdminClient } from "../_shared/adminAuth.ts";
 import {
@@ -30,17 +30,65 @@ const DUPLICATE_WINDOW_MS = 10 * 60 * 1_000;
 const TURNSTILE_ACTION = "professional-lead";
 
 type SupabaseAdmin = ReturnType<typeof getSupabaseAdminClient>;
+type LeadIdRow = { id: string };
 
-async function resolveRequesterUserId(
+type RequesterIdentity =
+  | { ok: true; userId: string | null; profileId: string | null }
+  | { ok: false; response: Response };
+
+function getProfileId(value: unknown): string | null {
+  const row = Array.isArray(value) ? value[0] : value;
+  if (!row || typeof row !== "object") return null;
+  const id = Reflect.get(row, "id");
+  return typeof id === "string" ? id : null;
+}
+
+async function resolveRequesterIdentity(
   req: Request,
   supabaseAdmin: SupabaseAdmin,
-): Promise<string | null> {
+): Promise<RequesterIdentity> {
   const token = extractBearerToken(req);
-  if (!token) return null;
+  if (!token) {
+    return { ok: true, userId: null, profileId: null };
+  }
 
-  const { data, error } = await supabaseAdmin.auth.getUser(token);
-  if (error || !data.user) return null;
-  return data.user.id;
+  const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
+  if (authError || !authData.user) {
+    return {
+      ok: false,
+      response: jsonResponse(
+        { error: "invalid_or_expired_token" },
+        401,
+        ALLOWED_METHODS,
+        req,
+      ),
+    };
+  }
+
+  const { data: activeProfile, error: activeProfileError } = await supabaseAdmin.rpc(
+    "get_active_profile",
+    { p_user_id: authData.user.id },
+  );
+  if (activeProfileError) {
+    console.error("[create-professional-lead] active Profile resolution failed", {
+      code: activeProfileError.code,
+    });
+    return {
+      ok: false,
+      response: jsonResponse(
+        { error: "requester_identity_unavailable" },
+        503,
+        ALLOWED_METHODS,
+        req,
+      ),
+    };
+  }
+
+  return {
+    ok: true,
+    userId: authData.user.id,
+    profileId: getProfileId(activeProfile),
+  };
 }
 
 async function isProfessionalAvailable(
@@ -49,11 +97,18 @@ async function isProfessionalAvailable(
 ): Promise<boolean> {
   const { data: professional, error: professionalError } = await supabaseAdmin
     .from("professional_data")
-    .select("id,profile_id,is_accepting_clients")
+    .select("id,profile_id,is_accepting_clients,visibility")
     .eq("id", professionalId)
     .maybeSingle();
 
-  if (professionalError || !professional?.is_accepting_clients) return false;
+  if (
+    professionalError ||
+    !professional?.is_accepting_clients ||
+    (professional.visibility !== "public_listed" &&
+      professional.visibility !== "public_unlisted")
+  ) {
+    return false;
+  }
 
   const { data: profile, error: profileError } = await supabaseAdmin
     .from("profiles")
@@ -62,21 +117,6 @@ async function isProfessionalAvailable(
     .maybeSingle();
 
   return !profileError && Boolean(profile?.is_active) && !profile?.is_suspended;
-}
-
-async function validateRequesterProfile(
-  supabaseAdmin: SupabaseAdmin,
-  profileId: string,
-  userId: string,
-): Promise<boolean> {
-  const { data, error } = await supabaseAdmin
-    .from("profiles")
-    .select("id,user_id,is_active,is_suspended")
-    .eq("id", profileId)
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  return !error && Boolean(data?.is_active) && !data?.is_suspended;
 }
 
 async function findRecentDuplicate(
@@ -88,13 +128,13 @@ async function findRecentDuplicate(
     requesterPhone: string | null;
     serviceNeeded: string;
   },
-): Promise<Record<string, unknown> | null> {
+): Promise<LeadIdRow | null> {
   const cutoff = new Date(Date.now() - DUPLICATE_WINDOW_MS).toISOString();
 
   const baseQuery = () =>
     supabaseAdmin
       .from("professional_leads")
-      .select("*")
+      .select("id")
       .eq("professional_id", input.professionalId)
       .eq("service_needed", input.serviceNeeded)
       .gte("created_at", cutoff)
@@ -105,21 +145,21 @@ async function findRecentDuplicate(
     const { data, error } = await baseQuery()
       .eq("requester_user_id", input.requesterUserId)
       .maybeSingle();
-    if (!error && data) return data;
+    if (!error && data?.id) return { id: data.id };
   }
 
   if (input.requesterEmail) {
     const { data, error } = await baseQuery()
       .eq("requester_email", input.requesterEmail)
       .maybeSingle();
-    if (!error && data) return data;
+    if (!error && data?.id) return { id: data.id };
   }
 
   if (input.requesterPhone) {
     const { data, error } = await baseQuery()
       .eq("requester_phone", input.requesterPhone)
       .maybeSingle();
-    if (!error && data) return data;
+    if (!error && data?.id) return { id: data.id };
   }
 
   return null;
@@ -156,54 +196,52 @@ Deno.serve(async (req: Request) => {
 
   const remoteIp = getTrustedClientIp(req);
   const supabaseAdmin = getSupabaseAdminClient();
-  const requesterUserId = await resolveRequesterUserId(req, supabaseAdmin);
+  const requesterIdentity = await resolveRequesterIdentity(req, supabaseAdmin);
+  if (!requesterIdentity.ok) return requesterIdentity.response;
 
   try {
-    const outcome = await executeProfessionalLeadIntake<Record<string, unknown>>(
-      body.data,
-      {
-        requesterUserId,
-        verifyTurnstile: async (token) => {
-          try {
-            return await verifyTurnstileToken({
-              token,
-              secret: getRequiredEnv("TURNSTILE_SECRET_KEY"),
-              expectedAction: TURNSTILE_ACTION,
-              allowedHostnames: parseAllowedTurnstileHostnames(
-                getRequiredEnv("ALLOWED_ORIGINS"),
-              ),
-              remoteIp,
-            });
-          } catch (error) {
-            console.error("[create-professional-lead] Turnstile configuration unavailable", {
-              message: error instanceof Error ? error.message : "unknown configuration error",
-            });
-            return { ok: false, reason: "configuration" };
-          }
-        },
-        isProfessionalAvailable: (professionalId) =>
-          isProfessionalAvailable(supabaseAdmin, professionalId),
-        validateRequesterProfile: (profileId, userId) =>
-          validateRequesterProfile(supabaseAdmin, profileId, userId),
-        findRecentDuplicate: (input) => findRecentDuplicate(supabaseAdmin, input),
-        insertLead: async (row: ProfessionalLeadIntakeRow) => {
-          const { data, error } = await supabaseAdmin
-            .from("professional_leads")
-            .insert(row)
-            .select("*")
-            .single();
-          if (error) {
-            console.error("[create-professional-lead] insert failed", {
-              code: error.code,
-            });
-          }
-          return {
-            data: data ?? null,
-            error: error ? { code: error.code } : null,
-          };
-        },
+    const outcome = await executeProfessionalLeadIntake<LeadIdRow>(body.data, {
+      requesterUserId: requesterIdentity.userId,
+      requesterProfileId: requesterIdentity.profileId,
+      verifyTurnstile: async (token) => {
+        try {
+          return await verifyTurnstileToken({
+            token,
+            secret: getRequiredEnv("TURNSTILE_SECRET_KEY"),
+            expectedAction: TURNSTILE_ACTION,
+            allowedHostnames: parseAllowedTurnstileHostnames(
+              getRequiredEnv("ALLOWED_ORIGINS"),
+            ),
+            remoteIp,
+          });
+        } catch (error) {
+          console.error("[create-professional-lead] Turnstile configuration unavailable", {
+            message:
+              error instanceof Error ? error.message : "unknown configuration error",
+          });
+          return { ok: false, reason: "configuration" };
+        }
       },
-    );
+      isProfessionalAvailable: (professionalId) =>
+        isProfessionalAvailable(supabaseAdmin, professionalId),
+      findRecentDuplicate: (input) => findRecentDuplicate(supabaseAdmin, input),
+      insertLead: async (row: ProfessionalLeadIntakeRow) => {
+        const { data, error } = await supabaseAdmin
+          .from("professional_leads")
+          .insert(row)
+          .select("id")
+          .single();
+        if (error) {
+          console.error("[create-professional-lead] insert failed", {
+            code: error.code,
+          });
+        }
+        return {
+          data: data?.id ? { id: data.id } : null,
+          error: error ? { code: error.code } : null,
+        };
+      },
+    });
 
     switch (outcome.status) {
       case "created":
@@ -223,7 +261,6 @@ Deno.serve(async (req: Request) => {
       case "turnstile_failed":
         return jsonResponse({ status: outcome.status }, 200, ALLOWED_METHODS, req);
       case "invalid_payload":
-      case "requester_profile_invalid":
         return jsonResponse({ error: outcome.status }, 400, ALLOWED_METHODS, req);
       case "professional_unavailable":
         return jsonResponse({ error: outcome.status }, 409, ALLOWED_METHODS, req);
