@@ -25,6 +25,9 @@ const oldLeadService = read(
 const clientContract = read(
   "src/core/professional/contracts/ProfessionalLeadIntakeContract.ts",
 );
+const operationalE2e = read(
+  "tests/e2e/professional-leads-operational.spec.ts",
+);
 const functionConfig = read("supabase/config.toml");
 const authPolicy = read(
   "docs/09-reference/governance/security/EDGE_FUNCTION_AUTH_POLICY.json",
@@ -102,6 +105,16 @@ describe("G39 Professional lead browser boundary", () => {
     expect(oldLeadService).not.toContain("normalizeLeadInput");
     expect(oldLeadService).not.toContain("CreateProfessionalLeadInput");
     expect(dialog).not.toContain("ProfessionalLeadService");
+  });
+
+  it("keeps technical E2E fixture creation off browser INSERT authority", () => {
+    expect(operationalE2e).toContain("createOptionalOperationalAdminClient");
+    expect(operationalE2e).toMatch(
+      /fixtureAdmin\s*\.from\("professional_leads"\)\s*\.insert/,
+    );
+    expect(operationalE2e).not.toMatch(
+      /client\s*\.from\("professional_leads"\)\s*\.insert/,
+    );
   });
 });
 
