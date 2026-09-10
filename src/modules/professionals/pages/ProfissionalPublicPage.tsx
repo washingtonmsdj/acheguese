@@ -168,7 +168,7 @@ function ProfileHero({
   return (
     <section className="mt-3 md:mt-5" aria-labelledby="professional-profile-title">
       <div className="flex items-start gap-3 sm:gap-4">
-        <Avatar className="h-20 w-20 shrink-0 border border-territory-border bg-territory-raised sm:h-24 sm:w-24 md:h-28 md:w-28">
+        <Avatar className="h-24 w-24 shrink-0 border border-territory-border bg-territory-raised sm:h-24 sm:w-24 md:h-28 md:w-28">
           <AvatarImage src={profile.avatar_url ?? profile.logo_url ?? undefined} alt="" />
           <AvatarFallback className="bg-territory-raised text-xl font-bold text-territory-brand sm:text-2xl">
             {getInitials(profileName)}
@@ -177,7 +177,7 @@ function ProfileHero({
         <div className="min-w-0 pt-1 md:pt-2">
           <h1
             id="professional-profile-title"
-            className="font-heading text-[1.5rem] font-bold leading-[1.05] tracking-[-0.045em] text-territory-ink sm:text-[1.75rem] md:text-[2rem]"
+            className="font-heading text-[1.5rem] font-bold leading-[1.05] tracking-[-0.045em] text-territory-ink sm:text-[1.75rem] md:text-[1.75rem]"
           >
             {profileName}
           </h1>
@@ -232,14 +232,14 @@ function ConversationButton({
 function ServicesSection({ services }: { services: ProfileServiceItem[] }) {
   return (
     <section aria-labelledby="professional-services-title">
-      <h2 id="professional-services-title" className="font-heading text-xl font-bold tracking-[-0.025em] text-territory-ink sm:text-2xl">
+      <h2 id="professional-services-title" className="font-heading text-xl font-bold tracking-[-0.025em] text-territory-ink">
         Como posso ajudar
       </h2>
       <div className="mt-3 border-t border-territory-border">
         {services.map((service) => {
           const Icon = service.icon;
           return (
-              <div key={service.title} className="flex min-h-[3.25rem] items-center gap-3 border-b border-territory-border py-1.5 sm:gap-4 md:min-h-[4.25rem] md:py-3">
+              <div key={service.title} className="flex min-h-[3.25rem] items-center gap-3 border-b border-territory-border py-1.5 sm:gap-4 md:min-h-14 md:py-2">
               <Icon className="h-7 w-7 shrink-0 text-territory-ink" strokeWidth={1.8} aria-hidden="true" />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold text-territory-ink sm:text-base">{service.title}</p>
@@ -263,7 +263,7 @@ function PortfolioSection({ portfolio }: { portfolio: string[] }) {
   return (
     <section aria-labelledby="professional-portfolio-title">
       <div className="flex items-center justify-between gap-3">
-        <h2 id="professional-portfolio-title" className="font-heading text-xl font-bold leading-6 tracking-[-0.025em] text-territory-ink sm:text-2xl sm:leading-7">
+        <h2 id="professional-portfolio-title" className="font-heading text-xl font-bold leading-6 tracking-[-0.025em] text-territory-ink">
           Trabalhos realizados
         </h2>
         <button type="button" className="inline-flex min-h-6 items-center gap-1 text-sm font-bold text-territory-brand hover:text-territory-brand-strong md:min-h-10">
@@ -272,13 +272,13 @@ function PortfolioSection({ portfolio }: { portfolio: string[] }) {
           <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
-      <div className="mt-1 grid grid-cols-2 gap-2 sm:mt-3 sm:grid-cols-3 sm:gap-3">
+      <div className="mt-0 grid grid-cols-2 gap-2 sm:mt-3 sm:grid-cols-3 sm:gap-3">
         {portfolio.map((image, index) => (
           <img
             key={`${image}-${index}`}
             src={image}
             alt={`Trabalho realizado ${index + 1}`}
-            className={cn("aspect-[1.35] w-full rounded-lg object-cover", index === 2 && "hidden sm:block")}
+            className={cn("aspect-[1.2] w-full rounded-lg object-cover", index === 2 && "hidden sm:block")}
           />
         ))}
       </div>
@@ -289,7 +289,7 @@ function PortfolioSection({ portfolio }: { portfolio: string[] }) {
 function RecommendationsSection() {
   return (
     <section aria-labelledby="professional-recommendations-title">
-      <h2 id="professional-recommendations-title" className="font-heading text-xl font-bold tracking-[-0.025em] text-territory-ink sm:text-2xl">
+      <h2 id="professional-recommendations-title" className="font-heading text-xl font-bold tracking-[-0.025em] text-territory-ink">
         Recomendações
       </h2>
       <div className="mt-3 flex items-start gap-3 border-t border-territory-border pt-4">
@@ -317,7 +317,7 @@ function ConversationAside({
   return (
     <aside className="hidden md:block xl:sticky xl:top-24" aria-label="Contato e região de atendimento">
       <TerritorySurface className="p-4 sm:p-5">
-        <h2 className="font-heading text-xl font-bold tracking-[-0.025em] text-territory-ink sm:text-2xl">Vamos conversar?</h2>
+        <h2 className="font-heading text-xl font-bold tracking-[-0.025em] text-territory-ink">Vamos conversar?</h2>
         <p className="mt-2 text-sm leading-6 text-territory-ink">
           Explique o que precisa e combine o atendimento diretamente com {profile.professional_name.split(" ")[0]}.
         </p>
@@ -442,9 +442,9 @@ export default function ProfissionalPublicPage() {
 
   return (
     <div className="min-h-[100dvh] bg-territory-canvas pb-24 text-territory-ink md:pb-8">
-      <TerritoryTopbar territoryName={profileTerritoryName} contextLabel={profileContextLabel} isAuthenticated={Boolean(user)} unreadCount={unreadCount} searchHref={searchHref} searchLabel="Buscar serviços e negócios" showMobileSearch={false} />
+      <TerritoryTopbar territoryName={profileTerritoryName} contextLabel={profileContextLabel} isAuthenticated={Boolean(user)} unreadCount={unreadCount} searchHref={searchHref} searchLabel="Buscar serviços e negócios" showMobileSearch={false} flushDesktop />
 
-      <main className="mx-auto w-full max-w-[72rem] px-4 pb-8 pt-2 sm:px-6 md:pt-5 lg:px-8">
+      <main className="w-full max-w-[60rem] px-4 pb-8 pt-2 sm:px-6 md:pt-5 lg:px-6">
         <div className="hidden items-center gap-2 text-xs text-territory-muted md:flex"><Link to={searchHref} className="hover:text-territory-brand">Explorar</Link><span aria-hidden="true">/</span><Link to={buildModuleTerritoryUrl(MODULE_SLUGS.services, searchTerritoryBase)} className="hover:text-territory-brand">Serviços</Link><span aria-hidden="true">/</span><span className="truncate">{profile.professional_name}</span></div>
 
         <div className="mt-3 flex items-center justify-between gap-3 md:mt-2"><Link to={searchHref} className="inline-flex min-h-10 items-center gap-2 rounded-lg px-1 text-sm font-semibold text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><ArrowLeft className="h-4 w-4" aria-hidden="true" />Voltar à busca</Link><ProfileActions saved={saved} onToggleSaved={() => setSaved((value) => !value)} /></div>
@@ -456,8 +456,8 @@ export default function ProfissionalPublicPage() {
         </div>
         <ProfileTabs />
 
-        <div className="mt-4 grid gap-5 md:gap-8 xl:grid-cols-[minmax(0,1.6fr)_minmax(20rem,0.9fr)] xl:items-start xl:gap-9">
-          <div className="min-w-0 space-y-4 md:space-y-8"><ServicesSection services={services} /><PortfolioSection portfolio={portfolio} /><MobileCoverageSection coverage={coverage} /><RecommendationsSection /></div>
+        <div className="mt-4 grid gap-5 md:gap-8 xl:grid-cols-[minmax(0,540px)_20rem] xl:items-start xl:gap-9">
+          <div className="min-w-0 space-y-3 md:space-y-8"><ServicesSection services={services} /><PortfolioSection portfolio={portfolio} /><MobileCoverageSection coverage={coverage} /><RecommendationsSection /></div>
           <ConversationAside profile={profile} coverage={coverage} onOpen={() => setLeadDialogOpen(true)} />
         </div>
       </main>
