@@ -1,9 +1,9 @@
 import type { LucideIcon } from "lucide-react";
 import { Lightbulb, Plug, Wrench } from "lucide-react";
-import complexoComercioImage from "@/assets/complexo-comercio.jpg";
-import neighborhoodImage from "@/assets/neighborhood-featured.jpg";
-import profileImage from "@/assets/persona-morador.jpg";
-import serviceImage from "@/assets/servicos-hero.jpg";
+import outletImage from "@/assets/professional-concept/outlet.png";
+import lampImage from "@/assets/professional-concept/lamp.png";
+import profileImage from "@/assets/professional-concept/joao-santos.png";
+import switchImage from "@/assets/professional-concept/switch.png";
 import type { ProfessionalPublicProfile } from "../hooks/useProfessionalBySlug";
 
 export interface ProfessionalConceptService {
@@ -56,7 +56,7 @@ export const PROFESSIONAL_CONCEPT_DETAILS: ProfessionalConceptDetails = {
       icon: Wrench,
     },
   ],
-  portfolio: [serviceImage, neighborhoodImage, complexoComercioImage],
+  portfolio: [outletImage, lampImage, switchImage],
   coverage: [
     "Santa Cruz",
     "Nordeste de Amaralina",

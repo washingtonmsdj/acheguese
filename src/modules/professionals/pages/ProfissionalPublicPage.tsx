@@ -141,7 +141,7 @@ function ProfileTabs() {
           key={tab.label}
           type="button"
           className={cn(
-            "relative min-h-12 shrink-0 px-3 text-sm font-medium text-territory-muted transition-colors first:pl-0 last:pr-0 hover:text-territory-ink after:absolute after:inset-x-3 after:bottom-[-1px] after:h-0.5 after:bg-transparent first:after:left-0 last:after:right-0 sm:px-4 sm:after:inset-x-4",
+            "relative min-h-10 shrink-0 px-3 text-sm font-medium text-territory-muted transition-colors first:pl-0 last:pr-0 hover:text-territory-ink after:absolute after:inset-x-3 after:bottom-[-1px] after:h-0.5 after:bg-transparent first:after:left-0 last:after:right-0 sm:px-4 sm:after:inset-x-4 md:min-h-12",
             tab.active && "font-bold text-territory-ink after:bg-territory-brand",
           )}
           aria-current={tab.active ? "page" : undefined}
@@ -166,9 +166,9 @@ function ProfileHero({
   const category = profile.service_category ?? profile.service_subcategory ?? "Serviços profissionais";
 
   return (
-    <section className="mt-4 md:mt-5" aria-labelledby="professional-profile-title">
+    <section className="mt-3 md:mt-5" aria-labelledby="professional-profile-title">
       <div className="flex items-start gap-3 sm:gap-4">
-        <Avatar className="h-24 w-24 shrink-0 border border-territory-border bg-territory-raised sm:h-24 sm:w-24 md:h-28 md:w-28">
+        <Avatar className="h-20 w-20 shrink-0 border border-territory-border bg-territory-raised sm:h-24 sm:w-24 md:h-28 md:w-28">
           <AvatarImage src={profile.avatar_url ?? profile.logo_url ?? undefined} alt="" />
           <AvatarFallback className="bg-territory-raised text-xl font-bold text-territory-brand sm:text-2xl">
             {getInitials(profileName)}
@@ -194,7 +194,7 @@ function ProfileHero({
         </div>
       </div>
       {profile.description ? (
-        <p className="mt-4 max-w-3xl text-sm leading-6 text-territory-ink sm:text-base sm:leading-7">
+        <p className="mt-3 max-w-3xl text-sm leading-5 text-territory-ink sm:text-base sm:leading-7">
           {profile.description}
         </p>
       ) : null}
@@ -219,7 +219,7 @@ function ConversationButton({
       onClick={onOpen}
       disabled={!profile.is_accepting_clients}
       className={cn(
-        "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-territory-sun px-4 text-sm font-bold text-territory-ink shadow-territory-highlight transition-colors hover:bg-territory-sun/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand disabled:cursor-not-allowed disabled:opacity-55",
+        "inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-territory-sun px-4 text-sm font-bold text-territory-ink shadow-territory-highlight transition-colors hover:bg-territory-sun/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand disabled:cursor-not-allowed disabled:opacity-55 md:min-h-11",
         className,
       )}
     >
@@ -239,7 +239,7 @@ function ServicesSection({ services }: { services: ProfileServiceItem[] }) {
         {services.map((service) => {
           const Icon = service.icon;
           return (
-            <div key={service.title} className="flex min-h-[4.25rem] items-center gap-3 border-b border-territory-border py-3 sm:gap-4">
+              <div key={service.title} className="flex min-h-[3.25rem] items-center gap-3 border-b border-territory-border py-1.5 sm:gap-4 md:min-h-[4.25rem] md:py-3">
               <Icon className="h-7 w-7 shrink-0 text-territory-ink" strokeWidth={1.8} aria-hidden="true" />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold text-territory-ink sm:text-base">{service.title}</p>
@@ -263,16 +263,16 @@ function PortfolioSection({ portfolio }: { portfolio: string[] }) {
   return (
     <section aria-labelledby="professional-portfolio-title">
       <div className="flex items-center justify-between gap-3">
-        <h2 id="professional-portfolio-title" className="font-heading text-xl font-bold tracking-[-0.025em] text-territory-ink sm:text-2xl">
+        <h2 id="professional-portfolio-title" className="font-heading text-xl font-bold leading-6 tracking-[-0.025em] text-territory-ink sm:text-2xl sm:leading-7">
           Trabalhos realizados
         </h2>
-        <button type="button" className="inline-flex min-h-10 items-center gap-1 text-sm font-bold text-territory-brand hover:text-territory-brand-strong">
+        <button type="button" className="inline-flex min-h-6 items-center gap-1 text-sm font-bold text-territory-brand hover:text-territory-brand-strong md:min-h-10">
           <span className="hidden sm:inline">Ver todas as fotos</span>
           <span className="sm:hidden">Ver fotos</span>
           <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+      <div className="mt-1 grid grid-cols-2 gap-2 sm:mt-3 sm:grid-cols-3 sm:gap-3">
         {portfolio.map((image, index) => (
           <img
             key={`${image}-${index}`}
@@ -315,7 +315,7 @@ function ConversationAside({
   onOpen: () => void;
 }) {
   return (
-    <aside className="xl:sticky xl:top-24" aria-label="Contato e região de atendimento">
+    <aside className="hidden md:block xl:sticky xl:top-24" aria-label="Contato e região de atendimento">
       <TerritorySurface className="p-4 sm:p-5">
         <h2 className="font-heading text-xl font-bold tracking-[-0.025em] text-territory-ink sm:text-2xl">Vamos conversar?</h2>
         <p className="mt-2 text-sm leading-6 text-territory-ink">
@@ -350,6 +350,24 @@ function ConversationAside({
         </button>
       </TerritorySurface>
     </aside>
+  );
+}
+
+function MobileCoverageSection({ coverage }: { coverage: string[] }) {
+  if (coverage.length === 0) return null;
+
+  return (
+    <section className="md:hidden" aria-labelledby="professional-mobile-coverage-title">
+      <h2
+        id="professional-mobile-coverage-title"
+        className="font-heading text-xl font-bold tracking-[-0.025em] text-territory-ink"
+      >
+        Onde atende
+      </h2>
+      <ul className="mt-3 border-t border-territory-border pt-3 text-sm leading-6 text-territory-ink">
+        {coverage.map((item) => <li key={item}>{item}</li>)}
+      </ul>
+    </section>
   );
 }
 
@@ -426,20 +444,20 @@ export default function ProfissionalPublicPage() {
     <div className="min-h-[100dvh] bg-territory-canvas pb-24 text-territory-ink md:pb-8">
       <TerritoryTopbar territoryName={profileTerritoryName} contextLabel={profileContextLabel} isAuthenticated={Boolean(user)} unreadCount={unreadCount} searchHref={searchHref} searchLabel="Buscar serviços e negócios" showMobileSearch={false} />
 
-      <main className="mx-auto w-full max-w-[72rem] px-4 pb-8 pt-4 sm:px-6 md:pt-5 lg:px-8">
+      <main className="mx-auto w-full max-w-[72rem] px-4 pb-8 pt-2 sm:px-6 md:pt-5 lg:px-8">
         <div className="hidden items-center gap-2 text-xs text-territory-muted md:flex"><Link to={searchHref} className="hover:text-territory-brand">Explorar</Link><span aria-hidden="true">/</span><Link to={buildModuleTerritoryUrl(MODULE_SLUGS.services, searchTerritoryBase)} className="hover:text-territory-brand">Serviços</Link><span aria-hidden="true">/</span><span className="truncate">{profile.professional_name}</span></div>
 
         <div className="mt-3 flex items-center justify-between gap-3 md:mt-2"><Link to={searchHref} className="inline-flex min-h-10 items-center gap-2 rounded-lg px-1 text-sm font-semibold text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><ArrowLeft className="h-4 w-4" aria-hidden="true" />Voltar à busca</Link><ProfileActions saved={saved} onToggleSaved={() => setSaved((value) => !value)} /></div>
 
         <ProfileHero profile={profile} territoryName={profileTerritoryName} locationLabel={profileLocationLabel} />
-        <div className="mt-4 md:hidden">
+        <div className="mt-3 md:hidden">
           <ConversationButton profile={profile} onOpen={() => setLeadDialogOpen(true)} className="w-full" />
-          <p className="mt-2 text-center text-xs leading-5 text-territory-muted">Conte o que precisa e combine os detalhes.</p>
+          <p className="mt-1 text-center text-xs leading-5 text-territory-muted">Conte o que precisa e combine os detalhes.</p>
         </div>
         <ProfileTabs />
 
-        <div className="mt-5 grid gap-8 xl:grid-cols-[minmax(0,1.6fr)_minmax(20rem,0.9fr)] xl:items-start xl:gap-9">
-          <div className="min-w-0 space-y-8"><ServicesSection services={services} /><PortfolioSection portfolio={portfolio} /><RecommendationsSection /></div>
+        <div className="mt-4 grid gap-5 md:gap-8 xl:grid-cols-[minmax(0,1.6fr)_minmax(20rem,0.9fr)] xl:items-start xl:gap-9">
+          <div className="min-w-0 space-y-4 md:space-y-8"><ServicesSection services={services} /><PortfolioSection portfolio={portfolio} /><MobileCoverageSection coverage={coverage} /><RecommendationsSection /></div>
           <ConversationAside profile={profile} coverage={coverage} onOpen={() => setLeadDialogOpen(true)} />
         </div>
       </main>
