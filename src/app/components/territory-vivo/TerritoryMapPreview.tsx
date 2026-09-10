@@ -1,9 +1,11 @@
 import { ArrowRight, ArrowUpRight, Map } from "lucide-react";
 import { Link } from "react-router-dom";
 import { MapLibreAdapter } from "@/core/maps/components/v3/MapLibreAdapter";
+import type { ControlPosition } from "@/core/maps/components/v3/controls/types";
+import type { TerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import { DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
-import type { MapMarker } from "@/core/maps/types/core";
+import type { MapMarker, MapViewport } from "@/core/maps/types/core";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { cn } from "@/shared/utils/cn";
 
@@ -24,6 +26,10 @@ interface TerritoryMapPreviewProps {
   featuredResult?: TerritoryMapFeaturedResult;
   onMarkerClick?: (id: string) => void;
   showNavigationControls?: boolean;
+  navigationControlPosition?: ControlPosition;
+  initialViewport?: Partial<MapViewport>;
+  fitTerritoryBounds?: boolean;
+  territoryPolygons?: TerritoryPolygon[];
   mapHeightClassName?: string;
 }
 
@@ -36,9 +42,14 @@ export default function TerritoryMapPreview({
   featuredResult,
   onMarkerClick,
   showNavigationControls = false,
+  navigationControlPosition = "bottom-right",
+  initialViewport,
+  fitTerritoryBounds,
+  territoryPolygons = [],
   mapHeightClassName = "h-[22.75rem]",
 }: TerritoryMapPreviewProps) {
-  const { polygons } = useTerritoryPolygon(resolved);
+  const { polygons: resolvedPolygons } = useTerritoryPolygon(resolved);
+  const polygons = [...resolvedPolygons, ...territoryPolygons];
 
   return (
     <section
@@ -67,11 +78,13 @@ export default function TerritoryMapPreview({
           markers={markers}
           onMarkerClick={onMarkerClick}
           resolved={resolved}
-          fitTerritoryBounds={Boolean(resolved)}
+          initialViewport={initialViewport}
+          fitTerritoryBounds={fitTerritoryBounds ?? Boolean(resolved)}
           territoryFitPadding={28}
           territoryFitMaxZoom={14}
           interactive={showNavigationControls}
           hideNavigationControl={!showNavigationControls}
+          navigationControlPosition={navigationControlPosition}
           controls={{}}
           className="h-full w-full"
         />
