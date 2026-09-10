@@ -14,6 +14,12 @@
 -- from PUBLIC/anon/authenticated and granted only to service_role. The Edge
 -- owns end-user admin/MFA authorization; the SQL functions do not duplicate
 -- that boundary with deprecated auth.role() checks.
+--
+-- Concurrency contract: an existing group row is locked before related
+-- location rows; selected location rows are locked in deterministic UUID order
+-- while scope is validated; membership writes are serialized during the
+-- compatibility window so the command cannot observe one set and persist a
+-- different set inside its own transaction.
 
 BEGIN;
 
@@ -56,6 +62,7 @@ DECLARE
   v_existing_status TEXT;
   v_member_ids UUID[] := ARRAY[]::UUID[];
   v_member_count INTEGER := 0;
+  v_locked_member_count INTEGER := 0;
   v_valid_member_count INTEGER := 0;
   v_group JSONB;
 BEGIN
@@ -81,12 +88,7 @@ BEGIN
     RAISE EXCEPTION 'invalid_group_description' USING ERRCODE = '22023';
   END IF;
 
-  IF p_anchor_city_id IS NULL OR NOT EXISTS (
-    SELECT 1
-    FROM public.locations AS city
-    WHERE city.id = p_anchor_city_id
-      AND city.type::TEXT = 'city'
-  ) THEN
+  IF p_anchor_city_id IS NULL THEN
     RAISE EXCEPTION 'invalid_anchor_city' USING ERRCODE = '22023';
   END IF;
 
@@ -107,6 +109,49 @@ BEGIN
   FROM unnest(p_member_location_ids) AS member_id;
 
   v_member_count := cardinality(v_member_ids);
+
+  -- Keep the lock order stable: group -> anchor city -> member locations ->
+  -- membership table. The same group cannot be edited concurrently with a
+  -- status transition while its membership snapshot is being replaced.
+  IF p_group_id IS NOT NULL THEN
+    SELECT group_row.anchor_city_id, group_row.status
+    INTO v_existing_anchor, v_existing_status
+    FROM public.territorial_groups AS group_row
+    WHERE group_row.id = p_group_id
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'group_not_found' USING ERRCODE = 'P0002';
+    END IF;
+
+    IF v_existing_anchor IS DISTINCT FROM p_anchor_city_id THEN
+      RAISE EXCEPTION 'anchor_city_immutable' USING ERRCODE = '22023';
+    END IF;
+  END IF;
+
+  PERFORM city.id
+  FROM public.locations AS city
+  WHERE city.id = p_anchor_city_id
+    AND city.type::TEXT = 'city'
+  FOR SHARE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'invalid_anchor_city' USING ERRCODE = '22023';
+  END IF;
+
+  SELECT count(*)::INTEGER
+  INTO v_locked_member_count
+  FROM (
+    SELECT member.id
+    FROM public.locations AS member
+    WHERE member.id = ANY(v_member_ids)
+    ORDER BY member.id
+    FOR SHARE
+  ) AS locked_members;
+
+  IF v_locked_member_count <> v_member_count THEN
+    RAISE EXCEPTION 'invalid_group_member_scope' USING ERRCODE = '22023';
+  END IF;
 
   SELECT count(*)::INTEGER
   INTO v_valid_member_count
@@ -141,20 +186,6 @@ BEGIN
         RAISE EXCEPTION 'group_slug_conflict' USING ERRCODE = '23505';
     END;
   ELSE
-    SELECT group_row.anchor_city_id, group_row.status
-    INTO v_existing_anchor, v_existing_status
-    FROM public.territorial_groups AS group_row
-    WHERE group_row.id = p_group_id
-    FOR UPDATE;
-
-    IF NOT FOUND THEN
-      RAISE EXCEPTION 'group_not_found' USING ERRCODE = 'P0002';
-    END IF;
-
-    IF v_existing_anchor IS DISTINCT FROM p_anchor_city_id THEN
-      RAISE EXCEPTION 'anchor_city_immutable' USING ERRCODE = '22023';
-    END IF;
-
     IF v_existing_status = 'active' AND v_member_count = 0 THEN
       RAISE EXCEPTION 'active_group_requires_member' USING ERRCODE = '23514';
     END IF;
@@ -173,6 +204,11 @@ BEGIN
 
     v_group_id := p_group_id;
   END IF;
+
+  -- Phase 1 coexists briefly with the historical browser DML path. Serialize
+  -- membership DML while this command replaces the complete set so no old
+  -- writer can interleave DELETE/INSERT inside the transaction.
+  LOCK TABLE public.territorial_group_members IN SHARE ROW EXCLUSIVE MODE;
 
   DELETE FROM public.territorial_group_members AS membership
   WHERE membership.group_id = v_group_id;
@@ -231,6 +267,9 @@ BEGIN
   IF NOT FOUND THEN
     RAISE EXCEPTION 'group_not_found' USING ERRCODE = 'P0002';
   END IF;
+
+  -- Match saveGroup lock order for the shared membership resource.
+  LOCK TABLE public.territorial_group_members IN SHARE ROW EXCLUSIVE MODE;
 
   IF p_status = 'active' AND NOT EXISTS (
     SELECT 1
@@ -310,6 +349,13 @@ BEGIN
   IF position('auth.role()' in v_save_definition) <> 0
      OR position('auth.role()' in v_status_definition) <> 0 THEN
     RAISE EXCEPTION 'postcondition: deprecated auth.role boundary reintroduced';
+  END IF;
+
+  IF position('ORDER BY member.id' in v_save_definition) = 0
+     OR position('FOR SHARE' in v_save_definition) = 0
+     OR position('LOCK TABLE public.territorial_group_members IN SHARE ROW EXCLUSIVE MODE' in v_save_definition) = 0
+     OR position('LOCK TABLE public.territorial_group_members IN SHARE ROW EXCLUSIVE MODE' in v_status_definition) = 0 THEN
+    RAISE EXCEPTION 'postcondition: G43 concurrency locks missing';
   END IF;
 END
 $postcondition$;
