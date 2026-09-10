@@ -1,5 +1,5 @@
 import {
-  readSupabaseFunctionHttpErrorBody,
+  resolveSupabaseFunctionErrorMessage,
   supabase,
   type SupabaseClient,
 } from "@/integrations/supabase";
@@ -27,17 +27,6 @@ function hasBrokerData<T>(
   return Boolean(response) && Object.prototype.hasOwnProperty.call(response, "data");
 }
 
-function errorMessageFromPayload(payload: unknown): string | null {
-  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
-
-  for (const key of ["error", "message"] as const) {
-    const value = Reflect.get(payload, key);
-    if (typeof value === "string" && value.trim()) return value.trim();
-  }
-
-  return null;
-}
-
 async function invokeRawSupabaseBroker<T, TAction extends string>({
   action,
   client,
@@ -52,8 +41,9 @@ async function invokeRawSupabaseBroker<T, TAction extends string>({
   );
 
   if (error) {
-    const errorPayload = await readSupabaseFunctionHttpErrorBody(error);
-    const message = errorMessageFromPayload(errorPayload) ?? error.message;
+    const message =
+      (await resolveSupabaseFunctionErrorMessage(error)) ??
+      "Edge Function invocation failed";
     logger.warn(`[${serviceName}] broker invocation failed`, {
       action,
       message,
