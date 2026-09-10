@@ -44,10 +44,14 @@ import {
   isLaunchSurfaceEnabled,
   type LaunchSurfaceKey,
 } from "@/app/config/launchScope";
-import { useBusinessNavigation } from "@/modules/business/hooks/useBusinessNavigation";
+import { BUSCA_CONCEPT_MOCK } from "@/app/mocks/buscaConceptMock";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
+import type { TerritoryFilter } from "@/core/location/types";
+import { mapEntityProjection } from "@/core/maps";
+import type { MapMarker } from "@/core/maps/types/core";
 import { useUnifiedNotifications } from "@/core/notifications/useUnifiedNotifications";
+import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
 import {
   TERRITORY_RESOLVE_STATUS,
   useResolveTerritoryFromUrl,
@@ -56,15 +60,12 @@ import {
   buildModuleTerritoryUrl,
   MODULE_SLUGS,
 } from "@/core/routing/utils/territoryUrls";
-import { useGlobalSearch } from "@/core/search/hooks/useGlobalSearch";
 import type { SearchCategory, SearchDocument } from "@/core/search";
+import { useGlobalSearch } from "@/core/search/hooks/useGlobalSearch";
 import { useSessionContext } from "@/core/session";
-import type { TerritoryFilter } from "@/core/location/types";
-import type { MapMarker } from "@/core/maps/types/core";
-import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
+import { useBusinessNavigation } from "@/modules/business/hooks/useBusinessNavigation";
 import { BusinessLogo } from "@/shared/components/ui/business-logo";
 import { cn } from "@/shared/utils/cn";
-import { BUSCA_CONCEPT_MOCK } from "@/app/mocks/buscaConceptMock";
 
 const TerritoryMapPreview = lazy(
   () => import("@/app/components/territory-vivo/TerritoryMapPreview"),
@@ -308,41 +309,59 @@ export default function BuscaPage() {
   }, [conceptMockEnabled, results]);
 
   const resultMarkers = useMemo<MapMarker[]>(() => {
-    const businessMarkers = displayResults.businesses.flatMap((business) =>
-      typeof business.latitude === "number" &&
-      typeof business.longitude === "number"
-        ? [{
-            id: `business-${business.id}`,
-            type: "business" as const,
-            coordinates: {
-              latitude: business.latitude,
-              longitude: business.longitude,
-            },
-            title: business.name,
-            subtitle: business.category ?? undefined,
-            status: "active" as const,
-            url: undefined,
-          }]
-        : [],
-    );
+    const businessMarkers = displayResults.businesses.flatMap((business) => {
+      if (
+        typeof business.latitude !== "number" ||
+        typeof business.longitude !== "number"
+      ) {
+        return [];
+      }
+
+      const marker = mapEntityProjection.projectEntity(
+        {
+          id: `business-${business.id}`,
+          name: business.name,
+          latitude: business.latitude,
+          longitude: business.longitude,
+          status: "active",
+          category: business.category,
+          description: business.description,
+        },
+        "business",
+        { includeMetadata: true },
+      );
+
+      return marker ? [marker] : [];
+    });
+
     const professionalMarkers = displayResults.professionals.flatMap(
-      (professional) =>
-        typeof professional.latitude === "number" &&
-        typeof professional.longitude === "number"
-          ? [{
-              id: `professional-${professional.id}`,
-              type: "professional" as const,
-              coordinates: {
-                latitude: professional.latitude,
-                longitude: professional.longitude,
-              },
-              title: professional.name,
-              subtitle: professional.category ?? undefined,
-              status: "active" as const,
-              url: professional.target_url ?? undefined,
-            }]
-          : [],
+      (professional) => {
+        if (
+          typeof professional.latitude !== "number" ||
+          typeof professional.longitude !== "number"
+        ) {
+          return [];
+        }
+
+        const marker = mapEntityProjection.projectEntity(
+          {
+            id: `professional-${professional.id}`,
+            name: professional.name,
+            latitude: professional.latitude,
+            longitude: professional.longitude,
+            status: "active",
+            category: professional.category,
+            description: professional.description,
+            url: professional.target_url ?? undefined,
+          },
+          "professional",
+          { includeMetadata: true },
+        );
+
+        return marker ? [marker] : [];
+      },
     );
+
     return [...businessMarkers, ...professionalMarkers];
   }, [displayResults]);
 
