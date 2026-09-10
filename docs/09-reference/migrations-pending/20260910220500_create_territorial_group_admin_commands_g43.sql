@@ -9,6 +9,11 @@
 --   5. only then promote the separate DML-lock migration.
 --
 -- This ordering prevents an outage while Postgres/Edge/frontend are cut over.
+--
+-- Authority contract: both commands are SECURITY INVOKER. EXECUTE is revoked
+-- from PUBLIC/anon/authenticated and granted only to service_role. The Edge
+-- owns end-user admin/MFA authorization; the SQL functions do not duplicate
+-- that boundary with deprecated auth.role() checks.
 
 BEGIN;
 
@@ -54,10 +59,6 @@ DECLARE
   v_valid_member_count INTEGER := 0;
   v_group JSONB;
 BEGIN
-  IF auth.role() IS DISTINCT FROM 'service_role' THEN
-    RAISE EXCEPTION 'service_role_required' USING ERRCODE = '42501';
-  END IF;
-
   IF p_actor_user_id IS NULL THEN
     RAISE EXCEPTION 'invalid_actor_user_id' USING ERRCODE = '22023';
   END IF;
@@ -214,10 +215,6 @@ AS $function$
 DECLARE
   v_group JSONB;
 BEGIN
-  IF auth.role() IS DISTINCT FROM 'service_role' THEN
-    RAISE EXCEPTION 'service_role_required' USING ERRCODE = '42501';
-  END IF;
-
   IF p_actor_user_id IS NULL THEN
     RAISE EXCEPTION 'invalid_actor_user_id' USING ERRCODE = '22023';
   END IF;
@@ -267,17 +264,28 @@ GRANT EXECUTE ON FUNCTION public.territorial_admin_set_group_status(UUID, TEXT, 
   TO service_role;
 
 DO $postcondition$
+DECLARE
+  v_save_definition TEXT;
+  v_status_definition TEXT;
 BEGIN
   IF has_function_privilege(
+    'anon',
+    'public.territorial_admin_save_group(uuid,text,text,text,uuid,uuid[],uuid)',
+    'EXECUTE'
+  ) OR has_function_privilege(
     'authenticated',
     'public.territorial_admin_save_group(uuid,text,text,text,uuid,uuid[],uuid)',
+    'EXECUTE'
+  ) OR has_function_privilege(
+    'anon',
+    'public.territorial_admin_set_group_status(uuid,text,uuid)',
     'EXECUTE'
   ) OR has_function_privilege(
     'authenticated',
     'public.territorial_admin_set_group_status(uuid,text,uuid)',
     'EXECUTE'
   ) THEN
-    RAISE EXCEPTION 'postcondition: authenticated can execute territorial admin commands';
+    RAISE EXCEPTION 'postcondition: browser role can execute territorial admin commands';
   END IF;
 
   IF NOT has_function_privilege(
@@ -290,6 +298,18 @@ BEGIN
     'EXECUTE'
   ) THEN
     RAISE EXCEPTION 'postcondition: service_role cannot execute territorial admin commands';
+  END IF;
+
+  SELECT pg_get_functiondef(
+    'public.territorial_admin_save_group(uuid,text,text,text,uuid,uuid[],uuid)'::regprocedure
+  ) INTO v_save_definition;
+  SELECT pg_get_functiondef(
+    'public.territorial_admin_set_group_status(uuid,text,uuid)'::regprocedure
+  ) INTO v_status_definition;
+
+  IF position('auth.role()' in v_save_definition) <> 0
+     OR position('auth.role()' in v_status_definition) <> 0 THEN
+    RAISE EXCEPTION 'postcondition: deprecated auth.role boundary reintroduced';
   END IF;
 END
 $postcondition$;
