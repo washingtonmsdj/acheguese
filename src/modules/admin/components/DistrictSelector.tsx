@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /**
  * DistrictSelector
  *
@@ -26,6 +25,8 @@ interface DistrictSelectorProps {
   selectedDistricts: string[];
   onDistrictsChange: (districtIds: string[]) => void;
   disabled?: boolean;
+  /** Existing groups cannot move between anchor cities. */
+  anchorCityLocked?: boolean;
 }
 
 export function DistrictSelector({
@@ -34,6 +35,7 @@ export function DistrictSelector({
   selectedDistricts,
   onDistrictsChange,
   disabled,
+  anchorCityLocked = false,
 }: DistrictSelectorProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [showOnlySelected, setShowOnlySelected] = useState(false);
@@ -53,13 +55,13 @@ export function DistrictSelector({
     return matchesSearch;
   });
 
-  // Ao trocar cidade, descartar selecoes que nao pertencem a nova cidade
+  // Ao trocar cidade, descartar selecoes que nao pertencem a nova cidade.
   useEffect(() => {
-    if (!anchorCityId || selectedDistricts.length === 0) return;
+    if (!anchorCityId || selectedDistricts.length === 0 || loadingDistricts) return;
     const validIds = new Set(districts.map((d) => d.id));
     const kept = selectedDistricts.filter((id) => validIds.has(id));
     if (kept.length !== selectedDistricts.length) onDistrictsChange(kept);
-  }, [anchorCityId, districts]);
+  }, [anchorCityId, districts, loadingDistricts, onDistrictsChange, selectedDistricts]);
 
   const toggle = (id: string) =>
     onDistrictsChange(
@@ -82,8 +84,8 @@ export function DistrictSelector({
             <select
               value={anchorCityId}
               onChange={(e) => onAnchorCityChange(e.target.value)}
-              disabled={disabled}
-              className="w-full px-4 py-2.5 border border-border rounded-lg bg-background text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              disabled={disabled || anchorCityLocked}
+              className="w-full px-4 py-2.5 border border-border rounded-lg bg-background text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all disabled:opacity-60"
             >
               <option value="">Selecione uma cidade</option>
               {cities.map((c) => (
@@ -93,7 +95,9 @@ export function DistrictSelector({
               ))}
             </select>
             <p className="text-xs text-muted-foreground">
-              Apenas bairros desta cidade poderao ser selecionados
+              {anchorCityLocked
+                ? 'A cidade ancora de um grupo existente nao pode ser alterada.'
+                : 'Apenas bairros desta cidade poderao ser selecionados.'}
             </p>
           </>
         )}
@@ -179,8 +183,8 @@ export function DistrictSelector({
                 {searchTerm
                   ? 'Nenhum bairro encontrado com esse termo'
                   : showOnlySelected
-                  ? 'Nenhum bairro selecionado ainda'
-                  : 'Nenhum bairro disponivel nesta cidade'}
+                    ? 'Nenhum bairro selecionado ainda'
+                    : 'Nenhum bairro disponivel nesta cidade'}
               </p>
             </div>
           ) : (
@@ -221,7 +225,7 @@ export function DistrictSelector({
 
           <div className="mt-3 p-3 bg-muted/30 rounded-lg border border-border">
             <p className="text-xs text-muted-foreground">
-              Dica: Use o filtro "Apenas selecionados" para revisar os bairros ja adicionados ao grupo
+              Dica: use o filtro "Apenas selecionados" para revisar os bairros ja adicionados ao grupo.
             </p>
           </div>
         </div>
