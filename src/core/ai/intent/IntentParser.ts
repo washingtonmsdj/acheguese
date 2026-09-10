@@ -1,10 +1,10 @@
 import { AIIntentSchema, type AIIntent, type AIProvider, type IntentParserInput } from "../domain/types";
-import { OpenAIProvider } from "../providers/OpenAIProvider";
+import { EdgeAIProvider } from "../providers/EdgeAIProvider";
 import { RuleBasedAIProvider } from "../providers/RuleBasedAIProvider";
 
 export class IntentParser {
   constructor(
-    private readonly provider: AIProvider = new OpenAIProvider(),
+    private readonly provider: AIProvider = new EdgeAIProvider(),
     private readonly fallbackProvider: AIProvider = new RuleBasedAIProvider(),
   ) {}
 
