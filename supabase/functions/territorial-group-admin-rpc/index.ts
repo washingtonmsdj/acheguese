@@ -261,7 +261,6 @@ serve(async (req: Request) => {
         p_description: description,
         p_anchor_city_id: anchorCityId,
         p_member_location_ids: memberLocationIds,
-        p_actor_user_id: auth.userId,
       });
       if (result.error) {
         const known = knownRpcError(result.error.message);
@@ -283,7 +282,6 @@ serve(async (req: Request) => {
       const result = await supabaseAdmin.rpc('territorial_admin_set_group_status', {
         p_group_id: groupId,
         p_status: status,
-        p_actor_user_id: auth.userId,
       });
       if (result.error) {
         const known = knownRpcError(result.error.message);
