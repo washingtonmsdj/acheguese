@@ -121,6 +121,15 @@ describe("G43 territorial group admin authority", () => {
     expect(adminHook).not.toContain("service.listAllGroups()");
   });
 
+  it("batches membership inventory instead of issuing one read per group", () => {
+    expect(repository).toContain(".select('group_id, locations(*)')");
+    expect(repository).toContain(".in('group_id', groupIds)");
+    expect(repository).toContain("const membersByGroup = new Map<string, Location[]>()");
+    expect(repository).not.toMatch(
+      /groups\.map\(async \(group\)[\s\S]*this\.listMembers\(group\.id\)/,
+    );
+  });
+
   it("preserves the real anchor_city_id on edit and keeps anchor mutation locked", () => {
     expect(groupForm).toContain("anchor_city_id?: string | null");
     expect(groupForm).toContain("setAnchorCityId(group.anchor_city_id ?? '')");
