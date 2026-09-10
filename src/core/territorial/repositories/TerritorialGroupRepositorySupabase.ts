@@ -15,6 +15,11 @@ import type {
   UpdateTerritorialGroupData,
 } from './ITerritorialGroupRepository';
 
+interface TerritorialMembershipLocationRow {
+  group_id: string;
+  locations: Location | null;
+}
+
 export class TerritorialGroupRepositorySupabase implements ITerritorialGroupRepository {
   private readonly db: SupabaseClient;
 
@@ -86,22 +91,36 @@ export class TerritorialGroupRepositorySupabase implements ITerritorialGroupRepo
   }
 
   private async listWithMembers(status?: 'active'): Promise<TerritorialGroupWithMembers[]> {
-    let query = this.db
+    let groupsQuery = this.db
       .from('territorial_groups')
       .select('*');
 
-    if (status) query = query.eq('status', status);
+    if (status) groupsQuery = groupsQuery.eq('status', status);
 
-    const { data: groups, error } = await query.order('name');
-    if (error) throw error;
-    if (!groups) return [];
+    const { data: groups, error: groupsError } = await groupsQuery.order('name');
+    if (groupsError) throw groupsError;
+    if (!groups || groups.length === 0) return [];
 
-    return Promise.all(
-      groups.map(async (group) => ({
-        ...group,
-        members: await this.listMembers(group.id),
-      })),
-    );
+    const groupIds = groups.map((group) => group.id);
+    const { data: membershipData, error: membershipError } = await this.db
+      .from('territorial_group_members')
+      .select('group_id, locations(*)')
+      .in('group_id', groupIds);
+
+    if (membershipError) throw membershipError;
+
+    const membersByGroup = new Map<string, Location[]>();
+    for (const row of (membershipData ?? []) as unknown as TerritorialMembershipLocationRow[]) {
+      if (!row.locations) continue;
+      const members = membersByGroup.get(row.group_id) ?? [];
+      members.push(row.locations);
+      membersByGroup.set(row.group_id, members);
+    }
+
+    return groups.map((group) => ({
+      ...group,
+      members: membersByGroup.get(group.id) ?? [],
+    }));
   }
 
   /** Product/public inventory remains active-only. */
