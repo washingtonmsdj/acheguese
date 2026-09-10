@@ -8,7 +8,10 @@
  */
 
 import { DPO_REQUEST_STATUS } from "@/core/privacy/constants/dpoRequestStatus";
-import { supabase } from "@/integrations/supabase";
+import {
+  resolveSupabaseFunctionErrorMessage,
+  supabase,
+} from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { PrivacyRpcService } from "./PrivacyRpcService";
 
@@ -66,6 +69,25 @@ interface PrivacyDbClient {
   };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function exportSectionCount(payload: Record<string, unknown>): number {
+  const metadata = payload.export_metadata;
+  if (isRecord(metadata) && Array.isArray(metadata.sections)) {
+    return metadata.sections.filter((section) => typeof section === "string").length;
+  }
+
+  const sections = payload.data;
+  return isRecord(sections) ? Object.keys(sections).length : 0;
+}
+
+function exportSizeBytes(payload: Record<string, unknown>): number {
+  const serialized = JSON.stringify(payload, null, 2);
+  return new TextEncoder().encode(serialized).length;
+}
+
 // Service
 
 export class PrivacyService {
@@ -103,14 +125,23 @@ export class PrivacyService {
     const { data, error } = await supabase.functions.invoke("user-export-data");
 
     if (error) {
-      logger.error("[PrivacyService] Error exporting user data", error);
-      throw new Error(error.message || "Failed to export user data");
+      const message =
+        (await resolveSupabaseFunctionErrorMessage(error)) ??
+        "Failed to export user data";
+      logger.error("[PrivacyService] Error exporting user data", {
+        message,
+      });
+      throw new Error(message);
+    }
+
+    if (!isRecord(data) || !isRecord(data.export_metadata) || !isRecord(data.data)) {
+      throw new Error("Invalid user export response");
     }
 
     return {
-      data: data as Record<string, unknown>,
-      sizeBytes: Number(data?.export_metadata?.size_bytes ?? 0),
-      tablesExported: Object.keys(data ?? {}).length,
+      data,
+      sizeBytes: exportSizeBytes(data),
+      tablesExported: exportSectionCount(data),
     };
   }
 
