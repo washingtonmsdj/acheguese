@@ -42,13 +42,13 @@ A orchestration de source passa por `TerritorialManagementService` / `territoria
 A semântica canônica é deliberadamente assimétrica:
 
 - qualquer flag canônica atualiza o nó solicitado;
-- `is_selector_active=false` também desativa **todos os descendentes**, em uma única transação recursiva;
+- `is_selector_active=false` também desativa **todos os descendentes**, em uma única transação;
 - `is_selector_active=true` reativa somente o nó solicitado e não força descendentes a `true`;
 - `is_landing_enabled` e `is_navigable` não fazem cascata.
 
 O SQL preparado está em
 `docs/09-reference/migrations-pending/20260910214500_transactional_location_visibility_cascade_g42.sql`.
-Ele cria uma RPC `service_role`-only, usa `WITH RECURSIVE`, serializa writes de hierarquia durante a operação e devolve ACK correlacionado (`location`, `affectedCount`, `cascaded`).
+Ele cria uma RPC `service_role`-only e reutiliza o contrato de escala comprovado no G5: descendentes são alcançados pelo prefixo indexado de `geographic_path` (`raiz/%`), apoiado por `idx_locations_geographic_path_pattern`, em uma única operação SQL. A RPC também serializa writes estruturais durante a mutação e devolve ACK correlacionado (`location`, `affectedCount`, `cascaded`). Não existe loop Edge nem uma segunda estratégia recursiva concorrente.
 
 **Não implantar a versão G42 de `territorial-update-location-visibility` antes de promover e provar essa migration no mesmo ambiente.** O banco remoto conhecido ainda estava indisponível por timeout no último preflight; portanto o source está pronto, mas o cutover não está certificado.
 
@@ -76,7 +76,7 @@ O validator `tools/architecture/validate-territory-ssot.ts` e os ratchets de seg
 - gateways backend explícitos e limitados por operação;
 - stale allowlists falham;
 - ownership de escrita de `locations` permanece separado por operação;
-- o gateway G42 de Location não pode voltar a executar loop de writes em descendentes e precisa usar a RPC transacional.
+- o gateway G42 de Location não pode voltar a executar loop de writes em descendentes e precisa usar a RPC transacional com o prefixo indexado canônico.
 
 ## Integração de Landing e routing
 
@@ -89,7 +89,7 @@ A autoridade de source está consolidada porque:
 1. contracts, repository e service de grupos possuem owner único;
 2. `core/location` não contém implementação concorrente de grupos;
 3. writes especializados de visibilidade passam pelos gateways backend autorizados;
-4. a cascata recursiva de Location está desenhada como uma única operação SQL, não como loop Edge;
+4. a cascata de Location está desenhada como uma única operação SQL sobre o prefixo `geographic_path` já otimizado no G5, não como loop Edge ou CTE recursiva paralela;
 5. os bridges restantes são one-way, explícitos e monotônicos;
 6. o ratchet impede regressão estrutural.
 
@@ -100,6 +100,7 @@ O **cutover runtime** da cascata de Location permanece aberto até: Postgres rem
 - `src/core/location/README.md`
 - `src/core/territorial/TERRITORIAL_GROUPS_SEMANTICS.md`
 - `docs/02-domain/GEOGRAPHIC_FOUNDATION.md`
+- `docs/03-architecture/G5_LOCATION_DESCENDANTS_RPC_PERFORMANCE_2026-08-31.md`
 - `tools/architecture/validate-territory-ssot.ts`
 - `tests/security/territorial-visibility-client-contract-g42.test.ts`
 - `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
