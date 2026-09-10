@@ -11,8 +11,9 @@ Leia nesta ordem:
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — execução operacional atual;
-4. `docs/08-roadmap/checkpoints/2026-09-10-g38-professional-authority.md` — checkpoint incremental G38 enquanto o SSOT principal aguarda consolidação;
-5. `SECURITY.md` — segurança e gates de release.
+4. `docs/08-roadmap/checkpoints/2026-09-10-g39-professional-lead-intake.md` — checkpoint incremental G39 e gate de cutover Professional;
+5. `docs/08-roadmap/checkpoints/2026-09-10-g38-professional-authority.md` — checkpoint anterior G38;
+6. `SECURITY.md` — segurança e gates de release.
 
 ## Checkpoint operacional curto — 2026-09-10
 
@@ -22,18 +23,22 @@ Leia nesta ordem:
 - `9a90aaed` aposentou contratos mortos de Admin/Profile e o reexport local obsoleto de `ServiceArea`;
 - `cce689c7` alinhou `admin-create-user` ao lifecycle canônico de Auth/Profile; auditoria posterior confirmou que a função **não tem caller ativo no frontend/Admin atual**, portanto ela não deve ser implantada apenas por existir no Git;
 - `f6e6fd1` corrigiu o `vercel-ignore`; sem prova suficiente de diff ele executa build normal, e checkout sem remote `origin` não gera falso erro fatal;
-- deployment production `dpl_8DWo9NXMwyXaMGkKwkoV4h4Ldho1` de `f6e6fd1` está **READY** e atende `acheguese.com.br`, `www.acheguese.com.br` e `acheguese.vercel.app`;
+- deployment production `dpl_8DWo9NXMwyXaMGkKwkoV4h4Ldho1` de `f6e6fd1` ficou READY; deployment production posterior `dpl_7duftbyCnSp1cHUEr2uNPbhzvZBN` de `ba691ca6` também está READY e é a produção conhecida mais recente desta linha;
 - sitemap resiliente foi provado em produção: Supabase/Cloudflare 522 cai no fallback estático validado com 7 URLs sem derrubar o release;
 - `profile-rpc` foi reconciliado no runtime em **v19 ACTIVE**, `verify_jwt=true`; `service_area`, `service_areas` e `service_radius_km` são rejeitados em Professional/extensionData e Coverage permanece em `public.service_areas`;
 - a geração oficial de tipos Supabase continua intermitentemente bloqueada por 522; não editar `types.generated.ts` manualmente nem substituir o boundary estreito de `register_safety_evidence` por `any`;
 - `5bead48b` corrigiu o novo Search/Explorar para projetar pins via `mapEntityProjection`; `be2d464b` integrou a Search por merge real de dois pais, preservando o hardening funcional da `main`;
 - `fc912273` reduziu exatamente os **11 allowances stale** detectados pelo último build READY: 5 writers Safety, 1 reader `service_areas`, 3 callers RPC e 2 dynamic writers de Mobilidade; nenhuma nova permissão foi adicionada;
 - G38: `AdminServicos` não escreve mais disponibilidade Professional diretamente; `admin-professional-rpc` está **v6 ACTIVE**, `verify_jwt=true`, com entrypoint e shared helpers reconciliados ao source da `main`;
-- G38: `ProfessionalLeadService` não faz mais read-modify-write/upsert de `professional_stats.contacts_count`; a migration versionada move o contador para trigger atômico server-owned e revoga DML browser;
-- **runtime DB G38 ainda pendente:** `apply_migration` e até `list_migrations` estão falhando antes de iniciar por `Connection terminated due to connection timeout`; não declarar trigger/revoke ativos sem prova posterior;
-- `codex/identidade-visual-achegue-se` foi sincronizada com a `main` por merge sem force-push; validação final mostrou `behind_by=0` e apenas quatro deltas visuais próprios (`TerritoryAdaptiveNavigation`, `TerritoryMapPreview`, `BuscaPage`, `TerritoryTopbar`);
+- G38/G39: `ProfessionalLeadService` não faz mais read-modify-write/upsert de `professional_stats.contacts_count`; o futuro contador atômico por trigger **não está na fila ativa de migrations** para evitar dupla contagem com o frontend LIVE antigo;
+- G39: `9b01a9a3` moveu a criação pública de orçamento para `ProfessionalLeadIntakeService` + `create-professional-lead`, com Turnstile, honeypot, rate-limit, origin/body guards, deduplicação e identidade/lifecycle derivados server-side;
+- G39: `create-professional-lead` está **v2 ACTIVE**, `verify_jwt=false`, como broker público governado; o endpoint é aditivo e a produção antiga não depende dele;
+- G39: o SQL destrutivo está somente em `docs/09-reference/migrations-pending/20260910133000_finalize_professional_lead_intake_g39.sql`; **não mover/aplicar** até frontend novo LIVE + smoke anônimo/autenticado + zero caller LIVE do criador direto;
+- G39: `3e68743b` ratcheta o staging e exige que a futura revogação de `INSERT` em `professional_leads` e DML em `professional_stats` ocorra no mesmo cutover transacional;
+- busca de código confirmou zero caller runtime atual de `ProfessionalLeadService.createLead`; os hits restantes são documentação/testes. A remoção física do método legado deve ser isolada, sem misturar reescrita grande do serviço com release;
 - builds atuais da `main` continuam sujeitos ao **build-rate-limit da Vercel** (`Deployment rate limited — retry in 24 hours`), blocker externo de execução e não prova de compilação aprovada ou reprovada;
-- **não revogar ainda** os grants temporários de `professional_data/profiles` enquanto o frontend novo não estiver comprovadamente LIVE no mesmo SHA; retirar compatibilidade somente após zero callers antigos;
+- **não revogar ainda** os grants temporários de `professional_data/profiles` nem executar o cutover de leads/stats enquanto o frontend novo não estiver comprovadamente LIVE no mesmo SHA/descendente certificado;
+- `codex/identidade-visual-achegue-se` deve receber `main` por merge sem force-push, preservando seus deltas visuais próprios; nunca substituir a branch visual por uma árvore antiga para “sincronizar” arquitetura;
 - Mobilidade continua **launch-paused**: `PUBLIC_LAUNCH_SURFACES.mobility=false`;
 - não restaurar DML direto, operator scripts obsoletos, wrappers concorrentes, dynamic-table novo ou authorities paralelas.
 
