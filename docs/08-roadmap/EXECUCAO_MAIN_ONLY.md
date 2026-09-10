@@ -1271,6 +1271,42 @@ Correção:
 
 Próximo: G36C2 migrar suspensão/reativação Admin para o broker administrativo já existente, sem criar uma segunda autoridade.
 
+### Checkpoint G36C2 — Admin suspension broker expand (2026-09-09)
+
+Auditoria:
+- `AdminUserService.suspendProfile/unsuspendProfile/suspendUser/unsuspendUser` ainda faziam UPDATE direto em `public.profiles`;
+- esses fluxos possuem callers vivos no painel Admin e não podem ser removidos;
+- o Edge `admin-suspend-profile` já é o owner correto, mas chamava o RPC antigo `suspend_profile`;
+- o RPC antigo só alterava `is_active=false` e não implementava o contrato real usado pela UI (`is_suspended/suspended/suspended_at/suspended_until/suspension_reason`);
+- `requireAdmin` e `private.is_admin_from_roles` usam o mesmo conjunto efetivo `admin/super_admin`.
+
+Expand G36C2:
+- novo `private.admin_set_profile_suspension` revalida Admin no Postgres;
+- novo wrapper `public.admin_profile_rpc_set_suspension` é service-role-only;
+- um único comando suporta alvo `profile` ou `user`;
+- suspensão de usuário atualiza todos os Profiles da conta na mesma transação;
+- cada Profile afetado recebe `profile_audit_log`;
+- suspensão exige motivo e validade futura quando houver expiração;
+- reativação limpa o estado de suspensão sem reativar/desativar arbitrariamente `is_active`;
+- Edge `admin-suspend-profile` passa a aceitar `action=suspend|unsuspend`, `target_kind=profile|user`, `target_id`, motivo e expiração;
+- `AdminUserService` e adapter multi-profile passam pelo Edge, sem DML direto;
+- authorization map aponta para o novo RPC;
+- o RPC legado `suspend_profile` permanece apenas durante o expand para permitir cutover sem janela quebrada.
+
+Probe pré-aplicação com `BEGIN/ROLLBACK`:
+- suspend de Profile: PASS;
+- audit log: PASS;
+- unsuspend de Profile: PASS;
+- suspend de usuário com 4 Profiles: 4/4 atualizados;
+- ator não-admin: bloqueado.
+
+Próximo imediato:
+1. commit do expand;
+2. aplicar migration;
+3. redeployar `admin-suspend-profile` exatamente do SHA;
+4. repetir probes no runtime persistido;
+5. só então G36C2-contract remover `public.suspend_profile`.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:

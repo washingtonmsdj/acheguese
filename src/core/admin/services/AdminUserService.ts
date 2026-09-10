@@ -116,78 +116,77 @@ export class AdminUserService {
     if (error) throw error;
   }
 
+  private static async setSuspension(params: {
+    targetKind: "profile" | "user";
+    targetId: string;
+    suspended: boolean;
+    reason?: string;
+    suspendedUntil?: Date;
+  }): Promise<void> {
+    const { data, error } = await supabase.functions.invoke(
+      "admin-suspend-profile",
+      {
+        body: {
+          action: params.suspended ? "suspend" : "unsuspend",
+          target_kind: params.targetKind,
+          target_id: params.targetId,
+          reason: params.reason ?? null,
+          suspended_until:
+            params.suspended && params.suspendedUntil
+              ? params.suspendedUntil.toISOString()
+              : null,
+        },
+      },
+    );
+
+    if (error) throw error;
+    if (!data?.success) {
+      throw new Error(data?.error || "Falha ao atualizar suspensão");
+    }
+  }
+
   static async suspendProfile(
     profileId: string,
     reason: string,
     suspendedUntil?: Date,
   ): Promise<void> {
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        is_suspended: true,
-        suspended: true,
-        suspension_reason: reason,
-        suspended_at: new Date().toISOString(),
-        suspended_until: suspendedUntil?.toISOString() ?? null,
-      })
-      .eq("id", profileId);
-
-    if (error) throw error;
+    await this.setSuspension({
+      targetKind: "profile",
+      targetId: profileId,
+      suspended: true,
+      reason,
+      suspendedUntil,
+    });
   }
 
   static async unsuspendProfile(profileId: string): Promise<void> {
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        is_suspended: false,
-        suspended: false,
-        suspension_reason: null,
-        suspended_until: null,
-      })
-      .eq("id", profileId);
-
-    if (error) throw error;
+    await this.setSuspension({
+      targetKind: "profile",
+      targetId: profileId,
+      suspended: false,
+    });
   }
 
-  /**
-   * Suspende todos os perfis de um usuário.
-   * ✅ Usa supabase normal com RLS (admin tem permissão)
-   */
   static async suspendUser(
     userId: string,
     reason: string,
     suspendedUntil?: Date,
   ): Promise<void> {
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        is_suspended: true,
-        suspended: true,
-        suspension_reason: reason,
-        suspended_at: new Date().toISOString(),
-        suspended_until: suspendedUntil?.toISOString() ?? null,
-      })
-      .eq("user_id", userId);
-
-    if (error) throw error;
+    await this.setSuspension({
+      targetKind: "user",
+      targetId: userId,
+      suspended: true,
+      reason,
+      suspendedUntil,
+    });
   }
 
-  /**
-   * Remove suspensão de todos os perfis de um usuário.
-   * ✅ Usa supabase normal com RLS (admin tem permissão)
-   */
   static async unsuspendUser(userId: string): Promise<void> {
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        is_suspended: false,
-        suspended: false,
-        suspension_reason: null,
-        suspended_until: null,
-      })
-      .eq("user_id", userId);
-
-    if (error) throw error;
+    await this.setSuspension({
+      targetKind: "user",
+      targetId: userId,
+      suspended: false,
+    });
   }
 
   /**

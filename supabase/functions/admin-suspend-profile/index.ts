@@ -1,63 +1,75 @@
 /**
  * EDGE FUNCTION: admin-suspend-profile
- * Suspende um perfil. Requer role admin (super_admin ou moderator).
  *
- * POST /functions/v1/admin-suspend-profile
- * Body: { profile_id: string, reason: string }
- * Headers: Authorization: Bearer <user_jwt>
+ * Broker administrativo único para suspender/reativar um Profile ou todos os
+ * Profiles de uma conta. O bearer token prova o ator; o Postgres revalida a
+ * role antes de qualquer mudança.
  */
-
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { requireAdmin, jsonResponse } from '../_shared/adminAuth.ts';
-import { 
-  getAllSecurityHeaders,
-  rateLimitMiddleware,
+import {
+  getSupabaseAdminClient,
+  jsonResponse,
+  requireAdmin,
+} from "../_shared/adminAuth.ts";
+import {
   auditLog,
+  getAllSecurityHeaders,
   getAuditInfo,
   isOriginAllowed,
   isValidUUID,
+  rateLimitMiddleware,
   readJsonBody,
   requireHttpMethod,
   sanitizeString,
-} from '../_shared/security.ts';
+} from "../_shared/security.ts";
 
-interface SuspendRequest {
-  profile_id: string;
-  reason: string;
+type ModerationAction = "suspend" | "unsuspend";
+type ModerationTargetKind = "profile" | "user";
+
+interface ModerationRequest {
+  action: ModerationAction;
+  target_kind: ModerationTargetKind;
+  target_id: string;
+  reason?: string | null;
+  suspended_until?: string | null;
 }
 
-const ALLOWED_METHODS = 'POST, OPTIONS';
+const ALLOWED_METHODS = "POST, OPTIONS";
+
+function isModerationAction(value: unknown): value is ModerationAction {
+  return value === "suspend" || value === "unsuspend";
+}
+
+function isTargetKind(value: unknown): value is ModerationTargetKind {
+  return value === "profile" || value === "user";
+}
 
 Deno.serve(async (req: Request) => {
   const auditInfo = getAuditInfo(req);
-  const origin = req.headers.get('origin');
-  const respond = (body: unknown, status = 200) => jsonResponse(body, status, ALLOWED_METHODS, req);
+  const origin = req.headers.get("origin");
+  const respond = (body: unknown, status = 200) =>
+    jsonResponse(body, status, ALLOWED_METHODS, req);
 
   if (origin && !isOriginAllowed(origin)) {
-    return respond({ error: 'Origin not allowed' }, 403);
+    return respond({ error: "Origin not allowed" }, 403);
   }
-  
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { 
-      status: 204, 
+
+  if (req.method === "OPTIONS") {
+    return new Response("ok", {
+      status: 204,
       headers: getAllSecurityHeaders(ALLOWED_METHODS, req),
     });
   }
 
-  const methodError = requireHttpMethod(req, ['POST'], ALLOWED_METHODS);
+  const methodError = requireHttpMethod(req, ["POST"], ALLOWED_METHODS);
   if (methodError) return methodError;
 
-  // Rate limiting (mais restritivo para operações admin)
-  const rateLimitResponse = await rateLimitMiddleware(req, 20, 60000);
+  const rateLimitResponse = await rateLimitMiddleware(req, 20, 60_000);
   if (rateLimitResponse) return rateLimitResponse;
 
-  // 1. Validar admin
   const authResult = await requireAdmin(req);
   if (authResult instanceof Response) return authResult;
 
-  // 2. Parse body
-  const rawBody = await readJsonBody<SuspendRequest>(req, {
+  const rawBody = await readJsonBody<ModerationRequest>(req, {
     maxBytes: 4096,
     methods: ALLOWED_METHODS,
   });
@@ -65,64 +77,93 @@ Deno.serve(async (req: Request) => {
     auditLog({
       timestamp: new Date().toISOString(),
       userId: authResult.userId,
-      action: 'suspend_profile_failed',
-      resource: 'profiles',
-      status: 'failure',
-      details: { reason: 'invalid_json' },
+      action: "profile_moderation_failed",
+      resource: "profiles",
+      status: "failure",
+      details: { reason: "invalid_json" },
       ...auditInfo,
     });
     return rawBody.response;
   }
+
   const body = rawBody.data;
-
-  // 3. Validar entrada
-  if (!body.profile_id?.trim() || !isValidUUID(body.profile_id)) {
-    return respond({ error: 'Valid profile_id is required' }, 400);
+  if (!isModerationAction(body.action)) {
+    return respond({ error: "Valid action is required" }, 400);
+  }
+  if (!isTargetKind(body.target_kind)) {
+    return respond({ error: "Valid target_kind is required" }, 400);
+  }
+  if (!body.target_id?.trim() || !isValidUUID(body.target_id)) {
+    return respond({ error: "Valid target_id is required" }, 400);
   }
 
-  if (!body.reason?.trim()) {
-    return respond({ error: 'reason is required for suspension' }, 400);
+  const isSuspending = body.action === "suspend";
+  const sanitizedReason =
+    typeof body.reason === "string"
+      ? sanitizeString(body.reason, 500).trim()
+      : "";
+
+  if (isSuspending && !sanitizedReason) {
+    return respond({ error: "reason is required for suspension" }, 400);
   }
 
-  const sanitizedReason = sanitizeString(body.reason, 500);
+  let suspendedUntil: string | null = null;
+  if (isSuspending && body.suspended_until) {
+    const parsed = new Date(body.suspended_until);
+    if (
+      Number.isNaN(parsed.getTime()) ||
+      parsed.getTime() <= Date.now()
+    ) {
+      return respond({ error: "suspended_until must be a future timestamp" }, 400);
+    }
+    suspendedUntil = parsed.toISOString();
+  }
 
-  // 4. Executar via service_role
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    { auth: { persistSession: false } },
+  const supabaseAdmin = getSupabaseAdminClient();
+  const { data, error } = await supabaseAdmin.rpc(
+    "admin_profile_rpc_set_suspension",
+    {
+      p_actor_user_id: authResult.userId,
+      p_target_kind: body.target_kind,
+      p_target_id: body.target_id,
+      p_suspended: isSuspending,
+      p_reason: sanitizedReason || null,
+      p_suspended_until: suspendedUntil,
+    },
   );
-
-  const { data, error } = await supabase.rpc('suspend_profile', {
-    p_profile_id: body.profile_id,
-    p_admin_user_id: authResult.userId,
-    p_reason: sanitizedReason,
-  });
 
   if (error) {
     auditLog({
       timestamp: new Date().toISOString(),
       userId: authResult.userId,
-      action: 'suspend_profile_failed',
-      resource: 'profiles',
-      status: 'failure',
-      details: { profileId: body.profile_id, error: error.message },
+      action: "profile_moderation_failed",
+      resource: "profiles",
+      status: "failure",
+      details: {
+        moderationAction: body.action,
+        targetKind: body.target_kind,
+        targetId: body.target_id,
+        error: error.message,
+      },
       ...auditInfo,
     });
-    return respond({ error: 'Failed to suspend profile' }, 500);
+    return respond({ error: "Failed to update suspension state" }, 500);
   }
 
-  // Audit log de sucesso
   auditLog({
     timestamp: new Date().toISOString(),
     userId: authResult.userId,
-    action: 'suspend_profile',
-    resource: 'profiles',
-    status: 'success',
-    details: { profileId: body.profile_id, reason: sanitizedReason },
+    action: isSuspending ? "suspend_profile" : "unsuspend_profile",
+    resource: "profiles",
+    status: "success",
+    details: {
+      targetKind: body.target_kind,
+      targetId: body.target_id,
+      reason: sanitizedReason || undefined,
+      suspendedUntil,
+    },
     ...auditInfo,
   });
 
   return respond(data);
 });
-

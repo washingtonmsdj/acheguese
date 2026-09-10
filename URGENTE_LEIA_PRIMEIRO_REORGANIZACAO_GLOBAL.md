@@ -43,7 +43,8 @@ Leia nesta ordem:
 - último deploy Vercel production READY localizado: `86c76fc8d48550fbbed783a359c32f6cdf6a435d`, muito atrás da `main`;
 - Mobilidade continua **launch-paused**: `PUBLIC_LAUNCH_SURFACES.mobility=false`;
 - G36C1 remove os writers mortos de `profiles.active_ride_id`; estado de corrida permanece exclusivamente em `driver_availability.active_ride_id`; campo físico de Profile só poderá ser dropado após cutover do frontend antigo;
-- próximo eixo imediato: G36C2 brokerizar suspensão/reativação Admin; depois G36C3 eliminar os inserts diretos restantes de Profile/Driver e só então fechar grants compatíveis quando o frontend same-SHA estiver LIVE;
+- G36C2 expand pronto: suspensão/reativação Admin passa pelo Edge `admin-suspend-profile` + RPC service-role-only com revalidação de role e audit por Profile; suporta alvo Profile ou usuário inteiro; RPC antigo só fica até o cutover ser provado;
+- próximo gate imediato: aplicar/reconciliar G36C2 no runtime e remover `suspend_profile` legado; depois G36C3 eliminar os inserts diretos restantes de Profile/Driver e só então fechar grants compatíveis quando o frontend same-SHA estiver LIVE;
 - não restaurar DML direto, operator scripts obsoletos, wrappers concorrentes, dynamic-table novo ou authorities paralelas.
 
 ## Regra para novas IAs/agentes

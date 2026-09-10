@@ -273,7 +273,7 @@
       "coverage": "verified",
       "enforcement": [
         "edge-function:admin-suspend-profile",
-        "service-role-only-rpc:suspend_profile"
+        "service-role-only-rpc:admin_profile_rpc_set_suspension"
       ],
       "evidence": [
         "supabase/functions/admin-suspend-profile/index.ts",

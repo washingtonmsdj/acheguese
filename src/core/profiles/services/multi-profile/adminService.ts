@@ -11,7 +11,6 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
-import { buildSupabaseFunctionUrl } from '@/shared/config/publicSupabase';
 import type { ServiceResponse } from './types';
 
 type ProfileAuditLogRecord = Record<string, unknown>;
@@ -22,61 +21,53 @@ export class AdminService {
   /**
    * Suspender perfil (via edge function)
    */
-  static async suspendProfile(profileId: string, reason: string): Promise<ServiceResponse<{ profile_id: string }>> {
+  static async suspendProfile(
+    profileId: string,
+    reason: string,
+  ): Promise<ServiceResponse<{ profile_id: string }>> {
     try {
-      if (!reason || reason.trim() === '') {
+      if (!reason || reason.trim() === "") {
         return {
           success: false,
-          error: 'Reason is required for suspension',
+          error: "Reason is required for suspension",
         };
       }
 
-      const user = await SessionService.getCurrentUser();
-      
-      if (!user) {
-        return {
-          success: false,
-          error: 'Not authenticated',
-        };
-      }
-
-      const accessToken = SessionService.getAccessToken();
-      if (!accessToken) {
-        return {
-          success: false,
-          error: 'No session token available',
-        };
-      }
-
-      const response = await fetch(
-        buildSupabaseFunctionUrl('admin-suspend-profile'),
+      const { data, error } = await supabase.functions.invoke(
+        "admin-suspend-profile",
         {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            profile_id: profileId,
+          body: {
+            action: "suspend",
+            target_kind: "profile",
+            target_id: profileId,
             reason,
-          }),
-        }
+            suspended_until: null,
+          },
+        },
       );
 
-      const data = await response.json();
-
-      if (!response.ok) {
+      if (error) {
         return {
           success: false,
-          error: data.error || 'Failed to suspend profile',
+          error: error.message || "Failed to suspend profile",
         };
       }
 
-      return data;
+      if (!data?.success) {
+        return {
+          success: false,
+          error: data?.error || "Failed to suspend profile",
+        };
+      }
+
+      return {
+        success: true,
+        data: { profile_id: profileId },
+      };
     } catch (error: unknown) {
       return {
         success: false,
-        error: errorMessage(error, 'Failed to suspend profile'),
+        error: errorMessage(error, "Failed to suspend profile"),
       };
     }
   }
