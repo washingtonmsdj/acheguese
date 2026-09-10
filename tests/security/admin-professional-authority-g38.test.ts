@@ -22,6 +22,19 @@ describe("Professional admin authority G38", () => {
     expect(edge).not.toContain("professionalPatch");
   });
 
+  it("requires the Edge acknowledgement to match both target and requested availability", () => {
+    const mutation = read("src/core/professional/services/professional.mutations.ts");
+
+    expect(mutation).toContain("resolveSupabaseFunctionErrorMessage");
+    expect(mutation).toContain("updated.id !== id");
+    expect(mutation).toContain(
+      "updated.is_accepting_clients !== isAcceptingClients",
+    );
+    expect(mutation).toContain(
+      "Resposta invalida ao atualizar disponibilidade do profissional",
+    );
+  });
+
   it("uses the canonical active/inactive status vocabulary in Admin Services", () => {
     const page = read("src/modules/admin/pages/AdminServicos.tsx");
 
