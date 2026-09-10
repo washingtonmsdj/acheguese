@@ -59,9 +59,30 @@ function gitCommitAvailable(sha) {
   return !result.error && result.status === 0;
 }
 
+function gitRemoteAvailable(name) {
+  const result = runGit(["remote", "get-url", name]);
+  return (
+    !result.error &&
+    result.status === 0 &&
+    String(result.stdout ?? "").trim().length > 0
+  );
+}
+
 function ensureGitCommitAvailable(sha) {
   if (gitCommitAvailable(sha)) {
     return { available: true, fetched: false, detail: "" };
+  }
+
+  // Vercel can provide a shallow checkout without a configured `origin` remote.
+  // In that case we cannot prove the previous successful deployment tree, so the
+  // safe behavior is to fail open to a normal build instead of emitting a fatal
+  // git fetch error or guessing from HEAD^.
+  if (!gitRemoteAvailable("origin")) {
+    return {
+      available: false,
+      fetched: false,
+      detail: "origin remote is unavailable in this checkout",
+    };
   }
 
   const fetchResult = runGit(previousCommitFetchArgs(sha));
