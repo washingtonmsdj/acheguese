@@ -145,10 +145,19 @@ const PRIMARY_FILTER_IDS: SearchCategory[] = [
 ];
 
 function titleCase(value: string): string {
+  const minorWords = new Set(["a", "as", "da", "das", "de", "do", "dos", "e"]);
   return value
     .replace(/-/g, " ")
     .toLocaleLowerCase("pt-BR")
-    .replace(/(^|\s)\p{L}/gu, (letter) => letter.toLocaleUpperCase("pt-BR"));
+    .split(" ")
+    .map((word, index) =>
+      index > 0 && minorWords.has(word)
+        ? word
+        : word.replace(/^\p{L}/u, (letter) =>
+            letter.toLocaleUpperCase("pt-BR"),
+          ),
+    )
+    .join(" ");
 }
 
 export default function BuscaPage() {
@@ -252,6 +261,7 @@ export default function BuscaPage() {
       jobs: buildModuleTerritoryUrl(MODULE_SLUGS.jobs, territoryBase),
       map: buildModuleTerritoryUrl(MODULE_SLUGS.map, territoryBase),
       search: buildModuleTerritoryUrl(MODULE_SLUGS.search, territoryBase),
+      education: buildModuleTerritoryUrl(MODULE_SLUGS.education, territoryBase),
     }),
     [territoryBase],
   );
@@ -414,7 +424,7 @@ export default function BuscaPage() {
         isAuthenticated={Boolean(user)}
         unreadCount={unreadCount}
         searchHref={moduleUrls.search}
-        searchLabel={`Buscar em ${territoryName}`}
+        searchLabel="O que você procura por aqui?"
       />
 
       <main className="mx-auto w-full max-w-[76rem] px-4 pb-24 pt-6 sm:px-6 sm:pt-8 lg:px-8 lg:pb-10">
@@ -448,21 +458,29 @@ export default function BuscaPage() {
           aria-label="Categorias da busca"
         >
           <div className="flex gap-6 overflow-x-auto scrollbar-hide sm:gap-8">
-            {FILTERS.filter((filter) => PRIMARY_FILTER_IDS.includes(filter.id)).map((filter) => (
-              <button
-                key={filter.id}
-                type="button"
-                onClick={() => handleFilterChange(filter.id)}
-                className={cn(
-                  "relative min-h-12 shrink-0 whitespace-nowrap px-0.5 text-sm font-medium text-territory-muted transition-colors after:absolute after:inset-x-0 after:bottom-[-1px] after:h-0.5 after:rounded-full after:bg-transparent hover:text-territory-ink",
-                  activeFilter === filter.id &&
-                    "font-bold text-territory-brand after:bg-territory-brand",
-                )}
-                aria-pressed={activeFilter === filter.id}
-              >
-                {filter.label}
-              </button>
-            ))}
+            {FILTERS.filter((filter) => PRIMARY_FILTER_IDS.includes(filter.id)).map(
+              (filter) => (
+                <button
+                  key={filter.id}
+                  type="button"
+                  onClick={() => handleFilterChange(filter.id)}
+                  className={cn(
+                    "relative min-h-12 shrink-0 whitespace-nowrap px-0.5 text-sm font-medium text-territory-muted transition-colors after:absolute after:inset-x-0 after:bottom-[-1px] after:h-0.5 after:rounded-full after:bg-transparent hover:text-territory-ink",
+                    activeFilter === filter.id &&
+                      "font-bold text-territory-brand after:bg-territory-brand",
+                  )}
+                  aria-pressed={activeFilter === filter.id}
+                >
+                  {filter.label}
+                </button>
+              ),
+            )}
+            <Link
+              to={moduleUrls.education}
+              className="relative hidden min-h-12 shrink-0 items-center whitespace-nowrap px-0.5 text-sm font-medium text-territory-muted transition-colors hover:text-territory-ink md:inline-flex"
+            >
+              Educação
+            </Link>
           </div>
         </nav>
 
@@ -470,7 +488,7 @@ export default function BuscaPage() {
           <button
             type="button"
             onClick={toggleFilterMenu}
-            className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-territory-border bg-territory-surface px-3 text-sm font-semibold text-territory-ink hover:border-territory-brand/45"
+            className="hidden min-h-10 items-center gap-2 rounded-xl border border-territory-border bg-territory-surface px-3 text-sm font-semibold text-territory-ink hover:border-territory-brand/45 md:inline-flex"
           >
             <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
             Filtros
