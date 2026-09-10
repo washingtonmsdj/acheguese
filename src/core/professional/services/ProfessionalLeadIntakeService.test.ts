@@ -1,13 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { invoke } = vi.hoisted(() => ({
+const { invoke, readHttpErrorBody } = vi.hoisted(() => ({
   invoke: vi.fn(),
+  readHttpErrorBody: vi.fn(),
 }));
 
 vi.mock("@/integrations/supabase", () => ({
   supabase: {
     functions: { invoke },
   },
+  readSupabaseFunctionHttpErrorBody: readHttpErrorBody,
 }));
 
 import {
@@ -34,6 +36,8 @@ const submission: CreateProfessionalLeadSubmission = {
 describe("ProfessionalLeadIntakeService", () => {
   beforeEach(() => {
     invoke.mockReset();
+    readHttpErrorBody.mockReset();
+    readHttpErrorBody.mockResolvedValue(null);
   });
 
   it("returns the authoritative lead id for a newly created request", async () => {
@@ -83,11 +87,21 @@ describe("ProfessionalLeadIntakeService", () => {
     });
   });
 
+  it("maps the 2xx Turnstile rejection returned by the broker", async () => {
+    invoke.mockResolvedValue({
+      data: { status: "turnstile_failed" },
+      error: null,
+    });
+
+    await expect(
+      ProfessionalLeadIntakeService.createLead(submission),
+    ).resolves.toEqual({
+      success: false,
+      error: "A verificação anti-spam expirou ou foi rejeitada. Confirme novamente.",
+    });
+  });
+
   it.each([
-    [
-      "turnstile_failed",
-      "A verificação anti-spam expirou ou foi rejeitada. Confirme novamente.",
-    ],
     ["invalid_payload", "Revise os dados do pedido antes de enviar novamente."],
     [
       "professional_unavailable",
@@ -102,22 +116,53 @@ describe("ProfessionalLeadIntakeService", () => {
       "O envio de pedidos está temporariamente indisponível. Tente novamente mais tarde.",
     ],
     [
-      "database_failed",
+      "lead_creation_failed",
       "Não foi possível registrar o pedido agora. Tente novamente em instantes.",
     ],
-  ] as const)("maps broker failure %s without weakening the boundary", async (status, message) => {
-    invoke.mockResolvedValue({ data: { status }, error: null });
+    [
+      "invalid_or_expired_token",
+      "Sua sessão expirou ou não é mais válida. Entre novamente e reenvie o pedido.",
+    ],
+    [
+      "requester_identity_unavailable",
+      "Não foi possível validar seu perfil agora. Tente novamente em instantes.",
+    ],
+    ["origin_not_allowed", "Não foi possível validar a origem deste pedido."],
+    [
+      "Rate limit exceeded",
+      "Muitas tentativas foram feitas em pouco tempo. Aguarde um instante antes de tentar novamente.",
+    ],
+  ] as const)("maps Edge HTTP failure %s from the response body", async (code, message) => {
+    const httpError = { message: "Edge Function returned a non-2xx status code" };
+    invoke.mockResolvedValue({ data: null, error: httpError });
+    readHttpErrorBody.mockResolvedValue({ error: code });
 
     await expect(
       ProfessionalLeadIntakeService.createLead(submission),
     ).resolves.toEqual({ success: false, error: message });
+    expect(readHttpErrorBody).toHaveBeenCalledWith(httpError);
   });
 
-  it("fails closed when the Edge invocation itself fails", async () => {
+  it("fails closed for transport errors without an HTTP response body", async () => {
+    const transportError = { message: "network failure" };
+    invoke.mockResolvedValue({ data: null, error: transportError });
+    readHttpErrorBody.mockResolvedValue(null);
+
+    await expect(
+      ProfessionalLeadIntakeService.createLead(submission),
+    ).resolves.toEqual({
+      success: false,
+      error: "Não foi possível registrar o pedido agora. Tente novamente em instantes.",
+    });
+    expect(readHttpErrorBody).toHaveBeenCalledWith(transportError);
+  });
+
+  it("fails closed for unknown HTTP error payloads", async () => {
     invoke.mockResolvedValue({
       data: null,
-      error: { message: "network failure" },
+      error: { message: "Edge Function returned a non-2xx status code" },
     });
+    readHttpErrorBody.mockResolvedValue({ error: "unexpected_server_code" });
 
     await expect(
       ProfessionalLeadIntakeService.createLead(submission),
