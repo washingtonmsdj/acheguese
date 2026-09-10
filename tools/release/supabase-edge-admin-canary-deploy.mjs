@@ -16,6 +16,7 @@ const CANARY_FUNCTIONS = Object.freeze({
     requiredFiles: Object.freeze([
       'supabase/functions/admin-list-users/index.ts',
       'supabase/functions/_shared/adminAuth.ts',
+      'supabase/functions/_shared/mfaPolicy.ts',
       'supabase/functions/_shared/security.ts',
       'supabase/functions/_shared/validation.ts',
     ]),
@@ -25,6 +26,7 @@ const CANARY_FUNCTIONS = Object.freeze({
     requiredFiles: Object.freeze([
       'supabase/functions/admin-get-user/index.ts',
       'supabase/functions/_shared/adminAuth.ts',
+      'supabase/functions/_shared/mfaPolicy.ts',
       'supabase/functions/_shared/security.ts',
       'supabase/functions/_shared/validation.ts',
     ]),
@@ -242,6 +244,10 @@ function assertSourceContracts(functionSlug) {
     join(process.cwd(), 'supabase', 'functions', '_shared', 'adminAuth.ts'),
     'utf8',
   );
+  const mfaPolicy = readFileSync(
+    join(process.cwd(), 'supabase', 'functions', '_shared', 'mfaPolicy.ts'),
+    'utf8',
+  );
 
   if (functionSlug === 'admin-list-users') {
     if (!entrypoint.includes('admin_list_user_account_contexts')) {
@@ -279,6 +285,8 @@ function assertSourceContracts(functionSlug) {
     "supabase.rpc('get_user_roles'",
     "_user_id: user.id",
     "const adminRole = resolveAdminRole(roles)",
+    "const mfaPolicy = await evaluateUserMfaPolicy(supabase, user.id, token)",
+    "if (mfaPolicy.required)",
   ];
   for (const marker of requiredAdminAuthMarkers) {
     if (!adminAuth.includes(marker)) {
@@ -287,6 +295,17 @@ function assertSourceContracts(functionSlug) {
   }
   if (/\.from\(["']user_roles["']\)/.test(adminAuth)) {
     throw new Error('adminAuth voltou a consultar user_roles diretamente');
+  }
+
+  const requiredMfaPolicyMarkers = [
+    'supabaseAdmin.auth.admin.mfa.listFactors({',
+    'getAuthenticatorAssuranceLevel(token)',
+    'currentLevel !== "aal2"',
+  ];
+  for (const marker of requiredMfaPolicyMarkers) {
+    if (!mfaPolicy.includes(marker)) {
+      throw new Error(`mfaPolicy sem contrato obrigatorio: ${marker}`);
+    }
   }
 }
 
