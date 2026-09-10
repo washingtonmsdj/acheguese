@@ -23,6 +23,8 @@ const adminQuery = read(
   "src/core/territorial/services/territorial.admin.queries.ts",
 );
 const adminHook = read("src/modules/admin/hooks/useTerritorialGroups.ts");
+const groupForm = read("src/modules/admin/components/TerritorialGroupForm.tsx");
+const districtSelector = read("src/modules/admin/components/DistrictSelector.tsx");
 
 describe("G43 territorial group admin authority", () => {
   it("requires JWT plus canonical admin/MFA authority on the broker", () => {
@@ -40,6 +42,7 @@ describe("G43 territorial group admin authority", () => {
     expect(phaseOne).toContain(
       "CREATE OR REPLACE FUNCTION public.territorial_admin_save_group(",
     );
+    expect(phaseOne).toContain("SECURITY INVOKER");
     expect(phaseOne).toContain("DELETE FROM public.territorial_group_members");
     expect(phaseOne).toContain("INSERT INTO public.territorial_group_members");
     expect(phaseOne).toContain("active_group_requires_member");
@@ -49,14 +52,21 @@ describe("G43 territorial group admin authority", () => {
     expect(phaseOne).toContain("member.type::TEXT IN ('district', 'neighborhood')");
   });
 
+  it("uses function ACLs as the SQL execution boundary without deprecated auth.role checks", () => {
+    expect(phaseOne).toContain("FROM PUBLIC, anon, authenticated");
+    expect(phaseOne).toContain("TO service_role");
+    expect(phaseOne).toContain("has_function_privilege(\n    'anon'");
+    expect(phaseOne).toContain("has_function_privilege(\n    'authenticated'");
+    expect(phaseOne).not.toMatch(/IF\s+(?:\(SELECT\s+)?auth\.role\(\)/);
+    expect(phaseOne).toContain("deprecated auth.role boundary reintroduced");
+  });
+
   it("keeps status activation server-owned and rejects active empty groups", () => {
     expect(phaseOne).toContain(
       "CREATE OR REPLACE FUNCTION public.territorial_admin_set_group_status(",
     );
     expect(phaseOne).toContain("p_status = 'active' AND NOT EXISTS");
     expect(phaseOne).toContain("FOR UPDATE");
-    expect(phaseOne).toContain("FROM PUBLIC, anon, authenticated");
-    expect(phaseOne).toContain("TO service_role");
   });
 
   it("stages browser DML removal only as a gated phase-two cutover", () => {
@@ -85,5 +95,14 @@ describe("G43 territorial group admin authority", () => {
     expect(adminQuery).toContain(".listAllForAdmin()");
     expect(adminHook).toContain("listAdminTerritorialGroups");
     expect(adminHook).not.toContain("service.listAllGroups()");
+  });
+
+  it("preserves the real anchor_city_id on edit and keeps anchor mutation locked", () => {
+    expect(groupForm).toContain("anchor_city_id?: string | null");
+    expect(groupForm).toContain("setAnchorCityId(group.anchor_city_id ?? '')");
+    expect(groupForm).not.toContain("setAnchorCityId(group.parent_id");
+    expect(groupForm).toContain("anchorCityLocked={Boolean(group)}");
+    expect(districtSelector).toContain("anchorCityLocked?: boolean");
+    expect(districtSelector).toContain("disabled={disabled || anchorCityLocked}");
   });
 });
