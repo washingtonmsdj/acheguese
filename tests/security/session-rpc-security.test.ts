@@ -13,6 +13,7 @@ function readProjectFile(path: string): string {
 describe("session rpc broker security", () => {
   it("routes p_user_id-sensitive session/profile RPCs through an authenticated broker", () => {
     const edgeFunction = readProjectFile("supabase/functions/session-rpc/index.ts");
+    const mfaPolicy = readProjectFile("supabase/functions/_shared/mfaPolicy.ts");
     const config = readProjectFile("supabase/config.toml");
     const broker = readProjectFile("src/core/session/services/SessionRpcService.ts");
     const sessionService = readProjectFile("src/core/session/services/SessionService.ts");
@@ -30,7 +31,9 @@ describe("session rpc broker security", () => {
     expect(edgeFunction).toContain('getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY")');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("get_active_profile"');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("switch_active_profile"');
-    expect(edgeFunction).toContain('supabaseAdmin.rpc("check_user_mfa_required"');
+    expect(edgeFunction).toContain("evaluateUserMfaPolicy");
+    expect(mfaPolicy).toContain("getAuthenticatorAssuranceLevel(token)");
+    expect(mfaPolicy).toContain("supabaseAdmin.auth.admin.mfa.listFactors({");
     expect(edgeFunction).not.toContain('.from("user_sessions")');
     expect(edgeFunction).toContain('const scope = exceptCurrent ? "others" : "global"');
     expect(edgeFunction).toContain("supabaseAdmin.auth.admin.signOut(token, scope)");
