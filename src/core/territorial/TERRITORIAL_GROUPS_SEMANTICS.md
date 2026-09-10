@@ -1,391 +1,304 @@
-# SEMÂNTICA FORMAL - GRUPOS TERRITORIAIS
+# Semântica formal — Grupos Territoriais
 
-**Data**: 2026-03-28  
-**Versão**: 1.0.0  
-**Status**: ✅ OFICIAL
+**Data base:** 2026-09-10  
+**Versão:** 2.0.0  
+**Status:** OFICIAL — source G43 preparado; cutover runtime pendente
 
----
+## 1. Definição
 
-## 1. DEFINIÇÃO
+Um **grupo territorial** é um agrupamento funcional, comunitário ou comercial de
+localidades oficiais de uma mesma cidade.
 
-### O que é um Grupo Territorial?
+Ele **não é**:
 
-Um **grupo territorial** é um agrupamento funcional/comunitário/comercial de bairros oficiais.
+- território oficial;
+- bairro artificial em `locations`;
+- nível da hierarquia geográfica;
+- substituto de `country/state/city/district/neighborhood`.
 
-**NÃO É**:
-- ❌ Território oficial (country/state/city/district)
-- ❌ Bairro fake em `locations`
-- ❌ Hierarquia administrativa
-- ❌ Substituição de bairros oficiais
+Ele **é**:
 
-**É**:
-- ✅ Agrupamento de múltiplos bairros (districts)
-- ✅ Entidade separada em `territorial_groups`
-- ✅ Slug próprio para URLs
-- ✅ Status independente (active/inactive)
-- ✅ Pertence a uma cidade âncora
+- entidade própria em `territorial_groups`;
+- relação N:N com locations reais por `territorial_group_members`;
+- agrupamento com slug, status e metadata próprios;
+- sempre ancorado em uma cidade oficial por `anchor_city_id`.
 
----
+## 2. Fronteira canônica
 
-## 2. REGRAS FUNDAMENTAIS
-
-### Regra 1: Separação Absoluta
-
-```
-locations                    → Territórios oficiais (IBGE, Prefeitura)
-territorial_groups           → Agrupamentos funcionais
-territorial_group_members    → Vínculo entre grupo e bairros
+```text
+locations                    -> geografia oficial
+territorial_groups           -> agrupamentos territoriais
+territorial_group_members    -> memberships grupo <-> location
 ```
 
-**Proibido**:
-- Criar bairro fake em `locations` para representar grupo
-- Misturar hierarquia oficial com agrupamento funcional
-- Usar `parent_id` para representar grupo
+É proibido representar grupo usando `locations.parent_id`. `parent_id` pertence
+exclusivamente à hierarquia geográfica oficial.
 
-### Regra 2: Membros São Sempre Districts
+Owner de domínio: `src/core/territorial`.
+
+## 3. Membros permitidos
+
+O contrato atual aceita localidades selecionáveis de tipo:
+
+- `district`;
+- `neighborhood`.
+
+`city`, `state` e `country` não podem ser membros.
+
+A função histórica `check_territorial_group_member()` foi reconciliada em
+`20260530120000_ensure_complexo_nordeste_membership.sql` para aceitar
+`district | neighborhood` e exigir que o `parent_id` do membro corresponda à
+cidade âncora do grupo.
+
+O command G43 reforça a mesma regra e também exige membro `active` no momento da
+substituição do conjunto.
+
+## 4. Cidade âncora
+
+Todos os membros precisam pertencer diretamente à mesma cidade:
+
+```text
+territorial_groups.anchor_city_id = Salvador
+member.parent_id                  = Salvador
+```
+
+No lifecycle administrativo G43, `anchor_city_id` é **imutável depois da
+criação**. Editar um grupo não é uma operação de migração entre cidades.
+
+Se futuramente existir uma necessidade real de mover um grupo entre cidades,
+isso deve ganhar um command específico com invariantes próprios; não deve ser
+implementado como UPDATE genérico.
+
+## 5. Identidade e slug
+
+O slug é único dentro da cidade âncora:
 
 ```sql
--- ✅ CORRETO
-INSERT INTO territorial_group_members (group_id, location_id)
-VALUES ('tg-complexo', 'loc-nordeste-de-amaralina');  -- district
-
--- ❌ ERRADO
-INSERT INTO territorial_group_members (group_id, location_id)
-VALUES ('tg-complexo', 'loc-salvador');  -- city (não permitido)
+UNIQUE (slug, anchor_city_id)
 ```
 
-**Constraint**: Trigger `check_territorial_group_member` valida que `location_id` é district.
+Portanto, duas cidades podem ter o mesmo slug de grupo, mas uma cidade não pode
+ter dois grupos com o mesmo slug.
 
-### Regra 3: Cidade Âncora
+## 6. Status e visibilidade
 
-Todos os membros de um grupo devem pertencer à mesma cidade âncora.
+Estados canônicos:
+
+```text
+active
+inactive
+```
+
+- `active` → pode participar das superfícies de produto, sujeito também aos
+  flags de visibilidade aplicáveis;
+- `inactive` → não deve aparecer como grupo público utilizável.
+
+A leitura é separada por intenção:
+
+- `TerritorialGroupService.listAllGroups()` / repository `listAll()` → somente
+  grupos ativos;
+- `listAdminTerritorialGroups()` / repository `listAllForAdmin()` → inventário
+  administrativo, incluindo inativos quando a RLS administrativa autoriza.
+
+Essa separação é obrigatória: desativar um grupo não pode fazê-lo desaparecer da
+própria tela de administração, e inventário administrativo não pode ampliar a
+superfície pública.
+
+## 7. Membership
+
+Chave lógica:
 
 ```sql
--- ✅ CORRETO
-territorial_groups.anchor_city_id = 'loc-salvador'
-members: nordeste-de-amaralina (parent=salvador), santa-cruz (parent=salvador)
-
--- ❌ ERRADO
-territorial_groups.anchor_city_id = 'loc-salvador'
-members: nordeste-de-amaralina (parent=salvador), copacabana (parent=rio-de-janeiro)
+PRIMARY KEY (group_id, location_id)
 ```
 
-**Constraint**: Trigger valida que `location.parent_id = group.anchor_city_id`.
+Um mesmo membro não pode aparecer duas vezes no mesmo grupo.
 
-### Regra 4: Slug Único por Cidade
+Para lifecycle G43:
 
-```sql
-CONSTRAINT territorial_groups_slug_city_unique UNIQUE (slug, anchor_city_id)
+- IDs recebidos são deduplicados antes da persistência;
+- todos precisam existir;
+- todos precisam estar ativos;
+- todos precisam ser `district | neighborhood`;
+- todos precisam ter `parent_id = anchor_city_id`;
+- grupo `active` precisa manter pelo menos um membro.
+
+## 8. Administração — autoridade atual e cutover G43
+
+### Runtime atual
+
+Enquanto o G43 não for promovido no Supabase remoto, o frontend LIVE ainda pode
+depender dos métodos de compatibilidade de `TerritorialGroupService` /
+`TerritorialGroupRepositorySupabase`.
+
+Esses métodos **não devem ser descritos como transacionais**. Em particular, o
+writer histórico de substituição usa requests separados e existe apenas até o
+cutover ser comprovado.
+
+Não remover o caminho compatível antes de o broker novo estar LIVE; não criar um
+terceiro writer para contornar o gate.
+
+### Autoridade preparada — phase 1
+
+Migration pending:
+
+`docs/09-reference/migrations-pending/20260910220500_create_territorial_group_admin_commands_g43.sql`
+
+Commands:
+
+```text
+territorial_admin_save_group
+territorial_admin_set_group_status
 ```
 
-**Permite**:
-- Grupo "centro" em Salvador
-- Grupo "centro" em São Paulo
+`territorial_admin_save_group` é a futura autoridade de criação/edição:
 
-**Proíbe**:
-- Dois grupos "centro" em Salvador
+- criação/edição do grupo e substituição do conjunto completo de memberships
+  acontecem na mesma transação;
+- grupo novo nasce `inactive`;
+- cidade âncora é validada e bloqueada;
+- em edição, a cidade âncora não pode mudar;
+- locations membros são bloqueadas em ordem determinística antes da validação;
+- membership DML é serializada durante a curta janela de compatibilidade;
+- qualquer erro aborta toda a transação.
 
----
+`territorial_admin_set_group_status`:
 
-## 3. ESTRUTURA DE DADOS
+- bloqueia o grupo antes da transição;
+- serializa a leitura do conjunto de memberships;
+- rejeita `active` quando não há membros.
 
-### Tabela `territorial_groups`
+Os dois commands são `SECURITY INVOKER`. `EXECUTE` é revogado de `PUBLIC`,
+`anon` e `authenticated` e concedido somente a `service_role`.
 
-| Coluna | Tipo | Descrição |
-|--------|------|-----------|
-| `id` | UUID | Identificador único |
-| `slug` | TEXT | Slug para URLs (ex: complexo-do-nordeste-de-amaralina) |
-| `name` | TEXT | Nome público (ex: Complexo do Nordeste de Amaralina) |
-| `description` | TEXT | Descrição opcional |
-| `anchor_city_id` | UUID | FK para `locations` (cidade âncora) |
-| `status` | TEXT | active / inactive |
-| `metadata` | JSONB | Metadados opcionais |
+### Gateway administrativo
 
-### Tabela `territorial_group_members`
+`territorial-group-admin-rpc` é o gateway G43 preparado:
 
-| Coluna | Tipo | Descrição |
-|--------|------|-----------|
-| `group_id` | UUID | FK para `territorial_groups` |
-| `location_id` | UUID | FK para `locations` (district) |
-| `created_at` | TIMESTAMPTZ | Data de adição ao grupo |
+- `verify_jwt=true`;
+- `requireAdmin()`;
+- MFA/AAL2 canônico;
+- ator derivado da sessão validada;
+- payload limitado e validado;
+- ACK de `saveGroup` correlacionado a ID/slug/nome/description/cidade/members/
+  contagem/criação;
+- ACK de `setStatus` correlacionado ao mesmo grupo e status solicitado;
+- 2xx incompatível é erro, não sucesso.
 
-**Constraint**: `UNIQUE (group_id, location_id)` (bairro não pode estar duplicado no mesmo grupo).
+Ele não deve ser implantado antes de os commands existirem no mesmo ambiente.
 
----
+### Lock final — phase 2
 
-## 4. SEMÂNTICA DE USO
+Migration pending:
 
-### Caso 1: Filtro Territorial por Grupo
+`docs/09-reference/migrations-pending/20260910221500_lock_territorial_group_writes_to_broker_g43.sql`
 
-**Cenário**: Usuário acessa `/br/ba/salvador/complexo-do-nordeste-de-amaralina`
+Somente depois de phase 1 + Edge ACTIVE + smoke admin AAL2 + frontend migrado e
+certificado, a phase 2 remove `INSERT/UPDATE/DELETE` de `authenticated` nas duas
+tabelas de grupo.
 
-**Resolução**:
-```typescript
-// 1. Resolver grupo
-const group = await territorialGroupService.getGroupBySlugAndCity(
-  'complexo-do-nordeste-de-amaralina',
-  'loc-salvador'
-);
+SELECT público ativo-only e SELECT administrativo explícito são preservados.
 
-// 2. Resolver membros ativos
-const locationIds = await territorialGroupService.resolveGroupToLocationIds(group.id);
-// Retorna: ['loc-nordeste-de-amaralina', 'loc-santa-cruz', 'loc-chapada', 'loc-vale']
+## 9. Flags de visibilidade
 
-// 3. Aplicar filtro
-const filter: TerritoryFilter = {
-  scope: 'group',
-  location_ids: locationIds
-};
+Flags canônicos em metadata:
 
-// 4. Query
-const businesses = await supabase
-  .from('business_data')
-  .select('*')
-  .in('location_id', filter.location_ids);
+```text
+is_selector_active
+is_landing_enabled
+is_navigable
 ```
 
-### Caso 2: Verificar Disponibilidade de Módulo
+Atualizações especializadas passam pelos gateways territoriais. Browser não
+deve recriar lógica de metadata com read-modify-write paralelo.
 
-**Cenário**: Verificar se módulo "community" está disponível no grupo.
+A cascata de `locations` é uma autoridade distinta: G42 prepara
+`territorial_update_location_visibility(...)`, que atualiza raiz + todos os
+descendentes numa única transação quando `is_selector_active=false`.
 
-**Resolução**:
-```typescript
-const availability = await groupAvailabilityService.getGroupModuleAvailability(
-  'tg-complexo-nordeste',
-  ModuleKey.COMMUNITY
-);
+## 10. Resolução de grupo
 
-// availability.availability: 'full' | 'partial' | 'none'
-// availability.active_member_ids: ['loc-nordeste', 'loc-santa-cruz']  (apenas com rollout ativo)
+Para um grupo ativo, a resolução territorial expande o grupo para IDs de
+locations membros ativos. Consumers aplicam esses IDs ao domínio que estiverem
+consultando; não materializam uma location artificial para o grupo.
+
+Exemplo conceitual:
+
+```text
+Complexo do Nordeste de Amaralina
+  -> Nordeste de Amaralina
+  -> Santa Cruz
+  -> Chapada do Rio Vermelho
+  -> Vale das Pedrinhas
 ```
 
-### Caso 3: Ativar Módulo para Grupo Inteiro
+O grupo continua sendo uma entidade composta. Cada membro continua sendo uma
+location oficial independente.
 
-**Cenário**: Admin ativa módulo "mobility" para todo o Complexo do Nordeste.
+## 11. Integração com rollout
 
-**Resolução**:
-```typescript
-const result = await territorialRolloutService.activateRolloutForGroup({
-  group_id: 'tg-complexo-nordeste',
-  module_key: ModuleKey.MOBILITY,
-  status: RolloutStatus.ACTIVE
-});
+`GroupAvailabilityService` e `TerritorialRolloutService` resolvem grupos para
+locations reais. O rollout continua pertencendo ao owner de rollout, não à
+tabela de grupos.
 
-// result.applied_to: ['loc-nordeste', 'loc-santa-cruz', 'loc-chapada', 'loc-vale']
-// result.skipped: []  (membros inativos ou com erro)
-```
+Um grupo não cria um novo nível de herança geográfica.
 
----
+## 12. UI administrativa
 
-## 5. DIFERENÇA ENTRE LOCATION E GROUP
+A UI administrativa **existe** e não é pendência futura.
 
-| Aspecto | Location (Território Oficial) | Territorial Group (Agrupamento) |
-|---------|-------------------------------|--------------------------------|
-| **Fonte** | IBGE, Prefeitura (oficial) | Funcional/comunitário (interno) |
-| **Hierarquia** | Sim (parent_id) | Não (membership) |
-| **Tipo** | country/state/city/district | Sempre agrupamento de districts |
-| **Slug** | Único globalmente | Único por cidade |
-| **URL** | `/br/ba/salvador/pituba` | `/br/ba/salvador/complexo-do-nordeste` |
-| **Tabela** | `locations` | `territorial_groups` |
-| **Vínculo** | `parent_id` (hierarquia) | `territorial_group_members` (membership) |
-| **Mudança** | Governança oficial (IBGE) | Admin interno |
+Contrato atual corrigido:
 
----
+- lista ativos + inativos para administração;
+- criação exige cidade e pelo menos um bairro no formulário atual;
+- edição usa `anchor_city_id` real;
+- cidade âncora de grupo existente fica bloqueada;
+- memberships já presentes no inventário são reutilizadas, sem segunda leitura
+  redundante;
+- inventário de memberships é buscado em lote, evitando uma consulta por grupo.
 
-## 6. CASOS DE USO
+O frontend ainda não deve apontar os writes para `territorial-group-admin-rpc`
+enquanto o runtime remoto não possuir phase 1 + Edge comprovados.
 
-### Quando Usar Location?
+## 13. Invariantes que não podem regredir
 
-- Filtrar por bairro oficial
-- Filtrar por cidade
-- Hierarquia administrativa
-- URLs canônicas de território
-- Rollout por hierarquia (herança)
+1. grupo nunca vira location fake;
+2. `parent_id` nunca representa membership de grupo;
+3. público recebe somente grupos ativos;
+4. Admin continua capaz de ver/reativar grupos inativos;
+5. cidade âncora existente é imutável no lifecycle G43;
+6. grupo ativo não fica vazio pelo command canônico;
+7. criação/edição + memberships devem convergir para uma transação única;
+8. commands privilegiados não são executáveis por `anon/authenticated`;
+9. autorização de usuário administrativo pertence ao gateway MFA/AAL2;
+10. `auth.role()` não substitui ACL explícito dos commands G42/G43;
+11. nenhum loop Edge/browser substitui atomicidade do banco;
+12. writer histórico só pode ser removido depois do cutover provado.
 
-### Quando Usar Territorial Group?
+## 14. Estado operacional em 2026-09-10
 
-- Agrupamento comunitário (ex: Complexo do Nordeste)
-- Agrupamento comercial (ex: Orla de Salvador)
-- Agrupamento funcional (ex: Zona Turística)
-- Filtro por múltiplos bairros relacionados
-- Rollout por grupo (ativar módulo em vários bairros de uma vez)
+Source:
 
----
+- G42 cascade de Location preparada;
+- G43 commands de grupo preparados;
+- `territorial-group-admin-rpc` preparado e governado;
+- formulário/inventário administrativo corrigidos;
+- ratchets G42/G43 presentes.
 
-## 7. GOVERNANÇA MÍNIMA
+Runtime Supabase:
 
-### Status de Grupo
+- Postgres ainda retorna `connection timeout` nos preflights;
+- nenhuma migration pending G42/G43 foi promovida;
+- catálogo remoto não apresenta `territorial-get-tree`,
+  `territorial-update-group-visibility`, `territorial-update-location-visibility`
+  nem `territorial-group-admin-rpc`.
 
-```typescript
-status: 'active' | 'inactive'
-```
+Estado correto: **SOURCE-READY / RUNTIME-PENDING**.
 
-- `active`: Grupo visível e utilizável
-- `inactive`: Grupo oculto (não aparece em listagens, URLs retornam 404)
+## Referências
 
-### Integridade de Membership
-
-**Validações Automáticas** (triggers):
-1. Membro deve ser district (não city, state, country)
-2. Membro deve pertencer à cidade âncora
-3. Membro não pode estar duplicado no mesmo grupo
-
-**Validações Manuais** (service):
-1. Grupo não pode ficar vazio após remoção de membros
-2. Slug deve ser único por cidade
-
----
-
-## 8. ADMINISTRAÇÃO DE GRUPOS
-
-### Criar Grupo
-
-```typescript
-import { territorialGroupService } from '@/core/territorial';
-
-const group = await territorialGroupService.createGroup({
-  slug: 'orla-de-salvador',
-  name: 'Orla de Salvador',
-  description: 'Bairros da orla marítima',
-  anchor_city_id: 'loc-salvador',
-  member_location_ids: ['loc-barra', 'loc-rio-vermelho'], // Opcional
-});
-
-// Grupo criado como 'inactive' por padrão
-```
-
-### Atualizar Grupo
-
-```typescript
-// Atualizar nome
-await territorialGroupService.updateGroup('tg-orla', {
-  name: 'Orla Marítima de Salvador',
-});
-
-// Atualizar slug
-await territorialGroupService.updateGroup('tg-orla', {
-  slug: 'orla-maritima',
-});
-
-// Ativar grupo (requer pelo menos 1 membro)
-await territorialGroupService.activateGroup('tg-orla');
-
-// Desativar grupo
-await territorialGroupService.deactivateGroup('tg-orla');
-```
-
-### Gerenciar Membros
-
-```typescript
-// Adicionar membros
-await territorialGroupService.addMembers('tg-orla', ['loc-ondina', 'loc-amaralina']);
-
-// Remover membros
-await territorialGroupService.removeMembers('tg-orla', ['loc-amaralina']);
-
-// Substituir todos os membros (transacional)
-await territorialGroupService.replaceMembers('tg-orla', ['loc-barra', 'loc-rio-vermelho']);
-```
-
-### Validações Automáticas
-
-Todas as operações de escrita validam:
-- ✅ Slug único por cidade
-- ✅ Cidade âncora existe e é do tipo 'city'
-- ✅ Membros são do tipo 'district'
-- ✅ Membros pertencem à cidade âncora
-- ✅ Membros estão ativos
-- ✅ Grupo ativo deve ter pelo menos 1 membro
-- ✅ Duplicatas de membership são ignoradas
-
----
-
-## 9. RESOLUÇÃO DE FILTRO TERRITORIAL
-
-### TerritoryFilter Expandido
-
-```typescript
-type TerritoryFilter =
-  | { scope: 'location'; location_id: string }      // Bairro único
-  | { scope: 'group'; location_ids: string[] }      // Grupo de bairros
-  | { scope: 'none' };                              // Sem filtro
-```
-
-### Aplicação em Queries
-
-```typescript
-// Filtro por location
-if (filter.scope === 'location') {
-  query = query.eq('location_id', filter.location_id);
-}
-
-// Filtro por group
-if (filter.scope === 'group') {
-  query = query.in('location_id', filter.location_ids);
-}
-
-// Sem filtro
-if (filter.scope === 'none') {
-  // Não executar query ou retornar vazio
-}
-```
-
----
-
-## 10. EXEMPLOS REAIS
-
-### Exemplo 1: Complexo do Nordeste de Amaralina
-
-**Grupo**:
-- ID: `tg-complexo-nordeste`
-- Slug: `complexo-do-nordeste-de-amaralina`
-- Nome: `Complexo do Nordeste de Amaralina`
-- Cidade Âncora: Salvador (`loc-salvador`)
-
-**Membros**:
-1. Nordeste de Amaralina (`loc-nordeste-de-amaralina`)
-2. Santa Cruz (`loc-santa-cruz`)
-3. Chapada do Rio Vermelho (`loc-chapada-do-rio-vermelho`)
-4. Vale das Pedrinhas (`loc-vale-das-pedrinhas`)
-
-**URL**: `/br/ba/salvador/complexo-do-nordeste-de-amaralina`
-
-**Filtro Resultante**:
-```typescript
-{
-  scope: 'group',
-  location_ids: [
-    'loc-nordeste-de-amaralina',
-    'loc-santa-cruz',
-    'loc-chapada-do-rio-vermelho',
-    'loc-vale-das-pedrinhas'
-  ]
-}
-```
-
----
-
-## 11. PENDÊNCIAS FORA DO ESCOPO (ETAPA 2)
-
-**NÃO implementado ainda**:
-- ❌ Versionamento de grupos
-- ❌ Aliases históricos de grupos
-- ❌ Slug redirects de grupos
-- ❌ UI administrativa de grupos
-
-**Implementado**:
-- ✅ Leitura de grupos (getById, getBySlugAndCity, listAll)
-- ✅ Resolução de membros (listMembers, resolveGroupToLocationIds)
-- ✅ Verificação de membership (isMemberOfGroup)
-- ✅ Verificação de status (isGroupActive)
-- ✅ Integração com rollout (GroupAvailabilityService, TerritorialRolloutService)
-- ✅ Filtro territorial expandido (TerritoryFilter com scope 'group')
-- ✅ CRUD completo de grupos (create, update, activate, deactivate)
-- ✅ CRUD completo de membership (addMembers, removeMembers, replaceMembers)
-- ✅ Validações de integridade (cidade âncora, tipo district, slug único)
-- ✅ Regra de ativação (grupo ativo deve ter membros)
-
----
-
-**Versão**: 1.0.0  
-**Status**: ✅ FUNDAÇÃO COMPLETA (READ + WRITE)
+- `src/core/territorial/README.md`
+- `docs/08-roadmap/checkpoints/2026-09-10-g43-territorial-admin-authority.md`
+- `supabase/migrations/20260530120000_ensure_complexo_nordeste_membership.sql`
+- `tests/security/territorial-group-admin-authority-g43.test.ts`
+- `tests/security/territorial-visibility-client-contract-g42.test.ts`
