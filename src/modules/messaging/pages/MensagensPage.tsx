@@ -23,6 +23,11 @@ import providerImage from "@/assets/persona-prestador.jpg";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 import { useCommunityDirectMessages } from "@/core/messaging/hooks/useCommunityDirectMessages";
 import type { CommunityDirectMessage, CommunityDirectThreadPreview } from "@/core/messaging";
+import {
+  buildCommunityTerritoryUrl,
+  buildModuleTerritoryUrl,
+  MODULE_SLUGS,
+} from "@/core/routing/utils/territoryUrls";
 import { useSessionContext } from "@/core/session";
 import type { SessionProfileView } from "@/core/session/types";
 import { cn } from "@/shared/utils/cn";
@@ -97,6 +102,15 @@ function getInitials(value: string): string {
     .toUpperCase();
 }
 
+function formatTerritoryLabel(value: string): string {
+  return value
+    .replace(/-/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toLocaleUpperCase("pt-BR") + part.slice(1))
+    .join(" ");
+}
+
 function ProfileAvatar({
   profile,
   size = "md",
@@ -163,8 +177,8 @@ function ProfileSelectorRow({
 function DesktopNavigation({ territoryHref }: { territoryHref: string }) {
   const items = [
     { label: "Início", href: territoryHref, icon: Home },
-    { label: "Explorar", href: "/busca", icon: Search },
-    { label: "Comunidade", href: `${territoryHref}/comunidade`, icon: Users },
+    { label: "Explorar", href: buildModuleTerritoryUrl(MODULE_SLUGS.search, territoryHref), icon: Search },
+    { label: "Comunidade", href: buildCommunityTerritoryUrl(territoryHref), icon: Users },
     { label: "Conversas", href: "/mensagens", icon: MessageCircle, active: true },
     { label: "Conta", href: "/conta", icon: UserRound },
   ];
@@ -466,11 +480,11 @@ function ConversationDetail({
   );
 }
 
-function MobileBottomNavigation() {
+function MobileBottomNavigation({ territoryHref }: { territoryHref: string }) {
   const items = [
-    { label: "Início", href: "/", icon: Home },
-    { label: "Explorar", href: "/busca", icon: Search },
-    { label: "Comunidade", href: "/comunidade/ba/salvador", icon: Users },
+    { label: "Início", href: territoryHref, icon: Home },
+    { label: "Explorar", href: buildModuleTerritoryUrl(MODULE_SLUGS.search, territoryHref), icon: Search },
+    { label: "Comunidade", href: buildCommunityTerritoryUrl(territoryHref), icon: Users },
     { label: "Conversas", href: "/mensagens", icon: MessageCircle, active: true },
     { label: "Conta", href: "/conta", icon: UserRound },
   ];
@@ -544,8 +558,8 @@ export default function MensagensPage() {
   const selectedConversation = conversations.find((conversation) => conversation.id === selectedConversationId) ?? conversations[0];
   const isLiveConversation = Boolean(selectedConversation && liveConversations.some((conversation) => conversation.id === selectedConversation.id));
   const liveDisplayMessages = useMemo(() => liveMessages.map((message) => mapLiveMessage(message, activeProfile?.id)), [activeProfile?.id, liveMessages]);
-  const territoryName = conceptMockEnabled ? "Complexo do Nordeste de Amaralina" : active.city ? active.city.replace(/-/g, " ") : "Seu território";
-  const contextLabel = `${active.city ? active.city.replace(/-/g, " ") : "Salvador"}, ${active.state.toUpperCase()}`;
+  const territoryName = conceptMockEnabled ? "Complexo do Nordeste de Amaralina" : active.city ? formatTerritoryLabel(active.city) : "Seu território";
+  const contextLabel = `${active.city ? formatTerritoryLabel(active.city) : "Salvador"}, ${active.state.toUpperCase()}`;
   const territoryHref = conceptMockEnabled ? "/ba/salvador/complexo-do-nordeste-de-amaralina" : `/${active.state}/${active.city}`;
   const selectedConversationData = selectedConversation ?? conceptConversations[0];
 
@@ -607,7 +621,7 @@ export default function MensagensPage() {
       <div className="lg:hidden">
         <MobileHeader account={inboxProfiles.find((profile) => profile.key === "personal") ?? selectedProfile} />
         <main className="min-h-[calc(100dvh-4.75rem)] pb-[5.25rem]">{mobileList}</main>
-        <MobileBottomNavigation />
+        <MobileBottomNavigation territoryHref={territoryHref} />
       </div>
 
       <div className="hidden min-h-[100dvh] flex-col bg-territory-canvas lg:flex">
