@@ -1,52 +1,74 @@
 /**
  * Territorial Mutations - SSOT v2.0
- * 
- * Funções de escrita para gestão territorial
+ *
+ * Funções de escrita para gestão territorial.
  */
 import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
+import {
+  resolveSupabaseFunctionErrorMessage,
+  supabase,
+} from '@/integrations/supabase';
 import type { VisibilityFlag } from './types';
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 /**
- * Atualizar flag de metadata em location ou group
- * 
- * ✅ SEGURANÇA: Usa edge functions para operações com service_role
- * - territorial-update-location-visibility para locations
- * - territorial-update-group-visibility para territorial_groups
+ * Atualizar flag canônica em location ou territorial group.
+ *
+ * O HTTP 2xx isolado não é suficiente: o Edge precisa devolver a mesma entidade
+ * e o metadata precisa refletir exatamente o valor solicitado.
  */
 export async function updateMetadataFlag(
   table: 'locations' | 'territorial_groups',
   id: string,
   flag: VisibilityFlag,
-  value: boolean
+  value: boolean,
 ): Promise<Record<string, unknown>> {
-  try {
-    const functionName = table === 'locations' 
+  const functionName =
+    table === 'locations'
       ? 'territorial-update-location-visibility'
       : 'territorial-update-group-visibility';
+  const entityKey = table === 'locations' ? 'location' : 'group';
+  const body =
+    table === 'locations'
+      ? { id, locationId: id, flag, value }
+      : { id, groupId: id, flag, value };
 
-    const body =
-      table === 'locations'
-        ? { id, locationId: id, flag, value }
-        : { id, groupId: id, flag, value };
-
+  try {
     const { data, error } = await supabase.functions.invoke(functionName, {
       body,
     });
 
     if (error) {
-      logger.error(`territorial.mutations.updateMetadataFlag - ${table}`, error);
-      throw new Error(error.message);
+      const message =
+        (await resolveSupabaseFunctionErrorMessage(error)) ??
+        'Falha ao atualizar a visibilidade territorial.';
+      logger.error(`territorial.mutations.updateMetadataFlag - ${table}`, {
+        message,
+      });
+      throw new Error(message);
     }
 
-    logger.info(`territorial.mutations.updateMetadataFlag`, {
+    if (!isRecord(data) || data.success !== true) {
+      throw new Error('Resposta invalida ao atualizar a visibilidade territorial.');
+    }
+
+    const entity = isRecord(data[entityKey]) ? data[entityKey] : null;
+    const metadata = entity && isRecord(entity.metadata) ? entity.metadata : null;
+    if (!entity || entity.id !== id || !metadata || metadata[flag] !== value) {
+      throw new Error('Resposta invalida ao atualizar a visibilidade territorial.');
+    }
+
+    logger.info('territorial.mutations.updateMetadataFlag', {
       table,
       id,
       flag,
       value,
     });
 
-    return (data ?? {}) as Record<string, unknown>;
+    return entity;
   } catch (error) {
     logger.error('territorial.mutations.updateMetadataFlag', error);
     throw error;
@@ -54,58 +76,33 @@ export async function updateMetadataFlag(
 }
 
 /**
- * Ativar/desativar location com lógica de cascata
- * 
- * Regras:
- * - Ao ATIVAR: ativa todos os pais em cascata
- * - Ao DESATIVAR: desativa todos os filhos (locations e groups) em cascata
- * 
- * ✅ SEGURANÇA: Usa edge function territorial-update-location-visibility
- * - Validação de role admin no servidor
- * - Lógica de cascata implementada no servidor
- * - Audit logging automático
+ * Ativar/desativar location. Regras de cascata pertencem ao broker territorial;
+ * o cliente apenas exige confirmação autoritativa do nó solicitado.
  */
-export async function toggleLocationSelector(locationId: string, newValue: boolean): Promise<void> {
-  try {
-    logger.info('territorial.mutations.toggleLocationSelector', {
-      locationId,
-      newValue,
-    });
-
-    // A edge function já implementa toda a lógica de cascata
-    await updateMetadataFlag('locations', locationId, 'is_selector_active', newValue);
-
-    logger.info('territorial.mutations.toggleLocationSelector - Concluído');
-  } catch (error) {
-    logger.error('territorial.mutations.toggleLocationSelector', error);
-    throw error;
-  }
+export async function toggleLocationSelector(
+  locationId: string,
+  newValue: boolean,
+): Promise<void> {
+  await updateMetadataFlag(
+    'locations',
+    locationId,
+    'is_selector_active',
+    newValue,
+  );
 }
 
 /**
- * Ativar/desativar group com lógica de cascata
- * 
- * Regras:
- * - Ao ATIVAR: ativa a cidade âncora e todos os seus pais em cascata
- * 
- * ✅ SEGURANÇA: Usa edge function territorial-update-group-visibility
- * - Validação de role admin no servidor
- * - Lógica de cascata implementada no servidor
- * - Audit logging automático
+ * Ativar/desativar territorial group. Regras de cascata pertencem ao broker;
+ * o cliente apenas exige confirmação autoritativa do grupo solicitado.
  */
-export async function toggleGroupSelector(groupId: string, newValue: boolean): Promise<void> {
-  try {
-    logger.info('territorial.mutations.toggleGroupSelector', {
-      groupId,
-      newValue,
-    });
-
-    // A edge function já implementa toda a lógica de cascata
-    await updateMetadataFlag('territorial_groups', groupId, 'is_selector_active', newValue);
-
-    logger.info('territorial.mutations.toggleGroupSelector - Concluído');
-  } catch (error) {
-    logger.error('territorial.mutations.toggleGroupSelector', error);
-    throw error;
-  }
+export async function toggleGroupSelector(
+  groupId: string,
+  newValue: boolean,
+): Promise<void> {
+  await updateMetadataFlag(
+    'territorial_groups',
+    groupId,
+    'is_selector_active',
+    newValue,
+  );
 }
