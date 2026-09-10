@@ -1,4 +1,12 @@
-import { lazy, Suspense, useMemo, type ReactNode } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import {
   ArrowRight,
@@ -732,18 +740,77 @@ export default function TerritoryHomePage() {
     );
   }, [urls]);
 
+  const moreQuickAction = useMemo(
+    () => ({
+      label: "Ver todos",
+      description: "Todos os caminhos do território",
+      href: urls.search,
+      icon: MoreHorizontal,
+      tone: "bg-territory-raised text-territory-brand",
+    }),
+    [urls.search],
+  );
+
+  const mobileQuickActionsContainerRef = useRef<HTMLDivElement>(null);
+  const mobileQuickActionsMeasureRef = useRef<HTMLDivElement>(null);
+  const [mobileQuickActionCount, setMobileQuickActionCount] = useState(() =>
+    Math.min(4, quickActions.length),
+  );
+
+  useEffect(() => {
+    const container = mobileQuickActionsContainerRef.current;
+    const measure = mobileQuickActionsMeasureRef.current;
+    if (!container || !measure) return;
+
+    const updateVisibleActions = () => {
+      const containerStyles = window.getComputedStyle(container);
+      const availableWidth =
+        container.clientWidth -
+        Number.parseFloat(containerStyles.paddingLeft || "0") -
+        Number.parseFloat(containerStyles.paddingRight || "0");
+      const gap = Number.parseFloat(window.getComputedStyle(measure).columnGap || "0");
+      const measuredWidths = Array.from(measure.children).map(
+        (child) => child.getBoundingClientRect().width,
+      );
+      const actionWidths = measuredWidths.slice(0, quickActions.length);
+      const moreWidth = measuredWidths[quickActions.length] ?? 64;
+      const allActionsWidth =
+        actionWidths.reduce((total, width) => total + width, 0) +
+        Math.max(0, actionWidths.length - 1) * gap;
+
+      let visibleCount = quickActions.length;
+      if (allActionsWidth > availableWidth + 1) {
+        visibleCount = 0;
+        for (let count = 1; count <= actionWidths.length; count += 1) {
+          const candidateWidth =
+            actionWidths.slice(0, count).reduce((total, width) => total + width, 0) +
+            moreWidth +
+            count * gap;
+          if (candidateWidth <= availableWidth + 1) {
+            visibleCount = count;
+          } else {
+            break;
+          }
+        }
+      }
+
+      setMobileQuickActionCount((currentCount) =>
+        currentCount === visibleCount ? currentCount : visibleCount,
+      );
+    };
+
+    updateVisibleActions();
+    const resizeObserver = new ResizeObserver(updateVisibleActions);
+    resizeObserver.observe(container);
+    return () => resizeObserver.disconnect();
+  }, [quickActions.length]);
+
   const mobileQuickActions = useMemo(
     () => [
-      ...quickActions.slice(0, 4),
-      {
-        label: "Ver todos",
-        description: "Todos os caminhos do território",
-        href: urls.search,
-        icon: MoreHorizontal,
-        tone: "bg-territory-raised text-territory-brand",
-      },
+      ...quickActions.slice(0, mobileQuickActionCount),
+      ...(mobileQuickActionCount < quickActions.length ? [moreQuickAction] : []),
     ],
-    [quickActions, urls.search],
+    [mobileQuickActionCount, moreQuickAction, quickActions],
   );
 
   const hasWorthKnowing =
@@ -809,30 +876,62 @@ export default function TerritoryHomePage() {
               <h2 id="resolver-title" className="sr-only">
                 Resolver por aqui
               </h2>
-              <div className="-mx-4 flex snap-x gap-1.5 overflow-x-auto px-4 pb-2 scrollbar-hide md:hidden">
-                {mobileQuickActions.map((action) => {
-                  const Icon = action.icon;
-                  return (
-                    <Link
-                      key={action.label}
-                      to={action.href}
-                      className="group flex min-w-16 snap-start flex-col items-center rounded-xl p-1 text-center transition-colors hover:bg-territory-raised"
-                    >
-                      <span
-                        className={cn(
-                          "flex h-12 w-12 items-center justify-center rounded-full",
-                          action.tone,
-                        )}
+              <div className="-mx-4 overflow-hidden px-4 pb-2 scrollbar-hide md:hidden">
+                <div
+                  ref={mobileQuickActionsContainerRef}
+                  className="flex min-w-0 gap-1.5"
+                >
+                  {mobileQuickActions.map((action) => {
+                    const Icon = action.icon;
+                    return (
+                      <Link
+                        key={action.label}
+                        to={action.href}
+                        className="group flex min-w-16 flex-none flex-col items-center rounded-xl p-1 text-center transition-colors hover:bg-territory-raised"
                       >
-                        <Icon className="h-5 w-5" aria-hidden="true" />
-                      </span>
-                      <span className="mt-2 block text-xs font-semibold leading-5 text-territory-ink group-hover:text-territory-brand sm:text-sm">
-                        {action.label}
-                      </span>
-                      <span className="sr-only">{action.description}</span>
-                    </Link>
-                  );
-                })}
+                        <span
+                          className={cn(
+                            "flex h-12 w-12 items-center justify-center rounded-full",
+                            action.tone,
+                          )}
+                        >
+                          <Icon className="h-5 w-5" aria-hidden="true" />
+                        </span>
+                        <span className="mt-2 block text-xs font-semibold leading-5 text-territory-ink group-hover:text-territory-brand sm:text-sm">
+                          {action.label}
+                        </span>
+                        <span className="sr-only">{action.description}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+                <div
+                  ref={mobileQuickActionsMeasureRef}
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -left-[10000px] top-0 flex w-max gap-1.5 opacity-0"
+                >
+                  {[...quickActions, moreQuickAction].map((action) => {
+                    const Icon = action.icon;
+                    return (
+                      <div
+                        key={`measure-${action.label}`}
+                        className="group flex min-w-16 flex-none flex-col items-center rounded-xl p-1 text-center"
+                      >
+                        <span
+                          className={cn(
+                            "flex h-12 w-12 items-center justify-center rounded-full",
+                            action.tone,
+                          )}
+                        >
+                          <Icon className="h-5 w-5" aria-hidden="true" />
+                        </span>
+                        <span className="mt-2 block text-xs font-semibold leading-5 text-territory-ink sm:text-sm">
+                          {action.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
               <div className="hidden md:grid md:grid-cols-6 md:gap-6">
                 {quickActions.map((action) => {
