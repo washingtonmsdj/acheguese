@@ -286,7 +286,7 @@ class AdminRolesServiceClass {
         userId: params.userId,
         role: params.role,
       });
-      return false;
+      throw error;
     }
   }
 
@@ -307,7 +307,7 @@ class AdminRolesServiceClass {
         userId: params.userId,
         role: params.role,
       });
-      return false;
+      throw error;
     }
   }
 
@@ -384,7 +384,7 @@ class AdminRolesServiceClass {
         userId: params.userId,
         role: params.role,
       });
-      return false;
+      throw error;
     }
   }
 
