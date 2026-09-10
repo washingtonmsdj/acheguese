@@ -15,6 +15,25 @@ Leia nesta ordem:
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — execução operacional atual;
 4. `SECURITY.md` — segurança e gates de release.
 
+## Checkpoint operacional curto — 2026-09-10
+
+> Resumo de handoff; a autoridade detalhada continua em `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`.
+
+- nova Home + identidade visual foram integradas à `main` em `ab8e9327`; a sincronização responsiva posterior entrou em `7f1abe79` sem regressão estrutural;
+- identidade visual ativa: Plus Jakarta Sans, petróleo `#123E3D`, solar `#F3CB4C`, superfície `#FAFBF7`, texto principal `#203534`;
+- o build pós-merge revelou 10 erros TypeScript preexistentes; foram corrigidos pela consolidação dos owners canônicos de Admin, Location/ServiceAreas, Mobility e Safety, sem restaurar bridges ou writers antigos;
+- `9a90aaed` aposentou os contratos mortos de `AdminDataService.updateUserData` / `AdminUserService.updateProfile` e o reexport local obsoleto de `ServiceArea`;
+- `cce689c7` alinhou `admin-create-user` ao lifecycle canônico de Auth/Profile: não cria mais um segundo Profile por INSERT direto e o rollback fica ancorado em `auth.users` + cascades;
+- `f6e6fd1` corrigiu o `vercel-ignore`: checkout sem remote `origin` deixa de produzir erro fatal; quando o commit anterior está disponível o diff real é calculado, e sem prova suficiente o comportamento continua fail-open para build normal;
+- deploy production `dpl_8DWo9NXMwyXaMGkKwkoV4h4Ldho1` de `f6e6fd1` está **READY** e atende `acheguese.com.br`, `www.acheguese.com.br` e `acheguese.vercel.app`;
+- sitemap resiliente foi provado novamente: Supabase/Cloudflare 522 não derruba o release; o gerador produz fallback estático validado com 7 URLs;
+- `profile-rpc` remoto continua **v18 ACTIVE** e está divergente do Git: o runtime ainda aceita `service_area`, enquanto a `main` rejeita `service_area`, `service_areas` e `service_radius_km` porque Coverage pertence a `public.service_areas`; não considerar este runtime reconciliado até deploy source-exact;
+- geração oficial de tipos Supabase continua bloqueada por 522 do provider; `register_safety_evidence` permanece com boundary local estreito, sem `any`, sem editar manualmente `types.generated.ts` e com o RPC explícito para o ratchet de Storage/Safety;
+- validator de Core Platform ainda informa baseline stale para acessos já removidos; reduzir esses allowances, não restaurar os acessos apenas para satisfazer baseline;
+- branch `codex/identidade-visual-achegue-se` continua reservada para evolução visual; o commit `e4249358` introduz o novo Search/Explorar e precisa passar pela projeção canônica de mapa antes de merge na `main`;
+- Mobilidade continua **launch-paused**: `PUBLIC_LAUNCH_SURFACES.mobility=false`;
+- não restaurar DML direto, operator scripts obsoletos, wrappers concorrentes, dynamic-table novo ou authorities paralelas.
+
 ## Checkpoint operacional curto — 2026-09-09
 
 > Resumo de handoff; a autoridade detalhada continua em `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`.
