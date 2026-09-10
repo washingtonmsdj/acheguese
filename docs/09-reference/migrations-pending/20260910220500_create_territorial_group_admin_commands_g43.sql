@@ -36,7 +36,13 @@ BEGIN
     RAISE EXCEPTION 'preflight: service_role lacks territorial_groups privileges';
   END IF;
 
-  IF NOT has_table_privilege('service_role', 'public.territorial_group_members', 'SELECT,INSERT,DELETE') THEN
+  -- SELECT ... FOR SHARE requires UPDATE privilege in PostgreSQL. Fail closed
+  -- before creating commands that could compile but fail only at first use.
+  IF NOT has_table_privilege('service_role', 'public.locations', 'SELECT,UPDATE') THEN
+    RAISE EXCEPTION 'preflight: service_role lacks locations row-lock privileges';
+  END IF;
+
+  IF NOT has_table_privilege('service_role', 'public.territorial_group_members', 'SELECT,INSERT,UPDATE,DELETE') THEN
     RAISE EXCEPTION 'preflight: service_role lacks territorial_group_members privileges';
   END IF;
 END
