@@ -109,6 +109,17 @@ export function AppLayoutSidebar() {
     isCommunityPublicLandingRoute ||
     isCommunityAliasPublicRoute;
 
+  const isMessagingRoute =
+    pathSegments[0] === "mensagens" || pathSegments[0] === "chat";
+
+  if (isMessagingRoute) {
+    return (
+      <div className="min-h-[100dvh] w-full bg-territory-canvas">
+        <Outlet />
+      </div>
+    );
+  }
+
   // Se deve ocultar a sidebar global, renderizar apenas o conteúdo
   if (usesTerritoryVivoShell) {
     return (
