@@ -3,13 +3,19 @@ import { Link } from "react-router-dom";
 import { MapLibreAdapter } from "@/core/maps/components/v3/MapLibreAdapter";
 import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import { DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
+import type { MapMarker } from "@/core/maps/types/core";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import { cn } from "@/shared/utils/cn";
 
 interface TerritoryMapPreviewProps {
   resolved: ResolvedTerritory | null;
   mapHref: string;
   territoryName: string;
   title?: string;
+  markers?: MapMarker[];
+  onMarkerClick?: (id: string) => void;
+  showNavigationControls?: boolean;
+  mapHeightClassName?: string;
 }
 
 export default function TerritoryMapPreview({
@@ -17,6 +23,10 @@ export default function TerritoryMapPreview({
   mapHref,
   territoryName,
   title = `Mapa de ${territoryName}`,
+  markers = [],
+  onMarkerClick,
+  showNavigationControls = false,
+  mapHeightClassName = "h-[22.75rem]",
 }: TerritoryMapPreviewProps) {
   const { polygons } = useTerritoryPolygon(resolved);
 
@@ -40,16 +50,18 @@ export default function TerritoryMapPreview({
           <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
         </Link>
       </div>
-      <div className="relative h-[22.75rem] overflow-hidden bg-territory-raised">
+      <div className={cn("relative overflow-hidden bg-territory-raised", mapHeightClassName)}>
         <MapLibreAdapter
           styleUrl={DEFAULT_TILE_STYLE.styleUrl}
           territoryPolygons={polygons}
+          markers={markers}
+          onMarkerClick={onMarkerClick}
           resolved={resolved}
           fitTerritoryBounds={Boolean(resolved)}
           territoryFitPadding={28}
           territoryFitMaxZoom={14}
-          interactive={false}
-          hideNavigationControl
+          interactive={showNavigationControls}
+          hideNavigationControl={!showNavigationControls}
           controls={{}}
           className="h-full w-full"
         />
