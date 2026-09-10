@@ -1,4 +1,7 @@
-import { supabase } from "@/integrations/supabase";
+import {
+  readSupabaseFunctionHttpErrorBody,
+  supabase,
+} from "@/integrations/supabase";
 
 export type ProfessionalLeadSourceChannel =
   | "public_profile"
@@ -78,6 +81,32 @@ function isBrokerFailureStatus(value: unknown): value is BrokerFailureStatus {
   );
 }
 
+function errorCodeFromPayload(payload: unknown): string | null {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
+  const code = Reflect.get(payload, "error");
+  return typeof code === "string" ? code : null;
+}
+
+function httpFailureMessage(code: string | null): string | null {
+  if (!code) return null;
+  if (isBrokerFailureStatus(code)) return brokerFailureMessage(code);
+
+  switch (code) {
+    case "lead_creation_failed":
+      return "Não foi possível registrar o pedido agora. Tente novamente em instantes.";
+    case "invalid_or_expired_token":
+      return "Sua sessão expirou ou não é mais válida. Entre novamente e reenvie o pedido.";
+    case "requester_identity_unavailable":
+      return "Não foi possível validar seu perfil agora. Tente novamente em instantes.";
+    case "origin_not_allowed":
+      return "Não foi possível validar a origem deste pedido.";
+    case "Rate limit exceeded":
+      return "Muitas tentativas foram feitas em pouco tempo. Aguarde um instante antes de tentar novamente.";
+    default:
+      return null;
+  }
+}
+
 export class ProfessionalLeadIntakeService {
   static async createLead(
     input: CreateProfessionalLeadSubmission,
@@ -104,9 +133,12 @@ export class ProfessionalLeadIntakeService {
     );
 
     if (error) {
+      const errorPayload = await readSupabaseFunctionHttpErrorBody(error);
       return {
         success: false,
-        error: "Não foi possível registrar o pedido agora. Tente novamente em instantes.",
+        error:
+          httpFailureMessage(errorCodeFromPayload(errorPayload)) ??
+          "Não foi possível registrar o pedido agora. Tente novamente em instantes.",
       };
     }
 
