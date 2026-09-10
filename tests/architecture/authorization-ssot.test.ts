@@ -37,20 +37,29 @@ describe("Authorization SSOT", () => {
     expect(facade).toContain('export { RoleService } from "./services/RoleService"');
   });
 
-  it("keeps direct user_roles persistence inside Admin management only", () => {
-    const access = /\.from(?:<[^>]+>)?\(["']user_roles["']\)/;
-    const callers = listRuntimeSourceFiles(srcRoot)
-      .filter((path) => access.test(readFileSync(path, "utf8")))
+  it("keeps browser user_roles access read-only and mutations behind admin-role-rpc", () => {
+    const directAccess = /\.from(?:<[^>]+>)?\(["']user_roles["']\)/;
+    const directMutation = /\.from(?:<[^>]+>)?\(["']user_roles["']\)[\s\S]{0,220}?\.(?:insert|update|upsert|delete)\s*\(/;
+    const sourceFiles = listRuntimeSourceFiles(srcRoot);
+
+    const readers = sourceFiles
+      .filter((path) => directAccess.test(readFileSync(path, "utf8")))
+      .map((path) => relative(root, path).replace(/\\/g, "/"));
+    const writers = sourceFiles
+      .filter((path) => directMutation.test(readFileSync(path, "utf8")))
       .map((path) => relative(root, path).replace(/\\/g, "/"));
 
-    expect(callers).toEqual(["src/core/admin/services/AdminRolesService.ts"]);
+    expect(readers).toEqual(["src/core/admin/services/AdminRolesService.ts"]);
+    expect(writers, "global role writes must never bypass the AAL2 admin broker").toEqual([]);
 
     const adminRoles = read("src/core/admin/services/AdminRolesService.ts");
     expect(adminRoles).not.toContain("async hasRole(");
     expect(adminRoles).not.toContain("async getUserRoles(");
+    expect(adminRoles).toContain('functionName: "admin-role-rpc"');
     expect(adminRoles).toContain("async grantRole(");
     expect(adminRoles).toContain("async revokeRole(");
     expect(adminRoles).toContain("async renewRole(");
+    expect(adminRoles).not.toContain("return false;");
   });
 
   it("keeps role_history read-only in browser and trigger-written", () => {
@@ -112,13 +121,19 @@ describe("Authorization SSOT", () => {
     expect(violations).toEqual([]);
   });
 
-  it("keeps Edge admin auth on the same aggregate role contract", () => {
+  it("keeps Edge admin auth on the same aggregate role and MFA contract", () => {
     const adminAuth = read("supabase/functions/_shared/adminAuth.ts");
+    const mfaPolicy = read("supabase/functions/_shared/mfaPolicy.ts");
 
     expect(adminAuth).toContain(".rpc('get_user_roles'");
     expect(adminAuth).not.toMatch(/\.from\(["']user_roles["']\)/);
     expect(adminAuth).toContain("roles.includes('super_admin')");
     expect(adminAuth).toContain("roles.includes('admin')");
+    expect(adminAuth).toContain("evaluateUserMfaPolicy(supabase, user.id, token)");
+    expect(adminAuth).toContain("if (mfaPolicy.required)");
+    expect(mfaPolicy).toContain("auth.admin.mfa.listFactors");
+    expect(mfaPolicy).toContain("getAuthenticatorAssuranceLevel(token)");
+    expect(mfaPolicy).toContain('currentLevel !== "aal2"');
   });
 
   it("repairs aggregate validity and consolidates RLS helpers", () => {
