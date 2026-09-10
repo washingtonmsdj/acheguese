@@ -69,10 +69,8 @@ import { updateProfileCommand } from "./profile.identity.commands";
 import { getProfileContextAggregate } from "./profile.context.aggregate";
 import { getProfileStatsAggregate } from "./profile.stats.aggregate";
 import {
-  clearActiveRideId as clearActiveRideIdMutation,
   createProfileWithIdentityValidation,
   ensureActiveDriverProfileForUser,
-  setActiveRideId as setActiveRideIdMutation,
   uploadAvatar as uploadAvatarMutation,
 } from "./profile.mutations";
 import {
@@ -409,15 +407,6 @@ export class ProfileService {
       canComment: context?.permissions.canComment ?? false,
       canMessage: context?.permissions.canMessage ?? false,
     };
-  }
-  async setActiveRideId(
-    profileId: string,
-    rideId: string | null,
-  ): Promise<void> {
-    await setActiveRideIdMutation(profileId, rideId);
-  }
-  async clearActiveRideId(profileId: string, rideId: string): Promise<void> {
-    await clearActiveRideIdMutation(profileId, rideId);
   }
   async getVisibleContact(profileId: string): Promise<VisibleProfileContact | null> {
     return ProfileRpcService.getVisibleContact(profileId);

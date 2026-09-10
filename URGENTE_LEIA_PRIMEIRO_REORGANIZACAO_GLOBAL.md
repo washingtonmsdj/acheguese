@@ -42,7 +42,8 @@ Leia nesta ordem:
 - Vercel atual está bloqueando novos builds por limite do provider e GitHub jobs recentes nem iniciam steps; portanto build/E2E same-SHA continuam pendentes de execução real;
 - último deploy Vercel production READY localizado: `86c76fc8d48550fbbed783a359c32f6cdf6a435d`, muito atrás da `main`;
 - Mobilidade continua **launch-paused**: `PUBLIC_LAUNCH_SURFACES.mobility=false`;
-- próximo eixo imediato: G36C retirar writers restantes de Admin/Driver/Ride da stack genérica de Profile; depois fechar grants compatíveis somente quando o frontend same-SHA estiver LIVE;
+- G36C1 remove os writers mortos de `profiles.active_ride_id`; estado de corrida permanece exclusivamente em `driver_availability.active_ride_id`; campo físico de Profile só poderá ser dropado após cutover do frontend antigo;
+- próximo eixo imediato: G36C2 brokerizar suspensão/reativação Admin; depois G36C3 eliminar os inserts diretos restantes de Profile/Driver e só então fechar grants compatíveis quando o frontend same-SHA estiver LIVE;
 - não restaurar DML direto, operator scripts obsoletos, wrappers concorrentes, dynamic-table novo ou authorities paralelas.
 
 ## Regra para novas IAs/agentes

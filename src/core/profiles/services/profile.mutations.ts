@@ -417,39 +417,6 @@ export async function ensureActiveDriverProfileForUser(userId: string): Promise<
   }
 }
 
-export async function setActiveRideId(profileId: string, rideId: string | null): Promise<void> {
-  const { error } = await supabase
-    .from(TABLE)
-    .update({ active_ride_id: rideId })
-    .eq("id", profileId);
-
-  if (error) {
-    trackError(new Error("Error setting active_ride_id"), {
-      component: "profile.mutations",
-      action: "setActiveRideId",
-      metadata: { profileId, rideId, error },
-    });
-    throw error;
-  }
-}
-
-export async function clearActiveRideId(profileId: string, rideId: string): Promise<void> {
-  const { error } = await supabase
-    .from(TABLE)
-    .update({ active_ride_id: null })
-    .eq("id", profileId)
-    .eq("active_ride_id", rideId);
-
-  if (error) {
-    trackError(new Error("Error clearing active_ride_id"), {
-      component: "profile.mutations",
-      action: "clearActiveRideId",
-      metadata: { profileId, rideId, error },
-    });
-    throw error;
-  }
-}
-
 // ============================================================================
 // ✅ VERIFICAÇÃO
 // ============================================================================

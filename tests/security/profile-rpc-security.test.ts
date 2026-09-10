@@ -212,6 +212,10 @@ describe("profile rpc broker security", () => {
     expect(profileMutations).toContain("SessionRpcService.switchActiveProfile");
     expect(profileMutations).not.toContain("export async function updateProfileDirect");
     expect(profileMutations).not.toContain("export async function suspendUser");
+    expect(profileMutations).not.toContain("setActiveRideId");
+    expect(profileMutations).not.toContain("clearActiveRideId");
+    expect(profileService).not.toContain("setActiveRideId");
+    expect(profileService).not.toContain("clearActiveRideId");
 
     expect(multiProfile).toContain("ProfileRpcService.updateOwnedProfile");
     expect(multiProfile).not.toContain("updateLooseRows");

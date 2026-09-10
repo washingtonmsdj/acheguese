@@ -1255,6 +1255,22 @@ CI/deploy:
 
 Próximo: G36C deve retirar os writers restantes de Admin/Driver/Ride da stack genérica de Profile, mantendo cada mutação no owner de domínio e sem revogar grants de compatibilidade antes do frontend same-SHA LIVE.
 
+### Checkpoint G36C1 — Profile deixa de escrever active_ride_id (2026-09-09)
+
+Auditoria:
+- os únicos writers de `profiles.active_ride_id` no código vivo estavam em `profile.mutations.ts`;
+- `ProfileService.setActiveRideId/clearActiveRideId` não possuíam caller externo vivo;
+- o estado operacional canônico de corrida já é `public.driver_availability.active_ride_id`, controlado pelos comandos atômicos de Mobility/Delivery;
+- portanto manter write em `profiles.active_ride_id` criava uma segunda autoridade para o mesmo estado.
+
+Correção:
+- removidos `setActiveRideId` e `clearActiveRideId` de `profile.mutations.ts`;
+- removidos os wrappers correspondentes de `ProfileService`;
+- o campo físico em `profiles` não é dropado neste checkpoint por causa da janela de compatibilidade do frontend antigo;
+- ratchet em `profile-rpc-security.test.ts` impede o retorno desses writers.
+
+Próximo: G36C2 migrar suspensão/reativação Admin para o broker administrativo já existente, sem criar uma segunda autoridade.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:
