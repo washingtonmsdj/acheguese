@@ -85,13 +85,14 @@ export class TerritorialGroupRepositorySupabase implements ITerritorialGroupRepo
       .filter((group): group is TerritorialGroup => Boolean(group));
   }
 
-  async listAll(): Promise<TerritorialGroupWithMembers[]> {
-    const { data: groups, error } = await this.db
+  private async listWithMembers(status?: 'active'): Promise<TerritorialGroupWithMembers[]> {
+    let query = this.db
       .from('territorial_groups')
-      .select('*')
-      .eq('status', 'active')
-      .order('name');
+      .select('*');
 
+    if (status) query = query.eq('status', status);
+
+    const { data: groups, error } = await query.order('name');
     if (error) throw error;
     if (!groups) return [];
 
@@ -101,6 +102,16 @@ export class TerritorialGroupRepositorySupabase implements ITerritorialGroupRepo
         members: await this.listMembers(group.id),
       })),
     );
+  }
+
+  /** Product/public inventory remains active-only. */
+  async listAll(): Promise<TerritorialGroupWithMembers[]> {
+    return this.listWithMembers('active');
+  }
+
+  /** Admin RLS may expose inactive groups; public callers still cannot see them. */
+  async listAllForAdmin(): Promise<TerritorialGroupWithMembers[]> {
+    return this.listWithMembers();
   }
 
   async create(data: CreateTerritorialGroupData): Promise<TerritorialGroup> {
