@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   Bell,
   ChevronDown,
@@ -6,8 +6,9 @@ import {
   MessageCircle,
   Search,
   UserRound,
+  X,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 interface TerritoryTopbarProps {
   territoryName: string;
@@ -35,7 +36,13 @@ export function TerritoryTopbar({
   profileAvatarUrl,
 }: TerritoryTopbarProps) {
   const navigate = useNavigate();
-  const [query, setQuery] = useState("");
+  const location = useLocation();
+  const queryFromUrl = new URLSearchParams(location.search).get("q")?.trim() ?? "";
+  const [query, setQuery] = useState(queryFromUrl);
+
+  useEffect(() => {
+    setQuery(queryFromUrl);
+  }, [queryFromUrl]);
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -46,7 +53,12 @@ export function TerritoryTopbar({
     );
   };
 
-  const renderSearchForm = (inputId: string) =>
+  const clearSearch = () => {
+    setQuery("");
+    if (searchHref) navigate(searchHref);
+  };
+
+  const renderSearchForm = (inputId: string, accessibleLabel = searchLabel) =>
     searchHref ? (
       <form
         onSubmit={submitSearch}
@@ -54,7 +66,7 @@ export function TerritoryTopbar({
         className="relative w-full max-w-[26rem]"
       >
         <label htmlFor={inputId} className="sr-only">
-          {searchLabel}
+        {accessibleLabel}
         </label>
         <Search
           className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-territory-muted"
@@ -68,8 +80,18 @@ export function TerritoryTopbar({
           onChange={(event) => setQuery(event.target.value)}
           placeholder={searchLabel}
           autoComplete="off"
-          className="h-11 w-full rounded-xl border border-white/20 bg-white px-11 pr-4 text-sm text-territory-ink outline-none placeholder:text-territory-muted focus:border-territory-sun focus:ring-2 focus:ring-territory-sun/40"
+          className="h-11 w-full rounded-xl border border-white/20 bg-white px-11 pr-12 text-sm text-territory-ink outline-none placeholder:text-territory-muted focus:border-territory-sun focus:ring-2 focus:ring-territory-sun/40"
         />
+        {query ? (
+          <button
+            type="button"
+            onClick={clearSearch}
+            className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-territory-muted hover:bg-territory-raised hover:text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun"
+            aria-label="Limpar busca"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        ) : null}
       </form>
     ) : null;
 
@@ -168,7 +190,9 @@ export function TerritoryTopbar({
         </div>
       </div>
       <div className="mx-auto flex max-w-[76rem] items-center gap-3 px-4 pb-3 sm:px-6 lg:hidden">
-        <div className="min-w-0 flex-1">{renderSearchForm("territory-home-search")}</div>
+        <div className="min-w-0 flex-1">
+          {renderSearchForm("territory-home-search", `${searchLabel} no celular`)}
+        </div>
       </div>
     </header>
   );
