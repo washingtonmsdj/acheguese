@@ -66,6 +66,16 @@ describe("G43 territorial group admin authority", () => {
     expect(phaseOne).toContain("member.type::TEXT IN ('district', 'neighborhood')");
   });
 
+  it("fails closed if service_role cannot acquire the required G43 row locks", () => {
+    expect(phaseOne).toContain(
+      "has_table_privilege('service_role', 'public.locations', 'SELECT,UPDATE')",
+    );
+    expect(phaseOne).toContain("service_role lacks locations row-lock privileges");
+    expect(phaseOne).toContain(
+      "has_table_privilege('service_role', 'public.territorial_group_members', 'SELECT,INSERT,UPDATE,DELETE')",
+    );
+  });
+
   it("serializes membership validation and replacement during the compatibility window", () => {
     expect(phaseOne).toContain("FOR UPDATE");
     expect(phaseOne).toContain("ORDER BY member.id");
