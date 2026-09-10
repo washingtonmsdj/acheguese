@@ -84,6 +84,8 @@ export interface MapLibreAdapterProps {
   onMapClick?: (coords: { latitude: number; longitude: number }) => void;
   /** Callback quando mapa termina de carregar */
   onLoad?: () => void;
+  /** Callback quando o mapa registra um erro de carregamento ou renderização */
+  onError?: (message: string) => void;
   /** Configuração de controles do mapa (busca, localização, camadas, etc) */
   controls?: MapControlsConfig;
   /** Configuração do marcador de localização do usuário */
@@ -172,6 +174,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       onViewportChange, 
       onMapClick, 
       onLoad, 
+      onError,
       controls,
       userLocationMarker,
       resolved,
@@ -339,6 +342,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
 
         // Outros erros são registrados para debug
         logger.warn('[MapLibreAdapter] Map error:', errorMessage);
+        onError?.(errorMessage || 'unknown');
 
         if (typeof window !== 'undefined') {
           const s = readMapState();

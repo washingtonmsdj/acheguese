@@ -13,9 +13,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["DM Sans", "sans-serif"],
-        display: ["Space Grotesk", "sans-serif"],
-        heading: ["Space Grotesk", "sans-serif"],
+        sans: ["Plus Jakarta Sans", "sans-serif"],
+        display: ["Plus Jakarta Sans", "sans-serif"],
+        heading: ["Plus Jakarta Sans", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -79,6 +79,7 @@ export default {
           raised: "hsl(var(--territory-surface-raised))",
           ink: "hsl(var(--territory-ink))",
           muted: "hsl(var(--territory-muted))",
+          "muted-strong": "hsl(var(--territory-muted-strong))",
           brand: "hsl(var(--territory-brand))",
           "brand-strong": "hsl(var(--territory-brand-strong))",
           warm: "hsl(var(--territory-warm))",
@@ -87,6 +88,14 @@ export default {
           focus: "hsl(var(--territory-focus))",
           "on-image": "hsl(var(--territory-on-image))",
           "image-overlay": "hsl(var(--territory-image-overlay))",
+          error: "hsl(var(--territory-error))",
+          success: "hsl(var(--territory-success))",
+          warning: "hsl(var(--territory-warning))",
+          info: "hsl(var(--territory-info))",
+          selection: "hsl(var(--territory-selection))",
+          disabled: "hsl(var(--territory-disabled))",
+          "disabled-foreground":
+            "hsl(var(--territory-disabled-foreground))",
         },
         category: {
           alert: {

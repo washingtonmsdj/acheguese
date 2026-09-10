@@ -117,10 +117,6 @@ input[type="reset"] {
   }
 }
 
-.text-muted-foreground {
-  color: hsla(var(--foreground), 0.8) !important;
-}
-
 label {
   font-weight: 500;
   margin-bottom: 0.5rem;

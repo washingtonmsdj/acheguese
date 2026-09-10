@@ -7,6 +7,15 @@
  */
 
 export const THEME = {
+  brand: {
+    petroleum: "hsl(var(--brand-petroleum))",
+    solar: "hsl(var(--brand-solar))",
+    surface: "hsl(var(--brand-surface))",
+    text: "hsl(var(--brand-text))",
+    textSecondary: "hsl(var(--brand-text-secondary))",
+    textSecondaryStrong: "hsl(var(--brand-text-secondary-strong))",
+  },
+
   background: {
     primary: "hsl(var(--background))",
     secondary: "hsl(var(--card))",
@@ -36,10 +45,14 @@ export const THEME = {
   },
 
   status: {
-    success: "hsl(var(--success))",
-    warning: "hsl(var(--warning))",
-    error: "hsl(var(--destructive))",
-    info: "hsl(var(--info))",
+    success: "hsl(var(--semantic-success))",
+    warning: "hsl(var(--semantic-warning))",
+    error: "hsl(var(--semantic-error))",
+    info: "hsl(var(--semantic-info))",
+    focus: "hsl(var(--semantic-focus))",
+    selection: "hsl(var(--semantic-selection))",
+    disabled: "hsl(var(--semantic-disabled))",
+    disabledForeground: "hsl(var(--semantic-disabled-foreground))",
   },
 
   border: {

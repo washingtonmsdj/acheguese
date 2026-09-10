@@ -88,6 +88,8 @@ interface TerritoryStateProps {
   secondaryAction?: { label: string; href: string };
   className?: string;
   testId?: string;
+  compact?: boolean;
+  tone?: "default" | "raised" | "highlight" | "inset";
 }
 
 export function TerritoryState({
@@ -98,20 +100,39 @@ export function TerritoryState({
   secondaryAction,
   className,
   testId,
+  compact = false,
+  tone = "inset",
 }: TerritoryStateProps) {
   return (
     <TerritorySurface
-      tone="inset"
-      className={cn("p-5 sm:p-6", className)}
+      tone={tone}
+      className={cn(compact ? "p-4" : "p-5 sm:p-6", className)}
       data-testid={testId}
       role="status"
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-territory bg-territory-brand/12 text-territory-brand">
+      <div
+        className={cn(
+          "flex gap-4",
+          compact
+            ? "flex-col gap-3 sm:flex-row sm:items-center"
+            : "flex-col sm:flex-row sm:items-center",
+        )}
+      >
+        <span
+          className={cn(
+            "flex shrink-0 items-center justify-center rounded-territory bg-territory-brand/12 text-territory-brand",
+            compact ? "h-10 w-10" : "h-11 w-11",
+          )}
+        >
           {icon}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="font-heading text-base font-semibold text-territory-ink">
+          <p
+            className={cn(
+              "font-heading font-semibold text-territory-ink",
+              compact ? "text-sm" : "text-base",
+            )}
+          >
             {title}
           </p>
           <p className="mt-1 text-sm leading-6 text-territory-muted">
@@ -119,7 +140,12 @@ export function TerritoryState({
           </p>
         </div>
         {primaryAction || secondaryAction ? (
-          <div className="flex shrink-0 flex-wrap gap-2">
+          <div
+            className={cn(
+              "flex shrink-0 flex-wrap gap-2",
+              compact && "sm:ml-auto",
+            )}
+          >
             {primaryAction ? (
               <Link
                 to={primaryAction.href}

@@ -70,7 +70,9 @@ test.describe("Home territorial pública e determinística", () => {
 
     await page.getByRole("button", { name: "Pituba" }).click();
     await expect(page).toHaveURL(/\/ba\/salvador\/pituba$/);
-    await expect(page.getByText("Hoje em Pituba")).toBeVisible({
+    await expect(
+      page.getByRole("heading", { name: "Na sua comunidade" }),
+    ).toBeVisible({
       timeout: 30_000,
     });
     await expect(page.getByText("Oficina Horizonte")).toBeVisible({
@@ -109,7 +111,7 @@ test.describe("Home territorial pública e determinística", () => {
 
     await gotoApp(page, "/ba/salvador/valeria");
     await expect(
-      page.getByRole("heading", { name: "Vale saber em Valéria" }),
+      page.getByRole("heading", { name: "Na sua comunidade" }),
     ).toBeVisible({ timeout: 30_000 });
     await expect(page.getByTestId("territory-home-empty")).toContainText(
       "pouca atividade recente",
@@ -127,13 +129,15 @@ test.describe("Home territorial pública e determinística", () => {
     const health = observeBrowserHealth(page);
 
     await gotoApp(page, "/ba/salvador/pituba");
-    await page.getByRole("link", { name: "Explorar", exact: true }).click();
+    await page
+      .getByRole("searchbox", { name: "O que você procura por aqui?" })
+      .press("Enter");
     await expect(page).toHaveURL(/\/busca\/ba\/salvador\/pituba$/);
     await expect(
       page.getByRole("searchbox", { name: "Buscar em Pituba" }),
     ).toBeVisible({ timeout: 30_000 });
 
-    await page.getByRole("link", { name: "Hoje", exact: true }).click();
+    await page.getByRole("link", { name: "Início", exact: true }).click();
     await expect(page).toHaveURL(/\/ba\/salvador\/pituba$/);
     await page.getByRole("link", { name: /Trocar território/i }).click();
     await expect(page).toHaveURL(/\/\?trocar=territorio$/);
@@ -148,15 +152,17 @@ test.describe("Home territorial pública e determinística", () => {
     page,
   }) => {
     await gotoApp(page, "/ba/salvador/pituba");
-    await expect(page.getByText("Hoje em Pituba")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Na sua comunidade" }),
+    ).toBeVisible();
     await expect(
       page.getByText("Community ainda não liberada em Pituba."),
     ).toBeVisible({ timeout: 30_000 });
     await expect(
-      page.getByRole("link", { name: "Hoje", exact: true }),
+      page.getByRole("link", { name: "Início", exact: true }),
     ).toHaveAttribute("aria-current", "page");
 
-    for (const label of ["Explorar", "Community", "Atividade", "Entrar"]) {
+    for (const label of ["Comunidade", "Publicar", "Conversas", "Conta"]) {
       await expect(
         page.locator(`[data-bottom-nav-item="${label.toLowerCase()}"]`),
       ).toBeVisible();
@@ -169,7 +175,9 @@ test.describe("Home territorial pública e determinística", () => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.setViewportSize({ width: 320, height: 844 });
     await gotoApp(page, "/ba/salvador/pituba");
-    await expect(page.getByText("Hoje em Pituba")).toBeVisible({
+    await expect(
+      page.getByRole("heading", { name: "Na sua comunidade" }),
+    ).toBeVisible({
       timeout: 30_000,
     });
 
@@ -189,7 +197,9 @@ test.describe("Home territorial pública e determinística", () => {
       ),
     ).toBe(true);
 
-    const searchbox = page.getByRole("searchbox", { name: "Buscar em Pituba" });
+    const searchbox = page.getByRole("searchbox", {
+      name: "O que você procura por aqui?",
+    });
     await searchbox.focus();
     const focusStyle = await searchbox.evaluate((element) => {
       const style = getComputedStyle(element);
@@ -259,9 +269,6 @@ test.describe("Entrada territorial responsiva", () => {
     await expect(
       page.getByRole("button", { name: "Usar minha localização" }),
     ).toBeVisible();
-    await expect(
-      page.getByTestId("territory-entry-map-boundary-status"),
-    ).toContainText("Limite oficial");
     await expect
       .poll(
         () =>
@@ -314,7 +321,7 @@ test.describe("Entrada territorial responsiva", () => {
     await page.setViewportSize({ width: 820, height: 1000 });
     await expectNoHorizontalOverflow(page);
     await expect(
-      page.getByText("Um ponto de partida para a vida local"),
+      page.getByRole("heading", { name: "Por onde vamos começar?" }),
     ).toBeVisible();
 
     await page.setViewportSize({ width: 1440, height: 1000 });
@@ -389,7 +396,9 @@ test.describe("Home territorial autenticada", () => {
   }) => {
     await loginAsUser(page);
     await gotoApp(page, "/ba/salvador/pituba");
-    await expect(page.getByText("Hoje em Pituba")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Seu bairro, mais perto." }),
+    ).toBeVisible();
     await expect(page.getByRole("link", { name: "Entrar" })).toHaveCount(0);
   });
 });

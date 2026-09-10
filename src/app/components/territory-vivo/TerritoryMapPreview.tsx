@@ -1,4 +1,4 @@
-import { ArrowUpRight, Map } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Map } from "lucide-react";
 import { Link } from "react-router-dom";
 import { MapLibreAdapter } from "@/core/maps/components/v3/MapLibreAdapter";
 import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
@@ -9,12 +9,14 @@ interface TerritoryMapPreviewProps {
   resolved: ResolvedTerritory | null;
   mapHref: string;
   territoryName: string;
+  title?: string;
 }
 
 export default function TerritoryMapPreview({
   resolved,
   mapHref,
   territoryName,
+  title = `Mapa de ${territoryName}`,
 }: TerritoryMapPreviewProps) {
   const { polygons } = useTerritoryPolygon(resolved);
 
@@ -23,10 +25,22 @@ export default function TerritoryMapPreview({
       className="overflow-hidden rounded-territory-highlight border border-territory-border bg-territory-surface"
       aria-labelledby="explore-map-title"
     >
-      <div
-        className="relative h-56 overflow-hidden bg-territory-raised"
-        aria-hidden="true"
-      >
+      <div className="flex min-h-12 items-center justify-between gap-3 border-b border-territory-border px-4">
+        <p
+          id="explore-map-title"
+          className="min-w-0 truncate font-heading text-base font-bold text-territory-ink"
+        >
+          {title}
+        </p>
+        <Link
+          to={mapHref}
+          className="inline-flex min-h-10 shrink-0 items-center gap-1 rounded-lg px-1 text-sm font-semibold text-territory-brand hover:bg-territory-raised"
+        >
+          Ampliar
+          <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
+      </div>
+      <div className="relative h-[22.75rem] overflow-hidden bg-territory-raised">
         <MapLibreAdapter
           styleUrl={DEFAULT_TILE_STYLE.styleUrl}
           territoryPolygons={polygons}
@@ -41,27 +55,16 @@ export default function TerritoryMapPreview({
         />
         <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,hsl(var(--territory-surface)/0.5),transparent_45%)]" />
       </div>
-      <div className="flex items-center justify-between gap-4 p-4">
-        <div className="min-w-0">
-          <p
-            id="explore-map-title"
-            className="flex items-center gap-2 font-heading font-semibold text-territory-ink"
-          >
-            <Map className="h-4 w-4 text-territory-brand" aria-hidden="true" />
-            Mapa de {territoryName}
-          </p>
-          <p className="mt-1 text-xs leading-5 text-territory-muted">
-            Abra a experiência completa para ver camadas e pontos ativos.
-          </p>
-        </div>
-        <Link
-          to={mapHref}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-territory-brand text-[hsl(var(--territory-canvas))] hover:bg-territory-brand-strong"
-          aria-label={`Abrir mapa completo de ${territoryName}`}
-        >
-          <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-        </Link>
-      </div>
+      <Link
+        to={mapHref}
+        className="flex min-h-12 items-center justify-between gap-3 px-4 text-sm font-semibold text-territory-ink hover:bg-territory-raised"
+      >
+        <span className="inline-flex items-center gap-2">
+          <Map className="h-5 w-5 text-territory-brand" aria-hidden="true" />
+          Explorar no mapa
+        </span>
+        <ArrowRight className="h-4 w-4 text-territory-brand" aria-hidden="true" />
+      </Link>
     </section>
   );
 }
