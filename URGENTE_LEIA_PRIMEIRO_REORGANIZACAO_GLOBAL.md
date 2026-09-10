@@ -27,10 +27,12 @@ Leia nesta ordem:
 - `f6e6fd1` corrigiu o `vercel-ignore`: checkout sem remote `origin` deixa de produzir erro fatal; quando o commit anterior está disponível o diff real é calculado, e sem prova suficiente o comportamento continua fail-open para build normal;
 - deploy production `dpl_8DWo9NXMwyXaMGkKwkoV4h4Ldho1` de `f6e6fd1` está **READY** e atende `acheguese.com.br`, `www.acheguese.com.br` e `acheguese.vercel.app`;
 - sitemap resiliente foi provado novamente: Supabase/Cloudflare 522 não derruba o release; o gerador produz fallback estático validado com 7 URLs;
-- `profile-rpc` remoto continua **v18 ACTIVE** e está divergente do Git: o runtime ainda aceita `service_area`, enquanto a `main` rejeita `service_area`, `service_areas` e `service_radius_km` porque Coverage pertence a `public.service_areas`; não considerar este runtime reconciliado até deploy source-exact;
-- geração oficial de tipos Supabase continua bloqueada por 522 do provider; `register_safety_evidence` permanece com boundary local estreito, sem `any`, sem editar manualmente `types.generated.ts` e com o RPC explícito para o ratchet de Storage/Safety;
-- validator de Core Platform ainda informa baseline stale para acessos já removidos; reduzir esses allowances, não restaurar os acessos apenas para satisfazer baseline;
-- branch `codex/identidade-visual-achegue-se` continua reservada para evolução visual; o commit `e4249358` introduz o novo Search/Explorar e precisa passar pela projeção canônica de mapa antes de merge na `main`;
+- `profile-rpc` foi reconciliado no runtime em **v19 ACTIVE**, `verify_jwt=true`: o source remoto agora rejeita `service_area`, `service_areas` e `service_radius_km` em Professional/extensionData e mantém Coverage exclusivamente em `public.service_areas`;
+- geração oficial de tipos Supabase continua bloqueada intermitentemente por 522 do provider; `register_safety_evidence` permanece com boundary local estreito, sem `any`, sem editar manualmente `types.generated.ts` e com o RPC explícito para o ratchet de Storage/Safety;
+- o último build production READY confirmou **11 allowances stale** no manifesto de Core Platform: 5 writers Safety, 1 reader `service_areas`, 3 callers RPC e 2 dynamic writers de Mobilidade já removidos do código; reduzir esses allowances no manifesto, nunca restaurar acessos para satisfazer baseline;
+- o novo Search/Explorar da identidade visual foi corrigido em `5bead48b` para projetar pins por `mapEntityProjection` em vez de montar `MapMarker` manualmente;
+- Search/Explorar foi integrado à `main` por merge real de dois pais em **`be2d464b`**, preservando o hardening funcional da `main`; `main` e `codex/identidade-visual-achegue-se` foram sincronizadas nesse checkpoint;
+- o preview imediatamente anterior da Search (`b39d1481`) está READY; novos builds de `5bead48b`/merge estão bloqueados pelo **build-rate-limit da Vercel**, portanto não confundir limite externo com falha de compilação;
 - Mobilidade continua **launch-paused**: `PUBLIC_LAUNCH_SURFACES.mobility=false`;
 - não restaurar DML direto, operator scripts obsoletos, wrappers concorrentes, dynamic-table novo ou authorities paralelas.
 
