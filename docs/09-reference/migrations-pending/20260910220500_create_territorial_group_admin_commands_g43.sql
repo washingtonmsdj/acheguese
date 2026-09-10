@@ -12,8 +12,9 @@
 --
 -- Authority contract: both commands are SECURITY INVOKER. EXECUTE is revoked
 -- from PUBLIC/anon/authenticated and granted only to service_role. The Edge
--- owns end-user admin/MFA authorization; the SQL functions do not duplicate
--- that boundary with deprecated auth.role() checks.
+-- owns end-user admin/MFA authorization and audit. SQL therefore does not accept
+-- a cosmetic actor UUID that a service-role caller could forge, and does not
+-- duplicate that boundary with deprecated auth.role() checks.
 --
 -- Concurrency contract: an existing group row is locked before related
 -- location rows; selected location rows are locked in deterministic UUID order
@@ -47,8 +48,7 @@ CREATE OR REPLACE FUNCTION public.territorial_admin_save_group(
   p_name TEXT,
   p_description TEXT,
   p_anchor_city_id UUID,
-  p_member_location_ids UUID[],
-  p_actor_user_id UUID
+  p_member_location_ids UUID[]
 )
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -66,10 +66,6 @@ DECLARE
   v_valid_member_count INTEGER := 0;
   v_group JSONB;
 BEGIN
-  IF p_actor_user_id IS NULL THEN
-    RAISE EXCEPTION 'invalid_actor_user_id' USING ERRCODE = '22023';
-  END IF;
-
   p_slug := lower(btrim(COALESCE(p_slug, '')));
   p_name := btrim(COALESCE(p_name, ''));
   p_description := NULLIF(btrim(COALESCE(p_description, '')), '');
@@ -236,8 +232,7 @@ $function$;
 
 CREATE OR REPLACE FUNCTION public.territorial_admin_set_group_status(
   p_group_id UUID,
-  p_status TEXT,
-  p_actor_user_id UUID
+  p_status TEXT
 )
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -248,10 +243,6 @@ AS $function$
 DECLARE
   v_group JSONB;
 BEGIN
-  IF p_actor_user_id IS NULL THEN
-    RAISE EXCEPTION 'invalid_actor_user_id' USING ERRCODE = '22023';
-  END IF;
-
   IF p_group_id IS NULL OR p_status NOT IN ('active', 'inactive') THEN
     RAISE EXCEPTION 'invalid_group_status_request' USING ERRCODE = '22023';
   END IF;
@@ -289,14 +280,14 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public.territorial_admin_save_group(UUID, TEXT, TEXT, TEXT, UUID, UUID[], UUID)
+REVOKE ALL ON FUNCTION public.territorial_admin_save_group(UUID, TEXT, TEXT, TEXT, UUID, UUID[])
   FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION public.territorial_admin_set_group_status(UUID, TEXT, UUID)
+REVOKE ALL ON FUNCTION public.territorial_admin_set_group_status(UUID, TEXT)
   FROM PUBLIC, anon, authenticated;
 
-GRANT EXECUTE ON FUNCTION public.territorial_admin_save_group(UUID, TEXT, TEXT, TEXT, UUID, UUID[], UUID)
+GRANT EXECUTE ON FUNCTION public.territorial_admin_save_group(UUID, TEXT, TEXT, TEXT, UUID, UUID[])
   TO service_role;
-GRANT EXECUTE ON FUNCTION public.territorial_admin_set_group_status(UUID, TEXT, UUID)
+GRANT EXECUTE ON FUNCTION public.territorial_admin_set_group_status(UUID, TEXT)
   TO service_role;
 
 DO $postcondition$
@@ -306,19 +297,19 @@ DECLARE
 BEGIN
   IF has_function_privilege(
     'anon',
-    'public.territorial_admin_save_group(uuid,text,text,text,uuid,uuid[],uuid)',
+    'public.territorial_admin_save_group(uuid,text,text,text,uuid,uuid[])',
     'EXECUTE'
   ) OR has_function_privilege(
     'authenticated',
-    'public.territorial_admin_save_group(uuid,text,text,text,uuid,uuid[],uuid)',
+    'public.territorial_admin_save_group(uuid,text,text,text,uuid,uuid[])',
     'EXECUTE'
   ) OR has_function_privilege(
     'anon',
-    'public.territorial_admin_set_group_status(uuid,text,uuid)',
+    'public.territorial_admin_set_group_status(uuid,text)',
     'EXECUTE'
   ) OR has_function_privilege(
     'authenticated',
-    'public.territorial_admin_set_group_status(uuid,text,uuid)',
+    'public.territorial_admin_set_group_status(uuid,text)',
     'EXECUTE'
   ) THEN
     RAISE EXCEPTION 'postcondition: browser role can execute territorial admin commands';
@@ -326,21 +317,21 @@ BEGIN
 
   IF NOT has_function_privilege(
     'service_role',
-    'public.territorial_admin_save_group(uuid,text,text,text,uuid,uuid[],uuid)',
+    'public.territorial_admin_save_group(uuid,text,text,text,uuid,uuid[])',
     'EXECUTE'
   ) OR NOT has_function_privilege(
     'service_role',
-    'public.territorial_admin_set_group_status(uuid,text,uuid)',
+    'public.territorial_admin_set_group_status(uuid,text)',
     'EXECUTE'
   ) THEN
     RAISE EXCEPTION 'postcondition: service_role cannot execute territorial admin commands';
   END IF;
 
   SELECT pg_get_functiondef(
-    'public.territorial_admin_save_group(uuid,text,text,text,uuid,uuid[],uuid)'::regprocedure
+    'public.territorial_admin_save_group(uuid,text,text,text,uuid,uuid[])'::regprocedure
   ) INTO v_save_definition;
   SELECT pg_get_functiondef(
-    'public.territorial_admin_set_group_status(uuid,text,uuid)'::regprocedure
+    'public.territorial_admin_set_group_status(uuid,text)'::regprocedure
   ) INTO v_status_definition;
 
   IF position('auth.role()' in v_save_definition) <> 0
