@@ -1,32 +1,34 @@
 /**
  * TerritorialGroupForm
  *
- * Formulario de criacao/edicao de grupo territorial
- * UI melhorada com exibicao de membros atuais e melhor organizacao
- *
- * SSOT - Usa TerritorialGroupService
+ * Formulario de criacao/edicao de grupo territorial.
+ * O inventario administrativo ja entrega memberships; o formulario nao abre
+ * uma segunda leitura apenas para reconstruir o mesmo estado.
  */
-import { logger } from '@/shared/utils/logger';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { TerritorialGroupService } from '@/core/territorial/services/TerritorialGroupService';
+import { TerritorialGroupService } from '@/core/territorial';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { Badge } from '@/shared/components/ui/badge';
 import { toast } from 'sonner';
-import { Loader2, MapPin, Users, X, Hash, FileText, Building2 } from 'lucide-react';
+import { Building2, FileText, Hash, Loader2, MapPin, Users } from 'lucide-react';
 import { DistrictSelector } from './DistrictSelector';
+
 interface TerritorialGroupFormProps {
   group?: {
     id: string;
     name?: string | null;
     slug?: string | null;
     description?: string | null;
-    parent_id?: string | null;
+    anchor_city_id?: string | null;
     status?: string | null;
-    member_ids?: string[];
-  };
+    members?: Array<{
+      id: string;
+      name?: string | null;
+    }>;
+  } | null;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -50,9 +52,7 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
   const [anchorCityId, setAnchorCityId] = useState('');
   const [selectedDistricts, setSelectedDistricts] = useState<string[]>([]);
   const [currentMemberNames, setCurrentMemberNames] = useState<string[]>([]);
-  const [loadingMembers, setLoadingMembers] = useState(false);
 
-  // Auto-generate slug from name
   const handleNameChange = (value: string) => {
     setName(value);
     if (!group) {
@@ -63,41 +63,29 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
         .replace(/[^a-z0-9\s-]/g, '')
         .replace(/\s+/g, '-')
         .replace(/-+/g, '-')
-        .trim();
+        .replace(/^-+|-+$/g, '');
       setSlug(generated);
     }
   };
 
   useEffect(() => {
-    async function loadGroupMembers() {
-      if (group && group.id) {
-        setName(group.name || '');
-        setSlug(group.slug || '');
-        setDescription(group.description || '');
-        setAnchorCityId(group.parent_id || '');
-        setLoadingMembers(true);
-
-        try {
-          // SSOT - Buscar membros via TerritorialGroupService
-          const groupWithMembers = await service.getGroupWithMembers(group.id);
-          const members = groupWithMembers?.members ?? [];
-
-          if (members) {
-            setSelectedDistricts(members.map(m => m.id));
-            setCurrentMemberNames(members.map(m => m.name || 'Desconhecido'));
-          }
-        } catch (err) {
-          logger.error('Error loading group members:', err);
-          if (group.member_ids?.length > 0) {
-            setSelectedDistricts(group.member_ids);
-          }
-        } finally {
-          setLoadingMembers(false);
-        }
-      }
+    if (!group) {
+      setName('');
+      setSlug('');
+      setDescription('');
+      setAnchorCityId('');
+      setSelectedDistricts([]);
+      setCurrentMemberNames([]);
+      return;
     }
 
-    loadGroupMembers();
+    const members = group.members ?? [];
+    setName(group.name ?? '');
+    setSlug(group.slug ?? '');
+    setDescription(group.description ?? '');
+    setAnchorCityId(group.anchor_city_id ?? '');
+    setSelectedDistricts(members.map((member) => member.id));
+    setCurrentMemberNames(members.map((member) => member.name ?? 'Desconhecido'));
   }, [group]);
 
   const createMutation = useMutation({
@@ -117,7 +105,6 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
       onSuccess();
     },
     onError: (error: unknown) => {
-      logger.error('Error creating group:', error);
       const message = error instanceof Error ? error.message : 'Erro ao criar grupo';
       toast.error(message);
     },
@@ -125,6 +112,8 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
 
   const updateMutation = useMutation({
     mutationFn: async (data: GroupFormPayload) => {
+      if (!group) throw new Error('Grupo territorial nao selecionado');
+
       await service.updateGroup(group.id, {
         name: data.name,
         slug: data.slug,
@@ -144,15 +133,15 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
 
     if (!name.trim()) return toast.error('Nome e obrigatorio');
     if (!slug.trim()) return toast.error('Slug e obrigatorio');
     if (!anchorCityId) return toast.error('Cidade ancora e obrigatoria');
     if (selectedDistricts.length === 0) return toast.error('Selecione pelo menos um bairro');
 
-    const data = {
+    const data: GroupFormPayload = {
       name: name.trim(),
       slug: slug.trim(),
       description: description.trim() || undefined,
@@ -171,7 +160,6 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Resumo do grupo (edicao) */}
       {group && (
         <div className="rounded-xl border border-border bg-gradient-to-br from-purple-500/5 to-transparent p-5">
           <div className="flex items-center gap-3 mb-3">
@@ -186,26 +174,20 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
             </div>
           </div>
 
-          {/* Membros atuais */}
-          {loadingMembers ? (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              Carregando membros...
-            </div>
-          ) : currentMemberNames.length > 0 ? (
+          {currentMemberNames.length > 0 ? (
             <div>
               <p className="text-xs font-medium text-muted-foreground mb-2">
                 Bairros atuais ({currentMemberNames.length}):
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {currentMemberNames.sort().map((name, idx) => (
+                {[...currentMemberNames].sort().map((memberName, index) => (
                   <Badge
-                    key={idx}
+                    key={`${memberName}-${index}`}
                     variant="secondary"
                     className="text-[11px] px-2 py-0.5 bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20"
                   >
                     <MapPin className="h-2.5 w-2.5 mr-1" />
-                    {name}
+                    {memberName}
                   </Badge>
                 ))}
               </div>
@@ -216,7 +198,6 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
         </div>
       )}
 
-      {/* Dados basicos */}
       <div className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
@@ -226,8 +207,8 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
             </label>
             <Input
               value={name}
-              onChange={(e) => handleNameChange(e.target.value)}
-              placeholder="Ex: Área Central, Região Comercial, Orla Norte"
+              onChange={(event) => handleNameChange(event.target.value)}
+              placeholder="Ex: Area Central, Regiao Comercial, Orla Norte"
               disabled={isSubmitting}
               className="h-11"
             />
@@ -240,7 +221,7 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
             </label>
             <Input
               value={slug}
-              onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+              onChange={(event) => setSlug(event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
               placeholder="complexo-nordeste-amaralina"
               disabled={isSubmitting}
               className="h-11 font-mono text-sm"
@@ -257,7 +238,7 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
           </label>
           <Textarea
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(event) => setDescription(event.target.value)}
             placeholder="Breve descricao do grupo territorial..."
             rows={2}
             disabled={isSubmitting}
@@ -266,7 +247,6 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
         </div>
       </div>
 
-      {/* Seletor de bairros */}
       <div className="border-t pt-5">
         <div className="flex items-center gap-2 mb-4">
           <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -283,13 +263,15 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
           selectedDistricts={selectedDistricts}
           onDistrictsChange={setSelectedDistricts}
           disabled={isSubmitting}
+          anchorCityLocked={Boolean(group)}
         />
       </div>
 
-      {/* Acoes */}
       <div className="flex items-center justify-between gap-3 pt-4 border-t">
         <p className="text-[11px] text-muted-foreground hidden sm:block">
-          {group ? 'As alteracoes serao aplicadas imediatamente' : 'O grupo sera criado como ativo'}
+          {group
+            ? 'A cidade ancora permanece fixa; nome, slug e bairros podem ser atualizados.'
+            : 'O grupo sera criado inativo e podera ser ativado apos a revisao.'}
         </p>
         <div className="flex items-center gap-3 ml-auto">
           <Button
