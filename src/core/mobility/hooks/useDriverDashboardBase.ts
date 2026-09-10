@@ -12,11 +12,8 @@ import {
   getRideDispatchContextById,
   getRidesByDriverProfile,
 } from "@/core/mobility/services/mobility.queries";
-import {
-  startRide as startRideMutation,
-  completeRide,
-  cancelRide,
-} from "@/core/mobility/services/mobility.mutations";
+import { RideOperationalService } from "@/core/mobility/core/RideOperationalService";
+import { RIDE_STATE } from "@/core/mobility/core/RideStateMachine";
 import { logger } from "@/shared/utils/logger";
 import { RIDE_STATUS, TIMEOUTS } from "@/core/mobility/constants";
 import { RideRatingService } from "@/core/mobility/services/RideRatingService";
@@ -465,18 +462,33 @@ export function useDriverDashboardBase({
 
   const startRide = useCallback(
     async (rideId: string) => {
+      if (!driverProfileId) {
+        toast.error("Perfil de motorista nao encontrado");
+        return;
+      }
+
       setActionsLoading(true);
       try {
-        await startRideMutation(rideId);
+        const result = await RideOperationalService.transitionTo(
+          rideId,
+          RIDE_STATE.IN_PROGRESS,
+          driverProfileId,
+          "Driver started ride",
+        );
+        if (!result.success) {
+          throw new Error(result.error || "Ride start was not applied");
+        }
+
         await refetchDashboard();
         toast.success("Corrida iniciada!");
-      } catch {
+      } catch (error) {
+        logger.error("useDriverDashboardBase.startRide", error as Error, { rideId, driverProfileId });
         toast.error("Erro ao iniciar corrida");
       } finally {
         setActionsLoading(false);
       }
     },
-    [refetchDashboard],
+    [driverProfileId, refetchDashboard],
   );
 
   const handleOpenCompleteDialog = useCallback((ride: MobilityRide) => {
@@ -490,42 +502,72 @@ export function useDriverDashboardBase({
   }, []);
 
   const handleCompleteRide = useCallback(async () => {
-    if (!rideToComplete) {
+    if (!rideToComplete || !driverProfileId) {
+      if (!driverProfileId) {
+        toast.error("Perfil de motorista nao encontrado");
+      }
       return;
     }
 
     setActionsLoading(true);
     try {
-      await completeRide(rideToComplete.id);
+      const result = await RideOperationalService.completeRide(
+        rideToComplete.id,
+        driverProfileId,
+      );
+      if (!result.success) {
+        throw new Error(result.error || "Ride completion was not applied");
+      }
+
       setCompleteDialogOpen(false);
       setRideToRate(rideToComplete);
       setRatePassengerOpen(true);
       await refetchDashboard();
       toast.success("Corrida finalizada!");
-    } catch {
+    } catch (error) {
+      logger.error("useDriverDashboardBase.completeRide", error as Error, {
+        rideId: rideToComplete.id,
+        driverProfileId,
+      });
       toast.error("Erro ao finalizar");
     } finally {
       setActionsLoading(false);
     }
-  }, [refetchDashboard, rideToComplete]);
+  }, [driverProfileId, refetchDashboard, rideToComplete]);
 
   const handleCancelRide = useCallback(async (reason: string) => {
-    if (!rideToCancel) {
+    if (!rideToCancel || !driverProfileId) {
+      if (!driverProfileId) {
+        toast.error("Perfil de motorista nao encontrado");
+      }
       return;
     }
 
     setActionsLoading(true);
     try {
-      await cancelRide(rideToCancel.id, reason);
+      const result = await RideOperationalService.cancelRide({
+        rideId: rideToCancel.id,
+        cancelledBy: "driver",
+        profileId: driverProfileId,
+        reason,
+      });
+      if (!result.success) {
+        throw new Error(result.error || "Ride cancellation was not applied");
+      }
+
       setCancelDialogOpen(false);
       await refetchDashboard();
       toast.success("Corrida cancelada");
-    } catch {
+    } catch (error) {
+      logger.error("useDriverDashboardBase.cancelRide", error as Error, {
+        rideId: rideToCancel.id,
+        driverProfileId,
+      });
       toast.error("Erro ao cancelar");
     } finally {
       setActionsLoading(false);
     }
-  }, [refetchDashboard, rideToCancel]);
+  }, [driverProfileId, refetchDashboard, rideToCancel]);
 
   const handleRatePassenger = useCallback(
     async (ratingPayload: unknown) => {

@@ -102,12 +102,12 @@ export default function CadastrarServicoPage() {
     }
   };
 
-  const toggleBairro = (bairro: string) => {
+  const toggleBairro = (locationId: string) => {
     setForm((prev) => ({
       ...prev,
-      serviceAreas: prev.serviceAreas.includes(bairro)
-        ? prev.serviceAreas.filter((b) => b !== bairro)
-        : [...prev.serviceAreas, bairro],
+      serviceAreaLocationIds: prev.serviceAreaLocationIds.includes(locationId)
+        ? prev.serviceAreaLocationIds.filter((id) => id !== locationId)
+        : [...prev.serviceAreaLocationIds, locationId],
     }));
   };
 

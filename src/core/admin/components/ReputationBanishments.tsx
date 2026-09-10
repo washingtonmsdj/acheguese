@@ -18,6 +18,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 import { logger } from "@/shared/utils/logger";
 import { adminMobilityService } from "@/core/admin"; // ✅ MIGRADO - Usa AdminMobilityService do core
+import { AdminUserService } from "@/core/admin/services/AdminUserService";
 import { profileService } from "@/core/profiles/services";
 
 type AdminUser = Awaited<ReturnType<typeof profileService.getSuspendedUsers>>[number];

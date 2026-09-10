@@ -10,7 +10,7 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { residenceService } from "@/core/residence/services/ResidenceService";
-import { serviceAreasService } from "@/core/service-areas/services/ServiceAreasService";
+import { serviceAreasService, type ServiceArea } from "@/core/service-areas";
 
 type ErrorLike = {
   code?: string | null;
@@ -87,15 +87,6 @@ export interface UserResidence {
   state?: string;
   street?: string;
   is_primary?: boolean;
-}
-
-export interface ServiceArea {
-  id: string;
-  profile_id: string;
-  city: string;
-  neighborhoods: string[];
-  is_primary: boolean;
-  is_active: boolean;
 }
 
 export interface ProfileLocation {
@@ -224,11 +215,12 @@ class LocationServiceClass {
   }
 
   /**
-   * Busca área de serviço primária de um perfil profissional
+   * Busca área de serviço primária de um perfil profissional.
+   * O shape pertence ao Coverage/ServiceAreas SSOT; este serviço não mantém modelo paralelo.
    */
   async getPrimaryServiceArea(profileId: string): Promise<ServiceArea | null> {
     try {
-      return (await serviceAreasService.getPrimaryServiceArea(profileId)) as ServiceArea | null;
+      return await serviceAreasService.getPrimaryServiceArea(profileId);
     } catch (error) {
       logger.error("Error fetching primary service area:", error);
       return null;
@@ -252,23 +244,33 @@ class LocationServiceClass {
         const residence = await residenceService.getPrimaryResidenceWithRelations(userId);
         if (!residence) return null;
 
-        // ETAPA 12: Usar apenas modelo canônico
-        const location = (residence as { location?: { name?: string; full_name?: string; metadata?: { state_code?: string } } }).location;
+        const relation = residence as {
+          location?: {
+            name?: string;
+            full_name?: string;
+            metadata?: { state_code?: string };
+          };
+        };
+        const location = relation.location;
+        if (!location) return null;
+
+        const neighborhood = location.name ?? "";
+        const fullName = location.full_name ?? neighborhood;
         return {
-          neighborhood: location.name,
-          city: location.full_name.split(' - ')[1] || location.name,
+          neighborhood,
+          city: fullName.split(" - ")[1] || neighborhood,
           state: location.metadata?.state_code,
         };
       }
 
-      // Perfil profissional: busca área de serviço
+      // Perfis profissionais: traduz o Coverage SSOT para o view-model de localização.
       if (profileId) {
         const serviceArea = await this.getPrimaryServiceArea(profileId);
         if (!serviceArea) return null;
 
         return {
-          neighborhood: serviceArea.neighborhoods?.[0] || "",
-          city: serviceArea.city,
+          neighborhood: serviceArea.locality_name || serviceArea.location_name,
+          city: serviceArea.city_name || serviceArea.location_name,
           isPrimary: serviceArea.is_primary,
         };
       }

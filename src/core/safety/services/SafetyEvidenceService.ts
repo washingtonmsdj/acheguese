@@ -1,4 +1,4 @@
-import { supabase, type Json } from '@/integrations/supabase';
+import { callRPC, supabase, type Json } from '@/integrations/supabase';
 import { MEDIA_STORAGE_BUCKETS } from '@/core/media/config/storageBuckets';
 import { mediaService } from '@/core/media/services/MediaService';
 import { SAFETY_EVIDENCE_UPLOAD_POLICY } from '@/core/safety/config/evidencePolicy';
@@ -118,7 +118,10 @@ class SafetyEvidenceService {
       });
       uploadedPath = upload.path;
 
-      const { data, error } = await supabase.rpc('register_safety_evidence', {
+      const { data, error } = await callRPC<
+        SafetyEvidenceRow,
+        'register_safety_evidence'
+      >('register_safety_evidence', {
         p_incident_id: input.incidentId,
         p_evidence_type: input.evidenceType,
         p_object_path: upload.path,
@@ -130,7 +133,7 @@ class SafetyEvidenceService {
         throw error ?? new Error('Failed to register safety evidence');
       }
 
-      return { success: true, data: mapRow(data as SafetyEvidenceRow) };
+      return { success: true, data: mapRow(data) };
     } catch (error) {
       if (uploadedPath) {
         try {

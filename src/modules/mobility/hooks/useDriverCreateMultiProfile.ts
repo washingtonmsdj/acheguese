@@ -48,7 +48,15 @@ export function useDriverCreateMultiProfile(
         throw new Error(result.error || "Falha ao criar perfil de motorista");
       }
 
-      return result.data;
+      const handle = result.data.handle?.trim();
+      if (!handle) {
+        throw new Error("Resposta inválida ao criar perfil de motorista");
+      }
+
+      return {
+        profile_id: result.data.profile_id,
+        handle,
+      };
     },
 
     onSuccess: (result) => {
