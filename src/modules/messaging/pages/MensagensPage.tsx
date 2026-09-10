@@ -262,34 +262,6 @@ function DesktopHeader({
   );
 }
 
-function MobileHeader({ account, territoryName, contextLabel, territoryHref }: { account: InboxProfile; territoryName: string; contextLabel: string; territoryHref: string }) {
-  return (
-    <header className="bg-territory-brand px-5 pb-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] text-white lg:hidden">
-      <div className="flex items-center justify-between gap-3">
-        <Link to={territoryHref} aria-label="Achegue-se — início" className="font-heading text-[1.45rem] font-bold tracking-[-0.06em] text-white">
-          achegue-se<span className="text-territory-sun">.</span>
-        </Link>
-        <div className="flex items-center gap-2">
-          <button type="button" aria-label="Notificações" className="flex h-10 w-10 items-center justify-center rounded-full text-white hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun">
-            <Bell className="h-5 w-5" strokeWidth={1.8} aria-hidden="true" />
-          </button>
-          <Link to="/conta" aria-label="Abrir minha conta" className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun">
-            <ProfileAvatar profile={account} size="sm" />
-          </Link>
-        </div>
-      </div>
-      <Link to="/?trocar=territorio" className="mt-3 flex items-center gap-2 rounded-xl py-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun">
-        <MapPin className="h-5 w-5 shrink-0 text-territory-sun" strokeWidth={2.1} aria-hidden="true" />
-        <span className="min-w-0 flex-1 leading-tight">
-          <span className="block truncate text-sm font-semibold">{territoryName}</span>
-          <span className="block text-xs text-white/75">{contextLabel}</span>
-        </span>
-        <ChevronDown className="h-4 w-4 shrink-0" aria-hidden="true" />
-      </Link>
-    </header>
-  );
-}
-
 function ProfileSelector({
   selected,
   profiles,
@@ -389,7 +361,7 @@ function ConversationColumn({
   const filteredConversations = conversations.filter((conversation) => conversation.name.toLowerCase().includes(search.toLowerCase()) || conversation.preview.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <section className="min-w-0 border-r border-territory-border bg-territory-canvas px-4 py-5 sm:px-5 lg:w-[23.25rem] lg:shrink-0 lg:px-5 lg:py-6">
+    <section className="min-w-0 border-r-0 border-territory-border bg-territory-canvas px-4 py-5 sm:px-5 lg:w-[23.25rem] lg:shrink-0 lg:border-r lg:px-5 lg:py-6">
       <h1 className="font-heading text-[1.5rem] font-bold tracking-[-0.04em] text-territory-ink lg:text-[1.75rem]">Conversas</h1>
       <ProfileSelector selected={selectedProfile} profiles={profiles} open={mobileSelectorOpen} onToggle={onToggleMobileSelector} onSelect={onSelectProfile} className="mt-4 lg:hidden" />
       <div className="hidden lg:block">
@@ -628,8 +600,7 @@ export default function MensagensPage() {
   return (
     <div className="min-h-[100dvh] bg-territory-canvas text-territory-ink">
       <div className="lg:hidden">
-        <MobileHeader account={inboxProfiles.find((profile) => profile.key === "personal") ?? selectedProfile} territoryName={territoryName} contextLabel={contextLabel} territoryHref={territoryHref} />
-        <main className="min-h-[calc(100dvh-4.75rem)] pb-[5.25rem]">{mobileList}</main>
+        <main className="min-h-[100dvh] pt-[env(safe-area-inset-top)] pb-[5.25rem]">{mobileList}</main>
         <MobileBottomNavigation territoryHref={territoryHref} />
       </div>
 
