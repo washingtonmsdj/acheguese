@@ -1307,6 +1307,21 @@ Próximo imediato:
 4. repetir probes no runtime persistido;
 5. só então G36C2-contract remover `public.suspend_profile`.
 
+### Checkpoint G36C2B — Admin suspension broker contract (2026-09-09)
+
+Runtime do expand `ee84ad7fb867ec1a06a49d4b7cc0f01a5a4e05f0`:
+- `admin-suspend-profile v1 ACTIVE`, `verify_jwt=true`;
+- entrypoint + `_shared/adminAuth.ts` + `_shared/security.ts`: byte-a-byte iguais ao SHA;
+- `admin_profile_rpc_set_suspension`: `anon=false`, `authenticated=false`, `service_role=true`;
+- probe persistente com rollback confirmou suspend/unsuspend de Profile, suspend atômico dos 4 Profiles de um usuário, audit e bloqueio de non-admin.
+
+Contract:
+- nenhum caller vivo permanece em `public.suspend_profile(uuid,uuid,text)`;
+- migration `retire_legacy_suspend_profile_g36` remove o RPC antigo;
+- auditoria remota e status canônico passam a observar somente `admin_profile_rpc_set_suspension`.
+
+Próximo: G36C3 eliminar os inserts diretos restantes de Profile/Driver e convergir bootstrap de Driver para o broker correto.
+
 ### Checkpoint G13 — avaliações de corrida e privacidade do agregado público (2026-09-09)
 
 Auditoria real:

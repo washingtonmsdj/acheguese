@@ -47,7 +47,6 @@ WITH table_policies AS (
       'review_profile_verification',
       'set_profile_verification_badge',
       'admin_profile_rpc_set_suspension',
-      'suspend_profile',
       'review_community_content_reports',
       'apply_community_user_moderation_action'
     )

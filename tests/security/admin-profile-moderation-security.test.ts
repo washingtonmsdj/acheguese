@@ -59,5 +59,12 @@ describe("admin profile moderation authority", () => {
 
     // Expand/contract: legacy RPC remains until the new Edge is proven live.
     expect(migration).not.toContain("DROP FUNCTION public.suspend_profile");
+
+    const contract = read(
+      "supabase/migrations/20260910002000_retire_legacy_suspend_profile_g36.sql",
+    );
+    expect(contract).toContain(
+      "DROP FUNCTION IF EXISTS public.suspend_profile(uuid, uuid, text)",
+    );
   });
 });

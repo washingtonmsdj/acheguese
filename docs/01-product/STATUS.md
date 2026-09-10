@@ -324,8 +324,8 @@ Observacao: este documento e a fonte operacional atual. O historico abaixo fica 
   estao explicitamente parciais e seguem nos findings das fases proprias.
 - O catalogo remoto confirmou RLS ativo em `posts`, `comments`, `messages`,
   `business_data`, `community_reports` e `group_messages_new`. Tambem confirmou
-  que `verify_profile` e `suspend_profile` nao sao executaveis por `anon` nem
-  `authenticated`; os fluxos passam pelas Edge Functions administrativas.
+  que `verify_profile` e `admin_profile_rpc_set_suspension` nao sao executaveis por
+  `anon` nem `authenticated`; os fluxos passam pelas Edge Functions administrativas.
 - Testes da fase cobrem anonimo, inativo, suspenso, bloqueado, owner,
   non-owner, moderator, admin e hint de moderacao comunitaria. Regras de lint e
   o validador de sessao nao recomendam mais autorizacao client-side.
