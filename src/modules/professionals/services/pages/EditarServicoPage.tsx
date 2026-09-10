@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { mediaService } from "@/core/media/services/MediaService";
 import { useIdentitySaveLogger } from "@/core/public-identity/hooks/useIdentitySaveLogger";
@@ -89,7 +89,10 @@ export default function EditarServicoPage() {
   } = useServiceAreaOptions(professional?.location_id ?? null);
 
   const canonicalCoverageQuery = useServiceAreas(professional?.profile_id ?? "");
-  const canonicalServiceAreas = canonicalCoverageQuery.data ?? [];
+  const canonicalServiceAreas = useMemo(
+    () => canonicalCoverageQuery.data ?? [],
+    [canonicalCoverageQuery.data],
+  );
   const coverageInitializedProfileRef = React.useRef<string | null>(null);
 
   const { updateProfessional } = useProfessionalEdit();

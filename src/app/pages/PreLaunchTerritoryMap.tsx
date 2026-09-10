@@ -4,7 +4,12 @@ import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { boundaryService } from "@/core/geospatial";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { LocationStatus, LocationType, type Location } from "@/core/location/types";
-import { DEFAULT_TILE_STYLE, MapLibreAdapter, type MapMarker } from "@/core/maps";
+import {
+  DEFAULT_TILE_STYLE,
+  MapLibreAdapter,
+  mapEntityProjection,
+  type MapMarker,
+} from "@/core/maps";
 import type { TerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import { normalizeTerritoryText, slugifyTerritory } from "@/shared/utils/slugify";
 
@@ -33,6 +38,34 @@ type TerritoryFitPadding = {
   bottom: number;
   left: number;
 };
+
+type PreLaunchMarkerInput = {
+  id: string;
+  type: "business" | "service";
+  latitude: number;
+  longitude: number;
+  title: string;
+  subtitle: string;
+  score: number;
+  isPremium?: boolean;
+};
+
+function projectPreLaunchMarker(input: PreLaunchMarkerInput): MapMarker | null {
+  const marker = mapEntityProjection.projectEntity(
+    {
+      id: input.id,
+      name: input.title,
+      latitude: input.latitude,
+      longitude: input.longitude,
+      subtitle: input.subtitle,
+      status: "active",
+      isPremium: input.isPremium,
+    },
+    input.type,
+  );
+
+  return marker ? { ...marker, score: input.score } : null;
+}
 
 function getTerritoryFitPadding(): TerritoryFitPadding {
   if (typeof window === "undefined") {
@@ -246,21 +279,17 @@ export function PreLaunchTerritoryMap() {
 
   const markers = useMemo<MapMarker[]>(() => {
     const salvadorCenter = cityPolygons[0]?.center;
-    const output: MapMarker[] = [
-      {
-        id: "prelaunch-salvador",
-        type: "service",
-        coordinates: {
-          latitude: salvadorCenter?.[0] ?? SALVADOR_CENTER.latitude,
-          longitude: salvadorCenter?.[1] ?? SALVADOR_CENTER.longitude,
-        },
-        title: "Salvador",
-        subtitle: "cidade piloto",
-        status: "active",
-        score: 100,
-        isPremium: true,
-      },
-    ];
+    const salvadorMarker = projectPreLaunchMarker({
+      id: "prelaunch-salvador",
+      type: "service",
+      latitude: salvadorCenter?.[0] ?? SALVADOR_CENTER.latitude,
+      longitude: salvadorCenter?.[1] ?? SALVADOR_CENTER.longitude,
+      title: "Salvador",
+      subtitle: "cidade piloto",
+      score: 100,
+      isPremium: true,
+    });
+    const output: MapMarker[] = salvadorMarker ? [salvadorMarker] : [];
     const complexMarkerSourcesByName = new Map<
       string,
       { center: [number, number]; name: string }
@@ -299,18 +328,17 @@ export function PreLaunchTerritoryMap() {
     Array.from(complexMarkerSourcesByName.values())
       .slice(0, 4)
       .forEach((source, index) => {
-        output.push({
+        const marker = projectPreLaunchMarker({
           id: `prelaunch-complex-${slugifyTerritory(source.name)}-${index}`,
           type: index === 0 ? "business" : "service",
-          coordinates: {
-            latitude: source.center[0],
-            longitude: source.center[1],
-          },
+          latitude: source.center[0],
+          longitude: source.center[1],
           title: source.name,
           subtitle: "Complexo do Nordeste",
-          status: "active",
           score: 96 - index,
         });
+
+        if (marker) output.push(marker);
       });
 
     return output;
