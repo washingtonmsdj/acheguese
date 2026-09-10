@@ -24,9 +24,9 @@ BEGIN
   END IF;
 
   IF to_regprocedure(
-    'public.territorial_admin_save_group(uuid,text,text,text,uuid,uuid[],uuid)'
+    'public.territorial_admin_save_group(uuid,text,text,text,uuid,uuid[])'
   ) IS NULL OR to_regprocedure(
-    'public.territorial_admin_set_group_status(uuid,text,uuid)'
+    'public.territorial_admin_set_group_status(uuid,text)'
   ) IS NULL THEN
     RAISE EXCEPTION 'preflight: G43 transactional group commands missing';
   END IF;
@@ -37,11 +37,11 @@ BEGIN
 
   IF NOT has_function_privilege(
     'service_role',
-    'public.territorial_admin_save_group(uuid,text,text,text,uuid,uuid[],uuid)',
+    'public.territorial_admin_save_group(uuid,text,text,text,uuid,uuid[])',
     'EXECUTE'
   ) OR NOT has_function_privilege(
     'service_role',
-    'public.territorial_admin_set_group_status(uuid,text,uuid)',
+    'public.territorial_admin_set_group_status(uuid,text)',
     'EXECUTE'
   ) THEN
     RAISE EXCEPTION 'preflight: service_role cannot execute G43 commands';
@@ -49,11 +49,11 @@ BEGIN
 
   IF has_function_privilege(
     'authenticated',
-    'public.territorial_admin_save_group(uuid,text,text,text,uuid,uuid[],uuid)',
+    'public.territorial_admin_save_group(uuid,text,text,text,uuid,uuid[])',
     'EXECUTE'
   ) OR has_function_privilege(
     'authenticated',
-    'public.territorial_admin_set_group_status(uuid,text,uuid)',
+    'public.territorial_admin_set_group_status(uuid,text)',
     'EXECUTE'
   ) THEN
     RAISE EXCEPTION 'preflight: browser can execute G43 commands directly';
