@@ -150,13 +150,11 @@ export type {
 // ============================================
 // LOCATION HISTORY EXPORTS
 // LocationService: gerencia GPS/histórico/residência - não é territorial.
-// Mantido separado da fundação territorial por responsabilidade distinta.
-// Mantido aqui como contrato público de histórico residencial.
+// Coverage/ServiceArea pertence a @/core/service-areas e não é reexportado aqui.
 // ============================================
 export { locationService, LocationService } from "./services/LocationHistoryService";
 export type {
   LocationHistory,
   UserResidence,
-  ServiceArea,
   ProfileLocation,
 } from "./services/LocationHistoryService";

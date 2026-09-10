@@ -12,7 +12,6 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { adminRolesService } from "./AdminRolesService";
 import { VerificationAdminService } from "@/core/verification";
-import type { UpdateProfilePayload } from "@/core/profiles/services/types";
 
 export interface AdminUser {
   /** ID do auth.users */
@@ -64,14 +63,11 @@ export class AdminUserService {
     search?: string,
   ): Promise<AdminUserListResult> {
     try {
-      // Chamar edge function
       const { data, error } = await supabase.functions.invoke('admin-list-users', {
         body: { page, pageSize, search },
       });
 
       if (error) throw error;
-
-      // A edge function já retorna no formato correto
       return data as AdminUserListResult;
     } catch (error: unknown) {
       logger.error("AdminUserService.listUsers error:", error);
@@ -85,35 +81,16 @@ export class AdminUserService {
    */
   static async getUserById(userId: string): Promise<AdminUser | null> {
     try {
-      // Chamar edge function
       const { data, error } = await supabase.functions.invoke('admin-get-user', {
         body: { userId },
       });
 
       if (error) throw error;
-
-      // A edge function já retorna no formato correto
       return data?.user as AdminUser | null;
     } catch (error: unknown) {
       logger.error("AdminUserService.getUserById error:", error);
       return null;
     }
-  }
-
-  /**
-   * Compatibilidade administrativa de atualização por profile_id.
-   * G36C moverá este write para broker admin antes de revogar grants da tabela.
-   */
-  static async updateProfile(
-    profileId: string,
-    updates: UpdateProfilePayload,
-  ): Promise<void> {
-    const { error } = await supabase
-      .from("profiles")
-      .update(updates)
-      .eq("id", profileId);
-
-    if (error) throw error;
   }
 
   private static async setSuspension(params: {
@@ -191,7 +168,6 @@ export class AdminUserService {
 
   /**
    * Verifica o perfil principal de um usuário.
-   * ✅ Usa supabase normal com RLS (admin tem permissão)
    */
   static async verifyUser(profileId: string): Promise<void> {
     await VerificationAdminService.verifyProfile(

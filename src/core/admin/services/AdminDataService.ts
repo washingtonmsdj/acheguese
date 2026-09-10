@@ -9,10 +9,8 @@
 
 import { RoleService } from "@/core/authorization/services/RoleService";
 import { profileService } from "@/core/profiles/services/ProfileService";
-import type { UpdateProfilePayload } from "@/core/profiles/services/types";
 import { logger } from "@/shared/utils/logger";
 import { adminRolesService } from "./AdminRolesService";
-import { AdminUserService } from "./AdminUserService";
 
 export class AdminDataService {
   /** Buscar detalhes completos de um usuario (admin only). */
@@ -36,24 +34,6 @@ export class AdminDataService {
       logger.error("Error fetching user details:", error);
       throw new Error(
         `Erro ao buscar detalhes do usuario: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
-  }
-
-  /** Atualizar dados de usuario (admin only). */
-  static async updateUserData(userId: string, updates: UpdateProfilePayload) {
-    try {
-      const profile = await profileService.getProfileContext(userId);
-      if (!profile) {
-        throw new Error("User profile not found");
-      }
-
-      await AdminUserService.updateProfile(profile.id, updates);
-      return profileService.getAccessibleProfileById(profile.id);
-    } catch (error: unknown) {
-      logger.error("Error updating user data:", error);
-      throw new Error(
-        `Erro ao atualizar usuario: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
