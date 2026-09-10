@@ -166,9 +166,9 @@ describe("edgeFunctionBroker", () => {
     expect(result).toBeNull();
   });
 
-  it("allows command brokers without response data", async () => {
+  it("accepts command brokers only with an explicit non-null data acknowledgement", async () => {
     invokeMock.mockResolvedValue({
-      data: null,
+      data: { data: { id: "result-1" } },
       error: null,
     });
 
@@ -180,5 +180,29 @@ describe("edgeFunctionBroker", () => {
         serviceName: "ProbeService",
       }),
     ).resolves.toBeUndefined();
+  });
+
+  it("rejects a bare 2xx command response", async () => {
+    invokeMock.mockResolvedValue({ data: null, error: null });
+
+    await expect(
+      invokeSupabaseBrokerCommand({
+        action: "probe",
+        functionName: "probe-rpc",
+        serviceName: "ProbeService",
+      }),
+    ).rejects.toThrow("ProbeService broker returned no command acknowledgement");
+  });
+
+  it("rejects a command envelope whose data is explicitly null", async () => {
+    invokeMock.mockResolvedValue({ data: { data: null }, error: null });
+
+    await expect(
+      invokeSupabaseBrokerCommand({
+        action: "probe",
+        functionName: "probe-rpc",
+        serviceName: "ProbeService",
+      }),
+    ).rejects.toThrow("ProbeService broker returned no command acknowledgement");
   });
 });
