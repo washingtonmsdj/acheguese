@@ -2,9 +2,10 @@
  * 📝 PROFESSIONAL MUTATIONS - SSOT v2.0
  *
  * Operações de escrita para profissionais.
- * Todas as mutations são pure functions que recebem parâmetros e retornam dados atualizados.
+ * Mutations de domínio permanecem aqui; comandos administrativos são enviados
+ * ao broker autenticado e autorizados no backend.
  *
- * @version 2.0.0 - Refatoração SSOT
+ * @version 2.1.0 - Admin availability brokered
  */
 
 import { supabase } from "@/integrations/supabase";
@@ -14,6 +15,7 @@ import { trackError } from "@/shared/utils/errorTracking";
 import { ReviewsService } from "@/core/reviews";
 import type {
   Professional,
+  ProfessionalStatus,
   CreateProfessionalInput,
   UpdateProfessionalInput,
   ProfessionalJob,
@@ -40,8 +42,6 @@ interface QuerySingleResult<TRow> {
 interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
   select: (columns?: string) => QueryBuilder<TRow>;
   insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
-  update: (values: unknown) => QueryBuilder<TRow>;
-  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
   single: () => Promise<QuerySingleResult<TRow>>;
 }
 
@@ -75,6 +75,8 @@ type CreateProfessionalJobInputLike = CreateProfessionalJobInput & {
   duration_hours?: number | null;
   duracao_horas?: number | null;
 };
+
+type AdminAvailabilityStatus = Extract<ProfessionalStatus, "active" | "inactive">;
 
 const professionalMutationsDb = supabase as unknown as ProfessionalMutationsDbClient;
 
@@ -118,9 +120,7 @@ function normalizeCreateJobInput(jobData: CreateProfessionalJobInput): {
 // 🛍️ JOBS MUTATIONS - Serviços/Trabalhos
 // ============================================================================
 
-/**
- * Criar serviço para profissional
- */
+/** Criar serviço para profissional. */
 export async function createJob(
   professionalId: string,
   jobData: CreateProfessionalJobInput,
@@ -139,7 +139,10 @@ export async function createJob(
       .single();
 
     if (error) {
-      throw new Error(error.message);
+      throw new Error(error.message ?? "Falha ao criar serviço");
+    }
+    if (!data) {
+      throw new Error("Serviço criado sem retorno do banco");
     }
 
     logger.info("[professional.mutations] Job created:", data.id);
@@ -156,34 +159,39 @@ export async function createJob(
 }
 
 // ============================================================================
-// ⚙️ ADMIN MUTATIONS - Operações administrativas
+// ⚙️ ADMIN COMMAND ADAPTER
 // ============================================================================
 
 /**
- * Atualizar status de profissional (admin)
+ * Altera disponibilidade pelo broker administrativo. O browser não escreve
+ * `professional_data` diretamente; autorização efetiva ocorre na Edge Function.
  */
 export async function updateProfessionalStatus(
   id: string,
-  status: string,
+  status: AdminAvailabilityStatus,
 ): Promise<void> {
   try {
-    const isActive = status === "active";
+    const { data, error } = await supabase.functions.invoke("admin-professional-rpc", {
+      body: {
+        action: "setAvailability",
+        params: {
+          professionalId: id,
+          isAcceptingClients: status === "active",
+        },
+      },
+    });
 
-    const { error } = await professionalMutationsDb
-      .from<Professional>("professional_data")
-      .update({
-        is_accepting_clients: isActive,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id);
-
-    if (error) {
-      throw new Error(error.message);
+    if (error) throw error;
+    if (!data?.data?.id) {
+      throw new Error(data?.error || "Falha ao atualizar disponibilidade do profissional");
     }
 
-    logger.info("[professional.mutations] Professional status updated:", { id, status });
+    logger.info("[professional.mutations] Professional availability updated:", {
+      id,
+      status,
+    });
   } catch (error) {
-    logger.error("[professional.mutations] Error updating status:", error);
+    logger.error("[professional.mutations] Error updating availability:", error);
     trackError(error as Error, {
       component: "professional.mutations",
       action: "updateProfessionalStatus",
@@ -193,9 +201,7 @@ export async function updateProfessionalStatus(
   }
 }
 
-/**
- * Deletar avaliação de profissional (admin)
- */
+/** Deletar avaliação de profissional (admin). */
 export async function deleteProfessionalReview(reviewId: string): Promise<void> {
   try {
     await ReviewsService.removeReview(reviewId, "professional");
@@ -211,15 +217,13 @@ export async function deleteProfessionalReview(reviewId: string): Promise<void> 
   }
 }
 
-/**
- * Incrementar visualizações do profissional
- */
+/** Incrementar visualizações do profissional. */
 export async function incrementViews(professionalId: string): Promise<void> {
   try {
     await PublicViewTrackingService.track("professional", professionalId);
     logger.info("[professional.mutations] Views incremented:", professionalId);
   } catch (error) {
-    // Silently fail - views are not critical
+    // Visualizações não podem bloquear a navegação principal.
     logger.warn("[professional.mutations] Failed to increment views:", error);
   }
 }

@@ -1,20 +1,17 @@
-/* eslint-disable react-hooks/exhaustive-deps */
- 
-import React from "react";
-
-import { useState, useEffect } from "react";
-import { useToast } from "@/shared/hooks/use-toast";
+import { useEffect, useState } from "react";
 import {
-  Check,
-  X,
-  Trash2,
   Eye,
-  Star,
-  Search,
   Filter,
-  MessageSquare,
+  PauseCircle,
+  PlayCircle,
+  Search,
   Shield,
+  Star,
+  Trash2,
 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { useToast } from "@/shared/hooks/use-toast";
+import { ptBR } from "@/shared/utils/dateLocale";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import {
@@ -34,38 +31,25 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/shared/components/ui/dialog";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@/shared/components/ui/avatar";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "@/shared/utils/dateLocale";
 import { adminCommunityService } from "@/core/admin/services/AdminCommunityService";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { ProfessionalService } from "@/core/professional/services/ProfessionalService";
+import type {
+  Professional,
+  ProfessionalStatus,
+} from "@/core/professional/types";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
-
-interface Professional {
-  id: string;
-  profile_id?: string;
-  name: string;
-  photo: string;
-  service: string;
-  category: string;
-  neighborhood: string;
-  whatsapp: string;
-  rating: number;
-  total_avaliacoes: number;
-  status: string;
-  created_at: string;
-}
 
 interface Review {
   id: string;
@@ -77,6 +61,15 @@ interface Review {
 }
 
 type ProfessionalSimple = { id: string; name: string };
+type AvailabilityFilter = "all" | "active" | "inactive";
+type AvailabilityStatus = Extract<ProfessionalStatus, "active" | "inactive">;
+
+function availabilityLabel(status: ProfessionalStatus): string {
+  if (status === "active") return "Ativo";
+  if (status === "inactive") return "Pausado";
+  if (status === "suspended") return "Suspenso";
+  return "Pendente";
+}
 
 export default function AdminServicos() {
   const { canModerate, isChecking } = useAdminGuard();
@@ -85,7 +78,7 @@ export default function AdminServicos() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState("todos");
+  const [filterStatus, setFilterStatus] = useState<AvailabilityFilter>("all");
   const [selectedPro, setSelectedPro] = useState<Professional | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -97,55 +90,60 @@ export default function AdminServicos() {
   const loadData = async () => {
     setLoading(true);
     try {
-      // Load professionals via AdminCommunityService
       const pros = await adminCommunityService.getAllProfessionals();
-      setProfessionals((pros as unknown as Professional[]) || []);
+      setProfessionals(pros ?? []);
 
-      // Load reviews via ReviewsService (SSOT)
       const revs = await ReviewsService.getAllReviews("professional", 100);
-
-      if (revs.length > 0) {
-        const reviewerIds = [...new Set(revs.map((r) => r.reviewer_profile_id))];
-        const proIds = [...new Set(revs.map((r) => r.reviewed_profile_id))];
-
-        const profiles =
-          reviewerIds.length > 0
-            ? await profileService.getProfilesSummary(reviewerIds as string[])
-            : [];
-        const prosData =
-          proIds.length > 0
-            ? await ProfessionalService.getProfessionalsByIdsSimple(
-                proIds as string[],
-              )
-            : [];
-
-        const profileMap = new Map(
-          profiles.map((p) => [p.id, { name: p.displayName, avatar_url: p.avatarUrl }]),
-        );
-        const proMap = new Map(
-          (prosData || []).map((p: ProfessionalSimple) => [p.id, p] as const),
-        );
-
-        setReviews(
-          revs.map((r) => ({
-            id: r.id,
-            rating: r.rating,
-            comment: r.comment,
-            created_at: r.created_at,
-            reviewer: profileMap.get(r.reviewer_profile_id) || {
-              name: "Usuário",
-              avatar_url: "",
-            },
-            professional: proMap.get(r.reviewed_profile_id) || {
-              name: "Desconhecido",
-            },
-          })),
-        );
-      } else {
+      if (revs.length === 0) {
         setReviews([]);
+        return;
       }
 
-    } catch (error) {
+      const reviewerIds = [...new Set(revs.map((review) => review.reviewer_profile_id))];
+      const professionalProfileIds = [
+        ...new Set(revs.map((review) => review.reviewed_profile_id)),
+      ];
+
+      const profiles =
+        reviewerIds.length > 0
+          ? await profileService.getProfilesSummary(reviewerIds)
+          : [];
+      const professionalData =
+        professionalProfileIds.length > 0
+          ? await ProfessionalService.getProfessionalsByIdsSimple(
+              professionalProfileIds,
+            )
+          : [];
+
+      const profileMap = new Map(
+        profiles.map((profile) => [
+          profile.id,
+          { name: profile.displayName, avatar_url: profile.avatarUrl },
+        ]),
+      );
+      const professionalMap = new Map(
+        professionalData.map((professional: ProfessionalSimple) => [
+          professional.id,
+          professional,
+        ] as const),
+      );
+
+      setReviews(
+        revs.map((review) => ({
+          id: review.id,
+          rating: review.rating,
+          comment: review.comment,
+          created_at: review.created_at,
+          reviewer: profileMap.get(review.reviewer_profile_id) ?? {
+            name: "Usuário",
+            avatar_url: "",
+          },
+          professional: professionalMap.get(review.reviewed_profile_id) ?? {
+            name: "Desconhecido",
+          },
+        })),
+      );
+    } catch {
       toast({
         title: "Erro ao carregar serviços",
         description: "Não foi possível carregar os dados de moderação.",
@@ -157,18 +155,17 @@ export default function AdminServicos() {
   };
 
   useEffect(() => {
-    if (!isChecking && canModerate) {
-      loadData();
-    }
+    if (!isChecking && canModerate) void loadData();
+    // loadData is intentionally tied to the authorization gate.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canModerate, isChecking]);
 
-  // Validação de admin
   if (!isChecking && !canModerate) {
     return (
-      <div className="min-h-screen bg-[#0A0F14] flex items-center justify-center p-4">
+      <div className="flex min-h-screen items-center justify-center bg-[#0A0F14] p-4">
         <div className="text-center">
-          <Shield className="h-16 w-16 text-red-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-white mb-2">Acesso Negado</h1>
+          <Shield className="mx-auto mb-4 h-16 w-16 text-red-400" />
+          <h1 className="mb-2 text-2xl font-bold text-white">Acesso Negado</h1>
           <p className="text-gray-400">
             Apenas administradores podem acessar esta página.
           </p>
@@ -177,20 +174,23 @@ export default function AdminServicos() {
     );
   }
 
-  const updateStatus = async (id: string, status: string) => {
+  const updateAvailability = async (
+    professionalId: string,
+    status: AvailabilityStatus,
+  ) => {
     setActionLoading(true);
     try {
-      await ProfessionalService.updateProfessionalStatus(id, status);
+      await ProfessionalService.updateProfessionalStatus(professionalId, status);
       toast({
         title:
-          status === "aprovado"
-            ? "Profissional aprovado!"
-            : "Profissional rejeitado",
+          status === "active"
+            ? "Profissional ativado"
+            : "Disponibilidade pausada",
       });
       await loadData();
     } catch {
       toast({
-        title: "Erro ao atualizar status",
+        title: "Erro ao atualizar disponibilidade",
         description: "Não foi possível concluir esta ação.",
         variant: "destructive",
       });
@@ -244,131 +244,121 @@ export default function AdminServicos() {
     setDeleteTarget(null);
   };
 
-  const filteredPros = professionals.filter((p) => {
-    if (filterStatus !== "todos" && p.status !== filterStatus) return false;
-    if (
-      search &&
-      !p.name.toLowerCase().includes(search.toLowerCase()) &&
-      !p.service.toLowerCase().includes(search.toLowerCase())
-    )
+  const normalizedSearch = search.trim().toLocaleLowerCase("pt-BR");
+  const filteredProfessionals = professionals.filter((professional) => {
+    if (filterStatus !== "all" && professional.status !== filterStatus) {
       return false;
-    return true;
-  });
+    }
+    if (!normalizedSearch) return true;
 
-  const pendingCount = professionals.filter(
-    (p) => p.status === "pendente",
-  ).length;
+    return [professional.name, professional.category, professional.neighborhood]
+      .filter((value): value is string => Boolean(value))
+      .some((value) =>
+        value.toLocaleLowerCase("pt-BR").includes(normalizedSearch),
+      );
+  });
 
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold font-display">Serviços</h1>
+        <h1 className="font-display text-2xl font-bold">Serviços</h1>
         <p className="text-muted-foreground">
-          Gerencie prestadores de serviço e avaliações
+          Gerencie disponibilidade, perfis e avaliações de profissionais.
         </p>
       </div>
 
       <Tabs defaultValue="professionals">
         <TabsList>
-          <TabsTrigger value="professionals" className="gap-1">
-            Profissionais
-            {pendingCount > 0 && (
-              <Badge variant="destructive" className="h-5 px-1.5">
-                {pendingCount}
-              </Badge>
-            )}
-          </TabsTrigger>
+          <TabsTrigger value="professionals">Profissionais</TabsTrigger>
           <TabsTrigger value="reviews">Avaliações</TabsTrigger>
         </TabsList>
 
         <TabsContent value="professionals" className="space-y-4">
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Buscar..."
+                placeholder="Buscar profissional, categoria ou bairro..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(event) => setSearch(event.target.value)}
                 className="pl-9"
               />
             </div>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-36">
-                <Filter className="h-4 w-4 mr-1" />
+            <Select
+              value={filterStatus}
+              onValueChange={(value) => setFilterStatus(value as AvailabilityFilter)}
+            >
+              <SelectTrigger className="w-40">
+                <Filter className="mr-1 h-4 w-4" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
-                <SelectItem value="pendente">Pendentes</SelectItem>
-                <SelectItem value="aprovado">Aprovados</SelectItem>
-                <SelectItem value="rejeitado">Rejeitados</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="active">Ativos</SelectItem>
+                <SelectItem value="inactive">Pausados</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="border rounded-lg overflow-hidden">
+          <div className="overflow-hidden rounded-lg border">
             <table className="w-full text-sm">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left p-3">Profissional</th>
-                  <th className="text-left p-3">Serviço</th>
-                  <th className="text-left p-3">Bairro</th>
-                  <th className="text-center p-3">Avaliação</th>
-                  <th className="text-center p-3">Status</th>
-                  <th className="text-right p-3">Ações</th>
+                  <th className="p-3 text-left">Profissional</th>
+                  <th className="p-3 text-left">Serviço</th>
+                  <th className="p-3 text-left">Bairro</th>
+                  <th className="p-3 text-center">Avaliação</th>
+                  <th className="p-3 text-center">Disponibilidade</th>
+                  <th className="p-3 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td
-                      colSpan={6}
-                      className="p-4 text-center text-muted-foreground"
-                    >
+                    <td colSpan={6} className="p-4 text-center text-muted-foreground">
                       Carregando serviços...
                     </td>
                   </tr>
-                ) : filteredPros.length === 0 ? (
+                ) : filteredProfessionals.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={6}
-                      className="p-4 text-center text-muted-foreground"
-                    >
+                    <td colSpan={6} className="p-4 text-center text-muted-foreground">
                       Nenhum resultado
                     </td>
                   </tr>
                 ) : (
-                  filteredPros.map((pro) => (
-                    <tr key={pro.id} className="border-t">
+                  filteredProfessionals.map((professional) => (
+                    <tr key={professional.id} className="border-t">
                       <td className="p-3">
                         <div className="flex items-center gap-2">
                           <Avatar className="h-8 w-8">
-                            <AvatarImage src={pro.photo} />
-                            <AvatarFallback>{(pro.name ?? '?')[0]}</AvatarFallback>
+                            <AvatarImage src={professional.logo_url} />
+                            <AvatarFallback>
+                              {(professional.name || "P").charAt(0).toLocaleUpperCase("pt-BR")}
+                            </AvatarFallback>
                           </Avatar>
-                          <span className="font-medium">{pro.name ?? 'Nome não informado'}</span>
+                          <div className="min-w-0">
+                            <span className="block truncate font-medium">
+                              {professional.name || "Nome não informado"}
+                            </span>
+                            {professional.is_verified ? (
+                              <span className="text-xs text-muted-foreground">Verificado</span>
+                            ) : null}
+                          </div>
                         </div>
                       </td>
-                      <td className="p-3">{pro.service ?? 'N/A'}</td>
-                      <td className="p-3">{pro.neighborhood ?? 'N/A'}</td>
+                      <td className="p-3">{professional.category || "N/A"}</td>
+                      <td className="p-3">{professional.neighborhood || "N/A"}</td>
                       <td className="p-3 text-center">
                         <span className="flex items-center justify-center gap-0.5">
-                          <Star className="h-3 w-3 text-warning fill-warning" />
-                          {Number(pro.rating).toFixed(1)} (
-                          {pro.total_avaliacoes})
+                          <Star className="h-3 w-3 fill-warning text-warning" />
+                          {Number(professional.rating ?? 0).toFixed(1)} ({professional.total_reviews ?? 0})
                         </span>
                       </td>
                       <td className="p-3 text-center">
                         <Badge
-                          variant={
-                            pro.status === "aprovado"
-                              ? "default"
-                              : pro.status === "pendente"
-                                ? "secondary"
-                                : "destructive"
-                          }
+                          variant={professional.status === "active" ? "default" : "secondary"}
                         >
-                          {pro.status}
+                          {availabilityLabel(professional.status)}
                         </Badge>
                       </td>
                       <td className="p-3">
@@ -377,33 +367,36 @@ export default function AdminServicos() {
                             size="icon"
                             variant="ghost"
                             disabled={actionLoading}
-                            onClick={() => setSelectedPro(pro)}
+                            onClick={() => setSelectedPro(professional)}
+                            aria-label={`Ver ${professional.name}`}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          {pro.status === "pendente" && (
-                            <>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="text-success"
-                                disabled={actionLoading}
-                                onClick={() => updateStatus(pro.id, "aprovado")}
-                              >
-                                <Check className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="text-destructive"
-                                disabled={actionLoading}
-                                onClick={() =>
-                                  updateStatus(pro.id, "rejeitado")
-                                }
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </>
+                          {professional.status === "active" ? (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              disabled={actionLoading}
+                              onClick={() =>
+                                void updateAvailability(professional.id, "inactive")
+                              }
+                              aria-label={`Pausar ${professional.name}`}
+                            >
+                              <PauseCircle className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-success"
+                              disabled={actionLoading}
+                              onClick={() =>
+                                void updateAvailability(professional.id, "active")
+                              }
+                              aria-label={`Ativar ${professional.name}`}
+                            >
+                              <PlayCircle className="h-4 w-4" />
+                            </Button>
                           )}
                           <Button
                             size="icon"
@@ -413,10 +406,11 @@ export default function AdminServicos() {
                             onClick={() => {
                               setDeleteTarget({
                                 type: "professional",
-                                id: pro.profile_id || pro.id,
+                                id: professional.profile_id || professional.id,
                               });
                               setShowDeleteDialog(true);
                             }}
+                            aria-label={`Remover ${professional.name}`}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -431,44 +425,38 @@ export default function AdminServicos() {
         </TabsContent>
 
         <TabsContent value="reviews" className="space-y-4">
-          <div className="border rounded-lg overflow-hidden">
+          <div className="overflow-hidden rounded-lg border">
             <table className="w-full text-sm">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left p-3">Avaliador</th>
-                  <th className="text-left p-3">Profissional</th>
-                  <th className="text-center p-3">Nota</th>
-                  <th className="text-left p-3">Comentário</th>
-                  <th className="text-left p-3">Data</th>
-                  <th className="text-right p-3">Ações</th>
+                  <th className="p-3 text-left">Avaliador</th>
+                  <th className="p-3 text-left">Profissional</th>
+                  <th className="p-3 text-center">Nota</th>
+                  <th className="p-3 text-left">Comentário</th>
+                  <th className="p-3 text-left">Data</th>
+                  <th className="p-3 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {reviews.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={6}
-                      className="p-4 text-center text-muted-foreground"
-                    >
+                    <td colSpan={6} className="p-4 text-center text-muted-foreground">
                       Nenhuma avaliação
                     </td>
                   </tr>
                 ) : (
-                  reviews.map((rev) => (
-                    <tr key={rev.id} className="border-t">
-                      <td className="p-3">{rev.reviewer?.name || "Anônimo"}</td>
-                      <td className="p-3">{rev.professional?.name || "-"}</td>
+                  reviews.map((review) => (
+                    <tr key={review.id} className="border-t">
+                      <td className="p-3">{review.reviewer?.name || "Anônimo"}</td>
+                      <td className="p-3">{review.professional?.name || "-"}</td>
                       <td className="p-3 text-center">
                         <span className="flex items-center justify-center gap-0.5">
-                          {rev.rating}{" "}
-                          <Star className="h-3 w-3 text-warning fill-warning" />
+                          {review.rating} <Star className="h-3 w-3 fill-warning text-warning" />
                         </span>
                       </td>
-                      <td className="p-3 max-w-xs truncate">
-                        {rev.comment || "-"}
-                      </td>
+                      <td className="max-w-xs truncate p-3">{review.comment || "-"}</td>
                       <td className="p-3 text-muted-foreground">
-                        {formatDistanceToNow(new Date(rev.created_at), {
+                        {formatDistanceToNow(new Date(review.created_at), {
                           addSuffix: true,
                           locale: ptBR,
                         })}
@@ -480,9 +468,10 @@ export default function AdminServicos() {
                           className="text-destructive"
                           disabled={actionLoading}
                           onClick={() => {
-                            setDeleteTarget({ type: "review", id: rev.id });
+                            setDeleteTarget({ type: "review", id: review.id });
                             setShowDeleteDialog(true);
                           }}
+                          aria-label="Remover avaliação"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -494,40 +483,36 @@ export default function AdminServicos() {
             </table>
           </div>
         </TabsContent>
-
       </Tabs>
 
-      {/* View professional dialog */}
-      <Dialog open={!!selectedPro} onOpenChange={() => setSelectedPro(null)}>
+      <Dialog open={Boolean(selectedPro)} onOpenChange={() => setSelectedPro(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Detalhes do Profissional</DialogTitle>
+            <DialogDescription>
+              Dados públicos e estado operacional do perfil profissional.
+            </DialogDescription>
           </DialogHeader>
-          <DialogDescription className="sr-only">
-            Gerenciar serviços profissionais
-          </DialogDescription>
-          {selectedPro && (
+          {selectedPro ? (
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <Avatar className="h-16 w-16">
-                  <AvatarImage src={selectedPro.photo} />
-                  <AvatarFallback>{(selectedPro.name ?? '?')[0]}</AvatarFallback>
+                  <AvatarImage src={selectedPro.logo_url} />
+                  <AvatarFallback>
+                    {(selectedPro.name || "P").charAt(0).toLocaleUpperCase("pt-BR")}
+                  </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-bold">{selectedPro.name ?? 'Nome não informado'}</p>
+                  <p className="font-bold">{selectedPro.name || "Nome não informado"}</p>
                   <p className="text-sm text-muted-foreground">
-                    {selectedPro.service ?? 'N/A'}
+                    {selectedPro.category || "N/A"}
                   </p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
-                  <span className="text-muted-foreground">Categoria:</span>{" "}
-                  {selectedPro.category ?? 'N/A'}
-                </div>
-                <div>
                   <span className="text-muted-foreground">Bairro:</span>{" "}
-                  {selectedPro.neighborhood ?? 'N/A'}
+                  {selectedPro.neighborhood || "N/A"}
                 </div>
                 <div>
                   <span className="text-muted-foreground">WhatsApp:</span>{" "}
@@ -535,16 +520,18 @@ export default function AdminServicos() {
                 </div>
                 <div>
                   <span className="text-muted-foreground">Avaliação:</span>{" "}
-                  {Number(selectedPro.rating ?? 0).toFixed(1)} (
-                  {selectedPro.total_avaliacoes ?? 0})
+                  {Number(selectedPro.rating ?? 0).toFixed(1)} ({selectedPro.total_reviews ?? 0})
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Disponibilidade:</span>{" "}
+                  {availabilityLabel(selectedPro.status)}
                 </div>
               </div>
             </div>
-          )}
+          ) : null}
         </DialogContent>
       </Dialog>
 
-      {/* Delete confirmation */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
@@ -561,7 +548,11 @@ export default function AdminServicos() {
             >
               Cancelar
             </Button>
-            <Button variant="destructive" disabled={actionLoading} onClick={confirmDelete}>
+            <Button
+              variant="destructive"
+              disabled={actionLoading}
+              onClick={() => void confirmDelete()}
+            >
               Excluir
             </Button>
           </DialogFooter>
@@ -570,4 +561,3 @@ export default function AdminServicos() {
     </div>
   );
 }
-
