@@ -1,14 +1,15 @@
 /**
  * useEmail Hook
- * 
- * React hook for email operations.
+ *
+ * React query facade for the authenticated user's email delivery history.
+ * Password recovery belongs to AuthService; MFA recovery codes never transit
+ * through the email notification channel.
  */
 
 import { useQuery } from '@tanstack/react-query';
 import { EmailService, type EmailLog } from '../services/EmailService';
 
 export function useEmail(userId?: string) {
-  // Get email logs
   const {
     data: emailLogs,
     isLoading: isLoadingLogs,
@@ -18,26 +19,18 @@ export function useEmail(userId?: string) {
     queryKey: ['email-logs', userId],
     queryFn: () => (userId ? EmailService.getEmailLogs(userId) : Promise.resolve([])),
     enabled: !!userId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
   return {
-    // Data
     emailLogs: emailLogs || [],
-    
-    // Loading states
     isLoadingLogs,
-    
-    // Errors
     logsError,
-    
-    // Actions
     refetchLogs,
-    
-    // Email sending methods (direct access to service)
+
+    // Valid authenticated self-email operations only.
     sendWelcomeEmail: EmailService.sendWelcomeEmail,
-    sendPasswordResetEmail: EmailService.sendPasswordResetEmail,
-    sendMFASetupEmail: EmailService.sendMFASetupEmail,
+    sendMFASetupConfirmationEmail: EmailService.sendMFASetupConfirmationEmail,
     sendNewDeviceLoginEmail: EmailService.sendNewDeviceLoginEmail,
     sendPaymentConfirmationEmail: EmailService.sendPaymentConfirmationEmail,
     sendSubscriptionExpiringEmail: EmailService.sendSubscriptionExpiringEmail,
