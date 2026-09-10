@@ -1,4 +1,7 @@
-import { supabase } from "@/integrations/supabase";
+import {
+  resolveSupabaseFunctionErrorMessage,
+  supabase,
+} from "@/integrations/supabase";
 import type {
   VerificationDecision,
   VerificationReviewItem,
@@ -17,6 +20,14 @@ interface AdminVerificationResponse {
   error?: string;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function isCounter(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0;
+}
+
 async function invokeAdminVerification(
   body: Record<string, unknown>,
 ): Promise<AdminVerificationResponse> {
@@ -24,12 +35,22 @@ async function invokeAdminVerification(
     body,
   });
 
-  if (error) throw error;
-  const response = data as AdminVerificationResponse | null;
-  if (!response || response.error) {
-    throw new Error(response?.error || "Invalid profile verification response");
+  if (error) {
+    const message =
+      (await resolveSupabaseFunctionErrorMessage(error)) ??
+      "Profile verification request failed";
+    throw new Error(message);
   }
-  return response;
+
+  if (!isRecord(data)) {
+    throw new Error("Invalid profile verification response");
+  }
+
+  if (typeof data.error === "string" && data.error.trim()) {
+    throw new Error(data.error);
+  }
+
+  return data as AdminVerificationResponse;
 }
 
 export class VerificationAdminService {
@@ -43,17 +64,35 @@ export class VerificationAdminService {
       limit: options.limit ?? 100,
       offset: options.offset ?? 0,
     });
-    return response.items ?? [];
+
+    if (!Array.isArray(response.items)) {
+      throw new Error("Invalid profile verification list response");
+    }
+
+    return response.items;
   }
 
   static async getStats(): Promise<VerificationStats> {
     const response = await invokeAdminVerification({ action: "stats" });
-    const pending = response.pending ?? 0;
-    const approved = response.approved ?? 0;
-    const rejected = response.rejected ?? 0;
-    const revoked = response.revoked ?? 0;
+    const { pending, approved, rejected, revoked } = response;
+
+    if (
+      !isCounter(pending) ||
+      !isCounter(approved) ||
+      !isCounter(rejected) ||
+      !isCounter(revoked)
+    ) {
+      throw new Error("Invalid profile verification stats response");
+    }
+
+    const calculatedTotal = pending + approved + rejected + revoked;
+    const total = response.total;
+    if (total !== undefined && !isCounter(total)) {
+      throw new Error("Invalid profile verification stats response");
+    }
+
     return {
-      total: response.total ?? pending + approved + rejected + revoked,
+      total: total ?? calculatedTotal,
       pending,
       approved,
       rejected,
@@ -66,20 +105,28 @@ export class VerificationAdminService {
     decision: VerificationDecision,
     reason?: string,
   ): Promise<void> {
-    await invokeAdminVerification({
+    const response = await invokeAdminVerification({
       action: "review",
       verification_id: verificationId,
       decision,
       reason,
     });
+
+    if (!Object.prototype.hasOwnProperty.call(response, "verification")) {
+      throw new Error("Invalid profile verification review response");
+    }
   }
 
   static async verifyProfile(profileId: string, reason?: string): Promise<void> {
-    await invokeAdminVerification({
+    const response = await invokeAdminVerification({
       action: "verify_profile",
       profile_id: profileId,
       reason,
     });
+
+    if (!Object.prototype.hasOwnProperty.call(response, "verification")) {
+      throw new Error("Invalid profile verification command response");
+    }
   }
 }
 
