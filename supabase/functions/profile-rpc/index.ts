@@ -160,6 +160,25 @@ function optionalExtensionData(value: unknown): Record<string, unknown> | null {
   return sanitized;
 }
 
+const PROFESSIONAL_LEGACY_COVERAGE_KEYS = new Set([
+  "service_area",
+  "service_areas",
+  "service_radius_km",
+]);
+
+function assertNoProfessionalLegacyCoverage(
+  value: Record<string, unknown>,
+  field: string,
+): void {
+  for (const key of PROFESSIONAL_LEGACY_COVERAGE_KEYS) {
+    if (Object.prototype.hasOwnProperty.call(value, key)) {
+      throw new RequestValidationError(
+        `Unsupported ${field} field: ${key}; professional coverage is owned by service_areas`,
+      );
+    }
+  }
+}
+
 const BUSINESS_PATCH_KEYS = new Set([
   "business_name",
   "legal_name",
@@ -579,7 +598,6 @@ const PROFESSIONAL_PATCH_KEYS = new Set([
   "specialties",
   "years_experience",
   "services_offered",
-  "service_area",
   "hourly_rate",
   "accepts_remote",
 ]);
@@ -590,6 +608,8 @@ function sanitizeProfessionalPatch(value: unknown): Record<string, unknown> {
   }
 
   const input = { ...(value as Record<string, unknown>) };
+  assertNoProfessionalLegacyCoverage(input, "professionalPatch");
+
   for (const key of Object.keys(input)) {
     if (!PROFESSIONAL_PATCH_KEYS.has(key)) {
       throw new RequestValidationError(`Unsupported professional field: ${key}`);
@@ -633,7 +653,7 @@ function sanitizeProfessionalPatch(value: unknown): Record<string, unknown> {
     throw new RequestValidationError("location_id cannot be cleared");
   }
 
-    if (typeof input.slug === "string") {
+  if (typeof input.slug === "string") {
     const slug = input.slug.trim().toLowerCase();
     if (
       slug.length < 2 ||
@@ -671,7 +691,7 @@ function sanitizeProfessionalPatch(value: unknown): Record<string, unknown> {
     }
   }
 
-  for (const key of ["certifications", "specialties", "services_offered", "service_area"]) {
+  for (const key of ["certifications", "specialties", "services_offered"]) {
     if (
       key in input &&
       input[key] !== null &&
@@ -872,6 +892,7 @@ async function handleCreateProfessional(
   if (!extensionData) {
     throw new RequestValidationError("extensionData is required");
   }
+  assertNoProfessionalLegacyCoverage(extensionData, "extensionData");
   const professionalPatch = sanitizeProfessionalPatch(params.professionalPatch ?? {});
 
   const { data, error } = await supabaseAdmin.rpc("profile_rpc_create_professional", {

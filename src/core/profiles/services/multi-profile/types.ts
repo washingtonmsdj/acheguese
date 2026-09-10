@@ -116,8 +116,8 @@ export interface ProfessionalData {
   updated_at: string;
 }
 
-// Driver extension. Operational online/availability/location state is read-only
-// here; mutations belong to DriverAvailabilityService / driver_availability.
+// Driver extension is cadastro/verification only. Operational presence,
+// availability and live location belong exclusively to driver_availability.
 export interface DriverData {
   profile_id: string;
   license_number: string;
@@ -133,9 +133,6 @@ export interface DriverData {
   documents_verified_at?: string;
   background_check_status?: 'pending' | 'approved' | 'rejected';
   background_check_date?: string;
-  is_available: boolean;
-  current_location?: Record<string, unknown> | null;
-  last_location_update?: string;
   created_at: string;
   updated_at: string;
 }

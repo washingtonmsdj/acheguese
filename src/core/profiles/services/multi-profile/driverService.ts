@@ -8,6 +8,25 @@ import { supabase } from '@/integrations/supabase';
 import type { DriverData, ServiceResponse } from './types';
 import { sanitizeDriverSelfServiceUpdate } from '@/core/mobility/services/driverDataSelfService';
 
+const DRIVER_DATA_PROFILE_EDITOR_SELECT = [
+  'profile_id',
+  'license_number',
+  'license_category',
+  'license_expiry',
+  'license_state',
+  'vehicle_type',
+  'vehicle_plate',
+  'vehicle_model',
+  'vehicle_year',
+  'vehicle_color',
+  'documents_verified',
+  'documents_verified_at',
+  'background_check_status',
+  'background_check_date',
+  'created_at',
+  'updated_at',
+].join(',');
+
 const errorMessage = (error: unknown, fallback: string): string =>
   error instanceof Error ? error.message : fallback;
 
@@ -43,12 +62,15 @@ interface DriverDbClient {
 const driverDb = supabase as unknown as DriverDbClient;
 
 export class DriverService {
-  /** Buscar dados cadastrais/estado de leitura do driver via RLS. */
+  /**
+   * Busca somente o agregado cadastral usado pelo editor de perfil.
+   * Estado operacional e GPS sao lidos no owner driver_availability.
+   */
   static async getDriverData(profileId: string): Promise<DriverData | null> {
     try {
       const { data, error } = await driverDb
         .from<DriverData>('driver_data')
-        .select('*')
+        .select(DRIVER_DATA_PROFILE_EDITOR_SELECT)
         .eq('profile_id', profileId)
         .single();
 
