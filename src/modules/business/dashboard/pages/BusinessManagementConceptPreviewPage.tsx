@@ -316,7 +316,7 @@ export default function BusinessManagementConceptPreviewPage() {
       <div className="flex min-h-[calc(100vh-4rem)] md:h-[calc(100vh-4rem)] md:min-h-0">
         <ConceptGlobalNavigation />
         <ConceptBusinessNavigation onSelect={selectArea} onBack={() => navigate("/conta?concept-mock=1")} />
-        <main className="min-w-0 flex-1 px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pt-6 lg:px-6 lg:pb-8 lg:pt-4 xl:px-6 md:overflow-y-auto">
+        <main className="min-w-0 flex-1 px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pt-6 lg:px-6 lg:pb-8 lg:pt-4 xl:px-6 scrollbar-hide md:overflow-y-auto">
           <div className="w-full">
             <div className="md:hidden">
               <ConceptMobileBusinessIdentity onBack={() => navigate("/conta?concept-mock=1")} onViewPage={() => navigate(territoryHref)} />
