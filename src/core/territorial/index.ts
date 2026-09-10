@@ -35,6 +35,7 @@ export type {
   AddMembersInput,
   RemoveMembersInput,
 } from './services/TerritorialGroupService';
+export { listAdminTerritorialGroups } from './services/territorial.admin.queries';
 export { TerritorialManagementService } from './services/TerritorialManagementService';
 export type {
   VisibilityFlag,
