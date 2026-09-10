@@ -52,6 +52,17 @@ describe("G43 territorial group admin authority", () => {
     expect(phaseOne).toContain("member.type::TEXT IN ('district', 'neighborhood')");
   });
 
+  it("serializes membership validation and replacement during the compatibility window", () => {
+    expect(phaseOne).toContain("FOR UPDATE");
+    expect(phaseOne).toContain("ORDER BY member.id");
+    expect(phaseOne).toContain("FOR SHARE");
+    expect(phaseOne).toContain("GET DIAGNOSTICS v_locked_member_count = ROW_COUNT");
+    expect(phaseOne).toContain(
+      "LOCK TABLE public.territorial_group_members IN SHARE ROW EXCLUSIVE MODE",
+    );
+    expect(phaseOne).toContain("postcondition: G43 concurrency locks missing");
+  });
+
   it("uses function ACLs as the SQL execution boundary without deprecated auth.role checks", () => {
     expect(phaseOne).toContain("FROM PUBLIC, anon, authenticated");
     expect(phaseOne).toContain("TO service_role");
