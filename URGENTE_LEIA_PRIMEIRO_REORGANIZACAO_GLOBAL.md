@@ -11,7 +11,7 @@ Leia nesta ordem:
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — execução operacional atual;
-4. `docs/08-roadmap/checkpoints/2026-09-10-g40-edge-error-contract.md` — checkpoint incremental G40, fechamento do creator legado e contrato HTTP de Edge;
+4. `docs/08-roadmap/checkpoints/2026-09-10-g40-edge-error-contract.md` — checkpoint incremental G40, fechamento do creator legado, contrato HTTP de Edge e fixture E2E isolada;
 5. `docs/08-roadmap/checkpoints/2026-09-10-g39-professional-lead-intake.md` — checkpoint G39 e gate de cutover Professional;
 6. `docs/08-roadmap/checkpoints/2026-09-10-g38-professional-authority.md` — checkpoint anterior G38;
 7. `SECURITY.md` — segurança e gates de release.
@@ -39,7 +39,9 @@ Leia nesta ordem:
 - G40: `86d92e03` removeu fisicamente `ProfessionalLeadService.createLead` depois da prova de zero callers runtime; `71d3c42b` impede por teste que o creator e seus helpers mortos retornem;
 - G40: o tratamento de erro de Edge foi corrigido na causa raiz: `src/integrations/supabase/functionErrors.ts` lê o body de `FunctionsHttpError`; `ProfessionalLeadIntakeService` e o broker genérico preservam agora erros estruturados 4xx/5xx sem importar `@supabase/supabase-js` em `core`;
 - G40: há cobertura nova para created/deduplicated/Turnstile/HTTP failures/fail-closed e para o adapter Supabase com `FunctionsHttpError` real;
-- G40: `tests/e2e/professional-leads-operational.spec.ts` ainda possui **fixture técnica** com `INSERT` autenticado direto em `professional_leads`; isso não é caller runtime, mas deve migrar para `service_role` em target E2E isolado antes do cutover — nunca manter/reabrir grant browser por causa do teste;
+- G40: `55b25cd0` migrou a criação da fixture técnica de `professional_leads` para `createOptionalOperationalAdminClient()`, que só opera com `service_role` em target E2E aprovado; mensagens, propostas, aceite, atendimento e review continuam no cliente autenticado;
+- G40: `878e06d2` ratcheta essa separação e impede retorno de `client.from("professional_leads").insert(...)` no E2E operacional; a fixture não é mais blocker para a futura revogação do browser `INSERT`;
+- ainda faltam os smokes públicos anônimo e autenticado pelo broker + Turnstile e a certificação real de security/architecture/typecheck/build antes do cutover;
 - os workflows acionados no novo baseline encerraram antes de qualquer step e sem logs úteis; portanto não há sinal válido de typecheck/teste/arquitetura neste executor. Não interpretar esse `failure` instantâneo como regressão de código;
 - builds atuais da `main` continuam sujeitos ao **build-rate-limit da Vercel** (`Deployment rate limited — retry in 24 hours`), blocker externo de execução e não prova de compilação aprovada ou reprovada;
 - **não revogar ainda** os grants temporários de `professional_data/profiles` nem executar o cutover de leads/stats enquanto o frontend novo não estiver comprovadamente LIVE no mesmo SHA/descendente certificado;
