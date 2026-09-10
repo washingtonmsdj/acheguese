@@ -8,40 +8,63 @@ function readProjectFile(relativePath: string): string {
 
 describe("Mobility driver authority", () => {
   it("keeps driver verification and ride offers outside direct browser writes", () => {
-    const migration = readProjectFile(
+    const authorityMigration = readProjectFile(
       "supabase/migrations/20260909154500_harden_mobility_driver_authority_g7.sql",
     );
-    const profileRpc = readProjectFile("supabase/functions/profile-rpc/index.ts");
+    const creationMigration = readProjectFile(
+      "supabase/migrations/20260910003000_domain_owned_profile_creation_g36.sql",
+    );
+    const contractMigration = readProjectFile(
+      "supabase/migrations/20260910004500_retire_legacy_profile_creation_bridges_g36.sql",
+    );
+    const mobilityRpc = readProjectFile("supabase/functions/mobility-rpc/index.ts");
     const runtime = readProjectFile(
       "src/core/mobility/services/MobilityRuntimeService.ts",
+    );
+    const driverIdentity = readProjectFile(
+      "src/core/mobility/hooks/useDriverProfileIdentity.ts",
     );
     const driverService = readProjectFile(
       "src/core/profiles/services/multi-profile/driverService.ts",
     );
 
-    expect(migration).toContain(
+    expect(authorityMigration).toContain(
       "REVOKE INSERT, UPDATE, DELETE ON TABLE public.driver_data FROM authenticated",
     );
-    expect(migration).toContain("public.update_owned_driver_data");
-    expect(migration).toContain("Unsupported driver_data field");
-    expect(migration).toContain("is_verified = false");
-    expect(migration).toContain("documents_verified = false");
-    expect(migration).toContain("background_check_status = 'pending'");
-    expect(migration).toContain("public.ensure_admin_driver_data");
-    expect(migration).toContain(
+    expect(authorityMigration).toContain("public.update_owned_driver_data");
+    expect(authorityMigration).toContain("Unsupported driver_data field");
+    expect(authorityMigration).toContain("is_verified = false");
+    expect(authorityMigration).toContain("documents_verified = false");
+    expect(authorityMigration).toContain("background_check_status = 'pending'");
+    expect(authorityMigration).toContain(
       "REVOKE UPDATE ON TABLE public.ride_offers FROM authenticated",
     );
-    expect(migration).toContain(
+    expect(authorityMigration).toContain(
       'DROP POLICY IF EXISTS "Drivers can respond to their own pending offers"',
     );
 
-    expect(profileRpc).toContain("sanitizeDriverExtensionData");
-    expect(profileRpc).toContain("documents_verified: false");
-    expect(profileRpc).toContain('background_check_status: "pending"');
-    expect(profileRpc).toContain("canDoDelivery === canDoRides");
+    expect(creationMigration).toContain("public.mobility_rpc_create_driver_profile");
+    expect(creationMigration).toContain("public.mobility_rpc_ensure_admin_driver_profile");
+    expect(creationMigration).toContain("private.mobility_ensure_admin_driver_profile");
+    expect(creationMigration).toContain("private.is_admin_from_roles(p_actor_user_id)");
 
-    expect(runtime).toContain('"update_owned_driver_data"');
-    expect(runtime).toContain('"ensure_admin_driver_data"');
+    expect(mobilityRpc).toContain("sanitizeDriverRegistrationExtension");
+    expect(mobilityRpc).toContain("documents_verified: false");
+    expect(mobilityRpc).toContain('background_check_status: "pending"');
+    expect(mobilityRpc).toContain("canDoDelivery === canDoRides");
+    expect(mobilityRpc).toContain('"mobility_rpc_ensure_admin_driver_profile"');
+
+    expect(driverIdentity).toContain("MobilityRpcService.ensureAdminDriverProfile");
+    expect(driverIdentity).not.toContain("createAdminDriverProfile");
+    expect(runtime).not.toContain('"ensure_admin_driver_data"');
     expect(driverService).toContain("'update_owned_driver_data'");
+
+    expect(contractMigration).toContain(
+      "DROP FUNCTION IF EXISTS public.ensure_admin_driver_data(uuid)",
+    );
+    expect(contractMigration).toContain(
+      "DROP FUNCTION IF EXISTS public.profile_rpc_create_profile_with_extension",
+    );
+    expect(contractMigration).not.toContain("CASCADE");
   });
 });
