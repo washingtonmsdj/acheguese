@@ -134,6 +134,13 @@ export function isTransientSitemapSourceError(error: unknown): boolean {
     /\b(?:econnreset|econnrefused|etimedout|enotfound|eai_again)\b/.test(message) ||
     message.includes('connection timed out') ||
     message.includes('connection timeout') ||
+    message.includes('gateway timeout') ||
+    message.includes('service unavailable') ||
+    message.includes('bad gateway') ||
+    message.includes('too many requests') ||
+    message.includes('request timeout') ||
+    message.includes('origin is unreachable') ||
+    message.includes('web server is down') ||
     message.includes('fetch failed') ||
     message.includes('network error') ||
     message.includes('network request failed')
