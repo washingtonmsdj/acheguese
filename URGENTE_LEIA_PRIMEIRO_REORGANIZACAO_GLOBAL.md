@@ -11,7 +11,8 @@ Leia nesta ordem:
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — execução operacional atual;
-4. `SECURITY.md` — segurança e gates de release.
+4. `docs/08-roadmap/checkpoints/2026-09-10-g38-professional-authority.md` — checkpoint incremental G38 enquanto o SSOT principal aguarda consolidação;
+5. `SECURITY.md` — segurança e gates de release.
 
 ## Checkpoint operacional curto — 2026-09-10
 
@@ -27,10 +28,13 @@ Leia nesta ordem:
 - a geração oficial de tipos Supabase continua intermitentemente bloqueada por 522; não editar `types.generated.ts` manualmente nem substituir o boundary estreito de `register_safety_evidence` por `any`;
 - `5bead48b` corrigiu o novo Search/Explorar para projetar pins via `mapEntityProjection`; `be2d464b` integrou a Search por merge real de dois pais, preservando o hardening funcional da `main`;
 - `fc912273` reduziu exatamente os **11 allowances stale** detectados pelo último build READY: 5 writers Safety, 1 reader `service_areas`, 3 callers RPC e 2 dynamic writers de Mobilidade; nenhuma nova permissão foi adicionada;
-- `main` e `codex/identidade-visual-achegue-se` foram sincronizadas após esse checkpoint;
-- o preview imediatamente anterior da Search (`b39d1481`) está READY; builds posteriores estão sujeitos ao **build-rate-limit da Vercel**, o que é blocker externo de execução e não prova de falha de compilação;
+- G38: `AdminServicos` não escreve mais disponibilidade Professional diretamente; `admin-professional-rpc` está **v6 ACTIVE**, `verify_jwt=true`, com entrypoint e shared helpers reconciliados ao source da `main`;
+- G38: `ProfessionalLeadService` não faz mais read-modify-write/upsert de `professional_stats.contacts_count`; a migration versionada move o contador para trigger atômico server-owned e revoga DML browser;
+- **runtime DB G38 ainda pendente:** `apply_migration` e até `list_migrations` estão falhando antes de iniciar por `Connection terminated due to connection timeout`; não declarar trigger/revoke ativos sem prova posterior;
+- `codex/identidade-visual-achegue-se` foi sincronizada com a `main` por merge sem force-push; validação final mostrou `behind_by=0` e apenas quatro deltas visuais próprios (`TerritoryAdaptiveNavigation`, `TerritoryMapPreview`, `BuscaPage`, `TerritoryTopbar`);
+- builds atuais da `main` continuam sujeitos ao **build-rate-limit da Vercel** (`Deployment rate limited — retry in 24 hours`), blocker externo de execução e não prova de compilação aprovada ou reprovada;
+- **não revogar ainda** os grants temporários de `professional_data/profiles` enquanto o frontend novo não estiver comprovadamente LIVE no mesmo SHA; retirar compatibilidade somente após zero callers antigos;
 - Mobilidade continua **launch-paused**: `PUBLIC_LAUNCH_SURFACES.mobility=false`;
-- próximo gate estrutural: provar se os grants browser temporários de `profiles`, `professional_data` e `professional_stats` ainda têm caller real no frontend LIVE; revogar somente após prova de zero dependência;
 - não restaurar DML direto, operator scripts obsoletos, wrappers concorrentes, dynamic-table novo ou authorities paralelas.
 
 ## Regra para novas IAs/agentes
@@ -41,7 +45,7 @@ Leia nesta ordem:
 - remover somente legado real, duplicação, compatibility bridge ou owner substituído, depois de preservar/migrar a capacidade funcional válida e comprovar callers/impacto;
 - trabalhar diretamente na `main`, sem force-push, revalidando o HEAD antes de cada write;
 - preferir owner/SSOT canônico em `src/core`, `src/modules`, `src/app`, `src/integrations` e `src/shared`;
-- atualizar `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` quando um checkpoint operacional mudar;
+- atualizar `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` quando um checkpoint operacional mudar e usar checkpoints incrementais em `docs/08-roadmap/checkpoints/` somente quando necessário para evitar reescrita insegura do SSOT durante execução concorrente;
 - usar `teste-acheguese` apenas como laboratório/prova de UX territorial quando aplicável; o produto consolidado continua neste repositório.
 
 ## Política de migração deste ponteiro
