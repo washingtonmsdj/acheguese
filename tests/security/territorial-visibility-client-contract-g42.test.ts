@@ -50,6 +50,7 @@ describe("G42 territorial visibility client contract", () => {
     expect(pendingLocationCascade).toContain(
       "CREATE OR REPLACE FUNCTION public.territorial_update_location_visibility(",
     );
+    expect(pendingLocationCascade).toContain("SECURITY INVOKER");
     expect(pendingLocationCascade).toContain(
       "idx_locations_geographic_path_pattern",
     );
@@ -69,6 +70,8 @@ describe("G42 territorial visibility client contract", () => {
     expect(pendingLocationCascade).toContain("p_value IS FALSE");
     expect(pendingLocationCascade).toContain("FROM PUBLIC, anon, authenticated");
     expect(pendingLocationCascade).toContain("TO service_role");
+    expect(pendingLocationCascade).not.toMatch(/IF\s+(?:\(SELECT\s+)?auth\.role\(\)/);
+    expect(pendingLocationCascade).toContain("deprecated auth.role boundary reintroduced");
   });
 
   it("requires a correlated transactional acknowledgement before reporting success", () => {
