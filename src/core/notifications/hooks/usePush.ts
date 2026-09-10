@@ -1,12 +1,12 @@
 /**
  * usePush Hook
- * 
- * React hook for push notification operations.
+ *
+ * React hook for the current user's push subscription and self-test flow.
  */
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PushService, type StoredPushSubscription, type PushNotificationPayload } from '../services/PushService';
+import { PushService, type StoredPushSubscription } from '../services/PushService';
 import { useToast } from '@/shared/hooks/use-toast';
 
 export function usePush(userId?: string) {
@@ -16,7 +16,6 @@ export function usePush(userId?: string) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Check support and permission on mount
   useEffect(() => {
     const checkSupport = async () => {
       const supported = PushService.isSupported();
@@ -31,7 +30,6 @@ export function usePush(userId?: string) {
     checkSupport();
   }, []);
 
-  // Get subscriptions
   const {
     data: subscriptions,
     isLoading: isLoadingSubscriptions,
@@ -41,19 +39,13 @@ export function usePush(userId?: string) {
     queryKey: ['push-subscriptions', userId],
     queryFn: () => (userId ? PushService.getSubscriptions(userId) : Promise.resolve([])),
     enabled: !!userId && isSupported,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
-  // Update isSubscribed based on subscriptions
   useEffect(() => {
-    if (subscriptions && subscriptions.length > 0) {
-      setIsSubscribed(true);
-    } else {
-      setIsSubscribed(false);
-    }
+    setIsSubscribed(Boolean(subscriptions?.length));
   }, [subscriptions]);
 
-  // Subscribe mutation
   const subscribeMutation = useMutation({
     mutationFn: async () => {
       if (!userId) throw new Error('User ID is required');
@@ -85,11 +77,8 @@ export function usePush(userId?: string) {
     },
   });
 
-  // Unsubscribe mutation
   const unsubscribeMutation = useMutation({
-    mutationFn: async (subscriptionId: string) => {
-      return PushService.unsubscribe(subscriptionId);
-    },
+    mutationFn: async (subscriptionId: string) => PushService.unsubscribe(subscriptionId),
     onSuccess: (result) => {
       if (result.success) {
         setIsSubscribed(false);
@@ -115,7 +104,6 @@ export function usePush(userId?: string) {
     },
   });
 
-  // Send test notification mutation
   const sendTestMutation = useMutation({
     mutationFn: async () => {
       if (!userId) throw new Error('User ID is required');
@@ -144,41 +132,20 @@ export function usePush(userId?: string) {
     },
   });
 
-  // Send notification to user
-  const sendToUser = async (targetUserId: string, notification: PushNotificationPayload) => {
-    return PushService.sendToUser(targetUserId, notification);
-  };
-
-  // Send notification to multiple users
-  const sendToUsers = async (userIds: string[], notification: PushNotificationPayload) => {
-    return PushService.sendToUsers(userIds, notification);
-  };
-
   return {
-    // State
     isSupported,
     hasPermission,
     isSubscribed,
     subscriptions: subscriptions || [],
-
-    // Loading states
     isLoadingSubscriptions,
     isSubscribing: subscribeMutation.isPending,
     isUnsubscribing: unsubscribeMutation.isPending,
     isSendingTest: sendTestMutation.isPending,
-
-    // Errors
     subscriptionsError,
-
-    // Actions
     subscribe: () => subscribeMutation.mutate(),
     unsubscribe: (subscriptionId: string) => unsubscribeMutation.mutate(subscriptionId),
     sendTest: () => sendTestMutation.mutate(),
     refetchSubscriptions,
-    sendToUser,
-    sendToUsers,
-
-    // Direct access to service
     requestPermission: PushService.requestPermission,
   };
 }
