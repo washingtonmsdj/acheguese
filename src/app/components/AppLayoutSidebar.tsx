@@ -60,6 +60,11 @@ export function AppLayoutSidebar() {
         pathSegments.length >= 3 &&
         pathSegments.length <= 4));
   const isAccountRoute = pathSegments[0] === "conta";
+  const conceptAccountPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    isAccountRoute &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
   const isPublicPersonalProfileRoute =
     pathSegments[0] === "u" && pathSegments.length === 2;
   const isProfessionalPublicRoute =
@@ -135,7 +140,8 @@ export function AppLayoutSidebar() {
           </div>
         </div>
         <TerritoryAdaptiveNavigation
-          hideMobile={isProfessionalPublicRoute}
+          hideMobile={isProfessionalPublicRoute || conceptAccountPreview}
+          hideDesktop={conceptAccountPreview}
         />
       </>
     );

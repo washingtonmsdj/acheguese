@@ -26,8 +26,10 @@ import {
 
 export function TerritoryAdaptiveNavigation({
   hideMobile = false,
+  hideDesktop = false,
 }: {
   hideMobile?: boolean;
+  hideDesktop?: boolean;
 }) {
   const { pathname } = useLocation();
   const { active } = usePublicBrowsingCity();
@@ -157,7 +159,7 @@ export function TerritoryAdaptiveNavigation({
       </nav>
 
       <nav
-        className="fixed inset-y-0 left-0 z-[90] hidden w-[4.5rem] flex-col border-r border-territory-border bg-territory-surface px-2 py-3 md:flex xl:hidden"
+        className={cn("fixed inset-y-0 left-0 z-[90] hidden w-[4.5rem] flex-col border-r border-territory-border bg-territory-surface px-2 py-3 md:flex xl:hidden", hideDesktop && "md:hidden")}
         aria-label="Navegação principal tablet"
         data-territory-navigation="tablet"
       >
@@ -196,7 +198,7 @@ export function TerritoryAdaptiveNavigation({
       </nav>
 
       <nav
-        className="fixed inset-y-0 left-0 z-[90] hidden w-44 flex-col border-r border-territory-border bg-territory-surface px-3 py-5 xl:bottom-0 xl:top-16 xl:flex"
+        className={cn("fixed inset-y-0 left-0 z-[90] hidden w-44 flex-col border-r border-territory-border bg-territory-surface px-3 py-5 xl:bottom-0 xl:top-16 xl:flex", hideDesktop && "xl:hidden")}
         aria-label="Navegação principal desktop"
         data-territory-navigation="desktop"
       >
