@@ -10,7 +10,6 @@ export { ProfessionalService } from './professionalService';
 export { DriverService } from './driverService';
 export { ProfileMembersService } from './profileMembersService';
 export { ProfileLinksService } from './profileLinksService';
-export { AdminService } from './adminService';
 
 export type {
   Profile,
