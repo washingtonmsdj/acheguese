@@ -32,7 +32,7 @@ A leitura foi separada por intenção:
 - `listAll()` → inventário de produto/público, somente grupos `active`;
 - `listAllForAdmin()` / `listAdminTerritorialGroups()` → inventário administrativo, incluindo grupos inativos sob RLS administrativo.
 
-Isso impede que um grupo desapareça da própria tela de gestão depois de ser desativado sem ampliar o inventário público.
+O repository busca memberships desse inventário em lote, evitando o antigo padrão `1 + N` de consultas por grupo. Isso impede que um grupo desapareça da própria tela de gestão depois de ser desativado sem ampliar o inventário público.
 
 ## Backend gateways
 
@@ -59,7 +59,7 @@ O SQL preparado está em
 
 Ele cria uma RPC `SECURITY INVOKER` executável somente por `service_role` e reutiliza o contrato de escala comprovado no G5: descendentes são alcançados pelo prefixo indexado de `geographic_path` (`raiz/%`), apoiado por `idx_locations_geographic_path_pattern`, em uma única operação SQL. A RPC serializa writes estruturais durante a mutação e devolve ACK correlacionado (`location`, `affectedCount`, `cascaded`). Não existe loop Edge nem uma segunda estratégia recursiva concorrente.
 
-O SQL não usa `auth.role()` como boundary: `PUBLIC`, `anon` e `authenticated` não podem executar a função; a Edge autenticada é responsável pela autorização de usuário e injeta o ator verificado.
+O SQL não usa `auth.role()` como boundary: `PUBLIC`, `anon` e `authenticated` não podem executar a função; a Edge autenticada é responsável pela autorização de usuário e injeta o ator verificado onde o ator é persistido pela própria operação G42.
 
 **Não implantar a versão G42 de `territorial-update-location-visibility` antes de promover e provar essa migration no mesmo ambiente.** O Postgres remoto continuou encerrando o preflight por `connection timeout` em 2026-09-10.
 
@@ -80,7 +80,9 @@ Ela cria:
 - `territorial_admin_save_group(...)` → cria/edita o grupo e substitui o conjunto completo de memberships na **mesma transação**;
 - `territorial_admin_set_group_status(...)` → altera status sob lock e rejeita ativação de grupo vazio.
 
-Os commands são `SECURITY INVOKER`, revogam `EXECUTE` de `PUBLIC/anon/authenticated` e concedem somente a `service_role`. A Edge `territorial-group-admin-rpc` deriva `p_actor_user_id` do JWT validado por `requireAdmin`.
+Os commands são `SECURITY INVOKER`, revogam `EXECUTE` de `PUBLIC/anon/authenticated` e concedem somente a `service_role`. Eles não aceitam `actor_user_id` decorativo: o ator confiável pertence ao gateway autenticado, que registra `auth.userId` no audit após `requireAdmin`/AAL2. Um processo que já possui `service_role` não ganha legitimidade adicional enviando um UUID de ator ao SQL.
+
+O broker também exige ACK correlacionado: `saveGroup` precisa devolver o mesmo ID quando aplicável, slug, nome, descrição, cidade, conjunto de membros, contagem e estado de criação; `setStatus` precisa devolver o mesmo grupo e status. Um 2xx incompatível é tratado como falha.
 
 Para evitar TOCTOU na própria transação, o `saveGroup` segue ordem de locks `grupo -> cidade âncora -> locations membros -> membership table`; os membros são bloqueados em ordem determinística de UUID antes da validação de tipo/status/parent. Durante a curta janela de compatibilidade, writes em `territorial_group_members` são serializados para impedir interleaving entre o command e o writer histórico.
 
@@ -116,8 +118,10 @@ O validator `tools/architecture/validate-territory-ssot.ts` e os ratchets de seg
 - ownership de escrita de `locations` permanece separado por operação;
 - o gateway G42 de Location não pode voltar a executar loop de writes em descendentes;
 - G42/G43 não podem reintroduzir `auth.role()` como substituto de ACL/gateway;
+- G43 não pode reintroduzir um `actor_user_id` SQL sem efeito como falsa boundary;
 - G43 mantém group + memberships na mesma transação e serializa a validação/substituição;
-- a cidade âncora real do grupo é `anchor_city_id` e o formulário de edição não pode tratá-la como `parent_id` nem permitir mutação.
+- a cidade âncora real do grupo é `anchor_city_id` e o formulário de edição não pode tratá-la como `parent_id` nem permitir mutação;
+- o inventário de memberships não pode regredir para uma leitura por grupo.
 
 ## Integração de Landing e routing
 
