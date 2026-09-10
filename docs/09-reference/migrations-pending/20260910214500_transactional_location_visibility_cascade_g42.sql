@@ -15,6 +15,11 @@
 -- Scale contract: G5 already proved the canonical descendant set for normal
 -- locations through the indexed geographic_path prefix. Do not regress this
 -- mutation to a recursive row-by-row traversal.
+--
+-- Authority contract: the function is SECURITY INVOKER and EXECUTE is revoked
+-- from PUBLIC/anon/authenticated, then granted only to service_role. Do not add
+-- auth.role() checks here: function ACL is the database execution boundary and
+-- the Edge owns end-user admin/MFA authorization.
 
 BEGIN;
 
@@ -85,10 +90,6 @@ DECLARE
   v_location JSONB;
   v_cascade BOOLEAN := p_flag = 'is_selector_active' AND p_value IS FALSE;
 BEGIN
-  IF auth.role() IS DISTINCT FROM 'service_role' THEN
-    RAISE EXCEPTION 'service_role_required' USING ERRCODE = '42501';
-  END IF;
-
   IF p_location_id IS NULL THEN
     RAISE EXCEPTION 'invalid_location_id' USING ERRCODE = '22023';
   END IF;
@@ -188,11 +189,15 @@ DECLARE
   v_definition TEXT;
 BEGIN
   IF has_function_privilege(
+    'anon',
+    'public.territorial_update_location_visibility(uuid,text,boolean,uuid)',
+    'EXECUTE'
+  ) OR has_function_privilege(
     'authenticated',
     'public.territorial_update_location_visibility(uuid,text,boolean,uuid)',
     'EXECUTE'
   ) THEN
-    RAISE EXCEPTION 'postcondition: authenticated can execute territorial visibility RPC';
+    RAISE EXCEPTION 'postcondition: browser role can execute territorial visibility RPC';
   END IF;
 
   IF NOT has_function_privilege(
@@ -215,8 +220,8 @@ BEGIN
     RAISE EXCEPTION 'postcondition: hierarchy write lock missing';
   END IF;
 
-  IF position('service_role_required' in v_definition) = 0 THEN
-    RAISE EXCEPTION 'postcondition: service-role boundary missing';
+  IF position('auth.role()' in v_definition) <> 0 THEN
+    RAISE EXCEPTION 'postcondition: deprecated auth.role boundary reintroduced';
   END IF;
 END
 $postcondition$;
