@@ -15,6 +15,14 @@ const sessionRpc = readFileSync(
   join(root, "supabase/functions/session-rpc/index.ts"),
   "utf8",
 );
+const mfaPolicy = readFileSync(
+  join(root, "supabase/functions/_shared/mfaPolicy.ts"),
+  "utf8",
+);
+const adminAuth = readFileSync(
+  join(root, "supabase/functions/_shared/adminAuth.ts"),
+  "utf8",
+);
 
 describe("MFA Auth authority G42", () => {
   it("derives enabled MFA from Supabase Auth factors instead of the browser tracker", () => {
@@ -33,12 +41,29 @@ describe("MFA Auth authority G42", () => {
     expect(service).toContain("SessionRpcService.checkMfaRequired()");
   });
 
-  it("reconciles the policy cache from verified server-side Auth factors", () => {
-    expect(sessionRpc).toContain("supabaseAdmin.auth.admin.mfa.listFactors({ userId })");
-    expect(sessionRpc).toContain('factor?.status === "verified"');
-    expect(sessionRpc).toContain("await reconcileMfaTrackerFromAuth(supabaseAdmin, userId)");
-    expect(sessionRpc).toContain('supabaseAdmin.rpc("check_user_mfa_required"');
-    expect(sessionRpc).toContain('typeof data !== "boolean"');
+  it("centralizes role, verified-factor and current-AAL policy on the server", () => {
+    expect(mfaPolicy).toContain('supabaseAdmin.rpc(\n    "get_user_roles"');
+    expect(mfaPolicy).toContain('.from("admin_mfa_enforcement")');
+    expect(mfaPolicy).toContain("supabaseAdmin.auth.admin.mfa.listFactors({");
+    expect(mfaPolicy).toContain('factor.status === "verified"');
+    expect(mfaPolicy).toContain("getAuthenticatorAssuranceLevel(token)");
+    expect(mfaPolicy).toContain('reason: "enrollment_required"');
+    expect(mfaPolicy).toContain('reason: "verification_required"');
+    expect(mfaPolicy).toContain('currentLevel !== "aal2"');
+  });
+
+  it("uses the same MFA policy for UI state and every shared admin authorization", () => {
+    expect(sessionRpc).toContain(
+      'import { evaluateUserMfaPolicy } from "../_shared/mfaPolicy.ts"',
+    );
+    expect(sessionRpc).toContain("const policy = await evaluateUserMfaPolicy(");
+    expect(sessionRpc).toContain("required: policy.required");
+    expect(adminAuth).toContain(
+      "const mfaPolicy = await evaluateUserMfaPolicy(supabase, user.id, token)",
+    );
+    expect(adminAuth).toContain("if (mfaPolicy.required)");
+    expect(adminAuth).toContain("MFA enrollment required");
+    expect(adminAuth).toContain("MFA verification required");
   });
 
   it("keeps an unresolved authenticated MFA policy fail closed", () => {
