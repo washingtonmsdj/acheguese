@@ -139,15 +139,12 @@ BEGIN
     RAISE EXCEPTION 'invalid_anchor_city' USING ERRCODE = '22023';
   END IF;
 
-  SELECT count(*)::INTEGER
-  INTO v_locked_member_count
-  FROM (
-    SELECT member.id
-    FROM public.locations AS member
-    WHERE member.id = ANY(v_member_ids)
-    ORDER BY member.id
-    FOR SHARE
-  ) AS locked_members;
+  PERFORM member.id
+  FROM public.locations AS member
+  WHERE member.id = ANY(v_member_ids)
+  ORDER BY member.id
+  FOR SHARE;
+  GET DIAGNOSTICS v_locked_member_count = ROW_COUNT;
 
   IF v_locked_member_count <> v_member_count THEN
     RAISE EXCEPTION 'invalid_group_member_scope' USING ERRCODE = '22023';
@@ -352,6 +349,7 @@ BEGIN
   END IF;
 
   IF position('ORDER BY member.id' in v_save_definition) = 0
+     OR position('GET DIAGNOSTICS v_locked_member_count = ROW_COUNT' in v_save_definition) = 0
      OR position('FOR SHARE' in v_save_definition) = 0
      OR position('LOCK TABLE public.territorial_group_members IN SHARE ROW EXCLUSIVE MODE' in v_save_definition) = 0
      OR position('LOCK TABLE public.territorial_group_members IN SHARE ROW EXCLUSIVE MODE' in v_status_definition) = 0 THEN
