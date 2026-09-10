@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { MultiProfileService } from "@/core/profiles/services/multi-profile";
+import { MobilityRpcService } from "@/core/mobility/services/MobilityRpcService";
 import { MOBILITY_QUERY_KEYS } from "@/core/mobility/constants";
 import {
   buildDriverProfileCreatePayload,
@@ -36,13 +36,12 @@ export function useDriverCreateMultiProfile(
     ): Promise<{ profile_id: string; handle: string }> => {
       const payload = await buildDriverProfileCreatePayload(input);
 
-      const result = await MultiProfileService.createProfile({
-        profile_type: "driver",
+      const result = await MobilityRpcService.createDriverProfile({
         handle: payload.handle,
-        display_name: payload.displayName,
-        avatar_url: payload.avatarUrl,
+        displayName: payload.displayName,
+        avatarUrl: payload.avatarUrl,
         bio: payload.bio,
-        extension_data: payload.extensionData,
+        extensionData: payload.extensionData,
       });
 
       if (!result.success || !result.data) {

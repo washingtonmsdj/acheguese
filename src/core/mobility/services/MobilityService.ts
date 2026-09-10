@@ -53,7 +53,6 @@ export {
   incrementRideViewCount,
   decrementRideSeats,
   //  Driver management
-  createAdminDriverProfile,
   updateDriverOnlineStatus,
   updateDriverData,
   checkSuspensionExpiry,
@@ -198,7 +197,6 @@ export class MobilityFacade {
   //  ===== MUTATIONS =====
   static incrementRideViewCount = MobilityMutations.incrementRideViewCount;
   static decrementRideSeats = MobilityMutations.decrementRideSeats;
-  static createAdminDriverProfile = MobilityMutations.createAdminDriverProfile;
   static updateDriverOnlineStatus = MobilityMutations.updateDriverOnlineStatus;
   static updateDriverData = MobilityMutations.updateDriverData;
   static checkSuspensionExpiry = MobilityMutations.checkSuspensionExpiry;

@@ -37,7 +37,6 @@ export {
   switchActiveProfile,
   deleteProfile,
   uploadAvatar,
-  ensureDriverProfileForUser,
   checkUsernameAvailability,
 } from "./profile.mutations";
 

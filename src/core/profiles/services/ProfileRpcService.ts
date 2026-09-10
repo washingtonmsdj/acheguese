@@ -1,7 +1,7 @@
 import { invokeSupabaseBroker } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 
 type ProfileRpcAction =
-  | "createProfile"
+  | "createPersonal"
   | "createBusiness"
   | "updateBusiness"
   | "deactivateBusiness"
@@ -53,15 +53,19 @@ export class ProfileRpcService {
     });
   }
 
-  static async createProfile<TResult>(params: {
-    profileType: string;
-    handle: string;
-    displayName: string;
+  static async createPersonal<TResult>(params: {
+    username: string;
+    name: string;
+    displayName?: string | null;
     avatarUrl?: string | null;
     bio?: string | null;
-    extensionData?: Record<string, unknown> | null;
+    shortBio?: string | null;
+    city: string;
+    neighborhood?: string | null;
+    street?: string | null;
+    publicLocationVisibility?: "hidden" | "city_only" | "district" | null;
   }): Promise<TResult> {
-    return this.invoke<TResult>("createProfile", params);
+    return this.invoke<TResult>("createPersonal", params);
   }
 
   static async createBusiness<TResult>(params: {

@@ -219,11 +219,10 @@ export async function buildDriverProfileCreatePayload(
       vehicle_model: input.vehicleModel,
       vehicle_year: input.vehicleYear,
       vehicle_color: input.vehicleColor,
-      documents_verified: false,
-      background_check_status: "pending",
-      is_available: false,
-      // ✅ Capacidades baseadas no tipo
-      can_do_delivery: input.capabilities?.can_do_delivery ?? true,
+      // Estado de verificação/assinatura é server-owned.
+      // O modal genérico representa "Motorista"; Motoboy envia capabilities
+      // explícitas na página dedicada.
+      can_do_delivery: input.capabilities?.can_do_delivery ?? false,
       can_do_rides: input.capabilities?.can_do_rides ?? true,
     },
   };

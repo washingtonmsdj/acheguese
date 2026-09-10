@@ -21,7 +21,6 @@ import { ProfileMembersService } from './profileMembersService';
 import { MultiProfileRuntimeService } from './runtimeProfileService';
 import type {
   Profile,
-  CreateProfileInput,
   UpdateProfileInput,
   ServiceResponse,
   ProfileWithExtension,
@@ -172,33 +171,6 @@ export class MultiProfileService {
       return {
         success: false,
         error: errorMessage(error, 'Failed to save profile extension'),
-      };
-    }
-  }
-
-  /**
-   * Criar perfil com extensão (via RPC)
-   */
-  static async createProfile(input: CreateProfileInput): Promise<ServiceResponse<{ profile_id: string; handle: string }>> {
-    try {
-      if (input.profile_type === "business") {
-        return {
-          success: false,
-          error: "Use BusinessService.createBusiness para criar empresas",
-        };
-      }
-      return ProfileRpcService.createProfile<ServiceResponse<{ profile_id: string; handle: string }>>({
-        profileType: input.profile_type,
-        handle: input.handle,
-        displayName: input.display_name,
-        avatarUrl: input.avatar_url || null,
-        bio: input.bio || null,
-        extensionData: (input.extension_data || null) as Record<string, unknown> | null,
-      });
-    } catch (error: unknown) {
-      return {
-        success: false,
-        error: errorMessage(error, 'Failed to create profile'),
       };
     }
   }

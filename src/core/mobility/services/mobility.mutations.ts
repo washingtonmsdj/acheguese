@@ -51,7 +51,6 @@ type MobilityMutationsDbClient = {
 
 const mobilityDb = supabase as unknown as MobilityMutationsDbClient;
 
-
 /**
  * Incrementar contador de visualizações
  */
@@ -71,37 +70,6 @@ export async function decrementRideSeats(rideId: string): Promise<void> {
   if (error) {
     logger.error("MobilityMutations.decrementRideSeats", error);
     throw error;
-  }
-}
-
-/**
- * Criar perfil de motorista via admin
- */
-export async function createAdminDriverProfile(userId: string): Promise<unknown | null> {
-  try {
-    const driverProfile = await profileService.ensureDriverProfileForUser(userId);
-    if (!driverProfile?.id) return null;
-
-    const { data: existing } = await mobilityDb
-      .from("driver_data")
-      .select("*")
-      .eq("profile_id", driverProfile.id)
-      .maybeSingle();
-
-    if (existing) return existing;
-
-    const { data: driverData, error: driverError } = await mobilityDb.rpc<Record<string, unknown>>(
-      "ensure_admin_driver_data",
-      { p_profile_id: driverProfile.id },
-    );
-
-    if (driverError) throw driverError;
-
-    logger.info("MobilityMutations.createAdminDriverProfile - ensured", { userId, profileId: driverProfile.id });
-    return driverData;
-  } catch (error) {
-    logger.error("MobilityMutations.createAdminDriverProfile", error as Error);
-    return null;
   }
 }
 
@@ -183,4 +151,3 @@ export async function checkSuspensionExpiry(profileId: string): Promise<void> {
     logger.error("MobilityMutations.checkSuspensionExpiry", error as Error);
   }
 }
-

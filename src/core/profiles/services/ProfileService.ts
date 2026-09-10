@@ -69,8 +69,7 @@ import { updateProfileCommand } from "./profile.identity.commands";
 import { getProfileContextAggregate } from "./profile.context.aggregate";
 import { getProfileStatsAggregate } from "./profile.stats.aggregate";
 import {
-  createProfileWithIdentityValidation,
-  ensureActiveDriverProfileForUser,
+  createProfile as createProfileMutation,
   uploadAvatar as uploadAvatarMutation,
 } from "./profile.mutations";
 import {
@@ -182,9 +181,6 @@ export class ProfileService {
   ): Promise<Profile | null> {
     return getProfileByTypeQuery(userId, profileType);
   }
-  async ensureDriverProfileForUser(userId: string): Promise<Profile | null> {
-    return ensureActiveDriverProfileForUser(userId);
-  }
   async getRequiredActiveProfile(userId?: string): Promise<Profile> {
     const profile = await this.getActiveProfile(userId);
     if (!profile) {
@@ -202,7 +198,7 @@ export class ProfileService {
     return this.getByUsername(handle);
   }
   async createProfile(profile: CreateProfilePayload): Promise<Profile> {
-    return createProfileWithIdentityValidation(profile);
+    return createProfileMutation(profile);
   }
   async switchActiveProfile(userId: string, profileId: string): Promise<void> {
     const switched = await SessionRpcService.switchActiveProfile(profileId);

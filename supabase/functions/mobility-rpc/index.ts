@@ -34,6 +34,8 @@ const DRIVER_AVAILABILITY_ACTIONS = new Set([
 ]);
 const DRIVER_RIDE_MODES = new Set(["ride", "motoboy"]);
 const ACTIONS = {
+  createDriverProfile: true,
+  ensureAdminDriverProfile: true,
   createRide: true,
   createDelivery: true,
   acceptRide: true,
@@ -241,6 +243,151 @@ function optionalInteger(
     throw new RequestValidationError(`Invalid ${field}`);
   }
   return parsed;
+}
+
+const DRIVER_LICENSE_CATEGORIES = new Set(["A", "B", "AB", "C", "D", "E"]);
+const DRIVER_VEHICLE_TYPES = new Set(["car", "motorcycle", "van", "truck"]);
+const BRAZIL_STATE_CODES = new Set([
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS",
+  "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC",
+  "SP", "SE", "TO",
+]);
+const DRIVER_REGISTRATION_FIELDS = new Set([
+  "license_number",
+  "license_category",
+  "license_expiry",
+  "license_state",
+  "vehicle_type",
+  "vehicle_plate",
+  "vehicle_model",
+  "vehicle_year",
+  "vehicle_color",
+  "can_do_delivery",
+  "can_do_rides",
+]);
+
+function sanitizeDriverRegistrationExtension(
+  value: unknown,
+): Record<string, unknown> {
+  const input = requireObject(value, "extensionData");
+
+  for (const key of Object.keys(input)) {
+    if (!DRIVER_REGISTRATION_FIELDS.has(key)) {
+      throw new RequestValidationError(
+        `Unsupported driver registration field: ${key}`,
+      );
+    }
+  }
+
+  const licenseNumber = requireTrimmedString(
+    input.license_number,
+    "license_number",
+    32,
+  );
+  const licenseCategory = requireTrimmedString(
+    input.license_category,
+    "license_category",
+    3,
+  ).toUpperCase();
+  if (!DRIVER_LICENSE_CATEGORIES.has(licenseCategory)) {
+    throw new RequestValidationError("Invalid license_category");
+  }
+
+  const licenseExpiry = requireTrimmedString(
+    input.license_expiry,
+    "license_expiry",
+    10,
+  );
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(licenseExpiry)) {
+    throw new RequestValidationError("Invalid license_expiry");
+  }
+  const expiryDate = new Date(`${licenseExpiry}T00:00:00Z`);
+  if (
+    Number.isNaN(expiryDate.getTime()) ||
+    expiryDate.getTime() < Date.now() - 86_400_000
+  ) {
+    throw new RequestValidationError("Driver license is expired");
+  }
+
+  const licenseState = requireTrimmedString(
+    input.license_state,
+    "license_state",
+    2,
+  ).toUpperCase();
+  if (!BRAZIL_STATE_CODES.has(licenseState)) {
+    throw new RequestValidationError("Invalid license_state");
+  }
+
+  const vehicleType = requireTrimmedString(
+    input.vehicle_type,
+    "vehicle_type",
+    24,
+  ).toLowerCase();
+  if (!DRIVER_VEHICLE_TYPES.has(vehicleType)) {
+    throw new RequestValidationError("Invalid vehicle_type");
+  }
+
+  const vehiclePlate = requireTrimmedString(
+    input.vehicle_plate,
+    "vehicle_plate",
+    16,
+  ).toUpperCase();
+  if (!/^[A-Z0-9-]{5,10}$/.test(vehiclePlate)) {
+    throw new RequestValidationError("Invalid vehicle_plate");
+  }
+
+  const vehicleModel = requireTrimmedString(
+    input.vehicle_model,
+    "vehicle_model",
+    100,
+  );
+  const vehicleYear = optionalInteger(
+    input.vehicle_year,
+    "vehicle_year",
+    1900,
+    new Date().getUTCFullYear() + 1,
+  );
+  if (vehicleYear === null) {
+    throw new RequestValidationError("Invalid vehicle_year");
+  }
+  const vehicleColor = requireTrimmedString(
+    input.vehicle_color,
+    "vehicle_color",
+    64,
+  );
+
+  if (
+    typeof input.can_do_delivery !== "boolean" ||
+    typeof input.can_do_rides !== "boolean"
+  ) {
+    throw new RequestValidationError("Driver operational mode is required");
+  }
+  const canDoDelivery = input.can_do_delivery === true;
+  const canDoRides = input.can_do_rides === true;
+  if (canDoDelivery === canDoRides) {
+    throw new RequestValidationError(
+      "Driver registration must select exactly one initial operational mode",
+    );
+  }
+
+  return {
+    license_number: licenseNumber,
+    license_category: licenseCategory,
+    license_expiry: licenseExpiry,
+    license_state: licenseState,
+    vehicle_type: vehicleType,
+    vehicle_plate: vehiclePlate,
+    vehicle_model: vehicleModel,
+    vehicle_year: vehicleYear,
+    vehicle_color: vehicleColor,
+    documents_verified: false,
+    documents_verified_at: null,
+    background_check_status: "pending",
+    background_check_date: null,
+    is_available: false,
+    can_do_delivery: canDoDelivery,
+    can_do_rides: canDoRides,
+  };
 }
 
 async function isProjectAdmin(supabaseAdmin: SupabaseClient, userId: string): Promise<boolean> {
@@ -1526,6 +1673,62 @@ async function handleReconcileStaleDriverAvailability(
   return result;
 }
 
+async function handleCreateDriverProfile(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const handle = requireTrimmedString(params.handle, "handle", 100);
+  const displayName = requireTrimmedString(
+    params.displayName,
+    "displayName",
+    160,
+  );
+  const avatarUrl = optionalTrimmedString(
+    params.avatarUrl,
+    "avatarUrl",
+    2048,
+  );
+  const bio = optionalTrimmedString(params.bio, "bio", 4000);
+  const extensionData = sanitizeDriverRegistrationExtension(
+    params.extensionData,
+  );
+
+  const { data, error } = await supabaseAdmin.rpc(
+    "mobility_rpc_create_driver_profile",
+    {
+      p_actor_user_id: auth.userId,
+      p_handle: handle,
+      p_display_name: displayName,
+      p_avatar_url: avatarUrl,
+      p_bio: bio,
+      p_extension_data: extensionData,
+    },
+  );
+
+  if (error) throw error;
+  return data ?? { success: false, error: "Driver profile RPC returned no data" };
+}
+
+async function handleEnsureAdminDriverProfile(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+) {
+  if (!auth.isProjectAdmin) {
+    throw new RequestAuthorizationError(
+      "Project admin authority is required",
+    );
+  }
+
+  const { data, error } = await supabaseAdmin.rpc(
+    "mobility_rpc_ensure_admin_driver_profile",
+    { p_actor_user_id: auth.userId },
+  );
+
+  if (error) throw error;
+  return data ?? { success: false, error: "Admin driver bootstrap returned no data" };
+}
+
 async function dispatchAction(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
@@ -1533,6 +1736,10 @@ async function dispatchAction(
   params: Record<string, unknown>,
 ) {
   switch (action) {
+    case "createDriverProfile":
+      return handleCreateDriverProfile(supabaseAdmin, auth, params);
+    case "ensureAdminDriverProfile":
+      return handleEnsureAdminDriverProfile(supabaseAdmin, auth);
     case "createRide":
       return handleCreateRide(supabaseAdmin, auth, params);
     case "createDelivery":

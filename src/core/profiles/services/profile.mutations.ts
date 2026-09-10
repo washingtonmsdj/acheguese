@@ -4,8 +4,6 @@
  * @version 2.0.0 - Refatoração SSOT
  */
 
-import { supabase } from "@/integrations/supabase";
-import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { SessionService } from "@/core/session/services/SessionService";
 import { mediaService } from "@/core/media/services/MediaService";
@@ -18,156 +16,54 @@ import type {
   ProfileRow as Profile,
   OwnedProfileUpdatePayload,
 } from "./types";
-import {
-  getActiveProfile,
-  getProfileByType,
-  isUsernameAvailable,
-} from "./profile.queries";
-import {
-  buildCreateProfileInsert,
-  validateCreateProfileInput,
-} from "./profile.service.presenters";
-
-const TABLE = "profiles";
-const PROFILE_MUTATION_RETURN_COLUMNS = [
-  "id",
-  "user_id",
-  "profile_type",
-  "name",
-  "display_name",
-  "username",
-  "handle",
-  "slug",
-  "bio",
-  "short_bio",
-  "avatar_url",
-  "website",
-  "is_active",
-  "is_public",
-  "is_suspended",
-  "public_location_visibility",
-  "reputation",
-  "reputation_score",
-  "community_reputation_score",
-  "pontos",
-  "trust_score",
-  "verified",
-  "verified_at",
-  "show_contact_email",
-  "show_phone",
-  "show_linked_profiles",
-  "show_business_links",
-  "show_professional_links",
-  "created_at",
-  "updated_at",
-].join(",");
-
-interface QueryError {
-  message?: string | null;
-}
-
-interface QueryArrayResult<TRow> {
-  data: TRow[] | null;
-  error: QueryError | null;
-}
-
-interface QuerySingleResult<TRow> {
-  data: TRow | null;
-  error: QueryError | null;
-}
-
-interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
-  select: (columns?: string) => QueryBuilder<TRow>;
-  insert: (values: unknown | unknown[]) => QueryBuilder<TRow>;
-  update: (values: unknown) => QueryBuilder<TRow>;
-  delete: () => QueryBuilder<TRow>;
-  eq: (column: string, value: unknown) => QueryBuilder<TRow>;
-  single: () => Promise<QuerySingleResult<TRow>>;
-}
-
-interface ProfileMutationsDbClient {
-  from: <TRow = never>(table: string) => QueryBuilder<TRow>;
-}
-
-const profileMutationsDb = supabase as unknown as ProfileMutationsDbClient;
-
-type CreateProfilePayloadWithWhatsapp = CreateProfilePayload & {
-  whatsapp?: string;
-};
-
-function getCreateProfileWhatsapp(profile: CreateProfilePayload): string | undefined {
-  const profileWithWhatsapp = profile as CreateProfilePayloadWithWhatsapp;
-  return typeof profileWithWhatsapp.whatsapp === "string"
-    ? profileWithWhatsapp.whatsapp
-    : undefined;
-}
+import { isUsernameAvailable } from "./profile.queries";
+import { validateCreateProfileInput } from "./profile.service.presenters";
 
 // ============================================================================
 // 📝 CREATE
 // ============================================================================
 
+interface PersonalCreateBrokerResult {
+  success: boolean;
+  data?: {
+    profile_id: string;
+    handle: string;
+    username: string;
+  };
+  error?: string;
+}
+
 /**
- * Cria um novo profile
+ * Criação genérica foi encerrada: esta API cria somente o Profile pessoal.
+ * Business, Professional e Driver possuem owners/brokers de domínio próprios.
  */
-export async function createProfile(profile: CreateProfilePayload): Promise<Profile> {
-  if (profile.profile_type === "business") {
-    throw new Error("Use BusinessService.createBusiness para criar empresas");
+export async function createProfile(
+  profile: CreateProfilePayload,
+): Promise<Profile> {
+  if (profile.profile_type !== "personal") {
+    if (profile.profile_type === "business") {
+      throw new Error("Use BusinessService.createBusiness para criar empresas");
+    }
+    if (profile.profile_type === "professional") {
+      throw new Error("Use o lifecycle Professional para criar profissionais");
+    }
+    if (profile.profile_type === "driver") {
+      throw new Error("Use o cadastro de Motorista do módulo Mobility");
+    }
+    throw new Error("Criação genérica de Profile não é permitida para este domínio");
   }
 
   const user = await SessionService.getCurrentUser();
-
   if (!user) {
     throw new Error("User must be authenticated to create a profile");
   }
 
-  // Verificar disponibilidade do username
-  if (profile.username) {
-    const available = await isUsernameAvailable(profile.username);
-    if (!available) {
-      throw new Error(`Username "${profile.username}" is not available`);
-    }
-  }
-
-  const { data, error } = await supabase
-    .from(TABLE)
-    .insert({
-      user_id: user.id,
-      name: profile.name,
-      username: profile.username,
-      avatar_url: profile.avatar_url,
-      bio: profile.bio,
-      profile_type: profile.profile_type || "personal",
-      whatsapp: getCreateProfileWhatsapp(profile),
-      is_active: true,
-    })
-    .select(PROFILE_MUTATION_RETURN_COLUMNS)
-    .single();
-
-  if (error) {
-    trackError(error, {
-      component: "profile.mutations",
-      action: "createProfile",
-      metadata: { profileData: profile },
-    });
-    throw new Error(`Failed to create profile: ${error.message}`);
-  }
-
-  return data as unknown as Profile;
-}
-
-export async function createProfileWithIdentityValidation(
-  profile: CreateProfilePayload,
-): Promise<Profile> {
-  if (profile.profile_type === "business") {
-    throw new Error("Use BusinessService.createBusiness para criar empresas");
-  }
-
-  const user = await SessionService.getCurrentUser();
-  if (!user) throw new Error("Not authenticated");
-
   validateCreateProfileInput(profile);
 
-  const validation = PublicIdentityService.validateFormat(profile.username, "profile");
+  const validation = PublicIdentityService.validateFormat(
+    profile.username,
+    "profile",
+  );
   if (!validation.valid) {
     throw new Error(`Invalid username: ${validation.error}`);
   }
@@ -177,25 +73,30 @@ export async function createProfileWithIdentityValidation(
     entityType: "profile",
   });
   if (availability.status !== "available") {
-    throw new Error("Username already in use");
+    throw new Error(
+      availability.message ||
+        `Username "${profile.username}" is not available`,
+    );
   }
 
-  const { data, error } = await profileMutationsDb
-    .from<Profile>(TABLE)
-    .insert(buildCreateProfileInsert(user.id, profile))
-    .select(PROFILE_MUTATION_RETURN_COLUMNS)
-    .single();
+  const result = await ProfileRpcService.createPersonal<PersonalCreateBrokerResult>({
+    username: profile.username,
+    name: profile.name,
+    displayName: profile.display_name ?? profile.name,
+    avatarUrl: profile.avatar_url ?? null,
+    bio: profile.bio ?? null,
+    shortBio: profile.short_bio ?? null,
+    city: profile.city,
+    neighborhood: profile.neighborhood ?? null,
+    street: profile.street ?? null,
+    publicLocationVisibility: profile.public_location_visibility ?? null,
+  });
 
-  if (error) {
-    trackError(new Error("Error creating profile"), {
-      component: "profile.mutations",
-      action: "createProfileWithIdentityValidation",
-      metadata: { userId: user.id, error },
-    });
-    throw error;
+  if (!result.success || !result.data?.profile_id) {
+    throw new Error(result.error || "Personal profile create rejected");
   }
 
-  return data as unknown as Profile;
+  return reloadAccessibleProfile(result.data.profile_id);
 }
 
 // ============================================================================
@@ -326,94 +227,6 @@ export async function uploadAvatar(profileId: string, file: File): Promise<strin
       metadata: { profileId },
     });
     throw error;
-  }
-}
-
-// ============================================================================
-// 🚗 DRIVER PROFILE
-// ============================================================================
-
-/**
- * Garante que o usuário tenha um profile do tipo driver
- */
-export async function ensureDriverProfileForUser(userId: string): Promise<Profile | null> {
-  const existingDriverProfile = await getProfileByType(userId, "driver");
-  if (existingDriverProfile) {
-    return existingDriverProfile;
-  }
-
-  // Busca o perfil ativo para copiar dados
-  const activeProfile = await getActiveProfile(userId);
-
-  if (!activeProfile) {
-    logger.warn("[profile.mutations] No active profile found for user", { userId });
-    return null;
-  }
-
-  // Cria novo profile do tipo driver
-  const { data: newDriverProfile, error: createError } = await supabase
-    .from(TABLE)
-    .insert({
-      user_id: userId,
-      name: activeProfile.name,
-      username: `${activeProfile.username ?? activeProfile.id}-driver`,
-      avatar_url: activeProfile.avatar_url,
-      profile_type: "driver",
-      is_active: false, // Não ativa automaticamente
-      whatsapp: activeProfile.whatsapp,
-    })
-    .select(PROFILE_MUTATION_RETURN_COLUMNS)
-    .single();
-
-  if (createError) {
-    trackError(createError, {
-      component: "profile.mutations",
-      action: "ensureDriverProfileForUser",
-      metadata: { userId },
-    });
-    return null;
-  }
-
-  return newDriverProfile as unknown as Profile;
-}
-
-export async function ensureActiveDriverProfileForUser(userId: string): Promise<Profile | null> {
-  try {
-    const existingDriverProfile = await getProfileByType(userId, "driver");
-    if (existingDriverProfile) {
-      return existingDriverProfile;
-    }
-
-    const personalProfile = await getProfileByType(userId, "personal");
-    const { data, error } = await supabase
-      .from(TABLE)
-      .insert({
-        user_id: userId,
-        profile_type: "driver",
-        name: personalProfile?.name || "Admin",
-        display_name: `${personalProfile?.display_name || "Admin"} (Motorista)`,
-        is_active: true,
-      })
-      .select("*")
-      .single();
-
-    if (error) {
-      trackError(new Error("Error ensuring driver profile"), {
-        component: "profile.mutations",
-        action: "ensureActiveDriverProfileForUser",
-        metadata: { userId, error },
-      });
-      return null;
-    }
-
-    return data as unknown as Profile;
-  } catch (error) {
-    trackError(new Error("Unexpected error ensuring driver profile"), {
-      component: "profile.mutations",
-      action: "ensureActiveDriverProfileForUser",
-      metadata: { userId, error },
-    });
-    return null;
   }
 }
 

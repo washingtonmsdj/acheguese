@@ -13,6 +13,8 @@ import type {
 } from "../types/FailedDeliveryMetadata";
 
 type MobilityRpcAction =
+  | "createDriverProfile"
+  | "ensureAdminDriverProfile"
   | "createRide"
   | "createDelivery"
   | "acceptRide"
@@ -111,6 +113,28 @@ const FUNCTION_NAME = "mobility-rpc";
 const SERVICE_NAME = "MobilityRpcService";
 
 export class MobilityRpcService {
+  static async createDriverProfile(input: {
+    handle: string;
+    displayName: string;
+    avatarUrl?: string | null;
+    bio?: string | null;
+    extensionData: Record<string, unknown>;
+  }): Promise<{
+    success: boolean;
+    data?: { profile_id: string; handle?: string };
+    error?: string;
+  }> {
+    return this.invoke("createDriverProfile", input);
+  }
+
+  static async ensureAdminDriverProfile(): Promise<{
+    success: boolean;
+    data?: Record<string, unknown>;
+    error?: string;
+  }> {
+    return this.invoke("ensureAdminDriverProfile");
+  }
+
   static async createRide(input: CreateRideInput): Promise<{
     success: boolean;
     ride_id?: string;

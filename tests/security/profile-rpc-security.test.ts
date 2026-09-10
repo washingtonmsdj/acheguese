@@ -9,7 +9,7 @@ function readProjectFile(path: string): string {
 }
 
 describe("profile rpc broker security", () => {
-  it("routes privileged profile mutations through an authenticated broker", () => {
+  it("routes privileged profile mutations through authenticated domain brokers", () => {
     const edgeFunction = readProjectFile("supabase/functions/profile-rpc/index.ts");
     const config = readProjectFile("supabase/config.toml");
     const broker = readProjectFile("src/core/profiles/services/ProfileRpcService.ts");
@@ -26,12 +26,13 @@ describe("profile rpc broker security", () => {
     expect(edgeFunction).toContain("function requireUser(");
     expect(edgeFunction).toContain("[89ab][0-9a-f]{3}-[0-9a-f]{12}");
     expect(edgeFunction).toContain('getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY")');
-    expect(edgeFunction).toContain('supabaseAdmin.rpc("profile_rpc_create_profile_with_extension"');
+    expect(edgeFunction).toContain('"createPersonal"');
+    expect(edgeFunction).toContain('"profile_rpc_create_personal"');
+    expect(edgeFunction).not.toContain('createProfile: true');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("profile_rpc_create_business"');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("profile_rpc_update_business"');
     expect(edgeFunction).toContain('"profile_rpc_deactivate_business"');
-    expect(edgeFunction).toContain("Business profiles must use the createBusiness action");
-        expect(edgeFunction).toContain('supabaseAdmin.rpc("profile_rpc_create_professional"');
+    expect(edgeFunction).toContain('supabaseAdmin.rpc("profile_rpc_create_professional"');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("profile_rpc_update_professional_data"');
     expect(edgeFunction).toContain('supabaseAdmin.rpc("profile_rpc_deactivate_professional"');
     expect(edgeFunction).toContain("sanitizeProfessionalPatch");
@@ -44,13 +45,14 @@ describe("profile rpc broker security", () => {
     expect(edgeFunction).not.toMatch(/p_actor_user_id:\s*params\./);
 
     expect(broker).toContain('const FUNCTION_NAME = "profile-rpc"');
+    expect(broker).toContain('this.invoke<TResult>("createPersonal"');
     expect(broker).toContain('this.invoke<TResult>("createBusiness"');
     expect(broker).toContain('this.invoke<TResult>("updateBusiness"');
     expect(broker).toContain('this.invoke<TResult>("deactivateBusiness"');
-        expect(broker).toContain('this.invoke<TResult>("createProfessional"');
+    expect(broker).toContain('this.invoke<TResult>("createProfessional"');
     expect(broker).toContain('this.invoke<TResult>("updateProfessionalData"');
     expect(broker).toContain('this.invoke<TResult>("deactivateProfessional"');
-    expect(profileService).toContain("ProfileRpcService.createProfile");
+    expect(profileService).not.toContain("ProfileRpcService.createProfile");
     expect(profileService).toContain("ProfileRpcService.updateHandle");
     expect(profileService).toContain("ProfileRpcService.deleteProfile");
     expect(profileService).toContain("ProfileRpcService.transferOwnership");
@@ -158,6 +160,7 @@ describe("profile rpc broker security", () => {
     expect(migration).not.toContain("9299019a-0af0-4892-8226-7d1e3d9f0c36");
     expect(migration).not.toContain("d4fcd570-ba34-4624-ba90-4190767c6784");
   });
+
   it("brokers owner profile edits and separates admin/mobility authorities", () => {
     const migration = readProjectFile(
       "supabase/migrations/20260909222500_broker_owned_profile_self_service_g36.sql",
@@ -268,7 +271,6 @@ describe("profile rpc broker security", () => {
     );
   });
 
-
   it("server-owns the general Business lifecycle without duplicating Network authority", () => {
     const migration = readProjectFile(
       "supabase/migrations/20260909234000_broker_owned_business_lifecycle_g36.sql",
@@ -311,7 +313,6 @@ describe("profile rpc broker security", () => {
     expect(edge).toContain("sanitizeBusinessPatch");
     expect(edge).toContain("sanitizeContactChannels");
     expect(edge).toContain("sanitizeBusinessHours");
-    expect(edge).toContain("Business profiles must use the createBusiness action");
 
     expect(broker).toContain('this.invoke<TResult>("createBusiness"');
     expect(broker).toContain('this.invoke<TResult>("updateBusiness"');
@@ -335,11 +336,82 @@ describe("profile rpc broker security", () => {
       /\.from(?:<[^>]+>)?\(\s*["']business_stats["']\s*\)[\s\S]{0,260}\.(?:insert|update|delete)\(/,
     );
 
-    for (const source of [multiProfile, profileMutations]) {
-      expect(source).toContain(
-        "Use BusinessService.createBusiness para criar empresas",
-      );
-    }
+    expect(profileMutations).toContain(
+      "Use BusinessService.createBusiness para criar empresas",
+    );
+    expect(multiProfile).not.toContain("ProfileRpcService.createProfile");
   });
 
+  it("separates Personal and Driver creation by domain authority", () => {
+    const migration = readProjectFile(
+      "supabase/migrations/20260910003000_domain_owned_profile_creation_g36.sql",
+    );
+    const profileEdge = readProjectFile("supabase/functions/profile-rpc/index.ts");
+    const profileBroker = readProjectFile("src/core/profiles/services/ProfileRpcService.ts");
+    const profileMutations = readProjectFile(
+      "src/core/profiles/services/profile.mutations.ts",
+    );
+    const multiProfile = readProjectFile(
+      "src/core/profiles/services/multi-profile/profileService.ts",
+    );
+    const mobilityEdge = readProjectFile("supabase/functions/mobility-rpc/index.ts");
+    const mobilityBroker = readProjectFile(
+      "src/core/mobility/services/MobilityRpcService.ts",
+    );
+    const driverCreate = readProjectFile(
+      "src/modules/mobility/hooks/useDriverCreateMultiProfile.ts",
+    );
+    const driverRegistration = readProjectFile(
+      "src/modules/mobility/utils/driverRegistration.ts",
+    );
+    const driverIdentity = readProjectFile(
+      "src/core/mobility/hooks/useDriverProfileIdentity.ts",
+    );
+
+    expect(migration).toContain("private.profile_create_personal");
+    expect(migration).toContain("public.profile_rpc_create_personal");
+    expect(migration).toContain("public.mobility_rpc_create_driver_profile");
+    expect(migration).toContain("private.mobility_ensure_admin_driver_profile");
+    expect(migration).toContain("public.mobility_rpc_ensure_admin_driver_profile");
+    expect(migration).toContain("private.is_admin_from_roles(p_actor_user_id)");
+    expect(migration).toContain("ON CONFLICT (profile_id) DO NOTHING");
+    expect(migration).toContain("Compatibility window");
+
+    for (const signature of [
+      "public.profile_rpc_create_personal",
+      "public.mobility_rpc_create_driver_profile",
+      "public.mobility_rpc_ensure_admin_driver_profile",
+    ]) {
+      expect(migration).toContain(`REVOKE ALL ON FUNCTION ${signature}`);
+      expect(migration).toContain("FROM PUBLIC, anon, authenticated");
+      expect(migration).toContain("TO service_role");
+    }
+
+    expect(profileEdge).toContain('createPersonal: true');
+    expect(profileEdge).toContain('"profile_rpc_create_personal"');
+    expect(profileEdge).not.toContain('createProfile: true');
+    expect(profileBroker).toContain('this.invoke<TResult>("createPersonal"');
+    expect(profileBroker).not.toContain('"createProfile"');
+    expect(profileMutations).toContain("ProfileRpcService.createPersonal");
+    expect(profileMutations).not.toMatch(
+      /\.from(?:<[^>]+>)?\(\s*["']profiles["']\s*\)[\s\S]{0,260}\.insert\(/,
+    );
+    expect(multiProfile).not.toContain("ProfileRpcService.createProfile");
+
+    expect(mobilityEdge).toContain("createDriverProfile: true");
+    expect(mobilityEdge).toContain("ensureAdminDriverProfile: true");
+    expect(mobilityEdge).toContain("sanitizeDriverRegistrationExtension");
+    expect(mobilityEdge).toContain('"mobility_rpc_create_driver_profile"');
+    expect(mobilityEdge).toContain('"mobility_rpc_ensure_admin_driver_profile"');
+    expect(mobilityBroker).toContain('"createDriverProfile"');
+    expect(mobilityBroker).toContain('"ensureAdminDriverProfile"');
+    expect(driverCreate).toContain("MobilityRpcService.createDriverProfile");
+    expect(driverCreate).not.toContain("MultiProfileService.createProfile");
+    expect(driverRegistration).not.toContain("documents_verified: false");
+    expect(driverRegistration).not.toContain('background_check_status: "pending"');
+    expect(driverRegistration).toContain("can_do_delivery: input.capabilities?.can_do_delivery ?? false");
+    expect(driverRegistration).toContain("can_do_rides: input.capabilities?.can_do_rides ?? true");
+    expect(driverIdentity).toContain("MobilityRpcService.ensureAdminDriverProfile");
+    expect(driverIdentity).not.toContain("createAdminDriverProfile");
+  });
 });

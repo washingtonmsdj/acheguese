@@ -24,7 +24,7 @@ const ALLOWED_METHODS = "POST, OPTIONS";
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const ACTIONS = {
-  createProfile: true,
+  createPersonal: true,
   createBusiness: true,
   updateBusiness: true,
   deactivateBusiness: true,
@@ -710,41 +710,6 @@ function sanitizeProfessionalPatch(value: unknown): Record<string, unknown> {
   return input;
 }
 
-function sanitizeDriverExtensionData(
-  extensionData: Record<string, unknown> | null,
-): Record<string, unknown> | null {
-  if (!extensionData) return null;
-
-  const canDoDelivery = extensionData.can_do_delivery === true;
-  const canDoRides = extensionData.can_do_rides === true;
-  if (canDoDelivery === canDoRides) {
-    throw new RequestValidationError(
-      "Driver registration must select exactly one initial operational mode",
-    );
-  }
-
-  const sanitized = { ...extensionData };
-  delete sanitized.is_verified;
-  delete sanitized.subscription_active;
-  delete sanitized.rating;
-  delete sanitized.total_rides;
-  delete sanitized.total_rides_completed;
-  delete sanitized.total_rides_cancelled;
-  delete sanitized.acceptance_rate;
-  delete sanitized.cancellation_rate;
-
-  return {
-    ...sanitized,
-    documents_verified: false,
-    documents_verified_at: null,
-    background_check_status: "pending",
-    background_check_date: null,
-    is_available: false,
-    can_do_delivery: canDoDelivery,
-    can_do_rides: canDoRides,
-  };
-}
-
 function requireInviteRole(value: unknown): ProfileMemberRole {
   if (value === undefined || value === null || value === "") return "member";
   if (value !== "member" && value !== "admin") {
@@ -770,40 +735,65 @@ async function requireUser(
   return { userId: data.user.id };
 }
 
-async function handleCreateProfile(
+async function handleCreatePersonal(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
   params: Record<string, unknown>,
 ) {
-  const profileType = requireProfileType(params.profileType ?? params.p_profile_type);
-  const handle = requireString(params.handle ?? params.p_handle, "handle", 100);
-  const displayName = requireString(params.displayName ?? params.p_display_name, "displayName", 160);
-  const avatarUrl = optionalString(params.avatarUrl ?? params.p_avatar_url, "avatarUrl", 2048);
-  const bio = optionalString(params.bio ?? params.p_bio, "bio", 4000);
-  if (profileType === "business") {
-    throw new RequestValidationError(
-      "Business profiles must use the createBusiness action",
-    );
+  const username = requireString(params.username, "username", 30);
+  const name = requireString(params.name, "name", 160);
+  const displayName =
+    optionalString(params.displayName, "displayName", 160) ?? name;
+  const avatarUrl = optionalString(params.avatarUrl, "avatarUrl", 2048);
+  const bio = optionalString(params.bio, "bio", 4000);
+  const shortBio = optionalString(params.shortBio, "shortBio", 280);
+  const city = requireString(params.city, "city", 160);
+  const neighborhood = optionalString(params.neighborhood, "neighborhood", 160);
+  const street = optionalString(params.street, "street", 300);
+
+  const publicLocationVisibilityRaw = params.publicLocationVisibility;
+  const publicLocationVisibility =
+    publicLocationVisibilityRaw === undefined ||
+      publicLocationVisibilityRaw === null ||
+      publicLocationVisibilityRaw === ""
+      ? null
+      : publicLocationVisibilityRaw;
+
+  if (
+    publicLocationVisibility !== null &&
+    publicLocationVisibility !== "hidden" &&
+    publicLocationVisibility !== "city_only" &&
+    publicLocationVisibility !== "district"
+  ) {
+    throw new RequestValidationError("Invalid publicLocationVisibility");
   }
 
-  const rawExtensionData = optionalExtensionData(params.extensionData ?? params.p_extension_data);
-  const extensionData =
-    profileType === "driver"
-      ? sanitizeDriverExtensionData(rawExtensionData)
-      : rawExtensionData;
+  const patch: Record<string, unknown> = {
+    name,
+    display_name: displayName,
+    city,
+  };
+  if (shortBio !== null) patch.short_bio = shortBio;
+  if (neighborhood !== null) patch.neighborhood = neighborhood;
+  if (street !== null) patch.street = street;
+  if (publicLocationVisibility !== null) {
+    patch.public_location_visibility = publicLocationVisibility;
+  }
 
-  const { data, error } = await supabaseAdmin.rpc("profile_rpc_create_profile_with_extension", {
-    p_actor_user_id: auth.userId,
-    p_profile_type: profileType,
-    p_handle: handle,
-    p_display_name: displayName,
-    p_avatar_url: avatarUrl,
-    p_bio: bio,
-    p_extension_data: extensionData,
-  });
+  const { data, error } = await supabaseAdmin.rpc(
+    "profile_rpc_create_personal",
+    {
+      p_actor_user_id: auth.userId,
+      p_username: username,
+      p_display_name: displayName,
+      p_avatar_url: avatarUrl,
+      p_bio: bio,
+      p_patch: patch,
+    },
+  );
 
   if (error) throw error;
-  return data ?? { success: false, error: "Profile RPC returned no data" };
+  return data ?? { success: false, error: "Personal profile RPC returned no data" };
 }
 
 async function handleCreateBusiness(
@@ -1092,8 +1082,8 @@ async function dispatchAction(
   params: Record<string, unknown>,
 ) {
   switch (action) {
-    case "createProfile":
-      return handleCreateProfile(supabaseAdmin, auth, params);
+    case "createPersonal":
+      return handleCreatePersonal(supabaseAdmin, auth, params);
     case "createBusiness":
       return handleCreateBusiness(supabaseAdmin, auth, params);
     case "updateBusiness":

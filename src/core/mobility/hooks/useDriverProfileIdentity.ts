@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useIsAdmin } from "@/core/auth/hooks/useIsAdmin";
 import { useSessionContext } from "@/core/session";
 import type { DriverDataRecord } from "@/core/mobility/types/DriverDataRecord";
+import { MobilityRpcService } from "@/core/mobility/services/MobilityRpcService";
 
 interface UseDriverProfileIdentityOptions {
   allowAdminBootstrap?: boolean;
@@ -39,7 +40,12 @@ export function useDriverProfileIdentity({
         return existing;
       }
 
-      return (await mobilityService.createAdminDriverProfile(user.id)) as DriverDataRecord | null;
+      const result = await MobilityRpcService.ensureAdminDriverProfile();
+      if (!result.success || !result.data) {
+        throw new Error(result.error || "Falha ao preparar perfil operacional de motorista");
+      }
+
+      return result.data as unknown as DriverDataRecord;
     },
     enabled: enabled && !!user,
     retry: false,

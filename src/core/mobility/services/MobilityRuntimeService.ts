@@ -137,37 +137,6 @@ class MobilityServiceInstance {
 
   // -- Driver --------------------------------------------------------------
 
-  async createAdminDriverProfile(userId: string): Promise<DriverDataRecord | null> {
-    try {
-      const driverProfile = await profileService.ensureDriverProfileForUser(userId);
-      if (!driverProfile?.id) return null;
-
-      const { data: existing } = await db
-        .from<DriverDataRecord>("driver_data")
-        .select("*")
-        .eq("profile_id", driverProfile.id)
-        .maybeSingle();
-
-      if (existing) return existing;
-
-      const { data: driverData, error: driverError } = await db.rpc<DriverDataRecord>(
-        "ensure_admin_driver_data",
-        { p_profile_id: driverProfile.id },
-      );
-
-      if (driverError) throw driverError;
-
-      logger.info("mobilityService.createAdminDriverProfile - ensured", {
-        userId,
-        profileId: driverProfile.id,
-      });
-      return driverData;
-    } catch (error) {
-      logger.error("mobilityService.createAdminDriverProfile", error as Error);
-      return null;
-    }
-  }
-
   async getDriverData(identifier: string): Promise<DriverDataRecord | null> {
     try {
       const driverProfileId = await this.resolveDriverProfileId(identifier);
@@ -423,7 +392,6 @@ class MobilityServiceInstance {
       return null;
     }
   }
-
 
   async incrementRideViewCount(rideId: string): Promise<void> {
     try {
