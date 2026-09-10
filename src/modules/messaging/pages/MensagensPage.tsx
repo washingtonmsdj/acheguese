@@ -593,7 +593,7 @@ function MobileConversationDetail({
   };
 
   return (
-    <section className="flex min-h-[calc(100dvh-4.5rem)] flex-col bg-territory-canvas pb-[4.5rem]">
+    <section className="flex h-[100dvh] min-h-0 flex-col bg-territory-canvas pt-[env(safe-area-inset-top)]">
       <header className="flex min-h-16 items-center gap-3 border-b border-territory-border bg-territory-surface px-4">
         <button type="button" onClick={onBack} aria-label="Voltar para conversas" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"><ArrowLeft className="h-5 w-5" aria-hidden="true" /></button>
         <ProfileAvatar profile={conversation} size="sm" />
@@ -613,7 +613,7 @@ function MobileConversationDetail({
         <div className="flex min-h-0 flex-1 flex-col justify-end gap-3 overflow-y-auto pb-4">
           {localMessages.map((message) => <MessageBubble key={message.id} body={message.body} time={message.time} mine={message.mine} />)}
         </div>
-        <form onSubmit={submit} className="mt-3 rounded-2xl border border-territory-border bg-territory-surface p-3 shadow-territory-subtle">
+        <form onSubmit={submit} className="mt-3 shrink-0 rounded-2xl border border-territory-border bg-territory-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-territory-subtle">
           <div className="mb-3 flex items-center gap-3 px-1"><ConceptProfileIcon profile={selectedProfile} size="sm" /><span className="min-w-0 truncate text-sm text-territory-muted">Respondendo como <strong className="font-semibold text-territory-ink">{selectedProfile.name}</strong></span></div>
           <div className="flex items-center gap-2">
             <button type="button" aria-label="Adicionar anexo" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-territory-raised text-territory-brand hover:bg-[hsl(var(--territory-brand)/0.12)]"><Plus className="h-5 w-5" aria-hidden="true" /></button>
