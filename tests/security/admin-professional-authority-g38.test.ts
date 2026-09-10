@@ -16,7 +16,7 @@ describe("Professional admin authority G38", () => {
 
     expect(edge).toContain('const ACTIONS = { setAvailability: true } as const;');
     expect(edge).toContain("requireAdmin(req)");
-    expect(edge).toContain('getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY")');
+    expect(edge).toContain("getSupabaseAdminClient()");
     expect(edge).toContain('.from("professional_data")');
     expect(edge).toContain("is_accepting_clients: isAcceptingClients");
     expect(edge).not.toContain("professionalPatch");

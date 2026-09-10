@@ -6,13 +6,14 @@
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { requireAdmin } from "../_shared/adminAuth.ts";
+import {
+  getSupabaseAdminClient,
+  requireAdmin,
+} from "../_shared/adminAuth.ts";
 import {
   auditLog,
   getAllSecurityHeaders,
   getAuditInfo,
-  getRequiredEnv,
   jsonResponse,
   rateLimitMiddleware,
   readJsonBody,
@@ -94,12 +95,7 @@ serve(async (req: Request) => {
       "isAcceptingClients",
     );
 
-    const supabaseAdmin = createClient(
-      getRequiredEnv("SUPABASE_URL"),
-      getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY"),
-      { auth: { autoRefreshToken: false, persistSession: false } },
-    );
-
+    const supabaseAdmin = getSupabaseAdminClient();
     const { data, error } = await supabaseAdmin
       .from("professional_data")
       .update({
