@@ -7,7 +7,10 @@
  * - Atualizar conteudo AI
  */
 
-import { supabase } from "@/integrations/supabase";
+import {
+  resolveSupabaseFunctionErrorMessage,
+  supabase,
+} from "@/integrations/supabase";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
 
@@ -52,7 +55,7 @@ interface TerritorialDbClient {
     invoke<TResponse>(
       name: string,
       options: { body?: unknown },
-    ): Promise<{ data: TResponse | null; error: { message?: string } | null }>;
+    ): Promise<{ data: TResponse | null; error: unknown | null }>;
   };
 }
 
@@ -100,23 +103,29 @@ export class TerritorialAIService {
         );
 
       if (error) {
-        logger.error("Error invoking AI generation:", error);
-        throw error;
+        const message =
+          (await resolveSupabaseFunctionErrorMessage(error)) ??
+          "Falha ao gerar conteúdo territorial";
+        throw new Error(message);
       }
 
-      const response = data ?? {};
-      if (response.error) {
-        throw new Error(response.error);
+      if (!data || typeof data !== "object" || Array.isArray(data)) {
+        throw new Error("Resposta inválida da geração territorial");
       }
 
-      return response;
+      if (typeof data.error === "string" && data.error.trim()) {
+        throw new Error(data.error);
+      }
+
+      return data;
     } catch (err) {
-      trackError(err as Error, {
+      const error = err instanceof Error ? err : new Error("Falha ao gerar conteúdo territorial");
+      trackError(error, {
         component: "TerritorialAIService",
         action: "generateAIContent",
         metadata: params,
       });
-      throw err;
+      throw error;
     }
   }
 
