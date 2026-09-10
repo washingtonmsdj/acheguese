@@ -16,7 +16,7 @@ export interface MFAStatus {
   mfaMethod: 'totp' | 'sms' | 'email' | null;
   enrolledAt: string | null;
   lastVerifiedAt: string | null;
-  /** Compatibilidade de leitura. Recovery codes não são suportados pelo Auth. */
+  /** Compatibilidade de leitura; o projeto não habilita recovery codes no Auth. */
   backupCodesGenerated: boolean;
   backupCodesCount: number;
   gracePeriodExpiresAt: string | null;
@@ -38,6 +38,25 @@ export interface MFARequirement {
 }
 
 class MFAService {
+  /**
+   * Sincroniza o tracker auxiliar pelo broker server-owned após uma mutação
+   * confirmada pelo Supabase Auth. Falha de sincronização não desfaz uma
+   * operação que o Auth já confirmou.
+   */
+  private async reconcilePolicyTracker(): Promise<void> {
+    try {
+      const required = await SessionRpcService.checkMfaRequired();
+      if (required === null) {
+        logger.error(
+          'MFAService.reconcilePolicyTracker',
+          new Error('session-rpc returned no MFA requirement'),
+        );
+      }
+    } catch (error) {
+      logger.error('MFAService.reconcilePolicyTracker', error);
+    }
+  }
+
   /**
    * Verificar se MFA é obrigatório para o usuário atual.
    *
@@ -91,11 +110,10 @@ class MFAService {
   }
 
   /**
-   * Buscar status auxiliar de MFA do usuário atual.
+   * Buscar status de MFA do usuário atual.
    *
-   * Os campos históricos de backup codes são neutralizados porque Supabase Auth
-   * não fornece recovery codes. Exibi-los como válidos criaria uma capacidade
-   * de recuperação que não existe.
+   * `mfaEnabled` e `mfaMethod` são derivados dos fatores verificados retornados
+   * pelo Supabase Auth. A tabela auxiliar fornece somente metadata de política.
    */
   async getMFAStatus(): Promise<MFAStatus | null> {
     try {
@@ -105,46 +123,44 @@ class MFAService {
         return null;
       }
 
-      const { data: initialData, error } = await supabase
-        .from('user_mfa_status')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-      let data = initialData;
-
-      if (error) {
-        // Se não existe registro, criar apenas a linha auxiliar do próprio usuário.
-        if (error.code === 'PGRST116') {
-          const { data: newData, error: insertError } = await supabase
-            .from('user_mfa_status')
-            .insert({ user_id: user.id })
-            .select()
-            .single();
-
-          if (insertError) {
-            logger.error('MFAService.getMFAStatus - insert', insertError);
-            return null;
-          }
-
-          data = newData;
-        } else {
-          logger.error('MFAService.getMFAStatus', error);
-          return null;
-        }
+      const { data: factorData, error: factorError } =
+        await supabase.auth.mfa.listFactors();
+      if (factorError || !factorData) {
+        logger.error(
+          'MFAService.getMFAStatus - factors',
+          factorError ?? new Error('Supabase Auth returned no MFA factors payload'),
+        );
+        return null;
       }
 
-      if (!data) return null;
+      // Este serviço suporta TOTP. `listFactors().totp` representa os fatores
+      // TOTP habilitados/confirmados para a sessão do usuário.
+      const hasVerifiedTotp = Array.isArray(factorData.totp) && factorData.totp.length > 0;
+
+      const { data: policyData, error: policyError } = await supabase
+        .from('user_mfa_status')
+        .select(
+          'enrolled_at,last_verified_at,grace_period_expires_at,is_exempt,exemption_reason',
+        )
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (policyError) {
+        logger.warn('MFAService.getMFAStatus - policy metadata', policyError);
+      }
 
       return {
-        mfaEnabled: data.mfa_enabled === true,
-        mfaMethod: (data.mfa_method as 'totp' | 'sms' | 'email' | null),
-        enrolledAt: data.enrolled_at,
-        lastVerifiedAt: data.last_verified_at,
+        mfaEnabled: hasVerifiedTotp,
+        mfaMethod: hasVerifiedTotp ? 'totp' : null,
+        enrolledAt: policyData?.enrolled_at ?? null,
+        lastVerifiedAt: policyData?.last_verified_at ?? null,
+        // O projeto não habilita recovery codes do Auth. Os códigos locais
+        // históricos foram removidos porque nunca constituíram recuperação real.
         backupCodesGenerated: false,
         backupCodesCount: 0,
-        gracePeriodExpiresAt: data.grace_period_expires_at,
-        isExempt: data.is_exempt === true,
-        exemptionReason: data.exemption_reason,
+        gracePeriodExpiresAt: policyData?.grace_period_expires_at ?? null,
+        isExempt: policyData?.is_exempt === true,
+        exemptionReason: policyData?.exemption_reason ?? null,
       };
     } catch (error) {
       logger.error('MFAService.getMFAStatus', error);
@@ -184,8 +200,6 @@ class MFAService {
 
   /**
    * Verificar código TOTP e completar enrollment.
-   * Supabase Auth é a autoridade; falha no tracker auxiliar não desfaz um fator
-   * que o Auth já verificou, mas é registrada para reconciliação.
    */
   async verifyAndEnableMFA(factorId: string, code: string): Promise<boolean> {
     try {
@@ -194,7 +208,10 @@ class MFAService {
       });
 
       if (error || !data?.id) {
-        logger.error('MFAService.verifyAndEnableMFA - challenge', error ?? new Error('Missing challenge id'));
+        logger.error(
+          'MFAService.verifyAndEnableMFA - challenge',
+          error ?? new Error('Missing challenge id'),
+        );
         return false;
       }
 
@@ -209,27 +226,7 @@ class MFAService {
         return false;
       }
 
-      const user = await SessionService.getCurrentUser();
-
-      if (user) {
-        const now = new Date().toISOString();
-        const { error: statusError } = await supabase
-          .from('user_mfa_status')
-          .upsert({
-            user_id: user.id,
-            mfa_enabled: true,
-            mfa_method: 'totp',
-            enrolled_at: now,
-            last_verified_at: now,
-            backup_codes_generated: false,
-            backup_codes_count: 0,
-          });
-
-        if (statusError) {
-          logger.error('MFAService.verifyAndEnableMFA - status sync', statusError);
-        }
-      }
-
+      await this.reconcilePolicyTracker();
       return true;
     } catch (error) {
       logger.error('MFAService.verifyAndEnableMFA', error);
@@ -251,26 +248,7 @@ class MFAService {
         return false;
       }
 
-      const user = await SessionService.getCurrentUser();
-
-      if (user) {
-        const { error: statusError } = await supabase
-          .from('user_mfa_status')
-          .update({
-            mfa_enabled: false,
-            mfa_method: null,
-            enrolled_at: null,
-            last_verified_at: null,
-            backup_codes_generated: false,
-            backup_codes_count: 0,
-          })
-          .eq('user_id', user.id);
-
-        if (statusError) {
-          logger.error('MFAService.disableMFA - status sync', statusError);
-        }
-      }
-
+      await this.reconcilePolicyTracker();
       return true;
     } catch (error) {
       logger.error('MFAService.disableMFA', error);
@@ -307,7 +285,10 @@ class MFAService {
       });
 
       if (error || !data?.id) {
-        logger.error('MFAService.verifyMFACode - challenge', error ?? new Error('Missing challenge id'));
+        logger.error(
+          'MFAService.verifyMFACode - challenge',
+          error ?? new Error('Missing challenge id'),
+        );
         return false;
       }
 
@@ -322,21 +303,7 @@ class MFAService {
         return false;
       }
 
-      const user = await SessionService.getCurrentUser();
-
-      if (user) {
-        const { error: statusError } = await supabase
-          .from('user_mfa_status')
-          .update({
-            last_verified_at: new Date().toISOString(),
-          })
-          .eq('user_id', user.id);
-
-        if (statusError) {
-          logger.error('MFAService.verifyMFACode - status sync', statusError);
-        }
-      }
-
+      await this.reconcilePolicyTracker();
       return true;
     } catch (error) {
       logger.error('MFAService.verifyMFACode', error);
