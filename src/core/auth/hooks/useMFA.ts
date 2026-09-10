@@ -1,7 +1,7 @@
 /**
  * useMFA Hook
- * 
- * Hook para gerenciar MFA (Multi-Factor Authentication)
+ *
+ * Hook para gerenciar MFA (Multi-Factor Authentication).
  */
 import { logger } from '@/shared/utils/logger';
 import { useState, useEffect } from 'react';
@@ -13,11 +13,14 @@ export function useMFA() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Carregar status de MFA
+  // Carregar status de MFA.
   const loadStatus = async () => {
     try {
       setLoading(true);
       setError(null);
+      // Não preservar uma decisão anterior enquanto a autoridade está sendo
+      // reavaliada. `null` significa desconhecido, nunca "MFA dispensado".
+      setRequirement(null);
 
       const [statusData, requirementData] = await Promise.all([
         mfaService.getMFAStatus(),
@@ -28,25 +31,26 @@ export function useMFA() {
       setRequirement(requirementData);
     } catch (err) {
       logger.error('useMFA.loadStatus', err);
+      setRequirement(null);
       setError('Erro ao carregar status de MFA');
     } finally {
       setLoading(false);
     }
   };
 
-  // Carregar ao montar
+  // Carregar ao montar.
   useEffect(() => {
     loadStatus();
   }, []);
 
-  // Iniciar enrollment
+  // Iniciar enrollment.
   const startEnrollment = async () => {
     try {
       setLoading(true);
       setError(null);
 
       const enrollmentData = await mfaService.enrollMFA();
-      
+
       if (!enrollmentData) {
         throw new Error('Falha ao iniciar enrollment de MFA');
       }
@@ -61,21 +65,19 @@ export function useMFA() {
     }
   };
 
-  // Verificar e habilitar MFA
+  // Verificar e habilitar MFA.
   const verifyAndEnable = async (factorId: string, code: string) => {
     try {
       setLoading(true);
       setError(null);
 
       const success = await mfaService.verifyAndEnableMFA(factorId, code);
-      
+
       if (!success) {
         throw new Error('Código inválido');
       }
 
-      // Recarregar status
       await loadStatus();
-
       return true;
     } catch (err) {
       logger.error('useMFA.verifyAndEnable', err);
@@ -86,21 +88,19 @@ export function useMFA() {
     }
   };
 
-  // Desabilitar MFA
+  // Desabilitar MFA.
   const disable = async (factorId: string) => {
     try {
       setLoading(true);
       setError(null);
 
       const success = await mfaService.disableMFA(factorId);
-      
+
       if (!success) {
         throw new Error('Falha ao desabilitar MFA');
       }
 
-      // Recarregar status
       await loadStatus();
-
       return true;
     } catch (err) {
       logger.error('useMFA.disable', err);
@@ -111,14 +111,14 @@ export function useMFA() {
     }
   };
 
-  // Verificar código durante login
+  // Verificar código durante login.
   const verifyCode = async (factorId: string, code: string) => {
     try {
       setLoading(true);
       setError(null);
 
       const success = await mfaService.verifyMFACode(factorId, code);
-      
+
       if (!success) {
         throw new Error('Código inválido');
       }
@@ -133,7 +133,7 @@ export function useMFA() {
     }
   };
 
-  // Listar fatores
+  // Listar fatores.
   const listFactors = async () => {
     try {
       return await mfaService.listMFAFactors();
@@ -142,6 +142,8 @@ export function useMFA() {
       return [];
     }
   };
+
+  const isMFARequirementResolved = requirement !== null && error === null;
 
   return {
     status,
@@ -154,10 +156,13 @@ export function useMFA() {
     disable,
     verifyCode,
     listFactors,
-    // Computed properties
-    isMFAEnabled: status?.mfaEnabled || false,
-    isMFARequired: requirement?.required || false,
-    gracePeriodDaysRemaining: requirement?.daysRemaining || null,
-    isInGracePeriod: (requirement?.daysRemaining || 0) > 0,
+    // Computed properties. Quando a política está desconhecida, `isMFARequired`
+    // permanece true (fail-closed); consumidores podem usar o resolved flag para
+    // distinguir exigência real de indisponibilidade da autoridade.
+    isMFAEnabled: status?.mfaEnabled ?? false,
+    isMFARequired: requirement?.required ?? true,
+    isMFARequirementResolved,
+    gracePeriodDaysRemaining: requirement?.daysRemaining ?? null,
+    isInGracePeriod: (requirement?.daysRemaining ?? 0) > 0,
   };
 }
