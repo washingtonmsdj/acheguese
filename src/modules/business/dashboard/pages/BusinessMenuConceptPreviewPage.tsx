@@ -432,7 +432,7 @@ function MenuItemGrid({ items, selectedId, onOpen, onToggle, onDelete, onMarkSol
             <button type="button" onClick={() => onOpen(item)} className="group block w-full text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand">
               <div className="relative aspect-[2/1] overflow-hidden bg-territory-raised">
                 <img src={item.image} alt="" className="h-full w-full object-cover transition-transform group-hover:scale-[1.02]" />
-                <div className="absolute inset-x-2 top-2 flex flex-col items-start gap-1 sm:inset-x-3 sm:top-3 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
+                <div className="absolute inset-x-2 top-2 hidden flex-col items-start gap-1 sm:inset-x-3 sm:top-3 sm:flex-row sm:items-start sm:justify-between sm:gap-2 lg:flex">
                   {item.featured ? <span className="inline-flex items-center gap-1 rounded-full bg-territory-sun px-2 py-1 text-[0.625rem] font-bold text-territory-ink"><Star className="h-3 w-3 fill-current" aria-hidden="true" />Destaque</span> : null}
                   <span className={cn("self-start rounded-full px-2 py-1 text-[0.625rem] font-bold sm:self-auto", item.status === "Disponível" ? "bg-territory-success/95 text-white" : item.status === "Rascunho" ? "bg-territory-warning text-territory-ink" : "bg-territory-ink/75 text-white")}>{item.status}</span>
                 </div>
@@ -442,6 +442,10 @@ function MenuItemGrid({ items, selectedId, onOpen, onToggle, onDelete, onMarkSol
                   <h3 className="truncate text-xs font-bold text-territory-ink sm:text-sm">{item.name}</h3>
                   <p className="mt-0.5 text-[0.625rem] text-territory-muted sm:text-xs">{item.category}</p>
                   <p className="mt-1 text-xs font-bold leading-4 text-territory-ink sm:text-sm">{item.price}</p>
+                </div>
+                <div className="flex flex-col items-start gap-1 lg:hidden">
+                  {item.featured ? <span className="inline-flex items-center gap-1 rounded-full bg-territory-sun px-2 py-1 text-[0.625rem] font-bold text-territory-ink"><Star className="h-3 w-3 fill-current" aria-hidden="true" />Destaque</span> : null}
+                  <span className={cn("rounded-full px-2 py-1 text-[0.625rem] font-bold", item.status === "Disponível" ? "bg-territory-success/95 text-white" : item.status === "Rascunho" ? "bg-territory-warning text-territory-ink" : "bg-territory-ink/75 text-white")}>{item.status}</span>
                 </div>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.625rem] text-territory-muted sm:text-[0.6875rem]">
                   {item.preparationTime ? <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" aria-hidden="true" />{item.preparationTime} min</span> : null}
