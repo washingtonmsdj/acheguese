@@ -1,5 +1,3 @@
-import { FunctionsHttpError } from "@supabase/supabase-js";
-
 function messageFromPayload(payload: unknown): string | null {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
 
@@ -17,13 +15,31 @@ function messageFromError(error: unknown): string | null {
   return typeof message === "string" && message.trim() ? message.trim() : null;
 }
 
+function getFunctionsHttpErrorContext(
+  error: unknown,
+): { json(): Promise<unknown> } | null {
+  if (!error || typeof error !== "object" || Array.isArray(error)) return null;
+  if (Reflect.get(error, "name") !== "FunctionsHttpError") return null;
+
+  const context = Reflect.get(error, "context");
+  if (!context || typeof context !== "object" || Array.isArray(context)) return null;
+
+  const json = Reflect.get(context, "json");
+  if (typeof json !== "function") return null;
+
+  return {
+    json: () => Promise.resolve(Reflect.apply(json, context, [])),
+  };
+}
+
 export async function readSupabaseFunctionHttpErrorBody(
   error: unknown,
 ): Promise<unknown | null> {
-  if (!(error instanceof FunctionsHttpError)) return null;
+  const context = getFunctionsHttpErrorContext(error);
+  if (!context) return null;
 
   try {
-    return await error.context.json();
+    return await context.json();
   } catch {
     return null;
   }
