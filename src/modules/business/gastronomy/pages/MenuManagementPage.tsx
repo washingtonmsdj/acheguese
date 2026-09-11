@@ -4,7 +4,7 @@
  * SSOT: Usa hooks que consomem MenuService.
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBusinessDashboardContext } from '@/modules/business/dashboard/businessDashboardContext';
 import { useBusinessSubscription } from '@/core/billing';
@@ -25,9 +25,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
-import { ArrowLeft, LayoutGrid, List, Plus, Search } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, LayoutGrid, List, Plus, Search } from 'lucide-react';
 import type { MenuCategory, MenuItem } from '@/core/business/services/MenuService';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
+import { PAGINATION } from '@/shared/constants';
+
+const MENU_ITEMS_PAGE_SIZE = PAGINATION.MEDIUM_LIMIT;
 
 export default function MenuManagementPage() {
   const { businessId, businessDataId } = useBusinessDashboardContext();
@@ -47,6 +50,7 @@ export default function MenuManagementPage() {
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | 'available' | 'paused' | 'soldOut'>('all');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [currentPage, setCurrentPage] = useState(1);
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
@@ -72,14 +76,34 @@ export default function MenuManagementPage() {
     toggleAvailability,
     isCreating: creatingItem,
     isUpdating: updatingItem,
-  } = useMenuItems(menuId ?? '', filterCategory === 'all' ? undefined : filterCategory);
+    totalCount: filteredItemsCount,
+    hasNextPage,
+  } = useMenuItems(menuId ?? '', filterCategory === 'all' ? undefined : filterCategory, {
+    page: currentPage,
+    pageSize: MENU_ITEMS_PAGE_SIZE,
+    searchQuery,
+    status: filterStatus,
+  });
 
-  const { items: allItems } = useMenuItems(menuId ?? '');
+  const { totalCount: totalItemsCount } = useMenuItems(menuId ?? '', undefined, {
+    page: 1,
+    pageSize: 1,
+  });
 
   const canUseCategories = entitlements.canUseMenuCategories;
   const canUseImages = entitlements.canUseMenuImages;
   const categoriesCount = categories?.length || 0;
-  const totalItemsCount = allItems?.length || 0;
+  const totalPages = Math.max(1, Math.ceil(filteredItemsCount / MENU_ITEMS_PAGE_SIZE));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterCategory, filterStatus, searchQuery]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   const canAddMoreItems =
     entitlements.maxMenuItems === null || totalItemsCount < entitlements.maxMenuItems;
@@ -171,15 +195,14 @@ export default function MenuManagementPage() {
     updateItem({ itemId, stock_quantity: 0, is_available: false });
   };
 
-  const filteredItems =
-    items?.filter((item) =>
-      (item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.description?.toLowerCase().includes(searchQuery.toLowerCase())) &&
-      (filterStatus === 'all' ||
-        (filterStatus === 'soldOut' && item.stock_quantity === 0) ||
-        (filterStatus === 'available' && item.is_available && item.stock_quantity !== 0) ||
-        (filterStatus === 'paused' && !item.is_available && item.stock_quantity !== 0)),
-    ) || [];
+  const filteredItems = items ?? [];
+  const firstVisibleItem = filteredItemsCount === 0
+    ? 0
+    : (currentPage - 1) * MENU_ITEMS_PAGE_SIZE + 1;
+  const lastVisibleItem = Math.min(
+    currentPage * MENU_ITEMS_PAGE_SIZE,
+    filteredItemsCount,
+  );
 
   if (loadingSubscription || loadingMenuId) {
     return (
@@ -352,21 +375,60 @@ export default function MenuManagementPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className={viewMode === 'grid' ? 'grid grid-cols-2 gap-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6' : 'space-y-4'}>
-              {filteredItems.map((item) => (
-                <ItemCard
-                  key={item.id}
-                  item={item}
-                  onEdit={handleEditItem}
-                  onDelete={setItemToDelete}
-                  onToggleAvailability={(itemId, isAvailable) =>
-                    toggleAvailability({ itemId, isAvailable })
-                  }
-                  onMarkSoldOut={handleMarkItemSoldOut}
-                  layout={viewMode}
-                />
-              ))}
-            </div>
+            <>
+              <div className={viewMode === 'grid' ? 'grid grid-cols-2 gap-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6' : 'space-y-4'}>
+                {filteredItems.map((item) => (
+                  <ItemCard
+                    key={item.id}
+                    item={item}
+                    onEdit={handleEditItem}
+                    onDelete={setItemToDelete}
+                    onToggleAvailability={(itemId, isAvailable) =>
+                      toggleAvailability({ itemId, isAvailable })
+                    }
+                    onMarkSoldOut={handleMarkItemSoldOut}
+                    layout={viewMode}
+                  />
+                ))}
+              </div>
+
+              {filteredItemsCount > MENU_ITEMS_PAGE_SIZE && (
+                <Card>
+                  <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm text-muted-foreground">
+                      Exibindo {firstVisibleItem}–{lastVisibleItem} de {filteredItemsCount} itens
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        aria-label="Página anterior"
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                      >
+                        <ChevronLeft className="mr-1 h-4 w-4" aria-hidden="true" />
+                        Anterior
+                      </Button>
+                      <span className="min-w-24 text-center text-sm text-muted-foreground">
+                        Página {currentPage} de {totalPages}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        aria-label="Próxima página"
+                        disabled={!hasNextPage}
+                        onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                      >
+                        Próxima
+                        <ChevronRight className="ml-1 h-4 w-4" aria-hidden="true" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
           )}
         </TabsContent>
 

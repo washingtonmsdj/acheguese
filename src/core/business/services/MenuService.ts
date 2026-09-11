@@ -9,6 +9,8 @@ import { EntitlementsService } from '@/core/billing/entitlements';
 import { BillingPlanService, type PlanEntitlements } from '@/core/billing/services/BillingPlanService';
 import { PlanTier } from '@/core/billing/types';
 import { isMediaAssetReference, resolveMediaAssetSource } from '@/core/media';
+import { PAGINATION } from '@/shared/constants';
+import { sanitizeForILike } from '@/shared/utils/sqlSanitization';
 
 type QueryResult<T> = Promise<{ data: T; error: { code?: string; message?: string } | null; count?: number | null }>;
 
@@ -22,9 +24,11 @@ interface QueryBuilder<TRow> {
   delete(): QueryBuilder<TRow>;
   eq(column: string, value: unknown): QueryBuilder<TRow>;
   in(column: string, values: readonly unknown[]): QueryBuilder<TRow>;
+  or(filters: string): QueryBuilder<TRow>;
   not(column: string, operator: string, value: unknown): QueryBuilder<TRow>;
   order(column: string, options?: { ascending?: boolean }): QueryBuilder<TRow>;
   limit(count: number): QueryBuilder<TRow>;
+  range(from: number, to: number): QueryBuilder<TRow>;
   maybeSingle(): QueryResult<TRow | null>;
   single(): QueryResult<TRow>;
   then<
@@ -47,6 +51,25 @@ const db = supabase as unknown as MenuDbClient;
 export interface ServiceResult<T> {
   data: T | null;
   error: string | null;
+  meta?: MenuItemsPagination;
+}
+
+export type MenuItemsStatus = 'all' | 'available' | 'paused' | 'soldOut';
+
+export interface MenuItemsListOptions {
+  /** Página baseada em 1. */
+  page?: number;
+  /** Quantidade de itens por página. Limitada ao teto compartilhado do sistema. */
+  pageSize?: number;
+  searchQuery?: string;
+  status?: MenuItemsStatus;
+}
+
+export interface MenuItemsPagination {
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  hasMore: boolean;
 }
 
 export interface MenuCategory {
@@ -595,26 +618,86 @@ export const MenuService = {
     }
   },
 
-  async listItems(menuId: string, categoryId?: string): Promise<ServiceResult<MenuItem[]>> {
+  async listItems(
+    menuId: string,
+    categoryId?: string,
+    options?: MenuItemsListOptions,
+  ): Promise<ServiceResult<MenuItem[]>> {
     try {
       const categoryIds = categoryId ? [categoryId] : await listCategoryIds(menuId);
       if (categoryIds.length === 0) {
-        return { data: [], error: null };
+        if (!options) return { data: [], error: null };
+
+        const page = Math.max(1, Math.floor(options.page ?? 1));
+        const pageSize = Math.min(
+          Math.max(1, Math.floor(options.pageSize ?? PAGINATION.MEDIUM_LIMIT)),
+          PAGINATION.LARGE_LIMIT,
+        );
+        return {
+          data: [],
+          error: null,
+          meta: { page, pageSize, totalCount: 0, hasMore: false },
+        };
       }
 
-      const query = db
-    .from('menu_items')
-        .select('*')
+      let query = db
+        .from('menu_items')
+        .select('*', options ? { count: 'exact' } : undefined)
         .in('category_id', categoryIds);
 
-      const { data, error } = await query.order('display_order', { ascending: true });
+      if (options?.searchQuery) {
+        const sanitizedSearch = sanitizeForILike(options.searchQuery);
+        if (sanitizedSearch) {
+          query = query.or(
+            `name.ilike.%${sanitizedSearch}%,description.ilike.%${sanitizedSearch}%`,
+          );
+        }
+      }
+
+      if (options?.status === 'available') {
+        query = query
+          .eq('is_available', true)
+          .or('metadata->>stock_quantity.neq.0,metadata->>stock_quantity.is.null');
+      } else if (options?.status === 'paused') {
+        query = query
+          .eq('is_available', false)
+          .or('metadata->>stock_quantity.neq.0,metadata->>stock_quantity.is.null');
+      } else if (options?.status === 'soldOut') {
+        query = query.eq('metadata->>stock_quantity', '0');
+      }
+
+      const orderedQuery = query.order('display_order', { ascending: true });
+      const page = Math.max(1, Math.floor(options?.page ?? 1));
+      const pageSize = Math.min(
+        Math.max(1, Math.floor(options?.pageSize ?? PAGINATION.MEDIUM_LIMIT)),
+        PAGINATION.LARGE_LIMIT,
+      );
+      const paginatedQuery = options
+        ? orderedQuery.range((page - 1) * pageSize, page * pageSize - 1)
+        : orderedQuery;
+      const { data, error, count } = await paginatedQuery;
 
       if (error) {
         logger.error('[MenuService] listItems error', error);
         return { data: null, error: error.message };
       }
 
-      return { data: (data ?? []).map((row) => mapMenuItem(asRecord(row), menuId)), error: null };
+      const mappedItems = (data ?? []).map((row) => mapMenuItem(asRecord(row), menuId));
+      if (!options) {
+        return { data: mappedItems, error: null };
+      }
+
+      const totalCount = count ?? mappedItems.length;
+      return {
+        data: mappedItems,
+        error: null,
+        meta: {
+          page,
+          pageSize,
+          totalCount,
+          hasMore: page * pageSize < totalCount,
+        },
+      };
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : String(err) };
     }

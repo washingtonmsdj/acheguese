@@ -6,22 +6,43 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getMenuItem } from '@/core/business/services/menu.queries';
-import { MenuService, type MenuItem } from '@/core/business/services/MenuService';
+import {
+  MenuService,
+  type MenuItem,
+  type MenuItemsListOptions,
+} from '@/core/business/services/MenuService';
 import { toast } from 'sonner';
 
-export function useMenuItems(menuId: string, categoryId?: string) {
+export function useMenuItems(
+  menuId: string,
+  categoryId?: string,
+  options?: MenuItemsListOptions,
+) {
   const queryClient = useQueryClient();
 
   // Query: Listar itens
-  const { data: items, isLoading, error } = useQuery({
-    queryKey: ['menu-items', menuId, categoryId],
+  const query = useQuery({
+    queryKey: [
+      'menu-items',
+      menuId,
+      categoryId,
+      options?.page ?? null,
+      options?.pageSize ?? null,
+      options?.searchQuery ?? null,
+      options?.status ?? null,
+    ],
     queryFn: async () => {
-      const result = await MenuService.listItems(menuId, categoryId);
+      const result = await MenuService.listItems(menuId, categoryId, options);
       if (result.error) throw new Error(result.error);
-      return result.data || [];
+      return {
+        items: result.data || [],
+        meta: result.meta,
+      };
     },
     enabled: !!menuId,
   });
+
+  const items = query.data?.items;
 
   // Mutation: Criar item
   const createMutation = useMutation({
@@ -110,8 +131,10 @@ export function useMenuItems(menuId: string, categoryId?: string) {
 
   return {
     items,
-    isLoading,
-    error,
+    totalCount: query.data?.meta?.totalCount ?? items?.length ?? 0,
+    hasNextPage: query.data?.meta?.hasMore ?? false,
+    isLoading: query.isLoading,
+    error: query.error,
     createItem: createMutation.mutate,
     createItemAsync: createMutation.mutateAsync,
     updateItem: updateMutation.mutate,
