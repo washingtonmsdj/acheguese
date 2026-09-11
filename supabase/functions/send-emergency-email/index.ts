@@ -1,10 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
-import { requireOperationalAccount } from '../_shared/accountOperational.ts';
+import { requireAuthenticatedUser } from '../_shared/businessAuth.ts';
 import {
   auditLog,
   checkRateLimit,
   errorResponse,
-  extractBearerToken,
   getAllSecurityHeaders,
   getAuditInfo,
   getRequiredEnv,
@@ -123,44 +122,20 @@ export default {
     const edgeRateLimit = await rateLimitMiddleware(req, 100, 60_000);
     if (edgeRateLimit) return edgeRateLimit;
 
-    const token = extractBearerToken(req);
-    if (!token) {
+    const authResult = await requireAuthenticatedUser(req, supabaseAdmin);
+    if (authResult instanceof Response) {
       auditLog({
         timestamp: new Date().toISOString(),
         action: 'emergency_email_auth_failed',
         resource: 'emergency_alerts',
         status: 'failure',
-        details: { reason: 'missing_token' },
+        details: { reason: 'invalid_or_missing_token' },
         ...auditInfo,
       });
-      return respond({ error: 'Missing authorization token' }, 401);
+      return authResult;
     }
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseAdmin.auth.getUser(token);
-    if (authError || !user?.id) {
-      auditLog({
-        timestamp: new Date().toISOString(),
-        action: 'emergency_email_auth_failed',
-        resource: 'emergency_alerts',
-        status: 'failure',
-        details: { reason: 'invalid_or_expired_token' },
-        ...auditInfo,
-      });
-      return respond({ error: 'Invalid or expired token' }, 401);
-    }
-
-    const accountOperationalError = await requireOperationalAccount(
-      supabaseAdmin,
-      user.id,
-      req,
-      ALLOWED_METHODS,
-    );
-    if (accountOperationalError) return accountOperationalError;
-
-    const userId = user.id;
+    const userId = authResult.user.id;
     const userRateLimit = await checkRateLimit(
       `emergency-email:${userId}`,
       30,
