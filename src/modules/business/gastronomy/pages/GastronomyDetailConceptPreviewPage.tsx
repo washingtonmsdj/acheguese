@@ -372,16 +372,18 @@ function MenuRow({ item, selected, onSelect }: { item: ConceptMenuItem; selected
 
 function MenuGridCard({ item, selected, onSelect }: { item: ConceptMenuItem; selected: boolean; onSelect: () => void }) {
   return (
-    <button type="button" disabled={item.available === false} onClick={onSelect} className={cn("group flex min-w-0 flex-col rounded-lg border border-territory-border bg-territory-surface p-2 text-left transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:rounded-xl sm:p-2.5", selected && "border-territory-brand bg-[hsl(var(--territory-success)/0.12)]", item.available === false ? "cursor-not-allowed opacity-55" : "hover:border-territory-brand/50 hover:bg-territory-raised")}>
-      <span className="relative block aspect-[5/3] w-full overflow-hidden rounded-md bg-territory-raised sm:rounded-lg">
+    <button type="button" disabled={item.available === false} onClick={onSelect} className={cn("group flex min-w-0 flex-col rounded-lg border border-territory-border bg-territory-surface p-2 text-left transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:rounded-xl sm:p-2.5 lg:flex-row lg:items-center lg:gap-3 lg:p-2.5", selected && "border-territory-brand bg-[hsl(var(--territory-success)/0.12)]", item.available === false ? "cursor-not-allowed opacity-55" : "hover:border-territory-brand/50 hover:bg-territory-raised")}>
+      <span className="relative block aspect-[5/3] w-full shrink-0 overflow-hidden rounded-md bg-territory-raised sm:rounded-lg lg:h-16 lg:w-24 lg:aspect-auto">
         <img src={item.image} alt="" className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]" />
         {item.available === false ? <span className="absolute bottom-1 left-1 rounded-full bg-territory-surface/95 px-1.5 py-0.5 text-[0.5625rem] font-semibold text-territory-muted">Indisponível</span> : null}
       </span>
-      <span className="mt-2 line-clamp-2 min-h-8 text-xs font-bold leading-4 text-territory-ink sm:text-sm">{item.name}</span>
-      <span className="mt-1 line-clamp-2 min-h-8 text-[0.6875rem] leading-4 text-territory-muted sm:text-xs">{item.description}</span>
-      <span className="mt-2 flex items-center justify-between gap-1 text-xs font-bold text-territory-ink sm:text-sm">
-        {item.available === false ? <span className="text-[0.625rem] font-semibold text-territory-muted">Temporariamente indisponível</span> : money(item.price)}
-        <ChevronRight className="h-4 w-4 shrink-0 text-territory-brand" aria-hidden="true" />
+      <span className="min-w-0 flex-1">
+        <span className="mt-2 block line-clamp-2 min-h-8 text-xs font-bold leading-4 text-territory-ink sm:text-sm lg:mt-0 lg:min-h-0 lg:truncate">{item.name}</span>
+        <span className="mt-1 block line-clamp-2 min-h-8 text-[0.6875rem] leading-4 text-territory-muted sm:text-xs lg:mt-0.5 lg:min-h-0 lg:line-clamp-1">{item.description}</span>
+        <span className="mt-2 flex items-center justify-between gap-1 text-xs font-bold text-territory-ink sm:text-sm lg:mt-1">
+          {item.available === false ? <span className="text-[0.625rem] font-semibold text-territory-muted">Temporariamente indisponível</span> : money(item.price)}
+          <ChevronRight className="h-4 w-4 shrink-0 text-territory-brand" aria-hidden="true" />
+        </span>
       </span>
     </button>
   );
