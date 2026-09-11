@@ -86,6 +86,31 @@ function verificationErrorForCode(code: string): string {
   }
 }
 
+function toOperationalVerification(
+  data: VerificationStatusRpcResult,
+): OperationalVerification {
+  return {
+    ...data,
+    // The status RPC deliberately never exposes the persisted hash.
+    pin_hash: null,
+  } as OperationalVerification;
+}
+
+function toVerificationSummary(
+  verification: OperationalVerification,
+): VerificationStatusSummary {
+  return {
+    isRequired: verification.is_required,
+    status: verification.status,
+    verified: verification.status === 'verified',
+    attemptsRemaining: Math.max(
+      0,
+      CONFIG.MAX_ATTEMPTS - verification.verification_attempts,
+    ),
+    expiresAt: verification.pin_expires_at,
+  };
+}
+
 export class OperationalVerificationService {
   /**
    * Issues or rotates the active ride PIN for the authenticated requester.
@@ -128,9 +153,8 @@ export class OperationalVerificationService {
   }
 
   /**
-   * Verifies a PIN entirely in Postgres. `verifiedBy` remains in the public
-   * TypeScript contract for callers, but the database deliberately ignores any
-   * caller-supplied actor identity and derives verified_by from the active session.
+   * Verifies a PIN entirely in Postgres. The database derives the actor from
+   * the active authenticated Profile; callers cannot choose verified_by.
    */
   static async verifyPIN(
     params: VerifyPINParams,
@@ -191,53 +215,75 @@ export class OperationalVerificationService {
   }
 
   /**
-   * Returns the sanitized verification projection. `pin_hash` is intentionally
-   * represented as null for compatibility with the legacy interface and is never
-   * returned by the database RPC.
+   * Result-bearing status read used by security-sensitive callers.
+   *
+   * `success: true, data: null` means the authoritative RPC succeeded and no
+   * verification row exists, which is a valid "PIN not required" state for
+   * rides whose passenger and driver did not opt into PIN verification.
+   *
+   * `success: false` means the security state could not be established. UI
+   * callers must fail closed instead of treating that condition as no PIN.
    */
-  static async getVerificationStatus(
+  static async getVerificationStatusResult(
     rideId: string,
-  ): Promise<OperationalVerification | null> {
+  ): Promise<ServiceResult<OperationalVerification | null>> {
     try {
       const { data, error } = await verificationRpc.rpc<VerificationStatusRpcResult>(
         'get_operational_verification_status',
         { p_ride_id: rideId },
       );
 
-      if (error) throw new Error(error.message || 'Failed to read verification status');
-      if (!data) return null;
+      if (error) {
+        throw new Error(error.message || 'Failed to read verification status');
+      }
 
       return {
-        ...data,
-        pin_hash: null,
-      } as OperationalVerification;
+        success: true,
+        data: data ? toOperationalVerification(data) : null,
+      };
     } catch (error) {
       logger.error('Error getting verification status:', error);
-      return null;
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to read verification status',
+      };
     }
+  }
+
+  /**
+   * Compatibility read for non-authoritative presentation code. Security-
+   * sensitive flows must use getVerificationStatusResult so read failures are
+   * distinguishable from an absent verification row.
+   */
+  static async getVerificationStatus(
+    rideId: string,
+  ): Promise<OperationalVerification | null> {
+    const result = await this.getVerificationStatusResult(rideId);
+    return result.success ? (result.data ?? null) : null;
+  }
+
+  static async getVerificationStatusSummaryResult(
+    rideId: string,
+  ): Promise<ServiceResult<VerificationStatusSummary | null>> {
+    const result = await this.getVerificationStatusResult(rideId);
+    if (!result.success) {
+      return { success: false, error: result.error };
+    }
+
+    return {
+      success: true,
+      data: result.data ? toVerificationSummary(result.data) : null,
+    };
   }
 
   static async getVerificationStatusSummary(
     rideId: string,
   ): Promise<VerificationStatusSummary | null> {
-    try {
-      const verification = await this.getVerificationStatus(rideId);
-      if (!verification) return null;
-
-      return {
-        isRequired: verification.is_required,
-        status: verification.status,
-        verified: verification.status === 'verified',
-        attemptsRemaining: Math.max(
-          0,
-          CONFIG.MAX_ATTEMPTS - verification.verification_attempts,
-        ),
-        expiresAt: verification.pin_expires_at,
-      };
-    } catch (error) {
-      logger.error('Error getting verification status summary:', error);
-      return null;
-    }
+    const result = await this.getVerificationStatusSummaryResult(rideId);
+    return result.success ? (result.data ?? null) : null;
   }
 
   /**

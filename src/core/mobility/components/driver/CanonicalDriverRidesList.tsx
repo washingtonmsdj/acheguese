@@ -1,11 +1,17 @@
 import type { MobilityRide } from "@/core/mobility/types/ride";
 import { getDriverRideActionAvailability } from "@/core/mobility/core/DriverRideActionPolicy";
+import { DriverPassengerRideProgression } from "./DriverPassengerRideProgression";
 import { DriverRidesList } from "./DriverRidesList";
 
 interface CanonicalDriverRidesListProps {
   rides: MobilityRide[];
   type: "available" | "accepted" | "history";
   onAccept?: (id: string) => void;
+  onStartPickupRoute?: (id: string) => Promise<boolean> | boolean | void;
+  onConfirmBoarding?: (
+    id: string,
+    pin?: string,
+  ) => Promise<boolean> | boolean | void;
   onStart?: (id: string) => void;
   onComplete?: (id: string, ride?: MobilityRide) => void;
   onCancel?: (id: string) => void;
@@ -21,11 +27,16 @@ interface CanonicalDriverRidesListProps {
  * authority: callbacks are only exposed when DriverRideActionPolicy permits
  * the transition. One ride is rendered at a time so policy is evaluated per
  * row without changing the existing card layout.
+ *
+ * Passenger progression controls live here rather than inside the legacy card:
+ * driver_accepted -> driver_arriving -> passenger_boarded -> in_progress.
  */
 export function CanonicalDriverRidesList({
   rides,
   type,
   onAccept,
+  onStartPickupRoute,
+  onConfirmBoarding,
   onStart,
   onComplete,
   onCancel,
@@ -53,16 +64,27 @@ export function CanonicalDriverRidesList({
         const actions = getDriverRideActionAvailability(ride.status);
 
         return (
-          <DriverRidesList
-            key={ride.id}
-            rides={[ride]}
-            type="accepted"
-            onStart={actions.canStart ? onStart : undefined}
-            onComplete={actions.canComplete ? onComplete : undefined}
-            onCancel={actions.canCancel ? onCancel : undefined}
-            loading={false}
-            isSuspended={isSuspended}
-          />
+          <div key={ride.id}>
+            <DriverPassengerRideProgression
+              rideId={ride.id}
+              status={ride.status}
+              onStartPickupRoute={
+                actions.canStartPickupRoute ? onStartPickupRoute : undefined
+              }
+              onConfirmBoarding={
+                actions.canConfirmBoarding ? onConfirmBoarding : undefined
+              }
+            />
+            <DriverRidesList
+              rides={[ride]}
+              type="accepted"
+              onStart={actions.canStart ? onStart : undefined}
+              onComplete={actions.canComplete ? onComplete : undefined}
+              onCancel={actions.canCancel ? onCancel : undefined}
+              loading={false}
+              isSuspended={isSuspended}
+            />
+          </div>
         );
       })}
     </div>

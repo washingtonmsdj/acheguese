@@ -191,6 +191,8 @@ export default function MotoristaPage() {
                 onOfferModeFilterChange={hook.setOfferModeFilter}
                 onToggleOnline={hook.toggleDriverOnline}
                 onAcceptRide={hook.acceptRide}
+                onStartPickupRoute={hook.startPassengerPickupRoute}
+                onConfirmBoarding={hook.confirmPassengerBoarding}
                 onStartRide={hook.startRide}
                 onCompleteRide={(rideId, ride) => {
                   if (ride) hook.handleOpenCompleteDialog(ride);
