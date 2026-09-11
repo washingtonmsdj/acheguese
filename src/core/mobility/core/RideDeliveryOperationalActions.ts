@@ -43,8 +43,8 @@ type RideDriverAssignment = {
   ride_mode?: string | null;
 } | null;
 
-const MOTOBOY_ONLY_ERROR = "Operao exclusiva de motoboy.";
-const DELIVERY_NOT_FOUND_ERROR = "Entrega no encontrada.";
+const MOTOBOY_ONLY_ERROR = "Operacao exclusiva de motoboy.";
+const DELIVERY_NOT_FOUND_ERROR = "Entrega nao encontrada.";
 
 function validateRideDriverOperation(
   ride: RideDriverAssignment,
@@ -81,15 +81,15 @@ export async function createDeliveryOperation(
     if (requesterBlock) return requesterBlock;
 
     if (!hasValidRouteCoordinates(input)) {
-      return { success: false, error: "Coordenadas so obrigatrias para calculo de preco." };
+      return { success: false, error: "Coordenadas sao obrigatorias para calculo de preco." };
     }
 
     if (!input.recipientName?.trim()) {
-      return { success: false, error: "Nome do destinatario  obrigatorio." };
+      return { success: false, error: "Nome do destinatario e obrigatorio." };
     }
 
     if (input.suggestedPrice && input.suggestedPrice < 5.0) {
-      return { success: false, error: "Preo minimo  R$ 5,00." };
+      return { success: false, error: "Preco minimo e R$ 5,00." };
     }
 
     const creation = await MobilityRpcService.createDelivery(input);
@@ -191,7 +191,19 @@ export async function confirmDeliveryOperation(
     const operatorBlock = await ensureMotoboyCanOperate(driverProfileId, rideId);
     if (operatorBlock) return operatorBlock;
 
-    const verification = await OperationalVerificationService.getVerificationStatus(rideId);
+    // Delivery confirmation is safety-sensitive. A verification read failure
+    // must never be interpreted as "PIN not required". The broker performs the
+    // authoritative check again before the atomic delivery transition.
+    const verificationResult =
+      await OperationalVerificationService.getVerificationStatusResult(rideId);
+    if (!verificationResult.success) {
+      return {
+        success: false,
+        error: "Delivery verification state is unavailable",
+      };
+    }
+
+    const verification = verificationResult.data ?? null;
     if (verification?.is_required && verification.status !== "verified") {
       if (!pin) return { success: false, error: "PIN required for delivery confirmation" };
 
@@ -274,12 +286,12 @@ export async function updateFailedDeliveryResolutionOperation(
       status?: string;
       failed_delivery_metadata?: Record<string, unknown> | null;
     } | null;
-    if (!ride) return { success: false, error: "Corrida no encontrada" };
+    if (!ride) return { success: false, error: "Corrida nao encontrada" };
     if (ride.status !== RIDE_STATE.FAILED_DELIVERY) {
-      return { success: false, error: "Corrida no est em failed_delivery" };
+      return { success: false, error: "Corrida nao esta em failed_delivery" };
     }
     if (!ride.failed_delivery_metadata) {
-      return { success: false, error: "Metadata de falha no encontrada" };
+      return { success: false, error: "Metadata de falha nao encontrada" };
     }
 
     validateFailedDeliveryResolution(resolutionUpdate);
