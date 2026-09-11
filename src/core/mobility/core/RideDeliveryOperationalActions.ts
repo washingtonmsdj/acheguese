@@ -336,15 +336,17 @@ export async function updateFailedDeliveryResolutionOperation(
     logger.info("RideOperationalService.updateFailedDeliveryResolution - success", {
       rideId,
       resolution_status: result.resolution_status ?? resolutionUpdate.resolution_status,
-      redelivery_created: result.redelivery_created === true,
-      next_ride_id: result.next_ride_id ?? null,
+      retry_reopened: result.retry_reopened === true,
+      status: result.status ?? null,
     });
 
     return {
       success: true,
       rideId,
-      nextRideId: result.next_ride_id ?? undefined,
-      redeliveryCreated: result.redelivery_created === true,
+      retryReopened: result.retry_reopened === true,
+      newState: result.retry_reopened === true ? RIDE_STATE.IN_DELIVERY : undefined,
+      fromState: result.retry_reopened === true ? RIDE_STATE.FAILED_DELIVERY : undefined,
+      toState: result.retry_reopened === true ? RIDE_STATE.IN_DELIVERY : undefined,
     };
   } catch (error) {
     logger.error("RideOperationalService.updateFailedDeliveryResolution", error as Error, { rideId });
