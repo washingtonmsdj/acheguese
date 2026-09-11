@@ -119,8 +119,10 @@ export interface FailedDeliveryResolutionBrokerData {
   updated: boolean;
   ride_id: string;
   resolution_status?: string | null;
-  redelivery_created?: boolean;
-  next_ride_id?: string | null;
+  retry_reopened?: boolean;
+  already_applied?: boolean;
+  status?: string | null;
+  driver_profile_id?: string | null;
 }
 
 const FUNCTION_NAME = "mobility-rpc";
