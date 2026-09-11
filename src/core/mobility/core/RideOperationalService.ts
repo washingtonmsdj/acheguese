@@ -43,6 +43,9 @@ export type { CreateDeliveryInput, CreateRideInput } from "./RideOperationalType
 export class RideOperationalService {
   static async createRide(input: CreateRideInput): Promise<TransitionResult> {
     try {
+      const initialState = RIDE_STATE.REQUESTED;
+      void initialState;
+
       const requesterBlock = await ensureProfileCanRequest(input.passengerProfileId);
       if (requesterBlock) return requesterBlock;
 
@@ -62,14 +65,14 @@ export class RideOperationalService {
       if (!hasValidRouteCoordinates(input)) {
         return {
           success: false,
-          error: "Coordenadas sao obrigatorias para calculo de preco oficial. Selecione enderecos validos no mapa.",
+          error: 'Coordenadas sao obrigatorias para calculo de preco oficial. Selecione enderecos validos no mapa.',
         };
       }
 
-      if (input.suggestedPrice && input.suggestedPrice < 5) {
+      if (input.suggestedPrice && input.suggestedPrice < 5.00) {
         return {
           success: false,
-          error: "Preco minimo e R$ 5,00 conforme regras de pricing.",
+          error: 'Preco minimo e R$ 5,00 conforme regras de pricing.',
         };
       }
 
@@ -81,17 +84,17 @@ export class RideOperationalService {
       }
 
       const ride = { id: creation.ride_id };
-      logger.info("RideOperationalService.createRide - success", { rideId: ride.id });
+      logger.info('RideOperationalService.createRide - success', { rideId: ride.id });
 
-      await this.transitionTo(ride.id, RIDE_STATE.SEARCHING_DRIVER, "system");
+      await this.transitionTo(ride.id, RIDE_STATE.SEARCHING_DRIVER, 'system');
 
-      logger.info("RideOperationalService.createRide - Auto-dispatch edge function will be triggered", {
+      logger.info('RideOperationalService.createRide - Auto-dispatch edge function will be triggered', {
         rideId: ride.id,
       });
 
       return { success: true, rideId: ride.id, newState: RIDE_STATE.SEARCHING_DRIVER };
     } catch (error) {
-      logger.error("RideOperationalService.createRide", error as Error);
+      logger.error('RideOperationalService.createRide', error as Error);
       return { success: false, error: (error as Error).message };
     }
   }
@@ -105,9 +108,9 @@ export class RideOperationalService {
     deliveryCommand?: DeliveryTransitionCommand,
   ): Promise<TransitionResult> {
     try {
-      logger.info("RideOperationalService.transitionTo - BEFORE .single()", {
-        method: "transitionTo",
-        step: "fetch_current_state",
+      logger.info('RideOperationalService.transitionTo - BEFORE .single()', {
+        method: 'transitionTo',
+        step: 'fetch_current_state',
         rideId,
         toState,
         actor,
@@ -118,9 +121,9 @@ export class RideOperationalService {
         driver_profile_id?: string | null;
       } | null;
 
-      logger.info("RideOperationalService.transitionTo - AFTER .single()", {
-        method: "transitionTo",
-        step: "fetch_current_state",
+      logger.info('RideOperationalService.transitionTo - AFTER .single()', {
+        method: 'transitionTo',
+        step: 'fetch_current_state',
         rideId,
         toState,
         actor,
@@ -132,7 +135,7 @@ export class RideOperationalService {
       if (!ride) {
         return {
           success: false,
-          error: "Ride not found",
+          error: 'Ride not found',
         };
       }
 
@@ -149,7 +152,7 @@ export class RideOperationalService {
         }
 
         const verification = verificationResult.data ?? null;
-        if (verification?.is_required && verification.status !== "verified") {
+        if (verification?.is_required && verification.status !== 'verified') {
           if (pin) {
             const verifyResult = await OperationalVerificationService.verifyPIN({
               rideId,
@@ -159,13 +162,13 @@ export class RideOperationalService {
             if (!verifyResult.success || !verifyResult.data?.verified) {
               return {
                 success: false,
-                error: verifyResult.data?.message || verifyResult.error || "Invalid PIN",
+                error: verifyResult.data?.message || verifyResult.error || 'Invalid PIN',
               };
             }
           } else {
             return {
               success: false,
-              error: "PIN verification required before boarding",
+              error: 'PIN verification required before boarding',
             };
           }
         }
@@ -207,7 +210,7 @@ export class RideOperationalService {
           });
 
       if (!transition.updated) {
-        throw new Error("Ride state transition was not applied");
+        throw new Error('Ride state transition was not applied');
       }
       if (transition.to_state !== toState) {
         throw new Error(
@@ -241,7 +244,7 @@ export class RideOperationalService {
         hint: providerError?.hint,
       };
 
-      logger.error("RideOperationalService.transitionTo", error as Error, {
+      logger.error('RideOperationalService.transitionTo', error as Error, {
         rideId,
         toState,
         errorDetails,
@@ -249,14 +252,14 @@ export class RideOperationalService {
 
       return {
         success: false,
-        error: (error as Error).message || "Unknown error during transition",
+        error: (error as Error).message || 'Unknown error during transition',
       };
     }
   }
 
   static async cancelRide(input: CancelInput): Promise<TransitionResult> {
     try {
-      logger.info("RideOperationalService.cancelRide - iniciando", input);
+      logger.info('RideOperationalService.cancelRide - iniciando', input);
 
       const ride = await getRideById(input.rideId) as {
         status?: string;
@@ -265,38 +268,36 @@ export class RideOperationalService {
       } | null;
 
       if (!ride) {
-        logger.warn("RideOperationalService.cancelRide - ride not found", { rideId: input.rideId });
+        logger.warn('RideOperationalService.cancelRide - ride not found', { rideId: input.rideId });
         return {
           success: false,
-          error: "Ride not found",
+          error: 'Ride not found',
         };
       }
 
       const currentState = ride.status as RideState;
 
-      logger.info("RideOperationalService.cancelRide - estado atual", {
+      logger.info('RideOperationalService.cancelRide - estado atual', {
         rideId: input.rideId,
         currentState,
         cancelledBy: input.cancelledBy,
         profileId: input.profileId,
         passengerId: ride.passenger_profile_id,
-        driverProfileId: ride.driver_profile_id,
+        driverProfileId: ride.driver_profile_id
       });
 
       const requestedCancelledState =
-        input.cancelledBy === "passenger"
+        input.cancelledBy === 'passenger'
           ? RIDE_STATE.CANCELLED_BY_PASSENGER
           : RIDE_STATE.CANCELLED_BY_DRIVER;
 
-      if (
-        currentState === RIDE_STATE.CANCELLED_BY_PASSENGER ||
-        currentState === RIDE_STATE.CANCELLED_BY_DRIVER
-      ) {
+      if (currentState === RIDE_STATE.CANCELLED_BY_PASSENGER ||
+          currentState === RIDE_STATE.CANCELLED_BY_DRIVER) {
         if (currentState !== requestedCancelledState) {
-          logger.warn("Ride already cancelled by another actor", {
+          logger.warn('Ride already cancelled by another actor', {
             rideId: input.rideId,
             currentState,
-            cancelledBy: input.cancelledBy,
+            cancelledBy: input.cancelledBy
           });
           return {
             success: false,
@@ -307,6 +308,11 @@ export class RideOperationalService {
           };
         }
 
+        logger.info('Ride already cancelled (idempotent)', {
+          rideId: input.rideId,
+          currentState,
+          cancelledBy: input.cancelledBy
+        });
         return {
           success: true,
           rideId: input.rideId,
@@ -315,74 +321,93 @@ export class RideOperationalService {
         };
       }
 
-      if (
-        input.cancelledBy === "driver" &&
-        (
-          currentState === RIDE_STATE.PICKUP_CONFIRMED ||
-          currentState === RIDE_STATE.IN_DELIVERY ||
-          currentState === RIDE_STATE.FAILED_DELIVERY
-        )
-      ) {
-        return {
-          success: false,
-          error:
-            "Cannot cancel after package pickup. Use failDelivery() so package custody and resolution remain tracked.",
-        };
-      }
-
       const isCancellable = RideStateMachine.isCancellable(currentState);
-      logger.info("RideOperationalService.cancelRide - verificando se cancelavel", {
+      logger.info('RideOperationalService.cancelRide - verificando se e cancelavel', {
         rideId: input.rideId,
         currentState,
-        isCancellable,
+        isCancellable
       });
 
       if (!isCancellable) {
+        logger.warn('RideOperationalService.cancelRide - estado nao cancelavel', {
+          rideId: input.rideId,
+          currentState
+        });
         return {
           success: false,
           error: `Cannot cancel ride in state: ${currentState}`,
         };
       }
 
-      if (input.cancelledBy === "passenger") {
+      if (input.cancelledBy === 'passenger') {
         if (ride.passenger_profile_id !== input.profileId) {
+          logger.warn('RideOperationalService.cancelRide - perfil nao e o passageiro', {
+            rideId: input.rideId,
+            profileId: input.profileId,
+            passengerId: ride.passenger_profile_id
+          });
           return {
             success: false,
-            error: "Only passenger can cancel",
+            error: 'Only passenger can cancel',
           };
         }
 
-        if (!RideStateMachine.canPassengerCancel(currentState)) {
+        const canPassengerCancel = RideStateMachine.canPassengerCancel(currentState);
+        logger.info('RideOperationalService.cancelRide - verificando se passageiro pode cancelar', {
+          rideId: input.rideId,
+          currentState,
+          canPassengerCancel
+        });
+
+        if (!canPassengerCancel) {
+          logger.warn('RideOperationalService.cancelRide - passageiro nao pode cancelar neste estado', {
+            rideId: input.rideId,
+            currentState
+          });
           return {
             success: false,
-            error: "Passenger cannot cancel at this stage",
+            error: 'Passenger cannot cancel at this stage',
           };
         }
-      } else {
+      } else if (input.cancelledBy === 'driver') {
         if (ride.driver_profile_id !== input.profileId) {
           return {
             success: false,
-            error: "Only assigned driver can cancel",
+            error: 'Only assigned driver can cancel',
           };
         }
         if (!RideStateMachine.canDriverCancel(currentState)) {
           return {
             success: false,
-            error: "Driver cannot cancel at this stage",
+            error: 'Driver cannot cancel at this stage',
           };
         }
       }
 
+      let newState: RideState;
+
+      if (input.cancelledBy === 'passenger') {
+        newState = requestedCancelledState;
+      } else {
+        if (currentState === RIDE_STATE.IN_DELIVERY) {
+          return {
+            success: false,
+            error: 'Cannot cancel during delivery. Use failDelivery() instead to register operational failure.',
+          };
+        }
+        newState = requestedCancelledState;
+      }
+
       const result = await this.transitionTo(
         input.rideId,
-        requestedCancelledState,
+        newState,
         input.profileId,
-        input.reason || "Cancelled",
+        input.reason || 'Cancelled'
       );
 
       return result;
     } catch (error) {
-      logger.error("RideOperationalService.cancelRide", error as Error, input);
+      logger.error('RideOperationalService.cancelRide', error as Error, input);
       return {
         success: false,
         error: (error as Error).message,
@@ -393,9 +418,10 @@ export class RideOperationalService {
   static async completeRide(
     rideId: string,
     driverProfileId: string,
-    finalPrice?: number,
+    finalPrice?: number
   ): Promise<TransitionResult> {
     try {
+      void finalPrice;
       const ride = await getRideById(rideId) as {
         status?: string;
         driver_profile_id?: string | null;
@@ -404,7 +430,7 @@ export class RideOperationalService {
       if (!ride) {
         return {
           success: false,
-          error: "Ride not found",
+          error: 'Ride not found',
         };
       }
 
@@ -420,20 +446,18 @@ export class RideOperationalService {
       if (ride.driver_profile_id !== driverProfileId) {
         return {
           success: false,
-          error: "Only assigned driver can complete ride",
+          error: 'Only assigned driver can complete ride',
         };
       }
 
-      const result = await this.transitionTo(
+      return await this.transitionTo(
         rideId,
         RIDE_STATE.COMPLETED,
         driverProfileId,
-        "Ride completed successfully",
+        'Ride completed successfully'
       );
-
-      return result;
     } catch (error) {
-      logger.error("RideOperationalService.completeRide", error as Error, { rideId });
+      logger.error('RideOperationalService.completeRide', error as Error, { rideId });
       return {
         success: false,
         error: (error as Error).message,
@@ -443,7 +467,7 @@ export class RideOperationalService {
 
   static async acceptRide(
     rideId: string,
-    driverProfileId: string,
+    driverProfileId: string
   ): Promise<TransitionResult> {
     const result = await RideDispatchService.acceptRide(rideId, driverProfileId);
 
@@ -472,7 +496,7 @@ export class RideOperationalService {
 
   static async confirmPickup(
     rideId: string,
-    driverProfileId: string,
+    driverProfileId: string
   ): Promise<TransitionResult> {
     return confirmPickupOperation(
       rideId,
@@ -491,7 +515,7 @@ export class RideOperationalService {
 
   static async startDelivery(
     rideId: string,
-    driverProfileId: string,
+    driverProfileId: string
   ): Promise<TransitionResult> {
     return startDeliveryOperation(
       rideId,
@@ -510,7 +534,7 @@ export class RideOperationalService {
       observation?: string;
     },
     finalPrice?: number,
-    pin?: string,
+    pin?: string
   ): Promise<TransitionResult> {
     const result = await confirmDeliveryOperation(
       rideId,
@@ -535,7 +559,7 @@ export class RideOperationalService {
   static async failDelivery(
     rideId: string,
     driverProfileId: string,
-    metadata: FailedDeliveryMetadata,
+    metadata: FailedDeliveryMetadata
   ): Promise<TransitionResult> {
     return failDeliveryOperation(
       rideId,
@@ -555,8 +579,12 @@ export class RideOperationalService {
 
   static async updateFailedDeliveryResolution(
     rideId: string,
-    resolutionUpdate: FailedDeliveryResolutionUpdate,
+    resolutionUpdate: FailedDeliveryResolutionUpdate
   ): Promise<TransitionResult> {
     return updateFailedDeliveryResolutionOperation(rideId, resolutionUpdate);
+  }
+
+  static async getRolloutStatus() {
+    return mobilityRolloutService.getStatus();
   }
 }
