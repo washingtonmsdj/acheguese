@@ -96,9 +96,26 @@ function requireMemberIds(value: unknown): string[] {
 
 function cleanSlug(value: unknown): string {
   const slug = requireText(value, 'slug', 2, 120).toLowerCase();
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
-    throw new RequestValidationError('Invalid slug');
+  let previousWasHyphen = false;
+
+  for (let index = 0; index < slug.length; index += 1) {
+    const code = slug.charCodeAt(index);
+    const isLowercaseLetter = code >= 97 && code <= 122;
+    const isDigit = code >= 48 && code <= 57;
+
+    if (isLowercaseLetter || isDigit) {
+      previousWasHyphen = false;
+      continue;
+    }
+
+    const isValidHyphen =
+      code === 45 && index > 0 && index < slug.length - 1 && !previousWasHyphen;
+    if (!isValidHyphen) {
+      throw new RequestValidationError('Invalid slug');
+    }
+    previousWasHyphen = true;
   }
+
   return slug;
 }
 

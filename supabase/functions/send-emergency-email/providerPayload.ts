@@ -71,7 +71,15 @@ export function extractEmail(value: string): string | null {
 }
 
 function sanitize(value: string, maxLength: number): string {
-  return value.replace(/[\u0000-\u001F\u007F]/g, ' ').trim().slice(0, maxLength);
+  let sanitized = '';
+  for (const character of value) {
+    const codePoint = character.codePointAt(0);
+    const isControlCharacter =
+      codePoint !== undefined && (codePoint <= 0x1f || codePoint === 0x7f);
+    sanitized += isControlCharacter ? ' ' : character;
+    if (sanitized.length >= maxLength) break;
+  }
+  return sanitized.trim().slice(0, maxLength);
 }
 
 function normalizeIsoDatetime(value: string | null | undefined): string | null {
