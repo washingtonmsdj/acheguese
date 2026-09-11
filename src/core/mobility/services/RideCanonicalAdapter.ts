@@ -9,6 +9,11 @@
 
 import type { Address } from '@/core/address/types';
 import type { Location } from '@/core/location/types';
+import {
+  LEGACY_CLOSED_RIDE_STATUSES,
+  LEGACY_UNRESOLVED_OPEN_RIDE_STATUSES,
+  toCanonicalRideState,
+} from "../core/RideLifecycleStatus";
 import type { RideRequest } from "../types/types";
 import type { Tables } from "@/integrations/supabase";
 
@@ -38,35 +43,32 @@ type RideRequestSerializedRoute = {
   destination?: SerializedRideLocation;
 };
 
-const RIDE_REQUEST_STATUSES: readonly RideRequest["status"][] = [
-  "pending",
-  "requested",
-  "searching_driver",
-  "driver_assigned",
-  "driver_accepted",
-  "driver_arriving",
-  "driver_on_the_way",
-  "driver_arrived",
-  "passenger_boarded",
-  "passenger_on_board",
-  "pickup_confirmed",
-  "in_progress",
-  "in_delivery",
-  "delivered",
-  "completed",
-  "cancelled",
-  "failed",
-  "expired",
-  "cancelled_by_passenger",
-  "cancelled_by_driver",
+const UNRESOLVED_COMPATIBILITY_STATUSES: readonly string[] = [
+  ...LEGACY_UNRESOLVED_OPEN_RIDE_STATUSES,
+  ...LEGACY_CLOSED_RIDE_STATUSES,
 ];
 
-function normalizeRideStatus(status: string | null | undefined): RideRequest["status"] {
-  if (status && RIDE_REQUEST_STATUSES.includes(status as RideRequest["status"])) {
+/**
+ * Normalize deterministic historical aliases at the read boundary so deploy
+ * ordering is safe. Ambiguous historical rows remain visible with their raw
+ * status until provenance cleanup can rewrite them without inventing meaning.
+ */
+function normalizeRideStatus(
+  status: string | null | undefined,
+): RideRequest["status"] {
+  const canonical = toCanonicalRideState(status);
+  if (canonical) return canonical;
+
+  if (
+    status &&
+    UNRESOLVED_COMPATIBILITY_STATUSES.includes(status)
+  ) {
     return status as RideRequest["status"];
   }
 
-  return "pending";
+  // Missing/unknown database state must not resurrect the old `pending` alias.
+  // `requested` is the canonical lifecycle entry state.
+  return "requested";
 }
 
 function normalizeRideMode(rideMode: string | null | undefined): RideRequest["ride_mode"] {
